@@ -534,3 +534,19 @@ class MouseActions(object):
 
     def zoom(self, zoom_factor):
         return self.gui.zoom(zoom_factor)
+
+    def on_pan_left(self, event):
+        """helper method for trackball camera"""
+        self.gui.view_actions.on_pan_left(event)
+
+    def on_pan_right(self, event):
+        """helper method for trackball camera"""
+        self.gui.view_actions.on_pan_right(event)
+
+    def on_pan_up(self, event):
+        """helper method for trackball camera"""
+        self.gui.view_actions.on_pan_up(event)
+
+    def on_pan_down(self, event):
+        """helper method for trackball camera"""
+        self.gui.view_actions.on_pan_down(event)

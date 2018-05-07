@@ -671,6 +671,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
             return
         elif 'COMMAND' in typ and not self.settings.show_command:
             return
+        elif 'WARNING' in typ and not self.settings.show_warning:
+            return
+        elif 'ERROR' in typ and not self.settings.show_error:
+            return
 
         frame = sys._getframe(4)  # jump to get out of the logger code
         lineno = frame.f_lineno
@@ -709,8 +713,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         """ Helper funtion: log a message msg with a 'INFO:' prefix """
         if msg is None:
             msg = 'msg is None; must be a string'
-            return self.log.simple_msg(msg, 'ERROR')
-        self.log.simple_msg(msg, 'INFO')
+            return self.log.simple_msg(msg, 'GUI ERROR')
+        self.log.simple_msg(msg, 'GUI INFO')
 
     def log_debug(self, msg):
         """ Helper funtion: log a message msg with a 'DEBUG:' prefix """
@@ -1656,6 +1660,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                  min_value=None, max_value=None,
                  animate_scale=True, animate_phase=False, animate_time=False,
                  icase_fringe=None, icase_disp=None, icase_vector=None,
+                 animate_fringe=False, animate_vector=False,
                  icase_start=None, icase_end=None, icase_delta=None,
                  time=2.0, animation_profile='0 to scale',
                  nrepeat=0, fps=30, magnify=1,
@@ -1790,8 +1795,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
             icase_msg = '         icase_start=%s, icase_end=%s, icase_delta=%s,\n' % (
                 icase_start, icase_end, icase_delta,)
         else:
-            icase_msg = '         icase_fringe=%s, icase_disp=%s, icase_vector=%s, \n' % (
-                icase_fringe, icase_disp, icase_vector,)
+            icase_msg = (
+                '         icase_fringe=%s, icase_disp=%s, icase_vector=%s, \n'
+                '         animate_fringe=%s, animate_vector=%s, \n' % (
+                    icase_fringe, icase_disp, icase_vector,
+                    animate_fringe, animate_vector,
+                ))
 
         #animate_in_gui = True
         self.stop_animation()
@@ -1823,6 +1832,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 min_value, max_value,
                 scales, phases,
                 icases_fringe, icases_disp, icases_vector,
+                animate_fringe, animate_vector,
                 fps)
             return
 
@@ -1830,6 +1840,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             is_failed = self.make_gif_helper(
                 gif_filename, icases_fringe, icases_disp, icases_vector, scales,
                 phases=phases, isteps=isteps,
+                animate_fringe=animate_fringe, animate_vector=animate_vector,
                 max_value=max_value, min_value=min_value,
                 time=time, analysis_time=analysis_time, fps=fps, magnify=magnify,
                 onesided=onesided, nrepeat=nrepeat,
@@ -1864,10 +1875,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
     def _animate_in_gui(self, min_value, max_value,
                         scales, phases,
                         icases_fringe, icases_disp, icases_vector,
+                        animate_fringe, animate_vector,
                         fps):
         """helper method for ``make_gif``"""
         callback = AnimationCallback(self, scales, phases,
                                      icases_fringe, icases_disp, icases_vector,
+                                     animate_fringe, animate_vector,
                                      min_value, max_value)
 
         # Sign up to receive TimerEvent
@@ -1894,6 +1907,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def animation_update(self, icase_fringe0, icase_disp0, icase_vector0,
                          icase_fringe, icase_disp, icase_vector, scale, phase,
+                         animate_fringe, animate_vector,
+                         normalized_frings_scale,
                          min_value, max_value):
         """applies the animation update callback"""
         #print('icase_fringe=%r icase_fringe0=%r' % (icase_fringe, icase_fringe0))
@@ -1913,6 +1928,11 @@ class GuiCommon2(QMainWindow, GuiCommon):
             if not is_valid:
                 self.log_error('Invalid Fringe Case %i' % icase_fringe)
                 return False
+
+        is_valid = self.animation_update_fringe(icase_fringe, animate_fringe, normalized_frings_scale)
+        if not is_valid:
+            return is_valid
+
         try:
             # apply the deflection
             self.update_grid_by_icase_scale_phase(icase_disp, scale, phase=phase)
@@ -1930,8 +1950,31 @@ class GuiCommon2(QMainWindow, GuiCommon):
         is_valid = True
         return is_valid
 
+    def animation_update_fringe(self, icase_fringe, animate_fringe, normalized_frings_scale):
+        """helper method for ``animation_update``"""
+        if animate_fringe:
+            # e^(i*(theta + phase)) = sin(theta + phase) + i*cos(theta + phase)
+            is_valid, data = self._update_vtk_fringe(icase_fringe, normalized_frings_scale)
+            if not is_valid:
+                return is_valid
+            (
+                unused_icase, result_type, unused_location, min_value, max_value, norm_value,
+                data_format, unused_scale, unused_methods,
+                nlabels, labelsize, ncolors, colormap,
+            ) = data
+            is_legend_shown = self.scalar_bar.is_shown
+            self.update_scalar_bar(result_type, min_value, max_value, norm_value,
+                                   data_format,
+                                   nlabels=nlabels, labelsize=labelsize,
+                                   ncolors=ncolors, colormap=colormap,
+                                   is_shown=is_legend_shown)
+            #obj.get_vector_array_by_phase(i, name, )
+        is_valid = True
+        return is_valid
+
     def make_gif_helper(self, gif_filename, icases_fringe, icases_disp, icases_vector,
                         scales, phases=None, isteps=None,
+                        animate_fringe=False, animate_vector=False,
                         max_value=None, min_value=None,
                         time=2.0, analysis_time=2.0, fps=30, magnify=1,
                         onesided=True, nrepeat=0,
@@ -2027,13 +2070,17 @@ class GuiCommon2(QMainWindow, GuiCommon):
         icase_vector0 = -1
         is_failed = True
         if make_images:
+            scale_max = max(abs(scales.max()), abs(scales.min()))
             for istep, icase_fringe, icase_disp, icase_vector, scale, phase in zip(
                 isteps, icases_fringe, icases_disp, icases_vector, scales, phases):
 
+                normalized_frings_scale = scale / scale_max
                 is_valid = self.animation_update(
                     icase_fringe0, icase_disp0, icase_vector0,
                     icase_fringe, icase_disp, icase_vector,
                     scale, phase,
+                    animate_fringe, animate_vector,
+                    normalized_frings_scale,
                     min_value, max_value)
                 if not is_valid:
                     return is_failed

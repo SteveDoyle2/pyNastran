@@ -190,7 +190,7 @@ class GuiCommon(GuiAttributes):
         self.icase_disp = None
         self.icase_vector = None
 
-    def _get_fringe_data(self, icase):
+    def _get_fringe_data(self, icase, scale=None):
         """helper for ``on_fringe``"""
         is_valid = False
         # (grid_result, name_tuple, name_str, data)
@@ -210,7 +210,17 @@ class GuiCommon(GuiAttributes):
         label2 = ''
         (obj, (i, name)) = self.result_cases[icase]
         subcase_id = obj.subcase_id
+
         case = obj.get_result(i, name)
+        if scale is None:
+            scale = 1.0
+        else:
+            # we can have ints...
+            #case *= scale
+            case = np.multiply(case, scale, casting="unsafe")
+        #else:
+            # phase is not None
+            #xyz_nominal, vector_data = obj.get_vector_result(i, name, phase)
 
         if case is None:
             # normal result
@@ -234,7 +244,8 @@ class GuiCommon(GuiAttributes):
         out = obj.get_nlabels_labelsize_ncolors_colormap(i, name)
         nlabels, labelsize, ncolors, colormap = out
 
-        normi = _get_normalized_data(self.result_cases[icase])
+        #normi = _get_normalized_data(self.result_cases[icase])
+        normi = _get_normalized_data(case)
 
         #if min_value is None and max_value is None:
             #max_value = normi.max()
@@ -251,7 +262,6 @@ class GuiCommon(GuiAttributes):
         norm_value = float(max_value - min_value)
 
         vector_size = 1
-        scale = 1.0
         name_tuple = (vector_size, subcase_id, result_type, label, min_value, max_value, scale)
         name_str = self._names_storage.get_name_string(name)
         #return name, normi, vector_size, min_value, max_value, norm_value
@@ -301,11 +311,11 @@ class GuiCommon(GuiAttributes):
         label2 = ''
         (obj, (i, name)) = self.result_cases[icase]
         subcase_id = obj.subcase_id
-        case = obj.get_result(i, name)
-        if case is None:
-            # normal result
-            self.log_error('icase=%r is not a displacement/force' % icase)
-            return is_valid, failed_data
+        #case = obj.get_result(i, name)  # TODO: remove
+        #if case is None:
+            ## normal result
+            #self.log_error('icase=%r is not a displacement/force' % icase)
+            #return is_valid, failed_data
 
         result_type = obj.get_title(i, name)
         vector_size = obj.get_vector_size(i, name)
@@ -385,43 +395,15 @@ class GuiCommon(GuiAttributes):
             None : defaults to self.icase+1
         """
         self.icase = icase
-        is_valid, (grid_result, name, name_str, data) = self._get_fringe_data(icase)
-
+        is_valid, data = self._update_vtk_fringe(icase)
         if not is_valid:
             return is_valid
+
         (
-            icase, result_type, location, min_value, max_value, norm_value,
+            icase, result_type, unused_location, min_value, max_value, norm_value,
             data_format, scale, methods,
             nlabels, labelsize, ncolors, colormap,
         ) = data
-
-        #-----------------------------------
-        grid = self.grid
-
-        grid_result.SetName(name_str)
-        self._names_storage.add(name)
-
-        cell_data = grid.GetCellData()
-        point_data = grid.GetPointData()
-        if location == 'centroid':
-            #cell_data.RemoveArray(name_str)
-            self._names_storage.remove(name)
-            cell_data.AddArray(grid_result)
-
-            #if location != obj_location:
-            point_data.SetActiveScalars(None)
-            cell_data.SetActiveScalars(name_str)
-
-        elif location == 'node':
-            #point_data.RemoveArray(name_str)
-            self._names_storage.remove(name)
-            point_data.AddArray(grid_result)
-
-            #if location != obj_location:
-            cell_data.SetActiveScalars(None)
-            point_data.SetActiveScalars(name_str)
-        else:
-            raise RuntimeError(location)
 
         #is_legend_shown = True
         #if is_legend_shown is None:
@@ -465,6 +447,48 @@ class GuiCommon(GuiAttributes):
         is_valid = True
         return is_valid
 
+    def _update_vtk_fringe(self, icase, scale=None):
+        """helper method for ``on_fringe``"""
+        is_valid, (grid_result, name, name_str, data) = self._get_fringe_data(icase, scale)
+        #print("is_valid=%s scale=%s" % (is_valid, scale))
+        if not is_valid:
+            return is_valid, data
+        (
+            icase, unused_result_type, location, unused_min_value, unused_max_value, unused_norm_value,
+            unused_data_format, unused_scale, unused_methods,
+            unused_nlabels, unused_labelsize, unused_ncolors, unused_colormap,
+        ) = data
+
+        #-----------------------------------
+        grid = self.grid
+
+        grid_result.SetName(name_str)
+        self._names_storage.add(name)
+
+        cell_data = grid.GetCellData()
+        point_data = grid.GetPointData()
+        if location == 'centroid':
+            #cell_data.RemoveArray(name_str)
+            self._names_storage.remove(name)
+            cell_data.AddArray(grid_result)
+
+            #if location != obj_location:
+            point_data.SetActiveScalars(None)
+            cell_data.SetActiveScalars(name_str)
+
+        elif location == 'node':
+            #point_data.RemoveArray(name_str)
+            self._names_storage.remove(name)
+            point_data.AddArray(grid_result)
+
+            #if location != obj_location:
+            cell_data.SetActiveScalars(None)
+            point_data.SetActiveScalars(name_str)
+        else:
+            raise RuntimeError(location)
+        is_valid = True
+        return is_valid, data
+
     def on_disp(self, icase, apply_fringe=False, update_legend_window=True, show_msg=True):
         """Sets the icase data to the active displacement"""
         is_disp = True
@@ -489,7 +513,7 @@ class GuiCommon(GuiAttributes):
             None : defaults to self.icase+1
         """
         self.icase = icase
-        is_valid, (grid_result, unused_name, name_str, data) = self._get_disp_data(
+        is_valid, (grid_result, unused_name, unused_name_str, data) = self._get_disp_data(
             icase, is_disp)
 
         if not is_valid:
@@ -1200,6 +1224,7 @@ class GuiCommon(GuiAttributes):
 
         #print('result_cases.keys() =', self.result_cases.keys())
         i = 0
+        icase = None
         for icase in sorted(iterkeys(self.result_cases)):
             #cases = self.result_cases[icase]
             if result_name == icase[1]:
@@ -1404,10 +1429,11 @@ class GuiCommon(GuiAttributes):
         if follower_nodes is not None:
             self.follower_nodes[name] = follower_nodes
 
-def _get_normalized_data(result_case):
-    """helper method for ``export_case_data``"""
-    (obj, (i, name)) = result_case
-    case = obj.get_result(i, name)
+def _get_normalized_data(case):
+    """helper method for ``_get_fringe_data``"""
+#def _get_normalized_data(result_case):
+    #(obj, (i, name)) = result_case
+    #case = obj.get_result(i, name)
     if case is None:
         return None
 

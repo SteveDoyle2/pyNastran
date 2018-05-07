@@ -2969,7 +2969,7 @@ class ComplexCBeamForceVUArray(ScalarObject):  # 191-VUBEAM
             for (i, eid, parenti, coordi, nid, xxbi, fxi, fyi, fzi, mxi, myi, mzi) in zip(
                  cycle(range(2)), eids, parent, coord, nids, xxb, fx, fy, fz, mx, my, mz):
                 if i == 0:
-                    f.write(''.join(header + msg) % (eid, parenti, coordi))
+                    f06_file.write(''.join(header + msg) % (eid, parenti, coordi))
 
                 out = write_imag_floats_13e([fxi, fyi, fzi, mxi, myi, mzi], is_mag_phase=is_mag_phase)
                 [fxri, fyri, fzri, mxri, myri, mzri,

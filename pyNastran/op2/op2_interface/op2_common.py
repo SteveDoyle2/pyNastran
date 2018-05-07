@@ -116,6 +116,7 @@ class OP2Common(Op2Codes, F06Writer):
         5 - PRINT, PUNCH
         6 - PLOT, PUNCH
         7 - PRINT, PLOT, PUNCH
+
         """
         pass
 
@@ -143,6 +144,7 @@ class OP2Common(Op2Codes, F06Writer):
         .. note:: A case of 4 is not used and is used below as a placeholder,
                   while a case of -1 is some bizarre unhandled,
                   undocumented case.
+
         """
         self._set_times_dtype()
         self.format_code_original = self.format_code
@@ -261,8 +263,9 @@ class OP2Common(Op2Codes, F06Writer):
 
     def setNullNonlinearFactor(self):
         """
-        initializes the nonlinear factor, which lets us know if
-        this is a transient solution or not
+        Initializes the nonlinear factor, which lets us know if
+        this is a transient solution or not.
+
         """
         self.nonlinear_factor = None
         self.data_code['nonlinear_factor'] = None
@@ -407,6 +410,7 @@ class OP2Common(Op2Codes, F06Writer):
         stress_bits[2] = 0 -> isFiberCurvature=True isFiberDistance=False
         stress_bits[3] = 0 -> duplicate of Bit[1] (stress/strain)
         stress_bits[4] = 0 -> material coordinate system flag
+
         """
         if self.is_debug_file:
             msg = ''
@@ -552,6 +556,7 @@ class OP2Common(Op2Codes, F06Writer):
             DISP(PLOT,PHASE)=ALL
         it's wrong, and should be:
             DISP(PLOT,REAL)=ALL
+
         """
         # we'll probably remove this later because we're fixing
         #it before we get to the object
@@ -597,9 +602,7 @@ class OP2Common(Op2Codes, F06Writer):
 
     def _read_table_sort1_real(self, data, ndata, result_name, storage_obj,
                                real_vector, node_elem, random_code=None, is_cid=False):
-        """
-        Reads a real table (for random analysis)
-        """
+        """Reads a real table (for random analysis)"""
         assert self.format_code == 1, self.format_code
         assert self.num_wide == 8, self.num_wide
         is_vectorized = True
@@ -626,9 +629,7 @@ class OP2Common(Op2Codes, F06Writer):
     def _read_table_vectorized(self, data, ndata, result_name, storage_obj,
                                real_vector, complex_vector,
                                node_elem, random_code=None, is_cid=False):
-        """
-        Reads a generalized real/complex SORT1/SORT2 table
-        """
+        """Reads a generalized real/complex SORT1/SORT2 table"""
         assert isinstance(result_name, string_types), 'result_name=%r' % result_name
         assert isinstance(storage_obj, dict), 'storage_obj=%r' % storage_obj
         #print('self.num_wide =', self.num_wide)
@@ -712,6 +713,7 @@ class OP2Common(Op2Codes, F06Writer):
             unused
         is_cid : bool; default=False
             unused
+
         Returns
         -------
         n : int
@@ -721,6 +723,7 @@ class OP2Common(Op2Codes, F06Writer):
             data, ndata, result_name, storage_obj,
             RealTemperatureVectorArray, ComplexThermalLoadVectorArray,
             'node', random_code=self.random_code)
+
         """
         assert isinstance(result_name, string_types), 'result_name=%r' % result_name
         assert isinstance(storage_obj, dict), 'storage_obj=%r' % storage_obj
@@ -787,6 +790,7 @@ class OP2Common(Op2Codes, F06Writer):
 
         ACODE,4=05 vs. ACODE=05  -> function code 4
         TCODE,1=02 vs. TCODE=02  -> function code 1
+
         """
         if self._function_code == 1:
             if value // 1000 in [2, 3, 6]:
@@ -814,6 +818,7 @@ class OP2Common(Op2Codes, F06Writer):
         With a static (e.g. SOL 101) result, reads a complex OUG-style
         table created by:
               DISP(PLOT,SORT1,REAL) = ALL
+
         """
         if self.is_debug_file:
             self.binary_debug.write('  _read_real_scalar_table_static\n')
@@ -866,6 +871,7 @@ class OP2Common(Op2Codes, F06Writer):
         With a real transient result (e.g. SOL 109/159), reads a
         real OUG-style table created by:
               DISP(PLOT,SORT1,REAL) = ALL
+
         """
         # print('result_name=%s use_vector=%s is_vectorized=%s' % (result_name, self.use_vector, is_vectorized))
         if self.is_debug_file:
@@ -911,6 +917,7 @@ class OP2Common(Op2Codes, F06Writer):
         With a real transient result (e.g. SOL 109/159), reads a
         real OUG-style table created by:
               DISP(PLOT,SORT2,REAL) = ALL
+
         """
         if self.is_debug_file:
             self.binary_debug.write('  _read_real_scalar_table_sort2\n')
@@ -959,7 +966,8 @@ class OP2Common(Op2Codes, F06Writer):
         With a static (e.g. SOL 101) result, reads a complex OUG-style
         table created by:
               DISP(PLOT,SORT1,REAL) = ALL
-            """
+
+        """
         if self.is_debug_file:
             self.binary_debug.write('  _read_real_table_static\n')
         assert flag in ['node', 'elem'], flag
@@ -1007,6 +1015,7 @@ class OP2Common(Op2Codes, F06Writer):
         With a real transient result (e.g. SOL 109/159), reads a
         real OUG-style table created by:
               DISP(PLOT,SORT1,REAL) = ALL
+
         """
         # print('result_name=%s use_vector=%s is_vectorized=%s' % (result_name, self.use_vector, is_vectorized))
         if self.is_debug_file:
@@ -1053,6 +1062,7 @@ class OP2Common(Op2Codes, F06Writer):
         With a real transient result (e.g. SOL 109/159), reads a
         real OUG-style table created by:
               DISP(PLOT,SORT2,REAL) = ALL
+
         """
         if self.is_debug_file:
             self.binary_debug.write('  _read_real_table_sort2\n')
@@ -1202,6 +1212,7 @@ class OP2Common(Op2Codes, F06Writer):
         """
         Somewhat risky method for calculating the eid because the device code
         is ignored.  However, this might be the actual way to parse the id.
+
         """
         #print('eid =', eid)
         #print('flag =', flag)
@@ -1270,6 +1281,7 @@ class OP2Common(Op2Codes, F06Writer):
         table created by:
           DISP(PLOT,SORT2,PHASE) = ALL
           DISP(PLOT,SORT2,IMAG) = ALL
+
         """
         if self.is_debug_file:
             self.binary_debug.write('  _read_complex_table\n')
@@ -1328,6 +1340,7 @@ class OP2Common(Op2Codes, F06Writer):
             self.create_transient_object(slot, slot_vector, is_cid=is_cid)
 
         .. note:: dt can also be load_step depending on the class
+
         """
         assert not isinstance(class_obj, string_types), 'class_obj=%r' % class_obj
         assert class_obj is not None, class_obj
@@ -1392,6 +1405,7 @@ class OP2Common(Op2Codes, F06Writer):
         """
         A simple pass loop for unsupported tables that can be hacked on
         to crash the program everywhere that uses it.
+
         """
         #msg = 'table_name=%s table_code=%s %s\n%s' % (
             #self.table_name, self.table_code, msg, self.code_information())
@@ -1476,6 +1490,7 @@ class OP2Common(Op2Codes, F06Writer):
           TCODE1 = 2
           TCODE1/1000 = 0
           TCODE = f1(TCODE1)
+
         """
         (approach_code, tCode, int3, isubcase) = unpack(self._endian + b'4i', data[:16])
         self.approach_code = approach_code
@@ -1613,6 +1628,7 @@ class OP2Common(Op2Codes, F06Writer):
           thermal_bits[2] = 0 -> SRSS
           thermal_bits[1] = 0 -> NRL
           thermal_bits[0] = 0 -> NRLO
+
         """
         bits = [0, 0, 0, 0, 0]
         thermal_code = self.thermal
@@ -1667,6 +1683,7 @@ class OP2Common(Op2Codes, F06Writer):
           sort_bits[0] = 0 -> isSorted=True isRandom=False
           sort_bits[1] = 0 -> is_sort1=True is_sort2=False
           sort_bits[2] = 0 -> isReal=True   isReal/Imaginary=False
+
         """
         bits = [0, 0, 0]
         sort_code = self.sort_code
@@ -1870,6 +1887,7 @@ class OP2Common(Op2Codes, F06Writer):
                             RealSolidStressArray)
         if auto_return:
             return nelements * ntotal
+
         """
         auto_return = False
         #is_vectorized = True
@@ -1919,6 +1937,7 @@ class OP2Common(Op2Codes, F06Writer):
         defines common struct formats
 
         https://docs.scipy.org/doc/numpy/reference/arrays.dtypes.html#arrays-dtypes-constructing
+
         """
         self.fdtype = npdtype(self._uendian + 'f4')
         self.idtype = npdtype(self._uendian + 'i4')

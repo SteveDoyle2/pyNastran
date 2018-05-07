@@ -83,9 +83,56 @@ class DIT(GeomCommon):
         return n
 
     def _read_tabrndg(self, data, n):
-        """TABRNDG(56, 26, 303)"""
-        self.log.info('skipping TABRNDG in DIT\n')
-        return len(data)
+        """
+        TABRNDG(56, 26, 303)
+        Power spectral density for gust loads in aeroelastic analysis.
+
+        1 ID        I   Table identification number
+        2 TYPE      I   Power spectral density type
+        3 LU        RS  Scale of turbulence divided by velocity
+        4 WG        RS  Root-mean-square gust velocity
+        5 UNDEF(4) none Not used
+        Words 1 through 8 repeat until (-1,-1) occurs
+
+        """
+        #self.log.info('skipping TABRNDG in DIT\n')
+        #return len(data)
+        #nentries = 0
+        ndata = len(data)# - n
+        assert ndata == 52, ndata
+        struct_2i2f4i = Struct('2i2f4i')
+        struct_ff = Struct('ff')
+        struct_2i = self.struct_2i
+        while ndata - n >= 32:
+            edata = data[n:n + 32]
+            out = struct_2i2f4i.unpack(edata)
+            (tid, table_type, lu, wg, dunno_a, dunno_b, dunno_c, dunno_d) = out
+            if tid > 100000000:
+                tid = -(tid - 100000000)
+            #if add_codes:
+            #data_in = [tid, table_type, lu, wg]
+            #else:
+                #data_in = [tid, x, y]
+
+            n += 32
+            #if 0:
+                #while 1:
+                    #(xint, yint) = struct_2i.unpack(data[n:n + 8])
+                    #(x, y) = struct_ff.unpack(data[n:n + 8])
+
+                    #n += 8
+                    #if [xint, yint] == [-1, -1]:
+                        #break
+                    #else:
+                        #data_in += [x, y]
+
+            #print('data_in =', data_in)
+            #table = cls.add_op2_data(data_in)
+            #add_method(table)
+            self.add_tabrndg(tid, table_type, lu, wg, comment='')
+            #nentries += 1
+        #self.increase_card_count('TABRNDG', nentries)
+        return n
 
     def _read_tables1(self, data, n):
         """TABLES1(3105, 31, 97)"""

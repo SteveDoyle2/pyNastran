@@ -394,14 +394,15 @@ class LegendObject(object):
         if render:
             self.gui.Render()
 
-        msg = ('self.on_update_legend(title=%r, min_value=%s, max_value=%s,\n'
-               '                      scale=%r, phase=%r,\n'
-               '                      data_format=%r, is_low_to_high=%s, is_discrete=%s,\n'
-               '                      nlabels=%r, labelsize=%r, ncolors=%r, colormap=%r,\n'
-               '                      is_horizontal=%r, is_shown=%r)'
-               % (title, min_value, max_value, scale, phase,
-                  data_format, is_low_to_high, is_discrete,
-                  nlabels, labelsize, ncolors, colormap, is_horizontal, is_shown))
+        msg = (
+            'self.on_update_legend(title=%r, min_value=%s, max_value=%s,\n'
+            '                      scale=%r, phase=%r,\n'
+            '                      data_format=%r, is_low_to_high=%s, is_discrete=%s,\n'
+            '                      nlabels=%r, labelsize=%r, ncolors=%r, colormap=%r,\n'
+            '                      is_horizontal=%r, is_shown=%r)'
+            % (title, min_value, max_value, scale, phase,
+               data_format, is_low_to_high, is_discrete,
+               nlabels, labelsize, ncolors, colormap, is_horizontal, is_shown))
         self.gui.log_command(msg)
         #if is_shown:
             #pass

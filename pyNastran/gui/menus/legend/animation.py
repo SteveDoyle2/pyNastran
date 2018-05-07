@@ -21,9 +21,9 @@ from pyNastran.gui.utils.write_gif import IS_IMAGEIO
 
 
 ANIMATION_PROFILES = [
-    '0 to Scale',
+    #'0 to Scale',
+    #'-Scale to Scale',
     '0 to Scale to 0',
-    '-Scale to Scale',
     '-Scale to Scale to -Scale',
     '0 to Scale to -Scale to 0',
     'Sinusoidal: 0 to Scale to -Scale to 0',
@@ -300,7 +300,7 @@ class AnimationWindow(PyDialog):
         self.gif_button.setToolTip('Sets the name of the gif to %s.gif' % self._default_name)
 
         # scale / phase
-        if 0: # pragma: no cover
+        if 1: # pragma: no cover
             self.animate_scale_radio = QRadioButton("Animate Scale")
             self.animate_phase_radio = QRadioButton("Animate Phase")
             self.animate_time_radio = QRadioButton("Animate Time")
@@ -898,21 +898,21 @@ class AnimationWindow(PyDialog):
 
         grid2.addWidget(self.animate_in_gui_checkbox, irow, 0)
         irow += 1
-        if 1:
-            grid2.addWidget(self.resolution_label, irow, 0)
-            grid2.addWidget(self.resolution_edit, irow, 1)
-            grid2.addWidget(self.resolution_button, irow, 2)
-            irow += 1
 
-            grid2.addWidget(self.browse_folder_label, irow, 0)
-            grid2.addWidget(self.browse_folder_edit, irow, 1)
-            grid2.addWidget(self.browse_folder_button, irow, 2)
-            irow += 1
+        grid2.addWidget(self.resolution_label, irow, 0)
+        grid2.addWidget(self.resolution_edit, irow, 1)
+        grid2.addWidget(self.resolution_button, irow, 2)
+        irow += 1
 
-            grid2.addWidget(self.gif_label, irow, 0)
-            grid2.addWidget(self.gif_edit, irow, 1)
-            grid2.addWidget(self.gif_button, irow, 2)
-            irow += 1
+        grid2.addWidget(self.browse_folder_label, irow, 0)
+        grid2.addWidget(self.browse_folder_edit, irow, 1)
+        grid2.addWidget(self.browse_folder_button, irow, 2)
+        irow += 1
+
+        grid2.addWidget(self.gif_label, irow, 0)
+        grid2.addWidget(self.gif_edit, irow, 1)
+        grid2.addWidget(self.gif_button, irow, 2)
+        irow += 1
 
         grid2.addWidget(self.make_images_checkbox, irow, 0)
         #grid2.addWidget(self.overwrite_images_checkbox, irow, 0)
@@ -1006,6 +1006,9 @@ class AnimationWindow(PyDialog):
                 gifbase = gifbase[:-4]
             gif_filename = os.path.join(output_dir, gifbase + '.gif')
 
+        animate_fringe = self.checkbox_fringe.isChecked()
+        animate_vector = self.checkbox_vector.isChecked()
+
         animate_scale = self.animate_scale_radio.isChecked()
         animate_phase = self.animate_phase_radio.isChecked()
         animate_time = self.animate_time_radio.isChecked()
@@ -1047,6 +1050,7 @@ class AnimationWindow(PyDialog):
                 gif_filename, scale, istep=istep,
                 animate_scale=animate_scale, animate_phase=animate_phase, animate_time=animate_time,
                 icase_fringe=icase_fringe, icase_disp=icase_disp, icase_vector=icase_vector,
+                animate_fringe=animate_fringe, animate_vector=animate_vector,
                 icase_start=icase_disp_start, icase_end=icase_disp_end, icase_delta=icase_disp_delta,
                 time=time, animation_profile=animation_profile,
                 nrepeat=nrepeat, fps=fps, magnify=magnify,

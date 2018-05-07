@@ -133,7 +133,7 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
                       export_hdf5=True, debug=True, skip_files=None,
                       stop_on_failure=False, nstart=0, nstop=1000000000,
                       short_stats=False, binary_debug=False,
-                      compare=True, quiet=False, dev=True):
+                      compare=True, quiet=False, dev=True, xref_safe=False):
     """used by op2_test.py to run thousands of files"""
     if skip_files is None:
         skip_files = []
@@ -173,7 +173,8 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
                                      subcases=subcases, debug=debug,
                                      stop_on_failure=stop_on_failure,
                                      binary_debug=binary_debug,
-                                     compare=compare, dev=dev)[1]
+                                     compare=compare, dev=dev,
+                                     xref_safe=xref_safe)[1]
                 if not is_passedi:
                     is_passed = False
                     break
@@ -194,7 +195,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
             delete_f06=False, skip_dataframe=False,
             subcases=None, exclude=None, short_stats=False,
             compare=True, debug=False, log=None, binary_debug=False,
-            quiet=False, check_memory=False, stop_on_failure=True, dev=False):
+            quiet=False, check_memory=False, stop_on_failure=True, dev=False, xref_safe=False):
     """
     Runs an OP2
 
@@ -337,7 +338,8 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
             print(op2.get_op2_stats(short=short_stats))
             op2.print_subcase_key()
 
-        write_op2_as_bdf(op2, op2_bdf, bdf_filename, write_bdf, make_geom, read_bdf, dev)
+        write_op2_as_bdf(op2, op2_bdf, bdf_filename, write_bdf, make_geom, read_bdf, dev,
+                         xref_safe=xref_safe)
 
         if compare:
             assert op2 == op2_nv
@@ -480,7 +482,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
 
     return op2, is_passed
 
-def write_op2_as_bdf(op2, op2_bdf, bdf_filename, write_bdf, make_geom, read_bdf, dev):
+def write_op2_as_bdf(op2, op2_bdf, bdf_filename, write_bdf, make_geom, read_bdf, dev, xref_safe=False):
     if write_bdf:
         assert make_geom, 'make_geom=%s' % make_geom
         op2._nastran_format = 'msc'
@@ -488,9 +490,12 @@ def write_op2_as_bdf(op2, op2_bdf, bdf_filename, write_bdf, make_geom, read_bdf,
         op2.validate()
         op2.write_bdf(bdf_filename, size=8)
         op2.log.debug('bdf_filename = %s' % bdf_filename)
+        xref = xref_safe is False
         if read_bdf:
             try:
-                op2_bdf.read_bdf(bdf_filename)
+                op2_bdf.read_bdf(bdf_filename, xref=xref)
+                if xref_safe:
+                    op2_bdf.safe_cross_reference()
             except:
                 if dev and len(op2_bdf.card_count) == 0:
                     pass
@@ -628,6 +633,7 @@ def main():
             compare=not data['--disablecompare'],
             quiet=data['--quiet'],
             is_nx=data['--nx'],
+            xref_safe=False,
         )
     print("dt = %f" % (time.time() - time0))
 

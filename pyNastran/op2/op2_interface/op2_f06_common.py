@@ -49,6 +49,7 @@ class OP2_F06_Common(object):
         On the other hand, the rodForces object contains CROD/CTUBE/CONROD elements.
         It is difficult to handle initializing the CRODs/CONRODs given a
         mixed type case, so we split out the elements.
+
         """
         #======================================================================
         # rods
@@ -517,6 +518,7 @@ class OP2_F06_Common(object):
 
           RealCRodStrain  - CROD
           RealCTubeStrain - CTUBE
+
         """
         res_length = 0
         for res_type in res_types:
@@ -563,9 +565,7 @@ class OP2_F06_Common(object):
         return res_length
 
     def get_table_types(self):
-        """
-        Gets the names of the results.
-        """
+        """Gets the names of the results."""
         table_types = [
             # OUG - displacement
             'displacements',
@@ -923,9 +923,7 @@ class OP2_F06_Common(object):
         return table_types
 
     def _get_table_types_testing(self):
-        """
-        testing method...don't use
-        """
+        """testing method...don't use"""
         table_types = self.get_table_types()
         tables = object_attributes(self, 'public')
         tables = [table for table in tables
@@ -982,6 +980,7 @@ class OP2_F06_Common(object):
         ***Appreviated OP2 Stats***
         >>> self.get_op2_stats(short=True)
         displacements[1]; RealDisplacementArray; [1, 72, 6]; [t1, t2, t3, r1, r2, r3]
+
         """
         def compare(key_value):
             key = key_value[0]

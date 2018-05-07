@@ -1,6 +1,7 @@
 """
 Defines:
  - FortranFormat
+
 """
 from __future__ import print_function
 import sys
@@ -40,9 +41,7 @@ class FortranFormat(object):
         self.valid_subcases = []
 
     def show(self, n, types='ifs', endian=None):  # pragma: no cover
-        """
-        Shows binary data
-        """
+        """Shows binary data"""
         assert self.n == self.f.tell()
         nints = n // 4
         data = self.f.read(4 * nints)
@@ -73,6 +72,7 @@ class FortranFormat(object):
             the big/little endian {>, <}
 
         .. warning:: 's' is apparently not Python 3 friendly
+
         """
         return self.write_data(sys.stdout, data, types=types, endian=endian)
 
@@ -97,6 +97,7 @@ class FortranFormat(object):
             Q - unsigned long long (int; 8 bytes)
         endian : str; default=None -> auto determined somewhere else in the code
             the big/little endian {>, <}
+
         """
         n = len(data)
         nints = n // 4
@@ -176,6 +177,7 @@ class FortranFormat(object):
         -------
         data :  since data can never be None, a None value
                 indicates something bad happened.
+
         """
         data = self.f.read(4)
         ndata, = self.struct_i.unpack(data)
@@ -197,6 +199,7 @@ class FortranFormat(object):
         -------
         data : bytes
             the data in binary
+
         """
         data = self.f.read(4)
         ndata, = self.struct_i.unpack(data)
@@ -219,6 +222,7 @@ class FortranFormat(object):
         -------
         data : bytes
             the data in binary
+
         """
         data_out = b''
         for unused_i in range(3):
@@ -241,6 +245,7 @@ class FortranFormat(object):
             the data in binary
         ndata : int
             len(data)
+
         """
         data = self.f.read(4)
         ndata, = self.struct_i.unpack(data)
@@ -270,6 +275,7 @@ class FortranFormat(object):
         ------
         FortranMarkerError
             if the expected table number is not found
+
         """
         for i, marker in enumerate(markers):
             data = self.read_block()
@@ -296,6 +302,7 @@ class FortranFormat(object):
         ------
         FortranMarkerError
             if the expected table number is not found
+
         """
         data = self.read_3_blocks()
         imarkers = self.struct_3i.unpack(data)
@@ -322,6 +329,7 @@ class FortranFormat(object):
         -------
         markers : List[int]
             list of [1, 2, 3, ...] markers
+
         """
         ni = self.n
         markers = []
@@ -359,6 +367,7 @@ class FortranFormat(object):
         -------
         markers : int
             a single marker
+
         """
         ni = self.n
         markers = []
@@ -488,6 +497,7 @@ class FortranFormat(object):
             True : ???
             False : failed???
             None : passed???
+
         """
         # this is the length of the current record inside table3/table4
         record_len = self._get_record_length()
@@ -548,6 +558,7 @@ class FortranFormat(object):
         n : None / int
             None : an error occurred or we're in read_mode=1/array sizeing (???)
             int : the number of bytes that have been read
+
         """
         datai = b''
         n = 0
@@ -736,6 +747,7 @@ class FortranFormat(object):
         -------
         is_valid : bool
             should this subcase defined by self.isubcase be read?
+
         """
         if not self.is_all_subcases:
             if hasattr(self, 'isubcase') and self.isubcase in self.valid_subcases:
@@ -751,6 +763,7 @@ class FortranFormat(object):
         ----------
         n : int
             the position to goto
+
         """
         self.n = n
         self.f.seek(n)
@@ -765,6 +778,7 @@ class FortranFormat(object):
         -------
         record_length : int
             the length of the data block
+
         """
         if self.is_debug_file:
             self.binary_debug.write('_get_record_length\n')
@@ -801,6 +815,7 @@ class FortranFormat(object):
         -------
         record : None
             a record of None indicates a skipped block
+
         """
         markers0 = self.get_nmarkers(1, rewind=False)
         record = self._skip_block()
@@ -858,6 +873,7 @@ class FortranFormat(object):
 
         If a block is small enough, it will fit into 2^12 bytes and a record
         is a block.
+
         """
         return self._read_record_ndata(stream, debug, macro_rewind)[0]
 

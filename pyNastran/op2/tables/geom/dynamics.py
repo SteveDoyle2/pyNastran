@@ -50,7 +50,7 @@ class DYNAMICS(GeomCommon):
             (3307, 33, 129) : ['NONLIN3', self._read_fake],
             (3407, 34, 130): ['NONLIN4', self._read_fake], # 23
             (2107, 21, 195): ['RANDPS', self._read_randps], # 24
-            (2207, 22, 196): ['RANDT1', self._read_fake], # 25
+            (2207, 22, 196): ['RANDT1', self._read_randt1], # 25
             (5107, 51, 131): ['RLOAD1', self._read_rload1],  # 26
             (5207, 52, 132): ['RLOAD2', self._read_rload2],  # 27
             (8910, 89, 606): ['ROTORB', self._read_fake],  # 28
@@ -759,7 +759,28 @@ class DYNAMICS(GeomCommon):
         self.increase_card_count('RANDPS', nentries)
         return n, []
 
-#RANDT1
+    def _read_randt1(self, data, n):
+        """
+        RANDT1(2207,22,196)
+
+        Word Name Type Description
+        1 SID  I  Set identification number
+        2 N    I  Number of time lag intervals
+        3 TO   RS Starting time lag
+        4 TMAX RS Maximum time lag
+        """
+        ntotal = 16  # 4*4
+        struct1 = Struct(self._endian + b'2i 2f')
+        nentries = (len(data) - n) // ntotal
+        for i in range(nentries):
+            out = struct1.unpack(data[n:n+ntotal])
+            if self.is_debug_file:
+                self.binary_debug.write('  RANDT1=%s\n' % str(out))
+            sid, nlags, to, tmax = out
+            self.add_randt1(sid, nlags, to, tmax)
+            n += ntotal
+        self.card_count['RANDT1'] = nentries
+        return n
 
     def _read_rload1(self, data, n):
         """common method for reading NX/MSC RLOAD1"""

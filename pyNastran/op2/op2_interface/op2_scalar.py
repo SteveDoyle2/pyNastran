@@ -50,6 +50,7 @@ Defines the sub-OP2 class.  This should never be called outisde of the OP2 class
    - _read_results_table()
    - _print_month(month, day, year, zero, one)
    - _finish()
+
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -669,6 +670,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             (.. seealso:: import logging)
         debug_file : str; default=None (No debug)
             sets the filename that will be written to
+
         """
         assert isinstance(debug, bool), 'debug=%r' % debug
 
@@ -721,6 +723,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         ----------
         subcases : List[int, ...] / int; default=None->all subcases
             list of [subcase1_ID,subcase2_ID]
+
         """
         #: stores the set of all subcases that are in the OP2
         #self.subcases = set([])
@@ -750,6 +753,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                      subcase_id_2: [time3, time4]}
 
         .. warning:: I'm not sure this still works...
+
         """
         expected_times = {}
         for (isubcase, etimes) in iteritems(times):
@@ -1243,6 +1247,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         -------
         op2_filename : str
             a valid file string
+
         """
         if op2_filename is None:
             from pyNastran.utils.gui_io import load_file_dialog
@@ -1256,9 +1261,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         return op2_filename
 
     def _create_binary_debug(self):
-        """
-        Instatiates the ``self.binary_debug`` variable/file
-        """
+        """Instatiates the ``self.binary_debug`` variable/file"""
         if hasattr(self, 'binary_debug') and self.binary_debug is not None:
             self.binary_debug.close()
             del self.binary_debug
@@ -1346,6 +1349,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
           - open the file
           - set the endian
           - preallocate some struct objects
+
         """
         #: file index
         self.n = 0
@@ -1532,6 +1536,12 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         ----------
         table_name : bytes str
             the first table's name
+
+        Returns
+        -------
+        table_names : List[bytes str]
+            the table names that were read
+
         """
         table_names = []
         while table_name is not None:
@@ -1628,6 +1638,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         ---
         -2 - nitimes?
         -3 - list of times?
+
         """
         table_name = self._read_table_name(rewind=False, stop_on_failure=True)
         self.read_markers([-1])
@@ -1664,6 +1675,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         Reads the DIT table (poorly).
         The DIT table stores information about table cards
         (e.g. TABLED1, TABLEM1).
+
         """
         table_name = self._read_table_name(rewind=False)
         self.read_markers([-1])
@@ -1754,6 +1766,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
           }
 
           model.set_additional_generalized_tables_to_read(generalized_tables)
+
         """
         self._update_generalized_tables(tables)
         self.generalized_tables = tables
@@ -1775,6 +1788,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 function to read table 3 results (e.g., metadata)
             method4 : function
                 function to read table 4 results (e.g., the actual results)
+
         """
         self._update_generalized_tables(tables)
         table_mapper = self._get_table_mapper()
@@ -1798,6 +1812,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         helper function for:
          - set_additional_generalized_tables_to_read
          - set_additional_result_tables_to_read
+
         """
         global NX_RESULT_TABLES
         global MSC_RESULT_TABLES
@@ -1839,6 +1854,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         .. note:: Do not use this for result tables like OUGV1, which
                   store results like displacement.  Those are not matrices.
                   Matrices are things like DMIGs.
+
         """
         if isinstance(matrices, list):
             matrices2 = {}
@@ -1862,6 +1878,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         """
         Skips the majority of geometry/result tables as they follow a very standard format.
         Other tables don't follow this format.
+
         """
         self.table_name = self._read_table_name(rewind=False)
         if self.is_debug_file:
@@ -1888,6 +1905,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         -------
         markers : List[int, int, int]
             a list of nmarker integers
+
         """
         markers = []
         struc = Struct('3i')
@@ -1898,9 +1916,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         return markers
 
     def _read_geom_table(self):
-        """
-        Reads a geometry table
-        """
+        """Reads a geometry table"""
         self.table_name = self._read_table_name(rewind=False)
         if self.is_debug_file:
             self.binary_debug.write('_read_geom_table - %s\n' % self.table_name)
@@ -1925,9 +1941,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self._read_subtables()
 
     def _read_results_table(self):
-        """
-        Reads a results table
-        """
+        """Reads a results table"""
         if self.is_debug_file:
             self.binary_debug.write('read_results_table - %s\n' % self.table_name)
         self.table_name = self._read_table_name(rewind=False)
@@ -1991,6 +2005,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             a dummy integer (???)
         one : int
             a dummy integer (???)
+
         """
         month, day, year = self._set_op2_date(month, day, year)
 
@@ -2007,6 +2022,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         Clears out the data members contained within the self.words variable.
         This prevents mixups when working on the next table, but otherwise
         has no effect.
+
         """
         for word in self.words:
             if word != '???' and hasattr(self, word):

@@ -2188,6 +2188,8 @@ class AddCards(AddMethods):
         """
         Creates a PCOMP card
 
+        Parameters
+        ----------
         pid : int
             property id
         mids : List[int, ..., int]
@@ -3269,6 +3271,13 @@ class AddCards(AddMethods):
         self._add_load_object(randps)
         return randps
 
+    def add_randt1(self, sid, n, t0, tmax, comment=''):
+        """RANDT1"""
+        fields = ['RANDT1', n, t0, tmax]
+        self.reject_card_lines('RANDT1', print_card_8(fields).split('\n'))
+        #randt1 = RANDT1(sid, n, t0, tmax, comment=comment)
+        #self._add_load_object(randt1)
+
     def add_acsrce(self, sid, excite_id, rho, b, delay=0, dphase=0, power=0,
                    comment=''):
         """
@@ -4292,8 +4301,6 @@ class AddCards(AddMethods):
         Creates a SPLINE4 card, which defines a curved Infinite Plate,
         Thin Plate, or Finite Plate Spline.
 
-        Parameters
-        ----------
         Parameters
         ----------
         eid : int

@@ -1,6 +1,7 @@
 """
 Defines:
  - data_in_material_coord(bdf, op2, in_place=False)
+
 """
 from __future__ import print_function
 import copy
@@ -104,6 +105,7 @@ def is_mcid(elem):
     -------
     is_mcid : bool
         the projected material coordinate system is used
+
     """
     theta_mcid = getattr(elem, 'theta_mcid', None)
     return isinstance(theta_mcid, integer_types)
@@ -125,6 +127,7 @@ def angle2vec(v1, v2):
 
     v1 o v2 = |v1| * |v2| * cos(theta)
     theta = np.arccos( (v1 o v2) / (|v1|*|v2|))
+
     """
     denom = norm(v1, axis=1) * norm(v2, axis=1)
     return np.arccos((v1 * v2).sum(axis=1) / denom)
@@ -179,6 +182,7 @@ def data_in_material_coord(bdf, op2, in_place=False):
     .. warning ::  doesn't handle composite stresses/strains/forces
     .. warning ::  doesn't handle solid stresses/strains/forces (e.g. MAT11)
     .. warning ::  zeros out data for CQUAD8s
+
     """
     if in_place:
         op2_new = op2

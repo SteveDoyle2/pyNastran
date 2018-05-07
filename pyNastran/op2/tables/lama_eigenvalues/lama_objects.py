@@ -1,6 +1,5 @@
 from __future__ import print_function
 from math import sqrt
-from six import iteritems
 
 import numpy as np
 
@@ -230,7 +229,7 @@ class ComplexEigenvalues(BaseScalarObject):
         msg = '%-7s %15s %15s %10s %10s %10s\n' % (
             'RootNum', 'ExtractionOrder', 'Eigenvalue', '', 'Cycles', 'Damping')
         msg += '%-7s %15s %15s %10s\n' % ('', '', 'Real', 'Imaginary')
-        for imode, mode in enumerate(self.mode):
+        for imode, unused_mode in enumerate(self.mode):
             extract_order = self.extraction_order[imode]
             eigenvalue = self.eigenvalues[imode]
             cycle = self.cycles[imode]
@@ -298,7 +297,8 @@ class BucklingEigenvalues(BaseScalarObject):
         fdata = np.zeros((nmodes, 5), dtype='float32')
 
         imodei = 0
-        for (imode, eigi) in sorted(iteritems(self.eigenvalues)):
+        for (imode, unused_mode) in enumerate(self.mode):
+            eigi = self.eigenvalues[imode]
             extraction_order = self.extraction_order[imode]
             freq = self.freqs[imode]
             omega = self.omegas[imode]
@@ -328,7 +328,8 @@ class BucklingEigenvalues(BaseScalarObject):
                         '    NO.       ORDER                                                                       MASS              STIFFNESS\n']
         f06_file.write(''.join(msg))
 
-        for (imode, order) in sorted(iteritems(self.extraction_order)):
+        for (imode, unused_mode) in enumerate(self.mode):
+            order = self.extraction_order[imode]
             eigr = self.eigenvalues[imode]
             freq = self.freqs[imode]
             omega = self.omegas[imode]

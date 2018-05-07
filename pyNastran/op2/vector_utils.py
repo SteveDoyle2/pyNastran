@@ -23,6 +23,7 @@ defines some methods for working with arrays:
                               xyz_cid0, summation_point_cid0=None,
                               consider_rxf=True,
                               debug=False, logger=None)
+
 """
 from __future__ import print_function
 from struct import calcsize
@@ -61,6 +62,7 @@ def filter1d(a, b=None, zero_tol=0.001):
     b = [1., -0.1, 0.1]
     >>> i = filter(a, b, zero_tol=0.5)
     [0, 1]
+
     """
     a = np.asarray(a)
     i = np.where(np.abs(a) > zero_tol)[0]
@@ -138,7 +140,8 @@ def where_searchsorted(a, v, side='left', x=None, y=None):
                [ True,  True, False],
                [False,  True, False]], dtype=bool)
         >>> np.where(ix)
-        (array([1, 1, 2]), array([0, 1, 1])) """
+        (array([1, 1, 2]), array([0, 1, 1]))
+        """
     # TODO: take advantage of searchsorted
     assert x is None, x
     assert y is None, y
@@ -204,6 +207,7 @@ def sortedsum1d(ids, values, axis=None):
     ----
     This could probably be more efficient
     Doesn't support axis
+
     """
     uids = unique(ids)
     i1 = np.searchsorted(ids, uids, side='left') # left is the default
@@ -239,6 +243,7 @@ def iformat(format_old, precision=2):
     '8i6f10s'
     >>> iformat('8i6f10s', precision=2)
     '8l6d10q'
+
     """
     if precision == 2:  # double
         format_new = format_old.replace('i', 'l').replace('f', 'd')
@@ -283,6 +288,7 @@ def abs_max_min_global(values):
 
     .. note:: [3.0,  2.0, -3.0] will return 3.0, and
              [-3.0, 2.0,  3.0] will return 3.0
+
     """
     # support lists/tuples
     values = np.asarray(values)
@@ -342,6 +348,7 @@ def abs_max_min_vector(values):
 
     .. note:: [3.0,  2.0, -3.0] will return 3.0, and
               [-3.0, 2.0,  3.0] will return 3.0
+
     """
     # support lists/tuples
     values = np.asarray(values)
@@ -438,6 +445,7 @@ def transform_force(force_in_local,
     Fglobal = Flocal @ T
     Flocal = T.T @ Fglobal
     Flocal2 = T2.T @ (Flocal1 @ T1)
+
     """
     force_out = np.zeros(force_in_local.shape, dtype=force_in_local.dtype)
 
@@ -522,6 +530,7 @@ def transform_force_moment(force_in_local, moment_in_local,
     xyz_g = T_b2g @ xyz_b
     T_b2g @ xyz_b = T_a2g @ xyz_a
     xyz_b = T_b2g.T @ T_a2g @ xyz_a = T_g2b @ T_a2g @ xyz_a
+
     """
     #print('consider_rxf =', consider_rxf)
     #debug = True
@@ -692,6 +701,7 @@ def transform_force_moment_sum(force_in_local, moment_in_local,
         the sum of moments about the summation point in the coord_out coordinate frame
 
     .. todo:: doesn't seem to handle cylindrical/spherical systems
+
     """
     assert logger is not None
     out = transform_force_moment(

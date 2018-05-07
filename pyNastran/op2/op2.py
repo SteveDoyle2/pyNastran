@@ -19,6 +19,7 @@ Defines the main OP2 class.  Defines:
    - set_mode(mode)
    - transform_displacements_to_global(i_transform, coords, xyz_cid0=None, debug=False)
    - transform_gpforce_to_global(nids_all, nids_transform, i_transform, coords, xyz_cid0=None)
+
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -88,6 +89,7 @@ def read_op2(op2_filename=None, combine=True, subcases=None,
 
     .. note :: this method will change in order to return an object that
                does not have so many methods
+
     """
     model = OP2(log=log, debug=debug, debug_file=debug_file, mode=mode)
     model.set_subcases(subcases)
@@ -138,6 +140,7 @@ class OP2(OP2_Scalar):
             sets the filename that will be written to
         mode : str; default='msc'
             {msc, nx}
+
         """
         self.encoding = None
         self.set_mode(mode)
@@ -168,6 +171,7 @@ class OP2(OP2_Scalar):
         attribute_names : List[str]
             sorted list of the names of attributes of a given type or None
             if the mode is wrong
+
         """
         if keys_to_skip is None:
             keys_to_skip = []
@@ -201,6 +205,7 @@ class OP2(OP2_Scalar):
         method : List[str]
             sorted list of the names of methods of a given type
             or None if the mode is wrong
+
         """
         if keys_to_skip is None:
             keys_to_skip = []
@@ -244,6 +249,7 @@ class OP2(OP2_Scalar):
         ------
         AssertionError/ValueError : stop_on_failure=True and and error occurred
         NotImplementedError : this is a sign of an unsupported object
+
         """
         if not self.read_mode == op2_model.read_mode:
             self.log.warning('self.read_mode=%s op2_model.read_mode=%s ... assume True' % (
@@ -325,6 +331,7 @@ class OP2(OP2_Scalar):
         ------
         AssertionError/ValueError : stop_on_failure=True and and error occurred
         NotImplementedError : this is a sign of an unsupported object
+
         """
         # check the name (e.g., RealDisplacementArray vs. ComplexDisplacementArray)
         aname = a_obj.__class__.__name__
@@ -523,6 +530,7 @@ class OP2(OP2_Scalar):
              True : prevents matrix reading crashes
         encoding : str
             the unicode encoding (default=None; system default)
+
         """
         if build_dataframe is None:
             build_dataframe = False
@@ -564,7 +572,8 @@ class OP2(OP2_Scalar):
         creates the following objects:
           - sonitor3 : MONPNT3 object from the MP3F matrix
           - monitor1 : MONPNT1 object from the PMRF, PERF, PFRF, AGRF, PGRF, AFRF matrices
-          """
+
+        """
         if 'MP3F' in self.matrices:
             self.monitor3 = MONPNT3(self._frequencies, self.matrices['MP3F'])
 
@@ -595,6 +604,7 @@ class OP2(OP2_Scalar):
          - RealPlateStressArray (???)
          - RealPlateStrainArray (???)
          - RealCompositePlateStrainArray (???)
+
         """
         # TODO: sorter = uniques.argsort()
         #C:\Anaconda\lib\site-packages\pandas\core\algorithms.py:198: DeprecationWarning: unorderable dtypes;
@@ -668,6 +678,7 @@ class OP2(OP2_Scalar):
         TODO: doesn't support:
           - matrices
           - BucklingEigenvalues
+
         """
         from pyNastran.op2.op2_interface.hdf5_interface import export_op2_to_hdf5_file
         export_op2_to_hdf5_file(hdf5_filename, self)
@@ -694,6 +705,7 @@ class OP2(OP2_Scalar):
               1 : result1 + result2 + results3,
               2 : result4,
           }
+
         """
         self.combine = combine
         result_types = self.get_table_types()
@@ -988,6 +1000,7 @@ class OP2(OP2_Scalar):
                   pyNastran's BDF interface uses:
                     - cp=0 for global frames
                     - cp>0 are local frames
+
         """
         #output = {}
         disp_like_dicts = [
@@ -1163,6 +1176,7 @@ class OP2(OP2_Scalar):
             Use this if CD is not rectangular
         xyz_cid0 : ???
             ???
+
         """
         disp_like_dicts = [
             # TODO: causes test_op2_solid_shell_bar_01_gpforce_xyz to fail

@@ -1192,6 +1192,7 @@ def determine_sort_bits_meaning(table_code, sort_code, sort_bits):
     table_code%1000 = function3()
 
     SPCForce = table_code % 1000 (function 3)
+
     """
     sort_method = 1
     is_real = True

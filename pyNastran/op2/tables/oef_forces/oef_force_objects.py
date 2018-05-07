@@ -2599,7 +2599,7 @@ class RealCGapForceArray(ScalarObject):  # 38-CGAP
             sw = self.data[itime, :, 7]
 
             for (eid, fxi, sfyi, sfzi, ui, vi, wi, svi, swi) in zip(eids, fx, sfy, sfz, u, v, w, sv, sw):
-                vals2 = write_float_12e([fxi, sfyi, sfzi, ui, vi, wi, svi, swi])
+                vals2 = write_floats_12e([fxi, sfyi, sfzi, ui, vi, wi, svi, swi])
                 [fxi, sfyi, sfzi, ui, vi, wi, svi, swi] = vals2
                 f06_file.write('0%13i%-13s %-13s %-13s %-13s %-13s %-13s %-13s %s\n' % (
                     eid, fxi, sfyi, sfzi, ui, vi, wi, svi, swi))
