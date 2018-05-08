@@ -522,7 +522,8 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, nsm_id=None,
         'QSET', 'QSET1', 'USET', 'USET1',
     ]
     for etype, eids in iteritems(model._type_to_id_map):
-        if len(eids) == 0 or etype in no_mass:
+        #assert isinstance(eids, list), 'etype=%r eids=%s'%  (etype, eids)
+        if etype in no_mass or len(eids) == 0:
             continue
         mass, cg, I = _get_mass_new(
             model, all_eids, all_mass_ids, etypes_skipped,

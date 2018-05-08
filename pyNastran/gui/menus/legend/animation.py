@@ -17,7 +17,7 @@ from qtpy.compat import getexistingdirectory
 from pyNastran.gui.qt_version import qt_version
 from pyNastran.gui.utils.qt.pydialog import PyDialog, check_int, check_float
 from pyNastran.gui.utils.qt.dialogs import open_file_dialog
-from pyNastran.gui.utils.write_gif import IS_IMAGEIO
+from pyNastran.gui.menus.legend.write_gif import IS_IMAGEIO
 
 
 ANIMATION_PROFILES = [

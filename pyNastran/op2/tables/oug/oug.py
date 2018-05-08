@@ -874,10 +874,11 @@ class OUG(OP2Common):
                 result_name = 'displacements_NO'
                 storage_obj = self.displacements_NO
                 obj = RealDisplacementArray
-            #elif self.table_code == 910:
-                #result_name = 'velocities_NO'
-                #storage_obj = self.velocities_NO
-                #obj = RealVelocityArray
+            elif self.table_code == 910:
+                assert self.table_name in [b'OUGNO1', b'OUGNO2'], 'self.table_name=%r' % self.table_name
+                result_name = 'velocities_NO'
+                storage_obj = self.velocities_NO
+                obj = RealVelocityArray
             elif self.table_code == 911:
                 assert self.table_name in [b'OUGNO1', b'OUGNO2', b'OAGNO1', b'OAGNO2'], 'self.table_name=%r' % self.table_name
                 result_name = 'accelerations_NO'

@@ -629,17 +629,17 @@ class TestMeshUtils(unittest.TestCase):
 
         pid = 11
         model.add_ctria3(12, pid, [1, 2, 3], theta_mcid=45., zoffset=0.,
-                         tflag=0, T1=0.1, T2=0.1, T3=0.1,
+                         tflag=0, T1=0.1, T2=0.1, T3=0.1,  # absolute - mass=0.1*0.5=0.05
                          comment='')
         model.add_ctria3(13, pid, [1, 2, 3], theta_mcid=1, zoffset=0.,
-                         tflag=0, T1=0.1, T2=0.1, T3=0.1,
+                         tflag=0, T1=0.1, T2=0.1, T3=0.1,  # absolute
                          comment='')
 
         model.add_cquad4(14, pid, [1, 2, 3, 4], theta_mcid=45., zoffset=0.,
-                         tflag=0, T1=0.1, T2=0.1, T3=0.1, T4=0.1,
+                         tflag=0, T1=0.1, T2=0.1, T3=0.1, T4=0.1,  # absolute
                          comment='')
         model.add_cquad4(15, pid, [1, 2, 3, 4], theta_mcid=1, zoffset=0.,
-                         tflag=1, T1=0.1, T2=0.1, T3=0.1, T4=0.1,
+                         tflag=1, T1=0.1, T2=0.1, T3=0.1, T4=0.1,  # relative
                          comment='')
         model.add_cord2r(1, rid=0,
                          origin=[0., 0., 0.],
@@ -663,13 +663,13 @@ class TestMeshUtils(unittest.TestCase):
         model.cross_reference()
         model.pop_xref_errors()
 
-        assert np.allclose(mass, 1.0), mass  ## TODO: wrong
+        assert np.allclose(mass, 0.05), mass # t=0.1; A=0.5; nsm=0.; mass=0.05
 
         mass = model.mass_properties(element_ids=14)[0]
         bdf_file = StringIO()
         model.write_bdf(bdf_file, close=False)
         bdf_file.seek(0)
-        assert np.allclose(mass, 2.0), mass
+        assert np.allclose(mass, 0.1), mass # t=0.1; A=1.0; nsm=0.; mass=0.1
 
         csv_filename = 'mcids.csv'
         export_mcids(model, csv_filename=csv_filename, eids=[12, 13],

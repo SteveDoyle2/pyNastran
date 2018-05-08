@@ -867,6 +867,16 @@ def check_for_optional_param(keys, subcase, msg, error, ierror, nerrors):
         ierror += 1
     return ierror
 
+def check_sol(sol, subcase, sols, case_control_key, log, ierror, nerrors):
+    """Checks that the solution is valid"""
+    if sol not in sols:
+        msg = 'sol=%s is missing %r\n%s' % (sol, case_control_key, subcase)
+        log.error(msg)
+        if ierror == nerrors:
+            raise RuntimeError(msg)
+        ierror += 1
+    return ierror
+
 def check_case(sol, subcase, fem2, p0, isubcase, subcases,
                ierror=0, nerrors=100, stop_on_failure=True):
     """
@@ -1235,6 +1245,7 @@ def require_cards(card_names, log, soltype, sol, subcase,
 def _check_case_parameters(subcase, fem2, p0, isubcase, sol,
                            ierror=0, nerrors=100, stop_on_failure=True):
     """helper method for ``check_case``"""
+    log = fem2.log
     if any(subcase.has_parameter('TIME', 'TSTEP')):
         if 'TIME' in subcase:
             time_tstep_id = subcase.get_parameter('TIME')[0]
@@ -1305,9 +1316,9 @@ def _check_case_parameters(subcase, fem2, p0, isubcase, sol,
         else:
             method_ids = list(fem2.methods.keys())
             raise RuntimeError('METHOD = %s not in method_ids=%s' % (method_id, method_ids))
-
-        assert sol in [5, 76, 101, 103, 105, 106, 107, 108, 110, 111,
-                       112, 144, 145, 146, 187, 200], 'sol=%s METHOD\n%s' % (sol, subcase)
+        sols = [5, 76, 101, 103, 105, 106, 107, 108, 110, 111,
+                112, 144, 145, 146, 187, 200]
+        ierror = check_sol(sol, subcase, sols, 'METHOD', log, ierror, nerrors)
 
     if 'CMETHOD' in subcase:
         cmethod_id = subcase.get_parameter('CMETHOD')[0]
@@ -1318,7 +1329,7 @@ def _check_case_parameters(subcase, fem2, p0, isubcase, sol,
         else:
             cmethod_ids = list(fem2.cMethods.keys())
             raise RuntimeError('CMETHOD = %s not in cmethod_ids=%s' % (cmethod_id, cmethod_ids))
-        assert sol in [10, 110, 111, 145], 'sol=%s CMETHOD\n%s' % (sol, subcase)
+        ierror = check_sol(sol, subcase, sols, 'CMETHOD', log, ierror, nerrors)
 
     if 'RMETHOD' in subcase:
         unused_rmethod_id = subcase.get_parameter('RMETHOD')[0]
@@ -1330,13 +1341,15 @@ def _check_case_parameters(subcase, fem2, p0, isubcase, sol,
             #method_ids = list(fem2.methods.keys())
             #raise RuntimeError('METHOD = %s not in method_ids=%s' % (method_id, method_ids))
 
-        assert sol in [110, 111], 'sol=%s RMETHOD\n%s' % (sol, subcase)
+        sols = [110, 111]
+        ierror = check_sol(sol, subcase, sols, 'RMETHOD', log, ierror, nerrors)
 
     if 'FMETHOD' in subcase:
         # FLUTTER
         fmethod_id = subcase.get_parameter('FMETHOD')[0]
         unused_fmethod = fem2.flutters[fmethod_id]
-        assert sol in [145, 200], 'sol=%s FMETHOD\n%s' % (sol, subcase)
+        sols = [145, 200]
+        ierror = check_sol(sol, subcase, sols, 'FMETHOD', log, ierror, nerrors)
 
     nid_map = fem2.nid_map
     if 'TEMPERATURE(LOAD)' in subcase:
@@ -1362,9 +1375,11 @@ def _check_case_parameters(subcase, fem2, p0, isubcase, sol,
         assert np.allclose(force, force2), 'force=%s force2=%s' % (force, force2)
         assert np.allclose(moment, moment2), 'moment=%s moment2=%s' % (moment, moment2)
         print('  isubcase=%i F=%s M=%s' % (isubcase, force, moment))
-        assert sol in [1, 5, 24, 61, 64, 66, 101, 103, 105, 106, 107,
-                       108, 109, 110, 111, 112, 144, 145, 153, 200, 400, 601,
-                      ], 'sol=%s LOAD\n%s' % (sol, subcase)
+        sols = [
+            1, 5, 24, 61, 64, 66, 101, 103, 105, 106, 107,
+            108, 109, 110, 111, 112, 144, 145, 153, 200, 400, 601,
+        ]
+        ierror = check_sol(sol, subcase, sols, 'LOAD', log, ierror, nerrors)
     else:
         # print('is_load =', subcase.has_parameter('LOAD'))
         pass
@@ -1372,7 +1387,8 @@ def _check_case_parameters(subcase, fem2, p0, isubcase, sol,
     if 'FREQUENCY' in subcase:
         freq_id = subcase.get_parameter('FREQUENCY')[0]
         freq = fem2.frequencies[freq_id]
-        assert sol in [26, 68, 76, 78, 88, 108, 101, 111, 112, 118, 146, 200], 'sol=%s FREQUENCY' % sol
+        sols = [26, 68, 76, 78, 88, 108, 101, 111, 112, 118, 146, 200]
+        ierror = check_sol(sol, subcase, sols, 'FREQUENCY', log, ierror, nerrors)
 
     # if 'LSEQ' in subcase:
         # lseq_id = subcase.get_parameter('LSEQ')[0]
@@ -1417,8 +1433,11 @@ def _check_case_parameters(subcase, fem2, p0, isubcase, sol,
         fem2.get_reduced_loads(loadset_id)
 
     if 'DLOAD' in subcase:
-        assert sol in [26, 68, 76, 78, 88, 99, 103, 108, 109, 111, 112, 118, 129, 146,
-                       153, 159, 200, 400, 401, 601], 'sol=%s DLOAD\n%s' % (sol, subcase)
+        sols = [
+            26, 68, 76, 78, 88, 99, 103, 108, 109, 111, 112, 118, 129, 146,
+            153, 159, 200, 400, 401, 601,
+        ]
+        ierror = check_sol(sol, subcase, sols, 'DLOAD', log, ierror, nerrors)
         dload_id = subcase.get_parameter('DLOAD')[0]
         fem2.get_reduced_dloads(dload_id)
         #if 'LOADSET' in subcase:

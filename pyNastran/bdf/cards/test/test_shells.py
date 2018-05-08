@@ -970,8 +970,8 @@ class TestShells(unittest.TestCase):
         model.add_grid(4, [0., 1., 0.])
         model.add_cquad4(10, pid, [1, 2, 3, 4])
 
-        model.add_cshear(14, pid, [1, 2, 3, 4],
-                         comment='cshear')
+        cshear = model.add_cshear(14, pid, [1, 2, 3, 4],
+                                  comment='cshear')
         model.add_pshear(pid, mid, t=1., comment='pshear')
 
         E = 3.0e7
@@ -990,6 +990,7 @@ class TestShells(unittest.TestCase):
         model.cross_reference()
         model.pop_xref_errors()
 
+        assert np.allclose(cshear.Mass(), 1.0), cshear.Mass()
         assert np.allclose(mass, 1.0), mass
 
         model.uncross_reference()

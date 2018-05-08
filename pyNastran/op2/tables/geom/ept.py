@@ -10,6 +10,7 @@ from six.moves import range
 
 import numpy as np
 
+from pyNastran import is_release
 from pyNastran.bdf.cards.properties.mass import PMASS, NSM
 from pyNastran.bdf.cards.properties.bars import PBAR, PBARL, PBEND
 from pyNastran.bdf.cards.properties.beam import PBEAM, PBEAML, PBCOMP
@@ -626,8 +627,89 @@ class EPT(GeomCommon):
         return n, props
 
     def _read_pbush1d(self, data, n):
-        self.log.info('skipping PBUSH1D in EPT\n')
-        return len(data)
+        """
+        Record 18 -- PBUSH1D(3101,31,219)
+
+        1  PID    I  Property identification number
+        2  K      RS Stiffness
+        3  C      RS Viscous Damping
+        4  M      RS Mass
+        5  ALPHA  RS Temperature coefficient
+        6  SA     RS Stress recovery coefficient
+        7  EA/SE  RS Strain recovery coefficient
+
+        8  TYPEA  I  Shock data type:0=Null, 1=Table, 2=Equation
+        9  CVT    RS Coefficient of translation velocity tension
+        10 CVC    RS Coefficient of translation velocity compression
+        11 EXPVT  RS Exponent of velocity tension
+        12 EXPVC  RS Exponent of velocity compression
+        13 IDTSU  I  TABLEDi or DEQATN entry identification number for scale factor vs displacement
+        14 IDTCU  I  DEQATN entry identification number for scale factor vs displacement
+        15 IDTSUD I  DEQATN entry identification number for derivative tension
+        16 IDCSUD I  DEQATN entry identification number for derivative compression
+
+        17 TYPES  I  Spring data type: 0=Null, 1=Table, 2=Equation
+        18 IDTS   I  TABLEDi or DEQATN entry identification number for tension compression
+        19 IDCS   I  DEQATN entry identification number for compression
+        20 IDTDU  I  DEQATN entry identification number for scale factor vs displacement
+        21 IDCDU  I  DEQATN entry identification number for force vs displacement
+
+        22 TYPED  I  Damper data type: 0=Null, 1=Table, 2=Equation
+        23 IDTD   I  TABLEDi or DEQATN entry identification number for tension compression
+        24 IDTD   I  DEQATN entry identification number for compression
+        25 IDTDV  I  DEQATN entry identification number for scale factor versus velocity
+        26 IDCDV  I  DEQATN entry identification number for force versus velocity
+
+        27 TYPEG  I  General data type: 0=Null, 1=Table, 2=Equation
+        28 IDTG   I  TABLEDi or DEQATN entry identification number for tension compression
+        29 IDCG   I  DEQATN entry identification number for compression
+        30 IDTDU  I  DEQATN entry identification number for scale factor versus displacement
+        31 IDCDU  I  DEQATN entry identification number for force versus displacement
+        32 IDTDV  I  DEQATN entry identification number for scale factor versus velocity
+        33 IDCDV  I  DEQATN entry identification number for force vs velocity
+
+        34 TYPEF  I  Fuse data type: 0=Null, 1=Table
+        35 IDTF   I  TABLEDi entry identification number for tension
+        36 IDCF   I  TABLEDi entry identification number for compression
+
+        37 UT     RS Ultimate tension
+        38 UC     RS Ultimate compression
+        """
+        type_map = {
+            0 : None,
+            1 : 'EQUAT',
+            2 : 'TABLE',
+        }
+        ntotal = 152  # 38*4
+        struct1 = Struct(self._endian + b'i 6f i 4f 24i 2f')
+        nentries = (len(data) - n) // ntotal
+        for i in range(nentries):
+            edata = data[n:n+152]
+            out = struct1.unpack(edata)
+            (pid, k, c, m, unused_alpha, sa, se,
+             typea, cvt, cvc, expvt, expvc, idtsu, idtcu, idtsud, idcsud,
+             types, idts, idcs, idtdu, idcdu, typed, idtd, idtd, idtdv, idcdv,
+             typeg, idtg, idcg, idtdu, idcdu, idtdv, idcdv,
+             typef, idtf, idcf,
+             ut, uc) = out
+            if not is_release:
+                if typea in [1, 2]:
+                    raise NotImplementedError(str((typea, cvt, cvc, expvt, expvc, idtsu, idtcu, idtsud, idcsud)))
+                if types in [1, 2]:
+                    raise NotImplementedError(str((types, idts, idcs, idtdu, idcdu, typed, idtd, idtd, idtdv, idcdv)))
+                if typeg in [1, 2]:
+                    raise NotImplementedError(str((typeg, idtg, idcg, idtdu, idcdu, idtdv, idcdv)))
+                if typef in [1, 2]:
+                    raise NotImplementedError(str((idtf, idcf)))
+                typea_str = type_map[typea]
+                types_str = type_map[types]
+                typeg_str = type_map[typeg]
+                typef_str = type_map[typef]
+            self.add_pbush1d(pid, k=k, c=c, m=m, sa=sa, se=se,
+                             optional_vars=None,)
+            n += ntotal
+        self.card_count['PBUSH1D'] = nentries
+        return n
 
     def _read_pbusht(self, data, n):
         self.log.info('skipping PBUSHT in EPT\n')

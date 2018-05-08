@@ -46,14 +46,16 @@ def setup_animation(scale, istep=None,
     phases = None
     onesided = False
     is_symmetric = False
+    endpoint = False
     if animate_scale:
         out = setup_animate_scale(
             scale,
             icase_fringe, icase_disp, icase_vector,
             time, animation_profile, fps)
-        icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, onesided, is_symmetric = out
+        icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, onesided, is_symmetric, endpoint = out
     elif animate_phase:
         onesided = True
+        endpoint = True
         is_symmetric = False
         out = setup_animate_phase(
             scale,
@@ -63,6 +65,7 @@ def setup_animation(scale, istep=None,
     elif animate_time:
         onesided = True
         is_symmetric = False
+        endpoint = True
         out = setup_animate_time(
             scale, time,
             icase_start, icase_end, icase_delta,
@@ -79,16 +82,19 @@ def setup_animation(scale, istep=None,
         analysis_time, fps)
     phases2, icases_fringe2, icases_disp2, icases_vector2, isteps2, scales2 = out
 
-    if istep is None and animate_scale and not animate_in_gui:
+    if istep is None and animate_scale: # and not animate_in_gui:
         scales2, phases2, icases_fringe2, icases_disp2, icases_vector2, isteps2 = make_symmetric(
-            scales2, phases2, icases_fringe2, icases_disp2, icases_vector2, isteps2, is_symmetric)
+            scales2, phases2, icases_fringe2, icases_disp2, icases_vector2, isteps2, is_symmetric, endpoint)
+        #if animate_in_gui:
+            # double the number of frames
+            # drop the duplicate end frame if necessary
     if istep is not None:
         assert isinstance(istep, integer_types), 'istep=%r' % istep
         scales = (scales2[istep],)
         phases = (phases2[istep],)
         isteps = (istep,)
     #print('scales_final=%s' % scales)
-    return phases2, icases_fringe2, icases_disp2, icases_vector2, isteps2, scales2, analysis_time, onesided
+    return phases2, icases_fringe2, icases_disp2, icases_vector2, isteps2, scales2, analysis_time, onesided, endpoint
 
 
 def fix_nframes(nframes, profile):
@@ -243,7 +249,11 @@ def setup_animate_scale(scale, icase_fringe, icase_disp, icase_vector, time, pro
     # TODO: this can hit
     #if profile == '0 to scale to 0' and len(scales) % 2 == 0:
         #raise RuntimeError('nscales=%s scales=%s' % (len(scales), scales))
-    return icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, onesided, is_symmetric
+    out = (
+        icases_fringe, icases_disp, icases_vector,
+        isteps, scales, analysis_time, onesided, is_symmetric, endpoint,
+    )
+    return out
 
 def setup_animate_phase(scale, icase_fringe, icase_disp, icase_vector, time, fps):
     """Gets the inputs for a phase animation"""
@@ -403,13 +413,37 @@ def update_animation_inputs(phases, icases_fringe, icases_disp, icases_vector,
     scales2 = np.array(scales)
     return phases2, icases_fringe2, icases_disp2, icases_vector2, isteps2, scales2
 
-def make_symmetric(scales, phases, icases_fringe, icases_disp, icases_vector, isteps, is_symmetric):
+def make_symmetric(scales, phases, icases_fringe, icases_disp, icases_vector, isteps, is_symmetric, endpoint):
     """
     Chop the frames in half at the middle frame
 
-    [1, 2, 3, 4, 5, 4, 3, 2, 1]
-    >>> a = [1, 2, 3, 4, 5]
+    Example
+    -------
+    >>> isteps = [1, 2, 3, 4, 5, 4, 3, 2, 1]
+    >>> make_symmetric(scales, phases, icases_fringe, icases_disp, icases_vector,
+                       isteps, is_symmetric)
+    isteps = [1, 2, 3, 4, 5]
+
+    Example
+    -------
+    >>> scales = [0., 1., 0.]
+    >>> isteps = [1, 2, 3]
+    >>> make_symmetric(scales, phases, icases_fringe, icases_disp, icases_vector,
+                       isteps, is_symmetric)
+    scales = [0., 1.]
+    isteps = [1, 2]
     """
+    if not is_symmetric:
+        if endpoint:
+            out = (
+                scales[:-1], phases[:-1],
+                icases_fringe[:-1], icases_disp[:-1], icases_vector[:-1],
+                isteps[:-1]
+            )
+        else:
+            out = scales, phases, icases_fringe, icases_disp, icases_vector, isteps
+        return out
+
     # if twosided
     i = None
     if is_symmetric:
@@ -417,7 +451,7 @@ def make_symmetric(scales, phases, icases_fringe, icases_disp, icases_vector, is
         ihalf_frame = nframes // 2 + 1
         assert nframes % 2 == 1, nframes
         i = ihalf_frame
-    elif scales[0] == scales[-1]:
+    elif endpoint:
         i = -1
 
     if i is not None:
@@ -446,7 +480,7 @@ def make_two_sided(scales, phases, icases_fringe, icases_disp, icases_vector, is
     this is a two sided "mountain"; we have to go back down
     [1, 2, 3, 4, 5, 4, 3, 2, 1]
     """
-    is_endpoint = scales[0] == scales[-1]
+    is_endpoint = np.allclose(scales[0], scales[-1])
     end = None
 
     if is_endpoint:
@@ -526,12 +560,12 @@ def write_gif(gif_filename, png_filenames, time=2.0,
     if not os.path.exists(gif_dirname):
         os.makedirs(gif_dirname)
 
-    if not onesided:
+    #if not onesided:
         # drop the duplicate middle frame
         # >>> a = [1, 2, 3, 4, 5]
         # >>> a + a[-2::-1]
         # [1, 2, 3, 4, 5, 4, 3, 2, 1]
-        png_filenames = png_filenames + png_filenames[-2::-1]
+        #png_filenames = png_filenames + png_filenames[-2::-1]
 
     if make_gif and IS_IMAGEIO:
         images = []

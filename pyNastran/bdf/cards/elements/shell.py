@@ -187,7 +187,8 @@ class ShellElement(Element):
         """
         Returns the mass per area
         """
-        return self.pid_ref.MassPerArea()
+        tscales = self.get_thickness_scale()
+        return self.pid_ref.MassPerArea(tflag=self.tflag, tscales=tscales)
 
     def Mass(self):
         # () -> float
@@ -195,7 +196,13 @@ class ShellElement(Element):
         .. math:: m = \frac{m}{A} A  \f]
         """
         A = self.Area()
-        mpa = self.pid_ref.MassPerArea()
+        tscales = self.get_thickness_scale()
+        try:
+            mpa = self.pid_ref.MassPerArea(tflag=self.tflag, tscales=tscales)
+        except TypeError:
+            print(self.pid_ref)
+            raise
+
         try:
             return mpa * A
         except TypeError:
@@ -208,11 +215,12 @@ class ShellElement(Element):
         """
         A = self.Area_no_xref(model)
         pid_ref = model.Property(self.pid)
-        mpa = pid_ref.MassPerArea_no_xref(model)
+        tavg_scale = self.get_thickness_scale()
+        mpa = pid_ref.MassPerArea_no_xref(model, tavg_scale)
         try:
             return mpa * A
         except TypeError:
-            msg = 'mass/area=%s area=%s pidType=%s' % (mpa, A, self.pid_ref.type)
+            msg = 'mass/area=%s area=%s prop_type=%s' % (mpa, A, self.pid_ref.type)
             raise TypeError(msg)
 
     #def flip_normal(self):
@@ -247,11 +255,10 @@ class TriShell(ShellElement):
         y = cross(normal, x)
         return x, y
 
+
     def Thickness(self):
         # () -> float
-        """
-        Returns the thickness
-        """
+        """Returns the thickness"""
         return self.pid_ref.Thickness()
 
     def AreaCentroidNormal(self):
@@ -626,6 +633,9 @@ class CTRIA3(TriShell):
         #else:
         #    t = self.pid_ref.Thickness()
         #return t
+
+    def get_thickness_scale(self):
+        return [self.T1, self.T2, self.T3]
 
     def flip_normal(self):
         """
@@ -1023,6 +1033,9 @@ class CTRIA6(TriShell):
                 assert isinstance(c[i], float)
                 assert isinstance(n[i], float)
 
+    def get_thickness_scale(self):
+        return [self.T1, self.T2, self.T3]
+
     def Thickness(self):
         """
         Returns the thickness, :math:`t`
@@ -1278,10 +1291,11 @@ class CTRIAR(TriShell):
         self.nodes_ref = None
         self.theta_mcid_ref = None
 
+    def get_thickness_scale(self):
+        return [self.T1, self.T2, self.T3]
+
     def Thickness(self):
-        """
-        Returns the thickness
-        """
+        """Returns the thickness"""
         return self.pid_ref.Thickness()
 
     def flip_normal(self):
@@ -1402,10 +1416,11 @@ class QuadShell(ShellElement):
         y = cross(normal, x)
         return x, y
 
+    def get_thickness_scale(self):
+        return None
+
     def Thickness(self):
-        """
-        Returns the thickness
-        """
+        """Returns the thickness"""
         return self.pid_ref.Thickness()
 
     def Normal(self):
@@ -1807,6 +1822,19 @@ class CSHEAR(QuadShell):
     def G(self):
         # type: () -> float
         return self.pid_ref.mid_ref.G()
+
+    def Mass(self):
+        # () -> float
+        r"""
+        .. math:: m = \frac{m}{A} A  \f]
+        """
+        A = self.Area()
+        mpa = self.pid_ref.MassPerArea()
+        try:
+            return mpa * A
+        except TypeError:
+            msg = 'mass/area=%s area=%s prop_type=%s' % (mpa, A, self.pid_ref.type)
+            raise TypeError(msg)
 
     def Thickness(self):
         # type: () -> float
@@ -2280,6 +2308,9 @@ class CQUAD4(QuadShell):
         self.pid_ref = None
         self.nodes_ref = None
         self.theta_mcid_ref = None
+
+    def get_thickness_scale(self):
+        return [self.T1, self.T2, self.T3, self.T4]
 
     def _verify(self, xref):
         eid = self.eid
@@ -3056,6 +3087,9 @@ class CQUADR(QuadShell):
         self.nodes_ref = None
         self.theta_mcid_ref = None
 
+    def get_thickness_scale(self):
+        return [self.T1, self.T2, self.T3, self.T4]
+
     def Thickness(self):
         """
         Returns the thickness
@@ -3349,6 +3383,7 @@ class CQUAD(QuadShell):
     theta_mcid is an MSC specific variable
     """
     type = 'CQUAD'
+    #tflag = 1
 
     def __init__(self, eid, pid, nids, theta_mcid=0., comment=''):
         """
@@ -3442,6 +3477,19 @@ class CQUAD(QuadShell):
         b = n2 - n4
         area = 0.5 * norm(cross(a, b))
         return area
+
+    def Mass(self):
+        # () -> float
+        r"""
+        .. math:: m = \frac{m}{A} A  \f]
+        """
+        A = self.Area()
+        mpa = self.pid_ref.MassPerArea()
+        try:
+            return mpa * A
+        except TypeError:
+            msg = 'mass/area=%s area=%s prop_type=%s' % (mpa, A, self.pid_ref.type)
+            raise TypeError(msg)
 
     def Thickness(self):
         """
@@ -3672,6 +3720,9 @@ class CQUAD8(QuadShell):
                 #assert isinstance(n[i], float)
             mass = self.Mass()
             assert isinstance(mass, float), 'mass=%r' % mass
+
+    def get_thickness_scale(self):
+        return [self.T1, self.T2, self.T3, self.T4]
 
     def Thickness(self):
         """

@@ -48,7 +48,7 @@ from pyNastran.gui.menus.menus import (
     ApplicationLogWidget,
     PythonConsoleWidget)
 
-from pyNastran.gui.utils.write_gif import (
+from pyNastran.gui.menus.legend.write_gif import (
     setup_animation, update_animation_inputs, write_gif, make_two_sided)
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_idtype
 
@@ -1789,7 +1789,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.log_error(str(error))
             self.stop_animation()
             return is_failed
-        phases, icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, onesided = out
+        phases, icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, onesided, endpoint = out
 
         if animate_time:
             icase_msg = '         icase_start=%s, icase_end=%s, icase_delta=%s,\n' % (

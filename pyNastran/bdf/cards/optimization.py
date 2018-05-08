@@ -287,6 +287,8 @@ def validate_dvprel(prop_type, pname_fid, validate):
         #options = [5]
         _check_dvprel_options(pname_fid, prop_type, options)
     elif prop_type == 'PVISC':
+        if pname_fid == 3:
+            pname_fid = 'CE1'
         options = ['CE1']
         _check_dvprel_options(pname_fid, prop_type, options)
 

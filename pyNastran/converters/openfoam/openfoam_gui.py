@@ -129,7 +129,7 @@ class MainWindow(GuiCommon2, STL_IO, OpenFoamIO, SurfIO, UGRID_IO, BEdge_IO): # 
         self.set_window_title(msg)
         self.log_command('on_reload()')
         #self.cycleResults(Title)
-        for i in range(10):  #  limit on number of cycles
+        for unused_i in range(10):  #  limit on number of cycles
             if self.Title != title:
                 self.cycleResults(title)
             else:

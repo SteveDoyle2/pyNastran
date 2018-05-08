@@ -52,8 +52,7 @@ class CompositeShellProperty(ShellProperty):
         self.lam = None
         self.mids_ref = None
 
-    def MassPerArea(self, iply='all', method='nplies'):
-        #self.deprecated('MassPerArea(iply, method)', 'get_mass_per_area(iply, method)', '0.8')
+    def MassPerArea(self, iply='all', method='nplies', tflag=1, tscales=None):
         return self.get_mass_per_area(iply, method)
 
     def Thickness(self, iply='all'):
@@ -1554,7 +1553,7 @@ class PSHEAR(ShellProperty):
             return self.mid_ref.mid
         return self.mid
 
-    def MassPerArea(self):
+    def MassPerArea(self, tflag=1, tscales=None):
         """
         Calculates mass per area.
 
@@ -1888,8 +1887,20 @@ class PSHELL(ShellProperty):
             return self.mid4_ref.mid
         return self.mid4
 
-    def Thickness(self):
-        return self.t
+    def Thickness(self, tflag=1, tscales=None):
+        t0 = self.t
+        if tscales is not None:
+            nt = len(tscales)
+            if tflag == 0: # absolute
+                thickness = sum([ti  if ti is not None else t0 for ti in tscales]) / nt
+            elif tflag == 1: # relative
+                thickness = sum([ti * t0 if ti is not None else t0 for ti in tscales]) / nt
+            else:
+                raise RuntimeError('tflag=%r and must be 0/1' % tflag)
+            return thickness
+        else:
+            thickness = t0
+        return thickness
 
     def Rho(self):
         return self.mid_ref.rho
@@ -1897,29 +1908,31 @@ class PSHELL(ShellProperty):
     def Nsm(self):
         return self.nsm
 
-    def MassPerArea(self):
+    def MassPerArea(self, tflag=1, tscales=None):
         """
         Calculates mass per area.
 
         .. math:: \frac{m}{A} = nsm + \rho t"""
         mid_ref = self.mid_ref
         rho = mid_ref.Rho()
+        thickness = self.Thickness(tflag=tflag, tscales=tscales)
         try:
-            mass_per_area = self.nsm + rho * self.t
+            mass_per_area = self.nsm + rho * thickness
         except:
             print("nsm=%s rho=%s t=%s" % (self.nsm, rho, self.t))
             raise
         return mass_per_area
 
-    def MassPerArea_no_xref(self, model):
+    def MassPerArea_no_xref(self, model, tflag=1, tscales=None):
         """
         Calculates mass per area.
 
         .. math:: \frac{m}{A} = nsm + \rho t"""
         mid_ref = model.Material(self.Mid())
         rho = mid_ref.Rho()
+        thickness = self.Thickness(tflag=tflag, tscales=tscales)
         try:
-            mass_per_area = self.nsm + rho * self.t
+            mass_per_area = self.nsm + rho * thickness
         except:
             print("nsm=%s rho=%s t=%s" % (self.nsm, rho, self.t))
             raise
