@@ -173,9 +173,7 @@ class RealSpringDamperForceArray(RealForceObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealForceObject.__init__(self, data_code, isubcase)
         self.nelements = 0  # result specific
-        if is_sort1:
-            self.add = self.add_sort1
-        else:
+        if not is_sort1:
             raise NotImplementedError('SORT2')
 
     def build(self):
@@ -431,9 +429,7 @@ class RealRodForceArray(RealForceObject):
         RealForceObject.__init__(self, data_code, isubcase)
         self.nelements = 0  # result specific
 
-        if is_sort1:
-            self.add = self.add_sort1
-        else:
+        if not is_sort1:
             raise NotImplementedError('SORT2')
 
     def get_headers(self):
@@ -901,9 +897,7 @@ class RealCShearForceArray(ScalarObject):
         #self.ntotal = 0
         self.nelements = 0  # result specific
 
-        if is_sort1:
-            self.add = self.add_sort1
-        else:
+        if not is_sort1:
             raise NotImplementedError('SORT2')
 
     def _reset_indices(self):
@@ -1136,9 +1130,7 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
         #self.ntotal = 0
         self.nelements = 0  # result specific
 
-        if is_sort1:
-            self.add = self.add_sort1
-        else:
+        if not is_sort1:
             raise NotImplementedError('SORT2')
 
     def get_headers(self):
@@ -1844,9 +1836,7 @@ class RealCBarForceArray(ScalarObject):  # 34-CBAR
         #self.ntotal = 0
         self.nelements = 0  # result specific
 
-        if is_sort1:
-            self.add = self.add_sort1
-        else:
+        if not is_sort1:
             raise NotImplementedError('SORT2; code_info=\n%s' % self.code_information())
 
     def _reset_indices(self):
@@ -2040,9 +2030,7 @@ class RealConeAxForceArray(ScalarObject):
         #self.ntotal = 0
         self.nelements = 0  # result specific
 
-        if is_sort1:
-            self.add = self.add_sort1
-        else:
+        if not is_sort1:
             raise NotImplementedError('SORT2; code_info=\n%s' % self.code_information())
 
     def _reset_indices(self):
@@ -2238,9 +2226,7 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
         #self.ntotal = 0
         self.nelements = 0  # result specific
 
-        if is_sort1:
-            self.add = self.add_sort1
-        else:
+        if not is_sort1:
             raise NotImplementedError('SORT2; code_info=\n%s' % self.code_information())
 
     def get_headers(self):
@@ -2439,9 +2425,7 @@ class RealCGapForceArray(ScalarObject):  # 38-CGAP
         #self.ntotal = 0
         self.nelements = 0  # result specific
 
-        if is_sort1:
-            self.add = self.add_sort1
-        else:
+        if not is_sort1:
             raise NotImplementedError('SORT2; code_info=\n%s' % self.code_information())
 
     def _reset_indices(self):
@@ -2829,9 +2813,7 @@ class RealSolidPressureForceArray(ScalarObject):  # 77-PENTA_PR,78-TETRA_PR
         #self.ntotal = 0
         self.nelements = 0  # result specific
 
-        if is_sort1:
-            self.add = self.add_sort1
-        else:
+        if not is_sort1:
             raise NotImplementedError('SORT2; code_info=\n%s' % self.code_information())
 
     def _reset_indices(self):
@@ -3306,9 +3288,7 @@ class RealCBushForceArray(ScalarObject):
         #self.ntotal = 0
         self.nelements = 0  # result specific
 
-        if is_sort1:
-            self.add = self.add_sort1
-        else:
+        if not is_sort1:
             raise NotImplementedError('SORT2; code_info=\n%s' % self.code_information())
 
     def _reset_indices(self):

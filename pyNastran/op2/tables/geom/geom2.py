@@ -79,7 +79,7 @@ class GEOM2(GeomCommon):
             (8200, 82, 383): ['CHACBR', self._read_fake],     # record 42 - not done
             (8308, 83, 405): ['CHBDYE', self._read_fake],     # record 43 - not done
             (10808, 108, 406): ['CHBDYG', self._read_chbdyg], # record 44
-            (10908, 109, 407): ['CHBDYP', self._read_chbdyp], # record 45 - not done
+            (10908, 109, 407): ['CHBDYP', self._read_chbdyp], # record 45
             (7308, 73, 253): ['CHEXA', self._read_chexa],     # record 46
             # CHEXA20F record 47
             # CHEXAFD record 48
@@ -91,7 +91,7 @@ class GEOM2(GeomCommon):
             (1201, 12, 67): ['CMASS3', self._read_cmass3],    # record 54
             (1301, 13, 68): ['CMASS4', self._read_cmass4],    # record 55
             (2508, 25, 0): ['CMFREE', self._read_cmfree],     # record 56 - not done
-            (1401, 14, 63): ['CONM1', self._read_conm1],      # record 57 - not done
+            (1401, 14, 63): ['CONM1', self._read_conm1],      # record 57
             (1501, 15, 64): ['CONM2', self._read_conm2],      # record 58
             (1601, 16, 47): ['CONROD', self._read_conrod],    # record 59
             (12701, 127, 408): ['CONV', self._read_conv],     # record 60 - not tested
@@ -568,11 +568,31 @@ class GEOM2(GeomCommon):
     def _read_cbush1d(self, data, n):
         """
         CBUSH1D(5608,56,218) - the marker for Record 14
+
+        1 EID  I Element identification number
+        2 PID  I Property identification number
+        3 G(2) I Grid point identification numbers
+        5 CID  I Coordinate system identification number
+        6 UNDEF(3) none
+
         """
-        self.log.info('skipping CBUSH1D in GEOM2\n')
-        if self.is_debug_file:
-            self.binary_debug.write('skipping CBUSH1D in GEOM2\n')
-        return len(data)
+        ntotal = 36 # 4*9
+        nelements = (len(data) - n) // ntotal
+        struct_6i = Struct(self._endian + b'9i')
+        for i in range(nelements):
+            edata = data[n:n + ntotal]
+            out = struct_6i.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  CDAMP1=%s\n' % str(out))
+            (eid, pid, g1, g2, cid, unused_a, unused_b, unused_c) = out
+            self.add_cbush1d(eid, pid, nids, cid=cid)
+            n += ntotal
+        self.card_count['CBUSH1D'] = nelements
+        return n
+        #self.log.info('skipping CBUSH1D in GEOM2\n')
+        #if self.is_debug_file:
+            #self.binary_debug.write('skipping CBUSH1D in GEOM2\n')
+        #return len(data)
 
     def _read_ccone(self, data, n):
         """

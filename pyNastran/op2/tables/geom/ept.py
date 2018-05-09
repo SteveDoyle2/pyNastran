@@ -718,6 +718,21 @@ class EPT(GeomCommon):
     def _read_pcomp(self, data, n):
         """
         PCOMP(2706,27,287) - the marker for Record 22
+
+        1  PID   I  Property identification number
+        2  N(C)  I  Number of plies
+        3  Z0    RS Distance from the reference plane to the bottom surface
+        4  NSM   RS Nonstructural mass per unit area
+        5  SB    RS Allowable shear stress of the bonding material
+        6  FT    I  Failure theory
+        7  TREF  RS Reference temperature
+        8  GE    RS Damping coefficient
+
+        9  MID   I  Material identification number
+        10 T     RS Thicknesses of the ply
+        11 THETA RS Orientation angle of the longitudinal direction of the ply
+        12 SOUT  I Stress or strain output request of the ply
+        Words 9 through 12 repeat N times
         """
         nproperties = 0
         s1 = Struct(self._endian + b'2i3fi2f')
@@ -771,8 +786,117 @@ class EPT(GeomCommon):
         return n
 
     def _read_pcompg(self, data, n):
-        self.log.info('skipping PCOMPG in EPT\n')
-        return len(data)
+        """
+        PCOMP(2706,27,287)
+
+        1 PID      I  Property identification number
+        2 LAMOPT   I  Laminate option
+        3 Z0       RS Distance from the reference plane to the bottom surface
+        4 NSM      RS Nonstructural mass per unit area
+        5 SB       RS Allowable shear stress of the bonding material
+        6 FT       I  Failure theory
+        7 TREF     RS Reference temperature
+        8 GE       RS Damping coefficient
+
+        9  GPLYIDi I  Global ply IDs.
+        10 MID     I  Material identification number
+        11 T       RS Thicknesses of the ply
+        12 THETA   RS Orientation angle of the longitudinal direction of the ply
+        13 SOUT    I  Stress or strain output request of the ply
+        Words 9 through 13 repeat N times (until -1, -1, -1, -1, -1 as Nplies doesn't exist...)
+        """
+        nproperties = 0
+        s1 = Struct(self._endian + b'2i 3f i 2f')
+        s2 = Struct(self._endian + b'2i2fi')
+        struct_i5 = Struct(self._endian + b'5i')
+
+        # lam - SYM, MEM, BEND, SMEAR, SMCORE, None
+        lam_map = {
+            0 : None,
+        }
+
+        # ft - HILL, HOFF, TSAI, STRN, None
+        ft_map = {
+            0 : None,
+        }
+        # sout - YES, NO
+        sout_map = {
+            0 : 'NO',
+        }
+        ndata = len(data)
+        while n < (ndata - 32):
+            out = s1.unpack(data[n:n+32])
+            (pid, lam_int, z0, nsm, sb, ft_int, tref, ge) = out
+            if self.binary_debug:
+                self.binary_debug.write('PCOMPG pid=%s lam_int=%s z0=%s nsm=%s sb=%s ft_int=%s tref=%s ge=%s' % tuple(out))
+            assert isinstance(lam_int, int), out
+            n += 32
+
+            mids = []
+            thicknesses = []
+            thetas = []
+            souts = []
+            global_ply_ids = []
+
+            # None, 'SYM', 'MEM', 'BEND', 'SMEAR', 'SMCORE', 'NO'
+            #is_symmetrical = 'NO'
+            #if nlayers < 0:
+                #is_symmetrical = 'SYM'
+                #nlayers = abs(nlayers)
+            #assert nlayers > 0, out
+
+            #assert 0 < nlayers < 100, 'pid=%s nlayers=%s z0=%s nms=%s sb=%s ft=%s tref=%s ge=%s' % (
+                #pid, nlayers, z0, nsm, sb, ft, tref, ge)
+
+            #if self.is_debug_file:
+                #self.binary_debug.write('    pid=%s nlayers=%s z0=%s nms=%s sb=%s ft=%s tref=%s ge=%s\n' % (
+                    #pid, nlayers, z0, nsm, sb, ft, tref, ge))
+            ilayer = 0
+            while ilayer < 1000:
+                ints5 = struct_i5.unpack(data[n:n+20])
+                if ints5 == (-1, -1, -1, -1, -1):
+                    if self.is_debug_file:
+                        self.binary_debug.write('      global_ply=%-1 mid=%-1 t=%-1 theta=%-1 sout=-1\n')
+                    break
+                (global_ply, mid, t, theta, sout_int) = s2.unpack(data[n:n+20])
+                try:
+                    sout = sout_map[sout_int]
+                except KeyError:
+                    self.log.error('cant parse iply=%s sout=%s; assuming 0=NO' % (iply, sout_int))
+                    sout = 'NO'
+
+                global_ply_ids.append(global_ply)
+                mids.append(mid)
+                thicknesses.append(t)
+                thetas.append(theta)
+                souts.append(sout)
+                if self.is_debug_file:
+                    self.binary_debug.write('      global_ply=%s mid=%s t=%s theta=%s sout_int=%s sout=%r\n' % (
+                        global_ply, mid, t, theta, sout_int, sout))
+                n += 20
+                ilayer += 1
+
+            try:
+                ft = ft_map[ft_int]
+            except KeyError:
+                self.log.error('pid=%s cant parse ft=%s; should be HILL, HOFF, TSAI, STRN...skipping' % (pid, ft_int))
+                continue
+
+            try:
+                lam = lam_map[lam_int]
+            except KeyError:
+                self.log.error('pid=%s cant parse lam=%s; should be HILL, HOFF, TSAI, STRN...skipping' % (pid, lam_int))
+                continue
+
+            # apparently Nastran makes duplicate property ids...
+            if pid in self.properties and self.properties[pid].type == 'PCOMP':
+                del self.properties[pid]
+
+            self.add_pcompg(pid, global_ply_ids, mids, thicknesses, thetas=thetas, souts=souts,
+                            nsm=nsm, sb=sb, ft=ft, tref=tref, ge=ge, lam=lam, z0=z0, comment='')
+            nproperties += 1
+        self.card_count['PCOMPG'] = nproperties
+        return n
 
 # PCOMPA
 

@@ -26,9 +26,7 @@ class Real1DHeatFluxArray(ScalarObject):  # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34
         self.itotal = 0
         self.ielement = 0
 
-        if is_sort1:
-            self.add = self.add_sort1
-        else:
+        if not is_sort1:
             raise NotImplementedError('SORT2')
 
     def _reset_indices(self):
@@ -761,9 +759,7 @@ class RealHeatFluxVUBeamArray(ScalarObject):  # 191-VUBEAM
         self.ielement = 0
         self.itime = 0
 
-        if is_sort1:
-            self.add = self.add_sort1
-        else:
+        if not is_sort1:
             raise NotImplementedError('SORT2')
 
     def _reset_indices(self):
@@ -1098,9 +1094,7 @@ class RealConvHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         self.ielement = 0
         self.itotal = 0
 
-        if is_sort1:
-            self.add = self.add_sort1
-        else:
+        if not is_sort1:
             raise NotImplementedError('SORT2')
 
     def _reset_indices(self):
@@ -1276,9 +1270,7 @@ class RealChbdyHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         self.ielement = 0
         self.itotal = 0
 
-        if is_sort1:
-            self.add = self.add_sort1
-        else:
+        if not is_sort1:
             raise NotImplementedError('SORT2')
 
     def _reset_indices(self):

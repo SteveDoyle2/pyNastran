@@ -30,9 +30,7 @@ class RealBarArray(OES_Object):
         self.ielement = 0
         self.nelements = 0  # result specific
 
-        if is_sort1:
-            pass
-        else:
+        if not is_sort1:
             raise NotImplementedError('SORT2')
             #assert dt is not None
             #self.add = self.add_sort2

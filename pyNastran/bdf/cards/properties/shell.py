@@ -9,6 +9,7 @@ All shell properties are defined in this file.  This includes:
  * PPLANE
 
 All shell properties are ShellProperty and Property objects.
+
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -90,6 +91,7 @@ class CompositeShellProperty(ShellProperty):
         ----------
         model : BDF()
             the BDF object
+
         """
         mids_ref = []
         for iply in range(len(self.thicknesses)):
@@ -121,6 +123,7 @@ class CompositeShellProperty(ShellProperty):
         -------
         is_symmetrical : bool
             is the SYM flag active?
+
         """
         if self.lam == 'SYM':
             return True
@@ -167,6 +170,7 @@ class CompositeShellProperty(ShellProperty):
               ply 0
             Ask for ply 3, return ply 1
             Ask for ply 4, return ply 2
+
         """
         if iply == 'all':
             return iply
@@ -204,6 +208,7 @@ class CompositeShellProperty(ShellProperty):
         -------
         thickness : float
             the thickness of the ply or plies
+
         """
         #nplies = len(self.thicknesses)
         if iply == 'all':  # get all layers
@@ -227,6 +232,7 @@ class CompositeShellProperty(ShellProperty):
                 returns nplies * 2   (even)
               else:
                 returns nplies
+
             """
         nplies = len(self.thicknesses)
         if self.is_symmetrical():
@@ -234,9 +240,7 @@ class CompositeShellProperty(ShellProperty):
         return nplies
 
     def get_nonstructural_mass(self):
-        """
-        Gets the non-structural mass :math:`i^{th}` ply
-        """
+        """Gets the non-structural mass :math:`i^{th}` ply"""
         return self.nsm
 
     def Mids(self):
@@ -251,6 +255,7 @@ class CompositeShellProperty(ShellProperty):
         -------
         mids : MATx
             the material IDs
+
         """
         mids = []
         for iply in range(self.nplies):
@@ -265,6 +270,7 @@ class CompositeShellProperty(ShellProperty):
         ----------
         iply : int
             the ply ID (starts from 0)
+
         """
         iply = self._adjust_ply_id(iply)
         mid_ref = self.mids_ref[iply]
@@ -284,6 +290,7 @@ class CompositeShellProperty(ShellProperty):
         -------
         material_id : int
             the material id of the ith ply
+
         """
         iply = self._adjust_ply_id(iply)
         if self.mids_ref is not None:
@@ -301,6 +308,7 @@ class CompositeShellProperty(ShellProperty):
         ----------
         iply : int
             the ply ID (starts from 0)
+
         """
         iply = self._adjust_ply_id(iply)
         if self.mids_ref is not None:
@@ -317,6 +325,7 @@ class CompositeShellProperty(ShellProperty):
         ----------
         iply : int
             the ply ID (starts from 0)
+
         """
         iply = self._adjust_ply_id(iply)
         theta = self.thetas[iply]
@@ -331,6 +340,7 @@ class CompositeShellProperty(ShellProperty):
         ----------
         iply : int
             the ply ID (starts from 0)
+
         """
         iply = self._adjust_ply_id(iply)
         sout = self.souts[iply]
@@ -363,6 +373,7 @@ class CompositeShellProperty(ShellProperty):
 
         >>> pcomp.get_z_locations()
         [0., 1., 2.]
+
         """
         zi = self.z0
         z = [zi]
@@ -422,6 +433,7 @@ class CompositeShellProperty(ShellProperty):
              .. math:: nsm_i = t_i \frac{nsm}{\sum(t_i)}
 
         .. note:: final mass calculation will be done later
+
         """
         rhos = [mat_ref.get_density() for mat_ref in self.mids_ref]
         return self.get_mass_per_area_rho(rhos, iply, method)
@@ -476,6 +488,7 @@ class CompositeShellProperty(ShellProperty):
              .. math:: nsm_i = t_i \frac{nsm}{\sum(t_i)}
 
         .. note:: final mass calculation will be done later
+
         """
         assert method in ['nplies', 'rho*t', 't'], 'method=%r is invalid' % method
         nplies = len(self.thicknesses)
@@ -638,6 +651,7 @@ class PCOMP(CompositeShellProperty):
             None : -1/2 * total_thickness
         comment : str; default=''
             a comment for the card
+
         """
         CompositeShellProperty.__init__(self)
         if comment:
@@ -702,6 +716,7 @@ class PCOMP(CompositeShellProperty):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         pid = integer(card, 1, 'pid')
 
@@ -785,6 +800,7 @@ class PCOMP(CompositeShellProperty):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         #data_in = [
             #pid, z0, nsm, sb, ft, tref, ge,
@@ -998,6 +1014,7 @@ class PCOMPG(CompositeShellProperty):
             None : -1/2 * total_thickness
         comment : str; default=''
             a comment for the card
+
         """
         CompositeShellProperty.__init__(self)
         if comment:
@@ -1049,8 +1066,10 @@ class PCOMPG(CompositeShellProperty):
         # 'NO' is not an option!
         allowed_lam = [None, 'SYM', 'MEM', 'BEND', 'SMEAR', 'SMCORE']
         if self.lam not in allowed_lam:
-            msg = 'lam=%r is invalid; allowed=[%s]' % (self.lam, ', '.join(allowed_lam))
+            msg = 'lam=%r is invalid; allowed=[%s]' % (self.lam, ', '.join(str(lam) for lam in allowed_lam))
             raise ValueError(msg)
+        for iply, sout in enumerate(self.souts):
+            assert sout in ['YES', 'NO'], "iply=%s sout=%r; SOUT must be ['YES', 'NO']" % (iply, sout)
 
         # this is a loose requirement
         #if self.ft in ['HILL', 'HOFF', 'TSAI', 'STRN'] and self.sb <= 0.:
@@ -1069,6 +1088,7 @@ class PCOMPG(CompositeShellProperty):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         pid = integer(card, 1, 'pid')
         # z0 will be calculated later
@@ -1256,6 +1276,7 @@ class PLPLANE(ShellProperty):
             ???
         comment : str; default=''
             a comment for the card
+
         """
         ShellProperty.__init__(self)
         if comment:
@@ -1279,6 +1300,7 @@ class PLPLANE(ShellProperty):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')  # MATHE, MATHP
@@ -1296,6 +1318,7 @@ class PLPLANE(ShellProperty):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ' which is required by PLPLANE pid=%s' % self.pid
         self.mid_ref = model.HyperelasticMaterial(self.mid, msg=msg)
@@ -1377,6 +1400,7 @@ class PPLANE(ShellProperty):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')  # MATHE, MATHP
@@ -1395,6 +1419,7 @@ class PPLANE(ShellProperty):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ' which is required by PPLANE pid=%s' % self.pid
         self.mid_ref = model.Material(self.mid, msg)
@@ -1469,6 +1494,7 @@ class PSHEAR(ShellProperty):
             Effectiveness factor for extensional stiffness along edges 2-3 and 1-4
         comment : str; default=''
             a comment for the card
+
         """
         ShellProperty.__init__(self)
         if comment:
@@ -1497,6 +1523,7 @@ class PSHEAR(ShellProperty):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
@@ -1518,6 +1545,7 @@ class PSHEAR(ShellProperty):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         pid = data[0]
         mid = data[1]
@@ -1536,6 +1564,7 @@ class PSHEAR(ShellProperty):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ' which is required by PSHEAR pid=%s' % self.pid
         self.mid_ref = model.Material(self.mid, msg)
@@ -1651,6 +1680,7 @@ class PSHELL(ShellProperty):
             z2 default : t/2 if thickness is defined
         comment : str; default=''
             a comment for the card
+
         """
         ShellProperty.__init__(self)
         if comment:
@@ -1711,6 +1741,7 @@ class PSHELL(ShellProperty):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         pid = integer(card, 1, 'pid')
         mid1 = integer_or_blank(card, 2, 'mid1')
@@ -1756,6 +1787,7 @@ class PSHELL(ShellProperty):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         pid = data[0]
         mid1 = data[1]
@@ -1946,6 +1978,7 @@ class PSHELL(ShellProperty):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ' which is required by PSHELL pid=%s' % self.pid
         if self.mid1:

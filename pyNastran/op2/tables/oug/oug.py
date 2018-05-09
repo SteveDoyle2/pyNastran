@@ -886,7 +886,6 @@ class OUG(OP2Common):
                 obj = RealAccelerationArray
             else:
                 n = self._not_implemented_or_skip(data, ndata, self.code_information())
-                #raise RuntimeError(self.code_information())
                 return n
             if self._results.is_not_saved(result_name):
                 return ndata

@@ -31,13 +31,7 @@ class RealBeamArray(OES_Object):
         self.nelements = 0  # result specific
         self.nnodes = None
 
-        if is_sort1:
-            pass
-            #if dt is not None:
-                #self.add = self.add_sort1
-                #self.add_new_eid = self.add_new_eid_sort1
-                #self.addNewNode = self.addNewNodeSort1
-        else:
+        if not is_sort1:
             raise NotImplementedError('SORT2')
             #assert dt is not None
             #self.add = self.add_sort2

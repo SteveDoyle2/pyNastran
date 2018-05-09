@@ -541,7 +541,7 @@ class OEF(OP2Common):
                         edata = data[n:n+ntotal]
                         n += ntotal
                         out = s.unpack(edata)
-                        (eid_device, etype, xgrad, ygrad, zgrad, xflux, yflux, zflux, zed) = out
+                        (eid_device, etype, xgrad, ygrad, zgrad, xflux, yflux, zflux, unused_zed) = out
                         eid = eid_device // 10
                         obj.add_sort1(dt, eid, etype, xgrad, ygrad, zgrad, xflux, yflux, zflux)
             else:
@@ -626,7 +626,7 @@ class OEF(OP2Common):
                             if self.is_debug_file:
                                 self.binary_debug.write('  %s -> [%s, %s, %s, %s, %s, %s, %s]\n'
                                                         % (eid, eid_device, etype, fapplied, free_conv, force_conv, frad, ftotal))
-                            obj.add(dt, eid, etype, fapplied, free_conv, force_conv, frad, ftotal)
+                            obj.add_sort1(dt, eid, etype, fapplied, free_conv, force_conv, frad, ftotal)
             else:
                 msg = self.code_information()
                 return self._not_implemented_or_skip(data, ndata, msg)
@@ -688,7 +688,7 @@ class OEF(OP2Common):
                         (eid_device, free_conv, cntl_node, free_conv_k) = out
                         eid = eid_device // 10
                         assert cntl_node >= 0, cntl_node
-                        obj.add(dt, eid, cntl_node, free_conv, free_conv_k)
+                        obj.add_sort1(dt, eid, cntl_node, free_conv, free_conv_k)
             else:
                 msg = self.code_information()
                 return self._not_implemented_or_skip(data, ndata, msg)
@@ -766,7 +766,7 @@ class OEF(OP2Common):
                         n += 8
                         (eid_device, parent) = out
                         eid = eid_device // 10
-                        for i in range(nnodes):
+                        for j in range(nnodes):
                             out = s2.unpack(data[n:n+28])
                             grad_fluxes.append(out)
                             n += 28
@@ -851,7 +851,7 @@ class OEF(OP2Common):
                         data_in = [eid, parent, coord, icord, theta]
                         #self.log.debug('RealHeatFluxVUArray = %s' % data_in)
                         grad_fluxes = []
-                        for i in range(nnodes):
+                        for j in range(nnodes):
                             edata = data[n:n+28]  # 7*4
                             n += 28
                             out = s2.unpack(edata)
@@ -933,7 +933,7 @@ class OEF(OP2Common):
                         self.log.debug('VUBeam %s' % data_in)
 
                         grad_fluxes = []
-                        for i in range(nnodes):
+                        for j in range(nnodes):
                             edata = data[n:n+28]  # 7*4
                             n += 28
                             out = s2.unpack(edata)
@@ -1270,7 +1270,7 @@ class OEF(OP2Common):
                             data_in = [eid, parent, coord, icord, theta]
 
                             forces = []
-                            for i in range(nnodes):
+                            for j in range(nnodes):
                                 edata = data[n:n+52]  # 13*4
                                 n += 52
                                 out = s2.unpack(edata)
@@ -1429,7 +1429,7 @@ class OEF(OP2Common):
                             data_in = [eid, parent, coord, icord, theta]
 
                             forces = []
-                            for i in range(nnodes):
+                            for j in range(nnodes):
                                 edata = data[n:n+100]  # 13*4
                                 n += 100
                                 out = s2.unpack(edata)
@@ -1490,7 +1490,7 @@ class OEF(OP2Common):
                         data_in = [eid, parent, coord, icord, theta]
 
                         forces = []
-                        for i in range(nnodes):
+                        for j in range(nnodes):
                             edata = data[n:n+100]  # 13*4
                             n += 100
                             out = s2.unpack(edata)
@@ -1620,7 +1620,7 @@ class OEF(OP2Common):
                         data_in = [eid, parent, coord, icord]
 
                         forces = []
-                        for i in range(nnodes):
+                        for j in range(nnodes):
                             edata = data[n:n+32]  # 8*4
                             n += 32
                             out = s2.unpack(edata)
@@ -1861,7 +1861,7 @@ class OEF(OP2Common):
                     eid = eid_device // 10
                     if self.is_debug_file:
                         self.binary_debug.write('OEF_Rod - %s\n' % (str(out)))
-                    obj.add(dt, eid, axial, torque)
+                    obj.add_sort1(dt, eid, axial, torque)
                     n += ntotal
 
         elif self.format_code in [2, 3] and self.num_wide == 5: # imag
@@ -2030,14 +2030,14 @@ class OEF(OP2Common):
                     eid = eid_device // 10
                     n += 4
 
-                    for i in range(11):
+                    for istation in range(11):
                         edata = data[n:n+36]
                         out = s2.unpack(edata)
                         if self.is_debug_file:
                             self.binary_debug.write('OEF_Beam - %s\n' % (str(out)))
                         (nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq) = out
 
-                        if i == 0:  # isNewElement
+                        if istation == 0:  # isNewElement
                             obj.add_new_element_sort1(
                                 dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)
                         elif sd > 0.:
@@ -2109,7 +2109,7 @@ class OEF(OP2Common):
                     eid = eid_device // 10
 
                     n += 4
-                    for i in range(11):
+                    for istation in range(11):
                         edata = data[n:n+64]
                         n += 64
                         out = s2.unpack(edata)
@@ -2248,7 +2248,7 @@ class OEF(OP2Common):
                         self.binary_debug.write('OEF_SpringDamper - %s\n' % str(out))
                     (eid_device, force) = out
                     eid = eid_device // 10
-                    obj.add(dt, eid, force)
+                    obj.add_sort1(dt, eid, force)
                     n += ntotal
         elif self.format_code in [2, 3] and self.num_wide == 3:  # imag
             ntotal = 12  # 3*4
@@ -2354,7 +2354,7 @@ class OEF(OP2Common):
                         self.binary_debug.write('OEF_CVisc - %s\n' % (str(out)))
                     (eid_device, axial, torque) = out
                     eid = eid_device // 10
-                    obj.add(dt, eid, axial, torque)
+                    obj.add_sort1(dt, eid, axial, torque)
                     n += ntotal
         elif self.format_code in [2, 3] and self.num_wide == 5: # complex
             ntotal = 20  # 5*4
@@ -2470,7 +2470,7 @@ class OEF(OP2Common):
                     (eid_device, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq) = out
                     eid = eid_device // 10
                     data_in = [eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq]
-                    obj.add(dt, data_in)
+                    obj.add_sort1(dt, data_in)
                     n += ntotal
         elif self.format_code in [2, 3] and self.num_wide == 17: # imag
             slot = self.cbar_force
@@ -2800,7 +2800,7 @@ class OEF(OP2Common):
                     eid = eid_device // 10
                     obj.add_sort1(dt, eid, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
                     n += 44
-                    for i in range(nnodes):
+                    for j in range(nnodes):
                         edata = data[n : n + 36]
                         out = s2.unpack(edata)
                         if self.is_debug_file:
@@ -2890,7 +2890,7 @@ class OEF(OP2Common):
                     obj.add_new_element_sort1(dt, eid, term, nid, mx, my, mxy,
                                               bmx, bmy, bmxy, tx, ty)
 
-                    for i in range(nnodes):  # .. todo:: fix crash...
+                    for j in range(nnodes):  # .. todo:: fix crash...
                         edata = data[n:n+68]
                         n += 68
                         out = s2.unpack(edata)
@@ -3056,9 +3056,9 @@ class OEF(OP2Common):
                                #f41, f21, f12, f32, f23, f43, f34,
                                #f14, kf1, s12, kf2, s23, kf3, s34, kf4, s41]
                     #print "%s" % (self.get_element_type(self.element_type)), data_in
-                    obj.add(dt, eid,
-                            f41, f21, f12, f32, f23, f43, f34,
-                            f14, kf1, s12, kf2, s23, kf3, s34, kf4, s41)
+                    obj.add_sort1(dt, eid,
+                                  f41, f21, f12, f32, f23, f43, f34,
+                                  f14, kf1, s12, kf2, s23, kf3, s34, kf4, s41)
                     n += ntotal
 
         elif self.format_code in [2, 3] and self.num_wide == 33:  # imag
@@ -3347,7 +3347,7 @@ class OEF(OP2Common):
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                ireal = [2, 3,  4,  5,  6,  7, 15, 16, 17, 18, 19, 20]
+                ireal = [2, 3, 4, 5, 6, 7, 15, 16, 17, 18, 19, 20]
                 iimag = [8, 9, 10, 11, 12, 13, 21, 22, 23, 24, 25, 26]
                 # 0    1
                 # eid, nidA,
@@ -3641,7 +3641,7 @@ class OEF(OP2Common):
                         self.binary_debug.write('OEF_CBUSH-102 - %s\n' % (str(out)))
                     (eid_device, fx, fy, fz, mx, my, mz) = out
                     eid = eid_device // 10
-                    obj.add(dt, eid, fx, fy, fz, mx, my, mz)
+                    obj.add_sort1(dt, eid, fx, fy, fz, mx, my, mz)
                     n += ntotal
         elif self.format_code in [2, 3] and self.num_wide == 13:  # imag
             # TODO: vectorize

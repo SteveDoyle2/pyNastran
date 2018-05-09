@@ -313,6 +313,28 @@ class TestOP2(Tester):
         #op2.write_f06(f06_filename)
         #os.remove(f06_filename)
 
+    def test_bdf_op2_thermal_01(self):
+        """checks time_thermal_elements.bdf"""
+        bdf_filename = os.path.join(MODEL_PATH, 'elements', 'time_thermal_elements.bdf')
+        #f06_filename = os.path.join(MODEL_PATH, 'elements', 'modes_complex_elements.test_op2.f06')
+        op2_filename = os.path.join(MODEL_PATH, 'elements', 'time_thermal_elements.op2')
+        fem1, fem2, diff_cards = self.run_bdf('', bdf_filename)
+        diff_cards2 = list(set(diff_cards))
+        diff_cards2.sort()
+        assert len(diff_cards2) == 0, diff_cards2
+
+        run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=True,
+                write_f06=True, write_op2=False,
+                is_mag_phase=False,
+                is_sort2=False, is_nx=None, delete_f06=True,
+                subcases=None, exclude=None, short_stats=False,
+                compare=True, debug=False, binary_debug=True,
+                quiet=True, check_memory=False,
+                stop_on_failure=True, dev=False)
+        #op2 = read_op2_geom(op2_filename, debug=False)
+        #op2.write_f06(f06_filename)
+        #os.remove(f06_filename)
+
     def test_set_results(self):
         """tests setting only a subset of results"""
         op2_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending.op2')

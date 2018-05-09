@@ -66,6 +66,7 @@ class BDFMethods(BDFAttributes):
             'PFAST', 'PGAP', 'PRAC2D', 'PRAC3D', 'PCONEAX', 'PLSOLID',
             'PCOMPS', 'PVISC',
             'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR',
+            'PBEND',
         ]
         pid_eids = self.get_element_ids_dict_with_pids(
             property_ids, msg=' which is required by get_length_breakdown')
@@ -87,6 +88,7 @@ class BDFMethods(BDFAttributes):
                         print(elem)
                         raise
             else:
+                print('prop =', prop)
                 eid0 = eids[0]
                 elem = self.elements[eid0]
                 msg = str(prop) + str(elem)
