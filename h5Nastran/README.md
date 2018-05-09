@@ -56,10 +56,17 @@ bdf's, punch files, and f06 files are appreciated so I can add more support and 
 
 There is no intention to support SORT2 results tables unless someone can make a very good case for supporting them.
 
-Roadmap:
-1.  add more bdf cards and other bdf information support (control decks, etc)
-2.  add more resuls tables (punch files first priorty, f06 second priority)
-3.  op2 to h5?  same idea would be used as for f06 reader
+Roadmap for first minor release:
+1.  add more bdf cards - reading from pyNastran and writing to pyNastran - want to support all cards pyNastran does
+2.  other minor changes
+
+Roadmap for first major release:
+3.  op2 to h5 reader
+
+Roadmap for other stuff down the road:
 4.  add some more results search features
 5.  create standalone GUI to query results (no VTK or plotting), just data
 6.  once GUI is done, it can be incorporated into pyNastran GUI if desired
+7.  would like to support native nastran h5 result files, but don't have any to work with
+
+
