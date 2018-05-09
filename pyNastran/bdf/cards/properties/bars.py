@@ -2092,6 +2092,8 @@ class PBEND(LineProperty):
         mid = integer(card, 2, 'mid')
 
         value3 = integer_or_double(card, 3, 'Area/FSI')
+        #print("PBEND: area/fsi=%s" % value3)
+
         # MSC/NX option A
         A = None
         i1 = None
@@ -2182,7 +2184,7 @@ class PBEND(LineProperty):
                 t = double(card, 5, 't')
 
                 #: Internal pressure
-                p = double(card, 6, 'p')
+                p = double_or_blank(card, 6, 'p')
 
                 # line3
                 # Non-structural mass :math:`nsm`

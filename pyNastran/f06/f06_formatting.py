@@ -3,7 +3,7 @@ from pyNastran.utils import object_attributes
 
 
 def write_float_12e(val):
-    vals2 = []
+    """writes a Nastran formatted 12.5 float"""
     v2 = '%12.5E' % val
     if v2 in (' 0.00000E+00', '-0.00000E+00'):
         v2 = ' 0.0'
@@ -11,6 +11,7 @@ def write_float_12e(val):
 
 
 def write_float_13e(val):
+    """writes a Nastran formatted 13.6 float"""
     val2 = '%13.6E' % val
     if val2 in (' 0.000000E+00', '-0.000000E+00'):
         val2 = ' 0.0'
@@ -18,6 +19,7 @@ def write_float_13e(val):
 
 
 def write_floats_10e(vals):
+    """writes a series of Nastran formatted 10.3 floats"""
     vals2 = []
     for v in vals:
         v2 = '%10.3E' % v
@@ -28,6 +30,7 @@ def write_floats_10e(vals):
 
 
 def write_floats_12e(vals):
+    """writes a series of Nastran formatted 12.5 floats"""
     vals2 = []
     for v in vals:
         v2 = '%12.5E' % v
@@ -38,6 +41,7 @@ def write_floats_12e(vals):
 
 
 def write_floats_13e(vals):
+    """writes a series of Nastran formatted 13.6 floats"""
     vals2 = []
     for v in vals:
         v2 = '%13.6E' % v
@@ -104,8 +108,8 @@ def _eigenvalue_header(obj, header, itime, ntimes, dt):
         header[1] = dt_line
         codes = getattr(obj, name + 's')
         if not len(codes) == ntimes:
-            msg = '%ss in %s the wrong size; ntimes=%s; %ss=%s\n' % (name,
-                obj.__class__.__name__, ntimes, name, codes)
+            msg = '%ss in %s the wrong size; ntimes=%s; %ss=%s\n' % (
+                name, obj.__class__.__name__, ntimes, name, codes)
             atts = object_attributes(obj)
             msg += 'names=%s\n' % atts
             msg += 'data_names=%s\n' % obj.data_names

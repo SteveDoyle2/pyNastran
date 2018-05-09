@@ -264,6 +264,11 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
         subcases = []
     if exclude is None:
         exclude = []
+    if isinstance(is_sort2, bool):
+        sort_methods = [is_sort2]
+    else:
+        sort_methods = is_sort2
+
     assert '.op2' in op2_filename.lower(), 'op2_filename=%s is not an OP2' % op2_filename
     is_passed = False
 
@@ -358,8 +363,10 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
             op2.export_to_hdf5(h5_filename)
             load_op2_from_hdf5(h5_filename, log=op2.log)
         if write_f06:
-            op2.write_f06(model + '.test_op2.f06', is_mag_phase=is_mag_phase,
-                          is_sort1=not is_sort2, quiet=quiet, repr_check=True)
+            for is_sort2 in sort_methods:
+                op2.write_f06(model + '.test_op2.f06', is_mag_phase=is_mag_phase,
+                              is_sort1=not is_sort2, quiet=quiet, repr_check=True)
+
             if delete_f06:
                 try:
                     os.remove(model + '.test_op2.f06')

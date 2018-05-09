@@ -378,12 +378,6 @@ class PBEAM(IntegratedLineProperty):
                 assert self.i1[i] >= 0., self.i1
                 assert self.i2[i] >= 0., self.i2
                 assert self.j[i] >= 0., self.j  # we check warping later
-                di12 = self.i1[i] * self.i2[i] - self.i12[i] ** 2
-                if not di12 > 0.:
-                    msg = 'I1 * I2 - I12^2=0 and must be greater than 0.0 at End B\n'
-                    msg += 'pid=%s xxb=%s i1=%s i2=%s i12=%s i1*i2-i12^2=%s'  % (
-                        self.pid, self.xxb[i], self.i1[i], self.i2[i], self.i12[i], di12)
-                    raise ValueError(msg)
 
                 if nsm == 0.0:
                     #print('iterpolating nsm; i=%s xxb=%s' % (i, xxb))
@@ -418,6 +412,16 @@ class PBEAM(IntegratedLineProperty):
                     msg += '  i=%s xxb=%s j=%s; j[%i]=%s\n' % (i, xxbi, self.j, i, ji)
                     raise ValueError(msg)
         self.mid_ref = None
+
+    def validate(self):
+        nstations = len(self.A)
+        for ilayer in range(nstations):
+            di12 = self.i1[ilayer] * self.i2[ilayer] - self.i12[ilayer] ** 2
+            if not di12 > 0.:
+                msg = 'I1 * I2 - I12^2=0 and must be greater than 0.0 at End B\n'
+                msg += 'pid=%s xxb=%s i1=%s i2=%s i12=%s i1*i2-i12^2=%s'  % (
+                    self.pid, self.xxb[ilayer], self.i1[ilayer], self.i2[ilayer], self.i12[ilayer], di12)
+                raise ValueError(msg)
 
     @classmethod
     def add_card(cls, card, comment=''):

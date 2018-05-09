@@ -414,7 +414,7 @@ class OEF(OP2Common):
                         out = s.unpack(edata)
                         (eid_device, eType, xgrad, ygrad, zgrad, xflux, yflux, zflux) = out
                         eid = eid_device // 10
-                        obj.add(dt, eid, eType, xgrad, ygrad, zgrad, xflux, yflux, zflux)
+                        obj.add_sort1(dt, eid, eType, xgrad, ygrad, zgrad, xflux, yflux, zflux)
                         n += ntotal
             else:
                 msg = self.code_information()
@@ -1323,7 +1323,7 @@ class OEF(OP2Common):
                             out2 = (vugrid, mfx, mfy, mfxy, bmx, bmy, bmxy, syz, szx)
                             forces.append(out2)
                         data_in.append(forces)
-                        #data_in = [vugrid,mfx,mfy,mfxy,a,b,c,bmx,bmy,bmxy,syz,szx,d]
+                        #data_in = [vugrid, mfx, mfy, mfxy, a, b,c, bmx, bmy, bmxy, syz, szx, d]
                         obj.add(nnodes, dt, data_in)
 
             elif self.format_code in [2, 3] and self.num_wide == numwide_imag:  # imag
@@ -2606,7 +2606,7 @@ class OEF(OP2Common):
                 return nelements * self.num_wide * 4, None, None
 
             obj = self.obj
-            if is_vectorized:
+            if self.use_vector and is_vectorized:
                 n = nelements * 4 * self.num_wide
                 ielement = obj.ielement
                 ielement2 = ielement + nelements
@@ -3209,7 +3209,7 @@ class OEF(OP2Common):
                         self.binary_debug.write('OEF_CONEAX-35 - %s\n' % (str(out)))
                     (eid_device, hopa, bmu, bmv, tm, su, sv) = out
                     eid = eid_device // 10
-                    obj.add(dt, eid, hopa, bmu, bmv, tm, su, sv)
+                    obj.add_sort1(dt, eid, hopa, bmu, bmv, tm, su, sv)
                     n += ntotal
         else:
             msg = self.code_information()
@@ -3264,7 +3264,7 @@ class OEF(OP2Common):
                     data_in = [eid, fx, sfy, sfz, u, v, w, sv, sw]
                     #print "%s" %(self.get_element_type(self.element_type)), data_in
                     #eid = obj.add_new_eid(out)
-                    obj.add(dt, eid, fx, sfy, sfz, u, v, w, sv, sw)
+                    obj.add_sort1(dt, eid, fx, sfy, sfz, u, v, w, sv, sw)
                     n += ntotal
         else:
             msg = self.code_information()

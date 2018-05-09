@@ -11,6 +11,16 @@ import traceback
 from six import iteritems, itervalues, StringIO, string_types
 from six.moves import range
 
+SIDE_MAP = {}
+SIDE_MAP['CHEXA'] = {
+    1 : [4, 3, 2, 1],
+    2 : [1, 2, 6, 5],
+    3 : [2, 3, 7, 6],
+    4 : [3, 4, 8, 7],
+    5 : [4, 1, 5, 8],
+    6 : [5, 6, 7, 8],
+}
+
 #VTK_TRIANGLE = 5
 #VTK_QUADRATIC_TRIANGLE = 22
 
@@ -3231,6 +3241,30 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     #_chexa_faces, nids, nid_map, xyz_cid0)
                 #nnodes = 8
                 #dim = 3
+            elif etype == 'CHBDYE':
+                #self.eid_map[eid] = ieid
+                eid_solid = elem.eid2
+                side = elem.side
+                element_solid = model.elements[eid_solid]
+
+                mapped_inids = SIDE_MAP[element_solid.type][side]
+                side_inids = [nid - 1 for nid in mapped_inids]
+                nodes = element_solid.node_ids
+
+                pid = 0
+                nnodes = len(side_inids)
+                nids = [nodes[inid] for inid in side_inids]
+                inids = np.searchsorted(all_nids, nids)
+
+                if len(side_inids) == 4:
+                    cell_type = cell_type_quad4
+                else:
+                    msg = 'element_solid:\n%s' % (str(element_solid))
+                    msg += 'mapped_inids = %s\n' % mapped_inids
+                    msg += 'side_nids = %s\n' % side_inids
+                    msg += 'nodes = %s\n' % nodes
+                    msg += 'side_nodes = %s\n' % side_nodes
+                    raise NotImplementedError(msg)
             else:
                 #raise NotImplementedError(elem)
                 skipped_etypes.add(etype)
@@ -4649,6 +4683,63 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     self.gui.log_info("skipping %s" % element.type)
                     continue
             #elif etype == 'CBYDYP':
+            elif etype == 'CHBDYE':
+                eid_solid = element.eid2
+                side = element.side
+                element_solid = model.elements[eid_solid]
+
+                try:
+                    mapped_inids = SIDE_MAP[element_solid.type][side]
+                except KeyError:  # pragma: no cover
+                    print('removing\n%s' % (element))
+                    print('removing eid=%s; %s' % (eid, element.type))
+                    del self.eid_map[eid]
+                    self.gui.log_info("skipping %s" % element.type)
+                    continue
+                side_inids = [nid - 1 for nid in mapped_inids]
+                nodes = element_solid.node_ids
+
+                pid = 0
+                nnodes = len(side_inids)
+                node_ids = [nodes[inid] for inid in side_inids]
+                #inids = np.searchsorted(all_nids, node_ids)
+
+                if len(side_inids) == 3:
+                    n1, n2, n3 = [nid_map[nid] for nid in node_ids[:3]]
+                    p1 = xyz_cid0[n1, :]
+                    p2 = xyz_cid0[n2, :]
+                    p3 = xyz_cid0[n3, :]
+                    out = tri_quality(p1, p2, p3)
+                    (areai, max_skew, aspect_ratio,
+                     min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
+
+                    elem = vtkTriangle()
+                    elem.GetPointIds().SetId(0, n1)
+                    elem.GetPointIds().SetId(1, n2)
+                    elem.GetPointIds().SetId(2, n3)
+                elif len(side_inids) == 4:
+                    n1, n2, n3, n4 = [nid_map[nid] for nid in node_ids[:4]]
+                    p1 = xyz_cid0[n1, :]
+                    p2 = xyz_cid0[n2, :]
+                    p3 = xyz_cid0[n3, :]
+                    p4 = xyz_cid0[n4, :]
+                    out = quad_quality(p1, p2, p3, p4)
+                    (areai, taper_ratioi, area_ratioi, max_skew, aspect_ratio,
+                     min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
+
+                    elem = vtkQuad()
+                    elem.GetPointIds().SetId(0, n1)
+                    elem.GetPointIds().SetId(1, n2)
+                    elem.GetPointIds().SetId(2, n3)
+                    elem.GetPointIds().SetId(3, n4)
+                else:
+                    msg = 'element_solid:\n%s' % (str(element_solid))
+                    msg += 'mapped_inids = %s\n' % mapped_inids
+                    msg += 'side_nids = %s\n' % side_inids
+                    msg += 'nodes = %s\n' % nodes
+                    msg += 'side_nodes = %s\n' % side_nodes
+                    raise NotImplementedError(msg)
+                grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             else:
                 print('removing\n%s' % (element))
                 print('removing eid=%s; %s' % (eid, element.type))

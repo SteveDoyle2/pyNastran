@@ -1957,6 +1957,7 @@ class OP2Common(Op2Codes, F06Writer):
         del self.struct_i, self.struct_2i, self.struct_3i, self.struct_8s
 
 def apply_mag_phase(floats, is_magnitude_phase, isave1, isave2):
+    """converts mag/phase data to real/imag"""
     if is_magnitude_phase:
         mag = floats[:, isave1]
         phase = floats[:, isave2]
@@ -1969,6 +1970,7 @@ def apply_mag_phase(floats, is_magnitude_phase, isave1, isave2):
     return real_imag
 
 def get_superelement_adaptivity_index(subtitle, superelement):
+    """determines the SUPERELEMENT/ADAPTIVITY_INDEX from the subtitle"""
     superelement_adaptivity_index = ''
     if 'SUPERELEMENT' in superelement:
         # 'SUPERELEMENT 0'

@@ -14,9 +14,11 @@ class RealMPCForcesArray(RealTableArray):
         #'      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         if self.table_name in ['OQMG1', 'OQMG2']:
             pass
-        elif self.table_name in ['OQGPSD1', 'OQGPSD2']:
+        elif self.table_name in ['OQMATO1', 'OQMATO2']:
+            words += ['                                                 ( AUTO-CORRELATION FUNCTION )']
+        elif self.table_name in ['OQGPSD1', 'OQGPSD2', 'OQMPSD1', 'OQMPSD2']:
             words += ['                                             ( POWER SPECTRAL DENSITY FUNCTION )']
-        elif self.table_name in ['OQGRMS1', 'OQGRMS2']:
+        elif self.table_name in ['OQGRMS1', 'OQGRMS2', 'OQMRMS1', 'OQMRMS2']:
             words += ['                                                     ( ROOT MEAN SQUARE )']
         elif self.table_name in ['OQGCRM1', 'OQGCRM2']:
             words += ['                                               ( CUMULATIVE ROOT MEAN SQUARE )']
