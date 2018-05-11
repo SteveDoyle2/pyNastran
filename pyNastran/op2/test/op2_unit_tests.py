@@ -355,7 +355,8 @@ class TestOP2(Tester):
                 subcases=None, exclude=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
                 quiet=True, check_memory=False,
-                stop_on_failure=True, dev=False)
+                stop_on_failure=True, dev=False,
+                skip_dataframe=True)
         #op2 = read_op2_geom(op2_filename, debug=False)
         #op2.write_f06(f06_filename)
         #os.remove(f06_filename)
@@ -380,7 +381,8 @@ class TestOP2(Tester):
                 subcases=None, exclude=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
                 quiet=True, check_memory=False,
-                stop_on_failure=True, dev=False)
+                stop_on_failure=True, dev=False,
+                skip_dataframe=True)
         #op2 = read_op2_geom(op2_filename, debug=False)
         #op2.write_f06(f06_filename)
         #os.remove(f06_filename)
