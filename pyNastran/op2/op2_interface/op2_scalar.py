@@ -786,10 +786,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'RADEATC': [self._read_oug1_3, self._read_oug_4], # Displacement Equivalent Inertia Attachment mode (OUG)
 
             # broken - isat_launch_100hz.op2 - wrong numwide
-            #b'RAQCONS': [self._read_oqg1_3, self._read_oqg_4], # Constraint mode MPC force table (OQG)
-            #b'RAQEATC': [self._read_oqg1_3, self._read_oqg_4], # Attachment mode MPC force table (OQG)
-            b'RAQCONS': [self._table_passer, self._table_passer], # temporary
-            b'RAQEATC': [self._table_passer, self._table_passer], # temporary
+            b'RAQCONS': [self._read_oqg1_3, self._read_oqg_4], # Constraint mode MPC force table (OQG)
+            b'RAQEATC': [self._read_oqg1_3, self._read_oqg_4], # Attachment mode MPC force table (OQG)
+            #b'RAQCONS': [self._table_passer, self._table_passer], # temporary
+            #b'RAQEATC': [self._table_passer, self._table_passer], # temporary
 
             #b'RAFCONS': [self._read_oef1_3, self._read_oef1_4], # Element Force Constraint Mode (OEF)
             #b'RAFEATC': [self._read_oef1_3, self._read_oef1_4], # Element Force Equivalent Inertia Attachment mode (OEF)
@@ -804,12 +804,12 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'RAPCONS': [self._table_passer, self._table_passer], # Constraint mode ply stress table (OES)
             b'RAPEATC': [self._table_passer, self._table_passer], # Attachment mode ply stress table (OES)
 
-            #b'RASCONS': [self._read_oes1_3, self._read_oes1_4], # Stress Constraint Mode (OES)
+            b'RASCONS': [self._read_oes1_3, self._read_oes1_4], # Stress Constraint Mode (OES)
             #b'RASEATC': [self._read_oes1_3, self._read_oes1_4], # Stress Equivalent Inertia Attachment mode (OES)
-            b'RASCONS': [self._table_passer, self._table_passer], # temporary
+            #b'RASCONS': [self._table_passer, self._table_passer], # temporary
             b'RASEATC': [self._table_passer, self._table_passer], # temporary
 
-            #b'RAEEATC': [self._table_passer, self._table_passer], # Strain Equivalent Inertia Attachment mode (OES)
+            b'RAEEATC': [self._read_oes1_3, self._read_ostr1_4], # Strain Equivalent Inertia Attachment mode (OES)
             #b'RAECONS': [self._read_oes1_3, self._read_oes1_4], # Strain Constraint Mode (OSTR)
             b'RAEEATC': [self._table_passer, self._table_passer], # temporary
             b'RAECONS': [self._table_passer, self._table_passer], # temporary
@@ -902,11 +902,11 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OPNL1' : [self._read_opg1_3, self._read_opg1_4],  # nonlinear loads
             b'OCRPG' : [self._read_opg1_3, self._read_opg1_4],  # post-buckling loads
 
-            b'OPGATO1' : [self._table_passer, self._table_passer],
-            b'OPGCRM1' : [self._table_passer, self._table_passer],
-            b'OPGPSD1' : [self._table_passer, self._table_passer],
-            b'OPGRMS1' : [self._table_passer, self._table_passer],
-            b'OPGNO1'  : [self._table_passer, self._table_passer],
+            b'OPGATO1' : [self._read_opg1_3, self._read_opg1_4],
+            b'OPGCRM1' : [self._read_opg1_3, self._read_opg1_4],
+            b'OPGPSD1' : [self._read_opg1_3, self._read_opg1_4],
+            b'OPGRMS1' : [self._read_opg1_3, self._read_opg1_4],
+            b'OPGNO1'  : [self._read_opg1_3, self._read_opg1_4],
 
             b'OPGATO2' : [self._table_passer, self._table_passer],
             b'OPGCRM2' : [self._table_passer, self._table_passer],
@@ -947,11 +947,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OESNLBR' : [self._read_oes1_3, self._read_oes1_4],
             b'OESNL1X' : [self._read_oes1_3, self._read_oes1_4],
 
-            #b'OESNLXR' : [self._table_crasher, self._table_crasher],  # nonlinear stresses
-            #b'OESNLXD' : [self._table_crasher, self._table_crasher],  # nonlinear transient stresses
-            #b'OESNLBR' : [self._table_crasher, self._table_crasher],
-            #b'OESNL1X' : [self._table_crasher, self._table_crasher],
-
             b'OESNLXR2' : [self._table_passer, self._table_passer],
             b'OESNLBR2' : [self._table_passer, self._table_passer],
 
@@ -969,11 +964,11 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OESTRCP' : [self._read_oes1_3, self._read_ostr1_4],
 
             # off strain
-            b'OSTRATO1' : [self._table_passer, self._table_passer],
-            b'OSTRCRM1' : [self._table_passer, self._table_passer],
-            b'OSTRPSD1' : [self._table_passer, self._table_passer],
-            b'OSTRRMS1' : [self._table_passer, self._table_passer], # isat_random
-            b'OSTRNO1' : [self._table_passer, self._table_passer],  # isat_random
+            b'OSTRATO1' : [self._read_oes1_3, self._read_ostr1_4],
+            b'OSTRCRM1' : [self._read_oes1_3, self._read_ostr1_4],
+            b'OSTRPSD1' : [self._read_oes1_3, self._read_ostr1_4],
+            b'OSTRRMS1' : [self._read_oes1_3, self._read_ostr1_4], # isat_random
+            b'OSTRNO1' : [self._read_oes1_3, self._read_ostr1_4],  # isat_random
 
             b'OSTRATO2' : [self._table_passer, self._table_passer],
             b'OSTRCRM2' : [self._table_passer, self._table_passer],
@@ -981,13 +976,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OSTRRMS2' : [self._table_passer, self._table_passer],
             b'OSTRNO2'  : [self._table_passer, self._table_passer],
 
-            b'OSTRMS1C' : [self._table_passer, self._table_passer], # isat_random
-            b'OSTNO1C' : [self._table_passer, self._table_passer],  # isat_random
-            #b'OSTRRMS1' : [self._read_oes1_3, self._read_oes1_4], # isat_random
-            #b'OSTRNO1' : [self._read_oes1_3, self._read_oes1_4],  # isat_random
-            #b'OSTRMS1C' : [self._read_oes1_3, self._read_oes1_4], # isat_random
-            #b'OSTRMS1C' : [self._read_oes1_3, self._read_oes1_4], # isat_random
-            #b'OSTNO1C' : [self._read_oes1_3, self._read_oes1_4],  # isat_random
+            b'OSTRMS1C' : [self._read_oes1_3, self._read_ostr1_4], # isat_random
+            b'OSTNO1C' : [self._read_oes1_3, self._read_ostr1_4],  # isat_random
+            #b'OSTRRMS1' : [self._read_oes1_3, self._read_ostr1_4], # isat_random
+            #b'OSTRNO1' : [self._read_oes1_3, self._read_ostr1_4],  # isat_random
 
             b'OSTPSD2C' : [self._table_passer, self._table_passer],
             #=======================
@@ -1187,12 +1179,12 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OAGNO2'  : [self._read_oug2_3, self._read_oug_no],
 
             # stress
-            b'OESATO1' : [self._table_passer, self._table_passer],
-            b'OESCRM1' : [self._table_passer, self._table_passer],
-            b'OESPSD1' : [self._table_passer, self._table_passer],
-            b'OESRMS1' : [self._table_passer, self._table_passer],
-            b'OESNO1'  : [self._table_passer, self._table_passer],
-            b'OESXRMS1' : [self._table_passer, self._table_passer],
+            b'OESATO1' : [self._read_oes1_3, self._read_oes1_4],
+            b'OESCRM1' : [self._read_oes1_3, self._read_oes1_4],
+            b'OESPSD1' : [self._read_oes1_3, self._read_oes1_4],
+            b'OESRMS1' : [self._read_oes1_3, self._read_oes1_4],
+            b'OESNO1'  : [self._read_oes1_3, self._read_oes1_4],
+            b'OESXRMS1' : [self._read_oes1_3, self._read_oes1_4],
 
             b'OESATO2' : [self._table_passer, self._table_passer],
             b'OESCRM2' : [self._table_passer, self._table_passer],

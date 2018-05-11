@@ -2,6 +2,21 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import string_types, PY2, PY3
 
+# strings
+SORT1_TABLES = [b'OSTRMS1C', b'OSTNO1C']
+SORT2_TABLES = [b'OUGPSD2', b'OUGATO2']
+
+def get_sort_method_from_table_name(table_name):
+    """helper method"""
+    if table_name in SORT1_TABLES:
+        sort_method = 1
+    elif table_name in SORT2_TABLES:
+        sort_method = 2
+    else:
+        table_num = table_name.decode('utf8')[-1]
+        sort_method = int(table_num)
+    return sort_method
+
 
 class Op2Codes(object):
     def __init__(self):
@@ -70,7 +85,7 @@ class Op2Codes(object):
             37: 'CTRAPRG-old',
             38: 'CGAP',
             39: 'CTETRA',
-            40: 'CBUS1D',
+            40: 'CBUSH1D',
             41: 'CHEXA1-old',
             42: 'CHEXA2-old',
             43: 'CFLUID2',
@@ -1045,7 +1060,13 @@ class Op2Codes(object):
             return True if sort_method == 1 else False
         except AssertionError:
             table_name = self.table_name_str
-            is_sort1_table = int(table_name[-1]) == 1
+            if table_name in SORT1_TABLES:
+                is_sort1_table = True
+            else:
+                try:
+                    is_sort1_table = int(table_name[-1]) == 1
+                except ValueError:
+                    raise ValueError('is this SORT1/2?  table_name=%r' % table_name)
             return is_sort1_table
 
     @property
@@ -1056,7 +1077,13 @@ class Op2Codes(object):
             return True if sort_method == 2 else False
         except AssertionError:
             table_name = self.table_name_str
-            is_sort2_table = int(table_name[-1]) == 2
+            if table_name in SORT2_TABLES:
+                is_sort2_table = True
+            else:
+                try:
+                    is_sort2_table = int(table_name[-1]) == 2
+                except ValueError:
+                    raise ValueError('is this SORT1/2?  table_name=%r' % table_name)
             return is_sort2_table
 
     def _table_specs(self):

@@ -255,7 +255,7 @@ class GEOM2(GeomCommon):
             #return
 
         if elem.eid > 100000000:
-            raise RuntimeError('bad parsing...')
+            raise RuntimeError('bad parsing...elem:\n%s' % elem)
 
         if elem.type in ['CTRIA6', 'CQUAD8']:
             for nid in elem.nodes:
@@ -576,16 +576,18 @@ class GEOM2(GeomCommon):
         6 UNDEF(3) none
 
         """
-        ntotal = 36 # 4*9
+        ntotal = 32 # 4*8
         nelements = (len(data) - n) // ntotal
-        struct_6i = Struct(self._endian + b'9i')
+        struct_6i = Struct(self._endian + b'8i')
         for i in range(nelements):
             edata = data[n:n + ntotal]
             out = struct_6i.unpack(edata)
             if self.is_debug_file:
-                self.binary_debug.write('  CDAMP1=%s\n' % str(out))
+                self.binary_debug.write('  CBUSH1D=%s\n' % str(out))
             (eid, pid, g1, g2, cid, unused_a, unused_b, unused_c) = out
-            self.add_cbush1d(eid, pid, nids, cid=cid)
+            if cid == -1:
+                cid = None
+            self.add_cbush1d(eid, pid, [g1, g2], cid=cid)
             n += ntotal
         self.card_count['CBUSH1D'] = nelements
         return n

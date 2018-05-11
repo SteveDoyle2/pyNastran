@@ -90,6 +90,15 @@ class OP2_F06_Common(object):
         self.ctetra_strain = {}
         self.cpenta_strain = {}
         self.chexa_strain = {}
+
+        self.ctetra_stress_RASCONS = {}
+        self.cpenta_stress_RASCONS = {}
+        self.chexa_stress_RASCONS = {}
+
+        self.ctetra_strain_RASCONS = {}
+        self.cpenta_strain_RASCONS = {}
+        self.chexa_strain_RASCONS = {}
+
         #======================================================================
 
         # bars/beams
@@ -99,8 +108,12 @@ class OP2_F06_Common(object):
         self.cbar_force_PSD = {}
         self.cbar_force_RMS = {}
         self.cbar_force_NO = {}
+        self.cbar_force_RAFCONS = {}
+        self.cbar_force_RAFEATC = {}
 
         self.cbar_stress = {}
+        self.modal_contribution_cbar_stress = {}
+        self.modal_contribution_cbar_strain = {}
         self.cbar_strain = {}
 
         self.cbar_force_10nodes = {}
@@ -148,6 +161,8 @@ class OP2_F06_Common(object):
         self.cquad4_force_PSD = {}
         self.cquad4_force_RMS = {}
         self.cquad4_force_NO = {}
+        self.cquad4_force_RAFCONS = {}
+        self.cquad4_force_RAFEATC = {}
 
         self.cquad8_force = {}
         self.cquad8_force_ATO = {}
@@ -170,12 +185,26 @@ class OP2_F06_Common(object):
         self.cquadr_stress = {}
         self.ctriar_stress = {}
 
+        self.ctria3_stress_RASCONS = {}
+        self.ctria6_stress_RASCONS = {}
+        self.cquad4_stress_RASCONS = {}
+        self.cquad8_stress_RASCONS = {}
+        self.cquadr_stress_RASCONS = {}
+        self.ctriar_stress_RASCONS = {}
+
         self.ctria3_strain = {}
         self.ctria6_strain = {}
         self.cquad4_strain = {}
         self.cquad8_strain = {}
         self.cquadr_strain = {}
         self.ctriar_strain = {}
+
+        self.ctria3_strain_RASCONS = {}
+        self.ctria6_strain_RASCONS = {}
+        self.cquad4_strain_RASCONS = {}
+        self.cquad8_strain_RASCONS = {}
+        self.cquadr_strain_RASCONS = {}
+        self.ctriar_strain_RASCONS = {}
 
         self.cquad4_composite_stress = {}
         self.cquad8_composite_stress = {}
@@ -220,7 +249,11 @@ class OP2_F06_Common(object):
         self.cbush_stress = {}
         self.cbush_strain = {}
         self.nonlinear_cbush_stress = {}  # CBUSH 226
+        self.modal_contribution_cbush_stress = {}
+        self.modal_contribution_cbush_strain = {}
+
         self.cbush1d_stress_strain = {}
+        self.nonlinear_cbush1d_stress_strain = {}
 
         #======================================================================
 
@@ -344,6 +377,8 @@ class OP2_F06_Common(object):
         self.cbush_force_CRM = {}
         self.cbush_force_RMS = {}
         self.cbush_force_NO = {}
+        self.cbush_force_RAFCONS = {}
+        self.cbush_force_RAFEATC = {}
 
         self.coneax_force = {}
 
@@ -369,16 +404,19 @@ class OP2_F06_Common(object):
         self.force_VU = {}
 
         #self.force_VU_2D = {}
-        self.vuquad_force = {}
-        self.vutria_force = {}
+        self.vu_quad_force = {}
+        self.vu_tria_force = {}
 
         #OEF - Fluxes - tCode=4 thermal=1
-        self.thermalLoad_CONV = {}
+        self.conv_thermal_load = {}
 
         #self.thermalLoad_CHBDY = {}
         self.chbdye_thermal_load = {}
         self.chbdyg_thermal_load = {}
         self.chbdyp_thermal_load = {}
+        self.chbdye_thermal_load_flux = {}
+        self.chbdyg_thermal_load_flux = {}
+        self.chbdyp_thermal_load_flux = {}
 
         #self.thermalLoad_1D = {}
         self.crod_thermal_load = {}
@@ -387,6 +425,12 @@ class OP2_F06_Common(object):
         self.conrod_thermal_load = {}
         self.cbar_thermal_load = {}
         self.cbend_thermal_load = {}
+        self.crod_thermal_load_flux = {}
+        self.cbeam_thermal_load_flux = {}
+        self.ctube_thermal_load_flux = {}
+        self.conrod_thermal_load_flux = {}
+        self.cbar_thermal_load_flux = {}
+        self.cbend_thermal_load_flux = {}
 
         #self.thermalLoad_2D_3D = {}
         self.cquad4_thermal_load = {}
@@ -398,9 +442,18 @@ class OP2_F06_Common(object):
         self.chexa_thermal_load = {}
         self.cpenta_thermal_load = {}
 
+        self.cquad4_thermal_load_flux = {}
+        self.ctriax6_thermal_load_flux = {}
+        self.cquad8_thermal_load_flux = {}
+        self.ctria3_thermal_load_flux = {}
+        self.ctria6_thermal_load_flux = {}
+        self.ctetra_thermal_load_flux = {}
+        self.chexa_thermal_load_flux = {}
+        self.cpenta_thermal_load_flux = {}
+
         self.thermalLoad_VU = {}
         self.thermalLoad_VU_3D = {}
-        self.thermalLoad_VUBeam = {}
+        self.vu_beam_thermal_load = {}
         #self.temperatureForces = {}
 
         # OES - tCode=5 thermal=0 s_code=0,1 (stress/strain)
@@ -648,9 +701,11 @@ class OP2_F06_Common(object):
             'ctube_strain',
 
             # OES - isotropic CBAR stress/strain
-            'cbar_stress',
-            'cbar_strain',
+            'cbar_stress', 'modal_contribution_cbar_stress',
+            'cbar_strain', 'modal_contribution_cbar_strain',
+
             'cbar_force', 'cbar_force_ATO', 'cbar_force_CRM', 'cbar_force_PSD', 'cbar_force_RMS', 'cbar_force_NO',
+            'cbar_force_RAFCONS', 'cbar_force_RAFEATC',
 
             'cbar_stress_10nodes',
             'cbar_strain_10nodes',
@@ -666,33 +721,33 @@ class OP2_F06_Common(object):
 
 
             # OES - isotropic CTRIA3/CQUAD4 stress
-            'ctria3_stress',
-            'ctriar_stress',
-            'ctria6_stress',
+            'ctria3_stress', 'ctria3_stress_RASCONS',
+            'ctriar_stress', 'ctriar_stress_RASCONS',
+            'ctria6_stress', 'ctria6_stress_RASCONS',
 
-            'cquadr_stress',
-            'cquad4_stress',
-            'cquad8_stress',
+            'cquadr_stress', 'cquadr_stress_RASCONS',
+            'cquad4_stress', 'cquad4_stress_RASCONS',
+            'cquad8_stress', 'cquad8_stress_RASCONS',
 
             # OES - isotropic CTRIA3/CQUAD4 strain
-            'ctria3_strain',
-            'ctriar_strain',
-            'ctria6_strain',
+            'ctria3_strain', 'ctria3_strain_RASCONS',
+            'ctriar_strain', 'ctriar_strain_RASCONS',
+            'ctria6_strain', 'ctria6_strain_RASCONS',
 
-            'cquadr_strain',
-            'cquad4_strain',
-            'cquad8_strain',
+            'cquadr_strain', 'cquadr_strain_RASCONS',
+            'cquad4_strain', 'cquad4_strain_RASCONS',
+            'cquad8_strain', 'cquad8_strain_RASCONS',
 
 
             # OES - isotropic CTETRA/CHEXA/CPENTA stress
-            'ctetra_stress',
-            'chexa_stress',
-            'cpenta_stress',
+            'ctetra_stress', 'ctetra_stress_RASCONS',
+            'chexa_stress', 'chexa_stress_RASCONS',
+            'cpenta_stress', 'cpenta_stress_RASCONS',
 
             # OES - isotropic CTETRA/CHEXA/CPENTA strain
-            'ctetra_strain',
-            'chexa_strain',
-            'cpenta_strain',
+            'ctetra_strain', 'ctetra_strain_RASCONS',
+            'chexa_strain', 'chexa_strain_RASCONS',
+            'cpenta_strain', 'cpenta_strain_RASCONS',
 
             # OES - CSHEAR stress/strain
             'cshear_stress',
@@ -741,6 +796,7 @@ class OP2_F06_Common(object):
             'cbend_force',
 
             'cbush_force', 'cbush_force_ATO', 'cbush_force_CRM', 'cbush_force_PSD', 'cbush_force_RMS', 'cbush_force_NO',
+            'cbush_force_RAFCONS', 'cbush_force_RAFEATC',
             'coneax_force',
             'cdamp1_force',
             'cdamp2_force',
@@ -755,6 +811,7 @@ class OP2_F06_Common(object):
             'ctria3_force', 'ctria3_force_ATO', 'ctria3_force_CRM', 'ctria3_force_PSD', 'ctria3_force_RMS', 'ctria3_force_NO',
             'ctria6_force', 'ctria6_force_ATO', 'ctria6_force_CRM', 'ctria6_force_PSD', 'ctria6_force_RMS', 'ctria6_force_NO',
             'ctriar_force', 'ctriar_force_ATO', 'ctriar_force_CRM', 'ctriar_force_PSD', 'ctriar_force_RMS', 'ctriar_force_NO',
+            'cquad4_force_RAFCONS', 'cquad4_force_RAFEATC',
 
             'cshear_force',
             #'cquad4_composite_force',
@@ -777,38 +834,38 @@ class OP2_F06_Common(object):
 
             'force_VU',
             #'force_VU_2D',
-            'vuquad_force',
-            'vutria_force',
+            'vu_quad_force',
+            'vu_tria_force',
 
             #OEF - Fluxes - tCode=4 thermal=1
-            'thermalLoad_CONV',
+            'conv_thermal_load',
 
             #'thermalLoad_CHBDY',
-            'chbdye_thermal_load',
-            'chbdyg_thermal_load',
-            'chbdyp_thermal_load',
+            'chbdye_thermal_load', 'chbdye_thermal_load_flux',
+            'chbdyg_thermal_load', 'chbdyg_thermal_load_flux',
+            'chbdyp_thermal_load', 'chbdyp_thermal_load_flux',
 
             #'thermalLoad_1D',
-            'crod_thermal_load',
-            'cbeam_thermal_load',
-            'ctube_thermal_load',
-            'conrod_thermal_load',
-            'cbar_thermal_load',
-            'cbend_thermal_load',
+            'crod_thermal_load', 'crod_thermal_load_flux',
+            'cbeam_thermal_load', 'cbeam_thermal_load_flux',
+            'ctube_thermal_load', 'ctube_thermal_load_flux',
+            'conrod_thermal_load', 'conrod_thermal_load_flux',
+            'cbar_thermal_load', 'cbar_thermal_load_flux',
+            'cbend_thermal_load', 'cbend_thermal_load_flux',
 
             #'thermalLoad_2D_3D',
-            'cquad4_thermal_load',
-            'ctriax6_thermal_load',
-            'cquad8_thermal_load',
-            'ctria3_thermal_load',
-            'ctria6_thermal_load',
-            'ctetra_thermal_load',
-            'chexa_thermal_load',
-            'cpenta_thermal_load',
+            'cquad4_thermal_load', 'cquad4_thermal_load_flux',
+            'ctriax6_thermal_load', 'ctriax6_thermal_load_flux',
+            'cquad8_thermal_load', 'cquad8_thermal_load_flux',
+            'ctria3_thermal_load', 'ctria3_thermal_load_flux',
+            'ctria6_thermal_load', 'ctria6_thermal_load_flux',
+            'ctetra_thermal_load', 'ctetra_thermal_load_flux',
+            'chexa_thermal_load', 'chexa_thermal_load_flux',
+            'cpenta_thermal_load', 'cpenta_thermal_load_flux',
 
             'thermalLoad_VU',
             'thermalLoad_VU_3D',
-            'thermalLoad_VUBeam',
+            'vu_beam_thermal_load',
             #self.temperatureForces
         ]
         table_types += [
@@ -816,9 +873,9 @@ class OP2_F06_Common(object):
             'ctriax_stress',
             'ctriax_strain',
 
-            'cbush_stress',
-            'cbush_strain',
-            'cbush1d_stress_strain',
+            'cbush_stress', 'modal_contribution_cbush_stress',
+            'cbush_strain', 'modal_contribution_cbush_strain',
+            'cbush1d_stress_strain', 'nonlinear_cbush1d_stress_strain',
 
             # OES - nonlinear CROD/CONROD/CTUBE stress
             'nonlinear_crod_stress',

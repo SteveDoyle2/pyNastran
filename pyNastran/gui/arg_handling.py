@@ -63,23 +63,28 @@ def run_docopt():
 
     # INPUT format may be explicitly or implicitly defined with or
     # without an output file
+    test = ''
+    qt = ''
+    if not pyNastran.is_pynastrangui_exe:
+        test = ' [--test]'
+        qt = ' [--qt QT]'
     msg += "  pyNastranGUI [-f FORMAT] INPUT [-o OUTPUT]\n"
     msg += '               [-g GSCRIPT] [-p PSCRIPT]\n'
     msg += '               [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]\n'
-    msg += '               [-q] [--groups] [--noupdate] [--log LOG] [--test] [--qt QT]\n'
+    msg += '               [-q] [--groups] [--noupdate] [--log LOG]%s%s\n' % (test, qt)
 
     # You don't need to throw a -o flag
     msg += "  pyNastranGUI [-f FORMAT] INPUT OUTPUT [-o OUTPUT]\n"
     msg += '               [-g GSCRIPT] [-p PSCRIPT]\n'
     msg += '               [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]\n'
-    msg += '               [-q] [--groups] [--noupdate] [--log LOG] [--test] [--qt QT]\n'
+    msg += '               [-q] [--groups] [--noupdate] [--log LOG]%s%s\n' % (test, qt)
 
     # no input/output files
     # can you ever have an OUTPUT, but no INPUT?
     msg += "  pyNastranGUI [-f FORMAT] [-i INPUT] [-o OUTPUT...]\n"
     msg += '               [-g GSCRIPT] [-p PSCRIPT]\n'
     msg += '               [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]\n'
-    msg += '               [-q] [--groups] [--noupdate] [--log LOG] [--test] [--qt QT]\n'
+    msg += '               [-q] [--groups] [--noupdate] [--log LOG]%s%s\n' % (test, qt)
     msg += '  pyNastranGUI -h | --help\n'
     msg += '  pyNastranGUI -v | --version\n'
     msg += "\n"
@@ -100,8 +105,9 @@ def run_docopt():
     msg += '\n'
 
     msg += "Debug:\n"
-    msg += "  --test      temporary dev mode (default=False)\n"
-    msg += "  --qt QT     sets the qt version (default=QT_API)\n"
+    if not pyNastran.is_pynastrangui_exe:
+        msg += "  --test      temporary dev mode (default=False)\n"
+        msg += "  --qt QT     sets the qt version (default=QT_API)\n"
     msg += "  --noupdate  disables the update check\n"
     msg += '\n'
 

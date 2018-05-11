@@ -23,11 +23,11 @@ def get_setting(settings, setting_keys, setting_names, default, auto_type=None):
             #print('couldnt load %s; using default' % pull_name)
             value = default
 
-    if value is None:
+    if value is None and default is not None:
         #print('couldnt load %s; using default' % pull_name)
-        assert default is not None, pull_name
         value = default
-    assert value is not None, pull_name
+    if default is not None:
+        assert value is not None, pull_name
 
     value = autotype_value(value, auto_type)
     return value

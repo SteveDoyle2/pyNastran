@@ -344,8 +344,8 @@ TABLE_OBJ_MAP = {
     'chbdyp_thermal_load' : (RealChbdyHeatFluxArray,),
     'chbdyg_thermal_load' : (RealChbdyHeatFluxArray,),
 
-    'vutria_force' : (RealForceVU2DArray,),
-    'vuquad_force' : (RealForceVU2DArray,),
+    'vu_tria_force' : (RealForceVU2DArray,),
+    'vu_quad_force' : (RealForceVU2DArray,),
 
     'temperatures' : (RealTemperatureArray,),
     'thermal_gradient_and_flux' : (RealTemperatureGradientAndFluxArray,),

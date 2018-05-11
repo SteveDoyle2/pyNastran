@@ -2,6 +2,17 @@
 """
 Defines the Real/Complex Forces created by:
     FORCE = ALL
+
+NX Case Control  Block         Description
+===============  ==========    ===========
+FORCE            OEF1          Element forces or heat flux (linear elements only)
+FORCE            OEF1X         Element forces (nonlinear elements only)
+????             HOEF1         ???
+FORCE            DOEF1         Scaled Response Spectra
+MODCON           OEFMC         Modal contributions
+FORCE            OEF1X         Element forces with intermediate (CBAR and CBEAM)
+                               station forces and forces on nonlinear elements
+FLUX             HOEF1         Element heat flux
 """
 from __future__ import print_function
 from struct import Struct
@@ -72,6 +83,60 @@ class OEF(OP2Common):
     """Defines OEFx table reading for element forces/heat flux"""
     def __init__(self):
         OP2Common.__init__(self)
+
+    def get_oef_prefix_postfix(self):
+        """
+        NX Case Control  Block         Description
+        ===============  ==========    ===========
+        NLSTRESS         OESNLXR       Nonlinear static stresses
+        BOUTPUT          OESNLBR       Slideline stresses
+        STRESS           OESNLXD       Nonlinear Transient Stresses
+        STRESS           OES1C/OSTR1C  Ply stresses/strains
+        STRESS           OES1X         Element stresses with intermediate (CBAR and CBEAM)
+                                       station stresses and stresses on nonlinear elements
+        STRESS           OES/OESVM     Element stresses (linear elements only)
+        STRAIN           OSTR1         Element strains
+        STRESS/STRAIN    DOES1/DOSTR1  Scaled Response Spectra
+        MODCON           OSTRMC        Modal contributions
+        """
+        prefix = ''
+        postfix = ''
+        if self.table_name in [b'OEF1X']:
+            pass
+        elif self.table_name in [b'HOEF1']:
+            postfix = '_flux'
+        #elif self.table_name in ['OESNLXR']:
+            #prefix = 'sideline_'
+        #elif self.table_name in ['OESNLXD', 'OESNL1X', 'OESNLXR']:
+            #prefix = 'nonlinear_'
+        #elif self.table_name == 'OESNLBR':
+            #prefix = 'sideline_'
+        #elif self.table_name == 'OESRT':
+            #prefix = 'strength_ratio_'
+        #elif self.table_name in ['OESCP', 'OESTRCP']:
+            #pass # TODO: update
+        elif self.table_name in [b'OEFCRM1']:
+            assert self.table_code in [504], self.code_information()
+            postfix = '_CRM'
+        elif self.table_name in [b'OEFPSD1']:
+            assert self.table_code in [604], self.code_information()
+            postfix = '_PSD'
+        elif self.table_name in [b'OEFRMS1']:
+            assert self.table_code in [804], self.code_information()
+            postfix = '_RMS'
+        elif self.table_name in [b'OEFNO1']:
+            assert self.table_code in [904], self.code_information()
+            postfix = '_NO'
+        elif self.table_name in [b'RAFCONS']:
+            postfix = '_RAFCONS'
+        elif self.table_name in [b'RAFEATC']:
+            postfix = '_RAFEATC'
+        #elif self.table_name in [b'DOEF1']:
+            #assert self.thermal in [8], self.code_information()  # Scaled response spectra NRL
+            #assert self.table_code in [4], self.code_information()
+        else:
+            raise NotImplementedError('%r' % self.table_name)
+        return prefix, postfix
 
     def _oef_force_code(self):
         """
@@ -331,6 +396,7 @@ class OEF(OP2Common):
         """Table 4 parser for OEF1 thermal table"""
         if self._results.is_not_saved('element_forces'):
             return ndata
+        prefix, postfix = self.get_oef_prefix_postfix()
         n = 0
         #thermal
         #is_magnitude_phase = self.is_magnitude_phase()
@@ -347,17 +413,17 @@ class OEF(OP2Common):
             obj_vector_real = Real1DHeatFluxArray
             #if self.element_type == 1: # CROD
             if self.element_type == 1:
-                result_name = 'crod_thermal_load'
+                result_name = 'crod_thermal_load' + postfix
             elif self.element_type == 2:
-                result_name = 'cbeam_thermal_load'
+                result_name = 'cbeam_thermal_load' + postfix
             elif self.element_type == 3:
-                result_name = 'ctube_thermal_load'
+                result_name = 'ctube_thermal_load' + postfix
             elif self.element_type == 10:
-                result_name = 'conrod_thermal_load'
+                result_name = 'conrod_thermal_load' + postfix
             elif self.element_type == 34:
-                result_name = 'cbar_thermal_load'
+                result_name = 'cbar_thermal_load' + postfix
             elif self.element_type == 69:
-                result_name = 'cbend_thermal_load'
+                result_name = 'cbend_thermal_load' + postfix
             else:
                 raise NotImplementedError('element_type=%s element_name=%s' % (
                     self.element_type, self.element_name))
@@ -432,21 +498,21 @@ class OEF(OP2Common):
             # 67-HEXA
             # 68-PENTA
             if self.element_type == 33:
-                result_name = 'cquad4_thermal_load'
+                result_name = 'cquad4_thermal_load' + postfix
             elif self.element_type == 53:
-                result_name = 'ctriax6_thermal_load'
+                result_name = 'ctriax6_thermal_load' + postfix
             elif self.element_type == 64:
-                result_name = 'cquad8_thermal_load'
+                result_name = 'cquad8_thermal_load' + postfix
             elif self.element_type == 74:
-                result_name = 'ctria3_thermal_load'
+                result_name = 'ctria3_thermal_load' + postfix
             elif self.element_type == 75:
-                result_name = 'ctria6_thermal_load'
+                result_name = 'ctria6_thermal_load' + postfix
             elif self.element_type == 39:
-                result_name = 'ctetra_thermal_load'
+                result_name = 'ctetra_thermal_load' + postfix
             elif self.element_type == 67:
-                result_name = 'chexa_thermal_load'
+                result_name = 'chexa_thermal_load' + postfix
             elif self.element_type == 68:
-                result_name = 'cpenta_thermal_load'
+                result_name = 'cpenta_thermal_load' + postfix
             else:
                 raise NotImplementedError('element_type=%s element_name=%s' % (
                     self.element_type, self.element_name))
@@ -552,11 +618,11 @@ class OEF(OP2Common):
             # 109-CHBDYP
             #if self.table_name in ['OEF1X']:
             if self.element_type == 107:
-                result_name = 'chbdye_thermal_load'
+                result_name = 'chbdye_thermal_load' + postfix
             elif self.element_type == 108:
-                result_name = 'chbdyg_thermal_load'
+                result_name = 'chbdyg_thermal_load' + postfix
             elif self.element_type == 109:
-                result_name = 'chbdyp_thermal_load'
+                result_name = 'chbdyp_thermal_load' + postfix
             else:
                 raise NotImplementedError('element_type=%s element_name=%s' % (
                     self.element_type, self.element_name))
@@ -633,7 +699,7 @@ class OEF(OP2Common):
 
         elif self.element_type == 110:
             # 110-CONV
-            result_name = 'thermalLoad_CONV'
+            result_name = 'conv_thermal_load' + postfix
             if self._results.is_not_saved(result_name):
                 return ndata
             self._results._found_result(result_name)
@@ -646,7 +712,7 @@ class OEF(OP2Common):
                 if 0:
                     if self.read_mode == 1:
                         return ndata
-                    self.create_transient_object(self.thermalLoad_CONV, HeatFlux_CONV)
+                    self.create_transient_object(slot, HeatFlux_CONV)
                 else:
                     auto_return, is_vectorized = self._create_oes_object4(
                         nelements, result_name, slot, RealConvHeatFluxArray)
@@ -709,7 +775,7 @@ class OEF(OP2Common):
                 msg = self.code_information()
                 return self._not_implemented_or_skip(data, ndata, msg)
 
-            result_name = 'thermalLoad_VU_3D'
+            result_name = 'thermalLoad_VU_3D' + postfix
             if self._results.is_not_saved(result_name):
                 return ndata
             self._results._found_result(result_name)
@@ -780,7 +846,7 @@ class OEF(OP2Common):
             # 189-VUQUAD
             # 190-VUTRIA
             if self.format_code == 1 and self.num_wide == 27:  # real
-                result_name = 'thermalLoad_VU'
+                result_name = 'thermalLoad_VU' + postfix
                 if self._results.is_not_saved(result_name):
                     return ndata
                 self._results._found_result(result_name)
@@ -867,7 +933,7 @@ class OEF(OP2Common):
             nnodes = 2
             numwide_real = 4 + 7 * nnodes
 
-            result_name = 'thermalLoad_VUBeam'
+            result_name = 'vu_beam_thermal_load' + postfix
             if self._results.is_not_saved(result_name):
                 return ndata
             self._results._found_result(result_name)
@@ -880,7 +946,7 @@ class OEF(OP2Common):
                     if self.read_mode == 1:
                         return ndata
                     #assert self.num_wide==27,self.code_information()
-                    self.create_transient_object(self.thermalLoad_VUBeam, HeatFlux_VUBEAM)
+                    self.create_transient_object(slot, HeatFlux_VUBEAM)
                 else:
                     auto_return, is_vectorized = self._create_oes_object4(
                         nelements, result_name, slot, RealHeatFluxVUBeamArray)
@@ -991,53 +1057,54 @@ class OEF(OP2Common):
             return n
         return new_func
 
-    def _apply_oef_ato_crm_psd_rms_no(self, result_name):
-        """
-        Appends a keyword onto the result_name in order to handle random results
-        without 100 if loops.
-        keywords = {_ATO, _CRM, _PSD, _RMS, _NO}
+    #def _apply_oef_ato_crm_psd_rms_no(self, result_name):
+        #"""
+        #Appends a keyword onto the result_name in order to handle random results
+        #without 100 if loops.
+        #keywords = {_ATO, _CRM, _PSD, _RMS, _NO}
 
-        Do this:
-            result_name = 'cbar_forces'
-            table_name = 'OEFPSD1'
-            result_name, is_random = _apply_oef_ato_crm_psd_rms_no(self, result_name)
-            slot = getattr(self, result_name)
+        #Do this:
+            #result_name = 'cbar_forces'
+            #table_name = 'OEFPSD1'
+            #result_name, is_random = _apply_oef_ato_crm_psd_rms_no(self, result_name)
+            #slot = getattr(self, result_name)
 
-        Or this:
-            result_name = 'cbar_forces_PSD'
-            slot = self.cbar_forces_PSD
-        """
-        is_random = True
-        if self.table_name in [b'OEF1', b'OEF1X', b'OEFIT']:
-            is_random = False
-        elif self.table_name in [b'OEFCRM1']:
-            assert self.table_code in [504], self.code_information()
-            result_name += '_CRM'
-        elif self.table_name in [b'OEFPSD1']:
-            assert self.table_code in [604], self.code_information()
-            result_name += '_PSD'
-        elif self.table_name in [b'OEFRMS1']:
-            assert self.table_code in [804], self.code_information()
-            result_name += '_RMS'
-        elif self.table_name in [b'OEFNO1']:
-            assert self.table_code in [904], self.code_information()
-            result_name += '_NO'
-        elif self.table_name in [b'DOEF1']:
-            assert self.thermal in [8], self.code_information()  # Scaled response spectra NRL
-            assert self.table_code in [4], self.code_information()
-        else:
-            raise NotImplementedError(self.code_information())
-        #print(result_name, self.table_name)
-        return result_name, is_random
+        #Or this:
+            #result_name = 'cbar_forces_PSD'
+            #slot = self.cbar_forces_PSD
+        #"""
+        #is_random = True
+        #if self.table_name in [b'OEF1', b'OEF1X', b'OEFIT']:
+            #is_random = False
+        #elif self.table_name in [b'OEFCRM1']:
+            #assert self.table_code in [504], self.code_information()
+            #result_name += '_CRM'
+        #elif self.table_name in [b'OEFPSD1']:
+            #assert self.table_code in [604], self.code_information()
+            #result_name += '_PSD'
+        #elif self.table_name in [b'OEFRMS1']:
+            #assert self.table_code in [804], self.code_information()
+            #result_name += '_RMS'
+        #elif self.table_name in [b'OEFNO1']:
+            #assert self.table_code in [904], self.code_information()
+            #result_name += '_NO'
+        #elif self.table_name in [b'DOEF1']:
+            #assert self.thermal in [8], self.code_information()  # Scaled response spectra NRL
+            #assert self.table_code in [4], self.code_information()
+        #else:
+            #raise NotImplementedError(self.code_information())
+        ##print(result_name, self.table_name)
+        #return result_name, is_random
 
     # @_print_obj_name_on_crash
     def _read_oef1_loads(self, data, ndata):
         """
         Reads the OEF1 table; stores the element forces/heat flux.
         """
-        self._apply_oef_ato_crm_psd_rms_no('') # TODO: just testing
+        #self._apply_oef_ato_crm_psd_rms_no('') # TODO: just testing
         if self._results.is_not_saved('element_forces'):
             return ndata
+        prefix, postfix = self.get_oef_prefix_postfix()
         unused_flag = 'element_id'
         (num_wide_real, num_wide_imag) = self._oef_force_code()
         if self.is_debug_file:
@@ -1049,13 +1116,13 @@ class OEF(OP2Common):
         dt = self.nonlinear_factor
 
         if self.element_type in [1, 3, 10]:  # rods
-            n, nelements, ntotal = self._oef_crod(data, ndata, dt, is_magnitude_phase)
+            n, nelements, ntotal = self._oef_crod(data, ndata, dt, is_magnitude_phase, prefix, postfix)
             if nelements is None:
                 return n
 
         elif self.element_type == 2:  # cbeam
             #2-CBEAM
-            n, nelements, ntotal = self._oef_cbeam(data, ndata, dt, is_magnitude_phase)
+            n, nelements, ntotal = self._oef_cbeam(data, ndata, dt, is_magnitude_phase, prefix, postfix)
             if nelements is None:
                 return n
 
@@ -1070,31 +1137,31 @@ class OEF(OP2Common):
             # 21-CDAMP2
             # 22-CDAMP3
             # 23-CDAMP4
-            n, nelements, ntotal = self._oef_celas_cdamp(data, ndata, dt, is_magnitude_phase)
+            n, nelements, ntotal = self._oef_celas_cdamp(data, ndata, dt, is_magnitude_phase, prefix, postfix)
             if nelements is None:
                 return n
 
         elif self.element_type == 24:  # CVISC
-            n, nelements, ntotal = self._oef_cvisc(data, ndata, dt, is_magnitude_phase)
+            n, nelements, ntotal = self._oef_cvisc(data, ndata, dt, is_magnitude_phase, prefix, postfix)
             if nelements is None:
                 return n
 
         elif self.element_type == 34:  # cbar
             # 34-CBAR
-            n, nelements, ntotal = self._oef_cbar_34(data, ndata, dt, is_magnitude_phase)
+            n, nelements, ntotal = self._oef_cbar_34(data, ndata, dt, is_magnitude_phase, prefix, postfix)
             if nelements is None:
                 return n
 
         elif self.element_type == 100:  # cbar
             #100-BARS
-            n, nelements, ntotal = self._oef_cbar_100(data, ndata, dt, is_magnitude_phase)
+            n, nelements, ntotal = self._oef_cbar_100(data, ndata, dt, is_magnitude_phase, prefix, postfix)
             if nelements is None:
                 return n
 
         elif self.element_type in [33, 74]: # centroidal shells
             # 33-CQUAD4
             # 74-CTRIA3
-            n, nelements, ntotal = self._oef_shells_centroidal(data, ndata, dt, is_magnitude_phase)
+            n, nelements, ntotal = self._oef_shells_centroidal(data, ndata, dt, is_magnitude_phase, prefix, postfix)
             if nelements is None:
                 return n
 
@@ -1104,7 +1171,7 @@ class OEF(OP2Common):
             # 75-CTRIA6
             # 82-CQUADR
             # 144-CQUAD4-bilinear
-            n, nelements, ntotal = self._oef_shells_nodal(data, ndata, dt, is_magnitude_phase)
+            n, nelements, ntotal = self._oef_shells_nodal(data, ndata, dt, is_magnitude_phase, prefix, postfix)
             if nelements is None:
                 return n
 
@@ -1113,7 +1180,7 @@ class OEF(OP2Common):
             # 96 - CQUAD8
             # 97 - CTRIA3
             # 98 - CTRIA6 (composite)
-            n, nelements, ntotal = self._oef_shells_composite(data, ndata, dt, is_magnitude_phase)
+            n, nelements, ntotal = self._oef_shells_composite(data, ndata, dt, is_magnitude_phase, prefix, postfix)
             if nelements is None:
                 return n
 
@@ -1146,25 +1213,25 @@ class OEF(OP2Common):
 
         elif self.element_type == 4:  # cshear
             # 4-CSHEAR
-            n, nelements, ntotal = self._oef_cshear(data, ndata, dt, is_magnitude_phase)
+            n, nelements, ntotal = self._oef_cshear(data, ndata, dt, is_magnitude_phase, prefix, postfix)
             if nelements is None:
                 return n
 
         elif self.element_type == 35:  # coneax
             # 35-CONEAX
-            n, nelements, ntotal = self._oef_cconeax(data, ndata, dt, is_magnitude_phase)
+            n, nelements, ntotal = self._oef_cconeax(data, ndata, dt, is_magnitude_phase, prefix, postfix)
             if nelements is None:
                 return n
 
         elif self.element_type == 38:  # cgap
             # 38-GAP
-            n, nelements, ntotal = self._oef_cgap(data, ndata, dt, is_magnitude_phase)
+            n, nelements, ntotal = self._oef_cgap(data, ndata, dt, is_magnitude_phase, prefix, postfix)
             if nelements is None:
                 return n
 
         elif self.element_type == 69:  # cbend
             # 69-CBEND
-            n, nelements, ntotal = self._oef_cbend(data, ndata, dt, is_magnitude_phase)
+            n, nelements, ntotal = self._oef_cbend(data, ndata, dt, is_magnitude_phase, prefix, postfix)
             if nelements is None:
                 return n
 
@@ -1172,13 +1239,13 @@ class OEF(OP2Common):
             # 76-HEXPR
             # 77-PENPR
             # 78-TETPR
-            n, nelements, ntotal = self._oef_csolid_pressure(data, ndata, dt, is_magnitude_phase)
+            n, nelements, ntotal = self._oef_csolid_pressure(data, ndata, dt, is_magnitude_phase, prefix, postfix)
             if nelements is None:
                 return n
 
         elif self.element_type == 102:  # cbush
             # 102-CBUSH
-            n, nelements, ntotal = self._oef_cbush(data, ndata, dt, is_magnitude_phase)
+            n, nelements, ntotal = self._oef_cbush(data, ndata, dt, is_magnitude_phase, prefix, postfix)
             if nelements is None:
                 return n
 
@@ -1196,11 +1263,11 @@ class OEF(OP2Common):
             if self.element_type in [189]:  # VUQUAD
                 nnodes = 4
                 etype = 'VUQUAD4'
-                result_name = 'vuquad_force'
+                result_name = 'vu_quad_force'
             elif self.element_type in [190]:  # VUTRIA
                 nnodes = 3
                 etype = 'VUTRIA3'
-                result_name = 'vutria_force'
+                result_name = 'vu_tria_force'
             else:
                 raise NotImplementedError(self.code_information())
 
@@ -1788,7 +1855,7 @@ class OEF(OP2Common):
         """Table 4 parser for OEF2 thermal table"""
         pass
 
-    def _oef_crod(self, data, ndata, dt, is_magnitude_phase):
+    def _oef_crod(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
         n = 0
         #1-CROD
         #3-CTUBE
@@ -1796,13 +1863,13 @@ class OEF(OP2Common):
         obj_real = RealRodForceArray
         obj_complex = ComplexRodForceArray
         if self.element_type == 1: # CROD
-            result_name = 'crod_force'
+            result_name = prefix + 'crod_force' + postfix
             slot = self.crod_force
         elif self.element_type == 3:  # CTUBE
-            result_name = 'ctube_force'
+            result_name = prefix + 'ctube_force' + postfix
             slot = self.ctube_force
         elif self.element_type == 10:  # CONROD
-            result_name = 'conrod_force'
+            result_name = prefix + 'conrod_force' + postfix
             slot = self.conrod_force
         else:
             msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
@@ -1924,10 +1991,10 @@ class OEF(OP2Common):
             return self._not_implemented_or_skip(data, ndata, msg)
         return n, nelements, ntotal
 
-    def _oef_cbeam(self, data, ndata, dt, is_magnitude_phase):
+    def _oef_cbeam(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
         #2-CBEAM
         n = 0
-        result_name = 'cbeam_force'
+        result_name = prefix + 'cbeam_force' + postfix
         if self._results.is_not_saved(result_name):
             return ndata, None, None
         self._results._found_result(result_name)
@@ -1979,7 +2046,7 @@ class OEF(OP2Common):
         elif self.format_code in [1, 2] and self.num_wide == 100:  # real/random
             # real - format_code == 1
             # random - format_code == 2
-            result_name, is_random = self._apply_oef_ato_crm_psd_rms_no(result_name)
+            #result_name, is_random = self._apply_oef_ato_crm_psd_rms_no(result_name)
             slot = getattr(self, result_name)
             ntotal = 400  # 1+(10-1)*11=100 ->100*4 = 400
             nelements = ndata // ntotal
@@ -2153,7 +2220,7 @@ class OEF(OP2Common):
             return self._not_implemented_or_skip(data, ndata, msg)
         return n, nelements, ntotal
 
-    def _oef_celas_cdamp(self, data, ndata, dt, is_magnitude_phase):
+    def _oef_celas_cdamp(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
         n = 0
         # 11-CELAS1
         # 12-CELAS2
@@ -2165,43 +2232,43 @@ class OEF(OP2Common):
         # 22-CDAMP3
         # 23-CDAMP4
         if self.element_type == 11:
-            result_name = 'celas1_force'
+            result_name = prefix + 'celas1_force' + postfix
             slot = self.celas1_force
             obj_real = RealSpringForceArray
             obj_complex = ComplexSpringForceArray
         elif self.element_type == 12:
-            result_name = 'celas2_force'
+            result_name = prefix + 'celas2_force' + postfix
             slot = self.celas2_force
             obj_real = RealSpringForceArray
             obj_complex = ComplexSpringForceArray
         elif self.element_type == 13:
-            result_name = 'celas3_force'
+            result_name = prefix + 'celas3_force' + postfix
             slot = self.celas3_force
             obj_real = RealSpringForceArray
             obj_complex = ComplexSpringForceArray
         elif self.element_type == 14:
-            result_name = 'celas4_force'
+            result_name = prefix + 'celas4_force' + postfix
             slot = self.celas4_force
             obj_real = RealSpringForceArray
             obj_complex = ComplexSpringForceArray
 
         elif self.element_type == 20:
-            result_name = 'cdamp1_force'
+            result_name = prefix + 'cdamp1_force' + postfix
             slot = self.cdamp1_force
             obj_real = RealDamperForceArray
             obj_complex = ComplexDamperForceArray
         elif self.element_type == 21:
-            result_name = 'cdamp2_force'
+            result_name = prefix + 'cdamp2_force' + postfix
             slot = self.cdamp2_force
             obj_real = RealDamperForceArray
             obj_complex = ComplexDamperForceArray
         elif self.element_type == 22:
-            result_name = 'cdamp3_force'
+            result_name = prefix + 'cdamp3_force' + postfix
             slot = self.cdamp3_force
             obj_real = RealDamperForceArray
             obj_complex = ComplexDamperForceArray
         elif self.element_type == 23:
-            result_name = 'cdamp4_force'
+            result_name = prefix + 'cdamp4_force' + postfix
             slot = self.cdamp4_force
             obj_real = RealDamperForceArray
             obj_complex = ComplexDamperForceArray
@@ -2306,8 +2373,8 @@ class OEF(OP2Common):
             return self._not_implemented_or_skip(data, ndata, msg)
         return n, nelements, ntotal
 
-    def _oef_cvisc(self, data, ndata, dt, is_magnitude_phase):
-        result_name = 'cvisc_force'
+    def _oef_cvisc(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
+        result_name = prefix + 'cvisc_force' + postfix
         if self._results.is_not_saved(result_name):
             return ndata, None, None
         n = 0
@@ -2416,10 +2483,10 @@ class OEF(OP2Common):
             return self._not_implemented_or_skip(data, ndata, msg)
         return n, nelements, ntotal
 
-    def _oef_cbar_34(self, data, ndata, dt, is_magnitude_phase):
+    def _oef_cbar_34(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
         # 34-CBAR
         n = 0
-        result_name = 'cbar_force'
+        result_name = prefix + 'cbar_force' + postfix
         if self._results.is_not_saved(result_name):
             return ndata, None, None
         self._results._found_result(result_name)
@@ -2429,7 +2496,7 @@ class OEF(OP2Common):
         if self.format_code in [1, 2] and self.num_wide == 9:
             # real - format_code == 1
             # random - format_code == 2
-            result_name, is_random = self._apply_oef_ato_crm_psd_rms_no(result_name)
+            #result_name, is_random = self._apply_oef_ato_crm_psd_rms_no(result_name)
             slot = getattr(self, result_name)
 
             ntotal = 36  # 9*4
@@ -2526,10 +2593,10 @@ class OEF(OP2Common):
         #print self.barForces
         return n, nelements, ntotal
 
-    def _oef_cbar_100(self, data, ndata, dt, is_magnitude_phase):
+    def _oef_cbar_100(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
         n = 0
         #100-BARS
-        result_name = 'cbar_force_10nodes'
+        result_name = prefix + 'cbar_force_10nodes' + postfix
         if self._results.is_not_saved(result_name):
             return ndata, None, None
         self._results._found_result(result_name)
@@ -2580,7 +2647,7 @@ class OEF(OP2Common):
             return self._not_implemented_or_skip(data, ndata, msg)
         return n, nelements, ntotal
 
-    def _oef_shells_centroidal(self, data, ndata, dt, is_magnitude_phase):
+    def _oef_shells_centroidal(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
         # 33-CQUAD4
         # 74-CTRIA3
         n = 0
@@ -2591,7 +2658,7 @@ class OEF(OP2Common):
         else:
             msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
             return self._not_implemented_or_skip(data, ndata, msg)
-        result_name, is_random = self._apply_oef_ato_crm_psd_rms_no(result_name)
+        #result_name, is_random = self._apply_oef_ato_crm_psd_rms_no(result_name)
         slot = getattr(self, result_name)
 
         assert self._data_factor == 1, self._data_factor
@@ -2703,7 +2770,7 @@ class OEF(OP2Common):
             return self._not_implemented_or_skip(data, ndata, msg)
         return n, nelements, ntotal
 
-    def _oef_shells_nodal(self, data, ndata, dt, is_magnitude_phase):
+    def _oef_shells_nodal(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
         n = 0
         # 64-CQUAD8
         # 70-CTRIAR
@@ -2711,20 +2778,15 @@ class OEF(OP2Common):
         # 82-CQUADR
         # 144-CQUAD4-bilinear
         if self.element_type == 64:
-            result_name = 'cquad8_force'
-            slot = self.cquad8_force
+            result_name = prefix + 'cquad8_force' + postfix
         elif self.element_type == 70:
-            result_name = 'ctriar_force'
-            slot = self.ctriar_force
+            result_name = prefix + 'ctriar_force' + postfix
         elif self.element_type == 75:
-            result_name = 'ctria6_force'
-            slot = self.ctria6_force
+            result_name = prefix + 'ctria6_force' + postfix
         elif self.element_type == 82:
-            result_name = 'cquadr_force'
-            slot = self.cquadr_force
+            result_name = prefix + 'cquadr_force' + postfix
         elif self.element_type == 144:
-            result_name = 'cquad4_force'
-            slot = self.cquad4_force
+            result_name = prefix + 'cquad4_force' + postfix
         else:
             msg = self.code_information()
             return self._not_implemented_or_skip(data, ndata, msg)
@@ -2924,7 +2986,7 @@ class OEF(OP2Common):
             return self._not_implemented_or_skip(data, ndata, msg)
         return n, nelements, ntotal
 
-    def _oef_shells_composite(self, data, ndata, dt, is_magnitude_phase):
+    def _oef_shells_composite(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
         n = 0
         # 95 - CQUAD4
         # 96 - CQUAD8
@@ -3000,7 +3062,7 @@ class OEF(OP2Common):
             return self._not_implemented_or_skip(data, ndata, msg)
         return n, nelements, ntotal
 
-    def _oef_cshear(self, data, ndata, dt, is_magnitude_phase):
+    def _oef_cshear(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
         # 4-CSHEAR
         result_name = 'cshear_force'
         if self._results.is_not_saved(result_name):
@@ -3163,10 +3225,10 @@ class OEF(OP2Common):
             return self._not_implemented_or_skip(data, ndata, msg)
         return n, nelements, ntotal
 
-    def _oef_cconeax(self, data, ndata, dt, is_magnitude_phase):
+    def _oef_cconeax(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
         n = 0
         # 35-CONEAX
-        result_name = 'coneax_force'
+        result_name = prefix + 'coneax_force' + postfix
         if self._results.is_not_saved(result_name):
             return ndata, None, None
         self._results._found_result(result_name)
@@ -3216,7 +3278,7 @@ class OEF(OP2Common):
             return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
 
-    def _oef_cgap(self, data, ndata, dt, is_magnitude_phase):
+    def _oef_cgap(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
         # 38-GAP
         n = 0
         result_name = 'cgap_force'
@@ -3271,10 +3333,10 @@ class OEF(OP2Common):
             return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
 
-    def _oef_cbend(self, data, ndata, dt, is_magnitude_phase):
+    def _oef_cbend(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
         # 69-CBEND
         n = 0
-        result_name = 'cbend_force'
+        result_name = prefix + 'cbend_force' + postfix
         self._results._found_result(result_name)
         slot = getattr(self, result_name)
         if self.format_code == 1 and self.num_wide == 15:  # real
@@ -3435,7 +3497,7 @@ class OEF(OP2Common):
             return self._not_implemented_or_skip(data, ndata, msg)
         return n, nelements, ntotal
 
-    def _oef_csolid_pressure(self, data, ndata, dt, is_magnitude_phase):
+    def _oef_csolid_pressure(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
         # 76-HEXPR
         # 77-PENPR
         # 78-TETPR
@@ -3591,10 +3653,10 @@ class OEF(OP2Common):
             return self._not_implemented_or_skip(data, ndata, msg)
         return n, nelements, ntotal
 
-    def _oef_cbush(self, data, ndata, dt, is_magnitude_phase):
+    def _oef_cbush(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
         # 102-CBUSH
-        result_name = 'cbush_force'
-        result_name, is_random = self._apply_oef_ato_crm_psd_rms_no(result_name)
+        result_name = prefix + 'cbush_force' + postfix
+        #result_name, is_random = self._apply_oef_ato_crm_psd_rms_no(result_name)
         self._results._found_result(result_name)
         slot = getattr(self, result_name)
         n = 0

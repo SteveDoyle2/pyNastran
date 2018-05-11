@@ -10,7 +10,8 @@ from numpy import frombuffer, radians, sin, cos, ones, dtype as npdtype
 from pyNastran import is_release
 from pyNastran.f06.f06_writer import F06Writer
 from pyNastran.op2.op2_helper import polar_to_real_imag
-from pyNastran.op2.op2_interface.op2_codes import Op2Codes, get_scode_word
+from pyNastran.op2.op2_interface.op2_codes import (
+    Op2Codes, get_scode_word, get_sort_method_from_table_name)
 
 from pyNastran.op2.errors import SortCodeError, MultipleSolutionNotImplementedError # DeviceCodeError,
 
@@ -1094,7 +1095,7 @@ class OP2Common(Op2Codes, F06Writer):
 
             flag = 'freq/dt/mode'
             s = Struct(self._endian + self._analysis_code_fmt + b'i6f')
-            if 'RMS' != self.table_name[-4:-1] and 'NO' != self.table_name[-3:-1]:
+            if 'RMS' != self.table_name_str[-4:-1] and 'NO' != self.table_name_str[-3:-1]:
                 #table_cap = self.table_name[-4:-1]
                 #print('table_cap = %r' % table_cap)
                 assert eid > 0, self.code_information()
@@ -1392,6 +1393,9 @@ class OP2Common(Op2Codes, F06Writer):
         ogs = 0
         if hasattr(self, 'ogs'):
             ogs = self.ogs
+        #if self.binary_debug:
+            #self.binary_debug.write(self.code_information(include_time=True))
+
         code = (self.isubcase, self.analysis_code, self._sort_method, self._count, ogs,
                 self.superelement_adaptivity_index, self.pval_step)
         #code = (self.isubcase, self.analysis_code, self._sort_method, self._count,
@@ -1711,7 +1715,7 @@ class OP2Common(Op2Codes, F06Writer):
         try:
             sort_method, is_real, is_random = self._table_specs()
         except:
-            sort_method = int(self.table_name[-1])
+            sort_method = get_sort_method_from_table_name(self.table_name)
         #is_sort1 = self.table_name.endswith('1')
         #is_sort1 = self.is_sort1  # uses the sort_bits
         assert sort_method in [1, 2], 'sort_method=%r\n%s' % (sort_method, self.code_information())

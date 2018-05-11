@@ -233,7 +233,7 @@ class F06Writer(OP2_F06_Common):
                 self._results.add('constraint_forces')
             elif 'force' in result.lower(): # could use more validation...
                 self._results.add('element_forces')
-            # thermalLoad_VU_3D, thermalLoad_1D, thermalLoad_CONV, thermalLoad_2D_3D
+            # thermalLoad_VU_3D, thermalLoad_1D, conv_thermal_load, thermalLoad_2D_3D
             self._results.add(result)
 
     def set_results(self, results):
@@ -775,12 +775,15 @@ class F06Writer(OP2_F06_Common):
 
             #------------------------------------------
             #OEF - Fluxes - tCode=4 thermal=1
-            self.thermalLoad_CONV,
+            self.conv_thermal_load,
 
             #self.thermalLoad_CHBDY,
             self.chbdye_thermal_load,
             self.chbdyg_thermal_load,
             self.chbdyp_thermal_load,
+            self.chbdye_thermal_load_flux,
+            self.chbdyg_thermal_load_flux,
+            self.chbdyp_thermal_load_flux,
 
             #self.thermalLoad_1D,
             self.crod_thermal_load,
@@ -789,6 +792,12 @@ class F06Writer(OP2_F06_Common):
             self.conrod_thermal_load,
             self.cbar_thermal_load,
             self.cbend_thermal_load,
+            self.crod_thermal_load_flux,
+            self.cbeam_thermal_load_flux,
+            self.ctube_thermal_load_flux,
+            self.conrod_thermal_load_flux,
+            self.cbar_thermal_load_flux,
+            self.cbend_thermal_load_flux,
 
             #self.thermalLoad_2D_3D,
             self.cquad4_thermal_load,
@@ -799,13 +808,21 @@ class F06Writer(OP2_F06_Common):
             self.ctetra_thermal_load,
             self.chexa_thermal_load,
             self.cpenta_thermal_load,
+            self.cquad4_thermal_load_flux,
+            self.ctriax6_thermal_load_flux,
+            self.cquad8_thermal_load_flux,
+            self.ctria3_thermal_load_flux,
+            self.ctria6_thermal_load_flux,
+            self.ctetra_thermal_load_flux,
+            self.chexa_thermal_load_flux,
+            self.cpenta_thermal_load_flux,
 
 
             self.thermalLoad_VU,
             self.thermalLoad_VU_3D,
-            self.thermalLoad_VUBeam,
-            self.vuquad_force,
-            self.vutria_force,
+            self.vu_beam_thermal_load,
+            self.vu_quad_force,
+            self.vu_tria_force,
 
             #------------------------------------------
 

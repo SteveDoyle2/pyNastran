@@ -461,10 +461,13 @@ class GEOM3(GeomCommon):
 
             surf_or_line = surf_or_line.rstrip().decode('latin1')
             line_load_dir = line_load_dir.rstrip().decode('latin1')
+            if line_load_dir == '':
+                # TODO: not 100%
+                line_load_dir = 'NORM'
 
             # forces NX pload4 function to get called if it should be
             assert surf_or_line in ['SURF', 'LINE']
-            assert line_load_dir in ['LINE', 'X', 'Y', 'Z', 'TANG', 'NORM']
+            assert line_load_dir in ['LINE', 'X', 'Y', 'Z', 'TANG', 'NORM'], 'line_load_dir=%r' % line_load_dir
 
             load = PLOAD4.add_op2_data(
                 [sid, eid, [p1, p2, p3, p4], g1, g34,
