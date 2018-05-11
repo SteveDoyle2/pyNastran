@@ -101,7 +101,7 @@ class OEF(OP2Common):
         """
         prefix = ''
         postfix = ''
-        if self.table_name in [b'OEF1X']:
+        if self.table_name in [b'OEF1X', b'OEF1']:
             pass
         elif self.table_name in [b'HOEF1']:
             postfix = '_flux'
@@ -117,16 +117,16 @@ class OEF(OP2Common):
             #pass # TODO: update
         elif self.table_name in [b'OEFCRM1']:
             assert self.table_code in [504], self.code_information()
-            postfix = '_CRM'
+            postfix = '_crm'
         elif self.table_name in [b'OEFPSD1']:
             assert self.table_code in [604], self.code_information()
-            postfix = '_PSD'
+            postfix = '_psd'
         elif self.table_name in [b'OEFRMS1']:
             assert self.table_code in [804], self.code_information()
-            postfix = '_RMS'
+            postfix = '_rms'
         elif self.table_name in [b'OEFNO1']:
             assert self.table_code in [904], self.code_information()
-            postfix = '_NO'
+            postfix = '_no'
         elif self.table_name in [b'RAFCONS']:
             postfix = '_RAFCONS'
         elif self.table_name in [b'RAFEATC']:
@@ -2652,9 +2652,9 @@ class OEF(OP2Common):
         # 74-CTRIA3
         n = 0
         if self.element_type == 33:
-            result_name = 'cquad4_force'
+            result_name = prefix + 'cquad4_force' + postfix
         elif self.element_type == 74:
-            result_name = 'ctria3_force'
+            result_name = prefix + 'ctria3_force' + postfix
         else:
             msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
             return self._not_implemented_or_skip(data, ndata, msg)

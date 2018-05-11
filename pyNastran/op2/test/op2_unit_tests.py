@@ -1628,21 +1628,21 @@ class TestOP2(Tester):
         assert len(op2.accelerations_RMS) == 1
         assert len(op2.accelerations_CRM) == 1
         assert len(op2.accelerations_NO) == 1
-        assert len(op2.cbar_force_CRM) == 1
-        assert len(op2.cbar_force_PSD) == 1
-        assert len(op2.cbar_force_RMS) == 1
-        assert len(op2.cbar_force_NO) == 1
-        assert len(op2.cquad4_force_CRM) == 1
-        assert len(op2.cquad4_force_PSD) == 1
-        assert len(op2.cquad4_force_RMS) == 1
-        assert len(op2.cquad4_force_NO) == 1
-        assert len(op2.ctria3_force_CRM) == 1
-        assert len(op2.ctria3_force_PSD) == 1
-        assert len(op2.ctria3_force_RMS) == 1
-        assert len(op2.ctria3_force_NO) == 1
-        assert len(op2.cbar_force_NO) == 1
-        assert len(op2.cbar_force_NO) == 1
-        assert len(op2.cbar_force_NO) == 1
+        assert len(op2.cbar_force_crm) == 1
+        assert len(op2.cbar_force_psd) == 1
+        assert len(op2.cbar_force_rms) == 1
+        assert len(op2.cbar_force_no) == 1
+        assert len(op2.cquad4_force_crm) == 1
+        assert len(op2.cquad4_force_psd) == 1
+        assert len(op2.cquad4_force_rms) == 1
+        assert len(op2.cquad4_force_no) == 1
+        assert len(op2.ctria3_force_crm) == 1
+        assert len(op2.ctria3_force_psd) == 1
+        assert len(op2.ctria3_force_rms) == 1
+        assert len(op2.ctria3_force_no) == 1
+        assert len(op2.cbar_force_no) == 1
+        assert len(op2.cbar_force_no) == 1
+        assert len(op2.cbar_force_no) == 1
         assert len(op2.eigenvalues) == 1
         assert 'BHH' in op2.matrices
         assert 'KHH' in op2.matrices

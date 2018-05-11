@@ -541,6 +541,9 @@ class OES(OP2Common):
             (34, 1, 16, b'OES1X') : ('cbar_stress', RealBarStressArray),
             (34, 1, 16, b'OES1') : ('cbar_stress', RealBarStressArray),
             (34, 2, 19, b'OES1X') : ('cbar_stress', ComplexBarStressArray),
+            (34, 1, 10, 'OESNO1') : ('cbar_stress', ComplexBarStressArray),
+            (34, 2, 10, 'OESXRMS1') : ('cbar_stress', ComplexBarStressArray),
+
             (34, 3, 19, b'OES1X') : ('cbar_stress', ComplexBarStressArray),
             (34, 3, 19, b'OESVM1') : ('cbar_stress', ComplexBarStressArray),
             #(34, 1, 19) : ('cbar_stress', RandomBarStressArray),
@@ -580,14 +583,18 @@ class OES(OP2Common):
             (33, 2, 15, b'OES1X') :  ('cquad4_stress', ComplexPlateStressArray),
             (33, 3, 15, b'OES1X') :  ('cquad4_stress', ComplexPlateStressArray),
             #(33, 3, 0) :  ('cquad4_stress', RandomPlateStressArray),
+            (33, 1, 9, 'OESNO1') : ('cquad4_stress', ComplexPlateStressArray),
+            (33, 2, 11, 'OESXRMS1') : ('cquad4_stress', ComplexPlateStressArray),
 
             (74, 1, 17, b'OES1X1') : ('ctria3_stress', RealPlateStrainArray),
             (74, 1, 17, b'OES1X') : ('ctria3_stress', RealPlateStrainArray),
             (74, 1, 17, b'OES1') : ('ctria3_stress', RealPlateStrainArray),
             (74, 2, 15, b'OES1X') : ('ctria3_stress', ComplexPlateStrainArray),
             (74, 3, 15, b'OES1X') : ('ctria3_stress', ComplexPlateStrainArray),
-            (74, 2, 17, b'OESVM1') : ('cquad4_stress', 'NA'),
-            (74, 3, 17, b'OESVM1') : ('cquad4_stress', 'NA'),
+            (74, 2, 11, 'OESXRMS1') : ('ctria3_stress', ComplexPlateStrainArray),
+            (74, 1, 9, 'OESNO1') : ('ctria3_stress', ComplexPlateStrainArray),
+            (74, 2, 17, b'OESVM1') : ('ctria3_stress', 'NA'),
+            (74, 3, 17, b'OESVM1') : ('ctria3_stress', 'NA'),
             #(74, 1, 9) : ('ctria3_stress', RandomPlateStressArray),
 
             (82, 1, 87, b'OES1X1') : ('cquadr_stress', RealPlateStressArray),
@@ -986,13 +993,15 @@ class OES(OP2Common):
             prefix = 'strength_ratio_'
         elif self.table_name in [b'OESCP', b'OESTRCP']:
             pass # TODO: update
+        elif self.table_name in [b'OESXRMS1']: # wrong...
+            pass
         elif self.table_name in [b'OESVM1C', b'OSTRVM1C', b'OESVM1', b'OSTRVM1']:
             prefix = 'modal_contribution_'
         elif self.table_name in [b'OSTRRMS1']:
             self.format_code = 1
             self.sort_bits[0] = 0
             postfix = '_rms'
-        elif self.table_name in [b'OSTRNO1', b'OSTNO1C']:
+        elif self.table_name in [b'OESNO1', b'OSTRNO1', b'OSTNO1C']:
             self.format_code = 1
             self.sort_bits[0] = 0
             postfix = '_no'
@@ -2589,6 +2598,16 @@ class OES(OP2Common):
                                           s1b, s2b, s3b, s4b)
         elif self.format_code == 1 and self.num_wide == 19: # random
             raise RuntimeError(self.code_information())
+        elif self.format_code == 2 and self.num_wide == 10: # random
+            msg = self.code_information()
+            n = self._not_implemented_or_skip(data, ndata, msg)
+            nelements = None
+            ntotal = None
+        elif self.format_code == 1 and self.num_wide == 10: # random
+            msg = self.code_information()
+            n = self._not_implemented_or_skip(data, ndata, msg)
+            nelements = None
+            ntotal = None
         else:
             raise RuntimeError(self.code_information())
         return n, nelements, ntotal
@@ -3124,6 +3143,11 @@ class OES(OP2Common):
             n = self._not_implemented_or_skip(data, ndata, msg)
             nelements = None
             ntotal = None
+        elif self.format_code == 2 and self.num_wide == 11: # random
+            msg = self.code_information()
+            n = self._not_implemented_or_skip(data, ndata, msg)
+            nelements = None
+            ntotal = None
         else:
             raise RuntimeError(self.code_information())
         return n, nelements, ntotal
@@ -3289,6 +3313,12 @@ class OES(OP2Common):
         elif self.format_code in [2, 3] and self.num_wide == 17: # random; CTRIA3
             assert self.table_name in [b'OESVM1', b'OSTRVM1'], self.code_information()
             #msg = self.code_information()
+            msg = '%s-%s' % (self.table_name_str, self.element_name)
+            return self._not_implemented_or_skip(data, ndata, msg), None, None
+        elif self.format_code == 2 and self.num_wide == 11: # random; CTRIA3
+            msg = '%s-%s' % (self.table_name_str, self.element_name)
+            return self._not_implemented_or_skip(data, ndata, msg), None, None
+        elif self.format_code == 1 and self.num_wide == 9: # random; CTRIA3
             msg = '%s-%s' % (self.table_name_str, self.element_name)
             return self._not_implemented_or_skip(data, ndata, msg), None, None
         else:
