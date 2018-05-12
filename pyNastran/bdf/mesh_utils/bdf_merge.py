@@ -8,7 +8,7 @@ from six.moves import StringIO
 from six import string_types, iteritems, itervalues
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.case_control_deck import CaseControlDeck
-from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
+from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber, get_renumber_starting_ids_from_model
 
 
 def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None, size=8,
@@ -113,22 +113,7 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
     ]
     mappers = []
     for bdf_filename in bdf_filenames[1:]:
-        #model.log.info('model.masses = %s' % model.masses)
-        starting_id_dict = {
-            'cid' : max(model.coords.keys()) + 1,
-            'nid' : max(model.point_ids) + 1,
-            'eid' : max([max(model.elements.keys()),
-                         max(model.masses.keys()) if model.masses else 0,
-                         max(model.rigid_elements.keys()) if model.rigid_elements else 0,
-                        ]) + 1,
-            'pid' : max([max(model.properties.keys()),
-                         0 if len(model.properties_mass) == 0 else max(model.properties_mass.keys()),
-                         ]) + 1,
-            'mid' : max(model.material_ids) + 1,
-            'set_id' : max(model.sets.keys()) + 1 if model.sets else 1,
-            'spline_id' : max(model.splines.keys()) + 1 if model.splines else 1,
-            'caero_id' : max(caero.box_ids[-1, -1] for caero in itervalues(model.caeros)) + 1 if model.caeros else 1,
-        }
+        starting_id_dict = get_renumber_starting_ids_from_model(model)
         #for param, val in sorted(iteritems(starting_id_dict)):
             #print('  %-3s %s' % (param, val))
 

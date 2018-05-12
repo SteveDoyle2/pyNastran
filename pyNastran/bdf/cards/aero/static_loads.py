@@ -905,11 +905,35 @@ class TRIM(BaseCard):
 
             ndelta = (naestat + naesurf + naeparm) - (ntrim + naelink + nsuport_dofs + nsuport1_dofs) #+ ntrim_aesurfs
             if ndelta != 0:
+                #msg = (
+                    #'(naestat + naesurf + naeparm) - (ntrim + ntrim_aesurf? + naelink + '
+                    #'nsuport_dofs + nsuport1_dofs) = ndelta = %s; ndelta != 0\n'
+                    #'naestat=%s naesurf=%s naeparm=%s ntrim=%s ntrim_aesurf=%s '
+                    #'naelink=%s nsuport_dofs=%s nsuport1_dofs=%s\n' % (
+                        #ndelta,
+                        #naestat, naesurf, naeparm, ntrim, ntrim_aesurf,
+                        #naelink, nsuport_dofs, nsuport1_dofs)
+                #)
                 msg = (
-                    '(naestat + naesurf + naeparm) - (ntrim + ntrim_aesurf? + naelink + '
-                    'nsuport_dofs + nsuport1_dofs) = ndelta = %s; ndelta != 0\n'
-                    'naestat=%s naesurf=%s naeparm=%s ntrim=%s ntrim_aesurf=%s '
-                    'naelink=%s nsuport_dofs=%s nsuport1_dofs=%s\n' % (
+                    'Invalid trim state (ndelta != 0):\n'
+                    '   (naestat + naesurf + naeparm) = (%s + %s + %s)\n'
+                    ' - (ntrim + ntrim_aesurf? + naelink + nsuport_dofs + nsuport1_dofs)'
+                    ' = (%s + %s + %s + %s + %s)\n'
+                    '===================================================================\n'
+                    '  ndelta = %s\n\n'
+                    'Summary\n'
+                    '-------\n'
+                    '  +naestat = %s\n'
+                    '  +naesurf = %s\n'
+                    '  +naeparm = %s\n'
+                    '  -ntrim = %s\n'
+                    '  -ntrim_aesurf = %s\n'
+                    '  -naelink = %s\n'
+                    '  -nsuport_dofs = %s\n'
+                    '  -nsuport1_dofs = %s\n\n' % (
+                        naestat, naesurf, naeparm,
+                        ntrim, ntrim_aesurf, naelink, nsuport_dofs, nsuport1_dofs,
+
                         ndelta,
                         naestat, naesurf, naeparm, ntrim, ntrim_aesurf,
                         naelink, nsuport_dofs, nsuport1_dofs)

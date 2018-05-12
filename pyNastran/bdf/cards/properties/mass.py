@@ -204,6 +204,7 @@ class NSM1x(Property):
     def Type(self):
         """gets the nsm_type"""
         return self.nsm_type
+
     @Type.setter
     def Type(self, nsm_type):
         """sets the nsm_type"""
@@ -230,12 +231,12 @@ class NSM1x(Property):
         _id = 1
         nfields = len(card)
         if nfields == 5:
-            value = integer_or_string(card, 4, 'ID_1')
-            if value != 'ALL' and not isinstance(value, int):
+            id1 = integer_or_string(card, 4, 'ID_1')
+            if id1 != 'ALL' and not isinstance(id1, int):
                 msg = ('*ID_1 = %r (field #4) on card must be an integer or ALL.\n'
-                       'card=%s' % (value, card))
+                       'card=%s' % (id1, card))
                 raise SyntaxError(msg)
-            ids = value
+            ids = id1
         else:
             # we'll handle expansion in the init
             ids = card[4:]
@@ -272,9 +273,10 @@ class NSM1(NSM1x):
     +------+-----+------+-------+-----+----+----+----+----+
     """
     type = 'NSM1'
-    def __init__(self, sid, nsm_type, pid_eid, value, comment=''):
+    def __init__(self, sid, nsm_type, value, pid_eid, comment=''):
         """See ``NSM1x``"""
-        NSM1x.__init__(self, sid, nsm_type, pid_eid, value, comment='')
+        assert isinstance(value, float), 'NSM1; value=%r and must be a float' % (value)
+        NSM1x.__init__(self, sid, nsm_type, value, pid_eid, comment='')
 
 
 class NSM(NSMx):
@@ -388,6 +390,7 @@ class NSML1(NSM1x):
         comment : str; default=''
             a comment for the card
         """
+        assert isinstance(value, float), 'NSML1; value=%r and must be a float' % (value)
         NSM1x.__init__(self, sid, nsm_type, value, ids, comment=comment)
 
 

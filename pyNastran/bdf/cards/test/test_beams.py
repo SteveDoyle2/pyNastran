@@ -1028,7 +1028,7 @@ class TestBeams(unittest.TestCase):
         model.pop_parse_errors()
         model.cross_reference()
         model.pop_xref_errors()
-        save_load_deck(model, run_convert=False)
+        save_load_deck(model, run_convert=False, run_renumber=False)
 
     def test_beamor(self):
         """tests a BEAMOR"""

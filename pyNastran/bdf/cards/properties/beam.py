@@ -1791,6 +1791,7 @@ class PBCOMP(LineProperty):
         self.mids = mids
         assert 0 <= self.symopt <= 5, 'symopt=%i is invalid; ' % self.symopt
         self.mid_ref = None
+        self.mids_ref = None
 
     def validate(self):
         assert isinstance(self.mids, list), 'mids=%r type=%s' % (self.mids, type(self.mids))
@@ -1891,22 +1892,28 @@ class PBCOMP(LineProperty):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ' which is required by PBCOMP mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
+        self.mids_ref = model.Materials(self.mids, msg=msg)
 
     def Mids(self):
-        return self.mids
+        if self.mids_ref is None:
+            return self.mids
+        return [mid.mid for mid in self.mids_ref]
 
     def uncross_reference(self):
         self.mid = self.Mid()
+        self.mids = self.Mids()
         self.mid_ref = None
+        self.mids_ref = None
 
     def raw_fields(self):
         list_fields = ['PBCOMP', self.pid, self.Mid(), self.A, self.i1,
                        self.i2, self.i12, self.j, self.nsm, self.k1, self.k2,
                        self.m1, self.m2, self.n1, self.n2, self.symopt, None]
-        for (yi, zi, ci, mid) in zip(self.y, self.z, self.c, self.mids):
+        for (yi, zi, ci, mid) in zip(self.y, self.z, self.c, self.Mids()):
             list_fields += [yi, zi, ci, mid, None, None, None, None]
         return list_fields
 

@@ -97,23 +97,23 @@ def run_docopt():
     msg += '\n'
 
     msg += "Secondary Options:\n"
+    msg += "  --groups                        enables groups\n"
     msg += "  -g GSCRIPT, --geomscript        path to geometry script file (runs before load geometry)\n"
     msg += "  -p PSCRIPT, --postscript        path to post script file (runs after load geometry)\n"
-    msg += "  --groups                        enables groups\n"
     msg += "  --user_geom GEOM_FNAME          add user specified geometry (repeatable)\n"
     msg += "  -u POINTS_FNAME, --user_points  add user specified points (repeatable)\n"
     msg += '\n'
 
     msg += "Debug:\n"
     if not pyNastran.is_pynastrangui_exe:
-        msg += "  --test      temporary dev mode (default=False)\n"
-        msg += "  --qt QT     sets the qt version (default=QT_API)\n"
-    msg += "  --noupdate  disables the update check\n"
+        msg += "  --test         temporary dev mode (default=False)\n"
+        msg += "  --qt QT        sets the qt version (default=QT_API)\n"
+    msg += "  --noupdate     disables the update check\n"
+    msg += "  --log LOG      disables HTML logging; prints to the screen\n"
     msg += '\n'
 
     msg += "Info:\n"
     msg += "  -q, --quiet    prints debug messages (default=True)\n"
-    msg += "  --log LOG      disables HTML logging; prints to the screen\n"
     msg += "  -h, --help     show this help message and exit\n"
     msg += "  -v, --version  show program's version number and exit\n"
 
@@ -166,8 +166,8 @@ def run_docopt():
     user_points = data['--user_points']
     user_geom = data['--user_geom']
 
-    qt = data['--qt']
-    if qt:
+    if '--qt' in data:
+        qt = data['--qt']
         qt = qt.lower()
         assert qt in ['pyside', 'pyqt4', 'pyqt5'], 'qt=%r' % qt
         os.environ.setdefault('QT_API', qt)
@@ -178,10 +178,13 @@ def run_docopt():
 
     is_groups = data['--groups']
     no_update = data['--noupdate']
+    test = ''
+    if '--test' in data:
+        test = data['--test']
     #assert data['--console'] == False, data['--console']
     return (input_format, input_filenames, output_filenames,
             geom_script, post_script, debug, user_points,
-            user_geom, is_groups, no_update, data['--log'], data['--test'])
+            user_geom, is_groups, no_update, data['--log'], test)
 
 
 def get_inputs(argv=None):

@@ -672,7 +672,7 @@ class CTRIAX6(TriShell):
         return 0.
 
     def Mid(self):
-        if isinstance(self.mid, integer_types):
+        if self.mid_ref is None:
             return self.mid
         return self.mid_ref.mid
 

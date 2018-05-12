@@ -582,6 +582,7 @@ class AddCards(AddMethods):
             a comment for the card
 
         """
+        assert isinstance(value, float)
         nsm = NSM1(sid, nsm_type, value, ids, comment=comment)
         self._add_nsm_object(nsm)
         return nsm

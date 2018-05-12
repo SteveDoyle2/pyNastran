@@ -4601,7 +4601,7 @@ class SPLINE2(Spline):
         7: 'dtor', 8:'cid', 9:'dthx', 10:'dthy',
     }
 
-    def __init__(self, eid, caero, id1, id2, setg, dz=0.0, dtor=1.0, cid=0,
+    def __init__(self, eid, caero, box1, box2, setg, dz=0.0, dtor=1.0, cid=0,
                  dthx=0., dthy=0., usage='BOTH', comment=''):
         """
         Creates a SPLINE2 card, which defines a beam spline.
@@ -4612,7 +4612,7 @@ class SPLINE2(Spline):
             spline id
         caero : int
             CAEROx id that defines the plane of the spline
-        id1 / id2 : int
+        box1 / box2 : int
             First/last box/body id that is used by the spline
         setg : int
             SETx id that defines the list of GRID points that are used
@@ -4647,8 +4647,8 @@ class SPLINE2(Spline):
 
         self.eid = eid
         self.caero = caero
-        self.id1 = id1
-        self.id2 = id2
+        self.box1 = box1
+        self.box2 = box2
         self.setg = setg
         self.dz = dz
         self.dtor = dtor
@@ -4656,10 +4656,12 @@ class SPLINE2(Spline):
         self.dthx = dthx
         self.dthy = dthy
         self.usage = usage
-        assert self.id2 >= self.id1, 'id2=%s id1=%s' % (self.id2, self.id1)
         self.cid_ref = None
         self.caero_ref = None
         self.setg_ref = None
+
+    def validate(self):
+        assert self.box2 >= self.box1, 'box2=%s box1=%s' % (self.box2, self.box1)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -4747,8 +4749,32 @@ class SPLINE2(Spline):
         self.setg_ref = None
 
     @property
+    def id1(self):
+        """see box1"""
+        self.deprecated('id1', 'box1', '1.0')
+        return self.box1
+
+    @property
+    def id2(self):
+        """see box2"""
+        self.deprecated('id2', 'box2', '1.0')
+        return self.box2
+
+    @id1.setter
+    def id1(self):
+        """see box1"""
+        self.deprecated('id1', 'box1', '1.0')
+        self.box1 = box1
+
+    @id1.setter
+    def id2(self):
+        """see box2"""
+        self.deprecated('id2', 'box2', '1.0')
+        self.box2 = box2
+
+    @property
     def aero_element_ids(self):
-        return np.arange(self.id1, self.id2 + 1)
+        return np.arange(self.box1, self.bpx2 + 1)
 
     def Cid(self):
         if self.setg_ref is not None:
@@ -4775,7 +4801,7 @@ class SPLINE2(Spline):
             the fields that define the card
 
         """
-        list_fields = ['SPLINE2', self.eid, self.CAero(), self.id1, self.id2,
+        list_fields = ['SPLINE2', self.eid, self.CAero(), self.box1, self.box2,
                        self.Set(), self.dz, self.dtor, self.Cid(), self.dthx,
                        self.dthy, None, self.usage]
         return list_fields
@@ -4783,7 +4809,7 @@ class SPLINE2(Spline):
     def repr_fields(self):
         dz = set_blank_if_default(self.dz, 0.)
         usage = set_blank_if_default(self.usage, 'BOTH')
-        list_fields = ['SPLINE2', self.eid, self.CAero(), self.id1, self.id2,
+        list_fields = ['SPLINE2', self.eid, self.CAero(), self.box1, self.box2,
                        self.Set(), dz, self.dtor, self.Cid(), self.dthx, self.dthy,
                        None, usage]
         return list_fields

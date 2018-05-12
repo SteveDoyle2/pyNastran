@@ -65,7 +65,7 @@ class Abaqus(object):
             lines = abaqus_inp_filename
         else:
             msg = 'abaqus_inp_filename=%s type=%r' % (
-                abaqus_inp_filename, type( abaqus_inp_filename))
+                abaqus_inp_filename, type(abaqus_inp_filename))
             raise NotImplementedError(msg)
 
         lines = _clean_lines(lines)
@@ -859,6 +859,26 @@ class Abaqus(object):
         #iline -= 1
         self.log.debug('  end of step %i...' % istep)
         return iline, line0
+
+    def write(self, abqaqus_filename_out):
+        self.log.info('writing %r' % abqaqus_filename_out)
+        #self.parts = {}
+        #self.boundaries = {}
+        #self.materials = {}
+        #self.amplitudes = {}
+        #self.assembly = {}
+        #self.initial_conditions = {}
+        #self.steps = {}
+        #self.heading = None
+        #self.preprint = None
+        with open(abqaqus_filename_out, 'w') as abq_file:
+            print("  nparts = %s" % len(self.parts))
+            print("  nmaterials = %s" % len(self.materials))
+            for part_name, part in iteritems(self.parts):
+                part.write(abq_file)
+            for unused_mat_name, mat in iteritems(self.materials):
+                mat.write(abq_file)
+
 
 def read_set(lines, iline, line0, params_map):
     """reads a set"""

@@ -719,7 +719,7 @@ class TestAero(unittest.TestCase):
         model.cross_reference(model)
         caero1.panel_points_elements()
         caero2.get_points_elements_3d()
-        save_load_deck(model)
+        save_load_deck(model, run_renumber=False)
 
 
     def test_spline2(self):
@@ -1037,7 +1037,7 @@ class TestAero(unittest.TestCase):
         caero3b.get_points()
         caero3b.panel_points_elements()
 
-        save_load_deck(model, run_convert=False)
+        save_load_deck(model, run_convert=False, run_renumber=False)
 
 
     def test_paero3(self):
@@ -1250,7 +1250,7 @@ class TestAero(unittest.TestCase):
 
         read_bdf(bdf_filename, xref=False, punch=True, debug=False)
         model.safe_cross_reference()
-        save_load_deck(model, run_convert=False)
+        save_load_deck(model, run_convert=False, run_renumber=False)
 
 
         #caero5.raw_fields()
@@ -1318,7 +1318,7 @@ class TestAero(unittest.TestCase):
         model.cross_reference()
         spline3.write_card()
         spline3.raw_fields()
-        save_load_deck(model)
+        save_load_deck(model, run_renumber=False)
         spline3b.eid = 1000
 
         spline3b.nodes.append(42)

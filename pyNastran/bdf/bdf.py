@@ -10,6 +10,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
 import sys
+from copy import deepcopy
 import io
 import traceback
 from collections import defaultdict
@@ -4209,6 +4210,24 @@ class BDF(BDF_):
         #: QVOL
         self.loads = {}  # type: Dict[int, List[Any]]
         self.load_combinations = {}  # type: Dict[int, List[Any]]
+
+    def __deepcopy__(self, memo):
+        """performs a deepcopy"""
+        #newone = type(self)()
+        #newone.__dict__.update(self.__dict__)
+        #return newone
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for k, v in self.__dict__.items():
+            setattr(result, k, deepcopy(v, memo))
+        return result
+
+    def __copy__(self):
+        """performs a copy"""
+        newone = type(self)()
+        newone.__dict__.update(self.__dict__)
+        return newone
 
 
 def _prep_comment(comment):

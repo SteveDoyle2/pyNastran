@@ -218,7 +218,7 @@ class CMASS1(PointMassElement):
         return nodes
 
     def Pid(self):
-        if isinstance(self.pid, integer_types):
+        if self.pid_ref is None:
             return self.pid
         return self.pid_ref.pid
 

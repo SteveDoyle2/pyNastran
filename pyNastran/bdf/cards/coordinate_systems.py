@@ -1720,7 +1720,7 @@ class Cord2x(Coord):
         assert isinstance(cid, integer_types), 'cid=%r' % cid
         assert isinstance(rid, integer_types), 'rid=%r' % rid
 
-    def update(self, nid_map, cid_map):
+    def update(self, unused_nid_map, cid_map):
         """
         maps = {
             'node' : nid_map,
@@ -2556,3 +2556,127 @@ class CORD2S(Cord2x, SphericalCoord):
         list_fields = (['CORD2S', self.cid, rid] + list(self.e1) +
                        list(self.e2) + list(self.e3))
         return list_fields
+
+
+def create_coords_along_line(model, p1, p2, percents, cid=0, axis=1):
+    """
+    Creates a series of coordinate systems
+
+    Parameters
+    ----------
+    model : BDF()
+        the model
+    p1 : (3,) float ndarray
+        the start point
+    p2 : (3,) float ndarray
+        the end point
+    percents : (ncoords, ) float ndarray
+        the location of the coords (0. to 1.; inclusive)
+    cid : int; default=0
+        the reference coordinate system
+    axis : int; default=1
+        the axis normal to the plane; defines the "x" axis
+
+    Returns
+    -------
+    xyz_cid0 : (nnodes, 3) float ndarray
+        the xyz locations the global (basic) coordinate system
+    nid_cp_cd : (nnodes, 3) int ndarray
+       the node_id, cp coord, cd coord
+    icd_transform : ???
+       a mapping of the cid to nids???
+    cids : List[int]
+        the created coordinate system ids
+    origins : List[(ox, oy, oz)]
+        the origin of each coordinate system
+    cid_to_inids : Dict[cid] -> inids
+        maps the coord id to the index of the nodes along the axis
+        cid : int
+           the coord id
+        inids : (nnodes_in_cid)
+
+    Warning
+    -------
+     - requires at least 1 node
+    """
+    cid = max(list(model.coords.keys())) + 1
+
+    cids = []
+    origins = []
+    if axis == 0: # x axis, yz plane
+        z_axisi = [1., 0., 0.]
+        xz_planei = [0., 1., 0.]
+    elif axis == 1: # xz plane, y axis
+        z_axisi = [0., 1., 0.]
+        xz_planei = [0., 0., 1.]
+    elif axis == 2: # xy plane, z axis
+        z_axisi = [0., 0., 1.]
+        xz_planei = [0., 1., 0.]
+    else:
+        raise NotImplementedError(axis)
+    z_axisi = np.array(z_axisi)
+    xz_planei = np.array(xz_planei)
+
+    for unused_icid, percent in enumerate(percents):
+        origin = percent * p1 + (1-percent) * p2
+        zaxis = np.array(origin) + z_axisi
+
+        # let's put the torque down the axis of the wing
+        # (x-axis, but globally the y-axis), so we add a
+        # point in the y-axis
+        xzplane = origin + xz_planei
+
+        #print('origin = %s' % origin)
+        #print('zaxis = %s' % zaxis)
+        #print('xzplane = %s' % xzplane)
+        unused_coord = model.add_cord2r(
+            cid, rid=0,
+            origin=origin, zaxis=zaxis, xzplane=xzplane, comment='')
+
+        cids.append(cid)
+        origins.append(origin)
+        cid += 1
+    return cids
+
+def get_nodes_along_axis_in_coords(model, nids, xyz_cp, icp_transform, cids):
+    """
+    Parameters
+    ----------
+    model : BDF()
+        the model
+    nids : (nnodes, ) ndarray
+        the nodes of the model
+    xyz_cp : (nnodes, 3) float ndarray
+        the xyz locations in a representative local coordinate system
+        for example, for cid=0, use xyz_cid0
+    icp_transform : Dict[cp cid] -> inids
+       a mapping of the CP coord to the node indices
+    icd_transform : Dict[cd cid] -> inids
+       a mapping of the CD coord to the node indices
+    cids : List[int]
+        the created coordinate system ids
+
+    Returns
+    -------
+    #origins : List[(ox, oy, oz)]
+        #the origin of each coordinate system
+    cid_to_inids : Dict[cid] -> inids
+        maps the coord id to the index of the nodes along the axis
+        cid : int
+           the coord id
+        inids : (nnodes_in_cid)
+    """
+    # setup the cutting planes
+    # down the axis from the outboard to the inboard
+    cid_to_inids = {}
+    for icid, cid in enumerate(cids): # 114 cids
+        #origin = origins[icid]
+        #origin = model.coords[cid].origin
+
+        xyz_cid = model.transform_xyzcp_to_xyz_cid(xyz_cp, nids, icp_transform,
+                                                   cid=cid, in_place=False, atol=1e-6)
+        xvalues_raw = xyz_cid[:, 0]
+        inids = np.where(xvalues_raw <= 0.)[0]
+        cid_to_inids[cid] = inids
+        model.log.debug('nnodes[icid=%3s, cid=%s] = %s' % (icid, cid, len(inids)))
+    return cid_to_inids
