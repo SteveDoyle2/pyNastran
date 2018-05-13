@@ -599,6 +599,7 @@ class CHBDYP(ThermalElement):
         assert self.pid > 0
         self.nodes_ref = None
         self.pid_ref = None
+        self.ce_ref = None
 
     @property
     def Type(self):
@@ -622,7 +623,6 @@ class CHBDYP(ThermalElement):
         """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
-
         surface_type = string(card, 3, 'Type')
 
         iview_front = integer_or_blank(card, 4, 'iview_front', 0)
@@ -639,8 +639,8 @@ class CHBDYP(ThermalElement):
         rad_mid_back = integer_or_blank(card, 10, 'rad_mid_back', 0)
         gmid = integer_or_blank(card, 11, 'gmid')
         ce = integer_or_blank(card, 12, 'ce', 0)
-        e1 = double_or_blank(card, 13, 'e3')
-        e2 = double_or_blank(card, 14, 'e3')
+        e1 = double_or_blank(card, 13, 'e1')
+        e2 = double_or_blank(card, 14, 'e2')
         e3 = double_or_blank(card, 15, 'e3')
         assert len(card) <= 16, 'len(CHBDYP card) = %i\ncard=%s' % (len(card), card)
         return CHBDYP(eid, pid, surface_type, g1, g2, g0=g0, gmid=gmid, ce=ce,
@@ -659,6 +659,7 @@ class CHBDYP(ThermalElement):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         [eid, pid, surface_type, iviewf, iviewb, g1, g2, g0, radmidf, radmidb,
          dislin, ce, e1, e2, e3] = data
@@ -716,29 +717,38 @@ class CHBDYP(ThermalElement):
         ----------
         model : BDF()
             the BDF object
+
         """
-        msg = ' which is required by CHBDYP pid=%s' % self.pid
-        self.pid_ref = model.Phbdy(self.pid, msg=msg)
-        self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
+        try:
+            msg = ' which is required by CHBDYP pid=%s' % self.pid
+            self.pid_ref = model.Phbdy(self.pid, msg=msg)
+            self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
+            self.ce_ref = model.Coord(self.ce, msg)
+        except KeyError:
+            print(self.get_stats())
+            raise
 
     def safe_cross_reference(self, model):
         msg = ' which is required by CHBDYP pid=%s' % self.pid
-        self.pid = model.Phbdy(self.pid, msg=msg)
-        self.nodes = model.EmptyNodes(self.nodes, msg=msg)
-        self.pid_ref = self.pid
-        self.nodes_ref = self.nodes
+        self.pid_ref = model.Phbdy(self.pid, msg=msg)
+        self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
+        self.ce_ref = model.Coord(self.ce, msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
+        self.ce = self.Ce()
         self.nodes_ref = None
         self.pid_ref = None
+        self.ce_ref = None
 
     def _verify(self, xref):
         eid = self.Eid()
         pid = self.Pid()
+        ce = self.Ce()
         assert isinstance(eid, integer_types)
         assert isinstance(pid, integer_types)
+        assert isinstance(ce, integer_types)
 
     def Eid(self):
         return self.eid
@@ -748,11 +758,17 @@ class CHBDYP(ThermalElement):
             return self.pid_ref.pid
         return self.pid
 
+    def Ce(self):
+        """gets the coordinate system, CE"""
+        if self.ce_ref is not None:
+            return self.ce_ref.cid
+        return self.ce
+
     def raw_fields(self):
         (g1, g2, g0, gmid) = self.node_ids
         list_fields = ['CHBDYP', self.eid, self.Pid(), self.surface_type,
                        self.iview_front, self.ivew_back, g1, g2, g0,
-                       self.rad_mid_front, self.rad_mid_back, gmid, self.ce,
+                       self.rad_mid_front, self.rad_mid_back, gmid, self.Ce(),
                        self.e1, self.e2, self.e3]
         return list_fields
 
@@ -764,7 +780,7 @@ class CHBDYP(ThermalElement):
 
         (g1, g2, g0, gmid) = self.node_ids
         g0 = set_blank_if_default(g0, 0)
-        ce = set_blank_if_default(self.ce, 0)
+        ce = set_blank_if_default(self.Ce(), 0)
 
         list_fields = ['CHBDYP', self.eid, self.Pid(), self.surface_type, iview_front,
                        ivew_back, g1, g2, g0, rad_mid_front, rad_mid_back,
@@ -907,6 +923,7 @@ class PCONV(ThermalProperty):
         assert self.pconid > 0
         assert self.mid > 0
         assert self.form in [0, 1, 10, 11, 20, 21]
+        self.ce_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -954,23 +971,31 @@ class PCONV(ThermalProperty):
         return PCONV(pconid, mid, form, expf, ftype, tid, chlen, gidin, ce,
                      e1, e2, e3, comment=comment)
 
-    #def cross_reference(self, model):
-        #pass
+    def Ce(self):
+        """gets the coordinate system, CE"""
+        if self.ce_ref is not None:
+            return self.ce_ref.cid
+        return self.ce
+
+    def cross_reference(self, model):
+        msg = 'which is required by PCONV pconid=%s' % self.pconid
+        self.ce_ref = model.Coord(self.ce, msg)
 
     def uncross_reference(self):
-        pass
+        self.ce = self.Ce()
+        self.ce_ref = None
 
     def raw_fields(self):
         list_fields = ['PCONV', self.pconid, self.mid, self.form, self.expf,
                        self.ftype, self.tid, None, None, self.chlen, self.gidin,
-                       self.ce, self.e1, self.e2, self.e3]
+                       self.Ce(), self.e1, self.e2, self.e3]
         return list_fields
 
     def repr_fields(self):
         form = set_blank_if_default(self.form, 0)
         expf = set_blank_if_default(self.expf, 0.0)
         ftype = set_blank_if_default(self.ftype, 0)
-        ce = set_blank_if_default(self.ce, 0)
+        ce = set_blank_if_default(self.Ce(), 0)
         list_fields = ['PCONV', self.pconid, self.mid, form, expf, ftype, self.tid,
                        None, None, self.chlen, self.gidin, ce, self.e1, self.e2,
                        self.e3]

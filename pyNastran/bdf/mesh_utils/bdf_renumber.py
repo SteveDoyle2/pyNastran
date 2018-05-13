@@ -7,7 +7,7 @@ from __future__ import print_function
 from itertools import chain
 
 import io
-from six import PY2, PY3, iteritems, StringIO
+from six import PY2, PY3, iteritems, itervalues, StringIO
 import numpy as np
 
 from pyNastran.bdf.bdf import BDF
@@ -561,10 +561,14 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     if 'caero_id' in starting_id_dict and caero_id is not None:
         # caeros
         for caero_idi, caero in sorted(iteritems(model.caeros)):
-            if caero.type in ['CAERO1', 'CAERO2', 'CAERO3', 'CAERO4']: # not CAERO5
+            if caero.type in ['CAERO1', 'CAERO3', 'CAERO4']: # not CAERO5
                 caero.eid = caero_id
                 caero_id_map[caero_idi] = caero_id
                 caero_id += caero.shape[0] * caero.shape[1]
+            elif caero.type == 'CAERO2':
+                caero.eid = caero_id
+                caero_id_map[caero_idi] = caero_id
+                caero_id += caero.nboxes
             else:
                 raise NotImplementedError(caero)
 
@@ -645,7 +649,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         for idi, param in sorted(iteritems(dict_obj)):
             #print('working on id=%s param=%s' % (str(idi), str(param)))
             try:
-                msg = '%s has no %r; use %s' % (param.type, param_name, object_attributes(param))
+                msg = '%s has no %r; use %s' % (param.type, param_name, param.object_attributes())
             except AttributeError:
                 model.log.error('param = %r' % param)
                 raise

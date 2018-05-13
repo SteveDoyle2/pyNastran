@@ -5,7 +5,7 @@ defines:
 """
 from __future__ import print_function
 from six.moves import StringIO
-from six import string_types, iteritems, itervalues
+from six import string_types, iteritems
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.case_control_deck import CaseControlDeck
 from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber, get_renumber_starting_ids_from_model
@@ -274,7 +274,11 @@ def _get_mapper_0(model):
 
     """
     # build the maps
-    eids_all = list(model.elements.keys()) + list(model.masses.keys()) + list(model.rigid_elements.keys())
+    eids_all = (
+        list(model.elements.keys()) +
+        list(model.masses.keys()) +
+        list(model.rigid_elements.keys())
+    )
     eid_map = {eid : eid for eid in eids_all}
     nid_map = {nid : nid for nid in model.point_ids}
     cid_map = {cid : cid for cid in model.coord_ids}
@@ -298,10 +302,10 @@ def _get_mapper_0(model):
     tstep_map = _dict_key_to_key(model.tsteps)
     tstepnl_map = _dict_key_to_key(model.tstepnls)
     suport1_map = _dict_key_to_key(model.suport1)
-    suport_map = {}
+    #suport_map = {}
 
     nlparm_map = _dict_key_to_key(model.nlparms)
-    nlpci_map = _dict_key_to_key(model.nlpcis)
+    #nlpci_map = _dict_key_to_key(model.nlpcis)
     table_sdamping_map = _dict_key_to_key(model.tables_sdamping)
     dconadd_map = _dict_key_to_key(model.dconadds)
     dconstr_map = _dict_key_to_key(model.dconstrs)

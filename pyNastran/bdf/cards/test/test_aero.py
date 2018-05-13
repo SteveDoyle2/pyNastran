@@ -642,7 +642,7 @@ class TestAero(unittest.TestCase):
     def test_spline1(self):
         """checks the SPLINE1 card"""
         eid = 1
-        caero_id = 99999999
+        caero_id = 100
         box1 = 1
         box2 = 10
         setg = 42
@@ -719,7 +719,7 @@ class TestAero(unittest.TestCase):
         model.cross_reference(model)
         caero1.panel_points_elements()
         caero2.get_points_elements_3d()
-        save_load_deck(model, run_renumber=False)
+        save_load_deck(model, run_renumber=True)
 
 
     def test_spline2(self):

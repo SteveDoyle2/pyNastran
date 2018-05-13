@@ -490,7 +490,36 @@ class TestBeams(unittest.TestCase):
         self.assertEqual(cbeam.I12(), 0.4)
         self.assertEqual(cbeam.J(), 3.14)
 
-    def test_cbeam_02(self):
+    def test_cbeam_g0(self):
+        """modification of test_cbeam_01"""
+        model = BDF(debug=False)
+        lines = ['PBEAM,200,6,2.9,3.5,5.97,0.4,3.14',
+                 '     , , ,2.0,-4.0',]
+        model.add_card(lines, 'PBEAM', is_list=False)
+
+        eid = 100
+        pid = 200
+        nids = [10, 20]
+        x = None
+        g0 = 30
+        model.add_cbeam(eid, pid, nids, x, g0, offt='GGG', bit=None, pa=0,
+                       pb=0, wa=None, wb=None, sa=0,
+                       sb=0, comment='')
+
+        mid = 6
+        E = 1.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu)
+        model.add_grid(10, [0., 0., 0.])
+        model.add_grid(20, [0., 0., 0.])
+        model.add_grid(30, [0., 1., 0.])
+        model.cross_reference()
+
+        save_load_deck(model, punch=True, run_remove_unused=True,
+                       run_convert=True, run_renumber=True)
+
+    def test_cbeam_pbeaml(self):
         """CBEAM/PBEAML"""
         model = BDF(debug=False)
         model.add_grid(1, [0., 0., 0.])
@@ -705,7 +734,7 @@ class TestBeams(unittest.TestCase):
         model.safe_cross_reference()
         model.uncross_reference()
 
-    def test_cbeam_03(self):
+    def test_cbeam_bit(self):
         """tests an BIT field on the CBEAM"""
         model = BDF(debug=False)
 

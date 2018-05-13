@@ -442,6 +442,7 @@ class CBAR(LineElement):
         self.pid_ref = None
         self.ga_ref = None
         self.gb_ref = None
+        self.g0_ref = None
 
     def validate(self):
         msg = ''
@@ -653,23 +654,39 @@ class CBAR(LineElement):
         if model.is_nx:
             assert self.offt == 'GGG', 'NX only support offt=GGG; offt=%r' % self.offt
 
+        if self.g0:
+            self.g0_ref = model.nodes[self.g0_ref]
+            self.g0_vector = self.g0_ref.get_position() - self.ga_ref.get_position()
+        else:
+            self.g0_vector = self.x
+
     def uncross_reference(self):
         self.pid = self.Pid()
         self.ga = self.Ga()
         self.gb = self.Gb()
+        self.g0 = self.G0()
         self.ga_ref = None
         self.gb_ref = None
+        self.g0_ref = None
         self.pid_ref = None
 
     def Ga(self):
+        """gets Ga/G1"""
         if self.ga_ref is None:
             return self.ga
         return self.ga_ref.nid
 
     def Gb(self):
+        """gets Gb/G2"""
         if self.gb_ref is None:
             return self.gb
         return self.gb_ref.nid
+
+    def G0(self):
+        """gets G0"""
+        if self.g0_ref is None:
+            return self.g0
+        return self.g0_ref.nid
 
     def get_x_g0_defaults(self):
         """
@@ -681,9 +698,13 @@ class CBAR(LineElement):
         x_g0 : varies
             g0 : List[int, None, None]
             x : List[float, float, float]
+
+        Note
+        ----
+        Used by CBAR and CBEAM
         """
         if self.g0 is not None:
-            return (self.g0, None, None)
+            return (self.G0(), None, None)
         else:
             #print('x =', self.x)
             #print('g0 =', self.g0)

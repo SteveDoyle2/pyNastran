@@ -259,7 +259,7 @@ class AEFACT(BaseCard):
             a comment for the card
 
         """
-        BaseCard.__init__(self)
+        super(AEFACT, self).__init__()
         if comment:
             self.comment = comment
         #: Set identification number. (Unique Integer > 0)
@@ -293,6 +293,14 @@ class AEFACT(BaseCard):
 
     #def uncross_reference(self):
         #pass
+
+    def object_attributes(self, mode='public', keys_to_skip=None):
+        """.. seealso:: `pyNastran.utils.object_attributes(...)`"""
+        if keys_to_skip is None:
+            keys_to_skip = []
+
+        my_keys_to_skip = ['Di', 'data']
+        return super(AEFACT, self).object_attributes(mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     @property
     def Di(self):
@@ -344,17 +352,15 @@ class AELINK(BaseCard):
 
     .. math:: u^D + \Sigma_{i=1}^n C_i u_i^I = 0.0
 
-    +--------+-------+-------+--------+----+-------+----+-------+----+
-    |   1    |   2   |   3   |   4    |  5 |   6   |  7 |   8   |  9 |
-    +========+=======+=======+========+====+=======+====+=======+====+
-    | AELINK |  ID   | LABLD | LABL1  | C1 | LABL2 | C2 | LABL3 | C3 |
-    +--------+-------+-------+--------+----+-------+----+-------+----+
-    |        | LABL4 |  C4   |  etc.  |    |       |    |       |    |
-    +--------+-------+-------+--------+----+-------+----+-------+----+
-
-    +--------+-------+-------+-------+------+
-    | AELINK |  10   | INBDA | OTBDA | -2.0 |
-    +--------+-------+-------+-------+------+
+    +--------+-------+-------+--------+------+-------+----+-------+----+
+    |   1    |   2   |   3   |   4    |   5  |   6   |  7 |   8   |  9 |
+    +========+=======+=======+========+======+=======+====+=======+====+
+    | AELINK |  ID   | LABLD | LABL1  |  C1  | LABL2 | C2 | LABL3 | C3 |
+    +--------+-------+-------+--------+------+-------+----+-------+----+
+    |        | LABL4 |  C4   |  etc.  |      |       |    |       |    |
+    +--------+-------+-------+--------+------+-------+----+-------+----+
+    | AELINK |  10   | INBDA |  OTBDA | -2.0 |       |    |       |    |
+    +--------+-------+-------+--------+------+-------+----+-------+----+
     """
     type = 'AELINK'
 
@@ -2050,6 +2056,12 @@ class CAERO2(BaseCard):
         if self.lint_ref is not None:
             return self.lint_ref.sid
         return self.lint
+
+    @property
+    def nboxes(self):
+        if self.nsb > 0:
+            return self.nsb
+        return len(self.lsb_ref.fractions) # AEFACT
 
     def cross_reference(self, model):
         """
@@ -4774,7 +4786,7 @@ class SPLINE2(Spline):
 
     @property
     def aero_element_ids(self):
-        return np.arange(self.box1, self.bpx2 + 1)
+        return np.arange(self.box1, self.box2 + 1)
 
     def Cid(self):
         if self.setg_ref is not None:

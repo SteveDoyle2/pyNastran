@@ -161,6 +161,7 @@ class CBEAM(CBAR):
         self.ga_ref = None
         self.gb_ref = None
         self.pid_ref = None
+        self.g0_ref = None
         self.g0_vector = None
 
     @classmethod
@@ -460,8 +461,8 @@ class CBEAM(CBAR):
         self.nodes_ref = [self.ga_ref, self.gb_ref]
         self.pid_ref = model.Property(self.pid, msg=msg)
         if self.g0:
-            g0 = model.nodes[self.g0]
-            self.g0_vector = g0.get_position() - self.ga_ref.get_position()
+            self.g0_ref = model.nodes[self.g0]
+            self.g0_vector = self.g0_ref.get_position() - self.ga_ref.get_position()
         else:
             self.g0_vector = self.x
         if model.is_nx:
@@ -469,7 +470,7 @@ class CBEAM(CBAR):
 
     def safe_cross_reference(self, model):
         msg = ' which is required by CBEAM eid=%s' % (self.eid)
-
+        print('self.ga, gb', self.ga, self.gb)
         self.ga_ref = model.Node(self.ga, msg=msg)
         self.gb_ref = model.Node(self.gb, msg=msg)
         self.nodes_ref = [self.ga_ref, self.gb_ref]
@@ -480,8 +481,8 @@ class CBEAM(CBAR):
 
         if self.g0:
             try:
-                g0 = model.nodes[self.g0]
-                self.g0_vector = g0.get_position() - self.ga_ref.get_position()
+                self.g0_ref = model.nodes[self.g0_ref]
+                self.g0_vector = self.g0_ref.get_position() - self.ga_ref.get_position()
             except KeyError:
                 model.log.warning('Node=%s%s' % (self.g0, msg))
         else:
@@ -491,8 +492,10 @@ class CBEAM(CBAR):
         self.pid = self.Pid()
         self.ga = self.Ga()
         self.gb = self.Gb()
+        self.g0 = self.G0()
         self.ga_ref = None
         self.gb_ref = None
+        self.g0_ref = None
         self.pid_ref = None
 
     def _verify(self, xref):
