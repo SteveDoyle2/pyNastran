@@ -2601,7 +2601,7 @@ class GetCard(GetMethods):
             new_array = [tuple(row) for row in mkarray]
             #print('new_array =', new_array)
             uniques = np.lib.arraysetops.unique(new_array, axis=0).tolist()
-            for u in uniques:
-                print(u)
+            #for u in uniques:
+                #print(u)
             #print('uniques =', uniques)
         return mkarray

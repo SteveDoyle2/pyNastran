@@ -655,8 +655,27 @@ class CBAR(LineElement):
             assert self.offt == 'GGG', 'NX only support offt=GGG; offt=%r' % self.offt
 
         if self.g0:
-            self.g0_ref = model.nodes[self.g0_ref]
+            self.g0_ref = model.nodes[self.g0]
             self.g0_vector = self.g0_ref.get_position() - self.ga_ref.get_position()
+        else:
+            self.g0_vector = self.x
+
+    def safe_cross_reference(self, model):
+        msg = ' which is required by CBEAM eid=%s' % (self.eid)
+        self.ga_ref = model.Node(self.ga, msg=msg)
+        self.gb_ref = model.Node(self.gb, msg=msg)
+        self.nodes_ref = [self.ga_ref, self.gb_ref]
+        try:
+            self.pid_ref = model.Property(self.pid, msg=msg)
+        except KeyError:
+            model.log.warning('pid=%s%s' % (self.pid, msg))
+
+        if self.g0:
+            try:
+                self.g0_ref = model.nodes[self.g0]
+                self.g0_vector = self.g0_ref.get_position() - self.ga_ref.get_position()
+            except KeyError:
+                model.log.warning('Node=%s%s' % (self.g0, msg))
         else:
             self.g0_vector = self.x
 
