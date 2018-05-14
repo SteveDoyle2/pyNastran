@@ -89,12 +89,46 @@ class OP2_F06_Common(object):
 
         #======================================================================
         self.ctetra_stress = {}
+        self.ctetra_stress_ato = {}
+        self.ctetra_stress_crm = {}
+        self.ctetra_stress_no = {}
+        self.ctetra_stress_psd = {}
+        self.ctetra_stress_rms = {}
+
         self.cpenta_stress = {}
+        self.cpenta_stress_ato = {}
+        self.cpenta_stress_crm = {}
+        self.cpenta_stress_no = {}
+        self.cpenta_stress_psd = {}
+        self.cpenta_stress_rms = {}
+
         self.chexa_stress = {}
+        self.chexa_stress_ato = {}
+        self.chexa_stress_crm = {}
+        self.chexa_stress_no = {}
+        self.chexa_stress_psd = {}
+        self.chexa_stress_rms = {}
 
         self.ctetra_strain = {}
+        self.ctetra_strain_ato = {}
+        self.ctetra_strain_crm = {}
+        self.ctetra_strain_no = {}
+        self.ctetra_strain_psd = {}
+        self.ctetra_strain_rms = {}
+
         self.cpenta_strain = {}
+        self.cpenta_strain_ato = {}
+        self.cpenta_strain_crm = {}
+        self.cpenta_strain_no = {}
+        self.cpenta_strain_psd = {}
+        self.cpenta_strain_rms = {}
+
         self.chexa_strain = {}
+        self.chexa_strain_ato = {}
+        self.chexa_strain_crm = {}
+        self.chexa_strain_no = {}
+        self.chexa_strain_psd = {}
+        self.chexa_strain_rms = {}
 
         self.modal_contribution_ctetra_stress = {}
         self.modal_contribution_cpenta_stress = {}
@@ -823,7 +857,6 @@ class OP2_F06_Common(object):
             # OES - isotropic CBAR stress/strain
             'cbar_stress', 'cbar_stress_ato', 'cbar_stress_crm', 'cbar_stress_no', 'cbar_stress_psd', 'cbar_stress_rms', 'modal_contribution_cbar_stress',
             'cbar_strain', 'cbar_strain_ato', 'cbar_strain_crm', 'cbar_strain_no', 'cbar_strain_psd', 'cbar_strain_rms', 'modal_contribution_cbar_strain',
-
             'cbar_force', 'cbar_force_ato', 'cbar_force_crm', 'cbar_force_psd', 'cbar_force_rms', 'cbar_force_no',
             'cbar_force_RAFCONS', 'cbar_force_RAFEATC',
 
@@ -860,14 +893,14 @@ class OP2_F06_Common(object):
 
 
             # OES - isotropic CTETRA/CHEXA/CPENTA stress
-            'ctetra_stress', 'modal_contribution_ctetra_stress', 'ctetra_stress_RASCONS',
-            'chexa_stress', 'modal_contribution_chexa_stress', 'chexa_stress_RASCONS',
-            'cpenta_stress', 'modal_contribution_cpenta_stress', 'cpenta_stress_RASCONS',
+            'ctetra_stress', 'ctetra_stress_ato', 'ctetra_stress_crm', 'ctetra_stress_no', 'ctetra_stress_psd', 'ctetra_stress_rms', 'modal_contribution_ctetra_stress', 'ctetra_stress_RASCONS',
+            'chexa_stress',  'chexa_stress_ato',  'chexa_stress_crm',  'chexa_stress_no',  'chexa_stress_psd',  'chexa_stress_rms',  'modal_contribution_chexa_stress', 'chexa_stress_RASCONS',
+            'cpenta_stress', 'cpenta_stress_ato', 'cpenta_stress_crm', 'cpenta_stress_no', 'cpenta_stress_psd', 'cpenta_stress_rms', 'modal_contribution_cpenta_stress', 'cpenta_stress_RASCONS',
 
             # OES - isotropic CTETRA/CHEXA/CPENTA strain
-            'ctetra_strain', 'modal_contribution_ctetra_strain', 'ctetra_strain_RASCONS',
-            'chexa_strain', 'modal_contribution_chexa_strain', 'chexa_strain_RASCONS',
-            'cpenta_strain', 'modal_contribution_cpenta_strain', 'cpenta_strain_RASCONS',
+            'ctetra_strain', 'ctetra_strain_ato', 'ctetra_strain_crm', 'ctetra_strain_no', 'ctetra_strain_psd', 'ctetra_strain_rms', 'modal_contribution_ctetra_strain', 'ctetra_strain_RASCONS',
+            'chexa_strain',  'chexa_strain_ato',  'chexa_strain_crm',  'chexa_strain_no',  'chexa_strain_psd',  'chexa_strain_rms',  'modal_contribution_chexa_strain', 'chexa_strain_RASCONS',
+            'cpenta_strain', 'cpenta_strain_ato', 'cpenta_strain_crm', 'cpenta_strain_no', 'cpenta_strain_psd', 'cpenta_strain_rms', 'modal_contribution_cpenta_strain', 'cpenta_strain_RASCONS',
 
             # OES - CSHEAR stress/strain
             'cshear_stress', 'modal_contribution_cshear_stress',

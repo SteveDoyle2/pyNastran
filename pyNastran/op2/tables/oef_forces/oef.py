@@ -131,9 +131,13 @@ class OEF(OP2Common):
             postfix = '_RAFCONS'
         elif self.table_name in [b'RAFEATC']:
             postfix = '_RAFEATC'
-        #elif self.table_name in [b'DOEF1']:
-            #assert self.thermal in [8], self.code_information()  # Scaled response spectra NRL
-            #assert self.table_code in [4], self.code_information()
+        elif self.table_name in [b'DOEF1']:
+            assert self.thermal in [8], self.code_information()  # Scaled response spectra NRL
+            assert self.table_code in [4], self.code_information()
+        elif self.table_name in [b'OEFIT']:
+            assert self.table_code in [25], self.code_information()
+            postfix = '_failure_indicies'
+            #raise NotImplementedError(self.code_information())
         else:
             raise NotImplementedError('%r' % self.table_name)
         return prefix, postfix

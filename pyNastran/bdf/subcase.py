@@ -311,6 +311,11 @@ class Subcase(object):
                             'RASEATC', 'RAFEATC', 'RAEEATC', 'RANEATC', 'RAGEATC', 'RAQCONS',
                             'RAPCONS']:
             pass
+        elif table_name in ['OUGPSD2',
+                            'OSTRNO1', 'OSTNO1C', 'OSTRNO1C',
+                            'OSTRMS1C', 'OSTRRMS1', 'OSTRRMS1C',
+                            'OQMPSD2']:
+            pass
         else:
             self._write_op2_error_msg(log, self.log, msg, data_code)
         #print(self)

@@ -280,7 +280,12 @@ class OP2Common(Op2Codes, F06Writer):
 
         label = label.decode(self.encoding).strip()
         nlabel = 65
-        label2 = label[nlabel:].strip()
+        label2 = label[nlabel:]
+        try:
+            label2 = update_label2(label2, self.isubcase)
+        except AssertionError:
+            pass
+
         assert len(label[:nlabel]) <= nlabel, 'len=%s \nlabel     =%r \nlabel[:%s]=%r' % (len(label), label, nlabel, label[:nlabel])
         assert len(label2) <= 55, 'len=%s label = %r\nlabel[:%s]=%r\nlabel2    =%r' % (len(label2), label, nlabel, label[:nlabel], label2)
         # not done...
@@ -380,7 +385,8 @@ class OP2Common(Op2Codes, F06Writer):
                 # 'SUBCASE 2'
                 #self.isubcase_name_map[isubcase] = [self.Subtitle, self.label]
                 self.isubcase_name_map[self.isubcase] = [
-                    self.subtitle, self.superelement_adaptivity_index, self.analysis_code, self.label]
+                    self.subtitle, self.superelement_adaptivity_index,
+                    self.analysis_code, self.label]
         else:
             raise  RuntimeError('isubcase is not defined')
 
@@ -388,7 +394,8 @@ class OP2Common(Op2Codes, F06Writer):
             ogs = 0
             if hasattr(self, 'ogs'):
                 ogs = self.ogs
-            code = (self.isubcase, self.analysis_code, self.superelement_adaptivity_index, self.pval_step, ogs)
+            code = (self.isubcase, self.analysis_code, self.superelement_adaptivity_index,
+                    self.pval_step, ogs)
             #code = (self.isubcase, self.analysis_code, self.superelement_adaptivity_index, self.table_name_str)
             #print("code =", code)
             #if code not in self.labels:
@@ -1006,11 +1013,6 @@ class OP2Common(Op2Codes, F06Writer):
                 n += 32
         return n
 
-
-    #@jit(str, str, str, boolean)
-    #@jit('int64(str, str, str, boolean)')
-    #@int_(str, str, str, boolean)
-    #@autojit
     def _read_real_table_sort1(self, data, is_vectorized, nnodes, result_name, flag, is_cid=False):
         """
         With a real transient result (e.g. SOL 109/159), reads a
@@ -1057,7 +1059,6 @@ class OP2Common(Op2Codes, F06Writer):
                 n += 32
         return n
 
-    #@autojit
     def _read_real_table_sort2(self, data, is_vectorized, nnodes, result_name, flag, is_cid=False):
         """
         With a real transient result (e.g. SOL 109/159), reads a
@@ -1068,44 +1069,48 @@ class OP2Common(Op2Codes, F06Writer):
         if self.is_debug_file:
             self.binary_debug.write('  _read_real_table_sort2\n')
         assert flag in ['node', 'elem'], flag
-        eid = self.nonlinear_factor
+        nid = self.nonlinear_factor
         #assert self.obj is not None
 
         obj = self.obj
-        if self.use_vector and is_vectorized and 0:  # TODO: not done....
+        if self.use_vector and is_vectorized:
             itime = obj.itime
             n = nnodes * 4 * 8
             itotal = obj.itotal
             itotal2 = itotal + nnodes
-            if obj.itime == 0:
-                ints = frombuffer(data, dtype=self.idtype).reshape(nnodes, 8)
-                #nids = ints[:, 0] // 10
-                nids = ones(nnodes, dtype='int32') * eid
-                assert nids.min() > 0, nids.min()
-                obj.node_gridtype[itotal:itotal2, 0] = nids
-                obj.node_gridtype[itotal:itotal2, 1] = ints[:, 1].copy()
 
+            obj.node_gridtype[itime, 0] = nid
             floats = frombuffer(data, dtype=self.fdtype).reshape(nnodes, 8).copy()
-            obj._times[itime] = floats[:, 0]
-            obj.data[obj.itime, itotal:itotal2, :] = floats[:, 2:]
+            ints = frombuffer(data, dtype=self.idtype).reshape(nnodes, 8)
+
+            if obj.itime == 0:
+                if self._analysis_code_fmt == b'i':
+                    times = ints[:, 0]
+                else:
+                    assert self._analysis_code_fmt == b'f'
+                    times = floats[:, 0]
+                obj._times = times
+            obj.node_gridtype[itime, 1] = ints[0, 1].copy()
+            obj.data[itotal:itotal2, obj.itime, :] = floats[:, 2:]
             obj.itotal = itotal2
         else:
             n = 0
             assert nnodes > 0
 
             flag = 'freq/dt/mode'
-            s = Struct(self._endian + self._analysis_code_fmt + b'i6f')
+            structi = Struct(self._endian + self._analysis_code_fmt + b'i6f')
             if 'RMS' != self.table_name_str[-4:-1] and 'NO' != self.table_name_str[-3:-1]:
                 #table_cap = self.table_name[-4:-1]
                 #print('table_cap = %r' % table_cap)
-                assert eid > 0, self.code_information()
+                assert nid > 0, self.code_information()
+            #print(obj.data.shape)
             for inode in range(nnodes):
                 edata = data[n:n+32]
-                out = s.unpack(edata)
+                out = structi.unpack(edata)
                 (dt, grid_type, tx, ty, tz, rx, ry, rz) = out
                 if self.is_debug_file:
                     self.binary_debug.write('  %s=%i; %s\n' % (flag, dt, str(out)))
-                obj.add_sort2(dt, eid, grid_type, tx, ty, tz, rx, ry, rz)
+                obj.add_sort2(dt, nid, grid_type, tx, ty, tz, rx, ry, rz)
                 n += 32
         return n
 
@@ -2007,3 +2012,70 @@ def get_superelement_adaptivity_index(subtitle, superelement):
         else:
             raise RuntimeError(split_superelement)
     return superelement_adaptivity_index
+
+def update_label2(label2, isubcase):
+    """strips off SUBCASE from the label2 to simplfify the output keys (e.g., displacements)"""
+    # strip off any comments
+    # 'SUBCASE  1 $ STAT'
+    # 'SUBCASE  1 $ 0.900 P'
+    label2 = label2.split('$')[0].strip()
+
+    if label2:
+        subcase_expected = 'SUBCASE %i' % isubcase
+        subcase_equal_expected = 'SUBCASE = %i' % isubcase
+        if subcase_expected == label2:
+            label2 = ''
+        elif label2 == 'NONLINEAR':
+            pass
+        elif subcase_expected in label2:
+            # 'SUBCASE 10' in 'NONLINEAR    SUBCASE 10'
+            nchars = len(subcase_expected)
+            ilabel_1 = label2.index(subcase_expected)
+            ilabel_2 = ilabel_1 + nchars
+            label2_prime = label2[:ilabel_1] + label2[ilabel_2:]
+            label2 = label2_prime.strip()
+        elif subcase_equal_expected in label2:
+            # 'SUBCASE = 10'
+            slabel = label2.split('=')
+            assert len(slabel) == 2, slabel
+            label2 = ''
+        elif 'PVAL ID=' in label2 and 'SUBCASE=' in label2:
+            # 'PVAL ID=       1                       SUBCASE=       1'
+            # '    PVAL ID=       1                       SUBCASE=       1'
+            ilabel2 = label2.index('SUBCASE')
+            slabel = label2[:ilabel2].strip().split('=')
+            assert slabel[0] == 'PVAL ID', slabel
+            label2 = slabel[0].strip() + '=' + slabel[1].strip()
+        elif 'SUBCASE' in label2:
+            # 'SUBCASE    10'
+            # 'SUBCASE = 10'
+            # 'SUBCASE = 1    SEGMENT = 1'
+            # 'SUBCASE = 1    HARMONIC = 0 ,C'
+            slabel = label2.split('$')[0].strip().split()
+
+            # 'SUBCASE    10'
+            # 'SUBCASE = 10'
+            # 'SUBCASE = 1    SEGMENT = 1'
+            # 'SUBCASE = 1    HARMONIC = 0 ,C'
+            if len(slabel) == 2:
+                label2 = ''
+            elif len(slabel) == 3 and slabel[1] == '=':
+                label2 = ''
+            else:
+                assert slabel[0] == 'SUBCASE', slabel
+
+                # 'SEGMENT = 1'
+                label2 = slabel[3] + '=' + slabel[5]
+
+        elif 'SUBCOM' in label2:
+            subcom, isubcase = label2.split()
+            label2 = ''
+        elif 'SYM' in label2 or 'REPCASE' in label2:
+            # 'SYM 401'
+            # 'REPCASE 108'
+            pass
+        #else:
+            #print('label2   = %r' % label2)
+            #print('subcasee = %r' % subcase_expected)
+            #asdf
+    return label2
