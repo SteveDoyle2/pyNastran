@@ -49,6 +49,41 @@ class MinorTables(OP2Common):
         #: it takes double the RAM, but is easier to use
         self.apply_symmetry = True
 
+    def _read_dit(self):
+        """
+        Reads the DIT table (poorly).
+        The DIT table stores information about table cards
+        (e.g. TABLED1, TABLEM1).
+
+        """
+        table_name = self._read_table_name(rewind=False)
+        self.read_markers([-1])
+        data = self._read_record()
+
+        self.read_markers([-2, 1, 0])
+        data = self._read_record()
+        table_name, = self.struct_8s.unpack(data)
+
+        self.read_markers([-3, 1, 0])
+        data = self._read_record()
+
+        self.read_markers([-4, 1, 0])
+        data = self._read_record()
+
+        self.read_markers([-5, 1, 0])
+
+        itable = -6
+        while 1:
+            markers = self.get_nmarkers(1, rewind=True)
+            if markers == [0]:
+                break
+            data = self._read_record()
+            self.read_markers([itable, 1, 0])
+            itable -= 1
+
+        #self.show(100)
+        self.read_markers([0])
+
     def _read_omm2(self):
         """reads the OMM2 table"""
         self.log.debug("table_name = %r" % self.table_name)

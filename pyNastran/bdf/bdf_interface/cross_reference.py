@@ -266,6 +266,9 @@ class XrefMesh(BDFAttributes):
         for flutter in itervalues(self.flutters):
             flutter.cross_reference(self)
 
+        for monitor_point in self.monitor_points:
+            monitor_point.cross_reference(self)
+
         if self.aero:
             self.aero.cross_reference(self)
         if self.aeros:

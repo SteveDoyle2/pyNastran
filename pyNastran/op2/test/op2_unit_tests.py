@@ -375,7 +375,7 @@ class TestOP2(Tester):
         #assert len(diff_cards2) == 0, diff_cards2
 
         run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=False, xref_safe=True,
-                write_f06=True, write_op2=False,
+                write_f06=False, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
                 subcases=None, exclude=None, short_stats=False,

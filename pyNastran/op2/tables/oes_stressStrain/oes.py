@@ -201,8 +201,6 @@ class OES(OP2Common):
 
         self._parse_stress_code_to_stress_bits()
         self._write_debug_bits()
-        if self.is_debug_file:
-            self.binary_debug.write('catttt!')
         assert isinstance(self.format_code, int), self.format_code
         #print('self.nonlinear_factor =', self.nonlinear_factor)
         #assert self.num_wide != 146, self.code_information()

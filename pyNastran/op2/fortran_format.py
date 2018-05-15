@@ -16,11 +16,11 @@ from pyNastran.utils import object_attributes
 
 # this is still a requirement, but disabling it so readthedocs works
 if sys.version_info < (2, 7, 7):
-    imajor, minor1, minor2 = sys.version_info[:3]
+    IMAJOR, MINOR1, MINOR2 = sys.version_info[:3]
     # makes sure we don't get the following bug:
     #   Issue #19099: The struct module now supports Unicode format strings.
     raise ImportError('Upgrade your Python to >= 2.7.7; version=(%s.%s.%s)' % (
-        imajor, minor1, minor2))
+        IMAJOR, MINOR1, MINOR2))
 
 class FortranFormat(object):
     """defines basic methods for reading Fortran formatted data files"""
@@ -306,10 +306,10 @@ class FortranFormat(object):
         """
         data = self.read_3_blocks()
         imarkers = self.struct_3i.unpack(data)
-        for i, marker in enumerate(markers):
+        for imarker, marker in enumerate(markers):
             if marker != imarker:
-                msg = 'marker=%r imarker=%r; markers=%s; i=%s; table_name=%r' % (
-                    marker, imarker, markers, i, self.table_name)
+                msg = 'marker=%r imarker=%r; markers=%s; table_name=%r' % (
+                    marker, imarker, markers, self.table_name)
                 raise FortranMarkerError(msg)
             if self.is_debug_file:
                 self.binary_debug.write('  read_markers -> [4, %i, 4]\n' % marker)
@@ -370,7 +370,7 @@ class FortranFormat(object):
 
         """
         ni = self.n
-        markers = []
+        #markers = []
         data = self.read_block()
         marker, = self.struct_i.unpack(data)
         if rewind:
@@ -389,7 +389,7 @@ class FortranFormat(object):
 
         markers = self.get_nmarkers(1, rewind=True)
         while markers[0] != 0:
-            data = self._skip_record()
+            unused_data = self._skip_record()
             if self.is_debug_file:
                 self.log.debug("skipping table_name = %r" % self.table_name)
             #if len(data) == 584:
@@ -499,6 +499,8 @@ class FortranFormat(object):
             None : passed???
 
         """
+        if self.binary_debug:
+            self.binary_debug.write('-' * 60 + '\n')
         # this is the length of the current record inside table3/table4
         record_len = self._get_record_length()
         if self.is_debug_file:
@@ -534,10 +536,10 @@ class FortranFormat(object):
                 if hasattr(self, 'num_wide'):
                     # num_wide is the result size and is usually found in
                     # table3, but some B-list tables don't have it
-                    n = self._read_subtable_results(table4_parser, record_len)
+                    unused_n = self._read_subtable_results(table4_parser, record_len)
                 else:
                     data, ndata = self._read_record_ndata()
-                    n = table4_parser(data, ndata)
+                    unused_n = table4_parser(data, ndata)
                 #del n
 
     def _read_subtable_results(self, table4_parser, record_len):
@@ -583,61 +585,7 @@ class FortranFormat(object):
             if hasattr(self, 'eid_old'):
                 del self.eid_old
 
-            # if reading the data
-            # 0 - non-vectorized
-            # 1 - 1st pass to size the array (vectorized)
-            # 2 - 2nd pass to read the data  (vectorized)
-
-            # vectorized objects are stored as self.obj
-            # they have obj.itime which is their table3 counter
-            if hasattr(self, 'obj') and hasattr(self.obj, 'itime'):
-                #ntotal = record_len // (self.num_wide * 4) * self._data_factor
-
-                # we reset the itime counter when we fill up the
-                # total number of nodes/elements/layers in the
-                # result, where ntotal is the critical length of
-                # interest.  This let's us start back at the correct
-                # spot the next time we read table3
-                #
-                # For displacements, ntotal=nnodes
-                #
-                # For a CBAR, it's ntotal=nelements*2, where 2 is
-                # the number of nodes; points A/B
-                #
-                # For a CTRIA3 / linear CQUAD4, it's
-                # ntotal=nelements*2, where 2 is the number of
-                # layers (top/btm) and we only get a centroidal
-                # result.
-                #
-                # For a CQUAD4 bilinear, it's
-                # ntotal=nelements*(nnodes+1)*2, where 2 is the
-                # number of layers and nnodes is 4 (we get an extra
-                # result at the centroid).
-                #
-                # For a PCOMP, it's ntotal=sum(nelements*nlayers),
-                # where each element can have a different number
-                # of layers
-                if self.obj.ntotal == self.obj.data.shape[1]:
-                    #print('resetting %r indicies; itime=%s; shape=%s' % (
-                    #    self.obj.class_name, self.obj.itime, self.obj.data.shape))
-                    self.obj._reset_indices()
-                    self.obj.words = self.words
-                    self.obj.itime += 1
-                else:
-                    # This happens when self._data_factor hasn't been reset
-                    # or is set wrong.
-                    # can it happen any other time?
-                    msga = 'self.obj.name=%r has itime' % self.obj.__class__.__name__
-                    self.log.debug(msga)
-                    msgb = 'ntotal=%s shape=%s shape[1]=%s _data_factor=%s\n' % (
-                        self.obj.ntotal, str(self.obj.data.shape),
-                        self.obj.data.shape[1], self._data_factor)
-                    msgb += 'obj._ntotals=%s' % self.obj._ntotals
-                    self.log.error(msgb)
-                    raise RuntimeError(msga + '\n' + msgb)
-
-            #else:
-                #print('self.obj.name=%r doesnt have itime' % self.obj.__class__.__name__)
+            self._reset_vector_counter()
 
         elif self.read_mode == 1:
             # if we're checking the array size
@@ -648,7 +596,7 @@ class FortranFormat(object):
                 self.ntotal = 0
                 #n = self.n
                 n = 0
-                for i, data in enumerate(self._stream_record()):
+                for unused_i, data in enumerate(self._stream_record()):
                     data = datai + data
                     ndata = len(data)
                     n = table4_parser(data, ndata)
@@ -663,42 +611,116 @@ class FortranFormat(object):
                 else:
                     data, ndata = self._skip_record_ndata()
                 n = table4_parser(data, ndata)
-                assert isinstance(n, integer_types), 'table_name=%s n=%s table4_parser=%s' % (self.table_name, n, table4_parser)
+                if not isinstance(n, integer_types):
+                    msg = 'n is not an integer; table_name=%s n=%s table4_parser=%s' % (
+                        self.table_name, n, table4_parser)
+                    raise TypeError(msg)
 
             #self._goto(n)
             #n = self._skip_record()
 
-            if hasattr(self, 'obj') and self.obj is not None:
-                if hasattr(self.obj, 'ntimes'):
-                    if not hasattr(self.obj, '_reset_indices'):
-                        #methods = '\ndir(obj)=%s' % ', '.join(sorted(dir(self.obj)))
-                        #msg = 'is %s vectorized because its missing _reset_indices...%s' % (
-                            #self.obj.__class__.__name__, methods)
-                        return None
-                        #raise RuntimeError(msg)
-                    self.obj._reset_indices()
-                    self.obj.ntimes += 1
-                    ntotal = record_len // (self.num_wide * 4) * self._data_factor
-
-                    # this has a problem with XYPLOT data if there is a result
-                    #    request in the same format (e.g. OESNLXD/OES1X1 tables
-                    #    if they both have the same element ID)
-                    #
-                    #class_name = self.obj.__class__.__name__
-                    #if class_name == 'RealBush1DStressArray':
-                        #print('%s.ntotal = %s' % (class_name, ntotal))
-                        #print('num_wide=%s factor=%s len=%s ntotal=%s' % (
-                            #self.num_wide, self._data_factor, record_len, ntotal))
-                    self.obj.ntotal = ntotal
-                    self.obj._ntotals.append(ntotal)
-
-                    assert isinstance(self.obj.ntotal, integer_types), type(self.obj.ntotal)
-                else:
-                    print('obj=%s doesnt have ntimes' % self.obj.__class__.__name__)
+            self._init_vector_counter(record_len)
         else:
             raise RuntimeError(self.read_mode)
         self._cleanup_data_members()
         return n
+
+    def _reset_vector_counter(self):
+        """
+        if reading the data
+        0 - non-vectorized
+        1 - 1st pass to size the array (vectorized)
+        2 - 2nd pass to read the data  (vectorized)
+
+        vectorized objects are stored as self.obj
+        they have obj.itime which is their table3 counter
+        """
+        if not(hasattr(self, 'obj') and hasattr(self.obj, 'itime')):
+            #print('self.obj.name=%r doesnt have itime' % self.obj.__class__.__name__)
+            return
+        #ntotal = record_len // (self.num_wide * 4) * self._data_factor
+
+        # we reset the itime counter when we fill up the
+        # total number of nodes/elements/layers in the
+        # result, where ntotal is the critical length of
+        # interest.  This let's us start back at the correct
+        # spot the next time we read table3
+        #
+        # For displacements, ntotal=nnodes
+        #
+        # For a CBAR, it's ntotal=nelements*2, where 2 is
+        # the number of nodes; points A/B
+        #
+        # For a CTRIA3 / linear CQUAD4, it's
+        # ntotal=nelements*2, where 2 is the number of
+        # layers (top/btm) and we only get a centroidal
+        # result.
+        #
+        # For a CQUAD4 bilinear, it's
+        # ntotal=nelements*(nnodes+1)*2, where 2 is the
+        # number of layers and nnodes is 4 (we get an extra
+        # result at the centroid).
+        #
+        # For a PCOMP, it's ntotal=sum(nelements*nlayers),
+        # where each element can have a different number
+        # of layers
+        if self.obj.ntotal == self.obj.data.shape[1]:
+            #print('resetting %r indicies; itime=%s; shape=%s' % (
+            #    self.obj.class_name, self.obj.itime, self.obj.data.shape))
+            self.obj._reset_indices()
+            self.obj.words = self.words
+            self.obj.itime += 1
+        else:
+            # This happens when self._data_factor hasn't been reset
+            # or is set wrong.
+            # can it happen any other time?
+            msga = 'self.obj.name=%r has itime' % self.obj.__class__.__name__
+            self.log.debug(msga)
+            msgb = 'ntotal=%s shape=%s shape[1]=%s _data_factor=%s\n' % (
+                self.obj.ntotal, str(self.obj.data.shape),
+                self.obj.data.shape[1], self._data_factor)
+            msgb += 'obj._ntotals=%s' % self.obj._ntotals
+            self.log.error(msgb)
+            raise RuntimeError(msga + '\n' + msgb)
+
+    def _init_vector_counter(self, record_len):
+        """
+        Sets the table size
+
+        Parameters
+        ----------
+        record_len : int
+            the length of the record block
+        """
+        if not(hasattr(self, 'obj') and self.obj is not None):
+            return
+
+        if hasattr(self.obj, 'ntimes'):
+            if not hasattr(self.obj, '_reset_indices'):
+                #methods = '\ndir(obj)=%s' % ', '.join(sorted(dir(self.obj)))
+                #msg = 'is %s vectorized because its missing _reset_indices...%s' % (
+                    #self.obj.__class__.__name__, methods)
+                return None
+                #raise RuntimeError(msg)
+            self.obj._reset_indices()
+            self.obj.ntimes += 1
+            ntotal = record_len // (self.num_wide * 4) * self._data_factor
+
+            # this has a problem with XYPLOT data if there is a result
+            #    request in the same format (e.g. OESNLXD/OES1X1 tables
+            #    if they both have the same element ID)
+            #
+            #class_name = self.obj.__class__.__name__
+            #if class_name == 'RealBush1DStressArray':
+                #print('%s.ntotal = %s' % (class_name, ntotal))
+                #print('num_wide=%s factor=%s len=%s ntotal=%s' % (
+                    #self.num_wide, self._data_factor, record_len, ntotal))
+            self.obj.ntotal = ntotal
+            self.obj._ntotals.append(ntotal)
+
+            assert isinstance(self.obj.ntotal, integer_types), type(self.obj.ntotal)
+        else:
+            self.log.warning('obj=%s doesnt have ntimes' % self.obj.__class__.__name__)
 
     def _cleanup_data_members(self):
         """deletes variables from previous tables"""
@@ -713,7 +735,11 @@ class FortranFormat(object):
         ]
         msg = ''
         if hasattr(self, 'words'):
-            assert len(self.words) in [0, 28], 'table_name=%r len(self.words)=%s words=%s' % (self.table_name, len(self.words), self.words)
+            if not len(self.words) in [0, 28]:
+                msg = 'table_name=%r len(self.words)=%s words=%s' % (
+                    self.table_name, len(self.words), self.words)
+                raise RuntimeError(msg)
+
             for word in self.words:
                 if word in ['???', 'Title']:
                     continue
@@ -789,7 +815,7 @@ class FortranFormat(object):
             self.binary_debug.write('  markers0=%s\n' % markers0)
 
         n = self.n
-        record = self._skip_block()
+        unused_record = self._skip_block()
         len_record += self.n - n - 8  # -8 is for the block
         if self.is_debug_file:
             self.binary_debug.write('  len_record=%s\n' % len_record)
@@ -801,7 +827,7 @@ class FortranFormat(object):
             if self.is_debug_file:
                 self.binary_debug.write('  markers1=%s\n' % markers1)
             n = self.n
-            record = self._skip_block()
+            unused_record = self._skip_block()
             len_record += self.n - n - 8  # -8 is for the block
             markers1 = self.get_nmarkers(1, rewind=True)
         self._goto(n0)
@@ -817,7 +843,7 @@ class FortranFormat(object):
             a record of None indicates a skipped block
 
         """
-        markers0 = self.get_nmarkers(1, rewind=False)
+        unused_markers0 = self.get_nmarkers(1, rewind=False)
         record = self._skip_block()
 
         markers1 = self.get_nmarkers(1, rewind=True)
@@ -856,7 +882,7 @@ class FortranFormat(object):
             markers1 = self.get_nmarkers(1, rewind=False)
             if self.is_debug_file and debug:
                 self.binary_debug.write('_stream_record - markers1 = [4, %s, 4]\n' % str(markers1))
-            record, nrecordi = self._read_block_ndata()
+            record, unused_nrecordi = self._read_block_ndata()
             yield record
             self.istream += 1
             markers1 = self.get_nmarkers(1, rewind=True)

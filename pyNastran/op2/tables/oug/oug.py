@@ -213,7 +213,7 @@ class OUG(OP2Common):
             #self.setNullNonlinearFactor()
 
         if self.analysis_code == 1:  # static...because reasons.
-            self._analysis_code_fmt = b'i'
+            self._analysis_code_fmt = b'f'
             self.data_names = self.apply_data_code_value('data_names', ['node_id'])
             self.apply_data_code_value('analysis_method', 'N/A')
         elif self.analysis_code == 2:  # real eigenvalues

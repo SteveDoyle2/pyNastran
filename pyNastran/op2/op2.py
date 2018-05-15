@@ -721,9 +721,11 @@ class OP2(OP2_Scalar):
                     isubcasei, analysis_codei, sort_methodi, counti, isuperelmemnt_adaptivity_index, pval_step, ogs = case_key
                     #isubcasei, analysis_codei, sort_methodi, counti, isuperelmemnt_adaptivity_index, table_name = case_key
                     if ogs == 0:
-                        value = (analysis_codei, sort_methodi, counti, isuperelmemnt_adaptivity_index, pval_step)
+                        value = (analysis_codei, sort_methodi, counti,
+                                 isuperelmemnt_adaptivity_index, pval_step)
                     else:
-                        value = (analysis_codei, sort_methodi, counti, isuperelmemnt_adaptivity_index, pval_step, ogs)
+                        value = (analysis_codei, sort_methodi, counti,
+                                 isuperelmemnt_adaptivity_index, pval_step, ogs)
 
                     if value not in self.subcase_key[isubcasei]:
                         #print('isubcase=%s value=%s' % (isubcasei, value))
@@ -792,13 +794,15 @@ class OP2(OP2_Scalar):
                     if not (key1 in result and key2 in result):
                         if key1 in result:
                             res1 = result[key1]
-                            self.log.info("res=%s has a single case; trivial" % res1.__class__.__name__)
+                            self.log.info("res=%s has a single case; trivial" %
+                                          res1.__class__.__name__)
                             result[isubcase] = result[key1]
                             #print('del key1=%s' % str(key1))
                             del result[key1]
                         elif key2 in result:
                             res2 = result[key2]
-                            self.log.info("res=%s has a single case; trivial" % res2.__class__.__name__)
+                            self.log.info("res=%s has a single case; trivial" %
+                                          res2.__class__.__name__)
                             result[isubcase] = result[key2]
                             #print('del key2=%s' % str(key2))
                             del result[key2]

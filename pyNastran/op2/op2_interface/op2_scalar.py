@@ -871,8 +871,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OQGATO2' : [self._read_oqg2_3, self._read_oqg_4],
             b'OQGCRM2' : [self._read_oqg2_3, self._read_oqg_4],
             b'OQGPSD2' : [self._read_oqg2_3, self._read_oqg_4],
-            b'OQGRMS2' : [self._read_oqg2_3, self._read_oqg_4],
-            b'OQGNO2'  : [self._read_oqg2_3, self._read_oqg_4],
+            b'OQGRMS2' : [self._read_oqg1_3, self._read_oqg_4],
+            b'OQGNO2'  : [self._read_oqg1_3, self._read_oqg_4],
 
             #=======================
             # MPC Forces
@@ -890,8 +890,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OQMATO2' : [self._read_oqg2_3, self._read_oqg_mpc_ato],
             b'OQMCRM2' : [self._read_oqg2_3, self._read_oqg_mpc_crm],
             b'OQMPSD2' : [self._read_oqg2_3, self._read_oqg_mpc_psd],
-            b'OQMRMS2' : [self._read_oqg2_3, self._read_oqg_mpc_rms],
-            b'OQMNO2'  : [self._read_oqg2_3, self._read_oqg_mpc_no],
+            b'OQMRMS2' : [self._read_oqg1_3, self._read_oqg_mpc_rms],
+            b'OQMNO2'  : [self._read_oqg1_3, self._read_oqg_mpc_no],
 
             #=======================
             # OPG
@@ -1014,8 +1014,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OUGATO2' : [self._read_oug2_3, self._read_oug_ato],
             b'OUGCRM2' : [self._read_oug2_3, self._read_oug_crm],
             b'OUGPSD2' : [self._read_oug2_3, self._read_oug_psd],
-            b'OUGRMS2' : [self._read_oug2_3, self._read_oug_rms],
-            b'OUGNO2'  : [self._read_oug2_3, self._read_oug_no],
+            b'OUGRMS2' : [self._read_oug1_3, self._read_oug_rms],
+            b'OUGNO2'  : [self._read_oug1_3, self._read_oug_no],
 
             #=======================
             # extreme values of the respective table
@@ -1258,18 +1258,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             self.binary_debug.close()
             del self.binary_debug
 
-        wb = 'w'
-        if PY2:
-            wb = 'wb'
-
-        if self.debug_file is not None:
-            #: an ASCII version of the op2 (creates lots of output)
-            self.log.debug('debug_file = %s' % self.debug_file)
-            self.binary_debug = open(self.debug_file, wb)
-            self.binary_debug.write(self.op2_filename + '\n')
-            self.is_debug_file = True
-        else:
-            self.is_debug_file = False
+        self.is_debug_file, self.binary_debug = create_binary_debug(
+            self.op2_filename, self.debug_file, self.log)
 
     def read_op2(self, op2_filename=None, combine=False):
         """
@@ -1416,7 +1406,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 macro_version = 'IMAT %s' % imat_version
             else:
                 version_ints = Struct(self._endian + b'7i').unpack(data)
-                if version_ints == (1, 2, 3, 4, 5, 6 , 7):
+                if version_ints == (1, 2, 3, 4, 5, 6, 7):
                     macro_version = 'MSFC'
                 else:
                     self.show_data(data)
@@ -1661,41 +1651,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             self._read_pcompts()
         else:
             self._skip_table_helper()
-
-    def _read_dit(self):
-        """
-        Reads the DIT table (poorly).
-        The DIT table stores information about table cards
-        (e.g. TABLED1, TABLEM1).
-
-        """
-        table_name = self._read_table_name(rewind=False)
-        self.read_markers([-1])
-        data = self._read_record()
-
-        self.read_markers([-2, 1, 0])
-        data = self._read_record()
-        table_name, = self.struct_8s.unpack(data)
-
-        self.read_markers([-3, 1, 0])
-        data = self._read_record()
-
-        self.read_markers([-4, 1, 0])
-        data = self._read_record()
-
-        self.read_markers([-5, 1, 0])
-
-        itable = -6
-        while 1:
-            markers = self.get_nmarkers(1, rewind=True)
-            if markers == [0]:
-                break
-            data = self._read_record()
-            self.read_markers([itable, 1, 0])
-            itable -= 1
-
-        #self.show(100)
-        self.read_markers([0])
 
     def _read_table_name(self, rewind=False, stop_on_failure=True):
         """Reads the next OP2 table name (e.g. OUG1, OES1X1)"""
@@ -2051,6 +2006,23 @@ def main():  # pragma: no cover
     #(model, ext) = os.path.splitext(op2_filename)
     #f06_outname = model + '.test_op2.f06'
     #o.write_f06(f06_outname)
+
+def create_binary_debug(op2_filename, debug_file, log):
+    """helper method"""
+    binary_debug = None
+    wb = 'w'
+    if PY2:
+        wb = 'wb'
+
+    if debug_file is not None:
+        #: an ASCII version of the op2 (creates lots of output)
+        log.debug('debug_file = %s' % debug_file)
+        binary_debug = open(debug_file, wb)
+        binary_debug.write(op2_filename + '\n')
+        is_debug_file = True
+    else:
+        is_debug_file = False
+    return is_debug_file, binary_debug
 
 
 if __name__ == '__main__':  # pragma: no cover
