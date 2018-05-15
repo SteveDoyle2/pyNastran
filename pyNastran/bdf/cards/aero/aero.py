@@ -300,7 +300,8 @@ class AEFACT(BaseCard):
             keys_to_skip = []
 
         my_keys_to_skip = ['Di', 'data']
-        return super(AEFACT, self).object_attributes(mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
+        return super(AEFACT, self).object_attributes(
+            mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     @property
     def Di(self):
@@ -377,6 +378,8 @@ class AELINK(BaseCard):
             name of the AESURF(???) card
         independent_labels : List[str, ..., str]
             name for the AESTAT(???) cards
+        Cis : List[???]
+            ???
         comment : str; default=''
             a comment for the card
 
@@ -952,7 +955,7 @@ class AESURF(BaseCard):
         self.tqllim_ref = None
         self.tqulim_ref = None
 
-    def update(self, model, maps):
+    def update(self, unused_model, maps):
         coord_map = maps['coord']
         aelist_map = maps['aelist']
         self.cid1 = coord_map[self.cid1]
@@ -1526,6 +1529,7 @@ class CAERO1(BaseCard):
                     self.box_ids[ichord, ispan] = self.eid + ichord + ispan * nchord
         except OverflowError:
             if dtype == 'int64':
+                # we already tried int64
                 msg = 'eid=%s ichord=%s ispan=%s nchord=%s' % (
                     self.eid, ichord, ispan, nchord)
                 raise OverflowError(msg)
@@ -1763,7 +1767,12 @@ class CAERO1(BaseCard):
         """
         p1, p2, p3, p4 = self.get_points()
         x, y = self.xy
-        return points_elements_from_quad_points(p1, p2, p3, p4, x, y)
+        # We're reordering the points so we get the node ids to be
+        # consistent with Nastran.  This is only useful if you're plotting
+        # aero panel forces
+        #
+        # this gives us chordwise panels and chordwise nodes
+        return points_elements_from_quad_points(p1, p4, p3, p2, x, y, dtype='int32')
 
     def set_points(self, points):
         self.p1 = points[0]
@@ -2533,7 +2542,7 @@ class CAERO3(BaseCard):
         """
         p1, p2, p3, p4 = self.get_points()
         x, y = self.xy
-        return points_elements_from_quad_points(p1, p2, p3, p4, x, y)
+        return points_elements_from_quad_points(p1, p2, p3, p4, x, y, dtype='int32')
 
     def get_npanel_points_elements(self):
         """
@@ -2925,7 +2934,7 @@ class CAERO4(BaseCard):
         """
         p1, p2, p3, p4 = self.get_points()
         x, y = self.xy
-        return points_elements_from_quad_points(p1, p2, p3, p4, x, y)
+        return points_elements_from_quad_points(p1, p2, p3, p4, x, y, dtype='int32')
 
     def get_LSpan(self):
         if isinstance(self.lspan, integer_types):
@@ -3179,7 +3188,7 @@ class CAERO5(BaseCard):
         x = np.array([0., 1.], dtype='float64')
         assert nspan >= 1, msg
 
-        return points_elements_from_quad_points(p1, p2, p3, p4, x, y)
+        return points_elements_from_quad_points(p1, p2, p3, p4, x, y, dtype='int32')
 
     def c1_c2(self, mach):
         p1, unused_p2, unused_p3, p4 = self.get_points()
@@ -3434,7 +3443,7 @@ class MONPNT1(BaseCard):
     +---------+---------+------+-----+-----+-------+------+----+----+
     """
     type = 'MONPNT1'
-    def __init__(self, name, label, axes, comp, xyz, cp=0, cd=None, comment=''):
+    def __init__(self, name, label, axes, aecomp_name, xyz, cp=0, cd=None, comment=''):
         """
         Creates a MONPNT1 card
 
@@ -3448,7 +3457,7 @@ class MONPNT1(BaseCard):
             that identifies and labels the monitor point.
         axes : str
             components {1,2,3,4,5,6}
-        comp : str
+        aecomp_name : str
             name of the AECOMP/AECOMPL entry
         xyz : List[float, float, float]; default=None
             The coordinates in the CP coordinate system about which the
@@ -3476,11 +3485,13 @@ class MONPNT1(BaseCard):
         self.name = name
         self.label = label
         self.axes = axes
-        self.comp = comp
+        self.comp = aecomp_name
         self.cp = cp
         self.xyz = xyz
         self.cd = cd
         assert len(xyz) == 3, xyz
+        self.cp_ref = None
+        self.cd_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -3501,24 +3512,51 @@ class MONPNT1(BaseCard):
         cd = integer_or_blank(card, 15, 'cd', cp)
         return MONPNT1(name, label, axes, comp, xyz, cp=cp, cd=cd, comment=comment)
 
-    #def cross_reference(self):
-        #pass
+    def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
 
-    #def uncross_reference(self):
-        #pass
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        msg = ' which is required by MONPNT1 name=%s' % self.name
+        self.cp_ref = model.Coord(self.cp, msg=msg)
+        self.cd_ref = model.Coord(self.cd, msg=msg)
+
+    def uncross_reference(self):
+        self.cp = self.Cp()
+        self.cd = self.Cd()
+        self.cp_ref = None
+        self.cd_ref = None
+
+    def Cp(self):
+        if self.cp_ref is not None:
+            return self.cp_ref.cid
+        return self.cp
+
+    def Cd(self):
+        if self.cd_ref is not None:
+            return self.cd_ref.cid
+        return self.cd
 
     def raw_fields(self):
         list_fields = [
             'MONPNT1', self.name, self.label.strip(), self.axes, self.comp,
-            self.cp,] + list(self.xyz) + [self.cd]
+            self.Cp(),] + list(self.xyz) + [self.Cd()]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
-        cp = self.cp
+        cp = self.Cp()
         x, y, z = self.xyz
-        cd = self.cd
+        cd = self.Cd()
+
+        # Default = the coordinate system specified by the CP field
         if cd == cp:
             cd = ''
+
         msg = 'MONPNT1 %-8s%s\n' % (self.name, self.label)
         msg += '        %-8s%-8s%-8s%-8s%-8s%-8s%-8s\n' % (
             self.axes, self.comp, cp,
@@ -3562,8 +3600,11 @@ class MONPNT2(BaseCard):
         eid = integer_or_blank(card, 12, 'eid')
         return MONPNT2(name, label, table, Type, nddl_item, eid, comment=comment)
 
-    #def uncross_reference(self):
-        #pass
+    def cross_reference(self, model):
+        pass
+
+    def uncross_reference(self):
+        pass
 
     def raw_fields(self):
         list_fields = [
@@ -3605,6 +3646,8 @@ class MONPNT3(BaseCard):
         self.xflag = xflag
         self.cp = cp
         self.cd = cd
+        self.cp_ref = None
+        self.cd_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -3628,19 +3671,46 @@ class MONPNT3(BaseCard):
         return MONPNT3(name, label, axes, grid_set, elem_set, xyz,
                        cp=cp, cd=cd, xflag=xflag, comment=comment)
 
-    #def uncross_reference(self):
-        #pass
+    def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        msg = ' which is required by MONPNT3 name=%s' % self.name
+        self.cp_ref = model.Coord(self.cp, msg=msg)
+        self.cd_ref = model.Coord(self.cd, msg=msg)
+
+    def uncross_reference(self):
+        self.cp = self.Cp()
+        self.cd = self.Cd()
+        self.cp_ref = None
+        self.cd_ref = None
+
+    def Cp(self):
+        if self.cp_ref is not None:
+            return self.cp_ref.cid
+        return self.cp
+
+    def Cd(self):
+        if self.cd_ref is not None:
+            return self.cd_ref.cid
+        return self.cd
 
     def raw_fields(self):
         list_fields = [
             'MONPNT3', self.name, self.label.strip(),
-            self.axes, self.grid_set, self.elem_set, self.cp
-            ] + list(self.xyz) + [self.xflag, self.cd]
+            self.axes, self.grid_set, self.elem_set, self.Cp()
+            ] + list(self.xyz) + [self.xflag, self.Cd()]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
-        cp = self.cp
-        cd = self.cd
+        cp = self.Cp()
+        cd = self.Cd()
         if cp == cd:
             cd = ''
         xflag = self.xflag
@@ -4763,25 +4833,25 @@ class SPLINE2(Spline):
     @property
     def id1(self):
         """see box1"""
-        self.deprecated('id1', 'box1', '1.0')
+        self.deprecated('id1', 'box1', '1.1')
         return self.box1
 
     @property
     def id2(self):
         """see box2"""
-        self.deprecated('id2', 'box2', '1.0')
+        self.deprecated('id2', 'box2', '1.1')
         return self.box2
 
     @id1.setter
-    def id1(self):
+    def id1(self, box1):
         """see box1"""
-        self.deprecated('id1', 'box1', '1.0')
+        self.deprecated('id1', 'box1', '1.1')
         self.box1 = box1
 
-    @id1.setter
-    def id2(self):
+    @id2.setter
+    def id2(self, box2):
         """see box2"""
-        self.deprecated('id2', 'box2', '1.0')
+        self.deprecated('id2', 'box2', '1.1')
         self.box2 = box2
 
     @property

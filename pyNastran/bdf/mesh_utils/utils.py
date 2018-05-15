@@ -458,27 +458,74 @@ def cmd_line_split_cbars_by_pin_flag():  # pragma: no cover
     split_cbars_by_pin_flag(bdf_filename_in, pin_flags_filename=pin_flags_filename,
                             bdf_filename_out=bdf_filename_out)
 
+def cmd_line_export_caero_mesh():  # pragma: no cover
+    """command line interface to export_caero_mesh"""
+    from docopt import docopt
+    import pyNastran
+    msg = (
+        'Usage:\n'
+        '  bdf export_caero_mesh IN_BDF_FILENAME [-o OUT_CAERO_BDF_FILENAME]\n'
+        '  bdf export_caero_mesh -h | --help\n'
+        '  bdf export_caero_mesh -v | --version\n'
+        '\n'
+
+        "Positional Arguments:\n"
+        "  IN_BDF_FILENAME    path to input BDF/DAT/NAS file\n"
+        '\n'
+
+        'Options:\n'
+        "  -o OUT, --output  OUT_CAERO_BDF_FILENAME  path to output BDF file\n\n"
+
+        'Info:\n'
+        '  -h, --help      show this help message and exit\n'
+        "  -v, --version   show program's version number and exit\n"
+    )
+    if len(sys.argv) == 1:
+        sys.exit(msg)
+
+    ver = str(pyNastran.__version__)
+    #type_defaults = {
+    #    '--nerrors' : [int, 100],
+    #}
+    data = docopt(msg, version=ver)
+    print(data)
+    size = 16
+    bdf_filename = data['IN_BDF_FILENAME']
+    caero_bdf_filename = data['--output']
+    if caero_bdf_filename is None:
+        caero_bdf_filename = 'caero.bdf'
+
+    from pyNastran.bdf.bdf import read_bdf
+    model = read_bdf(bdf_filename)
+    model.write_caero_model(caero_bdf_filename)
+
 def cmd_line():  # pragma: no cover
     """command line interface to multiple other command line scripts"""
     dev = True
-    msg = 'Usage:\n'
-    msg += '  bdf merge         (IN_BDF_FILENAMES)... [-o OUT_BDF_FILENAME]\n'
-    msg += '  bdf equivalence   IN_BDF_FILENAME EQ_TOL\n'
-    msg += '  bdf renumber      IN_BDF_FILENAME [-o OUT_BDF_FILENAME]\n'
-    msg += '  bdf mirror        IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--plane PLANE] [--tol TOL]\n'
-    msg += '  bdf export_mcids  IN_BDF_FILENAME [-o OUT_CSV_FILENAME] [--no_x] [--no_y]\n'
-    msg += '  bdf split_cbars_by_pin_flags    IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [-p PIN_FLAGS_CSV_FILENAME]\n'
-    msg += '  bdf create_vectorized_numbered  IN_BDF_FILENAME [OUT_BDF_FILENAME]\n'
+    msg = (
+        'Usage:\n'
+        '  bdf merge                       (IN_BDF_FILENAMES)... [-o OUT_BDF_FILENAME]\n'
+        '  bdf equivalence                 IN_BDF_FILENAME EQ_TOL\n'
+        '  bdf renumber                    IN_BDF_FILENAME [-o OUT_BDF_FILENAME]\n'
+        '  bdf mirror                      IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--plane PLANE] [--tol TOL]\n'
+        '  bdf export_mcids                IN_BDF_FILENAME [-o OUT_CSV_FILENAME] [--no_x] [--no_y]\n'
+        '  bdf export_caero_mesh           IN_BDF_FILENAME [-o OUT_BDF_FILENAME]\n'
+        '  bdf split_cbars_by_pin_flags    IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [-p PIN_FLAGS_CSV_FILENAME]\n'
+        '  bdf create_vectorized_numbered  IN_BDF_FILENAME [OUT_BDF_FILENAME]\n'
+    )
 
     if dev:
         msg += '  bdf bin          IN_BDF_FILENAME AXIS1 AXIS2 [--cid CID] [--step SIZE]\n'
-    msg += '\n'
-    msg += '  bdf merge         -h | --help\n'
-    msg += '  bdf equivalence   -h | --help\n'
-    msg += '  bdf renumber      -h | --help\n'
-    msg += '  bdf mirror        -h | --help\n'
-    msg += '  bdf export_mcids  -h | --help\n'
-    msg += '  bdf split_cbars_by_pin_flags  -h | --help\n'
+
+    msg += (
+        '\n'
+        '  bdf merge         -h | --help\n'
+        '  bdf equivalence   -h | --help\n'
+        '  bdf renumber      -h | --help\n'
+        '  bdf mirror        -h | --help\n'
+        '  bdf export_mcids  -h | --help\n'
+        '  bdf split_cbars_by_pin_flags  -h | --help\n'
+    )
     #bdf create_vectorized_numbered -h | --help
     #bdf create_vectorized_numbered -v | --version
 
@@ -505,6 +552,8 @@ def cmd_line():  # pragma: no cover
         cmd_line_export_mcid()
     elif sys.argv[1] == 'split_cbars_by_pin_flags':
         cmd_line_split_cbars_by_pin_flag()
+    elif sys.argv[1] == 'export_caero_mesh':
+        cmd_line_export_caero_mesh()
     elif sys.argv[1] == 'bin' and dev:
         cmd_line_bin()
     elif sys.argv[1] == 'create_vectorized_numbered' and dev:

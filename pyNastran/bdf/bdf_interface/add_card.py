@@ -6144,7 +6144,7 @@ class AddCards(AddMethods):
         self._add_dscreen_object(dscreen)
         return dscreen
 
-    def add_monpnt1(self, name, label, axes, comp, xyz, cp=0, cd=None,
+    def add_monpnt1(self, name, label, axes, aecomp_name, xyz, cp=0, cd=None,
                     comment=''):
         """
         Creates a MONPNT1 card
@@ -6159,7 +6159,7 @@ class AddCards(AddMethods):
             that identifies and labels the monitor point.
         axes : str
             components {1,2,3,4,5,6}
-        comp : str
+        aecomp_name : str
             name of the AECOMP/AECOMPL entry
         xyz : List[float, float, float]; default=None
             The coordinates in the CP coordinate system about which the
@@ -6177,7 +6177,7 @@ class AddCards(AddMethods):
         CD - MSC specific field
 
         """
-        monitor_point = MONPNT1(name, label, axes, comp, xyz, cp=cp, cd=cd,
+        monitor_point = MONPNT1(name, label, axes, aecomp_name, xyz, cp=cp, cd=cd,
                                 comment=comment)
         self._add_monpnt_object(monitor_point)
         return monitor_point

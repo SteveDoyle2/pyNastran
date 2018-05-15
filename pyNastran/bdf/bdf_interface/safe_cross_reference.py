@@ -153,6 +153,9 @@ class SafeXrefMesh(XrefMesh):
         for flutter in itervalues(self.flutters):
             flutter.safe_cross_reference(self)
 
+        for monitor_point in self.monitor_points:
+            monitor_point.safe_cross_reference(self)
+
         if self.aero:
             self.aero.safe_cross_reference(self)
         if self.aeros:

@@ -92,6 +92,7 @@ class WriteMesh(BDFAttributes):
     def write_caero_model(self, caero_bdf_filename='caero.bdf'):
         # type: (str) -> None
         """write the CAERO cards as CQUAD4s that can be visualized"""
+        self.log.debug('---starting BDF.write_caero_model of %s---' % caero_bdf_filename)
         with open(caero_bdf_filename, 'w') as bdf_file:
             #bdf_file.write('$ pyNastran: punch=True\n')
             bdf_file.write('CEND\n')

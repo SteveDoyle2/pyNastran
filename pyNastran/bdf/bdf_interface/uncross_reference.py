@@ -153,6 +153,9 @@ class UnXrefMesh(SafeXrefMesh):
         for flutter in itervalues(self.flutters):
             flutter.uncross_reference()
 
+        for monitor_point in self.monitor_points:
+            monitor_point.uncross_reference()
+
         if self.aero:
             self.aero.uncross_reference()
         if self.aeros:

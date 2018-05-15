@@ -17,6 +17,7 @@ from pyNastran.bdf.cards.coordinate_systems import (
     CORD3G)
 from pyNastran.bdf.bdf import BDF, BDFCard
 from pyNastran.bdf.utils import TransformLoadWRT
+from pyNastran.bdf.cards.aero.utils import make_monpnt1s_from_cids
 from pyNastran.bdf.cards.test.utils import save_load_deck
 from pyNastran.dev.bdf_vectorized2.bdf_vectorized import BDF as BDFv
 
@@ -900,9 +901,10 @@ class TestCoords(unittest.TestCase):
         p2 = np.array([50., 100, 0.])
 
         cids = create_coords_along_line(model, p1, p2, percents, cid=0, axis=cid)
-        unused_cid_to_inids = get_nodes_along_axis_in_coords(
+        cid_to_inids = get_nodes_along_axis_in_coords(
             model, nids, xyz_cp, icp_transform,
             cids)
+        make_monpnt1s_from_cids(model, nids, cids, cid_to_inids)
         #model.write_bdf('spike.bdf')
 
 def get_nodes(grids, grids_expected, coords):

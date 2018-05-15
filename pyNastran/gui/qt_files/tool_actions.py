@@ -100,7 +100,7 @@ class ToolActions(object):
         transform = make_vtk_transform(origin, matrix_3x3)
 
         create_actor = True
-        if coord_id in self.gui.transform:
+        if coord_id in self.gui.axes:
             axes = self.gui.axes[coord_id]
             create_actor = False
         else:
