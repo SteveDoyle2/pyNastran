@@ -4,12 +4,14 @@ Creates safe cross referencing
 Safe cross-referencing skips failed xref's
 """
 from __future__ import print_function
+from collections import defaultdict
+import traceback
 from typing import List, Dict, Any
 from six import iteritems, itervalues
-import traceback
 
 from numpy import zeros, argsort, arange, array_equal
 from pyNastran.bdf.bdf_interface.cross_reference import XrefMesh
+
 
 class SafeXrefMesh(XrefMesh):
     """
@@ -197,22 +199,37 @@ class SafeXrefMesh(XrefMesh):
         Links the elements to nodes, properties (and materials depending on
         the card).
         """
+        xref_errors = defaultdict(set)
         missing_safe_xref = set([])
         for elem in itervalues(self.elements):
             if hasattr(elem, 'safe_cross_reference'):
-                elem.safe_cross_reference(self)
+                try:
+                    elem.safe_cross_reference(self, xref_errors)
+                except TypeError:
+                    self.log.warning('element has not added xref_errors\n%s' % str(elem))
+                    raise
             else:
                 elem.cross_reference(self)
                 missing_safe_xref.add(elem.type)
 
         for elem in itervalues(self.rigid_elements):
             if hasattr(elem, 'safe_cross_reference'):
-                elem.safe_cross_reference(self)
+                try:
+                    elem.safe_cross_reference(self, xref_errors)
+                except TypeError:
+                    self.log.warning('element has not added xref_errors\n%s' % str(elem))
             else:
                 missing_safe_xref.add(elem.type)
                 elem.cross_reference(self)
-        #if missing_safe_xref:
-            #self.log.warning('These cards dont support safe_xref; %s' % str(list(missing_safe_xref)))
+
+        print(xref_errors)
+        for key, values in sorted(iteritems(xref_errors)):
+            values = list(values)  # set to list
+            values.sort()
+            self.log.warning('Failed to safe xref elements; missing %r = %s' % (key, values))
+
+        if missing_safe_xref:
+            self.log.warning('These cards dont support safe_xref; %s' % str(list(missing_safe_xref)))
 
     def _safe_cross_reference_loads(self, debug=True):
         # type: (bool) -> None
@@ -280,3 +297,45 @@ class SafeXrefMesh(XrefMesh):
                 msgi += msg % (eid)
             elements.append(element)
         return elements, msgi
+
+    def safe_property(self, pid, ref_id, xref_error, msg=''):
+        """
+        Parameters
+        ----------
+        ref_id : int
+            the referencing value (e.g., an element references a property)
+        """
+        try:
+            pid_ref = self.Property(pid, msg=msg)
+        except KeyError:
+            pid_ref = None
+            xref_error['pid'].add(ref_id)
+        return pid_ref
+
+    def safe_material(self, mid, ref_id, xref_error, msg=''):
+        """
+        Parameters
+        ----------
+        ref_id : int
+            the referencing value (e.g., an property references a material)
+        """
+        try:
+            mid_ref = self.Material(mid, msg=msg)
+        except KeyError:
+            mid_ref = None
+            xref_error['mid'].add(ref_id)
+        return mid_ref
+
+    def safe_coord(self, ref_id, cid, xref_error, msg=''):
+        """
+        Parameters
+        ----------
+        ref_id : int
+            the referencing value (e.g., an node and element references a coord)
+        """
+        try:
+            cid_ref = self.Coord(cid, msg=msg)
+        except KeyError:
+            cid_ref = None
+            xref_error['cid'].add(ref_id)
+        return cid_ref

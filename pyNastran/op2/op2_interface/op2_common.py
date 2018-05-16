@@ -237,7 +237,8 @@ class OP2Common(Op2Codes, F06Writer):
         #assert type(self._endian) == type(Type), 'endian=%r Type=%r' % (self._endian, Type)
         value, = unpack(self._endian + Type, datai)
         if fix_device_code:
-            value = (value - self.device_code) // 10
+            # was value = (value - self.device_code) // 10
+            value = value // 10
         if self.is_debug_file:
             self.binary_debug.write('  %-14s = %r\n' % (var_name, value))
         #setattr(self, var_name, value)  # set the parameter to the local namespace
@@ -920,7 +921,8 @@ class OP2Common(Op2Codes, F06Writer):
                 n += 32
         return n
 
-    def _read_real_scalar_table_sort2(self, data, is_vectorized, nnodes, result_name, flag, is_cid=False):
+    def _read_real_scalar_table_sort2(self, data, is_vectorized, nnodes, result_name,
+                                      flag, is_cid=False):
         """
         With a real transient result (e.g. SOL 109/159), reads a
         real OUG-style table created by:
@@ -969,7 +971,8 @@ class OP2Common(Op2Codes, F06Writer):
                 n += 32
         return n
 
-    def _read_real_table_static(self, data, is_vectorized, nnodes, result_name, flag, is_cid=False):
+    def _read_real_table_static(self, data, is_vectorized, nnodes, result_name,
+                                flag, is_cid=False):
         """
         With a static (e.g. SOL 101) result, reads a complex OUG-style
         table created by:
@@ -1096,22 +1099,24 @@ class OP2Common(Op2Codes, F06Writer):
         else:
             n = 0
             assert nnodes > 0
-
-            flag = 'freq/dt/mode'
+            flag = self.data_code['analysis_method']
             structi = Struct(self._endian + self._analysis_code_fmt + b'i6f')
-            if 'RMS' != self.table_name_str[-4:-1] and 'NO' != self.table_name_str[-3:-1]:
-                #table_cap = self.table_name[-4:-1]
-                #print('table_cap = %r' % table_cap)
-                assert nid > 0, self.code_information()
-            #print(obj.data.shape)
+
+            psds = ('CRM2', 'NO2', 'PSD2', 'RMS2')
+            #print('sort_method=%s' % self.sort_method)
+            #if self.table_name_str.endswith(psds):
             for inode in range(nnodes):
                 edata = data[n:n+32]
                 out = structi.unpack(edata)
                 (dt, grid_type, tx, ty, tz, rx, ry, rz) = out
                 if self.is_debug_file:
-                    self.binary_debug.write('  %s=%i; %s\n' % (flag, dt, str(out)))
+                    self.binary_debug.write('  nid=%s dt=%s=%i (%s); %s\n' % (
+                        nid, flag, dt, type(dt), str(out)))
                 obj.add_sort2(dt, nid, grid_type, tx, ty, tz, rx, ry, rz)
                 n += 32
+        #if self.table_name_str == 'OQMRMS1':
+            #print(obj.node_gridtype)
+            #print('------------')
         return n
 
     def _read_complex_table_sort1_mag(self, data, is_vectorized, nnodes, result_name, flag):
