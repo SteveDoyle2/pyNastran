@@ -1106,7 +1106,7 @@ class PBAR(LineProperty):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by PBAR mid=%s' % self.mid
+        msg = ', which is required by PBAR mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
 
     def uncross_reference(self):
@@ -1358,7 +1358,7 @@ class PBARL(LineProperty):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by PBARL mid=%s' % self.mid
+        msg = ', which is required by PBARL mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
 
     def uncross_reference(self):
@@ -1830,7 +1830,7 @@ class PBRSECT(LineProperty):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by PBRSECT mid=%s' % self.mid
+        msg = ', which is required by PBRSECT mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
 
     def uncross_reference(self):
@@ -1981,7 +1981,7 @@ class PBEAM3(LineProperty):  # not done, cleanup
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by PBEAM3 mid=%s' % self.mid
+        msg = ', which is required by PBEAM3 mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
 
     def uncross_reference(self):
@@ -2242,7 +2242,7 @@ class PBEND(LineProperty):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by PBEND mid=%s' % self.mid
+        msg = ', which is required by PBEND mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
 
     def uncross_reference(self):

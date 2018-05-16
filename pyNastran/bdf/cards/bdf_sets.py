@@ -154,7 +154,7 @@ class ABCQSet(Set):
             the BDF object
 
         """
-        msg = ' which is required by %s' % self.type
+        msg = ', which is required by %s' % self.type
         self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
     def uncross_reference(self):
@@ -165,7 +165,7 @@ class ABCQSet(Set):
     def node_ids(self):
         if self.ids_ref is None:
             return self.ids
-        msg = ' which is required by %s' % self.type
+        msg = ', which is required by %s' % self.type
         return _node_ids(self, self.ids, allow_empty_nodes=True, msg=msg)
 
     def raw_fields(self):
@@ -239,7 +239,7 @@ class SuperABCQSet(Set):
             the BDF object
 
         """
-        msg = ' which is required by %s seid=%s' % (self.type, self.seid)
+        msg = ', which is required by %s seid=%s' % (self.type, self.seid)
         self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
     def uncross_reference(self):
@@ -248,7 +248,7 @@ class SuperABCQSet(Set):
 
     @property
     def node_ids(self):
-        msg = ' which is required by %s seid=%s' % (self.type, self.seid)
+        msg = ', which is required by %s seid=%s' % (self.type, self.seid)
         if self.ids_ref is None:
             return self.ids
         return _node_ids(self, self.ids_ref, allow_empty_nodes=True, msg=msg)
@@ -477,7 +477,7 @@ class ABQSet1(Set):
             the BDF object
 
         """
-        msg = ' which is required by %s' % self.type
+        msg = ', which is required by %s' % self.type
         self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
     def uncross_reference(self):
@@ -490,7 +490,7 @@ class ABQSet1(Set):
 
     @property
     def node_ids(self):
-        msg = ' which is required by %s' % self.type
+        msg = ', which is required by %s' % self.type
         if self.ids_ref is None:
             return self.ids
         return _node_ids(self, self.ids_ref, allow_empty_nodes=True, msg=msg)
@@ -584,7 +584,7 @@ class SuperABQSet1(Set):
             the BDF object
 
         """
-        msg = ' which is required by %s seid=%s' % (self.type, self.seid)
+        msg = ', which is required by %s seid=%s' % (self.type, self.seid)
         self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
     def uncross_reference(self):
@@ -593,7 +593,7 @@ class SuperABQSet1(Set):
 
     @property
     def node_ids(self):
-        msg = ' which is required by %s seid=%s' % (self.type, self.seid)
+        msg = ', which is required by %s seid=%s' % (self.type, self.seid)
         if self.ids_ref is None:
             return self.ids
         return _node_ids(self, self.ids_ref, allow_empty_nodes=True, msg=msg)
@@ -793,7 +793,7 @@ class CSET1(Set):
             the BDF object
 
         """
-        msg = ' which is required by CSET1'
+        msg = ', which is required by CSET1'
         self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
     def uncross_reference(self):
@@ -802,7 +802,7 @@ class CSET1(Set):
 
     @property
     def node_ids(self):
-        msg = ' which is required by CSET1'
+        msg = ', which is required by CSET1'
         if self.ids_ref is None:
             return self.ids
         return _node_ids(self, self.ids_ref, allow_empty_nodes=True, msg=msg)
@@ -976,7 +976,7 @@ class SET1(Set):
           - ACMODL (optional)
 
         """
-        msg = ' which is required by SET1 sid=%s%s' % (self.sid, msg)
+        msg = ', which is required by SET1 sid=%s%s' % (self.sid, msg)
         if xref_type == 'Node':
             self.ids_ref = model.Nodes(self.get_ids(), msg=msg)
         elif xref_type == 'Point':
@@ -1011,7 +1011,7 @@ class SET1(Set):
 
         """
         assert msg != ''
-        msg = ' which is required by SET1 sid=%s%s nid=%%s' % (self.sid, msg)
+        msg = ', which is required by SET1 sid=%s%s nid=%%s' % (self.sid, msg)
         if xref_type == 'Node':
             self.ids_ref, out = model.safe_get_nodes(self.get_ids(), msg=msg)
             if len(out):
@@ -1143,7 +1143,7 @@ class SET3(Set):
         return ids
 
     def cross_reference_set(self, model, xref_type, msg=''):
-        msg = ' which is required by SET3 sid=%s%s' % (self.sid, msg)
+        msg = ', which is required by SET3 sid=%s%s' % (self.sid, msg)
         #if xref_type == 'Node':
             #self.ids = model.Nodes(self.get_ids(), msg=msg)
         if xref_type == 'Point':
@@ -1590,7 +1590,7 @@ class USET(Set):
             the BDF object
 
         """
-        msg = ' which is required by USET name=%s' % (self.name)
+        msg = ', which is required by USET name=%s' % (self.name)
         self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
     def uncross_reference(self):
@@ -1601,7 +1601,7 @@ class USET(Set):
     def node_ids(self):
         if self.ids_ref is None:
             return self.ids
-        msg = ' which is required by USET name=%s' % (self.name)
+        msg = ', which is required by USET name=%s' % (self.name)
         return _node_ids(self, self.ids_ref, allow_empty_nodes=True, msg=msg)
 
     def raw_fields(self):
@@ -1694,7 +1694,7 @@ class USET1(ABQSet1):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by USET1 name=%s' % (self.name)
+        msg = ', which is required by USET1 name=%s' % (self.name)
         self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
     def uncross_reference(self):
@@ -1705,7 +1705,7 @@ class USET1(ABQSet1):
     def node_ids(self):
         if self.ids_ref is None:
             return self.ids
-        msg = ' which is required by USET1 name=%s' % (self.name)
+        msg = ', which is required by USET1 name=%s' % (self.name)
         return _node_ids(self, self.ids_ref, allow_empty_nodes=True, msg=msg)
 
     def raw_fields(self):

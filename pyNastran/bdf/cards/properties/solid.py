@@ -132,7 +132,7 @@ class PLSOLID(SolidProperty):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by PLSOLID pid=%s' % self.pid
+        msg = ', which is required by PLSOLID pid=%s' % self.pid
         self.mid_ref = model.HyperelasticMaterial(self.mid, msg) # MATHP, MATHE
 
     def uncross_reference(self):
@@ -280,7 +280,7 @@ class PCOMPS(SolidProperty):
         return self.mids
 
     def cross_reference(self, model):
-        msg = ' which is required by PSOLID pid=%s' % self.pid
+        msg = ', which is required by PSOLID pid=%s' % self.pid
         self.mids_ref = []
         for mid in self.mids:
             mid_ref = model.Material(mid, msg=msg)
@@ -454,7 +454,7 @@ class PSOLID(SolidProperty):
     def cross_reference(self, model):
         # type: (Any) -> None
         """cross reference method for a PSOLID"""
-        msg = ' which is required by PSOLID pid=%s' % (self.pid)
+        msg = ', which is required by PSOLID pid=%s' % (self.pid)
         self.mid_ref = model.Material(self.mid, msg)
 
     def uncross_reference(self):

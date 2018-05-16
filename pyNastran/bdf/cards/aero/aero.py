@@ -1112,7 +1112,7 @@ class AESURFS(BaseCard):  # not integrated
             the BDF object
 
         """
-        msg = ' which is required by AESURFS aesid=%s' % self.aesid
+        msg = ', which is required by AESURFS aesid=%s' % self.aesid
         self.list1_ref = model.Set(self.list1, msg)
         self.list1_ref.cross_reference_set(model, 'Node', msg)
 
@@ -1120,7 +1120,7 @@ class AESURFS(BaseCard):  # not integrated
         self.list2_ref.cross_reference_set(model, 'Node', msg)
 
     def safe_cross_reference(self, model):
-        msg = ' which is required by AESURFS aesid=%s' % self.aesid
+        msg = ', which is required by AESURFS aesid=%s' % self.aesid
         try:
             self.list1_ref = model.Set(self.list1, msg=msg)
             self.list1_ref.cross_reference_set(model, 'Node', msg)
@@ -1555,7 +1555,7 @@ class CAERO1(BaseCard):
             the BDF object
 
         """
-        msg = ' which is required by CAERO1 eid=%s' % self.eid
+        msg = ', which is required by CAERO1 eid=%s' % self.eid
         self.pid_ref = model.PAero(self.pid, msg=msg)
         self.cp_ref = model.Coord(self.cp, msg=msg)
         self.ascid_ref = model.Acsid(msg=msg)
@@ -1578,7 +1578,7 @@ class CAERO1(BaseCard):
             the BDF object
 
         """
-        msg = ' which is required by CAERO1 eid=%s' % self.eid
+        msg = ', which is required by CAERO1 eid=%s' % self.eid
         try:
             self.pid_ref = model.PAero(self.pid, msg=msg)
         except KeyError:
@@ -1631,7 +1631,7 @@ class CAERO1(BaseCard):
             the BDF object
 
         """
-        #msg = ' which is required by CAERO1 eid=%s' % self.eid
+        #msg = ', which is required by CAERO1 eid=%s' % self.eid
         paero_map = maps['paero']
         coord_map = maps['coord']
         aefact_map = maps['aefact']
@@ -2082,7 +2082,7 @@ class CAERO2(BaseCard):
             the BDF object
 
         """
-        msg = ' which is required by CAERO2 eid=%s' % self.eid
+        msg = ', which is required by CAERO2 eid=%s' % self.eid
         self.pid_ref = model.PAero(self.pid, msg=msg)  # links to PAERO2
         self.cp_ref = model.Coord(self.cp, msg=msg)
         if self.nsb == 0:
@@ -2092,7 +2092,7 @@ class CAERO2(BaseCard):
         self.ascid_ref = model.Acsid(msg=msg)
 
     def safe_cross_reference(self, model, debug=False):
-        msg = ' which is required by CAERO2 eid=%s' % self.eid
+        msg = ', which is required by CAERO2 eid=%s' % self.eid
         try:
             self.pid_ref = model.PAero(self.pid, msg=msg)  # links to PAERO2
         except KeyError:
@@ -2451,7 +2451,7 @@ class CAERO3(BaseCard):
             the BDF object
 
         """
-        msg = ' which is required by CAERO3 eid=%s' % self.eid
+        msg = ', which is required by CAERO3 eid=%s' % self.eid
         self.pid_ref = model.PAero(self.pid, msg=msg)  # links to PAERO3
         self.cp_ref = model.Coord(self.cp, msg=msg)
         if self.list_w is not None:
@@ -2793,7 +2793,7 @@ class CAERO4(BaseCard):
             the BDF object
 
         """
-        msg = ' which is required by CAERO4 eid=%s' % self.eid
+        msg = ', which is required by CAERO4 eid=%s' % self.eid
         self.cp_ref = model.Coord(self.cp, msg=msg)
         self.pid_ref = model.PAero(self.pid, msg=msg)  # links to PAERO4 (not added)
 
@@ -2803,7 +2803,7 @@ class CAERO4(BaseCard):
         self._init_ids()
 
     def safe_cross_reference(self, model):
-        msg = ' which is required by CAERO4 eid=%s' % self.eid
+        msg = ', which is required by CAERO4 eid=%s' % self.eid
         try:
             self.pid_ref = model.PAero(self.pid, msg=msg)  # links to PAERO4 (not added)
         except KeyError:
@@ -3117,14 +3117,14 @@ class CAERO5(BaseCard):
             the BDF object
 
         """
-        msg = ' which is required by CAERO5 eid=%s' % self.eid
+        msg = ', which is required by CAERO5 eid=%s' % self.eid
         self.pid_ref = model.PAero(self.pid, msg=msg)
         self.cp_ref = model.Coord(self.cp, msg=msg)
         if self.nspan == 0:
             self.lspan_ref = model.AEFact(self.lspan, msg=msg)
 
     def safe_cross_reference(self, model):
-        msg = ' which is required by CAERO5 eid=%s' % self.eid
+        msg = ', which is required by CAERO5 eid=%s' % self.eid
         try:
             self.pid_ref = model.PAero(self.pid, msg=msg)
         except KeyError:
@@ -3522,7 +3522,7 @@ class MONPNT1(BaseCard):
             the BDF object
 
         """
-        msg = ' which is required by MONPNT1 name=%s' % self.name
+        msg = ', which is required by MONPNT1 name=%s' % self.name
         self.cp_ref = model.Coord(self.cp, msg=msg)
         self.cd_ref = model.Coord(self.cd, msg=msg)
 
@@ -3681,7 +3681,7 @@ class MONPNT3(BaseCard):
             the BDF object
 
         """
-        msg = ' which is required by MONPNT3 name=%s' % self.name
+        msg = ', which is required by MONPNT3 name=%s' % self.name
         self.cp_ref = model.Coord(self.cp, msg=msg)
         self.cd_ref = model.Coord(self.cd, msg=msg)
 
@@ -4040,14 +4040,14 @@ class PAERO2(BaseCard):
                       comment=comment)
 
     def cross_reference(self, model):
-        msg = ' which is required by PAERO2 eid=%s' % self.pid
+        msg = ', which is required by PAERO2 eid=%s' % self.pid
         if self.lrsb is not None and isinstance(self.lrsb, integer_types):
             self.lrsb_ref = model.AEFact(self.lrsb, msg=msg)
         if self.lrib is not None and isinstance(self.lrib, integer_types):
             self.lrib_ref = model.AEFact(self.lrib, msg=msg)
 
     def safe_cross_reference(self, model, debug=False):
-        msg = ' which is required by PAERO2 eid=%s' % self.pid
+        msg = ', which is required by PAERO2 eid=%s' % self.pid
         if self.lrsb is not None and isinstance(self.lrsb, integer_types):
             try:
                 self.lrsb_ref = model.AEFact(self.lrsb, msg=msg)
@@ -4583,7 +4583,7 @@ class SPLINE1(Spline):
             the BDF object
 
         """
-        msg = ' which is required by SPLINE1 eid=%s' % self.eid
+        msg = ', which is required by SPLINE1 eid=%s' % self.eid
         self.caero_ref = model.CAero(self.caero, msg=msg)
         self.setg_ref = model.Set(self.setg, msg=msg)
         self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
@@ -4596,7 +4596,7 @@ class SPLINE1(Spline):
             raise RuntimeError(msg)
 
     def safe_cross_reference(self, model):
-        msg = ' which is required by SPLINE1 eid=%s' % self.eid
+        msg = ', which is required by SPLINE1 eid=%s' % self.eid
         try:
             self.caero_ref = model.CAero(self.caero, msg=msg)
         except KeyError:
@@ -4784,7 +4784,7 @@ class SPLINE2(Spline):
             the BDF object
 
         """
-        msg = ' which is required by SPLINE2 eid=%s' % self.eid
+        msg = ', which is required by SPLINE2 eid=%s' % self.eid
         self.cid_ref = model.Coord(self.Cid(), msg=msg)
         self.caero_ref = model.CAero(self.CAero(), msg=msg)
         self.setg_ref = model.Set(self.Set(), msg=msg)
@@ -4798,7 +4798,7 @@ class SPLINE2(Spline):
             raise RuntimeError(msg)
 
     def safe_cross_reference(self, model):
-        msg = ' which is required by SPLINE2 eid=%s' % self.eid
+        msg = ', which is required by SPLINE2 eid=%s' % self.eid
         try:
             self.cid_ref = model.Coord(self.Cid(), msg=msg)
         except KeyError:
@@ -5077,7 +5077,7 @@ class SPLINE3(Spline):
                        comment=comment)
 
     def cross_reference(self, model):
-        msg = ' which is required by SPLINE3 eid=%s' % self.eid
+        msg = ', which is required by SPLINE3 eid=%s' % self.eid
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         self.caero_ref = model.CAero(self.caero, msg=msg)
 
@@ -5281,7 +5281,7 @@ class SPLINE4(Spline):
             the BDF object
 
         """
-        msg = ' which is required by SPLINE4 eid=%s' % self.eid
+        msg = ', which is required by SPLINE4 eid=%s' % self.eid
         self.caero_ref = model.CAero(self.CAero(), msg=msg)
         self.setg_ref = model.Set(self.Set(), msg=msg)
         self.aelist_ref = model.AEList(self.aelist, msg=msg)
@@ -5469,7 +5469,7 @@ class SPLINE5(Spline):
             the BDF object
 
         """
-        msg = ' which is required by SPLINE5 eid=%s' % self.eid
+        msg = ', which is required by SPLINE5 eid=%s' % self.eid
         self.cid_ref = model.Coord(self.cid, msg=msg)
         self.caero_ref = model.CAero(self.caero, msg=msg)
         self.setg_ref = model.Set(self.setg, msg=msg)
@@ -5484,7 +5484,7 @@ class SPLINE5(Spline):
             raise RuntimeError(msg)
 
     def safe_cross_reference(self, model):
-        msg = ' which is required by SPLINE5 eid=%s' % self.eid
+        msg = ', which is required by SPLINE5 eid=%s' % self.eid
         try:
             self.cid_ref = model.Coord(self.cid, msg=msg)
         except KeyError:

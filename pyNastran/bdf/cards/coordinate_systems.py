@@ -1786,7 +1786,7 @@ class Cord2x(Coord):
 
         """
         if self.Rid() != 0:
-            msg = ' which is required by %s cid=%s' % (self.type, self.cid)
+            msg = ', which is required by %s cid=%s' % (self.type, self.cid)
             self.rid_ref = model.Coord(self.rid, msg=msg)
 
     def uncross_reference(self):
@@ -1962,7 +1962,7 @@ class Cord1x(Coord):
             the BDF object
 
         """
-        msg = ' which is required by %s cid=%s' % (self.type, self.cid)
+        msg = ', which is required by %s cid=%s' % (self.type, self.cid)
         #: grid point 1
         self.g1_ref = model.Node(self.g1, msg=msg)
         #: grid point 2
@@ -2193,7 +2193,7 @@ class CORD3G(Coord):  # not done
             the BDF object
 
         """
-        msg = ' which is required by CORD3G cid=%s' % (self.cid)
+        msg = ', which is required by CORD3G cid=%s' % (self.cid)
         self.rid_ref = model.Coord(self.rid, msg=msg)
 
     def uncross_reference(self):

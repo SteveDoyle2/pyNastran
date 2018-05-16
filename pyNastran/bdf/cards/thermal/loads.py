@@ -106,7 +106,7 @@ class QVOL(ThermalLoad):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by QVOL sid=%s' % self.sid
+        msg = ', which is required by QVOL sid=%s' % self.sid
         self.elements_ref = model.Elements(self.elements, msg=msg)
 
     def safe_cross_reference(self, model):
@@ -263,7 +263,7 @@ class QVECT(ThermalLoad):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by QVECT sid=%s' % self.sid
+        msg = ', which is required by QVECT sid=%s' % self.sid
         self.eids_ref = model.Elements(self.eids, msg=msg)
 
     def safe_cross_reference(self, model):
@@ -381,7 +381,7 @@ class QBDY1(ThermalLoad):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by QBDY1 sid=%s' % self.sid
+        msg = ', which is required by QBDY1 sid=%s' % self.sid
         self.eids_ref = model.Elements(self.eids, msg=msg)
 
     def safe_cross_reference(self, model):
@@ -504,7 +504,7 @@ class QBDY2(ThermalLoad):  # not tested
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by QBDY2 sid=%s' % self.sid
+        msg = ', which is required by QBDY2 sid=%s' % self.sid
         self.eid_ref = model.Element(self.eid, msg=msg)
 
     def safe_cross_reference(self, model):
@@ -629,7 +629,7 @@ class QBDY3(ThermalLoad):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by QBDY3 sid=%s' % self.sid
+        msg = ', which is required by QBDY3 sid=%s' % self.sid
         eids = []
         for eid in self.eids:
             eids.append(model.Element(eid, msg=msg))

@@ -824,7 +824,7 @@ class DEFORM(Load):
         return
 
     def safe_cross_reference(self, model, debug=True):
-        msg = ' which is required by DEFORM=%s' % (self.sid)
+        msg = ', which is required by DEFORM=%s' % (self.sid)
         self.eid_ref = model.Element(self.eid, msg)
 
     def uncross_reference(self):
@@ -950,7 +950,7 @@ class SLOAD(Load):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by SLOAD=%s' % (self.sid)
+        msg = ', which is required by SLOAD=%s' % (self.sid)
         self.nodes_ref = []
         for nid in self.nodes:
             self.nodes_ref.append(model.Node(nid, msg=msg))
@@ -1073,7 +1073,7 @@ class RFORCE(Load):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by RFORCE sid=%s' % self.sid
+        msg = ', which is required by RFORCE sid=%s' % self.sid
         if self.nid > 0:
             self.nid_ref = model.Node(self.nid, msg=msg)
         self.cid_ref = model.Coord(self.cid, msg=msg)
@@ -1240,7 +1240,7 @@ class RFORCE1(Load):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by RFORCE1 sid=%s' % self.sid
+        msg = ', which is required by RFORCE1 sid=%s' % self.sid
         #if self.nid > 0:  # TODO: why was this every here?
         self.nid_ref = model.Node(self.nid, msg=msg)
         self.cid_ref = model.Coord(self.cid, msg=msg)
@@ -1377,7 +1377,7 @@ class RANDPS(RandomLoad):
             the BDF object
         """
         if self.tid:
-            msg = ' which is required by RANDPS sid=%s' % (self.sid)
+            msg = ', which is required by RANDPS sid=%s' % (self.sid)
             #self.tid = model.Table(self.tid, msg=msg)
             self.tid_ref = model.RandomTable(self.tid, msg=msg)
 

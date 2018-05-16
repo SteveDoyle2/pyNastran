@@ -326,7 +326,7 @@ class DLOAD(LoadCombination):
 
         """
         dload_ids2 = []
-        msg = ' which is required by DLOAD=%s' % (self.sid)
+        msg = ', which is required by DLOAD=%s' % (self.sid)
         for dload_id in self.load_ids:
             dload_id2 = model.DLoad(dload_id, consider_dload_combinations=False, msg=msg)
             dload_ids2.append(dload_id2)
@@ -334,7 +334,7 @@ class DLOAD(LoadCombination):
 
     def safe_cross_reference(self, model, debug=True):
         dload_ids2 = []
-        msg = ' which is required by DLOAD=%s' % (self.sid)
+        msg = ', which is required by DLOAD=%s' % (self.sid)
         for dload_id in self.load_ids:
             try:
                 dload_id2 = model.DLoad(dload_id, consider_dload_combinations=False, msg=msg)
@@ -519,7 +519,7 @@ class RLOAD1(DynamicLoad):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by RLOAD1 sid=%s' % (self.sid)
+        msg = ', which is required by RLOAD1 sid=%s' % (self.sid)
         #self._cross_reference_excite_id(model, msg)
         if isinstance(self.tc, integer_types) and self.tc:
             self.tc_ref = model.TableD(self.tc, msg=msg)
@@ -531,7 +531,7 @@ class RLOAD1(DynamicLoad):
             self.dphase_ref = model.DPHASE(self.dphase, msg=msg)
 
     def safe_cross_reference(self, model):
-        msg = ' which is required by RLOAD1 sid=%s' % (self.sid)
+        msg = ', which is required by RLOAD1 sid=%s' % (self.sid)
         #self.excite_id_ref = model.DAREA(self.excite_id, msg=msg)
         if isinstance(self.tc, integer_types) and self.tc:
             self.tc_ref = model.TableD(self.tc, msg=msg)
@@ -1076,14 +1076,14 @@ class TLOAD1(DynamicLoad):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by TLOAD1=%s' % (self.sid)
+        msg = ', which is required by TLOAD1=%s' % (self.sid)
         if self.tid:
             self.tid_ref = model.TableD(self.tid, msg=msg)
         if isinstance(self.delay, integer_types) and self.delay > 0:
             self.delay_ref = model.DELAY(self.delay, msg=msg)
 
     def safe_cross_reference(self, model, debug=True):
-        msg = ' which is required by TLOAD1=%s' % (self.sid)
+        msg = ', which is required by TLOAD1=%s' % (self.sid)
         if self.tid:
             #try:
             self.tid_ref = model.TableD(self.tid, msg=msg)
@@ -1381,13 +1381,13 @@ class TLOAD2(DynamicLoad):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by TLOAD2 sid=%s' % (self.sid)
+        msg = ', which is required by TLOAD2 sid=%s' % (self.sid)
         if isinstance(self.delay, integer_types) and self.delay > 0:
             self.delay_ref = model.DELAY(self.delay_id, msg=msg)
         # TODO: excite_id
 
     def safe_cross_reference(self, model, debug=True):
-        msg = ' which is required by TLOAD2 sid=%s' % (self.sid)
+        msg = ', which is required by TLOAD2 sid=%s' % (self.sid)
         if isinstance(self.delay, integer_types) and self.delay > 0:
             self.delay_ref = model.DELAY(self.delay_id, msg=msg)
         # TODO: excite_id

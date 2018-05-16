@@ -151,7 +151,7 @@ class AEROS(Aero):
             The BDF object.
 
         """
-        msg = ' which is required by AEROS'
+        msg = ', which is required by AEROS'
         self.acsid_ref = model.Coord(self.acsid, msg=msg)
         self.rcsid_ref = model.Coord(self.rcsid, msg=msg)
 
@@ -165,7 +165,7 @@ class AEROS(Aero):
             The BDF object.
 
         """
-        msg = ' which is required by AEROS'
+        msg = ', which is required by AEROS'
         self.acsid_ref = model.Coord(self.acsid, msg=msg)
         self.rcsid_ref = model.Coord(self.rcsid, msg=msg)
 
@@ -457,14 +457,14 @@ class CSSCHD(Aero):
             the BDF object
 
         """
-        msg = ' which is required by CSSCHD sid=%s' % self.sid
+        msg = ', which is required by CSSCHD sid=%s' % self.sid
         self.aesid_ref = model.AESurf(self.aesid, msg=msg)
         self.lalpha_ref = model.AEFact(self.lalpha, msg=msg)
         self.lmach_ref = model.AEFact(self.lmach, msg=msg)
         self.lschd_ref = model.AEFact(self.lschd, msg=msg)
 
     def safe_cross_reference(self, model):
-        msg = ' which is required by CSSCHD sid=%s' % self.sid
+        msg = ', which is required by CSSCHD sid=%s' % self.sid
         try:
             self.aesid_ref = model.AESurf(self.aesid, msg=msg)
         except KeyError:

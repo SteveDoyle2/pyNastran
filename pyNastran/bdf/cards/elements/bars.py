@@ -647,7 +647,7 @@ class CBAR(LineElement):
         """
         #if self.g0:
         #    self.x = nodes[self.g0].get_position() - nodes[self.ga].get_position()
-        msg = ' which is required by CBAR eid=%s' % (self.eid)
+        msg = ', which is required by CBAR eid=%s' % (self.eid)
         self.ga_ref = model.Node(self.ga, msg=msg)
         self.gb_ref = model.Node(self.gb, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
@@ -660,15 +660,12 @@ class CBAR(LineElement):
         else:
             self.g0_vector = self.x
 
-    def safe_cross_reference(self, model):
-        msg = ' which is required by CBEAM eid=%s' % (self.eid)
+    def safe_cross_reference(self, model, xref_errors):
+        msg = ', which is required by CBAR eid=%s' % (self.eid)
         self.ga_ref = model.Node(self.ga, msg=msg)
         self.gb_ref = model.Node(self.gb, msg=msg)
         self.nodes_ref = [self.ga_ref, self.gb_ref]
-        try:
-            self.pid_ref = model.Property(self.pid, msg=msg)
-        except KeyError:
-            model.log.warning('pid=%s%s' % (self.pid, msg))
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
         if self.g0:
             try:
@@ -904,11 +901,18 @@ class CBEAM3(LineElement):  # was CBAR
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CBEAM3 eid=%s' % (self.eid)
+        msg = ', which is required by CBEAM3 eid=%s' % (self.eid)
         self.ga_ref = model.Node(self.ga, msg=msg)
         self.gb_ref = model.Node(self.gb, msg=msg)
         self.gc_ref = model.Node(self.gc, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        msg = ', which is required by CBEAM3 eid=%s' % (self.eid)
+        self.ga_ref = model.Node(self.ga, msg=msg)
+        self.gb_ref = model.Node(self.gb, msg=msg)
+        self.gc_ref = model.Node(self.gc, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.ga = self.Ga()
@@ -1243,11 +1247,17 @@ class CBEND(LineElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CBEND eid=%s' % (self.eid)
+        msg = ', which is required by CBEND eid=%s' % (self.eid)
         #self.g0 = model.nodes[self.g0]
         self.ga_ref = model.Node(self.ga, msg=msg)
         self.gb_ref = model.Node(self.gb, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        msg = ', which is required by CBEND eid=%s' % (self.eid)
+        self.ga_ref = model.Node(self.ga, msg=msg)
+        self.gb_ref = model.Node(self.gb, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         node_ids = self.node_ids
@@ -1327,7 +1337,7 @@ def rotate_v_wa_wb(model, elem, n1, n2, node1, node2, ihat_offset, i_offset, eid
     - orientation -> wa/wb are defined in the xform_offset (yz) frame;
                      this is likely the easiest frame for a user
     """
-    msg = ' which is required by %s=%s' % (elem.type, elem.eid)
+    msg = ', which is required by %s=%s' % (elem.type, elem.eid)
     cd1 = node1.Cd()
     cd2 = node2.Cd()
     cd1_ref = model.Coord(cd1)

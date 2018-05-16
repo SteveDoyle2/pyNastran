@@ -492,7 +492,7 @@ class NSMADD(BaseCard):
 
     def safe_cross_reference(self, model, debug=True):
         nsms = []
-        msg = ' which is required by NSMADD=%s' % self.sid
+        msg = ', which is required by NSMADD=%s' % self.sid
         for nsm_id in self.sets:
             try:
                 nsm = model.NSM(nsm_id, msg=msg)

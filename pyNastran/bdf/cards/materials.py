@@ -160,7 +160,7 @@ class CREEP(Material):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CREEP pid=%s' % self.mid
+        msg = ', which is required by CREEP pid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
 
     def uncross_reference(self):
@@ -503,7 +503,7 @@ class MAT1(IsotropicMaterial):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by MAT1 mid=%s' % self.mid
+        msg = ', which is required by MAT1 mid=%s' % self.mid
         #self.mcsid = model.Coord(self.mcsid, msg=msg)  # used only for PARAM,CURVPLOT
         if self.mid in model.MATS1:
             self.mats1_ref = model.MATS1[self.mid]  # not using a method...
@@ -793,7 +793,7 @@ class MAT2(AnisotropicMaterial):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by MAT2 mid=%s' % self.mid
+        msg = ', which is required by MAT2 mid=%s' % self.mid
         if self.mid in model.MATT2:
             self.matt2_ref = model.MATT2[self.mid]  # not using a method...
 
@@ -1025,7 +1025,7 @@ class MAT3(OrthotropicMaterial):
         model : BDF()
             the BDF object
         """
-        #msg = ' which is required by MAT3 mid=%s' % self.mid
+        #msg = ', which is required by MAT3 mid=%s' % self.mid
         if self.mid in model.MATT3:
             self.matt3_ref = model.MATT3[self.mid]  # TODO: not using a method...
 
@@ -1174,7 +1174,7 @@ class MAT4(ThermalMaterial):
         model : BDF()
             the BDF object
         """
-        #msg = ' which is required by MAT4 mid=%s' % self.mid
+        #msg = ', which is required by MAT4 mid=%s' % self.mid
         if self.mid in model.MATT4:
             self.matt4 = model.MATT4[self.mid]  # not using a method...
             self.matt4_ref = self.matt4
@@ -1335,7 +1335,7 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
         model : BDF()
             the BDF object
         """
-        #msg = ' which is required by MAT5 mid=%s' % self.mid
+        #msg = ', which is required by MAT5 mid=%s' % self.mid
         if self.mid in model.MATT5:
             self.matt5_ref = model.MATT5[self.mid]  # not using a method...
 
@@ -1533,7 +1533,7 @@ class MAT8(OrthotropicMaterial):
         model : BDF()
             the BDF object
         """
-        #msg = ' which is required by MATT8 mid=%s' % self.mid
+        #msg = ', which is required by MATT8 mid=%s' % self.mid
         if self.mid in model.MATT8:
             self.matt8 = model.MATT8[self.mid]  # not using a method...
             self.matt8_ref = self.matt8

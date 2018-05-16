@@ -171,7 +171,7 @@ class PROD(Property):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by PROD mid=%s' % self.mid
+        msg = ', which is required by PROD mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
 
     def uncross_reference(self):
@@ -323,7 +323,7 @@ class PTUBE(Property):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by PTUBE mid=%s' % self.mid
+        msg = ', which is required by PTUBE mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
 
     def uncross_reference(self):

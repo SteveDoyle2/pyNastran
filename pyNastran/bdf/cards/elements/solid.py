@@ -274,9 +274,22 @@ class CHEXA8(SolidElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CHEXA eid=%s' % self.eid
+        msg = ', which is required by CHEXA eid=%s' % self.eid
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CHEXA eid=%s' % self.eid
+        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     @property
     def faces(self):
@@ -551,9 +564,22 @@ class CHEXA20(SolidElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CHEXA eid=%s' % self.eid
+        msg = ', which is required by CHEXA eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CHEXA eid=%s' % self.eid
+        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     @property
     def faces(self):
@@ -828,9 +854,22 @@ class CPENTA6(SolidElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CPENTA eid=%s' % self.eid
+        msg = ', which is required by CPENTA eid=%s' % self.eid
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CPENTA eid=%s' % self.eid
+        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     @property
     def faces(self):
@@ -1209,9 +1248,22 @@ class CPENTA15(SolidElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CPENTA eid=%s' % self.eid
+        msg = ', which is required by CPENTA eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CPENTA eid=%s' % self.eid
+        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     @property
     def faces(self):
@@ -1405,9 +1457,22 @@ class CPYRAM5(SolidElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CPYRAM eid=%s' % self.eid
+        msg = ', which is required by CPYRAM eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CPYRAM eid=%s' % self.eid
+        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     @property
     def faces(self):
@@ -1597,9 +1662,22 @@ class CPYRAM13(SolidElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CPYRAM eid=%s' % self.eid
+        msg = ', which is required by CPYRAM eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CPYRAM eid=%s' % self.eid
+        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     @property
     def faces(self):
@@ -1865,9 +1943,22 @@ class CTETRA4(SolidElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CTETRA eid=%s' % self.eid
+        msg = ', which is required by CTETRA eid=%s' % self.eid
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CTETRA eid=%s' % self.eid
+        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def _verify(self, xref):
         eid = self.eid
@@ -2087,9 +2178,22 @@ class CTETRA10(SolidElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CTETRA eid=%s' % self.eid
+        msg = ', which is required by CTETRA eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CTETRA eid=%s' % self.eid
+        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     @property
     def faces(self):

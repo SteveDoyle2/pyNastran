@@ -167,7 +167,7 @@ class LOAD(LoadCombination):
             the BDF object
         """
         load_ids2 = []
-        msg = ' which is required by LOAD=%s' % (self.sid)
+        msg = ', which is required by LOAD=%s' % (self.sid)
         for load_id in self.load_ids:
             if load_id == self.sid:
                 msg = 'Type=%s sid=%s load_id=%s creates a recursion error' % (
@@ -180,7 +180,7 @@ class LOAD(LoadCombination):
 
     def safe_cross_reference(self, model, debug=True):
         load_ids2 = []
-        msg = ' which is required by LOAD=%s' % (self.sid)
+        msg = ', which is required by LOAD=%s' % (self.sid)
         for load_id in self.load_ids:
             try:
                 load_id2 = model.Load(load_id, consider_load_combinations=True, msg=msg)
@@ -347,12 +347,12 @@ class GRAV(BaseCard):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by GRAV sid=%s' % self.sid
+        msg = ', which is required by GRAV sid=%s' % self.sid
         self.cid_ref = model.Coord(self.cid, msg=msg)
 
     def safe_cross_reference(self, model, debug=True):
         # msg = "Couldn't find CORDx=%s which is required by GRAV sid=%s" % (self.cid, self.sid)
-        msg = ' which is required by GRAV sid=%s' % self.sid
+        msg = ', which is required by GRAV sid=%s' % self.sid
         self.cid_ref = model.Coord(self.cid, msg=msg)
 
     def uncross_reference(self):
@@ -503,7 +503,7 @@ class ACCEL(BaseCard):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by ACCEL sid=%s' % self.sid
+        msg = ', which is required by ACCEL sid=%s' % self.sid
         self.cid_ref = model.Coord(self.cid, msg=msg)
 
     def uncross_reference(self):
@@ -511,7 +511,7 @@ class ACCEL(BaseCard):
         self.cid_ref = None
 
     def safe_cross_reference(self, model, debug=True):
-        msg = ' which is required by ACCEL sid=%s' % self.sid
+        msg = ', which is required by ACCEL sid=%s' % self.sid
         try:
             self.cid = model.Coord(self.cid, msg=msg)
             self.cid_ref = self.cid
@@ -641,7 +641,7 @@ class ACCEL1(BaseCard):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by ACCEL1 sid=%s' % self.sid
+        msg = ', which is required by ACCEL1 sid=%s' % self.sid
         self.cid_ref = model.Coord(self.Cid(), msg=msg)
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
@@ -661,7 +661,7 @@ class ACCEL1(BaseCard):
 
     @property
     def node_ids(self):
-        #msg = ' which is required by ACCEL1 sid=%s' % self.sid
+        #msg = ', which is required by ACCEL1 sid=%s' % self.sid
         #_node_ids(self.nodes, allow_empty_nodes=True, msg=msg)
         return self._node_ids(nodes=self.nodes_ref)
 
@@ -851,12 +851,12 @@ class Load0(BaseCard):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by %s sid=%s' % (self.type, self.sid)
+        msg = ', which is required by %s sid=%s' % (self.type, self.sid)
         self.node_ref = model.Node(self.node, msg=msg)
         self.cid_ref = model.Coord(self.cid, msg=msg)
 
     def safe_cross_reference(self, model, debug=True):
-        msg = ' which is required by %s sid=%s' % (self.type, self.sid)
+        msg = ', which is required by %s sid=%s' % (self.type, self.sid)
         # try:
         self.node_ref = model.Node(self.node, msg=msg)
         self.cid_ref = model.Coord(self.cid, msg=msg)
@@ -1045,7 +1045,7 @@ class Load1(BaseCard):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by %s sid=%s' % (self.type, self.sid)
+        msg = ', which is required by %s sid=%s' % (self.type, self.sid)
         self.node_ref = model.Node(self.node, msg=msg)
         self.g1_ref = model.Node(self.g1, msg=msg)
         self.g2_ref = model.Node(self.g2, msg=msg)
@@ -1066,7 +1066,7 @@ class Load1(BaseCard):
         .. todo:: cross reference and fix repr function
         """
         return self.cross_reference(model)
-        #msg = ' which is required by FORCE1 sid=%s' % self.sid
+        #msg = ', which is required by FORCE1 sid=%s' % self.sid
         #self.node_ref = model.Node(self.node, msg=msg)
         #self.g1_ref = model.Node(self.g1, msg=msg)
         #self.g2_ref = model.Node(self.g2, msg=msg)
@@ -1249,7 +1249,7 @@ class Load2(BaseCard):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by %s sid=%s' % (self.type, self.sid)
+        msg = ', which is required by %s sid=%s' % (self.type, self.sid)
         self.node_ref = model.Node(self.node, msg=msg)
         self.g1_ref = model.Node(self.g1, msg=msg)
         self.g2_ref = model.Node(self.g2, msg=msg)
@@ -1303,7 +1303,7 @@ class Load2(BaseCard):
         """
         .. todo:: cross reference and fix repr function
         """
-        msg = ' which is required by %s sid=%s' % (self.type, self.sid)
+        msg = ', which is required by %s sid=%s' % (self.type, self.sid)
         is_failed = False
         try:
             self.node_ref = model.Node(self.node, msg=msg)
@@ -1684,7 +1684,7 @@ class GMLOAD(Load):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by GMLOAD sid=%s' % self.sid
+        msg = ', which is required by GMLOAD sid=%s' % self.sid
         self.cid_ref = model.Coord(self.Cid(), msg=msg)
         #self.node = model.Node(self.node, msg=msg)
         #self.g1 = model.Node(self.g1, msg=msg)
@@ -2029,7 +2029,7 @@ class PLOAD1(Load):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by PLOAD1 sid=%s' % self.sid
+        msg = ', which is required by PLOAD1 sid=%s' % self.sid
         self.eid_ref = model.Element(self.eid, msg=msg)
 
     def safe_cross_reference(self, model):
@@ -2191,7 +2191,7 @@ class PLOAD2(Load):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by PLOAD2 sid=%s' % self.sid
+        msg = ', which is required by PLOAD2 sid=%s' % self.sid
         self.eids_ref = model.Elements(self.eids, msg=msg)
 
     def safe_cross_reference(self, model):
@@ -2590,7 +2590,7 @@ class PLOAD4(Load):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by PLOAD4 sid=%s' % self.sid
+        msg = ', which is required by PLOAD4 sid=%s' % self.sid
         self.cid_ref = model.Coord(self.cid, msg=msg)
         if self.g1 is not None:
             self.g1_ref = model.Node(self.g1, msg=msg + '; g1')
@@ -2600,7 +2600,7 @@ class PLOAD4(Load):
             self.eids_ref = model.Elements(self.eids, msg=msg)
 
     def safe_cross_reference(self, model, debug=True):
-        msg = ' which is required by PLOAD4 sid=%s' % self.sid
+        msg = ', which is required by PLOAD4 sid=%s' % self.sid
         #self.eid = model.Element(self.eid, msg=msg)
         try:
             self.cid_ref = model.Coord(self.cid, msg=msg)
@@ -2879,7 +2879,7 @@ class PLOADX1(BaseCard):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by PLOADX1 lid=%s' % self.sid
+        msg = ', which is required by PLOADX1 lid=%s' % self.sid
         self.eid_ref = model.Element(self.eid, msg=msg)
         self.ga_ref = model.Node(self.ga, msg=msg)
         self.gb_ref = model.Node(self.gb, msg=msg)

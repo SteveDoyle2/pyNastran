@@ -319,7 +319,7 @@ class CCONEAX(Element):
         return self.rings
 
     def cross_reference(self, model):
-        msg = ' which is required by CCONEAX eid=%s' % (self.eid)
+        msg = ', which is required by CCONEAX eid=%s' % (self.eid)
         #self.rings_ref
         self.pid_ref = model.Property(self.pid, msg=msg)
 
@@ -474,7 +474,7 @@ class PCONEAX(Property):
             the BDF object
 
         """
-        msg = ' which is required by PCONEAX=%s' %(self.pid)
+        msg = ', which is required by PCONEAX=%s' %(self.pid)
         if self.mid1 > 0:
             self.mid1_ref = model.Material(self.mid1, msg=msg)
         if self.mid2 > 0:

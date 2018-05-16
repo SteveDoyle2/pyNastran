@@ -564,13 +564,13 @@ class CTRIA3(TriShell):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CTRIA3 eid=%s' % self.eid
+        msg = ', which is required by CTRIA3 eid=%s' % self.eid
         self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
         self.pid_ref = model.Property(self.Pid(), msg=msg)
         if isinstance(self.theta_mcid, integer_types):
             self.theta_mcid_ref = model.Coord(self.theta_mcid, msg=msg)
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -579,11 +579,11 @@ class CTRIA3(TriShell):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CTRIA3 eid=%s' % self.eid
+        msg = ', which is required by CTRIA3 eid=%s' % self.eid
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
-        self.pid_ref = model.Property(self.pid, msg=msg)
-        #if isinstance(self.theta_mcid, integer_types):
-            #self.theta_mcid_ref = model.Coord(self.theta_mcid, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
+        if isinstance(self.theta_mcid, integer_types):
+            self.theta_mcid_ref = model.safe_coord(self.theta_mcid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -783,9 +783,22 @@ class CPLSTN3(TriShell):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CPLSTN3 eid=%s' % self.eid
+        msg = ', which is required by CPLSTN3 eid=%s' % self.eid
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.Pid(), msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CPLSTN3 eid=%s' % self.eid
+        self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -997,9 +1010,22 @@ class CTRIA6(TriShell):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CTRIA6 eid=%s' % self.eid
+        msg = ', which is required by CTRIA6 eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.Property(self.Pid(), msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CTRIA6 eid=%s' % self.eid
+        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -1279,9 +1305,22 @@ class CTRIAR(TriShell):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CTRIAR eid=%s' % self.eid
+        msg = ', which is required by CTRIAR eid=%s' % self.eid
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CTRIAR eid=%s' % self.eid
+        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -1680,9 +1719,22 @@ class CSHEAR(QuadShell):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CSHEAR eid=%s' % self.eid
-        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
+        msg = ', which is required by CSHEAR eid=%s' % self.eid
+        self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
         self.pid_ref = model.Property(self.Pid(), msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CSHEAR eid=%s' % self.eid
+        self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -2008,13 +2060,13 @@ class CQUAD4(QuadShell):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CQUAD4 eid=%s' % self.eid
+        msg = ', which is required by CQUAD4 eid=%s' % self.eid
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
         if isinstance(self.theta_mcid, integer_types):
             self.theta_mcid_ref = model.Coord(self.theta_mcid, msg=msg)
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -2023,11 +2075,11 @@ class CQUAD4(QuadShell):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CQUAD4 eid=%s' % self.eid
+        msg = ', which is required by CQUAD4 eid=%s' % self.eid
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
-        self.pid_ref = model.Property(self.pid, msg=msg)
-        #if isinstance(self.theta_mcid, integer_types):
-            #self.theta_mcid_ref = model.Coord(self.theta_mcid, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
+        if isinstance(self.theta_mcid, integer_types):
+            self.theta_mcid_ref = model.safe_coord(self.theta_mcid, self.eid, xref_errors, msg=msg)
 
     #def x(self, eta, xi, xs):
         #"""Calculate the x-coordinate within the element.
@@ -2477,9 +2529,22 @@ class CPLSTN4(QuadShell):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CPLSTN4 eid=%s' % self.eid
+        msg = ', which is required by CPLSTN4 eid=%s' % self.eid
         self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
         self.pid_ref = model.Property(self.Pid(), msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CPLSTN4 eid=%s' % self.eid
+        self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -2619,9 +2684,22 @@ class CPLSTN6(TriShell):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CPLSTN6 eid=%s' % self.eid
+        msg = ', which is required by CPLSTN6 eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.Property(self.Pid(), msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CPLSTN6 eid=%s' % self.eid
+        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -2820,9 +2898,22 @@ class CPLSTN8(QuadShell):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CQUAD8 eid=%s' % self.eid
+        msg = ', which is required by CPLSTN8 eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.Property(self.Pid(), msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CPLSTN8 eid=%s' % self.eid
+        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -3075,9 +3166,24 @@ class CQUADR(QuadShell):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CQUADR eid=%s' % self.eid
+        msg = ', which is required by CQUADR eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
+        ## TODO: xref coord
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CQUADR eid=%s' % self.eid
+        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
+        ## TODO: xref coord
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -3278,9 +3384,22 @@ class CPLSTS3(TriShell):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CTRIA3 eid=%s' % self.eid
+        msg = ', which is required by CPLSTS3 eid=%s' % self.eid
         self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
-        self.pid_ref = model.Property(self.Pid(), msg=msg)
+        self.pid_ref = model.Property(self.pid, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CPLSTS3 eid=%s' % self.eid
+        self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -3454,11 +3573,26 @@ class CQUAD(QuadShell):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CQUAD eid=%s' % self.eid
+        msg = ', which is required by CQUAD eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
         if isinstance(self.theta_mcid, integer_types):
             self.theta_mcid_ref = model.Coord(self.theta_mcid, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CQUAD eid=%s' % self.eid
+        self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
+        if isinstance(self.theta_mcid, integer_types):
+            self.theta_mcid_ref = model.safe_coord(self.theta_mcid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -3686,9 +3820,22 @@ class CQUAD8(QuadShell):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CQUAD8 eid=%s' % self.eid
+        msg = ', which is required by CQUAD8 eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.Property(self.Pid(), msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CQUAD8 eid=%s' % self.eid
+        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -3883,8 +4030,20 @@ class SNORM(BaseCard):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CTRIAR eid=%s' % self.eid
+        msg = ', which is required by SNORM eid=%s' % self.eid
         self.cid_ref = model.Coord(self.cid, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by SNORM eid=%s' % self.eid
+        self.cid_ref = model.safe_coord(self.cid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.cid = self.Cid()

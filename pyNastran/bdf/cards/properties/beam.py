@@ -851,7 +851,7 @@ class PBEAM(IntegratedLineProperty):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by PBEAM mid=%s' % self.mid
+        msg = ', which is required by PBEAM mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
         #if model.sol != 600:
             #assert max(self.j) == 0.0, self.j
@@ -1384,7 +1384,7 @@ class PBEAML(IntegratedLineProperty):
                      reference a MAT4 or MAT5 material entry.
         .. todo:: What happens when there are 2 subcases?
         """
-        msg = ' which is required by PBEAML mid=%s' % self.mid
+        msg = ', which is required by PBEAML mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
 
     def uncross_reference(self):
@@ -1591,7 +1591,7 @@ class PBMSECT(LineProperty):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by PBMSECT mid=%s' % self.mid
+        msg = ', which is required by PBMSECT mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
 
         self.outp_ref = model.Set(self.outp)
@@ -1894,7 +1894,7 @@ class PBCOMP(LineProperty):
             the BDF object
 
         """
-        msg = ' which is required by PBCOMP mid=%s' % self.mid
+        msg = ', which is required by PBCOMP mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
         self.mids_ref = model.Materials(self.mids, msg=msg)
 

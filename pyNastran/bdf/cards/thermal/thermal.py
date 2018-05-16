@@ -184,7 +184,7 @@ class CHBDYE(ThermalElement):
     def cross_reference(self, model):
         pass
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, xref_errors):
         pass
 
     def uncross_reference(self):
@@ -446,11 +446,11 @@ class CHBDYG(ThermalElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CHBDYG eid=%s' % self.eid
+        msg = ', which is required by CHBDYG eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
-    def safe_cross_reference(self, model):
-        msg = ' which is required by CHBDYG eid=%s' % self.eid
+    def safe_cross_reference(self, model, xref_errors):
+        msg = ', which is required by CHBDYG eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
     def uncross_reference(self):
@@ -720,7 +720,7 @@ class CHBDYP(ThermalElement):
 
         """
         try:
-            msg = ' which is required by CHBDYP pid=%s' % self.pid
+            msg = ', which is required by CHBDYP pid=%s' % self.pid
             self.pid_ref = model.Phbdy(self.pid, msg=msg)
             self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
             self.ce_ref = model.Coord(self.ce, msg)
@@ -728,11 +728,11 @@ class CHBDYP(ThermalElement):
             print(self.get_stats())
             raise
 
-    def safe_cross_reference(self, model):
-        msg = ' which is required by CHBDYP pid=%s' % self.pid
+    def safe_cross_reference(self, model, xref_errors):
+        msg = ', which is required by CHBDYP pid=%s' % self.pid
         self.pid_ref = model.Phbdy(self.pid, msg=msg)
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
-        self.ce_ref = model.Coord(self.ce, msg)
+        self.ce_ref = model.safe_coord(self.ce, self.pid, xref_errors, msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -1404,7 +1404,7 @@ class CONV(ThermalBC):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CONV eid=%s' % self.eid
+        msg = ', which is required by CONV eid=%s' % self.eid
         ## TODO: eid???
         self.eid_ref = model.Element(self.eid, msg=msg)
         if model._xref == 1:  # True
@@ -1569,7 +1569,7 @@ class CONVM(ThermalBC):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CONVM eid=%s' % self.eid
+        msg = ', which is required by CONVM eid=%s' % self.eid
         self.eid_ref = model.CYBDY(self.eid, msg=msg)
         self.pconvm_ref = model.PCONV(self.pconvm, msg=msg)
         self.film_node_ref = model.Grid(self.film_node, msg=msg)
@@ -1772,7 +1772,7 @@ class RADBC(ThermalBC):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by RADBC pid=%s' % self.nodamb
+        msg = ', which is required by RADBC pid=%s' % self.nodamb
         elems = []
         for eid in self.eids:
             elem = model.Element(eid, msg=msg)

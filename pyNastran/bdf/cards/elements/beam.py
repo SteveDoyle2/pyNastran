@@ -455,7 +455,7 @@ class CBEAM(CBAR):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CBEAM eid=%s' % (self.eid)
+        msg = ', which is required by CBEAM eid=%s' % (self.eid)
         self.ga_ref = model.Node(self.ga, msg=msg)
         self.gb_ref = model.Node(self.gb, msg=msg)
         self.nodes_ref = [self.ga_ref, self.gb_ref]
@@ -468,15 +468,12 @@ class CBEAM(CBAR):
         if model.is_nx:
             assert self.offt == 'GGG', 'NX only support offt=GGG; offt=%r' % self.offt
 
-    def safe_cross_reference(self, model):
-        msg = ' which is required by CBEAM eid=%s' % (self.eid)
+    def safe_cross_reference(self, model, xref_errors):
+        msg = ', which is required by CBEAM eid=%s' % (self.eid)
         self.ga_ref = model.Node(self.ga, msg=msg)
         self.gb_ref = model.Node(self.gb, msg=msg)
         self.nodes_ref = [self.ga_ref, self.gb_ref]
-        try:
-            self.pid_ref = model.Property(self.pid, msg=msg)
-        except KeyError:
-            model.log.warning('pid=%s%s' % (self.pid, msg))
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
         if self.g0:
             try:

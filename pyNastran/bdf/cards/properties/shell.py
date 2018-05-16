@@ -96,7 +96,7 @@ class CompositeShellProperty(ShellProperty):
         mids_ref = []
         for iply in range(len(self.thicknesses)):
             mid = self.mids[iply]
-            msg = ' which is required by %s pid=%s iply=%s' % (self.type, self.pid, iply)
+            msg = ', which is required by %s pid=%s iply=%s' % (self.type, self.pid, iply)
             mids_ref.append(model.Material(mid, msg))
         self.mids_ref = mids_ref
 
@@ -1320,7 +1320,7 @@ class PLPLANE(ShellProperty):
             the BDF object
 
         """
-        msg = ' which is required by PLPLANE pid=%s' % self.pid
+        msg = ', which is required by PLPLANE pid=%s' % self.pid
         self.mid_ref = model.HyperelasticMaterial(self.mid, msg=msg)
         self.cid_ref = model.Coord(self.cid, msg=msg)
 
@@ -1421,7 +1421,7 @@ class PPLANE(ShellProperty):
             the BDF object
 
         """
-        msg = ' which is required by PPLANE pid=%s' % self.pid
+        msg = ', which is required by PPLANE pid=%s' % self.pid
         self.mid_ref = model.Material(self.mid, msg)
 
     def uncross_reference(self):
@@ -1566,7 +1566,7 @@ class PSHEAR(ShellProperty):
             the BDF object
 
         """
-        msg = ' which is required by PSHEAR pid=%s' % self.pid
+        msg = ', which is required by PSHEAR pid=%s' % self.pid
         self.mid_ref = model.Material(self.mid, msg)
 
     def uncross_reference(self):
@@ -1980,7 +1980,7 @@ class PSHELL(ShellProperty):
             the BDF object
 
         """
-        msg = ' which is required by PSHELL pid=%s' % self.pid
+        msg = ', which is required by PSHELL pid=%s' % self.pid
         if self.mid1:
             self.mid1_ref = model.Material(self.mid1, msg)
         if self.mid2 and self.mid2 != -1:

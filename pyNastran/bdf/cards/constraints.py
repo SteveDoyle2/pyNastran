@@ -177,7 +177,7 @@ class SUPORT1(Constraint):
 
     def safe_cross_reference(self, model, debug=True):
         nids2 = []
-        msg = ' which is required by SUPORT1=%s' % self.conid
+        msg = ', which is required by SUPORT1=%s' % self.conid
         for nid in self.nodes:
             try:
                 nid2 = model.Node(nid, msg=msg)
@@ -318,7 +318,7 @@ class SUPORT(Constraint):
 
     def safe_cross_reference(self, model, debug=True):
         nids2 = []
-        msg = ' which is required by SUPORT'
+        msg = ', which is required by SUPORT'
         for nid in self.nodes:
             try:
                 nid2 = model.Node(nid, msg=msg)
@@ -535,7 +535,7 @@ class MPC(Constraint):
 
     def safe_cross_reference(self, model, debug=True):
         nids2 = []
-        msg = ' which is required by SPC=%s' % self.conid
+        msg = ', which is required by SPC=%s' % self.conid
         for nid in self.nodes:
             try:
                 nid2 = model.Node(nid, msg=msg)
@@ -752,7 +752,7 @@ class SPC(Constraint):
 
     def safe_cross_reference(self, model, debug=True):
         nids2 = []
-        msg = ' which is required by SPC=%s' % self.conid
+        msg = ', which is required by SPC=%s' % self.conid
         for nid in self.node_ids:
             try:
                 nid2 = model.Node(nid, msg=msg)
@@ -1419,7 +1419,7 @@ class SPCADD(ConstraintAdd):
 
     def safe_cross_reference(self, model, debug=True):
         self.sets_ref = []
-        msg = ' which is required by SPCADD=%s' % self.conid
+        msg = ', which is required by SPCADD=%s' % self.conid
         for spc_id in self.sets:
             try:
                 spc = model.SPC(spc_id, consider_spcadd=False, msg=msg)
@@ -1533,7 +1533,7 @@ class MPCADD(ConstraintAdd):
 
     def safe_cross_reference(self, model, debug=True):
         self.sets_ref = []
-        msg = ' which is required by MPCADD=%s' % self.conid
+        msg = ', which is required by MPCADD=%s' % self.conid
         for mpc_id in self.sets:
             try:
                 mpc = model.MPC(mpc_id, consider_mpcadd=False, msg=msg)
