@@ -3987,7 +3987,7 @@ class AddCards(AddMethods):
             a comment for the card
 
         """
-        caero = CAERO2(eid, pid, igid, p1, x12, cp=cp, nsb=nsb, nint=nint, lsb=lsb,
+        caero = CAERO2(eid, pid, igroup, p1, x12, cp=cp, nsb=nsb, nint=nint, lsb=lsb,
                        lint=lint, comment=comment)
         self._add_caero_object(caero)
         return caero

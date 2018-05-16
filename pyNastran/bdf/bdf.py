@@ -3265,8 +3265,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             icp_transform[cp] = np.where(np.in1d(nids_all, nids))[0]
         return icd_transform, icp_transform, xyz_cp, nid_cp_cd
 
-    def get_xyz_in_coord(self, cid=0, fdtype='float64', idtype='int32'):
+    def get_xyz_in_coord_array(self, cid=0, fdtype='float64', idtype='int32'):
         """
+        Gets the xyzs as an array in an arbitrary coordinate system
+
         Parameters
         ----------
         fdtype : str; default='float64'
@@ -3300,10 +3302,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                                                   cid=cid, in_place=False, atol=1e-6)
         return nid_cp_cd, xyz_cid, xyz_cp, icd_transform, icp_transform
 
-    def update_nodes(self, nids, xyz):
-        """
+    #def update_nodes(self, nids, xyz):
+        #"""
 
-        """
+        #"""
 
     def transform_xyzcp_to_xyz_cid(self, xyz_cp, nids, icp_transform,
                                    cid=0, in_place=False, atol=1e-6):
