@@ -528,6 +528,10 @@ class AELIST(BaseCard):
 
         if isinstance(elements, integer_types):
             elements = [elements]
+
+        if isinstance(elements, np.ndarray):
+            assert len(elements.shape) == 1, elements.shape
+            elements = elements.tolist()
         if not isinstance(elements, (list, tuple)):
             raise TypeError('AELIST; type(elements)=%s and must be a list/tuple' % type(elements))
 
@@ -3526,6 +3530,9 @@ class MONPNT1(BaseCard):
         self.cp_ref = model.Coord(self.cp, msg=msg)
         self.cd_ref = model.Coord(self.cd, msg=msg)
 
+    def safe_cross_reference(self, model):
+        self.cross_reference(model)
+
     def uncross_reference(self):
         self.cp = self.Cp()
         self.cd = self.Cd()
@@ -3602,6 +3609,9 @@ class MONPNT2(BaseCard):
 
     def cross_reference(self, model):
         pass
+
+    def safe_cross_reference(self, model):
+        self.cross_reference(model)
 
     def uncross_reference(self):
         pass
@@ -3684,6 +3694,9 @@ class MONPNT3(BaseCard):
         msg = ', which is required by MONPNT3 name=%s' % self.name
         self.cp_ref = model.Coord(self.cp, msg=msg)
         self.cd_ref = model.Coord(self.cd, msg=msg)
+
+    def safe_cross_reference(self, model):
+        self.cross_reference(model)
 
     def uncross_reference(self):
         self.cp = self.Cp()

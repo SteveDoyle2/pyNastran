@@ -194,7 +194,7 @@ class NastranGeometryHelper(NastranGuiAttributes):
             unused_v, wa, wb, xform = rotate_v_wa_wb(
                 model, elem,
                 n1, n2, node1, node2,
-                ihat, i, eid, Li)
+                ihat, i, eid, Li, model.log)
             if wb is None:
                 # one or more of v, wa, wb are bad
                 continue
@@ -266,7 +266,7 @@ class NastranGeometryHelper(NastranGuiAttributes):
                     unused_v, wa, wb, xform = rotate_v_wa_wb(
                         model, elem,
                         n1, n2, node1, node2,
-                        ihat, i, eid, Li)
+                        ihat, i, eid, Li, model.log)
                     if wb is None:
                         # one or more of v, wa, wb are bad
                         continue

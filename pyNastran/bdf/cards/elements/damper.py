@@ -742,7 +742,7 @@ class CDAMP5(LineDamper):
         """
         msg = ', which is required by CDAMP5 eid=%s' % (self.eid)
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
-        self.pid_ref = model.safe_property(self.pid, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids

@@ -78,7 +78,7 @@ from pyNastran.bdf.cards.constraints import (SPC, SPCADD, SPCAX, SPC1, SPCOFF, S
                                              GMSPC)
 from pyNastran.bdf.cards.coordinate_systems import (CORD1R, CORD1C, CORD1S,
                                                     CORD2R, CORD2C, CORD2S, #CORD3G,
-                                                    GMCORD)
+                                                    GMCORD, transform_coords_vectorized)
 from pyNastran.bdf.cards.deqatn import DEQATN
 from pyNastran.bdf.cards.dynamic import (
     DELAY, DPHASE, FREQ, FREQ1, FREQ2, FREQ3, FREQ4, FREQ5,
@@ -3155,9 +3155,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
         Parameters
         ----------
-        fdtype : str
+        fdtype : str; default='float64'
             the type of xyz_cp
-        idtype : str
+        idtype : str; default='int32'
             the type of nid_cp_cd
         sort_ids : bool; default=True
             sort the ids
@@ -3264,6 +3264,46 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             nids = np.array(nids)
             icp_transform[cp] = np.where(np.in1d(nids_all, nids))[0]
         return icd_transform, icp_transform, xyz_cp, nid_cp_cd
+
+    def get_xyz_in_coord(self, cid=0, fdtype='float64', idtype='int32'):
+        """
+        Parameters
+        ----------
+        fdtype : str; default='float64'
+            the type of xyz_cp
+        idtype : str; default='int32'
+            the type of nid_cp_cd
+        cid : int; default=0
+            the coordinate system to get xyz in
+
+        Returns
+        -------
+        nid_cp_cd : (n, 3) int ndarray
+            node id, CP, CD for each node
+        xyz_cid : (n, 3) float ndarray
+            points in the CID coordinate system
+        xyz_cp : (n, 3) float ndarray
+            points in the CP coordinate system
+        icd_transform : dict{int cd : (n,) int ndarray}
+            Dictionary from coordinate id to index of the nodes in
+            ``self.point_ids`` that their output (`CD`) in that
+            coordinate system.
+        icp_transform : dict{int cp : (n,) int ndarray}
+            Dictionary from coordinate id to index of the nodes in
+            ``self.point_ids`` that their input (`CP`) in that
+            coordinate system.
+        """
+        icd_transform, icp_transform, xyz_cp, nid_cp_cd = self.get_displacement_index_xyz_cp_cd(
+            fdtype=fdtype, idtype=idtype, sort_ids=True)
+        nids = nid_cp_cd[:, 0]
+        xyz_cid = self.transform_xyzcp_to_xyz_cid(xyz_cp, nids, icp_transform,
+                                                  cid=cid, in_place=False, atol=1e-6)
+        return nid_cp_cd, xyz_cid, xyz_cp, icd_transform, icp_transform
+
+    def update_nodes(self, nids, xyz):
+        """
+
+        """
 
     def transform_xyzcp_to_xyz_cid(self, xyz_cp, nids, icp_transform,
                                    cid=0, in_place=False, atol=1e-6):
@@ -3427,7 +3467,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                     #break
             raise RuntimeError(msg)
 
-
         if do_checks and not np.allclose(xyz_cid0, xyz_cid0_correct, atol=atol):
             #np.array_equal(xyz_cid, xyz_cid_alt):
             out = self.get_displacement_index_xyz_cp_cd(fdtype=xyz_cid0.dtype, sort_ids=True)
@@ -3464,91 +3503,47 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
     def _transform(self, cps_to_check0, icp_transform,
                    nids, xyz_cp, xyz_cid0, xyz_cid0_correct,
                    unused_in_place, do_checks):
-        """helper method for ``transform_xyzcp_to_xyz_cid``"""
-        cps_to_check = []
-        cps_checked = []
-        nids_checked = []
-        assert len(cps_to_check0) > 0, cps_to_check0
-        for cp in cps_to_check0:
-            if cp == 0:
-                if 0 in icp_transform:
-                    inode = icp_transform[cp]
-                    nids_checked.append(nids[inode])
-                    #print("  cp=%s used in a transform (CORD2R)...done" % (cp))
-                #else:
-                    #print("  cp=%s not used in a transform (CORD2R)...done" % (cp))
-                #print('***nids_checked=%s' % nids[inode])
-                #xyz_cid0[inode, :] = xyz_cp[inode, :]
-                continue
+        """
+        Transforms coordinates in a vectorized way
+        Helper method for ``transform_xyzcp_to_xyz_cid``
 
-            coord = self.coords[cp]
-            origin = coord.origin
+        Parameters
+        ----------
+        cps_to_check0 : List[int]
+            the Cps to check
+        icp_transform : dict{int cp : (n,) int ndarray}
+            Dictionary from coordinate id to index of the nodes in
+            ``self.point_ids`` that their input (`CP`) in that
+            coordinate system.
+        nids : (n, ) int ndarray
+            the GRID/SPOINT/EPOINT ids corresponding to xyz_cp
+        xyz_cp : (n, 3) float ndarray
+            points in the CP coordinate system
+        xyz_cid : (n, 3) float ndarray
+            points in the CID coordinate system
+        xyz_cid_correct : (n, 3) float ndarray
+            points in the CID coordinate system
+        unused_in_place : bool, default=False
+            If true the original xyz_cp is modified, otherwise a
+            new one is created.
+        do_checks : bool; default=False
+            internal value for testing
+            True : makes use of xyz_cid_correct
+            False : xyz_cid_correct is unused
 
-            if origin is None:
-                # the coord has not been xref'd, so add it to cps_to_check
-                #if self.is_bdf_vectorized:
-                    #assert in_place is False, 'in_place=%r must be False for vectorized' % in_place
-                #else:
-                    #raise RuntimeError('you must cross-reference the nodes')
-
-                cps_to_check.append(cp)
-                if cp in icp_transform:
-                    inode = icp_transform[cp]
-                    xyz_cid0[inode, :] = np.nan
-                #print("  cp=%s used, but not done (%s)..." % (cp, coord.type))
-                continue
-
-            cps_checked.append(cp)
-            #is_beta = np.diagonal(beta).min() != 1.
-            #is_origin = np.abs(coord.origin).max() != 0.
-
-            if cp not in icp_transform:
-                # we may need coordinate system, but it's not explicitly used
-                # in the list of GRID CP coordinate systems
-                #print("  cp=%s not used in a transform (%s)...done" % (cp, coord.type))
-                continue
-
-            beta = coord.beta()
-            inode = icp_transform[cp]
-            nids_checked.append(nids[inode])
-            #print('***nids_checked=%s' % nids[inode])
-            xyzi = coord.coord_to_xyz_array(xyz_cp[inode, :])
-            #try:
-            new = np.dot(xyzi, beta) + origin
-            #except TypeError:
-                #msg = 'Bad Math...\n'
-                #msg += '%s\n' % coord.rstrip()
-                #msg += '  origin = %s\n' % origin
-                #msg += '  i = %s\n' % coord.i
-                #msg += '  j = %s\n' % coord.j
-                #msg += '  k = %s\n' % coord.k
-                #msg += '  beta = \n%s' % beta
-                #self.log.error(msg)
-                #raise
-
-            xyz_cid0[inode, :] = new
-            if do_checks and not np.array_equal(xyz_cid0_correct[inode, :], new):
-                msg = ('xyz_cid0:\n%s\n'
-                       'xyz_cid0_correct:\n%s\n'
-                       'inode=%s' % (xyz_cid0[inode, :], xyz_cid0_correct[inode, :],
-                                     inode))
-                raise ValueError(msg)
-
-            #elif is_beta:
-                #xyz_cid0[inode, :] = np.dot(xyzi, beta)
-            #else:
-                #xyz_cid0[inode, :] = xyzi + coord.origin
-        #print('nids_checkedA =', nids_checked)
-        if len(nids_checked) == 0:
-            pass
-        elif len(nids_checked) == 1:
-            nids_checked = nids_checked[0]
-            # this is already sorted because icp_transform is sorted
-        else:
-            nids_checked = np.hstack(nids_checked)
-            nids_checked.sort()
-            assert len(nids_checked) > 0, nids_checked
-        cps_to_check.sort()
+        Returns
+        -------
+        nids_checked : (nnodes_checked,) int ndarray
+           the node ids that were checked
+        cps_checked : List[int]
+            the Cps that were checked
+        cps_to_check : List[int]
+            the Cps that are unreferenceable given the current information
+        """
+        nids_checked, cps_checked, cps_to_check = transform_coords_vectorized(
+            cps_to_check0, icp_transform,
+            nids, xyz_cp, xyz_cid0, xyz_cid0_correct,
+            self.coords, do_checks)
         return nids_checked, cps_checked, cps_to_check
 
     def _get_coords_to_update(self, cps_to_check, cps_checked, nids_checked):

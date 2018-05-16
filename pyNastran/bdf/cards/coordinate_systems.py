@@ -1645,6 +1645,14 @@ class Cord2x(Coord):
             else:
                 raise RuntimeError('j or k are None; j=%s k=%s' % (j, k))
 
+        if np.abs(k).max() == 0.0 or np.abs(i).max() == 0.0:
+            msg = (
+                'coordinate vectors arent perpendicular\n'
+                '  origin = %s\n'
+                '  i = %s\n'
+                '  j = %s\n'
+                '  k = %s\n' % (origin, i, j, k))
+            raise RuntimeError(msg)
         # origin
         e1 = origin
         # point on z axis
@@ -2680,3 +2688,128 @@ def get_nodes_along_axis_in_coords(model, nids, xyz_cp, icp_transform, cids):
         cid_to_inids[cid] = inids
         model.log.debug('nnodes[icid=%3s, cid=%s] = %s' % (icid, cid, len(inids)))
     return cid_to_inids
+
+def transform_coords_vectorized(cps_to_check0, icp_transform,
+                                nids, xyz_cp, xyz_cid0, xyz_cid0_correct,
+                                coords, do_checks):
+    """
+    Transforms coordinates in a vectorized way
+
+    Parameters
+    ----------
+    cps_to_check0 : List[int]
+        the Cps to check
+    icp_transform : dict{int cp : (n,) int ndarray}
+        Dictionary from coordinate id to index of the nodes in
+        ``self.point_ids`` that their input (`CP`) in that
+        coordinate system.
+    nids : (n, ) int ndarray
+        the GRID/SPOINT/EPOINT ids corresponding to xyz_cp
+    xyz_cp : (n, 3) float ndarray
+        points in the CP coordinate system
+    xyz_cid : (n, 3) float ndarray
+        points in the CID coordinate system
+    xyz_cid_correct : (n, 3) float ndarray
+        points in the CID coordinate system
+    unused_in_place : bool, default=False
+        If true the original xyz_cp is modified, otherwise a
+        new one is created.
+    do_checks : bool; default=False
+        internal value for testing
+        True : makes use of xyz_cid_correct
+        False : xyz_cid_correct is unused
+
+    Returns
+    -------
+    nids_checked : (nnodes_checked,) int ndarray
+       the node ids that were checked
+    cps_checked : List[int]
+        the Cps that were checked
+    cps_to_check : List[int]
+        the Cps that are unreferenceable given the current information
+    """
+    cps_to_check = []
+    cps_checked = []
+    nids_checked = []
+    assert len(cps_to_check0) > 0, cps_to_check0
+    for cp in cps_to_check0:
+        if cp == 0:
+            if 0 in icp_transform:
+                inode = icp_transform[cp]
+                nids_checked.append(nids[inode])
+                #print("  cp=%s used in a transform (CORD2R)...done" % (cp))
+            #else:
+                #print("  cp=%s not used in a transform (CORD2R)...done" % (cp))
+            #print('***nids_checked=%s' % nids[inode])
+            #xyz_cid0[inode, :] = xyz_cp[inode, :]
+            continue
+
+        coord = coords[cp]
+        origin = coord.origin
+
+        if origin is None:
+            # the coord has not been xref'd, so add it to cps_to_check
+            #if self.is_bdf_vectorized:
+                #assert in_place is False, 'in_place=%r must be False for vectorized' % in_place
+            #else:
+                #raise RuntimeError('you must cross-reference the nodes')
+
+            cps_to_check.append(cp)
+            if cp in icp_transform:
+                inode = icp_transform[cp]
+                xyz_cid0[inode, :] = np.nan
+            #print("  cp=%s used, but not done (%s)..." % (cp, coord.type))
+            continue
+
+        cps_checked.append(cp)
+        #is_beta = np.diagonal(beta).min() != 1.
+        #is_origin = np.abs(coord.origin).max() != 0.
+
+        if cp not in icp_transform:
+            # we may need coordinate system, but it's not explicitly used
+            # in the list of GRID CP coordinate systems
+            #print("  cp=%s not used in a transform (%s)...done" % (cp, coord.type))
+            continue
+
+        beta = coord.beta()
+        inode = icp_transform[cp]
+        nids_checked.append(nids[inode])
+        #print('***nids_checked=%s' % nids[inode])
+        xyzi = coord.coord_to_xyz_array(xyz_cp[inode, :])
+        #try:
+        new = np.dot(xyzi, beta) + origin
+        #except TypeError:
+            #msg = 'Bad Math...\n'
+            #msg += '%s\n' % coord.rstrip()
+            #msg += '  origin = %s\n' % origin
+            #msg += '  i = %s\n' % coord.i
+            #msg += '  j = %s\n' % coord.j
+            #msg += '  k = %s\n' % coord.k
+            #msg += '  beta = \n%s' % beta
+            #self.log.error(msg)
+            #raise
+
+        xyz_cid0[inode, :] = new
+        if do_checks and not np.array_equal(xyz_cid0_correct[inode, :], new):
+            msg = ('xyz_cid0:\n%s\n'
+                   'xyz_cid0_correct:\n%s\n'
+                   'inode=%s' % (xyz_cid0[inode, :], xyz_cid0_correct[inode, :],
+                                 inode))
+            raise ValueError(msg)
+
+        #elif is_beta:
+            #xyz_cid0[inode, :] = np.dot(xyzi, beta)
+        #else:
+            #xyz_cid0[inode, :] = xyzi + coord.origin
+    #print('nids_checkedA =', nids_checked)
+    if len(nids_checked) == 0:
+        pass
+    elif len(nids_checked) == 1:
+        nids_checked = nids_checked[0]
+        # this is already sorted because icp_transform is sorted
+    else:
+        nids_checked = np.hstack(nids_checked)
+        nids_checked.sort()
+        assert len(nids_checked) > 0, nids_checked
+    cps_to_check.sort()
+    return nids_checked, cps_checked, cps_to_check

@@ -1340,7 +1340,8 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
             self.matt5_ref = model.MATT5[self.mid]  # not using a method...
 
     def uncross_reference(self):
-        #self.matt5 = self.Matt5()
+        if self.mid in model.MATT5:
+            self.matt5 = self.Matt5()
         self.matt5_ref = None
 
     def get_density(self):

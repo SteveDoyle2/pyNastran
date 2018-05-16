@@ -382,7 +382,7 @@ class CBEAM(CBAR):
         unused_v, wa, wb, xform = rotate_v_wa_wb(
             model, elem,
             n1, n2, node1, node2,
-            i_offset, i, eid, Li)
+            i_offset, i, eid, Li, model.log)
         if wb is None:
             # one or more of v, wa, wb are bad
             return is_failed, (wa, wb, ihat, yhat, zhat)

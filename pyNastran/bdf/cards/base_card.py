@@ -708,7 +708,7 @@ def expand_thru(fields, set_fields=True, sort_fields=False):
     nfields = len(fields)
     i = 0
     while i < nfields:
-        if fields[i] == 'THRU':
+        if isinstance(fields[i], string_types) and fields[i] == 'THRU':
             istart = int(fields[i - 1])
             iend = int(fields[i + 1])
 

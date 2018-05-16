@@ -39,12 +39,23 @@ def save_load_deck(model, punch=True, run_remove_unused=True,
     model3 = BDF(debug=False, log=model.log, mode='msc')
     model3.load(obj_filename='model.obj')
     os.remove('model.obj')
-    model3.cross_reference()
-    model3.pop_xref_errors()
 
+    cross_reference(model3)
     if run_renumber:
         renumber('model2.bdf', model.log)
     return model3
+
+def cross_reference(model):
+    """validate we're doing xref right"""
+    model.cross_reference()
+    model.pop_xref_errors()
+
+    model.safe_cross_reference()
+    model.pop_xref_errors()
+
+    model.cross_reference()
+    model.pop_xref_errors()
+
 
 def renumber(bdf_filename, log):
     bdf_filename_out = 'junk.bdf'

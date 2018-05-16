@@ -9,6 +9,7 @@ import traceback
 from typing import List, Dict, Any
 from six import iteritems, itervalues
 
+import numpy as np
 from numpy import zeros, argsort, arange, array_equal
 from pyNastran.bdf.bdf_interface.cross_reference import XrefMesh
 
@@ -199,7 +200,7 @@ class SafeXrefMesh(XrefMesh):
         Links the elements to nodes, properties (and materials depending on
         the card).
         """
-        xref_errors = defaultdict(set)
+        xref_errors = defaultdict(list)
         missing_safe_xref = set([])
         for elem in itervalues(self.elements):
             if hasattr(elem, 'safe_cross_reference'):
@@ -222,14 +223,22 @@ class SafeXrefMesh(XrefMesh):
                 missing_safe_xref.add(elem.type)
                 elem.cross_reference(self)
 
-        print(xref_errors)
-        for key, values in sorted(iteritems(xref_errors)):
-            values = list(values)  # set to list
-            values.sort()
-            self.log.warning('Failed to safe xref elements; missing %r = %s' % (key, values))
+        self._show_safe_xref_errors('elements', xref_errors)
 
         if missing_safe_xref:
             self.log.warning('These cards dont support safe_xref; %s' % str(list(missing_safe_xref)))
+
+    def _show_safe_xref_errors(self, elements_word, xref_errors):
+        """helper method to show errors"""
+        if xref_errors:
+            msg = 'Failed to safe xref %s\n' % elements_word
+            for key, eids_pids in sorted(iteritems(xref_errors)):
+                eids = [eid_pid[0] for eid_pid in eids_pids]
+                eids.sort()
+                pids = np.unique([eid_pid[1] for eid_pid in eids_pids]).tolist()
+                msg += 'missing %r for %s = %s\n' % (key, elements_word, eids)
+                msg += '%s = %s\n' % (key, pids)
+            self.log.warning(msg.rstrip())
 
     def _safe_cross_reference_loads(self, debug=True):
         # type: (bool) -> None
@@ -309,7 +318,7 @@ class SafeXrefMesh(XrefMesh):
             pid_ref = self.Property(pid, msg=msg)
         except KeyError:
             pid_ref = None
-            xref_error['pid'].add(ref_id)
+            xref_error['pid'].append((ref_id, pid))
         return pid_ref
 
     def safe_material(self, mid, ref_id, xref_error, msg=''):
@@ -323,7 +332,7 @@ class SafeXrefMesh(XrefMesh):
             mid_ref = self.Material(mid, msg=msg)
         except KeyError:
             mid_ref = None
-            xref_error['mid'].add(ref_id)
+            xref_error['mid'].append((ref_id, mid))
         return mid_ref
 
     def safe_coord(self, ref_id, cid, xref_error, msg=''):
@@ -337,5 +346,5 @@ class SafeXrefMesh(XrefMesh):
             cid_ref = self.Coord(cid, msg=msg)
         except KeyError:
             cid_ref = None
-            xref_error['cid'].add(ref_id)
+            xref_error['cid'].append((ref_id, cid))
         return cid_ref

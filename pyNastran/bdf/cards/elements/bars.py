@@ -19,7 +19,7 @@ from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import BaseCard, Element
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, integer_double_or_blank, double_or_blank,
-    integer_string_or_blank, string_or_blank, string, integer_or_double,
+    integer_string_or_blank, string, integer_or_double,
     double)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -176,7 +176,7 @@ class BAROR(object):
         self.offt = offt
 
     @classmethod
-    def add_card(cls, card, baror=None, comment=''):
+    def add_card(cls, card, comment=''):
         pid = integer_or_blank(card, 2, 'pid')
 
         # x / g0
@@ -352,7 +352,8 @@ class CBAR(LineElement):
         elif cp_name == 'W3B':
             self.wb[2] = value
         else:
-            raise NotImplementedError('CBAR: cp_name=%r must be added to update_by_cp_name' % cp_name)
+            msg = 'CBAR: cp_name=%r must be added to update_by_cp_name' % cp_name
+            raise NotImplementedError(msg)
 
     def _update_field_helper(self, n, value):
         if n == 11:
@@ -443,6 +444,7 @@ class CBAR(LineElement):
         self.ga_ref = None
         self.gb_ref = None
         self.g0_ref = None
+        self.g0_vector = None
 
     def validate(self):
         msg = ''
@@ -867,7 +869,8 @@ class CBEAM3(LineElement):  # was CBAR
         gb = integer(card, 4, 'gb')
         gc = integer(card, 5, 'gc')
 
-        x, g0 = init_x_g0(card, eid)
+        # card, eid, x1_default, x2_default, x3_default
+        x, g0 = init_x_g0(card, eid, 0., 0., 0.)
 
         wa = np.array([double_or_blank(card, 9, 'w1a', 0.0),
                        double_or_blank(card, 10, 'w2a', 0.0),
@@ -1309,7 +1312,7 @@ def init_x_g0(card, eid, x1_default, x2_default, x3_default):
 
 
 def rotate_v_wa_wb(model, elem, n1, n2, node1, node2, ihat_offset, i_offset, eid,
-                   Li_offset):
+                   Li_offset, log):
     """
     Rotates v, wa, wb
 
@@ -1399,7 +1402,7 @@ def rotate_v_wa_wb(model, elem, n1, n2, node1, node2, ihat_offset, i_offset, eid
         #ia = n1 + wa
     else:
         msg = 'offt_end_a=%r is not supported; offt=%s' % (offt_end_a, elem.offt)
-        self.log.error(msg)
+        log.error(msg)
         return v, None, None, xform_offset
 
     #--------------------------------------------------------------------------

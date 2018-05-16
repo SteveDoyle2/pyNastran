@@ -2835,24 +2835,24 @@ class AddCards(AddMethods):
         self._add_material_dependence_object(mat)
         return mat
 
-    def add_matt1(self, mid, E_table=None, G_table=None, nu_table=None, rho_table=None,
-                  A_table=None, ge_table=None, st_table=None, sc_table=None, ss_table=None,
+    def add_matt1(self, mid, e_table=None, g_table=None, nu_table=None, rho_table=None,
+                  a_table=None, ge_table=None, st_table=None, sc_table=None, ss_table=None,
                   comment=''):
         """Creates a MATT1 card"""
-        mat = MATT1(mid, E_table, G_table, nu_table, rho_table, A_table,
+        mat = MATT1(mid, e_table, g_table, nu_table, rho_table, a_table,
                     ge_table, st_table, sc_table, ss_table,
                     comment=comment)
         self._add_material_dependence_object(mat)
         return mat
 
-    def add_matt2(self, mid, G11_table=None, G12_table=None, G13_table=None, G22_table=None,
-                  G23_table=None, G33_table=None, rho_table=None,
+    def add_matt2(self, mid, g11_table=None, g12_table=None, g13_table=None, g22_table=None,
+                  g23_table=None, g33_table=None, rho_table=None,
                   a1_table=None, a2_table=None, a3_table=None, ge_table=None,
                   st_table=None, sc_table=None, ss_table=None,
                   comment=''):
         """Creates a MATT2 card"""
-        mat = MATT2(mid, G11_table, G12_table, G13_table, G22_table,
-                    G23_table, G33_table, rho_table,
+        mat = MATT2(mid, g11_table, g12_table, g13_table, g22_table,
+                    g23_table, g33_table, rho_table,
                     a1_table, a2_table, a3_table, ge_table,
                     st_table, sc_table, ss_table,
                     comment=comment)
@@ -2888,14 +2888,14 @@ class AddCards(AddMethods):
         self._add_material_dependence_object(mat)
         return mat
 
-    def add_matt8(self, mid, E1_table=None, E2_table=None, Nu12_table=None,
-                  G12_table=None, G1z_table=None, G2z_table=None, rho_table=None,
+    def add_matt8(self, mid, e1_table=None, e2_table=None, nu12_table=None,
+                  g12_table=None, g1z_table=None, g2z_table=None, e2z_table=None, rho_table=None,
                   a1_table=None, a2_table=None,
                   xt_table=None, xc_table=None, yt_table=None, yc_table=None,
                   s_table=None, ge_table=None, f12_table=None, comment=''):
         """Creates a MATT8 card"""
-        mat = MATT8(mid, E1_table=E1_table, E2_table=E2_table, Nu12_table=Nu12_table,
-                    G12_table=G12_table, G1z_table=G1z_table, G2z_table=G2z_table,
+        mat = MATT8(mid, e1_table=e1_table, e2_table=e2_table, nu12_table=nu12_table,
+                    g12_table=g12_table, g1z_table=g1z_table, g2z_table=g2z_table,
                     rho_table=rho_table, a1_table=a1_table, a2_table=a2_table,
                     xt_table=xt_table, xc_table=xc_table, yt_table=yt_table, yc_table=yc_table,
                     s_table=s_table, ge_table=ge_table, f12_table=f12_table, comment=comment)
@@ -3903,7 +3903,7 @@ class AddCards(AddMethods):
         self._add_aero_object(aero)
         return aero
 
-    def add_caero1(self, eid, pid, igid, p1, x12, p4, x43,
+    def add_caero1(self, eid, pid, igroup, p1, x12, p4, x43,
                    cp=0, nspan=0, lspan=0, nchord=0, lchord=0, comment=''):
         """
         Defines a CAERO1 card, which defines a simplified lifting surface
@@ -3916,7 +3916,7 @@ class AddCards(AddMethods):
         pid : int, PAERO1
             int : PAERO1 ID
             PAERO1 : PAERO1 object (xref)
-        igid : int
+        igroup : int
             Group number
         p1 : (1, 3) ndarray float
             xyz location of point 1 (leading edge; inboard)
@@ -3947,13 +3947,13 @@ class AddCards(AddMethods):
              a comment for the card
 
         """
-        caero = CAERO1(eid, pid, igid, p1, x12, p4, x43, cp=cp,
+        caero = CAERO1(eid, pid, igroup, p1, x12, p4, x43, cp=cp,
                        nspan=nspan, lspan=lspan, nchord=nchord, lchord=lchord,
                        comment=comment)
         self._add_caero_object(caero)
         return caero
 
-    def add_caero2(self, eid, pid, igid, p1, x12, cp=0, nsb=0, nint=0, lsb=0,
+    def add_caero2(self, eid, pid, igroup, p1, x12, cp=0, nsb=0, nint=0, lsb=0,
                    lint=0, comment=''):
         """
         Defines a CAERO2 card, which defines a slender body
@@ -3966,7 +3966,7 @@ class AddCards(AddMethods):
         pid : int, PAERO2
             int : PAERO2 ID
             PAERO2 : PAERO2 object (xref)
-        igid : int
+        igroup : int
             Group number
         p1 : (1, 3) ndarray float
             xyz location of point 1 (forward position)
