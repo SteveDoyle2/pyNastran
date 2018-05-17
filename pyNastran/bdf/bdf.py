@@ -3815,57 +3815,60 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         ..warning :: pyNastran lines must be at the top of the file
 
         """
-        if hasattr(bdf_filename, 'read') and hasattr(bdf_filename, 'write'):
-            return
-        with open(bdf_filename, 'r') as bdf_file:
-            check_header = True
-            while check_header:
-                try:
-                    line = bdf_file.readline()
-                except:
-                    break
+        try:
+            lines = open(bdf_filename, 'r').readlines()
+        except (AttributeError, TypeError) as e:
+            if hasattr(bdf_filename, 'read') and hasattr(bdf_filename, 'write'):
+                lines = bdf_filename.readlines()
+            else:
+                raise e
+            
+        check_header = True
+        for line in lines:
+            if not check_header:
+                break
 
-                if line.startswith('$'):
-                    key, value = _parse_pynastran_header(line)
+            if line.startswith('$'):
+                key, value = _parse_pynastran_header(line)
 
-                    if key:
-                        #print('pyNastran key=%s value=%s' % (key, value))
-                        if key == 'version':
-                            self.nastran_format = value
-                        elif key == 'encoding':
-                            self._encoding = value
-                        elif key == 'punch':
-                            self.punch = True if value == 'true' else False
-                        elif key in ['nnodes', 'nelements']:
-                            pass
-                        elif key == 'dumplines':
-                            self.dumplines = True if value == 'true' else False
-                        elif key == 'skip_cards':
-                            cards = {value.strip() for value in value.upper().split(',')}
-                            self.cards_to_read = self.cards_to_read - cards
-                        elif 'skip ' in key:
-                            type_to_skip = key[5:].strip()
-                            #values = [int(value) for value in value.upper().split(',')]
-                            values = parse_patran_syntax(value)
-                            if type_to_skip not in self.object_attributes():
-                                raise RuntimeError('%r is an invalid key' % type_to_skip)
-                            if type_to_skip not in self.values_to_skip:
-                                self.values_to_skip[type_to_skip] = values
-                            else:
-                                self.values_to_skip[type_to_skip] = np.hstack([
-                                    self.values_to_skip[type_to_skip],
-                                    values
-                                ])
-                        #elif key == 'skip_elements'
-                        #elif key == 'skip_properties'
-                        elif key == 'units':
-                            self.units = [value.strip() for value in value.upper().split(',')]
+                if key:
+                    #print('pyNastran key=%s value=%s' % (key, value))
+                    if key == 'version':
+                        self.nastran_format = value
+                    elif key == 'encoding':
+                        self._encoding = value
+                    elif key == 'punch':
+                        self.punch = True if value == 'true' else False
+                    elif key in ['nnodes', 'nelements']:
+                        pass
+                    elif key == 'dumplines':
+                        self.dumplines = True if value == 'true' else False
+                    elif key == 'skip_cards':
+                        cards = {value.strip() for value in value.upper().split(',')}
+                        self.cards_to_read = self.cards_to_read - cards
+                    elif 'skip ' in key:
+                        type_to_skip = key[5:].strip()
+                        #values = [int(value) for value in value.upper().split(',')]
+                        values = parse_patran_syntax(value)
+                        if type_to_skip not in self.object_attributes():
+                            raise RuntimeError('%r is an invalid key' % type_to_skip)
+                        if type_to_skip not in self.values_to_skip:
+                            self.values_to_skip[type_to_skip] = values
                         else:
-                            raise NotImplementedError(key)
+                            self.values_to_skip[type_to_skip] = np.hstack([
+                                self.values_to_skip[type_to_skip],
+                                values
+                            ])
+                    #elif key == 'skip_elements'
+                    #elif key == 'skip_properties'
+                    elif key == 'units':
+                        self.units = [value.strip() for value in value.upper().split(',')]
                     else:
-                        break
+                        raise NotImplementedError(key)
                 else:
                     break
+            else:
+                break
 
     def _verify_bdf(self, xref=None):
         """Cross reference verification method."""
