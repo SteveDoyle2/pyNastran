@@ -3820,6 +3820,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         except (AttributeError, TypeError) as e:
             if hasattr(bdf_filename, 'read') and hasattr(bdf_filename, 'write'):
                 lines = bdf_filename.readlines()
+                bdf_filename.seek(0)  # need to rewind the buffer!
             else:
                 raise e
 
