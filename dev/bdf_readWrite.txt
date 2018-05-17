@@ -8,7 +8,7 @@ BDF Cards Supported Reading/Writing
 
 ----Control---:
 ECHOON  (done)
-ECHOOFF (done
+ECHOOFF (done)
 
 ----Nodes----:
 GRID    (done)
@@ -37,16 +37,17 @@ PTUBE   (done)
 
 # bars
 CBAR    (done)
-CBARAO
-BAROR
+CBARAO  (done)
+BAROR   (done)
 PBAR    (done)
 PBARL   (done)
 PBRSECT  # arbitrary bar section
 
 # beam
 CBEAM   (done)
-BEAMOR
+BEAMOR  (done)
 PBMSECT  # arbitrary beam section
+PBCOMP  (done)
 
 # beam3
 CBEAM3  (done)
@@ -147,8 +148,6 @@ PFAST   (done)
 
 CGAP    (done)
 PGAP    (done)
-
-PBCOMP  (not added)
 
 ----Rigid Elements----:
 RROD  (done)
@@ -314,6 +313,7 @@ SPLINE7
 
 CSSCHD  (done)
 TRIM    (done)
+TRIM2   (done)
 DIVERG  (done)
 
 ----Dynamic----:

@@ -318,7 +318,8 @@ SPLINE6
 SPLINE7
 
 CSSCHD  (???)
-TRIM    (done)
+TRIM    (N/A)
+TRIM2   (N/A)
 DIVERG  (???)
 
 ----Dynamic----:
