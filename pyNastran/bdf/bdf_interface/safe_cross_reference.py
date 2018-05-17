@@ -120,8 +120,10 @@ class SafeXrefMesh(XrefMesh):
         Links up all the aero cards
           - CAEROx, PAEROx, SPLINEx, AECOMP, AELIST, AEPARAM, AESTAT, AESURF, AESURFS
         """
+        xref_errors = defaultdict(list)
         for caero in itervalues(self.caeros):
-            caero.safe_cross_reference(self)
+            caero.safe_cross_reference(self, xref_errors)
+        self._show_safe_xref_errors('caeros', xref_errors)
 
         for paero in itervalues(self.paeros):
             paero.safe_cross_reference(self)
@@ -307,7 +309,7 @@ class SafeXrefMesh(XrefMesh):
             elements.append(element)
         return elements, msgi
 
-    def safe_property(self, pid, ref_id, xref_error, msg=''):
+    def safe_property(self, pid, ref_id, xref_errors, msg=''):
         """
         Parameters
         ----------
@@ -318,10 +320,11 @@ class SafeXrefMesh(XrefMesh):
             pid_ref = self.Property(pid, msg=msg)
         except KeyError:
             pid_ref = None
-            xref_error['pid'].append((ref_id, pid))
+            #self.log.error('cant find Property=%s%s' % (mid, msg))
+            xref_errors['pid'].append((ref_id, pid))
         return pid_ref
 
-    def safe_material(self, mid, ref_id, xref_error, msg=''):
+    def safe_material(self, mid, ref_id, xref_errors, msg=''):
         """
         Parameters
         ----------
@@ -332,10 +335,11 @@ class SafeXrefMesh(XrefMesh):
             mid_ref = self.Material(mid, msg=msg)
         except KeyError:
             mid_ref = None
-            xref_error['mid'].append((ref_id, mid))
+            #self.log.error('cant find Material=%s%s' % (mid, msg))
+            xref_errors['mid'].append((ref_id, mid))
         return mid_ref
 
-    def safe_coord(self, ref_id, cid, xref_error, msg=''):
+    def safe_coord(self, cid, ref_id, xref_errors, msg=''):
         """
         Parameters
         ----------
@@ -346,5 +350,21 @@ class SafeXrefMesh(XrefMesh):
             cid_ref = self.Coord(cid, msg=msg)
         except KeyError:
             cid_ref = None
-            xref_error['cid'].append((ref_id, cid))
+            #self.log.error('cant find cid=%s%s' % (cid, msg))
+            xref_errors['cid'].append((ref_id, cid))
         return cid_ref
+
+    def safe_aefact(self, aefact_id, ref_id, xref_errors, msg=''):
+        """
+        Parameters
+        ----------
+        ref_id : int
+            the referencing value (e.g., an CAERO eid references a AEFACT)
+        """
+        try:
+            aefact_ref = self.AEFact(aefact_id, msg=msg)
+        except KeyError:
+            aefact_ref = None
+            #self.log.error('cant find AFEACT=%s%s' % (aefact_id, msg))
+            xref_errors['aefact'].append((ref_id, aefact_id))
+        return aefact_ref

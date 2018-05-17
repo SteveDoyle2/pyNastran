@@ -106,7 +106,7 @@ from pyNastran.bdf.cards.aero.aero import (
     PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
     MONPNT1, MONPNT2, MONPNT3,
     SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5)
-from pyNastran.bdf.cards.aero.static_loads import AESTAT, AEROS, CSSCHD, TRIM, DIVERG
+from pyNastran.bdf.cards.aero.static_loads import AESTAT, AEROS, CSSCHD, TRIM, TRIM2, DIVERG
 from pyNastran.bdf.cards.aero.dynamic_loads import AERO, FLFACT, FLUTTER, GUST, MKAERO1, MKAERO2
 from pyNastran.bdf.cards.optimization import (
     DCONADD, DCONSTR, DESVAR, DDVAL, DOPTPRM, DLINK,
@@ -495,7 +495,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             'MONPNT1', 'MONPNT2', 'MONPNT3',  ## monitor_points
             'SPLINE1', 'SPLINE2', 'SPLINE3', 'SPLINE4', 'SPLINE5',  ## splines
             'SPLINE6', 'SPLINE7',
-            'TRIM',  ## trims
+            'TRIM', 'TRIM2',  ## trims
             'CSSCHD', ## csschds
             'DIVERG', ## divergs
 
@@ -2125,6 +2125,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             # SOL 144
             'AEROS' : (AEROS, self._add_aeros_object),
             'TRIM' : (TRIM, self._add_trim_object),
+            'TRIM2' : (TRIM2, self._add_trim_object),
             'DIVERG' : (DIVERG, self._add_diverg_object),
 
             # SOL 145

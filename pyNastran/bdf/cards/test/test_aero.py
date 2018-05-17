@@ -4,6 +4,7 @@ tests aero cards
 """
 from __future__ import print_function
 import os
+from collections import defaultdict
 import unittest
 from six import StringIO
 import numpy as np
@@ -557,7 +558,8 @@ class TestAero(unittest.TestCase):
         model.cross_reference()
         model.uncross_reference()
         #model.safe_cross_reference()
-        caero1c.safe_cross_reference(model)
+        xref_errors = defaultdict(list)
+        caero1c.safe_cross_reference(model, xref_errors)
         caero1c.panel_points_elements()
         caero1c.raw_fields()
         min_max_eid = caero1c.min_max_eid
@@ -638,6 +640,25 @@ class TestAero(unittest.TestCase):
         caero1_1by1.validate()
         assert caero1_1by1.shape == (1, 1)
         caero1_1by1.get_points()
+
+        p1 = [0., 0., 0.]
+        p4 = [0., 10., 0.]
+        x12 = 1.
+        x43 = 1.
+        eid = 1
+        nspan = 3
+        nchord = 2
+        lchord = None
+        lspan = None
+        caero1_2x3 = CAERO1(eid, pid, igid, p1, x12, p4, x43, cp=cp,
+                            nspan=nspan, lspan=lspan, nchord=nchord, lchord=lchord,
+                            comment='caero1')
+        caero1_2x3.validate()
+        assert caero1_2x3.shape == (2, 3), caero1_2x3.shape
+        caero1_2x3._init_ids()
+        points = caero1_2x3.get_points()
+        assert len(points) == 4
+
 
     def test_spline1(self):
         """checks the SPLINE1 card"""
@@ -1031,7 +1052,9 @@ class TestAero(unittest.TestCase):
         caero3b.uncross_reference()
         caero3b.write_card()
         caero3a.raw_fields()
-        caero3b.safe_cross_reference(model)
+
+        xref_errors = defaultdict(list)
+        caero3b.safe_cross_reference(model, xref_errors)
 
         caero3b.get_npanel_points_elements()
         caero3b.get_points()

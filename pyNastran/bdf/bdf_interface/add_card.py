@@ -88,7 +88,7 @@ from pyNastran.bdf.cards.aero.aero import (
     PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
     MONPNT1, MONPNT2, MONPNT3,
     SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5)
-from pyNastran.bdf.cards.aero.static_loads import AESTAT, AEROS, CSSCHD, TRIM, DIVERG
+from pyNastran.bdf.cards.aero.static_loads import AESTAT, AEROS, CSSCHD, TRIM, TRIM2, DIVERG
 from pyNastran.bdf.cards.aero.dynamic_loads import AERO, FLFACT, FLUTTER, GUST, MKAERO1, MKAERO2
 from pyNastran.bdf.cards.optimization import (
     DCONADD, DCONSTR, DESVAR, DDVAL, DOPTPRM, DLINK,
@@ -4351,9 +4351,9 @@ class AddCards(AddMethods):
         self._add_spline_object(spline)
         return spline
 
-    def add_trim(self, sid, mach, q, labels, uxs, aeqr=1.0, comment=''):
+    def add_trim(self, sid, mach, q, labels, uxs, aeqr=1.0, trim_type=1, comment=''):
         """
-        Creates a TRIM card for a static aero (144) analysis.
+        Creates a TRIM/TRIM2 card for a static aero (144) analysis.
 
         Parameters
         ----------
@@ -4370,11 +4370,19 @@ class AddCards(AddMethods):
         aeqr : float
             0.0 : rigid trim analysis
             1.0 : elastic trim analysis (default)
+        trim_type : int
+            1 : creates a TRIM
+            2 : creates a TRIM2
         comment : str; default=''
             a comment for the card
 
         """
-        trim = TRIM(sid, mach, q, labels, uxs, aeqr=aeqr, comment=comment)
+        if trim_type == 1:
+            trim = TRIM(sid, mach, q, labels, uxs, aeqr=aeqr, comment=comment)
+        elif trim_type == 2:
+            trim = TRIM2(sid, mach, q, labels, uxs, aeqr=aeqr, comment=comment)
+        else:  # pragma: no cover
+            raise ValueError(trim_type)
         self._add_trim_object(trim)
         return trim
 

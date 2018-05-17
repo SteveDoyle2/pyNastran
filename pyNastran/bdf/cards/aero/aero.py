@@ -440,6 +440,15 @@ class AELINK(BaseCard):
     #def uncross_reference(self):
         #pass
 
+    def object_attributes(self, mode='public', keys_to_skip=None):
+        """.. seealso:: `pyNastran.utils.object_attributes(...)`"""
+        if keys_to_skip is None:
+            keys_to_skip = []
+
+        my_keys_to_skip = ['id']
+        return super(AELINK, self).object_attributes(
+            mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
+
     @property
     def id(self):
         self.deprecated('id', 'aelink_id', '1.1')
@@ -631,6 +640,15 @@ class AEPARM(BaseCard):
         self.aeparm_id = aeparm_id
         self.label = label
         self.units = units
+
+    def object_attributes(self, mode='public', keys_to_skip=None):
+        """.. seealso:: `pyNastran.utils.object_attributes(...)`"""
+        if keys_to_skip is None:
+            keys_to_skip = []
+
+        my_keys_to_skip = ['id']
+        return super(AEPARM, self).object_attributes(
+            mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     @property
     def id(self):
@@ -1214,7 +1232,6 @@ class CAERO1(BaseCard):
         distance along the flow direction from node 1 to node 2; (typically x, root chord)
     x43 : float
         distance along the flow direction from node 4 to node 3; (typically x, tip chord)
-
     cp : int, CORDx
         int : coordinate system
         CORDx : Coordinate object (xref)
@@ -1527,10 +1544,10 @@ class CAERO1(BaseCard):
         assert nspan >= 1, 'nspan=%s' % nspan
         self.box_ids = np.zeros((nchord, nspan), dtype=dtype)
 
+        npanels = nchord * nspan
+        i = 0
         try:
-            for ichord in range(nchord):
-                for ispan in range(nspan):
-                    self.box_ids[ichord, ispan] = self.eid + ichord + ispan * nchord
+            self.box_ids = np.arange(self.eid, self.eid + npanels, dtype=dtype).reshape(nspan, nchord).T
         except OverflowError:
             if dtype == 'int64':
                 # we already tried int64
@@ -1572,7 +1589,7 @@ class CAERO1(BaseCard):
             self.lspan_ref = model.AEFact(self.lspan, msg)
         self._init_ids()
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1588,10 +1605,7 @@ class CAERO1(BaseCard):
         except KeyError:
             pass
 
-        try:
-            self.cp_ref = model.Coord(self.cp, msg=msg)
-        except KeyError:
-            pass
+        self.cp_ref = model.safe_coord(self.cp, self.eid, xref_errors, msg=msg)
 
         try:
             self.ascid_ref = model.Acsid(msg=msg)
@@ -1600,17 +1614,11 @@ class CAERO1(BaseCard):
 
         if self.nchord == 0:
             assert isinstance(self.lchord, integer_types), self.lchord
-            try:
-                self.lchord_ref = model.AEFact(self.lchord, msg)
-            except KeyError:
-                pass
+            self.lchord_ref = model.safe_aefact(self.lchord, self.eid, xref_errors, msg)
 
         if self.nspan == 0:
             assert isinstance(self.lspan, integer_types), self.lspan
-            try:
-                self.lspan_ref = model.AEFact(self.lspan, msg)
-            except KeyError:
-                pass
+            self.lspan_ref = model.safe_aefact(self.lspan, self.eid, xref_errors, msg)
 
         self._init_ids()
 
@@ -1771,12 +1779,12 @@ class CAERO1(BaseCard):
         """
         p1, p2, p3, p4 = self.get_points()
         x, y = self.xy
-        # We're reordering the points so we get the node ids to be
-        # consistent with Nastran.  This is only useful if you're plotting
+        # We're reordering the points so we get the node ids and element ids
+        # to be consistent with Nastran.  This is only useful if you're plotting
         # aero panel forces
         #
         # this gives us chordwise panels and chordwise nodes
-        return points_elements_from_quad_points(p1, p4, p3, p2, x, y, dtype='int32')
+        return points_elements_from_quad_points(p1, p4, p3, p2, y, x, dtype='int32')
 
     def set_points(self, points):
         self.p1 = points[0]
@@ -2095,28 +2103,19 @@ class CAERO2(BaseCard):
             self.lint_ref = model.AEFact(self.lint, msg=msg)
         self.ascid_ref = model.Acsid(msg=msg)
 
-    def safe_cross_reference(self, model, debug=False):
+    def safe_cross_reference(self, model, xref_errors, debug=False):
         msg = ', which is required by CAERO2 eid=%s' % self.eid
         try:
             self.pid_ref = model.PAero(self.pid, msg=msg)  # links to PAERO2
         except KeyError:
             pass
 
-        try:
-            self.cp_ref = model.Coord(self.cp, msg=msg)
-        except KeyError:
-            pass
+        self.cp_ref = model.safe_coord(self.cp, self.eid, xref_errors, msg=msg)
 
         if self.nsb == 0:
-            try:
-                self.lsb_ref = model.AEFact(self.lsb, msg=msg)
-            except KeyError:
-                pass
+            self.lsb_ref = model.safe_aefact(self.lsb, self.eid, xref_errors, msg=msg)
         if self.nint == 0:
-            try:
-                self.lint_ref = model.AEFact(self.lint, msg=msg)
-            except KeyError:
-                pass
+            self.lint_ref = model.safe_aefact(self.lint, self.eid, xref_errors, msg=msg)
         try:
             self.ascid_ref = model.Acsid(msg=msg)
         except KeyError:
@@ -2364,22 +2363,35 @@ class CAERO3(BaseCard):
                  cp=0, list_c1=None, list_c2=None,
                  comment=''):
         """
+        Creates a CAERO2 card, which defines a wing with a wing break/cant.
+
+        Parameters
+        ----------
         eid : int
             element id
         pid : int
             PAERO3 property id
+        p1 : (3,) float ndarray
+            ???
+        x12 : float
+            ???
+        p4 : (3,) float ndarray
+            ???
+        x43 : float
+            ???
         cp : int; default=0
             coordinate system for locating point 1
         list_w : int
             ???
         list_c1 : int; default=None
-            ???
+            defines an AEFACT for ???
         list_c2 : int; default=None
-            ???
+            defines an AEFACT for ???
         comment : str; default=''
             a comment for the card
 
         """
+        assert cp != 100
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
@@ -2411,6 +2423,7 @@ class CAERO3(BaseCard):
         assert len(self.p4) == 3, 'p4=%s' % self.p4
         assert self.x12 > 0., 'x12=%s' % self.x12
         assert self.x43 >= 0., 'x43=%s' % self.x43
+        assert isinstance(self.cp, int), 'cp=%r' % cp
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -2466,35 +2479,23 @@ class CAERO3(BaseCard):
             self.list_c2_ref = model.AEFact(self.list_c2, msg=msg)
         self.ascid_ref = model.Acsid(msg=msg)
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, xref_errors):
         msg = ', which is required by CAERO3 eid=%s' % self.eid
         try:
             self.pid_ref = model.PAero(self.pid, msg=msg)  # links to PAERO3
         except KeyError:
             model.log.warning('cannot find PAERO3 pid=%s%s' % (self.pid, msg))
 
-        try:
-            self.cp_ref = model.Coord(self.cp, msg=msg)
-        except KeyError:
-            model.log.warning('cannot find PAERO3 pid=%s%s' % (self.pid, msg))
+        self.cp_ref = model.safe_coord(self.cp, self.eid, xref_errors, msg=msg)
 
         if self.list_w is not None:
-            try:
-                self.list_w_ref = model.AEFact(self.list_w, msg=msg)
-            except KeyError:
-                model.log.warning('cannot find an AEFACT pid=%s%s' % (self.list_w, msg))
+            self.list_w_ref = model.safe_aefact(self.list_w, self.eid, xref_errors, msg=msg)
 
         if self.list_c1 is not None:
-            try:
-                self.list_c1_ref = model.AEFact(self.list_c1, msg=msg)
-            except KeyError:
-                model.log.warning('cannot find an AEFACT pid=%s%s' % (self.list_c1, msg))
+            self.list_c1_ref = model.safe_aefact(self.list_c1, self.eid, xref_errors, msg=msg)
 
         if self.list_c2 is not None:
-            try:
-                self.list_c2_ref = model.AEFact(self.list_c2, msg=msg)
-            except KeyError:
-                model.log.warning('cannot find an AEFACT list_c2=%s%s' % (self.list_c2, msg))
+            self.list_c2_ref = model.safe_aefact(self.list_c2, self.eid, xref_errors, msg=msg)
         try:
             self.ascid_ref = model.Acsid(msg=msg)
         except KeyError:
@@ -2708,7 +2709,6 @@ class CAERO4(BaseCard):
         lspan : int, AEFACT; default=0
             int > 0 : AEFACT reference for non-uniform nspan
             int = 0 : use nspan
-            AEFACT : AEFACT object  (xref)
         comment : str; default=''
              a comment for the card
 
@@ -2806,24 +2806,18 @@ class CAERO4(BaseCard):
             self.lspan_ref = model.AEFact(self.lspan, msg)
         self._init_ids()
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, xref_errors):
         msg = ', which is required by CAERO4 eid=%s' % self.eid
         try:
             self.pid_ref = model.PAero(self.pid, msg=msg)  # links to PAERO4 (not added)
         except KeyError:
             model.warning('cannot find PAERO4=%r' % self.pid)
 
-        try:
-            self.cp_ref = model.Coord(self.cp, msg=msg)
-        except KeyError:
-            model.warning('cannot find CORDx=%r' % self.cp)
+        self.cp_ref = model.safe_coord(self.cp, self.eid, xref_errors, msg=msg)
 
         if self.nspan == 0:
             assert isinstance(self.lspan, integer_types), self.lspan
-            try:
-                self.lspan_ref = model.AEFact(self.lspan, msg)
-            except KeyError:
-                pass
+            self.lspan_ref = model.safe_aefact(self.lspan, self.eid, xref_errors, msg)
         self._init_ids()
 
     def uncross_reference(self):
@@ -3127,23 +3121,18 @@ class CAERO5(BaseCard):
         if self.nspan == 0:
             self.lspan_ref = model.AEFact(self.lspan, msg=msg)
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, xref_errors):
+        xref_errors = {}
         msg = ', which is required by CAERO5 eid=%s' % self.eid
         try:
             self.pid_ref = model.PAero(self.pid, msg=msg)
         except KeyError:
             pass
 
-        try:
-            self.cp_ref = model.Coord(self.cp, msg=msg)
-        except KeyError:
-            pass
+        self.cp_ref = model.safe_coord(self.cp, self.eid, xref_errors, msg=msg)
 
         if self.nspan == 0:
-            try:
-                self.lspan_ref = model.AEFact(self.lspan, msg=msg)
-            except KeyError:
-                pass
+            self.lspan_ref = model.safe_aefact(self.lspan, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.pid = self.Pid()

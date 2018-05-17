@@ -682,7 +682,7 @@ class BDFAttributes(object):
             'splines' : ['SPLINE1', 'SPLINE2', 'SPLINE4', 'SPLINE5',],
             'csschds' : ['CSSCHD',],
             #'SPLINE3', 'SPLINE6', 'SPLINE7',
-            'trims' : ['TRIM',],
+            'trims' : ['TRIM', 'TRIM2'],
             'divergs' : ['DIVERG'],
 
             # coords

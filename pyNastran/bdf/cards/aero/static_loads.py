@@ -619,6 +619,8 @@ class DIVERG(BaseCard):
 
 class TRIM(BaseCard):
     """
+    Specifies constraints for aeroelastic trim variables.
+
     +------+--------+------+--------+--------+-----+--------+-----+----------+
     |   1  |   2    |   3  |    4   |    5   |  6  |    7   |  8  |     9    |
     +======+========+======+========+========+=====+========+=====+==========+
@@ -1029,3 +1031,79 @@ class TRIM(BaseCard):
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment + print_card_8(card)
+
+
+class TRIM2(TRIM):
+    """
+    Defines the state of the aerodynamic extra points for a trim analysis.
+    All undefined extra points will be set to zero.
+
+    +-------+--------+------+--------+--------+-----+--------+-----+----------+
+    |   1   |   2    |   3  |    4   |    5   |  6  |    7   |  8  |     9    |
+    +=======+========+======+========+========+=====+========+=====+==========+
+    | TRIM2 |   ID   | MACH |    Q   |        |     |        |     | IS_RIGID |
+    +-------+--------+------+--------+--------+-----+--------+-----+----------+
+    |       | LABEL1 |  UX1 | LABEL2 |   UX2  | ... |        |     |          |
+    +-------+--------+------+--------+--------+-----+--------+-----+----------+
+    """
+    type = 'TRIM2'
+    _field_map = {
+        1: 'sid', 2:'mach', 3:'q', 8:'aeqr',
+    }
+    def __init__(self, sid, mach, q, labels, uxs, aeqr=1.0, comment=''):
+        TRIM.__init__(self, sid, mach, q, labels, uxs, aeqr=1.0, comment='')
+
+    @classmethod
+    def add_card(cls, card, comment=''):  # TODO: not done...
+        """
+        Adds a TRIM2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        sid = integer(card, 1, 'sid')
+        mach = double(card, 2, 'mach')
+        q = double(card, 3, 'q')
+        aeqr = double_or_blank(card, 8, 'aeqr', 1.0)
+
+        i = 9
+        n = 3
+        labels = []
+        uxs = []
+        while i < len(card):
+            label = string(card, i, 'label%i' % n)
+            ux = double(card, i + 1, 'ux%i' % n)
+            labels.append(label)
+            uxs.append(ux)
+            i += 2
+        return TRIM2(sid, mach, q, labels, uxs, aeqr, comment=comment)
+
+    def raw_fields(self):
+        """
+        Gets the fields in their unmodified form
+
+        Returns
+        -------
+        fields : list[varies]
+            the fields that define the card
+
+        """
+        list_fields = ['TRIM2', self.sid, self.mach, self.q, None, None, None, None, self.aeqr]
+        nlabels = len(self.labels)
+        assert nlabels > 0, self.labels
+        for label, ux in zip(self.labels, self.uxs):
+            list_fields += [label, ux]
+        return list_fields
+
+    def repr_fields(self):
+        # fixes a Nastran bug
+        aeqr = set_blank_if_default(self.aeqr, 1.0)
+
+        list_fields = self.raw_fields()
+        list_fields[8] = aeqr
+        return list_fields
