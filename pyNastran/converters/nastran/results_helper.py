@@ -71,10 +71,16 @@ class NastranGuiResults(NastranGuiAttributes):
             for t123_offset in [0, 3]:
                 #if t123_offset == 3:
                     #continue
-                icase = self._fill_nastran_ith_displacement(
-                    result, name, deflects, t123_offset,
-                    cases, model, key, icase,
-                    form_dict, header_dict, keys_map)
+                try:
+                    icase = self._fill_nastran_ith_displacement(
+                        result, name, deflects, t123_offset,
+                        cases, model, key, icase,
+                        form_dict, header_dict, keys_map)
+                except ValueError:
+                    if not t123_offset == 3:
+                        raise
+                    self.log.error('skipping %s result; t123_offset=%s; type=%s' % (
+                        name, t123_offset, result[key].__class__.__name__))
         return icase
 
     def _fill_nastran_ith_displacement(self, result, name, deflects, t123_offset,

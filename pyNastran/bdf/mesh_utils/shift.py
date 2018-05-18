@@ -27,3 +27,16 @@ def shift(bdf_filename, dxyz, bdf_filename_out=None):
     if bdf_filename_out:
         model.write_bdf(bdf_filename_out)
     return model
+
+def update_nodes(model, nid_cp_cd, xyz_cid0):
+    """how does this work for SPOINTs/EPOINTs???"""
+    coord = model.coords[0]
+    all_node_ids = np.array(list(model.nodes.keys()), dtype=nid_cp_cd.dtype)
+    nids = nid_cp_cd[:, 0]
+    inids = np.searchsorted(nids, all_node_ids)
+    for inid, nid in zip(inids, all_node_ids):
+        node = model.nodes[nid]
+        xyz = xyz_cid0[inid, :]
+        node.xyz = xyz
+        node.cp = 0
+        node.cp_ref = coord

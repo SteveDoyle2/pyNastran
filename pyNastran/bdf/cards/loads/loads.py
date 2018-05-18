@@ -340,7 +340,7 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
             # TODO: temperature set, not a table?
             self.tid_ref = model.Table(self.tid, msg=msg)
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, xref_errors):
         return self.cross_reference(model)
 
     def uncross_reference(self):
@@ -442,7 +442,7 @@ class LOADCYN(Load):
     def uncross_reference(self):
         pass
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, xref_errors):
         return self.cross_reference(model)
 
     def raw_fields(self):
@@ -564,7 +564,7 @@ class DAREA(BaseCard):
         msg = ', which is required by DAREA=%s' % (self.sid)
         self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
 
-    def safe_cross_reference(self, model, debug=True):
+    def safe_cross_reference(self, model, xref_errors, debug=True):
         nids2 = []
         msg = ', which is required by DAREA=%s' % (self.sid)
         for nid in self.node_ids:
@@ -718,7 +718,7 @@ class SPCD(Load):
         msg = ', which is required by SPCD=%s' % (self.sid)
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
-    def safe_cross_reference(self, model, debug=True):
+    def safe_cross_reference(self, model, xref_errors, debug=True):
         msg = ', which is required by SPCD=%s' % (self.sid)
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
@@ -823,7 +823,7 @@ class DEFORM(Load):
         """
         return
 
-    def safe_cross_reference(self, model, debug=True):
+    def safe_cross_reference(self, model, xref_errors, debug=True):
         msg = ', which is required by DEFORM=%s' % (self.sid)
         self.eid_ref = model.Element(self.eid, msg)
 
@@ -955,7 +955,7 @@ class SLOAD(Load):
         for nid in self.nodes:
             self.nodes_ref.append(model.Node(nid, msg=msg))
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, xref_errors):
         return self.cross_reference(model)
 
     def uncross_reference(self):
@@ -1078,8 +1078,11 @@ class RFORCE(Load):
             self.nid_ref = model.Node(self.nid, msg=msg)
         self.cid_ref = model.Coord(self.cid, msg=msg)
 
-    def safe_cross_reference(self, model):
-        return self.cross_reference(model)
+    def safe_cross_reference(self, model, xref_errors):
+        msg = ', which is required by RFORCE sid=%s' % self.sid
+        if self.nid > 0:
+            self.nid_ref = model.Node(self.nid, msg=msg)
+        self.cid_ref = model.safe_coord(self.cid, self.sid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.nid = self.Nid()
@@ -1245,8 +1248,11 @@ class RFORCE1(Load):
         self.nid_ref = model.Node(self.nid, msg=msg)
         self.cid_ref = model.Coord(self.cid, msg=msg)
 
-    def safe_cross_reference(self, model):
-        return self.cross_reference(model)
+    def safe_cross_reference(self, model, xref_errors):
+        msg = ', which is required by RFORCE1 sid=%s' % self.sid
+        #if self.nid > 0:  # TODO: why was this every here?
+        self.nid_ref = model.Node(self.nid, msg=msg)
+        self.cid_ref = model.safe_coord(self.cid, self.sid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.nid = self.node_id

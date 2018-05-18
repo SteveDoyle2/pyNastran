@@ -1139,13 +1139,16 @@ class SET3(Set):
             ids = [point if isinstance(point, integer_types) else point.nid
                    for point in self.ids_ref]
         else:
-            raise NotImplementedError("xref_type=%r and must be ['Node']" % self.xref_type)
+            raise NotImplementedError("xref_type=%r and must be ['Point']" % self.xref_type) # 'Node',
         return ids
 
     def cross_reference_set(self, model, xref_type, msg=''):
         msg = ', which is required by SET3 sid=%s%s' % (self.sid, msg)
-        #if xref_type == 'Node':
-            #self.ids = model.Nodes(self.get_ids(), msg=msg)
+        if xref_type == 'GRID':  # was 'Node'
+            # not tested relative to Nastran, seems obvious though
+            # I'm not sure why Node was here vs. GRID
+            # the block was disabled anyways, so probably doesn't matter
+            self.ids = model.Nodes(self.get_ids(), msg=msg)
         if xref_type == 'Point':
             self.ids_ref = model.Points(self.get_ids(), msg=msg)
         else:

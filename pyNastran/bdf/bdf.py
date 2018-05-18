@@ -3295,6 +3295,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             Dictionary from coordinate id to index of the nodes in
             ``self.point_ids`` that their input (`CP`) in that
             coordinate system.
+
+        TODO
+        ----
+        how are SPOINTs/EPOINTs identified?
         """
         icd_transform, icp_transform, xyz_cp, nid_cp_cd = self.get_displacement_index_xyz_cp_cd(
             fdtype=fdtype, idtype=idtype, sort_ids=True)

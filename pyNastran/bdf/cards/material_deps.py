@@ -193,7 +193,7 @@ class MATS1(MaterialDependence):
         msg = "E (Young's Modulus) not implemented for MATS1"
         raise NotImplementedError(msg)
         #if self.tid:
-            #E = self.tid.Value(strain)
+            #E = self.tid_ref.Value(strain)
         #return E
 
     def cross_reference(self, model):

@@ -247,25 +247,48 @@ class SafeXrefMesh(XrefMesh):
         """
         Links the loads to nodes, coordinate systems, and other loads.
         """
+        xref_errors = defaultdict(list)
         for (lid, load_combinations) in iteritems(self.load_combinations):
             for load_combination in load_combinations:
-                load_combination.safe_cross_reference(self)
+                try:
+                    load_combination.safe_cross_reference(self, xref_errors)
+                except TypeError:  # pragma: no cover
+                    print(load_combination)
+                    raise
+        self._show_safe_xref_errors('loads', xref_errors)
 
         for (lid, loads) in iteritems(self.loads):
             for load in loads:
-                load.safe_cross_reference(self)
+                try:
+                    load.safe_cross_reference(self, xref_errors)
+                except TypeError:  # pragma: no cover
+                    print(load)
+                    raise
+        self._show_safe_xref_errors('loads', xref_errors)
 
         for (lid, sid) in iteritems(self.dloads):
             for load in sid:
-                load.safe_cross_reference(self)
+                load.safe_cross_reference(self, xref_errors)
         for (lid, sid) in iteritems(self.dload_entries):
             for load in sid:
-                load.safe_cross_reference(self)
+                try:
+                    load.safe_cross_reference(self, xref_errors)
+                except TypeError:  # pragma: no cover
+                    print(load)
+                    raise
 
         for key, darea in iteritems(self.dareas):
-            darea.safe_cross_reference(self)
+            try:
+                darea.safe_cross_reference(self, xref_errors)
+            except TypeError:  # pragma: no cover
+                print(darea)
+                raise
         for key, dphase in iteritems(self.dphases):
-            dphase.safe_cross_reference(self)
+            try:
+                dphase.safe_cross_reference(self, xref_errors)
+            except TypeError:  # pragma: no cover
+                print(dphase)
+                raise
 
     def safe_empty_nodes(self, nids, msg=''):
         """safe xref version of self.Nodes(nid, msg='')"""

@@ -697,7 +697,7 @@ def check_for_cd_frame(fem1):
                           for card_name in ['GRID', 'SPOINT', 'EPOINT', 'RINGAX']])
     if is_grid_points:
         unused_icd_transform, unused_icp_transform, unused_xyz_cp, nid_cp_cd = fem1.get_displacement_index_xyz_cp_cd(
-            fdtype='float64', idtype='int32', sort_ids=True)
+            fdtype='float64', idtype='int64', sort_ids=True)
         cds = np.unique(nid_cp_cd[:, 2])
         cd_coords = []
         for cd in cds:

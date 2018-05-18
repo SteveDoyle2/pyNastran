@@ -178,7 +178,7 @@ class LOAD(LoadCombination):
             load_ids2.append(load_id2)
         self.load_ids_ref = load_ids2
 
-    def safe_cross_reference(self, model, debug=True):
+    def safe_cross_reference(self, model, xref_errors, debug=True):
         load_ids2 = []
         msg = ', which is required by LOAD=%s' % (self.sid)
         for load_id in self.load_ids:
@@ -350,10 +350,10 @@ class GRAV(BaseCard):
         msg = ', which is required by GRAV sid=%s' % self.sid
         self.cid_ref = model.Coord(self.cid, msg=msg)
 
-    def safe_cross_reference(self, model, debug=True):
+    def safe_cross_reference(self, model, xref_errors, debug=True):
         # msg = "Couldn't find CORDx=%s which is required by GRAV sid=%s" % (self.cid, self.sid)
         msg = ', which is required by GRAV sid=%s' % self.sid
-        self.cid_ref = model.Coord(self.cid, msg=msg)
+        self.cid_ref = model.safe_coord(self.cid, self.sid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.cid = self.Cid()
@@ -510,13 +510,9 @@ class ACCEL(BaseCard):
         self.cid = self.Cid()
         self.cid_ref = None
 
-    def safe_cross_reference(self, model, debug=True):
+    def safe_cross_reference(self, model, xref_errors, debug=True):
         msg = ', which is required by ACCEL sid=%s' % self.sid
-        try:
-            self.cid = model.Coord(self.cid, msg=msg)
-            self.cid_ref = self.cid
-        except KeyError:
-            pass
+        self.cid_ref = model.safe_coord(self.cid, self.sid, xref_errors, msg=msg)
 
     def Cid(self):
         if self.cid_ref is not None:
@@ -642,11 +638,13 @@ class ACCEL1(BaseCard):
             the BDF object
         """
         msg = ', which is required by ACCEL1 sid=%s' % self.sid
-        self.cid_ref = model.Coord(self.Cid(), msg=msg)
+        self.cid_ref = model.Coord(self.cid, msg=msg)
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
-    def safe_cross_reference(self, model):
-        return self.cross_reference(model)
+    def safe_cross_reference(self, model, xref_errors):
+        msg = ', which is required by ACCEL1 sid=%s' % self.sid
+        self.cid_ref = model.safe_coord(self.cid, self.sid, xref_errors, msg=msg)
+        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
     def uncross_reference(self):
         self.cid = self.Cid()
@@ -855,13 +853,11 @@ class Load0(BaseCard):
         self.node_ref = model.Node(self.node, msg=msg)
         self.cid_ref = model.Coord(self.cid, msg=msg)
 
-    def safe_cross_reference(self, model, debug=True):
+    def safe_cross_reference(self, model, xref_errors, debug=True):
         msg = ', which is required by %s sid=%s' % (self.type, self.sid)
         # try:
         self.node_ref = model.Node(self.node, msg=msg)
-        self.cid_ref = model.Coord(self.cid, msg=msg)
-        # except KeyError:
-            # pass
+        self.cid_ref = model.safe_coord(self.cid, self.sid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.cid = self.Cid()
@@ -1061,7 +1057,7 @@ class Load1(BaseCard):
         self.g1_ref = None
         self.g2_ref = None
 
-    def safe_cross_reference(self, model, debug=True):
+    def safe_cross_reference(self, model, safe_coord, debug=True):
         """
         .. todo:: cross reference and fix repr function
         """
@@ -1299,7 +1295,7 @@ class Load2(BaseCard):
             xyz1, xyz2, xyz3, xyz4, v21, v2, self.xyz)
         normalize(self, msgi)
 
-    def safe_cross_reference(self, model, debug=True):
+    def safe_cross_reference(self, model, safe_coord, debug=True):
         """
         .. todo:: cross reference and fix repr function
         """
@@ -1309,28 +1305,28 @@ class Load2(BaseCard):
             self.node_ref = model.Node(self.node, msg=msg)
         except KeyError:
             is_failed = True
-            model.log.warning('failed to cross-reference NODE=%i,%s' % (self.node, msg))
+            model.log.warning('failed to cross-reference NODE=%i%s' % (self.node, msg))
 
         try:
             self.g1_ref = model.Node(self.g1, msg=msg)
             xyz1 = self.g1_ref.get_position()
         except KeyError:
             is_failed = True
-            model.log.warning('failed to cross-reference G1=%i,%s' % (self.g1, msg))
+            model.log.warning('failed to cross-reference G1=%i%s' % (self.g1, msg))
 
         try:
             self.g2_ref = model.Node(self.g2, msg=msg)
             xyz2 = self.g2_ref.get_position()
         except KeyError:
             is_failed = True
-            model.log.warning('failed to cross-reference G2=%i,%s' % (self.g2, msg))
+            model.log.warning('failed to cross-reference G2=%i%s' % (self.g2, msg))
 
         try:
             self.g3_ref = model.Node(self.g3, msg=msg)
             xyz3 = self.g3_ref.get_position()
         except KeyError:
             is_failed = True
-            model.log.warning('failed to cross-reference G3=%i,%s' % (self.g3, msg))
+            model.log.warning('failed to cross-reference G3=%i%s' % (self.g3, msg))
 
         if not is_failed:
             v21 = xyz2 - xyz1
@@ -1342,7 +1338,7 @@ class Load2(BaseCard):
                 is_failed = True
             if not is_failed:
                 xyz4 = self.g4_ref.get_position()
-                model.log.warning('failed to cross-reference G4=%i,%s' % (self.g4, msg))
+                model.log.warning('failed to cross-reference G4=%i%s' % (self.g4, msg))
         else:
             xyz3, xyz4 = xyz1, xyz3
 
@@ -1692,8 +1688,9 @@ class GMLOAD(Load):
         #self.xyz = self.g2.get_position() - self.g1.get_position()
         #normalize(self, msg)
 
-    def safe_cross_reference(self, model):
-        return self.cross_reference(model)
+    def safe_cross_reference(self, model, xref_errors):
+        msg = ', which is required by GMLOAD sid=%s' % self.sid
+        self.cid_ref = model.safe_coord(self.Cid(), self.sid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.cid = self.Cid()
@@ -1844,7 +1841,7 @@ class PLOAD(Load):
         """
         pass
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, safe_coord):
         return self.cross_reference(model)
 
     def uncross_reference(self):
@@ -2032,7 +2029,7 @@ class PLOAD1(Load):
         msg = ', which is required by PLOAD1 sid=%s' % self.sid
         self.eid_ref = model.Element(self.eid, msg=msg)
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, safe_coord):
         return self.cross_reference(model)
 
     def uncross_reference(self):
@@ -2194,7 +2191,7 @@ class PLOAD2(Load):
         msg = ', which is required by PLOAD2 sid=%s' % self.sid
         self.eids_ref = model.Elements(self.eids, msg=msg)
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, safe_coord):
         return self.cross_reference(model)
 
     def uncross_reference(self):
@@ -2599,13 +2596,10 @@ class PLOAD4(Load):
         if self.eids:
             self.eids_ref = model.Elements(self.eids, msg=msg)
 
-    def safe_cross_reference(self, model, debug=True):
+    def safe_cross_reference(self, model, xref_errors, debug=True):
         msg = ', which is required by PLOAD4 sid=%s' % self.sid
         #self.eid = model.Element(self.eid, msg=msg)
-        try:
-            self.cid_ref = model.Coord(self.cid, msg=msg)
-        except KeyError:
-            model.log.warning('Could not find cid=%s%s' % (self.cid, msg))
+        self.cid_ref = model.safe_coord(self.cid, self.sid, xref_errors, msg=msg)
 
         #self.eid_ref = self.eid
         if self.g1 is not None:
@@ -2621,7 +2615,7 @@ class PLOAD4(Load):
                 model.log.warning('Could not find g34=%s%s' % (self.g34, msg))
 
         #if self.eids:
-        msgia = 'Could not find element=%%s, %s\n' % msg
+        msgia = 'Could not find element=%%s%s\n' % msg
         self.eids_ref, msgi = model.safe_get_elements(self.eids, msg=msgia)
         if msgi:
             model.log.warning(msgi.rstrip())
@@ -2896,7 +2890,7 @@ class PLOADX1(BaseCard):
     def nodes_ref(self):
         return [self.ga_ref, self.gb_ref]
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, safe_coord):
         return self.cross_reference(model)
 
     def uncross_reference(self):
