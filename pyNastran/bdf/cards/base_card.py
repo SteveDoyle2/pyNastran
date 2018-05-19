@@ -536,72 +536,73 @@ class Element(BaseCard):
                 raise RuntimeError(msg)
         self.nodes = nodes2
 
-    @property
-    def faces(self):
-        # () -> Dict[int, List[int]]
-        """
-        Gets the faces of the element
+    # this doesn't belong in Element as CBARs don't have faces
+    #@property
+    #def faces(self):
+        ## () -> Dict[int, List[int]]
+        #"""
+        #Gets the faces of the element
 
-        Returns
-        -------
-        faces : Dict[int] = [face1, face2, ...]
-            key = face number
-            value = a list of nodes (integer pointers) as the values.
+        #Returns
+        #-------
+        #faces : Dict[int] = [face1, face2, ...]
+            #key = face number
+            #value = a list of nodes (integer pointers) as the values.
 
-        Notes
-        -----
-        The order of the nodes are consistent with normals that point outwards
-        The face numbering is meaningless
+        #Notes
+        #-----
+        #The order of the nodes are consistent with normals that point outwards
+        #The face numbering is meaningless
 
-        .. note::  The order of the nodes are consistent with ANSYS numbering; is this current?
-        .. warning:: higher order element ids not verified with ANSYS; is this current?
+        #.. note::  The order of the nodes are consistent with ANSYS numbering; is this current?
+        #.. warning:: higher order element ids not verified with ANSYS; is this current?
 
-        Examples
-        --------
-        >>> print(element.faces)
+        #Examples
+        #--------
+        #>>> print(element.faces)
 
-        """
-        faces = {}
-        try:
-            nodes = self.node_ids
-        except AttributeError:
-            return None
-        if self.type.startswith('CQUAD'): # CQUADx
-            # both sides
-            faces[1] = [nodes[0], nodes[1], nodes[2], nodes[3]]  # CQUAD8/9?
-            faces[2] = [nodes[1], nodes[0], nodes[3], nodes[2]]
-        elif self.type.startswith('CTRI'):  # CTRIAx
-            # both sides
-            faces[1] = [nodes[0], nodes[1], nodes[2]]  # CTRIA6?
-            faces[2] = [nodes[1], nodes[0], nodes[2]]
-        else:
-            faces = None
-        return faces
+        #"""
+        #faces = {}
+        #try:
+            #nodes = self.node_ids
+        #except AttributeError:
+            #return None
+        #if self.type.startswith('CQUAD'): # CQUADx
+            ## both sides
+            #faces[1] = [nodes[0], nodes[1], nodes[2], nodes[3]]  # CQUAD8/9?
+            #faces[2] = [nodes[1], nodes[0], nodes[3], nodes[2]]
+        #elif self.type.startswith('CTRI'):  # CTRIAx
+            ## both sides
+            #faces[1] = [nodes[0], nodes[1], nodes[2]]  # CTRIA6?
+            #faces[2] = [nodes[1], nodes[0], nodes[2]]
+        #else:
+            #faces = None
+        #return faces
 
-    def nodes2face(self, nodes):
-        """
-        returns the face number that matches the list of nodes input
+    #def nodes2face(self, nodes):
+        #"""
+        #returns the face number that matches the list of nodes input
 
-        Parameters
-        ----------
-        nodes : List[node]
-            a series of nodes
+        #Parameters
+        #----------
+        #nodes : List[node]
+            #a series of nodes
 
-        Returns
-        -------
-        face_id : int
-            the face number as an integer
+        #Returns
+        #-------
+        #face_id : int
+            #the face number as an integer
 
-        .. warning:: It's assumed you have the nodes in the proper order.
+        #.. warning:: It's assumed you have the nodes in the proper order.
 
-        """
-        assert isinstance(nodes, list), 'nodes=%s' % str(nodes)
-        face = None
-        for i in self.faces.keys():
-            chck = self.faces[i]
-            if nodes == chck:
-                face = i
-        return face
+        #"""
+        #assert isinstance(nodes, list), 'nodes=%s' % str(nodes)
+        #face = None
+        #for i in self.faces.keys():
+            #chck = self.faces[i]
+            #if nodes == chck:
+                #face = i
+        #return face
 
 def _format_comment(comment):
     # type: (str) -> str
