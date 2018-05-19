@@ -451,6 +451,8 @@ class CBAR(LineElement):
         self.gb_ref = None
         self.g0_ref = None
         self.g0_vector = None
+        if isinstance(self.offt, str):
+            self.offt = self.offt.replace('E', 'O')
 
     def validate(self):
         msg = ''
@@ -475,8 +477,14 @@ class CBAR(LineElement):
             msg = 'G0=%s cannot be GA=%s or GB=%s' % (self.g0, self.ga, self.gb)
             raise RuntimeError(msg)
 
+        self.check_offt()
+
+    def check_offt(self):
+        """
+        B,G,O
+        Note: The character 'O' in the table replaces the obsolete character 'E'
+        """
         msg = 'invalid offt parameter of %s...offt=%s' % (self.type, self.offt)
-        # B,G,O
         assert self.offt[0] in ['G', 'B'], msg
         assert self.offt[1] in ['G', 'O', 'E'], msg
         assert self.offt[2] in ['G', 'O', 'E'], msg
@@ -1346,6 +1354,7 @@ def rotate_v_wa_wb(model, elem, n1, n2, node1, node2, ihat_offset, i_offset, eid
     - orientation -> wa/wb are defined in the xform_offset (yz) frame;
                      this is likely the easiest frame for a user
     """
+    elem.check_offt()
     msg = ', which is required by %s=%s' % (elem.type, elem.eid)
     cd1 = node1.Cd()
     cd2 = node2.Cd()

@@ -131,6 +131,7 @@ class CBEAM(CBAR):
             a comment for the card
 
         offt/bit are MSC specific fields
+
         """
         LineElement.__init__(self)
         if comment:
@@ -163,6 +164,35 @@ class CBEAM(CBAR):
         self.pid_ref = None
         self.g0_ref = None
         self.g0_vector = None
+        if self.offt is not None:
+            self.offt = self.offt.replace('E', 'O')
+
+    def validate(self):
+        msg = ''
+        if self.x is None:
+            if not isinstance(self.g0, integer_types):
+                msg += 'CBEAM eid=%s: x is None, so g0=%s must be an integer' % (self.eid, self.g0)
+        else:
+            if not isinstance(self.x, (list, np.ndarray)):
+                msg += 'CBEAM eid=%s: x=%s and g0=%s, so x must be a list; type(x)=%s' % (
+                    self.eid, self.x, self.g0, type(self.x))
+        if msg:
+            raise ValueError(msg)
+
+        if isinstance(self.offt, integer_types):
+            assert self.offt in [1, 2, 21, 22, 41], 'invalid offt; offt=%i' % self.offt
+            raise NotImplementedError('invalid offt; offt=%i' % self.offt)
+        elif not isinstance(self.offt, string_types):
+            raise SyntaxError('invalid offt expected a string of length 3 '
+                              'offt=%r; Type=%s' % (self.offt, type(self.offt)))
+
+        if self.g0 in [self.ga, self.gb]:
+            msg = 'G0=%s cannot be GA=%s or GB=%s' % (self.g0, self.ga, self.gb)
+            raise RuntimeError(msg)
+
+        msg = 'invalid offt parameter of %s...offt=%s' % (self.type, self.offt)
+        if self.offt is not None:
+            self.check_offt()
 
     @classmethod
     def add_card(cls, card, beamor=None, comment=''):
@@ -177,6 +207,7 @@ class CBEAM(CBAR):
             defines the defaults
         comment : str; default=''
             a comment for the card
+
         """
         eid = integer(card, 1, 'eid')
 
@@ -236,6 +267,7 @@ class CBEAM(CBAR):
                 g0 is used instead of [x1, x2, x3]
         comment : str; default=''
             a comment for the card
+
         """
         #: .. todo:: verify
         assert len(data) == 2, 'data=%s len(data)=%s' % (data, len(data))
@@ -346,6 +378,7 @@ class CBEAM(CBAR):
 
         TODO: not integrated with CBAR yet...
         """
+        self.check_offt()
         is_failed = True
         ihat = None
         yhat = None

@@ -44,6 +44,7 @@ def validate_dvcrel(validate, element_type, cp_name):
 
     .. note:: words that start with integers (e.g., 12I/T**3) doesn't
               support strings
+
     """
     if not validate:
         return
@@ -88,6 +89,7 @@ def validate_dvmrel(validate, mat_type, mp_name):
 
     .. note::  words that start with integers (e.g., 12I/T**3) doesn't
                support strings
+
     """
     if not validate:
         return
@@ -119,6 +121,7 @@ def validate_dvprel(prop_type, pname_fid, validate):
               support strings
     .. note:: FID > 0 --> references the Property Card
     .. note:: FID < 0 --> references the EPT card
+
     """
     if not validate:
         return pname_fid
@@ -484,6 +487,9 @@ class DCONSTR(OptConstraint):
             lower/upper bound
         lowfq / highfq : float; default=0. / 1.e20
             lower/upper end of the frequency range
+        comment : str; default=''
+            a comment for the card
+
         """
         OptConstraint.__init__(self)
         if comment:
@@ -515,6 +521,7 @@ class DCONSTR(OptConstraint):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         oid = integer(card, 1, 'oid')
         dresp_id = integer(card, 2, 'dresp_id')
@@ -536,6 +543,7 @@ class DCONSTR(OptConstraint):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         oid = data[0]
         rid = data[1]
@@ -571,6 +579,7 @@ class DCONSTR(OptConstraint):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by DCONSTR oid=%s' % (self.oid)
         self.dresp_id_ref = model.DResp(self.dresp_id, msg)
@@ -647,6 +656,7 @@ class DESVAR(OptConstraint):
             None : continuous
         comment : str; default=''
             a comment for the card
+
         """
         OptConstraint.__init__(self)
         if comment:
@@ -678,6 +688,7 @@ class DESVAR(OptConstraint):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         desvar_id = integer(card, 1, 'desvar_id')
         label = string(card, 2, 'label')
@@ -708,7 +719,8 @@ class DESVAR(OptConstraint):
         Returns
         -------
         fields : List[varies]
-          the fields that define the card
+            the fields that define the card
+
         """
         xlb = set_blank_if_default(self.xlb, -1e20)
         xub = set_blank_if_default(self.xub, 1e20)
@@ -780,6 +792,7 @@ class DDVAL(OptConstraint):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         oid = integer(card, 1, 'oid')
         n = 1
@@ -893,6 +906,7 @@ class DOPTPRM(OptConstraint):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         nfields = len(card) - 1
         params = {}
@@ -984,6 +998,7 @@ class DLINK(OptConstraint):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         oid = integer(card, 1, 'oid')
         dependent_desvar = integer(card, 2, 'dependent_desvar')
@@ -1006,8 +1021,8 @@ class DLINK(OptConstraint):
 
     def raw_fields(self):
         list_fields = ['DLINK', self.oid, self.dependent_desvar, self.c0, self.cmult]
-        for (idv, ci) in zip(self.independent_desvars, self.coeffs):
-            list_fields += [idv, ci]
+        for (idv, coeff) in zip(self.independent_desvars, self.coeffs):
+            list_fields += [idv, coeff]
         return list_fields
 
     def repr_fields(self):
@@ -1022,7 +1037,7 @@ class DLINK(OptConstraint):
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
-        if is_double:
+        elif is_double:
             return self.comment + print_card_double(card)
         return self.comment + print_card_16(card)
 
@@ -1488,6 +1503,15 @@ class DRESP1(OptConstraint):
         self.atta_ref = None
         self.atti_ref = None
 
+    def object_attributes(self, mode='public', keys_to_skip=None):
+        """.. seealso:: `pyNastran.utils.object_attributes(...)`"""
+        if keys_to_skip is None:
+            keys_to_skip = []
+
+        my_keys_to_skip = ['rtype', 'ptype']
+        return super(DRESP1, self).object_attributes(
+            mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
+
     @property
     def rtype(self):
         return self.response_type
@@ -1515,6 +1539,7 @@ class DRESP1(OptConstraint):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         oid = integer(card, 1, 'oid')
         label = string(card, 2, 'label')
@@ -1586,6 +1611,7 @@ class DRESP1(OptConstraint):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by DRESP1 dresp_id=%s' % (self.dresp_id)
         msg += '\n' + str(self)
@@ -1743,7 +1769,8 @@ class DRESP1(OptConstraint):
         Returns
         -------
         fields : List[varies]
-          the fields that define the card
+            the fields that define the card
+
         """
         label = self.label.strip()
         if len(label) <= 6:
@@ -1879,6 +1906,7 @@ class DRESP2(OptConstraint):
            (1, 'DESVAR') = [30],
            (2, 'DRESP1') = [40],
         }
+
         """
         OptConstraint.__init__(self)
         if comment:
@@ -1933,6 +1961,7 @@ class DRESP2(OptConstraint):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         dresp_id = integer(card, 1, 'dresp_id')
         label = string(card, 2, 'label')
@@ -2010,6 +2039,7 @@ class DRESP2(OptConstraint):
         ----------
         model : BDF()
             the BDF object
+
         """
         #if model.dtable is not None:
             #model.log.debug(model.dtable.rstrip())
@@ -2026,6 +2056,10 @@ class DRESP2(OptConstraint):
                 params[key] = []
                 for unused_i, val in enumerate(vals):
                     params[key].append(model.DResp(val, msg))
+            elif name in ['DVCREL1', 'DVCREL2']:
+                params[key] = []
+                for val in vals:
+                    params[key].append(model.DVcrel(val, msg))
             elif name in ['DVMREL1', 'DVMREL2']:
                 params[key] = []
                 for unused_i, val in enumerate(vals):
@@ -2262,6 +2296,7 @@ class DRESP3(OptConstraint):
            (1, 'DESVAR') = [30],
            (2, 'DRESP1') = [40],
         }
+
         """
         OptConstraint.__init__(self)
         if comment:
@@ -2310,6 +2345,7 @@ class DRESP3(OptConstraint):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         dresp_id = integer(card, 1, 'dresp_id')
         label = string(card, 2, 'label')
@@ -2378,6 +2414,7 @@ class DRESP3(OptConstraint):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by DRESP3 ID=%s' % (self.dresp_id)
         default_values = {}
@@ -2388,6 +2425,10 @@ class DRESP3(OptConstraint):
                 params[key] = []
                 for val in vals:
                     params[key].append(model.DResp(val, msg))
+            elif name in ['DVCREL1', 'DVCREL2']:
+                params[key] = []
+                for val in vals:
+                    params[key].append(model.DVcrel(val, msg))
             elif name in ['DVMREL1', 'DVMREL2']:
                 params[key] = []
                 for val in vals:
@@ -2501,6 +2542,7 @@ class DCONADD(OptConstraint):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         oid = integer(card, 1, 'dcid')
         dconstrs = []
@@ -2518,8 +2560,8 @@ class DCONADD(OptConstraint):
         ----------
         model : BDF()
             the BDF object
+
         """
-        #self.dconstrs = [model.dconstrs[oid] for oid in self.dconstr_ids]
         self.dconstrs_ref = [model.dconstrs[oid] for oid in self.dconstr_ids]
 
     def uncross_reference(self):
@@ -2582,6 +2624,7 @@ class DSCREEN(OptConstraint):
             load case
         comment : str; default=''
             a comment for the card
+
         """
         OptConstraint.__init__(self)
         if comment:
@@ -2606,6 +2649,7 @@ class DSCREEN(OptConstraint):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         rtype = string(card, 1, 'rtype')
         trs = double_or_blank(card, 2, 'trs', -0.5)
@@ -2692,6 +2736,7 @@ class DVCREL1(DVXREL1):  # similar to DVMREL1
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         oid = integer(card, 1, 'oid')
         element_type = string(card, 2, 'Type')
@@ -2736,13 +2781,22 @@ class DVCREL1(DVXREL1):  # similar to DVMREL1
     def OptID(self):
         return self.oid
 
+    def object_attributes(self, mode='public', keys_to_skip=None):
+        """.. seealso:: `pyNastran.utils.object_attributes(...)`"""
+        if keys_to_skip is None:
+            keys_to_skip = []
+
+        my_keys_to_skip = ['Type']
+        return super(DVCREL1, self).object_attributes(
+            mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
+
     @property
     def Type(self):
         return self.element_type
+
     @Type.setter
     def Type(self, element_type):
         self.element_type = element_type
-
 
     def update_model(self, model, desvar_values):
         """doesn't require cross-referencing"""
@@ -2780,6 +2834,7 @@ class DVCREL1(DVXREL1):  # similar to DVMREL1
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by DVCREL1 oid=%r' % self.oid
         self.eid_ref = self._get_element(model, msg=msg)
@@ -2833,8 +2888,7 @@ class DVCREL1(DVXREL1):  # similar to DVMREL1
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
-        else:
-            return self.comment + print_card_16(card)
+        return self.comment + print_card_16(card)
 
 
 class DVCREL2(DVXREL2):
@@ -2901,6 +2955,7 @@ class DVCREL2(DVXREL2):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         oid = integer(card, 1, 'oid')
         element_type = string(card, 2, 'Type')
@@ -2953,9 +3008,19 @@ class DVCREL2(DVXREL2):
         return DVCREL2(oid, element_type, pid, cp_name, dequation, dvids, labels,
                        cp_min, cp_max, comment=comment)
 
+    def object_attributes(self, mode='public', keys_to_skip=None):
+        """.. seealso:: `pyNastran.utils.object_attributes(...)`"""
+        if keys_to_skip is None:
+            keys_to_skip = []
+
+        my_keys_to_skip = ['Type']
+        return super(DVCREL2, self).object_attributes(
+            mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
+
     @property
     def Type(self):
         return self.element_type
+
     @Type.setter
     def Type(self, element_type):
         self.element_type = element_type
@@ -2985,6 +3050,7 @@ class DVCREL2(DVXREL2):
         """
         this should really make a call the the DEQATN;
         see the PBEAM for an example of get/set_opt_value
+
         """
         try:
             get = self.eid_ref.get_optimization_value(self.cp_name)
@@ -3021,6 +3087,7 @@ class DVCREL2(DVXREL2):
             the BDF object
 
         .. todo:: add support for DEQATN cards to finish DVPREL2 xref
+
         """
         msg = ', which is required by DVCREL2 oid=%r' % self.oid
         #if self.element_type in self.allowed_elements:
@@ -3068,7 +3135,7 @@ class DVCREL2(DVXREL2):
 
     def _update_by_dvcrel(self, elem, value):
         if hasattr(elem, 'update_by_cp_name'):
-            elem.update_by_mname(self.cp_name, value)
+            elem.update_by_cp_name(self.cp_name, value)
         else:
             try:
                 cp_name_map = elem.cp_name_map
@@ -3155,6 +3222,7 @@ class DVMREL1(DVXREL1):
             should the variable be validated
         comment : str; default=''
             a comment for the card
+
         """
         DVXREL1.__init__(self, oid, dvids, coeffs, c0, comment)
 
@@ -3187,6 +3255,7 @@ class DVMREL1(DVXREL1):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         oid = integer(card, 1, 'oid')
         mat_type = string(card, 2, 'mat_type')
@@ -3220,6 +3289,15 @@ class DVMREL1(DVXREL1):
             raise RuntimeError('invalid DVMREL1...')
         return DVMREL1(oid, mat_type, mid, mp_name, dvids, coeffs,
                        mp_min=mp_min, mp_max=mp_max, c0=c0, comment=comment)
+
+    def object_attributes(self, mode='public', keys_to_skip=None):
+        """.. seealso:: `pyNastran.utils.object_attributes(...)`"""
+        if keys_to_skip is None:
+            keys_to_skip = []
+
+        my_keys_to_skip = ['Type']
+        return super(DVMREL1, self).object_attributes(
+            mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     @property
     def Type(self):
@@ -3264,6 +3342,7 @@ class DVMREL1(DVXREL1):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by DVMREL1 oid=%r' % (self.oid)
         self.mid_ref = model.Material(self.mid, msg=msg)
@@ -3371,6 +3450,7 @@ class DVMREL2(DVXREL2):
             a comment for the card
 
         .. note:: either dvids or labels is required
+
         """
         DVXREL2.__init__(self, oid, dvids, labels, deqation, comment)
 
@@ -3407,6 +3487,7 @@ class DVMREL2(DVXREL2):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         oid = integer(card, 1, 'oid')
         mat_type = string(card, 2, 'mat_type')
@@ -3518,6 +3599,15 @@ class DVMREL2(DVXREL2):
             raise NotImplementedError('mat_type=%r is not supported' % self.mat_type)
         return mid
 
+    def object_attributes(self, mode='public', keys_to_skip=None):
+        """.. seealso:: `pyNastran.utils.object_attributes(...)`"""
+        if keys_to_skip is None:
+            keys_to_skip = []
+
+        my_keys_to_skip = ['Type']
+        return super(DVMREL2, self).object_attributes(
+            mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
+
     @property
     def Type(self):
         self.deprecated('Type', 'mat_type', '1.1')
@@ -3537,6 +3627,7 @@ class DVMREL2(DVXREL2):
         """
         this should really make a call the the DEQATN;
         see the PBEAM for an example of get/set_opt_value
+
         """
         try:
             get = self.mid_ref.get_optimization_value(self.mp_name)
@@ -3574,6 +3665,7 @@ class DVMREL2(DVXREL2):
             the BDF object
 
         .. todo:: add support for DEQATN cards to finish DVMREL2 xref
+
         """
         msg = ', which is required by DVMREL2 oid=%r' % self.oid
         if self.mat_type in self.allowed_materials:
@@ -3629,6 +3721,7 @@ def break_word_by_trailing_integer(pname_fid):
     ('T', '11')
     >>> break_word_by_trailing_integer('THETA11')
     ('THETA', '11')
+
     """
     nums = []
     i = 0
@@ -3713,6 +3806,7 @@ class DVPREL1(DVXREL1):
             should the variable be validated
         comment : str; default=''
             a comment for the card
+
         """
         DVXREL1.__init__(self, oid, dvids, coeffs, c0, comment)
 
@@ -3802,6 +3896,7 @@ class DVPREL1(DVXREL1):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         oid = integer(card, 1, 'oid')
         prop_type = string(card, 2, 'prop_type')
@@ -3843,8 +3938,18 @@ class DVPREL1(DVXREL1):
         ----------
         xref : bool
             has this model been cross referenced
+
         """
         pass
+
+    def object_attributes(self, mode='public', keys_to_skip=None):
+        """.. seealso:: `pyNastran.utils.object_attributes(...)`"""
+        if keys_to_skip is None:
+            keys_to_skip = []
+
+        my_keys_to_skip = ['Type', 'pNameFid', 'pMax', 'pMin']
+        return super(DVPREL1, self).object_attributes(
+            mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     @property
     def Type(self):
@@ -3971,8 +4076,7 @@ class DVPREL1(DVXREL1):
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
-        else:
-            return self.comment + print_card_16(card)
+        return self.comment + print_card_16(card)
 
 
 class DVPREL2(DVXREL2):
@@ -4052,6 +4156,7 @@ class DVPREL2(DVXREL2):
             a comment for the card
 
         .. note:: either dvids or labels is required
+
         """
         DVXREL2.__init__(self, oid, dvids, labels, deqation, comment)
 
@@ -4098,6 +4203,7 @@ class DVPREL2(DVXREL2):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         oid = integer(card, 1, 'oid')
         prop_type = string(card, 2, 'prop_type')
@@ -4160,6 +4266,15 @@ class DVPREL2(DVXREL2):
 
     def OptID(self):
         return self.oid
+
+    def object_attributes(self, mode='public', keys_to_skip=None):
+        """.. seealso:: `pyNastran.utils.object_attributes(...)`"""
+        if keys_to_skip is None:
+            keys_to_skip = []
+
+        my_keys_to_skip = ['Type', 'pNameFid', 'pMax', 'pMin']
+        return super(DVPREL2, self).object_attributes(
+            mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     @property
     def Type(self):
@@ -4225,6 +4340,7 @@ class DVPREL2(DVXREL2):
         """
         this should really make a call the the DEQATN;
         see the PBEAM for an example of get/set_optimization_value
+
         """
         try:
             get = self.pid_ref.get_optimization_value(self.pname_fid)
@@ -4261,6 +4377,7 @@ class DVPREL2(DVXREL2):
             the BDF object
 
         .. todo:: add support for DEQATN cards to finish DVPREL2 xref
+
         """
         msg = ', which is required by DVPREL2 oid=%r' % self.oid
         self.pid_ref = self._get_property(model, self.pid, msg=msg)
@@ -4292,6 +4409,7 @@ class DVPREL2(DVXREL2):
         self.dequation = self.DEquation()
         self.pid_ref = None
         self.dequation_ref = None
+        self.dvids_ref = None
         self.dtable_ref = {}
 
     def update_model(self, model, desvar_values):
@@ -4333,6 +4451,7 @@ class DVPREL2(DVXREL2):
         ----------
         xref : bool
             has this model been cross referenced
+
         """
         pass
 
@@ -4389,6 +4508,7 @@ class DVGRID(BaseCard):
             the dxyz scale factor
         comment : str; default=''
             a comment for the card
+
         """
         BaseCard.__init__(self)
         if comment:
@@ -4423,6 +4543,7 @@ class DVGRID(BaseCard):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         dvid = integer(card, 1, 'dvid')
         nid = integer(card, 2, 'nid')
@@ -4443,6 +4564,7 @@ class DVGRID(BaseCard):
         ----------
         model : BDF()
             the BDF object
+
         """
         self.dvid_ref = model.desvars[self.dvid]
         self.nid_ref = model.Node(self.nid)
@@ -4501,6 +4623,7 @@ def parse_table_fields(card_type, card, fields):
        (1, 'DESVAR') = [30],
        (2, 'DRESP1') = [40],
     }
+
     """
     params = {}
     if not fields:
@@ -4568,6 +4691,7 @@ def _get_dresp23_table_values(name, values_list, inline=False):
         DNODE : List[List[int], List[int]]
     inline : bool; default=False
         used for DNODE
+
     """
     out = []
     if name in ['DRESP1', 'DRESP2']:
@@ -4636,6 +4760,7 @@ def get_dvxrel1_coeffs(dvxrel, model, desvar_values, debug=False):
     """
     Used by DVPREL1/2, DVMREL1/2, DVCREL1/2, and DVGRID to determine
     the value for the new property/material/etc. value
+
     """
     value = dvxrel.c0
     if debug:
@@ -4776,7 +4901,45 @@ def get_dvprel_key(dvprel, prop=None):
         if var_to_change in ['A', 'I1', 'I2', 'I1(B)', 'J', 'I2(B)']:
             pass
         elif isinstance(var_to_change, int):  # pragma: no cover
-            msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
+            if var_to_change < 0:
+                # shift to divisible by 16
+                if not (-167 <= var_to_change <= -6):
+                    msg = 'A-property_type=%r has not implemented %r in pname_map' % (
+                        prop_type, var_to_change)
+                    raise NotImplementedError(msg)
+                ioffset = -var_to_change - 6
+                istation = ioffset // 16
+                iterm = ioffset % 16
+
+                # 0    1   2   3   4   5   6   7    8  9
+                #(soi, xxb, a, i1, i2, i12, j, nsm, c1, c2,
+                #
+                 #10  11  12  13  14  15
+                 #d1, d2, e1, e2, f1, f2) = pack
+                assert istation == 0, istation
+                pbeam_var_map = {
+                    2 : 'A',
+                    3 : 'I1',
+                    4 : 'I2',
+                    5 : 'I12',
+                    6 : 'J',
+                    #7 : 'NSM',
+                    8 : 'C1',
+                    9 : 'C2',
+                    10 : 'D1',
+                    11 : 'D2',
+                    12 : 'E1',
+                    13 : 'E2',
+                    14 : 'F1',
+                    15 : 'F2',
+                }
+                if iterm in pbeam_var_map:
+                    var_to_change = pbeam_var_map[iterm] + str(istation + 1)
+                else:
+                    msg = 'istation=%s iterm=%s' % (istation, iterm)
+                    msg += 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
+            else:
+                msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
         else:  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
 

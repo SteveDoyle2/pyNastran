@@ -776,14 +776,15 @@ class BDFMethods(BDFAttributes):
                              for key, desvar in iteritems(self.desvars)}
 
         # Relates one design variable to one or more other design variables.
-        for desvar_id, dlink in iteritems(self.dlinks):
+        for dlink_id, dlink in iteritems(self.dlinks):
             value = dlink.c0
-            desvar = self.desvars[desvar_id]
+            desvar = dlink.dependent_desvar #get_stats()
+            desvar_ref = self.desvars[desvar]
             for coeff, desvar_idi in zip(dlink.coeffs, dlink.IDv):
                 valuei = desvar_values[desvar_idi]
                 value += coeff * valuei
-            value2 = min(max(value, desvar.xlb), desvar.xub)
-            desvar_values[desvar_id] = value2
+            value2 = min(max(value, desvar_ref.xlb), desvar_ref.xub)
+            desvar_values[dlink_id] = value2
 
         # calculates the real delta to be used by DVGRID
         desvar_delta = {key : (desvar_init[key] - desvar_values[key])

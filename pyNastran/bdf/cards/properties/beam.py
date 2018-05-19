@@ -73,7 +73,6 @@ class PBEAM(IntegratedLineProperty):
                 ioffset = -pname_fid - 6
                 istation = ioffset // 16
                 iterm = ioffset % 16
-                #print('istation=%s iterm=%s' % (istation, iterm))
 
                 # 0    1   2   3   4   5   6   7    8  9
                 #(soi, xxb, a, i1, i2, i12, j, nsm, c1, c2,
@@ -110,6 +109,7 @@ class PBEAM(IntegratedLineProperty):
                 elif iterm == 15:
                     self.f2[istation] = value
                 else:
+                    print('istation=%s iterm=%s' % (istation, iterm))
                     raise NotImplementedError('property_type=%r has not implemented %r (istation=%r, iterm=%r) in pname_map' % (
                         self.type, pname_fid, istation, iterm))
             else:
@@ -881,6 +881,7 @@ class PBEAM(IntegratedLineProperty):
         rho = self.Rho()
         mass_per_lengths = []
         for (area, nsm) in zip(self.A, self.nsm):
+            #print('area=%s rho=%s nsm=%s' % (area, rho, nsm))
             mass_per_lengths.append(area * rho + nsm)
         mass_per_length = integrate_positive_unit_line(self.xxb, mass_per_lengths)
         return mass_per_length

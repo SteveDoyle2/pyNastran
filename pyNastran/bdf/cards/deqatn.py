@@ -111,7 +111,8 @@ def _get_ta(f):
     ta2 = k1 * f**4 / ((f**2 + p1**2)**2 * (f**2 + p4**2)**2)
     return ta1, ta2
 
-BUILTINS = ['del', 'eval', 'yield']
+BUILTINS = ['del', 'eval', 'yield', 'async', 'await', 'property',
+            'slice', 'filter', 'map']
 
 class DEQATN(BaseCard):  # needs work...
     """
@@ -225,7 +226,11 @@ class DEQATN(BaseCard):  # needs work...
             self.eqs, default_values, str(self))
         self.func_str = func_str
         self.func_name = func_name
-        exec_(func_str)
+        try:
+            exec_(func_str)
+        except SyntaxError:
+            print(func_str)
+            raise
         #print(locals().keys())
         func = locals()[func_name]
         setattr(self, func_name, func)
@@ -498,6 +503,8 @@ def fortran_to_python(lines, default_values, comment=''):
         else:
             out = f
             func_msg += '    %s = %s\n' % (out, eq)
+            #print('out = %r' % out)
+            #print('eq = %r' % eq)
 
     func_msg += '    return %s' % f
     #print(func_msg)
@@ -581,6 +588,23 @@ def write_function_header(func_header, eq, default_values, comment=''):
         msg += _write_function_line(func_name, variables, default_values)
     msg += _write_comment(comment)
     msg += _write_variables(variables)
+    for builtin in BUILTINS:
+        if builtin in eq and '_' + builtin not in eq:
+            raise RuntimeError('cannot have an equation with %r\n%s' % (builtin, eq))
+            #import re
+            #eq = 'YIELD_A_YIELD'
+            #eq = '/YIELD'
+            #p = re.compile(r"\byield\b", flags=re.IGNORECASE)
+            #p2 = p.sub(eq,'_yield')
+            #print('P2 = %r' % p2)
+            #y = re.search(r"\byield\b", eq, flags=re.IGNORECASE)
+            #if y is not None:
+                #print('groups= ', y.groups())
+                #for group in y.groups():
+                    #print('group = %r' % group)
+                #print(y.group(0))
+                #print('***eq = %r' % eq)
+            #aaa
     msg += '    %s = %s\n' % (func_name, eq)
     return func_name, msg, variables
 
@@ -588,7 +612,6 @@ def _write_function_line(func_name, variables, default_values):
     """writes the ``def f(x, y, z=1.):`` part of the function"""
     vals = []
     is_default = False
-    #print('default_values = %s' % default_values)
     for var in variables:
         if var in BUILTINS:
             var += '_'
@@ -618,7 +641,7 @@ def _write_variables(variables):
     """type checks the inputs"""
     msg = '    try:\n'
     for var in variables:
-        if var == BUILTINS:
+        if var in BUILTINS:
             var += '_'
         #msg += "    assert isinstance(%s, float), '%s is not a float; type(%s)=%s' % (%s)")
         #msg += '        %s = float(%s)\n' % (var, var)
