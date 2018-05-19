@@ -389,10 +389,10 @@ def _clean_comment(comment):
         pass
     elif comment in IGNORE_COMMENTS:
         comment = None
-    #elif 'pynastran' in comment.lower():
-        #csline = comment.lower().split('pynastran', 1)
-        #if csline[1].strip()[0] == ':':
-            #comment = None
+    elif 'pynastran' in comment.lower():
+        csline = comment.lower().split('pynastran', 1)
+        if csline[1].strip()[0] == ':':
+            comment = None
 
     #if comment:
         #print(comment)
@@ -646,10 +646,10 @@ def _clean_comment_bulk(comment):
         pass
     elif comment in IGNORE_COMMENTS:
         comment = ''
-    #elif 'pynastran' in comment.lower():
-        #csline = comment.lower().split('pynastran', 1)
-        #if csline[1].strip() == ':':
-            #comment = ''
+    elif 'pynastran' in comment.lower():
+        csline = comment.lower().split('pynastran', 1)
+        if csline[1].strip() == ':':
+            comment = ''
 
     #if comment:
         #print(comment)

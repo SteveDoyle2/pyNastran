@@ -126,13 +126,7 @@ class AddMethods(BDFAttributes):
     def _add_spoint_object(self, spoints):
         # type: (Any) -> None
         """adds an SPOINT card"""
-        # remove $ character in the 0 spot and split by additional comments
-        #
-        # this is the desired format for "comment"
-        # _format_comment('a comment\ntaking two lines')
-        scomment = spoints.comment[1:].split('$', 1)
-        comment = ''.join(scomment)
-
+        comment = spoints.comment
         for nid in spoints.points:
             if nid in self.spoints:
                 continue
