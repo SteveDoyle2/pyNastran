@@ -3589,7 +3589,7 @@ class CQUAD(QuadShell):
             the BDF object
         """
         msg = ', which is required by CQUAD eid=%s' % self.eid
-        self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
+        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
         if isinstance(self.theta_mcid, integer_types):
             self.theta_mcid_ref = model.safe_coord(self.theta_mcid, self.eid, xref_errors, msg=msg)

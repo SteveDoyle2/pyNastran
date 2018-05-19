@@ -23,6 +23,7 @@ from pyNastran.bdf.mesh_utils.collapse_bad_quads import convert_bad_quads_to_tri
 from pyNastran.bdf.mesh_utils.delete_bad_elements import delete_bad_shells, get_bad_shells
 from pyNastran.bdf.mesh_utils.split_cbars_by_pin_flag import split_cbars_by_pin_flag
 from pyNastran.bdf.mesh_utils.dev.create_vectorized_numbered import create_vectorized_numbered
+from pyNastran.bdf.mesh_utils.remove_unused import remove_unused
 
 def cmd_line_create_vectorized_numbered():  # pragma: no cover
     msg = (
@@ -598,7 +599,6 @@ def cmd_line_filter():  # pragma: no cover
         eids.append(eid)
     xyz_cid0 = np.array(xyz_cid0)
     eids = np.array(eids)
-    print('eids =', eids)
 
     # we pretend to change the SPOINT location
     update_nodes = False
@@ -624,12 +624,16 @@ def cmd_line_filter():  # pragma: no cover
         update_nodes = True
 
     if update_nodes:
-        print('iunion =', iunion)
         eids_to_remove = eids[iunion]
         for eid in eids_to_remove:
+            etype = model.elements[eid].type
+            model._type_to_id_map[etype].remove(eid)
             del model.elements[eid]
 
         #update_nodes(model, nid_cp_cd, xyz_cid0)
+        # unxref'd model
+        remove_unused(model, remove_nids=True, remove_cids=True,
+                      remove_pids=True, remove_mids=True)
         model.write_bdf(bdf_filename_out)
 
 def _union(xval, iunion, ix):

@@ -1281,6 +1281,8 @@ class GetCard(GetMethods):
                 #assert len(independent) == 1, independent
                 if len(independent) != 1 or len(dependent) != 1:
                     msg = 'skipping card because len(independent) != 1 or len(dependent) != 1\n'
+                    msg += '  independent = %s\n'  % independent
+                    msg += '  dependent = %s\n'  % dependent
                     msg += str(elem)
                     self.log.error(msg)
                     continue
@@ -1488,7 +1490,7 @@ class GetCard(GetMethods):
             raise
         rbes = []
         for eid, rigid_element in iteritems(self.rigid_elements):
-            if rigid_element.type in ['RBE3', 'RBE2', 'RBE1', 'RBAR', 'RSPLINE']:
+            if rigid_element.type in ['RBE3', 'RBE2', 'RBE1', 'RBAR', 'RSPLINE', 'RROD']:
                 independent_nodes = set(rigid_element.independent_nodes)
                 dependent_nodes = set(rigid_element.dependent_nodes)
                 rbe_nids = independent_nodes | dependent_nodes

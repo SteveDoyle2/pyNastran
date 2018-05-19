@@ -120,12 +120,10 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
     for card_type, ids in iteritems(model._type_to_id_map):
     #for card_type, ids in iteritems(card_map):
         if card_type in ['CORD1R', 'CORD1C', 'CORD1S']:
-            #print(ids)
             for cid in ids:
                 coord = model.coords[cid]
                 nids_used.update(coord.node_ids)
         elif card_type in ['CORD2R', 'CORD2C', 'CORD2S']:
-            #print(ids)
             for cid in ids:
                 coord = model.coords[cid]
                 cids_used.add(coord.Rid())

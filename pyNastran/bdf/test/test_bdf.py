@@ -870,6 +870,12 @@ def check_for_optional_param(keys, subcase, msg, error, ierror, nerrors):
 def check_sol(sol, subcase, sols, case_control_key, log, ierror, nerrors):
     """Checks that the solution is valid"""
     if sol not in sols:
+        msg = '%s is not valid in sol=%s allowed_sols=%s\n%s' % (
+            case_control_key, sol, sols, subcase)
+        log.error(msg)
+        if ierror == nerrors:
+            raise RuntimeError(msg)
+    if case_control_key not in subcase:
         msg = 'sol=%s is missing %r\n%s' % (sol, case_control_key, subcase)
         log.error(msg)
         if ierror == nerrors:
@@ -1329,6 +1335,7 @@ def _check_case_parameters(subcase, fem2, p0, isubcase, sol,
         else:
             cmethod_ids = list(fem2.cMethods.keys())
             raise RuntimeError('CMETHOD = %s not in cmethod_ids=%s' % (cmethod_id, cmethod_ids))
+        sols = [145]
         ierror = check_sol(sol, subcase, sols, 'CMETHOD', log, ierror, nerrors)
 
     if 'RMETHOD' in subcase:

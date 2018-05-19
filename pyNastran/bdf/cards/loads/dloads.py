@@ -213,7 +213,7 @@ class ACSRCE(BaseCard):
         #self.dphases_ref = None
         #self.delays_ref = None
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, xref_errors):
         return self.cross_reference(model)
 
     #def uncross_reference(self):
@@ -332,7 +332,7 @@ class DLOAD(LoadCombination):
             dload_ids2.append(dload_id2)
         self.load_ids_ref = dload_ids2
 
-    def safe_cross_reference(self, model, debug=True):
+    def safe_cross_reference(self, model, xref_errors, debug=True):
         dload_ids2 = []
         msg = ', which is required by DLOAD=%s' % (self.sid)
         for dload_id in self.load_ids:
@@ -530,7 +530,7 @@ class RLOAD1(DynamicLoad):
         if isinstance(self.dphase, integer_types) and self.dphase > 0:
             self.dphase_ref = model.DPHASE(self.dphase, msg=msg)
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, xref_errors, ):
         msg = ', which is required by RLOAD1 sid=%s' % (self.sid)
         #self.excite_id_ref = model.DAREA(self.excite_id, msg=msg)
         if isinstance(self.tc, integer_types) and self.tc:
@@ -845,7 +845,7 @@ class RLOAD2(DynamicLoad):
         if isinstance(self.dphase, integer_types) and self.dphase > 0:
             self.dphase_ref = model.DPHASE(self.dphase, msg=msg)
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, xref_errors, ):
         msg = ', which is required by RLOAD2=%s' % (self.sid)
         if isinstance(self.tb, integer_types) and self.tb:
             self.tb_ref = model.TableD(self.tb, msg=msg)
@@ -1386,7 +1386,7 @@ class TLOAD2(DynamicLoad):
             self.delay_ref = model.DELAY(self.delay_id, msg=msg)
         # TODO: excite_id
 
-    def safe_cross_reference(self, model, debug=True):
+    def safe_cross_reference(self, model, xref_errors, debug=True):
         msg = ', which is required by TLOAD2 sid=%s' % (self.sid)
         if isinstance(self.delay, integer_types) and self.delay > 0:
             self.delay_ref = model.DELAY(self.delay_id, msg=msg)
