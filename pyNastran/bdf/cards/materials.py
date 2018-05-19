@@ -1013,7 +1013,7 @@ class MAT3(OrthotropicMaterial):
         mid = self.Mid()
         assert isinstance(mid, integer_types), 'mid=%r' % mid
         if xref:
-            if [self.mats3, self.matt3] == [None, None]:
+            if [self.mats3_ref, self.matt3_ref] == [None, None]:
                 pass
 
     def cross_reference(self, model):
@@ -1878,6 +1878,9 @@ class MAT9(AnisotropicMaterial):
         #assert isinstance(G12, float), 'G12=%r' % G12
         #assert isinstance(nu12, float), 'nu12=%r' % nu12
 
+    def Rho(self):
+        return self.rho
+
     def D(self):
         D = array(
             [[self.G11, self.G12, self.G13, self.G14, self.G15, self.G16],
@@ -2304,6 +2307,21 @@ class MAT11(Material):
         1: 'mid', 2:'e1', 3:'e2', 4:'e3', 5: 'nu12', 6:'nu13', 7:'nu23',
         8: 'g12', 9:'g13', 10:'g23', 11:'rho', 12:'a1', 13:'a2', 14:'a3',
         15:'tref', 16: 'ge',
+    }
+    mp_name_map = {
+        'E1' : 'e1',
+        'E2' : 'e2',
+        'E3' : 'e3',
+        #'E' : 'e', #3 : 'e',
+        #'G' : 'g', #4 : 'g',
+        #'NU' : 'nu', #5: 'nu',
+        #'RHO' : 'rho', #6 : 'rho',
+        #'A' : 'a', #7 : 'a',
+        #'TREF' : 'tref', #8 : 'tref',
+        #'GE' : 'ge', #9 : 'ge',
+        #'ST' : 'st', #10 : 'st',
+        #'SC' : 'sc', #11 : 'sc',
+        #'SS' : 'ss', #12 : 'ss',
     }
     def __init__(self, mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho=0.0,
                  a1=0.0, a2=0.0, a3=0.0, tref=0.0, ge=0.0, comment=''):

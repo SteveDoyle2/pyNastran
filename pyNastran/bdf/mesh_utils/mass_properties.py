@@ -749,14 +749,14 @@ def _get_mass_new(model, all_eids, all_mass_ids, etypes_skipped,
                 ti = prop.Thickness()
                 if tflag == 0:
                     # absolute
-                    t1 = elem.T1 if elem.T1 else ti
-                    t2 = elem.T2 if elem.T2 else ti
-                    t3 = elem.T3 if elem.T3 else ti
+                    t1 = ti if elem.T1 is None else elem.T1
+                    t2 = ti if elem.T2 is None else elem.T2
+                    t3 = ti if elem.T3 is None else elem.T3
                 elif tflag == 1:
                     # relative
-                    t1 = elem.T1 * ti if elem.T1 else ti
-                    t2 = elem.T2 * ti if elem.T2 else ti
-                    t3 = elem.T3 * ti if elem.T3 else ti
+                    t1 = ti if elem.T1 is None else elem.T1 * ti
+                    t2 = ti if elem.T2 is None else elem.T2 * ti
+                    t3 = ti if elem.T3 is None else elem.T3 * ti
                 else:
                     raise RuntimeError('tflag=%r' % tflag)
                 assert t1 + t2 + t3 > 0., 't1=%s t2=%s t3=%s' % (t1, t2, t3)
@@ -813,19 +813,30 @@ def _get_mass_new(model, all_eids, all_mass_ids, etypes_skipped,
                 ti = prop.Thickness()
                 if tflag == 0:
                     # absolute
-                    t1 = elem.T1 if elem.T1 else ti
-                    t2 = elem.T2 if elem.T2 else ti
-                    t3 = elem.T3 if elem.T3 else ti
-                    t4 = elem.T4 if elem.T4 else ti
+                    #t1 = elem.T1 if elem.T1 is not None else ti
+                    #t2 = elem.T2 if elem.T2 is not None else ti
+                    #t3 = elem.T3 if elem.T3 is not None else ti
+                    #t4 = elem.T4 if elem.T4 is not None else ti
+                    t1 = ti if elem.T1 is None else elem.T1
+                    t2 = ti if elem.T2 is None else elem.T2
+                    t3 = ti if elem.T3 is None else elem.T3
+                    t4 = ti if elem.T4 is None else elem.T4
                 elif tflag == 1:
                     # relative
-                    t1 = elem.T1 * ti if elem.T1 else ti
-                    t2 = elem.T2 * ti if elem.T2 else ti
-                    t3 = elem.T3 * ti if elem.T3 else ti
-                    t4 = elem.T4 * ti if elem.T4 else ti
+                    #t1 = elem.T1 * ti if elem.T1 is not None else ti
+                    #t2 = elem.T2 * ti if elem.T2 is not None else ti
+                    #t3 = elem.T3 * ti if elem.T3 is not None else ti
+                    #t4 = elem.T4 * ti if elem.T4 is not None else ti
+                    t1 = ti if elem.T1 is None else elem.T1 * ti
+                    t2 = ti if elem.T2 is None else elem.T2 * ti
+                    t3 = ti if elem.T3 is None else elem.T3 * ti
+                    t4 = ti if elem.T4 is None else elem.T4 * ti
                 else:
                     raise RuntimeError('tflag=%r' % tflag)
                 assert t1 + t2 + t3 + t4 > 0., 't1=%s t2=%s t3=%s t4=%s' % (t1, t2, t3, t4)
+                #print('tflag = %s' % tflag)
+                #print('T1234=[%s, %s, %s, %s]' % (elem.T1, elem.T2, elem.T3, elem.T4))
+                #print('t1234=[%s, %s, %s, %s]' % (t1, t2, t3, t4))
                 t = (t1 + t2 + t3 + t4) / 4.
 
                 # m/A = rho * A * t + nsm
@@ -857,6 +868,21 @@ def _get_mass_new(model, all_eids, all_mass_ids, etypes_skipped,
                 msg = 'centroid_new=%s centroid_old=%s\n%s' % (
                     str(centroid), str(elem.Centroid()), str(elem))
                 raise RuntimeError(msg)
+            #elem = model.elements[eid]
+            mass_expected = elem.Mass()
+            if not np.allclose(m, mass_expected):
+                msg = 'massi=%s expected=%s' % (m, mass_expected)
+                for node in elem.nodes_ref:
+                    node.comment = ''
+                elem.comment = ''
+                prop.comment = ''
+                prop.mid1_ref.comment = ''
+                msg += elem.get_stats()
+                msg += prop.get_stats()
+                msg += prop.mid_ref.get_stats()
+                raise RuntimeError(msg)
+            #print(elem)
+            #print(prop)
             #print('eid=%s type=%s mass=%s; area=%s mpa=%s'  %(elem.eid, elem.type, m, area, mpa))
             mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
     elif etype == 'CQUAD':
@@ -1187,7 +1213,9 @@ def _combine_prop_weighted_area_length_simple(
         if debug:  # pragma: no cover
             model.log.debug('  eid=%s %si=%s nsm_value=%s mass=%s' % (
                 eid, word, areai, nsm_value, m))
-        mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
+        #elem = model.elements[eid]
+        #assert np.allclose(m, elem.Mass()), elem.get_stats()
+        #mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
     if debug:  # pragma: no cover
         model.log.debug('%s sum = %s' % (word, area_sum))
     return mass
@@ -1223,6 +1251,7 @@ def _combine_prop_weighted_area_length(
             if debug:  # pragma: no cover
                 model.log.debug('  %si=%s %s_sum=%s nsm_value=%s mass=%s' % (
                     word, areai*area_sum, word, area_sum, nsm_value, m))
+            #assert np.allclose(m, elem.Mass()), elem.get_stats()
             mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
     return mass
 
@@ -1453,7 +1482,7 @@ def _apply_nsm(model, nsm_id,
                     lengthsi = length_all
                     centroidsi = nsm_centroidsi
                     mass = _combine_prop_weighted_area_length_simple(
-                        model, eidsi, lengthsi, centroidsi,
+                        model, all_eids, lengthsi, centroidsi,
                         nsm_value, reference_point, mass, cg, I,
                         is_area, divide_by_sum,
                         debug=debug)

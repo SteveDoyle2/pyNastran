@@ -595,6 +595,7 @@ class CTRIAX6(TriShell):
         self.theta = theta
         self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(nids) == 6, 'error on CTRIAX6'
+        self.mid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):

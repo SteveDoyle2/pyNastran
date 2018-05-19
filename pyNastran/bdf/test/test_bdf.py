@@ -1335,7 +1335,7 @@ def _check_case_parameters(subcase, fem2, p0, isubcase, sol,
         else:
             cmethod_ids = list(fem2.cMethods.keys())
             raise RuntimeError('CMETHOD = %s not in cmethod_ids=%s' % (cmethod_id, cmethod_ids))
-        sols = [145]
+        sols = [107, 110, 145, 200]
         ierror = check_sol(sol, subcase, sols, 'CMETHOD', log, ierror, nerrors)
 
     if 'RMETHOD' in subcase:

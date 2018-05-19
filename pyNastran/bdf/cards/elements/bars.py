@@ -351,6 +351,12 @@ class CBAR(LineElement):
             self.wb[1] = value
         elif cp_name == 'W3B':
             self.wb[2] = value
+        elif cp_name == 'X1':
+            self.x[0] = value
+        elif cp_name == 'X2':
+            self.x[1] = value
+        elif cp_name == 'X3':
+            self.x[2] = value
         else:
             msg = 'CBAR: cp_name=%r must be added to update_by_cp_name' % cp_name
             raise NotImplementedError(msg)

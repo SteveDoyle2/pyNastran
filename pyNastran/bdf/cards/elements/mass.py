@@ -655,7 +655,8 @@ class CMASS4(PointMassElement):
         model : BDF()
             the BDF object
         """
-        self.nodes_ref = model.EmpyNodes(self.nodes)
+        msg = ', which is required by CMASS4 eid=%s' % self.eid
+        self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
     def safe_cross_reference(self, model, xref_errors):
         self.cross_reference(model)

@@ -56,7 +56,7 @@ class CompositeShellProperty(ShellProperty):
     def MassPerArea(self, iply='all', method='nplies', tflag=1, tscales=None):
         return self.get_mass_per_area(iply, method)
 
-    def Thickness(self, iply='all'):
+    def Thickness(self, iply='all', tflag=1, tscales=None):
         return self.get_thickness(iply)
 
     def nPlies(self):
@@ -1924,11 +1924,15 @@ class PSHELL(ShellProperty):
         if tscales is not None:
             nt = len(tscales)
             if tflag == 0: # absolute
-                thickness = sum([ti  if ti is not None else t0 for ti in tscales]) / nt
+                thickness = sum([ti if ti is not None else t0 for ti in tscales]) / nt
             elif tflag == 1: # relative
                 thickness = sum([ti * t0 if ti is not None else t0 for ti in tscales]) / nt
             else:
                 raise RuntimeError('tflag=%r and must be 0/1' % tflag)
+            #print('t0 = %s' % t0)
+            #print('  tscales = %s' % tscales)
+            #print('  nt = %s' % nt)
+            #print('  thickness = %s' % thickness)
             return thickness
         else:
             thickness = t0

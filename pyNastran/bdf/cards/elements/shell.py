@@ -259,7 +259,9 @@ class TriShell(ShellElement):
     def Thickness(self):
         # () -> float
         """Returns the thickness"""
-        return self.pid_ref.Thickness()
+        tscales = self.get_thickness_scale()
+        return self.pid_ref.Thickness(tflag=self.tflag, tscales=tscales)
+        #return self.pid_ref.Thickness()
 
     def AreaCentroidNormal(self):
         """
@@ -1460,7 +1462,13 @@ class QuadShell(ShellElement):
 
     def Thickness(self):
         """Returns the thickness"""
-        return self.pid_ref.Thickness()
+        tscales = self.get_thickness_scale()
+        try:
+            return self.pid_ref.Thickness(tflag=self.tflag, tscales=tscales)
+        except TypeError:
+            print(self.pid_ref)
+            raise
+        #return self.pid_ref.Thickness()
 
     def Normal(self):
         try:

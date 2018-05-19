@@ -73,7 +73,7 @@ class PBEAM(IntegratedLineProperty):
                 ioffset = -pname_fid - 6
                 istation = ioffset // 16
                 iterm = ioffset % 16
-                print('istation=%s iterm=%s' % (istation, iterm))
+                #print('istation=%s iterm=%s' % (istation, iterm))
 
                 # 0    1   2   3   4   5   6   7    8  9
                 #(soi, xxb, a, i1, i2, i12, j, nsm, c1, c2,
@@ -88,11 +88,27 @@ class PBEAM(IntegratedLineProperty):
                 elif iterm == 4:
                     self.i2[istation] = value
                 elif iterm == 5:
-                    self.i12[istation] = value
+                    self.i12[istation] = value # 11-5 = 6
                 elif iterm == 6:
-                    self.j[istation] = value
+                    self.j[istation] = value # 12-6 = 6
+                #elif iterm == 7:
+                    #self.nsm[istation] = value # 13-6 = 6
                 elif iterm == 8:
                     self.c1[istation] = value
+                elif iterm == 9:
+                    self.c2[istation] = value
+                elif iterm == 10:
+                    self.d1[istation] = value
+                elif iterm == 11:
+                    self.d2[istation] = value
+                elif iterm == 12:
+                    self.e1[istation] = value
+                elif iterm == 13:
+                    self.e2[istation] = value
+                elif iterm == 14:
+                    self.f1[istation] = value
+                elif iterm == 15:
+                    self.f2[istation] = value
                 else:
                     raise NotImplementedError('property_type=%r has not implemented %r (istation=%r, iterm=%r) in pname_map' % (
                         self.type, pname_fid, istation, iterm))
@@ -115,6 +131,33 @@ class PBEAM(IntegratedLineProperty):
                 #print('istation=%r idim=%r' % (istation, idim))
                 #print(self)
                 #raise
+        elif isinstance(pname_fid, str):
+            if '(A)' in pname_fid:
+                i = 0
+                end = '(A)'
+            elif '(' not in pname_fid:
+                i = 0
+                end = ''
+            elif '(B)' in pname_fid:
+                i = -1
+                end = '(B)'
+            else:
+                raise NotImplementedError(pname_fid)
+            if pname_fid.startswith('I1'):
+                self.i1[i] = value
+                word = 'I1'
+            elif pname_fid.startswith('I2'):
+                self.i2[i] = value
+                word = 'I2'
+            elif pname_fid.startswith('A'):
+                self.A[i] = value
+                word = 'A'
+            else:
+                raise NotImplementedError('property_type=%r has not implemented %r in pname_map' % (
+                    self.type, pname_fid))
+            expected_word = word + end
+            if pname_fid != expected_word:
+                raise RuntimeError('%r is invalid' % expected_word)
         else:
             raise NotImplementedError('property_type=%r has not implemented %r in pname_map' % (
                 self.type, pname_fid))

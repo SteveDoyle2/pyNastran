@@ -3048,6 +3048,45 @@ class DVCREL2(DVXREL2):
         self.dequation_ref = None
         self.dtable_ref = {}
 
+    def _get_element(self, model, eid, msg=''):
+        assert isinstance(self.eid, int), type(self.eid)
+        #if self.element_type in ['MAT1']:
+        eid_ref = model.Element(eid, msg=msg)
+        #else:
+            #raise NotImplementedError(self.element_type)
+        return eid_ref
+
+    def update_model(self, model, desvar_values):
+        """doesn't require cross-referencing"""
+        values = get_deqatn_value(self, model, desvar_values)
+        elem = self._get_element(model, self.eid)
+        try:
+            self._update_by_dvcrel(elem, values)
+        except AttributeError:
+            raise
+            #raise NotImplementedError('prop_type=%r is not supported in update_model' % self.prop_type)
+
+    def _update_by_dvcrel(self, elem, value):
+        if hasattr(elem, 'update_by_cp_name'):
+            elem.update_by_mname(self.cp_name, value)
+        else:
+            try:
+                cp_name_map = elem.cp_name_map
+            except AttributeError:
+                msg = ('element_type=%r name=%r has not implemented '
+                       'cp_name_map/update_by_cp_name' % (
+                           self.element_type, self.cp_name))
+                raise NotImplementedError(msg)
+
+            try:
+                key = cp_name_map[self.cp_name]
+            except KeyError:
+                msg = ('element_type=%r has not implemented %r '
+                       'for in cp_name_map/update_by_cp_name' % (
+                           self.element_type, self.cp_name))
+                raise NotImplementedError(msg)
+            setattr(elem, key, value)
+
     def raw_fields(self):
         list_fields = ['DVCREL2', self.oid, self.element_type, self.Eid(),
                        self.cp_name, self.cp_min, self.cp_max, self.DEquation(), None]
@@ -3419,6 +3458,45 @@ class DVMREL2(DVXREL2):
                     labels.append(label)
         return DVMREL2(oid, mat_type, mid, mp_name, dequation, dvids, labels,
                        mp_min=mp_min, mp_max=mp_max, comment=comment)
+
+    def _get_material(self, model, mid, msg=''):
+        assert isinstance(self.mid, int), type(self.mid)
+        if self.mat_type in ['MAT1']:
+            mid_ref = model.Material(mid, msg=msg)
+        else:
+            raise NotImplementedError(self.mat_type)
+        return mid_ref
+
+    def update_model(self, model, desvar_values):
+        """doesn't require cross-referencing"""
+        values = get_deqatn_value(self, model, desvar_values)
+        mat = self._get_material(model, self.mid)
+        try:
+            self._update_by_dvmrel(mat, values)
+        except AttributeError:
+            raise
+            #raise NotImplementedError('prop_type=%r is not supported in update_model' % self.prop_type)
+
+    def _update_by_dvmrel(self, mat, value):
+        if hasattr(mat, 'update_by_mp_name'):
+            mat.update_by_mname(self.mp_name, value)
+        else:
+            try:
+                mp_name_map = mat.mp_name_map
+            except AttributeError:
+                msg = ('mat_type=%r name=%r has not implemented '
+                       'mp_name_map/update_by_mp_name' % (
+                           self.mat_type, self.mp_name))
+                raise NotImplementedError(msg)
+
+            try:
+                key = mp_name_map[self.mp_name]
+            except KeyError:
+                msg = ('mat_type=%r has not implemented %r '
+                       'for in mp_name_map/update_by_mp_name' % (
+                           self.mat_type, self.mp_name))
+                raise NotImplementedError(msg)
+            setattr(mat, key, value)
 
     def OptID(self):
         return self.oid
