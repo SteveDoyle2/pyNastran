@@ -186,7 +186,7 @@ class AERO(Aero):
         msg = ', which is required by AERO'
         self.acsid_ref = model.Coord(self.acsid, msg=msg)
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, xref_errors):
         """
         Safe cross refernece aerodynamic coordinate system.
 
@@ -197,7 +197,7 @@ class AERO(Aero):
 
         """
         msg = ', which is required by AERO'
-        self.acsid_ref = model.Coord(self.acsid, msg=msg)
+        self.acsid_ref = model.safe_coord(self.acsid, None, xref_errors, msg=msg)
 
     @classmethod
     def add_card(cls, card, comment=''):

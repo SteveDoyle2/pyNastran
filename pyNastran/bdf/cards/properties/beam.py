@@ -13,6 +13,7 @@ Multi-segment beams are IntegratedLineProperty objects.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
+from six import string_types
 from six.moves import zip, range
 import numpy as np
 from numpy import array, unique, argsort, mean, allclose, ndarray
@@ -27,7 +28,8 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.utils.mathematics import integrate_unit_line, integrate_positive_unit_line
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.cards.optimization import break_word_by_trailing_integer
+from pyNastran.bdf.cards.base_card import (
+    break_word_by_trailing_parentheses_integer_ab, break_word_by_trailing_integer)
 from pyNastran.utils import float_types
 
 class PBEAM(IntegratedLineProperty):
@@ -66,52 +68,8 @@ class PBEAM(IntegratedLineProperty):
     def update_by_pname_fid(self, pname_fid, value):
         if isinstance(pname_fid, int):
             if pname_fid < 0:
-                # shift to divisible by 16
-                if not (-167 <= pname_fid <= -6):
-                    raise NotImplementedError('A-property_type=%r has not implemented %r in pname_map' % (
-                        self.type, pname_fid))
-                ioffset = -pname_fid - 6
-                istation = ioffset // 16
-                iterm = ioffset % 16
-
-                # 0    1   2   3   4   5   6   7    8  9
-                #(soi, xxb, a, i1, i2, i12, j, nsm, c1, c2,
-                #
-                 #10  11  12  13  14  15
-                 #d1, d2, e1, e2, f1, f2) = pack
-                assert istation == 0, istation
-                if iterm == 2:
-                    self.A[istation] = value
-                elif iterm == 3:
-                    self.i1[istation] = value
-                elif iterm == 4:
-                    self.i2[istation] = value
-                elif iterm == 5:
-                    self.i12[istation] = value # 11-5 = 6
-                elif iterm == 6:
-                    self.j[istation] = value # 12-6 = 6
-                #elif iterm == 7:
-                    #self.nsm[istation] = value # 13-6 = 6
-                elif iterm == 8:
-                    self.c1[istation] = value
-                elif iterm == 9:
-                    self.c2[istation] = value
-                elif iterm == 10:
-                    self.d1[istation] = value
-                elif iterm == 11:
-                    self.d2[istation] = value
-                elif iterm == 12:
-                    self.e1[istation] = value
-                elif iterm == 13:
-                    self.e2[istation] = value
-                elif iterm == 14:
-                    self.f1[istation] = value
-                elif iterm == 15:
-                    self.f2[istation] = value
-                else:
-                    print('istation=%s iterm=%s' % (istation, iterm))
-                    raise NotImplementedError('property_type=%r has not implemented %r (istation=%r, iterm=%r) in pname_map' % (
-                        self.type, pname_fid, istation, iterm))
+                pname_fid = update_pbeam_negative_integer(self, pname_fid)
+                self.update_by_pname_fid(pname_fid, value)
             else:
                 raise NotImplementedError('property_type=%r has not implemented %r in pname_map' % (
                     self.type, pname_fid))
@@ -131,7 +89,7 @@ class PBEAM(IntegratedLineProperty):
                 #print('istation=%r idim=%r' % (istation, idim))
                 #print(self)
                 #raise
-        elif isinstance(pname_fid, str):
+        elif isinstance(pname_fid, string_types):
             if '(A)' in pname_fid:
                 i = 0
                 end = '(A)'
@@ -141,8 +99,14 @@ class PBEAM(IntegratedLineProperty):
             elif '(B)' in pname_fid:
                 i = -1
                 end = '(B)'
+            elif '(' in pname_fid:
+                word, num = break_word_by_trailing_parentheses_integer_ab(pname_fid)
+                end = '(%i)' % num
+                pname_fid = word + end
+                i = num - 1
             else:
                 raise NotImplementedError(pname_fid)
+
             if pname_fid.startswith('I1'):
                 self.i1[i] = value
                 word = 'I1'
@@ -152,15 +116,40 @@ class PBEAM(IntegratedLineProperty):
             elif pname_fid.startswith('A'):
                 self.A[i] = value
                 word = 'A'
+            elif pname_fid.startswith('C1'):
+                self.c1[i] = value
+                word = 'C1'
+            elif pname_fid.startswith('C2'):
+                self.c2[i] = value
+                word = 'C2'
+            elif pname_fid.startswith('D1'):
+                self.d1[i] = value
+                word = 'D1'
+            elif pname_fid.startswith('D2'):
+                self.d2[i] = value
+                word = 'D2'
+            elif pname_fid.startswith('E1'):
+                self.e1[i] = value
+                word = 'E1'
+            elif pname_fid.startswith('E2'):
+                self.e2[i] = value
+                word = 'E2'
+            elif pname_fid.startswith('F1'):
+                self.f1[i] = value
+                word = 'F1'
+            elif pname_fid.startswith('F2'):
+                self.f2[i] = value
+                word = 'F2'
             else:
-                raise NotImplementedError('property_type=%r has not implemented %r in pname_map' % (
-                    self.type, pname_fid))
+                raise NotImplementedError('property_type=%r has not implemented %r in pname_map; word=%r' % (
+                    self.type, pname_fid, word))
+
             expected_word = word + end
             if pname_fid != expected_word:
                 raise RuntimeError('%r is invalid' % expected_word)
         else:
-            raise NotImplementedError('property_type=%r has not implemented %r in pname_map' % (
-                self.type, pname_fid))
+            raise NotImplementedError('property_type=%r has not implemented %r in pname_map; type=%s' % (
+                self.type, pname_fid, type(pname_fid)))
 
     def __init__(self, pid, mid, xxb, so, area, i1, i2, i12, j, nsm=None,
                  c1=None, c2=None, d1=None, d2=None,
@@ -195,7 +184,6 @@ class PBEAM(IntegratedLineProperty):
            the y/z locations of the stress recovery points
            c1 - point C.y
            c2 - point C.z
-
         k1 / k2 : float; default=1.
             Shear stiffness factor K in K*A*G for plane 1/2.
         s1 / s2 : float; default=0.
@@ -463,7 +451,8 @@ class PBEAM(IntegratedLineProperty):
             if not di12 > 0.:
                 msg = 'I1 * I2 - I12^2=0 and must be greater than 0.0 at End B\n'
                 msg += 'pid=%s xxb=%s i1=%s i2=%s i12=%s i1*i2-i12^2=%s'  % (
-                    self.pid, self.xxb[ilayer], self.i1[ilayer], self.i2[ilayer], self.i12[ilayer], di12)
+                    self.pid, self.xxb[ilayer], self.i1[ilayer], self.i2[ilayer],
+                    self.i12[ilayer], di12)
                 raise ValueError(msg)
 
     @classmethod
@@ -1049,6 +1038,56 @@ class PBEAM(IntegratedLineProperty):
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
+def update_pbeam_negative_integer(prop, pname_fid):
+    """converts the negative PBEAM value to a positive one"""
+    # shift to divisible by 16
+    if not (-167 <= pname_fid <= -6):
+        raise NotImplementedError('A-property_type=%r has not implemented %r in pname_map' % (
+            prop.type, pname_fid))
+    ioffset = -pname_fid - 6
+    istation = ioffset // 16
+    iterm = ioffset % 16
+
+    # 0    1   2   3   4   5   6   7    8  9
+    #(soi, xxb, a, i1, i2, i12, j, nsm, c1, c2,
+    #
+     #10  11  12  13  14  15
+     #d1, d2, e1, e2, f1, f2) = pack
+    assert istation == 0, istation
+    if iterm == 2:
+        word = 'A'
+    elif iterm == 3:
+        word = 'I1'
+    elif iterm == 4:
+        word = 'I2'
+    elif iterm == 5:
+        word = 'I12'
+    elif iterm == 6:
+        word = 'J'
+    #elif iterm == 7:
+        #self.nsm[istation] = value # 13-6 = 6
+    elif iterm == 8:
+        word = 'C1'
+    elif iterm == 9:
+        word = 'C2'
+    elif iterm == 10:
+        word = 'D1'
+    elif iterm == 11:
+        word = 'D2'
+    elif iterm == 12:
+        word = 'E1'
+    elif iterm == 13:
+        word = 'E2'
+    elif iterm == 14:
+        word = 'F1'
+    elif iterm == 15:
+        word = 'F2'
+    else:
+        print('istation=%s iterm=%s' % (istation, iterm))
+        raise NotImplementedError('property_type=%r has not implemented %r (istation=%r, iterm=%r) in pname_map' % (
+            prop.type, pname_fid, istation, iterm))
+    word = '%s(%i)' % (word, istation + 1)
+    return word
 
 class PBEAML(IntegratedLineProperty):
     """
@@ -1407,7 +1446,7 @@ class PBEAML(IntegratedLineProperty):
                 self.pid, self.xxb, areas))
             assert len(self.xxb) == len(areas)
             raise
-            A = mean(areas)
+            #A = mean(areas)
         return A
 
     #def Mid(self):
@@ -1642,7 +1681,6 @@ class PBMSECT(LineProperty):
         self.outp_ref.cross_reference_set(model, 'Point', msg=msg)
 
         if len(self.brps):
-            ## TODO: not done
             self.brp1_ref = model.Set(self.brp1)
             self.brp1_ref.cross_reference_set(model, 'Point', msg=msg)
 

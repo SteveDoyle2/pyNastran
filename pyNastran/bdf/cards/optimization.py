@@ -22,11 +22,14 @@ from six import iteritems, string_types
 from six.moves import zip, range
 import numpy as np
 
-from pyNastran.utils import integer_types
+from pyNastran.utils import integer_types, float_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.cards.base_card import (BaseCard, expand_thru_by)
+from pyNastran.bdf.cards.base_card import (
+    BaseCard, expand_thru_by, break_word_by_trailing_integer,
+    break_word_by_trailing_parentheses_integer_ab)
 from pyNastran.bdf.cards.deqatn import fortran_to_python_short
     #collapse_thru_by_float, condense, build_thru_float)
+from pyNastran.bdf.cards.properties.beam import update_pbeam_negative_integer
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, integer_or_string, integer_string_or_blank,
     double, double_or_blank, string, string_or_blank,
@@ -203,10 +206,18 @@ def validate_dvprel(prop_type, pname_fid, validate):
         options = [
             'I1', 'I2', 'A', 'J',
             'I1(A)', 'I1(B)', 'I2(B)',
-            -8, -9, -10, -14, -15, -16, -17, -18, -19, -20, -21,
-            -168, -169, -170, -174, -175, -176, -177, -178, -179,
-            -180, -181,]
-        _check_dvprel_options(pname_fid, prop_type, options)
+            'C1', 'C2', 'D1', 'D2', 'E1', 'E2', 'F1', 'F2',
+            #-8, -9, -10, -14, -15, -16, -17, -18, -19, -20, -21,
+            #-168, -169, -170, -174, -175, -176, -177, -178, -179,
+            #-180, -181,
+        ]
+        if pname_fid < 0:
+            pname_fid = update_pbeam_negative_integer(None, pname_fid)
+
+        if isinstance(pname_fid, string_types):
+            word, num = break_word_by_trailing_parentheses_integer_ab(
+                pname_fid)
+        _check_dvprel_options(word, prop_type, options)
 
     elif prop_type == 'PBEAML':
         options = [
@@ -937,21 +948,43 @@ class DOPTPRM(OptConstraint):
 
 
 class DLINK(OptConstraint):
+    """
+    Multiple Design Variable Linking
+    Relates one design variable to one or more other design variables.
+
+    +-------+------+-------+--------+-------+------+----+------+----+
+    |   1   |   2  |   3   |   4    |   5   |   6  |  7 |   8  | 9  |
+    +=======+======+=======+========+=======+======+====+======+====+
+    | DLINK |  ID  | DDVID |   C0   | CMULT | IDV1 | C1 | IDV2 | C2 |
+    +-------+------+-------+--------+-------+------+----+------+----+
+    |       | IDV3 |   C3  | -etc.- |       |      |    |      |    |
+    +-------+------+-------+--------+-------+------+----+------+----+
+    """
     type = 'DLINK'
 
     def __init__(self, oid, dependent_desvar,
                  independent_desvars, coeffs, c0=0., cmult=1., comment=''):
         """
-        Multiple Design Variable Linking
-        Relates one design variable to one or more other design variables.
+        Creates a DLINK card, which creates a variable that is a lienar
+        ccombination of other design variables
 
-        +-------+------+-------+--------+-------+------+----+------+----+
-        |   1   |   2  |   3   |   4    |   5   |   6  |  7 |   8  | 9  |
-        +=======+======+=======+========+=======+======+====+======+====+
-        | DLINK |  ID  | DDVID |   C0   | CMULT | IDV1 | C1 | IDV2 | C2 |
-        +-------+------+-------+--------+-------+------+----+------+----+
-        |       | IDV3 |   C3  | -etc.- |       |      |    |      |    |
-        +-------+------+-------+--------+-------+------+----+------+----+
+        Parameters
+        ----------
+        oid : int
+            optimization id
+        dependent_desvar : int
+            the DESVAR to link
+        independent_desvars : List[int]
+            the DESVARs to combine
+        coeffs : List[int]
+            the linear combination coefficients
+        c0 : float; default=0.0
+            an offset
+        cmult : float; default=1.0
+            an scale factor
+        comment : str; default=''
+            a comment for the card
+
         """
         OptConstraint.__init__(self)
         if comment:
@@ -960,6 +993,10 @@ class DLINK(OptConstraint):
         self.dependent_desvar = dependent_desvar
         self.c0 = c0
         self.cmult = cmult
+        if isinstance(independent_desvars, integer_types):
+            independent_desvars = [independent_desvars]
+        if isinstance(coeffs, float_types):
+            coeffs = [coeffs] * len(independent_desvars)
         self.independent_desvars = independent_desvars
         self.coeffs = coeffs
 
@@ -3711,36 +3748,6 @@ class DVMREL2(DVXREL2):
         return self.comment + print_card_16(card)
 
 
-def break_word_by_trailing_integer(pname_fid):
-    """
-    Splits a word
-
-    Examples
-    --------
-    >>> break_word_by_trailing_integer('T11')
-    ('T', '11')
-    >>> break_word_by_trailing_integer('THETA11')
-    ('THETA', '11')
-
-    """
-    nums = []
-    i = 0
-    for i, letter in enumerate(reversed(pname_fid)):
-        if letter.isdigit():
-            nums.append(letter)
-        else:
-            break
-
-    num = ''.join(nums[::-1])
-    if not num:
-        msg = ("pname_fid=%r does not follow the form 'T1', 'T11', 'THETA42' "
-               "(letters and a number)" % pname_fid)
-        raise SyntaxError(msg)
-    word = pname_fid[:-i]
-    assert len(word)+len(num) == len(pname_fid), 'word=%r num=%r pname_fid=%r' % (word, num, pname_fid)
-    return word, num
-
-
 class DVPREL1(DVXREL1):
     """
     +---------+--------+--------+--------+-----------+-------+--------+-----+
@@ -4898,8 +4905,14 @@ def get_dvprel_key(dvprel, prop=None):
             msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
 
     elif prop_type == 'PBEAM':
-        if var_to_change in ['A', 'I1', 'I2', 'I1(B)', 'J', 'I2(B)']:
-            pass
+        if isinstance(var_to_change, string_types):
+            if var_to_change in ['A', 'I1', 'I2', 'I1(B)', 'J', 'I2(B)']:
+                pass
+            else:
+                word, num = break_word_by_trailing_parentheses_integer_ab(
+                    var_to_change)
+                var_to_change = '%s(%i)' % (word, num)
+
         elif isinstance(var_to_change, int):  # pragma: no cover
             if var_to_change < 0:
                 # shift to divisible by 16

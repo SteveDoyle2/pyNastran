@@ -155,7 +155,7 @@ class AEROS(Aero):
         self.acsid_ref = model.Coord(self.acsid, msg=msg)
         self.rcsid_ref = model.Coord(self.rcsid, msg=msg)
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, xref_errors):
         """
         Safe cross refernece aerodynamic coordinate system.
 
@@ -166,8 +166,8 @@ class AEROS(Aero):
 
         """
         msg = ', which is required by AEROS'
-        self.acsid_ref = model.Coord(self.acsid, msg=msg)
-        self.rcsid_ref = model.Coord(self.rcsid, msg=msg)
+        self.acsid_ref = model.safe_coord(self.acsid, None, xref_errors, msg=msg)
+        self.rcsid_ref = model.safe_coord(self.rcsid, None, xref_errors, msg=msg)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -463,27 +463,16 @@ class CSSCHD(Aero):
         self.lmach_ref = model.AEFact(self.lmach, msg=msg)
         self.lschd_ref = model.AEFact(self.lschd, msg=msg)
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, xref_errors):
         msg = ', which is required by CSSCHD sid=%s' % self.sid
         try:
             self.aesid_ref = model.AESurf(self.aesid, msg=msg)
         except KeyError:
             pass
 
-        try:
-            self.lalpha_ref = model.AEFact(self.lalpha, msg=msg)
-        except KeyError:
-            pass
-
-        try:
-            self.lmach_ref = model.AEFact(self.lmach, msg=msg)
-        except KeyError:
-            pass
-
-        try:
-            self.lschd_ref = model.AEFact(self.lschd, msg=msg)
-        except KeyError:
-            pass
+        self.lalpha_ref = model.safe_aefact(self.lalpha, self.sid, xref_errors, msg=msg)
+        self.lmach_ref = model.safe_aefact(self.lmach, self.sid, xref_errors, msg=msg)
+        self.lschd_ref = model.safe_aefact(self.lschd, self.sid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.aesid = self.AESid()

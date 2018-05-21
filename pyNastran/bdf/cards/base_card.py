@@ -851,3 +851,52 @@ def expand_thru_exclude(fields):
                 fields_out += sorted_list
             fields_out.append(fields[i])
     return fields_out
+
+def break_word_by_trailing_integer(pname_fid):
+    """
+    Splits a word
+
+    Examples
+    --------
+    >>> break_word_by_trailing_integer('T11')
+    ('T', '11')
+    >>> break_word_by_trailing_integer('THETA11')
+    ('THETA', '11')
+
+    """
+    nums = []
+    i = 0
+    for i, letter in enumerate(reversed(pname_fid)):
+        if letter.isdigit():
+            nums.append(letter)
+        else:
+            break
+
+    num = ''.join(nums[::-1])
+    if not num:
+        msg = ("pname_fid=%r does not follow the form 'T1', 'T11', 'THETA42' "
+               "(letters and a number)" % pname_fid)
+        raise SyntaxError(msg)
+    word = pname_fid[:-i]
+    assert len(word)+len(num) == len(pname_fid), 'word=%r num=%r pname_fid=%r' % (word, num, pname_fid)
+    return word, num
+
+def break_word_by_trailing_parentheses_integer_ab(pname_fid):
+    """
+    Splits a word
+
+    Examples
+    --------
+    >>> break_word_by_trailing_parentheses_integer('A(11)')
+    ('A', '11')
+    >>> break_word_by_trailing_parentheses_integer('NSM(11)')
+    ('NSM', '11')
+    >>> break_word_by_trailing_parentheses_integer('NSM(B)')
+    ('NSM', 'B')
+
+    """
+    assert pname_fid.endswith(')'), pname_fid
+    word, num = pname_fid[:-1].split('(')
+    if num not in ['A', 'B']:
+        num = int(num)
+    return word, num

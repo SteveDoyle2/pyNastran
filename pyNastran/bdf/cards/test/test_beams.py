@@ -1018,6 +1018,70 @@ class TestBeams(unittest.TestCase):
         assert pbeaml2.MassPerLength() == 21.0, pbeaml2.MassPerLength()
         save_load_deck(model)
 
+    def test_pbeam_opt(self):
+        """tests a PBEAM with DVPREL1"""
+        model = BDF(debug=False)
+        pid = 1
+        mid = 1
+        nsm = [1., 1.]
+        xxb = [0., 1.]
+        so = ['YES', 'YES']
+
+        area = [2.0, 2.0]
+        i1 = i2 = j = [0.1, 0.1]
+        i12 = [0.01, 0.01]
+        c1 = c2 = d1 = d2 = e1 = e2 = f1 = f2 = [0., 0.]
+        pbeam = model.add_pbeam(pid, mid, xxb, so, area, i1, i2, i12, j, nsm,
+                               c1, c2, d1, d2,
+                               e1, e2, f1, f2,
+                               k1=1., k2=1.,
+                               s1=0., s2=0.,
+                               nsia=0., nsib=None,
+                               cwa=0., cwb=None,
+                               m1a=0., m2a=None,
+                               m1b=0., m2b=None,
+                               n1a=0., n2a=None,
+                               n1b=0., n2b=None, comment='')
+        pbeam.validate()
+
+        E = 1.0
+        G = None
+        nu = 0.3
+        mat1 = model.add_mat1(mid, E, G, nu)
+        prop_type = 'PBEAM'
+
+        desvar_id = 1
+        xinit = 1.0
+        label = 'VAR1'
+        model.add_desvar(desvar_id, label, xinit, xlb=-1e20, xub=1e20,
+                        delx=None, ddval=None,
+                        comment='')
+        desvar_id = 2
+        label = 'VAR2'
+        model.add_desvar(desvar_id, label, xinit, xlb=-1e20, xub=1e20,
+                        delx=None, ddval=None,
+                        comment='')
+        for i in range(15):
+            oid = i + 1
+            pname_fid = -8 - i
+            if pname_fid in [-11, -12, -13, -22, -23]:
+                continue
+            dvids = desvar_id
+            coeffs = 1.0
+            model.add_dvprel1(oid, prop_type, pid, pname_fid, dvids, coeffs,
+                              p_min=None, p_max=1e20,
+                              c0=0.0, validate=True,
+                              comment='')
+        oid = 20
+        dependent_desvar = 1
+        independent_desvars = 2
+        coeffs = 1.0
+        model.add_dlink(oid, dependent_desvar, independent_desvars, coeffs,
+                       c0=0., cmult=1., comment='')
+        model.cross_reference()
+        model.update_model_by_desvars()
+        save_load_deck(model)
+
     def test_pbcomp(self):
         """tests a PBCOMP"""
         model = BDF(debug=False)

@@ -14,12 +14,11 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
 from pyNastran.utils import integer_types
-from pyNastran.bdf.cards.base_card import Element, BaseCard
+from pyNastran.bdf.cards.base_card import Element, BaseCard, break_word_by_trailing_integer
 from pyNastran.bdf.bdf_interface.assign_type import (
     fields, integer, integer_or_blank, integer_double_or_blank,
     double_or_blank, string)
 from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.bdf.cards.optimization import break_word_by_trailing_integer
 
 
 class CFAST(Element):

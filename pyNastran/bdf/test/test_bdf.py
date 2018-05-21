@@ -1431,7 +1431,7 @@ def _check_case_parameters(subcase, fem2, p0, isubcase, sol,
             msg += 'TABDMP1 = %s\n' % list(fem2.tables_sdamping.keys())
             raise RuntimeError(msg)
         if not(sdamping_id in fem2.tables_sdamping or fem2.tables_d):
-            msg = 'SDAMPING = %s; not in TABDMP1/TABLEDi' % sdamping_id
+            msg = 'SDAMPING = %s; not in TABDMP1/TABLEDi\n' % sdamping_id
             msg += 'TABDMP1 = %s\n' % list(fem2.tables_sdamping.keys())
             msg += 'TABLEDi = %s\n' % list(fem2.tables_d.keys())
             raise RuntimeError(msg)

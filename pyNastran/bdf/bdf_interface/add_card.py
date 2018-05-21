@@ -6089,7 +6089,28 @@ class AddCards(AddMethods):
 
     def add_dlink(self, oid, dependent_desvar,
                   independent_desvars, coeffs, c0=0., cmult=1., comment=''):
-        """Creates a DLINK card"""
+        """
+        Creates a DLINK card, which creates a variable that is a lienar
+        ccombination of other design variables
+
+        Parameters
+        ----------
+        oid : int
+            optimization id
+        dependent_desvar : int
+            the DESVAR to link
+        independent_desvars : List[int]
+            the DESVARs to combine
+        coeffs : List[int]
+            the linear combination coefficients
+        c0 : float; default=0.0
+            an offset
+        cmult : float; default=1.0
+            an scale factor
+        comment : str; default=''
+            a comment for the card
+
+        """
         dlink = DLINK(oid, dependent_desvar,
                       independent_desvars, coeffs, c0=c0, cmult=cmult, comment=comment)
         self._add_dlink_object(dlink)

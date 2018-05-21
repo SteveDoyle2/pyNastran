@@ -179,19 +179,23 @@ class CBEAM(CBAR):
         if msg:
             raise ValueError(msg)
 
-        if isinstance(self.offt, integer_types):
-            assert self.offt in [1, 2, 21, 22, 41], 'invalid offt; offt=%i' % self.offt
-            raise NotImplementedError('invalid offt; offt=%i' % self.offt)
-        elif not isinstance(self.offt, string_types):
-            raise SyntaxError('invalid offt expected a string of length 3 '
-                              'offt=%r; Type=%s' % (self.offt, type(self.offt)))
-
+        if self.g0 is not None:
+            assert isinstance(self.g0, integer_types), 'g0=%s must be an integer' % self.g0
         if self.g0 in [self.ga, self.gb]:
             msg = 'G0=%s cannot be GA=%s or GB=%s' % (self.g0, self.ga, self.gb)
             raise RuntimeError(msg)
 
-        msg = 'invalid offt parameter of %s...offt=%s' % (self.type, self.offt)
+        if self.bit is None and self.offt is None:
+            msg = 'OFFT/BIT must not be None; offt=%r bit=%s' % (self.offt, self.bit)
+            raise RuntimeError(msg)
+
         if self.offt is not None:
+            if isinstance(self.offt, integer_types):
+                assert self.offt in [1, 2, 21, 22, 41], 'invalid offt; offt=%i' % self.offt
+                raise NotImplementedError('invalid offt; offt=%i' % self.offt)
+            elif not isinstance(self.offt, string_types):
+                raise SyntaxError('invalid offt expected a string of length 3 '
+                                  'offt=%r; Type=%s' % (self.offt, type(self.offt)))
             self.check_offt()
 
     @classmethod
@@ -323,16 +327,6 @@ class CBEAM(CBAR):
         wb = np.array([main[11], main[12], main[13]], 'float64')
         return CBEAM(eid, pid, [ga, gb], x, g0, offt, bit,
                      pa=pa, pb=pb, wa=wa, wb=wb, sa=sa, sb=sb, comment=comment)
-
-    def validate(self):
-        if self.g0 is not None:
-            assert isinstance(self.g0, integer_types), 'g0=%s must be an integer' % self.g0
-        if self.g0 in [self.ga, self.gb]:
-            msg = 'G0=%s cannot be GA=%s or GB=%s' % (self.g0, self.ga, self.gb)
-            raise RuntimeError(msg)
-        if self.bit is None and self.offt is None:
-            msg = 'OFFT/BIT must not be None; offt=%r bit=%s' % (self.offt, self.bit)
-            raise RuntimeError(msg)
 
     def Nodes(self):
         return [self.ga, self.gb]

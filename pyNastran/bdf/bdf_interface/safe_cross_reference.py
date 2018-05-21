@@ -125,17 +125,23 @@ class SafeXrefMesh(XrefMesh):
             caero.safe_cross_reference(self, xref_errors)
         self._show_safe_xref_errors('caeros', xref_errors)
 
+        xref_errors = defaultdict(list)
         for paero in itervalues(self.paeros):
-            paero.safe_cross_reference(self)
+            paero.safe_cross_reference(self, xref_errors)
+        self._show_safe_xref_errors('paeros', xref_errors)
 
         for trim in itervalues(self.trims):
             trim.safe_cross_reference(self)
 
+        xref_errors = defaultdict(list)
         for csschd in itervalues(self.csschds):
-            csschd.safe_cross_reference(self)
+            csschd.safe_cross_reference(self, xref_errors)
+        self._show_safe_xref_errors('csschds', xref_errors)
 
+        xref_errors = defaultdict(list)
         for spline in itervalues(self.splines):
-            spline.safe_cross_reference(self)
+            spline.safe_cross_reference(self, xref_errors)
+        self._show_safe_xref_errors('splines', xref_errors)
 
         for aecomp in itervalues(self.aecomps):
             aecomp.safe_cross_reference(self)
@@ -149,8 +155,10 @@ class SafeXrefMesh(XrefMesh):
         #for aestat in itervalues(self.aestats):
             #aestat.safe_cross_reference(self)
 
+        xref_errors = defaultdict(list)
         for aesurf in itervalues(self.aesurf):
-            aesurf.safe_cross_reference(self)
+            aesurf.safe_cross_reference(self, xref_errors)
+        self._show_safe_xref_errors('caeros', xref_errors)
 
         for aesurfs in itervalues(self.aesurfs):
             aesurfs.safe_cross_reference(self)
@@ -158,13 +166,19 @@ class SafeXrefMesh(XrefMesh):
         for flutter in itervalues(self.flutters):
             flutter.safe_cross_reference(self)
 
+        xref_errors = defaultdict(list)
         for monitor_point in self.monitor_points:
-            monitor_point.safe_cross_reference(self)
+            monitor_point.safe_cross_reference(self, xref_errors)
+        self._show_safe_xref_errors('monitor_points', xref_errors)
 
         if self.aero:
-            self.aero.safe_cross_reference(self)
+            xref_errors = defaultdict(list)
+            self.aero.safe_cross_reference(self, xref_errors)
+            self._show_safe_xref_errors('aero', xref_errors)
         if self.aeros:
-            self.aeros.safe_cross_reference(self)
+            xref_errors = defaultdict(list)
+            self.aeros.safe_cross_reference(self, xref_errors)
+            self._show_safe_xref_errors('aeros', xref_errors)
 
         if 0:  # only support CAERO1
             ncaeros = len(self.caeros)
