@@ -1719,3 +1719,86 @@ class USET1(ABQSet1):
     def __repr__(self):
         list_fields = self.raw_fields()
         return self.comment + print_card_8(list_fields)
+
+class RADSET(ABQSet1):
+    """
+    Defines a degree-of-freedom set.
+
+    +--------+----------+----------+----------+----------+----------+----------+----------+----------+
+    |    1   |     2    |     3    |     4    |     5    |     6    |     7    |     8    |     9    |
+    +========+==========+==========+==========+==========+==========+==========+==========+==========+
+    | RADSET | ICAVITY1 | ICAVITY2 | ICAVITY3 | ICAVITY4 | ICAVITY5 | ICAVITY6 | ICAVITY7 | ICAVITY8 |
+    +--------+----------+----------+----------+----------+----------+----------+----------+----------+
+    |        | ICAVITY9 |          |          |          |          |          |          |          |
+    +--------+----------+----------+----------+----------+----------+----------+----------+----------+
+    | RADSET |     1    |     2    |     3    |     4    |          |          |          |          |
+    +--------+----------+----------+----------+----------+----------+----------+----------+----------+
+    """
+    type = 'RADSET'
+
+    def __init__(self, cavities, comment=''):
+        """
+        Creates a RADSET card
+
+        Parameters
+        ----------
+        cavities : List[int]
+            the RADCAV ids
+        comment : str; default=''
+            a comment for the card
+        """
+        if comment:
+            self.comment = comment
+        self.cavities = cavities
+
+        #:  Identifiers of grids points. (Integer > 0)
+        #self.ids = expand_thru(ids)
+        #self.ids_ref = None
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a USET1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        nfields = len(card)
+        cavities = []
+        i = 1
+        for ifield in range(1, nfields):
+            cavity = integer(card, ifield, 'iCavity%i' % i)
+            if cavity:
+                i += 1
+                cavities.append(cavity)
+        return RADSET(cavities, comment=comment)
+
+    #def cross_reference(self, model):
+        #"""
+        #Cross links the card so referenced cards can be extracted directly
+
+        #Parameters
+        #----------
+        #model : BDF()
+            #the BDF object
+        #"""
+        #msg = ', which is required by USET1 name=%s' % (self.name)
+        #self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
+
+    #def uncross_reference(self):
+        #self.ids = self.node_ids
+        #self.ids_ref = None
+
+    def raw_fields(self):
+        """gets the "raw" card without any processing as a list for printing"""
+        list_fields = ['RADSET'] + self.cavities # collapse_thru(self.node_ids)
+        return list_fields
+
+    def __repr__(self):
+        list_fields = self.raw_fields()
+        return self.comment + print_card_8(list_fields)

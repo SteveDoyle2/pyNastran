@@ -366,27 +366,30 @@ def cmd_line_merge():  # pragma: no cover
               encoding=None, size=size, is_double=False, cards_to_skip=cards_to_skip)
 
 
-def cmd_line_export_mcid():  # pragma: no cover
+def cmd_line_export_mcids():  # pragma: no cover
     """command line interface to export_mcids"""
     from docopt import docopt
     import pyNastran
     msg = (
         'Usage:\n'
-        '  bdf export_mcids IN_BDF_FILENAME [-o OUT_CSV_FILENAME] [--no_x] [--no_y]\n'
+        '  bdf export_mcids IN_BDF_FILENAME [-o OUT_CSV_FILENAME] [--iplies PLIES] [--no_x] [--no_y]\n'
         '  bdf export_mcids -h | --help\n'
         '  bdf export_mcids -v | --version\n'
         '\n'
 
-        "Positional Arguments:\n"
-        "  IN_BDF_FILENAME    path to input BDF/DAT/NAS file\n"
+        'Positional Arguments:\n'
+        '  IN_BDF_FILENAME    path to input BDF/DAT/NAS file\n'
         '\n'
 
         'Options:\n'
-        "  -o OUT, --output  OUT_CSV_FILENAME  path to output CSV file\n\n"
+        '  -o OUT, --output  OUT_CSV_FILENAME  path to output CSV file\n'
+        '  --iplies PLIES                      the plies to export; comma separated (default=0)\n'
+        '\n'
 
         'Data Suppression:\n'
         "  --no_x,  don't write the x axis\n"
         "  --no_y,  don't write the y axis\n"
+        '\n'
 
         'Info:\n'
         '  -h, --help      show this help message and exit\n'
@@ -403,9 +406,9 @@ def cmd_line_export_mcid():  # pragma: no cover
     print(data)
     size = 16
     bdf_filename = data['IN_BDF_FILENAME']
-    csv_filename = data['--output']
-    if csv_filename is None:
-        csv_filename = 'mcids.csv'
+    csv_filename_in = data['--output']
+    if csv_filename_in is None:
+        csv_filename_in = 'mcids.csv'
 
     export_xaxis = True
     export_yaxis = True
@@ -413,8 +416,23 @@ def cmd_line_export_mcid():  # pragma: no cover
         export_xaxis = False
     if data['--no_y']:
         export_yaxis = False
-    export_mcids(bdf_filename, csv_filename,
-                 export_xaxis=export_xaxis, export_yaxis=export_yaxis)
+    csv_filename_base = os.path.splitext(csv_filename_in)[0]
+    iplies = [0]
+    if data['--iplies']:
+        iplies = data['--iplies'].split(',')
+        iplies = [int(iply) for iply in iplies]
+        print('iplies = %s' % iplies)
+
+    from pyNastran.bdf.bdf import read_bdf
+    model = read_bdf(bdf_filename, xref=False) #, log=log, debug=debug)
+    model.safe_cross_reference()
+
+    for iply in iplies:
+        csv_filename = csv_filename_base + '_ply=%i.csv' % iply
+        export_mcids(model, csv_filename,
+                     export_xaxis=export_xaxis, export_yaxis=export_yaxis, iply=iply)
+        model.log.info('wrote %s' % csv_filename)
+
 
 def cmd_line_split_cbars_by_pin_flag():  # pragma: no cover
     """command line interface to split_cbars_by_pin_flag"""
@@ -745,7 +763,7 @@ def cmd_line():  # pragma: no cover
     elif sys.argv[1] == 'mirror':
         cmd_line_mirror()
     elif sys.argv[1] == 'export_mcids':
-        cmd_line_export_mcid()
+        cmd_line_export_mcids()
     elif sys.argv[1] == 'split_cbars_by_pin_flags':
         cmd_line_split_cbars_by_pin_flag()
     elif sys.argv[1] == 'export_caero_mesh':

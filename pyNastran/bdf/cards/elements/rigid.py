@@ -17,6 +17,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from itertools import count
 from six import string_types
 from six.moves import zip, range
+import numpy as np
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
@@ -825,6 +826,8 @@ class RBE2(RigidElement):
         #: degrees-of-freedom are assigned. (Integer > 0)
         if isinstance(Gmi, integer_types):
             Gmi = [Gmi]
+        elif isinstance(Gmi, np.ndarray):
+            Gmi = Gmi.tolist()
         self.Gmi = Gmi
         #self.nodes_ref = None
         self.Gmi_ref = None
@@ -1015,7 +1018,10 @@ class RBE2(RigidElement):
         if self.Gmi_ref is None or len(self.Gmi) == 0:
             return self.Gmi
         assert self.Gmi_ref is not None, self.Gmi
-        return self._node_ids(nodes=self.Gmi_ref, allow_empty_nodes=True)
+
+        # this lets us remove duplicate nodes when we xref
+        non_unique_gmi_node_ids = self._node_ids(nodes=self.Gmi_ref, allow_empty_nodes=True)
+        return np.unique(non_unique_gmi_node_ids).tolist()
 
     @property
     def independent_nodes(self):

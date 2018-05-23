@@ -104,14 +104,16 @@ from pyNastran.bdf.cards.bdf_sets import (
     SET1, SET3, #RADSET,
     SEBSET, SECSET, SEQSET, # SEUSET
     SEBSET1, SECSET1, SEQSET1, # SEUSET1
-    SESET, #SEQSEP
+    SESET, #SEQSEP,
+    RADSET,
 )
 from pyNastran.bdf.cards.params import PARAM
 from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL, DTI
 from pyNastran.bdf.cards.thermal.loads import (QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD,
                                                QVOL, QVECT)
 from pyNastran.bdf.cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
-                                                 PHBDY, CONV, CONVM, RADM, RADBC, VIEW, VIEW3D)
+                                                 PHBDY, CONV, CONVM)
+from pyNastran.bdf.cards.thermal.radiation import RADM, RADBC, RADCAV, VIEW, VIEW3D
 from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
                                             TABLEM1, TABLEM2, TABLEM3, TABLEM4,
                                             TABLES1, TABDMP1, TABLEST, TABRND1, TABRNDG,

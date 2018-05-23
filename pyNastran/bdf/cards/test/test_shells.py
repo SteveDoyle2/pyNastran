@@ -1146,6 +1146,55 @@ class TestShells(unittest.TestCase):
         model.pop_xref_errors()
         save_load_deck(model)
 
+    def test_shell_mcid(self):
+        """tests that mcids=0 are correctly identified as not 0.0 and thus not dropped"""
+        model = BDF()
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [0., 1., 0.])
+        model.add_grid(3, [0., 1., 1.])
+        model.add_grid(4, [0., 0., 1.])
+
+        eid = 10
+        pid = 100
+        mid = 1000
+        model.add_ctria3(eid, pid, [1, 2, 3], zoffset=0., theta_mcid=0, tflag=0,
+                        T1=None, T2=None, T3=None,
+                        comment='')
+
+        eid = 11
+        model.add_cquad4(eid, pid, [1, 2,3, 4], theta_mcid=0, zoffset=0., tflag=0,
+                         T1=None, T2=None, T3=None, T4=None, comment='')
+
+        model.add_pshell(pid, mid1=mid, t=0.1, mid2=mid, twelveIt3=1.0,
+                        mid3=None, tst=0.833333,
+                        nsm=0.0, z1=None, z2=None,
+                        mid4=None, comment='')
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu)
+        print(model.elements[11])
+        assert model.elements[10].rstrip() == 'CTRIA3        10     100       1       2       3       0'
+        assert model.elements[11].rstrip() == 'CQUAD4        11     100       1       2       3       4       0'
+        assert model.elements[10].write_card().rstrip() == 'CTRIA3        10     100       1       2       3       0'
+
+        model.cross_reference()
+        assert model.elements[10].rstrip() == 'CTRIA3        10     100       1       2       3       0'
+        assert model.elements[11].rstrip() == 'CQUAD4        11     100       1       2       3       4       0'
+
+        model.uncross_reference()
+        assert model.elements[10].rstrip() == 'CTRIA3        10     100       1       2       3       0'
+        assert model.elements[11].rstrip() == 'CQUAD4        11     100       1       2       3       4       0'
+        model.safe_cross_reference()
+        model.uncross_reference()
+        assert model.elements[10].rstrip() == 'CTRIA3        10     100       1       2       3       0'
+        assert model.elements[11].rstrip() == 'CQUAD4        11     100       1       2       3       4       0'
+
+        model2 = save_load_deck(model)
+        model2.elements[10].comment = ''
+        assert model2.elements[10].rstrip() == 'CTRIA3        10     100       1       2       3       0'
+        assert model2.elements[11].rstrip() == 'CQUAD4        11     100       1       2       3       4       0'
+
 def make_dvcrel_optimization(model, params, element_type, eid, i=1):
     j = i
     for ii, (name, desvar_value) in enumerate(params):

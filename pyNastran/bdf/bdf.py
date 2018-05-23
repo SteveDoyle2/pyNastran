@@ -122,13 +122,15 @@ from pyNastran.bdf.cards.bdf_sets import (
     SEBSET, SECSET, SEQSET, # SEUSET
     SEBSET1, SECSET1, SEQSET1, # SEUSET1
     SESET, #SEQSEP
+    RADSET,
 )
 from pyNastran.bdf.cards.params import PARAM
 from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL, DTI
 from pyNastran.bdf.cards.thermal.loads import (QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD,
                                                QVOL, QVECT)
 from pyNastran.bdf.cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
-                                                 PHBDY, CONV, CONVM, RADM, RADBC, VIEW, VIEW3D)
+                                                 PHBDY, CONV, CONVM)
+from pyNastran.bdf.cards.thermal.radiation import RADM, RADBC, RADCAV, VIEW, VIEW3D
 from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
                                             TABLEM1, TABLEM2, TABLEM3, TABLEM4,
                                             TABLES1, TABDMP1, TABLEST, TABRND1, TABRNDG,
@@ -512,6 +514,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             'RADBC', 'CONV',
             'RADM', 'VIEW', 'VIEW3D', # TODO: not validated
 
+
+            'RADCAV', ## radcavs
+
             # ---- dynamic cards ---- #
             'DAREA',  ## dareas
             'DPHASE',  ## dphases
@@ -548,6 +553,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             'CSET', 'CSET1',  ## csets
             'QSET', 'QSET1',  ## qsets
             'USET', 'USET1',  ## usets
+
+            'RADSET',  # radset
 
             # super-element sets
             'SESET',  ## se_sets
@@ -2201,6 +2208,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             'BSURF' : (BSURF, self._add_bsurf_object),
             'BSURFS' : (BSURFS, self._add_bsurfs_object),
 
+            'RADCAV' : (RADCAV, self._add_radcav_object),
+
             'ASET' : (ASET, self._add_aset_object),
             'ASET1' : (ASET1, self._add_aset_object),
 
@@ -2218,6 +2227,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
             'SET1' : (SET1, self._add_set_object),
             'SET3' : (SET3, self._add_set_object),
+
+            # radset
+            'RADSET' : (RADSET, self._add_radset_object),
 
             'SESET' : (SESET, self._add_seset_object),
 
@@ -3073,6 +3085,11 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         if self.mkaeros:
             msg.append('bdf:mkaeros')
             msg.append('  %-8s %s' % ('MKAERO:', len(self.mkaeros)))
+
+        # radset
+        if self.radset:
+            msg.append('bdf:radset')
+            msg.append('  %-8s %s' % ('RADSET:', 1))
 
         for card_group_name in card_dict_groups:
             try:

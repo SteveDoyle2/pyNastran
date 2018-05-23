@@ -1914,6 +1914,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #print('icase_fringe=%r icase_fringe0=%r' % (icase_fringe, icase_fringe0))
         arrow_scale = None # self.glyph_scale_factor * scale
         icase_vector = None
+        is_legend_shown = self.scalar_bar.is_shown
         if icase_disp != icase_disp0:
             # apply the fringe
             #
@@ -1925,6 +1926,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if icase_fringe is not None and icase_fringe != icase_fringe0:
             is_valid = self.on_fringe(icase_fringe,
                                       update_legend_window=False, show_msg=False)
+            if is_legend_shown:
+                # TODO: sort of a hack for the animatation
+                # the fringe always shows the legend, but we may not want that
+                # just use whatever is active
+                self.show_legend()
+
             if not is_valid:
                 self.log_error('Invalid Fringe Case %i' % icase_fringe)
                 return False

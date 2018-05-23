@@ -166,9 +166,8 @@ def run_docopt():
     user_points = data['--user_points']
     user_geom = data['--user_geom']
 
-    if '--qt' in data:
-        qt = data['--qt']
-        qt = qt.lower()
+    if data['--qt'] is not None:
+        qt = data['--qt'].lower()
         assert qt in ['pyside', 'pyqt4', 'pyqt5'], 'qt=%r' % qt
         os.environ.setdefault('QT_API', qt)
 

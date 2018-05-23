@@ -14,7 +14,7 @@ from pyNastran.bdf.cards.dynamic import NLPARM, TSTEPNL # TSTEP
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 #from pyNastran.bdf.cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
                                                  #PHBDY, CONV, CONVM, RADBC)
-from pyNastran.bdf.cards.thermal.thermal import RADM
+from pyNastran.bdf.cards.thermal.radiation import RADM
 
 
 class MPT(GeomCommon):

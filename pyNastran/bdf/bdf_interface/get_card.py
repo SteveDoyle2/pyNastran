@@ -1214,7 +1214,7 @@ class GetCard(GetMethods):
             'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4',
             'GRAV', 'ACCEL', 'ACCEL1', 'GMLOAD',
             'ACSRCE', 'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',
-            'RFORCE', 'RFORCE1',
+            'RFORCE', 'RFORCE1', 'SPCD',
         ]
         for load, scale in zip(loads, scale_factors):
             assert scale == 1.0, str(load)
@@ -1226,7 +1226,7 @@ class GetCard(GetMethods):
             elif load.type in skip_loads:
                 pass
             else:
-                self.log.debug(load)
+                self.log.debug(load.rstrip())
         return is_temperatures, temperatures
 
     def _get_rigid(self):

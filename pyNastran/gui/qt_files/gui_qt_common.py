@@ -414,7 +414,7 @@ class GuiCommon(GuiAttributes):
         # TODO: normal -> fringe screws up legend
         #print('is_legend_shown = ', is_legend_shown)
         if not is_legend_shown:
-            #print('shownig')
+            #print('showing')
             self.show_legend()
 
         self.update_scalar_bar(result_type, min_value, max_value, norm_value,

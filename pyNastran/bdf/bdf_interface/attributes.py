@@ -537,6 +537,8 @@ class BDFAttributes(object):
         self.views = {}
         #: stores VIEW3D
         self.view3ds = {}
+        self.radset = None
+        self.radcavs = {}
 
         # -------------------------contact cards-------------------------------
         self.bcrparas = {}  # type: Dict[int, Any]
@@ -756,6 +758,8 @@ class BDFAttributes(object):
             'se_qsets' : ['SEQSET', 'SEQSET1'],
             'se_usets' : ['SEUSET', 'SEQSET1'],
             'se_sets' : ['SESET'],
+            'radset' : ['RADSET'],
+            'radcavs' : ['RADCAV'],
             # SEBSEP
 
             'tables' : [

@@ -1058,14 +1058,15 @@ class WriteMesh(BDFAttributes):
         # type: (Any, int, bool) -> None
         """Writes the thermal cards"""
         # PHBDY
-        if self.phbdys or self.convection_properties or self.bcs or self.views or self.view3ds:
-            # self.thermalProperties or
+        is_thermal = (self.phbdys or self.convection_properties or self.bcs or
+                      self.views or self.view3ds or self.radset or self.radcavs)
+        if is_thermal:
             bdf_file.write('$THERMAL\n')
 
             for (unused_key, phbdy) in sorted(iteritems(self.phbdys)):
                 bdf_file.write(phbdy.write_card(size, is_double))
 
-            #for unused_key, prop in sorted(iteritems(self.thermalProperties)):
+            #for unused_key, prop in sorted(iteritems(self.thermal_properties)):
             #    bdf_file.write(str(prop))
             for (unused_key, prop) in sorted(iteritems(self.convection_properties)):
                 bdf_file.write(prop.write_card(size, is_double))
@@ -1079,6 +1080,11 @@ class WriteMesh(BDFAttributes):
                 bdf_file.write(view.write_card(size, is_double))
             for (unused_key, view3d) in sorted(iteritems(self.view3ds)):
                 bdf_file.write(view3d.write_card(size, is_double))
+            if self.radset:
+                bdf_file.write(self.radset.write_card(size, is_double))
+            for unused_icavity, radcav in iteritems(self.radcavs):
+                bdf_file.write(radcav.write_card(size, is_double))
+
 
     def _write_thermal_materials(self, bdf_file, size=8, is_double=False):
         # type: (Any, int, bool) -> None

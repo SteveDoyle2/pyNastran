@@ -277,7 +277,7 @@ class AddMethods(BDFAttributes):
         """adds an PMASS object"""
         key = prop.pid
         if key in self.properties_mass and not allow_overwrites:
-            if not prop ==self.properties_mass[key]:
+            if not prop == self.properties_mass[key]:
                 #print('pid=%s\noldProperty=\n%snewProperty=\n%s' %(key,self.properties_mass[key],prop))
                 assert key not in self.properties_mass, 'pid=%s oldProperty=\n%snewProperty=\n%s' % (key, self.properties_mass[key], prop)
         else:
@@ -330,6 +330,17 @@ class AddMethods(BDFAttributes):
         key = card.id
         self.bsurfs[key] = card
         self._type_to_id_map[card.type].append(key)
+
+    def _add_radcav_object(self, radcav, allow_overwrites=False):
+        """adds an RADCAV object"""
+        key = radcav.icavity
+        if key in self.radcavs and not allow_overwrites:
+            if not radcav == self.radcavs[key]:
+                assert key not in self.radcavs, 'pid=%s old RADCAV=\n%snew RADCAV=\n%s' % (key, self.radcavs[key], radcav)
+        else:
+            assert key > 0, 'pid=%s radcav=%s' % (key, radcav)
+            self.radcavs[key] = radcav
+            self._type_to_id_map[radcav.type].append(key)
 
     def _add_tempd_object(self, tempd, allow_overwrites=False):
         """adds an TEMPD object"""
@@ -1135,6 +1146,14 @@ class AddMethods(BDFAttributes):
         else:
             self.sets[key] = set_obj
             self._type_to_id_map[set_obj.type].append(key)
+
+    def _add_radset_object(self, set_obj):
+        """adds an RADSET object"""
+        if self.radset:
+            self.radset.add_set(set_obj)
+        else:
+            self.radset = set_obj
+            #self._type_to_id_map[set_obj.type].append(key)
 
     def _add_aset_object(self, set_obj):
         """adds an ASET/ASET1 object"""

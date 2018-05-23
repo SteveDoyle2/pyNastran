@@ -55,6 +55,9 @@ def find_closest_nodes(nodes_xyz, nids, xyz_compare, neq_max=1, tol=None, msg=''
     try:
         nids_out = nids[ieq]
     except IndexError:
+        # if you get a crash while trying to create the error message
+        # check to see if your nodes are really far from each other
+        #
         nnids = len(nids)
         msgi = 'Cannot find:\n'
         for i, ieqi, nid in zip(count(), ieq, nids):

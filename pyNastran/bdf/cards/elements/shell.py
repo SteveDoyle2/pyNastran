@@ -134,6 +134,18 @@ class ShellElement(Element):
             return self.theta_mcid
         return self.theta_mcid_ref.cid
 
+    def _get_theta_mcid_repr(self):
+        # : () -> str
+        """
+        set_blank_if_default doesn't distinguish between 0 and 0.0,
+        so we fix it
+
+        """
+        theta_mcid = self.Theta_mcid()
+        if isinstance(theta_mcid, float):
+            theta_mcid = set_blank_if_default(theta_mcid, 0.0)
+        return theta_mcid
+
     def Thickness(self):
         # () -> float
         """
@@ -659,8 +671,7 @@ class CTRIA3(TriShell):
     def _get_repr_defaults(self):
         zoffset = set_blank_if_default(self.zoffset, 0.0)
         tflag = set_blank_if_default(self.tflag, 0)
-        theta_mcid = set_blank_if_default(self.Theta_mcid(), 0.0)
-
+        theta_mcid = self._get_theta_mcid_repr()
         T1 = set_blank_if_default(self.T1, 1.0)
         T2 = set_blank_if_default(self.T2, 1.0)
         T3 = set_blank_if_default(self.T3, 1.0)
@@ -686,7 +697,7 @@ class CTRIA3(TriShell):
     def write_card(self, size=8, is_double=False):
         zoffset = set_blank_if_default(self.zoffset, 0.0)
         tflag = set_blank_if_default(self.tflag, 0)
-        theta_mcid = set_blank_if_default(self.Theta_mcid(), 0.0)
+        theta_mcid = self._get_theta_mcid_repr()
 
         T1 = set_blank_if_default(self.T1, 1.0)
         T2 = set_blank_if_default(self.T2, 1.0)
@@ -1136,7 +1147,7 @@ class CTRIA6(TriShell):
         zoffset = set_blank_if_default(self.zoffset, 0.0)
         assert isinstance(self.tflag, integer_types), self.tflag
         tflag = set_blank_if_default(self.tflag, 0)
-        theta_mcid = set_blank_if_default(self.Theta_mcid(), 0.0)
+        theta_mcid = self._get_theta_mcid_repr()
 
         T1 = set_blank_if_default(self.T1, 1.0)
         T2 = set_blank_if_default(self.T2, 1.0)
@@ -1357,7 +1368,7 @@ class CTRIAR(TriShell):
     def _get_repr_defaults(self):
         zoffset = set_blank_if_default(self.zoffset, 0.0)
         tflag = set_blank_if_default(self.tflag, 0)
-        theta_mcid = set_blank_if_default(self.Theta_mcid(), 0.0)
+        theta_mcid = self._get_theta_mcid_repr()
 
         T1 = set_blank_if_default(self.T1, 1.0)
         T2 = set_blank_if_default(self.T2, 1.0)
@@ -1565,8 +1576,8 @@ class QuadShell(ShellElement):
     def _get_repr_defaults(self):
         zoffset = set_blank_if_default(self.zoffset, 0.0)
         tflag = set_blank_if_default(self.tflag, 0)
-        theta_mcid = set_blank_if_default(self.Theta_mcid(), 0.0)
 
+        theta_mcid = self._get_theta_mcid_repr()
         T1 = set_blank_if_default(self.T1, 1.0)
         T2 = set_blank_if_default(self.T2, 1.0)
         T3 = set_blank_if_default(self.T3, 1.0)
@@ -2450,7 +2461,7 @@ class CQUAD4(QuadShell):
             msg = ('CQUAD4  %8i%8i%8i%8i%8i%8i\n' % tuple(data))
             return self.comment + msg
         else:
-            theta_mcid = set_blank_if_default(self.Theta_mcid(), 0.0)
+            theta_mcid = self._get_theta_mcid_repr()
             zoffset = set_blank_if_default(self.zoffset, 0.0)
             tflag = set_blank_if_default(self.tflag, 0)
             T1 = set_blank_if_default(self.T1, 1.0)
