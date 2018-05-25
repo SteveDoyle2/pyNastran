@@ -211,8 +211,8 @@ def validate_dvprel(prop_type, pname_fid, validate):
             #-168, -169, -170, -174, -175, -176, -177, -178, -179,
             #-180, -181,
         ]
-        if pname_fid < 0:
-            pname_fid = update_pbeam_negative_integer(None, pname_fid)
+        if isinstance(pname_fid, integer_types) and pname_fid < 0:
+            pname_fid = update_pbeam_negative_integer(pname_fid)
 
         if isinstance(pname_fid, string_types):
             word, num = break_word_by_trailing_parentheses_integer_ab(

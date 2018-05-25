@@ -16,7 +16,7 @@ from itertools import count
 from six import string_types
 from six.moves import zip, range
 import numpy as np
-from numpy import array, unique, argsort, mean, allclose, ndarray
+from numpy import array, unique, argsort, allclose, ndarray
 
 from pyNastran.bdf.utils import to_fields
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
@@ -30,7 +30,7 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.cards.base_card import (
     break_word_by_trailing_parentheses_integer_ab, break_word_by_trailing_integer)
-from pyNastran.utils import float_types
+from pyNastran.utils import integer_types, float_types
 
 class PBEAM(IntegratedLineProperty):
     """
@@ -66,13 +66,16 @@ class PBEAM(IntegratedLineProperty):
         #'I1(B)',
     #}
     def update_by_pname_fid(self, pname_fid, value):
-        if isinstance(pname_fid, int):
+        if isinstance(pname_fid, integer_types):
             if pname_fid < 0:
-                pname_fid = update_pbeam_negative_integer(self, pname_fid)
+                # convert fid to pname
+                pname_fid = update_pbeam_negative_integer(pname_fid)
+
+                # call this function again to update pname
                 self.update_by_pname_fid(pname_fid, value)
             else:
-                raise NotImplementedError('property_type=%r has not implemented %r in pname_map' % (
-                    self.type, pname_fid))
+                msg = "property_type='PBEAM' has not implemented %r in pname_map" % pname_fid
+                raise NotImplementedError(msg)
 
         #elif pname_fid.startswith('DIM'):
             #word, num = break_word_by_trailing_integer(pname_fid)
@@ -141,15 +144,17 @@ class PBEAM(IntegratedLineProperty):
                 self.f2[i] = value
                 word = 'F2'
             else:
-                raise NotImplementedError('property_type=%r has not implemented %r in pname_map; word=%r' % (
-                    self.type, pname_fid, word))
+                msg = "property_type='PBEAM' has not implemented %r in pname_map; word=%r" % (
+                    pname_fid, word)
+                raise NotImplementedError(msg)
 
             expected_word = word + end
             if pname_fid != expected_word:
                 raise RuntimeError('%r is invalid' % expected_word)
         else:
-            raise NotImplementedError('property_type=%r has not implemented %r in pname_map; type=%s' % (
-                self.type, pname_fid, type(pname_fid)))
+            msg = "property_type='PBEAM' has not implemented %r in pname_map; type=%s" % (
+                pname_fid, type(pname_fid))
+            raise NotImplementedError(msg)
 
     def __init__(self, pid, mid, xxb, so, area, i1, i2, i12, j, nsm=None,
                  c1=None, c2=None, d1=None, d2=None,
@@ -1038,12 +1043,28 @@ class PBEAM(IntegratedLineProperty):
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
-def update_pbeam_negative_integer(prop, pname_fid):
-    """converts the negative PBEAM value to a positive one"""
+def update_pbeam_negative_integer(pname_fid):
+    """
+    Converts the negative PBEAM value to a positive one
+
+    Parameters
+    ----------
+    pname_fid : int
+        for a PBEAM this should be between [-5, -167]
+        the negative values correspond to the numbers in the MPT OP2 table
+
+    Returns
+    -------
+    pname_fid : str
+        a pname is of 'J(3)' is far more clear than -37
+
+    TODO: only handles istation=0 for now (e.g., 'J(1)')
+    """
     # shift to divisible by 16
     if not (-167 <= pname_fid <= -6):
-        raise NotImplementedError('A-property_type=%r has not implemented %r in pname_map' % (
-            prop.type, pname_fid))
+        msg = "A-property_type='PBEAM' has not implemented %r in pname_map" % (
+            pname_fid)
+        raise NotImplementedError(msg)
     ioffset = -pname_fid - 6
     istation = ioffset // 16
     iterm = ioffset % 16
@@ -1084,8 +1105,9 @@ def update_pbeam_negative_integer(prop, pname_fid):
         word = 'F2'
     else:
         print('istation=%s iterm=%s' % (istation, iterm))
-        raise NotImplementedError('property_type=%r has not implemented %r (istation=%r, iterm=%r) in pname_map' % (
-            prop.type, pname_fid, istation, iterm))
+        msg = "property_type='PBEAM' has not implemented %r (istation=%r, iterm=%r) in pname_map" % (
+            pname_fid, istation, iterm)
+        raise NotImplementedError(msg)
     word = '%s(%i)' % (word, istation + 1)
     return word
 

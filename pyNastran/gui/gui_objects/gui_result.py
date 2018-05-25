@@ -16,6 +16,8 @@ INT_TYPES = ['<i4', '<i8', '|i1',
 class GuiResultCommon(object):
     def __init__(self):
         self.class_name = self.__class__.__name__
+        self.is_real = False
+        self.is_complex = False
 
     #def get_data_type(self, i, name):
         #raise NotImplementedError(self.class_name)
@@ -259,6 +261,8 @@ class GuiResult(GuiResultCommon):
                  mask_value=None, nlabels=None, labelsize=None, ncolors=None, colormap='jet',
                  data_format=None, uname='GuiResult'):
         """
+        Parameters
+        ----------
         subcase_id : int
             the flag that points to self.subcases for a message
         header : str
