@@ -578,7 +578,7 @@ class CHEXA20(SolidElement):
             the BDF object
         """
         msg = ', which is required by CHEXA eid=%s' % self.eid
-        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+        self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     @property
@@ -1262,7 +1262,7 @@ class CPENTA15(SolidElement):
             the BDF object
         """
         msg = ', which is required by CPENTA eid=%s' % self.eid
-        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+        self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     @property

@@ -738,8 +738,12 @@ class SPCD(Load):
 
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
-        return self.comment + print_card_8(card)
-
+        assert size == 16
+        if size == 8:
+            return self.comment + print_card_8(card)
+        elif is_double:
+            return self.comment + print_card_double(card)
+        return self.comment + print_card_16(card)
 
 class DEFORM(Load):
     """
@@ -1127,7 +1131,7 @@ class RFORCE(Load):
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
-        if is_double:
+        elif is_double:
             return self.comment + print_card_double(card)
         return self.comment + print_card_16(card)
 

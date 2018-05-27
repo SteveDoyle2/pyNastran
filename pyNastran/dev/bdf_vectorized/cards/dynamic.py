@@ -676,6 +676,8 @@ class NLPARM(BaseCard):
             kmethod = 'ITER'
         elif kmethod == 4:
             kmethod = 'SEMI'
+        elif kmethod == 3:
+            kmethod = 'ADAPT'
         else:
             msg = 'nlparm_id=%s kmethod=%r data=%s' % (nlparm_id, kmethod, data)
             raise NotImplementedError(msg)

@@ -11,7 +11,7 @@ from six.moves import range
 import numpy as np
 
 from pyNastran import is_release
-from pyNastran.bdf.cards.properties.mass import PMASS, NSM
+from pyNastran.bdf.cards.properties.mass import PMASS, NSM, NSML
 from pyNastran.bdf.cards.properties.bars import PBAR, PBARL, PBEND
 from pyNastran.bdf.cards.properties.beam import PBEAM, PBEAML, PBCOMP
 from pyNastran.bdf.cards.properties.bush import PBUSH
@@ -102,8 +102,8 @@ class EPT(GeomCommon):
         }
 
     def _add_op2_property(self, prop):
-        if prop.pid > 100000000:
-            raise RuntimeError('bad parsing; pid > 100000000...%s' % str(prop))
+        #if prop.pid > 100000000:
+            #raise RuntimeError('bad parsing; pid > 100000000...%s' % str(prop))
         self._add_property_object(prop, allow_overwrites=True)
         #print(str(prop)[:-1])
 
@@ -115,20 +115,159 @@ class EPT(GeomCommon):
 # HGSUPPR
 
     def _read_nsm(self, data, n):
+        """NSM"""
+        n = self._read_dual_card(data, n, self._read_nsm_nx, self._read_nsm_msc,
+                                 'NSM', self._add_nsm_object)
+        return n
+
+    def _read_nsm_msc(self, data, n):
         """
         NSM(3201,32,55) - the marker for Record 2
-        .. todo:: this isnt a property...
+
+        MSC
+        1 SID       I Set identification number
+        2 PROP  CHAR4 Set of property or elements
+        3 ID        I Property or element identification number
+        4 VALUE    RS Nonstructural mass value
+        ORIGIN =0 NSM Bulk Data entry
+        5 ID I Property or element ID
+        6 VALUE RS Nonstructural mass value
+        Words 5 through 6 repeat until End of Record
+        ORIGIN =2 NSML Bulk Data entry
+        5 ID I Property or element ID
+        6 VALUE RS Nonstructural mass value
+        Words 5 through 6 repeat until End of Record
+        Words 3 through 4 repeat until End of Record
         """
-        struct1 = Struct(self._endian + b'i4sif')
-        while len(data) >= 16:  # 4*4
-            edata = data[:16]
-            data = data[16:]
+        properties = []
+        struct1 = Struct(self._endian + b'i 4s if')
+        ndelta = 16
+
+        i = 0
+        ints = np.frombuffer(data[n:], self.idtype).copy()
+        floats = np.frombuffer(data[n:], self.fdtype).copy()
+
+        while n < len(data):
+            edata = data[n:n+ndelta]
             out = struct1.unpack(edata)
-            (sid, prop_set, ID, value) = out
-            self.log.info("sid=%s prop_set=%s ID=%s value=%s" %(sid, prop_set, ID, value))
-            prop = NSM.add_op2_data([sid, prop_set, ID, value])
-            self._add_nsm_object(prop)
-        return n
+            (sid, prop_set, pid, value) = out
+            #            538976312
+            assert pid < 100000000
+            i += 4
+            n += ndelta
+
+            prop_set = prop_set.decode('utf8').rstrip(' ') # \x00
+            values = [value]
+            #print('ints[i:]=', ints[i:])
+            while ints[i] != -1:
+                value2 = floats[i]
+                values.append(value2)
+                n += 4
+                i += 1
+            self.log.info("MSC: NSM-sid=%s prop_set=%s pid=%s values=%s" % (
+                sid, prop_set, pid, values))
+            prop = NSM.add_op2_data([sid, prop_set, pid, value])
+            #self._add_nsm_object(prop)
+            properties.append(prop)
+
+            # handle the trailing -1
+            i += 1
+            n += 4
+        return n, properties
+
+    def _read_nsm_nx(self, data, n):
+        """
+        NSM(3201,32,55) - the marker for Record 2
+
+        1 SID         I Set identification number
+        2 PROP(2) CHAR4 Set of properties or elements
+        4 ORIGIN      I  Entry origin
+        5 ID          I  Property or element identification number
+        6 VALUE      RS Nonstructural mass value
+        Words 5 through 6 repeat until End of Record
+        """
+        properties = []
+
+        #NX: C:\Users\sdoyle\Dropbox\move_tpl\nsmlcr2s.op2
+        struct1 = Struct(self._endian + b'i 8s ii f')
+        ndelta = 24
+        self.show_data(data[12:], 'ifs')
+
+        i = 0
+        ints = np.frombuffer(data[n:], self.idtype).copy()
+        floats = np.frombuffer(data[n:], self.fdtype).copy()
+
+        def break_by_minus1(idata):
+            """helper for ``read_nsm_nx``"""
+            i1 = 0
+            i = 0
+            i2 = None
+            packs = []
+            for idatai in idata:
+                #print('data[i:] = ', data[i:])
+                if idatai == -1:
+                    i2 = i
+                    packs.append((i1, i2))
+                    i1 = i2 + 1
+                    i += 1
+                    continue
+                i += 1
+            #print(packs)
+            return packs
+        idata = np.frombuffer(data[n:], self.idtype).copy()
+        fdata = np.frombuffer(data[n:], self.fdtype).copy()
+        packs = break_by_minus1(idata)
+        #for pack in packs:
+            #print(pack)
+
+        ipack = 0
+        while n < len(data):
+            #print('ints[i:]=', ints[i:].tolist())
+            i1, i2 = packs[ipack]
+            #print('idata=%s' % idata[i1:i2])
+            #print('fdata=%s' % fdata[i1:i2])
+            #print(idata[i1:i2])
+            edata = data[n:n+ndelta]
+            out = struct1.unpack(edata)
+            (sid, prop_set, origin, pid, value) = out
+            #            538976312
+            assert pid < 100000000
+            i += 6
+            n += ndelta
+
+            prop_set = prop_set.decode('utf8').rstrip(' ') # \x00
+            pids = [pid]
+            values = [value]
+            #print('ints[i:]=', ints[i:].tolist())
+            while ints[i] != -1:
+                pid = ints[i]
+                value2 = floats[i+1]
+                assert pid != -1
+                pids.append(pid)
+                values.append(value2)
+                n += 8
+                i += 2
+
+            for pid, value in zip(pids, values):
+                if origin == 0:
+                    #self.log.info("NX: NSM-sid=%s prop_set=%s pid=%s values=%s" % (
+                        #sid, prop_set, pid, values))
+                    prop = NSM.add_op2_data([sid, prop_set, pid, value])
+                elif origin == 2:
+                    #self.log.info("NX: NSML-sid=%s prop_set=%s pid=%s values=%s" % (
+                        #sid, prop_set, pid, values))
+                    prop = NSML.add_op2_data([sid, prop_set, pid, value])
+
+                #print(prop.rstrip(), pid, value)
+                #self._add_nsm_object(prop)
+                properties.append(prop)
+            #print('----')
+
+            # handle the trailing -1
+            i += 1
+            n += 4
+            ipack += 1
+        return n, properties
 
 # NSM1
 # NSML1

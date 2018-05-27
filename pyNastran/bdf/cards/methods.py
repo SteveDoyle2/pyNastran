@@ -920,7 +920,7 @@ class EIGRL(Method):
                                                          self.options, self.values))
         for option, value in zip(self.options, self.values):
             if option == 'NORM':
-                assert value in ['MAX'], 'option=%r value=%r' % (option, value)
+                assert value in ['MAX', ], 'option=%r value=%r' % (option, value)
             elif option == 'ALPH':
                 # float
                 pass

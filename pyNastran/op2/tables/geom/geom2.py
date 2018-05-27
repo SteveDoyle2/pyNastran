@@ -254,8 +254,8 @@ class GEOM2(GeomCommon):
             raise ValueError(elem)
             #return
 
-        if elem.eid > 100000000:
-            raise RuntimeError('bad parsing...elem:\n%s' % elem)
+        #if elem.eid > 100000000:
+            #raise RuntimeError('bad parsing...elem:\n%s' % elem)
 
         if elem.type in ['CTRIA6', 'CQUAD8']:
             for nid in elem.nodes:
@@ -1206,26 +1206,98 @@ class GEOM2(GeomCommon):
             n += ntotal
         return n, elements
 
+    #def _read_convm(self, data, n):
+        #"""CONVM"""
+        #n = self._read_dual_card(data, n, self._read_convm_nx, self._read_convm_msc,
+                                 #'CONVM', self._add_thermal_bc_object)
+        #return n
+
     def _read_convm(self, data, n):
         """
         CONVM(8908,89,422) - the marker for Record 60
 
-        TODO: MSC has 7 fields in QRG (6 defined in DMAP)
-              NX has 6 fields in QRG (6 defined in DMAP)
-              MSC has extra MDOT field.
-              I think it's 6...
+        MSC
+        1 EID I Element identification number
+        2 PCONID I Convection property identification number
+        3 FLMND I Point for film convection fluid property temperature
+        4 CNTMDOT I Control point used for controlling mass flow.
+        5 TA I Ambient points used for convection
+        Word 5 repeats 2 times
+
+        NX
+        1 EID I Element identification number
+        2 PCONID I Convection property identification number
+        3 FLMND I Point for film convection fluid property temperature
+        4 CNTMDOT I Control point used for controlling mass flow.
+        5 TA I Ambient points used for convection
+        Word 5 repeats 2 times
+
+        [110, 200, 0, 50000, 99999, 99999, 1.0,
+        111, 200, 0, 50000, 99999, 99999, 1.0,
+        112, 200, 0, 50000, 99999, 99999, 1.0,
+        113, 200, 0, 50000, 99999, 99999, 1.0,
+        114, 200, 0, 50000, 99999, 99999, 1.0,
+        115, 200, 0, 50000, 99999, 99999, 1.0,
+        116, 200, 0, 50000, 99999, 99999, 1.0,
+        117, 200, 0, 50000, 99999, 99999, 1.0,
+        118, 200, 0, 50000, 99999, 99999, 1.0,
+        119, 200, 0, 50000, 99999, 99999, 1.0,
+        130, 200, 0, 50000, 99999, 99999, 1.0,
+        131, 200, 0, 50000, 99999, 99999, 1.0,
+        132, 200, 0, 50000, 99999, 99999, 1.0,
+        133, 200, 0, 50000, 99999, 99999, 1.0,
+        134, 200, 0, 50000, 99999, 99999, 1.0,
+        135, 200, 0, 50000, 99999, 99999, 1.0,
+        136, 200, 0, 50000, 99999, 99999, 1.0,
+        137, 200, 0, 50000, 99999, 99999, 1.0,
+        138, 200, 0, 50000, 99999, 99999, 1.0,
+        139, 200, 0, 50000, 99999, 99999, 1.0,
+        150, 200, 0, 50000, 99999, 99999, 1.0,
+        151, 200, 0, 50000, 99999, 99999, 1.0,
+        152, 200, 0, 50000, 99999, 99999, 1.0,
+        153, 200, 0, 50000, 99999, 99999, 1.0,
+        154, 200, 0, 50000, 99999, 99999, 1.0,
+        155, 200, 0, 50000, 99999, 99999, 1.0,
+        156, 200, 0, 50000, 99999, 99999, 1.0,
+        157, 200, 0, 50000, 99999, 99999, 1.0,
+        158, 200, 0, 50000, 99999, 99999, 1.0,
+        159, 200, 0, 50000, 99999, 99999, 1.0,
+        170, 200, 0, 50000, 99999, 99999, 1.0,
+        171, 200, 0, 50000, 99999, 99999, 1.0,
+        172, 200, 0, 50000, 99999, 99999, 1.0,
+        173, 200, 0, 50000, 99999, 99999, 1.0,
+        174, 200, 0, 50000, 99999, 99999, 1.0,
+        175, 200, 0, 50000, 99999, 99999, 1.0,
+        176, 200, 0, 50000, 99999, 99999, 1.0,
+        177, 200, 0, 50000, 99999, 99999, 1.0,
+        178, 200, 0, 50000, 99999, 99999, 1.0,
+        179, 200, 0, 50000, 99999, 99999, 1.0,
+        190, 200, 0, 50000, 99999, 99999, 1.0,
+        191, 200, 0, 50000, 99999, 99999, 1.0,
+        192, 200, 0, 50000, 99999, 99999, 1.0,
+        193, 200, 0, 50000, 99999, 99999, 1.0,
+        194, 200, 0, 50000, 99999, 99999, 1.0,
+        195, 200, 0, 50000, 99999, 99999, 1.0,
+        196, 200, 0, 50000, 99999, 99999, 1.0,
+        197, 200, 0, 50000, 99999, 99999, 1.0,
+        198, 200, 0, 50000, 99999, 99999, 1.0,
+        199, 200, 0, 50000, 99999, 99999, 1.0]
         """
-        #return len(data)
+        #C:\Users\sdoyle\Dropbox\move_tpl\ht15330.op2
         ntotal = 24  # 7*4
         struct_6i = Struct(self._endian + b'6i')
-        nelements = (len(data) - n) // ntotal
+        ndata = len(data)
+        nelements = (ndata - n) // ntotal
+        assert (ndata - n) % ntotal == 0, 'CONVM error; ndata-n=%s ntotal=%s ndata-n/ntotal=%s' % (ndata-n, ntotal, (ndata-n)/float(ntotal))
         for i in range(nelements):
             edata = data[n:n+24]
             out = struct_6i.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CONVM=%s\n' % str(out))
             (eid, pcon_id, flmnd, cntrlnd, ta1, ta2) = out
-            assert eid > 0, out  # TODO: I'm not sure that this really has 7 fields...
+            if eid <= 0:
+                self.show_data(data, 'if')
+                raise RuntimeError('eid=%s < 0' % eid)  # TODO: I'm not sure that this really has 7 fields...
             mdot = 0.
             data_in = [eid, pcon_id, flmnd, cntrlnd, ta1, ta2, mdot]
             elem = CONVM.add_op2_data(data_in)
@@ -1464,15 +1536,19 @@ class GEOM2(GeomCommon):
         """
         struct_4i = Struct(self._endian + b'4i')
         nelements = (len(data) - n) // 16  # 4*4
+        #is_long_ids = False
         for i in range(nelements):
             edata = data[n:n + 16]
             out = struct_4i.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CROD=%s\n' % str(out))
             (eid, pid, n1, n2) = out
+            #if n1 > 100000000 or n2 > 100000000:
+                #is_long_ids = True
             elem = CROD.add_op2_data(out)
             self.add_op2_element(elem)
             n += 16
+        #self._is_long_ids = is_long_ids
         self.card_count['CROD'] = nelements
         return n
 

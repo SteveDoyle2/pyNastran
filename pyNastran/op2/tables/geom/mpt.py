@@ -62,8 +62,8 @@ class MPT(GeomCommon):
         }
 
     def add_op2_material(self, mat):
-        if mat.mid > 100000000:
-            raise RuntimeError('bad parsing...')
+        #if mat.mid > 100000000:
+            #raise RuntimeError('bad parsing...')
         self._add_structural_material_object(mat, allow_overwrites=True)
         #print(str(mat)[:-1])
 
@@ -290,31 +290,90 @@ class MPT(GeomCommon):
         return n
 
     def _read_mathp(self, data, n):
-        """MATHP(4506,45,374) - Record 11"""
+        """
+        MATHP(4506,45,374) - Record 11
+
+        NX/MSC
+        1 MID       I Material identification number
+        2 A10      RS Material constant related to distortional deformation
+        3 A01      RS Material constant related to distortional deformation
+        4 D1       RS Material constant related to volumetric deformation
+        5 RHO      RS Mass density
+        6 ALPHA    RS Coefficient of volumetric thermal expansion
+        7 TREF     RS Reference temperature
+        8 GE       RS Structural damping element coefficient
+        9 SF        I ???
+        10 NA       I Order of the distortional strain energy polynomial function
+        11 ND       I Order of the volumetric strain energy polynomial function
+        12 KP      RS ???
+        13 A20     RS Material constant related to distortional deformation
+        14 A11     RS Material constant related to distortional deformation
+        15 A02     RS Material constant related to distortional deformation
+        16 D2      RS Material constant related to volumetric deformation
+        17 A30     RS Material constant related to distortional deformation
+        18 A21     RS Material constant related to distortional deformation
+        19 A12     RS Material constant related to distortional deformation
+        20 A03     RS Material constant related to distortional deformation
+        21 D3      RS Material constant related to volumetric deformation
+        22 A40     RS Material constant related to distortional deformation
+        23 A31     RS Material constant related to distortional deformation
+        24 A22     RS Material constant related to distortional deformation
+        25 A13     RS Material constant related to distortional deformation
+        26 A04     RS Material constant related to distortional deformation
+        27 D4      RS Material constant related to volumetric deformation
+        28 A50     RS Material constant related to distortional deformation
+        29 A41     RS Material constant related to distortional deformation
+        30 A32     RS Material constant related to distortional deformation
+        31 A23     RS Material constant related to distortional deformation
+        32 A14     RS Material constant related to distortional deformation
+        33 A05     RS Material constant related to distortional deformation
+        34 D5      RS Material constant related to volumetric deformation
+        35 CONTFLG  I Continuation flag
+        CONTFLG =1 With continuation
+        36 TAB1 I TABLES1 identification number which defines tension/compression
+        37 TAB2 I TABLES1 identification number which defines equibiaxial tension
+        38 TAB3 I TABLES1 identification number which defines simple shear
+        39 TAB4 I TABLES1 identification number which defines pure shear
+        40 UNDEF(3) None
+        43 TAB5 I TABLES1 identification number which defines volumetric compression
+        CONTFLG =0 Without continuation
+        End CONTFLG
+        """
         nmaterials = 0
         s1 = Struct(self._endian + b'i7f3i23fi')
         s2 = Struct(self._endian + b'8i')
         n2 = len(data)
         while n < n2:
             edata = data[n:n+140]
-            n += 140
             out1 = s1.unpack(edata)
-
+            n += 140
             (mid, a10, a01, d1, rho, alpha, tref, ge, sf, na, nd, kp,
              a20, a11, a02, d2,
              a30, a21, a12, a03, d3,
              a40, a31, a22, a13, a04, d4,
              a50, a41, a32, a23, a14, a05, d5,
              continue_flag) = out1
+
+            if n == n2:
+                # we have to hack the continue_flag because it's wrong...
+                # C:\Users\sdoyle\Dropbox\move_tpl\ehq45.op2
+                continue_flag = 0
+                out1 = (mid, a10, a01, d1, rho, alpha, tref, ge, sf, na, nd, kp,
+                 a20, a11, a02, d2,
+                 a30, a21, a12, a03, d3,
+                 a40, a31, a22, a13, a04, d4,
+                 a50, a41, a32, a23, a14, a05, d5,
+                 continue_flag)
             data_in = [out1]
 
             if continue_flag:
                 edata = data[n:n+32]  # 7*4
-                n += 32
                 out2 = s2.unpack(edata)
+                n += 32
                 (tab1, tab2, tab3, tab4, x1, x2, x3, tab5) = out2
                 data_in.append(out2)
             mat = MATHP.add_op2_data(data_in)
+
             if self.is_debug_file:
                 self.binary_debug.write('  MATHP=%s\n' % str(out1))
             self._add_hyperelastic_material_object(mat)

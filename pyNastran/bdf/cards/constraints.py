@@ -1323,6 +1323,10 @@ class SPCOFF1(Constraint):
         card = self.raw_fields()
         return self.comment + print_card_8(card)
 
+    def write_card_16(self, is_double=False):
+        card = self.raw_fields()
+        return self.comment + print_card_16(card)
+
 
 class ConstraintAdd(Constraint):
     """common class for SPCADD, MPCADD"""

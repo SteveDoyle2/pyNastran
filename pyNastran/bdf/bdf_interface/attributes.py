@@ -138,6 +138,7 @@ class BDFAttributes(object):
         self.bdf_filename = None
         self.punch = None
         self._encoding = None
+        self._is_long_ids = False # ids > 8 characters
 
         #: ignore any ECHOON flags
         self.force_echo_off = True
@@ -810,7 +811,7 @@ class BDFAttributes(object):
     @property
     def is_long_ids(self):
         # type: () -> bool
-        if self._nastran_format == 'nx':
+        if self._nastran_format == 'nx' or self._is_long_ids:
             return True
         return False
 

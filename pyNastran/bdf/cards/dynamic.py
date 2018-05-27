@@ -980,6 +980,8 @@ class NLPARM(BaseCard):
             kmethod = 'AUTO'
         elif kmethod == 2:
             kmethod = 'ITER'
+        elif kmethod == 3:
+            kmethod = 'ADAPT'
         elif kmethod == 4:
             kmethod = 'SEMI'
         else:

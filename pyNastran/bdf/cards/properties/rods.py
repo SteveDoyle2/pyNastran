@@ -197,6 +197,10 @@ class PROD(Property):
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
+    def write_card_16(self, is_double=False):
+        card = self.raw_fields()
+        return self.comment + print_card_16(card)
+
 
 class PTUBE(Property):
     """

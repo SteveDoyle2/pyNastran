@@ -156,30 +156,62 @@ class GEOM4(GeomCommon):
 
         F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_cntlmtlboltld02.op2
         [123   0   6  10  -1]
+
+        C:\Users\sdoyle\Dropbox\move_tpl\cc439e.op2
+        # this should be 4 cards
+        [3, 1, 1, 8,
+         3, 1, 10, 16,
+         3, 1, 18, 24,
+         3, 1, 26, 40]
+
+         C:\Users\sdoyle\Dropbox\move_tpl\dogdr.op2
+        [0, 1, 10001, 10050,
+         3, 0, 101, 102, -1,
+         3, 0, 201, 202, -1,
+         3, 0, 301, 302, -1,
+         3, 0, 1001, 1002, -1,
+         3, 0, 2001, 2002, -1,
+         3, 0, 3001, 3002, -1]
         """
+        def break_by_thru_type(data):
+            """helper for ``read_xset1``"""
+            i = 0
+            packs = []
+            while i < len(data):
+                #print('data[i:] = ', data[i:])
+                if data[i+1] == 1:
+                    pack = data[i:i+4]
+                    #print('pack1 = %s' % pack)
+                    packs.append(pack)
+                    i += 4
+                    continue
+
+                i1 = i
+                i += 3
+                while data[i] != -1:
+                    i += 1
+                #print('pack2', data[i1:i])
+                pack = data[i1:i]
+                packs.append(pack)
+
+                # get rid of the trailing -1
+                i += 1
+            return packs
+
         ndata = len(data)
-        #nfields = (ndata - n) // 4
-        #fmt = '%ii' % nfields
         out = np.frombuffer(data[n:], self.idtype).copy()
+
         #print(out)
         izero = np.where(out == -1)[0]
-        if len(izero) == 0:
-            card = cls.add_op2_data(out)
+        nentries = 0
+
+        packs = break_by_thru_type(out)
+        for pack in packs:
+            card = cls.add_op2_data(pack)
             add_method(card)
-            self.increase_card_count(card_name, 1)
-        else:
-            i = np.hstack([[0], izero[:-1]+1])
-            j = np.hstack([izero[:-1], -1])
-            #print(i, j)
-            for ii, jj in zip(i, j):
-                outi = out[ii:jj]
-                #print(outi)
-                assert -1 not in outi, outi
-                if self.is_debug_file:
-                    self.binary_debug.write('  %s=%s\n' % (card_name, str(out)))
-                card = cls.add_op2_data(outi)
-                add_method(card)
-            self.increase_card_count(card_name, len(i))
+            nentries += 1
+
+        self.increase_card_count(card_name, nentries)
         return ndata
 
     def _add_superset_card(self, cls, card_name, add_method, out):
@@ -564,6 +596,7 @@ class GEOM4(GeomCommon):
 
     def _read_rbe3(self, data, n):
         """RBE3(7101,71,187) - Record 25"""
+        #self.show_data(data[n+80:], 'ifs')
         idata = np.frombuffer(data[n:], self.idtype).copy()
         fdata = np.frombuffer(data[n:], self.fdtype).copy()
         read_rbe3s_from_idata_fdata(self, idata, fdata)
@@ -762,6 +795,24 @@ class GEOM4(GeomCommon):
 
         struc = Struct(self._endian + b'iiif')
         constraints = []
+        def check_component(component, msg):
+            scomponent = str(component)
+            sorted_components = list(set(scomponent))
+            ssorted_components = ''.join(sorted_components)
+            if component in [11, 22, 33, 44]:
+                # 11 : C:\Users\sdoyle\Dropbox\move_tpl\ifct23.op2
+                # 22 : C:\Users\sdoyle\Dropbox\move_tpl\ifcpi44.op2
+                # 33 : C:\Users\sdoyle\Dropbox\move_tpl\ifcq11.op2
+                # 44 : C:\Users\sdoyle\Dropbox\move_tpl\pshp54.op2
+                pass
+            else:
+                msg2 = msg + 'scomponent=%r sorted_components=%r' % (scomponent, ssorted_components)
+                assert len(scomponent) == len(ssorted_components), msg2
+            for componenti in scomponent:
+                # 8 : C:\Users\sdoyle\Dropbox\move_tpl\beamp13.op2
+                # 9 : C:\Users\sdoyle\Dropbox\move_tpl\ifcq11r.op2
+                assert componenti in '0123456789', msg
+
         for i in range(nentries):
             edata = data[n:n + 16]
             (sid, nid, comp, dx) = struc.unpack(edata)
@@ -769,7 +820,8 @@ class GEOM4(GeomCommon):
                 self.binary_debug.write('SPC-NX sid=%s nid=%s comp=%s dx=%s\n' % (
                     sid, nid, comp, dx))
 
-            assert comp != 7, 'SPC-NX sid=%s nid=%s comp=%s dx=%s\n' % (sid, nid, comp, dx)
+            msg = 'SPC-NX sid=%s nid=%s comp=%s dx=%s\n' % (sid, nid, comp, dx)
+            check_component(comp, msg)
             if nid < 100000000:
                 constraint = SPC.add_op2_data([sid, nid, comp, dx])
                 constraints.append(constraint)
@@ -847,6 +899,8 @@ class GEOM4(GeomCommon):
         if len(nids) == 0:
             #self.log.warning('skipping SPC1 because its empty...%s' % out)
             return
+        if max(nids) > 100000000:
+            self._is_long_ids = True
         in_data = [components, nids]
         constraint = SPCOFF1.add_op2_data(in_data)
         self._add_constraint_spcoff_object(constraint)
@@ -943,17 +997,20 @@ class GEOM4(GeomCommon):
         assert nentries > 0, nentries
         assert (len(data) - n) % ntotal == 0
         constraints = []
+        is_long_ids = False
         for i in range(nentries):
             edata = data[n:n + ntotal]
-            #self.show_data(edata)
             out = struct_3if.unpack(edata)
-            (sid, ID, c, dx) = out
-            #print(out)
+            (sid, node_id, c, dx) = out
             if self.is_debug_file:
                 self.binary_debug.write('  SPCD-NX=%s\n' % str(out))
-            constraint = SPCD.add_op2_data([sid, ID, c, dx])
+
+            if node_id > 100000000:
+                is_long_ids = True
+            constraint = SPCD.add_op2_data([sid, node_id, c, dx])
             constraints.append(constraint)
             n += ntotal
+        self._is_long_ids = is_long_ids
         return n, constraints
 
     def _read_spcd_msc(self, data, n):
@@ -1198,7 +1255,19 @@ def read_rbe3s_from_idata_fdata(self, idata, fdata):
     data = [107, 1, 123456, 1.0, 1234, 10600, 10601, -1, -2, -3, 0/0.0,
             207, 2, 123456, 1.0, 1234, 20600, 20601, -1, -2, -3, 0/0.0,
             307, 3, 123456, 1.0, 1234, 30600, 30601, -1, -2, -3, 0/0.0]]
+
+    data = [
+    407, 4, 123, 1.0, 123, 41201, 41210, 41212, 41221, -1,
+    -0.25, 123, 41200, 41202, 41220, 41222, -1, -2, -3, 0,
+    408, 4, 456, 1.0, 123, 41201, 41210, 41212, 41221, -1,
+    1.0, 123, 41200, 41202, 41220, 41222, -1, -2, -3, 0)
+    ]
+    RBE3    407             4       123     1.0     123     41201   41210
+            41212   41221   -.25    123     41200   41202   41220   41222
+    RBE3    408             4       456     1.0     123     41201   41210
+            41212   41221   +.25    123     41200   41202   41220   41222
     """
+    # C:\Users\sdoyle\Dropbox\move_tpl\ecbep1.op2
     rbe3s = []
 
     #iminus1 = np.where(idata == -1)[0]
@@ -1207,6 +1276,8 @@ def read_rbe3s_from_idata_fdata(self, idata, fdata):
     #assert len(iminus2) == 1, idata
     #assert len(iminus3) == 1, idata
 
+    # -3 is the flag for not quite the end of the card, but pretty close...well depending on alpha
+    # if alpha exists, we correct for it, so i/j define the start/end of the cards
     iminus3 = np.where(idata == -3)[0]
     if idata[-1] == -3:
         is_alpha = False
@@ -1227,51 +1298,13 @@ def read_rbe3s_from_idata_fdata(self, idata, fdata):
         idatai = idata[ii:jj]
         eid, refg, refc, dummy, comp, grid = idatai[:6]
         weight = fdata[ii+3]
-        weights = [weight]
-        comps = [comp]
-        gijs = [grid]
-        #print('eid=%s refg=%s refc=%s weight=%s comp=%s grid=%s' % (
+
+        #print('eid=%s refgrid=%s refc=%s weight=%s comp=%s grid=%s' % (
             #eid, refg, refc, weight, comp, grid))
 
-        while 1:
-            weight = fdata[ii + 3]
-            comp = idata[ii + 4]
-            grid = idata[ii + 5]
-            #print('weight=%s comp=%s grid=%s' % (
-                #weight, comp, grid))
-            #if idata[ii + 6] in [-2, -3]:
-                #break
-            while idata[ii + 6] > 0:
-                grid = idata[ii+6]
-                #print('  gridi =', grid)
-                #print('  ii+6=%s gridi=%s extra=%s' % (ii+6, grid, idata[ii+6:jj+1].tolist()))
-                gijs.append(grid)
-                ii += 1
-            #print('ii = ', ii)
-            #print('idata[ii+6:] =', idata[ii+6:].tolist())
-            if idata[ii+6] == -3:
-                break
-            assert idata[ii+6] == -1, idata[ii+6:]
-            ii += 1 # -1
-            if idata[ii+6] == -2:
-                ii += 1 # -2
-                break
-
-        gmi = []
-        cmi = []
-        if idata[ii+6] != -3:
-            # gm/cm
-            #print('idata[ii+6]*', idata[ii+6])
-            #print('idata[ii+7]*', idata[ii+7])
-            #print('end = ', idata[ii+6:jj+1].tolist())
-
-            while idata[ii+6] != -3:
-                gm = idata[ii+6]
-                cm = idata[ii+7]
-                #print('  gm=%s cm=%s' % (gm, cm))
-                gmi.append(gm)
-                cmi.append(cm)
-                ii += 2
+        ii, weights, comps, gijs = fill_rbe3_wt_comp_gijs(ii, jj, idata, fdata)
+        ii, gmi, cmi = _get_rbe3_um(ii, jj, idata, fdata)
+        #print(idata[ii:jj].tolist())
 
         if is_alpha:
             alpha = fdata[ii]
@@ -1285,11 +1318,114 @@ def read_rbe3s_from_idata_fdata(self, idata, fdata):
             self.binary_debug.write('  RBE3=%s\n' % str(in_data))
         #print('rbe3 =', in_data)
         rbe3 = RBE3.add_op2_data(in_data)
+        #print(rbe3.rstrip())
 
         self._add_rigid_element_object(rbe3)
         rbe3s.append(rbe3)
         #print('--------------------------------------')
+    #aaa
     return rbe3s
+
+def _get_rbe3_um(i, j, idata, fdata):
+    """helper for ``read_rbe3s_from_idata_fdata``"""
+    gmi = []
+    cmi = []
+    if idata[i] == -2:
+        i += 1
+    if idata[i] != -3:
+        # gm/cm
+        #print('idata[i+6]*', idata[i+6])
+        #print('idata[i+7]*', idata[i+7])
+        #print('end = ', idata[i+6:j+1].tolist())
+
+        while idata[i] != -3:
+            gm = idata[i]
+            cm = idata[i+1]
+            #print('  gm=%s cm=%s' % (gm, cm))
+            gmi.append(gm)
+            cmi.append(cm)
+            i += 2
+
+    if idata[i] == -3:
+        i += 1
+    return i, gmi, cmi
+
+def get_minus_2_index(idata):
+    """helper for ``get_minus_2_index``"""
+    #print('idata =', idata)
+    i = np.where((idata == -2) | (idata == -3))[0]
+    #print('*i23 =', i, idata[i])
+    return i[0]
+
+def fill_rbe3_wt_comp_gijs(i, j, idata, fdata):
+    """helper for ``read_rbe3s_from_idata_fdata``"""
+    weights = []
+    comps = []
+    grids = []
+
+    i2 = i + get_minus_2_index(idata[i:j])
+    iold = -1
+    i += 3
+    while i < i2:
+        #print('idata[i:i2]=%s' % idata[i:i2].tolist())
+        if iold == i:
+            raise RuntimeError('infinite loop in the rbe3...')
+        iold = i
+        weight = fdata[i]
+        comp = idata[i + 1]
+        grid = idata[i + 2]
+        assert grid > 0, grid
+        weights.append(weight)
+        comps.append(comp)
+        gijs = [grid]
+        grids.append(gijs)
+        #print('weight=%s comp=%s grid=%s' % (
+            #weight, comp, grid))
+        #if idata[i + 6] in [-2, -3]:
+            #break
+
+        i += 3
+        while idata[i] > 0:
+            grid = idata[i]
+            assert grid > 0, grid
+            #print('  gridi =', grid)
+            #print('  i+3=%s gridi=%s extra=%s' % (i+3, grid, idata[i+3:j+1].tolist()))
+            gijs.append(grid)
+            i += 1
+        #print('i = ', i)
+        #print('idata[i:] =', idata[i:].tolist())
+
+        # this is the end of the -1 section (wt, comp, Gijs), but we have UM fields at the end
+        if idata[i] == -3:
+            #print('breaking -3...')
+            break
+        #assert idata[i] == -1, idata[i:j].tolist()
+
+        # -1 defines the end of the Gij block
+        #if idata[i] != -1:
+            #continue
+        if idata[i] != -1 and 0:
+            msg = (
+                'Expected -1 in %i slot of idata\n'
+                'RBE3: eid=%s, refg=%s, refc=%s\n'
+                'weights=%s comps=%s\n'
+                'weight=%s comp=%s gijs=%s\n'
+                'idatai=%s\n'
+                'idata[ii+6:jj] = %s' % (i, eid, refg, refc,
+                                       weights, comps,
+                                       weight, comp, gijs,
+                                       idatai.tolist(), idata[i:j].tolist())
+            )
+            raise RuntimeError(msg)
+
+        i += 1 # -1
+        #if idata[i+3] == -2:
+            #i += 1 # -2
+            #break
+        #print('weight=%s comp=%s gijs=%s' % (weight, comp, gijs))
+        #print('-------------------------------')
+    #print('weights=%s comps=%s gijs=%s' % (weights, comps, grids))
+    return i, weights, comps, grids
 
 def _read_spcadd_mpcadd(model, card_name, datai):
     """
