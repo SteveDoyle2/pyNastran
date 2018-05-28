@@ -196,7 +196,6 @@ class WriteMesh(BDFAttributes):
                 self.thermal_materials and max(self.thermal_materials) > 100000000 or
                 self.nsms and max(self.nsms) > 100000000 or
                 self.nsmadds and max(self.nsmadds) > 100000000)
-            print('is_long_ids', is_long_ids)
             if is_long_ids:
                 size = 16
 
@@ -292,7 +291,6 @@ class WriteMesh(BDFAttributes):
         Writes the elements in a sorted order
         """
         size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
-        print('is_long_ids=%s' % is_long_ids)
         if self.elements:
             bdf_file.write('$ELEMENTS\n')
             if is_long_ids:

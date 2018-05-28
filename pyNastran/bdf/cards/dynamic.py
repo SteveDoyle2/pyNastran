@@ -1967,7 +1967,7 @@ class TSTEPNL(BaseCard):
         self.utol = utol
         self.rtol_b = rtol_b
         self.min_iter = min_iter
-        assert self.ndt >= 3, self
+        #assert self.ndt >= 3, self
         assert self.dt > 0.
 
     def validate(self):

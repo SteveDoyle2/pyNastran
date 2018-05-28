@@ -83,7 +83,7 @@ class GEOM3(GeomCommon):
 
     def _read_accel(self, data, n):
         """ACCEL"""
-        self.log.info('skipping ACCEL in GEOM3\n')
+        self.log.info('skipping ACCEL in GEOM3')
         return len(data)
 
     def _read_accel1(self, data, n):
@@ -181,7 +181,7 @@ class GEOM3(GeomCommon):
 
     def _read_gmload(self, data, n):
         """GMLOAD"""
-        self.log.info('skipping GMLOAD in GEOM3\n')
+        self.log.info('skipping GMLOAD in GEOM3')
         return len(data)
 
     def _read_grav(self, data, n):
@@ -257,19 +257,19 @@ class GEOM3(GeomCommon):
 
     def _read_loadcyh(self, data, n):
         """LOADCYH"""
-        self.log.info('skipping LOADCYH in GEOM3\n')
+        self.log.info('skipping LOADCYH in GEOM3')
         if self.is_debug_file:
             self.binary_debug.write('skipping LOADCYH in GEOM3\n')
         return len(data)
 
     def _read_loadcyn(self, data, n):
         """LOADCYN"""
-        self.log.info('skipping LOADCYN in GEOM3\n')
+        self.log.info('skipping LOADCYN in GEOM3')
         return len(data)
 
     def _read_loadcyt(self, data, n):
         """LOADCYT"""
-        self.log.info('skipping LOADCYT in GEOM3\n')
+        self.log.info('skipping LOADCYT in GEOM3')
         return len(data)
 
     def _read_lseq(self, data, n):
@@ -515,7 +515,7 @@ class GEOM3(GeomCommon):
         return n, loads
 
     def _read_ploadx(self, data, n):
-        self.log.info('skipping PLOADX in GEOM4\n')
+        self.log.info('skipping PLOADX in GEOM3')
         return len(data)
 
     def _read_ploadx1(self, data, n):
@@ -634,11 +634,11 @@ class GEOM3(GeomCommon):
         return n
 
     def _read_qhbdy(self, data, n):
-        self.log.info('skipping QHBDY in GEOM3\n')
+        self.log.info('skipping QHBDY in GEOM3')
         return len(data)
 
     def _read_qvect(self, data, n):
-        self.log.info('skipping QVECT in GEOM3\n')
+        self.log.info('skipping QVECT in GEOM3')
         return len(data)
 
     def _read_qvol(self, data, n):
@@ -703,7 +703,7 @@ class GEOM3(GeomCommon):
 # TEMPD(5641,65,98) # 33
 # TEMPEST
     def _read_tempf(self, data, n):
-        self.log.info('skipping TEMPF in GEOM3\n')
+        self.log.info('skipping TEMPF in GEOM3')
         return len(data)
 # TEMP1C
 
@@ -724,13 +724,13 @@ class GEOM3(GeomCommon):
         return n
 
     def _read_tempp2(self, data, n):
-        self.log.info('skipping TEMPP2 in GEOM3\n')
+        self.log.info('skipping TEMPP2 in GEOM3')
         if self.is_debug_file:
             self.binary_debug.write('skipping TEMPP2 in GEOM3\n')
         return len(data)
 
     def _read_tempp3(self, data, n):
-        self.log.info('skipping TEMPP3 in GEOM3\n')
+        self.log.info('skipping TEMPP3 in GEOM3')
         if self.is_debug_file:
             self.binary_debug.write('skipping TEMPP3 in GEOM3\n')
         return len(data)
@@ -739,27 +739,27 @@ class GEOM3(GeomCommon):
         """
         TEMPP4(4201,42,18) - the marker for Record 40
         """
-        self.log.info('skipping TEMPP4 in GEOM3\n')
+        self.log.info('skipping TEMPP4 in GEOM3')
         return len(data)
 
     def _read_temprb(self, data, n):
-        self.log.info('skipping TEMPRB in GEOM3\n')
+        self.log.info('skipping TEMPRB in GEOM3')
         if self.is_debug_file:
             self.binary_debug.write('skipping TEMPRB in GEOM3\n')
         return len(data)
 
     def _read_pface(self, data, n):
-        self.log.info('skipping PFACE in GEOM3\n')
+        self.log.info('skipping PFACE in GEOM3')
         return len(data)
 
     def _read_pedge(self, data, n):
-        self.log.info('skipping PEDGE in GEOM3\n')
+        self.log.info('skipping PEDGE in GEOM3')
         return len(data)
 
     def _read_boltfor(self, data, n):
-        self.log.info('skipping BOLTFOR in GEOM3\n')
+        self.log.info('skipping BOLTFOR in GEOM3')
         return len(data)
 
     def _read_boltld(self, data, n):
-        self.log.info('skipping BOLTLD in GEOM3\n')
+        self.log.info('skipping BOLTLD in GEOM3')
         return len(data)

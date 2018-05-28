@@ -19,7 +19,7 @@ from six import string_types
 from six.moves import zip, range
 import numpy as np
 
-from pyNastran.utils import integer_types
+from pyNastran.utils import integer_types, float_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.cards.base_card import Element
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -906,7 +906,7 @@ class RBE2(RigidElement):
         assert self.cm is not None, 'cm=%s' % self.cm
         self.gn = self.gn
         self.cm = str(self.cm)
-        assert isinstance(self.alpha, float), 'alpha=%r type=%s' % (self.alpha, type(self.alpha))
+        assert isinstance(self.alpha, float_types), 'alpha=%r type=%s' % (self.alpha, type(self.alpha))
 
     def convert_to_mpc(self, mpc_id):
         """

@@ -678,7 +678,7 @@ class EPT(GeomCommon):
                   in-plane bending moment.
         33 Not used
         """
-        #self.log.info('skipping PBEND in EPT\n')
+        #self.log.info('skipping PBEND in EPT')
         #return len(data)
         ntotal = 132  # 33*4
         struct1 = Struct(self._endian + b'2i 4f i 21f i 4f')
@@ -851,7 +851,7 @@ class EPT(GeomCommon):
         return n
 
     def _read_pbusht(self, data, n):
-        self.log.info('skipping PBUSHT in EPT\n')
+        self.log.info('skipping PBUSHT in EPT')
         return len(data)
 
     def _read_pcomp(self, data, n):
@@ -1043,7 +1043,7 @@ class EPT(GeomCommon):
         """
         (152,19,147) - Record 24
         """
-        self.log.info('skipping PCONEAX in EPT\n')
+        self.log.info('skipping PCONEAX in EPT')
         return len(data)
 
     def _read_pconv(self, data, n):
@@ -1095,7 +1095,7 @@ class EPT(GeomCommon):
         return n, props
 
     def _read_pconvm(self, data, n):  # 26
-        self.log.info('skipping PCONVM in EPT\n')
+        self.log.info('skipping PCONVM in EPT')
         return len(data)
 
     def _read_pdamp(self, data, n):
@@ -1115,11 +1115,11 @@ class EPT(GeomCommon):
         return n
 
     def _read_pdampt(self, data, n):  # 26
-        self.log.info('skipping PDAMPT in EPT\n')
+        self.log.info('skipping PDAMPT in EPT')
         return len(data)
 
     def _read_pdamp5(self, data, n):  # 26
-        self.log.info('skipping PDAMP5 in EPT\n')
+        self.log.info('skipping PDAMP5 in EPT')
         return len(data)
 
 # PDUM1
@@ -1258,11 +1258,11 @@ class EPT(GeomCommon):
         return n
 
     def _read_pintc(self, data, n):
-        self.log.info('skipping PINTC in EPT\n')
+        self.log.info('skipping PINTC in EPT')
         return len(data)
 
     def _read_pints(self, data, n):
-        self.log.info('skipping PINTS in EPT\n')
+        self.log.info('skipping PINTS in EPT')
         return len(data)
 
     def _read_plplane(self, data, n):
@@ -1461,11 +1461,11 @@ class EPT(GeomCommon):
         return n
 
     def _read_pset(self, data, n):
-        self.log.info('skipping PSET in EPT\n')
+        self.log.info('skipping PSET in EPT')
         return len(data)
 
     def _read_pval(self, data, n):
-        self.log.info('skipping PVAL in EPT\n')
+        self.log.info('skipping PVAL in EPT')
         return len(data)
 
     def _read_pvisc(self, data, n):
@@ -1487,9 +1487,9 @@ class EPT(GeomCommon):
 # PWELD
 # PWSEAM
     def _read_view(self, data, n):
-        self.log.info('skipping VIEW in EPT\n')
+        self.log.info('skipping VIEW in EPT')
         return len(data)
 
     def _read_view3d(self, data, n):
-        self.log.info('skipping VIEW3D in EPT\n')
+        self.log.info('skipping VIEW3D in EPT')
         return len(data)

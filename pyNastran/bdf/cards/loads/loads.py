@@ -738,7 +738,6 @@ class SPCD(Load):
 
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
-        assert size == 16
         if size == 8:
             return self.comment + print_card_8(card)
         elif is_double:

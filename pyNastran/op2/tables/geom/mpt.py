@@ -422,11 +422,11 @@ class MPT(GeomCommon):
         return n
 
     def _read_matt2(self, data, n):
-        self.log.info('skipping MATT2 in MPT\n')
+        self.log.info('skipping MATT2 in MPT')
         return len(data)
 
     def _read_matt3(self, data, n):
-        self.log.info('skipping MATT3 in MPT\n')
+        self.log.info('skipping MATT3 in MPT')
         return len(data)
 
     def _read_matt4(self, data, n):
@@ -471,15 +471,15 @@ class MPT(GeomCommon):
 
 # MATT8 - unused
     def _read_matt8(self, data, n):
-        self.log.info('skipping MATT8 in MPT\n')
+        self.log.info('skipping MATT8 in MPT')
         return len(data)
 
     def _read_matt9(self, data, n):
-        self.log.info('skipping MATT9 in MPT\n')
+        self.log.info('skipping MATT9 in MPT')
         return len(data)
 
     def _read_matt11(self, data, n):
-        self.log.info('skipping MATT11 in MPT\n')
+        self.log.info('skipping MATT11 in MPT')
         return len(data)
 
 # MBOLT
@@ -488,7 +488,7 @@ class MPT(GeomCommon):
 # NLAUTO
 
     def _read_radbnd(self, data, n):
-        self.log.info('skipping RADBND in MPT\n')
+        self.log.info('skipping RADBND in MPT')
         return len(data)
 
 
@@ -527,7 +527,7 @@ class MPT(GeomCommon):
         return n
 
     def _read_radmt(self, data, n):
-        self.log.info('skipping RADMT in MPT\n')
+        self.log.info('skipping RADMT in MPT')
         return len(data)
 
     def _read_nlparm(self, data, n):

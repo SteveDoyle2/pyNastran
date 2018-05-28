@@ -346,25 +346,25 @@ class GEOM1(GeomCommon):
 
 
     def _read_extrn(self, data, n):
-        self.log.info('skipping EXTRN in GEOM1\n')
+        self.log.info('skipping EXTRN in GEOM1')
         return len(data)
 
     def _read_feedge(self, data, n):
-        self.log.info('skipping FEEDGE in GEOM1\n')
+        self.log.info('skipping FEEDGE in GEOM1')
         return len(data)
 
     def _read_gmcurve(self, data, n):
-        self.log.info('skipping GMCURVE in GEOM1\n')
+        self.log.info('skipping GMCURVE in GEOM1')
         return len(data)
 
     def _read_feface(self, data, n):
-        self.log.info('skipping FEFACE in GEOM1\n')
+        self.log.info('skipping FEFACE in GEOM1')
         return len(data)
 
     def _read_gmsurf(self, data, n):
-        self.log.info('skipping GMSURF in GEOM1\n')
+        self.log.info('skipping GMSURF in GEOM1')
         return len(data)
 
     def _read_gmcord(self, data, n):
-        self.log.info('skipping GMCORD in GEOM1\n')
+        self.log.info('skipping GMCORD in GEOM1')
         return len(data)

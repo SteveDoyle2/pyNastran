@@ -34,7 +34,7 @@ class ScalarBar(object):
         """creates the scalar bar"""
         self.scalar_bar = vtk.vtkScalarBarActor()
         self.color_function = vtk.vtkColorTransferFunction()
-        self.color_function.SetNanColor(0., 0., 0.)
+        self.color_function.SetNanColor(1., 1., 1.)
 
         self.is_shown = True
         self.is_horizontal = False
