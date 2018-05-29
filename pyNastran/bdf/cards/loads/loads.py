@@ -957,9 +957,12 @@ class SLOAD(Load):
         self.nodes_ref = []
         for nid in self.nodes:
             self.nodes_ref.append(model.Node(nid, msg=msg))
+        #self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
     def safe_cross_reference(self, model, xref_errors):
         return self.cross_reference(model)
+        #msg = ', which is required by SLOAD=%s' % (self.sid)
+        #self.nodes_ref = model.safe_empty_nodes(self.nodes, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids

@@ -105,7 +105,7 @@ class GEOM3(GeomCommon):
         i_minus_1s = np.where(ints == -1)[0]
 
         i0 = 0
-        self.show_data(data[n:])
+        #self.show_data(data[n:])
         for i_minus_1 in i_minus_1s:
             sid = ints[i0]
             cid = ints[i0 + 1]

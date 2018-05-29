@@ -811,9 +811,10 @@ class BDFAttributes(object):
     @property
     def is_long_ids(self):
         # type: () -> bool
-        if self._nastran_format == 'nx' or self._is_long_ids:
-            return True
-        return False
+        return self._is_long_ids
+        #if self._nastran_format == 'nx' or self._is_long_ids:
+            #return True
+        #return False
 
     @property
     def sol(self):

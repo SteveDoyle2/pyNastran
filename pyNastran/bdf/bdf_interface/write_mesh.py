@@ -662,10 +662,10 @@ class WriteMesh(BDFAttributes):
 
     def _write_mesh_long_ids_size(self, size, is_long_ids):
         """helper method"""
-        if is_long_ids:
+        if is_long_ids and size == 16 or is_long_ids is False:
             return size, is_long_ids
 
-        if size == 8 and is_long_ids is None or self.is_long_ids:
+        if size == 16 and is_long_ids is None or self.is_long_ids:
             size = 16
             is_long_ids = True
         else:
@@ -696,7 +696,7 @@ class WriteMesh(BDFAttributes):
                         raise
             for unused_key, tempd in sorted(iteritems(self.tempds)):
                 bdf_file.write(tempd.write_card(size, is_double))
-        self._write_dloads(bdf_file, size=size, is_double=is_double)
+        self._write_dloads(bdf_file, size=size, is_double=is_double, is_long_ids=is_long_ids)
 
     def _write_dloads(self, bdf_file, size=8, is_double=False, is_long_ids=None):
     # type: (Any, int, bool) -> None
@@ -821,7 +821,6 @@ class WriteMesh(BDFAttributes):
             bdf_file.write('$NODES\n')
             if self.grdset:
                 bdf_file.write(self.grdset.write_card(size))
-
             if is_long_ids:
                 for (unused_nid, node) in sorted(iteritems(self.nodes)):
                     bdf_file.write(node.write_card_16(is_double))

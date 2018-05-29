@@ -1007,7 +1007,7 @@ class DYNAMICS(GeomCommon):
         5 UNIT(2) CHAR4 RPM/FREQ flag for speed input
         7 TABLEID     I Table identification number for speed history
         """
-        self.show_data(data[12:], 'ifs')
+        #self.show_data(data[12:], 'ifs')
         ntotal = 28 # 4*7
         nentries = (len(data) - n) // ntotal
         struc = Struct(self._endian + b'3if 8s i')

@@ -509,6 +509,7 @@ class CELAS3(SpringElement):
             the BDF object
         """
         msg = ', which is required by CELAS3 eid=%s' % (self.eid)
+        #self.nodes_ref = model.safe_empty_nodes(self.node_ids, msg=msg)
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
@@ -678,6 +679,7 @@ class CELAS4(SpringElement):
         """
         msg = ', which is required by CELAS4 eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
+        #self.nodes_ref = model.safe_empty_nodes(self.node_ids, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids

@@ -136,6 +136,12 @@ class CREEP(Material):
         T0 = data[1]
         exp = data[2]
         form = data[3]
+        if form == 0:
+            form = 'CRLAW'
+        elif form == 1:
+            form = 'TABLE'
+        else:
+            raise NotImplementedError('CREEP: mid=%s, form=%s, not form: 0=CRLAW, 1=TABLE' % (mid, form))
         tidkp = data[4]
         tidcp = data[5]
         tidcs = data[6]
@@ -242,23 +248,35 @@ class NXSTRAT(BaseCard):
         nfields = len(card)
         iparam = 1
         params = {}
-        for ifield in range(2, nfields, 2):
+        min_nfields = min(8, nfields)
+        for ifield in range(2, min_nfields, 2):
             param_name = string(card, ifield, 'param_%i' % iparam)
             value = integer_or_double(card, ifield+1, 'value_%i' % iparam)
             params[param_name] = value
             iparam += 1
 
-        nparams = (nfields - 2) // 2
-        nleftover = (nfields - 2) % 2
-        assert nleftover == 0, 'nparams=%s nleftover=%s card=%s' % (nparams, nleftover, card)
+        if nfields > 9:
+            for ifield in range(9, nfields, 2):
+                param_name = string(card, ifield, 'param_%i' % iparam)
+                value = integer_or_double(card, ifield+1, 'value_%i' % iparam)
+                params[param_name] = value
+                iparam += 1
+
+        #nparams = (nfields - 2) // 2
+        #nleftover = (nfields - 2) % 2
+        #assert nleftover == ileftover, 'nparams=%s nleftover=%s card=%s' % (nparams, nleftover, card)
 
         #assert len(card) <= 13, 'len(NXSTRAT card) = %i\ncard=%s' % (len(card), card)
         return NXSTRAT(sid, params, comment=comment)
 
     def raw_fields(self):
         list_fields = ['NXSTRAT', self.sid]
+        i = 0
         for key, value in sorted(iteritems(self.params)):
             list_fields += [key, value]
+            i += 1
+            if i == 3:
+                list_fields.append(None)
         return list_fields
 
     def repr_fields(self):

@@ -386,8 +386,8 @@ class UGRID_IO(object):
 
         if os.path.exists(mapbc_filename) and not read_solids:
             has_mapbc_data = True
-            mapbc = open(mapbc_filename, 'r')
-            lines = mapbc.readlines()
+            with open(mapbc_filename, 'r') as mapbc:
+                lines = mapbc.readlines()
             lines = [line.strip() for line in lines
                      if not line.strip().startswith('#') and line.strip()]
             npatches = int(lines[0])

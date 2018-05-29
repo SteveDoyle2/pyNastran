@@ -571,10 +571,18 @@ class TestMaterials(unittest.TestCase):
 
     def test_nxstrat(self):
         params = {
-            'AUTO' : 1,
-            'MAXITE' : 30,
+            #'AUTO' : 1,
+            #'MAXITE' : 30,
             'RTOL' : 0.005,
-            'ATSNEXT' : 3,
+            #'ATSNEXT' : 3,
+            'A' : 1,
+            'B' : 2,
+            'C' : 3,
+            'D' : 4,
+            'E' : 5,
+            'F' : 6,
+            'G' : 7,
+            'H' : 8,
         }
         model = BDF(debug=False)
         nxstrat = model.add_nxstrat(42, params)

@@ -3838,7 +3838,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
         """
         try:
-            lines = open(bdf_filename, 'r').readlines()
+            with open(bdf_filename, 'r') as bdf_file:
+                lines = bdf_file.readlines()
         except (AttributeError, TypeError) as e:
             if hasattr(bdf_filename, 'read') and hasattr(bdf_filename, 'write'):
                 lines = bdf_filename.readlines()

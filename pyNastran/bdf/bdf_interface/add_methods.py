@@ -1097,7 +1097,7 @@ class AddMethods(BDFAttributes):
 
     def _add_nxstrat_object(self, nxstrat):
         key = nxstrat.sid
-        assert key not in self.nxstrats
+        assert key not in self.nxstrats, 'nxstrats=%s nxstrat=%s' % (self.nxstrats, nxstrat)
         assert key > 0
         self.nxstrats[key] = nxstrat
         self._type_to_id_map[nxstrat.type].append(key)

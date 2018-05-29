@@ -477,6 +477,7 @@ class CDAMP3(LineDamper):
         """
         msg = ', which is required by CDAMP3 eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
+        #self.nodes_ref = model.safe_empty_nodes(self.nodes, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
@@ -609,6 +610,8 @@ class CDAMP4(LineDamper):
         model : BDF()
             the BDF object
         """
+        #msg = ', which is required by CDAMP4 eid=%s' % (self.eid)
+        #self.nodes_ref = model.safe_empty_nodes(self.node_ids, msg=msg)
         self.cross_reference(model)
 
     def uncross_reference(self):

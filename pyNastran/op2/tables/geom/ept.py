@@ -191,7 +191,7 @@ class EPT(GeomCommon):
         #NX: C:\Users\sdoyle\Dropbox\move_tpl\nsmlcr2s.op2
         struct1 = Struct(self._endian + b'i 8s ii f')
         ndelta = 24
-        self.show_data(data[12:], 'ifs')
+        #self.show_data(data[12:], 'ifs')
 
         i = 0
         ints = np.frombuffer(data[n:], self.idtype).copy()

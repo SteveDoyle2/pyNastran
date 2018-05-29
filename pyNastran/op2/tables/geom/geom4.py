@@ -545,7 +545,7 @@ class GEOM4(GeomCommon):
             for ii, jj in zip(i, j):
                 eid, gn, cm = idata[ii:ii + 3]
                 gm = idata[ii+3:jj-1].tolist()
-                print('eid=%s gn=%s cm=%s gm=%s' % (eid, gn, cm, gm))
+                #print('eid=%s gn=%s cm=%s gm=%s' % (eid, gn, cm, gm))
                 #alpha = fdata[jj]
                 alpha = fdata[jj]
                 #print('eid=%s gn=%s cm=%s gm=%s alpha=%s' % (eid, gn, cm, gm, alpha))
@@ -1312,6 +1312,7 @@ def read_rbe3s_from_idata_fdata(self, idata, fdata):
         ii, weights, comps, gijs = fill_rbe3_wt_comp_gijs(ii, jj, idata, fdata)
         ii, gmi, cmi = _get_rbe3_um(ii, jj, idata, fdata)
         #print(idata[ii:jj].tolist())
+        assert len(gijs) > 0, gijs
 
         if is_alpha:
             alpha = fdata[ii]
@@ -1361,7 +1362,8 @@ def get_minus_2_index(idata):
     """helper for ``get_minus_2_index``"""
     #print('idata =', idata)
     i = np.where((idata == -2) | (idata == -3))[0]
-    #print('*i23 =', i, idata[i])
+    if len(i) == 0:
+        return len(idata)
     return i[0]
 
 def fill_rbe3_wt_comp_gijs(i, j, idata, fdata):
@@ -1371,10 +1373,11 @@ def fill_rbe3_wt_comp_gijs(i, j, idata, fdata):
     grids = []
 
     i2 = i + get_minus_2_index(idata[i:j])
+    #print('i=%s i2=%s' % (i, i2))
     iold = -1
     i += 3
     while i < i2:
-        #print('idata[i:i2]=%s' % idata[i:i2].tolist())
+        #print('  idata[i:i2]=%s' % idata[i:i2].tolist())
         if iold == i:
             raise RuntimeError('infinite loop in the rbe3...')
         iold = i
@@ -1429,9 +1432,10 @@ def fill_rbe3_wt_comp_gijs(i, j, idata, fdata):
         #if idata[i+3] == -2:
             #i += 1 # -2
             #break
-        #print('weight=%s comp=%s gijs=%s' % (weight, comp, gijs))
+        #print('  weight=%s comp=%s gijs=%s' % (weight, comp, gijs))
         #print('-------------------------------')
     #print('weights=%s comps=%s gijs=%s' % (weights, comps, grids))
+    assert len(weights) > 0, weights
     return i, weights, comps, grids
 
 def _read_spcadd_mpcadd(model, card_name, datai):
