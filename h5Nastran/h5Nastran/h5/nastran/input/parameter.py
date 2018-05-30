@@ -2,7 +2,7 @@ from __future__ import print_function, absolute_import
 
 import numpy as np
 
-from h5Nastran.data_helper import DataHelper
+from h5Nastran.defaults import Defaults
 from h5Nastran.h5nastrannode import H5NastranNode
 from .input_table import InputTable, TableDef
 
@@ -152,7 +152,7 @@ class NLPARM(InputTable):
         _conv = {}
 
         # TODO: check that intout is correct
-        _intout = {'YES': 1, 'NO': 0, 'ALL': 3, None: DataHelper.default_int, '': DataHelper.default_int}
+        _intout = {'YES': 1, 'NO': 0, 'ALL': 3, None: Defaults.default_int, '': Defaults.default_int}
 
         i = -1
         for card_id in card_ids:
@@ -160,12 +160,12 @@ class NLPARM(InputTable):
             card = cards[card_id]
 
             sid[i] = card.nlparm_id
-            ninc[i] = card.ninc if card.ninc is not None else DataHelper.default_int
+            ninc[i] = card.ninc if card.ninc is not None else Defaults.default_int
             dt[i] = card.dt
             kmethod[i] = _kmethod[card.kmethod]
             kstep[i] = card.kstep
             maxiter[i] = card.max_iter
-            conv[i] = DataHelper.unknown_int
+            conv[i] = Defaults.unknown_int
             if isinstance(card.int_out, int):
                 intout[i] = card.int_out
             else:
@@ -184,7 +184,7 @@ class NLPARM(InputTable):
             try:
                 miniter[i] = card.min_iter
             except AttributeError:
-                miniter[i] = DataHelper.default_int
+                miniter[i] = Defaults.default_int
 
         result = {'IDENTITY': data}
 

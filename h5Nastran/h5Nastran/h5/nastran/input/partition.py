@@ -2,7 +2,7 @@ from __future__ import print_function, absolute_import
 
 from six.moves import range
 
-from h5Nastran.data_helper import DataHelper
+from h5Nastran.defaults import Defaults
 from h5Nastran.h5nastrannode import H5NastranNode
 from .input_table import InputTable, TableDef
 
@@ -87,8 +87,8 @@ class AESURF(InputTable):
             label.append(card.label)
             cid1.append(card.cid1)
             alid1.append(card.alid1)
-            cid2.append(card.cid2 if card.cid2 is not None else DataHelper.default_int)
-            alid2.append(card.alid2 if card.alid2 is not None else DataHelper.default_int)
+            cid2.append(card.cid2 if card.cid2 is not None else Defaults.default_int)
+            alid2.append(card.alid2 if card.alid2 is not None else Defaults.default_int)
             eff.append(card.eff)
             ldw.append(_get_ldw(card.ldw))
             crefc.append(card.crefc)

@@ -4,7 +4,7 @@ import numpy as np
 from six import iteritems
 from six.moves import range
 
-from h5Nastran.data_helper import DataHelper
+from h5Nastran.defaults import Defaults
 from h5Nastran.h5nastrannode import H5NastranNode
 from ._shell_element_info import QuadShell, TriaShell, shell_element_info_format
 from .input_table import InputTable, TableDef
@@ -293,6 +293,32 @@ class CACINF4(InputTable):
 
 class CAERO1(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CAERO1')
+    
+    def to_bdf(self, bdf):
+        add_card = bdf.add_caero1
+        
+        data = self.identity
+        
+        eid = data['EID']
+        pid = data['PID']
+        cp = data['CP']
+        nspan = data['NSPAN']
+        nchord = data['NCHORD']
+        lspan = data['LSPAN']
+        lchord = data['LCHORD']
+        igid = data['IGID']
+        x1 = data['X1']
+        y1 = data['Y1']
+        z1 = data['Z1']
+        x12 = data['X12']
+        x4 = data['X4']
+        y4 = data['Y4']
+        z4 = data['Z4']
+        x43 = data['X43']
+        
+        for i in range(eid.shape[0]):
+            add_card(eid[i], pid[i], igid[i], np.array([x1[i], y1[i], z1[i]]), x12[i],
+                     np.array([x4[i], y4[i], z4[i]]), x43[i], cp[i], nspan[i], lspan[i], nchord[i], lchord[i])
 
     def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
@@ -399,6 +425,38 @@ class CAXISYM(InputTable):
 class CBAR(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CBAR')
 
+    def to_bdf(self, bdf):
+        add_card = bdf.add_cbar
+
+        data = self.identity
+
+        eid = data['EID']
+        pid = data['PID']
+        ga = data['GA']
+        gb = data['GB']
+        flag = data['FLAG']
+        x1 = data['X1']
+        x2 = data['X2']
+        x3 = data['X3']
+        go = data['GO']
+        pa = data['PA']
+        pb = data['PB']
+        w1a = data['W1A']
+        w2a = data['W2A']
+        w3a = data['W3A']
+        w1b = data['W1B']
+        w2b = data['W2B']
+        w3b = data['W3B']
+
+        for i in range(eid.shape[0]):
+            _flag = flag[i]
+            if _flag == 0:
+                offt = 'BGG'
+            else:
+                offt = 'GGG'
+            add_card(eid[i], pid[i], [ga[i], gb[i]], [x1[i], x2[i], x3[i]], go[i], offt=offt, pa=pa[i], pb=pb[i],
+                     wa=[w1a[i], w2a[i], w3a[i]], wb=[w1b[i], w2b[i], w3b[i]])
+
     def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
         data = np.empty(len(card_ids), dtype=self.table_def.dtype)
@@ -438,14 +496,19 @@ class CBAR(InputTable):
             # TODO: what does *F = FE bit-wise AND with 3 mean in DMAP guide?
 
             g0 = card.g0
+            offt = card.offt
+            first_offt = offt[0]
 
             if x[0] is None:
                 _flag = 2
-            elif g0 in ('', None):
-                g0 = DataHelper.default_int
+            elif first_offt == 'B':
+                g0 = Defaults.default_int
                 _flag = 0
-            else:
+            elif first_offt == 'G':
+                g0 = Defaults.default_int
                 _flag = 1
+
+            # TODO: offt is not stored, need to convert wa and wb to basic coordinate system
 
             eid[i] = card.eid
             pid[i] = card.pid
@@ -453,7 +516,7 @@ class CBAR(InputTable):
             flag[i] = _flag
 
             if x[0] is None:
-                x1[i], x2[i], x3[i] = [DataHelper.default_double] * 3
+                x1[i], x2[i], x3[i] = [Defaults.default_double] * 3
             else:
                 x1[i], x2[i], x3[i] = x
 
@@ -486,6 +549,17 @@ class CBARAO_SPEC(object):
 class CBARAO(InputTable):
     table_def = TableDef.create(CBARAO_SPEC)
 
+    def to_bdf(self, bdf):
+        add_card = bdf.add_cbarao
+
+        data = self.identity
+        eid = data['EID']
+        scale = data['SCALE']
+        x = data['X']
+
+        for i in range(eid.shape[0]):
+            add_card(eid[i], scale[i], x[i])
+
     def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
         data = np.empty(len(card_ids), dtype=self.table_def.dtype)
@@ -515,6 +589,46 @@ class CBARAO(InputTable):
 class CBEAM(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CBEAM')
 
+    def to_bdf(self, bdf):
+        add_card = bdf.add_cbeam
+
+        data = self.identity
+
+        eid = data['EID']
+        pid = data['PID']
+        ga = data['GA']
+        gb = data['GB']
+        sa = data['SA']
+        sb = data['SB']
+        x = data['X']
+        g0 = data['G0']
+        f = data['F']
+        pa = data['PA']
+        pb = data['PB']
+        wa = data['WA']
+        wb = data['WB']
+
+        # TODO: what about p-elements for bit?
+
+        for i in range(eid.size):
+            _flag = f[i]
+            if _flag == 0:
+                offt = 'BGG'
+            else:
+                offt = 'GGG'
+
+            _x = x[i]
+            if _x[0] == Defaults.default_double:
+                _x = None
+
+            _g0 = g0[i]
+
+            if _g0 == Defaults.default_int:
+                _g0 = None
+
+            add_card(eid[i], pid[i], [ga[i], gb[i]], _x, _g0, offt, bit=None,
+                     pa=pa[i], pb=pb[i], wa=wa[i], wb=wb[i], sa=sa[i], sb=sb[i])
+
     def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
         data = np.empty(len(card_ids), dtype=self.table_def.dtype)
@@ -538,13 +652,25 @@ class CBEAM(InputTable):
             i += 1
             card = cards[card_id]
 
+            offt = card.offt
+            first_offt = offt[0]
+
             _x = card.x
             if _x is None:
-                _x = [DataHelper.default_double, DataHelper.default_double, DataHelper.default_double]
+                _x = [Defaults.default_double, Defaults.default_double, Defaults.default_double]
+                _flag = 2
+                _g0 = card.g0
+            elif first_offt == 'B':
+                _g0 = Defaults.default_int
+                _flag = 0
+            elif first_offt == 'G':
+                _g0 = Defaults.default_int
+                _flag = 1
 
-            _g0 = card.g0
             if _g0 is None:
-                _g0 = DataHelper.default_int
+                _g0 = Defaults.default_int
+
+            # TODO: offt is not stored, need to convert wa and wb to basic coordinate system
 
             eid[i] = card.eid
             pid[i] = card.pid
@@ -553,7 +679,7 @@ class CBEAM(InputTable):
             sb[i] = card.sb
             x[i] = _x
             g0[i] = _g0
-            f[i] = DataHelper.unknown_int  # TODO: CBEAM flag
+            f[i] = _flag
             pa[i] = card.pa
             pb[i] = card.pb
             wa[i] = card.wa
@@ -579,6 +705,32 @@ class CBEAM3(InputTable):
 class CBEND(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CBEND')
 
+    def to_bdf(self, bdf):
+        add_card = bdf.add_cbend
+
+        data = self.identity
+        eid = data['EID']
+        pid = data['PID']
+        ga = data['GA']
+        gb = data['GB']
+        flag = data['FLAG']
+        x1 = data['X1']
+        x2 = data['X2']
+        x3 = data['X3']
+        go = data['GO']
+        geom = data['GEOM']
+
+        for i in range(eid.size):
+            _go = go[i]
+            if _go == DataHelper.default_int:
+                _go = None
+            if x1[i] == DataHelper.default_double:
+                x = None
+            else:
+                x = [x1[i], x2[i], x3[i]]
+
+            add_card(eid[i], pid[i], [ga[i], gb[i]], _go, x, geom[i])
+
     def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
         data = np.empty(len(card_ids), dtype=self.table_def.dtype)
@@ -602,7 +754,7 @@ class CBEND(InputTable):
             eid[i] = card.eid
             pid[i] = card.pid
             ga[i], gb[i] = card.node_ids
-            flag[i] = DataHelper.unknown_int  # TODO: CBEND flag
+            flag[i] = Defaults.unknown_int  # TODO: CBEND flag
             x1[i], x2[i], x3[i] = card.x
             go[i] = card.g0
             geom[i] = card.geom
@@ -619,6 +771,49 @@ class CBEND(InputTable):
 
 class CBUSH(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CBUSH')
+
+    def to_bdf(self, bdf):
+        add_card = bdf.add_cbush
+
+        data = self.identity
+
+        eid = data['EID']
+        pid = data['PID']
+        ga = data['GA']
+        gb = data['GB']
+        flag = data['FLAG']
+        x1 = data['X1']
+        x2 = data['X2']
+        x3 = data['X3']
+        go = data['GO']
+        cid = data['CID']
+        s = data['S']
+        ocid = data['OCID']
+        s1 = data['S1']
+        s2 = data['S2']
+        s3 = data['S3']
+
+        defaults = self._h5n.defaults
+
+        for i in range(eid.size):
+            _go = go[i]
+            if _go == defaults.default_int:
+                _go = None
+            if x1[i] == defaults.default_double:
+                x = None
+            else:
+                x = [x1[i], x2[i], x3[i]]
+            if cid[i] == defaults.default_int:
+                _cid = None
+            else:
+                _cid = cid[i]
+
+            if s1[i] == defaults.default_double:
+                _s = None
+            else:
+                _s = [s1[i], s2[i], s3[i]]
+
+            add_card(eid[i], pid[i], [ga[i], gb[i]], x, _go, _cid, s[i], ocid[i], _s)
 
     def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
@@ -647,16 +842,16 @@ class CBUSH(InputTable):
 
             _x = card.x
             if _x is None:
-                _x = [DataHelper.default_double, DataHelper.default_double, DataHelper.default_double]
+                _x = [Defaults.default_double, Defaults.default_double, Defaults.default_double]
 
             _g0 = card.g0
             if _g0 is None:
-                _g0 = DataHelper.default_int
+                _g0 = Defaults.default_int
 
             eid[i] = card.eid
             pid[i] = card.pid
             ga[i], gb[i] = card.node_ids
-            flag[i] = DataHelper.unknown_int  # TODO: CBUSH flag
+            flag[i] = Defaults.unknown_int  # TODO: CBUSH flag
             x1[i], x2[i], x3[i] = _x
             go[i] = _g0
             cid[i] = card.cid
@@ -676,6 +871,19 @@ class CBUSH(InputTable):
 
 class CBUSH1D(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CBUSH1D')
+    
+    def to_bdf(self, bdf):
+        add_card = bdf.add_cbush1d
+        
+        data = self.identity
+        
+        eid = data['EID']
+        pid = data['PID']
+        g = data['G']
+        cid = data['CID']
+        
+        for i in range(eid.size):
+            add_card(eid[i], pid[i], g[i], cid[i])
 
     def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
@@ -708,6 +916,21 @@ class CBUSH1D(InputTable):
 
 class CBUSH2D(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CBUSH2D')
+
+    def to_bdf(self, bdf):
+        add_card = bdf.add_cbush2d
+
+        data = self.identity
+
+        eid = data['EID']
+        pid = data['PID']
+        g = data['G']
+        cid = data['CID']
+        plane = data['PLANE']
+        sptid = data['SPTID']
+
+        for i in range(eid.size):
+            add_card(eid[i], pid[i], g[i], cid[i], plane[i], sptid[i])
 
     def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
@@ -745,6 +968,19 @@ class CBUSH2D(InputTable):
 class CCONEAX(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CCONEAX')
 
+    def to_bdf(self, bdf):
+        add_card = bdf.add_cconeax
+
+        data = self.identity
+
+        eid = data['EID']
+        pid = data['PID']
+        ra = data['RA']
+        rb = data['RB']
+
+        for i in range(eid.size):
+            add_card(eid[i], pid[i], [ra[i], rb[i]])
+
     def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
         data = np.empty(len(card_ids), dtype=self.table_def.dtype)
@@ -775,6 +1011,21 @@ class CCONEAX(InputTable):
 
 class CDAMP1(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CDAMP1')
+
+    def to_bdf(self, bdf):
+        add_card = bdf.add_cdamp1
+
+        data = self.identity
+
+        eid = data['EID']
+        pid = data['PID']
+        g1 = data['G1']
+        g2 = data['G2']
+        c1 = data['C1']
+        c2 = data['C2']
+
+        for i in range(eid.size):
+            add_card(eid[i], pid[i], [g1[i], g2[i]], c1[i], c2[i])
 
     def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
@@ -811,6 +1062,21 @@ class CDAMP1(InputTable):
 class CDAMP2(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CDAMP2')
 
+    def to_bdf(self, bdf):
+        add_card = bdf.add_cdamp2
+
+        data = self.identity
+
+        eid = data['EID']
+        b = data['B']
+        g1 = data['G1']
+        g2 = data['G2']
+        c1 = data['C1']
+        c2 = data['C2']
+
+        for i in range(eid.size):
+            add_card(eid[i], b[i], [g1[i], g2[i]], c1[i], c2[i])
+
     def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
         data = np.empty(len(card_ids), dtype=self.table_def.dtype)
@@ -846,6 +1112,20 @@ class CDAMP2(InputTable):
 class CDAMP3(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CDAMP3')
 
+    def to_bdf(self, bdf):
+        add_card = bdf.add_cdamp3
+
+        data = self.identity
+
+        eid = data['EID']
+        pid = data['PID']
+        s1 = data['S1']
+        s2 = data['S2']
+
+        for i in range(eid.size):
+            _s = [s1[i], s2[i]]
+            add_card(eid[i], pid[i], _s)
+
     def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
         data = np.empty(len(card_ids), dtype=self.table_def.dtype)
@@ -878,6 +1158,20 @@ class CDAMP3(InputTable):
 
 class CDAMP4(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CDAMP4')
+
+    def to_bdf(self, bdf):
+        add_card = bdf.add_cdamp4
+
+        data = self.identity
+
+        eid = data['EID']
+        b = data['B']
+        s1 = data['S1']
+        s2 = data['S2']
+
+        for i in range(eid.size):
+            _s = [s1[i], s2[i]]
+            add_card(eid[i], b[i], _s)
 
     def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
@@ -912,6 +1206,20 @@ class CDAMP4(InputTable):
 class CDAMP5(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CDAMP5')
 
+    def to_bdf(self, bdf):
+        add_card = bdf.add_cdamp5
+
+        data = self.identity
+
+        eid = data['EID']
+        pid = data['PID']
+        s1 = data['S1']
+        s2 = data['S2']
+
+        for i in range(eid.size):
+            _s = [s1[i], s2[i]]
+            add_card(eid[i], pid[i], _s)
+
     def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
         data = np.empty(len(card_ids), dtype=self.table_def.dtype)
@@ -945,6 +1253,21 @@ class CDAMP5(InputTable):
 class CELAS1(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CELAS1')
 
+    def to_bdf(self, bdf):
+        add_card = bdf.add_celas1
+
+        data = self.identity
+
+        eid = data['EID']
+        pid = data['PID']
+        g1 = data['G1']
+        g2 = data['G2']
+        c1 = data['C1']
+        c2 = data['C2']
+
+        for i in range(eid.size):
+            add_card(eid[i], pid[i], [g1[i], g2[i]], c1[i], c2[i])
+
     def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
         data = np.empty(len(card_ids), dtype=self.table_def.dtype)
@@ -961,7 +1284,7 @@ class CELAS1(InputTable):
             i += 1
             card = cards[card_id]
 
-            nids = [nid if nid is not None else DataHelper.default_int for nid in card.node_ids]
+            nids = [nid if nid is not None else 0 for nid in card.node_ids]
 
             eid[i] = card.eid
             pid[i] = card.pid
@@ -982,6 +1305,23 @@ class CELAS1(InputTable):
 class CELAS2(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CELAS2')
 
+    def to_bdf(self, bdf):
+        add_card = bdf.add_celas2
+
+        data = self.identity
+
+        eid = data['EID']
+        k = data['K']
+        g1 = data['G1']
+        g2 = data['G2']
+        c1 = data['C1']
+        c2 = data['C2']
+        ge = data['GE']
+        s = data['S']
+
+        for i in range(eid.size):
+            add_card(eid[i], k[i], [g1[i], g2[i]], c1[i], c2[i], ge[i], s[i])
+
     def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
         data = np.empty(len(card_ids), dtype=self.table_def.dtype)
@@ -1000,7 +1340,7 @@ class CELAS2(InputTable):
             i += 1
             card = cards[card_id]
 
-            nids = [nid if nid is not None else DataHelper.default_int for nid in card.node_ids]
+            nids = [nid if nid is not None else 0 for nid in card.node_ids]
 
             eid[i] = card.eid
             k[i] = card.k
@@ -1023,6 +1363,19 @@ class CELAS2(InputTable):
 class CELAS3(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CELAS3')
 
+    def to_bdf(self, bdf):
+        add_card = bdf.add_celas3
+
+        data = self.identity
+
+        eid = data['EID']
+        pid = data['PID']
+        s1 = data['S1']
+        s2 = data['S2']
+
+        for i in range(eid.size):
+            add_card(eid[i], pid[i], [s1[i], s2[i]])
+
     def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
         data = np.empty(len(card_ids), dtype=self.table_def.dtype)
@@ -1037,7 +1390,7 @@ class CELAS3(InputTable):
             i += 1
             card = cards[card_id]
 
-            nids = [nid if nid is not None else DataHelper.default_int for nid in card.node_ids]
+            nids = [nid if nid is not None else 0 for nid in card.node_ids]
 
             eid[i] = card.eid
             pid[i] = card.pid
@@ -1056,6 +1409,19 @@ class CELAS3(InputTable):
 class CELAS4(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CELAS4')
 
+    def to_bdf(self, bdf):
+        add_card = bdf.add_celas4
+
+        data = self.identity
+
+        eid = data['EID']
+        k = data['K']
+        s1 = data['S1']
+        s2 = data['S2']
+
+        for i in range(eid.size):
+            add_card(eid[i], k[i], [s1[i], s2[i]])
+
     def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
         data = np.empty(len(card_ids), dtype=self.table_def.dtype)
@@ -1070,7 +1436,7 @@ class CELAS4(InputTable):
             i += 1
             card = cards[card_id]
 
-            nids = [nid if nid is not None else DataHelper.default_int for nid in card.node_ids]
+            nids = [nid if nid is not None else 0 for nid in card.node_ids]
 
             eid[i] = card.eid
             k[i] = card.k
@@ -1123,6 +1489,31 @@ class CFLUID4(InputTable):
 
 class CGAP(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CGAP')
+    
+    def to_bdf(self, bdf):
+        add_card = bdf.add_cgap
+        
+        data = self.identity
+
+        eid = data['EID']
+        pid = data['PID']
+        ga = data['GA']
+        gb = data['GB']
+        f = data['F']
+        x1 = data['X1']
+        x2 = data['X2']
+        x3 = data['X3']
+        go = data['GO']
+        cid = data['CID']
+
+        defaults = self._h5n.defaults
+        
+        for i in range(eid.size):
+            _x = defaults.to_list_double([x1[i], x2[i], x3[i]])
+            _go = defaults.to_value_int(go[i])
+            _cid = defaults.to_value_int(cid[i])
+
+            add_card(eid[i], pid[i], [ga[i], gb[i]], _x, _go, _cid)
 
     def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
@@ -1138,27 +1529,21 @@ class CGAP(InputTable):
         x3 = data['X3']
         go = data['GO']
         cid = data['CID']
+        
+        defaults = self._h5n.defaults
 
         i = -1
         for card_id in card_ids:
             i += 1
             card = cards[card_id]
 
-            _x = card.x
-            if _x[0] is None:
-                _x = [DataHelper.default_double] * 3
-
-            _g0 = card.g0
-            if _g0 is None:
-                _g0 = DataHelper.default_int
-
             eid[i] = card.eid
             pid[i] = card.pid
             ga[i], gb[i] = card.node_ids
-            f[i] = DataHelper.unknown_int  # TODO: CGAP flag
-            x1[i], x2[i], x3[i] = _x
-            go[i] = _g0
-            cid[i] = card.cid if card.cid is not None else DataHelper.default_int
+            f[i] = defaults.unknown_int  # TODO: CGAP flag
+            x1[i], x2[i], x3[i] = defaults.get_list_double(card.x)
+            go[i] = defaults.get_value_int(card.g0)
+            cid[i] = defaults.get_value_int(card.cid)
 
         result = {
             'IDENTITY': data
@@ -1207,6 +1592,23 @@ class CHBDYP(InputTable):
 
 class CHEXA(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CHEXA')
+
+    def to_bdf(self, bdf):
+        add_card = bdf.add_chexa
+
+        data = self.identity
+
+        eid = data['EID']
+        pid = data['PID']
+        g = data['G']
+
+        for i in range(eid.size):
+            nids = g[i].tolist()
+            try:
+                nids.remove(0)
+            except ValueError:
+                pass
+            add_card(eid[i], pid[i], nids)
 
     def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
@@ -1306,12 +1708,54 @@ class CMASS3(InputTable):
 class CMASS4(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CMASS4')
 
+    def to_bdf(self, bdf):
+        add_card = bdf.add_cmass4
 
-########################################################################################################################
+        data = self.identity
+
+        eid = data['EID']
+        m = data['M']
+        s1 = data['S1']
+        s2 = data['S2']
+
+        for i in range(eid.size):
+            add_card(eid[i], m[i], [s1[i], s2[i]])
 
     def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
         data = np.empty(len(card_ids), dtype=self.table_def.dtype)
+
+        eid = data['EID']
+        m = data['M']
+        s1 = data['S1']
+        s2 = data['S2']
+
+        i = -1
+        for card_id in card_ids:
+            i += 1
+            card = cards[card_id]
+
+            eid[i] = card.eid
+            m[i] = card.mass
+            s1[i], s2[i] = card.nodes
+
+        result = {
+            'IDENTITY': data
+        }
+
+        return result
+
+
+########################################################################################################################
+
+
+class CONM2(InputTable):
+    table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CONM2')
+
+    def to_bdf(self, bdf):
+        add_card = bdf.add_conm2
+
+        data = self.identity
 
         eid = data['EID']
         g = data['G']
@@ -1324,27 +1768,12 @@ class CMASS4(InputTable):
         i2 = data['I2']
         i3 = data['I3']
 
-        i = -1
-        for card_id in card_ids:
-            i += 1
-            card = cards[card_id]
-
-            eid[i] = card.eid
-            g[i] = card.nid
-            cid[i] = card.cid
-            m[i] = card.mass
-            x1[i], x2[i], x3[i] = card.X
-            i1[i] = card.I[0]
-            i2[i] = card.I[1:3]
-            i3[i] = card.I[3:]
-
-        result = {
-            'IDENTITY': data
-        }
-
-        return result
-class CONM2(InputTable):
-    table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CONM2')
+        for i in range(eid.size):
+            x = [x1[i], x2[i], x3[i]]
+            i_ = [i1[i]]
+            i_.extend(i2[i].tolist())
+            i_.extend(i3[i].tolist())
+            add_card(eid[i], g[i], m[i], cid[i], x, i_)
 
     def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
@@ -1387,6 +1816,23 @@ class CONM2(InputTable):
 
 class CONROD(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CONROD')
+
+    def to_bdf(self, bdf):
+        add_card = bdf.add_conrod
+
+        data = self.identity
+
+        eid = data['EID']
+        g1 = data['G1']
+        g2 = data['G2']
+        mid = data['MID']
+        a = data['A']
+        j = data['J']
+        c = data['C']
+        nsm = data['NSM']
+
+        for i in range(eid.size):
+            add_card(eid[i], mid[i], [g1[i], g2[i]], a[i], j[i], c[i], nsm[i])
 
     def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
@@ -1433,6 +1879,19 @@ class CONTRLT(InputTable):
 
 class CPENTA(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CPENTA')
+
+    def to_bdf(self, bdf):
+        add_card = bdf.add_cpenta
+
+        data = self.identity
+
+        eid = data['EID']
+        pid = data['PID']
+        g = data['G']
+
+        for i in range(eid.size):
+            nids = [_ for _ in g[i] if _ != 0]
+            add_card(eid[i], pid[i], nids)
 
     def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
@@ -1589,6 +2048,35 @@ class CQUAD4FD(InputTable):
 class CQUAD8(InputTable, QuadShell):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CQUAD8')
 
+    def to_bdf(self, bdf):
+        add_card = bdf.add_cquad8
+
+        data = self.identity
+
+        eid = data['EID']
+        pid = data['PID']
+        g = data['G']
+        theta = data['THETA']
+        zoffs = data['ZOFFS']
+        tflag = data['TFLAG']
+        t = data['T']
+        mcid = data['MCID']
+
+        defaults = self._h5n.defaults
+
+        get_mcid = defaults.to_value_int
+        get_theta = defaults.to_value_double
+
+        for i in range(eid.size):
+            _mcid = get_mcid(mcid[i])
+            _theta = get_theta(theta[i])
+            if _mcid is None:
+                theta_mcid = _theta
+            else:
+                theta_mcid = _mcid
+            _t = t[i]
+            add_card(eid[i], pid[i], g[i], theta_mcid, zoffs[i], tflag[i], _t[0], _t[1], _t[2], _t[3])
+
     def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
         data = np.empty(len(card_ids), dtype=self.table_def.dtype)
@@ -1610,9 +2098,9 @@ class CQUAD8(InputTable, QuadShell):
             theta_mcid = card.theta_mcid
             if not isinstance(theta_mcid, float):
                 _mcid = theta_mcid
-                _theta = DataHelper.default_double
+                _theta = Defaults.default_double
             else:
-                _mcid = DataHelper.default_int
+                _mcid = Defaults.default_int
                 _theta = theta_mcid
 
             nids = [nid if nid is not None else 0 for nid in card.node_ids]
@@ -1647,6 +2135,35 @@ class CQUAD9FD(InputTable):
 
 class CQUADR(InputTable, QuadShell):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CQUADR')
+    
+    def to_bdf(self, bdf):
+        add_card = bdf.add_cquadr
+        
+        data = self.identity
+        
+        eid = data['EID']
+        pid = data['PID']
+        g = data['G']
+        theta = data['THETA']
+        zoffs = data['ZOFFS']
+        tflag = data['TFLAG']
+        t = data['T']
+        mcid = data['MCID']
+        
+        defaults = self._h5n.defaults
+
+        get_mcid = defaults.to_value_int
+        get_theta = defaults.to_value_double
+
+        for i in range(eid.size):
+            _mcid = get_mcid(mcid[i])
+            _theta = get_theta(theta[i])
+            if _mcid is None:
+                theta_mcid = _theta
+            else:
+                theta_mcid = _mcid
+            _t = t[i]
+            add_card(eid[i], pid[i], g[i], theta_mcid, zoffs[i], tflag[i], _t[0], _t[1], _t[2], _t[3])
 
     def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
@@ -1669,9 +2186,9 @@ class CQUADR(InputTable, QuadShell):
             theta_mcid = card.theta_mcid
             if not isinstance(theta_mcid, float):
                 _mcid = theta_mcid
-                _theta = DataHelper.default_double
+                _theta = Defaults.default_double
             else:
-                _mcid = DataHelper.default_int
+                _mcid = Defaults.default_int
                 _theta = theta_mcid
 
             eid[i] = card.eid
@@ -1710,6 +2227,18 @@ class CRBE1(InputTable):
 
 class CROD(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CROD')
+
+    def to_bdf(self, bdf):
+        add_card = bdf.add_crod
+
+        data = self.identity
+
+        eid = data['EID']
+        pid = data['PID']
+        g = data['G']
+
+        for i in range(eid.size):
+            add_card(eid[i], pid[i], g[i])
 
     def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
@@ -1755,6 +2284,18 @@ class CSEAMP(InputTable):
 class CSHEAR(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CSHEAR')
 
+    def to_bdf(self, bdf):
+        add_card = bdf.add_cshear
+
+        data = self.identity
+
+        eid = data['EID']
+        pid = data['PID']
+        g = data['G']
+
+        for i in range(eid.size):
+            add_card(eid[i], pid[i], g[i])
+
     def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
         data = np.empty(len(card_ids), dtype=self.table_def.dtype)
@@ -1798,6 +2339,19 @@ class CSLOT4(InputTable):
 
 class CTETRA(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CTETRA')
+
+    def to_bdf(self, bdf):
+        add_card = bdf.add_ctetra
+
+        data = self.identity
+
+        eid = data['EID']
+        pid = data['PID']
+        g = data['G']
+
+        for i in range(eid.size):
+            nids = [_ for _ in g[i] if _ != 0]
+            add_card(eid[i], pid[i], nids)
 
     def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
@@ -1859,11 +2413,11 @@ class CTRIA3(InputTable, TriaShell):
             _eid = eid[i]
             _pid = pid[i]
             _g = g[i].tolist()
-            _theta = _get_val(theta[i], DataHelper.default_double)
+            _theta = _get_val(theta[i], Defaults.default_double)
             _zoffs = zoffs[i]
             _tflag = tflag[i]
             _t = t[i]
-            _mcid = _get_val(mcid[i], DataHelper.default_int)
+            _mcid = _get_val(mcid[i], Defaults.default_int)
 
             if _theta is None:
                 theta_mcid = _mcid
@@ -1893,9 +2447,9 @@ class CTRIA3(InputTable, TriaShell):
             theta_mcid = card.theta_mcid
             if not isinstance(theta_mcid, float):
                 _mcid = theta_mcid
-                _theta = DataHelper.default_double
+                _theta = Defaults.default_double
             else:
-                _mcid = DataHelper.default_int
+                _mcid = Defaults.default_int
                 _theta = theta_mcid
 
             eid[i] = card.eid
@@ -1927,6 +2481,35 @@ class CTRIA3FD(InputTable):
 class CTRIA6(InputTable, TriaShell):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CTRIA6')
 
+    def to_bdf(self, bdf):
+        add_card = bdf.add_ctria6
+
+        data = self.identity
+
+        eid = data['EID']
+        pid = data['PID']
+        g = data['G']
+        theta = data['THETA']
+        zoffs = data['ZOFFS']
+        tflag = data['TFLAG']
+        t = data['T']
+        mcid = data['MCID']
+
+        defaults = self._h5n.defaults
+
+        get_mcid = defaults.to_value_int
+        get_theta = defaults.to_value_double
+
+        for i in range(eid.size):
+            _mcid = get_mcid(mcid[i])
+            _theta = get_theta(theta[i])
+            if _mcid is None:
+                theta_mcid = _theta
+            else:
+                theta_mcid = _mcid
+            _t = t[i]
+            add_card(eid[i], pid[i], g[i], theta_mcid, zoffs[i], tflag[i], _t[0], _t[1], _t[2])
+
     def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
         data = np.empty(len(card_ids), dtype=self.table_def.dtype)
@@ -1948,9 +2531,9 @@ class CTRIA6(InputTable, TriaShell):
             theta_mcid = card.theta_mcid
             if not isinstance(theta_mcid, float):
                 _mcid = theta_mcid
-                _theta = DataHelper.default_double
+                _theta = Defaults.default_double
             else:
-                _mcid = DataHelper.default_int
+                _mcid = Defaults.default_int
                 _theta = theta_mcid
 
             nids = [nid if nid else 0 for nid in card.node_ids]
@@ -1991,6 +2574,35 @@ class CTRIAH(InputTable):
 class CTRIAR(InputTable, TriaShell):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CTRIAR')
 
+    def to_bdf(self, bdf):
+        add_card = bdf.add_ctriar
+
+        data = self.identity
+
+        eid = data['EID']
+        pid = data['PID']
+        g = data['G']
+        theta = data['THETA']
+        zoffs = data['ZOFFS']
+        tflag = data['TFLAG']
+        t = data['T']
+        mcid = data['MCID']
+
+        defaults = self._h5n.defaults
+
+        get_mcid = defaults.to_value_int
+        get_theta = defaults.to_value_double
+
+        for i in range(eid.size):
+            _mcid = get_mcid(mcid[i])
+            _theta = get_theta(theta[i])
+            if _mcid is None:
+                theta_mcid = _theta
+            else:
+                theta_mcid = _mcid
+            _t = t[i]
+            add_card(eid[i], pid[i], g[i], theta_mcid, zoffs[i], tflag[i], _t[0], _t[1], _t[2])
+
     def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
         data = np.empty(len(card_ids), dtype=self.table_def.dtype)
@@ -2012,9 +2624,9 @@ class CTRIAR(InputTable, TriaShell):
             theta_mcid = card.theta_mcid
             if not isinstance(theta_mcid, float):
                 _mcid = theta_mcid
-                _theta = DataHelper.default_double
+                _theta = Defaults.default_double
             else:
-                _mcid = DataHelper.default_int
+                _mcid = Defaults.default_int
                 _theta = theta_mcid
 
             eid[i] = card.eid
@@ -2067,6 +2679,18 @@ class CTRIX6FD(InputTable):
 class CTUBE(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CTUBE')
 
+    def to_bdf(self, bdf):
+        add_card = bdf.add_ctube
+
+        data = self.identity
+
+        eid = data['EID']
+        pid = data['PID']
+        g = data['G']
+
+        for i in range(eid.size):
+            add_card(eid[i], pid[i], g[i])
+
     def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
         data = np.empty(len(card_ids), dtype=self.table_def.dtype)
@@ -2098,6 +2722,18 @@ class CTUBE(InputTable):
 
 class CVISC(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CVISC')
+
+    def to_bdf(self, bdf):
+        add_card = bdf.add_cvisc
+
+        data = self.identity
+
+        eid = data['EID']
+        pid = data['PID']
+        g = data['G']
+
+        for i in range(eid.size):
+            add_card(eid[i], pid[i], g[i])
 
     def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
@@ -2160,6 +2796,17 @@ class CWELDP(InputTable):
 
 class PLOTEL(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/PLOTEL')
+
+    def to_bdf(self, bdf):
+        add_card = bdf.add_plotel
+
+        data = self.identity
+
+        eid = data['EID']
+        g = data['G']
+
+        for i in range(eid.size):
+            add_card(eid[i], g[i])
 
     def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
@@ -2254,6 +2901,31 @@ class RADCOL(InputTable):
 class RBAR(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/RBAR')
 
+    def to_bdf(self, bdf):
+        add_card = bdf.add_rbar
+
+        data = self.identity
+
+        eid = data['EID']
+        ga = data['GA']
+        gb = data['GB']
+        cna = data['CNA']
+        cnb = data['CNB']
+        cma = data['CMA']
+        cmb = data['CMB']
+        alpha = data['ALPHA']
+
+        def _get_val(val):
+            return val if val != 0 else None
+
+        for i in range(eid.size):
+            _cna = _get_val(cna[i])
+            _cnb = _get_val(cnb[i])
+            _cma = _get_val(cma[i])
+            _cmb = _get_val(cmb[i])
+
+            add_card(eid[i], [ga[i], gb[i]], _cna, _cnb, _cma, _cmb, alpha[i])
+
     def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
 
@@ -2307,6 +2979,26 @@ class RBE2(InputTable):
         '/NASTRAN/INPUT/ELEMENT/RBE2/RB',
         subtables=[TableDef.create('/NASTRAN/INPUT/ELEMENT/RBE2/GM')],
     )
+
+    def to_bdf(self, bdf):
+        add_card = bdf.add_rbe2
+
+        identity = self.identity
+        gm = self.gm
+
+        eid = identity['EID']
+        gn = identity['GN']
+        cm = identity['CM']
+        gm_pos = identity['GM_POS']
+        gm_len = identity['GM_LEN']
+        alpha = identity['ALPHA']
+        gm_id = gm['ID']
+
+        j = 0
+        for i in range(eid.size):
+            gms = gm_id[j:j+gm_len[i]]
+            j += gm_len[i]
+            add_card(eid[i], gn[i], cm[i], gms, alpha[i])
 
     def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
@@ -2372,6 +3064,50 @@ class RBE3(InputTable):
             ),
         ]
     )
+
+    def to_bdf(self, bdf):
+        add_card = bdf.add_rbe3
+
+        identity = self.identity
+        _wtcg = self.wtcg
+        _gm = self.gm
+        _g = self.g
+
+        id_ = _g['ID']
+        gm = _gm['GM']
+        cm = _gm['CM']
+        wt1 = _wtcg['WT1']
+        c = _wtcg['C']
+        g_pos = _wtcg['G_POS']
+        g_len = _wtcg['G_LEN']
+        eid = identity['EID']
+        refg = identity['REFG']
+        refc = identity['REFC']
+        wtcg_pos = identity['WTCG_POS']
+        wtcg_len = identity['WTCG_LEN']
+        gm_pos = identity['GM_POS']
+        gm_len = identity['GM_LEN']
+        alpha = identity['ALPHA']
+
+        for i in range(eid.size):
+            i1 = gm_pos[i]
+            i2 = i1 + gm_len[i]
+            gmi = gm[i1:i2]
+            cmi = cm[i1:i2]
+
+            i1 = wtcg_pos[i]
+            i2 = i1 + wtcg_len[i]
+            weights = wt1[i1:i2]
+            comps = c[i1:i2]
+
+            gijs = []
+
+            for j in range(i1, i2):
+                j1 = g_pos[j]
+                j2 = j1 + g_len[j]
+                gijs.append(id_[j1:j2])
+
+            add_card(eid[i], refg[i], refc[i], weights, comps, gijs, gmi, cmi, alpha[i])
 
     def from_bdf(self, cards):
         card_ids = sorted(cards.keys())

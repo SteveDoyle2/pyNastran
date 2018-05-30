@@ -1,4 +1,6 @@
 from __future__ import print_function, absolute_import
+from six import iteritems
+from collections import OrderedDict
 
 from h5Nastran.h5nastrannode import H5NastranNode
 from .input_table import InputTable, TableDef
@@ -60,6 +62,15 @@ class Constraint(H5NastranNode):
 
     def path(self):
         return self._input.path() + ['CONSTRAINT']
+
+    def to_bdf(self, bdf):
+        for key, item in iteritems(self.__dict__):
+            if key.startswith('_'):
+                continue
+            try:
+                item.to_bdf(bdf)
+            except NotImplementedError:
+                pass
     
 
 ########################################################################################################################
@@ -97,6 +108,32 @@ class GRDSET(InputTable):
 
 class MPC(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/MPC/IDENTITY')
+
+    def to_bdf(self, bdf):
+        add_card = bdf.add_mpc
+
+        identity = self.identity
+        gca = self.gca
+
+        _g = gca['G']
+        _c = gca['C']
+        _a = gca['A']
+        sid = identity['SID']
+        g = identity['G']
+        c = identity['C']
+        a = identity['A']
+        gca_pos = identity['GCA_POS']
+        gca_len = identity['GCA_LEN']
+
+        for i in range(sid.size):
+            j1 = gca_pos[i]
+            j2 = j1 + gca_len[i]
+
+            nids = [g[i]] + _g[j1:j2].tolist()
+            comps = [c[i]] + _c[j1:j2].tolist()
+            enforced = [a[i]] + _a[j1:j2].tolist()
+
+            add_card(sid[i], nids, comps, enforced)
 
     def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
@@ -206,6 +243,33 @@ class SPBLND2(InputTable):
 class SPC(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/SPC')
 
+    def to_bdf(self, bdf):
+        add_card = bdf.add_spc
+
+        identity = self.identity
+
+        sid = identity['SID']
+        g = identity['G']
+        c = identity['C']
+        d = identity['D']
+
+        _spcs = OrderedDict()
+        for i in range(sid.size):
+            try:
+                _spc = _spcs[sid[i]]
+            except KeyError:
+                _spc = _spcs[sid[i]] = [[], [], []]
+
+            _gids, _comps, _enf = _spc
+
+            _gids.append(g[i])
+            _comps.append(c[i])
+            _enf.append(d[i])
+
+        for key, _spc in iteritems(_spcs):
+            _gids, _comps, _enf = _spc
+            add_card(key, _gids, _comps, _enf)
+
     def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
 
@@ -292,6 +356,20 @@ class SPC1_THRU(InputTable):
 class SPCADD(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/SPCADD/IDENTITY')
 
+    def to_bdf(self, bdf):
+        add_card = bdf.add_spcadd
+
+        identity = self.identity
+        sid = identity['SID']
+        s_pos = identity['S_POS']
+        s_len = identity['S_LEN']
+        s = self.s['S']
+
+        for i in range(sid.size):
+            j1 = s_pos[i]
+            j2 = j1 + s_len[i]
+            add_card(sid[i], s[j1:j2].tolist())
+
     def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
     
@@ -335,6 +413,33 @@ class SPCAX(InputTable):
 
 class SPCD(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/SPCD')
+
+    def to_bdf(self, bdf):
+        add_card = bdf.add_spcd
+
+        data = self.identity
+
+        sid = data['SID']
+        g = data['G']
+        c = data['C']
+        d = data['D']
+
+        _spcds = OrderedDict()
+        for i in range(sid.size):
+            try:
+                _spcd = _spcds[sid[i]]
+            except KeyError:
+                _spcd = _spcds[sid[i]] = [[], [], []]
+
+            _gids, _constr, _enf = _spcd
+
+            _gids.append(g[i])
+            _constr.append(c[i])
+            _enf.append(d[i])
+
+        for key, _spcd in iteritems(_spcds):
+            _gids, _constr, _enf = _spcd
+            add_card(key, _gids, _constr, _enf)
 
     def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
@@ -393,6 +498,26 @@ class SPLINE1(InputTable):
 
 class SPLINE2(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/SPLINE2')
+
+    def to_bdf(self, bdf):
+        add_card = bdf.add_spline2
+
+        identity = self.identity
+
+        eid = identity['EID']
+        caero = identity['CAERO']
+        id1 = identity['ID1']
+        id2 = identity['ID2']
+        setg = identity['SETG']
+        dz = identity['DZ']
+        dtor = identity['DTOR']
+        cid = identity['CID']
+        dthx = identity['DTHX']
+        dthy = identity['DTHY']
+        usage = identity['USAGE']
+
+        for i in range(eid.size):
+            add_card(eid[i], caero[i], id1[i], id2[i], setg[i], dz[i], dtor[i], cid[i], dthx[i], dthy[i], usage[i])
 
     def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
@@ -520,6 +645,17 @@ class TEMPBC(InputTable):
 
 class TEMPD(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/TEMPD')
+
+    def to_bdf(self, bdf):
+        add_card = bdf.add_tempd
+
+        data = self.identity
+
+        sid = data['SID']
+        t = data['T']
+
+        for i in range(sid.size):
+            add_card(sid[i], t[i])
 
     def from_bdf(self, cards):
         card_ids = sorted(cards.keys())

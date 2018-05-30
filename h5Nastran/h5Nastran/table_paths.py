@@ -7,6 +7,9 @@ class TablePaths(object):
         self.bdf_lines_path = r'/H5NASTRAN/NASTRAN/INPUT'
         self.bdf_lines_table = 'BDF_LINES'
 
+        self.bdf_file_path = r'/H5NASTRAN/NASTRAN/INPUT'
+        self.bdf_file_table = 'BDF_FILE'
+
         self.unsupported_cards_path = r'/H5NASTRAN/NASTRAN/INPUT'
         self.unsupported_cards_table = 'UNSUPPORTED_CARDS'
 
