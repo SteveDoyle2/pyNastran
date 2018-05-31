@@ -354,7 +354,9 @@ class Settings(object):
                 axes.GetYAxisCaptionActor2D(),
                 axes.GetZAxisCaptionActor2D(),
             ]
-            width = 0.10
+            # this doesn't set the width
+            # this being very large (old=0.1) makes the width constraint inactive
+            width = 1.0
             height = 0.25
             for text in texts:
                 text.SetWidth(coord_text_scale * width)
