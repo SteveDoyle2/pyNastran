@@ -1285,6 +1285,15 @@ class CBEND(LineElement):
         self.gb_ref = None
         self.pid_ref = None
 
+    def Centroid(self):
+        if self.pid_ref is None:
+            msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
+            raise RuntimeError(msg)
+        return (self.ga_ref.get_position() + self.gb_ref.get_position()) / 2.
+
+    def center_of_mass(self):
+        return self.Centroid()
+
     def raw_fields(self):
         (x1, x2, x3) = self.get_x_g0_defaults()
         list_fields = ['CBEND', self.eid, self.Pid(), self.Ga(), self.Gb(),
@@ -1324,11 +1333,80 @@ def init_x_g0(card, eid, x1_default, x2_default, x3_default):
         raise RuntimeError(msg)
     return x, g0
 
+def get_bar_vector(model, elem, node1, node2, xyz1):
+    """helper method for ``rotate_v_wa_wb``"""
+    cd1 = node1.Cd()
+    cd2 = node2.Cd()
+    if model is None:
+        cd1_ref = node1.cd_ref
+        cd2_ref = node2.cd_ref
 
-def rotate_v_wa_wb(model, elem, n1, n2, node1, node2, ihat_offset, i_offset, eid,
+        # get the vector v, which defines the projection on to the elemental
+        # coordinate frame
+        if elem.g0:
+            #msg = 'which is required by %s eid=%s\n%s' % (elem.type, elem.g0, str(elem))
+            g0_ref = elem.g0_ref
+            n0 = g0_ref.get_position()
+            v = n0 - xyz1
+        else:
+            v = cd1_ref.transform_node_to_global(elem.x)
+
+    else:
+        msg = ', which is required by %s=%s' % (elem.type, elem.eid)
+        cd1_ref = model.Coord(cd1)
+        cd2_ref = model.Coord(cd2)
+
+        # get the vector v, which defines the projection on to the elemental
+        # coordinate frame
+        if elem.g0:
+            #msg = 'which is required by %s eid=%s\n%s' % (elem.type, elem.g0, str(elem))
+            g0_ref = model.Node(elem.g0, msg=msg)
+            n0 = g0_ref.get_position()
+            v = n0 - xyz1
+        else:
+            v = cd1_ref.transform_node_to_global(elem.x)
+            cd1_ref = model.Coord(cd1)
+            cd2_ref = model.Coord(cd2)
+
+    return v, cd1, cd1_ref, cd2, cd2_ref
+
+def rotate_v_wa_wb(model, elem, xyz1, xyz2, node1, node2, ihat_offset, i_offset, eid,
                    Li_offset, log):
     """
     Rotates v, wa, wb
+
+    Parameters
+    ----------
+    model : BDF()
+        BDF : assume the model isn't xref'd
+        None : use the xref'd values
+    elem : CBAR() / CBEAM()
+       the CBAR/CBEAM
+    xyz1 / xyz2 : (3, ) float ndarray
+        the xyz locations for node 1 / 2
+    node1 / node2 : GRID()
+        the xyz object for node 1 / 2
+    ihat_offset : (3, ) float ndarray
+        the normalized x-axis (not including the CBEAM offset)
+    i_offset : (3, ) float ndarray
+        the unnormalized x-axis (not including the CBEAM offset)
+    eid : int
+        the element id
+    Li_offset : float
+        the length of the CBAR/CBEAM (not including the CBEAM offset)
+    log : Log()
+        a logging object or None
+
+    Returns
+    -------
+    v : List[float, float, float]
+        the projection vector that defines the y-axis (jhat)
+    wa : List[float, float, float]
+       the offset vector at A
+    wb : List[float, float, float]
+       the offset vector at B
+    xform : (3, 3) float ndarray
+        a vstack of the [ihat, jhat, khat] axes
 
     OFFT flag
     ---------
@@ -1355,30 +1433,7 @@ def rotate_v_wa_wb(model, elem, n1, n2, node1, node2, ihat_offset, i_offset, eid
                      this is likely the easiest frame for a user
     """
     elem.check_offt()
-    msg = ', which is required by %s=%s' % (elem.type, elem.eid)
-    cd1 = node1.Cd()
-    cd2 = node2.Cd()
-    cd1_ref = model.Coord(cd1)
-    cd2_ref = model.Coord(cd2)
-    #cd1_ref = elem.nodes_ref[0].cp_ref
-    #cd2_ref = elem.nodes_ref[1].cp_ref
-    #cd1 = cd1_ref.cid
-    #cd2 = cd2_ref.cid
-
-    # get the vector v, which defines the projection on to the elemental
-    # coordinate frame
-    if elem.g0:
-        #msg = 'which is required by %s eid=%s\n%s' % (elem.type, elem.g0, str(elem))
-        g0_ref = model.Node(elem.g0, msg=msg)
-        n0 = g0_ref.get_position()
-        v = n0 - n1
-    else:
-        #ga = elem.ga_ref
-        #cda_ref = cd1_ref
-        ga = model.nodes[elem.Ga()]
-        cda = ga.Cd()
-        cda_ref = model.Coord(cda)
-        v = cda_ref.transform_node_to_global(elem.x)
+    v, cd1, cd1_ref, cd2, cd2_ref = get_bar_vector(model, elem, node1, node2, xyz1)
 
     #--------------------------------------------------------------------------
     offt_vector, offt_end_a, offt_end_b = elem.offt
@@ -1394,10 +1449,10 @@ def rotate_v_wa_wb(model, elem, n1, n2, node1, node2, ihat_offset, i_offset, eid
         pass
     else:
         msg = 'offt_vector=%r is not supported; offt=%s' % (offt_vector, elem.offt)
-        return None, None, None, None, msg
+        return None, None, None, None
 
     yhat_offset, zhat_offset = get_bar_yz_transform(
-        v, ihat_offset, eid, n1, n2, node1.nid, node2.nid,
+        v, ihat_offset, eid, xyz1, xyz2, node1.nid, node2.nid,
         i_offset, Li_offset)
     xform_offset = np.vstack([ihat_offset, yhat_offset, zhat_offset]) # 3x3 unit matrix
 
@@ -1441,12 +1496,12 @@ def rotate_v_wa_wb(model, elem, n1, n2, node1, node2, ihat_offset, i_offset, eid
         return v, wa, None, xform_offset
 
     #--------------------------------------------------------------------------
-    #i = ib - ia # (n2 + wb) - (n1 + wa)
-    i = (n2 + wb) - (n1 + wa)
+    #i = ib - ia # (xyz2 + wb) - (xyz1 + wa)
+    #i = (xyz2 + wb) - (xyz1 + wa)
     i = i_offset
     Li = norm(i)
     ihat = i / Li
-    yhat, zhat = get_bar_yz_transform(v, ihat, eid, n1, n2, node1.nid, node2.nid, i, Li)
+    yhat, zhat = get_bar_yz_transform(v, ihat, eid, xyz1, xyz2, node1.nid, node2.nid, i, Li)
 
     #print('  n1=%s n2=%s' % (n1, n2))
     #print('  ib=%s ia=%s' % (ib, ia))
@@ -1461,15 +1516,41 @@ def rotate_v_wa_wb(model, elem, n1, n2, node1, node2, ihat_offset, i_offset, eid
 
     return v, wa, wb, xform
 
-def get_bar_yz_transform(v, ihat, eid, n1, n2, nid1, nid2, i, Li):
-    """helper method for _get_bar_yz_arrays"""
+def get_bar_yz_transform(v, ihat, eid, xyz1, xyz2, nid1, nid2, i, Li):
+    """
+    helper method for ``_get_bar_yz_arrays``
+
+    Parameters
+    ----------
+    v : List[float, float, float]
+        the projection vector that defines the y-axis (jhat)
+    ihat : (3, ) float ndarray
+        the normalized x-axis (not including the CBEAM offset)
+    eid : int
+        the element id
+    xyz1 / xyz2 : (3, ) float ndarray
+        the xyz locations for node 1 / 2
+    nid1 / nid2  : int
+        the node ids for xyz1 / xyz2
+    i : (3, ) float ndarray
+        the unnormalized x-axis (not including the CBEAM offset)
+    Li : float
+        the length of the CBAR/CBEAM (not including the CBEAM offset)
+
+    Returns
+    -------
+    yhat (3, ) float ndarray
+       the CBAR/CBEAM's y-axis
+    zhat (3, ) float ndarray
+       the CBAR/CBEAM's z-axis
+    """
     vhat = v / norm(v) # j
     try:
         z = np.cross(ihat, vhat) # k
     except ValueError:
         msg = 'Invalid vector length\n'
-        msg += 'n1  =%s\n' % str(n1)
-        msg += 'n2  =%s\n' % str(n2)
+        msg += 'xyz1=%s\n' % str(xyz1)
+        msg += 'xyz2=%s\n' % str(xyz2)
         msg += 'nid1=%s\n' % str(nid1)
         msg += 'nid2=%s\n' % str(nid2)
         msg += 'i   =%s\n' % str(i)
@@ -1486,9 +1567,9 @@ def get_bar_yz_transform(v, ihat, eid, n1, n2, nid1, nid2, i, Li):
 
     if norm(ihat) == 0.0 or norm(yhat) == 0.0 or norm(z) == 0.0:
         print('  invalid_orientation - eid=%s yhat=%s zhat=%s v=%s i=%s n%s=%s n%s=%s' % (
-            eid, yhat, zhat, v, i, nid1, n1, nid2, n2))
+            eid, yhat, zhat, v, i, nid1, xyz1, nid2, xyz2))
     elif not np.allclose(norm(yhat), 1.0) or not np.allclose(norm(zhat), 1.0) or Li == 0.0:
         print('  length_error        - eid=%s Li=%s Lyhat=%s Lzhat=%s'
               ' v=%s i=%s n%s=%s n%s=%s' % (
-                  eid, Li, norm(yhat), norm(zhat), v, i, nid1, n1, nid2, n2))
+                  eid, Li, norm(yhat), norm(zhat), v, i, nid1, xyz1, nid2, xyz2))
     return yhat, zhat

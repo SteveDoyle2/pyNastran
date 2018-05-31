@@ -133,6 +133,19 @@ class CFAST(Element):
         self.ga_ref = None
         self.gb_ref = None
 
+    #def Centroid(self):
+        ## same as below, but we ignore the 2nd point it it's None
+        #p = (self.nodes_ref[1].get_position() + self.nodes_ref[0].get_position()) / 2.
+
+        ##p = self.nodes_ref[0].get_position()
+        ##if self.nodes_ref[1] is not None:
+            ##p += self.nodes_ref[1].get_position()
+            ##p /= 2.
+        #return p
+
+    #def center_of_mass(self):
+        #return self.Centroid()
+
     def raw_fields(self):
         list_fields = ['CFAST', self.eid, self.Pid(), self.Type, self.ida, self.idb,
                        self.Gs(), self.Ga(), self.Gb(), self.xs, self.ys, self.zs]

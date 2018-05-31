@@ -19,6 +19,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
+from pyNastran.utils.mathematics import integrate_positive_unit_line
 
 
 class CBEAM(CBAR):
@@ -332,9 +333,99 @@ class CBEAM(CBAR):
         return [self.ga, self.gb]
 
     def Centroid(self):
-        return (self.ga_ref.get_position() + self.gb_ref.get_position()) / 2.
+        """"""
+        node1 = self.ga_ref
+        node2 = self.gb_ref
+        xyz1 = node1.get_position()
+        xyz2 = node2.get_position()
+        centroid = (xyz1 + xyz2) / 2.
+        return centroid
 
     def center_of_mass(self):
+        """the centroid formuala is way more complicated if you consider the nonstructural mass axis"""
+        elem = self
+        prop = self.pid_ref
+        node1 = self.ga_ref
+        node2 = self.gb_ref
+        xyz1 = node1.get_position()
+        xyz2 = node2.get_position()
+        #centroid = ( + self.gb_ref.get_position()) / 2.
+        centroid = (xyz1 + xyz2) / 2.
+        length = norm(xyz2 - xyz1)
+        #cda = model.nodes[n1].cid_ref
+        #cdb = model.nodes[n2].cid_ref
+
+        model = None
+        log = None
+        is_failed, out = elem.get_axes_by_nodes(model, self.pid_ref, node1, node2, xyz1, xyz2, log)
+        if is_failed:
+            #model.log.error(out)
+            raise RuntimeError(out)
+
+        wa, wb, _ihat, jhat, khat = out
+        p1 = xyz1 + wa
+        p2 = xyz2 + wb
+
+        if prop.type == 'PBEAM':
+            rho = prop.Rho()
+
+            # we don't call the MassPerLength method so we can put the NSM centroid
+            # on a different axis (the PBEAM is weird)
+            mass_per_lengths = []
+            nsm_per_lengths = []
+            for (area, nsm) in zip(prop.A, prop.nsm):
+                mass_per_lengths.append(area * rho)
+                nsm_per_lengths.append(nsm)
+            mass_per_length = integrate_positive_unit_line(prop.xxb, mass_per_lengths)
+            nsm_per_length = integrate_positive_unit_line(prop.xxb, nsm_per_lengths)
+            nsm_n1 = (p1 + jhat * prop.m1a + khat * prop.m2a)
+            nsm_n2 = (p2 + jhat * prop.m1b + khat * prop.m2b)
+            #print("nsm_per_length=%s" % nsm_per_length)
+            #print("nsm_n1=%s" % nsm_n1)
+            #print("nsm_n2=%s" % nsm_n2)
+            nsm_centroid = (nsm_n1 + nsm_n2) / 2.
+            #if nsm != 0.:
+                #p1_nsm = p1 + prop.ma
+                #p2_nsm = p2 + prop.mb
+        elif prop.type == 'PBEAML':
+            mass_per_lengths = prop.get_mass_per_lengths()
+            #mass_per_length = prop.MassPerLength() # includes simplified nsm
+
+            # m1a, m1b, m2a, m2b=0.
+            nsm_centroid = (p1 + p2) / 2.
+
+            # mass_per_length already includes nsm
+            mass_per_length = integrate_positive_unit_line(prop.xxb, mass_per_lengths)
+            nsm_per_length = 0.
+
+            #print('mass_per_lengths=%s nsm_per_lengths=%s' % (
+                #mass_per_lengths, nsm_per_lengths))
+            #print('mass_per_length=%s nsm_per_length=%s' % (
+                #mass_per_length, nsm_per_length))
+
+            #nsm_centroid = np.zeros(3) # TODO: what is this...
+            #nsm = prop.nsm[0] * length # TODO: simplified
+        elif prop.type == 'PBCOMP':
+            mass_per_length = prop.MassPerLength()
+            nsm_per_length = prop.nsm
+            nsm_n1 = (p1 + jhat * prop.m1 + khat * prop.m2)
+            nsm_n2 = (p2 + jhat * prop.m1 + khat * prop.m2)
+            nsm_centroid = (nsm_n1 + nsm_n2) / 2.
+        #elif prop.type == 'PBMSECT':
+            #continue
+            #mass_per_length = prop.MassPerLength()
+            #m = mass_per_length * length
+            #nsm = prop.nsm
+        else:
+            raise NotImplementedError(prop.type)
+
+        total_mass = mass_per_length + nsm_per_length
+        if total_mass == 0.0:
+            return centroid
+        centroid2 = (centroid * mass_per_length + nsm_centroid * nsm_per_length) / total_mass
+        return centroid2
+
+    def center_of_mass_xform(self):
         """
         A          B
         *----------*
@@ -377,16 +468,13 @@ class CBEAM(CBAR):
         ihat = None
         yhat = None
         zhat = None
+
         eid = self.eid
         (nid1, nid2) = self.node_ids
         node1 = model.nodes[nid1]
         node2 = model.nodes[nid2]
-        n1 = node1.get_position()
-        n2 = node2.get_position()
-        #centroid = (n1 + n2) / 2.
-        #i = n2 - n1
-        #Li = norm(i)
-        #ihat = i / Li
+        xyz1 = node1.get_position()
+        xyz2 = node2.get_position()
 
         elem = model.elements[eid]
         pid_ref = elem.pid_ref
@@ -394,22 +482,43 @@ class CBEAM(CBAR):
             pid_ref = model.Property(elem.pid)
         assert not isinstance(pid_ref, integer_types), elem
 
+        is_failed, (wa, wb, ihat, yhat, zhat) = self.get_axes_by_nodes(
+            model, pid_ref, node1, node2, xyz1, xyz2, model.log)
+        return is_failed, (wa, wb, ihat, yhat, zhat)
+
+    def get_axes_by_nodes(self, model, pid_ref, node1, node2, xyz1, xyz2, log):
+        """
+        Gets the axes of a CBAR/CBEAM, while respecting the OFFT flag.
+
+        See
+        ---
+        ``_rotate_v_wa_wb`` for a description of the OFFT flag.
+
+        TODO: not integrated with CBAR yet...
+        """
+        eid = self.eid
+        #centroid = (n1 + n2) / 2.
+        #i = n2 - n1
+        #Li = norm(i)
+        #ihat = i / Li
+
+        elem = self
         (nid1, nid2) = elem.node_ids
-        node1 = model.nodes[nid1]
-        node2 = model.nodes[nid2]
-        n1 = node1.get_position()
-        n2 = node2.get_position()
+        #node1 = model.nodes[nid1]
+        #node2 = model.nodes[nid2]
+        #xyz1 = node1.get_position()
+        #xyz2 = node2.get_position()
 
         # wa/wb are not considered in i_offset
         # they are considered in ihat
-        i = n2 - n1
+        i = xyz2 - xyz1
         Li = norm(i)
         i_offset = i / Li
 
         unused_v, wa, wb, xform = rotate_v_wa_wb(
             model, elem,
-            n1, n2, node1, node2,
-            i_offset, i, eid, Li, model.log)
+            xyz1, xyz2, node1, node2,
+            i_offset, i, eid, Li, log)
         if wb is None:
             # one or more of v, wa, wb are bad
             return is_failed, (wa, wb, ihat, yhat, zhat)

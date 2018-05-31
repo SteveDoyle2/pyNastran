@@ -41,6 +41,19 @@ class BushElement(Element):
         """
         return [tuple(sorted(self.node_ids))]
 
+    #def Centroid(self):
+        ## same as below, but we ignore the 2nd point it it's None
+        #p = (self.nodes_ref[1].get_position() + self.nodes_ref[0].get_position()) / 2.
+
+        ##p = self.nodes_ref[0].get_position()
+        ##if self.nodes_ref[1] is not None:
+            ##p += self.nodes_ref[1].get_position()
+            ##p /= 2.
+        #return p
+
+    #def center_of_mass(self):
+        #return self.Centroid()
+
 class CBUSH(BushElement):
     """
     Generalized Spring-and-Damper Connection
@@ -53,7 +66,7 @@ class CBUSH(BushElement):
     +=======+=====+======+====+====+=======+====+====+=====+
     | CBUSH | EID | PID  | GA | GB | GO/X1 | X2 | X3 | CID |
     +-------+-----+------+----+----+-------+----+----+-----+
-    |       |  S  | OCID | S1 | S2 |  S3   |    |    |     |
+    |       |  S  | OCID | S1 | S2 |   S3  |    |    |     |
     +-------+-----+------+----+----+-------+----+----+-----+
     """
     type = 'CBUSH'

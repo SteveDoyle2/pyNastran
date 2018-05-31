@@ -10,6 +10,7 @@ import unittest
 from itertools import count
 
 from six.moves import zip
+import numpy as np
 from numpy import array, allclose
 
 from pyNastran.bdf.bdf import BDF, BDFCard, PBEAM
@@ -931,22 +932,48 @@ class TestBeams(unittest.TestCase):
         xxb = [0., 1.]
         so = ['YES', 'YES']
 
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        x = [0., 1., 0.]
+        g0 = None
+
         area = [2.0, 2.0]
         i1 = i2 = j = [0.1, 0.1]
         i12 = [0.01, 0.01]
         c1 = c2 = d1 = d2 = e1 = e2 = f1 = f2 = [0., 0.]
-        pbeam = model.add_pbeam(pid, mid, xxb, so, area, i1, i2, i12, j, nsm,
-                               c1, c2, d1, d2,
-                               e1, e2, f1, f2,
-                               k1=1., k2=1.,
-                               s1=0., s2=0.,
-                               nsia=0., nsib=None,
-                               cwa=0., cwb=None,
-                               m1a=0., m2a=None,
-                               m1b=0., m2b=None,
-                               n1a=0., n2a=None,
-                               n1b=0., n2b=None, comment='')
-        pbeam.validate()
+        pbeam_a1 = model.add_pbeam(pid, mid, xxb, so, area, i1, i2, i12, j, nsm,
+                                   c1, c2, d1, d2,
+                                   e1, e2, f1, f2,
+                                   k1=1., k2=1.,
+                                   s1=0., s2=0.,
+                                   nsia=0., nsib=None,
+                                   cwa=0., cwb=None,
+                                   m1a=0., m2a=None,
+                                   m1b=0., m2b=None,
+                                   n1a=0., n2a=None,
+                                   n1b=0., n2b=None, comment='')
+
+        nsm = [1., 1.]
+        pid_pbeam_nsm = 30
+        pbeam_b1 = model.add_pbeam(pid_pbeam_nsm, mid, xxb, so, area, i1, i2, i12, j, nsm,
+                                  c1, c2, d1, d2,
+                                  e1, e2, f1, f2,
+                                  k1=1., k2=1.,
+                                  s1=0., s2=0.,
+                                  nsia=10., nsib=10.,
+                                  cwa=0., cwb=None,
+                                  # cg location at A/B (1.,1.)
+                                  m1a=1., m2a=1.,
+                                  m1b=1., m2b=1.,
+                                  # neutral axis at A/B (0., 0.)
+                                  n1a=0., n2a=None,
+                                  n1b=0., n2b=None, comment='')
+        eid = 42
+        model.add_cbeam(eid, pid_pbeam_nsm, [1, 2], x, g0, offt='GGG', bit=None,
+                        pa=0, pb=0, wa=None, wb=None, sa=0, sb=0, comment='')
+
+        pbeam_a1.validate()
+        pbeam_b1.validate()
 
         E = 1.0
         G = None
@@ -960,20 +987,46 @@ class TestBeams(unittest.TestCase):
         model.add_card(card_lines, 'PBEAML', comment='', is_list=False,
                        has_none=True)
         model.pop_parse_errors()
-        pbeam2 = model.properties[2]
+        pbeam_a2 = model.properties[2]
         #------------------
         model.cross_reference()
+        model.pop_xref_errors()
 
-        assert pbeam.Nsm() == 1.0
-        assert pbeam.Area() == 2.0
+        assert pbeam_a1.Nsm() == 1.0
+        assert pbeam_a1.Area() == 2.0
 
         # mass/L = area*rho + nsm
-        assert pbeam.MassPerLength() == 1.0
+        assert pbeam_a1.MassPerLength() == 1.0
+        assert pbeam_b1.MassPerLength() == 1.0, pbeam_b1.MassPerLength() # should be 10
+
+        mass, cg1, inertia = model.mass_properties(
+            element_ids=eid,
+            mass_ids=None,
+            reference_point=None,
+            sym_axis=None,
+            scale=None)
+        assert mass == 1.0, mass
+        #print('cg1=%s' % cg)
+        assert np.allclose(cg1, [0.5, 1., 1.]), cg1
+
+        mass, cg2, inertia = model._mass_properties_new(
+            element_ids=eid, mass_ids=None,
+            nsm_id=None,
+            reference_point=None,
+            sym_axis=None,
+            scale=None,
+            xyz_cid0_dict=None,
+            debug=False)
+        #print('mass =', mass)
+        #print('cg2=%s' % cg2)
+        assert mass == 1.0, mass
+        assert np.allclose(cg2, [0.5, 1., 1.]), cg2
 
         # area = 2.0
         mat1.rho = 10.0
-        assert pbeam.MassPerLength() == 21.0, pbeam.MassPerLength()
-        assert pbeam2.MassPerLength() == 21.0, pbeam2.MassPerLength()
+        assert pbeam_a1.MassPerLength() == 21.0, pbeam_a1.MassPerLength()
+        assert pbeam_a2.MassPerLength() == 21.0, pbeam_a2.MassPerLength()
+
         save_load_deck(model)
 
     def test_pbeaml_nsm(self):

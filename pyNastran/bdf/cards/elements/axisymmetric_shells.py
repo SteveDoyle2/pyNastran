@@ -56,11 +56,14 @@ class AxisymmetricTri(Element):
         Get the centroid.
 
         .. math::
-          CG = \frac{1}{3} (n_0+n_1+n_2)
+          CG = \frac{1}{3} (n_1+n_2+n_3)
         """
         n1, n2, n3 = self.get_node_positions(nodes=self.nodes_ref[:3])
         centroid = (n1 + n2 + n3) / 3.
         return centroid
+
+    def center_of_mass(self):
+        return self.Centroid()
 
     def Mass(self):
         unused_n1, unused_n2, unused_n3 = self.get_node_positions(nodes=self.nodes_ref[:3])
@@ -88,6 +91,20 @@ class AxisymmetricQuad(Element):
         unused_n1, unused_n2, unused_n3, unused_n4 = self.get_node_positions(
             nodes=self.nodes_ref[:4])
         return 0.
+
+    def Centroid(self):
+        r"""
+        Get the centroid.
+
+        .. math::
+          CG = \frac{1}{4} (n_1+n_2+n_3+n_4)
+        """
+        n1, n2, n3, n4 = self.get_node_positions(nodes=self.nodes_ref[:4])
+        centroid = (n1 + n2 + n3 + n4) / 4.
+        return centroid
+
+    def center_of_mass(self):
+        return self.Centroid()
 
 class CTRAX3(AxisymmetricTri):
     """

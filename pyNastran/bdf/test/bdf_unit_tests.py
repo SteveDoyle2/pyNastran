@@ -289,6 +289,8 @@ class TestBDF(Tester):
             assert len(fem.methods) == 0, 'len(methods) = %i' % len(fem.methods)
             assert len(fem.properties) == 3, 'len(properties) = %i' % len(fem.properties)  # PBEAML issue
 
+        fem1.cross_reference()
+        fem1.pop_xref_errors()
         compare_mass_cg_inertia(fem1)
         compare_mass_cg_inertia(fem1, reference_point=u'cg')
         compare_mass_cg_inertia(fem1, reference_point='cg')

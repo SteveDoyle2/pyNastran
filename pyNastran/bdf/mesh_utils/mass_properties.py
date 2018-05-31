@@ -14,6 +14,47 @@ import numpy as np
 from pyNastran.utils import integer_types
 from pyNastran.utils.mathematics import integrate_positive_unit_line
 
+NO_MASS = set([
+    'GRID', 'PARAM', 'FORCE', 'FORCE1', 'FORCE2', 'MOMENT1', 'MOMENT2', 'LOAD',
+    'DVPREL1', 'DVPREL2', 'DVCREL1', 'DVCREL2', 'DVMREL1', 'DVMREL2', 'DCONSTR', 'DESVAR',
+    'DEQATN', 'DRESP1', 'DRESP2', 'DRESP3',
+    'SPC', 'SPC1', 'SPCADD', 'MPC', 'MPCADD',
+    'MAT1', 'MAT2', 'MAT4', 'MAT5', 'MAT8', 'MAT10', 'MAT11', 'MAT3D', 'CREEP',
+    'MATT1', 'MATT3',
+
+    'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4', #'CLEAS5',
+    'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
+    'CBUSH', 'CBUSH1D', 'CBUSH2D', 'CVISC', 'CGAP', # is this right?
+    'CFAST',
+    'CRAC2D', 'CRAC3D',
+
+    'CSSCHD', 'CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5',
+    'CBARAO', 'CORD1R', 'CORD2R', 'CORD1C', 'CORD2C', 'CORD1S', 'CORD2S',
+    'CORD3G', 'CONV', 'CONVM', 'CLOAD',
+    'CHBDYG', 'CHBDYE', 'CHBDYP', 'TEMP', 'TEMPD', 'QVECT',
+
+    'CTRAX3', 'CTRAX6', 'CQUADX8', 'CQUADX4',
+    'CPLSTN3', 'CPLSTN6', 'CPLSTN4', 'CPLSTN8',
+
+    'ASET', 'ASET1', 'BSET', 'BSET1', 'CSET', 'CSET1',
+    'QSET', 'QSET1', 'USET', 'USET1',
+
+    'DLOAD', 'TLOAD1', 'PLOAD', 'PLOAD2', 'PLOAD4',
+    'TSTEP', 'TSTEPNL', 'TABLED1', 'TABLED2', 'TABLED3', 'TABLED4',
+    'TABLEM1', 'TABLEM2', 'TABLEM3', 'TABLEM4', 'TABLEST',
+
+    # aero
+    'MONPNT1', 'MONPNT2', 'MONPNT3',
+    'AERO', 'AEROS',
+    'CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5',
+    'SPLINE1', 'SPLINE2', 'SPLINE3', 'SPLINE4', 'SPLINE5', 'SPLINE6', 'SPLINE7',
+    'AEPARM', 'AEFACT', 'AESURF', 'AESURFS', 'AELINK',
+    'CSSCHD', 'TRIM', 'TRIM2', 'DIVERG', 'FLUTTER', 'GUST',
+
+    'DVPREL1', 'DVPREL2', 'DVMREL1', 'DVMREL2', 'DVCREL1', 'DVCREL2',
+    'DESVAR', 'DCONADD', 'DRESP1', 'DRESP2', 'DRESP3', 'DEQATN', 'DSCREEN',
+    'SUPORT', 'SUPORT1',
+])
 
 def transform_inertia(mass, xyz_cg, xyz_ref, xyz_ref2, I_ref):
     """
@@ -99,7 +140,7 @@ def _mass_properties_elements_init(model, element_ids, mass_ids):
 
 def _mass_properties(model, elements, masses, reference_point):
     """
-    Caclulates mass properties in the global system about the
+    Calculates mass properties in the global system about the
     reference point.
 
     Parameters
@@ -129,18 +170,40 @@ def _mass_properties(model, elements, masses, reference_point):
     # precompute the CG location and make it the reference point
     I = array([0., 0., 0., 0., 0., 0., ])
     cg = array([0., 0., 0.])
+    #mass_types = [
+        #'CONM1', 'CONM2',
+        #'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4',
+        #'CROD', 'CONROD', 'CTUBE',
+        #'CBAR', 'CBEAM', 'CFAST',
+        #'CTRIA3', 'CQUAD4', 'CTRIA6', 'CQUAD8', 'CQUADR', 'CTRIAR', 'CQUAD', 'CSHEAR',
+        #'CTETRA', 'CPYRAM', 'CPENTA', 'CHEXA',
+    #]
+    no_mass = NO_MASS
     if isinstance(reference_point, string_types):
         if reference_point == 'cg':
             mass = 0.
             for pack in [elements, masses]:
                 for element in pack:
+
                     try:
-                        p = element.Centroid()
+                        p = element.center_of_mass()  # was Centroid()
                         m = element.Mass()
-                        mass += m
-                        cg += m * p
-                    except:
-                        pass
+                    except AttributeError:
+                        if element.type in no_mass:
+                            #model.log.warning(element.rstrip())
+                            continue
+                        model.log.error(element.rstrip())
+                        raise
+                    except TypeError:
+                        model.log.error(element.rstrip())
+                        raise
+                        # not xref'd
+                    mass += m
+                    cg += m * p
+
+                    #except :
+                        #raise
+                        #pass
             if mass == 0.0:
                 return mass, cg, I
 
@@ -154,25 +217,13 @@ def _mass_properties(model, elements, masses, reference_point):
     for pack in [elements, masses]:
         for element in pack:
             try:
-                p = element.Centroid()
-            except:
+                p = element.center_of_mass()  # was Centroid()
+            except:  # we were already strict before
                 continue
 
             try:
                 m = element.Mass()
                 #print('eid=%s type=%s mass=%s'  %(element.eid, element.type, m))
-                (x, y, z) = p - reference_point
-                x2 = x * x
-                y2 = y * y
-                z2 = z * z
-                I[0] += m * (y2 + z2)  # Ixx
-                I[1] += m * (x2 + z2)  # Iyy
-                I[2] += m * (x2 + y2)  # Izz
-                I[3] += m * x * y      # Ixy
-                I[4] += m * x * z      # Ixz
-                I[5] += m * y * z      # Iyz
-                mass += m
-                cg += m * p
             except:
                 # PLPLANE
                 if element.pid_ref.type == 'PSHELL':
@@ -182,67 +233,26 @@ def _mass_properties(model, elements, masses, reference_point):
                 model.log.warning("could not get the inertia for element/property\n%s%s" % (
                     element, element.pid_ref))
                 continue
+            mass += m
+            cg += m * p
+            (x, y, z) = p - reference_point
+            x2 = x * x
+            y2 = y * y
+            z2 = z * z
+            I[0] += m * (y2 + z2)  # Ixx
+            I[1] += m * (x2 + z2)  # Iyy
+            I[2] += m * (x2 + y2)  # Izz
+            I[3] += m * x * y      # Ixy
+            I[4] += m * x * z      # Ixz
+            I[5] += m * y * z      # Iyz
 
-    #if model.nsms and 0:
-        #bar_props = ['PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PBCOMP', 'PROD', 'PBEND', 'PTUBE', ]
-        #shell_props = ['PSHELL', 'PCOMP',  'PSHEAR', 'PRAC2D',]
-        ##nsm_properties = [
-            ##'CONROD', 'ELEMENT', 'PCONEAX',
-        ##]
-        #bars = ['CBAR', 'CBEAM', 'CBEND', 'CROD', 'CTUBE', 'CONROD']
-        #shells = ['CQUAD4', 'CQUAD8', 'CQUADR', 'CTRIA3', 'CTRIA6', 'CTRIAR', 'CSHEAR','CRAC2D']
-        #length_pids_to_consider = []
-        #length_eids_to_consider = []
-        #area_pids_to_consider = []
-        #area_eids_to_consider = []
-        #nsm_id = 1
-        #nsms = model.get_reduced_nsms(nsm_id, consider_nsmadd=True)
-        #for prop in nsms:
-            #if prop.type in ['NSM', 'NSM1']:
-                #model.log.warning(prop.rstrip())
-
-            #elif prop.type in ['NSML', 'NSML1']:
-                #if prop.nsm_type in bar_props:
-                    #length_pids_to_consider.append(prop.ids)
-                    #length_mass_to_consider = [prop.value] * len(prop.ids)
-                #elif prop.nsm_type in shell_props:
-                    #area_pids_to_consider.append(prop.ids)
-                    #area_mass_to_consider = [prop.value] * len(prop.ids)
-
-                #elif prop.nsm_type == 'CONROD':
-                    #length_eids_to_consider.append(prop.ids)
-                    #length_mass_to_consider = [prop.value] * len(prop.ids)
-                #elif prop.nsm_type == 'ELEMENT':
-                    ## line element - CBAR, CBEAM, CBEND, CROD, CTUBE, and CONROD
-                    ## area element - CQUAD4, CQUAD8, CQUADR, CTRIA3, CTRIA6, CTRIAR,
-                    ##                CSHEAR, and CRAC2D
-                    #pid0 = prop.ids[0]
-                    #prop = model.properties[pid0]
-                    #if prop.type in bars:
-                        #length_pids_to_consider.append(prop.ids)
-                    #elif prop.type in shells:
-                        #area_pids_to_consider.append(prop.ids)
-                    #else:
-                        #model.log.warning(prop.rstrip())
-                        #continue
-                    #mass_to_consider =  [prop.value] * len(prop.ids)
-
-                #prop.ids = ids
-                #prop.value = value
-                #asd
-            #else:
-                ## NSMADD - this shouldn't happen since we supposedly merged things
-                #model.log.warning(prop.rstrip())
-
-        #for prop in model.properties:
-            #pass
     if mass:
         cg /= mass
     return (mass, cg, I)
 
 def _mass_properties_no_xref(model, elements, masses, reference_point):  # pragma: no cover
     """
-    Caclulates mass properties in the global system about the
+    Calculates mass properties in the global system about the
     reference point.
 
     Parameters
@@ -280,11 +290,12 @@ def _mass_properties_no_xref(model, elements, masses, reference_point):  # pragm
                     try:
                         p = element.Centroid_no_xref(model)
                         m = element.Mass_no_xref(model)
-                        mass += m
-                        cg += m * p
                     except:
                         #pass
                         raise
+                    mass += m
+                    cg += m * p
+
             if mass == 0.0:
                 return mass, cg, I
 
@@ -305,18 +316,6 @@ def _mass_properties_no_xref(model, elements, masses, reference_point):  # pragm
 
             try:
                 m = element.Mass_no_xref(model)
-                (x, y, z) = p - reference_point
-                x2 = x * x
-                y2 = y * y
-                z2 = z * z
-                I[0] += m * (y2 + z2)  # Ixx
-                I[1] += m * (x2 + z2)  # Iyy
-                I[2] += m * (x2 + y2)  # Izz
-                I[3] += m * x * y      # Ixy
-                I[4] += m * x * z      # Ixz
-                I[5] += m * y * z      # Iyz
-                mass += m
-                cg += m * p
             except:
                 # PLPLANE
                 pid_ref = model.Property(element.pid)
@@ -327,6 +326,18 @@ def _mass_properties_no_xref(model, elements, masses, reference_point):  # pragm
                 model.log.warning("could not get the inertia for element/property\n%s%s" % (
                     element, element.pid_ref))
                 continue
+            (x, y, z) = p - reference_point
+            x2 = x * x
+            y2 = y * y
+            z2 = z * z
+            I[0] += m * (y2 + z2)  # Ixx
+            I[1] += m * (x2 + z2)  # Iyy
+            I[2] += m * (x2 + y2)  # Izz
+            I[3] += m * x * y      # Ixy
+            I[4] += m * x * z      # Ixz
+            I[5] += m * y * z      # Iyz
+            mass += m
+            cg += m * p
 
     if mass:
         cg /= mass
@@ -356,7 +367,7 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, nsm_id=None,
                          sym_axis=None, scale=None, xyz_cid0_dict=None,
                          debug=False):  # pragma: no cover
     """
-    Caclulates mass properties in the global system about the
+    Calculates mass properties in the global system about the
     reference point.
 
     Parameters
@@ -499,47 +510,7 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, nsm_id=None,
     nsm_centroids_length = defaultdict(list)
     lengths = defaultdict(list)
 
-    no_mass = [
-        'GRID', 'PARAM', 'FORCE', 'FORCE1', 'FORCE2', 'MOMENT1', 'MOMENT2', 'LOAD',
-        'DVPREL1', 'DVPREL2', 'DVCREL1', 'DVCREL2', 'DVMREL1', 'DVMREL2', 'DCONSTR', 'DESVAR',
-        'DEQATN', 'DRESP1', 'DRESP2', 'DRESP3',
-        'SPC', 'SPC1', 'SPCADD', 'MPC', 'MPCADD',
-        'MAT1', 'MAT2', 'MAT4', 'MAT5', 'MAT8', 'MAT10', 'MAT11', 'MAT3D', 'CREEP',
-        'MATT1', 'MATT3',
-
-        'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4', #'CLEAS5',
-        'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
-        'CBUSH', 'CBUSH1D', 'CBUSH2D', 'CVISC', 'CGAP', # is this right?
-        'CFAST',
-        'CRAC2D', 'CRAC3D',
-
-        'CSSCHD', 'CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5',
-        'CBARAO', 'CORD1R', 'CORD2R', 'CORD1C', 'CORD2C', 'CORD1S', 'CORD2S',
-        'CORD3G', 'CONV', 'CONVM', 'CLOAD',
-        'CHBDYG', 'CHBDYE', 'CHBDYP', 'TEMP', 'TEMPD', 'QVECT',
-
-        'CTRAX3', 'CTRAX6', 'CQUADX8', 'CQUADX4',
-        'CPLSTN3', 'CPLSTN6', 'CPLSTN4', 'CPLSTN8',
-
-        'ASET', 'ASET1', 'BSET', 'BSET1', 'CSET', 'CSET1',
-        'QSET', 'QSET1', 'USET', 'USET1',
-
-        'DLOAD', 'TLOAD1', 'PLOAD', 'PLOAD2', 'PLOAD4',
-        'TSTEP', 'TSTEPNL', 'TABLED1', 'TABLED2', 'TABLED3', 'TABLED4',
-        'TABLEM1', 'TABLEM2', 'TABLEM3', 'TABLEM4', 'TABLEST',
-
-        # aero
-        'MONPNT1', 'MONPNT2', 'MONPNT3',
-        'AERO', 'AEROS',
-        'CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5',
-        'SPLINE1', 'SPLINE2', 'SPLINE3', 'SPLINE4', 'SPLINE5', 'SPLINE6', 'SPLINE7',
-        'AEPARM', 'AEFACT', 'AESURF', 'AESURFS', 'AELINK',
-        'CSSCHD', 'TRIM', 'TRIM2', 'DIVERG', 'FLUTTER', 'GUST',
-
-        'DVPREL1', 'DVPREL2', 'DVMREL1', 'DVMREL2', 'DVCREL1', 'DVCREL2',
-        'DESVAR', 'DCONADD', 'DRESP1', 'DRESP2', 'DRESP3', 'DEQATN', 'DSCREEN',
-        'SUPORT', 'SUPORT1',
-    ]
+    no_mass = NO_MASS
     for etype, eids in iteritems(model._type_to_id_map):
         #assert isinstance(eids, list), 'etype=%r eids=%s'%  (etype, eids)
         if etype in no_mass or len(eids) == 0:
@@ -823,12 +794,14 @@ def _get_mass_new(model, all_eids, all_mass_ids, etypes_skipped,
 
     elif etype in ['CQUADX']:
         pass
-    elif etype in []:
-        mass = _mass_catch_all(model, etype, etypes_skipped, all_eids, eids, mass, cg, I, reference_point)
+    elif etype in ['CTRIAX', 'CTRIAX6']:
+        mass = _mass_catch_all(model, etype, etypes_skipped, all_eids,
+                               eids, mass, cg, I, reference_point)
     elif etype.startswith('C'):
         model.log.warning('etype=%r should be explicit' % etype)
         #raise RuntimeError('etype=%r should be explicit' % etype) ## TODO: this is temporary
-        mass = _mass_catch_all(model, etype, etypes_skipped, all_eids, eids, mass, cg, I, reference_point)
+        mass = _mass_catch_all(model, etype, etypes_skipped, all_eids,
+                               eids, mass, cg, I, reference_point)
 
     #property_nsms[nsm_id][nsm.nsm_type][nsm_idi]
     #for nsm_id, prop_types in sorted(iteritems(property_nsms)):
@@ -873,23 +846,22 @@ def _get_cbeam_mass(model, xyz, all_eids,
     eids2 = get_sub_eids(all_eids, eids)
     for eid in eids2:
         elem = model.elements[eid]
+        #print(elem)
         prop = elem.pid_ref
         pid = elem.pid
         n1, n2 = elem.node_ids
-        node1 = xyz[n1]
-        node2 = xyz[n2]
-        centroid = (node1 + node2) / 2.
-        length = norm(node2 - node1)
-        #cda = model.nodes[n1].cid_ref
-        #cdb = model.nodes[n2].cid_ref
+        xyz1 = xyz[n1]
+        xyz2 = xyz[n2]
+        centroid = (xyz1 + xyz2) / 2.
+        length = norm(xyz2 - xyz1)
 
         is_failed, out = elem.get_axes(model)
         if is_failed:
             model.log.error(out)
             raise RuntimeError(out)
         wa, wb, _ihat, jhat, khat = out
-        p1 = node1 + wa
-        p2 = node2 + wb
+        p1 = xyz1 + wa
+        p2 = xyz2 + wb
         if prop.type == 'PBEAM':
             rho = prop.Rho()
 
@@ -904,6 +876,9 @@ def _get_cbeam_mass(model, xyz, all_eids,
             nsm_per_length = integrate_positive_unit_line(prop.xxb, nsm_per_lengths)
             nsm_n1 = (p1 + jhat * prop.m1a + khat * prop.m2a)
             nsm_n2 = (p2 + jhat * prop.m1b + khat * prop.m2b)
+            #print("nsm_per_length=%s" % nsm_per_length)
+            #print("nsm_n1=%s" % nsm_n1)
+            #print("nsm_n2=%s" % nsm_n2)
             nsm_centroid = (nsm_n1 + nsm_n2) / 2.
             #if nsm != 0.:
                 #p1_nsm = p1 + prop.ma

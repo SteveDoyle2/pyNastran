@@ -632,6 +632,9 @@ class CMASS4(PointMassElement):
     def Centroid(self):
         return np.zeros(3)
 
+    def center_of_mass(self):
+        return self.Centroid()
+
     @property
     def node_ids(self):
         return [self.S1(), self.S2()]
@@ -887,6 +890,9 @@ class CONM1(PointMassElement):
     @staticmethod
     def Centroid():
         return np.zeros(3, dtype='float64')
+
+    def center_of_mass(self):
+        return self.Centroid()
 
     @property
     def node_ids(self):

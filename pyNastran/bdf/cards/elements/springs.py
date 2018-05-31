@@ -25,12 +25,18 @@ class SpringElement(Element):
         Element.__init__(self)
         self.nodes = [None, None]
 
-    def Centroid(self):
-        p = (self.nodes_ref[1].get_position() - self.nodes_ref[0].get_position()) / 2.
-        return p
+    #def Centroid(self):
+        ## same as below, but we ignore the 2nd point it it's None
+        ##p = (self.nodes_ref[1].get_position() + self.nodes_ref[0].get_position()) / 2.
 
-    def center_of_mass(self):
-        return self.Centroid()
+        #p = self.nodes_ref[0].get_position()
+        #if self.nodes_ref[1] is not None:
+            #p += self.nodes_ref[1].get_position()
+            #p /= 2.
+        #return p
+
+    #def center_of_mass(self):
+        #return self.Centroid()
 
     def Mass(self):
         return 0.0

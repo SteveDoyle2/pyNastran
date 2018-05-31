@@ -466,7 +466,7 @@ class BDFMethods(BDFAttributes):
     def mass_properties_no_xref(self, element_ids=None, mass_ids=None, reference_point=None,
                                 sym_axis=None, scale=None):
         """
-        Caclulates mass properties in the global system about the
+        Calculates mass properties in the global system about the
         reference point.
 
         Parameters

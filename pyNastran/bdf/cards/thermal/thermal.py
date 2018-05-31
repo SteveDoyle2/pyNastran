@@ -33,6 +33,11 @@ class ThermalElement(ThermalCard):
     def __init__(self):
         ThermalCard.__init__(self)
 
+    #def Centroid(self):
+        #return np.zeros(3)
+
+    #def center_of_mass(self):
+        #return self.Centroid()
 
 class ThermalProperty(ThermalCard):
     def __init__(self):

@@ -24,6 +24,18 @@ class DamperElement(Element):
     def __init__(self):
         Element.__init__(self)
 
+    #def Centroid(self):
+        ## same as below, but we ignore the 2nd point it it's None
+        ##p = (self.nodes_ref[1].get_position() + self.nodes_ref[0].get_position()) / 2.
+
+        #p = self.nodes_ref[0].get_position()
+        #if self.nodes_ref[1] is not None:
+            #p += self.nodes_ref[1].get_position()
+            #p /= 2.
+        #return p
+
+    #def center_of_mass(self):
+        #return self.Centroid()
 
 class LineDamper(DamperElement):
     def __init__(self):
