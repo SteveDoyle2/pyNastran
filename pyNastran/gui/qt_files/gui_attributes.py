@@ -769,6 +769,21 @@ class GuiAttributes(object):
         """creates the axes that sits in the corner"""
         self.tool_actions.create_corner_axis()
 
+    def get_corner_axis_visiblity(self):
+        """gets the visibility of the corner axis"""
+        corner_axis = self.corner_axis
+        axes_actor = corner_axis.GetOrientationMarker()
+        is_visible = axes_actor.GetVisibility()
+        return is_visible
+
+    def set_corner_axis_visiblity(self, is_visible, render=True):
+        """sets the visibility of the corner axis"""
+        corner_axis = self.corner_axis
+        axes_actor = corner_axis.GetOrientationMarker()
+        axes_actor.SetVisibility(is_visible)
+        if render:
+            self.Render()
+
     def update_axes_length(self, dim_max):
         """
         sets the driving dimension for:

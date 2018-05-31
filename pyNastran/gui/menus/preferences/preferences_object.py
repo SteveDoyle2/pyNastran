@@ -44,6 +44,7 @@ class PreferencesObject(object):
             'dim_max' : settings.dim_max,
             'coord_scale' : settings.coord_scale,
             'coord_text_scale' : settings.coord_text_scale,
+            'show_corner_coord' : self.gui.get_corner_axis_visiblity(),
             'magnify' : settings.magnify,
 
             'min_clip' : min_clip,

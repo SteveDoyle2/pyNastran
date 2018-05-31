@@ -58,6 +58,7 @@ class PreferencesWindow(PyDialog):
 
         self.dim_max = data['dim_max']
         self._use_gradient_background = data['use_gradient_background'] # bool
+        self._show_corner_coord = data['show_corner_coord']
         self._annotation_size = data['annotation_size'] # int
 
         #self.out_data = data
@@ -176,6 +177,11 @@ class PreferencesWindow(PyDialog):
         self.coord_text_scale_edit.setSingleStep(2.5)
         self.coord_text_scale_edit.setValue(self._coord_text_scale)
 
+        # Show corner coord
+        self.corner_coord_label = QLabel("Show Corner Coordinate System:")
+        self.corner_coord_checkbox = QCheckBox()
+        self.corner_coord_checkbox.setChecked(self._show_corner_coord)
+
         #-----------------------------------------------------------------------
         self.magnify_label = QLabel('Screenshot Magnify:')
         self.magnify_edit = QSpinBox(self)
@@ -293,6 +299,10 @@ class PreferencesWindow(PyDialog):
         #grid.addWidget(self.clipping_max_button, irow, 2)
         #irow += 1
 
+        grid.addWidget(self.corner_coord_label, irow, 0)
+        grid.addWidget(self.corner_coord_checkbox, irow, 1)
+        irow += 1
+
         grid.addWidget(self.coord_scale_label, irow, 0)
         grid.addWidget(self.coord_scale_edit, irow, 1)
         grid.addWidget(self.coord_scale_button, irow, 2)
@@ -351,6 +361,7 @@ class PreferencesWindow(PyDialog):
         self.coord_scale_edit.valueChanged.connect(self.on_coord_scale)
         self.coord_scale_edit.editingFinished.connect(self.on_coord_scale)
         self.coord_scale_button.clicked.connect(self.on_default_coord_scale)
+        self.corner_coord_checkbox.clicked.connect(self.on_corner_coord)
 
         self.coord_text_scale_edit.valueChanged.connect(self.on_coord_text_scale)
         self.coord_text_scale_edit.editingFinished.connect(self.on_coord_text_scale)
@@ -395,6 +406,11 @@ class PreferencesWindow(PyDialog):
         self.background_color2_edit.setEnabled(is_checked)
         if self.win_parent is not None:
             self.win_parent.settings.set_gradient_background(use_gradient_background=is_checked)
+
+    def on_corner_coord(self):
+        is_checked = self.corner_coord_checkbox.isChecked()
+        if self.win_parent is not None:
+            self.win_parent.set_corner_axis_visiblity(is_checked, render=True)
 
     def on_annotation_color(self):
         rgb_color_ints = self.annotation_color_int
@@ -621,6 +637,7 @@ def main():
         'background_color2' : (1., 0., 1.), # purple
         'coord_scale' : 0.05,
         'coord_text_scale' : 1.0,
+        'show_corner_coord' : False,
         'magnify' : 5,
 
         'text_size' : 12,
