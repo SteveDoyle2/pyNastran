@@ -11,7 +11,7 @@ from numpy import array
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.utils.log import SimpleLogger
 from pyNastran.bdf.cards.test.utils import save_load_deck
-from pyNastran.bdf.mesh_utils.mass_properties import _mass_properties_new
+from pyNastran.bdf.mesh_utils.mass_properties import mass_properties_nsm
 import pyNastran
 
 PKG_PATH = pyNastran.__path__[0]
@@ -181,11 +181,11 @@ class TestNsm(unittest.TestCase):
             mass1_expected = expected_dict[nsm_id]
             if mass1_expected == -1.0:
                 with self.assertRaises(RuntimeError):
-                    mass1, cg, I = _mass_properties_new(model, nsm_id=nsm_id, debug=False)
+                    mass1, cg, I = mass_properties_nsm(model, nsm_id=nsm_id, debug=False)
             else:
-                mass1, cg, I = _mass_properties_new(model, nsm_id=nsm_id, debug=False)
+                mass1, cg, I = mass_properties_nsm(model, nsm_id=nsm_id, debug=False)
                 if mass1 != mass1_expected:
-                    mass2 = _mass_properties_new(model, nsm_id=nsm_id, debug=True)[0]
+                    mass2 = mass_properties_nsm(model, nsm_id=nsm_id, debug=True)[0]
                     raise RuntimeError('nsm_id=%s mass != %s; mass1=%s' % (nsm_id, mass1_expected, mass1))
             #print('mass[%s] = %s' % (nsm_id, mass))
             #print('----------------------------------------------')
@@ -210,7 +210,7 @@ class TestNsm(unittest.TestCase):
 
         # don't crash on the null case
         for nsm_id in sorted(model2.nsms):
-            mass, cg, I = _mass_properties_new(model2, nsm_id=nsm_id, debug=False)
+            mass, cg, I = mass_properties_nsm(model2, nsm_id=nsm_id, debug=False)
             self.assertEqual(mass, 0.0)
             #print('mass[%s] = %s' % (nsm_id, mass))
         #print('done with null')
@@ -273,10 +273,10 @@ class TestNsm(unittest.TestCase):
         model.cross_reference()
         model.pop_xref_errors()
 
-        mass, cg, I = model._mass_properties_new(nsm_id=5000)
+        mass, cg, I = model.mass_properties_nsm(nsm_id=5000)
         self.assertAlmostEqual(mass, 8.0)
         model2 = save_load_deck(model)
-        mass, cg, I = model2._mass_properties_new(nsm_id=5000)
+        mass, cg, I = model2.mass_properties_nsm(nsm_id=5000)
 
     #def test_nsm(self):
         #"""tests a complete nsm example"""
@@ -284,9 +284,9 @@ class TestNsm(unittest.TestCase):
         #bdf_filename = os.path.join(MODEL_PATH, 'nsm', 'TEST_NSM_SOL101.bdf')
         #model = read_bdf(bdf_filename)
         #print('    %6s %-9s %s' % ('nsm_id', 'mass', 'nsm'))
-        #mass0 = model._mass_properties_new(debug=False)[0]
+        #mass0 = model.mass_properties_nsm(debug=False)[0]
         #for nsm_id in sorted(chain(model.nsms, model.nsmadds)):
-            #mass, cg, I = model._mass_properties_new(nsm_id=nsm_id, debug=False)
+            #mass, cg, I = model.mass_properties_nsm(nsm_id=nsm_id, debug=False)
             #print('    %-6s %-9.4g %.4g' % (nsm_id, mass, mass-mass0))
 
         #area_breakdown = model.get_area_breakdown()

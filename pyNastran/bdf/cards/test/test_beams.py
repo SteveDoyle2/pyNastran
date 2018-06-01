@@ -1009,7 +1009,7 @@ class TestBeams(unittest.TestCase):
         #print('cg1=%s' % cg)
         assert np.allclose(cg1, [0.5, 1., 1.]), cg1
 
-        mass, cg2, inertia = model._mass_properties_new(
+        mass, cg2, inertia = model.mass_properties_nsm(
             element_ids=eid, mass_ids=None,
             nsm_id=None,
             reference_point=None,

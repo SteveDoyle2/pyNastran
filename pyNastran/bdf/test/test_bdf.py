@@ -1337,7 +1337,7 @@ def _check_case_parameters(subcase, fem2, p0, isubcase, sol,
         else:
             cmethod_ids = list(fem2.cMethods.keys())
             raise RuntimeError('CMETHOD = %s not in cmethod_ids=%s' % (cmethod_id, cmethod_ids))
-        allowed_sols = [107, 110, 145, 200]
+        allowed_sols = [107, 110, 144, 145, 200]
         ierror = check_sol(sol, subcase, allowed_sols, 'CMETHOD', log, ierror, nerrors)
 
     if 'RMETHOD' in subcase:
@@ -1386,7 +1386,7 @@ def _check_case_parameters(subcase, fem2, p0, isubcase, sol,
         print('  isubcase=%i F=%s M=%s' % (isubcase, force, moment))
         allowed_sols = [
             1, 5, 24, 61, 64, 66, 101, 103, 105, 106, 107,
-            108, 109, 110, 111, 112, 114, 144, 145, 153, 200, 400, 401, 601,
+            108, 109, 110, 111, 112, 114, 144, 145, 153, 200, 400, 401, 600, 601,
         ]
         ierror = check_sol(sol, subcase, allowed_sols, 'LOAD', log, ierror, nerrors)
     else:
@@ -1701,7 +1701,7 @@ def get_element_stats(fem1, unused_fem2, quiet=False):
     if fem1.elements:
         fem1.get_elements_nodes_by_property_type()
     mass1, cg1, inertia1 = fem1.mass_properties(reference_point=None, sym_axis=None)
-    mass2, cg2, inertia2 = fem1._mass_properties_new(reference_point=None, sym_axis=None)
+    mass2, cg2, inertia2 = fem1.mass_properties_nsm(reference_point=None, sym_axis=None)
     if not quiet:
         if fem1.wtmass != 1.0:
             print('weight = %s' % (mass1 / fem1.wtmass))
@@ -1712,8 +1712,16 @@ def get_element_stats(fem1, unused_fem2, quiet=False):
     assert np.allclose(cg1, cg2), 'mass=%s cg1=%s cg2=%s' % (mass1, cg1, cg2)
     assert np.allclose(inertia1, inertia2), 'mass=%s cg=%s inertia1=%s inertia2=%s' % (mass1, cg1, inertia1, inertia2)
 
+    reference_point = [10., 10., 10.]
+    mass1, cg1, inertia1 = fem1.mass_properties(reference_point=reference_point, sym_axis=None)
+    mass2, cg2, inertia2 = fem1.mass_properties_nsm(reference_point=reference_point, sym_axis=None)
+    assert np.allclose(mass1, mass2), 'reference_point=[10., 10., 10.]; mass1=%s mass2=%s' % (mass1, mass2)
+    assert np.allclose(cg1, cg2), 'reference_point=[10., 10., 10.]; mass=%s cg1=%s cg2=%s' % (mass1, cg1, cg2)
+    assert np.allclose(inertia1, inertia2), 'reference_point=[10., 10., 10.]; mass=%s cg=%s inertia1=%s inertia2=%s' % (mass1, cg1, inertia1, inertia2)
+    #assert np.allclose(inertia1, inertia1b), 'reference_point=[10., 10., 10.]; mass=%s cg=%s inertia1=%s inertia1b=%s' % (mass1, cg1, inertia1, inertia1b)
+
     for nsm_id in chain(fem1.nsms, fem1.nsmadds):
-        mass, cg, inertia = fem1._mass_properties_new(reference_point=None, sym_axis=None, nsm_id=nsm_id)
+        mass, cg, inertia = fem1.mass_properties_nsm(reference_point=None, sym_axis=None, nsm_id=nsm_id)
         print('nsm_id=%s' % nsm_id)
         print('  mass = %s' % mass)
         print('  cg = %s' % cg1)

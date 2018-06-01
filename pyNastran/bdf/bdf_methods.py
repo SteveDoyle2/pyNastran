@@ -20,11 +20,9 @@ from typing import List, Tuple, Any, Union, Dict
 from six import iteritems
 import numpy as np
 
-from pyNastran.utils import integer_types
 from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
 from pyNastran.bdf.mesh_utils.mass_properties import (
-    _mass_properties_elements_init, _mass_properties_no_xref, _apply_mass_symmetry,
-    _mass_properties, _mass_properties_new)
+    mass_properties, mass_properties_no_xref, mass_properties_nsm)
 from pyNastran.bdf.mesh_utils.loads import sum_forces_moments, sum_forces_moments_elements
 from pyNastran.bdf.mesh_utils.skin_solid_elements import write_skin_solid_faces
 
@@ -68,6 +66,8 @@ class BDFMethods(BDFAttributes):
             'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR',
             'PBEND',
         ]
+        bar_properties = ['PBAR', 'PBARL', 'PBEAM', 'PBEAML',
+                          'PROD', 'PTUBE', 'PBMSECT', 'PBCOMP']
         pid_eids = self.get_element_ids_dict_with_pids(
             property_ids, msg=' which is required by get_length_breakdown')
         pids_to_length = {}
@@ -76,7 +76,7 @@ class BDFMethods(BDFAttributes):
             lengths = []
             if prop.type in skip_props:
                 continue
-            elif prop.type in ['PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PROD', 'PTUBE', 'PBMSECT', 'PBCOMP']:
+            elif prop.type in bar_properties:
                 #['CBAR', 'CBEAM', 'CROD', 'CTUBE']:
                 # TODO: Do I need to consider the offset on length effects for a CBEAM?
                 for eid in eids:
@@ -330,6 +330,8 @@ class BDFMethods(BDFAttributes):
                     area = elem.Area()
                     masses.append(area * (rho * thickness + nsm))
             elif prop.type in ['PCOMP', 'PCOMPG']:
+                # TODO: does the PCOMP support differential thickness?
+                #       I don't think so...
                 for eid in eids:
                     elem = self.elements[eid]
                     masses.append(elem.Mass())
@@ -380,7 +382,8 @@ class BDFMethods(BDFAttributes):
                 raise RuntimeError(msg)
         return pids_to_mass, mass_type_to_mass
 
-    def mass_properties(self, element_ids=None, mass_ids=None, reference_point=None,
+    def mass_properties(self, element_ids=None, mass_ids=None,
+                        reference_point=None,
                         sym_axis=None, scale=None):
         """
         Calculates mass properties in the global system about the
@@ -450,20 +453,15 @@ class BDFMethods(BDFAttributes):
         >>> for pid, eids in sorted(iteritems(pid_eids)):
         >>>     mass, cg, I = model.mass_properties(element_ids=eids)
         """
-        if reference_point is None:
-            reference_point = np.array([0., 0., 0.])
-        elif isinstance(reference_point, integer_types):
-            reference_point = self.nodes[reference_point].get_position()
+        mass, cg, I = mass_properties(
+            self,
+            element_ids=element_ids, mass_ids=mass_ids,
+            reference_point=reference_point,
+            sym_axis=sym_axis, scale=scale)
+        return mass, cg, I
 
-        element_ids, elements, mass_ids, masses = _mass_properties_elements_init(
-            self, element_ids, mass_ids)
-        mass, cg, I = _mass_properties(
-            self, elements, masses,
-            reference_point=reference_point)
-        mass, cg, I = _apply_mass_symmetry(self, sym_axis, scale, mass, cg, I)
-        return (mass, cg, I)
-
-    def mass_properties_no_xref(self, element_ids=None, mass_ids=None, reference_point=None,
+    def mass_properties_no_xref(self, element_ids=None, mass_ids=None,
+                                reference_point=None,
                                 sym_axis=None, scale=None):
         """
         Calculates mass properties in the global system about the
@@ -534,28 +532,98 @@ class BDFMethods(BDFAttributes):
         >>> for pid, eids in sorted(iteritems(pid_eids)):
         >>>     mass, cg, I = model.mass_properties(element_ids=eids)
         """
-        if reference_point is None:
-            reference_point = np.array([0., 0., 0.])
-        elif isinstance(reference_point, integer_types):
-            reference_point = self.nodes[reference_point].get_position()
+        mass, cg, I = mass_properties_no_xref(
+            self, element_ids=element_ids, mass_ids=mass_ids,
+            reference_point=reference_point,
+            sym_axis=sym_axis, scale=scale)
+        return mass, cg, I
 
-        element_ids, elements, mass_ids, masses = _mass_properties_elements_init(
-            self, element_ids, mass_ids)
-        #nelements = len(elements) + len(masses)
+    def mass_properties_nsm(self, element_ids=None, mass_ids=None, nsm_id=None,
+                            reference_point=None,
+                            sym_axis=None, scale=None,
+                            xyz_cid0_dict=None, debug=False):
+        """
+        Calculates mass properties in the global system about the
+        reference point.  Considers NSM, NSM1, NSML, NSML1.
 
-        mass, cg, I = _mass_properties_no_xref(
-            self, elements, masses,
-            reference_point=reference_point)
+        Parameters
+        ----------
+        model : BDF()
+            a BDF object
+        element_ids : list[int]; (n, ) ndarray, optional
+            An array of element ids.
+        mass_ids : list[int]; (n, ) ndarray, optional
+            An array of mass ids.
+        nsm_id : int
+            the NSM id to consider
+        reference_point : ndarray/str/int, optional
+            type : ndarray
+                An array that defines the origin of the frame.
+                default = <0,0,0>.
+            type : str
+                'cg' is the only allowed string
+            type : int
+                the node id
+        sym_axis : str, optional
+            The axis to which the model is symmetric.
+            If AERO cards are used, this can be left blank.
+            allowed_values = 'no', x', 'y', 'z', 'xy', 'yz', 'xz', 'xyz'
+        scale : float, optional
+            The WTMASS scaling value.
+            default=None -> PARAM, WTMASS is used
+            float > 0.0
+        xyz_cid0_dict : dict[nid] : xyz; default=None -> auto-calculate
+            mapping of the node id to the global position
+        debug : bool; default=False
+            developer debug; may be removed in the future
 
-        mass, cg, I = _apply_mass_symmetry(self, sym_axis, scale, mass, cg, I)
-        return (mass, cg, I)
+        Returns
+        -------
+        mass : float
+            The mass of the model.
+        cg : ndarray
+            The cg of the model as an array.
+        I : ndarray
+            Moment of inertia array([Ixx, Iyy, Izz, Ixy, Ixz, Iyz]).
 
-    def _mass_properties_new(self, element_ids=None, mass_ids=None, nsm_id=None,
-                             reference_point=None,
-                             sym_axis=None, scale=None,
-                             xyz_cid0_dict=None, debug=False):
-        """not done"""
-        mass, cg, I = _mass_properties_new(
+        I = mass * centroid * centroid
+
+        .. math:: I_{xx} = m (dy^2 + dz^2)
+
+        .. math:: I_{yz} = -m * dy * dz
+
+        where:
+
+        .. math:: dx = x_{element} - x_{ref}
+
+        .. seealso:: http://en.wikipedia.org/wiki/Moment_of_inertia#Moment_of_inertia_tensor
+
+        .. note::
+           This doesn't use the mass matrix formulation like Nastran.
+           It assumes m*r^2 is the dominant term.
+           If you're trying to get the mass of a single element, it
+           will be wrong, but for real models will be correct.
+
+        Examples
+        --------
+        **mass properties of entire structure**
+
+        >>> mass, cg, I = model.mass_properties()
+        >>> Ixx, Iyy, Izz, Ixy, Ixz, Iyz = I
+
+
+        **mass properties of model based on Property ID**
+        >>> pids = list(model.pids.keys())
+        >>> pid_eids = model.get_element_ids_dict_with_pids(pids)
+        >>> for pid, eids in sorted(iteritems(pid_eids)):
+        >>>     mass, cg, I = mass_properties(model, element_ids=eids)
+
+        Warning
+        -------
+         - If eids are requested, but don't exist, no warning is thrown.
+           Decide if this is the desired behavior.
+        """
+        mass, cg, I = mass_properties_nsm(
             self, element_ids=element_ids, mass_ids=mass_ids, nsm_id=nsm_id,
             reference_point=reference_point,
             sym_axis=sym_axis, scale=scale, xyz_cid0_dict=xyz_cid0_dict, debug=debug)
