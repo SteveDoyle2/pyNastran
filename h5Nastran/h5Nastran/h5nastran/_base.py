@@ -1,7 +1,7 @@
 from __future__ import print_function, absolute_import
 
 from h5Nastran.h5.nastran import NastranNode
-from h5Nastran.data_helper import DataHelper
+from h5Nastran.defaults import Defaults
 from h5Nastran.table_paths import TablePaths
 
 import tables
@@ -25,13 +25,12 @@ class H5NastranBase(object):
         self._result_tables = {}
         
         self.nastran = NastranNode(self)
+        
+        # this node will take care of all custom data in h5 file
         # self.h5nastran = H5NastranNode(self)
 
-        # self.input = InputNode(self)
-        # self.result = ResultNode(self)
-
         self.table_paths = TablePaths()
-        self.defaults = DataHelper()
+        self.defaults = Defaults()
 
     def close(self):
         self.h5f.close()

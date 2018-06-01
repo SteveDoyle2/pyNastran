@@ -3,7 +3,7 @@ from __future__ import print_function, absolute_import
 import numpy as np
 from six import iterkeys
 
-from h5Nastran.data_helper import DataHelper
+from h5Nastran.defaults import Defaults
 from h5Nastran.h5nastrannode import H5NastranNode
 from .input_table import InputTable, TableDef
 
@@ -243,7 +243,7 @@ class PAERO1(InputTable):
             if diff_len > 0:
                 bi += [None] * diff_len
 
-            bi = [_ if _ is not None else DataHelper.default_int for _ in bi]
+            bi = [_ if _ is not None else Defaults.default_int for _ in bi]
 
             b1[i], b2[i], b3[i], b4[i], b5[i], b6[i] = bi
 
@@ -304,7 +304,7 @@ class PBAR(InputTable):
         i2 = data['I2']
         j = data['J']
         nsm = data['NSM']
-        data['FE'] = DataHelper.default_double  # blank field
+        data['FE'] = Defaults.default_double  # blank field
         c1 = data['C1']
         c2 = data['C2']
         d1 = data['D1']
@@ -495,8 +495,8 @@ class PBEAM(InputTable):
         pid = data['PID']
         mid = data['MID']
         nsegs = data['NSEGS']
-        data['CCF'][:] = DataHelper.unknown_int
-        data['CWELD'][:] = DataHelper.unknown_int
+        data['CCF'][:] = Defaults.unknown_int
+        data['CWELD'][:] = Defaults.unknown_int
 
         ######################
         so = data['SO']
@@ -537,8 +537,8 @@ class PBEAM(InputTable):
         # TODO: PBEAM - verify so is correct
 
         _so = {
-            '': DataHelper.default_double,
-            None: DataHelper.default_double,
+            '': Defaults.default_double,
+            None: Defaults.default_double,
             'NO': 0.,
             'YES': 1.,
             'YESA': 2.
@@ -648,8 +648,8 @@ class PBEAML(InputTable):
         # TODO: PBEAML - verify so is correct
 
         _so = {
-            '': DataHelper.default_double,
-            None: DataHelper.default_double,
+            '': Defaults.default_double,
+            None: Defaults.default_double,
             'NO': 0.,
             'YES': 1.,
             'YESA': 2.
@@ -820,14 +820,14 @@ class PBUSH(InputTable):
             card = cards[card_id]
 
             pid[i] = card.pid
-            k[i] = _get_list(card, 'Ki', DataHelper.default_double)
-            b[i] = _get_list(card, 'Bi', DataHelper.default_double)
-            ge[i] = _get_list(card, 'GEi', DataHelper.default_double)
-            sa[i] = _get_value(card, 'sa', DataHelper.default_double)
-            st[i] = _get_value(card, 'st', DataHelper.default_double)
-            ea[i] = _get_value(card, 'ea', DataHelper.default_double)
-            et[i] = _get_value(card, 'et', DataHelper.default_double)
-            m[i] = _get_value(card, 'm', DataHelper.default_double)
+            k[i] = _get_list(card, 'Ki', Defaults.default_double)
+            b[i] = _get_list(card, 'Bi', Defaults.default_double)
+            ge[i] = _get_list(card, 'GEi', Defaults.default_double)
+            sa[i] = _get_value(card, 'sa', Defaults.default_double)
+            st[i] = _get_value(card, 'st', Defaults.default_double)
+            ea[i] = _get_value(card, 'ea', Defaults.default_double)
+            et[i] = _get_value(card, 'et', Defaults.default_double)
+            m[i] = _get_value(card, 'm', Defaults.default_double)
 
         result = {'IDENTITY': data}
 
@@ -885,8 +885,8 @@ class PBUSH1D(InputTable):
         ut = data['UT']
         uc = data['UC']
 
-        default_double = DataHelper.default_double
-        default_int = DataHelper.default_int
+        default_double = Defaults.default_double
+        default_int = Defaults.default_int
 
         i = -1
         for card_id in card_ids:
@@ -1001,11 +1001,11 @@ class PBUSH1D(InputTable):
                 idtdv2[i] = card.gener_idtdv
                 idcdv2[i] = card.gener_idcdv
 
-            typef[i] = DataHelper.unknown_int
-            idtf[i] = DataHelper.unknown_int
-            idcf[i] = DataHelper.unknown_int
-            ut[i] = DataHelper.unknown_double
-            uc[i] = DataHelper.unknown_double
+            typef[i] = Defaults.unknown_int
+            idtf[i] = Defaults.unknown_int
+            idcf[i] = Defaults.unknown_int
+            ut[i] = Defaults.unknown_double
+            uc[i] = Defaults.unknown_double
 
         return {'IDENTITY': data}
 
@@ -1036,8 +1036,8 @@ class PCOMP(InputTable):
 
     def from_bdf(self, cards):
         _ft = {
-            None: DataHelper.default_int,
-            '': DataHelper.default_int,
+            None: Defaults.default_int,
+            '': Defaults.default_int,
             'HILL': 1,
             'HOFF': 2,
             'TSAI': 3,
@@ -1127,8 +1127,8 @@ class PCOMPG(InputTable):
     
     def from_bdf(self, cards):
         _ft = {
-            None: DataHelper.default_int,
-            '': DataHelper.default_int,
+            None: Defaults.default_int,
+            '': Defaults.default_int,
             'HILL': 1,
             'HOFF': 2,
             'TSAI': 3,
@@ -1204,7 +1204,7 @@ class PCOMPG(InputTable):
             ft.append(_ft[card.ft])
             tref.append(card.tref)
             ge.append(card.ge)
-            micro.append(DataHelper.unknown_str)
+            micro.append(Defaults.unknown_str)
             ply_pos.append(_pos)
             ply_len.append(n)
             _pos += n
@@ -1214,14 +1214,14 @@ class PCOMPG(InputTable):
             thick += list(card.thicknesses)
             theta += list(card.thetas)
             sout += [_convert_sout[_] for _ in card.souts]
-            midmtx += [DataHelper.unknown_int] * n
-            vf += [DataHelper.unknown_double] * n
-            vv += [DataHelper.unknown_double] * n
-            ctemp += [DataHelper.unknown_double] * n
-            moist += [DataHelper.unknown_double] * n
-            crit += [DataHelper.unknown_str] * n
-            nfti += [DataHelper.unknown_int] * n
-            fti += [DataHelper.unknown_str] * n
+            midmtx += [Defaults.unknown_int] * n
+            vf += [Defaults.unknown_double] * n
+            vv += [Defaults.unknown_double] * n
+            ctemp += [Defaults.unknown_double] * n
+            moist += [Defaults.unknown_double] * n
+            crit += [Defaults.unknown_str] * n
+            nfti += [Defaults.unknown_int] * n
+            fti += [Defaults.unknown_str] * n
             
         return result
             
@@ -1517,14 +1517,14 @@ class PSHELL(InputTable):
             pid[i] = card.pid
             mid1[i] = card.mid1
             t[i] = card.t
-            mid2[i] = _get_mid(card.mid2, DataHelper.default_int)
+            mid2[i] = _get_mid(card.mid2, Defaults.default_int)
             bk[i] = card.twelveIt3
-            mid3[i] = _get_mid(card.mid3, DataHelper.default_int)
+            mid3[i] = _get_mid(card.mid3, Defaults.default_int)
             ts[i] = card.tst
             nsm[i] = card.nsm
             z1[i] = card.z1
             z2[i] = card.z2
-            mid4[i] = _get_mid(card.mid4, DataHelper.default_int)
+            mid4[i] = _get_mid(card.mid4, Defaults.default_int)
 
         result = {'IDENTITY': data}
 
@@ -1569,15 +1569,15 @@ class PSOLID(InputTable):
             
         _integ = {
             0: 0, 1: 1, 2: 2, 3: 3, 'BUBBLE': 0, 'GAUSS': 1, 'TWO': 2, 'THREE': 3, 
-            '': DataHelper.default_int, None: DataHelper.default_int
+            '': Defaults.default_int, None: Defaults.default_int
         }
         
         _stress = {
-            'GRID': DataHelper.default_int, 'GAUSS': 1, '': DataHelper.default_int, None: DataHelper.default_int,
+            'GRID': Defaults.default_int, 'GAUSS': 1, '': Defaults.default_int, None: Defaults.default_int,
             1: 1
         }
         
-        _isop = {0: 0, 1: 1, 'REDUCED': 0, 'FULL': 1, '': DataHelper.default_int, None: DataHelper.default_int}
+        _isop = {0: 0, 1: 1, 'REDUCED': 0, 'FULL': 1, '': Defaults.default_int, None: Defaults.default_int}
 
         i = -1
         for card_id in card_ids:

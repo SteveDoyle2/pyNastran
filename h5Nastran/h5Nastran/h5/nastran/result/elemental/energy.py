@@ -1,6 +1,6 @@
 from __future__ import print_function, absolute_import
 
-from h5Nastran.data_helper import DataHelper
+from h5Nastran.defaults import Defaults
 from h5Nastran.h5nastrannode import H5NastranNode
 from ..result_table import ResultTable, TableDef, DataGetter
 
@@ -20,7 +20,7 @@ class Energy(H5NastranNode):
 
 def _validator(data):
     # TODO: what is IDENT in STRAIN_ELEM table?
-    data.append(DataHelper.unknown_int)  # this is why indices_len=5
+    data.append(Defaults.unknown_int)  # this is why indices_len=5
     return data
 
 

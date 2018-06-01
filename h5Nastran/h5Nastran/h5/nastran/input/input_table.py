@@ -7,13 +7,13 @@ import numpy as np
 import tables
 from six import add_metaclass
 
-from h5Nastran.data_helper import DataHelper
+from h5Nastran.defaults import Defaults
 from h5Nastran.msc import data_tables
 from h5Nastran.versioning import VersioningData, VersioningMetaClass
 
 _defaults = {
-    '<f8': DataHelper.default_double,
-    '<i8': DataHelper.default_int
+    '<f8': Defaults.default_double,
+    '<i8': Defaults.default_int
 }
 
 
@@ -107,7 +107,7 @@ class TableDef(object):
                 name = self.attrs[i]
                 _type = _dtypes[name][0]
                 if _type.startswith('S'):
-                    self.defaults[name] = DataHelper.default_str
+                    self.defaults[name] = Defaults.default_str
                 else:
                     self.defaults[name] = _defaults[_type]
 

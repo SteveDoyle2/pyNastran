@@ -3,8 +3,9 @@ from __future__ import print_function, absolute_import
 from collections import defaultdict
 
 from six.moves import range
+from six import iteritems
 
-from h5Nastran.data_helper import DataHelper
+from h5Nastran.defaults import Defaults
 from h5Nastran.h5nastrannode import H5NastranNode
 from .input_table import InputTable, TableDef
 
@@ -22,6 +23,15 @@ class Dynamic(H5NastranNode):
 
     def path(self):
         return self._input.path() + ['DYNAMIC']
+    
+    def to_bdf(self, bdf):
+        for key, item in iteritems(self.__dict__):
+            if key.startswith('_'):
+                continue
+            try:
+                item.to_bdf(bdf)
+            except NotImplementedError:
+                pass
 
 
 ########################################################################################################################
@@ -30,6 +40,28 @@ class Dynamic(H5NastranNode):
 class EIGR(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/DYNAMIC/EIGR')
 
+    def to_bdf(self, bdf):
+        add_card = bdf.add_eigr
+
+        identity = self.identity
+
+        sid = identity['SID']
+        method = identity['METHOD']
+        f1 = identity['F1']
+        f2 = identity['F2']
+        ne = identity['NE']
+        nd = identity['ND']
+        norm = identity['NORM']
+        g = identity['G']
+        c = identity['C']
+
+        to_value_int = self._h5n.defaults.to_value_int
+
+        for i in range(sid.size):
+            _g = to_value_int(g[i])
+            _c = to_value_int(c[i])
+            add_card(sid[i], method[i].decode(), f1[i], f2[i], ne[i], nd[i], norm[i].decode(), _g, _c)
+            
     def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
 
@@ -47,7 +79,7 @@ class EIGR(InputTable):
         g = identity['G']
         c = identity['C']
 
-        default_int = DataHelper.default_int
+        get_value_int = self._h5n.defaults.get_value_int
 
         for card_id in card_ids:
             card = cards[card_id]
@@ -56,11 +88,11 @@ class EIGR(InputTable):
             method.append(card.method)
             f1.append(card.f1)
             f2.append(card.f2)
-            ne.append(card.ne if card.ne is not None else default_int)
-            nd.append(card.nd if card.nd is not None else default_int)
+            ne.append(get_value_int(card.ne))
+            nd.append(get_value_int(card.nd))
             norm.append(card.norm)
-            g.append(card.G if card.G is not None else default_int)
-            c.append(card.C if card.C is not None else default_int)
+            g.append(get_value_int(card.G))
+            c.append(get_value_int(card.C))
 
         return result
 
@@ -115,14 +147,14 @@ class EIGRL(InputTable):
             for i in range(len(card.options)):
                 option_data[card.options[i]].append(card.values[i])
 
-            _v1 = _get_option(card.v1, 'V1', option_data, DataHelper.default_double)
-            _v2 = _get_option(card.v2, 'V2', option_data, DataHelper.default_double)
-            _nd = _get_option(card.nd, 'ND', option_data, DataHelper.default_int)
-            _msglvl = _get_option(card.msglvl, 'MSGLVL', option_data, DataHelper.default_int)
-            _maxset = _get_option(card.maxset, 'MAXSET', option_data, DataHelper.default_int)
-            _shfscl = _get_option(card.shfscl, 'SHFSCL', option_data, DataHelper.default_double)
-            _norm = _get_option(card.norm, 'NORM', option_data, DataHelper.default_str)
-            _alph = _get_option(None, 'ALPH', option_data, DataHelper.default_double)
+            _v1 = _get_option(card.v1, 'V1', option_data, Defaults.default_double)
+            _v2 = _get_option(card.v2, 'V2', option_data, Defaults.default_double)
+            _nd = _get_option(card.nd, 'ND', option_data, Defaults.default_int)
+            _msglvl = _get_option(card.msglvl, 'MSGLVL', option_data, Defaults.default_int)
+            _maxset = _get_option(card.maxset, 'MAXSET', option_data, Defaults.default_int)
+            _shfscl = _get_option(card.shfscl, 'SHFSCL', option_data, Defaults.default_double)
+            _norm = _get_option(card.norm, 'NORM', option_data, Defaults.default_str)
+            _alph = _get_option(None, 'ALPH', option_data, Defaults.default_double)
 
             # TODO: EIGRL how is nums used?, what is flag1 and flag2?
             # _nums = _get_option(None, 'NUMS', option_data, 1)
@@ -137,8 +169,8 @@ class EIGRL(InputTable):
             shfscl.append(_shfscl)
             norm.append(_norm)
             alph.append(_alph)
-            flag1.append(DataHelper.unknown_int)
-            flag2.append(DataHelper.unknown_int)
+            flag1.append(Defaults.unknown_int)
+            flag2.append(Defaults.unknown_int)
             freqs_pos.append(_pos)
             _len = len(_fi)
             _pos += _len

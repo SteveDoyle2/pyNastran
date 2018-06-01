@@ -6,7 +6,7 @@ from typing import Dict
 
 from h5Nastran.h5nastrannode import H5NastranNode
 from h5Nastran.utilities import ImmutableDict
-from .input_table import InputTable, TableDef, DataHelper
+from .input_table import InputTable, TableDef, Defaults
 
 
 class Node(H5NastranNode):
@@ -63,7 +63,7 @@ class GRID(InputTable):
             _cp = cp[i]
             _xyz = x[i]
             _cd = cd[i]
-            _ps = _get_ps(ps[i], DataHelper.default_int)
+            _ps = _get_ps(ps[i], Defaults.default_int)
             _seid = seid[i]
 
             add_card(_id, _xyz, _cp, _cd, _ps, _seid)
@@ -94,7 +94,7 @@ class GRID(InputTable):
             cp[i] = _get_val(card.cp, 0)
             x[i] = card.xyz
             cd[i] = _get_val(card.cd, 0)
-            ps[i] = _get_val(card.ps, DataHelper.default_int)
+            ps[i] = _get_val(card.ps, Defaults.default_int)
             seid[i] = _get_val(card.seid, 0)
 
         result = {'IDENTITY': data}

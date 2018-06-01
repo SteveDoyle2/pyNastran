@@ -3,7 +3,7 @@ from __future__ import print_function, absolute_import
 import numpy as np
 from six.moves import range
 
-from h5Nastran.data_helper import DataHelper
+from h5Nastran.defaults import Defaults
 from h5Nastran.h5nastrannode import H5NastranNode
 from .input_table import InputTable, TableDef
 
@@ -277,8 +277,7 @@ class MOMENT(InputTable):
 class PLOAD4(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/LOAD/PLOAD4')
 
-    @staticmethod
-    def from_bdf(self):
+    def from_bdf(self, cards):
         data = {
             'IDENTITY': {
                 'SID': [],
@@ -305,10 +304,10 @@ class PLOAD4(InputTable):
         sorl = identity['SORL']
         ldir = identity['LDIR']
 
-        card_ids = sorted(self.keys())
+        card_ids = sorted(cards.keys())
 
         for card_id in card_ids:
-            card_list = self[card_id]
+            card_list = cards[card_id]
 
             for card in card_list:
                 eids = card.eids
@@ -325,11 +324,11 @@ class PLOAD4(InputTable):
 
                 _g1 = card.g1
                 if _g1 is None:
-                    _g1 = DataHelper.default_int
+                    _g1 = Defaults.default_int
 
                 _g34 = card.g34
                 if _g34 is None:
-                    _g34 = DataHelper.default_int
+                    _g34 = Defaults.default_int
 
                 g1.extend([_g1] * eid_len)
                 g34.extend([_g34] * eid_len)
@@ -350,8 +349,7 @@ class PLOAD4(InputTable):
 class RLOAD1(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/LOAD/RLOAD1')
 
-    @staticmethod
-    def from_bdf(self):
+    def from_bdf(self, cards):
         data = {
             'IDENTITY': {
                 'SID': [],
@@ -382,7 +380,7 @@ class RLOAD1(InputTable):
         rc = identity['RC']
         rd = identity['RD']
 
-        card_ids = sorted(self.keys())
+        card_ids = sorted(cards.keys())
 
         def _get_type(val):
             if isinstance(val, int):
@@ -409,7 +407,7 @@ class RLOAD1(InputTable):
                 raise ValueError
 
         for card_id in card_ids:
-            card_list = self[card_id]
+            card_list = cards[card_id]
 
             for card in card_list:
                 sid.append(card.sid)
@@ -437,8 +435,7 @@ class RLOAD1(InputTable):
 class RLOAD2(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/LOAD/RLOAD2')
 
-    @staticmethod
-    def from_bdf(self):
+    def from_bdf(self, cards):
         data = {
             'IDENTITY': {
                 'SID': [],
@@ -469,7 +466,7 @@ class RLOAD2(InputTable):
         rb = identity['RB']
         rp = identity['RP']
 
-        card_ids = sorted(self.keys())
+        card_ids = sorted(cards.keys())
 
         def _get_type(val):
             if isinstance(val, int):
@@ -496,7 +493,7 @@ class RLOAD2(InputTable):
                 raise ValueError
 
         for card_id in card_ids:
-            card_list = self[card_id]
+            card_list = cards[card_id]
 
             for card in card_list:
                 sid.append(card.sid)

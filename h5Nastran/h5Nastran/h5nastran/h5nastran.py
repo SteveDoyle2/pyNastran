@@ -50,7 +50,6 @@ class H5Nastran(H5NastranBDF, H5NastranResult):
                               'VERSIONING', expectedrows=1, createparents=True)
 
         table = self.h5f.get_node(self.table_paths.versioning)
-
         data = np.zeros(1, dtype=versioning_dtype)
 
         data['H5NASTRAN_VERSION_STR'][0] = self.h5n_version_str
@@ -66,9 +65,11 @@ class H5Nastran(H5NastranBDF, H5NastranResult):
 
         table.append(data)
 
+        self.defaults.save(self)
+
         self.h5f.flush()
 
     def _update(self):
         self.nastran.update()
         defaults = self.h5f.get_node(self.table_paths.defaults).read()
-        self.defaults.load(defaults)
+        self.defaults.load(self)

@@ -113,6 +113,11 @@ class H5NastranBDF(H5NastranBase):
     def _load_bdf(self):
         from zlib import decompress
 
+        def decompress(d):
+            return d
+
+        self._bdf = self.h5f.get_node(self.table_paths.bdf_file).read().decode()
+
         bdf_lines = decompress(self.h5f.get_node(self.table_paths.bdf_lines).read()).decode()
 
         from six import StringIO
@@ -128,17 +133,26 @@ class H5NastranBDF(H5NastranBase):
 
         bdf = BDF(debug=False)
 
-        for card in self.supported_to_bdf_cards():
+        _cards = self.supported_to_bdf_cards()
+
+        for card in _cards:
             bdf.cards_to_read.remove(card)
 
         bdf.read_bdf(data, xref=False)
         data.close()
+
+        for card in _cards:
+            bdf.cards_to_read.add(card)
+            
+        del bdf.rejects[:]
 
         self.nastran.input.to_bdf(bdf)
 
         bdf.cross_reference()
 
         self.bdf = bdf
+
+        self.bdf.bdf_filename = self._bdf
         
     def _save_bdf(self):
         from six import StringIO
@@ -152,14 +166,14 @@ class H5NastranBDF(H5NastranBase):
 
         from zlib import compress
 
+        def compress(d):
+            return d
+
+        self.h5f.create_array(self.table_paths.bdf_file_path, self.table_paths.bdf_file_table,
+                              obj=self._bdf.encode(), title='BDF FILE', createparents=True)
+
         self.h5f.create_array(self.table_paths.bdf_lines_path, self.table_paths.bdf_lines_table,
                               obj=compress(out.getvalue().encode()), title='BDF LINES', createparents=True)
-
-        self.h5f.create_table(self.table_paths.defaults_path, self.table_paths.defaults_table, self.defaults.Format,
-                              'DATA DEFAULTS', expectedrows=1, createparents=True)
-
-        table = self.h5f.get_node(self.table_paths.defaults)
-        table.append(self.defaults.save())
 
         self.h5f.flush()
 
