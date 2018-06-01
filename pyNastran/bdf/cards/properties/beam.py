@@ -1163,12 +1163,29 @@ class PBEAML(IntegratedLineProperty):
             raise NotImplementedError('property_type=%r has not implemented %r in pname_map' % (
                 self.type, pname_fid))
         elif pname_fid.startswith('DIM'):
-            unused_word, num = break_word_by_trailing_integer(pname_fid)
-            ndim = len(self.dim[0])
+            # DIM1, DIM1(A), DIM1(10), DIM2(B)
+            #
+            # (DIM, num, station)
+            #
+            station_str = 'A' #  the default, A
+            if '(' in pname_fid:
+                assert pname_fid.endswith(')'), pname_fid
+                pname_fid, station_str = pname_fid[:-1].split('(', 1)
 
-            num = int(num) - 1
-            idim = num % ndim
-            istation = num // ndim
+            ndim = len(self.dim[0])
+            if station_str == 'A':
+                istation = 0
+            elif station_str == 'B':
+                istation = ndim - 1
+            else:
+                istation = int(station_str) - 1
+
+            unused_dim_word, num = break_word_by_trailing_integer(pname_fid)
+
+            idim = int(num) - 1
+
+            # in Nastran syntax
+            #print('DIM%i(%i)' % (idim+1, istation+1))
             try:
                 dim_station = self.dim[istation]
                 dim_station[idim] = value

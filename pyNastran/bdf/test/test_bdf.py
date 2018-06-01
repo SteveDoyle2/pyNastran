@@ -1324,7 +1324,7 @@ def _check_case_parameters(subcase, fem2, p0, isubcase, sol,
         else:
             method_ids = list(fem2.methods.keys())
             raise RuntimeError('METHOD = %s not in method_ids=%s' % (method_id, method_ids))
-        allowed_sols = [5, 76, 101, 103, 105, 106, 107, 108, 110, 111,
+        allowed_sols = [5, 76, 100, 101, 103, 105, 106, 107, 108, 110, 111,
                         112, 144, 145, 146, 187, 200]
         ierror = check_sol(sol, subcase, allowed_sols, 'METHOD', log, ierror, nerrors)
 
@@ -1337,7 +1337,7 @@ def _check_case_parameters(subcase, fem2, p0, isubcase, sol,
         else:
             cmethod_ids = list(fem2.cMethods.keys())
             raise RuntimeError('CMETHOD = %s not in cmethod_ids=%s' % (cmethod_id, cmethod_ids))
-        allowed_sols = [107, 110, 144, 145, 200]
+        allowed_sols = [107, 110, 111, 144, 145, 200]
         ierror = check_sol(sol, subcase, allowed_sols, 'CMETHOD', log, ierror, nerrors)
 
     if 'RMETHOD' in subcase:
@@ -1350,7 +1350,7 @@ def _check_case_parameters(subcase, fem2, p0, isubcase, sol,
             #method_ids = list(fem2.methods.keys())
             #raise RuntimeError('METHOD = %s not in method_ids=%s' % (method_id, method_ids))
 
-        allowed_sols = [110, 111]
+        allowed_sols = [101, 110, 111]
         ierror = check_sol(sol, subcase, allowed_sols, 'RMETHOD', log, ierror, nerrors)
 
     if 'FMETHOD' in subcase:
@@ -1444,7 +1444,7 @@ def _check_case_parameters(subcase, fem2, p0, isubcase, sol,
     if 'DLOAD' in subcase:
         allowed_sols = [
             26, 68, 76, 78, 88, 99, 103, 108, 109, 111, 112, 118, 129, 146,
-            153, 159, 200, 400, 401, 601,
+            153, 159, 200, 400, 401, 601, 700,
         ]
         ierror = check_sol(sol, subcase, allowed_sols, 'DLOAD', log, ierror, nerrors)
         dload_id = subcase.get_parameter('DLOAD')[0]
@@ -1712,20 +1712,20 @@ def get_element_stats(fem1, unused_fem2, quiet=False):
     assert np.allclose(cg1, cg2), 'mass=%s cg1=%s cg2=%s' % (mass1, cg1, cg2)
     assert np.allclose(inertia1, inertia2), 'mass=%s cg=%s inertia1=%s inertia2=%s' % (mass1, cg1, inertia1, inertia2)
 
-    reference_point = [10., 10., 10.]
-    mass1, cg1, inertia1 = fem1.mass_properties(reference_point=reference_point, sym_axis=None)
-    mass2, cg2, inertia2 = fem1.mass_properties_nsm(reference_point=reference_point, sym_axis=None)
-    assert np.allclose(mass1, mass2), 'reference_point=[10., 10., 10.]; mass1=%s mass2=%s' % (mass1, mass2)
-    assert np.allclose(cg1, cg2), 'reference_point=[10., 10., 10.]; mass=%s cg1=%s cg2=%s' % (mass1, cg1, cg2)
-    assert np.allclose(inertia1, inertia2), 'reference_point=[10., 10., 10.]; mass=%s cg=%s inertia1=%s inertia2=%s' % (mass1, cg1, inertia1, inertia2)
-    #assert np.allclose(inertia1, inertia1b), 'reference_point=[10., 10., 10.]; mass=%s cg=%s inertia1=%s inertia1b=%s' % (mass1, cg1, inertia1, inertia1b)
-
     for nsm_id in chain(fem1.nsms, fem1.nsmadds):
         mass, cg, inertia = fem1.mass_properties_nsm(reference_point=None, sym_axis=None, nsm_id=nsm_id)
         print('nsm_id=%s' % nsm_id)
         print('  mass = %s' % mass)
         print('  cg = %s' % cg1)
         print('  Ixx=%s, Iyy=%s, Izz=%s \n  Ixy=%s, Ixz=%s, Iyz=%s' % tuple(inertia1))
+
+    reference_point = [10., 10., 10.]
+    mass1, cg1, inertia1 = fem1.mass_properties(reference_point=reference_point, sym_axis=None)
+    mass2, cg2, inertia2 = fem1.mass_properties_nsm(reference_point=reference_point, sym_axis=None)
+    assert np.allclose(mass1, mass2), 'reference_point=[10., 10., 10.]; mass1=%s mass2=%s' % (mass1, mass2)
+    assert np.allclose(cg1, cg2), 'reference_point=[10., 10., 10.]; mass=%s cg1=%s cg2=%s' % (mass1, cg1, cg2)
+    assert np.allclose(inertia1, inertia2), 'reference_point=[10., 10., 10.]; mass=%s cg=%s inertia1=%s inertia2=%s' % (mass1, cg1, inertia1, inertia2)
+
 
 def get_matrix_stats(fem1, unused_fem2):
     # type: (BDF, BDF) -> None

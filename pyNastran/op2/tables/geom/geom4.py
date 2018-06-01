@@ -524,7 +524,6 @@ class GEOM4(GeomCommon):
          0,  9,  30,  2, 28, 29, 31, 32,  128, 129, 130, 131, 132, -1, 0.0,
          10, 25,  2, 23, 24, 26, 27, 123, 124, 125, 126, 127, -1, 0.0)
         """
-        self.show_data(data[n:], 'if')
         idata = np.frombuffer(data[n:], self.idtype).copy()
         iminus1 = np.where(idata == -1)[0]
         if idata[-1] == -1:

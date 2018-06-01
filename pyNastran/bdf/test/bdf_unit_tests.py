@@ -128,8 +128,7 @@ class TestBDF(Tester):
             assert allclose(cgi, cgie), 'i=%s cg=%s' % (i, str(cg))
 
         compare_mass_cg_inertia(fem1)
-        compare_mass_cg_inertia(fem1, reference_point=u'cg')
-        mass, cg, I = fem1.mass_properties(reference_point='cg')
+        compare_mass_cg_inertia(fem1, reference_point=None)
 
     def test_bdf_01_hdf5(self):
         """checks solid_bending.dat"""
@@ -157,7 +156,6 @@ class TestBDF(Tester):
             assert len(fem.methods) == 1, 'len(methods) = %i' % len(fem.methods)
             assert len(fem.properties) == 1, 'len(properties) = %i' % len(fem.properties)
         compare_mass_cg_inertia(fem1)
-        compare_mass_cg_inertia(fem1, reference_point=u'cg')
 
     def test_bdf_03(self):
         """checks cbush.dat"""
@@ -177,7 +175,6 @@ class TestBDF(Tester):
             assert len(fem.properties) == 1, 'len(properties) = %i' % len(fem.properties)  # PBEAML issue
 
         compare_mass_cg_inertia(fem1)
-        compare_mass_cg_inertia(fem1, reference_point=u'cg')
 
         self.run_bdf('', bdf_filename, xref=True, debug=False)
 
@@ -199,8 +196,8 @@ class TestBDF(Tester):
             assert len(fem.methods) == 1, 'len(methods) = %i' % len(fem.methods)
             assert len(fem.properties) == 3, 'len(properties) = %i' % len(fem.properties)  # PBEAML issue
             assert len(fem.properties_mass) == 0, 'len(properties_mass) = %i' % len(fem.properties_mass)
+        fem1.cross_reference()
         compare_mass_cg_inertia(fem1)
-        #compare_mass_cg_inertia(fem1, reference_point=u'cg')
 
         #self.run_bdf(folder, bdf_filename, xref=True, debug=False) # PBEAML is not supported
 
@@ -292,8 +289,6 @@ class TestBDF(Tester):
         fem1.cross_reference()
         fem1.pop_xref_errors()
         compare_mass_cg_inertia(fem1)
-        compare_mass_cg_inertia(fem1, reference_point=u'cg')
-        compare_mass_cg_inertia(fem1, reference_point='cg')
 
     def test_bdf_thermal_01(self):
         """checks time_thermal_elements.bdf"""
@@ -313,6 +308,7 @@ class TestBDF(Tester):
             assert len(fem.methods) == 0, 'len(methods) = %i' % len(fem.methods)
             assert len(fem.properties) == 1, 'len(properties) = %i' % len(fem.properties)
             assert len(fem.properties_mass) == 0, 'len(properties_mass) = %i' % len(fem.properties_mass)
+        fem1.cross_reference()
         compare_mass_cg_inertia(fem1)
 
     def test_bdf_transfer_function_01(self):
@@ -385,6 +381,7 @@ class TestBDF(Tester):
 
 def compare_mass_cg_inertia(fem1, reference_point=None, sym_axis=None):
     mass1, cg1, I1 = fem1.mass_properties(reference_point=reference_point, sym_axis=sym_axis)
+    #mass1, cg1, I1 = fem1.mass_properties_no_xref(reference_point=reference_point, sym_axis=sym_axis)
 
 
 class TestBaseCard(Tester):

@@ -384,7 +384,7 @@ class BDFMethods(BDFAttributes):
 
     def mass_properties(self, element_ids=None, mass_ids=None,
                         reference_point=None,
-                        sym_axis=None, scale=None):
+                        sym_axis=None, scale=None, inertia_reference='cg'):
         """
         Calculates mass properties in the global system about the
         reference point.
@@ -395,12 +395,10 @@ class BDFMethods(BDFAttributes):
             An array of element ids.
         mass_ids : list[int]; (n, ) ndarray, optional
             An array of mass ids.
-        reference_point : ndarray/str/int, optional
+        reference_point : ndarray/int, optional
             type : ndarray
                 An array that defines the origin of the frame.
                 default = <0,0,0>.
-            type : str
-                'cg' is the only allowed string
             type : int
                 the node id
         sym_axis : str, optional
@@ -411,6 +409,9 @@ class BDFMethods(BDFAttributes):
             The WTMASS scaling value.
             default=None -> PARAM, WTMASS is used
             float > 0.0
+        inertia_reference : str; default='cg'
+            'cg' : inertia is taken about the cg
+            'ref' : inertia is about the reference point
 
         Returns
         -------
@@ -457,12 +458,13 @@ class BDFMethods(BDFAttributes):
             self,
             element_ids=element_ids, mass_ids=mass_ids,
             reference_point=reference_point,
-            sym_axis=sym_axis, scale=scale)
+            sym_axis=sym_axis, scale=scale,
+            inertia_reference=inertia_reference)
         return mass, cg, I
 
     def mass_properties_no_xref(self, element_ids=None, mass_ids=None,
                                 reference_point=None,
-                                sym_axis=None, scale=None):
+                                sym_axis=None, scale=None, inertia_reference='cg'):
         """
         Calculates mass properties in the global system about the
         reference point.
@@ -473,12 +475,10 @@ class BDFMethods(BDFAttributes):
             An array of element ids.
         mass_ids : list[int]; (n, ) ndarray, optional
             An array of mass ids.
-        reference_point : ndarray/str/int, optional
+        reference_point : ndarray/int, optional
             type : ndarray
                 An array that defines the origin of the frame.
                 default = <0,0,0>.
-            type : str
-                'cg' is the only allowed string
             type : int
                 the node id
         sym_axis : str, optional
@@ -489,6 +489,9 @@ class BDFMethods(BDFAttributes):
             The WTMASS scaling value.
             default=None -> PARAM, WTMASS is used
             float > 0.0
+        inertia_reference : str; default='cg'
+            'cg' : inertia is taken about the cg
+            'ref' : inertia is about the reference point
 
         Returns
         -------
@@ -535,12 +538,13 @@ class BDFMethods(BDFAttributes):
         mass, cg, I = mass_properties_no_xref(
             self, element_ids=element_ids, mass_ids=mass_ids,
             reference_point=reference_point,
-            sym_axis=sym_axis, scale=scale)
+            sym_axis=sym_axis, scale=scale,
+            inertia_reference=inertia_reference)
         return mass, cg, I
 
     def mass_properties_nsm(self, element_ids=None, mass_ids=None, nsm_id=None,
                             reference_point=None,
-                            sym_axis=None, scale=None,
+                            sym_axis=None, scale=None, inertia_reference='cg',
                             xyz_cid0_dict=None, debug=False):
         """
         Calculates mass properties in the global system about the
@@ -556,12 +560,10 @@ class BDFMethods(BDFAttributes):
             An array of mass ids.
         nsm_id : int
             the NSM id to consider
-        reference_point : ndarray/str/int, optional
+        reference_point : ndarray/int, optional
             type : ndarray
                 An array that defines the origin of the frame.
                 default = <0,0,0>.
-            type : str
-                'cg' is the only allowed string
             type : int
                 the node id
         sym_axis : str, optional
@@ -572,6 +574,9 @@ class BDFMethods(BDFAttributes):
             The WTMASS scaling value.
             default=None -> PARAM, WTMASS is used
             float > 0.0
+        inertia_reference : str; default='cg'
+            'cg' : inertia is taken about the cg
+            'ref' : inertia is about the reference point
         xyz_cid0_dict : dict[nid] : xyz; default=None -> auto-calculate
             mapping of the node id to the global position
         debug : bool; default=False
@@ -626,7 +631,9 @@ class BDFMethods(BDFAttributes):
         mass, cg, I = mass_properties_nsm(
             self, element_ids=element_ids, mass_ids=mass_ids, nsm_id=nsm_id,
             reference_point=reference_point,
-            sym_axis=sym_axis, scale=scale, xyz_cid0_dict=xyz_cid0_dict, debug=debug)
+            sym_axis=sym_axis, scale=scale,
+            inertia_reference=inertia_reference,
+            xyz_cid0_dict=xyz_cid0_dict, debug=debug)
         return (mass, cg, I)
 
     #def __gravity_load(self, loadcase_id):

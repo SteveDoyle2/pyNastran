@@ -92,19 +92,21 @@ def transform_inertia(mass, xyz_cg, xyz_ref, xyz_ref2, I_ref):
     dx2 = xref2 - xcg
     dy2 = yref2 - ycg
     dz2 = zref2 - zcg
-    #print('dx1 = <%s, %s, %s>' % (dx1, dy1, dz1))
-    #print('dx2 = <%s, %s, %s>' % (dx2, dy2, dz2))
 
     # consistent with mass_properties, not CONM2
-    #print('I_ref =', I_ref)
     Ixx_ref, Iyy_ref, Izz_ref, Ixy_ref, Ixz_ref, Iyz_ref = I_ref
-    Ixx2 = Ixx_ref - mass * (dx1**2 - dx2**2)
-    Iyy2 = Iyy_ref - mass * (dy1**2 - dy2**2)
-    Izz2 = Izz_ref - mass * (dz1**2 - dz2**2)
+    dx = dx1**2 - dx2**2
+    dy = dy1**2 - dy2**2
+    dz = dz1**2 - dz2**2
+    Ixx2 = Ixx_ref - mass * (dy + dz)
+    Iyy2 = Iyy_ref - mass * (dx + dz)
+    Izz2 = Izz_ref - mass * (dx + dy)
     Ixy2 = Ixy_ref - mass * (dx1 * dy1 - dx2 * dy2)
     Ixz2 = Ixz_ref - mass * (dx1 * dz1 - dx2 * dz2)
     Iyz2 = Iyz_ref - mass * (dy1 * dz1 - dy2 * dz2)
     I_new = np.array([Ixx2, Iyy2, Izz2, Ixy2, Ixz2, Iyz2])
+    #print('  Iref = %s' % str(I_ref))
+    #print('  Inew = %s' % str(I_new))
     return I_new
 
 def _mass_properties_elements_init(model, element_ids, mass_ids):
@@ -140,7 +142,7 @@ def _mass_properties_elements_init(model, element_ids, mass_ids):
 
 def mass_properties(model, element_ids=None, mass_ids=None,
                     reference_point=None,
-                    sym_axis=None, scale=None):
+                    sym_axis=None, scale=None, inertia_reference='cg'):
     """
     Calculates mass properties in the global system about the
     reference point.
@@ -155,6 +157,9 @@ def mass_properties(model, element_ids=None, mass_ids=None,
         the mass ids to consider
     reference_point : (3, ) ndarray; default = <0,0,0>.
         an array that defines the origin of the frame.
+    inertia_reference : str; default='cg'
+        'cg' : inertia is taken about the cg
+        'ref' : inertia is about the reference point
 
     Returns
     -------
@@ -168,32 +173,44 @@ def mass_properties(model, element_ids=None, mass_ids=None,
     .. seealso:: model.mass_properties
 
     """
-    reference_point, is_cg = _update_reference_point(model, reference_point)
+    reference_point, is_cg = _update_reference_point(
+        model, reference_point, inertia_reference)
     element_ids, elements, mass_ids, masses = _mass_properties_elements_init(
         model, element_ids, mass_ids)
     mass, cg, I = _mass_properties(
         model, elements, masses,
         reference_point, is_cg)
     mass, cg, I = _apply_mass_symmetry(model, sym_axis, scale, mass, cg, I)
-    return (mass, cg, I)
+    return mass, cg, I
 
-def _update_reference_point(model, reference_point):
+def _update_reference_point(model, reference_point, inertia_reference='cg'):
     """helper method for handling reference point"""
-    is_cg = False
+    inertia_reference = inertia_reference.lower()
+    if inertia_reference == 'cg':
+        is_cg = True  # nastran-style inertia is always about the cg
+    elif inertia_reference == 'ref':
+        is_cg = False # inertia is about the reference point
+    else:
+        raise ValueError("inertia_reference=%r and must be 'cg' or 'ref'" % inertia_reference)
+
     if reference_point is None:
         reference_point = np.array([0., 0., 0.])
     elif isinstance(reference_point, integer_types):
         reference_point = model.nodes[reference_point].get_position()
-    elif isinstance(reference_point, string_types):
-        if reference_point == 'cg':
-            is_cg = True
+    else:
+        reference_point = np.asarray(reference_point, dtype='float64')
+        if len(reference_point.shape) != 1 or len(reference_point) != 3:
+            msg = ("reference_point=%r and must be None, "
+                   "a list of 3 floats, or an integer (node id)"  % reference_point)
+            raise ValueError(msg)
     return reference_point, is_cg
 
 def mass_properties_no_xref(model, element_ids=None, mass_ids=None,
                             reference_point=None,
-                            sym_axis=None, scale=None):
+                            sym_axis=None, scale=None, inertia_reference='cg',):
     """see model.mass_properties_no_xref"""
-    reference_point, is_cg = _update_reference_point(model, reference_point)
+    reference_point, is_cg = _update_reference_point(
+        model, reference_point, inertia_reference)
     element_ids, elements, mass_ids, masses = _mass_properties_elements_init(
         model, element_ids, mass_ids)
     #nelements = len(elements) + len(masses)
@@ -203,40 +220,23 @@ def mass_properties_no_xref(model, element_ids=None, mass_ids=None,
         reference_point, is_cg)
 
     mass, cg, I = _apply_mass_symmetry(model, sym_axis, scale, mass, cg, I)
-    return (mass, cg, I)
+    return mass, cg, I
 
 def _mass_properties(model, elements, masses, reference_point, is_cg):
     """helper method for ``mass_properties``"""
-    #Ixx Iyy Izz, Ixy, Ixz Iyz
-    # precompute the CG location and make it the reference point
-    I = array([0., 0., 0., 0., 0., 0., ])
-    cg = array([0., 0., 0.])
-    #mass_types = [
-        #'CONM1', 'CONM2',
-        #'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4',
-        #'CROD', 'CONROD', 'CTUBE',
-        #'CBAR', 'CBEAM', 'CFAST',
-        #'CTRIA3', 'CQUAD4', 'CTRIA6', 'CQUAD8', 'CQUADR', 'CTRIAR', 'CQUAD', 'CSHEAR',
-        #'CTETRA', 'CPYRAM', 'CPENTA', 'CHEXA',
-    #]
-    no_mass = NO_MASS
-    #if is_cg:
-        #mass, cg, I = _mass_properties_update_reference_point_to_cg(model, elements, masses)
-        #if mass == 0.0:
-            #return mass, cg, I
-        #reference_point = cg / mass
-    #else:
-        ## reference_point = [0.,0.,0.] or user-defined array
-        #pass
-
     mass = 0.
     cg = array([0., 0., 0.])
+    I = array([0., 0., 0., 0., 0., 0., ])
+    no_mass = NO_MASS
     for pack in [elements, masses]:
         for element in pack:
             try:
                 p = element.center_of_mass()  # was Centroid()
-            except:  # we were already strict before
-                continue
+            except AttributeError:
+                if element.type in no_mass:
+                    continue
+                model.log.error(element.rstrip())
+                raise
 
             try:
                 m = element.Mass()
@@ -303,18 +303,6 @@ def _mass_properties_no_xref(model, elements, masses, reference_point, is_cg):  
     .. seealso:: mass_properties(...)
 
     """
-    #Ixx Iyy Izz, Ixy, Ixz Iyz
-    # precompute the CG location and make it the reference point
-    #if is_cg:
-        #mass, cg, I = _mass_properties_no_xref_update_reference_point_to_cg(model, elements, masses)
-        #if mass == 0.0:
-            #return mass, cg, I
-
-        #reference_point = cg / mass
-    #else:
-        ## reference_point = [0.,0.,0.] or user-defined array
-        #pass
-
     mass = 0.
     cg = array([0., 0., 0.])
     I = array([0., 0., 0., 0., 0., 0., ])
@@ -361,51 +349,6 @@ def _mass_properties_no_xref(model, elements, masses, reference_point, is_cg):  
         I = transform_inertia(mass, cg, xyz_ref, xyz_ref2, I)
     return mass, cg, I
 
-def _mass_properties_update_reference_point_to_cg(model, elements, masses):
-    mass = 0.
-    cg = array([0., 0., 0.])
-    I = array([0., 0., 0., 0., 0., 0., ])
-    no_mass = NO_MASS
-    for pack in [elements, masses]:
-        for element in pack:
-
-            try:
-                p = element.center_of_mass()  # was Centroid()
-                m = element.Mass()
-            except AttributeError:
-                if element.type in no_mass:
-                    continue
-                model.log.error(element.rstrip())
-                raise
-            except TypeError:
-                # not xref'd?
-                model.log.error(element.rstrip())
-                raise
-            mass += m
-            cg += m * p
-
-            #except :
-                #raise
-                #pass
-    return mass, cg, I
-
-def _mass_properties_no_xref_update_reference_point_to_cg(model, elements, masses):
-    """helper method"""
-    I = array([0., 0., 0., 0., 0., 0., ])
-    cg = array([0., 0., 0.])
-    mass = 0.
-    for pack in [elements, masses]:
-        for element in pack:
-            try:
-                p = element.Centroid_no_xref(model)
-                m = element.Mass_no_xref(model)
-            except:
-                #pass
-                raise
-            mass += m
-            cg += m * p
-    return mass, cg, I
-
 def _increment_inertia(centroid, reference_point, m, mass, cg, I):
     """helper method"""
     if m == 0.:
@@ -426,8 +369,8 @@ def _increment_inertia(centroid, reference_point, m, mass, cg, I):
 
 def mass_properties_nsm(model, element_ids=None, mass_ids=None, nsm_id=None,
                         reference_point=None,
-                        sym_axis=None, scale=None, xyz_cid0_dict=None,
-                        debug=False):  # pragma: no cover
+                        sym_axis=None, scale=None, inertia_reference='cg',
+                        xyz_cid0_dict=None, debug=False):  # pragma: no cover
     """
     Calculates mass properties in the global system about the
     reference point.  Considers NSM, NSM1, NSML, NSML1.
@@ -442,12 +385,10 @@ def mass_properties_nsm(model, element_ids=None, mass_ids=None, nsm_id=None,
         An array of mass ids.
     nsm_id : int
         the NSM id to consider
-    reference_point : ndarray/str/int, optional
+    reference_point : ndarray/int, optional
         type : ndarray
             An array that defines the origin of the frame.
             default = <0,0,0>.
-        type : str
-            'cg' is the only allowed string
         type : int
             the node id
     sym_axis : str, optional
@@ -458,6 +399,9 @@ def mass_properties_nsm(model, element_ids=None, mass_ids=None, nsm_id=None,
         The WTMASS scaling value.
         default=None -> PARAM, WTMASS is used
         float > 0.0
+    inertia_reference : str; default='cg'
+        'cg' : inertia is taken about the cg
+        'ref' : inertia is about the reference point
     xyz_cid0_dict : dict[nid] : xyz; default=None -> auto-calculate
         mapping of the node id to the global position
     debug : bool; default=False
@@ -509,12 +453,10 @@ def mass_properties_nsm(model, element_ids=None, mass_ids=None, nsm_id=None,
      - If eids are requested, but don't exist, no warning is thrown.
        Decide if this is the desired behavior.
     """
-    #assert reference_point is None, reference_point
     # TODO: check CG for F:\work\pyNastran\examples\Dropbox\move_tpl\ac11102g.bdf
 
-    #if reference_point is None:
-    #reference_point = array([0., 0., 0.])
-    reference_point, is_cg = _update_reference_point(model, reference_point)
+    reference_point, is_cg = _update_reference_point(
+        model, reference_point, inertia_reference)
 
     if xyz_cid0_dict is None:
         xyz = {}
@@ -525,29 +467,6 @@ def mass_properties_nsm(model, element_ids=None, mass_ids=None, nsm_id=None,
 
     element_ids, unused_elements, mass_ids, unused_masses = _mass_properties_elements_init(
         model, element_ids, mass_ids)
-
-    #mass = 0.
-    #cg = array([0., 0., 0.])
-    #I = array([0., 0., 0., 0., 0., 0., ])
-    #if isinstance(reference_point, string_types):
-        #if reference_point == 'cg':
-            #mass = 0.
-            #for pack in [elements, masses]:
-                #for element in pack:
-                    #try:
-                        #p = element.Centroid()
-                        #m = element.Mass()
-                        #mass += m
-                        #cg += m * p
-                    #except:
-                        #pass
-            #if mass == 0.0:
-                #return mass, cg, I
-
-            #reference_point = cg / mass
-        #else:
-            ## reference_point = [0.,0.,0.] or user-defined array
-            #pass
 
     mass = 0.
     cg = array([0., 0., 0.])
@@ -601,7 +520,6 @@ def mass_properties_nsm(model, element_ids=None, mass_ids=None, nsm_id=None,
     assert mass is not None
     if mass:
         cg /= mass
-    mass, cg, I = _apply_mass_symmetry(model, sym_axis, scale, mass, cg, I)
     # Ixx, Iyy, Izz, Ixy, Ixz, Iyz = I
 
     # only transform if we're calculating the inertia about the cg
@@ -609,6 +527,8 @@ def mass_properties_nsm(model, element_ids=None, mass_ids=None, nsm_id=None,
         xyz_ref = reference_point
         xyz_ref2 = cg
         I = transform_inertia(mass, cg, xyz_ref, xyz_ref2, I)
+
+    mass, cg, I = _apply_mass_symmetry(model, sym_axis, scale, mass, cg, I)
     return mass, cg, I
 
 
@@ -1367,12 +1287,10 @@ def _apply_nsm(model, nsm_id,
         a BDF object
     nsm_id : int
         the NSM id to consider
-    reference_point : ndarray/str/int, optional
+    reference_point : ndarray/int, optional
         type : ndarray
             An array that defines the origin of the frame.
             default = <0,0,0>.
-        type : str
-            'cg' is the only allowed string
         type : int
             the node id
     area_eids_pids : Dict[etype_ptype] = eids_pids
