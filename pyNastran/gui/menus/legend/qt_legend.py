@@ -52,8 +52,6 @@ class LegendPropertiesWindow(PyDialog):
         self.is_gui = win_parent is not None
 
         self._updated_legend = False
-        self._animation_window_shown = False
-        self._animation_window = None
         self.external_call = True
 
         #if win_parent is None:
@@ -706,24 +704,7 @@ class LegendPropertiesWindow(PyDialog):
             'clicked_ok' : False,
             'close' : False,
         }
-        if not self._animation_window_shown:
-            self._animation_window = AnimationWindow(
-                data, win_parent=self,
-                fringe_cases=self.win_parent.get_form())
-            self._animation_window.show()
-            self._animation_window_shown = True
-            self._animation_window.exec_()
-        else:
-            self._animation_window.activateWindow()
-
-        if data['close']:
-            if not self._animation_window._updated_animation:
-                #self._apply_animation(data)
-                pass
-            self._animation_window_shown = False
-            del self._animation_window
-        else:
-            self._animation_window.activateWindow()
+        self.win_parent.legend_obj.set_animation_window(data)
 
     def on_default_name(self):
         """action when user clicks 'Default' for name"""

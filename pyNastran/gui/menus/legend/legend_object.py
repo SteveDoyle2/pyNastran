@@ -158,13 +158,12 @@ class LegendObject(object):
 
         arrow_scale, default_arrow_scale = self.get_legend_vector(self.gui.icase_vector)
 
-        name = '???'
         data = {
             'font_size' : self.settings.font_size,
             'icase_fringe' : self.gui.icase_fringe,
             'icase_disp' : self.gui.icase_disp,
             'icase_vector' : self.gui.icase_vector,
-            'name' : name,
+            'name' : result_type,
             'time' : 2,
             'frames/sec' : 30,
             'resolution' : 1,
@@ -182,6 +181,9 @@ class LegendObject(object):
             'clicked_ok' : False,
             'close' : False,
         }
+        self.set_animation_window(data)
+
+    def set_animation_window(self, data):
         if not self._animation_window_shown:
             self._animation_window = AnimationWindow(
                 data, win_parent=self.gui,
