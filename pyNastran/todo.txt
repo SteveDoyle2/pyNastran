@@ -1,23 +1,16 @@
-Release 0.8.1
-=============
-Tasks
------
- - bar vectors:
-    - fix bar scale precision for Master_model_TAXI
-    - fix Cd vector transform for Master_model_TAXI
- 
- - window should:
-   - remember the screen number
-   - remember the corners
- 
-Release 0.8.0
+Release 1.1.0
 =============
 - python setup.py register
 - python setup.py sdist bdist_wheel upload
 
 Tasks
 -----
- - merge
+ - window should:
+   - remember the screen number
+   - remember the corners
+
+Tasks
+-----
  - build docs
    - attach on sourceforge/egg?
  - run bdf tests in py27/35
@@ -35,17 +28,8 @@ Passing
  Remove
  ------
 
-
 Done
 ----
- - window should:
-   - automatically bring up the sidebar on first load
- - fix EIGC
- - fix NX bars in GUI
- - fix SetInput/SetInputData
- - various BDF/OP2/F06 tests
- - make sure OP2/BDF classes are shown in ReadTheDocs
- - vectorize op2 fully
 
 
 Future

@@ -105,10 +105,14 @@ def fix_nframes(nframes, profile):
     """
     fix_nframes_even = nframes == 1 or nframes % 2 == 0
     fix_nframes_sin = nframes == 1 or nframes % 4 != 1
+    is_div_four_profile = (
+        '0 to scale to -scale to 0' in profile or
+        profile == 'sinusoidal: scale to -scale to scale'
+    )
     if profile in ['0 to scale to 0', '-scale to scale to -scale'] and fix_nframes_even:
         nframes_div_2 = nframes // 2
         nframes = 2 * (nframes_div_2 + 1) + 1
-    if '0 to scale to -scale to 0' in profile and fix_nframes_sin:
+    if is_div_four_profile and fix_nframes_sin:
         nframes_div_4 = nframes // 4
         nframes = 4 * (nframes_div_4 + 1) + 1
     return nframes
@@ -156,6 +160,14 @@ def setup_animate_scale(scale, icase_fringe, icase_disp, icase_vector, time, pro
             onesided = False
             endpoint = True
             is_symmetric = False
+        elif profile == 'sinusoidal: scale to -scale to scale':
+            # symmetric
+            #onesided = True
+            #endpoint = False
+            #is_symmetric = True
+            onesided = False
+            endpoint = True
+            is_symmetric = False
         else:
             msg = (
                 "profile=%r is not supported:\n"
@@ -163,10 +175,11 @@ def setup_animate_scale(scale, icase_fringe, icase_disp, icase_vector, time, pro
                 "   '0 to scale to 0'\n"
                 "  '-scale to scale'\n"
                 "  '-scale to scale to -scale'\n"
-                "  '0 to scale to -scale to 0'"
-                "  'sinusoidal: 0 to scale to -scale to 0'"
+                "  '0 to scale to -scale to 0'\n"
+                "  'sinusoidal: 0 to scale to -scale to 0'\n"
+                "  'sinusoidal: scale to -scale to scale'\n"
                 % profile)
-            raise NotImplementedError(msg)
+            raise NotImplementedError(msg.rstrip())
     else:
         msg = 'profile=%r is not supported' % profile
         raise NotImplementedError(msg)
@@ -222,6 +235,10 @@ def setup_animate_scale(scale, icase_fringe, icase_disp, icase_vector, time, pro
             xp = np.array([0., nframes_interp * 0.25, nframes_interp * 0.5,
                            nframes_interp * 0.75, nframes_interp])
             scales = scale * np.sin(np.interp(isteps, xp, theta))
+        elif profile == 'sinusoidal: scale to -scale to scale':
+            theta = np.pi * np.array([0., 1., 2.])
+            xp = np.array([0., nframes_interp / 2., nframes_interp])
+            scales = scale * np.cos(np.interp(isteps, xp, theta))
 
         else:
             msg = (
@@ -230,9 +247,11 @@ def setup_animate_scale(scale, icase_fringe, icase_disp, icase_vector, time, pro
                 "  '0 to scale to 0'\n"
                 "  '-scale to scale'\n"
                 "  '-scale to scale to -scale'\n"
-                "  '0 to scale to -scale to 0'"
-                "  'sinusoidal: 0 to scale to -scale to 0'\n" % profile)
-            raise NotImplementedError(msg)
+                "  '0 to scale to -scale to 0'\n"
+                "  'sinusoidal: 0 to scale to -scale to 0'\n"
+                "  'sinusoidal: scale to -scale to scale'\n"
+                % profile)
+            raise NotImplementedError(msg.rstrip())
     #elif isinstance(profile, list):
         #yp = np.array(profile)
         #xp = np.linspace(0., nframes_interp, num=len(yp), endpoint=True, dtype='float64')

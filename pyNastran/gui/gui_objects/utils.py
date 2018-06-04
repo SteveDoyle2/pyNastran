@@ -53,4 +53,3 @@ def autotype_value(value, auto_type):
         else:
             value = auto_type(value)
     return value
-

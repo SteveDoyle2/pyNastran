@@ -1,4 +1,4 @@
-"""s
+"""
 defines:
  - LegendPropertiesWindow
 """
@@ -707,7 +707,9 @@ class LegendPropertiesWindow(PyDialog):
             'close' : False,
         }
         if not self._animation_window_shown:
-            self._animation_window = AnimationWindow(data, win_parent=self)
+            self._animation_window = AnimationWindow(
+                data, win_parent=self,
+                fringe_cases=self.win_parent.get_form())
             self._animation_window.show()
             self._animation_window_shown = True
             self._animation_window.exec_()

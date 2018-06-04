@@ -1,3 +1,6 @@
+"""
+defines various GUI unit tests
+"""
 from __future__ import print_function
 import os
 import unittest
@@ -7,6 +10,8 @@ import pyNastran
 from pyNastran.gui.utils.load_results import (
     load_csv, load_deflection_csv, load_user_geom, create_res_obj)
 from pyNastran.gui.menus.legend.write_gif import setup_animation, make_two_sided, make_symmetric
+from pyNastran.gui.menus.results_sidebar import get_cases_from_tree, build_pruned_tree
+
 PKG_PATH = pyNastran.__path__[0]
 MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
 
@@ -357,6 +362,51 @@ class GuiUtils(unittest.TestCase):
         assert len(np.unique(phases)) == 1, phases
         assert np.allclose(analysis_time, 2.0), analysis_time
         assert np.allclose(phases.max(), 0.), phases
+
+    def test_cases_from_tree(self):
+        """tests ``get_cases_from_tree``"""
+        form = [
+            [u'Geometry', None, [
+                (u'NodeID', 0, []),
+                (u'ElementID', 1, []),
+                (u'PropertyID', 2, []),
+                (u'MaterialID', 3, []),
+                (u'E', 4, []),
+                (u'Element Checks', None, [
+                    (u'ElementDim', 5, []),
+                    (u'Min Edge Length', 6, []),
+                    (u'Min Interior Angle', 7, []),
+                    (u'Max Interior Angle', 8, [])],
+                ),],
+            ],
+        ]
+        cases = get_cases_from_tree(form)
+        assert np.array_equal(cases, [0, 1, 2, 3, 4, 5, 6, 7, 8]), cases
+
+    def test_build_pruned_tree(self):
+        """tests ``get_cases_from_tree``"""
+        tree = [
+            [u'Geometry', None, [
+                (u'NodeID', 0, []),
+                (u'ElementID', 1, []),
+                (u'PropertyID', 2, []),
+                (u'MaterialID', 3, []),
+                (u'E', 4, []),
+                (u'Element Checks', None, [
+                    (u'ElementDim', 5, []),
+                    (u'Min Edge Length', 6, []),
+                    (u'Min Interior Angle', 7, []),
+                    (u'Max Interior Angle', 8, [])],
+                ),],
+            ],
+        ]
+        cases = [0, 1, 5]
+        tree2 = build_pruned_tree(tree, cases)
+        assert tree2 == [(u'Geometry', None, [(u'NodeID', 0, []), (u'ElementID', 1, []), (u'Element Checks', None, [(u'ElementDim', 5, [])])])], tree2
+
+        cases = [0, 1, 7]
+        tree2 = build_pruned_tree(tree, cases)
+        assert tree2 == [(u'Geometry', None, [(u'NodeID', 0, []), (u'ElementID', 1, []), (u'Element Checks', None, [(u'Min Interior Angle', 7, [])])])], tree2
 
 def assert_array(actual_array, expected_array, name):
     """checks the arrays for equivalence and the correct length"""

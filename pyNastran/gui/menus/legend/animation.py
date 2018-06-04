@@ -1,6 +1,6 @@
 """
 defines:
- - LegendPropertiesWindow
+ - AnimationWindow
 """
 from __future__ import print_function
 import os
@@ -17,6 +17,8 @@ from qtpy.compat import getexistingdirectory
 from pyNastran.gui.qt_version import qt_version
 from pyNastran.gui.utils.qt.pydialog import PyDialog, check_int, check_float
 from pyNastran.gui.utils.qt.dialogs import open_file_dialog
+from pyNastran.gui.menus.results_sidebar import (
+    ResultsWindow, get_cases_from_tree, build_pruned_tree)
 from pyNastran.gui.menus.legend.write_gif import IS_IMAGEIO
 
 
@@ -27,12 +29,14 @@ ANIMATION_PROFILES = [
     '-Scale to Scale to -Scale',
     '0 to Scale to -Scale to 0',
     'Sinusoidal: 0 to Scale to -Scale to 0',
+    'Sinusoidal: Scale to -Scale to Scale',
 ]
 #ANIMATION_PROFILES['-Scale to Scale to -Scale'] = [-1., 1., -1.]
 #ANIMATION_PROFILES['CSV Profile  (not supported)'] = None
 
 IS_TIME_FRINGE = False
 HIDE_WHEN_INACTIVE = False
+IS_RESULTS_SELECTOR = True
 class AnimationWindow(PyDialog):
     """
     +-------------------+
@@ -60,8 +64,9 @@ class AnimationWindow(PyDialog):
 
     TODO: add key-frame support
     """
-    def __init__(self, data, win_parent=None):
+    def __init__(self, data, win_parent=None, fringe_cases=None):
         PyDialog.__init__(self, data, win_parent)
+        self.fringe_cases = fringe_cases
         self.set_font_size(data['font_size'])
         self.istep = 0
         self._animate_type = 'time'
@@ -947,7 +952,41 @@ class AnimationWindow(PyDialog):
         vbox.addStretch()
         vbox.addLayout(step_run_box)
         vbox.addLayout(ok_cancel_box)
-        self.setLayout(vbox)
+
+        if IS_RESULTS_SELECTOR and self.fringe_cases:
+            cases = get_cases_from_tree(self.fringe_cases)
+            parent = self
+            name = 'main'
+            data = self.fringe_cases
+            choices = cases
+            results_widget = ResultsWindow(parent, name, data, choices,
+                                           include_clear=False, include_delete=False)
+            vbox_results = QVBoxLayout()
+            results_widget_label = QLabel('Results:')
+            vbox_results.addWidget(results_widget_label)
+            vbox_results.addWidget(results_widget)
+            hbox_main = QHBoxLayout()
+            hbox_main.addLayout(vbox)
+            hbox_main.addLayout(vbox_results)
+            self.setLayout(hbox_main)
+        else:
+            self.setLayout(vbox)
+
+    def on_fringe(self, icase):
+        """sets the icase fringe"""
+        self.icase_fringe_edit.setValue(icase)
+
+    def on_disp(self, icase):
+        """sets the icase disp"""
+        self.icase_disp_edit.setValue(icase)
+
+    def on_vector(self, icase):
+        """sets the icase vector"""
+        self.icase_vector_edit.setValue(icase)
+
+    def on_clear_results(self):
+        """sink for the right click menu"""
+        pass
 
     def on_step(self):
         """click the Step button"""
@@ -1167,6 +1206,7 @@ def main(): # pragma: no cover
     app = QApplication(sys.argv)
     #The Main window
 
+    #from pyNastran.gui.menus.legend.animation import AnimationWindow
     data2 = {
         'font_size' : 8,
         'icase_fringe' : 1,
@@ -1200,7 +1240,24 @@ def main(): # pragma: no cover
         'stress_max' : 1000.,
     }
     data2['phase'] = 0.  # uncomment for phase
-    main_window = AnimationWindow(data2)
+
+    form = [
+        [u'Geometry', None, [
+            (u'NodeID', 0, []),
+            (u'ElementID', 1, []),
+            (u'PropertyID', 2, []),
+            (u'MaterialID', 3, []),
+            (u'E', 4, []),
+            (u'Element Checks', None, [
+                (u'ElementDim', 5, []),
+                (u'Min Edge Length', 6, []),
+                (u'Min Interior Angle', 7, []),
+                (u'Max Interior Angle', 8, [])],
+            ),],
+        ],
+    ]
+    #[0, 1, 2, 3, 4, 5, 6, 7, 8]
+    main_window = AnimationWindow(data2, fringe_cases=form)
     main_window.show()
     # Enter the main loop
     app.exec_()
