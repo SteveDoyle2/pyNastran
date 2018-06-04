@@ -18,7 +18,8 @@ from pyNastran.gui.qt_version import qt_version
 from pyNastran.gui.utils.qt.pydialog import PyDialog, check_int, check_float
 from pyNastran.gui.utils.qt.dialogs import open_file_dialog
 from pyNastran.gui.menus.results_sidebar import (
-    ResultsWindow, get_cases_from_tree, build_pruned_tree)
+    ResultsWindow, get_cases_from_tree, #build_pruned_tree
+)
 from pyNastran.gui.menus.legend.write_gif import IS_IMAGEIO
 
 
@@ -64,8 +65,11 @@ class AnimationWindow(PyDialog):
 
     TODO: add key-frame support
     """
-    def __init__(self, data, win_parent=None, fringe_cases=None):
+    def __init__(self, data, win_parent=None, fringe_cases=None, is_gui_parent=False):
         PyDialog.__init__(self, data, win_parent)
+
+        # is the parent the gui?
+        self.is_gui_parent = False
         self.fringe_cases = fringe_cases
         self.set_font_size(data['font_size'])
         self.istep = 0
@@ -109,9 +113,15 @@ class AnimationWindow(PyDialog):
         self.set_connections()
 
         self.is_gui = False
+        self.gui = None
         if hasattr(self.win_parent, '_updated_legend'):
             self.win_parent.is_animate_open = True
             self.is_gui = True
+            self.gui = self.win_parent.win_parent
+
+        if is_gui_parent:
+            self.is_gui = True
+            self.gui = self.win_parent
         self.on_update_min_max_defaults()
 
 
@@ -169,7 +179,8 @@ class AnimationWindow(PyDialog):
         self.arrow_scale_edit = QLineEdit(str(self._scale))
         self.arrow_scale_button = QPushButton("Default")
         self.arrow_scale_edit.setToolTip('Scale factor of the "arrows"')
-        self.arrow_scale_button.setToolTip('Sets the arrow scale factor of the gif to %s' % self._arrow_scale)
+        self.arrow_scale_button.setToolTip('Sets the arrow scale factor of the gif to %s' % (
+            self._arrow_scale))
 
         self.arrow_scale_label.setVisible(False)
         self.arrow_scale_edit.setVisible(False)
@@ -279,10 +290,11 @@ class AnimationWindow(PyDialog):
         self.icase_disp_end_edit.setToolTip(
             'The last frame of the animation\n'
             'Assumes icase_start + nframes * icase_delta = icase_end')
-        self.icase_disp_delta_edit.setToolTip('The frame step size (to skip non-consecutive results).\n'
-                                         'Frame skipping can be used to:\n'
-                                         "  - skip across results that you don't want to plot\n"
-                                         '  - adjust the FPS')
+        self.icase_disp_delta_edit.setToolTip(
+            'The frame step size (to skip non-consecutive results).\n'
+            'Frame skipping can be used to:\n'
+            "  - skip across results that you don't want to plot\n"
+            '  - adjust the FPS')
 
         self.min_value_edit.setToolTip('Min value of the legend (not supported)')
         self.max_value_edit.setToolTip('Max value of the legend (not supported)')
@@ -745,12 +757,23 @@ class AnimationWindow(PyDialog):
 
     def on_default_scale(self):
         """sets the default displacement scale factor"""
-        self.scale_edit.setText(str(self._default_scale))
+        if self.is_gui:
+            icase_disp = self.icase_disp_edit.value()
+            unused_scale, unused_phase, default_scale, unused_default_phase = self.gui.legend_obj.get_legend_disp(
+                icase_disp)
+        else:
+            default_scale = self._default_scale
+        self.scale_edit.setText(str(default_scale))
         self.scale_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def on_default_arrow_scale(self):
         """sets the default arrow scale factor"""
-        self.arrow_scale_edit.setText(str(self._default_arrow_scale))
+        if self.is_gui:
+            icase_vector = self.icase_vector_edit.value()
+            unused_arrow_scale, default_arrow_scale = self.gui.legend_obj.get_legend_vector(icase_vector)
+        else:
+            default_arrow_scale = self._default_arrow_scale
+        self.arrow_scale_edit.setText(str(default_arrow_scale))
         self.arrow_scale_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def on_default_time(self):
@@ -1015,7 +1038,7 @@ class AnimationWindow(PyDialog):
         #if passed:
             #self._make_gif(validate_out, stop_animation=True)
         if self.is_gui:
-            self.win_parent.win_parent.stop_animation()
+            self.gui.stop_animation()
 
         self.wipe_button.setEnabled(True)
         self.stop_button.setEnabled(False)
@@ -1085,7 +1108,7 @@ class AnimationWindow(PyDialog):
         #icase = self._icase
 
         if self.is_gui:
-            self.win_parent.win_parent.make_gif(
+            self.gui.make_gif(
                 gif_filename, scale, istep=istep,
                 animate_scale=animate_scale, animate_phase=animate_phase, animate_time=animate_time,
                 icase_fringe=icase_fringe, icase_disp=icase_disp, icase_vector=icase_vector,
@@ -1103,7 +1126,7 @@ class AnimationWindow(PyDialog):
 
     def get_min_max(self, icase):
         if self.is_gui:
-            (obj, (i, name)) = self.win_parent.win_parent.result_cases[icase]
+            (obj, (i, name)) = self.gui.result_cases[icase]
             min_value, max_value = obj.get_min_max(i, name)
         else:
             return 0., 1.0
@@ -1135,6 +1158,9 @@ class AnimationWindow(PyDialog):
             flag1 = True
         else:
             animate_in_gui = self.animate_in_gui_checkbox.isChecked()
+            if scale == 0.0:
+                self.scale_edit.setStyleSheet("QLineEdit{background: red;}")
+                flag1 = False
 
         if animate_in_gui or wipe:
             passed = all([flag0, flag1, flag2, flag3, flag4, flag5])

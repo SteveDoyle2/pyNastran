@@ -144,31 +144,32 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         """
         gets the Nastran wildcard loader used in the file load menu
         """
-        geom_methods_bdf = 'Nastran Geometry - BDF ''(*.bdf; *.dat; *.nas; *.ecd; *.op2; *.pch)'
+        geom_methods_bdf = 'Nastran Geometry - BDF (*.bdf; *.dat; *.nas; *.ecd; *.op2; *.pch)'
         geom_methods_pch = 'Nastran Geometry - Punch (*.bdf; *.dat; *.nas; *.ecd; *.pch)'
         combined_methods_op2 = 'Nastran Geometry + Results - OP2 (*.op2)'
 
-        fmts = [
+        results_fmts = [
             'Nastran OP2 (*.op2)',
+            'pyNastran H5 (*.h5)',
             'Patran nod (*.nod)',
         ]
-        fmt = ';;'.join(fmts)
-        #fmt = 'Nastran OP2 (*.op2)'
+        results_fmt = ';;'.join(results_fmts)
+        #results_fmt = 'Nastran OP2 (*.op2)'
 
         data_geom = (
             'nastran',
             geom_methods_bdf, self.load_nastran_geometry,
-            fmt, self.load_nastran_results)
+            results_fmt, self.load_nastran_results)
 
         data_geom_pch = (
             'nastran',
             geom_methods_pch, self.load_nastran_geometry,
-            fmt, self.load_nastran_results)
+            results_fmt, self.load_nastran_results)
 
         unused_data_geom_results = (
             'nastran',
             combined_methods_op2, self.load_nastran_geometry_and_results,
-            fmt, self.load_nastran_results)
+            results_fmt, self.load_nastran_results)
 
         return [data_geom, data_geom_pch]
         #return [data_geom, data_geom_pch, data_geom_results]

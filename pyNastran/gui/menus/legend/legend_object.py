@@ -2,8 +2,10 @@
 defines:
  - LegendObject
 """
+import os
 from qtpy.QtWidgets import QMainWindow
 from pyNastran.gui.menus.legend.qt_legend import LegendPropertiesWindow
+from pyNastran.gui.menus.legend.animation import AnimationWindow
 from pyNastran.utils import integer_types
 
 
@@ -15,6 +17,9 @@ class LegendObject(object):
         self._legend_window = None
         self.is_horizontal_scalar_bar = False
         self.is_low_to_high = True
+
+        self._animation_window_shown = False
+        self._animation_window = None
 
     def show_legend(self):
         """shows the legend"""
@@ -39,6 +44,8 @@ class LegendObject(object):
         """sets the font size for the legend window"""
         if self._legend_window_shown:
             self._legend_window.set_font_size(font_size)
+        if self._animation_window_shown:
+            self._animation_window.set_font_size(font_size)
 
     def set_legend_menu(self):
         """
@@ -132,6 +139,69 @@ class LegendObject(object):
             del self._legend_window
         else:
             self._legend_window.activateWindow()
+
+    def set_animation_menu(self):
+        if not hasattr(self.gui, 'case_keys') or len(self.gui.case_keys) == 0:
+            self.gui.log_error('No model has been loaded.')
+            return
+
+        default_format = None
+        (result_type, scalar_bar, defaults_scalar_bar, data_format, default_format,
+         default_title, min_value, max_value, default_min, default_max) = self.get_legend_fringe(
+             self.gui.icase_fringe)
+
+        nlabels, labelsize, ncolors, colormap = scalar_bar
+        default_nlabels, default_labelsize, default_ncolors, default_colormap = defaults_scalar_bar
+
+        scale, phase, default_scale, default_phase = self.get_legend_disp(
+            self.gui.icase_disp)
+
+        arrow_scale, default_arrow_scale = self.get_legend_vector(self.gui.icase_vector)
+
+        name = '???'
+        data = {
+            'font_size' : self.settings.font_size,
+            'icase_fringe' : self.gui.icase_fringe,
+            'icase_disp' : self.gui.icase_disp,
+            'icase_vector' : self.gui.icase_vector,
+            'name' : name,
+            'time' : 2,
+            'frames/sec' : 30,
+            'resolution' : 1,
+            'iframe' : 0,
+            'scale' : scale,
+            'default_scale' : default_scale,
+
+            'arrow_scale' : arrow_scale,
+            'default_arrow_scale' : default_arrow_scale,
+
+            'is_scale' : default_phase is None,
+            'phase' : phase,
+            'default_phase' : default_phase,
+            'dirname' : os.path.abspath(os.getcwd()),
+            'clicked_ok' : False,
+            'close' : False,
+        }
+        if not self._animation_window_shown:
+            self._animation_window = AnimationWindow(
+                data, win_parent=self.gui,
+                fringe_cases=self.gui.get_form(),
+                is_gui_parent=True,
+            )
+            self._animation_window.show()
+            self._animation_window_shown = True
+            self._animation_window.exec_()
+        else:
+            self._animation_window.activateWindow()
+
+        if data['close']:
+            if not self._animation_window._updated_animation:
+                #self._apply_animation(data)
+                pass
+            self._animation_window_shown = False
+            del self._animation_window
+        else:
+            self._animation_window.activateWindow()
 
     def update_legend(self, icase_fringe, icase_disp, icase_vector,
                       name, min_value, max_value, data_format, scale, phase,

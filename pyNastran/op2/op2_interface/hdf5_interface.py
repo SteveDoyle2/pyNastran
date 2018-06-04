@@ -518,6 +518,7 @@ def export_op2_to_hdf5_file(hdf5_filename, op2_model):
     #no_sort2_classes = ['RealEigenvalues', 'ComplexEigenvalues', 'BucklingEigenvalues']
 
     with h5py.File(hdf5_filename, 'w') as hdf5_file:
+        op2_model.log.info('starting export_op2_to_hdf5_file of %r' % hdf5_filename)
         export_op2_to_hdf5(hdf5_file, op2_model)
 
 def export_op2_to_hdf5(hdf5_file, op2_model):

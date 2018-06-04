@@ -328,6 +328,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 ('label_reset', 'Clear All Labels', '', None, 'Clear all labels', self.reset_labels),
 
                 ('legend', 'Modify Legend...', 'legend.png', None, 'Set Legend', self.legend_obj.set_legend_menu),
+                ('animation', 'Create Animation...', 'animation.png', None, 'Create Animation', self.legend_obj.set_animation_menu),
                 ('clipping', 'Set Clipping...', '', None, 'Set Clipping', self.clipping_obj.set_clipping_menu),
                 #('axis', 'Show/Hide Axis', 'axis.png', None, 'Show/Hide Global Axis', self.on_show_hide_axes),
 
@@ -449,7 +450,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             'screenshot', '', 'wireframe', 'surface', 'camera_reset', '',
             'set_preferences', '',
             'label_clear', 'label_reset', '',
-            'legend', 'geo_properties',
+            'legend', 'animation', 'geo_properties',
             #['Anti-Aliasing', 'anti_alias_0', 'anti_alias_1', 'anti_alias_2',
             #'anti_alias_4', 'anti_alias_8',],
         ]
