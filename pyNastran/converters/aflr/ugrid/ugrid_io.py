@@ -256,9 +256,18 @@ class UGRID_IO(object):
         return form, cases
 
     def _fill_ugrid3d_case(self, base, cases, ID, nnodes, nelements, model, read_solids):
-        tag_filename = base + '.tags'
-        mapbc_filename = base.split('.')[0] + '.mapbc'
-        self.gui.log.info('mapbc_filename = %r' % mapbc_filename)
+        if os.path.exists(base):
+            # base = 'C:/data/'
+            # tag_filename = 'C:/data/.tags'
+            self.gui.log.info('mapbc_filename does not exist')
+            self.gui.log.info('tag_filename does not exist')
+            tag_filename = None
+            mapbc_filename = None
+        else:
+            tag_filename = base + '.tags'
+            mapbc_filename = base.split('.')[0] + '.mapbc'
+            self.gui.log.info('mapbc_filename = %r' % mapbc_filename)
+
         colormap = self.gui.settings.colormap
 
         cases_new = []
@@ -311,7 +320,7 @@ class UGRID_IO(object):
             cases[icase] = (surface_res, (0, 'SurfaceID'))
             icase += 1
 
-        if os.path.exists(tag_filename) and not read_solids:
+        if tag_filename is not None and os.path.exists(tag_filename) and not read_solids:
             #surf_ids = element_props[:, 0]
             #recon_flags = element_props[:, 1]
             #cases[(ID, 2, 'ReconFlag', 1, 'centroid', '%i')] = recon_flags
@@ -382,10 +391,10 @@ class UGRID_IO(object):
             cases[icase + 9] = (blthickness_res, (0, 'bl_thickness'))
 
             icase += 10
-        else:
+        elif tag_filename is not None:
             self.gui.log.warning('tag_filename=%r could not be found' % tag_filename)
 
-        if os.path.exists(mapbc_filename) and not read_solids:
+        if mapbc_filename is not None and os.path.exists(mapbc_filename) and not read_solids:
             has_mapbc_data = True
             with open(mapbc_filename, 'r') as mapbc:
                 lines = mapbc.readlines()
@@ -411,7 +420,7 @@ class UGRID_IO(object):
             mapbc_res = GuiResult(0, header='Map BC', title='Map BC',
                                   location='centroid', scalar=mapbcs, colormap=colormap)
             cases[icase + 9] = (mapbc_res, (0, 'Map BC'))
-        else:
+        elif mapbc_filename is not None:
             self.gui.log.warning('mapbc_filename=%r could not be found' % mapbc_filename)
 
 

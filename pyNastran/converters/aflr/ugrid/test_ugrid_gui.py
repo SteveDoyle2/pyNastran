@@ -16,7 +16,8 @@ from pyNastran.bdf.mesh_utils.extract_free_faces import write_skin_solid_faces
 from pyNastran.utils.log import get_logger
 
 PKG_PATH = pyNastran.__path__[0]
-MODEL_PATH = os.path.join(PKG_PATH, 'converters', 'tecplot', 'models')
+UGRID_PATH = os.path.join(PKG_PATH, 'converters', 'aflr', 'ugrid', 'models')
+#TECPLOT_PATH = os.path.join(PKG_PATH, 'converters', 'tecplot', 'models')
 NASTRAN_PATH = os.path.join(PKG_PATH, '..', 'models')
 
 
@@ -85,6 +86,14 @@ class TestUgridGui(unittest.TestCase):
         test.load_ugrid_geometry(ugrid_filename, name='main', plot=True)
         os.remove(ugrid_filename)
 
+    def test_ugrid3d_gui_box(self):
+        """simple UGRID2D box model"""
+        ugrid_filename = os.path.join(UGRID_PATH, 'box.b8.ugrid')
+
+        log = get_logger(level='warning')
+        test = UGRID_GUI()
+        test.log = log
+        test.load_ugrid_geometry(ugrid_filename, name='main', plot=True)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
