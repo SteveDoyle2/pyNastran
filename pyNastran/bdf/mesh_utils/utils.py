@@ -277,7 +277,7 @@ def cmd_line_mirror():  # pragma: no cover
 
         'Options:\n'
         "  -o OUT, --output  OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n\n"
-        "  --plane PLANE                       the symmetry plane (xz, ???)\n\n"
+        "  --plane PLANE                       the symmetry plane (xz, yz, xy)\n\n"
         "  --tol   TOL                         the spherical equivalence tolerance (default=0.000001)\n\n"
 
         'Info:\n'
@@ -294,6 +294,8 @@ def cmd_line_mirror():  # pragma: no cover
     data = docopt(msg, version=ver)
     if data['--tol'] is None:
         data['--tol'] = 0.000001
+    plane = data['--plane']
+
     print(data)
     size = 16
     bdf_filename = data['IN_BDF_FILENAME']
@@ -309,7 +311,7 @@ def cmd_line_mirror():  # pragma: no cover
     write_bdf_symmetric(model, bdf_filename_temp, encoding=None, size=size,
                         is_double=False,
                         enddata=None, close=True,
-                        plane='xz')
+                        plane=plane)
     tol = 0.000001
     bdf_equivalence_nodes(bdf_filename_temp, bdf_filename_out, tol,
                           renumber_nodes=False,

@@ -11,6 +11,7 @@ from qtpy.QtWidgets import (
     QApplication, QLabel, QPushButton, QLineEdit, QComboBox, QWidget, QRadioButton,
     QButtonGroup, QGridLayout, QHBoxLayout, QVBoxLayout)
 
+from pyNastran.utils import float_types
 from pyNastran.gui.utils.colormaps import colormap_keys
 from pyNastran.gui.utils.qt.pydialog import (
     PyDialog, check_float, check_format, check_positive_int_or_blank)
@@ -171,7 +172,7 @@ class LegendPropertiesWindow(PyDialog):
         is_vector = icase_vector is not None
 
         if icase_disp != self._default_icase_disp:
-            assert isinstance(scale, float), 'scale=%r' % scale
+            assert isinstance(scale, float_types), 'scale=%r type=%s' % (scale, type(scale))
             #assert isinstance(default_scale, float), 'default_scale=%r' % default_scale
             self._icase_disp = icase_disp
             self._default_icase_disp = icase_disp
@@ -180,7 +181,7 @@ class LegendPropertiesWindow(PyDialog):
             update_disp = True
 
         if icase_vector != self._default_icase_vector:
-            assert isinstance(arrow_scale, float), 'arrow_scale=%r' % arrow_scale
+            assert isinstance(arrow_scale, float_types), 'arrow_scale=%r type=%s' % (arrow_scale, type(scale))
             #assert isinstance(default_arrow_scale, float), 'default_arrow_scale=%r' % default_arrow_scale
             self._icase_vector = icase_vector
             self._default_icase_vector = icase_vector

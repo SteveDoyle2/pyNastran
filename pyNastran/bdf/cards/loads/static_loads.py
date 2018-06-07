@@ -2649,7 +2649,17 @@ class PLOAD4(Load):
 
     def get_element_ids(self, eid=None):
         if self.eids_ref is not None:
-            eids = [eid_ref.eid for eid_ref in self.eids_ref]
+            try:
+                eids = [eid_ref.eid for eid_ref in self.eids_ref]
+            except AttributeError:
+                eids = []
+                for eid_ref in self.eids_ref:
+                    if isinstance(eid_ref, integer_types):
+                        # Nastran is NOT OK with elements that don't actually exist in the PLOAD4
+                        # we do this for safe_cross_reference
+                        eids.append(eid)
+                    else:
+                        eids.append(eid_ref.eid)
         else:
             eids = self.eids
         return eids

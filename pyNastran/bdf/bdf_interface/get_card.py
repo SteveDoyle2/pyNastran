@@ -883,7 +883,12 @@ class GetCard(GetMethods):
 
             elif load_type == 'PLOAD4':
                 # multiple elements
+                eids_missing = []
                 for elem in load.eids_ref:
+                    if isinstance(elem, integer_types):
+                        # Nastran is NOT OK with missing element ids
+                        eids_missing.append(elem)
+                        continue
                     ie = eid_map[elem.eid]
                     normal = normals[ie, :]
                     # pressures[eids.index(elem.eid)] += p
@@ -1049,6 +1054,8 @@ class GetCard(GetMethods):
                         #load.cid.transformToGlobal()
                         #m = cross(r, f)
                         #M += m
+                if eids_missing:
+                    self.log.error('missing PLOAD4 element ids=%s on:\n%s' % (eids_missing, load.rstrip()))
 
             elif load_type == 'SPCD':
                 #self.gids = [integer(card, 2, 'G1'),]
@@ -1128,8 +1135,14 @@ class GetCard(GetMethods):
                 self.log.debug('  NastranIOv iload=%s/%s' % (iload, nloads))
             if load.type == 'PLOAD4':
                 #print(load.object_attributes())
+                eids_missing = []
                 for elem in load.eids_ref:
                     #elem = self.elements[eid]
+                    if isinstance(elem, integer_types):
+                        eids_missing.append(elem)
+                        # Nastran is NOT OK with missing element ids
+                        continue
+
                     if elem.type in ['CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR',
                                      'CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR']:
                         pressure = load.pressures[0] * scale
@@ -1150,6 +1163,9 @@ class GetCard(GetMethods):
                         #r = centroid - p
                     else:
                         etypes_skipped.add(elem.type)
+                if eids_missing:
+                    self.log.error('missing PLOAD4 element ids=%s on:\n%s' % (eids_missing, load.rstrip()))
+
             elif load.type == 'PLOAD2':
                 pressure = load.pressure * scale  # there are 4 pressures, but we assume p0
                 for eid in load.eids:

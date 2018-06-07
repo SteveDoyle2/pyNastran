@@ -10,7 +10,7 @@ This file defines:
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import iteritems
-
+from pyNastran.bdf.cards.loads.static_loads import PLOAD4
 
 def bdf_mirror(model, plane='xz'):
     """
@@ -36,6 +36,7 @@ def bdf_mirror(model, plane='xz'):
     """
     nid_offset = _mirror_nodes(model, plane=plane)
     eid_offset = _mirror_elements(model, nid_offset)
+    _mirror_loads(model, nid_offset, eid_offset)
     return nid_offset, eid_offset
 
 def write_bdf_symmetric(model, out_filename=None, encoding=None,
@@ -129,7 +130,7 @@ def _plane_to_iy(plane):
     elif plane == 'xy':
         iy = 2
     else:
-        raise NotImplementedError(plane)
+        raise NotImplementedError("plane=%r and must be 'yz', 'xz', or 'xy'." % plane)
     return iy
 
 def _mirror_elements(model, nid_offset):
@@ -166,6 +167,41 @@ def _mirror_elements(model, nid_offset):
                     print(element.get_stats())
                     raise
     return eid_offset
+
+def _mirror_loads(model, nid_offset=0, eid_offset=0):
+    """
+    Mirrors the loads
+
+    Considers:
+     - PLOAD4
+        - no coordinate systems (assumes cid=0)
+    """
+    for load_id, loads in iteritems(model.loads):
+        nloads = len(loads)
+        for iload, load in enumerate(loads):
+            # TODO: a super hack due to us changing the length of loads
+            #       I'm confused why this is required though as I thought
+            #       iterators can't change...
+            if iload == nloads:
+                break
+            load_type = load.type
+            if load.type == 'PLOAD4':
+                g1 = None
+                g34 = None
+                if load.g1 is not None:
+                    g1 = load.g1 + nid_offset
+                if load.g34 is not None:
+                    g34 = load.g34 + nid_offset
+                print(load.rstrip())
+
+                eids = [eid + eid_offset for eid in load.eids]
+                load = model.add_pload4(
+                    load.sid, eids, load.pressures, g1, g34,
+                    cid=load.cid, nvector=load.nvector,
+                    surf_or_line=load.surf_or_line,
+                    line_load_dir=load.line_load_dir, comment='')
+            else:
+                model.log.warning('skipping:\n%s' % load.rstrip())
 
 def make_symmetric_model(model, iy=1, zero_tol=1e-12):
     """

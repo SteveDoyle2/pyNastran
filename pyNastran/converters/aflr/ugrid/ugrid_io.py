@@ -22,7 +22,7 @@ from pyNastran.gui.utils.vtk.vtk_utils import (
 
 class UGRID_IO(object):
     def __init__(self, parent):
-        self.parent = parent
+        self.gui = parent
 
     def get_ugrid_wildcard_geometry_results_functions(self):
         data = (
@@ -50,22 +50,22 @@ class UGRID_IO(object):
         #    return
         read_solids = False
         if is_binary_file(ugrid_filename):
-            model = UGRID(log=self.log, debug=True, read_solids=read_solids)
+            model = UGRID(log=self.gui.log, debug=True, read_solids=read_solids)
             ext = os.path.basename(ugrid_filename).split('.')[2] # base, fmt, ext
             is_2d = False
         else:
             ext = os.path.basename(ugrid_filename).split('.')[1] # base, ext
-            model = UGRID2D_Reader(log=self.log, debug=True)
+            model = UGRID2D_Reader(log=self.gui.log, debug=True)
             is_2d = True
         is_3d = not is_2d
 
-        self.model_type = 'ugrid'
-        self.log.debug('ugrid_filename = %s' % ugrid_filename)
+        self.gui.model_type = 'ugrid'
+        self.gui.log.debug('ugrid_filename = %s' % ugrid_filename)
 
 
         assert ext == 'ugrid', ugrid_filename
         model.read_ugrid(ugrid_filename)
-        self.model = model
+        self.gui.model = model
 
         nnodes = model.nodes.shape[0]
         ntris = model.tris.shape[0]
@@ -106,30 +106,31 @@ class UGRID_IO(object):
 
 
         nodes = model.nodes
-        self.nelements = nelements
-        self.nnodes = nnodes
+        self.gui.nelements = nelements
+        self.gui.nnodes = nnodes
 
-        self.log.info("nnodes=%s nelements=%s" % (self.nnodes, self.nelements))
+        self.gui.log.info("nnodes=%s nelements=%s" % (self.gui.nnodes, self.gui.nelements))
         assert nelements > 0, nelements
 
-        grid = self.grid
-        grid.Allocate(self.nelements, 1000)
+        grid = self.gui.grid
+        grid.Allocate(self.gui.nelements, 1000)
 
         mmax = amax(nodes, axis=0)
         mmin = amin(nodes, axis=0)
         dim_max = (mmax - mmin).max()
-        self.create_global_axes(dim_max)
-        self.log.info('max = %s' % mmax)
-        self.log.info('min = %s' % mmin)
+        self.gui.create_global_axes(dim_max)
+        self.gui.log.info('max = %s' % mmax)
+        self.gui.log.info('min = %s' % mmin)
 
         if is_3d and read_solids:
             diff_node_ids = model.check_hanging_nodes(stop_on_diff=False)
             if len(diff_node_ids):
                 red = (1., 0., 0.)
-                self.create_alternate_vtk_grid('hanging_nodes', color=red, line_width=5, opacity=1.,
-                                               point_size=10, representation='point')
+                self.gui.create_alternate_vtk_grid(
+                    'hanging_nodes', color=red, line_width=5, opacity=1.,
+                    point_size=10, representation='point')
                 self._add_ugrid_nodes_to_grid('hanging_nodes', diff_node_ids, nodes)
-                self._add_alt_actors(self.alt_grids)
+                self.gui._add_alt_actors(self.gui.alt_grids)
 
         points = numpy_to_vtk_points(nodes)
 
@@ -156,21 +157,21 @@ class UGRID_IO(object):
                 elements.append(tetras)
                 etypes.append(12) # VTK_HEXAHEDRON().GetCellType()
 
-        self.model.elements = elements
-        self.model.etypes = etypes
+        self.gui.model.elements = elements
+        self.gui.model.etypes = etypes
         create_vtk_cells_of_constant_element_types(grid, elements, etypes)
 
-        self.nelements = nelements
+        self.gui.nelements = nelements
         grid.SetPoints(points)
         grid.Modified()
         if hasattr(grid, 'Update'):  # pragma: no cover
             grid.Update()
 
         # loadCart3dResults - regions/loads
-        self.scalarBar.VisibilityOn()
-        self.scalarBar.Modified()
+        self.gui.scalarBar.VisibilityOn()
+        self.gui.scalarBar.Modified()
 
-        self.isubcase_name_map = {1: ['AFLR UGRID Surface', '']}
+        self.gui.isubcase_name_map = {1: ['AFLR UGRID Surface', '']}
         cases = OrderedDict()
         ID = 1
 
@@ -182,7 +183,7 @@ class UGRID_IO(object):
                 cases, ID, nnodes, nelements)
 
         if plot:
-            self._finish_results_io2(form, cases)
+            self.gui._finish_results_io2(form, cases)
 
     def _add_ugrid_nodes_to_grid(self, name, diff_node_ids, nodes):
         """
@@ -199,7 +200,7 @@ class UGRID_IO(object):
 
         for nid in diff_node_ids:
             node = nodes[nid, :]
-            self.log.info('nid=%s node=%s' % (nid, node))
+            self.gui.log.info('nid=%s node=%s' % (nid, node))
             points.InsertPoint(nid, *node)
 
             #if 1:
@@ -211,8 +212,8 @@ class UGRID_IO(object):
                 #elem.SetRadius(sphere_size)
                 #elem.SetCenter(points.GetPoint(nid))
 
-            self.alt_grids[name].InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-        self.alt_grids[name].SetPoints(points)
+            self.gui.alt_grids[name].InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+        self.gui.alt_grids[name].SetPoints(points)
 
     def clear_surf(self):
         pass
@@ -223,7 +224,7 @@ class UGRID_IO(object):
     def _fill_ugrid2d_case(self, cases, ID, nnodes, nelements):
         #cases_new = []
         #results_form = []
-        colormap = self.parent.settings.colormap
+        colormap = self.gui.settings.colormap
         geometry_form = [
             ('ElementID', 0, []),
             ('NodeID', 1, []),
@@ -257,8 +258,8 @@ class UGRID_IO(object):
     def _fill_ugrid3d_case(self, base, cases, ID, nnodes, nelements, model, read_solids):
         tag_filename = base + '.tags'
         mapbc_filename = base.split('.')[0] + '.mapbc'
-        self.log.info('mapbc_filename = %r' % mapbc_filename)
-        colormap = self.parent.settings.colormap
+        self.gui.log.info('mapbc_filename = %r' % mapbc_filename)
+        colormap = self.gui.settings.colormap
 
         cases_new = []
         has_tag_data = False
@@ -322,14 +323,14 @@ class UGRID_IO(object):
             int_data = ones((nelements, 8), dtype='int32') * -10.
             float_data = zeros((nelements, 2), dtype='float64')
             for key, datai in sorted(iteritems(data)):
-                #self.log.info(datai)
+                #self.gui.log.info(datai)
                 [name, is_visc, is_recon, is_rebuild, is_fixed, is_source,
                  is_trans, is_delete, bl_spacing, bl_thickness, nlayers] = datai
                 i = where(pids == key)[0]
                 int_data[i, :] = [is_visc, is_recon, is_rebuild, is_fixed,
                                   is_source, is_trans, is_delete, nlayers]
                 float_data[i, :] = [bl_spacing, bl_thickness]
-                self.log.info('data[%i] = %s' % (key, name))
+                self.gui.log.info('data[%i] = %s' % (key, name))
 
             has_tag_data = True
             tag_form = []
@@ -382,7 +383,7 @@ class UGRID_IO(object):
 
             icase += 10
         else:
-            self.log.warning('tag_filename=%r could not be found' % tag_filename)
+            self.gui.log.warning('tag_filename=%r could not be found' % tag_filename)
 
         if os.path.exists(mapbc_filename) and not read_solids:
             has_mapbc_data = True
@@ -404,14 +405,14 @@ class UGRID_IO(object):
                     msg = 'ipatch=%s not found in pids=%s' % (ipatch + 1, upids)
                     raise RuntimeError(msg)
                 mapbcs[islot] = bc_num
-                self.log.info(line)
+                self.gui.log.info(line)
             mapbc_form.append(('Map BC', icase, []))
 
             mapbc_res = GuiResult(0, header='Map BC', title='Map BC',
                                   location='centroid', scalar=mapbcs, colormap=colormap)
             cases[icase + 9] = (mapbc_res, (0, 'Map BC'))
         else:
-            self.log.warning('mapbc_filename=%r could not be found' % mapbc_filename)
+            self.gui.log.warning('mapbc_filename=%r could not be found' % mapbc_filename)
 
 
         #norm_spacing = model.node_props[:, 0]
@@ -430,5 +431,5 @@ class UGRID_IO(object):
         results_form = []
         if len(results_form):
             form.append(('Results', None, results_form))
-        self.log.info(form)
+        self.gui.log.info(form)
         return form, cases
