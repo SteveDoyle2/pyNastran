@@ -260,15 +260,17 @@ def _mirror_aero(model, nid_offset, plane):
                 caeros.append(caero_new)
                 #print(caero)
             else:
-                model.log.error('skipping:\n%s' % caero.rstrip())
+                model.log.error('skipping (only support CAERO1):\n%s' % caero.rstrip())
 
         for caero in caeros:
             model._add_caero_object(caero)
 
     nsplines = len(model.splines)
-    sets_max = max(model.sets)
+    sets_max = max(model.sets) if len(model.sets) else 0
     if caero_eid_max == 0 and nsplines:
         model.log.error("cant mirror splines because CAEROs don't exist...")
+    elif nsplines and sets_max == 0:
+        model.log.error("cant mirror splines because SET1/3 don't exist...")
     elif nsplines:
         splines = []
         spline_sets_to_duplicate = []
@@ -293,7 +295,7 @@ def _mirror_aero(model, nid_offset, plane):
                 splines.append(spline_new)
                 spline_sets_to_duplicate.append(spline.setg)
             else:
-                model.log.error('skipping:\n%s' % spline.rstrip())
+                model.log.error('skipping (only support SPLINE1):\n%s' % spline.rstrip())
 
         #print("spline_sets_to_duplicate =", spline_sets_to_duplicate)
         msg = ', which is required to mirror:\n%s' % spline.rstrip()
@@ -308,7 +310,7 @@ def _mirror_aero(model, nid_offset, plane):
                 set_card = SET1(sid, ids, is_skin=is_skin, comment='')
                 sets_to_add.append(set_card)
             else:
-                model.log.error('skipping:\n%s' % set_card.rstrip())
+                model.log.error('skipping (only support SET1):\n%s' % set_card.rstrip())
 
         for spline in splines:
             model._add_spline_object(spline)
