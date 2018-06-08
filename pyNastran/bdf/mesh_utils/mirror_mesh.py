@@ -10,7 +10,9 @@ This file defines:
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import iteritems
-from pyNastran.bdf.cards.loads.static_loads import PLOAD4
+#from pyNastran.bdf.cards.loads.static_loads import PLOAD4
+from pyNastran.bdf.cards.aero.aero import CAERO1, SPLINE1
+from pyNastran.bdf.cards.bdf_sets import SET1 #, SET3
 
 def bdf_mirror(model, plane='xz'):
     """
@@ -34,9 +36,10 @@ def bdf_mirror(model, plane='xz'):
         the offset element id
 
     """
-    nid_offset = _mirror_nodes(model, plane=plane)
+    nid_offset, plane = _mirror_nodes(model, plane=plane)
     eid_offset = _mirror_elements(model, nid_offset)
     _mirror_loads(model, nid_offset, eid_offset)
+    _mirror_aero(model, nid_offset, plane)
     return nid_offset, eid_offset
 
 def write_bdf_symmetric(model, out_filename=None, encoding=None,
@@ -110,7 +113,7 @@ def _mirror_nodes(model, plane='xz'):
     """
     nid_offset = max(model.node_ids)
 
-    iy = _plane_to_iy(plane)
+    iy, plane = _plane_to_iy(plane)
     if model.nodes:
         for (nid, node) in sorted(iteritems(model.nodes)):
             xyz = node.get_position()
@@ -118,7 +121,7 @@ def _mirror_nodes(model, plane='xz'):
             xyz2 = xyz.copy()
             xyz2[iy] *= -1.
             model.add_grid(nid2, xyz2, cp=0, cd=node.cd, ps=node.ps, seid=node.seid)
-    return nid_offset
+    return nid_offset, plane
 
 def _plane_to_iy(plane):
     """gets the index fo the mirror plane"""
@@ -131,7 +134,7 @@ def _plane_to_iy(plane):
         iy = 2
     else:
         raise NotImplementedError("plane=%r and must be 'yz', 'xz', or 'xy'." % plane)
-    return iy
+    return iy, plane
 
 def _mirror_elements(model, nid_offset):
     """Mirrors the elements"""
@@ -176,23 +179,21 @@ def _mirror_loads(model, nid_offset=0, eid_offset=0):
      - PLOAD4
         - no coordinate systems (assumes cid=0)
     """
-    for load_id, loads in iteritems(model.loads):
+    for unused_load_id, loads in iteritems(model.loads):
         nloads = len(loads)
         for iload, load in enumerate(loads):
             # TODO: a super hack due to us changing the length of loads
-            #       I'm confused why this is required though as I thought
-            #       iterators can't change...
+            #       it's because we're using a list...
             if iload == nloads:
                 break
             load_type = load.type
-            if load.type == 'PLOAD4':
+            if load_type == 'PLOAD4':
                 g1 = None
                 g34 = None
                 if load.g1 is not None:
                     g1 = load.g1 + nid_offset
                 if load.g34 is not None:
                     g34 = load.g34 + nid_offset
-                print(load.rstrip())
 
                 eids = [eid + eid_offset for eid in load.eids]
                 load = model.add_pload4(
@@ -202,6 +203,119 @@ def _mirror_loads(model, nid_offset=0, eid_offset=0):
                     line_load_dir=load.line_load_dir, comment='')
             else:
                 model.log.warning('skipping:\n%s' % load.rstrip())
+
+def _mirror_aero(model, nid_offset, plane):
+    """
+    Mirrors the aero elements
+
+    Considers
+    ---------
+    AEROS
+     - doesn't consider sideslip
+    CAERO1
+     - doesn't consider sideslip
+     - doesn't consider lspan/lchord
+    SPLINE1
+    SET1
+    """
+    if model.aeros is not None:
+        aeros = model.aeros
+        aeros.sref *= 2.
+        if plane == 'xz':
+            aeros.sym_xz = 0
+        elif plane == 'yz':
+            aeros.sym_yz = 0
+        else:
+            model.log.error('not mirroring plane %r; only xz, yz' % plane)
+
+    caero_eid_max = 0
+    if len(model.caeros):
+        # TODO: ish-correct but very hackish and leaves a big id
+        caero_eid_max = max(model.caeros) + 100000
+
+        caeros = []
+        for unused_caero_id, caero in iteritems(model.caeros):
+            if caero.type == 'CAERO1':
+                assert caero.lspan == 0, caero
+                assert caero.lchord == 0, caero
+                lchord = caero.lchord
+                nchord = caero.nchord
+                lspan = caero.lspan
+                nspan = caero.nspan
+                p1 = caero.p1.copy()
+                p1[1] *= -1.
+                x12 = caero.x12
+                p4 = caero.p4.copy()
+                p4[1] *= -1.
+                x43 = caero.x43
+                eid2 = caero.eid + caero_eid_max
+                caero_new = CAERO1(eid2, caero.pid, caero.igid,
+                                   p1, x12, p4, x43,
+                                   cp=caero.cp, nspan=nspan,
+                                   lspan=lspan, nchord=nchord, lchord=lchord,
+                                   comment='')
+
+                # we flip the normal so if we ever use W2GJ it's going to be consistent
+                caero_new.flip_normal()
+                caeros.append(caero_new)
+                #print(caero)
+            else:
+                model.log.error('skipping:\n%s' % caero.rstrip())
+
+        for caero in caeros:
+            model._add_caero_object(caero)
+
+    nsplines = len(model.splines)
+    sets_max = max(model.sets)
+    if caero_eid_max == 0 and nsplines:
+        model.log.error("cant mirror splines because CAEROs don't exist...")
+    elif nsplines:
+        splines = []
+        spline_sets_to_duplicate = []
+        spline_max = max(model.splines)
+        for unused_spline_id, spline in iteritems(model.splines):
+            if spline.type == 'SPLINE1':
+                #spline = SPLINE1(eid, caero, box1, box2, setg)
+
+                eid = spline.eid + spline_max
+                caero = spline.caero + caero_eid_max
+                method = spline.method
+                usage = spline.usage
+                box1 = spline.box1 + caero_eid_max
+                box2 = spline.box2 + caero_eid_max
+                setg = spline.setg + sets_max
+                dz = spline.dz
+                melements = spline.melements
+                nelements = spline.nelements
+                spline_new = SPLINE1(eid, caero, box1, box2, setg, dz=dz,
+                                     method=method, usage=usage,
+                                     nelements=nelements, melements=melements, comment='')
+                splines.append(spline_new)
+                spline_sets_to_duplicate.append(spline.setg)
+            else:
+                model.log.error('skipping:\n%s' % spline.rstrip())
+
+        #print("spline_sets_to_duplicate =", spline_sets_to_duplicate)
+        msg = ', which is required to mirror:\n%s' % spline.rstrip()
+
+        sets_to_add = []
+        for set_id in spline_sets_to_duplicate:
+            set_card = model.Set(set_id, msg=msg)
+            if set_card.type == 'SET1':
+                sid = set_card.sid + sets_max
+                ids = [nid + nid_offset for nid in set_card.ids]
+                is_skin = set_card.is_skin
+                set_card = SET1(sid, ids, is_skin=is_skin, comment='')
+                sets_to_add.append(set_card)
+            else:
+                model.log.error('skipping:\n%s' % set_card.rstrip())
+
+        for spline in splines:
+            model._add_spline_object(spline)
+        for set_card in sets_to_add:
+            model._add_set_object(set_card)
+
+    model.pop_parse_errors()
 
 def make_symmetric_model(model, iy=1, zero_tol=1e-12):
     """
@@ -225,7 +339,6 @@ def make_symmetric_model(model, iy=1, zero_tol=1e-12):
             nids_to_remove.append(nid)
 
     for nid in nids_to_remove:
-        print('**', nid)
         del model.nodes[nid]
 
     for eid in eids_to_remove:
@@ -237,7 +350,7 @@ def make_symmetric_model(model, iy=1, zero_tol=1e-12):
             #print(caero)
             if p1[iy] <= zero and p4[iy] <= zero:
                 #print('p1=%s p4=%s' % (p1, p4))
-                caero_ids_to_remove(caero_id)
+                caero_ids_to_remove.append(caero_id)
             elif p1[iy] < zero:
                 p1[iy] = 0.
                 caero.set_points([p1, p2, p3, p4])
@@ -250,7 +363,7 @@ def make_symmetric_model(model, iy=1, zero_tol=1e-12):
             p1, p2 = caero.get_points()
             if p1[iy] <= zero and p2[iy] <= zero:
                 #print('p1=%s p4=%s' % (p1, p4))
-                caero_ids_to_remove(caero_id)
+                caero_ids_to_remove.append(caero_id)
         else:
             raise NotImplementedError(caero)
 
@@ -258,14 +371,14 @@ def make_symmetric_model(model, iy=1, zero_tol=1e-12):
         del model.caeros[caero_id]
 
     print('nids_to_remove =', nids_to_remove)
-    for spline_id, spline in iteritems(model.splines):
+    for unused_spline_id, spline in iteritems(model.splines):
         caero = spline.caero
-        setg = spline.setg
+        #setg = spline.setg
         #print('caero = ', caero)
         nids = spline.setg_ref.ids  # list
         #spline.uncross_reference()
 
-        i = 0
+        #i = 0
         nids = list(set(nids) - set(nids_to_remove))
         nids.sort()
         spline.setg_ref.ids_ref = None
@@ -291,7 +404,7 @@ def make_symmetric_model(model, iy=1, zero_tol=1e-12):
         if aestat.label in labels_to_remove:
             del model.aestats[aestat_id]
 
-    for trid_id, trim in iteritems(model.trims):
+    for unused_trim_id, trim in iteritems(model.trims):
         labels = trim.labels
         ilabels_to_remove = [labels.index(label) for label in labels_to_remove
                              if label in labels]

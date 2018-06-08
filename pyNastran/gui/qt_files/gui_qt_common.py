@@ -1141,6 +1141,7 @@ class GuiCommon(GuiAttributes):
 
         grid.Modified()
         self.grid_selected.Modified()
+        #self.contour_filter.Modified()
         #self.update_all()
         #self.update_all()
         if len(self.groups):

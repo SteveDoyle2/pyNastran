@@ -2143,6 +2143,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.grid_mapper.SetInputData(self.grid_selected)
 
 
+        make_contour_filter = False
+        if make_contour_filter:
+            self._make_contour_filter()
+
         #if 0:
             #self.warp_filter = vtk.vtkWarpVector()
             #self.warp_filter.SetScaleFactor(50.0)
@@ -2203,6 +2207,76 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #self.grid_mapper.SetInputConnection(id_filter.GetOutputPort())
         self.rend.AddActor(self.geom_actor)
         self.build_glyph()
+
+    def _make_contour_filter(self):  # pragma: no cover
+        """trying to make model lines...doesn't work"""
+        print('making filter!')
+        self.contour_filter = vtk.vtkContourFilter()
+
+        if 1:
+            # doesn't work...in progress
+            geometry_filter = vtk.vtkGeometryFilter()
+            geometry_filter.SetInputData(self.grid_selected)
+            geometry_filter.Update()
+            poly_data = geometry_filter.GetOutput()
+
+            self.contour_filter.SetInputData(poly_data)
+        elif 0:  # pragma: no cover
+            # doesn't work
+            self.contour_filter.SetInputData(self.grid_selected)
+        else:
+            raise RuntimeError('invalid contour_filter option')
+        self.contour_filter.GenerateValues(1, 10, 10)
+        #self.contour_filter.SetComputeScalars(1)
+        #contour_filter.SetInputConnection(self.grid_selected.GetOutputPort())
+        #self.contour_filter.SetInputData(None)
+
+        # Connect the segments of the conours into polylines
+        contour_stripper = vtk.vtkStripper()
+        contour_stripper.SetInputConnection(self.contour_filter.GetOutputPort())
+        contour_stripper.Update()
+
+        number_of_contour_lines = contour_stripper.GetOutput().GetNumberOfLines()
+        print('There are %s contours lines.' % number_of_contour_lines)
+
+        include_labels = False
+        if include_labels:
+            points = contour_stripper.GetOutput().GetPoints()
+            cells = contour_stripper.GetOutput().GetLines()
+            scalars = contour_stripper.GetOutput().GetPointData().GetScalars()
+
+
+            label_poly_data.SetPoints(label_points)
+            label_poly_data.GetPointData().SetScalars(label_scalars)
+
+            # The labeled data mapper will place labels at the points
+            label_mapper = vtk.vtkLabeledDataMapper()
+            label_mapper.SetFieldDataName("Isovalues")
+            #if vtk.VTK_MAJOR_VERSION <= 5:
+                #label_mapper.SetInput(label_poly_data)
+            #else:
+            label_mapper.SetInputData(label_poly_data)
+
+            label_mapper.SetLabelModeToLabelScalars()
+            label_mapper.SetLabelFormat("%6.2f")
+
+            label_mapper.SetLabelModeToLabelScalars()
+            label_mapper.SetLabelFormat("%6.2f")
+
+            isolabels_actor = vtk.vtkActor2D()
+            isolabels_actor.SetMapper(label_mapper)
+
+        contour_mapper = vtk.vtkPolyDataMapper()
+        contour_mapper.SetInputConnection(contour_stripper.GetOutputPort())
+        contour_mapper.ScalarVisibilityOff()
+
+        isolines_actor = vtk.vtkActor()
+        isolines_actor.SetMapper(contour_mapper)
+
+        # Add the actors to the scene
+        self.rend.AddActor(isolines_actor)
+        if include_labels:
+            self.rend.AddActor(isolabels_actor)
 
     def build_glyph(self):
         """builds the glyph actor"""

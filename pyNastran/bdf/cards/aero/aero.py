@@ -1310,7 +1310,7 @@ class CAERO1(BaseCard):
         else:
             raise KeyError('Field %r=%r is an invalid CAERO1 entry.' % (n, value))
 
-    def __init__(self, eid, pid, igid, p1, x12, p4, x43,
+    def __init__(self, eid, pid, igroup, p1, x12, p4, x43,
                  cp=0, nspan=0, lspan=0, nchord=0, lchord=0, comment=''):
         """
         Defines a CAERO1 card, which defines a simplified lifting surface
@@ -1323,7 +1323,7 @@ class CAERO1(BaseCard):
         pid : int, PAERO1
             int : PAERO1 ID
             PAERO1 : PAERO1 object (xref)
-        igid : int
+        igroup : int
             Group number
         p1 : (1, 3) ndarray float
             xyz location of point 1 (leading edge; inboard)
@@ -1382,7 +1382,7 @@ class CAERO1(BaseCard):
         self.lspan = lspan
         self.nchord = nchord
         self.lchord = lchord
-        self.igid = igid
+        self.igroup = igroup
         self.p1 = p1
         self.x12 = x12
         self.p4 = p4
@@ -1440,7 +1440,7 @@ class CAERO1(BaseCard):
         nchord = integer_or_blank(card, 5, 'nchord', 0)
         lspan = integer_or_blank(card, 6, 'lspan', 0)
         lchord = integer_or_blank(card, 7, 'lchord', 0)
-        igid = integer(card, 8, 'igid')
+        igroup = integer(card, 8, 'igid')
 
         p1 = np.array([
             double_or_blank(card, 9, 'x1', 0.0),
@@ -1455,12 +1455,12 @@ class CAERO1(BaseCard):
         x43 = double_or_blank(card, 16, 'x43', 0.)
 
         assert len(card) <= 17, 'len(CAERO1 card) = %i\ncard=%s' % (len(card), card)
-        return CAERO1(eid, pid, igid, p1, x12, p4, x43,
+        return CAERO1(eid, pid, igroup, p1, x12, p4, x43,
                       cp=cp, nspan=nspan, lspan=lspan, nchord=nchord, lchord=lchord,
                       comment=comment)
 
     @classmethod
-    def add_quad(cls, eid, pid, span, chord, igid,
+    def add_quad(cls, eid, pid, span, chord, igroup,
                  p1, p2, p3, p4, cp=0, spanwise='y', comment=''):
         r"""
         ::
@@ -1522,7 +1522,7 @@ class CAERO1(BaseCard):
         else:
             raise TypeError(chord)
 
-        return CAERO1(eid, pid, igid, p1, x12, p4, x43,
+        return CAERO1(eid, pid, igroup, p1, x12, p4, x43,
                       cp=cp, nspan=nspan, lspan=lspan, nchord=nchord, lchord=lchord,
                       comment=comment)
 
@@ -1551,6 +1551,16 @@ class CAERO1(BaseCard):
                     self.eid, ichord, ispan, nchord)
                 raise OverflowError(msg)
             self._init_ids(dtype='int64')
+
+    @property
+    def igid(self):
+        self.deprecated('igid', 'igroup', '1.1')
+        return self.igroup
+
+    @igid.setter
+    def igid(self, igroup):
+        self.deprecated('igid', 'igroup', '1.1')
+        self.igroup = igroup
 
     def Cp(self):
         if self.cp_ref is not None:
@@ -1811,7 +1821,7 @@ class CAERO1(BaseCard):
         lchord = self.get_LChord()
         lspan = self.get_LSpan()
         list_fields = (['CAERO1', self.eid, self.Pid(), self.Cp(), self.nspan,
-                        self.nchord, lspan, lchord, self.igid, ] +
+                        self.nchord, lspan, lchord, self.igroup, ] +
                        list(self.p1) + [self.x12] + list(self.p4) + [self.x43])
         return list_fields
 
@@ -1841,7 +1851,7 @@ class CAERO1(BaseCard):
         lchord = set_blank_if_default(self.get_LChord(), 0)
         lspan = set_blank_if_default(self.get_LSpan(), 0)
         list_fields = (['CAERO1', self.eid, self.Pid(), cp, nspan, nchord,
-                        lspan, lchord, self.igid] + list(self.p1) +
+                        lspan, lchord, self.igroup] + list(self.p1) +
                        [self.x12] + list(self.p4) + [self.x43])
         return list_fields
 
