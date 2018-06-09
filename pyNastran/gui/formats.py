@@ -89,6 +89,7 @@ except ImportError:  # pragma: no cover
 try:
     from pyNastran.converters.aflr.ugrid.ugrid_io import UGRID_IO
     CLASS_MAP['ugrid'] = UGRID_IO
+    CLASS_MAP['ugrid3d'] = UGRID_IO
 except ImportError:  # pragma: no cover
     pass
 

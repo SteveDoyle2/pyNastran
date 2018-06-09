@@ -9,7 +9,7 @@ from numpy import amax, amin, arange, ones, zeros, where, unique
 
 #VTK_TRIANGLE = 5
 import vtk
-from vtk import vtkTriangle, vtkQuad
+#from vtk import vtkTriangle, vtkQuad
 
 from pyNastran.converters.aflr.surf.surf_reader import TagReader
 from pyNastran.converters.aflr.ugrid.ugrid_reader import UGRID
@@ -26,12 +26,28 @@ class UGRID_IO(object):
 
     def get_ugrid_wildcard_geometry_results_functions(self):
         data = (
-            'AFLR3 Ugrid',
-            'AFLR3 Ugrid (*.ugrid)', self.load_ugrid_geometry,
+            'ugrid',
+            'AFLR2/AFLR3 UGrid2D (*.ugrid)', self.load_ugrid_geometry,  # 2d
             None, None)
         return data
 
-    def load_ugrid_geometry(self, ugrid_filename, name='main', plot=True):
+    def get_ugrid3d_wildcard_geometry_results_functions(self):
+        data = (
+            'ugrid3d',
+            'AFLR3 Ugrid3D (*.ugrid)', self.load_ugrid3d_geometry,
+            None, None)
+        return data
+
+    #def load_ugrid_geometry_2d(self, ugrid_filename, name='main', plot=True):
+        #"""Loads a UGRID3D as a 2D file"""
+        #self._load_ugrid_geometry(ugrid_filename, read_solids=False, name=name, plot=plot)
+
+    def load_ugrid3d_geometry(self, ugrid_filename, name='main', plot=True):
+        """Loads a UGRID3D as a 3D file"""
+        self.load_ugrid_geometry(ugrid_filename, read_solids=True, name=name, plot=plot)
+
+
+    def load_ugrid_geometry(self, ugrid_filename, read_solids=False, name='main', plot=True):
         """
         The entry point for UGRID geometry loading.
 
@@ -39,6 +55,9 @@ class UGRID_IO(object):
         ----------
         ugrid_filename : str
             the ugrid filename to load
+        read_solids : bool
+            True : load the tets/pentas/hexas from the UGRID3D model
+            False : UGRID2D or limits the UGRID3D model to tris/quads
         name : str
             the name of the "main" actor for the GUI
         plot : bool; default=True
@@ -48,22 +67,10 @@ class UGRID_IO(object):
         #skip_reading = self.remove_old_openfoam_geometry(openfoam_filename)
         #if skip_reading:
         #    return
-        read_solids = False
-        if is_binary_file(ugrid_filename):
-            model = UGRID(log=self.gui.log, debug=True, read_solids=read_solids)
-            ext = os.path.basename(ugrid_filename).split('.')[2] # base, fmt, ext
-            is_2d = False
-        else:
-            ext = os.path.basename(ugrid_filename).split('.')[1] # base, ext
-            model = UGRID2D_Reader(log=self.gui.log, debug=True)
-            is_2d = True
-        is_3d = not is_2d
-
+        model, is_2d, is_3d = get_ugrid_model(ugrid_filename, read_solids, self.gui.log)
         self.gui.model_type = 'ugrid'
         self.gui.log.debug('ugrid_filename = %s' % ugrid_filename)
 
-
-        assert ext == 'ugrid', ugrid_filename
         model.read_ugrid(ugrid_filename)
         self.gui.model = model
 
@@ -154,7 +161,7 @@ class UGRID_IO(object):
                 elements.append(penta6s)
                 etypes.append(13) # VTK_WEDGE().GetCellType()
             if nhexas:
-                elements.append(tetras)
+                elements.append(hexas)
                 etypes.append(12) # VTK_HEXAHEDRON().GetCellType()
 
         self.gui.model.elements = elements
@@ -200,6 +207,7 @@ class UGRID_IO(object):
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(nnodes)
 
+        alt_grid = self.gui.alt_grids[name]
         for nid in diff_node_ids:
             node = nodes[nid, :]
             self.gui.log.info('nid=%s node=%s' % (nid, node))
@@ -214,8 +222,8 @@ class UGRID_IO(object):
                 #elem.SetRadius(sphere_size)
                 #elem.SetCenter(points.GetPoint(nid))
 
-            self.gui.alt_grids[name].InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-        self.gui.alt_grids[name].SetPoints(points)
+            alt_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+        alt_grid.SetPoints(points)
 
     def clear_surf(self):
         pass
@@ -223,7 +231,7 @@ class UGRID_IO(object):
     # def _load_ugrid_results(self, openfoam_filename, dirname):
         # pass
 
-    def _fill_ugrid2d_case(self, cases, ID, nnodes, nelements):
+    def _fill_ugrid2d_case(self, cases, unused_id, nnodes, nelements):
         #cases_new = []
         #results_form = []
         colormap = self.gui.settings.colormap
@@ -272,7 +280,7 @@ class UGRID_IO(object):
 
         colormap = self.gui.settings.colormap
 
-        cases_new = []
+        #cases_new = []
         has_tag_data = False
         has_mapbc_data = False
         results_form = []
@@ -288,7 +296,7 @@ class UGRID_IO(object):
             #('ReconFlag', 5, []),
             #('GridBC', 6, []),
         ]
-        if read_solids:
+        if not read_solids:
             geometry_form.append(('SurfaceID', 3, []))
 
 
@@ -444,3 +452,18 @@ class UGRID_IO(object):
             form.append(('Results', None, results_form))
         self.gui.log.info(form)
         return form, cases, nids, eids
+
+def get_ugrid_model(ugrid_filename, read_solids, log):
+    """helper method for UGRID_IO"""
+    if read_solids or is_binary_file(ugrid_filename):
+        model = UGRID(log=log, debug=True, read_solids=read_solids)
+        ext = os.path.basename(ugrid_filename).split('.')[2] # base, fmt, ext
+        is_2d = False
+    else:
+        ext = os.path.basename(ugrid_filename).split('.')[1] # base, ext
+        model = UGRID2D_Reader(log=log, debug=True)
+        is_2d = True
+    is_3d = not is_2d
+
+    assert ext == 'ugrid', ugrid_filename
+    return model, is_2d, is_3d

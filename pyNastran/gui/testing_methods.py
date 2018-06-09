@@ -159,9 +159,9 @@ class FakeGUIMethods(GuiCommon):
         This is not quite the same as the main one.
         It's more or less just _set_results
         """
-        if self.node_ids is None:
+        if self.node_ids is None:  # pragma: no cover
             raise RuntimeError('implement self.node_ids for this format')
-        if self.element_ids is None:
+        if self.element_ids is None:  # pragma: no cover
             raise RuntimeError('implement self.element_ids for this format')
 
         assert len(cases) > 0, cases

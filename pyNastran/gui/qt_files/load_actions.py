@@ -84,9 +84,13 @@ class LoadActions(object):
 
                 if geometry_format2 in self.gui.format_class_map:
                     # intialize the class
-                    cls = self.gui.format_class_map[geometry_format](self.gui)
-                    function_name = 'load_%s_geometry' % geometry_format2
-                    load_function2 = getattr(cls, function_name)
+                    #print('geometry_format=%r geometry_format2=%s' % (geometry_format, geometry_format2))
+
+                    # TODO: was geometry_format going into this...
+                    cls = self.gui.format_class_map[geometry_format2](self.gui)
+
+                    function_name2 = 'load_%s_geometry' % geometry_format2
+                    load_function2 = getattr(cls, function_name2)
                     has_results = load_function2(infile_name, name=name, plot=plot)
                 else:
                     has_results = load_function(infile_name, name=name, plot=plot) # self.last_dir,
@@ -142,6 +146,7 @@ class LoadActions(object):
         if geometry_format and geometry_format.lower() not in self.gui.supported_formats:
             is_failed = True
             msg = 'The import for the %r module failed.\n' % geometry_format
+            #raise RuntimeError(msg)
             self.gui.log_error(msg)
             return is_failed, None
 
@@ -154,7 +159,6 @@ class LoadActions(object):
                 return is_failed, None
 
             geometry_format = geometry_format.lower()
-            print("geometry_format = %r" % geometry_format)
 
             for fmt in self.gui.fmts:
                 fmt_name, _major_name, _geom_wildcard, geom_func, res_wildcard, _resfunc = fmt
@@ -224,7 +228,8 @@ class LoadActions(object):
         if self.gui.format is None:
             msg = 'on_load_results failed:  You need to load a file first...'
             self.gui.log_error(msg)
-            raise RuntimeError(msg)
+            return
+            #raise RuntimeError(msg)
 
         if out_filename in [None, False]:
             title = 'Select a Results File for %s' % self.gui.format

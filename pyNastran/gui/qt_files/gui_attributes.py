@@ -1447,13 +1447,13 @@ class GuiAttributes(object):
     #------------------------------
     def get_element_ids(self, ids=None):
         """wrapper around element_ids"""
-        if cell_ids is None:
+        if ids is None:
             return self.element_ids
         return self.element_ids[ids]
 
     def get_node_ids(self, ids=None):
         """wrapper around node_ids"""
-        if point_ids is None:
+        if ids is None:
             return self.node_ids
         return self.node_ids[ids]
 

@@ -550,3 +550,11 @@ class MouseActions(object):
     def on_pan_down(self, event):
         """helper method for trackball camera"""
         self.gui.view_actions.on_pan_down(event)
+
+    def get_node_ids(self, ids=None):
+        """wrapper around node_ids"""
+        return self.gui.get_node_ids(ids)
+
+    def get_element_ids(self, ids=None):
+        """wrapper around node_ids"""
+        return self.gui.get_element_ids(ids)

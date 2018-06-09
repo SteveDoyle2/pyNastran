@@ -128,6 +128,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         self.nid_release_map = {}
         self.stress = {}
         self.strain = {}
+
     @property
     def gui(self):
         return self

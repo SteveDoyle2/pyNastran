@@ -49,6 +49,7 @@ class TestUgridGui(unittest.TestCase):
         test = UGRID_GUI()
         test.log = log
         test.load_ugrid_geometry(ugrid_filename, name='main', plot=True)
+        test.load_ugrid3d_geometry(ugrid_filename, name='main', plot=True)
 
     def test_ugrid_gui_02(self):
         """tests plate_with_circular_hole"""
@@ -87,13 +88,14 @@ class TestUgridGui(unittest.TestCase):
         os.remove(ugrid_filename)
 
     def test_ugrid3d_gui_box(self):
-        """simple UGRID2D box model"""
+        """simple UGRID3D box model"""
         ugrid_filename = os.path.join(UGRID_PATH, 'box.b8.ugrid')
 
         log = get_logger(level='warning')
         test = UGRID_GUI()
         test.log = log
         test.load_ugrid_geometry(ugrid_filename, name='main', plot=True)
+        test.load_ugrid3d_geometry(ugrid_filename, name='main', plot=True)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

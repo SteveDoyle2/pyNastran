@@ -88,7 +88,7 @@ class MainWindow(GuiCommon2, NastranIO):
         fmt_order = [
             # results
             'nastran', 'cart3d', 'panair', 'shabp', 'usm3d',
-            'tecplot', 'surf', 'ugrid',
+            'tecplot', 'surf', 'ugrid', 'ugrid3d',
 
             # no results
             'lawgs', 'stl', 'fast',

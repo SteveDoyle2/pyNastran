@@ -26,7 +26,8 @@ FORMAT_TO_EXTENSION = {
     'fast' : ['.fgrid'],
     #'abaqus' : []
 
-    # no duplicates are allowed
+    # no duplicate extensions are allowed; use the explicit --format option
+    #'ugrid3d' : ['.ugrid'],
     #'panair' : ['.inp'],
     #'abaqus' : ['.inp'],
 }
@@ -40,7 +41,7 @@ def determine_format(input_filename, allowed_formats=None):
     if allowed_formats is None:
         # used to include None...
         allowed_formats = [
-            'nastran', 'stl', 'cart3d', 'tecplot', 'ugrid', 'panair',
+            'nastran', 'stl', 'cart3d', 'tecplot', 'ugrid', 'ugrid3d', 'panair',
             #'plot3d',
             'surf', 'lawgs', 'degen_geom', 'shabp', 'avus', 'fast', 'abaqus',
             'usm3d', 'bedge', 'su2', 'tetgen', 'obj',
@@ -90,7 +91,7 @@ def run_docopt():
     msg += "\n"
     msg += "Primary Options:\n"
     msg += "  -f FORMAT, --format FORMAT  format type (avus, cart3d, lawgs, nastran, panair, plot3d,\n"
-    msg += "                                           stl, surf, tetgen, usm3d, ugrid)\n"
+    msg += "                                           stl, surf, tetgen, usm3d, ugrid, ugrid3d)\n"
     msg += "  -i INPUT, --input INPUT     path to input file\n"
     msg += "  -o OUTPUT, --output OUTPUT  path to output file\n"
     #msg += "  -r XYZ, --rotation XYZ      [x, y, z, -x, -y, -z] default is ???\n"
@@ -146,7 +147,7 @@ def run_docopt():
 
     # None is for custom geometry
     allowed_formats = [
-        'nastran', 'stl', 'cart3d', 'tecplot', 'ugrid', 'panair',
+        'nastran', 'stl', 'cart3d', 'tecplot', 'ugrid', 'ugrid3d', 'panair',
         #'plot3d',
         'surf', 'lawgs', 'degen_geom', 'shabp', 'avus', 'fast', 'abaqus',
         'usm3d', 'bedge', 'su2', 'tetgen',

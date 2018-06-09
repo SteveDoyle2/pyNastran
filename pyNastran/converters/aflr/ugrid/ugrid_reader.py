@@ -137,12 +137,6 @@ class UGRID(object):
             #quads = zeros(nquads * 4, dtype='int32')
             #pids = zeros(npids, dtype='int32')
 
-            if self.read_solids:
-                tets = zeros(ntets * 4, dtype='int32')
-                penta5s = zeros(npenta5s * 5, dtype='int32')
-                penta6s = zeros(npenta6s * 6, dtype='int32')
-                hexas = zeros(nhexas * 8, dtype='int32')
-
             ## NODES
             data = ugrid_file.read(nnodes * 3 * nfloat)
             self.n += nnodes * 3 * nfloat
@@ -188,64 +182,57 @@ class UGRID(object):
                 #self.nodes = self.nodes[inid]
                 return
 
-            ## CTETRA
-            data = ugrid_file.read(ntets * 4 * 4)
-            self.n += ntets * 4 * 4
-            tets = np.frombuffer(data, dtype=dtype).reshape((ntets, 4)).copy()
-            #print('min tets value = ' , tets.min())
-            #print('max tets value = ' , tets.max())
+            tets = zeros(ntets * 4, dtype='int32')
+            penta5s = zeros(npenta5s * 5, dtype='int32')
+            penta6s = zeros(npenta6s * 6, dtype='int32')
+            hexas = zeros(nhexas * 8, dtype='int32')
 
-            ## CPYRAM
-            data = ugrid_file.read(npenta5s * 5 * 4)
-            self.n += npenta5s * 5 * 4
-            penta5s = np.frombuffer(data, dtype=dtype).reshape((npenta5s, 5)).copy()
-            #print('min penta5s value = ' , penta5s.min())
-            #print('max penta5s value = ' , penta5s.max())
+            if ntets:
+                ## CTETRA
+                data = ugrid_file.read(ntets * 4 * 4)
+                self.n += ntets * 4 * 4
+                tets = np.frombuffer(data, dtype=dtype).reshape((ntets, 4)).copy()
+                #print('min tets value = ' , tets.min())
+                #print('max tets value = ' , tets.max())
 
-            ## CPENTA
-            data = ugrid_file.read(npenta6s * 6 * 4)
-            self.n += npenta6s * 6 * 4
-            penta6s = np.frombuffer(data, dtype=dtype).reshape((npenta6s, 6)).copy()
-            #print('min penta6s value = ' , penta6s.min())
-            #print('max penta6s value = ' , penta6s.max())
+            if npenta5s:
+                ## CPYRAM
+                data = ugrid_file.read(npenta5s * 5 * 4)
+                self.n += npenta5s * 5 * 4
+                penta5s = np.frombuffer(data, dtype=dtype).reshape((npenta5s, 5)).copy()
+                #print('min penta5s value = ' , penta5s.min())
+                #print('max penta5s value = ' , penta5s.max())
 
-            ## CHEXA
-            data = ugrid_file.read(nhexas * 8 * 4)
-            self.n += nhexas * 8 * 4
-            hexas = np.frombuffer(data, dtype=dtype).reshape((nhexas, 6)).copy()
-            #print('min hexas value = ' , hexas.min())
-            #print('max hexas value = ' , hexas.max())
+            if npenta6s:
+                ## CPENTA
+                data = ugrid_file.read(npenta6s * 6 * 4)
+                self.n += npenta6s * 6 * 4
+                penta6s = np.frombuffer(data, dtype=dtype).reshape((npenta6s, 6)).copy()
+                #print('min penta6s value = ' , penta6s.min())
+                #print('max penta6s value = ' , penta6s.max())
+
+            if nhexas:
+                ## CHEXA
+                nbytes_expected = nhexas * 8 * 4
+                data = ugrid_file.read(nbytes_expected)
+                ndata = len(data)
+                self.n += nhexas * 8 * 4
+
+                try:
+                    hexas = np.frombuffer(data, dtype=dtype).reshape((nhexas, 8)).copy()
+                except ValueError:  ## pragma: no cover
+                    msg = 'ndata=%s nbytes_expected=%s nhexas_actual=%g nhexas=%s' % (
+                        ndata, nbytes_expected, ndata/32., nhexas)
+                    self.log.error(msg)
+                    raise
+                #print('min hexas value = ' , hexas.min())
+                #print('max hexas value = ' , hexas.max())
 
             self.tets = tets
             self.penta5s = penta5s
             self.penta6s = penta6s
             self.hexas = hexas
 
-            if 0:
-                #self.show(100, types='i', big_endian=True)
-                if nvol_elements == 0:
-                    raise RuntimeError('not a volume grid')
-
-                data = ugrid_file.read(4)
-                nboundary_layer_tets = unpack(endian + 'i', data)
-                self.n += 4
-                self.log.debug('nboundary_layer_tets=%s' % (nboundary_layer_tets)) # trash
-
-
-                data = ugrid_file.read(nvol_elements * 4)
-                self.n += nvol_elements * 4
-                self.log.debug('len(data)=%s len/4=%s nvol_elements=%s' % (
-                    len(data), len(data) / 4., nvol_elements))
-                assert len(data) == (nvol_elements * 4)
-
-                fmt = endian + '%ii' % (nvol_elements * 4)
-                volume_ids = zeros(nvol_elements, dtype='int32')
-                volume_ids[:] = unpack(fmt, data)
-
-                # some more data we're not reading for now...
-
-                #self.show(100, types='i', big_endian=True)
-            assert self.n == ugrid_file.tell()
         if check:
             self.check_hanging_nodes()
 
