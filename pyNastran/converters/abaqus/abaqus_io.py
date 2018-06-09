@@ -271,8 +271,11 @@ class AbaqusIO(object):
         #form = []
         cases = OrderedDict()
         ID = 1
-        form, cases, unused_icase = self._fill_abaqus_case(cases, ID, nodes, nelements, model)
+        form, cases, unused_icase, node_ids, element_ids = self._fill_abaqus_case(cases, ID, nodes, nelements, model)
         #self._fill_cart3d_results(cases, form, icase, ID, model)
+
+        self.gui.node_ids = node_ids
+        self.gui.element_ids = element_ids
         self.gui._finish_results_io2(form, cases)
 
     def clear_abaqus(self):
@@ -320,4 +323,4 @@ class AbaqusIO(object):
             ('Geometry', None, geometry_form),
         ]
         icase = 2
-        return form, cases, icase
+        return form, cases, icase, node_ids, element_ids

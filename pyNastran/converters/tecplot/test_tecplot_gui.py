@@ -5,8 +5,8 @@ from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.converters.tecplot.tecplot_io import TecplotIO
 import pyNastran
 
-pkg_path = pyNastran.__path__[0]
-model_path = os.path.join(pkg_path, 'converters', 'tecplot')
+PKG_PATH = pyNastran.__path__[0]
+model_path = os.path.join(PKG_PATH, 'converters', 'tecplot')
 
 
 class TecplotGUI(TecplotIO, FakeGUIMethods):

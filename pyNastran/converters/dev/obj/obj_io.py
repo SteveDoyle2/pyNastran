@@ -16,8 +16,8 @@ class ObjIO(object):
     """
     Defines the GUI class for OBJ.
     """
-    def __init__(self, parent):
-        self.parent = parent
+    def __init__(self, gui):
+        self.gui = gui
 
     def get_obj_wildcard_geometry_results_functions(self):
         """
@@ -31,21 +31,21 @@ class ObjIO(object):
     def _remove_old_obj_geometry(self, filename):
         #return self._remove_old_geometry(filename)
 
-        self.parent.eid_map = {}
-        self.parent.nid_map = {}
+        self.gui.eid_map = {}
+        self.gui.nid_map = {}
         if filename is None:
-            self.parent.scalarBar.VisibilityOff()
+            self.gui.scalarBar.VisibilityOff()
             skip_reading = True
         else:
-            self.parent.turn_text_off()
-            self.parent.grid.Reset()
+            self.gui.turn_text_off()
+            self.gui.grid.Reset()
 
-            self.parent.result_cases = OrderedDict()
-            self.parent.ncases = 0
+            self.gui.result_cases = OrderedDict()
+            self.gui.ncases = 0
             try:
-                del self.parent.case_keys
-                del self.parent.icase
-                del self.parent.isubcase_name_map
+                del self.gui.case_keys
+                del self.gui.icase
+                del self.gui.isubcase_name_map
             except:
                 # print("cant delete geo")
                 pass
@@ -53,7 +53,7 @@ class ObjIO(object):
             #print(dir(self))
             skip_reading = False
         #self.scalarBar.VisibilityOff()
-        self.parent.scalarBar.Modified()
+        self.gui.scalarBar.Modified()
         return skip_reading
 
     def load_obj_geometry(self, obj_filename, name='main', plot=True):
@@ -74,15 +74,15 @@ class ObjIO(object):
         if skip_reading:
             return
 
-        self.parent.eid_maps[name] = {}
-        self.parent.nid_maps[name] = {}
+        self.gui.eid_maps[name] = {}
+        self.gui.nid_maps[name] = {}
         model = read_obj(obj_filename, log=self.log, debug=False)
         self.model_type = 'obj'
         nodes = model.nodes
         nelements = model.nelements
 
-        self.parent.nnodes = model.nnodes
-        self.parent.nelements = nelements
+        self.gui.nnodes = model.nnodes
+        self.gui.nelements = nelements
 
         grid = self.grid
         grid.Allocate(self.nelements, 1000)
@@ -98,7 +98,7 @@ class ObjIO(object):
         self.log_info("xmin=%s xmax=%s dx=%s" % (xmin, xmax, xmax-xmin))
         self.log_info("ymin=%s ymax=%s dy=%s" % (ymin, ymax, ymax-ymin))
         self.log_info("zmin=%s zmax=%s dz=%s" % (zmin, zmax, zmax-zmin))
-        self.parent.create_global_axes(dim_max)
+        self.gui.create_global_axes(dim_max)
         points = numpy_to_vtk_points(nodes)
 
         #assert elements.min() == 0, elements.min()
@@ -131,15 +131,17 @@ class ObjIO(object):
             grid.Update()
 
 
-        self.parent.scalarBar.VisibilityOn()
-        self.parent.scalarBar.Modified()
+        self.gui.scalarBar.VisibilityOn()
+        self.gui.scalarBar.Modified()
 
-        self.parent.isubcase_name_map = {1: ['OBJ', '']}
+        self.gui.isubcase_name_map = {1: ['OBJ', '']}
         cases = OrderedDict()
         ID = 1
-        form, cases, icase = self._fill_obj_geometry_objects(
+        form, cases, icase, node_ids, element_ids = self._fill_obj_geometry_objects(
             cases, ID, nodes, nelements, model)
-        self.parent._finish_results_io2(form, cases)
+        self.gui.node_ids = node_ids
+        self.gui.element_ids = element_ids
+        self.gui._finish_results_io2(form, cases)
 
     def clear_obj(self):
         pass
@@ -175,5 +177,4 @@ class ObjIO(object):
             ('Geometry', None, geometry_form),
         ]
         icase = 2
-        return form, cases, icase
-
+        return form, cases, icase, nids, eids

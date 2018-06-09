@@ -176,12 +176,14 @@ class UGRID_IO(object):
         ID = 1
 
         if hasattr(model, 'pids'):
-            form, cases = self._fill_ugrid3d_case(
+            form, cases, node_ids, element_ids = self._fill_ugrid3d_case(
                 ugrid_filename, cases, ID, nnodes, nelements, model, read_solids)
         else:
-            form, cases = self._fill_ugrid2d_case(
+            form, cases, node_ids, element_ids = self._fill_ugrid2d_case(
                 cases, ID, nnodes, nelements)
 
+        self.gui.node_ids = node_ids
+        self.gui.element_ids = element_ids
         if plot:
             self.gui._finish_results_io2(form, cases)
 
@@ -253,7 +255,7 @@ class UGRID_IO(object):
         #results_form = []
         #if len(results_form):
             #form.append(('Results', None, results_form))
-        return form, cases
+        return form, cases, nids, eids
 
     def _fill_ugrid3d_case(self, base, cases, ID, nnodes, nelements, model, read_solids):
         if os.path.exists(base):
@@ -441,4 +443,4 @@ class UGRID_IO(object):
         if len(results_form):
             form.append(('Results', None, results_form))
         self.gui.log.info(form)
-        return form, cases
+        return form, cases, nids, eids

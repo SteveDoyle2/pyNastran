@@ -11,9 +11,9 @@ from pyNastran.converters.aflr.surf.surf_io import SurfIO
 from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.utils.log import get_logger
 
-pkg_path = pyNastran.__path__[0]
-model_path = os.path.join(pkg_path, 'converters', 'tecplot', 'models')
-nastran_path = os.path.join(pkg_path, '..', 'models')
+PKG_PATH = pyNastran.__path__[0]
+model_path = os.path.join(PKG_PATH, 'converters', 'tecplot', 'models')
+nastran_path = os.path.join(PKG_PATH, '..', 'models')
 
 
 class SurfGui(SurfIO, FakeGUIMethods):
@@ -26,7 +26,7 @@ class TestSurfGui(unittest.TestCase):
     """defines *.surf tests"""
     def test_surf_gui_01(self):
         """tests two_blade_wake_sym_extended.surf"""
-        ugrid_filename = os.path.join(pkg_path, 'converters', 'aflr', 'ugrid', 'models',
+        ugrid_filename = os.path.join(PKG_PATH, 'converters', 'aflr', 'ugrid', 'models',
                                       'two_blade_wake_sym_extended.surf')
         log = get_logger(level='warning')
         test = SurfGui()

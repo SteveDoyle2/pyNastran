@@ -65,7 +65,9 @@ class TecplotIO(object):
         cases = OrderedDict()
         ID = 1
 
-        form, cases = self._fill_tecplot_case(cases, ID, model, is_surface)
+        form, cases, node_ids, element_ids = self._fill_tecplot_case(cases, ID, model, is_surface)
+        self.gui.node_ids = node_ids
+        self.gui.element_ids = element_ids
         self.parent._finish_results_io2(form, cases)
 
         #if 0:
@@ -263,4 +265,4 @@ class TecplotIO(object):
         ]
         if len(results_form):
             form.append(('Results', None, results_form))
-        return form, cases
+        return form, cases, nids, eids

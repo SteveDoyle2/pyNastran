@@ -2249,6 +2249,11 @@ class PBEND(LineProperty):
         self.mid = self.Mid()
         self.mid_ref = None
 
+    def MassPerLength(self):
+        """m/L = rho*A + nsm"""
+        rho = self.mid_ref.Rho()
+        return self.A * rho + self.nsm
+
     def raw_fields(self):
         return self.repr_fields()
 

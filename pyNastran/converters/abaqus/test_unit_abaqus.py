@@ -1,8 +1,10 @@
 from __future__ import print_function
+import os
 import unittest
 
 from pyNastran.converters.abaqus.abaqus import read_abaqus
 from pyNastran.utils.log import get_logger
+PWD = os.path.dirname(__file__)
 
 class TestAbaqus(unittest.TestCase):
     def test_abaqus_1(self):
@@ -10,6 +12,10 @@ class TestAbaqus(unittest.TestCase):
         lines = make_model()
         log = get_logger(level='warning', encoding='utf-8')
         read_abaqus(lines, log=log, debug=False)
+
+        abaqus_filename = os.path.join(PWD, 'abaqus.inp')
+        with open(abaqus_filename, 'w') as abaqus_file:
+            abaqus_file.writelines('\n'.join(lines))
 
 def make_model():
     """makes a test model"""

@@ -152,14 +152,14 @@ class AreaPickStyle(vtk.vtkInteractorStyleRubberBandZoom):  # works
                 if ids is not None:
                     cell_ids = vtk_to_numpy(ids)
                     assert len(cell_ids) == len(np.unique(cell_ids))
-                    eids = self.parent.element_ids[cell_ids]
+                    eids = self.parent.get_element_ids(cell_ids)
         if self.is_nids:
             points = ugrid.GetPointData()
             if points is not None:
                 ids = points.GetArray('Ids')
                 if ids is not None:
                     point_ids = vtk_to_numpy(ids)
-                    nids = self.parent.node_ids[point_ids]
+                    nids = self.parent.get_node_ids(point_ids)
 
         if self.callback is not None:
             self.callback(eids, nids)

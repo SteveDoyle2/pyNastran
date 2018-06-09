@@ -12,8 +12,8 @@ from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.converters.su2.su2_io import SU2_IO
 import pyNastran
 
-pkg_path = pyNastran.__path__[0]
-model_path = os.path.join(pkg_path, 'converters', 'su2')
+PKG_PATH = pyNastran.__path__[0]
+MODEL_PATH = os.path.join(PKG_PATH, 'converters', 'su2')
 
 
 class SU2_GUI(FakeGUIMethods):
@@ -26,8 +26,9 @@ class SU2_GUI(FakeGUIMethods):
 class TestSU2GUI(unittest.TestCase):
 
     def test_su2_geometry(self):
+        """tests mesh_naca0012_inv.su2"""
         log = get_logger(level='warning')
-        geometry_filename = os.path.join(model_path, 'mesh_naca0012_inv.su2')
+        geometry_filename = os.path.join(MODEL_PATH, 'mesh_naca0012_inv.su2')
 
         test = SU2_GUI()
         test.log = log

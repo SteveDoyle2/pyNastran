@@ -11,9 +11,9 @@ from pyNastran.converters.aflr.ugrid.ugrid3d_to_nastran import ugrid3d_to_nastra
 from pyNastran.converters.aflr.ugrid.ugrid3d_to_tecplot import ugrid_to_tecplot
 from pyNastran.utils.log import get_logger
 
-pkg_path = pyNastran.__path__[0]
-model_path = os.path.join(pkg_path, 'converters', 'tecplot', 'models')
-nastran_path = os.path.join(pkg_path, '..', 'models')
+PKG_PATH = pyNastran.__path__[0]
+model_path = os.path.join(PKG_PATH, 'converters', 'tecplot', 'models')
+nastran_path = os.path.join(PKG_PATH, '..', 'models')
 
 class TestUgrid(unittest.TestCase):
     """runs ugrid2d/3d tests"""

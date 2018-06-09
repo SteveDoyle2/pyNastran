@@ -2492,9 +2492,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
         data2 = [(method, None, [])]
         self.res_widget.update_methods(data2)
 
+        if self.node_ids is None:  # pragma: no cover
+            raise RuntimeError('implement self.node_ids for this format')
+        if self.element_ids is None:  # pragma: no cover
+            raise RuntimeError('implement self.element_ids for this format')
+
         if self.is_groups:
-            if self.element_ids is None:
-                raise RuntimeError('implement self.element_ids for this format')
             #eids = np.arange(172)
             #eids = []
             #self.hide_elements_mask(eids)

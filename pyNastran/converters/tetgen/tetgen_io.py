@@ -88,7 +88,9 @@ class TetgenIO(object):
         self.gui.scalarBar.Modified()
 
 
-        form, cases = self._fill_tetgen_case(nnodes, nelements)
+        form, cases, node_ids, element_ids = self._fill_tetgen_case(nnodes, nelements)
+        self.gui.node_ids = node_ids
+        self.gui.element_ids = element_ids
         self.gui._finish_results_io2(form, cases, reset_labels=True)
 
     def _fill_tetgen_case(self, nnodes, nelements):
@@ -113,4 +115,4 @@ class TetgenIO(object):
         cases = OrderedDict()
         cases[icase] = (nid_res, (0, 'NodeID'))
         cases[icase + 1] = (eid_res, (0, 'ElementID'))
-        return form, cases
+        return form, cases, nids, eids

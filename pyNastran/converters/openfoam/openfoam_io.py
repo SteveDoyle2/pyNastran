@@ -277,19 +277,26 @@ class OpenFoamIO(object):
 
         #print("nElements = ",nElements)
         if mesh_3d == 'hex':
-            form, cases = self._fill_openfoam_case(cases, ID, nodes, nelements,
-                                                   patches, names, normals, is_surface_blockmesh)
+            form, cases, node_ids, element_ids = self._fill_openfoam_case(
+                cases, ID, nodes, nelements,
+                patches, names, normals, is_surface_blockmesh)
+
         elif mesh_3d == 'shell':
-            form, cases = self._fill_openfoam_case(cases, ID, nodes, nelements,
-                                                   patches, names, normals, is_surface_blockmesh)
+            form, cases, node_ids, element_ids = self._fill_openfoam_case(
+                cases, ID, nodes, nelements,
+                patches, names, normals, is_surface_blockmesh)
+
         elif mesh_3d == 'faces':
             if len(names) == nelements:
                 is_surface_blockmesh = True
-            form, cases = self._fill_openfoam_case(cases, ID, nodes, nelements, patches,
-                                                   names, normals, is_surface_blockmesh)
+            form, cases, node_ids, element_ids = self._fill_openfoam_case(
+                cases, ID, nodes, nelements, patches,
+                names, normals, is_surface_blockmesh)
         else:
             raise RuntimeError(mesh_3d)
 
+        self.gui.node_ids = node_ids
+        self.gui.element_ids = element_ids
         if plot:
             self.gui._finish_results_io2(form, cases, reset_labels=reset_labels)
         else:
@@ -369,4 +376,4 @@ class OpenFoamIO(object):
         ]
         if len(results_form):
             form.append(('Results', None, results_form))
-        return form, cases
+        return form, cases, nids, eids

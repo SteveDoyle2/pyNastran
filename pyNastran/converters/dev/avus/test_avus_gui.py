@@ -11,10 +11,10 @@ from pyNastran.converters.cart3d.cart3d_io import Cart3dIO
     #nastran_to_cart3d, nastran_to_cart3d_filename)
 from pyNastran.utils.log import get_logger
 
-pkg_path = pyNastran.__path__[0]
-test_path = os.path.join(pkg_path, 'converters', 'dev', 'avus')
+PKG_PATH = pyNastran.__path__[0]
+test_path = os.path.join(PKG_PATH, 'converters', 'dev', 'avus')
 
-#model_path = os.path.join(pkg_path, 'converters', 'cart3d', 'models')
+#model_path = os.path.join(PKG_PATH, 'converters', 'cart3d', 'models')
 
 
 class AvusGUI(FakeGUIMethods):

@@ -9,8 +9,8 @@ from pyNastran.converters.dev.obj.obj import OBJ
 from pyNastran.utils.log import get_logger
 
 
-pkg_path = pyNastran.__path__[0]
-model_path = os.path.join(pkg_path, 'converters', 'dev', 'obj') #, 'models')
+PKG_PATH = pyNastran.__path__[0]
+model_path = os.path.join(PKG_PATH, 'converters', 'dev', 'obj') #, 'models')
 
 
 class ObjGUI(ObjIO, FakeGUIMethods):

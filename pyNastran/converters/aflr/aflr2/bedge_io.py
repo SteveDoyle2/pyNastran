@@ -100,7 +100,10 @@ class BEdge_IO(object):
         ID = 1
 
         self.gui._add_alt_actors(self.gui.alt_grids)
-        form, cases = self._fill_bedge_case(bedge_filename, cases, ID, nnodes, nelements, model)
+        form, cases, node_ids, element_ids = self._fill_bedge_case(
+            bedge_filename, cases, ID, nnodes, nelements, model)
+        self.gui.node_ids = node_ids
+        self.gui.element_ids = element_ids
         if plot:
             self.gui._finish_results_io2(form, cases)
 
@@ -190,4 +193,4 @@ class BEdge_IO(object):
         results_form = []
         if len(results_form):
             form.append(('Results', None, results_form))
-        return form, cases
+        return form, cases, nids, eids

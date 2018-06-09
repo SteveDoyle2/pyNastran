@@ -6,8 +6,8 @@ from pyNastran.converters.shabp.shabp_io import ShabpIO
 from pyNastran.utils.log import get_logger
 import pyNastran
 
-pkg_path = pyNastran.__path__[0]
-model_path = os.path.join(pkg_path, 'converters', 'shabp')
+PKG_PATH = pyNastran.__path__[0]
+model_path = os.path.join(PKG_PATH, 'converters', 'shabp')
 
 
 class ShabpGUI(ShabpIO, FakeGUIMethods):

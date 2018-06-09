@@ -283,8 +283,8 @@ def equivalence_ugrid3d_and_bdf_to_bdf(ugrid_filename, bdf_filename,
 
 def main():  # pragma: no cover
     """demo problem"""
-    pkg_path = ''
-    model_dir = os.path.join(pkg_path, 'aflr_work', 'bay')
+    PKG_PATH = ''
+    model_dir = os.path.join(PKG_PATH, 'aflr_work', 'bay')
     ugrid_filename = os.path.join(model_dir, 'model.b8.ugrid')
     bdf_filename = os.path.join(model_dir, 'solid.bdf')
     ugrid_filename_out = os.path.join(model_dir, 'model_merged.b8.ugrid')

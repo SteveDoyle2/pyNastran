@@ -14,8 +14,8 @@ from pyNastran.gui.gui_objects.gui_result import GuiResult
 
 
 class FastIO(object):
-    def __init__(self, parent):
-        self.parent = parent
+    def __init__(self, gui):
+        self.gui = gui
 
     def get_fast_wildcard_geometry_results_functions(self):
         data = ('FAST',
@@ -24,7 +24,7 @@ class FastIO(object):
         return data
 
     def load_fast_geometry(self, fgrid_filename, name='main', plot=True):
-        skip_reading = self.parent._remove_old_geometry(fgrid_filename)
+        skip_reading = self.gui._remove_old_geometry(fgrid_filename)
         if skip_reading:
             return
 
@@ -40,7 +40,7 @@ class FastIO(object):
         model = read_fgrid(
             fgrid_filename,
             dimension_flag,
-            log=self.parent.log, debug=False,
+            log=self.gui.log, debug=False,
         )
 
         nodes = model.nodes
@@ -67,18 +67,18 @@ class FastIO(object):
         #mapbc = model.mapbc
         #loads = model.loads
 
-        self.parent.nnodes = nnodes
+        self.gui.nnodes = nnodes
         nelements = ntris + ntets
-        self.parent.nelements = nelements
+        self.gui.nelements = nelements
 
         #print("nnodes = %i" % self.nnodes)
         #print("nelements = %i" % self.nelements)
 
-        grid = self.parent.grid
-        grid.Allocate(self.parent.nelements, 1000)
+        grid = self.gui.grid
+        grid.Allocate(self.gui.nelements, 1000)
 
         points = numpy_to_vtk_points(nodes)
-        self.parent.nid_map = {}
+        self.gui.nid_map = {}
 
         assert nodes is not None
         nnodes = nodes.shape[0]
@@ -109,7 +109,7 @@ class FastIO(object):
             grid.Update()
 
         # regions/loads
-        self.parent.scalarBar.Modified()
+        self.gui.scalarBar.Modified()
 
         cases = OrderedDict()
         #cases = self.result_cases
@@ -118,7 +118,7 @@ class FastIO(object):
             form, cases, model,
             nnodes, nelements, dimension_flag,
             results=True)
-        self.parent._finish_results_io2(form, cases)
+        self.gui._finish_results_io2(form, cases)
 
     def clear_fast(self):
         pass
@@ -127,7 +127,7 @@ class FastIO(object):
                            nnodes, nelements, dimension_flag,
                            results=False):
         note = ''
-        self.parent.isubcase_name_map = {
+        self.gui.isubcase_name_map = {
             1: ['Fast%s' % note, ''],
             #2: ['Fast%s' % note, ''],
         }
@@ -139,7 +139,7 @@ class FastIO(object):
     def _fill_fast_case(self, form, cases, model,
                         nnodes, nelements, dimension_flag,
                         results=False):
-        self.parent.scalarBar.VisibilityOff()
+        self.gui.scalarBar.VisibilityOff()
 
         icase = 0
         geometry_form = [

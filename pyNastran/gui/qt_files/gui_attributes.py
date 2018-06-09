@@ -1445,6 +1445,19 @@ class GuiAttributes(object):
         return self.vtk_interactor.GetRenderWindow()
 
     #------------------------------
+    def get_element_ids(self, ids=None):
+        """wrapper around element_ids"""
+        if cell_ids is None:
+            return self.element_ids
+        return self.element_ids[ids]
+
+    def get_node_ids(self, ids=None):
+        """wrapper around node_ids"""
+        if point_ids is None:
+            return self.node_ids
+        return self.node_ids[ids]
+
+    #------------------------------
     # these are overwritten
     def log_debug(self, msg):
         """turns logs into prints to aide debugging"""

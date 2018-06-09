@@ -13,9 +13,9 @@ from pyNastran.converters.tetgen.tetgen_io import TetgenIO
 from pyNastran.utils.log import get_logger
 import pyNastran
 
-pkg_path = pyNastran.__path__[0]
-model_path = os.path.join(pkg_path, 'converters', 'tetgen')
-STL_PATH = os.path.join(pkg_path, 'converters', 'stl')
+PKG_PATH = pyNastran.__path__[0]
+model_path = os.path.join(PKG_PATH, 'converters', 'tetgen')
+STL_PATH = os.path.join(PKG_PATH, 'converters', 'stl')
 
 
 class TetgenGUI(TetgenIO, FakeGUIMethods):

@@ -11,8 +11,8 @@ from pyNastran.converters.nastran.nastran_to_cart3d import (
 from pyNastran.utils.log import get_logger
 
 
-pkg_path = pyNastran.__path__[0]
-model_path = os.path.join(pkg_path, 'converters', 'cart3d', 'models')
+PKG_PATH = pyNastran.__path__[0]
+model_path = os.path.join(PKG_PATH, 'converters', 'cart3d', 'models')
 
 
 class Cart3dGUI(FakeGUIMethods):
@@ -86,7 +86,7 @@ class TestCart3dGUI(unittest.TestCase):
             "5.\n"
             "5. 5. 5. 5. 5.\n"
         )
-        test_path = os.path.join(pkg_path, 'converters', 'cart3d', 'models')
+        test_path = os.path.join(PKG_PATH, 'converters', 'cart3d', 'models')
         geometry_filename = os.path.join(test_path, 'flat.tri')
         with open(geometry_filename, 'w') as cart3d_file:
             cart3d_file.write(lines)

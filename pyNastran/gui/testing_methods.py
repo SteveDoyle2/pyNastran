@@ -159,8 +159,10 @@ class FakeGUIMethods(GuiCommon):
         This is not quite the same as the main one.
         It's more or less just _set_results
         """
-        #assert self.node_ids is not None
-        #assert self.element_ids is not None
+        if self.node_ids is None:
+            raise RuntimeError('implement self.node_ids for this format')
+        if self.element_ids is None:
+            raise RuntimeError('implement self.element_ids for this format')
 
         assert len(cases) > 0, cases
         if isinstance(cases, OrderedDict):

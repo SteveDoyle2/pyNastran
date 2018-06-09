@@ -106,7 +106,9 @@ class DegenGeomIO(object):
         cases = OrderedDict()
         ID = 1
 
-        form, cases = _fill_degen_geom_case(cases, ID, model, nnodes, nelements)
+        form, cases, node_ids, element_ids = _fill_degen_geom_case(cases, ID, model, nnodes, nelements)
+        self.gui.node_ids = node_ids
+        self.gui.element_ids = element_ids
         self.gui._finish_results_io2(form, cases)
 
     #def clear_adb(self):
@@ -137,4 +139,4 @@ def _fill_degen_geom_case(cases, ID, unused_model, nnodes, nelements):  # pragma
                         location='node', scalar=nodes)
     cases[icase] = (eid_res, (itime, 'ElementID'))
     cases[icase + 1] = (nid_res, (itime, 'NodeID'))
-    return form, cases
+    return form, cases, nodes, elements
