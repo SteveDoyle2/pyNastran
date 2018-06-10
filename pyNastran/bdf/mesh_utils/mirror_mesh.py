@@ -1,27 +1,45 @@
 # coding: utf-8
 """
 This file defines:
-  - nid_offset, eid_offset = bdf_mirror(model, plane='xz')
-  - nid_offset, eid_offset = write_bdf_symmetric(
-        model, out_filename=None, encoding=None,
+  - model, nid_offset, eid_offset = bdf_mirror(bdf_filename, plane='xz')
+  - model, nid_offset, eid_offset = write_bdf_symmetric(
+        bdf_filename, out_filename=None, encoding=None,
         size=8, is_double=False,
         enddata=None, close=True, plane='xz')
+  - model = make_symmetric_model(
+        bdf_filename, plane='xz', zero_tol=1e-12,
+        log=None, debug=True)
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import iteritems
-#from pyNastran.bdf.cards.loads.static_loads import PLOAD4
+from pyNastran.bdf.cards.loads.static_loads import PLOAD4
 from pyNastran.bdf.cards.aero.aero import CAERO1, SPLINE1
 from pyNastran.bdf.cards.bdf_sets import SET1 #, SET3
+from pyNastran.bdf.bdf import BDF, read_bdf
 
-def bdf_mirror(model, plane='xz'):
+def get_model(bdf_filename, log=None, debug=True):
+    """helper method"""
+    if isinstance(bdf_filename, BDF):
+        model = bdf_filename
+    else:
+        # str, StringIO
+        model = read_bdf(bdf_filename, validate=True, xref=True,
+                         punch=False, skip_cards=None,
+                         read_cards=None,
+                         encoding=None, log=log,
+                         debug=debug, mode='msc')
+    return model
+
+def bdf_mirror(bdf_filename, plane='xz', log=None, debug=True):
     """
-    Mirrors the model
+    Mirrors the model about the symmetry plane
 
     Parameters
     ----------
-    model : BDF()
-        the BDF model object
+    bdf_filename : str / BDF()
+        str : the bdf filename
+        BDF : the BDF model object
     plane : str; {'xy', 'yz', 'xz'}; default='xz'
         the plane to mirror about
         xz : +y/-y
@@ -30,38 +48,32 @@ def bdf_mirror(model, plane='xz'):
 
     Returns
     -------
+    model : BDF()
+        BDF : the BDF model object
     nid_offset : int
         the offset node id
     eid_offset : int
         the offset element id
 
     """
+    model = get_model(bdf_filename, log=log, debug=debug)
     nid_offset, plane = _mirror_nodes(model, plane=plane)
     eid_offset = _mirror_elements(model, nid_offset)
     _mirror_loads(model, nid_offset, eid_offset)
     _mirror_aero(model, nid_offset, plane)
-    return nid_offset, eid_offset
+    return model, nid_offset, eid_offset
 
-def write_bdf_symmetric(model, out_filename=None, encoding=None,
+def write_bdf_symmetric(bdf_filename, out_filename=None, encoding=None,
                         size=8, is_double=False,
                         enddata=None, close=True, plane='xz'):
     """
-    Writes the BDF as a symmetric model.
-    Considers shell and line elements.
-    Updates the BDF object to be symmetric
-      - see bdf_mirror if you don't want to write the model
-
-    Doesn't equivalence nodes on the centerline.
-    Doesn't handle solid elements.
-    Doesn't consider mass elements.
-    Doesn't consider rigid elements.
-    Doesn't handle loads.
-    Doesn't handle bar/beam offsets.
+    Mirrors the model about the symmetry plane
 
     Parameters
     ----------
-    model : BDF()
-        the BDF model object
+    bdf_filename : str / BDF()
+        str : the bdf filename
+        BDF : the BDF model object
     out_filename : varies; default=None
         str        - the name to call the output bdf
         file       - a file object
@@ -88,19 +100,38 @@ def write_bdf_symmetric(model, out_filename=None, encoding=None,
 
     Returns
     -------
+    model : BDF()
+        BDF : the BDF model object
     nid_offset : int
         the offset node id
     eid_offset : int
         the offset element id
 
+    Notes
+    -----
+    Updates the BDF object to be symmetric
+      - see bdf_mirror if you don't want to write the model
+    Doesn't equivalence nodes on the centerline.
+    Doesn't handle bar/beam offsets.
+
+    Considers
+    ---------
+    nodes : GRID
+    elements : CTRIA3, CQUAD4, CTRIA6, CQUAD8, CQUAD, CTRIAR, CQUADR
+    loads : PLOAD4
+    splines : SPLINE1 -> SET1
+    caeros : CAERO1
+    rigid_elements : N/A
+    mass_elements : N/A
+    aeros
+
     """
     #model.write_caero_model()
-    nid_offset, eid_offset = bdf_mirror(model, plane=plane)
-
+    model, nid_offset, eid_offset = bdf_mirror(bdf_filename, plane=plane)
     model.write_bdf(out_filename=out_filename, encoding=encoding,
                     size=size, is_double=is_double,
                     interspersed=False, enddata=enddata, close=close)
-    return nid_offset, eid_offset
+    return model, nid_offset, eid_offset
 
 def _mirror_nodes(model, plane='xz'):
     """
@@ -139,6 +170,12 @@ def _plane_to_iy(plane):
 def _mirror_elements(model, nid_offset):
     """Mirrors the elements"""
     eid_offset = max(model.elements.keys())
+    shell_elements = set([
+        'CTRIA3', 'CQUAD4', 'CTRIA6', 'CQUAD8', 'CQUAD',
+        'CTRIAR', 'CQUADR',
+        #'CTRIAX', 'CTRIAX6', 'CQUADX', 'CQUADX8',
+    ])
+
     if model.elements:
         for eid, element in sorted(iteritems(model.elements)):
             etype = element.type
@@ -160,7 +197,7 @@ def _mirror_elements(model, nid_offset):
             model.add_card(fields, etype)
             element2 = model.elements[eid2]
 
-            if etype in ['CTRIA3', 'CQUAD4']:
+            if etype in shell_elements:
                 element2.nodes = nodes
                 element.flip_normal() # nodes = nodes[::-1]
             else:
@@ -180,12 +217,8 @@ def _mirror_loads(model, nid_offset=0, eid_offset=0):
         - no coordinate systems (assumes cid=0)
     """
     for unused_load_id, loads in iteritems(model.loads):
-        nloads = len(loads)
-        for iload, load in enumerate(loads):
-            # TODO: a super hack due to us changing the length of loads
-            #       it's because we're using a list...
-            if iload == nloads:
-                break
+        for load in loads:
+            loads_new = []
             load_type = load.type
             if load_type == 'PLOAD4':
                 g1 = None
@@ -196,13 +229,16 @@ def _mirror_loads(model, nid_offset=0, eid_offset=0):
                     g34 = load.g34 + nid_offset
 
                 eids = [eid + eid_offset for eid in load.eids]
-                load = model.add_pload4(
+                load2 = PLOAD4(
                     load.sid, eids, load.pressures, g1, g34,
                     cid=load.cid, nvector=load.nvector,
                     surf_or_line=load.surf_or_line,
                     line_load_dir=load.line_load_dir, comment='')
+                loads_new.append(load)
             else:
                 model.log.warning('skipping:\n%s' % load.rstrip())
+        if loads_new:
+            loads += loads_new
 
 def _mirror_aero(model, nid_offset, plane):
     """
@@ -319,12 +355,32 @@ def _mirror_aero(model, nid_offset, plane):
 
     model.pop_parse_errors()
 
-def make_symmetric_model(model, iy=1, zero_tol=1e-12):
+def make_symmetric_model(bdf_filename, plane='xz', zero_tol=1e-12, log=None, debug=True):
     """
-    Makes a symmetric model
+    Makes a symmetric model from a full model
+
+    Parameters
+    ----------
+    bdf_filename : str / BDF()
+        str : the bdf filename
+        BDF : the BDF model object
+    plane : str; {'xy', 'yz', 'xz'}; default='xz'
+        the plane to mirror about
+        xz : +y/-y
+        yz : +x/-x
+        xy : +z/-z
+    zaero_tol : float; default=1e-12
+        the symmetry plane tolerance
+
+    Returns
+    -------
+    model : BDF()
+        BDF : the BDF model object
 
     ## TODO: doesn't handle elements straddling the centerline
     """
+    model = get_model(bdf_filename, log=log, debug=debug)
+    iy, plane = _plane_to_iy(plane)
     nids_to_remove = []
     eids_to_remove = []
     caero_ids_to_remove = []
@@ -360,7 +416,7 @@ def make_symmetric_model(model, iy=1, zero_tol=1e-12):
                 p4[iy] = 0.
                 caero.set_points([p1, p2, p3, p4])
         elif caero.type == 'CAERO2':
-            # TODO: a CAERO2 can't be half symmetric...
+            # TODO: a CAERO2 can't be half symmetric...can it?
             # TODO: it can be skewed though...
             p1, p2 = caero.get_points()
             if p1[iy] <= zero and p2[iy] <= zero:
@@ -372,7 +428,7 @@ def make_symmetric_model(model, iy=1, zero_tol=1e-12):
     for caero_id in caero_ids_to_remove:
         del model.caeros[caero_id]
 
-    print('nids_to_remove =', nids_to_remove)
+    #print('nids_to_remove =', nids_to_remove)
     for unused_spline_id, spline in iteritems(model.splines):
         caero = spline.caero
         #setg = spline.setg
@@ -387,9 +443,9 @@ def make_symmetric_model(model, iy=1, zero_tol=1e-12):
         spline.setg_ref.ids = nids
 
     plane_to_labels_keep_map = {
-        0 : ['URDD4', 'URDD2', 'URDD3', 'SIDES', 'YAW'], # yz
-        1 : ['URDD1', 'URDD5', 'URDD3', 'PITCH', 'ANGLEA'], # xz plane
-        2 : ['URDD1', 'URDD2', 'URDD6', 'ROLL'], # xy plane
+        'yz' : ['URDD4', 'URDD2', 'URDD3', 'SIDES', 'YAW'], # yz
+        'xz' : ['URDD1', 'URDD5', 'URDD3', 'PITCH', 'ANGLEA'], # xz plane
+        'xy' : ['URDD1', 'URDD2', 'URDD6', 'ROLL'], # xy plane
     }
 
     all_labels = [
@@ -397,10 +453,10 @@ def make_symmetric_model(model, iy=1, zero_tol=1e-12):
         'URDD1', 'URDD5', 'URDD3', 'PITCH', 'ANGLEA',
         'URDD1', 'URDD2', 'URDD6', 'ROLL',
     ]
-    labels_to_keep = plane_to_labels_keep_map[iy]
+    labels_to_keep = plane_to_labels_keep_map[plane]
     labels_to_remove = [label for label in all_labels if label not in labels_to_keep]
 
-    print('labels_to_remove =', labels_to_remove)
+    #print('labels_to_remove =', labels_to_remove)
     for aestat_id in list(model.aestats.keys()):
         aestat = model.aestats[aestat_id]
         if aestat.label in labels_to_remove:
@@ -410,6 +466,7 @@ def make_symmetric_model(model, iy=1, zero_tol=1e-12):
         labels = trim.labels
         ilabels_to_remove = [labels.index(label) for label in labels_to_remove
                              if label in labels]
-        print("ilabels_to_remove =", ilabels_to_remove)
+        #print("ilabels_to_remove =", ilabels_to_remove)
         trim.uxz = [trim.uxs[ilabel] for ilabel in ilabels_to_remove]
         trim.labels = [trim.labels[ilabel] for ilabel in ilabels_to_remove]
+    return model

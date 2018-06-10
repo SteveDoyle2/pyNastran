@@ -1521,17 +1521,20 @@ class QuadShell(ShellElement):
            c=centroid
            A=area
         """
-        n1, n2, n3, n4 = self.get_node_positions(nodes=self.nodes_ref[:4])
+        nodes_ref = self.nodes_ref[:4]
+        n1, n2, n3, n4 = self.get_node_positions(nodes=nodes_ref)
         area = 0.5 * norm(cross(n3-n1, n4-n2))
         centroid = (n1 + n2 + n3 + n4) / 4.
         return(area, centroid)
 
     def Centroid(self):
-        n1, n2, n3, n4 = self.get_node_positions(nodes=self.nodes_ref[:4])
+        nodes_ref = self.nodes_ref[:4]
+        n1, n2, n3, n4 = self.get_node_positions(nodes=nodes_ref)
         centroid = (n1 + n2 + n3 + n4) / 4.
         return centroid
 
     def Centroid_no_xref(self, model):
+        nodes = self.nodes_ref[:4]
         n1, n2, n3, n4 = self.get_node_positions_no_xref(model, nodes=self.nodes[:4])
         centroid = (n1 + n2 + n3 + n4) / 4.
         return centroid

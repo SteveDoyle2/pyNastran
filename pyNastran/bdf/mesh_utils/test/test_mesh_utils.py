@@ -21,7 +21,7 @@ from pyNastran.bdf.mesh_utils.export_mcids import export_mcids
 from pyNastran.bdf.mesh_utils.split_cbars_by_pin_flag import split_cbars_by_pin_flag
 from pyNastran.bdf.mesh_utils.split_elements import split_line_elements
 from pyNastran.bdf.mesh_utils.pierce_shells import pierce_shell_model, quad_intersection, triangle_intersection
-from pyNastran.bdf.mesh_utils.mirror_mesh import write_bdf_symmetric
+from pyNastran.bdf.mesh_utils.mirror_mesh import write_bdf_symmetric, bdf_mirror, make_symmetric_model
 from pyNastran.utils.log import SimpleLogger
 
 # testing these imports are up to date
@@ -746,6 +746,15 @@ class TestMeshUtils(unittest.TestCase):
         assert np.allclose(mass1*2, mass2), 'mass1=%s mass2=%s' % (mass1, mass2)
         assert np.allclose(cg2[1], 0.), 'cg2=%s' % (cg2)
         os.remove('sym.bdf')
+
+    def test_mirror2(self):
+        log = SimpleLogger(level='warning')
+        bdf_filename = os.path.join(pkg_path, '..', 'models', 'bwb', 'bwb_saero.bdf')
+        model = bdf_mirror(bdf_filename, plane='xz', log=log)[0]
+        model.uncross_reference()
+        model.cross_reference()
+        make_symmetric_model(model, plane='xz', zero_tol=1e-12)
+        #model.validate()
 
     def test_pierce_model(self):
         """tests pierce_shell_model"""
