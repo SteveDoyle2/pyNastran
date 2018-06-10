@@ -6,9 +6,10 @@ from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.mesh_utils.remove_unused import remove_unused
 from pyNastran.bdf.mesh_utils.convert import convert
 from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
+from pyNastran.bdf.mesh_utils.mirror_mesh import bdf_mirror
 
 def save_load_deck(model, punch=True, run_remove_unused=True,
-                   run_convert=True, run_renumber=True):
+                   run_convert=True, run_renumber=True, run_mirror=True):
     """writes, re-reads, saves an obj, loads an obj, and returns the deck"""
     model.validate()
     model.pop_parse_errors()
@@ -43,6 +44,12 @@ def save_load_deck(model, punch=True, run_remove_unused=True,
     cross_reference(model3)
     if run_renumber:
         renumber('model2.bdf', model.log)
+        if run_mirror:
+            # we put embed this under renumber to prevent modifying an
+            # existing model to prevent breaking tests
+            #
+            # shouldn't have any effect model2.bdf
+            bdf_mirror('model2.bdf', plane='xz', log=model.log)
     return model3
 
 def cross_reference(model):

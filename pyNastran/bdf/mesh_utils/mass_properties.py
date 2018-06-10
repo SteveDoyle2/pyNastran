@@ -120,6 +120,8 @@ def _mass_properties_elements_init(model, element_ids, mass_ids):
     if element_ids is None and mass_ids is None:
         elements = model.elements.values()
         masses = model.masses.values()
+        element_ids = [elem.eid for elem in elements]
+        mass_ids = [elem.eid for elem in masses]
 
     # if either element_id or mass_ids are specified and the other is not, use only the
     # specified ids
@@ -128,16 +130,20 @@ def _mass_properties_elements_init(model, element_ids, mass_ids):
     #       Decide if this is the desired behavior.
     else:
         if element_ids is None:
+            element_ids = []
             elements = []
         else:
             assert len(model.elements) > 0
             elements = [element for eid, element in model.elements.items() if eid in element_ids]
 
         if mass_ids is None:
+            mass_ids = []
             masses = []
         else:
             assert len(model.masses) > 0
             masses = [mass for eid, mass in model.masses.items() if eid in mass_ids]
+    assert element_ids is not None, element_ids
+    assert mass_ids is not None, mass_ids
     return element_ids, elements, mass_ids, masses
 
 def mass_properties(model, element_ids=None, mass_ids=None,
@@ -452,6 +458,9 @@ def mass_properties_nsm(model, element_ids=None, mass_ids=None, nsm_id=None,
     -------
      - If eids are requested, but don't exist, no warning is thrown.
        Decide if this is the desired behavior.
+     - If the NSMx ALL option is used, the mass from all elements
+       will be considered, even if not included in the element set
+
     """
     # TODO: check CG for F:\work\pyNastran\examples\Dropbox\move_tpl\ac11102g.bdf
 
@@ -502,7 +511,8 @@ def mass_properties_nsm(model, element_ids=None, mass_ids=None, nsm_id=None,
         if etype in no_mass or len(eids) == 0:
             continue
         mass, cg, I = _get_mass_new(
-            model, all_eids, all_mass_ids, etypes_skipped,
+            model, element_ids, mass_ids,
+            all_eids, all_mass_ids, etypes_skipped,
             etype, eids, xyz,
             length_eids_pids, nsm_centroids_length, lengths,
             area_eids_pids, nsm_centroids_area, areas,
@@ -539,11 +549,13 @@ def get_sub_eids(all_eids, eids):
     eids2 = eids[all_eids[ieids] == eids]
     return eids2
 
-def _get_mass_new(model, all_eids, all_mass_ids, etypes_skipped,
+def _get_mass_new(model, element_ids, mass_ids,
+                  all_eids, all_mass_ids, etypes_skipped,
                   etype, eids, xyz,
                   length_eids_pids, nsm_centroids_length, lengths,
                   area_eids_pids, nsm_centroids_area, areas,
                   mass, cg, I, reference_point):
+
     if etype in ['CROD', 'CONROD']:
         eids2 = get_sub_eids(all_eids, eids)
         for eid in eids2:
@@ -568,7 +580,8 @@ def _get_mass_new(model, all_eids, all_mass_ids, etypes_skipped,
             if massi != elem.Mass():
                 msg = 'mass_new=%s mass_old=%s\n%s' % (massi, elem.Mass(), str(elem))
                 raise RuntimeError(msg)
-            mass = _increment_inertia(centroid, reference_point, massi, mass, cg, I)
+            if eid in element_ids:
+                mass = _increment_inertia(centroid, reference_point, massi, mass, cg, I)
     elif etype == 'CTUBE':
         eids2 = get_sub_eids(all_eids, eids)
         for eid in eids2:
@@ -586,7 +599,8 @@ def _get_mass_new(model, all_eids, all_mass_ids, etypes_skipped,
             if massi != elem.Mass():
                 msg = 'mass_new=%s mass_old=%s\n%s' % (massi, elem.Mass(), str(elem))
                 raise RuntimeError(msg)
-            mass = _increment_inertia(centroid, reference_point, massi, mass, cg, I)
+            if eid in element_ids:
+                mass = _increment_inertia(centroid, reference_point, massi, mass, cg, I)
     elif etype == 'CBAR':
         eids2 = get_sub_eids(all_eids, eids)
         for eid in eids2:
@@ -607,23 +621,24 @@ def _get_mass_new(model, all_eids, all_mass_ids, etypes_skipped,
                 msg += 'centroid_new=%s centroid_old=%s\n%s' % (
                     str(centroid), str(elem.Centroid()), str(elem))
                 raise RuntimeError(msg)
-            mass = _increment_inertia(centroid, reference_point, massi, mass, cg, I)
+            if eid in element_ids:
+                mass = _increment_inertia(centroid, reference_point, massi, mass, cg, I)
 
     elif etype == 'CBEAM':
         mass = _get_cbeam_mass(
-            model, xyz, all_eids,
+            model, xyz, element_ids, all_eids,
             length_eids_pids, lengths, nsm_centroids_length,
             eids, mass, cg, I, reference_point)
 
     elif etype in ['CTRIA3', 'CTRIA6', 'CTRIAR']:
         mass = _get_tri_mass(
-            model, xyz, all_eids,
+            model, xyz, element_ids, all_eids,
             area_eids_pids, areas, nsm_centroids_area,
             eids, mass, cg, I, reference_point)
 
     elif etype in ['CQUAD4', 'CQUAD8', 'CQUADR']:
         mass = _get_quad_mass(
-            model, xyz, all_eids,
+            model, xyz, element_ids, all_eids,
             area_eids_pids, areas, nsm_centroids_area,
             eids, mass, cg, I, reference_point)
 
@@ -652,7 +667,8 @@ def _get_mass_new(model, all_eids, all_mass_ids, etypes_skipped,
                 msg += 'centroid_new=%s centroid_old=%s\n%s' % (
                     str(centroid), str(elem.Centroid()), str(elem))
                 raise RuntimeError(msg)
-            mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
+            if eid in element_ids:
+                mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
 
     elif etype == 'CSHEAR':
         eids2 = get_sub_eids(all_eids, eids)
@@ -677,14 +693,16 @@ def _get_mass_new(model, all_eids, all_mass_ids, etypes_skipped,
                 msg += 'centroid_new=%s centroid_old=%s\n%s' % (
                     str(centroid), str(elem.Centroid()), str(elem))
                 raise RuntimeError(msg)
-            mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
+            if eid in element_ids:
+                mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
     elif etype in ['CONM1', 'CONM2', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4']:
         eids2 = get_sub_eids(all_mass_ids, eids)
         for eid in eids2:
             elem = model.masses[eid]
             m = elem.Mass()
             centroid = elem.Centroid()
-            mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
+            if eid in mass_ids:
+                mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
     elif etype == 'CTETRA':
         eids2 = get_sub_eids(all_eids, eids)
         for eid in eids2:
@@ -699,7 +717,8 @@ def _get_mass_new(model, all_eids, all_mass_ids, etypes_skipped,
                 msg += 'centroid_new=%s centroid_old=%s\n%s' % (
                     str(centroid), str(elem.Centroid()), str(elem))
                 raise RuntimeError(msg)
-            mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
+            if eid in element_ids:
+                mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
 
     elif etype == 'CPYRAM':
         eids2 = get_sub_eids(all_eids, eids)
@@ -726,7 +745,8 @@ def _get_mass_new(model, all_eids, all_mass_ids, etypes_skipped,
                 raise RuntimeError(msg)
             #print('*eid=%s type=%s mass=%s rho=%s V=%s' % (
                 #elem.eid, 'CPYRAM', m, elem.Rho(), volume))
-            mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
+            if eid in element_ids:
+                mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
 
     elif etype == 'CPENTA':
         eids2 = get_sub_eids(all_eids, eids)
@@ -747,7 +767,8 @@ def _get_mass_new(model, all_eids, all_mass_ids, etypes_skipped,
                 raise RuntimeError(msg)
             #print('*eid=%s type=%s mass=%s rho=%s V=%s' % (
                 #elem.eid, 'CPENTA', m, elem.Rho(), volume))
-            mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
+            if eid in element_ids:
+                mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
 
     elif etype == 'CHEXA':
         eids2 = get_sub_eids(all_eids, eids)
@@ -773,7 +794,8 @@ def _get_mass_new(model, all_eids, all_mass_ids, etypes_skipped,
             #print('*area1=%s area2=%s length=%s' % (area1, area2, norm(centroid1 - centroid2)))
             #print('*eid=%s type=%s mass=%s rho=%s V=%s' % (
                 #elem.eid, 'CHEXA', m, elem.Rho(), volume))
-            mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
+            if eid in element_ids:
+                mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
 
     elif etype == 'CBEND':
         model.log.info('elem.type=%s mass is innaccurate' % etype)
@@ -783,18 +805,21 @@ def _get_mass_new(model, all_eids, all_mass_ids, etypes_skipped,
             elem = model.elements[eid]
             m = elem.Mass()
             centroid = elem.Centroid()
-            mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
+            if eid in element_ids:
+                mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
 
     elif etype in ['CQUADX']:
         pass
     elif etype in ['CTRIAX', 'CTRIAX6']:
-        mass = _mass_catch_all(model, etype, etypes_skipped, all_eids,
-                               eids, mass, cg, I, reference_point)
+        mass = _mass_catch_all(model, etype, etypes_skipped,
+                               element_ids, all_eids, eids,
+                               mass, cg, I, reference_point)
     elif etype.startswith('C'):
         model.log.warning('etype=%r should be explicit' % etype)
         #raise RuntimeError('etype=%r should be explicit' % etype) ## TODO: this is temporary
-        mass = _mass_catch_all(model, etype, etypes_skipped, all_eids,
-                               eids, mass, cg, I, reference_point)
+        mass = _mass_catch_all(model, etype, etypes_skipped,
+                               element_ids, all_eids, eids,
+                               mass, cg, I, reference_point)
 
     #property_nsms[nsm_id][nsm.nsm_type][nsm_idi]
     #for nsm_id, prop_types in sorted(iteritems(property_nsms)):
@@ -809,7 +834,9 @@ def _get_mass_new(model, all_eids, all_mass_ids, etypes_skipped,
         #areas['PSHELL'].append(area)
     return mass, cg, I
 
-def _mass_catch_all(model, etype, etypes_skipped, all_eids, eids, mass, cg, I, reference_point):
+def _mass_catch_all(model, etype, etypes_skipped,
+                    element_ids, all_eids, eids,
+                    mass, cg, I, reference_point):
     """helper method for ``get_mass_new``"""
     eids2 = get_sub_eids(all_eids, eids)
     for eid in eids2:
@@ -826,13 +853,14 @@ def _mass_catch_all(model, etype, etypes_skipped, all_eids, eids, mass, cg, I, r
         if m > 0.0:
             model.log.info('elem.type=%r is not supported in new '
                            'mass properties method' % elem.type)
-            mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
+            if eid in element_ids:
+                mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
         elif etype not in etypes_skipped:
             model.log.info('elem.type=%s doesnt have mass' % elem.type)
             etypes_skipped.add(etype)
     return mass
 
-def _get_cbeam_mass(model, xyz, all_eids,
+def _get_cbeam_mass(model, xyz, element_ids, all_eids,
                     length_eids_pids, lengths, nsm_centroids_length,
                     eids, mass, cg, I, reference_point):
     """helper method for ``get_mass_new``"""
@@ -923,6 +951,9 @@ def _get_cbeam_mass(model, xyz, all_eids,
             msg += 'centroid_new=%s centroid_old=%s\n%s' % (
                 str(centroid), str(elem.Centroid()), str(elem))
             raise RuntimeError(msg)
+
+        if eid not in element_ids:
+            continue
         #nsmi = property_nsms[nsm_id]['PBEAM'][pid] + element_nsms[nsm_id][eid] * length
         #nsm = (nsm_per_length + nsmi) * length
         (x, y, z) = centroid - reference_point
@@ -951,7 +982,7 @@ def _get_cbeam_mass(model, xyz, all_eids,
             raise RuntimeError(msg)
     return mass
 
-def _get_tri_mass(model, xyz, all_eids,
+def _get_tri_mass(model, xyz, element_ids, all_eids,
                   area_eids_pids, areas, nsm_centroids_area,
                   eids, mass, cg, I, reference_point):
     """helper method for ``get_mass_new``"""
@@ -1015,10 +1046,11 @@ def _get_tri_mass(model, xyz, all_eids,
             msg = 'centroid_new=%s centroid_old=%s\n%s' % (
                 str(centroid), str(elem.Centroid()), str(elem))
             raise RuntimeError(msg)
-        mass = _increment_inertia(centroid, reference_point, massi, mass, cg, I)
+        if eid in element_ids:
+            mass = _increment_inertia(centroid, reference_point, massi, mass, cg, I)
     return mass
 
-def _get_quad_mass(model, xyz, all_eids,
+def _get_quad_mass(model, xyz, element_ids, all_eids,
                    area_eids_pids, areas, nsm_centroids_area,
                    eids, mass, cg, I, reference_point):
     """helper method for ``get_mass_new``"""
@@ -1096,7 +1128,8 @@ def _get_quad_mass(model, xyz, all_eids,
         #print(elem)
         #print(prop)
         #print('eid=%s type=%s mass=%s; area=%s mpa=%s'  % (elem.eid, elem.type, m, area, mpa))
-        mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
+        if eid in element_ids:
+            mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
     return mass
 
 def _setup_apply_nsm(area_eids_pids, areas, nsm_centroids_area,

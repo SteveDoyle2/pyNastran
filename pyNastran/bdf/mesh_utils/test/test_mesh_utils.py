@@ -744,10 +744,11 @@ class TestMeshUtils(unittest.TestCase):
         mass2, cg2, inertia2 = model2.mass_properties()
         #print('cg1=%s cg2=%s' % (cg1, cg2))
         assert np.allclose(mass1*2, mass2), 'mass1=%s mass2=%s' % (mass1, mass2)
-        assert np.allclose(cg2[1], 0.), 'cg2=%s' % (cg2)
+        assert np.allclose(cg2[1], 0.), 'cg2=%s stats=%s' % (cg2, model2.get_bdf_stats())
         os.remove('sym.bdf')
 
     def test_mirror2(self):
+        """mirrors the BDF (we care about the aero cards)"""
         log = SimpleLogger(level='warning')
         bdf_filename = os.path.join(pkg_path, '..', 'models', 'bwb', 'bwb_saero.bdf')
         model = bdf_mirror(bdf_filename, plane='xz', log=log)[0]

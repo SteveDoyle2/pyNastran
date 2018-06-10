@@ -112,18 +112,13 @@ def write_bdf_symmetric(bdf_filename, out_filename=None, encoding=None,
     Updates the BDF object to be symmetric
       - see bdf_mirror if you don't want to write the model
     Doesn't equivalence nodes on the centerline.
-    Doesn't handle bar/beam offsets.
 
     Considers
     ---------
     nodes : GRID
-    elements : CTRIA3, CQUAD4, CTRIA6, CQUAD8, CQUAD, CTRIAR, CQUADR
-    loads : PLOAD4
-    splines : SPLINE1 -> SET1
-    caeros : CAERO1
-    rigid_elements : N/A
-    mass_elements : N/A
-    aeros
+    elements, rigid_elements, mass_elements : see ``_mirror_elements``
+    loads : see ``_mirror_loads``
+    aero cards : see ``_mirror_aero``
 
     """
     #model.write_caero_model()
@@ -142,10 +137,10 @@ def _mirror_nodes(model, plane='xz'):
     .. warning:: doesn't mirror SPOINTs, EPOINTs
 
     """
-    nid_offset = max(model.node_ids)
-
+    nid_offset = 0
     iy, plane = _plane_to_iy(plane)
     if model.nodes:
+        nid_offset = max(model.node_ids)
         for (nid, node) in sorted(iteritems(model.nodes)):
             xyz = node.get_position()
             nid2 = nid + nid_offset
@@ -168,28 +163,58 @@ def _plane_to_iy(plane):
     return iy, plane
 
 def _mirror_elements(model, nid_offset):
-    """Mirrors the elements"""
-    eid_offset = max(model.elements.keys())
-    shell_elements = set([
-        'CTRIA3', 'CQUAD4', 'CTRIA6', 'CQUAD8', 'CQUAD',
-        'CTRIAR', 'CQUADR',
-        #'CTRIAX', 'CTRIAX6', 'CQUADX', 'CQUADX8',
-    ])
+    """
+    Mirrors the elements
 
+    elements:
+       0d : CELAS1, CELAS2, CELAS3, CELAS4, CDAMP1, CDAMP2, CDAMP3, CDAMP4, CDAMP5
+            CFAST, CBUSH, CBUSH1D
+       2d : CTRIA3, CQUAD4, CTRIA6, CQUAD8, CQUAD, CTRIAR, CQUADR
+       3d : ???
+       missing : CVISC, CTRIAX, CTRIAX6, CQUADX, CQUADX8, CCONEAX
+    rigid_elements : N/A
+    mass_elements : N/A
+
+    Note
+    ----
+    Doesn't handle CBAR/CBEAM offsets
+    Doesn't handle CBEAM SPOINTs
+    """
+    eid_offset = 0
     if model.elements:
+        shells = set([
+            'CTRIA3', 'CQUAD4', 'CTRIA6', 'CQUAD8', 'CQUAD',
+            'CTRIAR', 'CQUADR',
+            #'CTRIAX', 'CTRIAX6', 'CQUADX', 'CQUADX8',
+        ])
+        rods = set(['CROD', 'CONROD', 'CTUBE'])
+        spring_dampers = set([
+            'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+            'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
+        ])
+
+        eid_offset = max(model.elements)
+        def _set_nodes(element, nodes):
+            try:
+                element.nodes = nodes
+            except AttributeError:
+                print(element.get_stats())
+                print(nodes)
+                raise
+
         for eid, element in sorted(iteritems(model.elements)):
             etype = element.type
             if etype in ['CHBDYG', 'CHBDYE']:
                 continue
 
             nodes = element.node_ids
-            try:
-                nodes = [node_id + nid_offset for node_id in nodes]
-            except TypeError:
-                msg = 'cannot mirror %r eid=%s because None exists in nodes=%s' % (
-                    element.type, eid, nodes)
-                model.log.warning(msg)
-                continue
+            #try:
+                #nodes = [node_id + nid_offset for node_id in nodes]
+            #except TypeError:
+                #msg = 'cannot mirror %r eid=%s because None exists in nodes=%s' % (
+                    #element.type, eid, nodes)
+                #model.log.warning(msg)
+                #continue
 
             eid2 = eid + eid_offset
             fields = element.repr_fields()
@@ -197,9 +222,48 @@ def _mirror_elements(model, nid_offset):
             model.add_card(fields, etype)
             element2 = model.elements[eid2]
 
-            if etype in shell_elements:
+            if etype in shells:
+                nodes = [node_id + nid_offset for node_id in nodes]
                 element2.nodes = nodes
                 element.flip_normal() # nodes = nodes[::-1]
+            elif etype in rods:
+                nodes = [node_id + nid_offset for node_id in nodes]
+                element2.nodes = nodes
+            elif etype in ['CBAR', 'CBEAM']:
+                nodes = [node_id + nid_offset for node_id in nodes]
+                element2.nodes = nodes
+                g0 = element2.g0 + nid_offset if element2.g0 is not None else None
+                element2.g0 = g0
+
+            elif etype == 'CGAP':
+                #nodes = [node_id + nid_offset if node_id is not None else None for node_id in nodes]
+                #_set_nodes(element2, nodes)
+                ga = element2.ga + nid_offset if element2.ga is not None else None
+                gb = element2.gb + nid_offset if element2.gb is not None else None
+                g0 = element2.g0 + nid_offset if element2.g0 is not None else None
+                element2.ga = ga
+                element2.gb = gb
+                element2.g0 = g0
+            elif etype == 'CBUSH1D':
+                ga = element2.ga + nid_offset if element2.ga is not None else None
+                gb = element2.gb + nid_offset if element2.gb is not None else None
+                element2.ga = ga
+                element2.gb = gb
+            elif etype == 'CFAST':
+                ga = element2.ga + nid_offset if element2.ga is not None else None
+                gb = element2.gb + nid_offset if element2.gb is not None else None
+                gs = element2.gs + nid_offset if element2.gs is not None else None
+                element2.ga = ga
+                element2.gb = gb
+                element2.gs = gs
+
+            elif etype == 'CCONEAX':
+                pass
+            elif etype in [spring_dampers]:
+                nodes = [node_id + nid_offset if node_id is not None else None for node_id in nodes]
+                _set_nodes(element2, nodes)
+                #print(nodes)
+                #element2.nodes = nodes
             else:
                 try:
                     element2.nodes = nodes
@@ -253,6 +317,10 @@ def _mirror_aero(model, nid_offset, plane):
      - doesn't consider lspan/lchord
     SPLINE1
     SET1
+
+    splines : SPLINE1 -> SET1
+    caeros : CAERO1
+    aeros
     """
     if model.aeros is not None:
         aeros = model.aeros
@@ -285,7 +353,7 @@ def _mirror_aero(model, nid_offset, plane):
                 p4[1] *= -1.
                 x43 = caero.x43
                 eid2 = caero.eid + caero_eid_max
-                caero_new = CAERO1(eid2, caero.pid, caero.igid,
+                caero_new = CAERO1(eid2, caero.pid, caero.igroup,
                                    p1, x12, p4, x43,
                                    cp=caero.cp, nspan=nspan,
                                    lspan=lspan, nchord=nchord, lchord=lchord,

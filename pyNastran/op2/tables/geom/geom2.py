@@ -905,10 +905,17 @@ class GEOM2(GeomCommon):
             data_in = [eid, pid, Type, iviewf, iviewb, g1, g2, g0, radmidf, radmidb,
                        dislin, ce, e1, e2, e3]
             elem = CHBDYP.add_op2_data(data_in)
-            self._add_thermal_element_object(elem)
+            self._add_thermal_element_object_safe(elem)
             n += ntotal
         self.card_count['CHBDYP'] = nelements
         return n
+
+    def _add_thermal_element_object_safe(self, obj):
+        if obj.eid in self.elements:
+            self.reject_lines.append(obj.write_card(size=16))
+        else:
+            self._add_element_object(obj)
+        #raise RuntimeError('this should be overwritten by the BDF class')
 
     def _read_chexa(self, data, n):
         """
@@ -1288,7 +1295,12 @@ class GEOM2(GeomCommon):
         struct_6i = Struct(self._endian + b'6i')
         ndata = len(data)
         nelements = (ndata - n) // ntotal
-        assert (ndata - n) % ntotal == 0, 'CONVM error; ndata-n=%s ntotal=%s ndata-n/ntotal=%s' % (ndata-n, ntotal, (ndata-n)/float(ntotal))
+        if (ndata - n) % ntotal != 0:
+            msg = 'CONVM error; ndata-n=%s ntotal=%s ndata-n/ntotal=%s' % (
+                ndata-n, ntotal, (ndata-n)/float(ntotal))
+            self.log.error(msg)
+            return n + ndata
+
         for i in range(nelements):
             edata = data[n:n+24]
             out = struct_6i.unpack(edata)

@@ -12,7 +12,7 @@ from pyNastran.bdf.cards.test.utils import save_load_deck
 
 class TestShells(unittest.TestCase):
     def test_pshell(self):
-        model = BDF()
+        model = BDF(debug=False)
         pid = 10
         pshell = model.add_pshell(pid, mid1=1, mid2=2, mid3=3, mid4=4, tst=3.14)
         assert ' 3.14' in pshell.rstrip(), pshell.rstrip()
@@ -962,36 +962,59 @@ class TestShells(unittest.TestCase):
     def test_shear(self):
         """tests a CSHEAR, PSHEAR"""
         pid = 10
+        pid_pshell = 11
+
         mid = 100
         model = BDF(debug=False)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         model.add_grid(3, [1., 1., 0.])
         model.add_grid(4, [0., 1., 0.])
-        model.add_cquad4(10, pid, [1, 2, 3, 4])
-
-        cshear = model.add_cshear(14, pid, [1, 2, 3, 4],
+        nsm = 10.0
+        t = 1.0
+        rho = 1.0
+        cshear = model.add_cshear(10, pid, [1, 2, 3, 4],
                                   comment='cshear')
-        model.add_pshear(pid, mid, t=1., comment='pshear')
+
+        cquad4 = model.add_cquad4(14, pid_pshell, [1, 2, 3, 4],
+                                  comment='cquad4')
+        model.add_pshear(pid, mid, t=t,
+                         nsm=nsm, f1=0., f2=0., comment='pshear')
+        model.add_pshell(pid_pshell, mid1=mid, t=t, mid2=None, twelveIt3=1.0,
+                        mid3=None, tst=0.833333,
+                        nsm=nsm, z1=None, z2=None,
+                        mid4=None, comment='')
 
         E = 3.0e7
         G = None
         nu = 0.3
-        model.add_mat1(mid, E, G, nu, rho=1.0)
+        model.add_mat1(mid, E, G, nu, rho=rho)
         model.validate()
 
         model.cross_reference()
         model.pop_xref_errors()
 
+        area = 1.0
+        mass_expected = area * (rho * t + nsm)
+        mass = model.mass_properties()[0]
+        assert np.allclose(mass, mass_expected*2), 'mass_properties all: mass=%s mass_expected=%s' % (mass, mass_expected*2)
+
         mass = model.mass_properties(element_ids=10)[0]
+        assert np.allclose(mass, mass_expected), 'mass_properties reduced: mass=%s mass_expected=%s' % (mass, mass_expected)
+
+        mass = model.mass_properties_nsm()[0]
+        assert np.allclose(mass, mass_expected*2), 'mass_properties_nsm all: mass=%s mass_expected=%s' % (mass, mass_expected*2)
+
+        mass = model.mass_properties_nsm(element_ids=10)[0]
+        assert np.allclose(mass, mass_expected), 'mass_properties_nsm reduced: mass=%s mass_expected=%s' % (mass, mass_expected)
+
         bdf_file = StringIO()
         model.write_bdf(bdf_file)
         model.uncross_reference()
         model.cross_reference()
         model.pop_xref_errors()
 
-        assert np.allclose(cshear.Mass(), 1.0), cshear.Mass()
-        assert np.allclose(mass, 1.0), mass
+        assert np.allclose(cshear.Mass(), mass_expected), cshear.Mass()
 
         model.uncross_reference()
         model.safe_cross_reference()
@@ -1148,7 +1171,7 @@ class TestShells(unittest.TestCase):
 
     def test_shell_mcid(self):
         """tests that mcids=0 are correctly identified as not 0.0 and thus not dropped"""
-        model = BDF()
+        model = BDF(debug=False)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [0., 1., 0.])
         model.add_grid(3, [0., 1., 1.])
@@ -1173,7 +1196,7 @@ class TestShells(unittest.TestCase):
         G = None
         nu = 0.3
         model.add_mat1(mid, E, G, nu)
-        print(model.elements[11])
+        #print(model.elements[11])
         assert model.elements[10].rstrip() == 'CTRIA3        10     100       1       2       3       0'
         assert model.elements[11].rstrip() == 'CQUAD4        11     100       1       2       3       4       0'
         assert model.elements[10].write_card().rstrip() == 'CTRIA3        10     100       1       2       3       0'

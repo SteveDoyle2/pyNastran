@@ -3881,11 +3881,8 @@ class OES(OP2Common):
                 #[o1, o2, t12, t1z, t2z, angle, major, minor, ovm]
                 obj.data[obj.itime, istart:iend, :] = floats[:, 2:].copy()
             else:
-                struct1 = Struct(self._endian + b'ii9f') # 11
                 eid_old = 0
-                if hasattr(self, 'eid_old'):
-                    eid_old = self.eid_old
-
+                struct1 = Struct(self._endian + b'ii9f') # 11
                 for i in range(nelements):
                     edata = data[n:n+44]  # 4*11
                     out = struct1.unpack(edata)
@@ -3904,7 +3901,6 @@ class OES(OP2Common):
                                       t12, t1z, t2z, angle, major, minor, ovm)
                     eid_old = eid
                     n += 44
-                self.eid_old = eid_old
         elif self.format_code in [2, 3] and self.num_wide == 9:  # TODO: imag? - not done...
             # TODO: vectorize
             raise NotImplementedError('imaginary composite stress?')

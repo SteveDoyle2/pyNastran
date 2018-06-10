@@ -581,10 +581,6 @@ class FortranFormat(object):
                 n = table4_parser(data, ndata)
                 assert isinstance(n, integer_types), self.table_name
 
-            # PCOMPs are tricky, so we need an element flag
-            if hasattr(self, 'eid_old'):
-                del self.eid_old
-
             self._reset_vector_counter()
 
         elif self.read_mode == 1:

@@ -1534,8 +1534,8 @@ class QuadShell(ShellElement):
         return centroid
 
     def Centroid_no_xref(self, model):
-        nodes = self.nodes_ref[:4]
-        n1, n2, n3, n4 = self.get_node_positions_no_xref(model, nodes=self.nodes[:4])
+        nodes = self.nodes[:4]
+        n1, n2, n3, n4 = self.get_node_positions_no_xref(model, nodes=nodes)
         centroid = (n1 + n2 + n3 + n4) / 4.
         return centroid
 

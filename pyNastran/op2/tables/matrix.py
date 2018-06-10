@@ -63,6 +63,8 @@ class Matrix(object):
     @property
     def shape_str(self):
         """gets the matrix description"""
+        if self.form == 0:
+            return 'N/A'
         if self.form == 1:
             return 'square'
         elif self.form == 2:
@@ -81,6 +83,8 @@ class Matrix(object):
     def build_dataframe(self):
         """exports the object to pandas format"""
         matrix = self.data
+        if matrix is None:
+            return
         if isinstance(matrix, coo_matrix):
             data = {'row': matrix.row, 'col': matrix.col, 'data' : matrix.data}
             data_frame = pd.DataFrame(data=data).reindex(columns=['row', 'col', 'data'])
@@ -95,6 +99,9 @@ class Matrix(object):
         mat.write(np.compat.asbytes(str(self) + '\n'))
 
         matrix = self.data
+        if self.data is None:
+            mat.write('skipping %s because data is None\n\n' % self.name)
+            return
         if isinstance(matrix, coo_matrix):
             if print_full:
                 for row, col, value in zip(matrix.row, matrix.col, matrix.data):
@@ -131,10 +138,15 @@ class Matrix(object):
         return object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     def __repr__(self):
-        class_name = str(type(self.data)).replace('<class ', '').replace('>', '').replace("'", '') + ';'
         header = 'Matrix[%r];' % self.name
-        shape = ' shape=%s;' % str(self.data.shape).replace('L', '')
-        dtype = '%s;' % self.data.dtype
+        if self.data is None:
+            shape = 'data=None; '
+            class_name = '<NoneType>'
+            dtype = '<NoneType>; '
+        else:
+            class_name = str(type(self.data)).replace('<class ', '').replace('>', '').replace("'", '') + ';'
+            shape = ' shape=%s;' % str(self.data.shape).replace('L', '')
+            dtype = '%s;' % self.data.dtype
         msg = '%-18s %-18s type=%-33s dtype=%-10s desc=%s' % (
             header, shape, class_name, dtype, self.shape_str)
         return msg

@@ -3039,7 +3039,6 @@ class OEF(OP2Common):
                 ##self.binary_debug.write('  #nodeji = [eid, ilayer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)]\n')
                 #self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
-            #eid_old = 0
             #s = Struct(self._endian + b'i8si4f4s')
             #for i in range(nelements):
                 #if i % 10000 == 0:
@@ -3059,7 +3058,6 @@ class OEF(OP2Common):
                     #obj.add_new_eid(eType, dt, eid, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
                 #else:
                     #obj.add(dt, eid, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
-                #eid_old = eid
                 #n += ntotal
         else:
             msg = self.code_information()

@@ -2,7 +2,7 @@
 defines readers for BDF objects in the OP2 DIT/DITS table
 """
 from __future__ import print_function
-from struct import Struct
+from struct import Struct, error as struct_error
 from six.moves import range
 import numpy as np
 
@@ -325,29 +325,40 @@ class DIT(GeomCommon):
         9 A RS
         Word 9 repeats until End of Record (-1)
         """
+        n0 = n
         nentries = 0
         ndata = len(data)
-        struct1 = Struct('i 4f 3i f')
+        struct1 = Struct('i 4f 3i f i')
         struct_i = self.struct_i
         struct_f = Struct('f')
-        while ndata - n >= 36:
-            edata = data[n:n + 36]
-            out = struct1.unpack(edata)
-            (tid, x1, x2, x3, x4, a, b, c, x) = out
-            data_in = [tid, x1, x2, x3, x4, x]
-            n += 40
-            while 1:
-                xint, = struct_i.unpack(data[n:n + 4])
-                x, = struct_f.unpack(data[n:n + 4])
-
-                n += 4
-                if xint == -1:
-                    break
+        try:
+            while ndata - n >= 40:
+                edata = data[n:n + 40]
+                out = struct1.unpack(edata)
+                (tid, x1, x2, x3, x4, a, b, c, x, test_minus1) = out
+                data_in = [tid, x1, x2, x3, x4, x]
+                n += 36
+                if test_minus1 == -1:
+                    n += 4
                 else:
-                    data_in.append(x)
-            table = cls.add_op2_data(data_in)
-            add_method(table)
-            nentries += 1
+                    while 1:
+                        xint, = struct_i.unpack(data[n:n + 4])
+                        x, = struct_f.unpack(data[n:n + 4])
+
+                        n += 4
+                        if xint == -1:
+                            break
+                        else:
+                            data_in.append(x)
+                table = cls.add_op2_data(data_in)
+                add_method(table)
+                nentries += 1
+        except struct_error:
+            self.log.error('failed parsing %s' % table_name)
+            self.show_data(data[n0:], 'if')
+            self.show_data(edata, 'if')
+            #n = n0 + ndata
+            raise
         self.increase_card_count(table_name, nentries)
         return n
 

@@ -627,6 +627,9 @@ class BDFMethods(BDFAttributes):
         -------
          - If eids are requested, but don't exist, no warning is thrown.
            Decide if this is the desired behavior.
+         - If the NSMx ALL option is used, the mass from all elements
+           will be considered, even if not included in the element set
+
         """
         mass, cg, I = mass_properties_nsm(
             self, element_ids=element_ids, mass_ids=mass_ids, nsm_id=nsm_id,

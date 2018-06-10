@@ -928,6 +928,11 @@ class ComplexTableArray(TableArray):
                 elif sgridtype == 'S':
                     f06_file.write('0 %12i %6s     %-13s\n'
                                    '  %12s %6s     %-13s\n' % (node_id, sgridtype, dxr, '', '', dxi))
+                elif sgridtype == 'H':
+                    f06_file.write('0 %12i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n'
+                                   '  %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n' % (
+                                       node_id, sgridtype, dxr, dyr, dzr, rxr, ryr, rzr,
+                                       '', '', dxi, dyi, dzi, rxi, ryi, rzi))
                 else:
                     raise NotImplementedError(sgridtype)
             f06_file.write(page_stamp % page_num)

@@ -3,9 +3,9 @@ Defines:
  - nodes, bars = export_mcids(bdf_filename, csv_filename=None)
 """
 from __future__ import print_function
-from six import integer_types, string_types, iteritems
+from six import integer_types, iteritems
 import numpy as np
-from pyNastran.bdf.bdf import read_bdf
+from pyNastran.bdf.bdf import BDF, read_bdf
 
 
 def export_mcids(bdf_filename, csv_filename=None,
@@ -60,12 +60,13 @@ def export_mcids(bdf_filename, csv_filename=None,
     if isinstance(eids, integer_types):
         eids = [eids]
 
-    if isinstance(bdf_filename, string_types):
+
+    if isinstance(bdf_filename, BDF):
+        model = bdf_filename
+    else:
         model = read_bdf(bdf_filename, xref=False, log=log, debug=debug)
         #print(model.get_bdf_stats())
         model.safe_cross_reference()
-    else:
-        model = bdf_filename
 
     skip_types = [
         'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4', 'CELAS5',
@@ -93,77 +94,17 @@ def export_mcids(bdf_filename, csv_filename=None,
     pids_failed = set([])
     for unused_eidi, elem in sorted(iteritems(elements)):
         if elem.type in ['CQUAD4', 'CQUAD8', 'CQUAD']:
-            pid_ref = elem.pid_ref
-            if pid_ref.type == 'PSHELL':
-                mids = [mat.type for mat in pid_ref.materials()
-                        if mat is not None and mat.mid > 0]
-                if 'MAT8' not in mids:
-                    continue
-            elif pid_ref.type in ['PCOMP', 'PCOMPG']:
-                pass
-            else:
-                raise NotImplementedError(pid_ref)
-            xyz1 = elem.nodes_ref[0].get_position()
-            xyz2 = elem.nodes_ref[1].get_position()
-            xyz3 = elem.nodes_ref[2].get_position()
-            xyz4 = elem.nodes_ref[3].get_position()
-
-            dxyz21 = np.linalg.norm(xyz2 - xyz1)
-            dxyz32 = np.linalg.norm(xyz3 - xyz2)
-            dxyz43 = np.linalg.norm(xyz4 - xyz3)
-            dxyz14 = np.linalg.norm(xyz1 - xyz4)
-            dxyz = np.mean([dxyz21, dxyz32, dxyz43, dxyz14]) / 2.
-            centroid, imat, jmat, normal = elem.material_coordinate_system()
-
-            try:
-                imat, jmat = _rotate_mcid(
-                    elem, pid_ref, iply, imat, jmat, normal,
-                    consider_property_rotation=consider_property_rotation)
-            except IndexError:
-                pids_failed.add(pid_ref.pid)
-                continue
-
-            iaxis = centroid + imat * dxyz
-            jaxis = centroid + jmat * dxyz
-            nid, eid = _add_elements(nid, eid, nodes, bars,
-                                     centroid, iaxis, jaxis,
-                                     export_both_axes, export_xaxis)
-
+            nid, eid = _export_quad(elem, nodes,
+                                    iply, nid, eid,
+                                    pids_failed, bars,
+                                    export_both_axes, export_xaxis,
+                                    consider_property_rotation)
         elif elem.type in ['CTRIA3', 'CTRIA6']:
-            pid_ref = elem.pid_ref
-            if pid_ref.type == 'PSHELL':
-                mids = [mat.type for mat in pid_ref.materials()
-                        if mat is not None and mat.mid > 0]
-                if 'MAT8' not in mids:
-                    continue
-            elif pid_ref.type in ['PCOMP', 'PCOMPG']:
-                pass
-            else:
-                raise NotImplementedError(pid_ref)
-
-            xyz1 = elem.nodes_ref[0].get_position()
-            xyz2 = elem.nodes_ref[1].get_position()
-            xyz3 = elem.nodes_ref[2].get_position()
-
-            dxyz21 = np.linalg.norm(xyz2 - xyz1)
-            dxyz32 = np.linalg.norm(xyz3 - xyz2)
-            dxyz13 = np.linalg.norm(xyz1 - xyz3)
-            dxyz = np.mean([dxyz21, dxyz32, dxyz13]) / 2.
-            centroid, imat, jmat, normal = elem.material_coordinate_system()
-
-            try:
-                imat, jmat = _rotate_mcid(
-                    elem, pid_ref, iply, imat, jmat, normal,
-                    consider_property_rotation=consider_property_rotation)
-            except IndexError:
-                pids_failed.add(pid_ref.pid)
-                continue
-
-            iaxis = centroid + imat * dxyz
-            jaxis = centroid + jmat * dxyz
-            nid, eid = _add_elements(nid, eid, nodes, bars,
-                                     centroid, iaxis, jaxis,
-                                     export_both_axes, export_xaxis)
+            nid, eid = _export_tria(elem, nodes,
+                                    iply, nid, eid,
+                                    pids_failed, bars,
+                                    export_both_axes, export_xaxis,
+                                    consider_property_rotation)
         elif elem.type in skip_types:
             pass
         else:
@@ -185,7 +126,94 @@ def export_mcids(bdf_filename, csv_filename=None,
     _export_coord_axes(nodes, bars, csv_filename)
     return nodes, bars
 
+def _export_quad(elem, nodes,
+                 iply, nid, eid,
+                 pids_failed, bars,
+                 export_both_axes, export_xaxis,
+                 consider_property_rotation):
+    pid_ref = elem.pid_ref
+    if pid_ref.type == 'PSHELL':
+        mids = [mat.type for mat in pid_ref.materials()
+                if mat is not None and mat.mid > 0]
+        if 'MAT8' not in mids:
+            return nid, eid
+    elif pid_ref.type in ['PCOMP', 'PCOMPG']:
+        pass
+    else:
+        raise NotImplementedError(pid_ref)
+    xyz1 = elem.nodes_ref[0].get_position()
+    xyz2 = elem.nodes_ref[1].get_position()
+    xyz3 = elem.nodes_ref[2].get_position()
+    xyz4 = elem.nodes_ref[3].get_position()
+
+    dxyz21 = np.linalg.norm(xyz2 - xyz1)
+    dxyz32 = np.linalg.norm(xyz3 - xyz2)
+    dxyz43 = np.linalg.norm(xyz4 - xyz3)
+    dxyz14 = np.linalg.norm(xyz1 - xyz4)
+    dxyz = np.mean([dxyz21, dxyz32, dxyz43, dxyz14]) / 2.
+    centroid, imat, jmat, normal = elem.material_coordinate_system()
+
+    try:
+        imat, jmat = _rotate_mcid(
+            elem, pid_ref, iply, imat, jmat, normal,
+            consider_property_rotation=consider_property_rotation)
+    except IndexError:
+        pids_failed.add(pid_ref.pid)
+        return nid, eid
+
+    iaxis = centroid + imat * dxyz
+    jaxis = centroid + jmat * dxyz
+    nid, eid = _add_elements(nid, eid, nodes, bars,
+                             centroid, iaxis, jaxis,
+                             export_both_axes, export_xaxis)
+
+    #nid, eid = _export_quad(elem, bars, nid, eid, export_both_axes, export_xaxis)
+    return nid, eid
+
+def _export_tria(elem, nodes,
+                 iply, nid, eid,
+                 pids_failed, bars,
+                 export_both_axes, export_xaxis,
+                 consider_property_rotation):
+    """helper method for ``export_mcids``"""
+    pid_ref = elem.pid_ref
+    if pid_ref.type == 'PSHELL':
+        mids = [mat.type for mat in pid_ref.materials()
+                if mat is not None and mat.mid > 0]
+        if 'MAT8' not in mids:
+            return nid, eid
+    elif pid_ref.type in ['PCOMP', 'PCOMPG']:
+        pass
+    else:
+        raise NotImplementedError(pid_ref)
+
+    xyz1 = elem.nodes_ref[0].get_position()
+    xyz2 = elem.nodes_ref[1].get_position()
+    xyz3 = elem.nodes_ref[2].get_position()
+
+    dxyz21 = np.linalg.norm(xyz2 - xyz1)
+    dxyz32 = np.linalg.norm(xyz3 - xyz2)
+    dxyz13 = np.linalg.norm(xyz1 - xyz3)
+    dxyz = np.mean([dxyz21, dxyz32, dxyz13]) / 2.
+    centroid, imat, jmat, normal = elem.material_coordinate_system()
+
+    try:
+        imat, jmat = _rotate_mcid(
+            elem, pid_ref, iply, imat, jmat, normal,
+            consider_property_rotation=consider_property_rotation)
+    except IndexError:
+        pids_failed.add(pid_ref.pid)
+        return nid, eid
+
+    iaxis = centroid + imat * dxyz
+    jaxis = centroid + jmat * dxyz
+    nid, eid = _add_elements(nid, eid, nodes, bars,
+                             centroid, iaxis, jaxis,
+                             export_both_axes, export_xaxis)
+    return nid, eid
+
 def _export_coord_axes(nodes, bars, csv_filename):
+    """save the coordinate systems in a csv file"""
     if csv_filename:
         with open(csv_filename, 'w') as out_file:
             for node in nodes:
@@ -221,19 +249,19 @@ def _rotate_mcid(elem, pid_ref, iply, imat, jmat, normal,
         return imat, jmat
 
     theta = np.radians(thetad)
-    c = np.cos(theta)
-    s = np.sin(theta)
+    cos = np.cos(theta)
+    sin = np.sin(theta)
 
-    R = np.array([
-        [c, -s, 0.],
-        [s, c, 0.],
+    theta_rotation = np.array([
+        [cos, -sin, 0.],
+        [sin, cos, 0.],
         [0., 0., 1.]
         ], dtype='float64')
 
-    R1 = np.vstack([imat, jmat, normal])
-    R2 = np.dot(R, R1)  ## TODO: validate
-    imat2 = R2[0, :]
-    jmat2 = R2[1, :]
+    element_axes = np.vstack([imat, jmat, normal])
+    rotated_axes = np.dot(theta_rotation, element_axes)  ## TODO: validate
+    imat2 = rotated_axes[0, :]
+    jmat2 = rotated_axes[1, :]
     return imat2, jmat2
 
 def _add_elements(nid, eid, nodes, bars,
