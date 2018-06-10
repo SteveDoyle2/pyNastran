@@ -710,7 +710,7 @@ class WriteMesh(BDFAttributes):
             print_func = print_card_16
         msg = []
         if self.reject_cards:
-            msg.append('$REJECTS\n')
+            msg.append('$REJECT_CARDS\n')
             for reject_card in self.reject_cards:
                 try:
                     msg.append(print_func(reject_card))
@@ -721,8 +721,8 @@ class WriteMesh(BDFAttributes):
                                               'cards\ncard=%s\n' % reject_card)
                     raise
 
-        if self.rejects:
-            msg.append('$REJECT_LINES\n')
+        if self.reject_lines:  # List[card]; card = List[str]
+            msg.append('$REJECT_LNES\n')
         for reject_lines in self.reject_lines:
             if isinstance(reject_lines, (list, tuple)):
                 for reject in reject_lines:

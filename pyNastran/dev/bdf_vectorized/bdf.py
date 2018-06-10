@@ -2004,7 +2004,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                 raise RuntimeError('No executive/case control deck was defined.')
             self.log.info('    rejecting card_name = %s' % card_name)
         self.increase_card_count(card_name)
-        self.rejects.append([comment] + card_lines)
+        self.reject_lines.append([comment] + card_lines)
 
     def _prepare_bctset(self, card, card_obj, comment=''):
         """adds a GRDSET"""
@@ -2062,8 +2062,8 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             self.add_deqatn(DEQATN.add_card(card_obj, comment=comment))
         else:
             if comment:
-                self.rejects.append([comment])
-            self.rejects.append(card)
+                self.reject_lines.append([comment])
+            self.reject_lines.append(card)
 
     def _prepare_dmig(self, card, card_obj, comment=''):
         """adds a DMIG"""
@@ -2525,7 +2525,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
 
             # done
             'sol', 'loads', 'mkaeros',
-            'rejects', 'reject_cards',
+            'reject_lines', 'reject_cards',
 
             # not cards
             'debug', 'executive_control_lines',
@@ -2616,8 +2616,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                 msg.append('\n'.join(group_msg))
                 msg.append('')
 
-        # rejects
-        if self.rejects:
+        if self.reject_lines:  # List[card]; card = List[str]
             msg.append('Rejected Cards')
             for name, counter in sorted(iteritems(self.card_count)):
                 if name not in self.cards_to_read:

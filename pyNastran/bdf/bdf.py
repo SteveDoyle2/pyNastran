@@ -2335,7 +2335,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             self.log.info('    rejecting card_name = %s' % card_name)
 
         self.increase_card_count(card_name)
-        self.rejects.append([_format_comment(comment)] + card_lines)
+        self.reject_lines.append([_format_comment(comment)] + card_lines)
 
     def _write_reject_message(self, card_name, card_obj, comment=''):
         """common method to not write duplicate reject card names"""
@@ -2468,7 +2468,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             self._add_dti_object(DTI.add_card(card_obj, comment=comment))
         else:
             if comment:
-                self.rejects.append([comment])
+                self.reject_lines.append([comment])
             self.reject_cards.append(card_obj)
             self._write_reject_message(card_name, card_obj, comment=comment)
 
@@ -2994,7 +2994,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
             ## done
             #'sol', 'loads', 'mkaeros',
-            #'rejects', 'reject_cards',
+            #'reject_lines', 'reject_cards',
 
             ## not cards
             #'debug', 'executive_control_lines',
@@ -3129,8 +3129,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 msg.append('\n'.join(group_msg))
                 msg.append('')
 
-        # rejects
-        if self.rejects:
+        if self.reject_lines:  # List[card]; card = List[str]
             msg.append('Rejected Cards')
             for name, counter in sorted(iteritems(self.card_count)):
                 if name not in self.cards_to_read:
@@ -3758,7 +3757,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                     self.log.info('    rejecting card_name = %s' % card_name)
                     for comment, card_lines in cards:
                         self.increase_card_count(card_name)
-                        self.rejects.append([_format_comment(comment)] + card_lines)
+                        self.reject_lines.append([_format_comment(comment)] + card_lines)
                 else:
                     for comment, card_lines in cards:
                         self.add_card(card_lines, card_name, comment=comment,
@@ -4064,7 +4063,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 self.log.info('    rejecting card_name = %s' % card_name)
                 for comment, card_lines in card:
                     self.increase_card_count(card_name)
-                    self.rejects.append([_format_comment(comment)] + card_lines)
+                    self.reject_lines.append([_format_comment(comment)] + card_lines)
             else:
                 for comment, card_lines in card:
                     class_instance = self._add_card_hdf5(card_lines, card_name, comment=comment,

@@ -952,7 +952,7 @@ class WriteMesh(BDFAttributes):
             print_func = print_card_16
 
         if self.reject_cards:
-            bdf_file.write('$REJECTS\n')
+            bdf_file.write('$REJECT_CARDS\n')
             for reject_card in self.reject_cards:
                 try:
                     bdf_file.write(print_func(reject_card))
@@ -963,20 +963,21 @@ class WriteMesh(BDFAttributes):
                                               'cards\ncard=%s\n' % reject_card)
                     raise
 
-        if self.rejects:
+        if self.reject_lines:
             bdf_file.write('$REJECT_LINES\n')
-        for reject_lines in self.reject_lines:
-            if isinstance(reject_lines, (list, tuple)):
-                for reject in reject_lines:
-                    reject2 = reject.rstrip()
+
+            for reject_lines in self.reject_lines:
+                if isinstance(reject_lines, (list, tuple)):
+                    for reject in reject_lines:
+                        reject2 = reject.rstrip()
+                        if reject2:
+                            bdf_file.write('%s\n' % reject2)
+                elif isinstance(reject_lines, string_types):
+                    reject2 = reject_lines.rstrip()
                     if reject2:
                         bdf_file.write('%s\n' % reject2)
-            elif isinstance(reject_lines, string_types):
-                reject2 = reject_lines.rstrip()
-                if reject2:
-                    bdf_file.write('%s\n' % reject2)
-            else:
-                raise TypeError(reject_lines)
+                else:
+                    raise TypeError(reject_lines)
 
     def _write_rigid_elements(self, bdf_file, size=8, is_double=False, is_long_ids=None):
         # type: (Any, int, bool) -> None
