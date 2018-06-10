@@ -29,7 +29,8 @@ class STL_IO(object):
         if skip_reading:
             return
 
-        model = read_stl(stl_filename, log=self.gui.log, debug=False)
+        model = read_stl(stl_filename, remove_elements_with_bad_normals=True,
+                         log=self.gui.log, debug=False)
         #self.model_type = model.model_type
         nodes = model.nodes
         elements = model.elements

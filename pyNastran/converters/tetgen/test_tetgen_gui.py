@@ -34,7 +34,7 @@ class TestTetgenGUI(unittest.TestCase):
         test = TetgenGUI()
         test.log = log
         test.model.load_tetgen_geometry(geometry_filename)
-        test.on_load_geometry(geometry_filename, geometry_format='tetgen')
+        test.on_load_geometry(geometry_filename, geometry_format='tetgen', raise_error=True)
 
     def test_tetgen_geometry_02(self):
         log = get_logger(level='warning')

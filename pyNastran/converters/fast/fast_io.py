@@ -114,10 +114,12 @@ class FastIO(object):
         cases = OrderedDict()
         #cases = self.result_cases
         form = []
-        self._fill_fast_results(
+        node_ids, element_ids = self._fill_fast_results(
             form, cases, model,
             nnodes, nelements, dimension_flag,
             results=True)
+        self.gui.node_ids = node_ids
+        self.gui.element_ids = element_ids
         self.gui._finish_results_io2(form, cases)
 
     def clear_fast(self):
@@ -131,10 +133,11 @@ class FastIO(object):
             1: ['Fast%s' % note, ''],
             #2: ['Fast%s' % note, ''],
         }
-        cases = self._fill_fast_case(
+        cases, node_ids, element_ids = self._fill_fast_case(
             form, cases, model,
             nnodes, nelements, dimension_flag,
             results=results)
+        return node_ids, element_ids
 
     def _fill_fast_case(self, form, cases, model,
                         nnodes, nelements, dimension_flag,
@@ -199,4 +202,4 @@ class FastIO(object):
                 #self.scalarBar.VisibilityOn()
 
         form.append(('Geometry', None, geometry_form))
-        return cases
+        return cases, nids, eids

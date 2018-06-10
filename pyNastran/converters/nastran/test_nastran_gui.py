@@ -93,7 +93,7 @@ class TestNastranGUI(unittest.TestCase):
 
         test = NastranGUI()
         test.on_load_geometry(infile_name=bdf_filename, geometry_format='nastran', name='main',
-                              plot=True, raise_error=False)
+                              plot=True, raise_error=True)
 
     def test_solid_shell_bar_03(self):
         bdf_filename = os.path.join(MODEL_PATH, 'sol_101_elements', 'buckling_solid_shell_bar.bdf')
@@ -596,7 +596,7 @@ class TestNastranGUI(unittest.TestCase):
         bdf_filename = os.path.join(MODEL_PATH, 'patran_fmt', '0012_20.bdf')
         nod_filename = os.path.join(MODEL_PATH, 'patran_fmt', 'normals.nod')
         test = NastranGUI()
-        test.on_load_geometry(bdf_filename, geometry_format='nastran')
+        test.on_load_geometry(bdf_filename, geometry_format='nastran', raise_error=True)
         test.on_load_custom_results(out_filename=nod_filename, restype='Patran_nod')
 
     def test_gui_axi(self):

@@ -28,7 +28,7 @@ class TestPanairGUI(unittest.TestCase):
         test = PanairGUI()
         test.log = log
         #test.model.load_panair_geometry(geometry_filename)
-        test.on_load_geometry(geometry_filename, geometry_format='panair')
+        test.on_load_geometry(geometry_filename, geometry_format='panair', raise_error=True)
 
     def test_m100_results(self):
         log = get_logger(level='warning')

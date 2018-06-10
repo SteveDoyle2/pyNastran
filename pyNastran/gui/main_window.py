@@ -85,18 +85,28 @@ class MainWindow(GuiCommon2, NastranIO):
         inputs=None
         """
         html_logging = True
+
+        # these are in alphabetical order except for Nastran
+        # this includes the bedge, surf, ugrid line (listed as AFLR in the gui)
         fmt_order = [
-            # results
-            'nastran', 'cart3d', 'panair', 'shabp', 'usm3d',
-            'tecplot', 'surf', 'ugrid', 'ugrid3d',
-
-            # no results
-            'lawgs', 'stl', 'fast',
-            'bedge', 'su2', 'tetgen', 'avus', 'abaqus',
-            'degen_geom', 'obj',
-
-            # openfoam
-            'openfoam_hex', 'openfoam_shell', 'openfoam_faces',
+            # no results unless specified
+            'nastran',  # results
+            'abaqus',
+            'avus',
+            'bedge', 'surf', 'ugrid', 'ugrid3d', # aflr
+            'cart3d',  # results
+            'degen_geom',
+            'fast',
+            'lawgs',
+            'obj',
+            'openfoam_hex', 'openfoam_shell', 'openfoam_faces', # openfoam - results
+            'panair',  # results
+            'shabp',  # results
+            'stl',
+            'su2',
+            'tecplot',  # results
+            'tetgen',
+            'usm3d',  # results
         ]
         #GuiCommon2.__init__(self, fmt_order, html_logging, inputs, parent)
         kwds['inputs'] = inputs

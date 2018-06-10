@@ -909,13 +909,21 @@ class Tecplot(FortranFormat):
             else:
                 raise RuntimeError()
 
-            if adjust_nids:
-                elements += 1
-            self.log.info('inode: min=%s max=%s' % (elements.min(), elements.max()))
-            assert elements.min() >= 1, elements.min()
-            assert elements.max() <= nnodes, elements.max()
+            # we do this before the nid adjustment
+            node_min = elements.min()
+            node_max = elements.max()
+            self.log.info('inode: min=%s max=%s' % (node_min, node_max))
+            assert node_min >= 0, node_min
+
+            if node_max > nnodes:
+                msg = 'elements.min()=node_min=%s elements.max()=node_max=%s nnodes=%s' % (
+                    node_min, node_max, nnodes)
+                raise RuntimeError(msg)
             # assert elements.min() == 1, elements.min()
             # assert elements.max() == nnodes, elements.max()
+
+            if adjust_nids:
+                elements += 1
 
             for element in elements:
                 tecplot_file.write(efmt % tuple(element))

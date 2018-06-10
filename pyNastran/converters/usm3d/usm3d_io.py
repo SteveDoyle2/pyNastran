@@ -4,10 +4,11 @@ Defines the GUI IO file for Usm3d.
 from __future__ import print_function
 import os
 from collections import defaultdict, OrderedDict
-from six import iteritems
+from six import iteritems, string_types
 
 import numpy as np
 
+from pyNastran.utils import integer_float_types, object_attributes
 from pyNastran.converters.usm3d.usm3d_reader import Usm3d
 from pyNastran.converters.usm3d.time_accurate_results import get_n_list
 
@@ -38,7 +39,22 @@ class Usm3dIO(object):
         # minimum is 1
         nstep = 100
 
-        assert self.gui.out_filename is not None, self.gui.out_filename
+        if self.gui.out_filename is None:
+            msg = 'usm3d_filename=%r must not be None\n' % self.gui.out_filename
+            dir_gui = []
+            for key in object_attributes(self.gui):
+                try:
+                    value = getattr(self.gui, key)
+                except KeyError:
+                    # self.edge_actor is a
+                    if key not in ['edge_actor']:
+                        self.gui.log.warning('key=%s is undefined...' % key)
+
+                if isinstance(value, (integer_float_types, string_types)):
+                    dir_gui.append(key)
+            dir_gui.sort()
+            msg += 'dir(gui) = [%s]' % ', '.join(dir_gui)
+            raise RuntimeError(msg)
         flo_filename = self.gui.out_filename
         dirname = os.path.dirname(flo_filename)
         if dirname == '':

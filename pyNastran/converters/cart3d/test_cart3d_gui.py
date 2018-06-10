@@ -31,7 +31,7 @@ class TestCart3dGUI(unittest.TestCase):
 
         test = Cart3dGUI()
         test.log = log
-        test.on_load_geometry(geometry_filename, geometry_format='cart3d')
+        test.on_load_geometry(geometry_filename, geometry_format='cart3d', raise_error=True)
 
     def test_cart3d_geometry_02(self):
         """tests the binary three plugs model"""

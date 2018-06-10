@@ -15,7 +15,7 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.utils import is_binary_file
 from pyNastran.utils.log import get_logger2
 
-def read_stl(stl_filename, log=None, debug=False):
+def read_stl(stl_filename, remove_elements_with_bad_normals=False, log=None, debug=False):
     """
 
     Reads an STL file
@@ -24,6 +24,8 @@ def read_stl(stl_filename, log=None, debug=False):
     ----------
     stl_filename : str
         the filename to read
+    remove_elements_with_bad_normals : bool; default=False
+        removes elements with NAN normal
 
     Returns
     -------
@@ -32,6 +34,8 @@ def read_stl(stl_filename, log=None, debug=False):
     """
     model = STL(log=log, debug=debug)
     model.read_stl(stl_filename)
+    if remove_elements_with_bad_normals:
+        model.remove_elements_with_bad_normals(model.elements)
     return model
 
 

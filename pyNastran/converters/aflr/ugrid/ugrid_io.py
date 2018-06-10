@@ -21,8 +21,8 @@ from pyNastran.gui.utils.vtk.vtk_utils import (
 
 
 class UGRID_IO(object):
-    def __init__(self, parent):
-        self.gui = parent
+    def __init__(self, gui):
+        self.gui = gui
 
     def get_ugrid_wildcard_geometry_results_functions(self):
         data = (

@@ -16,8 +16,11 @@ from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
 
 
 class TecplotIO(object):
-    def __init__(self, parent):
-        self.parent = parent
+    def __init__(self, gui):
+        self.gui = gui
+
+    def _remove_old_cart3d_geometry(self, tecplot_filename):
+        pass
 
     def get_tecplot_wildcard_geometry_results_functions(self):
         data = ('Tecplot Binary FEBlock',
@@ -29,7 +32,7 @@ class TecplotIO(object):
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]
 
-        skip_reading = self.parent._remove_old_cart3d_geometry(tecplot_filename)
+        skip_reading = self._remove_old_cart3d_geometry(tecplot_filename)
         #skip_reading = False
         if skip_reading:
             return
@@ -39,10 +42,10 @@ class TecplotIO(object):
             #fnames = [os.path.join('time20000', fname) for fname in fnames]
             #model = merge_tecplot_files(fnames, tecplot_filename_out=None, log=self.log)
         #else:
-        model = read_tecplot(tecplot_filename, log=self.parent.log, debug=False)
+        model = read_tecplot(tecplot_filename, log=self.gui.log, debug=False)
 
-        self.parent.model_type = 'tecplot'
-        self.parent.nnodes = model.nnodes
+        self.gui.model_type = 'tecplot'
+        self.gui.nnodes = model.nnodes
 
         #self._make_tecplot_geometry(model, self.nnodes, quads_only=True) # cart3d
         is_surface = self._make_tecplot_geometry(model, quads_only=False)
@@ -51,8 +54,8 @@ class TecplotIO(object):
 
 
         # loadTecplotResults - regions/loads
-        self.parent.scalarBar.VisibilityOn()
-        self.parent.scalarBar.Modified()
+        self.gui.scalarBar.VisibilityOn()
+        self.gui.scalarBar.Modified()
 
         loads = []
         assert loads is not None
@@ -68,7 +71,7 @@ class TecplotIO(object):
         form, cases, node_ids, element_ids = self._fill_tecplot_case(cases, ID, model, is_surface)
         self.gui.node_ids = node_ids
         self.gui.element_ids = element_ids
-        self.parent._finish_results_io2(form, cases)
+        self.gui._finish_results_io2(form, cases)
 
         #if 0:
             # http://www.vtk.org/Wiki/VTK/Examples/Cxx/Filtering/AppendFilter
@@ -83,13 +86,13 @@ class TecplotIO(object):
 
     def _make_tecplot_geometry(self, model, quads_only=False):
         nodes = model.xyz
-        unused_nnodes = self.parent.nnodes
-        grid = self.parent.grid
+        unused_nnodes = self.gui.nnodes
+        grid = self.gui.grid
 
         mmax = amax(nodes, axis=0)
         mmin = amin(nodes, axis=0)
         dim_max = (mmax - mmin).max()
-        self.parent.create_global_axes(dim_max)
+        self.gui.create_global_axes(dim_max)
 
         points = numpy_to_vtk_points(nodes)
 
@@ -109,7 +112,7 @@ class TecplotIO(object):
         if nshells:
             is_surface = True
             self._create_tecplot_shells(nquads, quads, ntris, tris)
-            self.parent.nelements = nshells
+            self.gui.nelements = nshells
 
         elif nsolids:
             #if 0:
@@ -123,7 +126,7 @@ class TecplotIO(object):
                 if nhexas:
                     free_faces = array(model.get_free_faces(), dtype='int32')# + 1
                     nfaces = len(free_faces)
-                    self.nelements = nfaces
+                    self.gui.nelements = nfaces
                     unused_elements = free_faces
                     grid.Allocate(nfaces, 1000)
 
@@ -139,7 +142,7 @@ class TecplotIO(object):
             else:
                 # is_volume
                 grid.Allocate(nsolids, 1000)
-                self.nelements = nsolids
+                self.gui.nelements = nsolids
                 if ntets:
                     for node_ids in tets:
                         elem = vtkTetra()
@@ -176,7 +179,7 @@ class TecplotIO(object):
         return is_surface
 
     def _create_tecplot_shells(self, is_quads, quads, is_tris, tris):
-        grid = self.parent.grid
+        grid = self.gui.grid
         if is_quads:
             for face in quads:
                 elem = vtkQuad()
@@ -210,7 +213,7 @@ class TecplotIO(object):
         #result_names = ['rho', 'U', 'V', 'W', 'p']
         result_names = model.variables[3:]
         #nelements = elements.shape[0]
-        nelements = self.parent.nelements
+        nelements = self.gui.nelements
         nnodes = model.nnodes
         #nnodes = nodes.shape[0]
 
