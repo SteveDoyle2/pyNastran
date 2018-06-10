@@ -21,6 +21,9 @@ class DegenGeomIO(object):
                )
         return data
 
+    def _remove_old_adb_geometry(self, adb_filename):  # pragma: no cover
+        pass
+
     def load_degen_geom_geometry(self, csv_filename,
                                  name='main', plot=True):# pragma: no cover
         #key = self.case_keys[self.icase]

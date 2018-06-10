@@ -16,7 +16,8 @@ model_path = os.path.join(PKG_PATH, 'converters', 'dev', 'obj') #, 'models')
 class ObjGUI(ObjIO, FakeGUIMethods):
     def __init__(self):
         FakeGUIMethods.__init__(self)
-        ObjIO.__init__(self, self)
+        self.model = ObjIO(self)
+        self.build_fmts(['obj'], stop_on_failure=True)
 
 
 class TestObjGUI(unittest.TestCase):
@@ -28,7 +29,8 @@ class TestObjGUI(unittest.TestCase):
 
         test = ObjGUI()
         test.log = log
-        test.load_obj_geometry(geometry_filename)
+        #test.load_obj_geometry(geometry_filename)
+        test.on_load_geometry(geometry_filename, geometry_format='obj', raise_error=True)
 
 
 if __name__ == '__main__':  # pragma: no cover

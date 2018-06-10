@@ -30,17 +30,17 @@ class TestShabpGUI(unittest.TestCase):
     def _test_shabp_geometry_02(self):
         test = ShabpGUI()
         shabp_infilename = os.path.join(model_path, 'models', 'orbiter.mk5')
-        test.model.load_shabp_geometry(shabp_infilename)
+        test.on_load_geometry(shabp_infilename, geometry_format='shabp', raise_error=True)
 
     def _test_shabp_geometry_03(self):
         test = ShabpGUI()
         shabp_infilename = os.path.join(model_path, 'models', 'shuttle.mk5')
-        test.model.load_shabp_geometry(shabp_infilename)
+        test.on_load_geometry(shabp_infilename, geometry_format='shabp', raise_error=True)
 
     def test_shabp_geometry_04(self):
         test = ShabpGUI()
         shabp_infilename = os.path.join(model_path, 'models', 'nose', 'noseX_working.mk5')
-        test.model.load_shabp_geometry(shabp_infilename)
+        test.on_load_geometry(shabp_infilename, geometry_format='shabp', raise_error=True)
 
 
     #def test_shabp_results(self):

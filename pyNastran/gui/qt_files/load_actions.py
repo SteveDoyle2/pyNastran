@@ -1,5 +1,6 @@
 from __future__ import print_function
 import os
+import sys
 import traceback
 import time as time_module
 from six import string_types
@@ -8,6 +9,7 @@ from qtpy.compat import getopenfilename
 from pyNastran.gui.utils.load_results import load_csv, load_deflection_csv
 from pyNastran.gui.utils.load_results import create_res_obj
 from pyNastran.utils import print_bad_path
+IS_TESTING = 'test' in sys.argv[0]
 
 
 class LoadActions(object):
@@ -146,8 +148,9 @@ class LoadActions(object):
         if geometry_format and geometry_format.lower() not in self.gui.supported_formats:
             is_failed = True
             msg = 'The import for the %r module failed.\n' % geometry_format
-            #raise RuntimeError(msg)
             self.gui.log_error(msg)
+            if IS_TESTING:  # pragma: no cover
+                raise RuntimeError(msg)
             return is_failed, None
 
         if infile_name:

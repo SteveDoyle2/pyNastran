@@ -38,7 +38,7 @@ class AutoWireframe(Module):
     def post_load_geometry(self):
         self.gui.on_wireframe()
 
-    def _create_menu_items(self, actions=None, create_menu_bar=True)
+    def _create_menu_items(self, actions=None, create_menu_bar=True):
         menu_items = self._create_menu_items()
         #_file, _view, _window, _help, _scripts, _toolbar, _hidden = menu_items
         #menu_items[0]

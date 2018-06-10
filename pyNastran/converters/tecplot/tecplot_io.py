@@ -64,7 +64,7 @@ class TecplotIO(object):
             note = ':  avg(Mach)=%g' % avg_mach
         else:
             note = ''
-        self.isubcase_name_map = {1: ['Tecplot%s' % note, '']}
+        self.gui.isubcase_name_map = {1: ['Tecplot%s' % note, '']}
         cases = OrderedDict()
         ID = 1
 

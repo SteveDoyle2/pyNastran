@@ -23,7 +23,7 @@ class ObjIO(object):
         """
         gets the OBJ wildcard loader used in the file load menu
         """
-        data = ('OBJ',
+        data = ('obj',
                 'OBJ (*.obj)', self.load_obj_geometry,
                 None, None)
         return data
@@ -74,9 +74,10 @@ class ObjIO(object):
         if skip_reading:
             return
 
+        log = self.gui.log
         self.gui.eid_maps[name] = {}
         self.gui.nid_maps[name] = {}
-        model = read_obj(obj_filename, log=self.log, debug=False)
+        model = read_obj(obj_filename, log=log, debug=False)
         self.model_type = 'obj'
         nodes = model.nodes
         nelements = model.nelements
@@ -84,8 +85,8 @@ class ObjIO(object):
         self.gui.nnodes = model.nnodes
         self.gui.nelements = nelements
 
-        grid = self.grid
-        grid.Allocate(self.nelements, 1000)
+        grid = self.gui.grid
+        grid.Allocate(self.gui.nelements, 1000)
 
         assert nodes is not None
         #nnodes = nodes.shape[0]
@@ -95,9 +96,9 @@ class ObjIO(object):
         dim_max = (mmax - mmin).max()
         xmax, ymax, zmax = mmax
         xmin, ymin, zmin = mmin
-        self.log_info("xmin=%s xmax=%s dx=%s" % (xmin, xmax, xmax-xmin))
-        self.log_info("ymin=%s ymax=%s dy=%s" % (ymin, ymax, ymax-ymin))
-        self.log_info("zmin=%s zmax=%s dz=%s" % (zmin, zmax, zmax-zmin))
+        log.info("xmin=%s xmax=%s dx=%s" % (xmin, xmax, xmax-xmin))
+        log.info("ymin=%s ymax=%s dy=%s" % (ymin, ymax, ymax-ymin))
+        log.info("zmin=%s zmax=%s dz=%s" % (zmin, zmax, zmax-zmin))
         self.gui.create_global_axes(dim_max)
         points = numpy_to_vtk_points(nodes)
 

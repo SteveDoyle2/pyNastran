@@ -21,6 +21,7 @@ class SurfGui(SurfIO, FakeGUIMethods):
     def __init__(self):
         FakeGUIMethods.__init__(self)
         SurfIO.__init__(self, self)
+        self.build_fmts(['surf'], stop_on_failure=True)
 
 class TestSurfGui(unittest.TestCase):
     """defines *.surf tests"""
@@ -31,7 +32,8 @@ class TestSurfGui(unittest.TestCase):
         log = get_logger(level='warning')
         test = SurfGui()
         test.log = log
-        test.load_surf_geometry(ugrid_filename)
+        test.on_load_geometry(ugrid_filename, geometry_format='surf', raise_error=True)
+        #test.load_surf_geometry(ugrid_filename)
 
 
 if __name__ == '__main__':  # pragma: no cover

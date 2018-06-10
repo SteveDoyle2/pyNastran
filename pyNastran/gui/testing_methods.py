@@ -163,6 +163,10 @@ class FakeGUIMethods(GuiCommon):
             raise RuntimeError('implement self.node_ids for this format')
         if self.element_ids is None:  # pragma: no cover
             raise RuntimeError('implement self.element_ids for this format')
+        #assert hasattr(self, 'gui'), 'gui does not exist for this format'
+        assert hasattr(self, 'isubcase_name_map'), 'isubcase_name_map does not exist for this format'
+        assert isinstance(self.nnodes, integer_types), 'nnodes=%r must be an integer' % self.nnodes
+        assert isinstance(self.nelements, integer_types), 'nelements=%r must be an integer' % self.nelements
 
         assert len(cases) > 0, cases
         if isinstance(cases, OrderedDict):

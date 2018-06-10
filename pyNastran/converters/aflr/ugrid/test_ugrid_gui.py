@@ -26,7 +26,7 @@ class UGRID_GUI(UGRID_IO, FakeGUIMethods):
     def __init__(self):
         FakeGUIMethods.__init__(self)
         UGRID_IO.__init__(self, self)
-        self.build_fmts(['ugrid'], stop_on_failure=True)
+        self.build_fmts(['ugrid', 'ugrid3d'], stop_on_failure=True)
 
 
 class TestUgridGui(unittest.TestCase):
@@ -48,8 +48,10 @@ class TestUgridGui(unittest.TestCase):
         assert os.path.exists(ugrid_filename), ugrid_filename
         test = UGRID_GUI()
         test.log = log
-        test.load_ugrid_geometry(ugrid_filename, name='main', plot=True)
-        test.load_ugrid3d_geometry(ugrid_filename, name='main', plot=True)
+        test.on_load_geometry(ugrid_filename, geometry_format='ugrid', raise_error=True)
+        test.on_load_geometry(ugrid_filename, geometry_format='ugrid3d', raise_error=True)
+        #test.load_ugrid_geometry(ugrid_filename, name='main', plot=True)
+        #test.load_ugrid3d_geometry(ugrid_filename, name='main', plot=True)
 
     def test_ugrid_gui_02(self):
         """tests plate_with_circular_hole"""
@@ -84,7 +86,8 @@ class TestUgridGui(unittest.TestCase):
         log = get_logger(level='warning')
         test = UGRID_GUI()
         test.log = log
-        test.load_ugrid_geometry(ugrid_filename, name='main', plot=True)
+        test.on_load_geometry(ugrid_filename, geometry_format='ugrid', raise_error=True)
+        #test.load_ugrid_geometry(ugrid_filename, name='main', plot=True)
         os.remove(ugrid_filename)
 
     def test_ugrid3d_gui_box(self):
@@ -94,8 +97,10 @@ class TestUgridGui(unittest.TestCase):
         log = get_logger(level='warning')
         test = UGRID_GUI()
         test.log = log
-        test.load_ugrid_geometry(ugrid_filename, name='main', plot=True)
-        test.load_ugrid3d_geometry(ugrid_filename, name='main', plot=True)
+        test.on_load_geometry(ugrid_filename, geometry_format='ugrid', raise_error=True)
+        test.on_load_geometry(ugrid_filename, geometry_format='ugrid3d', raise_error=True)
+        #test.load_ugrid_geometry(ugrid_filename, name='main', plot=True)
+        #test.load_ugrid3d_geometry(ugrid_filename, name='main', plot=True)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

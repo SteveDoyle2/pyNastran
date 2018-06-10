@@ -45,6 +45,7 @@ def determine_format(input_filename, allowed_formats=None):
             #'plot3d',
             'surf', 'lawgs', 'degen_geom', 'shabp', 'avus', 'fast', 'abaqus',
             'usm3d', 'bedge', 'su2', 'tetgen', 'obj',
+            'openfoam_hex', 'openfoam_shell', 'openfoam_faces',
         ]
 
     ext = os.path.splitext(input_filename)[1].lower()
@@ -90,8 +91,9 @@ def run_docopt():
     msg += '  pyNastranGUI -v | --version\n'
     msg += "\n"
     msg += "Primary Options:\n"
-    msg += "  -f FORMAT, --format FORMAT  format type (avus, cart3d, lawgs, nastran, panair, plot3d,\n"
-    msg += "                                           stl, surf, tetgen, usm3d, ugrid, ugrid3d)\n"
+    msg += "  -f FORMAT, --format FORMAT  format type (avus, bedge, cart3d, lawgs, nastran,\n" # plot3d,
+    msg += '                                  openfoam_hex, openfoam_shell, openfoam_faces,\n'
+    msg += "                                  panair, stl, surf, tetgen, usm3d, ugrid, ugrid3d)\n"
     msg += "  -i INPUT, --input INPUT     path to input file\n"
     msg += "  -o OUTPUT, --output OUTPUT  path to output file\n"
     #msg += "  -r XYZ, --rotation XYZ      [x, y, z, -x, -y, -z] default is ???\n"

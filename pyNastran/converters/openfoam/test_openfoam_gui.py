@@ -16,8 +16,8 @@ MODEL_PATH = os.path.join(PKG_PATH, 'converters', 'openfoam', 'models')
 class OpenFoamGUI(OpenFoamIO, FakeGUIMethods):
     def __init__(self):
         FakeGUIMethods.__init__(self)
-        OpenFoamIO.__init__(self, self)
-
+        self.model = OpenFoamIO(self)
+        self.build_fmts(['openfoam_hex', 'openfoam_shell', 'openfoam_faces'], stop_on_failure=True)
 
 class TestOpenFoamGUI(unittest.TestCase):
 
@@ -30,9 +30,9 @@ class TestOpenFoamGUI(unittest.TestCase):
         assert os.path.exists(geometry_filename), print_bad_path(geometry_filename)
         test = OpenFoamGUI()
         test.log = log
-        test.load_openfoam_geometry_shell(geometry_filename)
+        test.on_load_geometry(geometry_filename, geometry_format='openfoam_shell', raise_error=True)
+        test.on_load_geometry(geometry_filename, geometry_format='openfoam_hex', raise_error=True)
 
-        test.load_openfoam_geometry_hex(geometry_filename)
         #test.load_openfoam_geometry_faces(geometry_filename)
 
         model = read_block_mesh(geometry_filename, log=log)
@@ -61,7 +61,7 @@ class TestOpenFoamGUI(unittest.TestCase):
         log = get_logger(level='warning', encoding='utf-8')
         #test = OpenFoamGUI()
         #test.log = log
-        #test.load_openfoam_geometry_faces(face_filename)
+        #test.load_openfoam_faces_geometry(face_filename)
         faces = FaceFile(log=None, debug=False)
         faces.read_face_file(face_filename)
 

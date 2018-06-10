@@ -6,6 +6,7 @@ This file defines functions related to the result updating that are VTK specific
 # coding: utf-8
 # pylint: disable=C0111
 from __future__ import print_function, unicode_literals
+import sys
 from copy import deepcopy
 from six import iteritems, iterkeys
 
@@ -20,6 +21,7 @@ from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.gui.qt_files.gui_attributes import GuiAttributes
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk, numpy_to_vtk_points, VTK_VERSION
 from pyNastran.gui import IS_DEV
+IS_TESTING = 'test' in sys.argv[0]
 
 WHITE = (1., 1., 1.)
 BLUE = (0., 0., 1.)
@@ -40,7 +42,8 @@ class GuiCommon(GuiAttributes):
         self._names_storage = NamesStorage()
 
         self.vtk_version = VTK_VERSION
-        print('vtk_version = %s' % (self.vtk_version))
+        if not IS_TESTING:  # pragma: no cover
+            print('vtk_version = %s' % (self.vtk_version))
         if self.vtk_version[0] < 7 and not IS_DEV:  # TODO: should check for 7.1
             raise RuntimeError('VTK %s is no longer supported' % vtk.VTK_VERSION)
 

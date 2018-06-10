@@ -45,15 +45,17 @@ class ShabpIO(object):
             #print "node[%s] = %s" %(nid,str(node))
 
         nnodes = len(nodes)
-        self.nnodes = len(nodes)
-        self.nelements = len(elements)
+        nelements = len(elements)
+        self.gui.nnodes = nnodes
+        self.gui.nelements = nelements
         #print("nnodes = ",self.nnodes)
         #print("nelements = ", self.nelements)
 
-        self.gui.grid.Allocate(self.gui.nelements, 1000)
+        grid = self.gui.grid
+        grid.Allocate(nelements, 1000)
 
         points = vtk.vtkPoints()
-        points.SetNumberOfPoints(self.gui.nnodes)
+        points.SetNumberOfPoints(nnodes)
 
         assert len(nodes) > 0
         mmax = amax(nodes, axis=0)
@@ -71,12 +73,12 @@ class ShabpIO(object):
             elem.GetPointIds().SetId(1, p2)
             elem.GetPointIds().SetId(2, p3)
             elem.GetPointIds().SetId(3, p4)
-            self.gui.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+            grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
-        self.gui.grid.SetPoints(points)
-        self.gui.grid.Modified()
-        if hasattr(self.gui.grid, 'Update'):  # pragma: no cover
-            self.gui.grid.Update()
+        grid.SetPoints(points)
+        grid.Modified()
+        if hasattr(grid, 'Update'):  # pragma: no cover
+            grid.Update()
 
         # loadShabpResults - regions/loads
         self.gui.scalarBar.VisibilityOn()

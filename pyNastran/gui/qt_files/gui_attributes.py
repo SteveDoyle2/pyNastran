@@ -36,6 +36,7 @@ from pyNastran.gui.utils.vtk.vtk_utils import (
 
 from pyNastran.bdf.cards.base_card import deprecated
 from pyNastran.utils import print_bad_path
+IS_TESTING = 'test' in sys.argv[0]
 
 
 class GuiAttributes(object):
@@ -840,9 +841,11 @@ class GuiAttributes(object):
         #print("fmts =", fmts)
 
         self.supported_formats = [fmt[0] for fmt in fmts]
-        print('supported_formats = %s' % self.supported_formats)
+        if not IS_TESTING:  # pragma: no cover
+            print('supported_formats = %s' % self.supported_formats)
         #assert 'cart3d' in self.supported_formats, self.supported_formats
         if len(fmts) == 0:
+            print('supported_formats = %s' % self.supported_formats)
             raise RuntimeError('no modules were loaded...')
 
     def _add_fmt(self, fmts, fmt, geom_results_funcs, data):

@@ -30,21 +30,21 @@ class OpenFoamIO(object):
     def get_openfoam_hex_wildcard_geometry_results_functions(self):
         data = (
             'OpenFOAM Hex - BlockMeshDict',
-            'OpenFOAM Hex (*)', self.load_openfoam_geometry_hex,
+            'OpenFOAM Hex (*)', self.load_openfoam_hex_geometry,
             None, None)
         return data
 
     def get_openfoam_shell_wildcard_geometry_results_functions(self):
         data = (
             'OpenFOAM Shell - BlockMeshDict',
-            'OpenFOAM Shell (*)', self.load_openfoam_geometry_shell,
+            'OpenFOAM Shell (*)', self.load_openfoam_shell_geometry,
             None, None)
         return data
 
     def get_openfoam_faces_wildcard_geometry_results_functions(self):
         data = (
             'OpenFOAM Face - BlockMeshDict',
-            'OpenFOAM Face (*)', self.load_openfoam_geometry_faces,
+            'OpenFOAM Face (*)', self.load_openfoam_faces_geometry,
             None, None)
         return data
 
@@ -63,20 +63,20 @@ class OpenFoamIO(object):
             #try:
                 #del self.caseKeys
                 #del self.iCase
-                #del self.isubcase_name_map
+                #del self.gui.isubcase_name_map
             #except:
                 #print("cant delete geo")
             #skip_reading = False
         #self.scalarBar.Modified()
         #return skip_reading
 
-    def load_openfoam_geometry_hex(self, openfoam_filename, name='main', plot=True, **kwargs):
+    def load_openfoam_hex_geometry(self, openfoam_filename, name='main', plot=True, **kwargs):
         self.load_openfoam_geometry(openfoam_filename, 'hex')
 
-    def load_openfoam_geometry_shell(self, openfoam_filename, name='main', plot=True, **kwargs):
+    def load_openfoam_shell_geometry(self, openfoam_filename, name='main', plot=True, **kwargs):
         self.load_openfoam_geometry(openfoam_filename, 'shell')
 
-    def load_openfoam_geometry_faces(self, openfoam_filename, name='main', plot=True, **kwargs):
+    def load_openfoam_faces_geometry(self, openfoam_filename, name='main', plot=True, **kwargs):
         self.load_openfoam_geometry(openfoam_filename, 'faces')
 
     def load_openfoam_geometry(self, openfoam_filename, mesh_3d, name='main', plot=True, **kwargs):
@@ -144,8 +144,9 @@ class OpenFoamIO(object):
             raise RuntimeError(mesh_3d)
 
         self.gui.nnodes = len(nodes)
-        self.log.debug("nnodes = %s" % self.gui.nnodes)
-        self.log.debug("nelements = %s" % self.gui.nelements)
+        log = self.gui.log
+        log.debug("nnodes = %s" % self.gui.nnodes)
+        log.debug("nelements = %s" % self.gui.nelements)
 
         grid = self.gui.grid
         grid.Allocate(self.gui.nelements, 1000)

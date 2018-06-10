@@ -131,7 +131,7 @@ class SU2_IO(object):
         self.gui.scalarBar.Modified()
 
         cases = OrderedDict()
-        self.isubcase_name_map = {}
+        self.gui.isubcase_name_map = {}
         ID = 1
 
         form, cases, node_ids, element_ids = self._fill_su2_case(cases, ID, nelements, nnodes)
@@ -141,7 +141,7 @@ class SU2_IO(object):
 
     def _fill_su2_case(self, cases, ID, nelements, nnodes):
         """adds the sidebar results"""
-        self.isubcase_name_map[ID] = ('SU2', '')
+        self.gui.isubcase_name_map = {ID : ('SU2', ''), }
 
         #nelements = elements.shape[0]
         #nnodes = nodes.shape[0]

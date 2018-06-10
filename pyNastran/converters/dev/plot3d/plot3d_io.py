@@ -14,8 +14,8 @@ from pyNastran.gui.gui_objects.gui_result import GuiResult
 raise NotImplementedError()
 
 class Plot3d_io(object):  # pragma: no cover
-    def __init__(self):
-        pass
+    def __init__(self, gui):
+        self.gui = gui
 
     def get_plot3d_wildcard_geometry_results_functions(self):
         data = ('Plot3D',
@@ -107,18 +107,19 @@ class Plot3d_io(object):  # pragma: no cover
             break
 
         #print("eid = ", eid)
-        self.grid.SetPoints(points)
-        self.grid.Modified()
-        self.grid.Update()
+        grid = self.gui.grid
+        grid.SetPoints(points)
+        grid.Modified()
+        grid.Update()
         self.log_info("updated grid")
 
         #return
 
         # loadPlot3dResults - regions/loads
-        self.scalarBar.VisibilityOn()
-        self.scalarBar.Modified()
+        self.gui.scalarBar.VisibilityOn()
+        self.gui.scalarBar.Modified()
 
-        self.isubcase_name_map = {1: ['Plot3d', '']}
+        self.gui.isubcase_name_map = {1: ['Plot3d', '']}
         cases = OrderedDict()
         ID = 1
 
