@@ -1106,7 +1106,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if 0:  # pragma: no cover
             self._show_ids_mask(ids_to_show)
         elif 1:
-            # doesn't work for the BWB_saero.bdf
+            # doesn't work for the bwb_saero.bdf
             flip_flag = True is self._show_flag
             assert self._show_flag is True, self._show_flag
             self._update_ids_mask_show(ids_to_show)

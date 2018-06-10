@@ -392,13 +392,13 @@ class TestMeshUtils(unittest.TestCase):
     def test_renumber_01(self):
         """renumbers a deck in a couple ways"""
         bdf_filename = os.path.abspath(
-            os.path.join(pkg_path, '..', 'models', 'bwb', 'BWB_saero.bdf'))
+            os.path.join(pkg_path, '..', 'models', 'bwb', 'bwb_saero.bdf'))
         bdf_filename_out1 = os.path.abspath(
-            os.path.join(pkg_path, '..', 'models', 'bwb', 'BWB_saero1.out'))
+            os.path.join(pkg_path, '..', 'models', 'bwb', 'bwb_saero1.out'))
         bdf_filename_out2 = os.path.abspath(
-            os.path.join(pkg_path, '..', 'models', 'bwb', 'BWB_saero2.out'))
+            os.path.join(pkg_path, '..', 'models', 'bwb', 'bwb_saero2.out'))
         bdf_filename_out3 = os.path.abspath(
-            os.path.join(pkg_path, '..', 'models', 'bwb', 'BWB_saero3.out'))
+            os.path.join(pkg_path, '..', 'models', 'bwb', 'bwb_saero3.out'))
         model = bdf_renumber(bdf_filename, bdf_filename_out1, size=8,
                              is_double=False, starting_id_dict=None,
                              round_ids=False, cards_to_skip=None, debug=False)
@@ -420,7 +420,7 @@ class TestMeshUtils(unittest.TestCase):
         """merges multiple bdfs into a single deck"""
         #log = SimpleLogger(level='info')
         bdf_filename1 = os.path.abspath(os.path.join(
-            pkg_path, '..', 'models', 'bwb', 'BWB_saero.bdf'))
+            pkg_path, '..', 'models', 'bwb', 'bwb_saero.bdf'))
         bdf_filename2 = os.path.abspath(os.path.join(
             pkg_path, '..', 'models', 'sol_101_elements', 'static_solid_shell_bar.bdf'))
         bdf_filename3 = os.path.abspath(os.path.join(
@@ -454,7 +454,7 @@ class TestMeshUtils(unittest.TestCase):
     def test_export_mcids(self):
         """creates material coordinate systems"""
         bdf_filename = os.path.abspath(os.path.join(
-            pkg_path, '..', 'models', 'bwb', 'BWB_saero.bdf'))
+            pkg_path, '..', 'models', 'bwb', 'bwb_saero.bdf'))
         csv_filename = os.path.abspath(os.path.join(
             pkg_path, '..', 'models', 'bwb', 'mcids.csv'))
         export_mcids(bdf_filename, csv_filename,

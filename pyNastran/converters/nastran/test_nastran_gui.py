@@ -188,7 +188,7 @@ class TestNastranGUI(unittest.TestCase):
         test.load_nastran_results(op2_filename)
 
     def test_bwb_gui(self):
-        bdf_filename = os.path.join(MODEL_PATH, 'bwb', 'BWB_saero.bdf')
+        bdf_filename = os.path.join(MODEL_PATH, 'bwb', 'bwb_saero.bdf')
         test = NastranGUI()
         #test.log = get_logger2()
         test.load_nastran_geometry(bdf_filename)
