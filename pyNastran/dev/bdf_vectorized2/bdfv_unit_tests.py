@@ -31,7 +31,7 @@ class TestVectorized(unittest.TestCase):
 
     def test_bwb(self):
         """tests bwb"""
-        bdf_filename = os.path.join(MODEL_PATH, 'bwb', 'BWB_saero.bdf')
+        bdf_filename = os.path.join(MODEL_PATH, 'bwb', 'bwb_saero.bdf')
         model = read_bdfv(bdf_filename, validate=True, xref=False, punch=False,
                           skip_cards=None, encoding=None, log=None, debug=False,
                           mode='msc')
