@@ -549,7 +549,8 @@ def get_cases_from_tree(tree):
             assert cases2 == [], tree
             cases.append(icase)
         else:
-            assert icase is None, tree
+            assert icase is None or icase == '', tree
+            icase = None
             for case in cases2:
                 cases += get_cases_from_tree(case)
     else:
