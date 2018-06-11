@@ -403,7 +403,7 @@ class GuiCommon(GuiAttributes):
             return is_valid
 
         (
-            icase, result_type, unused_location, min_value, max_value, norm_value,
+            icase, result_type, location, min_value, max_value, norm_value,
             data_format, scale, methods,
             nlabels, labelsize, ncolors, colormap,
         ) = data
@@ -419,6 +419,8 @@ class GuiCommon(GuiAttributes):
         if not is_legend_shown:
             #print('showing')
             self.show_legend()
+
+        self.update_contour_filter(nlabels, location, min_value, max_value)
 
         self.update_scalar_bar(result_type, min_value, max_value, norm_value,
                                data_format,
@@ -791,7 +793,8 @@ class GuiCommon(GuiAttributes):
 
         self.final_grid_update(icase, name, grid_result,
                                name_vector, grid_result_vector,
-                               key, subtitle, label, show_msg)
+                               key, subtitle, label,
+                               min_value, max_value, show_msg)
 
         if is_legend_shown is None:
             is_legend_shown = self.scalar_bar.is_shown
@@ -1013,19 +1016,24 @@ class GuiCommon(GuiAttributes):
 
     def final_grid_update(self, icase, name, grid_result,
                           name_vector, grid_result_vector,
-                          key, subtitle, label, show_msg):
+                          key, subtitle, label,
+                          min_value, max_value, show_msg):
         assert isinstance(key, integer_types), key
         (obj, (i, res_name)) = self.result_cases[key]
         subcase_id = obj.subcase_id
         result_type = obj.get_title(i, res_name)
         vector_size = obj.get_vector_size(i, res_name)
         location = obj.get_location(i, res_name)
+        out = obj.get_nlabels_labelsize_ncolors_colormap(i, name)
+        nlabels, unused_labelsize, unused_ncolors, unused_colormap = out
 
         #if vector_size == 3:
             #print('name, grid_result, vector_size=3', name, grid_result)
         self._final_grid_update(icase, name, grid_result, None, None, None,
                                 1, subcase_id, result_type, location, subtitle, label,
                                 revert_displaced=True, show_msg=show_msg)
+        self.update_contour_filter(nlabels, location, min_value, max_value)
+
         if vector_size == 3:
             self._final_grid_update(icase, name_vector, grid_result_vector, obj, i, res_name,
                                     vector_size, subcase_id, result_type, location, subtitle, label,
@@ -1149,6 +1157,7 @@ class GuiCommon(GuiAttributes):
         #self.update_all()
         if len(self.groups):
             self.post_group_by_name(self.group_active)
+
         self.vtk_interactor.Render()
 
         self.hide_labels(show_msg=False)

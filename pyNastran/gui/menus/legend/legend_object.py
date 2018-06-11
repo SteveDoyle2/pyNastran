@@ -370,13 +370,14 @@ class LegendObject(object):
         #assert is_shown == False, is_shown
         is_normal = False
         update_legend = False
+        location = 'centroid'
         if self.gui.icase_fringe is not None:
             key = self.gui.case_keys[self.gui.icase_fringe]
             assert isinstance(key, integer_types), key
             (obj, (i, res_name)) = self.gui.result_cases[key]
             subcase_id = obj.subcase_id
 
-            unused_location = obj.get_location(i, res_name)
+            location = obj.get_location(i, res_name)
             min_value_old, max_value_old = obj.get_min_max(i, res_name)
             data_format_old = obj.get_data_format(i, res_name)
             colors_old = obj.get_nlabels_labelsize_ncolors_colormap(i, res_name)
@@ -463,6 +464,7 @@ class LegendObject(object):
                                        nlabels=nlabels, labelsize=labelsize,
                                        ncolors=ncolors, colormap=colormap,
                                        is_shown=is_shown)
+            self.gui.update_contour_filter(nlabels, location, min_value, max_value)
         if render:
             self.gui.Render()
 

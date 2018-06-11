@@ -79,6 +79,7 @@ from pyNastran.gui.formats import CLASS_MAP
                                             #iren=iren, rw=render_window)
         #self.Highlight
 
+
 # http://pyqt.sourceforge.net/Docs/PyQt5/multiinheritance.html
 class GuiCommon2(QMainWindow, GuiCommon):
     def __init__(self, **kwds):
@@ -2142,10 +2143,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.grid_mapper = vtk.vtkDataSetMapper()
         self.grid_mapper.SetInputData(self.grid_selected)
 
-
-        make_contour_filter = False
-        if make_contour_filter:
-            self._make_contour_filter()
+        self._make_contour_filter()
 
         #if 0:
             #self.warp_filter = vtk.vtkWarpVector()
@@ -2210,10 +2208,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def _make_contour_filter(self):  # pragma: no cover
         """trying to make model lines...doesn't work"""
-        print('making filter!')
+        if not self.make_contour_filter:
+            return
+
         self.contour_filter = vtk.vtkContourFilter()
 
-        if 1:
+        if 0:
             # doesn't work...in progress
             geometry_filter = vtk.vtkGeometryFilter()
             geometry_filter.SetInputData(self.grid_selected)
@@ -2224,12 +2224,18 @@ class GuiCommon2(QMainWindow, GuiCommon):
         elif 0:  # pragma: no cover
             # doesn't work
             self.contour_filter.SetInputData(self.grid_selected)
+        elif 1:
+            # https://blog.kitware.com/cell-set-as-unstructured-grid/
+            self.contour_filter.SetInputData(self.grid)
         else:
             raise RuntimeError('invalid contour_filter option')
-        self.contour_filter.GenerateValues(1, 10, 10)
+        #self.contour_filter.GenerateValues(1, 10, 10)
         #self.contour_filter.SetComputeScalars(1)
         #contour_filter.SetInputConnection(self.grid_selected.GetOutputPort())
         #self.contour_filter.SetInputData(None)
+        self.contour_filter.ComputeScalarsOff()
+        self.contour_filter.ComputeNormalsOff()
+
 
         # Connect the segments of the conours into polylines
         contour_stripper = vtk.vtkStripper()
@@ -2244,7 +2250,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
             points = contour_stripper.GetOutput().GetPoints()
             cells = contour_stripper.GetOutput().GetLines()
             scalars = contour_stripper.GetOutput().GetPointData().GetScalars()
-
 
             label_poly_data.SetPoints(label_points)
             label_poly_data.GetPointData().SetScalars(label_scalars)
@@ -2272,11 +2277,58 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         isolines_actor = vtk.vtkActor()
         isolines_actor.SetMapper(contour_mapper)
+        isolines_actor.GetProperty().SetColor(0., 0., 0.)
 
         # Add the actors to the scene
         self.rend.AddActor(isolines_actor)
         if include_labels:
             self.rend.AddActor(isolabels_actor)
+
+        self.contour_mapper = contour_mapper
+        self.contour_stripper = contour_stripper
+        self.contour_lines_actor = isolines_actor
+        self.contour_lines_actor.VisibilityOff()
+
+    def update_contour_filter(self, nlabels, location, min_value=None, max_value=None):
+        """update the contour lines"""
+        if not self.make_contour_filter:
+            return
+        if nlabels is None:
+            nlabels = 11
+        if location == 'centroid': # node/centroid
+            self.contour_lines_actor.VisibilityOff()
+            #self.contour_mapper.SetScalarModeToUseCellData()
+            #res_data = self.grid.GetCellData().GetScalars()
+            return
+        elif location == 'node':
+            #self.contour_mapper.SetScalarModeToUsePointData()
+            res_data = self.grid.GetPointData().GetScalars()
+        else:
+            raise RuntimeError('location=%r' % location)
+
+        self.contour_lines_actor.VisibilityOn()
+        number_of_cuts = nlabels - 1
+        if min_value is None or max_value is None:
+            data_range = res_data.GetRange()
+            if min_value is None:
+                min_value = data_range[0]
+            if max_value is None:
+                max_value = data_range[1]
+
+        self.contour_filter.GenerateValues(
+            number_of_cuts,
+            0.99 * min_value,
+            0.99 * max_value)
+
+        self.contour_filter.Modified()
+        #self.contour_stripper.Modified()
+        self.contour_mapper.Modified()
+        #self.contour_filter.Update()
+        #self.contour_stripper.Update()
+        #self.contour_mapper.Update()
+
+        number_of_contour_lines = self.contour_stripper.GetOutput().GetNumberOfLines()
+        self.log.info('There are %s contours lines.' % number_of_contour_lines)
 
     def build_glyph(self):
         """builds the glyph actor"""
