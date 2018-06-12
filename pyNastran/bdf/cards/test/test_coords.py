@@ -19,7 +19,6 @@ from pyNastran.bdf.bdf import BDF, BDFCard
 from pyNastran.bdf.utils import TransformLoadWRT
 from pyNastran.bdf.cards.aero.utils import make_monpnt1s_from_cids
 from pyNastran.bdf.cards.test.utils import save_load_deck
-from pyNastran.dev.bdf_vectorized2.bdf_vectorized import BDF as BDFv
 
 class TestCoords(unittest.TestCase):
     """tests the coordinate systems and their transforms"""
@@ -483,11 +482,6 @@ class TestCoords(unittest.TestCase):
         #-------------------------------------------------
         model.cross_reference()
 
-        model2 = BDFv(debug=False)
-        model2.read_bdf(bdf_file, punch=True, xref=False)
-        bdf_file.seek(0)
-        #-------------------------------------------------
-
         xyz_cid0_actual = array([
             [30., 40., 50.],
             [30., 40., 50.],
@@ -529,29 +523,6 @@ class TestCoords(unittest.TestCase):
             xyz_cp, nids, icp_transform,
             cid=0, atol=None)
         array_equal(xyz_cid0_actual, xyz_cid0)
-
-        model.write_bdf(bdf_file, close=False)
-
-        model3 = BDF(debug=False)
-        cord2r = model3.add_cord2r(30, rid=2,
-                                   origin=[14., 30., 70.],
-                                   zaxis=[13.431863852, 32.1458443949, 75.2107442927],
-                                   xzplane=[14.4583462334, 33.4569982885, 68.2297989286],
-                                   comment='')
-        cord2c = model3.add_cord2c(31, rid=2,
-                                   origin=[3., 42., -173.],
-                                   zaxis=[2.86526881213, 45.5425615252, 159.180363517],
-                                   xzplane=[3.65222385965, 29.2536614627, -178.631312271],
-                                   comment='')
-        cord2s = model3.add_cord2s(32, rid=2,
-                                   origin=[22., 14., 85.],
-                                   zaxis=[22.1243073983, 11.9537753718, 77.9978191005],
-                                   xzplane=[21.0997242967, 13.1806120497, 88.4824763008],
-                                   comment='')
-
-        assert cord2r == model.coords[cord2r.cid], 'cord2r:\n%r\ncord2r[cid]:\n%r' % (str(cord2r), str(model.coords[cord2r.cid]))
-        assert cord2c == model.coords[cord2c.cid], 'cord2c:\n%r\ncord2c[cid]:\n%r' % (str(cord2c), str(model.coords[cord2c.cid]))
-        assert cord2s == model.coords[cord2s.cid], 'cord2s:\n%r\ncord2s[cid]:\n%r' % (str(cord2s), str(model.coords[cord2s.cid]))
 
     def test_cord1c_01(self):
         lines = ['cord1c,2,1,4,3']

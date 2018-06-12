@@ -1,11 +1,6 @@
 """import various codes with backup for failed imports"""
 CLASS_MAP = {}
 
-try:
-    from pyNastran.converters.dev.avus.avus_io import AvusIO
-    CLASS_MAP['avus'] = AvusIO
-except ImportError:  # pragma: no cover
-    pass
 
 try:
     from pyNastran.converters.cart3d.cart3d_io import Cart3dIO
@@ -56,12 +51,6 @@ except ImportError:  # pragma: no cover
     pass
 
 try:
-    from pyNastran.converters.su2.su2_io import SU2_IO
-    CLASS_MAP['su2'] = SU2_IO
-except ImportError:  # pragma: no cover
-    pass
-
-try:
     from pyNastran.converters.fast.fast_io import FastIO
     CLASS_MAP['fast'] = FastIO
 except ImportError:  # pragma: no cover
@@ -72,7 +61,6 @@ from pyNastran.converters.nastran.nastran_io import NastranIO
 #CLASS_MAP['nastran'] = NastranIO
 
 
-#from pyNastran.converters.dev.plot3d.plot3d_io import Plot3d_io
 
 try:
     from pyNastran.converters.aflr.aflr2.bedge_io import BEdge_IO
@@ -99,29 +87,10 @@ try:
 except ImportError:  # pragma: no cover
     pass
 
-
-try:
-    from pyNastran.converters.dev.openvsp.adb_io import ADB_IO
-    CLASS_MAP['adb'] = ADB_IO
-except ImportError:  # pragma: no cover
-    pass
-
-try:
-    from pyNastran.converters.dev.openvsp.degen_geom_io import DegenGeomIO
-    CLASS_MAP['degen_geom'] = DegenGeomIO
-except ImportError:  # pragma: no cover
-    pass
-
 try:
     from pyNastran.converters.openfoam.openfoam_io import OpenFoamIO
     CLASS_MAP['openfoam_hex'] = OpenFoamIO
     CLASS_MAP['openfoam_shell'] = OpenFoamIO
     CLASS_MAP['openfoam_faces'] = OpenFoamIO
-except ImportError:  # pragma: no cover
-    pass
-
-try:
-    from pyNastran.converters.dev.obj.obj_io import ObjIO
-    CLASS_MAP['obj'] = ObjIO
 except ImportError:  # pragma: no cover
     pass

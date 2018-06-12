@@ -473,11 +473,6 @@ class TestOP2(Tester):
         #debug_file = model + '.debug.out'
 
         op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug)
-        from pyNastran.op2.dev.op2_writer import OP2Writer
-        op2w = OP2Writer()
-        op2w.write_op2(op2_filename_out, obj=op2, is_mag_phase=False,
-                       delete_objects=True)
-        op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out)
 
 
     def test_op2_solid_shell_bar_01_geom(self):
