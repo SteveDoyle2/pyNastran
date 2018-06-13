@@ -234,7 +234,7 @@ class RealCompositePlateArray(OES_Object):
 
     def get_element_index(self, eids):
         # elements are always sorted; nodes are not
-        itot = searchsorted(eids, self.element_layer[:, 0])  #[0]
+        itot = searchsorted(self.element_layer[:, 0], eids)  #[0]
         return itot
 
     def eid_to_element_node_index(self, eids):

@@ -570,7 +570,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             return is_failed
         if font_size < 6:
             font_size = 6
-        if self.font_size == font_size:
+        if self.settings.font_size == font_size:
             return False
         self.settings.font_size = font_size
         font = QtGui.QFont()
@@ -3872,7 +3872,99 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 flt = 'png'
 
         if fname:
+            w2i = vtk.vtkWindowToImageFilter()
+            w2i.SetInput(self.render_window)
+            w2i.SetInputBufferTypeToRGBA()
+
+            line_widths0, point_sizes0, axes_actor = self._screenshot_setup(magnify, w2i)
+
+            nam, ext = os.path.splitext(fname)
+            ext = ext.lower()
+            for nam, exts, obj in (('PostScript', ['.ps'], vtk.vtkPostScriptWriter),
+                                   ("BMP", ['.bmp'], vtk.vtkBMPWriter),
+                                   ('JPG', ['.jpg', '.jpeg'], vtk.vtkJPEGWriter),
+                                   ("TIFF", ['.tif', '.tiff'], vtk.vtkTIFFWriter)):
+                if flt == nam:
+                    fname = fname if ext in exts else fname + exts[0]
+                    writer = obj()
+                    break
+            else:
+                fname = fname if ext == '.png' else fname + '.png'
+                writer = vtk.vtkPNGWriter()
+
+            if self.vtk_version[0] >= 6:
+                writer.SetInputConnection(w2i.GetOutputPort())
+            else:
+                writer.SetInputConnection(w2i.GetOutputPort())
+
+            self.render_window.Render()
+            w2i.Update()
+            writer.SetFileName(fname)
+            writer.Write()
+
+            #self.log_info("Saved screenshot: " + fname)
+            if show_msg:
+                self.log_command('on_take_screenshot(%r, magnify=%s)' % (fname, magnify))
+            self._screenshot_teardown(line_widths0, point_sizes0, axes_actor)
+
+    def on_take_screenshot_old(self, fname=None, magnify=None, show_msg=True):
+        """
+        Take a screenshot of a current view and save as a file
+
+        Parameters
+        ----------
+        fname : str; default=None
+            None : pop open a window
+            str : bypass the popup window
+        magnify : int; default=None
+            None : use self.magnify
+            int : resolution increase factor
+        show_msg : bool; default=True
+            log the command
+        """
+        if fname is None or fname is False:
+            filt = ''
+            default_filename = ''
+
+            title = ''
+            if self.title is not None:
+                title = self.title
+
+            if self.out_filename is None:
+                default_filename = ''
+                if self.infile_name is not None:
+                    base, ext = os.path.splitext(os.path.basename(self.infile_name))
+                    default_filename = self.infile_name
+                    default_filename = base + '.png'
+            else:
+                base, ext = os.path.splitext(os.path.basename(self.out_filename))
+                default_filename = title + '_' + base + '.png'
+
+            file_types = (
+                'PNG Image *.png (*.png);; '
+                'JPEG Image *.jpg *.jpeg (*.jpg, *.jpeg);; '
+                'TIFF Image *.tif *.tiff (*.tif, *.tiff);; '
+                'BMP Image *.bmp (*.bmp);; '
+                'PostScript Document *.ps (*.ps)')
+
+            title = 'Choose a filename and type'
+            fname, flt = getsavefilename(parent=self, caption=title, basedir='',
+                                         filters=file_types, selectedfilter=filt,
+                                         options=None)
+            if fname in [None, '']:
+                return
+            #print("fname=%r" % fname)
+            #print("flt=%r" % flt)
+        else:
+            base, ext = os.path.splitext(os.path.basename(fname))
+            if ext.lower() in ['png', 'jpg', 'jpeg', 'tif', 'tiff', 'bmp', 'ps']:
+                flt = ext.lower()
+            else:
+                flt = 'png'
+
+        if fname:
             render_large = vtk.vtkRenderLargeImage()
+
             if self.vtk_version[0] >= 6:
                 render_large.SetInput(self.rend)
             else:
@@ -5458,7 +5550,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             default_scale, default_phase,
             default_nlabels, default_labelsize,
             default_ncolors, default_colormap,
-            is_low_to_high, is_horizontal_scalar_bar, is_fringe, font_size=self.font_size)
+            is_low_to_high, is_horizontal_scalar_bar, is_fringe, font_size=self.settings.font_size)
         #self.scalar_bar.set_visibility(self._legend_shown)
         #self.vtk_interactor.Render()
 

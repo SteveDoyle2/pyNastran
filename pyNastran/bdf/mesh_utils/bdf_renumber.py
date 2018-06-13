@@ -7,7 +7,7 @@ from __future__ import print_function
 from itertools import chain
 
 import io
-from six import PY2, PY3, iteritems, StringIO
+from six import PY2, PY3, iteritems, itervalues, StringIO
 import numpy as np
 
 from pyNastran.bdf.bdf import BDF

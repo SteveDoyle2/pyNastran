@@ -18,7 +18,7 @@ def set_clipping_menu(self):
     min_clip, max_clip = camera.GetClippingRange()
 
     data = {
-        'font_size' : self.font_size,
+        'font_size' : self.settings.font_size,
         'clipping_min' : min_clip,
         'clipping_max' : max_clip,
         'clicked_ok' : False,

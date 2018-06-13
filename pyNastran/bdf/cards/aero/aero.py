@@ -1330,7 +1330,7 @@ class CAERO1(BaseCard):
         self.lspan_ref = None
         self.ascid_ref = None
         self.box_ids = None
-        self._init_ids()
+        #self._init_ids() #TODO: make this work here?
 
     def validate(self):
         msg = ''
@@ -1630,6 +1630,84 @@ class CAERO1(BaseCard):
             p2 = p1 + self.ascid_ref.transform_vector_to_global(np.array([self.x12, 0., 0.]))
             p3 = p4 + self.ascid_ref.transform_vector_to_global(np.array([self.x43, 0., 0.]))
         return [p1, p2, p3, p4]
+
+    def get_box_index(self, box_id):
+        """
+        Get the index of ``self.box_ids`` that coresponds to the given box id.
+
+        Parameters
+        -----------
+        box_id : int
+            Box id to ge tthe index of.
+
+        Returns
+        --------
+        index : tuple
+            Index of ``self.box_ids`` that coresponds to the given box id.
+
+        """
+        if box_id not in self.box_ids:
+            self._box_id_error(box_id)
+        index = np.where(self.box_ids == box_id)
+        index = (index[0][0], index[1][0])
+        return index
+
+    def get_box_quarter_chord_center(self, box_id):
+        """
+        The the location of the quarter chord of the box along the centerline.
+
+        Parameters
+        -----------
+        box_id : int
+            Box id.
+
+        Returns
+        --------
+        xyz_quarter_chord : ndarray
+            Location of box quater chord in global.
+
+        """
+        return self._get_box_x_chord_center(box_id, 0.25)
+
+    def get_box_mid_chord_center(self, box_id):
+        """
+        The the location of the mid chord of the box along the centerline.
+
+        Parameters
+        -----------
+        box_id : int
+            Box id.
+
+        Returns
+        --------
+        xyz_mid_chord : ndarray
+            Location of box mid chord in global.
+
+        """
+        return self._get_box_x_chord_center(box_id, 0.5)
+
+    def _get_box_x_chord_center(self, box_id, x_chord):
+        """
+        The the location of the x_chord of the box along the centerline.
+        """
+        if self.lchord != 0 or self.lspan != 0:
+            raise NotImplementedError()
+        ichord, ispan = self.get_box_index(box_id)
+
+        le_vector = self.p4 - self.p1
+        delta_xyz = le_vector * ((ispan + 0.5)/self.nspan)
+        yz = delta_xyz[1:3] + self.p1[1:3]
+        chord = ((ispan + 0.5)/self.nspan) * (self.x43 - self.x12) + self.x12
+        x = (ichord + x_chord)/self.nchord * chord + self.p1[0] + delta_xyz[0]
+        return np.array([x, yz[0], yz[1]])
+
+    def _box_id_error(self, box_id):
+        """
+        Raise box_id IndexError.
+        """
+        msg = '%i not in range of aero box ids\nRange: %i to %i' % (box_id, self.box_ids[0, 0],
+                                                                    self.box_ids[-1, -1])
+        raise IndexError(msg)
 
     @property
     def shape(self):

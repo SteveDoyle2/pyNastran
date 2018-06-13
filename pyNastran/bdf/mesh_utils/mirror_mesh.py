@@ -35,7 +35,8 @@ def bdf_mirror(model, plane='xz'):
     """
     nid_offset = _mirror_nodes(model, plane=plane)
     eid_offset = _mirror_elements(model, nid_offset)
-    return nid_offset, eid_offset
+    caero_id_map = _mirror_aero(model, nid_offset, eid_offset, plane=plane)
+    return nid_offset, eid_offset, caero_id_map
 
 def write_bdf_symmetric(model, out_filename=None, encoding=None,
                         size=8, is_double=False,
@@ -89,7 +90,7 @@ def write_bdf_symmetric(model, out_filename=None, encoding=None,
         the offset element id
     """
     #model.write_caero_model()
-    nid_offset, eid_offset = bdf_mirror(model, plane=plane)
+    nid_offset, eid_offset, caero_id_map = bdf_mirror(model, plane=plane)
 
     model.write_bdf(out_filename=out_filename, encoding=encoding,
                     size=size, is_double=is_double,
@@ -133,7 +134,13 @@ def _mirror_elements(model, nid_offset):
     """
     Mirrors the elements
     """
-    eid_offset = max(model.elements.keys())
+    eid_max_elements = 0
+    eid_max_rigid = 0
+    if model.elements:
+        eid_max_elements = max(model.elements.keys())
+    if model.rigid_elements:
+        eid_max_rigid = max(model.rigid_elements.keys())
+    eid_offset = max(eid_max_elements, eid_max_rigid)
     if model.elements:
         for eid, element in sorted(iteritems(model.elements)):
             etype = element.type
@@ -149,11 +156,11 @@ def _mirror_elements(model, nid_offset):
                 model.log.warning(msg)
                 continue
 
-            eid2 = eid + eid_offset
+            eid_mirror = eid + eid_offset
             fields = element.repr_fields()
-            fields[1] = eid2
+            fields[1] = eid_mirror
             model.add_card(fields, etype)
-            element2 = model.elements[eid2]
+            element2 = model.elements[eid_mirror]
 
             if etype in ['CTRIA3', 'CQUAD4']:
                 element2.nodes = nodes
@@ -164,4 +171,103 @@ def _mirror_elements(model, nid_offset):
                 except AttributeError:
                     print(element.get_stats())
                     raise
+
+    if model.rigid_elements:
+        for eid, rigid_element in sorted(iteritems(model.rigid_elements)):
+            if rigid_element.type == 'RBE2':
+                Gmi_node_ids = rigid_element.Gmi_node_ids
+                Gn = rigid_element.Gn()
+                Gijs = None
+                ref_grid_id = None
+            elif rigid_element.type == 'RBE3':
+                Gmi_node_ids = rigid_element.Gmi_node_ids
+                Gijs = rigid_element.Gijs
+                ref_grid_id = rigid_element.ref_grid_id
+                Gn = None
+            else:
+                msg = '_write_elements_symmetric: %s not implimented' % rigid_element.type
+                raise NotImplementedError(msg)
+
+            Gmi_node_ids_mirror = [node_id + nid_offset for node_id in Gmi_node_ids]
+            if Gn:
+                Gn_mirror = Gn + nid_offset
+            if Gijs:
+                Gijs_mirror = [[node_id + nid_offset for node_id in nodes] for nodes in Gijs]
+            if ref_grid_id:
+                ref_grid_id_mirror = ref_grid_id + nid_offset
+
+            eid_mirror = eid + eid_offset
+            if rigid_element.type == 'RBE2':
+                rigid_element2 = model.add_rbe2(eid_mirror, Gn_mirror, rigid_element.cm,
+                                                Gmi_node_ids_mirror)
+            elif rigid_element.type == 'RBE3':
+                rigid_element2 = model.add_rbe3(
+                    eid_mirror, ref_grid_id_mirror, rigid_element.refc, rigid_element.weights,
+                    rigid_element.comps, Gijs_mirror
+                )
+
     return eid_offset
+
+def _mirror_aero(model, nid_offset, eid_offset, plane='xz'):
+    """
+    Writes the aero in a sorted order
+    """
+    caero_id_map = {}
+    if model.caeros:
+        caero_id_max = max(model.caero_ids)
+        caero_id_offset = np.max(model.caeros[caero_id_max].box_ids.flat)
+
+        set_id_offset = max(model.sets.keys())
+        spline_id_offset = max(model.splines.keys())
+
+        iy = _plane_to_iy(plane)
+
+        if model.caeros:
+            for (caero_id, caero) in sorted(iteritems(model.caeros)):
+                if caero.type == 'CAERO1':
+                    # reverse points to maintain normal
+                    p1_mirror = caero.p4
+                    x12_mirror = caero.x43
+                    p4_mirror = caero.p1
+                    x43_mirror = caero.x12
+
+                    p1_mirror[iy] *= -1.
+                    p4_mirror[iy] *= -1.
+
+                    from pyNastran.bdf.bdf import BDF
+                    isinstance(model, BDF)
+
+                    caero_id_mirror = caero_id + caero_id_offset
+                    caero_id_map[caero_id] = caero_id_mirror
+
+                    caero_mirror = model.add_caero1(
+                        caero_id_mirror, caero.pid, caero.igid, p1_mirror, x12_mirror, p4_mirror,
+                        x43_mirror, cp=caero.cp, nspan=caero.nspan, lspan=caero.lspan,
+                        nchord=caero.nchord, lchord=caero.lchord
+                    )
+                else:
+                    model.log.warning('%s not supported in bdf_mirror:\n%s' % (caero.type, caero))
+
+        if model.splines:
+            for (spline_id, spline) in sorted(iteritems(model.splines)):
+                if spline.type == 'SPLINE1':
+                    set_ref = spline.setg_ref
+                    if set_ref is None:
+                        set_ref = model.sets[spline.setg]
+                    set_ids_mirror = [nid + nid_offset for nid in set_ref.ids]
+                    sid_mirror = set_ref.sid + set_id_offset
+
+                    model.add_set1(sid_mirror, set_ids_mirror)
+
+                    box1_mirror = spline.box1 + caero_id_offset
+                    box2_mirror = spline.box2 + caero_id_offset
+                    caero_mirror = spline.CAero() + caero_id_offset
+                    eid_mirror = spline.eid + spline_id_offset
+                    setg_mirror = sid_mirror
+
+                    model.add_spline1(eid_mirror, caero_mirror, box1_mirror, box2_mirror, setg_mirror,
+                                      dz=spline.dz)
+                else:
+                    model.log.warning('%s not supported in bdf_mirror:\n%s' % (spline.type, spline))
+
+    return caero_id_map

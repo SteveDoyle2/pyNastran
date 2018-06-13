@@ -1,6 +1,9 @@
 from __future__ import print_function
 from qtpy import API as qt_version
 
+if qt_version == 'pyqt':
+    qt_version = 'pyqt4'
+
 if qt_version in ['pyqt4', 'pyside']:
     qt_int = 4
 elif qt_version in ['pyqt5', 'pyside2']:
