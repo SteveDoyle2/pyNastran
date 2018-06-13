@@ -15,6 +15,7 @@ from numpy import full, issubdtype
 from numpy.linalg import norm  # type: ignore
 import vtk
 
+import pyNastran
 from pyNastran.utils import integer_types
 from pyNastran.gui.gui_objects.names_storage import NamesStorage
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
@@ -42,7 +43,7 @@ class GuiCommon(GuiAttributes):
         self._names_storage = NamesStorage()
 
         self.vtk_version = VTK_VERSION
-        if not IS_TESTING:  # pragma: no cover
+        if not IS_TESTING or not pyNastran.is_pynastrangui_exe:  # pragma: no cover
             print('vtk_version = %s' % (self.vtk_version))
         if self.vtk_version[0] < 7 and not IS_DEV:  # TODO: should check for 7.1
             raise RuntimeError('VTK %s is no longer supported' % vtk.VTK_VERSION)

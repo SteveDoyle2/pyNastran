@@ -2291,7 +2291,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         key : str
             a key that VTK should be informed about, e.g. 't'
         """
-        print("key_key_press = ", key)
+        print("key_press = ", key)
         if key == 'f':  # change focal point
             #print('focal_point!')
             return

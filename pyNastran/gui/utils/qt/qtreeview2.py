@@ -164,10 +164,10 @@ class QTreeView2(QTreeView):
     def on_left_mouse_button(self):
         self.set_rows()
         valid, keys = self.get_row()
-        if not valid:
-            print('invalid=%s keys=%s' % (valid, keys))
-        else:
-            print('valid=%s keys=%s' % (valid, keys))
+        #if not valid:
+            #print('invalid=%s keys=%s' % (valid, keys))
+        #else:
+            #print('valid=%s keys=%s' % (valid, keys))
             #print('choice =', self.choices[keys])
 
     def on_right_mouse_button(self):

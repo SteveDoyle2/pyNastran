@@ -42,9 +42,9 @@ FORMAT_TO_EXTENSION = {
     'fast' : ['.cogsg'],
     'usm3d' : ['.cogsg', '.front'],
     'bedge' : ['.bedge'],
-    'su2' : ['.su2'],
+    #'su2' : ['.su2'],
     'tetgen' : ['.smesh', '.ele'],
-    'avus' : ['.grd'],
+    #'avus' : ['.grd'],
 
     # no duplicates are allowed
     #'panair' : ['.inp'],

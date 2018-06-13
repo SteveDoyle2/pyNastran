@@ -92,18 +92,18 @@ class MainWindow(GuiCommon2, NastranIO):
             # no results unless specified
             'nastran',  # results
             'abaqus',
-            'avus',
+            #'avus',
             'bedge', 'surf', 'ugrid', 'ugrid3d', # aflr
             'cart3d',  # results
-            'degen_geom',
+            #'degen_geom',
             'fast',
             'lawgs',
-            'obj',
+            #'obj',
             'openfoam_hex', 'openfoam_shell', 'openfoam_faces', # openfoam - results
             'panair',  # results
             'shabp',  # results
             'stl',
-            'su2',
+            #'su2',
             'tecplot',  # results
             'tetgen',
             'usm3d',  # results
@@ -116,7 +116,7 @@ class MainWindow(GuiCommon2, NastranIO):
         #fmt_order=fmt_order, inputs=inputs,
         #html_logging=html_logging,
 
-        if qt_version in ['pyqt4', 'pyqt5', 'pyside']:
+        if qt_version in ['pyqt', 'pyqt4', 'pyqt5', 'pyside']:
             NastranIO.__init__(self)
         else:
             raise NotImplementedError('qt_version=%r is not supported' % qt_version)

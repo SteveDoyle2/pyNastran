@@ -43,7 +43,7 @@ def determine_format(input_filename, allowed_formats=None):
         allowed_formats = [
             'nastran', 'stl', 'cart3d', 'tecplot', 'ugrid', 'ugrid3d', 'panair',
             #'plot3d',
-            'surf', 'lawgs', 'degen_geom', 'shabp', 'avus', 'fast', 'abaqus',
+            'surf', 'lawgs', 'shabp', 'fast', 'abaqus',
             'usm3d', 'bedge', 'su2', 'tetgen', 'obj',
             'openfoam_hex', 'openfoam_shell', 'openfoam_faces',
         ]
@@ -70,6 +70,7 @@ def run_docopt():
     if not pyNastran.is_pynastrangui_exe:
         test = ' [--test]'
         qt = ' [--qt QT]'
+
     msg += "  pyNastranGUI [-f FORMAT] INPUT [-o OUTPUT]\n"
     msg += '               [-g GSCRIPT] [-p PSCRIPT]\n'
     msg += '               [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]\n'
@@ -91,7 +92,7 @@ def run_docopt():
     msg += '  pyNastranGUI -v | --version\n'
     msg += "\n"
     msg += "Primary Options:\n"
-    msg += "  -f FORMAT, --format FORMAT  format type (avus, bedge, cart3d, lawgs, nastran,\n" # plot3d,
+    msg += "  -f FORMAT, --format FORMAT  format type (bedge, cart3d, lawgs, nastran,\n"
     msg += '                                  openfoam_hex, openfoam_shell, openfoam_faces,\n'
     msg += "                                  panair, stl, surf, tetgen, usm3d, ugrid, ugrid3d)\n"
     msg += "  -i INPUT, --input INPUT     path to input file\n"
@@ -151,8 +152,8 @@ def run_docopt():
     allowed_formats = [
         'nastran', 'stl', 'cart3d', 'tecplot', 'ugrid', 'ugrid3d', 'panair',
         #'plot3d',
-        'surf', 'lawgs', 'degen_geom', 'shabp', 'avus', 'fast', 'abaqus',
-        'usm3d', 'bedge', 'su2', 'tetgen',
+        'surf', 'lawgs', 'degen_geom', 'shabp', 'fast', 'abaqus',
+        'usm3d', 'bedge', 'tetgen',
         'openfoam_hex', 'openfoam_shell', 'openfoam_faces', 'obj',
         None,
     ]
@@ -169,7 +170,9 @@ def run_docopt():
     user_points = data['--user_points']
     user_geom = data['--user_geom']
 
-    if data['--qt'] is not None:
+    if pyNastran.is_pynastrangui_exe:
+        os.environ.setdefault('QT_API', 'pyqt4')
+    elif data['--qt'] is not None:
         qt = data['--qt'].lower()
         assert qt in ['pyside', 'pyqt4', 'pyqt5'], 'qt=%r' % qt
         os.environ.setdefault('QT_API', qt)
