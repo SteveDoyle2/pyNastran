@@ -1532,8 +1532,6 @@ class DRESP1(OptConstraint):
             atti = []
         elif isinstance(atti, integer_types):
             atti = [atti]
-        elif atti is None:
-            atti = []
         assert isinstance(atti, list), 'atti=%s type=%s' % (atti, type(atti))
 
         if validate:

@@ -2614,12 +2614,6 @@ class GetCard(GetMethods):
             mklist += mkaero.mklist()
         if mklist:
             mkarray = np.hstack([mklist])
-
-            #print('mklist =', mklist)
             new_array = [tuple(row) for row in mkarray]
-            #print('new_array =', new_array)
-            uniques = np.lib.arraysetops.unique(new_array).tolist()
-            #for u in uniques:
-                #print(u)
-            #print('uniques =', uniques)
+            #unique_pairs = np.lib.arraysetops.unique(new_array, axis=0).tolist()
         return mkarray
