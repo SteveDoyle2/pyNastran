@@ -171,7 +171,7 @@ class PROD(Property):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by PROD mid=%s' % self.mid
+        msg = ', which is required by PROD mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
 
     def uncross_reference(self):
@@ -195,6 +195,10 @@ class PROD(Property):
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
+
+    def write_card_16(self, is_double=False):
+        card = self.raw_fields()
         return self.comment + print_card_16(card)
 
 
@@ -323,7 +327,7 @@ class PTUBE(Property):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by PTUBE mid=%s' % self.mid
+        msg = ', which is required by PTUBE mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
 
     def uncross_reference(self):

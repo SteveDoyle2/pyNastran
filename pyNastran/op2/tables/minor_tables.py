@@ -49,6 +49,41 @@ class MinorTables(OP2Common):
         #: it takes double the RAM, but is easier to use
         self.apply_symmetry = True
 
+    def _read_dit(self):
+        """
+        Reads the DIT table (poorly).
+        The DIT table stores information about table cards
+        (e.g. TABLED1, TABLEM1).
+
+        """
+        table_name = self._read_table_name(rewind=False)
+        self.read_markers([-1])
+        data = self._read_record()
+
+        self.read_markers([-2, 1, 0])
+        data = self._read_record()
+        table_name, = self.struct_8s.unpack(data)
+
+        self.read_markers([-3, 1, 0])
+        data = self._read_record()
+
+        self.read_markers([-4, 1, 0])
+        data = self._read_record()
+
+        self.read_markers([-5, 1, 0])
+
+        itable = -6
+        while 1:
+            markers = self.get_nmarkers(1, rewind=True)
+            if markers == [0]:
+                break
+            data = self._read_record()
+            self.read_markers([itable, 1, 0])
+            itable -= 1
+
+        #self.show(100)
+        self.read_markers([0])
+
     def _read_omm2(self):
         """reads the OMM2 table"""
         self.log.debug("table_name = %r" % self.table_name)
@@ -592,11 +627,11 @@ class MinorTables(OP2Common):
             assert ndata == 108, ndata
             (aero, name, comps, cp, x, y, z, coeff, word, column, cd,
              ind_dof) = unpack(self._endian + b'8s 56s 2i 3f 4s 8s 3i', data[:108])
-            print('aero=%r' % aero)
-            print('name=%r' % name)
-            print('comps=%s cp=%s (x, y, z)=(%s, %s, %s)' % (comps, cp, x, y, z))
-            print('coeff=%r' % coeff)
-            print('word=%r (column, cd, ind_dof)=(%s, %s, %s)' % (word, column, cd, ind_dof))
+            #print('aero=%r' % aero)
+            #print('name=%r' % name)
+            #print('comps=%s cp=%s (x, y, z)=(%s, %s, %s)' % (comps, cp, x, y, z))
+            #print('coeff=%r' % coeff)
+            #print('word=%r (column, cd, ind_dof)=(%s, %s, %s)' % (word, column, cd, ind_dof))
             assert cp == 2, cp
             assert x == 0.0, x
             assert y == 0.0, y

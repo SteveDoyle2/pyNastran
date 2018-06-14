@@ -3,8 +3,9 @@ defines:
  - convert(model, units_to, units=None)
 """
 from __future__ import print_function
-from six import iteritems, itervalues
+from six import iteritems, itervalues, string_types
 import numpy as np
+from pyNastran.bdf.cards.base_card import break_word_by_trailing_parentheses_integer_ab
 
 def convert(model, units_to, units=None):
     """
@@ -18,6 +19,7 @@ def convert(model, units_to, units=None):
         [length, mass, time]
     units : list
         overwrites model.units
+
     """
     # units_start = 'in'
     # units_end = 'mm'
@@ -58,6 +60,7 @@ def _set_wtmass(model, gravity_scale):
     in-lbm-s : 1. / (32.2*12)
     m-kg-s   : 1.
     mm-Mg-s  : 1.
+
     """
     if 'WTMASS' in model.params:
         param = model.params['WTMASS']
@@ -128,7 +131,7 @@ def _convert_elements(model, xyz_scale, mass_scale, weight_scale):
     skip_elements = [
         'CCONEAX',
         'CELAS1', 'CELAS3', 'CDAMP3', 'CDAMP5', 'CVISC', 'CBUSH1D',
-        'CROD',  'CTUBE',
+        'CROD', 'CTUBE',
         'CBUSH',
         'CQUAD', 'CSHEAR', 'CTRIAX', 'CTRIAX6',
         'CTETRA', 'CPENTA', 'CHEXA', 'CPYRAM',
@@ -316,7 +319,6 @@ def _convert_properties(model, xyz_scale, mass_scale, weight_scale):
             prop.n1b *= xyz_scale
             prop.n2b *= xyz_scale
 
-
         elif prop_type == 'PBEAML':
             prop.dim *= xyz_scale
             prop.nsm *= nsm_bar_scale
@@ -327,7 +329,7 @@ def _convert_properties(model, xyz_scale, mass_scale, weight_scale):
             prop.z1 *= xyz_scale
             prop.z2 *= xyz_scale
             prop.twelveIt3 /= xyz_scale ** 3
-        elif prop_type ==  'PSHEAR':
+        elif prop_type == 'PSHEAR':
             prop.t *= xyz_scale
             prop.nsm *= nsm_plate_scale
 
@@ -548,7 +550,7 @@ def _convert_materials(model, xyz_scale, mass_scale, weight_scale):
 
 def _convert_constraints(model, xyz_scale):
     """converts the spc/mpcs"""
-    for spc_id, spcs in iteritems(model.spcs):
+    for unused_spc_id, spcs in iteritems(model.spcs):
         for spc in spcs:
             if spc.type in ['SPCADD', 'SPC1']:
                 continue
@@ -730,13 +732,14 @@ def _convert_aero(model, xyz_scale, time_scale, weight_scale):
 
 def _convert_optimization(model, xyz_scale, mass_scale, weight_scale):
     """converts the optimization objects"""
-    time_scale = 1.
-    force_scale = weight_scale
-    velocity_scale = xyz_scale / time_scale
-
+    #time_scale = 1.
+    #area_scale = xyz_scale ** 2
+    #inertia_scale = xyz_scale ** 4
+    #force_scale = weight_scale
+    #velocity_scale = xyz_scale / time_scale
     pressure_scale = weight_scale / xyz_scale ** 2
-    stiffness_scale = force_scale / xyz_scale
-    damping_scale = force_scale / velocity_scale
+    #stiffness_scale = force_scale / xyz_scale
+    #damping_scale = force_scale / velocity_scale
     #for key, deqatn in iteritems(model.dequations):
         #deqatn.cross_reference(model)
     #for key, dresp in iteritems(model.dresps):
@@ -747,7 +750,7 @@ def _convert_optimization(model, xyz_scale, mass_scale, weight_scale):
         #desvar.xub *= scale
         #desvar.delx *= scale
         #raise NotImplementedError(desvar)
-    for key, dconstrs in iteritems(model.dconstrs):
+    for unused_key, dconstrs in iteritems(model.dconstrs):
         for dconstr in dconstrs:
             otype = dconstr.type
             if otype == 'DCONSTR':
@@ -757,8 +760,8 @@ def _convert_optimization(model, xyz_scale, mass_scale, weight_scale):
                     response_type = dresp.rtype
                     assert len(dresp.atti) == 1, dresp.atti
                     for atti in dresp.atti:
-                        label = dresp.label
-                        atti_type = atti.type
+                        #label = dresp.label
+                        #atti_type = atti.type
                         if response_type == 'STRESS':
                             scale = pressure_scale
                         else:
@@ -773,7 +776,7 @@ def _convert_optimization(model, xyz_scale, mass_scale, weight_scale):
             else:
                 raise NotImplementedError(dconstr)
 
-    for key, dvcrel in iteritems(model.dvcrels):
+    for unused_key, dvcrel in iteritems(model.dvcrels):
         if dvcrel.type == 'DVCREL1':
             element_type = dvcrel.element_type
             if element_type == 'CBUSH':
@@ -795,83 +798,7 @@ def _convert_optimization(model, xyz_scale, mass_scale, weight_scale):
 
     for key, dvprel in iteritems(model.dvprels):
         if dvprel.type == 'DVPREL1':
-            #print(dvprel)
-            prop_type = dvprel.prop_type
-            var_to_change = dvprel.pname_fid
-
-            if prop_type == 'PSHELL':
-                if var_to_change == 'T':
-                    scale = xyz_scale
-                elif var_to_change in [6, 8]: # 12I/t^3, ts/t
-                    scale = 1.
-                else:
-                    raise NotImplementedError(dvprel)
-            elif prop_type == 'PCOMP':
-                if var_to_change.startswith('THETA'):
-                    continue
-                if var_to_change.startswith('T'):
-                    scale = xyz_scale
-                else:
-                    raise NotImplementedError(dvprel)
-            elif prop_type == 'PBARL':
-                if var_to_change.startswith('DIM'):
-                    scale = xyz_scale
-                else:
-                    raise NotImplementedError(dvprel)
-            elif prop_type == 'PBEAML':
-                if var_to_change.startswith('DIM'):
-                    scale = xyz_scale
-                else:
-                    raise NotImplementedError(dvprel)
-            elif prop_type == 'PSHEAR':
-                if var_to_change == 'T':
-                    scale = xyz_scale
-                else:
-                    raise NotImplementedError(dvprel)
-            elif prop_type == 'PBUSH':
-                if var_to_change in ['K1', 'K2', 'K3', 'K4', 'K5', 'K6']:
-                    scale = stiffness_scale
-                elif var_to_change in ['B1', 'B2', 'B3', 'B4', 'B5', 'B6']:
-                    scale = damping_scale
-                else:
-                    raise NotImplementedError(dvprel)
-            elif prop_type == 'PGAP':
-                if var_to_change in ['KA', 'KB', 'KT']:
-                    scale = stiffness_scale
-                else:
-                    raise NotImplementedError(dvprel)
-                ##: initial gap opening
-                #prop.u0 *= xyz_scale
-                ##: preload
-                #prop.f0 *= force_scale
-
-            elif prop_type == 'PBUSH1D':
-                if var_to_change in ['K']:
-                    scale = stiffness_scale
-                elif var_to_change in ['C']:
-                    scale = damping_scale
-                elif var_to_change in ['M']:
-                    scale = mass_scale
-                else:
-                    raise NotImplementedError(dvprel)
-
-            elif prop_type == 'PVISC':
-                if var_to_change in ['CE1']:
-                    scale = force_scale / velocity_scale
-                else:
-                    raise NotImplementedError(dvprel)
-
-                #prop.ce *= force_scale / velocity_scale
-                #prop.cr *= moment_scale / velocity_scale
-            elif prop_type == 'PDAMP':
-                if var_to_change in ['B1']:
-                    scale = force_scale / velocity_scale
-                else:
-                    raise NotImplementedError(dvprel)
-
-            else:
-                raise NotImplementedError(dvprel)
-
+            scale = _convert_dvprel1(dvprel, xyz_scale, mass_scale, weight_scale)
             desvars = dvprel.dvids_ref
             assert len(desvars) == 1, len(desvars)
             scale_desvars(desvars, scale)
@@ -884,6 +811,111 @@ def _convert_optimization(model, xyz_scale, mass_scale, weight_scale):
         #print('------------')
         #print(dvprel)
         #pass
+
+def _convert_dvprel1(dvprel, xyz_scale, mass_scale, weight_scale):
+    """helper for ``_convert_optimization``"""
+    time_scale = 1.
+    area_scale = xyz_scale ** 2
+    inertia_scale = xyz_scale ** 4
+    force_scale = weight_scale
+    velocity_scale = xyz_scale / time_scale
+    #pressure_scale = weight_scale / xyz_scale ** 2
+    stiffness_scale = force_scale / xyz_scale
+    damping_scale = force_scale / velocity_scale
+
+    #print(dvprel)
+    prop_type = dvprel.prop_type
+    var_to_change = dvprel.pname_fid
+
+    scale = 1.
+    if prop_type == 'PSHELL':
+        if var_to_change == 'T':
+            scale = xyz_scale
+        elif var_to_change in [6, 8]: # 12I/t^3, ts/t
+            scale = 1.
+        else:
+            raise NotImplementedError(dvprel)
+    elif prop_type == 'PCOMP':
+        if var_to_change.startswith('THETA'):
+            return scale
+        if var_to_change.startswith('T'):
+            scale = xyz_scale
+        else:
+            raise NotImplementedError(dvprel)
+    elif prop_type == 'PBARL':
+        if var_to_change.startswith('DIM'):
+            scale = xyz_scale
+        else:
+            raise NotImplementedError(dvprel)
+    elif prop_type == 'PBEAM':
+        if isinstance(prop_type, string_types):
+            word, unused_num = break_word_by_trailing_parentheses_integer_ab(
+                var_to_change)
+            if word == 'A':
+                scale = area_scale
+            elif word in ['I1', 'I2', 'I12', 'J']:
+                scale = inertia_scale
+            elif word in ['C1', 'C2', 'D1', 'D2', 'E1', 'E2', 'F1', 'F2']:
+                scale = xyz_scale
+            else:
+                raise NotImplementedError(dvprel)
+        else:
+            raise NotImplementedError(dvprel)
+
+    elif prop_type == 'PBEAML':
+        if var_to_change.startswith('DIM'):
+            scale = xyz_scale
+        else:
+            raise NotImplementedError(dvprel)
+    elif prop_type == 'PSHEAR':
+        if var_to_change == 'T':
+            scale = xyz_scale
+        else:
+            raise NotImplementedError(dvprel)
+    elif prop_type == 'PBUSH':
+        if var_to_change in ['K1', 'K2', 'K3', 'K4', 'K5', 'K6']:
+            scale = stiffness_scale
+        elif var_to_change in ['B1', 'B2', 'B3', 'B4', 'B5', 'B6']:
+            scale = damping_scale
+        else:
+            raise NotImplementedError(dvprel)
+    elif prop_type == 'PGAP':
+        if var_to_change in ['KA', 'KB', 'KT']:
+            scale = stiffness_scale
+        else:
+            raise NotImplementedError(dvprel)
+        ##: initial gap opening
+        #prop.u0 *= xyz_scale
+        ##: preload
+        #prop.f0 *= force_scale
+
+    elif prop_type == 'PBUSH1D':
+        if var_to_change in ['K']:
+            scale = stiffness_scale
+        elif var_to_change in ['C']:
+            scale = damping_scale
+        elif var_to_change in ['M']:
+            scale = mass_scale
+        else:
+            raise NotImplementedError(dvprel)
+
+    elif prop_type == 'PVISC':
+        if var_to_change in ['CE1']:
+            scale = force_scale / velocity_scale
+        else:
+            raise NotImplementedError(dvprel)
+
+        #prop.ce *= force_scale / velocity_scale
+        #prop.cr *= moment_scale / velocity_scale
+    elif prop_type == 'PDAMP':
+        if var_to_change in ['B1']:
+            scale = force_scale / velocity_scale
+        else:
+            raise NotImplementedError(dvprel)
+
+    else:
+        raise NotImplementedError(dvprel)
+    return scale
 
 def scale_desvars(desvars, scale):
     """scales the DVPREL/DVCREL/DVMREL DESVAR values"""
@@ -1026,6 +1058,4 @@ def convert_mass(mass_from, mass_to):
             gravity_scale *= gravity_english
         else:
             raise NotImplementedError('mass to unit=%r; expected=[g, kg, Mg, lbm]' % mass_to)
-
-
     return mass_scale, weight_scale, gravity_scale

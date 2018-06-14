@@ -3,16 +3,19 @@ Defines the GUI IO file for Tetegen.
 """
 from __future__ import print_function
 import os
+from collections import OrderedDict
+
+import numpy as np
 
 from pyNastran.converters.tetgen.tetgen import Tetgen
-#from pyNastran.gui.gui_objects.gui_result import GuiResult
+from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.gui.utils.vtk.vtk_utils import (
     create_vtk_cells_of_constant_element_type, numpy_to_vtk_points)
 
 
 class TetgenIO(object):
-    def __init__(self, parent):
-        self.parent = parent
+    def __init__(self, gui):
+        self.gui = gui
 
     def get_tetgen_wildcard_geometry_results_functions(self):
         data = ('Tetgen',
@@ -21,12 +24,11 @@ class TetgenIO(object):
         return data
 
     def load_tetgen_geometry(self, smesh_filename, name='main', plot=True):
-        #print("load_tetgen_geometry...")
-        skip_reading = self.parent._remove_old_geometry(smesh_filename)
+        skip_reading = self.gui._remove_old_geometry(smesh_filename)
         if skip_reading:
             return
 
-        model = Tetgen(log=self.parent.log, debug=False)
+        model = Tetgen(log=self.gui.log, debug=False)
 
         base_filename, ext = os.path.splitext(smesh_filename)
         ext = ext.lower()
@@ -42,8 +44,9 @@ class TetgenIO(object):
         nodes = model.nodes
         tris = model.tris
         tets = model.tets
+        nnodes = nodes.shape[0]
 
-        self.parent.nnodes = nodes.shape[0]
+        self.gui.nnodes = nodes.shape[0]
         ntris = 0
         ntets = 0
         if dimension_flag == 2:
@@ -52,17 +55,18 @@ class TetgenIO(object):
             ntets = tets.shape[0]
         else:
             raise RuntimeError()
-        self.parent.nelements = ntris + ntets
+        nelements = ntris + ntets
+        self.gui.nelements = nelements
 
-        #print("nnodes = ",self.nnodes)
-        #print("nelements = ", self.nelements)
+        #print("nnodes = ",self.gui.nnodes)
+        #print("nelements = ", self.gui.nelements)
 
-        grid = self.parent.grid
-        grid.Allocate(self.parent.nelements, 1000)
+        grid = self.gui.grid
+        grid.Allocate(self.gui.nelements, 1000)
 
         assert nodes is not None
         points = numpy_to_vtk_points(nodes)
-        self.parent.nid_map = {}
+        self.gui.nid_map = {}
 
         #elements -= 1
         if dimension_flag == 2:
@@ -76,17 +80,39 @@ class TetgenIO(object):
 
         grid.SetPoints(points)
         grid.Modified()
-        if hasattr(grid, 'Update'):
+        if hasattr(grid, 'Update'):  # pragma: no cover
             grid.Update()
 
         # loadTetgenResults - regions/loads
-        self.parent.scalarBar.VisibilityOff()
-        self.parent.scalarBar.Modified()
+        self.gui.scalarBar.VisibilityOff()
+        self.gui.scalarBar.Modified()
 
-        cases = {}
-        #unused_ID = 1
 
-        self.parent._finish_results_io(cases)
+        form, cases, node_ids, element_ids = self._fill_tetgen_case(nnodes, nelements)
+        self.gui.node_ids = node_ids
+        self.gui.element_ids = element_ids
+        self.gui._finish_results_io2(form, cases, reset_labels=True)
 
-    def _fill_tetgen_case(self, cases, ID, unused_elements):
-        return cases
+    def _fill_tetgen_case(self, nnodes, nelements):
+        subcase_id = 0
+        self.gui.isubcase_name_map = {subcase_id : ('Tetgen', '')}
+
+        icase = 0
+        form = [
+            ('NodeID', 0, []),
+            ('ElementID', 1, []),
+        ]
+        nids = np.arange(1, nnodes+1)
+        nid_res = GuiResult(subcase_id, 'NodeID', 'NodeID', 'node', nids,
+                            mask_value=None, nlabels=None, labelsize=None, ncolors=None,
+                            colormap='jet', data_format=None, uname='GuiResult')
+
+        eids = np.arange(1, nelements+1)
+        eid_res = GuiResult(subcase_id, 'ElementID', 'ElementID', 'centroid', eids,
+                            mask_value=None, nlabels=None, labelsize=None, ncolors=None,
+                            colormap='jet', data_format=None, uname='GuiResult')
+
+        cases = OrderedDict()
+        cases[icase] = (nid_res, (0, 'NodeID'))
+        cases[icase + 1] = (eid_res, (0, 'ElementID'))
+        return form, cases, nids, eids

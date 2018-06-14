@@ -162,7 +162,7 @@ class CMASS1(PointMassElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CMASS1 eid=%s' % self.eid
+        msg = ', which is required by CMASS1 eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.PropertyMass(self.pid, msg=msg)
 
@@ -218,7 +218,7 @@ class CMASS1(PointMassElement):
         return nodes
 
     def Pid(self):
-        if isinstance(self.pid, integer_types):
+        if self.pid_ref is None:
             return self.pid
         return self.pid_ref.pid
 
@@ -396,7 +396,7 @@ class CMASS2(PointMassElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CMASS2 eid=%s' % self.eid
+        msg = ', which is required by CMASS2 eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
     def uncross_reference(self):
@@ -536,7 +536,7 @@ class CMASS3(PointMassElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CMASS3 eid=%s' % self.eid
+        msg = ', which is required by CMASS3 eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.PropertyMass(self.pid, msg=msg)
 
@@ -632,6 +632,9 @@ class CMASS4(PointMassElement):
     def Centroid(self):
         return np.zeros(3)
 
+    def center_of_mass(self):
+        return self.Centroid()
+
     @property
     def node_ids(self):
         return [self.S1(), self.S2()]
@@ -655,9 +658,10 @@ class CMASS4(PointMassElement):
         model : BDF()
             the BDF object
         """
-        self.nodes_ref = model.EmpyNodes(self.nodes)
+        msg = ', which is required by CMASS4 eid=%s' % self.eid
+        self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, xref_errors):
         self.cross_reference(model)
 
     def uncross_reference(self):
@@ -887,6 +891,9 @@ class CONM1(PointMassElement):
     def Centroid():
         return np.zeros(3, dtype='float64')
 
+    def center_of_mass(self):
+        return self.Centroid()
+
     @property
     def node_ids(self):
         return [self.Nid()]
@@ -910,7 +917,7 @@ class CONM1(PointMassElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CONM1 eid=%s' % self.eid
+        msg = ', which is required by CONM1 eid=%s' % self.eid
         self.nid_ref = model.Node(self.Nid(), msg=msg)
         self.cid_ref = model.Coord(self.Cid(), msg=msg)
 
@@ -1305,7 +1312,7 @@ class CONM2(PointMassElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CONM2 eid=%s' % self.eid
+        msg = ', which is required by CONM2 eid=%s' % self.eid
         self.nid_ref = model.Node(self.nid, msg=msg)
 
         cid = self.Cid()

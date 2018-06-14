@@ -1,7 +1,8 @@
 from six.moves import StringIO
 from math import pi, sqrt
-
 import unittest
+
+import numpy as np
 
 from pyNastran.bdf.bdf import BDF, BDFCard
 from pyNastran.bdf.bdf import CROD, CONROD, PROD, CTUBE, PTUBE, GRID, MAT1
@@ -107,7 +108,20 @@ class TestRods(unittest.TestCase):
         nids = [10, 12]
         ctube = model.add_ctube(eid, pid, nids, comment='ctube')
         model.add_grid(10, [0., 0., 0.])
-        model.add_grid(12, [0., 0., 0.])
+        model.add_grid(12, [2., 0., 0.])
+
+        model.safe_cross_reference()
+        model.uncross_reference()
+        model.cross_reference()
+        mass, cg, inertia = model.mass_properties(
+            element_ids=None, mass_ids=None,
+            reference_point=None, sym_axis=None,
+            scale=None, inertia_reference='cg')
+
+        # L * (rho * a + nsm)
+        A = pi * (OD1**2) / 4.
+        mass_expected = 2.0 * (rho * A + nsm)
+        assert np.allclose(mass, mass_expected), mass
         save_load_deck(model)
 
     def test_conrod_01(self):

@@ -15,6 +15,7 @@ All aero cards are defined in this file.  This includes:
  * MONPNT1 / MONPNT2 / MONPNT3
 
 All cards are BaseCard objects.
+
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -58,6 +59,7 @@ class AECOMP(BaseCard):
         {'SET1', 'AELIST', 'CAEROx'}
     lists : list[int]
         list of values of AECOMP lists
+
     """
     type = 'AECOMP'
     allowed_list_types = ['SET1', 'AELIST', 'CAERO']
@@ -82,6 +84,7 @@ class AECOMP(BaseCard):
             the component
         comment : str; default=''
             a comment for the card
+
         """
         BaseCard.__init__(self)
         if comment:
@@ -114,6 +117,7 @@ class AECOMP(BaseCard):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         name = string(card, 1, 'name')
         list_type = string(card, 2, 'list_type')
@@ -133,6 +137,7 @@ class AECOMP(BaseCard):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by AECOMP name=%r' % self.name
         if self.list_type == 'SET1':
@@ -212,6 +217,7 @@ class AECOMP(BaseCard):
         -----------
         size : int; default=8
             the size of the card (8/16)
+
         """
         card = self.repr_fields()
         return self.comment + print_card_8(card)
@@ -233,6 +239,7 @@ class AEFACT(BaseCard):
 
     TODO: Are these defined in percentages and thus,
           should they be normalized if they are not?
+
     """
     type = 'AEFACT'
 
@@ -250,8 +257,9 @@ class AEFACT(BaseCard):
             list of percentages
         comment : str; default=''
             a comment for the card
+
         """
-        BaseCard.__init__(self)
+        super(AEFACT, self).__init__()
         if comment:
             self.comment = comment
         #: Set identification number. (Unique Integer > 0)
@@ -270,6 +278,7 @@ class AEFACT(BaseCard):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         sid = integer(card, 1, 'sid')
 
@@ -284,6 +293,15 @@ class AEFACT(BaseCard):
 
     #def uncross_reference(self):
         #pass
+
+    def object_attributes(self, mode='public', keys_to_skip=None):
+        """.. seealso:: `pyNastran.utils.object_attributes(...)`"""
+        if keys_to_skip is None:
+            keys_to_skip = []
+
+        my_keys_to_skip = ['Di', 'data']
+        return super(AEFACT, self).object_attributes(
+            mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     @property
     def Di(self):
@@ -308,6 +326,7 @@ class AEFACT(BaseCard):
         -------
         fields : List[int/float/str]
             the fields that define the card
+
         """
         list_fields = ['AEFACT', self.sid] + list(self.fractions)
         return list_fields
@@ -321,6 +340,7 @@ class AEFACT(BaseCard):
         -----------
         size : int; default=8
             the size of the card (8/16)
+
         """
         card = self.repr_fields()
         return self.comment + print_card_8(card)
@@ -333,17 +353,15 @@ class AELINK(BaseCard):
 
     .. math:: u^D + \Sigma_{i=1}^n C_i u_i^I = 0.0
 
-    +--------+-------+-------+--------+----+-------+----+-------+----+
-    |   1    |   2   |   3   |   4    |  5 |   6   |  7 |   8   |  9 |
-    +========+=======+=======+========+====+=======+====+=======+====+
-    | AELINK |  ID   | LABLD | LABL1  | C1 | LABL2 | C2 | LABL3 | C3 |
-    +--------+-------+-------+--------+----+-------+----+-------+----+
-    |        | LABL4 |  C4   |  etc.  |    |       |    |       |    |
-    +--------+-------+-------+--------+----+-------+----+-------+----+
-
-    +--------+-------+-------+-------+------+
-    | AELINK |  10   | INBDA | OTBDA | -2.0 |
-    +--------+-------+-------+-------+------+
+    +--------+-------+-------+--------+------+-------+----+-------+----+
+    |   1    |   2   |   3   |   4    |   5  |   6   |  7 |   8   |  9 |
+    +========+=======+=======+========+======+=======+====+=======+====+
+    | AELINK |  ID   | LABLD | LABL1  |  C1  | LABL2 | C2 | LABL3 | C3 |
+    +--------+-------+-------+--------+------+-------+----+-------+----+
+    |        | LABL4 |  C4   |  etc.  |      |       |    |       |    |
+    +--------+-------+-------+--------+------+-------+----+-------+----+
+    | AELINK |  10   | INBDA |  OTBDA | -2.0 |       |    |       |    |
+    +--------+-------+-------+--------+------+-------+----+-------+----+
     """
     type = 'AELINK'
 
@@ -360,8 +378,11 @@ class AELINK(BaseCard):
             name of the AESURF(???) card
         independent_labels : List[str, ..., str]
             name for the AESTAT(???) cards
+        Cis : List[???]
+            ???
         comment : str; default=''
             a comment for the card
+
         """
         BaseCard.__init__(self)
         if comment:
@@ -400,6 +421,7 @@ class AELINK(BaseCard):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         aelink_id = integer_or_string(card, 1, 'ID')
         label = string(card, 2, 'label')
@@ -417,6 +439,15 @@ class AELINK(BaseCard):
 
     #def uncross_reference(self):
         #pass
+
+    def object_attributes(self, mode='public', keys_to_skip=None):
+        """.. seealso:: `pyNastran.utils.object_attributes(...)`"""
+        if keys_to_skip is None:
+            keys_to_skip = []
+
+        my_keys_to_skip = ['id']
+        return super(AELINK, self).object_attributes(
+            mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     @property
     def id(self):
@@ -436,6 +467,7 @@ class AELINK(BaseCard):
         -------
         list_fields : List[int/float/str]
             the fields that define the card
+
         """
         list_fields = ['AELINK', self.aelink_id, self.label]
         for (ivar, ival) in zip(self.independent_labels, self.Cis):
@@ -451,6 +483,7 @@ class AELINK(BaseCard):
         -----------
         size : int; default=8
             the size of the card (8/16)
+
         """
         card = self.raw_fields()
         return self.comment + print_card_8(card)
@@ -479,6 +512,7 @@ class AELIST(BaseCard):
     2. When the THRU option is used, all intermediate grid points must exist.
        The word THRU may not appear in field 3 or 9 (2 or 9 for continuations).
     3. Intervening blank fields are not allowed.
+
     """
     type = 'AELIST'
 
@@ -495,6 +529,7 @@ class AELIST(BaseCard):
             list of box ids
         comment : str; default=''
             a comment for the card
+
         """
         BaseCard.__init__(self)
         if comment:
@@ -502,6 +537,10 @@ class AELIST(BaseCard):
 
         if isinstance(elements, integer_types):
             elements = [elements]
+
+        if isinstance(elements, np.ndarray):
+            assert len(elements.shape) == 1, elements.shape
+            elements = elements.tolist()
         if not isinstance(elements, (list, tuple)):
             raise TypeError('AELIST; type(elements)=%s and must be a list/tuple' % type(elements))
 
@@ -523,6 +562,7 @@ class AELIST(BaseCard):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         sid = integer(card, 1, 'sid')
         elements = fields(integer_or_string, card, 'eid', i=2, j=len(card))
@@ -549,6 +589,7 @@ class AELIST(BaseCard):
         -------
         fields : List[int/float/str]
             the fields that define the card
+
         """
         list_fields = ['AELIST', self.sid] + self.elements
         return list_fields
@@ -591,6 +632,7 @@ class AEPARM(BaseCard):
             unused by Nastran
         comment : str; default=''
             a comment for the card
+
         """
         BaseCard.__init__(self)
         if comment:
@@ -598,6 +640,15 @@ class AEPARM(BaseCard):
         self.aeparm_id = aeparm_id
         self.label = label
         self.units = units
+
+    def object_attributes(self, mode='public', keys_to_skip=None):
+        """.. seealso:: `pyNastran.utils.object_attributes(...)`"""
+        if keys_to_skip is None:
+            keys_to_skip = []
+
+        my_keys_to_skip = ['id']
+        return super(AEPARM, self).object_attributes(
+            mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     @property
     def id(self):
@@ -620,6 +671,7 @@ class AEPARM(BaseCard):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         aeparm_id = integer(card, 1, 'aeparm_id')
         label = string(card, 2, 'label')
@@ -640,6 +692,7 @@ class AEPARM(BaseCard):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         aeparm_id = data[0]
         label = data[1]
@@ -664,6 +717,7 @@ class AEPARM(BaseCard):
         -------
         fields : List[int/float/str]
             the fields that define the card
+
         """
         list_fields = ['AEPARM', self.aeparm_id, self.label, self.units]
         return list_fields
@@ -733,6 +787,7 @@ class AESURF(BaseCard):
             function of the dynamic pressure
         comment : str; default=''
             a comment for the card
+
         """
         BaseCard.__init__(self)
         if comment:
@@ -801,6 +856,7 @@ class AESURF(BaseCard):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         aesid = integer(card, 1, 'aesid')
         label = string(card, 2, 'label')
@@ -851,6 +907,7 @@ class AESURF(BaseCard):
     def AELIST_id1(self):
         self.deprecated('AESURF.AELIST_id1()', 'AESURF.aelist_id1()', '1.1')
         return self.aelist_id1()
+
     def AELIST_id2(self):
         self.deprecated('AESURF.AELIST_id2()', 'AESURF.aelist_id2()', '1.1')
         return self.aelist_id2()
@@ -863,6 +920,7 @@ class AESURF(BaseCard):
         ----------
         model : BDF()
             the BDF object
+
         """
         self.cid1_ref = model.Coord(self.cid1)
         if self.cid2 is not None:
@@ -875,16 +933,11 @@ class AESURF(BaseCard):
         if self.tqulim is not None:
             self.tqulim_ref = model.TableD(self.tqulim)
 
-    def safe_cross_reference(self, model):
-        try:
-            self.cid1_ref = model.Coord(self.cid1)
-        except KeyError:
-            pass
+    def safe_cross_reference(self, model, xref_errors):
+        msg = ', which is required by AESURF aesid=%s' % self.aesid
+        self.cid1_ref = model.safe_coord(self.cid1, self.aesid, xref_errors, msg=msg)
         if self.cid2 is not None:
-            try:
-                self.cid2_ref = model.Coord(self.cid2)
-            except KeyError:
-                pass
+            self.cid2_ref = model.safe_coord(self.cid2, self.aesid, xref_errors, msg=msg)
         try:
             self.alid1_ref = model.AELIST(self.alid1)
         except KeyError:
@@ -920,7 +973,7 @@ class AESURF(BaseCard):
         self.tqllim_ref = None
         self.tqulim_ref = None
 
-    def update(self, model, maps):
+    def update(self, unused_model, maps):
         coord_map = maps['coord']
         aelist_map = maps['aelist']
         self.cid1 = coord_map[self.cid1]
@@ -939,6 +992,7 @@ class AESURF(BaseCard):
         -------
         fieldsreset_camera[int/float/str]
             the fields that define the card
+
         """
         list_fields = ['AESURF', self.aesid, self.label, self.Cid1(), self.aelist_id1(),
                        self.Cid2(), self.aelist_id2(), self.eff, self.ldw,
@@ -954,6 +1008,7 @@ class AESURF(BaseCard):
         -------
         fields : List[int/float/str]
             the fields that define the card
+
         """
         eff = set_blank_if_default(self.eff, 1.0)
         ldw = set_blank_if_default(self.ldw, 'LDW')
@@ -984,6 +1039,7 @@ class AESURF(BaseCard):
         -------
         msg : str
             the string representation of the card
+
         """
         card = self.repr_fields()
         return self.comment + print_card_8(card)
@@ -1023,6 +1079,7 @@ class AESURFS(BaseCard):  # not integrated
             control surface(s) on the AESURF card
         comment : str; default=''
             a comment for the card
+
         """
         BaseCard.__init__(self)
         if comment:
@@ -1045,6 +1102,7 @@ class AESURFS(BaseCard):  # not integrated
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         aesid = integer(card, 1, 'ID')
         label = string(card, 2, 'label')
@@ -1070,8 +1128,9 @@ class AESURFS(BaseCard):  # not integrated
         ----------
         model : BDF()
             the BDF object
+
         """
-        msg = ' which is required by AESURFS aesid=%s' % self.aesid
+        msg = ', which is required by AESURFS aesid=%s' % self.aesid
         self.list1_ref = model.Set(self.list1, msg)
         self.list1_ref.cross_reference_set(model, 'Node', msg)
 
@@ -1079,7 +1138,7 @@ class AESURFS(BaseCard):  # not integrated
         self.list2_ref.cross_reference_set(model, 'Node', msg)
 
     def safe_cross_reference(self, model):
-        msg = ' which is required by AESURFS aesid=%s' % self.aesid
+        msg = ', which is required by AESURFS aesid=%s' % self.aesid
         try:
             self.list1_ref = model.Set(self.list1, msg=msg)
             self.list1_ref.cross_reference_set(model, 'Node', msg)
@@ -1116,6 +1175,7 @@ class AESURFS(BaseCard):  # not integrated
         -------
         fields : List[int/float/str]
             the fields that define the card
+
         """
         list_fields = ['AESURFS', self.aesid, self.label, None, self.List1(), None,
                        self.List2()]
@@ -1168,7 +1228,6 @@ class CAERO1(BaseCard):
         distance along the flow direction from node 1 to node 2; (typically x, root chord)
     x43 : float
         distance along the flow direction from node 4 to node 3; (typically x, tip chord)
-
     cp : int, CORDx
         int : coordinate system
         CORDx : Coordinate object (xref)
@@ -1188,6 +1247,7 @@ class CAERO1(BaseCard):
         AEFACT : AEFACT object  (xref)
     comment : str; default=''
          a comment for the card
+
     """
     type = 'CAERO1'
     _field_map = {
@@ -1204,6 +1264,7 @@ class CAERO1(BaseCard):
             the field number to update
         value : int/float
             the value for the appropriate field
+
         """
         if n == 9:
             return self.p1[0]
@@ -1231,6 +1292,7 @@ class CAERO1(BaseCard):
             the field number to update
         value : int/float
             the value for the appropriate field
+
         """
         if n == 9:
             self.p1[0] = value
@@ -1248,7 +1310,7 @@ class CAERO1(BaseCard):
         else:
             raise KeyError('Field %r=%r is an invalid CAERO1 entry.' % (n, value))
 
-    def __init__(self, eid, pid, igid, p1, x12, p4, x43,
+    def __init__(self, eid, pid, igroup, p1, x12, p4, x43,
                  cp=0, nspan=0, lspan=0, nchord=0, lchord=0, comment=''):
         """
         Defines a CAERO1 card, which defines a simplified lifting surface
@@ -1261,7 +1323,7 @@ class CAERO1(BaseCard):
         pid : int, PAERO1
             int : PAERO1 ID
             PAERO1 : PAERO1 object (xref)
-        igid : int
+        igroup : int
             Group number
         p1 : (1, 3) ndarray float
             xyz location of point 1 (leading edge; inboard)
@@ -1290,6 +1352,7 @@ class CAERO1(BaseCard):
             AEFACT : AEFACT object  (xref)
         comment : str; default=''
              a comment for the card
+
         """
         BaseCard.__init__(self)
         if cp is None:
@@ -1319,7 +1382,7 @@ class CAERO1(BaseCard):
         self.lspan = lspan
         self.nchord = nchord
         self.lchord = lchord
-        self.igid = igid
+        self.igroup = igroup
         self.p1 = p1
         self.x12 = x12
         self.p4 = p4
@@ -1369,6 +1432,7 @@ class CAERO1(BaseCard):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
@@ -1377,7 +1441,7 @@ class CAERO1(BaseCard):
         nchord = integer_or_blank(card, 5, 'nchord', 0)
         lspan = integer_or_blank(card, 6, 'lspan', 0)
         lchord = integer_or_blank(card, 7, 'lchord', 0)
-        igid = integer(card, 8, 'igid')
+        igroup = integer(card, 8, 'igid')
 
         p1 = np.array([
             double_or_blank(card, 9, 'x1', 0.0),
@@ -1392,12 +1456,12 @@ class CAERO1(BaseCard):
         x43 = double_or_blank(card, 16, 'x43', 0.)
 
         assert len(card) <= 17, 'len(CAERO1 card) = %i\ncard=%s' % (len(card), card)
-        return CAERO1(eid, pid, igid, p1, x12, p4, x43,
+        return CAERO1(eid, pid, igroup, p1, x12, p4, x43,
                       cp=cp, nspan=nspan, lspan=lspan, nchord=nchord, lchord=lchord,
                       comment=comment)
 
     @classmethod
-    def add_quad(cls, eid, pid, span, chord, igid,
+    def add_quad(cls, eid, pid, span, chord, igroup,
                  p1, p2, p3, p4, cp=0, spanwise='y', comment=''):
         r"""
         ::
@@ -1412,6 +1476,7 @@ class CAERO1(BaseCard):
           2------3
 
         TODO: CP not handled correctly
+
         """
         x12 = p2[0] - p1[0]
         x43 = p3[0] - p4[0]
@@ -1458,7 +1523,7 @@ class CAERO1(BaseCard):
         else:
             raise TypeError(chord)
 
-        return CAERO1(eid, pid, igid, p1, x12, p4, x43,
+        return CAERO1(eid, pid, igroup, p1, x12, p4, x43,
                       cp=cp, nspan=nspan, lspan=lspan, nchord=nchord, lchord=lchord,
                       comment=comment)
 
@@ -1469,22 +1534,34 @@ class CAERO1(BaseCard):
     def _init_ids(self, dtype='int32'):
         """
         Fill `self.box_ids` with the sub-box ids. Shape is (nchord, nspan)
+
         """
         nchord, nspan = self.shape
         assert nchord >= 1, 'nchord=%s' % nchord
         assert nspan >= 1, 'nspan=%s' % nspan
         self.box_ids = np.zeros((nchord, nspan), dtype=dtype)
 
+        npanels = nchord * nspan
+        i = 0
         try:
-            for ichord in range(nchord):
-                for ispan in range(nspan):
-                    self.box_ids[ichord, ispan] = self.eid + ichord + ispan * nchord
+            self.box_ids = np.arange(self.eid, self.eid + npanels, dtype=dtype).reshape(nspan, nchord).T
         except OverflowError:
             if dtype == 'int64':
+                # we already tried int64
                 msg = 'eid=%s ichord=%s ispan=%s nchord=%s' % (
                     self.eid, ichord, ispan, nchord)
                 raise OverflowError(msg)
             self._init_ids(dtype='int64')
+
+    @property
+    def igid(self):
+        self.deprecated('igid', 'igroup', '1.1')
+        return self.igroup
+
+    @igid.setter
+    def igid(self, igroup):
+        self.deprecated('igid', 'igroup', '1.1')
+        self.igroup = igroup
 
     def Cp(self):
         if self.cp_ref is not None:
@@ -1504,8 +1581,9 @@ class CAERO1(BaseCard):
         ----------
         model : BDF()
             the BDF object
+
         """
-        msg = ' which is required by CAERO1 eid=%s' % self.eid
+        msg = ', which is required by CAERO1 eid=%s' % self.eid
         self.pid_ref = model.PAero(self.pid, msg=msg)
         self.cp_ref = model.Coord(self.cp, msg=msg)
         self.ascid_ref = model.Acsid(msg=msg)
@@ -1518,7 +1596,7 @@ class CAERO1(BaseCard):
             self.lspan_ref = model.AEFact(self.lspan, msg)
         self._init_ids()
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1526,17 +1604,15 @@ class CAERO1(BaseCard):
         ----------
         model : BDF()
             the BDF object
+
         """
-        msg = ' which is required by CAERO1 eid=%s' % self.eid
+        msg = ', which is required by CAERO1 eid=%s' % self.eid
         try:
             self.pid_ref = model.PAero(self.pid, msg=msg)
         except KeyError:
             pass
 
-        try:
-            self.cp_ref = model.Coord(self.cp, msg=msg)
-        except KeyError:
-            pass
+        self.cp_ref = model.safe_coord(self.cp, self.eid, xref_errors, msg=msg)
 
         try:
             self.ascid_ref = model.Acsid(msg=msg)
@@ -1545,17 +1621,11 @@ class CAERO1(BaseCard):
 
         if self.nchord == 0:
             assert isinstance(self.lchord, integer_types), self.lchord
-            try:
-                self.lchord_ref = model.AEFact(self.lchord, msg)
-            except KeyError:
-                pass
+            self.lchord_ref = model.safe_aefact(self.lchord, self.eid, xref_errors, msg)
 
         if self.nspan == 0:
             assert isinstance(self.lspan, integer_types), self.lspan
-            try:
-                self.lspan_ref = model.AEFact(self.lspan, msg)
-            except KeyError:
-                pass
+            self.lspan_ref = model.safe_aefact(self.lspan, self.eid, xref_errors, msg)
 
         self._init_ids()
 
@@ -1578,8 +1648,9 @@ class CAERO1(BaseCard):
         ----------
         model : BDF()
             the BDF object
+
         """
-        #msg = ' which is required by CAERO1 eid=%s' % self.eid
+        #msg = ', which is required by CAERO1 eid=%s' % self.eid
         paero_map = maps['paero']
         coord_map = maps['coord']
         aefact_map = maps['aefact']
@@ -1602,6 +1673,7 @@ class CAERO1(BaseCard):
         -------
         min_max_eid : (2, ) list
             The [min_eid, max_eid]
+
         """
         nchord, nspan = self.shape
         return [self.eid, self.eid + nchord * nspan]
@@ -1614,6 +1686,7 @@ class CAERO1(BaseCard):
         -------
         p1234 : (4, 3) list
              List of 4 corner points in the global frame
+
         """
         if self.cp_ref is None and self.cp == 0:
             p1 = self.p1
@@ -1739,6 +1812,7 @@ class CAERO1(BaseCard):
             The number of nodes for the CAERO
         nelmements : int
             The number of elements for the CAERO
+
         """
         nchord, nspan = self.shape
         nelements = nchord * nspan
@@ -1754,6 +1828,7 @@ class CAERO1(BaseCard):
             The percentage x location in the chord-wise direction of each panel
         y : (nspan,) ndarray
             The percentage y location in the span-wise direction of each panel
+
         """
         if self.nchord == 0:
             x = self.lchord_ref.fractions
@@ -1785,10 +1860,16 @@ class CAERO1(BaseCard):
             the array of points
         elements : (nelements,4) ndarray of integers
             the array of point ids
+
         """
         p1, p2, p3, p4 = self.get_points()
         x, y = self.xy
-        return points_elements_from_quad_points(p1, p2, p3, p4, x, y)
+        # We're reordering the points so we get the node ids and element ids
+        # to be consistent with Nastran.  This is only useful if you're plotting
+        # aero panel forces
+        #
+        # this gives us chordwise panels and chordwise nodes
+        return points_elements_from_quad_points(p1, p4, p3, p2, y, x, dtype='int32')
 
     def set_points(self, points):
         self.p1 = points[0]
@@ -1801,6 +1882,11 @@ class CAERO1(BaseCard):
         assert self.x43 >= 0., 'p4=%s p3=%s' % (self.p4, p3)
         assert self.x12 > 0. or self.x43 > 0., 'points=%s' % (points)
 
+    def shift(self, dxyz):
+        """shifts the aero panel"""
+        self.p1 += dxyz
+        self.p4 += dxyz
+
     def raw_fields(self):
         """
         Gets the fields in their unmodified form
@@ -1809,11 +1895,12 @@ class CAERO1(BaseCard):
         -------
         fields : list
           the fields that define the card
+
         """
         lchord = self.get_LChord()
         lspan = self.get_LSpan()
         list_fields = (['CAERO1', self.eid, self.Pid(), self.Cp(), self.nspan,
-                        self.nchord, lspan, lchord, self.igid, ] +
+                        self.nchord, lspan, lchord, self.igroup, ] +
                        list(self.p1) + [self.x12] + list(self.p4) + [self.x43])
         return list_fields
 
@@ -1835,6 +1922,7 @@ class CAERO1(BaseCard):
         -------
         fields : LIST
             The fields that define the card
+
         """
         cp = set_blank_if_default(self.Cp(), 0)
         nspan = set_blank_if_default(self.nspan, 0)
@@ -1842,7 +1930,7 @@ class CAERO1(BaseCard):
         lchord = set_blank_if_default(self.get_LChord(), 0)
         lspan = set_blank_if_default(self.get_LSpan(), 0)
         list_fields = (['CAERO1', self.eid, self.Pid(), cp, nspan, nchord,
-                        lspan, lchord, self.igid] + list(self.p1) +
+                        lspan, lchord, self.igroup] + list(self.p1) +
                        [self.x12] + list(self.p4) + [self.x43])
         return list_fields
 
@@ -1883,6 +1971,7 @@ class CAERO2(BaseCard):
         -------
         value : int, float, None
             The value for the appropriate field
+
         """
         if n == 9:
             return self.p1[0]
@@ -1903,6 +1992,7 @@ class CAERO2(BaseCard):
             The field number to update
         value : int, float, None
             The value for the appropriate field
+
         """
         if n == 9:
             self.p1[0] = value
@@ -1945,6 +2035,7 @@ class CAERO2(BaseCard):
             Number of interference elements
         comment : str; default=''
             a comment for the card
+
         """
         BaseCard.__init__(self)
         if lsb is None:
@@ -2030,6 +2121,7 @@ class CAERO2(BaseCard):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
@@ -2071,6 +2163,12 @@ class CAERO2(BaseCard):
             return self.lint_ref.sid
         return self.lint
 
+    @property
+    def nboxes(self):
+        if self.nsb > 0:
+            return self.nsb
+        return len(self.lsb_ref.fractions) # AEFACT
+
     def cross_reference(self, model):
         """
         Cross links the card so referenced cards can be extracted directly
@@ -2079,8 +2177,9 @@ class CAERO2(BaseCard):
         ----------
         model : BDF()
             the BDF object
+
         """
-        msg = ' which is required by CAERO2 eid=%s' % self.eid
+        msg = ', which is required by CAERO2 eid=%s' % self.eid
         self.pid_ref = model.PAero(self.pid, msg=msg)  # links to PAERO2
         self.cp_ref = model.Coord(self.cp, msg=msg)
         if self.nsb == 0:
@@ -2089,28 +2188,19 @@ class CAERO2(BaseCard):
             self.lint_ref = model.AEFact(self.lint, msg=msg)
         self.ascid_ref = model.Acsid(msg=msg)
 
-    def safe_cross_reference(self, model, debug=False):
-        msg = ' which is required by CAERO2 eid=%s' % self.eid
+    def safe_cross_reference(self, model, xref_errors, debug=False):
+        msg = ', which is required by CAERO2 eid=%s' % self.eid
         try:
             self.pid_ref = model.PAero(self.pid, msg=msg)  # links to PAERO2
         except KeyError:
             pass
 
-        try:
-            self.cp_ref = model.Coord(self.cp, msg=msg)
-        except KeyError:
-            pass
+        self.cp_ref = model.safe_coord(self.cp, self.eid, xref_errors, msg=msg)
 
         if self.nsb == 0:
-            try:
-                self.lsb_ref = model.AEFact(self.lsb, msg=msg)
-            except KeyError:
-                pass
+            self.lsb_ref = model.safe_aefact(self.lsb, self.eid, xref_errors, msg=msg)
         if self.nint == 0:
-            try:
-                self.lint_ref = model.AEFact(self.lint, msg=msg)
-            except KeyError:
-                pass
+            self.lint_ref = model.safe_aefact(self.lint, self.eid, xref_errors, msg=msg)
         try:
             self.ascid_ref = model.Acsid(msg=msg)
         except KeyError:
@@ -2130,9 +2220,7 @@ class CAERO2(BaseCard):
         self.ascid_ref = None
 
     def get_points(self):
-        """
-        creates a 1D representation of the CAERO2
-        """
+        """creates a 1D representation of the CAERO2"""
         p1 = self.cp_ref.transform_node_to_global(self.p1)
         p2 = p1 + self.ascid_ref.transform_vector_to_global(np.array([self.x12, 0., 0.]))
 
@@ -2146,6 +2234,7 @@ class CAERO2(BaseCard):
         The idea is that this is used by the GUI to display CAERO panels.
 
         TODO: doesn't support the aero coordinate system
+
         """
         paero2 = self.pid_ref
 
@@ -2283,6 +2372,7 @@ class CAERO2(BaseCard):
         R(theta) = a*b / ((b*cos(theta))**2 + (a*sin(theta))**2)
 
         TODO: doesn't support the aero coordinate system
+
         """
         if thetas is None: # 41
             thetas = np.radians(np.linspace(0., 360., 17)) # 4,8,12,16,... becomes 5,9,13,17,...
@@ -2308,6 +2398,10 @@ class CAERO2(BaseCard):
         x12 = p2 - self.p1
         self.x12 = x12[0]
 
+    def shift(self, dxyz):
+        """shifts the aero panel"""
+        self.p1 += dxyz
+
     def raw_fields(self):
         """
         Gets the fields in their unmodified form
@@ -2316,6 +2410,7 @@ class CAERO2(BaseCard):
         -------
         fields : list
             The fields that define the card
+
         """
         list_fields = (['CAERO2', self.eid, self.Pid(), self.Cp(), self.nsb,
                         self.nint, self.Lsb(), self.Lint(), self.igid, ] + list(self.p1)
@@ -2330,6 +2425,7 @@ class CAERO2(BaseCard):
         -------
         fields : list
             The fields that define the card
+
         """
         cp = set_blank_if_default(self.Cp(), 0)
         nint = set_blank_if_default(self.nint, 0)
@@ -2352,21 +2448,35 @@ class CAERO3(BaseCard):
                  cp=0, list_c1=None, list_c2=None,
                  comment=''):
         """
+        Creates a CAERO2 card, which defines a wing with a wing break/cant.
+
+        Parameters
+        ----------
         eid : int
             element id
         pid : int
             PAERO3 property id
+        p1 : (3,) float ndarray
+            ???
+        x12 : float
+            ???
+        p4 : (3,) float ndarray
+            ???
+        x43 : float
+            ???
         cp : int; default=0
             coordinate system for locating point 1
         list_w : int
             ???
         list_c1 : int; default=None
-            ???
+            defines an AEFACT for ???
         list_c2 : int; default=None
-            ???
+            defines an AEFACT for ???
         comment : str; default=''
             a comment for the card
+
         """
+        assert cp != 100
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
@@ -2398,6 +2508,7 @@ class CAERO3(BaseCard):
         assert len(self.p4) == 3, 'p4=%s' % self.p4
         assert self.x12 > 0., 'x12=%s' % self.x12
         assert self.x43 >= 0., 'x43=%s' % self.x43
+        assert isinstance(self.cp, int), 'cp=%r' % cp
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -2410,6 +2521,7 @@ class CAERO3(BaseCard):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
@@ -2439,8 +2551,9 @@ class CAERO3(BaseCard):
         ----------
         model : BDF()
             the BDF object
+
         """
-        msg = ' which is required by CAERO3 eid=%s' % self.eid
+        msg = ', which is required by CAERO3 eid=%s' % self.eid
         self.pid_ref = model.PAero(self.pid, msg=msg)  # links to PAERO3
         self.cp_ref = model.Coord(self.cp, msg=msg)
         if self.list_w is not None:
@@ -2451,35 +2564,23 @@ class CAERO3(BaseCard):
             self.list_c2_ref = model.AEFact(self.list_c2, msg=msg)
         self.ascid_ref = model.Acsid(msg=msg)
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, xref_errors):
         msg = ', which is required by CAERO3 eid=%s' % self.eid
         try:
             self.pid_ref = model.PAero(self.pid, msg=msg)  # links to PAERO3
         except KeyError:
             model.log.warning('cannot find PAERO3 pid=%s%s' % (self.pid, msg))
 
-        try:
-            self.cp_ref = model.Coord(self.cp, msg=msg)
-        except KeyError:
-            model.log.warning('cannot find PAERO3 pid=%s%s' % (self.pid, msg))
+        self.cp_ref = model.safe_coord(self.cp, self.eid, xref_errors, msg=msg)
 
         if self.list_w is not None:
-            try:
-                self.list_w_ref = model.AEFact(self.list_w, msg=msg)
-            except KeyError:
-                model.log.warning('cannot find an AEFACT pid=%s%s' % (self.list_w, msg))
+            self.list_w_ref = model.safe_aefact(self.list_w, self.eid, xref_errors, msg=msg)
 
         if self.list_c1 is not None:
-            try:
-                self.list_c1_ref = model.AEFact(self.list_c1, msg=msg)
-            except KeyError:
-                model.log.warning('cannot find an AEFACT pid=%s%s' % (self.list_c1, msg))
+            self.list_c1_ref = model.safe_aefact(self.list_c1, self.eid, xref_errors, msg=msg)
 
         if self.list_c2 is not None:
-            try:
-                self.list_c2_ref = model.AEFact(self.list_c2, msg=msg)
-            except KeyError:
-                model.log.warning('cannot find an AEFACT list_c2=%s%s' % (self.list_c2, msg))
+            self.list_c2_ref = model.safe_aefact(self.list_c2, self.eid, xref_errors, msg=msg)
         try:
             self.ascid_ref = model.Acsid(msg=msg)
         except KeyError:
@@ -2509,6 +2610,7 @@ class CAERO3(BaseCard):
         -------
         p1234 : (4, 3) list
              List of 4 corner points in the global frame
+
         """
         p1 = self.cp_ref.transform_node_to_global(self.p1)
         p4 = self.cp_ref.transform_node_to_global(self.p4)
@@ -2526,10 +2628,11 @@ class CAERO3(BaseCard):
             the array of points
         elements : (nelements,4) ndarray of integers
             the array of point ids
+
         """
         p1, p2, p3, p4 = self.get_points()
         x, y = self.xy
-        return points_elements_from_quad_points(p1, p2, p3, p4, x, y)
+        return points_elements_from_quad_points(p1, p2, p3, p4, x, y, dtype='int32')
 
     def get_npanel_points_elements(self):
         """
@@ -2541,6 +2644,7 @@ class CAERO3(BaseCard):
             The number of nodes for the CAERO
         nelmements : int
             The number of elements for the CAERO
+
         """
         nchord, nspan = self.shape
         nelements = nchord * nspan
@@ -2563,6 +2667,7 @@ class CAERO3(BaseCard):
             The percentage x location in the chord-wise direction of each panel
         y : (nspan,) ndarray
             The percentage y location in the span-wise direction of each panel
+
         """
         nchord, nspan = self.shape
         x = np.linspace(0., 1., nchord + 1)
@@ -2616,6 +2721,7 @@ class CAERO3(BaseCard):
         -------
         fields : list
             The fields that define the card
+
         """
         list_fields = (['CAERO3', self.eid, self.Pid(), self.Cp(), self.List_w(),
                         self.List_c1(), self.List_c2(), None, None] + list(self.p1) + [self.x12] +
@@ -2630,6 +2736,7 @@ class CAERO3(BaseCard):
         -------
         fields : list
             The fields that define the card
+
         """
         cp = set_blank_if_default(self.Cp(), 0)
         list_fields = (['CAERO3', self.eid, self.Pid(), cp, self.List_w(),
@@ -2687,9 +2794,9 @@ class CAERO4(BaseCard):
         lspan : int, AEFACT; default=0
             int > 0 : AEFACT reference for non-uniform nspan
             int = 0 : use nspan
-            AEFACT : AEFACT object  (xref)
         comment : str; default=''
              a comment for the card
+
         """
         BaseCard.__init__(self)
         if comment:
@@ -2735,6 +2842,7 @@ class CAERO4(BaseCard):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
@@ -2772,8 +2880,9 @@ class CAERO4(BaseCard):
         ----------
         model : BDF()
             the BDF object
+
         """
-        msg = ' which is required by CAERO4 eid=%s' % self.eid
+        msg = ', which is required by CAERO4 eid=%s' % self.eid
         self.cp_ref = model.Coord(self.cp, msg=msg)
         self.pid_ref = model.PAero(self.pid, msg=msg)  # links to PAERO4 (not added)
 
@@ -2782,24 +2891,18 @@ class CAERO4(BaseCard):
             self.lspan_ref = model.AEFact(self.lspan, msg)
         self._init_ids()
 
-    def safe_cross_reference(self, model):
-        msg = ' which is required by CAERO4 eid=%s' % self.eid
+    def safe_cross_reference(self, model, xref_errors):
+        msg = ', which is required by CAERO4 eid=%s' % self.eid
         try:
             self.pid_ref = model.PAero(self.pid, msg=msg)  # links to PAERO4 (not added)
         except KeyError:
             model.warning('cannot find PAERO4=%r' % self.pid)
 
-        try:
-            self.cp_ref = model.Coord(self.cp, msg=msg)
-        except KeyError:
-            model.warning('cannot find CORDx=%r' % self.cp)
+        self.cp_ref = model.safe_coord(self.cp, self.eid, xref_errors, msg=msg)
 
         if self.nspan == 0:
             assert isinstance(self.lspan, integer_types), self.lspan
-            try:
-                self.lspan_ref = model.AEFact(self.lspan, msg)
-            except KeyError:
-                pass
+            self.lspan_ref = model.safe_aefact(self.lspan, self.eid, xref_errors, msg)
         self._init_ids()
 
     def uncross_reference(self):
@@ -2867,6 +2970,7 @@ class CAERO4(BaseCard):
             The number of nodes for the CAERO
         nelmements : int
             The number of elements for the CAERO
+
         """
         nchord, nspan = self.shape
         nelements = nchord * nspan
@@ -2882,6 +2986,7 @@ class CAERO4(BaseCard):
             The percentage x location in the chord-wise direction of each panel
         y : (nspan,) ndarray
             The percentage y location in the span-wise direction of each panel
+
         """
         x = np.linspace(0., 1., num=2)  # nchord=1
 
@@ -2908,10 +3013,11 @@ class CAERO4(BaseCard):
             the array of points
         elements : (nelements,4) ndarray of integers
             the array of point ids
+
         """
         p1, p2, p3, p4 = self.get_points()
         x, y = self.xy
-        return points_elements_from_quad_points(p1, p2, p3, p4, x, y)
+        return points_elements_from_quad_points(p1, p2, p3, p4, x, y, dtype='int32')
 
     def get_LSpan(self):
         if isinstance(self.lspan, integer_types):
@@ -2926,6 +3032,7 @@ class CAERO4(BaseCard):
         -------
         fields : list
             The fields that define the card
+
         """
         list_fields = (['CAERO4', self.eid, self.Pid(), self.Cp(), self.nspan,
                         self.get_LSpan(), None, None, None,] + list(self.p1) + [self.x12] +
@@ -2940,6 +3047,7 @@ class CAERO4(BaseCard):
         -------
         fields : list
             The fields that define the card
+
         """
         cp = set_blank_if_default(self.Cp(), 0)
 
@@ -3009,6 +3117,7 @@ class CAERO5(BaseCard):
             ???
         comment : str; default=''
              a comment for the card
+
         """
         BaseCard.__init__(self)
         if comment:
@@ -3056,6 +3165,7 @@ class CAERO5(BaseCard):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
@@ -3088,30 +3198,26 @@ class CAERO5(BaseCard):
         ----------
         model : BDF()
             the BDF object
+
         """
-        msg = ' which is required by CAERO5 eid=%s' % self.eid
+        msg = ', which is required by CAERO5 eid=%s' % self.eid
         self.pid_ref = model.PAero(self.pid, msg=msg)
         self.cp_ref = model.Coord(self.cp, msg=msg)
         if self.nspan == 0:
             self.lspan_ref = model.AEFact(self.lspan, msg=msg)
 
-    def safe_cross_reference(self, model):
-        msg = ' which is required by CAERO5 eid=%s' % self.eid
+    def safe_cross_reference(self, model, xref_errors):
+        xref_errors = {}
+        msg = ', which is required by CAERO5 eid=%s' % self.eid
         try:
             self.pid_ref = model.PAero(self.pid, msg=msg)
         except KeyError:
             pass
 
-        try:
-            self.cp_ref = model.Coord(self.cp, msg=msg)
-        except KeyError:
-            pass
+        self.cp_ref = model.safe_coord(self.cp, self.eid, xref_errors, msg=msg)
 
         if self.nspan == 0:
-            try:
-                self.lspan_ref = model.AEFact(self.lspan, msg=msg)
-            except KeyError:
-                pass
+            self.lspan_ref = model.safe_aefact(self.lspan, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.pid = self.Pid()
@@ -3160,7 +3266,7 @@ class CAERO5(BaseCard):
         x = np.array([0., 1.], dtype='float64')
         assert nspan >= 1, msg
 
-        return points_elements_from_quad_points(p1, p2, p3, p4, x, y)
+        return points_elements_from_quad_points(p1, p2, p3, p4, x, y, dtype='int32')
 
     def c1_c2(self, mach):
         p1, unused_p2, unused_p3, p4 = self.get_points()
@@ -3297,6 +3403,7 @@ class PAERO5(BaseCard):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         pid = integer(card, 1, 'property_id')
         nalpha = integer_or_blank(card, 2, 'nalpha', default=0)
@@ -3336,24 +3443,20 @@ class PAERO5(BaseCard):
         ----------
         model : BDF()
             the BDF object
+
         """
+        msg = ', which is required by PAERO5 eid=%s' % self.pid
         if self.lxis != 0:
             self.lxis_ref = model.AEFact(self.lxis_id)
         if self.ltaus != 0:
             self.ltaus_ref = model.AEFact(self.ltaus_id)
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, xref_errors):
+        msg = ', which is required by PAERO5 eid=%s' % self.pid
         if self.lxis != 0:
-            try:
-                self.lxis_ref = model.AEFact(self.lxis_id)
-            except KeyError:
-                pass
-
+            self.lxis_ref = model.safe_aefact(self.lxis_id, self.pid, xref_errors, msg=msg)
         if self.ltaus != 0:
-            try:
-                self.ltaus_ref = model.AEFact(self.ltaus_id)
-            except KeyError:
-                pass
+            self.ltaus_ref = model.safe_aefact(self.ltaus_id, self.pid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.lxis = self.lxis_id
@@ -3413,7 +3516,7 @@ class MONPNT1(BaseCard):
     +---------+---------+------+-----+-----+-------+------+----+----+
     """
     type = 'MONPNT1'
-    def __init__(self, name, label, axes, comp, xyz, cp=0, cd=None, comment=''):
+    def __init__(self, name, label, axes, aecomp_name, xyz, cp=0, cd=None, comment=''):
         """
         Creates a MONPNT1 card
 
@@ -3427,7 +3530,7 @@ class MONPNT1(BaseCard):
             that identifies and labels the monitor point.
         axes : str
             components {1,2,3,4,5,6}
-        comp : str
+        aecomp_name : str
             name of the AECOMP/AECOMPL entry
         xyz : List[float, float, float]; default=None
             The coordinates in the CP coordinate system about which the
@@ -3440,7 +3543,10 @@ class MONPNT1(BaseCard):
         comment : str; default=''
             a comment for the card
 
+        Note
+        ----
         CD - MSC specific field
+
         """
         BaseCard.__init__(self)
         if comment:
@@ -3452,11 +3558,13 @@ class MONPNT1(BaseCard):
         self.name = name
         self.label = label
         self.axes = axes
-        self.comp = comp
+        self.comp = aecomp_name
         self.cp = cp
         self.xyz = xyz
         self.cd = cd
         assert len(xyz) == 3, xyz
+        self.cp_ref = None
+        self.cd_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -3477,24 +3585,56 @@ class MONPNT1(BaseCard):
         cd = integer_or_blank(card, 15, 'cd', cp)
         return MONPNT1(name, label, axes, comp, xyz, cp=cp, cd=cd, comment=comment)
 
-    #def cross_reference(self):
-        #pass
+    def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
 
-    #def uncross_reference(self):
-        #pass
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        msg = ', which is required by MONPNT1 name=%s' % self.name
+        self.cp_ref = model.Coord(self.cp, msg=msg)
+        self.cd_ref = model.Coord(self.cd, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        msg = ', which is required by MONPNT1 name=%s' % self.name
+        self.cp_ref = model.safe_coord(self.cp, self.name, xref_errors, msg=msg)
+        self.cd_ref = model.safe_coord(self.cd, self.name, xref_errors, msg=msg)
+
+    def uncross_reference(self):
+        self.cp = self.Cp()
+        self.cd = self.Cd()
+        self.cp_ref = None
+        self.cd_ref = None
+
+    def Cp(self):
+        if self.cp_ref is not None:
+            return self.cp_ref.cid
+        return self.cp
+
+    def Cd(self):
+        if self.cd_ref is not None:
+            return self.cd_ref.cid
+        return self.cd
 
     def raw_fields(self):
         list_fields = [
             'MONPNT1', self.name, self.label.strip(), self.axes, self.comp,
-            self.cp,] + list(self.xyz) + [self.cd]
+            self.Cp(),] + list(self.xyz) + [self.Cd()]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
-        cp = self.cp
+        cp = self.Cp()
         x, y, z = self.xyz
-        cd = self.cd
+        cd = self.Cd()
+
+        # Default = the coordinate system specified by the CP field
         if cd == cp:
             cd = ''
+
         msg = 'MONPNT1 %-8s%s\n' % (self.name, self.label)
         msg += '        %-8s%-8s%-8s%-8s%-8s%-8s%-8s\n' % (
             self.axes, self.comp, cp,
@@ -3538,8 +3678,14 @@ class MONPNT2(BaseCard):
         eid = integer_or_blank(card, 12, 'eid')
         return MONPNT2(name, label, table, Type, nddl_item, eid, comment=comment)
 
-    #def uncross_reference(self):
-        #pass
+    def cross_reference(self, model):
+        pass
+
+    def safe_cross_reference(self, model, xref_errors):
+        self.cross_reference(model)
+
+    def uncross_reference(self):
+        pass
 
     def raw_fields(self):
         list_fields = [
@@ -3581,6 +3727,8 @@ class MONPNT3(BaseCard):
         self.xflag = xflag
         self.cp = cp
         self.cd = cd
+        self.cp_ref = None
+        self.cd_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -3604,19 +3752,51 @@ class MONPNT3(BaseCard):
         return MONPNT3(name, label, axes, grid_set, elem_set, xyz,
                        cp=cp, cd=cd, xflag=xflag, comment=comment)
 
-    #def uncross_reference(self):
-        #pass
+    def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        msg = ', which is required by MONPNT3 name=%s' % self.name
+        self.cp_ref = model.Coord(self.cp, msg=msg)
+        self.cd_ref = model.Coord(self.cd, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        msg = ', which is required by MONPNT3 name=%s' % self.name
+        self.cp_ref = model.safe_coord(self.cp, self.name, xref_errors, msg=msg)
+        self.cd_ref = model.safe_coord(self.cd, self.name, xref_errors, msg=msg)
+
+    def uncross_reference(self):
+        self.cp = self.Cp()
+        self.cd = self.Cd()
+        self.cp_ref = None
+        self.cd_ref = None
+
+    def Cp(self):
+        if self.cp_ref is not None:
+            return self.cp_ref.cid
+        return self.cp
+
+    def Cd(self):
+        if self.cd_ref is not None:
+            return self.cd_ref.cid
+        return self.cd
 
     def raw_fields(self):
         list_fields = [
             'MONPNT3', self.name, self.label.strip(),
-            self.axes, self.grid_set, self.elem_set, self.cp
-            ] + list(self.xyz) + [self.xflag, self.cd]
+            self.axes, self.grid_set, self.elem_set, self.Cp()
+            ] + list(self.xyz) + [self.xflag, self.Cd()]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
-        cp = self.cp
-        cd = self.cd
+        cp = self.Cp()
+        cd = self.Cd()
         if cp == cd:
             cd = ''
         xflag = self.xflag
@@ -3664,6 +3844,7 @@ class PAERO1(BaseCard):
         -------
         value : int
             the value for the appropriate field
+
         """
         return self.Bi[n - 1]
 
@@ -3677,6 +3858,7 @@ class PAERO1(BaseCard):
             the field number to update
         value : varies
             the value for the appropriate field
+
         """
         self.Bi[n - 1] = value
 
@@ -3693,6 +3875,7 @@ class PAERO1(BaseCard):
             CAERO2 ids that are within the same IGID group
         comment : str; default=''
             a comment for the card
+
         """
         BaseCard.__init__(self)
         if comment:
@@ -3713,6 +3896,7 @@ class PAERO1(BaseCard):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         pid = integer(card, 1, 'pid')
         Bi = [interpret_value(field) for field in card[2:]]
@@ -3730,7 +3914,7 @@ class PAERO1(BaseCard):
     def cross_reference(self, model):
         pass
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, xref_errors):
         pass
 
     def uncross_reference(self):
@@ -3747,6 +3931,7 @@ class PAERO1(BaseCard):
         -------
         fields : list[varies]
             the fields that define the card
+
         """
         list_fields = ['PAERO1', self.pid] + self.Bi
         return list_fields
@@ -3787,6 +3972,7 @@ class PAERO2(BaseCard):
         -------
         value : varies
             the value for the appropriate field
+
         """
         nnew = n - 8
         spot = nnew // 2
@@ -3807,6 +3993,7 @@ class PAERO2(BaseCard):
             the field number to update
         value : varies
             the value for the appropriate field
+
         """
         nnew = n - 8
         spot = nnew // 2
@@ -3852,6 +4039,7 @@ class PAERO2(BaseCard):
             for theta1/theta2
         comment : str; default=''
             a comment for the card
+
         """
         BaseCard.__init__(self)
         if comment:
@@ -3916,6 +4104,7 @@ class PAERO2(BaseCard):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         pid = integer(card, 1, 'pid')
         orient = string(card, 2, 'orient')
@@ -3937,24 +4126,18 @@ class PAERO2(BaseCard):
                       comment=comment)
 
     def cross_reference(self, model):
-        msg = ' which is required by PAERO2 eid=%s' % self.pid
+        msg = ', which is required by PAERO2 eid=%s' % self.pid
         if self.lrsb is not None and isinstance(self.lrsb, integer_types):
             self.lrsb_ref = model.AEFact(self.lrsb, msg=msg)
         if self.lrib is not None and isinstance(self.lrib, integer_types):
             self.lrib_ref = model.AEFact(self.lrib, msg=msg)
 
-    def safe_cross_reference(self, model, debug=False):
-        msg = ' which is required by PAERO2 eid=%s' % self.pid
+    def safe_cross_reference(self, model, xref_errors, debug=False):
+        msg = ', which is required by PAERO2 eid=%s' % self.pid
         if self.lrsb is not None and isinstance(self.lrsb, integer_types):
-            try:
-                self.lrsb_ref = model.AEFact(self.lrsb, msg=msg)
-            except KeyError:
-                pass
+            self.lrsb_ref = model.safe_aefact(self.lrsb, self.pid, xref_errors, msg=msg)
         if self.lrib is not None and isinstance(self.lrib, integer_types):
-            try:
-                self.lrib_ref = model.AEFact(self.lrib, msg=msg)
-            except KeyError:
-                pass
+            self.lrib_ref = model.safe_aefact(self.lrib, self.pid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.lrsb = self.Lrsb()
@@ -3982,6 +4165,7 @@ class PAERO2(BaseCard):
         -------
         fields : list[varies]
             the fields that define the card
+
         """
         list_fields = ['PAERO2', self.pid, self.orient, self.width,
                        self.AR, self.Lrsb(), self.Lrib(), self.lth1, self.lth2]
@@ -4034,6 +4218,7 @@ class PAERO3(BaseCard):
         -------
         value : varies
             the value for the appropriate field
+
         """
         nnew = n - 6
         if nnew < 0:
@@ -4056,6 +4241,7 @@ class PAERO3(BaseCard):
             the field number to update
         value :varies
             the value for the appropriate field
+
         """
         nnew = n - 6
         if nnew < 0:
@@ -4087,6 +4273,7 @@ class PAERO3(BaseCard):
             control surface geometry.
         comment : str; default=''
             a comment for the card
+
         """
         BaseCard.__init__(self)
         if comment:
@@ -4116,6 +4303,7 @@ class PAERO3(BaseCard):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         pid = integer(card, 1, 'pid')
         nbox = integer(card, 2, 'nbox')
@@ -4136,7 +4324,7 @@ class PAERO3(BaseCard):
     def cross_reference(self, model):
         pass
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, xref_errors):
         return self.cross_reference(model)
 
     def uncross_reference(self):
@@ -4154,6 +4342,7 @@ class PAERO3(BaseCard):
         -------
         fields : list[varies]
             the fields that define the card
+
         """
         list_fields = ['PAERO3', self.pid, self.nbox, self.ncontrol_surfaces, None]
         for (x, y) in zip(self.x, self.y):
@@ -4180,6 +4369,7 @@ class PAERO4(BaseCard):
     |        | 0.50 |  0.25 |  0.02  |  0.53 |  0.24 |   0.0  |        |        |
     +--------+------+-------+--------+-------+-------+--------+--------+--------+
     ## TODO: what happens for DOC4?
+
     """
     type = 'PAERO4'
     _field_map = {
@@ -4261,6 +4451,7 @@ class PAERO4(BaseCard):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         pid = integer(card, 1, 'pid')
         cla = integer_or_blank(card, 2, 'cla', 0)
@@ -4288,7 +4479,7 @@ class PAERO4(BaseCard):
     def cross_reference(self, model):
         pass
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, xref_errors):
         pass
 
     def uncross_reference(self):
@@ -4302,6 +4493,7 @@ class PAERO4(BaseCard):
         -------
         fields : list[varies]
             the fields that define the card
+
         """
         list_fields = ['PAERO4', self.pid, self.cla, self.lcla, self.circ, self.lcirc]
         for doc, caoc, gapoc in zip(self.docs, self.caocs, self.gapocs):
@@ -4379,6 +4571,7 @@ class SPLINE1(Spline):
             using the FPS option
         comment : str; default=''
             a comment for the card
+
         """
         Spline.__init__(self)
         if comment:
@@ -4414,6 +4607,7 @@ class SPLINE1(Spline):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         eid = integer(card, 1, 'eid')
         caero = integer(card, 2, 'caero')
@@ -4467,8 +4661,9 @@ class SPLINE1(Spline):
         ----------
         model : BDF()
             the BDF object
+
         """
-        msg = ' which is required by SPLINE1 eid=%s' % self.eid
+        msg = ', which is required by SPLINE1 eid=%s' % self.eid
         self.caero_ref = model.CAero(self.caero, msg=msg)
         self.setg_ref = model.Set(self.setg, msg=msg)
         self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
@@ -4480,8 +4675,8 @@ class SPLINE1(Spline):
             msg += str(self.setg_ref)
             raise RuntimeError(msg)
 
-    def safe_cross_reference(self, model):
-        msg = ' which is required by SPLINE1 eid=%s' % self.eid
+    def safe_cross_reference(self, model, xref_errors):
+        msg = ', which is required by SPLINE1 eid=%s' % self.eid
         try:
             self.caero_ref = model.CAero(self.caero, msg=msg)
         except KeyError:
@@ -4519,6 +4714,7 @@ class SPLINE1(Spline):
         -------
         fields : list[varies]
             the fields that define the card
+
         """
         list_fields = ['SPLINE1', self.eid, self.CAero(), self.box1, self.box2,
                        self.Set(), self.dz, self.method, self.usage, self.nelements,
@@ -4567,7 +4763,7 @@ class SPLINE2(Spline):
         7: 'dtor', 8:'cid', 9:'dthx', 10:'dthy',
     }
 
-    def __init__(self, eid, caero, id1, id2, setg, dz=0.0, dtor=1.0, cid=0,
+    def __init__(self, eid, caero, box1, box2, setg, dz=0.0, dtor=1.0, cid=0,
                  dthx=0., dthy=0., usage='BOTH', comment=''):
         """
         Creates a SPLINE2 card, which defines a beam spline.
@@ -4578,7 +4774,7 @@ class SPLINE2(Spline):
             spline id
         caero : int
             CAEROx id that defines the plane of the spline
-        id1 / id2 : int
+        box1 / box2 : int
             First/last box/body id that is used by the spline
         setg : int
             SETx id that defines the list of GRID points that are used
@@ -4605,6 +4801,7 @@ class SPLINE2(Spline):
             valid_usage = {FORCE, DISP, BOTH}
         comment : str; default=''
             a comment for the card
+
         """
         Spline.__init__(self)
         if comment:
@@ -4612,8 +4809,8 @@ class SPLINE2(Spline):
 
         self.eid = eid
         self.caero = caero
-        self.id1 = id1
-        self.id2 = id2
+        self.box1 = box1
+        self.box2 = box2
         self.setg = setg
         self.dz = dz
         self.dtor = dtor
@@ -4621,10 +4818,12 @@ class SPLINE2(Spline):
         self.dthx = dthx
         self.dthy = dthy
         self.usage = usage
-        assert self.id2 >= self.id1, 'id2=%s id1=%s' % (self.id2, self.id1)
         self.cid_ref = None
         self.caero_ref = None
         self.setg_ref = None
+
+    def validate(self):
+        assert self.box2 >= self.box1, 'box2=%s box1=%s' % (self.box2, self.box1)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -4637,6 +4836,7 @@ class SPLINE2(Spline):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         eid = integer(card, 1, 'eid')
         caero = integer(card, 2, 'caero')
@@ -4662,8 +4862,9 @@ class SPLINE2(Spline):
         ----------
         model : BDF()
             the BDF object
+
         """
-        msg = ' which is required by SPLINE2 eid=%s' % self.eid
+        msg = ', which is required by SPLINE2 eid=%s' % self.eid
         self.cid_ref = model.Coord(self.Cid(), msg=msg)
         self.caero_ref = model.CAero(self.CAero(), msg=msg)
         self.setg_ref = model.Set(self.Set(), msg=msg)
@@ -4676,12 +4877,9 @@ class SPLINE2(Spline):
             msg += str(self.setg_ref)
             raise RuntimeError(msg)
 
-    def safe_cross_reference(self, model):
-        msg = ' which is required by SPLINE2 eid=%s' % self.eid
-        try:
-            self.cid_ref = model.Coord(self.Cid(), msg=msg)
-        except KeyError:
-            pass
+    def safe_cross_reference(self, model, xref_errors):
+        msg = ', which is required by SPLINE2 eid=%s' % self.eid
+        self.cid_ref = model.safe_coord(self.Cid(), self.eid, xref_errors, msg=msg)
 
         try:
             self.caero_ref = model.CAero(self.CAero(), msg=msg)
@@ -4710,8 +4908,32 @@ class SPLINE2(Spline):
         self.setg_ref = None
 
     @property
+    def id1(self):
+        """see box1"""
+        self.deprecated('id1', 'box1', '1.1')
+        return self.box1
+
+    @property
+    def id2(self):
+        """see box2"""
+        self.deprecated('id2', 'box2', '1.1')
+        return self.box2
+
+    @id1.setter
+    def id1(self, box1):
+        """see box1"""
+        self.deprecated('id1', 'box1', '1.1')
+        self.box1 = box1
+
+    @id2.setter
+    def id2(self, box2):
+        """see box2"""
+        self.deprecated('id2', 'box2', '1.1')
+        self.box2 = box2
+
+    @property
     def aero_element_ids(self):
-        return np.arange(self.id1, self.id2 + 1)
+        return np.arange(self.box1, self.box2 + 1)
 
     def Cid(self):
         if self.setg_ref is not None:
@@ -4736,8 +4958,9 @@ class SPLINE2(Spline):
         -------
         fields : list[varies]
             the fields that define the card
+
         """
-        list_fields = ['SPLINE2', self.eid, self.CAero(), self.id1, self.id2,
+        list_fields = ['SPLINE2', self.eid, self.CAero(), self.box1, self.box2,
                        self.Set(), self.dz, self.dtor, self.Cid(), self.dthx,
                        self.dthy, None, self.usage]
         return list_fields
@@ -4745,7 +4968,7 @@ class SPLINE2(Spline):
     def repr_fields(self):
         dz = set_blank_if_default(self.dz, 0.)
         usage = set_blank_if_default(self.usage, 'BOTH')
-        list_fields = ['SPLINE2', self.eid, self.CAero(), self.id1, self.id2,
+        list_fields = ['SPLINE2', self.eid, self.CAero(), self.box1, self.box2,
                        self.Set(), dz, self.dtor, self.Cid(), self.dthx, self.dthy,
                        None, usage]
         return list_fields
@@ -4825,6 +5048,7 @@ class SPLINE3(Spline):
             valid_usage = {FORCE, DISP, BOTH}
         comment : str; default=''
             a comment for the card
+
         """
         Spline.__init__(self)
         if comment:
@@ -4887,6 +5111,7 @@ class SPLINE3(Spline):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         eid = integer(card, 1, 'eid')
         caero = integer(card, 2, 'caero')
@@ -4929,11 +5154,11 @@ class SPLINE3(Spline):
                        comment=comment)
 
     def cross_reference(self, model):
-        msg = ' which is required by SPLINE3 eid=%s' % self.eid
+        msg = ', which is required by SPLINE3 eid=%s' % self.eid
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         self.caero_ref = model.CAero(self.caero, msg=msg)
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, xref_errors):
         self.cross_reference(model)
 
     def uncross_reference(self):
@@ -5009,8 +5234,6 @@ class SPLINE4(Spline):
 
         Parameters
         ----------
-        Parameters
-        ----------
         eid : int
             spline id
         caero : int
@@ -5042,6 +5265,7 @@ class SPLINE4(Spline):
             using the FPS option
         comment : str; default=''
             a comment for the card
+
         """
         Spline.__init__(self)
         if comment:
@@ -5074,6 +5298,7 @@ class SPLINE4(Spline):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         eid = integer(card, 1, 'eid')
         caero = integer(card, 2, 'caero')
@@ -5131,8 +5356,9 @@ class SPLINE4(Spline):
         ----------
         model : BDF()
             the BDF object
+
         """
-        msg = ' which is required by SPLINE4 eid=%s' % self.eid
+        msg = ', which is required by SPLINE4 eid=%s' % self.eid
         self.caero_ref = model.CAero(self.CAero(), msg=msg)
         self.setg_ref = model.Set(self.Set(), msg=msg)
         self.aelist_ref = model.AEList(self.aelist, msg=msg)
@@ -5145,7 +5371,7 @@ class SPLINE4(Spline):
             msg += str(self.setg_ref)
             raise ValueError(msg)
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -5153,6 +5379,7 @@ class SPLINE4(Spline):
         ----------
         model : BDF()
             the BDF object
+
         """
         self.cross_reference(model)
 
@@ -5172,6 +5399,7 @@ class SPLINE4(Spline):
         -------
         fields : list[varies]
             the fields that define the card
+
         """
         list_fields = ['SPLINE4', self.eid, self.CAero(), self.AEList(), None,
                        self.Set(), self.dz, self.method, self.usage, self.nelements,
@@ -5212,6 +5440,7 @@ class SPLINE5(Spline):
     +---------+------+-------+--------+-------+------+----+-------+-------+
 
     METH, FTYPE, RCORE are in 2012+ (not MSC.2005r2 or NX.10)
+
     """
     type = 'SPLINE5'
     _field_map = {
@@ -5260,6 +5489,7 @@ class SPLINE5(Spline):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         eid = integer(card, 1, 'eid')
         caero = integer(card, 2, 'caero')
@@ -5314,8 +5544,9 @@ class SPLINE5(Spline):
         ----------
         model : BDF()
             the BDF object
+
         """
-        msg = ' which is required by SPLINE5 eid=%s' % self.eid
+        msg = ', which is required by SPLINE5 eid=%s' % self.eid
         self.cid_ref = model.Coord(self.cid, msg=msg)
         self.caero_ref = model.CAero(self.caero, msg=msg)
         self.setg_ref = model.Set(self.setg, msg=msg)
@@ -5329,12 +5560,9 @@ class SPLINE5(Spline):
             msg += str(self.setg_ref)
             raise RuntimeError(msg)
 
-    def safe_cross_reference(self, model):
-        msg = ' which is required by SPLINE5 eid=%s' % self.eid
-        try:
-            self.cid_ref = model.Coord(self.cid, msg=msg)
-        except KeyError:
-            pass
+    def safe_cross_reference(self, model, xref_errors):
+        msg = ', which is required by SPLINE5 eid=%s' % self.eid
+        self.cid_ref = model.safe_coord(self.cid, self.eid, xref_errors, msg=msg)
         try:
             self.caero_ref = model.CAero(self.caero, msg=msg)
         except KeyError:
@@ -5374,6 +5602,7 @@ class SPLINE5(Spline):
         -------
         fields : list[varies]
             the fields that define the card
+
         """
         list_fields = ['SPLINE5', self.eid, self.CAero(), self.AEList(), None,
                        self.Set(), self.dz, self.dtor, self.Cid(), self.thx, self.thy,

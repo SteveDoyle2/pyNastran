@@ -25,6 +25,7 @@ class QElementEdit(QLineEdit):
 
     def on_focus(self):
         """called when the QElementEdit is activated"""
-        self.win_parent.win_parent.on_area_pick(is_eids=True, is_nids=False,
-                                                callback=self.on_focus_callback,
-                                                force=True)
+        gui = self.win_parent.win_parent
+        gui.mouse_actions.on_area_pick(is_eids=True, is_nids=False,
+                                       callback=self.on_focus_callback,
+                                       force=True)

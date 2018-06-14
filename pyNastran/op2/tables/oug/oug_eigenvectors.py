@@ -48,6 +48,36 @@ class RealEigenvectorArray(RealTableArray):
             self.apply_data_code()
             self.set_data_members()
 
+    def get_phi(self):
+        """
+        gets the eigenvector matrix
+
+        Returns
+        -------
+        phi : (ndof, nmodes)
+            the eigenvector matrix
+
+        TODO: doesn't consider SPOINTs/EPOINTs
+        """
+        nmodes, nnodes = self.data.shape[:2]
+        ndof = nnodes * 6
+        phi_transpose = self.data.reshape(nmodes, ndof)
+        return phi_transpose.T
+
+    @classmethod
+    def phi_to_data(self, phi):
+        """(ndof, nmodes) -> (nmodes, nnodes, 6)"""
+        ndof, nmodes = phi.shape
+        nnodes = ndof // 6
+        assert ndof % 6 == 0
+        phi2 = phi.T  # nmodes, ndof
+        data = phi2.reshape(nmodes, nnodes, 6)
+        return data
+
+    def set_phi(self, phi):
+        """(ndof, nmodes) -> (nmodes, nnodes, 6)"""
+        self.data = self.phi_to_data(phi)
+
     def build_f06_vectorization(self):
         self.data = array(self.data, dtype='float32')
         self.node_gridtype = array(self.node_gridtype)

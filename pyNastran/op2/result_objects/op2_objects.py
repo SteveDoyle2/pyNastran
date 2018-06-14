@@ -307,7 +307,6 @@ class ScalarObject(BaseScalarObject):
         assert 'nonlinear_factor' in data_code, data_code
         BaseScalarObject.__init__(self)
         self.isubcase = isubcase
-        self.isTransient = False
         self.data_frame = None
         # the nonlinear factor; None=static; float=transient
         self.dt = None

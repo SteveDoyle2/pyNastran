@@ -197,8 +197,8 @@ def main():
     import os
     import pyNastran
 
-    pkg_path = pyNastran.__path__[0]
-    stl_filename = os.path.join(pkg_path, 'converters', 'stl', 'sphere.stl')
+    PKG_PATH = pyNastran.__path__[0]
+    stl_filename = os.path.join(PKG_PATH, 'converters', 'stl', 'sphere.stl')
 
     stl = read_stl(stl_filename)
     #XYZ Global = (2.0035907914418716, 1.3287668328026303, 2.873731014735773)

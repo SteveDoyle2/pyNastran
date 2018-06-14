@@ -4,12 +4,15 @@ import os
 import copy
 import unittest
 
+import numpy as np
+
 from pyNastran.bdf.bdf import read_bdf, BDF, BDFCard
 from pyNastran.bdf.cards.elements.solid import (
     #CTETRA4, CHEXA8, CPENTA6,
     #CTETRA10, CHEXA20,
     CPENTA15
 )
+from pyNastran.bdf.cards.test.utils import save_load_deck
 
 
 class TestSolids(unittest.TestCase):
@@ -200,6 +203,7 @@ class TestSolids(unittest.TestCase):
         for fields in cards:
             model.add_card(fields, fields[0], is_list=True)
         model.cross_reference()
+        save_load_deck(model)
 
     def test_solid_04(self):
         """checks linear static solid material"""
@@ -247,6 +251,7 @@ class TestSolids(unittest.TestCase):
 
         mat = model.Material(mid)
         mat.E()
+        save_load_deck(model)
 
     def test_solids_ctetra4(self):
         """tests a CTETRA4"""
@@ -266,6 +271,7 @@ class TestSolids(unittest.TestCase):
         nids = [11, 12, 13, 15]
         model.add_ctetra(eid, pid, nids, comment='ctetra')
         end_checks(model)
+        save_load_deck(model)
 
     def test_solids_ctetra4_mat9(self):
         """tests a CTETRA4"""
@@ -319,6 +325,7 @@ class TestSolids(unittest.TestCase):
         ]
         model.add_ctetra(eid, pid, nids, comment='ctetra10')
         end_checks(model)
+        save_load_deck(model)
 
     def test_solids_cpyram5(self):
         """tests a CPYRAM5"""
@@ -348,6 +355,7 @@ class TestSolids(unittest.TestCase):
         elem2.write_card_16(is_double=False)
 
         end_checks(model)
+        save_load_deck(model)
 
     def test_solids_cpenta(self):
         """tests a CPENTA6"""
@@ -377,6 +385,7 @@ class TestSolids(unittest.TestCase):
         elem2.write_card(size=16)
         elem2.write_card_16(is_double=False)
         end_checks(model)
+        save_load_deck(model)
 
     def test_solids_chexa(self):
         """tests a CHEXA8"""
@@ -415,6 +424,7 @@ class TestSolids(unittest.TestCase):
         end_checks(model)
         elem = model.elements[eid]
         assert elem.Mass() > 0, elem.Mass()
+        save_load_deck(model)
 
     def check_solid(self, model, eid, etype, pid, ptype, mid, mtype, nsm, rho, V):
         """checks that various solid methods work"""
@@ -430,6 +440,10 @@ class TestSolids(unittest.TestCase):
         self.assertEqual(element.Mid(), mid)
         self.assertEqual(element.Volume(), V)
         self.assertEqual(element.Mass(), mass)
+        mass_mp = model.mass_properties(element_ids=eid)[0]
+        mass_mp_nsm = model.mass_properties_nsm(element_ids=eid)[0]
+        assert np.allclose(mass, mass_mp)
+        assert np.allclose(mass, mass_mp_nsm)
 
 
 def end_checks(model):

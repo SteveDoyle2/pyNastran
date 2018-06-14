@@ -49,9 +49,9 @@ class ElementTableArray(ScalarObject):  # displacement style table
             i = 0
             if self.is_sort1:
                 for itime in range(ntimes):
-                    for ieid, eid, in enumerate(self.element):
-                        t1 = self.data[itime, inid, :]
-                        t2 = table.data[itime, inid, :]
+                    for ieid, eid in enumerate(self.element):
+                        t1 = self.data[itime, ieid, :]
+                        t2 = table.data[itime, ieid, :]
                         (tx1, ty1, tz1, rx1, ry1, rz1) = t1
                         (tx2, ty2, tz2, rx2, ry2, rz2) = t2
                         if not allclose(t1, t2):
@@ -163,7 +163,7 @@ class ElementTableArray(ScalarObject):  # displacement style table
             ny = self.ntotal
             #print("ntimes=%s nelements=%s" % (ntimes, nelements))
         if self.is_sort2:
-            ntotal = self.ntotal
+            unused_ntotal = self.ntotal
             nelements = self.ntimes
             ntimes = self.ntotal
             nx = nelements
@@ -330,7 +330,7 @@ class RealElementTableArray(ElementTableArray):  # displacement style table
             r2 = self.data[ieid, :, 4]
             r3 = self.data[ieid, :, 5]
 
-            header[1] = ' POINT-ID = %10i\n' % node_id
+            header[1] = ' ELEMENT-ID = %10i\n' % element_id
             f06_file.write(''.join(header + words))
             for dt, t1i, t2i, t3i, r1i, r2i, r3i in zip(times, t1, t2, t3, r1, r2, r3):
                 vals = [t1i, t2i, t3i, r1i, r2i, r3i]

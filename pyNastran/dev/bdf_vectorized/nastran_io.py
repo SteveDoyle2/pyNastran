@@ -1,6 +1,7 @@
 # pylint: disable=C0103,C0111,E1101
 from __future__ import print_function
 import os
+from collections import OrderedDict
 from six import iteritems
 from six.moves import zip
 
@@ -55,7 +56,7 @@ class NastranIO(NastranIO_xref):
             self.turn_text_off()
             self.grid.Reset()
 
-            self.result_cases = {}
+            self.result_cases = OrderedDict()
             self.ncases = 0
         for i in ('case_keys', 'icase', 'isubcase_name_map'):
             if hasattr(self, i):
@@ -152,7 +153,7 @@ class NastranIO(NastranIO_xref):
             self.nid_map[node_id] = i
 
         dim_max = max(xmax-xmin, ymax-ymin, zmax-zmin)
-        self.create_global_axes(dim_max)
+        self.gui.create_global_axes(dim_max)
 
 
         # add the CAERO/CONM2 elements
@@ -733,7 +734,7 @@ class NastranIO(NastranIO_xref):
         self.grid2.Update()
         self.log_info("updated grid")
 
-        cases = {}
+        cases = OrderedDict()
 
         if 0:
             nelements = len(model.elements)
@@ -983,7 +984,7 @@ class NastranIO(NastranIO_xref):
             #print("nodeID=%s t=%s" % (nodeID, translation))
         #self.isubcase_name_map[self.isubcase] = [Subtitle, Label]
 
-        cases = {}
+        cases = OrderedDict()
         subcase_ids = model.isubcase_name_map.keys()
         self.isubcase_name_map = model.isubcase_name_map
 

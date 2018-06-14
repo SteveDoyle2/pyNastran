@@ -29,7 +29,7 @@ def tecplot_to_nastran(tecplot_filename, bdf_filename, log=None, debug=True):
     solid_pid = 2
     mid = 1
     istart = 1
-    with open(bdf_filename, 'wb') as bdf_file:
+    with open(bdf_filename, 'w') as bdf_file:
         bdf_file.write('$pyNastran : punch=True\n')
         for inode, node in enumerate(model.xyz):
             card = ['GRID', inode + 1, None,] + list(node)

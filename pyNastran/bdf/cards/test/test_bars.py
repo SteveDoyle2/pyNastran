@@ -154,6 +154,33 @@ class TestBars(unittest.TestCase):
         model.add_mat1(mid, E, G, nu)
         save_load_deck(model)
 
+    def test_cbar_g0(self):
+        """modification of test_cbeam_01"""
+        model = BDF(debug=False)
+        pid = 200
+        mid = 6
+        model.add_pbar(pid, mid, A=0., i1=2., i2=2., i12=1., j=4., nsm=0., c1=0., c2=0.,
+                       d1=0., d2=0., e1=0., e2=0., f1=0., f2=0., k1=1.e8,
+                       k2=1.e8, comment='pbar')
+
+        eid = 100
+        nids = [10, 20]
+        x = None
+        g0 = 30
+        model.add_cbar(eid, pid, nids, x, g0, comment='cbar')
+
+        E = 1.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu)
+        model.add_grid(10, [0., 0., 0.])
+        model.add_grid(20, [0., 0., 0.])
+        model.add_grid(30, [0., 1., 0.])
+        model.cross_reference()
+
+        save_load_deck(model, punch=True, run_remove_unused=True,
+                       run_convert=True, run_renumber=True)
+
     def test_pbarl_1(self):
         """tests the PBARL"""
         model = BDF(log=None, debug=False)
@@ -475,6 +502,36 @@ class TestBars(unittest.TestCase):
         assert pbarl.MassPerLength() == 21.0, pbarl.MassPerLength()
         assert pbarl2.MassPerLength() == 21.0, pbarl2.MassPerLength()
 
+    def test_baror(self):
+        """tests a BAROR"""
+        model = BDF(debug=False)
+        n1 = 10
+        n2 = 20
+        model.add_grid(n1, [0., 0., 0.])
+        model.add_grid(n2, [1., 0., 0.])
+
+        pid = 2
+        mid = 1
+        bar_type = 'BAR'
+        dim = [1., 2.]  # area = 2.0
+        nsm = 1.
+        pbarl = model.add_pbarl(pid, mid, bar_type, dim, group='MSCBML0', nsm=1.,
+                               comment='')
+
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu, rho=1.)
+
+        card_lines = ['BAROR', None, pid, None, None, 0.6, 2.9, -5.87, 'GOG']
+        model.add_card(card_lines, 'BAROR', comment='BAROR', is_list=True,
+                       has_none=True)
+
+        eid = 1
+        card_lines = ['CBAR', eid, pid, n1, n2]
+        model.add_card(card_lines, 'CBAR', comment='', is_list=True,
+                      has_none=True)
+        model.pop_parse_errors()
 
     def test_pbrsect(self):
         """tests a PBRSECT"""

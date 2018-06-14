@@ -138,6 +138,7 @@ class BDFAttributes(object):
         self.bdf_filename = None
         self.punch = None
         self._encoding = None
+        self._is_long_ids = False # ids > 8 characters
 
         #: ignore any ECHOON flags
         self.force_echo_off = True
@@ -537,6 +538,8 @@ class BDFAttributes(object):
         self.views = {}
         #: stores VIEW3D
         self.view3ds = {}
+        self.radset = None
+        self.radcavs = {}
 
         # -------------------------contact cards-------------------------------
         self.bcrparas = {}  # type: Dict[int, Any]
@@ -682,7 +685,7 @@ class BDFAttributes(object):
             'splines' : ['SPLINE1', 'SPLINE2', 'SPLINE4', 'SPLINE5',],
             'csschds' : ['CSSCHD',],
             #'SPLINE3', 'SPLINE6', 'SPLINE7',
-            'trims' : ['TRIM',],
+            'trims' : ['TRIM', 'TRIM2'],
             'divergs' : ['DIVERG'],
 
             # coords
@@ -756,6 +759,8 @@ class BDFAttributes(object):
             'se_qsets' : ['SEQSET', 'SEQSET1'],
             'se_usets' : ['SEUSET', 'SEQSET1'],
             'se_sets' : ['SESET'],
+            'radset' : ['RADSET'],
+            'radcavs' : ['RADCAV'],
             # SEBSEP
 
             'tables' : [
@@ -806,9 +811,10 @@ class BDFAttributes(object):
     @property
     def is_long_ids(self):
         # type: () -> bool
-        if self._nastran_format == 'nx':
-            return True
-        return False
+        return self._is_long_ids
+        #if self._nastran_format == 'nx' or self._is_long_ids:
+            #return True
+        #return False
 
     @property
     def sol(self):
@@ -937,3 +943,19 @@ class BDFAttributes(object):
     def caero_ids(self):
         """gets the CAEROx ids"""
         return self.caeros.keys()
+
+    @property
+    def wtmass(self):
+        """
+        Gets the PARAM,WTMASS value, which defines the weight to mass
+        conversion factor
+
+        kg -> kg : 1.0
+        lb -> slug : 1/32.2
+        lb -> slinch : 1/(32.2*12)=1/386.4
+        """
+        wtmass = 1.0
+        if 'WTMASS' in self.params:
+            param = self.params['WTMASS']
+            wtmass = param.values[0]
+        return wtmass

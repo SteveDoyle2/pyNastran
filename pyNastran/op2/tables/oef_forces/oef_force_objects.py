@@ -173,9 +173,7 @@ class RealSpringDamperForceArray(RealForceObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealForceObject.__init__(self, data_code, isubcase)
         self.nelements = 0  # result specific
-        if is_sort1:
-            self.add = self.add_sort1
-        else:
+        if not is_sort1:
             raise NotImplementedError('SORT2')
 
     def build(self):
@@ -431,9 +429,7 @@ class RealRodForceArray(RealForceObject):
         RealForceObject.__init__(self, data_code, isubcase)
         self.nelements = 0  # result specific
 
-        if is_sort1:
-            self.add = self.add_sort1
-        else:
+        if not is_sort1:
             raise NotImplementedError('SORT2')
 
     def get_headers(self):
@@ -901,9 +897,7 @@ class RealCShearForceArray(ScalarObject):
         #self.ntotal = 0
         self.nelements = 0  # result specific
 
-        if is_sort1:
-            self.add = self.add_sort1
-        else:
+        if not is_sort1:
             raise NotImplementedError('SORT2')
 
     def _reset_indices(self):
@@ -1136,9 +1130,7 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
         #self.ntotal = 0
         self.nelements = 0  # result specific
 
-        if is_sort1:
-            self.add = self.add_sort1
-        else:
+        if not is_sort1:
             raise NotImplementedError('SORT2')
 
     def get_headers(self):
@@ -1844,9 +1836,7 @@ class RealCBarForceArray(ScalarObject):  # 34-CBAR
         #self.ntotal = 0
         self.nelements = 0  # result specific
 
-        if is_sort1:
-            self.add = self.add_sort1
-        else:
+        if not is_sort1:
             raise NotImplementedError('SORT2; code_info=\n%s' % self.code_information())
 
     def _reset_indices(self):
@@ -2040,9 +2030,7 @@ class RealConeAxForceArray(ScalarObject):
         #self.ntotal = 0
         self.nelements = 0  # result specific
 
-        if is_sort1:
-            self.add = self.add_sort1
-        else:
+        if not is_sort1:
             raise NotImplementedError('SORT2; code_info=\n%s' % self.code_information())
 
     def _reset_indices(self):
@@ -2238,9 +2226,7 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
         #self.ntotal = 0
         self.nelements = 0  # result specific
 
-        if is_sort1:
-            self.add = self.add_sort1
-        else:
+        if not is_sort1:
             raise NotImplementedError('SORT2; code_info=\n%s' % self.code_information())
 
     def get_headers(self):
@@ -2439,9 +2425,7 @@ class RealCGapForceArray(ScalarObject):  # 38-CGAP
         #self.ntotal = 0
         self.nelements = 0  # result specific
 
-        if is_sort1:
-            self.add = self.add_sort1
-        else:
+        if not is_sort1:
             raise NotImplementedError('SORT2; code_info=\n%s' % self.code_information())
 
     def _reset_indices(self):
@@ -2599,7 +2583,7 @@ class RealCGapForceArray(ScalarObject):  # 38-CGAP
             sw = self.data[itime, :, 7]
 
             for (eid, fxi, sfyi, sfzi, ui, vi, wi, svi, swi) in zip(eids, fx, sfy, sfz, u, v, w, sv, sw):
-                vals2 = write_float_12e([fxi, sfyi, sfzi, ui, vi, wi, svi, swi])
+                vals2 = write_floats_12e([fxi, sfyi, sfzi, ui, vi, wi, svi, swi])
                 [fxi, sfyi, sfzi, ui, vi, wi, svi, swi] = vals2
                 f06_file.write('0%13i%-13s %-13s %-13s %-13s %-13s %-13s %-13s %s\n' % (
                     eid, fxi, sfyi, sfzi, ui, vi, wi, svi, swi))
@@ -2829,9 +2813,7 @@ class RealSolidPressureForceArray(ScalarObject):  # 77-PENTA_PR,78-TETRA_PR
         #self.ntotal = 0
         self.nelements = 0  # result specific
 
-        if is_sort1:
-            self.add = self.add_sort1
-        else:
+        if not is_sort1:
             raise NotImplementedError('SORT2; code_info=\n%s' % self.code_information())
 
     def _reset_indices(self):
@@ -3306,9 +3288,7 @@ class RealCBushForceArray(ScalarObject):
         #self.ntotal = 0
         self.nelements = 0  # result specific
 
-        if is_sort1:
-            self.add = self.add_sort1
-        else:
+        if not is_sort1:
             raise NotImplementedError('SORT2; code_info=\n%s' % self.code_information())
 
     def _reset_indices(self):
@@ -3661,14 +3641,25 @@ class RealForceVU2DArray(RealForceObject):  # 189-VUQUAD, 190-VUTRIA
                 #'    111001003    -1.336704E+02 -4.010114E+01  1.236144E+01    4.553836E+02  1.366151E+02 -2.018654E+01  9.028288E+01 -1.651896E-13'
             ]
             nnodes = 3
-        #elif 'CQUAD4' in self.element_name:
+        elif 'VUQUAD' in self.element_name:
+            msg = [
+                '                 F O R C E S   I N   P - V E R S I O N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )'
+                '                 TIME =   2.500000E-03,  P-ELEMENT ID =      11,  OUTPUT COORD. ID =       0,  P OF EDGES =  3  3  3'
+                '                       LOCAL X DIR. = PROJECTED +X DIR.,  LOCAL NORMAL = COUNTER-CLOCKWISE,  ANGLE =    0.0000'
+                ''
+                '     VUGRID                - MEMBRANE  FORCES -      - BENDING  MOMENTS -             - TRANSVERSE SHEAR FORCES -                    '
+                '       ID.            FX            FY            FXY MX            MY            MXY             QX            QY                   '
+                #'    111001001     1.497761E+02  4.493284E+01  1.755556E+01    4.601057E+02  1.380317E+02  3.821717E+01  1.924838E+01  1.298280E-13'
+                #'    111001002    -1.284408E+01 -9.296992E-01 -6.540499E+00   -3.195809E+01  9.447659E+01  2.340929E+00 -4.620755E-01  1.074264E+01'
+                #'    111001003    -1.336704E+02 -4.010114E+01  1.236144E+01    4.553836E+02  1.366151E+02 -2.018654E+01  9.028288E+01 -1.651896E-13'
+            ]
             #msg = [
                 #'                          F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n'
                 #' \n'
                 #'    ELEMENT                    - MEMBRANE  FORCES -                      - BENDING   MOMENTS -            - TRANSVERSE SHEAR FORCES -\n'
                 #'      ID       GRID-ID     FX            FY            FXY           MX            MY            MXY           QX            QY\n'
             #]
-            #nnodes = 4
+            nnodes = 4
         else:
             raise NotImplementedError(self.element_name)
         return self.element_name, nnodes, msg
@@ -3712,7 +3703,7 @@ class RealForceVU2DArray(RealForceObject):  # 189-VUQUAD, 190-VUTRIA
             syz = self.data[itime, :, 6]
             szx = self.data[itime, :, 7]
 
-            if self.element_type == 190: # VUTRIA
+            if self.element_type in [189, 190]: # VUQUAD, VUTRIA
                 # TODO: format the data properly
                 for nid, mfxi, mfyi, mfxyi, bmxi, bmyi, bmxyi, syzi, szxi in zip(
                     nids, mfx, mfy, mfxy, bmx, bmy, bmxy, syz, szx):

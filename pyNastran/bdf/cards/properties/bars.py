@@ -1106,7 +1106,7 @@ class PBAR(LineProperty):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by PBAR mid=%s' % self.mid
+        msg = ', which is required by PBAR mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
 
     def uncross_reference(self):
@@ -1358,7 +1358,7 @@ class PBARL(LineProperty):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by PBARL mid=%s' % self.mid
+        msg = ', which is required by PBARL mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
 
     def uncross_reference(self):
@@ -1830,7 +1830,7 @@ class PBRSECT(LineProperty):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by PBRSECT mid=%s' % self.mid
+        msg = ', which is required by PBRSECT mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
 
     def uncross_reference(self):
@@ -1981,7 +1981,7 @@ class PBEAM3(LineProperty):  # not done, cleanup
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by PBEAM3 mid=%s' % self.mid
+        msg = ', which is required by PBEAM3 mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
 
     def uncross_reference(self):
@@ -2092,6 +2092,8 @@ class PBEND(LineProperty):
         mid = integer(card, 2, 'mid')
 
         value3 = integer_or_double(card, 3, 'Area/FSI')
+        #print("PBEND: area/fsi=%s" % value3)
+
         # MSC/NX option A
         A = None
         i1 = None
@@ -2182,7 +2184,7 @@ class PBEND(LineProperty):
                 t = double(card, 5, 't')
 
                 #: Internal pressure
-                p = double(card, 6, 'p')
+                p = double_or_blank(card, 6, 'p')
 
                 # line3
                 # Non-structural mass :math:`nsm`
@@ -2240,12 +2242,17 @@ class PBEND(LineProperty):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by PBEND mid=%s' % self.mid
+        msg = ', which is required by PBEND mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
 
     def uncross_reference(self):
         self.mid = self.Mid()
         self.mid_ref = None
+
+    def MassPerLength(self):
+        """m/L = rho*A + nsm"""
+        rho = self.mid_ref.Rho()
+        return self.A * rho + self.nsm
 
     def raw_fields(self):
         return self.repr_fields()

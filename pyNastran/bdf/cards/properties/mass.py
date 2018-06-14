@@ -9,12 +9,13 @@ All mass properties are PointProperty and Property objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import integer_types, string_types
+from six import string_types
 from pyNastran.bdf.cards.base_card import expand_thru_by, expand_thru, BaseCard, Property
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_string, double, double_or_blank, string)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
+from pyNastran.utils import float_types, integer_types
 
 
 class NSMx(Property):
@@ -28,7 +29,7 @@ class NSMx(Property):
     valid_properties = [
         'PSHELL', 'PCOMP', 'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PBCOMP',
         'PROD', 'CONROD', 'PBEND', 'PSHEAR', 'PTUBE', 'PCONEAX', 'PRAC2D',
-        'ELEMENT',
+        'ELEMENT', 'PDUM8',
     ]
 
     def __init__(self, sid, nsm_type, pid_eid, value, comment=''):
@@ -60,8 +61,9 @@ class NSMx(Property):
         self.nsm_type = nsm_type
         self.id = pid_eid
         self.value = value
-        assert isinstance(pid_eid, int), pid_eid
-        assert isinstance(value, float), value
+        assert isinstance(pid_eid, integer_types), 'pid_eid=%s type=%s' % (pid_eid, type(pid_eid))
+        assert isinstance(value, float_types), 'value=%s type=%s' % (value, type(value))
+
         if self.nsm_type not in self.valid_properties:
             raise TypeError('nsm_type=%r must be in [%s]' % (
                 self.nsm_type, ', '.join(self.valid_properties)))
@@ -204,6 +206,7 @@ class NSM1x(Property):
     def Type(self):
         """gets the nsm_type"""
         return self.nsm_type
+
     @Type.setter
     def Type(self, nsm_type):
         """sets the nsm_type"""
@@ -230,12 +233,12 @@ class NSM1x(Property):
         _id = 1
         nfields = len(card)
         if nfields == 5:
-            value = integer_or_string(card, 4, 'ID_1')
-            if value != 'ALL' and not isinstance(value, int):
+            id1 = integer_or_string(card, 4, 'ID_1')
+            if id1 != 'ALL' and not isinstance(id1, int):
                 msg = ('*ID_1 = %r (field #4) on card must be an integer or ALL.\n'
-                       'card=%s' % (value, card))
+                       'card=%s' % (id1, card))
                 raise SyntaxError(msg)
-            ids = value
+            ids = id1
         else:
             # we'll handle expansion in the init
             ids = card[4:]
@@ -272,9 +275,10 @@ class NSM1(NSM1x):
     +------+-----+------+-------+-----+----+----+----+----+
     """
     type = 'NSM1'
-    def __init__(self, sid, nsm_type, pid_eid, value, comment=''):
+    def __init__(self, sid, nsm_type, value, pid_eid, comment=''):
         """See ``NSM1x``"""
-        NSM1x.__init__(self, sid, nsm_type, pid_eid, value, comment='')
+        assert isinstance(value, float), 'NSM1; value=%r and must be a float' % (value)
+        NSM1x.__init__(self, sid, nsm_type, value, pid_eid, comment='')
 
 
 class NSM(NSMx):
@@ -388,6 +392,7 @@ class NSML1(NSM1x):
         comment : str; default=''
             a comment for the card
         """
+        assert isinstance(value, float), 'NSML1; value=%r and must be a float' % (value)
         NSM1x.__init__(self, sid, nsm_type, value, ids, comment=comment)
 
 
@@ -489,7 +494,7 @@ class NSMADD(BaseCard):
 
     def safe_cross_reference(self, model, debug=True):
         nsms = []
-        msg = ' which is required by NSMADD=%s' % self.sid
+        msg = ', which is required by NSMADD=%s' % self.sid
         for nsm_id in self.sets:
             try:
                 nsm = model.NSM(nsm_id, msg=msg)

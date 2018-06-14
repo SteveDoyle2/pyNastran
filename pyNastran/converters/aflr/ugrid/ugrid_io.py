@@ -1,5 +1,6 @@
 from __future__ import print_function
 import os
+from collections import OrderedDict
 
 from six import iteritems
 from six.moves import range
@@ -8,7 +9,7 @@ from numpy import amax, amin, arange, ones, zeros, where, unique
 
 #VTK_TRIANGLE = 5
 import vtk
-from vtk import vtkTriangle, vtkQuad
+#from vtk import vtkTriangle, vtkQuad
 
 from pyNastran.converters.aflr.surf.surf_reader import TagReader
 from pyNastran.converters.aflr.ugrid.ugrid_reader import UGRID
@@ -20,17 +21,33 @@ from pyNastran.gui.utils.vtk.vtk_utils import (
 
 
 class UGRID_IO(object):
-    def __init__(self):
-        pass
+    def __init__(self, gui):
+        self.gui = gui
 
     def get_ugrid_wildcard_geometry_results_functions(self):
         data = (
-            'AFLR3 Ugrid',
-            'AFLR3 Ugrid (*.ugrid)', self.load_ugrid_geometry,
+            'ugrid',
+            'AFLR2/AFLR3 UGrid2D (*.ugrid)', self.load_ugrid_geometry,  # 2d
             None, None)
         return data
 
-    def load_ugrid_geometry(self, ugrid_filename, name='main', plot=True):
+    def get_ugrid3d_wildcard_geometry_results_functions(self):
+        data = (
+            'ugrid3d',
+            'AFLR3 Ugrid3D (*.ugrid)', self.load_ugrid3d_geometry,
+            None, None)
+        return data
+
+    #def load_ugrid_geometry_2d(self, ugrid_filename, name='main', plot=True):
+        #"""Loads a UGRID3D as a 2D file"""
+        #self._load_ugrid_geometry(ugrid_filename, read_solids=False, name=name, plot=plot)
+
+    def load_ugrid3d_geometry(self, ugrid_filename, name='main', plot=True):
+        """Loads a UGRID3D as a 3D file"""
+        self.load_ugrid_geometry(ugrid_filename, read_solids=True, name=name, plot=plot)
+
+
+    def load_ugrid_geometry(self, ugrid_filename, read_solids=False, name='main', plot=True):
         """
         The entry point for UGRID geometry loading.
 
@@ -38,6 +55,9 @@ class UGRID_IO(object):
         ----------
         ugrid_filename : str
             the ugrid filename to load
+        read_solids : bool
+            True : load the tets/pentas/hexas from the UGRID3D model
+            False : UGRID2D or limits the UGRID3D model to tris/quads
         name : str
             the name of the "main" actor for the GUI
         plot : bool; default=True
@@ -47,24 +67,12 @@ class UGRID_IO(object):
         #skip_reading = self.remove_old_openfoam_geometry(openfoam_filename)
         #if skip_reading:
         #    return
-        read_solids = False
-        if is_binary_file(ugrid_filename):
-            model = UGRID(log=self.log, debug=True, read_solids=read_solids)
-            ext = os.path.basename(ugrid_filename).split('.')[2] # base, fmt, ext
-            is_2d = False
-        else:
-            ext = os.path.basename(ugrid_filename).split('.')[1] # base, ext
-            model = UGRID2D_Reader(log=self.log, debug=True)
-            is_2d = True
-        is_3d = not is_2d
+        model, is_2d, is_3d = get_ugrid_model(ugrid_filename, read_solids, self.gui.log)
+        self.gui.model_type = 'ugrid'
+        self.gui.log.debug('ugrid_filename = %s' % ugrid_filename)
 
-        self.model_type = 'ugrid'
-        self.log.debug('ugrid_filename = %s' % ugrid_filename)
-
-
-        assert ext == 'ugrid', ugrid_filename
         model.read_ugrid(ugrid_filename)
-        self.model = model
+        self.gui.model = model
 
         nnodes = model.nodes.shape[0]
         ntris = model.tris.shape[0]
@@ -105,30 +113,31 @@ class UGRID_IO(object):
 
 
         nodes = model.nodes
-        self.nelements = nelements
-        self.nnodes = nnodes
+        self.gui.nelements = nelements
+        self.gui.nnodes = nnodes
 
-        self.log.info("nnodes=%s nelements=%s" % (self.nnodes, self.nelements))
+        self.gui.log.info("nnodes=%s nelements=%s" % (self.gui.nnodes, self.gui.nelements))
         assert nelements > 0, nelements
 
-        grid = self.grid
-        grid.Allocate(self.nelements, 1000)
+        grid = self.gui.grid
+        grid.Allocate(self.gui.nelements, 1000)
 
         mmax = amax(nodes, axis=0)
         mmin = amin(nodes, axis=0)
         dim_max = (mmax - mmin).max()
-        self.create_global_axes(dim_max)
-        self.log.info('max = %s' % mmax)
-        self.log.info('min = %s' % mmin)
+        self.gui.create_global_axes(dim_max)
+        self.gui.log.info('max = %s' % mmax)
+        self.gui.log.info('min = %s' % mmin)
 
         if is_3d and read_solids:
             diff_node_ids = model.check_hanging_nodes(stop_on_diff=False)
             if len(diff_node_ids):
                 red = (1., 0., 0.)
-                self.create_alternate_vtk_grid('hanging_nodes', color=red, line_width=5, opacity=1.,
-                                               point_size=10, representation='point')
+                self.gui.create_alternate_vtk_grid(
+                    'hanging_nodes', color=red, line_width=5, opacity=1.,
+                    point_size=10, representation='point')
                 self._add_ugrid_nodes_to_grid('hanging_nodes', diff_node_ids, nodes)
-                self._add_alt_actors(self.alt_grids)
+                self.gui._add_alt_actors(self.gui.alt_grids)
 
         points = numpy_to_vtk_points(nodes)
 
@@ -152,37 +161,38 @@ class UGRID_IO(object):
                 elements.append(penta6s)
                 etypes.append(13) # VTK_WEDGE().GetCellType()
             if nhexas:
-                elements.append(tetras)
+                elements.append(hexas)
                 etypes.append(12) # VTK_HEXAHEDRON().GetCellType()
 
-        self.model.elements = elements
-        self.model.etypes = etypes
+        self.gui.model.elements = elements
+        self.gui.model.etypes = etypes
         create_vtk_cells_of_constant_element_types(grid, elements, etypes)
 
-        self.nelements = nelements
+        self.gui.nelements = nelements
         grid.SetPoints(points)
         grid.Modified()
-        if hasattr(grid, 'Update'):
+        if hasattr(grid, 'Update'):  # pragma: no cover
             grid.Update()
-        #self.log.info("updated grid")
 
         # loadCart3dResults - regions/loads
-        self.scalarBar.VisibilityOn()
-        self.scalarBar.Modified()
+        self.gui.scalarBar.VisibilityOn()
+        self.gui.scalarBar.Modified()
 
-        self.isubcase_name_map = {1: ['AFLR UGRID Surface', '']}
-        cases = {}
+        self.gui.isubcase_name_map = {1: ['AFLR UGRID Surface', '']}
+        cases = OrderedDict()
         ID = 1
 
         if hasattr(model, 'pids'):
-            form, cases = self._fill_ugrid3d_case(
+            form, cases, node_ids, element_ids = self._fill_ugrid3d_case(
                 ugrid_filename, cases, ID, nnodes, nelements, model, read_solids)
         else:
-            form, cases = self._fill_ugrid2d_case(
+            form, cases, node_ids, element_ids = self._fill_ugrid2d_case(
                 cases, ID, nnodes, nelements)
 
+        self.gui.node_ids = node_ids
+        self.gui.element_ids = element_ids
         if plot:
-            self._finish_results_io2(form, cases)
+            self.gui._finish_results_io2(form, cases)
 
     def _add_ugrid_nodes_to_grid(self, name, diff_node_ids, nodes):
         """
@@ -197,9 +207,10 @@ class UGRID_IO(object):
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(nnodes)
 
+        alt_grid = self.gui.alt_grids[name]
         for nid in diff_node_ids:
             node = nodes[nid, :]
-            self.log.info('nid=%s node=%s' % (nid, node))
+            self.gui.log.info('nid=%s node=%s' % (nid, node))
             points.InsertPoint(nid, *node)
 
             #if 1:
@@ -211,8 +222,8 @@ class UGRID_IO(object):
                 #elem.SetRadius(sphere_size)
                 #elem.SetCenter(points.GetPoint(nid))
 
-            self.alt_grids[name].InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-        self.alt_grids[name].SetPoints(points)
+            alt_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+        alt_grid.SetPoints(points)
 
     def clear_surf(self):
         pass
@@ -220,10 +231,10 @@ class UGRID_IO(object):
     # def _load_ugrid_results(self, openfoam_filename, dirname):
         # pass
 
-    def _fill_ugrid2d_case(self, cases, ID, nnodes, nelements):
+    def _fill_ugrid2d_case(self, cases, unused_id, nnodes, nelements):
         #cases_new = []
         #results_form = []
-
+        colormap = self.gui.settings.colormap
         geometry_form = [
             ('ElementID', 0, []),
             ('NodeID', 1, []),
@@ -235,9 +246,9 @@ class UGRID_IO(object):
         nids = arange(1, nnodes + 1)
 
         eid_res = GuiResult(0, header='ElementID', title='ElementID',
-                            location='centroid', scalar=eids)
+                            location='centroid', scalar=eids, colormap=colormap)
         nid_res = GuiResult(0, header='NodeID', title='NodeID',
-                            location='node', scalar=nids)
+                            location='node', scalar=nids, colormap=colormap)
 
         icase = 0
         cases[icase] = (eid_res, (0, 'ElementID'))
@@ -252,14 +263,24 @@ class UGRID_IO(object):
         #results_form = []
         #if len(results_form):
             #form.append(('Results', None, results_form))
-        return form, cases
+        return form, cases, nids, eids
 
     def _fill_ugrid3d_case(self, base, cases, ID, nnodes, nelements, model, read_solids):
-        tag_filename = base + '.tags'
-        mapbc_filename = base.split('.')[0] + '.mapbc'
-        self.log.info('mapbc_filename = %r' % mapbc_filename)
+        if os.path.exists(base):
+            # base = 'C:/data/'
+            # tag_filename = 'C:/data/.tags'
+            self.gui.log.info('mapbc_filename does not exist')
+            self.gui.log.info('tag_filename does not exist')
+            tag_filename = None
+            mapbc_filename = None
+        else:
+            tag_filename = base + '.tags'
+            mapbc_filename = base.split('.')[0] + '.mapbc'
+            self.gui.log.info('mapbc_filename = %r' % mapbc_filename)
 
-        cases_new = []
+        colormap = self.gui.settings.colormap
+
+        #cases_new = []
         has_tag_data = False
         has_mapbc_data = False
         results_form = []
@@ -275,7 +296,7 @@ class UGRID_IO(object):
             #('ReconFlag', 5, []),
             #('GridBC', 6, []),
         ]
-        if read_solids:
+        if not read_solids:
             geometry_form.append(('SurfaceID', 3, []))
 
 
@@ -290,12 +311,12 @@ class UGRID_IO(object):
         #npids = len(model.pids)
         pids = model.pids
         eid_res = GuiResult(0, header='ElementID', title='ElementID',
-                            location='centroid', scalar=eids)
+                            location='centroid', scalar=eids, colormap=colormap)
         nid_res = GuiResult(0, header='NodeID', title='NodeID',
-                            location='node', scalar=nids)
+                            location='node', scalar=nids, colormap=colormap)
         nxyz_res = NormalResult(0, 'Normals', 'Normals',
                                 nlabels=2, labelsize=5, ncolors=2,
-                                colormap='jet', data_format='%.1f',
+                                colormap=colormap, data_format='%.1f',
                                 uname='NormalResult')
 
         icase = 0
@@ -305,11 +326,11 @@ class UGRID_IO(object):
         icase += 3
         if not read_solids:
             surface_res = GuiResult(0, header='SurfaceID', title='SurfaceID',
-                                    location='centroid', scalar=pids)
+                                    location='centroid', scalar=pids, colormap=colormap)
             cases[icase] = (surface_res, (0, 'SurfaceID'))
             icase += 1
 
-        if os.path.exists(tag_filename) and not read_solids:
+        if tag_filename is not None and os.path.exists(tag_filename) and not read_solids:
             #surf_ids = element_props[:, 0]
             #recon_flags = element_props[:, 1]
             #cases[(ID, 2, 'ReconFlag', 1, 'centroid', '%i')] = recon_flags
@@ -321,14 +342,14 @@ class UGRID_IO(object):
             int_data = ones((nelements, 8), dtype='int32') * -10.
             float_data = zeros((nelements, 2), dtype='float64')
             for key, datai in sorted(iteritems(data)):
-                #self.log.info(datai)
+                #self.gui.log.info(datai)
                 [name, is_visc, is_recon, is_rebuild, is_fixed, is_source,
                  is_trans, is_delete, bl_spacing, bl_thickness, nlayers] = datai
                 i = where(pids == key)[0]
                 int_data[i, :] = [is_visc, is_recon, is_rebuild, is_fixed,
                                   is_source, is_trans, is_delete, nlayers]
                 float_data[i, :] = [bl_spacing, bl_thickness]
-                self.log.info('data[%i] = %s' % (key, name))
+                self.gui.log.info('data[%i] = %s' % (key, name))
 
             has_tag_data = True
             tag_form = []
@@ -344,26 +365,28 @@ class UGRID_IO(object):
             tag_form.append(('bl_thickness', icase+9, []))
 
             visc_res = GuiResult(0, header='is_visc', title='is_visc',
-                                 location='node', scalar=int_data[:, 0])
+                                 location='node', scalar=int_data[:, 0], colormap=colormap)
             recon_res = GuiResult(0, header='is_recon', title='is_recon',
-                                  location='node', scalar=int_data[:, 1])
+                                  location='node', scalar=int_data[:, 1], colormap=colormap)
             rebuild_res = GuiResult(0, header='is_rebuild', title='is_rebuild',
-                                    location='node', scalar=int_data[:, 2])
+                                    location='node', scalar=int_data[:, 2], colormap=colormap)
             fixed_res = GuiResult(0, header='is_fixed', title='is_fixed',
-                                  location='node', scalar=int_data[:, 3])
+                                  location='node', scalar=int_data[:, 3], colormap=colormap)
             source_res = GuiResult(0, header='is_source', title='is_source',
-                                   location='node', scalar=int_data[:, 4])
+                                   location='node', scalar=int_data[:, 4], colormap=colormap)
             trans_res = GuiResult(0, header='is_trans', title='is_trans',
-                                  location='node', scalar=int_data[:, 5])
+                                  location='node', scalar=int_data[:, 5], colormap=colormap)
             delete_res = GuiResult(0, header='is_delete', title='is_delete',
-                                   location='node', scalar=int_data[:, 6])
+                                   location='node', scalar=int_data[:, 6], colormap=colormap)
             nlayers_res = GuiResult(0, header='nlayers', title='nlayers',
-                                    location='node', scalar=int_data[:, 7])
+                                    location='node', scalar=int_data[:, 7], colormap=colormap)
 
             spacing_res = GuiResult(0, header='bl_spacing', title='bl_spacing',
-                                    location='centroid', scalar=float_data[:, 0])
+                                    location='centroid', scalar=float_data[:, 0],
+                                    colormap=colormap)
             blthickness_res = GuiResult(0, header='bl_thickness', title='bl_thickness',
-                                        location='centroid', scalar=float_data[:, 1])
+                                        location='centroid', scalar=float_data[:, 1],
+                                        colormap=colormap)
 
             cases[icase] = (visc_res, (0, 'is_visc'))
             cases[icase + 1] = (recon_res, (0, 'is_recon'))
@@ -378,13 +401,13 @@ class UGRID_IO(object):
             cases[icase + 9] = (blthickness_res, (0, 'bl_thickness'))
 
             icase += 10
-        else:
-            self.log.warning('tag_filename=%r could not be found' % tag_filename)
+        elif tag_filename is not None:
+            self.gui.log.warning('tag_filename=%r could not be found' % tag_filename)
 
-        if os.path.exists(mapbc_filename) and not read_solids:
+        if mapbc_filename is not None and os.path.exists(mapbc_filename) and not read_solids:
             has_mapbc_data = True
-            mapbc = open(mapbc_filename, 'r')
-            lines = mapbc.readlines()
+            with open(mapbc_filename, 'r') as mapbc:
+                lines = mapbc.readlines()
             lines = [line.strip() for line in lines
                      if not line.strip().startswith('#') and line.strip()]
             npatches = int(lines[0])
@@ -401,14 +424,14 @@ class UGRID_IO(object):
                     msg = 'ipatch=%s not found in pids=%s' % (ipatch + 1, upids)
                     raise RuntimeError(msg)
                 mapbcs[islot] = bc_num
-                self.log.info(line)
+                self.gui.log.info(line)
             mapbc_form.append(('Map BC', icase, []))
 
             mapbc_res = GuiResult(0, header='Map BC', title='Map BC',
-                                  location='centroid', scalar=mapbcs)
+                                  location='centroid', scalar=mapbcs, colormap=colormap)
             cases[icase + 9] = (mapbc_res, (0, 'Map BC'))
-        else:
-            self.log.warning('mapbc_filename=%r could not be found' % mapbc_filename)
+        elif mapbc_filename is not None:
+            self.gui.log.warning('mapbc_filename=%r could not be found' % mapbc_filename)
 
 
         #norm_spacing = model.node_props[:, 0]
@@ -427,5 +450,20 @@ class UGRID_IO(object):
         results_form = []
         if len(results_form):
             form.append(('Results', None, results_form))
-        self.log.info(form)
-        return form, cases
+        self.gui.log.info(form)
+        return form, cases, nids, eids
+
+def get_ugrid_model(ugrid_filename, read_solids, log):
+    """helper method for UGRID_IO"""
+    if read_solids or is_binary_file(ugrid_filename):
+        model = UGRID(log=log, debug=True, read_solids=read_solids)
+        ext = os.path.basename(ugrid_filename).split('.')[2] # base, fmt, ext
+        is_2d = False
+    else:
+        ext = os.path.basename(ugrid_filename).split('.')[1] # base, ext
+        model = UGRID2D_Reader(log=log, debug=True)
+        is_2d = True
+    is_3d = not is_2d
+
+    assert ext == 'ugrid', ugrid_filename
+    return model, is_2d, is_3d

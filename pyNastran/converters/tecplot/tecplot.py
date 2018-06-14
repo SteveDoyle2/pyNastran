@@ -315,6 +315,10 @@ class Tecplot(FortranFormat):
                 for inode in range(nnodesi):
                     if inode == 0:
                         self.log.debug('zone_type=%s sline=%s' %(zone_type, sline))
+                    if not len(sline[3:]) == len(results[inode, :]):
+                        msg = 'sline[3:]=%s results[inode, :]=%s' % (sline[:3], results[inode, :])
+                        raise RuntimeError(msg)
+
                     try:
                         xyz[inode, :] = sline[:3]
                         results[inode, :] = sline[3:]
@@ -853,11 +857,12 @@ class Tecplot(FortranFormat):
                 else:
                     data = self.xyz
                     fmt = ' %15.9E %15.9E %15.9E'
+                    fmt3 = ' %15.9E %15.9E %15.9E\n'
 
                 if PY3:
                     #vals = self.xyz[:, ivar].ravel()
                     for vals in data:
-                        tecplot_file.write(fmt % tuple(vals))
+                        tecplot_file.write(fmt3 % tuple(vals))
                 else:
                     savetxt(tecplot_file, data, fmt=fmt)
             else:
@@ -904,13 +909,21 @@ class Tecplot(FortranFormat):
             else:
                 raise RuntimeError()
 
-            if adjust_nids:
-                elements += 1
-            self.log.info('inode: min=%s max=%s' % (elements.min(), elements.max()))
-            assert elements.min() >= 1, elements.min()
-            assert elements.max() <= nnodes, elements.max()
+            # we do this before the nid adjustment
+            node_min = elements.min()
+            node_max = elements.max()
+            self.log.info('inode: min=%s max=%s' % (node_min, node_max))
+            assert node_min >= 0, node_min
+
+            if node_max > nnodes:
+                msg = 'elements.min()=node_min=%s elements.max()=node_max=%s nnodes=%s' % (
+                    node_min, node_max, nnodes)
+                raise RuntimeError(msg)
             # assert elements.min() == 1, elements.min()
             # assert elements.max() == nnodes, elements.max()
+
+            if adjust_nids:
+                elements += 1
 
             for element in elements:
                 tecplot_file.write(efmt % tuple(element))

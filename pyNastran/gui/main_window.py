@@ -8,7 +8,6 @@ from __future__ import division, unicode_literals, print_function
 # standard library
 import sys
 import os.path
-from collections import OrderedDict
 import imp
 #import traceback
 #import webbrowser
@@ -28,10 +27,7 @@ from pyNastran.gui.utils.version import check_for_newer_version
 
 # pyNastran
 from pyNastran.gui.plugins import plugin_name_to_path
-from pyNastran.gui.formats import (
-    NastranIO, DegenGeomIO, ADB_IO, # Plot3d_io,
-    SurfIO, UGRID_IO, AbaqusIO, BEdge_IO, OpenFoamIO,
-)
+from pyNastran.gui.formats import NastranIO
 from pyNastran.gui.gui_common import GuiCommon2
 
 try:
@@ -52,10 +48,7 @@ except:
 # http://openiconlibrary.sourceforge.net/gallery2/?./Icons/actions/view-refresh-8.png
 
 
-class MainWindow(GuiCommon2, NastranIO, DegenGeomIO,
-                 ADB_IO,
-                 SurfIO, UGRID_IO, AbaqusIO, BEdge_IO,
-                 OpenFoamIO):
+class MainWindow(GuiCommon2, NastranIO):
     """
     MainWindow -> GuiCommon2 -> GuiCommon
     gui.py     -> gui_common -> gui_qt_common
@@ -92,18 +85,28 @@ class MainWindow(GuiCommon2, NastranIO, DegenGeomIO,
         inputs=None
         """
         html_logging = True
+
+        # these are in alphabetical order except for Nastran
+        # this includes the bedge, surf, ugrid line (listed as AFLR in the gui)
         fmt_order = [
-            # results
-            'nastran', 'cart3d', 'panair', 'shabp', 'usm3d',
-            'tecplot', 'surf', 'ugrid',
-
-            # no results
-            'lawgs', 'stl', 'fast',
-            'bedge', 'su2', 'tetgen', 'avus', 'abaqus',
-            'degen_geom', 'obj',
-
-            # openfoam
-            'openfoam_hex', 'openfoam_shell', 'openfoam_faces',
+            # no results unless specified
+            'nastran',  # results
+            'abaqus',
+            'avus',
+            'bedge', 'surf', 'ugrid', 'ugrid3d', # aflr
+            'cart3d',  # results
+            'degen_geom',
+            'fast',
+            'lawgs',
+            'obj',
+            'openfoam_hex', 'openfoam_shell', 'openfoam_faces', # openfoam - results
+            'panair',  # results
+            'shabp',  # results
+            'stl',
+            'su2',
+            'tecplot',  # results
+            'tetgen',
+            'usm3d',  # results
         ]
         #GuiCommon2.__init__(self, fmt_order, html_logging, inputs, parent)
         kwds['inputs'] = inputs
@@ -114,15 +117,7 @@ class MainWindow(GuiCommon2, NastranIO, DegenGeomIO,
         #html_logging=html_logging,
 
         if qt_version in ['pyqt4', 'pyqt5', 'pyside']:
-            ADB_IO.__init__(self)
-            BEdge_IO.__init__(self)
             NastranIO.__init__(self)
-            DegenGeomIO.__init__(self)
-            #Plot3d_io.__init__(self)
-            SurfIO.__init__(self)
-            UGRID_IO.__init__(self)
-            AbaqusIO.__init__(self)
-            OpenFoamIO.__init__(self)
         else:
             raise NotImplementedError('qt_version=%r is not supported' % qt_version)
 
@@ -170,7 +165,7 @@ class MainWindow(GuiCommon2, NastranIO, DegenGeomIO,
         #import time
         #time0 = time.time()
         version_latest, unused_version_current, is_newer = check_for_newer_version()
-        if is_newer:
+        if is_newer and check:
             url = pyNastran.__website__
             from pyNastran.gui.menus.download import DownloadWindow
             win = DownloadWindow(url, version_latest, win_parent=self)
@@ -187,7 +182,7 @@ class MainWindow(GuiCommon2, NastranIO, DegenGeomIO,
             #self.___saveY = ev.y()
             pass
         else:
-            self.iren.mousePressEvent(event)
+            self.vtk_interactor.mousePressEvent(event)
 
     #def LeftButtonPressEvent(self, ev):
 
@@ -196,7 +191,25 @@ class MainWindow(GuiCommon2, NastranIO, DegenGeomIO,
         if self.is_pick:
             pass
         else:
-            self.iren.mousePressEvent(event)
+            self.vtk_interactor.mousePressEvent(event)
+
+    def open_website(self):
+        """loads the pyNastran main website"""
+        import webbrowser
+        url = pyNastran.__website__
+        webbrowser.open(url)
+
+    def open_docs(self):
+        """loads the pyNastran docs website"""
+        import webbrowser
+        url = pyNastran.__docs__
+        webbrowser.open(url)
+
+    def open_discussion_forum(self):
+        """loads the pyNastran discussion forum website"""
+        import webbrowser
+        url = pyNastran.__discussion_forum__
+        webbrowser.open(url)
 
     def about_dialog(self):
         """ Display about dialog """
@@ -284,7 +297,7 @@ class MainWindow(GuiCommon2, NastranIO, DegenGeomIO,
         self.cycle_results(case)
         self.on_set_camera_data(camera, show_log=False)
 
-    def closeEvent(self, unused_event):
+    def closeEvent(self, *args):
         """
         Handling saving state before application when application is
         being closed.

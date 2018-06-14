@@ -7,7 +7,6 @@ from six.moves import range
 import numpy as np
 ints = (int, np.int32)
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-from pyNastran.f06.f06_formatting import _eigenvalue_header
 try:
     import pandas as pd  # type: ignore
 except ImportError:
@@ -25,12 +24,7 @@ class RealCPLSTRNPlateArray(OES_Object):
         self.nelements = 0  # result specific
         self.nnodes = None
 
-        if is_sort1:
-            if dt is not None:
-                self.add = self.add_sort1
-                #self.add_new_eid = self.add_new_eid_sort1
-                #self.addNewNode = self.addNewNodeSort1
-        else:
+        if not is_sort1:
             raise NotImplementedError('SORT2')
 
     @property

@@ -136,6 +136,12 @@ class CREEP(Material):
         T0 = data[1]
         exp = data[2]
         form = data[3]
+        if form == 0:
+            form = 'CRLAW'
+        elif form == 1:
+            form = 'TABLE'
+        else:
+            raise NotImplementedError('CREEP: mid=%s, form=%s, not form: 0=CRLAW, 1=TABLE' % (mid, form))
         tidkp = data[4]
         tidcp = data[5]
         tidcs = data[6]
@@ -160,7 +166,7 @@ class CREEP(Material):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CREEP pid=%s' % self.mid
+        msg = ', which is required by CREEP pid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
 
     def uncross_reference(self):
@@ -242,23 +248,35 @@ class NXSTRAT(BaseCard):
         nfields = len(card)
         iparam = 1
         params = {}
-        for ifield in range(2, nfields, 2):
+        min_nfields = min(8, nfields)
+        for ifield in range(2, min_nfields, 2):
             param_name = string(card, ifield, 'param_%i' % iparam)
             value = integer_or_double(card, ifield+1, 'value_%i' % iparam)
             params[param_name] = value
             iparam += 1
 
-        nparams = (nfields - 2) // 2
-        nleftover = (nfields - 2) % 2
-        assert nleftover == 0, 'nparams=%s nleftover=%s card=%s' % (nparams, nleftover, card)
+        if nfields > 9:
+            for ifield in range(9, nfields, 2):
+                param_name = string(card, ifield, 'param_%i' % iparam)
+                value = integer_or_double(card, ifield+1, 'value_%i' % iparam)
+                params[param_name] = value
+                iparam += 1
+
+        #nparams = (nfields - 2) // 2
+        #nleftover = (nfields - 2) % 2
+        #assert nleftover == ileftover, 'nparams=%s nleftover=%s card=%s' % (nparams, nleftover, card)
 
         #assert len(card) <= 13, 'len(NXSTRAT card) = %i\ncard=%s' % (len(card), card)
         return NXSTRAT(sid, params, comment=comment)
 
     def raw_fields(self):
         list_fields = ['NXSTRAT', self.sid]
+        i = 0
         for key, value in sorted(iteritems(self.params)):
             list_fields += [key, value]
+            i += 1
+            if i == 3:
+                list_fields.append(None)
         return list_fields
 
     def repr_fields(self):
@@ -503,7 +521,7 @@ class MAT1(IsotropicMaterial):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by MAT1 mid=%s' % self.mid
+        msg = ', which is required by MAT1 mid=%s' % self.mid
         #self.mcsid = model.Coord(self.mcsid, msg=msg)  # used only for PARAM,CURVPLOT
         if self.mid in model.MATS1:
             self.mats1_ref = model.MATS1[self.mid]  # not using a method...
@@ -793,7 +811,7 @@ class MAT2(AnisotropicMaterial):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by MAT2 mid=%s' % self.mid
+        msg = ', which is required by MAT2 mid=%s' % self.mid
         if self.mid in model.MATT2:
             self.matt2_ref = model.MATT2[self.mid]  # not using a method...
 
@@ -1013,7 +1031,7 @@ class MAT3(OrthotropicMaterial):
         mid = self.Mid()
         assert isinstance(mid, integer_types), 'mid=%r' % mid
         if xref:
-            if [self.mats3, self.matt3] == [None, None]:
+            if [self.mats3_ref, self.matt3_ref] == [None, None]:
                 pass
 
     def cross_reference(self, model):
@@ -1025,7 +1043,7 @@ class MAT3(OrthotropicMaterial):
         model : BDF()
             the BDF object
         """
-        #msg = ' which is required by MAT3 mid=%s' % self.mid
+        #msg = ', which is required by MAT3 mid=%s' % self.mid
         if self.mid in model.MATT3:
             self.matt3_ref = model.MATT3[self.mid]  # TODO: not using a method...
 
@@ -1174,7 +1192,7 @@ class MAT4(ThermalMaterial):
         model : BDF()
             the BDF object
         """
-        #msg = ' which is required by MAT4 mid=%s' % self.mid
+        #msg = ', which is required by MAT4 mid=%s' % self.mid
         if self.mid in model.MATT4:
             self.matt4 = model.MATT4[self.mid]  # not using a method...
             self.matt4_ref = self.matt4
@@ -1335,12 +1353,13 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
         model : BDF()
             the BDF object
         """
-        #msg = ' which is required by MAT5 mid=%s' % self.mid
+        #msg = ', which is required by MAT5 mid=%s' % self.mid
         if self.mid in model.MATT5:
             self.matt5_ref = model.MATT5[self.mid]  # not using a method...
 
     def uncross_reference(self):
-        #self.matt5 = self.Matt5()
+        if self.mid in model.MATT5:
+            self.matt5 = self.Matt5()
         self.matt5_ref = None
 
     def get_density(self):
@@ -1533,7 +1552,7 @@ class MAT8(OrthotropicMaterial):
         model : BDF()
             the BDF object
         """
-        #msg = ' which is required by MATT8 mid=%s' % self.mid
+        #msg = ', which is required by MATT8 mid=%s' % self.mid
         if self.mid in model.MATT8:
             self.matt8 = model.MATT8[self.mid]  # not using a method...
             self.matt8_ref = self.matt8
@@ -1876,6 +1895,9 @@ class MAT9(AnisotropicMaterial):
         #assert isinstance(E22, float), 'E11=%r' % E11
         #assert isinstance(G12, float), 'G12=%r' % G12
         #assert isinstance(nu12, float), 'nu12=%r' % nu12
+
+    def Rho(self):
+        return self.rho
 
     def D(self):
         D = array(
@@ -2303,6 +2325,21 @@ class MAT11(Material):
         1: 'mid', 2:'e1', 3:'e2', 4:'e3', 5: 'nu12', 6:'nu13', 7:'nu23',
         8: 'g12', 9:'g13', 10:'g23', 11:'rho', 12:'a1', 13:'a2', 14:'a3',
         15:'tref', 16: 'ge',
+    }
+    mp_name_map = {
+        'E1' : 'e1',
+        'E2' : 'e2',
+        'E3' : 'e3',
+        #'E' : 'e', #3 : 'e',
+        #'G' : 'g', #4 : 'g',
+        #'NU' : 'nu', #5: 'nu',
+        #'RHO' : 'rho', #6 : 'rho',
+        #'A' : 'a', #7 : 'a',
+        #'TREF' : 'tref', #8 : 'tref',
+        #'GE' : 'ge', #9 : 'ge',
+        #'ST' : 'st', #10 : 'st',
+        #'SC' : 'sc', #11 : 'sc',
+        #'SS' : 'ss', #12 : 'ss',
     }
     def __init__(self, mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho=0.0,
                  a1=0.0, a2=0.0, a3=0.0, tref=0.0, ge=0.0, comment=''):

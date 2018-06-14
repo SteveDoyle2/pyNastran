@@ -17,8 +17,9 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from itertools import count
 from six import string_types
 from six.moves import zip, range
+import numpy as np
 
-from pyNastran.utils import integer_types
+from pyNastran.utils import integer_types, float_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.cards.base_card import Element
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -160,8 +161,19 @@ class RROD(RigidElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by RROD eid=%s' % (self.eid)
+        msg = ', which is required by RROD eid=%s' % (self.eid)
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        self.cross_reference(model)
 
     def uncross_reference(self):
         self.nodes = [self.Ga(), self.Gb()]
@@ -363,9 +375,20 @@ class RBAR(RigidElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by RBAR eid=%s' % (self.eid)
+        msg = ', which is required by RBAR eid=%s' % (self.eid)
         self.ga_ref = model.Node(self.Ga(), msg=msg)
         self.gb_ref = model.Node(self.Gb(), msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        self.cross_reference(model)
 
     def uncross_reference(self):
         self.ga = self.Ga()
@@ -493,9 +516,20 @@ class RBAR1(RigidElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by RBAR1 eid=%s' % (self.eid)
+        msg = ', which is required by RBAR1 eid=%s' % (self.eid)
         self.ga_ref = model.Node(self.Ga(), msg=msg)
         self.gb_ref = model.Node(self.Gb(), msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        self.cross_reference(model)
 
     def uncross_reference(self):
         self.ga = self.Ga()
@@ -650,9 +684,20 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by RBE1 eid=%s' % (self.eid)
+        msg = ', which is required by RBE1 eid=%s' % (self.eid)
         self.Gni_ref = model.EmptyNodes(self.Gni, msg=msg)
         self.Gmi_ref = model.EmptyNodes(self.Gmi, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        self.cross_reference(model)
 
     def uncross_reference(self):
         self.Gni = self.Gni_node_ids
@@ -781,6 +826,8 @@ class RBE2(RigidElement):
         #: degrees-of-freedom are assigned. (Integer > 0)
         if isinstance(Gmi, integer_types):
             Gmi = [Gmi]
+        elif isinstance(Gmi, np.ndarray):
+            Gmi = Gmi.tolist()
         self.Gmi = Gmi
         #self.nodes_ref = None
         self.Gmi_ref = None
@@ -859,7 +906,7 @@ class RBE2(RigidElement):
         assert self.cm is not None, 'cm=%s' % self.cm
         self.gn = self.gn
         self.cm = str(self.cm)
-        assert isinstance(self.alpha, float), 'alpha=%r type=%s' % (self.alpha, type(self.alpha))
+        assert isinstance(self.alpha, float_types), 'alpha=%r type=%s' % (self.alpha, type(self.alpha))
 
     def convert_to_mpc(self, mpc_id):
         """
@@ -938,11 +985,11 @@ class RBE2(RigidElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by RBE2 eid=%s' % (self.eid)
+        msg = ', which is required by RBE2 eid=%s' % (self.eid)
         self.Gmi_ref = model.EmptyNodes(self.Gmi, msg=msg)
         self.gn_ref = model.Node(self.Gn(), msg=msg)
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -951,7 +998,7 @@ class RBE2(RigidElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by RBE2 eid=%s' % (self.eid)
+        msg = ', which is required by RBE2 eid=%s' % (self.eid)
         self.Gmi_ref, unused_missing_nodes = model.safe_empty_nodes(self.Gmi, msg=msg)
         self.gn_ref = model.Node(self.Gn(), msg=msg)
 
@@ -971,7 +1018,10 @@ class RBE2(RigidElement):
         if self.Gmi_ref is None or len(self.Gmi) == 0:
             return self.Gmi
         assert self.Gmi_ref is not None, self.Gmi
-        return self._node_ids(nodes=self.Gmi_ref, allow_empty_nodes=True)
+
+        # this lets us remove duplicate nodes when we xref
+        non_unique_gmi_node_ids = self._node_ids(nodes=self.Gmi_ref, allow_empty_nodes=True)
+        return np.unique(non_unique_gmi_node_ids).tolist()
 
     @property
     def independent_nodes(self):
@@ -1277,7 +1327,7 @@ class RBE3(RigidElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by RBE3 eid=%s' % (self.eid)
+        msg = ', which is required by RBE3 eid=%s' % (self.eid)
         assert self.Gmi is not None
         self.Gmi_ref = model.EmptyNodes(self.Gmi, msg=msg)
 
@@ -1289,7 +1339,7 @@ class RBE3(RigidElement):
             self.Gijs_ref.append(model.EmptyNodes(Gij, msg=msg))
 
     def safe_cross_reference(self, model, debug=True):
-        msg = ' which is required by RBE3 eid=%s' % (self.eid)
+        msg = ', which is required by RBE3 eid=%s' % (self.eid)
         assert self.Gmi is not None
         self.Gmi_ref, unused_missing_nodes = model.safe_empty_nodes(self.Gmi, msg=msg)
 
@@ -1460,11 +1510,22 @@ class RSPLINE(RigidElement):
             the BDF object
         """
         return
-        #msg = ' which is required by RSPLINE eid=%s' % (self.eid)
+        #msg = ', which is required by RSPLINE eid=%s' % (self.eid)
         #self.Gni = model.EmptyNodes(self.Gni, msg=msg)
         #self.Gmi = model.EmptyNodes(self.Gmi, msg=msg)
         #self.Gni_ref = self.Gni
         #self.Gmi_ref = self.Gmi
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        self.cross_reference(model)
 
     def uncross_reference(self):
         pass
@@ -1529,6 +1590,8 @@ class RSSCON(RigidElement):
     | RSSCON |  111 | GRID |  31 |  74 |  75 |     |     |     |
     +--------+------+------+-----+-----+-----+-----+-----+-----+
     | RSSCON |  115 | ELEM | 311 | 741 |     |     |     |     |
+    +--------+------+------+-----+-----+-----+-----+-----+-----+
+    | RSSCON |  116 | INTC |  2  |  1  |  3  |     |     |     |
     +--------+------+------+-----+-----+-----+-----+-----+-----+
     """
     def __init__(self, eid, rigid_type,
@@ -1627,10 +1690,21 @@ class RSSCON(RigidElement):
         model : BDF()
             the BDF object
         """
-        unused_msg = ' which is required by RSSCON eid=%s' % (self.eid)
+        unused_msg = ', which is required by RSSCON eid=%s' % (self.eid)
         #if self.rigid_type == 'ELEM':
             #self.shell_eid_ref = model.Element(self.shell_eid, msg=msg)
             #self.solid_eid_ref = model.Element(self.shell_eid, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        self.cross_reference(model)
 
     def EidShell(self):
         if self.shell_eid_ref is not None:

@@ -17,6 +17,7 @@ Defines:
    - remove(results)
    - _found_result(result)
    - update(self, results)
+
 """
 from copy import deepcopy
 
@@ -25,6 +26,7 @@ class ResultSet(object):
     This class is private storage interface class.
 
     It's an interface tool between the code and the results the user requests.
+
     """
     def __init__(self, allowed_results):
         # the full set of allowable results
@@ -71,7 +73,8 @@ class ResultSet(object):
 
     def _found_result(self, result):
         if result not in self.allowed:
-            raise RuntimeError("result=%r is invalid; the name changed or it's a typo" % result)
+            msg = "result=%r is invalid; the name changed or it's a typo" % result
+            raise RuntimeError(msg) # check line ~640 in op2_f06_common.py if this is a new result
         self.found.add(result)
 
     def update(self, results):

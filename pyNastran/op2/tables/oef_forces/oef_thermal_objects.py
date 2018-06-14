@@ -2,9 +2,10 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import integer_types
-from numpy import zeros, empty, array_equal
+from numpy import zeros, empty
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
-from pyNastran.f06.f06_formatting import get_key0, write_float_13e, write_floats_13e, _eigenvalue_header
+from pyNastran.f06.f06_formatting import (
+    write_float_13e, write_floats_13e, _eigenvalue_header)
 from pyNastran.op2.result_objects.element_table_object import RealElementTableArray
 import numpy as np
 try:
@@ -13,7 +14,8 @@ except ImportError:
     pass
 
 
-class Real1DHeatFluxArray(ScalarObject):  # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34-BAR, 69-BEND
+class Real1DHeatFluxArray(ScalarObject):
+    """1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34-BAR, 69-BEND"""
     def __init__(self, data_code, is_sort1, isubcase, dt):
         self.element_type = None
         self.element_name = None
@@ -26,9 +28,7 @@ class Real1DHeatFluxArray(ScalarObject):  # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34
         self.itotal = 0
         self.ielement = 0
 
-        if is_sort1:
-            self.add = self.add_sort1
-        else:
+        if not is_sort1:
             raise NotImplementedError('SORT2')
 
     def _reset_indices(self):
@@ -79,10 +79,14 @@ class Real1DHeatFluxArray(ScalarObject):  # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34
         assert 0 not in self.element
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(self.data, items=column_values,
+                                       major_axis=self.element,
+                                       minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
         else:
-            self.data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(self.data,
+                                       major_axis=self.element,
+                                       minor_axis=headers).to_frame()
             self.data_frame.columns.names = ['Static']
         self.data_frame.index.names = ['ElementID', 'Item']
 
@@ -158,14 +162,16 @@ class Real1DHeatFluxArray(ScalarObject):  # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34
             ntimes_word = '1'
         headers = self.get_headers()
         n = len(headers)
-        msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (
+            ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         #msg.append('  element type: %s\n' % self.element_type)
         #msg.append('  element name: %s\n  ' % self.element_name)
         msg += self.get_data_code()
         return msg
 
-    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         msg_temp = [
@@ -174,7 +180,6 @@ class Real1DHeatFluxArray(ScalarObject):  # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34
             '    ELEMENT-ID   EL-TYPE        X-GRADIENT       Y-GRADIENT       Z-GRADIENT        X-FLUX           Y-FLUX           Z-FLUX\n'
             #'            10    ROD         -1.889713E+02                                       3.779427E+04'
         ]
-
         ntimes = self.data.shape[0]
 
         eids = self.element
@@ -202,7 +207,8 @@ class Real1DHeatFluxArray(ScalarObject):  # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34
         return page_num - 1
 
 
-class RealHeatFluxVU3DArray(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
+class RealHeatFluxVU3DArray(ScalarObject):
+    """189-VUQUAD 190-VUTRIA,191-VUBEAM"""
     def __init__(self, data_code, is_sort1, isubcase, dt):
         self.element_type = None
         self.element_name = None
@@ -265,10 +271,14 @@ class RealHeatFluxVU3DArray(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
         ]
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=element_node, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(self.data, items=column_values,
+                                       major_axis=element_node,
+                                       minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
         else:
-            self.data_frame = pd.Panel(self.data, major_axis=element_node, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(self.data,
+                                       major_axis=element_node,
+                                       minor_axis=headers).to_frame()
             self.data_frame.columns.names = ['Static']
         self.data_frame.index.names = ['ElementID', 'Node', 'Item']
 
@@ -282,7 +292,9 @@ class RealHeatFluxVU3DArray(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
             msg += '%s\n' % str(self.code_information())
             msg += 'Eid, Parent, Coord, iCoord\n'
             for (eid1, parent1, coord1, icord1), (eid2, parent2, coord2, icord2) in zip(self.element_parent, table.element_parent_coord_icord):
-                msg += '(%s, %s, %s, %s) (%s, %s, %s, %s)\n' % (eid1, parent1, coord1, icord1, eid2, parent2, coord2, icord2)
+                msg += '(%s, %s, %s, %s) (%s, %s, %s, %s)\n' % (
+                    eid1, parent1, coord1, icord1,
+                    eid2, parent2, coord2, icord2)
             print(msg)
             raise ValueError(msg)
         if not np.array_equal(self.data, table.data):
@@ -399,7 +411,8 @@ class RealHeatFluxVU3DArray(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
         return page_num - 1
 
 
-class HeatFlux_VU_3D(ScalarObject):  # 146-VUPENTA, 147-VUTETRA, 148-VUPENTA
+class HeatFlux_VU_3D(ScalarObject):
+    """146-VUPENTA, 147-VUTETRA, 148-VUPENTA"""
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
         self.parent = {}
@@ -473,7 +486,8 @@ class HeatFlux_VU_3D(ScalarObject):  # 146-VUPENTA, 147-VUTETRA, 148-VUPENTA
             self.flux[dt][eid][nid] = [xflux, yflux, zflux]
 
 
-class RealHeatFluxVUArray(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
+class RealHeatFluxVUArray(ScalarObject):
+    """189-VUQUAD 190-VUTRIA,191-VUBEAM"""
     def __init__(self, data_code, is_sort1, isubcase, dt):
         self.element_type = None
         self.element_name = None
@@ -535,10 +549,14 @@ class RealHeatFluxVUArray(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
         ]
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=element_node, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(self.data, items=column_values,
+                                       major_axis=element_node,
+                                       minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
         else:
-            self.data_frame = pd.Panel(self.data, major_axis=element_node, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(self.data,
+                                       major_axis=element_node,
+                                       minor_axis=headers).to_frame()
             self.data_frame.columns.names = ['Static']
         self.data_frame.index.names = ['ElementID', 'Node', 'Item']
 
@@ -552,7 +570,8 @@ class RealHeatFluxVUArray(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
             msg += '%s\n' % str(self.code_information())
             msg += 'Eid, Parent, Coord, iCoord\n'
             for (eid1, parent1, coord1, icord1), (eid2, parent2, coord2, icord2) in zip(self.element_parent_coord_icord, table.element_parent_coord_icord):
-                msg += '(%s, %s, %s, %s) (%s, %s, %s, %s)\n' % (eid1, parent1, coord1, icord1, eid2, parent2, coord2, icord2)
+                msg += '(%s, %s, %s, %s) (%s, %s, %s, %s)\n' % (
+                    eid1, parent1, coord1, icord1, eid2, parent2, coord2, icord2)
             print(msg)
             raise ValueError(msg)
         if not np.array_equal(self.data, table.data):
@@ -619,14 +638,16 @@ class RealHeatFluxVUArray(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
             ntimes_word = '1'
         headers = self.get_headers()
         n = len(headers)
-        msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (
+            ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         msg.append('  element type: %s\n' % self.element_type)
         msg.append('  element name: %s\n' % self.element_name)
         msg += self.get_data_code()
         return msg
 
-    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         ## TODO: add the f06 header
@@ -761,9 +782,7 @@ class RealHeatFluxVUBeamArray(ScalarObject):  # 191-VUBEAM
         self.ielement = 0
         self.itime = 0
 
-        if is_sort1:
-            self.add = self.add_sort1
-        else:
+        if not is_sort1:
             raise NotImplementedError('SORT2')
 
     def _reset_indices(self):
@@ -823,7 +842,9 @@ class RealHeatFluxVUBeamArray(ScalarObject):  # 191-VUBEAM
         if self.nonlinear_factor is not None:
             # TODO: rework
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=element_node, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(self.data, items=column_values,
+                                       major_axis=element_node,
+                                       minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
             self.data_frame.index.names = ['ElementID', 'Node', 'Item']
         else:
@@ -846,7 +867,8 @@ class RealHeatFluxVUBeamArray(ScalarObject):  # 191-VUBEAM
             msg += '%s\n' % str(self.code_information())
             msg += 'Eid, Parent, Coord\n'
             for (eid1, parent1, coord1), (eid2, parent2, coord2) in zip(self.element_parent_coord, table.element_parent_coord):
-                msg += '(%s, %s, %s)  (%s, %s, %s)\n' % (eid1, parent1, coord1, eid2, parent2, coord2)
+                msg += '(%s, %s, %s)  (%s, %s, %s)\n' % (
+                    eid1, parent1, coord1, eid2, parent2, coord2)
             print(msg)
             raise ValueError(msg)
         if not np.array_equal(self.data, table.data):
@@ -911,14 +933,16 @@ class RealHeatFluxVUBeamArray(ScalarObject):  # 191-VUBEAM
             ntimes_word = '1'
         headers = self.get_headers()
         n = len(headers)
-        msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (
+            ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         msg.append('  element type: %s\n' % self.element_type)
         msg.append('  element name: %s\n' % self.element_name)
         msg += self.get_data_code()
         return msg
 
-    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         asdf
@@ -955,7 +979,7 @@ class RealHeatFluxVUBeamArray(ScalarObject):  # 191-VUBEAM
                     [fappliedi, free_convi, force_convi, fradi, ftotali])
                 [sfapplied, sfree_conv, sforce_conv, sfrad, sftotal] = vals2
 
-                f06_file.write('         %10i    %13E    %13E    %13E    %13E    %13E    %13E\n' % (
+                f06_file.write('         %10i    %13E    %13E    %13E    %13E    %13E\n' % (
                     eid, sfapplied, sfree_conv, sforce_conv, sfrad, sftotal))
             f06_file.write(page_stamp % page_num)
             page_num += 1
@@ -1055,7 +1079,9 @@ class HeatFlux_2D_3DArray(RealElementTableArray):
         #nelements = self.element.shape[0]# // 2
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(self.data, items=column_values,
+                                       major_axis=self.element,
+                                       minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
             self.data_frame.index.names = ['ElementID', 'Item']
         else:
@@ -1066,7 +1092,8 @@ class HeatFlux_2D_3DArray(RealElementTableArray):
             self.data_frame = df1.join(df2)
         #print(self.data_frame)
 
-    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         words = [
@@ -1098,9 +1125,7 @@ class RealConvHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         self.ielement = 0
         self.itotal = 0
 
-        if is_sort1:
-            self.add = self.add_sort1
-        else:
+        if not is_sort1:
             raise NotImplementedError('SORT2')
 
     def _reset_indices(self):
@@ -1151,10 +1176,14 @@ class RealConvHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         ]
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=element_node, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(self.data, items=column_values,
+                                       major_axis=element_node,
+                                       minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
         else:
-            self.data_frame = pd.Panel(self.data, major_axis=element_node, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(self.data,
+                                       major_axis=element_node,
+                                       minor_axis=headers).to_frame()
             self.data_frame.columns.names = ['Static']
         self.data_frame.index.names = ['ElementID', 'Node', 'Item']
 
@@ -1220,14 +1249,16 @@ class RealConvHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
             ntimes_word = '1'
         headers = self.get_headers()
         n = len(headers)
-        msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (
+            ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         msg.append('  element type: %s\n' % self.element_type)
         msg.append('  element name: %s\n' % self.element_name)
         msg += self.get_data_code()
         return msg
 
-    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         msg_temp = [
@@ -1276,9 +1307,7 @@ class RealChbdyHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         self.ielement = 0
         self.itotal = 0
 
-        if is_sort1:
-            self.add = self.add_sort1
-        else:
+        if not is_sort1:
             raise NotImplementedError('SORT2')
 
     def _reset_indices(self):
@@ -1349,8 +1378,8 @@ class RealChbdyHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
 
                     if not np.array_equal(t1, t2):
                         msg += (
-                            '%s   (%s, %s, %s, %s, %s, %s)\n'
-                            '     (%s, %s, %s, %s, %s, %s)\n' % (
+                            '%s   (%s, %s, %s, %s, %s)\n'
+                            '     (%s, %s, %s, %s, %s)\n' % (
                                 eid,
                                 fapplied1, free_conv1, force_conv1, frad1, ftotal1,
                                 fapplied2, free_conv2, force_conv2, frad2, ftotal2,

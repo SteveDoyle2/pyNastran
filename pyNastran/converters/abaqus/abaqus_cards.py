@@ -11,7 +11,7 @@ import numpy as np
 
 class SolidSection(object):
     """a SolidSection defines depth and a material"""
-    def __init__(self, param_map, data_lines):
+    def __init__(self, param_map, data_lines, log):
         self.param_map = param_map
         self.data_lines = data_lines
         self.material = param_map['material']
@@ -19,10 +19,10 @@ class SolidSection(object):
         line0 = data_lines[0]
         assert len(line0) == 1., data_lines
 
-        self.thickness = line0[0]
+        self.thickness = float(line0[0])
 
         for line in data_lines:
-            print('solid - %r' % line)
+            log.info('solid - %r' % line)
 
     def __repr__(self):
         """prints a summary for the solid section"""
@@ -57,7 +57,33 @@ class Part(object):
     """a Part object is a series of nodes & elements (of various types)"""
     def __init__(self, name, nids, nodes, element_types, node_sets, element_sets,
                  solid_sections, log):
-        """creates a Part object"""
+        """
+        creates a Part object
+
+        Parameters
+        ----------
+        name : str
+            the name
+        element_types : Dict[element_type] : nodes
+            element_type : str
+                the element type
+
+            bars:
+                r2d2 : (nelements, 2) int ndarray
+
+            shells:
+                cpe3 : (nelements, 3) int ndarray
+                cpe4 : (nelements, 4) int ndarray
+                cpe4r : (nelements, 4) int ndarray
+                coh2d4 : (nelements, 4) int ndarray
+                cohax4 : (nelements, 4) int ndarray
+                cax3 : (nelements, 3) int ndarray
+                cax4r : (nelements, 4) int ndarray
+                cps4r : (nelements, 4) int ndarray
+
+            solids:
+                c3d10h : (nelements, 10) int ndarray
+        """
         self.name = name
         self.log = log
         self.solid_sections = solid_sections
@@ -85,7 +111,6 @@ class Part(object):
 
         # bars
         self.r2d2 = None
-        self.r2d2_eids = None
 
         # shells
         self.cpe3 = None
@@ -99,11 +124,9 @@ class Part(object):
 
         # solids
         self.c3d10h = None
-
-        # bars
+        #-----------------------------------
+        # eids
         self.r2d2_eids = None
-
-        # shells
         self.cpe3_eids = None
         self.cpe4_eids = None
         self.cpe4r_eids = None
@@ -114,6 +137,10 @@ class Part(object):
 
         # rigid elements
         self.c3d10h_eids = None
+        self._store_elements(element_types)
+
+    def _store_elements(self, element_types):
+        """helper method for the init"""
         if 'r2d2' in element_types: # similar to CBAR
             elements = element_types['r2d2']
             self.r2d2 = np.array(elements, dtype='int32')
@@ -300,17 +327,52 @@ class Part(object):
             n_cps4r = self.cps4r.shape[0]
 
         neids = (n_r2d2 + n_cpe3 + n_cpe4 + n_cpe4r + n_coh2d4 +
-                 n_c3d10h + n_cohax4 + n_cax3 + n_cax4r)
+                 n_c3d10h + n_cohax4 + n_cax3 + n_cax4r + n_cps4r)
         msg = (
             'Part(name=%r, nnodes=%i, neids=%i,\n'
             '     n_r2d2=%i, n_cpe3=%i, n_cpe4=%i, n_cpe4r=%i, n_coh2d4=%i,\n'
-            '     n_cohax4=%i, n_cax3=%i, n_cax4r=%i,\n'
+            '     n_cohax4=%i, n_cax3=%i, n_cax4r=%i, n_cps4r=%i,\n'
             '     n_c3d10h=%i)\n' % (
                 self.name, nnodes, neids,
                 n_r2d2, n_cpe3, n_cpe4, n_cpe4r, n_coh2d4,
-                n_cohax4, n_cax3, n_cax4r,
-                n_c3d10h)
+                n_cohax4, n_cax3, n_cax4r, n_cps4r,
+                n_c3d10h,)
         )
         for section in self.solid_sections:
             msg += str(section) + '\n'
         return msg
+
+    @property
+    def element_types(self):
+        """simplified way to access all the elements as a dictionary"""
+        element_types = {}
+        element_types['r2d2'] = (self.r2d2_eids, self.r2d2)
+        element_types['cpe3'] = (self.cpe3_eids, self.cpe3)
+        element_types['cpe4'] = (self.cpe4_eids, self.cpe4)
+        element_types['cpe4r'] = (self.cpe4r_eids, self.cpe4r)
+        element_types['cohax4'] = (self.cohax4_eids, self.cohax4)
+        element_types['coh2d4'] = (self.coh2d4_eids, self.coh2d4)
+        element_types['cax3'] = (self.cax3_eids, self.cax3)
+        element_types['cax4r'] = (self.cax4r_eids, self.cax4r)
+        #element_types['cps4r'] = (self.cps4r_eids, self.cps4r)
+        element_types['c3d10h'] = (self.c3d10h_eids, self.c3d10h)
+        return element_types
+
+    def write(self, abq_file):
+        """writes a Part"""
+        #name, nids, nodes, element_types, node_sets, element_sets,
+         #                solid_sections, log
+        abq_file.write('*Part,name=%r\n' % self.name)
+        abq_file.write('*Node\n')
+        for inid, node in enumerate(self.nodes):
+            abq_file.write('%i,%s,%s,%s\n' % (inid, node[0], node[1], node[2]))
+        for elem_type, (eids, elems) in iteritems(self.element_types):
+            if eids is None:
+                continue
+            abq_file.write('*Element,type=%s\n' % elem_type)
+            for eid, elem in zip(eids, elems):
+                #print(elem)
+                nids_strs = (str(nid) for nid in elem.tolist())
+                #abq_file.write(str(eid) + ','.join(nids_strs) + '\n')
+                abq_file.write(','.join(nids_strs) + '\n')
+        abq_file.write('*endpart')

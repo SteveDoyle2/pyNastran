@@ -10,7 +10,8 @@ from six.moves import range
 
 import numpy as np
 
-from pyNastran.bdf.cards.properties.mass import PMASS, NSM
+from pyNastran import is_release
+from pyNastran.bdf.cards.properties.mass import PMASS, NSM, NSML
 from pyNastran.bdf.cards.properties.bars import PBAR, PBARL, PBEND
 from pyNastran.bdf.cards.properties.beam import PBEAM, PBEAML, PBCOMP
 from pyNastran.bdf.cards.properties.bush import PBUSH
@@ -101,8 +102,8 @@ class EPT(GeomCommon):
         }
 
     def _add_op2_property(self, prop):
-        if prop.pid > 100000000:
-            raise RuntimeError('bad parsing; pid > 100000000...%s' % str(prop))
+        #if prop.pid > 100000000:
+            #raise RuntimeError('bad parsing; pid > 100000000...%s' % str(prop))
         self._add_property_object(prop, allow_overwrites=True)
         #print(str(prop)[:-1])
 
@@ -114,20 +115,159 @@ class EPT(GeomCommon):
 # HGSUPPR
 
     def _read_nsm(self, data, n):
+        """NSM"""
+        n = self._read_dual_card(data, n, self._read_nsm_nx, self._read_nsm_msc,
+                                 'NSM', self._add_nsm_object)
+        return n
+
+    def _read_nsm_msc(self, data, n):
         """
         NSM(3201,32,55) - the marker for Record 2
-        .. todo:: this isnt a property...
+
+        MSC
+        1 SID       I Set identification number
+        2 PROP  CHAR4 Set of property or elements
+        3 ID        I Property or element identification number
+        4 VALUE    RS Nonstructural mass value
+        ORIGIN =0 NSM Bulk Data entry
+        5 ID I Property or element ID
+        6 VALUE RS Nonstructural mass value
+        Words 5 through 6 repeat until End of Record
+        ORIGIN =2 NSML Bulk Data entry
+        5 ID I Property or element ID
+        6 VALUE RS Nonstructural mass value
+        Words 5 through 6 repeat until End of Record
+        Words 3 through 4 repeat until End of Record
         """
-        struct1 = Struct(self._endian + b'i4sif')
-        while len(data) >= 16:  # 4*4
-            edata = data[:16]
-            data = data[16:]
+        properties = []
+        struct1 = Struct(self._endian + b'i 4s if')
+        ndelta = 16
+
+        i = 0
+        ints = np.frombuffer(data[n:], self.idtype).copy()
+        floats = np.frombuffer(data[n:], self.fdtype).copy()
+
+        while n < len(data):
+            edata = data[n:n+ndelta]
             out = struct1.unpack(edata)
-            (sid, prop_set, ID, value) = out
-            self.log.info("sid=%s prop_set=%s ID=%s value=%s" %(sid, prop_set, ID, value))
-            prop = NSM.add_op2_data([sid, prop_set, ID, value])
-            self._add_nsm_object(prop)
-        return n
+            (sid, prop_set, pid, value) = out
+            #            538976312
+            assert pid < 100000000
+            i += 4
+            n += ndelta
+
+            prop_set = prop_set.decode('utf8').rstrip(' ') # \x00
+            values = [value]
+            #print('ints[i:]=', ints[i:])
+            while ints[i] != -1:
+                value2 = floats[i]
+                values.append(value2)
+                n += 4
+                i += 1
+            self.log.info("MSC: NSM-sid=%s prop_set=%s pid=%s values=%s" % (
+                sid, prop_set, pid, values))
+            prop = NSM.add_op2_data([sid, prop_set, pid, value])
+            #self._add_nsm_object(prop)
+            properties.append(prop)
+
+            # handle the trailing -1
+            i += 1
+            n += 4
+        return n, properties
+
+    def _read_nsm_nx(self, data, n):
+        """
+        NSM(3201,32,55) - the marker for Record 2
+
+        1 SID         I Set identification number
+        2 PROP(2) CHAR4 Set of properties or elements
+        4 ORIGIN      I  Entry origin
+        5 ID          I  Property or element identification number
+        6 VALUE      RS Nonstructural mass value
+        Words 5 through 6 repeat until End of Record
+        """
+        properties = []
+
+        #NX: C:\Users\sdoyle\Dropbox\move_tpl\nsmlcr2s.op2
+        struct1 = Struct(self._endian + b'i 8s ii f')
+        ndelta = 24
+        #self.show_data(data[12:], 'ifs')
+
+        i = 0
+        ints = np.frombuffer(data[n:], self.idtype).copy()
+        floats = np.frombuffer(data[n:], self.fdtype).copy()
+
+        def break_by_minus1(idata):
+            """helper for ``read_nsm_nx``"""
+            i1 = 0
+            i = 0
+            i2 = None
+            packs = []
+            for idatai in idata:
+                #print('data[i:] = ', data[i:])
+                if idatai == -1:
+                    i2 = i
+                    packs.append((i1, i2))
+                    i1 = i2 + 1
+                    i += 1
+                    continue
+                i += 1
+            #print(packs)
+            return packs
+        idata = np.frombuffer(data[n:], self.idtype).copy()
+        fdata = np.frombuffer(data[n:], self.fdtype).copy()
+        packs = break_by_minus1(idata)
+        #for pack in packs:
+            #print(pack)
+
+        ipack = 0
+        while n < len(data):
+            #print('ints[i:]=', ints[i:].tolist())
+            i1, i2 = packs[ipack]
+            #print('idata=%s' % idata[i1:i2])
+            #print('fdata=%s' % fdata[i1:i2])
+            #print(idata[i1:i2])
+            edata = data[n:n+ndelta]
+            out = struct1.unpack(edata)
+            (sid, prop_set, origin, pid, value) = out
+            #            538976312
+            assert pid < 100000000
+            i += 6
+            n += ndelta
+
+            prop_set = prop_set.decode('utf8').rstrip(' ') # \x00
+            pids = [pid]
+            values = [value]
+            #print('ints[i:]=', ints[i:].tolist())
+            while ints[i] != -1:
+                pid = ints[i]
+                value2 = floats[i+1]
+                assert pid != -1
+                pids.append(pid)
+                values.append(value2)
+                n += 8
+                i += 2
+
+            for pid, value in zip(pids, values):
+                if origin == 0:
+                    #self.log.info("NX: NSM-sid=%s prop_set=%s pid=%s values=%s" % (
+                        #sid, prop_set, pid, values))
+                    prop = NSM.add_op2_data([sid, prop_set, pid, value])
+                elif origin == 2:
+                    #self.log.info("NX: NSML-sid=%s prop_set=%s pid=%s values=%s" % (
+                        #sid, prop_set, pid, values))
+                    prop = NSML.add_op2_data([sid, prop_set, pid, value])
+
+                #print(prop.rstrip(), pid, value)
+                #self._add_nsm_object(prop)
+                properties.append(prop)
+            #print('----')
+
+            # handle the trailing -1
+            i += 1
+            n += 4
+            ipack += 1
+        return n, properties
 
 # NSM1
 # NSML1
@@ -538,7 +678,7 @@ class EPT(GeomCommon):
                   in-plane bending moment.
         33 Not used
         """
-        #self.log.info('skipping PBEND in EPT\n')
+        #self.log.info('skipping PBEND in EPT')
         #return len(data)
         ntotal = 132  # 33*4
         struct1 = Struct(self._endian + b'2i 4f i 21f i 4f')
@@ -626,16 +766,112 @@ class EPT(GeomCommon):
         return n, props
 
     def _read_pbush1d(self, data, n):
-        self.log.info('skipping PBUSH1D in EPT\n')
-        return len(data)
+        """
+        Record 18 -- PBUSH1D(3101,31,219)
+
+        1  PID    I  Property identification number
+        2  K      RS Stiffness
+        3  C      RS Viscous Damping
+        4  M      RS Mass
+        5  ALPHA  RS Temperature coefficient
+        6  SA     RS Stress recovery coefficient
+        7  EA/SE  RS Strain recovery coefficient
+
+        8  TYPEA  I  Shock data type:0=Null, 1=Table, 2=Equation
+        9  CVT    RS Coefficient of translation velocity tension
+        10 CVC    RS Coefficient of translation velocity compression
+        11 EXPVT  RS Exponent of velocity tension
+        12 EXPVC  RS Exponent of velocity compression
+        13 IDTSU  I  TABLEDi or DEQATN entry identification number for scale factor vs displacement
+        14 IDTCU  I  DEQATN entry identification number for scale factor vs displacement
+        15 IDTSUD I  DEQATN entry identification number for derivative tension
+        16 IDCSUD I  DEQATN entry identification number for derivative compression
+
+        17 TYPES  I  Spring data type: 0=Null, 1=Table, 2=Equation
+        18 IDTS   I  TABLEDi or DEQATN entry identification number for tension compression
+        19 IDCS   I  DEQATN entry identification number for compression
+        20 IDTDU  I  DEQATN entry identification number for scale factor vs displacement
+        21 IDCDU  I  DEQATN entry identification number for force vs displacement
+
+        22 TYPED  I  Damper data type: 0=Null, 1=Table, 2=Equation
+        23 IDTD   I  TABLEDi or DEQATN entry identification number for tension compression
+        24 IDTD   I  DEQATN entry identification number for compression
+        25 IDTDV  I  DEQATN entry identification number for scale factor versus velocity
+        26 IDCDV  I  DEQATN entry identification number for force versus velocity
+
+        27 TYPEG  I  General data type: 0=Null, 1=Table, 2=Equation
+        28 IDTG   I  TABLEDi or DEQATN entry identification number for tension compression
+        29 IDCG   I  DEQATN entry identification number for compression
+        30 IDTDU  I  DEQATN entry identification number for scale factor versus displacement
+        31 IDCDU  I  DEQATN entry identification number for force versus displacement
+        32 IDTDV  I  DEQATN entry identification number for scale factor versus velocity
+        33 IDCDV  I  DEQATN entry identification number for force vs velocity
+
+        34 TYPEF  I  Fuse data type: 0=Null, 1=Table
+        35 IDTF   I  TABLEDi entry identification number for tension
+        36 IDCF   I  TABLEDi entry identification number for compression
+
+        37 UT     RS Ultimate tension
+        38 UC     RS Ultimate compression
+        """
+        type_map = {
+            0 : None,
+            1 : 'EQUAT',
+            2 : 'TABLE',
+        }
+        ntotal = 152  # 38*4
+        struct1 = Struct(self._endian + b'i 6f i 4f 24i 2f')
+        nentries = (len(data) - n) // ntotal
+        for i in range(nentries):
+            edata = data[n:n+152]
+            out = struct1.unpack(edata)
+            (pid, k, c, m, unused_alpha, sa, se,
+             typea, cvt, cvc, expvt, expvc, idtsu, idtcu, idtsud, idcsud,
+             types, idts, idcs, idtdu, idcdu, typed, idtd, idtd, idtdv, idcdv,
+             typeg, idtg, idcg, idtdu, idcdu, idtdv, idcdv,
+             typef, idtf, idcf,
+             ut, uc) = out
+            if not is_release:
+                if typea in [1, 2]:
+                    raise NotImplementedError(str((typea, cvt, cvc, expvt, expvc, idtsu, idtcu, idtsud, idcsud)))
+                if types in [1, 2]:
+                    raise NotImplementedError(str((types, idts, idcs, idtdu, idcdu, typed, idtd, idtd, idtdv, idcdv)))
+                if typeg in [1, 2]:
+                    raise NotImplementedError(str((typeg, idtg, idcg, idtdu, idcdu, idtdv, idcdv)))
+                if typef in [1, 2]:
+                    raise NotImplementedError(str((idtf, idcf)))
+                typea_str = type_map[typea]
+                types_str = type_map[types]
+                typeg_str = type_map[typeg]
+                typef_str = type_map[typef]
+            self.add_pbush1d(pid, k=k, c=c, m=m, sa=sa, se=se,
+                             optional_vars=None,)
+            n += ntotal
+        self.card_count['PBUSH1D'] = nentries
+        return n
 
     def _read_pbusht(self, data, n):
-        self.log.info('skipping PBUSHT in EPT\n')
+        self.log.info('skipping PBUSHT in EPT')
         return len(data)
 
     def _read_pcomp(self, data, n):
         """
         PCOMP(2706,27,287) - the marker for Record 22
+
+        1  PID   I  Property identification number
+        2  N(C)  I  Number of plies
+        3  Z0    RS Distance from the reference plane to the bottom surface
+        4  NSM   RS Nonstructural mass per unit area
+        5  SB    RS Allowable shear stress of the bonding material
+        6  FT    I  Failure theory
+        7  TREF  RS Reference temperature
+        8  GE    RS Damping coefficient
+
+        9  MID   I  Material identification number
+        10 T     RS Thicknesses of the ply
+        11 THETA RS Orientation angle of the longitudinal direction of the ply
+        12 SOUT  I Stress or strain output request of the ply
+        Words 9 through 12 repeat N times
         """
         nproperties = 0
         s1 = Struct(self._endian + b'2i3fi2f')
@@ -689,8 +925,117 @@ class EPT(GeomCommon):
         return n
 
     def _read_pcompg(self, data, n):
-        self.log.info('skipping PCOMPG in EPT\n')
-        return len(data)
+        """
+        PCOMP(2706,27,287)
+
+        1 PID      I  Property identification number
+        2 LAMOPT   I  Laminate option
+        3 Z0       RS Distance from the reference plane to the bottom surface
+        4 NSM      RS Nonstructural mass per unit area
+        5 SB       RS Allowable shear stress of the bonding material
+        6 FT       I  Failure theory
+        7 TREF     RS Reference temperature
+        8 GE       RS Damping coefficient
+
+        9  GPLYIDi I  Global ply IDs.
+        10 MID     I  Material identification number
+        11 T       RS Thicknesses of the ply
+        12 THETA   RS Orientation angle of the longitudinal direction of the ply
+        13 SOUT    I  Stress or strain output request of the ply
+        Words 9 through 13 repeat N times (until -1, -1, -1, -1, -1 as Nplies doesn't exist...)
+        """
+        nproperties = 0
+        s1 = Struct(self._endian + b'2i 3f i 2f')
+        s2 = Struct(self._endian + b'2i2fi')
+        struct_i5 = Struct(self._endian + b'5i')
+
+        # lam - SYM, MEM, BEND, SMEAR, SMCORE, None
+        lam_map = {
+            0 : None,
+        }
+
+        # ft - HILL, HOFF, TSAI, STRN, None
+        ft_map = {
+            0 : None,
+        }
+        # sout - YES, NO
+        sout_map = {
+            0 : 'NO',
+        }
+        ndata = len(data)
+        while n < (ndata - 32):
+            out = s1.unpack(data[n:n+32])
+            (pid, lam_int, z0, nsm, sb, ft_int, tref, ge) = out
+            if self.binary_debug:
+                self.binary_debug.write('PCOMPG pid=%s lam_int=%s z0=%s nsm=%s sb=%s ft_int=%s tref=%s ge=%s' % tuple(out))
+            assert isinstance(lam_int, int), out
+            n += 32
+
+            mids = []
+            thicknesses = []
+            thetas = []
+            souts = []
+            global_ply_ids = []
+
+            # None, 'SYM', 'MEM', 'BEND', 'SMEAR', 'SMCORE', 'NO'
+            #is_symmetrical = 'NO'
+            #if nlayers < 0:
+                #is_symmetrical = 'SYM'
+                #nlayers = abs(nlayers)
+            #assert nlayers > 0, out
+
+            #assert 0 < nlayers < 100, 'pid=%s nlayers=%s z0=%s nms=%s sb=%s ft=%s tref=%s ge=%s' % (
+                #pid, nlayers, z0, nsm, sb, ft, tref, ge)
+
+            #if self.is_debug_file:
+                #self.binary_debug.write('    pid=%s nlayers=%s z0=%s nms=%s sb=%s ft=%s tref=%s ge=%s\n' % (
+                    #pid, nlayers, z0, nsm, sb, ft, tref, ge))
+            ilayer = 0
+            while ilayer < 1000:
+                ints5 = struct_i5.unpack(data[n:n+20])
+                if ints5 == (-1, -1, -1, -1, -1):
+                    if self.is_debug_file:
+                        self.binary_debug.write('      global_ply=%-1 mid=%-1 t=%-1 theta=%-1 sout=-1\n')
+                    break
+                (global_ply, mid, t, theta, sout_int) = s2.unpack(data[n:n+20])
+                try:
+                    sout = sout_map[sout_int]
+                except KeyError:
+                    self.log.error('cant parse iply=%s sout=%s; assuming 0=NO' % (iply, sout_int))
+                    sout = 'NO'
+
+                global_ply_ids.append(global_ply)
+                mids.append(mid)
+                thicknesses.append(t)
+                thetas.append(theta)
+                souts.append(sout)
+                if self.is_debug_file:
+                    self.binary_debug.write('      global_ply=%s mid=%s t=%s theta=%s sout_int=%s sout=%r\n' % (
+                        global_ply, mid, t, theta, sout_int, sout))
+                n += 20
+                ilayer += 1
+
+            try:
+                ft = ft_map[ft_int]
+            except KeyError:
+                self.log.error('pid=%s cant parse ft=%s; should be HILL, HOFF, TSAI, STRN...skipping' % (pid, ft_int))
+                continue
+
+            try:
+                lam = lam_map[lam_int]
+            except KeyError:
+                self.log.error('pid=%s cant parse lam=%s; should be HILL, HOFF, TSAI, STRN...skipping' % (pid, lam_int))
+                continue
+
+            # apparently Nastran makes duplicate property ids...
+            if pid in self.properties and self.properties[pid].type == 'PCOMP':
+                del self.properties[pid]
+
+            self.add_pcompg(pid, global_ply_ids, mids, thicknesses, thetas=thetas, souts=souts,
+                            nsm=nsm, sb=sb, ft=ft, tref=tref, ge=ge, lam=lam, z0=z0, comment='')
+            nproperties += 1
+        self.card_count['PCOMPG'] = nproperties
+        return n
 
 # PCOMPA
 
@@ -698,7 +1043,7 @@ class EPT(GeomCommon):
         """
         (152,19,147) - Record 24
         """
-        self.log.info('skipping PCONEAX in EPT\n')
+        self.log.info('skipping PCONEAX in EPT')
         return len(data)
 
     def _read_pconv(self, data, n):
@@ -750,7 +1095,7 @@ class EPT(GeomCommon):
         return n, props
 
     def _read_pconvm(self, data, n):  # 26
-        self.log.info('skipping PCONVM in EPT\n')
+        self.log.info('skipping PCONVM in EPT')
         return len(data)
 
     def _read_pdamp(self, data, n):
@@ -770,11 +1115,11 @@ class EPT(GeomCommon):
         return n
 
     def _read_pdampt(self, data, n):  # 26
-        self.log.info('skipping PDAMPT in EPT\n')
+        self.log.info('skipping PDAMPT in EPT')
         return len(data)
 
     def _read_pdamp5(self, data, n):  # 26
-        self.log.info('skipping PDAMP5 in EPT\n')
+        self.log.info('skipping PDAMP5 in EPT')
         return len(data)
 
 # PDUM1
@@ -913,11 +1258,11 @@ class EPT(GeomCommon):
         return n
 
     def _read_pintc(self, data, n):
-        self.log.info('skipping PINTC in EPT\n')
+        self.log.info('skipping PINTC in EPT')
         return len(data)
 
     def _read_pints(self, data, n):
-        self.log.info('skipping PINTS in EPT\n')
+        self.log.info('skipping PINTS in EPT')
         return len(data)
 
     def _read_plplane(self, data, n):
@@ -1116,11 +1461,11 @@ class EPT(GeomCommon):
         return n
 
     def _read_pset(self, data, n):
-        self.log.info('skipping PSET in EPT\n')
+        self.log.info('skipping PSET in EPT')
         return len(data)
 
     def _read_pval(self, data, n):
-        self.log.info('skipping PVAL in EPT\n')
+        self.log.info('skipping PVAL in EPT')
         return len(data)
 
     def _read_pvisc(self, data, n):
@@ -1142,9 +1487,9 @@ class EPT(GeomCommon):
 # PWELD
 # PWSEAM
     def _read_view(self, data, n):
-        self.log.info('skipping VIEW in EPT\n')
+        self.log.info('skipping VIEW in EPT')
         return len(data)
 
     def _read_view3d(self, data, n):
-        self.log.info('skipping VIEW3D in EPT\n')
+        self.log.info('skipping VIEW3D in EPT')
         return len(data)

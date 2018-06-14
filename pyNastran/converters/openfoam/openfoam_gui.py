@@ -52,7 +52,6 @@ class MainWindow(GuiCommon2, STL_IO, OpenFoamIO, SurfIO, UGRID_IO, BEdge_IO): # 
         self.logo = logo
         self.set_script_path(SCRIPT_PATH)
         self.set_icon_path(ICON_PATH)
-        print('gui', self.supported_formats)
 
         self.setup_gui()
         self.menu_help2 = self.menubar.addMenu('&Help')
@@ -129,7 +128,7 @@ class MainWindow(GuiCommon2, STL_IO, OpenFoamIO, SurfIO, UGRID_IO, BEdge_IO): # 
         self.set_window_title(msg)
         self.log_command('on_reload()')
         #self.cycleResults(Title)
-        for i in range(10):  #  limit on number of cycles
+        for unused_i in range(10):  #  limit on number of cycles
             if self.Title != title:
                 self.cycleResults(title)
             else:

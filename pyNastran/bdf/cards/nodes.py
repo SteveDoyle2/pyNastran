@@ -25,7 +25,7 @@ EPOINTs/SPOINTs classes are for multiple degrees of freedom
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
-from six import string_types, PY2
+from six import string_types, PY2, iteritems
 from typing import List, Union, Optional, Any
 import numpy as np
 
@@ -265,8 +265,17 @@ class EPOINT(XPoint):
         XPoint.__init__(self, nid, comment)
 
 def write_xpoints(cardtype, points, comment=''):
+    """writes SPOINTs/EPOINTs"""
     msg = comment
-    lists_fields = compress_xpoints(cardtype, points)
+    if isinstance(points, dict):
+        point_ids = []
+        for point_id, point in sorted(iteritems(points)):
+            point_ids.append(point_id)
+            if point.comment:
+                msg += point.comment
+    else:
+        point_ids = points
+    lists_fields = compress_xpoints(cardtype, point_ids)
     for list_fields in lists_fields:
         if 'THRU' not in list_fields:
             msg += print_int_card(list_fields)
@@ -275,9 +284,9 @@ def write_xpoints(cardtype, points, comment=''):
     return msg
 
 
-def compress_xpoints(Type, xpoints):
+def compress_xpoints(point_type, xpoints):
     """
-    Gets the spoints in sorted, short form.
+    Gets the SPOINTs/EPOINTs in sorted, short form.
 
       uncompresed:  SPOINT,1,3,5
       compressed:   SPOINT,1,3,5
@@ -289,9 +298,9 @@ def compress_xpoints(Type, xpoints):
       compressed:   SPOINT,7
                     SPOINT,1,THRU,5
 
-    Type = 'SPOINT'
+    point_type = 'SPOINT'
     spoints = [1, 2, 3, 4, 5]
-    fields = compressed_xpoints(Type, spoints)
+    fields = compressed_xpoints(point_type, spoints)
     >>> fields
     ['SPOINT', 1, 'THRU', 5]
     """
@@ -302,11 +311,11 @@ def compress_xpoints(Type, xpoints):
 
     lists_fields = []
     if singles:
-        list_fields = [Type] + singles
+        list_fields = [point_type] + singles
         lists_fields.append(list_fields)
     if doubles:
         for spoint_double in doubles:
-            list_fields = [Type] + spoint_double
+            list_fields = [point_type] + spoint_double
             lists_fields.append(list_fields)
     return lists_fields
 
@@ -587,7 +596,7 @@ class GRDSET(BaseCard):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by the GRDSET'
+        msg = ', which is required by the GRDSET'
         self.cp_ref = model.Coord(self.cp, msg=msg)
         self.cd_ref = model.Coord(self.cd, msg=msg)
         #self.seid = model.SuperElement(self.seid, msg)
@@ -1206,7 +1215,7 @@ class GRID(BaseCard):
             cross-references the coordinate system
         """
         self.xyz = xyz
-        msg = ' which is required by GRID nid=%s' % self.nid
+        msg = ', which is required by GRID nid=%s' % self.nid
         self.cp = cid
         if xref:
             self.cp_ref = model.Coord(cid, msg=msg)
@@ -1264,7 +1273,7 @@ class GRID(BaseCard):
         """see get_position_wrt"""
         if cid == self.cp: # same coordinate system
             return self.xyz
-        msg = ' which is required by GRID nid=%s' % (self.nid)
+        msg = ', which is required by GRID nid=%s' % (self.nid)
 
         # converting the xyz point arbitrary->global
         cp_ref = model.Coord(self.cp, msg=msg)
@@ -1300,7 +1309,7 @@ class GRID(BaseCard):
         p = self.cp_ref.transform_node_to_global(self.xyz)
 
         # a matrix global->local matrix is found
-        msg = ' which is required by GRID nid=%s' % (self.nid)
+        msg = ', which is required by GRID nid=%s' % (self.nid)
         coord_b = model.Coord(cid, msg=msg)
         xyz = coord_b.transform_node_to_local(p)
         return xyz
@@ -1331,7 +1340,7 @@ class GRID(BaseCard):
                 self.ps_ref = grdset.ps
             if not self.seid:
                 self.seid_ref = grdset.seid
-        msg = ' which is required by GRID nid=%s' % (self.nid)
+        msg = ', which is required by GRID nid=%s' % (self.nid)
         self.cp_ref = model.Coord(self.cp, msg=msg)
         if self.cd != -1:
             self.cd_ref = model.Coord(self.cd, msg=msg)
@@ -1623,7 +1632,7 @@ class POINT(BaseCard):
             the analysis coordinate system
         """
         self.xyz = xyz
-        msg = ' which is required by POINT nid=%s' % self.nid
+        msg = ', which is required by POINT nid=%s' % self.nid
         self.cp = model.Coord(cid, msg=msg)
 
     def get_position(self):
@@ -1664,7 +1673,7 @@ class POINT(BaseCard):
         p = self.cp.transform_node_to_global(self.xyz)
 
         # a matrix global->local matrix is found
-        msg = ' which is required by POINT nid=%s' % (self.nid)
+        msg = ', which is required by POINT nid=%s' % (self.nid)
         coord_b = model.Coord(cid, msg=msg)
         xyz = coord_b.transform_node_to_local(p)
         return xyz

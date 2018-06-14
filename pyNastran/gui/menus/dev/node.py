@@ -459,16 +459,6 @@ class EditNodeProperties(QDialog):
         #self.name_edit.setText(str(self._default_name))
         #self.name_edit.setStyleSheet("QLineEdit{background: white;}")
 
-    #def check_float(self, cell):
-        #text = cell.text()
-        #try:
-            #value = eval_float_from_string(text)
-            #cell.setStyleSheet("QLineEdit{background: white;}")
-            #return value, True
-        #except ValueError:
-            #cell.setStyleSheet("QLineEdit{background: red;}")
-            #return None, False
-
     #def check_name(self, cell):
         #text = str(cell.text()).strip()
         #if len(text):
@@ -488,7 +478,7 @@ class EditNodeProperties(QDialog):
         old_obj.is_visible = self.checkbox_show.isChecked()
         return True
         #name_value, flag0 = self.check_name(self.name_edit)
-        #ox_value, flag1 = self.check_float(self.transparency_edit)
+        #ox_value, flag1 = check_float(self.transparency_edit)
         #if flag0 and flag1:
             #self.out_data['clicked_ok'] = True
             #return True

@@ -128,7 +128,7 @@ class DELAY(BaseCard):
     def get_delay_at_freq(self, freq):
         return self.nodes, self.components, self.delays
 
-    def cross_reference(self, model):
+    def cross_reference(self, model, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -280,7 +280,7 @@ class DPHASE(BaseCard):
         msg = ', which is required by DPHASE sid=%s' % self.sid
         self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, xref_errors):
         return self.cross_reference(model)
 
     def uncross_reference(self):
@@ -582,7 +582,7 @@ class FREQ3(FREQ):
 
     def __init__(self, sid, f1, f2=None, freq_type='LINEAR', nef=10, cluster=1.0, comment=''):
         """
-        Creates a FREQ4 card
+        Creates a FREQ3 card
 
         Parameters
         ----------
@@ -980,6 +980,8 @@ class NLPARM(BaseCard):
             kmethod = 'AUTO'
         elif kmethod == 2:
             kmethod = 'ITER'
+        elif kmethod == 3:
+            kmethod = 'ADAPT'
         elif kmethod == 4:
             kmethod = 'SEMI'
         else:
@@ -1965,7 +1967,7 @@ class TSTEPNL(BaseCard):
         self.utol = utol
         self.rtol_b = rtol_b
         self.min_iter = min_iter
-        assert self.ndt >= 3, self
+        #assert self.ndt >= 3, self
         assert self.dt > 0.
 
     def validate(self):

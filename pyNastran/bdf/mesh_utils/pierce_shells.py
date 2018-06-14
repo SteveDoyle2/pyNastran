@@ -30,6 +30,7 @@ def quad_intersection(orig, direction, v0, v1, v2, v3):
     p : (3, ) float ndarray or None
         ndarray : the pierce point
         None : failed pierce
+
     """
     ans = triangle_intersection(orig, direction, v0, v1, v2)
     if ans is not None:
@@ -55,6 +56,7 @@ def triangle_intersection(orig, direction, v0, v1, v2):
     p : (3, ) float ndarray or None
         ndarray : the pierce point
         None : failed pierce
+
     """
     e1 = v1 - v0
     e2 = v2 - v0
@@ -107,6 +109,7 @@ def pierce_shell_model(bdf_filename, xyz_points, tol=1.0):
     node_ids : List[int ndarray, None]
         ndarray : pierced element's nodes
         None : invalid pierce
+
     """
     xyz_points = np.asarray(xyz_points)
     assert xyz_points.shape[1] == 3, xyz_points.shape

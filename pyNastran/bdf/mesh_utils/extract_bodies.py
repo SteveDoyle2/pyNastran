@@ -39,6 +39,7 @@ def extract_bodies(bdf_filename, mpc_id=0):
       - xref
       - duplicate element ids
       - large values
+
     """
     if isinstance(bdf_filename, BDF):
         model = bdf_filename
@@ -198,5 +199,4 @@ def extract_bodies(bdf_filename, mpc_id=0):
     if nbodies > 1:
         print('nbodies = %i' % nbodies)
     return body_eids2
-
 

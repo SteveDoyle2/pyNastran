@@ -79,7 +79,7 @@ class GEOM2(GeomCommon):
             (8200, 82, 383): ['CHACBR', self._read_fake],     # record 42 - not done
             (8308, 83, 405): ['CHBDYE', self._read_fake],     # record 43 - not done
             (10808, 108, 406): ['CHBDYG', self._read_chbdyg], # record 44
-            (10908, 109, 407): ['CHBDYP', self._read_chbdyp], # record 45 - not done
+            (10908, 109, 407): ['CHBDYP', self._read_chbdyp], # record 45
             (7308, 73, 253): ['CHEXA', self._read_chexa],     # record 46
             # CHEXA20F record 47
             # CHEXAFD record 48
@@ -91,7 +91,7 @@ class GEOM2(GeomCommon):
             (1201, 12, 67): ['CMASS3', self._read_cmass3],    # record 54
             (1301, 13, 68): ['CMASS4', self._read_cmass4],    # record 55
             (2508, 25, 0): ['CMFREE', self._read_cmfree],     # record 56 - not done
-            (1401, 14, 63): ['CONM1', self._read_conm1],      # record 57 - not done
+            (1401, 14, 63): ['CONM1', self._read_conm1],      # record 57
             (1501, 15, 64): ['CONM2', self._read_conm2],      # record 58
             (1601, 16, 47): ['CONROD', self._read_conrod],    # record 59
             (12701, 127, 408): ['CONV', self._read_conv],     # record 60 - not tested
@@ -254,8 +254,8 @@ class GEOM2(GeomCommon):
             raise ValueError(elem)
             #return
 
-        if elem.eid > 100000000:
-            raise RuntimeError('bad parsing...')
+        #if elem.eid > 100000000:
+            #raise RuntimeError('bad parsing...elem:\n%s' % elem)
 
         if elem.type in ['CTRIA6', 'CQUAD8']:
             for nid in elem.nodes:
@@ -277,7 +277,7 @@ class GEOM2(GeomCommon):
 # 5-CAXIF4 (2308,23,226)
 
     def _read_cbar(self, data, n):
-        """
+        r"""
         CBAR(2408,24,180) - the marker for Record 8
 
         MSC/NX
@@ -366,7 +366,7 @@ class GEOM2(GeomCommon):
         8 X6 RS 6th intermediate station for data recovery
         9 UNDEF none Not used
         """
-        #self.log.info('skipping CBARAO in GEOM2\n')
+        #self.log.info('skipping CBARAO in GEOM2')
         #if self.is_debug_file:
             #self.binary_debug.write('skipping CBARAO in GEOM2\n')
         #return len(data)
@@ -455,7 +455,7 @@ class GEOM2(GeomCommon):
         """
         CBEAMP(11401,114,9016) - the marker for Record 11
         """
-        self.log.info('skipping CBEAMP in GEOM2\n')
+        self.log.info('skipping CBEAMP in GEOM2')
         return len(data)
 
     def _read_cbend(self, data, n):
@@ -568,17 +568,39 @@ class GEOM2(GeomCommon):
     def _read_cbush1d(self, data, n):
         """
         CBUSH1D(5608,56,218) - the marker for Record 14
+
+        1 EID  I Element identification number
+        2 PID  I Property identification number
+        3 G(2) I Grid point identification numbers
+        5 CID  I Coordinate system identification number
+        6 UNDEF(3) none
+
         """
-        self.log.info('skipping CBUSH1D in GEOM2\n')
-        if self.is_debug_file:
-            self.binary_debug.write('skipping CBUSH1D in GEOM2\n')
-        return len(data)
+        ntotal = 32 # 4*8
+        nelements = (len(data) - n) // ntotal
+        struct_6i = Struct(self._endian + b'8i')
+        for i in range(nelements):
+            edata = data[n:n + ntotal]
+            out = struct_6i.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  CBUSH1D=%s\n' % str(out))
+            (eid, pid, g1, g2, cid, unused_a, unused_b, unused_c) = out
+            if cid == -1:
+                cid = None
+            self.add_cbush1d(eid, pid, [g1, g2], cid=cid)
+            n += ntotal
+        self.card_count['CBUSH1D'] = nelements
+        return n
+        #self.log.info('skipping CBUSH1D in GEOM2')
+        #if self.is_debug_file:
+            #self.binary_debug.write('skipping CBUSH1D in GEOM2\n')
+        #return len(data)
 
     def _read_ccone(self, data, n):
         """
         CCONE(2315,23,0) - the marker for Record 15
         """
-        self.log.info('skipping CCONE in GEOM2\n')
+        self.log.info('skipping CCONE in GEOM2')
         if self.is_debug_file:
             self.binary_debug.write('skipping CCONE in GEOM2\n')
         return len(data)
@@ -761,7 +783,7 @@ class GEOM2(GeomCommon):
         """
         CFAST(9801,98,506) - the marker for Record ???
         """
-        self.log.info('skipping CFAST in GEOM2\n')
+        self.log.info('skipping CFAST in GEOM2')
         return len(data)
 
 # CFASTP
@@ -770,21 +792,21 @@ class GEOM2(GeomCommon):
         """
         CFLUID2(8515,85,209) - the marker for Record 35
         """
-        self.log.info('skipping CFLUID2 in GEOM2\n')
+        self.log.info('skipping CFLUID2 in GEOM2')
         return len(data)
 
     def _read_cfluid3(self, data, n):
         """
         CFLUID3(8615,86,210) - the marker for Record 36
         """
-        self.log.info('skipping CFLUID3 in GEOM2\n')
+        self.log.info('skipping CFLUID3 in GEOM2')
         return len(data)
 
     def _read_cfluid4(self, data, n):
         """
         CFLUID4(8715,87,211) - the marker for Record 37
         """
-        self.log.info('skipping CFLUID4 in GEOM2\n')
+        self.log.info('skipping CFLUID4 in GEOM2')
         return len(data)
 
 # CINT
@@ -883,10 +905,17 @@ class GEOM2(GeomCommon):
             data_in = [eid, pid, Type, iviewf, iviewb, g1, g2, g0, radmidf, radmidb,
                        dislin, ce, e1, e2, e3]
             elem = CHBDYP.add_op2_data(data_in)
-            self._add_thermal_element_object(elem)
+            self._add_thermal_element_object_safe(elem)
             n += ntotal
         self.card_count['CHBDYP'] = nelements
         return n
+
+    def _add_thermal_element_object_safe(self, obj):
+        if obj.eid in self.elements:
+            self.reject_lines.append(obj.write_card(size=16))
+        else:
+            self._add_element_object(obj)
+        #raise RuntimeError('this should be overwritten by the BDF class')
 
     def _read_chexa(self, data, n):
         """
@@ -923,7 +952,7 @@ class GEOM2(GeomCommon):
         """
         CHEXP(12001,120,9011) - the marker for Record 50
         """
-        self.log.info('skipping CHEXP in GEOM2\n')
+        self.log.info('skipping CHEXP in GEOM2')
         if self.is_debug_file:
             self.binary_debug.write('skipping CHEXP in GEOM2\n')
         return len(data)
@@ -1002,7 +1031,7 @@ class GEOM2(GeomCommon):
         """
         CMFREE(2508,25,0) - the marker for Record 55
         """
-        self.log.info('skipping CMFREE in GEOM2\n')
+        self.log.info('skipping CMFREE in GEOM2')
         if self.is_debug_file:
             self.binary_debug.write('skipping CMFREE in GEOM2\n')
         return len(data)
@@ -1184,26 +1213,103 @@ class GEOM2(GeomCommon):
             n += ntotal
         return n, elements
 
+    #def _read_convm(self, data, n):
+        #"""CONVM"""
+        #n = self._read_dual_card(data, n, self._read_convm_nx, self._read_convm_msc,
+                                 #'CONVM', self._add_thermal_bc_object)
+        #return n
+
     def _read_convm(self, data, n):
         """
         CONVM(8908,89,422) - the marker for Record 60
 
-        TODO: MSC has 7 fields in QRG (6 defined in DMAP)
-              NX has 6 fields in QRG (6 defined in DMAP)
-              MSC has extra MDOT field.
-              I think it's 6...
+        MSC
+        1 EID I Element identification number
+        2 PCONID I Convection property identification number
+        3 FLMND I Point for film convection fluid property temperature
+        4 CNTMDOT I Control point used for controlling mass flow.
+        5 TA I Ambient points used for convection
+        Word 5 repeats 2 times
+
+        NX
+        1 EID I Element identification number
+        2 PCONID I Convection property identification number
+        3 FLMND I Point for film convection fluid property temperature
+        4 CNTMDOT I Control point used for controlling mass flow.
+        5 TA I Ambient points used for convection
+        Word 5 repeats 2 times
+
+        [110, 200, 0, 50000, 99999, 99999, 1.0,
+        111, 200, 0, 50000, 99999, 99999, 1.0,
+        112, 200, 0, 50000, 99999, 99999, 1.0,
+        113, 200, 0, 50000, 99999, 99999, 1.0,
+        114, 200, 0, 50000, 99999, 99999, 1.0,
+        115, 200, 0, 50000, 99999, 99999, 1.0,
+        116, 200, 0, 50000, 99999, 99999, 1.0,
+        117, 200, 0, 50000, 99999, 99999, 1.0,
+        118, 200, 0, 50000, 99999, 99999, 1.0,
+        119, 200, 0, 50000, 99999, 99999, 1.0,
+        130, 200, 0, 50000, 99999, 99999, 1.0,
+        131, 200, 0, 50000, 99999, 99999, 1.0,
+        132, 200, 0, 50000, 99999, 99999, 1.0,
+        133, 200, 0, 50000, 99999, 99999, 1.0,
+        134, 200, 0, 50000, 99999, 99999, 1.0,
+        135, 200, 0, 50000, 99999, 99999, 1.0,
+        136, 200, 0, 50000, 99999, 99999, 1.0,
+        137, 200, 0, 50000, 99999, 99999, 1.0,
+        138, 200, 0, 50000, 99999, 99999, 1.0,
+        139, 200, 0, 50000, 99999, 99999, 1.0,
+        150, 200, 0, 50000, 99999, 99999, 1.0,
+        151, 200, 0, 50000, 99999, 99999, 1.0,
+        152, 200, 0, 50000, 99999, 99999, 1.0,
+        153, 200, 0, 50000, 99999, 99999, 1.0,
+        154, 200, 0, 50000, 99999, 99999, 1.0,
+        155, 200, 0, 50000, 99999, 99999, 1.0,
+        156, 200, 0, 50000, 99999, 99999, 1.0,
+        157, 200, 0, 50000, 99999, 99999, 1.0,
+        158, 200, 0, 50000, 99999, 99999, 1.0,
+        159, 200, 0, 50000, 99999, 99999, 1.0,
+        170, 200, 0, 50000, 99999, 99999, 1.0,
+        171, 200, 0, 50000, 99999, 99999, 1.0,
+        172, 200, 0, 50000, 99999, 99999, 1.0,
+        173, 200, 0, 50000, 99999, 99999, 1.0,
+        174, 200, 0, 50000, 99999, 99999, 1.0,
+        175, 200, 0, 50000, 99999, 99999, 1.0,
+        176, 200, 0, 50000, 99999, 99999, 1.0,
+        177, 200, 0, 50000, 99999, 99999, 1.0,
+        178, 200, 0, 50000, 99999, 99999, 1.0,
+        179, 200, 0, 50000, 99999, 99999, 1.0,
+        190, 200, 0, 50000, 99999, 99999, 1.0,
+        191, 200, 0, 50000, 99999, 99999, 1.0,
+        192, 200, 0, 50000, 99999, 99999, 1.0,
+        193, 200, 0, 50000, 99999, 99999, 1.0,
+        194, 200, 0, 50000, 99999, 99999, 1.0,
+        195, 200, 0, 50000, 99999, 99999, 1.0,
+        196, 200, 0, 50000, 99999, 99999, 1.0,
+        197, 200, 0, 50000, 99999, 99999, 1.0,
+        198, 200, 0, 50000, 99999, 99999, 1.0,
+        199, 200, 0, 50000, 99999, 99999, 1.0]
         """
-        #return len(data)
+        #C:\Users\sdoyle\Dropbox\move_tpl\ht15330.op2
         ntotal = 24  # 7*4
         struct_6i = Struct(self._endian + b'6i')
-        nelements = (len(data) - n) // ntotal
+        ndata = len(data)
+        nelements = (ndata - n) // ntotal
+        if (ndata - n) % ntotal != 0:
+            msg = 'CONVM error; ndata-n=%s ntotal=%s ndata-n/ntotal=%s' % (
+                ndata-n, ntotal, (ndata-n)/float(ntotal))
+            self.log.error(msg)
+            return n + ndata
+
         for i in range(nelements):
             edata = data[n:n+24]
             out = struct_6i.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CONVM=%s\n' % str(out))
             (eid, pcon_id, flmnd, cntrlnd, ta1, ta2) = out
-            assert eid > 0, out  # TODO: I'm not sure that this really has 7 fields...
+            if eid <= 0:
+                self.show_data(data, 'if')
+                raise RuntimeError('eid=%s < 0' % eid)  # TODO: I'm not sure that this really has 7 fields...
             mdot = 0.
             data_in = [eid, pcon_id, flmnd, cntrlnd, ta1, ta2, mdot]
             elem = CONVM.add_op2_data(data_in)
@@ -1442,15 +1548,19 @@ class GEOM2(GeomCommon):
         """
         struct_4i = Struct(self._endian + b'4i')
         nelements = (len(data) - n) // 16  # 4*4
+        #is_long_ids = False
         for i in range(nelements):
             edata = data[n:n + 16]
             out = struct_4i.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CROD=%s\n' % str(out))
             (eid, pid, n1, n2) = out
+            #if n1 > 100000000 or n2 > 100000000:
+                #is_long_ids = True
             elem = CROD.add_op2_data(out)
             self.add_op2_element(elem)
             n += 16
+        #self._is_long_ids = is_long_ids
         self.card_count['CROD'] = nelements
         return n
 
@@ -1640,7 +1750,7 @@ class GEOM2(GeomCommon):
         return n
 
     def _read_ctriax(self, data, n): # 100
-        self.log.info('skipping CTRIAX in GEOM2\n')
+        self.log.info('skipping CTRIAX in GEOM2')
         return len(data)
 
     def _read_ctriax6(self, data, n):  # 101
@@ -1700,19 +1810,19 @@ class GEOM2(GeomCommon):
         CWELD(11701,117,559) - Record 106
         same as CFAST
         """
-        self.log.info('skipping CWELD in GEOM2\n')
+        self.log.info('skipping CWELD in GEOM2')
         if self.is_debug_file:
             self.binary_debug.write('skipping CWELD in GEOM2\n')
         return len(data)
 
     def _read_cweldc(self, data, n):  # 107
-        self.log.info('skipping CWELDC in GEOM2\n')
+        self.log.info('skipping CWELDC in GEOM2')
         if self.is_debug_file:
             self.binary_debug.write('skipping CWELDC in GEOM2\n')
         return len(data)
 
     def _read_cweldg(self, data, n):  # 108
-        self.log.info('skipping CWELDG in GEOM2\n')
+        self.log.info('skipping CWELDG in GEOM2')
         if self.is_debug_file:
             self.binary_debug.write('skipping CWELDG in GEOM2\n')
         return len(data)
@@ -1721,7 +1831,7 @@ class GEOM2(GeomCommon):
 #-------------------------------
 # CWSEAM
     def _read_genel(self, data, n):
-        self.log.info('skipping GENEL in GEOM2\n')
+        self.log.info('skipping GENEL in GEOM2')
         return len(data)
 # GMDNDC
 # GMBNDS
@@ -1744,7 +1854,7 @@ class GEOM2(GeomCommon):
         return n
 
     def _read_radbc(self, data, n):
-        self.log.info('skipping RADBC in GEOM2\n')
+        self.log.info('skipping RADBC in GEOM2')
         return len(data)
 
 # RADINT
@@ -1765,7 +1875,7 @@ class GEOM2(GeomCommon):
         return n
 
     def _read_vubeam(self, data, n):  # 119
-        self.log.info('skipping VUBEAM in GEOM2\n')
+        self.log.info('skipping VUBEAM in GEOM2')
         if self.is_debug_file:
             self.binary_debug.write('skipping VUBEAM in GEOM2\n')
         return len(data)
@@ -1781,17 +1891,17 @@ class GEOM2(GeomCommon):
 # WELDP
 
     def _read_trax3(self, data, n):
-        self.log.info('skipping CTRAX3 in GEOM2\n')
+        self.log.info('skipping CTRAX3 in GEOM2')
         return len(data)
 
     def _read_cquadx4(self, data, n):
-        self.log.info('skipping CQUADX4 in GEOM2\n')
+        self.log.info('skipping CQUADX4 in GEOM2')
         return len(data)
 
     def _read_ctrax6(self, data, n):
-        self.log.info('skipping CTRAX6 in GEOM2\n')
+        self.log.info('skipping CTRAX6 in GEOM2')
         return len(data)
 
     def _read_cquadx8(self, data, n):
-        self.log.info('skipping CQUADX8 in GEOM2\n')
+        self.log.info('skipping CQUADX8 in GEOM2')
         return len(data)

@@ -8,6 +8,7 @@ defines:
 """
 from __future__ import print_function
 import sys
+from codecs import open
 from copy import deepcopy
 from collections import defaultdict
 
@@ -34,6 +35,7 @@ def get_element_faces(model, element_ids=None):
     eid_faces : (int, List[(int, int, ...)])
        value1 : element id
        value2 : face
+
     """
     if element_ids is None:
         element_ids = model.element_ids
@@ -71,6 +73,7 @@ def get_solid_skin_faces(model):
     face_map : Dict[tuple(int, int, ...)] = List[int]
        key : sorted face
        value : unsorted face
+
     """
     eid_faces = get_element_faces(model)
     face_set = defaultdict(int)
@@ -142,6 +145,7 @@ def write_skin_solid_faces(model, skin_filename,
     punch : bool; default=False
         is this a punch file; should  be used by the read_bdf if model is a string
         unused
+
     """
     if isinstance(model, string_types):
         model = read_bdf(model, log=log)
@@ -249,13 +253,10 @@ def _write_skin_solid_faces(model, skin_filename, face_map,
         double precision flag
     encoding : str; default=None -> system default
         the string encoding
+
     """
     #encoding = model.get_encoding(encoding)
-    if PY2:
-        wb = 'wb'
-    else:
-        wb = 'w'
-    with open(skin_filename, wb) as bdf_file:
+    with open(skin_filename, 'w') as bdf_file:
         bdf_file.write('$ pyNastran: punch=True\n')
         for nid in sorted(nids_to_write):
             if nid is None:
@@ -341,32 +342,32 @@ def main():  # pragma: no cover
     encoding = sys.getdefaultencoding()
     import pyNastran
     from docopt import docopt
-    msg = "Usage:\n"
-    msg += "  extract_free_faces [-d] [-f] [--encoding ENCODE] BDF_FILENAME SKIN_FILENAME\n"
-    msg += "  extract_free_faces [-l] [-f] [--encoding ENCODE] BDF_FILENAME SKIN_FILENAME\n"
+    msg = (
+        'Usage:\n'
+        '  extract_free_faces [-d] [-f] [--encoding ENCODE] BDF_FILENAME SKIN_FILENAME\n'
+        '  extract_free_faces [-l] [-f] [--encoding ENCODE] BDF_FILENAME SKIN_FILENAME\n'
 
-    msg += '  extract_free_faces -h | --help\n'
-    msg += '  extract_free_faces -v | --version\n'
-    msg += '\n'
+        '  extract_free_faces -h | --help\n'
+        '  extract_free_faces -v | --version\n'
+        '\n'
 
-    msg += "Positional Arguments:\n"
-    msg += "  BDF_FILENAME   path to input BDF/DAT/NAS file\n"
-    msg += "  SKIN_FILENAME   path to output BDF/DAT/NAS file\n"
-    msg += '\n'
+        "Positional Arguments:\n"
+        "  BDF_FILENAME   path to input BDF/DAT/NAS file\n"
+        "  SKIN_FILENAME   path to output BDF/DAT/NAS file\n"
+        '\n'
 
-    msg += 'Options:\n'
-    msg += '  -l, --large        writes the BDF in large field, single precision format (default=False)\n'
-    msg += '  -d, --double       writes the BDF in large field, double precision format (default=False)\n'
-    msg += '  --encoding ENCODE  the encoding method (default=None -> %r)\n' % encoding
-
-    msg += "\n"
-    msg += "Developer:\n"
-    msg += '  -f, --profile    Profiles the code (default=False)\n'
-    msg += "\n"
-    msg += "Info:\n"
-    msg += '  -h, --help     show this help message and exit\n'
-    msg += "  -v, --version  show program's version number and exit\n"
-
+        'Options:\n'
+        '  -l, --large        writes the BDF in large field, single precision format (default=False)\n'
+        '  -d, --double       writes the BDF in large field, double precision format (default=False)\n'
+        '  --encoding ENCODE  the encoding method (default=None -> %r)\n'
+        '\n'
+        'Developer:\n'
+        '  -f, --profile    Profiles the code (default=False)\n'
+        '\n'
+        "Info:\n"
+        '  -h, --help     show this help message and exit\n'
+        "  -v, --version  show program's version number and exit\n" % encoding
+    )
     if len(sys.argv) == 1:
         sys.exit(msg)
 

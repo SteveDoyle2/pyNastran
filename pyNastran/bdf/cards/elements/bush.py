@@ -41,6 +41,19 @@ class BushElement(Element):
         """
         return [tuple(sorted(self.node_ids))]
 
+    #def Centroid(self):
+        ## same as below, but we ignore the 2nd point it it's None
+        #p = (self.nodes_ref[1].get_position() + self.nodes_ref[0].get_position()) / 2.
+
+        ##p = self.nodes_ref[0].get_position()
+        ##if self.nodes_ref[1] is not None:
+            ##p += self.nodes_ref[1].get_position()
+            ##p /= 2.
+        #return p
+
+    #def center_of_mass(self):
+        #return self.Centroid()
+
 class CBUSH(BushElement):
     """
     Generalized Spring-and-Damper Connection
@@ -53,7 +66,7 @@ class CBUSH(BushElement):
     +=======+=====+======+====+====+=======+====+====+=====+
     | CBUSH | EID | PID  | GA | GB | GO/X1 | X2 | X3 | CID |
     +-------+-----+------+----+----+-------+----+----+-----+
-    |       |  S  | OCID | S1 | S2 |  S3   |    |    |     |
+    |       |  S  | OCID | S1 | S2 |   S3  |    |    |     |
     +-------+-----+------+----+----+-------+----+----+-----+
     """
     type = 'CBUSH'
@@ -285,13 +298,30 @@ class CBUSH(BushElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CBUSH eid=%s' % self.eid
+        msg = ', which is required by CBUSH eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
         if self.cid is not None:
             self.cid_ref = model.Coord(self.cid, msg=msg)
         if self.ocid is not None and self.ocid != -1:
             self.ocid_ref = model.Coord(self.ocid, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CBUSH eid=%s' % self.eid
+        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
+        if self.cid is not None:
+            self.cid_ref = model.safe_coord(self.cid, self.eid, xref_errors, msg=msg)
+        if self.ocid is not None and self.ocid != -1:
+            self.ocid_ref = model.safe_coord(self.ocid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.ga = self.Ga()
@@ -388,13 +418,30 @@ class CBUSH1D(BushElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CBUSH1D eid=%s' % self.eid
+        msg = ', which is required by CBUSH1D eid=%s' % self.eid
         self.ga_ref = model.Node(self.ga, msg=msg)
         if self.gb:
             self.gb_ref = model.Node(self.gb, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
         if self.cid is not None:
             self.cid_ref = model.Coord(self.cid)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CBUSH1D eid=%s' % self.eid
+        self.ga_ref = model.Node(self.ga, msg=msg)
+        if self.gb:
+            self.gb_ref = model.Node(self.gb, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
+        if self.cid is not None:
+            self.cid_ref = model.safe_coord(self.cid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.ga = self.Ga()
@@ -548,7 +595,7 @@ class CBUSH2D(BushElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CBUSH2D eid=%s' % self.eid
+        msg = ', which is required by CBUSH2D eid=%s' % self.eid
         self.ga_ref = model.Node(self.ga, msg=msg)
         self.gb_ref = model.Node(self.gb, msg=msg)
         self.pid_ref = model.Property(self.pid)
@@ -556,6 +603,22 @@ class CBUSH2D(BushElement):
             self.cid_ref = model.Coord(self.cid, msg=msg)
         #if self.sptid is not None:
             #pass
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CBUSH2D eid=%s' % self.eid
+        self.ga_ref = model.Node(self.ga, msg=msg)
+        self.gb_ref = model.Node(self.gb, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
+        if self.cid is not None:
+            self.cid_ref = model.safe_coord(self.cid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.ga = self.Ga()

@@ -48,7 +48,6 @@ class NastranGuiResults(NastranGuiAttributes):
         """
         loads the nodal dispalcements/velocity/acceleration/eigenvector/spc/mpc forces
         """
-        nnodes = self.nnodes
         displacement_like = [
             # slot, name, deflects
 
@@ -65,104 +64,131 @@ class NastranGuiResults(NastranGuiAttributes):
             (model.applied_loads, 'AppliedLoads', False),
             (model.force_vectors, 'ForceVectors', False),
         ]
-        nids = self.node_ids
 
         for (result, name, deflects) in displacement_like:
             if key not in result:
                 continue
+            for t123_offset in [0, 3]:
+                #if t123_offset == 3:
+                    #continue
+                try:
+                    icase = self._fill_nastran_ith_displacement(
+                        result, name, deflects, t123_offset,
+                        cases, model, key, icase,
+                        form_dict, header_dict, keys_map)
+                except ValueError:
+                    if not t123_offset == 3:
+                        raise
+                    self.log.error('skipping %s result; t123_offset=%s; type=%s' % (
+                        name, t123_offset, result[key].__class__.__name__))
+        return icase
+
+    def _fill_nastran_ith_displacement(self, result, name, deflects, t123_offset,
+                                       cases, model, key, icase,
+                                       form_dict, header_dict, keys_map):
+        """helper for ``_fill_nastran_displacements`` to unindent the code a bit"""
+        nnodes = self.nnodes
+        nids = self.node_ids
+        if t123_offset == 0:
             title1 = name + ' T_XYZ'
-            #title2 = name + ' R_XYZ'
+        else:
+            assert t123_offset == 3, t123_offset
+            title1 = name + ' R_XYZ'
+        #title2 = name + ' R_XYZ'
 
-            case = result[key]
-            subcase_idi = case.isubcase
-            if not hasattr(case, 'data'):
-                print('str(%s) has no data...' % case.__class.__name__)
-                continue
-            #if not case.is_real:
-                #print('complex results not supported...')
-                #continue
-            # transient
-            if case.nonlinear_factor is not None:
-                #code_name = case.data_code['name']
-                unused_has_cycle = hasattr(case, 'mode_cycle')
-            else:
-                unused_has_cycle = False
-                unused_code_name = None
-            if not case.is_sort1:
-                self.log.warning('Skipping because SORT2\n' + str(case))
-                continue
+        case = result[key]
+        subcase_idi = case.isubcase
+        if not hasattr(case, 'data'):
+            print('str(%s) has no data...' % case.__class.__name__)
+            return icase
+        #if not case.is_real:
+            #print('complex results not supported...')
+            #continue
+        # transient
+        if case.nonlinear_factor is not None:
+            #code_name = case.data_code['name']
+            unused_has_cycle = hasattr(case, 'mode_cycle')
+        else:
+            unused_has_cycle = False
+            unused_code_name = None
+        if not case.is_sort1:
+            self.log.warning('Skipping because SORT2\n' + str(case))
+            return icase
 
-            t123, tnorm, ntimes = _get_t123_tnorm(case, nids, nnodes)
+        t123, tnorm, ntimes = _get_t123_tnorm(case, nids, nnodes,
+                                              t123_offset=t123_offset)
 
-            titles = []
-            scales = []
-            headers = []
-            #if deflects:
-            if deflects:
-                nastran_res = DisplacementResults(subcase_idi, titles, headers,
-                                                  self.xyz_cid0, t123, tnorm,
-                                                  scales,
-                                                  uname='NastranResult')
+        titles = []
+        scales = []
+        headers = []
+        #if deflects:
+        if deflects:
+            nastran_res = DisplacementResults(subcase_idi, titles, headers,
+                                              self.xyz_cid0, t123, tnorm,
+                                              scales,
+                                              uname='NastranResult')
 
-                dmax = []
-                for itime in range(ntimes):
-                    dt = case._times[itime]
-
-                    if name == 'Displacement':
-                        # (6673, )
-                        normiii = np.linalg.norm(t123[itime, :, :], axis=1)
-                        #print(normiii.shape)
-                        #print('Displacement; itime=%s time=%s tnorm=%s' % (
-                            #itime, dt, normiii.max()))
-                        dmax.append(normiii.max())
-                    # mode = 2; freq = 75.9575 Hz
-                    header = _get_nastran_header(case, dt, itime)
-                    header_dict[(key, itime)] = header
-                    keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
-
-                    tnorm_abs_max = tnorm.max()
-                    #if tnorm_abs_max == 0.0:
-                        #scale = self.displacement_scale_factor
-                    #else:
-                        #scale = self.displacement_scale_factor / tnorm_abs_max
-
-                    scale = self.settings.dim_max
-                    if tnorm_abs_max > 0.0:
-                        scale = self.settings.dim_max / tnorm_abs_max * 0.25
-                    scales.append(scale)
-                    titles.append(title1)
-                    headers.append(header)
-                    cases[icase] = (nastran_res, (itime, title1))  # do I keep this???
-                    formii = (title1, icase, [])
-                    form_dict[(key, itime)].append(formii)
-                    icase += 1
+            dmax = []
+            for itime in range(ntimes):
+                dt = case._times[itime]
 
                 if name == 'Displacement':
-                    # Displacement; itime=361 time=3.61 tnorm=1.46723
-                    #print('dmax = ', max(dmax))
-                    pass
-                nastran_res.save_defaults()
-            else:
-                nastran_res = ForceTableResults(subcase_idi, titles, headers,
-                                                t123, tnorm,
-                                                scales, #deflects=deflects,
-                                                uname='NastranResult')
-                for itime in range(ntimes):
-                    dt = case._times[itime]
-                    header = _get_nastran_header(case, dt, itime)
-                    header_dict[(key, itime)] = header
-                    keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
+                    # (6673, )
+                    normiii = np.linalg.norm(t123[itime, :, :], axis=1)
+                    #print(normiii.shape)
+                    #print('Displacement; itime=%s time=%s tnorm=%s' % (
+                        #itime, dt, normiii.max()))
+                    dmax.append(normiii.max())
+                # mode = 2; freq = 75.9575 Hz
+                header = _get_nastran_header(case, dt, itime)
+                header_dict[(key, itime)] = header
+                keys_map[key] = (case.subtitle, case.label,
+                                 case.superelement_adaptivity_index, case.pval_step)
 
-                    tnorm_abs_max = tnorm.max()
-                    scale = 1.
-                    scales.append(scale)
-                    titles.append(title1)
-                    headers.append(header)
-                    cases[icase] = (nastran_res, (itime, title1))  # do I keep this???
-                    formii = (title1, icase, [])
-                    form_dict[(key, itime)].append(formii)
-                    icase += 1
-                nastran_res.save_defaults()
+                tnorm_abs_max = tnorm.max()
+                #if tnorm_abs_max == 0.0:
+                    #scale = self.displacement_scale_factor
+                #else:
+                    #scale = self.displacement_scale_factor / tnorm_abs_max
+
+                scale = self.gui.settings.dim_max
+                if tnorm_abs_max > 0.0:
+                    scale = self.gui.settings.dim_max / tnorm_abs_max * 0.25
+                scales.append(scale)
+                titles.append(title1)
+                headers.append(header)
+                cases[icase] = (nastran_res, (itime, title1))  # do I keep this???
+                formii = (title1, icase, [])
+                form_dict[(key, itime)].append(formii)
+                icase += 1
+
+            if name == 'Displacement':
+                # Displacement; itime=361 time=3.61 tnorm=1.46723
+                #print('dmax = ', max(dmax))
+                pass
+            nastran_res.save_defaults()
+        else:
+            nastran_res = ForceTableResults(subcase_idi, titles, headers,
+                                            t123, tnorm,
+                                            scales, #deflects=deflects,
+                                            uname='NastranResult')
+            for itime in range(ntimes):
+                dt = case._times[itime]
+                header = _get_nastran_header(case, dt, itime)
+                header_dict[(key, itime)] = header
+                keys_map[key] = (case.subtitle, case.label,
+                                 case.superelement_adaptivity_index, case.pval_step)
+
+                tnorm_abs_max = tnorm.max()
+                scale = 1.
+                scales.append(scale)
+                titles.append(title1)
+                headers.append(header)
+                cases[icase] = (nastran_res, (itime, title1))  # do I keep this???
+                formii = (title1, icase, [])
+                form_dict[(key, itime)].append(formii)
+                icase += 1
+            nastran_res.save_defaults()
         return icase
 
     def _fill_nastran_temperatures(self, cases, model, key, icase,
@@ -191,7 +217,8 @@ class NastranGuiResults(NastranGuiAttributes):
                 dt = case._times[itime]
                 header = _get_nastran_header(case, dt, itime)
                 header_dict[(key, itime)] = header
-                keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
+                keys_map[key] = (case.subtitle, case.label,
+                                 case.superelement_adaptivity_index, case.pval_step)
 
                 loads = case.data[itime, :, :]
                 nxyz = norm(loads[:, :3], axis=1)
@@ -435,7 +462,8 @@ class NastranGuiResults(NastranGuiAttributes):
 
             #print('key =', key)
             case = resdict[key]
-            keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
+            keys_map[key] = (case.subtitle, case.label,
+                             case.superelement_adaptivity_index, case.pval_step)
 
             if case.is_complex:
                 continue
@@ -519,7 +547,8 @@ class NastranGuiResults(NastranGuiAttributes):
                 case = res_type[key]
                 if case.is_complex:
                     continue
-                keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
+                keys_map[key] = (case.subtitle, case.label,
+                                 case.superelement_adaptivity_index, case.pval_step)
                 data = case.data
                 if case.nonlinear_factor is None:
                     unused_ntimes = data.shape[:1]
@@ -554,7 +583,8 @@ class NastranGuiResults(NastranGuiAttributes):
                 dt = case._times[itime]
                 header = _get_nastran_header(case, dt, itime)
                 header_dict[(key, itime)] = header
-                keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
+                keys_map[key] = (case.subtitle, case.label,
+                                 case.superelement_adaptivity_index, case.pval_step)
 
                 #[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2,
                 # shear1, shear2, axial, torque]
@@ -593,7 +623,8 @@ class NastranGuiResults(NastranGuiAttributes):
             dt = case._times[itime]
             header = _get_nastran_header(case, dt, itime)
             header_dict[(key, itime)] = header
-            keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
+            keys_map[key] = (case.subtitle, case.label,
+                             case.superelement_adaptivity_index, case.pval_step)
 
             j = np.searchsorted(self.element_ids, ueids)
             di = j[1:-1] - j[0:-2]
@@ -979,7 +1010,7 @@ def print_empty_elements(model, element_ids, is_element_on, log_error):
     print('-----------------------------------')
 
 
-def _get_t123_tnorm(case, nids, nnodes):
+def _get_t123_tnorm(case, nids, nnodes, t123_offset=0):
     """helper method for _fill_op2_oug_oqg"""
     assert case.is_sort1, case.is_sort1
 
@@ -1003,7 +1034,7 @@ def _get_t123_tnorm(case, nids, nnodes):
 
     # (itime, nnodes, xyz)
     # (901, 6673, 3)
-    t123 = case.data[:, :, :3]
+    t123 = case.data[:, :, t123_offset:t123_offset+3]
     ntimes = case.ntimes
 
     if nnodes != ndata:
@@ -1064,6 +1095,10 @@ def _get_times(model, key):
             case = table[key]
             #print(case)
             is_real = case.is_real
+
+            # you're presumably looking here because of a bug
+            # are you sure the keys are the right length?
+            #print("is_real=%r nonlinear_factor=%r" % (is_real, case.nonlinear_factor))
             if case.nonlinear_factor is not None:
                 times = case._times
                 is_static = False

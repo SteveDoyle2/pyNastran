@@ -2,7 +2,7 @@
 defines readers for BDF objects in the OP2 DIT/DITS table
 """
 from __future__ import print_function
-from struct import Struct
+from struct import Struct, error as struct_error
 from six.moves import range
 import numpy as np
 
@@ -83,9 +83,56 @@ class DIT(GeomCommon):
         return n
 
     def _read_tabrndg(self, data, n):
-        """TABRNDG(56, 26, 303)"""
-        self.log.info('skipping TABRNDG in DIT\n')
-        return len(data)
+        """
+        TABRNDG(56, 26, 303)
+        Power spectral density for gust loads in aeroelastic analysis.
+
+        1 ID        I   Table identification number
+        2 TYPE      I   Power spectral density type
+        3 LU        RS  Scale of turbulence divided by velocity
+        4 WG        RS  Root-mean-square gust velocity
+        5 UNDEF(4) none Not used
+        Words 1 through 8 repeat until (-1,-1) occurs
+
+        """
+        #self.log.info('skipping TABRNDG in DIT\n')
+        #return len(data)
+        #nentries = 0
+        ndata = len(data)# - n
+        assert ndata == 52, ndata
+        struct_2i2f4i = Struct('2i2f4i')
+        struct_ff = Struct('ff')
+        struct_2i = self.struct_2i
+        while ndata - n >= 32:
+            edata = data[n:n + 32]
+            out = struct_2i2f4i.unpack(edata)
+            (tid, table_type, lu, wg, dunno_a, dunno_b, dunno_c, dunno_d) = out
+            if tid > 100000000:
+                tid = -(tid - 100000000)
+            #if add_codes:
+            #data_in = [tid, table_type, lu, wg]
+            #else:
+                #data_in = [tid, x, y]
+
+            n += 32
+            #if 0:
+                #while 1:
+                    #(xint, yint) = struct_2i.unpack(data[n:n + 8])
+                    #(x, y) = struct_ff.unpack(data[n:n + 8])
+
+                    #n += 8
+                    #if [xint, yint] == [-1, -1]:
+                        #break
+                    #else:
+                        #data_in += [x, y]
+
+            #print('data_in =', data_in)
+            #table = cls.add_op2_data(data_in)
+            #add_method(table)
+            self.add_tabrndg(tid, table_type, lu, wg, comment='')
+            #nentries += 1
+        #self.increase_card_count('TABRNDG', nentries)
+        return n
 
     def _read_tables1(self, data, n):
         """TABLES1(3105, 31, 97)"""
@@ -278,29 +325,40 @@ class DIT(GeomCommon):
         9 A RS
         Word 9 repeats until End of Record (-1)
         """
+        n0 = n
         nentries = 0
         ndata = len(data)
-        struct1 = Struct('i 4f 3i f')
+        struct1 = Struct('i 4f 3i f i')
         struct_i = self.struct_i
         struct_f = Struct('f')
-        while ndata - n >= 36:
-            edata = data[n:n + 36]
-            out = struct1.unpack(edata)
-            (tid, x1, x2, x3, x4, a, b, c, x) = out
-            data_in = [tid, x1, x2, x3, x4, x]
-            n += 40
-            while 1:
-                xint, = struct_i.unpack(data[n:n + 4])
-                x, = struct_f.unpack(data[n:n + 4])
-
-                n += 4
-                if xint == -1:
-                    break
+        try:
+            while ndata - n >= 40:
+                edata = data[n:n + 40]
+                out = struct1.unpack(edata)
+                (tid, x1, x2, x3, x4, a, b, c, x, test_minus1) = out
+                data_in = [tid, x1, x2, x3, x4, x]
+                n += 36
+                if test_minus1 == -1:
+                    n += 4
                 else:
-                    data_in.append(x)
-            table = cls.add_op2_data(data_in)
-            add_method(table)
-            nentries += 1
+                    while 1:
+                        xint, = struct_i.unpack(data[n:n + 4])
+                        x, = struct_f.unpack(data[n:n + 4])
+
+                        n += 4
+                        if xint == -1:
+                            break
+                        else:
+                            data_in.append(x)
+                table = cls.add_op2_data(data_in)
+                add_method(table)
+                nentries += 1
+        except struct_error:
+            self.log.error('failed parsing %s' % table_name)
+            self.show_data(data[n0:], 'if')
+            self.show_data(edata, 'if')
+            #n = n0 + ndata
+            raise
         self.increase_card_count(table_name, nentries)
         return n
 

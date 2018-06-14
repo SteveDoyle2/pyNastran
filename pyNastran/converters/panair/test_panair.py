@@ -1,7 +1,6 @@
 from __future__ import print_function
 import os
 import unittest
-from six.moves import range
 from numpy import array_equal, allclose
 
 import pyNastran

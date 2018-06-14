@@ -15,6 +15,8 @@ class RealAccelerationArray(RealTableArray):
             pass
         elif self.table_name in ['ROUGV1', 'ROUGV2']:
             words += ['                                                (RELATIVE TO ENFORCED MOTION INPUT)']
+        elif self.table_name in ['OAGATO1', 'OAGATO2']:
+            words += ['                                                 ( AUTO-CORRELATION FUNCTION )']
         elif self.table_name in ['OUGPSD1', 'OUGPSD2', 'OAGPSD1', 'OAGPSD2']:
             words += ['                                             ( POWER SPECTRAL DENSITY FUNCTION )']
         elif self.table_name in ['OUGRMS1', 'OUGRMS2', 'OAGRMS1', 'OAGRMS2']:

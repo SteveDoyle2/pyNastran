@@ -23,10 +23,10 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
 
     Parameters
     ----------
-    bdf_filename : str
-        a bdf_filename (string; supported) or a BDF model (BDF)
-        that has been cross referenced and is fully valid (an
-        equivalenced deck is not valid)
+    bdf_filename : str / BDF
+        str : a bdf_filename (string; supported)
+        BDF : a BDF model that has been cross referenced and is
+        fully valid (an equivalenced deck is not valid)
     bdf_filename_out : str
         a bdf_filename to write
     size : int; {8, 16}; default=8
@@ -173,6 +173,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     }
     >>> bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
                      starting_ids_dict=starting_ids_dict, round_ids=False)
+
     """
     starting_id_dict_default = {
         'cid' : 1,
@@ -547,19 +548,29 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         delta_box1_map = {}
         delta_box2_map = {}
         for sidi, spline in sorted(iteritems(model.splines)):
-            if spline.type == 'SPLINE1':
+            if spline.type in ['SPLINE1', 'SPLINE2']:
                 delta_box1_map[sidi] = spline.box1 - spline.caero
                 delta_box2_map[sidi] = spline.box2 - spline.caero
             else:
-                raise NotImplementedError(spline)
+                # should be handled by the xref?
+                pass
+            #else:
+                #raise NotImplementedError(spline)
 
     caero_id_map = {}
     if 'caero_id' in starting_id_dict and caero_id is not None:
         # caeros
         for caero_idi, caero in sorted(iteritems(model.caeros)):
-            caero.eid = caero_id
-            caero_id_map[caero_idi] = caero_id
-            caero_id += caero.shape[0] * caero.shape[1]
+            if caero.type in ['CAERO1', 'CAERO3', 'CAERO4']: # not CAERO5
+                caero.eid = caero_id
+                caero_id_map[caero_idi] = caero_id
+                caero_id += caero.shape[0] * caero.shape[1]
+            elif caero.type == 'CAERO2':
+                caero.eid = caero_id
+                caero_id_map[caero_idi] = caero_id
+                caero_id += caero.nboxes
+            else:
+                raise NotImplementedError(caero)
 
     spline_id_map = {}
     if 'spline_id' in starting_id_dict and spline_id is not None:
@@ -567,11 +578,14 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         for sidi, spline in sorted(iteritems(model.splines)):
             spline.eid = spline_id
             #spline.cross_reference(model)
-            if spline.type == 'SPLINE1':
+            if spline.type in ['SPLINE1', 'SPLINE2']:
                 spline.box1 = caero_id_map[spline.caero] + delta_box1_map[sidi]
                 spline.box2 = caero_id_map[spline.caero] + delta_box2_map[sidi]
             else:
-                raise NotImplementedError(spline)
+                # should be handled by the xref?
+                pass
+            #else:
+                #raise NotImplementedError(spline)
             spline_id_map[sidi] = spline_id
             spline_id += 1
 
@@ -635,7 +649,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         for idi, param in sorted(iteritems(dict_obj)):
             #print('working on id=%s param=%s' % (str(idi), str(param)))
             try:
-                msg = '%s has no %r; use %s' % (param.type, param_name, object_attributes(param))
+                msg = '%s has no %r; use %s' % (param.type, param_name, param.object_attributes())
             except AttributeError:
                 model.log.error('param = %r' % param)
                 raise
@@ -764,17 +778,14 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
 def get_renumber_starting_ids_from_model(model):
     """
     Get the starting ids dictionary used for renumbering with ids greater than those in model.
-
     Parameters
     -----------
     model : BDF
         BDF object to get maximum ids from.
-
     Returns
     --------
     starting_id_dict : dict {str : int, ...}
         Dictionary from id type to starting id.
-
     """
     starting_id_dict = {
         'cid' : max(model.coords.keys()) + 1,
@@ -782,14 +793,15 @@ def get_renumber_starting_ids_from_model(model):
         'eid' : max([max(model.elements.keys()),
                      max(model.masses.keys()) if model.masses else 0,
                      max(model.rigid_elements.keys()) if model.rigid_elements else 0,
-                    ]) + 1,
+                     ]) + 1,
         'pid' : max([max(model.properties.keys()),
                      0 if len(model.properties_mass) == 0 else max(model.properties_mass.keys()),
                      ]) + 1,
         'mid' : max(model.material_ids) + 1,
         'set_id' : max(model.sets.keys()) + 1 if model.sets else 1,
         'spline_id' : max(model.splines.keys()) + 1 if model.splines else 1,
-        'caero_id' : max(caero.box_ids[-1, -1] for caero in itervalues(model.caeros)) + 1 if model.caeros else 1,
+        'caero_id' : max(caero.box_ids[-1, -1]
+                         for caero in itervalues(model.caeros)) + 1 if model.caeros else 1,
     }
     return starting_id_dict
 
@@ -803,6 +815,7 @@ def _update_case_control(model, mapper):
         the BDF object
     mapper : dict[str] = List[int]
         Defines the possible case control header values for each entry (e.g. `LOAD`)
+
     """
     elemental_quantities = ['STRESS', 'STRAIN', 'FORCE', 'ESE', 'EKE']
     nodal_quantities = [

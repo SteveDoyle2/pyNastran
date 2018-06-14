@@ -26,134 +26,126 @@ The Graphical User Interface (GUI) looks like:
 
 .. code-block:: console
 
-  >>> pyNastranGUI --help
-
-  Usage:
-    pyNastranGUI [-f FORMAT] INPUT [-o OUTPUT]
-                 [-s SHOT] [-m MAGNIFY]
-                 [-g GSCRIPT] [-p PSCRIPT]
-                 [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]
-                 [-q] [--groups]
-    pyNastranGUI [-f FORMAT] INPUT OUTPUT [-o OUTPUT]
-                 [-s SHOT] [-m MAGNIFY]
-                 [-g GSCRIPT] [-p PSCRIPT]
-                 [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]
-                 [-q] [--groups]
-    pyNastranGUI [-f FORMAT] [-i INPUT] [-o OUTPUT...]
-                 [-s SHOT] [-m MAGNIFY]
-                 [-g GSCRIPT] [-p PSCRIPT]
-                 [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]
-                 [-q] [--groups]
-    pyNastranGUI -h | --help
-    pyNastranGUI -v | --version
-
-  Primary Options:
-    -f FORMAT, --format FORMAT  format type (avus, cart3d, lawgs, nastran, panair,
-                                             plot3d, stl, surf, tetgen, ugrid, usm3d)
-    -i INPUT, --input INPUT     path to input file
-    -o OUTPUT, --output OUTPUT  path to output file
-
-  Secondary Options:
-    -g GSCRIPT, --geomscript        path to geometry script file (runs before load geometry)
-    -p PSCRIPT, --postscript        path to post script file (runs after load geometry)
-    -s SHOT, --shots SHOT           path to screenshot (only 1 for now)
-    -m MAGNIFY, --magnify           how much should the resolution on a picture be magnified [default: 5]
-    --groups                        enables groups
-    --user_geom GEOM_FNAME          add user specified points to an alternate grid (repeatable)
-    -u POINTS_FNAME, --user_points  add user specified points to an alternate grid (repeatable)
-
-  Info:
-    -q, --quiet    prints debug messages (default=True)
-    -h, --help     show this help message and exit
-    -v, --version  show program's version number and exit
+See :doc:`gui` for more details.
 
 --------
 test_bdf
 --------
 Runs through various checks on a BDF that Nastran doesn't do.  Verifies your model is referenced properly.  Creates a summary table.
 
-.. code-block:: console
+See :doc:`test_bdf` for more details.
 
-  >>> test_bdf --help
+.. code-block:: conosle
 
-  Usage:
-    test_bdf [-x] [-p] [-c] [-L]      [-e E] [--encoding ENCODE] [-q] [-D] [-i] [--crash C] [-k] [-f] BDF_FILENAME
-    test_bdf [-x] [-p] [-c] [-L] [-d] [-e E] [--encoding ENCODE] [-q] [-D] [-i] [--crash C] [-k] [-f] BDF_FILENAME
-    test_bdf [-x] [-p] [-c] [-L] [-l] [-e E] [--encoding ENCODE] [-q] [-D] [-i] [--crash C] [-k] [-f] BDF_FILENAME
-    test_bdf      [-p]                [-e E] [--encoding ENCODE] [-q] [-D] [-i] [--crash C] [-k] [-f] BDF_FILENAME
-    test_bdf [-x] [-p] [-s]           [-e E] [--encoding ENCODE] [-q] [-D] [-i] [--crash C] [-k] [-f] BDF_FILENAME
-    test_bdf -h | --help
-    test_bdf -v | --version
+  >>> test_bdf fem.bdf > test.out
 
-  Positional Arguments:
-    BDF_FILENAME   path to BDF/DAT/NAS file
+The file test.out will be created...
 
-  Options:
-    -x, --xref     disables cross-referencing and checks of the BDF
-                   (default=True -> on)
-    -p, --punch    disables reading the executive and case control decks in the BDF
-                   (default=False -> reads entire deck)
-    -c, --check    disables BDF checks.  Checks run the methods on
-                   every element/property to test them.  May fails if a
-                   card is fully not supported (default=False)
-    -l, --large    writes the BDF in large field, single precision format (default=False)
-    -d, --double   writes the BDF in large field, double precision format (default=False)
-    -L, --loads    Disables forces/moments summation for the different subcases (default=True)
-    -e E, --nerrors E  Allow for cross-reference errors (default=100)
-    --encoding ENCODE  the encoding method (default=None -> 'ascii')
-    -q, --quiet        prints debug messages (default=False)
+.. code-block:: conosle
 
-  Developer:
-    --crash C,       Crash on specific cards (e.g. CGEN,EGRID)
-    -D, --dumplines  Writes the BDF exactly as read with the INCLUDES processed
-                     (pyNastran_dump.bdf)
-    -i, --dictsort   Writes the BDF with exactly as read with the INCLUDES processed
-                     (pyNastran_dict.bdf)
-    -f, --profile    Profiles the code (default=False)
-    -s, --stop       Stop after first read/write (default=False)
-    -k, --pickle     Pickles the data objects (default=False)
+  INFO:    fname=bdf.pyc                lineNo=371    ---starting BDF.read of fem.bdf---
+  INFO:    fname=bdf.pyc                lineNo=589    reject_card_name = |TEMPD|
+  INFO:    fname=bdf.pyc                lineNo=589    reject_card_name = |CTRIA3|
+  INFO:    fname=bdf.pyc                lineNo=384    ---finished BDF.read of fem.bdf---
+  INFO:    fname=write_mesh.pyc         lineNo=68     ***writing fem02.bdf_out
 
-  Info:
-    -h, --help     show this help message and exit
-    -v, --version  show program's version number and exit
+
+  INFO:    fname=bdf.pyc                lineNo=371    ---starting BDF.read of fem.bdf_out---
+  INFO:    fname=bdf.pyc                lineNo=589    reject_card_name = |TEMPD|
+  INFO:    fname=bdf.pyc                lineNo=384    ---finished BDF.read of fem.bdf_out---
+  INFO:    fname=write_mesh.pyc         lineNo=68     ***writing fem02.bdf_out2
+
+
+  diff_keys1=[] diff_keys2=[]
+     key=CHEXA   value1=52   value2=52
+     key=CPENTA  value1=52   value2=52
+     key=ENDDATA value1=1    value2=1
+     key=GRID    value1=135  value2=135
+    *key=INCLUDE value1=1    value2=0
+     key=MAT4    value1=1    value2=1
+     key=NLPARM  value1=1    value2=1
+     key=PARAM   value1=2    value2=2
+     key=PSOLID  value1=1    value2=1
+     key=SPC     value1=28   value2=28
+     key=TEMP    value1=18   value2=18
+    -key=TEMPD   value1=1    value2=1
+    *key=CTRIA3  value1=1    value2=0
 
 --------
 test_op2
 --------
 Runs through various checks on an OP2 file.  Creates a summary table.
 
+See :doc:`test_op2` for more details.
+
 .. code-block:: console
 
-  >>> test_op2 --help
+  >>> test_op2 -c ISat_Dploy_Sm.op2
 
-  Usage:
-    test_op2 [-q] [-b] [-c] [-g] [-n] [-f] [-z] [-w] [-t] [-s <sub>] [-x <arg>]... [--nx] OP2_FILENAME
-    test_op2 -h | --help
-    test_op2 -v | --version
+  ...
+  
+  ---stats for isat_dploy_sm.op2---
+  eigenvectors[1]
+    isubcase = 1
+    type=RealEigenvectorArray ntimes=203 nnodes=5367, table_name=BOPHIG
+    data: [t1, t2, t3, r1, r2, r3] shape=[203, 5367, 6] dtype=float32
+    gridTypes
+    sort1
+    modes = [  1   2   3 ..., 201 202 203]
+    eigrs = [        0.         0.         0. ...,  11912279.  12843625.  13110797.]
+    mode_cycles = [   0.       0.       0.    ...,  549.31   570.38   576.282]
 
-  Tests to see if an OP2 will work with pyNastran
+  cbar_force[1]
+    type=RealCBarForceArray ntimes=203 nelements=790
+    data: [ntimes, nnodes, 8] where 8=[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torq
+  ue]
+    data.shape = (203, 790, 8)
+    element name: CBAR-34
+    sort1
+    modes = [  1   2   3 ..., 201 202 203]
+    eigrs = [        0.         0.         0. ...,  11912279.  12843625.  13110797.]
+    cycles = [   0.       0.       0.    ...,  549.31   570.38   576.282]
 
-  Positional Arguments:
-    OP2_FILENAME         Path to OP2 file
+  ctria3_stress[1]
+    type=RealPlateStressArray ntimes=203 nelements=32 nnodes_per_element=1 nlayers=2 ntotal=64
+    data: [ntimes, ntotal, 8] where 8=[fiber_distance, oxx, oyy, txy, angle, omax, omin, von_mises]
+    data.shape=(203L, 64L, 8L)
+    element type: CTRIA3
+    s_code: 1
+    sort1
+    modes = [  1   2   3 ..., 201 202 203]
+    eigrs = [        0.         0.         0. ...,  11912279.  12843625.  13110797.]
+    mode2s = [0 0 0 ..., 0 0 0]
+    cycles = [   0.       0.       0.    ...,  549.31   570.38   576.282]
 
-  Options:
-    -b, --binarydebug     Dumps the OP2 as a readable text file
-    -c, --disablecompare  Doesn't do a validation of the vectorized result
-    -q, --quiet           Suppresses debug messages [default: False]
-    -t, --short_stats     Short get_op2_stats printout
-    -g, --geometry        Reads the OP2 for geometry, which can be written out
-    -n, --write_bdf       Writes the bdf to fem.test_op2.bdf (default=False)
-    -f, --write_f06       Writes the f06 to fem.test_op2.f06
-    -z, --is_mag_phase    F06 Writer writes Magnitude/Phase instead of
-                          Real/Imaginary (still stores Real/Imag); [default: False]
-    -s <sub>, --subcase   Specify one or more subcases to parse; (e.g. 2_5)
-    -w, --is_sort2        Sets the F06 transient to SORT2
-    -x <arg>, --exclude   Exclude specific results
-    --nx                  Assume NX Nastran
+  cquad4_stress[1]
+    type=RealPlateStressArray ntimes=203 nelements=4580 nnodes_per_element=1 nlayers=2 ntotal=9160
+    data: [ntimes, ntotal, 8] where 8=[fiber_distance, oxx, oyy, txy, angle, omax, omin, von_mises]
+    data.shape=(203L, 9160L, 8L)
+    element type: CQUAD4
+    s_code: 1
+    sort1
+    modes = [  1   2   3 ..., 201 202 203]
+    eigrs = [        0.         0.         0. ...,  11912279.  12843625.  13110797.]
+    mode2s = [0 0 0 ..., 0 0 0]
+    cycles = [   0.       0.       0.    ...,  549.31   570.38   576.282]
 
-  Info:
-    -h, --help     Show this help message and exit
-    -v, --version  Show program's version number and exit
+  eigenvalues[ISAT_SM_DEPLOYED MODES TO 400 HZ]
+    type=RealEigenvalues neigenvalues=203
+    title, extraction_order, eigenvalues, radians, cycles, generalized_mass, generalized_stiffness
+
+Or more simply:
+
+.. code-block:: console
+
+  >>> test_op2 -ct ISat_Dploy_Sm.op2
+
+  ---stats for isat_dploy_sm.op2---
+  eigenvectors[1]
+  cbar_force[1]
+  ctria3_stress[1]
+  cquad4_stress[1]
+  eigenvalues[u'ISAT_SM_DEPLOYED MODES TO 400 HZ']
 
 --------
 test_op4

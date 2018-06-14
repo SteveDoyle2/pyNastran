@@ -28,6 +28,7 @@ def get_nodal_averaged_stress(model, eid_to_nid_map, isubcase, options=None):
     .. todo:  doesn't support transient, frequency, real/imaginary data
     .. todo:  add 'sum', 'difference' for 'layers'?
     .. todo:  hasn't been tested
+
     """
     raise NotImplementedError()
     assert options['mode'] in ['derive/avg', 'avg/derive'], options['mode']

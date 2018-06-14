@@ -165,6 +165,16 @@ class ComplexCBushArray(OES_Object):
         return page_num
 
     def _write_sort1_as_sort1(self, header, page_stamp, page_num, f06_file, msg_temp, is_mag_phase):
+        r"""
+        C:\\Users\\sdoyle\\Dropbox\\move_tpl\\ofprand1.op2
+
+        '                         C O M P L E X   F O R C E S   I N   B U S H   E L E M E N T S   ( C B U S H ) '
+        '                                                          (REAL/IMAGINARY)'
+        ' '
+        '                  FREQUENCY         FORCE-X       FORCE-Y       FORCE-Z      MOMENT-X      MOMENT-Y      MOMENT-Z  '
+        '0               0.0               1.006599E-02  0.0           4.314467E-01  0.0           0.0           0.0'
+        '                                 -3.338092E-04  0.0          -9.563536E-03  0.0           0.0           0.0'
+        """
         ntimes = self.data.shape[0]
 
         eids = self.element
@@ -243,7 +253,11 @@ class ComplexCBushStrainArray(ComplexCBushArray, StrainObject):
         return headers
 
     def get_f06_header(self, is_mag_phase=True):
-        raise NotImplementedError('element_name=%r element_type=%s' % (self.element_name, self.element_type))
+        """C:\\Users\\sdoyle\\Dropbox\\move_tpl\\ofprand1.op2"""
+        if self.element_type == 102:
+            element_header = '                         C O M P L E X   F O R C E S   I N   B U S H   E L E M E N T S   ( C B U S H ) \n'
+        else:
+            raise NotImplementedError('element_name=%r element_type=%s' % (self.element_name, self.element_type))
 
         if is_mag_phase:
             mag_phase = '                                                          (MAG/PHASE)\n'  # not tested
@@ -254,8 +268,7 @@ class ComplexCBushStrainArray(ComplexCBushArray, StrainObject):
             element_header,
             mag_phase,
             ' \n',
-            '                 ELEMENT                             AXIAL                                         TORQUE\n',
-            '                   ID.                               FORCE\n',
-            #'                       1                 -2.459512E+05 /  3.377728E+04                  0.0          /  0.0\n',
+            ' ',
+            '                  FREQUENCY         FORCE-X       FORCE-Y       FORCE-Z      MOMENT-X      MOMENT-Y      MOMENT-Z  \n',
         ]
         return words

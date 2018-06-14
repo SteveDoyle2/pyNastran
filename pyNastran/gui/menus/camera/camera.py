@@ -1,15 +1,18 @@
+"""
+defines:
+ - CameraWindow
+"""
 from copy import deepcopy
 
-#from qtpy import QtCore, QtGui
 from qtpy.QtWidgets import (
     QApplication, QLabel, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem,
     QHBoxLayout, QVBoxLayout, QGridLayout)
 
-from pyNastran.gui.qt_version import qt_int as qt_version
 from pyNastran.gui.utils.qt.pydialog import PyDialog
 
 
 class CameraWindow(PyDialog):
+    """defines the CameraWindow class"""
     def __init__(self, data, win_parent=None):
         """
         +--------+
@@ -49,7 +52,6 @@ class CameraWindow(PyDialog):
 
         # closing
         self.apply_button = QPushButton("Apply")
-        #self.ok_button = QPushButton("OK")
         self.close_button = QPushButton("Close")
         self.cancel_button = QPushButton("Cancel")
 
@@ -79,7 +81,6 @@ class CameraWindow(PyDialog):
 
         ok_cancel_box = QHBoxLayout()
         ok_cancel_box.addWidget(self.apply_button)
-        #ok_cancel_box.addWidget(self.ok_button)
         ok_cancel_box.addWidget(self.close_button)
         ok_cancel_box.addWidget(self.cancel_button)
 
@@ -147,11 +148,7 @@ class CameraWindow(PyDialog):
         if self.win_parent is None:
             self.cameras[name] = None
             return
-
         self.cameras[name] = self.win_parent.get_camera_data()
-
-    #@property
-    #def camera(self):
 
     @property
     def nrows(self):
@@ -166,31 +163,12 @@ class CameraWindow(PyDialog):
 
         for irow in reversed(irows):
             self.table.removeRow(irow)
-            #print('delete', self.names)
             name = self.names.pop(irow)
             del self.cameras[name]
             #print('  removing irow=%s name=%r' % (irow, name))
 
     def closeEvent(self, event):
         event.accept()
-
-    @staticmethod
-    def check_name(cell):
-        text = str(cell.text()).strip()
-        if len(text):
-            cell.setStyleSheet("QLineEdit{background: white;}")
-            return text, True
-        else:
-            cell.setStyleSheet("QLineEdit{background: red;}")
-            return None, False
-
-    #def on_validate(self):
-        #name_value, flag0 = self.check_name(self.name_edit)
-        #if flag0:
-            #self.out_data['cameras'] = self.cameras
-            #self.out_data['clicked_ok'] = True
-            #return True
-        #return False
 
     def on_apply(self):
         passed = self.on_set()
@@ -216,8 +194,17 @@ class CameraWindow(PyDialog):
     def on_cancel(self):
         self.close()
 
+#def check_name(cell):
+    #text = str(cell.text()).strip()
+    #if len(text):
+        #cell.setStyleSheet("QLineEdit{background: white;}")
+        #return text, True
+    #else:
+        #cell.setStyleSheet("QLineEdit{background: red;}")
+        #return None, False
 
-def main():
+
+def main():  # pragma: no cover
     # kills the program when you hit Cntl+C from the command line
     # doesn't save the current state as presumably there's been an error
     import signal
@@ -229,26 +216,26 @@ def main():
     # Create the QApplication
     app = QApplication(sys.argv)
     #The Main window
-    a = [
+    amat = [
         [1., 1., 1.],
         [1., 1., 1.],
         [1., 1., 1.],
     ]
-    b = [
+    bmat = [
         [1., 1., 1.],
         [1., 1., 1.],
         [1., 1., 1.],
     ]
-    c = [
+    cmat = [
         [1., 1., 1.],
         [1., 1., 1.],
         [1., 1., 1.],
     ]
 
-    d = {
-        'cameras' : {'a':a, 'b':b, 'c':c},
+    data = {
+        'cameras' : {'a':amat, 'b':bmat, 'c':cmat},
     }
-    main_window = CameraWindow(d, win_parent=None)
+    main_window = CameraWindow(data, win_parent=None)
     main_window.show()
     # Enter the main loop
     app.exec_()

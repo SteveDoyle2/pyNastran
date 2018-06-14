@@ -177,9 +177,9 @@ class ChangeBCs(QDialog):
             value = parse_patran_syntax(text, pound=pound)
             cell.setStyleSheet("QLineEdit{background: white;}")
             return value, True
-        except ValueError as e:
+        except ValueError as error:
             cell.setStyleSheet("QLineEdit{background: red;}")
-            cell.setToolTip(str(e))
+            cell.setToolTip(str(error))
             return None, False
 
     def check_patran_syntax_dict(self, cell, pound=None):
@@ -189,9 +189,9 @@ class ChangeBCs(QDialog):
             cell.setStyleSheet("QLineEdit{background: white;}")
             cell.setToolTip('')
             return value, True
-        except (ValueError, SyntaxError, KeyError) as e:
+        except (ValueError, SyntaxError, KeyError) as error:
             cell.setStyleSheet("QLineEdit{background: red;}")
-            cell.setToolTip(str(e))
+            cell.setToolTip(str(error))
             return None, False
 
     def check_float(self, cell):

@@ -45,7 +45,7 @@ class TestMaterialCoordComplex(unittest.TestCase):
             )
             try:
                 op2_new = data_in_material_coord(bdf, op2)
-            except ValueError as e:
+            except ValueError as error:
                 op2.log.error('failed rotating %r' % prefix)
                 is_failed = True
                 #continue
@@ -91,7 +91,7 @@ class TestMaterialCoordComplex(unittest.TestCase):
             )
             try:
                 op2_new = data_in_material_coord(bdf, op2)
-            except ValueError as e:
+            except ValueError as error:
                 op2.log.error('failed rotating %r' % prefix)
                 is_failed = True
                 #continue
@@ -141,7 +141,7 @@ class TestMaterialCoordComplex(unittest.TestCase):
 
             try:
                 op2_new = data_in_material_coord(bdf, op2)
-            except ValueError as e:
+            except ValueError as error:
                 op2.log.error('failed rotating %r' % prefix)
                 is_failed = True
                 #continue

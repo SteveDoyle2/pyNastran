@@ -6,7 +6,6 @@ from itertools import count
 from six import integer_types
 from six.moves import zip, range
 import numpy as np
-ints = (int, np.int32)
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
@@ -15,6 +14,7 @@ try:
 except ImportError:
     pass
 
+ints = (int, np.int32)
 
 class RealPlateArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -28,10 +28,7 @@ class RealPlateArray(OES_Object):
         self.nnodes = None
 
         if is_sort1:
-            if dt is not None:
-                self._add = self._add_sort1
-                self._add_new_eid = self._add_new_eid_sort1
-                self._add_new_node = self._add_new_node_sort1
+            pass
         else:
             raise NotImplementedError('SORT2')
 
@@ -148,15 +145,15 @@ class RealPlateArray(OES_Object):
                     (eid, nid) = element_nodei
                     t1 = self.data[itime, ie, :]
                     t2 = table.data[itime, ie, :]
-                    (fiber_dist1, oxx1, oyy1, txy1, angle1, majorP1, minorP1, ovm1) = t1
-                    (fiber_dist2, oxx2, oyy2, txy2, angle2, majorP2, minorP2, ovm2) = t2
+                    (fiber_dist1, oxx1, oyy1, txy1, angle1, major_p1, minor_p1, ovm1) = t1
+                    (fiber_dist2, oxx2, oyy2, txy2, angle2, major_p2, minor_p2, ovm2) = t2
 
                     # vm stress can be NaN for some reason...
                     if not np.array_equal(t1[:-1], t2[:-1]):
                         msg += '(%s, %s)    (%s, %s, %s, %s, %s, %s, %s, %s)  (%s, %s, %s, %s, %s, %s, %s, %s)\n' % (
                             eid, nid,
-                            fiber_dist1, oxx1, oyy1, txy1, angle1, majorP1, minorP1, ovm1,
-                            fiber_dist2, oxx2, oyy2, txy2, angle2, majorP2, minorP2, ovm2)
+                            fiber_dist1, oxx1, oyy1, txy1, angle1, major_p1, minor_p1, ovm1,
+                            fiber_dist2, oxx2, oyy2, txy2, angle2, major_p2, minor_p2, ovm2)
                         i += 1
                         if i > 10:
                             print(msg)
@@ -166,13 +163,8 @@ class RealPlateArray(OES_Object):
                     raise ValueError(msg)
         return True
 
-    def _add_new_eid(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle,
-                     major_principal, minor_principal, ovm):
-        self._add_new_eid_sort1(dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle,
-                                major_principal, minor_principal, ovm)
-
-    def _add_new_eid_sort1(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle,
-                           major_principal, minor_principal, ovm):
+    def add_new_eid_sort1(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle,
+                          major_principal, minor_principal, ovm):
         assert isinstance(eid, ints), eid
         assert isinstance(node_id, ints), node_id
         self._times[self.itime] = dt
@@ -183,25 +175,13 @@ class RealPlateArray(OES_Object):
         self.itotal += 1
         self.ielement += 1
 
-    def _add_new_node(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle,
-                      major_principal, minor_principal, ovm):
-        assert isinstance(node_id, ints), node_id
-        self._add_sort1(dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle,
-                        major_principal, minor_principal, ovm)
+    def add_new_node_sort1(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle,
+                           major_principal, minor_principal, ovm):
+        self.add_sort1(dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle,
+                       major_principal, minor_principal, ovm)
 
-    def _add(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle,
-             major_principal, minor_principal, ovm):
-        assert isinstance(node_id, ints), node_id
-        self._add_sort1(dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle,
-                        major_principal, minor_principal, ovm)
-
-    def _add_new_node_sort1(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle,
-                            major_principal, minor_principal, ovm):
-        self._add_sort1(dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle,
-                        major_principal, minor_principal, ovm)
-
-    def _add_sort1(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle,
-                   major_principal, minor_principal, ovm):
+    def add_sort1(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle,
+                  major_principal, minor_principal, ovm):
         assert eid is not None, eid
         assert isinstance(node_id, ints), node_id
         self.element_node[self.itotal, :] = [eid, node_id]
@@ -314,7 +294,9 @@ class RealPlateArray(OES_Object):
                         f06_file.write('   %8s %8s  %-13s  %-13s %-13s %-13s   %8.4f  %-13s %-13s %s\n\n' % (
                             '', '', fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
                 else:
-                    raise NotImplementedError('element_name=%s self.element_type=%s' % (self.element_name, self.element_type))
+                    msg = 'element_name=%s self.element_type=%s' % (
+                        self.element_name, self.element_type)
+                    raise NotImplementedError(msg)
 
             f06_file.write(page_stamp % page_num)
             page_num += 1
@@ -486,4 +468,3 @@ def _get_plate_msg(self):
     else:
         raise NotImplementedError('name=%s type=%s' % (self.element_name, self.element_type))
     return msg, nnodes, cen
-

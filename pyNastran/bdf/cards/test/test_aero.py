@@ -4,6 +4,7 @@ tests aero cards
 """
 from __future__ import print_function
 import os
+from collections import defaultdict
 import unittest
 from six import StringIO
 import numpy as np
@@ -16,7 +17,7 @@ from pyNastran.bdf.cards.aero.aero import (
     AEFACT, AELIST, AEPARM,
     CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
     PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
-    AELIST, AESURF, AESURFS,
+    AESURF, AESURFS,
     AELINK, AECOMP,
     SPLINE1, SPLINE2 #, SPLINE3, SPLINE4, SPLINE5
 )
@@ -479,7 +480,7 @@ class TestAero(unittest.TestCase):
         nchord = 10
         igid = -1
         caero1d = CAERO1.add_quad(eid, pid, nspan, nchord, igid, p1, p2, p3, p4,
-                                 cp=cp, spanwise='y', comment='')
+                                  cp=cp, spanwise='y', comment='')
         caero1d.validate()
 
         eid = 5
@@ -499,7 +500,7 @@ class TestAero(unittest.TestCase):
         chord = 0.05
         igid = -1
         caero1f = CAERO1.add_quad(eid, pid, span, chord, igid, p1, p2, p3, p4,
-                                 cp=cp, spanwise='z', comment='')
+                                  cp=cp, spanwise='z', comment='')
         caero1f.validate()
         caero1f.flip_normal()
 
@@ -557,7 +558,8 @@ class TestAero(unittest.TestCase):
         model.cross_reference()
         model.uncross_reference()
         #model.safe_cross_reference()
-        caero1c.safe_cross_reference(model)
+        xref_errors = defaultdict(list)
+        caero1c.safe_cross_reference(model, xref_errors)
         caero1c.panel_points_elements()
         caero1c.raw_fields()
         min_max_eid = caero1c.min_max_eid
@@ -639,10 +641,29 @@ class TestAero(unittest.TestCase):
         assert caero1_1by1.shape == (1, 1)
         caero1_1by1.get_points()
 
+        p1 = [0., 0., 0.]
+        p4 = [0., 10., 0.]
+        x12 = 1.
+        x43 = 1.
+        eid = 1
+        nspan = 3
+        nchord = 2
+        lchord = None
+        lspan = None
+        caero1_2x3 = CAERO1(eid, pid, igid, p1, x12, p4, x43, cp=cp,
+                            nspan=nspan, lspan=lspan, nchord=nchord, lchord=lchord,
+                            comment='caero1')
+        caero1_2x3.validate()
+        assert caero1_2x3.shape == (2, 3), caero1_2x3.shape
+        caero1_2x3._init_ids()
+        points = caero1_2x3.get_points()
+        assert len(points) == 4
+
+
     def test_spline1(self):
         """checks the SPLINE1 card"""
         eid = 1
-        caero_id = 99999999
+        caero_id = 100
         box1 = 1
         box2 = 10
         setg = 42
@@ -719,7 +740,7 @@ class TestAero(unittest.TestCase):
         model.cross_reference(model)
         caero1.panel_points_elements()
         caero2.get_points_elements_3d()
-        save_load_deck(model)
+        save_load_deck(model, run_renumber=True)
 
 
     def test_spline2(self):
@@ -1031,13 +1052,15 @@ class TestAero(unittest.TestCase):
         caero3b.uncross_reference()
         caero3b.write_card()
         caero3a.raw_fields()
-        caero3b.safe_cross_reference(model)
+
+        xref_errors = defaultdict(list)
+        caero3b.safe_cross_reference(model, xref_errors)
 
         caero3b.get_npanel_points_elements()
         caero3b.get_points()
         caero3b.panel_points_elements()
 
-        save_load_deck(model, run_convert=False)
+        save_load_deck(model, run_convert=False, run_renumber=False)
 
 
     def test_paero3(self):
@@ -1154,7 +1177,7 @@ class TestAero(unittest.TestCase):
         p1, p2, p3, p4 = caero4b.get_points()
 
         caero4c = CAERO4(eid, pid, p1, x12, p4, x43,
-                         cp=0,nspan=0, lspan=0,
+                         cp=0, nspan=0, lspan=0,
                          comment='caero4c')
         with self.assertRaises(RuntimeError):
             # nspan=lspan=0
@@ -1250,7 +1273,7 @@ class TestAero(unittest.TestCase):
 
         read_bdf(bdf_filename, xref=False, punch=True, debug=False)
         model.safe_cross_reference()
-        save_load_deck(model, run_convert=False)
+        save_load_deck(model, run_convert=False, run_renumber=False)
 
 
         #caero5.raw_fields()
@@ -1318,7 +1341,7 @@ class TestAero(unittest.TestCase):
         model.cross_reference()
         spline3.write_card()
         spline3.raw_fields()
-        save_load_deck(model)
+        save_load_deck(model, run_renumber=False)
         spline3b.eid = 1000
 
         spline3b.nodes.append(42)

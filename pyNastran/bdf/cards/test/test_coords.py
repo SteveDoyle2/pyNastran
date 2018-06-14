@@ -9,10 +9,16 @@ from six.moves import StringIO
 import numpy as np
 from numpy import array, allclose, array_equal, cross
 
-from pyNastran.bdf.bdf import BDF, BDFCard, CORD1R, CORD1C, CORD1S, CORD2R, CORD2C, CORD2S
+from pyNastran.bdf.cards.coordinate_systems import (
+    create_coords_along_line, get_nodes_along_axis_in_coords,
+    define_coord_e123,
+    CORD1R, CORD1C, CORD1S,
+    CORD2R, CORD2C, #CORD2S,
+    CORD3G)
+from pyNastran.bdf.bdf import BDF, BDFCard
 from pyNastran.bdf.utils import TransformLoadWRT
+from pyNastran.bdf.cards.aero.utils import make_monpnt1s_from_cids
 from pyNastran.bdf.cards.test.utils import save_load_deck
-from pyNastran.bdf.cards.coordinate_systems import define_coord_e123, CORD3G
 from pyNastran.dev.bdf_vectorized2.bdf_vectorized import BDF as BDFv
 
 class TestCoords(unittest.TestCase):
@@ -330,8 +336,8 @@ class TestCoords(unittest.TestCase):
             card = model.process_card(lines)
             model.add_card(card, card[0])
 
-        xyz_cid0b = model.get_xyz_in_coord_no_xref(cid=0, fdtype='float64')
-        xyz_cid0c = model.get_xyz_in_coord_no_xref(cid=12, fdtype='float64')
+        unused_xyz_cid0b = model.get_xyz_in_coord_no_xref(cid=0, fdtype='float64')
+        unused_xyz_cid0c = model.get_xyz_in_coord_no_xref(cid=12, fdtype='float64')
         model.cross_reference()
 
         xyz_cid0_actual = array([
@@ -348,17 +354,17 @@ class TestCoords(unittest.TestCase):
         xyz_cid0 = model.get_xyz_in_coord(cid=0, fdtype='float64')
         array_equal(xyz_cid0_actual, xyz_cid0)
 
-        icd_transform, icp_transform, xyz_cp, nid_cp_cd = model.get_displacement_index_xyz_cp_cd()
+        unused_icd_transform, icp_transform, xyz_cp, nid_cp_cd = model.get_displacement_index_xyz_cp_cd()
         xyz_cid0_xform = model.transform_xyzcp_to_xyz_cid(
             xyz_cp, nid_cp_cd[:, 0], icp_transform, cid=0)
         array_equal(xyz_cid0_actual, xyz_cid0_xform)
         assert array_equal(nid_cp_cd[:, 0], array([10, 11, 12]))
 
-        xyz_cid_10 = model.transform_xyzcp_to_xyz_cid(
+        unused_xyz_cid_10 = model.transform_xyzcp_to_xyz_cid(
             xyz_cp, nid_cp_cd[:, 0], icp_transform, cid=10)
-        xyz_cid_11 = model.transform_xyzcp_to_xyz_cid(
+        unused_xyz_cid_11 = model.transform_xyzcp_to_xyz_cid(
             xyz_cp, nid_cp_cd[:, 0], icp_transform, cid=11)
-        xyz_cid_12 = model.transform_xyzcp_to_xyz_cid(
+        unused_xyz_cid_12 = model.transform_xyzcp_to_xyz_cid(
             xyz_cp, nid_cp_cd[:, 0], icp_transform, cid=12)
 
     def test_cord2_rcs_02(self):
@@ -399,8 +405,8 @@ class TestCoords(unittest.TestCase):
         for lines in cards:
             card = model.process_card(lines)
             model.add_card(card, card[0])
-        xyz_cid0b = model.get_xyz_in_coord_no_xref(cid=0, fdtype='float64')
-        xyz_cid0c = model.get_xyz_in_coord_no_xref(cid=22, fdtype='float64')
+        unused_xyz_cid0b = model.get_xyz_in_coord_no_xref(cid=0, fdtype='float64')
+        unused_xyz_cid0c = model.get_xyz_in_coord_no_xref(cid=22, fdtype='float64')
         model.cross_reference()
 
         xyz_cid0_actual = array([
@@ -416,17 +422,17 @@ class TestCoords(unittest.TestCase):
         xyz_cid0 = model.get_xyz_in_coord(cid=0, fdtype='float64')
         array_equal(xyz_cid0_actual, xyz_cid0)
 
-        icd_transform, icp_transform, xyz_cp, nid_cp_cd = model.get_displacement_index_xyz_cp_cd()
+        unused_icd_transform, icp_transform, xyz_cp, nid_cp_cd = model.get_displacement_index_xyz_cp_cd()
         xyz_cid0_xform = model.transform_xyzcp_to_xyz_cid(
             xyz_cp, nid_cp_cd[:, 0], icp_transform, cid=0)
         array_equal(xyz_cid0_actual, xyz_cid0_xform)
         assert array_equal(nid_cp_cd[:, 0], array([20, 21, 22]))
 
-        xyz_cid_20 = model.transform_xyzcp_to_xyz_cid(
+        unused_xyz_cid_20 = model.transform_xyzcp_to_xyz_cid(
             xyz_cp, nid_cp_cd[:, 0], icp_transform, cid=20)
-        xyz_cid_21 = model.transform_xyzcp_to_xyz_cid(
+        unused_xyz_cid_21 = model.transform_xyzcp_to_xyz_cid(
             xyz_cp, nid_cp_cd[:, 0], icp_transform, cid=21)
-        xyz_cid_22 = model.transform_xyzcp_to_xyz_cid(
+        unused_xyz_cid_22 = model.transform_xyzcp_to_xyz_cid(
             xyz_cp, nid_cp_cd[:, 0], icp_transform, cid=22)
 
 
@@ -468,8 +474,8 @@ class TestCoords(unittest.TestCase):
         for lines in cards:
             card = model.process_card(lines)
             model.add_card(card, card[0])
-        xyz_cid0b = model.get_xyz_in_coord_no_xref(cid=0, fdtype='float64')
-        xyz_cid0c = model.get_xyz_in_coord_no_xref(cid=32, fdtype='float64')
+        unused_xyz_cid0b = model.get_xyz_in_coord_no_xref(cid=0, fdtype='float64')
+        unused_xyz_cid0c = model.get_xyz_in_coord_no_xref(cid=32, fdtype='float64')
         bdf_file = StringIO()
         model.write_bdf(bdf_file, close=False)
         bdf_file.seek(0)
@@ -495,7 +501,7 @@ class TestCoords(unittest.TestCase):
         xyz_cid0 = model.get_xyz_in_coord(cid=0, fdtype='float64')
         assert np.allclose(xyz_cid0_actual, xyz_cid0), '%s' % (xyz_cid0_actual - xyz_cid0)
 
-        icd_transform, icp_transform, xyz_cp, nid_cp_cd = model.get_displacement_index_xyz_cp_cd()
+        unused_icd_transform, icp_transform, xyz_cp, nid_cp_cd = model.get_displacement_index_xyz_cp_cd()
         nids = nid_cp_cd[:, 0]
         xyz_cid0_xform = model.transform_xyzcp_to_xyz_cid(
             xyz_cp, nids, icp_transform, cid=0)
@@ -505,9 +511,9 @@ class TestCoords(unittest.TestCase):
 
 
         for cid in [30, 31, 32]:
-            xyz_cid_a = model.transform_xyzcp_to_xyz_cid(
+            unused_xyz_cid_a = model.transform_xyzcp_to_xyz_cid(
                 xyz_cp, nids, icp_transform, cid=cid)
-            xyz_cid_b = model2.transform_xyzcp_to_xyz_cid(
+            unused_xyz_cid_b = model2.transform_xyzcp_to_xyz_cid(
                 xyz_cp, nids, icp_transform, cid=cid, atol=None)
             #assert np.allclose(xyz_cid_a, xyz_cid_b), '%s' % np.isclose(xyz_cid_a, xyz_cid_b)
 
@@ -520,8 +526,8 @@ class TestCoords(unittest.TestCase):
 
         #---------------------------------------------
         xyz_cid0 = model.transform_xyzcp_to_xyz_cid(
-                xyz_cp, nids, icp_transform,
-                cid=0, atol=None)
+            xyz_cp, nids, icp_transform,
+            cid=0, atol=None)
         array_equal(xyz_cid0_actual, xyz_cid0)
 
         model.write_bdf(bdf_file, close=False)
@@ -591,7 +597,7 @@ class TestCoords(unittest.TestCase):
         model.add_grid(3, [0., 0., 1.])
         model.add_grid(4, [1., 0., 1.])
         coord.cross_reference(model)
-        cord2s = coord.to_cord2x(model, rid=0)
+        unused_cord2s = coord.to_cord2x(model, rid=0)
 
     def test_cord2r_02(self):
         grid = ['GRID       20143       7 -9.31-4  .11841 .028296']
@@ -704,8 +710,8 @@ class TestCoords(unittest.TestCase):
         origin = [0., 0., 0.]
         zaxis = [0., 0., 1.]
         xzplane = [1., 0., 0.]
-        cid1 = CORD2R(cid=1, rid=0, origin=origin, zaxis=zaxis, xzplane=xzplane,
-                      comment='cord2r')
+        unused_cid1 = CORD2R(cid=1, rid=0, origin=origin, zaxis=zaxis, xzplane=xzplane,
+                             comment='cord2r')
 
         xaxis = [1., 0., 0.]
         yaxis = [0., 1., 0.]
@@ -714,30 +720,36 @@ class TestCoords(unittest.TestCase):
         yz_plane = [0., 1., 1.]
         xy_plane = [1., 1., 0.]
         # x-axis
-        cid2 = CORD2R.add_axes(cid=2, rid=0, origin=origin, xaxis=xaxis, yaxis=None, zaxis=None,
-                               xyplane=None, yzplane=None, xzplane=xz_plane)
+        unused_cid2 = CORD2R.add_axes(cid=2, rid=0, origin=origin,
+                                      xaxis=xaxis, yaxis=None, zaxis=None,
+                                      xyplane=None, yzplane=None, xzplane=xz_plane)
 
-        cid3 = CORD2R.add_axes(cid=2, rid=0, origin=origin, xaxis=xaxis, yaxis=None, zaxis=None,
-                               xyplane=xy_plane, yzplane=None, xzplane=None)
+        unused_cid3 = CORD2R.add_axes(cid=2, rid=0, origin=origin,
+                                      xaxis=xaxis, yaxis=None, zaxis=None,
+                                      xyplane=xy_plane, yzplane=None, xzplane=None)
 
         # y-axis
-        cid4 = CORD2R.add_axes(cid=4, rid=0, origin=origin, xaxis=None, yaxis=yaxis, zaxis=None,
-                               xyplane=xy_plane, yzplane=None, xzplane=None)
+        unused_cid4 = CORD2R.add_axes(cid=4, rid=0, origin=origin,
+                                      xaxis=None, yaxis=yaxis, zaxis=None,
+                                      xyplane=xy_plane, yzplane=None, xzplane=None)
 
-        cid5 = CORD2R.add_axes(cid=5, rid=0, origin=origin, xaxis=None, yaxis=yaxis, zaxis=None,
-                               xyplane=None, yzplane=yz_plane, xzplane=None)
+        unused_cid5 = CORD2R.add_axes(cid=5, rid=0, origin=origin,
+                                      xaxis=None, yaxis=yaxis, zaxis=None,
+                                      xyplane=None, yzplane=yz_plane, xzplane=None)
 
         # z-axis
-        cid4 = CORD2R.add_axes(cid=4, rid=0, origin=origin, xaxis=None, yaxis=None, zaxis=zaxis,
-                               xyplane=None, yzplane=None, xzplane=xz_plane)
+        unused_cid4 = CORD2R.add_axes(cid=4, rid=0, origin=origin,
+                                      xaxis=None, yaxis=None, zaxis=zaxis,
+                                      xyplane=None, yzplane=None, xzplane=xz_plane)
 
-        cid5 = CORD2R.add_axes(cid=5, rid=0, origin=origin, xaxis=None, yaxis=None, zaxis=zaxis,
-                               xyplane=None, yzplane=yz_plane, xzplane=None)
+        unused_cid5 = CORD2R.add_axes(cid=5, rid=0, origin=origin,
+                                      xaxis=None, yaxis=None, zaxis=zaxis,
+                                      xyplane=None, yzplane=yz_plane, xzplane=None)
 
         # ijk
-        cid6 = CORD2R.add_ijk(cid=6, rid=0, origin=origin, i=xaxis, j=yaxis, k=None)
-        cid7 = CORD2R.add_ijk(cid=7, rid=0, origin=origin, i=xaxis, j=None, k=zaxis)
-        cid8 = CORD2R.add_ijk(cid=8, rid=0, origin=origin, i=None, j=yaxis, k=zaxis)
+        unused_cid6 = CORD2R.add_ijk(cid=6, rid=0, origin=origin, i=xaxis, j=yaxis, k=None)
+        unused_cid7 = CORD2R.add_ijk(cid=7, rid=0, origin=origin, i=xaxis, j=None, k=zaxis)
+        unused_cid8 = CORD2R.add_ijk(cid=8, rid=0, origin=origin, i=None, j=yaxis, k=zaxis)
         #cid6.add_ijk(rid=0, origin=origin, i=None, j=None, k=None)
 
     def test_cord1_referencing_01(self):
@@ -790,7 +802,7 @@ class TestCoords(unittest.TestCase):
         assert model.card_count['CORD2R'] == 11, model.card_count
         assert model.card_count['GRID'] == 3, model.card_count
         model.cross_reference()
-        for cid, coord in sorted(iteritems(model.coords)):
+        for unused_cid, coord in sorted(iteritems(model.coords)):
             assert coord.i is not None, coord
 
     def test_define_coords_from_axes(self):
@@ -799,7 +811,7 @@ class TestCoords(unittest.TestCase):
         cord2_type = 'CORD2R'
         cid = 1
         origin = [0., 0., 0.]
-        rid = 0
+        unused_rid = 0
         xaxis = [1., 0., 0.]
         xzplane = [0., 0., 1.]
         define_coord_e123(model, cord2_type, cid, origin, rid=0,
@@ -854,6 +866,46 @@ class TestCoords(unittest.TestCase):
         fields = BDFCard(cord3g.raw_fields())
         cord3g.repr_fields()
         cord3g.add_card(fields)
+
+    def test_create_coord_line(self):
+        """tests creating a series of coordinate systems down an axis"""
+        model = BDF(debug=False)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [0., 100., 0.])
+        eid = 10
+        mid = 11
+        nids = [1, 2]
+        model.add_conrod(eid, mid, nids, A=1.0, j=0.0, c=0.0, nsm=0.0,
+                         comment='')
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu, rho=0.0, a=0.0, tref=0.0, ge=0.0,
+                       St=0.0, Sc=0.0, Ss=0.0, mcsid=0,
+                       comment='')
+        model.cross_reference()
+
+
+        cid = 0
+        unused_icd_transform, icp_transform, xyz_cp, nid_cp_cd = model.get_displacement_index_xyz_cp_cd(
+            fdtype='float64', idtype='int32', sort_ids=True)
+        nids = nid_cp_cd[:, 0]
+        #unused_xyz_cid0 = model.transform_xyzcp_to_xyz_cid(
+            #xyz_cp, nids, icp_transform,
+            #cid=cid, in_place=False, atol=1e-6)
+
+
+        npoints = 50
+        percents = np.linspace(0., 1., num=npoints, endpoint=True)
+        p1 = np.array([50., -100, 0.])
+        p2 = np.array([50., 100, 0.])
+
+        cids = create_coords_along_line(model, p1, p2, percents, cid=0, axis=cid)
+        cid_to_inids = get_nodes_along_axis_in_coords(
+            model, nids, xyz_cp, icp_transform,
+            cids)
+        make_monpnt1s_from_cids(model, nids, cids, cid_to_inids)
+        #model.write_bdf('spike.bdf')
 
 def get_nodes(grids, grids_expected, coords):
     """

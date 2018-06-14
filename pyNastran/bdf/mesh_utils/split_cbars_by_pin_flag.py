@@ -41,6 +41,7 @@ def split_cbars_by_pin_flag(bdf_filename,
             the element id
         pin_flag : int
             the bar pin flag
+
     """
     if isinstance(bdf_filename, string_types):
         model = read_bdf(bdf_filename, xref=False, debug=debug)

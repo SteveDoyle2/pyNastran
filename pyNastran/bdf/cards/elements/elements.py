@@ -14,12 +14,11 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
 from pyNastran.utils import integer_types
-from pyNastran.bdf.cards.base_card import Element, BaseCard
+from pyNastran.bdf.cards.base_card import Element, BaseCard, break_word_by_trailing_integer
 from pyNastran.bdf.bdf_interface.assign_type import (
     fields, integer, integer_or_blank, integer_double_or_blank,
     double_or_blank, string)
 from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.bdf.cards.optimization import break_word_by_trailing_integer
 
 
 class CFAST(Element):
@@ -104,7 +103,7 @@ class CFAST(Element):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CFAST eid=%s' % self.eid
+        msg = ', which is required by CFAST eid=%s' % self.eid
         self.pid_ref = model.Property(self.Pid(), msg=msg)
         if self.gs:
             self.gs_ref = model.Node(self.Gs(), msg=msg)
@@ -112,6 +111,17 @@ class CFAST(Element):
             self.ga_ref = model.Node(self.Ga(), msg=msg)
         if self.gb:
             self.gb_ref = model.Node(self.Gb(), msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        self.cross_reference(model)
 
     def uncross_reference(self):
         self.pid = self.Pid()
@@ -122,6 +132,19 @@ class CFAST(Element):
         self.gs_ref = None
         self.ga_ref = None
         self.gb_ref = None
+
+    #def Centroid(self):
+        ## same as below, but we ignore the 2nd point it it's None
+        #p = (self.nodes_ref[1].get_position() + self.nodes_ref[0].get_position()) / 2.
+
+        ##p = self.nodes_ref[0].get_position()
+        ##if self.nodes_ref[1] is not None:
+            ##p += self.nodes_ref[1].get_position()
+            ##p /= 2.
+        #return p
+
+    #def center_of_mass(self):
+        #return self.Centroid()
 
     def raw_fields(self):
         list_fields = ['CFAST', self.eid, self.Pid(), self.Type, self.ida, self.idb,
@@ -353,15 +376,34 @@ class CGAP(Element):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CGAP eid=%s' % self.eid
-        self.ga_ref = model.Node(self.Ga(), msg=msg)
-        self.gb_ref = model.Node(self.Gb(), msg=msg)
+        msg = ', which is required by CGAP eid=%s' % self.eid
+        self.ga_ref = model.Node(self.ga, msg=msg)
+        self.gb_ref = model.Node(self.gb, msg=msg)
         if self.g0:
             self.g0_ref = model.Node(self.g0, msg=msg)
             self.x = self.g0_ref.get_position()
-        self.pid_ref = model.Property(self.Pid(), msg=msg)
+        self.pid_ref = model.Property(self.pid, msg=msg)
         if self.cid:
-            self.cid_ref = model.Coord(self.Cid(), msg=msg)
+            self.cid_ref = model.Coord(self.cid, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CGAP eid=%s' % self.eid
+        self.ga_ref = model.Node(self.ga, msg=msg)
+        self.gb_ref = model.Node(self.gb, msg=msg)
+        if self.g0:
+            self.g0_ref = model.Node(self.g0, msg=msg)
+            self.x = self.g0_ref.get_position()
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
+        if self.cid is not None:
+            self.cid_ref = model.safe_coord(self.cid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.ga = self.Ga()
@@ -435,9 +477,22 @@ class CrackElement(Element):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by %s eid=%s' % (self. type, self.eid)
+        msg = ', which is required by %s eid=%s' % (self. type, self.eid)
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by %s eid=%s' % (self. type, self.eid)
+        self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -699,11 +754,22 @@ class PLOTEL(BaseCard):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by PLOTEL eid=%s' % self.eid
+        msg = ', which is required by PLOTEL eid=%s' % self.eid
         self.nodes_ref = [
             model.Node(self.nodes[0], msg=msg),
             model.Node(self.nodes[1], msg=msg),
         ]
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        self.cross_reference(model)
 
     def uncross_reference(self):
         self.nodes = self.node_ids

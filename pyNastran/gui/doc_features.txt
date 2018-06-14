@@ -106,9 +106,9 @@ PyQt4/PyQt5/PySide unique
 
  - distance probe
    - similar method to results probe
+   - note in the message area at the bottom
    - TODO: add a notice that you're picking the second point
            maybe a note in the log
-           maybe a note in the message area at the bottom
            maybe a visualization (e.g., a node) on the model)
            maybe switch this to allow use to reselect 1st/2nd points repeatedly
 

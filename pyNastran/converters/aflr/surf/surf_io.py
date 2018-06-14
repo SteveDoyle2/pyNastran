@@ -1,5 +1,6 @@
 from __future__ import print_function
 import os
+from collections import OrderedDict
 
 from six import iteritems
 from numpy import vstack, amax, amin, arange, ones, zeros, where
@@ -14,8 +15,8 @@ from pyNastran.gui.utils.vtk.vtk_utils import (
 
 
 class SurfIO(object):
-    def __init__(self):
-        pass
+    def __init__(self, gui):
+        self.gui = gui
 
     def get_surf_wildcard_geometry_results_functions(self):
         data = (
@@ -31,8 +32,8 @@ class SurfIO(object):
 
         model = SurfReader()
 
-        self.model_type = 'surf'
-        self.log.debug('surf_filename = %s' % surf_filename)
+        self.gui.model_type = 'surf'
+        self.gui.log.debug('surf_filename = %s' % surf_filename)
 
         model.read_surf(surf_filename)
         nnodes = model.nodes.shape[0]
@@ -41,8 +42,8 @@ class SurfIO(object):
         nelements = ntris + nquads
 
         nodes = model.nodes
-        self.nelements = nelements
-        self.nnodes = nnodes
+        self.gui.nelements = nelements
+        self.gui.nnodes = nnodes
 
         #print("nNodes = %s" % self.nnodes)
         #print("nElements = %s" % self.nelements)
@@ -52,16 +53,16 @@ class SurfIO(object):
         mmax = amax(nodes, axis=0)
         mmin = amin(nodes, axis=0)
         dim_max = (mmax - mmin).max()
-        self.create_global_axes(dim_max)
-        self.log.info('max = %s' % mmax)
-        self.log.info('min = %s' % mmin)
+        self.gui.create_global_axes(dim_max)
+        self.gui.log.info('max = %s' % mmax)
+        self.gui.log.info('min = %s' % mmin)
 
         points = numpy_to_vtk_points(nodes)
         tris = model.tris - 1
         quads = model.quads - 1
 
-        grid = self.grid
-        grid.Allocate(self.nelements, 1000)
+        grid = self.gui.grid
+        grid.Allocate(self.gui.nelements, 1000)
 
         elements = []
         etypes = []
@@ -76,14 +77,14 @@ class SurfIO(object):
 
         model.read_surf_failnode(surf_filename)
         if len(model.nodes_failed):
-            if 'failed_nodes' not in self.alt_grids:
+            if 'failed_nodes' not in self.gui.alt_grids:
                 yellow = (1., 1., 0.)
-                self.create_alternate_vtk_grid('failed_nodes', color=yellow,
-                                               line_width=3, opacity=1.0)
+                self.gui.create_alternate_vtk_grid('failed_nodes', color=yellow,
+                                                   line_width=3, opacity=1.0)
 
             ifailed = where(model.nodes_failed == 1)[0]
             nfailed = len(ifailed)
-            failed_grid = self.alt_grids['failed_nodes']
+            failed_grid = self.gui.alt_grids['failed_nodes']
             failed_grid.Allocate(nfailed, 1000)
             points2 = vtk.vtkPoints()
             points2.SetNumberOfPoints(nfailed)
@@ -91,20 +92,20 @@ class SurfIO(object):
             for j, nid in enumerate(model.nodes_failed):
                 elem = vtk.vtkVertex()
                 c = nodes[nid - 1, :]
-                self.log.debug('%s %s' % (nid, c))
+                self.gui.log.debug('%s %s' % (nid, c))
                 points2.InsertPoint(j, *c)
                 elem.GetPointIds().SetId(0, j)
                 failed_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             failed_grid.SetPoints(points2)
-            self._add_alt_actors(self.alt_grids)
+            self.gui._add_alt_actors(self.gui.alt_grids)
 
-            actor = self.geometry_actors['failed_nodes']
+            actor = self.gui.geometry_actors['failed_nodes']
             actor.Modified()
             prop = actor.GetProperty()
             prop.SetRepresentationToPoints()
             prop.SetPointSize(10)
 
-        self.nelements = nelements
+        self.gui.nelements = nelements
         grid.SetPoints(points)
         grid.Modified()
         if hasattr(grid, 'Update'):
@@ -112,16 +113,19 @@ class SurfIO(object):
         #self.log_info("updated grid")
 
         # loadSurfResults - regions/loads
-        self.scalarBar.VisibilityOn()
-        self.scalarBar.Modified()
+        self.gui.scalarBar.VisibilityOn()
+        self.gui.scalarBar.Modified()
 
-        self.isubcase_name_map = {1: ['AFLR Surface', '']}
-        cases = {}
+        self.gui.isubcase_name_map = {1: ['AFLR Surface', '']}
+        cases = OrderedDict()
         ID = 1
 
-        form, cases = self._fill_surf_case(surf_filename, cases, ID, nnodes, nelements, model)
+        form, cases, node_ids, element_ids = self._fill_surf_case(
+            surf_filename, cases, ID, nnodes, nelements, model)
+        self.gui.node_ids = node_ids
+        self.gui.element_ids = element_ids
         if plot:
-            self._finish_results_io2(form, cases)
+            self.gui._finish_results_io2(form, cases)
 
     def clear_surf(self):
         pass
@@ -228,7 +232,7 @@ class SurfIO(object):
                 int_data[i, :] = [is_visc, is_recon, is_rebuild, is_fixed,
                                   is_source, is_trans, is_delete, nlayers]
                 float_data[i, :] = [bl_spacing, bl_thickness]
-                self.log.info('data[%i] = %s' % (key, name))
+                self.gui.log.info('data[%i] = %s' % (key, name))
 
             has_tag_data = True
             tag_form = []
@@ -285,4 +289,4 @@ class SurfIO(object):
         results_form = []
         if len(results_form):
             form.append(('Results', None, results_form))
-        return form, cases
+        return form, cases, nids, eids

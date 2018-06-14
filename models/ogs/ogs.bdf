@@ -68,7 +68,7 @@ LOAD = 101
 OUTPUT(POST)
 SET 1 = ALL 
 SURFACE 666 SET 1 NORMAL Y 
-$SURFACE 666 SET 1 NORMAL Z 
+SURFACE 666 SET 1 NORMAL Z 
 $*
 $*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 $*

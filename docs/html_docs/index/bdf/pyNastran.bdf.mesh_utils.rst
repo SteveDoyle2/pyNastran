@@ -76,9 +76,9 @@ mesh_utils Package
 :mod:`mirror_mesh` Module
 *************************
 
-.. inheritance-diagram:: pyNastran.bdf.bdf_interface.mirror_mesh
+.. inheritance-diagram:: pyNastran.bdf.mesh_utils.mirror_mesh
 
-.. automodule:: pyNastran.bdf.bdf_interface.mirror_mesh
+.. automodule:: pyNastran.bdf.mesh_utils.mirror_mesh
     :members:
     :private-members:
     :undoc-members:

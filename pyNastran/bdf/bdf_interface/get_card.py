@@ -811,8 +811,12 @@ class GetCard(GetMethods):
         fail_nids = set()
         fail_count = 0
         fail_count_max = 3
+        loads_to_skip = ['MOMENT', 'MOMENT1', 'MOMENT2', 'FORCE1', 'TEMP']
         for load, scale in zip(loads, scale_factors):
-            if load.type == 'FORCE':
+            load_type = load.type
+            if load_type in loads_to_skip:
+                pass
+            elif load_type == 'FORCE':
                 scale2 = load.mag * scale  # does this need a magnitude?
                 nid = load.node
                 if nid in dependents_nodes:
@@ -823,7 +827,7 @@ class GetCard(GetMethods):
                             nid, str(load)))
                 forces[nid_map[nid]] += load.xyz * scale2
 
-            elif load.type == 'PLOAD':
+            elif load_type == 'PLOAD':
                 pressure = load.pressure * scale
                 nnodes = len(load.nodes)
                 if nnodes == 4:
@@ -847,7 +851,7 @@ class GetCard(GetMethods):
                 for nid in load.nodes:
                     forces[nid_map[nid]] += forcei
 
-            elif load.type == 'PLOAD2':
+            elif load_type == 'PLOAD2':
                 pressure = load.pressure * scale  # there are 4 pressures, but we assume p0
                 for eid in load.eids:
                     elem = self.elements[eid]
@@ -877,9 +881,14 @@ class GetCard(GetMethods):
                         self.log.debug('    case=%s etype=%r loadtype=%r not supported' % (
                             load_case_id, elem.type, load.type))
 
-            elif load.type == 'PLOAD4':
+            elif load_type == 'PLOAD4':
                 # multiple elements
+                eids_missing = []
                 for elem in load.eids_ref:
+                    if isinstance(elem, integer_types):
+                        # Nastran is NOT OK with missing element ids
+                        eids_missing.append(elem)
+                        continue
                     ie = eid_map[elem.eid]
                     normal = normals[ie, :]
                     # pressures[eids.index(elem.eid)] += p
@@ -1045,8 +1054,10 @@ class GetCard(GetMethods):
                         #load.cid.transformToGlobal()
                         #m = cross(r, f)
                         #M += m
+                if eids_missing:
+                    self.log.error('missing PLOAD4 element ids=%s on:\n%s' % (eids_missing, load.rstrip()))
 
-            elif load.type == 'SPCD':
+            elif load_type == 'SPCD':
                 #self.gids = [integer(card, 2, 'G1'),]
                 #self.constraints = [components_or_blank(card, 3, 'C1', 0)]
                 #self.enforced = [double_or_blank(card, 4, 'D1', 0.0)]
@@ -1061,18 +1072,14 @@ class GetCard(GetMethods):
                     assert c1 in [1, 2, 3, 4, 5, 6], c1
                     if c1 < 4:
                         spcd[nid_map[nid], c1 - 1] = d1
-            elif load.type in ['FORCE1', 'MOMENT1']:
-                pass
-            elif load.type in ['TEMP']:
-                pass
-            elif load.type == 'SLOAD':
+            elif load_type == 'SLOAD':
                 for nid, mag in zip(load.nodes, load.mags):
                     forces[nid_map[nid]] += np.array([mag, 0., 0.])
             else:
-                if load.type not in cards_ignored:
-                    cards_ignored.add(load.type)
+                if load_type not in cards_ignored:
+                    cards_ignored.add(load_type)
                     self.log.warning('  _get_forces_moments_array - unsupported '
-                                     'load.type = %s' % load.type)
+                                     'load.type = %s' % load_type)
         if fail_count:
             fail_nids_list = list(fail_nids)
             fail_nids_list.sort()
@@ -1128,8 +1135,14 @@ class GetCard(GetMethods):
                 self.log.debug('  NastranIOv iload=%s/%s' % (iload, nloads))
             if load.type == 'PLOAD4':
                 #print(load.object_attributes())
+                eids_missing = []
                 for elem in load.eids_ref:
                     #elem = self.elements[eid]
+                    if isinstance(elem, integer_types):
+                        eids_missing.append(elem)
+                        # Nastran is NOT OK with missing element ids
+                        continue
+
                     if elem.type in ['CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR',
                                      'CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR']:
                         pressure = load.pressures[0] * scale
@@ -1150,6 +1163,9 @@ class GetCard(GetMethods):
                         #r = centroid - p
                     else:
                         etypes_skipped.add(elem.type)
+                if eids_missing:
+                    self.log.error('missing PLOAD4 element ids=%s on:\n%s' % (eids_missing, load.rstrip()))
+
             elif load.type == 'PLOAD2':
                 pressure = load.pressure * scale  # there are 4 pressures, but we assume p0
                 for eid in load.eids:
@@ -1214,7 +1230,7 @@ class GetCard(GetMethods):
             'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4',
             'GRAV', 'ACCEL', 'ACCEL1', 'GMLOAD',
             'ACSRCE', 'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',
-            'RFORCE', 'RFORCE1',
+            'RFORCE', 'RFORCE1', 'SPCD',
         ]
         for load, scale in zip(loads, scale_factors):
             assert scale == 1.0, str(load)
@@ -1226,7 +1242,7 @@ class GetCard(GetMethods):
             elif load.type in skip_loads:
                 pass
             else:
-                self.log.debug(load)
+                self.log.debug(load.rstrip())
         return is_temperatures, temperatures
 
     def _get_rigid(self):
@@ -1281,6 +1297,8 @@ class GetCard(GetMethods):
                 #assert len(independent) == 1, independent
                 if len(independent) != 1 or len(dependent) != 1:
                     msg = 'skipping card because len(independent) != 1 or len(dependent) != 1\n'
+                    msg += '  independent = %s\n'  % independent
+                    msg += '  dependent = %s\n'  % dependent
                     msg += str(elem)
                     self.log.error(msg)
                     continue
@@ -1488,7 +1506,7 @@ class GetCard(GetMethods):
             raise
         rbes = []
         for eid, rigid_element in iteritems(self.rigid_elements):
-            if rigid_element.type in ['RBE3', 'RBE2', 'RBE1', 'RBAR', 'RSPLINE']:
+            if rigid_element.type in ['RBE3', 'RBE2', 'RBE1', 'RBAR', 'RSPLINE', 'RROD']:
                 independent_nodes = set(rigid_element.independent_nodes)
                 dependent_nodes = set(rigid_element.dependent_nodes)
                 rbe_nids = independent_nodes | dependent_nodes
@@ -2587,3 +2605,21 @@ class GetCard(GetMethods):
                     raise NotImplementedError(mpc)
                 self.log.warning('not considering:\n%s' % str(mpc))
         return nids, comps
+
+    def get_mklist(self):
+        """gets the MKLIST vector from MKAERO1/MKAERO2"""
+        mklist = []
+        mkarray = np.array([])
+        for mkaero in self.mkaeros:
+            mklist += mkaero.mklist()
+        if mklist:
+            mkarray = np.hstack([mklist])
+
+            #print('mklist =', mklist)
+            new_array = [tuple(row) for row in mkarray]
+            #print('new_array =', new_array)
+            uniques = np.lib.arraysetops.unique(new_array).tolist()
+            #for u in uniques:
+                #print(u)
+            #print('uniques =', uniques)
+        return mkarray

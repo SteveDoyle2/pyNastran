@@ -54,7 +54,7 @@ Documentation
 --------------
 
 
-:mod:`pyNastran` uses `Sphinx <http://www.doxygen.org/>`_ for docstrings with 
+:mod:`pyNastran` uses `Sphinx <http://www.sphinx-doc.org/en/master/>`_ for docstrings with 
 Numpy's `style guide <https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt>`_
 for documenting variables.  This style is nice because:
 

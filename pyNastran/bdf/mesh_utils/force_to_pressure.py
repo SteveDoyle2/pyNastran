@@ -6,9 +6,7 @@ from pyNastran.bdf.bdf import read_bdf, BDF, FORCE, PLOAD4
 
 
 def force_to_pressure(bdf_filename, bdf_filename_out=None):
-    """
-    converts FORCE cards to PLOAD4s for a shell model
-    """
+    """converts FORCE cards to PLOAD4s for a shell model"""
     if isinstance(bdf_filename, BDF):
         model = bdf_filename
     else:

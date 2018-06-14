@@ -10,13 +10,16 @@ class ResultsWindow(QWidget):
     A ResultsWindow creates the box where we actually select our
     results case.  It does not have an apply button.
     """
-    def __init__(self, parent, name, data, choices):
+    def __init__(self, parent, name, data, choices,
+                 include_clear=True, include_delete=True):
         QWidget.__init__(self)
         self.name = name
         self.data = data
         self.choices = choices
         self.parent = parent
-        self.treeView = RightClickTreeView(self, self.data, choices)
+        self.treeView = RightClickTreeView(
+            self, self.data, choices,
+            include_clear=include_clear, include_delete=include_delete)
         self.treeView.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
         self.model = QtGui.QStandardItemModel()
@@ -87,6 +90,7 @@ class ResultsWindow(QWidget):
                 if children:
                     assert isinstance(children, list), children
                     self.addItems(item, children, level + 1, count_check=count_check)
+                    #print('*children = %s' % children)
             is_single = redo
             return is_single
         except ValueError:
@@ -94,8 +98,8 @@ class ResultsWindow(QWidget):
             print('elements =', elements)
             print('element =', element)
             print('len(elements)=%s' % len(elements))
-            for e in elements:
-                print('  e = %s' % str(e))
+            for elem in elements:
+                print('  e = %s' % str(elem))
             raise
         #if redo:
         #    data = [

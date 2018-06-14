@@ -166,7 +166,7 @@ class PFAST(Property):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by PFAST pid=%s' % self.pid
+        msg = ', which is required by PFAST pid=%s' % self.pid
         if self.mcid != -1:
             self.mcid_ref = model.Coord(self.Mcid(), msg)
 
@@ -495,7 +495,7 @@ class PRAC2D(CrackProperty):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by PRAC2D pid=%s' % self.pid
+        msg = ', which is required by PRAC2D pid=%s' % self.pid
         self.mid = model.Material(self.mid, msg)  # MAT1, MAT2, MAT8
         self.mid_ref = self.mid
 
@@ -576,7 +576,7 @@ class PRAC3D(CrackProperty):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by PRAC3D pid=%s' % self.pid
+        msg = ', which is required by PRAC3D pid=%s' % self.pid
         self.mid = model.Material(self.mid, msg)  # MAT1, MAT9
         self.mid_ref = self.mid
 

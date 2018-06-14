@@ -4,6 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 defines:
  - polar_to_real_imag
  - real_imag_to_mag_phase
+
 """
 
 import numpy as np
@@ -29,6 +30,7 @@ def polar_to_real_imag(mag, phase):
         the real component a of a+bi
     imag_value : float
         the imaginary component b of a+bi
+
     """
     rtheta = np.radians(phase)
     return mag * (np.cos(rtheta) + 1.j * np.sin(rtheta))

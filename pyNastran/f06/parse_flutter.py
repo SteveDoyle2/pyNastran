@@ -9,7 +9,8 @@ import matplotlib.pyplot as plt
 from pyNastran.utils.log import get_logger2
 from pyNastran.f06.flutter_response import FlutterResponse
 
-def make_flutter_response(f06_filename, f06_units=None, out_units=None):
+
+def make_flutter_response(f06_filename, f06_units=None, out_units=None, log=None):
     """
     Creates the FlutterResponse object
 
@@ -29,32 +30,11 @@ def make_flutter_response(f06_filename, f06_units=None, out_units=None):
            subcase_id
         value : FlutterResponse()
     """
-    if f06_units is None:
-        f06_units = {'velocity' : 'in/s', 'density' : 'slinch/in^3',
-                     'altitude' : 'NA', 'dynamic_pressure' : 'psi', 'eas':'in/s'}
-    if out_units is None:
-        out_units = {'velocity' : 'in/s', 'density' : 'slug/ft^3',
-                     'altitude' : 'ft', 'dynamic_pressure' : 'psf', 'eas':'ft/s'}
-    elif isinstance(out_units, str):
-        out_units = out_units.lower()
-        if out_units == 'si':
-            out_units = {'velocity' : 'm/s', 'density' : 'kg/m^3',
-                         'altitude' : 'm', 'dynamic_pressure' : 'Pa', 'eas':'m/s'}
-        elif out_units == 'english_in':
-            out_units = {'velocity' : 'in/s', 'density' : 'slinch/in^3',
-                         'altitude' : 'ft', 'dynamic_pressure' : 'psi', 'eas':'in/s'}
-        elif out_units == 'english_ft':
-            out_units = {'velocity' : 'ft/s', 'density' : 'slug/ft^3',
-                         'altitude' : 'ft', 'dynamic_pressure' : 'psf', 'eas':'ft/s'}
-        elif out_units == 'english_kt':
-            out_units = {'velocity' : 'knots', 'density' : 'slug/ft^3',
-                         'altitude' : 'ft', 'dynamic_pressure' : 'psf', 'eas':'knots'}
-        else:
-            raise NotImplementedError('out_units=%r' % out_units)
-    else:
-        assert isinstance(out_units, dict), 'out_units=%r' % (out_units)
+    f06_units = _get_units(f06_units)
+    out_units = _get_units(out_units)
 
-    log = get_logger2(log=None, debug=True, encoding='utf-8')
+    if log is None:
+        log = get_logger2(log=None, debug=True, encoding='utf-8')
     flutters = {}
     iline = 0
 
@@ -95,8 +75,8 @@ def make_flutter_response(f06_filename, f06_units=None, out_units=None):
                 new_subcase = int(sline[isubcase + 1])
                 #print('subcasei = %r' % new_subcase)
                 if new_subcase > subcase:
-                    log.info('subcase=%s -> new_subcase=%s' % (subcase, new_subcase))
-                    log.info('modes1 = %s' % modes)
+                    log.debug('subcase=%s -> new_subcase=%s' % (subcase, new_subcase))
+                    log.debug('modes1 = %s' % modes)
                     flutter = FlutterResponse(subcase, configuration, xysym, xzsym,
                                               mach, density_ratio, method,
                                               modes, results,
@@ -134,7 +114,7 @@ def make_flutter_response(f06_filename, f06_units=None, out_units=None):
                 sline = last_line.strip().split()
                 isubcase = sline.index('SUBCASE')
                 subcase = int(sline[isubcase + 1])
-                log.info('subcase = %s' % subcase)
+                log.debug('subcase = %s' % subcase)
 
             configuration_sline = f06_file.readline().split()
             iline += 1
@@ -214,7 +194,7 @@ def make_flutter_response(f06_filename, f06_units=None, out_units=None):
                 modes.append(mode)
             #print('')
 
-        log.info('modes = %s' % modes)
+        log.debug('modes = %s' % modes)
         flutter = FlutterResponse(subcase, configuration, xysym, xzsym,
                                   mach, density_ratio, method,
                                   modes, results,
@@ -222,11 +202,40 @@ def make_flutter_response(f06_filename, f06_units=None, out_units=None):
         flutters[subcase] = flutter
     return flutters
 
+def _get_units(units):
+    """gets the units"""
+    if units is None:
+        units = 'english_in'
+        #units = {'velocity' : 'in/s', 'density' : 'slug/ft^3',
+                 #'altitude' : 'ft', 'dynamic_pressure' : 'psf', 'eas':'ft/s'}
+
+    if isinstance(units, str):
+        units = units.lower()
+        if units == 'si':
+            units = {'velocity' : 'm/s', 'density' : 'kg/m^3',
+                         'altitude' : 'm', 'dynamic_pressure' : 'Pa', 'eas':'m/s'}
+        elif units == 'english_in':
+            units = {'velocity' : 'in/s', 'density' : 'slinch/in^3',
+                         'altitude' : 'ft', 'dynamic_pressure' : 'psi', 'eas':'in/s'}
+        elif units == 'english_ft':
+            units = {'velocity' : 'ft/s', 'density' : 'slug/ft^3',
+                         'altitude' : 'ft', 'dynamic_pressure' : 'psf', 'eas':'ft/s'}
+        elif units == 'english_kt':
+            units = {'velocity' : 'knots', 'density' : 'slug/ft^3',
+                         'altitude' : 'ft', 'dynamic_pressure' : 'psf', 'eas':'knots'}
+        else:
+            raise NotImplementedError('units=%r' % units)
+    else:
+        assert isinstance(units, dict), 'units=%r' % (units)
+    return units
+
+
 def plot_flutter_f06(f06_filename, f06_units=None, out_units=None,
                      plot_type='tas', modes=None,
                      plot_vg=False, plot_vg_vf=False, plot_root_locus=False,
                      plot_kfreq_damping=False, show=True,
-                     xlim=None, ylim_damping=None, ylim_freq=None, nopoints=False):
+                     xlim=None, ylim_damping=None, ylim_freq=None, nopoints=False,
+                     log=None):
     """
     Plots a flutter (SOL 145) deck
 
@@ -289,7 +298,7 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None,
      o fixing unconverged points
     """
     flutters = make_flutter_response(
-        f06_filename, f06_units=f06_units, out_units=out_units)
+        f06_filename, f06_units=f06_units, out_units=out_units, log=log)
 
     make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq,
                        plot_type,
@@ -319,7 +328,10 @@ def make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq,
         if plot_root_locus:
             flutter.plot_root_locus(modes=modes, show=False)
         if plot_kfreq_damping:
-            flutter.plot_kfreq_damping(modes=modes, show=False)
+            flutter.plot_kfreq_damping(modes=modes,
+                                       ylim_damping=ylim_damping,
+                                       ylim_kfreq=None,
+                                       show=False)
     if show:
         plt.show()
 

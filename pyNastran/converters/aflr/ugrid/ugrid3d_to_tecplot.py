@@ -1,9 +1,34 @@
 from __future__ import print_function
 
 from numpy import zeros, array
-from pyNastran.converters.aflr.ugrid.ugrid_reader import UGRID
+from pyNastran.converters.aflr.ugrid.ugrid_reader import UGRID, read_ugrid
 from pyNastran.converters.tecplot.tecplot import Tecplot
 
+def get_ugrid_model(ugrid_filename, log=None, debug=False):
+    """helper method for loading UGRID models
+
+    Parameters
+    ----------
+    ugrid_filename : varies
+        str : the input UGRID filename
+        UGRID : the UGRID object
+
+    Returns
+    -------
+    ugrid_model : UGRID()
+        the UGRID object
+    """
+    if isinstance(ugrid_filename, str):
+        #assert os.path.exists(ugrid_filename), '%r doesnt exist' % ugrid_filename
+        model = read_ugrid(ugrid_filename=ugrid_filename,
+                           encoding=None, log=log, debug=debug,
+                           read_shells=True, read_solids=True, check=True)
+        #UGRID(log=log, debug=debug)
+        #model.read_ugrid(ugrid_filename)
+    else:
+        model = ugrid_filename
+        assert isinstance(model, UGRID), 'expected UGRID; type(model)=%s' % type(model)
+    return model
 
 def ugrid3d_to_tecplot_filename(ugrid_filename, tecplot_filename,
                                 log=None, debug=False):
@@ -21,23 +46,24 @@ def ugrid3d_to_tecplot_filename(ugrid_filename, tecplot_filename,
         a logger object
     debug : bool; default=False
         developer debug
+
+    Returns
+    -------
+    tecplot_model : Tecplot()
+        the Tecplot object
     """
-    if isinstance(ugrid_filename, str):
-        #assert os.path.exists(ugrid_filename), '%r doesnt exist' % ugrid_filename
-        model = UGRID(log=log, debug=debug)
-        model.read_ugrid(ugrid_filename)
-    else:
-        model = ugrid_filename
-    model.write_tecplot(tecplot_filename)
+    ugrid_model = get_ugrid_model(ugrid_filename, log=log, debug=debug)
+    tecplot = write_tecplot(ugrid_model, tecplot_filename)
+    return tecplot
 
+def write_tecplot(ugrid_model, tecplot_filename):
+    ugrid_model.check_hanging_nodes()
+    tecplot = ugrid_to_tecplot(ugrid_model)
+    tecplot.write_tecplot(tecplot_filename, adjust_nids=True)  # is adjust correct???
+    tecplot.results = array([], dtype='float32')
+    return tecplot
 
-#def write_tecplot(self, tecplot_filename):
-    #self.check_hanging_nodes()
-    #tecplot = ugrid_to_tecplot(self)
-    #tecplot.write_tecplot(tecplot_filename, adjust_nids=True)  # is adjust correct???
-    #tecplot.results = array([], dtype='float32')
-
-def ugrid_to_tecplot(ugrid_model, tecplot_filename=None, debug=False):
+def ugrid_to_tecplot(ugrid_filename, tecplot_filename=None, log=None, debug=False):
     """
     Converts a UGRID to a Tecplot ASCII file.
 
@@ -48,7 +74,17 @@ def ugrid_to_tecplot(ugrid_model, tecplot_filename=None, debug=False):
         UGRID : the UGRID object
     tecplot_filename : str
         the output Tecplot filename
+    log : logger; default=None
+        a logger object
+    debug : bool; default=False
+        developer debug
+
+    Returns
+    -------
+    tecplot_model : Tecplot()
+        the Tecplot object
     """
+    ugrid_model = get_ugrid_model(ugrid_filename, log=log, debug=debug)
     nnodes = len(ugrid_model.nodes)
     nodes = zeros((nnodes, 3), dtype='float64')
     ugrid_model.check_hanging_nodes()

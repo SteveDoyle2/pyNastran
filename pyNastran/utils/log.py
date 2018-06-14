@@ -18,6 +18,7 @@ try:
     from colorama import init as colorinit, Fore  # type: ignore
     colorinit(autoreset=True)
     IS_COLORAMA = True
+    #IS_COLORAMA = False
 except ImportError:
     IS_COLORAMA = False
 

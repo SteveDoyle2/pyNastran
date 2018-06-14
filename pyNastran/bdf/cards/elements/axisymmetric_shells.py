@@ -56,11 +56,14 @@ class AxisymmetricTri(Element):
         Get the centroid.
 
         .. math::
-          CG = \frac{1}{3} (n_0+n_1+n_2)
+          CG = \frac{1}{3} (n_1+n_2+n_3)
         """
         n1, n2, n3 = self.get_node_positions(nodes=self.nodes_ref[:3])
         centroid = (n1 + n2 + n3) / 3.
         return centroid
+
+    def center_of_mass(self):
+        return self.Centroid()
 
     def Mass(self):
         unused_n1, unused_n2, unused_n3 = self.get_node_positions(nodes=self.nodes_ref[:3])
@@ -88,6 +91,20 @@ class AxisymmetricQuad(Element):
         unused_n1, unused_n2, unused_n3, unused_n4 = self.get_node_positions(
             nodes=self.nodes_ref[:4])
         return 0.
+
+    def Centroid(self):
+        r"""
+        Get the centroid.
+
+        .. math::
+          CG = \frac{1}{4} (n_1+n_2+n_3+n_4)
+        """
+        n1, n2, n3, n4 = self.get_node_positions(nodes=self.nodes_ref[:4])
+        centroid = (n1 + n2 + n3 + n4) / 4.
+        return centroid
+
+    def center_of_mass(self):
+        return self.Centroid()
 
 class CTRAX3(AxisymmetricTri):
     """
@@ -195,9 +212,22 @@ class CTRAX3(AxisymmetricTri):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CTRIAX eid=%s' % self.eid
+        msg = ', which is required by CTRAX eid=%s' % self.eid
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CTRAX eid=%s' % self.eid
+        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -338,9 +368,22 @@ class CTRAX6(AxisymmetricTri):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CTRAX6 eid=%s' % self.eid
+        msg = ', which is required by CTRAX6 eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CTRAX6 eid=%s' % self.eid
+        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -486,9 +529,22 @@ class CTRIAX(AxisymmetricTri):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CTRIAX eid=%s' % self.eid
+        msg = ', which is required by CTRIAX eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CTRIAX eid=%s' % self.eid
+        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -556,6 +612,7 @@ class CTRIAX6(TriShell):
         self.theta = theta
         self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(nids) == 6, 'error on CTRIAX6'
+        self.mid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -599,9 +656,22 @@ class CTRIAX6(TriShell):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CTRIAX6 eid=%s' % self.eid
+        msg = ', which is required by CTRIAX6 eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
         self.mid_ref = model.Material(self.mid)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CTRIAX6 eid=%s' % self.eid
+        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
+        self.mid_ref = model.safe_material(self.mid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -672,7 +742,7 @@ class CTRIAX6(TriShell):
         return 0.
 
     def Mid(self):
-        if isinstance(self.mid, integer_types):
+        if self.mid_ref is None:
             return self.mid
         return self.mid_ref.mid
 
@@ -828,9 +898,22 @@ class CQUADX(AxisymmetricQuad):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CQUADX eid=%s' % self.eid
+        msg = ', which is required by CQUADX eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.Property(self.Pid(), msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CQUADX eid=%s' % self.eid
+        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -953,9 +1036,22 @@ class CQUADX4(AxisymmetricQuad):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CQUADX eid=%s' % self.eid
+        msg = ', which is required by CQUADX4 eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.Property(self.Pid(), msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CQUADX4 eid=%s' % self.eid
+        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -1069,9 +1165,22 @@ class CQUADX8(AxisymmetricQuad):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CQUADX8 eid=%s' % self.eid
+        msg = ', which is required by CQUADX8 eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.Property(self.Pid(), msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CQUADX8 eid=%s' % self.eid
+        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids

@@ -54,17 +54,17 @@ class TestMaterials(unittest.TestCase):
         mat1.write_card(size=16, is_double=False)
         mat1.validate()
 
-        E_table = 1
-        G_table = 2
+        e_table = 1
+        g_table = 2
         nu_table = 3
         rho_table = 4
-        A_table = 4
+        a_table = 4
         ge_table = 4
         st_table = 4
         sc_table = 4
         ss_table = 4
-        matt1 = model.add_matt1(mid, E_table, G_table, nu_table, rho_table,
-                                A_table, ge_table, st_table, sc_table, ss_table,
+        matt1 = model.add_matt1(mid, e_table, g_table, nu_table, rho_table,
+                                a_table, ge_table, st_table, sc_table, ss_table,
                                 comment='matt1')
         matt1.validate()
 
@@ -146,12 +146,12 @@ class TestMaterials(unittest.TestCase):
         mat2.write_card(size=16, is_double=False)
         mat2.validate()
 
-        G11_table = 1
-        G12_table = 2
-        G13_table = 3
-        G22_table = 4
-        G23_table = 1
-        G33_table = 1
+        g11_table = 1
+        g12_table = 2
+        g13_table = 3
+        g22_table = 4
+        g23_table = 1
+        g33_table = 1
         rho_table = 1
         a1_table = 1
         a2_table = 1
@@ -160,8 +160,8 @@ class TestMaterials(unittest.TestCase):
         st_table = 1
         sc_table = 1
         ss_table = 1
-        matt2 = model.add_matt2(mid, G11_table, G12_table, G13_table, G22_table,
-                                G23_table, G33_table, rho_table,
+        matt2 = model.add_matt2(mid, g11_table, g12_table, g13_table, g22_table,
+                                g23_table, g33_table, rho_table,
                                 a1_table, a2_table, a3_table,
                                 ge_table, st_table, sc_table, ss_table,
                                 comment='matt2')
@@ -240,6 +240,7 @@ class TestMaterials(unittest.TestCase):
         tablem4.write_card()
 
         model.validate()
+        model.pop_parse_errors()
         model.cross_reference()
         model.pop_xref_errors()
         #matt3.write_card(size=16, is_double=False)
@@ -405,8 +406,8 @@ class TestMaterials(unittest.TestCase):
         mat8.validate()
 
         matt8 = model.add_matt8(
-            mid, E1_table=1, E2_table=2, Nu12_table=3,
-            G12_table=4, G1z_table=1, G2z_table=1, rho_table=1,
+            mid, e1_table=1, e2_table=2, nu12_table=3,
+            g12_table=4, g1z_table=1, g2z_table=1, rho_table=1,
             a1_table=1, a2_table=1,
             xt_table=1, xc_table=1, yt_table=1, yc_table=1,
             s_table=1, ge_table=1, f12_table=1, comment='matt8')
@@ -570,10 +571,18 @@ class TestMaterials(unittest.TestCase):
 
     def test_nxstrat(self):
         params = {
-            'AUTO' : 1,
-            'MAXITE' : 30,
+            #'AUTO' : 1,
+            #'MAXITE' : 30,
             'RTOL' : 0.005,
-            'ATSNEXT' : 3,
+            #'ATSNEXT' : 3,
+            'A' : 1,
+            'B' : 2,
+            'C' : 3,
+            'D' : 4,
+            'E' : 5,
+            'F' : 6,
+            'G' : 7,
+            'H' : 8,
         }
         model = BDF(debug=False)
         nxstrat = model.add_nxstrat(42, params)

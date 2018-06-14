@@ -19,6 +19,7 @@ Defines the main OP2 class.  Defines:
    - set_mode(mode)
    - transform_displacements_to_global(i_transform, coords, xyz_cid0=None, debug=False)
    - transform_gpforce_to_global(nids_all, nids_transform, i_transform, coords, xyz_cid0=None)
+
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -88,6 +89,7 @@ def read_op2(op2_filename=None, combine=True, subcases=None,
 
     .. note :: this method will change in order to return an object that
                does not have so many methods
+
     """
     model = OP2(log=log, debug=debug, debug_file=debug_file, mode=mode)
     model.set_subcases(subcases)
@@ -138,6 +140,7 @@ class OP2(OP2_Scalar):
             sets the filename that will be written to
         mode : str; default='msc'
             {msc, nx}
+
         """
         self.encoding = None
         self.set_mode(mode)
@@ -168,6 +171,7 @@ class OP2(OP2_Scalar):
         attribute_names : List[str]
             sorted list of the names of attributes of a given type or None
             if the mode is wrong
+
         """
         if keys_to_skip is None:
             keys_to_skip = []
@@ -201,6 +205,7 @@ class OP2(OP2_Scalar):
         method : List[str]
             sorted list of the names of methods of a given type
             or None if the mode is wrong
+
         """
         if keys_to_skip is None:
             keys_to_skip = []
@@ -244,6 +249,7 @@ class OP2(OP2_Scalar):
         ------
         AssertionError/ValueError : stop_on_failure=True and and error occurred
         NotImplementedError : this is a sign of an unsupported object
+
         """
         if not self.read_mode == op2_model.read_mode:
             self.log.warning('self.read_mode=%s op2_model.read_mode=%s ... assume True' % (
@@ -325,6 +331,7 @@ class OP2(OP2_Scalar):
         ------
         AssertionError/ValueError : stop_on_failure=True and and error occurred
         NotImplementedError : this is a sign of an unsupported object
+
         """
         # check the name (e.g., RealDisplacementArray vs. ComplexDisplacementArray)
         aname = a_obj.__class__.__name__
@@ -523,6 +530,7 @@ class OP2(OP2_Scalar):
              True : prevents matrix reading crashes
         encoding : str
             the unicode encoding (default=None; system default)
+
         """
         if build_dataframe is None:
             build_dataframe = False
@@ -564,7 +572,8 @@ class OP2(OP2_Scalar):
         creates the following objects:
           - sonitor3 : MONPNT3 object from the MP3F matrix
           - monitor1 : MONPNT1 object from the PMRF, PERF, PFRF, AGRF, PGRF, AFRF matrices
-          """
+
+        """
         if 'MP3F' in self.matrices:
             self.monitor3 = MONPNT3(self._frequencies, self.matrices['MP3F'])
 
@@ -595,6 +604,7 @@ class OP2(OP2_Scalar):
          - RealPlateStressArray (???)
          - RealPlateStrainArray (???)
          - RealCompositePlateStrainArray (???)
+
         """
         # TODO: sorter = uniques.argsort()
         #C:\Anaconda\lib\site-packages\pandas\core\algorithms.py:198: DeprecationWarning: unorderable dtypes;
@@ -648,65 +658,30 @@ class OP2(OP2_Scalar):
                     self.log.error('build_dataframe is broken for %s' % class_name)
                     raise
 
+    def load_hdf5(self, hdf5_filename, combine=True):
+        """loads an h5 file into an OP2 object"""
+        assert os.path.exists(hdf5_filename), print_bad_path(hdf5_filename)
+        from pyNastran.op2.op2_interface.hdf5_interface import load_op2_from_hdf5_file
+        import h5py
+        self.op2_filename = hdf5_filename
+
+        self.log.info('hdf5_op2_filename = %r' % hdf5_filename)
+        debug = False
+        with h5py.File(hdf5_filename, 'r') as h5_file:
+            load_op2_from_hdf5_file(self, h5_file, self.log, debug=debug)
+        self.combine_results(combine=combine)
+
     def export_to_hdf5(self, hdf5_filename):
         """
         Converts the OP2 objects into hdf5 object
 
         TODO: doesn't support:
-                - matrices
-                - RealEigenvalues
-                - ComplexEigenvalues
-                - BucklingEigenvalues
+          - matrices
+          - BucklingEigenvalues
+
         """
-        import h5py
-        no_sort2_classes = ['RealEigenvalues', 'ComplexEigenvalues', 'BucklingEigenvalues']
-        result_types = self.get_table_types()
-        i = 0
-
-        with h5py.File(hdf5_filename, 'w') as hdf5_file:
-            info_group = hdf5_file.create_group('info')
-            info_group.create_dataset('pyNastran_version', data=pyNastran.__version__)
-            info_group.create_dataset('nastran_format', data=self._nastran_format)
-            #info_group.create_dataset('is_msc', data=self.is_msc)
-            #info_group.create_dataset('is_nx', data=self.is_nx)
-            #info_group.create_dataset('nastran_version', data=self.is_nx)
-
-            if len(self.matrices):
-                matrix_group = hdf5_file.create_group('matrices')
-                for key, matrix in sorted(iteritems(self.matrices)):
-                    matrixi_group = matrix_group.create_group(b(key))
-                    if hasattr(matrix, 'export_to_hdf5'):
-                        matrix.export_to_hdf5(matrixi_group, self.log)
-                    else:
-                        self.log.warning('HDF5: key=%r type=%s cannot be exported' % (key, str(type(matrix))))
-                        #raise NotImplementedError()
-                        continue
-
-            subcase_groups = {}
-            for result_type in result_types:
-                result = getattr(self, result_type)
-                #if len(result):
-                    #print(result)
-
-                for key, obj in iteritems(result):
-                    class_name = obj.__class__.__name__
-                    #print('working on %s' % class_name)
-                    obj.object_attributes()
-                    subcase_name = 'Subcase=%s' % str(key)
-                    if subcase_name in subcase_groups:
-                        subcase_group = subcase_groups[subcase_name]
-                    else:
-                        subcase_group = hdf5_file.create_group(subcase_name)
-                        subcase_groups[subcase_name] = subcase_group
-
-                    #if hasattr(obj, 'element_name'):
-                        #class_name += ': %s' % obj.element_name
-
-                    #result_name = result_type + ':' + class_name
-                    result_name = result_type
-                    result_group = subcase_group.create_group(result_name)
-                    obj.export_to_hdf5(result_group, self.log)
-                    i += 1
+        from pyNastran.op2.op2_interface.hdf5_interface import export_op2_to_hdf5_file
+        export_op2_to_hdf5_file(hdf5_filename, self)
 
     def combine_results(self, combine=True):
         """
@@ -716,11 +691,11 @@ class OP2(OP2_Scalar):
         .. code-block:: python
 
           stress = {
-              # isubcase, analysis_code, sort_method, count, superelement_adaptivity_index
-              (1, 2, 1, 0, 'SUPERELEMENT 0') : result1,
-              (1, 2, 1, 0, 'SUPERELEMENT 10') : result2,
-              (1, 2, 1, 0, 'SUPERELEMENT 20') : result3,
-              (2, 2, 1, 0, 'SUPERELEMENT 0') : result4,
+              # isubcase, analysis_code, sort_method, count, superelement_adaptivity_index, pval_step
+              (1, 2, 1, 0, 'SUPERELEMENT 0', '') : result1,
+              (1, 2, 1, 0, 'SUPERELEMENT 10', '') : result2,
+              (1, 2, 1, 0, 'SUPERELEMENT 20', '') : result3,
+              (2, 2, 1, 0, 'SUPERELEMENT 0', '') : result4,
           }
         and convert it to:
 
@@ -730,6 +705,7 @@ class OP2(OP2_Scalar):
               1 : result1 + result2 + results3,
               2 : result4,
           }
+
         """
         self.combine = combine
         result_types = self.get_table_types()
@@ -742,12 +718,14 @@ class OP2(OP2_Scalar):
             for case_key in case_keys:
                 #print('case_key =', case_key)
                 if isinstance(case_key, tuple):
-                    isubcasei, analysis_codei, sort_methodi, counti, isuperelmemnt_adaptivity_index, ogs = case_key
+                    isubcasei, analysis_codei, sort_methodi, counti, isuperelmemnt_adaptivity_index, pval_step, ogs = case_key
                     #isubcasei, analysis_codei, sort_methodi, counti, isuperelmemnt_adaptivity_index, table_name = case_key
                     if ogs == 0:
-                        value = (analysis_codei, sort_methodi, counti, isuperelmemnt_adaptivity_index)
+                        value = (analysis_codei, sort_methodi, counti,
+                                 isuperelmemnt_adaptivity_index, pval_step)
                     else:
-                        value = (analysis_codei, sort_methodi, counti, isuperelmemnt_adaptivity_index, ogs)
+                        value = (analysis_codei, sort_methodi, counti,
+                                 isuperelmemnt_adaptivity_index, pval_step, ogs)
 
                     if value not in self.subcase_key[isubcasei]:
                         #print('isubcase=%s value=%s' % (isubcasei, value))
@@ -788,13 +766,13 @@ class OP2(OP2_Scalar):
 
                 if len(key0) == 5:
                     # ogs is optional
-                    isubcase, analysis_code, sort_code, count, isuperelmemnt_adaptivity_index = key0
-                    key1 = (isubcase, analysis_code, 1, count, isuperelmemnt_adaptivity_index)
-                    key2 = (isubcase, analysis_code, 2, count, isuperelmemnt_adaptivity_index)
+                    isubcase, analysis_code, sort_code, count, isuperelmemnt_adaptivity_index, pval_step = key0
+                    key1 = (isubcase, analysis_code, 1, count, isuperelmemnt_adaptivity_index, pval_step)
+                    key2 = (isubcase, analysis_code, 2, count, isuperelmemnt_adaptivity_index, pval_step)
                 else:
-                    isubcase, analysis_code, sort_code, count, isuperelmemnt_adaptivity_index, ogs = key0
-                    key1 = (isubcase, analysis_code, 1, count, isuperelmemnt_adaptivity_index, ogs)
-                    key2 = (isubcase, analysis_code, 2, count, isuperelmemnt_adaptivity_index, ogs)
+                    isubcase, analysis_code, sort_code, count, isuperelmemnt_adaptivity_index, pval_step, ogs = key0
+                    key1 = (isubcase, analysis_code, 1, count, isuperelmemnt_adaptivity_index, pval_step, ogs)
+                    key2 = (isubcase, analysis_code, 2, count, isuperelmemnt_adaptivity_index, pval_step, ogs)
 
                 #isubcase, analysis_code, sort_code, count, isuperelmemnt_adaptivity_index, table_name = key0
                 #key1 = (isubcase, analysis_code, 1, count, isuperelmemnt_adaptivity_index, table_name)
@@ -816,13 +794,15 @@ class OP2(OP2_Scalar):
                     if not (key1 in result and key2 in result):
                         if key1 in result:
                             res1 = result[key1]
-                            self.log.info("res=%s has a single case; trivial" % res1.__class__.__name__)
+                            self.log.info("res=%s has a single case; trivial" %
+                                          res1.__class__.__name__)
                             result[isubcase] = result[key1]
                             #print('del key1=%s' % str(key1))
                             del result[key1]
                         elif key2 in result:
                             res2 = result[key2]
-                            self.log.info("res=%s has a single case; trivial" % res2.__class__.__name__)
+                            self.log.info("res=%s has a single case; trivial" %
+                                          res2.__class__.__name__)
                             result[isubcase] = result[key2]
                             #print('del key2=%s' % str(key2))
                             del result[key2]
@@ -910,7 +890,7 @@ class OP2(OP2_Scalar):
         #print('subcase_ids =', subcase_ids)
 
 
-        # isubcase, analysis_code, sort_method, count, ogs, superelement_adaptivity_index
+        # isubcase, analysis_code, sort_method, count, ogs, superelement_adaptivity_index, pval_step
         #(1, 2, 1, 0, 0, 'SUPERELEMENT 0')  : result1
 
         isubcases = set([])
@@ -919,13 +899,15 @@ class OP2(OP2_Scalar):
         counts = set([])
         ogss = set([])
         superelement_adaptivity_indexs = set([])
+        pval_steps = set([])
 
         for key in keys:
-            if len(key) == 5:
-                isubcase, analysis_code, sort_method, count, superelement_adaptivity_index = key
+            #print('key = %s' % str(key))
+            if len(key) == 6:
+                isubcase, analysis_code, sort_method, count, superelement_adaptivity_index, pval_step = key
                 ogs = 0
-            elif len(key) == 6:
-                isubcase, analysis_code, sort_method, count, ogs, superelement_adaptivity_index = key
+            elif len(key) == 7:
+                isubcase, analysis_code, sort_method, count, ogs, superelement_adaptivity_index, pval_step = key
             else:
                 print('  %s' % str(key))
                 raise RuntimeError(key)
@@ -936,6 +918,7 @@ class OP2(OP2_Scalar):
             counts.add(count)
             ogss.add(ogs)
             superelement_adaptivity_indexs.add(superelement_adaptivity_index)
+            pval_steps.add(pval_step)
 
         isubcases = list(isubcases)
         analysis_codes = list(analysis_codes)
@@ -943,6 +926,7 @@ class OP2(OP2_Scalar):
         counts = list(counts)
         ogss = list(ogss)
         superelement_adaptivity_indexs = list(superelement_adaptivity_indexs)
+        pval_steps = list(pval_steps)
 
         isubcases.sort()
         analysis_codes.sort()
@@ -950,19 +934,21 @@ class OP2(OP2_Scalar):
         counts.sort()
         ogss.sort()
         superelement_adaptivity_indexs.sort()
+        pval_steps.sort()
 
         keys3 = []
         for isubcase in isubcases:
             for count in counts:
                 for analysis_code in analysis_codes:
                     for superelement_adaptivity_index in superelement_adaptivity_indexs:
-                        for sort_method in sort_methods:
-                            for ogs in ogss:
-                                key = (isubcase, analysis_code, sort_method,
-                                       count, ogs, superelement_adaptivity_index)
-                                if key not in keys3:
-                                    #print('adding ', key)
-                                    keys3.append(key)
+                        for pval_step in pval_steps:
+                            for sort_method in sort_methods:
+                                for ogs in ogss:
+                                    key = (isubcase, analysis_code, sort_method,
+                                           count, ogs, superelement_adaptivity_index, pval_step)
+                                    if key not in keys3:
+                                        #print('adding ', key)
+                                        keys3.append(key)
         if len(keys3) == 0:
             self.log.warning('No results...\n' + self.get_op2_stats(short=True))
         #assert len(keys3) > 0, keys3
@@ -1018,6 +1004,7 @@ class OP2(OP2_Scalar):
                   pyNastran's BDF interface uses:
                     - cp=0 for global frames
                     - cp>0 are local frames
+
         """
         #output = {}
         disp_like_dicts = [
@@ -1193,6 +1180,7 @@ class OP2(OP2_Scalar):
             Use this if CD is not rectangular
         xyz_cid0 : ???
             ???
+
         """
         disp_like_dicts = [
             # TODO: causes test_op2_solid_shell_bar_01_gpforce_xyz to fail

@@ -78,13 +78,13 @@ def _triangle_area_centroid_normal(nodes, card):
     length = norm(vector)
     try:
         normal = vector / length
-    except FloatingPointError as e:
+    except FloatingPointError as error:
         #CTRIA3     20152     701   20174   20175   20176    8020
         #vector: [ 0.  0.  0.]; length: 0.0
             #[207.42750549, 0.0, -0.22425441]
             #[207.42750549, 0.0, 0.00631836]
             #[207.42750549, 0.0, 0.69803673]
-        msg = e.message # strerror
+        msg = error.message # strerror
         msg += '\nvector: %s; length: %s' % (vector, length)
         msg += '\n  %s\n  %s\n  %s' % (n0.tolist(), n1.tolist(), n2.tolist())
         raise RuntimeError(msg)
@@ -133,6 +133,18 @@ class ShellElement(Element):
         if self.theta_mcid_ref is None:
             return self.theta_mcid
         return self.theta_mcid_ref.cid
+
+    def _get_theta_mcid_repr(self):
+        # : () -> str
+        """
+        set_blank_if_default doesn't distinguish between 0 and 0.0,
+        so we fix it
+
+        """
+        theta_mcid = self.Theta_mcid()
+        if isinstance(theta_mcid, float):
+            theta_mcid = set_blank_if_default(theta_mcid, 0.0)
+        return theta_mcid
 
     def Thickness(self):
         # () -> float
@@ -187,7 +199,8 @@ class ShellElement(Element):
         """
         Returns the mass per area
         """
-        return self.pid_ref.MassPerArea()
+        tscales = self.get_thickness_scale()
+        return self.pid_ref.MassPerArea(tflag=self.tflag, tscales=tscales)
 
     def Mass(self):
         # () -> float
@@ -195,7 +208,13 @@ class ShellElement(Element):
         .. math:: m = \frac{m}{A} A  \f]
         """
         A = self.Area()
-        mpa = self.pid_ref.MassPerArea()
+        tscales = self.get_thickness_scale()
+        try:
+            mpa = self.pid_ref.MassPerArea(tflag=self.tflag, tscales=tscales)
+        except TypeError:
+            print(self.pid_ref)
+            raise
+
         try:
             return mpa * A
         except TypeError:
@@ -222,11 +241,12 @@ class ShellElement(Element):
         """
         A = self.Area_no_xref(model)
         pid_ref = model.Property(self.pid)
-        mpa = pid_ref.MassPerArea_no_xref(model)
+        tavg_scale = self.get_thickness_scale()
+        mpa = pid_ref.MassPerArea_no_xref(model, tavg_scale)
         try:
             return mpa * A
         except TypeError:
-            msg = 'mass/area=%s area=%s pidType=%s' % (mpa, A, self.pid_ref.type)
+            msg = 'mass/area=%s area=%s prop_type=%s' % (mpa, A, self.pid_ref.type)
             raise TypeError(msg)
 
     #def flip_normal(self):
@@ -261,12 +281,13 @@ class TriShell(ShellElement):
         y = cross(normal, x)
         return x, y
 
+
     def Thickness(self):
         # () -> float
-        """
-        Returns the thickness
-        """
-        return self.pid_ref.Thickness()
+        """Returns the thickness"""
+        tscales = self.get_thickness_scale()
+        return self.pid_ref.Thickness(tflag=self.tflag, tscales=tscales)
+        #return self.pid_ref.Thickness()
 
     def AreaCentroidNormal(self):
         """
@@ -571,13 +592,13 @@ class CTRIA3(TriShell):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CTRIA3 eid=%s' % self.eid
+        msg = ', which is required by CTRIA3 eid=%s' % self.eid
         self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
         self.pid_ref = model.Property(self.Pid(), msg=msg)
         if isinstance(self.theta_mcid, integer_types):
             self.theta_mcid_ref = model.Coord(self.theta_mcid, msg=msg)
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -586,11 +607,11 @@ class CTRIA3(TriShell):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CTRIA3 eid=%s' % self.eid
+        msg = ', which is required by CTRIA3 eid=%s' % self.eid
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
-        self.pid_ref = model.Property(self.pid, msg=msg)
-        #if isinstance(self.theta_mcid, integer_types):
-            #self.theta_mcid_ref = model.Coord(self.theta_mcid, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
+        if isinstance(self.theta_mcid, integer_types):
+            self.theta_mcid_ref = model.safe_coord(self.theta_mcid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -641,6 +662,9 @@ class CTRIA3(TriShell):
         #    t = self.pid_ref.Thickness()
         #return t
 
+    def get_thickness_scale(self):
+        return [self.T1, self.T2, self.T3]
+
     def flip_normal(self):
         """
         Flips normal of element.
@@ -661,8 +685,7 @@ class CTRIA3(TriShell):
     def _get_repr_defaults(self):
         zoffset = set_blank_if_default(self.zoffset, 0.0)
         tflag = set_blank_if_default(self.tflag, 0)
-        theta_mcid = set_blank_if_default(self.Theta_mcid(), 0.0)
-
+        theta_mcid = self._get_theta_mcid_repr()
         T1 = set_blank_if_default(self.T1, 1.0)
         T2 = set_blank_if_default(self.T2, 1.0)
         T3 = set_blank_if_default(self.T3, 1.0)
@@ -688,7 +711,7 @@ class CTRIA3(TriShell):
     def write_card(self, size=8, is_double=False):
         zoffset = set_blank_if_default(self.zoffset, 0.0)
         tflag = set_blank_if_default(self.tflag, 0)
-        theta_mcid = set_blank_if_default(self.Theta_mcid(), 0.0)
+        theta_mcid = self._get_theta_mcid_repr()
 
         T1 = set_blank_if_default(self.T1, 1.0)
         T2 = set_blank_if_default(self.T2, 1.0)
@@ -787,9 +810,22 @@ class CPLSTN3(TriShell):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CPLSTN3 eid=%s' % self.eid
+        msg = ', which is required by CPLSTN3 eid=%s' % self.eid
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.Pid(), msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CPLSTN3 eid=%s' % self.eid
+        self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -1001,9 +1037,22 @@ class CTRIA6(TriShell):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CTRIA6 eid=%s' % self.eid
+        msg = ', which is required by CTRIA6 eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.Property(self.Pid(), msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CTRIA6 eid=%s' % self.eid
+        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -1036,6 +1085,9 @@ class CTRIA6(TriShell):
             for i in range(3):
                 assert isinstance(c[i], float)
                 assert isinstance(n[i], float)
+
+    def get_thickness_scale(self):
+        return [self.T1, self.T2, self.T3]
 
     def Thickness(self):
         """
@@ -1109,7 +1161,7 @@ class CTRIA6(TriShell):
         zoffset = set_blank_if_default(self.zoffset, 0.0)
         assert isinstance(self.tflag, integer_types), self.tflag
         tflag = set_blank_if_default(self.tflag, 0)
-        theta_mcid = set_blank_if_default(self.Theta_mcid(), 0.0)
+        theta_mcid = self._get_theta_mcid_repr()
 
         T1 = set_blank_if_default(self.T1, 1.0)
         T2 = set_blank_if_default(self.T2, 1.0)
@@ -1280,9 +1332,22 @@ class CTRIAR(TriShell):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CTRIAR eid=%s' % self.eid
+        msg = ', which is required by CTRIAR eid=%s' % self.eid
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CTRIAR eid=%s' % self.eid
+        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -1292,10 +1357,11 @@ class CTRIAR(TriShell):
         self.nodes_ref = None
         self.theta_mcid_ref = None
 
+    def get_thickness_scale(self):
+        return [self.T1, self.T2, self.T3]
+
     def Thickness(self):
-        """
-        Returns the thickness
-        """
+        """Returns the thickness"""
         return self.pid_ref.Thickness()
 
     def flip_normal(self):
@@ -1316,7 +1382,7 @@ class CTRIAR(TriShell):
     def _get_repr_defaults(self):
         zoffset = set_blank_if_default(self.zoffset, 0.0)
         tflag = set_blank_if_default(self.tflag, 0)
-        theta_mcid = set_blank_if_default(self.Theta_mcid(), 0.0)
+        theta_mcid = self._get_theta_mcid_repr()
 
         T1 = set_blank_if_default(self.T1, 1.0)
         T2 = set_blank_if_default(self.T2, 1.0)
@@ -1416,11 +1482,18 @@ class QuadShell(ShellElement):
         y = cross(normal, x)
         return x, y
 
+    def get_thickness_scale(self):
+        return None
+
     def Thickness(self):
-        """
-        Returns the thickness
-        """
-        return self.pid_ref.Thickness()
+        """Returns the thickness"""
+        tscales = self.get_thickness_scale()
+        try:
+            return self.pid_ref.Thickness(tflag=self.tflag, tscales=tscales)
+        except TypeError:
+            print(self.pid_ref)
+            raise
+        #return self.pid_ref.Thickness()
 
     def Normal(self):
         try:
@@ -1462,18 +1535,21 @@ class QuadShell(ShellElement):
            c=centroid
            A=area
         """
-        n1, n2, n3, n4 = self.get_node_positions(nodes=self.nodes_ref[:4])
+        nodes_ref = self.nodes_ref[:4]
+        n1, n2, n3, n4 = self.get_node_positions(nodes=nodes_ref)
         area = 0.5 * norm(cross(n3-n1, n4-n2))
         centroid = (n1 + n2 + n3 + n4) / 4.
         return(area, centroid)
 
     def Centroid(self):
-        n1, n2, n3, n4 = self.get_node_positions(nodes=self.nodes_ref[:4])
+        nodes_ref = self.nodes_ref[:4]
+        n1, n2, n3, n4 = self.get_node_positions(nodes=nodes_ref)
         centroid = (n1 + n2 + n3 + n4) / 4.
         return centroid
 
     def Centroid_no_xref(self, model):
-        n1, n2, n3, n4 = self.get_node_positions_no_xref(model, nodes=self.nodes[:4])
+        nodes = self.nodes[:4]
+        n1, n2, n3, n4 = self.get_node_positions_no_xref(model, nodes=nodes)
         centroid = (n1 + n2 + n3 + n4) / 4.
         return centroid
 
@@ -1517,8 +1593,8 @@ class QuadShell(ShellElement):
     def _get_repr_defaults(self):
         zoffset = set_blank_if_default(self.zoffset, 0.0)
         tflag = set_blank_if_default(self.tflag, 0)
-        theta_mcid = set_blank_if_default(self.Theta_mcid(), 0.0)
 
+        theta_mcid = self._get_theta_mcid_repr()
         T1 = set_blank_if_default(self.T1, 1.0)
         T2 = set_blank_if_default(self.T2, 1.0)
         T3 = set_blank_if_default(self.T3, 1.0)
@@ -1679,9 +1755,22 @@ class CSHEAR(QuadShell):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CSHEAR eid=%s' % self.eid
-        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
+        msg = ', which is required by CSHEAR eid=%s' % self.eid
+        self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
         self.pid_ref = model.Property(self.Pid(), msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CSHEAR eid=%s' % self.eid
+        self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -1821,6 +1910,19 @@ class CSHEAR(QuadShell):
     def G(self):
         # type: () -> float
         return self.pid_ref.mid_ref.G()
+
+    def Mass(self):
+        # () -> float
+        r"""
+        .. math:: m = \frac{m}{A} A  \f]
+        """
+        A = self.Area()
+        mpa = self.pid_ref.MassPerArea()
+        try:
+            return mpa * A
+        except TypeError:
+            msg = 'mass/area=%s area=%s prop_type=%s' % (mpa, A, self.pid_ref.type)
+            raise TypeError(msg)
 
     def Thickness(self):
         # type: () -> float
@@ -1994,13 +2096,13 @@ class CQUAD4(QuadShell):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CQUAD4 eid=%s' % self.eid
+        msg = ', which is required by CQUAD4 eid=%s' % self.eid
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
         if isinstance(self.theta_mcid, integer_types):
             self.theta_mcid_ref = model.Coord(self.theta_mcid, msg=msg)
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -2009,11 +2111,11 @@ class CQUAD4(QuadShell):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CQUAD4 eid=%s' % self.eid
+        msg = ', which is required by CQUAD4 eid=%s' % self.eid
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
-        self.pid_ref = model.Property(self.pid, msg=msg)
-        #if isinstance(self.theta_mcid, integer_types):
-            #self.theta_mcid_ref = model.Coord(self.theta_mcid, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
+        if isinstance(self.theta_mcid, integer_types):
+            self.theta_mcid_ref = model.safe_coord(self.theta_mcid, self.eid, xref_errors, msg=msg)
 
     #def x(self, eta, xi, xs):
         #"""Calculate the x-coordinate within the element.
@@ -2295,6 +2397,9 @@ class CQUAD4(QuadShell):
         self.nodes_ref = None
         self.theta_mcid_ref = None
 
+    def get_thickness_scale(self):
+        return [self.T1, self.T2, self.T3, self.T4]
+
     def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
@@ -2373,7 +2478,7 @@ class CQUAD4(QuadShell):
             msg = ('CQUAD4  %8i%8i%8i%8i%8i%8i\n' % tuple(data))
             return self.comment + msg
         else:
-            theta_mcid = set_blank_if_default(self.Theta_mcid(), 0.0)
+            theta_mcid = self._get_theta_mcid_repr()
             zoffset = set_blank_if_default(self.zoffset, 0.0)
             tflag = set_blank_if_default(self.tflag, 0)
             T1 = set_blank_if_default(self.T1, 1.0)
@@ -2460,9 +2565,22 @@ class CPLSTN4(QuadShell):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CPLSTN4 eid=%s' % self.eid
+        msg = ', which is required by CPLSTN4 eid=%s' % self.eid
         self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
         self.pid_ref = model.Property(self.Pid(), msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CPLSTN4 eid=%s' % self.eid
+        self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -2602,9 +2720,22 @@ class CPLSTN6(TriShell):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CPLSTN6 eid=%s' % self.eid
+        msg = ', which is required by CPLSTN6 eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.Property(self.Pid(), msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CPLSTN6 eid=%s' % self.eid
+        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -2803,9 +2934,22 @@ class CPLSTN8(QuadShell):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CQUAD8 eid=%s' % self.eid
+        msg = ', which is required by CPLSTN8 eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.Property(self.Pid(), msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CPLSTN8 eid=%s' % self.eid
+        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -3058,9 +3202,24 @@ class CQUADR(QuadShell):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CQUADR eid=%s' % self.eid
+        msg = ', which is required by CQUADR eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
+        ## TODO: xref coord
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CQUADR eid=%s' % self.eid
+        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
+        ## TODO: xref coord
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -3069,6 +3228,9 @@ class CQUADR(QuadShell):
         self.pid_ref = None
         self.nodes_ref = None
         self.theta_mcid_ref = None
+
+    def get_thickness_scale(self):
+        return [self.T1, self.T2, self.T3, self.T4]
 
     def Thickness(self):
         """
@@ -3258,9 +3420,22 @@ class CPLSTS3(TriShell):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CTRIA3 eid=%s' % self.eid
+        msg = ', which is required by CPLSTS3 eid=%s' % self.eid
         self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
-        self.pid_ref = model.Property(self.Pid(), msg=msg)
+        self.pid_ref = model.Property(self.pid, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CPLSTS3 eid=%s' % self.eid
+        self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -3363,6 +3538,7 @@ class CQUAD(QuadShell):
     theta_mcid is an MSC specific variable
     """
     type = 'CQUAD'
+    #tflag = 1
 
     def __init__(self, eid, pid, nids, theta_mcid=0., comment=''):
         """
@@ -3433,11 +3609,26 @@ class CQUAD(QuadShell):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CQUAD eid=%s' % self.eid
+        msg = ', which is required by CQUAD eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
         if isinstance(self.theta_mcid, integer_types):
             self.theta_mcid_ref = model.Coord(self.theta_mcid, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CQUAD eid=%s' % self.eid
+        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
+        if isinstance(self.theta_mcid, integer_types):
+            self.theta_mcid_ref = model.safe_coord(self.theta_mcid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -3456,6 +3647,19 @@ class CQUAD(QuadShell):
         b = n2 - n4
         area = 0.5 * norm(cross(a, b))
         return area
+
+    def Mass(self):
+        # () -> float
+        r"""
+        .. math:: m = \frac{m}{A} A  \f]
+        """
+        A = self.Area()
+        mpa = self.pid_ref.MassPerArea()
+        try:
+            return mpa * A
+        except TypeError:
+            msg = 'mass/area=%s area=%s prop_type=%s' % (mpa, A, self.pid_ref.type)
+            raise TypeError(msg)
 
     def Thickness(self):
         """
@@ -3652,9 +3856,22 @@ class CQUAD8(QuadShell):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CQUAD8 eid=%s' % self.eid
+        msg = ', which is required by CQUAD8 eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.Property(self.Pid(), msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CQUAD8 eid=%s' % self.eid
+        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -3686,6 +3903,9 @@ class CQUAD8(QuadShell):
                 #assert isinstance(n[i], float)
             mass = self.Mass()
             assert isinstance(mass, float), 'mass=%r' % mass
+
+    def get_thickness_scale(self):
+        return [self.T1, self.T2, self.T3, self.T4]
 
     def Thickness(self):
         """
@@ -3846,8 +4066,20 @@ class SNORM(BaseCard):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CTRIAR eid=%s' % self.eid
+        msg = ', which is required by SNORM eid=%s' % self.eid
         self.cid_ref = model.Coord(self.cid, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by SNORM eid=%s' % self.eid
+        self.cid_ref = model.safe_coord(self.cid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.cid = self.Cid()

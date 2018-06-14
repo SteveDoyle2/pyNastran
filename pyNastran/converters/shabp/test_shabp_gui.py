@@ -6,14 +6,15 @@ from pyNastran.converters.shabp.shabp_io import ShabpIO
 from pyNastran.utils.log import get_logger
 import pyNastran
 
-pkg_path = pyNastran.__path__[0]
-model_path = os.path.join(pkg_path, 'converters', 'shabp')
+PKG_PATH = pyNastran.__path__[0]
+model_path = os.path.join(PKG_PATH, 'converters', 'shabp')
 
 
 class ShabpGUI(ShabpIO, FakeGUIMethods):
     def __init__(self):
         FakeGUIMethods.__init__(self)
         self.model = ShabpIO(self)
+        self.build_fmts(['shabp'], stop_on_failure=True)
 
 
 class TestShabpGUI(unittest.TestCase):
@@ -23,22 +24,23 @@ class TestShabpGUI(unittest.TestCase):
         test = ShabpGUI()
         test.log = log
         shabp_infilename = os.path.join(model_path, 'models', 'flap', 'flap_inviscid.mk5')
-        test.model.load_shabp_geometry(shabp_infilename)
+        #test.model.load_shabp_geometry(shabp_infilename)
+        test.on_load_geometry(shabp_infilename, geometry_format='shabp', raise_error=True)
 
     def _test_shabp_geometry_02(self):
         test = ShabpGUI()
         shabp_infilename = os.path.join(model_path, 'models', 'orbiter.mk5')
-        test.model.load_shabp_geometry(shabp_infilename)
+        test.on_load_geometry(shabp_infilename, geometry_format='shabp', raise_error=True)
 
     def _test_shabp_geometry_03(self):
         test = ShabpGUI()
         shabp_infilename = os.path.join(model_path, 'models', 'shuttle.mk5')
-        test.model.load_shabp_geometry(shabp_infilename)
+        test.on_load_geometry(shabp_infilename, geometry_format='shabp', raise_error=True)
 
     def test_shabp_geometry_04(self):
         test = ShabpGUI()
         shabp_infilename = os.path.join(model_path, 'models', 'nose', 'noseX_working.mk5')
-        test.model.load_shabp_geometry(shabp_infilename)
+        test.on_load_geometry(shabp_infilename, geometry_format='shabp', raise_error=True)
 
 
     #def test_shabp_results(self):

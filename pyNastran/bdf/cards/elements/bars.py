@@ -19,7 +19,7 @@ from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import BaseCard, Element
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, integer_double_or_blank, double_or_blank,
-    integer_string_or_blank, string_or_blank, string, integer_or_double,
+    integer_string_or_blank, string, integer_or_double,
     double)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -156,13 +156,13 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
 
 class BAROR(object):
     """
-    +-------+-----+---+---+---+-------+-----+-------+------+
-    |   1   |  2  | 3 | 4 | 5 |   6   |  7  |   8   |  9   |
-    +=======+=====+===+===+===+=======+=====+=======+======+
-    | BAROR | PID |   |   |   | G0/X1 |  X2 |  X3   | OFFT |
-    +-------+-----+---+---+---+-------+-----+-------+------+
-    | BAROR | 39  |   |   |   |  0.6  | 2.9 | -5.87 | GOG  |
-    +-------+-----+---+---+---+-------+-----+-------+------+
+    +-------+---+-----+---+---+-------+-----+-------+------+
+    |   1   | 2 |  3  | 4 | 5 |   6   |  7  |   8   |  9   |
+    +=======+===+=====+===+===+=======+=====+=======+======+
+    | BAROR |   | PID |   |   | G0/X1 |  X2 |  X3   | OFFT |
+    +-------+---+-----+---+---+-------+-----+-------+------+
+    | BAROR |   | 39  |   |   |  0.6  | 2.9 | -5.87 | GOG  |
+    +-------+---+-----+---+---+-------+-----+-------+------+
     """
     type = 'BAROR'
     def __init__(self, pid, is_g0, g0, x, offt='GGG', comment=''):
@@ -176,7 +176,7 @@ class BAROR(object):
         self.offt = offt
 
     @classmethod
-    def add_card(cls, card, baror=None, comment=''):
+    def add_card(cls, card, comment=''):
         pid = integer_or_blank(card, 2, 'pid')
 
         # x / g0
@@ -192,10 +192,12 @@ class BAROR(object):
                           double_or_blank(card, 6, 'x2', 0.),
                           double_or_blank(card, 7, 'x3', 0.)],
                          dtype='float64')
+        else:
+            raise NotImplementedError('BAROR field5 = %r' % field5)
         offt = integer_string_or_blank(card, 8, 'offt', 'GGG')
         if isinstance(offt, integer_types):
             raise NotImplementedError('the integer form of offt is not supported; offt=%s' % offt)
-        assert len(card) <= 8, 'len(BAROR card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 9, 'len(BAROR card) = %i\ncard=%s' % (len(card), card)
         return BAROR(pid, is_g0, g0, x, offt=offt, comment=comment)
 
 class CBARAO(BaseCard):
@@ -349,8 +351,15 @@ class CBAR(LineElement):
             self.wb[1] = value
         elif cp_name == 'W3B':
             self.wb[2] = value
+        elif cp_name == 'X1':
+            self.x[0] = value
+        elif cp_name == 'X2':
+            self.x[1] = value
+        elif cp_name == 'X3':
+            self.x[2] = value
         else:
-            raise NotImplementedError('CBAR: cp_name=%r must be added to update_by_cp_name' % cp_name)
+            msg = 'CBAR: cp_name=%r must be added to update_by_cp_name' % cp_name
+            raise NotImplementedError(msg)
 
     def _update_field_helper(self, n, value):
         if n == 11:
@@ -440,6 +449,10 @@ class CBAR(LineElement):
         self.pid_ref = None
         self.ga_ref = None
         self.gb_ref = None
+        self.g0_ref = None
+        self.g0_vector = None
+        if isinstance(self.offt, str):
+            self.offt = self.offt.replace('E', 'O')
 
     def validate(self):
         msg = ''
@@ -464,8 +477,14 @@ class CBAR(LineElement):
             msg = 'G0=%s cannot be GA=%s or GB=%s' % (self.g0, self.ga, self.gb)
             raise RuntimeError(msg)
 
+        self.check_offt()
+
+    def check_offt(self):
+        """
+        B,G,O
+        Note: The character 'O' in the table replaces the obsolete character 'E'
+        """
         msg = 'invalid offt parameter of %s...offt=%s' % (self.type, self.offt)
-        # B,G,O
         assert self.offt[0] in ['G', 'B'], msg
         assert self.offt[1] in ['G', 'O', 'E'], msg
         assert self.offt[2] in ['G', 'O', 'E'], msg
@@ -644,30 +663,62 @@ class CBAR(LineElement):
         """
         #if self.g0:
         #    self.x = nodes[self.g0].get_position() - nodes[self.ga].get_position()
-        msg = ' which is required by CBAR eid=%s' % (self.eid)
+        msg = ', which is required by CBAR eid=%s' % (self.eid)
         self.ga_ref = model.Node(self.ga, msg=msg)
         self.gb_ref = model.Node(self.gb, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
         if model.is_nx:
             assert self.offt == 'GGG', 'NX only support offt=GGG; offt=%r' % self.offt
 
+        if self.g0:
+            self.g0_ref = model.nodes[self.g0]
+            self.g0_vector = self.g0_ref.get_position() - self.ga_ref.get_position()
+        else:
+            self.g0_vector = self.x
+
+    def safe_cross_reference(self, model, xref_errors):
+        msg = ', which is required by CBAR eid=%s' % (self.eid)
+        self.ga_ref = model.Node(self.ga, msg=msg)
+        self.gb_ref = model.Node(self.gb, msg=msg)
+        self.nodes_ref = [self.ga_ref, self.gb_ref]
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
+
+        if self.g0:
+            try:
+                self.g0_ref = model.nodes[self.g0]
+                self.g0_vector = self.g0_ref.get_position() - self.ga_ref.get_position()
+            except KeyError:
+                model.log.warning('Node=%s%s' % (self.g0, msg))
+        else:
+            self.g0_vector = self.x
+
     def uncross_reference(self):
         self.pid = self.Pid()
         self.ga = self.Ga()
         self.gb = self.Gb()
+        self.g0 = self.G0()
         self.ga_ref = None
         self.gb_ref = None
+        self.g0_ref = None
         self.pid_ref = None
 
     def Ga(self):
+        """gets Ga/G1"""
         if self.ga_ref is None:
             return self.ga
         return self.ga_ref.nid
 
     def Gb(self):
+        """gets Gb/G2"""
         if self.gb_ref is None:
             return self.gb
         return self.gb_ref.nid
+
+    def G0(self):
+        """gets G0"""
+        if self.g0_ref is None:
+            return self.g0
+        return self.g0_ref.nid
 
     def get_x_g0_defaults(self):
         """
@@ -679,9 +730,13 @@ class CBAR(LineElement):
         x_g0 : varies
             g0 : List[int, None, None]
             x : List[float, float, float]
+
+        Note
+        ----
+        Used by CBAR and CBEAM
         """
         if self.g0 is not None:
-            return (self.g0, None, None)
+            return (self.G0(), None, None)
         else:
             #print('x =', self.x)
             #print('g0 =', self.g0)
@@ -828,7 +883,8 @@ class CBEAM3(LineElement):  # was CBAR
         gb = integer(card, 4, 'gb')
         gc = integer(card, 5, 'gc')
 
-        x, g0 = init_x_g0(card, eid)
+        # card, eid, x1_default, x2_default, x3_default
+        x, g0 = init_x_g0(card, eid, 0., 0., 0.)
 
         wa = np.array([double_or_blank(card, 9, 'w1a', 0.0),
                        double_or_blank(card, 10, 'w2a', 0.0),
@@ -862,11 +918,18 @@ class CBEAM3(LineElement):  # was CBAR
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CBEAM3 eid=%s' % (self.eid)
+        msg = ', which is required by CBEAM3 eid=%s' % (self.eid)
         self.ga_ref = model.Node(self.ga, msg=msg)
         self.gb_ref = model.Node(self.gb, msg=msg)
         self.gc_ref = model.Node(self.gc, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        msg = ', which is required by CBEAM3 eid=%s' % (self.eid)
+        self.ga_ref = model.Node(self.ga, msg=msg)
+        self.gb_ref = model.Node(self.gb, msg=msg)
+        self.gc_ref = model.Node(self.gc, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.ga = self.Ga()
@@ -1201,11 +1264,17 @@ class CBEND(LineElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CBEND eid=%s' % (self.eid)
+        msg = ', which is required by CBEND eid=%s' % (self.eid)
         #self.g0 = model.nodes[self.g0]
         self.ga_ref = model.Node(self.ga, msg=msg)
         self.gb_ref = model.Node(self.gb, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        msg = ', which is required by CBEND eid=%s' % (self.eid)
+        self.ga_ref = model.Node(self.ga, msg=msg)
+        self.gb_ref = model.Node(self.gb, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         node_ids = self.node_ids
@@ -1215,6 +1284,15 @@ class CBEND(LineElement):
         self.ga_ref = None
         self.gb_ref = None
         self.pid_ref = None
+
+    def Centroid(self):
+        if self.pid_ref is None:
+            msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
+            raise RuntimeError(msg)
+        return (self.ga_ref.get_position() + self.gb_ref.get_position()) / 2.
+
+    def center_of_mass(self):
+        return self.Centroid()
 
     def raw_fields(self):
         (x1, x2, x3) = self.get_x_g0_defaults()
@@ -1255,11 +1333,80 @@ def init_x_g0(card, eid, x1_default, x2_default, x3_default):
         raise RuntimeError(msg)
     return x, g0
 
+def get_bar_vector(model, elem, node1, node2, xyz1):
+    """helper method for ``rotate_v_wa_wb``"""
+    cd1 = node1.Cd()
+    cd2 = node2.Cd()
+    if model is None:
+        cd1_ref = node1.cd_ref
+        cd2_ref = node2.cd_ref
 
-def rotate_v_wa_wb(model, elem, n1, n2, node1, node2, ihat_offset, i_offset, eid,
-                   Li_offset):
+        # get the vector v, which defines the projection on to the elemental
+        # coordinate frame
+        if elem.g0:
+            #msg = 'which is required by %s eid=%s\n%s' % (elem.type, elem.g0, str(elem))
+            g0_ref = elem.g0_ref
+            n0 = g0_ref.get_position()
+            v = n0 - xyz1
+        else:
+            v = cd1_ref.transform_node_to_global(elem.x)
+
+    else:
+        msg = ', which is required by %s=%s' % (elem.type, elem.eid)
+        cd1_ref = model.Coord(cd1)
+        cd2_ref = model.Coord(cd2)
+
+        # get the vector v, which defines the projection on to the elemental
+        # coordinate frame
+        if elem.g0:
+            #msg = 'which is required by %s eid=%s\n%s' % (elem.type, elem.g0, str(elem))
+            g0_ref = model.Node(elem.g0, msg=msg)
+            n0 = g0_ref.get_position()
+            v = n0 - xyz1
+        else:
+            v = cd1_ref.transform_node_to_global(elem.x)
+            cd1_ref = model.Coord(cd1)
+            cd2_ref = model.Coord(cd2)
+
+    return v, cd1, cd1_ref, cd2, cd2_ref
+
+def rotate_v_wa_wb(model, elem, xyz1, xyz2, node1, node2, ihat_offset, i_offset, eid,
+                   Li_offset, log):
     """
     Rotates v, wa, wb
+
+    Parameters
+    ----------
+    model : BDF()
+        BDF : assume the model isn't xref'd
+        None : use the xref'd values
+    elem : CBAR() / CBEAM()
+       the CBAR/CBEAM
+    xyz1 / xyz2 : (3, ) float ndarray
+        the xyz locations for node 1 / 2
+    node1 / node2 : GRID()
+        the xyz object for node 1 / 2
+    ihat_offset : (3, ) float ndarray
+        the normalized x-axis (not including the CBEAM offset)
+    i_offset : (3, ) float ndarray
+        the unnormalized x-axis (not including the CBEAM offset)
+    eid : int
+        the element id
+    Li_offset : float
+        the length of the CBAR/CBEAM (not including the CBEAM offset)
+    log : Log()
+        a logging object or None
+
+    Returns
+    -------
+    v : List[float, float, float]
+        the projection vector that defines the y-axis (jhat)
+    wa : List[float, float, float]
+       the offset vector at A
+    wb : List[float, float, float]
+       the offset vector at B
+    xform : (3, 3) float ndarray
+        a vstack of the [ihat, jhat, khat] axes
 
     OFFT flag
     ---------
@@ -1285,30 +1432,8 @@ def rotate_v_wa_wb(model, elem, n1, n2, node1, node2, ihat_offset, i_offset, eid
     - orientation -> wa/wb are defined in the xform_offset (yz) frame;
                      this is likely the easiest frame for a user
     """
-    msg = ' which is required by %s=%s' % (elem.type, elem.eid)
-    cd1 = node1.Cd()
-    cd2 = node2.Cd()
-    cd1_ref = model.Coord(cd1)
-    cd2_ref = model.Coord(cd2)
-    #cd1_ref = elem.nodes_ref[0].cp_ref
-    #cd2_ref = elem.nodes_ref[1].cp_ref
-    #cd1 = cd1_ref.cid
-    #cd2 = cd2_ref.cid
-
-    # get the vector v, which defines the projection on to the elemental
-    # coordinate frame
-    if elem.g0:
-        #msg = 'which is required by %s eid=%s\n%s' % (elem.type, elem.g0, str(elem))
-        g0_ref = model.Node(elem.g0, msg=msg)
-        n0 = g0_ref.get_position()
-        v = n0 - n1
-    else:
-        #ga = elem.ga_ref
-        #cda_ref = cd1_ref
-        ga = model.nodes[elem.Ga()]
-        cda = ga.Cd()
-        cda_ref = model.Coord(cda)
-        v = cda_ref.transform_node_to_global(elem.x)
+    elem.check_offt()
+    v, cd1, cd1_ref, cd2, cd2_ref = get_bar_vector(model, elem, node1, node2, xyz1)
 
     #--------------------------------------------------------------------------
     offt_vector, offt_end_a, offt_end_b = elem.offt
@@ -1324,10 +1449,10 @@ def rotate_v_wa_wb(model, elem, n1, n2, node1, node2, ihat_offset, i_offset, eid
         pass
     else:
         msg = 'offt_vector=%r is not supported; offt=%s' % (offt_vector, elem.offt)
-        return None, None, None, None, msg
+        return None, None, None, None
 
     yhat_offset, zhat_offset = get_bar_yz_transform(
-        v, ihat_offset, eid, n1, n2, node1.nid, node2.nid,
+        v, ihat_offset, eid, xyz1, xyz2, node1.nid, node2.nid,
         i_offset, Li_offset)
     xform_offset = np.vstack([ihat_offset, yhat_offset, zhat_offset]) # 3x3 unit matrix
 
@@ -1347,7 +1472,7 @@ def rotate_v_wa_wb(model, elem, n1, n2, node1, node2, ihat_offset, i_offset, eid
         #ia = n1 + wa
     else:
         msg = 'offt_end_a=%r is not supported; offt=%s' % (offt_end_a, elem.offt)
-        self.log.error(msg)
+        log.error(msg)
         return v, None, None, xform_offset
 
     #--------------------------------------------------------------------------
@@ -1371,12 +1496,12 @@ def rotate_v_wa_wb(model, elem, n1, n2, node1, node2, ihat_offset, i_offset, eid
         return v, wa, None, xform_offset
 
     #--------------------------------------------------------------------------
-    #i = ib - ia # (n2 + wb) - (n1 + wa)
-    i = (n2 + wb) - (n1 + wa)
+    #i = ib - ia # (xyz2 + wb) - (xyz1 + wa)
+    #i = (xyz2 + wb) - (xyz1 + wa)
     i = i_offset
     Li = norm(i)
     ihat = i / Li
-    yhat, zhat = get_bar_yz_transform(v, ihat, eid, n1, n2, node1.nid, node2.nid, i, Li)
+    yhat, zhat = get_bar_yz_transform(v, ihat, eid, xyz1, xyz2, node1.nid, node2.nid, i, Li)
 
     #print('  n1=%s n2=%s' % (n1, n2))
     #print('  ib=%s ia=%s' % (ib, ia))
@@ -1391,15 +1516,41 @@ def rotate_v_wa_wb(model, elem, n1, n2, node1, node2, ihat_offset, i_offset, eid
 
     return v, wa, wb, xform
 
-def get_bar_yz_transform(v, ihat, eid, n1, n2, nid1, nid2, i, Li):
-    """helper method for _get_bar_yz_arrays"""
+def get_bar_yz_transform(v, ihat, eid, xyz1, xyz2, nid1, nid2, i, Li):
+    """
+    helper method for ``_get_bar_yz_arrays``
+
+    Parameters
+    ----------
+    v : List[float, float, float]
+        the projection vector that defines the y-axis (jhat)
+    ihat : (3, ) float ndarray
+        the normalized x-axis (not including the CBEAM offset)
+    eid : int
+        the element id
+    xyz1 / xyz2 : (3, ) float ndarray
+        the xyz locations for node 1 / 2
+    nid1 / nid2  : int
+        the node ids for xyz1 / xyz2
+    i : (3, ) float ndarray
+        the unnormalized x-axis (not including the CBEAM offset)
+    Li : float
+        the length of the CBAR/CBEAM (not including the CBEAM offset)
+
+    Returns
+    -------
+    yhat (3, ) float ndarray
+       the CBAR/CBEAM's y-axis
+    zhat (3, ) float ndarray
+       the CBAR/CBEAM's z-axis
+    """
     vhat = v / norm(v) # j
     try:
         z = np.cross(ihat, vhat) # k
     except ValueError:
         msg = 'Invalid vector length\n'
-        msg += 'n1  =%s\n' % str(n1)
-        msg += 'n2  =%s\n' % str(n2)
+        msg += 'xyz1=%s\n' % str(xyz1)
+        msg += 'xyz2=%s\n' % str(xyz2)
         msg += 'nid1=%s\n' % str(nid1)
         msg += 'nid2=%s\n' % str(nid2)
         msg += 'i   =%s\n' % str(i)
@@ -1416,9 +1567,9 @@ def get_bar_yz_transform(v, ihat, eid, n1, n2, nid1, nid2, i, Li):
 
     if norm(ihat) == 0.0 or norm(yhat) == 0.0 or norm(z) == 0.0:
         print('  invalid_orientation - eid=%s yhat=%s zhat=%s v=%s i=%s n%s=%s n%s=%s' % (
-            eid, yhat, zhat, v, i, nid1, n1, nid2, n2))
+            eid, yhat, zhat, v, i, nid1, xyz1, nid2, xyz2))
     elif not np.allclose(norm(yhat), 1.0) or not np.allclose(norm(zhat), 1.0) or Li == 0.0:
         print('  length_error        - eid=%s Li=%s Lyhat=%s Lzhat=%s'
               ' v=%s i=%s n%s=%s n%s=%s' % (
-                  eid, Li, norm(yhat), norm(zhat), v, i, nid1, n1, nid2, n2))
+                  eid, Li, norm(yhat), norm(zhat), v, i, nid1, xyz1, nid2, xyz2))
     return yhat, zhat

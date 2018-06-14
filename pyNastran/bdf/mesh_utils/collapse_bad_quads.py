@@ -29,6 +29,7 @@ def convert_bad_quads_to_tris(model, eids_to_check=None, xyz_cid0=None, min_edge
     .. warning::  Don't cross reference properties/loads
 
     .. todo::  check for bad xref
+
     """
     out = model.get_card_ids_by_card_types('CQUAD4')
     cquad4s = out['CQUAD4']
@@ -38,7 +39,7 @@ def convert_bad_quads_to_tris(model, eids_to_check=None, xyz_cid0=None, min_edge
         cquad4s_to_check = list(set(eids_to_check).intersection(set(cquad4s)))
 
     elements = model.elements
-    eids_to_remove = []
+    unused_eids_to_remove = []
 
     if xyz_cid0 is None:
         xyz_cid0 = model.get_xyz_in_coord(cid=0)

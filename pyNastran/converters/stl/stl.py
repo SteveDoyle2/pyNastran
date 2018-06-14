@@ -2,6 +2,7 @@
 from __future__ import print_function
 import copy
 from struct import unpack, Struct, pack
+from collections import defaultdict
 
 from six import iteritems
 from six.moves import zip, range
@@ -14,7 +15,7 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.utils import is_binary_file
 from pyNastran.utils.log import get_logger2
 
-def read_stl(stl_filename, log=None, debug=False):
+def read_stl(stl_filename, remove_elements_with_bad_normals=False, log=None, debug=False):
     """
 
     Reads an STL file
@@ -23,6 +24,8 @@ def read_stl(stl_filename, log=None, debug=False):
     ----------
     stl_filename : str
         the filename to read
+    remove_elements_with_bad_normals : bool; default=False
+        removes elements with NAN normal
 
     Returns
     -------
@@ -31,6 +34,8 @@ def read_stl(stl_filename, log=None, debug=False):
     """
     model = STL(log=log, debug=debug)
     model.read_stl(stl_filename)
+    if remove_elements_with_bad_normals:
+        model.remove_elements_with_bad_normals(model.elements)
     return model
 
 
@@ -351,15 +356,13 @@ class STL(object):
         else:
             self.elements[i, :] = elements2 #[i, :]
 
-    def get_normals_at_nodes(self, elements, normals=None, nid_to_eid=None):
+    def get_normals_at_nodes(self, normals=None, nid_to_eid=None):
         """
         Calculates the normal vector of the nodes based on the average
         element normal.
 
         Parameters
         ----------
-        elements : ????
-            The elements...should be removed
         normals : (n, 3) ndarray floats
             The elemental normals
         nid_to_eid : Dict[int] = [int, int, ... ]
@@ -371,12 +374,12 @@ class STL(object):
         normals_at_nodes : (nnodes, 3) ndarray ints
             the normals
         """
+        elements = self.elements
         if normals is None:
             nodes = self.nodes
             normals = self.get_normals(elements, nodes=self.nodes)
 
         if nid_to_eid is None:
-            from collections import defaultdict
             nid_to_eid = defaultdict(list)
             eid = 0
             for (n1, n2, n3) in elements:
@@ -399,7 +402,7 @@ class STL(object):
         nnodes = self.nodes.shape[0]
 
         # build the kdtree
-        kdt = scipy.spatial.KDTree(self.nodes)
+        kdt = scipy.spatial.cKDTree(self.nodes)
 
         # find the node ids of interest
         nids_new = np.unique(self.elements.ravel())
@@ -428,125 +431,6 @@ class STL(object):
                 r_new_nid = possible2.min()
                 ireplace = np.where(self.elements == r)
                 self.elements[ireplace] = r_new_nid
-
-    def project_boundary_layer(self, nodes, elements, volume_bdfname):
-        """
-        Create a boundary layer mesh.
-
-        Parameters
-        ----------
-        nodes : (n, 3) ndarray floats
-            The nodes on the surface.
-        elements : (n, 3) ndarray ints
-            The elements on the surface.
-        volume_bdfname : str
-            The CPENTA bdf file to write.
-
-        Returns
-        -------
-        nodes2 : (n, 3) ndarray floats
-            The boundary layer nodes
-        elements2 : (n, 6) ndarray ints
-            The boundary layer elements
-        """
-        self.log.info("project_mesh...")
-
-        normals_at_nodes = self.get_normals_at_nodes(elements, normals=None, nid_to_eid=None)
-
-        #print "normals_at_nodes[4]", normals_at_nodes[4]
-        #----------- make boundary layer---------------
-        # deltaN = a^N * delta
-        delta = 0.1
-        b = 1.0
-        a = 1.1
-        N = 13
-        r = np.array(range(N))
-        #r = 1100
-
-        delta_ns = b * a**r * delta
-        self.log.info('delta_ns = %s' % delta_ns)
-        if not isinstance(delta_ns, np.ndarray):
-            delta_ns = np.array([delta_ns])
-        N = len(delta_ns)
-
-        nid = 0
-        nnodes = nodes.shape[0]
-        nodes2 = np.zeros((nnodes * (N+1), 3), 'float64')
-        nodes2[:nnodes, :] = nodes
-
-        nelements = elements.shape[0]
-        elements2 = np.zeros((nelements * (N+1), 3), 'int32')
-        elements2[:nelements, :] = elements
-
-        ni = 0
-        cid = None
-        nid = 1
-        eid2 = 1
-        pid = 100
-        mid = 100
-        with open(volume_bdfname, 'wb') as bdf:
-            bdf.write('CEND\nBEGIN BULK\n')
-            bdf.write('$NODES in Layer=0\n')
-            for (x, y, z) in nodes:
-                card = ['GRID', nid, cid, x, y, z]
-                bdf.write(print_card_8(card))
-                nid += 1
-
-            for deltaN in delta_ns:
-                outer_points = nodes + normals_at_nodes * deltaN
-                nodes2[ni*nnodes : (ni+1)*nnodes, :] = outer_points
-
-                nnbase = ni * nnodes
-                unused_nnshift = (ni+1) * nnodes
-
-                nebase = (ni) * nelements
-                neshift = (ni + 1) * nelements
-                elements2[neshift : neshift + nelements, :] = elements + nnodes * (ni + 1)
-
-                self.log.info('nodes = %s' % str(nodes))
-                self.log.info('deltaN = %s' % str(deltaN))
-                self.log.info('normals_at_nodes = %s' % str(normals_at_nodes))
-                self.log.info('outer_points = %s' % str(outer_points))
-                bdf.write('$NODES in Layer=%i\n' % (ni + 1))
-                for x, y, z in outer_points:
-                    card = ['GRID', nid, cid, x, y, z]
-                    bdf.write(print_card_8(card))
-                    nid += 1
-
-                bdf.write('$SOLID ELEMENTS in Layer=%i\n' % (ni + 1))
-                for eid in range(nelements):
-                    (n1, n2, n3) = elements2[nebase  + eid] + 1
-                    (n4, n5, n6) = elements2[neshift + eid] + 1
-                    card = ['CPENTA', eid2, pid, n1, n2, n3, n4, n5, n6]
-                    bdf.write(print_card_8(card))
-                    eid2 += 1
-
-                card = ['PSOLID', pid, mid]
-                bdf.write(print_card_8(card))
-
-                E = 1e7
-                G = None
-                nu = 0.3
-                card = ['MAT1', mid, E, G, nu]
-                bdf.write(print_card_8(card))
-
-                pid += 1
-                mid += 1
-                ni += 1
-
-        #print(elements2)
-        #for node in nodes:
-            #normal = normals_elements[nid]
-            #nid += 1
-        #print(deltaN)
-
-        #----------- make far field---------------
-        unused_nodes3 = nodes2[nnbase:, :]
-
-        elements3 = elements2[nebase:, :]
-        self.log.debug("done projecting...")
-        return nodes2, elements2
-
 
     def write_stl_ascii(self, out_filename, solid_name, float_fmt='%.6f',
                         normalize_normal_vectors=False, stop_on_failure=True):
@@ -680,17 +564,42 @@ class STL(object):
             nodes[inode] = node
         self.nodes = nodes
 
-    def scale_nodes(self, xscale, yscale, zscale):
+    def scale_nodes(self, xscale, yscale=None, zscale=None):
+        """
+        Scales the model
+
+        Parameters
+        ----------
+        xscale : float
+            the scaling factor for the x axis; also the default scaling factor
+        yscale/zscale : float; default=xscale
+            the scaling factors for the y/z axes
+        """
+        if yscale is None:
+            yscale = xscale
+        if zscale is None:
+            zscale = xscale
         self.nodes[:, 0] *= xscale
         self.nodes[:, 1] *= yscale
         self.nodes[:, 2] *= zscale
 
     def shift_nodes(self, xshift, yshift, zshift):
+        """Shifts the model"""
         self.nodes[:, 0] += xshift
         self.nodes[:, 1] += yshift
         self.nodes[:, 2] += zshift
 
     def flip_axes(self, axes, scale):
+        """
+        Swaps the axes
+
+        Parameters
+        ----------
+        axes : str
+            'xy', 'yz', 'xz'
+        scale : float
+            why is this here, but is not applied to all axes?
+        """
         if axes == 'xy':
             x = copy.deepcopy(self.nodes[:, 0])
             y = copy.deepcopy(self.nodes[:, 1])

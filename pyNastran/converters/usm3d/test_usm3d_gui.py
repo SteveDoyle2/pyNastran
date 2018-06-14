@@ -19,6 +19,7 @@ class Usm3dGUI(FakeGUIMethods):
     def __init__(self):
         FakeGUIMethods.__init__(self)
         self.model = Usm3dIO(self)
+        self.build_fmts(['usm3d'], stop_on_failure=True)
 
 
 class TestUsm3dGUI(unittest.TestCase):
@@ -31,6 +32,7 @@ class TestUsm3dGUI(unittest.TestCase):
 
         test = Usm3dGUI()
         test.log = log
+        #test.on_load_geometry(geometry_filename, geometry_format='usm3d', raise_error=True)
         test.model.load_usm3d_geometry(geometry_filename)
         test.model.load_usm3d_results(flo_filename)
         test.model.on_reload_usm3d()

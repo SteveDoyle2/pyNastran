@@ -50,7 +50,7 @@ class DYNAMICS(GeomCommon):
             (3307, 33, 129) : ['NONLIN3', self._read_fake],
             (3407, 34, 130): ['NONLIN4', self._read_fake], # 23
             (2107, 21, 195): ['RANDPS', self._read_randps], # 24
-            (2207, 22, 196): ['RANDT1', self._read_fake], # 25
+            (2207, 22, 196): ['RANDT1', self._read_randt1], # 25
             (5107, 51, 131): ['RLOAD1', self._read_rload1],  # 26
             (5207, 52, 132): ['RLOAD2', self._read_rload2],  # 27
             (8910, 89, 606): ['ROTORB', self._read_fake],  # 28
@@ -475,36 +475,47 @@ class DYNAMICS(GeomCommon):
         14 FI    RS Frequency at the upper boundary of the i-th segment
         Word 14 repeats NUMS times
         """
-        self.log.info('skipping EIGRL in DYNAMICS\n')
-        if self.is_debug_file:
-            self.binary_debug.write('skipping EIGRL in DYNAMICS\n')
-        return len(data)
+        #self.log.info('skipping EIGRL in DYNAMICS\n')
+        #if self.is_debug_file:
+            #self.binary_debug.write('skipping EIGRL in DYNAMICS\n')
+        #return len(data)
 
-        #self.show_data(data[n+36:n+100], 'ifs')
+        #self.show_data(data[n+44:], 'ifs')
         #print(len(data[n:]) / 4.)
-        #ndata = len(data)
-        #s = Struct('i 2f 3i f 2i 8s f i')
-        #while n < ndata:
-            #edata = data[n:n+52] # 13*52
-            #out = s.unpack(edata)
-            #sid, v1, v2, nd, msglvl, maxset, shfscl, flag1, flag2, norm, alpha, nums = out
-            #norm = norm.strip().decode('latin1')
-            #print("norm = %r" % norm)
-            #print("nums = ", nums)
-            #assert nums < 10000, nums
-            #edata2 = data[n+52:n+52+nums*4]
-            #self.show_data(edata2, 'if')
-            #fi = unpack('%if' % nums, edata2)
-            #print(out, fi)
+        ndata = len(data)
+        s = Struct('i 2f 3i f 2i 8s f i')
+        nbytes = 52
+        nentries = 0
+        while n < ndata:
+            #edata = data[n:n+46] # 11*4+2 = 46
+            edata = data[n:n+nbytes] # 13*4 = 52
+            out = s.unpack(edata)
+            sid, v1, v2, nd, msglvl, maxset, shfscl, flag1, flag2, norm, alpha, nums = out
+            norm = norm.decode('latin1').rstrip('\x00 ')
+            if nums != 538976288:
+                assert nums < 10000, nums
+                #edata2 = data[n+46:n+46+nums*4]
+                edata2 = data[n+nbytes:n+nbytes+nums*4]
+                self.show_data(edata2, 'if')
+                fi = unpack('%if' % nums, edata2)
+                print(out, fi)
+                raise NotImplementedError(nums)
 
-            #if self.is_debug_file:
-                #self.binary_debug.write('  EGIRL=%s\n' % str(out))
-            #eigrl = self.add_eigrl(sid, v1=None, v2=None, nd=None, msglvl=0,
-                                   #maxset=None, shfscl=None,
-                                   #norm=None, options=None, values=None)
-            #n += ntotal
-        #self.increase_card_count('EGIRL', nentries)
-        #return n
+            if self.is_debug_file:
+                self.binary_debug.write('  EGIRL=%s\n' % str(out))
+            options = []
+            values = []
+            eigrl = self.add_eigrl(sid, v1=v1, v2=v2, nd=nd, msglvl=msglvl,
+                                   maxset=maxset, shfscl=shfscl,
+                                   norm=norm, options=options, values=values)
+            #print(eigrl)
+            if nums == 538976288:
+                n = len(data)
+            else:
+                n += nbytes + nums * 4
+            nentries += 1
+        self.increase_card_count('EGIRL', nentries)
+        return n
 
     def _read_epoint(self, data, n):
         """EPOINT(707,7,124) - Record 12"""
@@ -759,7 +770,28 @@ class DYNAMICS(GeomCommon):
         self.increase_card_count('RANDPS', nentries)
         return n, []
 
-#RANDT1
+    def _read_randt1(self, data, n):
+        """
+        RANDT1(2207,22,196)
+
+        Word Name Type Description
+        1 SID  I  Set identification number
+        2 N    I  Number of time lag intervals
+        3 TO   RS Starting time lag
+        4 TMAX RS Maximum time lag
+        """
+        ntotal = 16  # 4*4
+        struct1 = Struct(self._endian + b'2i 2f')
+        nentries = (len(data) - n) // ntotal
+        for i in range(nentries):
+            out = struct1.unpack(data[n:n+ntotal])
+            if self.is_debug_file:
+                self.binary_debug.write('  RANDT1=%s\n' % str(out))
+            sid, nlags, to, tmax = out
+            self.add_randt1(sid, nlags, to, tmax)
+            n += ntotal
+        self.card_count['RANDT1'] = nentries
+        return n
 
     def _read_rload1(self, data, n):
         """common method for reading NX/MSC RLOAD1"""
@@ -951,12 +983,12 @@ class DYNAMICS(GeomCommon):
         for i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
-            sid, async, refrot, unit, speed_low, speed_high, speed = out
-            async = async.decode('latin1')
+            sid, asynci, refrot, unit, speed_low, speed_high, speed = out
+            asynci = asynci.decode('latin1')
             unit = unit.decode('latin1')
             if self.is_debug_file:
                 self.binary_debug.write('  RGYRO=%s\n' % str(out))
-            self.add_rgyro(sid, async, refrot, unit, speed_low, speed_high, speed)
+            self.add_rgyro(sid, asynci, refrot, unit, speed_low, speed_high, speed)
             n += ntotal
         self.increase_card_count('RGYRO', nentries)
         return n
@@ -966,7 +998,8 @@ class DYNAMICS(GeomCommon):
 
     def _read_rspint(self, data, n):
         """
-        Record 31 -- RSPINT(11001,110,310)
+        RSPINT(11001,110,310) - Record 31
+
         1 RID         I Rotor identification number
         2 GRIDA       I Grid A for rotation direction vector
         3 GRIDB       I Grid B for rotation direction vector
@@ -974,9 +1007,10 @@ class DYNAMICS(GeomCommon):
         5 UNIT(2) CHAR4 RPM/FREQ flag for speed input
         7 TABLEID     I Table identification number for speed history
         """
+        #self.show_data(data[12:], 'ifs')
         ntotal = 28 # 4*7
         nentries = (len(data) - n) // ntotal
-        struc = Struct(self._endian + b'3if 4s i')
+        struc = Struct(self._endian + b'3if 8s i')
         for i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)

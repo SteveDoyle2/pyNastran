@@ -9,6 +9,7 @@ All aero cards are defined in this file.  This includes:
  * MKAERO1 / MKAERO2
 
 All cards are BaseCard objects.
+
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -43,6 +44,7 @@ class Aero(BaseCard):
             xz symmetry flag (+1=symmetry; -1=antisymmetric)
         sym_xy : int; default=0
             xy symmetry flag (+1=symmetry; -1=antisymmetric)
+
         """
         BaseCard.__init__(self)
         self.sym_xy = None
@@ -126,6 +128,7 @@ class AERO(Aero):
             xy symmetry flag (+1=symmetry; -1=antisymmetric)
         comment : str; default=''
             a comment for the card
+
         """
         Aero.__init__(self)
         if comment:
@@ -178,11 +181,12 @@ class AERO(Aero):
         ----------
         model : BDF
             The BDF object.
+
         """
-        msg = ' which is required by AERO'
+        msg = ', which is required by AERO'
         self.acsid_ref = model.Coord(self.acsid, msg=msg)
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, xref_errors):
         """
         Safe cross refernece aerodynamic coordinate system.
 
@@ -190,9 +194,10 @@ class AERO(Aero):
         ----------
         model : BDF
             The BDF object.
+
         """
-        msg = ' which is required by AERO'
-        self.acsid_ref = model.Coord(self.acsid, msg=msg)
+        msg = ', which is required by AERO'
+        self.acsid_ref = model.safe_coord(self.acsid, None, xref_errors, msg=msg)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -205,6 +210,7 @@ class AERO(Aero):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         acsid = integer_or_blank(card, 1, 'acsid', 0)
         velocity = double_or_blank(card, 2, 'velocity')
@@ -239,6 +245,7 @@ class AERO(Aero):
         maps = {
             'coord' : cid_map,
         }
+
         """
         cid_map = maps['coord']
         self.acsid = cid_map[self.acsid]
@@ -251,6 +258,7 @@ class AERO(Aero):
         -------
         fields : List[int/float/str]
            the fields that define the card
+
         """
         list_fields = ['AERO', self.Acsid(), self.velocity, self.cref,
                        self.rho_ref, self.sym_xz, self.sym_xy]
@@ -264,6 +272,7 @@ class AERO(Aero):
         -------
         fields : List[varies]
           the fields that define the card
+
         """
         sym_xz = set_blank_if_default(self.sym_xz, 0)
         sym_xy = set_blank_if_default(self.sym_xy, 0)
@@ -286,6 +295,7 @@ class AERO(Aero):
         -------
         msg : str
             the string representation of the card
+
         """
         card = self.repr_fields()
         return self.comment + print_card_8(card)
@@ -347,6 +357,7 @@ class FLFACT(BaseCard):
                 TODO: does f1 need be be greater than f2/fnf???
         comment : str; default=''
             a comment for the card
+
         """
         BaseCard.__init__(self)
         if comment:
@@ -391,6 +402,7 @@ class FLFACT(BaseCard):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         sid = integer(card, 1, 'sid')
         assert len(card) > 2, 'len(FLFACT card)=%s; card=%s' % (len(card), card)
@@ -436,6 +448,7 @@ class FLFACT(BaseCard):
         -------
         fields : list[varies]
             the fields that define the card
+
         """
         list_fields = ['FLFACT', self.sid] + list(self.factors)
         return list_fields
@@ -477,6 +490,7 @@ class FLUTTER(BaseCard):
         -------
         value : int/float/str
             the value for the appropriate field
+
         """
         if n == 7:
             if self.method in ['K', 'KE']:
@@ -499,6 +513,7 @@ class FLUTTER(BaseCard):
             the field number to update
         value : int/float/str
             the value for the appropriate field
+
         """
         if n == 7:
             if self.method in ['K', 'KE']:
@@ -554,6 +569,7 @@ class FLUTTER(BaseCard):
             Convergence parameter for k. Used in the PK and PKNL methods only
         comment : str; default=''
             a comment for the card
+
         """
         BaseCard.__init__(self)
         if comment:
@@ -600,6 +616,7 @@ class FLUTTER(BaseCard):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         sid = integer(card, 1, 'sid')
         method = string(card, 2, 'method (K, KE, PKS, PKNLS, PKNL, PK)')
@@ -707,14 +724,15 @@ class FLUTTER(BaseCard):
         ----------
         model : BDF()
             the BDF object
+
         """
-        msg = ' which is required by FLUTTER sid=%s' % self.sid
+        msg = ', which is required by FLUTTER sid=%s' % self.sid
         self.density_ref = model.FLFACT(self.density, msg=msg)
         self.mach_ref = model.FLFACT(self.mach, msg=msg)
         self.reduced_freq_velocity_ref = model.FLFACT(self.reduced_freq_velocity, msg=msg)
 
     def safe_cross_reference(self, model):
-        msg = ' which is required by FLUTTER sid=%s' % self.sid
+        msg = ', which is required by FLUTTER sid=%s' % self.sid
         try:
             self.density_ref = model.FLFACT(self.density, msg=msg)
         except KeyError:
@@ -776,6 +794,7 @@ class FLUTTER(BaseCard):
         -------
         fields : list[varies]
             the fields that define the card
+
         """
         (imethod, nvalue) = self._get_raw_nvalue_omax()
         list_fields = ['FLUTTER', self.sid, self.method, self.get_density(),
@@ -836,6 +855,7 @@ class GUST(BaseCard):
             None : ???
         comment : str; default=''
             a comment for the card
+
         """
         BaseCard.__init__(self)
         if comment:
@@ -857,6 +877,7 @@ class GUST(BaseCard):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         sid = integer(card, 1, 'sid')
         dload = integer(card, 2, 'dload')
@@ -896,6 +917,7 @@ class GUST(BaseCard):
         -------
         fields : list[varies]
             the fields that define the card
+
         """
         list_fields = ['GUST', self.sid, self.dload, self.wg, self.x0, self.V]
         return list_fields
@@ -933,6 +955,7 @@ class MKAERO1(BaseCard):
             series of reduced frequencies
         comment : str; default=''
             a comment for the card
+
         """
         BaseCard.__init__(self)
         if comment:
@@ -941,12 +964,17 @@ class MKAERO1(BaseCard):
         self.reduced_freqs = np.unique(reduced_freqs)
 
     def validate(self):
+        msg = ''
+        if None in self.machs:
+            msg += 'MKAERO1; None in machs=%s\n' % (self.machs)
+        if None in self.reduced_freqs:
+            msg += 'MKAERO1; None in rfreqs=%s\n' % (self.reduced_freqs)
         if len(self.machs) == 0:
-            msg = 'MKAERO1; nmachs=%s machs=%s' % (len(self.machs), self.machs)
-            raise ValueError(msg)
+            msg += 'MKAERO1; nmachs=%s machs=%s\n' % (len(self.machs), self.machs)
         if len(self.reduced_freqs) == 0:
-            msg = 'MKAERO1; nrfreqs=%s rfreqs=%s' % (len(self.reduced_freqs), self.reduced_freqs)
-            raise ValueError(msg)
+            msg += 'MKAERO1; nrfreqs=%s rfreqs=%s' % (len(self.reduced_freqs), self.reduced_freqs)
+        if msg:
+            raise ValueError(msg.rstrip())
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -959,6 +987,7 @@ class MKAERO1(BaseCard):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         list_fields = [interpret_value(field) for field in card[1:]]
         nfields = len(list_fields) - 8
@@ -971,6 +1000,13 @@ class MKAERO1(BaseCard):
         reduced_freqs = wipe_empty_fields(reduced_freqs)
         return MKAERO1(machs, reduced_freqs, comment=comment)
 
+    def mklist(self):
+        mklist = []
+        for mach in self.machs:
+            for kfreq in self.reduced_freqs:
+                mklist.append([mach, kfreq])
+        return mklist
+
     def raw_fields(self):
         """
         Gets the fields in their unmodified form
@@ -979,6 +1015,7 @@ class MKAERO1(BaseCard):
         -------
         fields : list[varies]
             the fields that define the card
+
         """
         #list_fields = ['MKAERO1']
         #for (i, mach, rfreq) in zip(count(), self.machs, self.reduced_freqs):
@@ -1064,6 +1101,7 @@ class MKAERO2(BaseCard):
             series of reduced frequencies
         comment : str; default=''
             a comment for the card
+
         """
         BaseCard.__init__(self)
         if comment:
@@ -1094,6 +1132,7 @@ class MKAERO2(BaseCard):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         list_fields = card.fields(1)
         nfields = len(list_fields)
@@ -1104,6 +1143,13 @@ class MKAERO2(BaseCard):
             reduced_freqs.append(double(card, i + 1, 'rFreq'))
         return MKAERO2(machs, reduced_freqs, comment=comment)
 
+
+    def mklist(self):
+        mklist = []
+        for mach, kfreq in zip(self.machs, self.reduced_freqs):
+            mklist.append([mach, kfreq])
+        return mklist
+
     def raw_fields(self):
         """
         Gets the fields in their unmodified form
@@ -1112,6 +1158,7 @@ class MKAERO2(BaseCard):
         -------
         fields : list[varies]
             the fields that define the card
+
         """
         list_fields = ['MKAERO2']
         for (mach, rfreq) in zip(self.machs, self.reduced_freqs):

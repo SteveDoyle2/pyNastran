@@ -96,6 +96,7 @@ class DTABLE(BaseCard):
                 the value
         comment : str; default=''
             a comment for the card
+
         """
         BaseCard.__init__(self)
         if comment:
@@ -118,6 +119,7 @@ class DTABLE(BaseCard):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         nfields = len(card) - 1
         assert nfields % 2 == 0, nfields
@@ -182,6 +184,7 @@ class TABLED1(Table):
     +---------+------+-------+-------+--------+-----+-----+------+------+
 
     ..note:: EXTRAP is NX specific
+
     """
     type = 'TABLED1'
     #def __init__(self, tid, xaxis, yaxis, xy, comment=''):
@@ -209,6 +212,7 @@ class TABLED1(Table):
             .. note:: this is NX specific
         comment : str; default=''
             a comment for the card
+
         """
         Table.__init__(self)
         if comment:
@@ -233,6 +237,7 @@ class TABLED1(Table):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         table_id = integer(card, 1, 'tid')
         xaxis = string_or_blank(card, 2, 'xaxis', 'LINEAR')
@@ -343,6 +348,7 @@ class TABLED2(Table):
             .. note:: this is NX specific
         comment : str; default=''
             a comment for the card
+
         """
         Table.__init__(self)
         if comment:
@@ -364,6 +370,7 @@ class TABLED2(Table):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         table_id = integer(card, 1, 'tid')
         x1 = double(card, 2, 'x1')
@@ -456,6 +463,7 @@ class TABLED3(Table):
             .. note:: this is NX specific
         comment : str; default=''
             a comment for the card
+
         """
         Table.__init__(self)
         if comment:
@@ -479,6 +487,7 @@ class TABLED3(Table):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         table_id = integer(card, 1, 'tid')
         x1 = double(card, 2, 'x1')
@@ -523,6 +532,7 @@ class TABLED4(Table):
     Defines the coefficients of a power series for use in generating
     frequency-dependent and time-dependent dynamic loads. Also contains
     parametric data for use with the table.
+
     """
     type = 'TABLED4'
     def __init__(self, tid, x1, x2, x3, x4, a, comment=''):
@@ -550,6 +560,7 @@ class TABLED4(Table):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         table_id = integer(card, 1, 'tid')
         x1 = double(card, 2, 'x1')
@@ -618,6 +629,7 @@ class TABLED5(Table):
     Dynamic Load Tabular Function, Form 5
     Defines a value as a function of two variables for use in generating
     frequency-dependent and time-dependent dynamic loads.
+
     """
     type = 'TABLED5'
     def __init__(self, tid, xs, table_ids, comment=''):
@@ -639,6 +651,7 @@ class TABLED5(Table):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         table_id = integer(card, 1, 'tid')
 
@@ -735,6 +748,7 @@ class TABDMP1(Table):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         table_id = integer(card, 1, 'tid')
         Type = string_or_blank(card, 2, 'Type', 'G')
@@ -814,6 +828,7 @@ class TABLEM1(Table):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         table_id = integer(card, 1, 'tid')
         xaxis = string_or_blank(card, 2, 'xaxis', 'LINEAR')
@@ -865,6 +880,7 @@ class TABLEM2(Table):
     +---------+------+-------+--------+-----+-----+-----+------+------+
 
     ..note:: EXTRAP is NX specific
+
     """
     type = 'TABLEM2'
     def __init__(self, tid, x1, x, y, extrap=0, comment=''):
@@ -939,6 +955,7 @@ class TABLEM3(Table):
     +---------+------+-------+-------+--------+-----+-----+------+------+
 
     ..note:: EXTRAP is NX specific
+
     """
     type = 'TABLEM3'
     def __init__(self, tid, x1, x2, x, y, extrap=0, comment=''):
@@ -964,6 +981,7 @@ class TABLEM3(Table):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         table_id = integer(card, 1, 'tid')
         x1 = double(card, 2, 'x1')
@@ -1041,6 +1059,7 @@ class TABLEM4(Table):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         table_id = integer(card, 1, 'tid')
         x1 = double(card, 2, 'x1')
@@ -1073,6 +1092,7 @@ class TABLEM4(Table):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         table_id = data[0]
         x1 = data[1]
@@ -1092,6 +1112,19 @@ class TABLEM4(Table):
 
 
 class TABLES1(Table):
+    """
+    +---------+------+-------+-------+--------+-----+-------+------+------+
+    |    1    |   2  |   3   |   4   |    5   |  6  |   7   |  8   |   9  |
+    +=========+======+=======+=======+========+=====+=======+======+======+
+    | TABLES1 |  TID | TYPE  |       |        |     |       |      |      |
+    +---------+------+-------+-------+--------+-----+-------+------+------+
+    |         |  x1  |  y1   |   x2  |   y2   | x3  |  y3   | etc. | ENDT |
+    +---------+------+-------+-------+--------+-----+-------+------+------+
+    | TABLES1 |  32  |       |       |        |     |       |      |      |
+    +---------+------+-------+-------+--------+-----+-------+------+------+
+    |         |  0.0 |  0.0  |  0.01 |  1000. | 0.2 | 1500. | ENDT |      |
+    +---------+------+-------+-------+--------+-----+-------+------+------+
+    """
     type = 'TABLES1'
 
     def __init__(self, tid, x, y, Type=1, comment=''):
@@ -1106,10 +1139,13 @@ class TABLES1(Table):
             Type of stress-strain curve (1 or 2)
             1 - Cauchy (true) stress vs. total true strain
             2 - Cauchy (true) stress vs. plastic true strain (MSC only)
+            Type is MSC-specific and was added somewhere between
+            2006 and 2016.
         x, y : List[float]
             table values
         comment : str; default=''
             a comment for the card
+
         """
         Table.__init__(self)
         if comment:
@@ -1131,6 +1167,7 @@ class TABLES1(Table):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         table_id = integer(card, 1, 'tid')
         Type = integer_or_blank(card, 2, 'Type', 1)
@@ -1148,6 +1185,7 @@ class TABLES1(Table):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         table_id = data[0]
         xy = data[1:]
@@ -1166,10 +1204,31 @@ class TABLES1(Table):
         return list_fields
 
     def repr_fields(self):
-        return self.raw_fields()
+        xy = []
+        for xi, yi in zip(self.x, self.y):
+            xy.extend([xi, yi])
+
+        # MSC 2005.2 doesn't support Type; 2016.1 does
+        stress_strain_curve_type = set_blank_if_default(self.Type, 1)
+        list_fields = ['TABLES1', self.tid, stress_strain_curve_type, None, None, None,
+                       None, None, None] + xy + ['ENDT']
+        return list_fields
 
 
 class TABLEST(Table):
+    """
+    +---------+-------+-------+-------+--------+------+------+------+------+
+    |    1    |   2   |   3   |   4   |    5   |  6  |   7   |  8   |   9  |
+    +=========+=======+=======+=======+========+=====+=======+======+======+
+    | TABLEST |  TID  |       |       |        |      |      |      |      |
+    +---------+-------+-------+-------+--------+------+------+------+------+
+    |         |   x1  |  y1   |   x2  |   y2   |  x3  |  y3  | etc. | ENDT |
+    +---------+-------+-------+-------+--------+------+------+------+------+
+    | TABLEST |   32  |       |       |        |      |      |      |      |
+    +---------+-------+-------+-------+--------+------+------+------+------+
+    |         | 150.0 |  10.0 | 175.0 |  20.   | ENDT |      |      |      |
+    +---------+-------+-------+-------+--------+------+------+------+------+
+    """
     type = 'TABLEST'
 
     def __init__(self, tid, x, y, comment=''):
@@ -1191,6 +1250,7 @@ class TABLEST(Table):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         table_id = integer(card, 1, 'tid')
         x, y = read_table(card, table_id, 'TABLEST')
@@ -1207,6 +1267,7 @@ class TABLEST(Table):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         table_id = data[0]
         xy = data[1:]
@@ -1262,6 +1323,7 @@ class TABRND1(RandomTable):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         table_id = integer(card, 1, 'tid')
         xaxis = string_or_blank(card, 2, 'xaxis', 'LINEAR')
@@ -1280,6 +1342,7 @@ class TABRND1(RandomTable):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         table_id = data[0]
         xaxis = _map_axis(data[1])
@@ -1318,6 +1381,7 @@ class TABRNDG(RandomTable):
 
     Defines the power spectral density (PSD) of a gust for aeroelastic response
     analysis.
+
     """
     type = 'TABRNDG'
 
@@ -1339,6 +1403,7 @@ class TABRNDG(RandomTable):
             Root-mean-square gust velocity
         comment : str; default=''
             a comment for the card
+
         """
         RandomTable.__init__(self)
         if comment:
@@ -1365,6 +1430,7 @@ class TABRNDG(RandomTable):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         table_id = integer(card, 1, 'tid')
         Type = integer(card, 2, 'Type')

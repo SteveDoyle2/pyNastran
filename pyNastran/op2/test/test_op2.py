@@ -133,7 +133,7 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
                       export_hdf5=True, debug=True, skip_files=None,
                       stop_on_failure=False, nstart=0, nstop=1000000000,
                       short_stats=False, binary_debug=False,
-                      compare=True, quiet=False, dev=True):
+                      compare=True, quiet=False, dev=True, xref_safe=False):
     """used by op2_test.py to run thousands of files"""
     if skip_files is None:
         skip_files = []
@@ -173,7 +173,8 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
                                      subcases=subcases, debug=debug,
                                      stop_on_failure=stop_on_failure,
                                      binary_debug=binary_debug,
-                                     compare=compare, dev=dev)[1]
+                                     compare=compare, dev=dev,
+                                     xref_safe=xref_safe)[1]
                 if not is_passedi:
                     is_passed = False
                     break
@@ -194,7 +195,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
             delete_f06=False, skip_dataframe=False,
             subcases=None, exclude=None, short_stats=False,
             compare=True, debug=False, log=None, binary_debug=False,
-            quiet=False, check_memory=False, stop_on_failure=True, dev=False):
+            quiet=False, check_memory=False, stop_on_failure=True, dev=False, xref_safe=False):
     """
     Runs an OP2
 
@@ -263,6 +264,11 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
         subcases = []
     if exclude is None:
         exclude = []
+    if isinstance(is_sort2, bool):
+        sort_methods = [is_sort2]
+    else:
+        sort_methods = is_sort2
+
     assert '.op2' in op2_filename.lower(), 'op2_filename=%s is not an OP2' % op2_filename
     is_passed = False
 
@@ -337,7 +343,8 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
             print(op2.get_op2_stats(short=short_stats))
             op2.print_subcase_key()
 
-        write_op2_as_bdf(op2, op2_bdf, bdf_filename, write_bdf, make_geom, read_bdf, dev)
+        write_op2_as_bdf(op2, op2_bdf, bdf_filename, write_bdf, make_geom, read_bdf, dev,
+                         xref_safe=xref_safe)
 
         if compare:
             assert op2 == op2_nv
@@ -351,10 +358,15 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
             print("Memory usage     end: %s (KB); %.2f (MB)" % (kb, mb))
 
         if IS_HDF5 and export_hdf5:
-            op2.export_to_hdf5(model + '.test_op2.h5')
+            from pyNastran.op2.op2_interface.hdf5_interface import load_op2_from_hdf5
+            h5_filename = model + '.test_op2.h5'
+            op2.export_to_hdf5(h5_filename)
+            load_op2_from_hdf5(h5_filename, log=op2.log)
         if write_f06:
-            op2.write_f06(model + '.test_op2.f06', is_mag_phase=is_mag_phase,
-                          is_sort1=not is_sort2, quiet=quiet, repr_check=True)
+            for is_sort2 in sort_methods:
+                op2.write_f06(model + '.test_op2.f06', is_mag_phase=is_mag_phase,
+                              is_sort1=not is_sort2, quiet=quiet, repr_check=True)
+
             if delete_f06:
                 try:
                     os.remove(model + '.test_op2.f06')
@@ -477,7 +489,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
 
     return op2, is_passed
 
-def write_op2_as_bdf(op2, op2_bdf, bdf_filename, write_bdf, make_geom, read_bdf, dev):
+def write_op2_as_bdf(op2, op2_bdf, bdf_filename, write_bdf, make_geom, read_bdf, dev, xref_safe=False):
     if write_bdf:
         assert make_geom, 'make_geom=%s' % make_geom
         op2._nastran_format = 'msc'
@@ -485,9 +497,12 @@ def write_op2_as_bdf(op2, op2_bdf, bdf_filename, write_bdf, make_geom, read_bdf,
         op2.validate()
         op2.write_bdf(bdf_filename, size=8)
         op2.log.debug('bdf_filename = %s' % bdf_filename)
+        xref = xref_safe is False
         if read_bdf:
             try:
-                op2_bdf.read_bdf(bdf_filename)
+                op2_bdf.read_bdf(bdf_filename, xref=xref)
+                if xref_safe:
+                    op2_bdf.safe_cross_reference()
             except:
                 if dev and len(op2_bdf.card_count) == 0:
                     pass
@@ -502,7 +517,7 @@ def get_test_op2_data():
 
     msg = "Usage:\n"
     #is_release = True
-    options = '[--skip_dataframe] [-z] [-w] [-t] [-s <sub>] [-x <arg>]... [--nx]'
+    options = '[--skip_dataframe] [-z] [-w] [-t] [-s <sub>] [-x <arg>]... [--nx] [--safe]'
     if is_release:
         line1 = "test_op2 [-q] [-b] [-c] [-g] [-n] [-f] %s OP2_FILENAME\n" % options
     else:
@@ -536,6 +551,8 @@ def get_test_op2_data():
     msg += "  -w, --is_sort2         Sets the F06 transient to SORT2\n"
     msg += "  -x <arg>, --exclude    Exclude specific results\n"
     msg += "  --nx                   Assume NX Nastran\n"
+    msg += "  --safe                 Safe cross-references BDF (default=False)\n"
+
 
     if not is_release:
         msg += "\n"
@@ -599,6 +616,7 @@ def main():
             compare=not data['--disablecompare'],
             quiet=data['--quiet'],
             is_nx=data['--nx'],
+            safe=data['--safe'],
         )
         prof.dump_stats('op2.profile')
 
@@ -625,6 +643,7 @@ def main():
             compare=not data['--disablecompare'],
             quiet=data['--quiet'],
             is_nx=data['--nx'],
+            xref_safe=data['--safe'],
         )
     print("dt = %f" % (time.time() - time0))
 

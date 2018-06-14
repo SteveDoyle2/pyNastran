@@ -35,6 +35,7 @@ def write_skin_solid_faces(model, skin_filename,
         double precision flag
     encoding : str; default=None -> system default
         the string encoding
+
     """
     if(len(model.element_ids) == 0 or len(model.material_ids) == 0 or
        len(model.property_ids) == 0):
@@ -121,6 +122,7 @@ def get_solid_skin_faces(model):
            the face nids in sorted order
        face : List(int, int, ...)
            the face nids
+
     """
     eid_faces = model.get_element_faces()
     face_set = defaultdict(int)
@@ -204,6 +206,7 @@ def _write_skin_solid_faces(model, skin_filename, face_map,
         double precision flag
     encoding : str; default=None -> system default
         the string encoding
+
     """
     encoding = model.get_encoding(encoding)
     if PY2:

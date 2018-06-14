@@ -6,8 +6,9 @@ This file defines functions related to the result updating that are VTK specific
 # coding: utf-8
 # pylint: disable=C0111
 from __future__ import print_function, unicode_literals
+import sys
 from copy import deepcopy
-from six import iteritems, itervalues, iterkeys, string_types
+from six import iteritems, iterkeys
 
 import numpy as np
 from numpy import full, issubdtype
@@ -16,9 +17,11 @@ import vtk
 
 from pyNastran.utils import integer_types
 from pyNastran.gui.gui_objects.names_storage import NamesStorage
+from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.gui.qt_files.gui_attributes import GuiAttributes
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk, numpy_to_vtk_points, VTK_VERSION
 from pyNastran.gui import IS_DEV
+IS_TESTING = 'test' in sys.argv[0]
 
 WHITE = (1., 1., 1.)
 BLUE = (0., 0., 1.)
@@ -39,60 +42,12 @@ class GuiCommon(GuiAttributes):
         self._names_storage = NamesStorage()
 
         self.vtk_version = VTK_VERSION
-        print('vtk_version = %s' % (self.vtk_version))
+        if not IS_TESTING:  # pragma: no cover
+            print('vtk_version = %s' % (self.vtk_version))
         if self.vtk_version[0] < 7 and not IS_DEV:  # TODO: should check for 7.1
             raise RuntimeError('VTK %s is no longer supported' % vtk.VTK_VERSION)
 
-    def update_axes_length(self, dim_max):
-        """
-        sets the driving dimension for:
-          - picking?
-          - coordinate systems
-          - label size
-        """
-        self.settings.dim_max = dim_max
-        dim = self.dim * 0.10
-        self.on_set_axes_length(dim)
-
-    def on_set_axes_length(self, dim=None):
-        """
-        scale coordinate system based on model length
-        """
-        if dim is None:
-            dim = self.settings.dim_max * 0.10
-        if hasattr(self, 'axes'):
-            for axes in itervalues(self.axes):
-                axes.SetTotalLength(dim, dim, dim)
-
-    def update_text_actors(self, subcase_id, subtitle, min_value, max_value, label):
-        """
-        Updates the text actors in the lower left
-
-        Max:  1242.3
-        Min:  0.
-        Subcase: 1 Subtitle:
-        Label: SUBCASE 1; Static
-        """
-        if isinstance(max_value, integer_types):
-            max_msg = 'Max:  %i' % max_value
-            min_msg = 'Min:  %i' % min_value
-        elif isinstance(max_value, string_types):
-            max_msg = 'Max:  %s' % str(max_value)
-            min_msg = 'Min:  %s' % str(min_value)
-        else:
-            max_msg = 'Max:  %g' % max_value
-            min_msg = 'Min:  %g' % min_value
-        self.text_actors[0].SetInput(max_msg)
-        self.text_actors[1].SetInput(min_msg)
-        self.text_actors[2].SetInput('Subcase: %s Subtitle: %s' % (subcase_id, subtitle))  # info
-
-        if label:
-            self.text_actors[3].SetInput('Label: %s' % label)  # info
-            self.text_actors[3].VisibilityOn()
-        else:
-            self.text_actors[3].VisibilityOff()
-
-    def on_rcycle_results(self, case=None):
+    def on_rcycle_results(self):
         """the reverse of on_cycle_results"""
         if len(self.case_keys) <= 1:
             return
@@ -114,7 +69,7 @@ class GuiCommon(GuiAttributes):
             except IndexError:
                 icase -= 1
 
-    def on_cycle_results(self, case=None, show_msg=True):
+    def on_cycle_results(self, show_msg=True):
         """the gui method for calling cycle_results"""
         if len(self.case_keys) <= 1:
             return
@@ -226,14 +181,19 @@ class GuiCommon(GuiAttributes):
 
         self.hide_legend()
         self.scalar_bar.is_shown = False
-        self._set_legend_fringe(False)
+
+        self.clear_legend()
         self.vtk_interactor.Render()
 
         self.res_widget.result_case_window.treeView.fringe.setChecked(False)
         self.res_widget.result_case_window.treeView.disp.setChecked(False)
         self.res_widget.result_case_window.treeView.vector.setChecked(False)
+        self.icase = -1
+        self.icase_fringe = None
+        self.icase_disp = None
+        self.icase_vector = None
 
-    def _get_fringe_data(self, icase):
+    def _get_fringe_data(self, icase, scale=None):
         """helper for ``on_fringe``"""
         is_valid = False
         # (grid_result, name_tuple, name_str, data)
@@ -253,7 +213,17 @@ class GuiCommon(GuiAttributes):
         label2 = ''
         (obj, (i, name)) = self.result_cases[icase]
         subcase_id = obj.subcase_id
+
         case = obj.get_result(i, name)
+        if scale is None:
+            scale = 1.0
+        else:
+            # we can have ints...
+            #case *= scale
+            case = np.multiply(case, scale, casting="unsafe")
+        #else:
+            # phase is not None
+            #xyz_nominal, vector_data = obj.get_vector_result(i, name, phase)
 
         if case is None:
             # normal result
@@ -277,7 +247,8 @@ class GuiCommon(GuiAttributes):
         out = obj.get_nlabels_labelsize_ncolors_colormap(i, name)
         nlabels, labelsize, ncolors, colormap = out
 
-        normi = self._get_normalized_data(icase)
+        #normi = _get_normalized_data(self.result_cases[icase])
+        normi = _get_normalized_data(case)
 
         #if min_value is None and max_value is None:
             #max_value = normi.max()
@@ -294,7 +265,6 @@ class GuiCommon(GuiAttributes):
         norm_value = float(max_value - min_value)
 
         vector_size = 1
-        scale = 1.0
         name_tuple = (vector_size, subcase_id, result_type, label, min_value, max_value, scale)
         name_str = self._names_storage.get_name_string(name)
         #return name, normi, vector_size, min_value, max_value, norm_value
@@ -309,35 +279,6 @@ class GuiCommon(GuiAttributes):
         is_valid = True
         return is_valid, (grid_result, name_tuple, name_str, data)
 
-    def export_case_data(self, icases=None):
-        """exports CSVs of the requested cases"""
-        if icases is None:
-            icases = self.result_cases.keys()
-        for icase in icases:
-            (obj, (i, name)) = self.result_cases[icase]
-            subcase_id = obj.subcase_id
-            location = obj.get_location(i, name)
-
-            case = obj.get_result(i, name)
-            if case is None:
-                continue # normals
-            subtitle, label = self.get_subtitle_label(subcase_id)
-            label2 = obj.get_header(i, name)
-            data_format = obj.get_data_format(i, name)
-            vector_size = obj.get_vector_size(i, name)
-            print(subtitle, label, label2, location, name)
-
-            word, eids_nids = self.get_mapping_for_location(location)
-
-            # fixing cast int data
-            header = '%s(%%i),%s(%s)' % (word, label2, data_format)
-            if 'i' in data_format and isinstance(case.dtype, np.floating):
-                header = '%s(%%i),%s' % (word, label2)
-
-            fname = '%s_%s.csv' % (icase, name)
-            out_data = np.column_stack([eids_nids, case])
-            np.savetxt(fname, out_data, delimiter=',', header=header, fmt=b'%s')
-
     def get_mapping_for_location(self, location):
         """helper method for ``export_case_data``"""
         if location == 'centroid':
@@ -349,19 +290,6 @@ class GuiCommon(GuiAttributes):
         else:
             raise NotImplementedError(location)
         return word, eids_nids
-
-    def _get_normalized_data(self, icase):
-        """helper method for ``export_case_data``"""
-        (obj, (i, name)) = self.result_cases[icase]
-        case = obj.get_result(i, name)
-        if case is None:
-            return None
-
-        if len(case.shape) == 1:
-            normi = case
-        else:
-            normi = norm(case, axis=1)
-        return normi
 
     def _get_disp_data(self, icase, is_disp):
         """helper for ``on_disp``"""
@@ -386,11 +314,11 @@ class GuiCommon(GuiAttributes):
         label2 = ''
         (obj, (i, name)) = self.result_cases[icase]
         subcase_id = obj.subcase_id
-        case = obj.get_result(i, name)
-        if case is None:
-            # normal result
-            self.log_error('icase=%r is not a displacement/force' % icase)
-            return is_valid, failed_data
+        #case = obj.get_result(i, name)  # TODO: remove
+        #if case is None:
+            ## normal result
+            #self.log_error('icase=%r is not a displacement/force' % icase)
+            #return is_valid, failed_data
 
         result_type = obj.get_title(i, name)
         vector_size = obj.get_vector_size(i, name)
@@ -459,7 +387,7 @@ class GuiCommon(GuiAttributes):
         is_valid = True
         return is_valid, (grid_result, name_tuple, name_str, data)
 
-    def on_fringe(self, icase, show_msg=True):
+    def on_fringe(self, icase, update_legend_window=True, show_msg=True):
         """
         Sets the icase data to the active fringe
 
@@ -470,22 +398,72 @@ class GuiCommon(GuiAttributes):
             None : defaults to self.icase+1
         """
         self.icase = icase
-        is_valid, (grid_result, name, name_str, data) = self._get_fringe_data(icase)
-
+        is_valid, data = self._update_vtk_fringe(icase)
         if not is_valid:
-            return
+            return is_valid
+
         (
-            icase, result_type, location, min_value, max_value, norm_value,
+            icase, result_type, unused_location, min_value, max_value, norm_value,
             data_format, scale, methods,
             nlabels, labelsize, ncolors, colormap,
         ) = data
 
-        #(obj, (obj_i, obj_name)) = self.result_cases[self.icase]
-        #obj_location = obj.get_location(obj_i, obj_name)
-        #obj_location = ''
+        #is_legend_shown = True
+        #if is_legend_shown is None:
+        self.show_legend()
+        self.scalar_bar.is_shown = True
+        is_legend_shown = self.scalar_bar.is_shown
+
+        # TODO: normal -> fringe screws up legend
+        #print('is_legend_shown = ', is_legend_shown)
+        if not is_legend_shown:
+            #print('showing')
+            self.show_legend()
+
+        self.update_scalar_bar(result_type, min_value, max_value, norm_value,
+                               data_format,
+                               nlabels=nlabels, labelsize=labelsize,
+                               ncolors=ncolors, colormap=colormap,
+                               is_shown=is_legend_shown)
+
+        icase_fringe = icase
+        icase_disp = self.icase_disp
+        icase_vector = self.icase_vector
+
+        phase = 0.0
+        arrow_scale = 0.0
+        if update_legend_window:
+            self.legend_obj.update_legend(
+                icase_fringe, icase_disp, icase_vector,
+                result_type, min_value, max_value, data_format, scale, phase,
+                arrow_scale,
+                nlabels, labelsize, ncolors, colormap,
+                use_disp_internal=True, use_vector_internal=True)
+            self._set_legend_fringe(True)
+        self.res_widget.update_method(methods)
+
+        self.icase_fringe = icase
+        self.grid.Modified()
+        self.grid_selected.Modified()
+        self.vtk_interactor.Render()
+        self.res_widget.result_case_window.treeView.fringe.setChecked(True)
+        is_valid = True
+        return is_valid
+
+    def _update_vtk_fringe(self, icase, scale=None):
+        """helper method for ``on_fringe``"""
+        is_valid, (grid_result, name, name_str, data) = self._get_fringe_data(icase, scale)
+        #print("is_valid=%s scale=%s" % (is_valid, scale))
+        if not is_valid:
+            return is_valid, data
+        (
+            icase, unused_result_type, location, unused_min_value, unused_max_value, unused_norm_value,
+            unused_data_format, unused_scale, unused_methods,
+            unused_nlabels, unused_labelsize, unused_ncolors, unused_colormap,
+        ) = data
+
         #-----------------------------------
         grid = self.grid
-        phase = 0.0
 
         grid_result.SetName(name_str)
         self._names_storage.add(name)
@@ -511,67 +489,25 @@ class GuiCommon(GuiAttributes):
             point_data.SetActiveScalars(name_str)
         else:
             raise RuntimeError(location)
+        is_valid = True
+        return is_valid, data
 
-        is_low_to_high = True
-        #self._legend_window_shown = False
-        #self.update_legend(
-            #icase,
-            #result_type, min_value, max_value, data_format, scale, phase,
-            #nlabels, labelsize, ncolors, colormap,
-            #is_low_to_high, self.is_horizontal_scalar_bar)
-        #self.on_update_legend(title=title, min_value=min_value, max_value=max_value,
-                              #scale=scale, phase=phase, data_format=data_format,
-                              #is_low_to_high=is_low_to_high,
-                              ##is_discrete=is_discrete,
-                              ##is_horizontal=is_horizontal,
-                              #nlabels=nlabels, labelsize=labelsize,
-                              #ncolors=ncolors, colormap=colormap,
-                              #is_shown=True)
-
-        #is_legend_shown = True
-        #if is_legend_shown is None:
-        self.show_legend()
-        self.scalar_bar.is_shown = True
-        is_legend_shown = self.scalar_bar.is_shown
-
-        # TODO: normal -> fringe screws up legend
-        #print('is_legend_shown = ', is_legend_shown)
-        if not is_legend_shown:
-            #print('shownig')
-            self.show_legend()
-
-        self.update_scalar_bar(result_type, min_value, max_value, norm_value,
-                               data_format,
-                               nlabels=nlabels, labelsize=labelsize,
-                               ncolors=ncolors, colormap=colormap,
-                               is_low_to_high=is_low_to_high,
-                               is_horizontal=self.is_horizontal_scalar_bar,
-                               is_shown=is_legend_shown)
-
-        self.update_legend(icase,
-                           result_type, min_value, max_value, data_format, scale, phase,
-                           nlabels, labelsize, ncolors, colormap,
-                           is_low_to_high, self.is_horizontal_scalar_bar)
-        self.res_widget.update_method(methods)
-
-        self.grid.Modified()
-        self.grid_selected.Modified()
-        self.vtk_interactor.Render()
-        self.res_widget.result_case_window.treeView.fringe.setChecked(True)
-
-    def on_disp(self, icase, apply_fringe=False, show_msg=True):
+    def on_disp(self, icase, apply_fringe=False, update_legend_window=True, show_msg=True):
+        """Sets the icase data to the active displacement"""
         is_disp = True
-        self._on_disp_vector(icase, is_disp, apply_fringe, show_msg=show_msg)
+        self._on_disp_vector(icase, is_disp, apply_fringe, update_legend_window, show_msg=show_msg)
         self.res_widget.result_case_window.treeView.disp.setChecked(True)
 
-    def on_vector(self, icase, apply_fringe=False, show_msg=True):
+    def on_vector(self, icase, apply_fringe=False, update_legend_window=True, show_msg=True):
+        """Sets the icase data to the active vector"""
         is_disp = False
-        self._on_disp_vector(icase, is_disp, apply_fringe, show_msg=show_msg)
+        self._on_disp_vector(icase, is_disp, apply_fringe, update_legend_window, show_msg=show_msg)
         self.res_widget.result_case_window.treeView.vector.setChecked(True)
 
-    def _on_disp_vector(self, icase, is_disp, apply_fringe=False, show_msg=True):
+    def _on_disp_vector(self, icase, is_disp, apply_fringe=False,
+                        update_legend_window=True, show_msg=True):
         """
-        Sets the icase data to the active displacement
+        Sets the icase data to the active displacement/vector
 
         Parameters
         ----------
@@ -580,12 +516,14 @@ class GuiCommon(GuiAttributes):
             None : defaults to self.icase+1
         """
         self.icase = icase
-        is_valid, (grid_result, name, name_str, data) = self._get_disp_data(icase, is_disp)
+        is_valid, (grid_result, unused_name, unused_name_str, data) = self._get_disp_data(
+            icase, is_disp)
 
         if not is_valid:
             return
         (
-            icase, unused_result_type, location, unused_min_value, unused_max_value, unused_norm_value,
+            icase, unused_result_type, location,
+            unused_min_value, unused_max_value, unused_norm_value,
             unused_data_format, scale, unused_phase, unused_methods,
             unused_nlabels, unused_labelsize, unused_ncolors, unused_colormap,
             xyz_nominal, vector_data,
@@ -598,37 +536,8 @@ class GuiCommon(GuiAttributes):
         #obj_location = ''
         #-----------------------------------
         grid = self.grid
-        #phase = 0.0
 
-        if 0:
-            grid_result.SetName(name_str)
-            self._names_storage.add(name)
-
-            self.log_debug('icase=%s location=%s' % (icase, location))
-            cell_data = grid.GetCellData()
-            point_data = grid.GetPointData()
-
-            if location == 'centroid':
-                #cell_data.RemoveArray(name_str)
-                self._names_storage.remove(name)
-                cell_data.AddArray(grid_result)
-
-                #if location != obj_location:
-                point_data.SetActiveVectors(None)
-                cell_data.SetActiveVectors(name_str)
-
-            elif location == 'node':
-                #point_data.RemoveArray(name_str)
-                self._names_storage.remove(name)
-                point_data.AddArray(grid_result)
-
-                #if location != obj_location:
-                cell_data.SetActiveVectors(None)
-                point_data.SetActiveVectors(name_str)
-            else:
-                raise RuntimeError(location)
-
-        print('disp=%s location=%r' % (is_disp, location))
+        #print('disp=%s location=%r' % (is_disp, location))
         if is_disp: # or obj.deflects(i, res_name):
             #grid_result1 = self.set_grid_values(name, case, 1,
                                                 #min_value, max_value, norm_value)
@@ -639,9 +548,11 @@ class GuiCommon(GuiAttributes):
             self._xyz_nominal = xyz_nominal
             self._update_grid(vector_data)
 
-            self.grid.Modified()
+            grid.Modified()
             self.grid_selected.Modified()
+            self.icase_disp = icase
         else:
+            self.icase_vector = icase
             if location == 'node':
                 #self._is_displaced = False
                 self._is_forces = True
@@ -652,20 +563,32 @@ class GuiCommon(GuiAttributes):
                 self._is_forces = True
                 #xyz_nominal, vector_data = obj.get_vector_result(i, res_name)
                 self._update_elemental_vectors(vector_data, set_scalars=apply_fringe, scale=scale)
+            self.icase_vector = icase
 
-        #is_low_to_high = True
-        #self.log_info('min_value=%s, max_value=%s' % (min_value, max_value))
+        icase_fringe = self.icase_fringe
+        icase_disp = self.icase_disp
+        icase_vector = self.icase_vector
 
-        #is_legend_shown = True
-        #if is_legend_shown is None:
-        #is_legend_shown = self.scalar_bar.is_shown
-        #self.log_debug('is_legend_shown = %s' % is_legend_shown)
+        result_type = None
+        max_value = None
+        min_value = None
+        data_format = None
+        nlabels = None
+        ncolors = None
+        colormap = None
+        labelsize = None
 
-        #self.update_legend(icase,
-                           #result_type, min_value, max_value, data_format, scale, phase,
-                           #nlabels, labelsize, ncolors, colormap,
-                           #is_low_to_high, self.is_horizontal_scalar_bar)
-        #self.res_widget.update_method(methods)
+        scale = None
+        phase = None
+        arrow_scale = None
+        if update_legend_window:
+            self.legend_obj.update_legend(
+                icase_fringe, icase_disp, icase_vector,
+                result_type, min_value, max_value, data_format, scale, phase,
+                arrow_scale,
+                nlabels, labelsize, ncolors, colormap, use_fringe_internal=True,
+                use_disp_internal=True, use_vector_internal=True,
+                external_call=False)
 
         self.vtk_interactor.Render()
 
@@ -735,6 +658,8 @@ class GuiCommon(GuiAttributes):
         """
         Internal method for doing results updating
 
+        Parameters
+        ----------
         unused_result_name : str
             the name of the case for debugging purposes
         icase : int
@@ -762,12 +687,20 @@ class GuiCommon(GuiAttributes):
         show_msg : bool; default=True
             ???
         """
+        _update_icase = (
+            self.icase != self.icase_fringe and self.icase_fringe is not None or
+            self.icase != self.icase_disp  and self.icase_disp is not None or
+            self.icase != self.icase_vector and self.icase_vector is not None
+        )
+        if _update_icase:
+            skip_click_check = True
+
         if not skip_click_check:
             if not cycle and icase == self.icase:
                 # don't click the button twice
                 # cycle=True means we're cycling
                 # cycle=False skips that check
-                return
+                return None
 
         try:
             key = self.case_keys[icase]
@@ -775,6 +708,12 @@ class GuiCommon(GuiAttributes):
             print('icase=%r case_keys=%s' % (icase, str(self.case_keys)))
             raise
         self.icase = icase
+
+        # these will be fixed later in this function
+        self.icase_fringe = None
+        self.icase_disp = None
+        self.icase_vector = None
+
         case = self.result_cases[key]
         label2 = ''
         assert isinstance(key, integer_types), key
@@ -806,11 +745,13 @@ class GuiCommon(GuiAttributes):
               #% (subcase_id, result_type, subtitle, label))
 
         #================================================
-        is_low_to_high = True
         if case is None:
-            return self.set_normal_result(icase, name, subcase_id)
+            self.icase_fringe = icase
+            self.set_normal_result(icase, name, subcase_id)
+            return icase
 
         elif not self._is_fringe:
+            self.icase_fringe = icase
             # we maybe hacked the scalar bar to turn off for Normals/Clear Results
             # so we turn it back on
             self.show_legend()
@@ -848,7 +789,7 @@ class GuiCommon(GuiAttributes):
         self.update_text_actors(subcase_id, subtitle,
                                 min_value, max_value, label)
 
-        self.final_grid_update(name, grid_result,
+        self.final_grid_update(icase, name, grid_result,
                                name_vector, grid_result_vector,
                                key, subtitle, label, show_msg)
 
@@ -858,14 +799,19 @@ class GuiCommon(GuiAttributes):
                                data_format,
                                nlabels=nlabels, labelsize=labelsize,
                                ncolors=ncolors, colormap=colormap,
-                               is_low_to_high=is_low_to_high,
-                               is_horizontal=self.is_horizontal_scalar_bar,
                                is_shown=is_legend_shown)
 
-        self.update_legend(icase,
-                           result_type, min_value, max_value, data_format, scale, phase,
-                           nlabels, labelsize, ncolors, colormap,
-                           is_low_to_high, self.is_horizontal_scalar_bar)
+        icase_fringe = icase
+        icase_disp = self.icase_disp
+        icase_vector = self.icase_vector
+
+        arrow_scale = 0.0
+        self.legend_obj.update_legend(
+            icase_fringe, icase_disp, icase_vector,
+            result_type, min_value, max_value, data_format, scale, phase,
+            arrow_scale,
+            nlabels, labelsize, ncolors, colormap, use_fringe_internal=True,
+            external_call=False)
 
         # updates the type of the result that is displayed
         # method:
@@ -884,7 +830,7 @@ class GuiCommon(GuiAttributes):
         assert self.icase is not False, self.icase
         return self.icase
 
-    def set_normal_result(self, icase, name, subcase_id):
+    def set_normal_result(self, icase, name, unused_subcase_id):
         """plots a NormalResult"""
         unused_name_str = self._names_storage.get_name_string(name)
         prop = self.geom_actor.GetProperty()
@@ -901,15 +847,18 @@ class GuiCommon(GuiAttributes):
         if self._is_displaced:
             self._is_displaced = False
             self._update_grid(self._xyz_nominal)
+            self.icase_disp = None
 
         if self._is_forces:
             self.arrow_actor.SetVisibility(False)
+            self.icase_vector = None
 
         cell_data = grid.GetCellData()
         cell_data.SetActiveScalars(None)
 
         point_data = grid.GetPointData()
         point_data.SetActiveScalars(None)
+        self.icase_fringe = icase
 
         #if is_legend_shown is None:
             #is_legend_shown = self.scalar_bar.is_shown
@@ -917,18 +866,17 @@ class GuiCommon(GuiAttributes):
                                #data_format,
                                #nlabels=nlabels, labelsize=labelsize,
                                #ncolors=ncolors, colormap=colormap,
-                               #is_low_to_high=is_low_to_high,
-                               #is_horizontal=self.is_horizontal_scalar_bar,
                                #is_shown=is_legend_shown)
         #scale = 0.0
         #phase = None
 
         #min_value = -1.
         #max_value = 1.
-        #self.update_legend(icase,
-                           #result_type, min_value, max_value, data_format, scale, phase,
-                           #nlabels, labelsize, ncolors, colormap,
-                           #is_low_to_high, self.is_horizontal_scalar_bar)
+        #icase_fringe = icase
+        #self.legend_obj.update_legend(
+            #icase_fringe, icase_disp, icase_vector,
+            #result_type, min_value, max_value, data_format, scale, phase,
+            #nlabels, labelsize, ncolors, colormap, external_call=False)
         self.hide_legend()
         self.scalar_bar.is_shown = False
         self._set_legend_fringe(False)
@@ -938,8 +886,7 @@ class GuiCommon(GuiAttributes):
                                 #min_value, max_value, label)
         self.vtk_interactor.Render()
 
-
-    def set_grid_values(self, name, case, vector_size, min_value, max_value, norm_value,
+    def set_grid_values(self, name, case, vector_size, min_value, unused_max_value, norm_value,
                         is_low_to_high=True):
         """
         https://pyscience.wordpress.com/2014/09/06/numpy-to-vtk-converting-your-numpy-arrays-to-vtk-arrays-and-files/
@@ -1037,7 +984,34 @@ class GuiCommon(GuiAttributes):
         self._xyz_nominal = xyz_nominal
         self._update_grid(vector_data)
 
-    def final_grid_update(self, name, grid_result,
+    def update_forces_by_icase_scale_phase(self, icase, arrow_scale, phase=0.0):
+        """
+        Updates to the force state defined by the cases
+
+        Parameters
+        ----------
+        icase : int
+            result number in self.result_cases
+        arrow_scale : float
+            force scale factor; ??? scale
+        phase : float; default=0.0
+            phase angle (degrees); unused for real results
+        """
+        #print('update_grid_by_icase_scale_phase')
+        (obj, (i, res_name)) = self.result_cases[icase]
+        unused_xyz_nominal, vector_data = obj.get_vector_result_by_scale_phase(
+            i, res_name, arrow_scale, phase)
+
+        #grid_result1 = self.set_grid_values(name, case, 1,
+            #min_value, max_value, norm_value)
+        #point_data.AddArray(grid_result1)
+
+        self._is_forces = True
+        ## TODO: support elemental forces
+        self._update_forces(vector_data, set_scalars=False, scale=arrow_scale)
+        #self._update_elemental_vectors(forces_array, set_scalars=True, scale=None)
+
+    def final_grid_update(self, icase, name, grid_result,
                           name_vector, grid_result_vector,
                           key, subtitle, label, show_msg):
         assert isinstance(key, integer_types), key
@@ -1049,17 +1023,17 @@ class GuiCommon(GuiAttributes):
 
         #if vector_size == 3:
             #print('name, grid_result, vector_size=3', name, grid_result)
-        self._final_grid_update(name, grid_result, None, None, None,
+        self._final_grid_update(icase, name, grid_result, None, None, None,
                                 1, subcase_id, result_type, location, subtitle, label,
                                 revert_displaced=True, show_msg=show_msg)
         if vector_size == 3:
-            self._final_grid_update(name_vector, grid_result_vector, obj, i, res_name,
+            self._final_grid_update(icase, name_vector, grid_result_vector, obj, i, res_name,
                                     vector_size, subcase_id, result_type, location, subtitle, label,
                                     revert_displaced=False, show_msg=show_msg)
             #xyz_nominal, vector_data = obj.get_vector_result(i, res_name)
             #self._update_grid(vector_data)
 
-    def _final_grid_update(self, name, grid_result, obj, i, res_name,
+    def _final_grid_update(self, icase, name, grid_result, obj, i, res_name,
                            vector_size, subcase_id, result_type, location, subtitle, label,
                            revert_displaced=True, show_msg=True):
         if name is None:
@@ -1119,12 +1093,14 @@ class GuiCommon(GuiAttributes):
                         self._is_forces = False
                         self._xyz_nominal = xyz_nominal
                         self._update_grid(vector_data)
+                        self.icase_disp = icase
                     else:
                         self._is_displaced = False
                         self._is_forces = True
                         scale = obj.get_scale(i, res_name)
                         xyz_nominal, vector_data = obj.get_vector_result(i, res_name)
                         self._update_forces(vector_data, scale)
+                        self.icase_vector = icase
 
                     if show_msg:
                         self.log_info('node plotting vector=%s - subcase_id=%s '
@@ -1138,6 +1114,7 @@ class GuiCommon(GuiAttributes):
                 raise RuntimeError(location)
 
         if location == 'centroid':
+            self.icase_fringe = icase
             cell_data = grid.GetCellData()
             cell_data.SetActiveScalars(name_str)
 
@@ -1154,6 +1131,7 @@ class GuiCommon(GuiAttributes):
 
             point_data = grid.GetPointData()
             if vector_size == 1:
+                self.icase_fringe = icase
                 point_data.SetActiveScalars(name_str)  # TODO: None???
             elif vector_size == 3:
                 pass
@@ -1166,6 +1144,7 @@ class GuiCommon(GuiAttributes):
 
         grid.Modified()
         self.grid_selected.Modified()
+        #self.contour_filter.Modified()
         #self.update_all()
         #self.update_all()
         if len(self.groups):
@@ -1180,20 +1159,9 @@ class GuiCommon(GuiAttributes):
         grid = self.grid
         if scale is not None:
             self.glyphs.SetScaleFactor(self.glyph_scale_factor * scale)
-        mag = np.linalg.norm(forces_array, axis=1)
-        #assert len(forces_array) == len(mag)
-
-        mag_max = mag.max()
-        new_forces = np.copy(forces_array / mag_max)
-        #mag /= mag_max
-
-        #inonzero = np.where(mag > 0)[0]
-        #print('new_forces_max =', new_forces.max())
-        #print('new_forces =', new_forces[inonzero])
-        #print('mag =', mag[inonzero])
+        new_forces, mag = normalize_forces(forces_array)
 
         vtk_vectors = numpy_to_vtk(new_forces, deep=1)
-
         grid.GetPointData().SetVectors(vtk_vectors)
         if set_scalars:
             vtk_mag = numpy_to_vtk(mag, deep=1)
@@ -1209,20 +1177,9 @@ class GuiCommon(GuiAttributes):
         if scale is not None:
             # TODO: glyhs_centroid?
             self.glyphs_centroid.SetScaleFactor(self.glyph_scale_factor * scale)
-        mag = np.linalg.norm(forces_array, axis=1)
-        #assert len(forces_array) == len(mag)
-
-        mag_max = mag.max()
-        new_forces = np.copy(forces_array / mag_max)
-        #mag /= mag_max
-
-        #inonzero = np.where(mag > 0)[0]
-        #print('new_forces_max =', new_forces.max())
-        #print('new_forces =', new_forces[inonzero])
-        #print('mag =', mag[inonzero])
+        new_forces, mag = normalize_forces(forces_array)
 
         vtk_vectors = numpy_to_vtk(new_forces, deep=1)
-
         grid.GetPointData().SetVectors(None)
         #print('_update_elemental_vectors; shape=%s' % (str(new_forces.shape)))
         grid.GetCellData().SetVectors(vtk_vectors)
@@ -1271,6 +1228,7 @@ class GuiCommon(GuiAttributes):
 
         #print('result_cases.keys() =', self.result_cases.keys())
         i = 0
+        icase = None
         for icase in sorted(iterkeys(self.result_cases)):
             #cases = self.result_cases[icase]
             if result_name == icase[1]:
@@ -1319,17 +1277,191 @@ class GuiCommon(GuiAttributes):
         #print("next icase=%s key=%s" % (self.icase, key))
         return found_cases
 
-    def get_result_name(self, key):
-        assert isinstance(key, integer_types), key
-        (unused_obj, (unused_i, name)) = self.result_cases[key]
-        return name
+    def get_result_name(self, icase):
+        assert isinstance(icase, integer_types), icase
+        (unused_obj, (unused_i, res_name)) = self.result_cases[icase]
+        return res_name
 
-    def get_case_location(self, key):
-        assert isinstance(key, integer_types), key
-        (obj, (i, name)) = self.result_cases[key]
-        return obj.get_location(i, name)
+    def get_case_location(self, icase):
+        assert isinstance(icase, integer_types), icase
+        (obj, (i, res_name)) = self.result_cases[icase]
+        return obj.get_location(i, res_name)
 
-    def _set_legend_fringe(self, is_fringe):
-        self._is_fringe = is_fringe
-        if self._legend_window_shown:
-            self._legend_window._set_legend_fringe(is_fringe)
+    #---------------------------------------------------------------------------
+    def hide_labels(self, case_keys=None, show_msg=True):
+        if case_keys is None:
+            names = 'None)  # None -> all'
+            case_keys = sorted(self.label_actors.keys())
+        else:
+            mid = '%s,' * len(case_keys)
+            names = '[' + mid[:-1] + '])'
+
+        count = 0
+        for icase in case_keys:
+            actors = self.label_actors[icase]
+            for actor in actors:
+                actor.VisibilityOff()
+                #prop = actor.GetProperty()
+                count += 1
+        if count and show_msg:
+            self.log_command('hide_labels(%s)' % names)
+
+    def show_labels(self, case_keys=None, show_msg=True):
+        if case_keys is None:
+            names = 'None)  # None -> all'
+            case_keys = sorted(self.label_actors.keys())
+        else:
+            mid = '%s,' * len(case_keys)
+            names = mid[:-1] % case_keys + ')'
+
+        count = 0
+        for icase in case_keys:
+            try:
+                actors = self.label_actors[icase]
+            except KeyError:
+                msg = 'Cant find label_actors for icase=%r; keys=%s' % (
+                    icase, self.label_actors.keys())
+                self.log.error(msg)
+                continue
+            for actor in actors:
+                actor.VisibilityOn()
+                count += 1
+        if count and show_msg:
+            # yes the ) is intentionally left off because it's already been added
+            self.log_command('show_labels(%s)' % names)
+
+    def create_alternate_vtk_grid(self, name, color=None, line_width=5, opacity=1.0, point_size=1,
+                                  bar_scale=0.0, representation=None, display=None, is_visible=True,
+                                  follower_nodes=None, follower_function=None,
+                                  is_pickable=False, ugrid=None):
+        """
+        Creates an AltGeometry object
+
+        Parameters
+        ----------
+        line_width : int
+            the width of the line for 'surface' and 'main'
+        color : [int, int, int]
+            the RGB colors
+        opacity : float
+            0.0 -> solid
+            1.0 -> transparent
+        point_size : int
+            the point size for 'point'
+        bar_scale : float
+            the scale for the CBAR / CBEAM elements
+        representation : str
+            main - change with main mesh
+            wire - always wireframe
+            point - always points
+            surface - always surface
+            bar - can use bar scale
+        is_visible : bool; default=True
+            is this actor currently visable
+        is_pickable : bool; default=False
+            can you pick a node/cell on this actor
+        follower_nodes : List[int]
+            the nodes that are brought along with a deflection
+        follower_function : function
+            a custom follower_node update function
+        ugrid : vtk.vtkUnstructuredGrid(); default=None
+            the grid object; one will be created that you can fill
+            if None is passed in
+        """
+        if ugrid is None:
+            ugrid = vtk.vtkUnstructuredGrid()
+        self.alt_grids[name] = ugrid
+        self.geometry_properties[name] = AltGeometry(
+            self, name, color=color,
+            line_width=line_width, opacity=opacity,
+            point_size=point_size, bar_scale=bar_scale,
+            representation=representation, display=display,
+            is_visible=is_visible, is_pickable=is_pickable)
+        if follower_nodes is not None:
+            self.follower_nodes[name] = follower_nodes
+        if follower_function is not None:
+            self.follower_functions[name] = follower_function
+
+    def duplicate_alternate_vtk_grid(self, name, name_duplicate_from, color=None, line_width=5,
+                                     opacity=1.0, point_size=1, bar_scale=0.0, is_visible=True,
+                                     follower_nodes=None, is_pickable=False):
+        """
+        Copies the VTK actor
+
+        Parameters
+        ----------
+        line_width : int
+            the width of the line for 'surface' and 'main'
+        color : [int, int, int]
+            the RGB colors
+        opacity : float
+            0.0 -> solid
+            1.0 -> transparent
+        point_size : int
+            the point size for 'point'
+        bar_scale : float
+            the scale for the CBAR / CBEAM elements
+        is_visible : bool; default=True
+            is this actor currently visable
+        is_pickable : bool; default=False
+            can you pick a node/cell on this actor
+        follower_nodes : List[int]
+            the nodes that are brought along with a deflection
+        """
+        self.alt_grids[name] = vtk.vtkUnstructuredGrid()
+        if name_duplicate_from == 'main':
+            grid_copy_from = self.grid
+            representation = 'toggle'
+        else:
+            grid_copy_from = self.alt_grids[name_duplicate_from]
+            props = self.geometry_properties[name_duplicate_from]
+            representation = props.representation
+        self.alt_grids[name].DeepCopy(grid_copy_from)
+
+        #representation : str
+            #main - change with main mesh
+            #wire - always wireframe
+            #point - always points
+            #surface - always surface
+            #bar - can use bar scale
+        self.geometry_properties[name] = AltGeometry(
+            self, name, color=color, line_width=line_width,
+            opacity=opacity, point_size=point_size,
+            bar_scale=bar_scale, representation=representation,
+            is_visible=is_visible, is_pickable=is_pickable)
+
+        if follower_nodes is not None:
+            self.follower_nodes[name] = follower_nodes
+
+def _get_normalized_data(case):
+    """helper method for ``_get_fringe_data``"""
+#def _get_normalized_data(result_case):
+    #(obj, (i, name)) = result_case
+    #case = obj.get_result(i, name)
+    if case is None:
+        return None
+
+    if len(case.shape) == 1:
+        normi = case
+    else:
+        assert isinstance(case, np.ndarray), case
+        normi = norm(case, axis=1)
+    return normi
+
+def normalize_forces(forces_array):
+    """normalizes the forces"""
+    mag = np.linalg.norm(forces_array, axis=1)
+    #assert len(forces_array) == len(mag)
+
+    mag_max = mag.max()
+    if mag_max > 0.:
+        new_forces = np.copy(forces_array / mag_max)
+    else:
+        new_forces = np.copy(forces_array)
+    #mag /= mag_max
+
+    #inonzero = np.where(mag > 0)[0]
+    #print('new_forces_max =', new_forces.max())
+    #print('new_forces =', new_forces[inonzero])
+    #print('mag =', mag[inonzero])
+    return new_forces, mag

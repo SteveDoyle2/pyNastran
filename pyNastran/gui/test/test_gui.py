@@ -22,14 +22,6 @@ from pyNastran.bdf.errors import (CrossReferenceError, CardParseSyntaxError,
 from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.gui.formats import CLASS_MAP
 from pyNastran.converters.nastran.nastran_io import NastranIO
-from pyNastran.converters.fast.fast_io import FastIO
-from pyNastran.converters.abaqus.abaqus_io import AbaqusIO
-
-from pyNastran.converters.aflr.aflr2.bedge_io import BEdge_IO
-from pyNastran.converters.aflr.surf.surf_io import SurfIO
-from pyNastran.converters.aflr.ugrid.ugrid_io import UGRID_IO
-from pyNastran.converters.dev.openvsp.degen_geom_io import DegenGeomIO
-from pyNastran.converters.dev.openvsp.adb_io import ADB_IO
 
 from pyNastran.gui.arg_handling import determine_format
 from pyNastran.utils import print_bad_path
@@ -69,11 +61,7 @@ EXTENSION_TO_OUPUT_FORMATS = {
 #pkg_path = pyNastran.__path__[0]
 #model_path = os.path.join(pkg_path, '..', 'models')
 
-class FakeGUI(FakeGUIMethods, NastranIO, AbaqusIO,
-              #ADB_IO, DegenGeomIO, #Plot3d_io,
-              # AbaqusIO,
-              SurfIO, UGRID_IO, BEdge_IO,
-              DegenGeomIO, ADB_IO):
+class FakeGUI(FakeGUIMethods, NastranIO):
     """spoofs the gui for testing"""
 
     def __init__(self, formati, inputs=None):
@@ -87,21 +75,14 @@ class FakeGUI(FakeGUIMethods, NastranIO, AbaqusIO,
         """
         self._formati = formati
         FakeGUIMethods.__init__(self, inputs=inputs)
-        #ADB_IO.__init__(self)
-        AbaqusIO.__init__(self)
-        BEdge_IO.__init__(self)
         NastranIO.__init__(self)
-        #DegenGeomIO.__init__(self)
-        #Plot3d_io.__init__(self)
-        SurfIO.__init__(self)
-        UGRID_IO.__init__(self)
-        #AbaqusIO.__init__(self)
+        self.format_class_map = CLASS_MAP
 
     def load_geometry(self, input_filename):
         """loads a model"""
         load_geometry_name = 'load_%s_geometry' % self._formati
-        if self._formati in CLASS_MAP:
-            cls = CLASS_MAP[self._formati](self)
+        if self._formati in self.format_class_map:
+            cls = self.format_class_map[self._formati](self)
             getattr(cls, load_geometry_name)(input_filename)
         elif hasattr(self, load_geometry_name):
             # self.load_nastran_geometry(bdf_filename, None)
@@ -113,8 +94,8 @@ class FakeGUI(FakeGUIMethods, NastranIO, AbaqusIO,
     def load_results(self, output_filename):
         """loads a model"""
         load_results_name = 'load_%s_results' % self._formati
-        if self._formati in CLASS_MAP:
-            cls = CLASS_MAP[self._formati](self)
+        if self._formati in self.format_class_map:
+            cls = self.format_class_map[self._formati](self)
             getattr(cls, load_results_name)(output_filename)
         elif hasattr(self, load_results_name):
             # self.load_nastran_ressults(op2_filename, None)

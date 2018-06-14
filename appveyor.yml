@@ -18,41 +18,24 @@ environment:
     # conda set
     # TODO: add conda_libs...
     # TODO: add all_tests.py command
-    - PYTHON: "C:\\Miniconda"
-      PYTHON_VERSION: "2.7.x" # currently 2.7.11
-      PYTHON_ARCH: "32"
-      PYNASTRAN_TEST_PATH: "pyNastran/all_tests.py"
-      PYNASTRAN_LIBS: "numpy scipy pandas matplotlib vtk pyqt"
 
     - PYTHON: "C:\\Miniconda-x64"
       PYTHON_VERSION: "2.7.x" # currently 2.7.11
       PYTHON_ARCH: "64"
       PYNASTRAN_TEST_PATH: "pyNastran/all_tests.py"
-      PYNASTRAN_LIBS: "numpy scipy pandas matplotlib vtk pyqt"
-
-    #- PYTHON: "C:\\Miniconda3"
-    #  PYTHON_VERSION: "3.4.x" # currently 3.4.3
-    #  PYTHON_ARCH: "32"
-    #  PYNASTRAN_TEST_PATH: "pyNastran/all_tests_no_gui.py"
-    #  PYNASTRAN_LIBS: "numpy scipy pandas matplotlib"
-
-    #- PYTHON: "C:\\Miniconda3-x64"
-    #  PYTHON_VERSION: "3.4.x" # currently 3.4.3
-    #  PYTHON_ARCH: "64"
-    #  PYNASTRAN_TEST_PATH: "pyNastran/all_tests_no_gui.py"
-    #  PYNASTRAN_LIBS: "numpy scipy pandas matplotlib"
-
-    - PYTHON: "C:\\Miniconda35"
-      PYTHON_VERSION: "3.5.x" # currently 3.5.1
-      PYTHON_ARCH: "32"
-      PYNASTRAN_TEST_PATH: "pyNastran/all_tests_no_gui.py"
-      PYNASTRAN_LIBS: "numpy scipy pandas matplotlib"
+      PYNASTRAN_LIBS: "numpy scipy matplotlib vtk pyqt"
 
     - PYTHON: "C:\\Miniconda35-x64"
       PYTHON_VERSION: "3.5.x" # currently 3.5.1
       PYTHON_ARCH: "64"
-      PYNASTRAN_TEST_PATH: "pyNastran/all_tests_no_gui.py"
-      PYNASTRAN_LIBS: "numpy scipy pandas matplotlib"
+      PYNASTRAN_TEST_PATH: "pyNastran/all_tests.py"
+      PYNASTRAN_LIBS: "numpy scipy pandas matplotlib vtk pyqt"
+
+    - PYTHON: "C:\\Miniconda35-x64"
+      PYTHON_VERSION: "3.6.x" # currently 3.6.x
+      PYTHON_ARCH: "64"
+      PYNASTRAN_TEST_PATH: "pyNastran/all_tests.py"
+      PYNASTRAN_LIBS: "numpy scipy pandas matplotlib vtk pyqt"
 
     ############################################################
 
@@ -98,6 +81,7 @@ install:
   # removed: atlas
   - "conda install %PYNASTRAN_LIBS% --yes"
   #- "conda create -q -n test-environment python=$PYTHON_VERSION atlas numpy scipy pandas"
+  - "conda list"
 
   # Install the build dependencies of the project. If some dependencies contain
   # compiled extensions and are not provided as pre-built wheel packages,

@@ -37,6 +37,7 @@ def split_line_elements(bdf_model, eids, neids=2,
 
     A-----*-----B; neids=2
     A--*--*--*--B; neids=4
+
     """
     eids_out = []
     assert neids >= 2, neids

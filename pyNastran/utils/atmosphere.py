@@ -20,6 +20,7 @@ from math import log, exp
 import typing
 import numpy as np
 
+
 def _update_alt(alt, SI=False, debug=False):
     # type: (float, bool, bool) -> float
     """

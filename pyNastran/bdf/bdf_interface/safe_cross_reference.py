@@ -4,12 +4,15 @@ Creates safe cross referencing
 Safe cross-referencing skips failed xref's
 """
 from __future__ import print_function
+from collections import defaultdict
+import traceback
 from typing import List, Dict, Any
 from six import iteritems, itervalues
-import traceback
 
+import numpy as np
 from numpy import zeros, argsort, arange, array_equal
 from pyNastran.bdf.bdf_interface.cross_reference import XrefMesh
+
 
 class SafeXrefMesh(XrefMesh):
     """
@@ -117,20 +120,28 @@ class SafeXrefMesh(XrefMesh):
         Links up all the aero cards
           - CAEROx, PAEROx, SPLINEx, AECOMP, AELIST, AEPARAM, AESTAT, AESURF, AESURFS
         """
+        xref_errors = defaultdict(list)
         for caero in itervalues(self.caeros):
-            caero.safe_cross_reference(self)
+            caero.safe_cross_reference(self, xref_errors)
+        self._show_safe_xref_errors('caeros', xref_errors)
 
+        xref_errors = defaultdict(list)
         for paero in itervalues(self.paeros):
-            paero.safe_cross_reference(self)
+            paero.safe_cross_reference(self, xref_errors)
+        self._show_safe_xref_errors('paeros', xref_errors)
 
         for trim in itervalues(self.trims):
             trim.safe_cross_reference(self)
 
+        xref_errors = defaultdict(list)
         for csschd in itervalues(self.csschds):
-            csschd.safe_cross_reference(self)
+            csschd.safe_cross_reference(self, xref_errors)
+        self._show_safe_xref_errors('csschds', xref_errors)
 
+        xref_errors = defaultdict(list)
         for spline in itervalues(self.splines):
-            spline.safe_cross_reference(self)
+            spline.safe_cross_reference(self, xref_errors)
+        self._show_safe_xref_errors('splines', xref_errors)
 
         for aecomp in itervalues(self.aecomps):
             aecomp.safe_cross_reference(self)
@@ -144,8 +155,10 @@ class SafeXrefMesh(XrefMesh):
         #for aestat in itervalues(self.aestats):
             #aestat.safe_cross_reference(self)
 
+        xref_errors = defaultdict(list)
         for aesurf in itervalues(self.aesurf):
-            aesurf.safe_cross_reference(self)
+            aesurf.safe_cross_reference(self, xref_errors)
+        self._show_safe_xref_errors('caeros', xref_errors)
 
         for aesurfs in itervalues(self.aesurfs):
             aesurfs.safe_cross_reference(self)
@@ -153,10 +166,19 @@ class SafeXrefMesh(XrefMesh):
         for flutter in itervalues(self.flutters):
             flutter.safe_cross_reference(self)
 
+        xref_errors = defaultdict(list)
+        for monitor_point in self.monitor_points:
+            monitor_point.safe_cross_reference(self, xref_errors)
+        self._show_safe_xref_errors('monitor_points', xref_errors)
+
         if self.aero:
-            self.aero.safe_cross_reference(self)
+            xref_errors = defaultdict(list)
+            self.aero.safe_cross_reference(self, xref_errors)
+            self._show_safe_xref_errors('aero', xref_errors)
         if self.aeros:
-            self.aeros.safe_cross_reference(self)
+            xref_errors = defaultdict(list)
+            self.aeros.safe_cross_reference(self, xref_errors)
+            self._show_safe_xref_errors('aeros', xref_errors)
 
         if 0:  # only support CAERO1
             ncaeros = len(self.caeros)
@@ -194,47 +216,93 @@ class SafeXrefMesh(XrefMesh):
         Links the elements to nodes, properties (and materials depending on
         the card).
         """
+        xref_errors = defaultdict(list)
         missing_safe_xref = set([])
         for elem in itervalues(self.elements):
             if hasattr(elem, 'safe_cross_reference'):
-                elem.safe_cross_reference(self)
+                try:
+                    elem.safe_cross_reference(self, xref_errors)
+                except TypeError:
+                    self.log.warning('element has not added xref_errors\n%s' % str(elem))
+                    raise
             else:
                 elem.cross_reference(self)
                 missing_safe_xref.add(elem.type)
 
         for elem in itervalues(self.rigid_elements):
             if hasattr(elem, 'safe_cross_reference'):
-                elem.safe_cross_reference(self)
+                try:
+                    elem.safe_cross_reference(self, xref_errors)
+                except TypeError:
+                    self.log.warning('element has not added xref_errors\n%s' % str(elem))
             else:
                 missing_safe_xref.add(elem.type)
                 elem.cross_reference(self)
-        #if missing_safe_xref:
-            #self.log.warning('These cards dont support safe_xref; %s' % str(list(missing_safe_xref)))
+
+        self._show_safe_xref_errors('elements', xref_errors)
+
+        if missing_safe_xref:
+            self.log.warning('These cards dont support safe_xref; %s' % str(list(missing_safe_xref)))
+
+    def _show_safe_xref_errors(self, elements_word, xref_errors):
+        """helper method to show errors"""
+        if xref_errors:
+            msg = 'Failed to safe xref %s\n' % elements_word
+            for key, eids_pids in sorted(iteritems(xref_errors)):
+                eids = [eid_pid[0] for eid_pid in eids_pids]
+                eids.sort()
+                pids = np.unique([eid_pid[1] for eid_pid in eids_pids]).tolist()
+                msg += 'missing %r for %s = %s\n' % (key, elements_word, eids)
+                msg += '%s = %s\n' % (key, pids)
+            self.log.warning(msg.rstrip())
 
     def _safe_cross_reference_loads(self, debug=True):
         # type: (bool) -> None
         """
         Links the loads to nodes, coordinate systems, and other loads.
         """
+        xref_errors = defaultdict(list)
         for (lid, load_combinations) in iteritems(self.load_combinations):
             for load_combination in load_combinations:
-                load_combination.safe_cross_reference(self)
+                try:
+                    load_combination.safe_cross_reference(self, xref_errors)
+                except TypeError:  # pragma: no cover
+                    print(load_combination)
+                    raise
+        self._show_safe_xref_errors('loads', xref_errors)
 
         for (lid, loads) in iteritems(self.loads):
             for load in loads:
-                load.safe_cross_reference(self)
+                try:
+                    load.safe_cross_reference(self, xref_errors)
+                except TypeError:  # pragma: no cover
+                    print(load)
+                    raise
+        self._show_safe_xref_errors('loads', xref_errors)
 
         for (lid, sid) in iteritems(self.dloads):
             for load in sid:
-                load.safe_cross_reference(self)
+                load.safe_cross_reference(self, xref_errors)
         for (lid, sid) in iteritems(self.dload_entries):
             for load in sid:
-                load.safe_cross_reference(self)
+                try:
+                    load.safe_cross_reference(self, xref_errors)
+                except TypeError:  # pragma: no cover
+                    print(load)
+                    raise
 
         for key, darea in iteritems(self.dareas):
-            darea.safe_cross_reference(self)
+            try:
+                darea.safe_cross_reference(self, xref_errors)
+            except TypeError:  # pragma: no cover
+                print(darea)
+                raise
         for key, dphase in iteritems(self.dphases):
-            dphase.safe_cross_reference(self)
+            try:
+                dphase.safe_cross_reference(self, xref_errors)
+            except TypeError:  # pragma: no cover
+                print(dphase)
+                raise
 
     def safe_empty_nodes(self, nids, msg=''):
         """safe xref version of self.Nodes(nid, msg='')"""
@@ -277,3 +345,63 @@ class SafeXrefMesh(XrefMesh):
                 msgi += msg % (eid)
             elements.append(element)
         return elements, msgi
+
+    def safe_property(self, pid, ref_id, xref_errors, msg=''):
+        """
+        Parameters
+        ----------
+        ref_id : int
+            the referencing value (e.g., an element references a property)
+        """
+        try:
+            pid_ref = self.Property(pid, msg=msg)
+        except KeyError:
+            pid_ref = None
+            #self.log.error('cant find Property=%s%s' % (mid, msg))
+            xref_errors['pid'].append((ref_id, pid))
+        return pid_ref
+
+    def safe_material(self, mid, ref_id, xref_errors, msg=''):
+        """
+        Parameters
+        ----------
+        ref_id : int
+            the referencing value (e.g., an property references a material)
+        """
+        try:
+            mid_ref = self.Material(mid, msg=msg)
+        except KeyError:
+            mid_ref = None
+            #self.log.error('cant find Material=%s%s' % (mid, msg))
+            xref_errors['mid'].append((ref_id, mid))
+        return mid_ref
+
+    def safe_coord(self, cid, ref_id, xref_errors, msg=''):
+        """
+        Parameters
+        ----------
+        ref_id : int
+            the referencing value (e.g., an node and element references a coord)
+        """
+        try:
+            cid_ref = self.Coord(cid, msg=msg)
+        except KeyError:
+            cid_ref = None
+            #self.log.error('cant find cid=%s%s' % (cid, msg))
+            xref_errors['cid'].append((ref_id, cid))
+        return cid_ref
+
+    def safe_aefact(self, aefact_id, ref_id, xref_errors, msg=''):
+        """
+        Parameters
+        ----------
+        ref_id : int
+            the referencing value (e.g., an CAERO eid references a AEFACT)
+        """
+        try:
+            aefact_ref = self.AEFact(aefact_id, msg=msg)
+        except KeyError:
+            aefact_ref = None
+            #self.log.error('cant find AFEACT=%s%s' % (aefact_id, msg))
+            xref_errors['aefact'].append((ref_id, aefact_id))
+        return aefact_ref

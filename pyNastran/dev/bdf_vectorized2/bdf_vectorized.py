@@ -599,18 +599,18 @@ class BDF(BDF_):
         #"""
         #BDF_._write_nodes(self, bdf_file, size=size, is_double=is_double)
 
-    def _write_grids(self, bdf_file, size=8, is_double=False):
+    def _write_grids(self, bdf_file, size=8, is_double=False, is_long_ids=None):
         # type: (Any, int, bool) -> None
         """Writes the GRID-type cards"""
         self.nodes.write_card(size=size, is_double=is_double, bdf_file=bdf_file)
 
-    def _write_elements_interspersed(self, bdf_file, size=8, is_double=False):
+    def _write_elements_interspersed(self, bdf_file, size=8, is_double=False, is_long_ids=None):
         # type: (Any, int, bool) -> None
         """spoofed method"""
-        self._write_elements(bdf_file, size=size, is_double=is_double)
-        self._write_properties(bdf_file, size=size, is_double=is_double)
+        self._write_elements(bdf_file, size=size, is_double=is_double, is_long_ids=is_long_ids)
+        self._write_properties(bdf_file, size=size, is_double=is_double, is_long_ids=is_long_ids)
 
-    def _write_elements(self, bdf_file, size=8, is_double=False):
+    def _write_elements(self, bdf_file, size=8, is_double=False, is_long_ids=None):
         # type: (Any, int, bool) -> None
         """Writes the elements in a sorted order"""
         if self.elements:
@@ -632,7 +632,7 @@ class BDF(BDF_):
         if self.ao_element_flags:
             for (eid, element) in sorted(iteritems(self.ao_element_flags)):
                 bdf_file.write(element.write_card(size, is_double))
-        self._write_nsm(bdf_file, size, is_double)
+        self._write_nsm(bdf_file, size, is_double, is_long_ids=is_long_ids)
 
     #def _write_loads(self, bdf_file, size=8, is_double=False):
         #"""Writes the loads in a sorted order"""
@@ -640,7 +640,7 @@ class BDF(BDF_):
         ##for key, loadi in sorted(self.loads):
             ##bdf_file.write(loadi.write_card(size=size, is_double=is_double))
 
-    def _write_loads(self, bdf_file, size=8, is_double=False):
+    def _write_loads(self, bdf_file, size=8, is_double=False, is_long_ids=None):
         # type: (Any, int, bool) -> None
         """Writes the load cards sorted by ID"""
         if self.loads or self.tempds:
@@ -661,7 +661,7 @@ class BDF(BDF_):
                 raise
 
         assert len(self.tempds) == 0, self.tempds
-        self._write_dloads(bdf_file, size=size, is_double=is_double)
+        self._write_dloads(bdf_file, size=size, is_double=is_double, is_long_ids=is_long_ids)
 
     def get_displacement_index_xyz_cp_cd(self, fdtype='float64', idtype='int32', sort_ids=True):
         # type: (str, str, bool) -> Any

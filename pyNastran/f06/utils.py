@@ -11,7 +11,7 @@ def cmd_line_plot_flutter():  # pragma: no cover
     msg = (
         'Usage:\n'
         '  f06 plot_145 F06_FILENAME [--noline] [--modes MODES] [--subcases SUB] [--xlim FREQ] [--ylimdamp DAMP] '
-        '[--eas|--tas] [--in_units IN][--out_units OUT] [--nopoints]\n'
+        '[--eas|--tas] [--kfreq] [--rootlocus] [--in_units IN][--out_units OUT] [--nopoints]\n'
         '  f06 plot_145 -h | --help\n'
         '  f06 plot_145 -v | --version\n'
         '\n'
@@ -19,6 +19,11 @@ def cmd_line_plot_flutter():  # pragma: no cover
         'Positional Arguments:\n'
         '  F06_FILENAME    path to input F06 files\n'
 
+        'Plot Types for V-g/V-f:\n'
+        #'  --vgvf           plots a V-g/V-f plot\n'
+        '  --rootlocus      plots a root locus\n'
+        '  --kfreq          plots a kfreq-g/kfreq-f plot\n'
+        '\n'
         'Plot Types for V-g/V-f:\n'
         '  --tas            plot true airspeed (default)\n'
         '  --eas            plot eqivalent airspeed\n'
@@ -32,7 +37,7 @@ def cmd_line_plot_flutter():  # pragma: no cover
         '  --out_units OUT  Selects the ouptut unit system\n'
         '                   si (kg, m, s) -> m/s\n'
         '                   english_ft (slug/ft^3, ft, s) -> ft/s\n'
-        '                   english_in (slinch/in^3, in, s) -> in/s\n'
+        '                   english_in (slinch/in^3, in, s) -> in/s (default)\n'
         '                   english_kt (slinch/in^3, nm, s) -> knots\n'
         '\n'
         'Options:\n'
@@ -40,9 +45,8 @@ def cmd_line_plot_flutter():  # pragma: no cover
         '  --subcases SUB   the subcases to plot (e.g. 1,3); unused\n'
         '  --xlim FREQ      the frequency limits (unused)\n'
         '  --ylimdamp DAMP  the damping limits (default=-0.3:0.3)\n'
-        "  --nopoints       don't plot the points"
+        "  --nopoints       don't plot the points\n"
         '\n'
-
         'Info:\n'
         '  -h, --help      show this help message and exit\n'''
         "  -v, --version   show program's version number and exit\n"
@@ -65,23 +69,32 @@ def cmd_line_plot_flutter():  # pragma: no cover
     if data['--ylimdamp']:
         ylim_damping = split_float_colons(data['--ylimdamp'])
 
+    in_units = 'si'
+    if data['--in_units']:
+        in_units = data['--in_units'].lower()
+    assert in_units in ['si', 'english_in', 'english_ft', 'english_kt'], 'in_units=%r' % in_units
+
     out_units = 'si'
     if data['--out_units']:
-        out_units = data['--out_units']
+        out_units = data['--out_units'].lower()
     assert out_units in ['si', 'english_in', 'english_ft', 'english_kt'], 'out_units=%r' % out_units
 
     plot_type = 'tas'
     if data['--eas']:
         plot_type = 'eas'
 
+    plot_kfreq_damping = data['--kfreq']
+    plot_root_locus = data['--rootlocus']
+
     nopoints = data['--nopoints']
     print('modes = %s' % modes)
     plot_flutter_f06(f06_filename, modes=modes,
                      plot_type=plot_type,
+                     f06_units=in_units,
                      out_units=out_units,
-                     plot_root_locus=True, plot_vg_vf=True, plot_vg=False,
+                     plot_root_locus=plot_root_locus, plot_vg_vf=True, plot_vg=False,
+                     plot_kfreq_damping=plot_kfreq_damping,
                      ylim_damping=ylim_damping, nopoints=nopoints)
-    #plot_flutter_f06(f06_filename, plot_root_locus=False, plot_vg_vf=True)
 
 def split_float_colons(string_values):
     """
@@ -147,7 +160,7 @@ def cmd_line():  # pragma: no cover
     msg = (
         'Usage:\n'
         '  f06 plot_145 F06_FILENAME [--noline] [--modes MODES] [--subcases SUB] [--xlim FREQ] [--ylimdamp DAMP] '
-        '[--eas|--tas]\n'
+        '[--eas|--tas] [--kfreq] [--rootlocus]\n'
         '\n'
         '  f06 plot_145 -h | --help\n'
         '  f06 -v | --version\n'

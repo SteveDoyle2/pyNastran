@@ -19,6 +19,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
+from pyNastran.utils.mathematics import integrate_positive_unit_line
 
 
 class CBEAM(CBAR):
@@ -131,6 +132,7 @@ class CBEAM(CBAR):
             a comment for the card
 
         offt/bit are MSC specific fields
+
         """
         LineElement.__init__(self)
         if comment:
@@ -161,7 +163,41 @@ class CBEAM(CBAR):
         self.ga_ref = None
         self.gb_ref = None
         self.pid_ref = None
+        self.g0_ref = None
         self.g0_vector = None
+        if self.offt is not None:
+            self.offt = self.offt.replace('E', 'O')
+
+    def validate(self):
+        msg = ''
+        if self.x is None:
+            if not isinstance(self.g0, integer_types):
+                msg += 'CBEAM eid=%s: x is None, so g0=%s must be an integer' % (self.eid, self.g0)
+        else:
+            if not isinstance(self.x, (list, np.ndarray)):
+                msg += 'CBEAM eid=%s: x=%s and g0=%s, so x must be a list; type(x)=%s' % (
+                    self.eid, self.x, self.g0, type(self.x))
+        if msg:
+            raise ValueError(msg)
+
+        if self.g0 is not None:
+            assert isinstance(self.g0, integer_types), 'g0=%s must be an integer' % self.g0
+        if self.g0 in [self.ga, self.gb]:
+            msg = 'G0=%s cannot be GA=%s or GB=%s' % (self.g0, self.ga, self.gb)
+            raise RuntimeError(msg)
+
+        if self.bit is None and self.offt is None:
+            msg = 'OFFT/BIT must not be None; offt=%r bit=%s' % (self.offt, self.bit)
+            raise RuntimeError(msg)
+
+        if self.offt is not None:
+            if isinstance(self.offt, integer_types):
+                assert self.offt in [1, 2, 21, 22, 41], 'invalid offt; offt=%i' % self.offt
+                raise NotImplementedError('invalid offt; offt=%i' % self.offt)
+            elif not isinstance(self.offt, string_types):
+                raise SyntaxError('invalid offt expected a string of length 3 '
+                                  'offt=%r; Type=%s' % (self.offt, type(self.offt)))
+            self.check_offt()
 
     @classmethod
     def add_card(cls, card, beamor=None, comment=''):
@@ -176,6 +212,7 @@ class CBEAM(CBAR):
             defines the defaults
         comment : str; default=''
             a comment for the card
+
         """
         eid = integer(card, 1, 'eid')
 
@@ -235,6 +272,7 @@ class CBEAM(CBAR):
                 g0 is used instead of [x1, x2, x3]
         comment : str; default=''
             a comment for the card
+
         """
         #: .. todo:: verify
         assert len(data) == 2, 'data=%s len(data)=%s' % (data, len(data))
@@ -291,23 +329,103 @@ class CBEAM(CBAR):
         return CBEAM(eid, pid, [ga, gb], x, g0, offt, bit,
                      pa=pa, pb=pb, wa=wa, wb=wb, sa=sa, sb=sb, comment=comment)
 
-    def validate(self):
-        if self.g0 is not None:
-            assert isinstance(self.g0, integer_types), 'g0=%s must be an integer' % self.g0
-        if self.g0 in [self.ga, self.gb]:
-            msg = 'G0=%s cannot be GA=%s or GB=%s' % (self.g0, self.ga, self.gb)
-            raise RuntimeError(msg)
-        if self.bit is None and self.offt is None:
-            msg = 'OFFT/BIT must not be None; offt=%r bit=%s' % (self.offt, self.bit)
-            raise RuntimeError(msg)
-
     def Nodes(self):
         return [self.ga, self.gb]
 
     def Centroid(self):
-        return (self.ga_ref.get_position() + self.gb_ref.get_position()) / 2.
+        """"""
+        node1 = self.ga_ref
+        node2 = self.gb_ref
+        xyz1 = node1.get_position()
+        xyz2 = node2.get_position()
+        centroid = (xyz1 + xyz2) / 2.
+        return centroid
 
     def center_of_mass(self):
+        """the centroid formuala is way more complicated if you consider the nonstructural mass axis"""
+        elem = self
+        prop = self.pid_ref
+        node1 = self.ga_ref
+        node2 = self.gb_ref
+        xyz1 = node1.get_position()
+        xyz2 = node2.get_position()
+        #centroid = ( + self.gb_ref.get_position()) / 2.
+        centroid = (xyz1 + xyz2) / 2.
+        length = norm(xyz2 - xyz1)
+        #cda = model.nodes[n1].cid_ref
+        #cdb = model.nodes[n2].cid_ref
+
+        model = None
+        log = None
+        is_failed, out = elem.get_axes_by_nodes(model, self.pid_ref, node1, node2, xyz1, xyz2, log)
+        if is_failed:
+            #model.log.error(out)
+            raise RuntimeError(out)
+
+        wa, wb, _ihat, jhat, khat = out
+        p1 = xyz1 + wa
+        p2 = xyz2 + wb
+
+        if prop.type == 'PBEAM':
+            rho = prop.Rho()
+
+            # we don't call the MassPerLength method so we can put the NSM centroid
+            # on a different axis (the PBEAM is weird)
+            mass_per_lengths = []
+            nsm_per_lengths = []
+            for (area, nsm) in zip(prop.A, prop.nsm):
+                mass_per_lengths.append(area * rho)
+                nsm_per_lengths.append(nsm)
+            mass_per_length = integrate_positive_unit_line(prop.xxb, mass_per_lengths)
+            nsm_per_length = integrate_positive_unit_line(prop.xxb, nsm_per_lengths)
+            nsm_n1 = (p1 + jhat * prop.m1a + khat * prop.m2a)
+            nsm_n2 = (p2 + jhat * prop.m1b + khat * prop.m2b)
+            #print("nsm_per_length=%s" % nsm_per_length)
+            #print("nsm_n1=%s" % nsm_n1)
+            #print("nsm_n2=%s" % nsm_n2)
+            nsm_centroid = (nsm_n1 + nsm_n2) / 2.
+            #if nsm != 0.:
+                #p1_nsm = p1 + prop.ma
+                #p2_nsm = p2 + prop.mb
+        elif prop.type == 'PBEAML':
+            mass_per_lengths = prop.get_mass_per_lengths()
+            #mass_per_length = prop.MassPerLength() # includes simplified nsm
+
+            # m1a, m1b, m2a, m2b=0.
+            nsm_centroid = (p1 + p2) / 2.
+
+            # mass_per_length already includes nsm
+            mass_per_length = integrate_positive_unit_line(prop.xxb, mass_per_lengths)
+            nsm_per_length = 0.
+
+            #print('mass_per_lengths=%s nsm_per_lengths=%s' % (
+                #mass_per_lengths, nsm_per_lengths))
+            #print('mass_per_length=%s nsm_per_length=%s' % (
+                #mass_per_length, nsm_per_length))
+
+            #nsm_centroid = np.zeros(3) # TODO: what is this...
+            #nsm = prop.nsm[0] * length # TODO: simplified
+        elif prop.type == 'PBCOMP':
+            mass_per_length = prop.MassPerLength()
+            nsm_per_length = prop.nsm
+            nsm_n1 = (p1 + jhat * prop.m1 + khat * prop.m2)
+            nsm_n2 = (p2 + jhat * prop.m1 + khat * prop.m2)
+            nsm_centroid = (nsm_n1 + nsm_n2) / 2.
+        #elif prop.type == 'PBMSECT':
+            #continue
+            #mass_per_length = prop.MassPerLength()
+            #m = mass_per_length * length
+            #nsm = prop.nsm
+        else:
+            raise NotImplementedError(prop.type)
+
+        total_mass = mass_per_length + nsm_per_length
+        if total_mass == 0.0:
+            return centroid
+        centroid2 = (centroid * mass_per_length + nsm_centroid * nsm_per_length) / total_mass
+        return centroid2
+
+    def center_of_mass_xform(self):
         """
         A          B
         *----------*
@@ -345,20 +463,18 @@ class CBEAM(CBAR):
 
         TODO: not integrated with CBAR yet...
         """
+        self.check_offt()
         is_failed = True
         ihat = None
         yhat = None
         zhat = None
+
         eid = self.eid
         (nid1, nid2) = self.node_ids
         node1 = model.nodes[nid1]
         node2 = model.nodes[nid2]
-        n1 = node1.get_position()
-        n2 = node2.get_position()
-        #centroid = (n1 + n2) / 2.
-        #i = n2 - n1
-        #Li = norm(i)
-        #ihat = i / Li
+        xyz1 = node1.get_position()
+        xyz2 = node2.get_position()
 
         elem = model.elements[eid]
         pid_ref = elem.pid_ref
@@ -366,22 +482,43 @@ class CBEAM(CBAR):
             pid_ref = model.Property(elem.pid)
         assert not isinstance(pid_ref, integer_types), elem
 
+        is_failed, (wa, wb, ihat, yhat, zhat) = self.get_axes_by_nodes(
+            model, pid_ref, node1, node2, xyz1, xyz2, model.log)
+        return is_failed, (wa, wb, ihat, yhat, zhat)
+
+    def get_axes_by_nodes(self, model, pid_ref, node1, node2, xyz1, xyz2, log):
+        """
+        Gets the axes of a CBAR/CBEAM, while respecting the OFFT flag.
+
+        See
+        ---
+        ``_rotate_v_wa_wb`` for a description of the OFFT flag.
+
+        TODO: not integrated with CBAR yet...
+        """
+        eid = self.eid
+        #centroid = (n1 + n2) / 2.
+        #i = n2 - n1
+        #Li = norm(i)
+        #ihat = i / Li
+
+        elem = self
         (nid1, nid2) = elem.node_ids
-        node1 = model.nodes[nid1]
-        node2 = model.nodes[nid2]
-        n1 = node1.get_position()
-        n2 = node2.get_position()
+        #node1 = model.nodes[nid1]
+        #node2 = model.nodes[nid2]
+        #xyz1 = node1.get_position()
+        #xyz2 = node2.get_position()
 
         # wa/wb are not considered in i_offset
         # they are considered in ihat
-        i = n2 - n1
+        i = xyz2 - xyz1
         Li = norm(i)
         i_offset = i / Li
 
         unused_v, wa, wb, xform = rotate_v_wa_wb(
             model, elem,
-            n1, n2, node1, node2,
-            i_offset, i, eid, Li)
+            xyz1, xyz2, node1, node2,
+            i_offset, i, eid, Li, log)
         if wb is None:
             # one or more of v, wa, wb are bad
             return is_failed, (wa, wb, ihat, yhat, zhat)
@@ -454,34 +591,30 @@ class CBEAM(CBAR):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CBEAM eid=%s' % (self.eid)
+        msg = ', which is required by CBEAM eid=%s' % (self.eid)
         self.ga_ref = model.Node(self.ga, msg=msg)
         self.gb_ref = model.Node(self.gb, msg=msg)
         self.nodes_ref = [self.ga_ref, self.gb_ref]
         self.pid_ref = model.Property(self.pid, msg=msg)
         if self.g0:
-            g0 = model.nodes[self.g0]
-            self.g0_vector = g0.get_position() - self.ga_ref.get_position()
+            self.g0_ref = model.nodes[self.g0]
+            self.g0_vector = self.g0_ref.get_position() - self.ga_ref.get_position()
         else:
             self.g0_vector = self.x
         if model.is_nx:
             assert self.offt == 'GGG', 'NX only support offt=GGG; offt=%r' % self.offt
 
-    def safe_cross_reference(self, model):
-        msg = ' which is required by CBEAM eid=%s' % (self.eid)
-
+    def safe_cross_reference(self, model, xref_errors):
+        msg = ', which is required by CBEAM eid=%s' % (self.eid)
         self.ga_ref = model.Node(self.ga, msg=msg)
         self.gb_ref = model.Node(self.gb, msg=msg)
         self.nodes_ref = [self.ga_ref, self.gb_ref]
-        try:
-            self.pid_ref = model.Property(self.pid, msg=msg)
-        except KeyError:
-            model.log.warning('pid=%s%s' % (self.pid, msg))
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
         if self.g0:
             try:
-                g0 = model.nodes[self.g0]
-                self.g0_vector = g0.get_position() - self.ga_ref.get_position()
+                self.g0_ref = model.nodes[self.g0]
+                self.g0_vector = self.g0_ref.get_position() - self.ga_ref.get_position()
             except KeyError:
                 model.log.warning('Node=%s%s' % (self.g0, msg))
         else:
@@ -491,8 +624,10 @@ class CBEAM(CBAR):
         self.pid = self.Pid()
         self.ga = self.Ga()
         self.gb = self.Gb()
+        self.g0 = self.G0()
         self.ga_ref = None
         self.gb_ref = None
+        self.g0_ref = None
         self.pid_ref = None
 
     def _verify(self, xref):
@@ -615,10 +750,12 @@ class BEAMOR(BaseCard):
                           double_or_blank(card, 6, 'x2', 0.0),
                           double_or_blank(card, 7, 'x3', 0.0)],
                          dtype='float64')
+        else:
+            raise NotImplementedError('BEAMOR field5 = %r' % field5)
         offt = integer_string_or_blank(card, 8, 'offt', 'GGG')
         if isinstance(offt, integer_types):
             raise NotImplementedError('the integer form of offt is not supported; offt=%s' % offt)
-        assert len(card) <= 8, 'len(BEAMOR card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 9, 'len(BEAMOR card) = %i\ncard=%s' % (len(card), card)
         return BEAMOR(pid, is_g0, g0, x, offt=offt, comment=comment)
 
     def raw_fields(self):

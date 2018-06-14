@@ -49,14 +49,14 @@ def main(bdf_filename, run_first_nastran=True, debug=True):
         op2_filename = base + '.op2'
         try:
             model2 = read_op2(op2_filename)
-        except FatalError as e:
-            print(e)
+        except FatalError as error:
+            print(error)
 
         #try:
             #model2 = F06()
             #model2.read_f06(f06_filename)
-        #except FatalError as e:
-            #print(e)
+        #except FatalError as error:
+            #print(error)
             #return
     else:
         pass

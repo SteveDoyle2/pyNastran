@@ -446,7 +446,7 @@ class Usm3d(object):
         #-----------------------------------
         # nodes
         nnodes = self.header['nPoints']
-        str_format = '>%sd' % nnodes
+        #str_format = '>%sd' % nnodes
 
         dummy3 = cogsg_file.read(4)  # nnodes * 3 * 8
         dummy3_int, = unpack('>i', dummy3)

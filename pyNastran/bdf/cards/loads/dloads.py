@@ -213,7 +213,7 @@ class ACSRCE(BaseCard):
         #self.dphases_ref = None
         #self.delays_ref = None
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, xref_errors):
         return self.cross_reference(model)
 
     #def uncross_reference(self):
@@ -309,7 +309,8 @@ class DLOAD(LoadCombination):
             Load set identification numbers of RLOAD1, RLOAD2, TLOAD1,
             TLOAD2, and ACSRCE entries. See Remarks 3 and 7. (Integer > 0)
         comment : str; default=''
-            the card comment
+            a comment for the card
+
         """
         LoadCombination.__init__(self, sid, scale, scale_factors, load_ids,
                                  comment=comment)
@@ -322,17 +323,18 @@ class DLOAD(LoadCombination):
         ----------
         model : BDF()
             the BDF object
+
         """
         dload_ids2 = []
-        msg = ' which is required by DLOAD=%s' % (self.sid)
+        msg = ', which is required by DLOAD=%s' % (self.sid)
         for dload_id in self.load_ids:
             dload_id2 = model.DLoad(dload_id, consider_dload_combinations=False, msg=msg)
             dload_ids2.append(dload_id2)
         self.load_ids_ref = dload_ids2
 
-    def safe_cross_reference(self, model, debug=True):
+    def safe_cross_reference(self, model, xref_errors, debug=True):
         dload_ids2 = []
-        msg = ' which is required by DLOAD=%s' % (self.sid)
+        msg = ', which is required by DLOAD=%s' % (self.sid)
         for dload_id in self.load_ids:
             try:
                 dload_id2 = model.DLoad(dload_id, consider_dload_combinations=False, msg=msg)
@@ -388,7 +390,7 @@ class RLOAD1(DynamicLoad):
 
     def __init__(self, sid, excite_id, delay=0, dphase=0, tc=0, td=0, Type='LOAD', comment=''):
         """
-        Creates a RLOAD1 card, which defienes a frequency-dependent load
+        Creates an RLOAD1 card, which defienes a frequency-dependent load
         based on TABLEDs.
 
         Parameters
@@ -420,6 +422,7 @@ class RLOAD1(DynamicLoad):
             4, 5, 6, 7, 12, 13 - MSC only
         comment : str; default=''
             a comment for the card
+
         """
         DynamicLoad.__init__(self)
         if comment:
@@ -516,7 +519,7 @@ class RLOAD1(DynamicLoad):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by RLOAD1 sid=%s' % (self.sid)
+        msg = ', which is required by RLOAD1 sid=%s' % (self.sid)
         #self._cross_reference_excite_id(model, msg)
         if isinstance(self.tc, integer_types) and self.tc:
             self.tc_ref = model.TableD(self.tc, msg=msg)
@@ -527,8 +530,8 @@ class RLOAD1(DynamicLoad):
         if isinstance(self.dphase, integer_types) and self.dphase > 0:
             self.dphase_ref = model.DPHASE(self.dphase, msg=msg)
 
-    def safe_cross_reference(self, model):
-        msg = ' which is required by RLOAD1 sid=%s' % (self.sid)
+    def safe_cross_reference(self, model, xref_errors, ):
+        msg = ', which is required by RLOAD1 sid=%s' % (self.sid)
         #self.excite_id_ref = model.DAREA(self.excite_id, msg=msg)
         if isinstance(self.tc, integer_types) and self.tc:
             self.tc_ref = model.TableD(self.tc, msg=msg)
@@ -667,7 +670,7 @@ class RLOAD2(DynamicLoad):
     # P(f) = {A} * B(f) * e^(i*phi(f), + theta - 2*pi*f*tau)
     def __init__(self, sid, excite_id, delay=0, dphase=0, tb=0, tp=0, Type='LOAD', comment=''):
         """
-        Creates a RLOAD2 card, which defienes a frequency-dependent load
+        Creates a nRLOAD2 card, which defienes a frequency-dependent load
         based on TABLEDs.
 
         Parameters
@@ -705,6 +708,7 @@ class RLOAD2(DynamicLoad):
             4, 5, 6, 7, 12, 13 - MSC only
         comment : str; default=''
             a comment for the card
+
         """
         DynamicLoad.__init__(self)
         if comment:
@@ -841,7 +845,7 @@ class RLOAD2(DynamicLoad):
         if isinstance(self.dphase, integer_types) and self.dphase > 0:
             self.dphase_ref = model.DPHASE(self.dphase, msg=msg)
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, xref_errors, ):
         msg = ', which is required by RLOAD2=%s' % (self.sid)
         if isinstance(self.tb, integer_types) and self.tb:
             self.tb_ref = model.TableD(self.tb, msg=msg)
@@ -1072,14 +1076,14 @@ class TLOAD1(DynamicLoad):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by TLOAD1=%s' % (self.sid)
+        msg = ', which is required by TLOAD1=%s' % (self.sid)
         if self.tid:
             self.tid_ref = model.TableD(self.tid, msg=msg)
         if isinstance(self.delay, integer_types) and self.delay > 0:
             self.delay_ref = model.DELAY(self.delay, msg=msg)
 
     def safe_cross_reference(self, model, debug=True):
-        msg = ' which is required by TLOAD1=%s' % (self.sid)
+        msg = ', which is required by TLOAD1=%s' % (self.sid)
         if self.tid:
             #try:
             self.tid_ref = model.TableD(self.tid, msg=msg)
@@ -1377,13 +1381,13 @@ class TLOAD2(DynamicLoad):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by TLOAD2 sid=%s' % (self.sid)
+        msg = ', which is required by TLOAD2 sid=%s' % (self.sid)
         if isinstance(self.delay, integer_types) and self.delay > 0:
             self.delay_ref = model.DELAY(self.delay_id, msg=msg)
         # TODO: excite_id
 
-    def safe_cross_reference(self, model, debug=True):
-        msg = ' which is required by TLOAD2 sid=%s' % (self.sid)
+    def safe_cross_reference(self, model, xref_errors, debug=True):
+        msg = ', which is required by TLOAD2 sid=%s' % (self.sid)
         if isinstance(self.delay, integer_types) and self.delay > 0:
             self.delay_ref = model.DELAY(self.delay_id, msg=msg)
         # TODO: excite_id

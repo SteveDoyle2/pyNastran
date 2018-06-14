@@ -50,6 +50,7 @@ class BaseCard(object):
      - object_methods(self, mode='public', keys_to_skip=None)
      - comment
      - update_field(self, n, value)
+
     """
     def __init__(self):
         pass
@@ -146,6 +147,7 @@ class BaseCard(object):
           node = model.nodes[nid]
           # ['GRID', nid, cp, x, y, z]
           node.update_field(3, 0.1) # change the z coordinate
+
         """
         try:
             key_name = self._field_map[n]
@@ -157,6 +159,7 @@ class BaseCard(object):
         """
         dynamic method for non-standard attributes
         (e.g., node.update_field(3, 0.1) to update z)
+
         """
         msg = '%s has not overwritten _update_field_helper; out of range' % self.__class__.__name__
         raise IndexError(msg)
@@ -205,6 +208,7 @@ class BaseCard(object):
         ----------
         xref : bool
             has this model been cross referenced
+
         """
         print('# skipping _verify (type=%s) because _verify is '
               'not implemented' % self.type)
@@ -222,6 +226,7 @@ class BaseCard(object):
           False
           >>> GRID(nid=1, ...) === CQUAD4(eid=1, ...)
           False
+
         """
         if not isinstance(card, self.__class__):
             return False
@@ -252,7 +257,8 @@ class BaseCard(object):
         Returns
         -------
         fields : List[varies]
-          the fields that define the card
+            the fields that define the card
+
         """
         return self.raw_fields()
 
@@ -273,6 +279,7 @@ class BaseCard(object):
         """
         Prints a card in the simplest way possible
         (default values are left blank).
+
         """
         comment = self.comment
         list_fields = self.repr_fields()
@@ -313,6 +320,7 @@ class BaseCard(object):
         -------
         msg : str
             the string representation of the card
+
         """
         raise NotImplementedError('%s has not overwritten write_card' % self.__class__.__name__)
 
@@ -336,6 +344,7 @@ class Property(BaseCard):
         -------
         pid : int
             the Property ID
+
         """
         return self.pid
 
@@ -348,6 +357,7 @@ class Property(BaseCard):
         -------
         mid : int
             the Material ID
+
         """
         if self.mid_ref is None:
             return self.mid
@@ -439,6 +449,7 @@ class Element(BaseCard):
         -------
         pid : int
             the Property ID
+
         """
         if self.pid_ref is None:
             return self.pid
@@ -525,70 +536,73 @@ class Element(BaseCard):
                 raise RuntimeError(msg)
         self.nodes = nodes2
 
-    @property
-    def faces(self):
-        # () -> Dict[int, List[int]]
-        """
-        Gets the faces of the element
+    # this doesn't belong in Element as CBARs don't have faces
+    #@property
+    #def faces(self):
+        ## () -> Dict[int, List[int]]
+        #"""
+        #Gets the faces of the element
 
-        Returns
-        -------
-        faces : Dict[int] = [face1, face2, ...]
-            key = face number
-            value = a list of nodes (integer pointers) as the values.
+        #Returns
+        #-------
+        #faces : Dict[int] = [face1, face2, ...]
+            #key = face number
+            #value = a list of nodes (integer pointers) as the values.
 
-        Notes
-        -----
-        The order of the nodes are consistent with normals that point outwards
-        The face numbering is meaningless
+        #Notes
+        #-----
+        #The order of the nodes are consistent with normals that point outwards
+        #The face numbering is meaningless
 
-        .. note::  The order of the nodes are consistent with ANSYS numbering; is this current?
-        .. warning:: higher order element ids not verified with ANSYS; is this current?
+        #.. note::  The order of the nodes are consistent with ANSYS numbering; is this current?
+        #.. warning:: higher order element ids not verified with ANSYS; is this current?
 
-        Examples
-        --------
-        >>> print(element.faces)
-        """
-        faces = {}
-        try:
-            nodes = self.node_ids
-        except AttributeError:
-            return None
-        if self.type.startswith('CQUAD'): # CQUADx
-            # both sides
-            faces[1] = [nodes[0], nodes[1], nodes[2], nodes[3]]  # CQUAD8/9?
-            faces[2] = [nodes[1], nodes[0], nodes[3], nodes[2]]
-        elif self.type.startswith('CTRI'):  # CTRIAx
-            # both sides
-            faces[1] = [nodes[0], nodes[1], nodes[2]]  # CTRIA6?
-            faces[2] = [nodes[1], nodes[0], nodes[2]]
-        else:
-            faces = None
-        return faces
+        #Examples
+        #--------
+        #>>> print(element.faces)
 
-    def nodes2face(self, nodes):
-        """
-        returns the face number that matches the list of nodes input
+        #"""
+        #faces = {}
+        #try:
+            #nodes = self.node_ids
+        #except AttributeError:
+            #return None
+        #if self.type.startswith('CQUAD'): # CQUADx
+            ## both sides
+            #faces[1] = [nodes[0], nodes[1], nodes[2], nodes[3]]  # CQUAD8/9?
+            #faces[2] = [nodes[1], nodes[0], nodes[3], nodes[2]]
+        #elif self.type.startswith('CTRI'):  # CTRIAx
+            ## both sides
+            #faces[1] = [nodes[0], nodes[1], nodes[2]]  # CTRIA6?
+            #faces[2] = [nodes[1], nodes[0], nodes[2]]
+        #else:
+            #faces = None
+        #return faces
 
-        Parameters
-        ----------
-        nodes : List[node]
-            a series of nodes
+    #def nodes2face(self, nodes):
+        #"""
+        #returns the face number that matches the list of nodes input
 
-        Returns
-        -------
-        face_id : int
-            the face number as an integer
+        #Parameters
+        #----------
+        #nodes : List[node]
+            #a series of nodes
 
-        .. warning:: It's assumed you have the nodes in the proper order.
-        """
-        assert isinstance(nodes, list), 'nodes=%s' % str(nodes)
-        face = None
-        for i in self.faces.keys():
-            chck = self.faces[i]
-            if nodes == chck:
-                face = i
-        return face
+        #Returns
+        #-------
+        #face_id : int
+            #the face number as an integer
+
+        #.. warning:: It's assumed you have the nodes in the proper order.
+
+        #"""
+        #assert isinstance(nodes, list), 'nodes=%s' % str(nodes)
+        #face = None
+        #for i in self.faces.keys():
+            #chck = self.faces[i]
+            #if nodes == chck:
+                #face = i
+        #return face
 
 def _format_comment(comment):
     # type: (str) -> str
@@ -612,11 +626,13 @@ def _format_comment(comment):
 
     >>> _format_comment('$ a comment within a comment looks weird')
     $$ a comment within a comment looks weird
+
     """
     if comment.strip() == '':  # deals with a bunch of spaces
         return ''
     else:
-        return ''.join([u'${}\n'.format(_) for _ in comment.rstrip().split('\n')])
+        return ''.join([u'${}\n'.format(comment_line)
+                        for comment_line in comment.rstrip().split('\n')])
 
 def _node_ids(card, nodes=None, allow_empty_nodes=False, msg=''):
     try:
@@ -676,6 +692,7 @@ def expand_thru(fields, set_fields=True, sort_fields=False):
         This is useful for [2, 'THRU' 5, 1]
     sort_fields : bool; default=False
         Should the fields be sorted at the end?
+
     """
     # ..todo:  should this be removed...is the field capitalized when read in?
     if isinstance(fields, integer_types):
@@ -692,7 +709,7 @@ def expand_thru(fields, set_fields=True, sort_fields=False):
     nfields = len(fields)
     i = 0
     while i < nfields:
-        if fields[i] == 'THRU':
+        if isinstance(fields[i], string_types) and fields[i] == 'THRU':
             istart = int(fields[i - 1])
             iend = int(fields[i + 1])
 
@@ -740,6 +757,7 @@ def expand_thru_by(fields, set_fields=True, sort_fields=True,
     Notes
     -----
     used for QBDY3 and what else ???
+
     """
     if require_int:
         func = int
@@ -807,7 +825,8 @@ def expand_thru_exclude(fields):
     Expands a list of values of the form [1,5,THRU,11,EXCEPT,7,8,13]
     to be [1,5,6,9,10,11,13]
 
-    .. warning:: hasnt been tested
+    .. warning:: hasn't been tested
+
     """
     # ..todo:  should this be removed...is the field capitalized when read in?
     fields = [interpret_value(field.upper())
@@ -832,3 +851,52 @@ def expand_thru_exclude(fields):
                 fields_out += sorted_list
             fields_out.append(fields[i])
     return fields_out
+
+def break_word_by_trailing_integer(pname_fid):
+    """
+    Splits a word
+
+    Examples
+    --------
+    >>> break_word_by_trailing_integer('T11')
+    ('T', '11')
+    >>> break_word_by_trailing_integer('THETA11')
+    ('THETA', '11')
+
+    """
+    nums = []
+    i = 0
+    for i, letter in enumerate(reversed(pname_fid)):
+        if letter.isdigit():
+            nums.append(letter)
+        else:
+            break
+
+    num = ''.join(nums[::-1])
+    if not num:
+        msg = ("pname_fid=%r does not follow the form 'T1', 'T11', 'THETA42' "
+               "(letters and a number)" % pname_fid)
+        raise SyntaxError(msg)
+    word = pname_fid[:-i]
+    assert len(word)+len(num) == len(pname_fid), 'word=%r num=%r pname_fid=%r' % (word, num, pname_fid)
+    return word, num
+
+def break_word_by_trailing_parentheses_integer_ab(pname_fid):
+    """
+    Splits a word
+
+    Examples
+    --------
+    >>> break_word_by_trailing_parentheses_integer('A(11)')
+    ('A', '11')
+    >>> break_word_by_trailing_parentheses_integer('NSM(11)')
+    ('NSM', '11')
+    >>> break_word_by_trailing_parentheses_integer('NSM(B)')
+    ('NSM', 'B')
+
+    """
+    assert pname_fid.endswith(')'), pname_fid
+    word, num = pname_fid[:-1].split('(')
+    if num not in ['A', 'B']:
+        num = int(num)
+    return word, num

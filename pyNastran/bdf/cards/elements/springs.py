@@ -25,12 +25,18 @@ class SpringElement(Element):
         Element.__init__(self)
         self.nodes = [None, None]
 
-    def Centroid(self):
-        p = (self.nodes_ref[1].get_position() - self.nodes_ref[0].get_position()) / 2.
-        return p
+    #def Centroid(self):
+        ## same as below, but we ignore the 2nd point it it's None
+        ##p = (self.nodes_ref[1].get_position() + self.nodes_ref[0].get_position()) / 2.
 
-    def center_of_mass(self):
-        return self.Centroid()
+        #p = self.nodes_ref[0].get_position()
+        #if self.nodes_ref[1] is not None:
+            #p += self.nodes_ref[1].get_position()
+            #p /= 2.
+        #return p
+
+    #def center_of_mass(self):
+        #return self.Centroid()
 
     def Mass(self):
         return 0.0
@@ -184,6 +190,19 @@ class CELAS1(SpringElement):
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.Property(self.Pid(), msg=msg)
 
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CELAS1 eid=%s' % self.eid
+        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
+
     def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
@@ -335,6 +354,18 @@ class CELAS2(SpringElement):
         msg = ', which is required by CELAS2 eid=%s' % (self.eid)
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CELAS2 eid=%s' % self.eid
+        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
+
     def uncross_reference(self):
         self.nodes = self.node_ids
         self.nodes_ref = None
@@ -473,6 +504,20 @@ class CELAS3(SpringElement):
         msg = ', which is required by CELAS3 eid=%s' % (self.eid)
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.Pid(), msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CELAS3 eid=%s' % (self.eid)
+        #self.nodes_ref = model.safe_empty_nodes(self.node_ids, msg=msg)
+        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -628,6 +673,19 @@ class CELAS4(SpringElement):
         """
         msg = ', which is required by CELAS4 eid=%s' % (self.eid)
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CELAS4 eid=%s' % self.eid
+        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
+        #self.nodes_ref = model.safe_empty_nodes(self.node_ids, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids

@@ -17,7 +17,7 @@ iren.SetRenderWindow(renWin)
 
 # create source
 source = vtk.vtkConeSource()
-source.SetCenter(0,0,0)
+source.SetCenter(0, 0, 0)
 source.SetResolution(100)
 
 # mapper

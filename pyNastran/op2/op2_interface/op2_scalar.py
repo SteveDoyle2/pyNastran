@@ -50,6 +50,7 @@ Defines the sub-OP2 class.  This should never be called outisde of the OP2 class
    - _read_results_table()
    - _print_month(month, day, year, zero, one)
    - _finish()
+
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -669,6 +670,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             (.. seealso:: import logging)
         debug_file : str; default=None (No debug)
             sets the filename that will be written to
+
         """
         assert isinstance(debug, bool), 'debug=%r' % debug
 
@@ -721,6 +723,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         ----------
         subcases : List[int, ...] / int; default=None->all subcases
             list of [subcase1_ID,subcase2_ID]
+
         """
         #: stores the set of all subcases that are in the OP2
         #self.subcases = set([])
@@ -750,6 +753,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                      subcase_id_2: [time3, time4]}
 
         .. warning:: I'm not sure this still works...
+
         """
         expected_times = {}
         for (isubcase, etimes) in iteritems(times):
@@ -782,10 +786,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'RADEATC': [self._read_oug1_3, self._read_oug_4], # Displacement Equivalent Inertia Attachment mode (OUG)
 
             # broken - isat_launch_100hz.op2 - wrong numwide
-            #b'RAQCONS': [self._read_oqg1_3, self._read_oqg_4], # Constraint mode MPC force table (OQG)
-            #b'RAQEATC': [self._read_oqg1_3, self._read_oqg_4], # Attachment mode MPC force table (OQG)
-            b'RAQCONS': [self._table_passer, self._table_passer], # temporary
-            b'RAQEATC': [self._table_passer, self._table_passer], # temporary
+            b'RAQCONS': [self._read_oqg1_3, self._read_oqg_4], # Constraint mode MPC force table (OQG)
+            b'RAQEATC': [self._read_oqg1_3, self._read_oqg_4], # Attachment mode MPC force table (OQG)
+            #b'RAQCONS': [self._table_passer, self._table_passer], # temporary
+            #b'RAQEATC': [self._table_passer, self._table_passer], # temporary
 
             #b'RAFCONS': [self._read_oef1_3, self._read_oef1_4], # Element Force Constraint Mode (OEF)
             #b'RAFEATC': [self._read_oef1_3, self._read_oef1_4], # Element Force Equivalent Inertia Attachment mode (OEF)
@@ -800,12 +804,12 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'RAPCONS': [self._table_passer, self._table_passer], # Constraint mode ply stress table (OES)
             b'RAPEATC': [self._table_passer, self._table_passer], # Attachment mode ply stress table (OES)
 
-            #b'RASCONS': [self._read_oes1_3, self._read_oes1_4], # Stress Constraint Mode (OES)
+            b'RASCONS': [self._read_oes1_3, self._read_oes1_4], # Stress Constraint Mode (OES)
             #b'RASEATC': [self._read_oes1_3, self._read_oes1_4], # Stress Equivalent Inertia Attachment mode (OES)
-            b'RASCONS': [self._table_passer, self._table_passer], # temporary
+            #b'RASCONS': [self._table_passer, self._table_passer], # temporary
             b'RASEATC': [self._table_passer, self._table_passer], # temporary
 
-            #b'RAEEATC': [self._table_passer, self._table_passer], # Strain Equivalent Inertia Attachment mode (OES)
+            b'RAEEATC': [self._read_oes1_3, self._read_ostr1_4], # Strain Equivalent Inertia Attachment mode (OES)
             #b'RAECONS': [self._read_oes1_3, self._read_oes1_4], # Strain Constraint Mode (OSTR)
             b'RAEEATC': [self._table_passer, self._table_passer], # temporary
             b'RAECONS': [self._table_passer, self._table_passer], # temporary
@@ -867,8 +871,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OQGATO2' : [self._read_oqg2_3, self._read_oqg_4],
             b'OQGCRM2' : [self._read_oqg2_3, self._read_oqg_4],
             b'OQGPSD2' : [self._read_oqg2_3, self._read_oqg_4],
-            b'OQGRMS2' : [self._read_oqg2_3, self._read_oqg_4],
-            b'OQGNO2'  : [self._read_oqg2_3, self._read_oqg_4],
+            b'OQGRMS2' : [self._read_oqg1_3, self._read_oqg_4],
+            b'OQGNO2'  : [self._read_oqg1_3, self._read_oqg_4],
 
             #=======================
             # MPC Forces
@@ -886,8 +890,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OQMATO2' : [self._read_oqg2_3, self._read_oqg_mpc_ato],
             b'OQMCRM2' : [self._read_oqg2_3, self._read_oqg_mpc_crm],
             b'OQMPSD2' : [self._read_oqg2_3, self._read_oqg_mpc_psd],
-            b'OQMRMS2' : [self._read_oqg2_3, self._read_oqg_mpc_rms],
-            b'OQMNO2'  : [self._read_oqg2_3, self._read_oqg_mpc_no],
+            b'OQMRMS2' : [self._read_oqg1_3, self._read_oqg_mpc_rms],
+            b'OQMNO2'  : [self._read_oqg1_3, self._read_oqg_mpc_no],
 
             #=======================
             # OPG
@@ -898,11 +902,11 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OPNL1' : [self._read_opg1_3, self._read_opg1_4],  # nonlinear loads
             b'OCRPG' : [self._read_opg1_3, self._read_opg1_4],  # post-buckling loads
 
-            b'OPGATO1' : [self._table_passer, self._table_passer],
-            b'OPGCRM1' : [self._table_passer, self._table_passer],
-            b'OPGPSD1' : [self._table_passer, self._table_passer],
-            b'OPGRMS1' : [self._table_passer, self._table_passer],
-            b'OPGNO1'  : [self._table_passer, self._table_passer],
+            b'OPGATO1' : [self._read_opg1_3, self._read_opg1_4],
+            b'OPGCRM1' : [self._read_opg1_3, self._read_opg1_4],
+            b'OPGPSD1' : [self._read_opg1_3, self._read_opg1_4],
+            b'OPGRMS1' : [self._read_opg1_3, self._read_opg1_4],
+            b'OPGNO1'  : [self._read_opg1_3, self._read_opg1_4],
 
             b'OPGATO2' : [self._table_passer, self._table_passer],
             b'OPGCRM2' : [self._table_passer, self._table_passer],
@@ -943,11 +947,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OESNLBR' : [self._read_oes1_3, self._read_oes1_4],
             b'OESNL1X' : [self._read_oes1_3, self._read_oes1_4],
 
-            #b'OESNLXR' : [self._table_crasher, self._table_crasher],  # nonlinear stresses
-            #b'OESNLXD' : [self._table_crasher, self._table_crasher],  # nonlinear transient stresses
-            #b'OESNLBR' : [self._table_crasher, self._table_crasher],
-            #b'OESNL1X' : [self._table_crasher, self._table_crasher],
-
             b'OESNLXR2' : [self._table_passer, self._table_passer],
             b'OESNLBR2' : [self._table_passer, self._table_passer],
 
@@ -965,11 +964,11 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OESTRCP' : [self._read_oes1_3, self._read_ostr1_4],
 
             # off strain
-            b'OSTRATO1' : [self._table_passer, self._table_passer],
-            b'OSTRCRM1' : [self._table_passer, self._table_passer],
-            b'OSTRPSD1' : [self._table_passer, self._table_passer],
-            b'OSTRRMS1' : [self._table_passer, self._table_passer], # isat_random
-            b'OSTRNO1' : [self._table_passer, self._table_passer],  # isat_random
+            b'OSTRATO1' : [self._read_oes1_3, self._read_ostr1_4],
+            b'OSTRCRM1' : [self._read_oes1_3, self._read_ostr1_4],
+            b'OSTRPSD1' : [self._read_oes1_3, self._read_ostr1_4],
+            b'OSTRRMS1' : [self._read_oes1_3, self._read_ostr1_4], # isat_random
+            b'OSTRNO1' : [self._read_oes1_3, self._read_ostr1_4],  # isat_random
 
             b'OSTRATO2' : [self._table_passer, self._table_passer],
             b'OSTRCRM2' : [self._table_passer, self._table_passer],
@@ -977,13 +976,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OSTRRMS2' : [self._table_passer, self._table_passer],
             b'OSTRNO2'  : [self._table_passer, self._table_passer],
 
-            b'OSTRMS1C' : [self._table_passer, self._table_passer], # isat_random
-            b'OSTNO1C' : [self._table_passer, self._table_passer],  # isat_random
-            #b'OSTRRMS1' : [self._read_oes1_3, self._read_oes1_4], # isat_random
-            #b'OSTRNO1' : [self._read_oes1_3, self._read_oes1_4],  # isat_random
-            #b'OSTRMS1C' : [self._read_oes1_3, self._read_oes1_4], # isat_random
-            #b'OSTRMS1C' : [self._read_oes1_3, self._read_oes1_4], # isat_random
-            #b'OSTNO1C' : [self._read_oes1_3, self._read_oes1_4],  # isat_random
+            b'OSTRMS1C' : [self._read_oes1_3, self._read_ostr1_4], # isat_random
+            b'OSTNO1C' : [self._read_oes1_3, self._read_ostr1_4],  # isat_random
+            #b'OSTRRMS1' : [self._read_oes1_3, self._read_ostr1_4], # isat_random
+            #b'OSTRNO1' : [self._read_oes1_3, self._read_ostr1_4],  # isat_random
 
             b'OSTPSD2C' : [self._table_passer, self._table_passer],
             #=======================
@@ -1018,8 +1014,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OUGATO2' : [self._read_oug2_3, self._read_oug_ato],
             b'OUGCRM2' : [self._read_oug2_3, self._read_oug_crm],
             b'OUGPSD2' : [self._read_oug2_3, self._read_oug_psd],
-            b'OUGRMS2' : [self._read_oug2_3, self._read_oug_rms],
-            b'OUGNO2'  : [self._read_oug2_3, self._read_oug_no],
+            b'OUGRMS2' : [self._read_oug1_3, self._read_oug_rms],
+            b'OUGNO2'  : [self._read_oug1_3, self._read_oug_no],
 
             #=======================
             # extreme values of the respective table
@@ -1183,12 +1179,12 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OAGNO2'  : [self._read_oug2_3, self._read_oug_no],
 
             # stress
-            b'OESATO1' : [self._table_passer, self._table_passer],
-            b'OESCRM1' : [self._table_passer, self._table_passer],
-            b'OESPSD1' : [self._table_passer, self._table_passer],
-            b'OESRMS1' : [self._table_passer, self._table_passer],
-            b'OESNO1'  : [self._table_passer, self._table_passer],
-            b'OESXRMS1' : [self._table_passer, self._table_passer],
+            b'OESATO1' : [self._read_oes1_3, self._read_oes1_4],
+            b'OESCRM1' : [self._read_oes1_3, self._read_oes1_4],
+            b'OESPSD1' : [self._read_oes1_3, self._read_oes1_4],
+            b'OESRMS1' : [self._read_oes1_3, self._read_oes1_4],
+            b'OESNO1'  : [self._read_oes1_3, self._read_oes1_4],
+            b'OESXRMS1' : [self._read_oes1_3, self._read_oes1_4],
 
             b'OESATO2' : [self._table_passer, self._table_passer],
             b'OESCRM2' : [self._table_passer, self._table_passer],
@@ -1243,6 +1239,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         -------
         op2_filename : str
             a valid file string
+
         """
         if op2_filename is None:
             from pyNastran.utils.gui_io import load_file_dialog
@@ -1256,25 +1253,13 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         return op2_filename
 
     def _create_binary_debug(self):
-        """
-        Instatiates the ``self.binary_debug`` variable/file
-        """
+        """Instatiates the ``self.binary_debug`` variable/file"""
         if hasattr(self, 'binary_debug') and self.binary_debug is not None:
             self.binary_debug.close()
             del self.binary_debug
 
-        wb = 'w'
-        if PY2:
-            wb = 'wb'
-
-        if self.debug_file is not None:
-            #: an ASCII version of the op2 (creates lots of output)
-            self.log.debug('debug_file = %s' % self.debug_file)
-            self.binary_debug = open(self.debug_file, wb)
-            self.binary_debug.write(self.op2_filename + '\n')
-            self.is_debug_file = True
-        else:
-            self.is_debug_file = False
+        self.is_debug_file, self.binary_debug = create_binary_debug(
+            self.op2_filename, self.debug_file, self.log)
 
     def read_op2(self, op2_filename=None, combine=False):
         """
@@ -1346,6 +1331,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
           - open the file
           - set the endian
           - preallocate some struct objects
+
         """
         #: file index
         self.n = 0
@@ -1420,7 +1406,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 macro_version = 'IMAT %s' % imat_version
             else:
                 version_ints = Struct(self._endian + b'7i').unpack(data)
-                if version_ints == (1, 2, 3, 4, 5, 6 , 7):
+                if version_ints == (1, 2, 3, 4, 5, 6, 7):
                     macro_version = 'MSFC'
                 else:
                     self.show_data(data)
@@ -1532,6 +1518,12 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         ----------
         table_name : bytes str
             the first table's name
+
+        Returns
+        -------
+        table_names : List[bytes str]
+            the table names that were read
+
         """
         table_names = []
         while table_name is not None:
@@ -1628,6 +1620,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         ---
         -2 - nitimes?
         -3 - list of times?
+
         """
         table_name = self._read_table_name(rewind=False, stop_on_failure=True)
         self.read_markers([-1])
@@ -1658,40 +1651,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             self._read_pcompts()
         else:
             self._skip_table_helper()
-
-    def _read_dit(self):
-        """
-        Reads the DIT table (poorly).
-        The DIT table stores information about table cards
-        (e.g. TABLED1, TABLEM1).
-        """
-        table_name = self._read_table_name(rewind=False)
-        self.read_markers([-1])
-        data = self._read_record()
-
-        self.read_markers([-2, 1, 0])
-        data = self._read_record()
-        table_name, = self.struct_8s.unpack(data)
-
-        self.read_markers([-3, 1, 0])
-        data = self._read_record()
-
-        self.read_markers([-4, 1, 0])
-        data = self._read_record()
-
-        self.read_markers([-5, 1, 0])
-
-        itable = -6
-        while 1:
-            markers = self.get_nmarkers(1, rewind=True)
-            if markers == [0]:
-                break
-            data = self._read_record()
-            self.read_markers([itable, 1, 0])
-            itable -= 1
-
-        #self.show(100)
-        self.read_markers([0])
 
     def _read_table_name(self, rewind=False, stop_on_failure=True):
         """Reads the next OP2 table name (e.g. OUG1, OES1X1)"""
@@ -1754,6 +1713,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
           }
 
           model.set_additional_generalized_tables_to_read(generalized_tables)
+
         """
         self._update_generalized_tables(tables)
         self.generalized_tables = tables
@@ -1775,6 +1735,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 function to read table 3 results (e.g., metadata)
             method4 : function
                 function to read table 4 results (e.g., the actual results)
+
         """
         self._update_generalized_tables(tables)
         table_mapper = self._get_table_mapper()
@@ -1798,6 +1759,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         helper function for:
          - set_additional_generalized_tables_to_read
          - set_additional_result_tables_to_read
+
         """
         global NX_RESULT_TABLES
         global MSC_RESULT_TABLES
@@ -1839,6 +1801,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         .. note:: Do not use this for result tables like OUGV1, which
                   store results like displacement.  Those are not matrices.
                   Matrices are things like DMIGs.
+
         """
         if isinstance(matrices, list):
             matrices2 = {}
@@ -1862,6 +1825,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         """
         Skips the majority of geometry/result tables as they follow a very standard format.
         Other tables don't follow this format.
+
         """
         self.table_name = self._read_table_name(rewind=False)
         if self.is_debug_file:
@@ -1888,19 +1852,18 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         -------
         markers : List[int, int, int]
             a list of nmarker integers
+
         """
         markers = []
         struc = Struct('3i')
-        for i in range(nmarkers):
+        for unused_i in range(nmarkers):
             block = self.f.read(12)
             marker = struc.unpack(block)
             markers.append(marker)
         return markers
 
     def _read_geom_table(self):
-        """
-        Reads a geometry table
-        """
+        """Reads a geometry table"""
         self.table_name = self._read_table_name(rewind=False)
         if self.is_debug_file:
             self.binary_debug.write('_read_geom_table - %s\n' % self.table_name)
@@ -1925,9 +1888,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self._read_subtables()
 
     def _read_results_table(self):
-        """
-        Reads a results table
-        """
+        """Reads a results table"""
         if self.is_debug_file:
             self.binary_debug.write('read_results_table - %s\n' % self.table_name)
         self.table_name = self._read_table_name(rewind=False)
@@ -1991,6 +1952,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             a dummy integer (???)
         one : int
             a dummy integer (???)
+
         """
         month, day, year = self._set_op2_date(month, day, year)
 
@@ -2007,6 +1969,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         Clears out the data members contained within the self.words variable.
         This prevents mixups when working on the next table, but otherwise
         has no effect.
+
         """
         for word in self.words:
             if word != '???' and hasattr(self, word):
@@ -2043,6 +2006,23 @@ def main():  # pragma: no cover
     #(model, ext) = os.path.splitext(op2_filename)
     #f06_outname = model + '.test_op2.f06'
     #o.write_f06(f06_outname)
+
+def create_binary_debug(op2_filename, debug_file, log):
+    """helper method"""
+    binary_debug = None
+    wb = 'w'
+    if PY2:
+        wb = 'wb'
+
+    if debug_file is not None:
+        #: an ASCII version of the op2 (creates lots of output)
+        log.debug('debug_file = %s' % debug_file)
+        binary_debug = open(debug_file, wb)
+        binary_debug.write(op2_filename + '\n')
+        is_debug_file = True
+    else:
+        is_debug_file = False
+    return is_debug_file, binary_debug
 
 
 if __name__ == '__main__':  # pragma: no cover

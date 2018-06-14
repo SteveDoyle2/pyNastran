@@ -21,7 +21,7 @@ class RealBeamArray(OES_Object):
      - RealBeamStressArray
      - RealBeamStrainArray
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt):
+    def __init__(self, data_code, is_sort1, isubcase, unused_dt):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
@@ -31,13 +31,7 @@ class RealBeamArray(OES_Object):
         self.nelements = 0  # result specific
         self.nnodes = None
 
-        if is_sort1:
-            pass
-            #if dt is not None:
-                #self.add = self.add_sort1
-                #self.add_new_eid = self.add_new_eid_sort1
-                #self.addNewNode = self.addNewNodeSort1
-        else:
+        if not is_sort1:
             raise NotImplementedError('SORT2')
             #assert dt is not None
             #self.add = self.add_sort2
@@ -139,7 +133,7 @@ class RealBeamArray(OES_Object):
             i = 0
             if self.is_sort1:
                 for itime in range(ntimes):
-                    for ieid, (eid, nid) in enumerate(self.element_node):
+                    for ieid, (eid, unused_nid) in enumerate(self.element_node):
                         t1 = self.data[itime, ieid, :]
                         t2 = table.data[itime, ieid, :]
                         (axial_stress1, equiv_stress1, total_strain1, eff_plastic_creep_strain1,
@@ -183,7 +177,7 @@ class RealBeamArray(OES_Object):
         self.itotal += 1
         self.ielement += 1
 
-    def add_sort1(self, dt, eid, out):
+    def add_sort1(self, unused_dt, eid, out):
         """unvectorized method for adding SORT1 transient data"""
         (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
 
@@ -416,15 +410,15 @@ class RealNonlinearBeamArray(OES_Object):
         assert eid >= 0, eid
         self._times[self.itime] = dt
         (grid_a,
-         ca, long_ca, eqs_ca, te_ca, eps_ca, ecs_ca,
-         da, long_da, eqs_da, te_da, eps_da, ecs_da,
-         ea, long_ea, eqs_ea, te_ea, eps_ea, ecs_ea,
-         fa, long_fa, eqs_fa, te_fa, eps_fa, ecs_fa,
+         unused_ca, long_ca, eqs_ca, te_ca, eps_ca, ecs_ca,
+         unused_da, long_da, eqs_da, te_da, eps_da, ecs_da,
+         unused_ea, long_ea, eqs_ea, te_ea, eps_ea, ecs_ea,
+         unused_fa, long_fa, eqs_fa, te_fa, eps_fa, ecs_fa,
          grid_b,
-         cb, long_cb, eqs_cb, te_cb, eps_cb, ecs_cb,
-         db, long_db, eqs_db, te_db, eps_db, ecs_db,
-         eb, long_eb, eqs_eb, te_eb, eps_eb, ecs_eb,
-         fb, long_fb, eqs_fb, te_fb, eps_fb, ecs_fb,) = out[1:]
+         unused_cb, long_cb, eqs_cb, te_cb, eps_cb, ecs_cb,
+         unused_db, long_db, eqs_db, te_db, eps_db, ecs_db,
+         unused_eb, long_eb, eqs_eb, te_eb, eps_eb, ecs_eb,
+         unused_fb, long_fb, eqs_fb, te_fb, eps_fb, ecs_fb,) = out[1:]
 
         self.element_node[self.itotal] = [eid, grid_a, 0]
         self.element_node[self.itotal + 1] = [eid, grid_a, 1]
@@ -523,7 +517,6 @@ class RealNonlinearBeamArray(OES_Object):
             #'             ID       ID                                     STRESS                          PLASTIC/NLELAST       STRAIN\n',]
             #'0               1         1     C        1.738817E+03      1.738817E+03      5.796055E-05      0.0               0.0\n',
             #'                                D        1.229523E+03      1.229523E+03      4.098411E-05      0.0               0.0\n',
-            #eid_old = None
             for (eid, nid, loc, longi, eqs, te, eps, ecs) in zip(
                 eids, nids, locs, longs, eqss, tes, epss, ecss):
 

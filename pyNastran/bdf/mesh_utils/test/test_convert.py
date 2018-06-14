@@ -41,7 +41,6 @@ class TestConvert(unittest.TestCase):
         units_to = ['m', 'kg', 's']
 
         convert(model, units_to, units=units_from)
-        del model.params['WTMASS']
         model.write_bdf(bdf_filename_out2)
         os.remove(bdf_filename_out)
         os.remove(bdf_filename_out2)
@@ -62,14 +61,13 @@ class TestConvert(unittest.TestCase):
         units_to = ['m', 'kg', 's']
 
         convert(model, units_to, units=units_from)
-        del model.params['WTMASS']
         model.write_bdf(bdf_filename_out2)
         os.remove(bdf_filename_out)
         os.remove(bdf_filename_out2)
 
     def test_convert_bwb(self):
         """converts a bwb model"""
-        bdf_filename = os.path.join(pkg_path, '..', 'models', 'bwb', 'BWB_saero.bdf')
+        bdf_filename = os.path.join(pkg_path, '..', 'models', 'bwb', 'bwb_saero.bdf')
         bdf_filename_out = os.path.join(pkg_path, '..', 'models', 'bwb', 'bwb_modes.bdf')
         bdf_filename_out2 = os.path.join(pkg_path, '..', 'models', 'bwb', 'bwb_modes_converted.bdf')
         model = read_bdf(bdf_filename, log=log, validate=False)
@@ -186,9 +184,9 @@ class TestConvert(unittest.TestCase):
     def test_convert_02(self):
         """converts a full model units"""
         bdf_filename = os.path.abspath(
-            os.path.join(pkg_path, '..', 'models', 'bwb', 'BWB_saero.bdf'))
+            os.path.join(pkg_path, '..', 'models', 'bwb', 'bwb_saero.bdf'))
         bdf_filename_out = os.path.abspath(
-            os.path.join(pkg_path, '..', 'models', 'bwb', 'BWB_saero.out'))
+            os.path.join(pkg_path, '..', 'models', 'bwb', 'bwb_saero.out'))
 
         model = read_bdf(bdf_filename, log=log)
         units_to = ['m', 'kg', 's']

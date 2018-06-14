@@ -154,18 +154,24 @@ class OPG(OP2Common):
             n = self._read_load_vector(data, ndata)
         elif self.table_code == 12:  # ???
             n = self._read_force_vector(data, ndata)
+        elif self.table_code == 802:  # load vector
+            assert self.table_name in [b'OPGRMS1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+            n = self._read_load_vector(data, ndata, '_RMS')
+        elif self.table_code == 902:  # load vector
+            assert self.table_name in [b'OPGNO1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+            n = self._read_load_vector(data, ndata, '_NO')
         #else:
             #n = self._not_implemented_or_skip('bad OPG table')
         else:
-            raise NotImplementedError(self.table_code)
+            raise NotImplementedError('table_name=%r table_code=%r' % (self.table_name, self.table_code))
         return n
 
-    def _read_load_vector(self, data, ndata):
+    def _read_load_vector(self, data, ndata, postfix=''):
         """
         table_code = 2
         """
         if self.thermal == 0:
-            result_name = 'load_vectors'
+            result_name = 'load_vectors' + postfix
             storage_obj = self.load_vectors
             if self._results.is_not_saved(result_name):
                 return ndata
@@ -174,7 +180,7 @@ class OPG(OP2Common):
                                             RealLoadVectorArray, ComplexLoadVectorArray,
                                             'node', random_code=self.random_code)
         elif self.thermal == 1:
-            result_name = 'thermal_load_vectors'
+            result_name = 'thermal_load_vectors' + postfix
             storage_obj = self.thermal_load_vectors
 
             #RealThermalLoadVectorVector = None

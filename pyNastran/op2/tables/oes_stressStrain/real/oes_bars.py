@@ -1,12 +1,12 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from itertools import count
 from six import integer_types
 import numpy as np
 from numpy import zeros, searchsorted, ravel
 ints = (int, np.int32)
 
-from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
+    StressObject, StrainObject, OES_Object)
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 try:
     import pandas as pd  # type: ignore
@@ -30,12 +30,7 @@ class RealBarArray(OES_Object):
         self.ielement = 0
         self.nelements = 0  # result specific
 
-        if is_sort1:
-            if dt is not None:
-                #self.add = self.add_sort1
-                self.add_new_eid = self.add_new_eid_sort1
-                #self.addNewNode = self.addNewNodeSort1
-        else:
+        if not is_sort1:
             raise NotImplementedError('SORT2')
             #assert dt is not None
             #self.add = self.add_sort2
@@ -71,10 +66,10 @@ class RealBarArray(OES_Object):
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
 
-        if self.element_type == 34:
-            nnodes_per_element = 1
-        else:
-            raise NotImplementedError(self.element_type)
+        #if self.element_type == 34:
+            #nnodes_per_element = 1
+        #else:
+            #raise NotImplementedError(self.element_type)
 
         self.itime = 0
         self.ielement = 0
@@ -140,12 +135,6 @@ class RealBarArray(OES_Object):
                 raise ValueError(msg)
         return True
 
-    def add_new_eid(self, dt, eid, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
-                    s1b, s2b, s3b, s4b, smaxb, sminb, MSc):
-        self.add_new_eid_sort1(dt, eid,
-                               s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
-                               s1b, s2b, s3b, s4b, smaxb, sminb, MSc)
-
     def add_new_eid_sort1(self, dt, eid,
                           s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
                           s1b, s2b, s3b, s4b, smaxb, sminb, MSc):
@@ -180,7 +169,7 @@ class RealBarArray(OES_Object):
 
         nelements = self.ntotal
         ntimes = self.ntimes
-        ntotal = self.ntotal
+        unused_ntotal = self.ntotal
         nelements = self.ntotal
 
         msg = []
@@ -247,10 +236,10 @@ class RealBarArray(OES_Object):
             sminb = self.data[itime, :, 13]
             MSc = self.data[itime, :, 14]
 
-            for (i, eid, s1ai, s2ai, s3ai, s4ai, axiali, smaxai, sminai, MSti,
-                         s1bi, s2bi, s3bi, s4bi,         smaxbi, sminbi, MSci) in zip(
-                count(), eids, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
-                               s1b, s2b, s3b, s4b,        smaxb, sminb, MSc):
+            for (eid, s1ai, s2ai, s3ai, s4ai, axiali, smaxai, sminai, MSti,
+                      s1bi, s2bi, s3bi, s4bi,         smaxbi, sminbi, MSci) in zip(
+                eids, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
+                      s1b, s2b, s3b, s4b,        smaxb, sminb, MSc):
 
                 vals = [s1ai, s2ai, s3ai, s4ai, axiali, smaxai, sminai, MSti,
                         s1bi, s2bi, s3bi, s4bi,         smaxbi, sminbi, MSci]

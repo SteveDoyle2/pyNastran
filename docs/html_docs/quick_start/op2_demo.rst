@@ -16,9 +16,12 @@ slower. We can read entire blocks of arrays with a single call. The data
 is already typed. - Much, much more memory inefficient because we aren't
 appending strings onto lists and turning that into a numpy array.
 
-F06 parsers get ridiculously hard when you start do complicated results,
-like: - single subcase buckling - superelements - SOL 200 optimization
-with sub-optimization - SPOINTs
+F06 parsers get hard when you start do complicated results like: 
+
+ - single subcase buckling 
+ - superelements 
+ - SOL 200 optimization with sub-optimization
+ - SPOINTs
 
 The pyNastran OP2 Reader is fast, highly validated, and it supports most
 result types. The data in the OP2 is also more accurate because there is

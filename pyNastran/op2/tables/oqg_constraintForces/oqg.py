@@ -144,6 +144,7 @@ class OQG(OP2Common):
         self._write_debug_bits()
 
     def _read_oqg2_3(self, data, ndata):
+        """reads the SORT2 version of table 4 (the data table)"""
         self.nonlinear_factor = None
         self.is_table_1 = False
         self.is_table_2 = True
@@ -180,9 +181,11 @@ class OQG(OP2Common):
             #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5, False)
             #self.data_names = self.apply_data_code_value('data_names', ['node_id'])
             #self.setNullNonlinearFactor()
+
         if self.analysis_code == 1:  # static...because reasons.
             self._analysis_code_fmt = b'i'
             self.data_names = self.apply_data_code_value('data_names', ['node_id'])
+            self.apply_data_code_value('analysis_method', 'N/A')
         elif self.analysis_code == 2:  # real eigenvalues
             ## mode number
             self.mode = self.add_data_parameter(data, 'mode', b'i', 5)
@@ -193,6 +196,7 @@ class OQG(OP2Common):
             self.mode_cycle = self.add_data_parameter(data, 'mode_cycle', b'f', 7, False)
             self.data_names = self.apply_data_code_value('data_names',
                                                          ['node_id', 'eigr', 'mode_cycle'])
+            self.apply_data_code_value('analysis_method', 'mode')
         #elif self.analysis_code == 3: # differential stiffness
             #self.lsdvmn = self.get_values(data, b'i', 5) ## load set number
             #self.data_names = self.data_code['lsdvmn'] = self.lsdvmn
@@ -203,16 +207,19 @@ class OQG(OP2Common):
             #self.freq = self.add_data_parameter(data, 'freq', b'f', 5)
             self._analysis_code_fmt = b'f'
             self.data_names = self.apply_data_code_value('data_names', ['node_id'])
+            self.apply_data_code_value('analysis_method', 'freq')
         elif self.analysis_code == 6:  # transient
             ## time step
             #self.dt = self.add_data_parameter(data, 'dt', b'f', 5)
             self._analysis_code_fmt = b'f'
             self.data_names = self.apply_data_code_value('data_names', ['node_id'])
+            self.apply_data_code_value('analysis_method', 'dt')
         elif self.analysis_code == 7:  # pre-buckling
             ## load set number
             #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
             self._analysis_code_fmt = b'i'
             self.data_names = self.apply_data_code_value('data_names', ['node_id'])
+            self.apply_data_code_value('analysis_method', 'lsdvmn')
         elif self.analysis_code == 8:  # post-buckling
             ## load set number
             #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
@@ -220,6 +227,7 @@ class OQG(OP2Common):
             ## real eigenvalue
             self.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
             self.data_names = self.apply_data_code_value('data_names', ['node_id', 'eigr'])
+            self.apply_data_code_value('analysis_method', 'eigr')
         elif self.analysis_code == 9:  # complex eigenvalues
             ## mode number
             self.mode = self.add_data_parameter(data, 'mode', b'i', 5)
@@ -229,11 +237,13 @@ class OQG(OP2Common):
             ## imaginary eigenvalue
             self.eigi = self.add_data_parameter(data, 'eigi', b'f', 7, False)
             self.data_names = self.apply_data_code_value('data_names', ['node_id', 'eigr', 'eigi'])
+            self.apply_data_code_value('analysis_method', 'mode')
         elif self.analysis_code == 10:  # nonlinear statics
             ## load step
             #self.lftsfq = self.add_data_parameter(data, 'lftsfq', b'f', 5)
             self._analysis_code_fmt = b'f'
             self.data_names = self.apply_data_code_value('data_names', ['node_id'])
+            self.apply_data_code_value('analysis_method', 'lftsfq')
         elif self.analysis_code == 11:  # old geometric nonlinear statics
             ## load set number
             #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
@@ -245,6 +255,7 @@ class OQG(OP2Common):
             #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
             self._analysis_code_fmt = b'i'
             self.data_names = self.apply_data_code_value('data_names', ['node_id'])
+            self.apply_data_code_value('analysis_method', 'lsdvmn')
         else:
             msg = 'invalid analysis_code...analysis_code=%s' % self.analysis_code
             raise RuntimeError(msg)

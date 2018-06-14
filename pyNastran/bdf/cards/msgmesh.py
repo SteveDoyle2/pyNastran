@@ -201,7 +201,7 @@ class CGEN(BaseCard):
             #if not self.seid:
                 #self.seid = grdset.seid
                 #self.seid_ref = self.seid
-        #msg = ' which is required by CGEN nid=%s' % (self.nid)
+        #msg = ', which is required by CGEN nid=%s' % (self.nid)
         #self.cp = model.Coord(self.cp, msg=msg)
         #self.cp_ref = self.cp
         #if self.cd != -1:

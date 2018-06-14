@@ -5,7 +5,7 @@ defines:
 """
 from __future__ import print_function
 from six.moves import StringIO
-from six import string_types, iteritems, itervalues
+from six import string_types, iteritems
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.case_control_deck import CaseControlDeck
 from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber, get_renumber_starting_ids_from_model
@@ -66,6 +66,7 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
 
     .. todo:: doesn't support SPOINTs/EPOINTs
     .. warning:: still very preliminary
+
     """
     if not isinstance(bdf_filenames, (list, tuple)):
         raise TypeError('bdf_filenames is not a list/tuple...%s' % str(bdf_filenames))
@@ -226,6 +227,7 @@ def _assemble_mapper(mappers, mapper_0, data_members, mapper_renumber=None):
     -------
     mappers_all : List[mappers]
         One mapper for each bdf_filename
+
     """
     if mapper_renumber is not None:
         mappers_all = [_renumber_mapper(mapper_0, mapper_renumber)]
@@ -268,9 +270,14 @@ def _get_mapper_0(model):
             'coords' : cid_map,
             ...
         }
+
     """
     # build the maps
-    eids_all = list(model.elements.keys()) + list(model.masses.keys()) + list(model.rigid_elements.keys())
+    eids_all = (
+        list(model.elements.keys()) +
+        list(model.masses.keys()) +
+        list(model.rigid_elements.keys())
+    )
     eid_map = {eid : eid for eid in eids_all}
     nid_map = {nid : nid for nid in model.point_ids}
     cid_map = {cid : cid for cid in model.coord_ids}
@@ -294,10 +301,10 @@ def _get_mapper_0(model):
     tstep_map = _dict_key_to_key(model.tsteps)
     tstepnl_map = _dict_key_to_key(model.tstepnls)
     suport1_map = _dict_key_to_key(model.suport1)
-    suport_map = {}
+    #suport_map = {}
 
     nlparm_map = _dict_key_to_key(model.nlparms)
-    nlpci_map = _dict_key_to_key(model.nlpcis)
+    #nlpci_map = _dict_key_to_key(model.nlpcis)
     table_sdamping_map = _dict_key_to_key(model.tables_sdamping)
     dconadd_map = _dict_key_to_key(model.dconadds)
     dconstr_map = _dict_key_to_key(model.dconstrs)
@@ -385,6 +392,7 @@ def _renumber_mapper(mapper_0, mapper_renumber):
                 ???
             value : ???
                 ???
+
     """
     mapper = mapper_0.copy()
     # apply any renumbering
@@ -403,6 +411,7 @@ def _dicts_key_to_key(dictionaries):
     """
     creates a dummy map from the nominal key to the nominal key for
     multiple input dictionaries
+
     """
     out = {}
     for dicti in dictionaries:

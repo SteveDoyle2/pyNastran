@@ -16,13 +16,15 @@ class RealVelocityArray(RealTableArray):
             pass
         elif self.table_name in ['ROUGV1', 'ROUGV2']:
             words += ['                                                (RELATIVE TO ENFORCED MOTION INPUT)']
-        elif self.table_name in ['OUGPSD1', 'OUGPSD2']:
+        elif self.table_name in ['OVGATO1', 'OVGATO2']:
+            words += ['                                                 ( AUTO-CORRELATION FUNCTION )']
+        elif self.table_name in ['OUGPSD1', 'OUGPSD2', 'OVGPSD1', 'OVGPSD2']:
             words += ['                                             ( POWER SPECTRAL DENSITY FUNCTION )']
-        elif self.table_name in ['OUGRMS1', 'OUGRMS2']:
+        elif self.table_name in ['OUGRMS1', 'OUGRMS2', 'OVGRMS1', 'OVGRMS2']:
             words += ['                                                     ( ROOT MEAN SQUARE )']
-        elif self.table_name in ['OUGCRM1', 'OUGCRM2']:
+        elif self.table_name in ['OUGCRM1', 'OUGCRM2', 'OVGCRM1', 'OVGCRM2']:
             words += ['                                               ( CUMULATIVE ROOT MEAN SQUARE )']
-        elif self.table_name in ['OUGNO1', 'OUGNO2']:
+        elif self.table_name in ['OUGNO1', 'OUGNO2', 'OVGNO1', 'OVGNO2']:  # , 'OVGNO1', 'OVGNO2'
             words += ['                                                 ( NUMBER OF ZERO CROSSINGS )']
         else:
             raise NotImplementedError(self.table_name)

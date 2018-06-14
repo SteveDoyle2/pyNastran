@@ -32,7 +32,6 @@ included for use.
 
 
 .. toctree::
-   :maxdepth: 4
 
    quick_start/index
    index/pyNastran

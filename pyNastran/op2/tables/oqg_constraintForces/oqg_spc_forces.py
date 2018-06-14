@@ -11,8 +11,10 @@ class RealSPCForcesArray(RealTableArray):
         words = ['                               F O R C E S   O F   S I N G L E - P O I N T   C O N S T R A I N T\n', ]
         #' \n',
         #'      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
-        if self.table_name in ['OQG1', 'OQG2']: # 'OQGV1'
+        if self.table_name in ['OQG1', 'OQG2', 'OQGV1']:
             pass
+        elif self.table_name in ['OQGATO1', 'OQGATO2']:
+            words += ['                                                 ( AUTO-CORRELATION FUNCTION )']
         elif self.table_name in ['OQGPSD1', 'OQGPSD2']:
             words += ['                                             ( POWER SPECTRAL DENSITY FUNCTION )']
         elif self.table_name in ['OQGRMS1', 'OQGRMS2']:

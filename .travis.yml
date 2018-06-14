@@ -6,7 +6,7 @@ language: python
 python:
   - "2.7"
   - "3.5"
-  - "3.6" # temporarily ignore
+  - "3.6"
 #  - "3.5-dev" # 3.5 development branch
 #  - "nightly" # currently points to 3.6-dev
 
@@ -35,13 +35,6 @@ before_install:
  - sudo -H pip install auxlib
  - sudo pip install conda
 
-#install 2:
-#  - sudo conda init
-#    # Install packages
-#  - sudo conda update conda --yes
-#  - conda install --yes python=$TRAVIS_PYTHON_VERSION atlas numpy scipy vtk
-#  - export PATH=$HOME/py/bin:$PATH
-#  - python setup.py develop
 
 # per http://conda.pydata.org/docs/travis.html
 install:
@@ -76,10 +69,9 @@ install:
   - echo "python version=$TRAVIS_PYTHON_VERSION"
   
   # removed pandas
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy       scipy matplotlib      vtk pyqt; fi
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.4" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy       scipy matplotlib h5py; fi
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.5" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy       scipy matplotlib     ; fi
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy>=1.12 scipy matplotlib     ; fi
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy       scipy matplotlib h5py vtk pyqt; fi
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.5" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy       scipy matplotlib h5py vtk pyqt; fi
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy>=1.12 scipy matplotlib h5py vtk pyqt; fi
   - if [[ "$TRAVIS_PYTHON_VERSION" == "nightly" ]]; then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy<1.13  scipy matplotlib     ; fi
   - source activate test-environment
   - conda list
@@ -90,9 +82,8 @@ install:
 script:
   #- nosetests --with-cov --cov YOUR_PACKAGE_NAME_HERE --cov-config .coveragerc --logging-level=INFO
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then coverage run pyNastran/all_tests.py; fi
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.4" ]]; then python pyNastran/all_tests_no_gui.py; fi
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.5" ]]; then python pyNastran/all_tests_no_gui.py; fi
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then python pyNastran/all_tests_no_gui.py; fi
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.5" ]]; then python pyNastran/all_tests.py; fi
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then python pyNastran/all_tests.py; fi
   - if [[ "$TRAVIS_PYTHON_VERSION" == "nightly" ]]; then python pyNastran/all_tests_no_gui.py; fi
 
   # good

@@ -122,8 +122,9 @@ def run_lots_of_files(files, debug=debug,encoding='latin1', dev=True):
             nfailed += 1
         else:
             npassed += 1
-
     return failed_files
+
+
 def main():
     """the interface for gui_test"""
     from docopt import docopt

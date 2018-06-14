@@ -904,7 +904,7 @@ class TestLoads(unittest.TestCase):
         pid = 3
         nids = [1, 2, 3]
         ctria3 = model.add_ctria3(eid, pid, nids, zoffset=0., theta_mcid=0.0, tflag=0,
-                                  T1=1.0, T2=1.0, T3=1.0,
+                                  T1=None, T2=None, T3=None,
                                   comment='')
 
         # mass = (rho*t + nsm)*A = (0.2*0.5 + 0.3) * 0.5 = 0.4 * 0.5 = 0.2

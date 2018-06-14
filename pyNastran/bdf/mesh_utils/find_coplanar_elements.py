@@ -14,6 +14,8 @@ def find_coplanar_triangles(bdf_filename, eids):
     bdf_filename : str
         the path to the bdf input file
     eids : list
+        the element ids to consider
+
     """
     model = read_bdf(bdf_filename, xref=False)
 

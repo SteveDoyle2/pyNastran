@@ -201,6 +201,7 @@ def to_fields(card_lines, card_name):
       >>> fields = to_fields(lines, card_name)
       >>> fields
       ['GRID', '1', '', '1.0', '2.0', '3.0']
+
     """
     fields = []  # type: List[str]
 
@@ -277,9 +278,7 @@ def to_fields(card_lines, card_name):
     return fields #[field.strip() for field in fields]
 
 def parse_executive_control_deck(executive_control_lines):
-    """
-    Extracts the solution from the executive control deck
-    """
+    """Extracts the solution from the executive control deck"""
     sol = None
     method = None
     sol_iline = None
@@ -341,6 +340,7 @@ def _parse_pynastran_header(line):
 
     or a line without a valid pyNastran flag, we'll stop reading,
     even a valid header statement is on the following line.
+
     """
     lline = line[1:].lower().strip()
     if len(lline) == 0 or lline[0] == '$':
@@ -410,6 +410,7 @@ def print_filename(filename, relpath=True):
     -------
     filename_string : str
         a shortened representation of the filename
+
     """
     if isinstance(filename, StringIO):
         return '<StringIO>'
@@ -468,6 +469,7 @@ def parse_patran_syntax(node_sets, pound=None):
     .. warning::  Don't include the n/node or e/element or any other
                   identifier, just a string of "1 2 3 5:10 12:20:2".
                   Use parse_patran_syntax_dict to consider the identifier.
+
     """
     assert isinstance(node_sets, string_types), type(node_sets)
     if pound is not None:
@@ -518,6 +520,7 @@ def write_patran_syntax_dict(dict_sets):
         the node_set to parse
 
     See ``parse_patran_syntax_dict`` for explanation of usage
+
     """
     msg = ''
     for key, dict_set in sorted(iteritems(dict_sets)):
@@ -589,6 +592,7 @@ def parse_patran_syntax_dict(node_sets, pound_dict=None, msg=''):
     Use parse_patran_syntax to skip the identifier.
 
     .. warning:: case sensitive
+
     """
     data = {}  # type: Dict[str, List[int]]
     try:
@@ -713,6 +717,7 @@ def parse_patran_syntax_dict_map(node_sets, type_map, msg=''):
       }
 
     .. todo:: doesn't support pound_dict
+
     """
     # makes it so we can pass in 'N' and 'n' and still get 'Node' out
     update_type_map = {}  # type: Dict[str, str]
@@ -763,6 +768,7 @@ def Position(xyz, cid, model, is_cid_int=True):
     -------
     xyz2 : (3,) ndarray
         the position of the GRID in an arbitrary coordinate system
+
     """
     if is_cid_int:
         cp_ref = model.Coord(cid)
@@ -798,6 +804,7 @@ def TransformLoadWRT(F, M, cid, cid_new, model, is_cid_int=True):
         the force in an arbitrary coordinate system
     Mxyz_local : (3, ) float ndarray
         the force in an arbitrary coordinate system
+
     """
     if cid == cid_new: # same coordinate system
         return F, M
@@ -862,6 +869,7 @@ def PositionWRT(xyz, cid, cid_new, model, is_cid_int=True):
     -------
     xyz_local : (3, ) float ndarray
         the position of the GRID in an arbitrary coordinate system
+
     """
     if cid == cid_new: # same coordinate system
         return xyz
@@ -919,6 +927,7 @@ def deprecated(old_name, new_name, deprecated_version, levels=None):
         [1, 2, 3] shows 3 levels up from this function
 
     TODO: turn this into a decorator?
+
     """
     assert isinstance(deprecated_version, string_types), type(deprecated_version)
     assert isinstance(levels, list), type(levels)
@@ -982,7 +991,10 @@ def split_eids_along_nids(model, eids, nids):
 
     Implicitly returns model with additional nodes.
 
-    .. note :: xref should be set to False for this function.
+    Note
+    ----
+    xref should be set to False for this function.
+
     """
     #assert model.xref == False, model.xref
     nid = max(model.nodes.keys()) + 1

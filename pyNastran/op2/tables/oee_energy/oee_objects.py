@@ -362,7 +362,8 @@ class RealStrainEnergyArray(ScalarObject):
             f06_file.write(''.join(header + msg_temp2))
 
 
-            fmt1 = ' ' * 36 + '%10i         %-13s                 %.4f             %s\n'
+            fmt1 = ' ' * 36 + '%10s         %-13s                 %.4f             %s\n'
+            fmt1_nan = ' ' * 36 + '%10s         %-13s                 %.4f             %s\n'
             fmt2 = '\n                        TYPE = %-8s SUBTOTAL       %13s                 %.4f\n'
 
             for (eid, energyi, percenti, densityi) in zip(eids, energy, percent, density):
@@ -373,8 +374,23 @@ class RealStrainEnergyArray(ScalarObject):
                 if eid == 100000000:
                     f06_file.write(fmt2 % (self.element_name, senergyi, percenti))
                     break
-                f06_file.write(fmt1 % (
-                    eid, senergyi, percenti, sdensityi))
+                try:
+                    f06_file.write(fmt1 % (eid, senergyi, percenti, sdensityi))
+                except TypeError:
+                    #print('eid = %r; type=%s' % (eid, type(eid)))
+                    #print('senergyi = %r; type=%s' % (senergyi, type(senergyi)))
+                    #print('percenti = %r; type=%s' % (percenti, type(percenti)))
+                    #print('sdensityi = %r; type=%s' % (sdensityi, type(sdensityi)))
+                    assert np.isnan(sdensityi), 'eid=%s sdensityi=%s' % (eid, sdensityi)
+                    f06_file.write(fmt1_nan % (eid, senergyi, percenti, ''))
+                    #if 0:
+                        #print('senergyi = %r; type=%s' % (senergyi, type(senergyi)))
+                        #print('percenti = %r; type=%s' % (percenti, type(percenti)))
+                        #print('sdensityi = %r; type=%s' % (sdensityi, type(sdensityi)))
+                        #msg = fmt1 % (eid, senergyi, percenti, sdensityi)
+                        #raise TypeError(msg)
+                    #raise RuntimeError(msg)
+
             f06_file.write(page_stamp % page_num)
             page_num += 1
             break

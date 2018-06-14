@@ -1,5 +1,10 @@
+"""
+defines:
+ - BEdge_IO
+"""
 from __future__ import print_function
 import os
+from collections import OrderedDict
 
 import numpy as np
 import vtk
@@ -11,8 +16,9 @@ from pyNastran.gui.utils.vtk.vtk_utils import (
 
 
 class BEdge_IO(object):
-    def __init__(self):
-        pass
+    """creates BEdge_IO"""
+    def __init__(self, gui):
+        self.gui = gui
 
     def get_bedge_wildcard_geometry_results_functions(self):
         data = (
@@ -26,39 +32,39 @@ class BEdge_IO(object):
         #if skip_reading:
         #    return
 
-        self.modelType = 'bedge'
+        self.gui.modelType = 'bedge'
 
         model = read_bedge(bedge_filename)
-        self.log.info('bedge_filename = %s' % bedge_filename)
+        self.gui.log.info('bedge_filename = %s' % bedge_filename)
         nnodes = model.nodes.shape[0]
         nbars = model.bars.shape[0]
         nelements = nbars
 
         nodes = model.nodes
-        self.nelements = nelements
-        self.nnodes = nnodes
+        self.gui.nelements = nelements
+        self.gui.nnodes = nnodes
 
-        self.log.debug("nNodes = %s" % self.nnodes)
-        self.log.debug("nElements = %s" % self.nelements)
+        self.gui.log.debug("nNodes = %s" % self.gui.nnodes)
+        self.gui.log.debug("nElements = %s" % self.gui.nelements)
         assert nelements > 0, nelements
 
         black = (0., 0., 0.)
-        self.create_alternate_vtk_grid(
+        self.gui.create_alternate_vtk_grid(
             'nodes', color=black, line_width=5, opacity=1., point_size=3,
             representation='point')
-        alt_grid = self.alt_grids['nodes']
+        alt_grid = self.gui.alt_grids['nodes']
         alt_grid.Allocate(nnodes, 1000)
 
-        grid = self.grid
-        grid.Allocate(self.nelements, 1000)
+        grid = self.gui.grid
+        grid.Allocate(self.gui.nelements, 1000)
 
         points = numpy_to_vtk_points(nodes)
 
         mmax = np.amax(nodes, axis=0)
         mmin = np.amin(nodes, axis=0)
-        dim_max = (mmax - mmin).max()
-        self.log.info('max = %s' % mmax)
-        self.log.info('min = %s' % mmin)
+        unused_dim_max = (mmax - mmin).max()
+        self.gui.log.info('max = %s' % mmax)
+        self.gui.log.info('min = %s' % mmin)
         #print('dim_max =', dim_max)
         #self.update_axes_length(dim_max)
 
@@ -66,7 +72,7 @@ class BEdge_IO(object):
         #elements = np.arange(0, len(nodes), dtype='int32')
         #assert len(elements) == len(nodes)
         #create_vtk_cells_of_constant_element_type(alt_grid, elements, etype)
-        for inode, node in enumerate(nodes):
+        for inode, unused_node in enumerate(nodes):
             elem = vtk.vtkVertex()
             elem.GetPointIds().SetId(0, inode)
             alt_grid.InsertNextCell(etype, elem.GetPointIds())
@@ -76,39 +82,42 @@ class BEdge_IO(object):
         etype = 3  # vtkLine().GetCellType()
         create_vtk_cells_of_constant_element_type(grid, bars, etype)
 
-        self.nelements = nelements
+        self.gui.nelements = nelements
         alt_grid.SetPoints(points)
         grid.SetPoints(points)
         grid.Modified()
-        if hasattr(grid, 'Update'):
+        if hasattr(grid, 'Update'):  # pragma: no cover
             grid.Update()
         #print("updated grid")
 
         # loadBedgeResults - regions/loads
         #self.TurnTextOn()
-        self.scalarBar.VisibilityOn()
-        self.scalarBar.Modified()
+        self.gui.scalarBar.VisibilityOn()
+        self.gui.scalarBar.Modified()
 
-        self.isubcase_name_map = {1: ['AFLR BEDGE', '']}
-        cases = {}
+        self.gui.isubcase_name_map = {1: ['AFLR BEDGE', '']}
+        cases = OrderedDict()
         ID = 1
 
-        self._add_alt_actors(self.alt_grids)
-        form, cases = self._fill_bedge_case(bedge_filename, cases, ID, nnodes, nelements, model)
+        self.gui._add_alt_actors(self.gui.alt_grids)
+        form, cases, node_ids, element_ids = self._fill_bedge_case(
+            bedge_filename, cases, ID, nnodes, nelements, model)
+        self.gui.node_ids = node_ids
+        self.gui.element_ids = element_ids
         if plot:
-            self._finish_results_io2(form, cases)
+            self.gui._finish_results_io2(form, cases)
 
     def clear_bedge(self):
         pass
 
-    def _fill_bedge_case(self, bedge_filename, cases, ID, nnodes, nelements, model):
+    def _fill_bedge_case(self, bedge_filename, cases, unused_ID, nnodes, nelements, model):
         """
         creates the data for the sidebar 'form' and the result 'cases'
         """
         base, ext = os.path.splitext(bedge_filename)
         assert ext == '.bedge', bedge_filename
 
-        tag_filename = base + '.tags'
+        unused_tag_filename = base + '.tags'
 
         #cases_new = []
         has_tag_data = False
@@ -184,4 +193,4 @@ class BEdge_IO(object):
         results_form = []
         if len(results_form):
             form.append(('Results', None, results_form))
-        return form, cases
+        return form, cases, nids, eids

@@ -104,7 +104,7 @@ class ScalarTableArray(ScalarObject):  # displacement style table
             return self._get_stats_short()
         msg = []
 
-        ntimesi, ntotal = self.data.shape[:2]
+        unused_ntimesi, ntotal = self.data.shape[:2]
         ntimes = len(self._times)
         nnodes = self.node_gridtype.shape[0]
 

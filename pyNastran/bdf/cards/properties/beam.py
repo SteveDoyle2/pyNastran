@@ -13,9 +13,10 @@ Multi-segment beams are IntegratedLineProperty objects.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
+from six import string_types
 from six.moves import zip, range
 import numpy as np
-from numpy import array, unique, argsort, mean, allclose, ndarray
+from numpy import array, unique, argsort, allclose, ndarray
 
 from pyNastran.bdf.utils import to_fields
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
@@ -27,8 +28,9 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.utils.mathematics import integrate_unit_line, integrate_positive_unit_line
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.cards.optimization import break_word_by_trailing_integer
-from pyNastran.utils import float_types
+from pyNastran.bdf.cards.base_card import (
+    break_word_by_trailing_parentheses_integer_ab, break_word_by_trailing_integer)
+from pyNastran.utils import integer_types, float_types
 
 class PBEAM(IntegratedLineProperty):
     """
@@ -64,41 +66,16 @@ class PBEAM(IntegratedLineProperty):
         #'I1(B)',
     #}
     def update_by_pname_fid(self, pname_fid, value):
-        if isinstance(pname_fid, int):
+        if isinstance(pname_fid, integer_types):
             if pname_fid < 0:
-                # shift to divisible by 16
-                if not (-167 <= pname_fid <= -6):
-                    raise NotImplementedError('A-property_type=%r has not implemented %r in pname_map' % (
-                        self.type, pname_fid))
-                ioffset = -pname_fid - 6
-                istation = ioffset // 16
-                iterm = ioffset % 16
-                print('istation=%s iterm=%s' % (istation, iterm))
+                # convert fid to pname
+                pname_fid = update_pbeam_negative_integer(pname_fid)
 
-                # 0    1   2   3   4   5   6   7    8  9
-                #(soi, xxb, a, i1, i2, i12, j, nsm, c1, c2,
-                #
-                 #10  11  12  13  14  15
-                 #d1, d2, e1, e2, f1, f2) = pack
-                assert istation == 0, istation
-                if iterm == 2:
-                    self.A[istation] = value
-                elif iterm == 3:
-                    self.i1[istation] = value
-                elif iterm == 4:
-                    self.i2[istation] = value
-                elif iterm == 5:
-                    self.i12[istation] = value
-                elif iterm == 6:
-                    self.j[istation] = value
-                elif iterm == 8:
-                    self.c1[istation] = value
-                else:
-                    raise NotImplementedError('property_type=%r has not implemented %r (istation=%r, iterm=%r) in pname_map' % (
-                        self.type, pname_fid, istation, iterm))
+                # call this function again to update pname
+                self.update_by_pname_fid(pname_fid, value)
             else:
-                raise NotImplementedError('property_type=%r has not implemented %r in pname_map' % (
-                    self.type, pname_fid))
+                msg = "property_type='PBEAM' has not implemented %r in pname_map" % pname_fid
+                raise NotImplementedError(msg)
 
         #elif pname_fid.startswith('DIM'):
             #word, num = break_word_by_trailing_integer(pname_fid)
@@ -115,9 +92,69 @@ class PBEAM(IntegratedLineProperty):
                 #print('istation=%r idim=%r' % (istation, idim))
                 #print(self)
                 #raise
+        elif isinstance(pname_fid, string_types):
+            if '(A)' in pname_fid:
+                i = 0
+                end = '(A)'
+            elif '(' not in pname_fid:
+                i = 0
+                end = ''
+            elif '(B)' in pname_fid:
+                i = -1
+                end = '(B)'
+            elif '(' in pname_fid:
+                word, num = break_word_by_trailing_parentheses_integer_ab(pname_fid)
+                end = '(%i)' % num
+                pname_fid = word + end
+                i = num - 1
+            else:
+                raise NotImplementedError(pname_fid)
+
+            if pname_fid.startswith('I1'):
+                self.i1[i] = value
+                word = 'I1'
+            elif pname_fid.startswith('I2'):
+                self.i2[i] = value
+                word = 'I2'
+            elif pname_fid.startswith('A'):
+                self.A[i] = value
+                word = 'A'
+            elif pname_fid.startswith('C1'):
+                self.c1[i] = value
+                word = 'C1'
+            elif pname_fid.startswith('C2'):
+                self.c2[i] = value
+                word = 'C2'
+            elif pname_fid.startswith('D1'):
+                self.d1[i] = value
+                word = 'D1'
+            elif pname_fid.startswith('D2'):
+                self.d2[i] = value
+                word = 'D2'
+            elif pname_fid.startswith('E1'):
+                self.e1[i] = value
+                word = 'E1'
+            elif pname_fid.startswith('E2'):
+                self.e2[i] = value
+                word = 'E2'
+            elif pname_fid.startswith('F1'):
+                self.f1[i] = value
+                word = 'F1'
+            elif pname_fid.startswith('F2'):
+                self.f2[i] = value
+                word = 'F2'
+            else:
+                msg = "property_type='PBEAM' has not implemented %r in pname_map; word=%r" % (
+                    pname_fid, word)
+                raise NotImplementedError(msg)
+
+            expected_word = word + end
+            if pname_fid != expected_word:
+                raise RuntimeError('%r is invalid' % expected_word)
         else:
-            raise NotImplementedError('property_type=%r has not implemented %r in pname_map' % (
-                self.type, pname_fid))
+            msg = "property_type='PBEAM' has not implemented %r in pname_map; type=%s" % (
+                pname_fid, type(pname_fid))
+            raise NotImplementedError(msg)
 
     def __init__(self, pid, mid, xxb, so, area, i1, i2, i12, j, nsm=None,
                  c1=None, c2=None, d1=None, d2=None,
@@ -152,7 +189,6 @@ class PBEAM(IntegratedLineProperty):
            the y/z locations of the stress recovery points
            c1 - point C.y
            c2 - point C.z
-
         k1 / k2 : float; default=1.
             Shear stiffness factor K in K*A*G for plane 1/2.
         s1 / s2 : float; default=0.
@@ -378,12 +414,6 @@ class PBEAM(IntegratedLineProperty):
                 assert self.i1[i] >= 0., self.i1
                 assert self.i2[i] >= 0., self.i2
                 assert self.j[i] >= 0., self.j  # we check warping later
-                di12 = self.i1[i] * self.i2[i] - self.i12[i] ** 2
-                if not di12 > 0.:
-                    msg = 'I1 * I2 - I12^2=0 and must be greater than 0.0 at End B\n'
-                    msg += 'pid=%s xxb=%s i1=%s i2=%s i12=%s i1*i2-i12^2=%s'  % (
-                        self.pid, self.xxb[i], self.i1[i], self.i2[i], self.i12[i], di12)
-                    raise ValueError(msg)
 
                 if nsm == 0.0:
                     #print('iterpolating nsm; i=%s xxb=%s' % (i, xxb))
@@ -418,6 +448,17 @@ class PBEAM(IntegratedLineProperty):
                     msg += '  i=%s xxb=%s j=%s; j[%i]=%s\n' % (i, xxbi, self.j, i, ji)
                     raise ValueError(msg)
         self.mid_ref = None
+
+    def validate(self):
+        nstations = len(self.A)
+        for ilayer in range(nstations):
+            di12 = self.i1[ilayer] * self.i2[ilayer] - self.i12[ilayer] ** 2
+            if not di12 > 0.:
+                msg = 'I1 * I2 - I12^2=0 and must be greater than 0.0 at End B\n'
+                msg += 'pid=%s xxb=%s i1=%s i2=%s i12=%s i1*i2-i12^2=%s'  % (
+                    self.pid, self.xxb[ilayer], self.i1[ilayer], self.i2[ilayer],
+                    self.i12[ilayer], di12)
+                raise ValueError(msg)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -834,6 +875,7 @@ class PBEAM(IntegratedLineProperty):
         rho = self.Rho()
         mass_per_lengths = []
         for (area, nsm) in zip(self.A, self.nsm):
+            #print('area=%s rho=%s nsm=%s' % (area, rho, nsm))
             mass_per_lengths.append(area * rho + nsm)
         mass_per_length = integrate_positive_unit_line(self.xxb, mass_per_lengths)
         return mass_per_length
@@ -847,7 +889,7 @@ class PBEAM(IntegratedLineProperty):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by PBEAM mid=%s' % self.mid
+        msg = ', which is required by PBEAM mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
         #if model.sol != 600:
             #assert max(self.j) == 0.0, self.j
@@ -989,8 +1031,6 @@ class PBEAM(IntegratedLineProperty):
         n1b = set_blank_if_default(self.n1b, 0.0)
         n2b = set_blank_if_default(self.n2b, self.n1b)
 
-        #footer = [k1, k2, s1, s2, nsia, nsib, cwa, cwb,
-                  #m1a, m2a, m1b, m2b, n1a, n2a, n1b, n2b]
         footer = [k1, k2, s1, s2, nsia, nsib, cwa, cwb,
                   m1a, m2a, m1b, m2b, n1a, n2a, n1b, n2b]
 
@@ -1003,6 +1043,77 @@ class PBEAM(IntegratedLineProperty):
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
+    def write_card_16(self, is_double=False):
+        card = self.raw_fields()
+        return self.comment + print_card_16(card)
+
+def update_pbeam_negative_integer(pname_fid):
+    """
+    Converts the negative PBEAM value to a positive one
+
+    Parameters
+    ----------
+    pname_fid : int
+        for a PBEAM this should be between [-5, -167]
+        the negative values correspond to the numbers in the MPT OP2 table
+
+    Returns
+    -------
+    pname_fid : str
+        a pname is of 'J(3)' is far more clear than -37
+
+    TODO: only handles istation=0 for now (e.g., 'J(1)')
+    """
+    # shift to divisible by 16
+    if not (-167 <= pname_fid <= -6):
+        msg = "A-property_type='PBEAM' has not implemented %r in pname_map" % (
+            pname_fid)
+        raise NotImplementedError(msg)
+    ioffset = -pname_fid - 6
+    istation = ioffset // 16
+    iterm = ioffset % 16
+
+    # 0    1   2   3   4   5   6   7    8  9
+    #(soi, xxb, a, i1, i2, i12, j, nsm, c1, c2,
+    #
+     #10  11  12  13  14  15
+     #d1, d2, e1, e2, f1, f2) = pack
+    assert istation == 0, istation
+    if iterm == 2:
+        word = 'A'
+    elif iterm == 3:
+        word = 'I1'
+    elif iterm == 4:
+        word = 'I2'
+    elif iterm == 5:
+        word = 'I12'
+    elif iterm == 6:
+        word = 'J'
+    #elif iterm == 7:
+        #self.nsm[istation] = value # 13-6 = 6
+    elif iterm == 8:
+        word = 'C1'
+    elif iterm == 9:
+        word = 'C2'
+    elif iterm == 10:
+        word = 'D1'
+    elif iterm == 11:
+        word = 'D2'
+    elif iterm == 12:
+        word = 'E1'
+    elif iterm == 13:
+        word = 'E2'
+    elif iterm == 14:
+        word = 'F1'
+    elif iterm == 15:
+        word = 'F2'
+    else:
+        print('istation=%s iterm=%s' % (istation, iterm))
+        msg = "property_type='PBEAM' has not implemented %r (istation=%r, iterm=%r) in pname_map" % (
+            pname_fid, istation, iterm)
+        raise NotImplementedError(msg)
+    word = '%s(%i)' % (word, istation + 1)
+    return word
 
 class PBEAML(IntegratedLineProperty):
     """
@@ -1052,12 +1163,29 @@ class PBEAML(IntegratedLineProperty):
             raise NotImplementedError('property_type=%r has not implemented %r in pname_map' % (
                 self.type, pname_fid))
         elif pname_fid.startswith('DIM'):
-            unused_word, num = break_word_by_trailing_integer(pname_fid)
-            ndim = len(self.dim[0])
+            # DIM1, DIM1(A), DIM1(10), DIM2(B)
+            #
+            # (DIM, num, station)
+            #
+            station_str = 'A' #  the default, A
+            if '(' in pname_fid:
+                assert pname_fid.endswith(')'), pname_fid
+                pname_fid, station_str = pname_fid[:-1].split('(', 1)
 
-            num = int(num) - 1
-            idim = num % ndim
-            istation = num // ndim
+            ndim = len(self.dim[0])
+            if station_str == 'A':
+                istation = 0
+            elif station_str == 'B':
+                istation = ndim - 1
+            else:
+                istation = int(station_str) - 1
+
+            unused_dim_word, num = break_word_by_trailing_integer(pname_fid)
+
+            idim = int(num) - 1
+
+            # in Nastran syntax
+            #print('DIM%i(%i)' % (idim+1, istation+1))
             try:
                 dim_station = self.dim[istation]
                 dim_station[idim] = value
@@ -1361,7 +1489,7 @@ class PBEAML(IntegratedLineProperty):
                 self.pid, self.xxb, areas))
             assert len(self.xxb) == len(areas)
             raise
-            A = mean(areas)
+            #A = mean(areas)
         return A
 
     #def Mid(self):
@@ -1382,7 +1510,7 @@ class PBEAML(IntegratedLineProperty):
                      reference a MAT4 or MAT5 material entry.
         .. todo:: What happens when there are 2 subcases?
         """
-        msg = ' which is required by PBEAML mid=%s' % self.mid
+        msg = ', which is required by PBEAML mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
 
     def uncross_reference(self):
@@ -1589,14 +1717,13 @@ class PBMSECT(LineProperty):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by PBMSECT mid=%s' % self.mid
+        msg = ', which is required by PBMSECT mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
 
         self.outp_ref = model.Set(self.outp)
         self.outp_ref.cross_reference_set(model, 'Point', msg=msg)
 
         if len(self.brps):
-            ## TODO: not done
             self.brp1_ref = model.Set(self.brp1)
             self.brp1_ref.cross_reference_set(model, 'Point', msg=msg)
 
@@ -1789,6 +1916,7 @@ class PBCOMP(LineProperty):
         self.mids = mids
         assert 0 <= self.symopt <= 5, 'symopt=%i is invalid; ' % self.symopt
         self.mid_ref = None
+        self.mids_ref = None
 
     def validate(self):
         assert isinstance(self.mids, list), 'mids=%r type=%s' % (self.mids, type(self.mids))
@@ -1889,22 +2017,28 @@ class PBCOMP(LineProperty):
         ----------
         model : BDF()
             the BDF object
+
         """
-        msg = ' which is required by PBCOMP mid=%s' % self.mid
+        msg = ', which is required by PBCOMP mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
+        self.mids_ref = model.Materials(self.mids, msg=msg)
 
     def Mids(self):
-        return self.mids
+        if self.mids_ref is None:
+            return self.mids
+        return [mid.mid for mid in self.mids_ref]
 
     def uncross_reference(self):
         self.mid = self.Mid()
+        self.mids = self.Mids()
         self.mid_ref = None
+        self.mids_ref = None
 
     def raw_fields(self):
         list_fields = ['PBCOMP', self.pid, self.Mid(), self.A, self.i1,
                        self.i2, self.i12, self.j, self.nsm, self.k1, self.k2,
                        self.m1, self.m2, self.n1, self.n2, self.symopt, None]
-        for (yi, zi, ci, mid) in zip(self.y, self.z, self.c, self.mids):
+        for (yi, zi, ci, mid) in zip(self.y, self.z, self.c, self.Mids()):
             list_fields += [yi, zi, ci, mid, None, None, None, None]
         return list_fields
 

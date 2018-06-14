@@ -20,11 +20,9 @@ from typing import List, Tuple, Any, Union, Dict
 from six import iteritems
 import numpy as np
 
-from pyNastran.utils import integer_types
 from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
 from pyNastran.bdf.mesh_utils.mass_properties import (
-    _mass_properties_elements_init, _mass_properties_no_xref, _apply_mass_symmetry,
-    _mass_properties, _mass_properties_new)
+    mass_properties, mass_properties_no_xref, mass_properties_nsm)
 from pyNastran.bdf.mesh_utils.loads import sum_forces_moments, sum_forces_moments_elements
 from pyNastran.bdf.mesh_utils.skin_solid_elements import write_skin_solid_faces
 
@@ -66,7 +64,10 @@ class BDFMethods(BDFAttributes):
             'PFAST', 'PGAP', 'PRAC2D', 'PRAC3D', 'PCONEAX', 'PLSOLID',
             'PCOMPS', 'PVISC',
             'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR',
+            'PBEND',
         ]
+        bar_properties = ['PBAR', 'PBARL', 'PBEAM', 'PBEAML',
+                          'PROD', 'PTUBE', 'PBMSECT', 'PBCOMP']
         pid_eids = self.get_element_ids_dict_with_pids(
             property_ids, msg=' which is required by get_length_breakdown')
         pids_to_length = {}
@@ -75,7 +76,7 @@ class BDFMethods(BDFAttributes):
             lengths = []
             if prop.type in skip_props:
                 continue
-            elif prop.type in ['PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PROD', 'PTUBE', 'PBMSECT', 'PBCOMP']:
+            elif prop.type in bar_properties:
                 #['CBAR', 'CBEAM', 'CROD', 'CTUBE']:
                 # TODO: Do I need to consider the offset on length effects for a CBEAM?
                 for eid in eids:
@@ -87,6 +88,7 @@ class BDFMethods(BDFAttributes):
                         print(elem)
                         raise
             else:
+                print('prop =', prop)
                 eid0 = eids[0]
                 elem = self.elements[eid0]
                 msg = str(prop) + str(elem)
@@ -96,10 +98,12 @@ class BDFMethods(BDFAttributes):
                 pids_to_length[pid] = sum(lengths)
 
         has_length = len(pids_to_length)
-        if stop_if_no_length and not has_length:
-            raise RuntimeError('No elements with length were found')
-        else:
-            self.log.warning('No elements with length were found')
+
+        if not has_length:
+            msg = 'No elements with length were found'
+            self.log.warning(msg)
+            if stop_if_no_length:
+                raise RuntimeError(msg)
         return pids_to_length
 
     def get_area_breakdown(self, property_ids=None, stop_if_no_area=True, sum_bar_area=True):
@@ -163,10 +167,11 @@ class BDFMethods(BDFAttributes):
                 pids_to_area[pid] = sum(areas)
 
         has_area = len(pids_to_area)
-        if stop_if_no_area and not has_area:
-            raise RuntimeError('No elements with area were found')
-        else:
-            self.log.warning('No elements with area were found')
+        if not has_area:
+            msg = 'No elements with area were found'
+            self.log.warning(msg)
+            if stop_if_no_area:
+                raise RuntimeError(msg)
         return pids_to_area
 
     def get_volume_breakdown(self, property_ids=None, stop_if_no_volume=True):
@@ -251,10 +256,11 @@ class BDFMethods(BDFAttributes):
                 pids_to_volume[pid] = sum(volumes)
 
         has_volume = len(pids_to_volume)
-        if stop_if_no_volume and not has_volume:
-            raise RuntimeError('No elements with volume were found')
-        else:
-            self.log.warning('No elements with volume were found')
+        if not has_volume:
+            msg = 'No elements with volume were found'
+            self.log.warning(msg)
+            if stop_if_no_volume:
+                raise RuntimeError(msg)
         return pids_to_volume
 
     def get_mass_breakdown(self, property_ids=None, stop_if_no_mass=True, detailed=False):
@@ -328,6 +334,8 @@ class BDFMethods(BDFAttributes):
                     else:
                         masses.append(area * (rho * thickness + nsm))
             elif prop.type in ['PCOMP', 'PCOMPG']:
+                # TODO: does the PCOMP support differential thickness?
+                #       I don't think so...
                 for eid in eids:
                     elem = self.elements[eid]
                     if detailed:
@@ -379,16 +387,19 @@ class BDFMethods(BDFAttributes):
                 pids_to_mass_nonstructural[pid] = sum(masses_nonstructural)
 
         has_mass = len(mass_type_to_mass) > 0 or len(pids_to_mass) > 0
-        if stop_if_no_mass and not has_mass:
-            raise RuntimeError('No elements with mass were found')
-
+        if not has_mass:
+            msg = 'No elements with mass were found'
+            self.log.warning(msg)
+            if stop_if_no_mass:
+                raise RuntimeError(msg)
         if detailed:
             return pids_to_mass, pids_to_mass_nonstructural, mass_type_to_mass
         else:
             return pids_to_mass, mass_type_to_mass
 
-    def mass_properties(self, element_ids=None, mass_ids=None, reference_point=None,
-                        sym_axis=None, scale=None):
+    def mass_properties(self, element_ids=None, mass_ids=None,
+                        reference_point=None,
+                        sym_axis=None, scale=None, inertia_reference='cg'):
         """
         Calculates mass properties in the global system about the
         reference point.
@@ -399,12 +410,10 @@ class BDFMethods(BDFAttributes):
             An array of element ids.
         mass_ids : list[int]; (n, ) ndarray, optional
             An array of mass ids.
-        reference_point : ndarray/str/int, optional
+        reference_point : ndarray/int, optional
             type : ndarray
                 An array that defines the origin of the frame.
                 default = <0,0,0>.
-            type : str
-                'cg' is the only allowed string
             type : int
                 the node id
         sym_axis : str, optional
@@ -415,6 +424,9 @@ class BDFMethods(BDFAttributes):
             The WTMASS scaling value.
             default=None -> PARAM, WTMASS is used
             float > 0.0
+        inertia_reference : str; default='cg'
+            'cg' : inertia is taken about the cg
+            'ref' : inertia is about the reference point
 
         Returns
         -------
@@ -457,23 +469,19 @@ class BDFMethods(BDFAttributes):
         >>> for pid, eids in sorted(iteritems(pid_eids)):
         >>>     mass, cg, I = model.mass_properties(element_ids=eids)
         """
-        if reference_point is None:
-            reference_point = np.array([0., 0., 0.])
-        elif isinstance(reference_point, integer_types):
-            reference_point = self.nodes[reference_point].get_position()
+        mass, cg, I = mass_properties(
+            self,
+            element_ids=element_ids, mass_ids=mass_ids,
+            reference_point=reference_point,
+            sym_axis=sym_axis, scale=scale,
+            inertia_reference=inertia_reference)
+        return mass, cg, I
 
-        element_ids, elements, mass_ids, masses = _mass_properties_elements_init(
-            self, element_ids, mass_ids)
-        mass, cg, I = _mass_properties(
-            self, elements, masses,
-            reference_point=reference_point)
-        mass, cg, I = _apply_mass_symmetry(self, sym_axis, scale, mass, cg, I)
-        return (mass, cg, I)
-
-    def mass_properties_no_xref(self, element_ids=None, mass_ids=None, reference_point=None,
-                                sym_axis=None, scale=None):
+    def mass_properties_no_xref(self, element_ids=None, mass_ids=None,
+                                reference_point=None,
+                                sym_axis=None, scale=None, inertia_reference='cg'):
         """
-        Caclulates mass properties in the global system about the
+        Calculates mass properties in the global system about the
         reference point.
 
         Parameters
@@ -482,12 +490,10 @@ class BDFMethods(BDFAttributes):
             An array of element ids.
         mass_ids : list[int]; (n, ) ndarray, optional
             An array of mass ids.
-        reference_point : ndarray/str/int, optional
+        reference_point : ndarray/int, optional
             type : ndarray
                 An array that defines the origin of the frame.
                 default = <0,0,0>.
-            type : str
-                'cg' is the only allowed string
             type : int
                 the node id
         sym_axis : str, optional
@@ -498,6 +504,9 @@ class BDFMethods(BDFAttributes):
             The WTMASS scaling value.
             default=None -> PARAM, WTMASS is used
             float > 0.0
+        inertia_reference : str; default='cg'
+            'cg' : inertia is taken about the cg
+            'ref' : inertia is about the reference point
 
         Returns
         -------
@@ -541,31 +550,108 @@ class BDFMethods(BDFAttributes):
         >>> for pid, eids in sorted(iteritems(pid_eids)):
         >>>     mass, cg, I = model.mass_properties(element_ids=eids)
         """
-        if reference_point is None:
-            reference_point = np.array([0., 0., 0.])
-        elif isinstance(reference_point, integer_types):
-            reference_point = self.nodes[reference_point].get_position()
+        mass, cg, I = mass_properties_no_xref(
+            self, element_ids=element_ids, mass_ids=mass_ids,
+            reference_point=reference_point,
+            sym_axis=sym_axis, scale=scale,
+            inertia_reference=inertia_reference)
+        return mass, cg, I
 
-        element_ids, elements, mass_ids, masses = _mass_properties_elements_init(
-            self, element_ids, mass_ids)
-        #nelements = len(elements) + len(masses)
+    def mass_properties_nsm(self, element_ids=None, mass_ids=None, nsm_id=None,
+                            reference_point=None,
+                            sym_axis=None, scale=None, inertia_reference='cg',
+                            xyz_cid0_dict=None, debug=False):
+        """
+        Calculates mass properties in the global system about the
+        reference point.  Considers NSM, NSM1, NSML, NSML1.
 
-        mass, cg, I = _mass_properties_no_xref(
-            self, elements, masses,
-            reference_point=reference_point)
+        Parameters
+        ----------
+        model : BDF()
+            a BDF object
+        element_ids : list[int]; (n, ) ndarray, optional
+            An array of element ids.
+        mass_ids : list[int]; (n, ) ndarray, optional
+            An array of mass ids.
+        nsm_id : int
+            the NSM id to consider
+        reference_point : ndarray/int, optional
+            type : ndarray
+                An array that defines the origin of the frame.
+                default = <0,0,0>.
+            type : int
+                the node id
+        sym_axis : str, optional
+            The axis to which the model is symmetric.
+            If AERO cards are used, this can be left blank.
+            allowed_values = 'no', x', 'y', 'z', 'xy', 'yz', 'xz', 'xyz'
+        scale : float, optional
+            The WTMASS scaling value.
+            default=None -> PARAM, WTMASS is used
+            float > 0.0
+        inertia_reference : str; default='cg'
+            'cg' : inertia is taken about the cg
+            'ref' : inertia is about the reference point
+        xyz_cid0_dict : dict[nid] : xyz; default=None -> auto-calculate
+            mapping of the node id to the global position
+        debug : bool; default=False
+            developer debug; may be removed in the future
 
-        mass, cg, I = _apply_mass_symmetry(self, sym_axis, scale, mass, cg, I)
-        return (mass, cg, I)
+        Returns
+        -------
+        mass : float
+            The mass of the model.
+        cg : ndarray
+            The cg of the model as an array.
+        I : ndarray
+            Moment of inertia array([Ixx, Iyy, Izz, Ixy, Ixz, Iyz]).
 
-    def _mass_properties_new(self, element_ids=None, mass_ids=None, nsm_id=None,
-                             reference_point=None,
-                             sym_axis=None, scale=None,
-                             xyz_cid0_dict=None, debug=False):
-        """not done"""
-        mass, cg, I = _mass_properties_new(
+        I = mass * centroid * centroid
+
+        .. math:: I_{xx} = m (dy^2 + dz^2)
+
+        .. math:: I_{yz} = -m * dy * dz
+
+        where:
+
+        .. math:: dx = x_{element} - x_{ref}
+
+        .. seealso:: http://en.wikipedia.org/wiki/Moment_of_inertia#Moment_of_inertia_tensor
+
+        .. note::
+           This doesn't use the mass matrix formulation like Nastran.
+           It assumes m*r^2 is the dominant term.
+           If you're trying to get the mass of a single element, it
+           will be wrong, but for real models will be correct.
+
+        Examples
+        --------
+        **mass properties of entire structure**
+
+        >>> mass, cg, I = model.mass_properties()
+        >>> Ixx, Iyy, Izz, Ixy, Ixz, Iyz = I
+
+
+        **mass properties of model based on Property ID**
+        >>> pids = list(model.pids.keys())
+        >>> pid_eids = model.get_element_ids_dict_with_pids(pids)
+        >>> for pid, eids in sorted(iteritems(pid_eids)):
+        >>>     mass, cg, I = mass_properties(model, element_ids=eids)
+
+        Warning
+        -------
+         - If eids are requested, but don't exist, no warning is thrown.
+           Decide if this is the desired behavior.
+         - If the NSMx ALL option is used, the mass from all elements
+           will be considered, even if not included in the element set
+
+        """
+        mass, cg, I = mass_properties_nsm(
             self, element_ids=element_ids, mass_ids=mass_ids, nsm_id=nsm_id,
             reference_point=reference_point,
-            sym_axis=sym_axis, scale=scale, xyz_cid0_dict=xyz_cid0_dict, debug=debug)
+            sym_axis=sym_axis, scale=scale,
+            inertia_reference=inertia_reference,
+            xyz_cid0_dict=xyz_cid0_dict, debug=debug)
         return (mass, cg, I)
 
     #def __gravity_load(self, loadcase_id):
@@ -783,14 +869,15 @@ class BDFMethods(BDFAttributes):
                              for key, desvar in iteritems(self.desvars)}
 
         # Relates one design variable to one or more other design variables.
-        for desvar_id, dlink in iteritems(self.dlinks):
+        for dlink_id, dlink in iteritems(self.dlinks):
             value = dlink.c0
-            desvar = self.desvars[desvar_id]
+            desvar = dlink.dependent_desvar #get_stats()
+            desvar_ref = self.desvars[desvar]
             for coeff, desvar_idi in zip(dlink.coeffs, dlink.IDv):
                 valuei = desvar_values[desvar_idi]
                 value += coeff * valuei
-            value2 = min(max(value, desvar.xlb), desvar.xub)
-            desvar_values[desvar_id] = value2
+            value2 = min(max(value, desvar_ref.xlb), desvar_ref.xub)
+            desvar_values[dlink_id] = value2
 
         # calculates the real delta to be used by DVGRID
         desvar_delta = {key : (desvar_init[key] - desvar_values[key])

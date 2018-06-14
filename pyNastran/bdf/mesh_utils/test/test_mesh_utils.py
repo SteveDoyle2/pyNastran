@@ -21,7 +21,7 @@ from pyNastran.bdf.mesh_utils.export_mcids import export_mcids
 from pyNastran.bdf.mesh_utils.split_cbars_by_pin_flag import split_cbars_by_pin_flag
 from pyNastran.bdf.mesh_utils.split_elements import split_line_elements
 from pyNastran.bdf.mesh_utils.pierce_shells import pierce_shell_model, quad_intersection, triangle_intersection
-from pyNastran.bdf.mesh_utils.mirror_mesh import write_bdf_symmetric
+from pyNastran.bdf.mesh_utils.mirror_mesh import write_bdf_symmetric, bdf_mirror, make_symmetric_model
 from pyNastran.utils.log import SimpleLogger
 
 # testing these imports are up to date
@@ -392,13 +392,13 @@ class TestMeshUtils(unittest.TestCase):
     def test_renumber_01(self):
         """renumbers a deck in a couple ways"""
         bdf_filename = os.path.abspath(
-            os.path.join(pkg_path, '..', 'models', 'bwb', 'BWB_saero.bdf'))
+            os.path.join(pkg_path, '..', 'models', 'bwb', 'bwb_saero.bdf'))
         bdf_filename_out1 = os.path.abspath(
-            os.path.join(pkg_path, '..', 'models', 'bwb', 'BWB_saero1.out'))
+            os.path.join(pkg_path, '..', 'models', 'bwb', 'bwb_saero1.out'))
         bdf_filename_out2 = os.path.abspath(
-            os.path.join(pkg_path, '..', 'models', 'bwb', 'BWB_saero2.out'))
+            os.path.join(pkg_path, '..', 'models', 'bwb', 'bwb_saero2.out'))
         bdf_filename_out3 = os.path.abspath(
-            os.path.join(pkg_path, '..', 'models', 'bwb', 'BWB_saero3.out'))
+            os.path.join(pkg_path, '..', 'models', 'bwb', 'bwb_saero3.out'))
         model = bdf_renumber(bdf_filename, bdf_filename_out1, size=8,
                              is_double=False, starting_id_dict=None,
                              round_ids=False, cards_to_skip=None, debug=False)
@@ -420,7 +420,7 @@ class TestMeshUtils(unittest.TestCase):
         """merges multiple bdfs into a single deck"""
         #log = SimpleLogger(level='info')
         bdf_filename1 = os.path.abspath(os.path.join(
-            pkg_path, '..', 'models', 'bwb', 'BWB_saero.bdf'))
+            pkg_path, '..', 'models', 'bwb', 'bwb_saero.bdf'))
         bdf_filename2 = os.path.abspath(os.path.join(
             pkg_path, '..', 'models', 'sol_101_elements', 'static_solid_shell_bar.bdf'))
         bdf_filename3 = os.path.abspath(os.path.join(
@@ -454,7 +454,7 @@ class TestMeshUtils(unittest.TestCase):
     def test_export_mcids(self):
         """creates material coordinate systems"""
         bdf_filename = os.path.abspath(os.path.join(
-            pkg_path, '..', 'models', 'bwb', 'BWB_saero.bdf'))
+            pkg_path, '..', 'models', 'bwb', 'bwb_saero.bdf'))
         csv_filename = os.path.abspath(os.path.join(
             pkg_path, '..', 'models', 'bwb', 'mcids.csv'))
         export_mcids(bdf_filename, csv_filename,
@@ -629,17 +629,17 @@ class TestMeshUtils(unittest.TestCase):
 
         pid = 11
         model.add_ctria3(12, pid, [1, 2, 3], theta_mcid=45., zoffset=0.,
-                         tflag=0, T1=0.1, T2=0.1, T3=0.1,
+                         tflag=0, T1=0.1, T2=0.1, T3=0.1,  # absolute - mass=0.1*0.5=0.05
                          comment='')
         model.add_ctria3(13, pid, [1, 2, 3], theta_mcid=1, zoffset=0.,
-                         tflag=0, T1=0.1, T2=0.1, T3=0.1,
+                         tflag=0, T1=0.1, T2=0.1, T3=0.1,  # absolute
                          comment='')
 
         model.add_cquad4(14, pid, [1, 2, 3, 4], theta_mcid=45., zoffset=0.,
-                         tflag=0, T1=0.1, T2=0.1, T3=0.1, T4=0.1,
+                         tflag=0, T1=0.1, T2=0.1, T3=0.1, T4=0.1,  # absolute
                          comment='')
         model.add_cquad4(15, pid, [1, 2, 3, 4], theta_mcid=1, zoffset=0.,
-                         tflag=1, T1=0.1, T2=0.1, T3=0.1, T4=0.1,
+                         tflag=1, T1=0.1, T2=0.1, T3=0.1, T4=0.1,  # relative
                          comment='')
         model.add_cord2r(1, rid=0,
                          origin=[0., 0., 0.],
@@ -663,13 +663,13 @@ class TestMeshUtils(unittest.TestCase):
         model.cross_reference()
         model.pop_xref_errors()
 
-        assert np.allclose(mass, 1.0), mass  ## TODO: wrong
+        assert np.allclose(mass, 0.05), mass # t=0.1; A=0.5; nsm=0.; mass=0.05
 
         mass = model.mass_properties(element_ids=14)[0]
         bdf_file = StringIO()
         model.write_bdf(bdf_file, close=False)
         bdf_file.seek(0)
-        assert np.allclose(mass, 2.0), mass
+        assert np.allclose(mass, 0.1), mass # t=0.1; A=1.0; nsm=0.; mass=0.1
 
         csv_filename = 'mcids.csv'
         export_mcids(model, csv_filename=csv_filename, eids=[12, 13],
@@ -744,8 +744,18 @@ class TestMeshUtils(unittest.TestCase):
         mass2, cg2, inertia2 = model2.mass_properties()
         #print('cg1=%s cg2=%s' % (cg1, cg2))
         assert np.allclose(mass1*2, mass2), 'mass1=%s mass2=%s' % (mass1, mass2)
-        assert np.allclose(cg2[1], 0.), 'cg2=%s' % (cg2)
+        assert np.allclose(cg2[1], 0.), 'cg2=%s stats=%s' % (cg2, model2.get_bdf_stats())
         os.remove('sym.bdf')
+
+    def test_mirror2(self):
+        """mirrors the BDF (we care about the aero cards)"""
+        log = SimpleLogger(level='warning')
+        bdf_filename = os.path.join(pkg_path, '..', 'models', 'bwb', 'bwb_saero.bdf')
+        model = bdf_mirror(bdf_filename, plane='xz', log=log)[0]
+        model.uncross_reference()
+        model.cross_reference()
+        make_symmetric_model(model, plane='xz', zero_tol=1e-12)
+        #model.validate()
 
     def test_pierce_model(self):
         """tests pierce_shell_model"""

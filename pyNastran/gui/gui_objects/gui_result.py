@@ -12,9 +12,12 @@ REAL_TYPES = ['<i4', '<i8', '<f4', '<f8',
 INT_TYPES = ['<i4', '<i8', '|i1',
              '>i4', '>i8']
 
+
 class GuiResultCommon(object):
     def __init__(self):
         self.class_name = self.__class__.__name__
+        self.is_real = False
+        self.is_complex = False
 
     #def get_data_type(self, i, name):
         #raise NotImplementedError(self.class_name)
@@ -99,6 +102,17 @@ class GuiResultCommon(object):
 
     def get_default_phase(self, i, name):
         return None
+
+class NullResult(GuiResultCommon):
+    def __init__(self):
+        super(NullResult, self).__init__()
+
+    def get_scalar(self, i, name):
+        return None
+
+    def __repr__(self):
+        msg = '<NormalResult>'
+        return msg
 
 class NormalResult(GuiResultCommon):
     def __init__(self, subcase_id, header, title,
@@ -247,6 +261,8 @@ class GuiResult(GuiResultCommon):
                  mask_value=None, nlabels=None, labelsize=None, ncolors=None, colormap='jet',
                  data_format=None, uname='GuiResult'):
         """
+        Parameters
+        ----------
         subcase_id : int
             the flag that points to self.subcases for a message
         header : str
@@ -434,6 +450,22 @@ class GuiResult(GuiResultCommon):
     #def get_plot_value(self, i, name):
         #if self.is_real:
             #return self.dxyz[i, :]
+
+    def get_vector_array_by_phase(self, i, unused_name, phase=0.):
+        #assert len(self.xyz.shape) == 2, self.xyz.shape
+        if self.is_real:
+            # e(i*theta) = cos(theta) + i*sin(theta)
+            if self.dim == 2:
+                # single result
+                dxyz = self.dxyz
+            elif self.dim == 3:
+                dxyz = self.dxyz[i, :]
+            else:
+                raise NotImplementedError('dim=%s' % self.dim)
+        else:
+            dxyz = self._get_complex_displacements_by_phase(i, phase)
+        assert len(dxyz.shape) == 2, dxyz.shape
+        return xyz, dxyz
 
     def get_result(self, i, name):
         if self.is_real:

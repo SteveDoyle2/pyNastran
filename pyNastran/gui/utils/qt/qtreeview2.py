@@ -37,7 +37,7 @@ class QTreeView2(QTreeView):
         if key == Qt.Key_Delete:
             self.on_delete()
         elif key in [Qt.Key_Enter, Qt.Key_Return]:
-            return self.parent.parent.on_apply(event)
+            return self.parent.parent.on_apply()
         elif key in [Qt.Key_Up, Qt.Key_Down]:
             QTreeView.keyPressEvent(self, event)
             self.set_rows()
@@ -248,17 +248,19 @@ class RightClickTreeView(QTreeView2):
        - Apply Results to Vector
        - Delete Case
     """
-    def __init__(self, parent, data, choices):
+    def __init__(self, parent, data, choices, include_clear=True, include_delete=True):
         QTreeView2.__init__(self, parent, data, choices)
         #
         # TODO: create a menu that only has clear/normals/fringe/delete
         #       if there is no transient result
         #
         self.right_click_menu = QMenu()
-        self.clear = self.right_click_menu.addAction("Clear Results...")
-        self.fringe = self.right_click_menu.addAction("Apply Results to Fringe...")
 
-        self.clear.triggered.connect(self.on_clear_results)
+        if include_clear:
+            self.clear = self.right_click_menu.addAction("Clear Results...")
+            self.clear.triggered.connect(self.on_clear_results)
+
+        self.fringe = self.right_click_menu.addAction("Apply Results to Fringe...")
         self.fringe.triggered.connect(self.on_fringe)
 
         self.disp = self.right_click_menu.addAction("Apply Results to Displacement...")
@@ -266,9 +268,10 @@ class RightClickTreeView(QTreeView2):
 
         self.disp.triggered.connect(self.on_disp)
         self.vector.triggered.connect(self.on_vector)
-        #if 1:  # pragma: no cover
-        self.delete = self.right_click_menu.addAction("Delete...")
-        self.delete.triggered.connect(self.on_delete)
+
+        if include_delete:
+            self.delete = self.right_click_menu.addAction("Delete...")
+            self.delete.triggered.connect(self.on_delete)
 
         #self.fringe.setCheckable(True)
         #self.disp.setCheckable(True)

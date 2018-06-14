@@ -3,6 +3,7 @@ Defines the GUI IO file for Panair.
 """
 from __future__ import print_function
 import os
+from collections import OrderedDict
 
 from six import iteritems
 import numpy as np
@@ -17,8 +18,8 @@ from pyNastran.gui.gui_objects.gui_result import GuiResult
 
 
 class PanairIO(object):
-    def __init__(self, parent):
-        self.parent = parent
+    def __init__(self, gui):
+        self.gui = gui
 
     def get_panair_wildcard_geometry_results_functions(self):
         data = ('Panair',
@@ -28,39 +29,40 @@ class PanairIO(object):
         return data
 
     def load_panair_geometry(self, panair_filename, name='main', plot=True):
-        self.parent.nid_map = {}
+        self.gui.nid_map = {}
 
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]
 
-        skip_reading = self.parent._remove_old_geometry(panair_filename)
+        skip_reading = self.gui._remove_old_geometry(panair_filename)
         if skip_reading:
             return
 
-        model = PanairGrid(log=self.parent.log, debug=self.parent.debug)
-        self.parent.model_type = model.model_type
+        model = PanairGrid(log=self.gui.log, debug=self.gui.debug)
+        self.gui.model_type = model.model_type
         model.read_panair(panair_filename)
 
         nodes, elements, regions, kt, cp_norm = model.get_points_elements_regions()
         #for nid, node in enumerate(nodes):
             #print "node[%s] = %s" % (nid, str(node))
 
-        self.parent.nnodes = len(nodes)
-        self.parent.nelements = len(elements)
+        self.gui.nnodes = len(nodes)
+        self.gui.nelements = len(elements)
 
         #print("nnodes = ",self.nnodes)
         #print("nelements = ", self.nelements)
 
-        self.parent.grid.Allocate(self.parent.nelements, 1000)
+        grid = self.gui.grid
+        grid.Allocate(self.gui.nelements, 1000)
 
         points = vtk.vtkPoints()
-        points.SetNumberOfPoints(self.parent.nnodes)
+        points.SetNumberOfPoints(self.gui.nnodes)
 
         assert len(nodes) > 0
         mmax = amax(nodes, axis=0)
         mmin = amin(nodes, axis=0)
         dim_max = (mmax - mmin).max()
-        self.parent.create_global_axes(dim_max)
+        self.gui.create_global_axes(dim_max)
         for nid, node in enumerate(nodes):
             points.InsertPoint(nid, *node)
 
@@ -74,28 +76,31 @@ class PanairIO(object):
             elem.GetPointIds().SetId(1, p2)
             elem.GetPointIds().SetId(2, p3)
             elem.GetPointIds().SetId(3, p4)
-            self.parent.grid.InsertNextCell(quad_type, elem.GetPointIds())
+            grid.InsertNextCell(quad_type, elem.GetPointIds())
 
-        self.parent.grid.SetPoints(points)
-        self.parent.grid.Modified()
-        if hasattr(self.parent.grid, 'Update'):
-            self.parent.grid.Update()
+        grid.SetPoints(points)
+        grid.Modified()
+        if hasattr(grid, 'Update'):
+            grid.Update()
 
         # loadPanairResults - regions/loads
         if plot:
-            self.parent.scalarBar.VisibilityOn()
-            self.parent.scalarBar.Modified()
+            self.gui.scalarBar.VisibilityOn()
+            self.gui.scalarBar.Modified()
 
-        self.parent.isubcase_name_map = {1: ['Panair', '']}
-        cases = {}
+        self.gui.isubcase_name_map = {1: ['Panair', '']}
+        cases = OrderedDict()
         ID = 1
 
         #print "nElements = ", nElements
         loads = []
-        form, cases = self._fill_panair_geometry_case(
+        form, cases, node_ids, element_ids = self._fill_panair_geometry_case(
             cases, ID, nodes, elements, regions, kt, cp_norm, loads)
+        self.gui.node_ids = node_ids
+        self.gui.element_ids = element_ids
+
         #if plot:
-        self.parent._finish_results_io2(form, cases)
+        self.gui._finish_results_io2(form, cases)
         #else:
         #self._set_results([form], cases)
 
@@ -209,18 +214,18 @@ class PanairIO(object):
         cases[icase + 11] = (ceny_res, (itime, 'node_y'))
         cases[icase + 12] = (cenz_res, (itime, 'node_z'))
 
-        return form, cases
+        return form, cases, nids, eids
 
     def load_panair_results(self, panair_filename):
-        cases = self.parent.result_cases
+        cases = self.gui.result_cases
         if os.path.basename(panair_filename) == 'agps':
-            model = AGPS(log=self.parent.log, debug=self.parent.debug)
+            model = AGPS(log=self.gui.log, debug=self.gui.debug)
             model.read_agps(panair_filename)
         else:
             raise RuntimeError('only files named "agps" files are supported')
 
         # get the Cp on the nodes
-        Cp_array = zeros(self.parent.nnodes, dtype='float32')
+        Cp_array = zeros(self.gui.nnodes, dtype='float32')
         imin = 0
         for ipatch, Cp in sorted(iteritems(model.pressures)):
             Cpv = ravel(Cp)
@@ -238,9 +243,9 @@ class PanairIO(object):
                      Cp_array[self.elements[:, 2]] +
                      Cp_array[self.elements[:, 3]]) / 4.
 
-        icase = len(self.parent.result_cases)
+        icase = len(self.gui.result_cases)
 
-        form = self.parent.get_form()
+        form = self.gui.get_form()
         results_form = [
             ('Cp Nodal', icase, []),
             ('Cp Centroidal', icase + 1, [],),
@@ -255,4 +260,4 @@ class PanairIO(object):
         cases[icase] = (Cpn_res, (0, 'Cp_nodal'))
         cases[icase + 1] = (Cpc_res, (0, 'Cp_centroidal'))
 
-        self.parent._finish_results_io2(form, cases)
+        self.gui._finish_results_io2(form, cases)

@@ -61,6 +61,7 @@ def read_op2_geom(op2_filename=None, combine=True, subcases=None,
 
     .. note :: this method will change in order to return an object that
                does not have so many methods
+
     """
     model = OP2Geom(log=log, debug=debug, debug_file=debug_file, mode=mode)
     model.set_subcases(subcases)
@@ -104,6 +105,7 @@ class OP2GeomCommon(OP2, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS):
             sets the filename that will be written to
         mode : str; default='msc'
             {msc, nx}
+
         """
         GEOM1.__init__(self)
         GEOM2.__init__(self)
@@ -346,6 +348,7 @@ class OP2GeomCommon(OP2, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS):
         """
         reads the EDOM table
         SOL 200 design optimization and sensitivity analysis bulk entries.
+
         """
         return self._read_geom_4(self._edom_map, data, ndata)
 
@@ -353,6 +356,7 @@ class OP2GeomCommon(OP2, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS):
         """
         reads the CONTACT/CONTACTS table
         Table of Bulk Data entry related to surface contact
+
         """
         return self._read_geom_4(self._contact_map, data, ndata)
 
@@ -360,6 +364,7 @@ class OP2GeomCommon(OP2, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS):
         """
         3.21 EDT
         Aero and element deformations.
+
         """
         return self._read_geom_4(self._edt_map, data, ndata)
 
@@ -391,6 +396,7 @@ class OP2Geom(BDF, OP2GeomCommon):
             sets the filename that will be written to
         mode : str; default='msc'
             {msc, nx}
+
         """
         BDF.__init__(self, debug=debug, log=log)
         OP2GeomCommon.__init__(self, make_geom=make_geom,

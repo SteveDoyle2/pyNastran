@@ -2,26 +2,37 @@ from __future__ import print_function, absolute_import
 
 
 class TablePaths(object):
-    bdf_lines_path = r'/H5NASTRAN/NASTRAN/INPUT'
-    bdf_lines_table = 'BDF_LINES'
+    def __init__(self):
+        # TODO: this should be saved to h5 file, and read back in when reading
+        self.bdf_lines_path = r'/H5NASTRAN/NASTRAN/INPUT'
+        self.bdf_lines_table = 'BDF_LINES'
 
-    unsupported_cards_path = r'/H5NASTRAN/NASTRAN/INPUT'
-    unsupported_cards_table = 'UNSUPPORTED_CARDS'
+        self.bdf_file_path = r'/H5NASTRAN/NASTRAN/INPUT'
+        self.bdf_file_table = 'BDF_FILE'
 
-    about_path = r'/H5NASTRAN/INFO'
-    about_table = 'ABOUT'
+        self.unsupported_cards_path = r'/H5NASTRAN/NASTRAN/INPUT'
+        self.unsupported_cards_table = 'UNSUPPORTED_CARDS'
 
-    defaults_path = r'/H5NASTRAN/INFO'
-    defaults_table = 'DEFAULTS'
+        self.about_path = r'/H5NASTRAN/INFO'
+        self.about_table = 'ABOUT'
 
-    unsupported_result_tables_path = r'/H5NASTRAN/NASTRAN/RESULT'
-    unsupported_result_tables_table = 'UNSUPPORTED_RESULT_TABLES'
+        self.versioning_path = r'/H5NASTRAN/INFO'
+        self.versioning_table = 'VERSIONING'
 
-    shell_element_info_path = r'/H5NASTRAN/NASTRAN/INPUT'
-    shell_element_info_table = 'SHELL_ELEMENT_INFO'
+        self.defaults_path = r'/H5NASTRAN/INFO'
+        self.defaults_table = 'DEFAULTS'
 
-    private_index_path = r'/H5NASTRAN/INDEX'
+        self.unsupported_result_tables_path = r'/H5NASTRAN/NASTRAN/RESULT'
+        self.unsupported_result_tables_table = 'UNSUPPORTED_RESULT_TABLES'
+
+        self.shell_element_info_path = r'/H5NASTRAN/NASTRAN/INPUT'
+        self.shell_element_info_table = 'SHELL_ELEMENT_INFO'
+
+        self.subcase_path = r'/H5NASTRAN/NASTRAN/RESULT'
+        self.subcase_table = 'SUBCASES'
+
+        self.private_index_path = r'/H5NASTRAN/INDEX'
 
     def __getattr__(self, attr):
-        dict = self.__class__.__dict__
+        dict = self.__dict__
         return dict[attr + '_path'] + '/' + dict[attr + '_table']
