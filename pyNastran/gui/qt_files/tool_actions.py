@@ -49,7 +49,7 @@ class ToolActions(object):
             if 'i' in data_format and isinstance(case.dtype, np.floating):
                 header = '%s(%%i),%s' % (word, label2)
 
-            fname = '%s_%s.csv' % (icase, name)
+            fname = '%s_%s.csv' % (icase, _remove_invalid_filename_characters(name))
             out_data = np.column_stack([eids_nids, case])
             np.savetxt(fname, out_data, delimiter=',', header=header, fmt=b'%s')
 
@@ -792,3 +792,31 @@ def make_vtk_transform(origin, matrix_3x3):
     else:
         raise RuntimeError('unexpected coordinate system')
     return transform
+
+def _remove_invalid_filename_characters(basename):
+    """
+    Helper method for exporting cases of 12*I/t^3.csv,
+    which have invalid characters.
+
+    Invalid for Windows
+     < (less than)
+     > (greater than)
+     : (colon - sometimes works, but is actually NTFS Alternate Data Streams)
+     " (double quote)
+     / (forward slash)
+     \ (backslash)
+     | (vertical bar or pipe)
+     ? (question mark)
+     * (asterisk)
+
+    Invalid for Linux
+     / (forward slash)
+
+    TODO
+    ----
+    do a check for linux
+    """
+    invalid_chars = ':*?<>|/\\'
+    for char in invalid_chars:
+        basename = basename.replace(char, '')
+    return basename

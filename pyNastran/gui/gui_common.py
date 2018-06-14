@@ -1431,7 +1431,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if self.menu_bar_format is None:
             self._update_menu_bar_to_format(self.format, method_new)
         else:
-            print('need to add %r' % method_new)
+            if not pyNastran.is_pynastrangui_exe:  # pragma: no cover
+                print('need to add %r' % method_new)
             if self.menu_bar_format != self.format:
                 if hasattr(self, method_cleanup):
                 #if hasattr(self, method_old):
