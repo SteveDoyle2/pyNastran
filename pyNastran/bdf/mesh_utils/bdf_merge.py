@@ -10,7 +10,6 @@ from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.case_control_deck import CaseControlDeck
 from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber, get_renumber_starting_ids_from_model
 
-
 def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None, size=8,
               is_double=False, cards_to_skip=None, log=None, skip_case_control_deck=False):
     """

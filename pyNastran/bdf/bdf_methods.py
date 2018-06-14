@@ -263,7 +263,7 @@ class BDFMethods(BDFAttributes):
                 raise RuntimeError(msg)
         return pids_to_volume
 
-    def get_mass_breakdown(self, property_ids=None, stop_if_no_mass=True):
+    def get_mass_breakdown(self, property_ids=None, stop_if_no_mass=True, detailed=False):
         """
         gets a breakdown of the mass by property region
 
@@ -274,21 +274,19 @@ class BDFMethods(BDFAttributes):
         stop_if_no_mass : bool; default=True
             prevents crashing if there are no elements
             setting this to False really doesn't make sense for non-DMIG models
+        detailed : bool, optional, default : False
+            Separates structural and nonstructural mass outputs.
 
         Returns
-        -------
-        pids_to_mass : Dict[property_id] : mass
-            property_id : int
-                the property id
-            mass : float
-                the mass of the property region; NSM cards are not included
-            mass_type_to_mass : Dict[element_type] : mass
-            element_type : str
-                'CONM2', 'CMASS1', etc.
-            mass : float
-                the mass of the property region; NSM cards are not included
+        --------
+        pids_to_mass : dict {int : float, ...}
+            Map from property id to mass (structural mass only if detailed is True).
+        pids_to_mass_nonstructural : dict {int : float, ...}, optional
+            Map from property id to nonstructural mass (only if detailed is True).
+        mass_type_to_mass : dict {str : float, ...}
+            Map from mass id to mass for mass elements.
 
-        TODO: What about CONRODs?
+        TODO: What about CONRODs, CONM2s?
         #'PBRSECT',
         #'PBCOMP',
         #'PBMSECT',
@@ -302,6 +300,7 @@ class BDFMethods(BDFAttributes):
 
         mass_type_to_mass = {}
         pids_to_mass = {}
+        pids_to_mass_nonstructural = {}
         skipped_eid_pid = set([])
         for eid, elem in iteritems(self.masses):
             if elem.type not in mass_type_to_mass:
@@ -318,6 +317,7 @@ class BDFMethods(BDFAttributes):
         for pid, eids in iteritems(pid_eids):
             prop = self.properties[pid]
             masses = []
+            masses_nonstructural = []
             if prop.type == 'PSHELL':
                 # TODO: doesn't support PSHELL differential thicknesses
                 thickness = prop.t
@@ -328,13 +328,23 @@ class BDFMethods(BDFAttributes):
                     if elem.type in ['CQUADX']:
                         continue
                     area = elem.Area()
-                    masses.append(area * (rho * thickness + nsm))
+                    if detailed:
+                        masses.append(area * (rho * thickness))
+                        masses_nonstructural.append(area * nsm)
+                    else:
+                        masses.append(area * (rho * thickness + nsm))
             elif prop.type in ['PCOMP', 'PCOMPG']:
                 # TODO: does the PCOMP support differential thickness?
                 #       I don't think so...
                 for eid in eids:
                     elem = self.elements[eid]
-                    masses.append(elem.Mass())
+                    if detailed:
+                        mass, mass_nonstructural = elem.Mass_breakdown()
+                        masses.append(mass)
+                        masses_nonstructural.append(mass_nonstructural)
+                    else:
+                        masses.append(elem.Mass())
+
             elif prop.type in ['PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PROD', 'PTUBE']:
                 # what should I do here?
                 nsm = prop.nsm
@@ -373,6 +383,8 @@ class BDFMethods(BDFAttributes):
                 raise NotImplementedError(prop)
             if masses:
                 pids_to_mass[pid] = sum(masses)
+            if masses_nonstructural:
+                pids_to_mass_nonstructural[pid] = sum(masses_nonstructural)
 
         has_mass = len(mass_type_to_mass) > 0 or len(pids_to_mass) > 0
         if not has_mass:
@@ -380,7 +392,10 @@ class BDFMethods(BDFAttributes):
             self.log.warning(msg)
             if stop_if_no_mass:
                 raise RuntimeError(msg)
-        return pids_to_mass, mass_type_to_mass
+        if detailed:
+            return pids_to_mass, pids_to_mass_nonstructural, mass_type_to_mass
+        else:
+            return pids_to_mass, mass_type_to_mass
 
     def mass_properties(self, element_ids=None, mass_ids=None,
                         reference_point=None,

@@ -35,10 +35,10 @@ def convert(model, units_to, units=None):
     model.log.debug('time_scale = %s' % time_scale)
     model.log.debug('weight_scale = %s' % weight_scale)
     model.log.debug('gravity_scale = %s' % gravity_scale)
-    _set_wtmass(model, gravity_scale)
+    #_set_wtmass(model, gravity_scale)
 
     _convert_nodes(model, xyz_scale)
-    #_convert_coordinates(model, xyz_scale)
+    _convert_coordinates(model, xyz_scale)
 
     _convert_elements(model, xyz_scale, mass_scale, weight_scale)
     _convert_properties(model, xyz_scale, mass_scale, weight_scale)

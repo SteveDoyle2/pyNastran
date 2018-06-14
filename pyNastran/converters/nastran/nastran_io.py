@@ -5278,8 +5278,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         nplies_pcomp = None
         if 'PSHELL' in model.card_count:
             is_pshell = True
-            #mids = np.zeros((nelements, 4), dtype='int32')
-            #thickness = np.full((nelements, 4), np.nan, dtype='float32')
 
         pids_pcomp = model.get_card_ids_by_card_types(['PCOMP', 'PCOMPG'], combine=True)
         if pids_pcomp:
