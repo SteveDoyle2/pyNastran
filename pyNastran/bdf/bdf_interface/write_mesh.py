@@ -222,6 +222,9 @@ class WriteMesh(BDFAttributes):
         self._write_materials(bdf_file, size, is_double, is_long_ids=is_long_ids)
 
         self._write_masses(bdf_file, size, is_double, is_long_ids=is_long_ids)
+        self._write_rigid_elements(bdf_file, size, is_double, is_long_ids=is_long_ids) # split out for write_bdf_symmetric
+        self._write_aero(bdf_file, size, is_double, is_long_ids=is_long_ids)  # split out for write_bdf_symmetric
+
         self._write_common(bdf_file, size, is_double, is_long_ids=is_long_ids)
         if (enddata is None and 'ENDDATA' in self.card_count) or enddata:
             bdf_file.write('ENDDATA\n')
@@ -504,11 +507,9 @@ class WriteMesh(BDFAttributes):
             is this double precision
 
         """
-        self._write_rigid_elements(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_dmigs(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_loads(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_dynamic(bdf_file, size, is_double, is_long_ids=is_long_ids)
-        self._write_aero(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_aero_control(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_static_aero(bdf_file, size, is_double, is_long_ids=is_long_ids)
 

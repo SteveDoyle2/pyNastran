@@ -41,7 +41,6 @@ class TestConvert(unittest.TestCase):
         units_to = ['m', 'kg', 's']
 
         convert(model, units_to, units=units_from)
-        del model.params['WTMASS']
         model.write_bdf(bdf_filename_out2)
         os.remove(bdf_filename_out)
         os.remove(bdf_filename_out2)
@@ -62,7 +61,6 @@ class TestConvert(unittest.TestCase):
         units_to = ['m', 'kg', 's']
 
         convert(model, units_to, units=units_from)
-        del model.params['WTMASS']
         model.write_bdf(bdf_filename_out2)
         os.remove(bdf_filename_out)
         os.remove(bdf_filename_out2)

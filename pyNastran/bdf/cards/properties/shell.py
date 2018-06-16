@@ -56,6 +56,10 @@ class CompositeShellProperty(ShellProperty):
     def MassPerArea(self, iply='all', method='nplies', tflag=1, tscales=None):
         return self.get_mass_per_area(iply, method)
 
+    def MassPerArea_structure(self):
+        rhos = [mat_ref.get_density() for mat_ref in self.mids_ref]
+        return self.get_mass_per_area_structure(rhos)
+
     def Thickness(self, iply='all', tflag=1, tscales=None):
         return self.get_thickness(iply)
 
@@ -540,6 +544,29 @@ class CompositeShellProperty(ShellProperty):
                 raise NotImplementedError('method=%r is not supported' % method)
             return mass_per_area
 
+    def get_mass_per_area_structure(self, rhos):
+        r"""
+        Gets the Mass/Area for the property structure only.
+
+        .. math:: \frac{m}{A} = \sum(\rho t)
+
+        where :math:`nsm_i` is the non-structural mass of the
+        :math:`i^{th}` ply
+
+        Parameters
+        ----------
+
+        """
+        nplies = len(self.thicknesses)
+        mass_per_area = 0.
+        for iply in range(nplies):
+            rho = rhos[iply]
+            t = self.thicknesses[iply]
+            mass_per_area += rho * t
+
+        if self.is_symmetrical():
+            return 2. * mass_per_area
+        return mass_per_area
 
 class PCOMP(CompositeShellProperty):
     """
@@ -1969,6 +1996,20 @@ class PSHELL(ShellProperty):
         thickness = self.Thickness(tflag=tflag, tscales=tscales)
         try:
             mass_per_area = self.nsm + rho * thickness
+        except:
+            print("nsm=%s rho=%s t=%s" % (self.nsm, rho, self.t))
+            raise
+        return mass_per_area
+
+    def MassPerArea_structure(self):
+        """
+        Calculates mass per area.
+
+        .. math:: \frac{m}{A} = nsm + \rho t"""
+        mid_ref = self.mid_ref
+        rho = mid_ref.Rho()
+        try:
+            mass_per_area = rho * self.t
         except:
             print("nsm=%s rho=%s t=%s" % (self.nsm, rho, self.t))
             raise

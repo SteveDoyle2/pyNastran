@@ -876,6 +876,19 @@ def make_flfacts_mach_sweep(alt, machs, eas_limit=1000.,
                                       eas_units=eas_units,)
     return rho, machs, velocity
 
+def make_flfacts_eas_sweep(alt, eass, alt_units='m', velocity_units='m/s', density_units='kg/m^3',
+                           eas_units='m/s'):
+    """makes a mach sweep"""
+    rho = np.ones(len(eass)) * atm_density(alt, R=1716., alt_units=alt_units,
+                                           density_units=density_units)
+    sos = np.ones(len(eass)) * atm_speed_of_sound(alt, alt_units=alt_units,
+                                                  velocity_units=velocity_units)
+    rho_0 = atm_density(0., alt_units=alt_units, density_units=density_units)
+    velocity = eass * np.sqrt(rho_0/rho)
+    machs = velocity/sos
+
+    return rho, machs, velocity
+
 def _limit_eas(rho, machs, velocity, eas_limit=1000.,
                alt_units='m', velocity_units='m/s', density_units='kg/m^3',
                eas_units='m/s'):

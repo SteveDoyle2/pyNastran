@@ -13,6 +13,10 @@ This file defines:
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import iteritems
+from warnings import warn
+
+import numpy as np
+
 from pyNastran.bdf.cards.loads.static_loads import PLOAD4
 from pyNastran.bdf.cards.aero.aero import CAERO1, SPLINE1
 from pyNastran.bdf.cards.bdf_sets import SET1 #, SET3
@@ -60,7 +64,7 @@ def bdf_mirror(bdf_filename, plane='xz', log=None, debug=True):
     nid_offset, plane = _mirror_nodes(model, plane=plane)
     eid_offset = _mirror_elements(model, nid_offset)
     _mirror_loads(model, nid_offset, eid_offset)
-    _mirror_aero(model, nid_offset, plane)
+    _mirror_aero(model, nid_offset, plane=plane)
     return model, nid_offset, eid_offset
 
 def write_bdf_symmetric(bdf_filename, out_filename=None, encoding=None,
@@ -180,7 +184,13 @@ def _mirror_elements(model, nid_offset):
     Doesn't handle CBAR/CBEAM offsets
     Doesn't handle CBEAM SPOINTs
     """
-    eid_offset = 0
+    eid_max_elements = 0
+    eid_max_rigid = 0
+    if model.elements:
+        eid_max_elements = max(model.elements.keys())
+    if model.rigid_elements:
+        eid_max_rigid = max(model.rigid_elements.keys())
+    eid_offset = max(eid_max_elements, eid_max_rigid)
     if model.elements:
         shells = set([
             'CTRIA3', 'CQUAD4', 'CTRIA6', 'CQUAD8', 'CQUAD',
@@ -216,11 +226,11 @@ def _mirror_elements(model, nid_offset):
                 #model.log.warning(msg)
                 #continue
 
-            eid2 = eid + eid_offset
+            eid_mirror = eid + eid_offset
             fields = element.repr_fields()
-            fields[1] = eid2
+            fields[1] = eid_mirror
             model.add_card(fields, etype)
-            element2 = model.elements[eid2]
+            element2 = model.elements[eid_mirror]
 
             if etype in shells:
                 nodes = [node_id + nid_offset for node_id in nodes]
@@ -270,6 +280,43 @@ def _mirror_elements(model, nid_offset):
                 except AttributeError:
                     print(element.get_stats())
                     raise
+
+    if model.rigid_elements:
+        for eid, rigid_element in sorted(iteritems(model.rigid_elements)):
+            if rigid_element.type == 'RBE2':
+                Gmi_node_ids = rigid_element.Gmi_node_ids
+                Gn = rigid_element.Gn()
+                Gijs = None
+                ref_grid_id = None
+            elif rigid_element.type == 'RBE3':
+                Gmi_node_ids = rigid_element.Gmi_node_ids
+                Gijs = rigid_element.Gijs
+                ref_grid_id = rigid_element.ref_grid_id
+                Gn = None
+            else:
+                msg = '_write_elements_symmetric: %s not implimented' % rigid_element.type
+                warn(msg)
+                continue
+                #raise NotImplementedError(msg)
+
+            Gmi_node_ids_mirror = [node_id + nid_offset for node_id in Gmi_node_ids]
+            if Gn:
+                Gn_mirror = Gn + nid_offset
+            if Gijs:
+                Gijs_mirror = [[node_id + nid_offset for node_id in nodes] for nodes in Gijs]
+            if ref_grid_id:
+                ref_grid_id_mirror = ref_grid_id + nid_offset
+
+            eid_mirror = eid + eid_offset
+            if rigid_element.type == 'RBE2':
+                rigid_element2 = model.add_rbe2(eid_mirror, Gn_mirror, rigid_element.cm,
+                                                Gmi_node_ids_mirror)
+            elif rigid_element.type == 'RBE3':
+                rigid_element2 = model.add_rbe3(
+                    eid_mirror, ref_grid_id_mirror, rigid_element.refc, rigid_element.weights,
+                    rigid_element.comps, Gijs_mirror
+                )
+
     return eid_offset
 
 def _mirror_loads(model, nid_offset=0, eid_offset=0):
@@ -332,10 +379,10 @@ def _mirror_aero(model, nid_offset, plane):
         else:
             model.log.error('not mirroring plane %r; only xz, yz' % plane)
 
-    caero_eid_max = 0
+    caero_id_offset = 0
     if len(model.caeros):
-        # TODO: ish-correct but very hackish and leaves a big id
-        caero_eid_max = max(model.caeros) + 100000
+        caero_id_max = max(model.caero_ids)
+        caero_id_offset = np.max(model.caeros[caero_id_max].box_ids.flat)
 
         caeros = []
         for unused_caero_id, caero in iteritems(model.caeros):
@@ -352,7 +399,7 @@ def _mirror_aero(model, nid_offset, plane):
                 p4 = caero.p4.copy()
                 p4[1] *= -1.
                 x43 = caero.x43
-                eid2 = caero.eid + caero_eid_max
+                eid2 = caero.eid + caero_id_offset
                 caero_new = CAERO1(eid2, caero.pid, caero.igroup,
                                    p1, x12, p4, x43,
                                    cp=caero.cp, nspan=nspan,
@@ -371,7 +418,7 @@ def _mirror_aero(model, nid_offset, plane):
 
     nsplines = len(model.splines)
     sets_max = max(model.sets) if len(model.sets) else 0
-    if caero_eid_max == 0 and nsplines:
+    if caero_id_offset == 0 and nsplines:
         model.log.error("cant mirror splines because CAEROs don't exist...")
     elif nsplines and sets_max == 0:
         model.log.error("cant mirror splines because SET1/3 don't exist...")
@@ -384,11 +431,11 @@ def _mirror_aero(model, nid_offset, plane):
                 #spline = SPLINE1(eid, caero, box1, box2, setg)
 
                 eid = spline.eid + spline_max
-                caero = spline.caero + caero_eid_max
+                caero = spline.caero + caero_id_offset
                 method = spline.method
                 usage = spline.usage
-                box1 = spline.box1 + caero_eid_max
-                box2 = spline.box2 + caero_eid_max
+                box1 = spline.box1 + caero_id_offset
+                box2 = spline.box2 + caero_id_offset
                 setg = spline.setg + sets_max
                 dz = spline.dz
                 melements = spline.melements
