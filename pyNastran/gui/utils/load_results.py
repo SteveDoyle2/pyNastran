@@ -206,7 +206,7 @@ def load_deflection_csv(out_filename, encoding='latin1'):
 
     B = {}
     for i, name in enumerate(names_without_index):
-        B[name] = A[:, 3*i:3*i+3]
+        B[name] = A[:, 1+3*i:1+3*i+3]
 
     assert len(B) == len(fmt_dict_without_index), 'B.keys()=%s fmt_dict.keys()=%s' % (list(B.keys()), list(fmt_dict_without_index.keys()))
     assert len(B) == len(names_without_index), 'B.keys()=%s names.keys()=%s' % (list(B.keys()), names_without_index)

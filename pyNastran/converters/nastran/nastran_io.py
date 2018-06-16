@@ -902,11 +902,12 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             # 2/4/6/... - spline panels
             iaero = 2
             for spline_id, spline in sorted(iteritems(model.splines)):
-                # the control surfaces all lie perfectly on top of each other
-                # such that we have z fighting, so based on the aero index,
-                # we calculate a z offset.
-                setg = spline.setg_ref
-                structure_points = setg.get_ids()
+                setg_ref = spline.setg_ref
+                if setg_ref is None:
+                    self.log.warning('error cross referencing SPLINE:\n%s' % spline.rstrip())
+                    # errror cross-referenceing
+                    continue
+                structure_points = setg_ref.get_ids()
 
                 try:
                     aero_box_ids = spline.aero_element_ids
@@ -915,6 +916,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     print(spline.object_methods())
                     raise
 
+                # the control surfaces all lie perfectly on top of each other
+                # such that we have z fighting, so based on the aero index,
+                # we calculate a z offset.
                 zfighting_offset = 0.0001 * (iaero + 1)
                 grid_name = 'spline_%s_structure_points' % spline_id
                 self.gui.create_alternate_vtk_grid(

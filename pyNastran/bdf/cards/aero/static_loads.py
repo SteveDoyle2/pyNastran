@@ -835,18 +835,22 @@ class TRIM(BaseCard):
                         suport_dofs.add(dof)
                         nsuport_dofs += 1
 
+            suport_dof_msg2 = ''
             if suport1:
                 #unused_conid = suport1.conid
                 nids = suport1.node_ids
-                for nid, cs in zip(nids, suport1.Cs):
-                    for ci in cs:
-                        #print('  SUPORT1: id=%r nid=%r C=%r' % (conid, nid, ci))
-                        dof = (nid, ci)
+                suport_dof_msg = ''
+                for nid, components in zip(nids, suport1.Cs):
+                    for componenti in components:
+                        #print('  SUPORT1: id=%r nid=%r C=%r' % (conid, nid, componenti))
+                        dof = (nid, componenti)
+                        suport_dof_msg += '    (%s, %s)\n' % (nid, componenti)
                         if dof in suport_dofs:
                             msg = 'dof=%s suport_dofs=%s' % (str(dof), str(suport_dofs))
                             raise RuntimeError(msg)
                         suport_dofs.add(dof)
                         nsuport1_dofs += 1
+                suport_dof_msg2 = '\nsuport_dofs (nid, comp):\n%s\n' % suport_dof_msg.rstrip(',')
 
             aesurf_names = [aesurfi.label for aesurfi in aesurf.values()]
             aestat_labels = [aestat.label for aestat in aestats.values()]
@@ -921,13 +925,14 @@ class TRIM(BaseCard):
                     '  -ntrim_aesurf = %s\n'
                     '  -naelink = %s\n'
                     '  -nsuport_dofs = %s\n'
-                    '  -nsuport1_dofs = %s\n\n' % (
+                    '  -nsuport1_dofs = %s\n'
+                    '%s\n\n' % (
                         naestat, naesurf, naeparm,
                         ntrim, ntrim_aesurf, naelink, nsuport_dofs, nsuport1_dofs,
 
                         ndelta,
                         naestat, naesurf, naeparm, ntrim, ntrim_aesurf,
-                        naelink, nsuport_dofs, nsuport1_dofs)
+                        naelink, nsuport_dofs, nsuport1_dofs, suport_dof_msg2)
                 )
                 msg += str(self)
                 raise RuntimeError(msg)

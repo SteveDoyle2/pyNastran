@@ -63,7 +63,7 @@ class BDFAttributes(object):
             'log', 'mpcObject', 'spcObject',
             'node_ids', 'coord_ids', 'element_ids', 'property_ids',
             'material_ids', 'caero_ids', 'is_long_ids',
-            'nnodes', 'ncoords', 'nelements', 'nproperties',
+            'nnodes', 'ncoords', 'nelements', 'nproperties', 'rejects',
             'nmaterials', 'ncaeros',
 
             'point_ids', 'subcases',
@@ -106,7 +106,7 @@ class BDFAttributes(object):
             'log', #'mpcObject', 'spcObject',
             'node_ids', 'coord_ids', 'element_ids', 'property_ids',
             'material_ids', 'caero_ids', 'is_long_ids',
-            'nnodes', 'ncoords', 'nelements', 'nproperties',
+            'nnodes', 'ncoords', 'nelements', 'nproperties', 'rejects',
             'nmaterials', 'ncaeros',
 
             'point_ids', 'subcases',
