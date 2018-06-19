@@ -64,7 +64,7 @@ from vtk import (vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
 from pyNastran.utils import integer_types
 from pyNastran.utils.numpy_utils import isfinite_and_nonzero, isfinite_and_greater_than, isfinite
 from pyNastran.bdf.bdf import (BDF,
-                               CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
+                               CAERO1, CAERO2, CAERO3, CAERO4, CAERO5, CAERO7, BODY7,
                                CQUAD4, CQUAD8, CQUAD, CQUADR, CSHEAR,
                                CTRIA3, CTRIA6, CTRIAR,
                                CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8,
@@ -904,8 +904,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             for spline_id, spline in sorted(iteritems(model.splines)):
                 setg_ref = spline.setg_ref
                 if setg_ref is None:
-                    self.log.warning('error cross referencing SPLINE:\n%s' % spline.rstrip())
-                    # errror cross-referenceing
+                    self.log.error('error cross referencing SPLINE:\n%s' % spline.rstrip())
                     continue
                 structure_points = setg_ref.get_ids()
 
@@ -1004,7 +1003,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 npoints, ncelements = caero.get_npanel_points_elements()
                 ncaeros_sub += npoints
                 ncaero_sub_points += ncelements
-            elif isinstance(caero, CAERO2):
+            elif isinstance(caero, (CAERO2, BODY7)):
                 pass
             else:
                 print('%r doesnt support panel_points_elements' % caero.type)
@@ -1013,7 +1012,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             if isinstance(caero, (CAERO1, CAERO3, CAERO4, CAERO5)):
                 ncaeros_points += 4
                 ncaeros += 1
-            elif isinstance(caero, CAERO2):
+            elif isinstance(caero, (CAERO2, BODY7)):
                 points, elems = caero.get_points_elements_3d()
                 ncaeros_points += points.shape[0]
                 ncaeros += elems.shape[0]
@@ -1023,14 +1022,14 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         if model.caeros:
             caero_points = []
             for unused_eid, caero in sorted(iteritems(model.caeros)):
-                if caero.type in ['CAERO1', 'CAERO4']:
+                if caero.type in ['CAERO1', 'CAERO4', 'CAERO7']:
                     ncaeros_sub += 1
                     pointsi, elementsi = caero.panel_points_elements()
                     caero_points.append(pointsi)
                     for i, box_id in enumerate(caero.box_ids.flat):
                         box_id_to_caero_element_map[box_id] = elementsi[i, :] + num_prev
                     num_prev += pointsi.shape[0]
-                elif caero.type == 'CAERO2':
+                elif caero.type in ('CAERO2', 'BODY7'):
                     pass
                 else:
                     print('caero\n%s' % caero)
@@ -1060,8 +1059,11 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 raise RuntimeError(msg)
 
             for unused_label, aesurf in sorted(iteritems(model.aesurf)):
-                aelist = aesurf.alid1_ref
-                ncaeros_cs += len(aelist.elements)
+                aelist_ref = aesurf.alid1_ref
+                if aelist_ref is None:
+                    self.log.error('AESURF does not reference an AELIST\n%s' % (aesurf.rstrip()))
+                    continue
+                ncaeros_cs += len(aelist_ref.elements)
 
                 cs_name = '%s_control_surface' % aesurf.label
                 if cs_name not in self.alt_grids:
@@ -1069,13 +1071,13 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                         cs_name, color=PINK, line_width=5, opacity=0.5,
                         representation='surface')
 
-                cs_box_ids['caero_control_surfaces'].extend(aelist.elements)
-                cs_box_ids[cs_name].extend(aelist.elements)
+                cs_box_ids['caero_control_surfaces'].extend(aelist_ref.elements)
+                cs_box_ids[cs_name].extend(aelist_ref.elements)
                 if aesurf.alid2 is not None:
-                    aelist = aesurf.alid2_ref
-                    ncaeros_cs += len(aelist.elements)
-                    cs_box_ids[cs_name].extend(aelist.elements)
-                    cs_box_ids['caero_control_surfaces'].extend(aelist.elements)
+                    aelist_ref = aesurf.alid2_ref
+                    ncaeros_cs += len(aelist_ref.elements)
+                    cs_box_ids[cs_name].extend(aelist_ref.elements)
+                    cs_box_ids['caero_control_surfaces'].extend(aelist_ref.elements)
         out = (
             has_caero, caero_points, ncaeros, ncaeros_sub, ncaeros_cs,
             ncaeros_points, ncaero_sub_points,
@@ -1110,7 +1112,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         zfighting_offset = 0.0001
         caero_grid = self.gui.alt_grids['caero']
         for unused_eid, element in sorted(iteritems(model.caeros)):
-            if isinstance(element, (CAERO1, CAERO3, CAERO4, CAERO5)):
+            if isinstance(element, (CAERO1, CAERO3, CAERO4, CAERO5, CAERO7)):
                 # wing panel
                 cpoints = element.get_points()
                 cpoints[0][2] += zfighting_offset
@@ -1129,7 +1131,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 points.InsertPoint(j + 3, *cpoints[3])
                 caero_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
                 j += 4
-            elif isinstance(element, CAERO2):
+            elif isinstance(element, (CAERO2, BODY7)):
                 # slender body
                 if 0:  # pragma: no cover
                     # 1D version
@@ -1197,7 +1199,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         vtk_type = vtkQuad().GetCellType()
         for unused_eid, element in sorted(iteritems(model.caeros)):
-            if isinstance(element, (CAERO1, CAERO3, CAERO4, CAERO5)):
+            if isinstance(element, (CAERO1, CAERO3, CAERO4, CAERO5, CAERO7)):
                 pointsi, elementsi = element.panel_points_elements()
 
                 ipoint = 0
@@ -1272,6 +1274,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         vtk_type = vtkQuad().GetCellType()
 
         all_points = []
+        if name not in self.gui.alt_grids:
+            return
+
         grid = self.gui.alt_grids[name]
         for box_id in cs_box_ids:
             try:
@@ -1307,10 +1312,17 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             # points_name = spline_1000_structure_points
             points_name = '_'.join(sname)
             self.log.error('deleting %r' % points_name)
-            del self.gui.alt_grids[name]
-            del self.gui.alt_grids[points_name]
-            del self.gui.geometry_properties[name]
-            del self.gui.geometry_properties[points_name]
+            if name in self.gui.alt_grids:
+                del self.gui.alt_grids[name]
+
+            if points_name in self.gui.alt_grids:
+                del self.gui.alt_grids[points_name]
+
+            if name in self.gui.geometry_properties:
+                del self.gui.geometry_properties[name]
+
+            if points_name in self.gui.geometry_properties:
+                del self.gui.geometry_properties[points_name]
             return
         # combine all the points
         all_points_array = np.vstack(all_points)

@@ -490,6 +490,8 @@ class BDFAttributes(object):
 
         #: store SPLINE1,SPLINE2,SPLINE4,SPLINE5
         self.splines = {}  # type: Dict[int, Any]
+        #: store PANLST1,PANLST2,PANLST3
+        self.panlsts = {}
 
         # axisymmetric
         self.axic = None  # type: Optional[Any]
@@ -679,10 +681,11 @@ class BDFAttributes(object):
             'aesurf' : ['AESURF'],
             'aesurfs' : ['AESURFS'],
             'aestats' : ['AESTAT'],
-            'caeros' : ['CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5'],
+            'caeros' : ['CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5', 'CAERO7'],
             'paeros' : ['PAERO1', 'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5'],
             'monitor_points' : ['MONPNT1', 'MONPNT2', 'MONPNT3'],
             'splines' : ['SPLINE1', 'SPLINE2', 'SPLINE4', 'SPLINE5',],
+            'panlsts' : ['PANLST1', 'PANLST2', 'PANLST3',],
             'csschds' : ['CSSCHD',],
             #'SPLINE3', 'SPLINE6', 'SPLINE7',
             'trims' : ['TRIM', 'TRIM2'],
@@ -804,8 +807,9 @@ class BDFAttributes(object):
     @nastran_format.setter
     def nastran_format(self, nastran_format):
         fmt_lower = nastran_format.lower().strip()
-        if fmt_lower not in ['nx', 'msc']:
+        if fmt_lower not in ['nx', 'msc', 'zaero']:
             raise RuntimeError(nastran_format)
+        print('fmt =', fmt_lower)
         self._nastran_format = fmt_lower
 
     @property

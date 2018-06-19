@@ -991,6 +991,7 @@ class TRIM(BaseCard):
             labels.append(label)
             uxs.append(ux)
             i += 2
+            n += 1
         return TRIM(sid, mach, q, labels, uxs, aeqr, comment=comment)
 
     def raw_fields(self):
