@@ -4,7 +4,7 @@
 try:
     import pyInstaller
     pyInstaller_path = [os.path.dirname(pyinstaller.__file__)]
-    print "pyInstaller_path = %r" % pyInstaller_path
+    print("pyInstaller_path = %r" % pyInstaller_path)
 except ImportError:
     pyInstaller_path = []
 pyInstaller_path = [r'F:\work\pyNastran\pyNastran\pyinstaller']
@@ -25,8 +25,12 @@ import datetime
 from six import PY2
 
 # get pyNastran location
-import pkgutil
-pkg_path = pkgutil.get_loader('pyNastran').filename
+print('sys.version_info.major =', sys.version_info.major)
+if sys.version_info.major == 3:
+    pkg_path = os.path.abspath(os.path.join('.', '..', 'pyNastran'))
+else:
+    import pkgutil
+    pkg_path = pkgutil.get_loader('pyNastran').filename
 init_filename = os.path.join(pkg_path, '__init__.py')
 assert os.path.exists(init_filename), init_filename
 
@@ -453,7 +457,7 @@ a = Analysis(analyze_files,
              hookspath=None)
 pyz = PYZ(a.pure)
 
-#print "help(EXE) = \n",help(EXE)
+#print("help(EXE) = \n", help(EXE))
 exe = EXE(pyz,
           a.scripts,
           a.binaries + binaries + icons,
@@ -467,8 +471,8 @@ exe = EXE(pyz,
           icon=icon_main,
           console=True )
 
-#print '*'*80
-#print "help(COLLECT) = \n",help(COLLECT)
+#print('*'*80)
+#print("help(COLLECT) = \n",help(COLLECT))
 #coll = COLLECT(exe,
 #               a.binaries + binaries + icons,
 #               a.zipfiles,

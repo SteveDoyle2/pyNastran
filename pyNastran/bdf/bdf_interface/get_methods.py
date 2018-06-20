@@ -519,6 +519,26 @@ class GetMethods(BDFAttributes):
             raise RuntimeError(msg)
         return cid
 
+    def safe_acsid(self, msg=''):
+        """gets the aerodynamic coordinate system"""
+        if self.aero is not None:
+            acsid_aero = self.aero.Acsid()
+        if self.aeros is not None:
+            acsid_aeros = self.aeros.Acsid()
+
+        if self.aero is not None:
+            if self.aeros is not None:
+                assert acsid_aero == acsid_aeros, 'AERO acsid=%s, AEROS acsid=%s' % (acsid_aero,
+                                                                                     acsid_aeros)
+            cid = self.Coord(acsid_aero, msg=msg)
+        elif self.aeros is not None:
+            cid = self.Coord(acsid_aeros, msg=msg)
+        else:
+            ## TODO: consider changing this...
+            self.log.error('neither AERO nor AEROS cards exist; assuming global (cid=0).')
+            return self.Coord(0, msg=msg)
+        return cid
+
     def Aero(self, msg=''):
         """gets the AERO"""
         if self.aero is not None:

@@ -15,6 +15,7 @@ from numpy import full, issubdtype
 from numpy.linalg import norm  # type: ignore
 import vtk
 
+import pyNastran
 from pyNastran.utils import integer_types
 from pyNastran.gui.gui_objects.names_storage import NamesStorage
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
@@ -42,7 +43,7 @@ class GuiCommon(GuiAttributes):
         self._names_storage = NamesStorage()
 
         self.vtk_version = VTK_VERSION
-        if not IS_TESTING:  # pragma: no cover
+        if not IS_TESTING or not pyNastran.is_pynastrangui_exe:  # pragma: no cover
             print('vtk_version = %s' % (self.vtk_version))
         if self.vtk_version[0] < 7 and not IS_DEV:  # TODO: should check for 7.1
             raise RuntimeError('VTK %s is no longer supported' % vtk.VTK_VERSION)
@@ -403,7 +404,7 @@ class GuiCommon(GuiAttributes):
             return is_valid
 
         (
-            icase, result_type, unused_location, min_value, max_value, norm_value,
+            icase, result_type, location, min_value, max_value, norm_value,
             data_format, scale, methods,
             nlabels, labelsize, ncolors, colormap,
         ) = data
@@ -419,6 +420,8 @@ class GuiCommon(GuiAttributes):
         if not is_legend_shown:
             #print('showing')
             self.show_legend()
+
+        self.update_contour_filter(nlabels, location, min_value, max_value)
 
         self.update_scalar_bar(result_type, min_value, max_value, norm_value,
                                data_format,
@@ -791,7 +794,8 @@ class GuiCommon(GuiAttributes):
 
         self.final_grid_update(icase, name, grid_result,
                                name_vector, grid_result_vector,
-                               key, subtitle, label, show_msg)
+                               key, subtitle, label,
+                               min_value, max_value, show_msg)
 
         if is_legend_shown is None:
             is_legend_shown = self.scalar_bar.is_shown
@@ -1013,19 +1017,24 @@ class GuiCommon(GuiAttributes):
 
     def final_grid_update(self, icase, name, grid_result,
                           name_vector, grid_result_vector,
-                          key, subtitle, label, show_msg):
+                          key, subtitle, label,
+                          min_value, max_value, show_msg):
         assert isinstance(key, integer_types), key
         (obj, (i, res_name)) = self.result_cases[key]
         subcase_id = obj.subcase_id
         result_type = obj.get_title(i, res_name)
         vector_size = obj.get_vector_size(i, res_name)
         location = obj.get_location(i, res_name)
+        out = obj.get_nlabels_labelsize_ncolors_colormap(i, name)
+        nlabels, unused_labelsize, unused_ncolors, unused_colormap = out
 
         #if vector_size == 3:
             #print('name, grid_result, vector_size=3', name, grid_result)
         self._final_grid_update(icase, name, grid_result, None, None, None,
                                 1, subcase_id, result_type, location, subtitle, label,
                                 revert_displaced=True, show_msg=show_msg)
+        self.update_contour_filter(nlabels, location, min_value, max_value)
+
         if vector_size == 3:
             self._final_grid_update(icase, name_vector, grid_result_vector, obj, i, res_name,
                                     vector_size, subcase_id, result_type, location, subtitle, label,
@@ -1149,6 +1158,7 @@ class GuiCommon(GuiAttributes):
         #self.update_all()
         if len(self.groups):
             self.post_group_by_name(self.group_active)
+
         self.vtk_interactor.Render()
 
         self.hide_labels(show_msg=False)
@@ -1432,6 +1442,131 @@ class GuiCommon(GuiAttributes):
 
         if follower_nodes is not None:
             self.follower_nodes[name] = follower_nodes
+
+    def _make_contour_filter(self):  # pragma: no cover
+        """trying to make model lines...doesn't work"""
+        if not self.make_contour_filter:
+            return
+
+        self.contour_filter = vtk.vtkContourFilter()
+
+        if 0:
+            # doesn't work...in progress
+            geometry_filter = vtk.vtkGeometryFilter()
+            geometry_filter.SetInputData(self.grid_selected)
+            geometry_filter.Update()
+            poly_data = geometry_filter.GetOutput()
+
+            self.contour_filter.SetInputData(poly_data)
+        elif 0:  # pragma: no cover
+            # doesn't work
+            self.contour_filter.SetInputData(self.grid_selected)
+        elif 1:
+            # https://blog.kitware.com/cell-set-as-unstructured-grid/
+            self.contour_filter.SetInputData(self.grid)
+        else:
+            raise RuntimeError('invalid contour_filter option')
+        #self.contour_filter.GenerateValues(1, 10, 10)
+        #self.contour_filter.SetComputeScalars(1)
+        #contour_filter.SetInputConnection(self.grid_selected.GetOutputPort())
+        #self.contour_filter.SetInputData(None)
+        self.contour_filter.ComputeScalarsOff()
+        self.contour_filter.ComputeNormalsOff()
+
+
+        # Connect the segments of the conours into polylines
+        contour_stripper = vtk.vtkStripper()
+        contour_stripper.SetInputConnection(self.contour_filter.GetOutputPort())
+        contour_stripper.Update()
+
+        number_of_contour_lines = contour_stripper.GetOutput().GetNumberOfLines()
+        print('There are %s contours lines.' % number_of_contour_lines)
+
+        include_labels = False
+        if include_labels:
+            points = contour_stripper.GetOutput().GetPoints()
+            cells = contour_stripper.GetOutput().GetLines()
+            scalars = contour_stripper.GetOutput().GetPointData().GetScalars()
+
+            label_poly_data.SetPoints(label_points)
+            label_poly_data.GetPointData().SetScalars(label_scalars)
+
+            # The labeled data mapper will place labels at the points
+            label_mapper = vtk.vtkLabeledDataMapper()
+            label_mapper.SetFieldDataName("Isovalues")
+            #if vtk.VTK_MAJOR_VERSION <= 5:
+                #label_mapper.SetInput(label_poly_data)
+            #else:
+            label_mapper.SetInputData(label_poly_data)
+
+            label_mapper.SetLabelModeToLabelScalars()
+            label_mapper.SetLabelFormat("%6.2f")
+
+            label_mapper.SetLabelModeToLabelScalars()
+            label_mapper.SetLabelFormat("%6.2f")
+
+            isolabels_actor = vtk.vtkActor2D()
+            isolabels_actor.SetMapper(label_mapper)
+
+        contour_mapper = vtk.vtkPolyDataMapper()
+        contour_mapper.SetInputConnection(contour_stripper.GetOutputPort())
+        contour_mapper.ScalarVisibilityOff()
+
+        isolines_actor = vtk.vtkActor()
+        isolines_actor.SetMapper(contour_mapper)
+        isolines_actor.GetProperty().SetColor(0., 0., 0.)
+
+        # Add the actors to the scene
+        self.rend.AddActor(isolines_actor)
+        if include_labels:
+            self.rend.AddActor(isolabels_actor)
+
+        self.contour_mapper = contour_mapper
+        self.contour_stripper = contour_stripper
+        self.contour_lines_actor = isolines_actor
+        self.contour_lines_actor.VisibilityOff()
+
+    def update_contour_filter(self, nlabels, location, min_value=None, max_value=None):
+        """update the contour lines"""
+        if not self.make_contour_filter:
+            return
+        if nlabels is None:
+            nlabels = 11
+        if location == 'centroid': # node/centroid
+            self.contour_lines_actor.VisibilityOff()
+            #self.contour_mapper.SetScalarModeToUseCellData()
+            #res_data = self.grid.GetCellData().GetScalars()
+            return
+        elif location == 'node':
+            #self.contour_mapper.SetScalarModeToUsePointData()
+            res_data = self.grid.GetPointData().GetScalars()
+        else:
+            raise RuntimeError('location=%r' % location)
+
+        self.contour_lines_actor.VisibilityOn()
+        number_of_cuts = nlabels - 1
+        if min_value is None or max_value is None:
+            data_range = res_data.GetRange()
+            if min_value is None:
+                min_value = data_range[0]
+            if max_value is None:
+                max_value = data_range[1]
+
+        self.contour_filter.GenerateValues(
+            number_of_cuts,
+            0.99 * min_value,
+            0.99 * max_value)
+
+        self.contour_filter.Modified()
+        #self.contour_stripper.Modified()
+        self.contour_mapper.Modified()
+        #self.contour_filter.Update()
+        #self.contour_stripper.Update()
+        #self.contour_mapper.Update()
+
+        number_of_contour_lines = self.contour_stripper.GetOutput().GetNumberOfLines()
+        self.log.info('There are %s contours lines.' % number_of_contour_lines)
+
 
 def _get_normalized_data(case):
     """helper method for ``_get_fringe_data``"""

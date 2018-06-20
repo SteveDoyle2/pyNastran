@@ -258,8 +258,8 @@ class PBEAM(IntegratedLineProperty):
         #assert min(so) in [0., 1.], so  # YES, NO
         #assert max(so) == 1.0, so
         #print('xxb', xxb)
-        assert 0. <= min(xxb) <= 0.0, xxb  # x/L
-        assert 0. <= max(xxb) <= 1.0, xxb
+        assert np.allclose(min(xxb), 0.), 'pid=%s min(xxb)=%s xxb=%s' % (pid, min(xxb), xxb)  # x/L
+        assert 0. <= max(xxb) <= 1.0, 'pid=%s max(xxb)=%s xxb=%s' % (pid, max(xxb), xxb)  # x/L
         assert isinstance(area, list), area
         assert isinstance(i1, list), i1
         assert isinstance(i2, list), i2

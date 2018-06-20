@@ -230,6 +230,7 @@ class XrefMesh(BDFAttributes):
         Links up all the aero cards
           - CAEROx, PAEROx, SPLINEx, AECOMP, AELIST, AEPARAM, AESTAT, AESURF, AESURFS
         """
+        self.zona.cross_reference()
         for caero in itervalues(self.caeros):
             caero.cross_reference(self)
 

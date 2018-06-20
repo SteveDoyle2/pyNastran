@@ -519,6 +519,9 @@ class EPT(GeomCommon):
                                'ma=[%s,%s] mb=[%s,%s] na=[%s,%s] nb=[%s,%s]' % (tuple(endpack)))
             data_in.append(endpack)
 
+            if pid in self.properties:
+                if self.properties[pid].type == 'PBCOMP':
+                    continue
             prop = PBEAM.add_op2_data(data_in)
             self._add_op2_property(prop)
         self.card_count['PBEAM'] = nproperties

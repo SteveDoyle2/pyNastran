@@ -2151,5 +2151,10 @@ class TestAero(unittest.TestCase):
         rotorg.validate()
         save_load_deck(model)
 
+    def test_zona(self):
+        bdf_filename = os.path.join(MODEL_PATH, 'aero', 'f16_ma41.bdf')
+        model = read_bdf(bdf_filename, xref=False, debug=False)
+        model.safe_cross_reference()
+
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

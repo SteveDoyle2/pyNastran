@@ -321,7 +321,7 @@ class BDFMethods(BDFAttributes):
             if prop.type == 'PSHELL':
                 # TODO: doesn't support PSHELL differential thicknesses
                 thickness = prop.t
-                nsm = prop.nsm
+                nsm = prop.nsm  # per area
                 rho = prop.Rho()
                 for eid in eids:
                     elem = self.elements[eid]
@@ -346,8 +346,7 @@ class BDFMethods(BDFAttributes):
                         masses.append(elem.Mass())
 
             elif prop.type in ['PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PROD', 'PTUBE']:
-                # what should I do here?
-                nsm = prop.nsm
+                nsm = prop.nsm # per unit length
                 try:
                     rho = prop.Rho()
                 except AttributeError:
@@ -357,7 +356,11 @@ class BDFMethods(BDFAttributes):
                     elem = self.elements[eid]
                     area = prop.Area()
                     length = elem.Length()
-                    masses.append(area * (rho * length + nsm))
+                    if detailed:
+                        masses.append(length * (rho * area))
+                        masses_nonstructural.append(length * nsm)
+                    else:
+                        masses.append(length * (rho * area + nsm))
             elif prop.type in ['PSOLID', 'PCOMPS', 'PLSOLID']:
                 rho = prop.Rho()
                 for eid in eids:
@@ -373,12 +376,16 @@ class BDFMethods(BDFAttributes):
                 pass
             elif prop.type == 'PSHEAR':
                 thickness = prop.t
-                nsm = prop.nsm
+                nsm = prop.nsm # per area
                 rho = prop.Rho()
                 for eid in eids:
                     elem = self.elements[eid]
                     area = elem.Area()
-                    masses.append(area * (rho * thickness + nsm))
+                    if detailed:
+                        masses.append(area * (rho * thickness))
+                        masses_nonstructural.append(area * nsm)
+                    else:
+                        masses.append(area * (rho * thickness + nsm))
             else:
                 raise NotImplementedError(prop)
             if masses:

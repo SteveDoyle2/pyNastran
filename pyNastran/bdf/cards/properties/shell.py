@@ -620,6 +620,22 @@ class PCOMP(CompositeShellProperty):
                 self.type, pname_fid))
 
     def _update_field_helper(self, n, value):
+        if n == 3:
+            self.z0 = value
+            return
+        elif n == 4:
+            self.nsm = value
+            return
+        elif n == 5:
+            self.sb = value
+            return
+        elif n == 7:
+            self.tref = value
+            return
+        elif n == 8:
+            self.ge = value
+            return
+
         assert n > 0, 'PCOMP pid=%s; negative indicies are not supported (pname_fid=%r)' % (self.pid, n)
         nnew = n - 9
         if nnew <= 0:

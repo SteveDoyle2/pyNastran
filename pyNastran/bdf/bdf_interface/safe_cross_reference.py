@@ -120,6 +120,7 @@ class SafeXrefMesh(XrefMesh):
         Links up all the aero cards
           - CAEROx, PAEROx, SPLINEx, AECOMP, AELIST, AEPARAM, AESTAT, AESURF, AESURFS
         """
+        self.zona.safe_cross_reference()
         xref_errors = defaultdict(list)
         for caero in itervalues(self.caeros):
             caero.safe_cross_reference(self, xref_errors)
@@ -323,14 +324,18 @@ class SafeXrefMesh(XrefMesh):
     def safe_get_nodes(self, nids, msg=''):
         """safe xref version of self.Nodes(nid, msg='')"""
         nodes = []
+        error_nodes = []
         msgi = ''
         for nid in nids:
             try:
                 node = self.Node(nid)
             except KeyError:
+                error_nodes.append(str(nid))
                 node = nid
-                msgi += msg % (nid)
             nodes.append(nid)
+        if error_nodes:
+            msgi += 'Could not find nodes %s%s\n' % (', '.join(error_nodes), msg)
+
         return nodes, msgi
 
     def safe_get_elements(self, eids, msg=''):

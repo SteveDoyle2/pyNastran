@@ -4902,10 +4902,32 @@ def get_dvprel_key(dvprel, prop=None):
             msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
 
     elif prop_type == 'PBAR':
-        if var_to_change in ['A', 'I1', 'I2', 'J']:
+        pbar_var_map = {
+            # 1-based
+            4 : 'A',
+            5 : 'I1',
+            6 : 'I2',
+            7 : 'J',
+            10 : 'C1',
+            11 : 'C2',
+            12 : 'D1',
+            13 : 'D2',
+            14 : 'E1',
+            15 : 'E2',
+            16 : 'F1',
+            17 : 'F2',
+            18 : 'K1',
+            19 : 'K1',
+            20 : 'I12',
+        }
+        if var_to_change in ['A', 'I1', 'I2', 'J', 'C1', 'C2', 'D1', 'D2',
+                             'E1', 'E2', 'F1', 'F2', 'K1', 'K2', 'I12']:
             pass
         elif isinstance(var_to_change, int):  # pragma: no cover
-            msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
+            if var_to_change in pbar_var_map:
+                var_to_change = pbar_var_map[var_to_change]
+            else:
+                msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
         else:  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
 

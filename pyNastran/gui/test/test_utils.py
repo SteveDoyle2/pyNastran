@@ -383,6 +383,26 @@ class GuiUtils(unittest.TestCase):
         cases = get_cases_from_tree(form)
         assert np.array_equal(cases, [0, 1, 2, 3, 4, 5, 6, 7, 8]), cases
 
+    def test_cases_from_tree_spaces(self):
+        """tests ``get_cases_from_tree``"""
+        form = [
+            [u'Geometry', '', [
+                (u'NodeID', 0, []),
+                (u'ElementID', 1, []),
+                (u'PropertyID', 2, []),
+                (u'MaterialID', 3, []),
+                (u'E', 4, []),
+                (u'Element Checks', '', [
+                    (u'ElementDim', 5, []),
+                    (u'Min Edge Length', 6, []),
+                    (u'Min Interior Angle', 7, []),
+                    (u'Max Interior Angle', 8, [])],
+                ),],
+            ],
+        ]
+        cases = get_cases_from_tree(form)
+        assert np.array_equal(cases, [0, 1, 2, 3, 4, 5, 6, 7, 8]), cases
+
     def test_build_pruned_tree(self):
         """tests ``get_cases_from_tree``"""
         tree = [

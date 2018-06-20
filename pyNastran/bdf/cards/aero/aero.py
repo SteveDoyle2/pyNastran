@@ -428,7 +428,7 @@ class AELINK(BaseCard):
         independent_labels = []
         Cis = []
 
-        list_fields = [interpret_value(field) for field in card[3:]]
+        list_fields = [interpret_value(field, card) for field in card[3:]]
         assert len(list_fields) % 2 == 0, 'list_fields=%s' % list_fields
         for i in range(0, len(list_fields), 2):
             independent_label = list_fields[i]
@@ -1613,11 +1613,7 @@ class CAERO1(BaseCard):
             pass
 
         self.cp_ref = model.safe_coord(self.cp, self.eid, xref_errors, msg=msg)
-
-        try:
-            self.ascid_ref = model.Acsid(msg=msg)
-        except KeyError:
-            pass
+        self.ascid_ref = model.safe_acsid(msg=msg)
 
         if self.nchord == 0:
             assert isinstance(self.lchord, integer_types), self.lchord
@@ -2201,10 +2197,7 @@ class CAERO2(BaseCard):
             self.lsb_ref = model.safe_aefact(self.lsb, self.eid, xref_errors, msg=msg)
         if self.nint == 0:
             self.lint_ref = model.safe_aefact(self.lint, self.eid, xref_errors, msg=msg)
-        try:
-            self.ascid_ref = model.Acsid(msg=msg)
-        except KeyError:
-            pass
+        self.ascid_ref = model.safe_acsid(msg=msg)
 
     def uncross_reference(self):
         self.pid = self.Pid()
@@ -3899,7 +3892,7 @@ class PAERO1(BaseCard):
 
         """
         pid = integer(card, 1, 'pid')
-        Bi = [interpret_value(field) for field in card[2:]]
+        Bi = [interpret_value(field, card) for field in card[2:]]
         Bi2 = []
 
         for bi in Bi:
@@ -4116,7 +4109,7 @@ class PAERO2(BaseCard):
         lth2 = integer_or_blank(card, 8, 'lth2')
         thi = []
         thn = []
-        list_fields = [interpret_value(field) for field in card[9:]]
+        list_fields = [interpret_value(field, card) for field in card[9:]]
         nfields = len(list_fields)
         for i in range(9, 9 + nfields, 2):
             thi.append(integer(card, i, 'lth'))
@@ -4697,7 +4690,7 @@ class SPLINE1(Spline):
                 model.log.warning(msg)
                 msg = ''
         except KeyError:
-            model.log.warning('failed to find SETx set_id=%s,%s; allowed_sets=%s' % (
+            model.log.warning('failed to find SETx set_id=%s%s; allowed_sets=%s' % (
                 self.setg, msg, np.unique(list(model.sets.keys()))))
 
     def uncross_reference(self):

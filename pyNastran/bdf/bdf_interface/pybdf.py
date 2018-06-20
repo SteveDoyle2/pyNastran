@@ -25,9 +25,11 @@ EXECUTIVE_CASE_SPACES = tuple(list(FILE_MANAGEMENT) + ['SOL ', 'SET ', 'SUBCASE 
 
 
 class BDFInputPy(object):
-    def __init__(self, read_includes, dumplines, encoding, log=None, debug=False):
+    def __init__(self, read_includes, dumplines, encoding, nastran_format='msc',
+                 log=None, debug=False):
         self.dumplines = dumplines
         self.encoding = encoding
+        self.nastran_format = nastran_format
         self.include_dir = ''
 
         self.reject_lines = []
@@ -67,6 +69,39 @@ class BDFInputPy(object):
         all_lines = self._lines_to_deck_lines(main_lines)
         out = _lines_to_decks(all_lines, punch)
         system_lines, executive_control_lines, case_control_lines, bulk_data_lines = out
+        if self.nastran_format in ['msc', 'nx']:
+            pass
+        elif self.nastran_format == 'zona':
+            system_lines2 = []
+            for system_line in system_lines:
+                if system_line.upper().startswith('ASSIGN'):
+                    split_system = system_line.split(',')
+                    header = split_system[0].upper()
+                    if header.startswith('ASSIGN FEM'):
+                        fem, filename = header.split('=')
+                        filename = filename.strip('"\'')
+                        self.log.debug('reading %s' % filename)
+                        if filename.lower().endswith('.f06'):
+                            filename = os.path.splitext(filename)[0] + '.bdf'
+                        assert filename.endswith('.bdf'), filename
+
+                        _main_lines = self._get_main_lines(filename)
+                        _all_lines = self._lines_to_deck_lines(_main_lines)
+                        _out = _lines_to_decks(_all_lines, punch, keep_enddata=False)
+                        _system_lines, _executive_control_lines, _case_control_lines, bulk_data_lines2 = _out
+                        bulk_data_lines = bulk_data_lines2 + bulk_data_lines
+                        continue
+                    elif header.startswith('ASSIGN MATRIX'):
+                        pass
+                    elif header.startswith('ASSIGN OUTPUT4'):
+                        pass
+                    else:
+                        raise NotImplementedError(system_line)
+                system_lines2.append(system_line)
+            system_lines = system_lines
+        else:
+            msg = 'nastran_format=%r and must be msc, nx, or zona' % self.nastran_format
+            raise NotImplementedError(msg)
         return system_lines, executive_control_lines, case_control_lines, bulk_data_lines
 
     def _get_main_lines(self, bdf_filename):
@@ -365,7 +400,7 @@ IGNORE_COMMENTS = (
     'LOADS', 'AERO', 'STATIC AERO', 'AERO CONTROL SURFACES',
     'FLUTTER', 'GUST', 'DYNAMIC', 'OPTIMIZATION',
     'COORDS', 'THERMAL', 'TABLES', 'RANDOM TABLES',
-    'SETS', 'CONTACT', 'REJECTS', 'REJECT_LINES',
+    'SETS', 'CONTACT', 'REJECTS', 'REJECT_CARDS', 'REJECT_LINES',
     'PROPERTIES_MASS', 'MASSES')
 
 
@@ -399,7 +434,7 @@ def _clean_comment(comment):
     return comment
 
 
-def _lines_to_decks(lines, punch):
+def _lines_to_decks(lines, punch, keep_enddata=True):
     """
     Splits the BDF lines into:
      - system lines
@@ -460,8 +495,14 @@ def _lines_to_decks(lines, punch):
                 case_control_lines.append(line.rstrip())
             else:
                 break
-        for line in lines[i:]:
-            bulk_data_lines.append(line.rstrip())
+        if keep_enddata:
+            for line in lines[i:]:
+                bulk_data_lines.append(line.rstrip())
+        else:
+            for line in lines[i:]:
+                if line.upper().startswith('ENDDATA'):
+                    continue
+                bulk_data_lines.append(line.rstrip())
 
         _check_valid_deck(flag)
 

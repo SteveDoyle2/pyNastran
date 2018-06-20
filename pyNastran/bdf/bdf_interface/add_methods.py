@@ -915,6 +915,15 @@ class AddMethods(BDFAttributes):
         self.splines[key] = spline
         self._type_to_id_map[spline.type].append(key)
 
+    def _add_panlst_object(self, panlst):
+        # type: (Any) -> None
+        """adds an PANLST1/PANLST2/PANLST3 object"""
+        assert panlst.eid not in self.zona.panlsts
+        assert panlst.eid > 0
+        key = panlst.eid
+        self.zona.panlsts[key] = panlst
+        self._type_to_id_map[panlst.type].append(key)
+
     def _add_gust_object(self, gust):
         # type: (Any) -> None
         """adds an GUST object"""

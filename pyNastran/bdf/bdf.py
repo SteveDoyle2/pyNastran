@@ -100,6 +100,15 @@ from pyNastran.bdf.cards.material_deps import MATT1, MATT2, MATT3, MATT4, MATT5,
 
 from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
 from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs, POINT, SEQGP
+from pyNastran.bdf.cards.aero.zona import (
+    ACOORD, AEROZ, AESURFZ,
+    CAERO7, PANLST3,
+    BODY7, SEGMESH,
+    TRIM as TRIMZONA,
+    SPLINE1 as SPLINE1ZONA,
+    SPLINE2 as SPLINE2ZONA,
+    SPLINE3 as SPLINE3ZONA,
+)
 from pyNastran.bdf.cards.aero.aero import (
     AECOMP, AEFACT, AELINK, AELIST, AEPARM, AESURF, AESURFS,
     CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
@@ -682,7 +691,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             'material_ids', 'caero_ids', 'is_long_ids',
             'nnodes', 'ncoords', 'nelements', 'nproperties',
             'nmaterials', 'ncaeros', 'nid_map',
-            'is_bdf_vectorized',
+            'is_bdf_vectorized', 'rejects',
 
             'point_ids', 'subcases',
             '_card_parser', '_card_parser_b', '_card_parser_prepare',
@@ -1115,6 +1124,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         self._parse_primary_file_header(bdf_filename)
 
         obj = BDFInputPy(self.read_includes, self.dumplines, self._encoding,
+                         nastran_format=self.nastran_format,
                          log=self.log, debug=self.debug)
         main_lines = obj._get_main_lines(self.bdf_filename)
         all_lines = obj._lines_to_deck_lines(main_lines)
@@ -1168,8 +1178,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         self._read_bdf_helper(bdf_filename, encoding, punch, read_includes)
         self.log.debug('---starting BDF.read_bdf of %s---' % self.bdf_filename)
         self._parse_primary_file_header(bdf_filename)
-
         obj = BDFInputPy(self.read_includes, self.dumplines, self._encoding,
+                         nastran_format=self.nastran_format,
                          log=self.log, debug=self.debug)
         out = obj._get_lines(bdf_filename, punch=self.punch)
         system_lines, executive_control_lines, case_control_lines, bulk_data_lines = out
@@ -2255,6 +2265,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             'DPHASE' : (DPHASE, self._add_dphase_object),
             'DELAY' : (DELAY, self._add_delay_object),
         }
+
         self._card_parser_prepare = {
             'CBAR' : self._prepare_cbar,
             'CBEAM' : self._prepare_cbeam,
@@ -2335,7 +2346,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             self.log.info('    rejecting card_name = %s' % card_name)
 
         self.increase_card_count(card_name)
-        self.rejects.append([_format_comment(comment)] + card_lines)
+        self.reject_lines.append([_format_comment(comment)] + card_lines)
 
     def _write_reject_message(self, card_name, card_obj, comment=''):
         """common method to not write duplicate reject card names"""
@@ -2468,7 +2479,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             self._add_dti_object(DTI.add_card(card_obj, comment=comment))
         else:
             if comment:
-                self.rejects.append([comment])
+                self.reject_lines.append([comment])
             self.reject_cards.append(card_obj)
             self._write_reject_message(card_name, card_obj, comment=comment)
 
@@ -2994,7 +3005,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
             ## done
             #'sol', 'loads', 'mkaeros',
-            #'rejects', 'reject_cards',
+            #'reject_lines', 'reject_cards',
 
             ## not cards
             #'debug', 'executive_control_lines',
@@ -3129,8 +3140,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 msg.append('\n'.join(group_msg))
                 msg.append('')
 
-        # rejects
-        if self.rejects:
+        if self.reject_lines:  # List[card]; card = List[str]
             msg.append('Rejected Cards')
             for name, counter in sorted(iteritems(self.card_count)):
                 if name not in self.cards_to_read:
@@ -3758,7 +3768,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                     self.log.info('    rejecting card_name = %s' % card_name)
                     for comment, card_lines in cards:
                         self.increase_card_count(card_name)
-                        self.rejects.append([_format_comment(comment)] + card_lines)
+                        self.reject_lines.append([_format_comment(comment)] + card_lines)
                 else:
                     for comment, card_lines in cards:
                         self.add_card(card_lines, card_name, comment=comment,
@@ -3848,7 +3858,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 raise e
 
         check_header = True
-
         for line in lines:
             if not check_header:
                 break
@@ -3857,7 +3866,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 key, value = _parse_pynastran_header(line)
 
                 if key:
-                    #print('pyNastran key=%s value=%s' % (key, value))
                     if key == 'version':
                         self.nastran_format = value
                     elif key == 'encoding':
@@ -3894,6 +3902,26 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                     break
             else:
                 break
+
+        if self.nastran_format == 'zona':
+            self._card_parser['TRIM'] = (TRIMZONA, self._add_trim_object)
+            self._card_parser['CAERO7'] = (CAERO7, self._add_caero_object)
+            self._card_parser['AEROZ'] = (AEROZ, self._add_aeros_object)
+            self._card_parser['AESURFZ'] = (AESURFZ, self._add_aesurf_object)
+            self._card_parser['SPLINE1'] = (SPLINE1ZONA, self._add_spline_object)
+            self._card_parser['SPLINE2'] = (SPLINE2ZONA, self._add_spline_object)
+            self._card_parser['SPLINE3'] = (SPLINE3ZONA, self._add_spline_object)
+            self._card_parser['PANLST3'] = (PANLST3, self._add_panlst_object)
+            self._card_parser['SEGMESH'] = (SEGMESH, self._add_paero_object)
+            self._card_parser['BODY7'] = (BODY7, self._add_caero_object)
+            self._card_parser['ACOORD'] = (ACOORD, self._add_coord_object)
+            self.cards_to_read.add('CAERO7')
+            self.cards_to_read.add('AEROZ')
+            self.cards_to_read.add('AESURFZ')
+            self.cards_to_read.add('PANLST3')
+            self.cards_to_read.add('SEGMESH')
+            self.cards_to_read.add('BODY7')
+            self.cards_to_read.add('ACOORD')
 
     def _verify_bdf(self, xref=None):
         """Cross reference verification method."""
@@ -4030,6 +4058,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         self._parse_primary_file_header(bdf_filename)
 
         obj = BDFInputPy(self.read_includes, self.dumplines, self._encoding,
+                         nastran_format=self.nastran_format,
                          log=self.log, debug=self.debug)
         out = obj._get_lines(bdf_filename, punch=self.punch)
         system_lines, executive_control_lines, case_control_lines, bulk_data_lines = out
@@ -4064,7 +4093,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 self.log.info('    rejecting card_name = %s' % card_name)
                 for comment, card_lines in card:
                     self.increase_card_count(card_name)
-                    self.rejects.append([_format_comment(comment)] + card_lines)
+                    self.reject_lines.append([_format_comment(comment)] + card_lines)
             else:
                 for comment, card_lines in card:
                     class_instance = self._add_card_hdf5(card_lines, card_name, comment=comment,

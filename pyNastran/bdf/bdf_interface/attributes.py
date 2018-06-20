@@ -2,6 +2,7 @@
 from __future__ import print_function, unicode_literals
 from collections import defaultdict
 from typing import List, Dict, Optional, Any
+from six import itervalues, iteritems
 from numpy import array  # type: ignore
 
 from pyNastran.utils import object_attributes, object_methods
@@ -9,6 +10,26 @@ from pyNastran.bdf.utils import deprecated
 #from pyNastran.bdf.case_control_deck import CaseControlDeck
 from pyNastran.bdf.cards.coordinate_systems import CORD2R
 #from pyNastran.bdf.cards.constraints import ConstraintObject
+
+class ZONA(object):
+    def __init__(self, model):
+        self.model = model
+        self.caero_to_name_map = {}
+        #: store PANLST1,PANLST2,PANLST3
+        self.panlsts = {}
+
+    def cross_reference(self):
+        if self.model.nastran_format != 'zona':
+            return
+        for caero in itervalues(self.model.caeros):
+            self.caero_to_name_map[caero.label] = caero.eid
+
+    def safe_cross_reference(self):
+        self.cross_reference()
+
+    def write_bdf(self, bdf_file, size=8, is_double=False):
+        for unused_id, panlst in iteritems(self.panlsts):
+            bdf_file.write(panlst.write_card(size=size, is_double=is_double))
 
 class BDFAttributes(object):
     """defines attributes of the BDF"""
@@ -63,7 +84,7 @@ class BDFAttributes(object):
             'log', 'mpcObject', 'spcObject',
             'node_ids', 'coord_ids', 'element_ids', 'property_ids',
             'material_ids', 'caero_ids', 'is_long_ids',
-            'nnodes', 'ncoords', 'nelements', 'nproperties',
+            'nnodes', 'ncoords', 'nelements', 'nproperties', 'rejects',
             'nmaterials', 'ncaeros',
 
             'point_ids', 'subcases',
@@ -106,7 +127,7 @@ class BDFAttributes(object):
             'log', #'mpcObject', 'spcObject',
             'node_ids', 'coord_ids', 'element_ids', 'property_ids',
             'material_ids', 'caero_ids', 'is_long_ids',
-            'nnodes', 'ncoords', 'nelements', 'nproperties',
+            'nnodes', 'ncoords', 'nelements', 'nproperties', 'rejects',
             'nmaterials', 'ncaeros',
 
             'point_ids', 'subcases',
@@ -490,6 +511,7 @@ class BDFAttributes(object):
 
         #: store SPLINE1,SPLINE2,SPLINE4,SPLINE5
         self.splines = {}  # type: Dict[int, Any]
+        self.zona = ZONA(self)
 
         # axisymmetric
         self.axic = None  # type: Optional[Any]
@@ -679,10 +701,11 @@ class BDFAttributes(object):
             'aesurf' : ['AESURF'],
             'aesurfs' : ['AESURFS'],
             'aestats' : ['AESTAT'],
-            'caeros' : ['CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5'],
-            'paeros' : ['PAERO1', 'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5'],
+            'caeros' : ['CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5', 'CAERO7', 'BODY7'],
+            'paeros' : ['PAERO1', 'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5', 'SEGMESH'],
             'monitor_points' : ['MONPNT1', 'MONPNT2', 'MONPNT3'],
             'splines' : ['SPLINE1', 'SPLINE2', 'SPLINE4', 'SPLINE5',],
+            'panlsts' : ['PANLST1', 'PANLST2', 'PANLST3',],
             'csschds' : ['CSSCHD',],
             #'SPLINE3', 'SPLINE6', 'SPLINE7',
             'trims' : ['TRIM', 'TRIM2'],
@@ -691,7 +714,7 @@ class BDFAttributes(object):
             # coords
             'coords' : ['CORD1R', 'CORD1C', 'CORD1S',
                         'CORD2R', 'CORD2C', 'CORD2S',
-                        'GMCORD'],
+                        'GMCORD', 'ACOORD', 'CORD3G'],
 
             # temperature cards
             'tempds' : ['TEMPD'],
@@ -804,7 +827,7 @@ class BDFAttributes(object):
     @nastran_format.setter
     def nastran_format(self, nastran_format):
         fmt_lower = nastran_format.lower().strip()
-        if fmt_lower not in ['nx', 'msc']:
+        if fmt_lower not in ['nx', 'msc', 'zona']:
             raise RuntimeError(nastran_format)
         self._nastran_format = fmt_lower
 
@@ -842,12 +865,16 @@ class BDFAttributes(object):
 
     @property
     def rejects(self):
+        """access the rejected lines"""
         #: lines that were rejected b/c they were for a card that isnt supported
+        self.deprecated('rejects', 'reject_lines', '1.1')
         return self.reject_lines
 
     @rejects.setter
-    def rejects(self, rejects):
-        self.reject_lines = rejects
+    def rejects(self, reject_lines):
+        """set the rejected lines"""
+        self.deprecated('rejects', 'reject_lines', '1.1')
+        self.reject_lines = reject_lines
 
     #@property
     #def grids(self):

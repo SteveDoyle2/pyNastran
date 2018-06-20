@@ -344,11 +344,11 @@ def main():  # pragma: no cover
     from docopt import docopt
     msg = (
         'Usage:\n'
-        '  extract_free_faces [-d] [-f] [--encoding ENCODE] BDF_FILENAME SKIN_FILENAME\n'
-        '  extract_free_faces [-l] [-f] [--encoding ENCODE] BDF_FILENAME SKIN_FILENAME\n'
+        '  free_faces [-d] [-f] [--encoding ENCODE] BDF_FILENAME SKIN_FILENAME\n'
+        '  free_faces [-l] [-f] [--encoding ENCODE] BDF_FILENAME SKIN_FILENAME\n'
 
-        '  extract_free_faces -h | --help\n'
-        '  extract_free_faces -v | --version\n'
+        '  free_faces -h | --help\n'
+        '  free_faces -v | --version\n'
         '\n'
 
         "Positional Arguments:\n"

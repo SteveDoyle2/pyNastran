@@ -989,7 +989,7 @@ class MKAERO1(BaseCard):
             a comment for the card
 
         """
-        list_fields = [interpret_value(field) for field in card[1:]]
+        list_fields = [interpret_value(field, card) for field in card[1:]]
         nfields = len(list_fields) - 8
         machs = []
         reduced_freqs = []
