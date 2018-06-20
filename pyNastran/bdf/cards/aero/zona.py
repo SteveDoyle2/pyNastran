@@ -311,6 +311,9 @@ class AESURFZ(BaseCard):
             #self.tqllim_ref = model.TableD(self.tqllim)
         #if self.tqulim is not None:
             #self.tqulim_ref = model.TableD(self.tqulim)
+        self.setk_ref = model.zona.panlsts[self.setk]
+        self.setk_ref.cross_reference(model)
+        self.aero_element_ids = self.setk_ref.aero_element_ids
 
     def safe_cross_reference(self, model, xref_errors):
         msg = ', which is required by AESURF aesid=%s' % self.aesid
@@ -336,6 +339,9 @@ class AESURFZ(BaseCard):
                 #self.tqulim_ref = model.TableD(self.tqulim)
             #except KeyError:
                 #pass
+        self.setk_ref = model.zona.panlsts[self.setk]
+        self.setk_ref.cross_reference(model)
+        self.aero_element_ids = self.setk_ref.aero_element_ids
 
     def uncross_reference(self):
         self.cid1 = self.Cid1()
@@ -707,6 +713,7 @@ class PANLST3(Spline):
 
         self.eid = eid
         self.panel_groups = panel_groups # points to CAERO7 / BODY7
+        self.aero_element_ids = []
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -731,6 +738,24 @@ class PANLST3(Spline):
 
     def cross_reference(self, model):
         msg = ', which is required by PANLST3 eid=%s' % self.eid
+        #self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+        caero_refs = []
+        aero_element_ids = []
+        for caero_label in self.panel_groups:
+            caero_eid = model.zona.caero_to_name_map[caero_label]
+            caero_ref = model.CAero(caero_eid, msg=msg)
+            caero_refs.append(caero_ref)
+            eid = caero_ref.eid
+            npanels = caero_ref.npanels
+            assert npanels > 0, npanels
+            aero_element_ids2 = range(eid, eid + npanels)
+            assert len(aero_element_ids2) == npanels, npanels
+            aero_element_ids += aero_element_ids2
+        self.caero_refs = caero_refs
+        self.aero_element_ids = aero_element_ids
+
+    def safe_cross_reference(self, model, xref_errors):
+        self.cross_reference(model)
 
     def raw_fields(self):
         list_fields = ['PANLST3', self.eid] + self.panel_groups
@@ -896,6 +921,16 @@ class BODY7(BaseCard):
         #print("x12 = %s" % self.x12)
         #print("pcaero[%s] = %s" % (self.eid, [p1,p2]))
         return [p1, p2]
+
+    @property
+    def npanels(self):
+        npanels = 0
+        for segmesh in self.segmesh_refs:
+            segmesh = self.segmesh_refs[0]
+            nx = segmesh.naxial
+            ny = segmesh.nradial
+            npanels += nx * ny
+        return npanels
 
     def get_points_elements_3d(self):
         """
@@ -1487,7 +1522,7 @@ class CAERO7(BaseCard):
         6:'lspan', 7:'lchord', 8:'igid', 12:'x12', 16:'x43',
     }
 
-    def __init__(self, eid, name, p1, x12, p4, x43,
+    def __init__(self, eid, label, p1, x12, p4, x43,
                  cp=0, nspan=0, nchord=0, lspan=0, p_airfoil=None, ztaic=None, comment=''):
         """
         Defines a CAERO1 card, which defines a simplified lifting surface
@@ -1547,7 +1582,7 @@ class CAERO7(BaseCard):
         self.eid = eid
 
         #: Property identification number of a PAERO2 entry.
-        self.name = name
+        self.label = label
 
         #: Coordinate system for locating point 1.
         self.cp = cp
@@ -1865,6 +1900,11 @@ class CAERO7(BaseCard):
         raise IndexError(msg)
 
     @property
+    def npanels(self):
+        nchord, nspan = self.shape
+        return nchord * nspan
+
+    @property
     def shape(self):
         """returns (nelements_nchord, nelements_span)"""
         if self.nchord == 0:
@@ -2014,7 +2054,7 @@ class CAERO7(BaseCard):
         lchord = 0
         lspan = 0
         list_fields = (
-            ['CAERO7', self.eid, self.name, cp, nspan, nchord, lspan, self.ztaic, self.p_airfoil,] +
+            ['CAERO7', self.eid, self.label, cp, nspan, nchord, lspan, self.ztaic, self.p_airfoil,] +
             list(self.p1) + [self.x12, None, None, None, None] +
             list(self.p4) + [self.x43, None, None, None, None])
         return list_fields
@@ -2036,7 +2076,7 @@ class TRIM(BaseCard):
     |      | LABEL3 |  UX3 | LABEL4 |   UX4  | ... |        |     |          |
     +------+--------+------+--------+--------+-----+--------+-----+----------+
     """
-    type = 'TRIM'
+    type = 'TRIM_ZONA'
     _field_map = {
         1: 'sid', 2:'mach', 3:'q', 8:'aeqr',
     }
@@ -2222,7 +2262,7 @@ class SPLINE1(Spline):
     | SPLINE1 | 100  |       |       |  1   |  10  | 0. |     |       |
     +---------+------+-------+-------+------+------+----+-----+-------+
     """
-    type = 'SPLINE1'
+    type = 'SPLINE1_ZONA'
 
     def __init__(self, eid, setk, setg, model=None, cp=None, dz=None, eps=0.01, comment=''):
         """
@@ -2282,8 +2322,9 @@ class SPLINE1(Spline):
         self.setg_ref = model.Set(self.setg, msg=msg)
         self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
 
-        #self.nodes_ref = model.Nodes(self.nodes, msg=msg)
-        #self.caero_ref = model.CAero(self.caero, msg=msg)
+        self.setk_ref = model.zona.panlsts[self.setk]
+        self.setk_ref.cross_reference(model)
+        self.aero_element_ids = self.setk_ref.aero_element_ids
 
     def safe_cross_reference(self, model, xref_errors):
         msg = ', which is required by SPLINE1 eid=%s' % self.eid
@@ -2297,22 +2338,13 @@ class SPLINE1(Spline):
             model.log.warning('failed to find SETx set_id=%s,%s; allowed_sets=%s' % (
                 self.setg, msg, np.unique(list(model.sets.keys()))))
 
+        self.setk_ref = model.zona.panlsts[self.setk]
+        self.setk_ref.safe_cross_reference(model, xref_errors)
+        self.aero_element_ids = self.setk_ref.aero_element_ids
+
     def uncross_reference(self):
-        #self.caero = self.CAero()
-        #self.nodes = self.node_ids
-        self.nodes_ref = None
-        self.caero_ref = None
-
-    def CAero(self):
-        if self.caero_ref is not None:
-            return self.caero_ref.eid
-        return self.caero
-
-    @property
-    def node_ids(self):
-        if self.nodes_ref is None:
-            return self.nodes
-        return [node.nid for node in self.nodes_ref]
+        self.setk_ref = None
+        self.setg_ref = None
 
     def raw_fields(self):
         list_fields = ['SPLINE1', self.eid, self.model, self.cp, self.setk, self.setg,
@@ -2336,7 +2368,7 @@ class SPLINE2(Spline):
     | SPLINE2 | 100  |       |  1   |  10  | 0. |     |       |       |
     +---------+------+-------+------+------+----+-----+-------+-------+
     """
-    type = 'SPLINE2'
+    type = 'SPLINE2_ZONA'
 
     def __init__(self, eid, setk, setg, model=None, dz=None, eps=0.01, cp=None, curvature=None, comment=''):
         """
@@ -2393,28 +2425,19 @@ class SPLINE2(Spline):
 
     def cross_reference(self, model):
         msg = ', which is required by SPLINE1 eid=%s' % self.eid
+        self.setg_ref = model.Set(self.setg, msg=msg)
+        self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
         #self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         #self.caero_ref = model.CAero(self.caero, msg=msg)
+        self.setk_ref = model.zona.panlsts[self.setk]
+        self.setk_ref.cross_reference(model)
 
     def safe_cross_reference(self, model, xref_errors):
-        self.cross_reference(model)
+        self.cross_reference(model, xref_errors)
 
     def uncross_reference(self):
-        #self.caero = self.CAero()
-        #self.nodes = self.node_ids
-        self.nodes_ref = None
-        self.caero_ref = None
-
-    def CAero(self):
-        if self.caero_ref is not None:
-            return self.caero_ref.eid
-        return self.caero
-
-    @property
-    def node_ids(self):
-        if self.nodes_ref is None:
-            return self.nodes
-        return [node.nid for node in self.nodes_ref]
+        self.setk_ref = None
+        self.setg_ref = None
 
     def raw_fields(self):
         list_fields = ['SPLINE2', self.eid, self.model, self.cp, self.setk, self.setg,
@@ -2437,7 +2460,7 @@ class SPLINE3(Spline):
     | SPLINE3 | 100  |       |  N/A  |  1   |  10  | 0. |     |       |
     +---------+------+-------+-------+------+------+----+-----+-------+
     """
-    type = 'SPLINE3'
+    type = 'SPLINE3_ZONA'
 
     def __init__(self, eid, setk, setg, model=None, cp=None, dz=None, eps=0.01, comment=''):
         """
@@ -2466,6 +2489,7 @@ class SPLINE3(Spline):
         self.eps = eps
         self.setk_ref = None
         self.setg_ref = None
+        self.aero_element_ids = []
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -2493,28 +2517,28 @@ class SPLINE3(Spline):
 
     def cross_reference(self, model):
         msg = ', which is required by SPLINE3 eid=%s' % self.eid
+        self.setg_ref = model.Set(self.setg, msg=msg)
+        self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
         #self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         #self.caero_ref = model.CAero(self.caero, msg=msg)
+        self.setk_ref = model.zona.panlsts[self.setk]
+        self.setk_ref.cross_reference(model)
+        self.aero_element_ids = self.setk_ref.aero_element_ids
 
     def safe_cross_reference(self, model, xref_errors):
-        self.cross_reference(model)
+        msg = ', which is required by SPLINE3 eid=%s' % self.eid
+        try:
+            self.setg_ref = model.Set(self.setg, msg=msg)
+            self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
+        except:
+            pass
+        self.setk_ref = model.zona.panlsts[self.setk]
+        self.setk_ref.safe_cross_reference(model, xref_errors)
+        self.aero_element_ids = self.setk_ref.aero_element_ids
 
     def uncross_reference(self):
-        #self.caero = self.CAero()
-        #self.nodes = self.node_ids
-        self.nodes_ref = None
-        self.caero_ref = None
-
-    def CAero(self):
-        if self.caero_ref is not None:
-            return self.caero_ref.eid
-        return self.caero
-
-    @property
-    def node_ids(self):
-        if self.nodes_ref is None:
-            return self.nodes
-        return [node.nid for node in self.nodes_ref]
+        self.setk_ref = None
+        self.setg_ref = None
 
     def raw_fields(self):
         """

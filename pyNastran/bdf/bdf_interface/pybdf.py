@@ -69,7 +69,9 @@ class BDFInputPy(object):
         all_lines = self._lines_to_deck_lines(main_lines)
         out = _lines_to_decks(all_lines, punch)
         system_lines, executive_control_lines, case_control_lines, bulk_data_lines = out
-        if self.nastran_format == 'zaero':
+        if self.nastran_format in ['msc', 'nx']:
+            pass
+        elif self.nastran_format == 'zona':
             system_lines2 = []
             for system_line in system_lines:
                 if system_line.upper().startswith('ASSIGN'):
@@ -78,6 +80,7 @@ class BDFInputPy(object):
                     if header.startswith('ASSIGN FEM'):
                         fem, filename = header.split('=')
                         filename = filename.strip('"\'')
+                        self.log.debug('reading %s' % filename)
                         if filename.lower().endswith('.f06'):
                             filename = os.path.splitext(filename)[0] + '.bdf'
                         assert filename.endswith('.bdf'), filename
@@ -94,9 +97,11 @@ class BDFInputPy(object):
                         pass
                     else:
                         raise NotImplementedError(system_line)
-                print(system_line)
                 system_lines2.append(system_line)
             system_lines = system_lines
+        else:
+            msg = 'nastran_format=%r and must be msc, nx, or zona' % self.nastran_format
+            raise NotImplementedError(msg)
         return system_lines, executive_control_lines, case_control_lines, bulk_data_lines
 
     def _get_main_lines(self, bdf_filename):

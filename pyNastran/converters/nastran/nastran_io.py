@@ -149,11 +149,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         geom_methods_pch = 'Nastran Geometry - Punch (*.bdf; *.dat; *.nas; *.ecd; *.pch)'
         combined_methods_op2 = 'Nastran Geometry + Results - OP2 (*.op2)'
 
-        results_fmts = [
-            'Nastran OP2 (*.op2)',
-            'pyNastran H5 (*.h5)',
-            'Patran nod (*.nod)',
-        ]
+        results_fmts = ['Nastran OP2 (*.op2)',]
+        if IS_H5PY:
+            results_fmts.append('pyNastran H5 (*.h5)')
+        results_fmts.append('Patran nod (*.nod)')
         results_fmt = ';;'.join(results_fmts)
         #results_fmt = 'Nastran OP2 (*.op2)'
 
@@ -745,7 +744,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     cs_name = '%s_control_surface' % aesurf.label
                     self.set_caero_control_surface_grid(
                         cs_name, cs_box_ids[cs_name],
-                        box_id_to_caero_element_map, caero_points, label=aesurf.label,
+                        box_id_to_caero_element_map, caero_points, note=aesurf.label,
                         zfighting_offset=zfighting_offset)
                     zfighting_offset += zfighting_offset0
 
@@ -904,9 +903,12 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             for spline_id, spline in sorted(iteritems(model.splines)):
                 setg_ref = spline.setg_ref
                 if setg_ref is None:
-                    self.log.error('error cross referencing SPLINE:\n%s' % spline.rstrip())
+                    msg = 'error cross referencing SPLINE:\n%s' % spline.rstrip()
+                    self.log.error(msg)
+                    #raise RuntimeError(msg)
                     continue
-                structure_points = setg_ref.get_ids()
+                else:
+                    structure_points = setg_ref.get_ids()
 
                 try:
                     aero_box_ids = spline.aero_element_ids
@@ -914,7 +916,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     print(spline.object_attributes())
                     print(spline.object_methods())
                     raise
-
+                if spline.type != 'SPLINE3_ZAERO':
+                    assert len(aero_box_ids) > 0, spline
                 # the control surfaces all lie perfectly on top of each other
                 # such that we have z fighting, so based on the aero index,
                 # we calculate a z offset.
@@ -934,7 +937,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     line_width=4,
                     representation='toggle', is_visible=False)
                 self.set_caero_control_surface_grid(
-                    grid_name, aero_box_ids, box_id_to_caero_element_map, caero_points,
+                    grid_name, aero_box_ids,
+                    box_id_to_caero_element_map, caero_points,
                     zfighting_offset=zfighting_offset)
                 iaero += 2
 
@@ -1005,17 +1009,21 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 ncaero_sub_points += ncelements
             elif isinstance(caero, (CAERO2, BODY7)):
                 pass
-            else:
-                print('%r doesnt support panel_points_elements' % caero.type)
+            else:  # pragma: no cover
+                msg = '%r doesnt support panel_points_elements\n%s' % (caero.type, caero.rstrip())
+                raise NotImplementedError(msg)
 
         for unused_eid, caero in sorted(iteritems(model.caeros)):
-            if isinstance(caero, (CAERO1, CAERO3, CAERO4, CAERO5)):
+            if isinstance(caero, (CAERO1, CAERO3, CAERO4, CAERO5, CAERO7)):
                 ncaeros_points += 4
                 ncaeros += 1
             elif isinstance(caero, (CAERO2, BODY7)):
                 points, elems = caero.get_points_elements_3d()
                 ncaeros_points += points.shape[0]
                 ncaeros += elems.shape[0]
+            else:  # pragma: no cover
+                msg = '%r doesnt support panel counter\n%s' % (caero.type, caero.rstrip())
+                raise NotImplementedError(msg)
 
         num_prev = 0
         ncaeros_sub = 0
@@ -1059,25 +1067,38 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 raise RuntimeError(msg)
 
             for unused_label, aesurf in sorted(iteritems(model.aesurf)):
-                aelist_ref = aesurf.alid1_ref
-                if aelist_ref is None:
-                    self.log.error('AESURF does not reference an AELIST\n%s' % (aesurf.rstrip()))
-                    continue
-                ncaeros_cs += len(aelist_ref.elements)
+                if aesurf.type == 'AESURFZ':
+                    aero_element_ids = aesurf.aero_element_ids
+                    ncaeros_cs += len(aero_element_ids)
 
-                cs_name = '%s_control_surface' % aesurf.label
-                if cs_name not in self.alt_grids:
-                    self.gui.create_alternate_vtk_grid(
-                        cs_name, color=PINK, line_width=5, opacity=0.5,
-                        representation='surface')
+                    cs_name = '%s_control_surface' % aesurf.label
+                    if cs_name not in self.alt_grids:
+                        self.gui.create_alternate_vtk_grid(
+                            cs_name, color=PINK, line_width=5, opacity=0.5,
+                            representation='surface')
 
-                cs_box_ids['caero_control_surfaces'].extend(aelist_ref.elements)
-                cs_box_ids[cs_name].extend(aelist_ref.elements)
-                if aesurf.alid2 is not None:
-                    aelist_ref = aesurf.alid2_ref
+                    cs_box_ids['caero_control_surfaces'].extend(aero_element_ids)
+                    cs_box_ids[cs_name].extend(aero_element_ids)
+                else:
+                    aelist_ref = aesurf.alid1_ref
+                    if aelist_ref is None:
+                        self.log.error('AESURF does not reference an AELIST\n%s' % (aesurf.rstrip()))
+                        continue
                     ncaeros_cs += len(aelist_ref.elements)
-                    cs_box_ids[cs_name].extend(aelist_ref.elements)
+
+                    cs_name = '%s_control_surface' % aesurf.label
+                    if cs_name not in self.alt_grids:
+                        self.gui.create_alternate_vtk_grid(
+                            cs_name, color=PINK, line_width=5, opacity=0.5,
+                            representation='surface')
+
                     cs_box_ids['caero_control_surfaces'].extend(aelist_ref.elements)
+                    cs_box_ids[cs_name].extend(aelist_ref.elements)
+                    if aesurf.alid2 is not None:
+                        aelist_ref = aesurf.alid2_ref
+                        ncaeros_cs += len(aelist_ref.elements)
+                        cs_box_ids[cs_name].extend(aelist_ref.elements)
+                        cs_box_ids['caero_control_surfaces'].extend(aelist_ref.elements)
         out = (
             has_caero, caero_points, ncaeros, ncaeros_sub, ncaeros_cs,
             ncaeros_points, ncaero_sub_points,
@@ -1222,7 +1243,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
     def set_caero_control_surface_grid(self, name, cs_box_ids,
                                        box_id_to_caero_element_map,
-                                       caero_points, label=None,
+                                       caero_points, note=None,
                                        zfighting_offset=0.001):
         """
         Creates a single CAERO control surface?
@@ -1255,35 +1276,25 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             ???
         """
         j = 0
-        #points_list = []
-        missing_boxes = []
-        for box_id in cs_box_ids:
-            try:
-                unused_ipoints = box_id_to_caero_element_map[box_id]
-            except KeyError:
-                missing_boxes.append(box_id)
-                continue
-            #points_list.append(caero_points[ipoints, :])
-        if missing_boxes:
-            msg = 'Missing CAERO AELIST/SPLINE boxes: ' + str(missing_boxes)
-            self.gui.log_error(msg)
+        boxes_to_show = check_for_missing_control_surface_boxes(
+            name, cs_box_ids, box_id_to_caero_element_map, self.gui.log)
+        #if not boxes_to_show:
+            #print('*%s' % name)
+            #print('*%s' % boxes_to_show)
+            #return
 
-        #points_list = np.array(points_list)
         areas = []
         centroids = []
         vtk_type = vtkQuad().GetCellType()
 
         all_points = []
-        if name not in self.gui.alt_grids:
-            return
+        #if name not in self.gui.alt_grids:
+            #print('**%s' % name)
+            #return
 
         grid = self.gui.alt_grids[name]
-        for box_id in cs_box_ids:
-            try:
-                elementi = box_id_to_caero_element_map[box_id]
-            except KeyError:
-                print('cant find box_id=%i' % box_id)
-                continue
+        for box_id in boxes_to_show:
+            elementi = box_id_to_caero_element_map[box_id]
             pointsi = caero_points[elementi]
             centroid = (pointsi[0] + pointsi[1] + pointsi[2] + pointsi[3]) / 4.
             area = np.linalg.norm(np.cross(pointsi[2] - pointsi[0], pointsi[3] - pointsi[1])) / 2.
@@ -1336,10 +1347,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #if missing_boxes:
             #msg = 'Missing CAERO AELIST boxes: ' + str(missing_boxes)
             #self.gui.log_error(msg)
-        if label:
+        if note:
             # points_list (15, 4, 3) = (elements, nodes, 3)
             x, y, z = np.average(centroids, weights=areas, axis=0)
-            text = str(label)
+            text = str(note)
             #slot = self.gui.label_actors[-1]
             slot = self.gui.geometry_properties[name].label_actors
             self.gui.create_annotation(text, slot, x, y, z)
@@ -1708,16 +1719,17 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         j = 0
         nid_map = self.gui.nid_map
         alt_grid = self.gui.alt_grids[name]
+        missing_nodes = []
         for nid in sorted(node_ids):
             try:
                 unused_i = nid_map[nid]
             except KeyError:
-                model.log.warning('nid=%s does not exist%s' % (nid, msg))
+                missing_nodes.append(str(nid))
                 continue
 
             if nid not in model.nodes:
                 # I think this hits for SPOINTs
-                model.log.warning('nid=%s doesnt exist%s' % (nid, msg))
+                missing_nodes.append(str(nid))
                 continue
             # point = self.grid.GetPoint(i)
             # points.InsertPoint(j, *point)
@@ -1738,6 +1750,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
             alt_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             j += 1
+        if missing_nodes:
+            model.log.warning('nids=[%s] do not exist%s' % (', '.join(missing_nodes), msg))
+
         alt_grid.SetPoints(points)
 
     def _add_nastran_spoints_to_grid(self, model):
@@ -2273,9 +2288,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 else:
                     msg = 'element_solid:\n%s' % (str(element_solid))
                     msg += 'mapped_inids = %s\n' % mapped_inids
-                    msg += 'side_nids = %s\n' % side_inids
+                    msg += 'side_inids = %s\n' % side_inids
                     msg += 'nodes = %s\n' % nodes
-                    msg += 'side_nodes = %s\n' % side_nodes
+                    #msg += 'side_nodes = %s\n' % side_nodes
                     raise NotImplementedError(msg)
             else:
                 #raise NotImplementedError(elem)
@@ -3747,9 +3762,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 else:
                     msg = 'element_solid:\n%s' % (str(element_solid))
                     msg += 'mapped_inids = %s\n' % mapped_inids
-                    msg += 'side_nids = %s\n' % side_inids
+                    msg += 'side_inids = %s\n' % side_inids
                     msg += 'nodes = %s\n' % nodes
-                    msg += 'side_nodes = %s\n' % side_nodes
+                    #msg += 'side_nodes = %s\n' % side_nodes
                     raise NotImplementedError(msg)
                 grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             else:
@@ -5169,3 +5184,26 @@ def _get_nastran_gui_layer_word(i, ilayer, is_pshell_pcomp):
         else:
             word += 'PCOMP: ilayer=%i' % (ilayer)
     return word
+
+def check_for_missing_control_surface_boxes(name, cs_box_ids,
+                                            box_id_to_caero_element_map,
+                                            log):
+    """helper method for creating control surface"""
+    boxes_to_show = []
+    missing_boxes = []
+    for box_id in cs_box_ids:
+        try:
+            unused_ipoints = box_id_to_caero_element_map[box_id]
+        except KeyError:
+            missing_boxes.append(box_id)
+            continue
+        boxes_to_show.append(box_id)
+
+    if missing_boxes:
+        #print('\nboxes_to_show =', boxes_to_show)
+        msg = 'Missing CAERO AELIST/SPLINE control surface %r boxes: %s\n' % (
+            name, str(missing_boxes))
+        if not boxes_to_show:
+            msg += 'boxes_to_show=%s\n' % boxes_to_show
+        log.error(msg.rstrip())
+    return boxes_to_show

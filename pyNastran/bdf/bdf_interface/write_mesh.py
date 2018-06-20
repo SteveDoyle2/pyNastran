@@ -412,6 +412,7 @@ class WriteMesh(BDFAttributes):
                 bdf_file.write(spline.write_card(size, is_double))
             for monitor_point in self.monitor_points:
                 bdf_file.write(monitor_point.write_card(size, is_double))
+        self.zona.write_bdf(bdf_file, size=8, is_double=False)
 
     def _write_aero_control(self, bdf_file, size=8, is_double=False, is_long_ids=None):
         # type: (Any, int, bool) -> None

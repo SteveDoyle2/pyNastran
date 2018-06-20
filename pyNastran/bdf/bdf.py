@@ -3903,8 +3903,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             else:
                 break
 
-        print('nastran_format = %r' % self.nastran_format)
-        if self.nastran_format == 'zaero':
+        if self.nastran_format == 'zona':
             self._card_parser['TRIM'] = (TRIMZONA, self._add_trim_object)
             self._card_parser['CAERO7'] = (CAERO7, self._add_caero_object)
             self._card_parser['AEROZ'] = (AEROZ, self._add_aeros_object)
