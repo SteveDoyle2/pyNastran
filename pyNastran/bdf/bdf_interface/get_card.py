@@ -298,7 +298,13 @@ class GetCard(GetMethods):
                 self.log.error("card_type=%r' hasn't been added to "
                                "self._slot_to_type_map...check for typos")
                 raise
-            slot = getattr(self, key)
+            try:
+                slot = getattr(self, key)
+            except AttributeError:
+                if hasattr(self.zona, key):
+                    slot = getattr(self.zona, key)
+                else:
+                    raise
             ids = self._type_to_id_map[card_type]
             cards = []
             if isinstance(ids, bool):

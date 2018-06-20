@@ -1019,6 +1019,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 ncaeros += 1
             elif isinstance(caero, (CAERO2, BODY7)):
                 points, elems = caero.get_points_elements_3d()
+                if points is None:
+                    continue
                 ncaeros_points += points.shape[0]
                 ncaeros += elems.shape[0]
             else:  # pragma: no cover

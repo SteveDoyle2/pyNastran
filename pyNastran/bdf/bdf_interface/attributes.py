@@ -2,7 +2,7 @@
 from __future__ import print_function, unicode_literals
 from collections import defaultdict
 from typing import List, Dict, Optional, Any
-from six import itervalues
+from six import itervalues, iteritems
 from numpy import array  # type: ignore
 
 from pyNastran.utils import object_attributes, object_methods
@@ -28,8 +28,8 @@ class ZONA(object):
         self.cross_reference()
 
     def write_bdf(self, bdf_file, size=8, is_double=False):
-        for panlst in self.panlsts:
-            bdf_file.write(panlst.write_bdf(size=size, is_double=is_double))
+        for unused_id, panlst in iteritems(self.panlsts):
+            bdf_file.write(panlst.write_card(size=size, is_double=is_double))
 
 class BDFAttributes(object):
     """defines attributes of the BDF"""
@@ -701,8 +701,8 @@ class BDFAttributes(object):
             'aesurf' : ['AESURF'],
             'aesurfs' : ['AESURFS'],
             'aestats' : ['AESTAT'],
-            'caeros' : ['CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5', 'CAERO7'],
-            'paeros' : ['PAERO1', 'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5'],
+            'caeros' : ['CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5', 'CAERO7', 'BODY7'],
+            'paeros' : ['PAERO1', 'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5', 'SEGMESH'],
             'monitor_points' : ['MONPNT1', 'MONPNT2', 'MONPNT3'],
             'splines' : ['SPLINE1', 'SPLINE2', 'SPLINE4', 'SPLINE5',],
             'panlsts' : ['PANLST1', 'PANLST2', 'PANLST3',],
@@ -714,7 +714,7 @@ class BDFAttributes(object):
             # coords
             'coords' : ['CORD1R', 'CORD1C', 'CORD1S',
                         'CORD2R', 'CORD2C', 'CORD2S',
-                        'GMCORD'],
+                        'GMCORD', 'ACOORD', 'CORD3G'],
 
             # temperature cards
             'tempds' : ['TEMPD'],

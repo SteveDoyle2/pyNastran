@@ -370,6 +370,7 @@ def run_and_compare_fems(
 
         ierror = 0
         fem2 = run_fem2(bdf_model, out_model, xref, punch, sum_load, size, is_double, mesh_form,
+                        safe_xref=safe_xref,
                         encoding=encoding, debug=debug, quiet=quiet,
                         ierror=ierror, nerrors=nerrors,
                         stop_on_failure=stop_on_failure)
@@ -612,8 +613,12 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
 
 
                 fem1._xref = True
-                read_bdf(fem1.bdf_filename, encoding=encoding,
+                read_bdf(fem1.bdf_filename, encoding=encoding, xref=False,
                          debug=fem1.debug, log=fem1.log)
+                if safe_xref:
+                    fem1.safe_cross_reference()
+                elif xref:
+                    fem1.cross_reference()
 
                 fem1 = remake_model(bdf_model, fem1, pickle_obj)
                 #fem1.geom_check(geom_check=True, xref=True)
@@ -716,6 +721,7 @@ def check_for_cd_frame(fem1):
 
 def run_fem2(bdf_model, out_model, xref, punch,
              sum_load, size, is_double, mesh_form,
+             safe_xref=False,
              encoding=None, debug=False, quiet=False,
              stop_on_failure=True, ierror=0, nerrors=100):
     """
@@ -752,7 +758,11 @@ def run_fem2(bdf_model, out_model, xref, punch,
         fem2.log.info('starting fem2')
     sys.stdout.flush()
     try:
-        fem2.read_bdf(out_model, xref=xref, punch=punch, encoding=encoding)
+        fem2.read_bdf(out_model, xref=False, punch=punch, encoding=encoding)
+        if safe_xref:
+            fem2.safe_cross_reference()
+        elif xref:
+            fem2.cross_reference()
     except:
         print("failed reading %r" % out_model)
         raise

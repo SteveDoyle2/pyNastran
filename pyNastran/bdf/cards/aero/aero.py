@@ -4690,7 +4690,7 @@ class SPLINE1(Spline):
                 model.log.warning(msg)
                 msg = ''
         except KeyError:
-            model.log.warning('failed to find SETx set_id=%s,%s; allowed_sets=%s' % (
+            model.log.warning('failed to find SETx set_id=%s%s; allowed_sets=%s' % (
                 self.setg, msg, np.unique(list(model.sets.keys()))))
 
     def uncross_reference(self):

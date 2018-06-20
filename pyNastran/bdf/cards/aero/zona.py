@@ -35,11 +35,15 @@ class ACOORD(Coord):  # not done
     +========+=====+========+========+========+=======+=======+========+
     | ACOORD |  ID | XORIGN | YORIGN | ZORIGN | DELTA | THETA |        |
     +--------+-----+--------+--------+--------+-------+-------+--------+
-    | ACOORD |  10 |  250.0 |  52.5  |  15.0   | 0.0  |  0.0  |        |
+    | ACOORD |  10 |  250.0 |  52.5  |  15.0  |  0.0  |  0.0  |        |
     +--------+-----+--------+--------+--------+-------+-------+--------+
     """
     type = 'ACOORD'
     Type = 'R'
+    @property
+    def rid(self):
+        return None
+
     def __init__(self, cid, origin, delta, theta, comment=''):
         """
         Defines the CORD3G card
@@ -90,7 +94,9 @@ class ACOORD(Coord):  # not done
         return ACOORD(cid, origin, delta, theta, comment=comment)
 
     def setup(self):
-        pass
+        self.i = np.array([1., 0., 0.])
+        self.j = np.array([0., 1., 0.])
+        self.k = np.array([0., 0., 1.])
 
     def cross_reference(self, model):
         """
@@ -107,7 +113,11 @@ class ACOORD(Coord):  # not done
     def uncross_reference(self):
         pass
 
-    def coord3g_transform_to_global(self, p):
+    def coord_to_xyz(self, p):
+        return p
+        #return self.acoord_transform_to_global(p)
+
+    def acoord_transform_to_global(self, p):
         """
         Parameters
         ----------
@@ -124,24 +134,16 @@ class ACOORD(Coord):  # not done
          applied to a vector)."
 
         """
-        if self.method_es == 'E':
-            rotations = [int(i) for i in str(self.method_int)]
-            for (rotation, theta) in zip(rotations, self.thetas):
-                ct = cos(radians(theta))
-                st = sin(radians(theta))
-                if rotation == 1:
-                    p = np.dot(self.rotation_x(ct, st), p)
-                elif rotation == 2:
-                    p = np.dot(self.rotation_y(ct, st), p)
-                elif rotation == 3:
-                    p = np.dot(self.rotation_z(ct, st), p)
-                else:
-                    raise RuntimeError('rotation=%s rotations=%s' % (rotation, rotations))
-        elif self.method_es == 'S':
-            raise NotImplementedError("Space-Fixed rotation hasn't been implemented")
-        else:
-            msg = 'Invalid method; Use Euler or Space-Fixed.  method_es=%r' % self.method_es
-            raise RuntimeError(msg)
+        ct = np.cos(np.radians(self.theta))
+        st = np.sin(np.radians(self.theta))
+        #if rotation == 1:
+            #p = np.dot(self.rotation_x(ct, st), p)
+        #elif rotation == 2:
+        p = np.dot(self.rotation_y(ct, st), p)
+        #elif rotation == 3:
+            #p = np.dot(self.rotation_z(ct, st), p)
+        #else:
+            #raise RuntimeError('rotation=%s rotations=%s' % (rotation, rotations))
         return p
 
     def rotation_x(self, ct, st):
@@ -747,7 +749,9 @@ class PANLST3(Spline):
             caero_refs.append(caero_ref)
             eid = caero_ref.eid
             npanels = caero_ref.npanels
-            assert npanels > 0, npanels
+            if npanels == 0:
+                model.log.warning('skipping PANLST3 because there are 0 panels in:\n%r' % caero_ref)
+                continue
             aero_element_ids2 = range(eid, eid + npanels)
             assert len(aero_element_ids2) == npanels, npanels
             aero_element_ids += aero_element_ids2
@@ -902,7 +906,8 @@ class BODY7(BaseCard):
             #self.lint_ref = model.AEFact(self.lint, msg=msg)
         if self.acoord:
             self.acoord_ref = model.Coord(self.acoord, msg=msg)
-        self.ascid_ref = model.Acsid(msg=msg)
+        #self.ascid_ref = model.Acsid(msg=msg)
+        self.ascid_ref = model.Coord(0, msg=msg)
 
     def safe_cross_reference(self, model, xref_errors, debug=False):
         self.cross_reference(model)
@@ -926,7 +931,9 @@ class BODY7(BaseCard):
     def npanels(self):
         npanels = 0
         for segmesh in self.segmesh_refs:
-            segmesh = self.segmesh_refs[0]
+            for itype in segmesh.itypes:
+                if itype not in [3]:
+                    return 0
             nx = segmesh.naxial
             ny = segmesh.nradial
             npanels += nx * ny
@@ -946,7 +953,10 @@ class BODY7(BaseCard):
         nelements = 0
         for segmesh in self.segmesh_refs:
             #print(segmesh)
-            xyzi, elementi = self._get_points_elements_3di(segmesh)
+            try:
+                xyzi, elementi = self._get_points_elements_3di(segmesh)
+            except NotImplementedError:
+                return None, None
             xyz.append(xyzi)
             element.append(elementi + nelements)
             nelements += elementi.shape[0]
@@ -1198,8 +1208,8 @@ class SEGMESH(BaseCard):
             camber = double_or_blank(card, ifield+2, 'camber%i' % (counter+1), 0.)
             y = double_or_blank(card, ifield+3, 'y%i' % (counter+1), 0.)
             z = double_or_blank(card, ifield+4, 'z%i' % (counter+1), 0.)
-            idy = integer(card, ifield+5, 'idy%i' % (counter+1))
-            idz = integer(card, ifield+6, 'idz%i' % (counter+1))
+            idy = integer_or_blank(card, ifield+5, 'idy%i' % (counter+1))
+            idz = integer_or_blank(card, ifield+6, 'idz%i' % (counter+1))
             itypes.append(itype)
             xs.append(x)
             ys.append(y)
@@ -1516,7 +1526,7 @@ class CAERO7(BaseCard):
          a comment for the card
 
     """
-    type = 'CAERO1'
+    type = 'CAERO7'
     _field_map = {
         1: 'sid', 2:'pid', 3:'cp', 4:'nspan', 5:'nchord',
         6:'lspan', 7:'lchord', 8:'igid', 12:'x12', 16:'x43',
@@ -1656,7 +1666,7 @@ class CAERO7(BaseCard):
             lspan = 0
         ztaic = integer_or_blank(card, 7, 'ztaic')
         p_airfoil = integer_or_blank(card, 8, 'aefact')
-        assert cp == 0
+        #assert cp == 0
         #igroup = integer(card, 8, 'igid')
 
         x1 = double_or_blank(card, 9, 'x1', 0.0)
@@ -2330,17 +2340,17 @@ class SPLINE1(Spline):
         msg = ', which is required by SPLINE1 eid=%s' % self.eid
         try:
             self.setg_ref = model.Set(self.setg, msg=msg)
-            try:
-                self.setg_ref.safe_cross_reference(model, 'Node', msg=msg)
-            except:
-                raise
+            self.setg_ref.safe_cross_reference(model, 'Node', msg=msg)
         except KeyError:
-            model.log.warning('failed to find SETx set_id=%s,%s; allowed_sets=%s' % (
+            model.log.warning('failed to find SETx set_id=%s%s; allowed_sets=%s' % (
                 self.setg, msg, np.unique(list(model.sets.keys()))))
 
-        self.setk_ref = model.zona.panlsts[self.setk]
-        self.setk_ref.safe_cross_reference(model, xref_errors)
-        self.aero_element_ids = self.setk_ref.aero_element_ids
+        try:
+            self.setk_ref = model.zona.panlsts[self.setk]
+            self.setk_ref.safe_cross_reference(model, xref_errors)
+            self.aero_element_ids = self.setk_ref.aero_element_ids
+        except KeyError:
+            pass
 
     def uncross_reference(self):
         self.setk_ref = None
@@ -2413,13 +2423,13 @@ class SPLINE2(Spline):
 
         """
         eid = integer(card, 1, 'eid')
-        model = blank(card, 2, 'model')
+        model = string_or_blank(card, 2, 'model')
         setk = integer(card, 3, 'setk')
         setg = integer(card, 4, 'setg')
         dz = blank(card, 5, 'dz')
         eps = double_or_blank(card, 6, 'eps', 0.01)
-        cp = integer(card, 7, 'cp')
-        curvature = integer(card, 8, 'curvature')
+        cp = integer_or_blank(card, 7, 'cp', 0)
+        curvature = double_or_blank(card, 8, 'curvature', 1.0)
         return SPLINE2(eid, setk, setg, model=model, cp=cp, dz=dz, eps=eps,
                        curvature=curvature, comment=comment)
 
@@ -2433,15 +2443,24 @@ class SPLINE2(Spline):
         self.setk_ref.cross_reference(model)
 
     def safe_cross_reference(self, model, xref_errors):
-        self.cross_reference(model, xref_errors)
+        try:
+            msg = ', which is required by SPLINE1 eid=%s' % self.eid
+            self.setg_ref = model.Set(self.setg, msg=msg)
+            self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
+        except:
+            pass
+        #self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+        #self.caero_ref = model.CAero(self.caero, msg=msg)
+        self.setk_ref = model.zona.panlsts[self.setk]
+        self.setk_ref.safe_cross_reference(model, xref_errors)
 
     def uncross_reference(self):
         self.setk_ref = None
         self.setg_ref = None
 
     def raw_fields(self):
-        list_fields = ['SPLINE2', self.eid, self.model, self.cp, self.setk, self.setg,
-                       self.dz, self.eps]
+        list_fields = ['SPLINE2', self.eid, self.model, self.setk, self.setg,
+                       self.dz, self.eps, self.cp, self.curvature]
         return list_fields
 
     def write_card(self, size=8, is_double=False):

@@ -106,6 +106,7 @@ from pyNastran.bdf.cards.aero.zona import (
     BODY7, SEGMESH,
     TRIM as TRIMZONA,
     SPLINE1 as SPLINE1ZONA,
+    SPLINE2 as SPLINE2ZONA,
     SPLINE3 as SPLINE3ZONA,
 )
 from pyNastran.bdf.cards.aero.aero import (
@@ -3909,6 +3910,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             self._card_parser['AEROZ'] = (AEROZ, self._add_aeros_object)
             self._card_parser['AESURFZ'] = (AESURFZ, self._add_aesurf_object)
             self._card_parser['SPLINE1'] = (SPLINE1ZONA, self._add_spline_object)
+            self._card_parser['SPLINE2'] = (SPLINE2ZONA, self._add_spline_object)
             self._card_parser['SPLINE3'] = (SPLINE3ZONA, self._add_spline_object)
             self._card_parser['PANLST3'] = (PANLST3, self._add_panlst_object)
             self._card_parser['SEGMESH'] = (SEGMESH, self._add_paero_object)
