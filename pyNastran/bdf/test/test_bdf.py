@@ -221,7 +221,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
             encoding=None, sum_load=True, size=8, is_double=False,
             stop=False, nastran='', post=-1, dynamic_vars=None,
             quiet=False, dumplines=False, dictsort=False, run_extract_bodies=False,
-            nerrors=0, dev=False, crash_cards=None, safe_xref=True, pickle_obj=False,
+            nerrors=0, dev=False, crash_cards=None, safe_xref=False, pickle_obj=False,
             stop_on_failure=True):
     """
     Runs a single BDF
