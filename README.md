@@ -2,11 +2,13 @@
 |  Version  | Docs  | Status |
 | :--- 	  | :--- 	  | :--- 	  |
 |  [![PyPi Version](https://img.shields.io/pypi/v/pynastran.svg)](https://pypi.python.org/pypi/pyNastran) | [![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=v1.0)](http://pynastran-git.readthedocs.io/en/v1.0.0/?badge=v1.0.0) | [![Build Status](https://img.shields.io/travis/SteveDoyle2/pyNastran/v1.0.svg)](https://travis-ci.org/SteveDoyle2/pyNastran) [![Coverage Status](https://img.shields.io/coveralls/SteveDoyle2/pyNastran/v1.0.svg)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=v1.0) |
-|   Master | [![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=latest)](http://pynastran-git.readthedocs.io/en/latest/?badge=latest) | [![Linux Status](https://img.shields.io/travis/SteveDoyle2/pyNastran/master.svg)](https://travis-ci.org/SteveDoyle2/pyNastran) [![Windows Status](https://ci.appveyor.com/api/projects/status/1qau107h43mbgghi/branch/master?svg=true)](https://ci.appveyor.com/project/SteveDoyle2/pynastran) ![Coverage Status](https://coveralls.io/repos/github/SteveDoyle2/pyNastran/badge.svg?branch=master) | 
+|   Master | [![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=latest)](http://pynastran-git.readthedocs.io/en/latest/?badge=latest) | [![Linux Status](https://img.shields.io/travis/SteveDoyle2/pyNastran/master.svg)](https://travis-ci.org/SteveDoyle2/pyNastran) ![Coverage Status](https://coveralls.io/repos/github/SteveDoyle2/pyNastran/badge.svg?branch=master) | 
 
 
 
 <!---
+[![Windows Status](https://ci.appveyor.com/api/projects/status/1qau107h43mbgghi/branch/master?svg=true)](https://ci.appveyor.com/project/SteveDoyle2/pynastran)
+
 [![codecov](https://codecov.io/gh/SteveDoyle2/pyNastran/branch/master/graph/badge.svg)](https://codecov.io/gh/SteveDoyle2/pyNastran) 
 
 [![Coverage Status](https://img.shields.io/coveralls/SteveDoyle2/pyNastran/master.svg)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=master)
@@ -22,6 +24,10 @@
 [![Coverage Status](https://coveralls.io/repos/github/SteveDoyle2/pyNastran/badge.svg?branch=master)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=master)
 [![Requirements Status](https://img.shields.io/requires/github/SteveDoyle2/pyNastran/master.svg)](https://requires.io/github/SteveDoyle2/pyNastran/requirements/?branch=master)	|
 --->
+
+### v1.1-dev
+
+[Download GUI](https://sourceforge.net/projects/pynastran/files/?source=navbar) (latest is from 2018/6/22)
 
 ### v1.0.0
 
@@ -61,12 +67,12 @@ Using the pyNastran GUI, you can read in Nastran models and quickly view results
 
 This should be hidden...
 
-v1.1-progress
+### pyNastran v1.1.0 has not been released (6/25/2018)
 
 It's been roughly a year and 100 tickets closed since the last version, so it's probably
 time for another release!  I'm pleased to announce that the continuing problems 
 of up-to-date documentation will hopefully be a thing of the past.  xxx 
-has graciously offered to host the documentation.  The pyNastranGUI exe (previously 
+has offered to host the documentation.  The pyNastranGUI exe (previously 
 hosted on Sourceforge) will also be hosted there.  Outside of that, it's the same 
 open-source project and will still be on Github.
 
@@ -82,7 +88,7 @@ Programmatics
  - dropping VTK 5/6 suppoprt for the GUI
 
 BDF:
- - currently 340 cards supported
+ - 343 cards supported (up from 312)
  - cross-referencing is now more straightforward to new users (much of v1.0 works using the `_ref` option)
    - ``*_ref`` attributes are cross-referenced
       - ``element.nodes`` is not cross-referenced
@@ -99,6 +105,7 @@ OP2:
  - fixed sparse matrices being stored as dense matrices
 
 GUI:
+ - preliminary support for PySide
  - can now mix and match fringe/displacement/vector results (e.g., max principal stress shown on a displaced model)
  - improved animation menu
     - in gui animation
