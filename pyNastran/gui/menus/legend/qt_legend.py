@@ -15,7 +15,6 @@ from pyNastran.utils import float_types
 from pyNastran.gui.utils.colormaps import colormap_keys
 from pyNastran.gui.utils.qt.pydialog import (
     PyDialog, check_float, check_format, check_positive_int_or_blank)
-from pyNastran.gui.menus.legend.animation import AnimationWindow
 from pyNastran.gui.qt_version import qt_int as qt_version
 
 ANIMATE_TOOLTIP_OFF = 'This must be a displacement-like result to animate'
