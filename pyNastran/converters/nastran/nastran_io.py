@@ -5576,10 +5576,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 opt_cases.append(('DVPREL Init - %s' % key, icase + 1, []))
                 opt_cases.append(('DVPREL Min - %s' % key, icase + 2, []))
                 opt_cases.append(('DVPREL Max - %s' % key, icase + 3, []))
-                optimization_cases.append((key, '', opt_cases))
+                optimization_cases.append((key, None, opt_cases))
                 icase += 4
             if optimization_cases:
-                form0.append(('Optimization', '', optimization_cases))
+                form0.append(('Optimization', None, optimization_cases))
         return icase
 
     def _plot_pressures(self, model, cases, form0, icase, subcase_id):
