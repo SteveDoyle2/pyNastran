@@ -1011,7 +1011,7 @@ class SET1(Set):
 
         """
         assert msg != ''
-        msg = ', which is required by SET1 sid=%s%s nid=%%s' % (self.sid, msg)
+        msg = ', which is required by SET1 sid=%s%s' % (self.sid, msg)
         if xref_type == 'Node':
             self.ids_ref, out = model.safe_get_nodes(self.get_ids(), msg=msg)
             if len(out):

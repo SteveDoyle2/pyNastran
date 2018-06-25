@@ -170,6 +170,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         'suport_id' : None,
         'suport1_id' : None,
         'tf_id' : None,
+        'set_id' : None,
     }
     >>> bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
                      starting_ids_dict=starting_ids_dict, round_ids=False)
@@ -228,6 +229,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     freq_id = None
     tstep_id = None
     tstepnl_id = None
+    set_id = None
     suport_id = None
     suport1_id = None
     tf_id = None
@@ -298,6 +300,8 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
             tstep_id = int(value)
         elif key == 'tstepnl_id':
             tstepnl_id = int(value)
+        elif key == 'set_id':
+            set_id = int(value)
         elif key == 'suport_id':
             suport_id = int(value)
         elif key == 'suport1_id':

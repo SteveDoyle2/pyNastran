@@ -124,6 +124,8 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
             model2_renumber.disable_cards(cards_to_skip)
             model2_renumber.read_bdf(bdf_filename)
 
+        _apply_scalar_cards(model, model2_renumber)
+
         bdf_dump = StringIO() # 'bdf_merge_temp.bdf'
         _, mapperi = bdf_renumber(model2_renumber, bdf_dump, starting_id_dict=starting_id_dict,
                                   size=size, is_double=is_double, cards_to_skip=cards_to_skip)
@@ -186,6 +188,17 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
     mappers_final = _assemble_mapper(mappers, _mapper_0, data_members,
                                      mapper_renumber=mapper_renumber)
     return model, mappers_final
+
+def _apply_scalar_cards(model, model2_renumber):
+    """apply cards from model2 to model if they don't exist in model"""
+    if model.aero is None and model2_renumber.aero:
+        model.aero = model2_renumber.aero
+    if model.aeros is None and model2_renumber.aeros:
+        model.aeros = model2_renumber.aeros
+    model.mkaeros += model2_renumber.mkaeros
+    for key, param in iteritems(model2_renumber.params):
+        if key not in model.params:
+            model.params[key] = param
 
 def _assemble_mapper(mappers, mapper_0, data_members, mapper_renumber=None):
     """

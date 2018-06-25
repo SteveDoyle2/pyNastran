@@ -49,6 +49,10 @@ class GuiAttributes(object):
         inputs = kwds['inputs']
         res_widget = kwds['res_widget']
         self.dev = False
+
+        # totally broken for solids
+        self.make_contour_filter = False
+
         self.settings = Settings(self)
         self.tool_actions = ToolActions(self)
         self.view_actions = ViewActions(self)

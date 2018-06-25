@@ -6837,7 +6837,7 @@ class AddCards(AddMethods):
             self._add_dti_object(dti)
         else:
             if comment:
-                self.rejects.append([comment])
+                self.reject_lines.append([comment])
                 msg = "DTI only supports name='UNITS'; name=%r fields=%s" % (name, str(fields))
             raise NotImplementedError(msg)
             #self.reject_cards.append(card_obj)

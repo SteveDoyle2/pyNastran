@@ -271,8 +271,10 @@ class GuiResult(GuiResultCommon):
             the legend title
         location : str
             node, centroid
-        scalar : (n,) ndarray
+        scalar : (n,) int/float ndarray
             the data to make a contour plot with
+        mask_value : int; default=None
+            the NaN marker when scalars are ints
         data_format : str
             the type of data result (e.g. '%i', '%.2f', '%.3f')
         uname : str

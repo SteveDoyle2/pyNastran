@@ -1723,7 +1723,7 @@ class DMI(NastranMatrix):
 
         # counter
         i = 0
-        fields = [interpret_value(field) for field in card[3:]]
+        fields = [interpret_value(field, card) for field in card[3:]]
 
         # Real, starts at A(i1,j), goes to A(i2,j) in a column
         while i < len(fields):
@@ -1761,7 +1761,7 @@ class DMI(NastranMatrix):
         j = integer(card, 2, 'icol')
         # counter
         i = 0
-        fields = [interpret_value(field) for field in card[3:]]
+        fields = [interpret_value(field, card) for field in card[3:]]
         # Complex, starts at A(i1,j)+imag*A(i1,j), goes to A(i2,j) in a column
         while i < len(fields):
             i1 = fields[i]

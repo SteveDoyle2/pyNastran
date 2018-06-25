@@ -5,16 +5,10 @@ Release 1.1.0
 
 Tasks
 -----
- - window should:
-   - remember the screen number
-   - remember the corners
-
-Tasks
------
  - build docs
    - attach on sourceforge/egg?
- - run bdf tests in py27/35
- - run op2 tests in py27/35
+ - run bdf tests in py27/36
+ - run op2 tests in py27/36
  - tag
  - upload wheel
  - upload py27 gui
@@ -34,8 +28,11 @@ Done
 
 Future
 ===========
- Tasks
- -----
+Tasks
+-----
+ - window should:
+   - remember the screen number
+   - remember the corners
  - make op2 able to skip user specified parameters (e.g. get maxP or oVM from solidStresses)
  - add op2 writing
  - vectorize bdf

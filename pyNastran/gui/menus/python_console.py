@@ -42,11 +42,14 @@ else:
 
 
 if IS_SCINTILLA:
-    print('using scintilla')
     class SimplePythonEditorWidget(Qsci.QsciScintilla):
         ARROW_MARKER_NUM = 8
 
         def __init__(self, parent=None):
+            """
+            very similar to:
+            https://stackoverflow.com/questions/40002373/qscintilla-based-text-editor-in-pyqt5-with-clickable-functions-and-variables
+            """
             super(SimplePythonEditorWidget, self).__init__(parent)
 
             # Set the default font
@@ -56,19 +59,20 @@ if IS_SCINTILLA:
             font.setPointSize(10)
             self.setFont(font)
             self.setMarginsFont(font)
+            self.set_font(font)
 
-            # Margin 0 is used for line numbers
-            fontmetrics = QFontMetrics(font)
-            self.setMarginsFont(font)
-            self.setMarginWidth(0, fontmetrics.width("00000") + 6)
             self.setMarginLineNumbers(0, True)
             self.setMarginsBackgroundColor(QColor("#cccccc"))
 
             # Clickable margin 1 for showing markers
             self.setMarginSensitivity(1, True)
-            self.connect(self,
-                         QtCore.SIGNAL('marginClicked(int, int, Qt::KeyboardModifiers)'),
-                         self.on_margin_clicked)
+            if qt_version == 'pyqt4':
+                self.connect(self,
+                             QtCore.SIGNAL('marginClicked(int, int, Qt::KeyboardModifiers)'),
+                             self.on_margin_clicked)
+            else:
+                self.marginClicked.connect(self.on_margin_clicked)
+
             self.markerDefine(Qsci.QsciScintilla.RightArrow,
                               self.ARROW_MARKER_NUM)
             self.setMarkerBackgroundColor(QColor("#ee1111"),
@@ -88,7 +92,12 @@ if IS_SCINTILLA:
             lexer = Qsci.QsciLexerPython()
             lexer.setDefaultFont(font)
             self.setLexer(lexer)
-            self.SendScintilla(Qsci.QsciScintilla.SCI_STYLESETFONT, 1, 'Courier')
+
+            if qt_version == 'pyqt4':
+                self.SendScintilla(Qsci.QsciScintilla.SCI_STYLESETFONT, 1, 'Courier')
+            else:
+                font_style = bytearray(str.encode("Courier"))
+                self.SendScintilla(Qsci.QsciScintilla.SCI_STYLESETFONT, 1, font_style)
 
             # Don't want to see the horizontal scrollbar at all
             # Use raw message to Scintilla here (all messages are documented
@@ -98,7 +107,14 @@ if IS_SCINTILLA:
             # not too small
             #self.setMinimumSize(600, 450)
 
+        def set_font(self, font):
+            # Margin 0 is used for line numbers
+            fontmetrics = QFontMetrics(font)
+            self.setMarginsFont(font)
+            self.setMarginWidth(0, fontmetrics.width("00000") + 6)
+
         def on_margin_clicked(self, nmargin, nline, modifiers):
+            return
             # Toggle marker for the line the margin was clicked on
             if self.markersAtLine(nline) != 0:
                 self.markerDelete(nline, self.ARROW_MARKER_NUM)

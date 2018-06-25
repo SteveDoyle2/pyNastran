@@ -252,9 +252,10 @@ def cmd_line_renumber():  # pragma: no cover
     if bdf_filename_out is None:
         bdf_filename_out = 'renumber.bdf'
 
-    cards_to_skip = [
-        'AEFACT', 'CAERO1', 'CAERO2', 'SPLINE1', 'SPLINE2',
-        'AERO', 'AEROS', 'PAERO1', 'PAERO2', 'MKAERO1']
+    #cards_to_skip = [
+        #'AEFACT', 'CAERO1', 'CAERO2', 'SPLINE1', 'SPLINE2',
+        #'AERO', 'AEROS', 'PAERO1', 'PAERO2', 'MKAERO1']
+    cards_to_skip = []
     bdf_renumber(bdf_filename, bdf_filename_out, size=size, is_double=False,
                  starting_id_dict=None, round_ids=False,
                  cards_to_skip=cards_to_skip)
@@ -266,6 +267,7 @@ def cmd_line_mirror():  # pragma: no cover
     msg = (
         "Usage:\n"
         "  bdf mirror IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--plane PLANE] [--tol TOL]\n"
+        "  bdf mirror IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--plane PLANE] [--noeq]\n"
         '  bdf mirror -h | --help\n'
         '  bdf mirror -v | --version\n'
         '\n'
@@ -278,7 +280,9 @@ def cmd_line_mirror():  # pragma: no cover
         'Options:\n'
         "  -o OUT, --output  OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n\n"
         "  --plane PLANE                       the symmetry plane (xz, yz, xy)\n\n"
-        "  --tol   TOL                         the spherical equivalence tolerance (default=0.000001)\n\n"
+        '  --tol   TOL                         the spherical equivalence tolerance\n'
+        '  --noeq                              disable equivalencing\n'
+        "\n" #  (default=0.000001)
 
         'Info:\n'
         '  -h, --help      show this help message and exit\n'
@@ -293,7 +297,12 @@ def cmd_line_mirror():  # pragma: no cover
     #}
     data = docopt(msg, version=ver)
     if data['--tol'] is None:
-        data['--tol'] = 0.000001
+        data['TOL'] = 0.000001
+
+    tol = data['TOL']
+    if data['--noeq'] is not None:
+        tol = -1.
+
     plane = data['--plane']
 
     print(data)
@@ -312,7 +321,7 @@ def cmd_line_mirror():  # pragma: no cover
                         is_double=False,
                         enddata=None, close=True,
                         plane=plane)
-    tol = 0.000001
+
     bdf_equivalence_nodes(bdf_filename_temp, bdf_filename_out, tol,
                           renumber_nodes=False,
                           neq_max=10, xref=True,
@@ -361,9 +370,10 @@ def cmd_line_merge():  # pragma: no cover
     if bdf_filename_out is None:
         bdf_filename_out = 'merged.bdf'
 
-    cards_to_skip = [
-        'AEFACT', 'CAERO1', 'CAERO2', 'SPLINE1', 'SPLINE2',
-        'AERO', 'AEROS', 'PAERO1', 'PAERO2', 'MKAERO1']
+    #cards_to_skip = [
+        #'AEFACT', 'CAERO1', 'CAERO2', 'SPLINE1', 'SPLINE2',
+        #'AERO', 'AEROS', 'PAERO1', 'PAERO2', 'MKAERO1']
+    cards_to_skip = []
     bdf_merge(bdf_filenames, bdf_filename_out, renumber=True,
               encoding=None, size=size, is_double=False, cards_to_skip=cards_to_skip)
 
@@ -772,7 +782,7 @@ def cmd_line():  # pragma: no cover
         cmd_line_export_caero_mesh()
     elif sys.argv[1] == 'transform':
         cmd_line_transform()
-    elif sys.argv[1] == 'filter':  # TODO: make better name
+    elif sys.argv[1] == 'filter' and dev:  # TODO: make better name
         cmd_line_filter()
     elif sys.argv[1] == 'bin' and dev:
         cmd_line_bin()

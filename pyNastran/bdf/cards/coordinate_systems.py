@@ -562,7 +562,7 @@ class Coord(BaseCard):
             return p
 
         if not self.is_resolved:
-            if self.rid_ref is None and self.rid != 0:
+            if self.type != 'ACOORD' and self.rid_ref is None and self.rid != 0:
                 raise RuntimeError("BDF has not been cross referenced.")
             if self.type in ['CORD2R', 'CORD2C', 'CORD2S']:
                 self.rid_ref.setup()
