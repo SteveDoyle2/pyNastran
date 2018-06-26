@@ -113,7 +113,7 @@ class CaseControlDeck(object):
         try:
             self._read(self.lines)
         except:
-            print('\n'.join(self.lines))
+            self.log.error('Invalid Case Control Deck:\n' + '\n'.join(self.lines))
             raise
 
     def suppress_output(self):
@@ -306,12 +306,12 @@ class CaseControlDeck(object):
         sol : str
             the solution type to change the solution to
 
-        >>> print(bdf.case_control)
+        >>> bdf.case_control
         SUBCASE 1
             DISP = ALL
 
         >>> bdf.case_control.update_solution(1, 'FLUTTER')
-        >>> print(bdf.case_control)
+        >>> bdf.case_control
         SUBCASE 1
             ANALYSIS FLUTTER
             DISP = ALL
@@ -338,7 +338,7 @@ class CaseControlDeck(object):
         >>> bdf = BDF()
         >>> bdf.read_bdf(bdf_filename)
         >>> bdf.case_control.add_parameter_to_global_subcase('DISP=ALL')
-        >>> print(bdf.case_control)
+        >>> bdf.case_control
         TITLE = DUMMY LINE
         DISP = ALL
 

@@ -577,44 +577,10 @@ class CheckCard(CaseControlCard):
         self.options = options
         self.data = []
         for key_value in options:
-            if '=' in key_value:
-                key, valuei = key_value.split('=')
-                key = key.strip()
-                valuei = valuei.strip()
-
-                if key in self.duplicate_names:
-                    key = self.duplicate_names[key]
-
-                if key in self.allowed_values:
-                    key_type, key_values = self.allowed_values[key]
-                    try:
-                        valuei = key_type(valuei)
-                    except ValueError:
-                        msg = 'cannot make %r a %s in %r' % (valuei, key_type, key_value)
-                        raise ValueError(msg)
-                    except TypeError:
-                        msg = 'cannot make %r a %s in %r' % (valuei, key_type, key_value)
-                        raise TypeError(msg)
-
-                    # parse the value
-                    # SET=(G,N,A)
-                    if key_values is not None:
-                        try:
-                            sline = valuei.strip('(,)').split(',')
-                        except AttributeError:
-                            msg = 'cannot make %r a %s in %r of the form SET=(G,N,A)' % (
-                                valuei, key_type, key_value)
-                            raise ValueError(msg)
-                        for val in sline:
-                            if val not in key_values:
-                                msg = '%s: key=%r value=%r allowed_values=[%r]' % (
-                                    self.type, key, val, ', '.join(key_values))
-                                msg += '\noptions = %r' % options
-                                raise ValueError(msg)
-                self.data.append((key, valuei))
+            if key_value.startswith('SET'):
+                key = self._parse_set(key_value, options)
             else:
-                key = key_value
-                self.data.append((key, None))
+                key = self._parse(key_value, options)
             if key not in self.allowed_keys:
                 msg = '%s: key=%r allowed_keys=[%r]' % (
                     self.type, key, ', '.join(self.allowed_keys))
@@ -637,6 +603,103 @@ class CheckCard(CaseControlCard):
                 raise ValueError(msg)
         self.value = value
 
+    def _parse(self, key_value, options):
+        if '=' in key_value:
+            key, valuei = key_value.split('=')
+            key = key.strip()
+            valuei = valuei.strip()
+
+            if key in self.duplicate_names:
+                key = self.duplicate_names[key]
+
+            if key in self.allowed_values:
+                key_type, allowed_values = self.allowed_values[key]
+                try:
+                    valuei = key_type(valuei)
+                except ValueError:
+                    msg = 'cannot make %r a %s in %r' % (valuei, key_type, key_value)
+                    raise ValueError(msg)
+                except TypeError:
+                    msg = 'cannot make %r a %s in %r' % (valuei, key_type, key_value)
+                    raise TypeError(msg)
+
+                # parse the value
+                # SET=(G,N,A)
+                if allowed_values is not None:
+                    try:
+                        sline = valuei.strip('(,)').split(',')
+                    except AttributeError:
+                        msg = 'cannot make %r a %s in %r of the form SET=(G,N,A)' % (
+                            valuei, key_type, key_value)
+                        raise ValueError(msg)
+
+                    for val in sline:
+                        if val not in allowed_values:
+                            msg = '%s: key=%r value=%r allowed_values=[%r]' % (
+                                self.type, key, val, ', '.join(allowed_values))
+                            msg += '\noptions = %r' % options
+                            raise ValueError(msg)
+            self.data.append((key, valuei))
+        else:
+            key = key_value
+            self.data.append((key, None))
+        return key
+
+    def _parse_set(self, key_value, options):
+        """SET=(G,N,N+AUTOSPC,F,A)"""
+        if '=' in key_value:
+            key, valuei = key_value.split('=')
+            key = key.strip()
+            valuei = valuei.strip()
+
+            if key in self.duplicate_names:
+                key = self.duplicate_names[key]
+
+            if key in self.allowed_values:
+                key_type, allowed_values = self.allowed_values[key]
+                try:
+                    valuei = key_type(valuei)
+                except ValueError:
+                    msg = 'cannot make %r a %s in %r' % (valuei, key_type, key_value)
+                    raise ValueError(msg)
+                except TypeError:
+                    msg = 'cannot make %r a %s in %r' % (valuei, key_type, key_value)
+                    raise TypeError(msg)
+
+                # parse the value
+                # SET=(G,N,A)
+                if allowed_values is not None:
+                    try:
+                        sline = valuei.strip('(,)').split(',')
+                    except AttributeError:
+                        msg = 'cannot make %r a %s in %r of the form SET=(G,N,A)' % (
+                            valuei, key_type, key_value)
+                        raise ValueError(msg)
+
+                    for val in sline:
+                        if '+' not in val or 'ALL' in val.upper():
+                            # typical case
+                            if val not in allowed_values:
+                                msg = '%s: key=%r value=%r allowed_values=[%r]' % (
+                                    self.type, key, val, ', '.join(allowed_values))
+                                msg += '\noptions = %r' % options
+                                raise ValueError(msg)
+                        else:
+                            vals = val.split('+')
+                            # N+AUTOSPC
+                            for vali in vals:
+                                if vali not in allowed_values:
+                                    msg = '%s: key=%r value=%r allowed_values=[%r]' % (
+                                        self.type, key, val, ', '.join(allowed_values))
+                                    msg += '\noptions = %r' % options
+                                    raise ValueError(msg)
+
+            self.data.append((key, valuei))
+        else:
+            key = key_value
+            self.data.append((key, None))
+        return key
+
     @classmethod
     def add_from_case_control(cls, line, line_upper, lines, i):
         """add method used by the CaseControl class"""
@@ -650,7 +713,6 @@ class CheckCard(CaseControlCard):
 
             key = key.strip().upper()
             value = value.strip()
-            print('key=%r value=%r' % (key, value))
             #if self.debug:
                 #self.log.debug("key=%r value=%r" % (key, value))
             param_type = 'STRESS-type'
@@ -659,7 +721,6 @@ class CheckCard(CaseControlCard):
             if '(' in key:  # comma may be in line - STRESS-type
                 #param_type = 'STRESS-type'
                 sline = key.strip(')').split('(')
-                print('sline =', sline)
                 key = sline[0]
                 options = sline[1].split(',')
 
@@ -833,7 +894,7 @@ class GROUNDCHECK(CheckCard):
     }
 
     def __init__(self, key, value, options):
-        super(GROUNDCHECK, self).__init__(key, value, options)
+        CheckCard.__init__(self, key, value, options)
 
 class WEIGHTCHECK(CheckCard):
     """
@@ -850,7 +911,7 @@ class WEIGHTCHECK(CheckCard):
     }
 
     def __init__(self, key, value, options):
-        super(WEIGHTCHECK, self).__init__(key, value, options)
+        CheckCard.__init__(self, key, value, options)
 
 class MODCON(CheckCard):
     """
@@ -876,7 +937,7 @@ class MODCON(CheckCard):
     }
 
     def __init__(self, key, value, options):
-        super(MODCON, self).__init__(key, value, options)
+        CheckCard.__init__(self, key, value, options)
 
 class EXTSEOUT(CaseControlCard):
     """
@@ -983,7 +1044,7 @@ class DISPLACEMENT(CheckCard):
     allow_ints = True
 
     def __init__(self, key, value, options):
-        super(DISPLACEMENT, self).__init__(key, value, options)
+        CheckCard.__init__(self, key, value, options)
 
 class VELOCITY(CheckCard):
     """
@@ -1004,7 +1065,7 @@ class VELOCITY(CheckCard):
     allow_ints = True
 
     def __init__(self, key, value, options):
-        super(VELOCITY, self).__init__(key, value, options)
+        CheckCard.__init__(self, key, value, options)
 
 class ACCELERATION(CheckCard):
     """
@@ -1024,7 +1085,7 @@ class ACCELERATION(CheckCard):
     allow_ints = True
 
     def __init__(self, key, value, options):
-        super(ACCELERATION, self).__init__(key, value, options)
+        CheckCard.__init__(self, key, value, options)
 
 class SPCFORCES(CheckCard):
     """
@@ -1044,7 +1105,7 @@ class SPCFORCES(CheckCard):
     allow_ints = True
 
     def __init__(self, key, value, options):
-        super(SPCFORCES, self).__init__(key, value, options)
+        CheckCard.__init__(self, key, value, options)
 
 class MPCFORCES(CheckCard):
     """
@@ -1064,7 +1125,7 @@ class MPCFORCES(CheckCard):
     allow_ints = True
 
     def __init__(self, key, value, options):
-        super(MPCFORCES, self).__init__(key, value, options)
+        CheckCard.__init__(self, key, value, options)
 
 class NLLOAD(CheckCard):
     """
@@ -1080,7 +1141,7 @@ class NLLOAD(CheckCard):
     allow_ints = True
 
     def __init__(self, key, value, options):
-        super(NLLOAD, self).__init__(key, value, options)
+        CheckCard.__init__(self, key, value, options)
 
 class NLSTRESS(CheckCard):
     """
@@ -1096,7 +1157,7 @@ class NLSTRESS(CheckCard):
     allow_ints = True
 
     def __init__(self, key, value, options):
-        super(NLSTRESS, self).__init__(key, value, options)
+        CheckCard.__init__(self, key, value, options)
 
 #class NOUTPUT(CheckCard):
     #"""
@@ -1127,7 +1188,7 @@ class OLOAD(CheckCard):
     allow_ints = True
 
     def __init__(self, key, value, options):
-        super(OLOAD, self).__init__(key, value, options)
+        CheckCard.__init__(self, key, value, options)
 
 
 class OPRESS(CheckCard):
@@ -1143,7 +1204,7 @@ class OPRESS(CheckCard):
     allow_ints = True
 
     def __init__(self, key, value, options):
-        super(OPRESS, self).__init__(key, value, options)
+        CheckCard.__init__(self, key, value, options)
 
 class OTEMP(CheckCard):
     """
@@ -1158,7 +1219,7 @@ class OTEMP(CheckCard):
     allow_ints = True
 
     def __init__(self, key, value, options):
-        super(OTEMP, self).__init__(key, value, options)
+        CheckCard.__init__(self, key, value, options)
 
 CHECK_CARDS = [
     DISPLACEMENT, VELOCITY, ACCELERATION, NLLOAD, NLSTRESS, OLOAD, OPRESS,

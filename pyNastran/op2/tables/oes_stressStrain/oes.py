@@ -565,15 +565,18 @@ class OES(OP2Common):
             (68, 3, 102, b'OESVM1') : ('cpenta_stress', ComplexSolidStressArray),
 
             (39, 2, 69, b'OES1X') : ('ctetra_stress', ComplexSolidStressArray), # real/imag
+            (39, 2, 69, b'OES1') : ('ctetra_stress', ComplexSolidStressArray),
             (39, 2, 74, b'OESVM1') : ('ctetra_stress', 'NA'), # real/imag
             #(39, 3, 69) : ('ctetra_stress', ComplexSolidStressArray), # mag/phase
 
             (67, 2, 121, b'OES1X') : ('chexa_stress', ComplexSolidStressArray),
             (67, 3, 121, b'OES1X') : ('chexa_stress', ComplexSolidStressArray),
             (67, 3, 130, b'OESVM1') : ('chexa_stress', ComplexSolidStressArray),
+            (67, 2, 121, b'OES1') : ('chexa_stress', ComplexSolidStressArray),
 
             (68, 2, 95, b'OES1X') : ('cpenta_stress', ComplexSolidStressArray),
             (68, 3, 95, b'OES1X') : ('cpenta_stress', ComplexSolidStressArray),
+            (68, 2, 95, b'OES1') : ('cpenta_stress', ComplexSolidStressArray),
 
             (33, 1, 17, b'OES1X1') :  ('cquad4_stress', RealPlateStressArray),
             (33, 1, 17, b'OES1X') :  ('cquad4_stress', RealPlateStressArray),
@@ -681,6 +684,8 @@ class OES(OP2Common):
             (102, 1, 7, b'OES1') : ('cbush_stress', RealBushStressArray),
             (102, 2, 13, b'OES1X') : ('cbush_stress', ComplexCBushStressArray),
             (102, 3, 13, b'OES1X') : ('cbush_stress', ComplexCBushStressArray),
+            (102, 2, 13, b'OESVM1') : ('cbush_stress', 'NA'),
+            (102, 2, 13, b'OES1'): ('cbush_stress', ComplexCBushStressArray),
 
             (40, 1, 8, b'OES1X1') : ('cbush1d_stress_strain', RealBushStressArray),
             (40, 1, 8, b'OESNLXD') : ('cbush1d_stress_strain', RealBushStressArray),
@@ -725,6 +730,7 @@ class OES(OP2Common):
 
             # 101-AABSF
             (101, 2, 4, b'OES1X') : ('NA', 'NA'),
+
             # 140-HEXA8FD
             (140, 1, 162, b'OES1X1') : ('NA', 'NA'),
             #201-QUAD4FD
@@ -902,8 +908,6 @@ class OES(OP2Common):
             (95, 3, 13, b'OESVM1C') : ('cquad4', 'NA'),
             (97, 2, 13, b'OESVM1C') : ('ctria3', 'NA'),
             (97, 3, 13, b'OESVM1C') : ('ctria3', 'NA'),
-
-            (102, 2, 13, b'OESVM1') : ('cbush', 'NA'),
 
             (39, 2, 74, 'OESVM1') : ('ctetra', 'NA'),
             (67, 2, 130, b'OESVM1') : ('chexa', 'NA'),

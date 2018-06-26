@@ -261,14 +261,14 @@ def write_set(set_id, values, spaces=''):
     >>> set_id = 80
     >>> values = [1, 2, 3, 4, 5, 7]
     >>> set = write_set(set_id, values, spaces='')
-    >>> print(set)
+    >>> set
     SET 80 = 1 THRU 5, 7
 
     **Example 2**
     >>> set_id = ''
     >>> values = ['ALL']
     >>> set = write_set(set_id, values, spaces='')
-    >>> print(set)
+    >>> set
     SET = ALL
     """
     values.sort()

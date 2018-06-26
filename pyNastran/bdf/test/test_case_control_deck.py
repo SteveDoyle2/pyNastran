@@ -311,7 +311,7 @@ class CaseControlTest(unittest.TestCase):
             '    DISPLACEMENT = ALL',
         ]
         lines_expected = [
-            'GROUNDCHECK(PRINT,SET=(G,N,N+AUTOSPC,F,A),DATAREC=NO) = YES',
+            'GROUNDCHECK(PRINT, SET=(G,N,N+AUTOSPC,F,A), DATAREC=NO) = YES',
             'SUBCASE 1',
             '    DISPLACEMENT = ALL',
         ]
@@ -329,8 +329,7 @@ class CaseControlTest(unittest.TestCase):
             '    DISPLACEMENT = ALL',
         ]
         lines_expected = [
-            'GROUNDCHECK(PRINT,SET=(G,N,N+AUTOSPC,F,A),THRESH=1e-2,',
-            'DATAREC=NO) = YES',
+            'GROUNDCHECK(PRINT, SET=(G,N,N+AUTOSPC,F,A), THRESH=0.01, DATAREC=NO) = YES',
             'SUBCASE 1',
             '    DISPLACEMENT = ALL',
             'BEGIN BULK',
@@ -349,7 +348,7 @@ class CaseControlTest(unittest.TestCase):
             '    DISPLACEMENT = ALL',
         ]
         lines_expected = [
-            'GROUNDCHECK(PRINT,THRESH=1e-2,DATAREC=NO) = YES',
+            'GROUNDCHECK(PRINT, THRESH=0.01, DATAREC=NO) = YES',
             'SUBCASE 1',
             '    DISPLACEMENT = ALL',
         ]
@@ -361,22 +360,12 @@ class CaseControlTest(unittest.TestCase):
 
     def test_case_control_12(self):
         lines = [
-            'GROUNDCHECK(PRINT,SET=(G,N,N+AUTOSPC,F,A),THRESH=1e-2,DATAREC=NO,RPRINT,OTHER,OTHER2)=YES',
+            'GROUNDCHECK(PRINT,SET=(G,N,N+AUTOSPC,F,A),THRESH=1e-2,DATAREC=NO,FAKE)=YES',
             'SUBCASE 1',
             '    DISPLACEMENT = ALL',
         ]
-        lines_expected = [
-            'GROUNDCHECK(PRINT,SET=(G,N,N+AUTOSPC,F,A),THRESH=1e-2,',
-            'DATAREC=NO,RPRINT,OTHER,OTHER2) = YES',
-            'SUBCASE 1',
-            '    DISPLACEMENT = ALL',
-            'BEGIN BULK',
-        ]
-        deck = CaseControlDeck(lines)
-        deck_msg = '%s' % deck
-        #print('%s' % deck_msg)
-        deck_lines = deck_msg.split('\n')
-        compare_lines(self, deck_lines, lines_expected, has_endline=False)
+        with self.assertRaises(KeyError):
+            deck = CaseControlDeck(lines)
 
     def test_case_control_13(self):
         # this test checks that subcase 3 uses its local definition of set 100 and subcase 4 uses the default definition
@@ -410,6 +399,15 @@ class CaseControlTest(unittest.TestCase):
         assert default.params['SET 100'] == [[100], 100, 'SET-type']
         assert sc3.params['SET 100'] == [[100, 101], 100, 'SET-type']
         assert sc4.params['SET 100'] == [[100], 100, 'SET-type']
+
+    def test_weightcheck(self):
+        weightchecks = [
+            'WEIGHTCHECK=YES',
+            'WEIGHTCHECK(GRID=12,SET=(G,N,A),MASS)=YES',
+        ]
+        for weightcheck in weightchecks:
+            deck = CaseControlDeck([weightcheck])
+            str(deck)
 
 def compare_lines(self, lines, lines_expected, has_endline):
     i = 0
