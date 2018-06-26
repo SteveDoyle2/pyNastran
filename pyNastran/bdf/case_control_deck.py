@@ -27,8 +27,8 @@ from six import iteritems, itervalues
 #from pyNastran.bdf import subcase
 from pyNastran.bdf.subcase import Subcase, update_param_name
 from pyNastran.bdf.bdf_interface.subcase_cards import (
-    EXTSEOUT, WEIGHTCHECK, MODCON,
-    SET, SETMC, #AXISYMMETRIC,
+    EXTSEOUT, WEIGHTCHECK, GROUNDCHECK,
+    MODCON, SET, SETMC, #AXISYMMETRIC,
     #INT_CARD_DICT, INT_CARD_NAMES,
     #INTSTR_CARD_DICT, INTSTR_CARD_NAMES,
     #STR_CARD_DICT, STR_CARD_NAMES,
@@ -644,6 +644,12 @@ class CaseControlDeck(object):
             options = None
             param_type = 'OBJ-type'
             obj = WEIGHTCHECK.add_from_case_control(line, line_upper, lines, i)
+            value = obj
+            key = obj.type
+        elif line_upper.startswith('GROUNDCHECK'):
+            options = None
+            param_type = 'OBJ-type'
+            obj = GROUNDCHECK.add_from_case_control(line, line_upper, lines, i)
             value = obj
             key = obj.type
         elif line_upper.startswith('MODCON'):

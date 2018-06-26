@@ -7,16 +7,19 @@ try:
     print("pyInstaller_path = %r" % pyInstaller_path)
 except ImportError:
     pyInstaller_path = []
+
 pyInstaller_path = [r'F:\work\pyNastran\pyNastran\pyinstaller']
+IS_H5PY = False
+DEBUG = False
 
 #-------------------------------------------------------------------------
 ## this block gets/sets the version so it doesn't use git
 
 #import pyNastran
 #pyNastran.is_pynastrangui_exe = True
-#pyNastran.__version__ =  '%r' % pyNastran.__version__
+#pyNastran.__version__ = '%r' % pyNastran.__version__
 #pyNastran.__releaseDate__ =  '%r' % pyNastran.__releaseDate__
-#pyNastran.__releaseDate2__ =  '%r' % datei.strftime('%d %B %Y')
+#pyNastran.__releaseDate2__ = '%r' % datei.strftime('%d %B %Y')
 
 import os
 import sys
@@ -135,9 +138,12 @@ else:
         os.path.join(python_path, 'evns', 'py35', 'Library', 'bin', 'mkl_def3.dll')
         # others?
     ]
-mkl_dll_base = os.path.basename(mkl_dlls[0])
-#assert os.path.exists(mkl_dll), '%s doesnt exist' % mkl_dll
-has_mkl_dlls = os.path.exists(mkl_dll_base)
+
+has_mkl_dlls = False
+if mkl_dlls:
+    mkl_dll_base = os.path.basename(mkl_dlls[0])
+    #assert os.path.exists(mkl_dll), '%s doesnt exist' % mkl_dll
+    has_mkl_dlls = os.path.exists(mkl_dll_base)
 
 binaries = []
 if sys.platform == 'win32':
@@ -151,6 +157,8 @@ if sys.platform == 'win32':
                 (mkl_dll_base, mkl_dll, 'BINARY')
             )
 
+
+print('python_path', python_path)
 
 pathex = pyInstaller_path + [
     python_path,
@@ -171,36 +179,10 @@ excludes = [
     'distutils.re', 'distutils.string', 'distutils.sys',
     'distutils.sysconfig', 'distutils.types', 'distutils.version',
 
-
     'beautifulsoup4', 'bitarray', 'bottleneck', 'bzip2', 'cdecimal',
     'cffi', 'comtypes', 'conda-build', 'configobj', 'console_shortcut',
     'cryptography', 'cython', 'dask', 'docutils', 'fastcache', 'flask',
     'freetype', 'funcsigs', 'greenlet', 'grin', 
-    
-    'h5py', 'h5py._conv', 'h5py._errors', 'h5py._hl', 'h5py._hl.attrs',
-    'h5py._hl.base', 'h5py._hl.compat', 'h5py._hl.dataset', 'h5py._hl.datatype',
-    'h5py._hl.files', 'h5py._hl.filters', 'h5py._hl.group', 'h5py._hl.os',
-    'h5py._hl.selections', 'h5py._hl.selections2', 'h5py._hl.six',
-    'h5py._hl.sys', 'h5py._objects', 'h5py._proxy', 'h5py.defs',
-    'h5py.functools', 'h5py.gc', 'h5py.h5', 'h5py.h5a', 'h5py.h5ac', 'h5py.h5d',
-    'h5py.h5ds', 'h5py.h5f', 'h5py.h5fd', 'h5py.h5g', 'h5py.h5i', 'h5py.h5l',
-    'h5py.h5o', 'h5py.h5p', 'h5py.h5py', 'h5py.h5r', 'h5py.h5s', 'h5py.h5t',
-    'h5py.h5z', 'h5py.highlevel', 'h5py.numpy', 'h5py.operator', 'h5py.platform',
-    'h5py.sys', 'h5py.tests', 'h5py.tests.__future__', 'h5py.tests.common',
-    'h5py.tests.hl', 'h5py.tests.hl.test_attribute_create',
-    'h5py.tests.hl.test_dataset_getitem', 'h5py.tests.hl.test_dataset_swmr',
-    'h5py.tests.hl.test_datatype', 'h5py.tests.hl.test_dims_dimensionproxy',
-    'h5py.tests.hl.test_file', 'h5py.tests.hl.test_threads', 'h5py.tests.old', 
-    'h5py.tests.old.test_attrs', 'h5py.tests.old.test_attrs_data',
-    'h5py.tests.old.test_base', 'h5py.tests.old.test_dataset',
-    'h5py.tests.old.test_datatype', 'h5py.tests.old.test_dimension_scales',
-    'h5py.tests.old.test_file', 'h5py.tests.old.test_file_image', 
-    'h5py.tests.old.test_group', 'h5py.tests.old.test_h5', 
-    'h5py.tests.old.test_h5f', 'h5py.tests.old.test_h5p', 
-    'h5py.tests.old.test_h5t', 'h5py.tests.old.test_objects',
-    'h5py.tests.old.test_selections', 'h5py.tests.old.test_slicing',
-    'h5py.tests.sys', 'h5py.utils', 'h5py.version', 'h5py.warnings', 
-    'h5py.weakref',
     
     'idna',
     'ipaddress', 'ipython-notebook', 'ipython-qtconsole',
@@ -445,6 +427,35 @@ excludes = [
     #'sip', 'colorama', 'numpy', 'pillow', 'qt',
     #'vtk', 'six', 'mkl', 'mkl-service',
 ]
+excludes = []
+
+if not IS_H5PY:
+    excludes += [
+        'h5py', 'h5py._conv', 'h5py._errors', 'h5py._hl', 'h5py._hl.attrs',
+        'h5py._hl.base', 'h5py._hl.compat', 'h5py._hl.dataset', 'h5py._hl.datatype',
+        'h5py._hl.files', 'h5py._hl.filters', 'h5py._hl.group', 'h5py._hl.os',
+        'h5py._hl.selections', 'h5py._hl.selections2', 'h5py._hl.six',
+        'h5py._hl.sys', 'h5py._objects', 'h5py._proxy', 'h5py.defs',
+        'h5py.functools', 'h5py.gc', 'h5py.h5', 'h5py.h5a', 'h5py.h5ac', 'h5py.h5d',
+        'h5py.h5ds', 'h5py.h5f', 'h5py.h5fd', 'h5py.h5g', 'h5py.h5i', 'h5py.h5l',
+        'h5py.h5o', 'h5py.h5p', 'h5py.h5py', 'h5py.h5r', 'h5py.h5s', 'h5py.h5t',
+        'h5py.h5z', 'h5py.highlevel', 'h5py.numpy', 'h5py.operator', 'h5py.platform',
+        'h5py.sys', 'h5py.tests', 'h5py.tests.__future__', 'h5py.tests.common',
+        'h5py.tests.hl', 'h5py.tests.hl.test_attribute_create',
+        'h5py.tests.hl.test_dataset_getitem', 'h5py.tests.hl.test_dataset_swmr',
+        'h5py.tests.hl.test_datatype', 'h5py.tests.hl.test_dims_dimensionproxy',
+        'h5py.tests.hl.test_file', 'h5py.tests.hl.test_threads', 'h5py.tests.old', 
+        'h5py.tests.old.test_attrs', 'h5py.tests.old.test_attrs_data',
+        'h5py.tests.old.test_base', 'h5py.tests.old.test_dataset',
+        'h5py.tests.old.test_datatype', 'h5py.tests.old.test_dimension_scales',
+        'h5py.tests.old.test_file', 'h5py.tests.old.test_file_image', 
+        'h5py.tests.old.test_group', 'h5py.tests.old.test_h5', 
+        'h5py.tests.old.test_h5f', 'h5py.tests.old.test_h5p', 
+        'h5py.tests.old.test_h5t', 'h5py.tests.old.test_objects',
+        'h5py.tests.old.test_selections', 'h5py.tests.old.test_slicing',
+        'h5py.tests.sys', 'h5py.utils', 'h5py.version', 'h5py.warnings', 
+        'h5py.weakref',
+    ]
 
 a = Analysis(analyze_files,
              pathex=pathex,
@@ -465,7 +476,7 @@ exe = EXE(pyz,
           a.datas,
           #exclude_binaries=True,
           name=os.path.join('build\\pyi.win32\\pyNastranGUI', 'pyNastranGUI.exe'),
-          debug=True,
+          debug=DEBUG,
           strip=None,
           #upx=True,
           icon=icon_main,

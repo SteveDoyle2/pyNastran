@@ -46,7 +46,7 @@ Solver
         solve, calculate responses
    - added D matricies for PSHELL, PCOMP, PSOLID
 
------------------------v1.1.0 released 2018/?/?-----------------------
+-----------------------v1.1.0 released 2018/6/26-----------------------
 This is a major release.  As in the v1.0 release, the focus has been on testing.
 
 The bigest change has been to cross-referencing.  All cross-referenced 
@@ -97,6 +97,13 @@ BDF:
      - caero sub-panels ids are now renumbered
      - renumbering mapper object returned now
    - improved removed_unused card support
+   - improved mirroring
+   - read_bdf StringIO option now parses pyNastran header
+   - subcase copying speedup (helps with SETs)
+   - preliminary ZONA loading
+   - added atmosphere2.make_flfacts_eas_sweep, make_flfacts_mach_sweep, and
+     make_flfacts_alt_sweep with an EAS (equivalent airspeed) limiter
+   - rotate_v_wa_wb for CBAR/CBEAM to determine 
 
   - Bug fixes:
    - more add_card documentation (e.g., add_grid, add_ctria3)
@@ -111,6 +118,8 @@ BDF:
    - fixed LOAD card messing up load ids after cross referencing
    - fixed TRIM default on aeqr (was 0.0/rigid; should be 1.0/elastic) 
    - NLPCI now gets written when there are no other dynamic cards
+   - fixed CBUSH cid=0 bug
+   - fixed TABLED4/TABLEM4 stopping error
 
   - API changes:
    - model.Node(nid, allow_empty_nodes=False msg='') no longer supports 
@@ -145,6 +154,8 @@ OP2:
    - added model.set_additional_generalized_tables_to_read(tables) to 
      create custom OP2 readers
    - added complex/average strain energy
+   - save/load hdf5 support
+   - EIGRL support
 
   - Bug fixes:
    - improved table skipping
@@ -152,6 +163,11 @@ OP2:
    - fixed CEN/3, CEN/4 writing for RealPlateBilinearForceArray
    - improved geometry table reading
    - real sparse matrices take much less memory now; were being converted to dense matrices
+   - added RBAR on NX vs. MSC
+   - fixed RBE2 with alpha bug
+   - fixed CREEP bug
+   - fixed RBE3 bug
+   - fixed PBCOMP bug
 
   - API changes:
     - xlsx exporter removed
@@ -170,6 +186,8 @@ GUI:
     - delete secondary actor support
     - delete result cases support
     - improved view buttons
+    - preferences menu
+    - right click support on results sidebar to apply fringe/displacement/veactor results
 
   - Bug fixes:
     - displays control surfaces again (aesurf)
@@ -180,6 +198,7 @@ GUI:
     - "Toggle CONM2s" updates the "Edit Geometry Properties" menu
     - fixing Windows taskbar icon bug
     - fixing first launch bug
+    - qscintilla works in pyqt5
 
   - Known bugs:
     - after animating a model from within the GUI, the mouse behavior changes
@@ -210,16 +229,16 @@ Programmatics:
  - Dropping Python 3.3 support
  - Adding Python 3.6 support
 
-BDF :
+BDF:
  - This version makes it much easier to programmatically create BDFs with the
    ``add_grid``, ``add_ctria3(...)``, etc. methods.  Almost every card has a
     method and many have documentation of every parameter.
 
-OP2 :
+OP2:
  - Added support for MATPOOL matrices and RANDOM OUG-style tables.
  - First release of read_op2_geom.  Much improved OP2 Geometry reading.
 
-F06 :
+F06:
  - added a preliminary flutter (SOL 145) parser
    - supports multiple subcases
    - PK and PKNL methods supported
@@ -227,7 +246,7 @@ F06 :
    - input/output units
    - mode switching not fixed yet
 
-GUI :
+GUI:
   - Animation plots
   - NaN colors
   - improved picking tolerancing

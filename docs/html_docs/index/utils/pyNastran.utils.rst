@@ -10,7 +10,6 @@ This is the pyNastran.utils.rst file.
 .. automodule:: pyNastran.utils.atmosphere
     :members:
     :undoc-members:
-    :show-inheritance:
 
 :mod:`atmosphere2` Module
 -------------------------
@@ -20,7 +19,6 @@ This is the pyNastran.utils.rst file.
 .. automodule:: pyNastran.utils.atmosphere2
     :members:
     :undoc-members:
-    :show-inheritance:
 
 :mod:`dev` Module
 -----------------
@@ -40,7 +38,6 @@ This is the pyNastran.utils.rst file.
 .. automodule:: pyNastran.utils.docopt_types
     :members:
     :undoc-members:
-    :show-inheritance:
 
 :mod:`gui_choices` Module
 -------------------------
@@ -100,7 +97,6 @@ This is the pyNastran.utils.rst file.
 .. automodule:: pyNastran.utils.numpy_utils
     :members:
     :undoc-members:
-    :show-inheritance:
 
 :mod:`__init__` Module
 ----------------------

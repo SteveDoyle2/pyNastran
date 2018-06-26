@@ -19,7 +19,6 @@ mesh_utils Package
     :members:
     :private-members:
     :undoc-members:
-    :show-inheritance:
 
 **************************
 :mod:`bdf_renumber` Module
@@ -29,7 +28,6 @@ mesh_utils Package
     :members:
     :private-members:
     :undoc-members:
-    :show-inheritance:
 
 ********************************
 :mod:`collapse_bad_quads` Module
@@ -39,7 +37,6 @@ mesh_utils Package
     :members:
     :private-members:
     :undoc-members:
-    :show-inheritance:
 
 *********************
 :mod:`convert` Module
@@ -49,7 +46,6 @@ mesh_utils Package
     :members:
     :private-members:
     :undoc-members:
-    :show-inheritance:
 
 *********************************
 :mod:`delete_bad_elements` Module
@@ -59,7 +55,6 @@ mesh_utils Package
     :members:
     :private-members:
     :undoc-members:
-    :show-inheritance:
 
 **************************
 :mod:`export_mcids` Module
@@ -69,7 +64,6 @@ mesh_utils Package
     :members:
     :private-members:
     :undoc-members:
-    :show-inheritance:
 
 
 *************************
@@ -82,7 +76,6 @@ mesh_utils Package
     :members:
     :private-members:
     :undoc-members:
-    :show-inheritance:
 
 ****************************
 :mod:`extract_bodies` Module
@@ -92,17 +85,6 @@ mesh_utils Package
     :members:
     :private-members:
     :undoc-members:
-    :show-inheritance:
-
-********************************
-:mod:`extract_free_faces` Module
-********************************
-
-.. automodule:: pyNastran.bdf.mesh_utils.extract_free_faces
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
 
 ********************************
 :mod:`find_closest_nodes` Module
@@ -112,7 +94,6 @@ mesh_utils Package
     :members:
     :private-members:
     :undoc-members:
-    :show-inheritance:
 
 ************************************
 :mod:`find_coplanar_elements` Module
@@ -122,7 +103,6 @@ mesh_utils Package
     :members:
     :private-members:
     :undoc-members:
-    :show-inheritance:
 
 *******************************
 :mod:`force_to_pressure` Module
@@ -132,7 +112,24 @@ mesh_utils Package
     :members:
     :private-members:
     :undoc-members:
-    :show-inheritance:
+
+********************************
+:mod:`free_edges` Module
+********************************
+
+.. automodule:: pyNastran.bdf.mesh_utils.free_edges
+    :members:
+    :private-members:
+    :undoc-members:
+
+********************************
+:mod:`free_faces` Module
+********************************
+
+.. automodule:: pyNastran.bdf.mesh_utils.free_faces
+    :members:
+    :private-members:
+    :undoc-members:
 
 *********************
 :mod:`get_oml` Module
@@ -152,7 +149,6 @@ mesh_utils Package
     :members:
     :private-members:
     :undoc-members:
-    :show-inheritance:
 
 *************************************
 :mod:`split_cbars_by_pin_flag` Module
@@ -162,7 +158,6 @@ mesh_utils Package
     :members:
     :private-members:
     :undoc-members:
-    :show-inheritance:
 
 ****************************
 :mod:`split_elements` Module
@@ -172,7 +167,6 @@ mesh_utils Package
     :members:
     :private-members:
     :undoc-members:
-    :show-inheritance:
 
 *******************
 :mod:`utils` Module
@@ -182,5 +176,4 @@ mesh_utils Package
     :members:
     :private-members:
     :undoc-members:
-    :show-inheritance:
 

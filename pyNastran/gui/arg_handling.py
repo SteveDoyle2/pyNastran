@@ -70,6 +70,7 @@ def run_docopt():
     if not pyNastran.is_pynastrangui_exe:
         test = ' [--test]'
         qt = ' [--qt QT]'
+
     msg += "  pyNastranGUI [-f FORMAT] INPUT [-o OUTPUT]\n"
     msg += '               [-g GSCRIPT] [-p PSCRIPT]\n'
     msg += '               [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]\n'
