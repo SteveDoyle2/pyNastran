@@ -1224,6 +1224,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         """auto-table skipper"""
         if self.is_debug_file:
             self.binary_debug.write('  skipping table = %s\n' % self.table_name)
+        if self.table_name not in GEOM_TABLES and self.isubtable > -4:
+            self.log.warning('    skipping table')
+            #self.log.warning('    skipping table (isubtable=%s) = %s' % (
+                #self.table_name, self.isubtable))
         return ndata
 
     def _validate_op2_filename(self, op2_filename):
@@ -1830,6 +1834,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self.table_name = self._read_table_name(rewind=False)
         if self.is_debug_file:
             self.binary_debug.write('skipping table...%r\n' % self.table_name)
+        self.log.warning('    skipping table_helper = %s' % self.table_name)
+
         self.read_markers([-1])
         data = self._skip_record()
         self.read_markers([-2, 1, 0])

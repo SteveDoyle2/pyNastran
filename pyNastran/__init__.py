@@ -38,7 +38,7 @@ __copyright__ = 'Copyright %s; 2011-2018' % __license__
 __pyside_copyright__ = 'Copyright LGPLv3 - pySide'
 __pyqt_copyright__ = 'Copyright GPLv3 - PyQt'
 __website__ = 'https://github.com/SteveDoyle2/pyNastran'
-__docs__ = 'http://pynastran-git.readthedocs.io/en/latest/?badge=latest#'
+__docs__ = 'http://pynastran.m4-engineering.com/master'
 __discussion_forum__ = 'https://groups.google.com/forum/#!forum/pynastran-discuss'
 
 is_release = True  ## turns on skipping of tables that aren't supported

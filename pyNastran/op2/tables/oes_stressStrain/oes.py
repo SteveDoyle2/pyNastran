@@ -542,6 +542,10 @@ class OES(OP2Common):
             (34, 1, 10, b'OESNO1') : ('cbar_stress', ComplexBarStressArray),
             (34, 2, 10, b'OESXRMS1') : ('cbar_stress', ComplexBarStressArray),
 
+            # Missing stress_mapper key for OES1 table #501
+            # see cbarao_random_x_mini.op2 for an example with OES1 and OES1X...
+            # it looks to be an error in MSC [2008-2012)
+            (34, 2, 19, b'OES1') : ('cbar_stress', ComplexBarStressArray),
             (34, 3, 19, b'OES1X') : ('cbar_stress', ComplexBarStressArray),
             (34, 3, 19, b'OESVM1') : ('cbar_stress', ComplexBarStressArray),
             #(34, 1, 19) : ('cbar_stress', RandomBarStressArray),
@@ -573,6 +577,7 @@ class OES(OP2Common):
             (67, 3, 121, b'OES1X') : ('chexa_stress', ComplexSolidStressArray),
             (67, 3, 130, b'OESVM1') : ('chexa_stress', ComplexSolidStressArray),
             (67, 2, 121, b'OES1') : ('chexa_stress', ComplexSolidStressArray),
+            (67, 3, 121, b'OES1') : ('chexa_stress', ComplexSolidStressArray),
 
             (68, 2, 95, b'OES1X') : ('cpenta_stress', ComplexSolidStressArray),
             (68, 3, 95, b'OES1X') : ('cpenta_stress', ComplexSolidStressArray),

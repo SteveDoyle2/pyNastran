@@ -1,3 +1,8 @@
+"""
+defines:
+ - QElementEdit
+ - QNodeEdit
+"""
 from __future__ import print_function
 
 from qtpy import QtCore
@@ -20,6 +25,9 @@ class QElementEdit(QLineEdit):
 
     def on_focus_callback(self, eids, nids):
         """the callback method for ``on_focus``"""
+        if eids is None:
+            print('empty elements callback...')
+            return
         eids_str = write_patran_syntax_dict({'' : eids})
         self.setText(eids_str)
 
@@ -27,5 +35,32 @@ class QElementEdit(QLineEdit):
         """called when the QElementEdit is activated"""
         gui = self.win_parent.win_parent
         gui.mouse_actions.on_area_pick(is_eids=True, is_nids=False,
+                                       callback=self.on_focus_callback,
+                                       force=True)
+
+
+class QNodeEdit(QLineEdit):
+    """creates a QLineEdit that can pick node ids"""
+    def __init__(self, win_parent, parent=None, *args, **kwargs):
+        super(QNodeEdit, self).__init__(parent, *args, **kwargs)
+        self.win_parent = win_parent
+        #self.focusInEvent.connect(self.on_focus)
+
+    def focusInEvent(self, event):
+        self.on_focus()
+        QLineEdit.focusInEvent(self, QFocusEvent(QtCore.QEvent.FocusIn))
+
+    def on_focus_callback(self, eids, nids):
+        """the callback method for ``on_focus``"""
+        if nids is None:
+            print('empty nodes callback...')
+            return
+        nids_str = write_patran_syntax_dict({'' : nids})
+        self.setText(nids_str)
+
+    def on_focus(self):
+        """called when the QElementEdit is activated"""
+        gui = self.win_parent.win_parent
+        gui.mouse_actions.on_area_pick(is_eids=True, is_nids=True,
                                        callback=self.on_focus_callback,
                                        force=True)
