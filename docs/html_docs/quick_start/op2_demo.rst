@@ -1,27 +1,24 @@
 
-OP2 Demo
-========
+OP2 Introduction
+================
 
-The iPython notebook for this demo can be found in: -
-docs:raw-latex:`\quick`\_start:raw-latex:`\demo`:raw-latex:`\op`2\_demo.ipynb
+The Jupyter notebook for this demo can be found in: -
+docs:raw-latex:`\quick`\_start:raw-latex:`\demo`:raw-latex:`\op`2_demo.ipynb
 -
-https://github.com/SteveDoyle2/pyNastran/tree/master/docs/quick\_start/demo/op2\_demo.ipynb
+https://github.com/SteveDoyle2/pyNastran/tree/master/docs/quick_start/demo/op2_demo.ipynb
 
 Why use the OP2? Why not use the F06/PCH file?
 ----------------------------------------------
 
-Most people are comfortable with the F06. However, it's: - Ironically, a
+Most people are comfortable with the F06. However, it’s: - Ironically, a
 lot harder to parse. The OP2 is very structured. - Much, much, much
 slower. We can read entire blocks of arrays with a single call. The data
-is already typed. - Much, much more memory inefficient because we aren't
+is already typed. - Much, much more memory inefficient because we aren’t
 appending strings onto lists and turning that into a numpy array.
 
-F06 parsers get hard when you start do complicated results like: 
-
- - single subcase buckling 
- - superelements 
- - SOL 200 optimization with sub-optimization
- - SPOINTs
+F06 parsers get ridiculously hard when you start do complicated results,
+like: - single subcase buckling - superelements - SOL 200 optimization
+with sub-optimization - SPOINTs
 
 The pyNastran OP2 Reader is fast, highly validated, and it supports most
 result types. The data in the OP2 is also more accurate because there is
@@ -32,17 +29,17 @@ Validating an OP2
 
 The ``test_op2`` script is created when you run
 ``python setup.py develop`` or ``python setup.py install`` on pyNastran.
-Assuming it's on your path (it'll be in Python27:raw-latex:`\Scripts `or
+Assuming it’s on your path (it’ll be in Python27:raw-latex:`\Scripts `or
 something similar), you can run:
 
 ::
 
-    >>> test_op2 -f solid_bending.op2
+   >>> test_op2 -f solid_bending.op2
 
 The ``-f`` tells us to print out ``solid_bending.test_op2.f06``, which
 can be compared to your F06 for a small file to build confidence in the
-reader. It's also useful when you want an F06 of your model without
-rerunning Nastran just to see what's in it.
+reader. It’s also useful when you want an F06 of your model without
+rerunning Nastran just to see what’s in it.
 
 If you have a large model, you can make ``test_op2`` run much, much
 faster. The ``-c`` flag disables double-reading of the OP2. By default,
@@ -52,7 +49,7 @@ code, this is turned off, but is turned on for ``test_op2``.
 
 ::
 
-    >>> test_op2 -fc solid_bending.op2
+   >>> test_op2 -fc solid_bending.op2
 
 Import the packages
 -------------------
@@ -62,6 +59,7 @@ Import the packages
     import os
     import copy
     import numpy as np
+    np.set_printoptions(precision=2, threshold=20, suppress=True)
     
     import pyNastran
     pkg_path = pyNastran.__path__[0]
@@ -81,11 +79,11 @@ Sets default precision of real numbers for pandas output
     np.set_printoptions(precision=3, threshold=20)
 
 As with the BDF, we can use the long form and the short form. However,
-the long form for the ``OP2`` doesn't really add anything. So, let's
+the long form for the ``OP2`` doesn’t really add anything. So, let’s
 just use the short form.
 
-Besides massive speed improvements in the OP2 relative to v0.7, this
-version adds ``pandas`` dataframe support.
+In addition to the default numpy support, there is also **``pandas``**
+dataframe support.
 
 .. code:: python
 
@@ -98,10 +96,12 @@ version adds ``pandas`` dataframe support.
     op2 = read_op2(op2_filename, build_dataframe=True, debug=False)
 
 
-.. parsed-literal::
 
-    INFO:      fname=op2_scalar.py             lineNo=1176   op2_filename = 'f:\\work\\pynastran\\pynastran\\master3\\models\\iSat\\ISat_Launch_Sm_4pt.op2'
-    
+.. raw:: html
+
+    <text style=color:green>INFO:    op2_scalar.py:1291           op2_filename = 'c:\\nasa\\m4\\formats\\git\\v1.1-dev\\models\\iSat\\ISat_Launch_Sm_4pt.op2'
+    </text>
+
 
 OP2 Introspection
 -----------------
@@ -116,82 +116,62 @@ op2.
 
 .. parsed-literal::
 
-    GridPointWeight:  reference_point=0
-      mass=[    1.7746     1.7746     1.7746]
-      cg  =[-1.02627e-17   -2.53061   -18.4676]
-           [-0.0338509 -1.63349e-17   -18.4676]
-           [-0.0338509   -2.53061 -2.18142e-19]
-    
-      IS  =[    705.69   -1.56671   0.141187]
-           [  -1.56671    621.838    135.836]
-           [  0.141187    135.836    415.861]
-    
-      IQ  =[   689.183                      ]
-           [              348.384           ]
-           [                         705.821]
-    
-      Q  = [ 0.0884636 0.00159685   0.996078]
-           [ -0.892013  -0.444886  0.0799345]
-           [  0.443269  -0.895586 -0.0379318]
     eigenvectors[1]
       isubcase = 1
-      type=RealEigenvectorArray ntimes=167 nnodes=5379
+      type=RealEigenvectorArray ntimes=167 nnodes=5379, table_name=OUGV1
       data: [t1, t2, t3, r1, r2, r3] shape=[167, 5379, 6] dtype=float32
-      gridTypes
+      node_gridtype.shape = (5379, 2)
       sort1
-      modes = [  1   2   3 ..., 165 166 167]
-      eigrs = [  2.758e+03   3.568e+03   9.686e+03 ...,   6.163e+06   6.170e+06
-       6.230e+06]
-      mode_cycles = [1112674317 1114566525 1120195719 ..., 1159407589 1159413465 1159462558]
+      modes = [  1   2   3 ... 165 166 167]
+      eigns = [   2757.896    3568.136    9686.188 ... 6162773.5   6169898.5
+     6229583.   ]
+      mode_cycles = [  8.358   9.507  15.664 ... 395.101 395.329 397.237]
     
     cbar_force[1]
       type=RealCBarForceArray ntimes=167 nelements=827
       data: [ntimes, nnodes, 8] where 8=[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque]
       data.shape = (167, 827, 8)
+      element.shape = (827,)
       element name: CBAR-34
       sort1
-      modes = [  1   2   3 ..., 165 166 167]
-      eigrs = [  2.758e+03   3.568e+03   9.686e+03 ...,   6.163e+06   6.170e+06
-       6.230e+06]
-      cycles = [   8.358    9.507   15.663 ...,  395.101  395.329  397.237]
+      modes = [  1   2   3 ... 165 166 167]
+      eigns = [   2757.896    3568.136    9686.188 ... 6162773.5   6169898.5
+     6229583.   ]
+      cycles = [  8.358   9.507  15.664 ... 395.101 395.329 397.237]
     
     ctria3_stress[1]
       type=RealPlateStressArray ntimes=167 nelements=32 nnodes_per_element=1 nlayers=2 ntotal=64
       data: [ntimes, ntotal, 8] where 8=[fiber_distance, oxx, oyy, txy, angle, omax, omin, von_mises]
-      data.shape=(167L, 64L, 8L)
+      element_node.shape = (64, 2)
+      data.shape=(167, 64, 8)
       element type: CTRIA3
       s_code: 1
       sort1
-      modes = [  1   2   3 ..., 165 166 167]
-      eigrs = [  2.758e+03   3.568e+03   9.686e+03 ...,   6.163e+06   6.170e+06
-       6.230e+06]
-      mode2s = [         2          3          4 ...,        166        167 1159462558]
-      cycles = [  2.803e-45   4.204e-45   5.605e-45 ...,   2.326e-43   2.340e-43
-       2.496e+03]
+      modes = [  1   2   3 ... 165 166 167]
+      eigns = [   2757.896    3568.136    9686.188 ... 6162773.5   6169898.5
+     6229583.   ]
+      mode2s = [0 0 0 ... 0 0 0]
+      cycles = [  8.358   9.507  15.664 ... 395.101 395.329 397.237]
     
     cquad4_stress[1]
       type=RealPlateStressArray ntimes=167 nelements=4580 nnodes_per_element=1 nlayers=2 ntotal=9160
       data: [ntimes, ntotal, 8] where 8=[fiber_distance, oxx, oyy, txy, angle, omax, omin, von_mises]
-      data.shape=(167L, 9160L, 8L)
+      element_node.shape = (9160, 2)
+      data.shape=(167, 9160, 8)
       element type: CQUAD4
       s_code: 1
       sort1
-      modes = [  1   2   3 ..., 165 166 167]
-      eigrs = [  2.758e+03   3.568e+03   9.686e+03 ...,   6.163e+06   6.170e+06
-       6.230e+06]
-      mode2s = [         2          3          4 ...,        166        167 1159462558]
-      cycles = [  2.803e-45   4.204e-45   5.605e-45 ...,   2.326e-43   2.340e-43
-       2.496e+03]
-    
-    eigenvalues[ISAT_SM_LAUNCH_4PT MODES TO 400 HZ]
-      type=RealEigenvalues neigenvalues=167
-      title, extraction_order, eigenvalues, radians, cycles, generalized_mass, generalized_stiffness
+      modes = [  1   2   3 ... 165 166 167]
+      eigns = [   2757.896    3568.136    9686.188 ... 6162773.5   6169898.5
+     6229583.   ]
+      mode2s = [0 0 0 ... 0 0 0]
+      cycles = [  8.358   9.507  15.664 ... 395.101 395.329 397.237]
     
     
     
 
-If that's too long...
-~~~~~~~~~~~~~~~~~~~~~
+If that’s too long…
+~~~~~~~~~~~~~~~~~~~
 
 .. code:: python
 
@@ -200,12 +180,10 @@ If that's too long...
 
 .. parsed-literal::
 
-    GridPointWeight: ref_point=0 mass=1.7746; [reference_point, M0, S, mass, cg, IS, IQ, Q]
     eigenvectors[1]
     cbar_force[1]
     ctria3_stress[1]
     cquad4_stress[1]
-    eigenvalues[u'ISAT_SM_LAUNCH_4PT MODES TO 400 HZ']
     
     
 
@@ -221,9 +199,9 @@ the GRID card.
 Numpy-based Approach
 ~~~~~~~~~~~~~~~~~~~~
 
-We'll first show off the standard ``numpy`` based results on a transient
-case. Static results are the same, except that you'll always use the 0th
-index for the "time" index.
+We’ll first show off the standard ``numpy`` based results on a transient
+case. Static results are the same, except that you’ll always use the 0th
+index for the “time” index.
 
 The tutorial is intetionally just accessing the objects in a very clear,
 though inefficient way. The OP2 objects can take full advantage of the
@@ -259,7 +237,7 @@ numpy operations.
     loadcases = [1]
     modes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167]
     
-    times = [   1.    2.    3. ...,  165.  166.  167.]
+    times = [  1.   2.   3. ... 165. 166. 167.]
     
     first 10 nodes and grid types
     Nid Gridtype
@@ -273,8 +251,8 @@ numpy operations.
      [ 8  1]
      [ 9  1]
      [10  1]]
-    translation mode2_node10 = [  1.696e-05   7.937e-03   1.510e-03]
-    rotations mode2_node10 = [ -2.241e-04   1.228e-06  -1.187e-06]
+    translation mode2_node10 = [0.    0.008 0.002]
+    rotations mode2_node10 = [-0.  0. -0.]
     
 
 Pandas-based Approach
@@ -284,7 +262,7 @@ If you like pandas, you can access all the OP2 objects, which is very
 useful within the Jupyter Notebook. Different objects will look
 differently, but you can change the layout.
 
-If you're trying to learn pandas, there are many tutorials online, such
+If you’re trying to learn pandas, there are many tutorials online, such
 as: http://pandas.pydata.org/pandas-docs/stable/10min.html
 
 or a very long, but good video:
@@ -325,6 +303,19 @@ or a very long, but good video:
 .. raw:: html
 
     <div>
+    <style>
+        .dataframe thead tr:only-child th {
+            text-align: right;
+        }
+    
+        .dataframe thead th {
+            text-align: left;
+        }
+    
+        .dataframe tbody tr th {
+            vertical-align: top;
+        }
+    </style>
     <table border="1" class="dataframe">
       <thead>
         <tr>
@@ -354,42 +345,17 @@ or a very long, but good video:
         </tr>
         <tr>
           <th></th>
-          <th>EigenvalueReal</th>
-          <th>2757.896</th>
-          <th>3568.136</th>
-          <th>9685.530</th>
-          <th>16154.883</th>
-          <th>16278.047</th>
-          <th>16668.713</th>
-          <th>18248.492</th>
-          <th>18591.637</th>
-          <th>18617.254</th>
-          <th>31930.465</th>
-          <th>...</th>
-          <th>5782436.500</th>
-          <th>5860846.500</th>
-          <th>5920603.000</th>
-          <th>6020617.500</th>
-          <th>6035178.000</th>
-          <th>6037030.000</th>
-          <th>6102521.500</th>
-          <th>6162773.500</th>
-          <th>6169898.500</th>
-          <th>6229584.500</th>
-        </tr>
-        <tr>
-          <th></th>
           <th>Freq</th>
           <th>8.358</th>
           <th>9.507</th>
-          <th>15.663</th>
+          <th>15.664</th>
           <th>20.229</th>
           <th>20.306</th>
           <th>20.548</th>
           <th>21.500</th>
           <th>21.701</th>
           <th>21.716</th>
-          <th>28.440</th>
+          <th>28.444</th>
           <th>...</th>
           <th>382.715</th>
           <th>385.301</th>
@@ -404,17 +370,42 @@ or a very long, but good video:
         </tr>
         <tr>
           <th></th>
+          <th>Eigenvalue</th>
+          <th>2.758e+03</th>
+          <th>3.568e+03</th>
+          <th>9.686e+03</th>
+          <th>1.615e+04</th>
+          <th>1.628e+04</th>
+          <th>1.667e+04</th>
+          <th>1.825e+04</th>
+          <th>1.859e+04</th>
+          <th>1.862e+04</th>
+          <th>3.194e+04</th>
+          <th>...</th>
+          <th>5.782e+06</th>
+          <th>5.861e+06</th>
+          <th>5.921e+06</th>
+          <th>6.021e+06</th>
+          <th>6.035e+06</th>
+          <th>6.037e+06</th>
+          <th>6.103e+06</th>
+          <th>6.163e+06</th>
+          <th>6.170e+06</th>
+          <th>6.230e+06</th>
+        </tr>
+        <tr>
+          <th></th>
           <th>Radians</th>
           <th>52.516</th>
           <th>59.734</th>
-          <th>98.415</th>
+          <th>98.418</th>
           <th>127.102</th>
           <th>127.585</th>
           <th>129.107</th>
           <th>135.087</th>
           <th>136.351</th>
           <th>136.445</th>
-          <th>178.691</th>
+          <th>178.721</th>
           <th>...</th>
           <th>2404.670</th>
           <th>2420.919</th>
@@ -425,7 +416,7 @@ or a very long, but good video:
           <th>2470.328</th>
           <th>2482.493</th>
           <th>2483.928</th>
-          <th>2495.914</th>
+          <th>2495.913</th>
         </tr>
         <tr>
           <th>NodeID</th>
@@ -457,727 +448,727 @@ or a very long, but good video:
         <tr>
           <th rowspan="6" valign="top">1</th>
           <th>t1</th>
-          <td>5.548e-03</td>
+          <td>-5.548e-03</td>
           <td>4.671e-06</td>
-          <td>-1.818e-04</td>
+          <td>-1.816e-04</td>
           <td>-5.670e-02</td>
-          <td>1.722e-04</td>
+          <td>-1.721e-04</td>
           <td>-4.175e-02</td>
-          <td>8.632e-05</td>
+          <td>-8.632e-05</td>
           <td>-1.341e-03</td>
           <td>1.582e-03</td>
-          <td>-2.428e-01</td>
+          <td>2.438e-01</td>
           <td>...</td>
           <td>5.723e-02</td>
           <td>-5.369e-02</td>
-          <td>-3.838e-02</td>
-          <td>-1.326e-01</td>
+          <td>-3.837e-02</td>
+          <td>1.326e-01</td>
           <td>-1.973e-02</td>
-          <td>0.028</td>
+          <td>-0.028</td>
           <td>0.033</td>
           <td>-0.104</td>
-          <td>-6.919e-02</td>
-          <td>-1.904e-02</td>
+          <td>6.919e-02</td>
+          <td>1.904e-02</td>
         </tr>
         <tr>
           <th>t2</th>
-          <td>-2.133e-04</td>
+          <td>2.133e-04</td>
           <td>5.699e-03</td>
-          <td>2.392e-02</td>
-          <td>5.801e-04</td>
-          <td>-1.812e-04</td>
+          <td>2.393e-02</td>
+          <td>5.803e-04</td>
+          <td>1.812e-04</td>
           <td>1.971e-04</td>
-          <td>-6.526e-05</td>
-          <td>-3.563e-02</td>
+          <td>6.526e-05</td>
+          <td>-3.562e-02</td>
           <td>-3.164e-02</td>
-          <td>-1.292e-02</td>
+          <td>1.291e-02</td>
           <td>...</td>
-          <td>-3.090e-01</td>
+          <td>-3.091e-01</td>
           <td>-3.746e-01</td>
           <td>-5.840e-02</td>
-          <td>-2.385e-02</td>
+          <td>2.385e-02</td>
           <td>-5.889e-02</td>
-          <td>0.015</td>
+          <td>-0.015</td>
           <td>0.177</td>
-          <td>-0.010</td>
-          <td>5.252e-02</td>
-          <td>1.187e-01</td>
+          <td>-0.011</td>
+          <td>-5.252e-02</td>
+          <td>-1.187e-01</td>
         </tr>
         <tr>
           <th>t3</th>
-          <td>8.469e-04</td>
+          <td>-8.469e-04</td>
           <td>1.512e-03</td>
           <td>7.038e-03</td>
           <td>-8.160e-03</td>
-          <td>-1.385e-03</td>
-          <td>-6.209e-03</td>
-          <td>1.004e-04</td>
+          <td>1.385e-03</td>
+          <td>-6.210e-03</td>
+          <td>-1.004e-04</td>
           <td>-9.286e-03</td>
           <td>-7.856e-03</td>
-          <td>-3.743e-02</td>
+          <td>3.756e-02</td>
           <td>...</td>
-          <td>-4.535e-02</td>
+          <td>-4.534e-02</td>
           <td>1.271e-01</td>
           <td>2.550e-01</td>
-          <td>-1.792e-01</td>
+          <td>1.792e-01</td>
           <td>-1.136e-03</td>
-          <td>0.042</td>
+          <td>-0.042</td>
           <td>-0.037</td>
           <td>0.263</td>
-          <td>2.141e-01</td>
-          <td>-1.473e-01</td>
+          <td>-2.141e-01</td>
+          <td>1.472e-01</td>
         </tr>
         <tr>
           <th>r1</th>
-          <td>8.399e-06</td>
+          <td>-8.399e-06</td>
           <td>-2.241e-04</td>
           <td>-1.035e-03</td>
           <td>-4.509e-05</td>
-          <td>6.317e-05</td>
-          <td>-9.634e-06</td>
-          <td>2.518e-06</td>
+          <td>-6.317e-05</td>
+          <td>-9.635e-06</td>
+          <td>-2.518e-06</td>
           <td>1.322e-03</td>
           <td>1.172e-03</td>
-          <td>5.440e-04</td>
+          <td>-5.433e-04</td>
           <td>...</td>
           <td>-3.061e-02</td>
-          <td>-9.829e-04</td>
+          <td>-9.825e-04</td>
           <td>2.993e-02</td>
-          <td>-3.527e-02</td>
+          <td>3.527e-02</td>
           <td>1.148e-04</td>
-          <td>0.007</td>
+          <td>-0.007</td>
           <td>-0.053</td>
           <td>-0.004</td>
-          <td>2.357e-02</td>
-          <td>-3.403e-02</td>
+          <td>-2.357e-02</td>
+          <td>3.403e-02</td>
         </tr>
         <tr>
           <th>r2</th>
-          <td>2.507e-04</td>
+          <td>-2.507e-04</td>
           <td>1.228e-06</td>
-          <td>-8.742e-06</td>
+          <td>-8.730e-06</td>
           <td>-2.571e-03</td>
-          <td>6.180e-06</td>
+          <td>-6.174e-06</td>
           <td>-1.767e-03</td>
-          <td>3.812e-06</td>
+          <td>-3.812e-06</td>
           <td>-5.683e-05</td>
           <td>5.614e-05</td>
-          <td>-1.004e-02</td>
+          <td>1.008e-02</td>
           <td>...</td>
           <td>-1.174e-02</td>
           <td>1.241e-03</td>
           <td>1.025e-02</td>
-          <td>-3.112e-02</td>
+          <td>3.112e-02</td>
           <td>-4.135e-03</td>
-          <td>0.011</td>
+          <td>-0.011</td>
           <td>0.026</td>
           <td>0.009</td>
-          <td>7.311e-03</td>
-          <td>-9.083e-04</td>
+          <td>-7.311e-03</td>
+          <td>9.082e-04</td>
         </tr>
         <tr>
           <th>r3</th>
-          <td>5.261e-05</td>
+          <td>-5.261e-05</td>
           <td>-1.187e-06</td>
           <td>-1.986e-04</td>
           <td>-1.310e-04</td>
-          <td>-2.860e-05</td>
-          <td>-4.676e-05</td>
-          <td>-1.092e-07</td>
+          <td>2.861e-05</td>
+          <td>-4.677e-05</td>
+          <td>1.092e-07</td>
           <td>-1.774e-04</td>
           <td>1.806e-04</td>
-          <td>1.011e-03</td>
+          <td>-1.008e-03</td>
           <td>...</td>
-          <td>4.109e-05</td>
+          <td>4.063e-05</td>
           <td>2.184e-02</td>
           <td>2.495e-03</td>
-          <td>8.832e-02</td>
+          <td>-8.831e-02</td>
           <td>1.660e-02</td>
-          <td>-0.030</td>
+          <td>0.030</td>
           <td>-0.100</td>
           <td>0.022</td>
-          <td>2.547e-02</td>
-          <td>-5.581e-03</td>
+          <td>-2.547e-02</td>
+          <td>5.581e-03</td>
         </tr>
         <tr>
           <th rowspan="6" valign="top">2</th>
           <th>t1</th>
-          <td>5.548e-03</td>
+          <td>-5.548e-03</td>
           <td>4.671e-06</td>
-          <td>-1.818e-04</td>
+          <td>-1.816e-04</td>
           <td>-5.670e-02</td>
-          <td>1.722e-04</td>
+          <td>-1.721e-04</td>
           <td>-4.175e-02</td>
-          <td>8.632e-05</td>
+          <td>-8.632e-05</td>
           <td>-1.341e-03</td>
           <td>1.582e-03</td>
-          <td>-2.428e-01</td>
+          <td>2.438e-01</td>
           <td>...</td>
           <td>5.723e-02</td>
           <td>-5.369e-02</td>
-          <td>-3.838e-02</td>
-          <td>-1.326e-01</td>
+          <td>-3.837e-02</td>
+          <td>1.326e-01</td>
           <td>-1.973e-02</td>
-          <td>0.028</td>
+          <td>-0.028</td>
           <td>0.033</td>
           <td>-0.104</td>
-          <td>-6.919e-02</td>
-          <td>-1.904e-02</td>
+          <td>6.919e-02</td>
+          <td>1.904e-02</td>
         </tr>
         <tr>
           <th>t2</th>
-          <td>-1.081e-04</td>
+          <td>1.081e-04</td>
           <td>5.696e-03</td>
           <td>2.353e-02</td>
-          <td>3.180e-04</td>
-          <td>-2.384e-04</td>
+          <td>3.182e-04</td>
+          <td>2.384e-04</td>
           <td>1.036e-04</td>
-          <td>-6.548e-05</td>
+          <td>6.548e-05</td>
           <td>-3.598e-02</td>
           <td>-3.128e-02</td>
-          <td>-1.090e-02</td>
+          <td>1.090e-02</td>
           <td>...</td>
           <td>-3.090e-01</td>
           <td>-3.309e-01</td>
           <td>-5.341e-02</td>
-          <td>1.528e-01</td>
+          <td>-1.528e-01</td>
           <td>-2.568e-02</td>
-          <td>-0.045</td>
+          <td>0.045</td>
           <td>-0.022</td>
           <td>0.034</td>
-          <td>1.035e-01</td>
-          <td>1.075e-01</td>
+          <td>-1.035e-01</td>
+          <td>-1.075e-01</td>
         </tr>
         <tr>
           <th>t3</th>
-          <td>3.455e-04</td>
+          <td>-3.455e-04</td>
           <td>1.510e-03</td>
-          <td>7.055e-03</td>
+          <td>7.056e-03</td>
           <td>-3.018e-03</td>
-          <td>-1.398e-03</td>
+          <td>1.398e-03</td>
           <td>-2.676e-03</td>
-          <td>9.274e-05</td>
+          <td>-9.274e-05</td>
           <td>-9.172e-03</td>
           <td>-7.968e-03</td>
-          <td>-1.735e-02</td>
+          <td>1.739e-02</td>
           <td>...</td>
           <td>-2.187e-02</td>
           <td>1.246e-01</td>
           <td>2.345e-01</td>
-          <td>-1.170e-01</td>
+          <td>1.170e-01</td>
           <td>7.135e-03</td>
-          <td>0.020</td>
+          <td>-0.020</td>
           <td>-0.090</td>
           <td>0.244</td>
-          <td>1.995e-01</td>
-          <td>-1.454e-01</td>
+          <td>-1.995e-01</td>
+          <td>1.454e-01</td>
         </tr>
         <tr>
           <th>r1</th>
-          <td>8.399e-06</td>
+          <td>-8.399e-06</td>
           <td>-2.241e-04</td>
           <td>-1.035e-03</td>
           <td>-4.509e-05</td>
-          <td>6.317e-05</td>
-          <td>-9.634e-06</td>
-          <td>2.518e-06</td>
+          <td>-6.317e-05</td>
+          <td>-9.635e-06</td>
+          <td>-2.518e-06</td>
           <td>1.322e-03</td>
           <td>1.172e-03</td>
-          <td>5.440e-04</td>
+          <td>-5.433e-04</td>
           <td>...</td>
           <td>-3.061e-02</td>
-          <td>-9.829e-04</td>
+          <td>-9.825e-04</td>
           <td>2.993e-02</td>
-          <td>-3.527e-02</td>
+          <td>3.527e-02</td>
           <td>1.148e-04</td>
-          <td>0.007</td>
+          <td>-0.007</td>
           <td>-0.053</td>
           <td>-0.004</td>
-          <td>2.357e-02</td>
-          <td>-3.403e-02</td>
+          <td>-2.357e-02</td>
+          <td>3.403e-02</td>
         </tr>
         <tr>
           <th>r2</th>
-          <td>2.507e-04</td>
+          <td>-2.507e-04</td>
           <td>1.228e-06</td>
-          <td>-8.742e-06</td>
+          <td>-8.730e-06</td>
           <td>-2.571e-03</td>
-          <td>6.180e-06</td>
+          <td>-6.174e-06</td>
           <td>-1.767e-03</td>
-          <td>3.812e-06</td>
+          <td>-3.812e-06</td>
           <td>-5.683e-05</td>
           <td>5.614e-05</td>
-          <td>-1.004e-02</td>
+          <td>1.008e-02</td>
           <td>...</td>
           <td>-1.174e-02</td>
           <td>1.241e-03</td>
           <td>1.025e-02</td>
-          <td>-3.112e-02</td>
+          <td>3.112e-02</td>
           <td>-4.135e-03</td>
-          <td>0.011</td>
+          <td>-0.011</td>
           <td>0.026</td>
           <td>0.009</td>
-          <td>7.311e-03</td>
-          <td>-9.083e-04</td>
+          <td>-7.311e-03</td>
+          <td>9.082e-04</td>
         </tr>
         <tr>
           <th>r3</th>
-          <td>5.261e-05</td>
+          <td>-5.261e-05</td>
           <td>-1.187e-06</td>
           <td>-1.986e-04</td>
           <td>-1.310e-04</td>
-          <td>-2.860e-05</td>
-          <td>-4.676e-05</td>
-          <td>-1.092e-07</td>
+          <td>2.861e-05</td>
+          <td>-4.677e-05</td>
+          <td>1.092e-07</td>
           <td>-1.774e-04</td>
           <td>1.806e-04</td>
-          <td>1.011e-03</td>
+          <td>-1.008e-03</td>
           <td>...</td>
-          <td>4.109e-05</td>
+          <td>4.063e-05</td>
           <td>2.184e-02</td>
           <td>2.495e-03</td>
-          <td>8.832e-02</td>
+          <td>-8.831e-02</td>
           <td>1.660e-02</td>
-          <td>-0.030</td>
+          <td>0.030</td>
           <td>-0.100</td>
           <td>0.022</td>
-          <td>2.547e-02</td>
-          <td>-5.581e-03</td>
+          <td>-2.547e-02</td>
+          <td>5.581e-03</td>
         </tr>
         <tr>
           <th rowspan="6" valign="top">3</th>
           <th>t1</th>
-          <td>6.169e-03</td>
+          <td>-6.169e-03</td>
           <td>7.911e-06</td>
-          <td>-2.160e-04</td>
+          <td>-2.157e-04</td>
           <td>-6.310e-02</td>
-          <td>1.897e-04</td>
+          <td>-1.896e-04</td>
           <td>-4.617e-02</td>
-          <td>9.580e-05</td>
+          <td>-9.580e-05</td>
           <td>-1.466e-03</td>
           <td>1.704e-03</td>
-          <td>-2.679e-01</td>
+          <td>2.690e-01</td>
           <td>...</td>
           <td>2.695e-02</td>
           <td>-6.243e-02</td>
           <td>-6.576e-03</td>
-          <td>-2.369e-01</td>
+          <td>2.369e-01</td>
           <td>-3.571e-02</td>
-          <td>0.065</td>
+          <td>-0.065</td>
           <td>0.135</td>
           <td>-0.079</td>
-          <td>-5.365e-02</td>
-          <td>-2.056e-02</td>
+          <td>5.365e-02</td>
+          <td>2.056e-02</td>
         </tr>
         <tr>
           <th>t2</th>
-          <td>-2.295e-04</td>
+          <td>2.295e-04</td>
           <td>6.255e-03</td>
           <td>2.639e-02</td>
-          <td>6.019e-04</td>
-          <td>-2.806e-04</td>
+          <td>6.021e-04</td>
+          <td>2.805e-04</td>
           <td>1.856e-04</td>
-          <td>-7.132e-05</td>
+          <td>7.132e-05</td>
           <td>-3.892e-02</td>
           <td>-3.453e-02</td>
-          <td>-1.453e-02</td>
+          <td>1.452e-02</td>
           <td>...</td>
           <td>-1.994e-01</td>
           <td>-3.102e-01</td>
           <td>-1.168e-01</td>
-          <td>1.054e-01</td>
+          <td>-1.054e-01</td>
           <td>-4.058e-02</td>
-          <td>-0.023</td>
+          <td>0.023</td>
           <td>0.200</td>
           <td>0.023</td>
-          <td>1.385e-02</td>
-          <td>1.724e-01</td>
+          <td>-1.385e-02</td>
+          <td>-1.724e-01</td>
         </tr>
         <tr>
           <th>t3</th>
-          <td>8.457e-04</td>
+          <td>-8.457e-04</td>
           <td>1.512e-03</td>
           <td>7.034e-03</td>
-          <td>-8.138e-03</td>
-          <td>-1.386e-03</td>
+          <td>-8.137e-03</td>
+          <td>1.386e-03</td>
           <td>-6.198e-03</td>
-          <td>1.003e-04</td>
+          <td>-1.003e-04</td>
           <td>-9.286e-03</td>
           <td>-7.856e-03</td>
-          <td>-3.736e-02</td>
+          <td>3.749e-02</td>
           <td>...</td>
           <td>-4.493e-02</td>
           <td>1.259e-01</td>
           <td>2.542e-01</td>
-          <td>-1.777e-01</td>
+          <td>1.777e-01</td>
           <td>-1.024e-03</td>
-          <td>0.042</td>
+          <td>-0.042</td>
           <td>-0.038</td>
           <td>0.262</td>
-          <td>2.140e-01</td>
-          <td>-1.467e-01</td>
+          <td>-2.140e-01</td>
+          <td>1.467e-01</td>
         </tr>
         <tr>
           <th>r1</th>
-          <td>8.883e-06</td>
+          <td>-8.883e-06</td>
           <td>-2.240e-04</td>
           <td>-1.036e-03</td>
           <td>-5.241e-05</td>
-          <td>6.649e-05</td>
-          <td>-6.664e-06</td>
-          <td>2.507e-06</td>
+          <td>-6.649e-05</td>
+          <td>-6.665e-06</td>
+          <td>-2.507e-06</td>
           <td>1.321e-03</td>
           <td>1.174e-03</td>
-          <td>5.725e-04</td>
+          <td>-5.719e-04</td>
           <td>...</td>
           <td>-3.039e-02</td>
-          <td>2.253e-04</td>
+          <td>2.256e-04</td>
           <td>2.894e-02</td>
-          <td>-3.716e-02</td>
+          <td>3.716e-02</td>
           <td>-4.793e-04</td>
-          <td>0.008</td>
+          <td>-0.008</td>
           <td>-0.047</td>
           <td>-0.006</td>
-          <td>2.042e-02</td>
-          <td>-3.308e-02</td>
+          <td>-2.042e-02</td>
+          <td>3.308e-02</td>
         </tr>
         <tr>
           <th>r2</th>
-          <td>2.507e-04</td>
+          <td>-2.507e-04</td>
           <td>1.229e-06</td>
-          <td>-8.748e-06</td>
+          <td>-8.736e-06</td>
           <td>-2.571e-03</td>
-          <td>6.181e-06</td>
+          <td>-6.175e-06</td>
           <td>-1.767e-03</td>
-          <td>3.812e-06</td>
+          <td>-3.812e-06</td>
           <td>-5.683e-05</td>
           <td>5.614e-05</td>
-          <td>-1.004e-02</td>
+          <td>1.008e-02</td>
           <td>...</td>
           <td>-1.174e-02</td>
           <td>1.238e-03</td>
           <td>1.025e-02</td>
-          <td>-3.111e-02</td>
+          <td>3.111e-02</td>
           <td>-4.135e-03</td>
-          <td>0.011</td>
+          <td>-0.011</td>
           <td>0.026</td>
           <td>0.009</td>
-          <td>7.308e-03</td>
-          <td>-9.065e-04</td>
+          <td>-7.308e-03</td>
+          <td>9.064e-04</td>
         </tr>
         <tr>
           <th>r3</th>
-          <td>4.657e-05</td>
+          <td>-4.657e-05</td>
           <td>2.289e-06</td>
-          <td>-8.563e-06</td>
+          <td>-8.570e-06</td>
           <td>-2.151e-05</td>
-          <td>8.189e-06</td>
+          <td>-8.187e-06</td>
           <td>1.310e-05</td>
-          <td>-1.439e-07</td>
+          <td>1.439e-07</td>
           <td>-1.571e-04</td>
           <td>1.600e-04</td>
-          <td>1.240e-03</td>
+          <td>-1.241e-03</td>
           <td>...</td>
           <td>6.409e-03</td>
           <td>-2.870e-02</td>
           <td>6.276e-03</td>
-          <td>-3.529e-02</td>
+          <td>3.529e-02</td>
           <td>-1.277e-02</td>
-          <td>0.016</td>
+          <td>-0.016</td>
           <td>0.091</td>
           <td>-0.024</td>
-          <td>-3.187e-02</td>
-          <td>1.810e-03</td>
+          <td>3.187e-02</td>
+          <td>-1.809e-03</td>
         </tr>
         <tr>
           <th rowspan="6" valign="top">4</th>
           <th>t1</th>
-          <td>6.169e-03</td>
+          <td>-6.169e-03</td>
           <td>7.956e-06</td>
-          <td>-2.157e-04</td>
+          <td>-2.155e-04</td>
           <td>-6.310e-02</td>
-          <td>1.907e-04</td>
+          <td>-1.906e-04</td>
           <td>-4.617e-02</td>
-          <td>9.580e-05</td>
+          <td>-9.580e-05</td>
           <td>-1.466e-03</td>
           <td>1.704e-03</td>
-          <td>-2.679e-01</td>
+          <td>2.690e-01</td>
           <td>...</td>
           <td>2.726e-02</td>
           <td>-6.325e-02</td>
-          <td>-6.637e-03</td>
-          <td>-2.366e-01</td>
+          <td>-6.636e-03</td>
+          <td>2.366e-01</td>
           <td>-3.568e-02</td>
-          <td>0.065</td>
+          <td>-0.065</td>
           <td>0.135</td>
           <td>-0.079</td>
-          <td>-5.359e-02</td>
-          <td>-2.070e-02</td>
+          <td>5.359e-02</td>
+          <td>2.070e-02</td>
         </tr>
         <tr>
           <th>t2</th>
-          <td>-1.295e-04</td>
+          <td>1.295e-04</td>
           <td>6.253e-03</td>
           <td>2.619e-02</td>
-          <td>4.724e-04</td>
-          <td>-3.533e-04</td>
+          <td>4.726e-04</td>
+          <td>3.533e-04</td>
           <td>1.577e-04</td>
-          <td>-7.179e-05</td>
+          <td>7.179e-05</td>
           <td>-3.925e-02</td>
           <td>-3.419e-02</td>
-          <td>-1.184e-02</td>
+          <td>1.183e-02</td>
           <td>...</td>
           <td>-1.877e-01</td>
           <td>-3.177e-01</td>
           <td>-1.326e-01</td>
-          <td>1.642e-01</td>
+          <td>-1.642e-01</td>
           <td>-3.435e-02</td>
-          <td>-0.035</td>
+          <td>0.035</td>
           <td>0.187</td>
           <td>0.006</td>
-          <td>6.929e-04</td>
-          <td>1.884e-01</td>
+          <td>-6.914e-04</td>
+          <td>-1.884e-01</td>
         </tr>
         <tr>
           <th>t3</th>
-          <td>3.469e-04</td>
+          <td>-3.469e-04</td>
           <td>1.510e-03</td>
           <td>7.059e-03</td>
           <td>-3.040e-03</td>
-          <td>-1.396e-03</td>
+          <td>1.396e-03</td>
           <td>-2.688e-03</td>
-          <td>9.276e-05</td>
+          <td>-9.276e-05</td>
           <td>-9.173e-03</td>
           <td>-7.968e-03</td>
-          <td>-1.742e-02</td>
+          <td>1.746e-02</td>
           <td>...</td>
           <td>-2.215e-02</td>
           <td>1.256e-01</td>
           <td>2.349e-01</td>
-          <td>-1.179e-01</td>
+          <td>1.179e-01</td>
           <td>7.068e-03</td>
-          <td>0.020</td>
+          <td>-0.020</td>
           <td>-0.089</td>
           <td>0.243</td>
-          <td>1.992e-01</td>
-          <td>-1.457e-01</td>
+          <td>-1.992e-01</td>
+          <td>1.457e-01</td>
         </tr>
         <tr>
           <th>r1</th>
-          <td>7.731e-06</td>
+          <td>-7.731e-06</td>
           <td>-2.241e-04</td>
           <td>-1.037e-03</td>
-          <td>-3.840e-05</td>
-          <td>6.177e-05</td>
+          <td>-3.841e-05</td>
+          <td>-6.177e-05</td>
           <td>-1.181e-05</td>
-          <td>2.531e-06</td>
+          <td>-2.531e-06</td>
           <td>1.322e-03</td>
           <td>1.169e-03</td>
-          <td>5.129e-04</td>
+          <td>-5.122e-04</td>
           <td>...</td>
           <td>-3.086e-02</td>
           <td>-3.467e-03</td>
           <td>3.029e-02</td>
-          <td>-3.335e-02</td>
+          <td>3.335e-02</td>
           <td>6.161e-04</td>
-          <td>0.007</td>
+          <td>-0.007</td>
           <td>-0.058</td>
           <td>-0.003</td>
-          <td>2.650e-02</td>
-          <td>-3.497e-02</td>
+          <td>-2.650e-02</td>
+          <td>3.497e-02</td>
         </tr>
         <tr>
           <th>r2</th>
-          <td>2.507e-04</td>
+          <td>-2.507e-04</td>
           <td>1.229e-06</td>
-          <td>-8.746e-06</td>
+          <td>-8.734e-06</td>
           <td>-2.571e-03</td>
-          <td>6.177e-06</td>
+          <td>-6.171e-06</td>
           <td>-1.767e-03</td>
-          <td>3.812e-06</td>
+          <td>-3.812e-06</td>
           <td>-5.682e-05</td>
           <td>5.614e-05</td>
-          <td>-1.004e-02</td>
+          <td>1.008e-02</td>
           <td>...</td>
           <td>-1.174e-02</td>
           <td>1.238e-03</td>
           <td>1.026e-02</td>
-          <td>-3.112e-02</td>
+          <td>3.112e-02</td>
           <td>-4.135e-03</td>
-          <td>0.011</td>
+          <td>-0.011</td>
           <td>0.026</td>
           <td>0.010</td>
-          <td>7.313e-03</td>
-          <td>-9.084e-04</td>
+          <td>-7.314e-03</td>
+          <td>9.083e-04</td>
         </tr>
         <tr>
           <th>r3</th>
-          <td>4.712e-05</td>
+          <td>-4.712e-05</td>
           <td>2.923e-07</td>
-          <td>5.697e-05</td>
+          <td>5.696e-05</td>
           <td>-2.570e-05</td>
-          <td>3.632e-06</td>
+          <td>-3.632e-06</td>
           <td>1.221e-05</td>
-          <td>-1.684e-07</td>
+          <td>1.684e-07</td>
           <td>-1.412e-04</td>
           <td>1.769e-04</td>
-          <td>1.298e-03</td>
+          <td>-1.299e-03</td>
           <td>...</td>
           <td>1.457e-02</td>
           <td>-1.664e-02</td>
           <td>4.624e-03</td>
-          <td>-3.608e-02</td>
+          <td>3.608e-02</td>
           <td>-1.077e-02</td>
-          <td>0.016</td>
+          <td>-0.016</td>
           <td>0.083</td>
           <td>-0.026</td>
-          <td>-3.403e-02</td>
-          <td>3.453e-04</td>
+          <td>3.404e-02</td>
+          <td>-3.449e-04</td>
         </tr>
         <tr>
           <th rowspan="6" valign="top">5</th>
           <th>t1</th>
-          <td>6.801e-03</td>
+          <td>-6.801e-03</td>
           <td>1.081e-05</td>
-          <td>-2.255e-04</td>
+          <td>-2.253e-04</td>
           <td>-6.955e-02</td>
-          <td>2.031e-04</td>
+          <td>-2.029e-04</td>
           <td>-5.058e-02</td>
-          <td>1.054e-04</td>
+          <td>-1.054e-04</td>
           <td>-1.626e-03</td>
           <td>1.863e-03</td>
-          <td>-2.930e-01</td>
+          <td>2.943e-01</td>
           <td>...</td>
-          <td>-1.463e-03</td>
-          <td>-4.748e-02</td>
+          <td>-1.462e-03</td>
+          <td>-4.749e-02</td>
           <td>1.290e-02</td>
-          <td>-2.882e-01</td>
+          <td>2.882e-01</td>
           <td>-4.040e-02</td>
-          <td>0.084</td>
+          <td>-0.084</td>
           <td>0.165</td>
           <td>-0.056</td>
-          <td>-3.263e-02</td>
-          <td>-2.358e-02</td>
+          <td>3.263e-02</td>
+          <td>2.358e-02</td>
         </tr>
         <tr>
           <th>t2</th>
-          <td>-2.553e-04</td>
+          <td>2.553e-04</td>
           <td>6.819e-03</td>
           <td>2.910e-02</td>
-          <td>8.055e-04</td>
-          <td>-4.971e-04</td>
+          <td>8.057e-04</td>
+          <td>4.970e-04</td>
           <td>2.453e-04</td>
-          <td>-7.785e-05</td>
+          <td>7.785e-05</td>
           <td>-4.223e-02</td>
           <td>-3.750e-02</td>
-          <td>-1.564e-02</td>
+          <td>1.563e-02</td>
           <td>...</td>
           <td>-1.560e-01</td>
           <td>-3.697e-01</td>
           <td>-2.080e-01</td>
-          <td>1.525e-01</td>
+          <td>-1.525e-01</td>
           <td>-5.946e-02</td>
-          <td>-0.022</td>
+          <td>0.022</td>
           <td>0.442</td>
           <td>0.012</td>
-          <td>-6.531e-02</td>
-          <td>2.889e-01</td>
+          <td>6.531e-02</td>
+          <td>-2.889e-01</td>
         </tr>
         <tr>
           <th>t3</th>
-          <td>8.469e-04</td>
+          <td>-8.469e-04</td>
           <td>1.512e-03</td>
           <td>7.038e-03</td>
           <td>-8.160e-03</td>
-          <td>-1.385e-03</td>
-          <td>-6.209e-03</td>
-          <td>1.004e-04</td>
+          <td>1.385e-03</td>
+          <td>-6.210e-03</td>
+          <td>-1.004e-04</td>
           <td>-9.286e-03</td>
           <td>-7.856e-03</td>
-          <td>-3.743e-02</td>
+          <td>3.756e-02</td>
           <td>...</td>
-          <td>-4.535e-02</td>
+          <td>-4.534e-02</td>
           <td>1.271e-01</td>
           <td>2.550e-01</td>
-          <td>-1.792e-01</td>
+          <td>1.792e-01</td>
           <td>-1.136e-03</td>
-          <td>0.042</td>
+          <td>-0.042</td>
           <td>-0.037</td>
           <td>0.263</td>
-          <td>2.141e-01</td>
-          <td>-1.473e-01</td>
+          <td>-2.141e-01</td>
+          <td>1.472e-01</td>
         </tr>
         <tr>
           <th>r1</th>
-          <td>8.399e-06</td>
+          <td>-8.399e-06</td>
           <td>-2.241e-04</td>
           <td>-1.035e-03</td>
           <td>-4.509e-05</td>
-          <td>6.317e-05</td>
-          <td>-9.634e-06</td>
-          <td>2.518e-06</td>
+          <td>-6.317e-05</td>
+          <td>-9.635e-06</td>
+          <td>-2.518e-06</td>
           <td>1.322e-03</td>
           <td>1.172e-03</td>
-          <td>5.440e-04</td>
+          <td>-5.433e-04</td>
           <td>...</td>
           <td>-3.061e-02</td>
-          <td>-9.829e-04</td>
+          <td>-9.825e-04</td>
           <td>2.993e-02</td>
-          <td>-3.527e-02</td>
+          <td>3.527e-02</td>
           <td>1.148e-04</td>
-          <td>0.007</td>
+          <td>-0.007</td>
           <td>-0.053</td>
           <td>-0.004</td>
-          <td>2.357e-02</td>
-          <td>-3.403e-02</td>
+          <td>-2.357e-02</td>
+          <td>3.403e-02</td>
         </tr>
         <tr>
           <th>r2</th>
-          <td>2.507e-04</td>
+          <td>-2.507e-04</td>
           <td>1.228e-06</td>
-          <td>-8.742e-06</td>
+          <td>-8.730e-06</td>
           <td>-2.571e-03</td>
-          <td>6.180e-06</td>
+          <td>-6.174e-06</td>
           <td>-1.767e-03</td>
-          <td>3.812e-06</td>
+          <td>-3.812e-06</td>
           <td>-5.683e-05</td>
           <td>5.614e-05</td>
-          <td>-1.004e-02</td>
+          <td>1.008e-02</td>
           <td>...</td>
           <td>-1.174e-02</td>
           <td>1.241e-03</td>
           <td>1.025e-02</td>
-          <td>-3.112e-02</td>
+          <td>3.112e-02</td>
           <td>-4.135e-03</td>
-          <td>0.011</td>
+          <td>-0.011</td>
           <td>0.026</td>
           <td>0.009</td>
-          <td>7.311e-03</td>
-          <td>-9.083e-04</td>
+          <td>-7.311e-03</td>
+          <td>9.082e-04</td>
         </tr>
         <tr>
           <th>r3</th>
-          <td>5.261e-05</td>
+          <td>-5.261e-05</td>
           <td>-1.187e-06</td>
           <td>-1.986e-04</td>
           <td>-1.310e-04</td>
-          <td>-2.860e-05</td>
-          <td>-4.676e-05</td>
-          <td>-1.092e-07</td>
+          <td>2.861e-05</td>
+          <td>-4.677e-05</td>
+          <td>1.092e-07</td>
           <td>-1.774e-04</td>
           <td>1.806e-04</td>
-          <td>1.011e-03</td>
+          <td>-1.008e-03</td>
           <td>...</td>
-          <td>4.109e-05</td>
+          <td>4.063e-05</td>
           <td>2.184e-02</td>
           <td>2.495e-03</td>
-          <td>8.832e-02</td>
+          <td>-8.831e-02</td>
           <td>1.660e-02</td>
-          <td>-0.030</td>
+          <td>0.030</td>
           <td>-0.100</td>
           <td>0.022</td>
-          <td>2.547e-02</td>
-          <td>-5.581e-03</td>
+          <td>-2.547e-02</td>
+          <td>5.581e-03</td>
         </tr>
         <tr>
           <th>...</th>
@@ -1207,147 +1198,147 @@ or a very long, but good video:
         <tr>
           <th rowspan="6" valign="top">5629</th>
           <th>t1</th>
-          <td>-7.413e-05</td>
+          <td>7.413e-05</td>
           <td>-8.245e-05</td>
-          <td>-3.907e-04</td>
+          <td>-3.908e-04</td>
           <td>3.482e-03</td>
-          <td>3.748e-05</td>
+          <td>-3.748e-05</td>
           <td>2.988e-04</td>
-          <td>-2.694e-06</td>
-          <td>2.441e-05</td>
+          <td>2.694e-06</td>
+          <td>2.440e-05</td>
           <td>1.075e-03</td>
-          <td>2.742e-03</td>
+          <td>-2.721e-03</td>
           <td>...</td>
-          <td>4.748e-04</td>
+          <td>4.755e-04</td>
           <td>5.261e-03</td>
           <td>-4.662e-02</td>
-          <td>5.886e-02</td>
+          <td>-5.886e-02</td>
           <td>-6.227e-03</td>
-          <td>-0.017</td>
+          <td>0.017</td>
           <td>0.162</td>
           <td>-0.557</td>
-          <td>6.614e-01</td>
-          <td>-1.042e-01</td>
+          <td>-6.614e-01</td>
+          <td>1.042e-01</td>
         </tr>
         <tr>
           <th>t2</th>
-          <td>-4.452e-05</td>
+          <td>4.452e-05</td>
           <td>-2.089e-04</td>
-          <td>-5.165e-03</td>
+          <td>-5.166e-03</td>
           <td>2.748e-04</td>
-          <td>-1.754e-04</td>
+          <td>1.754e-04</td>
           <td>4.173e-04</td>
-          <td>-3.617e-06</td>
+          <td>3.617e-06</td>
           <td>-1.361e-04</td>
           <td>1.100e-04</td>
-          <td>8.914e-04</td>
+          <td>-9.064e-04</td>
           <td>...</td>
           <td>2.047e-01</td>
           <td>6.117e-02</td>
           <td>-5.444e-02</td>
-          <td>-1.529e-02</td>
+          <td>1.529e-02</td>
           <td>-1.469e-02</td>
-          <td>0.023</td>
+          <td>-0.023</td>
           <td>0.183</td>
           <td>0.290</td>
-          <td>-3.938e-01</td>
-          <td>3.587e-01</td>
+          <td>3.938e-01</td>
+          <td>-3.587e-01</td>
         </tr>
         <tr>
           <th>t3</th>
-          <td>-1.283e-04</td>
+          <td>1.283e-04</td>
           <td>1.048e-03</td>
-          <td>8.982e-03</td>
+          <td>8.983e-03</td>
           <td>5.709e-04</td>
-          <td>-1.808e-04</td>
+          <td>1.808e-04</td>
           <td>1.258e-03</td>
-          <td>5.577e-06</td>
+          <td>-5.577e-06</td>
           <td>-5.649e-03</td>
           <td>-5.097e-03</td>
-          <td>7.869e-03</td>
+          <td>-7.903e-03</td>
           <td>...</td>
           <td>-1.857e-01</td>
           <td>-2.785e-02</td>
           <td>6.353e-02</td>
-          <td>5.410e-02</td>
+          <td>-5.410e-02</td>
           <td>2.473e-02</td>
-          <td>-0.030</td>
+          <td>0.030</td>
           <td>-0.234</td>
           <td>0.069</td>
-          <td>6.091e-02</td>
-          <td>-3.214e-01</td>
+          <td>-6.092e-02</td>
+          <td>3.214e-01</td>
         </tr>
         <tr>
           <th>r1</th>
-          <td>-3.005e-07</td>
+          <td>3.005e-07</td>
           <td>5.476e-05</td>
           <td>6.343e-04</td>
-          <td>6.332e-06</td>
-          <td>2.491e-06</td>
+          <td>6.334e-06</td>
+          <td>-2.493e-06</td>
           <td>2.715e-06</td>
-          <td>5.464e-07</td>
+          <td>-5.464e-07</td>
           <td>-2.376e-04</td>
           <td>-2.019e-04</td>
-          <td>-6.031e-05</td>
+          <td>6.017e-05</td>
           <td>...</td>
           <td>-4.279e-04</td>
           <td>-3.524e-03</td>
-          <td>9.710e-04</td>
-          <td>-6.896e-03</td>
+          <td>9.711e-04</td>
+          <td>6.896e-03</td>
           <td>9.867e-04</td>
-          <td>0.001</td>
+          <td>-0.001</td>
           <td>-0.014</td>
           <td>-0.008</td>
-          <td>2.789e-02</td>
-          <td>-2.645e-02</td>
+          <td>-2.789e-02</td>
+          <td>2.645e-02</td>
         </tr>
         <tr>
           <th>r2</th>
-          <td>1.195e-05</td>
+          <td>-1.195e-05</td>
           <td>-1.468e-05</td>
           <td>-9.874e-05</td>
-          <td>2.887e-07</td>
-          <td>7.293e-06</td>
+          <td>2.889e-07</td>
+          <td>-7.292e-06</td>
           <td>-1.234e-04</td>
-          <td>1.826e-07</td>
+          <td>-1.826e-07</td>
           <td>7.492e-05</td>
           <td>1.152e-04</td>
-          <td>-9.475e-04</td>
+          <td>9.511e-04</td>
           <td>...</td>
           <td>2.369e-02</td>
           <td>1.095e-03</td>
           <td>-8.118e-03</td>
-          <td>-1.289e-02</td>
+          <td>1.289e-02</td>
           <td>-1.785e-03</td>
-          <td>0.005</td>
+          <td>-0.005</td>
           <td>0.015</td>
           <td>-0.021</td>
-          <td>3.344e-02</td>
-          <td>3.849e-03</td>
+          <td>-3.344e-02</td>
+          <td>-3.849e-03</td>
         </tr>
         <tr>
           <th>r3</th>
-          <td>-2.865e-06</td>
+          <td>2.865e-06</td>
           <td>1.522e-05</td>
-          <td>6.912e-05</td>
-          <td>-4.279e-06</td>
-          <td>-4.743e-06</td>
+          <td>6.913e-05</td>
+          <td>-4.280e-06</td>
+          <td>4.744e-06</td>
           <td>2.949e-05</td>
-          <td>1.857e-07</td>
+          <td>-1.857e-07</td>
           <td>-1.044e-04</td>
           <td>-6.757e-05</td>
-          <td>-1.060e-04</td>
+          <td>1.044e-04</td>
           <td>...</td>
           <td>2.703e-02</td>
           <td>1.362e-03</td>
           <td>-5.113e-03</td>
-          <td>-1.492e-02</td>
+          <td>1.492e-02</td>
           <td>-6.335e-04</td>
-          <td>0.005</td>
+          <td>-0.005</td>
           <td>0.001</td>
           <td>0.027</td>
-          <td>-1.418e-02</td>
-          <td>1.118e-02</td>
+          <td>1.418e-02</td>
+          <td>-1.118e-02</td>
         </tr>
         <tr>
           <th rowspan="6" valign="top">5630</th>
@@ -1424,75 +1415,75 @@ or a very long, but good video:
         </tr>
         <tr>
           <th>r1</th>
-          <td>-1.815e-05</td>
+          <td>1.815e-05</td>
           <td>-9.454e-05</td>
-          <td>-3.223e-04</td>
+          <td>-3.224e-04</td>
           <td>-3.568e-05</td>
-          <td>1.340e-05</td>
+          <td>-1.340e-05</td>
           <td>-3.384e-05</td>
-          <td>1.329e-06</td>
+          <td>-1.329e-06</td>
           <td>7.127e-04</td>
           <td>4.621e-04</td>
-          <td>-6.382e-04</td>
+          <td>6.393e-04</td>
           <td>...</td>
           <td>-3.555e-02</td>
           <td>-8.501e-03</td>
           <td>1.420e-02</td>
-          <td>-1.374e-02</td>
+          <td>1.374e-02</td>
           <td>1.390e-04</td>
-          <td>0.004</td>
+          <td>-0.004</td>
           <td>-0.017</td>
           <td>0.004</td>
-          <td>-2.480e-04</td>
-          <td>-2.458e-03</td>
+          <td>2.479e-04</td>
+          <td>2.458e-03</td>
         </tr>
         <tr>
           <th>r2</th>
-          <td>-1.174e-04</td>
+          <td>1.174e-04</td>
           <td>8.335e-07</td>
           <td>-1.801e-05</td>
           <td>1.328e-03</td>
-          <td>2.448e-05</td>
+          <td>-2.449e-05</td>
           <td>7.252e-04</td>
-          <td>-3.178e-07</td>
+          <td>3.178e-07</td>
           <td>-1.708e-05</td>
           <td>-1.350e-05</td>
-          <td>3.852e-03</td>
+          <td>-3.866e-03</td>
           <td>...</td>
-          <td>6.103e-03</td>
+          <td>6.104e-03</td>
           <td>-6.432e-03</td>
           <td>1.082e-02</td>
-          <td>-3.451e-02</td>
+          <td>3.451e-02</td>
           <td>-4.203e-03</td>
-          <td>0.011</td>
+          <td>-0.011</td>
           <td>0.018</td>
           <td>-0.003</td>
-          <td>7.885e-03</td>
-          <td>2.321e-02</td>
+          <td>-7.885e-03</td>
+          <td>-2.321e-02</td>
         </tr>
         <tr>
           <th>r3</th>
-          <td>1.512e-05</td>
+          <td>-1.512e-05</td>
           <td>3.817e-05</td>
           <td>2.898e-04</td>
-          <td>-7.734e-06</td>
-          <td>-1.064e-06</td>
-          <td>-1.914e-06</td>
-          <td>-6.212e-07</td>
+          <td>-7.733e-06</td>
+          <td>1.063e-06</td>
+          <td>-1.915e-06</td>
+          <td>6.212e-07</td>
           <td>-2.275e-04</td>
           <td>-1.247e-04</td>
-          <td>5.015e-04</td>
+          <td>-5.015e-04</td>
           <td>...</td>
           <td>1.508e-02</td>
           <td>-1.308e-03</td>
           <td>3.008e-03</td>
-          <td>-9.727e-03</td>
+          <td>9.727e-03</td>
           <td>3.836e-04</td>
-          <td>0.001</td>
+          <td>-0.001</td>
           <td>-0.003</td>
           <td>-0.030</td>
-          <td>-3.103e-02</td>
-          <td>-2.712e-02</td>
+          <td>3.103e-02</td>
+          <td>2.712e-02</td>
         </tr>
         <tr>
           <th rowspan="6" valign="top">5631</th>
@@ -1569,75 +1560,75 @@ or a very long, but good video:
         </tr>
         <tr>
           <th>r1</th>
-          <td>-9.862e-07</td>
+          <td>9.862e-07</td>
           <td>5.862e-05</td>
-          <td>5.579e-04</td>
+          <td>5.580e-04</td>
           <td>1.046e-05</td>
-          <td>6.905e-05</td>
+          <td>-6.905e-05</td>
           <td>5.601e-06</td>
-          <td>-1.679e-06</td>
+          <td>1.679e-06</td>
           <td>-2.394e-04</td>
           <td>-2.043e-04</td>
-          <td>-3.901e-05</td>
+          <td>3.883e-05</td>
           <td>...</td>
           <td>1.138e-03</td>
           <td>-1.261e-02</td>
           <td>1.119e-02</td>
-          <td>-1.439e-02</td>
+          <td>1.439e-02</td>
           <td>1.245e-03</td>
-          <td>0.004</td>
+          <td>-0.004</td>
           <td>-0.024</td>
           <td>-0.012</td>
-          <td>4.048e-03</td>
-          <td>1.465e-02</td>
+          <td>-4.048e-03</td>
+          <td>-1.465e-02</td>
         </tr>
         <tr>
           <th>r2</th>
-          <td>8.388e-06</td>
+          <td>-8.388e-06</td>
           <td>-1.919e-06</td>
-          <td>-7.635e-06</td>
+          <td>-7.634e-06</td>
           <td>-2.048e-04</td>
-          <td>-1.957e-07</td>
+          <td>1.955e-07</td>
           <td>-2.855e-04</td>
-          <td>5.311e-07</td>
+          <td>-5.311e-07</td>
           <td>6.254e-05</td>
           <td>-5.671e-05</td>
-          <td>-2.159e-03</td>
+          <td>2.168e-03</td>
           <td>...</td>
           <td>-2.994e-02</td>
           <td>-4.564e-03</td>
           <td>1.167e-02</td>
-          <td>-1.208e-02</td>
+          <td>1.208e-02</td>
           <td>-2.319e-03</td>
-          <td>0.004</td>
+          <td>-0.004</td>
           <td>0.012</td>
           <td>-0.005</td>
-          <td>-5.452e-03</td>
-          <td>-5.399e-03</td>
+          <td>5.452e-03</td>
+          <td>5.399e-03</td>
         </tr>
         <tr>
           <th>r3</th>
-          <td>-4.235e-05</td>
+          <td>4.235e-05</td>
           <td>3.105e-06</td>
-          <td>1.132e-06</td>
+          <td>1.133e-06</td>
           <td>3.700e-04</td>
-          <td>3.678e-07</td>
+          <td>-3.676e-07</td>
           <td>2.318e-04</td>
-          <td>-3.299e-07</td>
+          <td>3.299e-07</td>
           <td>-1.454e-05</td>
           <td>-9.195e-06</td>
-          <td>8.113e-04</td>
+          <td>-8.160e-04</td>
           <td>...</td>
-          <td>7.605e-03</td>
+          <td>7.604e-03</td>
           <td>-3.327e-03</td>
           <td>1.359e-02</td>
-          <td>8.849e-04</td>
+          <td>-8.851e-04</td>
           <td>-7.085e-04</td>
-          <td>0.002</td>
+          <td>-0.002</td>
           <td>0.011</td>
           <td>-0.018</td>
-          <td>-1.781e-02</td>
-          <td>-1.326e-02</td>
+          <td>1.781e-02</td>
+          <td>1.326e-02</td>
         </tr>
         <tr>
           <th rowspan="6" valign="top">5632</th>
@@ -1714,75 +1705,75 @@ or a very long, but good video:
         </tr>
         <tr>
           <th>r1</th>
-          <td>1.756e-05</td>
+          <td>-1.756e-05</td>
           <td>-9.628e-05</td>
           <td>-3.117e-04</td>
           <td>4.014e-05</td>
-          <td>1.268e-05</td>
+          <td>-1.268e-05</td>
           <td>3.502e-05</td>
-          <td>1.054e-06</td>
+          <td>-1.054e-06</td>
           <td>5.821e-04</td>
           <td>6.400e-04</td>
-          <td>9.411e-04</td>
+          <td>-9.421e-04</td>
           <td>...</td>
           <td>3.064e-02</td>
           <td>-2.242e-03</td>
-          <td>5.439e-04</td>
-          <td>-1.809e-02</td>
+          <td>5.440e-04</td>
+          <td>1.809e-02</td>
           <td>1.961e-04</td>
-          <td>0.005</td>
+          <td>-0.005</td>
           <td>-0.016</td>
           <td>0.004</td>
-          <td>1.558e-04</td>
-          <td>-4.253e-03</td>
+          <td>-1.559e-04</td>
+          <td>4.253e-03</td>
         </tr>
         <tr>
           <th>r2</th>
-          <td>-1.170e-04</td>
+          <td>1.170e-04</td>
           <td>-2.698e-07</td>
-          <td>2.598e-05</td>
+          <td>2.597e-05</td>
           <td>1.325e-03</td>
-          <td>-3.278e-05</td>
-          <td>7.227e-04</td>
-          <td>-2.756e-06</td>
+          <td>3.278e-05</td>
+          <td>7.228e-04</td>
+          <td>2.756e-06</td>
           <td>1.174e-05</td>
           <td>1.113e-05</td>
-          <td>3.844e-03</td>
+          <td>-3.858e-03</td>
           <td>...</td>
           <td>1.025e-02</td>
           <td>4.245e-03</td>
           <td>2.363e-03</td>
-          <td>-2.781e-02</td>
+          <td>2.781e-02</td>
           <td>-4.249e-03</td>
-          <td>0.009</td>
+          <td>-0.009</td>
           <td>0.026</td>
           <td>0.024</td>
-          <td>1.089e-02</td>
-          <td>-1.333e-02</td>
+          <td>-1.089e-02</td>
+          <td>1.333e-02</td>
         </tr>
         <tr>
           <th>r3</th>
-          <td>1.548e-05</td>
+          <td>-1.548e-05</td>
           <td>-4.294e-05</td>
           <td>-2.770e-04</td>
-          <td>-1.257e-05</td>
-          <td>-3.928e-06</td>
-          <td>-5.062e-06</td>
-          <td>3.049e-07</td>
+          <td>-1.258e-05</td>
+          <td>3.928e-06</td>
+          <td>-5.063e-06</td>
+          <td>-3.048e-07</td>
           <td>1.836e-04</td>
           <td>2.254e-04</td>
-          <td>5.881e-04</td>
+          <td>-5.880e-04</td>
           <td>...</td>
           <td>2.334e-02</td>
           <td>-1.135e-03</td>
           <td>5.283e-03</td>
-          <td>-1.865e-03</td>
+          <td>1.865e-03</td>
           <td>-3.915e-03</td>
-          <td>0.002</td>
+          <td>-0.002</td>
           <td>0.024</td>
           <td>-0.032</td>
-          <td>-2.891e-02</td>
-          <td>-1.447e-02</td>
+          <td>2.892e-02</td>
+          <td>1.447e-02</td>
         </tr>
         <tr>
           <th rowspan="6" valign="top">5633</th>
@@ -1859,75 +1850,75 @@ or a very long, but good video:
         </tr>
         <tr>
           <th>r1</th>
-          <td>-3.006e-07</td>
+          <td>3.006e-07</td>
           <td>5.476e-05</td>
           <td>6.343e-04</td>
-          <td>6.334e-06</td>
-          <td>2.491e-06</td>
+          <td>6.336e-06</td>
+          <td>-2.493e-06</td>
           <td>2.716e-06</td>
-          <td>5.464e-07</td>
+          <td>-5.464e-07</td>
           <td>-2.376e-04</td>
           <td>-2.019e-04</td>
-          <td>-6.030e-05</td>
+          <td>6.017e-05</td>
           <td>...</td>
-          <td>-4.279e-04</td>
+          <td>-4.280e-04</td>
           <td>-3.524e-03</td>
-          <td>9.710e-04</td>
-          <td>-6.896e-03</td>
+          <td>9.711e-04</td>
+          <td>6.896e-03</td>
           <td>9.867e-04</td>
-          <td>0.001</td>
+          <td>-0.001</td>
           <td>-0.014</td>
           <td>-0.008</td>
-          <td>2.789e-02</td>
-          <td>-2.645e-02</td>
+          <td>-2.789e-02</td>
+          <td>2.645e-02</td>
         </tr>
         <tr>
           <th>r2</th>
-          <td>-1.723e-06</td>
+          <td>1.723e-06</td>
           <td>1.278e-06</td>
           <td>-1.805e-06</td>
           <td>1.940e-04</td>
-          <td>3.380e-07</td>
-          <td>-8.450e-06</td>
-          <td>3.548e-08</td>
+          <td>-3.377e-07</td>
+          <td>-8.446e-06</td>
+          <td>-3.548e-08</td>
           <td>-4.728e-05</td>
           <td>4.650e-05</td>
-          <td>-2.113e-04</td>
+          <td>2.129e-04</td>
           <td>...</td>
           <td>2.084e-02</td>
           <td>1.171e-03</td>
           <td>-6.235e-03</td>
-          <td>-1.349e-02</td>
+          <td>1.349e-02</td>
           <td>-1.096e-03</td>
-          <td>0.005</td>
+          <td>-0.005</td>
           <td>0.006</td>
           <td>0.005</td>
-          <td>4.639e-03</td>
-          <td>6.872e-03</td>
+          <td>-4.639e-03</td>
+          <td>-6.872e-03</td>
         </tr>
         <tr>
           <th>r3</th>
-          <td>7.271e-06</td>
+          <td>-7.271e-06</td>
           <td>3.394e-06</td>
-          <td>-2.722e-06</td>
+          <td>-2.717e-06</td>
           <td>-1.478e-04</td>
-          <td>4.108e-07</td>
-          <td>-5.572e-05</td>
-          <td>2.948e-07</td>
-          <td>-1.384e-05</td>
+          <td>-4.097e-07</td>
+          <td>-5.573e-05</td>
+          <td>-2.948e-07</td>
+          <td>-1.383e-05</td>
           <td>-1.663e-05</td>
-          <td>-6.516e-04</td>
+          <td>6.515e-04</td>
           <td>...</td>
           <td>2.914e-02</td>
           <td>1.305e-03</td>
           <td>-6.509e-03</td>
-          <td>-1.448e-02</td>
+          <td>1.448e-02</td>
           <td>-1.144e-03</td>
-          <td>0.005</td>
+          <td>-0.005</td>
           <td>0.008</td>
           <td>0.008</td>
-          <td>7.160e-03</td>
-          <td>8.942e-03</td>
+          <td>-7.160e-03</td>
+          <td>-8.942e-03</td>
         </tr>
       </tbody>
     </table>
@@ -1945,7 +1936,7 @@ The OP2 is the same as an F06, so CQUAD4 elements have centroidal-based
 results or centroidal-based as well as the results at the 4 corner
 nodes.
 
-Be careful about what you're accessing.
+Be careful about what you’re accessing.
 
 .. code:: python
 
@@ -1979,17 +1970,17 @@ Be careful about what you're accessing.
 .. parsed-literal::
 
     plate_stress_obj = <class 'pyNastran.op2.tables.oes_stressStrain.real.oes_plates.RealPlateStressArray'>
-    plate_stress = ['_add_new_eid', '_add_new_node', 'subtitle', 'words', 's_code', 'is_built', 'stress_bits', 'load_set', 'itotal', '_add', '_ntotals', 'nnodes', 'sort_bits', 'isubcase', 'element_name', 'itime', 'nonlinear_factor', 'title', '_times', 'ntotal', 'approach_code', 'is_stress_flag', 'label', 'element_node', 'is_msc', 'num_wide', 'mode', 'format_code', 'device_code', 'modes', '_times_dtype', 'thermal_bits', 'mode2s', 'data_frame', 'mode2', 'dt', 'is_strain_flag', 'data', 'cycle', 'name', 'nelements', 'eigr', 'ielement', 'thermal', 'analysis_code', 'eigrs', 'table_code', 'element_type', 'table_name', 'data_code', 'isTransient', 'sort_code', 'cycles', 'ntimes', 'data_names']
+    plate_stress = ['itime', 'subtitle', 'words', 's_code', 'is_built', 'stress_bits', 'load_set', 'mode', '_ntotals', 'nnodes', 'sort_bits', 'isubcase', 'data', 'element_name', 'nonlinear_factor', 'title', '_times', 'ntotal', 'approach_code', 'is_stress_flag', 'label', 'element_node', 'is_msc', 'sort_method', 'num_wide', 'eign', 'format_code', 'device_code', 'superelement_adaptivity_index', 'modes', '_times_dtype', 'eigns', 'thermal_bits', 'mode2s', 'data_frame', 'mode2', 'dt', 'is_strain_flag', 'itotal', 'cycle', 'cycles', 'name', 'nelements', 'ielement', 'thermal', 'analysis_code', 'table_code', 'element_type', 'table_name', 'data_code', 'tCode', 'sort_code', 'pval_step', 'ntimes', 'data_names']
     
-    data_code_keys = [u'subtitle', u'stress_bits', u'load_set', u'thermal', u's_code', u'sort_bits', u'isubcase', u'element_name', u'mode2', u'title', u'approach_code', u'is_stress_flag', u'label', u'is_msc', u'num_wide', u'format_code', u'device_code', u'_times_dtype', u'thermal_bits', u'nonlinear_factor', u'is_strain_flag', u'cycle', u'name', u'eigr', u'analysis_code', u'table_code', u'element_type', u'table_name', u'mode', u'sort_code', u'data_names']
+    data_code_keys = [u'subtitle', u'stress_bits', u'load_set', u'thermal', u's_code', u'sort_bits', u'isubcase', u'element_name', u'nonlinear_factor', u'title', u'approach_code', u'is_stress_flag', u'label', u'table_name', u'sort_method', u'num_wide', u'mode', u'format_code', u'device_code', u'superelement_adaptivity_index', u'_times_dtype', u'thermal_bits', u'mode2', u'is_strain_flag', u'cycle', u'name', u'analysis_code', u'table_code', u'element_type', u'is_msc', u'eign', u'tCode', u'sort_code', u'data_names', u'pval_step']
     
     name = u'mode'
-    list-type variables = [u'mode', u'eigr', u'mode2', u'cycle']
+    list-type variables = [u'mode', u'eign', u'mode2', u'cycle']
     modes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167]
     
 
-Similar to the BDF, we can use object\_attributes/methods
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Similar to the BDF, we can use object_attributes/methods
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: python
 
@@ -2001,9 +1992,9 @@ Similar to the BDF, we can use object\_attributes/methods
 
 .. parsed-literal::
 
-    methods = ['apply_data_code', 'approach_code_str', 'build', 'build_dataframe', 'cast_grid_type', 'code_information', 'eid_to_element_node_index', 'get_data_code', 'get_element_index', 'get_element_type', 'get_headers', 'get_nnodes_bilinear', 'get_stats', 'get_unsteady_value', 'is_bilinear', 'is_complex', 'is_curvature', 'is_fiber_distance', 'is_magnitude_phase', 'is_max_shear', 'is_real', 'is_sort1', 'is_sort2', 'is_strain', 'is_stress', 'is_thermal', 'is_von_mises', 'object_attributes', 'object_methods', 'print_data_members', 'print_table_code', 'recast_gridtype_as_string', 'set_table_type', 'update_data_code', 'update_dt', 'write_f06']
+    methods = ['add_new_eid_sort1', 'add_new_node_sort1', 'add_sort1', 'apply_data_code', 'approach_code_str', 'build', 'build_dataframe', 'cast_grid_type', 'code_information', 'eid_to_element_node_index', 'export_to_hdf5', 'get_data_code', 'get_element_index', 'get_element_type', 'get_headers', 'get_nnodes_bilinear', 'get_stats', 'get_unsteady_value', 'is_bilinear', 'is_magnitude_phase', 'is_thermal', 'object_attributes', 'object_methods', 'print_data_members', 'print_table_code', 'recast_gridtype_as_string', 'set_table_type', 'update_data_code', 'update_dt', 'write_f06']
     
-    methods2= ['apply_data_code', 'approach_code_str', 'build', 'build_dataframe', 'cast_grid_type', 'code_information', 'eid_to_element_node_index', 'get_data_code', 'get_element_index', 'get_element_type', 'get_headers', 'get_nnodes_bilinear', 'get_stats', 'get_unsteady_value', 'is_bilinear', 'is_complex', 'is_curvature', 'is_fiber_distance', 'is_magnitude_phase', 'is_max_shear', 'is_real', 'is_sort1', 'is_sort2', 'is_strain', 'is_stress', 'is_thermal', 'is_von_mises', 'print_data_members', 'print_table_code', 'recast_gridtype_as_string', 'set_table_type', 'update_data_code', 'update_dt', 'write_f06']
+    methods2= ['add_new_eid_sort1', 'add_new_node_sort1', 'add_sort1', 'apply_data_code', 'approach_code_str', 'build', 'build_dataframe', 'cast_grid_type', 'code_information', 'eid_to_element_node_index', 'export_to_hdf5', 'get_data_code', 'get_element_index', 'get_element_type', 'get_headers', 'get_nnodes_bilinear', 'get_stats', 'get_unsteady_value', 'is_bilinear', 'is_magnitude_phase', 'is_thermal', 'print_data_members', 'print_table_code', 'recast_gridtype_as_string', 'set_table_type', 'update_data_code', 'update_dt', 'write_f06']
     
     headers = [u'fiber_distance', u'oxx', u'oyy', u'txy', u'angle', u'omax', u'omin', u'von_mises']
     
@@ -2015,7 +2006,7 @@ Number of Nodes on a CQUAD4
 -  For linear CQUAD4s, there is 1 centroidal stress at two locations
 -  For bilinear quads, there are 5 stresses at two locations (4 nodes +
    centroidal)
--  node\_id=0 indicates a centroidal quantity
+-  node_id=0 indicates a centroidal quantity
 -  CTRIA3s are always centroidal
 
 What sets this?
@@ -2023,49 +2014,51 @@ What sets this?
 
 ::
 
-    STRESS(real, sort1, BILIN) = ALL   # bilinear cquad
-    STRESS(real, sort1, CENT) = ALL    # linear quad
+   STRESS(real, sort1, BILIN) = ALL   # bilinear cquad
+   STRESS(real, sort1, CENT) = ALL    # linear quad
 
-    STRAIN(real, sort1, BILIN) = ALL   # bilinear cquad
-    STRAIN(real, sort1, CENT) = ALL    # linear quad
+   STRAIN(real, sort1, BILIN) = ALL   # bilinear cquad
+   STRAIN(real, sort1, CENT) = ALL    # linear quad
 
-How do we know if we're bilinear?
+How do we know if we’re bilinear?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ::
 
-    print("is_bilinear = %s\n" % plate_stress.is_bilinear())
+   print("is_bilinear = %s\n" % plate_stress.is_bilinear())
 
 What locations are chosen?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-That depends on fiber distance/fiber curvature... - fiber\_curvature -
-mean stress (oa) & slope (om)
+That depends on fiber distance/fiber curvature… - fiber_curvature - mean
+stress (oa) & slope (om)
 
 ::
 
-    $$ \sigma_{top} = \sigma_{alt} + \frac{t}{2} \sigma_{mean}$$
+   $$ \sigma_{top} = \sigma_{alt} + \frac{t}{2} \sigma_{mean}$$
 
-    $$ \sigma_{btm} = \sigma_{alt} + \frac{t}{2} \sigma_{mean}$$
+   $$ \sigma_{btm} = \sigma_{alt} + \frac{t}{2} \sigma_{mean}$$
 
--  fiber\_distance - upper and lower surface stress (o\_top; o\_btm)
--  If you have stress, fiber\_distance is always returned regardless of
+-  fiber_distance - upper and lower surface stress (o_top; o_btm)
+-  If you have stress, fiber_distance is always returned regardless of
    your option.
+
+.. _what-sets-this-1:
 
 What sets this?
 ^^^^^^^^^^^^^^^
 
 ::
 
-    STRAIN(real, sort1, FIBER) = ALL   # fiber distance/default
-    STRAIN(real, sort1, STRCUR) = ALL  # strain curvature
+   STRAIN(real, sort1, FIBER) = ALL   # fiber distance/default
+   STRAIN(real, sort1, STRCUR) = ALL  # strain curvature
 
-How do we know if we're using fiber\_distance?
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+How do we know if we’re using fiber_distance?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ::
 
-    print("is_fiber_distance = %s" % plate_stress.is_fiber_distance())
+   print("is_fiber_distance = %s" % plate_stress.is_fiber_distance())
 
 Accessing results
 -----------------
@@ -2105,7 +2098,7 @@ Note that this is intentionally done iinefficiently to access specific entries i
     
     #-----------------------------
     itime = 0 # static analysis / mode 1
-    if plate_stress.is_von_mises():  # True
+    if plate_stress.is_von_mises:  # True
         ovm = plate_stress.data[itime, :, 7]
         print('we have von mises data; ovm=%s\n' % ovm)
     else:
@@ -2138,11 +2131,11 @@ Note that this is intentionally done iinefficiently to access specific entries i
     ieids = [0 2 4]
     verify5:
     [0 1 2 3 4 5]
-    we have von mises data; ovm=[ 54.222   5.041  13.143 ...,   2.34    6.146   7.368]
+    we have von mises data; ovm=[54.222  5.041 13.143 ...  2.34   6.146  7.368]
     
-    [layer1, layer2, ...] = [ 54.222   5.041  13.143  21.222  78.544  17.91 ]
+    [layer1, layer2, ...] = [54.222  5.041 13.143 21.222 78.545 17.91 ]
     ieid1000 = [1998 1999]
-    ovm_mode6_eid1000 = [ 90.618  94.09 ] -> 94.0905
+    ovm_mode6_eid1000 = [90.618 94.091] -> 94.09056
     
 
 .. code:: python
@@ -2170,7 +2163,7 @@ Note that this is intentionally done iinefficiently to access specific entries i
     print("omin = %s" % plate_stress.data[imode, ieid10, 6])
     print("ovm/max_shear = %s" % plate_stress.data[imode, ieid10, 7])
     
-    if plate_stress.is_fiber_distance():
+    if plate_stress.is_fiber_distance:
         print("fiber_distance = %s" % plate_stress.data[imode, ieid10, 0])
     else:
         print("curvature = %s" % plate_stress.data[imode, ieid10, 0])
@@ -2181,13 +2174,13 @@ Note that this is intentionally done iinefficiently to access specific entries i
     ieid10 = 19
     [10  0]
     ps.modes = 6
-    ps.cycles = 9.80908925027e-45
-    oxx = -18.8701
-    oyy = -20.1605
-    txy = -8.30956
-    omax = -11.1807
-    omin = -27.8499
-    ovm/max_shear = 24.2743
+    ps.cycles = 20.548073657198046
+    oxx = -18.872536
+    oyy = -20.16303
+    txy = -8.309847
+    omax = -11.182922
+    omin = -27.852644
+    ovm/max_shear = 24.276606
     fiber_distance = -0.4
     
 
@@ -2199,19 +2192,63 @@ Note that this is intentionally done iinefficiently to access specific entries i
     mass, cg, I = model.mass_properties()
 
 
-.. parsed-literal::
 
-    WARNING:   fname=shell.py                  lineNo=1434   PSHELL pid=1 midsurface: z1=0.400000006 z2=-0.400000006 t=0.035999998 not in range of -1.5t < zi < 1.5t
-    WARNING:   fname=shell.py                  lineNo=1434   PSHELL pid=2 midsurface: z1=0.400000006 z2=-0.400000006 t=0.054000005 not in range of -1.5t < zi < 1.5t
-    WARNING:   fname=shell.py                  lineNo=1434   PSHELL pid=3 midsurface: z1=0.400000006 z2=-0.400000006 t=0.017999999 not in range of -1.5t < zi < 1.5t
-    WARNING:   fname=shell.py                  lineNo=1434   PSHELL pid=7 midsurface: z1=0.418000013 z2=-0.418000013 t=0.035999998 not in range of -1.5t < zi < 1.5t
-    WARNING:   fname=shell.py                  lineNo=1434   PSHELL pid=34 midsurface: z1=0.194000006 z2=-0.194000006 t=0.0186 not in range of -1.5t < zi < 1.5t
-    WARNING:   fname=shell.py                  lineNo=1434   PSHELL pid=37 midsurface: z1=0.308999985 z2=-0.308999985 t=0.0186 not in range of -1.5t < zi < 1.5t
-    WARNING:   fname=shell.py                  lineNo=1434   PSHELL pid=38 midsurface: z1=0.284000009 z2=-0.284000009 t=0.0186 not in range of -1.5t < zi < 1.5t
-    WARNING:   fname=shell.py                  lineNo=1434   PSHELL pid=46 midsurface: z1=0.199000001 z2=-0.199000001 t=0.0186 not in range of -1.5t < zi < 1.5t
-    
+.. raw:: html
 
-Let's print out the actual mass properties from the OP2 and get the same result as the F06
+    <text style=color:orange>WARNING: shell.py:2060                PSHELL pid=1 midsurface: z1=0.400000006 z2=-0.400000006 t=0.035999998 not in range of -1.5t < zi < 1.5t
+    </text>
+
+
+
+.. raw:: html
+
+    <text style=color:orange>WARNING: shell.py:2060                PSHELL pid=2 midsurface: z1=0.400000006 z2=-0.400000006 t=0.054000005 not in range of -1.5t < zi < 1.5t
+    </text>
+
+
+
+.. raw:: html
+
+    <text style=color:orange>WARNING: shell.py:2060                PSHELL pid=3 midsurface: z1=0.400000006 z2=-0.400000006 t=0.017999999 not in range of -1.5t < zi < 1.5t
+    </text>
+
+
+
+.. raw:: html
+
+    <text style=color:orange>WARNING: shell.py:2060                PSHELL pid=7 midsurface: z1=0.418000013 z2=-0.418000013 t=0.035999998 not in range of -1.5t < zi < 1.5t
+    </text>
+
+
+
+.. raw:: html
+
+    <text style=color:orange>WARNING: shell.py:2060                PSHELL pid=34 midsurface: z1=0.194000006 z2=-0.194000006 t=0.0186 not in range of -1.5t < zi < 1.5t
+    </text>
+
+
+
+.. raw:: html
+
+    <text style=color:orange>WARNING: shell.py:2060                PSHELL pid=37 midsurface: z1=0.308999985 z2=-0.308999985 t=0.0186 not in range of -1.5t < zi < 1.5t
+    </text>
+
+
+
+.. raw:: html
+
+    <text style=color:orange>WARNING: shell.py:2060                PSHELL pid=38 midsurface: z1=0.284000009 z2=-0.284000009 t=0.0186 not in range of -1.5t < zi < 1.5t
+    </text>
+
+
+
+.. raw:: html
+
+    <text style=color:orange>WARNING: shell.py:2060                PSHELL pid=46 midsurface: z1=0.199000001 z2=-0.199000001 t=0.0186 not in range of -1.5t < zi < 1.5t
+    </text>
+
+
+Let’s print out the actual mass properties from the OP2 and get the same result as the F06
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 We need ``PARAM,POSTEXT,YES`` in out BDF to get the Grid Point Weight
@@ -2223,47 +2260,19 @@ Table
     #print(gpw.object_attributes())
     
     print(gpw)
+    gpw.object_methods()
+    #gpw.write_f06?
+    print(gpw.get_stats())
 
 
 .. parsed-literal::
 
-                               O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R
-    0                                                     REFERENCE POINT =        0
-                                                                    M O
-                          *  1.774601E+00  1.402827E-19  2.212874E-19 -1.821217E-17 -3.277270E+01  4.490826E+00 *
-                          *  1.402827E-19  1.774601E+00 -4.675622E-19  3.277270E+01 -2.898787E-17 -6.007191E-02 *
-                          *  2.212874E-19 -4.675622E-19  1.774601E+00 -4.490826E+00  6.007191E-02 -3.871152E-19 *
-                          * -1.821217E-17  3.277270E+01 -4.490826E+00  1.322289E+03  1.414696E+00 -1.250574E+00 *
-                          * -3.277270E+01 -2.898787E-17  6.007191E-02  1.414696E+00  1.227074E+03 -2.187713E+02 *
-                          *  4.490826E+00 -6.007191E-02 -3.871152E-19 -1.250574E+00 -2.187713E+02  4.272278E+02 *
-                                                                     S
-                                               *  1.000000E+00  0.000000E+00  0.000000E+00 *
-                                               *  0.000000E+00  1.000000E+00  0.000000E+00 *
-                                               *  0.000000E+00  0.000000E+00  1.000000E+00 *
-                                   DIRECTION
-                              MASS AXIS SYSTEM (S)     MASS              X-C.G.        Y-C.G.        Z-C.G.
-                                      X            1.774601E+00     -1.026268E-17 -2.530611E+00 -1.846764E+01
-                                      Y            1.774601E+00     -3.385094E-02 -1.633486E-17 -1.846764E+01
-                                      Z            1.774601E+00     -3.385094E-02 -2.530611E+00 -2.181421E-19
-                                                                    I(S)
-                                               *  7.056896E+02 -1.566714E+00  1.411869E-01 *
-                                               * -1.566714E+00  6.218375E+02  1.358363E+02 *
-                                               *  1.411869E-01  1.358363E+02  4.158613E+02 *
-                                                                    I(Q)
-                                               *  6.891835E+02                             *
-                                               *                3.483842E+02               *
-                                               *                              7.058207E+02 *
-                                                                     Q
-                                               *  8.846355E-02  1.596853E-03  9.960781E-01 *
-                                               * -8.920128E-01 -4.448861E-01  7.993453E-02 *
-                                               *  4.432690E-01 -8.955857E-01 -3.793179E-02 *
     
-    PAGE 1
     
     
 
-We can also write the full F06
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+We can also write the full ``F06``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code:: python
 
@@ -2280,60 +2289,53 @@ We can also write the full F06
 
 .. parsed-literal::
 
-    F06:
-     grid_point_weight
-    RealEigenvalues    case=u'ISAT_SM_LAUNCH_4PT MODES TO 400 HZ'
-     RealEigenvectorArray SUBCASE=1 SUBTITLE=
-     RealCBarForceArray   SUBCASE=1 SUBTITLE=  - CBAR-34
-     RealPlateStressArray SUBCASE=1 SUBTITLE=  - CQUAD4
-     RealPlateStressArray SUBCASE=1 SUBTITLE=  - CTRIA3
-                               O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R
-    0                                                     REFERENCE POINT =        0
-                                                                    M O
-                          *  1.774601E+00  1.402827E-19  2.212874E-19 -1.821217E-17 -3.277270E+01  4.490826E+00 *
-                          *  1.402827E-19  1.774601E+00 -4.675622E-19  3.277270E+01 -2.898787E-17 -6.007191E-02 *
-                          *  2.212874E-19 -4.675622E-19  1.774601E+00 -4.490826E+00  6.007191E-02 -3.871152E-19 *
-                          * -1.821217E-17  3.277270E+01 -4.490826E+00  1.322289E+03  1.414696E+00 -1.250574E+00 *
-                          * -3.277270E+01 -2.898787E-17  6.007191E-02  1.414696E+00  1.227074E+03 -2.187713E+02 *
-                          *  4.490826E+00 -6.007191E-02 -3.871152E-19 -1.250574E+00 -2.187713E+02  4.272278E+02 *
-                                                                     S
-                                               *  1.000000E+00  0.000000E+00  0.000000E+00 *
-                                               *  0.000000E+00  1.000000E+00  0.000000E+00 *
-                                               *  0.000000E+00  0.000000E+00  1.000000E+00 *
-                                   DIRECTION
-                              MASS AXIS SYSTEM (S)     MASS              X-C.G.        Y-C.G.        Z-C.G.
-                                      X            1.774601E+00     -1.026268E-17 -2.530611E+00 -1.846764E+01
-                                      Y            1.774601E+00     -3.385094E-02 -1.633486E-17 -1.846764E+01
-                                      Z            1.774601E+00     -3.385094E-02 -2.530611E+00 -2.181421E-19
-                                                                    I(S)
-                                               *  7.056896E+02 -1.566714E+00  1.411869E-01 *
-                                               * -1.566714E+00  6.218375E+02  1.358363E+02 *
-                                               *  1.411869E-01  1.358363E+02  4.158613E+02 *
-                                                                    I(Q)
-                                               *  6.891835E+02                             *
-                                               *                3.483842E+02               *
-                                               *                              7.058207E+02 *
-                                                                     Q
-                                               *  8.846355E-02  1.596853E-03  9.960781E-01 *
-                                               * -8.920128E-01 -4.448861E-01  7.993453E-02 *
-                                               *  4.432690E-01 -8.955857E-01 -3.793179E-02 *
-    
-    1    ISAT_SM_LAUNCH_4PT MODES TO 400 HZ                                     JANUARY   4, 2016  pyNastran v0.8.0+dev.82cefee  PAGE     1
-    
-    1    ISAT_SM_LAUNCH_4PT MODES TO 400 HZ                                     JANUARY   4, 2016  pyNastran v0.8.0+dev.82cefee  PAGE     2
-         DEFAULT                                                                                                                        
-    
-                                                  R E A L   E I G E N V A L U E S
-                                                 ISAT_SM_LAUNCH_4PT MODES TO 400 HZ
-       MODE    EXTRACTION      EIGENVALUE            RADIANS             CYCLES            GENERALIZED         GENERALIZED
-        NO.       ORDER                                                                       MASS              STIFFNESS
+    1    ISAT_SM_LAUNCH_4PT MODES TO 400 HZ                                    FEBRUARY  14, 2018  pyNastran v1.1.0       PAGE     1
+         
+    0                                                                                                            SUBCASE 1
+                                             R E A L   E I G E N V E C T O R   N O .          1
+     
+          POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+                 1      G     -5.547863E-03   2.133077E-04  -8.469186E-04  -8.399206E-06  -2.506956E-04  -5.261146E-05
+                 2      G     -5.547863E-03   1.080848E-04  -3.455275E-04  -8.399206E-06  -2.506956E-04  -5.261146E-05
+                 3      G     -6.169366E-03   2.295251E-04  -8.457433E-04  -8.882780E-06  -2.506924E-04  -4.657186E-05
+                 4      G     -6.169462E-03   1.295465E-04  -3.468718E-04  -7.731095E-06  -2.506902E-04  -4.712092E-05
+                 5      G     -6.801341E-03   2.553037E-04  -8.469186E-04  -8.399206E-06  -2.506956E-04  -5.261146E-05
+                 6      G     -6.801341E-03   1.500808E-04  -3.455275E-04  -8.399206E-06  -2.506956E-04  -5.261146E-05
+                 7      G     -7.420456E-03   2.779656E-04  -8.458295E-04  -9.019739E-06  -2.506924E-04  -6.147318E-05
+                 8      G     -7.420568E-03   1.595261E-04  -3.468334E-04  -7.642398E-06  -2.506902E-04  -6.249677E-05
+                 9      G     -8.054819E-03   2.972998E-04  -8.469186E-04  -8.399206E-06  -2.506956E-04  -5.261146E-05
+                10      G     -8.054819E-03   1.920769E-04  -3.455275E-04  -8.399206E-06  -2.506956E-04  -5.261146E-05
+                11      G     -5.547945E-03  -2.034865E-04   7.615836E-04   9.685779E-06  -2.505747E-04  -5.059179E-05
+                12      G     -6.170889E-03  -2.232806E-04   7.602651E-04   1.005450E-05  -2.505695E-04  -4.706052E-05
+                13      G     -6.800818E-03  -2.519154E-04   7.615836E-04   9.685779E-06  -2.505747E-04  -5.059179E-05
+                14      G     -7.421867E-03  -2.748493E-04   7.598438E-04   1.041645E-05  -2.505710E-04  -6.034294E-05
+                15      G     -8.053692E-03  -3.003443E-04   7.615836E-04   9.685779E-06  -2.505747E-04  -5.059179E-05
+                16      G     -5.547945E-03  -1.023029E-04   2.604342E-04   9.685779E-06  -2.505747E-04  -5.059179E-05
+                17      G     -6.170872E-03  -1.254381E-04   2.618640E-04   9.119666E-06  -2.505694E-04  -4.744373E-05
+                18      G     -6.800818E-03  -1.507318E-04   2.604342E-04   9.685779E-06  -2.505747E-04  -5.059179E-05
+                19      G     -7.421871E-03  -1.645201E-04   2.621645E-04   8.841090E-06  -2.505694E-04  -6.108151E-05
+                20      G     -8.053692E-03  -1.991607E-04   2.604342E-04   9.685779E-06  -2.505747E-04  -5.059179E-05
+                21      G     -2.821161E-03  -1.092790E-04   7.579715E-04   7.133808E-06  -2.468418E-04  -3.410970E-05
+                22      G     -3.443996E-03  -1.233896E-04   7.561403E-04   7.799596E-06  -2.468382E-04  -3.001459E-05
+                23      G     -4.055370E-03  -1.449481E-04   7.579715E-04   7.133808E-06  -2.468418E-04  -3.410970E-05
+                24      G     -4.670648E-03  -1.632725E-04   7.558515E-04   7.958040E-06  -2.468395E-04  -4.140726E-05
+                25      G     -5.289579E-03  -1.806171E-04   7.579715E-04   7.133808E-06  -2.468418E-04  -3.410970E-05
+                26      G     -2.821161E-03  -4.105964E-05   2.642879E-04   7.133808E-06  -2.468418E-04  -3.410970E-05
+                27      G     -3.443890E-03  -6.412427E-05   2.660819E-04   6.400805E-06  -2.468367E-04  -2.950787E-05
+                28      G     -4.055370E-03  -7.672868E-05   2.642879E-04   7.133808E-06  -2.468418E-04  -3.410970E-05
+                29      G     -4.670699E-03  -9.216915E-05   2.663240E-04   6.263966E-06  -2.468367E-04  -4.123877E-05
+                30      G     -5.289579E-03  -1.123977E-04   2.642879E-04   7.133808E-06  -2.468418E-04  -3.410970E-05
+                31      G     -1.459303E-04   2.173024E-05   2.685585E-04   7.402167E-06  -2.425398E-04  -1.785639E-05
+                32      G     -1.459303E-04  -1.398253E-05   7.536381E-04   7.402167E-06  -2.425398E-04  -1.785639E-05
+                33      G     -7.555047E-04  -8.368386E-06   2.703055E-04   6.154360E-06  -2.425350E-04  -8.907110E-06
+                34      G     -7.555627E-04  -2.869231E-05   7.518338E-04   8.680357E-06  -2.425363E-04  -9.971128E-06
     
 
 .. code:: python
 
     #from IPython.display import display, Math, Latex
 
-The mass results are different as pyNastran's mass assumes point masses
+The mass results are different as pyNastran’s mass assumes point masses
 
 .. math:: m_{plates} = A * (rho * t + nsm)
 
@@ -2344,7 +2346,7 @@ The mass results are different as pyNastran's mass assumes point masses
 .. math:: I = m*r^2
 
 The larger your model is and the further from the origin, the more
-accurate the result. For some applications (e.g. a weight breakdown),
+accurate the result. For some applications (e.g. a weight breakdown),
 this is probably be fine.
 
 .. code:: python
@@ -2356,13 +2358,11 @@ this is probably be fine.
 .. parsed-literal::
 
     cg =
-    [[ -1.026e-17  -2.531e+00  -1.847e+01]
-     [ -3.385e-02  -1.633e-17  -1.847e+01]
-     [ -3.385e-02  -2.531e+00  -2.181e-19]]
-    cg = [ -0.035  -2.623 -18.53 ]
+    None
+    cg = [ -0.034  -2.531 -18.468]
     
 
-It's not like Nastran is perfect either.
+It’s not like Nastran is perfect either.
 ----------------------------------------
 
 Limitations
@@ -2371,7 +2371,7 @@ Limitations
 1. You cannot do weight statements in Nastran by
    component/property/material.
 
-2. Everything is always summmed up (e.g. you can have different geometry
+2. Everything is always summmed up (e.g. you can have different geometry
    in Subcase 2 and MPCs connecting physical geomtry, with other parts
    flying off into space).
 
@@ -2384,20 +2384,66 @@ These are things that pyNastran ``can`` do.
     model = read_bdf(bdf_filename, debug=False)
 
 
-.. parsed-literal::
 
-    WARNING:   fname=shell.py                  lineNo=1434   PSHELL pid=1 midsurface: z1=0.400000006 z2=-0.400000006 t=0.035999998 not in range of -1.5t < zi < 1.5t
-    WARNING:   fname=shell.py                  lineNo=1434   PSHELL pid=2 midsurface: z1=0.400000006 z2=-0.400000006 t=0.054000005 not in range of -1.5t < zi < 1.5t
-    WARNING:   fname=shell.py                  lineNo=1434   PSHELL pid=3 midsurface: z1=0.400000006 z2=-0.400000006 t=0.017999999 not in range of -1.5t < zi < 1.5t
-    WARNING:   fname=shell.py                  lineNo=1434   PSHELL pid=7 midsurface: z1=0.418000013 z2=-0.418000013 t=0.035999998 not in range of -1.5t < zi < 1.5t
-    WARNING:   fname=shell.py                  lineNo=1434   PSHELL pid=34 midsurface: z1=0.194000006 z2=-0.194000006 t=0.0186 not in range of -1.5t < zi < 1.5t
-    WARNING:   fname=shell.py                  lineNo=1434   PSHELL pid=37 midsurface: z1=0.308999985 z2=-0.308999985 t=0.0186 not in range of -1.5t < zi < 1.5t
-    WARNING:   fname=shell.py                  lineNo=1434   PSHELL pid=38 midsurface: z1=0.284000009 z2=-0.284000009 t=0.0186 not in range of -1.5t < zi < 1.5t
-    WARNING:   fname=shell.py                  lineNo=1434   PSHELL pid=46 midsurface: z1=0.199000001 z2=-0.199000001 t=0.0186 not in range of -1.5t < zi < 1.5t
-    
+.. raw:: html
 
-Let's get the breakdown by property ID
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    <text style=color:orange>WARNING: shell.py:2060                PSHELL pid=1 midsurface: z1=0.400000006 z2=-0.400000006 t=0.035999998 not in range of -1.5t < zi < 1.5t
+    </text>
+
+
+
+.. raw:: html
+
+    <text style=color:orange>WARNING: shell.py:2060                PSHELL pid=2 midsurface: z1=0.400000006 z2=-0.400000006 t=0.054000005 not in range of -1.5t < zi < 1.5t
+    </text>
+
+
+
+.. raw:: html
+
+    <text style=color:orange>WARNING: shell.py:2060                PSHELL pid=3 midsurface: z1=0.400000006 z2=-0.400000006 t=0.017999999 not in range of -1.5t < zi < 1.5t
+    </text>
+
+
+
+.. raw:: html
+
+    <text style=color:orange>WARNING: shell.py:2060                PSHELL pid=7 midsurface: z1=0.418000013 z2=-0.418000013 t=0.035999998 not in range of -1.5t < zi < 1.5t
+    </text>
+
+
+
+.. raw:: html
+
+    <text style=color:orange>WARNING: shell.py:2060                PSHELL pid=34 midsurface: z1=0.194000006 z2=-0.194000006 t=0.0186 not in range of -1.5t < zi < 1.5t
+    </text>
+
+
+
+.. raw:: html
+
+    <text style=color:orange>WARNING: shell.py:2060                PSHELL pid=37 midsurface: z1=0.308999985 z2=-0.308999985 t=0.0186 not in range of -1.5t < zi < 1.5t
+    </text>
+
+
+
+.. raw:: html
+
+    <text style=color:orange>WARNING: shell.py:2060                PSHELL pid=38 midsurface: z1=0.284000009 z2=-0.284000009 t=0.0186 not in range of -1.5t < zi < 1.5t
+    </text>
+
+
+
+.. raw:: html
+
+    <text style=color:orange>WARNING: shell.py:2060                PSHELL pid=46 midsurface: z1=0.199000001 z2=-0.199000001 t=0.0186 not in range of -1.5t < zi < 1.5t
+    </text>
+
+
+Weight Statement
+~~~~~~~~~~~~~~~~
+
+Let’s get the breakdown by property ID
 
 .. code:: python
 
@@ -2408,44 +2454,49 @@ Let's get the breakdown by property ID
     #print(pid_to_eids_map.keys())
     print('pid, mass, cg, [ixx, iyy, izz, ixy, ixz]')
     for pid, eids in sorted(iteritems(pid_to_eids_map)):
-        mass, cg, inertia = model.mass_properties(element_ids=eids, reference_point=[0., 0., 0.])
-        print('%-3s %-.6f %-38s %s' % (pid, mass, cg, inertia))
+        mass, cg, inertia = model.mass_properties(element_ids=eids, mass_ids=[], reference_point=[0., 0., 0.])
+        print('%-6s %-.6f %-38s %s' % (pid, mass, cg, inertia))
+    
+    mass_ids = list(model.masses.keys())
+    mass, cg, inertia = model.mass_properties(element_ids=[], mass_ids=mass_ids, reference_point=[0., 0., 0.])
+    print('%-6s %-.6f %-38s %s' % ('masses', mass, cg, inertia))    
 
 
 .. parsed-literal::
 
     pid, mass, cg, [ixx, iyy, izz, ixy, ixz]
-    1   0.027278 [  4.297e-15   2.980e-15  -2.000e+01]  [  1.461e+01   1.746e+01   4.384e+00   4.098e-17   1.450e-15   4.619e-16]
-    2   0.047993 [ -6.506e-16   2.530e-16  -2.000e+01]  [  3.723e+01   3.723e+01   1.245e+01  -3.469e-17  -5.690e-16   2.047e-16]
-    3   0.020998 [  6.842e-17  -4.699e-16  -2.000e+01]  [  1.428e+01   1.231e+01   5.270e+00   2.992e-17   5.281e-16   1.011e-15]
-    4   0.012216 [  0.043   0.438 -19.702]              [  7.090e+00   7.972e+00   2.021e+00   1.057e-02  -5.272e-03  -5.334e-02]
-    5   0.330158 [  0.    2.2 -20. ]                    [  1.970e+02   1.604e+02   4.335e+01   0.000e+00   4.441e-16  -1.453e+01]
-    7   0.027813 [  6.578e-17  -1.143e-14  -2.000e+01]  [  1.927e+01   1.927e+01   9.438e+00  -3.408e-15  -2.069e-16  -1.751e-15]
-    8   0.081584 [  0.000e+00   6.804e-16  -2.000e+01]  [  4.772e+01   4.772e+01   3.017e+01  -8.882e-16   0.000e+00  -8.882e-16]
-    9   0.012578 [  0.000e+00  -7.585e-16  -2.000e+01]  [  7.788e+00   7.788e+00   3.064e+00   5.551e-17  -4.857e-17  -1.180e-16]
-    10  0.000236 [  0.000e+00  -4.595e-16  -2.000e+01]  [  1.290e-01   1.290e-01   5.747e-02  -8.674e-19  -1.735e-18  -8.674e-19]
-    11  0.041700 [ -1.025  23.773 -12.016]              [ 30.253   7.053  23.957  -1.053   0.776 -11.967]
-    12  0.000457 [  0.     -5.92   20.506]              [ 0.221  0.205  0.016  0.     0.    -0.054]
-    13  0.000000 [ 0.  0.  0.]                          [ 0.  0.  0.  0.  0.  0.]
-    14  0.000353 [ -2.305e-16   0.000e+00   1.439e+01]  [  7.655e-02   8.537e-02   8.821e-03   0.000e+00  -2.168e-18   0.000e+00]
-    15  0.000000 [ 0.  0.  0.]                          [ 0.  0.  0.  0.  0.  0.]
-    16  0.000000 [ 0.  0.  0.]                          [ 0.  0.  0.  0.  0.  0.]
-    19  0.017749 [ -0.23    6.021 -35.642]              [ 24.961  26.944   6.461  -0.078   0.151  -3.954]
-    20  0.163082 [  6.808e-16   0.000e+00  -1.855e+01]  [  6.510e+01   9.086e+01   2.576e+01   0.000e+00  -1.776e-15   0.000e+00]
-    21  0.003625 [ -1.196e-16  -1.077e-15  -2.000e+01]  [  2.178e+00   2.178e+00   1.410e+00   0.000e+00   0.000e+00  -2.776e-17]
-    22  0.000000 [ 0.  0.  0.]                          [ 0.  0.  0.  0.  0.  0.]
-    23  0.000000 [ 0.  0.  0.]                          [ 0.  0.  0.  0.  0.  0.]
-    33  0.001346 [ -3.612e-14  -2.175e+00   3.691e-01]  [  8.358e-02   8.533e-02   1.683e-01   1.802e-16  -3.670e-17  -1.832e-03]
-    34  0.003561 [ -5.899e-17  -1.903e-18   1.483e+01]  [  1.054e+00   1.054e+00   6.701e-02  -5.828e-19  -4.120e-18  -8.674e-19]
-    35  0.000000 [ 0.  0.  0.]                          [ 0.  0.  0.  0.  0.  0.]
-    36  0.007197 [  3.676e-15   0.000e+00  -1.478e+01]  [  2.408e+00   5.178e+00   3.020e+00   6.939e-18   8.153e-17  -1.041e-17]
-    37  0.094566 [ -4.439e-15   0.000e+00  -1.950e+01]  [  4.493e+01   8.867e+01   4.649e+01   5.454e-14  -2.776e-16   0.000e+00]
-    38  0.007602 [  6.830e-06  -9.329e+00   2.731e+01]  [  7.013e+00   6.884e+00   1.223e+00  -2.922e-07   1.641e-06  -1.867e+00]
-    39  0.002433 [  1.348e-13  -8.954e+00   4.040e+00]  [  2.568e-01   8.454e-02   2.187e-01  -2.920e-15   1.207e-15  -9.123e-02]
-    41  0.000735 [ -9.583e-16  -1.843e-17   2.193e+00]  [  1.226e-02   6.032e-02   6.220e-02   5.127e-16   8.674e-19  -5.421e-20]
-    42  0.008854 [ -1.554  20.121 -19.007]              [ 7.95   4.679  3.9   -0.277  0.318 -3.386]
-    43  0.012241 [  6.191e-15   2.214e-18  -1.950e+01]  [  6.882e+00   1.224e+01   6.320e+00   7.003e-15  -4.749e-17   1.762e-18]
-    46  0.003671 [  3.544e-15   7.383e-18   1.528e+01]  [  1.035e+00   1.205e+00   3.350e-01   1.239e-07   8.544e-17   4.120e-18]
-    60  0.000000 [ 0.  0.  0.]                          [ 0.  0.  0.  0.  0.  0.]
-    61  0.000000 [ 0.  0.  0.]                          [ 0.  0.  0.  0.  0.  0.]
+    1      0.027278 [  0.   0. -20.]                       [3.699 6.553 4.384 0.    0.    0.   ]
+    2      0.047993 [ -0.   0. -20.]                       [18.033 18.033 12.454 -0.    -0.     0.   ]
+    3      0.020998 [  0.  -0. -20.]                       [5.881 3.907 5.27  0.    0.    0.   ]
+    4      0.012216 [  0.043   0.438 -19.702]              [2.346 3.23  2.019 0.01  0.005 0.052]
+    5      0.330158 [  0.    2.2 -20. ]                    [63.317 28.366 41.752  0.     0.     0.   ]
+    7      0.027813 [ -0.  -0. -20.]                       [ 8.141  8.141  9.438 -0.    -0.    -0.   ]
+    8      0.081584 [  0.   0. -20.]                       [15.087 15.087 30.174  0.     0.    -0.   ]
+    9      0.077642 [  0.   0. -20.]                       [17.017 17.017 18.911 -0.    -0.     0.   ]
+    10     0.000236 [  0.  -0. -20.]                       [ 0.035  0.035  0.057 -0.    -0.    -0.   ]
+    11     0.041700 [ -1.025  23.773 -12.016]              [ 0.666  0.988  0.348 -0.037  0.263 -0.056]
+    12     0.000457 [ 0.    -5.92  20.506]                 [0.013 0.013 0.    0.    0.    0.001]
+    13     0.003885 [ 0.    -6.949  9.892]                 [ 0.002  0.     0.002  0.     0.    -0.   ]
+    14     0.000353 [-0.     0.    14.391]                 [ 0.003  0.012  0.009  0.    -0.     0.   ]
+    15     0.003626 [0.    0.    7.867]                    [ 0.     0.092  0.091  0.    -0.     0.   ]
+    16     0.000000 [0. 0. 0.]                             [0. 0. 0. 0. 0. 0.]
+    19     0.017749 [ -0.23    6.021 -35.642]              [ 1.77   4.395  5.817 -0.053  0.005 -0.145]
+    20     0.163082 [  0.      0.    -18.545]              [ 9.01 34.77 25.76  0.    0.    0.  ]
+    21     0.003625 [ -0.  -0. -20.]                       [ 0.728  0.728  1.41   0.    -0.     0.   ]
+    22     0.000000 [0. 0. 0.]                             [0. 0. 0. 0. 0. 0.]
+    23     0.000000 [0. 0. 0.]                             [0. 0. 0. 0. 0. 0.]
+    33     0.001346 [-0.    -2.175  0.369]                 [ 0.077  0.085  0.162  0.    -0.    -0.001]
+    34     0.003561 [-0.    -0.    14.833]                 [ 0.271  0.271  0.067 -0.    -0.    -0.   ]
+    35     0.000000 [0. 0. 0.]                             [0. 0. 0. 0. 0. 0.]
+    36     0.007197 [  0.      0.    -14.783]              [ 0.835  3.605  3.02   0.     0.    -0.   ]
+    37     0.094566 [ -0.      0.    -19.499]              [ 8.975 52.72  46.49   0.    -0.     0.   ]
+    38     0.007602 [ 0.    -9.329 27.311]                 [0.681 1.214 0.562 0.    0.    0.07 ]
+    39     0.002433 [ 0.    -8.954  4.04 ]                 [ 0.022  0.045  0.024  0.    -0.    -0.003]
+    41     0.000735 [-0.    -0.     2.193]                 [ 0.009  0.057  0.062  0.     0.    -0.   ]
+    42     0.008854 [ -1.554  20.121 -19.007]              [ 1.166  1.459  0.293 -0.001  0.056  0.   ]
+    43     0.012241 [  0.      0.    -19.499]              [2.228 7.588 6.32  0.    0.    0.   ]
+    46     0.003671 [ 0.    0.   15.28]                    [ 0.178  0.348  0.335  0.    -0.     0.   ]
+    60     0.000000 [0. 0. 0.]                             [0. 0. 0. 0. 0. 0.]
+    61     0.000000 [0. 0. 0.]                             [0. 0. 0. 0. 0. 0.]
+    masses 0.772000 [  0.     -8.256 -18.238]              [392.813 338.699 118.704  -0.     -0.    138.698]
     

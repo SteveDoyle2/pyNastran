@@ -2,16 +2,16 @@
 Manipulating the Pandas DataFrame
 =================================
 
-The iPython notebook for this demo can be found in: -
-docs:raw-latex:`\quick`\_start:raw-latex:`\demo`:raw-latex:`\op`2\_pandas\_unstack.ipynb
+The Jupyter notebook for this demo can be found in: -
+docs:raw-latex:`\quick`\_start:raw-latex:`\demo`:raw-latex:`\op`2_pandas_unstack.ipynb
 -
-https://github.com/SteveDoyle2/pyNastran/tree/master/docs/quick\_start/demo/op2\_pandas\_unstack.ipynb
+https://github.com/SteveDoyle2/pyNastran/tree/master/docs/quick_start/demo/op2_pandas_unstack.ipynb
 
 This example will use pandas unstack
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The unstack method on a DataFrame moves on index level from rows to
-columns. First let's read in some data:
+columns. First let’s read in some data:
 
 .. code:: python
 
@@ -317,7 +317,7 @@ columns. First let's read in some data:
 
 
 
-First I'm going to pull out a small subset to work with
+First I’m going to pull out a small subset to work with
 
 .. code:: python
 
@@ -452,9 +452,9 @@ First I'm going to pull out a small subset to work with
 
 
 
-I happen to like the way that's organized, but let's say that I want the
-have the item descriptions in columns and the mode ID's and element
-numbers in rows. To do that, I'll first move the element ID's up to the
+I happen to like the way that’s organized, but let’s say that I want the
+have the item descriptions in columns and the mode ID’s and element
+numbers in rows. To do that, I’ll first move the element ID’s up to the
 columns using a .unstack(level=0) and the transpose the result:
 
 .. code:: python
@@ -559,8 +559,8 @@ columns using a .unstack(level=0) and the transpose the result:
 
 
 
-unstack requires unique row indices so I can't work with CQUAD4 stresses
-as they're currently output, but I'll work with CHEXA stresses. Let's
+unstack requires unique row indices so I can’t work with CQUAD4 stresses
+as they’re currently output, but I’ll work with CHEXA stresses. Let’s
 pull out the first two elements and first two modes:
 
 .. code:: python
@@ -1806,7 +1806,7 @@ Load ID, and have the items in the columns:
 
 
 
-Maybe I'd like my rows organized with the modes on the inside. I can do
+Maybe I’d like my rows organized with the modes on the inside. I can do
 that by swapping levels:
 
 We actually need to get rid of the extra rows using dropna():
@@ -3023,9 +3023,9 @@ We actually need to get rid of the extra rows using dropna():
 
 
 
-Alternatively I can do that by first using reset\_index to move all the
-index columns into data, and then using set\_index to define the order
-of columns I want as my index:
+Alternatively I can do that by first using reset_index to move all the
+index columns into data, and then using set_index to define the order of
+columns I want as my index:
 
 .. code:: python
 

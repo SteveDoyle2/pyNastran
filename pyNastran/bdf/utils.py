@@ -938,10 +938,10 @@ def deprecated(old_name, new_name, deprecated_version, levels=None):
     ver_tuple = tuple([int(i) for i in version.split('.')[:2]])
 
     new_line = ''
+    msg = "'%s' was deprecated in v%s (current=%s)" % (
+        old_name, deprecated_version, version)
     if new_name:
-        new_line = "; replace it with '%s'\n" % new_name
-    msg = "'%s' was deprecated in v%s%s (current=%s)" % (
-        old_name, version, deprecated_version, new_line)
+        msg += "; replace it with '%s'\n" % new_name
 
     for level in levels:
         # jump to get out of the inspection code
@@ -953,7 +953,6 @@ def deprecated(old_name, new_name, deprecated_version, levels=None):
             filename = os.path.basename(inspect.getfile(code))
         except:
             print(code)
-        #print(code)
 
         source_lines, line_no0 = inspect.getsourcelines(code)
         di = line_no - line_no0
@@ -963,7 +962,7 @@ def deprecated(old_name, new_name, deprecated_version, levels=None):
             break
         msg += '  %-25s:%-4s %s\n' % (filename, str(line_no) + ';', line.strip())
 
-    if ver_tuple > dep_ver_tuple:
+    if ver_tuple > dep_ver_tuple: # or 'id' in msg:
         # fail
         raise NotImplementedError(msg)
     else:

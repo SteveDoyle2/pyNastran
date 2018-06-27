@@ -11,6 +11,7 @@ except ImportError:
 pyInstaller_path = [r'F:\work\pyNastran\pyNastran\pyinstaller']
 IS_H5PY = False
 DEBUG = False
+IS_RELEASE = True
 
 #-------------------------------------------------------------------------
 ## this block gets/sets the version so it doesn't use git
@@ -76,7 +77,9 @@ with open(init_filename, 'w') as init_file:
         init_file.write(line)
 
 #version = '1.1.0+dev.%s' % ghash
-version = version_fmt % ghash
+version = version_fmt
+if not IS_RELEASE:
+    version = version_fmt % ghash
 
 # write the version
 version_filename = os.path.join(pkg_path, 'version.py')
