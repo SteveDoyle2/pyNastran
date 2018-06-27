@@ -64,24 +64,31 @@ Using the pyNastran GUI, you can read in Nastran models and quickly view results
 <!--- [Download pyNastran v0.8] (https://github.com/SteveDoyle2/pyNastran/releases)  --->
 
 <!--- 
-
+### pyNastran v1.2.0 has not been released (x/xx/xx)
 This should be hidden...
 
-### pyNastran v1.1.0 has not been released (6/25/2018)
+### pyNastran v1.1.1 has not been released (x/xx/xx)
+This should be hidden...
+--->
 
-It's been roughly a year and 100 tickets closed since the last version, so it's probably
-time for another release!  I'm pleased to announce that the continuing problems 
-of up-to-date documentation will hopefully be a thing of the past.  xxx 
-has offered to host the documentation.  The pyNastranGUI exe (previously 
-hosted on Sourceforge) will also be hosted there.  Outside of that, it's the same 
-open-source project and will still be on Github.
+### pyNastran v1.1.0 has not been released (6/26/2018)
+
+It's been roughly a year and ~100 tickets closed since the last version, so it's probably
+time for another release!  
+
+Probably the most best thing is the documentation actually builds again.  It was too big
+and took too long, so readthedocs failed.  I'm pleased to announce that the continuing 
+problems of up-to-date documentation will hopefully be a thing of the past.  [M4 Engineering](http://www.m4-engineering.com) 
+has offered to host the documentation on http://www.pynastran.m4-engineering.com.  
+There's still some work to do regarding hosting documentation for older versions and the master,
+but that's hopefully coming soon.  Outside of that, it's the same open-source project 
+and will still be on Github.
 
 Regarding features, the focus has again been on robustness and testing.  There has been
-a 10% increase in the testing coverage (the same as v0.8 to v1.0).
-
-There are a few changes (mainly in the BDF) though.  The GUI now also supports
-PyQt4, PyQt5, and Pyside with the same API, which helps reduces the restriction on
-licensing.
+a 10% increase in the testing coverage (the same as v0.8 to v1.0).  There are a few 
+changes (mainly in the BDF) though.  The GUI now also supports PyQt4, PyQt5, and Pyside 
+with the same API, so it's a bit easier to install from source as simplifying licensing
+issues as PyQt is GPL.
 
 Programmatics
  - Dropping Python 3.4 support
@@ -117,10 +124,8 @@ GUI:
  - better PSHELL/PCOMP distinction
 
 Known issues:
- - Transient Pandas Dataframes will fail in newer versions of numpy/pandas.  If anyone knows how to use a MultiIndex,
+ - Transient Pandas Dataframes will fail for newer versions of numpy/pandas.  If anyone knows how to use a MultiIndex,
    this is probably pretty easy to fix.
- 
---->
   
 # News
 
