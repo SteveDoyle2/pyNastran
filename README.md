@@ -67,6 +67,8 @@ This should be hidden...
 This should be hidden...
 --->
 
+# News
+
 ### pyNastran v1.1.0 has been released (6/26/2018)
 
 It's been roughly a year and ~100 tickets closed since the last version, so it's probably
@@ -126,8 +128,6 @@ Known issues:
  - Transient Pandas Dataframes will fail for newer versions of numpy/pandas.  If anyone knows how to use a MultiIndex,
    this is probably pretty easy to fix.
   
-# News
-
 ### pyNastran v1.0.0 has been released (5/25/2017)
 This is a major release.  The focus this time has been on robustness and testing.
 Hopefully, it shows.  The software has also been relicensed to be **BSD-3**, which
