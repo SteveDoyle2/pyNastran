@@ -1,7 +1,7 @@
 
 |  Version  | Docs  | Status |
 | :--- 	  | :--- 	  | :--- 	  |
-|  [![PyPi Version](https://img.shields.io/pypi/v/pynastran.svg)](https://pypi.python.org/pypi/pyNastran) | [![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=v1.0)](http://pynastran-git.readthedocs.io/en/v1.0.0/?badge=v1.0.0) | [![Build Status](https://img.shields.io/travis/SteveDoyle2/pyNastran/v1.0.svg)](https://travis-ci.org/SteveDoyle2/pyNastran) [![Coverage Status](https://img.shields.io/coveralls/SteveDoyle2/pyNastran/v1.0.svg)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=v1.0) |
+|  [![PyPi Version](https://img.shields.io/pypi/v/pynastran.svg)](https://pypi.python.org/pypi/pyNastran) | [docs](http://pynastran.m4-engineering.com/1.1.0/) | [![Build Status](https://img.shields.io/travis/SteveDoyle2/pyNastran/v1.0.svg)](https://travis-ci.org/SteveDoyle2/pyNastran) [![Coverage Status](https://img.shields.io/coveralls/SteveDoyle2/pyNastran/v1.0.svg)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=v1.0) |
 |   Master | [![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=latest)](http://pynastran-git.readthedocs.io/en/latest/?badge=latest) | [![Linux Status](https://img.shields.io/travis/SteveDoyle2/pyNastran/master.svg)](https://travis-ci.org/SteveDoyle2/pyNastran) ![Coverage Status](https://coveralls.io/repos/github/SteveDoyle2/pyNastran/badge.svg?branch=master) | 
 
 
@@ -25,13 +25,9 @@
 [![Requirements Status](https://img.shields.io/requires/github/SteveDoyle2/pyNastran/master.svg)](https://requires.io/github/SteveDoyle2/pyNastran/requirements/?branch=master)	|
 --->
 
-### v1.1-dev
+### v1.1.0
 
-[Download GUI](https://sourceforge.net/projects/pynastran/files/?source=navbar) (latest is from 2018/6/22)
-
-### v1.0.0
-
-[Download GUI](https://sourceforge.net/projects/pynastran/files/?source=navbar) (latest is from 2017/5/25)
+[Download GUI](https://sourceforge.net/projects/pynastran/files/?source=navbar) (latest is from 2018/6/26)
 
 <!---
 [Doumentation](http://pynastran-git.readthedocs.org/en/latest/index.html)
@@ -71,10 +67,13 @@ This should be hidden...
 This should be hidden...
 --->
 
-### pyNastran v1.1.0 has not been released (6/26/2018)
+### pyNastran v1.1.0 has been released (6/26/2018)
 
 It's been roughly a year and ~100 tickets closed since the last version, so it's probably
-time for another release!  
+time for another release!   I want to thank everybody who helped with this release, especially
+Michael Redmond.  He is working on h5Nastran, which which ties in with pyNastran.  It's not quite
+ready yet, but it offers the possibility of major speedups for large models.
+
 
 Probably the most best thing is the documentation actually builds again.  It was too big
 and took too long, so readthedocs failed.  I'm pleased to announce that the continuing 
