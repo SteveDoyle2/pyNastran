@@ -3,7 +3,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import string_types, PY2, PY3
 
 # strings
-SORT1_TABLES = [b'OSTRMS1C', b'OSTNO1C']
+SORT1_TABLES = [b'OSTRMS1C', b'OSTNO1C', b'OES1X', b'OSTR1X',
+                b'OESRMS2', b'OESNO2', b'OESXRMS1']
 SORT2_TABLES = [b'OUGPSD2', b'OUGATO2']
 
 def get_sort_method_from_table_name(table_name):

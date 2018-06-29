@@ -16,7 +16,6 @@ from __future__ import print_function, division
 import numpy as np
 import vtk
 from vtk.util.numpy_support import vtk_to_numpy
-from pyNastran.bdf.utils import write_patran_syntax_dict
 
 
 #class AreaPickStyle(vtk.vtkInteractorStyleRubberBandPick):
@@ -39,7 +38,7 @@ from pyNastran.bdf.utils import write_patran_syntax_dict
 #class AreaPickStyle(vtk.vtkInteractorStyleDrawPolygon):  # not sure how to use this one...
 class AreaPickStyle(vtk.vtkInteractorStyleRubberBandZoom):  # works
     """Picks nodes & elements with a visible box widget"""
-    def __init__(self, parent=None, is_eids=True, is_nids=True, callback=None):
+    def __init__(self, parent=None, is_eids=True, is_nids=True, name=None, callback=None):
         """creates the AreaPickStyle instance"""
         # for vtk.vtkInteractorStyleRubberBandZoom
         self.AddObserver("LeftButtonPressEvent", self._left_button_press_event)
@@ -51,8 +50,11 @@ class AreaPickStyle(vtk.vtkInteractorStyleRubberBandZoom):  # works
         self.parent.area_picker.SetRenderer(self.parent.rend)
         self.is_eids = is_eids
         self.is_nids = is_nids
+        assert is_eids or is_nids, 'is_eids=%r is_nids=%r, must not both be False' % (is_eids, is_nids)
         self.callback = callback
         self._pick_visible = False
+        self.name = name
+        assert name is not None
 
     def _left_button_press_event(self, obj, event):
         """
@@ -115,32 +117,65 @@ class AreaPickStyle(vtk.vtkInteractorStyleRubberBandZoom):  # works
         behind the front elements
         """
         area_picker = self.parent.area_picker
-        area_picker.Pick()
+        #area_picker.Pick()  # double pick?
 
         area_picker.AreaPick(xmin, ymin, xmax, ymax, self.parent.rend)
-        frustrum = area_picker.GetFrustum() # vtkPlanes
-        grid = self.parent.grid
+        frustum = area_picker.GetFrustum() # vtkPlanes
+        #frustum = create_box_frustum(xmin, ymin, xmax, ymax, self.parent.rend)
+
+        grid = self.parent.get_grid(self.name)
 
         #extract_ids = vtk.vtkExtractSelectedIds()
         #extract_ids.AddInputData(grid)
 
         idsname = "Ids"
         ids = vtk.vtkIdFilter()
-        ids.SetInputData(grid)
-        if self.is_eids:
-            ids.CellIdsOn()
-        if self.is_nids:
-            ids.PointIdsOn()
+        if isinstance(grid, vtk.vtkUnstructuredGrid):
+            ids.SetInputData(grid)
+        elif isinstance(grid, vtk.vtkPolyData):  # pragma: no cover
+            # this doesn't work...
+            ids.SetCellIds(grid.GetCellData())
+            ids.SetPointIds(grid.GetPointData())
+        else:
+            raise NotImplementedError(ids)
+        #self.is_eids = False
+
+        ids.CellIdsOn()
+        ids.PointIdsOn()
+
+        #if not self.is_eids:
+            #ids.CellIdsOff()
+        #if not self.is_nids:
+            #ids.PointIdsOff()
         #ids.FieldDataOn()
         ids.SetIdsArrayName(idsname)
 
-        selected_frustrum = vtk.vtkExtractSelectedFrustum()
-        selected_frustrum.SetFrustum(frustrum)
-        selected_frustrum.PreserveTopologyOff()
-        selected_frustrum.SetInputConnection(ids.GetOutputPort())  # was grid?
-        selected_frustrum.Update()
+        if 1:
+            selected_frustum = vtk.vtkExtractSelectedFrustum()
+            selected_frustum.SetFrustum(frustum)
+            selected_frustum.PreserveTopologyOff() #  don't make an unstructured grid
+            selected_frustum.SetInputConnection(ids.GetOutputPort())  # was grid?
+            selected_frustum.Update()
 
-        ugrid = selected_frustrum.GetOutput()
+            ugrid = selected_frustum.GetOutput()
+        else:  # pragma: no cover
+            extract_points = vtk.vtkExtractPoints()
+            selection_node =vtk.vtkSelectionNode()
+            selection = vtk.vtkSelection()
+            selection_node.SetContainingCellsOn()
+            selection_node.Initialize()
+            selection_node.SetFieldType(vtkSelectionNode.POINT)
+            selection_node.SetContentType(vtkSelectionNode.INDICES)
+
+            selection.AddNode(selection_node)
+
+            extract_selection = vtk.vtkExtractSelection()
+            extract_selection.SetInputData(0, grid)
+            extract_selection.SetInputData(1, selection) # vtk 6+
+            extract_selection.Update()
+
+            ugrid = extract_selection.GetOutput()
+
         eids = None
         nids = None
 
@@ -152,17 +187,17 @@ class AreaPickStyle(vtk.vtkInteractorStyleRubberBandZoom):  # works
                 if ids is not None:
                     cell_ids = vtk_to_numpy(ids)
                     assert len(cell_ids) == len(np.unique(cell_ids))
-                    eids = self.parent.get_element_ids(cell_ids)
+                    eids = self.parent.get_element_ids(self.name, cell_ids)
         if self.is_nids:
             points = ugrid.GetPointData()
             if points is not None:
                 ids = points.GetArray('Ids')
                 if ids is not None:
                     point_ids = vtk_to_numpy(ids)
-                    nids = self.parent.get_node_ids(point_ids)
+                    nids = self.parent.get_node_ids(self.name, point_ids)
 
         if self.callback is not None:
-            self.callback(eids, nids)
+            self.callback(eids, nids, self.name)
 
         self.area_pick_button.setChecked(False)
         self.parent.setup_mouse_buttons(mode='default')
@@ -172,3 +207,64 @@ class AreaPickStyle(vtk.vtkInteractorStyleRubberBandZoom):  # works
         self.area_pick_button.setChecked(False)
         self.parent.setup_mouse_buttons(mode='default')
         self.parent.vtk_interactor.Render()
+
+def create_box_frustum(x0_, y0_, x1_, y1_, renderer):  # pragma: no cover
+
+    if x0_ < x1_:
+        x0 = x0_
+        x1 = x1_
+    else:
+        x0 = x1_
+        x1 = x0_
+
+    if y0_ < y1_:
+        y0 = y0_
+        y1 = y1_
+    else:
+        y0 = y1_
+        y1 = y0_
+
+    if x0 == x1:
+        x1 += 1.
+
+    if y0 == y1:
+        y1 += 1.
+
+    verts = []
+
+    renderer.SetDisplayPoint(x0, y0, 0)
+    renderer.DisplayToWorld()
+    verts.extend(renderer.GetWorldPoint()[:4])
+
+    renderer.SetDisplayPoint(x0, y0, 1)
+    renderer.DisplayToWorld()
+    verts.extend(renderer.GetWorldPoint()[:4])
+
+    renderer.SetDisplayPoint(x0, y1, 0)
+    renderer.DisplayToWorld()
+    verts.extend(renderer.GetWorldPoint()[:4])
+
+    renderer.SetDisplayPoint(x0, y1, 1)
+    renderer.DisplayToWorld()
+    verts.extend(renderer.GetWorldPoint()[:4])
+
+    renderer.SetDisplayPoint(x1, y0, 0)
+    renderer.DisplayToWorld()
+    verts.extend(renderer.GetWorldPoint()[:4])
+
+    renderer.SetDisplayPoint(x1, y0, 1)
+    renderer.DisplayToWorld()
+    verts.extend(renderer.GetWorldPoint()[:4])
+
+    renderer.SetDisplayPoint(x1, y1, 0)
+    renderer.DisplayToWorld()
+    verts.extend(renderer.GetWorldPoint()[:4])
+
+    renderer.SetDisplayPoint(x1, y1, 1)
+    renderer.DisplayToWorld()
+    verts.extend(renderer.GetWorldPoint()[:4])
+
+    extract_selected_frustum = vtk.vtkExtractSelectedFrustum()
+    extract_selected_frustum.CreateFrustum(verts)
+
+    return extract_selected_frustum.GetFrustum()

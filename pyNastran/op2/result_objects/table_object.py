@@ -784,7 +784,8 @@ class RealTableArray(TableArray):
             else:
                 page_num = self._write_sort1_as_sort1(f06_file, page_num, page_stamp, header, words)
         else:
-            raise NotImplementedError('SORT2')
+            return page_num - 1
+            #raise NotImplementedError('SORT2')
             #page_num = self._write_sort2_as_sort2(f06_file, page_num, page_stamp, header, words)
         return page_num - 1
 

@@ -57,6 +57,8 @@ from pyNastran.op2.tables.oes_stressStrain.complex.oes_shear import ComplexShear
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_solids import ComplexSolidStressArray, ComplexSolidStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_springs import ComplexSpringStressArray, ComplexSpringStrainArray
 
+from pyNastran.op2.tables.oes_stressStrain.random.oes_bars import RandomBarStressArray, RandomBarStrainArray
+
 from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear_rod import RealNonlinearRodArray
 from pyNastran.op2.tables.oes_stressStrain.oes_hyperelastic import (
     HyperelasticQuadArray)
@@ -175,12 +177,7 @@ class OES(OP2Common):
         self.fix_format_code()
         self.get_oes_prefix_postfix()
         self._parse_thermal_code()
-        try:
-            self.element_name = self.element_mapper[self.element_type]
-        except KeyError:
-            self.log.error(self.code_information())
-            raise
-        self.data_code['element_name'] = self.element_name
+        self._set_element_name()
         if self.is_debug_file:
             self.binary_debug.write('  element_name   = %r\n' % self.element_name)
             self.binary_debug.write('  approach_code  = %r\n' % self.approach_code)
@@ -204,6 +201,14 @@ class OES(OP2Common):
         assert isinstance(self.format_code, int), self.format_code
         #print('self.nonlinear_factor =', self.nonlinear_factor)
         #assert self.num_wide != 146, self.code_information()
+
+    def _set_element_name(self):
+        try:
+            self.element_name = self.element_mapper[self.element_type]
+        except KeyError:
+            self.log.error(self.code_information())
+            raise
+        self.data_code['element_name'] = self.element_name
 
     def _parse_stress_code_to_stress_bits(self):
         """
@@ -234,6 +239,28 @@ class OES(OP2Common):
         self.stress_bits = bits
         self.data_code['stress_bits'] = self.stress_bits
 
+
+    def _read_oes2_4(self, data, ndata):
+        """
+        Reads the Stress Table 4
+        """
+        #assert self.isubtable == -4, self.isubtable
+        #if self.is_debug_file:
+            #self.binary_debug.write('  element_name = %r\n' % self.element_name)
+        #print "element_name =", self.element_name
+        assert isinstance(self.format_code, int), self.format_code
+        assert self.is_stress is True, self.code_information()
+        self.data_code['is_stress_flag'] = True
+        self.data_code['is_strain_flag'] = False
+
+        self._setup_op2_subcase('STRESS/STRAIN')
+        if self.element_type in [34]: #34, 33, 74]: # CBAR, CQUAD4, CTRIA3
+            n = self._read_oes_4_sort(data, ndata)
+        else:
+            msg = self.code_information()
+            n = self._not_implemented_or_skip(data, ndata, msg)
+        return n
+
     def _read_oes1_4(self, data, ndata):
         """
         Reads the Stress Table 4
@@ -249,7 +276,7 @@ class OES(OP2Common):
 
         self._setup_op2_subcase('STRESS/STRAIN')
         if self.is_sort1:
-            n = self._read_oes1_4_sort1(data, ndata)
+            n = self._read_oes_4_sort(data, ndata)
         else:
             msg = self.code_information()
             n = self._not_implemented_or_skip(data, ndata, msg)
@@ -270,6 +297,7 @@ class OES(OP2Common):
             '???', 'Title', 'subtitle', 'label', '???']
 
         self.parse_approach_code(data)  # 3
+        self.sort_method = 2
 
         ## element type
         self.element_type = self.add_data_parameter(data, 'element_type', b'i', 3, False)
@@ -289,58 +317,105 @@ class OES(OP2Common):
 
         ## thermal flag; 1 for heat ransfer, 0 otherwise
         self.thermal = self.add_data_parameter(data, 'thermal', b'i', 23, False)
+        self.element_id = self.add_data_parameter(data, 'element_id', b'i', 5, fix_device_code=True)
+        self._element_id = self.add_data_parameter(data, '_element_id', b'f', 5, apply_nonlinear_factor=False, add_to_dict=True)
 
-        if self.analysis_code == 2:  # real eigenvalues
+        if self.analysis_code == 1:  # static...because reasons.
+            self._analysis_code_fmt = b'f'
+            self.data_names = self.apply_data_code_value('data_names', ['element_id'])
+        elif self.analysis_code == 2:  # real eigenvalues
             self._analysis_code_fmt = b'i'
             self.eign = self.add_data_parameter(data, 'eign', b'f', 6, False)
             self.mode_cycle = self.add_data_parameter(data, 'mode_cycle', b'i', 7, False)  # mode or cycle .. todo:: confused on the type - F1???
-            self.data_names = self.apply_data_code_value('data_names', ['node_id', 'eign', 'mode_cycle'])
+            self.data_names = self.apply_data_code_value('data_names', ['element_id', 'eign', 'mode_cycle'])
         elif self.analysis_code == 5:   # frequency
             self._analysis_code_fmt = b'f'
-            self.data_names = self.apply_data_code_value('data_names', ['node_id'])
+            self.data_names = self.apply_data_code_value('data_names', ['element_id'])
+            self.apply_data_code_value('analysis_method', 'freq')
         elif self.analysis_code == 6:  # transient
             self._analysis_code_fmt = b'f'
-            self.data_names = self.apply_data_code_value('data_names', ['node_id'])
+            self.data_names = self.apply_data_code_value('data_names', ['element_id'])
+            self.apply_data_code_value('analysis_method', 'dt')
         elif self.analysis_code == 7:  # pre-buckling
             self._analysis_code_fmt = b'i'
-            self.data_names = self.apply_data_code_value('data_names', ['node_id'])
+            self.data_names = self.apply_data_code_value('data_names', ['element_id'])
+            self.apply_data_code_value('analysis_method', 'lsdvmn')
         elif self.analysis_code == 8:  # post-buckling
             self._analysis_code_fmt = b'f'
             self.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
-            self.data_names = self.apply_data_code_value('data_names', ['node_id', 'eigr'])
+            self.data_names = self.apply_data_code_value('data_names', ['element_id', 'eigr'])
+            self.apply_data_code_value('analysis_method', 'eigr')
         elif self.analysis_code == 9:  # complex eigenvalues
             # mode number
             self._analysis_code_fmt = b'i'
             self.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
             self.eigi = self.add_data_parameter(data, 'eigi', b'f', 7, False)
-            self.data_names = self.apply_data_code_value('data_names', ['node_id', 'eigr', 'eigi'])
+            self.data_names = self.apply_data_code_value('data_names', ['element_id', 'eigr', 'eigi'])
+            self.apply_data_code_value('analysis_method', 'mode')
         elif self.analysis_code == 10:  # nonlinear statics
             # load step
             self._analysis_code_fmt = b'f'
-            self.data_names = self.apply_data_code_value('data_names', ['node_id'])
+            self.data_names = self.apply_data_code_value('data_names', ['element_id'])
+            self.apply_data_code_value('analysis_method', 'lftsfq')
         elif self.analysis_code == 11:  # old geometric nonlinear statics
             # load set number
-            self.data_names = self.apply_data_code_value('data_names', ['node_id'])
+            self.data_names = self.apply_data_code_value('data_names', ['element_id'])
         elif self.analysis_code == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
-            self.data_names = self.apply_data_code_value('data_names', ['node_id'])
+            self.data_names = self.apply_data_code_value('data_names', ['element_id'])
         else:
             msg = 'invalid analysis_code...analysis_code=%s' % self.analysis_code
             raise RuntimeError(msg)
 
         self._parse_stress_code_to_stress_bits()
-        self._fix_sort2(data)
+        self._fix_oes_sort2(data)
+        self._set_element_name()
+        #assert isinstance(self.nonlinear_factor, int), self.nonlinear_factor
 
-    def _fix_sort2(self, data):
+        def get_format_code(is_sort2, is_complex, is_random):
+            format_code = 0
+            if is_complex:
+                format_code += 1
+            if is_sort2:
+                format_code += 2
+            if is_random:
+                format_code += 4
+            if format_code > 5:
+                format_code = 5
+            #print('is_complex =', is_complex)
+            #print('is_sort2 =', is_sort2)
+            #print('is_random =', is_random)
+            #print('format_code =', format_code)
+            return format_code
+
+        is_sort2 = True
+        is_complex = False
+        is_random = True
+        #format_code = get_format_code(is_sort2, is_complex, is_random)
+        #self.format_code = format_code
+        #self.data_code['format_code'] = format_code
+
+
+    def _fix_oes_sort2(self, data):
         self.fix_format_code()
-        if self.num_wide == 8:
-            self.format_code = 1
-            self.data_code['format_code'] = 1
-        else:
+        #print('self.format_code_original =', self.format_code_original)
+        #print('self.format_code =', self.format_code)
             #self.fix_format_code()
-            if self.format_code == 1:
-                self.format_code = 2
-                self.data_code['format_code'] = 2
-            assert self.format_code in [2, 3], self.code_information()
+            #if self.format_code == 1:
+                #self.format_code = 2
+                #self.data_code['format_code'] = 2
+            #assert self.format_code in [2, 3], self.code_information()
+
+        if 1:
+            self.fix_format_code()
+            #if self.num_wide == 8:
+                #self.format_code = 1
+                #self.data_code['format_code'] = 1
+            #else:
+                ##self.fix_format_code()
+                #if self.format_code == 1:
+                    #self.format_code = 2
+                    #self.data_code['format_code'] = 2
+                #assert self.format_code in [2, 3], self.code_information()
 
         self._parse_thermal_code()
         if self.is_debug_file:
@@ -351,9 +426,6 @@ class OES(OP2Common):
         self._read_title(data)
         self._write_debug_bits()
         #assert isinstance(self.nonlinear_factor, int), self.nonlinear_factor
-
-    def _read_oes2_4(self, data, ndata):
-        return self._table_passer(data, ndata)
 
     def _read_ostr1_4(self, data, ndata):
         """
@@ -369,7 +441,27 @@ class OES(OP2Common):
 
         self._setup_op2_subcase('STRESS/STRAIN')
         if self.is_sort1:
-            n = self._read_ostr1_4_sort1(data, ndata)
+            n = self._read_ostr_4_sort(data, ndata, sort_method=1)
+        else:
+            msg = self.code_information()
+            n = self._not_implemented_or_skip(data, ndata, msg)
+        return n
+
+    def _read_ostr2_4(self, data, ndata):
+        """
+        Reads the Strain Table 4
+        """
+        #assert self.isubtable == -4, self.isubtable
+        #if self.is_debug_file:
+            #self.binary_debug.write('  element_name = %r\n' % self.element_name)
+        #print("element_name =", self.element_name)
+        assert self.is_strain is True, self.code_information()
+        self.data_code['is_stress_flag'] = False
+        self.data_code['is_strain_flag'] = True
+
+        self._setup_op2_subcase('STRESS/STRAIN')
+        if self.element_type in [34]: # CBAR
+            n = self._read_ostr_4_sort(data, ndata)
         else:
             msg = self.code_information()
             n = self._not_implemented_or_skip(data, ndata, msg)
@@ -416,7 +508,7 @@ class OES(OP2Common):
         return new_func
 
     #@_print_obj_name_on_crash
-    def _read_oes1_4_sort1(self, data, ndata):
+    def _read_oes_4_sort(self, data, ndata):
         """
         Reads OES1 subtable 4
         """
@@ -424,7 +516,6 @@ class OES(OP2Common):
             #assert self.num_wide != 146
             #assert ndata != 146, self.code_information()
         assert isinstance(self.format_code, int), self.format_code
-        assert self.is_sort1 is True
         if self.thermal == 0:
             n = self._read_oes1_loads(data, ndata)
         elif self.thermal == 1:
@@ -435,14 +526,13 @@ class OES(OP2Common):
         return n
 
     #@_print_obj_name_on_crash
-    def _read_ostr1_4_sort1(self, data, ndata):
+    def _read_ostr_4_sort(self, data, ndata):
         """
         Reads OSTR1 subtable 4
         """
         #if self.num_wide == 146:
             #assert self.num_wide != 146
             #assert ndata != 146, self.code_information()
-        assert self.is_sort1 is True
         if self.thermal == 0:
             n = self._read_oes1_loads(data, ndata)
         elif self.thermal == 1:
@@ -542,6 +632,14 @@ class OES(OP2Common):
             (34, 1, 10, b'OESNO1') : ('cbar_stress', ComplexBarStressArray),
             (34, 2, 10, b'OESXRMS1') : ('cbar_stress', ComplexBarStressArray),
 
+            (34, 1, 10, b'OESRMS2') : ('cbar_stress', RandomBarStressArray),
+
+            (34, 2, 10, b'OESPSD2') : ('cbar_stress', RandomBarStressArray),
+            (34, 2, 10, b'OESRMS2') : ('cbar_stress', RandomBarStressArray),
+            (34, 2, 10, b'OESNO2') : ('cbar_stress', RandomBarStressArray),
+            (34, 2, 10, b'OESATO2') : ('cbar_stress', RandomBarStressArray),
+            (34, 2, 10, b'OESCRM2') : ('cbar_stress', RandomBarStressArray),
+
             # Missing stress_mapper key for OES1 table #501
             # see cbarao_random_x_mini.op2 for an example with OES1 and OES1X...
             # it looks to be an error in MSC [2008-2012)
@@ -592,6 +690,15 @@ class OES(OP2Common):
             (33, 1, 9, b'OESNO1') : ('cquad4_stress', ComplexPlateStressArray),
             (33, 2, 11, b'OESXRMS1') : ('cquad4_stress', ComplexPlateStressArray),
 
+            (33, 2, 9, b'OESATO2') : ('cquad4_stress', 'NA'),
+            (33, 2, 9, b'OESCRM2') : ('cquad4_stress', 'NA'),
+            (33, 2, 9, b'OESPSD2') : ('cquad4_stress', 'NA'),
+            (33, 2, 9, b'OESNO2') : ('cquad4_stress', 'NA'),
+
+            (33, 1, 9, b'OESRMS2') : ('cquad4_stress', 'NA'),
+            (33, 2, 9, b'OESRMS2') : ('cquad4_stress', 'NA'),
+
+
             (74, 1, 17, b'OES1X1') : ('ctria3_stress', RealPlateStrainArray),
             (74, 1, 17, b'OES1X') : ('ctria3_stress', RealPlateStrainArray),
             (74, 1, 17, b'OES1') : ('ctria3_stress', RealPlateStrainArray),
@@ -601,6 +708,9 @@ class OES(OP2Common):
             (74, 1, 9, b'OESNO1') : ('ctria3_stress', ComplexPlateStrainArray),
             (74, 2, 17, b'OESVM1') : ('ctria3_stress', 'NA'),
             (74, 3, 17, b'OESVM1') : ('ctria3_stress', 'NA'),
+
+            (74, 1, 9, b'OESRMS2') : ('ctria3_stress', 'NA'),
+
             #(74, 1, 9) : ('ctria3_stress', RandomPlateStressArray),
 
             (82, 1, 87, b'OES1X1') : ('cquadr_stress', RealPlateStressArray),
@@ -1000,35 +1110,85 @@ class OES(OP2Common):
             prefix = 'strength_ratio_'
         elif self.table_name in [b'OESCP', b'OESTRCP']:
             pass # TODO: update
-        elif self.table_name in [b'OESXRMS1']: # wrong...
-            pass
         elif self.table_name in [b'OESVM1C', b'OSTRVM1C', b'OESVM1', b'OSTRVM1']:
             prefix = 'modal_contribution_'
-        elif self.table_name in [b'OSTRRMS1']:
+
+        elif self.table_name in [b'OESXRMS1']: # wrong...
+            pass
             self.format_code = 1
-            self.sort_bits[0] = 0
+            self.sort_bits[0] = 0 # real
+            self.sort_bits[1] = 0 # sort1
+            self.sort_bits[2] = 1 # random
+            self._analysis_code_fmt = b'i'
+            self.sort_method = 1
+            print(self.data_code)
+            #self.data_code['nonlinear_factor'] = self._element_id
+            print(self.code_information())
+            #assert self.sort_method == 2, self.code_information()
+            #self.nonlinear_factor = self.n
+            #self.data_code['nonlinear_factor'] = None
+        elif self.table_name in [b'OESXRMS2']: # wrong...
+            pass
+        elif self.table_name in [b'OESRMS1', b'OSTRRMS1']:
+            self.format_code = 1
+            self.sort_bits[0] = 0 # real
+            assert self.sort_method == 1, self.code_information()
+            self._analysis_code_fmt = b'i'
+        elif self.table_name in [b'OESRMS2', b'OSTRRMS2']:
+            #self.format_code = 1
+            self.sort_bits[0] = 0 # real
+            self.sort_bits[1] = 0 # sort1
+            self.sort_bits[2] = 1 # random
+            self._analysis_code_fmt = b'i'
+            self.sort_method = 1
+            #assert self.sort_method == 2, self.code_information()
             postfix = '_rms'
+
+        elif self.table_name in [b'OESPSD1', b'OESPSD2', b'OSTRPSD1', b'OSTRPSD2']:
+            postfix = '_psd'
         elif self.table_name in [b'OESNO1', b'OSTRNO1', b'OSTNO1C']:
+            assert self.sort_method == 1, self.code_information( )
+
             self.format_code = 1
-            self.sort_bits[0] = 0
+            self.sort_bits[0] = 0 # real
+            self.sort_bits[2] = 1 # random
+            print(self.code_information())
+            postfix = '_no'
+        elif self.table_name in [b'OESNO2', b'OSTRNO2']:
+            self.format_code = 1
+            self.sort_bits[0] = 0 # real
+            self.sort_bits[1] = 0 # sort1
+            #self.sort_bits[0] = 1 # sort2
+            self.sort_bits[2] = 1 # random
+            self.sort_method = 1
+            self.data_code['nonlinear_factor'] = None
+            self._analysis_code_fmt = b'i'
             postfix = '_no'
         elif self.table_name in [b'OSTRMS1C']: #, b'OSTRMS1C']:
             self.format_code = 1
-            self.sort_bits[0] = 0
+            self.sort_bits[0] = 0 # real
             postfix = '_rms'
         elif self.table_name in [b'RASCONS']: #, b'OSTRMS1C']:
             self.format_code = 1
-            self.sort_bits[0] = 0
+            self.sort_bits[0] = 0 # real
             postfix = '_RASCONS'
-        #elif self.table_name in [b'OSTRCRM1']:
-            #self.format_code = 1
-            #self.sort_bits[0] = 0
-            #postfix = '_rms'
+
+        elif self.table_name in [b'OESCRM1', b'OSTRCRM1']:
+            postfix = '_crm'
+        elif self.table_name in [b'OESCRM2', b'OSTRCRM2']:
+            # sort2, random
+            self.sort_bits[0] = 0 # real
+            self.sort_bits[1] = 1 # sort2
+            self.sort_bits[2] = 1 # random
+            self.sort_method = 2
+            postfix = '_crm'
         #elif self.table_name in ['DOES1', 'DOSTR1']:
             #prefix = 'scaled_response_spectra_'
         #elif self.table_name in ['OESCP']:
         else:
             raise NotImplementedError(self.table_name)
+        self.data_code['sort_bits'] = self.sort_bits
+        self.data_code['nonlinear_factor'] = self.nonlinear_factor
         return prefix, postfix
 
     def _read_oes1_loads(self, data, ndata):
@@ -1049,8 +1209,10 @@ class OES(OP2Common):
             result_name = 'strain'
             stress_name = 'STRAIN'
 
-        if self.is_stress:
-            _result_name, _class_obj = self.get_stress_mapper()
+        #if self.is_stress:
+            #_result_name, _class_obj = self.get_stress_mapper()
+        if self.table_name_str == 'OESXRMS1':
+            assert self.sort_method == 1, self.code_information()
 
         if self._results.is_not_saved(result_name):
             return ndata
@@ -1738,8 +1900,8 @@ class OES(OP2Common):
             #strength_ratio_ply
             #print("eid=%s failure=%r ply=%s failureIndexPly=%s  failure_index_bonding=%s strength_ratio_bonding=%s flag=%s flag2=%s" % (
             #    eid, failure.strip(), ply, failureIndexPly, failure_index_bonding, strength_ratio_bonding, flag, flag2))
-            print("eid=%s strength_ratio_ply=%g failure_index_bonding=%s strength_ratio_bonding=%s" % (
-                eid, strength_ratio_ply, failure_index_bonding, strength_ratio_bonding))
+            #print("eid=%s strength_ratio_ply=%g failure_index_bonding=%s strength_ratio_bonding=%s" % (
+                #eid, strength_ratio_ply, failure_index_bonding, strength_ratio_bonding))
             #obj.add_new_eid(element_name, dt, eid, force, stress)
             n += ntotal
 
@@ -2447,6 +2609,10 @@ class OES(OP2Common):
         reads stress/strain for element type:
          - 34 : CBAR
         """
+        #if isinstance(self.nonlinear_factor, float):
+            #self.sort_bits[0] = 1 # sort2
+            #self.sort_method = 2
+
         n = 0
         if self.is_stress:
             result_name = prefix + 'cbar_stress' + postfix
@@ -2603,14 +2769,104 @@ class OES(OP2Common):
                     obj.add_new_eid_sort1(dt, eid,
                                           s1a, s2a, s3a, s4a, axial,
                                           s1b, s2b, s3b, s4b)
-        elif self.format_code == 1 and self.num_wide == 19: # random
+        elif self.format_code == 1 and self.num_wide == 19: # random strain?
             raise RuntimeError(self.code_information())
-        elif self.format_code == 2 and self.num_wide == 10: # random
-            msg = self.code_information()
-            n = self._not_implemented_or_skip(data, ndata, msg)
-            nelements = None
-            ntotal = None
-        elif self.format_code == 1 and self.num_wide == 10: # random
+
+        elif self.format_code in [1, 2] and self.num_wide == 10:
+            # random stress/strain per example
+            #
+            # DMAP says random stress has num_wide=10 and
+            # random strain has numwide=19, but it's wrong...maybe???
+            #
+            # format_code = 1 - NO/RMS (SORT1 regardless of whether this is a SORT2 table or not)
+            # format_code = 2 - ATO/PSD/CRM (actually SORT2)
+            #
+            element_id = self.nonlinear_factor
+            if self.is_stress:
+                obj_vector_random = RandomBarStressArray
+            else:
+                obj_vector_random = RandomBarStrainArray
+            self.data_code['nonlinear_factor'] = element_id
+
+            ntotal = 10 * 4
+            nelements = ndata // ntotal
+            auto_return, is_vectorized = self._create_oes_object4(
+                nelements, result_name, slot, obj_vector_random)
+            if auto_return:
+                return ndata, None, None
+
+            if self.is_debug_file:
+                self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
+                #self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
+                self.binary_debug.write('  #elementi = [eid_device, s1a, s2a, s3a, s4a, axial,\n')
+                self.binary_debug.write('                           s1b, s2b, s3b, s4b]\n')
+                self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
+
+            obj = self.obj
+            if self.use_vector and is_vectorized and 0:  # pragma: no cover
+                # self.itime = 0
+                # self.ielement = 0
+                # self.itotal = 0
+                #self.ntimes = 0
+                #self.nelements = 0
+                n = nelements * self.num_wide * 4
+
+                ielement = obj.ielement
+                ielement2 = ielement + nelements
+                obj._times[obj.itime] = dt
+
+                if obj.itime == 0:
+                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 10)
+                    eids = ints[:, 0] // 10
+                    obj.element[ielement:ielement2] = eids
+
+                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 10)
+
+                #[s1a, s2a, s3a, s4a, axial,
+                # s1b, s2b, s3b, s4b]
+                obj.data[obj.itime, ielement:ielement2, :] = floats[:, 1:].copy()
+                obj.itotal = ielement2
+                obj.ielement = ielement2
+            else:
+                #print(self.code_information())
+                #print('self._analysis_code_fmt =', self._analysis_code_fmt)
+                struct1 = Struct(self._endian + self._analysis_code_fmt + b'9f')
+                #self.log.info('self.nonlinear_factor = %s' % self.nonlinear_factor)
+                #assert self.sort_method == 2, self.code_information()
+                #if sort_method == 2:
+                    #obj.node_id = 42
+                for i in range(nelements):
+                    edata = data[n:n+ntotal]
+                    out = struct1.unpack(edata)
+                    (eid_device,
+                     s1a, s2a, s3a, s4a, axial,
+                     s1b, s2b, s3b, s4b) = out
+
+                    if self.sort_method == 1:
+                        eid = eid_device // 10
+                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
+                    else:
+                        eid = self.nonlinear_factor
+                        dt = eid_device
+                        #print("SORT2 dt=%s eid=%s" % (dt, eid))
+
+                    #print('  eid=%i; C%i=[%s]\n' % (eid, i, ', '.join(['%r' % di for di in out])))
+                    if self.table_name_str == 'OESXRMS1':
+                        #assert sort_method == 2
+                        assert self.sort_method == 1, self.code_information()
+
+                    if self.is_debug_file:
+                        self.binary_debug.write('  eid=%i; C%i=[%s]\n' % (
+                            eid, i, ', '.join(['%r' % di for di in out])))
+                    n += ntotal
+
+                    assert eid > 0, "dt=%s eid=%s" % (dt, eid)
+                    obj.add_new_eid_sort1(
+                        dt, eid,
+                        s1a, s2a, s3a, s4a, axial,
+                        s1b, s2b, s3b, s4b)
+
+        elif self.format_code == 1 and self.num_wide == 10: # random strain
             msg = self.code_information()
             n = self._not_implemented_or_skip(data, ndata, msg)
             nelements = None
@@ -3150,7 +3406,7 @@ class OES(OP2Common):
             n = self._not_implemented_or_skip(data, ndata, msg)
             nelements = None
             ntotal = None
-        elif self.format_code == 2 and self.num_wide == 11: # random
+        elif self.format_code in [1, 2] and self.num_wide == 11: # random
             msg = self.code_information()
             n = self._not_implemented_or_skip(data, ndata, msg)
             nelements = None
@@ -3322,7 +3578,7 @@ class OES(OP2Common):
             #msg = self.code_information()
             msg = '%s-%s' % (self.table_name_str, self.element_name)
             return self._not_implemented_or_skip(data, ndata, msg), None, None
-        elif self.format_code == 2 and self.num_wide == 11: # random; CTRIA3
+        elif self.format_code in [1, 2] and self.num_wide == 11: # random; CTRIA3
             msg = '%s-%s' % (self.table_name_str, self.element_name)
             return self._not_implemented_or_skip(data, ndata, msg), None, None
         elif self.format_code == 1 and self.num_wide == 9: # random; CTRIA3
@@ -3772,7 +4028,6 @@ class OES(OP2Common):
                     #sss
                     obj.element[ielement:ielement2] = eids  # 150
                      #print(obj.element_node[:10, :])
-                    #aaa
 
                 floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 25)[:, 1:]
 
@@ -4103,7 +4358,7 @@ class OES(OP2Common):
                     eid = eid_device // 10
                     if self.is_debug_file:
                         self.binary_debug.write('CTRIAX6-53 eid=%i\n    %s\n' % (eid, str(out)))
-                    print('CTRIAX6-53 eid=%i\n    %s\n' % (eid, str(out)))
+                    #print('CTRIAX6-53 eid=%i\n    %s\n' % (eid, str(out)))
 
                     if is_magnitude_phase:
                         rs = polar_to_real_imag(rsr, rsi)
@@ -4123,8 +4378,8 @@ class OES(OP2Common):
                         (loc, rsr, rsi, azsr, azsi, Asr, Asi, ssr, ssi) = out
                         if self.is_debug_file:
                             self.binary_debug.write('    %s\n' % (str(out)))
-                        print("eid=%s loc=%s rs=%s azs=%s as=%s ss=%s" % (
-                            eid, loc, rs, azs, As, ss))
+                        #print("eid=%s loc=%s rs=%s azs=%s as=%s ss=%s" % (
+                            #eid, loc, rs, azs, As, ss))
 
                         if is_magnitude_phase:
                             rs = polar_to_real_imag(rsr, rsi)

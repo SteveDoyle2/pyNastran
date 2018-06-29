@@ -674,7 +674,7 @@ class F06Writer(OP2_F06_Common):
             self.nonlinear_celas3_stress,
 
             # bars/beams
-            self.cbar_strain,
+            self.cbar_strain, self.cbar_strain_ato, self.cbar_strain_crm, self.cbar_strain_psd, self.cbar_strain_rms, self.cbar_strain_no,
             self.cbar_strain_10nodes,
             self.cbeam_strain,
 
@@ -715,7 +715,7 @@ class F06Writer(OP2_F06_Common):
             self.cbush1d_stress_strain,
             #------------------------------------------
             # cbars/cbeams
-            self.cbar_stress,
+            self.cbar_stress, self.cbar_stress_ato, self.cbar_stress_crm, self.cbar_stress_psd, self.cbar_stress_rms, self.cbar_stress_no,
             self.cbar_stress_10nodes,
             self.nonlinear_cbeam_stress,
             self.cbeam_stress,

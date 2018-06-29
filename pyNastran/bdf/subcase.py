@@ -260,6 +260,38 @@ class Subcase(object):
             options.append('PSDF')
             self.add('FORCE', 'ALL', options, 'STRESS-type')
 
+        elif table_name in ['OESATO1', 'OESATO2']:
+            options.append('PSDF')
+            self.add('STRESS', 'ALL', options, 'STRESS-type')
+        elif table_name in ['OESCRM1', 'OESCRM2']:
+            options.append('CRM')
+            self.add('STRESS', 'ALL', options, 'STRESS-type')
+        elif table_name in ['OESRMS1', 'OESRMS2']:
+            options.append('RMS')
+            self.add('STRESS', 'ALL', options, 'STRESS-type')
+        elif table_name in ['OESNO1', 'OESNO2']:
+            options.append('NO')
+            self.add('STRESS', 'ALL', options, 'STRESS-type')
+        elif table_name in ['OESPSD1', 'OESPSD2']:
+            options.append('PSDF')
+            self.add('STRESS', 'ALL', options, 'STRESS-type')
+
+        elif table_name in ['OSTRATO1', 'OSTRATO2']:
+            options.append('PSDF')
+            self.add('STRAIN', 'ALL', options, 'STRESS-type')
+        elif table_name in ['OSTRCRM1', 'OSTRCRM2']:
+            options.append('CRM')
+            self.add('STRAIN', 'ALL', options, 'STRESS-type')
+        elif table_name in ['OSTRRMS1', 'OSTRRMS2']:
+            options.append('RMS')
+            self.add('STRAIN', 'ALL', options, 'STRESS-type')
+        elif table_name in ['OSTRNO1', 'OSTRNO2']:
+            options.append('NO')
+            self.add('STRAIN', 'ALL', options, 'STRESS-type')
+        elif table_name in ['OSTRPSD1', 'OSTRPSD2']:
+            options.append('PSDF')
+            self.add('STRAIN', 'ALL', options, 'STRESS-type')
+
         elif table_name in ['OEFIT']:
             if table_code in [25]:
                 self.add('FORCE', 'ALL', options, 'STRESS-type')

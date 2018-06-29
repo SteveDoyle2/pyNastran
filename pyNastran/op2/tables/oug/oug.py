@@ -682,39 +682,33 @@ class OUG(OP2Common):
                 # displacement
                 assert self.table_name in [b'OUGPSD1', b'OUGPSD2'], 'self.table_name=%r' % self.table_name
                 result_name = 'displacements_PSD'
-                storage_obj = self.displacements_PSD
                 obj = RealDisplacementArray
             elif self.table_code == 10:
                 # velocity
                 assert self.table_name in [b'OVGPSD1', b'OVGPSD2'], 'self.table_name=%r' % self.table_name
                 result_name = 'velocities_PSD'
-                storage_obj = self.velocities_PSD
                 obj = RealVelocityArray
             elif self.table_code == 11:
                 # acceleration
                 assert self.table_name in [b'OAGPSD1', b'OAGPSD2'], 'self.table_name=%r' % self.table_name
                 result_name = 'accelerations_PSD'
-                storage_obj = self.accelerations_PSD
                 obj = RealAccelerationArray
 
             elif self.table_code == 601:
                 # displacement
                 assert self.table_name in [b'OUGPSD1', b'OUGPSD2'], 'self.table_name=%r' % self.table_name
                 result_name = 'displacements_PSD'
-                storage_obj = self.displacements_PSD
                 obj = RealDisplacementArray
             elif self.table_code == 610:
                 # velocity
                 assert self.table_name in [b'OUGPSD1', b'OUGPSD2'], 'self.table_name=%r' % self.table_name
                 result_name = 'velocities_PSD'
-                storage_obj = self.velocities_PSD
                 obj = RealVelocityArray
             elif self.table_code == 611:
                 # acceleration
                 assert self.table_name in [b'OUGPSD1', b'OUGPSD2'], 'self.table_name=%r' % self.table_name
                 result_name = 'accelerations_PSD'
-                storage_obj = self.accelerations_PSD
-                obj = RealDisplacementArray
+                obj = RealAccelerationArray
             else:
                 n = self._not_implemented_or_skip(data, ndata, self.code_information())
                 return n
@@ -722,6 +716,8 @@ class OUG(OP2Common):
             if self._results.is_not_saved(result_name):
                 return ndata
             self._results._found_result(result_name)
+
+            storage_obj = getattr(self, result_name)
             n = self._read_random_table(data, ndata, result_name, storage_obj,
                                         obj, 'node',
                                         random_code=self.random_code)

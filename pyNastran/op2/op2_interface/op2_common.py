@@ -1102,7 +1102,7 @@ class OP2Common(Op2Codes, F06Writer):
             flag = self.data_code['analysis_method']
             structi = Struct(self._endian + self._analysis_code_fmt + b'i6f')
 
-            psds = ('CRM2', 'NO2', 'PSD2', 'RMS2')
+            #psds = ('CRM2', 'NO2', 'PSD2', 'RMS2')
             #print('sort_method=%s' % self.sort_method)
             #if self.table_name_str.endswith(psds):
             for inode in range(nnodes):
@@ -1426,6 +1426,9 @@ class OP2Common(Op2Codes, F06Writer):
         #if any([card_name in msg for card_name in ['VUHEXA', 'VUPENTA', 'VUTETRA', 'VUQUAD']]):
             #return ndata
         #raise NotImplementedError(msg)
+        #if self.table_name.startswith(('OSTR', 'OES')) and self.element_type in [33, 74]:
+            #return ndata
+
         if is_release:
             if msg != self._last_comment:
                 #print(self.code_information())
@@ -1533,6 +1536,7 @@ class OP2Common(Op2Codes, F06Writer):
         #Sort 1 - SortCode=((TCODE//1000)+2)//2
 
         self.data_code['sort_code'] = self.sort_code
+        #print('tCode=%s tCode%%1000=%-2s tCode//1000=%s' % (tCode, tCode%1000, tCode//1000))
         self.sort_method = self._function1(tCode)
         self.data_code['sort_method'] = self.sort_method
 

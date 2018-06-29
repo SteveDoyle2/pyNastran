@@ -212,7 +212,7 @@ class MouseActions(object):
         self.setup_mouse_buttons('probe_result',
                                  left_button_down=self._probe_picker, revert=True)
 
-    def on_area_pick_callback(self, eids, nids):
+    def on_area_pick_callback(self, eids, nids, name):
         """prints the message when area_pick succeeds"""
         msg = ''
         if eids is not None and len(eids):
@@ -222,8 +222,11 @@ class MouseActions(object):
         if msg:
             self.gui.log_info('\n%s' % msg.lstrip())
 
-    def on_area_pick(self, is_eids=True, is_nids=True, callback=None, force=False):
+    def on_area_pick(self, is_eids=True, is_nids=True, name=None, callback=None, force=False):
         """creates a Rubber Band Zoom"""
+        if name is None:
+            name = self.gui.name
+        print('name = %s' % name)
         self.revert_pressed('area_pick')
         is_checked = self.actions['area_pick'].isChecked()
         if not is_checked:
@@ -238,7 +241,7 @@ class MouseActions(object):
         if callback is None:
             callback = self.on_area_pick_callback
         style = AreaPickStyle(parent=self, is_eids=is_eids, is_nids=is_nids,
-                              callback=callback)
+                              name=name, callback=callback)
         self.setup_mouse_buttons(mode='style', revert=True,
                                  style=style) #, style_name='area_pick'
 
@@ -514,6 +517,9 @@ class MouseActions(object):
     def node_picker(self):
         return self.gui.node_picker
 
+    def get_grid(self, name):
+        return self.grid
+
     @property
     def grid(self):
         return self.gui.grid
@@ -551,10 +557,10 @@ class MouseActions(object):
         """helper method for trackball camera"""
         self.gui.view_actions.on_pan_down(event)
 
-    def get_node_ids(self, ids=None):
+    def get_node_ids(self, name, ids=None):
         """wrapper around node_ids"""
-        return self.gui.get_node_ids(ids)
+        return self.gui.get_node_ids(name, ids)
 
-    def get_element_ids(self, ids=None):
+    def get_element_ids(self, name, ids=None):
         """wrapper around node_ids"""
-        return self.gui.get_element_ids(ids)
+        return self.gui.get_element_ids(name, ids)

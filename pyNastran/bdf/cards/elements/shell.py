@@ -2397,6 +2397,26 @@ class CQUAD4(QuadShell):
         self.nodes_ref = None
         self.theta_mcid_ref = None
 
+    def split_to_ctria3(self, eida, eidb):
+        """
+        Splits a CQUAD4 into two CTRIA3s
+
+        TODO
+        ----
+         - doesn't consider theta_mcid if a float correctly (use an integer)
+         - doesn't optimize the orientation of the nodes yet...
+        """
+        n1, n2, n3, n4 = self.nodes
+        nids = [n1, n2, n3]
+        elementa = CTRIA3(eida, self.pid, nids, zoffset=self.zoffset, theta_mcid=self.theta_mcid,
+                          tflag=self.tflag, T1=self.T1, T2=self.T2, T3=self.T3,
+                          comment=self.comment)
+        nids = [n3, n4, n1]
+        elementb = CTRIA3(eidb, self.pid, nids, zoffset=self.zoffset, theta_mcid=self.theta_mcid,
+                          tflag=self.tflag, T1=self.T1, T2=self.T2, T3=self.T3,
+                          comment='')
+        return elementa, elementb
+
     def get_thickness_scale(self):
         return [self.T1, self.T2, self.T3, self.T4]
 

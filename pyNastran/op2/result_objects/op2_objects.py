@@ -370,10 +370,14 @@ class ScalarObject(BaseScalarObject):
             if hasattr(self, name + 's'):
                 vals = getattr(self, name + 's')
                 name = name + 's'
-            else:
+                vals_array = np.array(vals)
+            elif hasattr(self, name):
                 vals = getattr(self, name)
+                vals_array = np.array(vals)
+            else:
+                vals_array = '???'
             #msg.append('%s = [%s]\n' % (name, ', '.join(['%r' % val for val in vals])))
-            msg += '%s%s = %s\n' % (prefix, name, np.array(vals))
+            msg += '%s%s = %s\n' % (prefix, name, vals_array)
         #print("***data_names =", self.data_names)
         return [msg]
 

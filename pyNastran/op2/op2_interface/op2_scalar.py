@@ -772,9 +772,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OSTRVM1' : [self._read_oes1_3, self._read_ostr1_4],   # isat_random
             b'OSTRVM1C' : [self._read_oes1_3, self._read_ostr1_4],  # isat_random
 
-            b'OSTR2' : [self._read_oes2_3, self._read_oes2_4],
-            b'OES2C' : [self._read_oes2_3, self._read_oes2_4],
-            b'OSTR2C' : [self._read_oes2_3, self._read_oes2_4],
+            b'OSTR2' : [self._table_passer, self._table_passer],
+            b'OES2C' : [self._table_passer, self._table_passer],
+            b'OSTR2C' : [self._table_passer, self._table_passer],
 
             # MSC TABLES
 
@@ -924,7 +924,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'ONRGY'  : [self._read_onr1_3, self._read_onr1_4],
             b'ONRGY1' : [self._read_onr1_3, self._read_onr1_4],  # strain energy density
             b'ONRGY2':  [self._table_passer, self._table_passer],
-            #=======================
+            #===========================================================
             # OES
             # stress
             # OES1C - Table of composite element stresses or strains in SORT1 format
@@ -935,6 +935,11 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OES1C'  : [self._read_oes1_3, self._read_oes1_4],  # stress - composite
             b'OESCP'  : [self._read_oes1_3, self._read_oes1_4],  # stress - nonlinear???
             b'OESRT'  : [self._read_oes1_3, self._read_oes1_4], # ply strength ratio
+
+            # strain
+            b'OSTR1X'  : [self._read_oes1_3, self._read_ostr1_4],  # strain - isotropic
+            b'OSTR1C'  : [self._read_oes1_3, self._read_ostr1_4],  # strain - composite
+            b'OESTRCP' : [self._read_oes1_3, self._read_ostr1_4],
 
             # special nonlinear tables
             # OESNLBR - Slideline stresses
@@ -958,28 +963,22 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             #b'OESNO2'  : [self._table_passer, self._table_passer],
             #b'OESCRM2' : [self._table_passer, self._table_passer],
             #=======================
-            # strain
-            b'OSTR1X'  : [self._read_oes1_3, self._read_ostr1_4],  # strain - isotropic
-            b'OSTR1C'  : [self._read_oes1_3, self._read_ostr1_4],  # strain - composite
-            b'OESTRCP' : [self._read_oes1_3, self._read_ostr1_4],
 
             # off strain
             b'OSTRATO1' : [self._read_oes1_3, self._read_ostr1_4],
             b'OSTRCRM1' : [self._read_oes1_3, self._read_ostr1_4],
             b'OSTRPSD1' : [self._read_oes1_3, self._read_ostr1_4],
-            b'OSTRRMS1' : [self._read_oes1_3, self._read_ostr1_4], # isat_random
-            b'OSTRNO1' : [self._read_oes1_3, self._read_ostr1_4],  # isat_random
+            b'OSTRRMS1' : [self._table_passer, self._table_passer], # isat_random
+            b'OSTRNO1' : [self._table_passer, self._table_passer],  # isat_random
 
-            b'OSTRATO2' : [self._table_passer, self._table_passer],
-            b'OSTRCRM2' : [self._table_passer, self._table_passer],
-            b'OSTRPSD2' : [self._table_passer, self._table_passer],
-            b'OSTRRMS2' : [self._table_passer, self._table_passer],
-            b'OSTRNO2'  : [self._table_passer, self._table_passer],
+            b'OSTRATO2' : [self._read_oes2_3, self._read_ostr2_4],
+            b'OSTRCRM2' : [self._read_oes2_3, self._read_ostr2_4],
+            b'OSTRPSD2' : [self._read_oes2_3, self._read_ostr2_4],
+            b'OSTRRMS2' : [self._read_oes2_3, self._read_ostr2_4],
+            b'OSTRNO2'  : [self._read_oes2_3, self._read_ostr2_4],
 
             b'OSTRMS1C' : [self._read_oes1_3, self._read_ostr1_4], # isat_random
             b'OSTNO1C' : [self._read_oes1_3, self._read_ostr1_4],  # isat_random
-            #b'OSTRRMS1' : [self._read_oes1_3, self._read_ostr1_4], # isat_random
-            #b'OSTRNO1' : [self._read_oes1_3, self._read_ostr1_4],  # isat_random
 
             b'OSTPSD2C' : [self._table_passer, self._table_passer],
             #=======================
@@ -1186,11 +1185,11 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OESNO1'  : [self._read_oes1_3, self._read_oes1_4],
             b'OESXRMS1' : [self._read_oes1_3, self._read_oes1_4],
 
-            b'OESATO2' : [self._table_passer, self._table_passer],
-            b'OESCRM2' : [self._table_passer, self._table_passer],
-            b'OESPSD2' : [self._table_passer, self._table_passer],
-            b'OESRMS2' : [self._table_passer, self._table_passer],
-            b'OESNO2'  : [self._table_passer, self._table_passer],
+            b'OESATO2' : [self._read_oes2_3, self._read_oes2_4],
+            b'OESCRM2' : [self._read_oes2_3, self._read_oes2_4],
+            b'OESPSD2' : [self._read_oes2_3, self._read_oes2_4],
+            b'OESRMS2' : [self._read_oes2_3, self._read_oes2_4],
+            b'OESNO2'  : [self._read_oes2_3, self._read_oes2_4],
 
             # force
             b'OEFATO1' : [self._read_oef1_3, self._read_oef1_4],

@@ -905,6 +905,7 @@ class GuiAttributes(object):
             geom_actor.SetMapper(grid_mapper)
             self.rend.AddActor(geom_actor)
 
+            self.name = 'main'
             self.grid = grid
             self.grid_mapper = grid_mapper
             self.geom_actor = geom_actor
@@ -1452,13 +1453,13 @@ class GuiAttributes(object):
         return self.vtk_interactor.GetRenderWindow()
 
     #------------------------------
-    def get_element_ids(self, ids=None):
+    def get_element_ids(self, name=None, ids=None):
         """wrapper around element_ids"""
         if ids is None:
             return self.element_ids
         return self.element_ids[ids]
 
-    def get_node_ids(self, ids=None):
+    def get_node_ids(self, name=None, ids=None):
         """wrapper around node_ids"""
         if ids is None:
             return self.node_ids
