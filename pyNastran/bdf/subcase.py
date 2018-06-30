@@ -266,7 +266,7 @@ class Subcase(object):
         elif table_name in ['OESCRM1', 'OESCRM2']:
             options.append('CRM')
             self.add('STRESS', 'ALL', options, 'STRESS-type')
-        elif table_name in ['OESRMS1', 'OESRMS2']:
+        elif table_name in ['OESRMS1', 'OESRMS2', 'OESXRMS1']:
             options.append('RMS')
             self.add('STRESS', 'ALL', options, 'STRESS-type')
         elif table_name in ['OESNO1', 'OESNO2']:

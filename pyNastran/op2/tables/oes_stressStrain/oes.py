@@ -58,6 +58,8 @@ from pyNastran.op2.tables.oes_stressStrain.complex.oes_solids import ComplexSoli
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_springs import ComplexSpringStressArray, ComplexSpringStrainArray
 
 from pyNastran.op2.tables.oes_stressStrain.random.oes_bars import RandomBarStressArray, RandomBarStrainArray
+from pyNastran.op2.tables.oes_stressStrain.random.oes_plates import RandomPlateStressArray, RandomPlateStrainArray
+from pyNastran.op2.tables.oes_stressStrain.random.oes_solids import RandomSolidStressArray, RandomSolidStrainArray
 
 from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear_rod import RealNonlinearRodArray
 from pyNastran.op2.tables.oes_stressStrain.oes_hyperelastic import (
@@ -254,7 +256,7 @@ class OES(OP2Common):
         self.data_code['is_strain_flag'] = False
 
         self._setup_op2_subcase('STRESS/STRAIN')
-        if self.element_type in [34]: #34, 33, 74]: # CBAR, CQUAD4, CTRIA3
+        if self.element_type in [34, 33, 74, 67]: # CBAR, CQUAD4, CTRIA3, CHEXA
             n = self._read_oes_4_sort(data, ndata)
         else:
             msg = self.code_information()
@@ -441,7 +443,7 @@ class OES(OP2Common):
 
         self._setup_op2_subcase('STRESS/STRAIN')
         if self.is_sort1:
-            n = self._read_ostr_4_sort(data, ndata, sort_method=1)
+            n = self._read_ostr_4_sort(data, ndata)
         else:
             msg = self.code_information()
             n = self._not_implemented_or_skip(data, ndata, msg)
@@ -460,7 +462,7 @@ class OES(OP2Common):
         self.data_code['is_strain_flag'] = True
 
         self._setup_op2_subcase('STRESS/STRAIN')
-        if self.element_type in [34]: # CBAR
+        if self.element_type in [34, 33, 74, 67]: # CBAR, CQUAD4, CTRIA3, CHEXA
             n = self._read_ostr_4_sort(data, ndata)
         else:
             msg = self.code_information()
@@ -1121,9 +1123,7 @@ class OES(OP2Common):
             self.sort_bits[2] = 1 # random
             self._analysis_code_fmt = b'i'
             self.sort_method = 1
-            print(self.data_code)
             #self.data_code['nonlinear_factor'] = self._element_id
-            print(self.code_information())
             #assert self.sort_method == 2, self.code_information()
             #self.nonlinear_factor = self.n
             #self.data_code['nonlinear_factor'] = None
@@ -1152,7 +1152,6 @@ class OES(OP2Common):
             self.format_code = 1
             self.sort_bits[0] = 0 # real
             self.sort_bits[2] = 1 # random
-            print(self.code_information())
             postfix = '_no'
         elif self.table_name in [b'OESNO2', b'OSTRNO2']:
             self.format_code = 1
@@ -3213,6 +3212,11 @@ class OES(OP2Common):
             #msg = 'OES-CHEXA-random-numwide=%s numwide_real=%s numwide_imag=%s numwide_random=%s' % (
                 #self.num_wide, numwide_real, numwide_imag, numwide_random)
             #return self._not_implemented_or_skip(data, ndata, msg)
+        elif self.format_code == 2 and self.num_wide == 67:  # CHEXA
+            msg = 'skipping random CHEXA; numwide=67'
+            n = self._not_implemented_or_skip(data, ndata, msg)
+            nelements = None
+            ntotal = None
         else:
             raise RuntimeError(self.code_information() +
                                '\nnumwide real=%s imag=%s random=%s' % (
@@ -3401,11 +3405,88 @@ class OES(OP2Common):
                             txy2 = complex(txy2r, txy2i)
                         obj.add_new_node_sort1(dt, eid, grid, fd1, sx1, sy1, txy1)
                         obj.add_sort1(dt, eid, grid, fd2, sx2, sy2, txy2)
-        elif self.format_code == 1 and self.num_wide == 9: # random
-            msg = self.code_information()
-            n = self._not_implemented_or_skip(data, ndata, msg)
-            nelements = None
-            ntotal = None
+        elif self.format_code in [1, 2] and self.num_wide == 9: # random msc
+            # _oes_cquad4 is the same as _oes_ctria3
+            element_id = self.nonlinear_factor
+            if self.is_stress:
+                obj_vector_random = RandomPlateStressArray
+                result_name = prefix + 'cquad4_stress' + postfix
+            else:
+                obj_vector_random = RandomPlateStrainArray
+                result_name = prefix + 'cquad4_strain' + postfix
+            self.data_code['nonlinear_factor'] = element_id
+
+            if self._results.is_not_saved(result_name):
+                return ndata, None, None
+            self._results._found_result(result_name)
+            slot = getattr(self, result_name)
+
+            ntotal = 36  # 4*9
+            nelements = ndata // ntotal
+            nlayers = nelements * 2
+            nnodes_expected = 1
+
+            auto_return, is_vectorized = self._create_oes_object4(
+                nlayers, result_name, slot, obj_vector_random)
+            if auto_return:
+                self._data_factor = 2
+                return nelements * ntotal, None, None
+
+            obj = self.obj
+            assert obj.is_built is True, obj.is_built
+            if self.use_vector and is_vectorized and 0:  # pragma: no cover
+                n = nelements * 4 * self.num_wide
+                ielement = obj.ielement
+                ielement2 = ielement + nelements
+                itotal = obj.itotal
+                itotal2 = itotal + nelements * nnodes_expected
+                obj._times[obj.itime] = dt
+                if obj.itime == 0:
+                    ints = frombuffer(data, dtype=self.idtype)
+                    ints1 = ints.reshape(nelements, 9)
+                    eids = ints1[:, 0] // 10
+                    print(eids)
+                    eids = np.vstack([eids, eids]).T.ravel()
+                    print(eids.shape)
+                    print(eids)
+                    print(obj.element)
+                    assert eids.min() > 0, eids.min()
+                    obj.element[itotal:itotal2, 0] = eids
+
+                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 9)[:, 1:]
+                print(floats.shape)
+                #fd, sx, sy, txy,
+                floats1 = floats.reshape(nelements * nnodes_expected, 8)
+                obj.data[obj.itime, itotal:itotal2, :] = floats1.copy()
+                obj.itotal = itotal2
+                obj.ielement = ielement2
+            else:
+                struct1 = Struct(self._endian + self._analysis_code_fmt + b'8f')
+                cen = 0 # CEN/4
+                for i in range(nelements):
+                    edata = data[n:n+ntotal]
+                    out = struct1.unpack(edata)
+
+                    (eid_device,
+                     fd1, sx1, sy1, txy1,
+                     fd2, sx2, sy2, txy2,) = out
+
+                    if self.sort_method == 1:
+                        eid = eid_device // 10
+                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
+                    else:
+                        eid = self.nonlinear_factor
+                        dt = eid_device
+                        #print("SORT2 dt=%s eid=%s" % (dt, eid))
+
+                    if self.is_debug_file:
+                        self.binary_debug.write('  eid=%i C=[%s]\n' % (
+                            eid, ', '.join(['%r' % di for di in out])))
+
+                    obj.add_new_eid_sort1(dt, eid, fd1, sx1, sy1, txy1)
+                    obj.add_sort1(dt, eid, fd2, sx2, sy2, txy2)
+                    n += ntotal
+
         elif self.format_code in [1, 2] and self.num_wide == 11: # random
             msg = self.code_information()
             n = self._not_implemented_or_skip(data, ndata, msg)
@@ -3581,9 +3662,88 @@ class OES(OP2Common):
         elif self.format_code in [1, 2] and self.num_wide == 11: # random; CTRIA3
             msg = '%s-%s' % (self.table_name_str, self.element_name)
             return self._not_implemented_or_skip(data, ndata, msg), None, None
-        elif self.format_code == 1 and self.num_wide == 9: # random; CTRIA3
-            msg = '%s-%s' % (self.table_name_str, self.element_name)
-            return self._not_implemented_or_skip(data, ndata, msg), None, None
+        elif self.format_code in [1, 2] and self.num_wide == 9: # random MSC stress/strain; CTRIA3
+            # _oes_cquad4 is the same as _oes_ctria3
+            element_id = self.nonlinear_factor
+            if self.is_stress:
+                obj_vector_random = RandomPlateStressArray
+                result_name = prefix + 'cquad4_stress' + postfix
+            else:
+                obj_vector_random = RandomPlateStrainArray
+                result_name = prefix + 'cquad4_strain' + postfix
+
+            self.data_code['nonlinear_factor'] = element_id
+
+            if self._results.is_not_saved(result_name):
+                return ndata, None, None
+            self._results._found_result(result_name)
+            slot = getattr(self, result_name)
+
+            ntotal = 36  # 4*9
+            nelements = ndata // ntotal
+            nlayers = nelements * 2
+            nnodes_expected = 1
+
+            auto_return, is_vectorized = self._create_oes_object4(
+                nlayers, result_name, slot, obj_vector_random)
+            if auto_return:
+                self._data_factor = 2
+                return nelements * ntotal, None, None
+
+            obj = self.obj
+            assert obj.is_built is True, obj.is_built
+            if self.use_vector and is_vectorized and 0:  # pragma: no cover
+                n = nelements * 4 * self.num_wide
+                ielement = obj.ielement
+                ielement2 = ielement + nelements
+                itotal = obj.itotal
+                itotal2 = itotal + nelements * nnodes_expected
+                obj._times[obj.itime] = dt
+                if obj.itime == 0:
+                    ints = frombuffer(data, dtype=self.idtype)
+                    ints1 = ints.reshape(nelements, 9)
+                    eids = ints1[:, 0] // 10
+                    print(eids)
+                    eids = np.vstack([eids, eids]).T.ravel()
+                    print(eids.shape)
+                    print(eids)
+                    print(obj.element)
+                    assert eids.min() > 0, eids.min()
+                    obj.element[itotal:itotal2, 0] = eids
+
+                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 9)[:, 1:]
+                print(floats.shape)
+                #fd, sx, sy, txy,
+                floats1 = floats.reshape(nelements * nnodes_expected, 8)
+                obj.data[obj.itime, itotal:itotal2, :] = floats1.copy()
+                obj.itotal = itotal2
+                obj.ielement = ielement2
+            else:
+                struct1 = Struct(self._endian + self._analysis_code_fmt + b'8f')
+                cen = 0 # CEN/4
+                for i in range(nelements):
+                    edata = data[n:n+ntotal]
+                    out = struct1.unpack(edata)
+
+                    (eid_device,
+                     fd1, sx1, sy1, txy1,
+                     fd2, sx2, sy2, txy2,) = out
+
+                    if self.sort_method == 1:
+                        eid = eid_device // 10
+                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
+                    else:
+                        eid = self.nonlinear_factor
+                        dt = eid_device
+                        #print("SORT2 dt=%s eid=%s" % (dt, eid))
+
+                    if self.is_debug_file:
+                        self.binary_debug.write('  eid=%i C=[%s]\n' % (
+                            eid, ', '.join(['%r' % di for di in out])))
+
+                    obj.add_new_eid_sort1(dt, eid, fd1, sx1, sy1, txy1)
+                    obj.add_sort1(dt, eid, fd2, sx2, sy2, txy2)
+                    n += ntotal
         else:
             raise RuntimeError(self.code_information())
         return n, nelements, ntotal

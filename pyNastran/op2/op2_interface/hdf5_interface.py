@@ -72,6 +72,10 @@ from pyNastran.op2.tables.oes_stressStrain.complex.oes_shear import ComplexShear
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_solids import ComplexSolidStressArray, ComplexSolidStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_springs import ComplexSpringStressArray, ComplexSpringStrainArray
 
+from pyNastran.op2.tables.oes_stressStrain.random.oes_bars import RandomBarStressArray, RandomBarStrainArray
+from pyNastran.op2.tables.oes_stressStrain.random.oes_plates import RandomPlateStressArray, RandomPlateStrainArray
+
+
 from pyNastran.op2.tables.ogs_grid_point_stresses.ogs_surface_stresses import GridPointStressesArray, GridPointStressesVolumeArray
 
 
@@ -197,7 +201,19 @@ TABLE_OBJ_MAP = {
     'ctube_force' : (RealRodForceArray, ComplexRodForceArray),
 
     'cbar_stress' : (RealBarStressArray, ComplexBarStressArray),
+    'cbar_stress_ato' : (RandomBarStressArray, ),
+    'cbar_stress_crm' : (RandomBarStressArray, ),
+    'cbar_stress_psd' : (RandomBarStressArray, ),
+    'cbar_stress_no' : (RandomBarStressArray, ),
+    'cbar_stress_rms' : (RandomBarStressArray, ),
+
     'cbar_strain' : (RealBarStrainArray, ComplexBarStrainArray),
+    'cbar_strain_ato' : (RandomBarStrainArray, ),
+    'cbar_strain_crm' : (RandomBarStrainArray, ),
+    'cbar_strain_psd' : (RandomBarStrainArray, ),
+    'cbar_strain_no' : (RandomBarStrainArray, ),
+    'cbar_strain_rms' : (RandomBarStrainArray, ),
+
     'cbar_force' : (RealCBarForceArray, ComplexCBarForceArray),
 
     'cbar_force_10nodes' : (RealCBar100ForceArray, ),
@@ -221,6 +237,30 @@ TABLE_OBJ_MAP = {
     'ctria6_strain' : (RealPlateStrainArray, ComplexPlateStrainArray),
     'ctriar_strain' : (RealPlateStrainArray, ComplexPlateStrainArray),
     'cquadr_strain' : (RealPlateStrainArray, ComplexPlateStrainArray),
+
+    'ctria3_stress_ato' : (RandomPlateStressArray, ),
+    'ctria3_stress_crm' : (RandomPlateStressArray, ),
+    'ctria3_stress_psd' : (RandomPlateStressArray, ),
+    'ctria3_stress_no' : (RandomPlateStressArray, ),
+    'ctria3_stress_rms' : (RandomPlateStressArray, ),
+
+    'ctria3_strain_ato' : (RandomPlateStrainArray, ),
+    'ctria3_strain_crm' : (RandomPlateStrainArray, ),
+    'ctria3_strain_psd' : (RandomPlateStrainArray, ),
+    'ctria3_strain_no' : (RandomPlateStrainArray, ),
+    'ctria3_strain_rms' : (RandomPlateStrainArray, ),
+
+    'cquad4_stress_ato' : (RandomPlateStressArray, ),
+    'cquad4_stress_crm' : (RandomPlateStressArray, ),
+    'cquad4_stress_psd' : (RandomPlateStressArray, ),
+    'cquad4_stress_no' : (RandomPlateStressArray, ),
+    'cquad4_stress_rms' : (RandomPlateStressArray, ),
+
+    'cquad4_strain_ato' : (RandomPlateStrainArray, ),
+    'cquad4_strain_crm' : (RandomPlateStrainArray, ),
+    'cquad4_strain_psd' : (RandomPlateStrainArray, ),
+    'cquad4_strain_no' : (RandomPlateStrainArray, ),
+    'cquad4_strain_rms' : (RandomPlateStrainArray, ),
 
     'ctriax_stress' : (RealTriaxStressArray, ComplexTriaxStressArray,),
 

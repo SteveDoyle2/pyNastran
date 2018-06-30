@@ -19,6 +19,7 @@ Defines:
    - update(self, results)
 
 """
+import re
 from copy import deepcopy
 
 class ResultSet(object):
@@ -56,16 +57,21 @@ class ResultSet(object):
         self.saved.add(result)
 
     def remove(self, results):
+        all_matched_results = []
         for result in results:
-            if result not in self.allowed:
+            resulti = '\w' + result if result.startswith('*') else result
+            regex = re.compile(resulti)
+            matched_results = list(filter(regex.match, self.allowed))
+            if len(matched_results) == 0:
                 #allowed = list(self.allowed)
                 #allowed.sort()
                 #raise RuntimeError('%r is not a valid result to remove\nallowed=[%s]' % (
                     #result, ', '.join(allowed)))
                 raise RuntimeError('%r is not a valid result to remove\n%s' % (
                                    result, self))
+            all_matched_results.extend(matched_results)
 
-        for result in results:
+        for result in all_matched_results:
             if result in self.saved:
                 self.saved.remove(result)
         #disable_set = set(results)

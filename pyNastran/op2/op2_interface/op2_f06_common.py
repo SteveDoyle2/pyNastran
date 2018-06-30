@@ -188,7 +188,18 @@ class OP2_F06_Common(object):
         self.cbeam_force_vu = {}
 
         self.cbeam_stress = {}
+        self.cbeam_stress_ato = {}
+        self.cbeam_stress_crm = {}
+        self.cbeam_stress_psd = {}
+        self.cbeam_stress_rms = {}
+        self.cbeam_stress_no = {}
+
         self.cbeam_strain = {}
+        self.cbeam_strain_ato = {}
+        self.cbeam_strain_crm = {}
+        self.cbeam_strain_psd = {}
+        self.cbeam_strain_rms = {}
+        self.cbeam_strain_no = {}
         self.modal_contribution_cbeam_stress = {}
         self.modal_contribution_cbeam_strain = {}
 
@@ -865,8 +876,8 @@ class OP2_F06_Common(object):
             'cbar_force_10nodes',
 
             # OES - isotropic CBEAM stress/strain
-            'cbeam_stress', 'modal_contribution_cbeam_stress',
-            'cbeam_strain', 'modal_contribution_cbeam_strain',
+            'cbeam_stress', 'cbeam_stress_ato', 'cbeam_stress_crm', 'cbeam_stress_psd', 'cbeam_stress_rms', 'cbeam_stress_no', 'modal_contribution_cbeam_stress',
+            'cbeam_strain', 'cbeam_strain_ato', 'cbeam_strain_crm', 'cbeam_strain_psd', 'cbeam_strain_rms', 'cbeam_strain_no', 'modal_contribution_cbeam_strain',
             'cbeam_force', 'cbeam_force_ato', 'cbeam_force_crm', 'cbeam_force_psd', 'cbeam_force_rms', 'cbeam_force_no',
             'cbeam_force_vu',
             'nonlinear_cbeam_stress',

@@ -871,8 +871,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OQGATO2' : [self._read_oqg2_3, self._read_oqg_4],
             b'OQGCRM2' : [self._read_oqg2_3, self._read_oqg_4],
             b'OQGPSD2' : [self._read_oqg2_3, self._read_oqg_4],
-            b'OQGRMS2' : [self._read_oqg1_3, self._read_oqg_4],
-            b'OQGNO2'  : [self._read_oqg1_3, self._read_oqg_4],
+            b'OQGRMS2' : [self._table_passer, self._table_passer],  # buggy on isat random
+            b'OQGNO2'  : [self._table_passer, self._table_passer],  # buggy on isat random
 
             #=======================
             # MPC Forces
@@ -890,8 +890,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OQMATO2' : [self._read_oqg2_3, self._read_oqg_mpc_ato],
             b'OQMCRM2' : [self._read_oqg2_3, self._read_oqg_mpc_crm],
             b'OQMPSD2' : [self._read_oqg2_3, self._read_oqg_mpc_psd],
-            b'OQMRMS2' : [self._read_oqg1_3, self._read_oqg_mpc_rms],
-            b'OQMNO2'  : [self._read_oqg1_3, self._read_oqg_mpc_no],
+            b'OQMRMS2' : [self._table_passer, self._table_passer],  # buggy on isat random
+            b'OQMNO2'  : [self._table_passer, self._table_passer],  # buggy on isat random
 
             #=======================
             # OPG
@@ -968,14 +968,14 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OSTRATO1' : [self._read_oes1_3, self._read_ostr1_4],
             b'OSTRCRM1' : [self._read_oes1_3, self._read_ostr1_4],
             b'OSTRPSD1' : [self._read_oes1_3, self._read_ostr1_4],
-            b'OSTRRMS1' : [self._table_passer, self._table_passer], # isat_random
-            b'OSTRNO1' : [self._table_passer, self._table_passer],  # isat_random
+            b'OSTRRMS1' : [self._read_oes1_3, self._read_ostr1_4], # isat_random
+            b'OSTRNO1' : [self._read_oes1_3, self._read_ostr1_4],  # isat_random
 
             b'OSTRATO2' : [self._read_oes2_3, self._read_ostr2_4],
             b'OSTRCRM2' : [self._read_oes2_3, self._read_ostr2_4],
             b'OSTRPSD2' : [self._read_oes2_3, self._read_ostr2_4],
-            b'OSTRRMS2' : [self._read_oes2_3, self._read_ostr2_4],
-            b'OSTRNO2'  : [self._read_oes2_3, self._read_ostr2_4],
+            b'OSTRRMS2' : [self._table_passer, self._table_passer],  # buggy on isat random
+            b'OSTRNO2' : [self._table_passer, self._table_passer],  # buggy on isat random
 
             b'OSTRMS1C' : [self._read_oes1_3, self._read_ostr1_4], # isat_random
             b'OSTNO1C' : [self._read_oes1_3, self._read_ostr1_4],  # isat_random
@@ -1013,8 +1013,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OUGATO2' : [self._read_oug2_3, self._read_oug_ato],
             b'OUGCRM2' : [self._read_oug2_3, self._read_oug_crm],
             b'OUGPSD2' : [self._read_oug2_3, self._read_oug_psd],
-            b'OUGRMS2' : [self._read_oug1_3, self._read_oug_rms],
-            b'OUGNO2'  : [self._read_oug1_3, self._read_oug_no],
+            b'OUGRMS2' : [self._table_passer, self._table_passer],  # buggy on isat random
+            b'OUGNO2'  : [self._table_passer, self._table_passer],  # buggy on isat random
 
             #=======================
             # extreme values of the respective table
@@ -1188,8 +1188,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OESATO2' : [self._read_oes2_3, self._read_oes2_4],
             b'OESCRM2' : [self._read_oes2_3, self._read_oes2_4],
             b'OESPSD2' : [self._read_oes2_3, self._read_oes2_4],
-            b'OESRMS2' : [self._read_oes2_3, self._read_oes2_4],
-            b'OESNO2'  : [self._read_oes2_3, self._read_oes2_4],
+            b'OESRMS2' : [self._table_passer, self._table_passer],  # buggy on isat random
+            b'OESNO2'  : [self._table_passer, self._table_passer],  # buggy on isat random
 
             # force
             b'OEFATO1' : [self._read_oef1_3, self._read_oef1_4],
