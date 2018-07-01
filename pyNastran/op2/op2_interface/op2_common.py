@@ -1381,7 +1381,7 @@ class OP2Common(Op2Codes, F06Writer):
                         msg = 'The object is flipping from a static (e.g. preload)\n'
                         msg += 'result to a transient/frequency based results\n'
                         msg += '%s -> %s\n' % (self.obj.nonlinear_factor, self.nonlinear_factor)
-                        msg += 'code = (subcase=%s, analysis_code=%s, sort=%s, count=%s, subtitle=%s)\n' % tuple(code)
+                        msg += 'code = (subcase=%s, analysis_code=%s, sort=%s, count=%s, ogs=%s, superelement_adaptivity_index=%r pval_step=%r)\n' % tuple(code)
                         msg += '%s\n' % str(self.obj)
                         msg += '\nIf this isnt correct, check if the data code was applied on the object'
                         raise MultipleSolutionNotImplementedError(msg)
@@ -1426,8 +1426,11 @@ class OP2Common(Op2Codes, F06Writer):
         #if any([card_name in msg for card_name in ['VUHEXA', 'VUPENTA', 'VUTETRA', 'VUQUAD']]):
             #return ndata
         #raise NotImplementedError(msg)
-        #if self.table_name.startswith(('OSTR', 'OES')) and self.element_type in [33, 74]:
-            #return ndata
+        if self.table_name.startswith(('OSTR', 'OES', 'OEF')):
+            if self.element_type in [145, 146, 147, 189,  # VUHEXA, VUPENTA, VUTETRA, VUQUAD
+                                     69, # CBEND
+                                     ]:
+                return ndata
 
         if is_release:
             if msg != self._last_comment:

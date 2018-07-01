@@ -840,11 +840,11 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OEFIT' : [self._read_oef1_3, self._read_oef1_4],  # failure indices
             b'OEF1X' : [self._read_oef1_3, self._read_oef1_4],  # element forces at intermediate stations
             b'OEF1'  : [self._read_oef1_3, self._read_oef1_4],  # element forces or heat flux
-            b'HOEF1':  [self._read_oef1_3, self._read_oef1_4], # element heat flux
+            b'HOEF1' : [self._read_oef1_3, self._read_oef1_4], # element heat flux
             b'DOEF1' : [self._read_oef1_3, self._read_oef1_4],  # scaled response spectra - forces
 
             # off force
-            b'OEF2'    : [self._table_passer, self._table_passer],  # element forces or heat flux
+            b'OEF2' : [self._table_passer, self._table_passer],  # element forces or heat flux
             #=======================
             # OQG
             # spc forces
@@ -956,7 +956,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OESNLBR2' : [self._table_passer, self._table_passer],
 
             # off stress
-            b'OES2'    : [self._table_passer, self._table_passer],  # stress - linear only
+            b'OES2'    : [self._read_oes2_3, self._read_oes2_4],  # stress - linear only
             b'OESPSD2C' : [self._table_passer, self._table_passer],
             #b'OESATO2' : [self._table_passer, self._table_passer],
             #b'OESRMS2' : [self._table_passer, self._table_passer],
@@ -1152,12 +1152,12 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OVGATO2' : [self._read_oug2_3, self._read_oug_ato],
             b'OVGCRM2' : [self._read_oug2_3, self._read_oug_crm],
             b'OVGPSD2' : [self._read_oug2_3, self._read_oug_psd],
-            b'OVGRMS2' : [self._read_oug2_3, self._read_oug_rms],
-            b'OVGNO2'  : [self._read_oug2_3, self._read_oug_no],
+            b'OVGRMS2' : [self._table_passer, self._table_passer],
+            b'OVGNO2'  : [self._table_passer, self._table_passer],
 
             #==================================
             #b'GPL': [self._table_passer, self._table_passer],
-            b'OMM2' : [self._table_passer, self._table_passer],
+            b'OMM2' : [self._table_passer, self._table_passer],  # max/min table - kinda useless
             b'ERRORN' : [self._table_passer, self._table_passer],  # p-element error summary table
             #==================================
 
@@ -1174,8 +1174,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OAGATO2' : [self._read_oug2_3, self._read_oug_ato],
             b'OAGCRM2' : [self._read_oug2_3, self._read_oug_crm],
             b'OAGPSD2' : [self._read_oug2_3, self._read_oug_psd],
-            b'OAGRMS2' : [self._read_oug2_3, self._read_oug_rms],
-            b'OAGNO2'  : [self._read_oug2_3, self._read_oug_no],
+            b'OAGRMS2' : [self._table_passer, self._table_passer],
+            b'OAGNO2'  : [self._table_passer, self._table_passer],
 
             # stress
             b'OESATO1' : [self._read_oes1_3, self._read_oes1_4],
@@ -1224,7 +1224,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         if self.is_debug_file:
             self.binary_debug.write('  skipping table = %s\n' % self.table_name)
         if self.table_name not in GEOM_TABLES and self.isubtable > -4:
-            self.log.warning('    skipping table')
+            self.log.warning('    skipping table: %s' % self.table_name_str)
             #self.log.warning('    skipping table (isubtable=%s) = %s' % (
                 #self.table_name, self.isubtable))
         return ndata

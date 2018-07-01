@@ -5,7 +5,7 @@ from six import string_types, PY2, PY3
 # strings
 SORT1_TABLES = [b'OSTRMS1C', b'OSTNO1C', b'OES1X', b'OSTR1X',
                 b'OESRMS2', b'OESNO2', b'OESXRMS1']
-SORT2_TABLES = [b'OUGPSD2', b'OUGATO2']
+SORT2_TABLES = [b'OUGPSD2', b'OUGATO2', 'OESCP']
 
 def get_sort_method_from_table_name(table_name):
     """helper method"""
@@ -1052,6 +1052,23 @@ class Op2Codes(object):
             return True
         return False
 
+    def is_sort1_new(self): # pragma: no cover
+        #is_sort1_table = self.is_sort1
+        table_name = self.table_name_str
+        if table_name in SORT1_TABLES:
+            is_sort1_table = True
+        elif table_name in SORT2_TABLES:
+            is_sort1_table = False
+        else:
+            try:
+                sort_method, is_real, is_random = self._table_specs()
+                return True if sort_method == 1 else False
+            except AssertionError:
+                try:
+                    is_sort1_table = int(table_name[-1]) == 1
+                except ValueError:
+                    raise ValueError('is this SORT1/2?  table_name=%r' % table_name)
+            return is_sort1_table
 
     @property
     def is_sort1(self):
@@ -1063,6 +1080,8 @@ class Op2Codes(object):
             table_name = self.table_name_str
             if table_name in SORT1_TABLES:
                 is_sort1_table = True
+            elif table_name in SORT2_TABLES:
+                is_sort1_table = False
             else:
                 try:
                     is_sort1_table = int(table_name[-1]) == 1
@@ -1086,6 +1105,39 @@ class Op2Codes(object):
                 except ValueError:
                     raise ValueError('is this SORT1/2?  table_name=%r' % table_name)
             return is_sort2_table
+
+    def update_t_code(self):
+        """
+        Value Sort type Data format Random
+        ===== ========= =========== ======
+        0     SORT1     Real        No
+        1     SORT1     Complex     No
+        2     SORT2     Real        No
+        3     SORT2     Complex     No
+        4     SORT1     Real        Yes
+        5     SORT2     Complex?    Yes
+        6     SORT2     Real        Yes
+
+        table_code%1000 = function3()
+
+        SPCForce = table_code % 1000 (function 3)
+
+        """
+        is_complex, is_sort2, is_random = self.sort_bits
+        map_sort_bits = {
+            # is_complex, is_sort2, is_random
+            (0, 0, 0) : 0,
+            (1, 0, 0) : 1,
+
+            (0, 1, 0) : 2,
+            (1, 1, 0) : 3,
+
+            # random
+            (0, 0, 1) : 4,
+            (1, 1, 1) : 5, # not 100%
+            (0, 1, 1) : 6,
+        }
+        t_code = map_sort_bits[(is_complex, is_sort2, is_random)]
 
     def _table_specs(self):
         """
@@ -1214,7 +1266,7 @@ def determine_sort_bits_meaning(table_code, sort_code, sort_bits):
     2     SORT2     Real        No
     3     SORT2     Complex     No
     4     SORT1     Real        Yes
-    5     ???       ???         ???
+    5     SORT2     ???         Yes
     6     SORT2     Real        Yes
 
     table_code%1000 = function3()

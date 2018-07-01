@@ -377,7 +377,6 @@ class GEOM4(GeomCommon):
         """
         MPCADD(4891,60,83) - Record 17
         """
-        #nentries = (len(data) - n) // 4
         datai = np.frombuffer(data[n:], self.idtype).copy()
         _read_spcadd_mpcadd(self, 'MPCADD', datai)
         return len(data)
@@ -388,8 +387,6 @@ class GEOM4(GeomCommon):
 
     def _read_qset1(self, data, n):
         """QSET1(610,6,316) - Record 22"""
-        #self.log.info('skipping QSET1 in GEOM4')
-        #return len(data)
         return self._read_xset1(data, n, 'QSET1', QSET1, self._add_qset_object)
 
     def _read_rbar_nx(self, data, n):

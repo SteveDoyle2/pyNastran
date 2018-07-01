@@ -511,7 +511,7 @@ class FortranFormat(object):
             if self.table_name in oes_nl and hasattr(self, 'num_wide') and self.num_wide == 146:
                 data_code_old = deepcopy(self.data_code)
 
-            self.data_code = {}
+            self.data_code = {'_encoding' : self._encoding}
             self.obj = None
             data, ndata = self._read_record_ndata()
             if not passer:

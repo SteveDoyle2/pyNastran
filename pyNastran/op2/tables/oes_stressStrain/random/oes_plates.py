@@ -90,7 +90,7 @@ class RandomPlateArray(OES_Object):
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
         self.data_frame = pd.Panel(self.data, items=column_values,
-                                   major_axis=self.element_node, minor_axis=headers).to_frame()
+                                   major_axis=self.element, minor_axis=headers).to_frame()
         self.data_frame.columns.names = column_names
         self.data_frame.index.names = ['ElementID', 'Item']
 
@@ -102,8 +102,8 @@ class RandomPlateArray(OES_Object):
                 self.element_node.shape, table.element_node.shape)
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\nEid, Nid\n' % str(self.code_information())
-            for (eid1, nid1), (eid2, nid2) in zip(self.element_node, table.element_node):
-                msg += '(%s, %s), (%s, %s)\n' % (eid1, nid1, eid2, nid2)
+            for eid1, eid2 in zip(self.element, table.element):
+                msg += '(%s, %s), (%s, %s)\n' % (eid1, eid2)
             print(msg)
             raise ValueError(msg)
         if not np.array_equal(self.data, table.data):
@@ -114,32 +114,30 @@ class RandomPlateArray(OES_Object):
             i = 0
             if self.is_sort1:
                 for itime in range(ntimes):
-                    for ieid, (eid, nid) in enumerate(self.element_node):
+                    for ieid, eid in enumerate(self.element):
                         t1 = self.data[itime, ieid, :]
                         t2 = table.data[itime, ieid, :]
                         (oxx1, oyy1, txy1) = t1
                         (oxx2, oyy2, txy2) = t2
                         #d = t1 - t2
                         if not np.allclose(
-                                [oxx1.real, oxx1.imag, oyy1.real, oyy1.imag, txy1.real, txy1.imag, ], # atol=0.0001
-                                [oxx2.real, oxx2.imag, oyy2.real, oyy2.imag, txy2.real, txy2.imag, ], atol=0.075):
+                                [oxx1, oyy1, txy1], # atol=0.0001
+                                [oxx2, oyy2, txy2], atol=0.075):
                             ni = len(str(eid)) + len(str(nid))
                         #if not np.array_equal(t1, t2):
-                            msg += ('(%s %s)  (%s, %sj, %s, %sj, %s, %sj)\n'
-                                    '%s     (%s, %sj, %s, %sj, %s, %sj)\n' % (
+                            msg += ('(%s %s)  (%s, %s, %s)\n'
+                                    '%s     (%s, %s, %s)\n' % (
                                         eid, nid,
-                                        oxx1.real, oxx1.imag, oyy1.real, oyy1.imag,
-                                        txy1.real, txy1.imag,
+                                        oxx1, oyy1, txy1,
                                         ' ' * ni,
-                                        oxx2.real, oxx2.imag, oyy2.real, oyy2.imag,
-                                        txy2.real, txy2.imag,
+                                        oxx2, oyy2, txy2,
                                     ))
-                            msg += ('%s     (%s, %sj, %s, %sj, %s, %sj)\n'
+                            msg += ('%s     (%s, %s, %s)\n'
                                     % (
                                         ' ' * ni,
-                                        oxx1.real - oxx2.real, oxx1.imag - oxx2.imag,
-                                        oyy1.real - oyy2.real, oyy1.imag - oyy2.imag,
-                                        txy1.real - txy2.real, txy1.imag - txy2.imag,
+                                        oxx1 - oxx2,
+                                        oyy1 - oyy2,
+                                        txy1 - txy2,
                                     ))
 
                             i += 1

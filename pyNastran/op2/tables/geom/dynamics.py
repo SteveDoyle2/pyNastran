@@ -433,10 +433,6 @@ class DYNAMICS(GeomCommon):
         13 C  I Component number
         14 UNDEF(5 ) None
         """
-        #self.log.info('skipping EIGR in DYNAMICS\n')
-        #if self.is_debug_file:
-            #self.binary_debug.write('skipping EIGR in DYNAMICS\n')
-        #return len(data)
         ntotal = 72
         nentries = (len(data) - n) // ntotal
         struct1 = Struct('i 8s 2f 4i 8s 7i')
@@ -475,13 +471,6 @@ class DYNAMICS(GeomCommon):
         14 FI    RS Frequency at the upper boundary of the i-th segment
         Word 14 repeats NUMS times
         """
-        #self.log.info('skipping EIGRL in DYNAMICS\n')
-        #if self.is_debug_file:
-            #self.binary_debug.write('skipping EIGRL in DYNAMICS\n')
-        #return len(data)
-
-        #self.show_data(data[n+44:], 'ifs')
-        #print(len(data[n:]) / 4.)
         ndata = len(data)
         s = Struct('i 2f 3i f 2i 8s f i')
         nbytes = 52

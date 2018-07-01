@@ -149,7 +149,7 @@ class OQG(OP2Common):
         self.nonlinear_factor = None
         self.is_table_1 = False
         self.is_table_2 = True
-        three = self.parse_approach_code(data)
+        unused_three = self.parse_approach_code(data)
         self.words = [
             'analysis_code', 'table_code', '???', 'isubcase',
             '???', '???', '???', 'random_code',

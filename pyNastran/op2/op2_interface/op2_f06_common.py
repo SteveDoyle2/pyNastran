@@ -53,11 +53,46 @@ class OP2_F06_Common(object):
         self.ctube_force = {}
 
         self.crod_stress = {}
+        self.crod_stress_ato = {}
+        self.crod_stress_crm = {}
+        self.crod_stress_psd = {}
+        self.crod_stress_rms = {}
+        self.crod_stress_no  = {}
+
         self.conrod_stress = {}
+        self.conrod_stress_ato = {}
+        self.conrod_stress_crm = {}
+        self.conrod_stress_psd = {}
+        self.conrod_stress_rms = {}
+        self.conrod_stress_no  = {}
+
         self.ctube_stress = {}
+        self.ctube_stress_ato = {}
+        self.ctube_stress_crm = {}
+        self.ctube_stress_psd = {}
+        self.ctube_stress_rms = {}
+        self.ctube_stress_no  = {}
+
         self.crod_strain = {}
+        self.crod_strain_ato = {}
+        self.crod_strain_crm = {}
+        self.crod_strain_psd = {}
+        self.crod_strain_rms = {}
+        self.crod_strain_no  = {}
+
         self.conrod_strain = {}
+        self.conrod_strain_ato = {}
+        self.conrod_strain_crm = {}
+        self.conrod_strain_psd = {}
+        self.conrod_strain_rms = {}
+        self.conrod_strain_no  = {}
+
         self.ctube_strain = {}
+        self.ctube_strain_ato = {}
+        self.ctube_strain_crm = {}
+        self.ctube_strain_psd = {}
+        self.ctube_strain_rms = {}
+        self.ctube_strain_no  = {}
 
         self.modal_contribution_crod_stress = {}
         self.modal_contribution_conrod_stress = {}
@@ -82,10 +117,58 @@ class OP2_F06_Common(object):
         self.modal_contribution_celas3_stress = {}
         self.modal_contribution_celas4_stress = {}
 
+        self.celas1_stress_ato = {}
+        self.celas1_stress_crm = {}
+        self.celas1_stress_psd = {}
+        self.celas1_stress_rms = {}
+        self.celas1_stress_no = {}
+
+        self.celas2_stress_ato = {}
+        self.celas2_stress_crm = {}
+        self.celas2_stress_psd = {}
+        self.celas2_stress_rms = {}
+        self.celas2_stress_no = {}
+
+        self.celas3_stress_ato = {}
+        self.celas3_stress_crm = {}
+        self.celas3_stress_psd = {}
+        self.celas3_stress_rms = {}
+        self.celas3_stress_no = {}
+
+        self.celas4_stress_ato = {}
+        self.celas4_stress_crm = {}
+        self.celas4_stress_psd = {}
+        self.celas4_stress_rms = {}
+        self.celas4_stress_no = {}
+
         self.celas1_strain = {}
         self.celas2_strain = {}
         self.celas3_strain = {}
         self.celas4_strain = {}
+
+        self.celas1_strain_ato = {}
+        self.celas1_strain_crm = {}
+        self.celas1_strain_psd = {}
+        self.celas1_strain_rms = {}
+        self.celas1_strain_no = {}
+
+        self.celas2_strain_ato = {}
+        self.celas2_strain_crm = {}
+        self.celas2_strain_psd = {}
+        self.celas2_strain_rms = {}
+        self.celas2_strain_no = {}
+
+        self.celas3_strain_ato = {}
+        self.celas3_strain_crm = {}
+        self.celas3_strain_psd = {}
+        self.celas3_strain_rms = {}
+        self.celas3_strain_no = {}
+
+        self.celas4_strain_ato = {}
+        self.celas4_strain_crm = {}
+        self.celas4_strain_psd = {}
+        self.celas4_strain_rms = {}
+        self.celas4_strain_no = {}
 
         #======================================================================
         self.ctetra_stress = {}
@@ -150,6 +233,9 @@ class OP2_F06_Common(object):
 
         # bars/beams
         self.cbar_force = {}
+        self.cbar_force_abs = {} # thermal=2
+        self.cbar_force_nrl = {} # thermal=8
+
         self.cbar_force_ato = {}
         self.cbar_force_crm = {}
         self.cbar_force_psd = {}
@@ -368,12 +454,26 @@ class OP2_F06_Common(object):
         self.ctria6_composite_stress = {}
         self.ctriar_composite_stress = {}
 
+        self.strength_ratio_cquad4_composite_stress = {}
+        self.strength_ratio_cquad8_composite_stress = {}
+        self.strength_ratio_cquadr_composite_stress = {}
+        self.strength_ratio_ctria3_composite_stress = {}
+        self.strength_ratio_ctria6_composite_stress = {}
+        self.strength_ratio_ctriar_composite_stress = {}
+
         self.cquad4_composite_strain = {}
         self.cquad8_composite_strain = {}
         self.cquadr_composite_strain = {}
         self.ctria3_composite_strain = {}
         self.ctria6_composite_strain = {}
         self.ctriar_composite_strain = {}
+
+        self.strength_ratio_cquad4_composite_strain = {}
+        self.strength_ratio_cquad8_composite_strain = {}
+        self.strength_ratio_cquadr_composite_strain = {}
+        self.strength_ratio_ctria3_composite_strain = {}
+        self.strength_ratio_ctria6_composite_strain = {}
+        self.strength_ratio_ctriar_composite_strain = {}
 
         self.cplstn3_stress = {}
         self.cplstn4_stress = {}
@@ -394,7 +494,19 @@ class OP2_F06_Common(object):
         self.cplsts8_strain = {}
 
         self.cshear_stress = {}
+        self.cshear_stress_ato = {}
+        self.cshear_stress_crm = {}
+        self.cshear_stress_psd = {}
+        self.cshear_stress_rms = {}
+        self.cshear_stress_no = {}
+
         self.cshear_strain = {}
+        self.cshear_strain_ato = {}
+        self.cshear_strain_crm = {}
+        self.cshear_strain_psd = {}
+        self.cshear_strain_rms = {}
+        self.cshear_strain_no = {}
+
         self.cshear_force = {}
         self.modal_contribution_cshear_stress = {}
         self.modal_contribution_cshear_strain = {}
@@ -405,7 +517,19 @@ class OP2_F06_Common(object):
 
         # bushing
         self.cbush_stress = {}
+        self.cbush_stress_ato  = {}
+        self.cbush_stress_crm  = {}
+        self.cbush_stress_psd  = {}
+        self.cbush_stress_rms  = {}
+        self.cbush_stress_no = {}
+
         self.cbush_strain = {}
+        self.cbush_strain_ato = {}
+        self.cbush_strain_crm = {}
+        self.cbush_strain_psd = {}
+        self.cbush_strain_rms = {}
+        self.cbush_strain_no = {}
+
         self.nonlinear_cbush_stress = {}  # CBUSH 226
         self.modal_contribution_cbush_stress = {}
         self.modal_contribution_cbush_strain = {}
@@ -786,12 +910,7 @@ class OP2_F06_Common(object):
         """Gets the names of the results."""
         table_types = [
             # OUG - displacement
-            'displacements',
-            'displacements_PSD',
-            'displacements_ATO',
-            'displacements_RMS',
-            'displacements_CRM',
-            'displacements_NO',
+            'displacements', 'displacements_PSD', 'displacements_ATO', 'displacements_RMS', 'displacements_CRM', 'displacements_NO',
             'displacements_scaled',
             'displacements_ROUGV1',
 
@@ -808,20 +927,11 @@ class OP2_F06_Common(object):
 
             # OUG - velocity
             'velocities',
-            'velocities_PSD',
-            'velocities_ATO',
-            'velocities_RMS',
-            'velocities_CRM',
-            'velocities_NO',
+            'velocities_PSD', 'velocities_ATO', 'velocities_RMS', 'velocities_CRM', 'velocities_NO',
             'velocities_ROUGV1',
 
             # OUG - acceleration
-            'accelerations',
-            'accelerations_PSD',
-            'accelerations_ATO',
-            'accelerations_RMS',
-            'accelerations_CRM',
-            'accelerations_NO',
+            'accelerations', 'accelerations_PSD', 'accelerations_ATO', 'accelerations_RMS', 'accelerations_CRM', 'accelerations_NO',
             'accelerations_ROUGV1',
 
             # OQG - spc/mpc forces
@@ -844,31 +954,33 @@ class OP2_F06_Common(object):
 
             # OES - tCode=5 thermal=0 s_code=0,1 (stress/strain)
             # OES - CELAS1/CELAS2/CELAS3/CELAS4 stress
-            'celas1_stress', 'modal_contribution_celas1_stress',
-            'celas2_stress', 'modal_contribution_celas2_stress',
-            'celas3_stress', 'modal_contribution_celas3_stress',
-            'celas4_stress', 'modal_contribution_celas4_stress',
+            'celas1_stress', 'celas1_stress_ato', 'celas1_stress_crm', 'celas1_stress_no', 'celas1_stress_psd', 'celas1_stress_rms', 'modal_contribution_celas1_stress',
+            'celas2_stress', 'celas2_stress_ato', 'celas2_stress_crm', 'celas2_stress_no', 'celas2_stress_psd', 'celas2_stress_rms', 'modal_contribution_celas2_stress',
+            'celas3_stress', 'celas3_stress_ato', 'celas3_stress_crm', 'celas3_stress_no', 'celas3_stress_psd', 'celas3_stress_rms', 'modal_contribution_celas3_stress',
+            'celas4_stress', 'celas4_stress_ato', 'celas4_stress_crm', 'celas4_stress_no', 'celas4_stress_psd', 'celas4_stress_rms', 'modal_contribution_celas4_stress',
 
             # OES - CELAS1/CELAS2/CELAS3/CELAS4 strain
-            'celas1_strain',
-            'celas2_strain',
-            'celas3_strain',
-            'celas4_strain',
+            'celas1_strain', 'celas1_strain_ato', 'celas1_strain_crm', 'celas1_strain_no', 'celas1_strain_psd', 'celas1_strain_rms', #'modal_contribution_celas1_strain',
+            'celas2_strain', 'celas2_strain_ato', 'celas2_strain_crm', 'celas2_strain_no', 'celas2_strain_psd', 'celas2_strain_rms', #'modal_contribution_celas2_strain',
+            'celas3_strain', 'celas3_strain_ato', 'celas3_strain_crm', 'celas3_strain_no', 'celas3_strain_psd', 'celas3_strain_rms', #'modal_contribution_celas3_strain',
+            'celas4_strain', 'celas4_strain_ato', 'celas4_strain_crm', 'celas4_strain_no', 'celas4_strain_psd', 'celas4_strain_rms', # 'modal_contribution_celas4_strain',
 
             # OES - isotropic CROD/CONROD/CTUBE stress
-            'crod_stress', 'modal_contribution_crod_stress',
-            'conrod_stress', 'modal_contribution_conrod_stress',
-            'ctube_stress', 'modal_contribution_ctube_stress',
+            'crod_stress', 'crod_stress_ato', 'crod_stress_crm', 'crod_stress_psd', 'crod_stress_rms', 'crod_stress_no', 'modal_contribution_crod_stress',
+            'conrod_stress', 'conrod_stress_ato', 'conrod_stress_crm', 'conrod_stress_psd', 'conrod_stress_rms', 'conrod_stress_no', 'modal_contribution_conrod_stress',
+            'ctube_stress', 'ctube_stress_ato', 'ctube_stress_crm', 'ctube_stress_psd', 'ctube_stress_rms', 'ctube_stress_no', 'modal_contribution_ctube_stress',
+
 
             # OES - isotropic CROD/CONROD/CTUBE strain
-            'crod_strain', 'modal_contribution_crod_strain',
-            'conrod_strain', 'modal_contribution_conrod_strain',
-            'ctube_strain', 'modal_contribution_ctube_strain',
+            'crod_strain', 'crod_strain_ato', 'crod_strain_crm', 'crod_strain_psd', 'crod_strain_rms', 'crod_strain_no', 'modal_contribution_crod_strain',
+            'conrod_strain', 'conrod_strain_ato', 'conrod_strain_crm', 'conrod_strain_psd', 'conrod_strain_rms', 'conrod_strain_no', 'modal_contribution_conrod_strain',
+            'ctube_strain', 'ctube_strain_ato', 'ctube_strain_crm', 'ctube_strain_psd', 'ctube_strain_rms', 'ctube_strain_no', 'modal_contribution_ctube_strain',
 
             # OES - isotropic CBAR stress/strain
             'cbar_stress', 'cbar_stress_ato', 'cbar_stress_crm', 'cbar_stress_no', 'cbar_stress_psd', 'cbar_stress_rms', 'modal_contribution_cbar_stress',
             'cbar_strain', 'cbar_strain_ato', 'cbar_strain_crm', 'cbar_strain_no', 'cbar_strain_psd', 'cbar_strain_rms', 'modal_contribution_cbar_strain',
-            'cbar_force', 'cbar_force_ato', 'cbar_force_crm', 'cbar_force_psd', 'cbar_force_rms', 'cbar_force_no',
+            'cbar_force', 'cbar_force_abs', 'cbar_force_nrl',
+            'cbar_force_ato', 'cbar_force_crm', 'cbar_force_psd', 'cbar_force_rms', 'cbar_force_no',
             'cbar_force_RAFCONS', 'cbar_force_RAFEATC',
 
             'cbar_stress_10nodes',
@@ -914,8 +1026,8 @@ class OP2_F06_Common(object):
             'cpenta_strain', 'cpenta_strain_ato', 'cpenta_strain_crm', 'cpenta_strain_no', 'cpenta_strain_psd', 'cpenta_strain_rms', 'modal_contribution_cpenta_strain', 'cpenta_strain_RASCONS',
 
             # OES - CSHEAR stress/strain
-            'cshear_stress', 'modal_contribution_cshear_stress',
-            'cshear_strain', 'modal_contribution_cshear_strain',
+            'cshear_stress', 'cshear_stress_ato', 'cshear_stress_rms', 'cshear_stress_psd', 'cshear_stress_crm', 'cshear_stress_no',  'modal_contribution_cshear_stress',
+            'cshear_strain', 'cshear_strain_ato', 'cshear_strain_rms', 'cshear_strain_psd', 'cshear_strain_crm', 'cshear_strain_no',  'modal_contribution_cshear_strain',
 
             # OES - GAPNL 86
             'nonlinear_cgap_stress',
@@ -1037,8 +1149,11 @@ class OP2_F06_Common(object):
             'ctriax_stress',
             'ctriax_strain',
 
-            'cbush_stress', 'modal_contribution_cbush_stress',
-            'cbush_strain', 'modal_contribution_cbush_strain',
+            'cbush_stress',  'cbush_stress_ato',  'cbush_stress_crm',  'cbush_stress_no',  'cbush_stress_psd',  'cbush_stress_rms',  'modal_contribution_cbush_stress', #'cbush_stress_RASCONS',
+            'cbush_strain',  'cbush_strain_ato',  'cbush_strain_crm',  'cbush_strain_no',  'cbush_strain_psd',  'cbush_strain_rms',  'modal_contribution_cbush_strain', #'cbush_strain_RASCONS',
+
+            #'cbush_stress', 'modal_contribution_cbush_stress',
+            #'cbush_strain', 'modal_contribution_cbush_strain',
             'cbush1d_stress_strain', 'nonlinear_cbush1d_stress_strain',
 
             # OES - nonlinear CROD/CONROD/CTUBE stress
@@ -1065,19 +1180,19 @@ class OP2_F06_Common(object):
             'nonlinear_celas3_stress',
 
             # OES - composite CTRIA3/CQUAD4 stress
-            'cquad4_composite_stress',
-            'cquad8_composite_stress',
-            'cquadr_composite_stress',
-            'ctria3_composite_stress',
-            'ctria6_composite_stress',
-            'ctriar_composite_stress',
+            'cquad4_composite_stress', 'strength_ratio_cquad4_composite_stress',
+            'cquad8_composite_stress', 'strength_ratio_cquad8_composite_stress',
+            'cquadr_composite_stress', 'strength_ratio_cquadr_composite_stress',
+            'ctria3_composite_stress', 'strength_ratio_ctria3_composite_stress',
+            'ctria6_composite_stress', 'strength_ratio_ctria6_composite_stress',
+            'ctriar_composite_stress', 'strength_ratio_ctriar_composite_stress',
 
-            'cquad4_composite_strain',
-            'cquad8_composite_strain',
-            'cquadr_composite_strain',
-            'ctria3_composite_strain',
-            'ctria6_composite_strain',
-            'ctriar_composite_strain',
+            'cquad4_composite_strain', 'strength_ratio_cquad4_composite_strain',
+            'cquad8_composite_strain', 'strength_ratio_cquad8_composite_strain',
+            'cquadr_composite_strain', 'strength_ratio_cquadr_composite_strain',
+            'ctria3_composite_strain', 'strength_ratio_ctria3_composite_strain',
+            'ctria6_composite_strain', 'strength_ratio_ctria6_composite_strain',
+            'ctriar_composite_strain', 'strength_ratio_ctriar_composite_strain',
 
             # OGS1 - grid point stresses
             'grid_point_stresses', # tCode=26

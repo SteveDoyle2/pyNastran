@@ -19,10 +19,6 @@ class RealSpringArray(OES_Object):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
 
         self.nelements = 0  # result specific
-        if is_sort1:
-            self.add_new_eid = self.add_new_eid_sort1
-        else:
-            raise NotImplementedError('SORT2')
 
     @property
     def is_real(self):
@@ -171,6 +167,36 @@ class RealSpringArray(OES_Object):
         #ind = ind.reshape(ind.size)
         #ind.sort()
         return ind
+
+    def set_as_sort1(self):
+        """the data is in SORT1, but the flags are wrong"""
+        if self.is_sort1:
+            return
+        if self.table_name == b'OES2':
+            self.table_name = b'OES1'
+        elif self.table_name == b'OESATO2':
+            self.table_name = b'OESATO1'
+        elif self.table_name == b'OESCRM2':
+            self.table_name = b'OESCRM1'
+        elif self.table_name == b'OESPSD2':
+            self.table_name = b'OESPSD1'
+
+        if self.table_name == b'OSTR2':
+            self.table_name = b'OSTR1'
+        elif self.table_name == b'OSTRATO2':
+            self.table_name = b'OSTRATO1'
+        elif self.table_name == b'OSTRCRM2':
+            self.table_name = b'OSTRCRM1'
+        elif self.table_name == b'OSTRPSD2':
+            self.table_name = b'OSTRPSD1'
+        elif self.table_name in [b'OES1', b'OESATO1', b'OESCRM1', b'OESPSD1',
+                                 b'OSTRATO1', b'OSTRCRM1', b'OSTRPSD1']:
+            pass
+        else:
+            raise RuntimeError(self.code_information())
+        self.sort_bits[1] = 0 # sort1
+        self.sort_method = 1
+        assert self.is_sort1 is True, self.is_sort1
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
