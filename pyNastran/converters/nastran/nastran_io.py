@@ -4665,7 +4665,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     if nid is not None:
                         nid_to_pid_map[nid].append(pid)
 
-                if element.Type in ['AREA4', 'AREA8']:
+                if element.surface_type in ['AREA4', 'AREA8']:
                     eid_to_nid_map[eid] = node_ids[:4]
 
                     n1, n2, n3, n4 = [nid_map[nid] for nid in node_ids[:4]]
@@ -4676,7 +4676,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     out = quad_quality(p1, p2, p3, p4)
                     (areai, taper_ratioi, area_ratioi, max_skew, aspect_ratio,
                      min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
-                    if element.Type == 'AREA4' or None in node_ids:
+                    if element.surface_type == 'AREA4' or None in node_ids:
                         elem = vtkQuad()
                     else:
                         elem = vtkQuadraticQuad()
@@ -4690,7 +4690,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     elem.GetPointIds().SetId(2, n3)
                     elem.GetPointIds().SetId(3, n4)
                     grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-                elif element.Type in ['AREA3', 'AREA6']:
+                elif element.surface_type in ['AREA3', 'AREA6']:
                     eid_to_nid_map[eid] = node_ids[:3]
                     if element.Type == 'AREA3' or None in node_ids:
                         elem = vtkTriangle()
@@ -5016,19 +5016,19 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 nnodesi = 2
             elif etype == 'CHBDYG':
                 ieid = self.eid_map[eid]
-                if element.Type == 'AREA3':
+                if element.surface_type == 'AREA3':
                     nnodesi = 3
                     element_dimi = 2
-                elif element.Type == 'AREA4':
+                elif element.surface_type == 'AREA4':
                     nnodesi = 4
                     element_dimi = 2
-                elif element.Type == 'AREA6':
+                elif element.surface_type == 'AREA6':
                     nnodesi = 6
                     element_dimi = 2
-                elif element.Type == 'AREA8':
+                elif element.surface_type == 'AREA8':
                     nnodesi = 8
                     element_dimi = 2
-                #elif element.Type == 'REV':
+                #elif element.surface_type == 'REV':
                     #nnodesi = 2 # ???
                     #element_dimi = 1 # ???
                 else:

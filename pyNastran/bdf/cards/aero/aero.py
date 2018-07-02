@@ -294,30 +294,6 @@ class AEFACT(BaseCard):
     #def uncross_reference(self):
         #pass
 
-    def object_attributes(self, mode='public', keys_to_skip=None):
-        """.. seealso:: `pyNastran.utils.object_attributes(...)`"""
-        if keys_to_skip is None:
-            keys_to_skip = []
-
-        my_keys_to_skip = ['Di', 'data']
-        return super(AEFACT, self).object_attributes(
-            mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
-
-    @property
-    def Di(self):
-        self.deprecated('Di', 'fractions', '1.1')
-        return self.fractions
-
-    @Di.setter
-    def Di(self, fractions):
-        self.deprecated('Di', 'fractions', '1.1')
-        self.fractions = fractions
-
-    @property
-    def data(self):
-        self.deprecated('data', 'fractions', '1.1')
-        return self.fractions
-
     def raw_fields(self):
         """
         Gets the fields in their unmodified form
@@ -439,25 +415,6 @@ class AELINK(BaseCard):
 
     #def uncross_reference(self):
         #pass
-
-    def object_attributes(self, mode='public', keys_to_skip=None):
-        """.. seealso:: `pyNastran.utils.object_attributes(...)`"""
-        if keys_to_skip is None:
-            keys_to_skip = []
-
-        my_keys_to_skip = ['id']
-        return super(AELINK, self).object_attributes(
-            mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
-
-    @property
-    def id(self):
-        self.deprecated('id', 'aelink_id', '1.1')
-        return self.aelink_id
-
-    @id.setter
-    def id(self, aelink_id):
-        self.deprecated('id', 'aelink_id', '1.1')
-        self.aelink_id = aelink_id
 
     def raw_fields(self):
         """
@@ -640,25 +597,6 @@ class AEPARM(BaseCard):
         self.aeparm_id = aeparm_id
         self.label = label
         self.units = units
-
-    def object_attributes(self, mode='public', keys_to_skip=None):
-        """.. seealso:: `pyNastran.utils.object_attributes(...)`"""
-        if keys_to_skip is None:
-            keys_to_skip = []
-
-        my_keys_to_skip = ['id']
-        return super(AEPARM, self).object_attributes(
-            mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
-
-    @property
-    def id(self):
-        self.deprecated('id', 'aeparm_id', '1.1')
-        return self.aeparm_id
-
-    @id.setter
-    def id(self, aeparm_id):
-        self.deprecated('id', 'aeparm_id', '1.1')
-        self.aeparm_id = aeparm_id
 
     @classmethod
     def add_card(cls, card, comment=''):

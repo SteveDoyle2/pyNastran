@@ -26,7 +26,7 @@ else:
         return 'dev.%s' % ghash
 
     revision = get_git_revision_short_hash()
-    __version__ = '1.1.0+%s' % revision
+    __version__ = '1.2.0+%s' % revision
     __releaseDate__ = '2018/6/xx'
     __releaseDate2__ = 'JUNE xx, 2018'
 

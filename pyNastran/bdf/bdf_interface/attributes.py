@@ -84,7 +84,7 @@ class BDFAttributes(object):
             'log', 'mpcObject', 'spcObject',
             'node_ids', 'coord_ids', 'element_ids', 'property_ids',
             'material_ids', 'caero_ids', 'is_long_ids',
-            'nnodes', 'ncoords', 'nelements', 'nproperties', 'rejects',
+            'nnodes', 'ncoords', 'nelements', 'nproperties',
             'nmaterials', 'ncaeros',
 
             'point_ids', 'subcases',
@@ -127,7 +127,7 @@ class BDFAttributes(object):
             'log', #'mpcObject', 'spcObject',
             'node_ids', 'coord_ids', 'element_ids', 'property_ids',
             'material_ids', 'caero_ids', 'is_long_ids',
-            'nnodes', 'ncoords', 'nelements', 'nproperties', 'rejects',
+            'nnodes', 'ncoords', 'nelements', 'nproperties',
             'nmaterials', 'ncaeros',
 
             'point_ids', 'subcases',
@@ -862,19 +862,6 @@ class BDFAttributes(object):
         if self.case_control_deck is None:
             return {}
         return self.case_control_deck.subcases
-
-    @property
-    def rejects(self):
-        """access the rejected lines"""
-        #: lines that were rejected b/c they were for a card that isnt supported
-        self.deprecated('rejects', 'reject_lines', '1.1')
-        return self.reject_lines
-
-    @rejects.setter
-    def rejects(self, reject_lines):
-        """set the rejected lines"""
-        self.deprecated('rejects', 'reject_lines', '1.1')
-        self.reject_lines = reject_lines
 
     #@property
     #def grids(self):

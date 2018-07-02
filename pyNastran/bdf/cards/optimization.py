@@ -3953,55 +3953,6 @@ class DVPREL1(DVXREL1):
         """
         pass
 
-    def object_attributes(self, mode='public', keys_to_skip=None):
-        """.. seealso:: `pyNastran.utils.object_attributes(...)`"""
-        if keys_to_skip is None:
-            keys_to_skip = []
-
-        my_keys_to_skip = ['Type', 'pNameFid', 'pMax', 'pMin']
-        return super(DVPREL1, self).object_attributes(
-            mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
-
-    @property
-    def Type(self):
-        self.deprecated('Type', 'prop_type', '1.1')
-        return self.prop_type
-
-    @Type.setter
-    def Type(self, prop_type):
-        self.deprecated('Type', 'prop_type', '1.1')
-        self.prop_type = prop_type
-
-    @property
-    def pNameFid(self):
-        self.deprecated('pNameFid', 'pname_fid', '1.1')
-        return self.pname_fid
-
-    @pNameFid.setter
-    def pNameFid(self, pname_fid):
-        self.deprecated('pNameFid', 'pname_fid', '1.1')
-        self.pname_fid = pname_fid
-
-    @property
-    def pMax(self):
-        self.deprecated('pMax', 'p_max', '1.1')
-        return self.p_max
-
-    @pMax.setter
-    def pMax(self, p_max):
-        self.deprecated('pMax', 'p_max', '1.1')
-        self.p_max = p_max
-
-    @property
-    def pMin(self):
-        self.deprecated('pMin', 'p_min', '1.1')
-        return self.p_min
-
-    @pMin.setter
-    def pMin(self, p_min):
-        self.deprecated('pMin', 'p_min', '1.1')
-        self.p_min = p_min
-
     def OptID(self):
         return self.oid
 
@@ -4277,55 +4228,6 @@ class DVPREL2(DVXREL2):
 
     def OptID(self):
         return self.oid
-
-    def object_attributes(self, mode='public', keys_to_skip=None):
-        """.. seealso:: `pyNastran.utils.object_attributes(...)`"""
-        if keys_to_skip is None:
-            keys_to_skip = []
-
-        my_keys_to_skip = ['Type', 'pNameFid', 'pMax', 'pMin']
-        return super(DVPREL2, self).object_attributes(
-            mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
-
-    @property
-    def Type(self):
-        self.deprecated('Type', 'prop_type', '1.1')
-        return self.prop_type
-
-    @Type.setter
-    def Type(self, prop_type):
-        self.deprecated('Type', 'prop_type', '1.1')
-        self.prop_type = prop_type
-
-    @property
-    def pNameFid(self):
-        self.deprecated('pNameFid', 'pname_fid', '1.1')
-        return self.pname_fid
-
-    @pNameFid.setter
-    def pNameFid(self, pname_fid):
-        self.deprecated('pNameFid', 'pname_fid', '1.1')
-        self.pname_fid = pname_fid
-
-    @property
-    def pMax(self):
-        self.deprecated('pMax', 'p_max', '1.1')
-        return self.p_max
-
-    @pMax.setter
-    def pMax(self, p_max):
-        self.deprecated('pMax', 'p_max', '1.1')
-        self.p_max = p_max
-
-    @property
-    def pMin(self):
-        self.deprecated('pMin', 'p_min', '1.1')
-        return self.p_min
-
-    @pMin.setter
-    def pMin(self, p_min):
-        self.deprecated('pMin', 'p_min', '1.1')
-        self.p_min = p_min
 
     def Pid(self):
         if self.pid_ref is None:

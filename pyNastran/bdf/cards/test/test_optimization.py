@@ -256,14 +256,6 @@ class TestOpt(unittest.TestCase):
         dvprel1 = model.add_dvprel1(dvprel1_id, prop_type, pid, pname_fid,
                                     desvar_ids, coeffs, p_min=None, p_max=p_max, c0=0.0,
                                     validate=True, comment='dvprel1')
-        assert dvprel1.pname_fid == dvprel1.pNameFid
-        assert dvprel1.prop_type == dvprel1.Type
-        assert dvprel1.p_max == dvprel1.pMax
-        assert dvprel1.p_min == dvprel1.pMin
-        dvprel1.pNameFid = pname_fid
-        dvprel1.Type = prop_type
-        dvprel1.pMax = p_max
-        dvprel1.pMin = None
 
         dvprel2_id = dvprel1_id + 1
         deqation = 100
@@ -272,14 +264,6 @@ class TestOpt(unittest.TestCase):
         dvprel2 = model.add_dvprel2(dvprel2_id, prop_type, pid, pname_fid, deqation,
                                     dvids, labels, p_min=None, p_max=p_max,
                                     validate=True, comment='dvprel2')
-        assert dvprel2.pname_fid == dvprel2.pNameFid
-        assert dvprel2.prop_type == dvprel2.Type
-        assert dvprel2.p_max == dvprel2.pMax
-        assert dvprel2.p_min == dvprel2.pMin
-        dvprel2.pNameFid = pname_fid
-        dvprel2.Type = prop_type
-        dvprel2.pMax = p_max
-        dvprel2.pMin = None
 
         equation_id = 100
         eqs = ['fstress(x) = x + 10.']

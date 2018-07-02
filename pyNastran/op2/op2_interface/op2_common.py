@@ -1426,11 +1426,11 @@ class OP2Common(Op2Codes, F06Writer):
         #if any([card_name in msg for card_name in ['VUHEXA', 'VUPENTA', 'VUTETRA', 'VUQUAD']]):
             #return ndata
         #raise NotImplementedError(msg)
-        if self.table_name.startswith(('OSTR', 'OES', 'OEF')):
-            if self.element_type in [145, 146, 147, 189,  # VUHEXA, VUPENTA, VUTETRA, VUQUAD
-                                     69, # CBEND
-                                     ]:
-                return ndata
+        #if self.table_name.startswith(('OSTR', 'OES', 'OEF')):
+            #if self.element_type in [145, 146, 147, 189,  # VUHEXA, VUPENTA, VUTETRA, VUQUAD
+                                     #69, # CBEND
+                                     #]:
+                #return ndata
 
         if is_release:
             if msg != self._last_comment:
