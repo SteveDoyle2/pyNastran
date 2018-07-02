@@ -172,25 +172,25 @@ class RealSpringArray(OES_Object):
         """the data is in SORT1, but the flags are wrong"""
         if self.is_sort1:
             return
-        if self.table_name == b'OES2':
-            self.table_name = b'OES1'
-        elif self.table_name == b'OESATO2':
-            self.table_name = b'OESATO1'
-        elif self.table_name == b'OESCRM2':
-            self.table_name = b'OESCRM1'
-        elif self.table_name == b'OESPSD2':
-            self.table_name = b'OESPSD1'
+        if self.table_name == 'OES2':
+            self.table_name = 'OES1'
+        elif self.table_name == 'OESATO2':
+            self.table_name = 'OESATO1'
+        elif self.table_name == 'OESCRM2':
+            self.table_name = 'OESCRM1'
+        elif self.table_name == 'OESPSD2':
+            self.table_name = 'OESPSD1'
 
-        if self.table_name == b'OSTR2':
-            self.table_name = b'OSTR1'
-        elif self.table_name == b'OSTRATO2':
-            self.table_name = b'OSTRATO1'
-        elif self.table_name == b'OSTRCRM2':
-            self.table_name = b'OSTRCRM1'
-        elif self.table_name == b'OSTRPSD2':
-            self.table_name = b'OSTRPSD1'
-        elif self.table_name in [b'OES1', b'OESATO1', b'OESCRM1', b'OESPSD1',
-                                 b'OSTRATO1', b'OSTRCRM1', b'OSTRPSD1']:
+        elif self.table_name == 'OSTR2':
+            self.table_name = 'OSTR1'
+        elif self.table_name == 'OSTRATO2':
+            self.table_name = 'OSTRATO1'
+        elif self.table_name == 'OSTRCRM2':
+            self.table_name = 'OSTRCRM1'
+        elif self.table_name == 'OSTRPSD2':
+            self.table_name = 'OSTRPSD1'
+        elif self.table_name in ['OES1', 'OESATO1', 'OESCRM1', 'OESPSD1',
+                                 'OSTRATO1', 'OSTRCRM1', 'OSTRPSD1']:
             pass
         else:
             raise RuntimeError(self.code_information())
