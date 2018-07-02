@@ -956,12 +956,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OESNLBR2' : [self._table_passer, self._table_passer],
 
             # off stress
-            b'OES2'    : [self._read_oes2_3, self._read_oes2_4],  # stress - linear only
+            b'OES2'    : [self._table_passer, self._table_passer],  # stress - linear only - disabled; need better tests
             b'OESPSD2C' : [self._table_passer, self._table_passer],
-            #b'OESATO2' : [self._table_passer, self._table_passer],
-            #b'OESRMS2' : [self._table_passer, self._table_passer],
-            #b'OESNO2'  : [self._table_passer, self._table_passer],
-            #b'OESCRM2' : [self._table_passer, self._table_passer],
             #=======================
 
             # off strain
@@ -1135,7 +1131,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             #b'FRL0': [self._table_passer, self._table_passer],  # frequency response list
 
             #==================================
-            # new
+            # modal participation factors
             b'OFMPF2M' : [self._table_passer, self._table_passer],
             b'OLMPF2M' : [self._table_passer, self._table_passer],
             b'OPMPF2M' : [self._table_passer, self._table_passer],

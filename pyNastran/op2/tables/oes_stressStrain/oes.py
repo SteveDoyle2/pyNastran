@@ -4503,13 +4503,14 @@ class OES(OP2Common):
                 #self.table_name_str, self.num_wide, self.format_code,
                 #numwide_real, numwide_imag, numwide_random)
             #return self._not_implemented_or_skip(data, ndata, msg), None, None
-        #elif self.format_code in [2, 3] and self.num_wide == 87:
-            ## 87 - CQUAD4-144
-            ##msg = self.code_information()
-            #msg = '%s-CQUAD4-numwide=%s format_code=%s;\n numwide_real=%s numwide_imag=%s numwide_random=%s' % (
-                #self.table_name_str, self.num_wide, self.format_code,
-                #numwide_real, numwide_imag, numwide_random)
-            #return self._not_implemented_or_skip(data, ndata, msg), None, None
+        elif self.format_code in [2, 3] and self.num_wide in [70, 87]:
+            # 70 - CTRIA6-75
+            # 87 - CQUAD4-144
+            msg = self.code_information()
+            msg += '%s-numwide=%s format_code=%s;\n numwide_real=%s numwide_imag=%s numwide_random=%s' % (
+                self.table_name_str, self.num_wide, self.format_code,
+                numwide_real, numwide_imag, numwide_random)
+            return self._not_implemented_or_skip(data, ndata, msg), None, None
         #elif self.format_code in [2, 3] and self.num_wide == 70:
             ## 87 - CQUAD4-144
             ##msg = self.code_information()
