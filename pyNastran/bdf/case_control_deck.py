@@ -19,6 +19,7 @@ CaseControlDeck:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+import re
 import sys
 import copy
 from typing import List, Dict, Any
@@ -528,17 +529,11 @@ class CaseControlDeck(object):
         #print("line_upper = %r" % line)
         #print('  equals_count = %s' % equals_count)
         if line_upper.startswith('SUBCASE'):
-            #print("line = %r" % line)
-            line2 = line.replace('=', '')
-            sline = line2.split()
-            if len(sline) != 2:
-                msg = "trying to parse %r..." % line
-                raise RuntimeError(msg)
-            (key, param_type) = sline
-            key = key.upper()
+            param_type = split_equal_space(line_upper, 'SUBCASE', 'SUBCASE = 5')
+            key = 'SUBCASE'
 
             #print("key=%r isubcase=%r" % (key, isubcase))
-            value = int(param_type)
+            value = integer(param_type, line_upper)
             #self.isubcase = int(isubcase)
             param_type = 'SUBCASE-type'
             assert key.upper() == key, key
@@ -797,7 +792,7 @@ class CaseControlDeck(object):
             param_type = 'STRESS-type'
             key = key.upper()
             #print('options =', options)
-            #asdf
+
         elif line_upper.startswith('BEGIN'):  # begin bulk
             try:
                 (key, value) = line_upper.split(' ')
@@ -871,7 +866,6 @@ class CaseControlDeck(object):
             assert value not in self.subcases, 'key=%s value=%s already exists' % (key, value)
             assert isinstance(value, int)
             isubcase = value
-            #print("value=", value)
             self.copy_subcase(i_from_subcase=0, i_to_subcase=isubcase,
                               overwrite_subcase=True)
             if self.debug:
@@ -958,11 +952,7 @@ def verify_card(key, value, options, line):
                'DIVERG', 'DLOAD', 'DRSPAN', 'FMETHOD', 'FREQUENCY', 'GUST',
                'HADAPART', 'LINE', 'LOAD', 'LOADSET', 'MAXLINES', 'MCHSTAT',
                'MFLUID', 'MODES', 'MODTRAK', 'MPC', 'NLHARM',]:
-        try:
-            value2 = int(value)
-        except ValueError:
-            print('line=%r is invalid; value=%r' % (line, value))
-            raise
+        value2 = integer(value, line)
         assert value2 > 0, 'line=%r is invalid; value=%r must be greater than 0.' % (line, value2)
 
 def verify_card2(key, value, options, line):
@@ -980,10 +970,8 @@ def verify_card2(key, value, options, line):
         'SEDR', 'SELG', 'SEFINAL', 'SEKR', 'TEMPERATURE(ESTIMATE)',
         'GPSDCON', 'AUXMODEL',
         'MODTRAK', 'OFREQ', 'DRSPAN', 'OMODES', 'ADACT', 'SERESP', 'STATSUB',
-        'CURVESYM', 'ELSDCON', 'CSSCHD', 'NSM', 'TSTRU', 'RANDVAR', ''
+        'CURVESYM', 'ELSDCON', 'CSSCHD', 'NSM', 'TSTRU', 'RANDVAR',
         'RGYRO', 'SELR', 'TEMPERATURE(ESTI)', 'RCROSS', 'SERE', 'SEMR',
-        '', '', '', '', '', '', '', '', '', '',
-        '',
     ]
 
     # these may only be integers
@@ -1009,28 +997,20 @@ def verify_card2(key, value, options, line):
         'PLOTTER', 'XYPLOT',
 
         'PTITLE',
-        'HOUTPUT', 'PLOTID', '', '', '', '', '',
+        'HOUTPUT', 'PLOTID',
         'AXISYMMETRIC', 'CURVELINESYMBOL', 'CURVELINESYMB', 'AECONFIG',
         'B2GG', 'B2PP', 'AESYMXZ', 'TEMP', 'DSAPRT', 'MEFFMASS',
         'MAXMIN', 'RESVEC', 'MODESELECT', 'RIGID', 'TCURVE',
         'SUPER', 'MAXI DEFO', 'P2G',
         'EXTSEOUT', 'FLSTCNT PREFDB', 'AESYMXY',
-        'DSYM', '', '', ''
+        'DSYM',
     ]
     if key in ['BCONTACT', 'CURVELINESYMBOL']:
-        try:
-            value2 = int(value)
-        except ValueError:
-            print('line=%r is invalid; value=%r' % (line, value))
-            raise
+        value2 = integer(value, line)
 
     # these may only be integers greater than 0
     elif key in int_cards:
-        try:
-            value2 = int(value)
-        except ValueError:
-            print('line=%r is invalid; value=%r' % (line, value))
-            raise
+        value2 = integer(value, line)
         assert value2 > 0, 'line=%r is invalid; value=%r must be greater than 0.' % (line, value2)
 
     # these may have a value of all/none/integer, nothing else
@@ -1042,22 +1022,14 @@ def verify_card2(key, value, options, line):
                  'NOUTPUT', 'SEDV', 'APRES', 'HTFLOW', 'NLSTRESS', 'GPKE',
                  'SACCELERATION', 'SDISPLACEMENT', 'SEMG', 'HARMONICS', 'PRESSURE', 'VUGRID',
                  'ELSUM', 'SVELOCITY', 'STRFIELD REAL', 'SENSITY', 'MONITOR',
-                 'NLLOAD', 'GPSDCON', 'BOUTPUT', '', '', '']:
+                 'NLLOAD', 'GPSDCON', 'BOUTPUT']:
         if value not in ['ALL', 'NONE']:
             if ',' in value:
                 sline = value.split(',')
                 for spot in sline:
-                    try:
-                        value2 = int(spot)
-                    except ValueError:
-                        print('line=%r is invalid; value=%r' % (line, spot))
-                        raise
+                    value2 = integer(spot, line)
             else:
-                try:
-                    value2 = int(value)
-                except ValueError:
-                    print('line=%r is invalid; value=%r' % (line, value))
-                    raise
+                value2 = integer(value, line)
                 if value2 <= 0:
                     msg = 'line=%r is invalid; value=%r must be greater than 0.' % (line, value2)
                     raise ValueError(msg)
@@ -1078,7 +1050,7 @@ def verify_card2(key, value, options, line):
         assert value in ['HEAT', 'ANALYSIS', 'MFREQ', 'STATICS', 'MODES', 'DFREQ',
                          'MTRAN', 'BUCK', 'MCEIG', 'DCEIG', 'SAERO', 'NLSTATIC', 'NLSTAT',
                          'STATIC', 'MTRANS', 'MODE', 'FLUTTER', 'DIVERG', 'NLTRAN',
-                         '', '', '', '', ''], 'line=%r is invalid; value=%r' % (line, value)
+                         ], 'line=%r is invalid; value=%r' % (line, value)
     elif key == 'AUTOSPC':
         assert value in ['YES'], 'line=%r is invalid; value=%r' % (line, value)
     else:
@@ -1129,38 +1101,24 @@ def _clean_lines(lines):
                 lines_pack = [line]
     return [''.join(pack) for pack in lines3]
 
-def main():  # pragma: no cover
-    """test case"""
-    lines = [
-        'SUBCASE 1',
-        '    ACCELERATION(PLOT,PRINT,PHASE) = ALL',
-        '    DISPLACEMENT(PLOT,PRINT,PHASE) = ALL',
-        '    DLOAD = 32',
-        '    M2GG = 111',
-        '    SET 88  = 5, 6, 7, 8, 9, 10 THRU 55 EXCEPT 15, 16, 77, 78, 79, '
-        '100 THRU 300',
-        '    SET 99  = 1 THRU 10',
-        '    SET 105 = 1.009, 10.2, 13.4, 14.0, 15.0',
-        '    SET 111 = MAAX1,MAAX2',
-        '    SET 1001 = 101/T1, 501/T3, 991/R3',
-        '    SET = ALL',
-        '    SPC = 42',
-        '    TSTEPNL = 22',
-        '    VELOCITY(PLOT,PRINT,PHASE) = ALL',
-        'BEGIN BULK',
-    ]
-    deck = CaseControlDeck(lines)
-    #deck.create_new_subcase(2)
-    #deck.add_parameter_to_local_subcase(0, 'SET 2 = 11,12,13,14,15,16,17,18,'
-    #   '19,20,21,22,23,24,25,26,'
-    #   '1000000000000000000000000000000000000000000000000000000,33')
-    str(deck)
-    #print('%s\n\n' % deck)
+def split_equal_space(line, word, example):
+    # (str, str, str) -> str
+    """
+    Splits a case insensative line by an
 
-    #deck2 = CaseControlDeck(['ACCELERATION(PLOT,PRINT,PHASE) = ALL',
-    #                         'DISPLACEMENT(PLOT,PRINT,PHASE) = ALL',
-    #                         'BEGIN BULK'])
-    #print('\n\n%s' % deck2)
+    reads:
+     - 'SUBCASE = 5'
+     - 'SUBCASE 5'
+    """
+    if ' ' not in line and '=' not in line:
+        raise SyntaxError("expected data of the form '%s', not %r" % (example, line))
+    out = re.split('\s*%s\s*=?\s*' % word, line, maxsplit=1, flags=re.IGNORECASE)
+    return out[1]
 
-if __name__ == '__main__':  # pragma: no cover
-    main()
+def integer(str_value, line):
+    # (str, str) -> int
+    try:
+        value = int(str_value)
+    except ValueError:
+        raise ValueError('%r is not an integer; line:\n%r' % (str_value, line))
+    return value

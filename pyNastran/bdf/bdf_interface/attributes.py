@@ -53,6 +53,7 @@ class BDFAttributes(object):
         self._nastran_format = 'nx'
         self.is_nx = True
         self.is_msc = False
+        self.is_zona = False
 
     def set_as_zona(self):
         self._nastran_format = 'zona'

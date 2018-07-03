@@ -661,8 +661,9 @@ class FortranFormat(object):
         # where each element can have a different number
         # of layers
         if self.obj.ntotal == self.obj.data.shape[1]:
-            #print('resetting %r indicies; itime=%s; shape=%s' % (
-            #    self.obj.class_name, self.obj.itime, self.obj.data.shape))
+            #if self.table_name_str in ['OESRMS2', 'OESNO2', 'OSTRRMS2', 'OSTRNO2', 'OESATO2']:
+                #print('resetting %r indicies; itime=%s; shape=%s' % (
+                    #self.obj.class_name, self.obj.itime, self.obj.data.shape))
             self.obj._reset_indices()
             self.obj.words = self.words
             self.obj.itime += 1

@@ -588,12 +588,13 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         nnodes = len(model.grid)
         nspoints = len(model.spoints)
         nepoints = len(model.epoints)
+        ncaero_cards = len(model.caeros)
         #if model.spoints:
             #spoints = sorted([spoint.nid for spoint in itervalues(model.spoints)])
         #if model.epoints:
             #epoints = sorted([epoint.nid for epoint in itervalues(model.epoints)])
 
-        if nnodes + nspoints + nepoints == 0 and len(model.caeros) == 0:
+        if nnodes + nspoints + nepoints + ncaero_cards == 0:
             msg = 'nnodes + nspoints + nepoints = 0\n'
             msg += 'card_count = %r' % str(model.card_count)
             raise NoGeometry(msg)
@@ -604,7 +605,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         nmasses = len(model.masses)
         nplotels = len(model.plotels)
-        ncaero_cards = len(model.caeros)
         nrigid = len(model.rigid_elements)
 
         #if 'CTRIAX6' in model.card_count and nelements == 0: # skipping...
@@ -1619,12 +1619,13 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         nnodes = len(model.nodes)
         nspoints = len(model.spoints)
         nepoints = len(model.epoints)
+        ncaero_cards = len(model.caeros)
         #if model.spoints:
             #spoints = sorted([spoint.nid for spoint in itervalues(model.spoints)])
         #if model.epoints:
             #epoints = sorted([epoint.nid for epoint in itervalues(model.epoints)])
 
-        if nnodes + nspoints + nepoints and len(model.caeros) == 0:
+        if nnodes + nspoints + nepoints + ncaero_cards == 0:
             msg = 'nnodes + nspoints + nepoints = 0\n'
             msg += 'card_count = %r' % str(model.card_count)
             raise NoGeometry(msg)
@@ -1632,7 +1633,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         nelements = len(model.elements)
         nmasses = len(model.masses)
         nplotels = len(model.plotels)
-        ncaero_cards = len(model.caeros)
         nrigid = len(model.rigid_elements)
         #nmpc = len(model.mpcs)  # really should only be allowed if we have it in a subcase
         if nelements + nmasses + ncaero_cards + nplotels + nrigid == 0:

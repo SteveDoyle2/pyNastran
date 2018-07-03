@@ -1,17 +1,17 @@
 from __future__ import print_function
-from six import PY2
-from six.moves import zip
 import os
 import unittest
+from codecs import open as codec_open
+from six import PY2
+from six.moves import zip
 
 import pyNastran
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.case_control_deck import CaseControlDeck
 from pyNastran.bdf.bdf_interface.subcase_utils import write_set, collapse_thru_packs
-from codecs import open as codec_open
 
-pkg_path = pyNastran.__path__[0]
-test_path = os.path.join(pkg_path, 'bdf', 'test')
+PKG_PATH = pyNastran.__path__[0]
+TEST_PATH = os.path.join(PKG_PATH, 'bdf', 'test')
 
 
 class CaseControlTest(unittest.TestCase):
@@ -35,11 +35,11 @@ class CaseControlTest(unittest.TestCase):
 
         deck.add_parameter_to_local_subcase(1, 'STRAIN = 7')
 
-        out = deck.get_subcase_parameter(0, 'GPFORCE')
+        unused_out = deck.get_subcase_parameter(0, 'GPFORCE')
 
         deck.add_parameter_to_local_subcase(1, 'ANALYSIS = SAERO')
         deck.add_parameter_to_local_subcase(2, 'ANALYSIS = STATIC')
-        out = deck.get_subcase_parameter(2, 'ANALYSIS')
+        unused_out = deck.get_subcase_parameter(2, 'ANALYSIS')
 
         deck.add_parameter_to_local_subcase(1, 'SET 1 = 100')
         deck.add_parameter_to_local_subcase(1, 'SET 2 = 200')
@@ -65,8 +65,8 @@ class CaseControlTest(unittest.TestCase):
         compare_lines(self, deck_lines, lines_expected, has_endline=False)
 
     def test_case_control_02(self):
-        bdf_filename = os.path.join(test_path, 'unit', 'case_control.dat')
-        bdf_filename2 = os.path.join(test_path, 'unit', 'case_control_out.dat')
+        bdf_filename = os.path.join(TEST_PATH, 'unit', 'case_control.dat')
+        bdf_filename2 = os.path.join(TEST_PATH, 'unit', 'case_control_out.dat')
 
         mesh = BDF(debug=False, log=None)
         mesh.read_bdf(bdf_filename, xref=True)
@@ -87,8 +87,8 @@ class CaseControlTest(unittest.TestCase):
         mesh.write_bdf(bdf_filename2)
         #print("---cc 3---\n%s" % str(mesh.case_control_deck))
 
-        with open(bdf_filename2, 'r') as f:
-            lines = f.readlines()
+        with open(bdf_filename2, 'r') as bdf_file:
+            lines = bdf_file.readlines()
 
         lines_expected = [
             '$pyNastran: version=msc',
@@ -121,20 +121,21 @@ class CaseControlTest(unittest.TestCase):
             self.assertEqual(line, line_expected, msg)
 
     def test_case_control_03(self):
-        values = [11, 12, 13, 14, 15, 16, 17, 18,
-           19, 20, 21, 22, 23, 24, 25, 26,
-           1000000000000000000000000000000000000000000000000000000, 33]
+        values = [
+            11, 12, 13, 14, 15, 16, 17, 18,
+            19, 20, 21, 22, 23, 24, 25, 26,
+            1000000000000000000000000000000000000000000000000000000, 33]
         spaces = '    '
         set_id = 10
 
         singles, doubles = collapse_thru_packs(values)
         assert singles == [33, 1000000000000000000000000000000000000000000000000000000], singles
         assert doubles == [[11, 'THRU', 26]], doubles
-        msg = write_set(set_id, values, spaces)
+        unused_msg = write_set(set_id, values, spaces)
 
         set_id = 11
         values = ['ALL']
-        msg = write_set(set_id, values, spaces)
+        unused_msg = write_set(set_id, values, spaces)
 
     def test_case_control_04(self):
         seti = 'SET 88 = 5, 6, 7, 8, 9, 10 THRU 55 EXCEPT 15, 16, 77, 78, 79, 100 THRU 300'
@@ -160,7 +161,7 @@ class CaseControlTest(unittest.TestCase):
             else:
                 assert value not in values, 'value=%s should NOT be in values=%s' % (value, values)
 
-        msg = write_set(set_id, values)
+        unused_msg = write_set(set_id, values)
 
         singles, doubles = collapse_thru_packs(values)
         assert singles == [77, 78, 79], singles
@@ -189,9 +190,10 @@ class CaseControlTest(unittest.TestCase):
             ]
         deck = CaseControlDeck(lines)
         deck.create_new_subcase(2)
-        deck.add_parameter_to_local_subcase(2, 'SET 2 = 11,12,13,14,15,16,17,18,'
-           '19,20,21,22,23,24,25,26,'
-           '1000000000000000000000000000000000000000000000000000000,33')
+        deck.add_parameter_to_local_subcase(
+            2, 'SET 2 = 11,12,13,14,15,16,17,18,'
+            '19,20,21,22,23,24,25,26,'
+            '1000000000000000000000000000000000000000000000000000000,33')
         deck_msg = '%s' % deck
         #print('%r' % deck_lines)
         deck_lines = deck_msg.split('\n')
@@ -290,15 +292,15 @@ class CaseControlTest(unittest.TestCase):
         ]
         bdf_filename = 'test7.bdf'
         bdf_filename2 = 'test7_bad.bdf'
-        with codec_open(bdf_filename, 'w', encoding='ascii') as f:
+        with codec_open(bdf_filename, 'w', encoding='ascii') as bdf_file:
             for line in lines_expected:
-                f.write(line)
+                bdf_file.write(line)
         bdf = BDF(debug=False)
         bdf.read_bdf(bdf_filename)
         bdf.write_bdf(bdf_filename2)
 
-        with codec_open(bdf_filename, 'r', encoding='ascii') as f:
-            lines = f.readlines()
+        with codec_open(bdf_filename, 'r', encoding='ascii') as bdf_file:
+            lines = bdf_file.readlines()
             compare_lines(self, lines, lines_expected, has_endline=True)
         os.remove(bdf_filename)
         os.remove(bdf_filename2)
@@ -341,34 +343,10 @@ class CaseControlTest(unittest.TestCase):
         compare_lines(self, deck_lines, lines_expected, has_endline=False)
 
     def test_case_control_11(self):
-        lines = [
-            'GROUNDCHECK(PRINT,',
-            'THRESH=1e-2,DATAREC=NO)=YES',
-            'SUBCASE 1',
-            '    DISPLACEMENT = ALL',
-        ]
-        lines_expected = [
-            'GROUNDCHECK(PRINT, THRESH=0.01, DATAREC=NO) = YES',
-            'SUBCASE 1',
-            '    DISPLACEMENT = ALL',
-        ]
-        deck = CaseControlDeck(lines)
-        deck_msg = '%s' % deck
-        #print('%s' % deck_msg)
-        deck_lines = deck_msg.split('\n')
-        compare_lines(self, deck_lines, lines_expected, has_endline=False)
-
-    def test_case_control_12(self):
-        lines = [
-            'GROUNDCHECK(PRINT,SET=(G,N,N+AUTOSPC,F,A),THRESH=1e-2,DATAREC=NO,FAKE)=YES',
-            'SUBCASE 1',
-            '    DISPLACEMENT = ALL',
-        ]
-        with self.assertRaises(KeyError):
-            deck = CaseControlDeck(lines)
-
-    def test_case_control_13(self):
-        # this test checks that subcase 3 uses its local definition of set 100 and subcase 4 uses the default definition
+        """
+        this test checks that subcase 3 uses its local definition of
+        set 100 and subcase 4 uses the default definition
+        """
         lines = [
             'SET 100 = 100',
             'DISP = 100',
@@ -400,6 +378,35 @@ class CaseControlTest(unittest.TestCase):
         assert sc3.params['SET 100'] == [[100, 101], 100, 'SET-type']
         assert sc4.params['SET 100'] == [[100], 100, 'SET-type']
 
+
+    def test_groundcheck_1(self):
+        """tests GROUNDCHECk"""
+        lines = [
+            'GROUNDCHECK(PRINT,',
+            'THRESH=1e-2,DATAREC=NO)=YES',
+            'SUBCASE 1',
+            '    DISPLACEMENT = ALL',
+        ]
+        lines_expected = [
+            'GROUNDCHECK(PRINT, THRESH=0.01, DATAREC=NO) = YES',
+            'SUBCASE 1',
+            '    DISPLACEMENT = ALL',
+        ]
+        deck = CaseControlDeck(lines)
+        deck_msg = '%s' % deck
+        #print('%s' % deck_msg)
+        deck_lines = deck_msg.split('\n')
+        compare_lines(self, deck_lines, lines_expected, has_endline=False)
+
+    def test_groundcheck_2(self):
+        lines = [
+            'GROUNDCHECK(PRINT,SET=(G,N,N+AUTOSPC,F,A),THRESH=1e-2,DATAREC=NO,FAKE)=YES',
+            'SUBCASE 1',
+            '    DISPLACEMENT = ALL',
+        ]
+        with self.assertRaises(KeyError):
+            unused_deck = CaseControlDeck(lines)
+
     def test_weightcheck(self):
         weightchecks = [
             'WEIGHTCHECK=YES',
@@ -408,6 +415,54 @@ class CaseControlTest(unittest.TestCase):
         for weightcheck in weightchecks:
             deck = CaseControlDeck([weightcheck])
             str(deck)
+    def test_subcase_equals(self):
+        lines = [
+            'SET 100 = 100',
+            'DISP = 100',
+            'SUBCASE 1',
+            '     SPC = 1',
+            '     LOAD = 1',
+            'SUBCASE= 2',
+            '     SPC = 2',
+            '     LOAD = 2',
+            '     DISP = ALL',
+            'SUBCASE =3',
+            '     SET 100 = 100, 101',
+            '     SPC = 3',
+            '     LOAD = 3',
+            '     DISP = 100',
+            'SUBCASE=4',
+            '     SPC = 3',
+            '     LOAD = 3',
+            '     DISP = 100',
+        ]
+
+        deck = CaseControlDeck(lines)
+        unused_default = deck.subcases[0]
+        unused_sc3 = deck.subcases[3]
+        unused_sc4 = deck.subcases[4]
+
+        #-------------------------------------
+        lines = [
+            'DISP = 100',
+            'SUBCASEBAD',
+            '     SPC = 3',
+            '     LOAD = 3',
+            '     DISP = 100',
+        ]
+        with self.assertRaises(SyntaxError):
+            deck = CaseControlDeck(lines)
+
+        #-------------------------------------
+        lines = [
+            'DISP = 100',
+            'SUBCASE BAD',
+            '     SPC = 3',
+            '     LOAD = 3',
+            '     DISP = 100',
+        ]
+        with self.assertRaises(ValueError):
+            deck = CaseControlDeck(lines)
 
 def compare_lines(self, lines, lines_expected, has_endline):
     i = 0

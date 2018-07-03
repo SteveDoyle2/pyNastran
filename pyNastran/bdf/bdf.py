@@ -625,7 +625,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         self.special_cards = ['DEQATN', '/']
         self._make_card_parser()
 
-        print('mode = %r' % mode)
         self._nastran_format = mode
         if mode == 'msc':
             self.set_as_msc()
