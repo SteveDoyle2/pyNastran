@@ -286,11 +286,7 @@ class OES(OP2Common):
         self.data_code['is_strain_flag'] = False
 
         self._setup_op2_subcase('STRESS/STRAIN')
-        if self.is_sort1:
-            n = self._read_oes_4_sort(data, ndata)
-        else:
-            msg = self.code_information()
-            n = self._not_implemented_or_skip(data, ndata, msg)
+        n = self._read_oes_4_sort(data, ndata)
         return n
 
     def _read_oes2_3(self, data, ndata):
@@ -451,11 +447,7 @@ class OES(OP2Common):
         self.data_code['is_strain_flag'] = True
 
         self._setup_op2_subcase('STRESS/STRAIN')
-        if self.is_sort1:
-            n = self._read_ostr_4_sort(data, ndata)
-        else:
-            msg = self.code_information()
-            n = self._not_implemented_or_skip(data, ndata, msg)
+        n = self._read_ostr_4_sort(data, ndata)
         return n
 
     def _read_ostr2_4(self, data, ndata):
@@ -1098,6 +1090,18 @@ class OES(OP2Common):
 
     def get_oes_prefix_postfix(self):
         """
+        Creates the prefix/postfix that splits off ATO, CRM, PSD, nonlinear,
+        etc. results.  We also fix some of the sort bits as typing:
+
+            STRESS(PLOT,SORT1,RALL) = ALL
+
+        will actually create the OESRMS2 table (depending on what else
+        is in your case control).  However, it's in an OESATO2 table, so
+        we know it's really SORT2.
+
+        Also, if you're validating the sort_bit flags, *RMS2 and *NO2 are
+        actually SORT1 tables.
+
         NX Case Control  Block         Description
         ===============  ==========    ===========
         NLSTRESS         OESNLXR       Nonlinear static stresses
@@ -1134,12 +1138,12 @@ class OES(OP2Common):
         elif self.table_name in [b'OESVM1C', b'OSTRVM1C', b'OESVM1', b'OSTRVM1']:
             prefix = 'modal_contribution_'
 
+        #----------------------------------------------------------------
         elif self.table_name in [b'OSTRMS1C']: #, b'OSTRMS1C']:
             self.format_code = 1
             self.sort_bits[0] = 0 # real
             postfix = '_rms'
         elif self.table_name in [b'OESXRMS1']: # wrong...
-            pass
             self.format_code = 1
             self.sort_bits[0] = 0 # real
             self.sort_bits[1] = 0 # sort1
@@ -1150,13 +1154,16 @@ class OES(OP2Common):
             #assert self.sort_method == 2, self.code_information()
             #self.nonlinear_factor = self.n
             #self.data_code['nonlinear_factor'] = None
+            postfix = '_rms'
         elif self.table_name in [b'OESXRMS2']: # wrong...
-            pass
+            self.sort_bits[1] = 1 # sort2
+            postfix = '_rms'
         elif self.table_name in [b'OESRMS1', b'OSTRRMS1']:
             self.format_code = 1
             self.sort_bits[0] = 0 # real
             assert self.sort_method == 1, self.code_information()
             self._analysis_code_fmt = b'i'
+            postfix = '_rms'
         elif self.table_name in [b'OESRMS2', b'OSTRRMS2']:
             #self.format_code = 1
             self.sort_bits[0] = 0 # real
@@ -1167,20 +1174,8 @@ class OES(OP2Common):
             #assert self.sort_method == 2, self.code_information()
             postfix = '_rms'
 
-        elif self.table_name in [b'OESPSD1', b'OSTRPSD1']:
-            #self.format_code = 1
-            self.sort_bits[1] = 0 # sort1
-            self.sort_bits[2] = 1 # random
-            postfix = '_psd'
-        elif self.table_name in [b'OESPSD2', b'OSTRPSD2']:
-            self.format_code = 1
-            self.sort_bits[0] = 0 # real
-            self.sort_bits[1] = 1 # sort2
-            self.sort_bits[2] = 1 # random
-            postfix = '_psd'
-
         elif self.table_name in [b'OESNO1', b'OSTRNO1', b'OSTNO1C']:
-            assert self.sort_method == 1, self.code_information( )
+            assert self.sort_method == 1, self.code_information()
             self.format_code = 1
             self.sort_bits[0] = 0 # real
             self.sort_bits[2] = 1 # random
@@ -1195,6 +1190,20 @@ class OES(OP2Common):
             self.data_code['nonlinear_factor'] = None
             self._analysis_code_fmt = b'i'
             postfix = '_no'
+        #----------------------------------------------------------------
+
+        elif self.table_name in [b'OESPSD1', b'OSTRPSD1']:
+            #self.format_code = 1
+            self.sort_bits[0] = 0 # real
+            self.sort_bits[1] = 0 # sort1
+            self.sort_bits[2] = 1 # random
+            postfix = '_psd'
+        elif self.table_name in [b'OESPSD2', b'OSTRPSD2']:
+            self.format_code = 1
+            self.sort_bits[0] = 0 # real
+            self.sort_bits[1] = 1 # sort2
+            self.sort_bits[2] = 1 # random
+            postfix = '_psd'
 
         elif self.table_name in [b'OESATO1', b'OSTRATO1']:
             postfix = '_ato'
@@ -2968,12 +2977,6 @@ class OES(OP2Common):
                         dt, eid,
                         s1a, s2a, s3a, s4a, axial,
                         s1b, s2b, s3b, s4b)
-
-        elif self.format_code == 1 and self.num_wide == 10: # random strain
-            msg = self.code_information()
-            n = self._not_implemented_or_skip(data, ndata, msg)
-            nelements = None
-            ntotal = None
         else:
             raise RuntimeError(self.code_information())
         return n, nelements, ntotal
@@ -3722,10 +3725,8 @@ class OES(OP2Common):
             element_id = self.nonlinear_factor
             if self.is_stress:
                 obj_vector_random = RandomPlateStressArray
-                result_name = prefix + 'cquad4_stress' + postfix
             else:
                 obj_vector_random = RandomPlateStrainArray
-                result_name = prefix + 'cquad4_strain' + postfix
             self.data_code['nonlinear_factor'] = element_id
 
             if self._results.is_not_saved(result_name):

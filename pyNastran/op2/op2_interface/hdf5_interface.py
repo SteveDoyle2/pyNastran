@@ -301,6 +301,11 @@ TABLE_OBJ_MAP = {
     'cbar_strain_rms' : (RandomBarStrainArray, ),
 
     'cbar_force' : (RealCBarForceArray, ComplexCBarForceArray),
+    'cbar_force_ato' : (RealCBarForceArray, ),
+    'cbar_force_crm' : (RealCBarForceArray, ),
+    'cbar_force_psd' : (RealCBarForceArray, ),
+    'cbar_force_no' : (RealCBarForceArray, ),
+    'cbar_force_rms' : (RealCBarForceArray, ),
 
     'cbar_force_10nodes' : (RealCBar100ForceArray, ),
     'cbar_stress_10nodes' : (RealBar10NodesStressArray, ),
@@ -406,24 +411,28 @@ TABLE_OBJ_MAP = {
     'cquadr_strain_no' : (RandomPlateStrainArray, ),
     'cquadr_strain_rms' : (RandomPlateStrainArray, ),
 
+    'ctria3_stress' : (RealPlateStressArray, ComplexPlateStressArray),
     'ctria3_stress_ato' : (RandomPlateStressArray, ),
     'ctria3_stress_crm' : (RandomPlateStressArray, ),
     'ctria3_stress_psd' : (RandomPlateStressArray, ),
     'ctria3_stress_no' : (RandomPlateStressArray, ),
     'ctria3_stress_rms' : (RandomPlateStressArray, ),
 
+    'ctria3_strain' : (RealPlateStrainArray, ComplexPlateStrainArray),
     'ctria3_strain_ato' : (RandomPlateStrainArray, ),
     'ctria3_strain_crm' : (RandomPlateStrainArray, ),
     'ctria3_strain_psd' : (RandomPlateStrainArray, ),
     'ctria3_strain_no' : (RandomPlateStrainArray, ),
     'ctria3_strain_rms' : (RandomPlateStrainArray, ),
 
+    'cquad43_stress' : (RealPlateStressArray, ComplexPlateStressArray),
     'cquad4_stress_ato' : (RandomPlateStressArray, ),
     'cquad4_stress_crm' : (RandomPlateStressArray, ),
     'cquad4_stress_psd' : (RandomPlateStressArray, ),
     'cquad4_stress_no' : (RandomPlateStressArray, ),
     'cquad4_stress_rms' : (RandomPlateStressArray, ),
 
+    'cquad4_strain' : (RealPlateStrainArray, ComplexPlateStrainArray),
     'cquad4_strain_ato' : (RandomPlateStrainArray, ),
     'cquad4_strain_crm' : (RandomPlateStrainArray, ),
     'cquad4_strain_psd' : (RandomPlateStrainArray, ),
@@ -504,13 +513,25 @@ TABLE_OBJ_MAP = {
 
     'grid_point_forces' : (RealGridPointForcesArray, ComplexGridPointForcesArray),
 
-    'ctria3_force' : (RealPlateForceArray, ComplexPlateForceArray),
-    'cquad4_force' : (RealPlateForceArray, RealPlateBilinearForceArray,
-                      ComplexPlateForceArray, ComplexPlate2ForceArray),
     'cquad8_force' : (RealPlateBilinearForceArray, ComplexPlate2ForceArray),
     'cquadr_force' : (RealPlateBilinearForceArray, ComplexPlate2ForceArray),
     'ctria6_force' : (RealPlateBilinearForceArray, ComplexPlate2ForceArray),
     'ctriar_force' : (RealPlateBilinearForceArray, ComplexPlate2ForceArray),
+
+    'ctria3_force' : (RealPlateForceArray, ComplexPlateForceArray),
+    'ctria3_force_ato' : (RealPlateForceArray, ),
+    'ctria3_force_crm' : (RealPlateForceArray, ),
+    'ctria3_force_psd' : (RealPlateForceArray, ),
+    'ctria3_force_no' : (RealPlateForceArray, ),
+    'ctria3_force_rms' : (RealPlateForceArray, ),
+
+    'cquad4_force' : (RealPlateForceArray, RealPlateBilinearForceArray,
+                      ComplexPlateForceArray, ComplexPlate2ForceArray),
+    'cquad4_force_ato' : (RealPlateForceArray, ),
+    'cquad4_force_crm' : (RealPlateForceArray, ),
+    'cquad4_force_psd' : (RealPlateForceArray, ),
+    'cquad4_force_no' : (RealPlateForceArray, ),
+    'cquad4_force_rms' : (RealPlateForceArray, ),
 
     'cgap_force' : (RealCGapForceArray, None),
 
@@ -754,13 +775,20 @@ def _get_obj_class(objs, class_name, result_name, unused_is_real, log):
 
     # does what the two previous lines should do...
     obj_map = {str(obj).split("'")[1].split('.')[-1] : obj for obj in objs if obj is not None}
-
     try:
         obj_class = obj_map[class_name]
     except KeyError:
         keysi = list(obj_map.keys())
         print(objs)
-        print(obj_map)
+
+        print('obj_map:')
+        for key, value in iteritems(obj_map):
+            print('  %s : %s' % (key, value))
+
+        # if the obj_map is wrong, you probably have an issue in:
+        # - get_oes_prefix_postfix
+        # - get_oef_prefix_postfix
+        # or other similar function
         log.warning('skipping result_name=%r class_name=%r keys=%s' % (
             result_name, class_name, keysi))
         #raise RuntimeError('result_name=%r class_name=%r keys=%s' % (

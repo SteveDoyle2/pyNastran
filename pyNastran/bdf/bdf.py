@@ -105,9 +105,9 @@ from pyNastran.bdf.cards.aero.zona import (
     CAERO7, PANLST3,
     BODY7, SEGMESH,
     TRIM as TRIMZONA,
-    SPLINE1 as SPLINE1ZONA,
-    SPLINE2 as SPLINE2ZONA,
-    SPLINE3 as SPLINE3ZONA,
+    SPLINE1_ZONA,
+    SPLINE2_ZONA,
+    SPLINE3_ZONA,
 )
 from pyNastran.bdf.cards.aero.aero import (
     AECOMP, AEFACT, AELINK, AELIST, AEPARM, AESURF, AESURFS,
@@ -625,10 +625,14 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         self.special_cards = ['DEQATN', '/']
         self._make_card_parser()
 
-        if self.is_msc:
+        print('mode = %r' % mode)
+        self._nastran_format = mode
+        if mode == 'msc':
             self.set_as_msc()
-        elif self.is_nx:
+        elif mode == 'nx':
             self.set_as_nx()
+        elif mode == 'zona':
+            self.set_as_zona()
         else:
             msg = 'mode=%r is not supported; modes=[msc, nx]' % self._nastran_format
             raise NotImplementedError(msg)
@@ -974,6 +978,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         _validate_dict(self.splines)
         _validate_dict(self.aecomps)
         _validate_dict(self.aefacts)
+        #_validate_dict(self.panlists)
 
         _validate_dict_list(self.aelinks)
 
@@ -3908,9 +3913,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             self._card_parser['CAERO7'] = (CAERO7, self._add_caero_object)
             self._card_parser['AEROZ'] = (AEROZ, self._add_aeros_object)
             self._card_parser['AESURFZ'] = (AESURFZ, self._add_aesurf_object)
-            self._card_parser['SPLINE1'] = (SPLINE1ZONA, self._add_spline_object)
-            self._card_parser['SPLINE2'] = (SPLINE2ZONA, self._add_spline_object)
-            self._card_parser['SPLINE3'] = (SPLINE3ZONA, self._add_spline_object)
+            self._card_parser['SPLINE1'] = (SPLINE1_ZONA, self._add_spline_object)
+            self._card_parser['SPLINE2'] = (SPLINE2_ZONA, self._add_spline_object)
+            self._card_parser['SPLINE3'] = (SPLINE3_ZONA, self._add_spline_object)
             self._card_parser['PANLST3'] = (PANLST3, self._add_panlst_object)
             self._card_parser['SEGMESH'] = (SEGMESH, self._add_paero_object)
             self._card_parser['BODY7'] = (BODY7, self._add_caero_object)

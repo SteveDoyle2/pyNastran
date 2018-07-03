@@ -47,7 +47,8 @@ class RandomBarArray(OES_Object):
 
     def _reset_indices(self):
         self.itotal = 0
-        self.ielement = 0
+        if self.table_name not in ['OESRMS2', 'OESNO2', 'OSTRRMS2', 'OSTRNO2']:
+            self.ielement = 0
 
     def _get_msgs(self):
         raise NotImplementedError('%s needs to implement _get_msgs' % self.__class__.__name__)
@@ -65,6 +66,11 @@ class RandomBarArray(OES_Object):
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
+
+        # buggy MSC 2005 (was this ever fixed?)
+        # NX doesn't have this bug
+        if self.table_name in ['OESRMS2', 'OESNO2', 'OSTRRMS2', 'OSTRNO2']:
+            self.ntotal = self.nelements
 
         #if self.element_type == 34:
             #nnodes_per_element = 1

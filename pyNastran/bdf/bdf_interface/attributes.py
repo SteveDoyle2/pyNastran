@@ -47,11 +47,18 @@ class BDFAttributes(object):
         self._nastran_format = 'msc'
         self.is_nx = False
         self.is_msc = True
+        self.is_zona = False
 
     def set_as_nx(self):
         self._nastran_format = 'nx'
         self.is_nx = True
         self.is_msc = False
+
+    def set_as_zona(self):
+        self._nastran_format = 'zona'
+        self.is_nx = False
+        self.is_msc = False
+        self.is_zona = True
 
     def object_attributes(self, mode='public', keys_to_skip=None):
         # type: (str, Optional[List[str]]) -> List[str]

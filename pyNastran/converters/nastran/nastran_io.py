@@ -62,6 +62,7 @@ from vtk import (vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
 
 #from pyNastran import is_release
 from pyNastran.utils import integer_types
+from pyNastran.utils.log import properties as log_properties
 from pyNastran.utils.numpy_utils import isfinite_and_nonzero, isfinite_and_greater_than, isfinite
 from pyNastran.bdf.bdf import (BDF,
                                CAERO1, CAERO2, CAERO3, CAERO4, CAERO5, CAERO7, BODY7,
@@ -449,24 +450,27 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         # t=.578
         #print("get_displacement_index_xyz_cp_cd")
-        out = model.get_displacement_index_xyz_cp_cd(
-            fdtype=fdtype, idtype='int32')
-        icd_transform, icp_transform, xyz_cp, nid_cp_cd = out
-        self.i_transform = icd_transform
+        xyz_cid0 = None
+        nid_cp_cd = None
+        if self.gui.nnodes > 0:
+            out = model.get_displacement_index_xyz_cp_cd(
+                fdtype=fdtype, idtype='int32')
+            icd_transform, icp_transform, xyz_cp, nid_cp_cd = out
+            self.i_transform = icd_transform
 
-        #print("transform_xyzcp_to_xyz_cid")
-        #model.nodes.cp = nid_cp_cd[:, 1]
-        xyz_cid0 = model.transform_xyzcp_to_xyz_cid(
-            xyz_cp, nid_cp_cd[:, 0], icp_transform, cid=cid,
-            in_place=False)
-        model.nodes.xyz_cid0 = xyz_cid0
-        model.nodes.nids = nid_cp_cd[:, 0]
+            #print("transform_xyzcp_to_xyz_cid")
+            #model.nodes.cp = nid_cp_cd[:, 1]
+            xyz_cid0 = model.transform_xyzcp_to_xyz_cid(
+                xyz_cp, nid_cp_cd[:, 0], icp_transform, cid=cid,
+                in_place=False)
+            model.nodes.xyz_cid0 = xyz_cid0
+            model.nodes.nids = nid_cp_cd[:, 0]
 
-        nid_map = self.gui.nid_map
-        for i, nid in enumerate(nid_cp_cd[:, 0]):
-            nid_map[nid] = i
+            nid_map = self.gui.nid_map
+            for i, nid in enumerate(nid_cp_cd[:, 0]):
+                nid_map[nid] = i
 
-        self._add_nastran_spoints_to_grid(model)
+            self._add_nastran_spoints_to_grid(model)
         #print('dt_nastran_xyz =', time.time() - time0)
         return xyz_cid0, nid_cp_cd
 
@@ -589,7 +593,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #if model.epoints:
             #epoints = sorted([epoint.nid for epoint in itervalues(model.epoints)])
 
-        if nnodes + nspoints + nepoints == 0:
+        if nnodes + nspoints + nepoints == 0 and len(model.caeros) == 0:
             msg = 'nnodes + nspoints + nepoints = 0\n'
             msg += 'card_count = %r' % str(model.card_count)
             raise NoGeometry(msg)
@@ -650,8 +654,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #-----------------------------------------------------------------------
         # nodes/coords
         #print('get_xyz_in_coord')
+        dim_max = 1.0
         xyz_cid0, nid_cp_cd = self.get_xyz_in_coord_vectorized(model, cid=0, fdtype='float32')
-        dim_max = self._points_to_vtkpoints_coords(model, xyz_cid0)
+        if xyz_cid0 is not None:
+            dim_max = self._points_to_vtkpoints_coords(model, xyz_cid0)
         #-----------------------------------------------------------------------
 
         #------------------------------------------------------------
@@ -668,77 +674,63 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         subcase_id = 0
 
-
-        icase = 0
-        all_nids = nid_cp_cd[:, 0]
-        self.gui.node_ids = all_nids
-
         colormap = self.gui.settings.colormap
-        nid_res = GuiResult(subcase_id, 'NodeID', 'NodeID', 'node', all_nids,
-                            mask_value=0,
-                            nlabels=None,
-                            labelsize=None,
-                            ncolors=None,
-                            colormap=colormap,
-                            data_format=None,
-                            uname='GuiResult')
-        cases[icase] = (nid_res, (0, 'Node ID'))
-        form0.append(('Node ID', icase, []))
-        icase += 1
+        if self.gui.nnodes > 0:
+            icase = 0
+            all_nids = nid_cp_cd[:, 0]
+            self.gui.node_ids = all_nids
 
-        nid_res = GuiResult(subcase_id, 'iNode', 'iNode', 'node',
-                            np.arange(len(all_nids), dtype='int32'),
-                            mask_value=0,
-                            nlabels=None,
-                            labelsize=None,
-                            ncolors=None,
-                            colormap=colormap,
-                            data_format=None,
-                            uname='GuiResult')
-        cases[icase] = (nid_res, (0, 'Node ID'))
-        form0.append(('iNode', icase, []))
-        icase += 1
-
-        # this intentionally makes a deepcopy
-        cds = np.array(nid_cp_cd[:, 2])
-        if cds.max() > 0:
-            cd_res = GuiResult(0, header='NodeCd', title='NodeCd',
-                               location='node', scalar=cds, colormap=colormap)
-            cases[icase] = (cd_res, (0, 'NodeCd'))
-            form0.append(('NodeCd', icase, []))
+            nid_res = GuiResult(subcase_id, 'NodeID', 'NodeID', 'node', all_nids,
+                                mask_value=0,
+                                nlabels=None,
+                                labelsize=None,
+                                ncolors=None,
+                                colormap=colormap,
+                                data_format=None,
+                                uname='GuiResult')
+            cases[icase] = (nid_res, (0, 'Node ID'))
+            form0.append(('Node ID', icase, []))
             icase += 1
 
-        eids_array = results['eid']
-        eid_res = GuiResult(subcase_id, 'ElementID', 'ElementID', 'centroid', eids_array,
-                            mask_value=0,
-                            nlabels=None,
-                            labelsize=None,
-                            ncolors=None,
-                            colormap=colormap,
-                            data_format=None,
-                            uname='GuiResult')
-        cases[icase] = (eid_res, (0, 'ElementID'))
-        form0.append(('ElementID', icase, []))
-        icase += 1
+            nid_res = GuiResult(subcase_id, 'iNode', 'iNode', 'node',
+                                np.arange(len(all_nids), dtype='int32'),
+                                mask_value=0,
+                                nlabels=None,
+                                labelsize=None,
+                                ncolors=None,
+                                colormap=colormap,
+                                data_format=None,
+                                uname='GuiResult')
+            cases[icase] = (nid_res, (0, 'Node ID'))
+            form0.append(('iNode', icase, []))
+            icase += 1
 
-        eids_array = results['eid']
-        eid_res = GuiResult(subcase_id, 'iElement', 'iElement', 'centroid',
-                            np.arange(len(eids_array), dtype='int32'),
-                            mask_value=-1,
-                            nlabels=None,
-                            labelsize=None,
-                            ncolors=None,
-                            colormap=colormap,
-                            data_format=None,
-                            uname='GuiResult')
-        cases[icase] = (eid_res, (0, 'iElement'))
-        form0.append(('iElement', icase, []))
-        icase += 1
+            # this intentionally makes a deepcopy
+            cds = np.array(nid_cp_cd[:, 2])
+            if cds.max() > 0:
+                cd_res = GuiResult(0, header='NodeCd', title='NodeCd',
+                                   location='node', scalar=cds, colormap=colormap)
+                cases[icase] = (cd_res, (0, 'NodeCd'))
+                form0.append(('NodeCd', icase, []))
+                icase += 1
 
-        #is_element_dim = True
-        dim_array = results['dim']
-        if len(np.unique(dim_array)) > 1:
-            dim_res = GuiResult(subcase_id, 'ElementDim', 'ElementDim', 'centroid', dim_array,
+        if self.gui.nelements > 0:
+            eids_array = results['eid']
+            eid_res = GuiResult(subcase_id, 'ElementID', 'ElementID', 'centroid', eids_array,
+                                mask_value=0,
+                                nlabels=None,
+                                labelsize=None,
+                                ncolors=None,
+                                colormap=colormap,
+                                data_format=None,
+                                uname='GuiResult')
+            cases[icase] = (eid_res, (0, 'ElementID'))
+            form0.append(('ElementID', icase, []))
+            icase += 1
+
+            eids_array = results['eid']
+            eid_res = GuiResult(subcase_id, 'iElement', 'iElement', 'centroid',
+                                np.arange(len(eids_array), dtype='int32'),
                                 mask_value=-1,
                                 nlabels=None,
                                 labelsize=None,
@@ -746,110 +738,125 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                                 colormap=colormap,
                                 data_format=None,
                                 uname='GuiResult')
-            cases[icase] = (dim_res, (0, 'ElementDim'))
-            form0.append(('ElementDim', icase, []))
+            cases[icase] = (eid_res, (0, 'iElement'))
+            form0.append(('iElement', icase, []))
             icase += 1
 
-        nnodes_array = results['nnodes']
-        if nnodes_array.max() > -1:
-            nnodes_res = GuiResult(subcase_id, 'NNodes/Elem', 'NNodes/Elem',
-                                   'centroid', nnodes_array,
-                                   mask_value=0,
-                                   nlabels=None,
-                                   labelsize=None,
-                                   ncolors=None,
-                                   colormap=colormap,
-                                   data_format=None,
-                                   uname='GuiResult')
-            cases[icase] = (nnodes_res, (0, 'NNodes/Elem'))
-            form0.append(('NNodes/Elem', icase, []))
+            #is_element_dim = True
+            dim_array = results['dim']
+            if len(np.unique(dim_array)) > 1:
+                dim_res = GuiResult(subcase_id, 'ElementDim', 'ElementDim', 'centroid', dim_array,
+                                    mask_value=-1,
+                                    nlabels=None,
+                                    labelsize=None,
+                                    ncolors=None,
+                                    colormap=colormap,
+                                    data_format=None,
+                                    uname='GuiResult')
+                cases[icase] = (dim_res, (0, 'ElementDim'))
+                form0.append(('ElementDim', icase, []))
+                icase += 1
+
+            nnodes_array = results['nnodes']
+            if nnodes_array.max() > -1:
+                nnodes_res = GuiResult(subcase_id, 'NNodes/Elem', 'NNodes/Elem',
+                                       'centroid', nnodes_array,
+                                       mask_value=0,
+                                       nlabels=None,
+                                       labelsize=None,
+                                       ncolors=None,
+                                       colormap=colormap,
+                                       data_format=None,
+                                       uname='GuiResult')
+                cases[icase] = (nnodes_res, (0, 'NNodes/Elem'))
+                form0.append(('NNodes/Elem', icase, []))
+                icase += 1
+
+            pids_array = results['pid']
+            pid_res = GuiResult(0, header='PropertyID', title='PropertyID',
+                                location='centroid', scalar=pids_array, mask_value=0)
+            cases[icase] = (pid_res, (0, 'PropertyID'))
+            form0.append(('PropertyID', icase, []))
             icase += 1
 
-        pids_array = results['pid']
-        pid_res = GuiResult(0, header='PropertyID', title='PropertyID',
-                            location='centroid', scalar=pids_array, mask_value=0)
-        cases[icase] = (pid_res, (0, 'PropertyID'))
-        form0.append(('PropertyID', icase, []))
-        icase += 1
-
-        #upids = np.unique(pids_array)
-        unused_mid_eids_skip = []
+            #upids = np.unique(pids_array)
+            unused_mid_eids_skip = []
 
 
-        pcomp_nplies = 0
-        nplies = 1
-        is_pshell = False
-        is_pcomp = False
-        if 'PSHELL' in model.card_count:
-            nplies = 4
-            is_pshell = True
-        for pid in model.get_card_ids_by_card_types(['PCOMP', 'PCOMPG'], combine=True):
-            prop = model.properties[pid]
-            pcomp_nplies = max(pcomp_nplies, prop.nplies)
-            is_pcomp = True
-        is_pshell_pcomp = (is_pshell, is_pcomp)
-        nplies = max(nplies, pcomp_nplies + 1)
-        mids = np.zeros((nelements, nplies), dtype='int32')
-        thickness = np.full((nelements, nplies), np.nan, dtype='float32')
-        #rho = np.full((nelements, nplies), np.nan, dtype='float32')
-        nplies = np.zeros(nelements, dtype='int32')
+            pcomp_nplies = 0
+            nplies = 1
+            is_pshell = False
+            is_pcomp = False
+            if 'PSHELL' in model.card_count:
+                nplies = 4
+                is_pshell = True
+            for pid in model.get_card_ids_by_card_types(['PCOMP', 'PCOMPG'], combine=True):
+                prop = model.properties[pid]
+                pcomp_nplies = max(pcomp_nplies, prop.nplies)
+                is_pcomp = True
+            is_pshell_pcomp = (is_pshell, is_pcomp)
+            nplies = max(nplies, pcomp_nplies + 1)
+            mids = np.zeros((nelements, nplies), dtype='int32')
+            thickness = np.full((nelements, nplies), np.nan, dtype='float32')
+            #rho = np.full((nelements, nplies), np.nan, dtype='float32')
+            nplies = np.zeros(nelements, dtype='int32')
 
-        # materials
-        upids = np.unique(pids_array)
-        ipids = np.zeros(len(pids_array), dtype='int32')
-        iupid = 0
-        for upid in upids: # upid_old
-            if upid == 0:
-                # elements w/o properties
-                continue
+            # materials
+            upids = np.unique(pids_array)
+            ipids = np.zeros(len(pids_array), dtype='int32')
+            iupid = 0
+            for upid in upids: # upid_old
+                if upid == 0:
+                    # elements w/o properties
+                    continue
 
-            ipid = np.where(pids_array == upid)[0]
-            ipids[ipid] = iupid
-            if len(ipid):
-                try:
-                    prop = model.properties[upid]
-                except KeyError:
-                    raise KeyError('pid=%r properties=%s' % (upid, str(model.properties)))
-                if prop.type == 'PSHELL':
-                    nplies[ipid] = 4
-                    thickness[ipid, 0] = prop.Thickness()
-                elif prop.type in ['PCOMP', 'PCOMPG']:
-                    nplies[ipid] = prop.nplies
-                    for iply in range(prop.nplies):
-                        mids[ipid, iply+1] = prop.Mid(iply)
-                        thickness[ipid, iply+1] = prop.Thickness(iply)
-                #else:
-                    #self.log.error('nplies\n%s' % str(prop))
-                iupid += 1
+                ipid = np.where(pids_array == upid)[0]
+                ipids[ipid] = iupid
+                if len(ipid):
+                    try:
+                        prop = model.properties[upid]
+                    except KeyError:
+                        raise KeyError('pid=%r properties=%s' % (upid, str(model.properties)))
+                    if prop.type == 'PSHELL':
+                        nplies[ipid] = 4
+                        thickness[ipid, 0] = prop.Thickness()
+                    elif prop.type in ['PCOMP', 'PCOMPG']:
+                        nplies[ipid] = prop.nplies
+                        for iply in range(prop.nplies):
+                            mids[ipid, iply+1] = prop.Mid(iply)
+                            thickness[ipid, iply+1] = prop.Thickness(iply)
+                    #else:
+                        #self.log.error('nplies\n%s' % str(prop))
+                    iupid += 1
 
-        if len(model.conrod):
-            #mids[ieid, 0] = 42
-            pass
+            if len(model.conrod):
+                #mids[ieid, 0] = 42
+                pass
 
-        pid_res = GuiResult(0, header='iProperty', title='iProperty',
-                            location='centroid', scalar=ipids, colormap=colormap)
-        cases[icase] = (pid_res, (0, 'iProperty'))
-        form0.append(('iProperty', icase, []))
-        icase += 1
+            pid_res = GuiResult(0, header='iProperty', title='iProperty',
+                                location='centroid', scalar=ipids, colormap=colormap)
+            cases[icase] = (pid_res, (0, 'iProperty'))
+            form0.append(('iProperty', icase, []))
+            icase += 1
 
-        #if nplies.max() > 0:
-            #nplies_res = GuiResult(0, header='Number of Plies', title='nPlies',
-                                   #location='centroid', scalar=nplies, mask_value=0)
-            #cases[icase] = (nplies_res, (0, 'Number of Plies'))
-            #form0.append(('Number of Plies', icase, []))
-            #icase += 1
+            #if nplies.max() > 0:
+                #nplies_res = GuiResult(0, header='Number of Plies', title='nPlies',
+                                       #location='centroid', scalar=nplies, mask_value=0)
+                #cases[icase] = (nplies_res, (0, 'Number of Plies'))
+                #form0.append(('Number of Plies', icase, []))
+                #icase += 1
 
-        pshell = {
-            'mids' : mids,
-            'thickness' : nplies,
-        }
-        pcomp = {
-            'mids' : mids,
-            'thickness' : nplies,
-            'nplies' : nplies,
-        }
-        icase = self._build_materials(model, pshell, pcomp, is_pshell_pcomp,
-                                      cases, form0, icase)
+            pshell = {
+                'mids' : mids,
+                'thickness' : nplies,
+            }
+            pcomp = {
+                'mids' : mids,
+                'thickness' : nplies,
+                'nplies' : nplies,
+            }
+            icase = self._build_materials(model, pshell, pcomp, is_pshell_pcomp,
+                                          cases, form0, icase)
 
         #------------------------------------------------------------
         # add alternate actors
@@ -863,11 +870,12 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 self.gui.geometry_actors[grid_name].Modified()
 
         #self.gui.grid_mapper.SetResolveCoincidentTopologyToPolygonOffset()
-        if plot:
-            #self.log.info(cases.keys())
-            self.gui._finish_results_io2([form], cases, reset_labels=reset_labels)
-        else:
-            self.gui._set_results([form], cases)
+        if 0:
+            if plot:
+                #self.log.info(cases.keys())
+                self.gui._finish_results_io2([form], cases, reset_labels=reset_labels)
+            else:
+                self.gui._set_results([form], cases)
 
 
     def _map_elements_vectorized(self, nid_map, model, j, dim_max,
@@ -928,6 +936,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #area_ratio = np.zeros(nelements, 'float32')
         #taper_ratio = np.zeros(nelements, 'float32')
         #min_edge_length = np.zeros(nelements, 'float32')
+        if nelements == 0:
+            return None
 
         if len(model.ctria3):
             model.ctria3.quality()
@@ -1614,7 +1624,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #if model.epoints:
             #epoints = sorted([epoint.nid for epoint in itervalues(model.epoints)])
 
-        if nnodes + nspoints + nepoints == 0:
+        if nnodes + nspoints + nepoints and len(model.caeros) == 0:
             msg = 'nnodes + nspoints + nepoints = 0\n'
             msg += 'card_count = %r' % str(model.card_count)
             raise NoGeometry(msg)
@@ -1712,8 +1722,12 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         # nodes/coords
 
         #print('get_xyz_in_coord')
-        xyz_cid0, nid_cp_cd = self.get_xyz_in_coord(model, cid=0, fdtype='float32')
-        dim_max = self._points_to_vtkpoints_coords(model, xyz_cid0)
+        dim_max = 1.0
+        xyz_cid0 = None
+        nid_cp_cd = None
+        if self.gui.nnodes:
+            xyz_cid0, nid_cp_cd = self.get_xyz_in_coord(model, cid=0, fdtype='float32')
+            dim_max = self._points_to_vtkpoints_coords(model, xyz_cid0)
         #-----------------------------------------------------------------------
 
         j = 0
@@ -1900,6 +1914,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         caero_points : ???
             ???
         """
+        stored_msg = []
         if model.splines:
             # 0 - caero / caero_subpanel
             # 1 - control surface
@@ -1910,6 +1925,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 setg_ref = spline.setg_ref
                 if setg_ref is None:
                     msg = 'error cross referencing SPLINE:\n%s' % spline.rstrip()
+                    #n, filename = log_properties(1)
+                    #print(filename, n)
+                    #stored_msg.append(msg)
                     self.log.error(msg)
                     #raise RuntimeError(msg)
                     continue
@@ -1933,8 +1951,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     grid_name, color=BLUE, opacity=1.0, point_size=5,
                     representation='point', is_visible=False)
                 msg = ', which is required by %r' % grid_name
-                self._add_nastran_nodes_to_grid(grid_name, structure_points, model, msg)
-
+                stored_msgi = self._add_nastran_nodes_to_grid(
+                    grid_name, structure_points, model, msg, store_msg=True)
 
                 zfighting_offset = 0.0001 * (iaero + 2)
                 grid_name = 'spline_%s_boxes' % spline_id
@@ -1942,11 +1960,17 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     grid_name, color=BLUE, opacity=0.3,
                     line_width=4,
                     representation='toggle', is_visible=False)
-                self.set_caero_control_surface_grid(
+                stored_msgi2 = self.set_caero_control_surface_grid(
                     grid_name, aero_box_ids,
                     box_id_to_caero_element_map, caero_points,
-                    zfighting_offset=zfighting_offset)
+                    zfighting_offset=zfighting_offset, store_msg=True)
                 iaero += 2
+                if stored_msgi:
+                    stored_msg.append(stored_msgi)
+                if stored_msgi2:
+                    stored_msg.append(stored_msgi2)
+        if stored_msg:
+            model.log.warning('\n' + '\n'.join(stored_msg))
 
     def make_caeros(self, model):
         """
@@ -2252,7 +2276,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
     def set_caero_control_surface_grid(self, name, cs_box_ids,
                                        box_id_to_caero_element_map,
                                        caero_points, note=None,
-                                       zfighting_offset=0.001):
+                                       zfighting_offset=0.001, store_msg=False):
         """
         Creates a single CAERO control surface?
 
@@ -2284,8 +2308,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             ???
         """
         j = 0
-        boxes_to_show = check_for_missing_control_surface_boxes(
-            name, cs_box_ids, box_id_to_caero_element_map, self.gui.log)
+        boxes_to_show, stored_msg = check_for_missing_control_surface_boxes(
+            name, cs_box_ids, box_id_to_caero_element_map, self.gui.log,
+            store_msg=store_msg)
         #if not boxes_to_show:
             #print('*%s' % name)
             #print('*%s' % boxes_to_show)
@@ -2342,7 +2367,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
             if points_name in self.gui.geometry_properties:
                 del self.gui.geometry_properties[points_name]
-            return
+            return stored_msg
         # combine all the points
         all_points_array = np.vstack(all_points)
 
@@ -2364,6 +2389,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             self.gui.create_annotation(text, slot, x, y, z)
 
         self.gui.alt_grids[name].SetPoints(points)
+        return stored_msg
 
     def _set_conm_grid(self, nconm2, model):
         """
@@ -2712,12 +2738,14 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         mpc_names = [depname, indname, linename]
         return mpc_names
 
-    def _add_nastran_nodes_to_grid(self, name, node_ids, model, msg):
+    def _add_nastran_nodes_to_grid(self, name, node_ids, model, msg, store_msg=False):
         """used to create MPC independent/dependent nodes"""
         nnodes = len(node_ids)
+        stored_msg = []
         if nnodes == 0:
-            model.log.warning('0 nodes added for %r' % name)
-            return
+            msg = '0 nodes added for %r' % name
+            out_msg = store_warning(model.log, store_msg, msg)
+            return out_msg
         self.gui.follower_nodes[name] = node_ids
 
         #numpy_to_vtk_points(nodes)
@@ -2758,10 +2786,15 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
             alt_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             j += 1
-        if missing_nodes:
-            model.log.warning('nids=[%s] do not exist%s' % (', '.join(missing_nodes), msg))
 
+        out_msg = ''
+        if missing_nodes:
+            stored_msg = 'nids=[%s] do not exist%s' % (', '.join(missing_nodes), msg)
         alt_grid.SetPoints(points)
+
+        if stored_msg:
+            out_msg = store_warning(model.log, store_msg, stored_msg)
+        return out_msg
 
     def _add_nastran_spoints_to_grid(self, model):
         """used to create SPOINTs"""
@@ -3821,7 +3854,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #new_cases = True
         # set to True to enable node_ids as an result
         nids_set = True
-        if nids_set:
+        if nids_set and self.gui.nnodes > 0:
             # this intentionally makes a deepcopy
             nids = np.array(nid_cp_cd[:, 0])
             cds = np.array(nid_cp_cd[:, 2])
@@ -3880,7 +3913,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 #print(e)
 
         #print('nelements=%s eid_map=%s' % (nelements, self.eid_map))
-        self.gui.set_glyph_scale_factor(np.nanmean(min_edge_length) * 2.5)  # was 1.5
+        if nelements and isfinite(min_edge_length):
+            glyph_scale = np.nanmean(min_edge_length) * 2.5
+            self.gui.set_glyph_scale_factor(glyph_scale)  # was 1.5
+
         if self.make_offset_normals_dim and nelements:
             icase, normals = self._build_normals_quality(
                 model, nelements, cases, form0, icase,
@@ -4008,6 +4044,29 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
           split in the other direction.
         """
         assert nid_map is not None
+        if xyz_cid0 is None:
+            nid_to_pid_map = None
+            pids = None
+            nelements = None
+            material_coord = None
+            area = None
+            min_interior_angle = None
+            max_interior_angle = None
+            max_aspect_ratio = None
+            max_skew_angle = None
+            taper_ratio = None
+            dideal_theta = None
+            area_ratio = None
+            min_edge_length = None
+            max_warp_angle = None
+            out = (
+                nid_to_pid_map, xyz_cid0, pids, nelements, material_coord,
+                area, min_interior_angle, max_interior_angle, max_aspect_ratio,
+                max_skew_angle, taper_ratio, dideal_theta,
+                area_ratio, min_edge_length, max_warp_angle,
+            )
+            return out
+
         xyz_cid0 = self.xyz_cid0
         nids = nid_cp_cd[:, 0]
         #sphere_size = self._get_sphere_size(dim_max)
@@ -6195,7 +6254,7 @@ def _get_nastran_gui_layer_word(i, ilayer, is_pshell_pcomp):
 
 def check_for_missing_control_surface_boxes(name, cs_box_ids,
                                             box_id_to_caero_element_map,
-                                            log):
+                                            log, store_msg=False):
     """helper method for creating control surface"""
     boxes_to_show = []
     missing_boxes = []
@@ -6207,11 +6266,31 @@ def check_for_missing_control_surface_boxes(name, cs_box_ids,
             continue
         boxes_to_show.append(box_id)
 
+    out_msg = ''
     if missing_boxes:
         #print('\nboxes_to_show =', boxes_to_show)
         msg = 'Missing CAERO AELIST/SPLINE control surface %r boxes: %s\n' % (
             name, str(missing_boxes))
         if not boxes_to_show:
             msg += 'boxes_to_show=%s\n' % boxes_to_show
-        log.error(msg.rstrip())
-    return boxes_to_show
+
+        out_msg = store_error(log, store_msg, msg.rstrip())
+    return boxes_to_show, out_msg
+
+def store_error(log, store_msg, msg):
+    out_msg = ''
+    if store_msg:
+        n, filename = log_properties(nframe=2)
+        out_msg = 'ERROR: %s:%s %s\n' % (filename, n, msg)
+    else:
+        log.warning(msg)
+    return out_msg
+
+def store_warning(log, store_msg, msg):
+    out_msg = ''
+    if store_msg:
+        n, filename = log_properties(nframe=2)
+        out_msg = 'WARNING: %s:%s %s\n' % (filename, n, msg)
+    else:
+        log.warning(msg)
+    return out_msg

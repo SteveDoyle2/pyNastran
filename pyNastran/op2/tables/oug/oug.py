@@ -288,6 +288,7 @@ class OUG(OP2Common):
 
         self.fix_format_code()
         if self.num_wide == 8:
+            #self.sort_bits[0] = 0 # real
             self.format_code = 1
             self.data_code['format_code'] = 1
         else:

@@ -1184,6 +1184,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OESATO2' : [self._read_oes2_3, self._read_oes2_4],
             b'OESCRM2' : [self._read_oes2_3, self._read_oes2_4],
             b'OESPSD2' : [self._read_oes2_3, self._read_oes2_4],
+            #b'OESRMS2' : [self._read_oes1_3, self._read_oes1_4],  # buggy on isat random
+            #b'OESNO2'  : [self._read_oes1_3, self._read_oes1_4],  # buggy on isat random
             b'OESRMS2' : [self._table_passer, self._table_passer],  # buggy on isat random
             b'OESNO2'  : [self._table_passer, self._table_passer],  # buggy on isat random
 

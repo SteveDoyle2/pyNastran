@@ -1190,7 +1190,7 @@ class CAERO1(BaseCard):
     type = 'CAERO1'
     _field_map = {
         1: 'sid', 2:'pid', 3:'cp', 4:'nspan', 5:'nchord',
-        6:'lspan', 7:'lchord', 8:'igid', 12:'x12', 16:'x43',
+        6:'lspan', 7:'lchord', 8:'igroup', 12:'x12', 16:'x43',
     }
     def _get_field_helper(self, n):
         """
@@ -1717,6 +1717,11 @@ class CAERO1(BaseCard):
         raise IndexError(msg)
 
     @property
+    def npanels(self):
+        nchord, nspan = self.shape
+        return nchord * nspan
+
+    @property
     def shape(self):
         """returns (nelements_nchord, nelements_span)"""
         if self.nchord == 0:
@@ -1890,7 +1895,7 @@ class CAERO2(BaseCard):
     type = 'CAERO2'
     _field_map = {
         1: 'sid', 2:'pid', 3:'cp', 4:'nsb', 5:'lsb',
-        6:'nint', 7:'lint', 8:'igid', 12:'x12',
+        6:'nint', 7:'lint', 8:'igroup', 12:'x12',
     }
     def _get_field_helper(self, n):
         """
@@ -1937,7 +1942,7 @@ class CAERO2(BaseCard):
         else:
             raise KeyError('Field %r=%r is an invalid CAERO2 entry.' % (n, value))
 
-    def __init__(self, eid, pid, igid, p1, x12,
+    def __init__(self, eid, pid, igroup, p1, x12,
                  cp=0, nsb=0, nint=0, lsb=0, lint=0, comment=''):
         """
         Defines a CAERO2 card, which defines a slender body
@@ -1950,7 +1955,7 @@ class CAERO2(BaseCard):
         pid : int, PAERO2
             int : PAERO2 ID
             PAERO2 : PAERO2 object (xref)
-        igid : int
+        igroup : int
             Group number
         p1 : (1, 3) ndarray float
             xyz location of point 1 (forward position)
@@ -2015,7 +2020,7 @@ class CAERO2(BaseCard):
 
         #: Interference group identification. Aerodynamic elements with
         #: different IGIDs are uncoupled. (Integer >= 0)
-        self.igid = igid
+        self.igroup = igroup
 
         #: Location of point 1 in coordinate system CP
         self.p1 = p1
@@ -2344,7 +2349,7 @@ class CAERO2(BaseCard):
 
         """
         list_fields = (['CAERO2', self.eid, self.Pid(), self.Cp(), self.nsb,
-                        self.nint, self.Lsb(), self.Lint(), self.igid, ] + list(self.p1)
+                        self.nint, self.Lsb(), self.Lint(), self.igroup, ] + list(self.p1)
                        + [self.x12])
         return list_fields
 
@@ -2363,7 +2368,7 @@ class CAERO2(BaseCard):
         lsb = set_blank_if_default(self.Lsb(), 0)
         lint = set_blank_if_default(self.Lint(), 0)
         list_fields = (['CAERO2', self.eid, self.Pid(), cp, self.nsb, nint,
-                        lsb, lint, self.igid, ] + list(self.p1) +
+                        lsb, lint, self.igroup, ] + list(self.p1) +
                        [self.x12])
         return list_fields
 
@@ -4015,7 +4020,6 @@ class PAERO2(BaseCard):
             self.lrib = None
         self.lrsb_ref = None
         self.lrib_ref = None
-
 
     def validate(self):
         assert self.orient in ['Z', 'Y', 'ZY'], 'PAERO2: orient=%r' % self.orient

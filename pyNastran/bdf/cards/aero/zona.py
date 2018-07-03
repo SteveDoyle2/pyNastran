@@ -19,7 +19,8 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, string,
     string_or_blank, integer_or_string, double_or_string, blank,
 )
-from pyNastran.bdf.cards.aero.aero import Spline
+from pyNastran.bdf.cards.aero.aero import (Spline, CAERO1, CAERO2, PAERO1, PAERO2,
+                                           SPLINE1, SPLINE2, SPLINE3)
 from pyNastran.bdf.cards.aero.utils import elements_from_quad, points_elements_from_quad_points
 from pyNastran.bdf.cards.coordinate_systems import Coord
 
@@ -780,10 +781,18 @@ class BODY7(BaseCard):
     +--------+-----+-----+----+-----+------+-----+------+------+
     |        | X1  |  Y1 | Z1 | X12 |      |     |      |      |
     +--------+-----+-----+----+-----+------+-----+------+------+
-    BODY7 BID LABEL IPBODY7 ACOORD NSEG IDMESH1 IDMESH2 IDMESH3 CONT
-    CONT IDMESH4 -etc
-    BODY7 4 BODY 2 8 4 20 21 22 +BC
-    +BC 23
+
+    +-------+---------+-------+---------+--------+------+---------+---------+---------+
+    |   1   |    2    |   3   |     4   |    5   |   6  |     7   |    8    |    9    |
+    +=======+=========+=======+=========+========+======+=========+=========+=========+
+    | BODY7 |   BID   | LABEL | IPBODY7 | ACOORD | NSEG | IDMESH1 | IDMESH2 | IDMESH3 |
+    +-------+---------+-------+---------+--------+------+---------+---------+---------+
+    |       | IDMESH4 |  etc  |         |        |      |         |         |         |
+    +-------+---------+-------+---------+--------+------+---------+---------+---------+
+    | BODY7 |    4    |  BODY |    2    |    8   |   4  |    20   |    21   |    22   |
+    +-------+---------+-------+---------+--------+------+---------+---------+---------+
+    |       |    23   |       |         |        |      |         |         |         |
+    +-------+---------+-------+---------+--------+------+---------+---------+---------+
     """
     type = 'BODY7'
 
@@ -917,6 +926,48 @@ class BODY7(BaseCard):
         self.acoord = self.ACoord()
         self.pid_ref = None
         self.acoord_ref = None
+
+    def convert_to_nastran(self):
+        """
+        +--------+-----+-----+----+-----+------+-----+------+------+
+        |    1   |  2  |  3  |  4 |  5  |   6  |   7 |   8  |  9   |
+        +========+=====+=====+====+=====+======+=====+======+======+
+        | CAERO2 | EID | PID | CP | NSB | NINT | LSB | LINT | IGID |
+        +--------+-----+-----+----+-----+------+-----+------+------+
+        |        | X1  |  Y1 | Z1 | X12 |      |     |      |      |
+        +--------+-----+-----+----+-----+------+-----+------+------+
+
+        +-------+---------+-------+---------+--------+------+---------+---------+---------+
+        |   1   |    2    |   3   |     4   |    5   |   6  |     7   |    8    |    9    |
+        +=======+=========+=======+=========+========+======+=========+=========+=========+
+        | BODY7 |   BID   | LABEL | IPBODY7 | ACOORD | NSEG | IDMESH1 | IDMESH2 | IDMESH3 |
+        +-------+---------+-------+---------+--------+------+---------+---------+---------+
+        |       | IDMESH4 |  etc  |         |        |      |         |         |         |
+        +-------+---------+-------+---------+--------+------+---------+---------+---------+
+        | BODY7 |    4    |  BODY |    2    |    8   |   4  |    20   |    21   |    22   |
+        +-------+---------+-------+---------+--------+------+---------+---------+---------+
+        |       |    23   |       |         |        |      |         |         |         |
+        +-------+---------+-------+---------+--------+------+---------+---------+---------+
+        """
+        pid = 1
+        igroup = 1
+        p1 = [0., 0., 0.]
+        x12 = 10.
+        orient = 'YZ'
+        AR = 1
+        thi = 1
+        thn = 1
+        cp = 0
+        width = 1
+        caero2 = CAERO2(self.eid, pid, igroup, p1, x12,
+                        cp=cp, nsb=0, nint=0, lsb=0,
+                        lint=0, comment=self.comment)
+        paero2 = PAERO2(pid, orient, width, AR, thi, thn,
+                        lrsb=None, lrib=None,
+                        lth1=None, lth2=None, comment='')
+        caero2.validate()
+        paero2.validate()
+        return caero2, paero2
 
     def get_points(self):
         """creates a 1D representation of the CAERO2"""
@@ -1791,6 +1842,26 @@ class CAERO7(BaseCard):
         self.lspan_ref = None
         self.ascid_ref = None
 
+    def convert_to_nastran(self):
+        """
+        +--------+-----+-----+----+-------+--------+--------+--------+------+
+        |   1    |  2  |  3  | 4  |   5   |   6    |    7   |   8    |   9  |
+        +========+=====+=====+====+=======+========+========+========+======+
+        | CAERO1 | EID | PID | CP | NSPAN | NCHORD |  LSPAN | LCHORD | IGID |
+        +--------+-----+-----+----+-------+--------+--------+--------+------+
+        |        |  X1 | Y1  | Z1 |  X12  |   X4   |   Y4   |   Z4   | X43  |
+        +--------+-----+-----+----+-------+--------+--------+--------+------+
+        """
+        pid = 1
+        igroup = 1
+        caero = CAERO1(self.eid, pid, igroup, self.p1, self.x12,
+                       self.p4, self.x43, cp=self.cp,
+                       nspan=self.nspan, lspan=self.lspan,
+                       nchord=self.nchord, lchord=0,
+                       comment=self.comment)
+        caero.validate()
+        return caero
+
     @property
     def min_max_eid(self):
         """
@@ -2259,10 +2330,20 @@ class TRIM(BaseCard):
         #card = self.repr_fields()
         #return self.comment + print_card_8(card)
 
-class SPLINE1(Spline):
+class SPLINE1_ZONA(Spline):
     """
     Defines an infinite plate spline method for displacements and loads
     transferal between CAERO7 macroelement and structural grid points.
+
+    +---------+-------+-------+------+------+------+----+------+-------+
+    |    1    |   2   |    3  |   4  |   5  |   6  |  7 |   8  |   9   |
+    +=========+=======+=======+======+======+======+====+======+=======+
+    | SPLINE1 | EID   | CAERO | BOX1 | BOX2 | SETG | DZ | METH | USAGE |
+    +---------+-------+-------+------+------+------+----+------+-------+
+    |         | NELEM | MELEM |      |      |      |    |      |       |
+    +---------+-------+-------+------+------+------+----+------+-------+
+    | SPLINE1 |   3   |  111  | 115  | 122  |  14  | 0. |      |       |
+    +---------+-------+-------+------+------+------+----+------+-------+
 
     +---------+------+-------+-------+------+------+----+-----+-------+
     |    1    |  2   |   3   |   4   |  5   |   6  |  7 |  8  |   9   |
@@ -2324,8 +2405,8 @@ class SPLINE1(Spline):
         setg = integer(card, 5, 'setg')
         dz = blank(card, 6, 'dz')
         eps = double_or_blank(card, 6, 'eps', 0.01)
-        return SPLINE1(eid, setk, setg, model=model, cp=cp, dz=dz, eps=eps,
-                       comment=comment)
+        return SPLINE1_ZONA(eid, setk, setg, model=model, cp=cp, dz=dz, eps=eps,
+                            comment=comment)
 
     def cross_reference(self, model):
         msg = ', which is required by SPLINE1 eid=%s' % self.eid
@@ -2356,6 +2437,52 @@ class SPLINE1(Spline):
         self.setk_ref = None
         self.setg_ref = None
 
+    def convert_to_nastran(self, model):
+        """
+        +---------+-------+-------+------+------+------+----+------+-------+
+        |    1    |   2   |    3  |   4  |   5  |   6  |  7 |   8  |   9   |
+        +=========+=======+=======+======+======+======+====+======+=======+
+        | SPLINE1 | EID   | CAERO | BOX1 | BOX2 | SETG | DZ | METH | USAGE |
+        +---------+-------+-------+------+------+------+----+------+-------+
+        |         | NELEM | MELEM |      |      |      |    |      |       |
+        +---------+-------+-------+------+------+------+----+------+-------+
+        | SPLINE1 |   3   |  111  | 115  | 122  |  14  | 0. |      |       |
+        +---------+-------+-------+------+------+------+----+------+-------+
+
+        +---------+------+-------+-------+------+------+----+-----+-------+
+        |    1    |  2   |   3   |   4   |  5   |   6  |  7 |  8  |   9   |
+        +=========+======+=======+=======+======+======+====+=====+=======+
+        | SPLINE1 | EID  | MODEL |  CP   | SETK | SETG | DZ | EPS |       |
+        +---------+------+-------+-------+------+------+----+-----+-------+
+        | SPLINE1 | 100  |       |       |  1   |  10  | 0. |     |       |
+        +---------+------+-------+-------+------+------+----+-----+-------+
+        """
+        print('self.aero_element_ids =', self.aero_element_ids)
+        #setk = 100 # set_aero
+        #return SPLINE1(self.eid, setk, self.setg, model=None, cp=self.cp, dz=self.dz,
+                       #eps=0.01, comment=self.comment)
+        splines = []
+        if not hasattr(self, '_comment'):
+            self._comment = ''
+        comment = '-' * 72 + '\n' #+ self._comment
+        #self._comment = ''
+        comment += str(self)
+        for panel_groups in self.setk_ref.panel_groups:
+            print(panel_groups)
+            eid = model.zona.caero_to_name_map[panel_groups]
+            caero = model.caeros[eid]
+            print(caero)
+            caero_id = eid
+            box1 = caero.eid
+            box2 = box1 + caero.npanels - 1
+            spline = SPLINE1(eid, caero_id, box1, box2, self.setg, dz=self.dz,
+                           method='IPS', usage='BOTH',
+                           nelements=10, melements=10, comment=comment)
+            spline.validate()
+            splines.append(spline)
+            comment = ''
+        return splines
+
     def raw_fields(self):
         list_fields = ['SPLINE1', self.eid, self.model, self.cp, self.setk, self.setg,
                        self.dz, self.eps]
@@ -2365,7 +2492,7 @@ class SPLINE1(Spline):
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
-class SPLINE2(Spline):
+class SPLINE2_ZONA(Spline):
     """
     Defines an infinite plate spline method for displacements and loads
     transferal between CAERO7 macroelement and structural grid points.
@@ -2430,8 +2557,8 @@ class SPLINE2(Spline):
         eps = double_or_blank(card, 6, 'eps', 0.01)
         cp = integer_or_blank(card, 7, 'cp', 0)
         curvature = double_or_blank(card, 8, 'curvature', 1.0)
-        return SPLINE2(eid, setk, setg, model=model, cp=cp, dz=dz, eps=eps,
-                       curvature=curvature, comment=comment)
+        return SPLINE2_ZONA(eid, setk, setg, model=model, cp=cp, dz=dz, eps=eps,
+                            curvature=curvature, comment=comment)
 
     def cross_reference(self, model):
         msg = ', which is required by SPLINE1 eid=%s' % self.eid
@@ -2467,7 +2594,7 @@ class SPLINE2(Spline):
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
-class SPLINE3(Spline):
+class SPLINE3_ZONA(Spline):
     """
     Defines a 3-D spline for the BODY7 and CAERO7 macroelement.
 
@@ -2531,8 +2658,8 @@ class SPLINE3(Spline):
         setg = integer(card, 5, 'setg')
         dz = blank(card, 6, 'dz')
         eps = double_or_blank(card, 6, 'eps', 0.01)
-        return SPLINE3(eid, setk, setg, model=model, cp=cp, dz=dz, eps=eps,
-                       comment=comment)
+        return SPLINE3_ZONA(eid, setk, setg, model=model, cp=cp, dz=dz, eps=eps,
+                            comment=comment)
 
     def cross_reference(self, model):
         msg = ', which is required by SPLINE3 eid=%s' % self.eid
@@ -2558,6 +2685,9 @@ class SPLINE3(Spline):
     def uncross_reference(self):
         self.setk_ref = None
         self.setg_ref = None
+
+    def convert_to_nastran(self, model):
+        return []
 
     def raw_fields(self):
         """

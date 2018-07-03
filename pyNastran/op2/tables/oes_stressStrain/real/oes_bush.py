@@ -33,7 +33,8 @@ class RealBushArray(OES_Object):
 
     def _reset_indices(self):
         self.itotal = 0
-        self.ielement = 0
+        if self.table_name not in ['OESRMS2', 'OESNO2', 'OSTRRMS2', 'OSTRNO2']:
+            self.ielement = 0
 
     def _get_msgs(self):
         raise NotImplementedError('%s needs to implement _get_msgs' % self.__class__.__name__)
@@ -58,6 +59,11 @@ class RealBushArray(OES_Object):
             pass
         else:
             raise NotImplementedError(self.element_type)
+
+        # buggy MSC 2005 (was this ever fixed?)
+        # NX doesn't have this bug
+        if self.table_name in ['OESRMS2', 'OESNO2', 'OSTRRMS2', 'OSTRNO2']:
+            self.ntotal = self.nelements
 
         self.itime = 0
         self.ielement = 0
