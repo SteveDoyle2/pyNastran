@@ -430,16 +430,6 @@ class CHBDYG(ThermalElement):
         assert isinstance(eid, integer_types)
 
     @property
-    def Type(self):
-        self.deprecated('Type', 'surface_type', '1.1')
-        return self.surface_type
-
-    @Type.setter
-    def Type(self, surface_type):
-        self.deprecated('Type', 'surface_type', '1.1')
-        self.surface_type = surface_type
-
-    @property
     def node_ids(self):
         if self.nodes_ref is None:
             return self.nodes

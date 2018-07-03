@@ -292,30 +292,6 @@ class VIEW(BaseCard):
     #def cross_reference(self, model):
         #pass
 
-    @property
-    def nb(self):
-        """gets nbeta"""
-        self.deprecated('nb', 'nbeta', '1.1')
-        return self.nbeta
-
-    @nb.setter
-    def nb(self, nbeta):
-        """sets nbeta"""
-        self.deprecated('nb', 'nbeta', '1.1')
-        self.nbeta = nbeta
-
-    @property
-    def ng(self):
-        """gets ngamma"""
-        self.deprecated('ng', 'ngamma', '1.1')
-        return self.ngamma
-
-    @ng.setter
-    def ng(self, ngamma):
-        """sets ngamma"""
-        self.deprecated('ng', 'ngamma', '1.1')
-        self.ngamma = ngamma
-
     def raw_fields(self):
         list_fields = ['VIEW', self.iview, self.icavity, self.shade,
                        self.nbeta, self.ngamma, self.dislin]

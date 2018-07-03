@@ -101,13 +101,10 @@ from pyNastran.bdf.cards.material_deps import MATT1, MATT2, MATT3, MATT4, MATT5,
 from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
 from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs, POINT, SEQGP
 from pyNastran.bdf.cards.aero.zona import (
-    ACOORD, AEROZ, AESURFZ,
+    ACOORD, AEROZ, AESURFZ, MKAEROZ, TRIMVAR, TRIMLNK,
     CAERO7, PANLST3,
     BODY7, SEGMESH,
-    TRIM as TRIMZONA,
-    SPLINE1_ZONA,
-    SPLINE2_ZONA,
-    SPLINE3_ZONA,
+    TRIM_ZONA, SPLINE1_ZONA, SPLINE2_ZONA, SPLINE3_ZONA,
 )
 from pyNastran.bdf.cards.aero.aero import (
     AECOMP, AEFACT, AELINK, AELIST, AEPARM, AESURF, AESURFS,
@@ -3694,23 +3691,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             icd_transform[cid] = np.where(np.in1d(nids_all, nids))[0]
         return nids_all, nids_transform, icd_transform
 
-    #def get_displacement_index_transforms(self):
-        #"""
-        #Deprecated in v1.0
-        #Removed in v1.1
-
-        #Old
-        #---
-        #icd_transform, beta_transforms = model.get_displacement_index_transforms()
-
-        #New
-        #---
-        #nids_all, nids_transform, icd_transform = model.get_displacement_index()
-        #"""
-        #self.deprecated(
-            #'icd_transform, beta_transforms = model.get_displacement_index_transforms()',
-            #'nids_all, nids_transform, icd_transform = model.get_displacement_index()', '1.0')
-
     def _get_card_name(self, lines):
         # type: (List[str]) -> str
         """
@@ -3908,7 +3888,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 break
 
         if self.nastran_format == 'zona':
-            self._card_parser['TRIM'] = (TRIMZONA, self._add_trim_object)
+            self._card_parser['TRIM'] = (TRIM_ZONA, self._add_trim_object)
             self._card_parser['CAERO7'] = (CAERO7, self._add_caero_object)
             self._card_parser['AEROZ'] = (AEROZ, self._add_aeros_object)
             self._card_parser['AESURFZ'] = (AESURFZ, self._add_aesurf_object)
@@ -3916,16 +3896,16 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             self._card_parser['SPLINE2'] = (SPLINE2_ZONA, self._add_spline_object)
             self._card_parser['SPLINE3'] = (SPLINE3_ZONA, self._add_spline_object)
             self._card_parser['PANLST3'] = (PANLST3, self._add_panlst_object)
+            self._card_parser['MKAEROZ'] = (MKAEROZ, self._add_mkaeroz_object)
             self._card_parser['SEGMESH'] = (SEGMESH, self._add_paero_object)
             self._card_parser['BODY7'] = (BODY7, self._add_caero_object)
             self._card_parser['ACOORD'] = (ACOORD, self._add_coord_object)
-            self.cards_to_read.add('CAERO7')
-            self.cards_to_read.add('AEROZ')
-            self.cards_to_read.add('AESURFZ')
-            self.cards_to_read.add('PANLST3')
-            self.cards_to_read.add('SEGMESH')
-            self.cards_to_read.add('BODY7')
-            self.cards_to_read.add('ACOORD')
+            self._card_parser['TRIMVAR'] = (TRIMVAR, self._add_trimvar_object)
+            self._card_parser['TRIMLNK'] = (TRIMLNK, self._add_trimlnk_object)
+            cards = [
+                'CAERO7', 'AEROZ', 'AESURFZ', 'PANLST3', 'SEGMESH',
+                'BODY7', 'ACOORD', 'MKAEROZ', 'TRIMVAR', 'TRIMLNK']
+            self.cards_to_read.update(set(cards))
 
     def _verify_bdf(self, xref=None):
         """Cross reference verification method."""

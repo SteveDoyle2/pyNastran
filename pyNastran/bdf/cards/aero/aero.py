@@ -385,6 +385,12 @@ class AELINK(BaseCard):
                 len(self.independent_labels), len(self.Cis),
                 self.independent_labels, self.Cis, str(self))
             raise RuntimeError(msg)
+        if len(self.independent_labels) == 0:
+            msg = 'nlabels=%s nci=%s\nindependent_labels=%s Cis=%s\n%s' % (
+                len(self.independent_labels), len(self.Cis),
+                self.independent_labels, self.Cis, str(self))
+            raise RuntimeError(msg)
+
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1490,16 +1496,6 @@ class CAERO1(BaseCard):
                     self.eid, ichord, ispan, nchord)
                 raise OverflowError(msg)
             self._init_ids(dtype='int64')
-
-    @property
-    def igid(self):
-        self.deprecated('igid', 'igroup', '1.1')
-        return self.igroup
-
-    @igid.setter
-    def igid(self, igroup):
-        self.deprecated('igid', 'igroup', '1.1')
-        self.igroup = igroup
 
     def Cp(self):
         if self.cp_ref is not None:
@@ -4841,30 +4837,6 @@ class SPLINE2(Spline):
         self.cid_ref = None
         self.caero_ref = None
         self.setg_ref = None
-
-    @property
-    def id1(self):
-        """see box1"""
-        self.deprecated('id1', 'box1', '1.1')
-        return self.box1
-
-    @property
-    def id2(self):
-        """see box2"""
-        self.deprecated('id2', 'box2', '1.1')
-        return self.box2
-
-    @id1.setter
-    def id1(self, box1):
-        """see box1"""
-        self.deprecated('id1', 'box1', '1.1')
-        self.box1 = box1
-
-    @id2.setter
-    def id2(self, box2):
-        """see box2"""
-        self.deprecated('id2', 'box2', '1.1')
-        self.box2 = box2
 
     @property
     def aero_element_ids(self):

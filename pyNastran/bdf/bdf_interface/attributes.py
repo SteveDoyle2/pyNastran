@@ -17,10 +17,26 @@ class ZONA(object):
         self.caero_to_name_map = {}
         #: store PANLST1,PANLST2,PANLST3
         self.panlsts = {}
+        self.mkaeroz = {}
+        self.trimvar = {}
+        self.trimlnk = {}
+
+    def clear(self):
+        self.panlsts = {}
+        self.mkaeroz = {}
+        self.trimvar = {}
+        self.trimlnk = {}
 
     def cross_reference(self):
         if self.model.nastran_format != 'zona':
             return
+        for mkaeroz in itervalues(self.mkaeroz):
+            mkaeroz.cross_reference(self.model)
+        for trimvar in itervalues(self.trimvar):
+            trimvar.cross_reference(self.model)
+        for trimlnk in itervalues(self.trimlnk):
+            trimlnk.cross_reference(self.model)
+
         for caero in itervalues(self.model.caeros):
             self.caero_to_name_map[caero.label] = caero.eid
 
@@ -30,6 +46,21 @@ class ZONA(object):
     def write_bdf(self, bdf_file, size=8, is_double=False):
         for unused_id, panlst in iteritems(self.panlsts):
             bdf_file.write(panlst.write_card(size=size, is_double=is_double))
+
+        for unused_id, mkaeroz in iteritems(self.mkaeroz):
+            bdf_file.write(mkaeroz.write_card(size=size, is_double=is_double))
+
+        for unused_id, trimvar in iteritems(self.trimvar):
+            bdf_file.write(trimvar.write_card(size=size, is_double=is_double))
+
+        for unused_id, trimlnk in iteritems(self.trimlnk):
+            bdf_file.write(trimlnk.write_card(size=size, is_double=is_double))
+
+    def __repr__(self):
+        msg = '<ZONA>; nPANLSTs=%s nmkaeroz=%s' % (
+            len(self.panlsts), len(self.mkaeroz),
+        )
+        return msg
 
 class BDFAttributes(object):
     """defines attributes of the BDF"""

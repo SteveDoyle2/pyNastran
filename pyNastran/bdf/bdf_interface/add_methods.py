@@ -924,6 +924,33 @@ class AddMethods(BDFAttributes):
         self.zona.panlsts[key] = panlst
         self._type_to_id_map[panlst.type].append(key)
 
+    def _add_mkaeroz_object(self, mkaeroz):
+        # type: (Any) -> None
+        """adds an MKAEROZ object"""
+        assert mkaeroz.sid not in self.zona.mkaeroz
+        assert mkaeroz.sid > 0
+        key = mkaeroz.sid
+        self.zona.mkaeroz[key] = mkaeroz
+        self._type_to_id_map[mkaeroz.type].append(key)
+
+    def _add_trimvar_object(self, trimvar):
+        # type: (Any) -> None
+        """adds an TRIMVAR object"""
+        assert trimvar.var_id not in self.zona.trimvar
+        assert trimvar.var_id > 0
+        key = trimvar.var_id
+        self.zona.trimvar[key] = trimvar
+        self._type_to_id_map[trimvar.type].append(key)
+
+    def _add_trimlnk_object(self, trimlnk):
+        # type: (Any) -> None
+        """adds an TRIMLNK object"""
+        assert trimlnk.link_id not in self.zona.trimlnk
+        assert trimlnk.link_id > 0
+        key = trimlnk.link_id
+        self.zona.trimlnk[key] = trimlnk
+        self._type_to_id_map[trimlnk.type].append(key)
+
     def _add_gust_object(self, gust):
         # type: (Any) -> None
         """adds an GUST object"""

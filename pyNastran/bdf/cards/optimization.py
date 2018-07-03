@@ -3340,16 +3340,6 @@ class DVMREL1(DVXREL1):
         return super(DVMREL1, self).object_attributes(
             mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
-    @property
-    def Type(self):
-        self.deprecated('Type', 'mat_type', '1.1')
-        return self.mat_type
-
-    @Type.setter
-    def Type(self, mat_type):
-        self.deprecated('Type', 'mat_type', '1.1')
-        self.mat_type = mat_type
-
     def update_model(self, model, desvar_values):
         """doesn't require cross-referencing"""
         value = get_dvxrel1_coeffs(self, model, desvar_values)
@@ -3648,16 +3638,6 @@ class DVMREL2(DVXREL2):
         my_keys_to_skip = ['Type']
         return super(DVMREL2, self).object_attributes(
             mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
-
-    @property
-    def Type(self):
-        self.deprecated('Type', 'mat_type', '1.1')
-        return self.mat_type
-
-    @Type.setter
-    def Type(self, mat_type):
-        self.deprecated('Type', 'mat_type', '1.1')
-        self.mat_type = mat_type
 
     def DEquation(self):
         if self.dequation_ref is None:

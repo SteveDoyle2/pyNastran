@@ -63,18 +63,6 @@ class CompositeShellProperty(ShellProperty):
     def Thickness(self, iply='all', tflag=1, tscales=None):
         return self.get_thickness(iply)
 
-    def nPlies(self):
-        self.deprecated('prop.nPlies()', 'prop.nplies', '1.1')
-        return self.nplies
-
-    def get_nplies(self):
-        self.deprecated('prop.get_nplies()', 'prop.nplies', '1.1')
-        return self.nplies
-
-    def get_material_ids(self):
-        self.deprecated('prop.get_material_ids()', 'prop.material_ids', '1.1')
-        return self.material_ids
-
     def Nsm(self):
         return self.get_nonstructural_mass()
 

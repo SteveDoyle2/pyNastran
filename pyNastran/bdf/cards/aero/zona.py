@@ -20,7 +20,10 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     string_or_blank, integer_or_string, double_or_string, blank,
 )
 from pyNastran.bdf.cards.aero.aero import (Spline, CAERO1, CAERO2, PAERO1, PAERO2,
-                                           SPLINE1, SPLINE2, SPLINE3)
+                                           SPLINE1, SPLINE2, SPLINE3, AESURF, AELIST,
+                                           AELINK)
+from pyNastran.bdf.cards.aero.static_loads import TRIM
+from pyNastran.bdf.cards.aero.dynamic_loads import MKAERO1
 from pyNastran.bdf.cards.aero.utils import elements_from_quad, points_elements_from_quad_points
 from pyNastran.bdf.cards.coordinate_systems import Coord
 
@@ -203,31 +206,18 @@ class AESURFZ(BaseCard):
 
         Parameters
         ----------
-        aesid : int
-            controller number
         label : str
             controller name
-        cid1 / cid2 : int / None
-            coordinate system id for primary/secondary control surface
-        alid1 / alid2 : int / None
-            AELIST id for primary/secondary control surface
-        eff : float; default=1.0
-            Control surface effectiveness
-        ldw : str; default='LDW'
-            Linear downwash flag;  ['LDW', 'NODLW']
-        crefc : float; default=1.0
-            reference chord for the control surface
-        crefs : float; default=1.0
-            reference area for the control surface
-        pllim / pulim : float; default=-pi/2 / pi/2
-            Lower/Upper deflection limits for the control surface in radians
-        hmllim / hmulim : float; default=None
-            Lower/Upper hinge moment limits for the control surface in
-            force-length units
-        tqllim / tqulim : int; default=None
-            Set identification numbers of TABLEDi entries that provide the
-            lower/upper deflection limits for the control surface as a
-            function of the dynamic pressure
+        surface_type : str
+            defines the control surface type {SYM, ASYM}
+        cid : int
+            coordinate system id to define the hinge axis
+        setk : int
+            aero panels defined by PANLST
+        setg : int
+           ???
+        actuator_tf : int
+            ???
         comment : str; default=''
             a comment for the card
 
@@ -242,7 +232,6 @@ class AESURFZ(BaseCard):
         self.setk = setk
         self.setg = setg
         self.actuator_tf = actuator_tf
-        setk, setg, actuator_tf
 
         #: Identification number of a rectangular coordinate system with a
         #: y-axis that defines the hinge line of the control surface
@@ -286,14 +275,6 @@ class AESURFZ(BaseCard):
         if self.alid2_ref is not None:
             return self.alid2_ref.sid
         return self.alid2
-
-    def AELIST_id1(self):
-        self.deprecated('AESURF.AELIST_id1()', 'AESURF.aelist_id1()', '1.1')
-        return self.aelist_id1()
-
-    def AELIST_id2(self):
-        self.deprecated('AESURF.AELIST_id2()', 'AESURF.aelist_id2()', '1.1')
-        return self.aelist_id2()
 
     def cross_reference(self, model):
         """
@@ -360,6 +341,36 @@ class AESURFZ(BaseCard):
         #self.tqllim
         self.tqllim_ref = None
         self.tqulim_ref = None
+
+    def convert_to_nastran(self, model, aesurf_id, aelist_id):
+        """
+        +--------+--------+-------+-------+-------+--------+--------+--------+--------+
+        |    1   |   2    |   3   |   4   |   5   |   6    |    7   |   8    |   9    |
+        +========+========+=======+=======+=======+========+========+========+========+
+        | AESURF |   ID   | LABEL | CID1  | ALID1 |  CID2  | ALID2  |  EFF   |  LDW   |
+        +--------+--------+-------+-------+-------+--------+--------+--------+--------+
+        |        |  CREFC | CREFS | PLLIM | PULIM | HMLLIM | HMULIM | TQLLIM | TQULIM |
+        +--------+--------+-------+-------+-------+--------+--------+--------+--------+
+
+        +---------+--------+-------+-------+-------+--------+--------+
+        |    1    |   2    |   3   |   4   |   5   |   6    |    7   |
+        +=========+========+=======+=======+=======+========+========+
+        | AESURFZ | LABEL  |  TYPE |  CID  |  SETK |  SETG  |  ACTID |
+        +---------+--------+-------+-------+-------+--------+--------+
+        | AESURFZ | RUDDER |  ASYM |   1   |   10  |   20   |    0   |
+        +---------+--------+-------+-------+-------+--------+--------+
+        """
+        assert self.surface_type == 'ASYM', str(self)
+        aelist = AELIST(aelist_id, self.aero_element_ids)
+        aesurf = AESURF(aesurf_id, self.label, self.cid, aelist_id, cid2=None, alid2=None,
+                       eff=1.0, ldw='LDW', crefc=1.0,
+                       crefs=1.0, pllim=-np.pi/2.,
+                       pulim=np.pi/2., hmllim=None,
+                       hmulim=None, tqllim=None,
+                       tqulim=None, comment=self.comment)
+        aesurf.validate()
+        aelist.validate()
+        return aelist, aesurf
 
     def update(self, unused_model, maps):
         coord_map = maps['coord']
@@ -671,6 +682,91 @@ class AEROZ(Aero):
         list_fields = ['AEROZ', self.Acsid(), self.sym_xz, self.flip,
                        self.fm_mass_unit, self.fm_length_unit,
                        self.cref, self.bref, self.sref] + list(self.xyz_ref)
+        return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
+
+
+class MKAEROZ(BaseCard):
+    type = 'MKAEROZ'
+    def __init__(self, sid, mach, flt_id, filename, print_flag, freqs,
+                 method=0, save=None, comment=''):
+        """
+        Parameters
+        ==========
+        sid : int
+            the MKAEROZ id
+        mach : float
+            the mach number for the TRIM solution
+        save : str
+            save the AIC data to the filename
+            SAVE    save the AICs
+            ACQUIRE load an AIC database
+            ADD     append the new acids to the existing AIC database
+            RESTART continue an analysis
+        filename : str
+            the length of the file must be at most 56 characters
+        print_flag : int
+            ???
+        method : int
+            ???
+        save : ???
+            ???
+        comment : str; default=''
+             a comment for the card
+        """
+        BaseCard.__init__(self)
+
+        if comment:
+            self.comment = comment
+        self.sid = sid
+        self.mach = mach
+        self.method = method
+        self.flt_id = flt_id
+        self.save = save
+        self.freqs = freqs
+        self.filename = filename
+        self.print_flag = print_flag
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        sid = integer(card, 1, 'IDMK')
+        mach = double(card, 2, 'MACH')
+        method = integer(card, 3, 'METHOD')
+        flt_id = integer(card, 4, 'IDFLT')
+        save = string(card, 5, 'SAVE')
+        filename_a = string_or_blank(card, 6, 'FILENAMEA', '')
+        filename_b = string_or_blank(card, 7, 'FILENAMEB', '')
+        print(filename_a, filename_b)
+        filename = (filename_a + filename_b).rstrip()
+        print_flag = integer(card, 8, 'PRINT_FLAG')
+        freqs = []
+        ifreq = 1
+        for ifield in range(9, len(card)):
+            freq = double(card, ifield, 'FREQ%i'%  ifreq)
+            ifreq += 1
+        return MKAEROZ(sid, mach, flt_id, filename, print_flag, freqs,
+                       method=method, save=save, comment=comment)
+
+    def cross_reference(self, model):
+        return
+
+    def repr_fields(self):
+        """
+        Gets the fields in their simplified form
+
+        Returns
+        -------
+        fields : List[varies]
+          the fields that define the card
+
+        """
+        filename_a = self.filename[:8]
+        filename_b = self.filename[8:]
+        list_fields = ['MKAEROZ', self.sid, self.mach, self.method, self.flt_id,
+                       self.save, filename_a, filename_b, self.print_flag] + self.freqs
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -1026,7 +1122,6 @@ class BODY7(BaseCard):
         """
         lengths_y = []
         lengths_z = []
-        #print(segmesh.get_stats())
         nx = segmesh.naxial
         ny = segmesh.nradial
 
@@ -1042,8 +1137,7 @@ class BODY7(BaseCard):
                        '2=elliptical body, 3=arbitrary body)' % itype)
                 raise NotImplementedError(msg)
             assert camber == 0.0, 'camber is not supported'
-            #print(x, y, z, idy_ref, idz_ref)
-            #print(idy_ref.get_stats())
+
             ynodes = idy_ref.fractions
             znodes = idz_ref.fractions
             assert len(ynodes) == len(znodes), 'len(ynodes)=%s len(znodes)=%s' % (len(ynodes), len(znodes))
@@ -2145,7 +2239,7 @@ class CAERO7(BaseCard):
         return self.comment + print_card_8(card)
 
 
-class TRIM(BaseCard):
+class TRIM_ZONA(BaseCard):
     """
     Specifies constraints for aeroelastic trim variables.
 
@@ -2204,30 +2298,6 @@ class TRIM(BaseCard):
         #: (Real)
         self.uxs = uxs
 
-    def validate(self):
-        assert self.q > 0.0, 'q=%s' % self.q
-        if len(set(self.labels)) != len(self.labels):
-            msg = 'not all labels are unique; labels=%s' % str(self.labels)
-            raise RuntimeError(msg)
-        if len(self.labels) != len(self.uxs):
-            msg = 'nlabels=%s != nux=%s; labels=%s uxs=%s' % (
-                len(self.labels), len(self.uxs), str(self.labels), str(self.uxs))
-            raise RuntimeError(msg)
-
-    def cross_reference(self, model):
-        pass
-        #self.suport = model.suport
-        #self.suport1 = model.suport1
-        #self.aestats = model.aestats
-        #self.aelinks = model.aelinks
-        #self.aesurf = model.aesurf
-
-    def safe_cross_reference(self, model):
-        pass
-
-    def uncross_reference(self):
-        pass
-
     @classmethod
     def add_card(cls, card, comment=''):
         """
@@ -2285,13 +2355,63 @@ class TRIM(BaseCard):
             ux = double_or_string(card, i + 1, 'ux%i' % n)
             if isinstance(ux, string_types):
                 assert ux == 'FREE', 'ux=%r' % ux
-            print('  label=%s ux=%s' % (label, ux))
+            #print('  label=%s ux=%s' % (label, ux))
             labels.append(label)
             uxs.append(ux)
             i += 2
             n += 1
-        return TRIM(sid, mkaeroz, q, cg, true_g, nxyz, pqr, loadset,
-                    labels, uxs, comment=comment)
+        return TRIM_ZONA(sid, mkaeroz, q, cg, true_g, nxyz, pqr, loadset,
+                         labels, uxs, comment=comment)
+
+    def validate(self):
+        assert self.q > 0.0, 'q=%s' % self.q
+        if len(set(self.labels)) != len(self.labels):
+            msg = 'not all labels are unique; labels=%s' % str(self.labels)
+            raise RuntimeError(msg)
+        if len(self.labels) != len(self.uxs):
+            msg = 'nlabels=%s != nux=%s; labels=%s uxs=%s' % (
+                len(self.labels), len(self.uxs), str(self.labels), str(self.uxs))
+            raise RuntimeError(msg)
+
+    def cross_reference(self, model):
+        pass
+        #self.suport = model.suport
+        #self.suport1 = model.suport1
+        #self.aestats = model.aestats
+        #self.aelinks = model.aelinks
+        #self.aesurf = model.aesurf
+
+    def safe_cross_reference(self, model):
+        pass
+
+    def uncross_reference(self):
+        pass
+
+    def convert_to_nastran(self, model):
+        mkaeroz_id = self.mkaeroz
+        mkaeroz = model.zona.mkaeroz[mkaeroz_id]
+        #print(mkaeroz)
+        mach = mkaeroz.mach
+        labels = []
+        uxs = []
+        comment = str(self)
+        for label_id, ux in zip(self.labels, self.uxs):
+            if ux != 'FREE':
+                trimvar = model.zona.trimvar[label_id]
+                label = trimvar.label
+                assert isinstance(label, string_types), 'label=%r' % label
+                comment += str(trimvar)
+                labels.append(label)
+                uxs.append(ux)
+
+        assert self.q is not None
+        if self.q == 'NONE':
+            self.q = 1.
+        assert isinstance(self.q, float), str(self)
+        trim = TRIM(self.sid, mach, self.q, labels, uxs,
+                    aeqr=1.0, comment=comment)
+        trim.validate()
+        return trim
 
     def raw_fields(self):
         """
@@ -2329,6 +2449,254 @@ class TRIM(BaseCard):
         return ''
         #card = self.repr_fields()
         #return self.comment + print_card_8(card)
+
+class TRIMLNK(BaseCard):
+    """
+    Defines a set of coefficient and trim variable identification
+    number pairs for trim variable linking.
+
+    +---------+--------+--------+--------+--------+--------+--------+--------+--------+
+    | TRIMLNK | IDLINK |   SYM  | COEFF1 | IDVAR1 | COEFF2 | IDVAR2 | COEFF3 | IDVAR3 |
+    +---------+--------+--------+--------+--------+--------+--------+--------+--------+
+    |         | COEFF4 | IDVAR4 | -etc-  |        |        |        |        |        |
+    +---------+--------+--------+--------+--------+--------+--------+--------+--------+
+    """
+    type = 'TRIMLNK'
+    def __init__(self, link_id, sym, coeffs, var_ids, comment=''):
+        """
+        Creates a TRIMLNK card
+
+        Parameters
+        ----------
+        link_id : int
+            the TRIMLNK id
+        sym : ???
+            ???
+        coeffs : ???
+            ???
+        var_ids : ???
+            ???
+        comment : str; default=''
+            a comment for the card
+
+        """
+        BaseCard.__init__(self)
+        if comment:
+            self.comment = comment
+
+        self.link_id = link_id
+        self.sym = sym
+        self.coeffs = coeffs
+        self.var_ids = var_ids
+        assert sym in ['SYM', 'ASYM', 'ANTI'], sym
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a TRIM card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        link_id = integer(card, 1, 'var_id')
+        sym = string_or_blank(card, 2, 'sym')
+
+        nfields = len(card) - 3
+        assert nfields % 2 == 0, card
+        icoeff = 1
+        coeffs = []
+        var_ids = []
+        for ifield in range(3, len(card), 2):
+            coeff = double(card, ifield, 'coeff_%i' % icoeff)
+            var_id = integer(card, ifield + 1, 'var_%i' % icoeff)
+            coeffs.append(coeff)
+            var_ids.append(var_id)
+            icoeff += 1
+        return TRIMLNK(link_id, sym, coeffs, var_ids, comment=comment)
+
+    def cross_reference(self, model):
+        pass
+        #self.suport = model.suport
+        #self.suport1 = model.suport1
+        #self.aestats = model.aestats
+        #self.aelinks = model.aelinks
+        #self.aesurf = model.aesurf
+
+    def safe_cross_reference(self, model):
+        pass
+
+    def uncross_reference(self):
+        pass
+
+    def convert_to_nastran(self, model):
+        label = 'LNK_%s' % self.link_id
+        trimvars = model.zona.trimvar
+
+        comment = str(self)
+        independent_labels = []
+        for var_id in self.var_ids:
+            trimvar = trimvars[var_id]
+            label = trimvar.label
+            comment += str(trimvar)
+            independent_labels.append(label)
+
+        Cis = self.coeffs
+        aelink = AELINK(self.link_id, label, independent_labels, Cis, comment=comment)
+        aelink.validate()
+        return aelink
+
+    def raw_fields(self):
+        """
+        Gets the fields in their unmodified form
+
+        Returns
+        -------
+        fields : list[varies]
+            the fields that define the card
+
+        """
+        list_fields = ['TRIMLNK', self.link_id, self.sym]
+        for coeff, var in zip(self.coeffs, self.var_ids):
+            list_fields.append(coeff)
+            list_fields.append(var)
+        return list_fields
+
+    def repr_fields(self):
+        return self.raw_fields()
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
+
+
+class TRIMVAR(BaseCard):
+    """
+    Specifies a trim variable for static aeroelastic trim variables.
+
+    """
+    type = 'TRIMVAR'
+    def __init__(self, var_id, label, lower, upper,
+                 trimlnk, dmi, sym, initial,
+                 dcd, dcy, dcl, dcr, dcm, dcn, comment=''):
+        """
+        Creates a TRIMVAR card for a static aero (144) analysis.
+
+        Parameters
+        ----------
+        var_id : int
+            the trim id; referenced by the Case Control TRIM field
+        comment : str; default=''
+            a comment for the card
+
+        """
+        BaseCard.__init__(self)
+        if comment:
+            self.comment = comment
+
+        self.var_id = var_id
+        self.label = label
+        self.lower = lower
+        self.upper = upper
+        self.trimlnk = trimlnk
+        self.dmi = dmi
+        self.sym = sym
+        self.initial = initial
+        self.dcd = dcd
+        self.dcy = dcy
+        self.dcl = dcl
+        self.dcr = dcr
+        self.dcm = dcm
+        self.dcn = dcn
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a TRIM card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        var_id = integer(card, 1, 'var_id')
+        label = string(card, 2, 'label')
+        lower = double_or_blank(card, 3, 'lower')
+        upper = double_or_blank(card, 4, 'upper')
+        trimlnk = integer_or_blank(card, 5, 'TRIMLNK')
+        dmi = blank(card, 6, 'DMI')
+        sym = string_or_blank(card, 7, 'sym')
+        initial = blank(card, 8, 'initial')
+        dcd = double_or_blank(card, 9, 'DCD')
+        dcy = double_or_blank(card, 10, 'DCY')
+        dcl = double_or_blank(card, 11, 'DCL')
+        dcr = double_or_blank(card, 12, 'DCR')
+        dcm = double_or_blank(card, 13, 'DCM')
+        dcn = double_or_blank(card, 14, 'DCN')
+        return TRIMVAR(var_id, label, lower, upper, trimlnk, dmi, sym,
+                       initial, dcd, dcy, dcl, dcr, dcm,
+                       dcn, comment=comment)
+
+    def cross_reference(self, model):
+        pass
+        #self.suport = model.suport
+        #self.suport1 = model.suport1
+        #self.aestats = model.aestats
+        #self.aelinks = model.aelinks
+        #self.aesurf = model.aesurf
+
+    def safe_cross_reference(self, model):
+        pass
+
+    def uncross_reference(self):
+        pass
+
+    def convert_to_nastran(self, model):
+        aaa
+        mkaeroz_id = self.mkaeroz
+        mkaeroz = model.zona.mkaeroz[mkaeroz_id]
+        print(mkaeroz)
+        mach = mkaeroz.mach
+        labels = []
+        uxs = []
+        for label_id, ux in zip(self.labels, self.uxs):
+            if ux != 'FREE':
+                label = model.zona.trimvar[label_id]
+                labels.append(label)
+                uxs.append(ux)
+        trim = TRIM(self.sid, mach, self.q, labels, uxs,
+                    aeqr=1.0, comment=str(self))
+        trim.validate()
+        return trim
+
+    def raw_fields(self):
+        """
+        Gets the fields in their unmodified form
+
+        Returns
+        -------
+        fields : list[varies]
+            the fields that define the card
+
+        """
+        list_fields = ['TRIMVAR', self.var_id, self.label, self.lower, self.upper,
+                       self.trimlnk, self.dmi, self.sym, self.initial,
+                       self.dcd, self.dcy, self.dcl, self.dcr, self.dcm, self.dcn]
+        return list_fields
+
+    def repr_fields(self):
+        return self.raw_fields()
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
 
 class SPLINE1_ZONA(Spline):
     """

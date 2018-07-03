@@ -226,30 +226,6 @@ class GuiAttributes(object):
         """
         deprecated(old_name, new_name, deprecated_version, levels=[0])
 
-    @property
-    def nNodes(self):
-        """gets the number of nodes"""
-        self.deprecated('self.nNodes', 'self.nnodes', '1.1')
-        return self.nnodes
-
-    @nNodes.setter
-    def nNodes(self, nnodes):
-        """sets the number of nodes"""
-        self.deprecated('self.nNodes', 'self.nnodes', '1.1')
-        self.nnodes = nnodes
-
-    @property
-    def nElements(self):
-        """gets the number of elements"""
-        self.deprecated('self.nElements', 'self.nelements', '1.1')
-        return self.nelements
-
-    @nElements.setter
-    def nElements(self, nelements):
-        """sets the number of elements"""
-        self.deprecated('self.nElements', 'self.nelements', '1.1')
-        self.nelements = nelements
-
     #-------------------------------------------------------------------
     # geom
     @property

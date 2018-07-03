@@ -257,18 +257,6 @@ class NastranMatrix(BaseCard):
                    GCj, GCi, Real, Complex, comment=comment, finalize=False)
 
     @property
-    def ifo(self):
-        """gets the matrix form"""
-        self.deprecated('ifo', 'matrix_form', '1.1')
-        return self.matrix_form
-
-    @ifo.setter
-    def ifo(self, matrix_form):
-        """sets the matrix form"""
-        self.deprecated('ifo', 'matrix_form', '1.1')
-        self.matrix_form = matrix_form
-
-    @property
     def matrix_type(self):
         """gets the matrix type"""
         if not isinstance(self.matrix_form, integer_types):

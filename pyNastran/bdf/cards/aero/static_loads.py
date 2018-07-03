@@ -325,16 +325,6 @@ class AESTAT(BaseCard):
     #def uncross_reference(self):
         #pass
 
-    @property
-    def id(self):
-        self.deprecated('id', 'aestat_id', '1.1')
-        return self.aestat_id
-
-    @id.setter
-    def id(self, aestat_id):
-        self.deprecated('id', 'aestat_id', '1.1')
-        self.aestat_id = aestat_id
-
     def raw_fields(self):
         """
         Gets the fields in their unmodified form
