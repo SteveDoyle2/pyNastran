@@ -9,7 +9,16 @@ from six import iteritems
 
 
 def free_edges(model):
-    """gets the free edges for shell elements"""
+    """
+    Gets the free edges for shell elements.
+    A free edge is an edge that is only connected to 1 shell element.
+
+    Parameters
+    ----------
+    model : BDF()
+        the BDF model
+
+    """
     edge_to_eids = _get_edge_to_eids_map(model)
 
     free_edges = []
@@ -22,6 +31,11 @@ def non_paired_edges(model):
     """
     Gets the edges not shared by exactly 2 elements.
     This is useful for identifying rib/spar intersections.
+
+    Parameters
+    ----------
+    model : BDF()
+        the BDF model
 
     """
     edge_to_eids = _get_edge_to_eids_map(model)

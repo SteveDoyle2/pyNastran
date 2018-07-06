@@ -4,6 +4,10 @@ Installation From Release
 
 pyNastran is an easy package to install once you have the required Python
 modules.  It's a pure Python package so you shouldn't have too many problems.
+Just type:
+
+``pip install pyNastran``
+
 
 Python
 ------
@@ -32,16 +36,16 @@ Install Procedure - From Anaconda (recommended)
 ***********************************************
 Base functionality:
  - `Anaconda Python <https://store.continuum.io/cshop/anaconda/>`_
- * `conda install numpy`
- * `conda install scipy`
- * `conda install docopt`
- * `conda install typing` (Python 2.7)
- * `conda install pathlib2` (Python 2.7)
- * `conda install scandir` (Python 2.7)
- * `conda install pandas` (optional)
- * `conda install h5py` (optional)
- * `conda install matplotlib` (optional)
- * `pip install pyNastran`
+ * ``conda install numpy``
+ * ``conda install scipy``
+ * ``conda install docopt``
+ * ``conda install typing`` (Python 2.7)
+ * ``conda install pathlib2`` (Python 2.7)
+ * ``conda install scandir`` (Python 2.7)
+ * ``conda install pandas`` (optional)
+ * ``conda install h5py`` (optional)
+ * ``conda install matplotlib`` (optional)
+ * ``pip install pyNastran``
 
 For gui support (optional; required for GUI):
  * Python 2.7: 
@@ -49,17 +53,17 @@ For gui support (optional; required for GUI):
      * Download VTK:
        - VTK-7.1.1-cp27-cp27m-win_amd64.whl (Python 2.7)
   On the command line:
-    * `conda install imageio`
-    * `conda install pyqt`
-    * `pip install VTK*.whl`
-    * `pip install qtpy`
+    * ``conda install imageio``
+    * ``conda install pyqt``
+    * ``pip install VTK*.whl``
+    * ``pip install qtpy``
 
  * Python 3.5, 3.6, 3.7:
    * On the command line:
-    * `conda install imageio`
-    * `conda install pyqt`
-    * `conda install vtk`
-    * `pip install qtpy`
+    * ``conda install imageio``
+    * ``conda install pyqt``
+    * ``conda install vtk``
+    * ``pip install qtpy``
 
 ************************************
 Install Procedure - From Base Python
@@ -70,16 +74,17 @@ Base functionality:
  * Download 64-bit `Python <https://www.python.org/downloads/>`_
    - Make sure to get 64-bit Python.
  * On the command line:
-   * `pip install numpy`
-   * `pip install scipy`
-   * `pip install docopt`
-   * `conda install typing` (Python 2.7)
-   * `conda install pathlib2` (Python 2.7)
-   * `conda install scandir` (Python 2.7)
-   * `pip install pandas` (optional)
-   * `pip install h5py` (optional)
-   * `pip install matplotlib` (optional)
-   * `pip install pyNastran`
+ 
+   * ``pip install numpy``
+   * ``pip install scipy``
+   * ``pip install docopt``
+   * ``conda install typing`` (Python 2.7)
+   * ``conda install pathlib2`` (Python 2.7)
+   * ``conda install scandir`` (Python 2.7)
+   * ``pip install pandas`` (optional)
+   * ``pip install h5py`` (optional)
+   * ``pip install matplotlib`` (optional)
+   * ``pip install pyNastran``
 
 
 For gui support (optional; required for GUI):
@@ -94,10 +99,10 @@ For gui support (optional; required for GUI):
      - PyQt4-4.11.4-cp35-cp35m-win_amd64.whl (Python 3.5)
      - PyQt4-4.11.4-cp36-cp36m-win_amd64.whl (Python 3.6)
   On the command line:
-    * `pip install imageio`
-    * `pip install VTK*.whl`
-    * `pip install PyQt4*.whl`
-    * `pip install qtpy`
+    * ``pip install imageio``
+    * ``pip install VTK*.whl``
+    * ``pip install PyQt4*.whl``
+    * ``pip install qtpy``
 
 ***********************************************
 Install Procedure - From WinPython (incomplete)

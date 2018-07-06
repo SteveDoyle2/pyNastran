@@ -415,6 +415,7 @@ class CaseControlTest(unittest.TestCase):
         for weightcheck in weightchecks:
             deck = CaseControlDeck([weightcheck])
             str(deck)
+
     def test_subcase_equals(self):
         lines = [
             'SET 100 = 100',

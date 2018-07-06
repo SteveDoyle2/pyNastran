@@ -1162,7 +1162,7 @@ class CAERO1(BaseCard):
     pid : int, PAERO1
         int : PAERO1 ID
         PAERO1 : PAERO1 object (xref)
-    igid : int
+    igroup : int
         Group number
     p1 : (1, 3) ndarray float
         xyz location of point 1 (leading edge; inboard)

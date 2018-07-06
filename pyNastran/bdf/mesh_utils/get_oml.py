@@ -48,7 +48,9 @@ def get_oml_eids(bdf_filename, eid_start, theta_tol=30.,
         eids=None, map_names=None,
         consider_0d=False, consider_0d_rigid=False,
         consider_1d=False, consider_2d=True, consider_3d=False)
-    (edge_to_eid_map, eid_to_edge_map, nid_to_edge_map) = maps
+    edge_to_eid_map = maps['edge_to_eid_map']
+    eid_to_edge_map = maps['eid_to_edge_map']
+    nid_to_edge_map = maps['nid_to_edge_map']
 
     #free_edges = get_free_edges(model, maps=maps)
     #---------------------------------

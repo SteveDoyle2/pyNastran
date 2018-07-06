@@ -281,6 +281,20 @@ def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
         #model.get_bdf_stats()
     return model
 
+def load_bdf_object(obj_filename, xref=True, log=None, debug=True):
+    model = BDF(log=log, debug=debug)
+    model.load(obj_filename=obj_filename)
+    model.cross_reference(xref=xref, xref_nodes=True, xref_elements=True,
+                          xref_nodes_with_elements=True,
+                          xref_properties=True,
+                          xref_masses=True,
+                          xref_materials=True,
+                          xref_loads=True,
+                          xref_constraints=True,
+                          xref_aero=True,
+                          xref_sets=True,
+                          xref_optimization=True)
+    return model
 
 class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
     """

@@ -5113,7 +5113,6 @@ class OES(OP2Common):
                 #[tx, ty, tz, rx, ry, rz]
                 obj.data[obj.itime, istart:iend, :] = floats[:, 1:].copy()
             else:
-                #struct1 = Struct(self._endian + b'i6f')
                 struct1 = Struct(self._endian + self._analysis_code_fmt + b'6f')
                 for i in range(nelements):
                     edata = data[n:n + ntotal]

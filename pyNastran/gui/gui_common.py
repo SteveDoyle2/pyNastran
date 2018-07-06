@@ -2423,8 +2423,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         if self.node_ids is None:  # pragma: no cover
             raise RuntimeError('implement self.node_ids for this format')
-        if self.element_ids is None:  # pragma: no cover
-            raise RuntimeError('implement self.element_ids for this format')
+        #if self.element_ids is None:  # pragma: no cover
+            #raise RuntimeError('implement self.element_ids for this format')
 
         if self.is_groups:
             #eids = np.arange(172)

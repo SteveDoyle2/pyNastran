@@ -8,7 +8,7 @@ All cards are BaseCard objects.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
-from six import string_types
+from six import string_types, itervalues, iteritems
 import numpy as np
 
 from pyNastran.bdf.cards.aero.dynamic_loads import Aero
@@ -26,6 +26,59 @@ from pyNastran.bdf.cards.aero.static_loads import TRIM
 from pyNastran.bdf.cards.aero.dynamic_loads import MKAERO1
 from pyNastran.bdf.cards.aero.utils import elements_from_quad, points_elements_from_quad_points
 from pyNastran.bdf.cards.coordinate_systems import Coord
+
+class ZONA(object):
+    def __init__(self, model):
+        self.model = model
+        self.caero_to_name_map = {}
+        #: store PANLST1,PANLST2,PANLST3
+        self.panlsts = {}
+        self.mkaeroz = {}
+        self.trimvar = {}
+        self.trimlnk = {}
+
+    def clear(self):
+        """clears out the ZONA object"""
+        self.panlsts = {}
+        self.mkaeroz = {}
+        self.trimvar = {}
+        self.trimlnk = {}
+
+    def cross_reference(self):
+        if self.model.nastran_format != 'zona':
+            return
+        for mkaeroz in itervalues(self.mkaeroz):
+            mkaeroz.cross_reference(self.model)
+        for trimvar in itervalues(self.trimvar):
+            trimvar.cross_reference(self.model)
+        for trimlnk in itervalues(self.trimlnk):
+            trimlnk.cross_reference(self.model)
+
+        for caero in itervalues(self.model.caeros):
+            self.caero_to_name_map[caero.label] = caero.eid
+
+    def safe_cross_reference(self):
+        self.cross_reference()
+
+    def write_bdf(self, bdf_file, size=8, is_double=False):
+        for unused_id, panlst in iteritems(self.panlsts):
+            bdf_file.write(panlst.write_card(size=size, is_double=is_double))
+
+        for unused_id, mkaeroz in iteritems(self.mkaeroz):
+            bdf_file.write(mkaeroz.write_card(size=size, is_double=is_double))
+
+        for unused_id, trimvar in iteritems(self.trimvar):
+            bdf_file.write(trimvar.write_card(size=size, is_double=is_double))
+
+        for unused_id, trimlnk in iteritems(self.trimlnk):
+            bdf_file.write(trimlnk.write_card(size=size, is_double=is_double))
+
+    def __repr__(self):
+        msg = '<ZONA>; nPANLSTs=%s nmkaeroz=%s' % (
+            len(self.panlsts), len(self.mkaeroz),
+        )
+        return msg
+
 
 class ACOORD(Coord):  # not done
     """
@@ -2267,6 +2320,14 @@ class TRIM_ZONA(BaseCard):
             the trim id; referenced by the Case Control TRIM field
         q : float
             dynamic pressure
+        true_g : float
+            ???
+        nxyz : List[float]
+            ???
+        pqr : List[float]
+            [roll_rate, pitch_rate, yaw_rate]
+        loadset : int
+            ???
         labels : List[str]
             names of the fixed variables
         uxs : List[float]
@@ -2313,7 +2374,7 @@ class TRIM_ZONA(BaseCard):
         """
         sid = integer(card, 1, 'sid')
         mkaeroz = integer(card, 2, 'mkaeroz')
-        q = double(card, 3, 'q')
+        qinf = double(card, 3, 'dynamic_pressure')
         # 5
         # 6
         cg = [
@@ -2360,11 +2421,11 @@ class TRIM_ZONA(BaseCard):
             uxs.append(ux)
             i += 2
             n += 1
-        return TRIM_ZONA(sid, mkaeroz, q, cg, true_g, nxyz, pqr, loadset,
+        return TRIM_ZONA(sid, mkaeroz, qinf, cg, true_g, nxyz, pqr, loadset,
                          labels, uxs, comment=comment)
 
     def validate(self):
-        assert self.q > 0.0, 'q=%s' % self.q
+        assert self.q > 0.0, 'q=%s\n%s' % (self.q, str(self))
         if len(set(self.labels)) != len(self.labels):
             msg = 'not all labels are unique; labels=%s' % str(self.labels)
             raise RuntimeError(msg)

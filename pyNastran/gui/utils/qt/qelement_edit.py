@@ -27,7 +27,6 @@ class QElementEdit(QLineEdit):
     def on_focus_callback(self, eids, nids, name):
         """the callback method for ``on_focus``"""
         if eids is None:
-            print('empty elements callback...')
             return
         eids_str = write_patran_syntax_dict({'' : eids})
         self.setText(eids_str)
@@ -56,7 +55,6 @@ class QNodeEdit(QLineEdit):
     def on_focus_callback(self, eids, nids, name):
         """the callback method for ``on_focus``"""
         if nids is None:
-            print('empty nodes callback...')
             return
         nids_str = write_patran_syntax_dict({'' : nids})
         self.setText(nids_str)

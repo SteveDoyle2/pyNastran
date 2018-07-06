@@ -46,6 +46,14 @@ Solver
         solve, calculate responses
    - added D matricies for PSHELL, PCOMP, PSOLID
 
+-----------------------v1.1.1 released 2018/7/xx-----------------------
+BDF:
+ - 'SUBCASE=5' supported in addition to 'SUBCASE 5' and 'SUBCASE = 5'
+
+OP2:
+ - fixed type of a few random results (i.e., mpc_forces_NO was being slotted into mpc_forces_ATO)
+ - when result limiting, you can now use regular expressions
+
 -----------------------v1.1.0 released 2018/6/26-----------------------
 This is a major release.  As in the v1.0 release, the focus has been on testing.
 

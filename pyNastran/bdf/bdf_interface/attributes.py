@@ -2,7 +2,6 @@
 from __future__ import print_function, unicode_literals
 from collections import defaultdict
 from typing import List, Dict, Optional, Any
-from six import itervalues, iteritems
 from numpy import array  # type: ignore
 
 from pyNastran.utils import object_attributes, object_methods
@@ -10,57 +9,8 @@ from pyNastran.bdf.utils import deprecated
 #from pyNastran.bdf.case_control_deck import CaseControlDeck
 from pyNastran.bdf.cards.coordinate_systems import CORD2R
 #from pyNastran.bdf.cards.constraints import ConstraintObject
+from pyNastran.bdf.cards.aero.zona import ZONA
 
-class ZONA(object):
-    def __init__(self, model):
-        self.model = model
-        self.caero_to_name_map = {}
-        #: store PANLST1,PANLST2,PANLST3
-        self.panlsts = {}
-        self.mkaeroz = {}
-        self.trimvar = {}
-        self.trimlnk = {}
-
-    def clear(self):
-        self.panlsts = {}
-        self.mkaeroz = {}
-        self.trimvar = {}
-        self.trimlnk = {}
-
-    def cross_reference(self):
-        if self.model.nastran_format != 'zona':
-            return
-        for mkaeroz in itervalues(self.mkaeroz):
-            mkaeroz.cross_reference(self.model)
-        for trimvar in itervalues(self.trimvar):
-            trimvar.cross_reference(self.model)
-        for trimlnk in itervalues(self.trimlnk):
-            trimlnk.cross_reference(self.model)
-
-        for caero in itervalues(self.model.caeros):
-            self.caero_to_name_map[caero.label] = caero.eid
-
-    def safe_cross_reference(self):
-        self.cross_reference()
-
-    def write_bdf(self, bdf_file, size=8, is_double=False):
-        for unused_id, panlst in iteritems(self.panlsts):
-            bdf_file.write(panlst.write_card(size=size, is_double=is_double))
-
-        for unused_id, mkaeroz in iteritems(self.mkaeroz):
-            bdf_file.write(mkaeroz.write_card(size=size, is_double=is_double))
-
-        for unused_id, trimvar in iteritems(self.trimvar):
-            bdf_file.write(trimvar.write_card(size=size, is_double=is_double))
-
-        for unused_id, trimlnk in iteritems(self.trimlnk):
-            bdf_file.write(trimlnk.write_card(size=size, is_double=is_double))
-
-    def __repr__(self):
-        msg = '<ZONA>; nPANLSTs=%s nmkaeroz=%s' % (
-            len(self.panlsts), len(self.mkaeroz),
-        )
-        return msg
 
 class BDFAttributes(object):
     """defines attributes of the BDF"""
@@ -70,6 +20,9 @@ class BDFAttributes(object):
         self.__init_attributes()
         self._is_cards_dict = False
 
+        self.is_nx = False
+        self.is_msc = False
+        self.is_zona = False
         self.set_as_msc()
 
         self.units = []  # type: List[str]

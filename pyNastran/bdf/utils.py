@@ -481,27 +481,40 @@ def parse_patran_syntax(node_sets, pound=None):
     snodes = node_sets.split()
     nodes = []  # type: List[int]
     for snode in snodes:
-        if ':' in snode:
-            ssnode = snode.split(':')
-            if len(ssnode) == 2:
-                nmin = int(ssnode[0])
-                nmax = int(ssnode[1])
-                new_set = list(range(nmin, nmax + 1))
-            elif len(ssnode) == 3:
-                nmin = int(ssnode[0])
-                nmax = int(ssnode[1])
-                delta = int(ssnode[2])
-                nmin, nmax = min([nmin, nmax]), max([nmin, nmax])
-                if delta > 0:
-                    new_set = list(range(nmin, nmax + 1, delta))
-                else:
-                    new_set = list(range(nmin, nmax + 1, -delta))
-            else:
-                raise NotImplementedError(snode)
-            nodes += new_set
-        else:
-            nodes.append(int(snode))
+        _apply_comma_colon_int_node(nodes, snode)
     return unique(nodes)
+
+def _apply_comma_colon_int_node(nodes, snode):
+    """helper method for parse_patran_syntax"""
+    if ',' in snode:
+        comma_split_node = snode.split(',')
+        for comma_node in comma_split_node:
+            _apply_comma_colon_int_node(nodes, comma_node)
+    elif ':' in snode:
+        new_set = _apply_colon_set(snode)
+        nodes += new_set
+    else:
+        nodes.append(int(snode))
+
+def _apply_colon_set(snode):
+    """helper method for parse_patran_syntax"""
+    ssnode = snode.split(':')
+    if len(ssnode) == 2:
+        nmin = int(ssnode[0])
+        nmax = int(ssnode[1])
+        new_set = list(range(nmin, nmax + 1))
+    elif len(ssnode) == 3:
+        nmin = int(ssnode[0])
+        nmax = int(ssnode[1])
+        delta = int(ssnode[2])
+        nmin, nmax = min([nmin, nmax]), max([nmin, nmax])
+        if delta > 0:
+            new_set = list(range(nmin, nmax + 1, delta))
+        else:
+            new_set = list(range(nmin, nmax + 1, -delta))
+    else:
+        raise NotImplementedError(snode)
+    return new_set
 
 def write_patran_syntax_dict(dict_sets):
     # type: (Dict[str, np.ndarray]) -> str

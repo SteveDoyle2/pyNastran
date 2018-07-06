@@ -3889,7 +3889,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             self.element_ids = eids
 
         # subcase_id, resultType, vector_size, location, dataFormat
-        if len(model.properties):
+        if len(model.properties) and nelements:
             icase, upids, pcomp, pshell, is_pshell_pcomp = self._build_properties(
                 model, nelements, eids, pids, cases, form0, icase)
             icase = self._build_materials(model, pcomp, pshell, is_pshell_pcomp,

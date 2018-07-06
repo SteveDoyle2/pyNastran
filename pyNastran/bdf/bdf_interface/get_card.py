@@ -1637,8 +1637,8 @@ class GetCard(GetMethods):
 
         eids : List[int]
             the element ids to consider
-        map_names : List[str]; default=None -> []
-            does nothing
+        map_names : List[str]; default=None -> all
+            'edge_to_eid_map', 'eid_to_edge_map', 'nid_to_edge_map', 'nid_to_eid_map'
         consider_0d : bool; default=True
             considers CELASx, CDAMPx, CFAST
         consider_0d_rigid : bool; default=True
@@ -1651,34 +1651,37 @@ class GetCard(GetMethods):
         consider_3d : bool; default=True
             considers CTETRA, CPENTA, CPYRAM, CHEXA elements
 
-        .. todo:: map_names support
         .. todo:: consider_0d support
         .. todo:: consider_0d_rigid support
         """
-        if map_names is None:
-            map_names = []
         allowed_maps = [
             'edge_to_eid_map',
             'eid_to_edge_map',
             'nid_to_edge_map',
-            'edge_to_nid_map',
-            'eid_to_eid_map',
+            #'edge_to_nid_map',  # unnecessary
+            #'eid_to_eid_map',  # not added yet
+            'nid_to_eid_map',
         ]
-
-        for name in map_names:
-            if name not in allowed_maps:
-                msg = 'name=%s; allowed=%s' % (name, sorted(allowed_maps.keys()))
-                raise RuntimeError(msg)
+        if map_names is None:
+            map_names = allowed_maps
+        else:
+            if isinstance(map_names, string_types):
+                map_names = [map_names]
+            if not isinstance(map_names, (list, tuple)):
+                msg = 'map_names=%s must be a list or tuple; not %s' % (
+                    map_names, type( map_names))
+                raise TypeError(msg)
+            for name in map_names:
+                if name not in allowed_maps:
+                    msg = 'name=%r; allowed=%s' % (name, sorted(allowed_maps.keys()))
+                    raise RuntimeError(msg)
 
         eid_to_edge_map = {}
         eid_to_nid_map = {}
 
         edge_to_eid_map = defaultdict(set)
-        #edge_to_nid_map = {}  # unnecessary
-
         nid_to_edge_map = defaultdict(set)  #set([]) ???
-        nid_to_eid_map = defaultdict(list)
-
+        nid_to_eid_map = defaultdict(set)
 
         if eids is None:
             eids = iterkeys(self.elements)
@@ -1707,7 +1710,7 @@ class GetCard(GetMethods):
             eid_to_nid_map[eid] = node_ids
 
             for nid in node_ids:
-                nid_to_eid_map[nid].append(eid)
+                nid_to_eid_map[nid].add(eid)
             for edge in edges:
                 assert not isinstance(edge, integer_types), 'edge=%s elem=\n%s' % (edge, elem)
                 assert edge[0] < edge[1], 'edge=%s elem=\n%s' % (edge, elem)
@@ -1718,11 +1721,29 @@ class GetCard(GetMethods):
                     raise
                 for nid in edge:
                     nid_to_edge_map[nid].add(tuple(edge))
-        out = (
-            edge_to_eid_map,
-            eid_to_edge_map,
-            nid_to_edge_map,
-        )
+
+        out = {}
+        allowed_maps = [
+            #'edge_to_eid_map',
+            #'eid_to_edge_map',
+            #'nid_to_edge_map',
+            #'edge_to_nid_map', # unnecessary
+            #'nid_to_eid_map',
+        ]
+
+        for key in map_names:
+            if key == 'edge_to_eid_map':
+                out[key] = edge_to_eid_map
+            elif key == 'eid_to_edge_map':
+                out[key] = eid_to_edge_map
+            elif key == 'nid_to_edge_map':
+                out[key] = nid_to_edge_map
+            elif key == 'nid_to_eid_map':
+                out[key] = nid_to_eid_map
+            #elif key == 'eid_to_eid_map': # not added yet
+                #out[key] = eid_to_eid_map
+            else:
+                self.log.error('missing map %r' % key)
         return out
 
     def get_node_ids_with_elements(self, eids, msg=''):
