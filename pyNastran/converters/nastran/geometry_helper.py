@@ -509,12 +509,18 @@ def tri_quality(p1, p2, p3):
     min_edge_length = min(length21, length32, length13)
     areai = 0.5 * np.linalg.norm(np.cross(v21, v13))
 
-    cos_skew1 = np.dot(e2_p1, e31) / (np.linalg.norm(e2_p1) * np.linalg.norm(e31))
-    cos_skew2 = np.dot(e2_p1, -e31) / (np.linalg.norm(e2_p1) * np.linalg.norm(e31))
-    cos_skew3 = np.dot(e3_p2, e21) / (np.linalg.norm(e3_p2) * np.linalg.norm(e21))
-    cos_skew4 = np.dot(e3_p2, -e21) / (np.linalg.norm(e3_p2) * np.linalg.norm(e21))
-    cos_skew5 = np.dot(e1_p3, e32) / (np.linalg.norm(e1_p3) * np.linalg.norm(e32))
-    cos_skew6 = np.dot(e1_p3, -e32) / (np.linalg.norm(e1_p3) * np.linalg.norm(e32))
+    ne31 = np.linalg.norm(e31)
+    ne21 = np.linalg.norm(e21)
+    ne32 = np.linalg.norm(e32)
+    ne2p1 = np.linalg.norm(e2_p1)
+    ne3p2 = np.linalg.norm(e3_p2)
+    ne1p3 = np.linalg.norm(e1_p3)
+    cos_skew1 = np.dot(e2_p1, e31) / (ne2_p1 * ne31)
+    cos_skew2 = np.dot(e2_p1, -e31) / (ne2_p1 * ne31)
+    cos_skew3 = np.dot(e3_p2, e21) / (ne3p2 * ne21)
+    cos_skew4 = np.dot(e3_p2, -e21) / (ne3p2 * ne21)
+    cos_skew5 = np.dot(e1_p3, e32) / (ne1_p3 * ne32)
+    cos_skew6 = np.dot(e1_p3, -e32) / (ne1_p3 * ne32)
     max_skew = np.pi / 2. - np.abs(np.arccos(np.clip([
         cos_skew1, cos_skew2, cos_skew3,
         cos_skew4, cos_skew5, cos_skew6], -1., 1.))).min()
@@ -600,8 +606,10 @@ def quad_quality(p1, p2, p3, p4):
     #     e1
     e13 = p34 - p12
     e42 = p23 - p14
-    cos_skew1 = np.dot(e13, e42) / (np.linalg.norm(e13) * np.linalg.norm(e42))
-    cos_skew2 = np.dot(e13, -e42) / (np.linalg.norm(e13) * np.linalg.norm(e42))
+    ne42 = np.linalg.norm(e42)
+    ne13 = np.linalg.norm(e13)
+    cos_skew1 = np.dot(e13, e42) / (ne13 * ne42)
+    cos_skew2 = np.dot(e13, -e42) / (ne13 * ne42)
     max_skew = np.pi / 2. - np.abs(np.arccos(
         np.clip([cos_skew1, cos_skew2], -1., 1.))).min()
     #aspect_ratio = max(p12, p23, p34, p14) / max(p12, p23, p34, p14)

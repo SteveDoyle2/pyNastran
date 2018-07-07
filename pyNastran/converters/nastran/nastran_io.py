@@ -3528,7 +3528,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #form0.append(('PropertyID', icase, []))
         #icase += 1
 
-        if len(model.properties):
+        if len(model.properties) and nelements:
             icase, upids, pcomp, pshell, is_pshell_pcomp = self._build_properties(
                 model, nelements, eids_array, pids_array, cases, form0, icase)
             icase = self._build_materials(model, pcomp, pshell, is_pshell_pcomp,
@@ -3945,7 +3945,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
     def _map_elements1(self, model, xyz_cid0, nid_cp_cd, unused_dim_max, nid_map, j):
         """
         Helper for map_elements
-
 
         element checks
         http://www.altairuniversity.com/wp-content/uploads/2012/04/Student_Guide_211-233.pdf
@@ -5344,6 +5343,30 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         TODO: CONROD
         """
+        upids = None
+        pcomp = None
+        pshell = None
+        is_pcomp = False
+        is_pshell = False
+
+        mids_pcomp = None
+        thickness_pcomp = None
+        nplies_pcomp = None
+        pcomp = {
+            'mids' : mids_pcomp,
+            'thickness' : thickness_pcomp,
+            'nplies' : nplies_pcomp,
+        }
+
+        mids = None
+        thickness = None
+        pshell = {
+            'mids' : mids,
+            'thickness' : thickness,
+        }
+        if not isfinite_and_greater_than(pids, 0):
+            return icase, upids, pcomp, pshell, (is_pshell, is_pcomp)
+
         prop_types_with_mid = [
             'PSOLID', 'PSHEAR',
             'PROD', 'PTUBE', 'PBAR', 'PBARL', 'PBEAM', 'PBEAML',
@@ -5351,23 +5374,17 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         ]
         prop_types_without_mid = ['PVISC', 'PELAS', 'PBUSH', 'PDAMP', 'PDAMPT']
 
-        upids = None
         pid_res = GuiResult(0, header='PropertyID', title='PropertyID',
                             location='centroid', scalar=pids, mask_value=0)
         cases[icase] = (pid_res, (0, 'PropertyID'))
         form0.append(('PropertyID', icase, []))
         icase += 1
-
         upids = np.unique(pids)
+
         mid_eids_skip = []
 
-        is_pshell = False
-        is_pcomp = False
         #mids_pshell = None
         #thickness_pshell = None
-        mids_pcomp = None
-        thickness_pcomp = None
-        nplies_pcomp = None
         if 'PSHELL' in model.card_count:
             is_pshell = True
 

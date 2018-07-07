@@ -701,13 +701,20 @@ class GuiCommon2(QMainWindow, GuiCommon):
         msg = msg.rstrip().replace('\n', '<br>')
         msg = tim + ' ' + (typ + ': ' + msg) if typ else msg
         if typ in colors:
-            msg = '<font color="%s"> %s </font>' % (colors[typ], msg)
+            msg = r'<font color="%s"> %s </font> <br />' % (colors[typ], msg)
 
+        if self.performance_mode:
+            self._log_messages.append(msg)
+        else:
+            self._log_msg(msg)
+
+    def _log_msg(self, msg):
+        """prints an HTML log message"""
         self.log_mutex.lockForWrite()
         text_cursor = self.log_widget.textCursor()
         end = text_cursor.End
         text_cursor.movePosition(end)
-        text_cursor.insertHtml(msg + r"<br />")
+        text_cursor.insertHtml(msg)
         self.log_widget.ensureCursorVisible() # new message will be visible
         self.log_mutex.unlock()
 

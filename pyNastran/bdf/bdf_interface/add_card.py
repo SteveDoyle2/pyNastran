@@ -3978,13 +3978,13 @@ class AddCards(AddMethods):
             int : coordinate system
             CORDx : Coordinate object (xref)
         nsb : int; default=0
-            AEFACT id for defining the location of the slender body elements
-        lsb : int; default=0
-            AEFACT id for defining the location of interference elements
-        nint : int; default=0
             Number of slender body elements
-        lint : int; default=0
+        lsb : int; default=0
+            AEFACT id for defining the location of the slender body elements
+        nint : int; default=0
             Number of interference elements
+        lint : int; default=0
+            AEFACT id for defining the location of interference elements
         comment : str; default=''
             a comment for the card
 

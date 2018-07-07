@@ -881,8 +881,8 @@ class AddMethods(BDFAttributes):
         # type: (Any) -> None
         """adds an CAERO1/CAERO2/CAERO3/CAERO4/CAERO5 object"""
         key = caero.eid
-        assert key not in self.caeros, '\ncaero=\n%r old_caero=\n%r' % (
-            caero, self.caeros[key])
+        assert key not in self.caeros, '\nkey=%s; caero=\n%r old_caero=\n%r' % (
+            key, caero, self.caeros[key])
         assert key > 0
         self.caeros[key] = caero
         self._type_to_id_map[caero.type].append(key)

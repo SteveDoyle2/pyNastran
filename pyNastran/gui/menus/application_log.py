@@ -13,7 +13,13 @@ class HtmlLog(QTextEdit):
         super(HtmlLog, self).__init__(*args, **kwargs)
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.__contextMenu)
+
+        # https://stackoverflow.com/questions/3120258/qtextedit-inserthtml-is-very-slow
         self.setReadOnly(True)
+        self.setAcceptRichText(False)
+        self.setContextMenuPolicy(Qt.NoContextMenu)
+        #self.setOpenLinks(False)
+        self.setUndoRedoEnabled(False)
 
     def __contextMenu(self):
         self._normalMenu = self.createStandardContextMenu()

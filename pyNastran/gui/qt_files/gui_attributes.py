@@ -49,10 +49,12 @@ class GuiAttributes(object):
         inputs = kwds['inputs']
         res_widget = kwds['res_widget']
         self.dev = False
+        self._log_messages = []
+        self._performance_mode = True
+        #self.performance_mode = True
 
         # totally broken for solids
         self.make_contour_filter = False
-
         self.settings = Settings(self)
         self.tool_actions = ToolActions(self)
         self.view_actions = ViewActions(self)
@@ -207,6 +209,51 @@ class GuiAttributes(object):
         self.color_function_black = vtk.vtkColorTransferFunction()
         self.color_function_black.AddRGBPoint(0.0, 0.0, 0.0, 0.0)
         self.color_function_black.AddRGBPoint(1.0, 0.0, 0.0, 0.0)
+
+    @property
+    def performance_mode(self):
+        return self._performance_mode
+
+    @performance_mode.setter
+    def performance_mode(self, performance_mode):
+        if performance_mode and self._log_messages:
+            msg = ''.join(self._log_messages)
+            self._performance_mode = performance_mode
+            #setUpdatesEnabled(False)
+            #TxtBrows->append(SomeBigHTMLString)
+            self._log_msg(msg)
+            #setUpdatesEnabled(True)
+
+    def start_stop_performance_mode(func):
+        """Supresses logging."""
+        def new_func(self, *args, **kwargs):
+            """
+            The actual function exec'd by the decorated function.
+            """
+            performance_mode_initial = self.performance_mode
+            if not performance_mode_initial:
+                self.performance_mode = True
+            try:
+                n = func(self, *args, **kwargs)
+            except NameError:
+                raise
+            except AttributeError:
+                raise
+            #except:
+                #raise
+                #print("----------")
+                #print(self.obj)
+                #print(self.data_code)
+                #if self.obj is not None:
+                    ##from pyNastran.utils import object_attributes
+                    ##print object_attributes(self.obj)
+                    #print(self.obj.data_code)
+                #print("----------")
+                #raise
+            if performance_mode_initial:
+                self.performance_mode = True
+            return n
+        return new_func
 
     #-------------------------------------------------------------------
     # deprecated attributes
@@ -454,6 +501,7 @@ class GuiAttributes(object):
             qt_wildcard, title, default_filename=default_filename)
         return wildcard_level, fname
 
+    @start_stop_performance_mode
     def on_run_script(self, python_file=False):
         """pulldown for running a python script"""
         is_passed = False
@@ -813,7 +861,7 @@ class GuiAttributes(object):
                 if stop_on_failure:
                     raise RuntimeError(msg)
                 self.log_error(msg)
-            self._add_fmt(fmts, fmt, geom_results_funcs, data)
+            _add_fmt(fmts, fmt, geom_results_funcs, data)
 
         if len(fmts) == 0:
             RuntimeError('No formats...expected=%s' % fmt_order)
@@ -827,47 +875,6 @@ class GuiAttributes(object):
         if len(fmts) == 0:
             print('supported_formats = %s' % self.supported_formats)
             raise RuntimeError('no modules were loaded...')
-
-    def _add_fmt(self, fmts, fmt, geom_results_funcs, data):
-        """
-        Adds a format
-
-        Parameters
-        ----------
-        fmts : List[formats]
-            format : List[fmt, macro_name, geo_fmt, geo_func, res_fmt, res_func]
-            macro_name : ???
-                ???
-            geo_fmt : ???
-                ???
-            geo_func : ???
-                ???
-            res_fmt : ???
-                ???
-            res_func : ???
-                ???
-        fmt : str
-            nastran, cart3d, etc.
-        geom_results_funcs : str
-            'get_nastran_wildcard_geometry_results_functions'
-            'get_cart3d_wildcard_geometry_results_functions'
-        data : function
-            the outputs from ``get_nastran_wildcard_geometry_results_functions()``
-            so 1 or more formats (macro_name, geo_fmt, geo_func, res_fmt, res_func)
-        """
-        msg = 'macro_name, geo_fmt, geo_func, res_fmt, res_func = data\n'
-        msg += 'data = %s'
-        if isinstance(data, tuple):
-            assert len(data) == 5, msg % str(data)
-            macro_name, geo_fmt, geo_func, res_fmt, res_func = data
-            fmts.append((fmt, macro_name, geo_fmt, geo_func, res_fmt, res_func))
-        elif isinstance(data, list):
-            for datai in data:
-                assert len(datai) == 5, msg % str(datai)
-                macro_name, geo_fmt, geo_func, res_fmt, res_func = datai
-                fmts.append((fmt, macro_name, geo_fmt, geo_func, res_fmt, res_func))
-        else:
-            raise TypeError(data)
 
     def _reset_model(self, name):
         """resets the grids; sets up alt_grids"""
@@ -910,6 +917,7 @@ class GuiAttributes(object):
             self.alt_grids[alt_name].Modified()
 
     #---------------------------------------------------------------------------
+    @start_stop_performance_mode
     def on_load_geometry(self, infile_name=None, geometry_format=None, name='main',
                          plot=True, raise_error=False):
         """
@@ -933,6 +941,7 @@ class GuiAttributes(object):
             infile_name=infile_name, geometry_format=geometry_format,
             name=name, plot=plot, raise_error=raise_error)
 
+    @start_stop_performance_mode
     def on_load_results(self, out_filename=None):
         """
         Loads a results file.  Must have called on_load_geometry first.
@@ -944,15 +953,18 @@ class GuiAttributes(object):
         """
         self.load_actions.on_load_results(out_filename=out_filename)
 
+    @start_stop_performance_mode
     def on_load_custom_results(self, out_filename=None, restype=None):
         """will be a more generalized results reader"""
         self.load_actions.on_load_custom_results(
             out_filename=out_filename, restype=restype)
 
+    @start_stop_performance_mode
     def load_patran_nod(self, nod_filename):
         """reads a Patran formatted *.nod file"""
         self.load_actions.load_patran_nod(nod_filename)
 
+    @start_stop_performance_mode
     def load_batch_inputs(self, inputs):
         geom_script = inputs['geomscript']
         if geom_script is not None:
@@ -1160,6 +1172,7 @@ class GuiAttributes(object):
         self.edit_geometry_properties_obj.on_update_geometry_properties_window(
             geometry_properties)
 
+    @start_stop_performance_mode
     def on_update_geometry_properties(self, out_data, name=None, write_log=True):
         """
         Applies the changed properties to the different actors if
@@ -1173,6 +1186,7 @@ class GuiAttributes(object):
         self.edit_geometry_properties_obj.on_update_geometry_properties(
             out_data, name=name, write_log=write_log)
 
+    @start_stop_performance_mode
     def on_update_geometry_properties_override_dialog(self, geometry_properties):
         """
         Update the goemetry properties and overwite the options in the
@@ -1211,10 +1225,12 @@ class GuiAttributes(object):
         """turns all the text actors on"""
         self.tool_actions.turn_text_on()
 
+    @start_stop_performance_mode
     def export_case_data(self, icases=None):
         """exports CSVs of the requested cases"""
         self.tool_actions.export_case_data(icases=icases)
 
+    @start_stop_performance_mode
     def on_load_user_geom(self, csv_filename=None, name=None, color=None):
         """
         Loads a User Geometry CSV File of the form:
@@ -1258,6 +1274,7 @@ class GuiAttributes(object):
         """
         self.tool_actions.on_load_user_geom(csv_filename=csv_filename, name=name, color=color)
 
+    @start_stop_performance_mode
     def on_load_csv_points(self, csv_filename=None, name=None, color=None):
         """
         Loads a User Points CSV File of the form:
@@ -1470,3 +1487,44 @@ class GuiAttributes(object):
 
     def Render(self):  # pragma: no cover
         pass
+
+def _add_fmt(fmts, fmt, geom_results_funcs, data):
+    """
+    Adds a format
+
+    Parameters
+    ----------
+    fmts : List[formats]
+        format : List[fmt, macro_name, geo_fmt, geo_func, res_fmt, res_func]
+        macro_name : ???
+            ???
+        geo_fmt : ???
+            ???
+        geo_func : ???
+            ???
+        res_fmt : ???
+            ???
+        res_func : ???
+            ???
+    fmt : str
+        nastran, cart3d, etc.
+    geom_results_funcs : str
+        'get_nastran_wildcard_geometry_results_functions'
+        'get_cart3d_wildcard_geometry_results_functions'
+    data : function
+        the outputs from ``get_nastran_wildcard_geometry_results_functions()``
+        so 1 or more formats (macro_name, geo_fmt, geo_func, res_fmt, res_func)
+    """
+    msg = 'macro_name, geo_fmt, geo_func, res_fmt, res_func = data\n'
+    msg += 'data = %s'
+    if isinstance(data, tuple):
+        assert len(data) == 5, msg % str(data)
+        macro_name, geo_fmt, geo_func, res_fmt, res_func = data
+        fmts.append((fmt, macro_name, geo_fmt, geo_func, res_fmt, res_func))
+    elif isinstance(data, list):
+        for datai in data:
+            assert len(datai) == 5, msg % str(datai)
+            macro_name, geo_fmt, geo_func, res_fmt, res_func = datai
+            fmts.append((fmt, macro_name, geo_fmt, geo_func, res_fmt, res_func))
+    else:
+        raise TypeError(data)

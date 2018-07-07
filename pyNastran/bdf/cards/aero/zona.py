@@ -21,7 +21,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 )
 from pyNastran.bdf.cards.aero.aero import (Spline, CAERO1, CAERO2, PAERO1, PAERO2,
                                            SPLINE1, SPLINE2, SPLINE3, AESURF, AELIST,
-                                           AELINK)
+                                           AELINK, AEFACT)
 from pyNastran.bdf.cards.aero.static_loads import TRIM
 from pyNastran.bdf.cards.aero.dynamic_loads import MKAERO1
 from pyNastran.bdf.cards.aero.utils import elements_from_quad, points_elements_from_quad_points
@@ -792,7 +792,7 @@ class MKAEROZ(BaseCard):
         save = string(card, 5, 'SAVE')
         filename_a = string_or_blank(card, 6, 'FILENAMEA', '')
         filename_b = string_or_blank(card, 7, 'FILENAMEB', '')
-        print(filename_a, filename_b)
+        #print(filename_a, filename_b)
         filename = (filename_a + filename_b).rstrip()
         print_flag = integer(card, 8, 'PRINT_FLAG')
         freqs = []
@@ -1076,7 +1076,7 @@ class BODY7(BaseCard):
         self.pid_ref = None
         self.acoord_ref = None
 
-    def convert_to_nastran(self):
+    def convert_to_nastran(self, model):
         """
         +--------+-----+-----+----+-----+------+-----+------+------+
         |    1   |  2  |  3  |  4 |  5  |   6  |   7 |   8  |  9   |
@@ -1098,25 +1098,115 @@ class BODY7(BaseCard):
         |       |    23   |       |         |        |      |         |         |         |
         +-------+---------+-------+---------+--------+------+---------+---------+---------+
         """
-        pid = 1
+        pid = max(model.paeros) + 1000
         igroup = 1
-        p1 = [0., 0., 0.]
-        x12 = 10.
-        orient = 'YZ'
-        AR = 1
-        thi = 1
-        thn = 1
+        orient = 'ZY'
         cp = 0
-        width = 1
+        #width = 1
+
+        #nsb  : AEFACT id for defining the location of the slender body elements
+        #lsb  : AEFACT id for defining the location of interference elements
+        #nint : Number of slender body elements
+        #lint : Number of interference elements
+        aefact_id = len(model.aefacts) + 1
+        xs_id = aefact_id
+        half_width_id = aefact_id + 1
+        theta1_id = aefact_id + 2
+        theta2_id = aefact_id + 3
+
+        lsb = xs_id
+        lint = xs_id
+
+        #+---------+--------+-------+------+---------+-------+------+------+-----+
+        #|    1    |    2   |   3   |   4  |    5    |   6   |   7  |   8  |  9  |
+        #+=========+========+=======+======+=========+=======+======+======+=====+
+        #| SEGMESH | IDMESH | NAXIS | NRAD | NOSERAD | IAXIS |      |      |     |
+        #|         | ITYPE1 |   X1  | CAM1 |   YR1   |  ZR1  | IDY1 | IDZ1 |     |
+        #|         | ITYPE2 |   X2  | CAM2 |   YR2   |  ZR2  | IDY2 | IDZ2 |     |
+        #|         | ITYPE3 |   X3  | CAM3 |   YR3   |  ZR3  | IDY3 | IDZ3 |     |
+        #+---------+--------+-------+------+---------+-------+------+------+-----+
+        nsegments = len(self.segmesh_refs)
+        xpoints = []
+        half_widths = []
+
+        origin_x, origin_y, origin_z = self.acoord_ref.origin
+        #x_offset = origin_x + x
+        #y_offset = origin_y + y
+        #z_offset = origin_z + z
+        nsegmesh = len(self.segmesh_refs)
+        for isegmesh, segmesh in enumerate(self.segmesh_refs):
+            for itype in segmesh.itypes:
+                if itype not in [3]:
+                    raise NotImplementedError(self)
+
+            # aefacts
+            if isegmesh in [0, nsegmesh - 1]:
+                xs = segmesh.xs
+                idys_ref = segmesh.idys_ref
+                idzs_ref = segmesh.idzs_ref
+            else:
+                xs = segmesh.xs[1:]
+                idys_ref = segmesh.idys_ref[1:]
+                idzs_ref = segmesh.idzs_ref[1:]
+
+            xpoints += xs
+            for idy_ref, idz_ref in zip(idys_ref, idzs_ref):
+                ypoints = idy_ref.fractions
+                zpoints = idz_ref.fractions
+                width = ypoints.max() - ypoints.min()
+                half_widths.append(width / 2.)
+
+            # just pick the last point for the yz location
+            ymean = ypoints.mean()
+            zmean = zpoints.mean()
+
+        xpoints_local = [xi for xi in xpoints]
+        assert len(half_widths) == len(xpoints_local)
+
+        half_width = max(half_widths)
+        AR = 1.0
+
+        p1 = [origin_x, origin_y + ymean, origin_z + zmean]
+        x12 = max(xpoints) - min(xpoints)
+        dash = '-' * 80 + '\n'
+        comment = dash
+        comment += self.comment
         caero2 = CAERO2(self.eid, pid, igroup, p1, x12,
-                        cp=cp, nsb=0, nint=0, lsb=0,
-                        lint=0, comment=self.comment)
-        paero2 = PAERO2(pid, orient, width, AR, thi, thn,
-                        lrsb=None, lrib=None,
-                        lth1=None, lth2=None, comment='')
+                        cp=cp,
+                        nsb=0, lsb=lsb,
+                        nint=0, lint=lint, comment=comment)
+
+        #
+        lrsb = half_width_id # slender body
+        lrib = half_width_id # interference
+
+
+        # theta arrays (AEFACTs)
+        lth1 = theta1_id
+        lth2 = theta2_id
+
+        # 0-57 is excluded
+        angles_body = [20.0, 40.0, 60.0, 80.0, 100.0, 120.0, 140.0, 160.0,
+                       200.0, 220.0, 240.0, 260.0, 280.0, 300.0, 320.0, 340.0]
+        angles_fin = [20.0, 40.0, 60.0, 80.0, 100.0, 120.0, 140.0, 160.0,
+                      200.0, 220.0, 240.0, 260.0, 280.0, 300.0, 320.0, 340.0]
+
+
+        aefact_xs = AEFACT(xs_id, xpoints_local, comment=dash+'Xs')
+        aefact_width = AEFACT(half_width_id, half_widths, comment='half widths')
+        aefact_theta1 = AEFACT(theta1_id, angles_body, comment='angles_body')
+        aefact_theta2 = AEFACT(theta2_id, angles_fin, comment='angles_body')
+
+        # which segments use theta1 array
+        lth = [1, 10] #nsegments] # t
+        thi = [1]
+        thn = [1]
+        paero2 = PAERO2(pid, orient, half_width, AR, thi, thn,
+                        lrsb=lrsb, lrib=lrib,
+                        lth=lth, comment='')
         caero2.validate()
         paero2.validate()
-        return caero2, paero2
+        return caero2, paero2, aefact_xs, aefact_width, aefact_theta1, aefact_theta2
 
     def get_points(self):
         """creates a 1D representation of the CAERO2"""
@@ -1156,6 +1246,7 @@ class BODY7(BaseCard):
             try:
                 xyzi, elementi = self._get_points_elements_3di(segmesh)
             except NotImplementedError:
+                raise
                 return None, None
             xyz.append(xyzi)
             element.append(elementi + nelements)
@@ -1181,6 +1272,8 @@ class BODY7(BaseCard):
         xs = []
         ys = []
         zs = []
+
+        origin_x, origin_y, origin_z = self.acoord_ref.origin
         for itype, x, y, z, camber, idy_ref, idz_ref in zip(segmesh.itypes,
                                                             segmesh.xs, segmesh.ys, segmesh.zs,
                                                             segmesh.cambers,
@@ -1196,7 +1289,6 @@ class BODY7(BaseCard):
             assert len(ynodes) == len(znodes), 'len(ynodes)=%s len(znodes)=%s' % (len(ynodes), len(znodes))
             nnodes = len(ynodes)
 
-            origin_x, origin_y, origin_z = self.acoord_ref.origin
             x_offset = origin_x + x
             y_offset = origin_y + y
             z_offset = origin_z + z
@@ -2723,7 +2815,7 @@ class TRIMVAR(BaseCard):
         aaa
         mkaeroz_id = self.mkaeroz
         mkaeroz = model.zona.mkaeroz[mkaeroz_id]
-        print(mkaeroz)
+        #print(mkaeroz)
         mach = mkaeroz.mach
         labels = []
         uxs = []
@@ -2886,7 +2978,7 @@ class SPLINE1_ZONA(Spline):
         | SPLINE1 | 100  |       |       |  1   |  10  | 0. |     |       |
         +---------+------+-------+-------+------+------+----+-----+-------+
         """
-        print('self.aero_element_ids =', self.aero_element_ids)
+        #print('self.aero_element_ids =', self.aero_element_ids)
         #setk = 100 # set_aero
         #return SPLINE1(self.eid, setk, self.setg, model=None, cp=self.cp, dz=self.dz,
                        #eps=0.01, comment=self.comment)
@@ -2897,10 +2989,10 @@ class SPLINE1_ZONA(Spline):
         #self._comment = ''
         comment += str(self)
         for panel_groups in self.setk_ref.panel_groups:
-            print(panel_groups)
+            #print(panel_groups)
             eid = model.zona.caero_to_name_map[panel_groups]
             caero = model.caeros[eid]
-            print(caero)
+            #print(caero)
             caero_id = eid
             box1 = caero.eid
             box2 = box1 + caero.npanels - 1

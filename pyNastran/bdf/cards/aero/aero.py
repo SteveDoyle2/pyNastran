@@ -1961,13 +1961,13 @@ class CAERO2(BaseCard):
             int : coordinate system
             CORDx : Coordinate object (xref)
         nsb : int; default=0
-            AEFACT id for defining the location of the slender body elements
-        lsb : int; default=0
-            AEFACT id for defining the location of interference elements
-        nint : int; default=0
             Number of slender body elements
-        lint : int; default=0
+        lsb : int; default=0
+            AEFACT id for defining the location of the slender body elements
+        nint : int; default=0
             Number of interference elements
+        lint : int; default=0
+            AEFACT id for defining the location of interference elements
         comment : str; default=''
             a comment for the card
 
@@ -3792,9 +3792,19 @@ class PAERO1(BaseCard):
             the value for the appropriate field
 
         """
-        self.Bi[n - 1] = value
+        self.caero_body_ids[n - 1] = value
 
-    def __init__(self, pid, Bi=None, comment=''):
+    @property
+    def Bi(self):
+        self.deprecated('Bi', 'caero_body_ids', '1.2')
+        return self.caero_body_ids
+
+    @Bi.setter
+    def Bi(self, Bi):
+        self.deprecated('Bi', 'caero_body_ids', '1.2')
+        self.caero_body_ids = Bi
+
+    def __init__(self, pid, caero_body_ids=None, comment=''):
         """
         Creates a PAERO1 card, which defines associated bodies for the
         panels in the Doublet-Lattice method.
@@ -3803,8 +3813,8 @@ class PAERO1(BaseCard):
         ----------
         pid : int
             PAERO1 id
-        Bi : List[int]; default=None
-            CAERO2 ids that are within the same IGID group
+        caero_body_ids : List[int]; default=None
+            CAERO2 ids that are within the same IGROUP group
         comment : str; default=''
             a comment for the card
 
@@ -3813,9 +3823,9 @@ class PAERO1(BaseCard):
         if comment:
             self.comment = comment
         self.pid = pid
-        if Bi is None:
-            Bi = []
-        self.Bi = Bi
+        if caero_body_ids is None:
+            caero_body_ids = []
+        self.caero_body_ids = caero_body_ids
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -3831,17 +3841,17 @@ class PAERO1(BaseCard):
 
         """
         pid = integer(card, 1, 'pid')
-        Bi = [interpret_value(field, card) for field in card[2:]]
-        Bi2 = []
+        caero_body_ids = [interpret_value(field, card) for field in card[2:]]
+        caero_body_ids2 = []
 
-        for bi in Bi:
-            if isinstance(bi, integer_types) and bi >= 0:
-                Bi2.append(bi)
-            elif bi is not None:
-                raise RuntimeError('invalid Bi value on PAERO1 bi=%r' % (bi))
+        for caero_body_id in caero_body_ids:
+            if isinstance(caero_body_id, integer_types) and caero_body_id >= 0:
+                caero_body_ids2.append(caero_body_id)
+            elif caero_body_id is not None:
+                raise RuntimeError('invalid caero_body_id value on PAERO1; caero_body_id=%r' % (caero_body_id))
             #else:
                 #pass
-        return PAERO1(pid, Bi, comment=comment)
+        return PAERO1(pid, caero_body_ids, comment=comment)
 
     def cross_reference(self, model):
         pass
@@ -3853,6 +3863,7 @@ class PAERO1(BaseCard):
         pass
 
     def Bodies(self):
+        self.deprecated('Bodies', 'N/A', '1.2')
         return self.Bi
 
     def raw_fields(self):
@@ -3865,7 +3876,7 @@ class PAERO1(BaseCard):
             the fields that define the card
 
         """
-        list_fields = ['PAERO1', self.pid] + self.Bi
+        list_fields = ['PAERO1', self.pid] + self.caero_body_ids
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -3888,7 +3899,7 @@ class PAERO2(BaseCard):
     type = 'PAERO2'
     _field_map = {
         1: 'pid', 2:'orient', 3:'width', 4:'AR', 5:'lrsb', 6:'lrib',
-        7: 'lth1', 8:'lth2',
+        #7: 'lth1', 8:'lth2',
     }
 
     def _get_field_helper(self, n):
@@ -3936,7 +3947,7 @@ class PAERO2(BaseCard):
             self.thn[spot] = value
 
     def __init__(self, pid, orient, width, AR,
-                 thi, thn, lrsb=None, lrib=None, lth1=None, lth2=None,
+                 thi, thn, lrsb=None, lrib=None, lth=None,
                  comment=''):
         """
         Creates a PAERO2 card, which defines additional cross-sectional
@@ -3966,7 +3977,7 @@ class PAERO2(BaseCard):
             int : AEFACT id containing a list of interference body
                   half-widths at the end points of the interference elements
             None : use width
-        lth1 / lth2 : int; default=None
+        lth : List[int, int]; default=None
             AEFACT id for defining theta arrays for interference calculations
             for theta1/theta2
         comment : str; default=''
@@ -4006,8 +4017,9 @@ class PAERO2(BaseCard):
 
         #: Identification number of AEFACT entries for defining theta arrays for
         #: interference calculations. (Integer >= 0)
-        self.lth1 = lth1
-        self.lth2 = lth2
+        if lth is None:
+            lth = [None, None]
+        self.lth = lth
         self.thi = thi
         self.thn = thn
         if self.lrsb == 0:
@@ -4016,6 +4028,21 @@ class PAERO2(BaseCard):
             self.lrib = None
         self.lrsb_ref = None
         self.lrib_ref = None
+
+    @property
+    def lth1(self):
+        return self.lth[0]
+    @property
+    def lth2(self):
+        return self.lth[1]
+
+    @lth1.setter
+    def lth1(self, lth1):
+        self.lth[0] = lth
+
+    @lth2.setter
+    def lth2(self, lth2):
+        self.lth[1] = lth
 
     def validate(self):
         assert self.orient in ['Z', 'Y', 'ZY'], 'PAERO2: orient=%r' % self.orient
@@ -4049,11 +4076,12 @@ class PAERO2(BaseCard):
         thn = []
         list_fields = [interpret_value(field, card) for field in card[9:]]
         nfields = len(list_fields)
+        lth = [lth1, lth2]
         for i in range(9, 9 + nfields, 2):
             thi.append(integer(card, i, 'lth'))
             thn.append(integer(card, i + 1, 'thn'))
         return PAERO2(pid, orient, width, AR, thi, thn,
-                      lrsb=lrsb, lrib=lrib, lth1=lth1, lth2=lth2,
+                      lrsb=lrsb, lrib=lrib, lth=lth,
                       comment=comment)
 
     def cross_reference(self, model):
@@ -4099,7 +4127,7 @@ class PAERO2(BaseCard):
 
         """
         list_fields = ['PAERO2', self.pid, self.orient, self.width,
-                       self.AR, self.Lrsb(), self.Lrib(), self.lth1, self.lth2]
+                       self.AR, self.Lrsb(), self.Lrib()] + self.lth
         for (thi, thn) in zip(self.thi, self.thn):
             list_fields += [thi, thn]
         return list_fields

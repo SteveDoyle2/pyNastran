@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-from types import MethodType
+from types import MethodType, FunctionType
 import os
 import io
 import sys
@@ -237,7 +237,10 @@ def object_attributes(obj, mode='public', keys_to_skip=None):
         sorted list of the names of attributes of a given type or None
         if the mode is wrong
     """
-    return __object_attr(obj, mode, keys_to_skip, lambda x: not isinstance(x, MethodType))
+    return __object_attr(
+        obj, mode, keys_to_skip,
+        lambda x: not isinstance(x, (MethodType, FunctionType))
+    )
 
 
 #def remove_files(*filenames):
