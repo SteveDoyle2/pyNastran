@@ -89,62 +89,91 @@ class WriteMesh(BDFAttributes):
         self.log.debug("***writing %s" % fname)
         return out_filename
 
-    def write_caero_model(self, caero_bdf_filename='caero.bdf'):
-        # type: (str) -> None
+    def write_caero_model(self, caero_bdf_filename='caero.bdf', is_subpanel_model=True):
+        # type: (str, bool) -> None
         """write the CAERO cards as CQUAD4s that can be visualized"""
+        def _get_subpanel_property(eid):
+            """gets the property id for the subpanel"""
+            pidi = None
+            for aesurf_id, aesurf in iteritems(self.aesurf):
+                aelist_id = aesurf.aelist_id1()
+                aelist = self.aelists[aelist_id]
+                if eid in aelist.elements:
+                    pidi = aesurf_id
+                    break
+            if pidi is None:
+                #pidi = pid
+                pidi = 1
+            return pidi
+
+        inid = 1
+        mid = 1
         self.log.debug('---starting BDF.write_caero_model of %s---' % caero_bdf_filename)
         with open(caero_bdf_filename, 'w') as bdf_file:
             #bdf_file.write('$ pyNastran: punch=True\n')
             bdf_file.write('CEND\n')
             bdf_file.write('BEGIN BULK\n')
-            i = 1
-            mid = 1
-            bdf_file.write('MAT1,%s,3.0E7,,0.3\n' % mid)
+            #if is_subpanel_model:
             for aesurf_id, aesurf in iteritems(self.aesurf):
                 #cid = aesurf.cid1
-                bdf_file.write('PSHELL,%s,%s,0.1\n' % (aesurf_id, aesurf_id))
+
+                #aesurf_mid = aesurf_id
+                aesurf_mid = 1
+                bdf_file.write('PSHELL,%s,%s,0.1\n' % (aesurf_id, aesurf_mid))
                 #print(cid)
                 #ax, ay, az = cid.i
                 #bx, by, bz = cid.j
                 #cx, cy, cz = cid.k
-                #bdf_file.write('CORD2R,%s,,%s,%s,%s,%s,%s,%s\n' % (cid, ax, ay, az, bx, by, bz))
+                #bdf_file.write('CORD2R,%s,,%s,%s,%s,%s,%s,%s\n' % (
+                    #cid, ax, ay, az, bx, by, bz))
                 #bdf_file.write(',%s,%s,%s\n' % (cx, cy, cz))
                 #print(cid)
                 #aesurf.elements
 
-            for eid, caero in sorted(iteritems(self.caeros)):
-                #assert eid != 1, 'CAERO eid=1 is reserved for non-flaps'
+            for caero_eid, caero in sorted(iteritems(self.caeros)):
+                #assert caero_eid != 1, 'CAERO eid=1 is reserved for non-flaps'
                 scaero = str(caero).rstrip().split('\n')
-                bdf_file.write('$ ' + '\n$ '.join(scaero) + '\n')
-                points, elements = caero.panel_points_elements()
-                npoints = points.shape[0]
-                #nelements = elements.shape[0]
-                for ipoint, point in enumerate(points):
-                    x, y, z = point
-                    bdf_file.write(print_card_8(['GRID', i+ipoint, None, x, y, z]))
+                if is_subpanel_model:
+                    if caero.type == 'CAERO2':
+                        continue
 
-                #pid = eid
-                #mid = eid
-                bdf_file.write('PSHELL,%s,%s,0.1\n' % (1, 1))
-                bdf_file.write('MAT1,%s,3.0E7,,0.3\n' % 1)
+                    bdf_file.write('$ ' + '\n$ '.join(scaero) + '\n')
+                    points, elements = caero.panel_points_elements()
+                    npoints = points.shape[0]
+                    #nelements = elements.shape[0]
+                    for ipoint, point in enumerate(points):
+                        x, y, z = point
+                        bdf_file.write(print_card_8(['GRID', inid+ipoint, None, x, y, z]))
 
-                j = 0
-                for elem in elements + i:
-                    p1, p2, p3, p4 = elem
-                    eid2 = j + eid
-                    pidi = None
-                    for aesurf_id, aesurf in iteritems(self.aesurf):
-                        aelist_id = aesurf.aelist_id1()
-                        aelist = self.aelists[aelist_id]
-                        if eid2 in aelist.elements:
-                            pidi = aesurf_id
-                            break
-                    if pidi is None:
-                        #pidi = pid
-                        pidi = 1
-                    bdf_file.write(print_card_8(['CQUAD4', j + eid, pidi, p1, p2, p3, p4]))
-                    j += 1
-                i += npoints
+                    #pid = caero_eid
+                    #mid = caero_eid
+                    jeid = 0
+                    for elem in elements + inid:
+                        p1, p2, p3, p4 = elem
+                        eid2 = jeid + caero_eid
+                        pidi = _get_subpanel_property(eid2)
+                        fields = ['CQUAD4', eid2, pidi, p1, p2, p3, p4]
+                        bdf_file.write(print_card_8(fields))
+                        jeid += 1
+                else:
+                    if caero.type == 'CAERO2':
+                        continue
+                    bdf_file.write('$ ' + '\n$ '.join(scaero) + '\n')
+                    points = caero.get_points()
+                    npoints = 4
+                    for ipoint, point in enumerate(points):
+                        x, y, z = point
+                        bdf_file.write(print_card_8(['GRID', inid+ipoint, None, x, y, z]))
+
+                    pid = _get_subpanel_property(caero_eid)
+                    p1 = inid
+                    p2 = inid + 1
+                    p3 = inid + 2
+                    p4 = inid + 3
+                    bdf_file.write(print_card_8(['CQUAD4', caero_eid, pid, p1, p2, p3, p4]))
+                inid += npoints
+            bdf_file.write('PSHELL,%s,%s,0.1\n' % (1, 1))
+            bdf_file.write('MAT1,%s,3.0E7,,0.3\n' % mid)
             bdf_file.write('ENDDATA\n')
 
     def write_bdf(self, out_filename=None, encoding=None,
@@ -311,7 +340,7 @@ class WriteMesh(BDFAttributes):
             for (eid, element) in sorted(iteritems(self.ao_element_flags)):
                 bdf_file.write(element.write_card(size, is_double))
         if self.normals:
-            for (nid, snorm) in sorted(iteritems(self.normals)):
+            for (unused_nid, snorm) in sorted(iteritems(self.normals)):
                 bdf_file.write(snorm.write_card(size, is_double))
         self._write_nsm(bdf_file, size, is_double)
 
@@ -395,7 +424,7 @@ class WriteMesh(BDFAttributes):
             for (eid, element) in sorted(iteritems(self.ao_element_flags)):
                 bdf_file.write(element.write_card(size, is_double))
         if self.normals:
-            for (nid, snorm) in sorted(iteritems(self.normals)):
+            for (unused_nid, snorm) in sorted(iteritems(self.normals)):
                 bdf_file.write(snorm.write_card(size, is_double))
         self._write_nsm(bdf_file, size, is_double)
 
@@ -468,7 +497,8 @@ class WriteMesh(BDFAttributes):
                 write_aero_in_flutter = True
         return write_aero_in_flutter, write_aero_in_gust
 
-    def _write_flutter(self, bdf_file, size=8, is_double=False, write_aero_in_flutter=True, is_long_ids=None):
+    def _write_flutter(self, bdf_file, size=8, is_double=False, write_aero_in_flutter=True,
+                       is_long_ids=None):
         # type: (Any, int, bool, bool) -> None
         """Writes the flutter cards"""
         if (write_aero_in_flutter and self.aero) or self.flfacts or self.flutters or self.mkaeros:
@@ -682,12 +712,12 @@ class WriteMesh(BDFAttributes):
             bdf_file.write('$LOADS\n')
             for (key, load_combinations) in sorted(iteritems(self.load_combinations)):
                 for load_combination in load_combinations:
-                        try:
-                            bdf_file.write(load_combination.write_card(size, is_double))
-                        except:
-                            print('failed printing load...type=%s key=%r'
-                                  % (load_combination.type, key))
-                            raise
+                    try:
+                        bdf_file.write(load_combination.write_card(size, is_double))
+                    except:
+                        print('failed printing load...type=%s key=%r'
+                              % (load_combination.type, key))
+                        raise
             for (key, loadcase) in sorted(iteritems(self.loads)):
                 for load in loadcase:
                     try:

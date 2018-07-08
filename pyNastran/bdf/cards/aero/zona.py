@@ -22,8 +22,8 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.cards.aero.aero import (Spline, CAERO1, CAERO2, PAERO1, PAERO2,
                                            SPLINE1, SPLINE2, SPLINE3, AESURF, AELIST,
                                            AELINK, AEFACT)
-from pyNastran.bdf.cards.aero.static_loads import TRIM
-from pyNastran.bdf.cards.aero.dynamic_loads import MKAERO1
+from pyNastran.bdf.cards.aero.static_loads import TRIM, AEROS
+from pyNastran.bdf.cards.aero.dynamic_loads import MKAERO1, AERO
 from pyNastran.bdf.cards.aero.utils import elements_from_quad, points_elements_from_quad_points
 from pyNastran.bdf.cards.coordinate_systems import Coord
 
@@ -43,6 +43,64 @@ class ZONA(object):
         self.mkaeroz = {}
         self.trimvar = {}
         self.trimlnk = {}
+        #self.aeroz = {}
+
+    def update_for_zona(self):
+        card_parser = self.model._card_parser
+        card_parser['TRIM'] = (TRIM_ZONA, self.model._add_trim_object)
+        card_parser['CAERO7'] = (CAERO7, self.model._add_caero_object)
+        card_parser['AEROZ'] = (AEROZ, self.model._add_aeros_object)
+        card_parser['AESURFZ'] = (AESURFZ, self.model._add_aesurf_object)
+        card_parser['SPLINE1'] = (SPLINE1_ZONA, self.model._add_spline_object)
+        card_parser['SPLINE2'] = (SPLINE2_ZONA, self.model._add_spline_object)
+        card_parser['SPLINE3'] = (SPLINE3_ZONA, self.model._add_spline_object)
+        card_parser['PANLST3'] = (PANLST3, self._add_panlst_object)
+        card_parser['MKAEROZ'] = (MKAEROZ, self._add_mkaeroz_object)
+        card_parser['SEGMESH'] = (SEGMESH, self.model._add_paero_object)
+        card_parser['BODY7'] = (BODY7, self.model._add_caero_object)
+        card_parser['ACOORD'] = (ACOORD, self.model._add_coord_object)
+        card_parser['TRIMVAR'] = (TRIMVAR, self._add_trimvar_object)
+        card_parser['TRIMLNK'] = (TRIMLNK, self._add_trimlnk_object)
+        cards = [
+            'CAERO7', 'AEROZ', 'AESURFZ', 'PANLST3', 'SEGMESH',
+            'BODY7', 'ACOORD', 'MKAEROZ', 'TRIMVAR', 'TRIMLNK']
+        self.model.cards_to_read.update(set(cards))
+
+    def _add_panlst_object(self, panlst):
+        # type: (Any) -> None
+        """adds an PANLST1/PANLST2/PANLST3 object"""
+        assert panlst.eid not in self.panlsts
+        assert panlst.eid > 0
+        key = panlst.eid
+        self.panlsts[key] = panlst
+        self.model._type_to_id_map[panlst.type].append(key)
+
+    def _add_mkaeroz_object(self, mkaeroz):
+        # type: (Any) -> None
+        """adds an MKAEROZ object"""
+        assert mkaeroz.sid not in self.mkaeroz
+        assert mkaeroz.sid > 0
+        key = mkaeroz.sid
+        self.mkaeroz[key] = mkaeroz
+        self.model._type_to_id_map[mkaeroz.type].append(key)
+
+    def _add_trimvar_object(self, trimvar):
+        # type: (Any) -> None
+        """adds an TRIMVAR object"""
+        assert trimvar.var_id not in self.trimvar
+        assert trimvar.var_id > 0
+        key = trimvar.var_id
+        self.trimvar[key] = trimvar
+        self.model._type_to_id_map[trimvar.type].append(key)
+
+    def _add_trimlnk_object(self, trimlnk):
+        # type: (Any) -> None
+        """adds an TRIMLNK object"""
+        assert trimlnk.link_id not in self.trimlnk
+        assert trimlnk.link_id > 0
+        key = trimlnk.link_id
+        self.trimlnk[key] = trimlnk
+        self.model._type_to_id_map[trimlnk.type].append(key)
 
     def cross_reference(self):
         if self.model.nastran_format != 'zona':
@@ -53,6 +111,8 @@ class ZONA(object):
             trimvar.cross_reference(self.model)
         for trimlnk in itervalues(self.trimlnk):
             trimlnk.cross_reference(self.model)
+        #for aeroz in itervalues(self.aeroz):
+            #aeroz.cross_reference(self.model)
 
         for caero in itervalues(self.model.caeros):
             self.caero_to_name_map[caero.label] = caero.eid
@@ -495,17 +555,17 @@ class AEROZ(Aero):
     | AEROS |   10  |   20  | 10.  | 100. | 1000. |   1   |       |
     +-------+-------+-------+------+------+-------+-------+-------+
     """
-    type = 'AEROS'
-    _field_map = {
-        1: 'acsid', 2:'rcsid', 3:'cRef', 4:'bRef', 5:'Sref',
-        6:'symXZ', 7:'symXY',
-    }
+    type = 'AEROZ'
+    #_field_map = {
+        #1: 'acsid', 2:'rcsid', 3:'cRef', 4:'bRef', 5:'Sref',
+        #6:'symXZ', 7:'symXY',
+    #}
 
     def __init__(self, fm_mass_unit, fm_length_unit,
                  cref, bref, sref,
                  flip='NO', acsid=0, rcsid=0, sym_xz=0, xyz_ref=None, comment=''):
         """
-        Creates an AEROS card
+        Creates an AEROZ card
 
         Parameters
         ----------
@@ -571,69 +631,10 @@ class AEROZ(Aero):
         self.acsid_ref = None
         self.rcsid_ref = None
 
-    def Acsid(self):
-        try:
-            return self.acsid_ref.cid
-        except AttributeError:
-            return self.acsid
-
-    def Rcsid(self):
-        try:
-            return self.rcsid_ref.cid
-        except AttributeError:
-            return self.rcsid
-
-    #def validate(self):
-        #msg = ''
-        #if not isinstance(self.acsid, integer_types):
-            #msg += 'acsid=%s must be an integer; type=%s\n' % (self.acsid, type(self.acsid))
-        #if not isinstance(self.rcsid, integer_types):
-            #msg += 'rcsid=%s must be an integer; type=%s\n' % (self.rcsid, type(self.rcsid))
-        #if not isinstance(self.cref, float):
-            #msg += 'cref=%s must be an float; type=%s\n' % (self.cref, type(self.cref))
-        #if not isinstance(self.bref, float):
-            #msg += 'bref=%s must be an float; type=%s\n' % (self.bref, type(self.bref))
-        #if not isinstance(self.sref, float):
-            #msg += 'sref=%s must be an float; type=%s\n' % (self.sref, type(self.sref))
-        #if not isinstance(self.sym_xz, integer_types):
-            #msg += 'sym_xz=%s must be an integer; type=%s\n' % (self.sym_xz, type(self.sym_xz))
-        #if not isinstance(self.sym_xy, integer_types):
-            #msg += 'sym_xy=%s must be an integer; type=%s\n' % (self.sym_xy, type(self.sym_xy))
-        #if msg:
-            #raise TypeError('There are errors on the AEROS card:\n%s%s' % (msg, self))
-
-    def cross_reference(self, model):
-        """
-        Cross refernece aerodynamic coordinate system.
-
-        Parameters
-        ----------
-        model : BDF
-            The BDF object.
-
-        """
-        msg = ', which is required by AEROS'
-        self.acsid_ref = model.Coord(self.acsid, msg=msg)
-        self.rcsid_ref = model.Coord(self.rcsid, msg=msg)
-
-    def safe_cross_reference(self, model, xref_errors):
-        """
-        Safe cross refernece aerodynamic coordinate system.
-
-        Parameters
-        ----------
-        model : BDF
-            The BDF object.
-
-        """
-        msg = ', which is required by AEROS'
-        self.acsid_ref = model.safe_coord(self.acsid, None, xref_errors, msg=msg)
-        self.rcsid_ref = model.safe_coord(self.rcsid, None, xref_errors, msg=msg)
-
     @classmethod
     def add_card(cls, card, comment=''):
         """
-        Adds an AEROS card from ``BDF.add_card(...)``
+        Adds an AEROZ card from ``BDF.add_card(...)``
 
         Parameters
         ----------
@@ -678,12 +679,73 @@ class AEROZ(Aero):
         xyz_ref = [xref, yref, zref]
 
         assert len(card) <= 12, 'len(AEROZ card) = %i\ncard=%s' % (len(card), card)
+
+        # faking data to not change gui
         rcsid = 0
         sym_xy = 0
         return AEROZ(fm_mass_unit, fm_length_unit,
                      cref, bref, sref, acsid=acsid, rcsid=rcsid,
                      sym_xz=sym_xz, flip=flip, xyz_ref=xyz_ref,
                      comment=comment)
+
+    def Acsid(self):
+        try:
+            return self.acsid_ref.cid
+        except AttributeError:
+            return self.acsid
+
+    def Rcsid(self):
+        try:
+            return self.rcsid_ref.cid
+        except AttributeError:
+            return self.rcsid
+
+    #def validate(self):
+        #msg = ''
+        #if not isinstance(self.acsid, integer_types):
+            #msg += 'acsid=%s must be an integer; type=%s\n' % (self.acsid, type(self.acsid))
+        #if not isinstance(self.rcsid, integer_types):
+            #msg += 'rcsid=%s must be an integer; type=%s\n' % (self.rcsid, type(self.rcsid))
+        #if not isinstance(self.cref, float):
+            #msg += 'cref=%s must be an float; type=%s\n' % (self.cref, type(self.cref))
+        #if not isinstance(self.bref, float):
+            #msg += 'bref=%s must be an float; type=%s\n' % (self.bref, type(self.bref))
+        #if not isinstance(self.sref, float):
+            #msg += 'sref=%s must be an float; type=%s\n' % (self.sref, type(self.sref))
+        #if not isinstance(self.sym_xz, integer_types):
+            #msg += 'sym_xz=%s must be an integer; type=%s\n' % (self.sym_xz, type(self.sym_xz))
+        #if not isinstance(self.sym_xy, integer_types):
+            #msg += 'sym_xy=%s must be an integer; type=%s\n' % (self.sym_xy, type(self.sym_xy))
+        #if msg:
+            #raise TypeError('There are errors on the AEROS card:\n%s%s' % (msg, self))
+
+    def cross_reference(self, model):
+        """
+        Cross refernece aerodynamic coordinate system.
+
+        Parameters
+        ----------
+        model : BDF
+            The BDF object.
+
+        """
+        msg = ', which is required by AEROZ'
+        self.acsid_ref = model.Coord(self.acsid, msg=msg)
+        self.rcsid_ref = model.Coord(self.rcsid, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Safe cross refernece aerodynamic coordinate system.
+
+        Parameters
+        ----------
+        model : BDF
+            The BDF object.
+
+        """
+        msg = ', which is required by AEROZ'
+        self.acsid_ref = model.safe_coord(self.acsid, None, xref_errors, msg=msg)
+        self.rcsid_ref = model.safe_coord(self.rcsid, None, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.acsid_ref = None
@@ -700,6 +762,30 @@ class AEROZ(Aero):
         self.acsid = cid_map[self.acsid]
         self.rcsid = cid_map[self.rcsid]
 
+    def convert_to_zona(self, unused_model):
+        #$       ACSID XZSYM FLIP FMMUNIT FMLUNIT REFC   REFB   REFS
+        #$+ABC   REFX  REFY  REFZ
+        #AEROZ   0     YES   NO   SLIN    IN       22.73 59.394 1175.8
+                #59.53 0.0   0.0
+        cref = self.cref
+        bref = self.bref
+        sref = self.sref
+        acsid = self.acsid
+        rho_ref = 1.0
+        if self.sym_xz == 'NO':
+            sym_xz = 0
+        elif self.sym_xz == 'YES':
+            sym_xz = 1
+        else:
+            raise NotImplementedError(self.sym_xz)
+        aeros = AEROS(cref, bref, sref, acsid=acsid, rcsid=0, sym_xz=sym_xz, sym_xy=0,
+                    comment=str(self))
+
+        velocity = 1.
+        aero = AERO(velocity, cref, rho_ref, acsid=acsid, sym_xz=sym_xz, sym_xy=0,
+                    comment='')
+        return aeros, aero
+
     def raw_fields(self):
         """
         Gets the fields in their unmodified form
@@ -710,10 +796,10 @@ class AEROZ(Aero):
             the fields that define the card
 
         """
-        asdf
+        raise NotImplementedError()
         #list_fields = ['AEROS', self.Acsid(), self.Rcsid(), self.cref,
                        #self.bref, self.sref, self.sym_xz, self.sym_xy]
-        return list_fields
+        #return list_fields
 
     def repr_fields(self):
         """
@@ -922,6 +1008,7 @@ class PANLST3(Spline):
 class BODY7(BaseCard):
     """
     Defines an aerodynamic body macroelement of a body-like component.
+    Similar to Nastran's CAERO2.
 
     +--------+-----+-----+----+-----+------+-----+------+------+
     |    1   |  2  |  3  |  4 |  5  |   6  |   7 |   8  |  9   |
@@ -1150,15 +1237,22 @@ class BODY7(BaseCard):
                 idzs_ref = segmesh.idzs_ref[1:]
 
             xpoints += xs
+            yz_mean = []
             for idy_ref, idz_ref in zip(idys_ref, idzs_ref):
                 ypoints = idy_ref.fractions
                 zpoints = idz_ref.fractions
                 width = ypoints.max() - ypoints.min()
-                half_widths.append(width / 2.)
+                height = zpoints.max() - zpoints.min()
+                #elliptical_area = pi * width * height
+                average_radius = (width + height) / 4.
+                half_widths.append(average_radius)
 
-            # just pick the last point for the yz location
-            ymean = ypoints.mean()
-            zmean = zpoints.mean()
+                ymeani = ypoints.mean()
+                zmeani = zpoints.mean()
+                yz_mean.append([ymeani, zmeani])
+
+            # I think you could area weight this and get a better mean...
+            ymean, zmean = np.mean(yz_mean, axis=0)
 
         xpoints_local = [xi for xi in xpoints]
         assert len(half_widths) == len(xpoints_local)
@@ -1193,9 +1287,9 @@ class BODY7(BaseCard):
 
 
         aefact_xs = AEFACT(xs_id, xpoints_local, comment=dash+'Xs')
-        aefact_width = AEFACT(half_width_id, half_widths, comment='half widths')
+        aefact_width = AEFACT(half_width_id, half_widths, comment='half_widths')
         aefact_theta1 = AEFACT(theta1_id, angles_body, comment='angles_body')
-        aefact_theta2 = AEFACT(theta2_id, angles_fin, comment='angles_body')
+        aefact_theta2 = AEFACT(theta2_id, angles_fin, comment='angles_fin')
 
         # which segments use theta1 array
         lth = [1, 10] #nsegments] # t
@@ -1240,17 +1334,16 @@ class BODY7(BaseCard):
         paero2 = self.pid_ref
         xyz = []
         element = []
-        nelements = 0
+        npoints = 0
         for segmesh in self.segmesh_refs:
             #print(segmesh)
             try:
                 xyzi, elementi = self._get_points_elements_3di(segmesh)
             except NotImplementedError:
-                raise
                 return None, None
             xyz.append(xyzi)
-            element.append(elementi + nelements)
-            nelements += elementi.shape[0]
+            element.append(elementi + npoints)
+            npoints += xyzi.shape[0]
 
         xyzs = np.vstack(xyz)
         elements = np.vstack(element)
@@ -1301,9 +1394,6 @@ class BODY7(BaseCard):
             np.hstack(ys),
             np.hstack(zs),
         ]).T
-        #print(xyz)
-        #print('ynodes = %s' % ynodes)
-        #print('znodes = %s' % znodes)
         elements = elements_from_quad(nx, ny, dtype='int32')
         return xyz, elements
 
@@ -1381,24 +1471,23 @@ class SEGMESH(BaseCard):
     def __init__(self, segmesh_id, naxial, nradial, nose_radius, iaxis,
                  itypes, xs, cambers, ys, zs, idys, idzs, comment=''):
         """
-        Defines a SEGMESH card, which is similar to a PARO2 and defines additional
-        slender body parameters.
+        Defines a SEGMESH card, which defines a cross-section for a PBODY7.
 
         Parameters
         ----------
-        DMESH : int
+        segmesh_id : int
             Body segment mesh identification number.
-        NAXIS : int
+        naxial : int
             Number of axial stations (i.e., divisions) of the segment. (min=2).
-        NRAD : int
+        nradial : int
             Number of circumferential points of the segment (min=3).
-        NOSERAD : float
+        nose_radius : float
             Nose radius of blunt body.
             NOSERAD is active only if ZONA7U (Hypersonic Aerodynamic Method)
             is used (the METHOD entry of the MKAEROZ Bulk Data equals 2 or –2).
             Furthermore, NOSERAD is used only if the SEGMESH bulk data card is
             the first segment defined in the BODY7 bulk data card.
-        IAXIS : int
+        iaxis : int
             The index of the axial station where the blunt nose ends.
             IAXIS is active only if ZONA7U (Hypersonic Aerodynamic
             Method) is used.
@@ -1426,20 +1515,6 @@ class SEGMESH(BaseCard):
             Identification number of AEFACT bulk data card that specifies
             NRAD number of the Z-coordinate locations of the circumferential
             points at the Xi axial station. Use only if ITYPEi=3.
-        eid : int
-            body id
-        label : str
-            An arbitrary character string used to define the body.
-        pid  : int; default=0
-            Identification number of PBODY7 bulk data card
-            (specifying body wake and/or inlet aerodynamic boxes)
-        acoord : int; default=0
-            Identification number of ACOORD bulk data card
-            (specifying body center line location and orientation)
-        nseg : int
-            Number of body segments
-        IDMESHi : List[int]
-            Identification number of SEGMESH bulk data card (specifying body segments).
         comment : str; default=''
             a comment for the card
 
@@ -1460,11 +1535,6 @@ class SEGMESH(BaseCard):
 
         self.idys_ref = None
         self.idzs_ref = None
-
-        #self.cp_ref = None
-        #self.lint_ref = None
-        #self.lsb_ref = None
-        #self.ascid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):

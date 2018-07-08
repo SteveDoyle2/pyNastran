@@ -100,12 +100,6 @@ from pyNastran.bdf.cards.material_deps import MATT1, MATT2, MATT3, MATT4, MATT5,
 
 from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
 from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs, POINT, SEQGP
-from pyNastran.bdf.cards.aero.zona import (
-    ACOORD, AEROZ, AESURFZ, MKAEROZ, TRIMVAR, TRIMLNK,
-    CAERO7, PANLST3,
-    BODY7, SEGMESH,
-    TRIM_ZONA, SPLINE1_ZONA, SPLINE2_ZONA, SPLINE3_ZONA,
-)
 from pyNastran.bdf.cards.aero.aero import (
     AECOMP, AEFACT, AELINK, AELIST, AEPARM, AESURF, AESURFS,
     CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
@@ -3902,24 +3896,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 break
 
         if self.nastran_format == 'zona':
-            self._card_parser['TRIM'] = (TRIM_ZONA, self._add_trim_object)
-            self._card_parser['CAERO7'] = (CAERO7, self._add_caero_object)
-            self._card_parser['AEROZ'] = (AEROZ, self._add_aeros_object)
-            self._card_parser['AESURFZ'] = (AESURFZ, self._add_aesurf_object)
-            self._card_parser['SPLINE1'] = (SPLINE1_ZONA, self._add_spline_object)
-            self._card_parser['SPLINE2'] = (SPLINE2_ZONA, self._add_spline_object)
-            self._card_parser['SPLINE3'] = (SPLINE3_ZONA, self._add_spline_object)
-            self._card_parser['PANLST3'] = (PANLST3, self._add_panlst_object)
-            self._card_parser['MKAEROZ'] = (MKAEROZ, self._add_mkaeroz_object)
-            self._card_parser['SEGMESH'] = (SEGMESH, self._add_paero_object)
-            self._card_parser['BODY7'] = (BODY7, self._add_caero_object)
-            self._card_parser['ACOORD'] = (ACOORD, self._add_coord_object)
-            self._card_parser['TRIMVAR'] = (TRIMVAR, self._add_trimvar_object)
-            self._card_parser['TRIMLNK'] = (TRIMLNK, self._add_trimlnk_object)
-            cards = [
-                'CAERO7', 'AEROZ', 'AESURFZ', 'PANLST3', 'SEGMESH',
-                'BODY7', 'ACOORD', 'MKAEROZ', 'TRIMVAR', 'TRIMLNK']
-            self.cards_to_read.update(set(cards))
+            self.zona.update_for_zona()
 
     def _verify_bdf(self, xref=None):
         """Cross reference verification method."""

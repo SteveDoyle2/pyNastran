@@ -1787,7 +1787,7 @@ class CAERO1(BaseCard):
 
     def panel_points_elements(self):
         """
-        Gets the sub-points and sub-elements for the CAERO card
+        Gets the sub-points and sub-elements for the CAERO1 card
 
         Returns
         -------

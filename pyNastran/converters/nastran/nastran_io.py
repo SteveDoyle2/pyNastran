@@ -65,14 +65,14 @@ from pyNastran.utils import integer_types
 from pyNastran.utils.log import properties as log_properties
 from pyNastran.utils.numpy_utils import isfinite_and_nonzero, isfinite_and_greater_than, isfinite
 from pyNastran.bdf.bdf import (BDF,
-                               CAERO1, CAERO2, CAERO3, CAERO4, CAERO5, CAERO7, BODY7,
+                               CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
                                CQUAD4, CQUAD8, CQUAD, CQUADR, CSHEAR,
                                CTRIA3, CTRIA6, CTRIAR,
                                CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8,
                                CTRAX3, CTRIAX6, CTRIAX, #CTRAX6,
                                CQUADX4, CQUADX8, CQUADX,
                                CONM2)
-
+from pyNastran.bdf.cards.aero.zona import CAERO7, BODY7
 from pyNastran.bdf.cards.elements.shell import ShellElement
 from pyNastran.bdf.cards.elements.solid import (
     CTETRA4, CTETRA10, CPENTA6, CPENTA15,

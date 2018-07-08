@@ -766,6 +766,18 @@ class AddMethods(BDFAttributes):
         self.aeros = aeros
         #self._type_to_id_map[aeros.type].append(key)
 
+    #def _add_aeroz_object(self, aeroz):
+        ## type: (Any) -> None
+        #"""adds an AEROZ object"""
+        #key = aeroz.sid
+        #if key in self.aeroz and not allow_overwrites:
+            #if not aeroz == self.zona.aeroz[key]:
+                #assert key not in self.aeroz, 'AEROZ.sid=%s\nold=\n%snew=\n%s' % (key, self.aeroz[key], aeroz)
+        #else:
+            #assert key > 0, 'sid=%s method=\n%s' % (key, aefact)
+            #self.aeroz[key] = aeroz
+            #self._type_to_id_map[aeroz.type].append(key)
+
     def _add_baror_object(self, baror):
         # type: (Any) -> None
         """adds an BAROR object"""
@@ -914,42 +926,6 @@ class AddMethods(BDFAttributes):
         key = spline.eid
         self.splines[key] = spline
         self._type_to_id_map[spline.type].append(key)
-
-    def _add_panlst_object(self, panlst):
-        # type: (Any) -> None
-        """adds an PANLST1/PANLST2/PANLST3 object"""
-        assert panlst.eid not in self.zona.panlsts
-        assert panlst.eid > 0
-        key = panlst.eid
-        self.zona.panlsts[key] = panlst
-        self._type_to_id_map[panlst.type].append(key)
-
-    def _add_mkaeroz_object(self, mkaeroz):
-        # type: (Any) -> None
-        """adds an MKAEROZ object"""
-        assert mkaeroz.sid not in self.zona.mkaeroz
-        assert mkaeroz.sid > 0
-        key = mkaeroz.sid
-        self.zona.mkaeroz[key] = mkaeroz
-        self._type_to_id_map[mkaeroz.type].append(key)
-
-    def _add_trimvar_object(self, trimvar):
-        # type: (Any) -> None
-        """adds an TRIMVAR object"""
-        assert trimvar.var_id not in self.zona.trimvar
-        assert trimvar.var_id > 0
-        key = trimvar.var_id
-        self.zona.trimvar[key] = trimvar
-        self._type_to_id_map[trimvar.type].append(key)
-
-    def _add_trimlnk_object(self, trimlnk):
-        # type: (Any) -> None
-        """adds an TRIMLNK object"""
-        assert trimlnk.link_id not in self.zona.trimlnk
-        assert trimlnk.link_id > 0
-        key = trimlnk.link_id
-        self.zona.trimlnk[key] = trimlnk
-        self._type_to_id_map[trimlnk.type].append(key)
 
     def _add_gust_object(self, gust):
         # type: (Any) -> None
