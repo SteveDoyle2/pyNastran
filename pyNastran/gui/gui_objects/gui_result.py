@@ -259,6 +259,7 @@ class GuiResult(GuiResultCommon):
     deflects = False
     def __init__(self, subcase_id, header, title, location, scalar,
                  mask_value=None, nlabels=None, labelsize=None, ncolors=None, colormap='jet',
+                 data_map=None,
                  data_format=None, uname='GuiResult'):
         """
         Parameters
@@ -282,6 +283,7 @@ class GuiResult(GuiResultCommon):
         """
         GuiResultCommon.__init__(self)
 
+        self.data_map = data_map
         self.subcase_id = subcase_id
         #assert self.subcase_id > 0, self.subcase_id
 

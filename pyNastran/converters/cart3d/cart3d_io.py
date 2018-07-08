@@ -5,6 +5,7 @@ from __future__ import print_function
 import os
 from collections import OrderedDict
 from six import iteritems
+import collections
 
 from numpy import arange, mean, vstack, unique, where, sqrt
 import numpy as np
@@ -141,8 +142,10 @@ class Cart3dIO(object):
         self.gui.isubcase_name_map = {1: ['Cart3d%s' % note, '']}
         cases = OrderedDict()
         ID = 1
-        form, cases, icase, node_ids, element_ids = _fill_cart3d_geometry_objects(
+        form, cases, icase, node_ids, element_ids, data_map_dict = _fill_cart3d_geometry_objects(
             cases, ID, nodes, elements, regions, model)
+        self.data_map = data_map_dict
+
         mach, unused_alpha, unused_beta = self._create_box(
             cart3d_filename, ID, form, cases, icase, regions)
         #mach = None
@@ -424,6 +427,32 @@ def _fill_cart3d_geometry_objects(cases, unused_id, nodes, elements, regions, mo
     cnnodes = cnormals.shape[0]
     assert cnnodes == nelements, len(cnnodes)
 
+    inv_counter = _node_inverse_counter(model, nnodes)
+    def data_map_func(data):
+        res = np.zeros(nnodes, dtype='float32')
+        for elem, datai in zip(model.elements, data):
+            res[elem] += datai
+        #print(res)
+
+        #res = np.zeros(nnodes, dtype='float32')
+        #res[model.elements] = data
+        #print(res)
+        #print('----')
+        #print(inv_counter)
+        ## neids * ??? = (3,nnodes)
+        ##(3,) * ??? = (5,)
+        ## eids * map -> node_ids
+        ##results = np.zeros(nnodes, dtype='float32')
+        #print(model.elements)
+        #node_results = data[model.elements.ravel()]
+        #assert node_results.shape == model.elements.shape
+        #node_results_sum = node_results.sum(axis=1)
+        #assert node_results_sum.shape == nnodes
+        #return node_results_sum * inv_counter
+        return res * inv_counter
+
+    data_map_dict = {('centroid', 'Node') : data_map_func}
+
     #print('nnodes =', nnodes)
     #print('nelements =', nelements)
     #print('regions.shape =', regions.shape)
@@ -434,6 +463,12 @@ def _fill_cart3d_geometry_objects(cases, unused_id, nodes, elements, regions, mo
                                 nids, eids, regions, area, cnormals,
                                 uname='Cart3dGeometry')
 
+    normal_z = cnormals[:, 2]
+    node_normal = data_map_func(normal_z)
+    result_name = 'Normal Z-nodal'
+    node_res = GuiResult(subcase_id, header=result_name, title=result_name,
+                         location='node', scalar=node_normal)
+
     cases = OrderedDict()
     cases[0] = (cart3d_geo, (0, 'NodeID'))
     cases[1] = (cart3d_geo, (0, 'ElementID'))
@@ -442,6 +477,7 @@ def _fill_cart3d_geometry_objects(cases, unused_id, nodes, elements, regions, mo
     cases[4] = (cart3d_geo, (0, 'NormalX'))
     cases[5] = (cart3d_geo, (0, 'NormalY'))
     cases[6] = (cart3d_geo, (0, 'NormalZ'))
+    #cases[7] = (node_res, (0, 'NormalZ-nodal'))
 
     geometry_form = [
         ('NodeID', 0, []),
@@ -451,15 +487,31 @@ def _fill_cart3d_geometry_objects(cases, unused_id, nodes, elements, regions, mo
         ('Normal X', 4, []),
         ('Normal Y', 5, []),
         ('Normal Z', 6, []),
+        #('Normal Z-nodal', 7, []),
     ]
     form = [
         ('Geometry', None, geometry_form),
     ]
-    icase = 7
-    return form, cases, icase, nids, eids
+    icase = len(geometry_form)
+    return form, cases, icase, nids, eids, data_map_dict
     #cnormals = model.get_normals(nodes, elements)
     #nnormals = model.get_normals_at_nodes(nodes, elements, cnormals)
 
+
+def _node_inverse_counter(model, nnodes):
+    node_ids = model.elements.ravel()
+    #max_nid = node_ids.max()
+    node_count = collections.Counter(node_ids)
+    #Counter({0: 7, 1: 4, 3: 2, 2: 1, 4: 1})
+
+    # we're going to multiply by 1/node_count
+    # if we have no nodes, then we have no results, so we have a sum of 0
+    # so we make it 1 to prevent division by 0
+    counter = np.ones(nnodes)
+    for nid, count in iteritems(node_count):
+        counter[nid] = count
+    inv_counter = 1. / counter
+    return inv_counter
 
 def _fill_cart3d_results(cases, form, icase, ID, loads, unused_model, unused_mach):
     """Creates the results form for Cart3d Results"""

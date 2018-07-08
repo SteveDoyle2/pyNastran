@@ -118,7 +118,12 @@ class Cart3dGeometry(GuiResultCommon):
     #----------------------------------------------------
     # colormap
     def get_nlabels_labelsize_ncolors_colormap(self, i, name):
-        j = self.titles.index(name)
+        try:
+            j = self.titles.index(name)
+        except ValueError:
+            print('name=%s' % str(name))
+            print('self.titles=%r' % self.titles)
+            raise
         return self.nlabels[j], self.labelsize[j], self.ncolors[j], self.colormap[j]
 
     def get_default_nlabels_labelsize_ncolors_colormap(self, i, name):

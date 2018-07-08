@@ -1025,7 +1025,7 @@ class GuiCommon(GuiAttributes):
         result_type = obj.get_title(i, res_name)
         vector_size = obj.get_vector_size(i, res_name)
         location = obj.get_location(i, res_name)
-        out = obj.get_nlabels_labelsize_ncolors_colormap(i, name)
+        out = obj.get_nlabels_labelsize_ncolors_colormap(i, res_name)
         nlabels, unused_labelsize, unused_ncolors, unused_colormap = out
 
         #if vector_size == 3:
