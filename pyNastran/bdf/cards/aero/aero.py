@@ -26,7 +26,7 @@ from six import string_types
 
 import numpy as np
 
-from pyNastran.utils import integer_types
+from pyNastran.utils import integer_types, object_attributes
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8, print_float_8
 from pyNastran.bdf.cards.base_card import BaseCard, expand_thru
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -3793,6 +3793,33 @@ class PAERO1(BaseCard):
 
         """
         self.caero_body_ids[n - 1] = value
+
+    def object_attributes(self, mode='public', keys_to_skip=None):
+        """
+        List the names of attributes of a class as strings. Returns public
+        attributes as default.
+
+        Parameters
+        ----------
+        mode : str
+            defines what kind of attributes will be listed
+            * 'public' - names that do not begin with underscore
+            * 'private' - names that begin with single underscore
+            * 'both' - private and public
+            * 'all' - all attributes that are defined for the object
+        keys_to_skip : List[str]; default=None -> []
+            names to not consider to avoid deprecation warnings
+
+        Returns
+        -------
+        attribute_names : List[str]
+            sorted list of the names of attributes of a given type or None
+            if the mode is wrong
+        """
+        if keys_to_skip is None:
+            keys_to_skip = []
+        my_keys_to_skip = ['Bi']
+        return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     @property
     def Bi(self):

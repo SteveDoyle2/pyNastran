@@ -875,12 +875,12 @@ class MKAEROZ(BaseCard):
         mach = double(card, 2, 'MACH')
         method = integer(card, 3, 'METHOD')
         flt_id = integer(card, 4, 'IDFLT')
-        save = string(card, 5, 'SAVE')
+        save = string_or_blank(card, 5, 'SAVE')
         filename_a = string_or_blank(card, 6, 'FILENAMEA', '')
         filename_b = string_or_blank(card, 7, 'FILENAMEB', '')
         #print(filename_a, filename_b)
         filename = (filename_a + filename_b).rstrip()
-        print_flag = integer(card, 8, 'PRINT_FLAG')
+        print_flag = integer_or_blank(card, 8, 'PRINT_FLAG', 0)
         freqs = []
         ifreq = 1
         for ifield in range(9, len(card)):

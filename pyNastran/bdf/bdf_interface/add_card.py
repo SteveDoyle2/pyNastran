@@ -4051,7 +4051,7 @@ class AddCards(AddMethods):
         self._add_caero_object(caero)
         return caero
 
-    def add_paero1(self, pid, Bi=None, comment=''):
+    def add_paero1(self, pid, caero_body_ids=None, comment=''):
         """
         Creates a PAERO1 card, which defines associated bodies for the
         panels in the Doublet-Lattice method.
@@ -4060,18 +4060,18 @@ class AddCards(AddMethods):
         ----------
         pid : int
             PAERO1 id
-        Bi : List[int]; default=None
+        caero_body_ids : List[int]; default=None
             CAERO2 ids that are within the same IGID group
         comment : str; default=''
             a comment for the card
 
         """
-        paero = PAERO1(pid, Bi=Bi, comment=comment)
+        paero = PAERO1(pid, caero_body_ids=caero_body_ids, comment=comment)
         self._add_paero_object(paero)
         return paero
 
     def add_paero2(self, pid, orient, width, AR, thi, thn,
-                   lrsb=None, lrib=None, lth1=None, lth2=None, comment=''):
+                   lrsb=None, lrib=None, lth=None, comment=''):
         """
         Creates a PAERO2 card, which defines additional cross-sectional
         properties for the CAERO2 geometry.
@@ -4100,15 +4100,17 @@ class AddCards(AddMethods):
             int : AEFACT id containing a list of interference body
                   half-widths at the end points of the interference elements
             None : use width
-        lth1 / lth2 : int; default=None
-            AEFACT id for defining theta arrays for interference calculations
-            for theta1/theta2
+        lth : List[int, int]; default=None
+            AEFACT ids for defining theta arrays for interference calculations
+            for theta1/theta2; length=2
         comment : str; default=''
             a comment for the card
 
         """
-        paero = PAERO2(pid, orient, width, AR, thi, thn,
-                       lrsb, lrib, lth1, lth2, comment=comment)
+        #paero = PAERO2(pid, orient, width, AR, thi, thn,
+                       #lrsb, lrib, lth1, lth2, comment=comment)
+        paero = PAERO2(pid, orient, width, AR, thi, thn, lrsb=lrsb, lrib=lrib,
+                       lth=lth, comment=comment)
         self._add_paero_object(paero)
         return paero
 

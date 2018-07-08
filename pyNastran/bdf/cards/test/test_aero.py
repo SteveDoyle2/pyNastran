@@ -519,7 +519,7 @@ class TestAero(unittest.TestCase):
                                           cp=cp, spanwise='z', comment='')
         caero1_no_coord.get_points()
 
-        paero = PAERO1(pid, Bi=None, comment='')
+        paero = PAERO1(pid, caero_body_ids=None, comment='')
         paero.validate()
         paero.write_card()
         model.paeros[pid] = paero
@@ -683,8 +683,8 @@ class TestAero(unittest.TestCase):
                                   cp=cid, nspan=5,
                                   lspan=0, nchord=6, lchord=0,
                                   comment='')
-        Bi = [3]
-        paero = model.add_paero1(pid, Bi=Bi, comment='')
+        caero_body_ids = [3]
+        paero = model.add_paero1(pid, caero_body_ids=caero_body_ids, comment='')
         model.add_cord2r(cid, rid=0,
                          origin=None, zaxis=None, xzplane=None,
                          comment='')
@@ -723,7 +723,7 @@ class TestAero(unittest.TestCase):
         thi = []
         thn = []
         paero2 = model.add_paero2(pid, orient, width, AR, thi, thn,
-                                  lrsb=10, lrib=None, lth1=None, lth2=None, comment='')
+                                  lrsb=10, lrib=None, lth=None, comment='')
         paero2.validate()
 
         sid = 10
@@ -879,18 +879,19 @@ class TestAero(unittest.TestCase):
         lrib = 3
         lth1 = 0
         lth2 = 0
+        lth = [lth1, lth2]
         thi = [0]
         thn = [0]
         paero2a = PAERO2.add_card(BDFCard(['PAERO2', pid, orient, width, AR,
-                                           lrsb, lrib, lth1, lth2] + thi + thn),
+                                           lrsb, lrib] + lth + thi + thn),
                                   comment='paero2')
         paero2a.validate()
         paero2b = model.add_paero2(pid, orient, width, AR, thi, thn,
-                                   lrsb=0, lrib=3, lth1=0, lth2=0, comment='paero2')
+                                   lrsb=0, lrib=3, lth=lth, comment='paero2')
 
         pid = 42
         paero2c = model.add_paero2(pid, orient, width, AR, thi, thn,
-                                   lrsb=None, lrib=None, lth1=None, lth2=None, comment='')
+                                   lrsb=None, lrib=None, lth=None, comment='')
         paero2b.validate()
         paero2c.validate()
         paero2b.write_card()
@@ -1302,7 +1303,7 @@ class TestAero(unittest.TestCase):
                          cp=0,
                          nspan=5, lspan=0,
                          nchord=5, lchord=0, comment='')
-        model.add_paero1(pid, Bi=None, comment='')
+        model.add_paero1(pid, caero_body_ids=None, comment='')
         model.add_grid(5, [0., 0., 0.])
 
         spline_id = 101

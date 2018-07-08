@@ -65,7 +65,7 @@ $ QHHS0107.DAT FOR K=0.5
 $
 $*****************************************************************************
 $	IDMK	MACH	MKPARM	IDFLT	SAVE	FILENAME	PRINT
-MKAEROZ	10	0.95	100	10	+MK1
+MKAEROZ	10	0.95	100	10					+MK1
 +MK1	0.0	0.05	0.1	0.2	0.3	0.4	0.5
 $
 MKPARAM	100	3	151	257	4	2	1	0

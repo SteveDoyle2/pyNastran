@@ -50,7 +50,7 @@ class GuiAttributes(object):
         res_widget = kwds['res_widget']
         self.dev = False
         self._log_messages = []
-        self._performance_mode = True
+        self._performance_mode = False
         #self.performance_mode = True
 
         # totally broken for solids
@@ -212,20 +212,29 @@ class GuiAttributes(object):
 
     @property
     def performance_mode(self):
+        """get the performance mode"""
         return self._performance_mode
 
     @performance_mode.setter
     def performance_mode(self, performance_mode):
-        if performance_mode and self._log_messages:
+        """
+        Set the performance mode.  If performance mode flips
+        to False, we dump the log buffer.
+        """
+        if not performance_mode and self._log_messages:
             msg = ''.join(self._log_messages)
-            self._performance_mode = performance_mode
             #setUpdatesEnabled(False)
-            #TxtBrows->append(SomeBigHTMLString)
+            #TxtBrows.append(SomeBigHTMLString)
             self._log_msg(msg)
             #setUpdatesEnabled(True)
+            self._log_messages = []
+        self._performance_mode = performance_mode
 
     def start_stop_performance_mode(func):
-        """Supresses logging."""
+        """
+        Supresses logging.  If we started with logging suppressed,
+        we won't unsupress logging at the end of the function.
+        """
         def new_func(self, *args, **kwargs):
             """
             The actual function exec'd by the decorated function.
@@ -235,23 +244,12 @@ class GuiAttributes(object):
                 self.performance_mode = True
             try:
                 n = func(self, *args, **kwargs)
-            except NameError:
+            except:
+                if not performance_mode_initial:
+                    self.performance_mode = False
                 raise
-            except AttributeError:
-                raise
-            #except:
-                #raise
-                #print("----------")
-                #print(self.obj)
-                #print(self.data_code)
-                #if self.obj is not None:
-                    ##from pyNastran.utils import object_attributes
-                    ##print object_attributes(self.obj)
-                    #print(self.obj.data_code)
-                #print("----------")
-                #raise
-            if performance_mode_initial:
-                self.performance_mode = True
+            if not performance_mode_initial:
+                self.performance_mode = False
             return n
         return new_func
 
