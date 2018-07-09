@@ -340,6 +340,16 @@ class XrefMesh(BDFAttributes):
                 if self._ixref_errors > self._nxref_errors:
                     self.pop_xref_errors()
 
+        for elem in itervalues(self.masses):
+            try:
+                elem.cross_reference(self)
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
+                self._ixref_errors += 1
+                var = traceback.format_exception_only(type(error), error)
+                self._stored_xref_errors.append((elem, var))
+                if self._ixref_errors > self._nxref_errors:
+                    self.pop_xref_errors()
+
         for elem in itervalues(self.rigid_elements):
             try:
                 elem.cross_reference(self)

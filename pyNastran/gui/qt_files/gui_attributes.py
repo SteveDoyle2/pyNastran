@@ -26,6 +26,7 @@ from pyNastran.gui.qt_files.mark_actions import MarkActions
 
 from pyNastran.gui.menus.legend.legend_object import LegendObject
 from pyNastran.gui.menus.preferences.preferences_object import PreferencesObject
+from pyNastran.gui.menus.cutting_plane.cutting_plane_object import CuttingPlaneObject
 from pyNastran.gui.menus.clipping.clipping_object import ClippingObject
 from pyNastran.gui.menus.camera.camera_object import CameraObject
 from pyNastran.gui.menus.edit_geometry_properties.edit_geometry_properties_object import (
@@ -66,6 +67,7 @@ class GuiAttributes(object):
         self.legend_obj = LegendObject(self)
         self.edit_geometry_properties_obj = EditGeometryPropertiesObject(self)
         self.preferences_obj = PreferencesObject(self)
+        self.cutting_plane_obj = CuttingPlaneObject(self)
         self.clipping_obj = ClippingObject(self)
         self.camera_obj = CameraObject(self)
 
@@ -180,6 +182,7 @@ class GuiAttributes(object):
         self.nid_maps = {}
         self.eid_maps = {}
         self.name = 'main'
+        self.models = {}
 
         self.groups = {}
         self.group_active = 'main'
@@ -874,6 +877,13 @@ class GuiAttributes(object):
             print('supported_formats = %s' % self.supported_formats)
             raise RuntimeError('no modules were loaded...')
 
+    @property
+    def model(self):
+        return self.models[self.name]
+    @model.setter
+    def model(self, model):
+        self.models[self.name] = model
+
     def _reset_model(self, name):
         """resets the grids; sets up alt_grids"""
         if hasattr(self, 'main_grids') and name not in self.main_grids:
@@ -887,6 +897,7 @@ class GuiAttributes(object):
             self.rend.AddActor(geom_actor)
 
             self.name = 'main'
+            self.models = {}
             self.grid = grid
             self.grid_mapper = grid_mapper
             self.geom_actor = geom_actor
@@ -1077,10 +1088,21 @@ class GuiAttributes(object):
         if self._modify_groups_window_shown:
             self._modify_groups_window.set_font_size(font_size)
         self.preferences_obj.set_font_size(font_size)
+        self.cutting_plane_obj.set_font_size(font_size)
 
         #self.menu_scripts.setFont(font)
         self.log_command('settings.on_set_font_size(%s)' % font_size)
         return False
+
+    def make_cutting_plane(data):
+        model_name = data['model_name']
+        model = self.models[model_name]
+        cid_p1, p1 = data['p1']
+        cid_p2, p2 = data['p2']
+        method, cid_zaxis, zaxis = data['zaxis']
+        xyz1 = self.model.coords[cid_p1].transform_node_to_global(p1)
+        xyz2 = self.model.coords[cid_p2].transform_node_to_global(p2)
+        zaxis_xyz = self.model.coords[cid_zaxis].transform_node_to_global(zaxis)
 
     #---------------------------------------------------------------------------
     def get_result_by_xyz_cell_id(self, node_xyz, cell_id):

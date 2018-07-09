@@ -396,6 +396,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 ('font_size_increase', 'Increase Font Size', 'text_up.png', 'Ctrl+Plus', 'Increase Font Size', self.on_increase_font_size),
                 ('font_size_decrease', 'Decrease Font Size', 'text_down.png', 'Ctrl+Minus', 'Decrease Font Size', self.on_decrease_font_size),
                 ('set_preferences', 'Preferences...', 'preferences.png', None, 'Set GUI Preferences', self.preferences_obj.set_preferences_menu),
+                ('cutting_plane', 'Cutting Plane...', 'cutting_plane.png', None, 'Create Cutting Plane', self.cutting_plane_obj.set_cutting_plane_menu),
 
                 # picking
                 ('area_pick', 'Area Pick', 'tarea_pick.png', None, 'Get a list of nodes/elements', self.mouse_actions.on_area_pick),
@@ -449,7 +450,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         menu_window = ['toolbar', 'reswidget']
         menu_view = [
             'screenshot', '', 'wireframe', 'surface', 'camera_reset', '',
-            'set_preferences', '',
+            'set_preferences', #'cutting_plane',
+            '',
             'label_clear', 'label_reset', '',
             'legend', 'animation', 'geo_properties',
             #['Anti-Aliasing', 'anti_alias_0', 'anti_alias_1', 'anti_alias_2',

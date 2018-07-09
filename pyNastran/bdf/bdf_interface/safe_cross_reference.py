@@ -230,6 +230,17 @@ class SafeXrefMesh(XrefMesh):
                 elem.cross_reference(self)
                 missing_safe_xref.add(elem.type)
 
+        for elem in itervalues(self.masses):
+            if hasattr(elem, 'safe_cross_reference'):
+                try:
+                    elem.safe_cross_reference(self, xref_errors)
+                except TypeError:
+                    self.log.warning('element has not added xref_errors\n%s' % str(elem))
+                    raise
+            else:
+                elem.cross_reference(self)
+                missing_safe_xref.add(elem.type)
+
         for elem in itervalues(self.rigid_elements):
             if hasattr(elem, 'safe_cross_reference'):
                 try:
