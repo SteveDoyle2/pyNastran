@@ -56,7 +56,7 @@ class UnXrefMesh(SafeXrefMesh):
             except AttributeError:
                 print(element)
                 raise
-        for elem in itervalues(self.masses):
+        for element in itervalues(self.masses):
             element.uncross_reference()
         for element in itervalues(self.rigid_elements):
             element.uncross_reference()

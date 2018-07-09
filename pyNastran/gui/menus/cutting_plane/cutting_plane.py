@@ -57,7 +57,7 @@ class CuttingPlaneWindow(PyDialog):
 
         self.plane_color_float, self.plane_color_int = _check_color(
             data['plane_color'])
-        self.methods = ['Global Z', 'Camera Up', 'Manual']
+        self.methods = ['Global Z', 'Camera Normal', 'Manual']
 
         self.setWindowTitle('Cutting Plane')
         self.create_widgets()
@@ -238,7 +238,7 @@ class CuttingPlaneWindow(PyDialog):
         if method == 'Global Z':
             zaxis = [0., 0., 1.]
             is_visible = False
-        elif method == 'Camera Up':
+        elif method == 'Camera Normal':
             is_visible = False
         elif method == 'Manual':
             is_visible = True
@@ -258,10 +258,10 @@ class CuttingPlaneWindow(PyDialog):
         font.setPointSize(value)
         self.setFont(font)
 
-    def on_corner_coord(self):
-        is_checked = self.corner_coord_checkbox.isChecked()
-        if self.win_parent is not None:
-            self.win_parent.set_corner_axis_visiblity(is_checked, render=True)
+    #def on_corner_coord(self):
+        #is_checked = self.corner_coord_checkbox.isChecked()
+        #if self.win_parent is not None:
+            #self.win_parent.set_corner_axis_visiblity(is_checked, render=True)
 
     def on_plane_color(self):
         """ Choose a plane color"""
@@ -338,11 +338,11 @@ class CuttingPlaneWindow(PyDialog):
             zaxis_x, flag6 = check_float(self.zaxis_x_edit)
             zaxis_y, flag7 = check_float(self.zaxis_y_edit)
             zaxis_z, flag8 = check_float(self.zaxis_z_edit)
-            zaxis = []
-        elif zaxis_method == 'Camera Up':
+            zaxis = [zaxis_x, zaxis_y, zaxis_z]
+        elif zaxis_method == 'Camera Normal':
             if self.win_parent is not None:
                 camera = self.win_parent.GetCamera()
-                zaxis = camera.GetViewUp()
+                zaxis = camera.GetViewPlaneNormal()
             else:
                 zaxis = [1., 1., 1.]
             zaxis_cid = 0
@@ -365,9 +365,6 @@ class CuttingPlaneWindow(PyDialog):
 
         if (passed or force) and self.win_parent is not None:
             self.win_parent.make_cutting_plane(self.out_data)
-
-        if passed and self.win_parent is not None:
-            self.win_parent.clipping_obj.apply_clipping(self.out_data)
         return passed
 
     def on_ok(self):

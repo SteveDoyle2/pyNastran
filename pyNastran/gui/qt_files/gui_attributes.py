@@ -1094,7 +1094,7 @@ class GuiAttributes(object):
         self.log_command('settings.on_set_font_size(%s)' % font_size)
         return False
 
-    def make_cutting_plane(data):
+    def make_cutting_plane(self, data):
         model_name = data['model_name']
         model = self.models[model_name]
         cid_p1, p1 = data['p1']
