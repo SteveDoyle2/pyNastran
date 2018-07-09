@@ -56,6 +56,9 @@ class Transformation(H5NastranNode):
             raise ValueError('Transformation.set_cid: unknown cid %d!' % cid)
 
     def vector_to_basic(self, vector, cid=None):
+        if cid == 0:
+            return np.array(vector)
+
         if cid is not None:
             # cid is the coordinate system that data is defined in.
             # if None then use last cid set
@@ -64,6 +67,9 @@ class Transformation(H5NastranNode):
         return self._cord.vector_to_basic(vector, cid)
 
     def position_to_basic(self, pos, cid=None):
+        if cid == 0:
+            return np.array(pos)
+        
         if cid is not None:
             # cid is the coordinate system that data is defined in.
             # if None then use last cid set
@@ -207,11 +213,12 @@ class Cord2(Cord):
         basic_origins = self.basic_origins['POS']
 
         for i in range(self.data.shape[0]):
-            V1b[i] = self.vector_to_basic(V1[i], rid[i])
-            V2b[i] = self.vector_to_basic(V2[i], rid[i])
-            V3b[i] = self.vector_to_basic(V3[i], rid[i])
+            # TODO: check that this is correct
+            V1b[i] = self._transformation.vector_to_basic(V1[i], rid[i])
+            V2b[i] = self._transformation.vector_to_basic(V2[i], rid[i])
+            V3b[i] = self._transformation.vector_to_basic(V3[i], rid[i])
 
-            basic_origins[i] = self.position_to_basic(np.array([A1[i], A2[i], A3[i]]), rid[i])
+            basic_origins[i] = self._transformation.position_to_basic(np.array([A1[i], A2[i], A3[i]]), rid[i])
     
     
 class Cord2c(Cord2):

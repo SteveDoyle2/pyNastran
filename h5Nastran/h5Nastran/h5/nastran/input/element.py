@@ -448,13 +448,17 @@ class CBAR(InputTable):
         w2b = data['W2B']
         w3b = data['W3B']
 
+        defaults = self._h5n.defaults
+        to_int = defaults.to_value_int
+
         for i in range(eid.shape[0]):
             _flag = flag[i]
             if _flag == 0:
                 offt = 'BGG'
             else:
                 offt = 'GGG'
-            add_card(eid[i], pid[i], [ga[i], gb[i]], [x1[i], x2[i], x3[i]], go[i], offt=offt, pa=pa[i], pb=pb[i],
+            add_card(eid[i], to_int(pid[i]), [ga[i], gb[i]], [x1[i], x2[i], x3[i]], to_int(go[i]), offt=offt,
+                     pa=to_int(pa[i]), pb=to_int(pb[i]),
                      wa=[w1a[i], w2a[i], w3a[i]], wb=[w1b[i], w2b[i], w3b[i]])
 
     def from_bdf(self, cards):
