@@ -9,18 +9,15 @@ The preferences menu handles:
  - Clipping Max
 """
 from __future__ import print_function
-from math import log10, ceil
 
 from qtpy.QtCore import Qt
 from qtpy import QtGui
 from qtpy.QtWidgets import (
     QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
-    QSpinBox, QDoubleSpinBox, QColorDialog, QLineEdit, QCheckBox, QComboBox)
-import vtk
+    QColorDialog, QLineEdit, QCheckBox, QComboBox)
 
 from pyNastran.gui.utils.qt.pydialog import PyDialog, check_float
 from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
-from pyNastran.gui.menus.menu_utils import eval_float_from_string
 
 
 class CuttingPlaneWindow(PyDialog):
@@ -122,6 +119,9 @@ class CuttingPlaneWindow(PyDialog):
         self.zaxis_y_edit = QLineEdit('')
         self.zaxis_z_edit = QLineEdit('')
 
+        self.ytol_edit = QLineEdit('10.0')
+        self.zero_tol_edit = QLineEdit('1e-5')
+
         self.p2_label = QLabel("P2:")
 
         # Plane Color
@@ -149,6 +149,9 @@ class CuttingPlaneWindow(PyDialog):
         x_label = QLabel('X')
         y_label = QLabel('Y')
         z_label = QLabel('Z')
+        ytol_label = QLabel('Y Tolerance:')
+        zero_tol_label = QLabel('Zero Tolerance:')
+
         location_label.setAlignment(Qt.AlignCenter)
         cid_label.setAlignment(Qt.AlignCenter)
         method_label.setAlignment(Qt.AlignCenter)
@@ -158,10 +161,11 @@ class CuttingPlaneWindow(PyDialog):
 
         irow = 0
         grid.addWidget(location_label, irow, 0)
-        grid.addWidget(cid_label, irow, 1)
-        grid.addWidget(x_label, irow, 2)
-        grid.addWidget(y_label, irow, 3)
-        grid.addWidget(z_label, irow, 4)
+        grid.addWidget(method_label, irow, 1)
+        grid.addWidget(cid_label, irow, 2)
+        grid.addWidget(x_label, irow, 3)
+        grid.addWidget(y_label, irow, 4)
+        grid.addWidget(z_label, irow, 5)
         irow += 1
 
         grid.addWidget(self.p1_label, irow, 0)
@@ -186,6 +190,14 @@ class CuttingPlaneWindow(PyDialog):
         grid.addWidget(self.zaxis_x_edit, irow, 3)
         grid.addWidget(self.zaxis_y_edit, irow, 4)
         grid.addWidget(self.zaxis_z_edit, irow, 5)
+        irow += 1
+
+        grid.addWidget(ytol_label, irow, 0)
+        grid.addWidget(self.ytol_edit, irow, 1)
+        irow += 1
+
+        grid.addWidget(zero_tol_label, irow, 0)
+        grid.addWidget(self.zero_tol_edit, irow, 1)
         irow += 1
 
         grid.addWidget(self.plane_color_label, irow, 0)
@@ -236,7 +248,6 @@ class CuttingPlaneWindow(PyDialog):
             print("method = %r" % method)
 
         if method == 'Global Z':
-            zaxis = [0., 0., 1.]
             is_visible = False
         elif method == 'Camera Normal':
             is_visible = False
@@ -350,12 +361,19 @@ class CuttingPlaneWindow(PyDialog):
             raise NotImplementedError(zaxis_method)
         print('zaxis =', zaxis)
 
+        ytol, flag9 = check_float(self.zero_tol_edit)
+        zero_tol, flag10 = check_float(self.zero_tol_edit)
+
         flags = [flag0, flag1, flag2, flag3, flag4, flag5,
-                 flag6, flag7, flag8]
+                 flag6, flag7, flag8,
+                 flag9, flag10]
         if all(flags):
             self.out_data['p1'] = [p1_cid, p1]
             self.out_data['p2'] = [p2_cid, p2]
             self.out_data['zaxis'] = [zaxis_method, zaxis_cid, zaxis]
+            self.out_data['ytol'] = ytol
+            self.out_data['zero_tol'] = zero_tol
+            self.out_data['plane_color'] = self.plane_color_float
             self.out_data['clicked_ok'] = True
             return True
         return False

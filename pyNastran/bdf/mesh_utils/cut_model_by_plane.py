@@ -85,6 +85,13 @@ def cut_model(nids, xyz_cid0, edges, view_up, p1, p2, tol,
         plane_atol=plane_atol)
     return local_points_array, global_points_array, result_array
 
+def _merge_bodies(local_points_array, global_points_array, result_array):
+    local_points_dict = {}
+    global_points_dict = {}
+    result_dict = {}
+    #return local_points_dict, global_points_dict, result_dict
+    return NotImplementedError()
+
 def _cut_model_by_coord(nids, xyz_cid0, edges, coord, tol,
                         nodal_result, plane_atol=1e-5):
     xyz_cid = coord.transform_node_to_local_array(xyz_cid0)
@@ -124,9 +131,7 @@ def get_close_edges(edges, nids_close):
     close_edges = []
     for edge in edges:
         (n1, n2) = edge
-        if n1 not in nids_close:
-            continue
-        if n2 not in nids_close:
+        if n1 not in nids_close and n2 not in nids_close:
             continue
         close_edges.append(edge)
     return close_edges
@@ -140,10 +145,10 @@ def slice_shell_elements(xyz_cid0, xyz_cid, edges, nodal_result, plane_atol=1e-5
     plane_atol: float; default=1e-5
         only needed for taking cuts on the symmetry plane
     """
-    #plane_bdf_filename = 'plane.bdf'
-    #fbdf = open(plane_bdf_filename, 'w')
-    #fbdf.write('$pyNastran: punch=True\n')
-    #fbdf.write('MAT1,1,3.0e7,,0.3\n')
+    plane_bdf_filename = 'plane.bdf'
+    fbdf = open(plane_bdf_filename, 'w')
+    fbdf.write('$pyNastran: punch=True\n')
+    fbdf.write('MAT1,1,3.0e7,,0.3\n')
     cid = 0
     local_points = []
     global_points = []
@@ -165,20 +170,26 @@ def slice_shell_elements(xyz_cid0, xyz_cid, edges, nodal_result, plane_atol=1e-5
         abs_y1_local = np.abs(y1_local)
         abs_y2_local = np.abs(y2_local)
         is_same_sign = np.sign(y1_local) == np.sign(y2_local)
-        if np.abs(y1_local) > plane_atol and abs_y2_local > plane_atol and is_same_sign:
-            print('skip y1_local=%.3f y2_local=%.3f plane_atol=%.e' % (y1_local, y2_local, plane_atol))
+        is_far_from_plane = abs_y1_local > plane_atol and abs_y2_local > plane_atol
+
+        #print('edge=%s' % (edge))
+        #print('  xyz1-local=%s xyz2-local=%s' % (xyz1_local, xyz2_local))
+        #print('  xyz1-global=%s xyz2-global=%s' % (xyz1_global, xyz2_global))
+        #print('  is_same_sign=%s is_far_from_plane=%s' % (is_same_sign, is_far_from_plane))
+        if is_far_from_plane and is_same_sign:
+            #print('skip y1_local=%.3f y2_local=%.3f plane_atol=%.e' % (y1_local, y2_local, plane_atol))
             continue
         elif np.allclose(y1_local, y2_local, atol=plane_atol):
-            print('  y-sym; nid1=%s nid2=%s edge=%s' % (nid1, nid2, str(edge)))
-            print('     xyz1=%s xyz2=%s' % (xyz1_global, xyz2_global))
-            #out_grid1 = ['GRID', nid_new, cid, ] + list(xyz1_local)
-            #out_grid2 = ['GRID', nid_new + 1, cid, ] + list(xyz2_local)
-            #conrod = ['CONROD', eid_new, nid_new, nid_new + 1, mid, area, J]
-            #conm2 = ['CONM2', eid_new+1, nid_new, 0, 100.]
-            #fbdf.write(print_card_8(out_grid1))
-            #fbdf.write(print_card_8(out_grid2))
-            #fbdf.write(print_card_8(conrod))
-            #fbdf.write(print_card_8(conm2))
+            #print('  y-sym; nid1=%s nid2=%s edge=%s' % (nid1, nid2, str(edge)))
+            #print('     xyz1=%s xyz2=%s' % (xyz1_global, xyz2_global))
+            out_grid1 = ['GRID', nid_new, cid, ] + list(xyz1_local)
+            out_grid2 = ['GRID', nid_new + 1, cid, ] + list(xyz2_local)
+            conrod = ['CONROD', eid_new, nid_new, nid_new + 1, mid, area, J]
+            conm2 = ['CONM2', eid_new+1, nid_new, 0, 100.]
+            fbdf.write(print_card_8(out_grid1))
+            fbdf.write(print_card_8(out_grid2))
+            fbdf.write(print_card_8(conrod))
+            fbdf.write(print_card_8(conm2))
 
             local_points.append(xyz1_local)
             local_points.append(xyz2_local)
@@ -188,10 +199,12 @@ def slice_shell_elements(xyz_cid0, xyz_cid, edges, nodal_result, plane_atol=1e-5
 
             x1, y1, z1 = xyz1_local
             x2, y2, z2 = xyz2_local
+            x1g, y1g, z1g = xyz1_global
+            x2g, y2g, z2g = xyz2_global
             result1 = nodal_result[nid1]
             result2 = nodal_result[nid2]
-            result.append([x1, y1, z1, result1])
-            result.append([x2, y2, z2, result2])
+            result.append([nid1, x1, y1, z1, x1g, y1g, z1g, result1])
+            result.append([nid2, x2, y2, z2, x1g, y1g, z1g, result2])
 
             nid_new += 2
             eid_new += 2
@@ -203,7 +216,7 @@ def slice_shell_elements(xyz_cid0, xyz_cid, edges, nodal_result, plane_atol=1e-5
             #print("  xyz1_local =%s xyz2_local =%s" % (xyz1_local, xyz2_local))
             continue
         else:
-            print('edge =', edge)
+            #print('edge =', edge)
             # these edges have crossings
             # reworking:
             #  y = m*x + b
@@ -227,33 +240,34 @@ def slice_shell_elements(xyz_cid0, xyz_cid, edges, nodal_result, plane_atol=1e-5
             avg_local = xyz2_local  * percent + xyz1_local  * (1 - percent)
             avg_global = xyz2_global * percent + xyz1_global * (1 - percent)
 
-            print('  nid1=%s nid2=%s edge=%s' % (nid1, nid2, str(edge)))
-            print('    xyz1_local=%s xyz2_local=%s' % (xyz1_local, xyz2_local))
-            print('    avg_local=%s' % avg_local)
-            print('    avg_global=%s' % avg_global)
-            #out_grid1 = ['GRID', nid_new, None, ] + list(avg_global)
-            #out_grid2 = ['GRID', nid_new, cid, ] + list(avg_local)
-            #conrod = ['CONROD', eid_new, nid_new, nid_new + 1, mid, A, J]
+            #print('  nid1=%s nid2=%s edge=%s' % (nid1, nid2, str(edge)))
+            #print('    xyz1_local=%s xyz2_local=%s' % (xyz1_local, xyz2_local))
+            #print('    avg_local=%s' % avg_local)
+            #print('    avg_global=%s' % avg_global)
+            out_grid1 = ['GRID', nid_new, None, ] + list(xyz1_local)
+            out_grid2 = ['GRID', nid_new+1, None, ] + list(xyz2_local)
+            conrod = ['CONROD', eid_new, nid_new, nid_new + 1, mid, area, J]
             #conm2 = ['CONM2', eid_new, nid_new, 0, 100.]
 
-            #fbdf.write(print_card_8(out_grid1))
-            #fbdf.write(print_card_8(out_grid2))
-            #fbdf.write(print_card_8(conrod))
+            fbdf.write(print_card_8(out_grid1))
+            fbdf.write(print_card_8(out_grid2))
+            fbdf.write(print_card_8(conrod))
             #fbdf.write(print_card_8(conm2))
             local_points.append(avg_local)
             global_points.append(avg_global)
 
-            xi, yi, zi = avg_global
+            xl, yl, zl = avg_local
+            xg, yg, zg = avg_global
             result1 = nodal_result[nid1]
             result2 = nodal_result[nid2]
             resulti = result2  * percent + result1  * (1 - percent)
-            result.append([xi, yi, zi, resulti])
+            result.append([0, xl, yl, zl, xg, yg, zg, resulti])
 
             nid_new += 2
             eid_new += 1
         assert len(local_points) == len(result)
-        #fbdf.write('$------\n')
-    #fbdf.close()
+        fbdf.write('$------\n')
+    fbdf.close()
     local_points_array = np.array(local_points)
     global_points_array = np.array(global_points)
     result_array = np.array(result)
