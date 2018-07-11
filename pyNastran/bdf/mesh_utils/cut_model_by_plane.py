@@ -37,8 +37,22 @@ def _setup(bdf_filename):
 
 def cut_model_by_coord(bdf_filename, coord, tol,
                        nodal_result, plane_atol=1e-5):
-    assert isinstance(tol, float), tol
+    """
+    Cuts a Nastran model with a cutting plane
 
+    Parameters
+    ----------
+    bdf_filename : str / BDF
+        str : the bdf filename
+        model : a properly configurated BDF object
+    coord : Coord
+        the coordinate system to cut the model with
+    nodal_result : (nelements, ) float np.ndarray
+        the result to cut the model with
+    plane_atol : float; default=1e-5
+        the tolerance for a line that's located on the y=0 local plane
+    """
+    assert isinstance(tol, float), tol
     nids, xyz_cid0, edges = _setup(bdf_filename)
     local_points_array, global_points_array, result_array = _cut_model_by_coord(
         nids, xyz_cid0, edges, coord, tol,
@@ -61,8 +75,8 @@ def cut_model(nids, xyz_cid0, edges, view_up, p1, p2, tol,
     """
     #view_up = camera.GetViewUp()
 
-    print('p1 =', p1)
-    print('p2 =', p2)
+    #print('p1 =', p1)
+    #print('p2 =', p2)
     z = view_up
     x = p2 - p1
     origin = p1
@@ -71,9 +85,9 @@ def cut_model(nids, xyz_cid0, edges, view_up, p1, p2, tol,
 
     # j axis (y direction) is normal to the plane
     j = np.cross(k, i)
-    print("i = ", i)
-    print("j = ", j)
-    print("k = ", k)
+    #print("i = ", i)
+    #print("j = ", j)
+    #print("k = ", k)
 
     cid = 1
     zaxis = origin + z
@@ -94,15 +108,36 @@ def _merge_bodies(local_points_array, global_points_array, result_array):
 
 def _cut_model_by_coord(nids, xyz_cid0, edges, coord, tol,
                         nodal_result, plane_atol=1e-5):
+    """
+    Cuts a Nastran model with a cutting plane
+
+    Parameters
+    ----------
+    nids : (nnodes, ) int ndarray
+        the node ids in the model
+    xyz_cid0 : (nnodes, 3) float ndarray
+        the node xyzs in the model
+    edges : ???
+        the edges of the model
+    coord : Coord
+        the coordinate system to cut the model with
+    tol : float
+        the tolerance to filter edges (using some large value) to prevent
+        excessive computations
+    nodal_result : (nelements, ) float np.ndarray
+        the result to cut the model with
+    plane_atol : float; default=1e-5
+        the tolerance for a line that's located on the y=0 local plane
+    """
     xyz_cid = coord.transform_node_to_local_array(xyz_cid0)
 
     # y direction is normal to the plane
     y = xyz_cid[:, 1]
     abs_y = np.abs(y)
-    print('tol =', tol)
+    #print('tol =', tol)
     iclose = np.where(abs_y <= tol)
     nids_close = nids[iclose]
-    print('nids_close =', nids_close)
+    #print('nids_close =', nids_close)
 
     close_edges = get_close_edges(edges, nids_close)
     close_edges_array = np.array(close_edges)
@@ -121,7 +156,7 @@ def _cut_model_by_coord(nids, xyz_cid0, edges, coord, tol,
     local_points_array, global_points_array, result_array = slice_shell_elements(
         xyz_cid0, xyz_cid, iclose_edges_array, nodal_result, plane_atol=plane_atol)
 
-    print(coord)
+    #print(coord)
     return local_points_array, global_points_array, result_array
 
 def get_close_edges(edges, nids_close):
@@ -142,8 +177,16 @@ def slice_shell_elements(xyz_cid0, xyz_cid, edges, nodal_result, plane_atol=1e-5
 
     Parameters
     ----------
-    plane_atol: float; default=1e-5
-        only needed for taking cuts on the symmetry plane
+    xyz_cid0 : (nnodes, 3) float ndarray
+        the node xyzs in the model
+    xyz_cid : (nnodes, 3) float ndarray
+        the node xyzs in the model in the local plane
+    edges : ???
+        the edges of the model
+    nodal_result : (nelements, ) float np.ndarray
+        the result to cut the model with
+    plane_atol : float; default=1e-5
+        the tolerance for a line that's located on the y=0 local plane
     """
     plane_bdf_filename = 'plane.bdf'
     fbdf = open(plane_bdf_filename, 'w')

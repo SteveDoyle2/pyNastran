@@ -13,7 +13,7 @@ import numpy as np
 #test_path = os.path.join(root_path, 'bdf', 'test', 'unit')
 
 import pyNastran
-from pyNastran.bdf.bdf import BDF, read_bdf
+from pyNastran.bdf.bdf import BDF, read_bdf, CORD2R
 from pyNastran.bdf.mesh_utils.bdf_equivalence import bdf_equivalence_nodes
 from pyNastran.bdf.mesh_utils.collapse_bad_quads import convert_bad_quads_to_tris
 from pyNastran.bdf.mesh_utils.delete_bad_elements import get_bad_shells
@@ -22,6 +22,8 @@ from pyNastran.bdf.mesh_utils.split_cbars_by_pin_flag import split_cbars_by_pin_
 from pyNastran.bdf.mesh_utils.split_elements import split_line_elements
 from pyNastran.bdf.mesh_utils.pierce_shells import pierce_shell_model, quad_intersection, triangle_intersection
 from pyNastran.bdf.mesh_utils.mirror_mesh import write_bdf_symmetric, bdf_mirror, make_symmetric_model
+from pyNastran.bdf.mesh_utils.cut_model_by_plane import cut_model_by_coord
+from pyNastran.bdf.mesh_utils.mesh import create_structured_cquad4s
 from pyNastran.utils.log import SimpleLogger
 
 # testing these imports are up to date
@@ -821,6 +823,61 @@ class TestMeshUtils(unittest.TestCase):
                       #triangle_intersection(p, v, p0, p1, p2),
                       #quad_intersection(p, v, p0, p1, p3, p2))
 
+    def test_cut_shell_model(self):
+        """tests pierce_shell_model"""
+        pid = 10
+        mid1 = 100
+        model = BDF(log=log)
+
+        # intersects (min)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        model.add_cquad4(1, pid, [1, 2, 3, 4])
+
+        # intersects (max)
+        model.add_grid(5, [0., 0., 1.])
+        model.add_grid(6, [1., 0., 1.])
+        model.add_grid(7, [1., 1., 1.])
+        model.add_grid(8, [0., 1., 1.])
+        model.add_cquad4(2, pid, [5, 6, 7, 8])
+
+        # intersects (mid)
+        model.add_grid(9, [0., 0., 0.5])
+        model.add_grid(10, [1., 0., 0.5])
+        model.add_grid(11, [1., 1., 0.5])
+        model.add_grid(12, [0., 1., 0.5])
+        model.add_cquad4(3, pid, [9, 10, 11, 12])
+
+        # doesn't intersect
+        model.add_grid(13, [10., 0., 0.])
+        model.add_grid(14, [11., 0., 0.])
+        model.add_grid(15, [11., 1., 0.])
+        model.add_grid(16, [10., 1., 0.])
+        model.add_cquad4(4, pid, [13, 14, 15, 16])
+
+        model.add_pshell(pid, mid1=mid1, t=2.)
+
+        E = 1.0
+        G = None
+        nu = 0.3
+        model.add_mat1(mid1, E, G, nu, rho=1.0)
+        model.validate()
+
+        model.cross_reference()
+
+        xyz_points = [
+            [0.4, 0.6, 0.], [-1., -1, 0.],]
+
+        tol = 2.
+        coord = CORD2R(1, rid=0, origin=[0.5, 0., 0.], zaxis=[0.5, 0., 1], xzplane=[1.5, 0., 0.],
+                      comment='')
+        nodal_result = np.linspace(0., 1., num=16)
+        local_points_array, global_points_array, result_array = cut_model_by_coord(
+            model, coord, tol, nodal_result,
+            plane_atol=1e-5)
+        assert len(result_array) == 16, len(result_array)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

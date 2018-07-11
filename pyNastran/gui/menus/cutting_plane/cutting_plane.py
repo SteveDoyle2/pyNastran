@@ -86,7 +86,7 @@ class CuttingPlaneWindow(PyDialog):
                 cid_str = cid_global_str
             else:
                 cid_str = str(cid)
-            print('cid_str = %r' % cid_str)
+            #print('cid_str = %r' % cid_str)
             self.p1_cid_pulldown.addItem(cid_str)
             self.p2_cid_pulldown.addItem(cid_str)
             self.zaxis_cid_pulldown.addItem(cid_str)
@@ -241,11 +241,11 @@ class CuttingPlaneWindow(PyDialog):
         if method is None:
             #method = self.zaxis_method_pulldown.getText()
             method = self.zaxis_method_pulldown.currentText()
-            print('method* = %r' % method)
+            #print('method* = %r' % method)
         else:
-            print("method_int = %r" % method)
+            #print("method_int = %r" % method)
             method = self.methods[method]
-            print("method = %r" % method)
+            #print("method = %r" % method)
 
         if method == 'Global Z':
             is_visible = False
@@ -327,8 +327,8 @@ class CuttingPlaneWindow(PyDialog):
         p1_cid = int(p1_cidi) if 'Global' not in p1_cidi else 0
         p2_cid = int(p2_cidi) if 'Global' not in p2_cidi else 0
         zaxis_cid = int(zaxis_cidi) if 'Global' not in zaxis_cidi else 0
-        print('p1_cidi=%r p2_cidi=%r p3_cidi=%r' % (p1_cidi, p2_cidi, zaxis_cidi))
-        print('p2_cid=%r p2_cid=%r p3_cidi=%r' % (p2_cid, p2_cid, zaxis_cid))
+        #print('p1_cidi=%r p2_cidi=%r p3_cidi=%r' % (p1_cidi, p2_cidi, zaxis_cidi))
+        #print('p2_cid=%r p2_cid=%r p3_cidi=%r' % (p2_cid, p2_cid, zaxis_cid))
 
         p1_x, flag0 = check_float(self.p1_x_edit)
         p1_y, flag1 = check_float(self.p1_y_edit)
@@ -359,7 +359,7 @@ class CuttingPlaneWindow(PyDialog):
             zaxis_cid = 0
         else:
             raise NotImplementedError(zaxis_method)
-        print('zaxis =', zaxis)
+        #print('zaxis =', zaxis)
 
         ytol, flag9 = check_float(self.zero_tol_edit)
         zero_tol, flag10 = check_float(self.zero_tol_edit)
