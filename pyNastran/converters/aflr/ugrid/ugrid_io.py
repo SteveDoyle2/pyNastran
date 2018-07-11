@@ -18,6 +18,7 @@ from pyNastran.utils import is_binary_file
 from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult
 from pyNastran.gui.utils.vtk.vtk_utils import (
     create_vtk_cells_of_constant_element_types, numpy_to_vtk_points)
+from pyNastran.gui.qt_files.colors import RED_FLOAT
 
 
 class UGRID_IO(object):
@@ -132,9 +133,8 @@ class UGRID_IO(object):
         if is_3d and read_solids:
             diff_node_ids = model.check_hanging_nodes(stop_on_diff=False)
             if len(diff_node_ids):
-                red = (1., 0., 0.)
                 self.gui.create_alternate_vtk_grid(
-                    'hanging_nodes', color=red, line_width=5, opacity=1.,
+                    'hanging_nodes', color=RED_FLOAT, line_width=5, opacity=1.,
                     point_size=10, representation='point')
                 self._add_ugrid_nodes_to_grid('hanging_nodes', diff_node_ids, nodes)
                 self.gui._add_alt_actors(self.gui.alt_grids)

@@ -102,14 +102,17 @@ except ImportError:
 #from pyNastran.f06.f06_formatting import get_key0
 from pyNastran.op2.op2_geom import OP2Geom
 
-GREEN = (0., 1., 0.)
-BLUE = (0., 0., 1.)
-LIGHT_GREEN = (0.5, 1., 0.5)
-PINK = (0.98, 0.4, 0.93)
-ORANGE = (219/255., 168/255., 13/255.)
-RED = (1., 0., 0.)
-YELLOW = (1., 1., 0.)
-PURPLE = (1., 0., 1.)
+from pyNastran.gui.qt_files.colors import (
+    RED_FLOAT, BLUE_FLOAT, GREEN_FLOAT, LIGHT_GREEN_FLOAT, PINK_FLOAT, PURPLE_FLOAT,
+    YELLOW_FLOAT, ORANGE_FLOAT)
+#GREEN = (0., 1., 0.)
+#BLUE = (0., 0., 1.)
+#LIGHT_GREEN = (0.5, 1., 0.5)
+#PINK = (0.98, 0.4, 0.93)
+#ORANGE = (219/255., 168/255., 13/255.)
+#RED = (1., 0., 0.)
+#YELLOW = (1., 1., 0.)
+#PURPLE = (1., 0., 1.)
 
 NO_THETA = [
     'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
@@ -639,7 +642,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         if nconm2 > 0:
             self.gui.create_alternate_vtk_grid(
-                'conm2', color=ORANGE, line_width=5, opacity=1., point_size=4,
+                'conm2', color=ORANGE_FLOAT, line_width=5, opacity=1., point_size=4,
                 representation='point', follower_function=None)
 
         # Allocate grids
@@ -1705,7 +1708,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 return
 
             self.gui.create_alternate_vtk_grid(
-                'conm2', color=ORANGE, line_width=5, opacity=1., point_size=4,
+                'conm2', color=ORANGE_FLOAT, line_width=5, opacity=1., point_size=4,
                 follower_function=update_conm2s_function,
                 representation='point')
 
@@ -1863,11 +1866,11 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         if self.has_caero:
             if 'caero' not in self.gui.alt_grids:
                 self.gui.create_alternate_vtk_grid(
-                    'caero', color=YELLOW, line_width=3, opacity=1.0,
+                    'caero', color=YELLOW_FLOAT, line_width=3, opacity=1.0,
                     representation='toggle', is_visible=True, is_pickable=False)
             if 'caero_subpanels' not in self.gui.alt_grids:
                 self.gui.create_alternate_vtk_grid(
-                    'caero_subpanels', color=YELLOW, line_width=3, opacity=1.0,
+                    'caero_subpanels', color=YELLOW_FLOAT, line_width=3, opacity=1.0,
                     representation='toggle', is_visible=False, is_pickable=False)
 
             self.gui.alt_grids['caero'].Allocate(ncaeros, 1000)
@@ -1948,7 +1951,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 zfighting_offset = 0.0001 * (iaero + 1)
                 grid_name = 'spline_%s_structure_points' % spline_id
                 self.gui.create_alternate_vtk_grid(
-                    grid_name, color=BLUE, opacity=1.0, point_size=5,
+                    grid_name, color=BLUE_FLOAT, opacity=1.0, point_size=5,
                     representation='point', is_visible=False)
                 msg = ', which is required by %r' % grid_name
                 stored_msgi = self._add_nastran_nodes_to_grid(
@@ -1957,7 +1960,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 zfighting_offset = 0.0001 * (iaero + 2)
                 grid_name = 'spline_%s_boxes' % spline_id
                 self.gui.create_alternate_vtk_grid(
-                    grid_name, color=BLUE, opacity=0.3,
+                    grid_name, color=BLUE_FLOAT, opacity=0.3,
                     line_width=4,
                     representation='toggle', is_visible=False)
                 stored_msgi2 = self.set_caero_control_surface_grid(
@@ -2086,7 +2089,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             #ncaero_cs_points = 0
             if 'caero_control_surfaces' not in self.gui.alt_grids:
                 self.gui.create_alternate_vtk_grid(
-                    'caero_control_surfaces', color=PINK, line_width=5, opacity=1.0,
+                    'caero_control_surfaces', color=PINK_FLOAT, line_width=5, opacity=1.0,
                     representation='surface', is_visible=False)
 
             # sort the control surfaces
@@ -2106,7 +2109,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     cs_name = '%s_control_surface' % aesurf.label
                     if cs_name not in self.alt_grids:
                         self.gui.create_alternate_vtk_grid(
-                            cs_name, color=PINK, line_width=5, opacity=0.5,
+                            cs_name, color=PINK_FLOAT, line_width=5, opacity=0.5,
                             representation='surface')
 
                     cs_box_ids['caero_control_surfaces'].extend(aero_element_ids)
@@ -2121,7 +2124,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     cs_name = '%s_control_surface' % aesurf.label
                     if cs_name not in self.alt_grids:
                         self.gui.create_alternate_vtk_grid(
-                            cs_name, color=PINK, line_width=5, opacity=0.5,
+                            cs_name, color=PINK_FLOAT, line_width=5, opacity=0.5,
                             representation='surface')
 
                     cs_box_ids['caero_control_surfaces'].extend(aelist_ref.elements)
@@ -2517,7 +2520,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 ids += idsi
             grid_name = 'SUPORT'
             self.gui.create_alternate_vtk_grid(
-                grid_name, color=RED, opacity=1.0, point_size=4,
+                grid_name, color=RED_FLOAT, opacity=1.0, point_size=4,
                 representation='point', is_visible=True)
 
         if len(mpc_names) == 0 and len(rigid_lines):
@@ -2534,7 +2537,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         spc_name = 'spc_id=%i' % spc_id
         spc_names = [spc_name]
         self.gui.create_alternate_vtk_grid(
-            spc_name, color=PURPLE, line_width=5, opacity=1.,
+            spc_name, color=PURPLE_FLOAT, line_width=5, opacity=1.,
             point_size=5, representation='point', is_visible=False)
 
         # node_ids = model.get_SPCx_node_ids(spc_id)
@@ -2613,7 +2616,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         bar_nids = list(bar_nids)
         self.gui.create_alternate_vtk_grid(
-            'Bar Nodes', color=RED, line_width=1, opacity=1.,
+            'Bar Nodes', color=RED_FLOAT, line_width=1, opacity=1.,
             point_size=5, representation='point', bar_scale=0., is_visible=False)
         msg = ", which is required by 'Bar Nodes'"
         self._add_nastran_nodes_to_grid('Bar Nodes', bar_nids, model, msg)
@@ -2635,10 +2638,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 bar_z = bar_type + '_z'
 
                 self.gui.create_alternate_vtk_grid(
-                    bar_y, color=GREEN, line_width=5, opacity=1.,
+                    bar_y, color=GREEN_FLOAT, line_width=5, opacity=1.,
                     point_size=5, representation='bar', bar_scale=scale, is_visible=False)
                 self.gui.create_alternate_vtk_grid(
-                    bar_z, color=BLUE, line_width=5, opacity=1.,
+                    bar_z, color=BLUE_FLOAT, line_width=5, opacity=1.,
                     point_size=5, representation='bar', bar_scale=scale, is_visible=False)
 
                 self._add_nastran_lines_xyz_to_grid(bar_y, lines_bar_y, eids)
@@ -2707,13 +2710,13 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             indname = 'mpc_id=%i_independent' % mpc_id
             linename = 'mpc_id=%i_lines' % mpc_id
         self.gui.create_alternate_vtk_grid(
-            depname, color=GREEN, line_width=5, opacity=1.,
+            depname, color=GREEN_FLOAT, line_width=5, opacity=1.,
             point_size=5, representation='point', is_visible=False)
         self.gui.create_alternate_vtk_grid(
-            indname, color=LIGHT_GREEN, line_width=5, opacity=1.,
+            indname, color=LIGHT_GREEN_FLOAT, line_width=5, opacity=1.,
             point_size=5, representation='point', is_visible=False)
         self.gui.create_alternate_vtk_grid(
-            linename, color=LIGHT_GREEN, line_width=5, opacity=1.,
+            linename, color=LIGHT_GREEN_FLOAT, line_width=5, opacity=1.,
             point_size=5, representation='wire', is_visible=False)
 
         lines2 = []
@@ -2809,7 +2812,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             model.log.warning('0 spoints added for %r' % name)
             return
         self.gui.create_alternate_vtk_grid(
-            name, color=BLUE, line_width=1, opacity=1.,
+            name, color=BLUE_FLOAT, line_width=1, opacity=1.,
             point_size=5, representation='point', bar_scale=0., is_visible=True)
 
         self.gui.follower_nodes[name] = spoint_ids
@@ -2890,7 +2893,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         """creates SUPORT and SUPORT1 nodes"""
         suport_name = 'suport1_id=%i' % suport_id
         self.gui.create_alternate_vtk_grid(
-            suport_name, color=RED, line_width=5, opacity=1., point_size=4,
+            suport_name, color=RED_FLOAT, line_width=5, opacity=1., point_size=4,
             representation='point', is_visible=False)
         suport_nids = get_suport_node_ids(model, suport_id)
         msg = ', which is required by %r' % suport_name
@@ -3938,7 +3941,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             lines = np.array(lines, dtype='int32')
 
             self.gui.create_alternate_vtk_grid(
-                'plotel', color=RED, line_width=2, opacity=0.8,
+                'plotel', color=RED_FLOAT, line_width=2, opacity=0.8,
                 point_size=5, representation='wire', is_visible=True)
             self._add_nastran_lines_to_grid('plotel', lines, model)
 

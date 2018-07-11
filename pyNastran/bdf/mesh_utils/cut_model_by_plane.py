@@ -1,30 +1,41 @@
+"""
+defines:
+ - local_points_array, global_points_array, result_array = cut_edge_model_by_axes(
+        bdf_filename, view_up, p1, p2, tol,
+        nodal_result, plane_atol=1e-5)
+ - local_points_array, global_points_array, result_array = cut_edge_model_by_coord(
+        bdf_filename, coord, tol,
+        nodal_result, plane_atol=1e-5)
+ - slice_edges(xyz_cid0, xyz_cid, edges, nodal_result, plane_atol=1e-5)
+"""
 from __future__ import print_function
 
-from six import iterkeys
+from six import iterkeys, iteritems
 import numpy as np
 from pyNastran.bdf.cards.coordinate_systems import CORD2R
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.mesh_utils.internal_utils import get_bdf_model
 
 
-def cut_model_by_axes(bdf_filename, view_up, p1, p2, tol,
-                      nodal_result, plane_atol=1e-5):
-    assert isinstance(tol, float), tol
-    p1 = np.asarray(p1)
-    p2 = np.asarray(p2)
-    view_up = np.asarray(view_up)
+#def cut_edge_model_by_axes(bdf_filename, view_up, p1, p2, tol,
+                           #nodal_result, plane_atol=1e-5):
+    #assert isinstance(tol, float), tol
+    #p1 = np.asarray(p1)
+    #p2 = np.asarray(p2)
+    #view_up = np.asarray(view_up)
 
-    nids, xyz_cid0, edges = _setup(bdf_filename)
+    #nids, xyz_cid0, edges = _setup_edges(bdf_filename)
 
-    local_points_array, global_points_array, result_array = cut_model(
-        nids, xyz_cid0, edges, view_up, p1, p2, tol,
-        nodal_result, plane_atol=plane_atol)
-    return local_points_array, global_points_array, result_array
+    #local_points_array, global_points_array, result_array = _cut_model(
+        #nids, xyz_cid0, edges, view_up, p1, p2, tol,
+        #nodal_result, plane_atol=plane_atol)
+    #return local_points_array, global_points_array, result_array
 
-def _setup(bdf_filename):
+def _setup_edges(bdf_filename):
+    """helper method"""
     model = get_bdf_model(bdf_filename, xref=False, log=None, debug=False)
     out = model.get_xyz_in_coord_array(cid=0, fdtype='float64', idtype='int32')
-    nid_cp_cd, xyz_cid0, unused_xyz_cp, unused_icd_transform, unused_icp_transform = out
+    nid_cp_cd, xyz_cid0, xyz_cp, unused_icd_transform, unused_icp_transform = out
     nids = nid_cp_cd[:, 0]
     #eid_to_edge_map, nid_to_edge_map, edge_to_eid_map = create_maps(model)
     #model = BDF()
@@ -35,8 +46,32 @@ def _setup(bdf_filename):
     edges = iterkeys(edge_to_eid_map)
     return nids, xyz_cid0, edges
 
-def cut_model_by_coord(bdf_filename, coord, tol,
-                       nodal_result, plane_atol=1e-5):
+def _setup_faces(bdf_filename):
+    """helper method"""
+    model = get_bdf_model(bdf_filename, xref=False, log=None, debug=False)
+    out = model.get_xyz_in_coord_array(cid=0, fdtype='float64', idtype='int32')
+    nid_cp_cd, xyz_cid0, xyz_cp, unused_icd_transform, unused_icp_transform = out
+    nids = nid_cp_cd[:, 0]
+    #eid_to_edge_map, nid_to_edge_map, edge_to_eid_map = create_maps(model)
+    #model = BDF()
+    faces = []
+    shells = set([
+        'CTRIA3', 'CTRIAX', 'CTRIA6', 'CTRIAX6',
+        'CQUAD4', 'CQUAD', 'CQUAD8', 'CQUADR', 'CQUADX', 'CQUADX8',
+        'CSHEAR'])
+    for eid, elem in iteritems(model.elements):
+        if elem.type in shells:
+            faces.append(elem.node_ids)
+
+    #out = model._get_maps(eids=None, map_names=None,
+                          #consider_0d=False, consider_0d_rigid=False,
+                          #consider_1d=False, consider_2d=True, consider_3d=False)
+    #edge_to_eid_map = out['edge_to_eid_map']
+    #faces = iterkeys(edge_to_eid_map)
+    return nids, xyz_cid0, faces
+
+def cut_edge_model_by_coord(bdf_filename, coord, tol,
+                            nodal_result, plane_atol=1e-5):
     """
     Cuts a Nastran model with a cutting plane
 
@@ -53,15 +88,84 @@ def cut_model_by_coord(bdf_filename, coord, tol,
         the tolerance for a line that's located on the y=0 local plane
     """
     assert isinstance(tol, float), tol
-    nids, xyz_cid0, edges = _setup(bdf_filename)
-    local_points_array, global_points_array, result_array = _cut_model_by_coord(
+    nids, xyz_cid0, edges = _setup_edges(bdf_filename)
+    local_points_array, global_points_array, result_array = _cut_edge_model_by_coord(
         nids, xyz_cid0, edges, coord, tol,
         nodal_result, plane_atol=plane_atol)
     return local_points_array, global_points_array, result_array
 
-def cut_model(nids, xyz_cid0, edges, view_up, p1, p2, tol,
-              nodal_result, plane_atol=1e-5):
+def cut_face_model_by_coord(bdf_filename, coord, tol,
+                            nodal_result, plane_atol=1e-5):
     """
+    Cuts a Nastran model with a cutting plane
+
+    Parameters
+    ----------
+    bdf_filename : str / BDF
+        str : the bdf filename
+        model : a properly configurated BDF object
+    coord : Coord
+        the coordinate system to cut the model with
+    nodal_result : (nelements, ) float np.ndarray
+        the result to cut the model with
+    plane_atol : float; default=1e-5
+        the tolerance for a line that's located on the y=0 local plane
+    """
+    assert isinstance(tol, float), tol
+    nids, xyz_cid0, faces = _setup_faces(bdf_filename)
+    local_points_array, global_points_array, result_array = _cut_face_model_by_coord(
+        nids, xyz_cid0, faces, coord, tol,
+        nodal_result, plane_atol=plane_atol)
+    return local_points_array, global_points_array, result_array
+
+def _determine_cord2r(origin, zaxis, xzplane):
+    k = zaxis / np.linalg.norm(zaxis)
+    iprime = xzplane / np.linalg.norm(xzplane)
+    j = np.cross(k, iprime)
+    j /= np.linalg.norm(j)
+    i = np.cross(j, k)
+    return i, k, origin, zaxis, xzplane
+
+def _project_z_axis(p1, p2, z_global):
+    x = p2 - p1
+    iprime = x / np.linalg.norm(x)
+    k = z_global / np.linalg.norm(z_global)
+    j = np.cross(k, iprime)
+    jhat = j / np.linalg.norm(j)
+    i = np.cross(jhat, k)
+
+    origin = p1
+    zaxis = p1 + k
+    xzplane = p1 + i
+    return i, k, origin, zaxis, xzplane
+
+
+def _p1_p2_zaxis_to_cord2r(model, p1, p2, zaxis, method='Z-Axis Projection',
+                           cid_p1=0, cid_p2=0, cid_zaxis=0):
+    p1 = np.asarray(p1)
+    p2 = np.asarray(p2)
+    zaxis = np.asarray(zaxis)
+    print("coord:")
+    print('  p1 =', p1)
+    print('  p2 =', p2)
+    print('  zaxis =', zaxis)
+
+    xyz1 = model.coords[cid_p1].transform_node_to_global(p1)
+    xyz2 = model.coords[cid_p2].transform_node_to_global(p2)
+    z_global = model.coords[cid_zaxis].transform_node_to_global(zaxis)
+    if method == 'CORD2R':
+        i, k, origin, zaxis, xzplane = _determine_cord2r(xyz1, xyz2, z_global)
+    elif method == 'Z-Axis Projection':
+        i, k, origin, zaxis, xzplane = _project_z_axis(xyz1, xyz2, z_global)
+    else:
+        raise NotImplementedError(method)
+    return xyz1, xyz2, z_global, i, k, origin, zaxis, xzplane
+
+def _cut_model(nids, xyz_cp, edges, view_up, p1, p2, tol,
+               nodal_result, plane_atol=1e-5):
+    """
+    Helper method for cut_edge_model_by_axes
+
     Parameters
     ----------
     edges : (nedges, 2) int ndarray
@@ -80,11 +184,11 @@ def cut_model(nids, xyz_cid0, edges, view_up, p1, p2, tol,
     z = view_up
     x = p2 - p1
     origin = p1
-    i = x / np.linalg.norm(x)
-    k = z / np.linalg.norm(z)
+    #i = x / np.linalg.norm(x)
+    #k = z / np.linalg.norm(z)
 
     # j axis (y direction) is normal to the plane
-    j = np.cross(k, i)
+    #j = np.cross(k, i)
     #print("i = ", i)
     #print("j = ", j)
     #print("k = ", k)
@@ -94,20 +198,20 @@ def cut_model(nids, xyz_cid0, edges, view_up, p1, p2, tol,
     xzplane = origin + x
     coord = CORD2R(cid, rid=0, origin=origin, zaxis=zaxis, xzplane=xzplane,
                    comment='')
-    local_points_array, global_points_array, result_array = _cut_model_by_coord(
-        nids, xyz_cid0, edges, coord, tol, nodal_result,
+    local_points_array, global_points_array, result_array = _cut_edge_model_by_coord(
+        nids, xyz_cp, edges, coord, tol, nodal_result,
         plane_atol=plane_atol)
     return local_points_array, global_points_array, result_array
 
-def _merge_bodies(local_points_array, global_points_array, result_array):
-    local_points_dict = {}
-    global_points_dict = {}
-    result_dict = {}
+#def _merge_bodies(local_points_array, global_points_array, result_array):
+    #local_points_dict = {}
+    #global_points_dict = {}
+    #result_dict = {}
     #return local_points_dict, global_points_dict, result_dict
-    return NotImplementedError()
+    #return NotImplementedError()
 
-def _cut_model_by_coord(nids, xyz_cid0, edges, coord, tol,
-                        nodal_result, plane_atol=1e-5):
+def _cut_edge_model_by_coord(nids, xyz_cid0, edges, coord, tol,
+                             nodal_result, plane_atol=1e-5):
     """
     Cuts a Nastran model with a cutting plane
 
@@ -137,7 +241,7 @@ def _cut_model_by_coord(nids, xyz_cid0, edges, coord, tol,
     #print('tol =', tol)
     iclose = np.where(abs_y <= tol)
     nids_close = nids[iclose]
-    #print('nids_close =', nids_close)
+    #print('nids_close =', nids_close.tolist())
 
     close_edges = get_close_edges(edges, nids_close)
     close_edges_array = np.array(close_edges)
@@ -153,8 +257,61 @@ def _cut_model_by_coord(nids, xyz_cid0, edges, coord, tol,
     #print('iclose_edges_array:')
     #print(iclose_edges_array)
 
-    local_points_array, global_points_array, result_array = slice_shell_elements(
+    local_points_array, global_points_array, result_array = slice_edges(
         xyz_cid0, xyz_cid, iclose_edges_array, nodal_result, plane_atol=plane_atol)
+
+    #print(coord)
+    return local_points_array, global_points_array, result_array
+
+def _cut_face_model_by_coord(nids, xyz_cid0, faces, coord, tol,
+                             nodal_result, plane_atol=1e-5):
+    """
+    Cuts a Nastran model with a cutting plane
+
+    Parameters
+    ----------
+    nids : (nnodes, ) int ndarray
+        the node ids in the model
+    xyz_cid0 : (nnodes, 3) float ndarray
+        the node xyzs in the model
+    faces : ???
+        the faces of the model
+    coord : Coord
+        the coordinate system to cut the model with
+    tol : float
+        the tolerance to filter faces (using some large value) to prevent
+        excessive computations
+    nodal_result : (nelements, ) float np.ndarray
+        the result to cut the model with
+    plane_atol : float; default=1e-5
+        the tolerance for a line that's located on the y=0 local plane
+    """
+    xyz_cid = coord.transform_node_to_local_array(xyz_cid0)
+
+    # y direction is normal to the plane
+    y = xyz_cid[:, 1]
+    abs_y = np.abs(y)
+    #print('tol =', tol)
+    iclose = np.where(abs_y <= tol)
+    nids_close = nids[iclose]
+    #print('nids_close =', nids_close.tolist())
+
+    close_faces = get_close_faces(faces, nids_close)
+    close_faces_array = np.array(close_faces)
+    #print('close_faces_array:')
+    #for edge in close_faces_array:
+        #print(face)
+    #print(close_faces_array)
+    #aaa
+
+    iclose_faces_array = np.searchsorted(nids, close_faces_array.ravel()).reshape(
+        close_faces_array.shape)
+
+    #print('iclose_edges_array:')
+    #print(iclose_edges_array)
+
+    local_points_array, global_points_array, result_array = slice_faces(
+        xyz_cid0, xyz_cid, iclose_faces_array, nodal_result, plane_atol=plane_atol)
 
     #print(coord)
     return local_points_array, global_points_array, result_array
@@ -171,7 +328,18 @@ def get_close_edges(edges, nids_close):
         close_edges.append(edge)
     return close_edges
 
-def slice_shell_elements(xyz_cid0, xyz_cid, edges, nodal_result, plane_atol=1e-5):
+def get_close_faces(faces, nids_close):
+    """this seems like it could be a lot faster"""
+    #n1 = edges[:, 0]
+    #n2 = edges[:, 1]
+    close_faces = []
+    for face in faces:
+        if not all((nid for nid in face)):
+            continue
+        close_faces.append(face)
+    return close_faces
+
+def slice_edges(xyz_cid0, xyz_cid, edges, nodal_result, plane_atol=1e-5):
     """
     Slices the shell elements
 
@@ -220,7 +388,8 @@ def slice_shell_elements(xyz_cid0, xyz_cid, edges, nodal_result, plane_atol=1e-5
         #print('  xyz1-global=%s xyz2-global=%s' % (xyz1_global, xyz2_global))
         #print('  is_same_sign=%s is_far_from_plane=%s' % (is_same_sign, is_far_from_plane))
         if is_far_from_plane and is_same_sign:
-            #print('skip y1_local=%.3f y2_local=%.3f plane_atol=%.e' % (y1_local, y2_local, plane_atol))
+            #print('skip y1_local=%.3f y2_local=%.3f plane_atol=%.e' % (
+                #y1_local, y2_local, plane_atol))
             continue
         elif np.allclose(y1_local, y2_local, atol=plane_atol):
             #print('  y-sym; nid1=%s nid2=%s edge=%s' % (nid1, nid2, str(edge)))
@@ -247,7 +416,7 @@ def slice_shell_elements(xyz_cid0, xyz_cid, edges, nodal_result, plane_atol=1e-5
             result1 = nodal_result[nid1]
             result2 = nodal_result[nid2]
             result.append([nid1, x1, y1, z1, x1g, y1g, z1g, result1])
-            result.append([nid2, x2, y2, z2, x1g, y1g, z1g, result2])
+            result.append([nid2, x2, y2, z2, x2g, y2g, z2g, result2])
 
             nid_new += 2
             eid_new += 2
@@ -259,55 +428,13 @@ def slice_shell_elements(xyz_cid0, xyz_cid, edges, nodal_result, plane_atol=1e-5
             #print("  xyz1_local =%s xyz2_local =%s" % (xyz1_local, xyz2_local))
             continue
         else:
-            #print('edge =', edge)
-            # these edges have crossings
-            # reworking:
-            #  y = m*x + b
-            #
-            # with the long form:
-            #  y = (y2-y1) / (x2-x1) * (x-x1) + y1
-            #
-            # to get:
-            #   y = y2 * (x-x1)/(x2-x1) + y1 * (1 - (x-x1)/(x2-x1))
-            #
-            # or:
-            #   p = (x-x1)/(x2-x1)  # percent
-            #   y = y2 * p + y1 * (1 - p)
-            #
-            # then we sub the entire point for y
-            # and sub out x for the y-coordinate
-            #
-            # then we just crank the formula where we set the value of "x" to 0.0
-            # where "x" is the y-coordinate
-            percent = (0. - y1_local) / (y2_local - y1_local)
-            avg_local = xyz2_local  * percent + xyz1_local  * (1 - percent)
-            avg_global = xyz2_global * percent + xyz1_global * (1 - percent)
-
-            #print('  nid1=%s nid2=%s edge=%s' % (nid1, nid2, str(edge)))
-            #print('    xyz1_local=%s xyz2_local=%s' % (xyz1_local, xyz2_local))
-            #print('    avg_local=%s' % avg_local)
-            #print('    avg_global=%s' % avg_global)
-            out_grid1 = ['GRID', nid_new, None, ] + list(xyz1_local)
-            out_grid2 = ['GRID', nid_new+1, None, ] + list(xyz2_local)
-            conrod = ['CONROD', eid_new, nid_new, nid_new + 1, mid, area, J]
-            #conm2 = ['CONM2', eid_new, nid_new, 0, 100.]
-
-            fbdf.write(print_card_8(out_grid1))
-            fbdf.write(print_card_8(out_grid2))
-            fbdf.write(print_card_8(conrod))
-            #fbdf.write(print_card_8(conm2))
-            local_points.append(avg_local)
-            global_points.append(avg_global)
-
-            xl, yl, zl = avg_local
-            xg, yg, zg = avg_global
-            result1 = nodal_result[nid1]
-            result2 = nodal_result[nid2]
-            resulti = result2  * percent + result1  * (1 - percent)
-            result.append([0, xl, yl, zl, xg, yg, zg, resulti])
-
-            nid_new += 2
-            eid_new += 1
+            nid_new, eid_new = _interpolate_bar_to_node(
+                nid_new, eid_new, mid, area, J, fbdf,
+                nid1, nid2,
+                xyz1_local, xyz2_local,
+                xyz1_global, xyz2_global,
+                nodal_result,
+                local_points, global_points, result)
         assert len(local_points) == len(result)
         fbdf.write('$------\n')
     fbdf.close()
@@ -316,17 +443,236 @@ def slice_shell_elements(xyz_cid0, xyz_cid, edges, nodal_result, plane_atol=1e-5
     result_array = np.array(result)
     return local_points_array, global_points_array, result_array
 
+def _interpolate_bar_to_node(nid_new, eid_new, mid, area, J, fbdf,
+                             nid1, nid2,
+                             xyz1_local, xyz2_local,
+                             xyz1_global, xyz2_global,
+                             nodal_result,
+                             local_points, global_points, result):
+    #print('edge =', edge)
+    # these edges have crossings
+    # reworking:
+    #  y = m*x + b
+    #
+    # with the long form:
+    #  y = (y2-y1) / (x2-x1) * (x-x1) + y1
+    #
+    # to get:
+    #   y = y2 * (x-x1)/(x2-x1) + y1 * (1 - (x-x1)/(x2-x1))
+    #
+    # or:
+    #   p = (x-x1)/(x2-x1)  # percent
+    #   y = y2 * p + y1 * (1 - p)
+    #
+    # then we sub the entire point for y
+    # and sub out x for the y-coordinate
+    #
+    # then we just crank the formula where we set the value of "x" to 0.0
+    # where "x" is the y-coordinate
+    y1_local = xyz1_local[1]
+    y2_local = xyz2_local[1]
+    percent = (0. - y1_local) / (y2_local - y1_local)
+    avg_local = xyz2_local  * percent + xyz1_local  * (1 - percent)
+    avg_global = xyz2_global * percent + xyz1_global * (1 - percent)
 
-def test_cut_model_by_axes():
-    bdf_filename = r'C:\NASA\m4\formats\git\pyNastran\models\bwb\bwb_saero.bdf'
-    p1 = [0., 0., 0.]
-    p2 = [20., 0., 0.]
-    tol = 10.
-    view_up = [0., 0., .2]
-    theta = np.radians(np.linspace(0., 360., num=10135))
-    nodal_result = np.sin(theta)
-    unused_local_points_array, unused_global_points_array, result_array = cut_model_by_axes(
-        bdf_filename, view_up, p1, p2, tol, nodal_result)
+    #print('  nid1=%s nid2=%s edge=%s' % (nid1, nid2, str(edge)))
+    #print('    xyz1_local=%s xyz2_local=%s' % (xyz1_local, xyz2_local))
+    #print('    avg_local=%s' % avg_local)
+    #print('    avg_global=%s' % avg_global)
+    out_grid1 = ['GRID', nid_new, None, ] + list(xyz1_local)
+    out_grid2 = ['GRID', nid_new+1, None, ] + list(xyz2_local)
+    conrod = ['CONROD', eid_new, nid_new, nid_new + 1, mid, area, J]
+    #conm2 = ['CONM2', eid_new, nid_new, 0, 100.]
 
-if __name__ == '__main__':
-    test_cut_model_by_axes()
+    fbdf.write(print_card_8(out_grid1))
+    fbdf.write(print_card_8(out_grid2))
+    fbdf.write(print_card_8(conrod))
+    #fbdf.write(print_card_8(conm2))
+    local_points.append(avg_local)
+    global_points.append(avg_global)
+
+    xl, yl, zl = avg_local
+    xg, yg, zg = avg_global
+    result1 = nodal_result[nid1]
+    result2 = nodal_result[nid2]
+    resulti = result2  * percent + result1  * (1 - percent)
+    result.append([0, xl, yl, zl, xg, yg, zg, resulti])
+
+    nid_new += 2
+    eid_new += 1
+    return nid_new, eid_new
+
+def slice_faces(xyz_cid0, xyz_cid, faces, nodal_result, plane_atol=1e-5):
+    """
+    Slices the shell elements
+
+    Parameters
+    ----------
+    xyz_cid0 : (nnodes, 3) float ndarray
+        the node xyzs in the model
+    xyz_cid : (nnodes, 3) float ndarray
+        the node xyzs in the model in the local plane
+    faces : ???
+        the faces of the model
+    nodal_result : (nelements, ) float np.ndarray
+        the result to cut the model with
+    plane_atol : float; default=1e-5
+        the tolerance for a line that's located on the y=0 local plane
+    """
+    plane_bdf_filename = 'plane_face.bdf'
+    fbdf = open(plane_bdf_filename, 'w')
+    fbdf.write('$pyNastran: punch=True\n')
+    fbdf.write('MAT1,1,3.0e7,,0.3\n')
+    cid = 0
+    local_points = []
+    global_points = []
+    nid_new = 1
+    eid_new = 1
+    mid = 1
+    area = 1.0
+    J = 1.0
+
+    result = []
+    tri_faces = faces
+    for face in tri_faces:
+        if len(face) == 4:
+            continue
+        print('face =', face)
+        (nid1, nid2, nid3) = face
+        xyz1_local = xyz_cid[nid1]
+        xyz2_local = xyz_cid[nid2]
+        xyz3_local = xyz_cid[nid3]
+        xyz1_global = xyz_cid0[nid1]
+        xyz2_global = xyz_cid0[nid2]
+        xyz3_global = xyz_cid0[nid3]
+        y1_local = xyz1_local[1]
+        y2_local = xyz2_local[1]
+        y3_local = xyz3_local[1]
+        y_local = xyz_cid0[face, 1]
+        abs_y_local = np.abs(y_local)
+        abs_y1_local = np.abs(y1_local)
+        abs_y2_local = np.abs(y2_local)
+        abs_y3_local = np.abs(y3_local)
+        is_same_sign = np.sign(y1_local) == np.sign(y2_local) == np.sign(y3_local)
+        is_far_from_plane = all(np.greater(abs_y_local, plane_atol))
+        print('face=%s' % (face))
+        print("  y_local = %s" % y_local)
+        #print('  xyz1-local=%s xyz2-local=%s' % (xyz1_local, xyz2_local))
+        #print('  xyz1-global=%s xyz2-global=%s' % (xyz1_global, xyz2_global))
+        print('  is_same_sign=%s is_far_from_plane=%s' % (is_same_sign, is_far_from_plane))
+        if is_far_from_plane and is_same_sign:
+            #print('skip y1_local=%.3f y2_local=%.3f plane_atol=%.e' % (
+                #y1_local, y2_local, plane_atol))
+            continue
+        elif np.allclose(y_local, y2_local, atol=plane_atol):
+            raise NotImplementedError('on edge?')
+            #print('  y-sym; nid1=%s nid2=%s edge=%s' % (nid1, nid2, str(edge)))
+            #print('     xyz1=%s xyz2=%s' % (xyz1_global, xyz2_global))
+            out_grid1 = ['GRID', nid_new, cid, ] + list(xyz1_local)
+            out_grid2 = ['GRID', nid_new + 1, cid, ] + list(xyz2_local)
+            conrod = ['CONROD', eid_new, nid_new, nid_new + 1, mid, area, J]
+            conm2 = ['CONM2', eid_new+1, nid_new, 0, 100.]
+            fbdf.write(print_card_8(out_grid1))
+            fbdf.write(print_card_8(out_grid2))
+            fbdf.write(print_card_8(conrod))
+            fbdf.write(print_card_8(conm2))
+
+            local_points.append(xyz1_local)
+            local_points.append(xyz2_local)
+
+            global_points.append(xyz1_global)
+            global_points.append(xyz2_global)
+
+            x1, y1, z1 = xyz1_local
+            x2, y2, z2 = xyz2_local
+            x1g, y1g, z1g = xyz1_global
+            x2g, y2g, z2g = xyz2_global
+            result1 = nodal_result[nid1]
+            result2 = nodal_result[nid2]
+            result.append([nid1, x1, y1, z1, x1g, y1g, z1g, result1])
+            result.append([nid2, x2, y2, z2, x2g, y2g, z2g, result2])
+
+            nid_new += 2
+            eid_new += 2
+
+        elif is_same_sign:  # Labs == Lpos
+            # same sign, so no crossing
+            #print('*edge =', edge)
+            #print("  xyz1_global=%s xyz2_global=%s" % (xyz1_global, xyz2_global))
+            #print("  xyz1_local =%s xyz2_local =%s" % (xyz1_local, xyz2_local))
+            continue
+        else:
+            nid_new, eid_new = _interpolate_face_to_bar(
+                nid_new, eid_new, mid, area, J, fbdf,
+                nid1, nid2, nid3,
+                xyz1_local, xyz2_local, xyz3_local,
+                xyz1_global, xyz2_global, xyz3_global,
+                nodal_result,
+                local_points, global_points, result)
+        assert len(local_points) == len(result)
+        fbdf.write('$------\n')
+    fbdf.close()
+    local_points_array = np.array(local_points)
+    global_points_array = np.array(global_points)
+    result_array = np.array(result)
+    return local_points_array, global_points_array, result_array
+
+def _interpolate_face_to_bar(nid_new, eid_new, mid, area, J, fbdf,
+                             nid1, nid2, nid3,
+                             xyz1_local, xyz2_local, xyz3_local,
+                             xyz1_global, xyz2_global, xyz3_global,
+                             nodal_result,
+                             local_points, global_points, result):
+    #print('edge =', edge)
+    # these edges have crossings
+    # reworking:
+    #  y = m*x + b
+    #
+    # with the long form:
+    #  y = (y2-y1) / (x2-x1) * (x-x1) + y1
+    #
+    # to get:
+    #   y = y2 * (x-x1)/(x2-x1) + y1 * (1 - (x-x1)/(x2-x1))
+    #
+    # or:
+    #   p = (x-x1)/(x2-x1)  # percent
+    #   y = y2 * p + y1 * (1 - p)
+    #
+    # then we sub the entire point for y
+    # and sub out x for the y-coordinate
+    #
+    # then we just crank the formula where we set the value of "x" to 0.0
+    # where "x" is the y-coordinate
+    y1_local = xyz1_local[1]
+    y2_local = xyz2_local[1]
+    y3_local = xyz3_local[1]
+    percent = (0. - y1_local) / (y2_local - y1_local)
+    avg_local = xyz2_local  * percent + xyz1_local  * (1 - percent)
+    avg_global = xyz2_global * percent + xyz1_global * (1 - percent)
+
+    #print('  nid1=%s nid2=%s edge=%s' % (nid1, nid2, str(edge)))
+    #print('    xyz1_local=%s xyz2_local=%s' % (xyz1_local, xyz2_local))
+    #print('    avg_local=%s' % avg_local)
+    #print('    avg_global=%s' % avg_global)
+    out_grid1 = ['GRID', nid_new, None, ] + list(xyz1_local)
+    out_grid2 = ['GRID', nid_new+1, None, ] + list(xyz2_local)
+    conrod = ['CONROD', eid_new, nid_new, nid_new + 1, mid, area, J]
+    #conm2 = ['CONM2', eid_new, nid_new, 0, 100.]
+
+    fbdf.write(print_card_8(out_grid1))
+    fbdf.write(print_card_8(out_grid2))
+    fbdf.write(print_card_8(conrod))
+    #fbdf.write(print_card_8(conm2))
+    local_points.append(avg_local)
+    global_points.append(avg_global)
+
+    xl, yl, zl = avg_local
+    xg, yg, zg = avg_global
+    result1 = nodal_result[nid1]
+    result2 = nodal_result[nid2]
+    resulti = result2  * percent + result1  * (1 - percent)
+    result.append([0, xl, yl, zl, xg, yg, zg, resulti])
+
+    nid_new += 2
+    eid_new += 1
+    return nid_new, eid_new

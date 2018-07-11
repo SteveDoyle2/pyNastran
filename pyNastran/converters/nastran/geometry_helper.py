@@ -24,7 +24,7 @@ from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points, numpy_to_vtk
 
 PIOVER2 = np.pi / 2.
 PIOVER3 = np.pi / 3.
-BLUE = (0., 0., 1.)
+from pyNastran.gui.qt_files.colors import BLUE_FLOAT
 BEAM_GEOM_TYPES = [
     'BAR', 'BOX', 'BOX1', 'CHAN', 'CHAN1', 'CHAN2', 'CROSS', 'DBOX',
     'H', 'HAT', 'HAT1', 'HEXA', 'I', 'I1', 'L', 'ROD',
@@ -295,7 +295,7 @@ class NastranGeometryHelper(NastranGuiAttributes):
                 if not sys.argv[0].startswith('test_'):
                     update_grid_function = None
                 self.gui.create_alternate_vtk_grid(
-                    '3d_bars', color=BLUE, opacity=0.2,
+                    '3d_bars', color=BLUE_FLOAT, opacity=0.2,
                     representation='surface', is_visible=True,
                     follower_function=update_grid_function,
                     ugrid=ugrid,

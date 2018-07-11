@@ -54,7 +54,9 @@ class CuttingPlaneWindow(PyDialog):
 
         self.plane_color_float, self.plane_color_int = _check_color(
             data['plane_color'])
-        self.methods = ['Global Z', 'Camera Normal', 'Manual']
+        self.methods = ['Z-Axis Projection', 'CORD2R']
+        self.zaxis_methods = ['Global Z', 'Camera Normal', 'Manual']
+        self._zaxis_method = 0  # Global Z
 
         self.setWindowTitle('Cutting Plane')
         self.create_widgets()
@@ -66,13 +68,22 @@ class CuttingPlaneWindow(PyDialog):
 
     def create_widgets(self):
         """creates the display window"""
-        # Origin
+        # CORD2R
+        #self.origin_label = QLabel("Origin:")
+        #self.zaxis_label = QLabel("Z Axis:")
+        #self.xz_plane_label = QLabel("XZ Plane:")
+
+        # Z-Axis Projection
         self.p1_label = QLabel("Origin/P1:")
         self.p2_label = QLabel("P2:")
         self.zaxis_label = QLabel("Z Axis:")
 
-        self.zaxis_method_pulldown = QComboBox()
+        self.method_pulldown = QComboBox()
         for method in self.methods:
+            self.method_pulldown.addItem(method)
+
+        self.zaxis_method_pulldown = QComboBox()
+        for method in self.zaxis_methods:
             self.zaxis_method_pulldown.addItem(method)
 
         self.cid_label = QLabel("Coordinate System:")
@@ -140,63 +151,127 @@ class CuttingPlaneWindow(PyDialog):
 
     def create_layout(self):
         grid = QGridLayout()
+        self.method_label = QLabel('Method:')
+        self.location_method_label = QLabel('Method:')
 
-        location_label = QLabel('Location')
-        method_label = QLabel('Method:')
-        method_projected_label1 = QLabel('Projected')
-        method_projected_label2 = QLabel('Projected')
-        cid_label = QLabel('Coordinate System:')
-        x_label = QLabel('X')
-        y_label = QLabel('Y')
-        z_label = QLabel('Z')
-        ytol_label = QLabel('Y Tolerance:')
-        zero_tol_label = QLabel('Zero Tolerance:')
+        self.location_label = QLabel('Location:')
+        self.zaxis_method_label = QLabel('Z-Axis Method:')
+        self.method_projected_label1 = QLabel('Projected')
+        self.method_projected_label2 = QLabel('Projected')
+        self.cid_label = QLabel('Coordinate System:')
+        self.x_label = QLabel('X')
+        self.y_label = QLabel('Y')
+        self.z_label = QLabel('Z')
+        self.ytol_label = QLabel('Y Tolerance:')
+        self.zero_tol_label = QLabel('Zero Tolerance:')
 
-        location_label.setAlignment(Qt.AlignCenter)
-        cid_label.setAlignment(Qt.AlignCenter)
-        method_label.setAlignment(Qt.AlignCenter)
-        x_label.setAlignment(Qt.AlignCenter)
-        y_label.setAlignment(Qt.AlignCenter)
-        z_label.setAlignment(Qt.AlignCenter)
+        self.location_label.setAlignment(Qt.AlignCenter)
+        self.cid_label.setAlignment(Qt.AlignCenter)
+        self.method_label.setAlignment(Qt.AlignCenter)
+        self.location_method_label.setAlignment(Qt.AlignCenter)
 
+        self.method_projected_label1.setAlignment(Qt.AlignCenter)
+        self.method_projected_label2.setAlignment(Qt.AlignCenter)
+
+        self.x_label.setAlignment(Qt.AlignCenter)
+        self.y_label.setAlignment(Qt.AlignCenter)
+        self.z_label.setAlignment(Qt.AlignCenter)
         irow = 0
-        grid.addWidget(location_label, irow, 0)
-        grid.addWidget(method_label, irow, 1)
-        grid.addWidget(cid_label, irow, 2)
-        grid.addWidget(x_label, irow, 3)
-        grid.addWidget(y_label, irow, 4)
-        grid.addWidget(z_label, irow, 5)
+        grid.addWidget(self.method_label, irow, 0)
+        grid.addWidget(self.method_pulldown, irow, 1)
+        irow += 1
+        self._add_grid_layout(grid, irow, is_cord2r=True)
+
+        #----------------------------------------------
+        grid2 = QGridLayout()
+        irow = 0
+        grid2.addWidget(self.method_label, irow, 0)
+        grid2.addWidget(self.method_pulldown, irow, 1)
+        irow += 1
+        self._add_grid_layout(grid2, irow, is_cord2r=False)
+        #----------------------------------------------
+
+        ok_cancel_box = QHBoxLayout()
+        ok_cancel_box.addWidget(self.apply_button)
+        ok_cancel_box.addWidget(self.ok_button)
+        ok_cancel_box.addWidget(self.cancel_button)
+
+        vbox = QVBoxLayout()
+
+        #if 0:
+            #button_frame = QFrame()
+            ##button_frame.setFrameStyle(QFrame.Plain | QFrame.Box)
+            #button_frame.setFrameStyle(QFrame.Box)
+            #button_frame.setLayout(grid)
+        #else:
+            #button_frame = QGroupBox()
+            #button_frame.setLayout(grid)
+            #vbox.addWidget(button_frame)
+
+        vbox.addLayout(grid)
+        #vbox.addStretch()
+        #vbox.addLayout(grid2)
+        vbox.addStretch()
+
+        #-----------------------
+        vbox.addLayout(ok_cancel_box)
+        self.on_method(0)
+        self.on_zaxis_method(0)
+        self.setLayout(vbox)
+
+    def _add_grid_layout(self, grid, irow, is_cord2r=True):
+        j = -1
+        grid.addWidget(self.location_label, irow, 0)
+        if is_cord2r:
+            grid.addWidget(self.location_method_label, irow, 1)
+            j = 0
+        grid.addWidget(self.cid_label, irow, j+2)
+        grid.addWidget(self.x_label, irow, j+3)
+        grid.addWidget(self.y_label, irow, j+4)
+        grid.addWidget(self.z_label, irow, j+5)
         irow += 1
 
+        j = -1
         grid.addWidget(self.p1_label, irow, 0)
-        grid.addWidget(method_projected_label1, irow, 1)
-        grid.addWidget(self.p1_cid_pulldown, irow, 2)
-        grid.addWidget(self.p1_x_edit, irow, 3)
-        grid.addWidget(self.p1_y_edit, irow, 4)
-        grid.addWidget(self.p1_z_edit, irow, 5)
+        if is_cord2r:
+            grid.addWidget(self.method_projected_label1, irow, 1)
+            j = 0
+        grid.addWidget(self.p1_cid_pulldown, irow, j+2)
+        grid.addWidget(self.p1_x_edit, irow, j+3)
+        grid.addWidget(self.p1_y_edit, irow, j+4)
+        grid.addWidget(self.p1_z_edit, irow, j+5)
         irow += 1
 
+        j = -1
         grid.addWidget(self.p2_label, irow, 0)
-        grid.addWidget(method_projected_label2, irow, 1)
-        grid.addWidget(self.p2_cid_pulldown, irow, 2)
-        grid.addWidget(self.p2_x_edit, irow, 3)
-        grid.addWidget(self.p2_y_edit, irow, 4)
-        grid.addWidget(self.p2_z_edit, irow, 5)
+        if is_cord2r:
+            grid.addWidget(self.method_projected_label2, irow, 1)
+            j = 0
+        grid.addWidget(self.p2_cid_pulldown, irow, j+2)
+        grid.addWidget(self.p2_x_edit, irow, j+3)
+        grid.addWidget(self.p2_y_edit, irow, j+4)
+        grid.addWidget(self.p2_z_edit, irow, j+5)
         irow += 1
 
+        j = -1
         grid.addWidget(self.zaxis_label, irow, 0)
-        grid.addWidget(self.zaxis_method_pulldown, irow, 1)
-        grid.addWidget(self.zaxis_cid_pulldown, irow, 2)
-        grid.addWidget(self.zaxis_x_edit, irow, 3)
-        grid.addWidget(self.zaxis_y_edit, irow, 4)
-        grid.addWidget(self.zaxis_z_edit, irow, 5)
+        if is_cord2r:
+            grid.addWidget(self.zaxis_method_pulldown, irow, 1)
+            j = 0
+        grid.addWidget(self.zaxis_cid_pulldown, irow, j+2)
+        grid.addWidget(self.zaxis_x_edit, irow, j+3)
+        grid.addWidget(self.zaxis_y_edit, irow, j+4)
+        grid.addWidget(self.zaxis_z_edit, irow, j+5)
         irow += 1
 
-        grid.addWidget(ytol_label, irow, 0)
+        #-----------------------------------------
+        #spacer_item = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        grid.addWidget(self.ytol_label, irow, 0)
         grid.addWidget(self.ytol_edit, irow, 1)
+        #grid.addItem(spacer_item, irow, 2)
         irow += 1
 
-        grid.addWidget(zero_tol_label, irow, 0)
+        grid.addWidget(self.zero_tol_label, irow, 0)
         grid.addWidget(self.zero_tol_edit, irow, 1)
         irow += 1
 
@@ -208,26 +283,8 @@ class CuttingPlaneWindow(PyDialog):
         #grid.addWidget(self.corner_coord_checkbox, irow, 1)
         #irow += 1
 
-
-        #self.create_legend_widgets()
-        #grid2 = self.create_legend_layout()
-        ok_cancel_box = QHBoxLayout()
-        ok_cancel_box.addWidget(self.apply_button)
-        ok_cancel_box.addWidget(self.ok_button)
-        ok_cancel_box.addWidget(self.cancel_button)
-
-        vbox = QVBoxLayout()
-        vbox.addLayout(grid)
-        #vbox.addStretch()
-        #vbox.addLayout(grid2)
-        vbox.addStretch()
-
-        vbox.addLayout(ok_cancel_box)
-        self.on_zaxis_method(0)
-        self.setLayout(vbox)
-
-
     def set_connections(self):
+        self.method_pulldown.currentIndexChanged.connect(self.on_method)
         self.zaxis_method_pulldown.currentIndexChanged.connect(self.on_zaxis_method)
         self.plane_color_edit.clicked.connect(self.on_plane_color)
 
@@ -237,15 +294,48 @@ class CuttingPlaneWindow(PyDialog):
         # closeEvent
         return
 
-    def on_zaxis_method(self, method=None):
-        if method is None:
-            #method = self.zaxis_method_pulldown.getText()
-            method = self.zaxis_method_pulldown.currentText()
-            #print('method* = %r' % method)
+    def on_method(self, method_int=None):
+        method = get_pulldown_text(method_int, self.methods, self.method_pulldown)
+        if method == 'Z-Axis Projection':
+            is_cord2r = False
+        elif method == 'CORD2R':
+            is_cord2r = True
         else:
-            #print("method_int = %r" % method)
-            method = self.methods[method]
-            #print("method = %r" % method)
+            raise NotImplementedError(method)
+        if is_cord2r:
+            p1_label_text = 'Origin:'
+            p2_label_text = 'Z Axis:'
+            p3_label_text = 'XZ Plane:'
+        else:
+            p1_label_text = 'Origin/P1:'
+            p2_label_text = 'P1:'
+            p3_label_text = 'Z-Axis:'
+
+        self.p1_label.setText(p1_label_text)
+        self.p2_label.setText(p2_label_text)
+        self.zaxis_label.setText(p3_label_text)
+
+        if is_cord2r:
+            self._zaxis_method = self.zaxis_method_pulldown.currentIndex()
+            # set to manual
+            #self.on_zaxis_method(method_int=2)  # manual
+
+            self.zaxis_method_pulldown.setCurrentIndex(2)
+            self.on_zaxis_method()  # update
+        else:
+            self.zaxis_method_pulldown.setCurrentIndex(self._zaxis_method)
+            self.on_zaxis_method()  # update
+
+        # works
+        self.zaxis_method_pulldown.setEnabled(not is_cord2r)
+        #self.cid_label.setVisible(not is_cord2r)
+        self.method_projected_label1.setVisible(not is_cord2r)
+        self.method_projected_label2.setVisible(not is_cord2r)
+        self.location_method_label.setVisible(not is_cord2r)
+        self.zaxis_method_pulldown.setVisible(not is_cord2r)
+
+    def on_zaxis_method(self, method_int=None):
+        method = get_pulldown_text(method_int, self.zaxis_methods, self.zaxis_method_pulldown)
 
         if method == 'Global Z':
             is_visible = False
@@ -361,19 +451,25 @@ class CuttingPlaneWindow(PyDialog):
             raise NotImplementedError(zaxis_method)
         #print('zaxis =', zaxis)
 
-        ytol, flag9 = check_float(self.zero_tol_edit)
-        zero_tol, flag10 = check_float(self.zero_tol_edit)
+        method = self.method_pulldown.currentText()
+        assert method in self.methods, 'method=%r' % method
+        flag9 = True
+
+        ytol, flag10 = check_float(self.ytol_edit)
+        zero_tol, flag11 = check_float(self.zero_tol_edit)
 
         flags = [flag0, flag1, flag2, flag3, flag4, flag5,
                  flag6, flag7, flag8,
-                 flag9, flag10]
+                 flag9, flag10, flag11]
         if all(flags):
+            self.out_data['method'] = method
             self.out_data['p1'] = [p1_cid, p1]
             self.out_data['p2'] = [p2_cid, p2]
             self.out_data['zaxis'] = [zaxis_method, zaxis_cid, zaxis]
             self.out_data['ytol'] = ytol
             self.out_data['zero_tol'] = zero_tol
             self.out_data['plane_color'] = self.plane_color_float
+            self.out_data['plane_opacity'] = 0.6
             self.out_data['clicked_ok'] = True
             return True
         return False
@@ -382,7 +478,7 @@ class CuttingPlaneWindow(PyDialog):
         passed = self.on_validate()
 
         if (passed or force) and self.win_parent is not None:
-            self.win_parent.make_cutting_plane(self.out_data)
+            self.win_parent.make_cutting_plane_from_data(self.out_data)
         return passed
 
     def on_ok(self):
@@ -400,6 +496,14 @@ def _check_color(color_float):
     assert isinstance(color_float[0], float), color_float
     color_int = [int(colori * 255) for colori in color_float]
     return color_float, color_int
+
+def get_pulldown_text(method_int, methods, pulldown):
+    if method_int is None:
+        #method = pulldown.getText()
+        method = pulldown.currentText()
+    else:
+        method = methods[method_int]
+    return method
 
 def main():
     # kills the program when you hit Cntl+C from the command line

@@ -11,6 +11,7 @@ from numpy import arange, mean, vstack, unique, where, sqrt
 import numpy as np
 
 from pyNastran.utils import integer_types
+from pyNastran.gui.qt_files.colors import RED_FLOAT, BLUE_FLOAT, GREEN_FLOAT, PINK_FLOAT
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.gui.utils.vtk.vtk_utils import (
     create_vtk_cells_of_constant_element_type, numpy_to_vtk_points)
@@ -253,8 +254,7 @@ class Cart3dIO(object):
             nodes, elements = read_input_c3d(input_c3d_filename, stack=True,
                                              log=self.gui.log, debug=self.gui.debug)
 
-            red = (1., 0., 0.)
-            color = red
+            color = RED_FLOAT
             self.gui.set_quad_grid('box', nodes, elements, color, line_width=1, opacity=1.)
 
             #-------------------------------------------------------------------
@@ -262,11 +262,9 @@ class Cart3dIO(object):
             nodes, elements = read_input_c3d(input_c3d_filename, stack=False,
                                              log=self.gui.log, debug=self.gui.debug)
 
-            red = (1., 0., 0.)
             inflow_nodes = []
             inflow_elements = []
 
-            green = (0., 1., 0.)
             symmetry_nodes = []
             symmetry_elements = []
 
@@ -274,7 +272,6 @@ class Cart3dIO(object):
             outflow_nodes = []
             outflow_elements = []
 
-            blue = (0., 0., 1.)
             farfield_nodes = []
             farfield_elements = []
 
@@ -338,21 +335,21 @@ class Cart3dIO(object):
                     raise NotImplementedError(msg)
 
             if ifarfield:
-                color = blue
+                color = BLUE_FLOAT
                 nodes = vstack(farfield_nodes)
                 elements = vstack(farfield_elements)
                 self.gui.set_quad_grid('farfield', nodes, elements, color,
                                        line_width=1, opacity=1.)
 
             if isymmetry:
-                color = green
+                color = GREEN_FLOAT
                 nodes = vstack(symmetry_nodes)
                 elements = vstack(symmetry_elements)
                 self.gui.set_quad_grid('symmetry', nodes, elements, color,
                                        line_width=1, opacity=1.)
 
             if iinflow:
-                color = red
+                color = RED_FLOAT
                 nodes = vstack(inflow_nodes)
                 elements = vstack(inflow_elements)
                 self.gui.set_quad_grid('inflow', nodes, elements, color,
@@ -380,12 +377,10 @@ class Cart3dIO(object):
         nfree_edges = len(free_edges_array)
 
         if nfree_edges:
-            # yellow = (1., 1., 0.)
-            pink = (0.98, 0.4, 0.93)
             npoints = 2 * nfree_edges
             if 'free_edges' not in self.gui.alt_grids:
                 self.gui.create_alternate_vtk_grid(
-                    'free_edges', color=pink, line_width=3, opacity=1.0,
+                    'free_edges', color=PINK_FLOAT, line_width=3, opacity=1.0,
                     representation='surface')
 
             alt_grid = self.gui.alt_grids['free_edges']

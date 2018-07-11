@@ -72,7 +72,7 @@ class ToolActions(object):
 
         Parameters
         ----------
-        coord_id : float
+        coord_id : int
             the coordinate system id
         dim_max : float
             the max model dimension; 10% of the max will be used for the coord length

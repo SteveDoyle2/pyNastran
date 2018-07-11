@@ -13,7 +13,7 @@ from pyNastran.converters.aflr.aflr2.aflr2 import read_bedge
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.gui.utils.vtk.vtk_utils import (
     create_vtk_cells_of_constant_element_type, numpy_to_vtk_points)
-
+from pyNastran.gui.qt_files.colors import BLACK_FLOAT
 
 class BEdge_IO(object):
     """creates BEdge_IO"""
@@ -48,9 +48,8 @@ class BEdge_IO(object):
         self.gui.log.debug("nElements = %s" % self.gui.nelements)
         assert nelements > 0, nelements
 
-        black = (0., 0., 0.)
         self.gui.create_alternate_vtk_grid(
-            'nodes', color=black, line_width=5, opacity=1., point_size=3,
+            'nodes', color=BLACK_FLOAT, line_width=5, opacity=1., point_size=3,
             representation='point')
         alt_grid = self.gui.alt_grids['nodes']
         alt_grid.Allocate(nnodes, 1000)

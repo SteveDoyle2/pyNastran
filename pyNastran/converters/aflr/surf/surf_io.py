@@ -12,6 +12,7 @@ from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.converters.aflr.surf.surf_reader import SurfReader, TagReader
 from pyNastran.gui.utils.vtk.vtk_utils import (
     create_vtk_cells_of_constant_element_types, numpy_to_vtk_points)
+from pyNastran.gui.qt_files.colors import YELLOW_FLOAT
 
 
 class SurfIO(object):
@@ -78,8 +79,7 @@ class SurfIO(object):
         model.read_surf_failnode(surf_filename)
         if len(model.nodes_failed):
             if 'failed_nodes' not in self.gui.alt_grids:
-                yellow = (1., 1., 0.)
-                self.gui.create_alternate_vtk_grid('failed_nodes', color=yellow,
+                self.gui.create_alternate_vtk_grid('failed_nodes', color=YELLOW_FLOAT,
                                                    line_width=3, opacity=1.0)
 
             ifailed = where(model.nodes_failed == 1)[0]

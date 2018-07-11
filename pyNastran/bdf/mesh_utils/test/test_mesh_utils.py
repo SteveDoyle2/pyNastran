@@ -22,7 +22,7 @@ from pyNastran.bdf.mesh_utils.split_cbars_by_pin_flag import split_cbars_by_pin_
 from pyNastran.bdf.mesh_utils.split_elements import split_line_elements
 from pyNastran.bdf.mesh_utils.pierce_shells import pierce_shell_model, quad_intersection, triangle_intersection
 from pyNastran.bdf.mesh_utils.mirror_mesh import write_bdf_symmetric, bdf_mirror, make_symmetric_model
-from pyNastran.bdf.mesh_utils.cut_model_by_plane import cut_model_by_coord
+from pyNastran.bdf.mesh_utils.cut_model_by_plane import cut_edge_model_by_coord, cut_face_model_by_coord
 from pyNastran.bdf.mesh_utils.mesh import create_structured_cquad4s
 from pyNastran.utils.log import SimpleLogger
 
@@ -874,10 +874,49 @@ class TestMeshUtils(unittest.TestCase):
         coord = CORD2R(1, rid=0, origin=[0.5, 0., 0.], zaxis=[0.5, 0., 1], xzplane=[1.5, 0., 0.],
                       comment='')
         nodal_result = np.linspace(0., 1., num=16)
-        local_points_array, global_points_array, result_array = cut_model_by_coord(
+        local_points_array, global_points_array, result_array = cut_edge_model_by_coord(
             model, coord, tol, nodal_result,
             plane_atol=1e-5)
         assert len(result_array) == 16, len(result_array)
 
+        local_points_array, global_points_array, result_array = cut_face_model_by_coord(
+            model, coord, tol, nodal_result,
+            plane_atol=1e-5)
+        assert len(result_array) == 0, len(result_array) # no quad support
+
+        #-------------------------------------------------------------------------
+        # triangles
+        #elements2 = {}
+        #for eid, elem in iteritems(model.elements):
+            #elem_a, elem_b = elem.split_to_ctria3(model, 'cat')
+            #elements2[elem_a.eid] = elem_a
+            #elements2[elem_b.eid] = elem_b
+        #model.elements = elements2
+
+        #print('----------------------------')
+        #local_points_array, global_points_array, result_array = cut_edge_model_by_coord(
+            #model, coord, tol, nodal_result,
+            #plane_atol=1e-5)
+        #assert len(result_array) == 5, len(result_array)
+
+        #local_points_array, global_points_array, result_array = cut_face_model_by_coord(
+            #model, coord, tol, nodal_result,
+            #plane_atol=1e-5)
+        #assert len(result_array) == 2, len(result_array)
+
+    #def test_split_pyrams_to_tets(self):
+        #model = BDF()
+        #model.add_grid(1, [0., 0., 0.])
+        #model.add_grid(2, [1., 0., 0.])
+        #model.add_grid(3, [1., 1., 0.])
+        #model.add_grid(4, [0., 1., 0.])
+        #model.add_grid(5, [0.5, 0.5, 1.])
+        #model.add_cpyram(1, 1, [1, 2, 3, 4, 5], comment='')
+        #model.add_psolid(1, 1)
+        #model.add_mat1(1, 3.0e7, None, 0.3, rho=0.0)
+        #def split_pyrams_to_tets(model):
+            #pyrams = model._type_to_id_map['CPYRAM']
+            #asdf
+        #split_pyrams_to_tets(model)
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

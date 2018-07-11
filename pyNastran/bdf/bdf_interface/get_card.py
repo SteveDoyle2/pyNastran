@@ -1661,6 +1661,7 @@ class GetCard(GetMethods):
             #'edge_to_nid_map',  # unnecessary
             #'eid_to_eid_map',  # not added yet
             'nid_to_eid_map',
+            #'face_to_edge_map',  # what does this look like?
         ]
         if map_names is None:
             map_names = allowed_maps
