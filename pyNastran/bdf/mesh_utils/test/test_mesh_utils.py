@@ -886,23 +886,23 @@ class TestMeshUtils(unittest.TestCase):
 
         #-------------------------------------------------------------------------
         # triangles
-        #elements2 = {}
-        #for eid, elem in iteritems(model.elements):
-            #elem_a, elem_b = elem.split_to_ctria3(model, 'cat')
-            #elements2[elem_a.eid] = elem_a
-            #elements2[elem_b.eid] = elem_b
-        #model.elements = elements2
+        elements2 = {}
+        for eid, elem in iteritems(model.elements):
+            elem_a, elem_b = elem.split_to_ctria3(model, 'cat')
+            elements2[elem_a.eid] = elem_a
+            elements2[elem_b.eid] = elem_b
+        model.elements = elements2
 
-        #print('----------------------------')
-        #local_points_array, global_points_array, result_array = cut_edge_model_by_coord(
-            #model, coord, tol, nodal_result,
-            #plane_atol=1e-5)
-        #assert len(result_array) == 5, len(result_array)
+        print('----------------------------')
+        local_points_array, global_points_array, result_array = cut_edge_model_by_coord(
+            model, coord, tol, nodal_result,
+            plane_atol=1e-5)
+        assert len(result_array) == 5, len(result_array)
 
-        #local_points_array, global_points_array, result_array = cut_face_model_by_coord(
-            #model, coord, tol, nodal_result,
-            #plane_atol=1e-5)
-        #assert len(result_array) == 2, len(result_array)
+        local_points_array, global_points_array, result_array = cut_face_model_by_coord(
+            model, coord, tol, nodal_result,
+            plane_atol=1e-5)
+        assert len(result_array) == 2, len(result_array)
 
     #def test_split_pyrams_to_tets(self):
         #model = BDF()

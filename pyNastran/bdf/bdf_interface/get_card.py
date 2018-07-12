@@ -1356,7 +1356,7 @@ class GetCard(GetMethods):
         .. warning:: assumes xref=True
         """
         if not isinstance(load_case_id, integer_types):
-            msg = 'load_case_id must be an integer; type=%s, load_case_id=\n%r' % (
+            msg = 'load_case_id must be an integer; type=%s, load_case_id:\n%r' % (
                 type(load_case_id), load_case_id)
             raise TypeError(msg)
 

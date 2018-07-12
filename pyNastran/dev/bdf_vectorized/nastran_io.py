@@ -41,6 +41,7 @@ from pyNastran.dev.bdf_vectorized.bdf import BDF
 from pyNastran.op2.test.test_op2 import OP2
 from pyNastran.f06.f06 import F06
 from pyNastran.converters.nastran.nastranIO import NastranIO as NastranIO_xref
+from pyNastran.utils import integer_types
 
 class NastranIO(NastranIO_xref):
     def __init__(self):
@@ -884,6 +885,10 @@ class NastranIO(NastranIO_xref):
             if subcase_id == 0:
                 continue
             load_case_id, options = model.case_control_deck.get_subcase_parameter(subcase_id, 'LOAD')
+            if not isinstance(load_case_id, integer_types):
+                msg = 'subcase_id LOAD=%r type=%s' % (
+                    subcase_id, load_case_id, type(load_case_id))
+                raise TypeError(msg)
             loadCase = model.loads[load_case_id]
 
             # account for scale factors

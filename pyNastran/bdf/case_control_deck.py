@@ -702,6 +702,8 @@ class CaseControlDeck(object):
             else:
                 key = 'TEMPERATURE(BOTH)'
                 options = []
+            value = int(value)
+
         elif line_upper.startswith('RIGID'):
             if '=' in line:
                 (key, value) = line_upper.strip().split('=')
