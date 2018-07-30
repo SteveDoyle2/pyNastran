@@ -26,6 +26,36 @@ def isfinite_and_nonzero(_array):
     """are any of the values finite and a value non-zero?"""
     return isfinite_and_greater_than(_array, 0.)
 
+#ver = np.lib.NumpyVersion(np.__version__)
+#if ver < '1.13.0':
+
+def unique2d(a):
+    """
+    Gets the unique pairs in a 2D vector where the pairs are defined:
+    (column 0, column 1).
+
+    Parameters
+    ----------
+    a : (n,2) ndarray
+        the input data
+
+    Returns
+    -------
+    u : (m,2)
+        the unique values in a
+
+    .. note:: this is intended to be used to find unique rows of
+              element-id/property-id or property-id/material-id pairs
+    .. note:: it works by finding the unique complex numbers and doesn't
+              extend well to a 3 column pair
+    """
+    print(a)
+    x, y = a.T
+    b = x + y*1.0j
+    print(b)
+    idx = np.unique(b, return_index=True)[1]
+    return a[idx]
+
 def unique_rows(A, return_index=False, return_inverse=False):
     """
     Similar to MATLAB's unique(A, 'rows'), this returns B, I, J

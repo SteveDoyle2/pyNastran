@@ -35,7 +35,7 @@ from numpy.linalg import norm  # type: ignore
 
 from scipy.linalg import solve_banded  # type: ignore
 from scipy.integrate import quad  # type: ignore
-
+from pyNastran.utils.numpy_utils import unique2d as unique2d_numpy
 
 # should future proof this as it handles 1.9.0.dev-d1dbf8e, 1.10.2, and 1.6.2
 #_numpy_version = [int(i) for i in numpy.__version__.split('.') if i.isdigit()]
@@ -51,6 +51,9 @@ from scipy.integrate import quad  # type: ignore
     # for eid in eids:
         # i.append(where(eids_all == eid)[0])
     # return hstack(i)
+
+def unique2d(A):
+    return unique2d_numpy(A)
 
 def get_abs_max(min_values, max_values):
     """Get return the value with the greatest magnitude, preserving sign."""
@@ -422,33 +425,6 @@ def gauss(n):
 
     raise NotImplementedError('The current implementation only supports up to '
                               '5 quadrature points')
-
-def unique2d(a):
-    """
-    Gets the unique pairs in a 2D vector where the pairs are defined:
-    (column 0, column 1).
-
-    Parameters
-    ----------
-    a : (n,2) ndarray
-        the input data
-
-    Returns
-    -------
-    u : (m,2)
-        the unique values in a
-
-    .. note:: this is intended to be used to find unique rows of
-              element-id/property-id or property-id/material-id pairs
-    .. note:: it works by finding the unique complex numbers and doesn't
-              extend well to a 3 column pair
-    """
-    print(a)
-    x, y = a.T
-    b = x + y*1.0j
-    print(b)
-    idx = np.unique(b, return_index=True)[1]
-    return a[idx]
 
 def roundup(value, round_increment=100):
     """

@@ -2398,6 +2398,7 @@ class CQUAD4(QuadShell):
         self.theta_mcid_ref = None
 
     def split_to_ctria3(self, eida, eidb):
+        # (int, int) -> (CTRIA3, CTRIA3)
         """
         Splits a CQUAD4 into two CTRIA3s
 

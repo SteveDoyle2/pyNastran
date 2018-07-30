@@ -823,100 +823,104 @@ class TestMeshUtils(unittest.TestCase):
                       #triangle_intersection(p, v, p0, p1, p2),
                       #quad_intersection(p, v, p0, p1, p3, p2))
 
-    def test_cut_shell_model(self):
+    def test_cut_shell_model_1(self):
         """tests pierce_shell_model"""
-        pid = 10
-        mid1 = 100
-        model = BDF(log=log)
-
-        # intersects (min)
-        model.add_grid(1, [0., 0., 0.])
-        model.add_grid(2, [1., 0., 0.])
-        model.add_grid(3, [1., 1., 0.])
-        model.add_grid(4, [0., 1., 0.])
-        model.add_cquad4(1, pid, [1, 2, 3, 4])
-
-        # intersects (max)
-        model.add_grid(5, [0., 0., 1.])
-        model.add_grid(6, [1., 0., 1.])
-        model.add_grid(7, [1., 1., 1.])
-        model.add_grid(8, [0., 1., 1.])
-        model.add_cquad4(2, pid, [5, 6, 7, 8])
-
-        # intersects (mid)
-        model.add_grid(9, [0., 0., 0.5])
-        model.add_grid(10, [1., 0., 0.5])
-        model.add_grid(11, [1., 1., 0.5])
-        model.add_grid(12, [0., 1., 0.5])
-        model.add_cquad4(3, pid, [9, 10, 11, 12])
-
-        # doesn't intersect
-        model.add_grid(13, [10., 0., 0.])
-        model.add_grid(14, [11., 0., 0.])
-        model.add_grid(15, [11., 1., 0.])
-        model.add_grid(16, [10., 1., 0.])
-        model.add_cquad4(4, pid, [13, 14, 15, 16])
-
-        model.add_pshell(pid, mid1=mid1, t=2.)
-
-        E = 1.0
-        G = None
-        nu = 0.3
-        model.add_mat1(mid1, E, G, nu, rho=1.0)
-        model.validate()
-
-        model.cross_reference()
-
-        xyz_points = [
-            [0.4, 0.6, 0.], [-1., -1, 0.],]
-
-        tol = 2.
+        model, nodal_result = _cut_shell_model_quads()
         coord = CORD2R(1, rid=0, origin=[0.5, 0., 0.], zaxis=[0.5, 0., 1], xzplane=[1.5, 0., 0.],
                       comment='')
-        nodal_result = np.linspace(0., 1., num=16)
+        model.coords[1] = coord
+        tol = 2.
+        #-------------------------------------------------------------------------
         local_points_array, global_points_array, result_array = cut_edge_model_by_coord(
             model, coord, tol, nodal_result,
             plane_atol=1e-5)
         assert len(result_array) == 16, len(result_array)
 
-        local_points_array, global_points_array, result_array = cut_face_model_by_coord(
+        geometry_array, result_array = cut_face_model_by_coord(
             model, coord, tol, nodal_result,
             plane_atol=1e-5)
-        assert len(result_array) == 0, len(result_array) # no quad support
+        assert result_array is None, len(result_array) # no quad support
 
+    def test_cut_shell_model_2(self):
+        """tests pierce_shell_model"""
+        tol = 2.
+        coord = CORD2R(1, rid=0, origin=[0.5, 0., 0.], zaxis=[0.5, 0., 1], xzplane=[1.5, 0., 0.],
+                      comment='')
+        model, nodal_result = _cut_shell_model_quads()
         #-------------------------------------------------------------------------
         # triangles
         elements2 = {}
+        neids = len(model.elements)
         for eid, elem in iteritems(model.elements):
-            elem_a, elem_b = elem.split_to_ctria3(model, 'cat')
+            elem_a, elem_b = elem.split_to_ctria3(eid, eid + neids)
             elements2[elem_a.eid] = elem_a
             elements2[elem_b.eid] = elem_b
         model.elements = elements2
+        print(elements2)
+        model.coords[1] = coord
+        model.write_bdf('tris.bdf')
 
         print('----------------------------')
         local_points_array, global_points_array, result_array = cut_edge_model_by_coord(
             model, coord, tol, nodal_result,
-            plane_atol=1e-5)
-        assert len(result_array) == 5, len(result_array)
+            plane_atol=1e-5, csv_filename='cut_edge_2.csv')
+        assert len(result_array) == 20, len(result_array)
 
-        local_points_array, global_points_array, result_array = cut_face_model_by_coord(
+        geometry_array, result_array = cut_face_model_by_coord(
             model, coord, tol, nodal_result,
-            plane_atol=1e-5)
-        assert len(result_array) == 2, len(result_array)
+            plane_atol=1e-5, csv_filename='cut_face_2.csv')
+        assert len(result_array) == 12, len(result_array)
 
-    #def test_split_pyrams_to_tets(self):
-        #model = BDF()
-        #model.add_grid(1, [0., 0., 0.])
-        #model.add_grid(2, [1., 0., 0.])
-        #model.add_grid(3, [1., 1., 0.])
-        #model.add_grid(4, [0., 1., 0.])
-        #model.add_grid(5, [0.5, 0.5, 1.])
-        #model.add_cpyram(1, 1, [1, 2, 3, 4, 5], comment='')
-        #model.add_psolid(1, 1)
-        #model.add_mat1(1, 3.0e7, None, 0.3, rho=0.0)
-        #def split_pyrams_to_tets(model):
-            #pyrams = model._type_to_id_map['CPYRAM']
-            #asdf
-        #split_pyrams_to_tets(model)
+def _cut_shell_model_quads():
+    """helper method"""
+    pid = 10
+    mid1 = 100
+    model = BDF(log=log)
+
+    # intersects (min)
+    model.add_grid(1, [0., 0., 0.])
+    model.add_grid(2, [1., 0., 0.])
+    model.add_grid(3, [1., 1., 0.])
+    model.add_grid(4, [0., 1., 0.])
+    model.add_cquad4(1, pid, [1, 2, 3, 4])
+
+    # intersects (max)
+    model.add_grid(5, [0., 0., 1.])
+    model.add_grid(6, [1., 0., 1.])
+    model.add_grid(7, [1., 1., 1.])
+    model.add_grid(8, [0., 1., 1.])
+    model.add_cquad4(2, pid, [5, 6, 7, 8])
+
+    # intersects (mid)
+    model.add_grid(9, [0., 0., 0.5])
+    model.add_grid(10, [1., 0., 0.5])
+    model.add_grid(11, [1., 1., 0.5])
+    model.add_grid(12, [0., 1., 0.5])
+    model.add_cquad4(3, pid, [9, 10, 11, 12])
+
+    # doesn't intersect
+    model.add_grid(13, [10., 0., 0.])
+    model.add_grid(14, [11., 0., 0.])
+    model.add_grid(15, [11., 1., 0.])
+    model.add_grid(16, [10., 1., 0.])
+    model.add_cquad4(4, pid, [13, 14, 15, 16])
+
+    model.add_pshell(pid, mid1=mid1, t=2.)
+
+    E = 1.0
+    G = None
+    nu = 0.3
+    model.add_mat1(mid1, E, G, nu, rho=1.0)
+    model.validate()
+
+    model.cross_reference()
+
+    xyz_points = [
+        [0.4, 0.6, 0.], [-1., -1, 0.],]
+
+    tol = 2.
+    nodal_result = np.linspace(0., 1., num=16)
+    return model, nodal_result
+
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
