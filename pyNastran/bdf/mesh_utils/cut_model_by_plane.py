@@ -9,6 +9,7 @@ defines:
  - slice_edges(xyz_cid0, xyz_cid, edges, nodal_result, plane_atol=1e-5)
 """
 from __future__ import print_function
+from itertools import count
 
 from six import iterkeys, iteritems
 import numpy as np
@@ -111,7 +112,8 @@ def cut_edge_model_by_coord(bdf_filename, coord, tol,
     return local_points_array, global_points_array, result_array
 
 def cut_face_model_by_coord(bdf_filename, coord, tol,
-                            nodal_result, plane_atol=1e-5, csv_filename=None):
+                            nodal_result, plane_atol=1e-5, skip_cleanup=True,
+                            csv_filename=None):
     """
     Cuts a Nastran model with a cutting plane
 
@@ -137,13 +139,20 @@ def cut_face_model_by_coord(bdf_filename, coord, tol,
     nids, xyz_cid0, faces, face_eids = _setup_faces(bdf_filename)
     unique_geometry_array, unique_results_array = _cut_face_model_by_coord(
         nids, xyz_cid0, faces, face_eids, coord, tol,
-        nodal_result, plane_atol=plane_atol)
+        nodal_result, plane_atol=plane_atol, skip_cleanup=skip_cleanup)
     if csv_filename:
         export_face_cut(csv_filename, unique_geometry_array, unique_results_array)
-    #print('unique_geometry_array, unique_results_array =', unique_geometry_array, unique_results_array)
+    #print('unique_geometry_array=%s unique_results_array =%s' % (
+        #unique_geometry_array, unique_results_array))
     return unique_geometry_array, unique_results_array
 
 def export_edge_cut(csv_filename, result_array):
+    """
+    Writes a face cut file of the format:
+
+        x, y, z, Cp
+        ...
+    """
     #nints = geometry_array.shape[1]
     #nfloats = results_array.shape[1]
     #max_int = geometry_array.max()
@@ -156,17 +165,36 @@ def export_edge_cut(csv_filename, result_array):
     np.savetxt(csv_filename, result_array, delimiter=',', newline='\n', header=header,
                footer='', comments='# ', encoding=None)
 
-def export_face_cut(csv_filename, geometry_array, results_array):
-    nints = geometry_array.shape[1]
-    nfloats = results_array.shape[1]
-    max_int = geometry_array.max()
-    len_max_int = len(str(max_int))
-    fmt = ('%%%ii,' % (len_max_int)) * nints + '%19.18e,' * nfloats
-    fmt = fmt.rstrip(',')
-    X = np.concatenate((geometry_array, results_array), axis=1)
-    header = 'eid, nid1, nid2, x, y, z, Cp'
-    np.savetxt(csv_filename, X, fmt=fmt, newline='\n', header=header,
-               footer='', comments='# ', encoding=None)
+def export_face_cut(csv_filename, geometry_arrays, results_arrays, header=''):
+    """
+    Writes a face cut file of the format:
+
+        header
+        Curve 1
+        eid, nid1, nid2, x, y, z, Cp
+        ...
+
+        Curve 2
+        eid, nid1, nid2, x, y, z, Cp
+        ...
+    """
+    with open(csv_filename, 'w') as csv_file:
+        if header:
+            csv_file.write(header)
+        for i, geometry_array, results_array in zip(count(), geometry_arrays, results_arrays):
+            nints = geometry_array.shape[1]
+            nfloats = results_array.shape[1]
+            max_int = geometry_array.max()
+            #len_max_int = len(str(max_int))
+            #fmt = ('%%%ii,' % (len_max_int)) * nints + '%19.18e,' * nfloats
+            fmt = '%i,' * nints + '%19.18e,' * nfloats
+            fmt = fmt.rstrip(',')
+            X = np.concatenate((geometry_array, results_array), axis=1)
+            header2 = 'Curve %i\n' % (i+1)
+            header2 += 'eid, nid1, nid2, x, y, z, Cp'
+            np.savetxt(csv_file, X, fmt=fmt, newline='\n', header=header2,
+                       footer='', comments='# ', encoding=None)
+            csv_file.write('\n')
 
 def _determine_cord2r(origin, zaxis, xzplane):
     k = zaxis / np.linalg.norm(zaxis)
@@ -319,7 +347,7 @@ def _cut_edge_model_by_coord(nids, xyz_cid0, edges, coord, tol,
     return local_points_array, global_points_array, result_array
 
 def _cut_face_model_by_coord(nids, xyz_cid0, faces, face_eids, coord, tol,
-                             nodal_result, plane_atol=1e-5):
+                             nodal_result, plane_atol=1e-5, skip_cleanup=True):
     """
     Cuts a Nastran model with a cutting plane
 
@@ -372,7 +400,7 @@ def _cut_face_model_by_coord(nids, xyz_cid0, faces, face_eids, coord, tol,
 
     unique_geometry_array, unique_results_array = slice_faces(
         nids, xyz_cid0, xyz_cid, iclose_faces_array, close_face_eids_array,
-        nodal_result, plane_atol=plane_atol)
+        nodal_result, plane_atol=plane_atol, skip_cleanup=skip_cleanup)
 
     #print(coord)
     return unique_geometry_array, unique_results_array
@@ -572,7 +600,8 @@ def _interpolate_bar_to_node(eid_new, nid_new, mid, area, J, fbdf,
     eid_new += 1
     return eid_new, nid_new
 
-def slice_faces(nodes, xyz_cid0, xyz_cid, faces, face_eids, nodal_result, plane_atol=1e-5):
+def slice_faces(nodes, xyz_cid0, xyz_cid, faces, face_eids, nodal_result,
+                plane_atol=1e-5, skip_cleanup=True):
     """
     Slices the shell elements
 
@@ -686,10 +715,10 @@ def slice_faces(nodes, xyz_cid0, xyz_cid, faces, face_eids, nodal_result, plane_
         #print(g)
     geometry_array = np.array(geometry, dtype='int32')
     unique_geometry_array, unique_results_array = _unique_face_rows(
-        geometry_array, results_array, nodes)
+        geometry_array, results_array, nodes, skip_cleanup=skip_cleanup)
     return unique_geometry_array, unique_results_array
 
-def _unique_face_rows(geometry_array, results_array, nodes):
+def _unique_face_rows(geometry_array, results_array, nodes, skip_cleanup=True):
     #print(geometry_array)
     #iedges = geometry_array[:, 1:]
     #geometry_array[:, 1:] = nodes[iedges.flatten()].reshape(iedges.shape)
@@ -722,7 +751,8 @@ def _unique_face_rows(geometry_array, results_array, nodes):
         #print(geometry_array[i, :])
 
     unused_iedges, unique_geometry_array2, unique_results_array2 = connect_face_rows(
-        unique_geometry_array, unique_results_array)
+        unique_geometry_array, unique_results_array, skip_cleanup=skip_cleanup)
+    print('iedges =', unused_iedges)
     return unique_geometry_array2, unique_results_array2
 
 def connect_face_rows(geometry_array, results_array, skip_cleanup=True):
@@ -734,9 +764,10 @@ def connect_face_rows(geometry_array, results_array, skip_cleanup=True):
     """
     # temp
     nedges = geometry_array.shape[0]
+    print('skip_cleanup=%s' % skip_cleanup)
     if skip_cleanup:
         iedges = np.arange(0, nedges)
-        return [iedges], geometry_array, results_array
+        return [iedges], [geometry_array], [results_array]
 
     # TODO: need to handle the dot case first
 
@@ -856,6 +887,7 @@ def _face_on_edge(eid, eid_new, nid_new, mid, area, J, fbdf,
                   nodal_result,
                   local_points, global_points,
                   geometry, result, unused_plane_atol):
+    """is this function necessary?"""
     #raise NotImplementedError('on edge-y1')
     #print('  y-sym; nid1=%s nid2=%s edge=%s' % (nid1, nid2, str(edge)))
     #print('     xyz1=%s xyz2=%s' % (xyz1_global, xyz2_global))
@@ -986,11 +1018,11 @@ def _interpolate_face_to_bar(nodes, eid, eid_new, nid_new, mid, area, J, fbdf,
         #lengths.append(length)
         dy = py2_local - py1_local
         if np.allclose(dy, 0.0, atol=plane_atol):
+            # We choose to ignore the triangle edge on/close to the symmetry plane.
+            # Instead, we use the neighboring projected edges as it's more correct.
+            # Also, that way do things in a more consistent way.
+            #
             continue
-
-        #dy21 = y2_local - y1_local
-        #dy31 = y3_local - y1_local
-        #dy23 = y2_local - y3_local
 
         # the second number is on the top
         percent = (0. - py1_local) / dy
@@ -1038,7 +1070,9 @@ def _interpolate_face_to_bar(nodes, eid, eid_new, nid_new, mid, area, J, fbdf,
         #print('  plane_atol=%s dy=%s\n' % (plane_atol, dy))
 
         geometry_temp.append([eid] + cut_edgei)
-        results_temp.append([xl, yl, zl, xg, yg, zg, resulti])  # TODO: doesn't handle results of length 2+
+
+        # TODO: doesn't handle results of length 2+
+        results_temp.append([xl, yl, zl, xg, yg, zg, resulti])
         i_values.append(i)
         percent_values.append(percent)
         nid_new += 1
@@ -1091,15 +1125,15 @@ def _is_dot(ivalues, percent_values, plane_atol):
     we don't want dots
     """
     percent_array = np.array(percent_values)
-    if ivalues == [0, 1]:  # source
-        dot_type = 'source'
+    if ivalues == [0, 1]:
+        #dot_type = 'source'
         is_dot = np.allclose(percent_array, 0., atol=plane_atol)
-    elif ivalues == [0, 2]:  # corner
-        dot_type = 'corner'
+    elif ivalues == [0, 2]:
+        #dot_type = 'corner'
         shifted_array = np.abs(percent_array - 0.5)
         is_dot = np.allclose(shifted_array, 0.5, atol=plane_atol)
-    elif ivalues == [1, 2]:  # sink
-        dot_type = 'sink'
+    elif ivalues == [1, 2]:
+        #dot_type = 'sink'
         is_dot = np.allclose(percent_array, 1., atol=plane_atol)
     else:
         raise RuntimeError('incorrect ivalues=%s' % ivalues)

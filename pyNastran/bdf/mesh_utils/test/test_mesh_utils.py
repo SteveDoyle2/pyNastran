@@ -866,10 +866,10 @@ class TestMeshUtils(unittest.TestCase):
             plane_atol=1e-5, csv_filename='cut_edge_2.csv')
         assert len(result_array) == 20, len(result_array)
 
-        geometry_array, result_array = cut_face_model_by_coord(
+        geometry_arrays, result_arrays = cut_face_model_by_coord(
             model, coord, tol, nodal_result,
             plane_atol=1e-5, csv_filename='cut_face_2.csv')
-        assert len(result_array) == 8, len(result_array)
+        assert len(result_arrays[0]) == 8, len(result_arrays)
 
 
     def test_connect_face_rows(self):
@@ -884,7 +884,7 @@ class TestMeshUtils(unittest.TestCase):
         nedges = geometry_array.shape[0]
         results_array = np.arange(0, nedges)
         #print(results_array)
-        iedges, geometry_array2, results_array2 = connect_face_rows(
+        iedges, geometry_arrays2, results_arrays2 = connect_face_rows(
             geometry_array, results_array, skip_cleanup=False)
         assert np.array_equal(iedges, [[0, 1, 2, 3, 4]]), 'iedges=%s' % iedges
         #-----------------------------------------------------------------------
@@ -899,7 +899,7 @@ class TestMeshUtils(unittest.TestCase):
         ])
         nedges = geometry_array.shape[0]
         results_array = np.arange(0, nedges)
-        iedges, geometry_array2, results_array2 = connect_face_rows(
+        iedges, geometry_arrays2, results_arrays2 = connect_face_rows(
             geometry_array, results_array, skip_cleanup=False)
         assert np.array_equal(iedges, [[0, 4, 3, 1, 2]]), 'iedges=%s' % iedges
         #print(geometry_array2)

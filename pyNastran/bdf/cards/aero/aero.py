@@ -351,11 +351,11 @@ class AELINK(BaseCard):
         aelink_id : int
             unique id
         label : str
-            name of the AESURF(???) card
+            name of the dependent AESURF card
         independent_labels : List[str, ..., str]
-            name for the AESTAT(???) cards
-        Cis : List[???]
-            ???
+            name for the independent variables (AESTATs)
+        Cis : List[float]
+            linking coefficients
         comment : str; default=''
             a comment for the card
 
@@ -369,7 +369,7 @@ class AELINK(BaseCard):
         #: defines the independent variable name (string)
         self.independent_labels = independent_labels
 
-        #: linking coefficient (real)
+        #: linking coefficients (real)
         self.Cis = Cis
 
         if isinstance(aelink_id, string_types):
@@ -390,7 +390,6 @@ class AELINK(BaseCard):
                 len(self.independent_labels), len(self.Cis),
                 self.independent_labels, self.Cis, str(self))
             raise RuntimeError(msg)
-
 
     @classmethod
     def add_card(cls, card, comment=''):

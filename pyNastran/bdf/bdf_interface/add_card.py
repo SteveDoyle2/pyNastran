@@ -4999,9 +4999,11 @@ class AddCards(AddMethods):
         aelink_id : int
             unique id
         label : str
-            name of the AESURF(???) card
+            name of the dependent AESURF card
         independent_labels : List[str, ..., str]
-            name for the AESTAT(???) cards
+            name for the independent variables (AESTATs)
+        Cis : List[float]
+            linking coefficients
         comment : str; default=''
             a comment for the card
 
