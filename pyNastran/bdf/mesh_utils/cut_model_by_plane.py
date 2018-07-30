@@ -140,7 +140,7 @@ def cut_face_model_by_coord(bdf_filename, coord, tol,
         nodal_result, plane_atol=plane_atol)
     if csv_filename:
         export_face_cut(csv_filename, unique_geometry_array, unique_results_array)
-    print('unique_geometry_array, unique_results_array =', unique_geometry_array, unique_results_array)
+    #print('unique_geometry_array, unique_results_array =', unique_geometry_array, unique_results_array)
     return unique_geometry_array, unique_results_array
 
 def export_edge_cut(csv_filename, result_array):
@@ -608,7 +608,7 @@ def slice_faces(nodes, xyz_cid0, xyz_cid, faces, face_eids, nodal_result, plane_
     tri_faces = faces
     for eid, face in zip(face_eids, tri_faces):
         if len(face) == 4:
-            print('skipping face=%s' % face)
+            #print('skipping face=%s' % face)
             continue
         (inid1, inid2, inid3) = face
         xyz1_local = xyz_cid[inid1]
@@ -632,7 +632,7 @@ def slice_faces(nodes, xyz_cid0, xyz_cid, faces, face_eids, nodal_result, plane_
         #print('  xyz1-global=%s xyz2-global=%s' % (xyz1_global, xyz2_global))
         #print('  is_same_sign=%s is_far_from_plane=%s' % (is_same_sign, is_far_from_plane))
         if is_far_from_plane and is_same_sign:
-            print('  far-face=%s' % (face))
+            #print('  far-face=%s' % (face))
             #print('skip y1_local=%.3f y2_local=%.3f plane_atol=%.e' % (
                 #y1_local, y2_local, plane_atol))
             continue
@@ -649,7 +649,7 @@ def slice_faces(nodes, xyz_cid0, xyz_cid, faces, face_eids, nodal_result, plane_
         #elif np.allclose(y1_local, y3_local, atol=plane_atol):
 
         elif is_same_sign:  # Labs == Lpos
-            print('  same sign-face=%s' % (face))
+            #print('  same sign-face=%s' % (face))
             # same sign, so no crossing
             #print('*edge =', edge)
             #print("  xyz1_global=%s xyz2_global=%s" % (xyz1_global, xyz2_global))
@@ -657,7 +657,7 @@ def slice_faces(nodes, xyz_cid0, xyz_cid, faces, face_eids, nodal_result, plane_
             continue
         else:
             # a crossing
-            print('  intersection-eid=%s face=%s' % (eid, face))
+            #print('  intersection-eid=%s face=%s' % (eid, face))
             #print('  is_same_sign=%s is_far_from_plane=%s' % (is_same_sign, is_far_from_plane))
             eid_new, nid_new = _interpolate_face_to_bar(
                 nodes, eid, eid_new, nid_new, mid, area, J, fbdf,
@@ -673,10 +673,10 @@ def slice_faces(nodes, xyz_cid0, xyz_cid, faces, face_eids, nodal_result, plane_
                 len(local_points), len(result))
             raise RuntimeError(msg)
         fbdf.write('$------\n')
-        print('----------------------')
+        #print('----------------------')
     fbdf.close()
     if len(geometry) == 0:
-        print('bad')
+        #print('bad')
         return None, None
     unused_local_points_array = np.array(local_points)
     unused_global_points_array = np.array(global_points)
@@ -690,7 +690,7 @@ def slice_faces(nodes, xyz_cid0, xyz_cid, faces, face_eids, nodal_result, plane_
     return unique_geometry_array, unique_results_array
 
 def _unique_face_rows(geometry_array, results_array, nodes):
-    print(geometry_array)
+    #print(geometry_array)
     #iedges = geometry_array[:, 1:]
     #geometry_array[:, 1:] = nodes[iedges.flatten()].reshape(iedges.shape)
     #aaa
@@ -703,8 +703,8 @@ def _unique_face_rows(geometry_array, results_array, nodes):
         out = nodes[row[1:]]
         geometry_array[irow, 1:] = out
 
-    print('geometry_array:')
-    print(geometry_array)
+    #print('geometry_array:')
+    #print(geometry_array)
     unused_edges = geometry_array[:, 1:]
     #print(','.join([str(val) for val in np.unique(edges)]))
     #print('geom =', geometry_array[myrow, :])
@@ -721,22 +721,133 @@ def _unique_face_rows(geometry_array, results_array, nodes):
             #print('i=%s eid=%s nid1=%s nid2=%s' % (i, eid, nid1, nid2))
         #print(geometry_array[i, :])
 
-    unique_geometry_array2, unique_results_array2 = _connect_face_rows(
+    unused_iedges, unique_geometry_array2, unique_results_array2 = connect_face_rows(
         unique_geometry_array, unique_results_array)
     return unique_geometry_array2, unique_results_array2
 
-def _connect_face_rows(geometry_array, results_array):
-    return geometry_array, results_array
+def connect_face_rows(geometry_array, results_array, skip_cleanup=True):
+    """
+    Connects the faces by taking the count of how many times each node
+    is used.  If a node is not used twice, then it is a starting/ending point,
+    so we can find the C-shaped loops and O-shaped loops.  This is not intended
+    to handle 3+ connected points, only 1 or 2.
+    """
+    # temp
+    nedges = geometry_array.shape[0]
+    if skip_cleanup:
+        iedges = np.arange(0, nedges)
+        return [iedges], geometry_array, results_array
 
     # TODO: need to handle the dot case first
-    #edges = geometry_array[:, 1:]
-    #nodes, counts = np.unique(edges, return_counts=True)
-    #print('nodes =', nodes)
-    #print('counts =', counts)
-    #ibad = np.where(counts != 2)
-    #print('unique = ', nodes[ibad])
-    #print(','.join([str(val) for val in nodes[ibad]]))
-    #return geometry_array2, results_array2
+
+    # grab (nid1, nid2) columns
+    eid_edges = geometry_array
+    eids_backup = geometry_array[:, 0]
+    geometry_array[:, 0] = np.arange(0, nedges)
+    edges = geometry_array[:, 1:]  # nodes, not inodes
+
+    nodes, counts = np.unique(edges, return_counts=True)
+    ibad = np.where(counts != 2)[0]
+    include_end = False
+    if len(ibad) == 0:
+        ibad = np.array([0])
+        include_end = True
+    #print('ibad = ', ibad)
+    node_start_end = nodes[ibad].tolist()
+    #print('node_start_end = ', node_start_end)
+    if len(ibad) == 2 or 1:
+        iedges = []
+        iedges_all = []
+        #print("ibad = %s" % ibad)
+        #print("edges:")
+        #print(edges)
+        #print('nodes =', nodes)
+        #print('counts =', counts)
+        nid_start = node_start_end[0]
+        node_start_end.remove(nid_start)
+        #print('nid_start = %s' % nid_start)
+
+        nedges = edges.shape[0]
+        all_irows = range(nedges) #np.arange(0, nedges)
+        #print('------------')
+        while len(all_irows):
+            #print('all_irows =',all_irows)
+            #print(eid_edges)
+            irows = np.where(nid_start == edges)[0]
+            if len(irows) == 0:
+                # finished an O-ring or a C-ring
+                if nid_start in node_start_end:
+                    node_start_end.remove(nid_start)
+                    nid_start = node_start_end[0]
+                    node_start_end.remove(nid_start)
+                else:
+                    #print("**missing 1")
+                    # include_end=True
+                    iedges.append(iedges[0])
+                    nid_start = edges[0, 0]
+                    node_start_end = []
+
+                #print('nid_end=%s' % nid_start)
+                #print('*iedges=%s' % iedges)
+                iedges_all.append(iedges)
+                iedges = []
+                continue
+            irow = irows[0]
+            #print('irow =', irow)
+
+            eid_nodes_row = eid_edges[irow]
+            eid = eid_nodes_row[0]
+            nodes_list = eid_nodes_row[1:].tolist()
+            #print('eid = %s' % eid)
+            #print('nodes = %s' % nodes_list)
+            nodes_list.remove(nid_start)
+
+            nid_start = nodes_list[0]
+            iedges.append(eid)
+            #print('nid = %s' % nid_start)
+            all_irows.remove(irow)
+            #print('iedges =', iedges)
+            #print('all_irows =', all_irows)
+
+            eid_edges = eid_edges[all_irows, :]
+            edges = edges[all_irows, :]
+            nedges = edges.shape[0]
+            all_irows = range(nedges)
+            #print('------------')
+        #print('iedges =', iedges)
+        if include_end:
+            iedges.append(iedges[0])
+        if iedges:
+            iedges_all.append(iedges)
+        geometry_array[:, 0] = eids_backup
+        #print('end!!!')
+    else:  # pragma: no cover
+        print("ibad = %s" % ibad)
+        print("ibad.shape", ibad.shape)
+        print("len(ibad) = %s" % len(ibad))
+        print('nodes =', nodes)
+        print('counts =', counts)
+        print('unique = ', nodes[ibad])
+        print(','.join([str(val) for val in nodes[ibad]]))
+
+    geometry, results = iedges_to_geometry_results(
+        iedges_all, geometry_array, results_array)
+    return iedges_all, geometry, results
+
+def iedges_to_geometry_results(iedges_all, geometry_array, results_array):
+    """
+    Takes the iedges and slices the geometry/results to isolate the rings
+    or C shapes.
+    """
+    #print("iedges_all =", iedges_all)
+    geometry = []
+    results = []
+    for iedges in iedges_all:
+        geometryi = geometry_array[iedges, :]
+        resultsi = results_array[iedges]
+        geometry.append(geometryi)
+        results.append(resultsi)
+    return geometry, results
 
 def _face_on_edge(eid, eid_new, nid_new, mid, area, J, fbdf,
                   inid1, inid2, unused_inid3,
@@ -867,8 +978,8 @@ def _interpolate_face_to_bar(nodes, eid, eid_new, nid_new, mid, area, J, fbdf,
     for i, (edge1, edge2) in enumerate(edgesi):
         (inid_a, p1_local, p1_global) = edge1
         (inid_b, p2_local, p2_global) = edge2
-        print('  inid_a=%s, p1_local=%s, p1_global=%s' % (inid_a, p1_local, p1_global))
-        print('  inid_b=%s, p2_local=%s, p2_global=%s' % (inid_b, p2_local, p2_global))
+        #print('  inid_a=%s, p1_local=%s, p1_global=%s' % (inid_a, p1_local, p1_global))
+        #print('  inid_b=%s, p2_local=%s, p2_global=%s' % (inid_b, p2_local, p2_global))
         py1_local = p1_local[1]
         py2_local = p2_local[1]
         #length = np.linalg.norm(p2_global - p1_global)
@@ -914,10 +1025,10 @@ def _interpolate_face_to_bar(nodes, eid, eid_new, nid_new, mid, area, J, fbdf,
         result2 = nodal_result[inid_b]
         resulti = result2  * percent + result1  * (1 - percent)
 
-        print('  inid1=%s inid2=%s edge1=%s' % (inid1, inid2, str(edge1)))
-        print('    xyz1_local=%s xyz2_local=%s' % (xyz1_local, xyz2_local))
-        print('    avg_local=%s' % avg_local)
-        print('    avg_global=%s' % avg_global)
+        #print('  inid1=%s inid2=%s edge1=%s' % (inid1, inid2, str(edge1)))
+        #print('    xyz1_local=%s xyz2_local=%s' % (xyz1_local, xyz2_local))
+        #print('    avg_local=%s' % avg_local)
+        #print('    avg_global=%s' % avg_global)
         sid = 1
         out_grid = ['GRID', nid_new, None, ] + list(avg_local)
         out_temp = ['TEMP', sid, nid_new, resulti] #+ resulti.tolist()
@@ -936,7 +1047,7 @@ def _interpolate_face_to_bar(nodes, eid, eid_new, nid_new, mid, area, J, fbdf,
     #p2 = global_points[-1]
     #dxyz = np.linalg.norm(p2 - p1)
     if _is_dot(i_values, percent_values, plane_atol):
-        print('dot!!!')
+        #print('dot!!!')
         mid = 2
         return eid_new, nid_new
 
@@ -981,15 +1092,16 @@ def _is_dot(ivalues, percent_values, plane_atol):
     """
     percent_array = np.array(percent_values)
     if ivalues == [0, 1]:  # source
+        dot_type = 'source'
         is_dot = np.allclose(percent_array, 0., atol=plane_atol)
-        print('source; percents=%s is_dot=%s' % (percent_array, is_dot))
     elif ivalues == [0, 2]:  # corner
+        dot_type = 'corner'
         shifted_array = np.abs(percent_array - 0.5)
         is_dot = np.allclose(shifted_array, 0.5, atol=plane_atol)
-        print('corner; percents=%s is_dot=%s' % (percent_array, is_dot))
     elif ivalues == [1, 2]:  # sink
+        dot_type = 'sink'
         is_dot = np.allclose(percent_array, 1., atol=plane_atol)
-        print('sink; percents=%s is_dot=%s' % (percent_array, is_dot))
     else:
         raise RuntimeError('incorrect ivalues=%s' % ivalues)
+    #print('%s; percents=%s is_dot=%s' % (dot_type, percent_array, is_dot))
     return is_dot

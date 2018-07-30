@@ -22,7 +22,7 @@ from pyNastran.bdf.mesh_utils.split_cbars_by_pin_flag import split_cbars_by_pin_
 from pyNastran.bdf.mesh_utils.split_elements import split_line_elements
 from pyNastran.bdf.mesh_utils.pierce_shells import pierce_shell_model, quad_intersection, triangle_intersection
 from pyNastran.bdf.mesh_utils.mirror_mesh import write_bdf_symmetric, bdf_mirror, make_symmetric_model
-from pyNastran.bdf.mesh_utils.cut_model_by_plane import cut_edge_model_by_coord, cut_face_model_by_coord
+from pyNastran.bdf.mesh_utils.cut_model_by_plane import cut_edge_model_by_coord, cut_face_model_by_coord, connect_face_rows
 from pyNastran.bdf.mesh_utils.mesh import create_structured_cquad4s
 from pyNastran.utils.log import SimpleLogger
 
@@ -869,7 +869,97 @@ class TestMeshUtils(unittest.TestCase):
         geometry_array, result_array = cut_face_model_by_coord(
             model, coord, tol, nodal_result,
             plane_atol=1e-5, csv_filename='cut_face_2.csv')
-        assert len(result_array) == 12, len(result_array)
+        assert len(result_array) == 8, len(result_array)
+
+
+    def test_connect_face_rows(self):
+        # in order
+        geometry_array = np.array([
+            [1, 1, 2],
+            [2, 2, 3],
+            [3, 3, 4],
+            [4, 4, 5],
+            [5, 5, 6],
+        ])
+        nedges = geometry_array.shape[0]
+        results_array = np.arange(0, nedges)
+        #print(results_array)
+        iedges, geometry_array2, results_array2 = connect_face_rows(
+            geometry_array, results_array, skip_cleanup=False)
+        assert np.array_equal(iedges, [[0, 1, 2, 3, 4]]), 'iedges=%s' % iedges
+        #-----------------------------------------------------------------------
+
+        # out of order
+        geometry_array = np.array([
+            [1, 1, 2], # 0
+            [2, 4, 5], # 3
+            [3, 5, 6], # 4
+            [4, 3, 4], # 2
+            [5, 2, 3], # 1
+        ])
+        nedges = geometry_array.shape[0]
+        results_array = np.arange(0, nedges)
+        iedges, geometry_array2, results_array2 = connect_face_rows(
+            geometry_array, results_array, skip_cleanup=False)
+        assert np.array_equal(iedges, [[0, 4, 3, 1, 2]]), 'iedges=%s' % iedges
+        #print(geometry_array2)
+
+        #-----------------------------------------------------------------------
+
+        # in order, two blocks
+        #print('*****************')
+        geometry_array = np.array([
+            # block 1
+            [1, 1, 2],
+            [2, 2, 3],
+            [3, 3, 4],
+
+            # block 2
+            [10, 10, 20],
+            [20, 20, 30],
+            [30, 30, 40],
+        ])
+        nedges = geometry_array.shape[0]
+        results_array = np.arange(0, nedges)
+        #print(results_array)
+        iedges, geometry_array2, results_array2 = connect_face_rows(
+            geometry_array, results_array, skip_cleanup=False)
+        assert np.array_equal(iedges, [[0, 1, 2], [3, 4, 5]]), 'iedges=%s' % iedges
+
+    def test_connect_face_rows_ring_1(self):
+        # in order, one ring
+        geometry_array = np.array([
+            [1, 1, 2],
+            [2, 2, 3],
+            [3, 3, 4],
+            [4, 1, 4],
+        ])
+        nedges = geometry_array.shape[0]
+        results_array = np.arange(0, nedges)
+        #print(results_array)
+        iedges, geometry_array2, results_array2 = connect_face_rows(
+            geometry_array, results_array, skip_cleanup=False)
+        assert np.array_equal(iedges, [[0, 1, 2, 3, 0]]), 'iedges=%s' % iedges
+
+    def test_connect_face_rows_ring_2(self):
+        # in order, two rings
+        geometry_array = np.array([
+            [1, 1, 2],
+            [2, 2, 3],
+            [3, 3, 4],
+            [4, 1, 4],
+
+            [10, 10, 20],
+            [20, 20, 30],
+            [30, 30, 40],
+            [40, 10, 40],
+        ])
+        nedges = geometry_array.shape[0]
+        results_array = np.arange(0, nedges)
+        #print(results_array)
+        iedges, geometry_array2, results_array2 = connect_face_rows(
+            geometry_array, results_array, skip_cleanup=False)
+        assert np.array_equal(iedges, [[0, 1, 2, 3, 0], [4, 5, 6, 7, 4]]), 'iedges=%s' % iedges
 
 def _cut_shell_model_quads():
     """helper method"""
