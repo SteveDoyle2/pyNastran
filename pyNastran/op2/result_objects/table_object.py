@@ -71,6 +71,12 @@ SORT2_TABLE_NAME_MAP = {
     'OQMPSD2' : 'OQMPSD1',
     'OQMRMS2' : 'OQMRMS1',
 
+    'OPGATO2' : 'OPGATO1',
+    'OPGCRM2' : 'OPGCRM1',
+    'OPGNO2' : 'OPGNO1',
+    'OPGPSD2' : 'OPGPSD1',
+    'OPGRMS2' : 'OPGRMS1',
+
     #'OUG2' : 'OUG1',
     'OUGV2' : 'OUGV1',
 }
@@ -123,30 +129,32 @@ class TableArray(ScalarObject):  # displacement style table
 
     def set_as_sort1(self):
         """changes the table into SORT1"""
-        if not self.table_name != 'OQMRMS1':
+        #if not self.table_name != 'OQMRMS1':
+            #return
+        if self.is_sort1:
             return
-        if not self.is_sort1:
-            try:
-                analysis_method = self.analysis_method
-            except AttributeError:
-                print(self.code_information())
-                raise
-            #print(self.get_stats())
-            #print(self.node_gridtype)
-            #print(self.data.shape)
-            #aaa
-            self.sort_method = 1
-            self.sort_bits[1] = 0
-            bit0, bit1, bit2 = self.sort_bits
-            self.table_name = SORT2_TABLE_NAME_MAP[self.table_name]
-            self.sort_code = bit0 + 2*bit1 + 4*bit2
-            #print(self.code_information())
-            assert self.is_sort1
-            if analysis_method != 'N/A':
-                self.data_names[0] = analysis_method
-                #print(self.table_name_str, analysis_method, self._times)
-                setattr(self, self.analysis_method + 's', self._times)
-            del self.analysis_method
+        #print('table_name=%r' % self.table_name)
+        try:
+            analysis_method = self.analysis_method
+        except AttributeError:
+            print(self.code_information())
+            raise
+        #print(self.get_stats())
+        #print(self.node_gridtype)
+        #print(self.data.shape)
+        #aaa
+        self.sort_method = 1
+        self.sort_bits[1] = 0
+        bit0, bit1, bit2 = self.sort_bits
+        self.table_name = SORT2_TABLE_NAME_MAP[self.table_name]
+        self.sort_code = bit0 + 2*bit1 + 4*bit2
+        #print(self.code_information())
+        assert self.is_sort1
+        if analysis_method != 'N/A':
+            self.data_names[0] = analysis_method
+            #print(self.table_name_str, analysis_method, self._times)
+            setattr(self, self.analysis_method + 's', self._times)
+        del self.analysis_method
 
     def assert_equal(self, table, rtol=1.e-5, atol=1.e-8):
         self._eq_header(table)
@@ -427,7 +435,7 @@ class TableArray(ScalarObject):  # displacement style table
         #print(self.data_frame)
 
     def finalize(self):
-        #print('finalize table')
+        self.set_as_sort1()
         gridtypes = self.node_gridtype[:, 1]
         nnodes = len(gridtypes)
         self.gridtype_str = np.chararray((nnodes), unicode=True)

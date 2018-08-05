@@ -255,6 +255,9 @@ class BaseScalarObject(Op2Codes):
             elif name == 'node_id':
                 column_names.append('NodeID')
                 column_values.append(times)
+            elif name == 'element_id':
+                column_names.append('EleemntID')
+                column_values.append(times)
             else:
                 msg = 'build_dataframe; name=%r' % name
                 print(msg)

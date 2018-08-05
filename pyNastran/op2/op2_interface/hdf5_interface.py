@@ -122,62 +122,67 @@ def _cast(h5_result_attr):
 
 TABLE_OBJ_MAP = {
     'displacements' : (RealDisplacementArray, ComplexDisplacementArray),
-    'velocities' : (RealVelocityArray, ComplexVelocityArray, RealThermalVelocityVectorArray),
-    'accelerations' : (RealAccelerationArray, ComplexAccelerationArray),
-    'eigenvectors' : (RealEigenvectorArray, ComplexEigenvectorArray),
-    'spc_forces' : (RealSPCForcesArray, ComplexSPCForcesArray),
-    'mpc_forces' : (RealMPCForcesArray, ComplexMPCForcesArray),
-    'load_vectors' : (RealLoadVectorArray, ComplexLoadVectorArray),
-    'force_vectors' : (RealForceVectorArray, ),
-
+    'displacements_no' : (RealDisplacementArray, ComplexDisplacementArray),
+    'displacements_ato' : (RealDisplacementArray, ComplexDisplacementArray),
+    'displacements_crm' : (RealDisplacementArray, ComplexDisplacementArray),
+    'displacements_psd' : (RealDisplacementArray, ComplexDisplacementArray),
+    'displacements_rms' : (RealDisplacementArray, ComplexDisplacementArray),
     'displacement_scaled_response_spectra_ABS' : (RealDisplacementArray, ComplexDisplacementArray),
-    'velocity_scaled_response_spectra_ABS' : (RealVelocityArray, ComplexVelocityArray),
-    'spc_forces_scaled_response_spectra_ABS' : (RealSPCForcesArray, ComplexSPCForcesArray),
-    'acceleration_scaled_response_spectra_ABS' : (RealAccelerationArray, ComplexAccelerationArray),
-
     'displacement_scaled_response_spectra_NRL' : (RealDisplacementArray, ComplexDisplacementArray),
-    'spc_forces_scaled_response_spectra_NRL' : (RealSPCForcesArray, ComplexSPCForcesArray),
-    'acceleration_scaled_response_spectra_NRL' : (RealAccelerationArray, ComplexAccelerationArray),
-
     'displacement_scaled_response_spectra_SRSS' : (RealDisplacementArray, ComplexDisplacementArray),
+
+    'velocities' : (RealVelocityArray, ComplexVelocityArray, RealThermalVelocityVectorArray),
+    'velocities_no' : (RealVelocityArray, ComplexVelocityArray),
+    'velocities_ato' : (RealVelocityArray, ComplexVelocityArray),
+    'velocities_crm' : (RealVelocityArray, ComplexVelocityArray),
+    'velocities_psd' : (RealVelocityArray, ComplexVelocityArray),
+    'velocities_rms' : (RealVelocityArray, ComplexVelocityArray),
+    'velocity_scaled_response_spectra_ABS' : (RealVelocityArray, ComplexVelocityArray),
+
+    'accelerations' : (RealAccelerationArray, ComplexAccelerationArray),
+    'accelerations_no' : (RealAccelerationArray, ComplexAccelerationArray),
+    'accelerations_ato' : (RealAccelerationArray, ComplexAccelerationArray),
+    'accelerations_crm' : (RealAccelerationArray, ComplexAccelerationArray),
+    'accelerations_psd' : (RealAccelerationArray, ComplexAccelerationArray),
+    'accelerations_rms' : (RealAccelerationArray, ComplexAccelerationArray),
+    'acceleration_scaled_response_spectra_ABS' : (RealAccelerationArray, ComplexAccelerationArray),
+    'acceleration_scaled_response_spectra_NRL' : (RealAccelerationArray, ComplexAccelerationArray),
     'acceleration_scaled_response_spectra_SRSS' : (RealAccelerationArray, ComplexAccelerationArray),
 
-    'displacements_NO' : (RealDisplacementArray, ComplexDisplacementArray),
-    'displacements_ATO' : (RealDisplacementArray, ComplexDisplacementArray),
-    'displacements_CRM' : (RealDisplacementArray, ComplexDisplacementArray),
-    'displacements_PSD' : (RealDisplacementArray, ComplexDisplacementArray),
-    'displacements_RMS' : (RealDisplacementArray, ComplexDisplacementArray),
+    'spc_forces' : (RealSPCForcesArray, ComplexSPCForcesArray),
+    'spc_forces_no' : (RealSPCForcesArray, ComplexSPCForcesArray),
+    'spc_forces_ato' : (RealSPCForcesArray, ComplexSPCForcesArray),
+    'spc_forces_crm' : (RealSPCForcesArray, ComplexSPCForcesArray),
+    'spc_forces_psd' : (RealSPCForcesArray, ComplexSPCForcesArray),
+    'spc_forces_rms' : (RealSPCForcesArray, ComplexSPCForcesArray),
+    'spc_forces_scaled_response_spectra_ABS' : (RealSPCForcesArray, ComplexSPCForcesArray),
+    'spc_forces_scaled_response_spectra_NRL' : (RealSPCForcesArray, ComplexSPCForcesArray),
 
-    'velocities_NO' : (RealVelocityArray, ComplexVelocityArray),
-    'velocities_ATO' : (RealVelocityArray, ComplexVelocityArray),
-    'velocities_CRM' : (RealVelocityArray, ComplexVelocityArray),
-    'velocities_PSD' : (RealVelocityArray, ComplexVelocityArray),
-    'velocities_RMS' : (RealVelocityArray, ComplexVelocityArray),
+    'mpc_forces' : (RealMPCForcesArray, ComplexMPCForcesArray),
+    'mpc_forces_no' : (RealMPCForcesArray, ComplexMPCForcesArray),
+    'mpc_forces_ato' : (RealMPCForcesArray, ComplexMPCForcesArray),
+    'mpc_forces_crm' : (RealMPCForcesArray, ComplexMPCForcesArray),
+    'mpc_forces_psd' : (RealMPCForcesArray, ComplexMPCForcesArray),
+    'mpc_forces_rms' : (RealMPCForcesArray, ComplexMPCForcesArray),
 
-    'accelerations_NO' : (RealAccelerationArray, ComplexAccelerationArray),
-    'accelerations_ATO' : (RealAccelerationArray, ComplexAccelerationArray),
-    'accelerations_CRM' : (RealAccelerationArray, ComplexAccelerationArray),
-    'accelerations_PSD' : (RealAccelerationArray, ComplexAccelerationArray),
-    'accelerations_RMS' : (RealAccelerationArray, ComplexAccelerationArray),
+    'eigenvectors' : (RealEigenvectorArray, ComplexEigenvectorArray),
+    'force_vectors' : (RealForceVectorArray, ),
 
-    'spc_forces_NO' : (RealSPCForcesArray, ComplexSPCForcesArray),
-    'spc_forces_ATO' : (RealSPCForcesArray, ComplexSPCForcesArray),
-    'spc_forces_CRM' : (RealSPCForcesArray, ComplexSPCForcesArray),
-    'spc_forces_PSD' : (RealSPCForcesArray, ComplexSPCForcesArray),
-    'spc_forces_RMS' : (RealSPCForcesArray, ComplexSPCForcesArray),
+    'load_vectors' : (RealLoadVectorArray, ComplexLoadVectorArray),
+    'load_vectors_crm' : (RealLoadVectorArray, ),
+    'load_vectors_psd' : (RealLoadVectorArray, ),
+    'load_vectors_ato' : (RealLoadVectorArray, ),
+    'load_vectors_no' : (RealLoadVectorArray, ),
+    'load_vectors_rms' : (RealLoadVectorArray, ),
 
-    'mpc_forces_NO' : (RealMPCForcesArray, ComplexMPCForcesArray),
-    'mpc_forces_ATO' : (RealMPCForcesArray, ComplexMPCForcesArray),
-    'mpc_forces_CRM' : (RealMPCForcesArray, ComplexMPCForcesArray),
-    'mpc_forces_PSD' : (RealMPCForcesArray, ComplexMPCForcesArray),
-    'mpc_forces_RMS' : (RealMPCForcesArray, ComplexMPCForcesArray),
-
+    #---------------------------------------------------------------------------
     'celas1_stress' : (RealSpringStressArray, ComplexSpringStressArray),
     'celas1_stress_ato' : (RealSpringStressArray, ),
     'celas1_stress_crm' : (RealSpringStressArray, ),
     'celas1_stress_psd' : (RealSpringStressArray, ),
     'celas1_stress_rms' : (RealSpringStressArray, ),
     'celas1_stress_no' : (RealSpringStressArray, ),
+    'modal_contribution_celas1_stress' : (RealSpringStressArray, ComplexSpringStressArray, ),
 
     'celas2_stress' : (RealSpringStressArray, ComplexSpringStressArray),
     'celas2_stress_ato' : (RealSpringStressArray, ),
@@ -185,6 +190,7 @@ TABLE_OBJ_MAP = {
     'celas2_stress_psd' : (RealSpringStressArray, ),
     'celas2_stress_rms' : (RealSpringStressArray, ),
     'celas2_stress_no' : (RealSpringStressArray, ),
+    'modal_contribution_celas2_stress': (RealSpringStressArray, ComplexSpringStressArray, ),
 
     'celas3_stress' : (RealSpringStressArray, ComplexSpringStressArray),
     'celas3_stress_ato' : (RealSpringStressArray, ),
@@ -192,6 +198,7 @@ TABLE_OBJ_MAP = {
     'celas3_stress_psd' : (RealSpringStressArray, ),
     'celas3_stress_rms' : (RealSpringStressArray, ),
     'celas3_stress_no' : (RealSpringStressArray, ),
+    'modal_contribution_celas3_stress': (RealSpringStressArray, ComplexSpringStressArray, ),
 
     'celas4_stress' : (RealSpringStressArray, ComplexSpringStressArray),
     'celas4_stress_ato' : (RealSpringStressArray, ),
@@ -199,6 +206,7 @@ TABLE_OBJ_MAP = {
     'celas4_stress_psd' : (RealSpringStressArray, ),
     'celas4_stress_rms' : (RealSpringStressArray, ),
     'celas4_stress_no' : (RealSpringStressArray, ),
+    'modal_contribution_celas4_stress' : (RealSpringStressArray, ComplexSpringStrainArray, ),  # TODO: I think this is real only...
 
     'celas1_strain' : (RealSpringStrainArray, ComplexSpringStrainArray),
     'celas1_strain_ato' : (RealSpringStrainArray, ),
@@ -206,6 +214,7 @@ TABLE_OBJ_MAP = {
     'celas1_strain_psd' : (RealSpringStrainArray, ),
     'celas1_strain_rms' : (RealSpringStrainArray, ),
     'celas1_strain_no' : (RealSpringStrainArray, ),
+    'modal_contribution_celas1_strain' : (RealSpringStrainArray, ComplexSpringStrainArray, ),
 
     'celas2_strain' : (RealSpringStrainArray, ComplexSpringStrainArray),
     'celas2_strain_ato' : (RealSpringStrainArray, ),
@@ -213,6 +222,7 @@ TABLE_OBJ_MAP = {
     'celas2_strain_psd' : (RealSpringStrainArray, ),
     'celas2_strain_rms' : (RealSpringStrainArray, ),
     'celas2_strain_no' : (RealSpringStrainArray, ),
+    'modal_contribution_celas2_strain' : (RealSpringStrainArray, ComplexSpringStrainArray, ),
 
     'celas3_strain' : (RealSpringStrainArray, ComplexSpringStrainArray),
     'celas3_strain_ato' : (RealSpringStrainArray, ),
@@ -220,6 +230,7 @@ TABLE_OBJ_MAP = {
     'celas3_strain_psd' : (RealSpringStrainArray, ),
     'celas3_strain_rms' : (RealSpringStrainArray, ),
     'celas3_strain_no' : (RealSpringStrainArray, ),
+    'modal_contribution_celas3_strain' : (RealSpringStrainArray, ComplexSpringStrainArray, ),
 
     'celas4_strain' : (RealSpringStrainArray, ComplexSpringStrainArray),
     'celas4_strain_ato' : (RealSpringStrainArray, ),
@@ -227,18 +238,70 @@ TABLE_OBJ_MAP = {
     'celas4_strain_psd' : (RealSpringStrainArray, ),
     'celas4_strain_rms' : (RealSpringStrainArray, ),
     'celas4_strain_no' : (RealSpringStrainArray, ),
+    'modal_contribution_celas4_strain' : (RealSpringStrainArray, ComplexSpringStrainArray, ),
 
     'celas1_force' : (RealSpringForceArray, ComplexSpringForceArray),
+    'celas1_force_ato' : (RealSpringForceArray, ),
+    'celas1_force_crm' : (RealSpringForceArray, ),
+    'celas1_force_psd' : (RealSpringForceArray, ),
+    'celas1_force_rms' : (RealSpringForceArray, ),
+    'celas1_force_no' : (RealSpringForceArray, ),
+
     'celas2_force' : (RealSpringForceArray, ComplexSpringForceArray),
+    'celas2_force_ato' : (RealSpringForceArray, ),
+    'celas2_force_crm' : (RealSpringForceArray, ),
+    'celas2_force_psd' : (RealSpringForceArray, ),
+    'celas2_force_rms' : (RealSpringForceArray, ),
+    'celas2_force_no' : (RealSpringForceArray, ),
+
     'celas3_force' : (RealSpringForceArray, ComplexSpringForceArray),
+    'celas3_force_ato' : (RealSpringForceArray, ),
+    'celas3_force_crm' : (RealSpringForceArray, ),
+    'celas3_force_psd' : (RealSpringForceArray, ),
+    'celas3_force_rms' : (RealSpringForceArray, ),
+    'celas3_force_no' : (RealSpringForceArray, ),
+
     'celas4_force' : (RealSpringForceArray, ComplexSpringForceArray),
+    'celas4_force_ato' : (RealSpringForceArray, ),
+    'celas4_force_crm' : (RealSpringForceArray, ),
+    'celas4_force_psd' : (RealSpringForceArray, ),
+    'celas4_force_rms' : (RealSpringForceArray, ),
+    'celas4_force_no' : (RealSpringForceArray, ),
 
     'cdamp1_force' : (RealDamperForceArray, ComplexDamperForceArray),
+    'cdamp1_force_ato' : (RealDamperForceArray, ),
+    'cdamp1_force_crm' : (RealDamperForceArray, ),
+    'cdamp1_force_psd' : (RealDamperForceArray, ),
+    'cdamp1_force_rms' : (RealDamperForceArray, ),
+    'cdamp1_force_no' : (RealDamperForceArray, ),
+
     'cdamp2_force' : (RealDamperForceArray, ComplexDamperForceArray),
+    'cdamp2_force_ato' : (RealDamperForceArray, ),
+    'cdamp2_force_crm' : (RealDamperForceArray, ),
+    'cdamp2_force_psd' : (RealDamperForceArray, ),
+    'cdamp2_force_rms' : (RealDamperForceArray, ),
+    'cdamp2_force_no' : (RealDamperForceArray, ),
+
     'cdamp3_force' : (RealDamperForceArray, ComplexDamperForceArray),
+    'cdamp3_force_ato' : (RealDamperForceArray, ),
+    'cdamp3_force_crm' : (RealDamperForceArray, ),
+    'cdamp3_force_psd' : (RealDamperForceArray, ),
+    'cdamp3_force_rms' : (RealDamperForceArray, ),
+    'cdamp3_force_no' : (RealDamperForceArray, ),
+
     'cdamp4_force' : (RealDamperForceArray, ComplexDamperForceArray),
+    'cdamp4_force_ato' : (RealDamperForceArray, ),
+    'cdamp4_force_crm' : (RealDamperForceArray, ),
+    'cdamp4_force_psd' : (RealDamperForceArray, ),
+    'cdamp4_force_rms' : (RealDamperForceArray, ),
+    'cdamp4_force_no' : (RealDamperForceArray, ),
 
     'cvisc_force' : (RealViscForceArray, ComplexViscForceArray),
+    'cvisc_force_ato' : (RealViscForceArray, ),
+    'cvisc_force_crm' : (RealViscForceArray, ),
+    'cvisc_force_psd' : (RealViscForceArray, ),
+    'cvisc_force_rms' : (RealViscForceArray, ),
+    'cvisc_force_no' : (RealViscForceArray, ),
 
     'crod_stress' : (RealRodStressArray, ComplexRodStressArray),
     'crod_stress_ato' : (RandomRodStressArray, ),
@@ -246,6 +309,7 @@ TABLE_OBJ_MAP = {
     'crod_stress_psd' : (RandomRodStressArray, ),
     'crod_stress_rms' : (RandomRodStressArray, ),
     'crod_stress_no' : (RandomRodStressArray, ),
+    'modal_contribution_crod_stress' : (RealRodStressArray, ComplexRodStressArray, ),
 
     'conrod_stress' : (RealRodStressArray, ComplexRodStressArray),
     'conrod_stress_ato' : (RandomRodStressArray, ),
@@ -253,6 +317,7 @@ TABLE_OBJ_MAP = {
     'conrod_stress_psd' : (RandomRodStressArray, ),
     'conrod_stress_rms' : (RandomRodStressArray, ),
     'conrod_stress_no' : (RandomRodStressArray, ),
+    'modal_contribution_conrod_stress' : (RealRodStressArray, ComplexRodStressArray, ),
 
     'ctube_stress' : (RealRodStressArray, ComplexRodStressArray),
     'ctube_stress_ato' : (RandomRodStressArray, ),
@@ -260,6 +325,7 @@ TABLE_OBJ_MAP = {
     'ctube_stress_psd' : (RandomRodStressArray, ),
     'ctube_stress_rms' : (RandomRodStressArray, ),
     'ctube_stress_no' : (RandomRodStressArray, ),
+    'modal_contribution_ctube_stress' : (RealRodStressArray, ComplexRodStressArray, ),
 
     'crod_strain' : (RealRodStrainArray, ComplexRodStrainArray),
     'crod_strain_ato' : (RandomRodStrainArray, ),
@@ -267,6 +333,7 @@ TABLE_OBJ_MAP = {
     'crod_strain_psd' : (RandomRodStrainArray, ),
     'crod_strain_rms' : (RandomRodStrainArray, ),
     'crod_strain_no' : (RandomRodStrainArray, ),
+    'modal_contribution_crod_strain' : (RealRodStrainArray, ComplexRodStrainArray, ),
 
     'conrod_strain' : (RealRodStrainArray, ComplexRodStrainArray),
     'conrod_strain_ato' : (RandomRodStrainArray, ),
@@ -274,6 +341,7 @@ TABLE_OBJ_MAP = {
     'conrod_strain_psd' : (RandomRodStrainArray, ),
     'conrod_strain_rms' : (RandomRodStrainArray, ),
     'conrod_strain_no' : (RandomRodStrainArray, ),
+    'modal_contribution_conrod_strain' : (RealRodStrainArray, ComplexRodStrainArray, ),
 
     'ctube_strain' : (RealRodStrainArray, ComplexRodStrainArray),
     'ctube_strain_ato' : (RandomRodStrainArray, ),
@@ -281,10 +349,28 @@ TABLE_OBJ_MAP = {
     'ctube_strain_psd' : (RandomRodStrainArray, ),
     'ctube_strain_rms' : (RandomRodStrainArray, ),
     'ctube_strain_no' : (RandomRodStrainArray, ),
+    'modal_contribution_ctube_strain' : (RealRodStrainArray, ComplexRodStrainArray, ),
 
     'crod_force' : (RealRodForceArray, ComplexRodForceArray),
+    'crod_force_ato' : (RealRodForceArray, ),
+    'crod_force_crm' : (RealRodForceArray, ),
+    'crod_force_psd' : (RealRodForceArray, ),
+    'crod_force_rms' : (RealRodForceArray, ),
+    'crod_force_no' : (RealRodForceArray, ),
+
     'conrod_force' : (RealRodForceArray, ComplexRodForceArray),
+    'conrod_force_ato' : (RealRodForceArray, ),
+    'conrod_force_crm' : (RealRodForceArray, ),
+    'conrod_force_psd' : (RealRodForceArray, ),
+    'conrod_force_rms' : (RealRodForceArray, ),
+    'conrod_force_no' : (RealRodForceArray, ),
+
     'ctube_force' : (RealRodForceArray, ComplexRodForceArray),
+    'ctube_force_ato' : (RealRodForceArray, ),
+    'ctube_force_crm' : (RealRodForceArray, ),
+    'ctube_force_psd' : (RealRodForceArray, ),
+    'ctube_force_rms' : (RealRodForceArray, ),
+    'ctube_force_no' : (RealRodForceArray, ),
 
     'cbar_stress' : (RealBarStressArray, ComplexBarStressArray),
     'cbar_stress_ato' : (RandomBarStressArray, ),
@@ -292,6 +378,7 @@ TABLE_OBJ_MAP = {
     'cbar_stress_psd' : (RandomBarStressArray, ),
     'cbar_stress_no' : (RandomBarStressArray, ),
     'cbar_stress_rms' : (RandomBarStressArray, ),
+    'modal_contribution_cbar_stress' : (RealBarStressArray, ComplexBarStressArray, ),
 
     'cbar_strain' : (RealBarStrainArray, ComplexBarStrainArray),
     'cbar_strain_ato' : (RandomBarStrainArray, ),
@@ -299,6 +386,7 @@ TABLE_OBJ_MAP = {
     'cbar_strain_psd' : (RandomBarStrainArray, ),
     'cbar_strain_no' : (RandomBarStrainArray, ),
     'cbar_strain_rms' : (RandomBarStrainArray, ),
+    'modal_contribution_cbar_strain' : (RealBarStrainArray, ComplexBarStrainArray, ),
 
     'cbar_force' : (RealCBarForceArray, ComplexCBarForceArray),
     'cbar_force_ato' : (RealCBarForceArray, ),
@@ -317,6 +405,7 @@ TABLE_OBJ_MAP = {
     'cbeam_stress_psd' : (RandomBeamStressArray, ),
     'cbeam_stress_rms' : (RandomBeamStressArray, ),
     'cbeam_stress_no' : (RandomBeamStressArray, ),
+    'modal_contribution_cbeam_stress' : (RealBeamStressArray, ComplexBeamStressArray, ),
 
     'cbeam_strain' : (RealBeamStrainArray, ComplexBeamStrainArray),
     'cbeam_strain_ato' : (RandomBeamStrainArray, ),
@@ -324,8 +413,14 @@ TABLE_OBJ_MAP = {
     'cbeam_strain_psd' : (RandomBeamStrainArray, ),
     'cbeam_strain_rms' : (RandomBeamStrainArray, ),
     'cbeam_strain_no' : (RandomBeamStrainArray, ),
+    'modal_contribution_cbeam_strain' : (RealBeamStrainArray, ComplexBeamStrainArray, ),
 
     'cbeam_force' : (RealCBeamForceArray, ComplexCBeamForceArray),
+    'cbeam_force_ato' : (RealCBeamForceArray, ),
+    'cbeam_force_crm' : (RealCBeamForceArray, ),
+    'cbeam_force_psd' : (RealCBeamForceArray, ),
+    'cbeam_force_rms' : (RealCBeamForceArray, ),
+    'cbeam_force_no' : (RealCBeamForceArray, ),
 
     'cquad4_stress' : (RealPlateStressArray, ComplexPlateStressArray),
     'cquad4_stress_ato' : (RandomPlateStressArray, ),
@@ -333,13 +428,15 @@ TABLE_OBJ_MAP = {
     'cquad4_stress_psd' : (RandomPlateStressArray, ),
     'cquad4_stress_no' : (RandomPlateStressArray, ),
     'cquad4_stress_rms' : (RandomPlateStressArray, ),
+    'modal_contribution_cquad4_stress' : (RealPlateStressArray, ComplexPlateStressArray,),
 
     'ctria3_stress' : (RealPlateStressArray, ComplexPlateStressArray),
-    'cquad4_stress_ato' : (RandomPlateStressArray, ),
-    'cquad4_stress_crm' : (RandomPlateStressArray, ),
-    'cquad4_stress_psd' : (RandomPlateStressArray, ),
-    'cquad4_stress_no' : (RandomPlateStressArray, ),
-    'cquad4_stress_rms' : (RandomPlateStressArray, ),
+    'ctria3_stress_ato' : (RandomPlateStressArray, ),
+    'ctria3_stress_crm' : (RandomPlateStressArray, ),
+    'ctria3_stress_psd' : (RandomPlateStressArray, ),
+    'ctria3_stress_no' : (RandomPlateStressArray, ),
+    'ctria3_stress_rms' : (RandomPlateStressArray, ),
+    'modal_contribution_ctria3_stress' : (RealPlateStressArray, ComplexPlateStressArray,),
 
     'cquad8_stress' : (RealPlateStressArray, ComplexPlateStressArray),
     'cquad8_stress_ato' : (RandomPlateStressArray, ),
@@ -347,6 +444,7 @@ TABLE_OBJ_MAP = {
     'cquad8_stress_psd' : (RandomPlateStressArray, ),
     'cquad8_stress_no' : (RandomPlateStressArray, ),
     'cquad8_stress_rms' : (RandomPlateStressArray, ),
+    'modal_contribution_cquad8_stress' : (RealPlateStressArray, ComplexPlateStressArray, ),
 
     'ctria6_stress' : (RealPlateStressArray, ComplexPlateStressArray),
     'ctria6_stress_ato' : (RandomPlateStressArray, ),
@@ -354,6 +452,7 @@ TABLE_OBJ_MAP = {
     'ctria6_stress_psd' : (RandomPlateStressArray, ),
     'ctria6_stress_no' : (RandomPlateStressArray, ),
     'ctria6_stress_rms' : (RandomPlateStressArray, ),
+    'modal_contribution_ctria6_stress' : (RealPlateStressArray, ComplexPlateStressArray,),
 
     'ctriar_stress' : (RealPlateStressArray, ComplexPlateStressArray),
     'ctriar_stress_ato' : (RandomPlateStressArray, ),
@@ -375,6 +474,7 @@ TABLE_OBJ_MAP = {
     'cquad4_strain_psd' : (RandomPlateStrainArray, ),
     'cquad4_strain_no' : (RandomPlateStrainArray, ),
     'cquad4_strain_rms' : (RandomPlateStrainArray, ),
+    'modal_contribution_cquad4_strain' : (RealPlateStrainArray, ComplexPlateStrainArray, ),
 
     'ctria3_strain' : (RealPlateStrainArray, ComplexPlateStrainArray),
     'ctria3_strain_ato' : (RandomPlateStrainArray, ),
@@ -389,6 +489,7 @@ TABLE_OBJ_MAP = {
     'cquad8_strain_psd' : (RandomPlateStrainArray, ),
     'cquad8_strain_no' : (RandomPlateStrainArray, ),
     'cquad8_strain_rms' : (RandomPlateStrainArray, ),
+    'modal_contribution_cquad8_strain' : (RealPlateStrainArray, ComplexPlateStrainArray,),
 
     'ctria6_strain' : (RealPlateStrainArray, ComplexPlateStrainArray),
     'ctria6_strain_ato' : (RandomPlateStrainArray, ),
@@ -396,6 +497,7 @@ TABLE_OBJ_MAP = {
     'ctria6_strain_psd' : (RandomPlateStrainArray, ),
     'ctria6_strain_no' : (RandomPlateStrainArray, ),
     'ctria6_strain_rms' : (RandomPlateStrainArray, ),
+    'modal_contribution_ctria6_strain' : (RealPlateStrainArray, ComplexPlateStrainArray,),
 
     'ctriar_strain' : (RealPlateStrainArray, ComplexPlateStrainArray),
     'ctriar_strain_ato' : (RandomPlateStrainArray, ),
@@ -403,6 +505,7 @@ TABLE_OBJ_MAP = {
     'ctriar_strain_psd' : (RandomPlateStrainArray, ),
     'ctriar_strain_no' : (RandomPlateStrainArray, ),
     'ctriar_strain_rms' : (RandomPlateStrainArray, ),
+    'modal_contribution_ctria3_strain' : (RealPlateStrainArray, ComplexPlateStrainArray,),
 
     'cquadr_strain' : (RealPlateStrainArray, ComplexPlateStrainArray),
     'cquadr_strain_ato' : (RandomPlateStrainArray, ),
@@ -410,34 +513,6 @@ TABLE_OBJ_MAP = {
     'cquadr_strain_psd' : (RandomPlateStrainArray, ),
     'cquadr_strain_no' : (RandomPlateStrainArray, ),
     'cquadr_strain_rms' : (RandomPlateStrainArray, ),
-
-    'ctria3_stress' : (RealPlateStressArray, ComplexPlateStressArray),
-    'ctria3_stress_ato' : (RandomPlateStressArray, ),
-    'ctria3_stress_crm' : (RandomPlateStressArray, ),
-    'ctria3_stress_psd' : (RandomPlateStressArray, ),
-    'ctria3_stress_no' : (RandomPlateStressArray, ),
-    'ctria3_stress_rms' : (RandomPlateStressArray, ),
-
-    'ctria3_strain' : (RealPlateStrainArray, ComplexPlateStrainArray),
-    'ctria3_strain_ato' : (RandomPlateStrainArray, ),
-    'ctria3_strain_crm' : (RandomPlateStrainArray, ),
-    'ctria3_strain_psd' : (RandomPlateStrainArray, ),
-    'ctria3_strain_no' : (RandomPlateStrainArray, ),
-    'ctria3_strain_rms' : (RandomPlateStrainArray, ),
-
-    'cquad43_stress' : (RealPlateStressArray, ComplexPlateStressArray),
-    'cquad4_stress_ato' : (RandomPlateStressArray, ),
-    'cquad4_stress_crm' : (RandomPlateStressArray, ),
-    'cquad4_stress_psd' : (RandomPlateStressArray, ),
-    'cquad4_stress_no' : (RandomPlateStressArray, ),
-    'cquad4_stress_rms' : (RandomPlateStressArray, ),
-
-    'cquad4_strain' : (RealPlateStrainArray, ComplexPlateStrainArray),
-    'cquad4_strain_ato' : (RandomPlateStrainArray, ),
-    'cquad4_strain_crm' : (RandomPlateStrainArray, ),
-    'cquad4_strain_psd' : (RandomPlateStrainArray, ),
-    'cquad4_strain_no' : (RandomPlateStrainArray, ),
-    'cquad4_strain_rms' : (RandomPlateStrainArray, ),
 
     'ctriax_stress' : (RealTriaxStressArray, ComplexTriaxStressArray,),
 
@@ -457,6 +532,7 @@ TABLE_OBJ_MAP = {
     'cshear_stress_psd' : (RandomShearStressArray, ),
     'cshear_stress_no' : (RandomShearStressArray, ),
     'cshear_stress_rms' : (RandomShearStressArray, ),
+    'modal_contribution_cshear_stress' : (ComplexShearStressArray,),
 
     'cshear_strain' : (RealShearStrainArray, ComplexShearStrainArray),
     'cshear_strain_ato' : (RandomShearStrainArray, ),
@@ -466,6 +542,11 @@ TABLE_OBJ_MAP = {
     'cshear_strain_rms' : (RandomShearStrainArray, ),
 
     'cshear_force' : (RealCShearForceArray, ComplexCShearForceArray),
+    'cshear_force_ato' : (RealCShearForceArray, ),
+    'cshear_force_crm' : (RealCShearForceArray, ),
+    'cshear_force_psd' : (RealCShearForceArray, ),
+    'cshear_force_rms' : (RealCShearForceArray, ),
+    'cshear_force_no' : (RealCShearForceArray, ),
 
     'coneax_force' : (RealConeAxForceArray,),
 
@@ -514,9 +595,32 @@ TABLE_OBJ_MAP = {
     'grid_point_forces' : (RealGridPointForcesArray, ComplexGridPointForcesArray),
 
     'cquad8_force' : (RealPlateBilinearForceArray, ComplexPlate2ForceArray),
+    'cquad8_force_ato' : (RealPlateBilinearForceArray, ),
+    'cquad8_force_crm' : (RealPlateBilinearForceArray, ),
+    'cquad8_force_psd' : (RealPlateBilinearForceArray, ),
+    'cquad8_force_rms' : (RealPlateBilinearForceArray, ),
+    'cquad8_force_no' : (RealPlateBilinearForceArray, ),
+
     'cquadr_force' : (RealPlateBilinearForceArray, ComplexPlate2ForceArray),
+    'cquadr_force_ato' : (RealPlateBilinearForceArray, ),
+    'cquadr_force_crm' : (RealPlateBilinearForceArray, ),
+    'cquadr_force_psd' : (RealPlateBilinearForceArray, ),
+    'cquadr_force_rms' : (RealPlateBilinearForceArray, ),
+    'cquadr_force_no' : (RealPlateBilinearForceArray, ),
+
     'ctria6_force' : (RealPlateBilinearForceArray, ComplexPlate2ForceArray),
+    'ctria6_force_ato' : (RealPlateBilinearForceArray, ),
+    'ctria6_force_crm' : (RealPlateBilinearForceArray, ),
+    'ctria6_force_psd' : (RealPlateBilinearForceArray, ),
+    'ctria6_force_rms' : (RealPlateBilinearForceArray, ),
+    'ctria6_force_no' : (RealPlateBilinearForceArray, ),
+
     'ctriar_force' : (RealPlateBilinearForceArray, ComplexPlate2ForceArray),
+    'ctriar_force_ato' : (RealPlateBilinearForceArray, ),
+    'ctriar_force_crm' : (RealPlateBilinearForceArray, ),
+    'ctriar_force_psd' : (RealPlateBilinearForceArray, ),
+    'ctriar_force_rms' : (RealPlateBilinearForceArray, ),
+    'ctriar_force_no' : (RealPlateBilinearForceArray, ),
 
     'ctria3_force' : (RealPlateForceArray, ComplexPlateForceArray),
     'ctria3_force_ato' : (RealPlateForceArray, ),
@@ -534,8 +638,19 @@ TABLE_OBJ_MAP = {
     'cquad4_force_rms' : (RealPlateForceArray, ),
 
     'cgap_force' : (RealCGapForceArray, None),
+    'cgap_force_ato' : (RealCGapForceArray, ),
+    'cgap_force_crm' : (RealCGapForceArray, ),
+    'cgap_force_psd' : (RealCGapForceArray, ),
+    'cgap_force_no' : (RealCGapForceArray, ),
+    'cgap_force_rms' : (RealCGapForceArray, ),
 
     'cbend_force' : (RealBendForceArray, ComplexCBendForceArray),
+    'cbend_force_ato' : (RealBendForceArray, ),
+    'cbend_force_crm' : (RealBendForceArray, ),
+    'cbend_force_psd' : (RealBendForceArray, ),
+    'cbend_force_no' : (RealBendForceArray, ),
+    'cbend_force_rms' : (RealBendForceArray, ),
+
     'cconeax_force' : (RealConeAxForceArray, None),
 
     'cbush_stress' : (RealBushStressArray, ComplexCBushStressArray),
@@ -553,6 +668,11 @@ TABLE_OBJ_MAP = {
     'cbush_strain_no' : (RealBushStrainArray, ),
 
     'cbush_force' : (RealCBushForceArray, ComplexCBushForceArray), # ComplexCBushForceArray
+    'cbush_force_ato' : (RealCBushForceArray, ),
+    'cbush_force_crm' : (RealCBushForceArray, ),
+    'cbush_force_psd' : (RealCBushForceArray, ),
+    'cbush_force_rms' : (RealCBushForceArray, ),
+    'cbush_force_no' : (RealCBushForceArray, ),
 
     'cbush1d_stress_strain' : (RealBush1DStressArray, ComplexCBush1DStressArray),
 
@@ -588,6 +708,7 @@ TABLE_OBJ_MAP = {
     'cbend_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
     'genel_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
     'dmig_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'conm2_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
 
     'nonlinear_celas1_stress' : (RealNonlinearSpringStressArray, ),
     'nonlinear_celas2_stress' : (RealNonlinearSpringStressArray, ),
@@ -608,36 +729,36 @@ TABLE_OBJ_MAP = {
     'cbeam_force_vu' : (RealCBeamForceVUArray, ComplexCBeamForceVUArray),
 
     'grid_point_stresses' : (GridPointStressesArray, ),
-    'grid_point_volume_stresses' : (GridPointStressesVolumeArray,),
+    'grid_point_volume_stresses' : (GridPointStressesVolumeArray, ),
 
-    'crod_thermal_load' :  (Real1DHeatFluxArray,),
-    'ctube_thermal_load' :  (Real1DHeatFluxArray,),
-    'conrod_thermal_load' : (Real1DHeatFluxArray,),
+    'crod_thermal_load' :  (Real1DHeatFluxArray, ),
+    'ctube_thermal_load' :  (Real1DHeatFluxArray, ),
+    'conrod_thermal_load' : (Real1DHeatFluxArray, ),
 
-    'cbar_thermal_load' :  (Real1DHeatFluxArray,),
-    'cbeam_thermal_load' : (Real1DHeatFluxArray,),
-    'cbend_thermal_load' : (Real1DHeatFluxArray,),
+    'cbar_thermal_load' :  (Real1DHeatFluxArray, ),
+    'cbeam_thermal_load' : (Real1DHeatFluxArray, ),
+    'cbend_thermal_load' : (Real1DHeatFluxArray, ),
 
-    'cquad4_thermal_load' : (HeatFlux_2D_3DArray,),
-    'cquad8_thermal_load' : (HeatFlux_2D_3DArray,),
-    'ctria3_thermal_load' : (HeatFlux_2D_3DArray,),
-    'ctria6_thermal_load' : (HeatFlux_2D_3DArray,),
-    'ctriax6_thermal_load' : (HeatFlux_2D_3DArray,),
+    'cquad4_thermal_load' : (HeatFlux_2D_3DArray, ),
+    'cquad8_thermal_load' : (HeatFlux_2D_3DArray, ),
+    'ctria3_thermal_load' : (HeatFlux_2D_3DArray, ),
+    'ctria6_thermal_load' : (HeatFlux_2D_3DArray, ),
+    'ctriax6_thermal_load' : (HeatFlux_2D_3DArray, ),
 
-    'ctetra_thermal_load' : (HeatFlux_2D_3DArray,),
-    'cpenta_thermal_load' : (HeatFlux_2D_3DArray,),
-    'chexa_thermal_load' : (HeatFlux_2D_3DArray,),
+    'ctetra_thermal_load' : (HeatFlux_2D_3DArray, ),
+    'cpenta_thermal_load' : (HeatFlux_2D_3DArray, ),
+    'chexa_thermal_load' : (HeatFlux_2D_3DArray, ),
 
-    'chbdye_thermal_load' :  (RealChbdyHeatFluxArray,),
-    'chbdyp_thermal_load' : (RealChbdyHeatFluxArray,),
-    'chbdyg_thermal_load' : (RealChbdyHeatFluxArray,),
+    'chbdye_thermal_load' :  (RealChbdyHeatFluxArray, ),
+    'chbdyp_thermal_load' : (RealChbdyHeatFluxArray, ),
+    'chbdyg_thermal_load' : (RealChbdyHeatFluxArray, ),
 
-    'vu_tria_force' : (RealForceVU2DArray,),
-    'vu_quad_force' : (RealForceVU2DArray,),
+    'vu_tria_force' : (RealForceVU2DArray, ),
+    'vu_quad_force' : (RealForceVU2DArray, ),
 
-    'temperatures' : (RealTemperatureArray,),
-    'thermal_gradient_and_flux' : (RealTemperatureGradientAndFluxArray,),
-    'thermal_load_vectors' : (RealTemperatureVectorArray,),
+    'temperatures' : (RealTemperatureArray, ),
+    'thermal_gradient_and_flux' : (RealTemperatureGradientAndFluxArray, ),
+    'thermal_load_vectors' : (RealTemperatureVectorArray, ),
 }
 
 TABLE_OBJ_KEYS = list(TABLE_OBJ_MAP.keys())

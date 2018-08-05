@@ -117,6 +117,7 @@ class ComplexTriaxStressArray(OES_Object):
         self.add_eid_sort1(dt, eid, gridc, fdr, oxx, oyy, txy)
 
     def add_eid_sort1(self, dt, eid, loc, rs, azs, As, ss):
+        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         #print(self.element_types2, element_type, self.element_types2.dtype)
         #print('itotal=%s dt=%s eid=%s nid=%-5s oxx=%s' % (self.itotal, dt, eid, node_id, oxx))
@@ -283,6 +284,7 @@ class ComplexPlateArray(OES_Object):
         self.add_eid_sort1(dt, eid, gridc, fdr, oxx, oyy, txy)
 
     def add_eid_sort1(self, dt, eid, node_id, fdr, oxx, oyy, txy):
+        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         #print(self.element_types2, element_type, self.element_types2.dtype)
         #print('itotal=%s dt=%s eid=%s nid=%-5s oxx=%s' % (self.itotal, dt, eid, node_id, oxx))

@@ -101,7 +101,7 @@ class OEF(OP2Common):
         """
         prefix = ''
         postfix = ''
-        if self.table_name in [b'OEF1X', b'OEF1']:
+        if self.table_name in [b'OEF1X', b'OEF1', b'OEF2']:
             pass
         elif self.table_name in [b'HOEF1']:
             postfix = '_flux'
@@ -116,17 +116,52 @@ class OEF(OP2Common):
         #elif self.table_name in ['OESCP', 'OESTRCP']:
             #pass # TODO: update
         elif self.table_name in [b'OEFCRM1']:
-            assert self.table_code in [504], self.code_information()
+            assert self.table_code in [4, 504], self.code_information()
+            postfix = '_crm'
+        elif self.table_name in [b'OEFCRM2']:
+            assert self.table_code in [4, 504], self.code_information()
+            # sort2, random
+            self.format_code = 1 # real
+            self.sort_bits[0] = 0 # real
+            self.sort_bits[1] = 1 # sort2
+            self.sort_bits[2] = 1 # random
+            self.sort_method = 2
             postfix = '_crm'
         elif self.table_name in [b'OEFPSD1']:
-            assert self.table_code in [604], self.code_information()
+            assert self.table_code in [4, 604], self.code_information()
             postfix = '_psd'
-        elif self.table_name in [b'OEFRMS1']:
-            assert self.table_code in [804], self.code_information()
+        elif self.table_name in [b'OEFPSD2']:
+            assert self.table_code in [4, 604], self.code_information()
+            self.format_code = 1
+            self.sort_bits[0] = 0 # real
+            self.sort_bits[1] = 1 # sort2
+            self.sort_bits[2] = 1 # random
+            postfix = '_psd'
+        elif self.table_name in [b'OEFRMS1', b'OEFRMS2']:
+            assert self.table_code in [4, 804], self.code_information()
+            #self.format_code = 1
+            self.sort_bits[0] = 0 # real
+            self.sort_bits[1] = 0 # sort1
+            self.sort_bits[2] = 1 # random
+            self.sort_method = 1
+            self._analysis_code_fmt = b'i'
             postfix = '_rms'
-        elif self.table_name in [b'OEFNO1']:
-            assert self.table_code in [904], self.code_information()
+        elif self.table_name in [b'OEFNO1', b'OEFNO2']:
+            assert self.table_code in [4, 904], self.code_information()
+            self.format_code = 1
+            self.sort_bits[0] = 0 # real
+            self.sort_bits[1] = 0 # sort1
+            #self.sort_bits[0] = 1 # sort2
+            self.sort_bits[2] = 1 # random
+            self.sort_method = 1
+            self.data_code['nonlinear_factor'] = None
+            self._analysis_code_fmt = b'i'
+            assert self.sort_method == 1, self.code_information()
             postfix = '_no'
+        elif self.table_name in [b'OEFATO1', b'OEFATO2']:
+            assert self.table_code in [4], self.code_information()
+            postfix = '_ato'
+
         elif self.table_name in [b'RAFCONS']:
             postfix = '_RAFCONS'
         elif self.table_name in [b'RAFEATC']:
@@ -265,6 +300,7 @@ class OEF(OP2Common):
 
     def _read_oef1_3(self, data, ndata):
         """Table 3 parser for OEF1 table"""
+        self._analysis_code_fmt = b'i'
         self._data_factor = 1
         self.words = [
             'aCode', 'tCode', 'element_type', 'isubcase',
@@ -386,7 +422,90 @@ class OEF(OP2Common):
 
     def _read_oef2_3(self, data, ndata):
         """Table 3 parser for OEF2 table"""
-        pass
+        self._data_factor = 1
+        self.words = [
+            'aCode', 'tCode', 'element_type', 'isubcase',
+            '???', '???', '???', '???',
+            'format_code', 'num_wide', 'o_code', '???',
+            '???', '???', '???', '???',
+            '???', '???', '???', '???',
+            '???', '???', '???', '???',
+            '???', 'Title', 'subtitle', 'label']
+
+        self.parse_approach_code(data)  # 3
+        self.sort_method = 2
+
+        #: element type
+        self.element_type = self.add_data_parameter(data, 'element_type', b'i', 3, False)
+
+        # dynamic load set ID/random code
+        #self.dLoadID = self.add_data_parameter(data, 'dLoadID', b'i', 8, False)
+
+        #: format code
+        self.format_code = self.add_data_parameter(data, 'format_code', b'i', 9, False)
+
+        #: number of words per entry in record
+        #: .. note: is this needed for this table ???
+        self.num_wide = self.add_data_parameter(data, 'num_wide', b'i', 10, False)
+
+        #: undefined in DMAP...
+        self.o_code = self.add_data_parameter(data, 'o_code', b'i', 11, False)
+
+        #: thermal flag; 1 for heat ransfer, 0 otherwise
+        self.thermal = self.add_data_parameter(data, 'thermal', b'i', 23, False)
+
+        self.element_id = self.add_data_parameter(data, 'element_id', b'i', 5, fix_device_code=True)
+        self._element_id = self.add_data_parameter(data, '_element_id', b'f', 5, apply_nonlinear_factor=False, add_to_dict=True)
+
+        if self.analysis_code == 1:  # static...because reasons.
+            self._analysis_code_fmt = b'f'
+            self.data_names = self.apply_data_code_value('data_names', ['element_id'])
+        elif self.analysis_code == 2:  # real eigenvalues
+            self._analysis_code_fmt = b'i'
+            self.eign = self.add_data_parameter(data, 'eign', b'f', 6, False)
+            self.mode_cycle = self.add_data_parameter(data, 'mode_cycle', b'i', 7, False)  # mode or cycle .. todo:: confused on the type - F1???
+            self.data_names = self.apply_data_code_value('data_names', ['element_id', 'eign', 'mode_cycle'])
+        elif self.analysis_code == 5:   # frequency
+            self._analysis_code_fmt = b'f'
+            self.data_names = self.apply_data_code_value('data_names', ['element_id'])
+            self.apply_data_code_value('analysis_method', 'freq')
+        elif self.analysis_code == 6:  # transient
+            self._analysis_code_fmt = b'f'
+            self.data_names = self.apply_data_code_value('data_names', ['element_id'])
+            self.apply_data_code_value('analysis_method', 'dt')
+        elif self.analysis_code == 7:  # pre-buckling
+            self._analysis_code_fmt = b'i'
+            self.data_names = self.apply_data_code_value('data_names', ['element_id'])
+            self.apply_data_code_value('analysis_method', 'lsdvmn')
+        elif self.analysis_code == 8:  # post-buckling
+            self._analysis_code_fmt = b'f'
+            self.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
+            self.data_names = self.apply_data_code_value('data_names', ['element_id', 'eigr'])
+            self.apply_data_code_value('analysis_method', 'eigr')
+        elif self.analysis_code == 9:  # complex eigenvalues
+            # mode number
+            self._analysis_code_fmt = b'i'
+            self.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
+            self.eigi = self.add_data_parameter(data, 'eigi', b'f', 7, False)
+            self.data_names = self.apply_data_code_value('data_names', ['element_id', 'eigr', 'eigi'])
+            self.apply_data_code_value('analysis_method', 'mode')
+        elif self.analysis_code == 10:  # nonlinear statics
+            # load step
+            self._analysis_code_fmt = b'f'
+            self.data_names = self.apply_data_code_value('data_names', ['element_id'])
+            self.apply_data_code_value('analysis_method', 'lftsfq')
+        elif self.analysis_code == 11:  # old geometric nonlinear statics
+            # load set number
+            self.data_names = self.apply_data_code_value('data_names', ['element_id'])
+        elif self.analysis_code == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
+            self.data_names = self.apply_data_code_value('data_names', ['element_id'])
+        else:
+            msg = 'invalid analysis_code...analysis_code=%s' % self.analysis_code
+            raise RuntimeError(msg)
+
+        self._fix_oes_sort2(data)
+        self._set_element_name()
+        #assert isinstance(self.nonlinear_factor, int), self.nonlinear_factor
 
     def _read_oef1_4(self, data, ndata):
         """Table 4 parser for OEF1 table"""
@@ -396,6 +515,14 @@ class OEF(OP2Common):
         elif self.thermal == 1:
             n = self._read_oef1_thermal(data, ndata)
         elif self.thermal in [2, 8]: # 2=ABS, 8=NRL
+            n = self._read_oef1_loads(data, ndata)
+        else:
+            n = self._not_implemented_or_skip(data, ndata, 'thermal=%s' % self.thermal)
+        return n
+
+    def _read_oef2_4(self, data, ndata):
+        if self.thermal == 0 and self.element_type not in [77]:
+            self._setup_op2_subcase('FORCE')
             n = self._read_oef1_loads(data, ndata)
         else:
             n = self._not_implemented_or_skip(data, ndata, 'thermal=%s' % self.thermal)
@@ -456,7 +583,7 @@ class OEF(OP2Common):
                     #self.binary_debug.write('  #elementi = [eid_device, axial, torque]\n')
                     #self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
-                if self.use_vector and is_vectorized:
+                if self.use_vector and is_vectorized and self.sort_method == 1:
                     n = nelements * 4 * self.num_wide
                     itotal = obj.ielement
                     ielement2 = obj.itotal + nelements
@@ -483,12 +610,17 @@ class OEF(OP2Common):
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
-                    s = Struct(self._endian + b'i8s6f')
+                    s = Struct(self._endian + self._analysis_code_fmt + b'8s6f')
                     for unused_i in range(nelements):
                         edata = data[n:n+ntotal]
                         out = s.unpack(edata)
                         (eid_device, eType, xgrad, ygrad, zgrad, xflux, yflux, zflux) = out
-                        eid = eid_device // 10
+                        if self.sort_method == 1:
+                            eid = eid_device // 10
+                            #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
+                        else:
+                            eid = self.nonlinear_factor
+                            dt = eid_device
                         obj.add_sort1(dt, eid, eType, xgrad, ygrad, zgrad, xflux, yflux, zflux)
                         n += ntotal
             else:
@@ -549,7 +681,7 @@ class OEF(OP2Common):
                     #self.binary_debug.write('  #elementi = [eid_device, axial, torque]\n')
                     #self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
-                if self.use_vector and is_vectorized:
+                if self.use_vector and is_vectorized and self.sort_method == 1:
                     n = nelements * 4 * self.num_wide
                     itotal = obj.ielement
                     ielement2 = obj.itotal + nelements
@@ -571,13 +703,18 @@ class OEF(OP2Common):
                     obj.ielement = ielement2
                 else:
                     # no zed on this element for some reason...
-                    s = Struct(self._endian + b'i8s6f')
+                    s = Struct(self._endian + self._analysis_code_fmt + b'8s6f')
                     for i in range(nelements):
                         edata = data[n:n+ntotal]
                         n += ntotal
                         out = s.unpack(edata)
                         (eid_device, etype, xgrad, ygrad, zgrad, xflux, yflux, zflux) = out
-                        eid = eid_device // 10
+                        if self.sort_method == 1:
+                            eid = eid_device // 10
+                            #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
+                        else:
+                            eid = self.nonlinear_factor
+                            dt = eid_device
                         obj.add_sort1(dt, eid, etype, xgrad, ygrad, zgrad, xflux, yflux, zflux)
 
             elif self.format_code == 1 and self.num_wide == 10:  # real - 3D
@@ -590,7 +727,7 @@ class OEF(OP2Common):
                     return nelements * self.num_wide * 4
                 obj = self.obj
                 assert nelements > 0, 'ndata=%s ntotal=%s' % (ndata, ntotal)
-                if self.use_vector and is_vectorized:
+                if self.use_vector and is_vectorized and self.sort_method == 1:
                     n = nelements * 4 * self.num_wide
                     itotal = obj.ielement
                     ielement2 = obj.itotal + nelements
@@ -611,13 +748,18 @@ class OEF(OP2Common):
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
-                    s = Struct(self._endian + b'i8s6fi')
+                    s = Struct(self._endian + self._analysis_code_fmt + b'8s6fi')
                     for i in range(nelements):
                         edata = data[n:n+ntotal]
                         n += ntotal
                         out = s.unpack(edata)
                         (eid_device, etype, xgrad, ygrad, zgrad, xflux, yflux, zflux, unused_zed) = out
-                        eid = eid_device // 10
+                        if self.sort_method == 1:
+                            eid = eid_device // 10
+                            #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
+                        else:
+                            eid = self.nonlinear_factor
+                            dt = eid_device
                         obj.add_sort1(dt, eid, etype, xgrad, ygrad, zgrad, xflux, yflux, zflux)
             else:
                 raise RuntimeError(self.code_information())
@@ -670,7 +812,7 @@ class OEF(OP2Common):
                         #self.binary_debug.write('  #elementi = [eid_device, etype, fapplied, free_conv, force_conv, frad, ftotal]\n')
                         #self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
-                    if self.use_vector and is_vectorized:
+                    if self.use_vector and is_vectorized and self.sort_method == 1:
                         n = nelements * 4 * self.num_wide
                         itotal = obj.ielement
                         ielement2 = obj.itotal + nelements
@@ -690,13 +832,18 @@ class OEF(OP2Common):
                         obj.itotal = itotal2
                         obj.ielement = ielement2
                     else:
-                        s1 = Struct(self._endian + b'i8s5f')
+                        s1 = Struct(self._endian + self._analysis_code_fmt + b'8s5f')
                         for i in range(nelements):
                             edata = data[n:n+32]
                             n += ntotal
                             out = s1.unpack(edata)
                             (eid_device, etype, fapplied, free_conv, force_conv, frad, ftotal) = out
-                            eid = eid_device // 10
+                            if self.sort_method == 1:
+                                eid = eid_device // 10
+                                #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
+                            else:
+                                eid = self.nonlinear_factor
+                                dt = eid_device
 
                             if self.is_debug_file:
                                 self.binary_debug.write('  %s -> [%s, %s, %s, %s, %s, %s, %s]\n'
@@ -734,7 +881,7 @@ class OEF(OP2Common):
                     #self.binary_debug.write('  #elementi = [eid_device, etype, fapplied, free_conv, force_conv, frad, ftotal]\n')
                     #self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
-                if self.use_vector and is_vectorized:
+                if self.use_vector and is_vectorized and self.sort_method == 1:
                     n = nelements * 4 * self.num_wide
                     ielement = obj.ielement
                     ielement2 = ielement + nelements
@@ -755,13 +902,18 @@ class OEF(OP2Common):
                     obj.itotal = ielement2
                     obj.ielement = ielement2
                 else:
-                    s1 = Struct(self._endian + b'ifif')
+                    s1 = Struct(self._endian + self._analysis_code_fmt + b'fif')
                     for i in range(nelements):
                         edata = data[n:n+16]
                         n += 16
                         out = s1.unpack(edata)
                         (eid_device, free_conv, cntl_node, free_conv_k) = out
-                        eid = eid_device // 10
+                        if self.sort_method == 1:
+                            eid = eid_device // 10
+                            #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
+                        else:
+                            eid = self.nonlinear_factor
+                            dt = eid_device
                         assert cntl_node >= 0, cntl_node
                         obj.add_sort1(dt, eid, cntl_node, free_conv, free_conv_k)
             else:
@@ -808,7 +960,7 @@ class OEF(OP2Common):
                         return nelements * self.num_wide * 4
 
                 obj = self.obj
-                if self.use_vector and is_vectorized:
+                if self.use_vector and is_vectorized and self.sort_method == 1:
                     n = nelements * 4 * self.num_wide
                     ielement = obj.ielement
                     ielement2 = ielement + nelements
@@ -834,13 +986,18 @@ class OEF(OP2Common):
                     obj.ielement = ielement2
                 else:
                     s1 = self.struct_2i
-                    s2 = Struct(self._endian + b'i6f')
+                    s2 = Struct(self._endian + self._analysis_code_fmt + b'6f')
                     grad_fluxes = []
                     for i in range(nelements):
                         out = s1.unpack(data[n:n+8])
                         n += 8
                         (eid_device, parent) = out
-                        eid = eid_device // 10
+                        if self.sort_method == 1:
+                            eid = eid_device // 10
+                            #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
+                        else:
+                            eid = self.nonlinear_factor
+                            dt = eid_device
                         for j in range(nnodes):
                             out = s2.unpack(data[n:n+28])
                             grad_fluxes.append(out)
@@ -881,7 +1038,7 @@ class OEF(OP2Common):
                     return nelements * self.num_wide * 4
 
                 obj = self.obj
-                if self.use_vector and is_vectorized:
+                if self.use_vector and is_vectorized and self.sort_method == 1:
                     n = nelements * 4 * self.num_wide
                     itotal = obj.itotal
                     itotal2 = itotal + nelements * nnodes
@@ -922,7 +1079,12 @@ class OEF(OP2Common):
 
                         out = s1.unpack(edata)
                         (eid_device, parent, coord, icord, theta, unused_null) = out
-                        eid = eid_device // 10
+                        if self.sort_method == 1:
+                            eid = eid_device // 10
+                            #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
+                        else:
+                            eid = self.nonlinear_factor
+                            dt = eid_device
                         data_in = [eid, parent, coord, icord, theta]
                         #self.log.debug('RealHeatFluxVUArray = %s' % data_in)
                         grad_fluxes = []
@@ -964,7 +1126,7 @@ class OEF(OP2Common):
                         return nelements * self.num_wide * 4
 
                 obj = self.obj
-                if self.use_vector and is_vectorized:
+                if self.use_vector and is_vectorized and self.sort_method == 1:
                     n = nelements * 4 * self.num_wide
                     itotal = obj.itotal
                     itotal2 = itotal + nelements * nnodes
@@ -1003,7 +1165,12 @@ class OEF(OP2Common):
 
                         out = s1.unpack(edata)
                         (eid_device, parent, coord, icord) = out
-                        eid = eid_device // 10
+                        if self.sort_method == 1:
+                            eid = eid_device // 10
+                            #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
+                        else:
+                            eid = self.nonlinear_factor
+                            dt = eid_device
                         data_in = [eid, parent, coord, icord]
                         self.log.debug('VUBeam %s' % data_in)
 
@@ -1070,7 +1237,7 @@ class OEF(OP2Common):
         #"""
         #Appends a keyword onto the result_name in order to handle random results
         #without 100 if loops.
-        #keywords = {_ATO, _CRM, _PSD, _RMS, _NO}
+        #keywords = {_ato, _crm, _psd, _rms, _NO}
 
         #Do this:
             #result_name = 'cbar_forces'
@@ -1079,24 +1246,24 @@ class OEF(OP2Common):
             #slot = getattr(self, result_name)
 
         #Or this:
-            #result_name = 'cbar_forces_PSD'
-            #slot = self.cbar_forces_PSD
+            #result_name = 'cbar_forces_psd'
+            #slot = self.cbar_forces_psd
         #"""
         #is_random = True
         #if self.table_name in [b'OEF1', b'OEF1X', b'OEFIT']:
             #is_random = False
         #elif self.table_name in [b'OEFCRM1']:
             #assert self.table_code in [504], self.code_information()
-            #result_name += '_CRM'
+            #result_name += '_crm'
         #elif self.table_name in [b'OEFPSD1']:
             #assert self.table_code in [604], self.code_information()
-            #result_name += '_PSD'
+            #result_name += '_psd'
         #elif self.table_name in [b'OEFRMS1']:
             #assert self.table_code in [804], self.code_information()
-            #result_name += '_RMS'
+            #result_name += '_rms'
         #elif self.table_name in [b'OEFNO1']:
             #assert self.table_code in [904], self.code_information()
-            #result_name += '_NO'
+            #result_name += '_no'
         #elif self.table_name in [b'DOEF1']:
             #assert self.thermal in [8], self.code_information()  # Scaled response spectra NRL
             #assert self.table_code in [4], self.code_information()
@@ -1342,7 +1509,12 @@ class OEF(OP2Common):
                                     etype, self.element_type, str(out)))
                             (eid_device, parent, coord, icord, theta, _) = out
 
-                            eid = eid_device // 10
+                            if self.sort_method == 1:
+                                eid = eid_device // 10
+                                #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
+                            else:
+                                eid = self.nonlinear_factor
+                                dt = eid_device
                             data_in = [eid, parent, coord, icord, theta]
 
                             forces = []
@@ -1384,7 +1556,12 @@ class OEF(OP2Common):
                                 etype, self.element_type, str(out)))
                         (eid_device, parent, coord, icord, theta, _) = out
 
-                        eid = eid_device // 10
+                        if self.sort_method == 1:
+                            eid = eid_device // 10
+                            #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
+                        else:
+                            eid = self.nonlinear_factor
+                            dt = eid_device
                         data_in = [eid, parent, coord, icord, theta]
 
                         forces = []
@@ -1441,7 +1618,7 @@ class OEF(OP2Common):
                     obj = self.obj
                     #print('dt=%s, itime=%s' % (obj.itime, dt))
                     is_vectorized = False
-                    if self.use_vector and is_vectorized:
+                    if self.use_vector and is_vectorized and self.sort_method == 1:
                         # self.itime = 0
                         # self.ielement = 0
                         # self.itotal = 0
@@ -1501,7 +1678,12 @@ class OEF(OP2Common):
                                     etype, self.element_type, str(out)))
                             (eid_device, parent, coord, icord, theta, _) = out
 
-                            eid = eid_device // 10
+                            if self.sort_method == 1:
+                                eid = eid_device // 10
+                                #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
+                            else:
+                                eid = self.nonlinear_factor
+                                dt = eid_device
                             data_in = [eid, parent, coord, icord, theta]
 
                             forces = []
@@ -1562,7 +1744,12 @@ class OEF(OP2Common):
                                 etype, self.element_type, str(out)))
                         (eid_device, parent, coord, icord, theta, _) = out
 
-                        eid = eid_device // 10
+                        if self.sort_method == 1:
+                            eid = eid_device // 10
+                            #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
+                        else:
+                            eid = self.nonlinear_factor
+                            dt = eid_device
                         data_in = [eid, parent, coord, icord, theta]
 
                         forces = []
@@ -1600,7 +1787,7 @@ class OEF(OP2Common):
                         data_in.append(forces)
                         #data_in = [vugrid,mfxr,mfyr,mfxyr,bmxr,bmyr,bmxyr,syzr,szxr,
                                          #mfxi,mfyi,mfxyi,bmxi,bmyi,bmxyi,syzi,szxi]
-                        obj.add(nnodes, dt, data_in)
+                        obj.add(nnodes, dt, *data_in)
             else:
                 msg = self.code_information()
                 return self._not_implemented_or_skip(data, ndata, msg)
@@ -1638,7 +1825,7 @@ class OEF(OP2Common):
                     return nelements * self.num_wide * 4
 
                 obj = self.obj
-                if self.use_vector and is_vectorized:
+                if self.use_vector and is_vectorized and self.sort_method == 1:
                     # self.itime = 0
                     # self.ielement = 0
                     # self.itotal = 0
@@ -1692,7 +1879,12 @@ class OEF(OP2Common):
                             self.binary_debug.write('OEF_Force_VU-191 - %s\n' % (str(out)))
                         (eid_device, parent, coord, icord) = out
 
-                        eid = eid_device // 10
+                        if self.sort_method == 1:
+                            eid = eid_device // 10
+                            #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
+                        else:
+                            eid = self.nonlinear_factor
+                            dt = eid_device
                         data_in = [eid, parent, coord, icord]
 
                         forces = []
@@ -1743,7 +1935,7 @@ class OEF(OP2Common):
                 obj = self.obj
 
                 #is_vectorized = False
-                if self.use_vector and is_vectorized:
+                if self.use_vector and is_vectorized and self.sort_method == 1:
                     #ntotal = nelements * 2
                     #raise NotImplementedError('ComplexBeamForceVUArray')
                     n = nelements * self.num_wide * 4
@@ -1797,7 +1989,12 @@ class OEF(OP2Common):
                                 self.element_type, str(out)))
                         (eid_device, parent, coord, icord) = out
 
-                        eid = eid_device // 10
+                        if self.sort_method == 1:
+                            eid = eid_device // 10
+                            #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
+                        else:
+                            eid = self.nonlinear_factor
+                            dt = eid_device
 
                         forces = []
                         for i in range(nnodes):
@@ -1860,10 +2057,6 @@ class OEF(OP2Common):
         assert n > 0, n
         return n
 
-    def _read_oef2_4(self, data):
-        """Table 4 parser for OEF2 thermal table"""
-        pass
-
     def _oef_crod(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
         n = 0
         #1-CROD
@@ -1904,7 +2097,7 @@ class OEF(OP2Common):
                 self.binary_debug.write('  #elementi = [eid_device, axial, torque]\n')
                 self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 n = nelements * 4 * self.num_wide
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
@@ -1929,12 +2122,17 @@ class OEF(OP2Common):
                     return nelements * self.num_wide * 4, None, None
 
                 obj = self.obj
-                s = Struct(self._endian + b'iff')  # 3
+                s = Struct(self._endian + self._analysis_code_fmt + b'ff')  # 3
                 for i in range(nelements):
                     edata = data[n:n+ntotal]
                     out = s.unpack(edata)
                     (eid_device, axial, torque) = out
-                    eid = eid_device // 10
+                    if self.sort_method == 1:
+                        eid = eid_device // 10
+                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
+                    else:
+                        eid = self.nonlinear_factor
+                        dt = eid_device
                     if self.is_debug_file:
                         self.binary_debug.write('OEF_Rod - %s\n' % (str(out)))
                     obj.add_sort1(dt, eid, axial, torque)
@@ -1956,7 +2154,7 @@ class OEF(OP2Common):
                 self.binary_debug.write('  #elementi = [eid_device, axial, torque]\n')
                 self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 n = nelements * 4 * self.num_wide
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
@@ -1977,7 +2175,7 @@ class OEF(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                s = Struct(self._endian + b'i4f')  # 5
+                s = Struct(self._endian + self._analysis_code_fmt + b'4f')  # 5
                 for i in range(nelements):
                     edata = data[n:n+20]
 
@@ -1985,7 +2183,12 @@ class OEF(OP2Common):
                     if self.is_debug_file:
                         self.binary_debug.write('OEF_CRod - %s\n' % (str(out)))
                     (eid_device, axial_real, torque_real, axial_imag, torque_imag) = out
-                    eid = eid_device // 10
+                    if self.sort_method == 1:
+                        eid = eid_device // 10
+                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
+                    else:
+                        eid = self.nonlinear_factor
+                        dt = eid_device
                     if is_magnitude_phase:
                         axial = polar_to_real_imag(axial_real, axial_imag)
                         torque = polar_to_real_imag(torque_real, torque_imag)
@@ -1997,7 +2200,7 @@ class OEF(OP2Common):
                     n += ntotal
         else:
             msg = self.code_information()
-            return self._not_implemented_or_skip(data, ndata, msg)
+            return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
 
     def _oef_cbeam(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
@@ -2016,7 +2219,7 @@ class OEF(OP2Common):
 
             #obj = self.obj
             ##is_vectorized = False
-            #if self.use_vector and is_vectorized:
+            #if self.use_vector and is_vectorized and self.sort_method == 1:
                 #n = nelements * 4 * self.num_wide
                 #itotal = obj.itotal
                 #itotal2 = obj.itotal + nelements
@@ -2066,7 +2269,7 @@ class OEF(OP2Common):
                 return nelements * self.num_wide * 4, None, None
             obj = self.obj
 
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 n = nelements * 4 * self.num_wide
                 itotal = obj.itotal
                 itotal2 = obj.itotal + nelements * 11
@@ -2103,7 +2306,12 @@ class OEF(OP2Common):
                 for i in range(nelements):
                     edata = data[n:n+4]
                     eid_device, = s1.unpack(edata)
-                    eid = eid_device // 10
+                    if self.sort_method == 1:
+                        eid = eid_device // 10
+                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
+                    else:
+                        eid = self.nonlinear_factor
+                        dt = eid_device
                     n += 4
 
                     for istation in range(11):
@@ -2132,7 +2340,7 @@ class OEF(OP2Common):
                 return nelements * self.num_wide * 4, None, None
 
             obj = self.obj
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 n = nelements * 4 * self.num_wide
                 itotal = obj.itotal
                 itotal2 = obj.itotal + nelements * 11
@@ -2182,7 +2390,12 @@ class OEF(OP2Common):
                 for i in range(nelements):
                     edata = data[n:n+4]
                     eid_device, = s1.unpack(edata)
-                    eid = eid_device // 10
+                    if self.sort_method == 1:
+                        eid = eid_device // 10
+                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
+                    else:
+                        eid = self.nonlinear_factor
+                        dt = eid_device
 
                     n += 4
                     for istation in range(11):
@@ -2226,7 +2439,9 @@ class OEF(OP2Common):
                             #raise RuntimeError('CBEAM error; i=%s sd=%s' % (i, sd))
         else:
             msg = self.code_information()
-            return self._not_implemented_or_skip(data, ndata, msg)
+            print(msg)
+            aa
+            return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
 
     def _oef_celas_cdamp(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
@@ -2242,43 +2457,35 @@ class OEF(OP2Common):
         # 23-CDAMP4
         if self.element_type == 11:
             result_name = prefix + 'celas1_force' + postfix
-            slot = self.celas1_force
             obj_real = RealSpringForceArray
             obj_complex = ComplexSpringForceArray
         elif self.element_type == 12:
             result_name = prefix + 'celas2_force' + postfix
-            slot = self.celas2_force
             obj_real = RealSpringForceArray
             obj_complex = ComplexSpringForceArray
         elif self.element_type == 13:
             result_name = prefix + 'celas3_force' + postfix
-            slot = self.celas3_force
             obj_real = RealSpringForceArray
             obj_complex = ComplexSpringForceArray
         elif self.element_type == 14:
             result_name = prefix + 'celas4_force' + postfix
-            slot = self.celas4_force
             obj_real = RealSpringForceArray
             obj_complex = ComplexSpringForceArray
 
         elif self.element_type == 20:
             result_name = prefix + 'cdamp1_force' + postfix
-            slot = self.cdamp1_force
             obj_real = RealDamperForceArray
             obj_complex = ComplexDamperForceArray
         elif self.element_type == 21:
             result_name = prefix + 'cdamp2_force' + postfix
-            slot = self.cdamp2_force
             obj_real = RealDamperForceArray
             obj_complex = ComplexDamperForceArray
         elif self.element_type == 22:
             result_name = prefix + 'cdamp3_force' + postfix
-            slot = self.cdamp3_force
             obj_real = RealDamperForceArray
             obj_complex = ComplexDamperForceArray
         elif self.element_type == 23:
             result_name = prefix + 'cdamp4_force' + postfix
-            slot = self.cdamp4_force
             obj_real = RealDamperForceArray
             obj_complex = ComplexDamperForceArray
         else:
@@ -2287,7 +2494,7 @@ class OEF(OP2Common):
         if self._results.is_not_saved(result_name):
             return ndata, None, None
         self._results._found_result(result_name)
-
+        slot = getattr(self, result_name)
         if self.format_code == 1 and self.num_wide == 2:  # real
             ntotal = 8 # 2 * 4
             nelements = ndata // ntotal
@@ -2297,7 +2504,7 @@ class OEF(OP2Common):
                 return nelements * self.num_wide * 4, None, None
 
             obj = self.obj
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 n = nelements * 4 * self.num_wide
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
@@ -2316,14 +2523,19 @@ class OEF(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                s = Struct(self._endian + b'if')  # 2
+                s = Struct(self._endian + self._analysis_code_fmt + b'f')  # 2
                 for i in range(nelements):
                     edata = data[n:n + 8]
                     out = s.unpack(edata)
                     if self.is_debug_file:
                         self.binary_debug.write('OEF_SpringDamper - %s\n' % str(out))
                     (eid_device, force) = out
-                    eid = eid_device // 10
+                    if self.sort_method == 1:
+                        eid = eid_device // 10
+                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
+                    else:
+                        eid = self.nonlinear_factor
+                        dt = eid_device
                     obj.add_sort1(dt, eid, force)
                     n += ntotal
         elif self.format_code in [2, 3] and self.num_wide == 3:  # imag
@@ -2342,7 +2554,7 @@ class OEF(OP2Common):
                 self.binary_debug.write('  #elementi = [eid_device, force]\n')
                 self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 n = nelements * 4 * self.num_wide
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
@@ -2362,14 +2574,19 @@ class OEF(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                s = Struct(self._endian + b'i2f')
+                s = Struct(self._endian + self._analysis_code_fmt + b'2f')
                 for i in range(nelements):
                     edata = data[n:n + 12]
                     out = s.unpack(edata)
                     if self.is_debug_file:
                         self.binary_debug.write('OEF_SpringDamper - %s\n' % str(out))
                     (eid_device, force_real, force_imag) = out
-                    eid = eid_device // 10
+                    if self.sort_method == 1:
+                        eid = eid_device // 10
+                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
+                    else:
+                        eid = self.nonlinear_factor
+                        dt = eid_device
                     if is_magnitude_phase:
                         force = polar_to_real_imag(force_real, force_imag)
                     else:
@@ -2379,7 +2596,9 @@ class OEF(OP2Common):
         else:
             #msg = 'OEF: element_name=%s element_type=%s' % (self.element_name, self.element_type)
             msg = self.code_information()
-            return self._not_implemented_or_skip(data, ndata, msg)
+            print(msg)
+            aa
+            return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
 
     def _oef_cvisc(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
@@ -2402,7 +2621,7 @@ class OEF(OP2Common):
                 return nelements * self.num_wide * 4, None, None
 
             obj = self.obj
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 n = nelements * 4 * self.num_wide
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
@@ -2421,7 +2640,7 @@ class OEF(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                s = Struct(self._endian + b'iff')
+                s = Struct(self._endian + self._analysis_code_fmt + b'ff')
                 for i in range(nelements):
                     edata = data[n:n+12]
 
@@ -2429,7 +2648,12 @@ class OEF(OP2Common):
                     if self.is_debug_file:
                         self.binary_debug.write('OEF_CVisc - %s\n' % (str(out)))
                     (eid_device, axial, torque) = out
-                    eid = eid_device // 10
+                    if self.sort_method == 1:
+                        eid = eid_device // 10
+                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
+                    else:
+                        eid = self.nonlinear_factor
+                        dt = eid_device
                     obj.add_sort1(dt, eid, axial, torque)
                     n += ntotal
         elif self.format_code in [2, 3] and self.num_wide == 5: # complex
@@ -2448,7 +2672,7 @@ class OEF(OP2Common):
                 self.binary_debug.write('  #elementi = [eid_device, axial, torque]\n')
                 self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 n = nelements * 4 * self.num_wide
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
@@ -2469,7 +2693,7 @@ class OEF(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                s = Struct(self._endian + b'i4f')  # 5
+                s = Struct(self._endian + self._analysis_code_fmt + b'4f')  # 5
                 for i in range(nelements):
                     edata = data[n:n+20]
 
@@ -2477,7 +2701,12 @@ class OEF(OP2Common):
                     if self.is_debug_file:
                         self.binary_debug.write('OEF_CVisc - %s\n' % (str(out)))
                     (eid_device, axial_real, torque_real, axial_imag, torque_imag) = out
-                    eid = eid_device // 10
+                    if self.sort_method == 1:
+                        eid = eid_device // 10
+                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
+                    else:
+                        eid = self.nonlinear_factor
+                        dt = eid_device
                     if is_magnitude_phase:
                         axial = polar_to_real_imag(axial_real, axial_imag)
                         torque = polar_to_real_imag(torque_real, torque_imag)
@@ -2489,7 +2718,9 @@ class OEF(OP2Common):
                     n += ntotal
         else:
             msg = self.code_information()
-            return self._not_implemented_or_skip(data, ndata, msg)
+            print(msg)
+            aa
+            return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
 
     def _oef_cbar_34(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
@@ -2517,7 +2748,7 @@ class OEF(OP2Common):
 
             obj = self.obj
             #return nelements * self.num_wide * 4
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 n = nelements * 4 * self.num_wide
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
@@ -2536,7 +2767,7 @@ class OEF(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                s = Struct(self._endian + b'i8f')  # 9
+                s = Struct(self._endian + self._analysis_code_fmt + b'8f')  # 9
                 for i in range(nelements):
                     edata = data[n:n + 36]
 
@@ -2544,9 +2775,14 @@ class OEF(OP2Common):
                     if self.is_debug_file:
                         self.binary_debug.write('OEF_CBar - %s\n' % (str(out)))
                     (eid_device, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq) = out
-                    eid = eid_device // 10
-                    data_in = [eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq]
-                    obj.add_sort1(dt, data_in)
+                    if self.sort_method == 1:
+                        eid = eid_device // 10
+                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
+                    else:
+                        eid = self.nonlinear_factor
+                        dt = eid_device
+                    #data_in = [eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq]
+                    obj.add_sort1(dt, eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq)
                     n += ntotal
         elif self.format_code in [2, 3] and self.num_wide == 17: # imag
             slot = self.cbar_force
@@ -2561,7 +2797,7 @@ class OEF(OP2Common):
                 return nelements * self.num_wide * 4, None, None
 
             obj = self.obj
-            s = Struct(self._endian + b'i16f')
+            s = Struct(self._endian + self._analysis_code_fmt + b'16f')
             for i in range(nelements):
                 edata = data[n:n + 68]
 
@@ -2571,7 +2807,12 @@ class OEF(OP2Common):
                  bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi) = out
                 if self.is_debug_file:
                     self.binary_debug.write('OEF_CBar - %s\n' % (str(out)))
-                eid = eid_device // 10
+                if self.sort_method == 1:
+                    eid = eid_device // 10
+                    #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
+                else:
+                    eid = self.nonlinear_factor
+                    dt = eid_device
                 if is_magnitude_phase:
                     bm1a = polar_to_real_imag(bm1ar, bm1ai)
                     bm2a = polar_to_real_imag(bm2ar, bm2ai)
@@ -2598,6 +2839,8 @@ class OEF(OP2Common):
                 n += ntotal
         else:
             msg = self.code_information()
+            print(msg)
+            aa
             return self._not_implemented_or_skip(data, ndata, msg)
         #print self.barForces
         return n, nelements, ntotal
@@ -2620,7 +2863,7 @@ class OEF(OP2Common):
                 return nelements * self.num_wide * 4, None, None
 
             obj = self.obj
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 n = nelements * 4 * self.num_wide
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
@@ -2639,7 +2882,7 @@ class OEF(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                s = Struct(self._endian + b'i7f')
+                s = Struct(self._endian + self._analysis_code_fmt + b'7f')
                 for i in range(nelements):
                     edata = data[n:n+32]
 
@@ -2647,12 +2890,19 @@ class OEF(OP2Common):
                     if self.is_debug_file:
                         self.binary_debug.write('OEF_CBar100 - %s\n' % (str(out)))
                     (eid_device, sd, bm1, bm2, ts1, ts2, af, trq) = out
-                    eid = eid_device // 10
+                    if self.sort_method == 1:
+                        eid = eid_device // 10
+                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
+                    else:
+                        eid = self.nonlinear_factor
+                        dt = eid_device
                     obj.add_sort1(dt, eid, sd, bm1, bm2, ts1, ts2, af, trq)
                     n += 32
         #elif self.format_code in [2, 3] and self.num_wide == 14:  # imag
         else:
             msg = self.code_information()
+            print(msg)
+            aa
             return self._not_implemented_or_skip(data, ndata, msg)
         return n, nelements, ntotal
 
@@ -2682,7 +2932,7 @@ class OEF(OP2Common):
                 return nelements * self.num_wide * 4, None, None
 
             obj = self.obj
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 n = nelements * 4 * self.num_wide
                 ielement = obj.ielement
                 ielement2 = ielement + nelements
@@ -2700,14 +2950,19 @@ class OEF(OP2Common):
                 obj.itotal = ielement2
                 obj.ielement = ielement2
             else:
-                s = Struct(self._endian + b'i8f')
+                s = Struct(self._endian + self._analysis_code_fmt + b'8f')
                 for i in range(nelements):
                     edata = data[n:n+36]
                     out = s.unpack(edata)
                     if self.is_debug_file:
                         self.binary_debug.write('real_OEF_Plate-%s - %s\n' % (self.element_type, str(out)))
                     (eid_device, mx, my, mxy, bmx, bmy, bmxy, tx, ty) = out
-                    eid = eid_device // 10
+                    if self.sort_method == 1:
+                        eid = eid_device // 10
+                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
+                    else:
+                        eid = self.nonlinear_factor
+                        dt = eid_device
                     obj.add_sort1(dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
                     n += ntotal
         elif self.format_code in [2, 3] and self.num_wide == 17:  # imag
@@ -2720,7 +2975,7 @@ class OEF(OP2Common):
                 return nelements * self.num_wide * 4, None, None
 
             obj = self.obj
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 n = nelements * 4 * self.num_wide
                 ielement = obj.ielement
                 ielement2 = ielement + nelements
@@ -2743,14 +2998,19 @@ class OEF(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                s = Struct(self._endian + b'i16f')
+                s = Struct(self._endian + self._analysis_code_fmt + b'16f')
                 for i in range(nelements):
                     edata = data[n:n+68]
                     out = s.unpack(edata)
                     (eid_device,
                      mxr, myr, mxyr, bmxr, bmyr, bmxyr, txr, tyr,
                      mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi) = out
-                    eid = eid_device // 10
+                    if self.sort_method == 1:
+                        eid = eid_device // 10
+                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
+                    else:
+                        eid = self.nonlinear_factor
+                        dt = eid_device
                     if self.is_debug_file:
                         self.binary_debug.write('complex_OEF_Plate-%s - %s\n' % (self.element_type, str(out)))
 
@@ -2776,6 +3036,8 @@ class OEF(OP2Common):
                     n += ntotal
         else:
             msg = self.code_information()
+            print(msg)
+            aa
             return self._not_implemented_or_skip(data, ndata, msg)
         return n, nelements, ntotal
 
@@ -2831,7 +3093,7 @@ class OEF(OP2Common):
                 return nelements * self.num_wide * 4, None, None
 
             obj = self.obj
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 nlayers = nelements * nnodes_all
                 n = nelements * self.num_wide * 4
 
@@ -2868,7 +3130,12 @@ class OEF(OP2Common):
                     (eid_device, term, _nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty) = out
                     #term= 'CEN\'
                     nid = 0
-                    eid = eid_device // 10
+                    if self.sort_method == 1:
+                        eid = eid_device // 10
+                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
+                    else:
+                        eid = self.nonlinear_factor
+                        dt = eid_device
                     obj.add_sort1(dt, eid, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
                     n += 44
                     for j in range(nnodes):
@@ -2891,7 +3158,7 @@ class OEF(OP2Common):
                 return nelements * self.num_wide * 4, None, None
 
             obj = self.obj
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 n = nelements * 4 * self.num_wide
                 itotal = obj.itotal
                 ielement = obj.ielement
@@ -2939,7 +3206,12 @@ class OEF(OP2Common):
                      mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi) = out
                     #term = 'CEN\'
 
-                    eid = eid_device // 10
+                    if self.sort_method == 1:
+                        eid = eid_device // 10
+                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
+                    else:
+                        eid = self.nonlinear_factor
+                        dt = eid_device
                     if is_magnitude_phase:
                         mx = polar_to_real_imag(mxr, mxi)
                         my = polar_to_real_imag(myr, myi)
@@ -2992,7 +3264,9 @@ class OEF(OP2Common):
                         obj.add_sort1(dt, eid, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
         else:
             msg = self.code_information()
-            return self._not_implemented_or_skip(data, ndata, msg)
+            print(msg)
+            aa
+            return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
 
     def _oef_shells_composite(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
@@ -3066,12 +3340,14 @@ class OEF(OP2Common):
                 #n += ntotal
         else:
             msg = self.code_information()
-            return self._not_implemented_or_skip(data, ndata, msg)
+            print(msg)
+            aa
+            return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
 
     def _oef_cshear(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
         # 4-CSHEAR
-        result_name = 'cshear_force'
+        result_name = prefix + 'cshear_force' + postfix
         if self._results.is_not_saved(result_name):
             return ndata, None, None
         self._results._found_result(result_name)
@@ -3089,7 +3365,7 @@ class OEF(OP2Common):
                 return nelements * self.num_wide * 4, None, None
 
             obj = self.obj
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 n = nelements * 4 * self.num_wide
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
@@ -3109,7 +3385,7 @@ class OEF(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                s = Struct(self._endian + b'i16f')
+                s = Struct(self._endian + self._analysis_code_fmt + b'16f')
                 for i in range(nelements):
                     edata = data[n:n+68]
 
@@ -3119,7 +3395,12 @@ class OEF(OP2Common):
                     (eid_device,
                      f41, f21, f12, f32, f23, f43, f34, f14, kf1,
                      s12, kf2, s23, kf3, s34, kf4, s41) = out
-                    eid = eid_device // 10
+                    if self.sort_method == 1:
+                        eid = eid_device // 10
+                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
+                    else:
+                        eid = self.nonlinear_factor
+                        dt = eid_device
 
                     #data_in = [eid,
                                #f41, f21, f12, f32, f23, f43, f34,
@@ -3147,7 +3428,7 @@ class OEF(OP2Common):
                 #self.binary_debug.write('  #elementi = [eid_device, axial, torque]\n')
                 #self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 n = nelements * 4 * self.num_wide
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
@@ -3175,7 +3456,7 @@ class OEF(OP2Common):
                 obj.ielement = ielement2
             else:
                 #self.create_transient_object(self.cshear_force, ComplexCShearForce)
-                s = Struct(self._endian + b'i32f')
+                s = Struct(self._endian + self._analysis_code_fmt + b'32f')
 
                 for i in range(nelements):
                     edata = data[n:n+132]
@@ -3223,13 +3504,20 @@ class OEF(OP2Common):
                         f14 = complex(f14r, f14i)
                         s41 = complex(s41r, s41i)
 
-                    eid = eid_device // 10
+                    if self.sort_method == 1:
+                        eid = eid_device // 10
+                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
+                    else:
+                        eid = self.nonlinear_factor
+                        dt = eid_device
                     obj.add_sort1(dt, eid,
                                   f41, f21, f12, f32, f23, f43, f34, f14,
                                   kf1, s12, kf2, s23, kf3, s34, kf4, s41)
         else:
             msg = self.code_information()
-            return self._not_implemented_or_skip(data, ndata, msg)
+            print(msg)
+            aa
+            return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
 
     def _oef_cconeax(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
@@ -3251,7 +3539,7 @@ class OEF(OP2Common):
                 return nelements * self.num_wide * 4, None, None
 
             obj = self.obj
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 n = nelements * 4 * self.num_wide
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
@@ -3270,14 +3558,19 @@ class OEF(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                s = Struct(self._endian + b'i6f')
+                s = Struct(self._endian + self._analysis_code_fmt + b'6f')
                 for i in range(nelements):
                     edata = data[n:n+ntotal]
                     out = s.unpack(edata)
                     if self.is_debug_file:
                         self.binary_debug.write('OEF_CONEAX-35 - %s\n' % (str(out)))
                     (eid_device, hopa, bmu, bmv, tm, su, sv) = out
-                    eid = eid_device // 10
+                    if self.sort_method == 1:
+                        eid = eid_device // 10
+                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
+                    else:
+                        eid = self.nonlinear_factor
+                        dt = eid_device
                     obj.add_sort1(dt, eid, hopa, bmu, bmv, tm, su, sv)
                     n += ntotal
         else:
@@ -3302,7 +3595,7 @@ class OEF(OP2Common):
                 return nelements * self.num_wide * 4, None, None
 
             obj = self.obj
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 n = nelements * 4 * self.num_wide
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
@@ -3321,7 +3614,7 @@ class OEF(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                s = Struct(self._endian + b'i8f')
+                s = Struct(self._endian + self._analysis_code_fmt + b'8f')
                 for i in range(nelements):
                     edata = data[n:n+36]
 
@@ -3329,7 +3622,12 @@ class OEF(OP2Common):
                     if self.is_debug_file:
                         self.binary_debug.write('OEF_CGAP-38 - %s\n' % (str(out)))
                     (eid_device, fx, sfy, sfz, u, v, w, sv, sw) = out
-                    eid = eid_device // 10
+                    if self.sort_method == 1:
+                        eid = eid_device // 10
+                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
+                    else:
+                        eid = self.nonlinear_factor
+                        dt = eid_device
                     data_in = [eid, fx, sfy, sfz, u, v, w, sv, sw]
                     #print "%s" %(self.get_element_type(self.element_type)), data_in
                     #eid = obj.add_new_eid(out)
@@ -3337,6 +3635,8 @@ class OEF(OP2Common):
                     n += ntotal
         else:
             msg = self.code_information()
+            print(msg)
+            aa
             return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
 
@@ -3355,7 +3655,7 @@ class OEF(OP2Common):
                 return nelements * self.num_wide * 4, None, None
 
             obj = self.obj
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 n = nelements * 4 * self.num_wide
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
@@ -3382,7 +3682,7 @@ class OEF(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                s = Struct(self._endian + b'i i6fi6f')
+                s = Struct(self._endian + self._analysis_code_fmt + b' i6fi6f')
                 for i in range(nelements):
                     edata = data[n:n+ntotal]
 
@@ -3392,7 +3692,12 @@ class OEF(OP2Common):
                     (eid_device,
                      nid_a, bm1_a, bm2_a, ts1_a, ts2_a, af_a, trq_a,
                      nid_b, bm1_b, bm2_b, ts1_b, ts2_b, af_b, trq_b) = out
-                    eid = eid_device // 10
+                    if self.sort_method == 1:
+                        eid = eid_device // 10
+                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
+                    else:
+                        eid = self.nonlinear_factor
+                        dt = eid_device
 
                     obj.add_sort1(
                         dt, eid,
@@ -3410,7 +3715,7 @@ class OEF(OP2Common):
                 return nelements * self.num_wide * 4, None, None
 
             obj = self.obj
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 n = nelements * 4 * self.num_wide
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
@@ -3454,7 +3759,7 @@ class OEF(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                s = Struct(self._endian + b'i i12f i12f')
+                s = Struct(self._endian + self._analysis_code_fmt + b' i12f i12f')
                 for i in range(nelements):
                     edata = data[n:n+108]
                     n += ntotal
@@ -3467,7 +3772,12 @@ class OEF(OP2Common):
                      nid_b,
                      bm1_br, bm2_br, ts1_br, ts2_br, af_br, trq_br,
                      bm1_bi, bm2_bi, ts1_bi, ts2_bi, af_bi, trq_bi) = out
-                    eid = eid_device // 10
+                    if self.sort_method == 1:
+                        eid = eid_device // 10
+                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
+                    else:
+                        eid = self.nonlinear_factor
+                        dt = eid_device
 
                     if is_magnitude_phase:
                         bm1_a = polar_to_real_imag(bm1_ar, bm1_ai)
@@ -3501,7 +3811,7 @@ class OEF(OP2Common):
                                   nid_b, bm1_b, bm2_b, ts1_b, ts2_b, af_b, trq_b)
         else:
             msg = self.code_information()
-            return self._not_implemented_or_skip(data, ndata, msg)
+            return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
 
     def _oef_csolid_pressure(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
@@ -3540,7 +3850,7 @@ class OEF(OP2Common):
                 #self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
                 #self.binary_debug.write('  #elementi = [eid_device, axial, torque]\n')
                 #self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 # self.itime = 0
                 # self.ielement = 0
                 # self.itotal = 0
@@ -3564,7 +3874,7 @@ class OEF(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                s = Struct(self._endian + b'i8s7f')
+                s = Struct(self._endian + self._analysis_code_fmt + b'8s7f')
                 for i in range(nelements):
                     edata = data[n : n + 40]
                     n += 40
@@ -3572,7 +3882,12 @@ class OEF(OP2Common):
                     if self.is_debug_file:
                         self.binary_debug.write('OEF_PentaPressure-%s %s\n' % (self.element_type, str(out)))
                     (eid_device, ename, ax, ay, az, vx, vy, vz, pressure) = out
-                    eid = eid_device // 10
+                    if self.sort_method == 1:
+                        eid = eid_device // 10
+                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
+                    else:
+                        eid = self.nonlinear_factor
+                        dt = eid_device
                     obj.add_sort1(dt, eid, ename, ax, ay, az, vx, vy, vz, pressure)
 
         elif self.format_code in [2, 3] and self.num_wide == 16:  # imag
@@ -3590,7 +3905,7 @@ class OEF(OP2Common):
                 #self.binary_debug.write('  #elementi = [eid_device, axial, torque]\n')
                 #self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 n = nelements * 4 * self.num_wide
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
@@ -3625,7 +3940,7 @@ class OEF(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                s = Struct(self._endian + b'i8s13f')
+                s = Struct(self._endian + self._analysis_code_fmt + b'8s13f')
                 for i in range(nelements):
                     edata = data[n:n+64]
                     n += 64
@@ -3636,7 +3951,12 @@ class OEF(OP2Common):
                     (eid_device, ename,
                      axr, ayr, azr, vxr, vyr, vzr, pressure,
                      axi, ayi, azi, vxi, vyi, vzi) = out
-                    eid = eid_device // 10
+                    if self.sort_method == 1:
+                        eid = eid_device // 10
+                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
+                    else:
+                        eid = self.nonlinear_factor
+                        dt = eid_device
                     ename = ename.decode('utf-8').strip()
 
                     if is_magnitude_phase:
@@ -3657,7 +3977,7 @@ class OEF(OP2Common):
                     obj.add_sort1(dt, eid, ename, ax, ay, az, vx, vy, vz, cpressure)
         else:
             msg = self.code_information()
-            return self._not_implemented_or_skip(data, ndata, msg)
+            return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
 
     def _oef_cbush(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
@@ -3681,7 +4001,7 @@ class OEF(OP2Common):
                 return nelements * self.num_wide * 4, None, None
 
             obj = self.obj
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 # self.itime = 0
                 # self.ielement = 0
                 # self.itotal = 0
@@ -3702,14 +4022,19 @@ class OEF(OP2Common):
                 #[fx, fy, fz, mx, my, mz]
                 obj.data[obj.itime, istart:iend, :] = results[:, 1:].copy()
             else:
-                s = Struct(self._endian + b'i6f')
+                s = Struct(self._endian + self._analysis_code_fmt + b'6f')
                 for i in range(nelements):
                     edata = data[n:n+28]
                     out = s.unpack(edata)
                     if self.is_debug_file:
                         self.binary_debug.write('OEF_CBUSH-102 - %s\n' % (str(out)))
                     (eid_device, fx, fy, fz, mx, my, mz) = out
-                    eid = eid_device // 10
+                    if self.sort_method == 1:
+                        eid = eid_device // 10
+                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
+                    else:
+                        eid = self.nonlinear_factor
+                        dt = eid_device
                     obj.add_sort1(dt, eid, fx, fy, fz, mx, my, mz)
                     n += ntotal
         elif self.format_code in [2, 3] and self.num_wide == 13:  # imag
@@ -3722,7 +4047,7 @@ class OEF(OP2Common):
             if auto_return:
                 return nelements * self.num_wide * 4, None, None
 
-            s = Struct(self._endian + b'i12f')
+            s = Struct(self._endian + self._analysis_code_fmt + b'12f')
 
             obj = self.obj
             for i in range(nelements):
@@ -3734,7 +4059,12 @@ class OEF(OP2Common):
                 (eid_device,
                  fxr, fyr, fzr, mxr, myr, mzr,
                  fxi, fyi, fzi, mxi, myi, mzi) = out
-                eid = eid_device // 10
+                if self.sort_method == 1:
+                    eid = eid_device // 10
+                    #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
+                else:
+                    eid = self.nonlinear_factor
+                    dt = eid_device
 
                 if is_magnitude_phase:
                     fx = polar_to_real_imag(fxr, fxi)
@@ -3758,5 +4088,7 @@ class OEF(OP2Common):
             #asdf
         else:
             msg = self.code_information()
+            print(msg)
+            aa
             return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal

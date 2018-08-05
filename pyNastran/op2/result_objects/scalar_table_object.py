@@ -226,6 +226,7 @@ class ScalarTableArray(ScalarObject):  # displacement style table
         """
         Calls any OP2 objects that need to do any post matrix calcs
         """
+        self.set_as_sort1()
         gridtypes = self.node_gridtype[:, 1]
         nnodes = len(gridtypes)
         self.gridtype_str = np.chararray((nnodes), unicode=True)
@@ -234,8 +235,38 @@ class ScalarTableArray(ScalarObject):  # displacement style table
             i = where(gridtypes == ugridtype)
             self.gridtype_str[i] = self.recast_gridtype_as_string(ugridtype)
 
+    def set_as_sort1(self):
+        """changes the table into SORT1"""
+        #if not self.table_name != 'OQMRMS1':
+            #return
+        if self.is_sort1:
+            return
+        #print('table_name=%r' % self.table_name)
+        try:
+            analysis_method = self.analysis_method
+        except AttributeError:
+            print(self.code_information())
+            raise
+        #print(self.get_stats())
+        #print(self.node_gridtype)
+        #print(self.data.shape)
+        #aaa
+        self.sort_method = 1
+        self.sort_bits[1] = 0
+        bit0, bit1, bit2 = self.sort_bits
+        self.table_name = SORT2_TABLE_NAME_MAP[self.table_name]
+        self.sort_code = bit0 + 2*bit1 + 4*bit2
+        #print(self.code_information())
+        assert self.is_sort1
+        if analysis_method != 'N/A':
+            self.data_names[0] = analysis_method
+            #print(self.table_name_str, analysis_method, self._times)
+            setattr(self, self.analysis_method + 's', self._times)
+        del self.analysis_method
+
     def add_sort1(self, dt, node_id, grid_type, v1):
         """unvectorized method for adding SORT1 transient data"""
+        assert isinstance(node_id, int) and node_id > 0, 'dt=%s node_id=%s' % (dt, node_id)
         # itotal - the node number
         # itime - the time/frequency step
 

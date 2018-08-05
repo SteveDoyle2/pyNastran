@@ -144,8 +144,8 @@ class ComplexBeamArray(OES_Object):
 
     def add_sort1(self, dt, eid, grid, sd,
                   exc, exd, exe, exf):
-
         """adss the non-vectorized data"""
+        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self.element_node[self.itotal] = [eid, grid]
         self.sd[self.itotal] = sd
         self.data[self.itime, self.itotal, :] = [exc, exd, exe, exf]

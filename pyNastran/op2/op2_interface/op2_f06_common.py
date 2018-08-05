@@ -49,8 +49,25 @@ class OP2_F06_Common(object):
         #======================================================================
         # rods
         self.crod_force = {}
+        self.crod_force_ato = {}
+        self.crod_force_crm = {}
+        self.crod_force_psd = {}
+        self.crod_force_rms = {}
+        self.crod_force_no  = {}
+
         self.conrod_force = {}
+        self.conrod_force_ato = {}
+        self.conrod_force_crm = {}
+        self.conrod_force_psd = {}
+        self.conrod_force_rms = {}
+        self.conrod_force_no  = {}
+
         self.ctube_force = {}
+        self.ctube_force_ato = {}
+        self.ctube_force_crm = {}
+        self.ctube_force_psd = {}
+        self.ctube_force_rms = {}
+        self.ctube_force_no  = {}
 
         self.crod_stress = {}
         self.crod_stress_ato = {}
@@ -523,6 +540,7 @@ class OP2_F06_Common(object):
         self.cshear_stress_psd = {}
         self.cshear_stress_rms = {}
         self.cshear_stress_no = {}
+        self.modal_contribution_cshear_stress = {}
 
         self.cshear_strain = {}
         self.cshear_strain_ato = {}
@@ -530,10 +548,14 @@ class OP2_F06_Common(object):
         self.cshear_strain_psd = {}
         self.cshear_strain_rms = {}
         self.cshear_strain_no = {}
+        self.modal_contribution_cshear_strain = {}
 
         self.cshear_force = {}
-        self.modal_contribution_cshear_stress = {}
-        self.modal_contribution_cshear_strain = {}
+        self.cshear_force_ato = {}
+        self.cshear_force_crm = {}
+        self.cshear_force_psd = {}
+        self.cshear_force_rms = {}
+        self.cshear_force_no = {}
         self.modal_contribution_cshear_force = {}
 
         #: OES - CBEAM 94
@@ -609,11 +631,11 @@ class OP2_F06_Common(object):
 
         #: OUG - displacement
         self.displacements = {}           # tCode=1 thermal=0
-        self.displacements_PSD = {}        # random
-        self.displacements_ATO = {}        # random
-        self.displacements_RMS = {}        # random
-        self.displacements_CRM = {}        # random
-        self.displacements_NO = {}         # random
+        self.displacements_psd = {}        # random
+        self.displacements_ato = {}        # random
+        self.displacements_rms = {}        # random
+        self.displacements_crm = {}        # random
+        self.displacements_no = {}         # random
         self.displacements_scaled = {}    # tCode=1 thermal=8
         self.displacements_ROUGV1 = {}
 
@@ -622,46 +644,46 @@ class OP2_F06_Common(object):
         self.displacement_scaled_response_spectra_NRL = {}  # thermal=8
         self.displacement_scaled_response_spectra_ABS = {}  # thermal=2
         self.displacement_scaled_response_spectra_SRSS = {} # thermal=4
-        #self.displacement_scaled_response_spectra_PSD = {}
-        #self.displacement_scaled_response_spectra_ATO = {}
-        #self.displacement_scaled_response_spectra_RMS = {}
-        #self.displacement_scaled_response_spectra_CRM = {}
-        #self.displacement_scaled_response_spectra_NO = {}
+        #self.displacement_scaled_response_spectra_psd = {}
+        #self.displacement_scaled_response_spectra_ato = {}
+        #self.displacement_scaled_response_spectra_rms = {}
+        #self.displacement_scaled_response_spectra_crm = {}
+        #self.displacement_scaled_response_spectra_no = {}
 
 
         #: OUG - velocity
         self.velocities = {}              # tCode=10 thermal=0
-        self.velocities_PSD = {}
-        self.velocities_ATO = {}
-        self.velocities_RMS = {}
-        self.velocities_CRM = {}
-        self.velocities_NO = {}
+        self.velocities_psd = {}
+        self.velocities_ato = {}
+        self.velocities_rms = {}
+        self.velocities_crm = {}
+        self.velocities_no = {}
         self.velocities_ROUGV1 = {}
 
         #self.velocity_scaled_response_spectra_NRL = {}
         self.velocity_scaled_response_spectra_ABS = {}
-        #self.velocity_scaled_response_spectra_PSD = {}
-        #self.velocity_scaled_response_spectra_ATO = {}
-        #self.velocity_scaled_response_spectra_RMS = {}
-        #self.velocity_scaled_response_spectra_CRM = {}
-        #self.velocity_scaled_response_spectra_NO = {}
+        #self.velocity_scaled_response_spectra_psd = {}
+        #self.velocity_scaled_response_spectra_ato = {}
+        #self.velocity_scaled_response_spectra_rms = {}
+        #self.velocity_scaled_response_spectra_crm = {}
+        #self.velocity_scaled_response_spectra_no = {}
 
         #: OUG - acceleration
         self.accelerations = {}            # tCode=11 thermal=0
-        self.accelerations_PSD = {}
-        self.accelerations_ATO = {}
-        self.accelerations_RMS = {}
-        self.accelerations_CRM = {}
-        self.accelerations_NO = {}
+        self.accelerations_psd = {}
+        self.accelerations_ato = {}
+        self.accelerations_rms = {}
+        self.accelerations_crm = {}
+        self.accelerations_no = {}
         self.accelerations_ROUGV1 = {}
 
         self.acceleration_scaled_response_spectra_NRL = {}
         self.acceleration_scaled_response_spectra_ABS = {}
-        #self.acceleration_scaled_response_spectra_PSD = {}
-        #self.acceleration_scaled_response_spectra_ATO = {}
-        #self.acceleration_scaled_response_spectra_RMS = {}
-        #self.acceleration_scaled_response_spectra_CRM = {}
-        #self.acceleration_scaled_response_spectra_NO = {}
+        #self.acceleration_scaled_response_spectra_psd = {}
+        #self.acceleration_scaled_response_spectra_ato = {}
+        #self.acceleration_scaled_response_spectra_rms = {}
+        #self.acceleration_scaled_response_spectra_crm = {}
+        #self.acceleration_scaled_response_spectra_no = {}
 
 
         #: OUG - temperatures
@@ -677,6 +699,11 @@ class OP2_F06_Common(object):
         # OEF - Forces - tCode=4 thermal=0
 
         self.cbend_force = {}
+        self.cbend_force_ato = {}
+        self.cbend_force_psd = {}
+        self.cbend_force_crm = {}
+        self.cbend_force_rms = {}
+        self.cbend_force_no = {}
 
         self.cbush_force = {}
         self.cbush_force_ato = {}
@@ -690,14 +717,60 @@ class OP2_F06_Common(object):
         self.coneax_force = {}
 
         self.cdamp1_force = {}
+        self.cdamp1_force_ato = {}
+        self.cdamp1_force_psd = {}
+        self.cdamp1_force_crm = {}
+        self.cdamp1_force_rms = {}
+        self.cdamp1_force_no = {}
+
         self.cdamp2_force = {}
+        self.cdamp2_force_ato = {}
+        self.cdamp2_force_crm = {}
+        self.cdamp2_force_psd = {}
+        self.cdamp2_force_rms = {}
+        self.cdamp2_force_no = {}
+
         self.cdamp3_force = {}
+        self.cdamp3_force_ato = {}
+        self.cdamp3_force_crm = {}
+        self.cdamp3_force_psd = {}
+        self.cdamp3_force_rms = {}
+        self.cdamp3_force_no = {}
+
         self.cdamp4_force = {}
+        self.cdamp4_force_ato = {}
+        self.cdamp4_force_crm = {}
+        self.cdamp4_force_psd = {}
+        self.cdamp4_force_rms = {}
+        self.cdamp4_force_no = {}
 
         self.celas1_force = {}
+        self.celas1_force_ato = {}
+        self.celas1_force_crm = {}
+        self.celas1_force_psd = {}
+        self.celas1_force_rms = {}
+        self.celas1_force_no = {}
+
         self.celas2_force = {}
+        self.celas2_force_ato = {}
+        self.celas2_force_crm = {}
+        self.celas2_force_psd = {}
+        self.celas2_force_rms = {}
+        self.celas2_force_no = {}
+
         self.celas3_force = {}
+        self.celas3_force_ato = {}
+        self.celas3_force_crm = {}
+        self.celas3_force_psd = {}
+        self.celas3_force_rms = {}
+        self.celas3_force_no = {}
+
         self.celas4_force = {}
+        self.celas4_force_ato = {}
+        self.celas4_force_crm = {}
+        self.celas4_force_psd = {}
+        self.celas4_force_rms = {}
+        self.celas4_force_no = {}
 
         self.cgap_force = {}
 
@@ -707,6 +780,11 @@ class OP2_F06_Common(object):
         self.ctetra_pressure_force = {}
 
         self.cvisc_force = {}
+        self.cvisc_force_ato = {}
+        self.cvisc_force_crm = {}
+        self.cvisc_force_psd = {}
+        self.cvisc_force_rms = {}
+        self.cvisc_force_no = {}
 
         self.force_VU = {}
 
@@ -803,18 +881,18 @@ class OP2_F06_Common(object):
         # OQG - spc/mpc forces
         self.spc_forces = {}  # tCode=3?
         self.spc_forces_scaled_response_spectra_NRL = {}
-        self.spc_forces_PSD = {}
-        self.spc_forces_ATO = {}
-        self.spc_forces_RMS = {}
-        self.spc_forces_CRM = {}
-        self.spc_forces_NO = {}
+        self.spc_forces_psd = {}
+        self.spc_forces_ato = {}
+        self.spc_forces_rms = {}
+        self.spc_forces_crm = {}
+        self.spc_forces_no = {}
 
         self.mpc_forces = {}  # tCode=39
-        self.mpc_forces_PSD = {}
-        self.mpc_forces_ATO = {}
-        self.mpc_forces_RMS = {}
-        self.mpc_forces_CRM = {}
-        self.mpc_forces_NO = {}
+        self.mpc_forces_psd = {}
+        self.mpc_forces_ato = {}
+        self.mpc_forces_rms = {}
+        self.mpc_forces_crm = {}
+        self.mpc_forces_no = {}
         self.mpc_forces_RAQCONS = {}
         self.mpc_forces_RAQEATC = {}
 
@@ -833,11 +911,11 @@ class OP2_F06_Common(object):
         self.thermal_load_vectors = {}  # tCode=2  thermal=1
         self.applied_loads = {}       # tCode=19 thermal=0
         self.force_vectors = {}       # tCode=12 thermal=0
-        self.load_vectors_ATO = {}
-        self.load_vectors_CRM = {}
-        self.load_vectors_NO = {}
-        self.load_vectors_PSD = {}
-        self.load_vectors_RMS = {}
+        self.load_vectors_ato = {}
+        self.load_vectors_crm = {}
+        self.load_vectors_no = {}
+        self.load_vectors_psd = {}
+        self.load_vectors_rms = {}
 
 
         #: OEE - strain energy density
@@ -877,6 +955,7 @@ class OP2_F06_Common(object):
         self.dmig_strain_energy = {}
         self.genel_strain_energy = {}
         self.cshear_strain_energy = {}
+        self.conm2_strain_energy = {}
 
     def _get_result_length(self, res_types, res_key):
         """
@@ -934,7 +1013,7 @@ class OP2_F06_Common(object):
         """Gets the names of the results."""
         table_types = [
             # OUG - displacement
-            'displacements', 'displacements_PSD', 'displacements_ATO', 'displacements_RMS', 'displacements_CRM', 'displacements_NO',
+            'displacements', 'displacements_psd', 'displacements_ato', 'displacements_rms', 'displacements_crm', 'displacements_no',
             'displacements_scaled',
             'displacements_ROUGV1',
 
@@ -951,18 +1030,18 @@ class OP2_F06_Common(object):
 
             # OUG - velocity
             'velocities',
-            'velocities_PSD', 'velocities_ATO', 'velocities_RMS', 'velocities_CRM', 'velocities_NO',
+            'velocities_psd', 'velocities_ato', 'velocities_rms', 'velocities_crm', 'velocities_no',
             'velocities_ROUGV1',
 
             # OUG - acceleration
-            'accelerations', 'accelerations_PSD', 'accelerations_ATO', 'accelerations_RMS', 'accelerations_CRM', 'accelerations_NO',
+            'accelerations', 'accelerations_psd', 'accelerations_ato', 'accelerations_rms', 'accelerations_crm', 'accelerations_no',
             'accelerations_ROUGV1',
 
             # OQG - spc/mpc forces
-            'spc_forces', 'spc_forces_PSD', 'spc_forces_ATO', 'spc_forces_RMS', 'spc_forces_CRM', 'spc_forces_NO',
+            'spc_forces', 'spc_forces_psd', 'spc_forces_ato', 'spc_forces_rms', 'spc_forces_crm', 'spc_forces_no',
             'spc_forces_scaled_response_spectra_NRL',
 
-            'mpc_forces', 'mpc_forces_PSD', 'mpc_forces_ATO', 'mpc_forces_RMS', 'mpc_forces_CRM', 'mpc_forces_NO',
+            'mpc_forces', 'mpc_forces_psd', 'mpc_forces_ato', 'mpc_forces_rms', 'mpc_forces_crm', 'mpc_forces_no',
             'mpc_forces_RAQCONS', 'mpc_forces_RAQEATC',
 
             'thermal_gradient_and_flux',
@@ -971,7 +1050,7 @@ class OP2_F06_Common(object):
             'grid_point_forces',
 
             # OPG - summation of loads for each element '
-            'load_vectors', 'load_vectors_ATO', 'load_vectors_CRM', 'load_vectors_NO', 'load_vectors_PSD', 'load_vectors_RMS',
+            'load_vectors', 'load_vectors_ato', 'load_vectors_crm', 'load_vectors_no', 'load_vectors_psd', 'load_vectors_rms',
             'thermal_load_vectors',
             'applied_loads',
             'force_vectors',
@@ -1088,20 +1167,20 @@ class OP2_F06_Common(object):
             #'response1_table',
 
             # OEF - Forces - tCode=4 thermal=0
-            'crod_force',
-            'conrod_force',
-            'ctube_force',
+            'crod_force',  'crod_force_ato', 'crod_force_crm', 'crod_force_psd', 'crod_force_rms', 'crod_force_no',
+            'conrod_force', 'conrod_force_ato', 'conrod_force_crm', 'conrod_force_psd', 'conrod_force_rms', 'conrod_force_no',
+            'ctube_force', 'ctube_force_ato', 'ctube_force_crm', 'ctube_force_psd', 'ctube_force_rms', 'ctube_force_no',
 
             # bar/beam/bend
-            'cbend_force',
+            'cbend_force', 'cbend_force_ato', 'cbend_force_crm', 'cbend_force_psd', 'cbend_force_rms', 'cbend_force_no',
 
             'cbush_force', 'cbush_force_ato', 'cbush_force_crm', 'cbush_force_psd', 'cbush_force_rms', 'cbush_force_no',
             'cbush_force_RAFCONS', 'cbush_force_RAFEATC',
             'coneax_force',
-            'cdamp1_force',
-            'cdamp2_force',
-            'cdamp3_force',
-            'cdamp4_force',
+            'cdamp1_force', 'cdamp1_force_ato', 'cdamp1_force_crm', 'cdamp1_force_psd', 'cdamp1_force_rms', 'cdamp1_force_no',
+            'cdamp2_force', 'cdamp2_force_ato', 'cdamp2_force_crm', 'cdamp2_force_psd', 'cdamp2_force_rms', 'cdamp2_force_no',
+            'cdamp3_force', 'cdamp3_force_ato', 'cdamp3_force_crm', 'cdamp3_force_psd', 'cdamp3_force_rms', 'cdamp3_force_no',
+            'cdamp4_force', 'cdamp4_force_ato', 'cdamp4_force_crm', 'cdamp4_force_psd', 'cdamp4_force_rms', 'cdamp4_force_no',
             'cgap_force',
 
             'cquad4_force', 'cquad4_force_ato', 'cquad4_force_crm', 'cquad4_force_psd', 'cquad4_force_rms', 'cquad4_force_no',
@@ -1113,7 +1192,7 @@ class OP2_F06_Common(object):
             'ctriar_force', 'ctriar_force_ato', 'ctriar_force_crm', 'ctriar_force_psd', 'ctriar_force_rms', 'ctriar_force_no',
             'cquad4_force_RAFCONS', 'cquad4_force_RAFEATC',
 
-            'cshear_force', 'modal_contribution_cshear_force',
+            'cshear_force', 'cshear_force_ato', 'cshear_force_crm', 'cshear_force_psd', 'cshear_force_rms', 'cshear_force_no', 'modal_contribution_cshear_force',
             #'cquad4_composite_force',
             #'cquad8_composite_force',
             #'cquadr_composite_force',
@@ -1125,12 +1204,12 @@ class OP2_F06_Common(object):
             'cpenta_pressure_force',
             'ctetra_pressure_force',
 
-            'celas1_force',
-            'celas2_force',
-            'celas3_force',
-            'celas4_force',
+            'celas1_force', 'celas1_force_ato', 'celas1_force_crm', 'celas1_force_psd', 'celas1_force_rms', 'celas1_force_no',
+            'celas2_force', 'celas2_force_ato', 'celas2_force_crm', 'celas2_force_psd', 'celas2_force_rms', 'celas2_force_no',
+            'celas3_force', 'celas3_force_ato', 'celas3_force_crm', 'celas3_force_psd', 'celas3_force_rms', 'celas3_force_no',
+            'celas4_force', 'celas4_force_ato', 'celas4_force_crm', 'celas4_force_psd', 'celas4_force_rms', 'celas4_force_no',
 
-            'cvisc_force',
+            'cvisc_force', 'cvisc_force_ato', 'cvisc_force_crm', 'cvisc_force_psd', 'cvisc_force_rms', 'cvisc_force_no',
 
             'force_VU',
             #'force_VU_2D',
@@ -1261,6 +1340,7 @@ class OP2_F06_Common(object):
             'cbend_strain_energy',
             'dmig_strain_energy',
             'genel_strain_energy',
+            'conm2_strain_energy',
 
 
             # unused?

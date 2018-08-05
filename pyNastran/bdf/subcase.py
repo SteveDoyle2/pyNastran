@@ -243,6 +243,12 @@ class Subcase(object):
                 self.add('FORCE', 'ALL', options, 'STRESS-type')
             else:
                 self._write_op2_error_msg(log, self.log, msg, data_code)
+        elif table_name in ['OEF2']:
+            options.append('SORT2')
+            if table_code == 4:
+                self.add('FORCE', 'ALL', options, 'STRESS-type')
+            else:
+                self._write_op2_error_msg(log, self.log, msg, data_code)
 
         elif table_name in ['OEFATO1', 'OEFATO2']:
             options.append('PSDF')

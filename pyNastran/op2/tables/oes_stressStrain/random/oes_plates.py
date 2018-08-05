@@ -166,7 +166,7 @@ class RandomPlateArray(OES_Object):
         #print(self.element_types2, element_type, self.element_types2.dtype)
         #print('itotal=%s dt=%s eid=%s nid=%-5s oxx=%s' % (self.itotal, dt, eid, node_id, oxx))
 
-        assert isinstance(eid, int), eid
+        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self.data[self.itime, self.itotal] = [oxx, oyy, txy]
         self.element[self.itotal, :] = eid  # 0 is center
         self.fiber_curvature[self.itotal] = fd

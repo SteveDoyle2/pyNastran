@@ -1622,14 +1622,14 @@ class TestOP2(Tester):
         op2_filename = os.path.join(folder, 'random_test_bar_plus_tri.op2')
         f06_filename = os.path.join(folder, 'random_test_bar_plus_tri.test_op2.f06')
         op2 = read_op2_geom(op2_filename, debug=False)
-        assert len(op2.displacements_PSD) == 1
-        assert len(op2.displacements_RMS) == 1
-        assert len(op2.displacements_CRM) == 1
-        assert len(op2.displacements_NO) == 1
-        assert len(op2.accelerations_PSD) == 1
-        assert len(op2.accelerations_RMS) == 1
-        assert len(op2.accelerations_CRM) == 1
-        assert len(op2.accelerations_NO) == 1
+        assert len(op2.displacements_psd) == 1
+        assert len(op2.displacements_rms) == 1
+        assert len(op2.displacements_crm) == 1
+        assert len(op2.displacements_no) == 1
+        assert len(op2.accelerations_psd) == 1
+        assert len(op2.accelerations_rms) == 1
+        assert len(op2.accelerations_crm) == 1
+        assert len(op2.accelerations_no) == 1
         assert len(op2.cbar_force_crm) == 1
         assert len(op2.cbar_force_psd) == 1
         assert len(op2.cbar_force_rms) == 1
@@ -1649,27 +1649,27 @@ class TestOP2(Tester):
         assert 'BHH' in op2.matrices
         assert 'KHH' in op2.matrices
 
-        #displacements_PSD[1]
-        #displacements_RMS[1]
-        #displacements_CRM[1]
-        #displacements_NO[1]
-        #accelerations_PSD[1]
-        #accelerations_RMS[1]
-        #accelerations_CRM[1]
-        #accelerations_NO[1]
-        #cbar_force_CRM[1]
-        #cbar_force_PSD[1]
-        #cbar_force_RMS[1]
-        #cbar_force_NO[1]
+        #displacements_psd[1]
+        #displacements_rms[1]
+        #displacements_crm[1]
+        #displacements_no[1]
+        #accelerations_psd[1]
+        #accelerations_rms[1]
+        #accelerations_crm[1]
+        #accelerations_no[1]
+        #cbar_force_crm[1]
+        #cbar_force_psd[1]
+        #cbar_force_rms[1]
+        #cbar_force_no[1]
         #eigenvalues[u'RANDOM TEST']
-        #cquad4_force_CRM[1]
-        #cquad4_force_PSD[1]
-        #cquad4_force_RMS[1]
-        #cquad4_force_NO[1]
-        #ctria3_force_CRM[1]
-        #ctria3_force_PSD[1]
-        #ctria3_force_RMS[1]
-        #ctria3_force_NO[1]
+        #cquad4_force_crm[1]
+        #cquad4_force_psd[1]
+        #cquad4_force_rms[1]
+        #cquad4_force_no[1]
+        #ctria3_force_crm[1]
+        #ctria3_force_psd[1]
+        #ctria3_force_rms[1]
+        #ctria3_force_no[1]
         #Matrix['BHH'];   shape=(20, 20); type=numpy.matrixlib.defmatrix.matrix; dtype=float64; desc=symmetric
         #Matrix['KHH'];   shape=(20, 20); type=numpy.matrixlib.defmatrix.matrix; dtype=float64; desc=symmetric
 

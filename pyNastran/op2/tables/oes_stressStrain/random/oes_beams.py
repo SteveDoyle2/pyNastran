@@ -161,11 +161,10 @@ class RandomBeamArray(OES_Object):
                 raise ValueError(msg)
         return True
 
-    def add_new_eid(self, dt, eid, out):
-        self.add_new_eid_sort1(dt, eid, out)
+    def add_new_eid(self, dt, eid, grid, sd, sxc, sxd, sxe, sxf):
+        self.add_new_eid_sort1(dt, eid, grid, sd, sxc, sxd, sxe, sxf)
 
-    def add_new_eid_sort1(self, dt, eid, out):
-        (grid, sd, sxc, sxd, sxe, sxf) = out
+    def add_new_eid_sort1(self, dt, eid, grid, sd, sxc, sxd, sxe, sxf):
         assert isinstance(eid, ints), eid
         assert eid >= 0, eid
         self._times[self.itime] = dt
@@ -175,10 +174,9 @@ class RandomBeamArray(OES_Object):
         self.itotal += 1
         self.ielement += 1
 
-    def add_sort1(self, unused_dt, eid, out):
+    def add_sort1(self, unused_dt, eid, grid, sd, sxc, sxd, sxe, sxf):
         """unvectorized method for adding SORT1 transient data"""
-        (grid, sd, sxc, sxd, sxe, sxf) = out
-
+        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self.element_node[self.itotal, :] = [eid, grid]
         self.xxb[self.itotal] = sd
         self.data[self.itime, self.itotal, :] = [sxc, sxd, sxe, sxf]

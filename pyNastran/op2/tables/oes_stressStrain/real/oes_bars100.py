@@ -57,7 +57,7 @@ class RealBar10NodesArray(OES_Object):
     def build(self):
         """sizes the vectorized attributes of the RealBar10NodesArray"""
         #print("self.ielement =", self.ielement)
-        # print('RealBar10NodesArray isubcase=%s ntimes=%s nelements=%s ntotal=%s' % (
+         #print('RealBar10NodesArray isubcase=%s ntimes=%s nelements=%s ntotal=%s' % (
             # self.isubcase, self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
@@ -147,7 +147,7 @@ class RealBar10NodesArray(OES_Object):
     def add_new_eid_sort1(self, eType, dt, eid,
                           sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS):
         self._times[self.itime] = dt
-        # print('isubcase=%s itotal=%s ieid=%s eid=%s' % (self.isubcase, self.itotal, self.ielement, eid))
+        #print('isubcase=%s itotal=%s ieid=%s eid=%s' % (self.isubcase, self.itotal, self.ielement, eid))
         self.element[self.itotal] = eid
         self.data[self.itime, self.itotal, :] = [sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS]
         self.itotal += 1

@@ -162,11 +162,10 @@ class RealBeamArray(OES_Object):
                 raise ValueError(msg)
         return True
 
-    def add_new_eid(self, dt, eid, out):
-        self.add_new_eid_sort1(dt, eid, out)
+    def add_new_eid(self, dt, eid, grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc):
+        self.add_new_eid_sort1(dt, eid, grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc)
 
-    def add_new_eid_sort1(self, dt, eid, out):
-        (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
+    def add_new_eid_sort1(self, dt, eid, grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc):
         assert isinstance(eid, ints), eid
         assert eid >= 0, eid
         self._times[self.itime] = dt
@@ -177,9 +176,9 @@ class RealBeamArray(OES_Object):
         self.itotal += 1
         self.ielement += 1
 
-    def add_sort1(self, unused_dt, eid, out):
+    def add_sort1(self, unused_dt, eid, grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc):
         """unvectorized method for adding SORT1 transient data"""
-        (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
+        #(grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
 
         self.element_node[self.itotal, :] = [eid, grid]
         self.xxb[self.itotal] = sd
@@ -405,11 +404,7 @@ class RealNonlinearBeamArray(OES_Object):
         msg += self.get_data_code()
         return msg
 
-    def add_new_eid_sort1(self, dt, eid, out):
-        assert isinstance(eid, ints), eid
-        assert eid >= 0, eid
-        self._times[self.itime] = dt
-        (grid_a,
+    def add_new_eid_sort1(self, dt, eid, grid_a,
          unused_ca, long_ca, eqs_ca, te_ca, eps_ca, ecs_ca,
          unused_da, long_da, eqs_da, te_da, eps_da, ecs_da,
          unused_ea, long_ea, eqs_ea, te_ea, eps_ea, ecs_ea,
@@ -418,7 +413,21 @@ class RealNonlinearBeamArray(OES_Object):
          unused_cb, long_cb, eqs_cb, te_cb, eps_cb, ecs_cb,
          unused_db, long_db, eqs_db, te_db, eps_db, ecs_db,
          unused_eb, long_eb, eqs_eb, te_eb, eps_eb, ecs_eb,
-         unused_fb, long_fb, eqs_fb, te_fb, eps_fb, ecs_fb,) = out[1:]
+         unused_fb, long_fb, eqs_fb, te_fb, eps_fb, ecs_fb):
+        assert isinstance(eid, ints), eid
+        assert eid >= 0, eid
+        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        self._times[self.itime] = dt
+        #(grid_a,
+         #unused_ca, long_ca, eqs_ca, te_ca, eps_ca, ecs_ca,
+         #unused_da, long_da, eqs_da, te_da, eps_da, ecs_da,
+         #unused_ea, long_ea, eqs_ea, te_ea, eps_ea, ecs_ea,
+         #unused_fa, long_fa, eqs_fa, te_fa, eps_fa, ecs_fa,
+         #grid_b,
+         #unused_cb, long_cb, eqs_cb, te_cb, eps_cb, ecs_cb,
+         #unused_db, long_db, eqs_db, te_db, eps_db, ecs_db,
+         #unused_eb, long_eb, eqs_eb, te_eb, eps_eb, ecs_eb,
+         #unused_fb, long_fb, eqs_fb, te_fb, eps_fb, ecs_fb,) = out[1:]
 
         self.element_node[self.itotal] = [eid, grid_a, 0]
         self.element_node[self.itotal + 1] = [eid, grid_a, 1]

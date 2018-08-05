@@ -181,6 +181,7 @@ class ElementTableArray(ScalarObject):  # displacement style table
 
     def add_sort1(self, dt, eid, etype, v1, v2, v3, v4, v5, v6):
         """unvectorized method for adding SORT1 transient data"""
+        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         # itotal - the node number
         # itime - the time/frequency step
 
@@ -483,7 +484,7 @@ class RealElementTableArray(ElementTableArray):  # displacement style table
         #gridtype = self.node_gridtype[:, 1]
 
         #times = self._times
-        ## print(self.data.shape)
+        #print(self.data.shape)
         #for inode, (node_id, gridtypei) in enumerate(zip(node, gridtype)):
             ## SORT1 is pretending to be SORT2
             #t1 = self.data[:, inode, 0].ravel()

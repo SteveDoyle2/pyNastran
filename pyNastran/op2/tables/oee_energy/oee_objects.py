@@ -11,7 +11,9 @@ try:
 except ImportError:
     pass
 
-
+SORT2_TABLE_NAME_MAP = {
+    'ONRGY2' : 'ONRGY1',
+}
 class RealStrainEnergyArray(ScalarObject):
     """
     ::
@@ -40,10 +42,10 @@ class RealStrainEnergyArray(ScalarObject):
         #self.element_name_count = OrderedDict()
         self.dt_temp = None
 
-        if is_sort1:
-            pass
-        else:
-            raise NotImplementedError('SORT2')
+        #if is_sort1:
+            #pass
+        #else:
+            #raise NotImplementedError('SORT2')
 
     @property
     def is_real(self):
@@ -130,6 +132,9 @@ class RealStrainEnergyArray(ScalarObject):
         minor_axis / headers = [ese, %, sed]
         name = mode
         """
+        #print(''.join(self.get_stats()))
+        #print(self.element)
+        #print(self.data)
         headers = self.get_headers()
         ntimes = self.element.shape[0]
         nelements = self.element.shape[1]
@@ -144,6 +149,7 @@ class RealStrainEnergyArray(ScalarObject):
             element = np.asarray(element, dtype='|U8')
             compare = ''
 
+        #print('ntimes=%s' % ntimes)
         if ntimes == 1:
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
@@ -181,7 +187,12 @@ class RealStrainEnergyArray(ScalarObject):
                 df.columns = [header]
                 dfs.append(df)
             self.data_frame = df1.join(dfs)
-            self.data_frame.columns.names = column_names
+            try:
+                self.data_frame.columns.names = column_names
+            except ValueError:
+                #print('headers =', headers)
+                print('self.cannot apply column_names=%s to RealStrainEnergyArray: %r' % (
+                    column_names, self.element_name))
 
             # remove empty rows
             assert self.data_frame is not None
@@ -257,6 +268,7 @@ class RealStrainEnergyArray(ScalarObject):
     def add_sort1(self, dt, eid, energyi, percenti, densityi):
         """unvectorized method for adding SORT1 transient data"""
         #itime = self.itime // self.nelement_types
+        assert isinstance(eid, (int, str)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         itime = self.itime
         self._times[itime] = dt
         self.element[itime, self.ielement] = eid
@@ -280,6 +292,35 @@ class RealStrainEnergyArray(ScalarObject):
         self.ielement += 1
         self.itotal += 1
 
+    def finalize(self):
+        self.set_as_sort1()
+
+    def set_as_sort1(self):
+        """changes the table into SORT1"""
+        if self.is_sort1:
+            return
+        try:
+            analysis_method = self.analysis_method
+        except AttributeError:
+            print(self.code_information())
+            raise
+        #print(self.get_stats())
+        #print(self.node_gridtype)
+        #print(self.data.shape)
+        #aaa
+        self.sort_method = 1
+        self.sort_bits[1] = 0
+        bit0, bit1, bit2 = self.sort_bits
+        self.table_name = SORT2_TABLE_NAME_MAP[self.table_name]
+        self.sort_code = bit0 + 2*bit1 + 4*bit2
+        #print(self.code_information())
+        assert self.is_sort1
+        if analysis_method != 'N/A':
+            self.data_names[0] = analysis_method
+            #print(self.table_name_str, analysis_method, self._times)
+            setattr(self, self.analysis_method + 's', self._times)
+        del self.analysis_method
+
     def get_stats(self, short=False):
         if not self.is_built:
             return [
@@ -294,12 +335,12 @@ class RealStrainEnergyArray(ScalarObject):
 
         msg = []
         if self.nonlinear_factor is not None:  # transient
-            msg.append('  type=%s ntimes=%i nelements=%i\n'
-                       % (self.__class__.__name__, ntimes, nelements))
+            msg.append('  type=%s element_name=%r ntimes=%i nelements=%i\n'
+                       % (self.__class__.__name__, self.element_name, ntimes, nelements))
             ntimes_word = 'ntimes'
         else:
-            msg.append('  type=%s nelements=%i\n'
-                       % (self.__class__.__name__, nelements))
+            msg.append('  type=%s element_name=%r nelements=%i\n'
+                       % (self.__class__.__name__, self.element_name, nelements))
             ntimes_word = '1'
         headers = self.get_headers()
         n = len(headers)
@@ -622,6 +663,7 @@ class ComplexStrainEnergyArray(ScalarObject):
     def add_sort1(self, dt, eid, energyr, energyi, percenti, densityi):
         """unvectorized method for adding SORT1 transient data"""
         #itime = self.itime // self.nelement_types
+        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         itime = self.itime
         self._times[itime] = dt
         try:

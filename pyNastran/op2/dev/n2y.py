@@ -1535,8 +1535,8 @@ def build_coords(cords):
         selected = np.zeros(n, dtype=np.int64)
         loop = 1
         while np.any(selected == 0):
-            # print('coords = \n%s' % str(cords[:, 2]))
-            # print('coords = \n%s' % str(cords.shape))
+            #print('coords = \n%s' % str(cords[:, 2]))
+            #print('coords = \n%s' % str(cords.shape))
             pv = locate.findvals(cords[:, 2], ref_ids)
             if pv.size == 0:
                 print('Need these coordinate cards:', ref_ids)

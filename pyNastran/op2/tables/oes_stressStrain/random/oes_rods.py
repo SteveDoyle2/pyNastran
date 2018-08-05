@@ -5,7 +5,8 @@ from six.moves import zip, range
 import numpy as np
 from numpy import zeros, searchsorted, allclose
 
-from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
+    StressObject, StrainObject, OES_Object, SORT2_TABLE_NAME_MAP)
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header #, get_key0
 try:
     import pandas as pd  # type: ignore

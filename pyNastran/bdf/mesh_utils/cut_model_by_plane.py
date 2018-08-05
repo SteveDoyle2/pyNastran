@@ -799,7 +799,7 @@ def connect_face_rows(geometry_array, results_array, skip_cleanup=True):
         #print('nid_start = %s' % nid_start)
 
         nedges = edges.shape[0]
-        all_irows = range(nedges) #np.arange(0, nedges)
+        all_irows = list(range(nedges)) #np.arange(0, nedges)
         #print('------------')
         while len(all_irows):
             #print('all_irows =',all_irows)
@@ -843,7 +843,7 @@ def connect_face_rows(geometry_array, results_array, skip_cleanup=True):
             eid_edges = eid_edges[all_irows, :]
             edges = edges[all_irows, :]
             nedges = edges.shape[0]
-            all_irows = range(nedges)
+            all_irows = list(range(nedges))
             #print('------------')
         #print('iedges =', iedges)
         if include_end:

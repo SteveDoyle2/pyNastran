@@ -149,6 +149,7 @@ class RealNonlinearPlateArray(OES_Object):
 
     def add_sort1(self, dt, eid, etype, fd, sx, sy, sz, txy, es, eps, ecs, ex, ey, ez, exy):
         """unvectorized method for adding SORT1 transient data"""
+        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         if isnan(fd):
             fd = 0.
         if isnan(sz):

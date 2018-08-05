@@ -749,7 +749,7 @@ class OP2(object):
             raise ValueError("form must be one of:  None, 'int', "
                              "'uint', 'double', 'single' or 'bytes'")
         if N:
-            # print('frm=%r' % frm)
+            #print('frm=%r' % frm)
             data = np.zeros(N, dtype=frm)
             i = 0
             while key > 0:
@@ -758,7 +758,7 @@ class OP2(object):
                 n = reclen // bytes_per
                 if n < self._rowsCutoff:
                     b = n * bytes_per
-                    # print('frmu=%r' % frmu)
+                    #print('frmu=%r' % frmu)
                     data[i:i+n] = struct.unpack(frmu % n, f.read(b))
                 else:
                     data[i:i+n] = np.fromfile(f, frm, n)
@@ -973,7 +973,7 @@ class OP2(object):
 
             # DATA record:
             if ougv1 is None:
-                print('masking')
+                #print('masking')
                 # - process DOF information on first column only
                 # - there are 8 elements per node:
                 #   id*10, type, x, y, z, rx, ry, rz
@@ -988,7 +988,7 @@ class OP2(object):
                 V = np.zeros((n, 8), bool)
                 V[:, 2] = True          # all nodes have 'x'
                 V[pvgrids, 3:] = True   # only grids have all 6
-                # print('V =\n', V)
+                 #print('V =\n', V)
                 V = V.flatten()
                 # initialize ougv1 with first mode shape:
                 data.dtype = np.float32  # reinterpret as floats
@@ -997,7 +997,7 @@ class OP2(object):
                 data = self.read_op2_record('single', V.shape[0])
                 ougv1[:, J] = data[V]
             J += 1
-            # print('Finished reading mode {0:3d}, Frequency ={1:6.2f}'.format(
+             #print('Finished reading mode {0:3d}, Frequency ={1:6.2f}'.format(
             #    J, np.sqrt(lam[J-1])/(2*np.pi)))
             eot, key = self._read_op2_end_of_table()
         return {'ougv1': ougv1, 'lambda': lam, 'dof': dof}
@@ -2954,9 +2954,9 @@ def read_post_op2(op2_filename, verbose=False, getougv1=False):
         cstm = None
         while 1:
             name, trailer, dbtype = o2._read_op2_name_trailer()
-            # print('name = %r' % name)
-            # print('trailer = %s' % str(trailer))
-            # print('dbtype = %r' % dbtype)
+             #print('name = %r' % name)
+             #print('trailer = %s' % str(trailer))
+             #print('dbtype = %r' % dbtype)
             if name is None:
                 break
             if name == '':

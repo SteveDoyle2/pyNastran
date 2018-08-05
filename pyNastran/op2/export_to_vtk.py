@@ -42,7 +42,7 @@ def export_to_vtk(model):
     op2_filename = model + '.op2'
     vtk_filename = model + '.vtk'
     export_to_vtk_filename(bdf_filename, op2_filename, vtk_filename)
-    print('finished exporting %s' % vtk_filename)
+    model.log.info('finished exporting %s' % vtk_filename)
 
 def export_to_vtk_filename(bdf_filename, op2_filename, vtk_filename, debug=False):
     with open(vtk_filename, 'w') as vtk_file:

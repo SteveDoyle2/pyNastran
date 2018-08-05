@@ -593,6 +593,9 @@ class OP2(OP2_Scalar):
             for obj in itervalues(result):
                 if hasattr(obj, 'finalize'):
                     obj.finalize()
+                elif hasattr(obj, 'tCode') and not obj.is_sort1:
+                    raise RuntimeError('object has not implemented finalize\n%s' % (
+                        ''.join(obj.get_stats())))
         self.del_structs()
 
     def build_dataframe(self):
@@ -819,7 +822,7 @@ class OP2(OP2_Scalar):
                     del result[key2]
                     res1.combine(res2)
                     result[isubcase] = res1
-                    # print('r[isubcase] =', result[isubcase])
+                     #print('r[isubcase] =', result[isubcase])
                 else:
                     #self.log.info("continue")
                     continue
@@ -1009,21 +1012,21 @@ class OP2(OP2_Scalar):
         #output = {}
         disp_like_dicts = [
             # should NO results be transformed?
-            #self.displacements_NO, self.velocities_NO, self.accelerations_NO,
-            #self.spc_forces_NO, self.mpc_forces_NO,
+            #self.displacements_no, self.velocities_no, self.accelerations_no,
+            #self.spc_forces_no, self.mpc_forces_no,
 
             self.displacements,
-            self.displacements_ATO, self.displacements_CRM, self.displacements_PSD, self.displacements_RMS,
+            self.displacements_ato, self.displacements_crm, self.displacements_psd, self.displacements_rms,
             self.displacements_scaled,
             self.displacement_scaled_response_spectra_ABS,
             self.displacement_scaled_response_spectra_NRL,
 
             self.velocities,
-            self.velocities_ATO, self.velocities_CRM, self.velocities_PSD, self.velocities_RMS,
+            self.velocities_ato, self.velocities_crm, self.velocities_psd, self.velocities_rms,
             self.velocity_scaled_response_spectra_ABS,
 
             self.accelerations,
-            self.accelerations_ATO, self.accelerations_CRM, self.accelerations_PSD, self.accelerations_RMS,
+            self.accelerations_ato, self.accelerations_crm, self.accelerations_psd, self.accelerations_rms,
             self.acceleration_scaled_response_spectra_ABS,
             self.acceleration_scaled_response_spectra_NRL,
 
@@ -1031,8 +1034,8 @@ class OP2(OP2_Scalar):
             self.eigenvectors_RADCONS, self.eigenvectors_RADEFFM,
             self.eigenvectors_RADEATC, self.eigenvectors_ROUGV1,
 
-            self.spc_forces, self.spc_forces_ATO, self.spc_forces_CRM, self.spc_forces_PSD, self.spc_forces_RMS,
-            self.mpc_forces, self.mpc_forces_ATO, self.mpc_forces_CRM, self.mpc_forces_PSD, self.mpc_forces_RMS,
+            self.spc_forces, self.spc_forces_ato, self.spc_forces_crm, self.spc_forces_psd, self.spc_forces_rms,
+            self.mpc_forces, self.mpc_forces_ato, self.mpc_forces_crm, self.mpc_forces_psd, self.mpc_forces_rms,
 
             self.applied_loads, self.load_vectors,
         ]

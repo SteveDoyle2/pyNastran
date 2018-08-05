@@ -71,6 +71,7 @@ class GridPointStressesArray(ScalarObject):
 
     def add_sort1(self, dt, nid, eid, fiber, nx, ny, txy, angle, majorP, minorP, tmax, ovm):
         """unvectorized method for adding SORT1 transient data"""
+        #assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.node_element[self.itotal, :] = [nid, eid]
         self.location[self.itotal] = fiber
@@ -278,6 +279,7 @@ class GridPointStressesVolumeArray(ScalarObject):
         return msg
 
     def add_sort1(self, dt, nid, nx, ny, nz, txy, tyz, txz, pressure, ovm):
+        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.node[self.itotal] = nid
         self.data[self.itime, self.itotal, :] = [nx, ny, nz, txy, tyz, txz, pressure, ovm]

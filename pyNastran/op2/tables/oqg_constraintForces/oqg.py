@@ -428,7 +428,7 @@ class OQG(OP2Common):
         """
         if self.thermal == 0:
             if self.table_code in [3, 603]:
-                result_name = 'spc_forces_PSD'
+                result_name = 'spc_forces_psd'
             else:
                 raise RuntimeError(self.code_information())
             obj = RealSPCForcesArray
@@ -451,8 +451,8 @@ class OQG(OP2Common):
         """
         if self.thermal == 0:
             if self.table_code in [3, 803]:
-                result_name = 'spc_forces_RMS'
-                storage_obj = self.spc_forces_RMS
+                result_name = 'spc_forces_rms'
+                storage_obj = self.spc_forces_rms
                 if self._results.is_not_saved(result_name):
                     return ndata
                 self._results._found_result(result_name)
@@ -472,10 +472,10 @@ class OQG(OP2Common):
         if self.thermal == 0:
             if self.table_code in [3]:
                 assert self.table_name in [b'OQGATO2'], 'self.table_name=%r' % self.table_name
-                result_name = 'spc_forces_ATO'
+                result_name = 'spc_forces_ato'
             #elif self.table_code in [603]:
                 #assert self.table_name in [b'OQGATO2'], 'self.table_name=%r' % self.table_name
-                #result_name = 'mpc_forces_PSD'
+                #result_name = 'mpc_forces_psd'
             else:
                 print(self.table_code)
                 raise RuntimeError(self.code_information())
@@ -498,8 +498,8 @@ class OQG(OP2Common):
         """
         if self.thermal == 0:
             if self.table_code in [3, 503]:
-                result_name = 'spc_forces_CRM'
-                storage_obj = self.spc_forces_CRM
+                result_name = 'spc_forces_crm'
+                storage_obj = self.spc_forces_crm
                 if self._results.is_not_saved(result_name):
                     return ndata
                 self._results._found_result(result_name)
@@ -519,7 +519,7 @@ class OQG(OP2Common):
         if self.thermal == 0:
             if self.table_code in [3, 903]:
                 assert self.table_name in [b'OQGNO1', b'OQGNO2'], 'self.table_name=%r' % self.table_name
-                result_name = 'spc_forces_NO'
+                result_name = 'spc_forces_no'
                 obj = RealSPCForcesArray
             else:
                 raise RuntimeError(self.code_information())
@@ -543,10 +543,10 @@ class OQG(OP2Common):
         if self.thermal == 0:
             if self.table_code in [39]:
                 assert self.table_name in [b'OQMPSD1', b'OQMPSD2'], 'self.table_name=%r' % self.table_name
-                result_name = 'mpc_forces_PSD'
+                result_name = 'mpc_forces_psd'
             elif self.table_code in [603]:
                 assert self.table_name in [b'OQMPSD1', b'OQMPSD2'], 'self.table_name=%r' % self.table_name
-                result_name = 'mpc_forces_PSD'
+                result_name = 'mpc_forces_psd'
             else:
                 print(self.table_code)
                 raise RuntimeError(self.code_information())
@@ -573,11 +573,11 @@ class OQG(OP2Common):
         if self.thermal == 0:
             if self.table_code in [39]:
                 assert self.table_name in [b'OQMATO1', b'OQMATO2'], 'self.table_name=%r' % self.table_name
-                result_name = 'mpc_forces_ATO'
+                result_name = 'mpc_forces_ato'
                 obj = RealMPCForcesArray
             #elif self.table_code in [603]:
                 #assert self.table_name in [b''], 'self.table_name=%r' % self.table_name
-                #result_name = 'mpc_forces_PSD'
+                #result_name = 'mpc_forces_psd'
             else:
                 print(self.table_code)
                 raise RuntimeError(self.code_information())
@@ -603,11 +603,11 @@ class OQG(OP2Common):
         if self.thermal == 0:
             if self.table_code in [39]:
                 assert self.table_name in [b'OQMCRM1', b'OQMCRM2'], 'self.table_name=%r' % self.table_name
-                result_name = 'mpc_forces_CRM'
+                result_name = 'mpc_forces_crm'
                 obj = RealMPCForcesArray
             #elif self.table_code in [603]:
                 #assert self.table_name in [b''], 'self.table_name=%r' % self.table_name
-                #result_name = 'mpc_forces_PSD'
+                #result_name = 'mpc_forces_psd'
             else:
                 print(self.table_code)
                 raise RuntimeError(self.code_information())
@@ -632,11 +632,11 @@ class OQG(OP2Common):
         if self.thermal == 0:
             if self.table_code in [39]:
                 assert self.table_name in [b'OQMRMS1', b'OQMRMS2'], 'self.table_name=%r' % self.table_name
-                result_name = 'mpc_forces_RMS'
+                result_name = 'mpc_forces_rms'
                 obj = RealMPCForcesArray
             #elif self.table_code in [603]:
                 #assert self.table_name in [b''], 'self.table_name=%r' % self.table_name
-                #result_name = 'mpc_forces_PSD'
+                #result_name = 'mpc_forces_psd'
             else:
                 print(self.table_code)
                 raise RuntimeError(self.code_information())
@@ -662,11 +662,11 @@ class OQG(OP2Common):
         if self.thermal == 0:
             if self.table_code in [39]:
                 assert self.table_name in [b'OQMNO1', b'OQMNO2'], 'self.table_name=%r' % self.table_name
-                result_name = 'mpc_forces_NO'
+                result_name = 'mpc_forces_no'
                 obj = RealMPCForcesArray
             #elif self.table_code in [603]:
                 #assert self.table_name in [b''], 'self.table_name=%r' % self.table_name
-                #result_name = 'mpc_forces_PSD'
+                #result_name = 'mpc_forces_psd'
             else:
                 print(self.table_code)
                 raise RuntimeError(self.code_information())

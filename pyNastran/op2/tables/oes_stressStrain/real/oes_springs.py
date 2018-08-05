@@ -6,13 +6,13 @@ from six.moves import zip
 import numpy as np
 from numpy import zeros, array_equal
 
-from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
+    StressObject, StrainObject, OES_Object, SORT2_TABLE_NAME_MAP)
 from pyNastran.f06.f06_formatting import write_floats_13e, write_float_13e, _eigenvalue_header
 try:
     import pandas as pd  # type: ignore
 except ImportError:
     pass
-
 
 class RealSpringArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -167,36 +167,6 @@ class RealSpringArray(OES_Object):
         #ind = ind.reshape(ind.size)
         #ind.sort()
         return ind
-
-    def set_as_sort1(self):
-        """the data is in SORT1, but the flags are wrong"""
-        if self.is_sort1:
-            return
-        if self.table_name == 'OES2':
-            self.table_name = 'OES1'
-        elif self.table_name == 'OESATO2':
-            self.table_name = 'OESATO1'
-        elif self.table_name == 'OESCRM2':
-            self.table_name = 'OESCRM1'
-        elif self.table_name == 'OESPSD2':
-            self.table_name = 'OESPSD1'
-
-        elif self.table_name == 'OSTR2':
-            self.table_name = 'OSTR1'
-        elif self.table_name == 'OSTRATO2':
-            self.table_name = 'OSTRATO1'
-        elif self.table_name == 'OSTRCRM2':
-            self.table_name = 'OSTRCRM1'
-        elif self.table_name == 'OSTRPSD2':
-            self.table_name = 'OSTRPSD1'
-        elif self.table_name in ['OES1', 'OESATO1', 'OESCRM1', 'OESPSD1',
-                                 'OSTRATO1', 'OSTRCRM1', 'OSTRPSD1']:
-            pass
-        else:
-            raise RuntimeError(self.code_information())
-        self.sort_bits[1] = 0 # sort1
-        self.sort_method = 1
-        assert self.is_sort1 is True, self.is_sort1
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
@@ -411,6 +381,7 @@ class RealNonlinearSpringStressArray(OES_Object):
 
     def add_sort1(self, dt, eid, force, stress):
         """unvectorized method for adding SORT1 transient data"""
+        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [force, stress]

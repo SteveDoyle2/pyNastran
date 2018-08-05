@@ -568,11 +568,11 @@ class F06Writer(OP2_F06_Common):
                       '\n', ' \n']
         header = copy.deepcopy(header_old)
         res_types = [
-            self.displacements, self.displacements_ROUGV1, self.displacements_PSD, self.displacements_ATO, self.displacements_RMS, self.displacements_CRM, self.displacements_NO, self.displacements_scaled,  # ???
-            self.accelerations, self.accelerations_ROUGV1, self.accelerations_PSD, self.accelerations_ATO, self.accelerations_RMS, self.accelerations_CRM, self.accelerations_NO,
-            self.velocities, self.velocities_ROUGV1, self.velocities_PSD, self.velocities_ATO, self.velocities_RMS, self.velocities_CRM, self.velocities_NO,
+            self.displacements, self.displacements_ROUGV1, self.displacements_psd, self.displacements_ato, self.displacements_rms, self.displacements_crm, self.displacements_no, self.displacements_scaled,  # ???
+            self.accelerations, self.accelerations_ROUGV1, self.accelerations_psd, self.accelerations_ato, self.accelerations_rms, self.accelerations_crm, self.accelerations_no,
+            self.velocities, self.velocities_ROUGV1, self.velocities_psd, self.velocities_ato, self.velocities_rms, self.velocities_crm, self.velocities_no,
             self.force_vectors,
-            self.load_vectors, self.load_vectors_ATO, self.load_vectors_CRM, self.load_vectors_PSD, self.load_vectors_NO,
+            self.load_vectors, self.load_vectors_ato, self.load_vectors_crm, self.load_vectors_psd, self.load_vectors_no,
             self.temperatures,
             #self.eigenvectors,
             self.eigenvectors_RADCONS,
@@ -580,11 +580,11 @@ class F06Writer(OP2_F06_Common):
             self.eigenvectors_RADEATC,
             self.eigenvectors_ROUGV1,
 
-            self.mpc_forces, self.mpc_forces_PSD, self.mpc_forces_ATO, self.mpc_forces_RMS,
+            self.mpc_forces, self.mpc_forces_psd, self.mpc_forces_ato, self.mpc_forces_rms,
             self.mpc_forces_RAQCONS,
             #self.mpc_forces_RAQEATC,
 
-            self.spc_forces, self.spc_forces_PSD, self.spc_forces_ATO, self.spc_forces_RMS,
+            self.spc_forces, self.spc_forces_psd, self.spc_forces_ato, self.spc_forces_rms,
             self.thermal_load_vectors,
 
             #self.strain_energy,
@@ -602,7 +602,7 @@ class F06Writer(OP2_F06_Common):
             self.celas1_strain_energy, self.celas2_strain_energy,
             self.celas3_strain_energy, self.celas4_strain_energy,
             self.cdum8_strain_energy, self.dmig_strain_energy,
-            self.cbend_strain_energy,
+            self.cbend_strain_energy, self.conm2_strain_energy,
             self.genel_strain_energy, self.cshear_strain_energy,
             #------------------------------------------
             # OEF - forces

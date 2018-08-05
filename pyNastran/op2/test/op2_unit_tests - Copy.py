@@ -89,7 +89,7 @@ class TestOP2(Tester):
             #itime=0,
             #debug=True,
             #logger=op2.log)
-        print('------------')
+        #print('------------')
 
         eids = [1]
         nids = [1, 2]

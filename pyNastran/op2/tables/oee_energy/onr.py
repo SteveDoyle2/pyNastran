@@ -17,6 +17,7 @@ class ONR(OP2Common):
         """
         reads ONRGY1 subtable 3
         """
+        self._analysis_code_fmt = b'i'
         self.words = [
             'aCode',       'tCode',    'eTotal',       'isubcase',
             '???',         '???',      'element_name', 'load_set',
@@ -33,27 +34,7 @@ class ONR(OP2Common):
         if self.is_debug_file:
             self.binary_debug.flush()
 
-        #field_num = 6
-        #datai = data[4 * (field_num - 1) : 4 * (field_num + 1)]
-        #assert len(datai) == 8, len(datai)
-        #print(4 * (field_num - 1), 4 * (field_num + 1))
-        #element_name, = self.struct_8s.unpack(data[24:32])  # changed on 11/30/2015; was this for a long time...
-        element_name, = self.struct_8s.unpack(data[20:28])
-        #print("element_name = %s" % (element_name))
-        try:
-            element_name = element_name.decode('utf-8').strip()  # element name
-        except UnicodeDecodeError:
-            #self.log.warning("element_name = %s" % str(element_name))
-            self.log.warning("element_name - UnicodeDecodeError")
-            #self.show_data(data)
-            raise
-        if element_name.isalnum():
-            self.data_code['element_name'] = element_name
-        else:
-            #print("element_name = %r" % (element_name))
-            #print(type(element_name))
-            self.data_code['element_name'] = 'UnicodeDecodeError???'
-            self.log.warning('data[20:28]=%r instead of data[24:32]' % data[20:28])
+        self._onr_element_name(data)
 
         #: Load set or zero
         self.load_set = self.add_data_parameter(data, 'load_set', b'i', 8, False)
@@ -151,6 +132,185 @@ class ONR(OP2Common):
         self._read_title(data)
         self._write_debug_bits()
 
+    def _onr_element_name(self, data):
+        #field_num = 6
+        #datai = data[4 * (field_num - 1) : 4 * (field_num + 1)]
+        #assert len(datai) == 8, len(datai)
+        #print(4 * (field_num - 1), 4 * (field_num + 1))
+        #element_name, = self.struct_8s.unpack(data[24:32])  # changed on 11/30/2015; was this for a long time...
+        element_name, = self.struct_8s.unpack(data[20:28])
+        #print("element_name = %s" % (element_name))
+        try:
+            element_name = element_name.decode('utf-8').strip()  # element name
+        except UnicodeDecodeError:
+            #self.log.warning("element_name = %s" % str(element_name))
+            self.log.warning("element_name - UnicodeDecodeError")
+            #self.show_data(data)
+            raise
+        if element_name.isalnum():
+            self.data_code['element_name'] = element_name
+        else:
+            #print("element_name = %r" % (element_name))
+            #print(type(element_name))
+            self.data_code['element_name'] = 'UnicodeDecodeError???'
+            self.log.warning('data[20:28]=%r instead of data[24:32]' % data[20:28])
+
+    def _read_onr2_3(self, data, ndata):
+        """reads the SORT2 version of table 4 (the data table)"""
+        self.nonlinear_factor = None
+        self.is_table_1 = False
+        self.is_table_2 = True
+        unused_three = self.parse_approach_code(data)
+        self.words = [
+            'aCode',       'tCode',    'eTotal',       'isubcase',
+            '???',         '???',      'element_name', 'load_set',
+            'format_code', 'num_wide', 'cvalres',      'setID',
+            'setID',       'eigenReal', 'eigenImag',   'rmssf',
+            'etotpos',     'etotneg',  'thresh',       '???',
+            '???',         '???',      '???',      '???',
+            '???', 'Title', 'subtitle', 'label']
+
+        self._onr_element_name(data)
+
+        #: Load set or zero
+        self.load_set = self.add_data_parameter(data, 'load_set', b'i', 8, False)
+
+        #: format code
+        self.format_code = self.add_data_parameter(data, 'format_code', b'i', 9, False)
+
+        #: number of words per entry in record
+        #: .. note:: is this needed for this table ???
+        self.num_wide = self.add_data_parameter(data, 'num_wide', b'i', 10, False)
+        ## C
+        self.cvalres = self.add_data_parameter(data, 'cvalres', b'i', 11, False)
+
+        #: Set identification number Number
+        self.set_id = self.add_data_parameter(data, 'set_id', b'i', 13, False)
+
+        #: Natural eigenvalue - real part
+        self.eigen_real = self.add_data_parameter(data, 'eigen_real', b'i', 14, False)
+
+        #: Natural eigenvalue - imaginary part
+        self.eigen_imag = self.add_data_parameter(data, 'eigen_imag', b'i', 15, False)
+
+        #: Natural frequency
+        self.freq = self.add_data_parameter(data, 'freq', b'f', 16, False)
+
+        #: RMS and CRMS scale factor - NX
+        self.rmssf = self.add_data_parameter(data, 'rmssf', b'f', 17)
+
+        #: Total positive energy
+        self.etotpos = self.add_data_parameter(data, 'etotpos', b'f', 18)
+
+        #: Total negative energy
+        self.etotneg = self.add_data_parameter(data, 'etotneg', b'f', 19, False)
+
+        #: Energy Threshold - NX
+        self.thresh = self.add_data_parameter(data, 'thresh', b'f', 17)
+
+        self.element_id = self.add_data_parameter(data, 'node_id', b'i', 5, fix_device_code=True)
+        #if self.analysis_code == 1:  # statics / displacement / heat flux
+            ## load set number
+            #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5, False)
+            #self.data_names = self.apply_data_code_value('data_names', ['node_id'])
+            #self.setNullNonlinearFactor()
+
+        if self.analysis_code == 1:  # static...because reasons.
+            self._analysis_code_fmt = b'i'
+            self.data_names = self.apply_data_code_value('data_names', ['node_id'])
+            self.apply_data_code_value('analysis_method', 'N/A')
+        elif self.analysis_code == 2:  # real eigenvalues
+            ## mode number
+            self.mode = self.add_data_parameter(data, 'mode', b'i', 5)
+            self._analysis_code_fmt = b'i'
+            ## real eigenvalue
+            self.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
+            ## mode or cycle .. todo:: confused on the type - F1???
+            self.mode_cycle = self.add_data_parameter(data, 'mode_cycle', b'f', 7, False)
+            self.data_names = self.apply_data_code_value('data_names',
+                                                         ['node_id', 'eigr', 'mode_cycle'])
+            self.apply_data_code_value('analysis_method', 'mode')
+        #elif self.analysis_code == 3: # differential stiffness
+            #self.lsdvmn = self.get_values(data, b'i', 5) ## load set number
+            #self.data_names = self.data_code['lsdvmn'] = self.lsdvmn
+        #elif self.analysis_code == 4: # differential stiffness
+            #self.lsdvmn = self.get_values(data, b'i', 5) ## load set number
+        elif self.analysis_code == 5:   # frequency
+            ## frequency
+            #self.freq = self.add_data_parameter(data, 'freq', b'f', 5)
+            self._analysis_code_fmt = b'f'
+            self.data_names = self.apply_data_code_value('data_names', ['node_id'])
+            self.apply_data_code_value('analysis_method', 'freq')
+        elif self.analysis_code == 6:  # transient
+            ## time step
+            #self.dt = self.add_data_parameter(data, 'dt', b'f', 5)
+            self._analysis_code_fmt = b'f'
+            self.data_names = self.apply_data_code_value('data_names', ['node_id'])
+            self.apply_data_code_value('analysis_method', 'dt')
+        elif self.analysis_code == 7:  # pre-buckling
+            ## load set number
+            #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
+            self._analysis_code_fmt = b'i'
+            self.data_names = self.apply_data_code_value('data_names', ['node_id'])
+            self.apply_data_code_value('analysis_method', 'lsdvmn')
+        elif self.analysis_code == 8:  # post-buckling
+            ## load set number
+            #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
+            self._analysis_code_fmt = b'i'
+            ## real eigenvalue
+            self.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
+            self.data_names = self.apply_data_code_value('data_names', ['node_id', 'eigr'])
+            self.apply_data_code_value('analysis_method', 'eigr')
+        elif self.analysis_code == 9:  # complex eigenvalues
+            ## mode number
+            self.mode = self.add_data_parameter(data, 'mode', b'i', 5)
+            self._analysis_code_fmt = b'i'
+            ## real eigenvalue
+            #self.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
+            ## imaginary eigenvalue
+            self.eigi = self.add_data_parameter(data, 'eigi', b'f', 7, False)
+            self.data_names = self.apply_data_code_value('data_names', ['node_id', 'eigr', 'eigi'])
+            self.apply_data_code_value('analysis_method', 'mode')
+        elif self.analysis_code == 10:  # nonlinear statics
+            ## load step
+            #self.lftsfq = self.add_data_parameter(data, 'lftsfq', b'f', 5)
+            self._analysis_code_fmt = b'f'
+            self.data_names = self.apply_data_code_value('data_names', ['node_id'])
+            self.apply_data_code_value('analysis_method', 'lftsfq')
+        elif self.analysis_code == 11:  # old geometric nonlinear statics
+            ## load set number
+            #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
+            self._analysis_code_fmt = b'f'
+            self.data_names = self.apply_data_code_value('data_names', ['node_id'])
+        elif self.analysis_code == 12:
+            # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
+            ## load set number
+            #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
+            self._analysis_code_fmt = b'i'
+            self.data_names = self.apply_data_code_value('data_names', ['node_id'])
+            self.apply_data_code_value('analysis_method', 'lsdvmn')
+        else:
+            msg = 'invalid analysis_code...analysis_code=%s' % self.analysis_code
+            raise RuntimeError(msg)
+
+        self.fix_format_code()
+        if self.num_wide == 8:
+            self.format_code = 1
+            self.data_code['format_code'] = 1
+        else:
+            #self.fix_format_code()
+            if self.format_code == 1:
+                self.format_code = 2
+                self.data_code['format_code'] = 2
+            assert self.format_code in [2, 3], self.code_information()
+
+        if self.is_debug_file:
+            self.binary_debug.write('  approach_code  = %r\n' % self.approach_code)
+            self.binary_debug.write('  tCode          = %r\n' % self.tCode)
+            self.binary_debug.write('  isubcase       = %r\n' % self.isubcase)
+        self._read_title(data)
+        self._write_debug_bits()
+
     def _read_onr1_4(self, data, ndata):
         """
         reads ONRGY1 subtable 4
@@ -238,6 +398,8 @@ class ONR(OP2Common):
             result_name = 'dmig_strain_energy'
         elif self.data_code['element_name'] == 'GENEL':
             result_name = 'genel_strain_energy'
+        elif self.data_code['element_name'] == 'CONM2':
+            result_name = 'conm2_strain_energy'
         else:
             #result_name = 'chexa8fd_strain_energy'
 
@@ -246,11 +408,8 @@ class ONR(OP2Common):
         #result_name = 'strain_energy'
         slot = getattr(self, result_name)
 
-
-
         auto_return = False
         self._results._found_result(result_name)
-
         if self.is_debug_file:
             self.binary_debug.write('cvalares = %s\n' % self.cvalres)
         if self.format_code in [1, 2] and self.num_wide == 4:
@@ -281,7 +440,7 @@ class ONR(OP2Common):
                 self.binary_debug.write('  #elementi = [eid_device, energy, percent, density]\n')
                 self.binary_debug.write('  nelements=%i\n' % nelements)
 
-            if self.use_vector:
+            if self.use_vector and self.sort_method == 1: # and self.is_sort1:
                 n = nelements * 4 * self.num_wide
                 ielement = obj.ielement
                 ielement2 = obj.ielement + nelements
@@ -301,13 +460,17 @@ class ONR(OP2Common):
                 obj.itotal2 = itotal2
                 obj.ielement = ielement2
             else:
-                struct1 = Struct(self._endian + b'i3f')
+                struct1 = Struct(self._endian + self._analysis_code_fmt + b'3f')
                 for i in range(nelements):
                     edata = data[n:n+ntotal]
 
                     out = struct1.unpack(edata)
                     (eid_device, energy, percent, density) = out
-                    eid = eid_device // 10
+                    if self.sort_method == 1:
+                        eid = eid_device // 10
+                    else:
+                        eid = self.nonlinear_factor
+                        dt = eid_device
                     if self.is_debug_file:
                         self.binary_debug.write('  eid=%i; %s\n' % (eid, str(out)))
                     self.obj.add_sort1(dt, eid, energy, percent, density)
@@ -430,6 +593,9 @@ class ONR(OP2Common):
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, RealStrainEnergyArray)
 
+            if auto_return:
+                return nelements * self.num_wide * 4
+
             obj = self.obj
             if self.use_vector:
                 n = nelements * 4 * self.num_wide
@@ -499,6 +665,7 @@ class ONR(OP2Common):
             #num_wide      = 4
             #isubcase      = 1
             #MSC Nastran
+            onr
         else:
             msg = self.code_information()
             return self._not_implemented_or_skip(data, ndata, msg)

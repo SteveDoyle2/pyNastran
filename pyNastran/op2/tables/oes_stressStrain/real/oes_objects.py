@@ -2,6 +2,21 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
 
+SORT2_TABLE_NAME_MAP = {
+    'OES2' : 'OES1',
+    'OESATO2' : 'OESATO1',
+    'OESCRM2' : 'OESCRM1',
+    'OESNO2' : 'OESNO1',
+    'OESPSD2' : 'OESPSD1',
+    'OESRMS2' : 'OESRMS1',
+
+    'OSTR2' : 'OSTR1',
+    'OSTRATO2' : 'OSTRATO1',
+    'OSTRCRM2' : 'OSTRCRM1',
+    'OSTRNO2' : 'OSTRNO1',
+    'OSTRPSD2' : 'OSTRPSD1',
+    'OSTRRMS2' : 'OSTRRMS1',
+}
 
 class OES_Object(ScalarObject):
     def __init__(self, data_code, isubcase, apply_data_code=True):
@@ -12,6 +27,19 @@ class OES_Object(ScalarObject):
         ScalarObject.__init__(self, data_code, isubcase, apply_data_code=apply_data_code)
         #self.log.debug("starting OES...element_name=%-6s isubcase=%s" % (self.element_name, self.isubcase))
         #print self.data_code
+
+    def finalize(self):
+        """it's required that the object be in SORT1"""
+        self.set_as_sort1()
+
+    def set_as_sort1(self):
+        """the data is in SORT1, but the flags are wrong"""
+        if self.is_sort1:
+            return
+        self.table_name = SORT2_TABLE_NAME_MAP[self.table_name]
+        self.sort_bits[1] = 0 # sort1
+        self.sort_method = 1
+        assert self.is_sort1 is True, self.is_sort1
 
     @property
     def is_curvature(self):

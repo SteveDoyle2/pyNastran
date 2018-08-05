@@ -141,6 +141,7 @@ class NonlinearGapStressArray(OES_Object):
                   shear_vi, shear_wi, slip_vi, slip_wi, form1, form2):
         """unvectorized method for adding SORT1 transient data"""
         assert isinstance(eid, ints)
+        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.itotal] = eid
         self.data[self.itime, self.itotal, :] = [comp_xi, shear_yi, shear_zi, axial_ui,

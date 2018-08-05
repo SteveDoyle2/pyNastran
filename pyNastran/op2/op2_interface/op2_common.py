@@ -882,7 +882,7 @@ class OP2Common(Op2Codes, F06Writer):
               DISP(PLOT,SORT1,REAL) = ALL
 
         """
-        # print('result_name=%s use_vector=%s is_vectorized=%s' % (result_name, self.use_vector, is_vectorized))
+        #print('result_name=%s use_vector=%s is_vectorized=%s' % (result_name, self.use_vector, is_vectorized))
         if self.is_debug_file:
             self.binary_debug.write('  _read_real_scalar_table_sort1\n')
         #assert flag in ['node', 'elem'], flag
@@ -1023,7 +1023,7 @@ class OP2Common(Op2Codes, F06Writer):
               DISP(PLOT,SORT1,REAL) = ALL
 
         """
-        # print('result_name=%s use_vector=%s is_vectorized=%s' % (result_name, self.use_vector, is_vectorized))
+        #print('result_name=%s use_vector=%s is_vectorized=%s' % (result_name, self.use_vector, is_vectorized))
         if self.is_debug_file:
             self.binary_debug.write('  _read_real_table_sort1\n')
         #assert flag in ['node', 'elem'], flag

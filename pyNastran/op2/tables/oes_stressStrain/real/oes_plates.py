@@ -183,6 +183,7 @@ class RealPlateArray(OES_Object):
     def add_sort1(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle,
                   major_principal, minor_principal, ovm):
         assert eid is not None, eid
+        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         assert isinstance(node_id, ints), node_id
         self.element_node[self.itotal, :] = [eid, node_id]
         self.data[self.itime, self.itotal, :] = [fiber_dist, oxx, oyy, txy, angle,

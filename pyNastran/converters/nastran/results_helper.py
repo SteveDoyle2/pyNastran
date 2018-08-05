@@ -432,6 +432,7 @@ class NastranGuiResults(NastranGuiAttributes):
             (model.dmig_strain_energy, 'DMIG', False),
             (model.genel_strain_energy, 'GENEL', False),
             (model.cshear_strain_energy, 'CSHEAR', True),
+            (model.conm2_strain_energy, 'CONM2', False),
         ]
         has_strain_energy = [key in res[0] for res in strain_energies]
         if not any(has_strain_energy):
