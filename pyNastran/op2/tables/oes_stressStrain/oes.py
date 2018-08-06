@@ -264,9 +264,10 @@ class OES(OP2Common):
         if self.element_type in [1, 3, 10, # CROD, CTUBE, CTUBE
                                  11, 12, 13, # CELAS1, CELAS2, CELAS3,
                                  2, 4, 34, 33, 74, # CBEAM, CSHEAR, CBAR, CQUAD4, CTRIA3,
-                                 75, 64, 70, 82, # CTRIA5, CQUAD8, CTRIAR, CQUADR
+                                 75, 64, 70, 82, 144, # CTRIA6, CQUAD8, CTRIAR, CQUADR, CQUAD4
                                  69, # CBEND
-                                 67, 68, 95, 102]: #CHEXA, CPENTA, QUAD4-comp, CBUSH
+                                 67, 68, 95, 102, #  #CHEXA, CPENTA, QUAD4-comp, CBUSH
+                                 97]: # CTRIA3-C
             n = self._read_oes_4_sort(data, ndata)
         else:
             msg = self.code_information()
@@ -467,9 +468,10 @@ class OES(OP2Common):
         if self.element_type in [1, 3, 10, # CROD, CTUBE, CTUBE
                                  11, 12, 13, # CELAS1, CELAS2, CELAS3,
                                  2, 4, 34, 33, 74, # CBEAM, CSHEAR, CBAR, CQUAD4, CTRIA3,
-                                 75, 64, 70, 82, # CTRIA5, CQUAD8, CTRIAR, CQUADR
+                                 75, 64, 70, 82, 144, # CTRIA6, CQUAD8, CTRIAR, CQUADR, CQUAD4
                                  69, # CBEND
-                                 67, 68, 95, 102]: #CHEXA, CPENTA, QUAD4-comp, CBUSH
+                                 67, 68, 95, 102,#CHEXA, CPENTA, QUAD4-comp, CBUSH
+                                 97]:  # CTRIA3-C
             n = self._read_ostr_4_sort(data, ndata)
         else:
             msg = self.code_information()
@@ -1080,9 +1082,9 @@ class OES(OP2Common):
         """
         prefix = ''
         postfix = ''
-        if self.table_name in [b'OES1X1', b'OES1X', b'OSTR1X', b'OES1C', b'OSTR1C', b'OES1']: # 'OES1C', 'OSTR1C', 'OES', 'OESTR1'
+        if self.table_name in [b'OES1X1', b'OES1X', b'OSTR1X', b'OES1C', b'OSTR1C', b'OES1', ]:
             pass
-        elif self.table_name in [b'OES2']:
+        elif self.table_name in [b'OES2', b'OSTR2', b'OES2C', b'OSTR2C']:
             assert self.sort_method == 2, self.sort_method
         #elif self.table_name in ['OESNLXR']:
             #prefix = 'sideline_'
@@ -1091,7 +1093,7 @@ class OES(OP2Common):
         elif self.table_name == b'OESNLBR':
             prefix = 'sideline_'
         elif self.table_name == b'OESRT':
-            prefix = 'strength_ratio_'
+            prefix = 'strength_ratio.'
         elif self.table_name in [b'OESCP', b'OESTRCP']:
             # guessing
             pass
@@ -1099,7 +1101,7 @@ class OES(OP2Common):
             #self.sort_bits[1] = 0 # sort1
             #self.sort_bits[2] = 1 # random; ???
         elif self.table_name in [b'OESVM1C', b'OSTRVM1C', b'OESVM1', b'OSTRVM1']:
-            prefix = 'modal_contribution_'
+            prefix = 'modal_contribution.'
 
         #----------------------------------------------------------------
         elif self.table_name in [b'OSTRMS1C']: #, b'OSTRMS1C']:
@@ -1190,7 +1192,28 @@ class OES(OP2Common):
         elif self.table_name in [b'RASCONS']: #, b'OSTRMS1C']:
             self.format_code = 1
             self.sort_bits[0] = 0 # real
-            postfix = '_RASCONS'
+            prefix = 'RASCONS.'
+        elif self.table_name in [b'RAECONS']: #, b'OSTRMS1C']:
+            self.format_code = 1
+            self.sort_bits[0] = 0 # real
+            prefix = 'RAECONS.'
+        elif self.table_name in [b'RAPCONS']: #, b'OSTRMS1C']:
+            self.format_code = 1
+            self.sort_bits[0] = 0 # real
+            prefix = 'RAPCONS.'
+
+        elif self.table_name in [b'RASEATC']: #, b'OSTRMS1C']:
+            self.format_code = 1
+            self.sort_bits[0] = 0 # real
+            prefix = 'RASEATC.'
+        elif self.table_name in [b'RAEEATC']: #, b'OSTRMS1C']:
+            self.format_code = 1
+            self.sort_bits[0] = 0 # real
+            prefix = 'RAEEATC.'
+        elif self.table_name in [b'RAPEATC']: #, b'OSTRMS1C']:
+            self.format_code = 1
+            self.sort_bits[0] = 0 # real
+            prefix = 'RAPEATC.'
 
         else:
             raise NotImplementedError(self.table_name)
@@ -1480,7 +1503,7 @@ class OES(OP2Common):
                     #self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
                 obj = self.obj
 
-                if self.use_vector and is_vectorized:
+                if self.use_vector and is_vectorized and self.sort_method == 1:
                     # self.itime = 0
                     # self.ielement = 0
                     # self.itotal = 0
@@ -1711,7 +1734,7 @@ class OES(OP2Common):
                     return nelements * self.num_wide * 4
 
                 obj = self.obj
-                #if self.use_vector and is_vectorized:
+                #if self.use_vector and is_vectorized and self.sort_method == 1:
                 n = nelements * self.num_wide * 4
 
                 istart = obj.itotal
@@ -1790,7 +1813,7 @@ class OES(OP2Common):
                     #return nelements * self.num_wide * 4
 
                 #obj = self.obj
-                ##if self.use_vector and is_vectorized:
+                ##if self.use_vector and is_vectorized and self.sort_method == 1:
                 #n = nlayers * self.num_wide * 4
 
                 #istart = obj.itotal
@@ -2056,7 +2079,7 @@ class OES(OP2Common):
 
             obj = self.obj
             assert obj is not None, self.code_information()
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 n = nelements * 4 * self.num_wide
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
@@ -2165,7 +2188,7 @@ class OES(OP2Common):
                 return nelements * self.num_wide * 4, None, None
 
             obj = self.obj
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 n = nelements * 4 * self.num_wide
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
@@ -2215,7 +2238,7 @@ class OES(OP2Common):
                 return nelements * self.num_wide * 4, None, None
 
             obj = self.obj
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 n = nelements * 4 * self.num_wide
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
@@ -2412,7 +2435,7 @@ class OES(OP2Common):
 
             nnodes = 10  # 11-1
             ntotal = self.num_wide * 4
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 n = nelements * 4 * self.num_wide
                 itotal = obj.itotal
                 itotal2 = itotal + nelements * 11
@@ -2599,7 +2622,7 @@ class OES(OP2Common):
 
             obj = self.obj
             assert obj is not None
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 n = nelements * 4 * self.num_wide
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
@@ -2645,7 +2668,7 @@ class OES(OP2Common):
                 return nelements * self.num_wide * 4, None, None
 
             obj = self.obj
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 n = nelements * 4 * self.num_wide
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
@@ -2779,7 +2802,7 @@ class OES(OP2Common):
                 self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
             obj = self.obj
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 # self.itime = 0
                 # self.ielement = 0
                 # self.itotal = 0
@@ -2846,7 +2869,7 @@ class OES(OP2Common):
                 self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
             obj = self.obj
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 n = nelements * 4 * self.num_wide
                 itotal = obj.itotal
                 itotal2 = itotal + nelements
@@ -3083,7 +3106,7 @@ class OES(OP2Common):
                 return nelements * self.num_wide * 4, None, None
 
             obj = self.obj
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 n = nelements * 4 * self.num_wide
                 itotal = obj.ielement
                 itotali = obj.itotal + nelements
@@ -3198,13 +3221,13 @@ class OES(OP2Common):
                         if inode == 0:
                             #  this is correct, but fails
                             #element_name = self.element_name + str(nnodes)
-                            obj.add_eid(element_name, cid, dt, eid, grid,
-                                        sxx, syy, szz, sxy, syz, sxz, s1, s2, s3,
-                                        a_cos, b_cos, c_cos, pressure, svm)
+                            obj.add_eid_sort1(element_name, cid, dt, eid, grid,
+                                              sxx, syy, szz, sxy, syz, sxz, s1, s2, s3,
+                                              a_cos, b_cos, c_cos, pressure, svm)
                         else:
-                            obj.add_node(dt, eid, inode, grid,
-                                         sxx, syy, szz, sxy, syz, sxz, s1, s2, s3,
-                                         a_cos, b_cos, c_cos, pressure, svm)
+                            obj.add_node_sort1(dt, eid, inode, grid,
+                                               sxx, syy, szz, sxy, syz, sxz, s1, s2, s3,
+                                               a_cos, b_cos, c_cos, pressure, svm)
                         n += 84
 
         elif self.format_code in [2, 3] and self.num_wide == numwide_imag:  # complex
@@ -3219,7 +3242,7 @@ class OES(OP2Common):
 
             obj = self.obj
 
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 n = nelements * 4 * self.num_wide
                 ielement = obj.ielement
                 ielement2 = ielement + nelements
@@ -3620,7 +3643,7 @@ class OES(OP2Common):
 
             obj = self.obj
             assert obj.is_built is True, obj.is_built
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 n = nelements * 4 * self.num_wide
                 ielement = obj.ielement
                 ielement2 = ielement + nelements
@@ -3679,7 +3702,7 @@ class OES(OP2Common):
                 return nelements * ntotal, None, None
 
             obj = self.obj
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 n = nelements * 4 * self.num_wide
                 nnodes_all = (nnodes + 1)
                 itotal = obj.itotal
@@ -3989,7 +4012,7 @@ class OES(OP2Common):
                 self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
             obj = self.obj
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 nfields = 17 * nelements
                 nbytes = nfields * 4
                 itotal = obj.itotal
@@ -4047,7 +4070,7 @@ class OES(OP2Common):
                 return nelements * self.num_wide * 4, None, None
             obj = self.obj
 
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 n = nelements * 4 * self.num_wide
                 itotal = obj.itotal
                 itotal2 = itotal + nelements * 2
@@ -4383,7 +4406,7 @@ class OES(OP2Common):
         #))
         etype = self.element_name
         #grid_center = 'CEN/%i' % nnodes
-        if self.format_code in [1, 3] and self.num_wide == numwide_real:  # real
+        if self.format_code in [1, 2, 3] and self.num_wide == numwide_real:  # real
             ntotal = 4 * (2 + 17 * nnodes_all)
             nelements = ndata // ntotal
             assert ndata % ntotal == 0
@@ -4397,7 +4420,7 @@ class OES(OP2Common):
 
             obj = self.obj
             #print('dt=%s, itime=%s' % (obj.itime, dt))
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 # self.itime = 0
                 # self.ielement = 0
                 # self.itotal = 0
@@ -4509,7 +4532,7 @@ class OES(OP2Common):
                 return nelements * ntotal, None, None
             obj = self.obj
 
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 n = nelements * 4 * self.num_wide
                 itotal = obj.itotal
                 itotal2 = itotal + nelements * (nnodes_all * 2)
@@ -4810,7 +4833,7 @@ class OES(OP2Common):
                 return nelements * self.num_wide * 4, None, None
 
             obj = self.obj
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 n = nelements * self.num_wide * 4
 
                 ielement = obj.ielement
@@ -4877,7 +4900,7 @@ class OES(OP2Common):
             #return nelements * self.num_wide * 4
             obj = self.obj
             is_vectorized = False
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 n = nelements * self.num_wide * 4
 
                 ielement = obj.ielement
@@ -5007,7 +5030,7 @@ class OES(OP2Common):
                 self.binary_debug.write('  element1 = [eid_device, layer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)]\n')
                 self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 n = nelements * self.num_wide * 4
 
                 istart = obj.itotal
@@ -5113,7 +5136,7 @@ class OES(OP2Common):
                 #obj.add_new_eid(dt, eid, theory, lamid, fp, fm, fb, fmax, fflag)
                 n += ntotal
         elif self.num_wide == 9 and self.table_name == 'OESRT':
-            # strength_ratio_cquad4_composite_stress
+            # strength_ratio.cquad4_composite_stress
             ntotal = 36
             nelements = ndata // ntotal
             if self.read_mode == 1:
@@ -5203,7 +5226,7 @@ class OES(OP2Common):
 
             obj = self.obj
             nnodes_all = 4
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 n = nelements * self.num_wide * 4
 
                 itotal = obj.itotal
@@ -5455,7 +5478,7 @@ class OES(OP2Common):
                 return nelements * self.num_wide * 4, None, None
 
             obj = self.obj
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 n = nelements * 4 * self.num_wide
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
@@ -5547,7 +5570,7 @@ class OES(OP2Common):
                 return nelements * self.num_wide * 4, None, None
 
             obj = self.obj
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 n = nelements * self.num_wide * 4
 
                 itotal = obj.itotal
@@ -5602,7 +5625,7 @@ class OES(OP2Common):
                 return nelements * self.num_wide * 4, None, None
 
             obj = self.obj
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 n = nelements * self.num_wide * 4
 
                 itotal = obj.itotal
@@ -5711,7 +5734,7 @@ class OES(OP2Common):
                 #self.binary_debug.write('  element1 = [eid_device, layer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)]\n')
                 #self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 n = nelements * self.num_wide * 4
                 istart = obj.itotal
                 iend = istart + nelements
@@ -5788,7 +5811,7 @@ class OES(OP2Common):
                 return nelements * self.num_wide * 4, None, None
             obj = self.obj
 
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 n = nelements * 4 * self.num_wide
                 itotal = obj.ielement
                 ielement = obj.ielement
@@ -5913,7 +5936,7 @@ class OES(OP2Common):
                 return nelements * self.num_wide * 4, None, None
 
             obj = self.obj
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 n = nelements * self.num_wide * 4
 
                 ielement = obj.ielement
@@ -6077,7 +6100,7 @@ class OES(OP2Common):
                 self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
             obj = self.obj
 
-            if self.use_vector and is_vectorized:
+            if self.use_vector and is_vectorized and self.sort_method == 1:
                 # self.itime = 0
                 # self.ielement = 0
                 # self.itotal = 0

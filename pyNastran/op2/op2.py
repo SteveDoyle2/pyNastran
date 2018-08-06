@@ -871,7 +871,7 @@ class OP2(OP2_Scalar):
         keys = []
         table_types = self.get_table_types()
         for table_type in sorted(table_types):
-            result_type_dict = getattr(self, table_type)
+            result_type_dict = self.get_result(table_type)
             if len(result_type_dict) == 0:
                 continue
             for key in result_type_dict:
@@ -1016,7 +1016,7 @@ class OP2(OP2_Scalar):
             #self.spc_forces_no, self.mpc_forces_no,
 
             self.displacements,
-            self.ato.displacements_ato, self.crm.displacements_crm, self.psd.displacements, self.rms.displacements,
+            self.ato.displacements, self.crm.displacements, self.psd.displacements, self.rms.displacements,
             self.displacements_scaled,
             self.displacement_scaled_response_spectra_ABS,
             self.displacement_scaled_response_spectra_NRL,

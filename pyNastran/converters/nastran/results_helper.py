@@ -1083,10 +1083,10 @@ def _get_times(model, key):
     is_static = False
     times = None
     for table_type in table_types:
-        if not hasattr(model, table_type):
+        if not model.has_result(table_type):
             print('no table_type=%s' % table_type)
             continue
-        table = getattr(model, table_type)
+        table = model.get_result(table_type)
         if len(table) == 0:
             continue
         #print(key, table, type(table))

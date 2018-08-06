@@ -112,7 +112,7 @@ class OEF(OP2Common):
         #elif self.table_name == 'OESNLBR':
             #prefix = 'sideline_'
         #elif self.table_name == 'OESRT':
-            #prefix = 'strength_ratio_'
+            #prefix = 'strength_ratio.'
         #elif self.table_name in ['OESCP', 'OESTRCP']:
             #pass # TODO: update
         elif self.table_name in [b'OEFCRM1']:
@@ -163,9 +163,9 @@ class OEF(OP2Common):
             prefix = 'ato.'
 
         elif self.table_name in [b'RAFCONS']:
-            postfix = '_RAFCONS'
+            prefix = 'RAFCONS.'
         elif self.table_name in [b'RAFEATC']:
-            postfix = '_RAFEATC'
+            prefix = 'RAFEATC.'
         elif self.table_name in [b'DOEF1']:
             assert self.table_code in [4], self.code_information()
             if self.thermal == 2:

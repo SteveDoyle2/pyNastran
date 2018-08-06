@@ -4,6 +4,7 @@ from pyNastran.op2.result_objects.op2_objects import ScalarObject
 
 SORT2_TABLE_NAME_MAP = {
     'OES2' : 'OES1',
+    'OES2C' : 'OES1C',
     'OESATO2' : 'OESATO1',
     'OESCRM2' : 'OESCRM1',
     'OESNO2' : 'OESNO1',
@@ -11,6 +12,7 @@ SORT2_TABLE_NAME_MAP = {
     'OESRMS2' : 'OESRMS1',
 
     'OSTR2' : 'OSTR1',
+    'OSTR2C' : 'OSTR1C',
     'OSTRATO2' : 'OSTRATO1',
     'OSTRCRM2' : 'OSTRCRM1',
     'OSTRNO2' : 'OSTRNO1',

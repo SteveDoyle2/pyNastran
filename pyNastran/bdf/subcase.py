@@ -238,7 +238,7 @@ class Subcase(object):
                 self.add('SPCFORCES', 'ALL', options, 'STRESS-type')
             else:
                 self._write_op2_error_msg(log, self.log, msg, data_code)
-        elif table_name in ['OEF1X', 'OEF1']:
+        elif table_name in ['OEF1X', 'OEF1', 'RAFCONS', 'RAFEATC']:
             if table_code in [4]:
                 self.add('FORCE', 'ALL', options, 'STRESS-type')
             else:
@@ -308,7 +308,7 @@ class Subcase(object):
                 self.add('MPCFORCES', 'ALL', options, 'STRESS-type')
             else:
                 self._write_op2_error_msg(log, self.log, msg, data_code)
-        elif table_name in ['OGPFB1']:
+        elif table_name in ['OGPFB1', 'RAGCONS', 'RAGEATC']:
             if table_code == 19:
                 self.add('GPFORCE', 'ALL', options, 'STRESS-type')
             else:
@@ -317,17 +317,23 @@ class Subcase(object):
         # stress
         elif table_name in ['OES1', 'OES1X', 'OES1X1', 'OES1C', 'OESCP',
                             'OESNLXD', 'OESNLXR', 'OESNLBR', 'OESTRCP',
-                            'OESVM1', 'OESVM1C', 'OESNL1X']:
+                            'OESVM1', 'OESVM1C', 'OESNL1X', 'RASCONS', 'RASEATC']:
             #assert data_code['is_stress_flag'] == True, data_code
             options.append('SORT1')
             if table_code == 5:
                 self.add('STRESS', 'ALL', options, 'STRESS-type')
             else:
                 self._write_op2_error_msg(log, self.log, msg, data_code)
-        elif table_name in ['OES2']:
+        elif table_name in ['OES2', 'OES2C']:
             options.append('SORT2')
             if table_code == 5:
                 self.add('STRESS', 'ALL', options, 'STRESS-type')
+            else:
+                self._write_op2_error_msg(log, self.log, msg, data_code)
+        elif table_name in ['OSTR2', 'OSTR2C']:
+            options.append('SORT2')
+            if table_code == 5:
+                self.add('STRAIN', 'ALL', options, 'STRESS-type')
             else:
                 self._write_op2_error_msg(log, self.log, msg, data_code)
 
@@ -339,7 +345,7 @@ class Subcase(object):
                 self._write_op2_error_msg(log, self.log, msg, data_code)
 
         # strain
-        elif table_name in ['OSTR1X', 'OSTR1C']:
+        elif table_name in ['OSTR1X', 'OSTR1C', 'RAECONS', 'RAEEATC']:
             assert data_code['is_strain_flag'] is True, data_code
             if table_code == 5:
                 self.add('STRAIN', 'ALL', options, 'STRESS-type')

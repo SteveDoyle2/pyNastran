@@ -4,8 +4,10 @@ from six import string_types, PY2, PY3
 
 # strings
 SORT1_TABLES = [b'OSTRMS1C', b'OSTNO1C', b'OES1X', b'OSTR1X',
-                b'OESRMS2', b'OESNO2', b'OESXRMS1']
-SORT2_TABLES = [b'OUGPSD2', b'OUGATO2', 'OESCP']
+                b'OESRMS2', b'OESNO2', b'OESXRMS1',
+                b'OES1C', b'OSTR1C']
+SORT2_TABLES = [b'OUGPSD2', b'OUGATO2', b'OESCP',
+                b'OES2C', b'OSTR2C']
 
 def get_sort_method_from_table_name(table_name):
     """helper method"""
@@ -14,8 +16,13 @@ def get_sort_method_from_table_name(table_name):
     elif table_name in SORT2_TABLES:
         sort_method = 2
     else:
-        table_num = table_name.decode('utf8')[-1]
-        sort_method = int(table_num)
+        table_name_str = table_name.decode('utf8')
+        table_num = table_name_str[-1]
+        try:
+            sort_method = int(table_num)
+        except ValueError:
+            print('table_name=%r' % table_name_str)
+            raise
     return sort_method
 
 
@@ -1099,6 +1106,8 @@ class Op2Codes(object):
             table_name = self.table_name_str
             if table_name in SORT2_TABLES:
                 is_sort2_table = True
+            elif table_name in SORT1_TABLES:
+                is_sort2_table = False
             else:
                 try:
                     is_sort2_table = int(table_name[-1]) == 2

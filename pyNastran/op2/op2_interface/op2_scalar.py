@@ -772,16 +772,15 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OSTRVM1' : [self._read_oes1_3, self._read_ostr1_4],   # isat_random
             b'OSTRVM1C' : [self._read_oes1_3, self._read_ostr1_4],  # isat_random
 
-            b'OSTR2' : [self._table_passer, self._table_passer],  # TODO: enable
-            b'OES2C' : [self._table_passer, self._table_passer],
-            b'OSTR2C' : [self._table_passer, self._table_passer],
+            b'OES2C' : [self._read_oes2_3, self._read_oes2_4],
+            b'OSTR2' : [self._read_oes2_3, self._read_ostr2_4], # TODO: disable
+            b'OSTR2C' : [self._read_oes2_3, self._read_ostr2_4],
+            #b'OES2C' : [self._table_passer, self._table_passer], # stress
+            #b'OSTR2' : [self._table_passer, self._table_passer],  # TODO: enable
+            #b'OSTR2C' : [self._table_passer, self._table_passer],
 
-            #b'OSTR2' : [self._read_oes2_3, self._read_ostr2_4], # TODO: disable
-            #b'OES2C' : [self._read_oes2_3, self._read_ostr2_4],
-            #b'OSTR2C' : [self._read_oes2_3, self._read_ostr2_4],
 
             # MSC TABLES
-
             # common tables
 
             # unorganized
@@ -790,34 +789,43 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'RADEATC': [self._read_oug1_3, self._read_oug_4], # Displacement Equivalent Inertia Attachment mode (OUG)
 
             # broken - isat_launch_100hz.op2 - wrong numwide
+            # spc forces
             b'RAQCONS': [self._read_oqg1_3, self._read_oqg_4], # Constraint mode MPC force table (OQG)
             b'RAQEATC': [self._read_oqg1_3, self._read_oqg_4], # Attachment mode MPC force table (OQG)
             #b'RAQCONS': [self._table_passer, self._table_passer], # temporary
             #b'RAQEATC': [self._table_passer, self._table_passer], # temporary
 
-            #b'RAFCONS': [self._read_oef1_3, self._read_oef1_4], # Element Force Constraint Mode (OEF)
-            #b'RAFEATC': [self._read_oef1_3, self._read_oef1_4], # Element Force Equivalent Inertia Attachment mode (OEF)
-            b'RAFCONS': [self._table_passer, self._table_passer], # temporary
-            b'RAFEATC': [self._table_passer, self._table_passer], # temporary
+            # element forces
+            b'RAFCONS': [self._read_oef1_3, self._read_oef1_4], # Element Force Constraint Mode (OEF)
+            b'RAFEATC': [self._read_oef1_3, self._read_oef1_4], # Element Force Equivalent Inertia Attachment mode (OEF)
+            #b'RAFCONS': [self._table_passer, self._table_passer], # temporary
+            #b'RAFEATC': [self._table_passer, self._table_passer], # temporary
 
-            #b'RAGCONS': [self._read_oef1_3, self._read_oef1_4], # Grid Point Forces Constraint Mode (OGPFB)
+            # grid point forces
+            b'RAGCONS': [self._read_ogpf1_3, self._read_ogpf1_4], # Grid Point Forces Constraint Mode (OGPFB)
+            b'RAGEATC': [self._read_ogpf1_3, self._read_ogpf1_4], # Grid Point Forces Equivalent Inertia Attachment mode (OEF)
+            #b'RAGCONS': [self._table_passer, self._table_passer], # Grid Point Forces Constraint Mode (OGPFB)
             #b'RAGEATC': [self._table_passer, self._table_passer], # Grid Point Forces Equivalent Inertia Attachment mode (OEF)
-            b'RAGCONS': [self._table_passer, self._table_passer], # temporary
-            b'RAGEATC': [self._table_passer, self._table_passer], # temporary
 
-            b'RAPCONS': [self._table_passer, self._table_passer], # Constraint mode ply stress table (OES)
-            b'RAPEATC': [self._table_passer, self._table_passer], # Attachment mode ply stress table (OES)
+            # stress
+            b'RAPCONS': [self._read_oes1_3, self._read_oes1_4], # Constraint mode ply stress table (OES)
+            b'RAPEATC': [self._read_oes1_3, self._read_oes1_4], # Attachment mode ply stress table (OES)
+            #b'RAPCONS': [self._table_passer, self._table_passer], # Constraint mode ply stress table (OES)
+            #b'RAPEATC': [self._table_passer, self._table_passer], # Attachment mode ply stress table (OES)
 
+            # stress
             b'RASCONS': [self._read_oes1_3, self._read_oes1_4], # Stress Constraint Mode (OES)
-            #b'RASEATC': [self._read_oes1_3, self._read_oes1_4], # Stress Equivalent Inertia Attachment mode (OES)
+            b'RASEATC': [self._read_oes1_3, self._read_oes1_4], # Stress Equivalent Inertia Attachment mode (OES)
             #b'RASCONS': [self._table_passer, self._table_passer], # temporary
-            b'RASEATC': [self._table_passer, self._table_passer], # temporary
+            #b'RASEATC': [self._table_passer, self._table_passer], # temporary
 
+            # strain
             b'RAEEATC': [self._read_oes1_3, self._read_ostr1_4], # Strain Equivalent Inertia Attachment mode (OES)
-            #b'RAECONS': [self._read_oes1_3, self._read_oes1_4], # Strain Constraint Mode (OSTR)
-            b'RAEEATC': [self._table_passer, self._table_passer], # temporary
-            b'RAECONS': [self._table_passer, self._table_passer], # temporary
+            b'RAECONS': [self._read_oes1_3, self._read_ostr1_4], # Strain Constraint Mode (OSTR)
+            #b'RAEEATC': [self._table_passer, self._table_passer], # temporary
+            #b'RAECONS': [self._table_passer, self._table_passer], # temporary
 
+            # strain energy
             b'RANEATC': [self._table_passer, self._table_passer], # Strain Energy Equivalent Inertia Attachment mode (ORGY1)
             b'RANCONS': [self._table_passer, self._table_passer], # Constraint mode element strain energy table (ORGY1)
 
@@ -1224,7 +1232,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OEFCRM2' : [self._read_oef2_3, self._read_oef2_4],
             b'OEFPSD2' : [self._read_oef2_3, self._read_oef2_4],
             b'OEFRMS2' : [self._read_oef2_3, self._read_oef2_4],
-            b'OEFNO2'  : [self._read_oef2_3, self._read_oef2_4],
+            #b'OEFNO2'  : [self._read_oef2_3, self._read_oef2_4],
+            b'OEFNO2' : [self._table_passer, self._table_passer], # buggy on isat_random_steve2.op2
         }
         return table_mapper
 

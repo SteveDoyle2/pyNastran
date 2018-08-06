@@ -21,14 +21,23 @@ class OGPF(OP2Common):
         self._read_opg1_3(data, ndata)  # TODO: this is wrong...
 
     def _read_ogpf1_4(self, data, ndata):
+        prefix = ''
         if self.table_code == 19:  # grid point force balance
-            assert self.table_name in [b'OGPFB1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
-            n = self._read_grid_point_forces(data, ndata)
+            if self.table_name in [b'OGPFB1']:
+                pass
+            elif self.table_name in [b'RAGEATC']:
+                prefix = 'RAGEATC.'
+            elif self.table_name in [b'RAGCONS']:
+                prefix = 'RAGCONS.'
+            else:
+                msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+                raise RuntimeError(msg)
+            n = self._read_grid_point_forces(data, ndata, prefix=prefix)
         else:
             raise NotImplementedError(self.table_code)
         return n
 
-    def _read_grid_point_forces(self, data, ndata):
+    def _read_grid_point_forces(self, data, ndata, prefix=''):
         """
         table_code = 19
         """
@@ -38,11 +47,11 @@ class OGPF(OP2Common):
         is_magnitude_phase = self.is_magnitude_phase()
 
         if self.thermal == 0:
-            result_name = 'grid_point_forces'
+            result_name = prefix + 'grid_point_forces'
             if self._results.is_not_saved(result_name):
                 return ndata
             self._results._found_result(result_name)
-            slot = getattr(self, result_name)
+            slot = self.get_result(result_name)
 
             if self.num_wide == 10:
                 ntotal = 40

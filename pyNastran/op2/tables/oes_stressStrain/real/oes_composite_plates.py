@@ -26,11 +26,11 @@ class RealCompositePlateArray(OES_Object):
         self.nelements = 0  # result specific
         self.nnodes = None
 
-        if is_sort1:
-            if dt is not None:
-                pass
-        else:
-            raise NotImplementedError('SORT2')
+        #if is_sort1:
+            #if dt is not None:
+                #pass
+        #else:
+            #raise NotImplementedError('SORT2')
 
     @property
     def is_real(self):

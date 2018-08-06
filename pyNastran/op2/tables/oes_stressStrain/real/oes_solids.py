@@ -28,12 +28,12 @@ class RealSolidArray(OES_Object):
         #self.ntotal = 0
         self.nelements = 0  # result specific
 
-        if is_sort1:
-            #sort1
-            self.add_node = self.add_node_sort1
-            self.add_eid = self.add_eid_sort1
-        else:
-            raise NotImplementedError('SORT2')
+        #if is_sort1:
+            ##sort1
+            #self.add_node = self.add_node_sort1
+            #self.add_eid = self.add_eid_sort1
+        #else:
+            #raise NotImplementedError('SORT2')
 
     @property
     def is_real(self):
