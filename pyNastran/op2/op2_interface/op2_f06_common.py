@@ -10,6 +10,156 @@ from pyNastran.utils import object_attributes, integer_types
 from pyNastran.bdf.cards.base_card import deprecated
 from pyNastran.bdf.case_control_deck import CaseControlDeck
 
+class RandomObjects(object):
+    prefix = ''
+    postfix = ''
+    def __init__(self):
+        self.displacements = {}
+        self.velocities = {}
+        self.accelerations = {}
+        self.load_vectors = {}
+        self.spc_forces = {}
+        self.mpc_forces = {}
+
+        self.crod_force = {}
+        self.conrod_force = {}
+        self.ctube_force = {}
+
+        self.cbar_force = {}
+        self.cbeam_force = {}
+
+        self.cbush_stress = {}
+        self.cbush_strain = {}
+
+        self.crod_stress = {}
+        self.conrod_stress = {}
+        self.ctube_stress = {}
+        self.cbar_stress = {}
+        self.cbeam_stress = {}
+
+        self.crod_strain = {}
+        self.conrod_strain = {}
+        self.ctube_strain = {}
+        self.cbar_strain = {}
+        self.cbeam_strain = {}
+
+        self.ctetra_strain = {}
+        self.cpenta_strain = {}
+        self.chexa_strain = {}
+
+        self.ctetra_stress = {}
+        self.cpenta_stress = {}
+        self.chexa_stress = {}
+
+        self.celas1_stress = {}
+        self.celas2_stress = {}
+        self.celas3_stress = {}
+        self.celas4_stress = {}
+
+        self.celas1_strain = {}
+        self.celas2_strain = {}
+        self.celas3_strain = {}
+        self.celas4_strain = {}
+
+        self.celas1_force = {}
+        self.celas2_force = {}
+        self.celas3_force = {}
+        self.celas4_force = {}
+
+        self.ctria3_force = {}
+        self.ctria6_force = {}
+        self.ctriar_force = {}
+        self.cquad4_force = {}
+        self.cquad8_force = {}
+        self.cquadr_force = {}
+
+        self.ctria3_stress = {}
+        self.ctria6_stress = {}
+        self.cquad4_stress = {}
+        self.cquad8_stress = {}
+        self.cquadr_stress = {}
+        self.ctriar_stress = {}
+
+        self.ctria3_strain = {}
+        self.ctria6_strain = {}
+        self.cquad4_strain = {}
+        self.cquad8_strain = {}
+        self.cquadr_strain = {}
+        self.ctriar_strain = {}
+
+        self.cbend_stress = {}
+        self.cbend_strain = {}
+        self.cbend_force = {}
+
+        self.cshear_stress = {}
+        self.cshear_strain = {}
+        self.cshear_force = {}
+
+        self.cbush_force = {}
+        self.cdamp1_force = {}
+        self.cdamp2_force = {}
+        self.cdamp3_force = {}
+        self.cdamp4_force = {}
+        self.cvisc_force = {}
+
+    def get_table_types(self):
+        tables = [
+            'displacements', 'velocities', 'accelerations',
+            'load_vectors', 'spc_forces', 'mpc_forces',
+
+            'celas1_force', 'celas2_force', 'celas3_force', 'celas4_force',
+            'crod_force', 'conrod_force', 'ctube_force',
+            'cbar_force', 'cbeam_force',
+            'cquad4_force', 'cquad8_force', 'cquadr_force',
+            'ctria3_force', 'ctria6_force', 'ctriar_force',
+
+            'celas1_stress', 'celas2_stress', 'celas3_stress', 'celas4_stress',
+            'crod_stress', 'conrod_stress', 'ctube_stress',
+            'cbar_stress', 'cbeam_stress',
+            'ctria3_stress', 'ctriar_stress', 'ctria6_stress',
+            'cquadr_stress', 'cquad4_stress', 'cquad8_stress',
+            'ctetra_stress', 'cpenta_stress', 'chexa_stress',
+
+            'celas1_strain', 'celas2_strain', 'celas3_strain', 'celas4_strain',
+            'crod_strain', 'conrod_strain', 'ctube_strain',
+            'cbar_strain', 'cbeam_strain',
+            'ctria3_strain', 'ctriar_strain', 'ctria6_strain',
+            'cquadr_strain', 'cquad4_strain', 'cquad8_strain',
+            'ctetra_strain', 'cpenta_strain', 'chexa_strain',
+
+            'cbend_stress', 'cbend_strain', 'cbend_force',
+            'cbush_stress',
+            'cbush_strain',
+            'cshear_stress', 'cshear_strain', 'cshear_force',
+
+            'cbush_force',
+            'cdamp1_force',
+            'cdamp2_force',
+            'cdamp3_force',
+            'cdamp4_force',
+            'cvisc_force',
+        ]
+        return [self.prefix + table + self.postfix for table in tables]
+
+class AutoCorrelationObjects(RandomObjects):
+    prefix = 'ato.'
+    #postfix = ''
+
+class PowerSpectralDensityObjects(RandomObjects):
+    prefix = 'psd.'
+    #postfix = ''
+
+class RootMeansSquareObjects(RandomObjects):
+    prefix = 'rms.'
+    #postfix = ''
+
+class CumulativeRootMeansSquareObjects(RandomObjects):
+    prefix = 'crm.'
+    #postfix = ''
+
+class NumberOfCrossingsObjects(RandomObjects):
+    prefix = 'no.'
+    #postfix = ''
 
 class OP2_F06_Common(object):
     def __init__(self):
@@ -34,6 +184,32 @@ class OP2_F06_Common(object):
         self.__objects_init__()
         self.__objects_common_init__()
 
+    def get_result(self, result_name):
+        """
+        Getattr, but considers sub-objects
+
+        Example 1
+        =========
+        self.eigenvectors = get_result('eigenvectors')
+
+        Example 2
+        =========
+        self.ato.displacements = get_result('ato.displacements')
+
+        """
+        if '.' in result_name:
+            try:
+                obj_name, result_name = result_name.split('.')
+            except ValueError:
+                print('result_name = %r' % result_name)
+                raise
+            storage_obj = getattr(self, obj_name)
+            storage_dict = getattr(storage_obj, result_name)
+            return storage_dict
+        else:
+            storage_obj = getattr(self, result_name)
+            return storage_obj
+
     def deprecated(self, old_name, new_name, deprecated_version):
         """allows for simple OP2 vectorization"""
         return deprecated(old_name, new_name, deprecated_version, levels=[0, 1, 2])
@@ -48,68 +224,23 @@ class OP2_F06_Common(object):
         """
         #======================================================================
         # rods
+        self.ato = AutoCorrelationObjects()
+        self.psd = PowerSpectralDensityObjects()
+        self.rms = RootMeansSquareObjects()
+        self.no = NumberOfCrossingsObjects()
+        self.crm = CumulativeRootMeansSquareObjects()
+
         self.crod_force = {}
-        self.crod_force_ato = {}
-        self.crod_force_crm = {}
-        self.crod_force_psd = {}
-        self.crod_force_rms = {}
-        self.crod_force_no  = {}
-
         self.conrod_force = {}
-        self.conrod_force_ato = {}
-        self.conrod_force_crm = {}
-        self.conrod_force_psd = {}
-        self.conrod_force_rms = {}
-        self.conrod_force_no  = {}
-
         self.ctube_force = {}
-        self.ctube_force_ato = {}
-        self.ctube_force_crm = {}
-        self.ctube_force_psd = {}
-        self.ctube_force_rms = {}
-        self.ctube_force_no  = {}
 
         self.crod_stress = {}
-        self.crod_stress_ato = {}
-        self.crod_stress_crm = {}
-        self.crod_stress_psd = {}
-        self.crod_stress_rms = {}
-        self.crod_stress_no  = {}
-
         self.conrod_stress = {}
-        self.conrod_stress_ato = {}
-        self.conrod_stress_crm = {}
-        self.conrod_stress_psd = {}
-        self.conrod_stress_rms = {}
-        self.conrod_stress_no  = {}
-
         self.ctube_stress = {}
-        self.ctube_stress_ato = {}
-        self.ctube_stress_crm = {}
-        self.ctube_stress_psd = {}
-        self.ctube_stress_rms = {}
-        self.ctube_stress_no  = {}
 
         self.crod_strain = {}
-        self.crod_strain_ato = {}
-        self.crod_strain_crm = {}
-        self.crod_strain_psd = {}
-        self.crod_strain_rms = {}
-        self.crod_strain_no  = {}
-
         self.conrod_strain = {}
-        self.conrod_strain_ato = {}
-        self.conrod_strain_crm = {}
-        self.conrod_strain_psd = {}
-        self.conrod_strain_rms = {}
-        self.conrod_strain_no  = {}
-
         self.ctube_strain = {}
-        self.ctube_strain_ato = {}
-        self.ctube_strain_crm = {}
-        self.ctube_strain_psd = {}
-        self.ctube_strain_rms = {}
-        self.ctube_strain_no  = {}
 
         self.modal_contribution_crod_stress = {}
         self.modal_contribution_conrod_stress = {}
@@ -134,30 +265,6 @@ class OP2_F06_Common(object):
         self.modal_contribution_celas3_stress = {}
         self.modal_contribution_celas4_stress = {}
 
-        self.celas1_stress_ato = {}
-        self.celas1_stress_crm = {}
-        self.celas1_stress_psd = {}
-        self.celas1_stress_rms = {}
-        self.celas1_stress_no = {}
-
-        self.celas2_stress_ato = {}
-        self.celas2_stress_crm = {}
-        self.celas2_stress_psd = {}
-        self.celas2_stress_rms = {}
-        self.celas2_stress_no = {}
-
-        self.celas3_stress_ato = {}
-        self.celas3_stress_crm = {}
-        self.celas3_stress_psd = {}
-        self.celas3_stress_rms = {}
-        self.celas3_stress_no = {}
-
-        self.celas4_stress_ato = {}
-        self.celas4_stress_crm = {}
-        self.celas4_stress_psd = {}
-        self.celas4_stress_rms = {}
-        self.celas4_stress_no = {}
-
         self.celas1_strain = {}
         self.celas2_strain = {}
         self.celas3_strain = {}
@@ -173,72 +280,14 @@ class OP2_F06_Common(object):
         self.modal_contribution_celas3_strain = {}
         self.modal_contribution_celas4_strain = {}
 
-        self.celas1_strain_ato = {}
-        self.celas1_strain_crm = {}
-        self.celas1_strain_psd = {}
-        self.celas1_strain_rms = {}
-        self.celas1_strain_no = {}
-
-        self.celas2_strain_ato = {}
-        self.celas2_strain_crm = {}
-        self.celas2_strain_psd = {}
-        self.celas2_strain_rms = {}
-        self.celas2_strain_no = {}
-
-        self.celas3_strain_ato = {}
-        self.celas3_strain_crm = {}
-        self.celas3_strain_psd = {}
-        self.celas3_strain_rms = {}
-        self.celas3_strain_no = {}
-
-        self.celas4_strain_ato = {}
-        self.celas4_strain_crm = {}
-        self.celas4_strain_psd = {}
-        self.celas4_strain_rms = {}
-        self.celas4_strain_no = {}
-
         #======================================================================
         self.ctetra_stress = {}
-        self.ctetra_stress_ato = {}
-        self.ctetra_stress_crm = {}
-        self.ctetra_stress_no = {}
-        self.ctetra_stress_psd = {}
-        self.ctetra_stress_rms = {}
-
         self.cpenta_stress = {}
-        self.cpenta_stress_ato = {}
-        self.cpenta_stress_crm = {}
-        self.cpenta_stress_no = {}
-        self.cpenta_stress_psd = {}
-        self.cpenta_stress_rms = {}
-
         self.chexa_stress = {}
-        self.chexa_stress_ato = {}
-        self.chexa_stress_crm = {}
-        self.chexa_stress_no = {}
-        self.chexa_stress_psd = {}
-        self.chexa_stress_rms = {}
 
         self.ctetra_strain = {}
-        self.ctetra_strain_ato = {}
-        self.ctetra_strain_crm = {}
-        self.ctetra_strain_no = {}
-        self.ctetra_strain_psd = {}
-        self.ctetra_strain_rms = {}
-
         self.cpenta_strain = {}
-        self.cpenta_strain_ato = {}
-        self.cpenta_strain_crm = {}
-        self.cpenta_strain_no = {}
-        self.cpenta_strain_psd = {}
-        self.cpenta_strain_rms = {}
-
         self.chexa_strain = {}
-        self.chexa_strain_ato = {}
-        self.chexa_strain_crm = {}
-        self.chexa_strain_no = {}
-        self.chexa_strain_psd = {}
-        self.chexa_strain_rms = {}
 
         self.modal_contribution_ctetra_stress = {}
         self.modal_contribution_cpenta_stress = {}
@@ -263,28 +312,13 @@ class OP2_F06_Common(object):
         self.cbar_force_abs = {} # thermal=2
         self.cbar_force_nrl = {} # thermal=8
 
-        self.cbar_force_ato = {}
-        self.cbar_force_crm = {}
-        self.cbar_force_psd = {}
-        self.cbar_force_rms = {}
-        self.cbar_force_no = {}
         self.cbar_force_RAFCONS = {}
         self.cbar_force_RAFEATC = {}
 
         self.cbar_stress = {}
-        self.cbar_stress_no = {}
-        self.cbar_stress_ato = {}
-        self.cbar_stress_crm = {}
-        self.cbar_stress_psd = {}
-        self.cbar_stress_rms = {}
         self.modal_contribution_cbar_stress = {}
 
         self.cbar_strain = {}
-        self.cbar_strain_no = {}
-        self.cbar_strain_ato = {}
-        self.cbar_strain_crm = {}
-        self.cbar_strain_psd = {}
-        self.cbar_strain_rms = {}
         self.modal_contribution_cbar_strain = {}
 
         self.cbar_force_10nodes = {}
@@ -292,75 +326,29 @@ class OP2_F06_Common(object):
         self.cbar_strain_10nodes = {}
 
         self.cbeam_force = {}
-        self.cbeam_force_ato = {}
-        self.cbeam_force_crm = {}
-        self.cbeam_force_psd = {}
-        self.cbeam_force_rms = {}
-        self.cbeam_force_no = {}
-
         self.cbeam_force_vu = {}
 
         self.cbeam_stress = {}
-        self.cbeam_stress_ato = {}
-        self.cbeam_stress_crm = {}
-        self.cbeam_stress_psd = {}
-        self.cbeam_stress_rms = {}
-        self.cbeam_stress_no = {}
-
         self.cbeam_strain = {}
-        self.cbeam_strain_ato = {}
-        self.cbeam_strain_crm = {}
-        self.cbeam_strain_psd = {}
-        self.cbeam_strain_rms = {}
-        self.cbeam_strain_no = {}
         self.modal_contribution_cbeam_stress = {}
         self.modal_contribution_cbeam_strain = {}
 
         #======================================================================
+        self.cbend_stress = {}
+        self.cbend_strain = {}
+        self.cbend_force = {}
+
+        #======================================================================
         # shells
         self.ctria3_force = {}
-        self.ctria3_force_ato = {}
-        self.ctria3_force_crm = {}
-        self.ctria3_force_psd = {}
-        self.ctria3_force_rms = {}
-        self.ctria3_force_no = {}
-
         self.ctria6_force = {}
-        self.ctria6_force_ato = {}
-        self.ctria6_force_crm = {}
-        self.ctria6_force_psd = {}
-        self.ctria6_force_rms = {}
-        self.ctria6_force_no = {}
-
         self.ctriar_force = {}
-        self.ctriar_force_ato = {}
-        self.ctriar_force_crm = {}
-        self.ctriar_force_psd = {}
-        self.ctriar_force_rms = {}
-        self.ctriar_force_no = {}
-
         self.cquad4_force = {}
-        self.cquad4_force_ato = {}
-        self.cquad4_force_crm = {}
-        self.cquad4_force_psd = {}
-        self.cquad4_force_rms = {}
-        self.cquad4_force_no = {}
+        self.cquad8_force = {}
+        self.cquadr_force = {}
+
         self.cquad4_force_RAFCONS = {}
         self.cquad4_force_RAFEATC = {}
-
-        self.cquad8_force = {}
-        self.cquad8_force_ato = {}
-        self.cquad8_force_crm = {}
-        self.cquad8_force_psd = {}
-        self.cquad8_force_rms = {}
-        self.cquad8_force_no = {}
-
-        self.cquadr_force = {}
-        self.cquadr_force_ato = {}
-        self.cquadr_force_crm = {}
-        self.cquadr_force_psd = {}
-        self.cquadr_force_rms = {}
-        self.cquadr_force_no = {}
 
         self.ctria3_stress = {}
         self.ctria6_stress = {}
@@ -376,41 +364,6 @@ class OP2_F06_Common(object):
         self.modal_contribution_cquadr_stress = {}
         self.modal_contribution_ctriar_stress = {}
 
-        self.ctria3_stress_no = {}
-        self.ctria6_stress_no = {}
-        self.cquad4_stress_no = {}
-        self.cquad8_stress_no = {}
-        self.cquadr_stress_no = {}
-        self.ctriar_stress_no = {}
-
-        self.ctria3_stress_crm = {}
-        self.ctria6_stress_crm = {}
-        self.cquad4_stress_crm = {}
-        self.cquad8_stress_crm = {}
-        self.cquadr_stress_crm = {}
-        self.ctriar_stress_crm = {}
-
-        self.ctria3_stress_ato = {}
-        self.ctria6_stress_ato = {}
-        self.cquad4_stress_ato = {}
-        self.cquad8_stress_ato = {}
-        self.cquadr_stress_ato = {}
-        self.ctriar_stress_ato = {}
-
-        self.ctria3_stress_psd = {}
-        self.ctria6_stress_psd = {}
-        self.cquad4_stress_psd = {}
-        self.cquad8_stress_psd = {}
-        self.cquadr_stress_psd = {}
-        self.ctriar_stress_psd = {}
-
-        self.ctria3_stress_rms = {}
-        self.ctria6_stress_rms = {}
-        self.cquad4_stress_rms = {}
-        self.cquad8_stress_rms = {}
-        self.cquadr_stress_rms = {}
-        self.ctriar_stress_rms = {}
-
         self.ctria3_stress_RASCONS = {}
         self.ctria6_stress_RASCONS = {}
         self.cquad4_stress_RASCONS = {}
@@ -424,41 +377,6 @@ class OP2_F06_Common(object):
         self.cquad8_strain = {}
         self.cquadr_strain = {}
         self.ctriar_strain = {}
-
-        self.ctria3_strain_ato = {}
-        self.ctria6_strain_ato = {}
-        self.cquad4_strain_ato = {}
-        self.cquad8_strain_ato = {}
-        self.cquadr_strain_ato = {}
-        self.ctriar_strain_ato = {}
-
-        self.ctria3_strain_crm = {}
-        self.ctria6_strain_crm = {}
-        self.cquad4_strain_crm = {}
-        self.cquad8_strain_crm = {}
-        self.cquadr_strain_crm = {}
-        self.ctriar_strain_crm = {}
-
-        self.ctria3_strain_no = {}
-        self.ctria6_strain_no = {}
-        self.cquad4_strain_no = {}
-        self.cquad8_strain_no = {}
-        self.cquadr_strain_no = {}
-        self.ctriar_strain_no = {}
-
-        self.ctria3_strain_psd = {}
-        self.ctria6_strain_psd = {}
-        self.cquad4_strain_psd = {}
-        self.cquad8_strain_psd = {}
-        self.cquadr_strain_psd = {}
-        self.ctriar_strain_psd = {}
-
-        self.ctria3_strain_rms = {}
-        self.ctria6_strain_rms = {}
-        self.cquad4_strain_rms = {}
-        self.cquad8_strain_rms = {}
-        self.cquadr_strain_rms = {}
-        self.ctriar_strain_rms = {}
 
         self.modal_contribution_ctria3_strain = {}
         self.modal_contribution_ctria6_strain = {}
@@ -535,27 +453,12 @@ class OP2_F06_Common(object):
         self.cplsts8_strain = {}
 
         self.cshear_stress = {}
-        self.cshear_stress_ato = {}
-        self.cshear_stress_crm = {}
-        self.cshear_stress_psd = {}
-        self.cshear_stress_rms = {}
-        self.cshear_stress_no = {}
         self.modal_contribution_cshear_stress = {}
 
         self.cshear_strain = {}
-        self.cshear_strain_ato = {}
-        self.cshear_strain_crm = {}
-        self.cshear_strain_psd = {}
-        self.cshear_strain_rms = {}
-        self.cshear_strain_no = {}
         self.modal_contribution_cshear_strain = {}
 
         self.cshear_force = {}
-        self.cshear_force_ato = {}
-        self.cshear_force_crm = {}
-        self.cshear_force_psd = {}
-        self.cshear_force_rms = {}
-        self.cshear_force_no = {}
         self.modal_contribution_cshear_force = {}
 
         #: OES - CBEAM 94
@@ -563,18 +466,7 @@ class OP2_F06_Common(object):
 
         # bushing
         self.cbush_stress = {}
-        self.cbush_stress_ato  = {}
-        self.cbush_stress_crm  = {}
-        self.cbush_stress_psd  = {}
-        self.cbush_stress_rms  = {}
-        self.cbush_stress_no = {}
-
         self.cbush_strain = {}
-        self.cbush_strain_ato = {}
-        self.cbush_strain_crm = {}
-        self.cbush_strain_psd = {}
-        self.cbush_strain_rms = {}
-        self.cbush_strain_no = {}
 
         self.nonlinear_cbush_stress = {}  # CBUSH 226
         self.modal_contribution_cbush_stress = {}
@@ -631,11 +523,6 @@ class OP2_F06_Common(object):
 
         #: OUG - displacement
         self.displacements = {}           # tCode=1 thermal=0
-        self.displacements_psd = {}        # random
-        self.displacements_ato = {}        # random
-        self.displacements_rms = {}        # random
-        self.displacements_crm = {}        # random
-        self.displacements_no = {}         # random
         self.displacements_scaled = {}    # tCode=1 thermal=8
         self.displacements_ROUGV1 = {}
 
@@ -653,11 +540,6 @@ class OP2_F06_Common(object):
 
         #: OUG - velocity
         self.velocities = {}              # tCode=10 thermal=0
-        self.velocities_psd = {}
-        self.velocities_ato = {}
-        self.velocities_rms = {}
-        self.velocities_crm = {}
-        self.velocities_no = {}
         self.velocities_ROUGV1 = {}
 
         #self.velocity_scaled_response_spectra_NRL = {}
@@ -670,11 +552,6 @@ class OP2_F06_Common(object):
 
         #: OUG - acceleration
         self.accelerations = {}            # tCode=11 thermal=0
-        self.accelerations_psd = {}
-        self.accelerations_ato = {}
-        self.accelerations_rms = {}
-        self.accelerations_crm = {}
-        self.accelerations_no = {}
         self.accelerations_ROUGV1 = {}
 
         self.acceleration_scaled_response_spectra_NRL = {}
@@ -698,79 +575,21 @@ class OP2_F06_Common(object):
 
         # OEF - Forces - tCode=4 thermal=0
 
-        self.cbend_force = {}
-        self.cbend_force_ato = {}
-        self.cbend_force_psd = {}
-        self.cbend_force_crm = {}
-        self.cbend_force_rms = {}
-        self.cbend_force_no = {}
-
         self.cbush_force = {}
-        self.cbush_force_ato = {}
-        self.cbush_force_psd = {}
-        self.cbush_force_crm = {}
-        self.cbush_force_rms = {}
-        self.cbush_force_no = {}
         self.cbush_force_RAFCONS = {}
         self.cbush_force_RAFEATC = {}
 
         self.coneax_force = {}
 
         self.cdamp1_force = {}
-        self.cdamp1_force_ato = {}
-        self.cdamp1_force_psd = {}
-        self.cdamp1_force_crm = {}
-        self.cdamp1_force_rms = {}
-        self.cdamp1_force_no = {}
-
         self.cdamp2_force = {}
-        self.cdamp2_force_ato = {}
-        self.cdamp2_force_crm = {}
-        self.cdamp2_force_psd = {}
-        self.cdamp2_force_rms = {}
-        self.cdamp2_force_no = {}
-
         self.cdamp3_force = {}
-        self.cdamp3_force_ato = {}
-        self.cdamp3_force_crm = {}
-        self.cdamp3_force_psd = {}
-        self.cdamp3_force_rms = {}
-        self.cdamp3_force_no = {}
-
         self.cdamp4_force = {}
-        self.cdamp4_force_ato = {}
-        self.cdamp4_force_crm = {}
-        self.cdamp4_force_psd = {}
-        self.cdamp4_force_rms = {}
-        self.cdamp4_force_no = {}
 
         self.celas1_force = {}
-        self.celas1_force_ato = {}
-        self.celas1_force_crm = {}
-        self.celas1_force_psd = {}
-        self.celas1_force_rms = {}
-        self.celas1_force_no = {}
-
         self.celas2_force = {}
-        self.celas2_force_ato = {}
-        self.celas2_force_crm = {}
-        self.celas2_force_psd = {}
-        self.celas2_force_rms = {}
-        self.celas2_force_no = {}
-
         self.celas3_force = {}
-        self.celas3_force_ato = {}
-        self.celas3_force_crm = {}
-        self.celas3_force_psd = {}
-        self.celas3_force_rms = {}
-        self.celas3_force_no = {}
-
         self.celas4_force = {}
-        self.celas4_force_ato = {}
-        self.celas4_force_crm = {}
-        self.celas4_force_psd = {}
-        self.celas4_force_rms = {}
-        self.celas4_force_no = {}
 
         self.cgap_force = {}
 
@@ -780,12 +599,6 @@ class OP2_F06_Common(object):
         self.ctetra_pressure_force = {}
 
         self.cvisc_force = {}
-        self.cvisc_force_ato = {}
-        self.cvisc_force_crm = {}
-        self.cvisc_force_psd = {}
-        self.cvisc_force_rms = {}
-        self.cvisc_force_no = {}
-
         self.force_VU = {}
 
         #self.force_VU_2D = {}
@@ -881,18 +694,8 @@ class OP2_F06_Common(object):
         # OQG - spc/mpc forces
         self.spc_forces = {}  # tCode=3?
         self.spc_forces_scaled_response_spectra_NRL = {}
-        self.spc_forces_psd = {}
-        self.spc_forces_ato = {}
-        self.spc_forces_rms = {}
-        self.spc_forces_crm = {}
-        self.spc_forces_no = {}
 
         self.mpc_forces = {}  # tCode=39
-        self.mpc_forces_psd = {}
-        self.mpc_forces_ato = {}
-        self.mpc_forces_rms = {}
-        self.mpc_forces_crm = {}
-        self.mpc_forces_no = {}
         self.mpc_forces_RAQCONS = {}
         self.mpc_forces_RAQEATC = {}
 
@@ -911,15 +714,9 @@ class OP2_F06_Common(object):
         self.thermal_load_vectors = {}  # tCode=2  thermal=1
         self.applied_loads = {}       # tCode=19 thermal=0
         self.force_vectors = {}       # tCode=12 thermal=0
-        self.load_vectors_ato = {}
-        self.load_vectors_crm = {}
-        self.load_vectors_no = {}
-        self.load_vectors_psd = {}
-        self.load_vectors_rms = {}
 
 
-        #: OEE - strain energy density
-        #self.strain_energy = {}  # tCode=18
+        #: OEE - strain energy density; tCode=18
         self.cquad4_strain_energy = {}
         self.cquad8_strain_energy = {}
         self.cquadr_strain_energy = {}
@@ -972,8 +769,12 @@ class OP2_F06_Common(object):
             key0 = next(iter(res_type))
             if not isinstance(key0, integer_types) and not isinstance(res_key, integer_types):
                 if not type(key0) == type(res_key):
-                    msg = 'bad compression check...keys0=%s type(key0)=%s res_key=%s type(res_key)=%s' % (
-                        key0, type(key0), res_key, type(res_key))
+                    msg = (
+                        'bad compression check...\n'
+                        'keys0=%s type(key0)=%s\n'
+                        'res_key=%s type(res_key)=%s' % (
+                            key0, type(key0), res_key, type(res_key))
+                    )
                     raise RuntimeError(msg)
 
             #print('res_type.keys()=%s' % res_type.keys())
@@ -1011,9 +812,17 @@ class OP2_F06_Common(object):
 
     def get_table_types(self):
         """Gets the names of the results."""
-        table_types = [
+        base = (
+            self.ato.get_table_types() +
+            self.psd.get_table_types() +
+            self.rms.get_table_types() +
+            self.no.get_table_types() +
+            self.crm.get_table_types()
+        )
+
+        table_types = base + [
             # OUG - displacement
-            'displacements', 'displacements_psd', 'displacements_ato', 'displacements_rms', 'displacements_crm', 'displacements_no',
+            'displacements',
             'displacements_scaled',
             'displacements_ROUGV1',
 
@@ -1029,19 +838,16 @@ class OP2_F06_Common(object):
 
 
             # OUG - velocity
-            'velocities',
-            'velocities_psd', 'velocities_ato', 'velocities_rms', 'velocities_crm', 'velocities_no',
-            'velocities_ROUGV1',
+            'velocities', 'velocities_ROUGV1',
 
             # OUG - acceleration
-            'accelerations', 'accelerations_psd', 'accelerations_ato', 'accelerations_rms', 'accelerations_crm', 'accelerations_no',
-            'accelerations_ROUGV1',
+            'accelerations', 'accelerations_ROUGV1',
 
             # OQG - spc/mpc forces
-            'spc_forces', 'spc_forces_psd', 'spc_forces_ato', 'spc_forces_rms', 'spc_forces_crm', 'spc_forces_no',
+            'spc_forces',
             'spc_forces_scaled_response_spectra_NRL',
 
-            'mpc_forces', 'mpc_forces_psd', 'mpc_forces_ato', 'mpc_forces_rms', 'mpc_forces_crm', 'mpc_forces_no',
+            'mpc_forces',
             'mpc_forces_RAQCONS', 'mpc_forces_RAQEATC',
 
             'thermal_gradient_and_flux',
@@ -1050,40 +856,38 @@ class OP2_F06_Common(object):
             'grid_point_forces',
 
             # OPG - summation of loads for each element '
-            'load_vectors', 'load_vectors_ato', 'load_vectors_crm', 'load_vectors_no', 'load_vectors_psd', 'load_vectors_rms',
+            'load_vectors',
             'thermal_load_vectors',
             'applied_loads',
             'force_vectors',
 
             # OES - tCode=5 thermal=0 s_code=0,1 (stress/strain)
             # OES - CELAS1/CELAS2/CELAS3/CELAS4 stress
-            'celas1_stress', 'celas1_stress_ato', 'celas1_stress_crm', 'celas1_stress_no', 'celas1_stress_psd', 'celas1_stress_rms', 'modal_contribution_celas1_stress',
-            'celas2_stress', 'celas2_stress_ato', 'celas2_stress_crm', 'celas2_stress_no', 'celas2_stress_psd', 'celas2_stress_rms', 'modal_contribution_celas2_stress',
-            'celas3_stress', 'celas3_stress_ato', 'celas3_stress_crm', 'celas3_stress_no', 'celas3_stress_psd', 'celas3_stress_rms', 'modal_contribution_celas3_stress',
-            'celas4_stress', 'celas4_stress_ato', 'celas4_stress_crm', 'celas4_stress_no', 'celas4_stress_psd', 'celas4_stress_rms', 'modal_contribution_celas4_stress',
+            'celas1_stress', 'modal_contribution_celas1_stress',
+            'celas2_stress', 'modal_contribution_celas2_stress',
+            'celas3_stress', 'modal_contribution_celas3_stress',
+            'celas4_stress', 'modal_contribution_celas4_stress',
 
             # OES - CELAS1/CELAS2/CELAS3/CELAS4 strain
-            'celas1_strain', 'celas1_strain_ato', 'celas1_strain_crm', 'celas1_strain_no', 'celas1_strain_psd', 'celas1_strain_rms', 'modal_contribution_celas1_strain',
-            'celas2_strain', 'celas2_strain_ato', 'celas2_strain_crm', 'celas2_strain_no', 'celas2_strain_psd', 'celas2_strain_rms', 'modal_contribution_celas2_strain',
-            'celas3_strain', 'celas3_strain_ato', 'celas3_strain_crm', 'celas3_strain_no', 'celas3_strain_psd', 'celas3_strain_rms', 'modal_contribution_celas3_strain',
-            'celas4_strain', 'celas4_strain_ato', 'celas4_strain_crm', 'celas4_strain_no', 'celas4_strain_psd', 'celas4_strain_rms', 'modal_contribution_celas4_strain',
+            'celas1_strain', 'modal_contribution_celas1_strain',
+            'celas2_strain', 'modal_contribution_celas2_strain',
+            'celas3_strain', 'modal_contribution_celas3_strain',
+            'celas4_strain', 'modal_contribution_celas4_strain',
 
             # OES - isotropic CROD/CONROD/CTUBE stress
-            'crod_stress', 'crod_stress_ato', 'crod_stress_crm', 'crod_stress_psd', 'crod_stress_rms', 'crod_stress_no', 'modal_contribution_crod_stress',
-            'conrod_stress', 'conrod_stress_ato', 'conrod_stress_crm', 'conrod_stress_psd', 'conrod_stress_rms', 'conrod_stress_no', 'modal_contribution_conrod_stress',
-            'ctube_stress', 'ctube_stress_ato', 'ctube_stress_crm', 'ctube_stress_psd', 'ctube_stress_rms', 'ctube_stress_no', 'modal_contribution_ctube_stress',
-
+            'crod_stress', 'modal_contribution_crod_stress',
+            'conrod_stress', 'modal_contribution_conrod_stress',
+            'ctube_stress', 'modal_contribution_ctube_stress',
 
             # OES - isotropic CROD/CONROD/CTUBE strain
-            'crod_strain', 'crod_strain_ato', 'crod_strain_crm', 'crod_strain_psd', 'crod_strain_rms', 'crod_strain_no', 'modal_contribution_crod_strain',
-            'conrod_strain', 'conrod_strain_ato', 'conrod_strain_crm', 'conrod_strain_psd', 'conrod_strain_rms', 'conrod_strain_no', 'modal_contribution_conrod_strain',
-            'ctube_strain', 'ctube_strain_ato', 'ctube_strain_crm', 'ctube_strain_psd', 'ctube_strain_rms', 'ctube_strain_no', 'modal_contribution_ctube_strain',
+            'crod_strain', 'modal_contribution_crod_strain',
+            'conrod_strain', 'modal_contribution_conrod_strain',
+            'ctube_strain', 'modal_contribution_ctube_strain',
 
             # OES - isotropic CBAR stress/strain
-            'cbar_stress', 'cbar_stress_ato', 'cbar_stress_crm', 'cbar_stress_no', 'cbar_stress_psd', 'cbar_stress_rms', 'modal_contribution_cbar_stress',
-            'cbar_strain', 'cbar_strain_ato', 'cbar_strain_crm', 'cbar_strain_no', 'cbar_strain_psd', 'cbar_strain_rms', 'modal_contribution_cbar_strain',
+            'cbar_stress', 'modal_contribution_cbar_stress',
+            'cbar_strain', 'modal_contribution_cbar_strain',
             'cbar_force', 'cbar_force_abs', 'cbar_force_nrl',
-            'cbar_force_ato', 'cbar_force_crm', 'cbar_force_psd', 'cbar_force_rms', 'cbar_force_no',
             'cbar_force_RAFCONS', 'cbar_force_RAFEATC',
 
             'cbar_stress_10nodes',
@@ -1091,46 +895,51 @@ class OP2_F06_Common(object):
             'cbar_force_10nodes',
 
             # OES - isotropic CBEAM stress/strain
-            'cbeam_stress', 'cbeam_stress_ato', 'cbeam_stress_crm', 'cbeam_stress_psd', 'cbeam_stress_rms', 'cbeam_stress_no', 'modal_contribution_cbeam_stress',
-            'cbeam_strain', 'cbeam_strain_ato', 'cbeam_strain_crm', 'cbeam_strain_psd', 'cbeam_strain_rms', 'cbeam_strain_no', 'modal_contribution_cbeam_strain',
-            'cbeam_force', 'cbeam_force_ato', 'cbeam_force_crm', 'cbeam_force_psd', 'cbeam_force_rms', 'cbeam_force_no',
+            'cbeam_stress', 'modal_contribution_cbeam_stress',
+            'cbeam_strain', 'modal_contribution_cbeam_strain',
+            'cbeam_force',
             'cbeam_force_vu',
             'nonlinear_cbeam_stress',
             #'nonlinear_cbeam_strain',
 
+            # CBEND
+            'cbend_stress', #'modal_contribution_cbend_stress',
+            'cbend_strain', #'modal_contribution_cbend_strain',
+            'cbend_force',
+
 
             # OES - isotropic CTRIA3/CQUAD4 stress
-            'ctria3_stress', 'ctria3_stress_ato', 'ctria3_stress_crm', 'ctria3_stress_no', 'ctria3_stress_psd', 'ctria3_stress_rms', 'modal_contribution_ctria3_stress', 'ctria3_stress_RASCONS',
-            'ctriar_stress', 'ctriar_stress_ato', 'ctriar_stress_crm', 'ctriar_stress_no', 'ctriar_stress_psd', 'ctriar_stress_rms', 'modal_contribution_ctriar_stress', 'ctriar_stress_RASCONS',
-            'ctria6_stress', 'ctria6_stress_ato', 'ctria6_stress_crm', 'ctria6_stress_no', 'ctria6_stress_psd', 'ctria6_stress_rms', 'modal_contribution_ctria6_stress', 'ctria6_stress_RASCONS',
+            'ctria3_stress', 'modal_contribution_ctria3_stress', 'ctria3_stress_RASCONS',
+            'ctriar_stress', 'modal_contribution_ctriar_stress', 'ctriar_stress_RASCONS',
+            'ctria6_stress', 'modal_contribution_ctria6_stress', 'ctria6_stress_RASCONS',
 
-            'cquadr_stress', 'cquadr_stress_ato', 'cquadr_stress_crm', 'cquadr_stress_no', 'cquadr_stress_psd', 'cquadr_stress_rms', 'modal_contribution_cquadr_stress', 'cquadr_stress_RASCONS',
-            'cquad4_stress', 'cquad4_stress_ato', 'cquad4_stress_crm', 'cquad4_stress_no', 'cquad4_stress_psd', 'cquad4_stress_rms', 'modal_contribution_cquad4_stress', 'cquad4_stress_RASCONS',
-            'cquad8_stress', 'cquad8_stress_ato', 'cquad8_stress_crm', 'cquad8_stress_no', 'cquad8_stress_psd', 'cquad8_stress_rms', 'modal_contribution_cquad8_stress', 'cquad8_stress_RASCONS',
+            'cquadr_stress', 'modal_contribution_cquadr_stress', 'cquadr_stress_RASCONS',
+            'cquad4_stress', 'modal_contribution_cquad4_stress', 'cquad4_stress_RASCONS',
+            'cquad8_stress', 'modal_contribution_cquad8_stress', 'cquad8_stress_RASCONS',
 
             # OES - isotropic CTRIA3/CQUAD4 strain
-            'ctria3_strain', 'ctria3_strain_ato', 'ctria3_strain_crm', 'ctria3_strain_no', 'ctria3_strain_psd', 'ctria3_strain_rms', 'modal_contribution_ctria3_strain', 'ctria3_strain_RASCONS',
-            'ctriar_strain', 'ctriar_strain_ato', 'ctriar_strain_crm', 'ctriar_strain_no', 'ctriar_strain_psd', 'ctriar_strain_rms', 'modal_contribution_ctriar_strain', 'ctriar_strain_RASCONS',
-            'ctria6_strain', 'ctria6_strain_ato', 'ctria6_strain_crm', 'ctria6_strain_no', 'ctria6_strain_psd', 'ctria6_strain_rms', 'modal_contribution_ctria6_strain', 'ctria6_strain_RASCONS',
+            'ctria3_strain', 'modal_contribution_ctria3_strain', 'ctria3_strain_RASCONS',
+            'ctriar_strain', 'modal_contribution_ctriar_strain', 'ctriar_strain_RASCONS',
+            'ctria6_strain', 'modal_contribution_ctria6_strain', 'ctria6_strain_RASCONS',
 
-            'cquadr_strain', 'cquadr_strain_ato', 'cquadr_strain_crm', 'cquadr_strain_no', 'cquadr_strain_psd', 'cquadr_strain_rms', 'modal_contribution_cquadr_strain', 'cquadr_strain_RASCONS',
-            'cquad4_strain', 'cquad4_strain_ato', 'cquad4_strain_crm', 'cquad4_strain_no', 'cquad4_strain_psd', 'cquad4_strain_rms', 'modal_contribution_cquad4_strain', 'cquad4_strain_RASCONS',
-            'cquad8_strain', 'cquad8_strain_ato', 'cquad8_strain_crm', 'cquad8_strain_no', 'cquad8_strain_psd', 'cquad8_strain_rms', 'modal_contribution_cquad8_strain', 'cquad8_strain_RASCONS',
+            'cquadr_strain', 'modal_contribution_cquadr_strain', 'cquadr_strain_RASCONS',
+            'cquad4_strain', 'modal_contribution_cquad4_strain', 'cquad4_strain_RASCONS',
+            'cquad8_strain', 'modal_contribution_cquad8_strain', 'cquad8_strain_RASCONS',
 
 
             # OES - isotropic CTETRA/CHEXA/CPENTA stress
-            'ctetra_stress', 'ctetra_stress_ato', 'ctetra_stress_crm', 'ctetra_stress_no', 'ctetra_stress_psd', 'ctetra_stress_rms', 'modal_contribution_ctetra_stress', 'ctetra_stress_RASCONS',
-            'chexa_stress',  'chexa_stress_ato',  'chexa_stress_crm',  'chexa_stress_no',  'chexa_stress_psd',  'chexa_stress_rms',  'modal_contribution_chexa_stress', 'chexa_stress_RASCONS',
-            'cpenta_stress', 'cpenta_stress_ato', 'cpenta_stress_crm', 'cpenta_stress_no', 'cpenta_stress_psd', 'cpenta_stress_rms', 'modal_contribution_cpenta_stress', 'cpenta_stress_RASCONS',
+            'ctetra_stress', 'modal_contribution_ctetra_stress', 'ctetra_stress_RASCONS',
+            'chexa_stress', 'modal_contribution_chexa_stress', 'chexa_stress_RASCONS',
+            'cpenta_stress', 'modal_contribution_cpenta_stress', 'cpenta_stress_RASCONS',
 
             # OES - isotropic CTETRA/CHEXA/CPENTA strain
-            'ctetra_strain', 'ctetra_strain_ato', 'ctetra_strain_crm', 'ctetra_strain_no', 'ctetra_strain_psd', 'ctetra_strain_rms', 'modal_contribution_ctetra_strain', 'ctetra_strain_RASCONS',
-            'chexa_strain',  'chexa_strain_ato',  'chexa_strain_crm',  'chexa_strain_no',  'chexa_strain_psd',  'chexa_strain_rms',  'modal_contribution_chexa_strain', 'chexa_strain_RASCONS',
-            'cpenta_strain', 'cpenta_strain_ato', 'cpenta_strain_crm', 'cpenta_strain_no', 'cpenta_strain_psd', 'cpenta_strain_rms', 'modal_contribution_cpenta_strain', 'cpenta_strain_RASCONS',
+            'ctetra_strain', 'modal_contribution_ctetra_strain', 'ctetra_strain_RASCONS',
+            'chexa_strain', 'modal_contribution_chexa_strain', 'chexa_strain_RASCONS',
+            'cpenta_strain', 'modal_contribution_cpenta_strain', 'cpenta_strain_RASCONS',
 
             # OES - CSHEAR stress/strain
-            'cshear_stress', 'cshear_stress_ato', 'cshear_stress_rms', 'cshear_stress_psd', 'cshear_stress_crm', 'cshear_stress_no',  'modal_contribution_cshear_stress',
-            'cshear_strain', 'cshear_strain_ato', 'cshear_strain_rms', 'cshear_strain_psd', 'cshear_strain_crm', 'cshear_strain_no',  'modal_contribution_cshear_strain',
+            'cshear_stress', 'modal_contribution_cshear_stress',
+            'cshear_strain', 'modal_contribution_cshear_strain',
 
             # OES - GAPNL 86
             'nonlinear_cgap_stress',
@@ -1167,32 +976,22 @@ class OP2_F06_Common(object):
             #'response1_table',
 
             # OEF - Forces - tCode=4 thermal=0
-            'crod_force',  'crod_force_ato', 'crod_force_crm', 'crod_force_psd', 'crod_force_rms', 'crod_force_no',
-            'conrod_force', 'conrod_force_ato', 'conrod_force_crm', 'conrod_force_psd', 'conrod_force_rms', 'conrod_force_no',
-            'ctube_force', 'ctube_force_ato', 'ctube_force_crm', 'ctube_force_psd', 'ctube_force_rms', 'ctube_force_no',
+            'crod_force',
+            'conrod_force',
+            'ctube_force',
 
-            # bar/beam/bend
-            'cbend_force', 'cbend_force_ato', 'cbend_force_crm', 'cbend_force_psd', 'cbend_force_rms', 'cbend_force_no',
-
-            'cbush_force', 'cbush_force_ato', 'cbush_force_crm', 'cbush_force_psd', 'cbush_force_rms', 'cbush_force_no',
+            # bar/beam
+            'cbush_force',
             'cbush_force_RAFCONS', 'cbush_force_RAFEATC',
             'coneax_force',
-            'cdamp1_force', 'cdamp1_force_ato', 'cdamp1_force_crm', 'cdamp1_force_psd', 'cdamp1_force_rms', 'cdamp1_force_no',
-            'cdamp2_force', 'cdamp2_force_ato', 'cdamp2_force_crm', 'cdamp2_force_psd', 'cdamp2_force_rms', 'cdamp2_force_no',
-            'cdamp3_force', 'cdamp3_force_ato', 'cdamp3_force_crm', 'cdamp3_force_psd', 'cdamp3_force_rms', 'cdamp3_force_no',
-            'cdamp4_force', 'cdamp4_force_ato', 'cdamp4_force_crm', 'cdamp4_force_psd', 'cdamp4_force_rms', 'cdamp4_force_no',
+            'cdamp1_force', 'cdamp2_force', 'cdamp3_force', 'cdamp4_force',
             'cgap_force',
 
-            'cquad4_force', 'cquad4_force_ato', 'cquad4_force_crm', 'cquad4_force_psd', 'cquad4_force_rms', 'cquad4_force_no',
-            'cquad8_force', 'cquad8_force_ato', 'cquad8_force_crm', 'cquad8_force_psd', 'cquad8_force_rms', 'cquad8_force_no',
-            'cquadr_force', 'cquadr_force_ato', 'cquadr_force_crm', 'cquadr_force_psd', 'cquadr_force_rms', 'cquadr_force_no',
-
-            'ctria3_force', 'ctria3_force_ato', 'ctria3_force_crm', 'ctria3_force_psd', 'ctria3_force_rms', 'ctria3_force_no',
-            'ctria6_force', 'ctria6_force_ato', 'ctria6_force_crm', 'ctria6_force_psd', 'ctria6_force_rms', 'ctria6_force_no',
-            'ctriar_force', 'ctriar_force_ato', 'ctriar_force_crm', 'ctriar_force_psd', 'ctriar_force_rms', 'ctriar_force_no',
+            'cquad4_force', 'cquad8_force', 'cquadr_force',
+            'ctria3_force', 'ctria6_force', 'ctriar_force',
             'cquad4_force_RAFCONS', 'cquad4_force_RAFEATC',
 
-            'cshear_force', 'cshear_force_ato', 'cshear_force_crm', 'cshear_force_psd', 'cshear_force_rms', 'cshear_force_no', 'modal_contribution_cshear_force',
+            'cshear_force', 'modal_contribution_cshear_force',
             #'cquad4_composite_force',
             #'cquad8_composite_force',
             #'cquadr_composite_force',
@@ -1204,12 +1003,8 @@ class OP2_F06_Common(object):
             'cpenta_pressure_force',
             'ctetra_pressure_force',
 
-            'celas1_force', 'celas1_force_ato', 'celas1_force_crm', 'celas1_force_psd', 'celas1_force_rms', 'celas1_force_no',
-            'celas2_force', 'celas2_force_ato', 'celas2_force_crm', 'celas2_force_psd', 'celas2_force_rms', 'celas2_force_no',
-            'celas3_force', 'celas3_force_ato', 'celas3_force_crm', 'celas3_force_psd', 'celas3_force_rms', 'celas3_force_no',
-            'celas4_force', 'celas4_force_ato', 'celas4_force_crm', 'celas4_force_psd', 'celas4_force_rms', 'celas4_force_no',
-
-            'cvisc_force', 'cvisc_force_ato', 'cvisc_force_crm', 'cvisc_force_psd', 'cvisc_force_rms', 'cvisc_force_no',
+            'celas1_force', 'celas2_force', 'celas3_force', 'celas4_force',
+            'cvisc_force',
 
             'force_VU',
             #'force_VU_2D',
@@ -1252,8 +1047,8 @@ class OP2_F06_Common(object):
             'ctriax_stress',
             'ctriax_strain',
 
-            'cbush_stress',  'cbush_stress_ato',  'cbush_stress_crm',  'cbush_stress_no',  'cbush_stress_psd',  'cbush_stress_rms',  'modal_contribution_cbush_stress', #'cbush_stress_RASCONS',
-            'cbush_strain',  'cbush_strain_ato',  'cbush_strain_crm',  'cbush_strain_no',  'cbush_strain_psd',  'cbush_strain_rms',  'modal_contribution_cbush_strain', #'cbush_strain_RASCONS',
+            'cbush_stress', 'modal_contribution_cbush_stress', #'cbush_stress_RASCONS',
+            'cbush_strain', 'modal_contribution_cbush_strain', #'cbush_strain_RASCONS',
 
             #'cbush_stress', 'modal_contribution_cbush_stress',
             #'cbush_strain', 'modal_contribution_cbush_strain',
@@ -1439,7 +1234,7 @@ class OP2_F06_Common(object):
         if short:
             no_data_classes = ['RealEigenvalues', 'ComplexEigenvalues', 'BucklingEigenvalues']
             for table_type in table_types:
-                table = getattr(self, table_type)
+                table = self.get_result(table_type)
                 for isubcase, subcase in sorted(iteritems(table), key=compare):
                     class_name = subcase.__class__.__name__
                     if class_name in no_data_classes:
@@ -1461,7 +1256,7 @@ class OP2_F06_Common(object):
                         #raise RuntimeError(msgi)
         else:
             for table_type in table_types:
-                table = getattr(self, table_type)
+                table = self.get_result(table_type)
                 try:
                     for isubcase, subcase in sorted(iteritems(table), key=compare):
                         class_name = subcase.__class__.__name__
@@ -1486,7 +1281,7 @@ class OP2_F06_Common(object):
                     self.log.warning(table)
                     raise
 
-        for name, matrix in sorted(iteritems(self.matrices)):
+        for unused_name, matrix in sorted(iteritems(self.matrices)):
             #msg.append('matrices[%s].shape = %s\n' % (name, matrix.data.shape))
             msg.append(str(matrix) + '\n')
         try:

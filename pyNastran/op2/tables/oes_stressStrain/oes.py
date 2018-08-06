@@ -265,6 +265,7 @@ class OES(OP2Common):
                                  11, 12, 13, # CELAS1, CELAS2, CELAS3,
                                  2, 4, 34, 33, 74, # CBEAM, CSHEAR, CBAR, CQUAD4, CTRIA3,
                                  75, 64, 70, 82, # CTRIA5, CQUAD8, CTRIAR, CQUADR
+                                 69, # CBEND
                                  67, 68, 95, 102]: #CHEXA, CPENTA, QUAD4-comp, CBUSH
             n = self._read_oes_4_sort(data, ndata)
         else:
@@ -467,6 +468,7 @@ class OES(OP2Common):
                                  11, 12, 13, # CELAS1, CELAS2, CELAS3,
                                  2, 4, 34, 33, 74, # CBEAM, CSHEAR, CBAR, CQUAD4, CTRIA3,
                                  75, 64, 70, 82, # CTRIA5, CQUAD8, CTRIAR, CQUADR
+                                 69, # CBEND
                                  67, 68, 95, 102]: #CHEXA, CPENTA, QUAD4-comp, CBUSH
             n = self._read_ostr_4_sort(data, ndata)
         else:
@@ -1049,45 +1051,6 @@ class OES(OP2Common):
             raise
             #return None, None
 
-    #def _apply_oes_ato_crm_psd_rms_no(self, result_name):
-        #"""
-        #Appends a keyword onto the result_name in order to handle random results
-        #without 100 if loops.
-        #keywords = {_ato, _crm, _psd, _rms, _no}
-
-        #Do this:
-            #result_name = 'cbar_stress'
-            #table_name = 'OEFPSD1'
-            #result_name, is_random = _apply_oef_ato_crm_psd_rms_no(self, result_name)
-            #slot = getattr(self, result_name)
-
-        #Or this:
-            #result_name = 'cbar_stress_psd'
-            #slot = self.cbar_stress_psd
-        #"""
-        #is_random = True
-        #if self.table_name in [b'OES1', b'OES1X1', b'OES1X', b'OES1C', b'OESCP', b'OESRT',
-                               #b'OSTR1X', b'OSTR1C',
-                               #b'OESTRCP', b'OESNLXR', b'OESNLXD',
-                               #b'OESVM1', b'OSTRVM1', b'OESVM1C']:
-            #is_random = False
-        #elif self.table_name in [b'OESCRM1', b'OESCRM2']:
-            #assert self.table_code in [504], self.code_information()
-            #result_name += '_crm'
-        #elif self.table_name in [b'OESPSD1', b'OESPSD2']:
-            #assert self.table_code in [604], self.code_information()
-            #result_name += '_psd'
-        #elif self.table_name in [b'OESRMS1', b'OESRMS2']:
-            #assert self.table_code in [804], self.code_information()
-            #result_name += '_rms'
-        #elif self.table_name in [b'OESNO1', b'OESNO2']:
-            #assert self.table_code in [904], self.code_information()
-            #result_name += '_no'
-        #else:
-            #raise NotImplementedError(self.code_information())
-        ##print(result_name, self.table_name)
-        #return result_name, is_random
-
     def get_oes_prefix_postfix(self):
         """
         Creates the prefix/postfix that splits off ATO, CRM, PSD, nonlinear,
@@ -1142,7 +1105,7 @@ class OES(OP2Common):
         elif self.table_name in [b'OSTRMS1C']: #, b'OSTRMS1C']:
             self.format_code = 1
             self.sort_bits[0] = 0 # real
-            postfix = '_rms'
+            prefix = 'rms.'
         elif self.table_name in [b'OESXRMS1']: # wrong...
             self.format_code = 1
             self.sort_bits[0] = 0 # real
@@ -1154,16 +1117,16 @@ class OES(OP2Common):
             #assert self.sort_method == 2, self.code_information()
             #self.nonlinear_factor = self.n
             #self.data_code['nonlinear_factor'] = None
-            postfix = '_rms'
+            prefix = 'rms.'
         elif self.table_name in [b'OESXRMS2']: # wrong...
             self.sort_bits[1] = 1 # sort2
-            postfix = '_rms'
+            prefix = 'rms.'
         elif self.table_name in [b'OESRMS1', b'OSTRRMS1']:
             self.format_code = 1
             self.sort_bits[0] = 0 # real
             assert self.sort_method == 1, self.code_information()
             self._analysis_code_fmt = b'i'
-            postfix = '_rms'
+            prefix = 'rms.'
         elif self.table_name in [b'OESRMS2', b'OSTRRMS2']:
             #self.format_code = 1
             self.sort_bits[0] = 0 # real
@@ -1172,14 +1135,14 @@ class OES(OP2Common):
             self.sort_method = 1
             self._analysis_code_fmt = b'i'
             #assert self.sort_method == 2, self.code_information()
-            postfix = '_rms'
+            prefix = 'rms.'
 
         elif self.table_name in [b'OESNO1', b'OSTRNO1', b'OSTNO1C']:
             assert self.sort_method == 1, self.code_information()
             self.format_code = 1
             self.sort_bits[0] = 0 # real
             self.sort_bits[2] = 1 # random
-            postfix = '_no'
+            prefix = 'no.'
         elif self.table_name in [b'OESNO2', b'OSTRNO2']:
             self.format_code = 1
             self.sort_bits[0] = 0 # real
@@ -1189,7 +1152,7 @@ class OES(OP2Common):
             self.sort_method = 1
             self.data_code['nonlinear_factor'] = None
             self._analysis_code_fmt = b'i'
-            postfix = '_no'
+            prefix = 'no.'
         #----------------------------------------------------------------
 
         elif self.table_name in [b'OESPSD1', b'OSTRPSD1']:
@@ -1197,21 +1160,21 @@ class OES(OP2Common):
             self.sort_bits[0] = 0 # real
             self.sort_bits[1] = 0 # sort1
             self.sort_bits[2] = 1 # random
-            postfix = '_psd'
+            prefix = 'psd.'
         elif self.table_name in [b'OESPSD2', b'OSTRPSD2']:
             self.format_code = 1
             self.sort_bits[0] = 0 # real
             self.sort_bits[1] = 1 # sort2
             self.sort_bits[2] = 1 # random
-            postfix = '_psd'
+            prefix = 'psd.'
 
         elif self.table_name in [b'OESATO1', b'OSTRATO1']:
-            postfix = '_ato'
+            prefix = 'ato.'
         elif self.table_name in [b'OESATO2', b'OSTRATO2']:
-            postfix = '_ato'
+            prefix = 'ato.'
 
         elif self.table_name in [b'OESCRM1', b'OSTRCRM1']:
-            postfix = '_crm'
+            prefix = 'crm.'
         elif self.table_name in [b'OESCRM2', b'OSTRCRM2']:
             # sort2, random
             self.format_code = 1 # real
@@ -1219,7 +1182,7 @@ class OES(OP2Common):
             self.sort_bits[1] = 1 # sort2
             self.sort_bits[2] = 1 # random
             self.sort_method = 2
-            postfix = '_crm'
+            prefix = 'crm.'
         #elif self.table_name in ['DOES1', 'DOSTR1']:
             #prefix = 'scaled_response_spectra_'
         #elif self.table_name in ['OESCP']:
@@ -1382,6 +1345,7 @@ class OES(OP2Common):
             return ndata
         elif self.element_type == 69:  # cbend
             # 69-CBEND
+            n, nelements, ntotal = self._oes_cbend(data, ndata, dt, is_magnitude_phase, stress_name, prefix, postfix)
             return ndata
         elif self.element_type == 86:  # cgap
             # 86-GAPNL
@@ -1499,8 +1463,7 @@ class OES(OP2Common):
                     return self._not_implemented_or_skip(data, ndata, msg)
 
                 self._results._found_result(result_name)
-                slot = getattr(self, result_name)
-
+                slot = self.get_result(result_name)
 
                 ntotal = 120  # 36+28*3
                 nelements = ndata // ntotal
@@ -1740,7 +1703,7 @@ class OES(OP2Common):
                 else:
                     obj_vector_real = RealCPLSTRNPlateStressArray
                     #result_name = 'cplstn3_strain'
-                slot = getattr(self, result_name)
+                slot = self.get_result(result_name)
 
                 auto_return, is_vectorized = self._create_oes_object4(
                     nelements, result_name, slot, obj_vector_real)
@@ -2030,7 +1993,7 @@ class OES(OP2Common):
         if self._results.is_not_saved(result_name):
             return ndata, None, None
         self._results._found_result(result_name)
-        slot = getattr(self, result_name)
+        slot = self.get_result(result_name)
 
         if self.format_code == 1 and self.num_wide == 2:  # real
             ntotal = 8 # 2 * 4
@@ -2191,7 +2154,7 @@ class OES(OP2Common):
         self._results._found_result(result_name)
 
         #result_name, unused_is_random = self._apply_oes_ato_crm_psd_rms_no(result_name)
-        slot = getattr(self, result_name)
+        slot = self.get_result(result_name)
         if self.format_code == 1 and self.num_wide == 5:  # real
             ntotal = 5 * 4
             nelements = ndata // ntotal
@@ -2374,7 +2337,7 @@ class OES(OP2Common):
             return ndata, None, None
         self._results._found_result(result_name)
 
-        slot = getattr(self, result_name)
+        slot = self.get_result(result_name)
         if self.format_code == 1 and self.num_wide == 111:  # real
             # TODO: vectorize
             ntotal = 444 # 44 + 10*40  (11 nodes)
@@ -2625,7 +2588,7 @@ class OES(OP2Common):
             return ndata, None, None
         self._results._found_result(result_name)
 
-        slot = getattr(self, result_name)
+        slot = self.get_result(result_name)
         if self.format_code == 1 and self.num_wide == 4:  # real
             ntotal = 16  # 4*4
             nelements = ndata // ntotal
@@ -2792,7 +2755,7 @@ class OES(OP2Common):
         if self._results.is_not_saved(result_name):
             return ndata, None, None
         self._results._found_result(result_name)
-        slot = getattr(self, result_name)
+        slot = self.get_result(result_name)
 
         if self.format_code == 1 and self.num_wide == 16:  # real
             if self.is_stress:
@@ -3100,7 +3063,7 @@ class OES(OP2Common):
         if self._results.is_not_saved(result_name):
             return ndata, None, None
         self._results._found_result(result_name)
-        slot = getattr(self, result_name)
+        slot = self.get_result(result_name)
 
         numwide_real = 4 + 21 * nnodes_expected
         numwide_imag = 4 + (17 - 4) * nnodes_expected
@@ -3530,7 +3493,8 @@ class OES(OP2Common):
                                    numwide_real, numwide_imag, numwide_random2))
         return n, nelements, ntotal
 
-    def _oes_csolid_nonlinear(self, data, ndata, dt, is_magnitude_phase, stress_name, prefix, postfix):
+    def _oes_csolid_nonlinear(self, data, ndata, dt, is_magnitude_phase, stress_name,
+                              prefix, postfix):
         """
         reads stress/strain for element type:
         - 85-TETRANL
@@ -3639,7 +3603,7 @@ class OES(OP2Common):
         if self._results.is_not_saved(result_name):
             return ndata, None, None
         self._results._found_result(result_name)
-        slot = getattr(self, result_name)
+        slot = self.get_result(result_name)
 
         numwide_real = 17
         if self.format_code == 1 and self.num_wide == 17:  # real
@@ -3825,7 +3789,7 @@ class OES(OP2Common):
             if self._results.is_not_saved(result_name):
                 return ndata, None, None
             self._results._found_result(result_name)
-            slot = getattr(self, result_name)
+            slot = self.get_result(result_name)
 
             ntotal = 36  # 4*9
             nelements = ndata // ntotal
@@ -3868,7 +3832,7 @@ class OES(OP2Common):
                 obj.ielement = ielement2
             else:
                 struct1 = Struct(self._endian + self._analysis_code_fmt + b'8f')
-                cen = 0 # CEN/4
+                #cen = 0 # CEN/4
                 for i in range(nelements):
                     edata = data[n:n+ntotal]
                     out = struct1.unpack(edata)
@@ -3894,10 +3858,95 @@ class OES(OP2Common):
                     n += ntotal
 
         elif self.format_code in [1, 2] and self.num_wide == 11: # random
-            msg = self.code_information()
-            n = self._not_implemented_or_skip(data, ndata, msg)
-            nelements = None
-            ntotal = None
+            #2 FD1 RS Z1 = Fibre Distance
+            #3 SX1 RS Normal in x at Z1
+            #4 SY1 RS Normal in y at Z1
+            #5 TXY1 RS Shear in xy at Z1
+            #6 RMSVM1 RS RMS von Mises at Z1
+
+            #7 FD2 RS Z2 = Fibre Distance
+            #8 SX2 RS Normal in x at Z2
+            #9 SY2 RS Normal in y at Z2
+            #10 TXY2 RS Shear in xy at Z2
+            #11 RMSVM2 RS RMS von Mises at Z2
+
+            element_id = self.nonlinear_factor
+            if self.is_stress:
+                obj_vector_random = RandomPlateStressArray
+            else:
+                obj_vector_random = RandomPlateStrainArray
+            self.data_code['nonlinear_factor'] = element_id
+
+            if self._results.is_not_saved(result_name):
+                return ndata, None, None
+            self._results._found_result(result_name)
+            slot = self.get_result(result_name)
+
+            ntotal = 44  # 4*11
+            nelements = ndata // ntotal
+            nlayers = nelements * 2
+            nnodes_expected = 1
+
+            auto_return, is_vectorized = self._create_oes_object4(
+                nlayers, result_name, slot, obj_vector_random)
+            if auto_return:
+                self._data_factor = 2
+                return nelements * ntotal, None, None
+
+            obj = self.obj
+            assert obj.is_built is True, obj.is_built
+            if self.use_vector and is_vectorized and 0:  # pragma: no cover
+                n = nelements * 4 * self.num_wide
+                ielement = obj.ielement
+                ielement2 = ielement + nelements
+                itotal = obj.itotal
+                itotal2 = itotal + nelements * nnodes_expected
+                obj._times[obj.itime] = dt
+                if obj.itime == 0:
+                    ints = frombuffer(data, dtype=self.idtype)
+                    ints1 = ints.reshape(nelements, 9)
+                    eids = ints1[:, 0] // 10
+                    print(eids)
+                    eids = np.vstack([eids, eids]).T.ravel()
+                    print(eids.shape)
+                    print(eids)
+                    print(obj.element)
+                    assert eids.min() > 0, eids.min()
+                    obj.element[itotal:itotal2, 0] = eids
+
+                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 11)[:, 1:]
+                print(floats.shape)
+                #fd, sx, sy, txy,
+                floats1 = floats.reshape(nelements * nnodes_expected, 10)
+                obj.data[obj.itime, itotal:itotal2, :] = floats1.copy()
+                obj.itotal = itotal2
+                obj.ielement = ielement2
+            else:
+                struct1 = Struct(self._endian + self._analysis_code_fmt + b'10f')
+                #cen = 0 # CEN/4
+                for i in range(nelements):
+                    edata = data[n:n+ntotal]
+                    out = struct1.unpack(edata)
+
+                    (eid_device,
+                     fd1, sx1, sy1, txy1, ovm1,
+                     fd2, sx2, sy2, txy2, ovm2,) = out
+
+                    if self.sort_method == 1:
+                        eid = eid_device // 10
+                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
+                    else:
+                        eid = self.nonlinear_factor
+                        dt = eid_device
+                        #print("SORT2 dt=%s eid=%s" % (dt, eid))
+
+                    if self.is_debug_file:
+                        self.binary_debug.write('  eid=%i C=[%s]\n' % (
+                            eid, ', '.join(['%r' % di for di in out])))
+
+                    obj.add_new_eid_ovm_sort1(dt, eid, fd1, sx1, sy1, txy1, ovm1)
+                    obj.add_ovm_sort1(dt, eid, fd2, sx2, sy2, txy2, ovm2)
+                    n += ntotal
         else:
             raise RuntimeError(self.code_information())
         return n, nelements, ntotal
@@ -3921,7 +3970,7 @@ class OES(OP2Common):
             return ndata, None, None
         self._results._found_result(result_name)
 
-        slot = getattr(self, result_name)
+        slot = self.get_result(result_name)
         if self.format_code in [1, 3] and self.num_wide == 17:  # real
             ntotal = 68  # 4*17
             nelements = ndata // ntotal
@@ -4076,8 +4125,95 @@ class OES(OP2Common):
             msg = '%s-%s' % (self.table_name_str, self.element_name)
             return self._not_implemented_or_skip(data, ndata, msg), None, None
         elif self.format_code in [1, 2] and self.num_wide == 11: # random; CTRIA3
-            msg = '%s-%s' % (self.table_name_str, self.element_name)
-            return self._not_implemented_or_skip(data, ndata, msg), None, None
+            #2 FD1 RS Z1 = Fibre Distance
+            #3 SX1 RS Normal in x at Z1
+            #4 SY1 RS Normal in y at Z1
+            #5 TXY1 RS Shear in xy at Z1
+            #6 RMSVM1 RS RMS von Mises at Z1
+
+            #7 FD2 RS Z2 = Fibre Distance
+            #8 SX2 RS Normal in x at Z2
+            #9 SY2 RS Normal in y at Z2
+            #10 TXY2 RS Shear in xy at Z2
+            #11 RMSVM2 RS RMS von Mises at Z2
+
+            element_id = self.nonlinear_factor
+            if self.is_stress:
+                obj_vector_random = RandomPlateStressArray
+            else:
+                obj_vector_random = RandomPlateStrainArray
+            self.data_code['nonlinear_factor'] = element_id
+
+            if self._results.is_not_saved(result_name):
+                return ndata, None, None
+            self._results._found_result(result_name)
+            slot = self.get_result(result_name)
+
+            ntotal = 44  # 4*11
+            nelements = ndata // ntotal
+            nlayers = nelements * 2
+            nnodes_expected = 1
+
+            auto_return, is_vectorized = self._create_oes_object4(
+                nlayers, result_name, slot, obj_vector_random)
+            if auto_return:
+                self._data_factor = 2
+                return nelements * ntotal, None, None
+
+            obj = self.obj
+            assert obj.is_built is True, obj.is_built
+            if self.use_vector and is_vectorized and 0:  # pragma: no cover
+                n = nelements * 4 * self.num_wide
+                ielement = obj.ielement
+                ielement2 = ielement + nelements
+                itotal = obj.itotal
+                itotal2 = itotal + nelements * nnodes_expected
+                obj._times[obj.itime] = dt
+                if obj.itime == 0:
+                    ints = frombuffer(data, dtype=self.idtype)
+                    ints1 = ints.reshape(nelements, 9)
+                    eids = ints1[:, 0] // 10
+                    print(eids)
+                    eids = np.vstack([eids, eids]).T.ravel()
+                    print(eids.shape)
+                    print(eids)
+                    print(obj.element)
+                    assert eids.min() > 0, eids.min()
+                    obj.element[itotal:itotal2, 0] = eids
+
+                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 11)[:, 1:]
+                print(floats.shape)
+                #fd, sx, sy, txy,
+                floats1 = floats.reshape(nelements * nnodes_expected, 10)
+                obj.data[obj.itime, itotal:itotal2, :] = floats1.copy()
+                obj.itotal = itotal2
+                obj.ielement = ielement2
+            else:
+                struct1 = Struct(self._endian + self._analysis_code_fmt + b'10f')
+                #cen = 0 # CEN/4
+                for i in range(nelements):
+                    edata = data[n:n+ntotal]
+                    out = struct1.unpack(edata)
+
+                    (eid_device,
+                     fd1, sx1, sy1, txy1, ovm1,
+                     fd2, sx2, sy2, txy2, ovm2,) = out
+
+                    if self.sort_method == 1:
+                        eid = eid_device // 10
+                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
+                    else:
+                        eid = self.nonlinear_factor
+                        dt = eid_device
+                        #print("SORT2 dt=%s eid=%s" % (dt, eid))
+
+                    if self.is_debug_file:
+                        self.binary_debug.write('  eid=%i C=[%s]\n' % (
+                            eid, ', '.join(['%r' % di for di in out])))
+
+                    obj.add_new_eid_ovm_sort1(dt, eid, fd1, sx1, sy1, txy1, ovm1)
+                    obj.add_ovm_sort1(dt, eid, fd2, sx2, sy2, txy2, ovm2)
+                    n += ntotal
         elif self.format_code in [1, 2] and self.num_wide == 9: # random MSC stress/strain; CTRIA3
             # _oes_cquad4 is the same as _oes_ctria3
             element_id = self.nonlinear_factor
@@ -4093,7 +4229,7 @@ class OES(OP2Common):
             if self._results.is_not_saved(result_name):
                 return ndata, None, None
             self._results._found_result(result_name)
-            slot = getattr(self, result_name)
+            slot = self.get_result(result_name)
 
             ntotal = 36  # 4*9
             nelements = ndata // ntotal
@@ -4164,7 +4300,8 @@ class OES(OP2Common):
             raise RuntimeError(self.code_information())
         return n, nelements, ntotal
 
-    def _oes_cquad4_144(self, data, ndata, dt, is_magnitude_phase, stress_name, prefix, postfix):
+    def _oes_cquad4_144(self, data, ndata, dt, is_magnitude_phase, stress_name,
+                        prefix, postfix):
         """
         reads stress/strain for element type:
          - 64 : CQUAD8
@@ -4236,7 +4373,7 @@ class OES(OP2Common):
             raise RuntimeError(self.code_information())
         nnodes_all = nnodes + 1 # adding the centroid
 
-        slot = getattr(self, result_name)
+        slot = self.get_result(result_name)
         numwide_real = 2 + 17 * nnodes_all
         numwide_imag = 2 + 15 * nnodes_all
         numwide_random = 2 + 9 * nnodes_all
@@ -4657,7 +4794,7 @@ class OES(OP2Common):
             else:
                 raise RuntimeError(self.element_type)
 
-        slot = getattr(self, result_name)
+        slot = self.get_result(result_name)
         self._results._found_result(result_name)
         #print(self.code_information())
 
@@ -4805,7 +4942,8 @@ class OES(OP2Common):
             raise RuntimeError(self.code_information())
         return n, nelements, ntotal
 
-    def _oes_shells_composite(self, data, ndata, dt, is_magnitude_phase, stress_name, prefix, postfix):
+    def _oes_shells_composite(self, data, ndata, dt, is_magnitude_phase, stress_name,
+                              prefix, postfix):
         """
         reads stress/strain for element type:
          - 95 : CQUAD4
@@ -4851,7 +4989,7 @@ class OES(OP2Common):
         if self._results.is_not_saved(result_name):
             return ndata, None, None
         self._results._found_result(result_name)
-        slot = getattr(self, result_name)
+        slot = self.get_result(result_name)
 
         etype = self.element_name
         if self.format_code == 1 and self.num_wide == 11:  # real
@@ -5032,7 +5170,8 @@ class OES(OP2Common):
             return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
 
-    def _oes_ctriax6(self, data, ndata, dt, is_magnitude_phase, stress_name, prefix, postfix):
+    def _oes_ctriax6(self, data, ndata, dt, is_magnitude_phase, stress_name,
+                     prefix, postfix):
         """
         reads stress/strain for element type:
          - 53 : CTRIAX6
@@ -5047,7 +5186,7 @@ class OES(OP2Common):
             return ndata, None, None
         self._results._found_result(result_name)
 
-        slot = getattr(self, result_name)
+        slot = self.get_result(result_name)
         if self.format_code == 1 and self.num_wide == 33: # real
             if self.is_stress:
                 obj_vector_real = RealTriaxStressArray
@@ -5236,7 +5375,8 @@ class OES(OP2Common):
             #return self._not_implemented_or_skip(data, ndata, msg)
         return n, nelements, ntotal
 
-    def _oes_cbush(self, data, ndata, dt, is_magnitude_phase, stress_name, prefix, postfix):
+    def _oes_cbush(self, data, ndata, dt, is_magnitude_phase, stress_name,
+                   prefix, postfix):
         """
         reads stress/strain for element type:
          - 102 : CBUSH
@@ -5251,7 +5391,7 @@ class OES(OP2Common):
             return ndata, None, None
         self._results._found_result(result_name)
 
-        slot = getattr(self, result_name)
+        slot = self.get_result(result_name)
         if self.format_code in [1, 3] and self.num_wide == 7:  # real
             if self.is_stress:
                 obj_vector_real = RealBushStressArray
@@ -5376,7 +5516,8 @@ class OES(OP2Common):
             #return self._not_implemented_or_skip(data, ndata, msg)
         return n, nelements, ntotal
 
-    def _oes_cbush1d(self, data, ndata, dt, is_magnitude_phase, stress_name, prefix, postfix):
+    def _oes_cbush1d(self, data, ndata, dt, is_magnitude_phase, stress_name,
+                     prefix, postfix):
         """
         reads stress/strain for element type:
          - 40 : CBUSH1D
@@ -5390,7 +5531,7 @@ class OES(OP2Common):
         if self._results.is_not_saved(result_name):
             return ndata, None, None
         self._results._found_result(result_name)
-        slot = getattr(self, result_name)
+        slot = self.get_result(result_name)
         if self.format_code == 1 and self.num_wide == 8:  # real
             if self.is_stress:
                 obj_vector_real = RealBush1DStressArray
@@ -5517,7 +5658,8 @@ class OES(OP2Common):
             #return self._not_implemented_or_skip(data, ndata, msg)
         return n, nelements, ntotal
 
-    def _oes_crod_nonlinear(self, data, ndata, dt, is_magnitude_phase, stress_name, prefix, postfix):
+    def _oes_crod_nonlinear(self, data, ndata, dt, is_magnitude_phase, stress_name,
+                            prefix, postfix):
         """
         reads stress/strain for element type:
          - 87 : CTUBENL
@@ -5553,7 +5695,7 @@ class OES(OP2Common):
         if self._results.is_not_saved(result_name):
             return ndata, None, None
         self._results._found_result(result_name)
-        slot = getattr(self, result_name)
+        slot = self.get_result(result_name)
         if self.format_code == 1 and self.num_wide == 7:  # real
             ntotal = 28  #  7*4 = 28
             nelements = ndata // ntotal
@@ -5606,7 +5748,8 @@ class OES(OP2Common):
             raise RuntimeError(self.code_information())
         return n, nelements, ntotal
 
-    def _oes_celas_nonlinear(self, data, ndata, dt, is_magnitude_phase, stress_name, prefix, postfix):
+    def _oes_celas_nonlinear(self, data, ndata, dt, is_magnitude_phase, stress_name,
+                             prefix, postfix):
         """
         reads stress/strain for element type:
          - 224 : CELAS1
@@ -5629,7 +5772,7 @@ class OES(OP2Common):
             return ndata, None, None
         self._results._found_result(result_name)
 
-        slot = getattr(self, result_name)
+        slot = self.get_result(result_name)
         if self.num_wide == numwide_real:
             assert self.num_wide == 3, "num_wide=%s not 3" % self.num_wide
             ntotal = 12  # 4*3
@@ -5683,7 +5826,64 @@ class OES(OP2Common):
             raise RuntimeError(self.code_information())
         return n, nelements, ntotal
 
-    def _oes_cgap_nonlinear(self, data, ndata, dt, is_magnitude_phase, stress_name, prefix, postfix):
+    def _oes_cbend(self, data, ndata, dt, is_magnitude_phase, stress_name,
+                   prefix, postfix):
+        """
+        reads stress/strain for element type:
+         - 69 : CBEND
+        """
+        if self.is_stress:
+            result_name = prefix + 'cbend_stress' + postfix
+        else:
+            result_name = prefix + 'cbend_strain' + postfix
+
+        if self._results.is_not_saved(result_name):
+            return ndata, None, None
+        self._results._found_result(result_name)
+        slot = self.get_result(result_name)
+
+        #print(self.code_information())
+        if self.num_wide == 21:
+            ntotal = 84  # 4*21
+            nelements = ndata // ntotal
+            #TCODE,7 =1 Real / Imaginary
+            #2 GRID I External Grid Point identification number
+            #3 CA RS Circumferential Angle
+            #4 SCR RS Long. Stress at Point C
+            #5 SDR RS Long. Stress at Point D
+            #6 SER RS Long. Stress at Point E
+            #7 SFR RS Long. Stress at Point F
+            #8 SCI RS Long. Stress at Point C
+            #9 SDI RS Long. Stress at Point D
+            #10 SEI RS Long. Stress at Point E
+            #11 SFI RS Long. Stress at Point F
+            #Words 2 through 11 repeat 002 times
+            msg = ''
+            if self.read_mode == 2:
+                msg = self.code_information()
+            n = self._not_implemented_or_skip(data, ndata, msg)
+
+        elif self.num_wide == 13:
+            ntotal = 52  # 4*13
+            nelements = ndata // ntotal
+            #TCODE,7 =2 Real
+            #2 GRID I External Grid Point identification number
+            #3 CA RS Circumferential Angle
+            #4 SC RS Long. Stress at Point C
+            #5 SD RS Long. Stress at Point D
+            #6 SE RS Long. Stress at Point E
+            #7 SF RS Long. Stress at Point F
+            #Words 2 through 7 repeat 002 times
+            msg = ''
+            if self.read_mode == 2:
+                msg = self.code_information()
+            n = self._not_implemented_or_skip(data, ndata, msg)
+        else:
+            raise RuntimeError(self.code_information())
+        return n, nelements, ntotal
+
+    def _oes_cgap_nonlinear(self, data, ndata, dt, is_magnitude_phase, stress_name,
+                            prefix, postfix):
         """
         reads stress/strain for element type:
          - 86 : GAPNL
@@ -5697,8 +5897,8 @@ class OES(OP2Common):
         if self._results.is_not_saved(result_name):
             return ndata, None, None
         self._results._found_result(result_name)
+        slot = self.get_result(result_name)
 
-        slot = getattr(self, result_name)
         if self.format_code == 1 and self.num_wide == 11:  # real?
             if self.is_stress:
                 obj_vector_real = NonlinearGapStressArray
@@ -5767,8 +5967,8 @@ class OES(OP2Common):
         if self._results.is_not_saved(result_name):
             return ndata, None, None
         self._results._found_result(result_name)
+        slot = self.get_result(result_name)
 
-        slot = getattr(self, result_name)
         if self.format_code == 1 and self.num_wide == numwide_real:
             msg = result_name
             if self.is_stress:
@@ -5854,8 +6054,8 @@ class OES(OP2Common):
         if self._results.is_not_saved(result_name):
             return ndata, None, None
         self._results._found_result(result_name)
+        slot = self.get_result(result_name)
 
-        slot = getattr(self, result_name)
         if self.format_code == 1 and self.num_wide == 10:  # real
             if self.is_stress:
                 obj_vector_real = RealBar10NodesStressArray

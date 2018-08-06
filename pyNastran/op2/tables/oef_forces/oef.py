@@ -117,7 +117,7 @@ class OEF(OP2Common):
             #pass # TODO: update
         elif self.table_name in [b'OEFCRM1']:
             assert self.table_code in [4, 504], self.code_information()
-            postfix = '_crm'
+            prefix = 'crm.'
         elif self.table_name in [b'OEFCRM2']:
             assert self.table_code in [4, 504], self.code_information()
             # sort2, random
@@ -126,17 +126,17 @@ class OEF(OP2Common):
             self.sort_bits[1] = 1 # sort2
             self.sort_bits[2] = 1 # random
             self.sort_method = 2
-            postfix = '_crm'
+            prefix = 'crm.'
         elif self.table_name in [b'OEFPSD1']:
             assert self.table_code in [4, 604], self.code_information()
-            postfix = '_psd'
+            prefix = 'psd.'
         elif self.table_name in [b'OEFPSD2']:
             assert self.table_code in [4, 604], self.code_information()
             self.format_code = 1
             self.sort_bits[0] = 0 # real
             self.sort_bits[1] = 1 # sort2
             self.sort_bits[2] = 1 # random
-            postfix = '_psd'
+            prefix = 'psd.'
         elif self.table_name in [b'OEFRMS1', b'OEFRMS2']:
             assert self.table_code in [4, 804], self.code_information()
             #self.format_code = 1
@@ -145,7 +145,7 @@ class OEF(OP2Common):
             self.sort_bits[2] = 1 # random
             self.sort_method = 1
             self._analysis_code_fmt = b'i'
-            postfix = '_rms'
+            prefix = 'rms.'
         elif self.table_name in [b'OEFNO1', b'OEFNO2']:
             assert self.table_code in [4, 904], self.code_information()
             self.format_code = 1
@@ -157,10 +157,10 @@ class OEF(OP2Common):
             self.data_code['nonlinear_factor'] = None
             self._analysis_code_fmt = b'i'
             assert self.sort_method == 1, self.code_information()
-            postfix = '_no'
+            prefix = 'no.'
         elif self.table_name in [b'OEFATO1', b'OEFATO2']:
             assert self.table_code in [4], self.code_information()
-            postfix = '_ato'
+            prefix = 'ato.'
 
         elif self.table_name in [b'RAFCONS']:
             postfix = '_RAFCONS'
@@ -567,7 +567,7 @@ class OEF(OP2Common):
             if self._results.is_not_saved(result_name):
                 return ndata
             self._results._found_result(result_name)
-            slot = getattr(self, result_name)
+            slot = self.get_result(result_name)
 
             if self.format_code == 1 and self.num_wide == 9:  # real
                 ntotal = 36
@@ -665,7 +665,7 @@ class OEF(OP2Common):
             if self._results.is_not_saved(result_name):
                 return ndata
             self._results._found_result(result_name)
-            slot = getattr(self, result_name)
+            slot = self.get_result(result_name)
             if self.format_code == 1 and self.num_wide == 9:  # real - 2D
                 # [33, 53, 64, 74, 75]
                 ntotal = 36
@@ -795,7 +795,7 @@ class OEF(OP2Common):
                 if self._results.is_not_saved(result_name):
                     return ndata
                 self._results._found_result(result_name)
-                slot = getattr(self, result_name)
+                slot = self.get_result(result_name)
 
                 if self.format_code == 1 and self.num_wide == 8:  # real
                     obj_vector_real = RealChbdyHeatFluxArray
@@ -859,7 +859,7 @@ class OEF(OP2Common):
             if self._results.is_not_saved(result_name):
                 return ndata
             self._results._found_result(result_name)
-            slot = getattr(self, result_name)
+            slot = self.get_result(result_name)
 
             if self.format_code == 1 and self.num_wide == 4:
                 ntotal = 16
@@ -940,7 +940,7 @@ class OEF(OP2Common):
             if self._results.is_not_saved(result_name):
                 return ndata
             self._results._found_result(result_name)
-            slot = getattr(self, result_name)
+            slot = self.get_result(result_name)
 
             numwide_real = 2 + 7 * nnodes
             if self.format_code == 1 and self.num_wide == numwide_real:  # real
@@ -1016,7 +1016,7 @@ class OEF(OP2Common):
                 if self._results.is_not_saved(result_name):
                     return ndata
                 self._results._found_result(result_name)
-                slot = getattr(self, result_name)
+                slot = self.get_result(result_name)
 
                 if self.element_type == 189:
                     nnodes = 4
@@ -1108,7 +1108,7 @@ class OEF(OP2Common):
             if self._results.is_not_saved(result_name):
                 return ndata
             self._results._found_result(result_name)
-            slot = getattr(self, result_name)
+            slot = self.get_result(result_name)
             if self.format_code == 1 and self.num_wide == numwide_real:  # real
                 ntotal = 16 + 28 * nnodes
                 nelements = ndata // ntotal
@@ -1232,45 +1232,6 @@ class OEF(OP2Common):
                 #raise
             return n
         return new_func
-
-    #def _apply_oef_ato_crm_psd_rms_no(self, result_name):
-        #"""
-        #Appends a keyword onto the result_name in order to handle random results
-        #without 100 if loops.
-        #keywords = {_ato, _crm, _psd, _rms, _NO}
-
-        #Do this:
-            #result_name = 'cbar_forces'
-            #table_name = 'OEFPSD1'
-            #result_name, is_random = _apply_oef_ato_crm_psd_rms_no(self, result_name)
-            #slot = getattr(self, result_name)
-
-        #Or this:
-            #result_name = 'cbar_forces_psd'
-            #slot = self.cbar_forces_psd
-        #"""
-        #is_random = True
-        #if self.table_name in [b'OEF1', b'OEF1X', b'OEFIT']:
-            #is_random = False
-        #elif self.table_name in [b'OEFCRM1']:
-            #assert self.table_code in [504], self.code_information()
-            #result_name += '_crm'
-        #elif self.table_name in [b'OEFPSD1']:
-            #assert self.table_code in [604], self.code_information()
-            #result_name += '_psd'
-        #elif self.table_name in [b'OEFRMS1']:
-            #assert self.table_code in [804], self.code_information()
-            #result_name += '_rms'
-        #elif self.table_name in [b'OEFNO1']:
-            #assert self.table_code in [904], self.code_information()
-            #result_name += '_no'
-        #elif self.table_name in [b'DOEF1']:
-            #assert self.thermal in [8], self.code_information()  # Scaled response spectra NRL
-            #assert self.table_code in [4], self.code_information()
-        #else:
-            #raise NotImplementedError(self.code_information())
-        ##print(result_name, self.table_name)
-        #return result_name, is_random
 
     # @_print_obj_name_on_crash
     def _read_oef1_loads(self, data, ndata):
@@ -1451,7 +1412,7 @@ class OEF(OP2Common):
                 return ndata
             self._results._found_result(result_name)
 
-            slot = getattr(self, result_name)
+            slot = self.get_result(result_name)
             numwide_real = 6 + 13 * nnodes
             numwide_imag = 6 + 25 * nnodes
 
@@ -1797,7 +1758,7 @@ class OEF(OP2Common):
             # 191-VUBEAM
             result_name = 'cbeam_force_vu'
             self._results._found_result(result_name)
-            slot = getattr(self, result_name)
+            slot = self.get_result(result_name)
 
             if self.format_code == 1 and self.num_wide == 20:  # real
                 #ELTYPE = 191 Beam view element (VUBEAM)
@@ -2081,7 +2042,7 @@ class OEF(OP2Common):
             return ndata, None, None
         self._results._found_result(result_name)
 
-        slot = getattr(self, result_name)
+        slot = self.get_result(result_name)
         if self.format_code == 1 and self.num_wide == 3: # real
             ntotal = 3 * 4
             nelements = ndata // ntotal
@@ -2259,7 +2220,7 @@ class OEF(OP2Common):
             # real - format_code == 1
             # random - format_code == 2
             #result_name, is_random = self._apply_oef_ato_crm_psd_rms_no(result_name)
-            slot = getattr(self, result_name)
+            slot = self.get_result(result_name)
             ntotal = 400  # 1+(10-1)*11=100 ->100*4 = 400
             nelements = ndata // ntotal
             auto_return, is_vectorized = self._create_oes_object4(
@@ -2329,7 +2290,7 @@ class OEF(OP2Common):
                                 dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)
                         n += 36
         elif self.format_code in [2, 3] and self.num_wide == 177: # imag
-            slot = getattr(self, result_name)
+            slot = self.get_result(result_name)
             ntotal = 708  # 3*4
             nelements = ndata // ntotal
 
@@ -2494,7 +2455,7 @@ class OEF(OP2Common):
         if self._results.is_not_saved(result_name):
             return ndata, None, None
         self._results._found_result(result_name)
-        slot = getattr(self, result_name)
+        slot = self.get_result(result_name)
         if self.format_code == 1 and self.num_wide == 2:  # real
             ntotal = 8 # 2 * 4
             nelements = ndata // ntotal
@@ -2608,7 +2569,7 @@ class OEF(OP2Common):
         n = 0
         self._results._found_result(result_name)
 
-        slot = getattr(self, result_name)
+        slot = self.get_result(result_name)
         obj_real = RealViscForceArray
 
         if self.format_code == 1 and self.num_wide == 3: # real
@@ -2737,7 +2698,7 @@ class OEF(OP2Common):
             # real - format_code == 1
             # random - format_code == 2
             #result_name, is_random = self._apply_oef_ato_crm_psd_rms_no(result_name)
-            slot = getattr(self, result_name)
+            slot = self.get_result(result_name)
 
             ntotal = 36  # 9*4
             nelements = ndata // ntotal
@@ -2852,7 +2813,7 @@ class OEF(OP2Common):
         if self._results.is_not_saved(result_name):
             return ndata, None, None
         self._results._found_result(result_name)
-        slot = getattr(self, result_name)
+        slot = self.get_result(result_name)
 
         if self.format_code == 1 and self.num_wide == 8:  # real
             ntotal = 32  # 8*4
@@ -2918,7 +2879,7 @@ class OEF(OP2Common):
             msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
             return self._not_implemented_or_skip(data, ndata, msg)
         #result_name, is_random = self._apply_oef_ato_crm_psd_rms_no(result_name)
-        slot = getattr(self, result_name)
+        slot = self.get_result(result_name)
 
         assert self._data_factor == 1, self._data_factor
         if self.format_code in [1, 2] and self.num_wide == 9:
@@ -3070,7 +3031,7 @@ class OEF(OP2Common):
             msg = 'name=%r type=%r' % (self.element_name, self.element_type)
             return self._not_implemented_or_skip(data, ndata, msg), None, None
 
-        slot = getattr(self, result_name)
+        slot = self.get_result(result_name)
         nnodes_all = nnodes + 1
         numwide_real = 2 + nnodes_all * 9 # centroidal node is the + 1
         numwide_imag = 2 + nnodes_all * 17
@@ -3353,7 +3314,7 @@ class OEF(OP2Common):
         self._results._found_result(result_name)
         n = 0
 
-        slot = getattr(self, result_name)
+        slot = self.get_result(result_name)
         if self.format_code == 1 and self.num_wide == 17:  # real
             ntotal = 68  # 17*4
             nelements = ndata // ntotal
@@ -3528,7 +3489,7 @@ class OEF(OP2Common):
             return ndata, None, None
         self._results._found_result(result_name)
 
-        slot = getattr(self, result_name)
+        slot = self.get_result(result_name)
         if self.format_code == 1 and self.num_wide == 7:  # real
             ntotal = 28  # 7*4
             nelements = ndata // ntotal
@@ -3583,7 +3544,7 @@ class OEF(OP2Common):
         n = 0
         result_name = 'cgap_force'
         self._results._found_result(result_name)
-        slot = getattr(self, result_name)
+        slot = self.get_result(result_name)
         if self.format_code == 1 and self.num_wide == 9:  # real
             ntotal = 36 # 9*4
             nelements = ndata // ntotal
@@ -3645,7 +3606,7 @@ class OEF(OP2Common):
         n = 0
         result_name = prefix + 'cbend_force' + postfix
         self._results._found_result(result_name)
-        slot = getattr(self, result_name)
+        slot = self.get_result(result_name)
         if self.format_code == 1 and self.num_wide == 15:  # real
             ntotal = 60  # 15*4
             nelements = ndata // ntotal
@@ -3985,7 +3946,7 @@ class OEF(OP2Common):
         result_name = prefix + 'cbush_force' + postfix
         #result_name, is_random = self._apply_oef_ato_crm_psd_rms_no(result_name)
         self._results._found_result(result_name)
-        slot = getattr(self, result_name)
+        slot = self.get_result(result_name)
         n = 0
 
         numwide_real = 7

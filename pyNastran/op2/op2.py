@@ -259,8 +259,8 @@ class OP2(OP2_Scalar):
         table_types = self.get_table_types()
         for table_type in table_types:
             # model.displacements
-            adict = getattr(self, table_type)
-            bdict = getattr(op2_model, table_type)
+            adict = self.get_result(table_type)
+            bdict = op2_model.get_result(table_type)
 
             # check number of subcases
             if len(adict) != len(bdict):
@@ -589,7 +589,7 @@ class OP2(OP2_Scalar):
         """internal method"""
         result_types = self.get_table_types()
         for result_type in result_types:
-            result = getattr(self, result_type)
+            result = self.get_result(result_type)
             for obj in itervalues(result):
                 if hasattr(obj, 'finalize'):
                     obj.finalize()
@@ -626,7 +626,7 @@ class OP2(OP2_Scalar):
                     #continue
 
         for result_type in result_types:
-            result = getattr(self, result_type)
+            result = self.get_result(result_type)
             for obj in itervalues(result):
                 class_name = obj.__class__.__name__
                 #print('working on %s' % class_name)
@@ -715,7 +715,7 @@ class OP2(OP2_Scalar):
 
         # set subcase_key
         for result_type in result_types:
-            result = getattr(self, result_type)
+            result = self.get_result(result_type)
             case_keys = sorted(result.keys())
             unique_isubcases = []
             for case_key in case_keys:
@@ -752,7 +752,7 @@ class OP2(OP2_Scalar):
 
         self.log.debug('combine_results')
         for result_type in result_types:
-            result = getattr(self, result_type)
+            result = self.get_result(result_type)
             if len(result) == 0:
                 continue
             for isubcase in unique_isubcases:
@@ -833,7 +833,7 @@ class OP2(OP2_Scalar):
         for result_type in result_types:
             if result_type == 'eigenvalues':
                 continue
-            result = getattr(self, result_type)
+            result = self.get_result(result_type)
             case_keys = list(result.keys())
             try:
                 case_keys = sorted(case_keys)  # TODO: causes DeprecationWarning
@@ -1012,21 +1012,21 @@ class OP2(OP2_Scalar):
         #output = {}
         disp_like_dicts = [
             # should NO results be transformed?
-            #self.displacements_no, self.velocities_no, self.accelerations_no,
+            #self.displacements_no, self.velocities_no, self.no.accelerations_no,
             #self.spc_forces_no, self.mpc_forces_no,
 
             self.displacements,
-            self.displacements_ato, self.displacements_crm, self.displacements_psd, self.displacements_rms,
+            self.ato.displacements_ato, self.crm.displacements_crm, self.psd.displacements, self.rms.displacements,
             self.displacements_scaled,
             self.displacement_scaled_response_spectra_ABS,
             self.displacement_scaled_response_spectra_NRL,
 
             self.velocities,
-            self.velocities_ato, self.velocities_crm, self.velocities_psd, self.velocities_rms,
+            self.ato.velocities, self.crm.velocities, self.psd.velocities, self.rms.velocities,
             self.velocity_scaled_response_spectra_ABS,
 
             self.accelerations,
-            self.accelerations_ato, self.accelerations_crm, self.accelerations_psd, self.accelerations_rms,
+            self.ato.accelerations, self.accelerations, self.psd.accelerations, self.rms.accelerations,
             self.acceleration_scaled_response_spectra_ABS,
             self.acceleration_scaled_response_spectra_NRL,
 
@@ -1034,10 +1034,11 @@ class OP2(OP2_Scalar):
             self.eigenvectors_RADCONS, self.eigenvectors_RADEFFM,
             self.eigenvectors_RADEATC, self.eigenvectors_ROUGV1,
 
-            self.spc_forces, self.spc_forces_ato, self.spc_forces_crm, self.spc_forces_psd, self.spc_forces_rms,
-            self.mpc_forces, self.mpc_forces_ato, self.mpc_forces_crm, self.mpc_forces_psd, self.mpc_forces_rms,
+            self.spc_forces, self.ato.spc_forces, self.crm.spc_forces, self.psd.spc_forces, self.rms.spc_forces,
+            self.mpc_forces, self.ato.mpc_forces, self.crm.mpc_forces, self.psd.mpc_forces, self.rms.mpc_forces,
 
-            self.applied_loads, self.load_vectors,
+            self.applied_loads,
+            self.load_vectors,
         ]
         for disp_like_dict in disp_like_dicts:
             if not disp_like_dict:

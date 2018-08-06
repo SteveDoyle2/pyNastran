@@ -203,6 +203,7 @@ class TestOP2(Tester):
     def test_bdf_op2_elements_02(self):
         """tests a large number of elements and results in SOL 103-modes"""
         bdf_filename = os.path.join(MODEL_PATH, 'elements', 'modes_elements.bdf')
+        print(bdf_filename)
         #f06_filename = os.path.join(MODEL_PATH, 'elements', 'modes_elements.test_op2.f06')
         op2_filename = os.path.join(MODEL_PATH, 'elements', 'modes_elements.op2')
         fem1, fem2, diff_cards = self.run_bdf('', bdf_filename)
@@ -1622,54 +1623,54 @@ class TestOP2(Tester):
         op2_filename = os.path.join(folder, 'random_test_bar_plus_tri.op2')
         f06_filename = os.path.join(folder, 'random_test_bar_plus_tri.test_op2.f06')
         op2 = read_op2_geom(op2_filename, debug=False)
-        assert len(op2.displacements_psd) == 1
-        assert len(op2.displacements_rms) == 1
-        assert len(op2.displacements_crm) == 1
-        assert len(op2.displacements_no) == 1
-        assert len(op2.accelerations_psd) == 1
-        assert len(op2.accelerations_rms) == 1
-        assert len(op2.accelerations_crm) == 1
-        assert len(op2.accelerations_no) == 1
-        assert len(op2.cbar_force_crm) == 1
-        assert len(op2.cbar_force_psd) == 1
-        assert len(op2.cbar_force_rms) == 1
-        assert len(op2.cbar_force_no) == 1
-        assert len(op2.cquad4_force_crm) == 1
-        assert len(op2.cquad4_force_psd) == 1
-        assert len(op2.cquad4_force_rms) == 1
-        assert len(op2.cquad4_force_no) == 1
-        assert len(op2.ctria3_force_crm) == 1
-        assert len(op2.ctria3_force_psd) == 1
-        assert len(op2.ctria3_force_rms) == 1
-        assert len(op2.ctria3_force_no) == 1
-        assert len(op2.cbar_force_no) == 1
-        assert len(op2.cbar_force_no) == 1
-        assert len(op2.cbar_force_no) == 1
+        assert len(op2.psd.displacements) == 1
+        assert len(op2.rms.displacements) == 1
+        assert len(op2.crm.displacements) == 1
+        assert len(op2.no.displacements) == 1
+        assert len(op2.psd.accelerations) == 1
+        assert len(op2.rms.accelerations) == 1
+        assert len(op2.crm.accelerations) == 1
+        assert len(op2.no.accelerations) == 1
+        assert len(op2.crm.cbar_force) == 1
+        assert len(op2.psd.cbar_force) == 1
+        assert len(op2.rms.cbar_force) == 1
+        assert len(op2.no.cbar_force) == 1
+        assert len(op2.crm.cquad4_force) == 1
+        assert len(op2.psd.cquad4_force) == 1
+        assert len(op2.rms.cquad4_force) == 1
+        assert len(op2.no.cquad4_force) == 1
+        assert len(op2.crm.ctria3_force) == 1
+        assert len(op2.psd.ctria3_force) == 1
+        assert len(op2.rms.ctria3_force) == 1
+        assert len(op2.no.ctria3_force) == 1
+        assert len(op2.no.cbar_force) == 1
+        assert len(op2.no.cbar_force) == 1
+        assert len(op2.no.cbar_force) == 1
         assert len(op2.eigenvalues) == 1
         assert 'BHH' in op2.matrices
         assert 'KHH' in op2.matrices
 
-        #displacements_psd[1]
-        #displacements_rms[1]
-        #displacements_crm[1]
-        #displacements_no[1]
-        #accelerations_psd[1]
-        #accelerations_rms[1]
-        #accelerations_crm[1]
-        #accelerations_no[1]
-        #cbar_force_crm[1]
-        #cbar_force_psd[1]
-        #cbar_force_rms[1]
-        #cbar_force_no[1]
+        #psd.displacements_psd[1]
+        #rms.displacements[1]
+        #crm.displacements[1]
+        #no.displacements[1]
+        #psd.accelerations[1]
+        #rms.accelerations[1]
+        #crm.accelerations[1]
+        #no.accelerations[1]
+        #crm.cbar_force[1]
+        #psd.cbar_force[1]
+        #rms.cbar_force[1]
+        #no.cbar_force[1]
         #eigenvalues[u'RANDOM TEST']
-        #cquad4_force_crm[1]
-        #cquad4_force_psd[1]
-        #cquad4_force_rms[1]
-        #cquad4_force_no[1]
-        #ctria3_force_crm[1]
-        #ctria3_force_psd[1]
-        #ctria3_force_rms[1]
-        #ctria3_force_no[1]
+        #crm.cquad4_force[1]
+        #psd.cquad4_force[1]
+        #rms.cquad4_force[1]
+        #no.cquad4_force[1]
+        #crm.ctria3_force[1]
+        #psd.ctria3_force[1]
+        #rms.ctria3_force[1]
+        #no.ctria3_force[1]
         #Matrix['BHH'];   shape=(20, 20); type=numpy.matrixlib.defmatrix.matrix; dtype=float64; desc=symmetric
         #Matrix['KHH'];   shape=(20, 20); type=numpy.matrixlib.defmatrix.matrix; dtype=float64; desc=symmetric
 

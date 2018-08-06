@@ -12,6 +12,12 @@ except ImportError:
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import write_float_13e
 
+BASIC_RANDOM_TABLES = [
+    'OESATO1', 'OESCRM1', 'OESPSD1', 'OESRMS1', 'OESNO1',
+    'OESATO2', 'OESCRM2', 'OESPSD2', 'OESRMS2', 'OESNO2',
+    'OSTRATO1', 'OSTRCRM1', 'OSTRPSD1', 'OSTRRMS1', 'OSTRNO1',
+    'OSTRATO2', 'OSTRCRM2', 'OSTRPSD2', 'OSTRRMS2', 'OSTRNO2',
+]
 
 class RandomPlateArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -83,8 +89,14 @@ class RandomPlateArray(OES_Object):
             raise RuntimeError(msg)
 
         self.fiber_curvature = zeros(self.ntotal, 'float32')
+
         # [oxx, oyy, txy]
-        self.data = zeros((self.ntimes, self.ntotal, 3), 'float32')
+        nresults = 3
+        if self._is_nx_random():
+            # ovm
+            nresults += 1
+
+        self.data = zeros((self.ntimes, self.ntotal, nresults), 'float32')
 
     def build_dataframe(self):
         headers = self.get_headers()
@@ -158,9 +170,6 @@ class RandomPlateArray(OES_Object):
         """unvectorized method for adding SORT1 transient data"""
         self.add_eid_sort1(dt, eid, fd, oxx, oyy, txy)
 
-    def add_new_node_sort1(self, dt, eid, fd, oxx, oyy, txy):
-        self.add_eid_sort1(dt, eid, fd, oxx, oyy, txy)
-
     def add_eid_sort1(self, dt, eid, fd, oxx, oyy, txy):
         self._times[self.itime] = dt
         #print(self.element_types2, element_type, self.element_types2.dtype)
@@ -172,6 +181,31 @@ class RandomPlateArray(OES_Object):
         self.fiber_curvature[self.itotal] = fd
         #self.ielement += 1
         self.itotal += 1
+    #---------------------------------------------------------------------------
+
+    def add_new_eid_ovm_sort1(self, dt, eid, fd, oxx, oyy, txy, ovm):
+        self.add_eid_ovm_sort1(dt, eid, fd, oxx, oyy, txy, ovm)
+
+    def add_ovm_sort1(self, dt, eid, fd, oxx, oyy, txy, ovm):
+        """unvectorized method for adding SORT1 transient data"""
+        self.add_eid_ovm_sort1(dt, eid, fd, oxx, oyy, txy, ovm)
+
+    def add_eid_ovm_sort1(self, dt, eid, fd, oxx, oyy, txy, ovm):
+        self._times[self.itime] = dt
+        #print(self.element_types2, element_type, self.element_types2.dtype)
+        #print('itotal=%s dt=%s eid=%s nid=%-5s oxx=%s' % (self.itotal, dt, eid, node_id, oxx))
+
+        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        self.data[self.itime, self.itotal] = [oxx, oyy, txy, ovm]
+        self.element[self.itotal, :] = eid  # 0 is center
+        self.fiber_curvature[self.itotal] = fd
+        #self.ielement += 1
+        self.itotal += 1
+
+    #---------------------------------------------------------------------------
+
+    def add_new_node_sort1(self, dt, eid, fd, oxx, oyy, txy):
+        self.add_eid_sort1(dt, eid, fd, oxx, oyy, txy)
 
     def get_stats(self, short=False):
         if not self.is_built:
@@ -291,6 +325,16 @@ class RandomPlateArray(OES_Object):
                     '', sfd, soxx, soyy, stxy))
             ilayer0 = not ilayer0
 
+    def _is_nx_random(self):
+        if self.table_name in BASIC_RANDOM_TABLES:
+            is_nx_random = False
+        elif self.table_name in ['OESXRMS1', ]:
+            is_nx_random = True
+        else:
+            msg = 'self.table_name=%s self.table_name_str=%s' % (self.table_name, self.table_name_str)
+            raise NotImplementedError(msg)
+        return is_nx_random
+
 def _get_plate_msg(self, is_mag_phase=True, is_sort1=True):
     #if self.is_von_mises:
         #von_mises = 'VON MISES'
@@ -400,7 +444,10 @@ class RandomPlateStressArray(RandomPlateArray, StressObject):
         StressObject.__init__(self, data_code, isubcase)
 
     def _get_headers(self):
-        return ['oxx', 'oyy', 'txy']
+        headers = ['oxx', 'oyy', 'txy']
+        if self._is_nx_random():
+            headers.append('ovm')
+        return headers
 
     def get_headers(self):
         return self._get_headers()
@@ -412,7 +459,10 @@ class RandomPlateStrainArray(RandomPlateArray, StrainObject):
         assert self.is_strain, self.stress_bits
 
     def _get_headers(self):
-        return ['exx', 'eyy', 'exy']
+        headers = ['exx', 'eyy', 'exy']
+        if self._is_nx_random():
+            headers.append('ovm')
+        return headers
 
     def get_headers(self):
         return self._get_headers()
