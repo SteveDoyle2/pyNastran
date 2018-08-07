@@ -1623,29 +1623,31 @@ class TestOP2(Tester):
         op2_filename = os.path.join(folder, 'random_test_bar_plus_tri.op2')
         f06_filename = os.path.join(folder, 'random_test_bar_plus_tri.test_op2.f06')
         op2 = read_op2_geom(op2_filename, debug=False)
-        assert len(op2.psd.displacements) == 1
-        assert len(op2.rms.displacements) == 1
-        assert len(op2.crm.displacements) == 1
-        assert len(op2.no.displacements) == 1
-        assert len(op2.psd.accelerations) == 1
-        assert len(op2.rms.accelerations) == 1
-        assert len(op2.crm.accelerations) == 1
-        assert len(op2.no.accelerations) == 1
-        assert len(op2.crm.cbar_force) == 1
-        assert len(op2.psd.cbar_force) == 1
-        assert len(op2.rms.cbar_force) == 1
-        assert len(op2.no.cbar_force) == 1
-        assert len(op2.crm.cquad4_force) == 1
-        assert len(op2.psd.cquad4_force) == 1
-        assert len(op2.rms.cquad4_force) == 1
-        assert len(op2.no.cquad4_force) == 1
-        assert len(op2.crm.ctria3_force) == 1
-        assert len(op2.psd.ctria3_force) == 1
-        assert len(op2.rms.ctria3_force) == 1
-        assert len(op2.no.ctria3_force) == 1
-        assert len(op2.no.cbar_force) == 1
-        assert len(op2.no.cbar_force) == 1
-        assert len(op2.no.cbar_force) == 1
+
+        op2res = op2.op2_results
+        assert len(op2res.psd.displacements) == 1
+        assert len(op2res.rms.displacements) == 1
+        assert len(op2res.crm.displacements) == 1
+        assert len(op2res.no.displacements) == 1
+        assert len(op2res.psd.accelerations) == 1
+        assert len(op2res.rms.accelerations) == 1
+        assert len(op2res.crm.accelerations) == 1
+        assert len(op2res.no.accelerations) == 1
+        assert len(op2res.crm.cbar_force) == 1
+        assert len(op2res.psd.cbar_force) == 1
+        assert len(op2res.rms.cbar_force) == 1
+        assert len(op2res.no.cbar_force) == 1
+        assert len(op2res.crm.cquad4_force) == 1
+        assert len(op2res.psd.cquad4_force) == 1
+        assert len(op2res.rms.cquad4_force) == 1
+        assert len(op2res.no.cquad4_force) == 1
+        assert len(op2res.crm.ctria3_force) == 1
+        assert len(op2res.psd.ctria3_force) == 1
+        assert len(op2res.rms.ctria3_force) == 1
+        assert len(op2res.no.ctria3_force) == 1
+        assert len(op2res.no.cbar_force) == 1
+        assert len(op2res.no.cbar_force) == 1
+        assert len(op2res.no.cbar_force) == 1
         assert len(op2.eigenvalues) == 1
         assert 'BHH' in op2.matrices
         assert 'KHH' in op2.matrices

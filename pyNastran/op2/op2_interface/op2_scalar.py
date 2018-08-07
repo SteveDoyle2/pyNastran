@@ -717,7 +717,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
     def set_subcases(self, subcases=None):
         """
-        Allows you to read only the subcases in the list of iSubcases
+        Allows you to read only the subcases in the list of isubcases
 
         Parameters
         ----------
@@ -728,7 +728,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         #: stores the set of all subcases that are in the OP2
         #self.subcases = set([])
         if subcases is None or subcases == []:
-            #: stores if the user entered [] for iSubcases
+            #: stores if the user entered [] for isubcases
             self.is_all_subcases = True
             self.valid_subcases = []
         else:
@@ -826,8 +826,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             #b'RAECONS': [self._table_passer, self._table_passer], # temporary
 
             # strain energy
-            b'RANEATC': [self._table_passer, self._table_passer], # Strain Energy Equivalent Inertia Attachment mode (ORGY1)
-            b'RANCONS': [self._table_passer, self._table_passer], # Constraint mode element strain energy table (ORGY1)
+            b'RANEATC' : [self._read_onr1_3, self._read_onr1_4], # Strain Energy Equivalent Inertia Attachment mode (ORGY1)
+            b'RANCONS': [self._read_onr1_3, self._read_onr1_4], # Constraint mode element strain energy table (ORGY1)
+            #b'RANEATC': [self._table_passer, self._table_passer], # Strain Energy Equivalent Inertia Attachment mode (ORGY1)
+            #b'RANCONS': [self._table_passer, self._table_passer], # Constraint mode element strain energy table (ORGY1)
 
 
             b'R1TABRG': [self._table_passer, self._read_r1tabrg],

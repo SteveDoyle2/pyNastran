@@ -36,7 +36,7 @@ class FortranFormat(object):
         self._endian = None
         self._table_mapper = {}
 
-        #: stores if the user entered [] for iSubcases
+        #: stores if the user entered [] for isubcases
         self.is_all_subcases = True
         self.valid_subcases = []
 

@@ -1010,32 +1010,37 @@ class OP2(OP2_Scalar):
 
         """
         #output = {}
+        ato = self.op2_results.ato
+        crm = self.op2_results.crm
+        psd = self.op2_results.psd
+        rms = self.op2_results.rms
+        #no = self.op2_results.no
         disp_like_dicts = [
             # should NO results be transformed?
-            #self.displacements_no, self.velocities_no, self.no.accelerations_no,
-            #self.spc_forces_no, self.mpc_forces_no,
+            #no.displacements, no.velocities, no.accelerations,
+            #no.spc_forces, no.mpc_forces,
 
             self.displacements,
-            self.ato.displacements, self.crm.displacements, self.psd.displacements, self.rms.displacements,
+            ato.displacements, crm.displacements, psd.displacements, rms.displacements,
             self.displacements_scaled,
             self.displacement_scaled_response_spectra_ABS,
             self.displacement_scaled_response_spectra_NRL,
 
             self.velocities,
-            self.ato.velocities, self.crm.velocities, self.psd.velocities, self.rms.velocities,
+            ato.velocities, crm.velocities, psd.velocities, rms.velocities,
             self.velocity_scaled_response_spectra_ABS,
 
             self.accelerations,
-            self.ato.accelerations, self.accelerations, self.psd.accelerations, self.rms.accelerations,
+            ato.accelerations, crm.accelerations, psd.accelerations, rms.accelerations,
             self.acceleration_scaled_response_spectra_ABS,
             self.acceleration_scaled_response_spectra_NRL,
 
             self.eigenvectors,
-            self.eigenvectors_RADCONS, self.eigenvectors_RADEFFM,
-            self.eigenvectors_RADEATC, self.eigenvectors_ROUGV1,
+            self.op2_results.RADCONS.eigenvectors, self.op2_results.RADEFFM.eigenvectors,
+            self.op2_results.RADEATC.eigenvectors, self.op2_results.ROUGV1.eigenvectors,
 
-            self.spc_forces, self.ato.spc_forces, self.crm.spc_forces, self.psd.spc_forces, self.rms.spc_forces,
-            self.mpc_forces, self.ato.mpc_forces, self.crm.mpc_forces, self.psd.mpc_forces, self.rms.mpc_forces,
+            self.spc_forces, ato.spc_forces, crm.spc_forces, psd.spc_forces, rms.spc_forces,
+            self.mpc_forces, ato.mpc_forces, crm.mpc_forces, psd.mpc_forces, rms.mpc_forces,
 
             self.applied_loads,
             self.load_vectors,

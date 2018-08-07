@@ -621,13 +621,13 @@ class OUG(OP2Common):
         if self.table_name in [b'OUGV1', b'OUGV2', b'BOUGV1', b'BOPHIG', b'OUG1']:
             result_name = 'eigenvectors'
         elif self.table_name == b'RADCONS':
-            result_name = 'eigenvectors_RADCONS'
+            result_name = 'RADCONS.eigenvectors'
         elif self.table_name == b'RADEFFM':
-            result_name = 'eigenvectors_RADEFFM'
+            result_name = 'RADEFFM.eigenvectors'
         elif self.table_name == b'RADEATC':
-            result_name = 'eigenvectors_RADEATC'
+            result_name = 'RADEATC.eigenvectors'
         elif self.table_name in [b'ROUGV1', 'ROUGV2']:
-            result_name = 'eigenvectors_ROUGV1'
+            result_name = 'ROUGV1.eigenvectors'
         else:
             msg = 'eigenvectors; table_name=%s' % self.table_name
             raise NotImplementedError(msg)

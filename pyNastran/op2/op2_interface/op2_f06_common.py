@@ -10,12 +10,57 @@ from pyNastran.bdf.cards.base_card import deprecated
 from pyNastran.bdf.case_control_deck import CaseControlDeck
 
 from pyNastran.op2.op2_interface.random_results import (
-    RAECONS, RASCONS, RAPCONS, RAFCONS, RAGCONS,
-    RAEEATC, RASEATC, RAPEATC, RAFEATC, RAGEATC,
+    RADCONS, RAECONS, RASCONS, RAPCONS, RAFCONS, RAGCONS, RANCONS,
+    RADEATC, RAEEATC, RASEATC, RAPEATC, RAFEATC, RAGEATC, RANEATC,
+    ROUGV1, RADEFFM,
     AutoCorrelationObjects, PowerSpectralDensityObjects, RootMeansSquareObjects,
     CumulativeRootMeansSquareObjects, NumberOfCrossingsObjects,
 )
 from pyNastran.op2.tables.grid_point_weight import GridPointWeight
+
+class Results(object):
+    def __init__(self):
+        self.ato = AutoCorrelationObjects()
+        self.psd = PowerSpectralDensityObjects()
+        self.rms = RootMeansSquareObjects()
+        self.no = NumberOfCrossingsObjects()
+        self.crm = CumulativeRootMeansSquareObjects()
+
+        self.modal_contribution = ModalContribution()
+        self.strength_ratio = StrengthRatio()
+        self.ROUGV1 = ROUGV1()
+
+        self.RADEFFM = RADEFFM()
+
+        self.RADCONS = RADCONS() # eigenvectors
+        self.RAFCONS = RAFCONS() # force
+        self.RASCONS = RASCONS() # stress
+        self.RAECONS = RAECONS() # strain
+        self.RAGCONS = RAGCONS() # grid point forces
+        self.RAPCONS = RAPCONS() # composite stress
+        self.RANCONS = RANCONS() # strain energy
+
+        self.RADEATC = RADEATC() # eigenvectors
+        self.RAFEATC = RAFEATC() # force
+        self.RASEATC = RASEATC() # stress
+        self.RAEEATC = RAEEATC() # strain
+        self.RAGEATC = RAGEATC() # grid point forces
+        self.RAPEATC = RAPEATC() # composite stress
+        self.RANEATC = RANEATC() # strain energy
+
+    def get_table_types(self):
+        sum_objs = [
+            self.ato, self.psd, self.rms, self.no, self.crm,
+            self.modal_contribution, self.strength_ratio,
+            self.ROUGV1,
+            self.RADEFFM,
+            self.RADCONS, self.RAFCONS, self.RASCONS, self.RAECONS, self.RAGCONS, self.RAPCONS, self.RANCONS,
+            self.RADEATC, self.RAFEATC, self.RASEATC, self.RAEEATC, self.RAGEATC, self.RAPEATC, self.RANEATC,
+        ]
+        base = []
+        for objs in sum_objs:
+            base.extend(objs.get_table_types())
+        return base
 
 class ModalContribution(object):
     def __init__(self):
@@ -150,7 +195,32 @@ class StrengthRatio(object):
         ]
         return ['strength_ratio.' + table for table in tables]
 
-class OP2_F06_Common(object):
+class Responses(object):
+    """Defines SOL 200 responses"""
+    def __init__(self):
+        self.convergence_data = None
+        self.weight_response = None
+        self.stress_response = None
+        self.strain_response = None
+        self.composite_stress_response = None
+        self.composite_strain_response = None
+        self.flutter_response = None
+
+class Deprecated(object):
+    def __init__(self):
+        pass
+    #@property
+    #def iSubcases(self):
+        #self.deprecated('iSubcases', 'isubcases', '1.2')
+        #return self.isubcases
+
+    #@iSubcases.setter
+    #def iSubcases(self, isubcases):
+        #self.deprecated('iSubcases', 'isubcases', '1.2')
+        #self.isubcases = isubcases
+
+
+class OP2_F06_Common(Deprecated):
     def __init__(self):
         #: a dictionary that maps an integer of the subcaseName to the
         #: subcase_id
@@ -168,7 +238,7 @@ class OP2_F06_Common(object):
 
         self.page_num = 1
 
-        self.iSubcases = []
+        self.isubcases = []
         self.__objects_vector_init__()
         self.__objects_init__()
         self.__objects_common_init__()
@@ -187,7 +257,7 @@ class OP2_F06_Common(object):
 
             obj_name, result_name = result_name.split('.')
             try:
-                storage_obj = getattr(self, obj_name)
+                storage_obj = getattr(self.op2_results, obj_name)
             except AttributeError:
                 return False
             return hasattr(storage_obj, result_name)
@@ -214,7 +284,7 @@ class OP2_F06_Common(object):
 
             obj_name, result_name = result_name.split('.')
 
-            storage_obj = getattr(self, obj_name)
+            storage_obj = getattr(self.op2_results, obj_name)
             storage_dict = getattr(storage_obj, result_name)
             return storage_dict
         else:
@@ -235,25 +305,7 @@ class OP2_F06_Common(object):
         """
         #======================================================================
         # rods
-        self.ato = AutoCorrelationObjects()
-        self.psd = PowerSpectralDensityObjects()
-        self.rms = RootMeansSquareObjects()
-        self.no = NumberOfCrossingsObjects()
-        self.crm = CumulativeRootMeansSquareObjects()
-
-        self.modal_contribution = ModalContribution()
-        self.strength_ratio = StrengthRatio()
-        self.RAFCONS = RAFCONS() # force
-        self.RASCONS = RASCONS() # stress
-        self.RAECONS = RAECONS() # strain
-        self.RAGCONS = RAGCONS() # grid point forces
-        self.RAPCONS = RAPCONS() # ???
-
-        self.RAFEATC = RAFEATC() # force
-        self.RASEATC = RASEATC() # stress
-        self.RAEEATC = RAEEATC() # strain
-        self.RAGEATC = RAGEATC() # grid point forces
-        self.RAPEATC = RAPEATC() # ???
+        self.op2_results = Results()
 
         self.crod_force = {}
         self.conrod_force = {}
@@ -394,15 +446,7 @@ class OP2_F06_Common(object):
     def __objects_common_init__(self):
         #: the date the job was run on
         self.date = None
-
-        # SOL 200
-        self.convergence_data = None
-        self.weight_response = None
-        self.stress_response = None
-        self.strain_response = None
-        self.composite_stress_response = None
-        self.composite_strain_response = None
-        self.flutter_response = None
+        self.responses = Responses()
 
         #: Grid Point Weight Table
         #: create with:
@@ -438,7 +482,6 @@ class OP2_F06_Common(object):
         #: OUG - displacement
         self.displacements = {}           # tCode=1 thermal=0
         self.displacements_scaled = {}    # tCode=1 thermal=8
-        self.displacements_ROUGV1 = {}
 
         #: OUP
 
@@ -454,7 +497,6 @@ class OP2_F06_Common(object):
 
         #: OUG - velocity
         self.velocities = {}              # tCode=10 thermal=0
-        self.velocities_ROUGV1 = {}
 
         #self.velocity_scaled_response_spectra_NRL = {}
         self.velocity_scaled_response_spectra_ABS = {}
@@ -466,7 +508,6 @@ class OP2_F06_Common(object):
 
         #: OUG - acceleration
         self.accelerations = {}            # tCode=11 thermal=0
-        self.accelerations_ROUGV1 = {}
 
         self.acceleration_scaled_response_spectra_NRL = {}
         self.acceleration_scaled_response_spectra_ABS = {}
@@ -482,10 +523,6 @@ class OP2_F06_Common(object):
 
         #: OUG - eigenvectors
         self.eigenvectors = {}            # tCode=7 thermal=0
-        self.eigenvectors_RADCONS = {}
-        self.eigenvectors_RADEFFM = {}
-        self.eigenvectors_RADEATC = {}
-        self.eigenvectors_ROUGV1 = {}
 
         # OEF - Forces - tCode=4 thermal=0
         self.cbush_force = {}
@@ -722,45 +759,19 @@ class OP2_F06_Common(object):
 
     def get_table_types(self):
         """Gets the names of the results."""
-        sum_objs = [
-            self.ato, self.psd, self.rms, self.no, self.crm,
-            self.modal_contribution, self.strength_ratio,
-            self.RAFCONS, self.RASCONS, self.RAECONS, self.RAGCONS, self.RAPCONS,
-            self.RAFEATC, self.RASEATC, self.RAEEATC, self.RAGEATC, self.RAPEATC,
-        ]
-        base = []
-        for objs in sum_objs:
-            base.extend(objs.get_table_types())
+        base = self.op2_results.get_table_types()
 
         table_types = base + [
-            # OUG - displacement
-            'displacements',
-            'displacements_scaled',
-            'displacements_ROUGV1',
-
-            # OUG - temperatures
+            # OUG - displacement, temperatures, eigenvectors, velocity, acceleration
+            'displacements', 'displacements_scaled',
             'temperatures',
-
-            # OUG - eigenvectors
             'eigenvectors',
-            'eigenvectors_RADCONS',
-            'eigenvectors_RADEFFM',
-            'eigenvectors_RADEATC',
-            'eigenvectors_ROUGV1',
-
-            # OUG - velocity
-            'velocities', 'velocities_ROUGV1',
-
-            # OUG - acceleration
-            'accelerations', 'accelerations_ROUGV1',
+            'velocities',
+            'accelerations',
 
             # OQG - spc/mpc forces
-            'spc_forces',
-            'spc_forces_scaled_response_spectra_NRL',
-
-            'mpc_forces',
-            'mpc_forces_RAQCONS', 'mpc_forces_RAQEATC',
-
+            'spc_forces', 'spc_forces_scaled_response_spectra_NRL',
+            'mpc_forces', 'mpc_forces_RAQCONS', 'mpc_forces_RAQEATC',
             'thermal_gradient_and_flux',
 
             # OGF - grid point forces
@@ -773,50 +784,27 @@ class OP2_F06_Common(object):
             'force_vectors',
 
             # OES - tCode=5 thermal=0 s_code=0,1 (stress/strain)
-            # OES - CELAS1/CELAS2/CELAS3/CELAS4 stress
-            'celas1_stress',
-            'celas2_stress',
-            'celas3_stress',
-            'celas4_stress',
+            # OES - CELAS1/CELAS2/CELAS3/CELAS4 stress/strain
+            'celas1_stress', 'celas2_stress', 'celas3_stress', 'celas4_stress',
+            'celas1_strain', 'celas2_strain', 'celas3_strain', 'celas4_strain',
 
-            # OES - CELAS1/CELAS2/CELAS3/CELAS4 strain
-            'celas1_strain',
-            'celas2_strain',
-            'celas3_strain',
-            'celas4_strain',
-
-            # OES - isotropic CROD/CONROD/CTUBE stress
-            'crod_stress',
-            'conrod_stress',
-            'ctube_stress',
-
-            # OES - isotropic CROD/CONROD/CTUBE strain
-            'crod_strain',
-            'conrod_strain',
-            'ctube_strain',
+            # OES - isotropic CROD/CONROD/CTUBE stress/strain
+            'crod_stress', 'conrod_stress', 'ctube_stress',
+            'crod_strain', 'conrod_strain', 'ctube_strain',
 
             # OES - isotropic CBAR stress/strain
-            'cbar_stress',
-            'cbar_strain',
+            'cbar_stress', 'cbar_strain',
             'cbar_force', 'cbar_force_abs', 'cbar_force_nrl',
 
-            'cbar_stress_10nodes',
-            'cbar_strain_10nodes',
-            'cbar_force_10nodes',
+            'cbar_stress_10nodes', 'cbar_strain_10nodes', 'cbar_force_10nodes',
 
             # OES - isotropic CBEAM stress/strain
-            'cbeam_stress',
-            'cbeam_strain',
-            'cbeam_force',
-            'cbeam_force_vu',
+            'cbeam_stress', 'cbeam_strain', 'cbeam_force', 'cbeam_force_vu',
             'nonlinear_cbeam_stress',
             #'nonlinear_cbeam_strain',
 
             # CBEND
-            'cbend_stress',
-            'cbend_strain',
-            'cbend_force',
-
+            'cbend_stress', 'cbend_strain', 'cbend_force',
 
             # OES - isotropic CTRIA3/CQUAD4 stress
             'ctria3_stress', 'ctriar_stress', 'ctria6_stress',
@@ -826,16 +814,12 @@ class OP2_F06_Common(object):
             'ctria3_strain', 'ctriar_strain', 'ctria6_strain',
             'cquadr_strain', 'cquad4_strain', 'cquad8_strain',
 
-
-            # OES - isotropic CTETRA/CHEXA/CPENTA stress
+            # OES - isotropic CTETRA/CHEXA/CPENTA stress/strain
             'ctetra_stress', 'chexa_stress', 'cpenta_stress',
-
-            # OES - isotropic CTETRA/CHEXA/CPENTA strain
             'ctetra_strain', 'chexa_strain', 'cpenta_strain',
 
             # OES - CSHEAR stress/strain
-            'cshear_stress',
-            'cshear_strain',
+            'cshear_stress', 'cshear_strain',
 
             # OES - GAPNL 86
             'nonlinear_cgap_stress',
@@ -860,9 +844,7 @@ class OP2_F06_Common(object):
             #'response1_table',
 
             # OEF - Forces - tCode=4 thermal=0
-            'crod_force',
-            'conrod_force',
-            'ctube_force',
+            'crod_force', 'conrod_force', 'ctube_force',
 
             # bar/beam
             'cbush_force',
@@ -881,17 +863,14 @@ class OP2_F06_Common(object):
             #'ctria6_composite_force',
             #'ctriar_composite_force',
 
-            'chexa_pressure_force',
-            'cpenta_pressure_force',
-            'ctetra_pressure_force',
+            'chexa_pressure_force', 'cpenta_pressure_force', 'ctetra_pressure_force',
 
             'celas1_force', 'celas2_force', 'celas3_force', 'celas4_force',
             'cvisc_force',
 
             'force_VU',
             #'force_VU_2D',
-            'vu_quad_force',
-            'vu_tria_force',
+            'vu_quad_force', 'vu_tria_force',
 
             #OEF - Fluxes - tCode=4 thermal=1
             'conv_thermal_load',
@@ -926,31 +905,24 @@ class OP2_F06_Common(object):
         ]
         table_types += [
             # OES - CTRIAX6
-            'ctriax_stress',
-            'ctriax_strain',
+            'ctriax_stress', 'ctriax_strain',
 
-            'cbush_stress',  #'cbush_stress_RASCONS',
-            'cbush_strain',  #'cbush_strain_RASCONS',
+            'cbush_stress', 'cbush_strain',
 
             #'cbush_stress',
             #'cbush_strain',
             'cbush1d_stress_strain', 'nonlinear_cbush1d_stress_strain',
 
             # OES - nonlinear CROD/CONROD/CTUBE stress
-            'nonlinear_crod_stress',
-            'nonlinear_crod_strain',
+            'nonlinear_crod_stress', 'nonlinear_crod_strain',
 
-            'nonlinear_ctube_stress',
-            'nonlinear_ctube_strain',
+            'nonlinear_ctube_stress', 'nonlinear_ctube_strain',
 
-            'nonlinear_conrod_stress',
-            'nonlinear_conrod_strain',
+            'nonlinear_conrod_stress', 'nonlinear_conrod_strain',
 
             # OESNLXR - CTRIA3/CQUAD4 stress
-            'nonlinear_cquad4_stress',
-            'nonlinear_ctria3_stress',
-            'nonlinear_cquad4_strain',
-            'nonlinear_ctria3_strain',
+            'nonlinear_cquad4_stress', 'nonlinear_ctria3_stress',
+            'nonlinear_cquad4_strain', 'nonlinear_ctria3_strain',
 
             #'hyperelastic_plate_stress',
             'hyperelastic_cquad4_strain',
@@ -960,19 +932,11 @@ class OP2_F06_Common(object):
             'nonlinear_celas3_stress',
 
             # OES - composite CTRIA3/CQUAD4 stress
-            'cquad4_composite_stress',
-            'cquad8_composite_stress',
-            'cquadr_composite_stress',
-            'ctria3_composite_stress',
-            'ctria6_composite_stress',
-            'ctriar_composite_stress',
+            'cquad4_composite_stress', 'cquad8_composite_stress', 'cquadr_composite_stress',
+            'ctria3_composite_stress', 'ctria6_composite_stress', 'ctriar_composite_stress',
 
-            'cquad4_composite_strain',
-            'cquad8_composite_strain',
-            'cquadr_composite_strain',
-            'ctria3_composite_strain',
-            'ctria6_composite_strain',
-            'ctriar_composite_strain',
+            'cquad4_composite_strain', 'cquad8_composite_strain', 'cquadr_composite_strain',
+            'ctria3_composite_strain', 'ctria6_composite_strain', 'ctriar_composite_strain',
 
             # OGS1 - grid point stresses
             'grid_point_stresses', # tCode=26
@@ -980,37 +944,25 @@ class OP2_F06_Common(object):
 
             # OEE - strain energy density
             #'strain_energy',  # tCode=18
-            'cquad4_strain_energy',
-            'cquad8_strain_energy',
-            'cquadr_strain_energy',
+            'cquad4_strain_energy', 'cquad8_strain_energy', 'cquadr_strain_energy',
             'cquadx_strain_energy',
 
-            'ctria3_strain_energy',
-            'ctria6_strain_energy',
-            'ctriar_strain_energy',
-            'ctriax_strain_energy',
-            'ctriax6_strain_energy',
+            'ctria3_strain_energy', 'ctria6_strain_energy', 'ctriar_strain_energy',
+            'ctriax_strain_energy', 'ctriax6_strain_energy',
 
             'cshear_strain_energy',
 
-            'ctetra_strain_energy',
-            'cpenta_strain_energy',
-            'chexa_strain_energy',
-            'cpyram_strain_energy',
+            'ctetra_strain_energy', 'cpenta_strain_energy',
+            'chexa_strain_energy', 'cpyram_strain_energy',
 
-            'crod_strain_energy',
-            'ctube_strain_energy',
-            'conrod_strain_energy',
+            'crod_strain_energy', 'ctube_strain_energy', 'conrod_strain_energy',
 
-            'cbar_strain_energy',
-            'cbeam_strain_energy',
+            'cbar_strain_energy', 'cbeam_strain_energy',
 
             'cgap_strain_energy',
             'cbush_strain_energy',
-            'celas1_strain_energy',
-            'celas2_strain_energy',
-            'celas3_strain_energy',
-            'celas4_strain_energy',
+            'celas1_strain_energy', 'celas2_strain_energy',
+            'celas3_strain_energy', 'celas4_strain_energy',
 
             'cdum8_strain_energy',
             #'chexa8fd_strain_energy'
@@ -1019,7 +971,6 @@ class OP2_F06_Common(object):
             'genel_strain_energy',
             'conm2_strain_energy',
 
-
             # unused?
             'displacement_scaled_response_spectra_NRL',
             'displacement_scaled_response_spectra_ABS',
@@ -1027,7 +978,6 @@ class OP2_F06_Common(object):
             'velocity_scaled_response_spectra_ABS',
             'acceleration_scaled_response_spectra_NRL',
             'acceleration_scaled_response_spectra_ABS',
-
         ]
         utables = unique(table_types)
         if len(table_types) != len(utables):

@@ -13,6 +13,52 @@ class ONR(OP2Common):
         self.words = None
         self.num_wide = None
 
+    def get_onr_prefix_postfix(self):
+        """
+        Creates the prefix/postfix that splits off ATO, CRM, PSD, nonlinear,
+        etc. results.  We also fix some of the sort bits as typing:
+
+            STRESS(PLOT,SORT1,RALL) = ALL
+
+        will actually create the OESRMS2 table (depending on what else
+        is in your case control).  However, it's in an OESATO2 table, so
+        we know it's really SORT2.
+
+        Also, if you're validating the sort_bit flags, *RMS2 and *NO2 are
+        actually SORT1 tables.
+
+        NX Case Control  Block         Description
+        ===============  ==========    ===========
+        NLSTRESS         OESNLXR       Nonlinear static stresses
+        BOUTPUT          OESNLBR       Slideline stresses
+        STRESS           OESNLXD       Nonlinear Transient Stresses
+        STRESS           OES1C/OSTR1C  Ply stresses/strains
+        STRESS           OES1X         Element stresses with intermediate (CBAR and CBEAM)
+                                       station stresses and stresses on nonlinear elements
+        STRESS           OES/OESVM     Element stresses (linear elements only)
+        STRAIN           OSTR1         Element strains
+        STRESS/STRAIN    DOES1/DOSTR1  Scaled Response Spectra
+        MODCON           OSTRMC        Modal contributions
+        """
+        prefix = ''
+        postfix = ''
+        if self.table_name in [b'ONRGY1', b'ONRGY2']:
+            pass
+        elif self.table_name in [b'RANEATC']: #, b'OSTRMS1C']:
+            self.format_code = 1
+            self.sort_bits[0] = 0 # real
+            prefix = 'RANEATC.'
+        elif self.table_name in [b'RANCONS']: #, b'OSTRMS1C']:
+            self.format_code = 1
+            self.sort_bits[0] = 0 # real
+            prefix = 'RANCONS.'
+
+        else:
+            raise NotImplementedError(self.table_name)
+        self.data_code['sort_bits'] = self.sort_bits
+        self.data_code['nonlinear_factor'] = self.nonlinear_factor
+        return prefix, postfix
+
     def _read_onr1_3(self, data, ndata):
         """
         reads ONRGY1 subtable 3
@@ -405,11 +451,14 @@ class ONR(OP2Common):
 
             raise NotImplementedError('element_name=%r' % (
                 self.data_code['element_name']))
+        prefix, postfix = self.get_onr_prefix_postfix()
+        result_name2 = prefix + result_name + postfix
         #result_name = 'strain_energy'
-        slot = getattr(self, result_name)
 
         auto_return = False
-        self._results._found_result(result_name)
+        self._results._found_result(result_name2)
+
+        slot = self.get_result(result_name2)
         if self.is_debug_file:
             self.binary_debug.write('cvalares = %s\n' % self.cvalres)
         if self.format_code in [1, 2] and self.num_wide == 4:

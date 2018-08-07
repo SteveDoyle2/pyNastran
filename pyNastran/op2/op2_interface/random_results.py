@@ -303,6 +303,77 @@ class RAGEATC(object):
         ]
         return ['RAGEATC.' + table for table in tables]
 
+class RANCONS(object):
+    def __init__(self):
+        self.cbar_strain_energy = {}
+        self.cbush_strain_energy = {}
+        self.chexa_strain_energy = {}
+        self.ctria3_strain_energy = {}
+        self.cquad4_strain_energy = {}
+    def get_table_types(self):
+        tables = [
+            'cbar_strain_energy', 'cbush_strain_energy',
+            'chexa_strain_energy',
+            'ctria3_strain_energy', 'cquad4_strain_energy',
+        ]
+        return ['RANCONS.' + table for table in tables]
+
+class RADEFFM(object):
+    def __init__(self):
+        self.eigenvectors = {}
+    def get_table_types(self):
+        tables = [
+            'eigenvectors',
+        ]
+        return ['RADEFFM.' + table for table in tables]
+
+class RADCONS(object):
+    def __init__(self):
+        self.eigenvectors = {}
+    def get_table_types(self):
+        tables = [
+            'eigenvectors',
+        ]
+        return ['RADCONS.' + table for table in tables]
+
+class RADEATC(object):
+    def __init__(self):
+        self.eigenvectors = {}
+    def get_table_types(self):
+        tables = [
+            'eigenvectors',
+        ]
+        return ['RADEATC.' + table for table in tables]
+
+class RANEATC(object):
+    def __init__(self):
+        self.cbar_strain_energy = {}
+        self.cbush_strain_energy = {}
+        self.chexa_strain_energy = {}
+        self.ctria3_strain_energy = {}
+        self.cquad4_strain_energy = {}
+    def get_table_types(self):
+        tables = [
+            'cbar_strain_energy', 'cbush_strain_energy',
+            'chexa_strain_energy',
+            'ctria3_strain_energy', 'cquad4_strain_energy',
+        ]
+        return ['RANEATC.' + table for table in tables]
+
+
+class ROUGV1(object):
+    def __init__(self):
+        self.displacements = {}
+        self.velocities = {}
+        self.accelerations = {}
+        self.eigenvectors = {}
+
+    def get_table_types(self):
+        tables = [
+            'displacements', 'velocities', 'accelerations', 'eigenvectors',
+        ]
+        return ['ROUGV1.' + table for table in tables]
+
 class RAFEATC(object):
     def __init__(self):
         self.cbar_force = {}

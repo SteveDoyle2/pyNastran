@@ -682,10 +682,10 @@ class MinorTables(OP2Common):
             response_type, = self.struct_i.unpack(data[8:12])
             #assert response_type in [1, 6, 10, 84], response_type
             if response_type == 1:
-                if self.weight_response is None:
-                    self.weight_response = WeightResponse()
+                if self.responses.weight_response is None:
+                    self.responses.weight_response = WeightResponse()
                 else:
-                    self.weight_response.n += 1
+                    self.responses.weight_response.n += 1
             elif response_type == 4:
                 #TYPE =4 EIGN or FREQ
                 #8 MODE I Mode number
@@ -703,10 +703,10 @@ class MinorTables(OP2Common):
                 #9 ICODE I 1: Real component or 2: Imaginary component
                 pass
             elif response_type == 84:
-                if self.flutter_response is None:
-                    self.flutter_response = FlutterResponse()
+                if self.responses.flutter_response is None:
+                    self.responses.flutter_response = FlutterResponse()
                 else:
-                    self.flutter_response.n += 1
+                    self.responses.flutter_response.n += 1
             return ndata
             #else: # response not added...
                 #pass
@@ -729,7 +729,7 @@ class MinorTables(OP2Common):
             seid = out[13]
 
             if response_type == 1:
-                self.weight_response.add_from_op2(out, self.log)
+                self.responses.weight_response.add_from_op2(out, self.log)
             elif response_type == 5:  # DISP
                 # out = (1, 101, 5, 'DISP1   ', 101, 1, 3, 0, 1, 0, 0, 0, 0, 0)
 
@@ -791,9 +791,10 @@ class MinorTables(OP2Common):
                        'mach=%s velocity=%s density=%s flutter_id=%s' % (
                            self._count, response_label, region, subcase, mode,
                            mach, velocity, density, flutter_id))
-                self.flutter_response.append(internal_id, dresp_id, response_label, region,
-                                             subcase, type_flag, seid,
-                                             mode, mach, velocity, density, flutter_id)
+                self.responses.flutter_response.append(
+                    internal_id, dresp_id, response_label, region,
+                    subcase, type_flag, seid,
+                    mode, mach, velocity, density, flutter_id)
                 #print(msg)
                 #self.log.debug(msg)
             else:
@@ -814,13 +815,13 @@ class MinorTables(OP2Common):
             self._skip_record()
             self.read_markers([-3, 1, 0])
 
-            if self.convergence_data is None:
+            if self.responses.convergence_data is None:
                 data = self._read_record()
                 ndvs = len(data) // 4 - 7
-                self.convergence_data = Convergence(ndvs)
+                self.responses.convergence_data = Convergence(ndvs)
             else:
                 self._skip_record()
-                self.convergence_data.n += 1
+                self.responses.convergence_data.n += 1
 
             self.read_markers([-4, 1, 0, 0])
             return
@@ -869,7 +870,7 @@ class MinorTables(OP2Common):
         elif conv_result == 2:
             conv_result = 'hard'
         elif conv_result in [3, 4]:
-            self.log.warning('HISADD conv_result=%s' % conv_result)
+            #self.log.warning('HISADD conv_result=%s' % conv_result)
             # not sure why this happens, but the field is wrong
             # it seems to apply to one step before this one
             conv_result = 'best_design'
@@ -887,8 +888,9 @@ class MinorTables(OP2Common):
         ndvs = len(data) // 4 - 7
         desvar_values = unpack('%sf' % ndvs, data[28:])
 
-        self.convergence_data.append(design_iter, iconvergence, conv_result, obj_intial,
-                                     obj_final, constraint_max, row_constraint_max, desvar_values)
+        self.responses.convergence_data.append(
+            design_iter, iconvergence, conv_result, obj_intial,
+            obj_final, constraint_max, row_constraint_max, desvar_values)
         self.read_markers([-4, 1, 0, 0])
 
     def _skip_matrix_mat(self):
