@@ -715,6 +715,25 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             assert isinstance(debug_file, string_types), debug_file
             self.debug_file = debug_file
 
+        self._mapped_tables = {
+            b'GPL' : self._read_gpl,
+            #b'MEFF' : self._read_meff,
+            b'INTMOD' : self._read_intmod,
+            b'HISADD' : self._read_hisadd,
+            b'EXTDB' : self._read_extdb,
+            b'OMM2' : self._read_omm2,
+            b'TOL' : self._read_tol,
+            b'PCOMPTS' : self._read_pcompts,
+            b'MONITOR' : self._read_monitor,
+            b'AEMONPT' : self._read_aemonpt,
+            b'FOL' : self._read_fol,
+            b'SDF' : self._read_sdf,
+            b'IBULK' : self._read_ibulk,
+            b'CDDATA' : self._read_ibulk,
+            b'CMODEXT' : self._read_cmodext,
+            b'CSTM' : self._read_cstm,
+        }
+
     def set_subcases(self, subcases=None):
         """
         Allows you to read only the subcases in the list of isubcases
@@ -837,11 +856,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
             b'MATPOOL': [self._table_passer, self._table_passer], # DMIG bulk data entries
 
+            # this comment may refer to CSTM?
             #F:\work\pyNastran\examples\Dropbox\pyNastran\bdf\cards\test\test_mass_01.op2
             #F:\work\pyNastran\examples\matpool\gpsc1.op2
-            #b'CSTM':    [self._table_crasher, self._table_crasher],
-            b'CSTM':    [self._table_passer, self._table_passer],
-            b'AXIC':    [self._table_passer, self._table_passer],
+            b'AXIC': [self._table_passer, self._table_passer],
 
             b'RSOUGV1': [self._table_passer, self._table_passer],
             b'RESOES1': [self._table_passer, self._table_passer],
@@ -858,7 +876,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'DOEF1' : [self._read_oef1_3, self._read_oef1_4],  # scaled response spectra - forces
 
             # off force
-            #b'OEF2' : [self._table_passer, self._table_passer],  # element forces or heat flux
             b'OEF2' : [self._read_oef2_3, self._read_oef2_4],  # element forces or heat flux
             #=======================
             # OQG
@@ -951,11 +968,11 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             # stress
             # OES1C - Table of composite element stresses or strains in SORT1 format
             # OESRT - Table of composite element ply strength ratio. Output by SDRCOMP
-            b'OES1X1' : [self._read_oes1_3, self._read_oes1_4],  # stress - nonlinear elements
-            b'OES1'   : [self._read_oes1_3, self._read_oes1_4],  # stress - linear only
-            b'OES1X'  : [self._read_oes1_3, self._read_oes1_4],  # element stresses at intermediate stations & nonlinear stresses
-            b'OES1C'  : [self._read_oes1_3, self._read_oes1_4],  # stress - composite
-            b'OESCP'  : [self._read_oes1_3, self._read_oes1_4],  # stress - nonlinear???
+            b'OES1X1' : [self._read_oes1_3, self._read_oes1_4], # stress - nonlinear elements
+            b'OES1'   : [self._read_oes1_3, self._read_oes1_4], # stress - linear only
+            b'OES1X'  : [self._read_oes1_3, self._read_oes1_4], # element stresses at intermediate stations & nonlinear stresses
+            b'OES1C'  : [self._read_oes1_3, self._read_oes1_4], # stress - composite
+            b'OESCP'  : [self._read_oes1_3, self._read_oes1_4], # stress - nonlinear???
             b'OESRT'  : [self._read_oes1_3, self._read_oes1_4], # ply strength ratio
 
             # strain
@@ -1575,39 +1592,17 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 #self._skip_table(table_name)
             #else:
             if table_name in self.generalized_tables:
+                t0 = self.f.tell()
                 self.generalized_tables[table_name](self)
+                assert self.f.tell() != t0, 'the position was unchanged...'
             elif table_name in GEOM_TABLES:
                 self._read_geom_table()  # DIT (agard)
-            elif table_name == b'GPL':
-                self._read_gpl()
-            #elif table_name == b'MEFF':
-                #self._read_meff()
-            elif table_name == b'INTMOD':
-                self._read_intmod()
-            elif table_name == b'HISADD':
-                self._read_hisadd()
+            elif table_name in self._mapped_tables:
+                t0 = self.f.tell()
+                self._mapped_tables[table_name]()
+                assert self.f.tell() != t0, 'the position was unchanged...'
             elif table_name == b'FRL':  # frequency response list
                 self._skip_table(self.table_name)
-            elif table_name == b'EXTDB':
-                self._read_extdb()
-            elif table_name == b'OMM2':
-                self._read_omm2()
-            elif table_name == b'TOL':
-                self._read_tol()
-            elif table_name == b'PCOMPTS': # blade
-                self._read_pcompts()
-            elif table_name == b'MONITOR':
-                self._read_monitor()
-            elif table_name == b'AEMONPT':
-                self._read_aemonpt()
-            elif table_name == b'FOL':
-                self._read_fol()
-            elif table_name == b'SDF':
-                self._read_sdf()
-            elif table_name in [b'IBULK', b'CDDATA']:
-                self._read_ibulk()
-            elif table_name == b'CMODEXT':
-                self._read_cmodext()
             elif table_name in MATRIX_TABLES:
                 self._read_matrix(table_name)
             elif table_name in RESULT_TABLES:

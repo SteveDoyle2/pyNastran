@@ -998,7 +998,7 @@ class OP2_F06_Common(Deprecated):
                   and table not in [
                       'card_count', 'data_code', 'element_mapper', 'isubcase_name_map',
                       'labels', 'subtitles', 'additional_matrices', 'matrices', 'subcase_key',
-                      'end_options', 'expected_times', 'generalized_tables']]
+                      'end_options', 'expected_times', 'generalized_tables', '_mapped_tables']]
         for table in tables:
             if self.make_geom:
                 break

@@ -49,6 +49,64 @@ class MinorTables(OP2Common):
         #: it takes double the RAM, but is easier to use
         self.apply_symmetry = True
 
+
+    def _read_cstm(self):
+        """
+        Reads the CSTM table, which defines the transform from global to basic.
+
+        Returns 14-column matrix 2-d array of the CSTM data:
+        ::
+          [
+           [ id1 type xo yo zo T(1,1:3) T(2,1:3) T(3,1:3) ]
+           [ id2 type xo yo zo T(1,1:3) T(2,1:3) T(3,1:3) ]
+           ...
+          ]
+
+        T is transformation from local to basic for the coordinate system.
+        """
+        table_name = self._read_table_name(rewind=False)
+        self.read_markers([-1])
+        data = self._read_record()
+        assert len(data) == 28, len(data)
+
+        self.read_markers([-2, 1, 0])
+        data = self._read_record()
+        assert len(data) == 8, len(data)
+
+        self.read_markers([-3, 1, 0])
+        data = self._read_record()
+        ints = np.frombuffer(data, dtype='int32')
+        floats = np.frombuffer(data, dtype='float32')
+        nints = len(ints)
+        assert nints % 14 == 0, 'nints=%s' % (nints)
+        ncstm = nints // 14
+        ints = ints.reshape(ncstm, 14)[:, :2]
+        floats = floats.reshape(ncstm, 14)[:, 2:]
+        #assert ncstm == 1, 'ncoords = %s' % ncstm
+        #print(self.coords)
+        coord_type_map = {
+            1 : 'CORD2R',
+            2 : '???',
+        }
+        for i, coord in enumerate(ints):
+            cid = ints[i, 0]
+            coord_type_int = ints[i, 1]
+        if coord_type_int in coord_type_map:
+            coord_type = coord_type_map[coord_type_int]
+        else:  # pragma: no cover
+            msg = 'cid=%s coord_type_int=%s is not supported\n' % (cid, coord_type_int)
+            if hasattr(self, 'coords'):
+                print(self.coords)
+            raise RuntimeError(msg)
+
+        #print(self.coords)
+        #print('cid = ', cid)
+        #print('coord_type = ', coord_type)
+        #print('myints =', ints)
+        #print('floats =', floats)
+
+        self.read_markers([-4, 1, 0, 0])
+
     def _read_dit(self):
         """
         Reads the DIT table (poorly).
