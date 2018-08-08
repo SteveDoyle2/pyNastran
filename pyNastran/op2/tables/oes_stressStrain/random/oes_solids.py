@@ -85,6 +85,7 @@ class RandomSolidArray(OES_Object):
         #self.data = zeros((self.ntimes, self.nelements, nnodes+1, 10), 'float32')
 
     def build_dataframe(self):
+        """creates a pandas dataframe"""
         headers = self.get_headers()
         # TODO: cid?
         element_node = [self.element_node[:, 0], self.element_node[:, 1]]

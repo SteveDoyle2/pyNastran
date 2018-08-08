@@ -78,6 +78,7 @@ class ComplexRodForceArray(ScalarObject):
         self.data = zeros((self.ntimes, self.ntotal, 2), dtype='complex64')
 
     def build_dataframe(self):
+        """creates a pandas dataframe"""
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
         self.data_frame = pd.Panel(self.data, items=column_values,
@@ -304,6 +305,7 @@ class ComplexCShearForceArray(ScalarObject):
         self.data = zeros((self.ntimes, self.ntotal, 16), dtype='complex64')
 
     def build_dataframe(self):
+        """creates a pandas dataframe"""
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
         self.data_frame = pd.Panel(self.data, items=column_values,
@@ -558,6 +560,7 @@ class ComplexSpringDamperForceArray(ScalarObject):
         self.data = zeros((self.ntimes, self.ntotal, 1), dtype='complex64')
 
     def build_dataframe(self):
+        """creates a pandas dataframe"""
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
         self.data_frame = pd.Panel(self.data, items=column_values,
@@ -983,6 +986,7 @@ class ComplexPlateForceArray(ScalarObject):
         self.data = zeros((self.ntimes, self.ntotal, 8), dtype='complex64')
 
     def build_dataframe(self):
+        """creates a pandas dataframe"""
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
         self.data_frame = pd.Panel(self.data, items=column_values,
@@ -1214,6 +1218,7 @@ class ComplexPlate2ForceArray(ScalarObject):
         self.data = zeros((self.ntimes, self.ntotal, 8), dtype='complex64')
 
     def build_dataframe(self):
+        """creates a pandas dataframe"""
         headers = self.get_headers()
         assert 0 not in self.element
         #print(self.element_node)
@@ -1478,6 +1483,7 @@ class ComplexCBarForceArray(ScalarObject):
 
 
     def build_dataframe(self):
+        """creates a pandas dataframe"""
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
         self.data_frame = pd.Panel(self.data, items=column_values,
@@ -1748,6 +1754,7 @@ class ComplexCBeamForceArray(ScalarObject):
         self.data = self.data[:, i, :]
 
     def build_dataframe(self):
+        """creates a pandas dataframe"""
         headers = self.get_headers()[1:]
         column_names, column_values = self._build_dataframe_transient_header()
         element_location = [
@@ -2001,6 +2008,7 @@ class ComplexCBendForceArray(ScalarObject):  # 69-CBEND
         self.data = zeros((self.ntimes, self.nelements, 12), dtype='complex64')
 
     def build_dataframe(self):
+        """creates a pandas dataframe"""
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
         element = self.element_node[:, 0]
@@ -2258,6 +2266,7 @@ class ComplexSolidPressureForceArray(ScalarObject):
         self.data = zeros((self.ntimes, self.ntotal, 7), dtype='complex64')
 
     def build_dataframe(self):
+        """creates a pandas dataframe"""
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
         self.data_frame = pd.Panel(self.data, items=column_values,
@@ -2487,6 +2496,7 @@ class ComplexCBushForceArray(ScalarObject):
         self.data = zeros((self.ntimes, self.ntotal, 6), 'complex64')
 
     def build_dataframe(self):
+        """creates a pandas dataframe"""
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
         self.data_frame = pd.Panel(self.data, items=column_values,
@@ -2788,6 +2798,7 @@ class ComplexCBeamForceVUArray(ScalarObject):  # 191-VUBEAM
         self.data = np.zeros((self.ntimes, self.ntotal, 7), dtype='complex64')
 
     #def build_dataframe(self):
+        #"""creates a pandas dataframe"""
         #headers = self.get_headers()
 
         #nelements = self.element_node.shape[0] // 2

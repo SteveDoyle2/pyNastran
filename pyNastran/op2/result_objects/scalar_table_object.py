@@ -211,6 +211,7 @@ class ScalarTableArray(ScalarObject):  # displacement style table
         self.data = zeros((nx, ny, 1), self.data_type())
 
     def build_dataframe(self):
+        """creates a pandas dataframe"""
         headers = self.get_headers()
         node_gridtype = [self.node_gridtype[:, 0], self.gridtype_str]
         ugridtype_str = unique(self.gridtype_str)

@@ -218,7 +218,7 @@ class Subcase(object):
                 self.add('DISPLACEMENT', 'ALL', options, 'STRESS-type')
             else:
                 self._write_op2_error_msg(log, self.log, msg, data_code)
-        elif table_name == 'BOPHIG':
+        elif table_name in ['OPHIG', 'BOPHIG']:
             if table_code == 7:
                 self.add('ANALYSIS', 'HEAT', options, 'KEY-type')
             else:

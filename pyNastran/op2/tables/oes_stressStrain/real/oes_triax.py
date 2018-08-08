@@ -76,6 +76,7 @@ class RealTriaxArray(OES_Object):
         self.data = zeros((self.ntimes, self.ntotal, 7), dtype='float32')
 
     def build_dataframe(self):
+        """creates a pandas dataframe"""
         headers = self.get_headers()
         element_node = [self.element_node[:, 0], self.element_node[:, 1]]
         if self.nonlinear_factor is not None:

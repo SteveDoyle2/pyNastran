@@ -63,6 +63,7 @@ class ComplexCBushArray(OES_Object):
         self.data = zeros((self.ntimes, self.nelements, 6), dtype='complex64')
 
     def build_dataframe(self):
+        """creates a pandas dataframe"""
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
         self.data_frame = pd.Panel(self.data, items=column_values,

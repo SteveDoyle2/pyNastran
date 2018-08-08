@@ -121,6 +121,7 @@ class RealNonlinearPlateArray(OES_Object):
         self.data = zeros((self.ntimes, self.ntotal, 12), dtype='float32')
 
     def build_dataframe(self):
+        """creates a pandas dataframe"""
         headers = self.get_headers()[1:]
         #nelements = self.element.shape[0]
 

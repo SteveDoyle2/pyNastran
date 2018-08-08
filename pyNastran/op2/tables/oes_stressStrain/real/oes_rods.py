@@ -79,6 +79,7 @@ class RealRodArray(OES_Object):
         self.data = zeros((ntimes, nelements, 4), dtype='float32')
 
     def build_dataframe(self):
+        """creates a pandas dataframe"""
         headers = self.get_headers()
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()

@@ -126,6 +126,7 @@ class ComplexSolidArray(OES_Object):
             self.data = zeros((self.ntimes, self.ntotal, 1), 'complex64')
 
     def build_dataframe(self):
+        """creates a pandas dataframe"""
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
         element_node = [self.element_node[:, 0], self.element_node[:, 1]]

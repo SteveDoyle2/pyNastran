@@ -56,6 +56,7 @@ from pyNastran.op2.tables.oes_stressStrain.complex.oes_rods import ComplexRodStr
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_shear import ComplexShearStressArray, ComplexShearStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_solids import ComplexSolidStressArray, ComplexSolidStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_springs import ComplexSpringStressArray, ComplexSpringStrainArray
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_bend import ComplexBendStressArray, ComplexBendStrainArray
 
 from pyNastran.op2.tables.oes_stressStrain.random.oes_rods import RandomRodStressArray, RandomRodStrainArray
 from pyNastran.op2.tables.oes_stressStrain.random.oes_bars import RandomBarStressArray, RandomBarStrainArray
@@ -5857,8 +5858,10 @@ class OES(OP2Common):
         """
         if self.is_stress:
             result_name = prefix + 'cbend_stress' + postfix
+            obj_vector_complex = ComplexBendStressArray
         else:
             result_name = prefix + 'cbend_strain' + postfix
+            obj_vector_complex = ComplexBendStrainArray
 
         if self._results.is_not_saved(result_name):
             return ndata, None, None
@@ -5867,8 +5870,10 @@ class OES(OP2Common):
 
         #print(self.code_information())
         if self.num_wide == 21:
+            n = 0
             ntotal = 84  # 4*21
             nelements = ndata // ntotal
+            assert ndata % ntotal == 0, 'ndata=%s ntotal=%s nelements=%s error=%s' % (ndata, ntotal, nelements, ndata % ntotal)
             #TCODE,7 =1 Real / Imaginary
             #2 GRID I External Grid Point identification number
             #3 CA RS Circumferential Angle
@@ -5881,10 +5886,70 @@ class OES(OP2Common):
             #10 SEI RS Long. Stress at Point E
             #11 SFI RS Long. Stress at Point F
             #Words 2 through 11 repeat 002 times
-            msg = ''
-            if self.read_mode == 2:
-                msg = self.code_information()
-            n = self._not_implemented_or_skip(data, ndata, msg)
+
+            auto_return, is_vectorized = self._create_oes_object4(
+                nelements, result_name, slot, obj_vector_complex)
+            if auto_return:
+                return nelements * self.num_wide * 4, None, None
+
+            obj = self.obj
+            assert obj is not None
+            if self.use_vector and is_vectorized and self.sort_method == 1 and 0:
+                n = nelements * 4 * self.num_wide
+                itotal = obj.ielement
+                ielement2 = obj.itotal + nelements
+                itotal2 = ielement2
+
+                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 4)
+                itime = obj.itime
+                obj._times[itime] = dt
+                if itime == 0:
+                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 4)
+                    eids = ints[:, 0] // 10
+                    assert eids.min() > 0, eids.min()
+                    obj.element[itotal:itotal2] = eids
+
+                #[max_strain, avg_strain, margin]
+                obj.data[itime, itotal:itotal2, :] = floats[:, 1:].copy()
+                obj.itotal = itotal2
+                obj.ielement = ielement2
+            else:
+                ntotali = 40
+                struct1 = Struct(self._endian + self._analysis_code_fmt)
+                struct2 = Struct(self._endian + b'i9f')
+
+                for i in range(nelements):
+                    edata = data[n:n + 4]
+                    eid_device, = struct1.unpack(edata)
+                    if self.sort_method == 1:
+                        eid = eid_device // 10
+                    else:
+                        eid = self.nonlinear_factor
+                        dt = eid_device
+
+                    n += 4
+                    for i in range(2):
+                        edata = data[n:n + ntotali]
+                        out = struct2.unpack(edata)
+                        if self.is_debug_file:
+                            self.binary_debug.write('BEND-69 - eid=%s %s\n' % (eid, str(out)))
+                        #print('BEND-69 - eid=%s %s\n' % (eid, str(out)))
+
+                        (grid, angle, scr, sdr, ser, sfr,
+                         sci, sdi, sei, sfi) = out
+
+                        if is_magnitude_phase:
+                            sc = polar_to_real_imag(scr, sci)
+                            sd = polar_to_real_imag(sdr, sdi)
+                            se = polar_to_real_imag(ser, sei)
+                            sf = polar_to_real_imag(sfr, sfi)
+                        else:
+                            sc = complex(scr, sci)
+                            sd = complex(sdr, sdi)
+                            se = complex(ser, sei)
+                            sf = complex(sfr, sfi)
+                        obj.add_sort1(dt, eid, grid, angle, sc, sd, se, sf)
+                        n += ntotali
 
         elif self.num_wide == 13:
             ntotal = 52  # 4*13

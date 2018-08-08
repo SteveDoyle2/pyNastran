@@ -67,6 +67,7 @@ class RealEigenvalues(BaseScalarObject):
         return headers
 
     def build_dataframe(self):
+        """creates a pandas dataframe"""
         headers = self.get_headers()
         #cycle = sqrt(abs(eigenvalue)) / (2. * pi)
         data = np.vstack([self.eigenvalues, self.radians, self.cycles,
@@ -186,6 +187,7 @@ class ComplexEigenvalues(BaseScalarObject):
         return headers
 
     def build_dataframe(self):
+        """creates a pandas dataframe"""
         headers = self.get_headers()
 
         cdata = self.eigenvalues
@@ -290,6 +292,7 @@ class BucklingEigenvalues(BaseScalarObject):
             #self.add_f06_line(line, i)
 
     def build_dataframe(self):
+        """creates a pandas dataframe"""
         headers = self.get_headers()
         nmodes = len(self.eigenvalues)
 

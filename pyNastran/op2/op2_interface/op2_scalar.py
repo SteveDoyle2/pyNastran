@@ -1711,9 +1711,12 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                     self.read_markers([0], macro_rewind=rewind)
                 except:
                     # if we hit this block, we have a FATAL error
-                    if not self._nastran_format.lower().startswith('imat'):
+                    if not self._nastran_format.lower().startswith('imat') and self.post != -4:
+                        self.f.seek(self.n)
+                        self.show(1000)
                         raise FatalError('There was a Nastran FATAL Error.  '
-                                         'Check the F06.\nlast table=%r' % self.table_name)
+                                         'Check the F06.\nlast table=%r; post=%s' % (
+                                             self.table_name, self.post))
                 table_name = None
 
                 # we're done reading, so we're going to ignore the rewind

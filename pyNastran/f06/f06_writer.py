@@ -568,26 +568,35 @@ class F06Writer(OP2_F06_Common):
                       '\n', ' \n']
         header = copy.deepcopy(header_old)
         unallowed_results = ['eigenvectors', 'eigenvalues']
-        res_types = (self.get_result(table_type) for table_type in sorted(self.get_table_types())
-                     if table_type not in unallowed_results)
+        res_types = list(self.get_result(table_type) for table_type in sorted(self.get_table_types())
+                         if table_type not in unallowed_results)
+
+        #ROUGV1 = self.op2_results.ROUGV1
+        #psd = self.op2_results.psd
+        #ato = self.op2_results.ato
+        #rms = self.op2_results.rms
+        #crm = self.op2_results.crm
+        #no = self.op2_results.no
+        #modal_contribution = self.op2_results.modal_contribution
         #res_types = [
-            #self.displacements, self.displacements_ROUGV1, self.displacements_psd, self.displacements_ato, self.displacements_rms, self.displacements_crm, self.displacements_no, self.displacements_scaled,  # ???
-            #self.accelerations, self.accelerations_ROUGV1, self.accelerations_psd, self.accelerations_ato, self.accelerations_rms, self.accelerations_crm, self.accelerations_no,
-            #self.velocities, self.velocities_ROUGV1, self.velocities_psd, self.velocities_ato, self.velocities_rms, self.velocities_crm, self.velocities_no,
+            #self.displacements, ROUGV1.displacements, psd.displacements, ato.displacements, rms.displacements, crm.displacements, no.displacements, self.displacements_scaled,  # ???
+            #self.accelerations, ROUGV1.accelerations, psd.accelerations, ato.accelerations, rms.accelerations, crm.accelerations, no.accelerations,
+            #self.velocities, ROUGV1.velocities, psd.velocities, ato.velocities, rms.velocities, crm.velocities, no.velocities,
             #self.force_vectors,
-            #self.load_vectors, self.load_vectors_ato, self.load_vectors_crm, self.load_vectors_psd, self.load_vectors_no,
+            #self.load_vectors, ato.load_vectors, crm.load_vectors, psd.load_vectors, no.load_vectors,
             #self.temperatures,
-            ##self.eigenvectors,
+
+            #self.eigenvectors,
             #self.eigenvectors_RADCONS,
             #self.eigenvectors_RADEFFM,
             #self.eigenvectors_RADEATC,
             #self.eigenvectors_ROUGV1,
 
-            #self.mpc_forces, self.mpc_forces_psd, self.mpc_forces_ato, self.mpc_forces_rms,
-            #self.mpc_forces_RAQCONS,
+            #self.mpc_forces, psd.mpc_forces, ato.mpc_forces, rms.mpc_forces,
+            ##self.mpc_forces_RAQCONS,
             ##self.mpc_forces_RAQEATC,
 
-            #self.spc_forces, self.spc_forces_psd, self.spc_forces_ato, self.spc_forces_rms,
+            #self.spc_forces, psd.spc_forces, ato.spc_forces, rms.spc_forces,
             #self.thermal_load_vectors,
 
             ##self.strain_energy,
@@ -612,12 +621,12 @@ class F06Writer(OP2_F06_Common):
 
             ## alphabetical order...
             ## bars
-            #self.cbar_force, self.cbar_force_ato, self.cbar_force_crm, self.cbar_force_psd, self.cbar_force_rms, self.cbar_force_no,
+            #self.cbar_force, ato.cbar_force, crm.cbar_force, psd.cbar_force, rms.cbar_force, no.cbar_force,
             #self.cbar_force_10nodes,
 
             ## beam
             #self.cbend_force,
-            #self.cbeam_force, self.cbeam_force_ato, self.cbeam_force_crm, self.cbeam_force_psd, self.cbeam_force_rms, self.cbeam_force_no,
+            #self.cbeam_force, ato.cbeam_force, crm.cbeam_force, psd.cbeam_force, rms.cbeam_force, no.cbeam_force,
             #self.cbeam_force_vu,
 
             ## alphabetical
@@ -626,16 +635,16 @@ class F06Writer(OP2_F06_Common):
             #self.celas3_force,
             #self.celas4_force,
 
-            #self.cquad4_force, self.cquad4_force_ato, self.cquad4_force_crm, self.cquad4_force_psd, self.cquad4_force_rms, self.cquad4_force_no,
-            #self.cquad8_force, self.cquad8_force_ato, self.cquad8_force_crm, self.cquad8_force_psd, self.cquad8_force_rms, self.cquad8_force_no,
-            #self.cquadr_force, self.cquadr_force_ato, self.cquadr_force_crm, self.cquadr_force_psd, self.cquadr_force_rms, self.cquadr_force_no,
+            #self.cquad4_force, ato.cquad4_force, crm.cquad4_force, psd.cquad4_force, rms.cquad4_force, no.cquad4_force,
+            #self.cquad8_force, ato.cquad8_force, crm.cquad8_force, psd.cquad8_force, rms.cquad8_force, no.cquad8_force,
+            #self.cquadr_force, ato.cquadr_force, crm.cquadr_force, psd.cquadr_force, rms.cquadr_force, no.cquadr_force,
 
             #self.conrod_force,
             #self.crod_force,
             #self.cshear_force,
-            #self.ctria3_force, self.ctria3_force_ato, self.ctria3_force_crm, self.ctria3_force_psd, self.ctria3_force_rms, self.ctria3_force_no,
-            #self.ctria6_force, self.ctria3_force_ato, self.ctria6_force_crm, self.ctria6_force_psd, self.ctria6_force_rms, self.ctria6_force_no,
-            #self.ctriar_force, self.ctriar_force_ato, self.ctriar_force_crm, self.ctriar_force_psd, self.ctriar_force_rms, self.ctriar_force_no,
+            #self.ctria3_force, ato.ctria3_force, crm.ctria3_force, psd.ctria3_force, rms.ctria3_force, no.ctria3_force,
+            #self.ctria6_force, ato.ctria3_force, crm.ctria6_force, psd.ctria6_force, rms.ctria6_force, no.ctria6_force,
+            #self.ctriar_force, ato.ctriar_force, crm.ctriar_force, psd.ctriar_force, rms.ctriar_force, no.ctriar_force,
             #self.ctube_force,
 
             ## springs
@@ -651,7 +660,7 @@ class F06Writer(OP2_F06_Common):
             #self.cdamp4_force,
 
             ## other
-            #self.cbush_force, self.cbush_force_ato, self.cbush_force_psd, self.cbush_force_crm, self.cbush_force_rms, self.cbush_force_no,
+            #self.cbush_force, ato.cbush_force, crm.cbush_force, psd.cbush_force, rms.cbush_force, no.cbush_force,
             #self.cgap_force,
             #self.cvisc_force,
 
@@ -677,7 +686,7 @@ class F06Writer(OP2_F06_Common):
             #self.nonlinear_celas3_stress,
 
             ## bars/beams
-            #self.cbar_strain, self.cbar_strain_ato, self.cbar_strain_crm, self.cbar_strain_psd, self.cbar_strain_rms, self.cbar_strain_no,
+            #self.cbar_strain, ato.cbar_strain, crm.cbar_strain, psd.cbar_strain, rms.cbar_strain, no.cbar_strain,
             #self.cbar_strain_10nodes,
             #self.cbeam_strain,
 
@@ -698,19 +707,19 @@ class F06Writer(OP2_F06_Common):
             #self.nonlinear_ctube_strain,
             #self.nonlinear_conrod_strain,
 
-            #self.chexa_strain,  self.modal_contribution_chexa_strain,
-            #self.conrod_strain, self.modal_contribution_conrod_strain,
-            #self.cpenta_strain, self.modal_contribution_cpenta_strain,
-            #self.cquad4_strain, self.modal_contribution_cquad4_strain,
-            #self.cquad8_strain, self.modal_contribution_cquad8_strain,
-            #self.cquadr_strain, self.modal_contribution_cquadr_strain,
-            #self.crod_strain, self.modal_contribution_crod_strain,
-            #self.cshear_strain, self.modal_contribution_cshear_strain,
-            #self.ctetra_strain, self.modal_contribution_ctetra_strain,
-            #self.ctria3_strain, self.modal_contribution_ctria3_strain,
-            #self.ctria6_strain, self.modal_contribution_ctria6_strain,
-            #self.ctriar_strain, self.modal_contribution_ctriar_strain,
-            #self.ctube_strain,  self.modal_contribution_ctube_strain,
+            #self.chexa_strain,  modal_contribution.chexa_strain,
+            #self.conrod_strain, modal_contribution.conrod_strain,
+            #self.cpenta_strain, modal_contribution.cpenta_strain,
+            #self.cquad4_strain, modal_contribution.cquad4_strain,
+            #self.cquad8_strain, modal_contribution.cquad8_strain,
+            #self.cquadr_strain, modal_contribution.cquadr_strain,
+            #self.crod_strain, modal_contribution_crod_strain,
+            #self.cshear_strain, modal_contribution.cshear_strain,
+            #self.ctetra_strain, modal_contribution.ctetra_strain,
+            #self.ctria3_strain, modal_contribution.ctria3_strain,
+            #self.ctria6_strain, modal_contribution.ctria6_strain,
+            #self.ctriar_strain, modal_contribution.ctriar_strain,
+            #self.ctube_strain,  modal_contribution.ctube_strain,
 
             ## bush
             #self.cbush_strain,
@@ -718,7 +727,7 @@ class F06Writer(OP2_F06_Common):
             #self.cbush1d_stress_strain,
             ##------------------------------------------
             ## cbars/cbeams
-            #self.cbar_stress, self.cbar_stress_ato, self.cbar_stress_crm, self.cbar_stress_psd, self.cbar_stress_rms, self.cbar_stress_no,
+            #self.cbar_stress, ato.cbar_stress, crm.cbar_stress, psd.cbar_stress, rms.cbar_stress, no.cbar_stress,
             #self.cbar_stress_10nodes,
             #self.nonlinear_cbeam_stress,
             #self.cbeam_stress,
@@ -733,10 +742,10 @@ class F06Writer(OP2_F06_Common):
 
             ## shear
             ## OES - stress
-            #self.celas1_stress, self.modal_contribution_celas1_stress,
-            #self.celas2_stress, self.modal_contribution_celas2_stress,
-            #self.celas3_stress, self.modal_contribution_celas3_stress,
-            #self.celas4_stress, self.modal_contribution_celas4_stress,
+            #self.celas1_stress, modal_contribution.celas1_stress,
+            #self.celas2_stress, modal_contribution.celas2_stress,
+            #self.celas3_stress, modal_contribution.celas3_stress,
+            #self.celas4_stress, modal_contribution.celas4_stress,
 
             #self.chexa_stress,
             #self.conrod_stress,

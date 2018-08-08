@@ -330,6 +330,7 @@ class TableArray(ScalarObject):  # displacement style table
             #ntimes, nnodes, nx, ny, self.ntotal))
 
     def build_dataframe(self):
+        """creates a pandas dataframe"""
         headers = self.get_headers()
         #headers = [0, 1, 2, 3, 4, 5]
         node_gridtype = [self.node_gridtype[:, 0], self.gridtype_str]

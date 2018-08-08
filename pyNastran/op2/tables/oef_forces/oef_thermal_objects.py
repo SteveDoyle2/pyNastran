@@ -75,6 +75,7 @@ class Real1DHeatFluxArray(ScalarObject):
         self.data = zeros((self.ntimes, self.ntotal, 6), dtype='float32')
 
     def build_dataframe(self):
+        """creates a pandas dataframe"""
         headers = self.get_headers()
         assert 0 not in self.element
         if self.nonlinear_factor is not None:
@@ -263,6 +264,7 @@ class RealHeatFluxVU3DArray(ScalarObject):
         self.data = zeros((self.ntimes, self.ntotal, 6), dtype='float32')
 
     def build_dataframe(self):
+        """creates a pandas dataframe"""
         # TODO: fix me
         headers = self.get_headers()
         #assert 0 not in self.element
@@ -543,6 +545,7 @@ class RealHeatFluxVUArray(ScalarObject):
         self.data = zeros((self.ntimes, self.ntotal, 6), dtype='float32')
 
     def _build_dataframe(self):
+        """creates a pandas dataframe"""
         # TODO: fix me
         headers = self.get_headers()
         #assert 0 not in self.element
@@ -830,6 +833,7 @@ class RealHeatFluxVUBeamArray(ScalarObject):  # 191-VUBEAM
         self.data = zeros((self.ntimes, self.ntotal, 6), dtype='float32')
 
     def build_dataframe(self):
+        """creates a pandas dataframe"""
         headers = self.get_headers()
         #assert 0 not in self.element
         element_node = [
@@ -1080,6 +1084,7 @@ class HeatFlux_2D_3DArray(RealElementTableArray):
         RealElementTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def build_dataframe(self):
+        """creates a pandas dataframe"""
         headers = self.get_headers()
 
         #nelements = self.element.shape[0]# // 2
@@ -1173,6 +1178,7 @@ class RealConvHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         self.data = zeros((self.ntimes, self.ntotal, 2), dtype='float32')
 
     def build_dataframe(self):
+        """creates a pandas dataframe"""
         # TODO: fix me
         headers = self.get_headers()
         #assert 0 not in self.element
@@ -1357,6 +1363,7 @@ class RealChbdyHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         self.data = zeros((self.ntimes, self.ntotal, 5), dtype='float32')
 
     def build_dataframe(self):
+        """creates a pandas dataframe"""
         headers = self.get_headers()
         assert 0 not in self.element
         if self.nonlinear_factor is not None:

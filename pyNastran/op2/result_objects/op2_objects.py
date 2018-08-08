@@ -268,6 +268,7 @@ class BaseScalarObject(Op2Codes):
         return column_names, column_values
 
     def build_dataframe(self):
+        """creates a pandas dataframe"""
         print('build_dataframe is not implemented in %s' % self.__class__.__name__)
 
     def export_to_hdf5(self, group, log):

@@ -110,6 +110,7 @@ class FailureIndices(RealForceObject):
         self.data = zeros((self.ntimes, self.nelements, 1), dtype='float32')
 
     def build_dataframe(self):
+        """creates a pandas dataframe"""
         headers = self.get_headers()
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
@@ -230,6 +231,7 @@ class RealSpringDamperForceArray(RealForceObject):
 
 
     def build_dataframe(self):
+        """creates a pandas dataframe"""
         headers = self.get_headers()
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
@@ -505,6 +507,7 @@ class RealRodForceArray(RealForceObject):
         self.data = zeros((ntimes, nelements, 2), dtype='float32')
 
     def build_dataframe(self):
+        """creates a pandas dataframe"""
         headers = self.get_headers()
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
@@ -729,6 +732,7 @@ class RealCBeamForceArray(RealForceObject):
         self.data = self.data[:, i, :]
 
     def build_dataframe(self):
+        """creates a pandas dataframe"""
         headers = self.get_headers()
         element_location = [
             self.element_node[:, 0],
@@ -969,6 +973,7 @@ class RealCShearForceArray(RealForceObject):
         self.data = zeros((self.ntimes, self.ntotal, 16), dtype='float32')
 
     def build_dataframe(self):
+        """creates a pandas dataframe"""
         headers = self.get_headers()
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
@@ -1191,6 +1196,7 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
         self.data = zeros((self.ntimes, self.ntotal, 2), dtype='float32')
 
     def build_dataframe(self):
+        """creates a pandas dataframe"""
         headers = self.get_headers()
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
@@ -1393,6 +1399,7 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
         self.data = zeros((self.ntimes, self.ntotal, 8), dtype='float32')
 
     def build_dataframe(self):
+        """creates a pandas dataframe"""
         headers = self.get_headers()
         assert 0 not in self.element
         if self.nonlinear_factor is not None:
@@ -1614,6 +1621,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
         self.data = zeros((self.ntimes, self.ntotal, 8), dtype='float32')
 
     def build_dataframe(self):
+        """creates a pandas dataframe"""
         headers = self.get_headers()
         element_node = [self.element_node[:, 0], self.element_node[:, 1]]
         if self.nonlinear_factor is not None:
@@ -1912,6 +1920,7 @@ class RealCBarForceArray(RealForceObject):  # 34-CBAR
         self.data = zeros((self.ntimes, self.ntotal, 8), dtype='float32')
 
     def build_dataframe(self):
+        """creates a pandas dataframe"""
         headers = self.get_headers()
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
@@ -2102,6 +2111,7 @@ class RealConeAxForceArray(RealForceObject):
         self.data = zeros((self.ntimes, self.ntotal, 6), dtype='float32')
 
     def build_dataframe(self):
+        """creates a pandas dataframe"""
         headers = self.get_headers()
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
@@ -2301,6 +2311,7 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
         #self.data = self.data[:, i, :]
 
     def build_dataframe(self):
+        """creates a pandas dataframe"""
         headers = self.get_headers()
         element_location = [
             self.element,
@@ -2495,6 +2506,7 @@ class RealCGapForceArray(RealForceObject):  # 38-CGAP
         self.data = zeros((self.ntimes, self.ntotal, 8), dtype='float32')
 
     def build_dataframe(self):
+        """creates a pandas dataframe"""
         headers = self.get_headers()
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
@@ -2663,6 +2675,7 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
         self.data = zeros((self.ntimes, self.nelements, 12), dtype='float32')
 
     def build_dataframe(self):
+        """creates a pandas dataframe"""
         element = self.element_node[:, 0]
         headers = self.get_headers()
         if self.nonlinear_factor is not None:
@@ -3133,6 +3146,7 @@ class RealCBeamForceVUArray(RealForceObject):  # 191-VUBEAM
         self.data = zeros((self.ntimes, self.ntotal, 7), dtype='float32')
 
     def build_dataframe(self):
+        """creates a pandas dataframe"""
         headers = self.get_headers()
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
@@ -3360,6 +3374,7 @@ class RealCBushForceArray(RealForceObject):
         self.data = zeros((self.ntimes, self.nelements, 6), dtype='float32')
 
     def build_dataframe(self):
+        """creates a pandas dataframe"""
         headers = self.get_headers()
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
@@ -3563,6 +3578,7 @@ class RealForceVU2DArray(RealForceObject):  # 189-VUQUAD, 190-VUTRIA
         self.data = zeros((self.ntimes, self.ntotal, 8), dtype='float32')
 
     def build_dataframe(self):
+        """creates a pandas dataframe"""
         return
         #headers = self.get_headers()
         #assert 0 not in self.element_node
