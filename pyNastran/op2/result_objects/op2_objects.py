@@ -160,6 +160,7 @@ class BaseScalarObject(Op2Codes):
     def _build_dataframe_transient_header(self):
         """builds the header for the Pandas DataFrame/table"""
         assert isinstance(self.name, (text_type, binary_type)), 'name=%s type=%s' % (self.name, type(self.name))
+        #print('self.name = %r' % self.name)
         #name = self.name #data_code['name']
         times = self._times
         utimes = np.unique(times)

@@ -280,7 +280,7 @@ class GridPointStressesVolumeArray(ScalarObject):
         return msg
 
     def add_sort1(self, dt, nid, nx, ny, nz, txy, tyz, txz, pressure, ovm):
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(nid, int) and nid > 0, 'dt=%s nid=%s' % (dt, nid)
         self._times[self.itime] = dt
         self.node[self.itotal] = nid
         self.data[self.itime, self.itotal, :] = [nx, ny, nz, txy, tyz, txz, pressure, ovm]

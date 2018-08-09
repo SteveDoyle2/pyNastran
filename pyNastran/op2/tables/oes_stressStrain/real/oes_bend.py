@@ -14,11 +14,11 @@ from pyNastran.f06.f06_formatting import write_imag_floats_13e
 ints = (int, np.int32)
 
 
-class ComplexBendArray(OES_Object):
+class RealBendArray(OES_Object):
     """
     Common class for:
-     - ComplexBendStressArray
-     - ComplexBendStrainArray
+     - RealBendStressArray
+     - RealBendStrainArray
     """
     def __init__(self, data_code, is_sort1, isubcase, dt):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)   ## why???
@@ -85,18 +85,18 @@ class ComplexBendArray(OES_Object):
                 self.ntotal)
             raise RuntimeError(msg)
 
-        # [angle, sc, sd, se, sf]
-        self.data = np.zeros((self.ntimes, self.ntotal, 5), 'complex64')
+        # [angle, sc, sd, se, sf, omax, omin, mst, msc]
+        self.data = np.zeros((self.ntimes, self.ntotal, 9), 'float32')
 
-    def build_dataframe(self):
-        """creates a pandas dataframe"""
-        print(self.data_code)
-        headers = self.headers
-        column_names, column_values = self._build_dataframe_transient_header()
-        self.data_frame = pd.Panel(self.data, items=column_values,
-                                   major_axis=self.element_node, minor_axis=headers).to_frame()
-        self.data_frame.columns.names = column_names
-        self.data_frame.index.names = ['ElementID', 'Item']
+    #def build_dataframe(self):
+        #"""creates a pandas dataframe"""
+        #print(self.data_code)
+        #headers = self.headers
+        #column_names, column_values = self._build_dataframe_transient_header()
+        #self.data_frame = pd.Panel(self.data, items=column_values,
+                                   #major_axis=self.element_node, minor_axis=headers).to_frame()
+        #self.data_frame.columns.names = column_names
+        #self.data_frame.index.names = ['ElementID', 'Item']
 
     def __eq__(self, table):
         assert self.is_sort1 == table.is_sort1
@@ -112,17 +112,17 @@ class ComplexBendArray(OES_Object):
                     for ieid, (eid, nid) in enumerate(self.element_node):
                         t1 = self.data[itime, ieid, :]
                         t2 = table.data[itime, ieid, :]
-                        (angle1, sc1, sd1, se1, sf1) = t1
-                        (angle2, sc2, sd2, se2, sf2) = t2
-                        d = t1 - t2
-                        if not np.allclose([angle1.real, sc1.real, sc1.imag, sd1.real, sd1.imag, se1.real, se1.imag, sf1.real, sf1.imag, ],
-                                           [angle2.real, sc2.real, sc2.imag, sd2.real, sd2.imag, se2.real, se2.imag, sf2.real, sf2.imag, ], atol=0.0001):
+                        (angle1, sc1, sd1, se1, sf1, omax1, omin1, mst1, msc1) = t1
+                        (angle2, sc2, sd2, se2, sf2, omax2, omin2, mst2, msc2) = t2
+                        delta = t1 - t2
+                        if not np.allclose([angle1, sc1, sd1, se1, sf1],
+                                           [angle2, sc2, sd2, se2, sf2], atol=0.0001):
                         #if not np.array_equal(t1, t2):
-                            msg += '%-4s  (%s, %sj, %s, %sj)\n      (%s, %sj, %s, %sj)\n  dt12=(%s, %sj, %s, %sj)\n' % (
+                            msg += '%-4s  (%s, %s, %s, %s)\n      (%s, %s, %s, %s)\n  dt12=(%s, %s, %s, %s)\n' % (
                                 eid,
-                                sc1.real, sc1.imag, sd1.real, sd1.imag,
-                                sc2.real, sc2.imag, sd2.real, sd2.imag,
-                                d[0].real, d[0].imag, d[1].real, d[1].imag,)
+                                sc1, sd1, se1, sf1,
+                                sc2, sd2, se2, sf2,
+                                delta[0], delta[1], delta[2], delta[3],)
                             i += 1
                         if i > 10:
                             print(msg)
@@ -134,11 +134,11 @@ class ComplexBendArray(OES_Object):
                 raise ValueError(msg)
         return True
 
-    def add_sort1(self, dt, eid, grid, angle, sc, sd, se, sf):
+    def add_sort1(self, dt, eid, grid, angle, sc, sd, se, sf, omax, omin, mst, msc):
         """unvectorized method for adding SORT1 transient data"""
         assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
-        self.data[self.itime, self.itotal] = [angle, sc, sd, se, sf]
+        self.data[self.itime, self.itotal] = [angle, sc, sd, se, sf, omax, omin, mst, msc]
         self.element_node[self.itotal] = [eid, grid]
         #self.ielement += 1
         self.itotal += 1
@@ -186,6 +186,7 @@ class ComplexBendArray(OES_Object):
         '0 0.0          6901   A    0     1.384767E+01     6.258920E-01    -1.217803E+01     1.043753E+00
         '                                -4.615430E-01    -2.086098E-02     4.058937E-01    -3.478828E-02
         """
+        raise NotImplementedError('CBEND.stress/strain.real write_f06')
         msg_temp = _get_cbend_msg(is_mag_phase, is_sort1)
         ntimes = self.data.shape[0]
         eids = self.element_node[:, 0]
@@ -269,19 +270,19 @@ def _get_cbend_msg(is_mag_phase, is_sort1):
         msg.append('   FREQUENCY   GRID END  ANG.         C                D                E                F\n')
     return msg
 
-class ComplexBendStressArray(ComplexBendArray, StressObject):
+class RealBendStressArray(RealBendArray, StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        ComplexBendArray.__init__(self, data_code, is_sort1, isubcase, dt)
+        RealBendArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
     def _get_headers(self):
-        return ['angle', 'sc', 'sd', 'se', 'sf']
+        return ['angle', 'sc', 'sd', 'se', 'sf', 'omax', 'omin', 'mst', 'msc']
 
-class ComplexBendStrainArray(ComplexBendArray, StrainObject):
+class RealBendStrainArray(RealBendArray, StrainObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        ComplexBendArray.__init__(self, data_code, is_sort1, isubcase, dt)
+        RealBendArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
         assert self.is_strain, self.stress_bits
 
     def _get_headers(self):
-        return ['angle', 'sc', 'sd', 'se', 'sf']
+        return ['angle', 'sc', 'sd', 'se', 'sf', 'emax', 'emin', 'mst', 'msc']

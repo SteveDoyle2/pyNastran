@@ -1,6 +1,35 @@
 from __future__ import print_function
 import numpy as np
 
+class Responses(object):
+    """Defines SOL 200 responses"""
+    def __init__(self):
+        self.convergence_data = None
+        self.weight_response = None
+        self.stress_response = None
+        self.strain_response = None
+        self.force_response = None
+        self.composite_stress_response = None
+        self.composite_strain_response = None
+        self.flutter_response = None
+
+    def get_stats(self, short=False):
+        objects = [
+            self.convergence_data,
+            self.weight_response,
+            self.stress_response,
+            self.strain_response,
+            self.force_response,
+            self.composite_stress_response,
+            self.composite_strain_response,
+            self.flutter_response,
+        ]
+        msg = []
+        for obj in objects:
+            if obj is not None:
+                msg += obj.get_stats(short=short) + '\n'
+        return msg
+
 class WeightResponse(object):
     def __init__(self):
         self.n = 1
@@ -123,12 +152,64 @@ class WeightResponse(object):
             #print(self)
 
     def __repr__(self):
-        msg = 'WeightResponse()\n'
+        msg = 'responses.WeightResponse()\n'
         msg += '  n=%s\n' % self.n
         #msg += '  velocity=%s\n' % (velocity)
         return msg
 
+    def get_stats(self, short=False):
+        if short:
+            return 'responses.weight_response (%s)' % (self.n)
+        else:
+            return self.__repr__()
+
+
+class GeneralResponse(object):
+    """common class for StressResponse, StrainResponse, and ForceResponse"""
+    def __init__(self):
+        self.n = 1
+        self._n = 0
+        self._itable = 0
+        self.is_built = False
+        self.internal_id = []
+        self.response_label = []
+        self.subcase = []
+        self.item_code = []
+        self.pid = []
+
+    def append(self, internal_id, dresp_id, response_label, region, subcase, type_flag, seid,
+               item_code, pid):
+        self.internal_id.append(internal_id)
+        self.response_label.append(response_label)
+        self.subcase.append(subcase)
+        self.item_code.append(item_code)
+        self.pid.append(pid)
+        self._n += 1
+        #if self.n == self._n:
+            #print(self)
+
+    def __repr__(self):
+        name = self.__class__.__name__
+        msg = 'responses.%s()\n' % name
+        msg += '  item_code=%s\n' % (self.item_code)
+        msg += '  pid=%s\n' % (self.pid)
+        return msg
+
+    def get_stats(self, short=False):
+        if short:
+            return 'responses.%s_response (%s)' % (self.name, self.n)
+        else:
+            return self.__repr__()
+
+class ForceResponse(GeneralResponse):
+    name = 'force'
+class StressResponse(GeneralResponse):
+    name = 'stress'
+class StrainResponse(GeneralResponse):
+    name = 'strain'
+
 class FlutterResponse(object):
+    name = 'flutter'
     def __init__(self):
         self.n = 1
         self._n = 0
@@ -154,7 +235,6 @@ class FlutterResponse(object):
         self.velocity.append(velocity)
         self.density.append(density)
         self.flutter_id.append(flutter_id)
-        self.subcase.append(subcase)
         self._n += 1
         #if self.n == self._n:
             #print(self)
@@ -164,6 +244,11 @@ class FlutterResponse(object):
         msg += '  velocity=%s\n' % (self.velocity)
         return msg
 
+    def get_stats(self, short=False):
+        if short:
+            return 'responses.%s_response (%s)' % (self.name, self.n)
+        else:
+            return self.__repr__()
 
 class Convergence(object):
     def __init__(self, ndesign_variables):
@@ -240,3 +325,9 @@ class Convergence(object):
         msg += '  constraint_max = %s\n' % self.constraint_max
         msg += '  row_constraint_max = %s\n' % self.row_constraint_max
         return msg
+
+    def get_stats(self, short=False):
+        if short:
+            return 'responses.convergence_data (%s, %s)' % (self.n, self.ndesign_variables)
+        else:
+            return self.__repr__()

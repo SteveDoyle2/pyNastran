@@ -20,6 +20,7 @@ from six.moves import range
 import numpy as np
 from numpy import frombuffer, vstack, sin, cos, radians, array, hstack, zeros
 
+from pyNastran.op2.tables.utils import get_eid_dt_from_eid_device
 from pyNastran.op2.op2_helper import polar_to_real_imag
 from pyNastran.op2.op2_interface.op2_common import OP2Common, apply_mag_phase
 
@@ -615,12 +616,8 @@ class OEF(OP2Common):
                         edata = data[n:n+ntotal]
                         out = s.unpack(edata)
                         (eid_device, eType, xgrad, ygrad, zgrad, xflux, yflux, zflux) = out
-                        if self.sort_method == 1:
-                            eid = eid_device // 10
-                            #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
-                        else:
-                            eid = self.nonlinear_factor
-                            dt = eid_device
+                        eid, dt = get_eid_dt_from_eid_device(
+                            eid_device, self.nonlinear_factor, self.sort_method)
                         obj.add_sort1(dt, eid, eType, xgrad, ygrad, zgrad, xflux, yflux, zflux)
                         n += ntotal
             else:
@@ -709,12 +706,8 @@ class OEF(OP2Common):
                         n += ntotal
                         out = s.unpack(edata)
                         (eid_device, etype, xgrad, ygrad, zgrad, xflux, yflux, zflux) = out
-                        if self.sort_method == 1:
-                            eid = eid_device // 10
-                            #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
-                        else:
-                            eid = self.nonlinear_factor
-                            dt = eid_device
+                        eid, dt = get_eid_dt_from_eid_device(
+                            eid_device, self.nonlinear_factor, self.sort_method)
                         obj.add_sort1(dt, eid, etype, xgrad, ygrad, zgrad, xflux, yflux, zflux)
 
             elif self.format_code == 1 and self.num_wide == 10:  # real - 3D
@@ -754,12 +747,8 @@ class OEF(OP2Common):
                         n += ntotal
                         out = s.unpack(edata)
                         (eid_device, etype, xgrad, ygrad, zgrad, xflux, yflux, zflux, unused_zed) = out
-                        if self.sort_method == 1:
-                            eid = eid_device // 10
-                            #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
-                        else:
-                            eid = self.nonlinear_factor
-                            dt = eid_device
+                        eid, dt = get_eid_dt_from_eid_device(
+                            eid_device, self.nonlinear_factor, self.sort_method)
                         obj.add_sort1(dt, eid, etype, xgrad, ygrad, zgrad, xflux, yflux, zflux)
             else:
                 raise RuntimeError(self.code_information())
@@ -838,12 +827,8 @@ class OEF(OP2Common):
                             n += ntotal
                             out = s1.unpack(edata)
                             (eid_device, etype, fapplied, free_conv, force_conv, frad, ftotal) = out
-                            if self.sort_method == 1:
-                                eid = eid_device // 10
-                                #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
-                            else:
-                                eid = self.nonlinear_factor
-                                dt = eid_device
+                            eid, dt = get_eid_dt_from_eid_device(
+                                eid_device, self.nonlinear_factor, self.sort_method)
 
                             if self.is_debug_file:
                                 self.binary_debug.write('  %s -> [%s, %s, %s, %s, %s, %s, %s]\n'
@@ -908,12 +893,8 @@ class OEF(OP2Common):
                         n += 16
                         out = s1.unpack(edata)
                         (eid_device, free_conv, cntl_node, free_conv_k) = out
-                        if self.sort_method == 1:
-                            eid = eid_device // 10
-                            #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
-                        else:
-                            eid = self.nonlinear_factor
-                            dt = eid_device
+                        eid, dt = get_eid_dt_from_eid_device(
+                            eid_device, self.nonlinear_factor, self.sort_method)
                         assert cntl_node >= 0, cntl_node
                         obj.add_sort1(dt, eid, cntl_node, free_conv, free_conv_k)
             else:
@@ -992,12 +973,8 @@ class OEF(OP2Common):
                         out = s1.unpack(data[n:n+8])
                         n += 8
                         (eid_device, parent) = out
-                        if self.sort_method == 1:
-                            eid = eid_device // 10
-                            #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
-                        else:
-                            eid = self.nonlinear_factor
-                            dt = eid_device
+                        eid, dt = get_eid_dt_from_eid_device(
+                            eid_device, self.nonlinear_factor, self.sort_method)
                         for j in range(nnodes):
                             out = s2.unpack(data[n:n+28])
                             grad_fluxes.append(out)
@@ -1079,12 +1056,8 @@ class OEF(OP2Common):
 
                         out = s1.unpack(edata)
                         (eid_device, parent, coord, icord, theta, unused_null) = out
-                        if self.sort_method == 1:
-                            eid = eid_device // 10
-                            #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
-                        else:
-                            eid = self.nonlinear_factor
-                            dt = eid_device
+                        eid, dt = get_eid_dt_from_eid_device(
+                            eid_device, self.nonlinear_factor, self.sort_method)
                         data_in = [eid, parent, coord, icord, theta]
                         #self.log.debug('RealHeatFluxVUArray = %s' % data_in)
                         grad_fluxes = []
@@ -1165,12 +1138,8 @@ class OEF(OP2Common):
 
                         out = s1.unpack(edata)
                         (eid_device, parent, coord, icord) = out
-                        if self.sort_method == 1:
-                            eid = eid_device // 10
-                            #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
-                        else:
-                            eid = self.nonlinear_factor
-                            dt = eid_device
+                        eid, dt = get_eid_dt_from_eid_device(
+                            eid_device, self.nonlinear_factor, self.sort_method)
                         data_in = [eid, parent, coord, icord]
                         self.log.debug('VUBeam %s' % data_in)
 
@@ -1470,12 +1439,8 @@ class OEF(OP2Common):
                                     etype, self.element_type, str(out)))
                             (eid_device, parent, coord, icord, theta, _) = out
 
-                            if self.sort_method == 1:
-                                eid = eid_device // 10
-                                #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
-                            else:
-                                eid = self.nonlinear_factor
-                                dt = eid_device
+                            eid, dt = get_eid_dt_from_eid_device(
+                                eid_device, self.nonlinear_factor, self.sort_method)
                             data_in = [eid, parent, coord, icord, theta]
 
                             forces = []
@@ -1517,12 +1482,8 @@ class OEF(OP2Common):
                                 etype, self.element_type, str(out)))
                         (eid_device, parent, coord, icord, theta, _) = out
 
-                        if self.sort_method == 1:
-                            eid = eid_device // 10
-                            #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
-                        else:
-                            eid = self.nonlinear_factor
-                            dt = eid_device
+                        eid, dt = get_eid_dt_from_eid_device(
+                            eid_device, self.nonlinear_factor, self.sort_method)
                         data_in = [eid, parent, coord, icord, theta]
 
                         forces = []
@@ -1639,12 +1600,8 @@ class OEF(OP2Common):
                                     etype, self.element_type, str(out)))
                             (eid_device, parent, coord, icord, theta, _) = out
 
-                            if self.sort_method == 1:
-                                eid = eid_device // 10
-                                #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
-                            else:
-                                eid = self.nonlinear_factor
-                                dt = eid_device
+                            eid, dt = get_eid_dt_from_eid_device(
+                                eid_device, self.nonlinear_factor, self.sort_method)
                             data_in = [eid, parent, coord, icord, theta]
 
                             forces = []
@@ -1705,12 +1662,8 @@ class OEF(OP2Common):
                                 etype, self.element_type, str(out)))
                         (eid_device, parent, coord, icord, theta, _) = out
 
-                        if self.sort_method == 1:
-                            eid = eid_device // 10
-                            #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
-                        else:
-                            eid = self.nonlinear_factor
-                            dt = eid_device
+                        eid, dt = get_eid_dt_from_eid_device(
+                            eid_device, self.nonlinear_factor, self.sort_method)
                         data_in = [eid, parent, coord, icord, theta]
 
                         forces = []
@@ -1748,7 +1701,7 @@ class OEF(OP2Common):
                         data_in.append(forces)
                         #data_in = [vugrid,mfxr,mfyr,mfxyr,bmxr,bmyr,bmxyr,syzr,szxr,
                                          #mfxi,mfyi,mfxyi,bmxi,bmyi,bmxyi,syzi,szxi]
-                        obj.add(nnodes, dt, *data_in)
+                        obj.add_sort1(nnodes, dt, *data_in)
             else:
                 msg = self.code_information()
                 return self._not_implemented_or_skip(data, ndata, msg)
@@ -1840,12 +1793,8 @@ class OEF(OP2Common):
                             self.binary_debug.write('OEF_Force_VU-191 - %s\n' % (str(out)))
                         (eid_device, parent, coord, icord) = out
 
-                        if self.sort_method == 1:
-                            eid = eid_device // 10
-                            #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
-                        else:
-                            eid = self.nonlinear_factor
-                            dt = eid_device
+                        eid, dt = get_eid_dt_from_eid_device(
+                            eid_device, self.nonlinear_factor, self.sort_method)
                         data_in = [eid, parent, coord, icord]
 
                         forces = []
@@ -1950,12 +1899,8 @@ class OEF(OP2Common):
                                 self.element_type, str(out)))
                         (eid_device, parent, coord, icord) = out
 
-                        if self.sort_method == 1:
-                            eid = eid_device // 10
-                            #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
-                        else:
-                            eid = self.nonlinear_factor
-                            dt = eid_device
+                        eid, dt = get_eid_dt_from_eid_device(
+                            eid_device, self.nonlinear_factor, self.sort_method)
 
                         forces = []
                         for i in range(nnodes):
@@ -2088,12 +2033,8 @@ class OEF(OP2Common):
                     edata = data[n:n+ntotal]
                     out = s.unpack(edata)
                     (eid_device, axial, torque) = out
-                    if self.sort_method == 1:
-                        eid = eid_device // 10
-                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
-                    else:
-                        eid = self.nonlinear_factor
-                        dt = eid_device
+                    eid, dt = get_eid_dt_from_eid_device(
+                        eid_device, self.nonlinear_factor, self.sort_method)
                     if self.is_debug_file:
                         self.binary_debug.write('OEF_Rod - %s\n' % (str(out)))
                     obj.add_sort1(dt, eid, axial, torque)
@@ -2144,12 +2085,8 @@ class OEF(OP2Common):
                     if self.is_debug_file:
                         self.binary_debug.write('OEF_CRod - %s\n' % (str(out)))
                     (eid_device, axial_real, torque_real, axial_imag, torque_imag) = out
-                    if self.sort_method == 1:
-                        eid = eid_device // 10
-                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
-                    else:
-                        eid = self.nonlinear_factor
-                        dt = eid_device
+                    eid, dt = get_eid_dt_from_eid_device(
+                        eid_device, self.nonlinear_factor, self.sort_method)
                     if is_magnitude_phase:
                         axial = polar_to_real_imag(axial_real, axial_imag)
                         torque = polar_to_real_imag(torque_real, torque_imag)
@@ -2213,7 +2150,8 @@ class OEF(OP2Common):
                     #if self.is_debug_file:
                         #self.binary_debug.write('OEF_Beam - %s\n' % (str(out)))
                     #(eid_device, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq) = out
-                    #eid = eid_device // 10
+                    #eid, dt = get_eid_dt_from_eid_device(
+                        #eid_device, self.nonlinear_factor, self.sort_method)
                     #n += 36
 
         elif self.format_code in [1, 2] and self.num_wide == 100:  # real/random
@@ -2267,12 +2205,8 @@ class OEF(OP2Common):
                 for i in range(nelements):
                     edata = data[n:n+4]
                     eid_device, = s1.unpack(edata)
-                    if self.sort_method == 1:
-                        eid = eid_device // 10
-                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
-                    else:
-                        eid = self.nonlinear_factor
-                        dt = eid_device
+                    eid, dt = get_eid_dt_from_eid_device(
+                        eid_device, self.nonlinear_factor, self.sort_method)
                     n += 4
 
                     for istation in range(11):
@@ -2351,12 +2285,8 @@ class OEF(OP2Common):
                 for i in range(nelements):
                     edata = data[n:n+4]
                     eid_device, = s1.unpack(edata)
-                    if self.sort_method == 1:
-                        eid = eid_device // 10
-                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
-                    else:
-                        eid = self.nonlinear_factor
-                        dt = eid_device
+                    eid, dt = get_eid_dt_from_eid_device(
+                        eid_device, self.nonlinear_factor, self.sort_method)
 
                     n += 4
                     for istation in range(11):
@@ -2491,12 +2421,8 @@ class OEF(OP2Common):
                     if self.is_debug_file:
                         self.binary_debug.write('OEF_SpringDamper - %s\n' % str(out))
                     (eid_device, force) = out
-                    if self.sort_method == 1:
-                        eid = eid_device // 10
-                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
-                    else:
-                        eid = self.nonlinear_factor
-                        dt = eid_device
+                    eid, dt = get_eid_dt_from_eid_device(
+                        eid_device, self.nonlinear_factor, self.sort_method)
                     obj.add_sort1(dt, eid, force)
                     n += ntotal
         elif self.format_code in [2, 3] and self.num_wide == 3:  # imag
@@ -2542,12 +2468,8 @@ class OEF(OP2Common):
                     if self.is_debug_file:
                         self.binary_debug.write('OEF_SpringDamper - %s\n' % str(out))
                     (eid_device, force_real, force_imag) = out
-                    if self.sort_method == 1:
-                        eid = eid_device // 10
-                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
-                    else:
-                        eid = self.nonlinear_factor
-                        dt = eid_device
+                    eid, dt = get_eid_dt_from_eid_device(
+                        eid_device, self.nonlinear_factor, self.sort_method)
                     if is_magnitude_phase:
                         force = polar_to_real_imag(force_real, force_imag)
                     else:
@@ -2609,12 +2531,8 @@ class OEF(OP2Common):
                     if self.is_debug_file:
                         self.binary_debug.write('OEF_CVisc - %s\n' % (str(out)))
                     (eid_device, axial, torque) = out
-                    if self.sort_method == 1:
-                        eid = eid_device // 10
-                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
-                    else:
-                        eid = self.nonlinear_factor
-                        dt = eid_device
+                    eid, dt = get_eid_dt_from_eid_device(
+                        eid_device, self.nonlinear_factor, self.sort_method)
                     obj.add_sort1(dt, eid, axial, torque)
                     n += ntotal
         elif self.format_code in [2, 3] and self.num_wide == 5: # complex
@@ -2662,12 +2580,8 @@ class OEF(OP2Common):
                     if self.is_debug_file:
                         self.binary_debug.write('OEF_CVisc - %s\n' % (str(out)))
                     (eid_device, axial_real, torque_real, axial_imag, torque_imag) = out
-                    if self.sort_method == 1:
-                        eid = eid_device // 10
-                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
-                    else:
-                        eid = self.nonlinear_factor
-                        dt = eid_device
+                    eid, dt = get_eid_dt_from_eid_device(
+                        eid_device, self.nonlinear_factor, self.sort_method)
                     if is_magnitude_phase:
                         axial = polar_to_real_imag(axial_real, axial_imag)
                         torque = polar_to_real_imag(torque_real, torque_imag)
@@ -2736,12 +2650,8 @@ class OEF(OP2Common):
                     if self.is_debug_file:
                         self.binary_debug.write('OEF_CBar - %s\n' % (str(out)))
                     (eid_device, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq) = out
-                    if self.sort_method == 1:
-                        eid = eid_device // 10
-                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
-                    else:
-                        eid = self.nonlinear_factor
-                        dt = eid_device
+                    eid, dt = get_eid_dt_from_eid_device(
+                        eid_device, self.nonlinear_factor, self.sort_method)
                     #data_in = [eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq]
                     obj.add_sort1(dt, eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq)
                     n += ntotal
@@ -2768,12 +2678,8 @@ class OEF(OP2Common):
                  bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi) = out
                 if self.is_debug_file:
                     self.binary_debug.write('OEF_CBar - %s\n' % (str(out)))
-                if self.sort_method == 1:
-                    eid = eid_device // 10
-                    #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
-                else:
-                    eid = self.nonlinear_factor
-                    dt = eid_device
+                    eid, dt = get_eid_dt_from_eid_device(
+                        eid_device, self.nonlinear_factor, self.sort_method)
                 if is_magnitude_phase:
                     bm1a = polar_to_real_imag(bm1ar, bm1ai)
                     bm2a = polar_to_real_imag(bm2ar, bm2ai)
@@ -2796,6 +2702,8 @@ class OEF(OP2Common):
                 #data_in = [bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq]
                 #print "%s" % (self.get_element_type(self.element_type)), data_in
                 #eid = obj.add_new_eid(out)
+                eid, dt = get_eid_dt_from_eid_device(
+                    eid_device, self.nonlinear_factor, self.sort_method)
                 obj.add_sort1(dt, eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq)
                 n += ntotal
         else:
@@ -2851,12 +2759,8 @@ class OEF(OP2Common):
                     if self.is_debug_file:
                         self.binary_debug.write('OEF_CBar100 - %s\n' % (str(out)))
                     (eid_device, sd, bm1, bm2, ts1, ts2, af, trq) = out
-                    if self.sort_method == 1:
-                        eid = eid_device // 10
-                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
-                    else:
-                        eid = self.nonlinear_factor
-                        dt = eid_device
+                    eid, dt = get_eid_dt_from_eid_device(
+                        eid_device, self.nonlinear_factor, self.sort_method)
                     obj.add_sort1(dt, eid, sd, bm1, bm2, ts1, ts2, af, trq)
                     n += 32
         #elif self.format_code in [2, 3] and self.num_wide == 14:  # imag
@@ -2918,12 +2822,8 @@ class OEF(OP2Common):
                     if self.is_debug_file:
                         self.binary_debug.write('real_OEF_Plate-%s - %s\n' % (self.element_type, str(out)))
                     (eid_device, mx, my, mxy, bmx, bmy, bmxy, tx, ty) = out
-                    if self.sort_method == 1:
-                        eid = eid_device // 10
-                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
-                    else:
-                        eid = self.nonlinear_factor
-                        dt = eid_device
+                    eid, dt = get_eid_dt_from_eid_device(
+                        eid_device, self.nonlinear_factor, self.sort_method)
                     obj.add_sort1(dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
                     n += ntotal
         elif self.format_code in [2, 3] and self.num_wide == 17:  # imag
@@ -2966,12 +2866,8 @@ class OEF(OP2Common):
                     (eid_device,
                      mxr, myr, mxyr, bmxr, bmyr, bmxyr, txr, tyr,
                      mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi) = out
-                    if self.sort_method == 1:
-                        eid = eid_device // 10
-                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
-                    else:
-                        eid = self.nonlinear_factor
-                        dt = eid_device
+                    eid, dt = get_eid_dt_from_eid_device(
+                        eid_device, self.nonlinear_factor, self.sort_method)
                     if self.is_debug_file:
                         self.binary_debug.write('complex_OEF_Plate-%s - %s\n' % (self.element_type, str(out)))
 
@@ -3091,12 +2987,8 @@ class OEF(OP2Common):
                     (eid_device, term, _nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty) = out
                     #term= 'CEN\'
                     nid = 0
-                    if self.sort_method == 1:
-                        eid = eid_device // 10
-                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
-                    else:
-                        eid = self.nonlinear_factor
-                        dt = eid_device
+                    eid, dt = get_eid_dt_from_eid_device(
+                        eid_device, self.nonlinear_factor, self.sort_method)
                     obj.add_sort1(dt, eid, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
                     n += 44
                     for j in range(nnodes):
@@ -3167,12 +3059,8 @@ class OEF(OP2Common):
                      mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi) = out
                     #term = 'CEN\'
 
-                    if self.sort_method == 1:
-                        eid = eid_device // 10
-                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
-                    else:
-                        eid = self.nonlinear_factor
-                        dt = eid_device
+                    eid, dt = get_eid_dt_from_eid_device(
+                        eid_device, self.nonlinear_factor, self.sort_method)
                     if is_magnitude_phase:
                         mx = polar_to_real_imag(mxr, mxi)
                         my = polar_to_real_imag(myr, myi)
@@ -3287,7 +3175,8 @@ class OEF(OP2Common):
                 #out = s.unpack(edata)
                 #(eid_device, theory, lamid, failure_index_direct_stress, failure_mode_max_shear,
                          #failure_index_interlaminar_shear, fmax, failure_flag) = out
-                #eid = eid_device // 10
+                #eid, dt = get_eid_dt_from_eid_device(
+                    #eid_device, self.nonlinear_factor, self.sort_method)
                 #if self.is_debug_file:
                     #if eid > 0:
                         #self.binary_debug.write('  eid=%i; C=[%s]\n' % (', '.join(['%r' % di for di in out]) ))
@@ -3356,12 +3245,8 @@ class OEF(OP2Common):
                     (eid_device,
                      f41, f21, f12, f32, f23, f43, f34, f14, kf1,
                      s12, kf2, s23, kf3, s34, kf4, s41) = out
-                    if self.sort_method == 1:
-                        eid = eid_device // 10
-                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
-                    else:
-                        eid = self.nonlinear_factor
-                        dt = eid_device
+                    eid, dt = get_eid_dt_from_eid_device(
+                        eid_device, self.nonlinear_factor, self.sort_method)
 
                     #data_in = [eid,
                                #f41, f21, f12, f32, f23, f43, f34,
@@ -3465,19 +3350,13 @@ class OEF(OP2Common):
                         f14 = complex(f14r, f14i)
                         s41 = complex(s41r, s41i)
 
-                    if self.sort_method == 1:
-                        eid = eid_device // 10
-                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
-                    else:
-                        eid = self.nonlinear_factor
-                        dt = eid_device
+                    eid, dt = get_eid_dt_from_eid_device(
+                        eid_device, self.nonlinear_factor, self.sort_method)
                     obj.add_sort1(dt, eid,
                                   f41, f21, f12, f32, f23, f43, f34, f14,
                                   kf1, s12, kf2, s23, kf3, s34, kf4, s41)
         else:
             msg = self.code_information()
-            print(msg)
-            aa
             return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
 
@@ -3526,12 +3405,8 @@ class OEF(OP2Common):
                     if self.is_debug_file:
                         self.binary_debug.write('OEF_CONEAX-35 - %s\n' % (str(out)))
                     (eid_device, hopa, bmu, bmv, tm, su, sv) = out
-                    if self.sort_method == 1:
-                        eid = eid_device // 10
-                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
-                    else:
-                        eid = self.nonlinear_factor
-                        dt = eid_device
+                    eid, dt = get_eid_dt_from_eid_device(
+                        eid_device, self.nonlinear_factor, self.sort_method)
                     obj.add_sort1(dt, eid, hopa, bmu, bmv, tm, su, sv)
                     n += ntotal
         else:
@@ -3583,12 +3458,8 @@ class OEF(OP2Common):
                     if self.is_debug_file:
                         self.binary_debug.write('OEF_CGAP-38 - %s\n' % (str(out)))
                     (eid_device, fx, sfy, sfz, u, v, w, sv, sw) = out
-                    if self.sort_method == 1:
-                        eid = eid_device // 10
-                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
-                    else:
-                        eid = self.nonlinear_factor
-                        dt = eid_device
+                    eid, dt = get_eid_dt_from_eid_device(
+                        eid_device, self.nonlinear_factor, self.sort_method)
                     data_in = [eid, fx, sfy, sfz, u, v, w, sv, sw]
                     #print "%s" %(self.get_element_type(self.element_type)), data_in
                     #eid = obj.add_new_eid(out)
@@ -3653,12 +3524,8 @@ class OEF(OP2Common):
                     (eid_device,
                      nid_a, bm1_a, bm2_a, ts1_a, ts2_a, af_a, trq_a,
                      nid_b, bm1_b, bm2_b, ts1_b, ts2_b, af_b, trq_b) = out
-                    if self.sort_method == 1:
-                        eid = eid_device // 10
-                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
-                    else:
-                        eid = self.nonlinear_factor
-                        dt = eid_device
+                    eid, dt = get_eid_dt_from_eid_device(
+                        eid_device, self.nonlinear_factor, self.sort_method)
 
                     obj.add_sort1(
                         dt, eid,
@@ -3733,12 +3600,8 @@ class OEF(OP2Common):
                      nid_b,
                      bm1_br, bm2_br, ts1_br, ts2_br, af_br, trq_br,
                      bm1_bi, bm2_bi, ts1_bi, ts2_bi, af_bi, trq_bi) = out
-                    if self.sort_method == 1:
-                        eid = eid_device // 10
-                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
-                    else:
-                        eid = self.nonlinear_factor
-                        dt = eid_device
+                    eid, dt = get_eid_dt_from_eid_device(
+                        eid_device, self.nonlinear_factor, self.sort_method)
 
                     if is_magnitude_phase:
                         bm1_a = polar_to_real_imag(bm1_ar, bm1_ai)
@@ -3843,12 +3706,8 @@ class OEF(OP2Common):
                     if self.is_debug_file:
                         self.binary_debug.write('OEF_PentaPressure-%s %s\n' % (self.element_type, str(out)))
                     (eid_device, ename, ax, ay, az, vx, vy, vz, pressure) = out
-                    if self.sort_method == 1:
-                        eid = eid_device // 10
-                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
-                    else:
-                        eid = self.nonlinear_factor
-                        dt = eid_device
+                    eid, dt = get_eid_dt_from_eid_device(
+                        eid_device, self.nonlinear_factor, self.sort_method)
                     obj.add_sort1(dt, eid, ename, ax, ay, az, vx, vy, vz, pressure)
 
         elif self.format_code in [2, 3] and self.num_wide == 16:  # imag
@@ -3912,12 +3771,8 @@ class OEF(OP2Common):
                     (eid_device, ename,
                      axr, ayr, azr, vxr, vyr, vzr, pressure,
                      axi, ayi, azi, vxi, vyi, vzi) = out
-                    if self.sort_method == 1:
-                        eid = eid_device // 10
-                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
-                    else:
-                        eid = self.nonlinear_factor
-                        dt = eid_device
+                    eid, dt = get_eid_dt_from_eid_device(
+                        eid_device, self.nonlinear_factor, self.sort_method)
                     ename = ename.decode('utf-8').strip()
 
                     if is_magnitude_phase:
@@ -3990,12 +3845,8 @@ class OEF(OP2Common):
                     if self.is_debug_file:
                         self.binary_debug.write('OEF_CBUSH-102 - %s\n' % (str(out)))
                     (eid_device, fx, fy, fz, mx, my, mz) = out
-                    if self.sort_method == 1:
-                        eid = eid_device // 10
-                        #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
-                    else:
-                        eid = self.nonlinear_factor
-                        dt = eid_device
+                    eid, dt = get_eid_dt_from_eid_device(
+                        eid_device, self.nonlinear_factor, self.sort_method)
                     obj.add_sort1(dt, eid, fx, fy, fz, mx, my, mz)
                     n += ntotal
         elif self.format_code in [2, 3] and self.num_wide == 13:  # imag
@@ -4020,12 +3871,8 @@ class OEF(OP2Common):
                 (eid_device,
                  fxr, fyr, fzr, mxr, myr, mzr,
                  fxi, fyi, fzi, mxi, myi, mzi) = out
-                if self.sort_method == 1:
-                    eid = eid_device // 10
-                    #print("SORT1 dt=%s eid_device=%s eid=%s" % (dt, eid_device, eid))
-                else:
-                    eid = self.nonlinear_factor
-                    dt = eid_device
+                eid, dt = get_eid_dt_from_eid_device(
+                    eid_device, self.nonlinear_factor, self.sort_method)
 
                 if is_magnitude_phase:
                     fx = polar_to_real_imag(fxr, fxi)

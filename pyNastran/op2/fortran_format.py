@@ -156,35 +156,6 @@ class FortranFormat(object):
         self.f.seek(self.n)
         return self.write_data(f, data, types=types)
 
-    def _skip_block(self):
-        """
-        Skips a block following a pattern of:
-            [nbytes, data, nbytes]
-
-        Returns
-        -------
-        data :  since data can never be None, a None value
-                indicates something bad happened.
-        """
-        return self._skip_block_ndata()[0]
-
-    def _skip_block_ndata(self):
-        """
-        Skips a block following a pattern of:
-            [nbytes, data, nbytes]
-
-        Returns
-        -------
-        data :  since data can never be None, a None value
-                indicates something bad happened.
-
-        """
-        data = self.f.read(4)
-        ndata, = self.struct_i.unpack(data)
-        self.n += 8 + ndata
-        self._goto(self.n)
-        return None, ndata
-
     def read_block(self):
         """
         Reads a block following a pattern of:
@@ -234,61 +205,6 @@ class FortranFormat(object):
             self.n += 8 + ndata
         return data_out
 
-    def _read_block_ndata(self):
-        """
-        Reads a block following a pattern of:
-            [nbytes, data, nbytes]
-
-        Returns
-        -------
-        data : bytes
-            the data in binary
-        ndata : int
-            len(data)
-
-        """
-        data = self.f.read(4)
-        ndata, = self.struct_i.unpack(data)
-
-        data_out = self.f.read(ndata)
-        data = self.f.read(4)
-        self.n += 8 + ndata
-        return data_out, ndata
-
-
-    def read_markers(self, markers, macro_rewind=True):
-        """
-        Gets specified markers, where a marker has the form of [4, value, 4].
-        The "marker" corresponds to the value, so 3 markers takes up 9 integers.
-        These are used to indicate position in the file as well as the number
-        of bytes to read.
-
-        Because we're checking the markers vs. what we expect, we just throw
-        the data away.
-
-        Parameters
-        ----------
-        markers : List[int]
-            markers to get; markers = [-10, 1]
-
-        Raises
-        ------
-        FortranMarkerError
-            if the expected table number is not found
-
-        """
-        for i, marker in enumerate(markers):
-            data = self.read_block()
-            imarker, = self.struct_i.unpack(data)
-            if marker != imarker:
-                import os
-                msg = 'marker=%r imarker=%r; markers=%s; i=%s; table_name=%r; iloc=%s/%s' % (
-                    marker, imarker, markers, i, self.table_name,
-                    self.f.tell(), os.path.getsize(self.op2_filename))
-                raise FortranMarkerError(msg)
-            if self.is_debug_file:
-                self.binary_debug.write('  read_markers -> [4, %i, 4]\n' % marker)
-
     def read_3_markers(self, markers, macro_rewind=True):
         """
         Micro-optimizes ``read_markers`` for 3 markers.
@@ -314,94 +230,6 @@ class FortranFormat(object):
             if self.is_debug_file:
                 self.binary_debug.write('  read_markers -> [4, %i, 4]\n' % marker)
 
-    def get_nmarkers(self, n, rewind=True, macro_rewind=False):
-        """
-        Gets n markers, so if n=2, it will get 2 markers.
-
-        Parameters
-        ----------
-        n : int
-            number of markers to get
-        rewind : bool
-            should the file be returned to the starting point
-
-        Returns
-        -------
-        markers : List[int]
-            list of [1, 2, 3, ...] markers
-
-        """
-        ni = self.n
-        markers = []
-        for i in range(n):
-            data = self.read_block()
-            marker, = self.struct_i.unpack(data)
-            markers.append(marker)
-        if rewind:
-            self.n = ni
-            self.f.seek(self.n)
-            #for i in range(n):
-                #self.binary_debug.write('get_nmarkers- [4, %i, 4]; macro_rewind=%s\n' % (
-                    #i, macro_rewind or rewind))
-        else:
-            #if not macro_rewind:
-            if self.is_debug_file:
-                for i in range(n):
-                    self.binary_debug.write('get_nmarkers- [4, %i, 4]; macro_rewind=%s\n' % (
-                        i, macro_rewind or rewind))
-        return markers
-
-    def get_marker1(self, rewind=True, macro_rewind=False):
-        """
-        Gets 1 marker
-        See get_n_markers(...)
-
-        Parameters
-        ----------
-        rewind : bool
-            should the file be returned to the starting point
-        macro_rewind : bool
-            ???
-
-        Returns
-        -------
-        markers : int
-            a single marker
-
-        """
-        ni = self.n
-        #markers = []
-        data = self.read_block()
-        marker, = self.struct_i.unpack(data)
-        if rewind:
-            self.n = ni
-            self.f.seek(self.n)
-        else:
-            if self.is_debug_file:
-                msg = 'get_marker - [4, %i, 4]; macro_rewind=%s\n' % (
-                    marker, macro_rewind or rewind)
-                self.binary_debug.write(msg)
-        return marker
-
-    def _skip_subtables(self):
-        self.isubtable = -3
-        self.read_markers([-3, 1, 0])
-
-        markers = self.get_nmarkers(1, rewind=True)
-        while markers[0] != 0:
-            unused_data = self._skip_record()
-            if self.is_debug_file:
-                self.log.debug("skipping table_name = %r" % self.table_name)
-            #if len(data) == 584:
-                #self._parse_results_table3(data)
-            #else:
-                #data = self._parse_results_table4(data)
-
-            self.isubtable -= 1
-            self.read_markers([self.isubtable, 1, 0])
-            markers = self.get_nmarkers(1, rewind=True)
-        self.read_markers([0])
-
     #def passer(self, data):
         #"""
         #dummy function used for unsupported tables
@@ -420,7 +248,7 @@ class FortranFormat(object):
 
         #nstart = self.n
         self.isubtable = -3
-        self.read_markers([-3, 1, 0])
+        self.op2_reader.read_markers([-3, 1, 0])
         if self.is_debug_file:
             self.binary_debug.write('***isubtable = %i\n' % self.isubtable)
             self.binary_debug.write('---markers = [-3, 1, 0]---\n')
@@ -452,7 +280,7 @@ class FortranFormat(object):
 
         # we need to check the marker, so we read it and rewind, so we don't
         # screw up our positioning in the file
-        markers = self.get_nmarkers(1, rewind=True)
+        markers = self.op2_reader.get_nmarkers(1, rewind=True)
         if self.is_debug_file:
             self.binary_debug.write('---marker0 = %s---\n' % markers)
 
@@ -464,13 +292,13 @@ class FortranFormat(object):
             self._read_subtable_3_4(table3_parser, table4_parser, passer)
             #force_table4 = self._read_subtable_3_4(table3_parser, table4_parser, passer)
             self.isubtable -= 1
-            self.read_markers([self.isubtable, 1, 0])
-            markers = self.get_nmarkers(1, rewind=True)
+            self.op2_reader.read_markers([self.isubtable, 1, 0])
+            markers = self.op2_reader.get_nmarkers(1, rewind=True)
         if self.is_debug_file:
             self.binary_debug.write('breaking on marker=%r\n' % str(markers))
 
         # we've finished reading all subtables, but have one last marker to read
-        self.read_markers([0])
+        self.op2_reader.read_markers([0])
         self._finish()
 
     def _finish(self):
@@ -513,7 +341,7 @@ class FortranFormat(object):
 
             self.data_code = {'_encoding' : self._encoding}
             self.obj = None
-            data, ndata = self._read_record_ndata()
+            data, ndata = self.op2_reader._read_record_ndata()
             if not passer:
                 try:
                     table3_parser(data, ndata)
@@ -530,15 +358,15 @@ class FortranFormat(object):
                 #if hasattr(self, 'isubcase'):
                     #print("code = ", self._get_code())
         else:
-            if passer or not self.is_valid_subcase():
-                data = self._skip_record()
+            if passer or not self.op2_reader.is_valid_subcase():
+                data = self.op2_reader._skip_record()
             else:
                 if hasattr(self, 'num_wide'):
                     # num_wide is the result size and is usually found in
                     # table3, but some B-list tables don't have it
                     unused_n = self._read_subtable_results(table4_parser, record_len)
                 else:
-                    data, ndata = self._read_record_ndata()
+                    data, ndata = self.op2_reader._read_record_ndata()
                     unused_n = table4_parser(data, ndata)
                 #del n
 
@@ -577,7 +405,7 @@ class FortranFormat(object):
                     assert isinstance(n, integer_types), self.table_name
                     datai = data[n:]
             else:
-                data, ndata = self._read_record_ndata()
+                data, ndata = self.op2_reader._read_record_ndata()
                 n = table4_parser(data, ndata)
                 assert isinstance(n, integer_types), self.table_name
 
@@ -586,7 +414,7 @@ class FortranFormat(object):
         elif self.read_mode == 1:
             # if we're checking the array size
 
-            #n = self._skip_record()
+            #n = self.op2_reader._skip_record()
             #n = table4_parser(datai, 300000)
             if is_streaming:  # pragma: no cover
                 self.ntotal = 0
@@ -603,17 +431,17 @@ class FortranFormat(object):
                 #break
             else:
                 if self.table_name in [b'R1TABRG', b'ONRGY1']:
-                    data, ndata = self._read_record_ndata()
+                    data, ndata = self.op2_reader._read_record_ndata()
                 else:
-                    data, ndata = self._skip_record_ndata()
+                    data, ndata = self.op2_reader._skip_record_ndata()
                 n = table4_parser(data, ndata)
                 if not isinstance(n, integer_types):
                     msg = 'n is not an integer; table_name=%s n=%s table4_parser=%s' % (
                         self.table_name, n, table4_parser)
                     raise TypeError(msg)
 
-            #self._goto(n)
-            #n = self._skip_record()
+            #self.op2_reader._goto(n)
+            #n = self.op2_reader._skip_record()
 
             self._init_vector_counter(record_len)
         else:
@@ -762,35 +590,6 @@ class FortranFormat(object):
             print(object_attributes(self))
             print(msg)
 
-    def is_valid_subcase(self):
-        """
-        Lets the code check whether or not to read a subcase
-
-        Returns
-        -------
-        is_valid : bool
-            should this subcase defined by self.isubcase be read?
-
-        """
-        if not self.is_all_subcases:
-            if hasattr(self, 'isubcase') and self.isubcase in self.valid_subcases:
-                return True
-            return False
-        return True
-
-    def _goto(self, n):
-        """
-        Jumps to position n in the file
-
-        Parameters
-        ----------
-        n : int
-            the position to goto
-
-        """
-        self.n = n
-        self.f.seek(n)
-
     def _get_record_length(self):
         """
         The record length helps us figure out data block size, which is used
@@ -807,59 +606,38 @@ class FortranFormat(object):
             self.binary_debug.write('_get_record_length\n')
         len_record = 0
         n0 = self.n
-        markers0 = self.get_nmarkers(1, rewind=False)
+        markers0 = self.op2_reader.get_nmarkers(1, rewind=False)
         if self.is_debug_file:
             self.binary_debug.write('  markers0=%s\n' % markers0)
 
         n = self.n
-        unused_record = self._skip_block()
+        unused_record = self.op2_reader._skip_block()
         len_record += self.n - n - 8  # -8 is for the block
         if self.is_debug_file:
             self.binary_debug.write('  len_record=%s\n' % len_record)
 
-        markers1 = self.get_nmarkers(1, rewind=True)
+        markers1 = self.op2_reader.get_nmarkers(1, rewind=True)
         # handling continuation blocks
         while markers1[0] > 0:
-            markers1 = self.get_nmarkers(1, rewind=False)
+            markers1 = self.op2_reader.get_nmarkers(1, rewind=False)
             if self.is_debug_file:
                 self.binary_debug.write('  markers1=%s\n' % markers1)
             n = self.n
-            unused_record = self._skip_block()
+            unused_record = self.op2_reader._skip_block()
             len_record += self.n - n - 8  # -8 is for the block
-            markers1 = self.get_nmarkers(1, rewind=True)
-        self._goto(n0)
+            markers1 = self.op2_reader.get_nmarkers(1, rewind=True)
+        self.op2_reader._goto(n0)
         return len_record
-
-    def _skip_record(self):
-        """
-        the skip version of ``_read_record``
-
-        Returns
-        -------
-        record : None
-            a record of None indicates a skipped block
-
-        """
-        unused_markers0 = self.get_nmarkers(1, rewind=False)
-        record = self._skip_block()
-
-        markers1 = self.get_nmarkers(1, rewind=True)
-        # handling continuation blocks
-        while markers1[0] > 0:
-            markers1 = self.get_nmarkers(1, rewind=False)
-            record = self._skip_block()
-            markers1 = self.get_nmarkers(1, rewind=True)
-        return record
 
     def _stream_record(self, debug=True):
         """
         Creates a "for" loop that keeps giving us records until we're done.
         """
         self.istream = 0
-        markers0 = self.get_nmarkers(1, rewind=False)
+        markers0 = self.op2_reader.get_nmarkers(1, rewind=False)
         if self.is_debug_file and debug:
             self.binary_debug.write('_stream_record - marker = [4, %i, 4]\n' % markers0[0])
-        record, nrecord = self._read_block_ndata()
+        record, nrecord = self.op2_reader._read_block_ndata()
         if self.is_debug_file and debug:
             self.binary_debug.write('_stream_record - record = [%i, recordi, %i]\n' % (
                 nrecord, nrecord))
@@ -869,20 +647,20 @@ class FortranFormat(object):
         yield record
         self.istream += 1
 
-        markers1 = self.get_nmarkers(1, rewind=True)
+        markers1 = self.op2_reader.get_nmarkers(1, rewind=True)
         if self.is_debug_file and debug:
             self.binary_debug.write('_stream_record - markers1 = [4, %s, 4]\n' % str(markers1))
 
         # handling continuation blocks
         #nloop = 0
         while markers1[0] > 0:
-            markers1 = self.get_nmarkers(1, rewind=False)
+            markers1 = self.op2_reader.get_nmarkers(1, rewind=False)
             if self.is_debug_file and debug:
                 self.binary_debug.write('_stream_record - markers1 = [4, %s, 4]\n' % str(markers1))
-            record, unused_nrecordi = self._read_block_ndata()
+            record, unused_nrecordi = self.op2_reader._read_block_ndata()
             yield record
             self.istream += 1
-            markers1 = self.get_nmarkers(1, rewind=True)
+            markers1 = self.op2_reader.get_nmarkers(1, rewind=True)
             #nloop += 1
 
     def _read_record(self, stream=False, debug=True, macro_rewind=False):
@@ -898,76 +676,4 @@ class FortranFormat(object):
         is a block.
 
         """
-        return self._read_record_ndata(stream, debug, macro_rewind)[0]
-
-    def _read_record_ndata(self, stream=False, debug=True, macro_rewind=False):
-        """reads a record and the length of the record"""
-        markers0 = self.get_nmarkers(1, rewind=False, macro_rewind=macro_rewind)
-        if self.is_debug_file and debug:
-            self.binary_debug.write('read_record - marker = [4, %i, 4]; macro_rewind=%s\n' % (
-                markers0[0], macro_rewind))
-        record, nrecord = self._read_block_ndata()
-
-        if self.is_debug_file and debug:
-            msg = 'read_record - record = [%i, recordi, %i]; macro_rewind=%s\n' % (
-                nrecord, nrecord, macro_rewind)
-            self.binary_debug.write(msg)
-        if markers0[0]*4 != len(record):
-            raise FortranMarkerError('markers0=%s*4 len(record)=%s; table_name=%r' % (
-                markers0[0]*4, len(record), self.table_name))
-
-        markers1 = self.get_nmarkers(1, rewind=True)
-        if markers1[0] > 0:
-            nloop = 0
-            records = [record]
-            while markers1[0] > 0:
-                markers1 = self.get_nmarkers(1, rewind=False)
-                if self.is_debug_file and debug:
-                    self.binary_debug.write('read_record - markers1 = [4, %i, 4]\n' % markers1[0])
-                recordi, nrecordi = self._read_block_ndata()
-                nrecord += nrecordi
-                records.append(recordi)
-                #record += recordi
-                markers1 = self.get_nmarkers(1, rewind=True)
-                if self.is_debug_file and debug:
-                    self.binary_debug.write('read_record - markers1 = [4, %i, 4]\n' % markers1[0])
-                nloop += 1
-
-            # if nloop == 0:
-                # record = records[0]
-            # elif nloop == 1:
-                # record = records[0] + records[1]
-            # else:
-            record = b''.join(records)
-        return record, nrecord
-
-    def _skip_record_ndata(self, stream=False, debug=True, macro_rewind=False):
-        """the skip version of ``_read_record_ndata``"""
-        markers0 = self.get_nmarkers(1, rewind=False, macro_rewind=macro_rewind)
-        if self.is_debug_file and debug:
-            self.binary_debug.write('read_record - marker = [4, %i, 4]; macro_rewind=%s\n' % (
-                markers0[0], macro_rewind))
-        record, nrecord = self._skip_block_ndata()
-
-        if self.is_debug_file and debug:
-            self.binary_debug.write('read_record - record = [%i, recordi, %i]; '
-                                    'macro_rewind=%s\n' % (nrecord, nrecord, macro_rewind))
-        if markers0[0]*4 != nrecord:
-            msg = 'markers0=%s*4 len(record)=%s; table_name=%r' % (
-                markers0[0]*4, nrecord, self.table_name)
-            raise FortranMarkerError(msg)
-
-        markers1 = self.get_nmarkers(1, rewind=True)
-
-        if markers1[0] > 0:
-            while markers1[0] > 0:
-                markers1 = self.get_nmarkers(1, rewind=False)
-                if self.is_debug_file and debug:
-                    self.binary_debug.write('read_record - markers1 = [4, %i, 4]\n' % markers1[0])
-                unused_recordi, nrecordi = self._skip_block_ndata()
-                nrecord += nrecordi
-
-                markers1 = self.get_nmarkers(1, rewind=True)
-                if self.is_debug_file and debug:
-                    self.binary_debug.write('read_record - markers1 = [4, %i, 4]\n' % markers1[0])
-        return record, nrecord
+        return self.op2_reader._read_record_ndata(stream, debug, macro_rewind)[0]

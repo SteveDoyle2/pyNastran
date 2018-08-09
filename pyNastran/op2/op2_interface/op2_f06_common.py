@@ -9,6 +9,7 @@ from pyNastran.utils import object_attributes, integer_types
 from pyNastran.bdf.cards.base_card import deprecated
 from pyNastran.bdf.case_control_deck import CaseControlDeck
 
+from pyNastran.op2.tables.design_response import Responses
 from pyNastran.op2.op2_interface.random_results import (
     RADCONS, RAECONS, RASCONS, RAPCONS, RAFCONS, RAGCONS, RANCONS,
     RADEATC, RAEEATC, RASEATC, RAPEATC, RAFEATC, RAGEATC, RANEATC,
@@ -194,17 +195,6 @@ class StrengthRatio(object):
             'ctria3_composite_strain', 'ctria6_composite_strain', 'ctriar_composite_strain',
         ]
         return ['strength_ratio.' + table for table in tables]
-
-class Responses(object):
-    """Defines SOL 200 responses"""
-    def __init__(self):
-        self.convergence_data = None
-        self.weight_response = None
-        self.stress_response = None
-        self.strain_response = None
-        self.composite_stress_response = None
-        self.composite_strain_response = None
-        self.flutter_response = None
 
 class Deprecated(object):
     def __init__(self):
@@ -991,14 +981,16 @@ class OP2_F06_Common(Deprecated):
 
     def _get_table_types_testing(self):
         """testing method...don't use"""
+        skipped_attributes = [
+            'card_count', 'data_code', 'element_mapper', 'isubcase_name_map',
+            'labels', 'subtitles', 'additional_matrices', 'matrices', 'subcase_key',
+            'end_options', 'expected_times', 'generalized_tables', 'op2_reader']
+
         table_types = self.get_table_types()
         tables = object_attributes(self, 'public')
         tables = [table for table in tables
                   if isinstance(getattr(self, table), dict)
-                  and table not in [
-                      'card_count', 'data_code', 'element_mapper', 'isubcase_name_map',
-                      'labels', 'subtitles', 'additional_matrices', 'matrices', 'subcase_key',
-                      'end_options', 'expected_times', 'generalized_tables', '_mapped_tables']]
+                  and table not in skipped_attributes]
         for table in tables:
             if self.make_geom:
                 break
@@ -1059,6 +1051,7 @@ class OP2_F06_Common(Deprecated):
                 return key[0]
 
         msg = []
+        msg += self.responses.get_stats(short=short)
         if self.grid_point_weight:
             msg += self.grid_point_weight.get_stats(short=short)
 

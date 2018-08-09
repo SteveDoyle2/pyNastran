@@ -411,7 +411,7 @@ class OP2(OP2_Scalar):
         #del self.log
         #del self._card_parser, self._card_parser_prepare
         del self.generalized_tables
-        del self._mapped_tables
+        del self.op2_reader
 
         #print(object_attributes(self, mode="all", keys_to_skip=[]))
         with open(obj_filename, 'wb') as obj_file:

@@ -835,7 +835,7 @@ def sutherland_viscoscity(T):
         viscosity = 8.0382436E-10 * T
     else:
         if T > 5400.:
-            msg = "WARNING:  viscosity - Temperature is too large (T>5400) T=%s\n" % T
+            msg = "WARNING:  viscosity - Temperature is too large (T>5400 R) T=%s\n" % T
             sys.stderr.write(msg)
         viscosity = 2.27E-8 * (T ** 1.5) / (T + 198.6)
     return viscosity

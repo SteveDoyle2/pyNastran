@@ -36,19 +36,14 @@ Defines the sub-OP2 class.  This should never be called outisde of the OP2 class
    - _create_binary_debug()
    - _make_tables()
    - _read_tables(table_name)
-   - _read_tol()
    - _skip_table(table_name)
-   - _read_dit()
    - _read_table_name(rewind=False, stop_on_failure=True)
    - _update_generalized_tables(tables)
-   - _skip_table_helper()
-   - _read_omm2()
    - _read_cmodext()
    - _read_cmodext_helper(marker_orig, debug=False)
    - _get_marker_n(nmarkers)
    - _read_geom_table()
    - _read_results_table()
-   - _print_month(month, day, year, zero, one)
    - _finish()
 
 """
@@ -69,6 +64,7 @@ from pyNastran import is_release
 from pyNastran.f06.errors import FatalError
 from pyNastran.op2.errors import SortCodeError, DeviceCodeError, FortranMarkerError
 from pyNastran.op2.tables.grid_point_weight import GridPointWeight
+from pyNastran.op2.op2_interface.op2_reader import OP2Reader
 
 #============================
 
@@ -715,24 +711,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             assert isinstance(debug_file, string_types), debug_file
             self.debug_file = debug_file
 
-        self._mapped_tables = {
-            b'GPL' : self._read_gpl,
-            #b'MEFF' : self._read_meff,
-            b'INTMOD' : self._read_intmod,
-            b'HISADD' : self._read_hisadd,
-            b'EXTDB' : self._read_extdb,
-            b'OMM2' : self._read_omm2,
-            b'TOL' : self._read_tol,
-            b'PCOMPTS' : self._read_pcompts,
-            b'MONITOR' : self._read_monitor,
-            b'AEMONPT' : self._read_aemonpt,
-            b'FOL' : self._read_fol,
-            b'SDF' : self._read_sdf,
-            b'IBULK' : self._read_ibulk,
-            b'CDDATA' : self._read_ibulk,
-            b'CMODEXT' : self._read_cmodext,
-            b'CSTM' : self._read_cstm,
-        }
+        self.op2_reader = OP2Reader(self)
 
     def set_subcases(self, subcases=None):
         """
@@ -851,7 +830,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             #b'RANCONS': [self._table_passer, self._table_passer], # Constraint mode element strain energy table (ORGY1)
 
 
-            b'R1TABRG': [self._table_passer, self._read_r1tabrg],
+            b'R1TABRG': [self._table_passer, self.op2_reader.read_r1tabrg],
             #b'TOL': [self._table_passer, self._table_passer],
 
             b'MATPOOL': [self._table_passer, self._table_passer], # DMIG bulk data entries
@@ -1358,7 +1337,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self._read_version()
 
         #=================
-        table_name = self._read_table_name(rewind=True, stop_on_failure=False)
+        table_name = self.op2_reader._read_table_name(rewind=True, stop_on_failure=False)
         if table_name is None:
             raise FatalError('There was a Nastran FATAL Error.  Check the F06.\nNo tables exist...')
 
@@ -1416,7 +1395,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             #if PY2:
                 #self._endian = b(self._endian)
         else:
-            self._goto(self.n)
+            self.op2_reader._goto(self.n)
 
 
         if self.read_mode == 1:
@@ -1425,9 +1404,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
     def _read_version(self):
         """reads the version header"""
         #try:
-        markers = self.get_nmarkers(1, rewind=True)
+        markers = self.op2_reader.get_nmarkers(1, rewind=True)
         #except:
-            #self._goto(0)
+            #self.op2_reader._goto(0)
             #try:
                 #self.f.read(4)
             #except:
@@ -1443,11 +1422,11 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             if self.is_debug_file:
                 self.binary_debug.write('marker = 3 -> PARAM,POST,-1?\n')
             self.post = -1
-            self.read_markers([3])
+            self.op2_reader.read_markers([3])
             data = self.read_block()   # TODO: is this the date?
             #assert len(data) == 12, len(data)
 
-            self.read_markers([7])
+            self.op2_reader.read_markers([7])
             data = self.read_block()
 
             if data == b'NASTRAN FORT TAPE ID CODE - ':
@@ -1516,7 +1495,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
             if self.is_debug_file:
                 self.binary_debug.write(data.decode(self._encoding) + '\n')
-            self.read_markers([-1, 0])
+            self.op2_reader.read_markers([-1, 0])
         elif markers == [2,]:  # PARAM, POST, -2
             if self.is_debug_file:
                 self.binary_debug.write('marker = 2 -> PARAM,POST,-2?\n')
@@ -1589,7 +1568,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
             self.table_name = table_name
             #if 0:
-                #self._skip_table(table_name)
+                #self.op2_reader._skip_table(table_name)
             #else:
             if table_name in self.generalized_tables:
                 t0 = self.f.tell()
@@ -1597,12 +1576,12 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 assert self.f.tell() != t0, 'the position was unchanged...'
             elif table_name in GEOM_TABLES:
                 self._read_geom_table()  # DIT (agard)
-            elif table_name in self._mapped_tables:
+            elif table_name in self.op2_reader.mapped_tables:
                 t0 = self.f.tell()
-                self._mapped_tables[table_name]()
+                self.op2_reader.mapped_tables[table_name]()
                 assert self.f.tell() != t0, 'the position was unchanged...'
             elif table_name == b'FRL':  # frequency response list
-                self._skip_table(self.table_name)
+                self.op2_reader._skip_table(self.table_name)
             elif table_name in MATRIX_TABLES:
                 self._read_matrix(table_name)
             elif table_name in RESULT_TABLES:
@@ -1638,94 +1617,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 )
                 raise NotImplementedError(msg)
 
-            table_name = self._read_table_name(rewind=True, stop_on_failure=False)
+            table_name = self.op2_reader._read_table_name(rewind=True, stop_on_failure=False)
         return table_names
-
-    def _read_tol(self):
-        """
-        This is probably broken for MSC Nastran
-
-        TOL
-        ---
-        -2 - nitimes?
-        -3 - list of times?
-
-        """
-        table_name = self._read_table_name(rewind=False, stop_on_failure=True)
-        self.read_markers([-1])
-        data = self._read_record()
-        #self.show_data(data)
-
-        self.read_markers([-2, 1, 0])
-        #self.show_ndata(440, types='if')
-        data = self._read_record()
-        #print('----')
-        self.read_markers([-3, 1, 0])
-        #self.show_ndata(440, types='if')
-        #print('----')
-        self.read_markers([0])
-        #data = self._read_record()
-
-
-        #self.show_ndata(440, types='ifs')
-
-        #self.show_data(data)
-        #aaaa
-
-    def _skip_table(self, table_name):
-        """bypasses the next table as quickly as possible"""
-        if table_name in ['DIT', 'DITS']:  # tables
-            self._read_dit()
-        elif table_name in ['PCOMPTS']:
-            self._read_pcompts()
-        else:
-            self._skip_table_helper()
-
-    def _read_table_name(self, rewind=False, stop_on_failure=True):
-        """Reads the next OP2 table name (e.g. OUG1, OES1X1)"""
-        table_name = None
-        data = None
-        if self.is_debug_file:
-            self.binary_debug.write('_read_table_name - rewind=%s\n' % rewind)
-        ni = self.n
-        structi = self.struct_8s
-        if stop_on_failure:
-            data = self._read_record(debug=False, macro_rewind=rewind)
-            table_name, = structi.unpack(data)
-            if self.is_debug_file and not rewind:
-                self.binary_debug.write('marker = [4, 2, 4]\n')
-                self.binary_debug.write('table_header = [8, %r, 8]\n\n' % table_name)
-            table_name = table_name.strip()
-        else:
-            try:
-                data = self._read_record(macro_rewind=rewind)
-                table_name, = structi.unpack(data)
-                table_name = table_name.strip()
-            except:
-                # we're done reading
-                self.n = ni
-                self.f.seek(self.n)
-
-                try:
-                    # we have a trailing 0 marker
-                    self.read_markers([0], macro_rewind=rewind)
-                except:
-                    # if we hit this block, we have a FATAL error
-                    if not self._nastran_format.lower().startswith('imat') and self.post != -4:
-                        self.f.seek(self.n)
-                        self.show(1000)
-                        raise FatalError('There was a Nastran FATAL Error.  '
-                                         'Check the F06.\nlast table=%r; post=%s' % (
-                                             self.table_name, self.post))
-                table_name = None
-
-                # we're done reading, so we're going to ignore the rewind
-                rewind = False
-
-        if rewind:
-            self.n = ni
-            self.f.seek(self.n)
-        return table_name
 
     def set_additional_generalized_tables_to_read(self, tables):
         """
@@ -1853,23 +1746,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 else:
                     self.additional_matrices[b(matrix_name)] = matrix
 
-    def _skip_table_helper(self):
-        """
-        Skips the majority of geometry/result tables as they follow a very standard format.
-        Other tables don't follow this format.
-
-        """
-        self.table_name = self._read_table_name(rewind=False)
-        if self.is_debug_file:
-            self.binary_debug.write('skipping table...%r\n' % self.table_name)
-        self.log.warning('    skipping table_helper = %s' % self.table_name)
-
-        self.read_markers([-1])
-        data = self._skip_record()
-        self.read_markers([-2, 1, 0])
-        data = self._skip_record()
-        self._skip_subtables()
-
     def _get_marker_n(self, nmarkers):
         """
         Gets N markers
@@ -1898,14 +1774,14 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
     def _read_geom_table(self):
         """Reads a geometry table"""
-        self.table_name = self._read_table_name(rewind=False)
+        self.table_name = self.op2_reader._read_table_name(rewind=False)
         if self.is_debug_file:
             self.binary_debug.write('_read_geom_table - %s\n' % self.table_name)
-        self.read_markers([-1])
+        self.op2_reader.read_markers([-1])
         data = self._read_record()
 
-        self.read_markers([-2, 1, 0])
-        data, ndata = self._read_record_ndata()
+        self.op2_reader.read_markers([-2, 1, 0])
+        data, ndata = self.op2_reader._read_record_ndata()
         if ndata == 8:
             subtable_name, = self.struct_8s.unpack(data)
         else:
@@ -1925,17 +1801,17 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         """Reads a results table"""
         if self.is_debug_file:
             self.binary_debug.write('read_results_table - %s\n' % self.table_name)
-        self.table_name = self._read_table_name(rewind=False)
-        self.read_markers([-1])
+        self.table_name = self.op2_reader._read_table_name(rewind=False)
+        self.op2_reader.read_markers([-1])
         if self.is_debug_file:
             self.binary_debug.write('---markers = [-1]---\n')
             #self.binary_debug.write('marker = [4, -1, 4]\n')
         data = self._read_record()
 
-        self.read_markers([-2, 1, 0])
+        self.op2_reader.read_markers([-2, 1, 0])
         if self.is_debug_file:
             self.binary_debug.write('---markers = [-2, 1, 0]---\n')
-        data, ndata = self._read_record_ndata()
+        data, ndata = self.op2_reader._read_record_ndata()
         if ndata == 8:
             subtable_name = self.struct_8s.unpack(data)
             if self.is_debug_file:
@@ -1947,7 +1823,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 self.binary_debug.write('  recordi = [%r, %i, %i, %i, %i, %i]\n'  % (
                     subtable_name, month, day, year, zero, one))
                 self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
-            self._print_month(month, day, year, zero, one)
+            self.op2_reader._print_month(month, day, year, zero, one)
         elif ndata == 612: # ???
             strings, ints, floats = self.show_data(data)
             msg = 'len(data) = %i\n' % ndata
@@ -1969,34 +1845,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 self.subtable_name, subtable_name))
         self.subtable_name = subtable_name
         self._read_subtables()
-
-    def _print_month(self, month, day, year, zero, one):
-        """
-        Creates the self.date attribute from the 2-digit year.
-
-        Parameters
-        ----------
-        month : int
-            the month (integer <= 12)
-        day :  int
-            the day (integer <= 31)
-        year : int
-            the day (integer <= 99)
-        zero : int
-            a dummy integer (???)
-        one : int
-            a dummy integer (???)
-
-        """
-        month, day, year = self._set_op2_date(month, day, year)
-
-        #self.log.debug("%s/%s/%4i zero=%s one=%s" % (month, day, year, zero, one))
-        #if self.is_debug_file:
-        if self.is_debug_file:
-            self.binary_debug.write('  [subtable_name, month=%i, day=%i, year=%i, '
-                                    'zero=%i, one=%i]\n\n' % (month, day, year, zero, one))
-        #assert zero == 0, zero  # is this the RTABLE indicator???
-        assert one in [0, 1], one  # 0, 50
 
     def _finish(self):
         """

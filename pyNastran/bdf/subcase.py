@@ -233,7 +233,7 @@ class Subcase(object):
             else:
                 self._write_op2_error_msg(log, self.log, msg, data_code)
 
-        elif table_name in ['OQG1', 'OQG2']:
+        elif table_name in ['OQG1', 'OQG2', 'OQGV1']:
             if table_code == 3:
                 self.add('SPCFORCES', 'ALL', options, 'STRESS-type')
             else:
