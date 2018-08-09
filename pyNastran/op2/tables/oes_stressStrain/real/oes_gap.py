@@ -36,7 +36,14 @@ class NonlinearGapStressArray(OES_Object):
         self.ielement = 0
 
     def _get_msgs(self):
-        raise NotImplementedError('%s needs to implement _get_msgs' % self.__class__.__name__)
+        msgs = [
+            '                      S T R E S S E S   ( F O R C E S )   I N   G A P   E L E M E N T S      ( C G A P )'
+            ' '
+            '    ELEMENT   - F O R C E S   I N   E L E M   S Y S T -       - D I S P L A C E M E N T S   I N   E L E M   S Y S T -'
+            '       ID       COMP-X       SHEAR-Y       SHEAR-Z       AXIAL-U       TOTAL-V       TOTAL-W       SLIP-V        SLIP-W    STATUS'
+            #'       3801   3.71080E+05   0.0           0.0           2.37879E-01   9.51516E-01  -5.55112E-17   9.51516E-01  -5.55112E-17 SLIDE   '
+        ]
+        return msgs
 
     def get_headers(self):
         headers = ['compX', 'shearY', 'shearZ', 'axialU', 'shearV', 'shearW', 'slipV', 'slipW']

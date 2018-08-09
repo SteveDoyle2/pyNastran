@@ -1,5 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from itertools import cycle
 import numpy as np
 try:
     import pandas as pd  # type: ignore
@@ -92,7 +93,7 @@ class ComplexBendArray(OES_Object):
         headers = self.headers
         column_names, column_values = self._build_dataframe_transient_header()
         self.data_frame = pd.Panel(self.data, items=column_values,
-                                   major_axis=self.element, minor_axis=self.headers).to_frame()
+                                   major_axis=self.element_node, minor_axis=headers).to_frame()
         self.data_frame.columns.names = column_names
         self.data_frame.index.names = ['ElementID', 'Item']
 
@@ -172,6 +173,99 @@ class ComplexBendArray(OES_Object):
 
     def get_headers(self):
         return self.headers
+
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
+        """
+              ELEMENT-ID =    6901'
+                                 C O M P L E X   S T R E S S E S   I N   B E N D   E L E M E N T S   ( C B E N D )
+                                                                  (REAL/IMAGINARY)
+                                CIRC.      LOCATION         LOCATION         LOCATION         LOCATION
+           FREQUENCY   GRID END  ANG.         C                D                E                F
+        '0 0.0          6901   A    0     1.384767E+01     6.258920E-01    -1.217803E+01     1.043753E+00
+        '                                -4.615430E-01    -2.086098E-02     4.058937E-01    -3.478828E-02
+        """
+        msg_temp = _get_cbend_msg(is_mag_phase, is_sort1)
+        ntimes = self.data.shape[0]
+        eids = self.element_node[:, 0]
+        nids = self.element_node[:, 1]
+        counter = cycle([0, 1])
+        if self.is_sort1:
+            if is_sort1:
+                for itime in range(ntimes):
+                    dt = self._times[itime]
+
+                    dt_line = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
+                    header[1] = dt_line
+                    msg = header + msg_temp
+                    f06_file.write('\n'.join(msg))
+
+                    # [angle, sc, sd, se, sf]
+                    angles = self.data[itime, :, 0]
+                    scs = self.data[itime, :, 1]
+                    sds = self.data[itime, :, 2]
+                    ses = self.data[itime, :, 3]
+                    sfs = self.data[itime, :, 4]
+                    assert len(eids) == len(angles)
+                    assert len(angles) > 0, angles
+                    for i, eid, nid, anglei, sci, sdi, sei, sfi in zip(counter, eids, nids, angles, scs, sds, ses, sfs):
+                        assert isinstance(eid, ints), 'eid=%s type=%s' % (eid, type(eid))
+                        [sc_real, sc_imag,
+                         sd_real, sd_imag,
+                         se_real, se_imag,
+                         sf_real, sf_imag,] = write_imag_floats_13e([sci, sdi, sei, sfi], is_mag_phase)
+
+                        #f.write('                      28                  0.0          /  0.0                           0.0          /  0.0\n')
+
+                        #'      ELEMENT-ID =    6901'
+                        #'                         C O M P L E X   S T R E S S E S   I N   B E N D   E L E M E N T S   ( C B E N D ) '
+                        #'                                                          (REAL/IMAGINARY)'
+                        #'                        CIRC.      LOCATION         LOCATION         LOCATION         LOCATION'
+                        #'   FREQUENCY   GRID END  ANG.         C                D                E                F'
+                        #'0 0.0          6901   A    0     1.384767E+01     6.258920E-01    -1.217803E+01     1.043753E+00'
+                        #'                                -4.615430E-01    -2.086098E-02     4.058937E-01    -3.478828E-02'
+                        if i == 0:
+                            f06_file.write(
+                                '0%12i %8i  A  %.2f %-13s    %-13s    %-13s    %s\n'
+                                ' %12s %8s          %-13s    %-13s    %-13s    %s\n'% (
+                                    eid, nid, anglei.real,
+                                    sc_real, sd_real, se_real, sf_real,
+                                    '', '',
+                                    sc_imag, sd_imag, se_imag, sf_imag,
+                                ))
+                        else:
+                            f06_file.write(
+                                '0%12s %8i  B  %.2f %-13s    %-13s    %-13s    %s\n'
+                                ' %12s %8s          %-13s    %-13s    %-13s    %s\n'% (
+                                    '', nid, anglei.real,
+                                    sc_real, sd_real, se_real, sf_real,
+                                    '', '',
+                                    sc_imag, sd_imag, se_imag, sf_imag,
+                                ))
+                    f06_file.write(page_stamp % page_num)
+                    page_num += 1
+            else:
+                raise NotImplementedError('ComplexBendArray-sort2')
+        else:
+            raise NotImplementedError('ComplexBendArray-sort2')
+        return page_num - 1
+
+def _get_cbend_msg(is_mag_phase, is_sort1):
+    if is_mag_phase:
+        raise NotImplementedError()
+    else:
+        realimag_magphase = '                                                          (REAL/IMAGINARY)'
+
+    msg = [
+        '                         C O M P L E X   S T R E S S E S   I N   B E N D   E L E M E N T S   ( C B E N D ) ',
+        realimag_magphase,
+        '                        CIRC.      LOCATION         LOCATION         LOCATION         LOCATION',
+    ]
+    if is_sort1:
+        msg.append('   ELEMENT-ID  GRID END  ANG.         C                D                E                F\n')
+    else:
+        msg.append('   FREQUENCY   GRID END  ANG.         C                D                E                F\n')
+    return msg
 
 class ComplexBendStressArray(ComplexBendArray, StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
