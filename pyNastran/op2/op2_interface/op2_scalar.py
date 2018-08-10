@@ -1278,7 +1278,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 "All files (*.*)|*.*"
             wildcard_qt = "Nastran OP2 (*.op2);;All files (*)"
             title = 'Please select a OP2 to load'
-            op2_filename, wildcard_level = load_file_dialog(
+            op2_filename, unused_wildcard_level = load_file_dialog(
                 title, wildcard_wx, wildcard_qt, dirname='')
             assert op2_filename is not None, op2_filename
         return op2_filename
@@ -1475,7 +1475,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 self.generalized_tables[table_name](self)
                 assert self.f.tell() != t0, 'the position was unchanged...'
             elif table_name in GEOM_TABLES:
-                op2_reader._read_geom_table()  # DIT (agard)
+                op2_reader.read_geom_table()  # DIT (agard)
             elif table_name in op2_reader.mapped_tables:
                 t0 = self.f.tell()
                 op2_reader.mapped_tables[table_name]()
@@ -1483,13 +1483,13 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             elif table_name == b'FRL':  # frequency response list
                 op2_reader._skip_table(self.table_name)
             elif table_name in MATRIX_TABLES:
-                op2_reader._read_matrix(table_name)
+                op2_reader.read_matrix(table_name)
             elif table_name in RESULT_TABLES:
-                op2_reader._read_results_table()
+                op2_reader.read_results_table()
             elif self.skip_undefined_matrices:
-                op2_reader._read_matrix(table_name)
+                op2_reader.read_matrix(table_name)
             elif table_name.strip() in self.additional_matrices:
-                op2_reader._read_matrix(table_name)
+                op2_reader.read_matrix(table_name)
             else:
                 msg = (
                     'Invalid Table = %r\n\n'
@@ -1666,7 +1666,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
 def main():  # pragma: no cover
     """testing pickling"""
-    from pickle import dumps, dump, load, loads
+    from pickle import dump, load
     txt_filename = 'solid_shell_bar.txt'
     pickle_file = open(txt_filename, 'wb')
     op2_filename = 'solid_shell_bar.op2'

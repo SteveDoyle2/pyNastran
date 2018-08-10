@@ -26,7 +26,7 @@ Defines various tables that don't fit in other sections:
   - Matrix
     - _get_matrix_row_fmt_nterms_nfloats(self, nvalues, tout)
     - _skip_matrix_mat(self)
-    - _read_matrix(self, table_name)
+    - read_matrix(self, table_name)
     - _read_matpool_matrix(self)
     - _read_matrix_mat(self)
     - grids_comp_array_to_index(grids1, comps1, grids2, comps2,
@@ -38,7 +38,7 @@ Defines various tables that don't fit in other sections:
     - _skip_subtables(self)
     - _skip_table_helper(self)
     - _print_month(self, month, day, year, zero, one)
-    - _read_results_table(self)
+    - read_results_table(self)
 """
 from __future__ import print_function, unicode_literals
 from copy import deepcopy
@@ -622,7 +622,7 @@ class OP2Reader(object):
         op2.table_name = self._read_table_name(rewind=False)
         self.log.debug('table_name = %r' % op2.table_name)
         if self.is_debug_file:
-            self.binary_debug.write('_read_geom_table - %s\n' % op2.table_name)
+            self.binary_debug.write('read_geom_table - %s\n' % op2.table_name)
         self.read_markers([-1])
         if self.is_debug_file:
             self.binary_debug.write('---markers = [-1]---\n')
@@ -741,7 +741,7 @@ class OP2Reader(object):
         op2.table_name = self._read_table_name(rewind=False)
         op2.log.debug('table_name = %r' % op2.table_name)
         if self.is_debug_file:
-            self.binary_debug.write('_read_geom_table - %s\n' % op2.table_name)
+            self.binary_debug.write('read_geom_table - %s\n' % op2.table_name)
         self.read_markers([-1])
         if self.is_debug_file:
             self.binary_debug.write('---markers = [-1]---\n')
@@ -864,7 +864,7 @@ class OP2Reader(object):
         op2.table_name = self._read_table_name(rewind=False)
         op2.log.debug('table_name = %r' % op2.table_name)
         if self.is_debug_file:
-            self.binary_debug.write('_read_geom_table - %s\n' % op2.table_name)
+            self.binary_debug.write('read_geom_table - %s\n' % op2.table_name)
         self.read_markers([-1])
         if self.is_debug_file:
             self.binary_debug.write('---markers = [-1]---\n')
@@ -892,7 +892,7 @@ class OP2Reader(object):
         op2.table_name = self._read_table_name(rewind=False)
         #op2.log.debug('table_name = %r' % op2.table_name)
         if self.is_debug_file:
-            self.binary_debug.write('_read_geom_table - %s\n' % op2.table_name)
+            self.binary_debug.write('read_geom_table - %s\n' % op2.table_name)
         self.read_markers([-1])
         if self.is_debug_file:
             self.binary_debug.write('---markers = [-1]---\n')
@@ -1508,7 +1508,7 @@ class OP2Reader(object):
             niter += 1
         raise RuntimeError('this should never happen; n=%s' % niter_max)
 
-    def _read_matrix(self, table_name):
+    def read_matrix(self, table_name):
         """
         general method for reading matrices and MATPOOL matrices
 
@@ -2544,7 +2544,7 @@ class OP2Reader(object):
         return True
 
 
-    def _read_results_table(self):
+    def read_results_table(self):
         """Reads a results table"""
         op2 = self.op2
         if self.is_debug_file:
@@ -2594,12 +2594,12 @@ class OP2Reader(object):
         op2.subtable_name = subtable_name
         self._read_subtables()
 
-    def _read_geom_table(self):
+    def read_geom_table(self):
         """Reads a geometry table"""
         op2 = self.op2
         op2.table_name = self._read_table_name(rewind=False)
         if self.is_debug_file:
-            self.binary_debug.write('_read_geom_table - %s\n' % op2.table_name)
+            self.binary_debug.write('read_geom_table - %s\n' % op2.table_name)
         self.read_markers([-1])
         data = self._read_record()
 
@@ -2619,6 +2619,69 @@ class OP2Reader(object):
 
         op2.subtable_name = subtable_name.rstrip()
         self._read_subtables()
+
+    def _read_subtables(self):
+        """reads a series of subtables"""
+        # this parameters is used for numpy streaming
+        op2 = self.op2
+        op2._table4_count = 0
+        op2.is_table_1 = True
+        op2._data_factor = 1
+
+        #nstart = op2.n
+        op2.isubtable = -3
+        self.read_markers([-3, 1, 0])
+        if self.is_debug_file:
+            self.binary_debug.write('***isubtable = %i\n' % op2.isubtable)
+            self.binary_debug.write('---markers = [-3, 1, 0]---\n')
+        table_mapper = op2._get_table_mapper()
+
+        # get the parsing functions (table3_parser, table4_parser)
+        # or find out we're going to be skipping the tables
+        #
+        # table3 - the table with the meta data (e.g. subcase_id, time, is_stress/strain)
+        # table4 - the actual results data
+        #
+        # we indicate table3/4 by isubtable, which starts from -3 (so table3) and counts
+        # down (yes down) to 4 to indicate table4.  If we count down again, we end up
+        # back at table 3 (with isubtable=-5), which will occur in the case of multiple
+        # times/element types/results in a single macro table (e.g. OUG, OES).
+        if op2.table_name in table_mapper:
+            #if self.read_mode == 2:
+                #self.log.debug("table_name = %r" % op2.table_name)
+
+            table3_parser, table4_parser = table_mapper[op2.table_name]
+            passer = False
+        else:
+            if self.read_mode == 2:
+                self.log.info("skipping table_name = %r" % op2.table_name)
+                    #raise NotImplementedError(op2.table_name)
+            table3_parser = None
+            table4_parser = None
+            passer = True
+
+        # we need to check the marker, so we read it and rewind, so we don't
+        # screw up our positioning in the file
+        markers = self.get_nmarkers(1, rewind=True)
+        if self.is_debug_file:
+            self.binary_debug.write('---marker0 = %s---\n' % markers)
+
+        # while the subtables aren't done
+        while markers[0] != 0:
+            op2.is_start_of_subtable = True
+            if self.is_debug_file:
+                self.binary_debug.write('***isubtable = %i\n' % op2.isubtable)
+            self._read_subtable_3_4(table3_parser, table4_parser, passer)
+            #force_table4 = self._read_subtable_3_4(table3_parser, table4_parser, passer)
+            op2.isubtable -= 1
+            self.read_markers([op2.isubtable, 1, 0])
+            markers = self.get_nmarkers(1, rewind=True)
+        if self.is_debug_file:
+            self.binary_debug.write('breaking on marker=%r\n' % str(markers))
+
+        # we've finished reading all subtables, but have one last marker to read
+        self.read_markers([0])
+        op2._finish()
 
     def _read_subtable_3_4(self, table3_parser, table4_parser, passer):
         """

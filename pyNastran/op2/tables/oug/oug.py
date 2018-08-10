@@ -338,29 +338,29 @@ class OUG(OP2Common):
             raise NotImplementedError(self.code_information())
         return n
 
-    def _read_eigenvector_displacement_solution_set(self, data, ndata):
-        """
-        table_code = 14
-        """
-        raise NotImplementedError()
+    #def _read_eigenvector_displacement_solution_set(self, data, ndata):
+        #"""
+        #table_code = 14
+        #"""
+        #raise NotImplementedError()
 
-    def _read_displacement_solution_set(self, data, ndata):
-        """
-        table_code = 15
-        """
-        raise NotImplementedError()
+    #def _read_displacement_solution_set(self, data, ndata):
+        #"""
+        #table_code = 15
+        #"""
+        #raise NotImplementedError()
 
-    def _read_velocity_solution_set(self, data, ndata):
-        """
-        table_code = 16
-        """
-        raise NotImplementedError()
+    #def _read_velocity_solution_set(self, data, ndata):
+        #"""
+        #table_code = 16
+        #"""
+        #raise NotImplementedError()
 
-    def _read_acceleration_solution_set(self, data, ndata):
-        """
-        table_code = 17
-        """
-        raise NotImplementedError()
+    #def _read_acceleration_solution_set(self, data, ndata):
+        #"""
+        #table_code = 17
+        #"""
+        #raise NotImplementedError()
 
     def _setup_op2_subcase(self, word):
         """

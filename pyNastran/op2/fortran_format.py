@@ -165,68 +165,6 @@ class FortranFormat(object):
     def _get_table_mapper(self):
         raise NotImplementedError('this should be overwritten')
 
-    def _read_subtables(self):
-        """reads a series of subtables"""
-        # this parameters is used for numpy streaming
-        self._table4_count = 0
-        self.is_table_1 = True
-        self._data_factor = 1
-
-        #nstart = self.n
-        self.isubtable = -3
-        self.op2_reader.read_markers([-3, 1, 0])
-        if self.is_debug_file:
-            self.binary_debug.write('***isubtable = %i\n' % self.isubtable)
-            self.binary_debug.write('---markers = [-3, 1, 0]---\n')
-        table_mapper = self._get_table_mapper()
-
-        # get the parsing functions (table3_parser, table4_parser)
-        # or find out we're going to be skipping the tables
-        #
-        # table3 - the table with the meta data (e.g. subcase_id, time, is_stress/strain)
-        # table4 - the actual results data
-        #
-        # we indicate table3/4 by isubtable, which starts from -3 (so table3) and counts
-        # down (yes down) to 4 to indicate table4.  If we count down again, we end up
-        # back at table 3 (with isubtable=-5), which will occur in the case of multiple
-        # times/element types/results in a single macro table (e.g. OUG, OES).
-        if self.table_name in table_mapper:
-            #if self.read_mode == 2:
-                #self.log.debug("table_name = %r" % self.table_name)
-
-            table3_parser, table4_parser = table_mapper[self.table_name]
-            passer = False
-        else:
-            if self.read_mode == 2:
-                self.log.info("skipping table_name = %r" % self.table_name)
-                    #raise NotImplementedError(self.table_name)
-            table3_parser = None
-            table4_parser = None
-            passer = True
-
-        # we need to check the marker, so we read it and rewind, so we don't
-        # screw up our positioning in the file
-        markers = self.op2_reader.get_nmarkers(1, rewind=True)
-        if self.is_debug_file:
-            self.binary_debug.write('---marker0 = %s---\n' % markers)
-
-        # while the subtables aren't done
-        while markers[0] != 0:
-            self.is_start_of_subtable = True
-            if self.is_debug_file:
-                self.binary_debug.write('***isubtable = %i\n' % self.isubtable)
-            self.op2_reader._read_subtable_3_4(table3_parser, table4_parser, passer)
-            #force_table4 = self._read_subtable_3_4(table3_parser, table4_parser, passer)
-            self.isubtable -= 1
-            self.op2_reader.read_markers([self.isubtable, 1, 0])
-            markers = self.op2_reader.get_nmarkers(1, rewind=True)
-        if self.is_debug_file:
-            self.binary_debug.write('breaking on marker=%r\n' % str(markers))
-
-        # we've finished reading all subtables, but have one last marker to read
-        self.op2_reader.read_markers([0])
-        self._finish()
-
     def _finish(self):
         raise NotImplementedError('overwrite this')
 

@@ -26,7 +26,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 import os
 import sys
 from six import iteritems, string_types, itervalues
-from six.moves.cPickle import load, dump
+from six.moves.cPickle import load, dump, dumps
 
 import numpy as np
 
@@ -144,7 +144,7 @@ class OP2(OP2_Scalar):
         self.encoding = None
         self.set_mode(mode)
         make_geom = False
-        assert make_geom == False, make_geom
+        assert make_geom is False, make_geom
         OP2_Scalar.__init__(self, debug=debug, log=log, debug_file=debug_file)
         self.ask = False
 
@@ -578,13 +578,18 @@ class OP2(OP2_Scalar):
         if 'MP3F' in self.matrices:
             self.monitor3 = MONPNT3(self._frequencies, self.matrices['MP3F'])
 
-        # these are totally wrong...it doesn't go by component; it goes by inertial, external, flexibility, etc.
+        # these are totally wrong...it doesn't go by component;
+        # it goes by inertial, external, flexibility, etc.
         if 'PERF' in self.matrices:
-            #                                                           :)       ?       :)      :)      ?       ?
-            #self.monitor1 = MONPNT1(self.frequencies, self.matrices, ['PMRF', 'AFRF', 'PFRF', 'PGRF', 'AGRF', 'PERF', ])
 
-            #                                                           :)       ?       :)      :)2     ?       ?
-            self.monitor1 = MONPNT1(self._frequencies, self.matrices, ['PMRF', 'PERF', 'PFRF', 'AGRF', 'PGRF', 'AFRF', ])
+            self.monitor1 = MONPNT1(self.frequencies, self.matrices, [
+                # :)       ?       :)      :)      ?       ?
+                'PMRF', 'AFRF', 'PFRF', 'PGRF', 'AGRF', 'PERF', ])
+
+            #
+            self.monitor1 = MONPNT1(self._frequencies, self.matrices,
+                                    #  :)       ?       :)      :)2     ?       ?
+                                    ['PMRF', 'PERF', 'PFRF', 'AGRF', 'PGRF', 'AFRF', ])
 
     def _finalize(self):
         """internal method"""
