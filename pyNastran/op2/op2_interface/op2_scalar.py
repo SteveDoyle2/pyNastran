@@ -41,9 +41,7 @@ Defines the sub-OP2 class.  This should never be called outisde of the OP2 class
    - _update_generalized_tables(tables)
    - _read_cmodext()
    - _read_cmodext_helper(marker_orig, debug=False)
-   - _get_marker_n(nmarkers)
    - _read_geom_table()
-   - _read_results_table()
    - _finish()
 
 """
@@ -51,18 +49,16 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
 #import sys
-from struct import unpack, Struct
+from struct import unpack
 from collections import Counter
 from typing import List
 from six import binary_type, string_types, iteritems, PY2, PY3, b
-from six.moves import range
 
 from numpy import array
 import numpy as np
 
 from pyNastran import is_release
 from pyNastran.f06.errors import FatalError
-from pyNastran.op2.errors import SortCodeError, DeviceCodeError, FortranMarkerError
 from pyNastran.op2.tables.grid_point_weight import GridPointWeight
 from pyNastran.op2.op2_interface.op2_reader import OP2Reader
 
@@ -81,7 +77,6 @@ from pyNastran.op2.tables.opg_appliedLoads.opg import OPG
 from pyNastran.op2.tables.oqg_constraintForces.oqg import OQG
 from pyNastran.op2.tables.oug.oug import OUG
 from pyNastran.op2.tables.ogpwg import OGPWG
-from pyNastran.op2.tables.minor_tables import MinorTables
 from pyNastran.op2.fortran_format import FortranFormat
 
 from pyNastran.utils import is_binary_file
@@ -236,8 +231,10 @@ GEOM_TABLES = [
 ]
 
 NX_RESULT_TABLES = [
-    # OESVM1  - OES Table of           element stresses for frequency response analysis that includes von Mises stress output in SORT1 format.
-    # OESVM1C - OES Table of composite element stresses for frequency response analysis that includes von Mises stress output in SORT1 format.
+    # OESVM1  - OES Table of           element stresses
+    # OESVM1C - OES Table of composite element stresses
+    #           for frequency response analysis that includes von Mises stress
+    #           output in SORT1 format.
     b'OESVM1', b'OSTRVM1',
     b'OESVM1C', b'OSTRVM1C',
 
@@ -320,7 +317,8 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     b'OUPV1',
 
     # OUGV1PAT - Displacements in the basic coordinate system
-    # OUGV1  - Output (O) Displacements (U) in the global/g-set (G) coordinate system in vector (V) format and SORT1
+    # OUGV1  - Output (O) Displacements (U) in the global/g-set (G)
+    #          coordinate system in vector (V) format and SORT1
     # BOUGV1 - Displacements in the basic coordinate system
     # BOPHIG - Eigenvectors in the basic coordinate system
     # ROUGV1 - Relative OUGV1
@@ -586,7 +584,7 @@ MATRIX_TABLES = NX_MATRIX_TABLES + MSC_MATRIX_TABLES + AUTODESK_MATRIX_TABLES + 
 
 
 class OP2_Scalar(LAMA, ONR, OGPF,
-                 OEF, OES, OGS, OPG, OQG, OUG, OGPWG, MinorTables, FortranFormat):
+                 OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
     """
     Defines an interface for the Nastran OP2 file.
     """
@@ -677,6 +675,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self.f06_filename = None
         self._encoding = 'utf8'
 
+        #: should a MATPOOL "symmetric" matrix be stored as symmetric
+        #: it takes double the RAM, but is easier to use
+        self.apply_symmetry = True
+
         LAMA.__init__(self)
         ONR.__init__(self)
         OGPF.__init__(self)
@@ -690,7 +692,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         OQG.__init__(self)
         OUG.__init__(self)
         OGPWG.__init__(self)
-        MinorTables.__init__(self)
         FortranFormat.__init__(self)
 
         self.is_vectorized = False
@@ -1334,7 +1335,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         self._create_binary_debug()
         self._setup_op2()
-        self._read_version()
+        self.op2_reader.read_nastran_version()
 
         #=================
         table_name = self.op2_reader._read_table_name(rewind=True, stop_on_failure=False)
@@ -1401,108 +1402,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         if self.read_mode == 1:
             self._set_structs()
 
-    def _read_version(self):
-        """reads the version header"""
-        #try:
-        markers = self.op2_reader.get_nmarkers(1, rewind=True)
-        #except:
-            #self.op2_reader._goto(0)
-            #try:
-                #self.f.read(4)
-            #except:
-                #raise FatalError("The OP2 is empty.")
-            #raise
-        if self.is_debug_file:
-            if self.read_mode == 1:
-                self.binary_debug.write('read_mode = %s (vectorized; 1st pass)\n' % self.read_mode)
-            elif self.read_mode == 2:
-                self.binary_debug.write('read_mode = %s (vectorized; 2nd pass)\n' % self.read_mode)
-
-        if markers == [3,]:  # PARAM, POST, -1
-            if self.is_debug_file:
-                self.binary_debug.write('marker = 3 -> PARAM,POST,-1?\n')
-            self.post = -1
-            self.op2_reader.read_markers([3])
-            data = self.read_block()   # TODO: is this the date?
-            #assert len(data) == 12, len(data)
-
-            self.op2_reader.read_markers([7])
-            data = self.read_block()
-
-            if data == b'NASTRAN FORT TAPE ID CODE - ':
-                macro_version = 'nastran'
-            elif b'IMAT v' in data:
-                imat_version = data[6:11].encode('utf8')
-                macro_version = 'IMAT %s' % imat_version
-            else:
-                version_ints = Struct(self._endian + b'7i').unpack(data)
-                if version_ints == (1, 2, 3, 4, 5, 6, 7):
-                    macro_version = 'MSFC'
-                else:
-                    self.show_data(data)
-                    raise NotImplementedError(data)
-                #self.show_data(data)
-            if self.is_debug_file:
-                self.binary_debug.write('%r\n' % data)
-            #print('macro_version = %r' % macro_version)
-
-
-            data = self._read_record()
-            if self.is_debug_file:
-                self.binary_debug.write('%r\n' % data)
-            version = data.strip()
-
-            if macro_version == 'nastran':
-                if version.startswith(b'NX'):
-                    self.set_as_nx()
-                    self.set_table_type()
-                elif version.startswith(b'MODEP'):
-                    # TODO: why is this separate?
-                    # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_ac11103.op2
-                    self.set_as_nx()
-                    self.set_table_type()
-                elif version.startswith(b'AEROFREQ'):
-                    # TODO: why is this separate?
-                    # C:\Users\Steve\Dropbox\pyNastran_examples\move_tpl\loadf.op2
-                    self.set_as_msc()
-                    self.set_table_type()
-                elif version.startswith(b'AEROTRAN'):
-                    # TODO: why is this separate?
-                    # C:\Users\Steve\Dropbox\pyNastran_examples\move_tpl\loadf.op2
-                    self.set_as_msc()
-                    self.set_table_type()
-                elif version in [b'XXXXXXXX', b'V2005R3B']:
-                    self.set_as_msc()
-                    self.set_table_type()
-                elif version == b'OS12.210':
-                    self.set_as_optistruct()
-                    self.set_table_type()
-                elif version == b'OS11XXXX':
-                    self.set_as_radioss()
-                    self.set_table_type()
-                #elif data[:20] == b'XXXXXXXX20141   0   ':
-                    #self.set_as_msc()
-                    #self.set_table_type()
-                else:
-                    raise RuntimeError('unknown version=%r' % version)
-            elif macro_version.startswith('IMAT'):
-                assert version.startswith(b'ATA'), version
-                self._nastran_format = macro_version
-            elif macro_version == 'MSFC':
-                self._nastran_format = macro_version
-                #self.show_data(version)
-                #assert version.startswith(b'ATA'), version
-
-            if self.is_debug_file:
-                self.binary_debug.write(data.decode(self._encoding) + '\n')
-            self.op2_reader.read_markers([-1, 0])
-        elif markers == [2,]:  # PARAM, POST, -2
-            if self.is_debug_file:
-                self.binary_debug.write('marker = 2 -> PARAM,POST,-2?\n')
-            self.post = -2
-        else:
-            raise NotImplementedError(markers)
-
     #def create_unpickable_data(self):
         #raise NotImplementedError()
         ##==== not needed ====
@@ -1555,6 +1454,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             the table names that were read
 
         """
+        op2_reader = self.op2_reader
         table_names = []
         while table_name is not None:
             table_names.append(table_name)
@@ -1568,28 +1468,28 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
             self.table_name = table_name
             #if 0:
-                #self.op2_reader._skip_table(table_name)
+                #op2_reader._skip_table(table_name)
             #else:
             if table_name in self.generalized_tables:
                 t0 = self.f.tell()
                 self.generalized_tables[table_name](self)
                 assert self.f.tell() != t0, 'the position was unchanged...'
             elif table_name in GEOM_TABLES:
-                self._read_geom_table()  # DIT (agard)
-            elif table_name in self.op2_reader.mapped_tables:
+                op2_reader._read_geom_table()  # DIT (agard)
+            elif table_name in op2_reader.mapped_tables:
                 t0 = self.f.tell()
-                self.op2_reader.mapped_tables[table_name]()
+                op2_reader.mapped_tables[table_name]()
                 assert self.f.tell() != t0, 'the position was unchanged...'
             elif table_name == b'FRL':  # frequency response list
-                self.op2_reader._skip_table(self.table_name)
+                op2_reader._skip_table(self.table_name)
             elif table_name in MATRIX_TABLES:
-                self._read_matrix(table_name)
+                op2_reader._read_matrix(table_name)
             elif table_name in RESULT_TABLES:
-                self._read_results_table()
+                op2_reader._read_results_table()
             elif self.skip_undefined_matrices:
-                self._read_matrix(table_name)
+                op2_reader._read_matrix(table_name)
             elif table_name.strip() in self.additional_matrices:
-                self._read_matrix(table_name)
+                op2_reader._read_matrix(table_name)
             else:
                 msg = (
                     'Invalid Table = %r\n\n'
@@ -1609,15 +1509,17 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                     "      b'OES1X1' : False,\n"
                     '  }\n\n'
 
-                    'If you want to take control of the OP2 reader (mainly useful for obscure tables), see:\n'
+                    'If you want to take control of the OP2 reader (mainly useful '
+                    'for obscure tables), see:\n'
                     "  methods_dict = {\n"
                     "      b'OUGV1' : [method],\n"
                     '  }\n'
-                    '  model.set_additional_generalized_tables_to_read(methods_dict)\n' % table_name
+                    '  model.set_additional_generalized_tables_to_read(methods_dict)\n' % (
+                        table_name)
                 )
                 raise NotImplementedError(msg)
 
-            table_name = self.op2_reader._read_table_name(rewind=True, stop_on_failure=False)
+            table_name = op2_reader._read_table_name(rewind=True, stop_on_failure=False)
         return table_names
 
     def set_additional_generalized_tables_to_read(self, tables):
@@ -1745,106 +1647,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                     self.additional_matrices[matrix_name] = matrix
                 else:
                     self.additional_matrices[b(matrix_name)] = matrix
-
-    def _get_marker_n(self, nmarkers):
-        """
-        Gets N markers
-
-        A marker is a flag that is used.  It's a series of 3 ints (4, n, 4)
-        where n changes from marker to marker.
-
-        Parameters
-        ----------
-        nmarkers : int
-            the number of markers to read
-
-        Returns
-        -------
-        markers : List[int, int, int]
-            a list of nmarker integers
-
-        """
-        markers = []
-        struc = Struct('3i')
-        for unused_i in range(nmarkers):
-            block = self.f.read(12)
-            marker = struc.unpack(block)
-            markers.append(marker)
-        return markers
-
-    def _read_geom_table(self):
-        """Reads a geometry table"""
-        self.table_name = self.op2_reader._read_table_name(rewind=False)
-        if self.is_debug_file:
-            self.binary_debug.write('_read_geom_table - %s\n' % self.table_name)
-        self.op2_reader.read_markers([-1])
-        data = self._read_record()
-
-        self.op2_reader.read_markers([-2, 1, 0])
-        data, ndata = self.op2_reader._read_record_ndata()
-        if ndata == 8:
-            subtable_name, = self.struct_8s.unpack(data)
-        else:
-            strings, ints, floats = self.show_data(data)
-            msg = 'Unhandled table length error\n'
-            msg += 'table_name = %s\n' % self.table_name
-            msg += 'len(data) = %i\n' % ndata
-            msg += 'strings  = %r\n' % strings
-            msg += 'ints     = %r\n' % str(ints)
-            msg += 'floats   = %r' % str(floats)
-            raise NotImplementedError(msg)
-
-        self.subtable_name = subtable_name.rstrip()
-        self._read_subtables()
-
-    def _read_results_table(self):
-        """Reads a results table"""
-        if self.is_debug_file:
-            self.binary_debug.write('read_results_table - %s\n' % self.table_name)
-        self.table_name = self.op2_reader._read_table_name(rewind=False)
-        self.op2_reader.read_markers([-1])
-        if self.is_debug_file:
-            self.binary_debug.write('---markers = [-1]---\n')
-            #self.binary_debug.write('marker = [4, -1, 4]\n')
-        data = self._read_record()
-
-        self.op2_reader.read_markers([-2, 1, 0])
-        if self.is_debug_file:
-            self.binary_debug.write('---markers = [-2, 1, 0]---\n')
-        data, ndata = self.op2_reader._read_record_ndata()
-        if ndata == 8:
-            subtable_name = self.struct_8s.unpack(data)
-            if self.is_debug_file:
-                self.binary_debug.write('  recordi = [%r]\n'  % subtable_name)
-                self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
-        elif ndata == 28:
-            subtable_name, month, day, year, zero, one = unpack(self._endian + b'8s5i', data)
-            if self.is_debug_file:
-                self.binary_debug.write('  recordi = [%r, %i, %i, %i, %i, %i]\n'  % (
-                    subtable_name, month, day, year, zero, one))
-                self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
-            self.op2_reader._print_month(month, day, year, zero, one)
-        elif ndata == 612: # ???
-            strings, ints, floats = self.show_data(data)
-            msg = 'len(data) = %i\n' % ndata
-            #msg += 'strings  = %r\n' % strings
-            #msg += 'ints     = %r\n' % str(ints)
-            #msg += 'floats   = %r' % str(floats)
-            print(msg)
-            subtable_name, = self.struct_8s.unpack(data[:8])
-            print('subtable_name = %r' % subtable_name.strip())
-        else:
-            strings, ints, floats = self.show_data(data)
-            msg = 'len(data) = %i\n' % ndata
-            msg += 'strings  = %r\n' % strings
-            msg += 'ints     = %r\n' % str(ints)
-            msg += 'floats   = %r' % str(floats)
-            raise NotImplementedError(msg)
-        if hasattr(self, 'subtable_name'):
-            raise RuntimeError('the file hasnt been cleaned up; subtable_name_old=%s new=%s' % (
-                self.subtable_name, subtable_name))
-        self.subtable_name = subtable_name
-        self._read_subtables()
 
     def _finish(self):
         """

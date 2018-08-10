@@ -25,8 +25,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
 import sys
-from copy import deepcopy
-from six import iterkeys, iteritems, string_types, itervalues, b
+from six import iteritems, string_types, itervalues
 from six.moves.cPickle import load, dump
 
 import numpy as np
@@ -39,9 +38,9 @@ from pyNastran.op2.tables.monpnt import MONPNT1, MONPNT3
 from pyNastran.f06.errors import FatalError
 from pyNastran.op2.errors import SortCodeError, DeviceCodeError, FortranMarkerError
 #from pyNastran.op2.op2_interface.op2_writer import OP2Writer
-from pyNastran.op2.op2_interface.op2_f06_common import Op2F06Attributes
+#from pyNastran.op2.op2_interface.op2_f06_common import Op2F06Attributes
 from pyNastran.op2.op2_interface.op2_scalar import OP2_Scalar
-
+from pyNastran.utils import print_bad_path
 
 def read_op2(op2_filename=None, combine=True, subcases=None,
              exclude_results=None, include_results=None,
@@ -771,11 +770,11 @@ class OP2(OP2_Scalar):
 
                 if len(key0) == 5:
                     # ogs is optional
-                    isubcase, analysis_code, sort_code, count, isuperelmemnt_adaptivity_index, pval_step = key0
+                    isubcase, analysis_code, unused_sort_code, count, isuperelmemnt_adaptivity_index, pval_step = key0
                     key1 = (isubcase, analysis_code, 1, count, isuperelmemnt_adaptivity_index, pval_step)
                     key2 = (isubcase, analysis_code, 2, count, isuperelmemnt_adaptivity_index, pval_step)
                 else:
-                    isubcase, analysis_code, sort_code, count, isuperelmemnt_adaptivity_index, pval_step, ogs = key0
+                    isubcase, analysis_code, unused_sort_code, count, isuperelmemnt_adaptivity_index, pval_step, ogs = key0
                     key1 = (isubcase, analysis_code, 1, count, isuperelmemnt_adaptivity_index, pval_step, ogs)
                     key2 = (isubcase, analysis_code, 2, count, isuperelmemnt_adaptivity_index, pval_step, ogs)
 
@@ -885,7 +884,7 @@ class OP2(OP2_Scalar):
                     keys.append(key)
 
         #print(self.get_op2_stats())
-        keys_order = []
+        #keys_order = []
 
         # subcase_ids = self.subcase_key.keys()
 
@@ -1052,118 +1051,8 @@ class OP2(OP2_Scalar):
                 continue
             #print('-----------')
             for subcase, result in iteritems(disp_like_dict):
-                #print('result.name = ', result.class_name)
-                data = result.data
-                for cid, inode in iteritems(i_transform):
-                    if cid in [-1, 0]:
-                        continue
-                    coord = coords[cid]
-                    coord_type = coord.type
-                    cid_transform = coord.beta()
-
-                    # a global coordinate system has 1s along the main diagonal
-                    is_global_cid = False
-                    if np.array_equal([1., 1., 1.], np.diagonal(cid_transform)):
-                        is_global_cid = True
-
-                    if not is_global_cid and debug:
-                        self.log.debug('coord\n%s' % coord)
-                        self.log.debug(cid_transform)
-                        self.log.debug('inode = %s' % [str(val).rstrip('L') for val in inode.tolist()])
-                        self.log.debug('data.shape = %s' % str(data.shape))
-                        self.log.debug('len(inode) = %s' % len(inode))
-                        assert np.array_equal(inode, np.unique(inode))
-                    if coord_type in ['CORD2R', 'CORD1R']:
-                        if is_global_cid:
-                            #self.log.debug('is_global_cid')
-                            continue
-                        #self.log.debug('rectangular')
-
-
-                        # isat_tran.op2
-                        #  - nspoint = 4
-                        #  - ngrid = 5379
-                        #
-                        #  - ntotal = 5383
-                        #  data.shape = (101, 8, 6)
-                        translation = data[:, inode, :3]
-                        rotation = data[:, inode, 3:]
-                        data[:, inode, :3] = translation.dot(cid_transform)
-                        data[:, inode, 3:] = rotation.dot(cid_transform)
-                    elif coord_type in ['CORD2C', 'CORD1C']:
-                        #self.log.debug('cylindrical')
-                        if xyz_cid0 is None:
-                            msg = ('xyz_cid is required for cylindrical '
-                                   'coordinate transforms')
-                            raise RuntimeError(msg)
-                        xyzi = xyz_cid0[inode, :]
-                        rtz_cid = coord.xyz_to_coord_array(xyzi)
-                        theta = rtz_cid[:, 1]
-                        #self.log.debug('theta = %s' % list(theta))
-                        for itime in range(data.shape[0]):
-                            translation = data[itime, inode, :3]
-                            rotation = data[itime, inode, 3:]
-                            #theta_max1 = translation[:, 1].max()
-                            #theta_max2 = rotation[:, 1].max()
-                            #print('theta_max = ', max(theta_max1, theta_max2))
-
-                            if 0:
-                                # actually somewhat close
-                                translation[:, 1] += theta
-                                rotation[:, 1] += theta
-                                translation = coord.coord_to_xyz_array(data[itime, inode, :3])
-                                rotation = coord.coord_to_xyz_array(data[itime, inode, 3:])
-                            elif 0:
-                                # bad for spc (global_radial_cd)
-                                translation[:, 1] += theta
-                                rotation[:, 1] += theta
-                                translation = coord.coord_to_xyz_array(translation)
-                                rotation = coord.coord_to_xyz_array(rotation)
-                            elif 0:
-                                # very wrong...
-                                #print(translation.shape)
-                                translation[:, 1] += theta
-                                rotation[:, 1] += theta
-                            elif 1:
-                                pass
-                            else:
-                                raise RuntimeError('no option selected...')
-
-                            #if is_global_cid:
-                                #data[itime, inode, :3] = translation
-                                #data[itime, inode, 3:] = rotation
-                                #print('is_global_cid')
-                                #continue
-                            data[itime, inode, :3] = translation.dot(cid_transform)
-                            data[itime, inode, 3:] = rotation.dot(cid_transform)
-                    elif coord_type in ['CORD2S', 'CORD1S']:
-                        #print('spherical')
-                        if xyz_cid0 is None:
-                            msg = ('xyz_cid is required for spherical '
-                                   'coordinate transforms')
-                            raise RuntimeError(msg)
-                        xyzi = xyz_cid0[inode, :]
-                        rtp_cid = coord.xyz_to_coord_array(xyzi)
-                        theta = rtp_cid[:, 1]
-                        phi = rtp_cid[:, 2]
-                        for itime in range(data.shape[0]):
-                            translation = data[itime, inode, :3]
-                            rotation = data[itime, inode, 3:]
-                            if 0:
-                                translation[:, 1] += theta
-                                translation[:, 2] += phi
-                                rotation[:, 1] += theta
-                                rotation[:, 2] += phi
-                            translation = coord.coord_to_xyz_array(translation)
-                            rotation = coord.coord_to_xyz_array(rotation)
-                            if is_global_cid:
-                                data[itime, inode, :3] = translation
-                                data[itime, inode, 3:] = rotation
-                                continue
-                            data[itime, inode, :3] = translation.dot(cid_transform)
-                            data[itime, inode, 3:] = rotation.dot(cid_transform)
-                    else:
-                        raise RuntimeError(coord)
+                transform_displacement_to_global(subcase, result, i_transform, coords, xyz_cid0,
+                                                 self.log, debug=debug)
 
     def transform_gpforce_to_global(self, nids_all, nids_transform, i_transform, coords, xyz_cid0=None):
         """
@@ -1190,7 +1079,7 @@ class OP2(OP2_Scalar):
             Use this if CD is only rectangular
             Use this if CD is not rectangular
         xyz_cid0 : ???
-            ???
+            required for cylindrical/spherical coordinate systems
 
         """
         disp_like_dicts = [
@@ -1203,175 +1092,301 @@ class OP2(OP2_Scalar):
                 continue
             self.log.debug('-----------')
             for subcase, result in iteritems(disp_like_dict):
-                self.log.debug('result.name = %s' % result.class_name)
-                data = result.data
+                transform_gpforce_to_globali(subcase, result,
+                                             nids_all, nids_transform,
+                                             i_transform, coords, xyz_cid0, self.log)
 
-                # inode_xyz :
-                #    the indices of the nodes in the model grid point list
-                for cid, inode_xyz in iteritems(i_transform):
-                    self.log.debug('cid = %s' % cid)
-                    if cid in [-1, 0]:
-                        continue
-                    coord = coords[cid]
-                    coord_type = coord.type
-                    cid_transform = coord.beta()
-
-                    # a global coordinate system has 1s along the main diagonal
-                    is_global_cid = False
-                    if np.array_equal([1., 1., 1.], np.diagonal(cid_transform)):
-                        is_global_cid = True
-                    nids = np.array(nids_transform[cid])
-
-                    #from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
-                    #result = RealGridPointForcesArray()
-                    if result.is_unique: # TODO: doesn't support preload
-                        #self.node_element = zeros((self.ntimes, self.ntotal, 2), dtype='int32')
-                        nids_all_gp = result.node_element[0, :, 0]
-
-                        self.log.debug('nids_all_gp = %s' % list(nids_all_gp))
-                        self.log.debug('nids = %s' % list(nids))
-
-                        # the indices of the grid points that we're transforming
-                        inode_gp = np.where(np.in1d(nids_all_gp, nids))[0]
-                        self.log.debug('inode_gp = %s' % list(inode_gp))
-                        nids_gp = nids_all_gp[inode_gp]
-                        self.log.debug('nids_gp = %s' % list(nids_gp))
-                        assert np.array_equal(np.unique(nids_gp), np.unique(nids)), 'nids_gp=%s nids=%s' % (nids_gp, nids)
-                        self.log.debug('---------')
-                        # the transformation index to go from xyz to the grid point forces
-                        inode_gp_xyz = np.searchsorted(nids_all, nids_all_gp)
-                        self.log.debug('nids_all = %s' % list(nids_all))
-                        self.log.debug('nids_all_gp = %s' % list(nids_all_gp))
-                        self.log.debug('inode_xyz = %s' % list(inode_xyz))
-                        self.log.debug('inode_gp_xyz = %s' % list(inode_gp_xyz))
-                        sys.stdout.flush()
-                        assert len(inode_gp_xyz) == len(nids_all_gp), len(nids_all_gp)
-
-                    else:
-                        raise NotImplementedError(result)
-
-                    if coord_type in ['CORD2R', 'CORD1R']:
-                        if is_global_cid:
-                            continue
-                        #print('coord\n', coord)
-                        #print(cid_transform)
-                        #print('inode = %s' % inode)
-                        #print('rectangular')
-                        translation = data[:, inode_gp, :3]
-                        rotation = data[:, inode_gp, 3:]
-                        data[:, inode_gp, :3] = translation.dot(cid_transform)
-                        data[:, inode_gp, 3:] = rotation.dot(cid_transform)
-                    elif coord_type in ['CORD2C', 'CORD1C']:
-                        #print('cylindrical')
-                        if xyz_cid0 is None:
-                            msg = ('xyz_cid is required for cylindrical '
-                                   'coordinate transforms')
-                            raise RuntimeError(msg)
-                        xyzi = xyz_cid0[inode_xyz, :]
-                        rtz_cid = coord.xyz_to_coord_array(xyzi)
-                        theta_xyz = rtz_cid[inode_xyz, 1]
-                        theta = rtz_cid[inode_gp_xyz, 1]
-                        self.log.debug('coord\n%s' % coord)
-                        self.log.debug(cid_transform)
-                        #print('theta_xyz = %s' % list(theta_xyz))
-                        #print('theta     = %s' % list(theta))
-
-                        for itime in range(data.shape[0]):
-                            #inode = np.where(np.in1d(nids_all, 2))[0]
-                            #print('start', data[itime, inode_gp, :3])
-                            translation = data[itime, inode_gp, :3]
-                            rotation = data[itime, inode_gp, 3:]
-                            if 0:
-                                # horrible
-                                translation = coord.coord_to_xyz_array(data[itime, inode_gp, :3])
-                                rotation = coord.coord_to_xyz_array(data[itime, inode_gp, 3:])
-                                data[itime, inode_gp, :3] = translation.dot(cid_transform)
-                                data[itime, inode_gp, 3:] = rotation.dot(cid_transform)
-                            elif 0:
-                                # expectedly horrible
-                                translation[:, 1] += theta
-                                rotation[:, 1] += theta
-                                translation = coord.coord_to_xyz_array(data[itime, inode_gp, :3])
-                                rotation = coord.coord_to_xyz_array(data[itime, inode_gp, 3:])
-                                data[itime, inode_gp, :3] = translation.dot(cid_transform)
-                                data[itime, inode_gp, 3:] = rotation.dot(cid_transform)
-                            elif 0:
-                                # actually not bad...
-                                translation = coord.xyz_to_coord_array(translation)
-                                rotation = coord.xyz_to_coord_array(rotation)
-                                translation[:, 1] += theta
-                                rotation[:, 1] += theta
-                                translation = coord.coord_to_xyz_array(translation)
-                                rotation = coord.coord_to_xyz_array(rotation)
-                                data[itime, inode_gp, :3] = translation.dot(cid_transform)
-                                data[itime, inode_gp, 3:] = rotation.dot(cid_transform)
-                            elif 0:
-                                # not that bad, worse than previous
-                                translation = coord.xyz_to_coord_array(translation)
-                                rotation = coord.xyz_to_coord_array(rotation)
-                                translation[:, 1] += theta
-                                rotation[:, 1] += theta
-                                translation = coord.coord_to_xyz_array(translation)
-                                rotation = coord.coord_to_xyz_array(rotation)
-                                data[itime, inode_gp, :3] = translation.dot(cid_transform.T)
-                                data[itime, inode_gp, 3:] = rotation.dot(cid_transform.T)
-                            elif 1:
-                                # doesn't work...actually pretty close
-                                data[itime, inode_gp, :3] = translation.dot(cid_transform)
-                                data[itime, inode_gp, 3:] = rotation.dot(cid_transform)
-                            elif 0:
-                                # very, very close
-                                data[itime, inode_gp, :3] = translation.dot(cid_transform.T)
-                                data[itime, inode_gp, 3:] = rotation.dot(cid_transform.T)
-                            elif 0:
-                                # is this just the same as one of the previous?
-                                data[itime, inode_gp, :3] = cid_transform.T.dot(translation.T).T
-                                data[itime, inode_gp, 3:] = cid_transform.T.dot(rotation.T).T
-                            else:
-                                raise RuntimeError('no option selected...')
-
-                            #if is_global_cid:
-                                #data[itime, inode, :3] = translation
-                                #data[itime, inode, 3:] = rotation
-                                #continue
-                            #data[itime, inode_gp, :3] = translation.dot(cid_transform)
-                            #data[itime, inode_gp, 3:] = rotation.dot(cid_transform)
-                            #print('end', data[itime, inode_gp, :3])
-
-                    elif coord_type in ['CORD2S', 'CORD1S']:
-                        self.log.debug('spherical')
-                        if xyz_cid0 is None:
-                            msg = ('xyz_cid is required for spherical '
-                                   'coordinate transforms')
-                            raise RuntimeError(msg)
-                        xyzi = xyz_cid0[inode, :]
-                        rtp_cid = coord.xyz_to_coord_array(xyzi)
-                        theta = rtp_cid[:, 1]
-                        phi = rtp_cid[:, 2]
-                        for itime in range(data.shape[0]):
-                            translation = data[itime, inode, :3]
-                            rotation = data[itime, inode, 3:]
-                            #if 0:
-                                #translation[:, 1] += theta
-                                #translation[:, 2] += phi
-                                #rotation[:, 1] += theta
-                                #rotation[:, 2] += phi
-                            translation = coord.coord_to_xyz_array(data[itime, inode, :3])
-                            rotation = coord.coord_to_xyz_array(data[itime, inode, 3:])
-                            #if is_global_cid:
-                                #data[itime, inode, :3] = translation
-                                #data[itime, inode, 3:] = rotation
-                                #continue
-                            data[itime, inode, :3] = translation.dot(cid_transform)
-                            data[itime, inode, 3:] = rotation.dot(cid_transform)
-                    else:
-                        raise RuntimeError(coord)
         self.log.debug('-----------')
         return
 
+def transform_displacement_to_global(subcase, result, i_transform, coords, xyz_cid0, log, debug=False):
+    #print('result.name = ', result.class_name)
+    data = result.data
+    for cid, inode in iteritems(i_transform):
+        if cid in [-1, 0]:
+            continue
+        coord = coords[cid]
+        coord_type = coord.type
+        cid_transform = coord.beta()
+
+        # a global coordinate system has 1s along the main diagonal
+        is_global_cid = False
+        if np.array_equal([1., 1., 1.], np.diagonal(cid_transform)):
+            is_global_cid = True
+
+        if not is_global_cid and debug:
+            log.debug('coord\n%s' % coord)
+            log.debug(cid_transform)
+            log.debug('inode = %s' % [str(val).rstrip('L') for val in inode.tolist()])
+            log.debug('data.shape = %s' % str(data.shape))
+            log.debug('len(inode) = %s' % len(inode))
+            assert np.array_equal(inode, np.unique(inode))
+        if coord_type in ['CORD2R', 'CORD1R']:
+            if is_global_cid:
+                #self.log.debug('is_global_cid')
+                continue
+            #self.log.debug('rectangular')
+
+
+            # isat_tran.op2
+            #  - nspoint = 4
+            #  - ngrid = 5379
+            #
+            #  - ntotal = 5383
+            #  data.shape = (101, 8, 6)
+            translation = data[:, inode, :3]
+            rotation = data[:, inode, 3:]
+            data[:, inode, :3] = translation.dot(cid_transform)
+            data[:, inode, 3:] = rotation.dot(cid_transform)
+        elif coord_type in ['CORD2C', 'CORD1C']:
+            #self.log.debug('cylindrical')
+            if xyz_cid0 is None:
+                msg = ('xyz_cid is required for cylindrical '
+                       'coordinate transforms')
+                raise RuntimeError(msg)
+            xyzi = xyz_cid0[inode, :]
+            rtz_cid = coord.xyz_to_coord_array(xyzi)
+            theta = rtz_cid[:, 1]
+            #self.log.debug('theta = %s' % list(theta))
+            for itime in range(data.shape[0]):
+                translation = data[itime, inode, :3]
+                rotation = data[itime, inode, 3:]
+                #theta_max1 = translation[:, 1].max()
+                #theta_max2 = rotation[:, 1].max()
+                #print('theta_max = ', max(theta_max1, theta_max2))
+
+                if 0:
+                    # actually somewhat close
+                    translation[:, 1] += theta
+                    rotation[:, 1] += theta
+                    translation = coord.coord_to_xyz_array(data[itime, inode, :3])
+                    rotation = coord.coord_to_xyz_array(data[itime, inode, 3:])
+                elif 0:
+                    # bad for spc (global_radial_cd)
+                    translation[:, 1] += theta
+                    rotation[:, 1] += theta
+                    translation = coord.coord_to_xyz_array(translation)
+                    rotation = coord.coord_to_xyz_array(rotation)
+                elif 0:
+                    # very wrong...
+                    #print(translation.shape)
+                    translation[:, 1] += theta
+                    rotation[:, 1] += theta
+                elif 1:
+                    pass
+                else:
+                    raise RuntimeError('no option selected...')
+
+                #if is_global_cid:
+                    #data[itime, inode, :3] = translation
+                    #data[itime, inode, 3:] = rotation
+                    #print('is_global_cid')
+                    #continue
+                data[itime, inode, :3] = translation.dot(cid_transform)
+                data[itime, inode, 3:] = rotation.dot(cid_transform)
+        elif coord_type in ['CORD2S', 'CORD1S']:
+            #print('spherical')
+            if xyz_cid0 is None:
+                msg = ('xyz_cid is required for spherical '
+                       'coordinate transforms')
+                raise RuntimeError(msg)
+            xyzi = xyz_cid0[inode, :]
+            rtp_cid = coord.xyz_to_coord_array(xyzi)
+            theta = rtp_cid[:, 1]
+            phi = rtp_cid[:, 2]
+            for itime in range(data.shape[0]):
+                translation = data[itime, inode, :3]
+                rotation = data[itime, inode, 3:]
+                if 0:
+                    translation[:, 1] += theta
+                    translation[:, 2] += phi
+                    rotation[:, 1] += theta
+                    rotation[:, 2] += phi
+                translation = coord.coord_to_xyz_array(translation)
+                rotation = coord.coord_to_xyz_array(rotation)
+                if is_global_cid:
+                    data[itime, inode, :3] = translation
+                    data[itime, inode, 3:] = rotation
+                    continue
+                data[itime, inode, :3] = translation.dot(cid_transform)
+                data[itime, inode, 3:] = rotation.dot(cid_transform)
+        else:
+            raise RuntimeError(coord)
+
+def transform_gpforce_to_globali(subcase, result,
+                                 nids_all, nids_transform,
+                                 i_transform, coords, xyz_cid0, log):
+    """
+    Performs an inplace operation to transform the GPFORCE result
+    into the global frame
+
+    """
+    log.debug('result.name = %s' % result.class_name)
+    data = result.data
+
+    # inode_xyz :
+    #    the indices of the nodes in the model grid point list
+    for cid, inode_xyz in iteritems(i_transform):
+        log.debug('cid = %s' % cid)
+        if cid in [-1, 0]:
+            continue
+        coord = coords[cid]
+        coord_type = coord.type
+        cid_transform = coord.beta()
+
+        # a global coordinate system has 1s along the main diagonal
+        is_global_cid = False
+        if np.array_equal([1., 1., 1.], np.diagonal(cid_transform)):
+            is_global_cid = True
+        nids = np.array(nids_transform[cid])
+
+        #from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
+        #result = RealGridPointForcesArray()
+        if result.is_unique: # TODO: doesn't support preload
+            #self.node_element = zeros((self.ntimes, self.ntotal, 2), dtype='int32')
+            nids_all_gp = result.node_element[0, :, 0]
+
+            log.debug('nids_all_gp = %s' % list(nids_all_gp))
+            log.debug('nids = %s' % list(nids))
+
+            # the indices of the grid points that we're transforming
+            inode_gp = np.where(np.in1d(nids_all_gp, nids))[0]
+            log.debug('inode_gp = %s' % list(inode_gp))
+            nids_gp = nids_all_gp[inode_gp]
+            log.debug('nids_gp = %s' % list(nids_gp))
+            assert np.array_equal(np.unique(nids_gp), np.unique(nids)), 'nids_gp=%s nids=%s' % (nids_gp, nids)
+            log.debug('---------')
+            # the transformation index to go from xyz to the grid point forces
+            inode_gp_xyz = np.searchsorted(nids_all, nids_all_gp)
+            log.debug('nids_all = %s' % list(nids_all))
+            log.debug('nids_all_gp = %s' % list(nids_all_gp))
+            log.debug('inode_xyz = %s' % list(inode_xyz))
+            log.debug('inode_gp_xyz = %s' % list(inode_gp_xyz))
+            sys.stdout.flush()
+            assert len(inode_gp_xyz) == len(nids_all_gp), len(nids_all_gp)
+        else:
+            raise NotImplementedError(result)
+
+        if coord_type in ['CORD2R', 'CORD1R']:
+            if is_global_cid:
+                continue
+            #print('coord\n', coord)
+            #print(cid_transform)
+            #print('inode = %s' % inode)
+            #print('rectangular')
+            translation = data[:, inode_gp, :3]
+            rotation = data[:, inode_gp, 3:]
+            data[:, inode_gp, :3] = translation.dot(cid_transform)
+            data[:, inode_gp, 3:] = rotation.dot(cid_transform)
+        elif coord_type in ['CORD2C', 'CORD1C']:
+            #print('cylindrical')
+            if xyz_cid0 is None:
+                msg = ('xyz_cid is required for cylindrical '
+                       'coordinate transforms')
+                raise RuntimeError(msg)
+            xyzi = xyz_cid0[inode_xyz, :]
+            rtz_cid = coord.xyz_to_coord_array(xyzi)
+            unused_theta_xyz = rtz_cid[inode_xyz, 1]
+            theta = rtz_cid[inode_gp_xyz, 1]
+            log.debug('coord\n%s' % coord)
+            log.debug(cid_transform)
+            #print('theta_xyz = %s' % list(theta_xyz))
+            #print('theta     = %s' % list(theta))
+
+            for itime in range(data.shape[0]):
+                #inode = np.where(np.in1d(nids_all, 2))[0]
+                #print('start', data[itime, inode_gp, :3])
+                translation = data[itime, inode_gp, :3]
+                rotation = data[itime, inode_gp, 3:]
+                if 0:
+                    # horrible
+                    translation = coord.coord_to_xyz_array(data[itime, inode_gp, :3])
+                    rotation = coord.coord_to_xyz_array(data[itime, inode_gp, 3:])
+                    data[itime, inode_gp, :3] = translation.dot(cid_transform)
+                    data[itime, inode_gp, 3:] = rotation.dot(cid_transform)
+                elif 0:
+                    # expectedly horrible
+                    translation[:, 1] += theta
+                    rotation[:, 1] += theta
+                    translation = coord.coord_to_xyz_array(data[itime, inode_gp, :3])
+                    rotation = coord.coord_to_xyz_array(data[itime, inode_gp, 3:])
+                    data[itime, inode_gp, :3] = translation.dot(cid_transform)
+                    data[itime, inode_gp, 3:] = rotation.dot(cid_transform)
+                elif 0:
+                    # actually not bad...
+                    translation = coord.xyz_to_coord_array(translation)
+                    rotation = coord.xyz_to_coord_array(rotation)
+                    translation[:, 1] += theta
+                    rotation[:, 1] += theta
+                    translation = coord.coord_to_xyz_array(translation)
+                    rotation = coord.coord_to_xyz_array(rotation)
+                    data[itime, inode_gp, :3] = translation.dot(cid_transform)
+                    data[itime, inode_gp, 3:] = rotation.dot(cid_transform)
+                elif 0:
+                    # not that bad, worse than previous
+                    translation = coord.xyz_to_coord_array(translation)
+                    rotation = coord.xyz_to_coord_array(rotation)
+                    translation[:, 1] += theta
+                    rotation[:, 1] += theta
+                    translation = coord.coord_to_xyz_array(translation)
+                    rotation = coord.coord_to_xyz_array(rotation)
+                    data[itime, inode_gp, :3] = translation.dot(cid_transform.T)
+                    data[itime, inode_gp, 3:] = rotation.dot(cid_transform.T)
+                elif 1:
+                    # doesn't work...actually pretty close
+                    data[itime, inode_gp, :3] = translation.dot(cid_transform)
+                    data[itime, inode_gp, 3:] = rotation.dot(cid_transform)
+                elif 0:
+                    # very, very close
+                    data[itime, inode_gp, :3] = translation.dot(cid_transform.T)
+                    data[itime, inode_gp, 3:] = rotation.dot(cid_transform.T)
+                elif 0:
+                    # is this just the same as one of the previous?
+                    data[itime, inode_gp, :3] = cid_transform.T.dot(translation.T).T
+                    data[itime, inode_gp, 3:] = cid_transform.T.dot(rotation.T).T
+                else:
+                    raise RuntimeError('no option selected...')
+
+                #if is_global_cid:
+                    #data[itime, inode, :3] = translation
+                    #data[itime, inode, 3:] = rotation
+                    #continue
+                #data[itime, inode_gp, :3] = translation.dot(cid_transform)
+                #data[itime, inode_gp, 3:] = rotation.dot(cid_transform)
+                #print('end', data[itime, inode_gp, :3])
+
+        elif coord_type in ['CORD2S', 'CORD1S']:
+            log.debug('spherical')
+            if xyz_cid0 is None:
+                msg = ('xyz_cid is required for spherical '
+                       'coordinate transforms')
+                raise RuntimeError(msg)
+            xyzi = xyz_cid0[inode, :]
+            rtp_cid = coord.xyz_to_coord_array(xyzi)
+            theta = rtp_cid[:, 1]
+            unused_phi = rtp_cid[:, 2]
+            for itime in range(data.shape[0]):
+                translation = data[itime, inode, :3]
+                rotation = data[itime, inode, 3:]
+                #if 0:
+                    #translation[:, 1] += theta
+                    #translation[:, 2] += phi
+                    #rotation[:, 1] += theta
+                    #rotation[:, 2] += phi
+                translation = coord.coord_to_xyz_array(data[itime, inode, :3])
+                rotation = coord.coord_to_xyz_array(data[itime, inode, 3:])
+                #if is_global_cid:
+                    #data[itime, inode, :3] = translation
+                    #data[itime, inode, 3:] = rotation
+                    #continue
+                data[itime, inode, :3] = translation.dot(cid_transform)
+                data[itime, inode, 3:] = rotation.dot(cid_transform)
+        else:
+            raise RuntimeError(coord)
+    return
+
 def main():  # pragma: no cover
     """testing new ideas"""
-    import pyNastran
     pkg_path = pyNastran.__path__[0]
 
     # we don't want the variable name to get picked up by the class

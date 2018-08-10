@@ -1215,10 +1215,6 @@ class Op2Codes(object):
 
     #----
 
-    def _set_op2_date(self, month, day, year):
-        self.date = (month, day, 2000 + year)
-        return self.date
-
 def get_scode_word(s_code, stress_bits):
     if s_code == 0:
         s_word = 'Coordinate Element - Stress Max Shear (Octahedral)'
