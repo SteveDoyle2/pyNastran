@@ -1666,7 +1666,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
 def main():  # pragma: no cover
     """testing pickling"""
-    from pickle import dump, load
+    from six.moves.cPickle import dump, load
     txt_filename = 'solid_shell_bar.txt'
     pickle_file = open(txt_filename, 'wb')
     op2_filename = 'solid_shell_bar.op2'

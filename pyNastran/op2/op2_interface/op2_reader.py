@@ -41,6 +41,7 @@ Defines various tables that don't fit in other sections:
     - read_results_table(self)
 """
 from __future__ import print_function, unicode_literals
+import sys
 from copy import deepcopy
 from itertools import count
 from struct import unpack, Struct
@@ -124,7 +125,7 @@ class OP2Reader(object):
                 if version_ints == (1, 2, 3, 4, 5, 6, 7):
                     macro_version = 'MSFC'
                 else:
-                    op2.show_data(data)
+                    self.show_data(data)
                     raise NotImplementedError(data)
                 #self.show_data(data)
             if self.is_debug_file:
@@ -214,12 +215,12 @@ class OP2Reader(object):
         #if self.read_mode == 2:
         word, = unpack(self._endian + b'8s', data)
         assert word == b'AECFMON ', word
-        #op2.show_data(data)
+        #self.show_data(data)
         #print('-----------------------')
         #print('record 3')
         self.read_markers([-3, 1, 0])
         data = self._read_record()
-        #op2.show_data(data)
+        #self.show_data(data)
 
         if self.read_mode == 2:
             ndata = len(data)
@@ -244,12 +245,12 @@ class OP2Reader(object):
         #print('record 4')
         self.read_markers([-4, 1, 0])
         #data = self._read_record()
-        #op2.show_data(data)
+        #self.show_data(data)
         self.read_markers([0])
 
         #print('-----------------------')
         #print('end')
-        #op2.show(200)
+        #self.show(200)
         #aaa
 
     def _read_monitor(self):
@@ -279,7 +280,7 @@ class OP2Reader(object):
         if self.read_mode == 2:
             word, = op2.struct_8s.unpack(data)
             assert word == b'STCFMON ', word
-        #op2.show_data(data)
+        #self.show_data(data)
         #print('-----------------------')
         #print('record 3')
         self.read_markers([-3, 1, 0])
@@ -315,12 +316,12 @@ class OP2Reader(object):
         #print('record 4')
         self.read_markers([-4, 1, 0])
         #data = self._read_record()
-        #op2.show_data(data)
+        #self.show_data(data)
         self.read_markers([0])
 
         #print('-----------------------')
         #print('end')
-        #op2.show(200)
+        #self.show(200)
 
     def _read_cmodext(self):
         r"""
@@ -349,7 +350,7 @@ class OP2Reader(object):
         assert oneseventy_a == 170, oneseventy_a
         assert oneseventy_b == 170, oneseventy_b
         print('170*4 =', 170*4)
-        #op2.show_data(data)
+        #self.show_data(data)
         marker -= 1
         marker = self._read_cmodext_helper(marker) # -3
         marker = self._read_cmodext_helper(marker)
@@ -388,7 +389,7 @@ class OP2Reader(object):
             val = unpack('i', data[:4])[0]
             if debug:
                 print('val=%s delta=%s' % (val, val - val_old))
-                op2.show_data(data, types='ifs')
+                self.show_data(data, types='ifs')
             assert len(data) > 4
             #print('i=%s val=%s delta=%s' % (i, val, val - val_old))
             val_old = val
@@ -597,6 +598,7 @@ class OP2Reader(object):
         assert nfloats * 4 == (ndata - 8)
         fmt = b(self._uendian + '%sf' % nfloats)
         freqs = np.array(list(unpack(fmt, data[8:])), dtype='float32')
+        print('_frequencies = ', freqs)
         op2._frequencies = freqs
         if self.is_debug_file:
             self.binary_debug.write('  recordi = [%r, freqs]\n'  % (subtable_name_raw))
@@ -642,7 +644,7 @@ class OP2Reader(object):
                 markers = self.get_nmarkers(1, rewind=False)
                 break
             unused_data = self._read_record()
-            #op2.show_data(data, 'i')
+            #self.show_data(data, 'i')
             n -= 1
             markers = self.get_nmarkers(1, rewind=True)
 
@@ -686,7 +688,7 @@ class OP2Reader(object):
         self.read_markers([-2, 1, 0])
         data = self._read_record()  # ('HISADD', )
         #print('hisadd data2')
-        #op2.show_data(data)
+        #self.show_data(data)
 
         #self.log.info('----marker3----')
         self.read_markers([-3, 1, 0])
@@ -703,7 +705,7 @@ class OP2Reader(object):
             iconvergence = '???'
         else:
             msg = 'iconvergence=%s\n' % iconvergence
-            op2.show_data(data, types='ifs', endian=None)
+            self.show_data(data, types='ifs', endian=None)
             raise NotImplementedError(msg)
 
         if conv_result == 0:
@@ -781,7 +783,7 @@ class OP2Reader(object):
                 self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
             self._print_month(month, day, year, zero, one)
         else:
-            raise NotImplementedError(op2.show_data(data))
+            raise NotImplementedError(self.show_data(data))
         self._read_subtables()
 
     def _read_pcompts(self):
@@ -898,7 +900,7 @@ class OP2Reader(object):
             self.binary_debug.write('---markers = [-1]---\n')
         unused_data = self._read_record()
         #print('intmod data1')
-        #op2.show_data(data)
+        #self.show_data(data)
 
         markers = self.get_nmarkers(1, rewind=True)
         if self.is_debug_file:
@@ -906,7 +908,7 @@ class OP2Reader(object):
         self.read_markers([-2, 1, 0])
         unused_data = self._read_record()
         #print('intmod data2')
-        #op2.show_data(data)
+        #self.show_data(data)
 
         for n in [-3, -4, -5, -6, -7, -8,]:
             self.read_markers([n, 1, 1])
@@ -915,12 +917,12 @@ class OP2Reader(object):
             nbytes = markers[0]*4 + 12
             unused_data = op2.f.read(nbytes)
             #print('intmod data%i' % n)
-            #op2.show_data(data)
+            #self.show_data(data)
             op2.n += nbytes
 
         n = -9
         self.read_markers([n, 1, 0, 0])
-        #op2.show(50)
+        #self.show(50)
         #raise NotImplementedError(op2.table_name)
 
     def read_r1tabrg(self, data, ndata):
@@ -1129,7 +1131,7 @@ class OP2Reader(object):
                 assert dummy_a == 170, dummy_a
                 assert dummy_b == 170, dummy_b
         else:
-            strings, ints, floats = op2.show_data(data)
+            strings, ints, floats = self.show_data(data)
             msg = 'len(data) = %i\n' % ndata
             msg += 'strings  = %r\n' % strings
             msg += 'ints     = %r\n' % str(ints)
@@ -1158,7 +1160,7 @@ class OP2Reader(object):
         unused_table_name = self._read_table_name(rewind=False, stop_on_failure=True)
         self.read_markers([-1])
         unused_data = self._read_record()
-        #op2.show_data(data)
+        #self.show_data(data)
 
         self.read_markers([-2, 1, 0])
         #op2.show_ndata(440, types='if')
@@ -1173,7 +1175,7 @@ class OP2Reader(object):
 
         #op2.show_ndata(440, types='ifs')
 
-        #op2.show_data(data)
+        #self.show_data(data)
         #aaaa
 
     def _get_matrix_row_fmt_nterms_nfloats(self, nvalues, tout):
@@ -1345,7 +1347,7 @@ class OP2Reader(object):
             assert bi == 170, bi
         else:
             self.log.warning('unexpected matrix length=%s' % len(data))
-            self.log.warning(op2.show_data(data, types='if'))
+            self.log.warning(self.show_data(data, types='if'))
 
         itable = -3
         unused_j = None
@@ -2127,7 +2129,7 @@ class OP2Reader(object):
                     # if we hit this block, we have a FATAL error
                     if not op2._nastran_format.lower().startswith('imat') and op2.post != -4:
                         op2.f.seek(op2.n)
-                        op2.show(1000)
+                        self.show(1000)
                         raise FatalError('There was a Nastran FATAL Error.  '
                                          'Check the F06.\nlast table=%r; post=%s' % (
                                              op2.table_name, op2.post))
@@ -2209,7 +2211,7 @@ class OP2Reader(object):
         """
         op2 = self.op2
         data = self.read_3_blocks()
-        imarkers = op2.struct_3i.unpack(data)
+        unused_imarkers = op2.struct_3i.unpack(data)
         for imarker, marker in enumerate(markers):
             if marker != imarker:
                 msg = 'marker=%r imarker=%r; markers=%s; table_name=%r' % (
@@ -2573,7 +2575,7 @@ class OP2Reader(object):
                 self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
             self._print_month(month, day, year, zero, one)
         elif ndata == 612: # ???
-            strings, ints, floats = op2.show_data(data)
+            strings, ints, floats = self.show_data(data)
             msg = 'len(data) = %i\n' % ndata
             #msg += 'strings  = %r\n' % strings
             #msg += 'ints     = %r\n' % str(ints)
@@ -2582,7 +2584,7 @@ class OP2Reader(object):
             subtable_name, = op2.struct_8s.unpack(data[:8])
             print('subtable_name = %r' % subtable_name.strip())
         else:
-            strings, ints, floats = op2.show_data(data)
+            strings, ints, floats = self.show_data(data)
             msg = 'len(data) = %i\n' % ndata
             msg += 'strings  = %r\n' % strings
             msg += 'ints     = %r\n' % str(ints)
@@ -2608,7 +2610,7 @@ class OP2Reader(object):
         if ndata == 8:
             subtable_name, = self.op2.struct_8s.unpack(data)
         else:
-            strings, ints, floats = op2.show_data(data)
+            strings, ints, floats = self.show_data(data)
             msg = 'Unhandled table length error\n'
             msg += 'table_name = %s\n' % op2.table_name
             msg += 'len(data) = %i\n' % ndata
@@ -2749,6 +2751,123 @@ class OP2Reader(object):
                     data, ndata = self._read_record_ndata()
                     unused_n = table4_parser(data, ndata)
                 #del n
+
+    def show(self, n, types='ifs', endian=None):  # pragma: no cover
+        op2 = self.op2
+        assert op2.n == op2.f.tell()
+        nints = n // 4
+        data = op2.f.read(4 * nints)
+        strings, ints, floats = self.show_data(data, types=types, endian=endian)
+        op2.f.seek(op2.n)
+        return strings, ints, floats
+
+    def show_data(self, data, types='ifs', endian=None):  # pragma: no cover
+        """
+        Shows a data block as various types
+
+        Parameters
+        ----------
+        data : bytes
+            the binary string bytes
+        types : str; default='ifs'
+            i - int
+            f - float
+            s - string
+            d - double (float64; 8 bytes)
+            q - long long (int64; 8 bytes)
+
+            l - long (int; 4 bytes)
+            I - unsigned int (int; 4 bytes)
+            L - unsigned long (int; 4 bytes)
+            Q - unsigned long long (int; 8 bytes)
+        endian : str; default=None -> auto determined somewhere else in the code
+            the big/little endian {>, <}
+
+        .. warning:: 's' is apparently not Python 3 friendly
+
+        """
+        return self._write_data(sys.stdout, data, types=types, endian=endian)
+
+    def _write_data(self, f, data, types='ifs', endian=None):  # pragma: no cover
+        """
+        Useful function for seeing what's going on locally when debugging.
+
+        Parameters
+        ----------
+        data : bytes
+            the binary string bytes
+        types : str; default='ifs'
+            i - int
+            f - float
+            s - string
+            d - double (float64; 8 bytes)
+            q - long long (int64; 8 bytes)
+
+            l - long (int; 4 bytes)
+            I - unsigned int (int; 4 bytes)
+            L - unsigned long (int; 4 bytes)
+            Q - unsigned long long (int; 8 bytes)
+        endian : str; default=None -> auto determined somewhere else in the code
+            the big/little endian {>, <}
+
+        """
+        n = len(data)
+        nints = n // 4
+        ndoubles = n // 8
+        strings = None
+        ints = None
+        floats = None
+        longs = None
+
+        if endian is None:
+            endian = self._uendian
+            assert endian is not None, endian
+
+        f.write('\nndata = %s:\n' % n)
+        for typei in types:
+            assert typei in 'sifdq lIL', 'type=%r is invalid' % typei
+
+        if 's' in types:
+            strings = unpack('%s%is' % (endian, n), data)
+            f.write("  strings = %s\n" % str(strings))
+        if 'i' in types:
+            ints = unpack('%s%ii' % (endian, nints), data)
+            f.write("  ints    = %s\n" % str(ints))
+        if 'f' in types:
+            floats = unpack('%s%if' % (endian, nints), data)
+            f.write("  floats  = %s\n" % str(floats))
+        if 'd' in types:
+            doubles = unpack('%s%id' % (endian, ndoubles), data[:ndoubles*8])
+            f.write("  doubles (float64) = %s\n" % str(doubles))
+
+        if 'l' in types:
+            longs = unpack('%s%il' % (endian, nints), data)
+            f.write("  long  = %s\n" % str(longs))
+        if 'I' in types:
+            ints2 = unpack('%s%iI' % (endian, nints), data)
+            f.write("  unsigned int = %s\n" % str(ints2))
+        if 'L' in types:
+            longs2 = unpack('%s%iL' % (endian, nints), data)
+            f.write("  unsigned long = %s\n" % str(longs2))
+        if 'q' in types:
+            longs = unpack('%s%iq' % (endian, ndoubles), data[:ndoubles*8])
+            f.write("  long long (int64) = %s\n" % str(longs))
+        f.write('\n')
+        return strings, ints, floats
+
+    def show_ndata(self, n, types='ifs'):  # pragma: no cover
+        return self._write_ndata(sys.stdout, n, types=types)
+
+    def _write_ndata(self, f, n, types='ifs'):  # pragma: no cover
+        """
+        Useful function for seeing what's going on locally when debugging.
+        """
+        op2 = self.op2
+        nold = op2.n
+        data = op2.f.read(n)
+        op2.n = nold
+        op2.f.seek(op2.n)
+        return self._write_data(f, data, types=types)
 
 def grids_comp_array_to_index(grids1, comps1, grids2, comps2,
                               make_matrix_symmetric):

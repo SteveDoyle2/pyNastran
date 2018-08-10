@@ -18,7 +18,6 @@ from collections import defaultdict
 from typing import List, Dict, Optional, Union, Set, Any, cast
 from six import string_types, iteritems, itervalues, iterkeys, StringIO
 from six.moves.cPickle import load, dump, dumps  # type: ignore
-#from pickle import load, dump
 
 import numpy as np  # type: ignore
 

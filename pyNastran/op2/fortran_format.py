@@ -42,119 +42,14 @@ class FortranFormat(object):
 
     def show(self, n, types='ifs', endian=None):  # pragma: no cover
         """Shows binary data"""
-        assert self.n == self.f.tell()
-        nints = n // 4
-        data = self.f.read(4 * nints)
-        strings, ints, floats = self.show_data(data, types=types, endian=endian)
-        self.f.seek(self.n)
-        return strings, ints, floats
+        return self.op2_reader.show(n, types=types, endian=endian)
 
     def show_data(self, data, types='ifs', endian=None):  # pragma: no cover
-        """
-        Shows a data block as various types
-
-        Parameters
-        ----------
-        data : bytes
-            the binary string bytes
-        types : str; default='ifs'
-            i - int
-            f - float
-            s - string
-            d - double (float64; 8 bytes)
-            q - long long (int64; 8 bytes)
-
-            l - long (int; 4 bytes)
-            I - unsigned int (int; 4 bytes)
-            L - unsigned long (int; 4 bytes)
-            Q - unsigned long long (int; 8 bytes)
-        endian : str; default=None -> auto determined somewhere else in the code
-            the big/little endian {>, <}
-
-        .. warning:: 's' is apparently not Python 3 friendly
-
-        """
-        return self.write_data(sys.stdout, data, types=types, endian=endian)
-
-    def write_data(self, f, data, types='ifs', endian=None):  # pragma: no cover
-        """
-        Useful function for seeing what's going on locally when debugging.
-
-        Parameters
-        ----------
-        data : bytes
-            the binary string bytes
-        types : str; default='ifs'
-            i - int
-            f - float
-            s - string
-            d - double (float64; 8 bytes)
-            q - long long (int64; 8 bytes)
-
-            l - long (int; 4 bytes)
-            I - unsigned int (int; 4 bytes)
-            L - unsigned long (int; 4 bytes)
-            Q - unsigned long long (int; 8 bytes)
-        endian : str; default=None -> auto determined somewhere else in the code
-            the big/little endian {>, <}
-
-        """
-        n = len(data)
-        nints = n // 4
-        ndoubles = n // 8
-        strings = None
-        ints = None
-        floats = None
-        longs = None
-
-        if endian is None:
-            endian = self._uendian
-            assert endian is not None, endian
-
-        f.write('\nndata = %s:\n' % n)
-        for typei in types:
-            assert typei in 'sifdq lIL', 'type=%r is invalid' % typei
-
-        if 's' in types:
-            strings = unpack('%s%is' % (endian, n), data)
-            f.write("  strings = %s\n" % str(strings))
-        if 'i' in types:
-            ints = unpack('%s%ii' % (endian, nints), data)
-            f.write("  ints    = %s\n" % str(ints))
-        if 'f' in types:
-            floats = unpack('%s%if' % (endian, nints), data)
-            f.write("  floats  = %s\n" % str(floats))
-        if 'd' in types:
-            doubles = unpack('%s%id' % (endian, ndoubles), data[:ndoubles*8])
-            f.write("  doubles (float64) = %s\n" % str(doubles))
-
-        if 'l' in types:
-            longs = unpack('%s%il' % (endian, nints), data)
-            f.write("  long  = %s\n" % str(longs))
-        if 'I' in types:
-            ints2 = unpack('%s%iI' % (endian, nints), data)
-            f.write("  unsigned int = %s\n" % str(ints2))
-        if 'L' in types:
-            longs2 = unpack('%s%iL' % (endian, nints), data)
-            f.write("  unsigned long = %s\n" % str(longs2))
-        if 'q' in types:
-            longs = unpack('%s%iq' % (endian, ndoubles), data[:ndoubles*8])
-            f.write("  long long (int64) = %s\n" % str(longs))
-        f.write('\n')
-        return strings, ints, floats
+        """Shows binary data"""
+        return self.op2_reader.show_data(data, types=types, endian=endian)
 
     def show_ndata(self, n, types='ifs'):  # pragma: no cover
-        return self.write_ndata(sys.stdout, n, types=types)
-
-    def write_ndata(self, f, n, types='ifs'):  # pragma: no cover
-        """
-        Useful function for seeing what's going on locally when debugging.
-        """
-        nold = self.n
-        data = self.f.read(n)
-        self.n = nold
-        self.f.seek(self.n)
-        return self.write_data(f, data, types=types)
+        self.op2_reader.show_ndata(n, types=types)
 
     #def passer(self, data):
         #"""

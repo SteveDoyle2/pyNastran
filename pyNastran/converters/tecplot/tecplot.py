@@ -3,6 +3,7 @@ models from:
     http://people.sc.fsu.edu/~jburkardt/data/tec/tec.html
 """
 from __future__ import print_function
+import sys
 import os
 from struct import unpack
 from collections import defaultdict
@@ -16,7 +17,7 @@ from numpy import (
 from pyNastran.utils import is_binary_file
 #from pyNastran.utils.numpy_utils import unique_rows
 from pyNastran.utils.log import get_logger2
-from pyNastran.op2.fortran_format import FortranFormat
+
 
 def read_tecplot(tecplot_filename, use_cols=None, dtype=None, log=None, debug=False):
     """loads a tecplot file"""
@@ -32,15 +33,15 @@ def read_tecplot(tecplot_filename, use_cols=None, dtype=None, log=None, debug=Fa
         #self.log = get_logger2(log, debug=debug)
         #self.debug = debug
 
-class Tecplot(FortranFormat):
+class Tecplot(object):
     """
     Parses a hexa binary/ASCII Tecplot 360 file.
     Writes an ASCII Tecplot 10 file (no transient support).
     """
     def __init__(self, log=None, debug=False):
         # defines binary file specific features
-        FortranFormat.__init__(self)
-        self.endian = b'<'
+        self._endian = b'<'
+        self._n = 0
 
         self.tecplot_filename = ''
         self.log = get_logger2(log, debug=debug)
@@ -272,7 +273,7 @@ class Tecplot(FortranFormat):
                        nnodes, nelements,
                        xyz_list, hexas_list, tets_list, quads_list, tris_list,
                        results_list,
-                       data_packing=None, unused_fe=None):
+                       data_packing=None, fe=None):
         """
         reads:
           - ZONE E
@@ -444,9 +445,8 @@ class Tecplot(FortranFormat):
         self.tecplot_filename = tecplot_filename
         assert os.path.exists(tecplot_filename), tecplot_filename
         with open(tecplot_filename, 'rb') as tecplot_file:
-            # we are using the FortranFormat class, which relies on
-            # self.f
             self.f = tecplot_file
+            self._uendian = '<'
             self.n = 0
             self.variables = ['rho', 'u', 'v', 'w', 'p']
 
@@ -639,6 +639,121 @@ class Tecplot(FortranFormat):
         self.xyz = xyz
         self.results = results
         self.log.debug('done...')
+
+    def show(self, n, types='ifs', endian=None):  # pragma: no cover
+        assert self.n == self.f.tell()
+        nints = n // 4
+        data = self.f.read(4 * nints)
+        strings, ints, floats = self.show_data(data, types=types, endian=endian)
+        self.f.seek(self.n)
+        return strings, ints, floats
+
+    def show_data(self, data, types='ifs', endian=None):  # pragma: no cover
+        """
+        Shows a data block as various types
+
+        Parameters
+        ----------
+        data : bytes
+            the binary string bytes
+        types : str; default='ifs'
+            i - int
+            f - float
+            s - string
+            d - double (float64; 8 bytes)
+            q - long long (int64; 8 bytes)
+
+            l - long (int; 4 bytes)
+            I - unsigned int (int; 4 bytes)
+            L - unsigned long (int; 4 bytes)
+            Q - unsigned long long (int; 8 bytes)
+        endian : str; default=None -> auto determined somewhere else in the code
+            the big/little endian {>, <}
+
+        .. warning:: 's' is apparently not Python 3 friendly
+
+        """
+        return self._write_data(sys.stdout, data, types=types, endian=endian)
+
+    def _write_data(self, f, data, types='ifs', endian=None):  # pragma: no cover
+        """
+        Useful function for seeing what's going on locally when debugging.
+
+        Parameters
+        ----------
+        data : bytes
+            the binary string bytes
+        types : str; default='ifs'
+            i - int
+            f - float
+            s - string
+            d - double (float64; 8 bytes)
+            q - long long (int64; 8 bytes)
+
+            l - long (int; 4 bytes)
+            I - unsigned int (int; 4 bytes)
+            L - unsigned long (int; 4 bytes)
+            Q - unsigned long long (int; 8 bytes)
+        endian : str; default=None -> auto determined somewhere else in the code
+            the big/little endian {>, <}
+
+        """
+        n = len(data)
+        nints = n // 4
+        ndoubles = n // 8
+        strings = None
+        ints = None
+        floats = None
+        longs = None
+
+        if endian is None:
+            endian = self._uendian
+            assert endian is not None, endian
+
+        f.write('\nndata = %s:\n' % n)
+        for typei in types:
+            assert typei in 'sifdq lIL', 'type=%r is invalid' % typei
+
+        if 's' in types:
+            strings = unpack('%s%is' % (endian, n), data)
+            f.write("  strings = %s\n" % str(strings))
+        if 'i' in types:
+            ints = unpack('%s%ii' % (endian, nints), data)
+            f.write("  ints    = %s\n" % str(ints))
+        if 'f' in types:
+            floats = unpack('%s%if' % (endian, nints), data)
+            f.write("  floats  = %s\n" % str(floats))
+        if 'd' in types:
+            doubles = unpack('%s%id' % (endian, ndoubles), data[:ndoubles*8])
+            f.write("  doubles (float64) = %s\n" % str(doubles))
+
+        if 'l' in types:
+            longs = unpack('%s%il' % (endian, nints), data)
+            f.write("  long  = %s\n" % str(longs))
+        if 'I' in types:
+            ints2 = unpack('%s%iI' % (endian, nints), data)
+            f.write("  unsigned int = %s\n" % str(ints2))
+        if 'L' in types:
+            longs2 = unpack('%s%iL' % (endian, nints), data)
+            f.write("  unsigned long = %s\n" % str(longs2))
+        if 'q' in types:
+            longs = unpack('%s%iq' % (endian, ndoubles), data[:ndoubles*8])
+            f.write("  long long (int64) = %s\n" % str(longs))
+        f.write('\n')
+        return strings, ints, floats
+
+    def show_ndata(self, n, types='ifs'):  # pragma: no cover
+        return self._write_ndata(sys.stdout, n, types=types)
+
+    def _write_ndata(self, f, n, types='ifs'):  # pragma: no cover
+        """
+        Useful function for seeing what's going on locally when debugging.
+        """
+        nold = self.n
+        data = self.f.read(n)
+        self.n = nold
+        self.f.seek(self.n)
+        return self._write_data(f, data, types=types)
 
     def slice_x(self, xslice):
         """TODO: doesn't remove unused nodes/renumber elements"""

@@ -58,7 +58,6 @@ class UGRID(object):
     Interface to the AFLR UGrid format.
     """
     def __init__(self, log=None, debug=False, read_shells=True, read_solids=True):
-        #FortranFormat.__init__(self)
         self.log = get_logger(log, 'debug' if debug else 'info')
         self.debug = debug
         self.n = 0

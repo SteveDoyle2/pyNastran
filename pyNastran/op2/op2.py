@@ -575,21 +575,22 @@ class OP2(OP2_Scalar):
           - monitor1 : MONPNT1 object from the PMRF, PERF, PFRF, AGRF, PGRF, AFRF matrices
 
         """
+        #assert len(self._frequencies) > 0, self._frequencies
         if 'MP3F' in self.matrices:
             self.monitor3 = MONPNT3(self._frequencies, self.matrices['MP3F'])
 
         # these are totally wrong...it doesn't go by component;
         # it goes by inertial, external, flexibility, etc.
         if 'PERF' in self.matrices:
-
-            self.monitor1 = MONPNT1(self.frequencies, self.matrices, [
+            #self.monitor1 = MONPNT1(
+                #self._frequencies, self.matrices, [
                 # :)       ?       :)      :)      ?       ?
-                'PMRF', 'AFRF', 'PFRF', 'PGRF', 'AGRF', 'PERF', ])
+                #'PMRF', 'AFRF', 'PFRF', 'PGRF', 'AGRF', 'PERF', ])
 
-            #
-            self.monitor1 = MONPNT1(self._frequencies, self.matrices,
-                                    #  :)       ?       :)      :)2     ?       ?
-                                    ['PMRF', 'PERF', 'PFRF', 'AGRF', 'PGRF', 'AFRF', ])
+            self.monitor1 = MONPNT1(
+                self._frequencies, self.matrices,
+                #  :)       ?       :)      :)2     ?       ?
+                ['PMRF', 'PERF', 'PFRF', 'AGRF', 'PGRF', 'AFRF', ])
 
     def _finalize(self):
         """internal method"""

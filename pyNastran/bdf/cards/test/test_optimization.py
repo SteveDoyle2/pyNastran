@@ -33,7 +33,7 @@ class TestOpt(unittest.TestCase):
         #bdf, op2 = run_model(bdf_filename, op2_filename,
                              #f06_has_weight=False, vectorized=True,
                              #encoding='utf-8')
-        op2 = read_op2(op2_filename, log=log, debug=False)
+        op2 = read_op2(op2_filename, log=log, debug=True)
 
         subcase_ids = op2.subcase_key.keys()
         #for subcase_id in subcase_ids:

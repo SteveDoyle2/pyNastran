@@ -5,7 +5,6 @@ from __future__ import print_function
 import os
 import struct
 
-from pyNastran.op2.fortran_format import FortranFormat
 from pyNastran.dev.xdb.xdb_object import XDB_obj
 from pyNastran.dev.xdb.debug_output import debug_output
 
@@ -16,9 +15,8 @@ def read_xdb(xdb_filename, etype, nsubcases=1, npload4s=1, debug=False, log=None
     xdb.read_xdb(xdb_filename, etype, nsubcases, npload4s)
     return xdb
 
-class XDB(FortranFormat):
+class XDB(object):
     def __init__(self, debug=False, log=None):
-        FortranFormat.__init__(self)
         self.n = 0
         self._endian = '<'
         self.debug = debug

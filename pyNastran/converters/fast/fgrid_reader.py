@@ -1,6 +1,5 @@
 from __future__ import print_function
 import os
-#from pyNastran.op2.fortran_format import FortranFormat
 import numpy as np
 from pyNastran.utils import print_bad_path
 from pyNastran.utils.log import get_logger2
