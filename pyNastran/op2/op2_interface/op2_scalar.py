@@ -1481,7 +1481,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 op2_reader.mapped_tables[table_name]()
                 assert self.f.tell() != t0, 'the position was unchanged...'
             elif table_name == b'FRL':  # frequency response list
-                op2_reader._skip_table(self.table_name)
+                op2_reader.read_frl()
             elif table_name in MATRIX_TABLES:
                 op2_reader.read_matrix(table_name)
             elif table_name in RESULT_TABLES:

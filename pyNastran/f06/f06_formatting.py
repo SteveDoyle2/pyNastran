@@ -85,16 +85,26 @@ def write_imag_floats_13e(vals, is_mag_phase):
 
 
 def write_floats_8p4f(vals):
+    """writes an 8.4F formatted number"""
     vals2 = []
-    for v in vals:
-        if v >= 1000.0 or v <= -100.0:
-            raise RuntimeError(v)
-        v2 = '%8.4f' % v
-        if v2 in ('  0.0000', ' -0.0000'):
-            v2 = '  0.0   '
-        vals2.append(v2)
+    for val in vals:
+        if val >= 1000.0 or val <= -100.0:
+            raise RuntimeError(val)
+        val2 = '%8.4f' % val
+        if valin ('  0.0000', ' -0.0000'):
+            val2 = '  0.0   '
+        vals2.append(val2)
     return vals2
 
+def write_floats_8p1e(vals):
+    """writes an 8.1E formatted number"""
+    vals2 = []
+    for val in vals:
+        if abs(val) < 1e-10:
+            vals2.append('       ')
+        else:
+            vals2.append('%8.1E' % val)
+    return vals2
 
 def _eigenvalue_header(obj, header, itime, ntimes, dt):
     if obj.nonlinear_factor is not None:

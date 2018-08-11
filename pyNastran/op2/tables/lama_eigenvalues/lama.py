@@ -32,7 +32,7 @@ class LAMA(OP2Common):
             '???', '???', '???', '???']
         #self.show_data(data)
 
-        three = self.parse_approach_code(data)
+        unused_three = self.parse_approach_code(data)
         self.six = self.add_data_parameter(data, 'six', b'i', 10, False)  # seven
         self._read_title(data)
 
@@ -51,7 +51,7 @@ class LAMA(OP2Common):
             '???', '???', '???', '???']
         #self.show_data(data)
 
-        three = self.parse_approach_code(data)
+        unused_three = self.parse_approach_code(data)
 
         self.seven = self.add_data_parameter(data, 'seven', b'i', 10, False)  # seven
         #: residual vector augmentation flag
@@ -127,7 +127,7 @@ class LAMA(OP2Common):
             '???', '???', '???', '???']
         #self.show_data(data)
 
-        three = self.parse_approach_code(data)
+        unused_three = self.parse_approach_code(data)
 
         self.seven = self.add_data_parameter(data, 'seven', b'i', 10, False)  # seven
         ## residual vector augmentation flag

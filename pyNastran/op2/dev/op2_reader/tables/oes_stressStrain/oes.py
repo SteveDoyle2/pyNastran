@@ -76,13 +76,6 @@ from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import RealNonlinearPla
 
 from pyNastran.op2.tables.lama_eigenvalues.lama import TableReader
 
-#class OES(OP2Common):
-    #"""
-    #Defines  the OES class that is used to read stress/strain data
-    #"""
-    #def __init__(self):
-        #OP2Common.__init__(self)
-        #self.ntotal = 0
 
 class OES(TableReader):
     """

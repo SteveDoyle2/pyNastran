@@ -603,7 +603,9 @@ class OP2Reader(object):
         assert nfloats * 4 == (ndata - 8)
         fmt = b(self._uendian + '%sf' % nfloats)
         freqs = np.array(list(unpack(fmt, data[8:])), dtype='float32')
-        print('_frequencies = ', freqs)
+
+        if op2._frequencies is not None:
+            raise RuntimeError('Cannot overwrite op2._frequencies...')
         op2._frequencies = freqs
         if self.is_debug_file:
             self.binary_debug.write('  recordi = [%r, freqs]\n'  % (subtable_name_raw))

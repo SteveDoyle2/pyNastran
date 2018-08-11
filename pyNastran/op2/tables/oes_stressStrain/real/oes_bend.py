@@ -9,7 +9,7 @@ except ImportError:
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
-from pyNastran.f06.f06_formatting import write_imag_floats_13e
+from pyNastran.f06.f06_formatting import write_floats_13e, write_floats_8p1e
 
 ints = (int, np.int32)
 
@@ -178,16 +178,14 @@ class RealBendArray(OES_Object):
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
                   page_num=1, is_mag_phase=False, is_sort1=True):
         """
-              ELEMENT-ID =    6901'
-                                 C O M P L E X   S T R E S S E S   I N   B E N D   E L E M E N T S   ( C B E N D )
-                                                                  (REAL/IMAGINARY)
-                                CIRC.      LOCATION         LOCATION         LOCATION         LOCATION
-           FREQUENCY   GRID END  ANG.         C                D                E                F
-        '0 0.0          6901   A    0     1.384767E+01     6.258920E-01    -1.217803E+01     1.043753E+00
-        '                                -4.615430E-01    -2.086098E-02     4.058937E-01    -3.478828E-02
+        '                                   S T R A I N S    I N   B E N D   E L E M E N T S        ( C B E N D )'
+        '                        CIRC.'
+        '   ELEMENT-ID  GRID END  ANG.   SXC           SXD           SXE           SXF           S-MAX         S-MIN         M.S.-T   M.S.-C'
+        '0      6901    6901   A    0   4.372282E-16 -5.960465E-15  0.0           0.0           4.372282E-16 -5.960465E-15          '
+        '               6902   B    0  -6.533992E-15  5.000001E-07 -5.000000E-13 -5.000000E-13  5.000001E-07 -5.000000E-13 -6.0E-01  6.0E+05'
         """
-        raise NotImplementedError('CBEND.stress/strain.real write_f06')
-        msg_temp = _get_cbend_msg(is_mag_phase, is_sort1)
+        #raise NotImplementedError('CBEND.stress/strain.real write_f06')
+        msg_temp = _get_cbend_msg(self.is_stress, is_mag_phase, is_sort1)
         ntimes = self.data.shape[0]
         eids = self.element_node[:, 0]
         nids = self.element_node[:, 1]
@@ -196,8 +194,11 @@ class RealBendArray(OES_Object):
             if is_sort1:
                 for itime in range(ntimes):
                     dt = self._times[itime]
+                    if self.nonlinear_factor is None:
+                        dt_line = ''
+                    else:
 
-                    dt_line = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
+                        dt_line = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
                     header[1] = dt_line
                     msg = header + msg_temp
                     f06_file.write('\n'.join(msg))
@@ -208,14 +209,17 @@ class RealBendArray(OES_Object):
                     sds = self.data[itime, :, 2]
                     ses = self.data[itime, :, 3]
                     sfs = self.data[itime, :, 4]
+
+                    maxs = self.data[itime, :, 5]
+                    mins = self.data[itime, :, 6]
+                    msts = self.data[itime, :, 7]
+                    mscs = self.data[itime, :, 8]
                     assert len(eids) == len(angles)
                     assert len(angles) > 0, angles
-                    for i, eid, nid, anglei, sci, sdi, sei, sfi in zip(counter, eids, nids, angles, scs, sds, ses, sfs):
+                    for i, eid, nid, anglei, sci, sdi, sei, sfi, maxi, mini, msti, msci in zip(counter, eids, nids, angles, scs, sds, ses, sfs, maxs, mins, msts, mscs):
                         assert isinstance(eid, ints), 'eid=%s type=%s' % (eid, type(eid))
-                        [sc_real, sc_imag,
-                         sd_real, sd_imag,
-                         se_real, se_imag,
-                         sf_real, sf_imag,] = write_imag_floats_13e([sci, sdi, sei, sfi], is_mag_phase)
+                        [angle, sc, sd, se, sf, omax, omin] = write_floats_13e([anglei, sci, sdi, sei, sfi, maxi, mini])
+                        [mst, msc] = write_floats_8p1e([msti, msci])
 
                         #f.write('                      28                  0.0          /  0.0                           0.0          /  0.0\n')
 
@@ -228,46 +232,50 @@ class RealBendArray(OES_Object):
                         #'                                -4.615430E-01    -2.086098E-02     4.058937E-01    -3.478828E-02'
                         if i == 0:
                             f06_file.write(
-                                '0%12i %8i  A  %.2f %-13s    %-13s    %-13s    %s\n'
-                                ' %12s %8s          %-13s    %-13s    %-13s    %s\n'% (
-                                    eid, nid, anglei.real,
-                                    sc_real, sd_real, se_real, sf_real,
-                                    '', '',
-                                    sc_imag, sd_imag, se_imag, sf_imag,
+                                '0 %9i%8i   A  %.2f %-13s %-13s %-13s %-13s %-13s %-13s %s %s\n'% (
+                                    eid, nid, anglei,
+                                    sc, sd, se, sf, omax, omin, mst, msc,
                                 ))
                         else:
                             f06_file.write(
-                                '0%12s %8i  B  %.2f %-13s    %-13s    %-13s    %s\n'
-                                ' %12s %8s          %-13s    %-13s    %-13s    %s\n'% (
-                                    '', nid, anglei.real,
-                                    sc_real, sd_real, se_real, sf_real,
-                                    '', '',
-                                    sc_imag, sd_imag, se_imag, sf_imag,
+                                '  %9s%8i   B  %.2f %-13s %-13s %-13s %-13s %-13s %-13s %s %s\n'% (
+                                    '', nid, anglei,
+                                    sc, sd, se, sf, omax, omin, mst, msc,
                                 ))
                     f06_file.write(page_stamp % page_num)
                     page_num += 1
             else:
-                raise NotImplementedError('ComplexBendArray-sort2')
+                raise NotImplementedError('RealBendArray-sort2')
         else:
-            raise NotImplementedError('ComplexBendArray-sort2')
+            raise NotImplementedError('RealBendArray-sort2')
         return page_num - 1
 
-def _get_cbend_msg(is_mag_phase, is_sort1):
+def _get_cbend_msg(is_stress, is_mag_phase, is_sort1):
     """get the header for the CBEND result"""
     if is_mag_phase:
         raise NotImplementedError()
     else:
         realimag_magphase = '                                                          (REAL/IMAGINARY)'
 
-    msg = [
-        '                         C O M P L E X   S T R E S S E S   I N   B E N D   E L E M E N T S   ( C B E N D ) ',
-        realimag_magphase,
-        '                        CIRC.      LOCATION         LOCATION         LOCATION         LOCATION',
-    ]
-    if is_sort1:
-        msg.append('   ELEMENT-ID  GRID END  ANG.         C                D                E                F\n')
+    if is_stress:
+        stress_strain = '                                  S T R E S S E S   I N   B E N D   E L E M E N T S        ( C B E N D )'
     else:
-        msg.append('   FREQUENCY   GRID END  ANG.         C                D                E                F\n')
+        stress_strain = '                                   S T R A I N S    I N   B E N D   E L E M E N T S        ( C B E N D )'
+
+    assert is_sort1 is True
+    sort1 = '   ELEMENT-ID  GRID END  ANG.   SXC           SXD           SXE           SXF           S-MAX         S-MIN         M.S.-T   M.S.-C\n'
+    msg = [
+        stress_strain,
+        '                        CIRC.',
+        sort1,
+    ]
+    #'0      6901    6901   A    0   4.372282E-16 -5.960465E-15  0.0           0.0           4.372282E-16 -5.960465E-15          '
+    #'               6902   B    0  -6.533992E-15  5.000001E-07 -5.000000E-13 -5.000000E-13  5.000001E-07 -5.000000E-13 -6.0E-01  6.0E+05'
+
+    #if is_sort1:
+        #msg.append('   ELEMENT-ID  GRID END  ANG.         C                D                E                F\n')
+    #else:
+        #msg.append('   FREQUENCY   GRID END  ANG.         C                D                E                F\n')
     return msg
 
 class RealBendStressArray(RealBendArray, StressObject):

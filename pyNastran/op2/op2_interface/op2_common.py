@@ -151,7 +151,7 @@ class OP2Common(Op2Codes, F06Writer):
         self.format_code_original = self.format_code
         if self.format_code == -1:
             if self.is_debug_file:
-                self.write_ndata(self.binary_debug, 100)
+                self.op2_reader._write_ndata(self.binary_debug, 100)
             if self.table_name in [b'OESNLXR', b'OESNLBR', b'OESNLXD', b'OESNL1X']:
                 assert self.format_code == -1, self.format_code
                 self.format_code = 1

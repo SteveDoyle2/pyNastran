@@ -120,12 +120,13 @@ class OES(OP2Common):
         self.thermal = self.add_data_parameter(data, 'thermal', b'i', 23, False)
 
         ## assuming tCode=1
-        if self.analysis_code == 1:   # statics / displacement / heat flux
+        analysis_code = self.analysis_code
+        if analysis_code == 1:   # statics / displacement / heat flux
             ## load set number
             self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5, False)
             self.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
             self.setNullNonlinearFactor()
-        elif self.analysis_code == 2:  # real eigenvalues
+        elif analysis_code == 2:  # real eigenvalues
             #: mode number
             self.mode = self.add_data_parameter(data, 'mode', b'i', 5)
             #: eigenvalue
@@ -135,29 +136,29 @@ class OES(OP2Common):
             self.cycle = self.add_data_parameter(data, 'cycle', b'f', 7, False)
             self.update_mode_cycle('cycle')
             self.data_names = self.apply_data_code_value('data_names', ['mode', 'eign', 'mode2', 'cycle'])
-        #elif self.analysis_code==3: # differential stiffness
+        #elif analysis_code == 3: # differential stiffness
             #self.lsdvmn = self.get_values(data,'i',5) ## load set number
             #self.data_code['lsdvmn'] = self.lsdvmn
-        #elif self.analysis_code==4: # differential stiffness
+        #elif analysis_code == 4: # differential stiffness
         #    self.lsdvmn = self.get_values(data,'i',5) ## load set number
-        elif self.analysis_code == 5:   # frequency
+        elif analysis_code == 5:   # frequency
             ## frequency
             self.freq = self.add_data_parameter(data, 'freq', b'f', 5)
             self.data_names = self.apply_data_code_value('data_names', ['freq'])
-        elif self.analysis_code == 6:  # transient
+        elif analysis_code == 6:  # transient
             ## time step
             self.dt = self.add_data_parameter(data, 'dt', b'f', 5)
             self.data_names = self.apply_data_code_value('data_names', ['dt'])
-        elif self.analysis_code == 7:  # pre-buckling
+        elif analysis_code == 7:  # pre-buckling
             ## load set
             self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
             self.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
-        elif self.analysis_code == 8:  # post-buckling
+        elif analysis_code == 8:  # post-buckling
             ## mode number
             self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
             self.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)  # real eigenvalue
             self.data_names = self.apply_data_code_value('data_names', ['lsdvmn', 'eigr'])
-        elif self.analysis_code == 9:  # complex eigenvalues
+        elif analysis_code == 9:  # complex eigenvalues
             ## mode number
             self.mode = self.add_data_parameter(data, 'mode', b'i', 5)
             ## real eigenvalue
@@ -165,15 +166,15 @@ class OES(OP2Common):
             ## imaginary eigenvalue
             self.eigi = self.add_data_parameter(data, 'eigi', b'f', 7, False)
             self.data_names = self.apply_data_code_value('data_names', ['mode', 'eigr', 'eigi'])
-        elif self.analysis_code == 10:  # nonlinear statics
+        elif analysis_code == 10:  # nonlinear statics
             ## load step
             self.lftsfq = self.add_data_parameter(data, 'lftsfq', b'f', 5)
             self.data_names = self.apply_data_code_value('data_names', ['lftsfq'])
-        elif self.analysis_code == 11:  # old geometric nonlinear statics
+        elif analysis_code == 11:  # old geometric nonlinear statics
             ## load set number
             self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
             self.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
-        elif self.analysis_code == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
+        elif analysis_code == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
             ## Time step ??? --> straight from DMAP
             self.dt = self.add_data_parameter(data, 'dt', b'f', 5)
             self.data_names = self.apply_data_code_value('data_names', ['dt'])
@@ -248,7 +249,6 @@ class OES(OP2Common):
             i -= 1
         self.stress_bits = bits
         self.data_code['stress_bits'] = self.stress_bits
-
 
     def _read_oes2_4(self, data, ndata):
         """

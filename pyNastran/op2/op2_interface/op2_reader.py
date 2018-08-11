@@ -598,7 +598,9 @@ class OP2Reader(object):
         assert nfloats * 4 == (ndata - 8)
         fmt = b(self._uendian + '%sf' % nfloats)
         freqs = np.array(list(unpack(fmt, data[8:])), dtype='float32')
-        print('_frequencies = ', freqs)
+
+        if op2._frequencies is not None:
+            raise RuntimeError('Cannot overwrite op2._frequencies...')
         op2._frequencies = freqs
         if self.is_debug_file:
             self.binary_debug.write('  recordi = [%r, freqs]\n'  % (subtable_name_raw))
@@ -609,14 +611,51 @@ class OP2Reader(object):
     def read_frl(self):
         """reads the FRL (Frequency Response List) table"""
         op2 = self.op2
-        #op2.log.debug("table_name = %r" % op2.table_name)
-        #op2.table_name = self._read_table_name(rewind=False)
-        #self.read_markers([-1])
-        #data = self._read_record()
+        op2.table_name = self._read_table_name(rewind=False)
+        self.read_markers([-1])
+        data = self._read_record()
+        idata = unpack(self._endian + '7i', data)
+        assert idata[0] == 101, idata
+        assert idata[1] == 1, idata
+        assert idata[2] == 0, idata
+        assert idata[3] == 0, idata
+        assert idata[4] == 0, idata
+        assert idata[5] == 0, idata
+        assert idata[6] == 0, idata
+        #print(self.show_data(data))
 
-        #self.read_markers([-2, 1, 0])
+
+        self.read_markers([-2, 1, 0])
+        data = self._read_record()
+        assert len(data) == 12, '\n'.join(str(d) for d in self.show_data(data))
+
+        #print('----------------------------')
+        self.read_markers([-3, 1, 0])
         #data = self._read_record()
-        self._skip_table(op2.table_name)
+        #self.show_data(data)
+
+        #print('----------------------------')
+        #self.read_markers([-4, 1, 0])
+        #self.show_ndata(32)
+
+        self.isubtable = -3
+        markers = self.get_nmarkers(1, rewind=True)
+        while markers[0] != 0:
+            if self.read_mode == 1:
+                self._skip_record()
+            else:
+                data = self._read_record()
+                #self.show_data(data)
+                freqs = np.frombuffer(data, dtype=op2.fdtype).copy()
+                #print('read_mode=%s freqs=%s' % (self.read_mode, freqs.tolist()))
+                if op2._frequencies is not None:
+                    raise RuntimeError('Cannot overwrite op2._frequencies...')
+                op2._frequencies = freqs
+
+            self.isubtable -= 1
+            self.read_markers([self.isubtable, 1, 0])
+            markers = self.get_nmarkers(1, rewind=True)
+        self.read_markers([0])
 
     def read_gpl(self):
         """reads the GPL table (grid point list?)"""
