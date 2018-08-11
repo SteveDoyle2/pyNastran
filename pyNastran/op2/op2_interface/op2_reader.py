@@ -633,16 +633,12 @@ class OP2Reader(object):
         data = self._read_record()
         assert len(data) == 12, '\n'.join(str(d) for d in self.show_data(data))
 
-        #print('----------------------------')
+        subtable_name_raw, = op2.struct_8s.unpack(data[:8])
+        subtable_name = subtable_name_raw.strip()
+        assert subtable_name == b'FRL0', 'subtable_name=%r' % subtable_name
+
         self.read_markers([-3, 1, 0])
-        #data = self._read_record()
-        #self.show_data(data)
-
-        #print('----------------------------')
-        #self.read_markers([-4, 1, 0])
-        #self.show_ndata(32)
-
-        self.isubtable = -3
+        isubtable = -3
         markers = self.get_nmarkers(1, rewind=True)
         while markers[0] != 0:
             if self.read_mode == 1:
@@ -660,9 +656,10 @@ class OP2Reader(object):
                     raise RuntimeError(msg)
                 op2._frequencies = freqs
 
-            self.isubtable -= 1
-            self.read_markers([self.isubtable, 1, 0])
+            isubtable -= 1
+            self.read_markers([isubtable, 1, 0])
             markers = self.get_nmarkers(1, rewind=True)
+        del isubtable
         self.read_markers([0])
 
     def read_gpl(self):
@@ -2427,33 +2424,33 @@ class OP2Reader(object):
     def _skip_record_ndata(self, stream=False, debug=True, macro_rewind=False):
         """the skip version of ``_read_record_ndata``"""
         op2 = self.op2
-        markers0 = self.get_nmarkers(1, rewind=False, macro_rewind=macro_rewind)
+        marker0 = self.get_marker1(rewind=False, macro_rewind=macro_rewind)
         if self.is_debug_file and debug:
             self.binary_debug.write('read_record - marker = [4, %i, 4]; macro_rewind=%s\n' % (
-                markers0[0], macro_rewind))
+                marker0, macro_rewind))
         record, nrecord = self._skip_block_ndata()
 
         if self.is_debug_file and debug:
             self.binary_debug.write('read_record - record = [%i, recordi, %i]; '
                                     'macro_rewind=%s\n' % (nrecord, nrecord, macro_rewind))
-        if markers0[0]*4 != nrecord:
-            msg = 'markers0=%s*4 len(record)=%s; table_name=%r' % (
-                markers0[0]*4, nrecord, op2.table_name)
+        if marker0*4 != nrecord:
+            msg = 'marker0=%s*4 len(record)=%s; table_name=%r' % (
+                marker0*4, nrecord, op2.table_name)
             raise FortranMarkerError(msg)
 
-        markers1 = self.get_nmarkers(1, rewind=True)
+        marker1 = self.get_marker1(rewind=True)
 
-        if markers1[0] > 0:
-            while markers1[0] > 0:
-                markers1 = self.get_nmarkers(1, rewind=False)
+        if marker1 > 0:
+            while marker1 > 0:
+                marker1 = self.get_marker1(rewind=False)
                 if self.is_debug_file and debug:
-                    self.binary_debug.write('read_record - markers1 = [4, %i, 4]\n' % markers1[0])
+                    self.binary_debug.write('read_record - marker1 = [4, %i, 4]\n' % marker1)
                 unused_recordi, nrecordi = self._skip_block_ndata()
                 nrecord += nrecordi
 
-                markers1 = self.get_nmarkers(1, rewind=True)
+                marker1 = self.get_marker1(rewind=True)
                 if self.is_debug_file and debug:
-                    self.binary_debug.write('read_record - markers1 = [4, %i, 4]\n' % markers1[0])
+                    self.binary_debug.write('read_record - marker1 = [4, %i, 4]\n' % marker1)
         return record, nrecord
 
     def _get_record_length(self):
