@@ -77,12 +77,13 @@ class OP2Reader(object):
             b'PCOMPTS' : self._read_pcompts,
             b'MONITOR' : self._read_monitor,
             b'AEMONPT' : self._read_aemonpt,
-            b'FOL' : self.read_fol,
+            b'FOL' : self.read_fol,  # frequency response list
+            b'FRL' : self.read_frl,  # frequency response list
             b'SDF' : self.read_sdf,
             b'IBULK' : self.read_ibulk,
             b'CDDATA' : self.read_ibulk,
             b'CMODEXT' : self._read_cmodext,
-            b'CSTM' : self.read_cstm,
+            b'CSTM' : self.read_cstm,  # coordinate system transformation matrices
         }
         #self.op2_skip = OP2Skip(op2)
 
@@ -599,17 +600,18 @@ class OP2Reader(object):
         fmt = b(self._uendian + '%sf' % nfloats)
         freqs = np.array(list(unpack(fmt, data[8:])), dtype='float32')
 
-        if op2._frequencies is not None and not np.array_equal(freqs, op2._frequencies):
-            msg = (
-                'Cannot overwrite op2._frequencies...\n'
-                'op2._frequencies = %s\n'
-                'new_freqs = %s\n' % (op2._frequencies, freqs))
-            raise RuntimeError(msg)
-        op2._frequencies = freqs
-        if self.is_debug_file:
-            self.binary_debug.write('  recordi = [%r, freqs]\n'  % (subtable_name_raw))
-            self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
-            self.binary_debug.write('  freqs = %s' % freqs)
+        if self._read_mode == 2:
+            if op2._frequencies is not None and not np.array_equal(freqs, op2._frequencies):
+                msg = (
+                    'Cannot overwrite op2._frequencies...\n'
+                    'op2._frequencies = %s\n'
+                    'new_freqs = %s\n' % (op2._frequencies, freqs))
+                raise RuntimeError(msg)
+            op2._frequencies = freqs
+            if self.is_debug_file:
+                self.binary_debug.write('  recordi = [%r, freqs]\n'  % (subtable_name_raw))
+                self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
+                self.binary_debug.write('  freqs = %s' % freqs)
         self._read_subtables()
 
     def read_frl(self):
@@ -618,7 +620,7 @@ class OP2Reader(object):
         op2.table_name = self._read_table_name(rewind=False)
         self.read_markers([-1])
         data = self._read_record()
-        idata = unpack(self._endian + '7i', data)
+        idata = unpack(self._endian + b'7i', data)
         assert idata[0] == 101, idata
         assert idata[1] == 1, idata
         assert idata[2] == 0, idata
