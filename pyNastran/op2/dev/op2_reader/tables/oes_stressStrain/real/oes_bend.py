@@ -9,7 +9,7 @@ except ImportError:
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
-from pyNastran.f06.f06_formatting import write_imag_floats_13e
+from pyNastran.f06.f06_formatting import write_floats_13e, write_floats_8p1e
 
 ints = (int, np.int32)
 

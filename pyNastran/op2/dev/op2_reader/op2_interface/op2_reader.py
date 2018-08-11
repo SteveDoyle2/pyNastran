@@ -82,12 +82,13 @@ class OP2Reader(object):
             b'PCOMPTS' : self._read_pcompts,
             b'MONITOR' : self._read_monitor,
             b'AEMONPT' : self._read_aemonpt,
-            b'FOL' : self.read_fol,
+            b'FOL' : self.read_fol,  # frequency response list
+            b'FRL' : self.read_frl,  # frequency response list
             b'SDF' : self.read_sdf,
             b'IBULK' : self.read_ibulk,
             b'CDDATA' : self.read_ibulk,
             b'CMODEXT' : self._read_cmodext,
-            b'CSTM' : self.read_cstm,
+            b'CSTM' : self.read_cstm,  # coordinate system transformation matrices
         }
         #self.op2_skip = OP2Skip(op2)
 
@@ -604,30 +605,69 @@ class OP2Reader(object):
         fmt = b(self._uendian + '%sf' % nfloats)
         freqs = np.array(list(unpack(fmt, data[8:])), dtype='float32')
 
-        if op2._frequencies is not None and not np.array_equal(freqs, op2._frequencies):
-            msg = (
-                'Cannot overwrite op2._frequencies...\n'
-                'op2._frequencies = %s\n'
-                'new_freqs = %s\n' % (op2._frequencies, freqs))
-            raise RuntimeError(msg)
-        op2._frequencies = freqs
-        if self.is_debug_file:
-            self.binary_debug.write('  recordi = [%r, freqs]\n'  % (subtable_name_raw))
-            self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
-            self.binary_debug.write('  freqs = %s' % freqs)
+        if self.read_mode == 2:
+            if op2._frequencies is not None and not np.array_equal(freqs, op2._frequencies):
+                msg = (
+                    'Cannot overwrite op2._frequencies...\n'
+                    'op2._frequencies = %s\n'
+                    'new_freqs = %s\n' % (op2._frequencies, freqs))
+                raise RuntimeError(msg)
+            op2._frequencies = freqs
+            if self.is_debug_file:
+                self.binary_debug.write('  recordi = [%r, freqs]\n'  % (subtable_name_raw))
+                self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
+                self.binary_debug.write('  freqs = %s' % freqs)
         self._read_subtables()
 
     def read_frl(self):
         """reads the FRL (Frequency Response List) table"""
         op2 = self.op2
-        #op2.log.debug("table_name = %r" % op2.table_name)
-        #op2.table_name = self._read_table_name(rewind=False)
-        #self.read_markers([-1])
-        #data = self._read_record()
+        op2.table_name = self._read_table_name(rewind=False)
+        self.read_markers([-1])
+        data = self._read_record()
+        idata = unpack(self._endian + b'7i', data)
+        assert idata[0] == 101, idata
+        assert idata[1] == 1, idata
+        assert idata[2] == 0, idata
+        assert idata[3] == 0, idata
+        assert idata[4] == 0, idata
+        assert idata[5] == 0, idata
+        assert idata[6] == 0, idata
+        #print(self.show_data(data))
 
-        #self.read_markers([-2, 1, 0])
-        #data = self._read_record()
-        self._skip_table(op2.table_name)
+
+        self.read_markers([-2, 1, 0])
+        data = self._read_record()
+        assert len(data) == 12, '\n'.join(str(d) for d in self.show_data(data))
+
+        subtable_name_raw, = op2.struct_8s.unpack(data[:8])
+        subtable_name = subtable_name_raw.strip()
+        assert subtable_name == b'FRL0', 'subtable_name=%r' % subtable_name
+
+        self.read_markers([-3, 1, 0])
+        isubtable = -3
+        markers = self.get_nmarkers(1, rewind=True)
+        while markers[0] != 0:
+            if self.read_mode == 1:
+                self._skip_record()
+            else:
+                data = self._read_record()
+                #self.show_data(data)
+                freqs = np.frombuffer(data, dtype=op2.fdtype).copy()
+                #print('read_mode=%s freqs=%s' % (self.read_mode, freqs.tolist()))
+                if op2._frequencies is not None and not np.array_equal(freqs, op2._frequencies):
+                    msg = (
+                        'Cannot overwrite op2._frequencies...\n'
+                        'op2._frequencies = %s\n'
+                        'new_freqs = %s\n' % (op2._frequencies, freqs))
+                    raise RuntimeError(msg)
+                op2._frequencies = freqs
+
+            isubtable -= 1
+            self.read_markers([isubtable, 1, 0])
+            markers = self.get_nmarkers(1, rewind=True)
+        del isubtable
+        self.read_markers([0])
 
     def read_gpl(self):
         """reads the GPL table (grid point list?)"""
@@ -2400,24 +2440,24 @@ class OP2Reader(object):
         if self.is_debug_file and debug:
             self.binary_debug.write('read_record - record = [%i, recordi, %i]; '
                                     'macro_rewind=%s\n' % (nrecord, nrecord, macro_rewind))
-        if markers0[0]*4 != nrecord:
-            msg = 'markers0=%s*4 len(record)=%s; table_name=%r' % (
-                markers0[0]*4, nrecord, op2.table_name)
+        if marker0*4 != nrecord:
+            msg = 'marker0=%s*4 len(record)=%s; table_name=%r' % (
+                marker0*4, nrecord, op2.table_name)
             raise FortranMarkerError(msg)
 
-        markers1 = self.get_nmarkers(1, rewind=True)
+        marker1 = self.get_marker1(rewind=True)
 
-        if markers1[0] > 0:
-            while markers1[0] > 0:
-                markers1 = self.get_nmarkers(1, rewind=False)
+        if marker1 > 0:
+            while marker1 > 0:
+                marker1 = self.get_marker1(rewind=False)
                 if self.is_debug_file and debug:
-                    self.binary_debug.write('read_record - markers1 = [4, %i, 4]\n' % markers1[0])
+                    self.binary_debug.write('read_record - marker1 = [4, %i, 4]\n' % marker1)
                 unused_recordi, nrecordi = self._skip_block_ndata()
                 nrecord += nrecordi
 
-                markers1 = self.get_nmarkers(1, rewind=True)
+                marker1 = self.get_marker1(rewind=True)
                 if self.is_debug_file and debug:
-                    self.binary_debug.write('read_record - markers1 = [4, %i, 4]\n' % markers1[0])
+                    self.binary_debug.write('read_record - marker1 = [4, %i, 4]\n' % marker1)
         return record, nrecord
 
     def _get_record_length(self):

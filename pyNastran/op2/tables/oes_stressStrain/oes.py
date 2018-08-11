@@ -1792,30 +1792,6 @@ class OES(OP2Common):
             auto_return = True
         return auto_return, is_vectorized
 
-    def _is_vectorized(self, obj_vector, slot_vector):
-        """
-        Checks to see if the data array has been vectorized
-
-        Parameters
-        ----------
-        obj_vector:  the object to check
-            (obj or None; None happens when vectorization hasn't been implemented)
-        slot_vector: the dictionary to put the object in
-            (dict or None; None happens when obj hasn't been implemented)
-
-        Returns
-        -------
-        is_vectorized : bool
-            should the data object be vectorized
-
-        .. note :: the Vectorized column refers to the setting given by the user
-        """
-        is_vectorized = False
-        if self.is_vectorized:
-            if obj_vector is not None:
-                is_vectorized = True
-        return is_vectorized
-
     def _oes_celas(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
         """
         reads stress/strain for element type:
