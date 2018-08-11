@@ -600,7 +600,7 @@ class OP2Reader(object):
         fmt = b(self._uendian + '%sf' % nfloats)
         freqs = np.array(list(unpack(fmt, data[8:])), dtype='float32')
 
-        if self._read_mode == 2:
+        if self.read_mode == 2:
             if op2._frequencies is not None and not np.array_equal(freqs, op2._frequencies):
                 msg = (
                     'Cannot overwrite op2._frequencies...\n'

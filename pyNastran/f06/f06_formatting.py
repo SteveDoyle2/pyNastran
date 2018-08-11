@@ -91,7 +91,7 @@ def write_floats_8p4f(vals):
         if val >= 1000.0 or val <= -100.0:
             raise RuntimeError(val)
         val2 = '%8.4f' % val
-        if val in ('  0.0000', ' -0.0000'):
+        if val2 in ('  0.0000', ' -0.0000'):
             val2 = '  0.0   '
         vals2.append(val2)
     return vals2
