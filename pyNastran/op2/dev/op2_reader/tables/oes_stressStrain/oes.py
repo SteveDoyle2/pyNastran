@@ -24,8 +24,9 @@ from six.moves import range
 from numpy import fromstring, frombuffer, radians, sin, cos, vstack, repeat, array
 import numpy as np
 
-from pyNastran.op2.op2_interface.op2_common import OP2Common, apply_mag_phase
+from pyNastran.op2.op2_interface.op2_common import OP2Common
 from pyNastran.op2.op2_helper import polar_to_real_imag
+from pyNastran.op2.op2_interface.utils import apply_mag_phase
 
 from pyNastran.op2.tables.utils import get_eid_dt_from_eid_device
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bars import RealBarStressArray, RealBarStrainArray

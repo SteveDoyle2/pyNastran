@@ -10,11 +10,11 @@ from numpy import frombuffer, radians, sin, cos, ones, dtype as npdtype
 from pyNastran import is_release
 from pyNastran.f06.f06_writer import F06Writer
 from pyNastran.op2.op2_helper import polar_to_real_imag
+from pyNastran.op2.op2_interface.utils import get_superelement_adaptivity_index, update_label2
 from pyNastran.op2.op2_interface.op2_codes import (
     Op2Codes, get_scode_word, get_sort_method_from_table_name)
 
-from pyNastran.op2.errors import SortCodeError, MultipleSolutionNotImplementedError # DeviceCodeError,
-
+from pyNastran.op2.errors import SortCodeError, MultipleSolutionNotImplementedError
 
 class OP2Common(Op2Codes, F06Writer):
     def __init__(self):
@@ -811,7 +811,7 @@ class OP2Common(Op2Codes, F06Writer):
         elif self._function_code == 3:
             out = value % 1000
         elif self._function_code == 4:
-            out =value // 10
+            out = value // 10
         elif self._function_code == 5:
             out = value % 10
         #elif self._function_code == 6:
@@ -2000,118 +2000,3 @@ class OP2Common(Op2Codes, F06Writer):
         """deepcopy(OP2) fails on Python 3.6 without doing this"""
         del self.fdtype, self.idtype, self.double_dtype, self.long_dtype
         del self.struct_i, self.struct_2i, self.struct_3i, self.struct_8s
-
-def apply_mag_phase(floats, is_magnitude_phase, isave1, isave2):
-    """converts mag/phase data to real/imag"""
-    if is_magnitude_phase:
-        mag = floats[:, isave1]
-        phase = floats[:, isave2]
-        rtheta = radians(phase)
-        real_imag = mag * (cos(rtheta) + 1.j * sin(rtheta))
-    else:
-        real = floats[:, isave1]
-        imag = floats[:, isave2]
-        real_imag = real + 1.j * imag
-    return real_imag
-
-def get_superelement_adaptivity_index(subtitle, superelement):
-    """determines the SUPERELEMENT/ADAPTIVITY_INDEX from the subtitle"""
-    superelement_adaptivity_index = ''
-    if 'SUPERELEMENT' in superelement:
-        # 'SUPERELEMENT 0'
-
-        # F:\work\pyNastran\examples\Dropbox\move_tpl\opt7.op2
-        # 'SUPERELEMENT 0       ,   1'
-        split_superelement = superelement.split()
-        if len(split_superelement) == 2:
-            word, value1 = split_superelement
-            assert word == 'SUPERELEMENT', 'split_superelement=%s' % split_superelement
-            subtitle = '%s; SUPERELEMENT %s' % (subtitle, value1)
-            value1 = int(value1)
-
-            if superelement_adaptivity_index:
-                superelement_adaptivity_index = '%s; SUPERELEMENT %s' % (
-                    superelement_adaptivity_index, value1)
-            else:
-                superelement_adaptivity_index = 'SUPERELEMENT %ss' % value1
-        elif len(split_superelement) == 4:
-            word, value1, comma, value2 = split_superelement
-            assert word == 'SUPERELEMENT', 'split_superelement=%s' % split_superelement
-            value1 = int(value1)
-            value2 = int(value2)
-
-            if superelement_adaptivity_index:
-                superelement_adaptivity_index = '%s; SUPERELEMENT %s,%s' % (
-                    superelement_adaptivity_index, value1, value2)
-            else:
-                superelement_adaptivity_index = 'SUPERELEMENT %s,%s' % (value1, value2)
-        else:
-            raise RuntimeError(split_superelement)
-    return superelement_adaptivity_index
-
-def update_label2(label2, isubcase):
-    """strips off SUBCASE from the label2 to simplfify the output keys (e.g., displacements)"""
-    # strip off any comments
-    # 'SUBCASE  1 $ STAT'
-    # 'SUBCASE  1 $ 0.900 P'
-    label2 = label2.split('$')[0].strip()
-
-    if label2:
-        subcase_expected = 'SUBCASE %i' % isubcase
-        subcase_equal_expected = 'SUBCASE = %i' % isubcase
-        if subcase_expected == label2:
-            label2 = ''
-        elif label2 == 'NONLINEAR':
-            pass
-        elif subcase_expected in label2:
-            # 'SUBCASE 10' in 'NONLINEAR    SUBCASE 10'
-            nchars = len(subcase_expected)
-            ilabel_1 = label2.index(subcase_expected)
-            ilabel_2 = ilabel_1 + nchars
-            label2_prime = label2[:ilabel_1] + label2[ilabel_2:]
-            label2 = label2_prime.strip()
-        elif subcase_equal_expected in label2:
-            # 'SUBCASE = 10'
-            slabel = label2.split('=')
-            assert len(slabel) == 2, slabel
-            label2 = ''
-        elif 'PVAL ID=' in label2 and 'SUBCASE=' in label2:
-            # 'PVAL ID=       1                       SUBCASE=       1'
-            # '    PVAL ID=       1                       SUBCASE=       1'
-            ilabel2 = label2.index('SUBCASE')
-            slabel = label2[:ilabel2].strip().split('=')
-            assert slabel[0] == 'PVAL ID', slabel
-            label2 = slabel[0].strip() + '=' + slabel[1].strip()
-        elif 'SUBCASE' in label2:
-            # 'SUBCASE    10'
-            # 'SUBCASE = 10'
-            # 'SUBCASE = 1    SEGMENT = 1'
-            # 'SUBCASE = 1    HARMONIC = 0 ,C'
-            slabel = label2.split('$')[0].strip().split()
-
-            # 'SUBCASE    10'
-            # 'SUBCASE = 10'
-            # 'SUBCASE = 1    SEGMENT = 1'
-            # 'SUBCASE = 1    HARMONIC = 0 ,C'
-            if len(slabel) == 2:
-                label2 = ''
-            elif len(slabel) == 3 and slabel[1] == '=':
-                label2 = ''
-            else:
-                assert slabel[0] == 'SUBCASE', slabel
-
-                # 'SEGMENT = 1'
-                label2 = slabel[3] + '=' + slabel[5]
-
-        elif 'SUBCOM' in label2:
-            subcom, isubcase = label2.split()
-            label2 = ''
-        elif 'SYM' in label2 or 'REPCASE' in label2:
-            # 'SYM 401'
-            # 'REPCASE 108'
-            pass
-        #else:
-            #print('label2   = %r' % label2)
-            #print('subcasee = %r' % subcase_expected)
-            #asdf
-    return label2

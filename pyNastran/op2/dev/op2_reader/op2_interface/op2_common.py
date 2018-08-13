@@ -13,7 +13,7 @@ from pyNastran.op2.op2_helper import polar_to_real_imag
 from pyNastran.op2.op2_interface.op2_codes import (
     Op2Codes, get_scode_word, get_sort_method_from_table_name)
 
-from pyNastran.op2.op2_interface.utils import apply_mag_phase, update_label2, get_superelement_adaptivity_index
+from pyNastran.op2.op2_interface.utils import update_label2, get_superelement_adaptivity_index
 from pyNastran.op2.errors import SortCodeError, MultipleSolutionNotImplementedError # DeviceCodeError,
 
 

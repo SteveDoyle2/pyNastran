@@ -41,4 +41,4 @@ __website__ = 'https://github.com/SteveDoyle2/pyNastran'
 __docs__ = 'http://pynastran.m4-engineering.com/master'
 __discussion_forum__ = 'https://groups.google.com/forum/#!forum/pynastran-discuss'
 
-is_release = True  ## True=turns on skipping of tables that aren't supported
+is_release = False  ## True=turns on skipping of tables that aren't supported
