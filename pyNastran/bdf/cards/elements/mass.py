@@ -980,9 +980,9 @@ class CONM2(PointMassElement):
         elif name == 'X1':
             self.X[0] = value
         elif name == 'X2':
-            self.X[2] = value
+            self.X[1] = value
         elif name == 'X3':
-            self.X[3] = value
+            self.X[2] = value
         elif name == 'I11':
             #I11, I21, I22, I31, I32, I33 = I
             self.I[0] = value
