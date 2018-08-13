@@ -45,10 +45,12 @@ import sys
 from copy import deepcopy
 from itertools import count
 from struct import unpack, Struct
-from six import b, iteritems
+from six import b, iteritems, string_types
 import numpy as np
+from numpy import frombuffer
 import scipy  # type: ignore
 
+from pyNastran.utils import integer_types
 from pyNastran.f06.errors import FatalError
 from pyNastran.op2.errors import FortranMarkerError, SortCodeError
 from pyNastran.op2.tables.design_response import (
@@ -56,19 +58,43 @@ from pyNastran.op2.tables.design_response import (
     FlutterResponse, Convergence)
 from pyNastran.op2.tables.matrix import Matrix
 
+from pyNastran.op2.op2_interface.utils import apply_mag_phase, update_label2, get_superelement_adaptivity_index
+from pyNastran.op2.op2_interface.op2_codes import determine_sort_bits_meaning
+
 from pyNastran.op2.tables.lama_eigenvalues.lama import LAMA
 from pyNastran.op2.tables.oes_stressStrain.oes import OES
+from pyNastran.op2.tables.oqg_constraintForces.oqg import OQG
+from pyNastran.op2.tables.oee_energy.onr import ONR
+from pyNastran.op2.tables.ogf_gridPointForces.ogpf import OGPF
+
+from pyNastran.op2.tables.oef_forces.oef import OEF
+#from pyNastran.op2.tables.oes_stressStrain.oesm import OESM
+from pyNastran.op2.tables.ogs_grid_point_stresses.ogs import OGS
+
+from pyNastran.op2.tables.opg_appliedLoads.opg import OPG
+from pyNastran.op2.tables.oug.oug import OUG
+from pyNastran.op2.tables.ogpwg import OGPWG
 
 #class MinorTables(object):
     #def __init__(self, op2_reader):
         #self.op2_reader = op2_reader
 
-class OP2Reader(object):
+from pyNastran.op2.op2_interface.op2_codes import Op2Codes
+
+class OP2Reader(Op2Codes):
     """Stores methods that aren't useful to an end user"""
     def __init__(self, op2):
+        Op2Codes.__init__(self)
+
+        # how many optimization passes have there been
+        self._count = 0
+
         self.op2 = op2
-        self.lama = LAMA(op2)
-        self.oes = OES(op2)
+        self.table_reader = TableReader(self)
+        self.lama = LAMA(self, op2)
+        self.oes = OES(self, op2)
+        self.oqg = OQG(self, op2)
+        self.oug = OUG(self, op2)
         #self.minor_tables = MinorTables(self)
 
         self.mapped_tables = {
@@ -91,6 +117,295 @@ class OP2Reader(object):
             b'CSTM' : self.read_cstm,  # coordinate system transformation matrices
         }
         #self.op2_skip = OP2Skip(op2)
+        self.numwide = -1
+
+    @property
+    def idtype(self):
+        return self.op2.idtype
+    @property
+    def fdtype(self):
+        return self.op2.fdtype
+
+    @property
+    def use_vector(self):
+        return self.op2.use_vector
+
+    @property
+    def result_names(self):
+        return self.op2.result_names
+
+    @property
+    def encoding(self):
+        """interface to the op2 object"""
+        return self.op2.encoding
+
+    @property
+    def f(self):
+        return self.op2.f
+    #@f.setter
+    #def f(self, f):
+        #self.op2.f = f
+
+    @property
+    def n(self):
+        return self.op2.n
+    @n.setter
+    def n(self, n):
+        self.op2.n = n
+
+    def _function1(self, value):
+        """function1(value)"""
+        if value // 1000 in [2, 3, 6]:
+            return 2
+        return 1
+
+    def set_null_nonlinear_factor(self):
+        """
+        Initializes the nonlinear factor, which lets us know if
+        this is a transient solution or not.
+
+        """
+        self.nonlinear_factor = None
+        self.data_code['nonlinear_factor'] = None
+
+    def _read_title(self, data):
+        self._read_title_helper(data)
+
+        if hasattr(self, 'isubcase'):
+            op2 = self.op2
+            if self.isubcase not in op2.isubcase_name_map:
+                # 100 from label
+                # 20 from subtitle line
+                # 'SUBCASE 2'
+                #op2.isubcase_name_map[isubcase] = [self.subtitle, self.label]
+                op2.isubcase_name_map[self.isubcase] = [
+                    self.subtitle, self.superelement_adaptivity_index,
+                    self.analysis_code, self.label]
+        else:
+            raise  RuntimeError('isubcase is not defined')
+
+        if hasattr(self, 'subtitle') and hasattr(self, 'label'):
+            ogs = 0
+            if hasattr(self, 'ogs'):
+                ogs = self.ogs
+            unused_code = (self.isubcase, self.analysis_code,
+                           self.superelement_adaptivity_index,
+                           self.pval_step, ogs)
+            #code = (self.isubcase, self.analysis_code,
+                    #self.superelement_adaptivity_index, self.table_name_str)
+            #print("code =", code)
+            #if code not in op2.labels:
+                #op2.subtitles[op2.isubcase].append(self.subtitle)
+                #op2.labels[code] = self.label
+
+    def _read_title_helper(self, data):
+        assert len(data) == 584, len(data)
+        # titleSubtitleLabel
+        title, subtitle, label = unpack(self._endian + b'128s128s128s', data[200:])
+        self.title = title.decode(self.encoding).strip()
+        subtitle = subtitle.decode(self.encoding)
+
+        label = label.decode(self.encoding).strip()
+        nlabel = 65
+        label2 = label[nlabel:]
+        try:
+            label2 = update_label2(label2, self.isubcase)
+        except AssertionError:
+            pass
+
+        assert len(label[:nlabel]) <= nlabel, 'len=%s \nlabel     =%r \nlabel[:%s]=%r' % (len(label), label, nlabel, label[:nlabel])
+        assert len(label2) <= 55, 'len=%s label = %r\nlabel[:%s]=%r\nlabel2    =%r' % (len(label2), label, nlabel, label[:nlabel], label2)
+        # not done...
+        # 65 + 55 = 120 < 128
+
+        self.label = label
+        self.pval_step = label2
+
+        #split_label = label.split()
+        #if len(split_label) == 2:
+            #word, value1 = split_label
+            #assert word == 'SUPERELEMENT', 'split_label=%s' % split_label
+            #subtitle = '%s; SUPERELEMENT %s' % (subtitle, value1)
+            #value1 = int(value1)
+
+            #if superelement_adaptivity_index:
+                #superelement_adaptivity_index = '%s; SUPERELEMENT %s' % (
+                    #superelement_adaptivity_index, value1)
+            #else:
+                #superelement_adaptivity_index = 'SUPERELEMENT %ss' % value1
+        #elif len(split_label) == 4:
+            #word, value1, comma, value2 = split_label
+            #assert word == 'SUPERELEMENT', 'split_label=%s' % split_label
+            #value1 = int(value1)
+            #value2 = int(value2)
+
+            #if superelement_adaptivity_index:
+                #superelement_adaptivity_index = '%s; SUPERELEMENT %s,%s' % (
+                    #superelement_adaptivity_index, value1, value2)
+            #else:
+                #superelement_adaptivity_index = 'SUPERELEMENT %s,%s' % (value1, value2)
+        #else:
+            #raise RuntimeError(split_label)
+
+
+        nsubtitle_break = 67
+        adpativity_index = subtitle[nsubtitle_break:99].strip()
+        superelement = subtitle[99:].strip()
+
+        subtitle = subtitle[:nsubtitle_break].strip()
+        assert len(superelement) <= 26, 'len=%s superelement=%r' % (len(superelement), superelement)
+        superelement = superelement.strip()
+
+        assert len(subtitle) <= 67, 'len=%s subtitle=%r' % (len(subtitle), subtitle)
+        superelement_adaptivity_index = get_superelement_adaptivity_index(subtitle, superelement)
+
+        if adpativity_index:
+            assert 'ADAPTIVITY INDEX=' in adpativity_index
+            # F:\work\pyNastran\examples\Dropbox\move_tpl\pet1018.op2
+            #'ADAPTIVITY INDEX=      1'
+            split_adpativity_index = adpativity_index.split()
+            assert len(split_adpativity_index) == 3, split_adpativity_index
+            word1, word2, adpativity_index_value = split_adpativity_index
+            assert word1 == 'ADAPTIVITY', 'split_adpativity_index=%s' % split_adpativity_index
+            assert word2 == 'INDEX=', 'split_adpativity_index=%s' % split_adpativity_index
+
+            adpativity_index_value = int(adpativity_index_value)
+            subtitle = '%s; ADAPTIVITY_INDEX=%s' % (subtitle, adpativity_index_value)
+            if superelement_adaptivity_index:
+                superelement_adaptivity_index = '%s; ADAPTIVITY_INDEX=%s' % (
+                    superelement_adaptivity_index, adpativity_index_value)
+            else:
+                superelement_adaptivity_index = 'ADAPTIVITY_INDEX=%s' % adpativity_index_value
+
+        self.subtitle = subtitle
+        self.superelement_adaptivity_index = superelement_adaptivity_index
+        assert len(self.label) <= 124, 'len=%s label=%r' % (len(self.label), self.label)
+
+        #: the subtitle of the subcase
+        data_code = self.data_code
+        data_code['subtitle'] = self.subtitle
+
+        # the sub-key
+        data_code['pval_step'] = self.pval_step
+        data_code['superelement_adaptivity_index'] = self.superelement_adaptivity_index
+
+        #: the label of the subcase
+        data_code['label'] = self.label
+        data_code['title'] = self.title
+
+        if self.is_debug_file:
+            self.binary_debug.write(
+                '  %-14s = %r\n' * 6 % (
+                    'count', self._count,
+                    'title', self.title,
+                    'subtitle', self.subtitle,
+                    'label', self.label,
+                    'pval_step', self.pval_step,
+                    'superelement_adaptivity_index', self.superelement_adaptivity_index))
+
+    def _write_debug_bits(self):
+        """
+        s_code =  0 -> stress_bits = [0,0,0,0,0]
+        s_code =  1 -> stress_bits = [0,0,0,0,1]
+        s_code =  2 -> stress_bits = [0,0,0,1,0]
+        s_code =  3 -> stress_bits = [0,0,0,1,1]
+        etc.
+        s_code = 32 -> stress_bits = [1,1,1,1,1]
+
+        stress_bits[0] = 0 -> isMaxShear=True       isVonMises=False
+        stress_bits[0] = 1 -> isMaxShear=False      isVonMises=True
+
+        stress_bits[1] = 0 -> is_stress=True        is_strain=False
+        stress_bits[2] = 0 -> isFiberCurvature=True isFiberDistance=False
+        stress_bits[3] = 0 -> duplicate of Bit[1] (stress/strain)
+        stress_bits[4] = 0 -> material coordinate system flag
+
+        """
+        if self.is_debug_file:
+            msg = ''
+            assert len(self.words) in [0, 28], 'table_name=%r len(self.words)=%s words=%s' % (self.table_name, len(self.words), self.words)
+            for i, param in enumerate(self.words):
+                if param == 's_code':
+                    try:
+                        s_word = get_scode_word(self.s_code, self.stress_bits)
+                    except AttributeError:
+                        raise
+                    self.binary_debug.write('  s_code         = %s -> %s\n' % (self.s_code, s_word))
+                    self.binary_debug.write('    stress_bits[0] = %i -> is_von_mises    =%-5s vs is_max_shear\n' % (self.stress_bits[0], self.is_von_mises))
+                    self.binary_debug.write('    stress_bits[1] = %i -> is_strain       =%-5s vs is_stress\n' % (self.stress_bits[1], self.is_strain))
+                    self.binary_debug.write('    stress_bits[2] = %i -> strain_curvature=%-5s vs fiber_dist\n' % (self.stress_bits[2], self.is_curvature))
+                    self.binary_debug.write('    stress_bits[3] = %i -> is_strain       =%-5s vs is_stress\n' % (self.stress_bits[3], self.is_strain))
+                    self.binary_debug.write('    stress_bits[4] = %i -> material coordinate system flag=%s vs ???\n' % (self.stress_bits[4], self.stress_bits[4]))
+                elif param == '???':
+                    param = 0
+                msg += '%s, ' % param
+                if i % 5 == 4:
+                    msg += '\n             '
+
+            if hasattr(self, 'format_code'):
+                try:
+                    is_complex = self.is_complex
+                except AssertionError:
+                    self.binary_debug.write('\n  ERROR: cannot determine is_complex properly; '
+                                            'check_sort_bits!!!\n')
+                    is_complex = '???'
+
+                try:
+                    is_random = self.is_random
+                except AssertionError:
+                    is_random = '???'
+
+                try:
+                    is_sort1 = self.is_sort1
+                except AssertionError:
+                    is_sort1 = '???'
+
+                try:
+                    is_real = self.is_real
+                except AssertionError:
+                    is_real = '???'
+
+                if is_complex:
+                    msg = '\n  %-14s = %i -> is_mag_phase vs is_real_imag vs. is_random\n' % (
+                        'format_code', self.format_code)
+                    self.binary_debug.write(msg)
+                else:
+                    self.binary_debug.write('  %-14s = %i\n' % ('format_code', self.format_code))
+                self.binary_debug.write('    sort_bits[0] = %i -> is_random=%s vs mag/phase\n' % (self.sort_bits[0], is_random))
+                self.binary_debug.write('    sort_bits[1] = %i -> is_sort1 =%s vs sort2\n' % (self.sort_bits[1], is_sort1))
+                self.binary_debug.write('    sort_bits[2] = %i -> is_real  =%s vs real/imag\n' % (self.sort_bits[2], is_real))
+
+                try:
+                    sort_method, is_real, is_random = self._table_specs()
+                    self.binary_debug.write('    sort_method = %s\n' % sort_method)
+                except AssertionError:
+                    self.binary_debug.write('    sort_method = ???\n')
+
+                if is_complex:
+                    msg = '\n  %-14s = %i -> is_mag_phase vs is_real_imag vs. is_random\n' % (
+                        'format_code', self.format_code)
+                    self.binary_debug.write(msg)
+                else:
+                    self.binary_debug.write('  %-14s = %i\n' % ('format_code', self.format_code))
+
+            self.binary_debug.write('  recordi = [%s]\n\n' % msg)
+
+    def _setup_op2_subcase(self, word):
+        """
+        Parameters
+        ----------
+        word : str
+            displacement
+            FLUX
+        """
+        if self.read_mode == 1:
+            op2 = self.op2
+            case_control_deck = op2.case_control_deck
+            if self.isubcase not in case_control_deck.subcases:
+                op2.subcase = case_control_deck.create_new_subcase(self.isubcase)
+            else:
+                op2.subcase = case_control_deck.subcases[self.isubcase]
+            op2.subcase.add_op2_data(self.data_code, word, self.log)
 
     def read_nastran_version(self):
         """reads the version header"""
@@ -934,7 +1249,7 @@ class OP2Reader(object):
             markers = self.get_nmarkers(1, rewind=False)
             #print('markers =', markers)
             nbytes = markers[0]*4 + 12
-            unused_data = op2.f.read(nbytes)
+            unused_data = self.f.read(nbytes)
             op2.n += nbytes
         n = -9
         self.read_markers([n, 1, 0, 0])
@@ -966,7 +1281,7 @@ class OP2Reader(object):
             markers = self.get_nmarkers(1, rewind=False)
             #print('markers =', markers)
             nbytes = markers[0]*4 + 12
-            unused_data = op2.f.read(nbytes)
+            unused_data = self.f.read(nbytes)
             #print('intmod data%i' % n)
             #self.show_data(data)
             op2.n += nbytes
@@ -987,13 +1302,13 @@ class OP2Reader(object):
         """
         op2 = self.op2
         responses = op2.responses
-        if op2._table4_count == 0:
-            op2._count += 1
-        op2._table4_count += 1
+        if self._table4_count == 0:
+            self._count += 1
+        self._table4_count += 1
 
-        #if op2._table4_count == 0:
-            #op2._count += 1
-        #op2._table4_count += 1
+        #if self._table4_count == 0:
+            #self._count += 1
+        #self._table4_count += 1
 
         if self.read_mode == 1:
             assert data is not None, data
@@ -1148,7 +1463,7 @@ class OP2Reader(object):
                 flutter_id = out[10]
                 #msg = ('FLUTTER - _count=%s label=%r region=%s subcase=%s mode=%s '
                        #'mach=%s velocity=%s density=%s flutter_id=%s' % (
-                           #op2._count, response_label, region, subcase, mode,
+                           #self._count, response_label, region, subcase, mode,
                            #mach, velocity, density, flutter_id))
                 responses.flutter_response.append(
                     internal_id, dresp_id, response_label, region,
@@ -1569,7 +1884,7 @@ class OP2Reader(object):
         .. todo:: MATPOOLs are disabled because they're not parsed properly
         """
         op2 = self.op2
-        i = op2.f.tell()
+        i = self.f.tell()
         # if we skip on read_mode=1, we don't get debugging
         # if we just use read_mode=2, some tests fail
         #
@@ -1946,7 +2261,7 @@ class OP2Reader(object):
         markers = []
         struc = Struct('3i')
         for unused_i in range(nmarkers):
-            block = op2.f.read(12)
+            block = self.f.read(12)
             marker = struc.unpack(block)
             markers.append(marker)
         return markers
@@ -1969,15 +2284,15 @@ class OP2Reader(object):
 
         """
         op2 = self.op2
-        ni = op2.n
+        ni = self.n
         markers = []
         for i in range(n):
             data = self.read_block()
             marker, = op2.struct_i.unpack(data)
             markers.append(marker)
         if rewind:
-            op2.n = ni
-            op2.f.seek(op2.n)
+            self.n = ni
+            self.f.seek(self.n)
             #for i in range(n):
                 #self.binary_debug.write('get_nmarkers- [4, %i, 4]; macro_rewind=%s\n' % (
                     #i, macro_rewind or rewind))
@@ -2018,7 +2333,7 @@ class OP2Reader(object):
                 import os
                 msg = 'marker=%r imarker=%r; markers=%s; i=%s; table_name=%r; iloc=%s/%s' % (
                     marker, imarker, markers, i, op2.table_name,
-                    op2.f.tell(), os.path.getsize(op2.op2_filename))
+                    self.f.tell(), os.path.getsize(op2.op2_filename))
                 raise FortranMarkerError(msg)
             if self.is_debug_file:
                 self.binary_debug.write('  read_markers -> [4, %i, 4]\n' % marker)
@@ -2138,12 +2453,12 @@ class OP2Reader(object):
 
         """
         op2 = self.op2
-        data = op2.f.read(4)
+        data = self.f.read(4)
         ndata, = op2.struct_i.unpack(data)
 
-        data_out = op2.f.read(ndata)
-        data = op2.f.read(4)
-        op2.n += 8 + ndata
+        data_out = self.f.read(ndata)
+        data = self.f.read(4)
+        self.n += 8 + ndata
         return data_out, ndata
 
     #------------------------------------------------------------------
@@ -2154,7 +2469,7 @@ class OP2Reader(object):
         data = None
         if self.is_debug_file:
             self.binary_debug.write('_read_table_name - rewind=%s\n' % rewind)
-        ni = op2.n
+        ni = self.n
         structi = op2.struct_8s
         if stop_on_failure:
             data = self._read_record(debug=False, macro_rewind=rewind)
@@ -2170,8 +2485,8 @@ class OP2Reader(object):
                 table_name = table_name.strip()
             except:
                 # we're done reading
-                op2.n = ni
-                op2.f.seek(op2.n)
+                self.n = ni
+                self.f.seek(self.n)
 
                 try:
                     # we have a trailing 0 marker
@@ -2179,19 +2494,19 @@ class OP2Reader(object):
                 except:
                     # if we hit this block, we have a FATAL error
                     if not op2._nastran_format.lower().startswith('imat') and op2.post != -4:
-                        op2.f.seek(op2.n)
+                        self.f.seek(self.n)
                         self.show(1000)
                         raise FatalError('There was a Nastran FATAL Error.  '
                                          'Check the F06.\nlast table=%r; post=%s' % (
-                                             op2.table_name, op2.post))
+                                             self.table_name, op2.post))
                 table_name = None
 
                 # we're done reading, so we're going to ignore the rewind
                 rewind = False
 
         if rewind:
-            op2.n = ni
-            op2.f.seek(op2.n)
+            self.n = ni
+            self.f.seek(self.n)
         return table_name
 
     def read_block(self):
@@ -2211,12 +2526,12 @@ class OP2Reader(object):
 
         """
         op2 = self.op2
-        data = op2.f.read(4)
+        data = self.f.read(4)
         ndata, = op2.struct_i.unpack(data)
 
-        data_out = op2.f.read(ndata)
-        data = op2.f.read(4)
-        op2.n += 8 + ndata
+        data_out = self.f.read(ndata)
+        data = self.f.read(4)
+        self.n += 8 + ndata
         return data_out
 
     def read_3_blocks(self):
@@ -2237,12 +2552,12 @@ class OP2Reader(object):
         op2 = self.op2
         data_out = b''
         for unused_i in range(3):
-            data = op2.f.read(4)
+            data = self.f.read(4)
             ndata, = op2.struct_i.unpack(data)
 
-            data_out += op2.f.read(ndata)
-            data = op2.f.read(4)
-            op2.n += 8 + ndata
+            data_out += self.f.read(ndata)
+            data = self.f.read(4)
+            self.n += 8 + ndata
         return data_out
 
     def read_3_markers(self, markers, macro_rewind=True):
@@ -2290,13 +2605,13 @@ class OP2Reader(object):
 
         """
         op2 = self.op2
-        ni = op2.n
+        ni = self.n
         #markers = []
         data = self.read_block()
         marker, = op2.struct_i.unpack(data)
         if rewind:
-            op2.n = ni
-            op2.f.seek(op2.n)
+            self.n = ni
+            self.f.seek(self.n)
         else:
             if self.is_debug_file:
                 msg = 'get_marker - [4, %i, 4]; macro_rewind=%s\n' % (
@@ -2304,9 +2619,9 @@ class OP2Reader(object):
                 self.binary_debug.write(msg)
         return marker
 
-    def _read_subtables(self):
-        """interface to the op2 object"""
-        return self.op2._read_subtables()
+    #def _read_subtables(self):
+        #"""interface to the op2 object"""
+        #return self.op2._read_subtables()
 
     #------------------------------------------------------------------
     @property
@@ -2375,7 +2690,7 @@ class OP2Reader(object):
 
         """
         op2 = self.op2
-        op2.table_name = self._read_table_name(rewind=False)
+        self.table_name = self._read_table_name(rewind=False)
         if self.is_debug_file:
             self.binary_debug.write('skipping table...%r\n' % op2.table_name)
         self.log.warning('    skipping table_helper = %s' % op2.table_name)
@@ -2431,10 +2746,10 @@ class OP2Reader(object):
     def _skip_record_ndata(self, stream=False, debug=True, macro_rewind=False):
         """the skip version of ``_read_record_ndata``"""
         op2 = self.op2
-        markers0 = self.get_nmarkers(1, rewind=False, macro_rewind=macro_rewind)
+        marker0 = self.get_marker1(rewind=False, macro_rewind=macro_rewind)
         if self.is_debug_file and debug:
             self.binary_debug.write('read_record - marker = [4, %i, 4]; macro_rewind=%s\n' % (
-                markers0[0], macro_rewind))
+                marker0, macro_rewind))
         record, nrecord = self._skip_block_ndata()
 
         if self.is_debug_file and debug:
@@ -2476,14 +2791,14 @@ class OP2Reader(object):
         if self.is_debug_file:
             self.binary_debug.write('_get_record_length\n')
         len_record = 0
-        n0 = op2.n
+        n0 = self.n
         markers0 = self.get_nmarkers(1, rewind=False)
         if self.is_debug_file:
             self.binary_debug.write('  markers0=%s\n' % markers0)
 
-        n = op2.n
+        n = self.n
         unused_record = self._skip_block()
-        len_record += op2.n - n - 8  # -8 is for the block
+        len_record += self.n - n - 8  # -8 is for the block
         if self.is_debug_file:
             self.binary_debug.write('  len_record=%s\n' % len_record)
 
@@ -2493,9 +2808,9 @@ class OP2Reader(object):
             markers1 = self.get_nmarkers(1, rewind=False)
             if self.is_debug_file:
                 self.binary_debug.write('  markers1=%s\n' % markers1)
-            n = op2.n
+            n = self.n
             unused_record = self._skip_block()
-            len_record += op2.n - n - 8  # -8 is for the block
+            len_record += self.n - n - 8  # -8 is for the block
             markers1 = self.get_nmarkers(1, rewind=True)
         self._goto(n0)
         return len_record
@@ -2524,10 +2839,10 @@ class OP2Reader(object):
 
         """
         op2 = self.op2
-        data = op2.f.read(4)
+        data = self.f.read(4)
         ndata, = op2.struct_i.unpack(data)
-        op2.n += 8 + ndata
-        self._goto(op2.n)
+        self.n += 8 + ndata
+        self._goto(self.n)
         return None, ndata
 
     #---------------------------------------------------------------------------
@@ -2576,8 +2891,8 @@ class OP2Reader(object):
             the position to goto
 
         """
-        self.op2.n = n
-        self.op2.f.seek(n)
+        self.n = n
+        self.f.seek(n)
 
     def is_valid_subcase(self):
         """
@@ -2591,18 +2906,17 @@ class OP2Reader(object):
         """
         op2 = self.op2
         if not op2.is_all_subcases:
-            if hasattr(op2, 'isubcase') and op2.isubcase in op2.valid_subcases:
+            if hasattr(op2, 'isubcase') and self.isubcase in op2.valid_subcases:
                 return True
             return False
         return True
 
-
     def read_results_table(self):
         """Reads a results table"""
-        op2 = self.op2
+        #op2 = self.op2
         if self.is_debug_file:
-            self.binary_debug.write('read_results_table - %s\n' % op2.table_name)
-        op2.table_name = self._read_table_name(rewind=False)
+            self.binary_debug.write('read_results_table - %s\n' % self.table_name)
+        self.table_name = self._read_table_name(rewind=False)
         self.read_markers([-1])
         if self.is_debug_file:
             self.binary_debug.write('---markers = [-1]---\n')
@@ -2643,8 +2957,8 @@ class OP2Reader(object):
             raise NotImplementedError(msg)
         if hasattr(self, 'subtable_name'):
             raise RuntimeError('the file hasnt been cleaned up; subtable_name_old=%s new=%s' % (
-                op2.subtable_name, subtable_name))
-        op2.subtable_name = subtable_name
+                self.subtable_name, subtable_name))
+        self.subtable_name = subtable_name
         self._read_subtables()
 
     def read_geom_table(self):
@@ -2659,7 +2973,7 @@ class OP2Reader(object):
         self.read_markers([-2, 1, 0])
         data, ndata = self._read_record_ndata()
         if ndata == 8:
-            subtable_name, = self.op2.struct_8s.unpack(data)
+            subtable_name, = op2.struct_8s.unpack(data)
         else:
             strings, ints, floats = self.show_data(data)
             msg = 'Unhandled table length error\n'
@@ -2670,7 +2984,7 @@ class OP2Reader(object):
             msg += 'floats   = %r' % str(floats)
             raise NotImplementedError(msg)
 
-        op2.subtable_name = subtable_name.rstrip()
+        self.subtable_name = subtable_name.rstrip()
         self._read_subtables()
 
     def _read_subtables(self):
@@ -2681,7 +2995,7 @@ class OP2Reader(object):
         op2.is_table_1 = True
         op2._data_factor = 1
 
-        #nstart = op2.n
+        #nstart = self.n
         op2.isubtable = -3
         self.read_markers([-3, 1, 0])
         if self.is_debug_file:
@@ -2702,7 +3016,6 @@ class OP2Reader(object):
         if op2.table_name in table_mapper:
             #if self.read_mode == 2:
                 #self.log.debug("table_name = %r" % op2.table_name)
-
             table3_parser, table4_parser = table_mapper[op2.table_name]
             passer = False
         else:
@@ -2734,7 +3047,7 @@ class OP2Reader(object):
 
         # we've finished reading all subtables, but have one last marker to read
         self.read_markers([0])
-        op2._finish()
+        self._finish()
 
     def _read_subtable_3_4(self, table3_parser, table4_parser, passer):
         """
@@ -2759,7 +3072,6 @@ class OP2Reader(object):
             None : passed???
 
         """
-        op2 = self.op2
         if self.binary_debug:
             self.binary_debug.write('-' * 60 + '\n')
         # this is the length of the current record inside table3/table4
@@ -2769,11 +3081,11 @@ class OP2Reader(object):
 
         oes_nl = [b'OESNLXD', b'OESNL1X', b'OESNLXR']
         if record_len == 584:  # table3 has a length of 584
-            if op2.table_name in oes_nl and hasattr(op2, 'num_wide') and op2.num_wide == 146:
-                data_code_old = deepcopy(op2.data_code)
+            if self.table_name in oes_nl and hasattr(self, 'num_wide') and self.num_wide == 146:
+                data_code_old = deepcopy(self.data_code)
 
-            op2.data_code = {'_encoding' : self._encoding}
-            op2.obj = None
+            self.data_code = {'_encoding' : self._encoding}
+            self.obj = None
             data, ndata = self._read_record_ndata()
             if not passer:
                 try:
@@ -2781,35 +3093,195 @@ class OP2Reader(object):
                 except SortCodeError:
                     if self.is_debug_file:
                         self.binary_debug.write('except SortCodeError!\n')
-                    if op2.table_name in oes_nl:
-                        op2.data_code = data_code_old
+                    if self.table_name in oes_nl:
+                        self.data_code = data_code_old
                         for key, value in iteritems(data_code_old):
-                            setattr(op2, key, value)
+                            setattr(self, key, value)
                         table4_parser(data, ndata)
                         return False
-                    raise RuntimeError(op2.code_information())
-                #if hasattr(op2, 'isubcase'):
-                    #print("code = ", op2._get_code())
+                    raise RuntimeError(self.code_information())
+                #if hasattr(self, 'isubcase'):
+                    #print("code = ", self._get_code())
         else:
             if passer or not self.is_valid_subcase():
                 data = self._skip_record()
             else:
-                if hasattr(op2, 'num_wide'):
+                if hasattr(self, 'num_wide'):
                     # num_wide is the result size and is usually found in
                     # table3, but some B-list tables don't have it
-                    unused_n = op2._read_subtable_results(table4_parser, record_len)
+                    unused_n = self._read_subtable_results(table4_parser, record_len)
                 else:
                     data, ndata = self._read_record_ndata()
                     unused_n = table4_parser(data, ndata)
                 #del n
 
+    def _read_subtable_results(self, table4_parser, record_len):
+        """
+        # if reading the data
+        # 1 - 1st pass to size the array (vectorized)
+        # 2 - 2nd pass to read the data  (vectorized)
+
+        Parameters
+        ----------
+        table4_parser : function
+            the parser function for table 4
+        record_len : int
+            the length of the record block
+
+        Returns
+        -------
+        n : None / int
+            None : an error occurred or we're in read_mode=1/array sizeing (???)
+            int : the number of bytes that have been read
+
+        """
+        datai = b''
+        n = 0
+        is_streaming = False
+        if self.read_mode == 2:
+            self.ntotal = 0
+
+            if is_streaming:  # pragma: no cover
+                # we stream the record because we get it in partial blocks
+                for data in self._stream_record():
+                    data = datai + data
+                    ndata = len(data)
+                    n = table4_parser(data, ndata)
+                    assert isinstance(n, integer_types), self.table_name
+                    datai = data[n:]
+            else:
+                data, ndata = self._read_record_ndata()
+                n = table4_parser(data, ndata)
+                assert isinstance(n, integer_types), self.table_name
+
+            self._reset_vector_counter()
+
+        elif self.read_mode == 1:
+            # if we're checking the array size
+
+            #n = self._skip_record()
+            #n = table4_parser(datai, 300000)
+            if is_streaming:  # pragma: no cover
+                self.ntotal = 0
+                #n = self.n
+                n = 0
+                for unused_i, data in enumerate(self._stream_record()):
+                    data = datai + data
+                    ndata = len(data)
+                    n = table4_parser(data, ndata)
+                    assert isinstance(n, integer_types), self.table_name
+                    datai = data[n:]
+                assert len(datai) == 0, len(datai)
+                #n = record_len
+                #break
+            else:
+                if self.table_name in [b'R1TABRG', b'ONRGY1']:
+                    data, ndata = self._read_record_ndata()
+                else:
+                    data, ndata = self._skip_record_ndata()
+                n = table4_parser(data, ndata)
+                if not isinstance(n, integer_types):
+                    msg = 'n is not an integer; table_name=%s n=%s table4_parser=%s' % (
+                        self.table_name, n, table4_parser)
+                    raise TypeError(msg)
+
+            #self._goto(n)
+            #n = self._skip_record()
+
+            self._init_vector_counter(record_len)
+        else:
+            raise RuntimeError(self.read_mode)
+        self._cleanup_data_members()
+        return n
+
+    def _init_vector_counter(self, record_len):
+        """
+        Sets the table size
+
+        Parameters
+        ----------
+        record_len : int
+            the length of the record block
+        """
+        if not(hasattr(self, 'obj') and self.obj is not None):
+            return
+
+        if hasattr(self.obj, 'ntimes'):
+            if not hasattr(self.obj, '_reset_indices'):
+                #methods = '\ndir(obj)=%s' % ', '.join(sorted(dir(self.obj)))
+                #msg = 'is %s vectorized because its missing _reset_indices...%s' % (
+                    #self.obj.__class__.__name__, methods)
+                return None
+                #raise RuntimeError(msg)
+            self.obj._reset_indices()
+            self.obj.ntimes += 1
+            ntotal = record_len // (self.num_wide * 4) * self._data_factor
+
+            # this has a problem with XYPLOT data if there is a result
+            #    request in the same format (e.g. OESNLXD/OES1X1 tables
+            #    if they both have the same element ID)
+            #
+            #class_name = self.obj.__class__.__name__
+            #if class_name == 'RealBush1DStressArray':
+                #print('%s.ntotal = %s' % (class_name, ntotal))
+                #print('num_wide=%s factor=%s len=%s ntotal=%s' % (
+                    #self.num_wide, self._data_factor, record_len, ntotal))
+            self.obj.ntotal = ntotal
+            self.obj._ntotals.append(ntotal)
+
+            assert isinstance(self.obj.ntotal, integer_types), type(self.obj.ntotal)
+        else:
+            self.log.warning('obj=%s doesnt have ntimes' % self.obj.__class__.__name__)
+
+    def _cleanup_data_members(self):
+        """deletes variables from previous tables"""
+        del_words = [
+            'words',
+            #'Title',
+            #'ID',
+            'analysis_code',
+            #'result_names',
+            #'labels',
+            #'data_names',
+        ]
+        msg = ''
+        if hasattr(self, 'words'):
+            if not len(self.words) in [0, 28]:
+                msg = 'table_name=%r len(self.words)=%s words=%s' % (
+                    self.table_name, len(self.words), self.words)
+                raise RuntimeError(msg)
+
+            for word in self.words:
+                if word in ['???', 'Title']:
+                    continue
+                if not hasattr(self, word):
+                    continue
+                delattr(self, word)
+            self.words = []
+        if hasattr(self, 'analysis_code'):
+            del self.analysis_code
+        #if hasattr(self, 'data_names') and self.data_names is not None:
+            #print(object_attributes(self))
+
+        if hasattr(self, 'data_code'):
+            del self.data_code
+
+        for word in del_words:
+            if hasattr(self, word):
+                val = getattr(self, word)
+                if isinstance(val, list) and len(val) == 0:
+                    continue
+                msg += '  %s=%s\n' % (word, val)
+        if msg:
+            print(object_attributes(self))
+            print(msg)
+
     def show(self, n, types='ifs', endian=None):  # pragma: no cover
-        op2 = self.op2
-        assert op2.n == op2.f.tell()
+        assert self.n == self.f.tell()
         nints = n // 4
-        data = op2.f.read(4 * nints)
+        data = self.f.read(4 * nints)
         strings, ints, floats = self.show_data(data, types=types, endian=endian)
-        op2.f.seek(op2.n)
+        self.f.seek(self.n)
         return strings, ints, floats
 
     def show_data(self, data, types='ifs', endian=None):  # pragma: no cover
@@ -2913,67 +3385,471 @@ class OP2Reader(object):
         """
         Useful function for seeing what's going on locally when debugging.
         """
-        op2 = self.op2
-        nold = op2.n
-        data = op2.f.read(n)
-        op2.n = nold
-        op2.f.seek(op2.n)
+        nold = self.n
+        data = self.f.read(n)
+        self.n = nold
+        self.f.seek(self.n)
         return self._write_data(f, data, types=types)
 
-def grids_comp_array_to_index(grids1, comps1, grids2, comps2,
-                              make_matrix_symmetric):
-    """maps the dofs"""
-    #from pyNastran.utils.mathematics import unique2d
-    ai = np.vstack([grids1, comps1]).T
-    bi = np.vstack([grids2, comps2]).T
-    #print('grids2 =', grids2)
-    #print('comps2 =', comps2)
-    #c = np.vstack([a, b])
-    #assert c.shape[1] == 2, c.shape
-    #urows = unique2d(c)
-    #urows = c
+    def _finish(self):
+        """
+        Clears out the data members contained within the self.words variable.
+        This prevents mixups when working on the next table, but otherwise
+        has no effect.
 
-    nid_comp_to_dof_index = {}
-    j = 0
-    a_keys = set()
-    for nid_dof in ai:
-        #nid_dof = (int(nid), int(dof))
-        nid_dof = tuple(nid_dof)
-        if nid_dof not in a_keys:
-            a_keys.add(nid_dof)
-            if nid_dof not in nid_comp_to_dof_index:
-                nid_comp_to_dof_index[nid_dof] = j
-                j += 1
-    nja = len(a_keys)
-    del a_keys
+        """
+        if hasattr(self, 'words'):
+            for word in self.words:
+                if word != '???' and hasattr(self, word):
+                    if word not in ['Title', 'reference_point']:
+                        delattr(self, word)
+        self.obj = None
+        if hasattr(self, 'subtable_name'):
+            del self.subtable_name
 
-    b_keys = set()
-    for nid_dof in bi:
-        nid_dof = tuple(nid_dof)
-        if nid_dof not in b_keys:
-            b_keys.add(nid_dof)
-        if nid_dof not in nid_comp_to_dof_index:
-            nid_comp_to_dof_index[nid_dof] = j
-            j += 1
-    njb = len(b_keys)
-    del b_keys
+    #-------------------------------------------------------------------------------------------
+    # oug-style reader
+    def create_transient_object(self, storage_obj, class_obj, is_cid=False, debug=False):
+        """
+        Creates a transient object (or None if the subcase should be skippied).
+
+        Parameters
+        ----------
+        storageName : str
+            the name of the dictionary to store the object in (e.g. 'displacements')
+        class_obj : object()
+            the class object to instantiate
+        debug : bool
+            developer debug
+
+        .. python ::
+
+            slot = self.displacements
+            slot_vector = RealDisplacementArray
+            self.create_transient_object(slot, slot_vector, is_cid=is_cid)
+
+        .. note:: dt can also be load_step depending on the class
+
+        """
+        op2 = self.op2
+        assert not isinstance(class_obj, string_types), 'class_obj=%r' % class_obj
+        assert class_obj is not None, class_obj
+        if debug:
+            print("create Transient Object")
+            print("***NF = %s" % self.nonlinear_factor)
+        #if not hasattr(self, storageName):
+            #attrs =  object_attributes(obj, mode="public")
+            #msg = 'storage_obj=%r does not exist.\n' % storage_obj
+            #msg += 'Attributes = [%s]' , ', %s'.join(attrs)
+            #raise RuntimeError(msg)
+        #storage_obj = getattr(self, storageName)
+        #assert class_obj is not None, 'name=%r has no associated classObject' % storageName
+
+        #self.log.debug('self.table_name=%s isubcase=%s subtitle=%r' % (
+            #self.table_name, self.isubcase, self.subtitle.strip()))
+        self.data_code['table_name'] = self.table_name.decode(self.encoding)
+        assert self.log is not None
+
+        code = self._get_code()
+        #print('code =', code)
+        if hasattr(self, 'isubcase'):
+            if self.code in storage_obj:
+                print('made %s' % str(self.code))
+                obj = storage_obj[code]
+                if self.nonlinear_factor is not None:
+                    if obj.nonlinear_factor is None:
+                        msg = (
+                            'The object is flipping from a static (e.g. preload)\n'
+                            'result to a transient/frequency based results\n'
+                            '%s -> %s\n' % (obj.nonlinear_factor, self.nonlinear_factor))
+                        msg += (
+                            'code = (subcase=%s, analysis_code=%s, sort=%s, count=%s, ogs=%s, '
+                            'superelement_adaptivity_index=%r pval_step=%r)\n' % tuple(code))
+                        msg += '%s\n' % str(obj)
+                        msg += '\nIf this isnt correct, check if the data code was applied on the object'
+                        raise MultipleSolutionNotImplementedError(msg)
+                obj.update_data_code(copy.deepcopy(self.data_code))
+            else:
+                print('making %s' % class_obj)
+                class_obj.is_cid = is_cid
+                is_sort1 = self.is_sort1  # uses the sort_bits
+
+                obj = class_obj(self.data_code, is_sort1, self.isubcase, self.nonlinear_factor)
+            self.obj = obj
+            storage_obj[code] = obj
+        else:
+            if code in storage_obj:
+                self.obj = storage_obj[code]
+            else:
+                storage_obj[code] = self.obj
+
+    def _create_table_vector(self, result_name, nnodes,
+                             slot, slot_vector, is_cid=False):
+        assert isinstance(result_name, string_types), result_name
+        assert isinstance(slot, dict), slot
+        auto_return = False
+        print('read_mode=%s %s nnodes=%s' % (self.read_mode, result_name, nnodes))
+        self.result_names.add(result_name)
+        assert nnodes > 0
+
+        if self.read_mode == 1:
+            self.create_transient_object(slot, slot_vector, is_cid=is_cid)
+            self.result_names.add(result_name)
+            self.obj._nnodes += nnodes
+            auto_return = True
+        elif self.read_mode == 2:
+            self.code = self._get_code()
+            obj = slot[self.code]
+            print(obj)
+            #self.obj.update_data_code(self.data_code)
+            obj.build()
+            self.obj = obj
+        else:
+            auto_return = True
+        return auto_return
+
+    def _fix_format_code(self, format_code=1):
+        """
+        Nastran can mess up the format code by using what the user specified,
+        which may be wrong.
+
+        For a SOL 101, if the user uses the following in their BDF:
+            DISP(PLOT,PHASE)=ALL
+        it's wrong, and should be:
+            DISP(PLOT,REAL)=ALL
+
+        """
+        # we'll probably remove this later because we're fixing
+        #it before we get to the object
+        return
+        # if self.format_code != format_code:
+            # self.format_code = format_code
+            # self.obj.format_code = format_code
+            # self.obj.data_code['format_code'] = format_code
+
+    def create_transient_object(self, storage_obj, class_obj, is_cid=False, debug=False):
+        """
+        Creates a transient object (or None if the subcase should be skippied).
+
+        Parameters
+        ----------
+        storageName : str
+            the name of the dictionary to store the object in (e.g. 'displacements')
+        class_obj : object()
+            the class object to instantiate
+        debug : bool
+            developer debug
+
+        .. python ::
+
+            slot = self.displacements
+            slot_vector = RealDisplacementArray
+            self.create_transient_object(slot, slot_vector, is_cid=is_cid)
+
+        .. note:: dt can also be load_step depending on the class
+
+        """
+        print("create Transient Object")
+        assert not isinstance(class_obj, string_types), 'class_obj=%r' % class_obj
+        assert class_obj is not None, class_obj
+        if debug:
+            print("create Transient Object")
+            print("***NF = %s" % self.nonlinear_factor)
+        #if not hasattr(self, storageName):
+            #attrs =  object_attributes(obj, mode="public")
+            #msg = 'storage_obj=%r does not exist.\n' % storage_obj
+            #msg += 'Attributes = [%s]' , ', %s'.join(attrs)
+            #raise RuntimeError(msg)
+        #storage_obj = getattr(self, storageName)
+        #assert class_obj is not None, 'name=%r has no associated classObject' % storageName
+
+        #self.log.debug('self.table_name=%s isubcase=%s subtitle=%r' % (
+            #self.table_name, self.isubcase, self.subtitle.strip()))
+        self.data_code['table_name'] = self.table_name.decode(self.encoding)
+        assert self.log is not None
+
+        code = self._get_code()
+        #print('code =', code)
+        if hasattr(self, 'isubcase'):
+            if self.code in storage_obj:
+                obj = storage_obj[code]
+                if self.nonlinear_factor is not None:
+                    if obj.nonlinear_factor is None:
+                        msg = ('The object is flipping from a static (e.g. preload)\n'
+                               'result to a transient/frequency based results\n'
+                               '%s -> %s\n' % (obj.nonlinear_factor, self.nonlinear_factor))
+                        msg += (
+                            'code = (subcase=%s, analysis_code=%s, sort=%s, count=%s, ogs=%s, '
+                            'superelement_adaptivity_index=%r pval_step=%r)\n' % tuple(code))
+                        msg += '%s\n' % str(obj)
+                        msg += '\nIf this isnt correct, check if the data code was applied on the object'
+                        raise MultipleSolutionNotImplementedError(msg)
+                obj.update_data_code(copy.deepcopy(self.data_code))
+            else:
+                class_obj.is_cid = is_cid
+                is_sort1 = self.is_sort1  # uses the sort_bits
+                obj = class_obj(self.data_code, is_sort1, self.isubcase, self.nonlinear_factor)
+
+            self.obj = obj
+            storage_obj[code] = obj
+        else:
+            if code in storage_obj:
+                self.obj = storage_obj[code]
+            else:
+                storage_obj[code] = self.obj
+
+    def _get_code(self):
+        code = self.isubcase
+        ogs = 0
+        if hasattr(self, 'ogs'):
+            ogs = self.ogs
+        #if self.binary_debug:
+            #self.binary_debug.write(self.code_information(include_time=True))
+
+        code = (self.isubcase, self.analysis_code, self._sort_method, self._count, ogs,
+                self.superelement_adaptivity_index, self.pval_step)
+        #code = (self.isubcase, self.analysis_code, self._sort_method, self._count,
+                #self.superelement_adaptivity_index, self.table_name_str)
+        #print('%r' % self.subtitle)
+        self.code = code
+        #self.log.debug('code = %s' % str(self.code))
+        return self.code
+
+    @property
+    def _sort_method(self):
+        try:
+            sort_method, is_real, is_random = self._table_specs()
+        except:
+            sort_method = get_sort_method_from_table_name(self.table_name)
+        #is_sort1 = self.table_name.endswith('1')
+        #is_sort1 = self.is_sort1  # uses the sort_bits
+        assert sort_method in [1, 2], 'sort_method=%r\n%s' % (sort_method, self.code_information())
+        return sort_method
+
+    def update_mode_cycle(self, name):
+        value = getattr(self, name)
+        if value == 0.0:
+            #print('table_name=%r mode=%s eigr=%s' % (self.table_name, self.mode, self.eigr))
+            value = np.sqrt(np.abs(self.eign)) / (2. * np.pi)
+            setattr(self, name, value)
+            self.data_code[name] = value
+
+    def _get_code(self):
+        code = self.isubcase
+        ogs = 0
+        if hasattr(self, 'ogs'):
+            ogs = self.ogs
+        #if self.binary_debug:
+            #self.binary_debug.write(self.code_information(include_time=True))
+
+        code = (self.isubcase, self.analysis_code, self._sort_method, self._count, ogs,
+                self.superelement_adaptivity_index, self.pval_step)
+        #code = (self.isubcase, self.analysis_code, self._sort_method, self._count,
+                #self.superelement_adaptivity_index, self.table_name_str)
+        #print('%r' % self.subtitle)
+        self.code = code
+        #self.log.debug('code = %s' % str(self.code))
+        return self.code
+
+    def _reset_vector_counter(self):
+        """
+        if reading the data
+        0 - non-vectorized
+        1 - 1st pass to size the array (vectorized)
+        2 - 2nd pass to read the data  (vectorized)
+
+        vectorized objects are stored as self.obj
+        they have obj.itime which is their table3 counter
+        """
+        if not(hasattr(self, 'obj') and hasattr(self.obj, 'itime')):
+            #print('self.obj.name=%r doesnt have itime' % self.obj.__class__.__name__)
+            return
+        #ntotal = record_len // (self.num_wide * 4) * self._data_factor
+
+        # we reset the itime counter when we fill up the
+        # total number of nodes/elements/layers in the
+        # result, where ntotal is the critical length of
+        # interest.  This let's us start back at the correct
+        # spot the next time we read table3
+        #
+        # For displacements, ntotal=nnodes
+        #
+        # For a CBAR, it's ntotal=nelements*2, where 2 is
+        # the number of nodes; points A/B
+        #
+        # For a CTRIA3 / linear CQUAD4, it's
+        # ntotal=nelements*2, where 2 is the number of
+        # layers (top/btm) and we only get a centroidal
+        # result.
+        #
+        # For a CQUAD4 bilinear, it's
+        # ntotal=nelements*(nnodes+1)*2, where 2 is the
+        # number of layers and nnodes is 4 (we get an extra
+        # result at the centroid).
+        #
+        # For a PCOMP, it's ntotal=sum(nelements*nlayers),
+        # where each element can have a different number
+        # of layers
+        obj = self.obj
+        if obj.ntotal == obj.data.shape[1]:
+            #if self.table_name_str in ['OESRMS2', 'OESNO2', 'OSTRRMS2', 'OSTRNO2', 'OESATO2']:
+                #print('resetting %r indicies; itime=%s; shape=%s' % (
+                    #self.obj.class_name, self.obj.itime, self.obj.data.shape))
+            obj._reset_indices()
+            obj.words = self.words
+            obj.itime += 1
+        else:
+            # This happens when self._data_factor hasn't been reset
+            # or is set wrong.
+            # can it happen any other time?
+            msga = 'self.obj.name=%r has itime' % obj.__class__.__name__
+            self.log.debug(msga)
+            msgb = 'ntotal=%s shape=%s shape[1]=%s _data_factor=%s\n' % (
+                obj.ntotal, str(obj.data.shape),
+                obj.data.shape[1], self._data_factor)
+            msgb += 'obj._ntotals=%s' % obj._ntotals
+            self.log.error(msgb)
+            raise RuntimeError(msga + '\n' + msgb)
+
+    def _read_table_vectorized(self, data, ndata, result_name, storage_obj,
+                               real_vector, complex_vector,
+                               node_elem, random_code=None, is_cid=False):
+        """Reads a generalized real/complex SORT1/SORT2 table"""
+        return self.table_reader._read_table_vectorized(
+            data, ndata, result_name, storage_obj,
+            real_vector, complex_vector,
+            node_elem, random_code=random_code, is_cid=is_cid)
 
 
-    nj = len(nid_comp_to_dof_index)
-    if make_matrix_symmetric:
-        ja = np.zeros(nj, dtype='int32')
-        for i, nid_dof in zip(count(), ai):
-            j[i] = nid_comp_to_dof_index[tuple(nid_dof)]
-        for i, nid_dof in zip(count(), bi):
-            j[i] = nid_comp_to_dof_index[tuple(nid_dof)]
-        return j, j, nj, nj, nj
-    else:
-        ja = np.zeros(grids1.shape, dtype='int32')
-        for i, nid_dof in zip(count(), ai.tolist()):
-            ja[i] = nid_comp_to_dof_index[tuple(nid_dof)]
+class TableReader(object):
+    def __init__(self, op2_reader):
+        self.op2_reader = op2_reader
 
-        jb = np.zeros(grids2.shape, dtype='int32')
-        for i, nid_dof in zip(count(), bi.tolist()):
-            jb[i] = nid_comp_to_dof_index[tuple(nid_dof)]
+    @property
+    def _endian(self):
+        """interface to the op2 object"""
+        return self.op2_reader._endian
 
-        return ja, jb, nja, njb, nj
+    @property
+    def is_debug_file(self):
+        """interface to the op2 object"""
+        return self.op2_reader.is_debug_file
+
+    @property
+    def binary_debug(self):
+        """interface to the op2 object"""
+        return self.op2_reader.binary_debug
+
+    @property
+    def log(self):
+        """interface to the op2 object"""
+        return self.op2_reader.log
+
+    def _read_table_vectorized(self, data, ndata, result_name, storage_obj,
+                               real_vector, complex_vector,
+                               node_elem, random_code=None, is_cid=False):
+        """Reads a generalized real/complex SORT1/SORT2 table"""
+        op2_reader = self.op2_reader
+        assert isinstance(result_name, string_types), 'result_name=%r' % result_name
+        assert isinstance(storage_obj, dict), 'storage_obj=%r' % storage_obj
+        #print('self.num_wide =', self.num_wide)
+        #print('random...%s' % self.isRandomResponse())
+        #if not self.isRandomResponse():
+        is_vectorized = True
+        if op2_reader.format_code == 1 and op2_reader.num_wide == 8:  # real/random
+            # real
+            nnodes = ndata // 32  # 8*4
+            auto_return = op2_reader._create_table_vector(
+                result_name, nnodes, storage_obj, real_vector, is_cid=is_cid)
+            if auto_return:
+                return ndata
+
+            op2_reader._fix_format_code(format_code=1)
+            if op2_reader.is_sort1:
+                if op2_reader.nonlinear_factor is None:
+                    n = self._read_real_table_static(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
+                else:
+                    n = self._read_real_table_sort1(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
+            else:
+                n = self._read_real_table_sort2(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
+                #n = ndata
+                #msg = self.code_information()
+                #n = self._not_implemented_or_skip(data, ndata, msg)
+        elif op2_reader.format_code in [2, 3] and op2_reader.num_wide == 14:  # real or real/imaginary or mag/phase
+            # complex
+            nnodes = ndata // 56  # 14*4
+            if op2_reader.is_debug_file:
+                op2_reader.binary_debug.write('nnodes=%s' % nnodes)
+            auto_return = self._create_table_vector(
+                result_name, nnodes, storage_obj, complex_vector)
+            if auto_return:
+                return ndata
+            if op2_reader.is_sort1:
+                if op2_reader.is_magnitude_phase():
+                    n = self._read_complex_table_sort1_mag(data, is_vectorized, nnodes, result_name, node_elem)
+                else:
+                    n = self._read_complex_table_sort1_imag(data, is_vectorized, nnodes, result_name, node_elem)
+            else:
+                if op2_reader.is_magnitude_phase():
+                    n = self._read_complex_table_sort2_mag(data, is_vectorized, nnodes, result_name, node_elem)
+                else:
+                    n = self._read_complex_table_sort2_imag(data, is_vectorized, nnodes, result_name, node_elem)
+                #msg = self.code_information()
+                #n = self._not_implemented_or_skip(data, ndata, msg)
+        else:
+            #msg = 'COMPLEX/PHASE is included in:\n'
+            #msg += '  DISP(PLOT)=ALL\n'
+            #msg += '  but the result type is REAL\n'
+            msg = op2_reader.code_information()
+            n = op2_reader._not_implemented_or_skip(data, ndata, msg)
+        #else:
+        #msg = 'invalid random_code=%s num_wide=%s' % (random_code, op2_reader.num_wide)
+        #n = self._not_implemented_or_skip(data, ndata, msg)
+        return n
+
+    def _read_real_table_static(self, data, is_vectorized, nnodes, result_name,
+                                flag, is_cid=False):
+        """
+        With a static (e.g. SOL 101) result, reads a complex OUG-style
+        table created by:
+              DISP(PLOT,SORT1,REAL) = ALL
+
+        """
+        if self.is_debug_file:
+            self.binary_debug.write('  _read_real_table_static\n')
+        assert flag in ['node', 'elem'], flag
+        op2_reader = self.op2_reader
+        dt = op2_reader.nonlinear_factor
+        assert op2_reader.obj is not None
+        obj = op2_reader.obj
+
+        if op2_reader.use_vector and is_vectorized:
+            n = nnodes * 4 * 8
+            itotal2 = obj.itotal + nnodes
+            #print('ndata=%s n=%s nnodes=%s' % (ndata, n, nnodes))
+            ints = frombuffer(data, dtype=op2_reader.idtype).reshape(nnodes, 8)
+            floats = frombuffer(data, dtype=op2_reader.fdtype).reshape(nnodes, 8)
+            obj._times[obj.itime] = dt
+            #self.node_gridtype[self.itotal, :] = [node_id, grid_type]
+            #self.data[self.itime, self.itotal, :] = [v1, v2, v3, v4, v5, v6]
+            #obj.node_gridtype[obj.itotal:itotal2, :] = ints[:, 0:1]
+            nids = ints[:, 0] // 10
+            assert nids.min() > 0, nids.min()
+            obj.node_gridtype[obj.itotal:itotal2, 0] = nids
+            obj.node_gridtype[obj.itotal:itotal2, 1] = ints[:, 1].copy()
+            obj.data[obj.itime, obj.itotal:itotal2, :] = floats[:, 2:].copy()
+            obj.itotal = itotal2
+        else:
+            n = 0
+            dt = None
+            s = Struct(self._endian + b'2i6f')
+            for inode in range(nnodes):
+                out = s.unpack(data[n:n+32])
+                (eid_device, grid_type, tx, ty, tz, rx, ry, rz) = out
+                eid = eid_device // 10
+                if self.is_debug_file:
+                    self.binary_debug.write('  %s=%i; %s\n' % (flag, eid, str(out)))
+                obj.add_sort1(None, eid, grid_type, tx, ty, tz, rx, ry, rz)
+                n += 32
+        return n
+

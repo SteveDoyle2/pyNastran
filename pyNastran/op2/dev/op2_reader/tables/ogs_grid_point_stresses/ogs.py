@@ -58,7 +58,7 @@ class OGS(OP2Common):
             ## load set number
             self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5, False)
             self.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
-            self.setNullNonlinearFactor()
+            op2_reader.set_null_nonlinear_factor()
         elif self.analysis_code == 2:  # normal modes/buckling (real eigenvalues)
             ## mode number
             self.mode = self.add_data_parameter(data, 'mode', b'i', 5)

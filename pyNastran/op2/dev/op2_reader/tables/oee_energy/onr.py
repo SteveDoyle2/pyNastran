@@ -125,7 +125,7 @@ class ONR(OP2Common):
             #del self.data_code['nonlinear_factor']
             self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5, False)
             self.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
-            self.setNullNonlinearFactor()
+            op2_reader.set_null_nonlinear_factor()
         elif self.analysis_code == 2:  # real eigenvalues
             self.mode = self.add_data_parameter(data, 'mode', b'i', 5)  ## mode number
             #self.mode_cycle1 = self.add_data_parameter(data, 'mode', b'i', 7)
@@ -259,7 +259,7 @@ class ONR(OP2Common):
             ## load set number
             #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5, False)
             #self.data_names = self.apply_data_code_value('data_names', ['node_id'])
-            #self.setNullNonlinearFactor()
+            #op2_reader.set_null_nonlinear_factor()
 
         if self.analysis_code == 1:  # static...because reasons.
             self._analysis_code_fmt = b'i'

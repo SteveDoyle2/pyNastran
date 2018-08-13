@@ -74,15 +74,15 @@ from pyNastran.op2.tables.oes_stressStrain.oes_hyperelastic import (
 from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import RealNonlinearPlateArray
 
 
-from pyNastran.op2.tables.lama_eigenvalues.lama import TableReader
+from pyNastran.op2.tables.table_reader import GenericTableReader
 
 
-class OES(TableReader):
+class OES(GenericTableReader):
     """
     Defines  the OES class that is used to read stress/strain data
     """
-    def __init__(self, op2):
-        TableReader.__init__(self, op2)
+    def __init__(self, op2_reader, op2):
+        GenericTableReader.__init__(self, op2_reader, op2)
         #self.ntotal = 0
 
     @property
@@ -91,7 +91,7 @@ class OES(TableReader):
 
     @property
     def is_strain(self):
-        if self.stress_bits[1] == 1:
+        if self.op2_reader.stress_bits[1] == 1:
             return True
         return False
 
@@ -100,10 +100,11 @@ class OES(TableReader):
         """
         reads OES1 subtable 3
         """
-        op2 = self.op2
-        op2._analysis_code_fmt = b'i'
-        op2._data_factor = 1
-        op2.words = [
+        op2_reader = self.op2_reader
+        #op2 = self.op2
+        self._analysis_code_fmt = b'i'
+        op2_reader._data_factor = 1
+        op2_reader.words = [
             'aCode', 'tCode', 'element_type', 'isubcase',
             '???', '???', '???', 'load_set'
             'format_code', 'num_wide', 's_code', '???',
@@ -112,55 +113,55 @@ class OES(TableReader):
             '???', '???', '???', '???',
             '???', 'Title', 'subtitle', 'label', '???']
 
-        op2.parse_approach_code(data)  # 3
+        self.parse_approach_code(data)  # 3
 
         ## element type
-        self.element_type = op2.add_data_parameter(data, 'element_type', b'i', 3, False)
+        op2_reader.element_type = self.add_data_parameter(data, 'element_type', b'i', 3, False)
 
         ## load set ID
-        self.load_set = op2.add_data_parameter(data, 'load_set', b'i', 8, False)
+        op2_reader.load_set = self.add_data_parameter(data, 'load_set', b'i', 8, False)
 
         ## format code
-        self.format_code = op2.add_data_parameter(data, 'format_code', b'i', 9, False)
+        op2_reader.format_code = self.add_data_parameter(data, 'format_code', b'i', 9, False)
 
         ## number of words per entry in record
         ## .. note:: is this needed for this table ???
-        self.num_wide = op2.add_data_parameter(data, 'num_wide', b'i', 10, False)
+        op2_reader.num_wide = self.add_data_parameter(data, 'num_wide', b'i', 10, False)
 
         ## stress/strain codes
-        self.s_code = op2.add_data_parameter(data, 's_code', b'i', 11, False)
+        op2_reader.s_code = self.add_data_parameter(data, 's_code', b'i', 11, False)
 
         ## thermal flag; 1 for heat ransfer, 0 otherwise
-        self.thermal = op2.add_data_parameter(data, 'thermal', b'i', 23, False)
+        op2_reader.thermal = self.add_data_parameter(data, 'thermal', b'i', 23, False)
 
-        self.analysis_code = op2.analysis_code
+        #self.analysis_code = op2.analysis_code
 
         ## assuming tCode=1
-        analysis_code = self.analysis_code
+        analysis_code = op2_reader.analysis_code
         if analysis_code == 1:   # statics / displacement / heat flux
             ## load set number
-            op2.lsdvmn = op2.add_data_parameter(data, 'lsdvmn', b'i', 5, False)
-            op2.data_names = op2.apply_data_code_value('data_names', ['lsdvmn'])
-            op2.setNullNonlinearFactor()
+            op2_reader.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5, False)
+            op2_reader.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
+            op2_reader.set_null_nonlinear_factor()
         elif analysis_code == 2:  # real eigenvalues
             #: mode number
-            op2.mode = op2.add_data_parameter(data, 'mode', b'i', 5)
+            op2_reader.mode = self.add_data_parameter(data, 'mode', b'i', 5)
             #: eigenvalue
-            op2.eign = op2.add_data_parameter(data, 'eign', b'f', 6, False)
+            op2_reader.eign = self.add_data_parameter(data, 'eign', b'f', 6, False)
             #: mode or cycle TODO confused on the type - F1 means float/int???
-            op2.mode2 = op2.add_data_parameter(data, 'mode2', b'i', 7, False)
-            op2.cycle = op2.add_data_parameter(data, 'cycle', b'f', 7, False)
-            op2.update_mode_cycle('cycle')
-            op2.data_names = op2.apply_data_code_value('data_names', ['mode', 'eign', 'mode2', 'cycle'])
+            op2_reader.mode2 = self.add_data_parameter(data, 'mode2', b'i', 7, False)
+            op2_reader.cycle = self.add_data_parameter(data, 'cycle', b'f', 7, False)
+            self.update_mode_cycle('cycle')
+            op2_reader.data_names = self.apply_data_code_value('data_names', ['mode', 'eign', 'mode2', 'cycle'])
         #elif analysis_code == 3: # differential stiffness
-            #op2.lsdvmn = op2.get_values(data,'i',5) ## load set number
-            #self.data_code['lsdvmn'] = op2.lsdvmn
+            #self.lsdvmn = self.get_values(data,'i',5) ## load set number
+            #self.data_code['lsdvmn'] = self.lsdvmn
         #elif analysis_code == 4: # differential stiffness
-            #op2.lsdvmn = op2.get_values(data,'i',5) ## load set number
+            #self.lsdvmn = self.get_values(data,'i',5) ## load set number
         elif analysis_code == 5:   # frequency
             ## frequency
-            self.freq = self.add_data_parameter(data, 'freq', b'f', 5)
-            self.data_names = self.apply_data_code_value('data_names', ['freq'])
+            op2_reader.freq = self.add_data_parameter(data, 'freq', b'f', 5)
+            op2_reader.data_names = self.apply_data_code_value('data_names', ['freq'])
         elif analysis_code == 6:  # transient
             ## time step
             self.dt = self.add_data_parameter(data, 'dt', b'f', 5)
@@ -176,24 +177,24 @@ class OES(TableReader):
             self.data_names = self.apply_data_code_value('data_names', ['lsdvmn', 'eigr'])
         elif analysis_code == 9:  # complex eigenvalues
             ## mode number
-            self.mode = self.add_data_parameter(data, 'mode', b'i', 5)
+            op2_reader.mode = self.add_data_parameter(data, 'mode', b'i', 5)
             ## real eigenvalue
-            self.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
+            op2_reader.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
             ## imaginary eigenvalue
-            self.eigi = self.add_data_parameter(data, 'eigi', b'f', 7, False)
-            self.data_names = self.apply_data_code_value('data_names', ['mode', 'eigr', 'eigi'])
+            op2_reader.eigi = self.add_data_parameter(data, 'eigi', b'f', 7, False)
+            op2_reader.data_names = self.apply_data_code_value('data_names', ['mode', 'eigr', 'eigi'])
         elif analysis_code == 10:  # nonlinear statics
             ## load step
-            self.lftsfq = self.add_data_parameter(data, 'lftsfq', b'f', 5)
-            self.data_names = self.apply_data_code_value('data_names', ['lftsfq'])
+            op2_reader.lftsfq = self.add_data_parameter(data, 'lftsfq', b'f', 5)
+            op2_reader.data_names = self.apply_data_code_value('data_names', ['lftsfq'])
         elif analysis_code == 11:  # old geometric nonlinear statics
             ## load set number
-            self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
-            self.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
+            op2_reader.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
+            op2_reader.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
         elif analysis_code == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
             ## Time step ??? --> straight from DMAP
-            self.dt = self.add_data_parameter(data, 'dt', b'f', 5)
-            self.data_names = self.apply_data_code_value('data_names', ['dt'])
+            op2_reader.dt = self.add_data_parameter(data, 'dt', b'f', 5)
+            op2_reader.data_names = self.apply_data_code_value('data_names', ['dt'])
         else:
             msg = 'invalid analysis_code...analysis_code=%s' % analysis_code
             raise RuntimeError(msg)
@@ -206,37 +207,41 @@ class OES(TableReader):
         self._parse_thermal_code()
         self._set_element_name()
         if self.is_debug_file:
-            self.binary_debug.write('  element_name   = %r\n' % self.element_name)
-            self.binary_debug.write('  approach_code  = %r\n' % self.approach_code)
-            self.binary_debug.write('  tCode          = %r\n' % self.tCode)
-            self.binary_debug.write('  isubcase       = %r\n' % self.isubcase)
+            self.binary_debug.write('  element_name   = %r\n' % op2_reader.element_name)
+            self.binary_debug.write('  approach_code  = %r\n' % op2_reader.approach_code)
+            self.binary_debug.write('  tCode          = %r\n' % op2_reader.tCode)
+            self.binary_debug.write('  isubcase       = %r\n' % op2_reader.isubcase)
 
-        self._read_title(data)
+        op2_reader._read_title(data)
 
 
         try:
-            self.element_name = op2.element_mapper[self.element_type]
+            op2_reader.element_name = self.element_mapper[op2_reader.element_type]
         except KeyError:
-            self.log.error(self.code_information())
+            self.log.error(op2_reader.code_information())
             raise
-        assert self.element_name != '', self.code_information()
-        #if self.element_type not in self.element_mapper:
-            #return self._not_implemented_or_skip(data, ndata, self.code_information())
+        assert op2_reader.element_name != '', op2_reader.code_information()
+        #if op2_reader.element_type not in op2_reader.element_mapper:
+            #return self._not_implemented_or_skip(data, ndata, op2_reader.code_information())
 
         self._parse_stress_code_to_stress_bits()
-        op2._write_debug_bits()
-        assert isinstance(self.format_code, int), self.format_code
+        op2_reader._write_debug_bits()
+        assert isinstance(op2_reader.format_code, int), op2_reader.format_code
         #print('self.nonlinear_factor =', self.nonlinear_factor)
-        #assert self.num_wide != 146, self.code_information()
+        #assert op2_reader.num_wide != 146, self.code_information()
+
+    @property
+    def element_mapper(self):
+        return self.op2.element_mapper
 
     def _set_element_name(self):
-        op2 = self.op2
+        op2_reader = self.op2_reader
         try:
-            self.element_name = op2.element_mapper[self.element_type]
+            op2_reader.element_name = self.element_mapper[op2_reader.element_type]
         except KeyError:
-            self.log.error(op2.code_information())
+            self.log.error(op2_reader.code_information())
             raise
-        self.data_code['element_name'] = self.element_name
+        op2_reader.data_code['element_name'] = op2_reader.element_name
 
     def _parse_stress_code_to_stress_bits(self):
         """
@@ -255,17 +260,18 @@ class OES(TableReader):
         stress_bits[3] = 0 -> duplicate of Bit[1] (stress/strain)
         stress_bits[4] = 0 -> material coordinate system flag
         """
-        bits = [0, 0, 0, 0, 0]
+        op2_reader = self.op2_reader
 
-        s_code = self.s_code
+        bits = [0, 0, 0, 0, 0]
+        s_code = op2_reader.s_code
         i = 4
         while s_code > 0:
             value = s_code % 2
             s_code = (s_code - value) // 2
             bits[i] = value
             i -= 1
-        self.stress_bits = bits
-        self.data_code['stress_bits'] = self.stress_bits
+        op2_reader.stress_bits = bits
+        op2_reader.data_code['stress_bits'] = op2_reader.stress_bits
 
     def _read_oes2_4(self, data, ndata):
         """
@@ -273,15 +279,15 @@ class OES(TableReader):
         """
         #assert self.isubtable == -4, self.isubtable
         #if self.is_debug_file:
-            #self.binary_debug.write('  element_name = %r\n' % self.element_name)
-        #print "element_name =", self.element_name
-        assert isinstance(self.format_code, int), self.format_code
-        assert self.is_stress is True, self.code_information()
-        self.data_code['is_stress_flag'] = True
-        self.data_code['is_strain_flag'] = False
+            #self.binary_debug.write('  element_name = %r\n' % op2_reader.element_name)
+        #print "element_name =", op2_reader.element_name
+        assert isinstance(op2_reader.format_code, int), op2_reader.format_code
+        assert self.is_stress is True, op2_reader.code_information()
+        op2_reader.data_code['is_stress_flag'] = True
+        op2_reader.data_code['is_strain_flag'] = False
 
         self._setup_op2_subcase('STRESS/STRAIN')
-        if self.element_type in [1, 3, 10, # CROD, CTUBE, CTUBE
+        if op2_reader.element_type in [1, 3, 10, # CROD, CTUBE, CTUBE
                                  11, 12, 13, # CELAS1, CELAS2, CELAS3,
                                  2, 4, 34, 33, 74, # CBEAM, CSHEAR, CBAR, CQUAD4, CTRIA3,
                                  75, 64, 70, 82, 144, # CTRIA6, CQUAD8, CTRIAR, CQUADR, CQUAD4
@@ -300,15 +306,15 @@ class OES(TableReader):
         """
         #assert self.isubtable == -4, self.isubtable
         #if self.is_debug_file:
-            #self.binary_debug.write('  element_name = %r\n' % self.element_name)
-        #print "element_name =", self.element_name
-        op2 = self.op2
-        assert isinstance(self.format_code, int), self.format_code
+            #self.binary_debug.write('  element_name = %r\n' % op2_reader.element_name)
+        #print "element_name =", op2_reader.element_name
+        op2_reader = self.op2_reader
+        assert isinstance(op2_reader.format_code, int), op2_reader.format_code
         assert self.is_stress is True, op2.code_information()
-        self.data_code['is_stress_flag'] = True
-        self.data_code['is_strain_flag'] = False
+        op2_reader.data_code['is_stress_flag'] = True
+        op2_reader.data_code['is_strain_flag'] = False
 
-        op2._setup_op2_subcase('STRESS/STRAIN')
+        op2_reader._setup_op2_subcase('STRESS/STRAIN')
         n = self._read_oes_4_sort(data, ndata)
         return n
 
@@ -316,8 +322,9 @@ class OES(TableReader):
         """
         reads OES1 subtable 3
         """
-        self._data_factor = 1
-        self.words = [
+        op2_reader = self.op2_reader
+        op2_reader._data_factor = 1
+        op2_reader.words = [
             'aCode', 'tCode', 'element_type', 'isubcase',
             '???', '???', '???', 'load_set'
             'format_code', 'num_wide', 's_code', '???',
@@ -327,69 +334,70 @@ class OES(TableReader):
             '???', 'Title', 'subtitle', 'label', '???']
 
         self.parse_approach_code(data)  # 3
-        self.sort_method = 2
+        op2_reader.sort_method = 2
 
         ## element type
-        self.element_type = self.add_data_parameter(data, 'element_type', b'i', 3, False)
+        op2_reader.element_type = self.add_data_parameter(data, 'element_type', b'i', 3, False)
 
         ## load set ID
-        self.load_set = self.add_data_parameter(data, 'load_set', b'i', 8, False)
+        op2_reader.load_set = self.add_data_parameter(data, 'load_set', b'i', 8, False)
 
         ## format code
-        self.format_code = self.add_data_parameter(data, 'format_code', b'i', 9, False)
+        op2_reader.format_code = self.add_data_parameter(data, 'format_code', b'i', 9, False)
 
         ## number of words per entry in record
         ## .. note:: is this needed for this table ???
-        self.num_wide = self.add_data_parameter(data, 'num_wide', b'i', 10, False)
+        op2_reader.num_wide = self.add_data_parameter(data, 'num_wide', b'i', 10, False)
 
         ## stress/strain codes
-        self.s_code = self.add_data_parameter(data, 's_code', b'i', 11, False)
+        op2_reader.s_code = self.add_data_parameter(data, 's_code', b'i', 11, False)
 
         ## thermal flag; 1 for heat ransfer, 0 otherwise
-        self.thermal = self.add_data_parameter(data, 'thermal', b'i', 23, False)
-        self.element_id = self.add_data_parameter(data, 'element_id', b'i', 5, fix_device_code=True)
-        self._element_id = self.add_data_parameter(data, '_element_id', b'f', 5, apply_nonlinear_factor=False, add_to_dict=True)
+        op2_reader.thermal = self.add_data_parameter(data, 'thermal', b'i', 23, False)
+        op2_reader.element_id = self.add_data_parameter(data, 'element_id', b'i', 5, fix_device_code=True)
+        op2_reader._element_id = self.add_data_parameter(data, '_element_id', b'f', 5, apply_nonlinear_factor=False, add_to_dict=True)
 
-        if self.analysis_code == 1:  # static...because reasons.
+        analysis_code = op2_reader.analysis_code
+        if analysis_code == 1:  # static...because reasons.
             self._analysis_code_fmt = b'f'
-            self.data_names = self.apply_data_code_value('data_names', ['element_id'])
-        elif self.analysis_code == 2:  # real eigenvalues
-            self._analysis_code_fmt = b'i'
-            self.eign = self.add_data_parameter(data, 'eign', b'f', 6, False)
-            self.mode_cycle = self.add_data_parameter(data, 'mode_cycle', b'i', 7, False)  # mode or cycle .. todo:: confused on the type - F1???
-            self.data_names = self.apply_data_code_value('data_names', ['element_id', 'eign', 'mode_cycle'])
-        elif self.analysis_code == 5:   # frequency
+            op2_reader.data_names = self.apply_data_code_value('data_names', ['element_id'])
+        elif analysis_code == 2:  # real eigenvalues
+            op2_reader._analysis_code_fmt = b'i'
+            op2_reader.eign = self.add_data_parameter(data, 'eign', b'f', 6, False)
+            op2_reader.mode_cycle = self.add_data_parameter(data, 'mode_cycle', b'i', 7, False)  # mode or cycle .. todo:: confused on the type - F1???
+            op2_reader.data_names = self.apply_data_code_value('data_names', ['element_id', 'eign', 'mode_cycle'])
+        elif op2_reader.analysis_code == 5:   # frequency
             self._analysis_code_fmt = b'f'
-            self.data_names = self.apply_data_code_value('data_names', ['element_id'])
+            op2_reader.data_names = self.apply_data_code_value('data_names', ['element_id'])
             self.apply_data_code_value('analysis_method', 'freq')
-        elif self.analysis_code == 6:  # transient
+        elif analysis_code == 6:  # transient
             self._analysis_code_fmt = b'f'
-            self.data_names = self.apply_data_code_value('data_names', ['element_id'])
+            op2_reader.data_names = self.apply_data_code_value('data_names', ['element_id'])
             self.apply_data_code_value('analysis_method', 'dt')
-        elif self.analysis_code == 7:  # pre-buckling
+        elif analysis_code == 7:  # pre-buckling
             self._analysis_code_fmt = b'i'
-            self.data_names = self.apply_data_code_value('data_names', ['element_id'])
+            op2_reader.data_names = self.apply_data_code_value('data_names', ['element_id'])
             self.apply_data_code_value('analysis_method', 'lsdvmn')
-        elif self.analysis_code == 8:  # post-buckling
+        elif analysis_code == 8:  # post-buckling
             self._analysis_code_fmt = b'f'
-            self.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
-            self.data_names = self.apply_data_code_value('data_names', ['element_id', 'eigr'])
+            op2_reader.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
+            op2_reader.data_names = self.apply_data_code_value('data_names', ['element_id', 'eigr'])
             self.apply_data_code_value('analysis_method', 'eigr')
-        elif self.analysis_code == 9:  # complex eigenvalues
+        elif analysis_code == 9:  # complex eigenvalues
             # mode number
             self._analysis_code_fmt = b'i'
-            self.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
-            self.eigi = self.add_data_parameter(data, 'eigi', b'f', 7, False)
-            self.data_names = self.apply_data_code_value('data_names', ['element_id', 'eigr', 'eigi'])
+            op2_reader.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
+            op2_reader.eigi = self.add_data_parameter(data, 'eigi', b'f', 7, False)
+            op2_reader.data_names = self.apply_data_code_value('data_names', ['element_id', 'eigr', 'eigi'])
             self.apply_data_code_value('analysis_method', 'mode')
-        elif self.analysis_code == 10:  # nonlinear statics
+        elif analysis_code == 10:  # nonlinear statics
             # load step
             self._analysis_code_fmt = b'f'
-            self.data_names = self.apply_data_code_value('data_names', ['element_id'])
+            op2_reader.data_names = self.apply_data_code_value('data_names', ['element_id'])
             self.apply_data_code_value('analysis_method', 'lftsfq')
-        elif self.analysis_code == 11:  # old geometric nonlinear statics
+        elif analysis_code == 11:  # old geometric nonlinear statics
             # load set number
-            self.data_names = self.apply_data_code_value('data_names', ['element_id'])
+            op2_reader.data_names = self.apply_data_code_value('data_names', ['element_id'])
         elif self.analysis_code == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
             self.data_names = self.apply_data_code_value('data_names', ['element_id'])
         else:
@@ -421,41 +429,41 @@ class OES(TableReader):
         is_complex = False
         is_random = True
         #format_code = get_format_code(is_sort2, is_complex, is_random)
-        #self.format_code = format_code
-        #self.data_code['format_code'] = format_code
+        #op2_reader.format_code = format_code
+        #op2_reader.data_code['format_code'] = format_code
 
 
     def _fix_oes_sort2(self, data):
         self.fix_format_code()
         #print('self.format_code_original =', self.format_code_original)
-        #print('self.format_code =', self.format_code)
+        #print('op2_reader.format_code =', op2_reader.format_code)
             #self.fix_format_code()
-            #if self.format_code == 1:
-                #self.format_code = 2
+            #if op2_reader.format_code == 1:
+                #op2_reader.format_code = 2
                 #self.data_code['format_code'] = 2
-            #assert self.format_code in [2, 3], self.code_information()
+            #assert op2_reader.format_code in [2, 3], op2_reader.code_information()
 
         if 1:
             self.fix_format_code()
-            #if self.num_wide == 8:
-                #self.format_code = 1
-                #self.data_code['format_code'] = 1
+            #if op2_reader.num_wide == 8:
+                #op2_reader.format_code = 1
+                #op2_reader.data_code['format_code'] = 1
             #else:
                 ##self.fix_format_code()
-                #if self.format_code == 1:
-                    #self.format_code = 2
-                    #self.data_code['format_code'] = 2
-                #assert self.format_code in [2, 3], self.code_information()
+                #if op2_reader.format_code == 1:
+                    #op2_reader.format_code = 2
+                    #op2_reader.data_code['format_code'] = 2
+                #assert op2_reader.format_code in [2, 3], op2_reader.code_information()
 
         self._parse_thermal_code()
         if self.is_debug_file:
-            self.binary_debug.write('  %-14s = %r %s\n' % ('approach_code', self.approach_code,
-                                                           self.approach_code_str(self.approach_code)))
-            self.binary_debug.write('  %-14s = %r\n' % ('tCode', self.tCode))
-            self.binary_debug.write('  %-14s = %r\n' % ('isubcase', self.isubcase))
+            self.binary_debug.write('  %-14s = %r %s\n' % ('approach_code', op2_reader.approach_code,
+                                                           op2_reader.approach_code_str(op2_reader.approach_code)))
+            self.binary_debug.write('  %-14s = %r\n' % ('tCode', op2_reader.tCode))
+            self.binary_debug.write('  %-14s = %r\n' % ('isubcase', op2_reader.isubcase))
         self._read_title(data)
         self._write_debug_bits()
-        #assert isinstance(self.nonlinear_factor, int), self.nonlinear_factor
+        #assert isinstance(op2_reader.nonlinear_factor, int), op2_reader.nonlinear_factor
 
     def _read_ostr1_4(self, data, ndata):
         """
@@ -463,8 +471,8 @@ class OES(TableReader):
         """
         #assert self.isubtable == -4, self.isubtable
         #if self.is_debug_file:
-            #self.binary_debug.write('  element_name = %r\n' % self.element_name)
-        #print "element_name =", self.element_name
+            #self.binary_debug.write('  element_name = %r\n' % op2_reader.element_name)
+        #print "element_name =", op2_reader.element_name
         assert self.is_strain is True, self.code_information()
         self.data_code['is_stress_flag'] = False
         self.data_code['is_strain_flag'] = True
@@ -479,14 +487,14 @@ class OES(TableReader):
         """
         #assert self.isubtable == -4, self.isubtable
         #if self.is_debug_file:
-            #self.binary_debug.write('  element_name = %r\n' % self.element_name)
-        #print("element_name =", self.element_name)
+            #self.binary_debug.write('  element_name = %r\n' % op2_reader.element_name)
+        #print("element_name =", op2_reader.element_name)
         assert self.is_strain is True, self.code_information()
         self.data_code['is_stress_flag'] = False
         self.data_code['is_strain_flag'] = True
 
         self._setup_op2_subcase('STRESS/STRAIN')
-        if self.element_type in [1, 3, 10, # CROD, CTUBE, CTUBE
+        if op2_reader.element_type in [1, 3, 10, # CROD, CTUBE, CTUBE
                                  11, 12, 13, # CELAS1, CELAS2, CELAS3,
                                  2, 4, 34, 33, 74, # CBEAM, CSHEAR, CBAR, CQUAD4, CTRIA3,
                                  75, 64, 70, 82, 144, # CTRIA6, CQUAD8, CTRIAR, CQUADR, CQUAD4
@@ -544,17 +552,17 @@ class OES(TableReader):
         """
         Reads OES1 subtable 4
         """
-        #if self.num_wide == 146:
-            #assert self.num_wide != 146
+        #if op2_reader.num_wide == 146:
+            #assert op2_reader.num_wide != 146
             #assert ndata != 146, self.code_information()
-        op2 = self.op2
-        assert isinstance(self.format_code, int), self.format_code
-        if self.thermal == 0:
+        op2_reader = self.op2_reader
+        assert isinstance(op2_reader.format_code, int), op2_reader.format_code
+        if op2_reader.thermal == 0:
             n = self._read_oes1_loads(data, ndata)
-        elif self.thermal == 1:
+        elif op2_reader.thermal == 1:
             n = self._read_oes1_thermal(data, ndata)
         else:
-            msg = 'thermal=%s' % self.thermal
+            msg = 'thermal=%s' % op2_reader.thermal
             n = self._not_implemented_or_skip(data, ndata, msg)
         return n
 
@@ -563,8 +571,8 @@ class OES(TableReader):
         """
         Reads OSTR1 subtable 4
         """
-        #if self.num_wide == 146:
-            #assert self.num_wide != 146
+        #if op2_reader.num_wide == 146:
+            #assert op2_reader.num_wide != 146
             #assert ndata != 146, self.code_information()
         if self.thermal == 0:
             n = self._read_oes1_loads(data, ndata)
@@ -1062,11 +1070,11 @@ class OES(TableReader):
             (68, 2, 102, b'OESVM1') : ('cpenta', 'NA'),
         }
 
-        key = (self.element_type, self.format_code, self.num_wide, self.table_name)
+        key = (op2_reader.element_type, op2_reader.format_code, op2_reader.num_wide, op2_reader.table_name)
         try:
             return stress_mapper[key]
         except KeyError:
-            self.log.error(self.code_information())
+            self.log.error(op2_reader.code_information())
             msg = ('stress_mapper (~line 850 of oes.py) does not contain the '
                    'following key and must be added\n'
                    'key=(element_type=%r, format_code=%r, num_wide=%r, table_name=%r) ' % key)
@@ -1102,158 +1110,159 @@ class OES(TableReader):
         STRESS/STRAIN    DOES1/DOSTR1  Scaled Response Spectra
         MODCON           OSTRMC        Modal contributions
         """
-        op2 = self.op2
+        op2_reader = self.op2_reader
         prefix = ''
         postfix = ''
-        if self.table_name in [b'OES1X1', b'OES1X', b'OSTR1X', b'OES1C', b'OSTR1C', b'OES1', ]:
+        table_name = op2_reader.table_name
+        if table_name in [b'OES1X1', b'OES1X', b'OSTR1X', b'OES1C', b'OSTR1C', b'OES1', ]:
             pass
-        elif self.table_name in [b'OES2', b'OSTR2', b'OES2C', b'OSTR2C']:
-            assert self.sort_method == 2, self.sort_method
-        #elif self.table_name in ['OESNLXR']:
+        elif table_name in [b'OES2', b'OSTR2', b'OES2C', b'OSTR2C']:
+            assert op2_reader.sort_method == 2, op2_reader.sort_method
+        #elif table_name in ['OESNLXR']:
             #prefix = 'sideline_'
-        elif self.table_name in [b'OESNLXD', b'OESNL1X', b'OESNLXR']:
+        elif table_name in [b'OESNLXD', b'OESNL1X', b'OESNLXR']:
             prefix = 'nonlinear_'
-        elif self.table_name == b'OESNLBR':
+        elif table_name == b'OESNLBR':
             prefix = 'sideline_'
-        elif self.table_name == b'OESRT':
+        elif table_name == b'OESRT':
             prefix = 'strength_ratio.'
-        elif self.table_name in [b'OESCP', b'OESTRCP']:
+        elif table_name in [b'OESCP', b'OESTRCP']:
             # guessing
             pass
-            #self.sort_bits[0] = 0 # real; ???
-            #self.sort_bits[1] = 0 # sort1
-            #self.sort_bits[2] = 1 # random; ???
-        elif self.table_name in [b'OESVM1C', b'OSTRVM1C', b'OESVM1', b'OSTRVM1']:
+            #op2_reader.sort_bits[0] = 0 # real; ???
+            #op2_reader.sort_bits[1] = 0 # sort1
+            #op2_reader.sort_bits[2] = 1 # random; ???
+        elif table_name in [b'OESVM1C', b'OSTRVM1C', b'OESVM1', b'OSTRVM1']:
             prefix = 'modal_contribution.'
 
         #----------------------------------------------------------------
-        elif self.table_name in [b'OSTRMS1C']: #, b'OSTRMS1C']:
-            self.format_code = 1
-            self.sort_bits[0] = 0 # real
+        elif table_name in [b'OSTRMS1C']: #, b'OSTRMS1C']:
+            op2_reader.format_code = 1
+            op2_reader.sort_bits[0] = 0 # real
             prefix = 'rms.'
-        elif self.table_name in [b'OESXRMS1']: # wrong...
-            self.format_code = 1
-            self.sort_bits[0] = 0 # real
-            self.sort_bits[1] = 0 # sort1
-            self.sort_bits[2] = 1 # random
+        elif table_name in [b'OESXRMS1']: # wrong...
+            op2_reader.format_code = 1
+            op2_reader.sort_bits[0] = 0 # real
+            op2_reader.sort_bits[1] = 0 # sort1
+            op2_reader.sort_bits[2] = 1 # random
             self._analysis_code_fmt = b'i'
-            self.sort_method = 1
-            #self.data_code['nonlinear_factor'] = self._element_id
-            #assert self.sort_method == 2, self.code_information()
-            #self.nonlinear_factor = self.n
-            #self.data_code['nonlinear_factor'] = None
+            op2_reader.sort_method = 1
+            #op2_reader.data_code['nonlinear_factor'] = op2_reader._element_id
+            #assert op2_reader.sort_method == 2, op2_reader.code_information()
+            #op2_reader.nonlinear_factor = self.n
+            #op2_reader.data_code['nonlinear_factor'] = None
             prefix = 'rms.'
-        elif self.table_name in [b'OESXRMS2']: # wrong...
-            self.sort_bits[1] = 1 # sort2
+        elif table_name in [b'OESXRMS2']: # wrong...
+            op2_reader.sort_bits[1] = 1 # sort2
             prefix = 'rms.'
-        elif self.table_name in [b'OESRMS1', b'OSTRRMS1']:
-            self.format_code = 1
-            self.sort_bits[0] = 0 # real
-            assert self.sort_method == 1, self.code_information()
+        elif table_name in [b'OESRMS1', b'OSTRRMS1']:
+            op2_reader.format_code = 1
+            op2_reader.sort_bits[0] = 0 # real
+            assert op2_reader.sort_method == 1, op2_reader.code_information()
             self._analysis_code_fmt = b'i'
             prefix = 'rms.'
-        elif self.table_name in [b'OESRMS2', b'OSTRRMS2']:
-            #self.format_code = 1
-            self.sort_bits[0] = 0 # real
-            self.sort_bits[1] = 0 # sort1
-            self.sort_bits[2] = 1 # random
-            self.sort_method = 1
+        elif table_name in [b'OESRMS2', b'OSTRRMS2']:
+            #op2_reader.format_code = 1
+            op2_reader.sort_bits[0] = 0 # real
+            op2_reader.sort_bits[1] = 0 # sort1
+            op2_reader.sort_bits[2] = 1 # random
+            op2_reader.sort_method = 1
             self._analysis_code_fmt = b'i'
-            #assert self.sort_method == 2, self.code_information()
+            #assert op2_reader.sort_method == 2, op2_reader.code_information()
             prefix = 'rms.'
 
-        elif self.table_name in [b'OESNO1', b'OSTRNO1', b'OSTNO1C']:
-            assert self.sort_method == 1, self.code_information()
-            self.format_code = 1
-            self.sort_bits[0] = 0 # real
-            self.sort_bits[2] = 1 # random
+        elif table_name in [b'OESNO1', b'OSTRNO1', b'OSTNO1C']:
+            assert op2_reader.sort_method == 1, op2_reader.code_information()
+            op2_reader.format_code = 1
+            op2_reader.sort_bits[0] = 0 # real
+            op2_reader.sort_bits[2] = 1 # random
             prefix = 'no.'
-        elif self.table_name in [b'OESNO2', b'OSTRNO2']:
-            self.format_code = 1
-            self.sort_bits[0] = 0 # real
-            self.sort_bits[1] = 0 # sort1
-            #self.sort_bits[0] = 1 # sort2
-            self.sort_bits[2] = 1 # random
-            self.sort_method = 1
-            self.data_code['nonlinear_factor'] = None
+        elif table_name in [b'OESNO2', b'OSTRNO2']:
+            op2_reader.format_code = 1
+            op2_reader.sort_bits[0] = 0 # real
+            op2_reader.sort_bits[1] = 0 # sort1
+            #op2_reader.sort_bits[0] = 1 # sort2
+            op2_reader.sort_bits[2] = 1 # random
+            op2_reader.sort_method = 1
+            op2_reader.data_code['nonlinear_factor'] = None
             self._analysis_code_fmt = b'i'
             prefix = 'no.'
         #----------------------------------------------------------------
 
-        elif self.table_name in [b'OESPSD1', b'OSTRPSD1']:
-            #self.format_code = 1
-            self.sort_bits[0] = 0 # real
-            self.sort_bits[1] = 0 # sort1
-            self.sort_bits[2] = 1 # random
+        elif table_name in [b'OESPSD1', b'OSTRPSD1']:
+            #op2_reader.format_code = 1
+            op2_reader.sort_bits[0] = 0 # real
+            op2_reader.sort_bits[1] = 0 # sort1
+            op2_reader.sort_bits[2] = 1 # random
             prefix = 'psd.'
-        elif self.table_name in [b'OESPSD2', b'OSTRPSD2']:
-            self.format_code = 1
-            self.sort_bits[0] = 0 # real
-            self.sort_bits[1] = 1 # sort2
-            self.sort_bits[2] = 1 # random
+        elif table_name in [b'OESPSD2', b'OSTRPSD2']:
+            op2_reader.format_code = 1
+            op2_reader.sort_bits[0] = 0 # real
+            op2_reader.sort_bits[1] = 1 # sort2
+            op2_reader.sort_bits[2] = 1 # random
             prefix = 'psd.'
 
-        elif self.table_name in [b'OESATO1', b'OSTRATO1']:
+        elif table_name in [b'OESATO1', b'OSTRATO1']:
             prefix = 'ato.'
-        elif self.table_name in [b'OESATO2', b'OSTRATO2']:
+        elif table_name in [b'OESATO2', b'OSTRATO2']:
             prefix = 'ato.'
 
-        elif self.table_name in [b'OESCRM1', b'OSTRCRM1']:
+        elif table_name in [b'OESCRM1', b'OSTRCRM1']:
             prefix = 'crm.'
-        elif self.table_name in [b'OESCRM2', b'OSTRCRM2']:
+        elif table_name in [b'OESCRM2', b'OSTRCRM2']:
             # sort2, random
-            self.format_code = 1 # real
-            self.sort_bits[0] = 0 # real
-            self.sort_bits[1] = 1 # sort2
-            self.sort_bits[2] = 1 # random
-            self.sort_method = 2
+            op2_reader.format_code = 1 # real
+            op2_reader.sort_bits[0] = 0 # real
+            op2_reader.sort_bits[1] = 1 # sort2
+            op2_reader.sort_bits[2] = 1 # random
+            op2_reader.sort_method = 2
             prefix = 'crm.'
-        #elif self.table_name in ['DOES1', 'DOSTR1']:
+        #elif table_name in ['DOES1', 'DOSTR1']:
             #prefix = 'scaled_response_spectra_'
-        #elif self.table_name in ['OESCP']:
+        #elif table_name in ['OESCP']:
 
-        elif self.table_name in [b'RASCONS']: #, b'OSTRMS1C']:
-            self.format_code = 1
-            self.sort_bits[0] = 0 # real
+        elif table_name in [b'RASCONS']: #, b'OSTRMS1C']:
+            op2_reader.format_code = 1
+            op2_reader.sort_bits[0] = 0 # real
             prefix = 'RASCONS.'
-        elif self.table_name in [b'RAECONS']: #, b'OSTRMS1C']:
-            self.format_code = 1
-            self.sort_bits[0] = 0 # real
+        elif table_name in [b'RAECONS']: #, b'OSTRMS1C']:
+            op2_reader.format_code = 1
+            op2_reader.sort_bits[0] = 0 # real
             prefix = 'RAECONS.'
-        elif self.table_name in [b'RAPCONS']: #, b'OSTRMS1C']:
-            self.format_code = 1
-            self.sort_bits[0] = 0 # real
+        elif table_name in [b'RAPCONS']: #, b'OSTRMS1C']:
+            op2_reader.format_code = 1
+            op2_reader.sort_bits[0] = 0 # real
             prefix = 'RAPCONS.'
 
-        elif self.table_name in [b'RASEATC']: #, b'OSTRMS1C']:
-            self.format_code = 1
-            self.sort_bits[0] = 0 # real
+        elif table_name in [b'RASEATC']: #, b'OSTRMS1C']:
+            op2_reader.format_code = 1
+            op2_reader.sort_bits[0] = 0 # real
             prefix = 'RASEATC.'
-        elif self.table_name in [b'RAEEATC']: #, b'OSTRMS1C']:
-            self.format_code = 1
-            self.sort_bits[0] = 0 # real
+        elif table_name in [b'RAEEATC']: #, b'OSTRMS1C']:
+            op2_reader.format_code = 1
+            op2_reader.sort_bits[0] = 0 # real
             prefix = 'RAEEATC.'
-        elif self.table_name in [b'RAPEATC']: #, b'OSTRMS1C']:
-            self.format_code = 1
-            self.sort_bits[0] = 0 # real
+        elif table_name in [b'RAPEATC']: #, b'OSTRMS1C']:
+            op2_reader.format_code = 1
+            op2_reader.sort_bits[0] = 0 # real
             prefix = 'RAPEATC.'
 
         else:
-            raise NotImplementedError(self.table_name)
-        self.data_code['sort_bits'] = self.sort_bits
-        self.data_code['nonlinear_factor'] = op2.nonlinear_factor
+            raise NotImplementedError(table_name)
+        op2_reader.data_code['sort_bits'] = op2_reader.sort_bits
+        op2_reader.data_code['nonlinear_factor'] = op2_reader.nonlinear_factor
         return prefix, postfix
 
     def _read_oes1_loads(self, data, ndata):
         """
         Reads OES self.thermal=0 stress/strain
         """
-        op2 = self.op2
+        op2_reader = self.op2_reader
         prefix, postfix = self.get_oes_prefix_postfix()
         #self._apply_oes_ato_crm_psd_rms_no('') # TODO: just testing
         n = 0
         is_magnitude_phase = self.is_magnitude_phase()
-        dt = op2.nonlinear_factor
+        dt = op2_reader.nonlinear_factor
 
         #flag = 'element_id'
         if self.is_stress:
@@ -1265,12 +1274,12 @@ class OES(TableReader):
 
         #if self.is_stress:
             #_result_name, _class_obj = self.get_stress_mapper()
-        if op2.table_name_str == 'OESXRMS1':
+        if op2_reader.table_name_str == 'OESXRMS1':
             assert self.sort_method == 1, self.code_information()
 
         if self._results.is_not_saved(result_name):
             return ndata
-        if self.element_type in [1, 3, 10]:  # rods
+        if op2_reader.element_type in [1, 3, 10]:  # rods
             # 1-CROD
             # 3-CTUBE
             # 10-CONROD
@@ -1278,19 +1287,19 @@ class OES(TableReader):
             if nelements is None:
                 return n
 
-        elif self.element_type == 2: # CBEAM
+        elif op2_reader.element_type == 2: # CBEAM
             # 2-CBEAM
             n, nelements, ntotal = self._oes_cbeam(data, ndata, dt, is_magnitude_phase, prefix, postfix)
             if nelements is None:
                 return n
 
-        elif self.element_type == 4: # CSHEAR
+        elif op2_reader.element_type == 4: # CSHEAR
             # 4-CSHEAR
             n, nelements, ntotal = self._oes_cshear(data, ndata, dt, is_magnitude_phase, prefix, postfix)
             if nelements is None:
                 return n
 
-        elif self.element_type in [11, 12, 13, 14]:  # springs
+        elif op2_reader.element_type in [11, 12, 13, 14]:  # springs
             # 11-CELAS1
             # 12-CELAS2
             # 13-CELAS3
@@ -1299,12 +1308,12 @@ class OES(TableReader):
             if nelements is None:
                 return n
 
-        elif self.element_type == 34: # CBAR
+        elif op2_reader.element_type == 34: # CBAR
             n, nelements, ntotal = self._oes_cbar_34(data, ndata, dt, is_magnitude_phase, prefix, postfix)
             if nelements is None:
                 return n
 
-        elif self.element_type in [39, 67, 68]: # solid stress
+        elif op2_reader.element_type in [39, 67, 68]: # solid stress
             # 39-CTETRA
             # 67-CHEXA
             # 68-CPENTA
@@ -1313,17 +1322,17 @@ class OES(TableReader):
                 return n
         #=========================
         # plates
-        elif self.element_type == 33:  # CQUAD4-centroidal
+        elif op2_reader.element_type == 33:  # CQUAD4-centroidal
             n, nelements, ntotal = self._oes_cquad4_33(data, ndata, dt, is_magnitude_phase, prefix, postfix)
             if nelements is None:
                 return n
 
-        elif self.element_type == 74:  # TRIA3
+        elif op2_reader.element_type == 74:  # TRIA3
             n, nelements, ntotal = self._oes_ctria3(data, ndata, dt, is_magnitude_phase, prefix, postfix)
             if nelements is None:
                 return n
 
-        elif self.element_type in [64, 70, 75, 82, 144]:  # bilinear plates
+        elif op2_reader.element_type in [64, 70, 75, 82, 144]:  # bilinear plates
             # 64-CQUAD8
             # 70-CTRIAR
             # 75-CTRIA6
@@ -1333,14 +1342,14 @@ class OES(TableReader):
             if nelements is None:
                 return n
 
-        elif self.element_type in [88, 90]: # nonlinear shells
+        elif op2_reader.element_type in [88, 90]: # nonlinear shells
             # 88-CTRIA3NL
             # 90-CQUAD4NL
             n, nelements, ntotal = self._oes_shells_nonlinear(data, ndata, dt, is_magnitude_phase, stress_name, prefix, postfix)
             if nelements is None:
                 return n
 
-        elif self.element_type in [95, 96, 97, 98]: # composite shell
+        elif op2_reader.element_type in [95, 96, 97, 98]: # composite shell
             # 95 - CQUAD4
             # 96 - CQUAD8
             # 97 - CTRIA3
@@ -1349,25 +1358,25 @@ class OES(TableReader):
             if nelements is None:
                 return n
 
-        elif self.element_type == 53: # axial plates - ctriax6
+        elif op2_reader.element_type == 53: # axial plates - ctriax6
             # 53 - CTRIAX6
             n, nelements, ntotal = self._oes_ctriax6(data, ndata, dt, is_magnitude_phase, stress_name, prefix, postfix)
             if nelements is None:
                 return n
 
-        elif self.element_type == 102: # cbush
+        elif op2_reader.element_type == 102: # cbush
             # 102-CBUSH
             n, nelements, ntotal = self._oes_cbush(data, ndata, dt, is_magnitude_phase, stress_name, prefix, postfix)
             if nelements is None:
                 return n
 
-        elif self.element_type == 40:  # cbush1d
+        elif op2_reader.element_type == 40:  # cbush1d
             # 40-CBUSH1D
             n, nelements, ntotal = self._oes_cbush1d(data, ndata, dt, is_magnitude_phase, stress_name, prefix, postfix)
             if nelements is None:
                 return n
 
-        elif self.element_type in [87, 89, 92]:  # nonlinear rods
+        elif op2_reader.element_type in [87, 89, 92]:  # nonlinear rods
             # 87-CTUBENL
             # 89-RODNL
             # 92-CONRODNL
@@ -1375,7 +1384,7 @@ class OES(TableReader):
             if nelements is None:
                 return n
 
-        elif self.element_type in [224, 225]: # nonlinear spring
+        elif op2_reader.element_type in [224, 225]: # nonlinear spring
             # 224-CELAS1
             # 225-CELAS3
             # NonlinearSpringStress
@@ -1383,82 +1392,82 @@ class OES(TableReader):
             if nelements is None:
                 return n
 
-        elif self.element_type == 35:
+        elif op2_reader.element_type == 35:
             # 35-CON
             return ndata
-        elif self.element_type in [60, 61]:
+        elif op2_reader.element_type in [60, 61]:
             # 60-DUM8
             # 61-DUM9
             return ndata
-        elif self.element_type == 69:  # cbend
+        elif op2_reader.element_type == 69:  # cbend
             # 69-CBEND
             n, nelements, ntotal = self._oes_cbend(data, ndata, dt, is_magnitude_phase, stress_name, prefix, postfix)
             return ndata
-        elif self.element_type == 86:  # cgap
+        elif op2_reader.element_type == 86:  # cgap
             # 86-GAPNL
             n, nelements, ntotal = self._oes_cgap_nonlinear(data, ndata, dt, is_magnitude_phase, stress_name, prefix, postfix)
             if nelements is None:
                 return n
 
-        elif self.element_type == 94:
+        elif op2_reader.element_type == 94:
             # 94-BEAMNL
             n, nelements, ntotal = self._oes_cbeam_nonlinear(data, ndata, dt, is_magnitude_phase, stress_name, prefix, postfix)
             if nelements is None:
                 return n
 
-        elif self.element_type in [85, 91, 93]:
+        elif op2_reader.element_type in [85, 91, 93]:
             n, nelements, ntotal = self._oes_csolid_nonlinear(data, ndata, dt, is_magnitude_phase, stress_name, prefix, postfix)
             if nelements is None:
                 return n
 
-        elif self.element_type == 100:  # bars
+        elif op2_reader.element_type == 100:  # bars
             # 100-BARS
             n, nelements, ntotal = self._oes_cbar_100(data, ndata, dt, is_magnitude_phase,
                                                       stress_name, prefix, postfix)
             if nelements is None:
                 return n
 
-        elif self.element_type == 101:
+        elif op2_reader.element_type == 101:
             # 101-AABSF
             return ndata
-        elif self.element_type in [140, 201]:
+        elif op2_reader.element_type in [140, 201]:
             # 140-HEXA8FD, 201-QUAD4FD
             return ndata
-        elif self.element_type in [145, 146, 147]:
+        elif op2_reader.element_type in [145, 146, 147]:
             n, nelements, ntotal = self._oes_vu_solid(data, ndata, dt, is_magnitude_phase, stress_name, prefix, postfix)
             if nelements is None:
                 return n
 
-        elif self.element_type == 139:
+        elif op2_reader.element_type == 139:
             n, nelements, ntotal = self._oes_hyperelastic_quad(data, ndata, dt, is_magnitude_phase, stress_name, prefix, postfix)
             if nelements is None:
                 return n
 
-        elif self.element_type == 189:
+        elif op2_reader.element_type == 189:
             # 189-VUQUAD
-            if self.element_type == 189:  # VQUAD
+            if op2_reader.element_type == 189:  # VQUAD
                 if self.read_mode == 1:
                     return ndata
                 #ntotal = 440  # 6+(33-7)*4 =  -> 110*4 = 440
                 nnodes = 4    # 4 corner points + 1 centroid
                 etype = 'VUQUAD4'
-            #elif self.element_type == 144:  # CQUAD4
+            #elif op2_reader.element_type == 144:  # CQUAD4
                 #ntotal = 440  # 6+(33-7)*4 =  -> 110*4 = 440
                 #nnodes = 4    # 4 corner points
                 #etype = 'CQUAD4'
-            #elif self.element_type == 64:  # CQUAD8
+            #elif op2_reader.element_type == 64:  # CQUAD8
                 #ntotal = 348  # 2+17*5 = 87 -> 87*4 = 348
                 #nnodes = 4    # centroid + 4 corner points
                 #etype = 'CQUAD8'
-            #elif self.element_type == 82:  # CQUADR
+            #elif op2_reader.element_type == 82:  # CQUADR
                 #ntotal = 348  # 2+17*5 = 87 -> 87*4 = 348
                 #nnodes = 4    # centroid + 4 corner points
                 #etype = 'CQUADR'
-            #elif self.element_type == 75:  # CTRIA6
+            #elif op2_reader.element_type == 75:  # CTRIA6
                 #ntotal = 280  # 2+17*3 = 70 -> 70*4 = 280
                 #nnodes = 3    # centroid + 3 corner points
                 #etype = 'CTRIA6'
-            #elif self.element_type == 70:  # CTRIAR
+            #elif op2_reader.element_type == 70:  # CTRIAR
                 #ntotal = 280  # 2+17*3 = 70 -> 70*4 = 280
                 #nnodes = 3    # centroid + 3 corner points
                 #etype = 'CTRIAR'
@@ -1468,7 +1477,7 @@ class OES(TableReader):
             numwide_real = 6 + (23 - 6) * nnodes  # real???
             numwide_imag = 6 + (33 - 6) * nnodes  # imag???
 
-            if self.format_code == 1 and self.num_wide == numwide_real:  # real???
+            if op2_reader.format_code == 1 and op2_reader.num_wide == numwide_real:  # real???
                 ntotal = numwide_real * 4
                 s2 = Struct(self._endian + b'3i4s2i')
                 s3 = Struct(self._endian + b'i16f')
@@ -1484,7 +1493,7 @@ class OES(TableReader):
                     n += 68
 
                     if self.is_debug_file:
-                        self.binary_debug.write('%s-%s - %s\n' % (etype, self.element_type, str(out)))
+                        self.binary_debug.write('%s-%s - %s\n' % (etype, op2_reader.element_type, str(out)))
 
                     #obj.add_new_node(dt, eid, parent, coord, icord, theta, itype)
                     #obj.add_new_eid(eType, dt, eid, parent, coord, icord, theta, itype)
@@ -1501,28 +1510,28 @@ class OES(TableReader):
                                      #dummy3, dummy4, dummy5,
                                      #bcx, bcy, bcxy, tyz, tzx,
                                      #dummy6, dummy7, dummy8)
-            elif self.num_wide == numwide_imag:
+            elif op2_reader.num_wide == numwide_imag:
                 ntotal = numwide_imag * 4
                 nelements = ndata // ntotal
                 n = nelements * ntotal
             else:
-                msg = 'numwide=%s' % self.num_wide
+                msg = 'numwide=%s' % op2_reader.num_wide
                 return self._not_implemented_or_skip(data, ndata, msg)
 
-        elif self.element_type in [47, 48, 189, 190]:
+        elif op2_reader.element_type in [47, 48, 189, 190]:
             # 47-AXIF2
             # 48-AXIF3
             # 190-VUTRIA
             return ndata
-        elif self.element_type == 191:
+        elif op2_reader.element_type == 191:
             # 191-VUBEAM
             return ndata
-        elif self.element_type in [50, 51, 203]:
+        elif op2_reader.element_type in [50, 51, 203]:
             # 203-SLIF1D?
             # 50-SLOT3
             # 51-SLOT4
             return ndata
-        elif self.element_type in [160, 161, 162, 163, 164, 165, 166, 167, 168,
+        elif op2_reader.element_type in [160, 161, 162, 163, 164, 165, 166, 167, 168,
                                    169, 170, 171, 172, 202,
                                    204, 218, 211, 213, 214,
                                    216, 217, 219, 220, 221, 222, 223,
@@ -1558,18 +1567,18 @@ class OES(TableReader):
             # 233-TRIARLC
             # 235-CQUADR
             return ndata
-        #elif self.element_type in [255]:
+        #elif op2_reader.element_type in [255]:
             #return ndata
-        elif self.element_type in [271, 275]:
+        elif op2_reader.element_type in [271, 275]:
             # 271-CPLSTN3
             # 275-CPLSTS3
             msg = self.code_information()
             return self._not_implemented_or_skip(data, ndata, msg)
-            if self.element_type == 271:
+            if op2_reader.element_type == 271:
                 result_name = 'cplstn3'
                 nnodes = 1
                 ntotal = 4 * 6
-            elif self.element_type == 275:
+            elif op2_reader.element_type == 275:
                 result_name = 'cplsts3'
                 nnodes = 1
                 ntotal = 4 * 6
@@ -1583,11 +1592,11 @@ class OES(TableReader):
                 result_name += '_strain'
 
             numwide_real = ntotal // 4
-            if self.format_code == 1 and self.num_wide == numwide_real:
+            if op2_reader.format_code == 1 and op2_reader.num_wide == numwide_real:
                 #ntotal = 4 * (1 + 6 * (nnodes))
                 nelements = ndata // ntotal
 
-                #self._data_factor = 10  # TODO: why is this 10?
+                #op2_reader._data_factor = 10  # TODO: why is this 10?
                 if self.is_stress:
                     obj_vector_real = RealCPLSTRNPlateStressArray
                     #result_name = 'cplstn3_stress'
@@ -1599,11 +1608,11 @@ class OES(TableReader):
                 auto_return, is_vectorized = self._create_oes_object4(
                     nelements, result_name, slot, obj_vector_real)
                 if auto_return:
-                    return nelements * self.num_wide * 4
+                    return nelements * op2_reader.num_wide * 4
 
                 obj = self.obj
                 #if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * self.num_wide * 4
+                n = nelements * op2_reader.num_wide * 4
 
                 istart = obj.itotal
                 iend = istart + nelements
@@ -1617,24 +1626,24 @@ class OES(TableReader):
                 #[oxx, oyy, ozz, txy, ovm]
                 obj.data[obj.itime, istart:iend, :] = results
             else:
-                msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
+                msg = 'sort1 Type=%s num=%s' % (op2_reader.element_name, op2_reader.element_type)
                 return self._not_implemented_or_skip(data, ndata, msg)
 
-        elif self.element_type in [276, 277, 278]:
+        elif op2_reader.element_type in [276, 277, 278]:
             # 276-CPLSTS4
             # 277-CPLSTS6
             # 278-CPLSTS8
             msg = self.code_information()
             return self._not_implemented_or_skip(data, ndata, msg)
-            #if self.element_type == 276:
+            #if op2_reader.element_type == 276:
                 #result_name = 'cplsts4'
                 #nnodes = 5  # 4 + 1
                 #ntotal = 4 * 32
-            #elif self.element_type == 277:
+            #elif op2_reader.element_type == 277:
                 #result_name = 'cplsts6'
                 #nnodes = 4
                 #ntotal = 4 * 26
-            #elif self.element_type == 278:
+            #elif op2_reader.element_type == 278:
                 #result_name = 'cplsts8'
                 #nnodes = 5
                 #ntotal = 4 * 32
@@ -1653,10 +1662,10 @@ class OES(TableReader):
                 #ntotal // 4, numwide_real, self.code_information())
 
             #ntotal = numwide_real * 4
-            #if self.format_code == 1 and self.num_wide == numwide_real:
+            #if op2_reader.format_code == 1 and op2_reader.num_wide == numwide_real:
                 #nelements = ndata // ntotal
 
-                ##self._data_factor = 10  # TODO: why is this 10?
+                ##op2_reader._data_factor = 10  # TODO: why is this 10?
                 #if self.is_stress:
                     #obj_vector_real = RealCPLSTRNPlateStressArray
                     ##result_name = 'cplstn3_stress'
@@ -1669,12 +1678,12 @@ class OES(TableReader):
                 #auto_return, is_vectorized = self._create_oes_object4(
                     #nlayers, result_name, slot, obj_vector_real)
                 #if auto_return:
-                    #self._data_factor = nnodes
-                    #return nelements * self.num_wide * 4
+                    #op2_reader._data_factor = nnodes
+                    #return nelements * op2_reader.num_wide * 4
 
                 #obj = self.obj
                 ##if self.use_vector and is_vectorized and self.sort_method == 1:
-                #n = nlayers * self.num_wide * 4
+                #n = nlayers * op2_reader.num_wide * 4
 
                 #istart = obj.itotal
                 #iend = istart + nlayers
@@ -1695,23 +1704,23 @@ class OES(TableReader):
                 ##[oxx, oyy, ozz, txy, ovm]
                 #obj.data[obj.itime, istart:iend, :] = results
             #else:
-                #msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
+                #msg = 'sort1 Type=%s num=%s' % (op2_reader.element_name, op2_reader.element_type)
                 #return self._not_implemented_or_skip(data, ndata, msg)
         else:
-            msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
+            msg = 'sort1 Type=%s num=%s' % (op2_reader.element_name, op2_reader.element_type)
             return self._not_implemented_or_skip(data, ndata, msg)
 
         assert ndata > 0, ndata
-        assert nelements > 0, 'nelements=%r element_type=%s element_name=%r' % (nelements, self.element_type, self.element_name)
-        #assert ndata % ntotal == 0, '%s n=%s nwide=%s len=%s ntotal=%s' % (self.element_name, ndata % ntotal, ndata % self.num_wide, ndata, ntotal)
-        assert self.num_wide * 4 == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide * 4, ntotal)
+        assert nelements > 0, 'nelements=%r element_type=%s element_name=%r' % (nelements, op2_reader.element_type, op2_reader.element_name)
+        #assert ndata % ntotal == 0, '%s n=%s nwide=%s len=%s ntotal=%s' % (op2_reader.element_name, ndata % ntotal, ndata % op2_reader.num_wide, ndata, ntotal)
+        assert op2_reader.num_wide * 4 == ntotal, 'numwide*4=%s ntotal=%s' % (op2_reader.num_wide * 4, ntotal)
         assert self.thermal == 0, "thermal = %%s" % self.thermal
         assert n > 0, "n = %s result_name=%s" % (n, result_name)
         return n
 
     def oesrt_cquad4_95(self, data, ndata):
         """unsupported element"""
-        assert self.num_wide == 9, "num_wide=%s not 9" % self.num_wide
+        assert op2_reader.num_wide == 9, "num_wide=%s not 9" % op2_reader.num_wide
         ntotal = 36  # 4*9
 
         n = 0
@@ -1825,46 +1834,46 @@ class OES(TableReader):
         if self.is_stress:
             obj_real = RealSpringStressArray
             obj_complex = ComplexSpringStressArray
-            if self.element_type == 11:
+            if op2_reader.element_type == 11:
                 result_name = prefix + 'celas1_stress' + postfix
-            elif self.element_type == 12:
+            elif op2_reader.element_type == 12:
                 result_name = prefix + 'celas2_stress' + postfix
-            elif self.element_type == 13:
+            elif op2_reader.element_type == 13:
                 result_name = prefix + 'celas3_stress' + postfix
-            elif self.element_type == 14:
+            elif op2_reader.element_type == 14:
                 result_name = prefix + 'celas4_stress' + postfix
             else:
-                raise RuntimeError(self.element_type)
+                raise RuntimeError(op2_reader.element_type)
         else:
             obj_real = RealSpringStrainArray
             obj_complex = ComplexSpringStrainArray
-            if self.element_type == 11:
+            if op2_reader.element_type == 11:
                 result_name = prefix + 'celas1_strain' + postfix
-            elif self.element_type == 12:
+            elif op2_reader.element_type == 12:
                 result_name = prefix + 'celas2_strain' + postfix
-            elif self.element_type == 13:
+            elif op2_reader.element_type == 13:
                 result_name = prefix + 'celas3_strain' + postfix
-            elif self.element_type == 14:
+            elif op2_reader.element_type == 14:
                 result_name = prefix + 'celas4_strain' + postfix
             else:
-                raise RuntimeError(self.element_type)
+                raise RuntimeError(op2_reader.element_type)
 
         if self._results.is_not_saved(result_name):
             return ndata, None, None
         self._results._found_result(result_name)
         slot = self.get_result(result_name)
 
-        if self.format_code == 1 and self.num_wide == 2:  # real
+        if op2_reader.format_code == 1 and op2_reader.num_wide == 2:  # real
             ntotal = 8 # 2 * 4
             nelements = ndata // ntotal
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_real)
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * op2_reader.num_wide * 4, None, None
 
             obj = self.obj
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * 4 * self.num_wide
+                n = nelements * 4 * op2_reader.num_wide
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
@@ -1895,7 +1904,7 @@ class OES(TableReader):
                             eid, i, eid_device, ox))
                     obj.add_new_eid_sort1(dt, eid, ox)
                     n += ntotal
-        elif self.format_code in [2, 3] and self.num_wide == 3:  # imag
+        elif op2_reader.format_code in [2, 3] and op2_reader.num_wide == 3:  # imag
             ntotal = 12
             nelements = ndata // ntotal
 
@@ -1903,12 +1912,12 @@ class OES(TableReader):
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_complex)
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * op2_reader.num_wide * 4, None, None
 
             obj = self.obj
             assert obj is not None, self.code_information()
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * 4 * self.num_wide
+                n = nelements * 4 * op2_reader.num_wide
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
@@ -1949,7 +1958,7 @@ class OES(TableReader):
                             eid, i, eid_device, axial_real, axial_imag))
                     obj.add_sort1(dt, eid, axial)
                     n += ntotal
-        elif self.format_code == 1 and self.num_wide == 3: # random
+        elif op2_reader.format_code == 1 and op2_reader.num_wide == 3: # random
             raise RuntimeError(self.code_information())
             #msg = self.code_information()
             #return self._not_implemented_or_skip(data, ndata, msg)
@@ -1969,11 +1978,11 @@ class OES(TableReader):
             obj_vector_real = RealRodStressArray
             obj_vector_complex = ComplexRodStressArray
             obj_vector_random = RandomRodStressArray
-            if self.element_type == 1: # CROD
+            if op2_reader.element_type == 1: # CROD
                 result_name = prefix + 'crod_stress' + postfix
-            elif self.element_type == 3:  # CTUBE
+            elif op2_reader.element_type == 3:  # CTUBE
                 result_name = prefix + 'ctube_stress' + postfix
-            elif self.element_type == 10:  # CONROD
+            elif op2_reader.element_type == 10:  # CONROD
                 result_name = prefix + 'conrod_stress' + postfix
             else:
                 msg = self.code_information()
@@ -1982,11 +1991,11 @@ class OES(TableReader):
             obj_vector_real = RealRodStrainArray
             obj_vector_complex = ComplexRodStrainArray
             obj_vector_random = RandomRodStrainArray
-            if self.element_type == 1: # CROD
+            if op2_reader.element_type == 1: # CROD
                 result_name = prefix + 'crod_strain' + postfix
-            elif self.element_type == 3:  # CTUBE
+            elif op2_reader.element_type == 3:  # CTUBE
                 result_name = prefix + 'ctube_strain' + postfix
-            elif self.element_type == 10:  # CONROD
+            elif op2_reader.element_type == 10:  # CONROD
                 result_name = prefix + 'conrod_strain' + postfix
             else:
                 msg = self.code_information()
@@ -1998,18 +2007,18 @@ class OES(TableReader):
 
         #result_name, unused_is_random = self._apply_oes_ato_crm_psd_rms_no(result_name)
         slot = self.get_result(result_name)
-        if self.format_code == 1 and self.num_wide == 5:  # real
+        if op2_reader.format_code == 1 and op2_reader.num_wide == 5:  # real
             ntotal = 5 * 4
             nelements = ndata // ntotal
 
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_vector_real)
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * op2_reader.num_wide * 4, None, None
 
             obj = self.obj
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * 4 * self.num_wide
+                n = nelements * 4 * op2_reader.num_wide
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
@@ -2042,17 +2051,17 @@ class OES(TableReader):
                             eid, ', '.join(['%r' % di for di in out])))
                     obj.add_new_eid(dt, eid, axial, axial_margin, torsion, torsion_margin)
                     n += ntotal
-        elif self.format_code in [2, 3] and self.num_wide == 5: # imag
+        elif op2_reader.format_code in [2, 3] and op2_reader.num_wide == 5: # imag
             ntotal = 20
             nelements = ndata // ntotal
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_vector_complex)
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * op2_reader.num_wide * 4, None, None
 
             obj = self.obj
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * 4 * self.num_wide
+                n = nelements * 4 * op2_reader.num_wide
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
@@ -2084,7 +2093,7 @@ class OES(TableReader):
 
                     obj.add_sort1(dt, eid, axial, torsion)
                     n += ntotal
-        #elif self.format_code in [2, 3] and self.num_wide == 8:  # is this imag ???
+        #elif op2_reader.format_code in [2, 3] and op2_reader.num_wide == 8:  # is this imag ???
             #ntotal = 32
             #s = self.self.struct_i
             #nelements = ndata // ntotal
@@ -2093,18 +2102,18 @@ class OES(TableReader):
                 #eid_device, = s.unpack(edata)
                 #assert eid > 0, eid
                 #n += ntotal
-        elif self.format_code == 1 and self.num_wide == 3: # random
+        elif op2_reader.format_code == 1 and op2_reader.num_wide == 3: # random
             ntotal = 3 * 4
             nelements = ndata // ntotal
 
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_vector_random)
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * op2_reader.num_wide * 4, None, None
 
             obj = self.obj
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * 4 * self.num_wide
+                n = nelements * 4 * op2_reader.num_wide
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
@@ -2158,7 +2167,7 @@ class OES(TableReader):
         self._results._found_result(result_name)
 
         slot = self.get_result(result_name)
-        if self.format_code == 1 and self.num_wide == 111:  # real
+        if op2_reader.format_code == 1 and op2_reader.num_wide == 111:  # real
             # TODO: vectorize
             ntotal = 444 # 44 + 10*40  (11 nodes)
 
@@ -2172,12 +2181,12 @@ class OES(TableReader):
             auto_return, is_vectorized = self._create_oes_object4(
                 nlayers, result_name, slot, obj_vector_real)
             if auto_return:
-                self._data_factor = 11
-                return nelements * self.num_wide * 4, None, None
+                op2_reader._data_factor = 11
+                return nelements * op2_reader.num_wide * 4, None, None
             obj = self.obj
 
             nnodes = 10  # 11-1
-            ntotal = self.num_wide * 4
+            ntotal = op2_reader.num_wide * 4
             nelements = ndata // ntotal
             if self.use_vector and is_vectorized and 0:
                 raise NotImplementedError('CBEAM-2-real not vectorized')
@@ -2206,7 +2215,7 @@ class OES(TableReader):
                         out = s2.unpack(edata)
                         # (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
                         obj.add_sort1(dt, eid, *out)
-        elif self.format_code in [2, 3] and self.num_wide == 111:  # imag and random?
+        elif op2_reader.format_code in [2, 3] and op2_reader.num_wide == 111:  # imag and random?
             # definitely complex results for MSC Nastran 2016.1
 
             ntotal = 444 # 44 + 10*40  (11 nodes)
@@ -2221,15 +2230,15 @@ class OES(TableReader):
             auto_return, is_vectorized = self._create_oes_object4(
                 nlayers, result_name, slot, obj_vector_complex)
             if auto_return:
-                self._data_factor = 11
-                return nelements * self.num_wide * 4, None, None
+                op2_reader._data_factor = 11
+                return nelements * op2_reader.num_wide * 4, None, None
 
             obj = self.obj
 
             nnodes = 10  # 11-1
-            ntotal = self.num_wide * 4
+            ntotal = op2_reader.num_wide * 4
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * 4 * self.num_wide
+                n = nelements * 4 * op2_reader.num_wide
                 itotal = obj.itotal
                 itotal2 = itotal + nelements * 11
 
@@ -2320,7 +2329,7 @@ class OES(TableReader):
                         if self.is_debug_file:
                             self.binary_debug.write('CBEAM-2 - eid=%i out2=%s\n' % (eid, str(out2)))
 
-        elif self.format_code == 1 and self.num_wide == 67: # random
+        elif op2_reader.format_code == 1 and op2_reader.num_wide == 67: # random
             # TODO: vectorize
             ntotal = 268 # 1 + 11*6  (11 nodes)
 
@@ -2334,12 +2343,12 @@ class OES(TableReader):
             auto_return, is_vectorized = self._create_oes_object4(
                 nlayers, result_name, slot, obj_vector_random)
             if auto_return:
-                self._data_factor = 11
-                return nelements * self.num_wide * 4, None, None
+                op2_reader._data_factor = 11
+                return nelements * op2_reader.num_wide * 4, None, None
             obj = self.obj
 
             nnodes = 10  # 11-1
-            ntotal = self.num_wide * 4
+            ntotal = op2_reader.num_wide * 4
             nelements = ndata // ntotal
             if self.use_vector and is_vectorized and 0:
                 raise NotImplementedError('CBEAM-2-random not vectorized')
@@ -2396,18 +2405,18 @@ class OES(TableReader):
         self._results._found_result(result_name)
 
         slot = self.get_result(result_name)
-        if self.format_code == 1 and self.num_wide == 4:  # real
+        if op2_reader.format_code == 1 and op2_reader.num_wide == 4:  # real
             ntotal = 16  # 4*4
             nelements = ndata // ntotal
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_vector_real)
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * op2_reader.num_wide * 4, None, None
 
             obj = self.obj
             assert obj is not None
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * 4 * self.num_wide
+                n = nelements * 4 * op2_reader.num_wide
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
@@ -2435,17 +2444,17 @@ class OES(TableReader):
                     obj.add_new_eid(dt, eid, max_strain, avg_strain, margin)
                     n += ntotal
 
-        elif self.format_code in [2, 3] and self.num_wide == 5:  # imag
+        elif op2_reader.format_code in [2, 3] and op2_reader.num_wide == 5:  # imag
             ntotal = 20  # 4*5
             nelements = ndata // ntotal
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_vector_complex)
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * op2_reader.num_wide * 4, None, None
 
             obj = self.obj
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * 4 * self.num_wide
+                n = nelements * 4 * op2_reader.num_wide
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
@@ -2478,18 +2487,18 @@ class OES(TableReader):
                         etavg = complex(etavgr, etavgi)
                     obj.add_sort1(dt, eid, etmax, etavg)
                     n += ntotal
-        elif self.format_code == 1 and self.num_wide == 3: # random
+        elif op2_reader.format_code == 1 and op2_reader.num_wide == 3: # random
             ntotal = 12  # 3*4
             nelements = ndata // ntotal
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_vector_random)
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * op2_reader.num_wide * 4, None, None
 
             obj = self.obj
             assert obj is not None
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * 4 * self.num_wide
+                n = nelements * 4 * op2_reader.num_wide
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
@@ -2541,7 +2550,7 @@ class OES(TableReader):
         self._results._found_result(result_name)
         slot = op2.get_result(result_name)
 
-        if self.format_code == 1 and self.num_wide == 16:  # real
+        if op2_reader.format_code == 1 and op2_reader.num_wide == 16:  # real
             if self.is_stress:
                 obj_vector_real = RealBarStressArray
             else:
@@ -2569,7 +2578,7 @@ class OES(TableReader):
                 # self.itotal = 0
                 #self.ntimes = 0
                 #self.nelements = 0
-                n = nelements * self.num_wide * 4
+                n = nelements * op2_reader.num_wide * 4
 
                 ielement = obj.ielement
                 ielement2 = ielement + nelements
@@ -2601,7 +2610,7 @@ class OES(TableReader):
                         dt, eid,
                         s1a, s2a, s3a, s4a, axial, smaxa, smina, margin_tension,
                         s1b, s2b, s3b, s4b, smaxb, sminb, margin_compression)
-        elif self.format_code in [2, 3] and self.num_wide == 19:  # imag
+        elif op2_reader.format_code in [2, 3] and op2_reader.num_wide == 19:  # imag
             if self.is_stress:
                 obj_vector_complex = ComplexBarStressArray
             else:
@@ -2623,7 +2632,7 @@ class OES(TableReader):
 
             obj = self.obj
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * 4 * self.num_wide
+                n = nelements * 4 * op2_reader.num_wide
                 itotal = obj.itotal
                 itotal2 = itotal + nelements
                 ielement2 = itotal2
@@ -2680,10 +2689,10 @@ class OES(TableReader):
                     obj.add_new_eid_sort1(dt, eid,
                                           s1a, s2a, s3a, s4a, axial,
                                           s1b, s2b, s3b, s4b)
-        elif self.format_code == 1 and self.num_wide == 19: # random strain?
+        elif op2_reader.format_code == 1 and op2_reader.num_wide == 19: # random strain?
             raise RuntimeError(self.code_information())
 
-        elif self.format_code in [1, 2] and self.num_wide == 10:
+        elif op2_reader.format_code in [1, 2] and op2_reader.num_wide == 10:
             # random stress/strain per example
             #
             # DMAP says random stress has num_wide=10 and
@@ -2720,7 +2729,7 @@ class OES(TableReader):
                 # self.itotal = 0
                 #self.ntimes = 0
                 #self.nelements = 0
-                n = nelements * self.num_wide * 4
+                n = nelements * op2_reader.num_wide * 4
 
                 ielement = obj.ielement
                 ielement2 = ielement + nelements
@@ -2779,19 +2788,20 @@ class OES(TableReader):
          - 68 : CPENTA
         """
         n = 0
+        op2_reader = self.op2_reader
         if self.is_stress:
             obj_vector_real = RealSolidStressArray
             obj_vector_complex = ComplexSolidStressArray
             obj_vector_random = RandomSolidStressArray
-            if self.element_type == 39: # CTETRA
+            if op2_reader.element_type == 39: # CTETRA
                 nnodes_expected = 5  # 1 centroid + 4 corner points
                 result_name = prefix + 'ctetra_stress' + postfix
                 element_name = 'CTETRA4'
-            elif self.element_type == 67:  # CHEXA
+            elif op2_reader.element_type == 67:  # CHEXA
                 nnodes_expected = 9
                 result_name = prefix + 'chexa_stress' + postfix
                 element_name = 'CHEXA8'
-            elif self.element_type == 68:  # CPENTA
+            elif op2_reader.element_type == 68:  # CPENTA
                 nnodes_expected = 7
                 result_name = prefix + 'cpenta_stress' + postfix
                 element_name = 'CPENTA6'
@@ -2802,21 +2812,21 @@ class OES(TableReader):
             obj_vector_complex = ComplexSolidStrainArray
             obj_vector_random = RandomSolidStrainArray
 
-            if self.element_type == 39: # CTETRA
+            if op2_reader.element_type == 39: # CTETRA
                 nnodes_expected = 5  # 1 centroid + 4 corner points
                 result_name = prefix + 'ctetra_strain' + postfix
                 element_name = 'CTETRA4'
-            elif self.element_type == 67:  # CHEXA
+            elif op2_reader.element_type == 67:  # CHEXA
                 nnodes_expected = 9
                 result_name = prefix + 'chexa_strain' + postfix
                 element_name = 'CHEXA8'
-            elif self.element_type == 68:  # CPENTA
+            elif op2_reader.element_type == 68:  # CPENTA
                 nnodes_expected = 7
                 result_name = prefix + 'cpenta_strain' + postfix
                 element_name = 'CPENTA6'
             else:
                 raise RuntimeError(self.code_information())
-                #msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
+                #msg = 'sort1 Type=%s num=%s' % (op2_reader.element_name, op2_reader.element_type)
                 #return self._not_implemented_or_skip(data, ndata, msg)
 
         if self._results.is_not_saved(result_name):
@@ -2828,22 +2838,22 @@ class OES(TableReader):
         numwide_imag = 4 + (17 - 4) * nnodes_expected
         numwide_random = 4 + (11 - 4) * nnodes_expected
         numwide_random2 = 18 + 14 * (nnodes_expected - 1)
-        preline1 = '%s-%s' % (self.element_name, self.element_type)
+        preline1 = '%s-%s' % (op2_reader.element_name, op2_reader.element_type)
         preline2 = ' ' * len(preline1)
 
         #print('numwide real=%s imag=%s random=%s' % (numwide_real, numwide_imag, numwide_random2))
-        self._data_factor = nnodes_expected
-        if self.format_code == 1 and self.num_wide == numwide_real:  # real
+        op2_reader._data_factor = nnodes_expected
+        if op2_reader.format_code == 1 and op2_reader.num_wide == numwide_real:  # real
             ntotal = 16 + 84 * nnodes_expected
             nelements = ndata // ntotal
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_vector_real)
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * op2_reader.num_wide * 4, None, None
 
             obj = self.obj
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * 4 * self.num_wide
+                n = nelements * 4 * op2_reader.num_wide
                 itotal = obj.ielement
                 itotali = obj.itotal + nelements
                 itotal2 = obj.itotal + nelements * nnodes_expected
@@ -2866,12 +2876,12 @@ class OES(TableReader):
                     ints2 = ints1[:, 4:].reshape(nelements * nnodes_expected, 21)
                     grid_device = ints2[:, 0]#.reshape(nelements, nnodes_expected)
 
-                    #print('%s-grid_device=%s' % (self.element_name, grid_device))
+                    #print('%s-grid_device=%s' % (op2_reader.element_name, grid_device))
                     unused_grid_device2 = repeat(grid_device, nnodes_expected)
                     try:
                         obj.element_node[itotal:itotal2, 1] = grid_device
                     except ValueError:
-                        msg = '%s; nnodes=%s\n' % (self.element_name, nnodes_expected)
+                        msg = '%s; nnodes=%s\n' % (op2_reader.element_name, nnodes_expected)
                         msg += 'itotal=%s itotal2=%s\n' % (itotal, itotal2)
                         msg += 'grid_device.shape=%s; size=%s\n' % (str(grid_device.shape), grid_device.size)
                         #msg += 'nids=%s' % nids
@@ -2909,7 +2919,7 @@ class OES(TableReader):
                 struct2 = Struct(self._endian + b'i20f')
                 if self.is_debug_file:
                     msg = '%s-%s nelements=%s nnodes=%s; C=[sxx, sxy, s1, a1, a2, a3, pressure, svm,\n' % (
-                        self.element_name, self.element_type, nelements, nnodes_expected)
+                        op2_reader.element_name, op2_reader.element_type, nelements, nnodes_expected)
                     msg += '                                 syy, syz, s2, b1, b2, b3,\n'
                     msg += '                                 szz, sxz, s3, c1, c2, c3]\n'
                     self.binary_debug.write(msg)
@@ -2952,7 +2962,7 @@ class OES(TableReader):
                         c_cos = [c1, c2, c3]
                         if inode == 0:
                             #  this is correct, but fails
-                            #element_name = self.element_name + str(nnodes)
+                            #element_name = op2_reader.element_name + str(nnodes)
                             obj.add_eid_sort1(element_name, cid, dt, eid, grid,
                                               sxx, syy, szz, sxy, syz, sxz, s1, s2, s3,
                                               a_cos, b_cos, c_cos, pressure, svm)
@@ -2962,7 +2972,7 @@ class OES(TableReader):
                                                a_cos, b_cos, c_cos, pressure, svm)
                         n += 84
 
-        elif self.format_code in [2, 3] and self.num_wide == numwide_imag:  # complex
+        elif op2_reader.format_code in [2, 3] and op2_reader.num_wide == numwide_imag:  # complex
             # TODO: vectorize
             ntotal = numwide_imag * 4
             nelements = ndata // ntotal
@@ -2970,12 +2980,12 @@ class OES(TableReader):
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_vector_complex)
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * op2_reader.num_wide * 4, None, None
 
             obj = self.obj
 
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * 4 * self.num_wide
+                n = nelements * 4 * op2_reader.num_wide
                 ielement = obj.ielement
                 ielement2 = ielement + nelements
                 itotal = obj.itotal
@@ -3024,8 +3034,8 @@ class OES(TableReader):
                         self.binary_debug.write('  eid=%i C=[%s]\n' % (
                             eid, ', '.join(['%r' % di for di in out])))
 
-                    #element_name = self.element_name + str(nodef)  # this is correct, but has problems...
-                    obj.add_eid_sort1(self.element_type, element_name, dt, eid, cid, ctype, nodef)
+                    #element_name = op2_reader.element_name + str(nodef)  # this is correct, but has problems...
+                    obj.add_eid_sort1(op2_reader.element_type, element_name, dt, eid, cid, ctype, nodef)
                     for inode in range(nnodes_expected):
                         edata = data[n:n+52]
                         n += 52
@@ -3056,18 +3066,18 @@ class OES(TableReader):
                                 grid, ', '.join(['%r' % di for di in out])))
                         obj.add_node_sort1(dt, eid, grid, inode,
                                            ex, ey, ez, etxy, etyz, etzx)
-        elif self.format_code == 1 and self.num_wide == numwide_random: # random
+        elif op2_reader.format_code == 1 and op2_reader.num_wide == numwide_random: # random
             ntotal = numwide_random * 4
             nelements = ndata // ntotal
             assert ndata % ntotal == 0, ndata
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_vector_random)
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * op2_reader.num_wide * 4, None, None
 
             obj = self.obj
             if self.use_vector and is_vectorized and 0:  # pragma: no cover
-                n = nelements * 4 * self.num_wide
+                n = nelements * 4 * op2_reader.num_wide
                 itotal = obj.ielement
                 itotali = obj.itotal + nelements
                 itotal2 = obj.itotal + nelements * nnodes_expected
@@ -3090,12 +3100,12 @@ class OES(TableReader):
                     ints2 = ints1[:, 4:].reshape(nelements * nnodes_expected, 21)
                     grid_device = ints2[:, 0]#.reshape(nelements, nnodes_expected)
 
-                    #print('%s-grid_device=%s' % (self.element_name, grid_device))
+                    #print('%s-grid_device=%s' % (op2_reader.element_name, grid_device))
                     unused_grid_device2 = repeat(grid_device, nnodes_expected)
                     try:
                         obj.element_node[itotal:itotal2, 1] = grid_device
                     except ValueError:
-                        msg = '%s; nnodes=%s\n' % (self.element_name, nnodes_expected)
+                        msg = '%s; nnodes=%s\n' % (op2_reader.element_name, nnodes_expected)
                         msg += 'itotal=%s itotal2=%s\n' % (itotal, itotal2)
                         msg += 'grid_device.shape=%s; size=%s\n' % (str(grid_device.shape), grid_device.size)
                         #msg += 'nids=%s' % nids
@@ -3133,7 +3143,7 @@ class OES(TableReader):
                 struct2 = Struct(self._endian + b'i6f')
                 if self.is_debug_file and 0:
                     msg = '%s-%s nelements=%s nnodes=%s; C=[sxx, sxy, s1, a1, a2, a3, pressure, svm,\n' % (
-                        self.element_name, self.element_type, nelements, nnodes_expected)
+                        op2_reader.element_name, op2_reader.element_type, nelements, nnodes_expected)
                     msg += '                                 syy, syz, s2, b1, b2, b3,\n'
                     msg += '                                 szz, sxz, s3, c1, c2, c3]\n'
                     self.binary_debug.write(msg)
@@ -3173,14 +3183,14 @@ class OES(TableReader):
                         grid = grid_device
                         if inode == 0:
                             #  this is correct, but fails
-                            #element_name = self.element_name + str(nnodes)
+                            #element_name = op2_reader.element_name + str(nnodes)
                             obj.add_eid_sort1(element_name, cid, dt, eid, grid,
                                               sxx, syy, szz, txy, tyz, txz)
                         else:
                             obj.add_node_sort1(dt, eid, inode, grid,
                                                sxx, syy, szz, txy, tyz, txz)
                         n += 28
-        elif self.format_code in [2, 3] and self.num_wide == numwide_random2:
+        elif op2_reader.format_code in [2, 3] and op2_reader.num_wide == numwide_random2:
             #raise RuntimeError(self.code_information())
             ## a = 18
             ## b = 14
@@ -3189,7 +3199,7 @@ class OES(TableReader):
             ## a + b * 6 = 102 # CPENTA
             ## a + b * 8 = 130 # CHEXA-67
             #msg = 'OES-CHEXA-random-numwide=%s numwide_real=%s numwide_imag=%s numwide_random=%s' % (
-                #self.num_wide, numwide_real, numwide_imag, numwide_random)
+                #op2_reader.num_wide, numwide_real, numwide_imag, numwide_random)
             #return self._not_implemented_or_skip(data, ndata, msg)
 
             #print('numwide real=%s imag=%s random=%s' % (numwide_real, numwide_imag, numwide_random))
@@ -3198,12 +3208,12 @@ class OES(TableReader):
             #print('random2=%s' % num_wide_random)
             #print(self.code_information())
 
-            #if self.num_wide ==
+            #if op2_reader.num_wide ==
             if self.read_mode == 1:
                 return ndata, None, None
             return ndata, None, None
             #print('numwide=%s numwide_random=%s attempt2=%s subcase=%s' % (
-                #self.num_wide, numwide_random, num_wide_random, self.isubcase))
+                #op2_reader.num_wide, numwide_random, num_wide_random, self.isubcase))
             ##msg = self.code_information()
             #ntotal = 130
             #nelements = ndata // ntotal
@@ -3227,9 +3237,9 @@ class OES(TableReader):
                         #self.binary_debug.write('%s - %s\n' % (preline2, str(out)))
                     #(grid_device, sxx, syy, sz, txy, tyz, txz) = out
             #msg = 'OES-CHEXA-random-numwide=%s numwide_real=%s numwide_imag=%s numwide_random=%s' % (
-                #self.num_wide, numwide_real, numwide_imag, numwide_random)
+                #op2_reader.num_wide, numwide_real, numwide_imag, numwide_random)
             #return self._not_implemented_or_skip(data, ndata, msg)
-        elif self.format_code in [1, 2] and self.num_wide == 67:  # CHEXA
+        elif op2_reader.format_code in [1, 2] and op2_reader.num_wide == 67:  # CHEXA
             msg = 'skipping random CHEXA; numwide=67'
             n = self._not_implemented_or_skip(data, ndata, msg)
             nelements = None
@@ -3253,13 +3263,13 @@ class OES(TableReader):
         #85: 2 + (18 - 2) * 5,  # Nonlinear CTETRA
         #91: 4 + (25 - 4) * 7,  # Nonlinear CPENTA
         #93: 4 + (25 - 4) * 9,  # Nonlinear CHEXA
-        if self.element_type == 85:
+        if op2_reader.element_type == 85:
             etype = 'CTETRANL'
             nnodes = 5
-        elif self.element_type == 91:
+        elif op2_reader.element_type == 91:
             etype = 'CPENTANL'
             nnodes = 7
-        elif self.element_type == 93:
+        elif op2_reader.element_type == 93:
             etype = 'CHEXANL'
             nnodes = 9
         else:
@@ -3268,13 +3278,13 @@ class OES(TableReader):
         numwide_real = 4 + (25 - 4) * nnodes  # real???
         numwide_random = 2 + (18 - 2) * nnodes  # imag???
         #self.log.debug("format_code=%s numwide=%s numwide_real=%s numwide_random=%s" % (
-            #self.format_code, self.num_wide, numwide_real, numwide_random))
+            #op2_reader.format_code, op2_reader.num_wide, numwide_real, numwide_random))
 
         #numwide_real = 0
         #numwide_imag = 2 + 16 * nnodes
         #ntotal = 8 + 64 * nnodes
 
-        if self.format_code == 1 and self.num_wide == numwide_real:
+        if op2_reader.format_code == 1 and op2_reader.num_wide == numwide_real:
             ntotal = numwide_real * 4
             #if self.is_stress:
                 #self.create_transient_object(self.nonlinearPlateStress, NonlinearSolid)
@@ -3282,11 +3292,11 @@ class OES(TableReader):
                 #self.create_transient_object(self.nonlinearPlateStrain, NonlinearSolid)
             #self.handle_results_buffer(self.OES_CQUAD4NL_90, resultName, name)
             raise RuntimeError('OES_CQUAD4NL_90')
-        elif self.format_code == 1 and self.num_wide == numwide_random:  # random
+        elif op2_reader.format_code == 1 and op2_reader.num_wide == numwide_random:  # random
             # 82 : CTETRA_NL (etype=85)
             # 146 : CHEXA_NL (etype=93)
             #raise RuntimeError(self.code_information())
-        #elif self.format_code in [2, 3] and self.num_wide == numwide_imag:  # imag
+        #elif op2_reader.format_code in [2, 3] and op2_reader.num_wide == numwide_imag:  # imag
             ntotal = numwide_random * 4
             #if self.is_stress:
                 #self.create_transient_object(self.nonlinearPlateStress, NonlinearSolid)
@@ -3303,7 +3313,7 @@ class OES(TableReader):
 
                 out = s1.unpack(edata)
                 if self.is_debug_file:
-                    self.binary_debug.write('%s-%s - %s\n' % (etype, self.element_type, str(out)))
+                    self.binary_debug.write('%s-%s - %s\n' % (etype, op2_reader.element_type, str(out)))
                 (eid_device, unused_ctype) = out
                 eid, dt = get_eid_dt_from_eid_device(
                     eid_device, self.nonlinear_factor, self.sort_method)
@@ -3313,7 +3323,7 @@ class OES(TableReader):
                     n += 64
                     out = s2.unpack(edata)
                     if self.is_debug_file:
-                        self.binary_debug.write('%s-%sB - %s\n' % (etype, self.element_type, str(out)))
+                        self.binary_debug.write('%s-%sB - %s\n' % (etype, op2_reader.element_type, str(out)))
 
                     assert len(out) == 16
                     #(grid,
@@ -3322,7 +3332,7 @@ class OES(TableReader):
         else:
             #msg = self.code_information()
             msg = "format_code=%s numwide=%s numwide_real=%s numwide_random=%s" % (
-                self.format_code, self.num_wide, numwide_real, numwide_random)
+                op2_reader.format_code, op2_reader.num_wide, numwide_real, numwide_random)
             #return self._not_implemented_or_skip(data, ndata, msg)
             raise RuntimeError(self.code_information())
         return n, nelements, ntotal
@@ -3349,7 +3359,7 @@ class OES(TableReader):
         slot = self.get_result(result_name)
 
         numwide_real = 17
-        if self.format_code == 1 and self.num_wide == 17:  # real
+        if op2_reader.format_code == 1 and op2_reader.num_wide == 17:  # real
             ntotal = 68  # 4*17
             nelements = ndata // ntotal
             nlayers = nelements * 2
@@ -3358,13 +3368,13 @@ class OES(TableReader):
             auto_return, is_vectorized = self._create_oes_object4(
                 nlayers, result_name, slot, obj_vector_real)
             if auto_return:
-                self._data_factor = 2
+                op2_reader._data_factor = 2
                 return nelements * ntotal, None, None
 
             obj = self.obj
             assert obj.is_built is True, obj.is_built
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * 4 * self.num_wide
+                n = nelements * 4 * op2_reader.num_wide
                 ielement = obj.ielement
                 ielement2 = ielement + nelements
                 itotal = obj.itotal
@@ -3407,19 +3417,19 @@ class OES(TableReader):
                     obj.add_sort1(dt, eid, cen, fd2, sx2, sy2, txy2,
                                   angle2, major2, minor2, max_shear2)
                     n += ntotal
-        elif self.format_code in [2, 3] and self.num_wide == 15:  # imag
+        elif op2_reader.format_code in [2, 3] and op2_reader.num_wide == 15:  # imag
             nnodes = 0  # centroid + 4 corner points
             ntotal = 4 * (15 * (nnodes + 1))
             nelements = ndata // ntotal
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_vector_complex)
             if auto_return:
-                self._data_factor = 2
+                op2_reader._data_factor = 2
                 return nelements * ntotal, None, None
 
             obj = self.obj
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * 4 * self.num_wide
+                n = nelements * 4 * op2_reader.num_wide
                 nnodes_all = (nnodes + 1)
                 itotal = obj.itotal
                 itotal2 = itotal + 2 * nelements * nnodes_all
@@ -3512,7 +3522,7 @@ class OES(TableReader):
                             txy2 = complex(txy2r, txy2i)
                         obj.add_new_node_sort1(dt, eid, grid, fd1, sx1, sy1, txy1)
                         obj.add_sort1(dt, eid, grid, fd2, sx2, sy2, txy2)
-        elif self.format_code in [1, 2] and self.num_wide == 9: # random msc
+        elif op2_reader.format_code in [1, 2] and op2_reader.num_wide == 9: # random msc
             # _oes_cquad4 is the same as _oes_ctria3
             element_id = self.nonlinear_factor
             if self.is_stress:
@@ -3534,13 +3544,13 @@ class OES(TableReader):
             auto_return, is_vectorized = self._create_oes_object4(
                 nlayers, result_name, slot, obj_vector_random)
             if auto_return:
-                self._data_factor = 2
+                op2_reader._data_factor = 2
                 return nelements * ntotal, None, None
 
             obj = self.obj
             assert obj.is_built is True, obj.is_built
             if self.use_vector and is_vectorized and 0:  # pragma: no cover
-                n = nelements * 4 * self.num_wide
+                n = nelements * 4 * op2_reader.num_wide
                 ielement = obj.ielement
                 ielement2 = ielement + nelements
                 itotal = obj.itotal
@@ -3587,7 +3597,7 @@ class OES(TableReader):
                     obj.add_sort1(dt, eid, fd2, sx2, sy2, txy2)
                     n += ntotal
 
-        elif self.format_code in [1, 2] and self.num_wide == 11: # random
+        elif op2_reader.format_code in [1, 2] and op2_reader.num_wide == 11: # random
             #2 FD1 RS Z1 = Fibre Distance
             #3 SX1 RS Normal in x at Z1
             #4 SY1 RS Normal in y at Z1
@@ -3600,7 +3610,7 @@ class OES(TableReader):
             #10 TXY2 RS Shear in xy at Z2
             #11 RMSVM2 RS RMS von Mises at Z2
 
-            element_id = self.nonlinear_factor
+            element_id = op2_reader.nonlinear_factor
             if self.is_stress:
                 obj_vector_random = RandomPlateStressArray
             else:
@@ -3620,13 +3630,13 @@ class OES(TableReader):
             auto_return, is_vectorized = self._create_oes_object4(
                 nlayers, result_name, slot, obj_vector_random)
             if auto_return:
-                self._data_factor = 2
+                op2_reader._data_factor = 2
                 return nelements * ntotal, None, None
 
             obj = self.obj
             assert obj.is_built is True, obj.is_built
             if self.use_vector and is_vectorized and 0:  # pragma: no cover
-                n = nelements * 4 * self.num_wide
+                n = nelements * 4 * op2_reader.num_wide
                 ielement = obj.ielement
                 ielement2 = ielement + nelements
                 itotal = obj.itotal
@@ -3696,14 +3706,14 @@ class OES(TableReader):
         self._results._found_result(result_name)
 
         slot = self.get_result(result_name)
-        if self.format_code in [1, 3] and self.num_wide == 17:  # real
+        if op2_reader.format_code in [1, 3] and op2_reader.num_wide == 17:  # real
             ntotal = 68  # 4*17
             nelements = ndata // ntotal
             nlayers = nelements * 2  # 2 layers per node
             auto_return, is_vectorized = self._create_oes_object4(
                 nlayers, result_name, slot, obj_vector_real)
             if auto_return:
-                self._data_factor = 2
+                op2_reader._data_factor = 2
                 return nelements * ntotal, None, None
 
             if self.is_debug_file:
@@ -3758,18 +3768,18 @@ class OES(TableReader):
                     obj.add_sort1(dt, eid, cen, fd2, sx2, sy2, txy2,
                                   angle2, major2, minor2, vm2)
                     n += ntotal
-        elif self.format_code in [2, 3] and self.num_wide == 15:  # imag
+        elif op2_reader.format_code in [2, 3] and op2_reader.num_wide == 15:  # imag
             ntotal = 60  # 4*15
             nelements = ndata // ntotal
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_vector_complex)
             if auto_return:
-                self._data_factor = 2
-                return nelements * self.num_wide * 4, None, None
+                op2_reader._data_factor = 2
+                return nelements * op2_reader.num_wide * 4, None, None
             obj = self.obj
 
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * 4 * self.num_wide
+                n = nelements * 4 * op2_reader.num_wide
                 itotal = obj.itotal
                 itotal2 = itotal + nelements * 2
                 ielement = obj.ielement
@@ -3833,15 +3843,15 @@ class OES(TableReader):
                     obj.add_new_eid_sort1(dt, eid, cen, fd1, sx1, sy1, txy1)
                     obj.add_sort1(dt, eid, cen, fd2, sx2, sy2, txy2)
                     n += ntotal
-        #elif self.format_code == 1 and self.num_wide == 9: # random?
+        #elif op2_reader.format_code == 1 and op2_reader.num_wide == 9: # random?
             #msg = self.code_information()
             #return self._not_implemented_or_skip(data, ndata, msg), None, None
-        elif self.format_code in [2, 3] and self.num_wide == 17: # random; CTRIA3
+        elif op2_reader.format_code in [2, 3] and op2_reader.num_wide == 17: # random; CTRIA3
             assert self.table_name in [b'OESVM1', b'OSTRVM1'], self.code_information()
             #msg = self.code_information()
-            msg = '%s-%s' % (self.table_name_str, self.element_name)
+            msg = '%s-%s' % (self.table_name_str, op2_reader.element_name)
             return self._not_implemented_or_skip(data, ndata, msg), None, None
-        elif self.format_code in [1, 2] and self.num_wide == 11: # random; CTRIA3
+        elif op2_reader.format_code in [1, 2] and op2_reader.num_wide == 11: # random; CTRIA3
             #2 FD1 RS Z1 = Fibre Distance
             #3 SX1 RS Normal in x at Z1
             #4 SY1 RS Normal in y at Z1
@@ -3854,7 +3864,7 @@ class OES(TableReader):
             #10 TXY2 RS Shear in xy at Z2
             #11 RMSVM2 RS RMS von Mises at Z2
 
-            element_id = self.nonlinear_factor
+            element_id = op2_reader.nonlinear_factor
             if self.is_stress:
                 obj_vector_random = RandomPlateStressArray
             else:
@@ -3874,13 +3884,13 @@ class OES(TableReader):
             auto_return, is_vectorized = self._create_oes_object4(
                 nlayers, result_name, slot, obj_vector_random)
             if auto_return:
-                self._data_factor = 2
+                op2_reader._data_factor = 2
                 return nelements * ntotal, None, None
 
             obj = self.obj
             assert obj.is_built is True, obj.is_built
             if self.use_vector and is_vectorized and 0:  # pragma: no cover
-                n = nelements * 4 * self.num_wide
+                n = nelements * 4 * op2_reader.num_wide
                 ielement = obj.ielement
                 ielement2 = ielement + nelements
                 itotal = obj.itotal
@@ -3926,7 +3936,7 @@ class OES(TableReader):
                     obj.add_new_eid_ovm_sort1(dt, eid, fd1, sx1, sy1, txy1, ovm1)
                     obj.add_ovm_sort1(dt, eid, fd2, sx2, sy2, txy2, ovm2)
                     n += ntotal
-        elif self.format_code in [1, 2] and self.num_wide == 9: # random MSC stress/strain; CTRIA3
+        elif op2_reader.format_code in [1, 2] and op2_reader.num_wide == 9: # random MSC stress/strain; CTRIA3
             # _oes_cquad4 is the same as _oes_ctria3
             element_id = self.nonlinear_factor
             if self.is_stress:
@@ -3951,13 +3961,13 @@ class OES(TableReader):
             auto_return, is_vectorized = self._create_oes_object4(
                 nlayers, result_name, slot, obj_vector_random)
             if auto_return:
-                self._data_factor = 2
+                op2_reader._data_factor = 2
                 return nelements * ntotal, None, None
 
             obj = self.obj
             assert obj.is_built is True, obj.is_built
             if self.use_vector and is_vectorized and 0:  # pragma: no cover
-                n = nelements * 4 * self.num_wide
+                n = nelements * 4 * op2_reader.num_wide
                 ielement = obj.ielement
                 ielement2 = ielement + nelements
                 itotal = obj.itotal
@@ -4022,45 +4032,45 @@ class OES(TableReader):
             obj_vector_real = RealPlateStressArray
             obj_vector_complex = ComplexPlateStressArray
             obj_vector_random = RandomPlateStressArray
-            if self.element_type == 64: # CQUAD8
+            if op2_reader.element_type == 64: # CQUAD8
                 result_name = prefix + 'cquad8_stress' + postfix
                 #gridC = 'CEN/8'
-            elif self.element_type == 70:  # CTRIAR
+            elif op2_reader.element_type == 70:  # CTRIAR
                 result_name = prefix + 'ctriar_stress' + postfix
                 #gridC = 'CEN/3'
-            elif self.element_type == 75:  # CTRIA6
+            elif op2_reader.element_type == 75:  # CTRIA6
                 result_name = prefix + 'ctria6_stress' + postfix
                 #gridC = 'CEN/6'
-            elif self.element_type == 82:  # CQUADR
+            elif op2_reader.element_type == 82:  # CQUADR
                 result_name = prefix + 'cquadr_stress' + postfix
                 #gridC = 'CEN/4'
-            elif self.element_type == 144:  # CQUAD4-bilinear
+            elif op2_reader.element_type == 144:  # CQUAD4-bilinear
                 # there's no nead to separate this with centroidal strain
                 # because you can only have one in a given OP2
                 result_name = prefix + 'cquad4_stress' + postfix
                 #gridC = 'CEN/4'
             else:
                 raise RuntimeError(self.code_information())
-                #msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
+                #msg = 'sort1 Type=%s num=%s' % (op2_reader.element_name, op2_reader.element_type)
                 #return self._not_implemented_or_skip(data, ndata, msg)
         else:
             obj_vector_real = RealPlateStrainArray
             obj_vector_complex = ComplexPlateStrainArray
             obj_vector_random = RandomPlateStrainArray
 
-            if self.element_type == 64: # CQUAD8
+            if op2_reader.element_type == 64: # CQUAD8
                 result_name = prefix + 'cquad8_strain' + postfix
                 #gridC = 'CEN/8'
-            elif self.element_type == 70:  # CTRIAR
+            elif op2_reader.element_type == 70:  # CTRIAR
                 result_name = prefix + 'ctriar_strain' + postfix
                 #gridC = 'CEN/3'
-            elif self.element_type == 75:  # CTRIA6
+            elif op2_reader.element_type == 75:  # CTRIA6
                 result_name = prefix + 'ctria6_strain' + postfix
                 #gridC = 'CEN/6'
-            elif self.element_type == 82: # CQUADR
+            elif op2_reader.element_type == 82: # CQUADR
                 result_name = prefix + 'cquadr_strain' + postfix
                 #gridC = 'CEN/4'
-            elif self.element_type == 144: # CQUAD4-bilinear
+            elif op2_reader.element_type == 144: # CQUAD4-bilinear
                 # there's no nead to separate this with centroidal strain
                 # because you can only have one in a given OP2
                 result_name = prefix + 'cquad4_strain' + postfix
@@ -4072,9 +4082,9 @@ class OES(TableReader):
             return ndata, None, None
         self._results._found_result(result_name)
 
-        if self.element_type in [64, 82, 144]:
+        if op2_reader.element_type in [64, 82, 144]:
             nnodes = 4 # + 1 centroid
-        elif self.element_type in [70, 75]:
+        elif op2_reader.element_type in [70, 75]:
             nnodes = 3 # + 1 centroid
         else:
             raise RuntimeError(self.code_information())
@@ -4086,11 +4096,11 @@ class OES(TableReader):
         numwide_random = 2 + 9 * nnodes_all
         numwide_imag2 = 2 + 16 * nnodes_all
         #print('%s real=%s imag=%s imag2=%s random=%s' % (
-            #self.element_name, numwide_real, numwide_imag, numwide_imag2, numwide_random
+            #op2_reader.element_name, numwide_real, numwide_imag, numwide_imag2, numwide_random
         #))
-        etype = self.element_name
+        etype = op2_reader.element_name
         #grid_center = 'CEN/%i' % nnodes
-        if self.format_code in [1, 2, 3] and self.num_wide == numwide_real:  # real
+        if op2_reader.format_code in [1, 2, 3] and op2_reader.num_wide == numwide_real:  # real
             ntotal = 4 * (2 + 17 * nnodes_all)
             nelements = ndata // ntotal
             assert ndata % ntotal == 0
@@ -4099,8 +4109,8 @@ class OES(TableReader):
             auto_return, is_vectorized = self._create_oes_object4(
                 nlayers, result_name, slot, obj_vector_real)
             if auto_return:
-                self._data_factor = 2 * nnodes_all  # number of "layers" for an element
-                return nelements * self.num_wide * 4, None, None
+                op2_reader._data_factor = 2 * nnodes_all  # number of "layers" for an element
+                return nelements * op2_reader.num_wide * 4, None, None
 
             obj = self.obj
             #print('dt=%s, itime=%s' % (obj.itime, dt))
@@ -4110,7 +4120,7 @@ class OES(TableReader):
                 # self.itotal = 0
                 #self.ntimes = 0
                 #self.nelements = 0
-                n = nelements * self.num_wide * 4
+                n = nelements * op2_reader.num_wide * 4
 
                 istart = obj.itotal
                 iend = istart + nlayers
@@ -4200,20 +4210,20 @@ class OES(TableReader):
                         obj.add_sort1(dt, eid, grid, fd2, sx2, sy2,
                                       txy2, angle2, major2, minor2, vm2)
                         n += 68
-        elif self.format_code in [2, 3] and self.num_wide == numwide_imag:  # imag
+        elif op2_reader.format_code in [2, 3] and op2_reader.num_wide == numwide_imag:  # imag
             ntotal = numwide_imag * 4
-            assert self.num_wide * 4 == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide*4, ntotal)
+            assert op2_reader.num_wide * 4 == ntotal, 'numwide*4=%s ntotal=%s' % (op2_reader.num_wide*4, ntotal)
             nelements = ndata // ntotal
 
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_vector_complex)
             if auto_return:
-                self._data_factor = 2
+                op2_reader._data_factor = 2
                 return nelements * ntotal, None, None
             obj = self.obj
 
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * 4 * self.num_wide
+                n = nelements * 4 * op2_reader.num_wide
                 itotal = obj.itotal
                 itotal2 = itotal + nelements * (nnodes_all * 2)
                 ielement = obj.ielement
@@ -4309,15 +4319,15 @@ class OES(TableReader):
 
                         obj.add_new_node_sort1(dt, eid, grid, fd1, sx1, sy1, txy1)
                         obj.add_sort1(dt, eid, grid, fd2, sx2, sy2, txy2)
-        #elif self.format_code == 1 and self.num_wide == numwide_random: # random
+        #elif op2_reader.format_code == 1 and op2_reader.num_wide == numwide_random: # random
             #msg = self.code_information()
             #msg += '  numwide=%s numwide_real=%s numwide_imag=%s numwide_random=%s' % (
-                #self.num_wide, numwide_real, numwide_imag, numwide_random)
+                #op2_reader.num_wide, numwide_real, numwide_imag, numwide_random)
             #return self._not_implemented_or_skip(data, ndata, msg), None, None
-        elif self.format_code in [1, 2] and self.num_wide == numwide_random:
+        elif op2_reader.format_code in [1, 2] and op2_reader.num_wide == numwide_random:
             # 47 - CQUAD8-64
             # 38 - CTRIAR-70
-            ntotal = self.num_wide * 4
+            ntotal = op2_reader.num_wide * 4
             nelements = ndata // ntotal
             assert ndata % ntotal == 0
             nlayers = 2 * nelements * nnodes_all  # 2 layers per node
@@ -4329,8 +4339,8 @@ class OES(TableReader):
             auto_return, is_vectorized = self._create_oes_object4(
                 nlayers, result_name, slot, obj_vector_random)
             if auto_return:
-                self._data_factor = 2 * nnodes_all  # number of "layers" for an element
-                return nelements * self.num_wide * 4, None, None
+                op2_reader._data_factor = 2 * nnodes_all  # number of "layers" for an element
+                return nelements * op2_reader.num_wide * 4, None, None
 
             obj = self.obj
             #print('dt=%s, itime=%s' % (obj.itime, dt))
@@ -4340,7 +4350,7 @@ class OES(TableReader):
                 # self.itotal = 0
                 #self.ntimes = 0
                 #self.nelements = 0
-                n = nelements * self.num_wide * 4
+                n = nelements * op2_reader.num_wide * 4
 
                 istart = obj.itotal
                 iend = istart + nlayers
@@ -4449,24 +4459,24 @@ class OES(TableReader):
             ## 47 - CQUAD8-64
             ##msg = self.code_information()
             #msg = '%s-CQUAD4-numwide=%s format_code=%s;\n numwide_real=%s numwide_imag=%s numwide_random=%s' % (
-                #self.table_name_str, self.num_wide, self.format_code,
+                #self.table_name_str, op2_reader.num_wide, op2_reader.format_code,
                 #numwide_real, numwide_imag, numwide_random)
             #return self._not_implemented_or_skip(data, ndata, msg), None, None
-        elif self.format_code in [2, 3] and self.num_wide in [70, 87]:
+        elif op2_reader.format_code in [2, 3] and op2_reader.num_wide in [70, 87]:
             # 70 - CTRIA6-75
             # 87 - CQUAD4-144
             msg = self.code_information()
             msg += '%s-numwide=%s format_code=%s;\n numwide_real=%s numwide_imag=%s numwide_random=%s' % (
-                self.table_name_str, self.num_wide, self.format_code,
+                self.table_name_str, op2_reader.num_wide, op2_reader.format_code,
                 numwide_real, numwide_imag, numwide_random)
             #print(msg)
             return self._not_implemented_or_skip(data, ndata, msg), None, None
 
-        #elif self.format_code in [2, 3] and self.num_wide == 70:
+        #elif op2_reader.format_code in [2, 3] and op2_reader.num_wide == 70:
             ## 87 - CQUAD4-144
             ##msg = self.code_information()
             #msg = '%s-CTRIA6-numwide=%s numwide_real=%s numwide_imag=%s numwide_random=%s' % (
-                #self.table_name_str, self.num_wide, numwide_real, numwide_imag, numwide_random)
+                #self.table_name_str, op2_reader.num_wide, numwide_real, numwide_imag, numwide_random)
             #return self._not_implemented_or_skip(data, ndata, msg), None, None
         else:
             raise RuntimeError(self.code_information())
@@ -4480,25 +4490,25 @@ class OES(TableReader):
         """
         n = 0
         if self.is_stress:
-            if self.element_type == 88:
+            if op2_reader.element_type == 88:
                 result_name = prefix + 'ctria3_stress' # + postfix  nonlinear_
-            elif self.element_type == 90:
+            elif op2_reader.element_type == 90:
                 result_name = prefix + 'cquad4_stress'  + postfix # nonlinear_
             else:
-                raise RuntimeError(self.element_type)
+                raise RuntimeError(op2_reader.element_type)
         else:
-            if self.element_type == 88:
+            if op2_reader.element_type == 88:
                 result_name = prefix + 'ctria3_strain' + postfix # nonlinear_
-            elif self.element_type == 90:
+            elif op2_reader.element_type == 90:
                 result_name = prefix + 'cquad4_strain' + postfix # nonlinear_
             else:
-                raise RuntimeError(self.element_type)
+                raise RuntimeError(op2_reader.element_type)
 
         slot = self.get_result(result_name)
         self._results._found_result(result_name)
         #print(self.code_information())
 
-        if self.format_code == 1 and self.num_wide == 13 and self.element_type in [88, 90]:  # real
+        if op2_reader.format_code == 1 and op2_reader.num_wide == 13 and op2_reader.element_type in [88, 90]:  # real
             # single layered hyperelastic (???) ctria3, cquad4
             ntotal = 52  # 4*13
             nelements = ndata // ntotal
@@ -4507,11 +4517,11 @@ class OES(TableReader):
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_vector_real)
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * op2_reader.num_wide * 4, None, None
 
             obj = self.obj
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * self.num_wide * 4
+                n = nelements * op2_reader.num_wide * 4
 
                 ielement = obj.ielement
                 ielement2 = ielement + nelements
@@ -4540,11 +4550,11 @@ class OES(TableReader):
                     eid, dt = get_eid_dt_from_eid_device(
                         eid_device, self.nonlinear_factor, self.sort_method)
                     obj.add_new_eid_sort1(
-                        dt, eid, self.element_type, fd1,
+                        dt, eid, op2_reader.element_type, fd1,
                         sx1, sy1, sz1, txy1, es1, eps1, ecs1,
                         ex1, ey1, ez1, exy1)
                     n += ntotal
-        elif self.format_code == 1 and self.num_wide == 25 and self.element_type in [88, 90]:
+        elif op2_reader.format_code == 1 and op2_reader.num_wide == 25 and op2_reader.element_type in [88, 90]:
             # TODO: vectorize
             #     ELEMENT      FIBER                        STRESSES/ TOTAL STRAINS                     EQUIVALENT    EFF. STRAIN     EFF. CREEP
             #        ID      DISTANCE           X              Y             Z               XY           STRESS    PLASTIC/NLELAST     STRAIN
@@ -4564,14 +4574,14 @@ class OES(TableReader):
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_vector_real)
             if auto_return:
-                self._data_factor = 2
-                return nelements * self.num_wide * 4, None, None
+                op2_reader._data_factor = 2
+                return nelements * op2_reader.num_wide * 4, None, None
 
-            #return nelements * self.num_wide * 4
+            #return nelements * op2_reader.num_wide * 4
             obj = self.obj
             is_vectorized = False
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * self.num_wide * 4
+                n = nelements * op2_reader.num_wide * 4
 
                 ielement = obj.ielement
                 ielement2 = ielement + nelements
@@ -4603,7 +4613,7 @@ class OES(TableReader):
                 obj.ielement = ielement2
                 obj.itotal = itotal2
             else:
-                etype = self.element_type
+                etype = op2_reader.element_type
                 struct1 = Struct(self._endian + self._analysis_code_fmt + b'24f') # 1+24=25
                 for i in range(nelements):
                     edata = data[n:n + ntotal]
@@ -4624,7 +4634,7 @@ class OES(TableReader):
                         dt, eid, etype,
                         fd2, sx2, sy2, undef3, txy2, es2, eps2, ecs2, ex2, ey2, undef4, etxy2)
                     n += ntotal
-        elif self.format_code == 1 and self.num_wide == 0: # random
+        elif op2_reader.format_code == 1 and op2_reader.num_wide == 0: # random
             msg = self.code_information()
             return self._not_implemented_or_skip(data, ndata, msg)
         else:
@@ -4645,32 +4655,32 @@ class OES(TableReader):
             obj_vector_real = RealCompositePlateStressArray
             #obj_vector_complex = ComplexCompositePlateStressArray
             unused_obj_vector_random = RandomCompositePlateStressArray
-            if self.element_type == 95: # CQUAD4
+            if op2_reader.element_type == 95: # CQUAD4
                 result_name = prefix + 'cquad4_composite_stress' + postfix
-            elif self.element_type == 96:  # CQUAD8
+            elif op2_reader.element_type == 96:  # CQUAD8
                 result_name = prefix + 'cquad8_composite_stress' + postfix
-            elif self.element_type == 97:  # CTRIA3
+            elif op2_reader.element_type == 97:  # CTRIA3
                 result_name = prefix + 'ctria3_composite_stress' + postfix
-            elif self.element_type == 98:  # CTRIA6
+            elif op2_reader.element_type == 98:  # CTRIA6
                 result_name = prefix + 'ctria6_composite_stress' + postfix
-            #elif self.element_type == ???:  # CTRIA6
+            #elif op2_reader.element_type == ???:  # CTRIA6
                 #result_name = prefix + 'ctriar_composite_stress' + postfix
-            #elif self.element_type == 10:  # CTRIA6
+            #elif op2_reader.element_type == 10:  # CTRIA6
             else:
                 raise RuntimeError(self.code_information())
         else:
             obj_vector_real = RealCompositePlateStrainArray
             #obj_vector_complex = ComplexCompositePlateStrainArray
             unused_obj_vector_random = RandomCompositePlateStrainArray
-            if self.element_type == 95: # CQUAD4
+            if op2_reader.element_type == 95: # CQUAD4
                 result_name = prefix + 'cquad4_composite_strain' + postfix
-            elif self.element_type == 96:  # CQUAD8
+            elif op2_reader.element_type == 96:  # CQUAD8
                 result_name = prefix + 'cquad8_composite_strain' + postfix
-            elif self.element_type == 97:  # CTRIA3
+            elif op2_reader.element_type == 97:  # CTRIA3
                 result_name = prefix + 'ctria3_composite_strain' + postfix
-            elif self.element_type == 98:  # CTRIA6
+            elif op2_reader.element_type == 98:  # CTRIA6
                 result_name = prefix + 'ctria6_composite_strain' + postfix
-            #elif self.element_type == ???:  # CTRIA6
+            #elif op2_reader.element_type == ???:  # CTRIA6
                 #result_name = prefix + 'ctriar_composite_strain' + postfix
             else:
                 raise RuntimeError(self.code_information())
@@ -4680,14 +4690,14 @@ class OES(TableReader):
         self._results._found_result(result_name)
         slot = self.get_result(result_name)
 
-        etype = self.element_name
-        if self.format_code == 1 and self.num_wide == 11:  # real
+        etype = op2_reader.element_name
+        if op2_reader.format_code == 1 and op2_reader.num_wide == 11:  # real
             ntotal = 44
             nelements = ndata // ntotal
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_vector_real)
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * op2_reader.num_wide * 4, None, None
 
             obj = self.obj
             if self.is_debug_file:
@@ -4697,7 +4707,7 @@ class OES(TableReader):
                 self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * self.num_wide * 4
+                n = nelements * op2_reader.num_wide * 4
 
                 istart = obj.itotal
                 iend = istart + nelements
@@ -4735,7 +4745,7 @@ class OES(TableReader):
                                       t12, t1z, t2z, angle, major, minor, ovm)
                     eid_old = eid
                     n += 44
-        elif self.format_code in [2, 3] and self.num_wide == 9:  # TODO: imag? - not done...
+        elif op2_reader.format_code in [2, 3] and op2_reader.num_wide == 9:  # TODO: imag? - not done...
             # TODO: vectorize
             raise NotImplementedError('imaginary composite stress?')
             msg = self.code_information()
@@ -4744,7 +4754,7 @@ class OES(TableReader):
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_vector_complex)
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * op2_reader.num_wide * 4, None, None
 
             # TODO: this is an OEF result???
             #    furthermore the actual table is calle dout as
@@ -4767,17 +4777,17 @@ class OES(TableReader):
                 (theory, lamid, fp, fm, fb, fmax, fflag) = out
 
                 if self.is_debug_file:
-                    self.binary_debug.write('%s-%s - (%s) + %s\n' % (self.element_name, self.element_type, eid_device, str(out)))
+                    self.binary_debug.write('%s-%s - (%s) + %s\n' % (op2_reader.element_name, op2_reader.element_type, eid_device, str(out)))
                 obj.add_new_eid(dt, eid, theory, lamid, fp, fm, fb, fmax, fflag)
                 n += ntotal
             raise NotImplementedError('this is a really weird case...')
-        elif self.format_code == 2 and self.num_wide == 11:
+        elif op2_reader.format_code == 2 and op2_reader.num_wide == 11:
             self.log.warning('skipping OESCP-PCOMP')
             # OESCP - STRAINS IN LAYERED COMPOSITE ELEMENTS (QUAD4)
             ntotal = 44
             nelements = ndata // ntotal
             if self.read_mode == 1:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * op2_reader.num_wide * 4, None, None
 
             struct1 = Struct(self._endian + self._analysis_code_fmt + b'i9f')
             for i in range(nelements):
@@ -4790,15 +4800,15 @@ class OES(TableReader):
                 #print(eid, out)
 
                 #if self.is_debug_file:
-                    #self.binary_debug.write('%s-%s - (%s) + %s\n' % (self.element_name, self.element_type, eid_device, str(out)))
+                    #self.binary_debug.write('%s-%s - (%s) + %s\n' % (op2_reader.element_name, op2_reader.element_type, eid_device, str(out)))
                 #obj.add_new_eid(dt, eid, theory, lamid, fp, fm, fb, fmax, fflag)
                 n += ntotal
-        elif self.num_wide == 9 and self.table_name == 'OESRT':
+        elif op2_reader.num_wide == 9 and self.table_name == 'OESRT':
             # strength_ratio.cquad4_composite_stress
             ntotal = 36
             nelements = ndata // ntotal
             if self.read_mode == 1:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * op2_reader.num_wide * 4, None, None
 
             # not 100%
             struct1 = Struct(self._endian + self._analysis_code_fmt + b' 8s i 3f if')
@@ -4814,15 +4824,15 @@ class OES(TableReader):
                 #print(eid, out)
 
                 #if self.is_debug_file:
-                    #self.binary_debug.write('%s-%s - (%s) + %s\n' % (self.element_name, self.element_type, eid_device, str(out)))
+                    #self.binary_debug.write('%s-%s - (%s) + %s\n' % (op2_reader.element_name, op2_reader.element_type, eid_device, str(out)))
                 #obj.add_new_eid(dt, eid, theory, lamid, fp, fm, fb, fmax, fflag)
                 n += ntotal
-        elif self.format_code in [2, 3] and self.num_wide == 13 and self.table_name in ['OESVM1C', 'OSTRVM1C']:
+        elif op2_reader.format_code in [2, 3] and op2_reader.num_wide == 13 and self.table_name in ['OESVM1C', 'OSTRVM1C']:
             # OESCP - STRAINS IN LAYERED COMPOSITE ELEMENTS (QUAD4)
             ntotal = 52
             nelements = ndata // ntotal
             if self.read_mode == 1:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * op2_reader.num_wide * 4, None, None
 
             struct1 = Struct(self._endian + self._analysis_code_fmt + b'i9f ff')
             for i in range(nelements):
@@ -4836,15 +4846,15 @@ class OES(TableReader):
                     eid_device, self.nonlinear_factor, self.sort_method)
                 #print(eid, out)
 
-                #print('%s-%s - (%s) + %s\n' % (self.element_name, self.element_type, eid_device, str(out)))
+                #print('%s-%s - (%s) + %s\n' % (op2_reader.element_name, op2_reader.element_type, eid_device, str(out)))
                 #if self.is_debug_file:
-                    #self.binary_debug.write('%s-%s - (%s) + %s\n' % (self.element_name, self.element_type, eid_device, str(out)))
+                    #self.binary_debug.write('%s-%s - (%s) + %s\n' % (op2_reader.element_name, op2_reader.element_type, eid_device, str(out)))
                 #obj.add_new_eid(dt, eid, theory, lamid, fp, fm, fb, fmax, fflag)
                 n += ntotal
         else:
             #msg = self.code_information()
             msg = '%s-COMP-random-numwide=%s numwide_real=11 numwide_imag=9' % (
-                self.table_name_str, self.num_wide)
+                self.table_name_str, op2_reader.num_wide)
             return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
 
@@ -4865,7 +4875,7 @@ class OES(TableReader):
         self._results._found_result(result_name)
 
         slot = self.get_result(result_name)
-        if self.format_code == 1 and self.num_wide == 33: # real
+        if op2_reader.format_code == 1 and op2_reader.num_wide == 33: # real
             if self.is_stress:
                 obj_vector_real = RealTriaxStressArray
             else:
@@ -4876,13 +4886,13 @@ class OES(TableReader):
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_vector_real)
             if auto_return:
-                self._data_factor = 4
-                return nelements * self.num_wide * 4, None, None
+                op2_reader._data_factor = 4
+                return nelements * op2_reader.num_wide * 4, None, None
 
             obj = self.obj
             nnodes_all = 4
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * self.num_wide * 4
+                n = nelements * op2_reader.num_wide * 4
 
                 itotal = obj.itotal
                 itotal2 = itotal + nelements * nnodes_all
@@ -4928,13 +4938,13 @@ class OES(TableReader):
                             self.binary_debug.write('CTRIAX6-53B - %s\n' % (str(out)))
                         obj.add_sort1(dt, eid, loc, rs, azs, As, ss, maxp, tmax, octs)
                         n += 32
-        elif self.format_code in [2, 3] and self.num_wide == 37: # imag
+        elif op2_reader.format_code in [2, 3] and op2_reader.num_wide == 37: # imag
             # TODO: vectorize object
             #return ndata
 
             if self.is_stress:
-                #print('self.element_type', self.element_type)
-                #print('self.element_name', self.element_name)
+                #print('op2_reader.element_type', op2_reader.element_type)
+                #print('op2_reader.element_name', op2_reader.element_name)
                 #raise NotImplementedError('ComplexTriaxStressArray')
                 obj_vector_complex = ComplexTriaxStressArray
             else:
@@ -4943,7 +4953,7 @@ class OES(TableReader):
 
             num_wide = 1 + 4 * 9
             ntotal = num_wide * 4
-            assert num_wide == self.num_wide, num_wide
+            assert num_wide == op2_reader.num_wide, num_wide
             nelements = ndata // ntotal  # (1+8*4)*4 = 33*4 = 132
             leftover = ndata % ntotal
             assert leftover == 0, 'ntotal=%s nelements=%s leftover=%s' % (ntotal, nelements, leftover)
@@ -4956,13 +4966,13 @@ class OES(TableReader):
             auto_return = False
             is_vectorized = False
             if auto_return:
-                #self._data_factor = 4
-                return nelements * self.num_wide * 4, None, None
+                #op2_reader._data_factor = 4
+                return nelements * op2_reader.num_wide * 4, None, None
 
             obj = self.obj
             nnodes_all = 4
             if self.use_vector and is_vectorized and 0:
-                n = nelements * 4 * self.num_wide
+                n = nelements * 4 * op2_reader.num_wide
                 itotal = obj.itotal
                 itotal2 = itotal + nelements * nnodes_all
                 ielement = obj.ielement
@@ -5062,24 +5072,24 @@ class OES(TableReader):
         self._results._found_result(result_name)
 
         slot = self.get_result(result_name)
-        if self.format_code in [1, 3] and self.num_wide == 7:  # real
+        if op2_reader.format_code in [1, 3] and op2_reader.num_wide == 7:  # real
             if self.is_stress:
                 obj_vector_real = RealBushStressArray
             else:
                 obj_vector_real = RealBushStrainArray
 
-            assert self.num_wide == 7, "num_wide=%s not 7" % self.num_wide
+            assert op2_reader.num_wide == 7, "num_wide=%s not 7" % op2_reader.num_wide
             ntotal = 28  # 4*7
 
             nelements = ndata // ntotal
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_vector_real)
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * op2_reader.num_wide * 4, None, None
             obj = self.obj
 
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * self.num_wide * 4
+                n = nelements * op2_reader.num_wide * 4
 
                 istart = obj.ielement
                 iend = istart + nelements
@@ -5104,7 +5114,7 @@ class OES(TableReader):
 
                     obj.add_sort1(dt, eid, tx, ty, tz, rx, ry, rz)
                     n += ntotal
-        elif self.format_code in [2, 3] and self.num_wide == 13:  # imag
+        elif op2_reader.format_code in [2, 3] and op2_reader.num_wide == 13:  # imag
             if self.is_stress:
                 obj_complex = ComplexCBushStressArray
             else:
@@ -5115,11 +5125,11 @@ class OES(TableReader):
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_complex)
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * op2_reader.num_wide * 4, None, None
 
             obj = self.obj
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * 4 * self.num_wide
+                n = nelements * 4 * op2_reader.num_wide
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
@@ -5187,7 +5197,7 @@ class OES(TableReader):
             return ndata, None, None
         self._results._found_result(result_name)
         slot = self.get_result(result_name)
-        if self.format_code == 1 and self.num_wide == 8:  # real
+        if op2_reader.format_code == 1 and op2_reader.num_wide == 8:  # real
             if self.is_stress:
                 obj_vector_real = RealBush1DStressArray
             else:
@@ -5199,11 +5209,11 @@ class OES(TableReader):
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_vector_real)
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * op2_reader.num_wide * 4, None, None
 
             obj = self.obj
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * self.num_wide * 4
+                n = nelements * op2_reader.num_wide * 4
 
                 itotal = obj.itotal
                 itotal2 = itotal + nelements
@@ -5238,7 +5248,7 @@ class OES(TableReader):
                     # axial_strain, plastic_strain, is_failed
                     obj.add_sort1(dt, eid, fe, ue, ve, ao, ae, ep, fail)
                     n += ntotal
-        elif self.format_code in [2, 3] and self.num_wide == 9:  # imag
+        elif op2_reader.format_code in [2, 3] and op2_reader.num_wide == 9:  # imag
             # TODO: vectorize object
             ntotal = 36  # 4*9
             nelements = ndata // ntotal
@@ -5250,11 +5260,11 @@ class OES(TableReader):
                 raise NotImplementedError('self.cbush1d_stress_strain; complex strain')
 
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * op2_reader.num_wide * 4, None, None
 
             obj = self.obj
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * self.num_wide * 4
+                n = nelements * op2_reader.num_wide * 4
 
                 itotal = obj.itotal
                 itotal2 = itotal + nelements
@@ -5294,7 +5304,7 @@ class OES(TableReader):
                         ue = complex(uer, uei)
                         ao = complex(aor, aoi)
                         ae = complex(aer, aei)
-                    obj.add_new_eid(self.element_type, dt, eid, fe, ue, ao, ae)
+                    obj.add_new_eid(op2_reader.element_type, dt, eid, fe, ue, ao, ae)
         else:
             msg = self.code_information()
             raise NotImplementedError(msg)
@@ -5312,25 +5322,25 @@ class OES(TableReader):
         n = 0
         #prefix = 'nonlinear_'
         if self.is_stress:
-            if self.element_type == 87:
+            if op2_reader.element_type == 87:
                 result_name = prefix + 'ctube_stress' + postfix
                 name = 'CTUBENL-87'
-            elif self.element_type == 89:
+            elif op2_reader.element_type == 89:
                 result_name = prefix + 'crod_stress' + postfix
                 name = 'RODNL-89'
-            elif self.element_type == 92:
+            elif op2_reader.element_type == 92:
                 result_name = prefix + 'conrod_stress' + postfix
                 name = 'CONRODNL-92'
             else:
                 raise RuntimeError(self.code_information())
         else:
-            if self.element_type == 87:
+            if op2_reader.element_type == 87:
                 result_name = prefix + 'ctube_strain' + postfix
                 name = 'CTUBENL-87'
-            elif self.element_type == 89:
+            elif op2_reader.element_type == 89:
                 result_name = prefix + 'crod_strain' + postfix
                 name = 'RODNL-89'
-            elif self.element_type == 92:
+            elif op2_reader.element_type == 92:
                 result_name = prefix + 'conrod_strain' + postfix
                 name = 'CONRODNL-92'
             else:
@@ -5340,13 +5350,13 @@ class OES(TableReader):
             return ndata, None, None
         self._results._found_result(result_name)
         slot = self.get_result(result_name)
-        if self.format_code == 1 and self.num_wide == 7:  # real
+        if op2_reader.format_code == 1 and op2_reader.num_wide == 7:  # real
             ntotal = 28  #  7*4 = 28
             nelements = ndata // ntotal
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, RealNonlinearRodArray)
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * op2_reader.num_wide * 4, None, None
 
             obj = self.obj
             #if self.is_debug_file:
@@ -5356,7 +5366,7 @@ class OES(TableReader):
                 #self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * self.num_wide * 4
+                n = nelements * op2_reader.num_wide * 4
                 istart = obj.itotal
                 iend = istart + nelements
                 obj._times[obj.itime] = dt
@@ -5401,9 +5411,9 @@ class OES(TableReader):
         n = 0
         numwide_real = 3
         if self.is_stress:
-            if self.element_type == 224:
+            if op2_reader.element_type == 224:
                 result_name = prefix + 'celas1_stress' + postfix # nonlinear_
-            elif self.element_type == 225:
+            elif op2_reader.element_type == 225:
                 result_name = prefix + 'celas3_stress' + postfix # nonlinear_
         else:
             raise NotImplementedError('NonlinearSpringStrain')
@@ -5413,8 +5423,8 @@ class OES(TableReader):
         self._results._found_result(result_name)
 
         slot = self.get_result(result_name)
-        if self.num_wide == numwide_real:
-            assert self.num_wide == 3, "num_wide=%s not 3" % self.num_wide
+        if op2_reader.num_wide == numwide_real:
+            assert op2_reader.num_wide == 3, "num_wide=%s not 3" % op2_reader.num_wide
             ntotal = 12  # 4*3
             nelements = ndata // ntotal
 
@@ -5425,11 +5435,11 @@ class OES(TableReader):
                 raise NotImplementedError('NonlinearSpringStrainArray') # undefined
 
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * op2_reader.num_wide * 4, None, None
             obj = self.obj
 
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * 4 * self.num_wide
+                n = nelements * 4 * op2_reader.num_wide
                 unused_itotal = obj.ielement
                 ielement = obj.ielement
                 ielement2 = obj.ielement + nelements
@@ -5455,7 +5465,7 @@ class OES(TableReader):
                     eid, dt = get_eid_dt_from_eid_device(
                         eid_device, self.nonlinear_factor, self.sort_method)
                     if self.is_debug_file:
-                        self.binary_debug.write('%s-%s - %s\n' % (self.element_name, self.element_type, str(out)))
+                        self.binary_debug.write('%s-%s - %s\n' % (op2_reader.element_name, op2_reader.element_type, str(out)))
                     obj.add_sort1(dt, eid, force, stress)
                     n += ntotal
         else:
@@ -5483,7 +5493,7 @@ class OES(TableReader):
         slot = self.get_result(result_name)
 
         #print(self.code_information())
-        if self.num_wide == 21 and self.format_code == 1:# real
+        if op2_reader.num_wide == 21 and op2_reader.format_code == 1:# real
             #TCODE,7 =0 Real
             #2 GRID I External Grid Point identification number
             #3 CA RS Circumferential Angle
@@ -5504,12 +5514,12 @@ class OES(TableReader):
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_vector_real)
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * op2_reader.num_wide * 4, None, None
 
             obj = self.obj
             assert obj is not None
             if self.use_vector and is_vectorized and self.sort_method == 1 and 0:
-                n = nelements * 4 * self.num_wide
+                n = nelements * 4 * op2_reader.num_wide
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
@@ -5556,7 +5566,7 @@ class OES(TableReader):
                 #msg = self.code_information()
             #n = self._not_implemented_or_skip(data, ndata, msg)
             #return n, None, None
-        elif self.num_wide == 21 and self.format_code in [2, 3]: # complex
+        elif op2_reader.num_wide == 21 and op2_reader.format_code in [2, 3]: # complex
             n = 0
             ntotal = 84  # 4*21
             nelements = ndata // ntotal
@@ -5577,12 +5587,12 @@ class OES(TableReader):
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_vector_complex)
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * op2_reader.num_wide * 4, None, None
 
             obj = self.obj
             assert obj is not None
             if self.use_vector and is_vectorized and self.sort_method == 1 and 0:
-                n = nelements * 4 * self.num_wide
+                n = nelements * 4 * op2_reader.num_wide
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
@@ -5636,7 +5646,7 @@ class OES(TableReader):
                         obj.add_sort1(dt, eid, grid, angle, sc, sd, se, sf)
                         n += ntotali
 
-        elif self.num_wide == 13:
+        elif op2_reader.num_wide == 13:
             ntotal = 52  # 4*13
             nelements = ndata // ntotal
             #TCODE,7 =2 Real
@@ -5672,7 +5682,7 @@ class OES(TableReader):
         self._results._found_result(result_name)
         slot = self.get_result(result_name)
 
-        if self.format_code == 1 and self.num_wide == 11:  # real?
+        if op2_reader.format_code == 1 and op2_reader.num_wide == 11:  # real?
             if self.is_stress:
                 obj_vector_real = NonlinearGapStressArray
             else:
@@ -5683,11 +5693,11 @@ class OES(TableReader):
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_vector_real)
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * op2_reader.num_wide * 4, None, None
 
             obj = self.obj
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * self.num_wide * 4
+                n = nelements * op2_reader.num_wide * 4
 
                 ielement = obj.ielement
                 ielement2 = ielement + nelements
@@ -5740,7 +5750,7 @@ class OES(TableReader):
         self._results._found_result(result_name)
         slot = self.get_result(result_name)
 
-        if self.format_code == 1 and self.num_wide == numwide_real:
+        if op2_reader.format_code == 1 and op2_reader.num_wide == numwide_real:
             msg = result_name
             if self.is_stress:
                 obj_vector_real = RealNonlinearBeamStressArray
@@ -5754,7 +5764,7 @@ class OES(TableReader):
             auto_return, is_vectorized = self._create_oes_object4(
                 nlayers, result_name, slot, obj_vector_real)
             if auto_return:
-                self._data_factor = 8
+                op2_reader._data_factor = 8
                 return ndata, None, None
             obj = self.obj
             if self.is_debug_file:
@@ -5799,7 +5809,7 @@ class OES(TableReader):
                 obj.add_new_eid_sort1(dt, eid, *out[1:])
                 n += 204
 
-        elif self.format_code == 1 and self.num_wide == numwide_random:  # random
+        elif op2_reader.format_code == 1 and op2_reader.num_wide == numwide_random:  # random
             msg = self.code_information()
             raise NotImplementedError(msg)
             #return self._not_implemented_or_skip(data, ndata, msg)
@@ -5824,7 +5834,7 @@ class OES(TableReader):
         self._results._found_result(result_name)
         slot = self.get_result(result_name)
 
-        if self.format_code == 1 and self.num_wide == 10:  # real
+        if op2_reader.format_code == 1 and op2_reader.num_wide == 10:  # real
             if self.is_stress:
                 obj_vector_real = RealBar10NodesStressArray
             else:
@@ -5851,7 +5861,7 @@ class OES(TableReader):
                 # self.itotal = 0
                 #self.ntimes = 0
                 #self.nelements = 0
-                n = nelements * self.num_wide * 4
+                n = nelements * op2_reader.num_wide * 4
 
                 istart = obj.itotal
                 iend = istart + nelements
@@ -5874,7 +5884,7 @@ class OES(TableReader):
                         self.binary_debug.write('  eid=%i; C%i=[%s]\n' % (
                             eid, i, ', '.join(['%r' % di for di in out])))
                     n += ntotal
-                    obj.add_new_eid(self.element_name, dt, eid,
+                    obj.add_new_eid(op2_reader.element_name, dt, eid,
                                     sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS)
         else:
             raise RuntimeError(self.code_information())
@@ -5888,16 +5898,16 @@ class OES(TableReader):
         # 145-VUHEXA  (8 nodes)
         # 146-VUPENTA (6 nodes)
         # 147-VUTETRA (4 nodes)
-        if self.element_type == 147:
+        if op2_reader.element_type == 147:
             etype = 'VUTETRA'
             nnodes = 4
             #numwide_a = 2 + (14 - 2) * nnodes  # 50
             #numwide_b = 2 + (9 - 2) * nnodes  # 30
             #numwide_c = 2 + 13 * nnodes  # 54
-        elif self.element_type == 146:
+        elif op2_reader.element_type == 146:
             etype = 'VUPENTA'
             nnodes = 6
-        elif self.element_type == 145:
+        elif op2_reader.element_type == 145:
             etype = 'VUHEXA'
             nnodes = 8
         else:
@@ -5906,13 +5916,13 @@ class OES(TableReader):
         #num_wideA = 2 + 12 * nnodes
         #ntotal = 8 + 48 * nnodes
 
-        if self.format_code == -1 and self.num_wide == 33: # real
+        if op2_reader.format_code == -1 and op2_reader.num_wide == 33: # real
             # assuming TETRA...
             # TODO: vectorize
             numwide_a = 2 + (14 - 2) * nnodes  # 50
             numwide_b = 2 + (9 - 2) * nnodes  # 30
             numwide_c = 2 + 13 * nnodes  # 54
-            if self.num_wide == numwide_a:
+            if op2_reader.num_wide == numwide_a:
                 ntotal = numwide_a * 4
                 s1 = self.struct_2i
                 s2 = Struct(self._endian + b'i11f')
@@ -5928,21 +5938,21 @@ class OES(TableReader):
                         edata = data[n:n+48]
                         out = s2.unpack(edata)
                         if self.is_debug_file:
-                            self.binary_debug.write('%s-%s - %s\n' % (etype, self.element_type, str(out)))
+                            self.binary_debug.write('%s-%s - %s\n' % (etype, op2_reader.element_type, str(out)))
                         assert len(out) == 12
                         (grid, xnorm, ynorm, znorm, txy, tyz, txz,
                          prin1, prin2, prin3, smean, vono_roct) = out
                 n = ndata
-            elif self.num_wide == numwide_b:
+            elif op2_reader.num_wide == numwide_b:
                 ntotal = numwide_b * 4
                 nelements = ndata // ntotal
                 n = nelements * ntotal
-            elif self.num_wide == numwide_c:
+            elif op2_reader.num_wide == numwide_c:
                 ntotal = numwide_c * 4
                 nelements = ndata // ntotal
                 n = nelements * ntotal
             else:
-                msg = 'numwide=%s A=%s B=%s C=%s' % (self.num_wide, numwide_a, numwide_b, numwide_c)
+                msg = 'numwide=%s A=%s B=%s C=%s' % (op2_reader.num_wide, numwide_a, numwide_b, numwide_c)
                 raise RuntimeError(self.code_information())
         else:
             #raise RuntimeError(self.code_information())
@@ -5957,7 +5967,7 @@ class OES(TableReader):
         """
         #if self.read_mode == 1:
             #return ndata
-        if self.format_code == 1 and self.num_wide == 30:
+        if op2_reader.format_code == 1 and op2_reader.num_wide == 30:
             if self.is_stress:
                 obj_vector_real = HyperelasticQuadArray
                 self.create_transient_object(self.hyperelastic_cquad4_strain, obj_vector_real)
@@ -5990,7 +6000,7 @@ class OES(TableReader):
                 # self.itotal = 0
                 #self.ntimes = 0
                 #self.nelements = 0
-                n = nelements * self.num_wide * 4
+                n = nelements * op2_reader.num_wide * 4
 
                 istart = obj.itotal
                 iend = istart + nelements
@@ -6038,13 +6048,13 @@ class OES(TableReader):
                         n += 28
         else:
             msg = 'numwide=%s element_num=%s etype=%s' % (
-                self.num_wide, self.element_type, self.element_name)
+                op2_reader.num_wide, op2_reader.element_type, op2_reader.element_name)
             return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
 
     def obj_set_element(self, obj, ielement, ielement2, data, nelements):
         if obj.itime == 0:
-            ints = frombuffer(data, dtype=self.idtype).reshape(nelements, self.num_wide).copy()
+            ints = frombuffer(data, dtype=self.idtype).reshape(nelements, op2_reader.num_wide).copy()
             eids = ints[:, 0] // 10
             assert eids.min() > 0, eids.min()
             obj.element[ielement:ielement2] = eids

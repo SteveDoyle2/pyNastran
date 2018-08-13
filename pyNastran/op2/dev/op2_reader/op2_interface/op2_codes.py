@@ -736,6 +736,51 @@ class Op2Codes(object):
     def approach_code_str(self, approach_code):
         return ''
 
+    def _table_specs(self):
+        """
+        +-------+-----------+-------------+----------+
+        | Value | Sort Type | Data Format | Random ? |
+        +-------+-----------+-------------+----------+
+        |   0   |   SORT1   |    Real     |   No     |
+        +-------+-----------+-------------+----------+
+        |   1   |   SORT1   |    Complex  |   No     |
+        +-------+-----------+-------------+----------+
+        |   2   |   SORT2   |    Real     |   No     |
+        +-------+-----------+-------------+----------+
+        |   3   |   SORT2   |    Complex  |   No     |
+        +-------+-----------+-------------+----------+
+        |   4   |   SORT1   |    Real     |   Yes    |
+        +-------+-----------+-------------+----------+
+        |   5   |   SORT1   |    Real     |   ???    |
+        +-------+-----------+-------------+----------+
+        |   6   |   SORT2   |    Real     |   Yes    |
+        +-------+-----------+-------------+----------+
+        |   7   |    ???    |    ???      |   ???    |
+        +-------+-----------+-------------+----------+
+
+        +-----+-------------+---------+
+        | Bit |     0       |    1    |
+        +-----+-------------+---------+
+        |  0  | Not Random  | Random  |
+        |  1  | SORT1       | SORT2   |
+        |  2  | Real        | Complex |
+        +-----+-------------+---------+
+        """
+        #tcode = self.table_code // 1000
+        table_code = self.tCode
+        tcode = self.sort_code
+        sort_code = tcode
+        #if self.table_name_str == 'OQGPSD2':
+            #print(self.code_information())
+            #print('table_name=%s tCode=%s sort_code=%s self.sort_bits=%s' % (self.table_name_str, self.tCode, sort_code, self.sort_bits))
+        assert sort_code in [0, 1, 2, 3, 4, 5, 6], 'sort_code=%s\n%s' % (sort_code, self.code_information())
+        try:
+            sort_method, is_real, is_random = determine_sort_bits_meaning(table_code, sort_code, self.sort_bits)
+        except AssertionError:
+            #print(self.code_information())
+            raise
+        return sort_method, is_real, is_random
+
     def code_information(self, include_time=True):
         """
         prints the general table information
@@ -1148,72 +1193,6 @@ class Op2Codes(object):
         }
         t_code = map_sort_bits[(is_complex, is_sort2, is_random)]
 
-    def _table_specs(self):
-        """
-        +-------+-----------+-------------+----------+
-        | Value | Sort Type | Data Format | Random ? |
-        +-------+-----------+-------------+----------+
-        |   0   |   SORT1   |    Real     |   No     |
-        +-------+-----------+-------------+----------+
-        |   1   |   SORT1   |    Complex  |   No     |
-        +-------+-----------+-------------+----------+
-        |   2   |   SORT2   |    Real     |   No     |
-        +-------+-----------+-------------+----------+
-        |   3   |   SORT2   |    Complex  |   No     |
-        +-------+-----------+-------------+----------+
-        |   4   |   SORT1   |    Real     |   Yes    |
-        +-------+-----------+-------------+----------+
-        |   5   |   SORT1   |    Real     |   ???    |
-        +-------+-----------+-------------+----------+
-        |   6   |   SORT2   |    Real     |   Yes    |
-        +-------+-----------+-------------+----------+
-        |   7   |    ???    |    ???      |   ???    |
-        +-------+-----------+-------------+----------+
-
-        +-----+-------------+---------+
-        | Bit |     0       |    1    |
-        +-----+-------------+---------+
-        |  0  | Not Random  | Random  |
-        |  1  | SORT1       | SORT2   |
-        |  2  | Real        | Complex |
-        +-----+-------------+---------+
-        """
-        #tcode = self.table_code // 1000
-        table_code = self.tCode
-        tcode = self.sort_code
-        sort_code = tcode
-        #if self.table_name_str == 'OQGPSD2':
-            #print(self.code_information())
-            #print('table_name=%s tCode=%s sort_code=%s self.sort_bits=%s' % (self.table_name_str, self.tCode, sort_code, self.sort_bits))
-        assert sort_code in [0, 1, 2, 3, 4, 5, 6], 'sort_code=%s\n%s' % (sort_code, self.code_information())
-        try:
-            sort_method, is_real, is_random = determine_sort_bits_meaning(table_code, sort_code, self.sort_bits)
-        except AssertionError:
-            #print(self.code_information())
-            raise
-        return sort_method, is_real, is_random
-
-    #----
-    # sort_code
-    # disabled 11/2015
-    #def isSortedResponse(self):
-        #if self.sort_bits[0] == 0:
-            #return True
-        #return False
-
-    # disabled 11/2015
-    #def isRandomResponse(self):
-        #return not self.isSortedResponse()
-
-    #----
-    # combos
-    #def isRealOrRandom(self):  # been broken for a long time
-        #return self.isReal() or self.isRandom()
-
-    #def isRealImaginaryOrMagnitudePhase(self):  # been broken for a long time
-        #return self.is_real_imaginary or self.MagnitudePhase()
-
-    #----
 
 def get_scode_word(s_code, stress_bits):
     if s_code == 0:

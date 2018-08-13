@@ -289,12 +289,12 @@ class OEF(OP2Common):
             236: 16,   # punch CTRIAR
         }
         try:
-            real = real_mapper[self.element_type]
+            real = real_mapper[op2_reader.element_type]
         except KeyError:
             real = None
 
         try:
-            imag = imag_mapper[self.element_type]
+            imag = imag_mapper[op2_reader.element_type]
         except KeyError:
             imag = None
         return (real, imag)
@@ -302,8 +302,8 @@ class OEF(OP2Common):
     def _read_oef1_3(self, data, ndata):
         """Table 3 parser for OEF1 table"""
         self._analysis_code_fmt = b'i'
-        self._data_factor = 1
-        self.words = [
+        op2_reader._data_factor = 1
+        op2_reader.words = [
             'aCode', 'tCode', 'element_type', 'isubcase',
             '???', '???', '???', '???',
             'format_code', 'num_wide', 'o_code', '???',
@@ -315,29 +315,29 @@ class OEF(OP2Common):
         self.parse_approach_code(data)
 
         #: element type
-        self.element_type = self.add_data_parameter(data, 'element_type', b'i', 3, False)
+        op2_reader.element_type = self.add_data_parameter(data, 'element_type', b'i', 3, False)
 
         # dynamic load set ID/random code
         #self.dLoadID = self.add_data_parameter(data, 'dLoadID', b'i', 8, False)
 
         #: format code
-        self.format_code = self.add_data_parameter(data, 'format_code', b'i', 9, False)
+        op2_reader.format_code = self.add_data_parameter(data, 'format_code', b'i', 9, False)
 
         #: number of words per entry in record
         #: .. note: is this needed for this table ???
-        self.num_wide = self.add_data_parameter(data, 'num_wide', b'i', 10, False)
+        op2_reader.num_wide = self.add_data_parameter(data, 'num_wide', b'i', 10, False)
 
         #: undefined in DMAP...
-        self.o_code = self.add_data_parameter(data, 'o_code', b'i', 11, False)
+        op2_reader.o_code = self.add_data_parameter(data, 'o_code', b'i', 11, False)
 
         #: thermal flag; 1 for heat ransfer, 0 otherwise
-        self.thermal = self.add_data_parameter(data, 'thermal', b'i', 23, False)
+        op2_reader.thermal = self.add_data_parameter(data, 'thermal', b'i', 23, False)
 
         ## assuming tCode=1
         if self.analysis_code == 1:   # statics
-            self.loadID = self.add_data_parameter(data, 'loadID', b'i', 5, False)  # load set ID number
-            self.data_names = self.apply_data_code_value('data_names', ['loadID'])
-            self.setNullNonlinearFactor()
+            op2_reader.loadID = self.add_data_parameter(data, 'loadID', b'i', 5, False)  # load set ID number
+            op2_reader.data_names = self.apply_data_code_value('data_names', ['loadID'])
+            op2_reader.set_null_nonlinear_factor()
         elif self.analysis_code == 2:  # normal modes/buckling (real eigenvalues)
             #: mode number
             self.mode = self.add_data_parameter(data, 'mode', b'i', 5)
@@ -347,35 +347,35 @@ class OEF(OP2Common):
             self.update_mode_cycle('cycle')
             self.data_names = self.apply_data_code_value('data_names', ['mode', 'eign', 'cycle'])
             # TODO: mode_cycle is not defined?
-            #self.data_names = self.apply_data_code_value('data_names', ['mode', 'eign', 'mode_cycle'])
-        elif self.analysis_code == 3:  # differential stiffness 0
+            #op2_reader.data_names = self.apply_data_code_value('data_names', ['mode', 'eign', 'mode_cycle'])
+        elif analysis_code == 3:  # differential stiffness 0
             #: load set ID number
-            self.loadID = self.add_data_parameter(data, 'loadID', b'i', 5)
-            self.data_names = self.apply_data_code_value('data_names', ['loadID'])
-        elif self.analysis_code == 4:  # differential stiffness 1
+            op2_reader.loadID = self.add_data_parameter(data, 'loadID', b'i', 5)
+            op2_reader.data_names = self.apply_data_code_value('data_names', ['loadID'])
+        elif analysis_code == 4:  # differential stiffness 1
             #: load set ID number
-            self.loadID = self.add_data_parameter(data, 'loadID', b'i', 5)
-            self.data_names = self.apply_data_code_value('data_names', ['loadID'])
-        elif self.analysis_code == 5:   # frequency
-            self.freq = self.add_data_parameter(data, 'freq', b'f', 5)  # frequency
-            self.data_names = self.apply_data_code_value('data_names', ['freq'])
-        elif self.analysis_code == 6:  # transient
-            self.time = self.add_data_parameter(data, 'time', b'f', 5)  # time step
-            self.data_names = self.apply_data_code_value('data_names', ['time'])
-        elif self.analysis_code == 7:  # pre-buckling
+            op2_reader.loadID = self.add_data_parameter(data, 'loadID', b'i', 5)
+            op2_reader.data_names = self.apply_data_code_value('data_names', ['loadID'])
+        elif analysis_code == 5:   # frequency
+            op2_reader.freq = self.add_data_parameter(data, 'freq', b'f', 5)  # frequency
+            op2_reader.data_names = self.apply_data_code_value('data_names', ['freq'])
+        elif analysis_code == 6:  # transient
+            op2_reader.time = self.add_data_parameter(data, 'time', b'f', 5)  # time step
+            op2_reader.data_names = self.apply_data_code_value('data_names', ['time'])
+        elif analysis_code == 7:  # pre-buckling
             #: load set ID number
-            self.loadID = self.add_data_parameter(data, 'loadID', b'i', 5)
+            op2_reader.loadID = self.add_data_parameter(data, 'loadID', b'i', 5)
             #self.apply_data_code_value('data_names',['lsdvmn'])
-            self.data_names = self.apply_data_code_value('data_names', ['loadID'])
-        elif self.analysis_code == 8:  # post-buckling
+            op2_reader.data_names = self.apply_data_code_value('data_names', ['loadID'])
+        elif analysis_code == 8:  # post-buckling
             #: load set ID number
-            self.loadID = self.add_data_parameter(data, 'loadID', b'i', 5)
+            op2_reader.loadID = self.add_data_parameter(data, 'loadID', b'i', 5)
             #: real eigenvalue
-            self.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
-            self.data_names = self.apply_data_code_value('data_names', ['loadID', 'eigr'])
-        elif self.analysis_code == 9:  # complex eigenvalues
+            op2_reader.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
+            op2_reader.data_names = self.apply_data_code_value('data_names', ['loadID', 'eigr'])
+        elif analysis_code == 9:  # complex eigenvalues
             #: mode number
-            self.mode = self.add_data_parameter(data, 'mode', b'i', 5)
+            op2_reader.mode = self.add_data_parameter(data, 'mode', b'i', 5)
             #: real eigenvalue
             self.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
             #: imaginary eigenvalue
@@ -423,8 +423,8 @@ class OEF(OP2Common):
 
     def _read_oef2_3(self, data, ndata):
         """Table 3 parser for OEF2 table"""
-        self._data_factor = 1
-        self.words = [
+        op2_reader._data_factor = 1
+        op2_reader.words = [
             'aCode', 'tCode', 'element_type', 'isubcase',
             '???', '???', '???', '???',
             'format_code', 'num_wide', 'o_code', '???',
@@ -434,47 +434,48 @@ class OEF(OP2Common):
             '???', 'Title', 'subtitle', 'label']
 
         self.parse_approach_code(data)  # 3
-        self.sort_method = 2
+        op2_reader.sort_method = 2
 
         #: element type
-        self.element_type = self.add_data_parameter(data, 'element_type', b'i', 3, False)
+        op2_reader.element_type = self.add_data_parameter(data, 'element_type', b'i', 3, False)
 
         # dynamic load set ID/random code
-        #self.dLoadID = self.add_data_parameter(data, 'dLoadID', b'i', 8, False)
+        #op2_reader.dLoadID = self.add_data_parameter(data, 'dLoadID', b'i', 8, False)
 
         #: format code
-        self.format_code = self.add_data_parameter(data, 'format_code', b'i', 9, False)
+        op2_reader.format_code = self.add_data_parameter(data, 'format_code', b'i', 9, False)
 
         #: number of words per entry in record
         #: .. note: is this needed for this table ???
-        self.num_wide = self.add_data_parameter(data, 'num_wide', b'i', 10, False)
+        op2_reader.num_wide = self.add_data_parameter(data, 'num_wide', b'i', 10, False)
 
         #: undefined in DMAP...
-        self.o_code = self.add_data_parameter(data, 'o_code', b'i', 11, False)
+        op2_reader.o_code = self.add_data_parameter(data, 'o_code', b'i', 11, False)
 
         #: thermal flag; 1 for heat ransfer, 0 otherwise
-        self.thermal = self.add_data_parameter(data, 'thermal', b'i', 23, False)
+        op2_reader.thermal = self.add_data_parameter(data, 'thermal', b'i', 23, False)
 
-        self.element_id = self.add_data_parameter(data, 'element_id', b'i', 5, fix_device_code=True)
-        self._element_id = self.add_data_parameter(data, '_element_id', b'f', 5, apply_nonlinear_factor=False, add_to_dict=True)
+        op2_reader.element_id = self.add_data_parameter(data, 'element_id', b'i', 5, fix_device_code=True)
+        op2_reader._element_id = self.add_data_parameter(data, '_element_id', b'f', 5, apply_nonlinear_factor=False, add_to_dict=True)
 
-        if self.analysis_code == 1:  # static...because reasons.
+        analysis_code = op2_reader.analysis_code
+        if analysis_code == 1:  # static...because reasons.
             self._analysis_code_fmt = b'f'
-            self.data_names = self.apply_data_code_value('data_names', ['element_id'])
-        elif self.analysis_code == 2:  # real eigenvalues
+            op2_reader.data_names = self.apply_data_code_value('data_names', ['element_id'])
+        elif analysis_code == 2:  # real eigenvalues
             self._analysis_code_fmt = b'i'
             self.eign = self.add_data_parameter(data, 'eign', b'f', 6, False)
             self.mode_cycle = self.add_data_parameter(data, 'mode_cycle', b'i', 7, False)  # mode or cycle .. todo:: confused on the type - F1???
             self.data_names = self.apply_data_code_value('data_names', ['element_id', 'eign', 'mode_cycle'])
-        elif self.analysis_code == 5:   # frequency
+        elif analysis_code == 5:   # frequency
             self._analysis_code_fmt = b'f'
             self.data_names = self.apply_data_code_value('data_names', ['element_id'])
             self.apply_data_code_value('analysis_method', 'freq')
-        elif self.analysis_code == 6:  # transient
+        elif analysis_code == 6:  # transient
             self._analysis_code_fmt = b'f'
             self.data_names = self.apply_data_code_value('data_names', ['element_id'])
             self.apply_data_code_value('analysis_method', 'dt')
-        elif self.analysis_code == 7:  # pre-buckling
+        elif analysis_code == 7:  # pre-buckling
             self._analysis_code_fmt = b'i'
             self.data_names = self.apply_data_code_value('data_names', ['element_id'])
             self.apply_data_code_value('analysis_method', 'lsdvmn')
@@ -483,25 +484,25 @@ class OEF(OP2Common):
             self.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
             self.data_names = self.apply_data_code_value('data_names', ['element_id', 'eigr'])
             self.apply_data_code_value('analysis_method', 'eigr')
-        elif self.analysis_code == 9:  # complex eigenvalues
+        elif analysis_code == 9:  # complex eigenvalues
             # mode number
             self._analysis_code_fmt = b'i'
             self.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
             self.eigi = self.add_data_parameter(data, 'eigi', b'f', 7, False)
             self.data_names = self.apply_data_code_value('data_names', ['element_id', 'eigr', 'eigi'])
             self.apply_data_code_value('analysis_method', 'mode')
-        elif self.analysis_code == 10:  # nonlinear statics
+        elif analysis_code == 10:  # nonlinear statics
             # load step
             self._analysis_code_fmt = b'f'
             self.data_names = self.apply_data_code_value('data_names', ['element_id'])
             self.apply_data_code_value('analysis_method', 'lftsfq')
-        elif self.analysis_code == 11:  # old geometric nonlinear statics
+        elif analysis_code == 11:  # old geometric nonlinear statics
             # load set number
             self.data_names = self.apply_data_code_value('data_names', ['element_id'])
-        elif self.analysis_code == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
+        elif analysis_code == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
             self.data_names = self.apply_data_code_value('data_names', ['element_id'])
         else:
-            msg = 'invalid analysis_code...analysis_code=%s' % self.analysis_code
+            msg = 'invalid analysis_code...analysis_code=%s' % analysis_code
             raise RuntimeError(msg)
 
         self._fix_oes_sort2(data)
@@ -510,19 +511,20 @@ class OEF(OP2Common):
 
     def _read_oef1_4(self, data, ndata):
         """Table 4 parser for OEF1 table"""
-        if self.thermal == 0:
+        thermal = self.op2_reader.thermal
+        if thermal == 0:
             self._setup_op2_subcase('FORCE')
             n = self._read_oef1_loads(data, ndata)
-        elif self.thermal == 1:
+        elif thermal == 1:
             n = self._read_oef1_thermal(data, ndata)
-        elif self.thermal in [2, 8]: # 2=ABS, 8=NRL
+        elif thermal in [2, 8]: # 2=ABS, 8=NRL
             n = self._read_oef1_loads(data, ndata)
         else:
-            n = self._not_implemented_or_skip(data, ndata, 'thermal=%s' % self.thermal)
+            n = self._not_implemented_or_skip(data, ndata, 'thermal=%s' % thermal)
         return n
 
     def _read_oef2_4(self, data, ndata):
-        if self.thermal == 0 and self.element_type not in [77]:
+        if op2_reader.thermal == 0 and op2_reader.element_type not in [77]:
             self._setup_op2_subcase('FORCE')
             n = self._read_oef1_loads(data, ndata)
         else:
@@ -937,7 +939,7 @@ class OEF(OP2Common):
                     auto_return, is_vectorized = self._create_oes_object4(
                         nelements, result_name, slot, RealHeatFluxVU3DArray)
                     if auto_return:
-                        self._data_factor = nnodes
+                        op2_reader._data_factor = nnodes
                         return nelements * self.num_wide * 4
 
                 obj = self.obj
@@ -1011,7 +1013,7 @@ class OEF(OP2Common):
                 auto_return, is_vectorized = self._create_oes_object4(
                     nelements, result_name, slot, RealHeatFluxVUArray)
                 if auto_return:
-                    self._data_factor = nnodes
+                    op2_reader._data_factor = nnodes
                     return nelements * self.num_wide * 4
 
                 obj = self.obj
@@ -1095,12 +1097,12 @@ class OEF(OP2Common):
                     auto_return, is_vectorized = self._create_oes_object4(
                         nelements, result_name, slot, RealHeatFluxVUBeamArray)
                     if auto_return:
-                        self._data_factor = nnodes
-                        return nelements * self.num_wide * 4
+                        op2_reader._data_factor = nnodes
+                        return nelements * op2_reader.num_wide * 4
 
                 obj = self.obj
                 if self.use_vector and is_vectorized and self.sort_method == 1:
-                    n = nelements * 4 * self.num_wide
+                    n = nelements * 4 * op2_reader.num_wide
                     itotal = obj.itotal
                     itotal2 = itotal + nelements * nnodes
                     ielement = obj.ielement
@@ -1401,8 +1403,8 @@ class OEF(OP2Common):
                     auto_return, is_vectorized = self._create_oes_object4(
                         nelements, result_name, slot, RealForceVU2DArray)
                     if auto_return:
-                        self._data_factor = nnodes
-                        return nelements * self.num_wide * 4
+                        op2_reader._data_factor = nnodes
+                        return nelements * op2_reader.num_wide * 4
 
                     obj = self.obj
                     if self.use_vector and is_vectorized and 0:
@@ -1534,7 +1536,7 @@ class OEF(OP2Common):
                     auto_return, is_vectorized = self._create_oes_object4(
                         nlayers, result_name, slot, obj_vector_real)
                     if auto_return:
-                        self._data_factor = nnodes  # TODO: why is this 10?
+                        op2_reader._data_factor = nnodes  # TODO: why is this 10?
                         return nelements * self.num_wide * 4
 
                     obj = self.obj
@@ -1735,8 +1737,8 @@ class OEF(OP2Common):
                 auto_return, is_vectorized = self._create_oes_object4(
                     nelements, result_name, slot, RealCBeamForceVUArray)
                 if auto_return:
-                    self._data_factor = 2
-                    return nelements * self.num_wide * 4
+                    op2_reader._data_factor = 2
+                    return nelements * op2_reader.num_wide * 4
 
                 obj = self.obj
                 if self.use_vector and is_vectorized and self.sort_method == 1:
@@ -1840,7 +1842,7 @@ class OEF(OP2Common):
                 auto_return, is_vectorized = self._create_oes_object4(
                     nelements, result_name, slot, ComplexCBeamForceVUArray)
                 if auto_return:
-                    self._data_factor = 2
+                    op2_reader._data_factor = 2
                     return ndata
                 obj = self.obj
 
@@ -2164,7 +2166,7 @@ class OEF(OP2Common):
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, RealCBeamForceArray)
             if auto_return:
-                self._data_factor = 11
+                op2_reader._data_factor = 11
                 return nelements * self.num_wide * 4, None, None
             obj = self.obj
 
@@ -2231,7 +2233,7 @@ class OEF(OP2Common):
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, ComplexCBeamForceArray)
             if auto_return:
-                self._data_factor = 11
+                op2_reader._data_factor = 11
                 return nelements * self.num_wide * 4, None, None
 
             obj = self.obj
@@ -2785,7 +2787,7 @@ class OEF(OP2Common):
         #result_name, is_random = self._apply_oef_ato_crm_psd_rms_no(result_name)
         slot = self.get_result(result_name)
 
-        assert self._data_factor == 1, self._data_factor
+        assert op2_reader._data_factor == 1, op2_reader._data_factor
         if self.format_code in [1, 2] and self.num_wide == 9:
             # real - format_code == 1
             # random - format_code == 2
@@ -2946,7 +2948,7 @@ class OEF(OP2Common):
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_real)
             if auto_return:
-                self._data_factor = nnodes_all
+                op2_reader._data_factor = nnodes_all
                 return nelements * self.num_wide * 4, None, None
 
             obj = self.obj
@@ -3007,7 +3009,7 @@ class OEF(OP2Common):
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, ComplexPlate2ForceArray)
             if auto_return:
-                self._data_factor = nnodes_all
+                op2_reader._data_factor = nnodes_all
                 return nelements * self.num_wide * 4, None, None
 
             obj = self.obj

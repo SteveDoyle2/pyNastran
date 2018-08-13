@@ -23,17 +23,24 @@ from pyNastran.op2.tables.oqg_constraintForces.oqg_thermal_gradient_and_flux imp
     #RealTemperatureGradientAndFlux,
     RealTemperatureGradientAndFluxArray)
 
+from pyNastran.op2.tables.table_reader import TableReader
 
-class OQG(OP2Common):
-    def __init__(self):
-        OP2Common.__init__(self)
+
+class OQG(TableReader):
+    """
+    Defines the OQS class that is used to read SPC/MPC forces
+    """
+    def __init__(self, op2_reader, op2):
+        TableReader.__init__(self, op2_reader, op2)
 
     def _read_oqg1_3(self, data, ndata):
-        self.nonlinear_factor = None
-        self.is_table_1 = True
-        self.is_table_2 = False
+        op2_reader = self.op2_reader
+        op2_reader._data_factor = 1
+        op2_reader.nonlinear_factor = None
+        op2_reader.is_table_1 = True
+        op2_reader.is_table_2 = False
         unused_three = self.parse_approach_code(data)
-        self.words = [
+        op2_reader.words = [
             'analysis_code', 'table_code', '???', 'isubcase',
             '???', '???', '???', 'random_code',
             'format_code', 'num_wide', '11', '???',
@@ -43,114 +50,117 @@ class OQG(OP2Common):
             '???', 'Title', 'subtitle', 'label']
 
         ## random code
-        self.random_code = self.add_data_parameter(data, 'random_code', b'i', 8, False)
+        op2_reader.random_code = self.add_data_parameter(data, 'random_code', b'i', 8, False)
 
         ## format code
-        self.format_code = self.add_data_parameter(data, 'format_code', b'i', 9, False)
+        op2_reader.format_code = self.add_data_parameter(data, 'format_code', b'i', 9, False)
 
         ## number of words per entry in record
-        self.num_wide = self.add_data_parameter(data, 'num_wide', b'i', 10, False)
+        op2_reader.num_wide = self.add_data_parameter(data, 'num_wide', b'i', 10, False)
 
         ## acoustic pressure flag
-        self.acoustic_flag = self.add_data_parameter(data, 'acoustic_flag', b'f', 13, False)
+        op2_reader.acoustic_flag = self.add_data_parameter(data, 'acoustic_flag', b'f', 13, False)
 
         ## thermal flag; 1 for heat transfer, 0 otherwise
-        self.thermal = self.add_data_parameter(data, 'thermal', b'i', 23, False)
+        op2_reader.thermal = self.add_data_parameter(data, 'thermal', b'i', 23, False)
 
         if not self.is_sort1:
             raise NotImplementedError('SORT2; code_info=\n%s' % self.code_information())
         #assert self.isThermal()==False,self.thermal
 
         ## assuming tCode=1
-        if self.analysis_code == 1:   # statics / displacement / heat flux
+        analysis_code = op2_reader.analysis_code
+        if analysis_code == 1:   # statics / displacement / heat flux
             ## load set number
-            self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5, False)
-            self.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
-            self.setNullNonlinearFactor()
-        elif self.analysis_code == 2:  # real eigenvalues
+            op2_reader.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5, False)
+            op2_reader.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
+            op2_reader.set_null_nonlinear_factor()
+        elif analysis_code == 2:  # real eigenvalues
             ## mode number
-            self.mode = self.add_data_parameter(data, 'mode', b'i', 5)
+            op2_reader.mode = self.add_data_parameter(data, 'mode', b'i', 5)
             ## eigenvalue
-            self.eign = self.add_data_parameter(data, 'eign', b'f', 6, False)
+            op2_reader.eign = self.add_data_parameter(data, 'eign', b'f', 6, False)
             ## mode or cycle .. todo:: confused on the type - F1???
-            self.mode_cycle = self.add_data_parameter(data, 'mode_cycle', b'f', 7, False)
+            op2_reader.mode_cycle = self.add_data_parameter(data, 'mode_cycle', b'f', 7, False)
             self.update_mode_cycle('mode_cycle')
-            self.data_names = self.apply_data_code_value('data_names',
-                                                         ['mode', 'eign', 'mode_cycle'])
+            op2_reader.data_names = self.apply_data_code_value('data_names',
+                                                               ['mode', 'eign', 'mode_cycle'])
         #elif self.analysis_code == 3: # differential stiffness
             #self.lsdvmn = self.get_values(data, b'i', 5) ## load set number
             #self.data_names = self.data_code['lsdvmn'] = self.lsdvmn
         #elif self.analysis_code == 4: # differential stiffness
             #self.lsdvmn = self.get_values(data, b'i', 5) ## load set number
-        elif self.analysis_code == 5:   # frequency
+        elif analysis_code == 5:   # frequency
             ## frequency
             self.freq = self.add_data_parameter(data, 'freq', b'f', 5)
             self.data_names = self.apply_data_code_value('data_names', ['freq'])
-        elif self.analysis_code == 6:  # transient
+        elif analysis_code == 6:  # transient
             ## time step
             self.dt = self.add_data_parameter(data, 'dt', b'f', 5)
             self.data_names = self.apply_data_code_value('data_names', ['dt'])
         elif self.analysis_code == 7:  # pre-buckling
             ## load set number
             self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
-            self.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
-        elif self.analysis_code == 8:  # post-buckling
+            op2_reader.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
+        elif analysis_code == 8:  # post-buckling
             ## load set number
-            self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
+            op2_reader.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
             ## real eigenvalue
-            self.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
-            self.data_names = self.apply_data_code_value('data_names', ['lsdvmn', 'eigr'])
-        elif self.analysis_code == 9:  # complex eigenvalues
+            op2_reader.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
+            op2_reader.data_names = self.apply_data_code_value('data_names', ['lsdvmn', 'eigr'])
+        elif analysis_code == 9:  # complex eigenvalues
             ## mode number
-            self.mode = self.add_data_parameter(data, 'mode', b'i', 5)
+            op2_reader.mode = self.add_data_parameter(data, 'mode', b'i', 5)
             ## real eigenvalue
-            self.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
+            op2_reader.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
             ## imaginary eigenvalue
-            self.eigi = self.add_data_parameter(data, 'eigi', b'f', 7, False)
-            self.data_names = self.apply_data_code_value('data_names', ['mode', 'eigr', 'eigi'])
-        elif self.analysis_code == 10:  # nonlinear statics
+            op2_reader.eigi = self.add_data_parameter(data, 'eigi', b'f', 7, False)
+            op2_reader.data_names = self.apply_data_code_value('data_names', ['mode', 'eigr', 'eigi'])
+        elif analysis_code == 10:  # nonlinear statics
             ## load step
-            self.lftsfq = self.add_data_parameter(data, 'lftsfq', b'f', 5)
-            self.data_names = self.apply_data_code_value('data_names', ['lftsfq'])
-        elif self.analysis_code == 11:  # old geometric nonlinear statics
+            op2_reader.lftsfq = self.add_data_parameter(data, 'lftsfq', b'f', 5)
+            op2_reader.data_names = self.apply_data_code_value('data_names', ['lftsfq'])
+        elif analysis_code == 11:  # old geometric nonlinear statics
             ## load set number
-            self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
-            self.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
-        elif self.analysis_code == 12:
+            op2_reader.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
+            op2_reader.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
+        elif analysis_code == 12:
             # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
             ## load set number
-            self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
-            self.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
+            op2_reader.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
+            op2_reader.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
         else:
-            msg = 'invalid analysis_code...analysis_code=%s' % self.analysis_code
+            msg = 'invalid analysis_code...analysis_code=%s' % analysis_code
             raise RuntimeError(msg)
 
         self.fix_format_code()
-        if self.num_wide == 8:
-            self.format_code = 1
-            self.data_code['format_code'] = 1
+        if op2_reader.num_wide == 8:
+            op2_reader.format_code = 1
+            op2_reader.data_code['format_code'] = 1
         else:
             #self.fix_format_code()
-            if self.format_code == 1:
-                self.format_code = 2
-                self.data_code['format_code'] = 2
-            assert self.format_code in [2, 3], self.code_information()
+            if op2_reader.format_code == 1:
+                op2_reader.format_code = 2
+                op2_reader.data_code['format_code'] = 2
+            assert op2_reader.format_code in [2, 3], op2_reader.code_information()
 
         self._parse_thermal_code()
         if self.is_debug_file:
             self.binary_debug.write('  approach_code  = %r\n' % self.approach_code)
             self.binary_debug.write('  tCode          = %r\n' % self.tCode)
             self.binary_debug.write('  isubcase       = %r\n' % self.isubcase)
-        self._read_title(data)
-        self._write_debug_bits()
+        op2_reader._read_title(data)
+        op2_reader._write_debug_bits()
 
     def _read_oqg2_3(self, data, ndata):
         """reads the SORT2 version of table 4 (the data table)"""
-        self.nonlinear_factor = None
-        self.is_table_1 = False
-        self.is_table_2 = True
+        op2_reader = self.op2_reader
+        op2_reader._data_factor = 1
+        op2_reader.nonlinear_factor = None
+        op2_reader.is_table_1 = False
+        op2_reader.is_table_2 = True
         unused_three = self.parse_approach_code(data)
-        self.words = [
+        op2_reader.words = [
             'analysis_code', 'table_code', '???', 'isubcase',
             '???', '???', '???', 'random_code',
             'format_code', 'num_wide', '11', '???',
@@ -160,19 +170,19 @@ class OQG(OP2Common):
             '???', 'Title', 'subtitle', 'label']
 
         ## random code
-        self.random_code = self.add_data_parameter(data, 'random_code', b'i', 8, False)
+        op2_reader.random_code = self.add_data_parameter(data, 'random_code', b'i', 8, False)
 
         ## format code
-        self.format_code = self.add_data_parameter(data, 'format_code', b'i', 9, False)
+        op2_reader.format_code = self.add_data_parameter(data, 'format_code', b'i', 9, False)
 
         ## number of words per entry in record
-        self.num_wide = self.add_data_parameter(data, 'num_wide', b'i', 10, False)
+        op2_reader.num_wide = self.add_data_parameter(data, 'num_wide', b'i', 10, False)
 
         ## acoustic pressure flag
-        self.acoustic_flag = self.add_data_parameter(data, 'acoustic_flag', b'f', 13, False)
+        op2_reader.acoustic_flag = self.add_data_parameter(data, 'acoustic_flag', b'f', 13, False)
 
         ## thermal flag; 1 for heat transfer, 0 otherwise
-        self.thermal = self.add_data_parameter(data, 'thermal', b'i', 23, False)
+        op2_reader.thermal = self.add_data_parameter(data, 'thermal', b'i', 23, False)
 
         #assert self.isThermal() == False, self.thermal
 
@@ -181,39 +191,40 @@ class OQG(OP2Common):
             ## load set number
             #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5, False)
             #self.data_names = self.apply_data_code_value('data_names', ['node_id'])
-            #self.setNullNonlinearFactor()
+            #op2_reader.set_null_nonlinear_factor()
 
-        if self.analysis_code == 1:  # static...because reasons.
+        analysis_code = op2_reader.analysis_code
+        if analysis_code == 1:  # static...because reasons.
             self._analysis_code_fmt = b'i'
-            self.data_names = self.apply_data_code_value('data_names', ['node_id'])
+            op2_reader.data_names = self.apply_data_code_value('data_names', ['node_id'])
             self.apply_data_code_value('analysis_method', 'N/A')
-        elif self.analysis_code == 2:  # real eigenvalues
+        elif analysis_code == 2:  # real eigenvalues
             ## mode number
-            self.mode = self.add_data_parameter(data, 'mode', b'i', 5)
+            op2_reader.mode = self.add_data_parameter(data, 'mode', b'i', 5)
             self._analysis_code_fmt = b'i'
             ## real eigenvalue
-            self.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
+            op2_reader.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
             ## mode or cycle .. todo:: confused on the type - F1???
-            self.mode_cycle = self.add_data_parameter(data, 'mode_cycle', b'f', 7, False)
-            self.data_names = self.apply_data_code_value('data_names',
+            op2_reader.mode_cycle = self.add_data_parameter(data, 'mode_cycle', b'f', 7, False)
+            op2_reader.data_names = self.apply_data_code_value('data_names',
                                                          ['node_id', 'eigr', 'mode_cycle'])
             self.apply_data_code_value('analysis_method', 'mode')
         #elif self.analysis_code == 3: # differential stiffness
-            #self.lsdvmn = self.get_values(data, b'i', 5) ## load set number
-            #self.data_names = self.data_code['lsdvmn'] = self.lsdvmn
+            #op2_reader.lsdvmn = self.get_values(data, b'i', 5) ## load set number
+            #op2_reader.data_names = self.data_code['lsdvmn'] = self.lsdvmn
         #elif self.analysis_code == 4: # differential stiffness
             #self.lsdvmn = self.get_values(data, b'i', 5) ## load set number
         elif self.analysis_code == 5:   # frequency
             ## frequency
-            #self.freq = self.add_data_parameter(data, 'freq', b'f', 5)
+            #op2_reader.freq = self.add_data_parameter(data, 'freq', b'f', 5)
             self._analysis_code_fmt = b'f'
-            self.data_names = self.apply_data_code_value('data_names', ['node_id'])
+            op2_reader.data_names = self.apply_data_code_value('data_names', ['node_id'])
             self.apply_data_code_value('analysis_method', 'freq')
         elif self.analysis_code == 6:  # transient
             ## time step
-            #self.dt = self.add_data_parameter(data, 'dt', b'f', 5)
+            #op2_reader.dt = self.add_data_parameter(data, 'dt', b'f', 5)
             self._analysis_code_fmt = b'f'
-            self.data_names = self.apply_data_code_value('data_names', ['node_id'])
+            op2_reader.data_names = self.apply_data_code_value('data_names', ['node_id'])
             self.apply_data_code_value('analysis_method', 'dt')
         elif self.analysis_code == 7:  # pre-buckling
             ## load set number
@@ -302,43 +313,46 @@ class OQG(OP2Common):
         if self._results.is_not_saved(result_name):
             return ndata
 
-        if self.table_name in [b'OQGCRM1', b'OQGCRM2']:
-            if self.table_code not in [3, 503]:
-                msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+        op2_reader = self.op2_reader
+        table_name = op2_reader.table_name
+        table_code = op2_reader.table_code
+        if table_name in [b'OQGCRM1', b'OQGCRM2']:
+            if table_code not in [3, 503]:
+                msg = 'table_name=%s table_code=%s' % (table_name, table_code)
                 raise AssertionError(msg)
             n = self._read_oqg_spc_crm(data, ndata)
-        elif self.table_name in [b'OQGPSD1', b'OQGPSD2']:
-            if self.table_code not in [3, 603]:  # was 3
-                msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+        elif table_name in [b'OQGPSD1', b'OQGPSD2']:
+            if table_code not in [3, 603]:  # was 3
+                msg = 'table_name=%s table_code=%s' % (table_name, table_code)
                 raise AssertionError(msg + '\n%s' % self.code_information())
             n = self._read_oqg_spc_psd(data, ndata)
-        elif self.table_name in [b'OQGATO1', b'OQGATO2']:
-            if self.table_code not in [3, 703]:
-                msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+        elif table_name in [b'OQGATO1', b'OQGATO2']:
+            if table_code not in [3, 703]:
+                msg = 'table_name=%s table_code=%s' % (table_name, table_code)
                 raise AssertionError(msg)
             n = self._read_oqg_spc_ato(data, ndata)
-        elif self.table_name in [b'OQGRMS1', b'OQGRMS2']:
-            if self.table_code not in [3, 803]:
-                msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+        elif table_name in [b'OQGRMS1', b'OQGRMS2']:
+            if table_code not in [3, 803]:
+                msg = 'table_name=%s table_code=%s' % (table_name, table_code)
                 raise AssertionError(msg)
             n = self._read_oqg_spc_rms(data, ndata)
-        elif self.table_name in [b'OQGNO1', b'OQGNO2']:
-            if self.table_code not in [3, 903]:
-                msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+        elif table_name in [b'OQGNO1', b'OQGNO2']:
+            if table_code not in [3, 903]:
+                msg = 'table_name=%s table_code=%s' % (table_name, table_code)
                 raise AssertionError(msg)
             n = self._read_oqg_spc_no(data, ndata)
 
-        elif self.table_code == 3:   # SPC Forces
-            assert self.table_name in [b'OQG1', b'OQGV1', b'OQP1', b'OQG2'], self.code_information()
+        elif table_code == 3:   # SPC Forces
+            assert self.table_name in [b'OQG1', b'OQGV1', b'OQP1', b'OQG2'], op2_reader.code_information()
             n = self._read_spc_forces(data, ndata)
-        elif self.table_code == 39:  # MPC Forces
-            assert self.table_name in [b'OQMG1', b'OQMG2'], self.code_information() # , b'OQMPSD1', b'OQMPSD2'
+        elif table_code == 39:  # MPC Forces
+            assert table_name in [b'OQMG1', b'OQMG2'], op2_reader.code_information() # , b'OQMPSD1', b'OQMPSD2'
             n = self._read_oqg_mpc_forces(data, ndata)
-        elif self.table_name in [b'RAQEATC', b'RAQCONS']:
+        elif table_name in [b'RAQEATC', b'RAQCONS']:
             # self.table_code == 5 and
             n = self._read_oqg_mpc_forces(data, ndata)
         else:
-            raise RuntimeError(self.code_information())
+            raise RuntimeError(op2_reader.code_information())
         return n
 
     def _read_spc_forces(self, data, ndata):
@@ -351,40 +365,42 @@ class OQG(OP2Common):
             msg = 'spc_forces; table_name=%s' % self.table_name
             raise NotImplementedError(msg)
 
-        if self.thermal == 0:
-            self._setup_op2_subcase('SPCFORCES')
+        op2_reader = self.op2_reader
+        thermal = op2_reader.thermal
+        if thermal == 0:
+            op2_reader._setup_op2_subcase('SPCFORCES')
 
             result_name = 'spc_forces'
-            storage_obj = self.spc_forces
+            storage_obj = self.get_result(result_name)
             if self._results.is_not_saved(result_name):
                 return ndata
             self._results._found_result(result_name)
-            n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
-                                            RealSPCForcesArray, ComplexSPCForcesArray,
-                                            'node', random_code=self.random_code)
-        elif self.thermal == 1:
+            n = op2_reader._read_table_vectorized(data, ndata, result_name, storage_obj,
+                                                  RealSPCForcesArray, ComplexSPCForcesArray,
+                                                  'node', random_code=op2_reader.random_code)
+        elif thermal == 1:
             #'finite element temperature gradients and fluxes'
-            self._setup_op2_subcase('FLUX')
+            op2_reader._setup_op2_subcase('FLUX')
 
             result_name = 'thermal_gradient_and_flux'
-            storage_obj = self.thermal_gradient_and_flux
+            storage_obj = self.get_result(result_name)
             if self._results.is_not_saved(result_name):
                 return ndata
             self._results._found_result(result_name)
-            n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
-                                            RealTemperatureGradientAndFluxArray, None,
-                                            'node', random_code=self.random_code)
+            n = op2_reader._read_table_vectorized(data, ndata, result_name, storage_obj,
+                                                  RealTemperatureGradientAndFluxArray, None,
+                                                  'node', random_code=op2_reader.random_code)
         elif self.thermal == 8:  # 4 ?
             result_name = 'spc_forces_scaled_response_spectra_NRL'
-            storage_obj = self.spc_forces_scaled_response_spectra_NRL
+            storage_obj = self.get_result(result_name)
             if self._results.is_not_saved(result_name):
                 return ndata
             self._results._found_result(result_name)
-            n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
-                                            RealSPCForcesArray, ComplexSPCForcesArray,
-                                            'node', random_code=self.random_code)
+            n = op2_reader._read_table_vectorized(data, ndata, result_name, storage_obj,
+                                                  RealSPCForcesArray, ComplexSPCForcesArray,
+                                                  'node', random_code=op2_reader.random_code)
         else:
-            raise RuntimeError(self.code_information())
+            raise RuntimeError(op2_reader.code_information())
             #msg = 'thermal=%s' % self.thermal
             #return self._not_implemented_or_skip(data, ndata, msg)
         return n

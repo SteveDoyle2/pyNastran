@@ -13,6 +13,7 @@ from pyNastran.op2.op2_helper import polar_to_real_imag
 from pyNastran.op2.op2_interface.op2_codes import (
     Op2Codes, get_scode_word, get_sort_method_from_table_name)
 
+from pyNastran.op2.op2_interface.utils import apply_mag_phase, update_label2, get_superelement_adaptivity_index
 from pyNastran.op2.errors import SortCodeError, MultipleSolutionNotImplementedError # DeviceCodeError,
 
 
@@ -45,13 +46,10 @@ class OP2Common(Op2Codes, F06Writer):
         # is a debug file being written to
         self.is_debug_file = False
 
-        # how many optimization passes have there been
-        self._count = 0
-
         #: the results
         self.result_names = set([])
         #: bool
-        self.is_vectorized = None
+        #self.is_vectorized = None
         self.combine = False
 
         #: the storage dictionary that is passed to OP2 objects (e.g. RealDisplacementArray)
@@ -263,119 +261,6 @@ class OP2Common(Op2Codes, F06Writer):
     def apply_data_code_value(self, name, value):
         self.data_code[name] = value
 
-    def setNullNonlinearFactor(self):
-        """
-        Initializes the nonlinear factor, which lets us know if
-        this is a transient solution or not.
-
-        """
-        self.nonlinear_factor = None
-        self.data_code['nonlinear_factor'] = None
-
-    def _read_title_helper(self, data):
-        assert len(data) == 584, len(data)
-        # titleSubtitleLabel
-        title, subtitle, label = unpack(self._endian + b'128s128s128s', data[200:])
-        self.title = title.decode(self.encoding).strip()
-        subtitle = subtitle.decode(self.encoding)
-
-        label = label.decode(self.encoding).strip()
-        nlabel = 65
-        label2 = label[nlabel:]
-        try:
-            label2 = update_label2(label2, self.isubcase)
-        except AssertionError:
-            pass
-
-        assert len(label[:nlabel]) <= nlabel, 'len=%s \nlabel     =%r \nlabel[:%s]=%r' % (len(label), label, nlabel, label[:nlabel])
-        assert len(label2) <= 55, 'len=%s label = %r\nlabel[:%s]=%r\nlabel2    =%r' % (len(label2), label, nlabel, label[:nlabel], label2)
-        # not done...
-        # 65 + 55 = 120 < 128
-
-        self.label = label
-        self.pval_step = label2
-
-        #split_label = label.split()
-        #if len(split_label) == 2:
-            #word, value1 = split_label
-            #assert word == 'SUPERELEMENT', 'split_label=%s' % split_label
-            #subtitle = '%s; SUPERELEMENT %s' % (subtitle, value1)
-            #value1 = int(value1)
-
-            #if superelement_adaptivity_index:
-                #superelement_adaptivity_index = '%s; SUPERELEMENT %s' % (
-                    #superelement_adaptivity_index, value1)
-            #else:
-                #superelement_adaptivity_index = 'SUPERELEMENT %ss' % value1
-        #elif len(split_label) == 4:
-            #word, value1, comma, value2 = split_label
-            #assert word == 'SUPERELEMENT', 'split_label=%s' % split_label
-            #value1 = int(value1)
-            #value2 = int(value2)
-
-            #if superelement_adaptivity_index:
-                #superelement_adaptivity_index = '%s; SUPERELEMENT %s,%s' % (
-                    #superelement_adaptivity_index, value1, value2)
-            #else:
-                #superelement_adaptivity_index = 'SUPERELEMENT %s,%s' % (value1, value2)
-        #else:
-            #raise RuntimeError(split_label)
-
-
-        nsubtitle_break = 67
-        adpativity_index = subtitle[nsubtitle_break:99].strip()
-        superelement = subtitle[99:].strip()
-
-        subtitle = subtitle[:nsubtitle_break].strip()
-        assert len(superelement) <= 26, 'len=%s superelement=%r' % (len(superelement), superelement)
-        superelement = superelement.strip()
-
-        assert len(subtitle) <= 67, 'len=%s subtitle=%r' % (len(subtitle), subtitle)
-        superelement_adaptivity_index = get_superelement_adaptivity_index(subtitle, superelement)
-
-        if adpativity_index:
-            assert 'ADAPTIVITY INDEX=' in adpativity_index
-            # F:\work\pyNastran\examples\Dropbox\move_tpl\pet1018.op2
-            #'ADAPTIVITY INDEX=      1'
-            split_adpativity_index = adpativity_index.split()
-            assert len(split_adpativity_index) == 3, split_adpativity_index
-            word1, word2, adpativity_index_value = split_adpativity_index
-            assert word1 == 'ADAPTIVITY', 'split_adpativity_index=%s' % split_adpativity_index
-            assert word2 == 'INDEX=', 'split_adpativity_index=%s' % split_adpativity_index
-
-            adpativity_index_value = int(adpativity_index_value)
-            subtitle = '%s; ADAPTIVITY_INDEX=%s' % (subtitle, adpativity_index_value)
-            if superelement_adaptivity_index:
-                superelement_adaptivity_index = '%s; ADAPTIVITY_INDEX=%s' % (
-                    superelement_adaptivity_index, adpativity_index_value)
-            else:
-                superelement_adaptivity_index = 'ADAPTIVITY_INDEX=%s' % adpativity_index_value
-
-        self.subtitle = subtitle
-        self.superelement_adaptivity_index = superelement_adaptivity_index
-        assert len(self.label) <= 124, 'len=%s label=%r' % (len(self.label), self.label)
-
-        #: the subtitle of the subcase
-        self.data_code['subtitle'] = self.subtitle
-
-        # the sub-key
-        self.data_code['pval_step'] = self.pval_step
-        self.data_code['superelement_adaptivity_index'] = self.superelement_adaptivity_index
-
-        #: the label of the subcase
-        self.data_code['label'] = self.label
-        self.data_code['title'] = self.title
-
-        if self.is_debug_file:
-            self.binary_debug.write(
-                '  %-14s = %r\n' * 6 % (
-                    'count', self._count,
-                    'title', self.title,
-                    'subtitle', self.subtitle,
-                    'label', self.label,
-                    'pval_step', self.pval_step,
-                    'superelement_adaptivity_index', self.superelement_adaptivity_index))
-
     def _read_title(self, data):
         self._read_title_helper(data)
 
@@ -402,93 +287,6 @@ class OP2Common(Op2Codes, F06Writer):
             #if code not in self.labels:
                 #self.subtitles[self.isubcase].append(self.subtitle)
                 #self.labels[code] = self.label
-
-    def _write_debug_bits(self):
-        """
-        s_code =  0 -> stress_bits = [0,0,0,0,0]
-        s_code =  1 -> stress_bits = [0,0,0,0,1]
-        s_code =  2 -> stress_bits = [0,0,0,1,0]
-        s_code =  3 -> stress_bits = [0,0,0,1,1]
-        etc.
-        s_code = 32 -> stress_bits = [1,1,1,1,1]
-
-        stress_bits[0] = 0 -> isMaxShear=True       isVonMises=False
-        stress_bits[0] = 1 -> isMaxShear=False      isVonMises=True
-
-        stress_bits[1] = 0 -> is_stress=True        is_strain=False
-        stress_bits[2] = 0 -> isFiberCurvature=True isFiberDistance=False
-        stress_bits[3] = 0 -> duplicate of Bit[1] (stress/strain)
-        stress_bits[4] = 0 -> material coordinate system flag
-
-        """
-        if self.is_debug_file:
-            msg = ''
-            assert len(self.words) in [0, 28], 'table_name=%r len(self.words)=%s words=%s' % (self.table_name, len(self.words), self.words)
-            for i, param in enumerate(self.words):
-                if param == 's_code':
-                    try:
-                        s_word = get_scode_word(self.s_code, self.stress_bits)
-                    except AttributeError:
-                        raise
-                    self.binary_debug.write('  s_code         = %s -> %s\n' % (self.s_code, s_word))
-                    self.binary_debug.write('    stress_bits[0] = %i -> is_von_mises    =%-5s vs is_max_shear\n' % (self.stress_bits[0], self.is_von_mises))
-                    self.binary_debug.write('    stress_bits[1] = %i -> is_strain       =%-5s vs is_stress\n' % (self.stress_bits[1], self.is_strain))
-                    self.binary_debug.write('    stress_bits[2] = %i -> strain_curvature=%-5s vs fiber_dist\n' % (self.stress_bits[2], self.is_curvature))
-                    self.binary_debug.write('    stress_bits[3] = %i -> is_strain       =%-5s vs is_stress\n' % (self.stress_bits[3], self.is_strain))
-                    self.binary_debug.write('    stress_bits[4] = %i -> material coordinate system flag=%s vs ???\n' % (self.stress_bits[4], self.stress_bits[4]))
-                elif param == '???':
-                    param = 0
-                msg += '%s, ' % param
-                if i % 5 == 4:
-                    msg += '\n             '
-
-            if hasattr(self, 'format_code'):
-                try:
-                    is_complex = self.is_complex
-                except AssertionError:
-                    self.binary_debug.write('\n  ERROR: cannot determine is_complex properly; '
-                                            'check_sort_bits!!!\n')
-                    is_complex = '???'
-
-                try:
-                    is_random = self.is_random
-                except AssertionError:
-                    is_random = '???'
-
-                try:
-                    is_sort1 = self.is_sort1
-                except AssertionError:
-                    is_sort1 = '???'
-
-                try:
-                    is_real = self.is_real
-                except AssertionError:
-                    is_real = '???'
-
-                if is_complex:
-                    msg = '\n  %-14s = %i -> is_mag_phase vs is_real_imag vs. is_random\n' % (
-                        'format_code', self.format_code)
-                    self.binary_debug.write(msg)
-                else:
-                    self.binary_debug.write('  %-14s = %i\n' % ('format_code', self.format_code))
-                self.binary_debug.write('    sort_bits[0] = %i -> is_random=%s vs mag/phase\n' % (self.sort_bits[0], is_random))
-                self.binary_debug.write('    sort_bits[1] = %i -> is_sort1 =%s vs sort2\n' % (self.sort_bits[1], is_sort1))
-                self.binary_debug.write('    sort_bits[2] = %i -> is_real  =%s vs real/imag\n' % (self.sort_bits[2], is_real))
-
-                try:
-                    sort_method, is_real, is_random = self._table_specs()
-                    self.binary_debug.write('    sort_method = %s\n' % sort_method)
-                except AssertionError:
-                    self.binary_debug.write('    sort_method = ???\n')
-
-                if is_complex:
-                    msg = '\n  %-14s = %i -> is_mag_phase vs is_real_imag vs. is_random\n' % (
-                        'format_code', self.format_code)
-                    self.binary_debug.write(msg)
-                else:
-                    self.binary_debug.write('  %-14s = %i\n' % ('format_code', self.format_code))
-
-            self.binary_debug.write('  recordi = [%s]\n\n' % msg)
 
     def _read_geom_4(self, mapper, data, ndata):
         if self.read_mode == 1:
@@ -556,30 +354,12 @@ class OP2Common(Op2Codes, F06Writer):
         #assert n == len(data), 'n=%s len(data)=%s' % (n, len(data))
         return n
 
-    def _fix_format_code(self, format_code=1):
-        """
-        Nastran can mess up the format code by using what the user specified,
-        which may be wrong.
-
-        For a SOL 101, if the user uses the following in their BDF:
-            DISP(PLOT,PHASE)=ALL
-        it's wrong, and should be:
-            DISP(PLOT,REAL)=ALL
-
-        """
-        # we'll probably remove this later because we're fixing
-        #it before we get to the object
-        return
-        # if self.format_code != format_code:
-            # self.format_code = format_code
-            # self.obj.format_code = format_code
-            # self.obj.data_code['format_code'] = format_code
-
     def _read_random_table(self, data, ndata, result_name, storage_obj,
                            real_vector, node_elem, random_code=None, is_cid=False):
         """
         Reads a real table (for random analysis)
         """
+        asdfasf
         assert self.format_code == 1, self.format_code
         assert self.num_wide == 8, self.num_wide
         is_vectorized = True
@@ -612,6 +392,7 @@ class OP2Common(Op2Codes, F06Writer):
     def _read_table_sort1_real(self, data, ndata, result_name, storage_obj,
                                real_vector, node_elem, random_code=None, is_cid=False):
         """Reads a real table (for random analysis)"""
+        aaaadsf
         assert self.format_code == 1, self.format_code
         assert self.num_wide == 8, self.num_wide
         is_vectorized = True
@@ -633,67 +414,6 @@ class OP2Common(Op2Codes, F06Writer):
         else:
             n = self._read_real_table_sort1(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
         assert n is not None
-        return n
-
-    def _read_table_vectorized(self, data, ndata, result_name, storage_obj,
-                               real_vector, complex_vector,
-                               node_elem, random_code=None, is_cid=False):
-        """Reads a generalized real/complex SORT1/SORT2 table"""
-        assert isinstance(result_name, string_types), 'result_name=%r' % result_name
-        assert isinstance(storage_obj, dict), 'storage_obj=%r' % storage_obj
-        #print('self.num_wide =', self.num_wide)
-        #print('random...%s' % self.isRandomResponse())
-        #if not self.isRandomResponse():
-        is_vectorized = True
-        if self.format_code == 1 and self.num_wide == 8:  # real/random
-            # real
-            nnodes = ndata // 32  # 8*4
-            auto_return = self._create_table_vector(
-                result_name, nnodes, storage_obj, real_vector, is_cid=is_cid)
-            if auto_return:
-                return ndata
-
-            self._fix_format_code(format_code=1)
-            if self.is_sort1:
-                if self.nonlinear_factor is None:
-                    n = self._read_real_table_static(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
-                else:
-                    n = self._read_real_table_sort1(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
-            else:
-                n = self._read_real_table_sort2(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
-                #n = ndata
-                #msg = self.code_information()
-                #n = self._not_implemented_or_skip(data, ndata, msg)
-        elif self.format_code in [2, 3] and self.num_wide == 14:  # real or real/imaginary or mag/phase
-            # complex
-            nnodes = ndata // 56  # 14*4
-            if self.is_debug_file:
-                self.binary_debug.write('nnodes=%s' % nnodes)
-            auto_return = self._create_table_vector(
-                result_name, nnodes, storage_obj, complex_vector)
-            if auto_return:
-                return ndata
-            if self.is_sort1:
-                if self.is_magnitude_phase():
-                    n = self._read_complex_table_sort1_mag(data, is_vectorized, nnodes, result_name, node_elem)
-                else:
-                    n = self._read_complex_table_sort1_imag(data, is_vectorized, nnodes, result_name, node_elem)
-            else:
-                if self.is_magnitude_phase():
-                    n = self._read_complex_table_sort2_mag(data, is_vectorized, nnodes, result_name, node_elem)
-                else:
-                    n = self._read_complex_table_sort2_imag(data, is_vectorized, nnodes, result_name, node_elem)
-                #msg = self.code_information()
-                #n = self._not_implemented_or_skip(data, ndata, msg)
-        else:
-            #msg = 'COMPLEX/PHASE is included in:\n'
-            #msg += '  DISP(PLOT)=ALL\n'
-            #msg += '  but the result type is REAL\n'
-            msg = self.code_information()
-            n = self._not_implemented_or_skip(data, ndata, msg)
-        #else:
-        #msg = 'invalid random_code=%s num_wide=%s' % (random_code, self.num_wide)
-        #n = self._not_implemented_or_skip(data, ndata, msg)
         return n
 
     def _read_scalar_table_vectorized(self, data, ndata, result_name, storage_obj,
@@ -734,6 +454,7 @@ class OP2Common(Op2Codes, F06Writer):
             'node', random_code=self.random_code)
 
         """
+        asdfasf
         assert isinstance(result_name, string_types), 'result_name=%r' % result_name
         assert isinstance(storage_obj, dict), 'storage_obj=%r' % storage_obj
         #print('self.num_wide =', self.num_wide)
@@ -801,6 +522,7 @@ class OP2Common(Op2Codes, F06Writer):
         TCODE,1=02 vs. TCODE=02  -> function code 1
 
         """
+        bbbb
         if self._function_code == 1:
             if value // 1000 in [2, 3, 6]:
                 out = 2
@@ -829,6 +551,7 @@ class OP2Common(Op2Codes, F06Writer):
               DISP(PLOT,SORT1,REAL) = ALL
 
         """
+        cccc
         if self.is_debug_file:
             self.binary_debug.write('  _read_real_scalar_table_static\n')
         assert flag in ['node', 'elem'], flag
@@ -882,6 +605,7 @@ class OP2Common(Op2Codes, F06Writer):
               DISP(PLOT,SORT1,REAL) = ALL
 
         """
+        dddd
         #print('result_name=%s use_vector=%s is_vectorized=%s' % (result_name, self.use_vector, is_vectorized))
         if self.is_debug_file:
             self.binary_debug.write('  _read_real_scalar_table_sort1\n')
@@ -929,6 +653,7 @@ class OP2Common(Op2Codes, F06Writer):
               DISP(PLOT,SORT2,REAL) = ALL
 
         """
+        eeee
         if self.is_debug_file:
             self.binary_debug.write('  _read_real_scalar_table_sort2\n')
         assert flag in ['node', 'elem'], flag
@@ -971,51 +696,6 @@ class OP2Common(Op2Codes, F06Writer):
                 n += 32
         return n
 
-    def _read_real_table_static(self, data, is_vectorized, nnodes, result_name,
-                                flag, is_cid=False):
-        """
-        With a static (e.g. SOL 101) result, reads a complex OUG-style
-        table created by:
-              DISP(PLOT,SORT1,REAL) = ALL
-
-        """
-        if self.is_debug_file:
-            self.binary_debug.write('  _read_real_table_static\n')
-        assert flag in ['node', 'elem'], flag
-        dt = self.nonlinear_factor
-        assert self.obj is not None
-        obj = self.obj
-
-        if self.use_vector and is_vectorized:
-            n = nnodes * 4 * 8
-            itotal2 = obj.itotal + nnodes
-            #print('ndata=%s n=%s nnodes=%s' % (ndata, n, nnodes))
-            ints = frombuffer(data, dtype=self.idtype).reshape(nnodes, 8)
-            floats = frombuffer(data, dtype=self.fdtype).reshape(nnodes, 8)
-            obj._times[obj.itime] = dt
-            #self.node_gridtype[self.itotal, :] = [node_id, grid_type]
-            #self.data[self.itime, self.itotal, :] = [v1, v2, v3, v4, v5, v6]
-            #obj.node_gridtype[obj.itotal:itotal2, :] = ints[:, 0:1]
-            nids = ints[:, 0] // 10
-            assert nids.min() > 0, nids.min()
-            obj.node_gridtype[obj.itotal:itotal2, 0] = nids
-            obj.node_gridtype[obj.itotal:itotal2, 1] = ints[:, 1].copy()
-            obj.data[obj.itime, obj.itotal:itotal2, :] = floats[:, 2:].copy()
-            obj.itotal = itotal2
-        else:
-            n = 0
-            dt = None
-            s = Struct(self._endian + b'2i6f')
-            for inode in range(nnodes):
-                out = s.unpack(data[n:n+32])
-                (eid_device, grid_type, tx, ty, tz, rx, ry, rz) = out
-                eid = eid_device // 10
-                if self.is_debug_file:
-                    self.binary_debug.write('  %s=%i; %s\n' % (flag, eid, str(out)))
-                obj.add_sort1(None, eid, grid_type, tx, ty, tz, rx, ry, rz)
-                n += 32
-        return n
-
     def _read_real_table_sort1(self, data, is_vectorized, nnodes, result_name, flag, is_cid=False):
         """
         With a real transient result (e.g. SOL 109/159), reads a
@@ -1023,6 +703,7 @@ class OP2Common(Op2Codes, F06Writer):
               DISP(PLOT,SORT1,REAL) = ALL
 
         """
+        gggg
         #print('result_name=%s use_vector=%s is_vectorized=%s' % (result_name, self.use_vector, is_vectorized))
         if self.is_debug_file:
             self.binary_debug.write('  _read_real_table_sort1\n')
@@ -1069,6 +750,7 @@ class OP2Common(Op2Codes, F06Writer):
               DISP(PLOT,SORT2,REAL) = ALL
 
         """
+        hhhh
         if self.is_debug_file:
             self.binary_debug.write('  _read_real_table_sort2\n')
         assert flag in ['node', 'elem'], flag
@@ -1120,6 +802,7 @@ class OP2Common(Op2Codes, F06Writer):
         return n
 
     def _read_complex_table_sort1_mag(self, data, is_vectorized, nnodes, result_name, flag):
+        iiii
         if self.is_debug_file:
             self.binary_debug.write('  _read_complex_table_sort1_mag\n')
         assert flag in ['node', 'elem'], flag
@@ -1169,6 +852,7 @@ class OP2Common(Op2Codes, F06Writer):
         return n
 
     def _read_complex_table_sort1_imag(self, data, is_vectorized, nnodes, result_name, flag):
+        jjjj
         if self.is_debug_file:
             self.binary_debug.write('  _read_complex_table_sort1_imag\n')
         #assert flag in ['node', 'elem'], flag
@@ -1225,6 +909,7 @@ class OP2Common(Op2Codes, F06Writer):
         is ignored.  However, this might be the actual way to parse the id.
 
         """
+        kkkk
         #print('eid =', eid)
         #print('flag =', flag)
         eid2 = eid_device // 10
@@ -1241,6 +926,7 @@ class OP2Common(Op2Codes, F06Writer):
         # return eid2
 
     def get_oug2_flag(self):
+        llllll
         if self.analysis_code == 5:
             flag = 'freq'
             flag_type = '%.2f'
@@ -1250,6 +936,7 @@ class OP2Common(Op2Codes, F06Writer):
         return flag, flag_type
 
     def _read_complex_table_sort2_mag(self, data, is_vectorized, nnodes, result_name, flag):
+        mmmmm
         if self.is_debug_file:
             self.binary_debug.write('  _read_complex_table\n')
         assert flag in ['node', 'elem'], flag
@@ -1294,6 +981,7 @@ class OP2Common(Op2Codes, F06Writer):
           DISP(PLOT,SORT2,IMAG) = ALL
 
         """
+        nnnn
         if self.is_debug_file:
             self.binary_debug.write('  _read_complex_table\n')
         assert flag in ['node', 'elem'], flag
@@ -1331,96 +1019,13 @@ class OP2Common(Op2Codes, F06Writer):
                 n += 56
         return n
 
-    def create_transient_object(self, storage_obj, class_obj, is_cid=False, debug=False):
-        """
-        Creates a transient object (or None if the subcase should be skippied).
-
-        Parameters
-        ----------
-        storageName : str
-            the name of the dictionary to store the object in (e.g. 'displacements')
-        class_obj : object()
-            the class object to instantiate
-        debug : bool
-            developer debug
-
-        .. python ::
-
-            slot = self.displacements
-            slot_vector = RealDisplacementArray
-            self.create_transient_object(slot, slot_vector, is_cid=is_cid)
-
-        .. note:: dt can also be load_step depending on the class
-
-        """
-        assert not isinstance(class_obj, string_types), 'class_obj=%r' % class_obj
-        assert class_obj is not None, class_obj
-        if debug:
-            print("create Transient Object")
-            print("***NF = %s" % self.nonlinear_factor)
-        #if not hasattr(self, storageName):
-            #attrs =  object_attributes(obj, mode="public")
-            #msg = 'storage_obj=%r does not exist.\n' % storage_obj
-            #msg += 'Attributes = [%s]' , ', %s'.join(attrs)
-            #raise RuntimeError(msg)
-        #storage_obj = getattr(self, storageName)
-        #assert class_obj is not None, 'name=%r has no associated classObject' % storageName
-
-        #self.log.debug('self.table_name=%s isubcase=%s subtitle=%r' % (
-            #self.table_name, self.isubcase, self.subtitle.strip()))
-        self.data_code['table_name'] = self.table_name.decode(self.encoding)
-        assert self.log is not None
-
-        code = self._get_code()
-        #print('code =', code)
-        if hasattr(self, 'isubcase'):
-            if self.code in storage_obj:
-                self.obj = storage_obj[code]
-                if self.nonlinear_factor is not None:
-                    if self.obj.nonlinear_factor is None:
-                        msg = 'The object is flipping from a static (e.g. preload)\n'
-                        msg += 'result to a transient/frequency based results\n'
-                        msg += '%s -> %s\n' % (self.obj.nonlinear_factor, self.nonlinear_factor)
-                        msg += 'code = (subcase=%s, analysis_code=%s, sort=%s, count=%s, ogs=%s, superelement_adaptivity_index=%r pval_step=%r)\n' % tuple(code)
-                        msg += '%s\n' % str(self.obj)
-                        msg += '\nIf this isnt correct, check if the data code was applied on the object'
-                        raise MultipleSolutionNotImplementedError(msg)
-                self.obj.update_data_code(copy.deepcopy(self.data_code))
-            else:
-                class_obj.is_cid = is_cid
-                is_sort1 = self.is_sort1  # uses the sort_bits
-
-                self.obj = class_obj(self.data_code, is_sort1, self.isubcase, self.nonlinear_factor)
-            storage_obj[code] = self.obj
-        else:
-            if code in storage_obj:
-                self.obj = storage_obj[code]
-            else:
-                storage_obj[code] = self.obj
-
-    def _get_code(self):
-        code = self.isubcase
-        ogs = 0
-        if hasattr(self, 'ogs'):
-            ogs = self.ogs
-        #if self.binary_debug:
-            #self.binary_debug.write(self.code_information(include_time=True))
-
-        code = (self.isubcase, self.analysis_code, self._sort_method, self._count, ogs,
-                self.superelement_adaptivity_index, self.pval_step)
-        #code = (self.isubcase, self.analysis_code, self._sort_method, self._count,
-                #self.superelement_adaptivity_index, self.table_name_str)
-        #print('%r' % self.subtitle)
-        self.code = code
-        #self.log.debug('code = %s' % str(self.code))
-        return self.code
-
     def _not_implemented_or_skip(self, data, ndata, msg=''):
         """
         A simple pass loop for unsupported tables that can be hacked on
         to crash the program everywhere that uses it.
 
         """
+        oooo
         #msg = 'table_name=%s table_code=%s %s\n%s' % (
             #self.table_name, self.table_code, msg, self.code_information())
         #if any([card_name in msg for card_name in ['VUHEXA', 'VUPENTA', 'VUTETRA', 'VUQUAD']]):
@@ -1457,12 +1062,6 @@ class OP2Common(Op2Codes, F06Writer):
             msg = 'table_name=%s table_code=%s %s\n%s' % (
                 self.table_name, self.table_code, msg, self.code_information())
             raise NotImplementedError(msg)
-
-    def _function1(self, value):
-        """function1(value)"""
-        if value // 1000 in [2, 3, 6]:
-            return 2
-        return 1
 
     def _function2(self, value):
         """function2(value)"""
@@ -1512,6 +1111,7 @@ class OP2Common(Op2Codes, F06Writer):
           TCODE = f1(TCODE1)
 
         """
+        pppp
         (approach_code, tCode, int3, isubcase) = unpack(self._endian + b'4i', data[:16])
         self.approach_code = approach_code
         self.tCode = tCode
@@ -1651,6 +1251,7 @@ class OP2Common(Op2Codes, F06Writer):
           thermal_bits[0] = 0 -> NRLO
 
         """
+        qqq
         bits = [0, 0, 0, 0, 0]
         thermal_code = self.thermal
 
@@ -1706,6 +1307,7 @@ class OP2Common(Op2Codes, F06Writer):
           sort_bits[2] = 0 -> isReal=True   isReal/Imaginary=False
 
         """
+        rrrr
         bits = [0, 0, 0]
         sort_code = self.sort_code
 
@@ -1728,28 +1330,20 @@ class OP2Common(Op2Codes, F06Writer):
         self.data_code['sort_bits'] = self.sort_bits
 
     @property
-    def _sort_method(self):
-        try:
-            sort_method, is_real, is_random = self._table_specs()
-        except:
-            sort_method = get_sort_method_from_table_name(self.table_name)
-        #is_sort1 = self.table_name.endswith('1')
-        #is_sort1 = self.is_sort1  # uses the sort_bits
-        assert sort_method in [1, 2], 'sort_method=%r\n%s' % (sort_method, self.code_information())
-        return sort_method
-
-    @property
     def is_real(self):
+        ssss
         sort_method, is_real, is_random = self._table_specs()
         return is_real
 
     @property
     def is_complex(self):
+        tttt
         sort_method, is_real, is_random = self._table_specs()
         return not is_real
 
     @property
     def is_random(self):
+        uuuu
         sort_method, is_real, is_random = self._table_specs()
         return is_random
 
@@ -1761,6 +1355,7 @@ class OP2Common(Op2Codes, F06Writer):
         return self.is_magnitude_phase()
 
     def is_magnitude_phase(self):
+        vvvv
         if self.format_code == 3:
             return True
         return False
@@ -1785,6 +1380,7 @@ class OP2Common(Op2Codes, F06Writer):
 
     @property
     def is_curvature(self):
+        wwww
         if self.is_stress:
             curvature_flag = False
         else:
@@ -1802,6 +1398,7 @@ class OP2Common(Op2Codes, F06Writer):
 
     @property
     def is_max_shear(self):
+        xxxx
         return True if self.stress_bits[4] == 0 else False
 
     @property
@@ -1814,12 +1411,14 @@ class OP2Common(Op2Codes, F06Writer):
 
     @property
     def is_strain(self):
+        yyyy
         if self.stress_bits[1] == 1:
             return True
         return False
 
     def _create_table_object(self, result_name, nnodes,
                              slot, slot_object, slot_vector, is_cid=False):
+        zzzz
         assert isinstance(result_name, string_types), result_name
         assert isinstance(slot, dict), slot
         auto_return = False
@@ -1847,27 +1446,6 @@ class OP2Common(Op2Codes, F06Writer):
             # pass = 0/2
             self.create_transient_object(slot, slot_object)
         return auto_return, is_vectorized
-
-    def _create_table_vector(self, result_name, nnodes,
-                             slot, slot_vector, is_cid=False):
-        assert isinstance(result_name, string_types), result_name
-        assert isinstance(slot, dict), slot
-        auto_return = False
-        #print('%s nnodes=%s' % (result_name, nnodes))
-        self.result_names.add(result_name)
-        if self.read_mode == 1:
-            self.create_transient_object(slot, slot_vector, is_cid=is_cid)
-            self.result_names.add(result_name)
-            self.obj._nnodes += nnodes
-            auto_return = True
-        elif self.read_mode == 2:
-            self.code = self._get_code()
-            self.obj = slot[self.code]
-            #self.obj.update_data_code(self.data_code)
-            self.obj.build()
-        else:
-            auto_return = True
-        return auto_return
 
     def _create_oes_object4(self, nelements, result_name, slot, obj_vector):
         """
@@ -1910,6 +1488,7 @@ class OP2Common(Op2Codes, F06Writer):
             return nelements * ntotal
 
         """
+        asdfaefewf
         auto_return = False
         #is_vectorized = True
         is_vectorized = self._is_vectorized(obj_vector, slot)
@@ -1971,6 +1550,7 @@ class OP2Common(Op2Codes, F06Writer):
 
         .. note :: the Vectorized column refers to the setting given by the user
         """
+        babartba
         is_vectorized = False
         if self.is_vectorized:
             if obj_vector is not None:
@@ -2000,118 +1580,3 @@ class OP2Common(Op2Codes, F06Writer):
         """deepcopy(OP2) fails on Python 3.6 without doing this"""
         del self.fdtype, self.idtype, self.double_dtype, self.long_dtype
         del self.struct_i, self.struct_2i, self.struct_3i, self.struct_8s
-
-def apply_mag_phase(floats, is_magnitude_phase, isave1, isave2):
-    """converts mag/phase data to real/imag"""
-    if is_magnitude_phase:
-        mag = floats[:, isave1]
-        phase = floats[:, isave2]
-        rtheta = radians(phase)
-        real_imag = mag * (cos(rtheta) + 1.j * sin(rtheta))
-    else:
-        real = floats[:, isave1]
-        imag = floats[:, isave2]
-        real_imag = real + 1.j * imag
-    return real_imag
-
-def get_superelement_adaptivity_index(subtitle, superelement):
-    """determines the SUPERELEMENT/ADAPTIVITY_INDEX from the subtitle"""
-    superelement_adaptivity_index = ''
-    if 'SUPERELEMENT' in superelement:
-        # 'SUPERELEMENT 0'
-
-        # F:\work\pyNastran\examples\Dropbox\move_tpl\opt7.op2
-        # 'SUPERELEMENT 0       ,   1'
-        split_superelement = superelement.split()
-        if len(split_superelement) == 2:
-            word, value1 = split_superelement
-            assert word == 'SUPERELEMENT', 'split_superelement=%s' % split_superelement
-            subtitle = '%s; SUPERELEMENT %s' % (subtitle, value1)
-            value1 = int(value1)
-
-            if superelement_adaptivity_index:
-                superelement_adaptivity_index = '%s; SUPERELEMENT %s' % (
-                    superelement_adaptivity_index, value1)
-            else:
-                superelement_adaptivity_index = 'SUPERELEMENT %ss' % value1
-        elif len(split_superelement) == 4:
-            word, value1, comma, value2 = split_superelement
-            assert word == 'SUPERELEMENT', 'split_superelement=%s' % split_superelement
-            value1 = int(value1)
-            value2 = int(value2)
-
-            if superelement_adaptivity_index:
-                superelement_adaptivity_index = '%s; SUPERELEMENT %s,%s' % (
-                    superelement_adaptivity_index, value1, value2)
-            else:
-                superelement_adaptivity_index = 'SUPERELEMENT %s,%s' % (value1, value2)
-        else:
-            raise RuntimeError(split_superelement)
-    return superelement_adaptivity_index
-
-def update_label2(label2, isubcase):
-    """strips off SUBCASE from the label2 to simplfify the output keys (e.g., displacements)"""
-    # strip off any comments
-    # 'SUBCASE  1 $ STAT'
-    # 'SUBCASE  1 $ 0.900 P'
-    label2 = label2.split('$')[0].strip()
-
-    if label2:
-        subcase_expected = 'SUBCASE %i' % isubcase
-        subcase_equal_expected = 'SUBCASE = %i' % isubcase
-        if subcase_expected == label2:
-            label2 = ''
-        elif label2 == 'NONLINEAR':
-            pass
-        elif subcase_expected in label2:
-            # 'SUBCASE 10' in 'NONLINEAR    SUBCASE 10'
-            nchars = len(subcase_expected)
-            ilabel_1 = label2.index(subcase_expected)
-            ilabel_2 = ilabel_1 + nchars
-            label2_prime = label2[:ilabel_1] + label2[ilabel_2:]
-            label2 = label2_prime.strip()
-        elif subcase_equal_expected in label2:
-            # 'SUBCASE = 10'
-            slabel = label2.split('=')
-            assert len(slabel) == 2, slabel
-            label2 = ''
-        elif 'PVAL ID=' in label2 and 'SUBCASE=' in label2:
-            # 'PVAL ID=       1                       SUBCASE=       1'
-            # '    PVAL ID=       1                       SUBCASE=       1'
-            ilabel2 = label2.index('SUBCASE')
-            slabel = label2[:ilabel2].strip().split('=')
-            assert slabel[0] == 'PVAL ID', slabel
-            label2 = slabel[0].strip() + '=' + slabel[1].strip()
-        elif 'SUBCASE' in label2:
-            # 'SUBCASE    10'
-            # 'SUBCASE = 10'
-            # 'SUBCASE = 1    SEGMENT = 1'
-            # 'SUBCASE = 1    HARMONIC = 0 ,C'
-            slabel = label2.split('$')[0].strip().split()
-
-            # 'SUBCASE    10'
-            # 'SUBCASE = 10'
-            # 'SUBCASE = 1    SEGMENT = 1'
-            # 'SUBCASE = 1    HARMONIC = 0 ,C'
-            if len(slabel) == 2:
-                label2 = ''
-            elif len(slabel) == 3 and slabel[1] == '=':
-                label2 = ''
-            else:
-                assert slabel[0] == 'SUBCASE', slabel
-
-                # 'SEGMENT = 1'
-                label2 = slabel[3] + '=' + slabel[5]
-
-        elif 'SUBCOM' in label2:
-            subcom, isubcase = label2.split()
-            label2 = ''
-        elif 'SYM' in label2 or 'REPCASE' in label2:
-            # 'SYM 401'
-            # 'REPCASE 108'
-            pass
-        #else:
-            #print('label2   = %r' % label2)
-            #print('subcasee = %r' % subcase_expected)
-            #asdf
-    return label2
