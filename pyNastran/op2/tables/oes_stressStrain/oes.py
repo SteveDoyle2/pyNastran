@@ -64,6 +64,7 @@ from pyNastran.op2.tables.oes_stressStrain.complex.oes_bend import ComplexBendSt
 from pyNastran.op2.tables.oes_stressStrain.random.oes_rods import RandomRodStressArray, RandomRodStrainArray
 from pyNastran.op2.tables.oes_stressStrain.random.oes_bars import RandomBarStressArray, RandomBarStrainArray
 from pyNastran.op2.tables.oes_stressStrain.random.oes_beams import RandomBeamStressArray, RandomBeamStrainArray
+from pyNastran.op2.tables.oes_stressStrain.random.oes_bend import RandomBendStressArray, RandomBendStrainArray
 from pyNastran.op2.tables.oes_stressStrain.random.oes_plates import RandomPlateStressArray, RandomPlateStrainArray
 from pyNastran.op2.tables.oes_stressStrain.random.oes_solids import RandomSolidStressArray, RandomSolidStrainArray
 from pyNastran.op2.tables.oes_stressStrain.random.oes_shear import RandomShearStressArray, RandomShearStrainArray
@@ -5451,10 +5452,12 @@ class OES(OP2Common):
             result_name = prefix + 'cbend_stress' + postfix
             obj_vector_real = RealBendStressArray
             obj_vector_complex = ComplexBendStressArray
+            obj_vector_random = RandomBendStressArray
         else:
             result_name = prefix + 'cbend_strain' + postfix
             obj_vector_real = RealBendStrainArray
             obj_vector_complex = ComplexBendStrainArray
+            obj_vector_random = RandomBendStrainArray
 
         if self._results.is_not_saved(result_name):
             return ndata, None, None
@@ -5616,6 +5619,7 @@ class OES(OP2Common):
                         n += ntotali
 
         elif self.num_wide == 13:
+            n = 0
             ntotal = 52  # 4*13
             nelements = ndata // ntotal
             #TCODE,7 =2 Real
@@ -5626,10 +5630,62 @@ class OES(OP2Common):
             #6 SE RS Long. Stress at Point E
             #7 SF RS Long. Stress at Point F
             #Words 2 through 7 repeat 002 times
-            msg = ''
-            if self.read_mode == 2:
-                msg = self.code_information()
-            n = self._not_implemented_or_skip(data, ndata, msg)
+            #if self.table_name != "OESPSD2":
+                #msg = ''
+                #if self.read_mode == 2:
+                    #msg = self.code_information()
+                #n = self._not_implemented_or_skip(data, ndata, msg)
+                #return n, None, None
+
+            auto_return, is_vectorized = self._create_oes_object4(
+                nelements, result_name, slot, obj_vector_random)
+            if auto_return:
+                return nelements * self.num_wide * 4, None, None
+
+            obj = self.obj
+            if self.use_vector and is_vectorized and self.sort_method == 1 and 0:
+                n = nelements * 4 * self.num_wide
+                itotal = obj.ielement
+                ielement2 = obj.itotal + nelements
+                itotal2 = ielement2
+
+                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 4)
+                itime = obj.itime
+                obj._times[itime] = dt
+                if itime == 0:
+                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 4)
+                    eids = ints[:, 0] // 10
+                    assert eids.min() > 0, eids.min()
+                    obj.element[itotal:itotal2] = eids
+
+                #[max_strain, avg_strain, margin]
+                obj.data[itime, itotal:itotal2, :] = floats[:, 1:].copy()
+                obj.itotal = itotal2
+                obj.ielement = ielement2
+            else:
+                ntotali = 24
+                struct1 = Struct(self._endian + self._analysis_code_fmt)
+                struct2 = Struct(self._endian + b'i5f')
+
+                for unused_i in range(nelements):
+                    edata = data[n:n + 4]
+                    #self.show_data(edata)
+                    eid_device, = struct1.unpack(edata)
+                    eid, dt = get_eid_dt_from_eid_device(
+                        eid_device, self.nonlinear_factor, self.sort_method)
+
+                    n += 4
+                    for i in range(2):
+                        edata = data[n:n + ntotali]
+                        out = struct2.unpack(edata)
+                        if self.is_debug_file:
+                            self.binary_debug.write('BEND-69 - eid=%s dt=%s %s\n' % (eid, dt, str(out)))
+                        #print('BEND-69 - eid=%s dt=%s %s\n' % (eid, dt, str(out)))
+
+                        (grid, angle, sc, sd, se, sf) = out
+                        obj.add_sort1(dt, eid, grid, angle, sc, sd, se, sf)
+                        n += ntotali
+
         else:
             raise RuntimeError(self.code_information())
         return n, nelements, ntotal

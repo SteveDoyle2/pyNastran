@@ -257,36 +257,22 @@ class RandomSolidArray(OES_Object):
                 count(), eids2, nodes, oxx, oyy, ozz, txy, tyz, txz):
 
                 j = where(eids3 == deid)[0]
-                cid = cids3[j]
-                A = [[doxx, dtxy, dtxz],
-                     [dtxy, doyy, dtyz],
-                     [dtxz, dtyz, dozz]]
-                (_lambda, v) = eigh(A)  # a hermitian matrix is a symmetric-real matrix
-
-                # o1-max
-                # o2-mid
-                # o3-min
-                assert do1 >= do2 >= do3, 'o1 >= o2 >= o3; eid=%s o1=%e o2=%e o3=%e' % (deid, do1, do2, do3)
+                #cid = cids3[j]
+                cid = 0
                 [oxxi, oyyi, ozzi, txyi, tyzi, txzi] = write_floats_13e(
                     [doxx, doyy, dozz, dtxy, dtyz, dtxz])
 
                 if i % cnnodes == 0:
+                    #print('deid, cid, nnodes = %s, %s, %s' % (deid, cid, nnodes))
                     f06_file.write('0  %8s    %8iGRID CS  %i GP\n' % (deid, cid, nnodes))
                     f06_file.write(
-                        '0              %8s  X  %-13s  XY  %-13s   A  %-13s  LX%5.2f%5.2f%5.2f  %-13s   %s\n'
-                        '               %8s  Y  %-13s  YZ  %-13s   B  %-13s  LY%5.2f%5.2f%5.2f\n'
-                        '               %8s  Z  %-13s  ZX  %-13s   C  %-13s  LZ%5.2f%5.2f%5.2f\n'
-                        % ('CENTER', oxxi, txyi, o1i, v[0, 1], v[0, 2], v[0, 0], pi, ovmi,
-                           '', oyyi, tyzi, o2i, v[1, 1], v[1, 2], v[1, 0],
-                           '', ozzi, txzi, o3i, v[2, 1], v[2, 2], v[2, 0]))
+                        #               center   oxx    oyy     ozz     txy     tyz     txz
+                        '0              %8s   %-13s   %-13s   %-13s   %-13s   %-13s   %-13s\n'
+                        % ('CENTER', oxxi, oyyi, ozzi, txyi, tyzi, txzi))
                 else:
                     f06_file.write(
-                        '0              %8s  X  %-13s  XY  %-13s   A  %-13s  LX%5.2f%5.2f%5.2f  %-13s   %s\n'
-                        '               %8s  Y  %-13s  YZ  %-13s   B  %-13s  LY%5.2f%5.2f%5.2f\n'
-                        '               %8s  Z  %-13s  ZX  %-13s   C  %-13s  LZ%5.2f%5.2f%5.2f\n'
-                        % (node_id, oxxi, txyi, o1i, v[0, 1], v[0, 2], v[0, 0], pi, ovmi,
-                           '', oyyi, tyzi, o2i, v[1, 1], v[1, 2], v[1, 0],
-                           '', ozzi, txzi, o3i, v[2, 1], v[2, 2], v[2, 0]))
+                        '0              %8s   %-13s   %-13s   %-13s   %-13s   %-13s   %-13s\n'
+                        % (node_id, oxxi, oyyi, ozzi, txyi, tyzi, txzi))
                 i += 1
             f06_file.write(page_stamp % page_num)
             page_num += 1

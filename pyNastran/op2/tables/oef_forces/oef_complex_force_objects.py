@@ -136,12 +136,12 @@ class ComplexRodForceArray(ScalarObject):
 
         msg = []
         if self.nonlinear_factor is not None:  # transient
-            msg.append('  type=%s ntimes=%i nelements=%i\n'
-                       % (self.__class__.__name__, ntimes, nelements))
+            msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, ntimes, nelements, self.table_name))
             ntimes_word = 'ntimes'
         else:
-            msg.append('  type=%s nelements=%i\n'
-                       % (self.__class__.__name__, nelements))
+            msg.append('  type=%s nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, nelements, self.table_name))
             ntimes_word = '1'
         msg.append('  eType\n')
         headers = self.get_headers()
@@ -382,12 +382,12 @@ class ComplexCShearForceArray(ScalarObject):
 
         msg = []
         if self.nonlinear_factor is not None:  # transient
-            msg.append('  type=%s ntimes=%i nelements=%i\n'
-                       % (self.__class__.__name__, ntimes, nelements))
+            msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, ntimes, nelements, self.table_name))
             ntimes_word = 'ntimes'
         else:
-            msg.append('  type=%s nelements=%i\n'
-                       % (self.__class__.__name__, nelements))
+            msg.append('  type=%s nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, nelements, self.table_name))
             ntimes_word = '1'
         msg.append('  eType\n')
         headers = self.get_headers()
@@ -616,12 +616,12 @@ class ComplexSpringDamperForceArray(ScalarObject):
 
         msg = []
         if self.nonlinear_factor is not None:  # transient
-            msg.append('  type=%s ntimes=%i nelements=%i\n'
-                       % (self.__class__.__name__, ntimes, nelements))
+            msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, ntimes, nelements, self.table_name))
             ntimes_word = 'ntimes'
         else:
-            msg.append('  type=%s nelements=%i\n'
-                       % (self.__class__.__name__, nelements))
+            msg.append('  type=%s nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, nelements, self.table_name))
             ntimes_word = '1'
         msg.append('  eType\n')
         headers = self.get_headers()
@@ -834,12 +834,12 @@ class ComplexViscForceArray(ScalarObject):
 
         msg = []
         if self.nonlinear_factor is not None:  # transient
-            msg.append('  type=%s ntimes=%i nelements=%i\n'
-                       % (self.__class__.__name__, ntimes, nelements))
+            msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, ntimes, nelements, self.table_name))
             ntimes_word = 'ntimes'
         else:
-            msg.append('  type=%s nelements=%i\n'
-                       % (self.__class__.__name__, nelements))
+            msg.append('  type=%s nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, nelements, self.table_name))
             ntimes_word = '1'
         msg.append('  eType\n')
         headers = self.get_headers()
@@ -1053,12 +1053,12 @@ class ComplexPlateForceArray(ScalarObject):
 
         msg = []
         if self.nonlinear_factor is not None:  # transient
-            msg.append('  type=%s ntimes=%i nelements=%i\n'
-                       % (self.__class__.__name__, ntimes, nelements))
+            msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, ntimes, nelements, self.table_name))
             ntimes_word = 'ntimes'
         else:
-            msg.append('  type=%s nelements=%i\n'
-                       % (self.__class__.__name__, nelements))
+            msg.append('  type=%s nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, nelements, self.table_name))
             ntimes_word = '1'
         msg.append('  eType\n')
         headers = self.get_headers()
@@ -1299,12 +1299,12 @@ class ComplexPlate2ForceArray(ScalarObject):
 
         msg = []
         if self.nonlinear_factor is not None:  # transient
-            msg.append('  type=%s ntimes=%i nelements=%i\n'
-                       % (self.__class__.__name__, ntimes, nelements))
+            msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, ntimes, nelements, self.table_name))
             ntimes_word = 'ntimes'
         else:
-            msg.append('  type=%s nelements=%i\n'
-                       % (self.__class__.__name__, nelements))
+            msg.append('  type=%s nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, nelements, self.table_name))
             ntimes_word = '1'
         msg.append('  eType\n')
         headers = self.get_headers()
@@ -1548,10 +1548,11 @@ class ComplexCBarForceArray(ScalarObject):
         msg = []
 
         if self.nonlinear_factor is not None:  # transient
-            msg.append('  type=%s ntimes=%i nelements=%i\n'
-                       % (self.__class__.__name__, ntimes, nelements))
+            msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, ntimes, nelements, self.table_name))
         else:
-            msg.append('  type=%s nelements=%i\n' % (self.__class__.__name__, nelements))
+            msg.append('  type=%s nelements=%i; table_name=%r\n' % (
+                self.__class__.__name__, nelements, self.table_name))
         msg.append('  eType, cid\n')
         msg.append('  data: [ntimes, nelements, 8] where 8=[%s]\n' % str(', '.join(self.get_headers())))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
@@ -2104,12 +2105,12 @@ class ComplexCBendForceArray(ScalarObject):  # 69-CBEND
 
         msg = []
         if self.nonlinear_factor is not None:  # transient
-            msg.append('  type=%s ntimes=%i nelements=%i\n'
-                       % (self.__class__.__name__, ntimes, nelements))
+            msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, ntimes, nelements, self.table_name))
             ntimes_word = 'ntimes'
         else:
-            msg.append('  type=%s nelements=%i\n'
-                       % (self.__class__.__name__, nelements))
+            msg.append('  type=%s nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, nelements, self.table_name))
             ntimes_word = '1'
         msg.append('  eType\n')
         headers = self.get_headers()
@@ -2326,12 +2327,12 @@ class ComplexSolidPressureForceArray(ScalarObject):
 
         msg = []
         if self.nonlinear_factor is not None:  # transient
-            msg.append('  type=%s ntimes=%i nelements=%i\n'
-                       % (self.__class__.__name__, ntimes, nelements))
+            msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, ntimes, nelements, self.table_name))
             ntimes_word = 'ntimes'
         else:
-            msg.append('  type=%s nelements=%i\n'
-                       % (self.__class__.__name__, nelements))
+            msg.append('  type=%s nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, nelements, self.table_name))
             ntimes_word = '1'
         msg.append('  eType\n')
         headers = self.get_headers()
@@ -2563,10 +2564,11 @@ class ComplexCBushForceArray(ScalarObject):
         msg = []
 
         if self.nonlinear_factor is not None:  # transient
-            msg.append('  type=%s ntimes=%i nelements=%i\n'
-                       % (self.__class__.__name__, ntimes, nelements))
+            msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, ntimes, nelements, self.table_name))
         else:
-            msg.append('  type=%s nelements=%i\n' % (self.__class__.__name__, nelements))
+            msg.append('  type=%s nelements=%i; table_name=%r\n' % (
+                self.__class__.__name__, nelements, self.table_name))
         msg.append('  eType, cid\n')
         msg.append('  data: [ntimes, nelements, 6] where 6=[%s]\n' % str(', '.join(self.get_headers())))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))

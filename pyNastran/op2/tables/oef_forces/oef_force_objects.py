@@ -146,12 +146,12 @@ class FailureIndices(RealForceObject):
 
         msg = []
         if self.nonlinear_factor is not None:  # transient
-            msg.append('  type=%s ntimes=%i nelements=%i\n'
-                       % (self.__class__.__name__, ntimes, nelements))
+            msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, ntimes, nelements, self.table_name))
             ntimes_word = 'ntimes'
         else:
-            msg.append('  type=%s nelements=%i\n'
-                       % (self.__class__.__name__, nelements))
+            msg.append('  type=%s nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, nelements, self.table_name))
             ntimes_word = '1'
         headers = self.get_headers()
         n = len(headers)
@@ -314,12 +314,12 @@ class RealSpringDamperForceArray(RealForceObject):
 
         msg = []
         if self.nonlinear_factor is not None:  # transient
-            msg.append('  type=%s ntimes=%i nelements=%i\n'
-                       % (self.__class__.__name__, ntimes, nelements))
+            msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, ntimes, nelements, self.table_name))
             ntimes_word = 'ntimes'
         else:
-            msg.append('  type=%s nelements=%i\n'
-                       % (self.__class__.__name__, nelements))
+            msg.append('  type=%s nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, nelements, self.table_name))
             ntimes_word = '1'
         headers = self.get_headers()
         n = len(headers)
@@ -544,12 +544,12 @@ class RealRodForceArray(RealForceObject):
 
         msg = []
         if self.nonlinear_factor is not None:  # transient
-            msg.append('  type=%s ntimes=%i nelements=%i\n'
-                       % (self.__class__.__name__, ntimes, nelements))
+            msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, ntimes, nelements, self.table_name))
             ntimes_word = 'ntimes'
         else:
-            msg.append('  type=%s nelements=%i\n'
-                       % (self.__class__.__name__, nelements))
+            msg.append('  type=%s nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, nelements, self.table_name))
             ntimes_word = '1'
         headers = self.get_headers()
         n = len(headers)
@@ -812,10 +812,11 @@ class RealCBeamForceArray(RealForceObject):
         msg = []
 
         if self.nonlinear_factor is not None:  # transient
-            msg.append('  type=%s ntimes=%i nelements=%i\n'
-                       % (self.__class__.__name__, ntimes, nelements))
+            msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, ntimes, nelements, self.table_name))
         else:
-            msg.append('  type=%s nelements=%i\n' % (self.__class__.__name__, nelements))
+            msg.append('  type=%s nelements=%i; table_name=%r\n' % (
+                self.__class__.__name__, nelements, self.table_name))
         #msg.append('  eType, cid\n')
         msg.append('  data: [ntimes, nelements, 8] where 8=[%s]\n' % str(', '.join(self.get_headers())))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
@@ -850,7 +851,8 @@ class RealCBeamForceArray(RealForceObject):
             #else:
                 #self._write_sort1_as_sort2(f06_file, page_num, page_stamp, header, msg_temp)
         else:
-            assert self.is_sort1 is True, str(self)
+            print('skipping %s because its sort2' % self.__class__.__name__)
+            #assert self.is_sort1 is True, str(self)
         return page_num - 1
 
     def get_headers(self):
@@ -1061,12 +1063,12 @@ class RealCShearForceArray(RealForceObject):
 
         msg = []
         if self.nonlinear_factor is not None:  # transient
-            msg.append('  type=%s ntimes=%i nelements=%i\n'
-                       % (self.__class__.__name__, ntimes, nelements))
+            msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, ntimes, nelements, self.table_name))
             ntimes_word = 'ntimes'
         else:
-            msg.append('  type=%s nelements=%i\n'
-                       % (self.__class__.__name__, nelements))
+            msg.append('  type=%s nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, nelements, self.table_name))
             ntimes_word = '1'
         headers = self.get_headers()
         n = len(headers)
@@ -1968,12 +1970,12 @@ class RealCBarForceArray(RealForceObject):  # 34-CBAR
 
         msg = []
         if self.nonlinear_factor is not None:  # transient
-            msg.append('  type=%s ntimes=%i nelements=%i\n'
-                       % (self.__class__.__name__, ntimes, nelements))
+            msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, ntimes, nelements, self.table_name))
             ntimes_word = 'ntimes'
         else:
-            msg.append('  type=%s nelements=%i\n'
-                       % (self.__class__.__name__, nelements))
+            msg.append('  type=%s nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, nelements, self.table_name))
             ntimes_word = '1'
         headers = self.get_headers()
         n = len(headers)
@@ -2182,12 +2184,12 @@ class RealConeAxForceArray(RealForceObject):
 
         msg = []
         if self.nonlinear_factor is not None:  # transient
-            msg.append('  type=%s ntimes=%i nelements=%i\n'
-                       % (self.__class__.__name__, ntimes, nelements))
+            msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, ntimes, nelements, self.table_name))
             ntimes_word = 'ntimes'
         else:
-            msg.append('  type=%s nelements=%i\n'
-                       % (self.__class__.__name__, nelements))
+            msg.append('  type=%s nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, nelements, self.table_name))
             ntimes_word = '1'
         headers = self.get_headers()
         n = len(headers)
@@ -2357,12 +2359,12 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
 
         msg = []
         if self.nonlinear_factor is not None:  # transient
-            msg.append('  type=%s ntimes=%i nelements=%i\n'
-                       % (self.__class__.__name__, ntimes, nelements))
+            msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, ntimes, nelements, self.table_name))
             ntimes_word = 'ntimes'
         else:
-            msg.append('  type=%s nelements=%i\n'
-                       % (self.__class__.__name__, nelements))
+            msg.append('  type=%s nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, nelements, self.table_name))
             ntimes_word = '1'
         headers = self.get_headers()
         n = len(headers)

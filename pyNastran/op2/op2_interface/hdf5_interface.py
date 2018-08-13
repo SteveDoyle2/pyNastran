@@ -76,6 +76,7 @@ from pyNastran.op2.tables.oes_stressStrain.complex.oes_bend import ComplexBendSt
 from pyNastran.op2.tables.oes_stressStrain.random.oes_rods import RandomRodStressArray, RandomRodStrainArray
 from pyNastran.op2.tables.oes_stressStrain.random.oes_bars import RandomBarStressArray, RandomBarStrainArray
 from pyNastran.op2.tables.oes_stressStrain.random.oes_beams import RandomBeamStressArray, RandomBeamStrainArray
+from pyNastran.op2.tables.oes_stressStrain.random.oes_bend import RandomBendStressArray, RandomBendStrainArray
 from pyNastran.op2.tables.oes_stressStrain.random.oes_plates import RandomPlateStressArray, RandomPlateStrainArray
 from pyNastran.op2.tables.oes_stressStrain.random.oes_solids import RandomSolidStressArray, RandomSolidStrainArray
 from pyNastran.op2.tables.oes_stressStrain.random.oes_shear import RandomShearStressArray, RandomShearStrainArray
@@ -423,7 +424,18 @@ TABLE_OBJ_MAP = {
     'modal_contribution.cbeam_strain' : (RealBeamStrainArray, ComplexBeamStrainArray, ),
 
     'cbend_stress' : (ComplexBendStressArray, ),
+    'ato.cbend_stress' : (RandomBendStressArray, ),
+    'crm.cbend_stress' : (RandomBendStressArray, ),
+    'psd.cbend_stress' : (RandomBendStressArray, ),
+    'rms.cbend_stress' : (RandomBendStressArray, ),
+    'no.cbend_stress' : (RandomBendStressArray, ),
+
     'cbend_strain' : (ComplexBendStrainArray, ),
+    'ato.cbend_strain' : (RandomBendStrainArray, ),
+    'crm.cbend_strain' : (RandomBendStrainArray, ),
+    'psd.cbend_strain' : (RandomBendStrainArray, ),
+    'rms.cbend_strain' : (RandomBendStrainArray, ),
+    'no.cbend_strain' : (RandomBendStrainArray, ),
 
     'cbeam_force' : (RealCBeamForceArray, ComplexCBeamForceArray),
     'ato.cbeam_force' : (RealCBeamForceArray, ),
