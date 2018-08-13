@@ -9,6 +9,7 @@ All shell properties are defined in this file.  This includes:
  * PPLANE
 
 All shell properties are ShellProperty and Property objects.
+
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -17,7 +18,6 @@ from numpy import array
 import numpy as np
 
 from pyNastran.utils import integer_types
-from pyNastran.bdf.deprecated import DeprecatedCompositeShellProperty
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Property, Material
 from pyNastran.bdf.cards.optimization import break_word_by_trailing_integer
@@ -37,7 +37,7 @@ class ShellProperty(Property):
         self.tref = tref
 
 
-class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
+class CompositeShellProperty(ShellProperty):
     def __init__(self):
         ShellProperty.__init__(self)
         self.mids = []
@@ -53,6 +53,28 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         self.lam = None
         self.mids_ref = None
 
+    def MassPerArea(self, iply='all', method='nplies', tflag=1, tscales=None):
+        return self.get_mass_per_area(iply, method)
+
+    def MassPerArea_structure(self):
+        rhos = [mat_ref.get_density() for mat_ref in self.mids_ref]
+        return self.get_mass_per_area_structure(rhos)
+
+    def Thickness(self, iply='all', tflag=1, tscales=None):
+        return self.get_thickness(iply)
+
+    def Nsm(self):
+        return self.get_nonstructural_mass()
+
+    def Rho(self, iply):
+        return self.get_density(iply)
+
+    def Theta(self, iply):
+        return self.get_theta(iply)
+
+    def sout(self, iply):
+        return self.get_sout(iply)
+
     def cross_reference(self, model):
         """
         Cross links the card so referenced cards can be extracted directly
@@ -61,11 +83,12 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         ----------
         model : BDF()
             the BDF object
+
         """
         mids_ref = []
         for iply in range(len(self.thicknesses)):
             mid = self.mids[iply]
-            msg = ' which is required by %s pid=%s iply=%s' % (self.type, self.pid, iply)
+            msg = ', which is required by %s pid=%s iply=%s' % (self.type, self.pid, iply)
             mids_ref.append(model.Material(mid, msg))
         self.mids_ref = mids_ref
 
@@ -92,6 +115,7 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         -------
         is_symmetrical : bool
             is the SYM flag active?
+
         """
         if self.lam == 'SYM':
             return True
@@ -138,14 +162,24 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
               ply 0
             Ask for ply 3, return ply 1
             Ask for ply 4, return ply 2
+
         """
         if iply == 'all':
             return iply
 
+        # iply = 5
+        # nplies = 3 (sym=6)
+        # iply2 = 'iply' or 'iply - nplies'
+        # iply2 = 0 = 9
+        # iply2 = 1 = 1
+        # iply2 = 2 = 2
+        # iply2 = 3 - 3 = 2
+        # iply2 = 4 - 3 = 1
+        # iply2 = 5 - 3 = 0
         nplies = len(self.thicknesses)
         if iply >= nplies:
             if iply < self.nplies:
-                iply = iply - nplies
+                iply = nplies - iply - 1
             else:
                 raise IndexError('invalid value for iply=%r' % iply)
         elif iply < 0:
@@ -166,6 +200,7 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         -------
         thickness : float
             the thickness of the ply or plies
+
         """
         #nplies = len(self.thicknesses)
         if iply == 'all':  # get all layers
@@ -189,6 +224,7 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
                 returns nplies * 2   (even)
               else:
                 returns nplies
+
             """
         nplies = len(self.thicknesses)
         if self.is_symmetrical():
@@ -196,9 +232,7 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         return nplies
 
     def get_nonstructural_mass(self):
-        """
-        Gets the non-structural mass :math:`i^{th}` ply
-        """
+        """Gets the non-structural mass :math:`i^{th}` ply"""
         return self.nsm
 
     def Mids(self):
@@ -213,6 +247,7 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         -------
         mids : MATx
             the material IDs
+
         """
         mids = []
         for iply in range(self.nplies):
@@ -227,6 +262,7 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         ----------
         iply : int
             the ply ID (starts from 0)
+
         """
         iply = self._adjust_ply_id(iply)
         mid_ref = self.mids_ref[iply]
@@ -246,6 +282,7 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         -------
         material_id : int
             the material id of the ith ply
+
         """
         iply = self._adjust_ply_id(iply)
         if self.mids_ref is not None:
@@ -263,6 +300,7 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         ----------
         iply : int
             the ply ID (starts from 0)
+
         """
         iply = self._adjust_ply_id(iply)
         if self.mids_ref is not None:
@@ -279,6 +317,7 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         ----------
         iply : int
             the ply ID (starts from 0)
+
         """
         iply = self._adjust_ply_id(iply)
         theta = self.thetas[iply]
@@ -293,10 +332,25 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         ----------
         iply : int
             the ply ID (starts from 0)
+
         """
         iply = self._adjust_ply_id(iply)
         sout = self.souts[iply]
         return sout
+
+    def get_thicknesses(self):
+        thickness = []
+        for i in range(self.nplies):
+            thick = self.get_thickness(i)
+            thickness.append(thick)
+        return array(thickness)
+
+    def get_thetas(self):
+        thetas = []
+        for i in range(self.nplies):
+            theta = self.get_theta(i)
+            thetas.append(theta)
+        return array(thetas)
 
     def get_z_locations(self):
         """
@@ -311,11 +365,11 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
 
         >>> pcomp.get_z_locations()
         [0., 1., 2.]
+
         """
         zi = self.z0
         z = [zi]
-        for i in range(self.nplies):
-            thick = self.get_thickness(i)
+        for thick in self.get_thicknesses():
             zi += thick
             z.append(zi)
         return array(z)
@@ -371,6 +425,7 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
              .. math:: nsm_i = t_i \frac{nsm}{\sum(t_i)}
 
         .. note:: final mass calculation will be done later
+
         """
         rhos = [mat_ref.get_density() for mat_ref in self.mids_ref]
         return self.get_mass_per_area_rho(rhos, iply, method)
@@ -425,6 +480,7 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
              .. math:: nsm_i = t_i \frac{nsm}{\sum(t_i)}
 
         .. note:: final mass calculation will be done later
+
         """
         assert method in ['nplies', 'rho*t', 't'], 'method=%r is invalid' % method
         nplies = len(self.thicknesses)
@@ -476,6 +532,29 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
                 raise NotImplementedError('method=%r is not supported' % method)
             return mass_per_area
 
+    def get_mass_per_area_structure(self, rhos):
+        r"""
+        Gets the Mass/Area for the property structure only.
+
+        .. math:: \frac{m}{A} = \sum(\rho t)
+
+        where :math:`nsm_i` is the non-structural mass of the
+        :math:`i^{th}` ply
+
+        Parameters
+        ----------
+
+        """
+        nplies = len(self.thicknesses)
+        mass_per_area = 0.
+        for iply in range(nplies):
+            rho = rhos[iply]
+            t = self.thicknesses[iply]
+            mass_per_area += rho * t
+
+        if self.is_symmetrical():
+            return 2. * mass_per_area
+        return mass_per_area
 
 class PCOMP(CompositeShellProperty):
     """
@@ -529,6 +608,22 @@ class PCOMP(CompositeShellProperty):
                 self.type, pname_fid))
 
     def _update_field_helper(self, n, value):
+        if n == 3:
+            self.z0 = value
+            return
+        elif n == 4:
+            self.nsm = value
+            return
+        elif n == 5:
+            self.sb = value
+            return
+        elif n == 7:
+            self.tref = value
+            return
+        elif n == 8:
+            self.ge = value
+            return
+
         assert n > 0, 'PCOMP pid=%s; negative indicies are not supported (pname_fid=%r)' % (self.pid, n)
         nnew = n - 9
         if nnew <= 0:
@@ -540,9 +635,10 @@ class PCOMP(CompositeShellProperty):
         try:
             ply = self.plies[ilayer]
         except IndexError:
-            msg = 'PCOMP pid=%s; n=%s nnew=%s ilayer=%s slot=%r\n' % (self.pid, n, nnew, ilayer, slot)
+            msg = 'PCOMP pid=%s; n=%s nnew=%s ilayer=%s slot=%r\n' % (
+                self.pid, n, nnew, ilayer, slot)
             msg += ('On PCOMP pid=%r, ply %i is not defined.  '
-                   'iply_min=0; iply_max=%i' % (self.pid, ilayer, len(self.plies)))
+                    'iply_min=0; iply_max=%i' % (self.pid, ilayer, len(self.plies)))
             raise IndexError(msg)
 
         # ply = [mid, t, theta, sout]
@@ -586,6 +682,7 @@ class PCOMP(CompositeShellProperty):
             None : -1/2 * total_thickness
         comment : str; default=''
             a comment for the card
+
         """
         CompositeShellProperty.__init__(self)
         if comment:
@@ -650,6 +747,7 @@ class PCOMP(CompositeShellProperty):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         pid = integer(card, 1, 'pid')
 
@@ -733,6 +831,7 @@ class PCOMP(CompositeShellProperty):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         #data_in = [
             #pid, z0, nsm, sb, ft, tref, ge,
@@ -806,7 +905,7 @@ class PCOMP(CompositeShellProperty):
             #self.souts[i] = sout
             #i += 1
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         pid = self.Pid()
         is_sym = self.is_symmetrical()
         nplies = self.nplies
@@ -946,6 +1045,7 @@ class PCOMPG(CompositeShellProperty):
             None : -1/2 * total_thickness
         comment : str; default=''
             a comment for the card
+
         """
         CompositeShellProperty.__init__(self)
         if comment:
@@ -997,8 +1097,10 @@ class PCOMPG(CompositeShellProperty):
         # 'NO' is not an option!
         allowed_lam = [None, 'SYM', 'MEM', 'BEND', 'SMEAR', 'SMCORE']
         if self.lam not in allowed_lam:
-            msg = 'lam=%r is invalid; allowed=[%s]' % (self.lam, ', '.join(allowed_lam))
+            msg = 'lam=%r is invalid; allowed=[%s]' % (self.lam, ', '.join(str(lam) for lam in allowed_lam))
             raise ValueError(msg)
+        for iply, sout in enumerate(self.souts):
+            assert sout in ['YES', 'NO'], "iply=%s sout=%r; SOUT must be ['YES', 'NO']" % (iply, sout)
 
         # this is a loose requirement
         #if self.ft in ['HILL', 'HOFF', 'TSAI', 'STRN'] and self.sb <= 0.:
@@ -1017,6 +1119,7 @@ class PCOMPG(CompositeShellProperty):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         pid = integer(card, 1, 'pid')
         # z0 will be calculated later
@@ -1072,7 +1175,7 @@ class PCOMPG(CompositeShellProperty):
                       global_ply_ids, mids, thicknesses, thetas, souts,
                       nsm, sb, ft, tref, ge, lam, z0, comment=comment)
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         pid = self.Pid()
         is_sym = self.is_symmetrical()
         nplies = self.nplies
@@ -1204,6 +1307,7 @@ class PLPLANE(ShellProperty):
             ???
         comment : str; default=''
             a comment for the card
+
         """
         ShellProperty.__init__(self)
         if comment:
@@ -1227,6 +1331,7 @@ class PLPLANE(ShellProperty):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')  # MATHE, MATHP
@@ -1244,12 +1349,11 @@ class PLPLANE(ShellProperty):
         ----------
         model : BDF()
             the BDF object
+
         """
-        msg = ' which is required by PLPLANE pid=%s' % self.pid
-        self.mid = model.HyperelasticMaterial(self.mid, msg=msg)
-        self.cid = model.Coord(self.cid, msg=msg)
-        self.mid_ref = self.mid
-        self.cid_ref = self.cid
+        msg = ', which is required by PLPLANE pid=%s' % self.pid
+        self.mid_ref = model.HyperelasticMaterial(self.mid, msg=msg)
+        self.cid_ref = model.Coord(self.cid, msg=msg)
 
     def uncross_reference(self):
         self.mid = self.Mid()
@@ -1257,10 +1361,10 @@ class PLPLANE(ShellProperty):
         self.mid_ref = None
         self.cid_ref = None
 
-    def _verify(self, xref=False):
-        pid = self.Pid()
-        mid = self.Mid()
-        cid = self.Cid()
+    def _verify(self, xref):
+        unused_pid = self.Pid()
+        unused_mid = self.Mid()
+        unused_cid = self.Cid()
         #stress_strain_output_location = self.stress_strain_output_location
         if xref:
             assert self.mid_ref.type in ['MATHE', 'MATHP'], 'PLPLANE: mid_ref.type=%s' % self.mid_ref.type
@@ -1327,6 +1431,7 @@ class PPLANE(ShellProperty):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')  # MATHE, MATHP
@@ -1345,8 +1450,9 @@ class PPLANE(ShellProperty):
         ----------
         model : BDF()
             the BDF object
+
         """
-        msg = ' which is required by PPLANE pid=%s' % self.pid
+        msg = ', which is required by PPLANE pid=%s' % self.pid
         self.mid_ref = model.Material(self.mid, msg)
 
     def uncross_reference(self):
@@ -1354,9 +1460,9 @@ class PPLANE(ShellProperty):
         self.mid = self.Mid()
         self.mid_ref = None
 
-    def _verify(self, xref=False):
-        pid = self.Pid()
-        mid = self.Mid()
+    def _verify(self, xref):
+        unused_pid = self.Pid()
+        unused_mid = self.Mid()
         #stress_strain_output_location = self.stress_strain_output_location
         if xref:
             assert self.mid_ref.type in ['MAT1', 'MAT3', 'MAT4', 'MAT5', 'MAT8'], 'PPLANE: mid.type=%s' % self.mid.type
@@ -1419,6 +1525,7 @@ class PSHEAR(ShellProperty):
             Effectiveness factor for extensional stiffness along edges 2-3 and 1-4
         comment : str; default=''
             a comment for the card
+
         """
         ShellProperty.__init__(self)
         if comment:
@@ -1447,6 +1554,7 @@ class PSHEAR(ShellProperty):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
@@ -1468,6 +1576,7 @@ class PSHEAR(ShellProperty):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         pid = data[0]
         mid = data[1]
@@ -1486,8 +1595,9 @@ class PSHEAR(ShellProperty):
         ----------
         model : BDF()
             the BDF object
+
         """
-        msg = ' which is required by PSHEAR pid=%s' % self.pid
+        msg = ', which is required by PSHEAR pid=%s' % self.pid
         self.mid_ref = model.Material(self.mid, msg)
 
     def uncross_reference(self):
@@ -1503,7 +1613,7 @@ class PSHEAR(ShellProperty):
             return self.mid_ref.mid
         return self.mid
 
-    def MassPerArea(self):
+    def MassPerArea(self, tflag=1, tscales=None):
         """
         Calculates mass per area.
 
@@ -1512,7 +1622,7 @@ class PSHEAR(ShellProperty):
         mass_per_area = self.nsm + rho * self.t
         return mass_per_area
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         pid = self.Pid()
         midi = self.Mid()
 
@@ -1601,6 +1711,7 @@ class PSHELL(ShellProperty):
             z2 default : t/2 if thickness is defined
         comment : str; default=''
             a comment for the card
+
         """
         ShellProperty.__init__(self)
         if comment:
@@ -1661,6 +1772,7 @@ class PSHELL(ShellProperty):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         pid = integer(card, 1, 'pid')
         mid1 = integer_or_blank(card, 2, 'mid1')
@@ -1706,6 +1818,7 @@ class PSHELL(ShellProperty):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         pid = data[0]
         mid1 = data[1]
@@ -1725,7 +1838,7 @@ class PSHELL(ShellProperty):
                       mid3, tst, nsm,
                       z1, z2, mid4, comment=comment)
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         pid = self.Pid()
         mid = self.Mid()
         mid1 = self.Mid1()
@@ -1742,7 +1855,7 @@ class PSHELL(ShellProperty):
 
         mids = [mid for mid in [self.mid1, self.mid2, self.mid3, self.mid4]
                 if mid is not None]
-        material_ids = self.material_ids
+        unused_material_ids = self.material_ids
         assert len(mids) > 0
         if xref:
             assert isinstance(self.mid_ref, Material), 'mid=%r' % self.mid_ref
@@ -1837,8 +1950,24 @@ class PSHELL(ShellProperty):
             return self.mid4_ref.mid
         return self.mid4
 
-    def Thickness(self):
-        return self.t
+    def Thickness(self, tflag=1, tscales=None):
+        t0 = self.t
+        if tscales is not None:
+            nt = len(tscales)
+            if tflag == 0: # absolute
+                thickness = sum([ti if ti is not None else t0 for ti in tscales]) / nt
+            elif tflag == 1: # relative
+                thickness = sum([ti * t0 if ti is not None else t0 for ti in tscales]) / nt
+            else:
+                raise RuntimeError('tflag=%r and must be 0/1' % tflag)
+            #print('t0 = %s' % t0)
+            #print('  tscales = %s' % tscales)
+            #print('  nt = %s' % nt)
+            #print('  thickness = %s' % thickness)
+            return thickness
+        else:
+            thickness = t0
+        return thickness
 
     def Rho(self):
         return self.mid_ref.rho
@@ -1846,7 +1975,37 @@ class PSHELL(ShellProperty):
     def Nsm(self):
         return self.nsm
 
-    def MassPerArea(self):
+    def MassPerArea(self, tflag=1, tscales=None):
+        """
+        Calculates mass per area.
+
+        .. math:: \frac{m}{A} = nsm + \rho t"""
+        mid_ref = self.mid_ref
+        rho = mid_ref.Rho()
+        thickness = self.Thickness(tflag=tflag, tscales=tscales)
+        try:
+            mass_per_area = self.nsm + rho * thickness
+        except:
+            print("nsm=%s rho=%s t=%s" % (self.nsm, rho, self.t))
+            raise
+        return mass_per_area
+
+    def MassPerArea_no_xref(self, model, tflag=1, tscales=None):
+        """
+        Calculates mass per area.
+
+        .. math:: \frac{m}{A} = nsm + \rho t"""
+        mid_ref = model.Material(self.Mid())
+        rho = mid_ref.Rho()
+        thickness = self.Thickness(tflag=tflag, tscales=tscales)
+        try:
+            mass_per_area = self.nsm + rho * thickness
+        except:
+            print("nsm=%s rho=%s t=%s" % (self.nsm, rho, self.t))
+            raise
+        return mass_per_area
+
+    def MassPerArea_structure(self):
         """
         Calculates mass per area.
 
@@ -1854,21 +2013,7 @@ class PSHELL(ShellProperty):
         mid_ref = self.mid_ref
         rho = mid_ref.Rho()
         try:
-            mass_per_area = self.nsm + rho * self.t
-        except:
-            print("nsm=%s rho=%s t=%s" % (self.nsm, rho, self.t))
-            raise
-        return mass_per_area
-
-    def MassPerArea_no_xref(self, model):
-        """
-        Calculates mass per area.
-
-        .. math:: \frac{m}{A} = nsm + \rho t"""
-        mid_ref = model.Material(self.Mid())
-        rho = mid_ref.Rho()
-        try:
-            mass_per_area = self.nsm + rho * self.t
+            mass_per_area = rho * self.t
         except:
             print("nsm=%s rho=%s t=%s" % (self.nsm, rho, self.t))
             raise
@@ -1882,8 +2027,9 @@ class PSHELL(ShellProperty):
         ----------
         model : BDF()
             the BDF object
+
         """
-        msg = ' which is required by PSHELL pid=%s' % self.pid
+        msg = ', which is required by PSHELL pid=%s' % self.pid
         if self.mid1:
             self.mid1_ref = model.Material(self.mid1, msg)
         if self.mid2 and self.mid2 != -1:

@@ -2,12 +2,13 @@ import unittest
 from six import StringIO
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.cards.test.utils import save_load_deck
-
+from pyNastran.utils.log import SimpleLogger
 
 class TestMsgMesh(unittest.TestCase):
     def test_msgmesh_1(self):
         """tests CGEN"""
-        model = BDF(debug=False)
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log, debug=False)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         model.add_grid(3, [1., 1., 0.])
@@ -58,7 +59,7 @@ class TestMsgMesh(unittest.TestCase):
         #model2 = read_bdf(bdf_filename2, xref=False)
         #print('---------------')
         #model2.safe_cross_reference()
-        save_load_deck(model)
+        save_load_deck(model, run_convert=False)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

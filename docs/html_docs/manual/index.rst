@@ -6,7 +6,6 @@ pyNastran Manual
 
    introduction
 ..   nomenclature
-..   bdf_user
 ..   developer_introduction
 ..   bdf_developer
 

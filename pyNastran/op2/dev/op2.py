@@ -258,31 +258,31 @@ class OP2(object):
                 raise RuntimeError('Could not decipher file.  First'
                                    '4-byte integer should be 4 or 8.')
             if sys.byteorder == 'little':
-                self._endian = '>'
+                self._endian = b'>'
             else:
-                self._endian = '<'
+                self._endian = b'<'
         else:
             self._swap = False
-            self._endian = '='
+            self._endian = b'='
 
-        self._Str4 = struct.Struct(self._endian + 'i')
+        self._Str4 = struct.Struct(self._endian + b'i')
         if reclen == 4:
             self._bit64 = False
-            self._intstr = self._endian + 'i4'
-            self._intstru = self._endian + '%di'
+            self._intstr = self._endian + b'i4'
+            self._intstru = self._endian + b'%di'
             self._ibytes = 4
             self._Str = self._Str4
         else:
             self._bit64 = True
-            self._intstr = self._endian + 'i8'
-            self._intstru = self._endian + '%dq'
+            self._intstr = self._endian + b'i8'
+            self._intstru = self._endian + b'%dq'
             self._ibytes = 8
-            self._Str = struct.Struct(self._endian + 'q')
+            self._Str = struct.Struct(self._endian + b'q')
         #print('bit64 = ', self._bit64)
 
         self._rowsCutoff = 3000
-        self._int32str = self._endian + 'i4'
-        self._int32stru = self._endian + '%di'
+        self._int32str = self._endian + b'i4'
+        self._int32stru = self._endian + b'%di'
         self._read_op2_header()
         self._postheaderpos = self._fileh.tell()
         self.directory(verbose=False)
@@ -424,8 +424,8 @@ class OP2(object):
         else:
             intsize = 4
         col = 0
-        frm = self._endian + '%dd'
-        print('frm =', frm)
+        frm = self._endian + b'%dd'
+        #print('frm =', frm)
         while dtype > 0:  # read in matrix columns
             # key is number of elements in next record (row # followed
             # by key-1 real numbers)
@@ -614,10 +614,10 @@ class OP2(object):
         """
         key = self._get_key()
         if self._ibytes == 4:
-            header_str = struct.Struct(self._endian + 'iii')
+            header_str = struct.Struct(self._endian + b'iii')
             hbytes = 12
         else:
-            header_str = struct.Struct(self._endian + 'qqq')
+            header_str = struct.Struct(self._endian + b'qqq')
             hbytes = 24
 
         eot = 0
@@ -729,12 +729,12 @@ class OP2(object):
             frmu = self._intstru.replace('i', 'I')
             bytes_per = self._ibytes
         elif form == 'double':
-            frm = self._endian + 'f8'
-            frmu = self._endian + '%dd'
+            frm = self._endian + b'f8'
+            frmu = self._endian + b'%dd'
             bytes_per = 8
         elif form == 'single':
-            frm = self._endian + 'f4'
-            frmu = self._endian + '%df'
+            frm = self._endian + b'f4'
+            frmu = self._endian + b'%df'
             bytes_per = 4
         elif form == 'bytes':
             data = b''
@@ -749,7 +749,7 @@ class OP2(object):
             raise ValueError("form must be one of:  None, 'int', "
                              "'uint', 'double', 'single' or 'bytes'")
         if N:
-            # print('frm=%r' % frm)
+            #print('frm=%r' % frm)
             data = np.zeros(N, dtype=frm)
             i = 0
             while key > 0:
@@ -758,7 +758,7 @@ class OP2(object):
                 n = reclen // bytes_per
                 if n < self._rowsCutoff:
                     b = n * bytes_per
-                    # print('frmu=%r' % frmu)
+                    #print('frmu=%r' % frmu)
                     data[i:i+n] = struct.unpack(frmu % n, f.read(b))
                 else:
                     data[i:i+n] = np.fromfile(f, frm, n)
@@ -916,14 +916,14 @@ class OP2(object):
         Can currently only read a real eigenvalue table (ACODE,4 = 2,
         TCODE,1 = 1, TCODE,2 = 7, and TCODE,7 in [0, 2]).
         """
-        float2_str = struct.Struct(self._endian + 'ff')
+        float2_str = struct.Struct(self._endian + b'ff')
         iif6_int = np.dtype(self._endian+'i4')
         iif6_bytes = 32
         if self._ibytes == 4:
-            i4_Str = struct.Struct(self._endian + 'iiii')
+            i4_Str = struct.Struct(self._endian + b'iiii')
             i4_bytes = 16
         else:
-            i4_Str = struct.Struct(self._endian + 'qqqq')
+            i4_Str = struct.Struct(self._endian + b'qqqq')
             i4_bytes = 32
         pos = self._fileh.tell()
         key = self._get_key()
@@ -973,7 +973,7 @@ class OP2(object):
 
             # DATA record:
             if ougv1 is None:
-                print('masking')
+                #print('masking')
                 # - process DOF information on first column only
                 # - there are 8 elements per node:
                 #   id*10, type, x, y, z, rx, ry, rz
@@ -988,7 +988,7 @@ class OP2(object):
                 V = np.zeros((n, 8), bool)
                 V[:, 2] = True          # all nodes have 'x'
                 V[pvgrids, 3:] = True   # only grids have all 6
-                # print('V =\n', V)
+                 #print('V =\n', V)
                 V = V.flatten()
                 # initialize ougv1 with first mode shape:
                 data.dtype = np.float32  # reinterpret as floats
@@ -997,7 +997,7 @@ class OP2(object):
                 data = self.read_op2_record('single', V.shape[0])
                 ougv1[:, J] = data[V]
             J += 1
-            # print('Finished reading mode {0:3d}, Frequency ={1:6.2f}'.format(
+             #print('Finished reading mode {0:3d}, Frequency ={1:6.2f}'.format(
             #    J, np.sqrt(lam[J-1])/(2*np.pi)))
             eot, key = self._read_op2_end_of_table()
         return {'ougv1': ougv1, 'lambda': lam, 'dof': dof}
@@ -1027,8 +1027,8 @@ class OP2(object):
         # read 2nd record:
         key = self._get_key()
         data2 = np.zeros(0, dtype='u4')
-        frm = self._endian + 'u4'
-        frmu = self._endian + '%dI'
+        frm = self._uendian + 'u4'
+        frmu = self._endian + b'%dI'
         if self._ibytes == 8:
             mult = 2
         else:
@@ -1089,16 +1089,16 @@ class OP2(object):
         See :func:`rdn2cop2`.
         """
         if self._ibytes == 4:
-            Str = struct.Struct(self._endian + 'iiiiiiddd')
+            Str = struct.Struct(self._endian + b'iiiiiiddd')
             sbytes = 24 + 24
             wpg = 12  # words per grid
             wpd = 2   # words per double
         else:
-            Str = struct.Struct(self._endian + 'qqqqqqddd')
+            Str = struct.Struct(self._endian + b'qqqqqqddd')
             sbytes = 48 + 24
             wpg = 9   # words per grid
             wpd = 1   # words per double
-        rfrm = self._endian + '%dd'
+        rfrm = self._endian + b'%dd'
         key = self._get_key()
 
         datarec = []
@@ -1182,11 +1182,11 @@ class OP2(object):
 
         The x, y, z values are the grid location in basic.
         """
-        struc = struct.Struct(self._endian + 'ifff')
+        struc = struct.Struct(self._endian + b'ifff')
         sbytes = 16
         wpg = 4  # words per grid
         wpd = 1  # words per single
-        rfrm = self._endian + '%df'
+        rfrm = self._endian + b'%df'
         key = self._get_key()
 
         datarec = []
@@ -1290,12 +1290,12 @@ class OP2(object):
         T is transformation from local to basic for the coordinate
         system.
         """
-        Str = struct.Struct(self._endian + 'ii' + 'f'*12)
+        Str = struct.Struct(self._endian + b'ii' + b'f'*12)
         sbytes = 4 *14
         wpg = 14   # words per grid
         wpd = 1    # words per single
         key = self._get_key()
-        rfrm = self._endian + '%df'
+        rfrm = self._endian + b'%df'
         datarec = []
         ileft = 0    # integers to read that are left over
         dleft = 0    # singles left
@@ -1365,16 +1365,16 @@ class OP2(object):
 
     def _read_op2_geom1_cord2(self):
         if self._ibytes == 4:
-            header_Str = struct.Struct(self._endian + 'iii')
-            cord2_Str = struct.Struct(self._endian + '4i9f')
-            sebulk_Str = struct.Struct(self._endian + '4if3i')
+            header_Str = struct.Struct(self._endian + b'iii')
+            cord2_Str = struct.Struct(self._endian + b'4i9f')
+            sebulk_Str = struct.Struct(self._endian + b'4if3i')
             hbytes = 12
             cbytes = 4*13
             bbytes = 4*8
         else:
-            header_Str = struct.Struct(self._endian + 'qqq')
-            cord2_Str = struct.Struct(self._endian + '4q9d')
-            sebulk_Str = struct.Struct(self._endian + '4qd3q')
+            header_Str = struct.Struct(self._endian + b'qqq')
+            cord2_Str = struct.Struct(self._endian + b'4q9d')
+            sebulk_Str = struct.Struct(self._endian + b'4qd3q')
             hbytes = 24
             cbytes = 8*13
             bbytes = 8*8
@@ -1589,10 +1589,10 @@ class OP2(object):
         Reads and returns the MAPS information for :func:`read_nas2cam_op2`.
         """
         if self._ibytes == 4:
-            id_Str = struct.Struct(self._endian + 'id')
+            id_Str = struct.Struct(self._endian + b'id')
             id_bytes = 12
         else:
-            id_Str = struct.Struct(self._endian + 'qd')
+            id_Str = struct.Struct(self._endian + b'qd')
             id_bytes = 16
         key = 1
         maps = np.zeros((0, 2))
@@ -1631,20 +1631,20 @@ class OP2(object):
                 ints_rec2 = 2
             if ints_rec2 != iprev:
                 if self._bit64:
-                    ir_str = struct.Struct(self._endian + 'q'*ints_rec2)
+                    ir_str = struct.Struct(self._endian + b'q'*ints_rec2)
                     ir_bytes = 8*ints_rec2
                 else:
-                    ir_str = struct.Struct(self._endian + 'i'*ints_rec2)
+                    ir_str = struct.Struct(self._endian + b'i'*ints_rec2)
                     ir_bytes = 4*ints_rec2
             return ir_str, ir_bytes, ints_rec2
 
         if self._bit64:
-            rfrm = self._endian + 'f8'
-            rfrmu = self._endian + '%dd'
+            rfrm = self._endian + b'f8'
+            rfrmu = self._endian + b'%dd'
             rsize = 8
         else:
-            rfrm = self._endian + 'f4'
-            rfrmu = self._endian + '%df'
+            rfrm = self._endian + b'f4'
+            rfrmu = self._endian + b'%df'
             rsize = 4
         u1 = self.read_op2_record()
         elemtype = u1[1]
@@ -1949,7 +1949,7 @@ class OP2(object):
               BGPDTS
               MAPS     (if required)
 
-        Note: The 2nd bit for the DOF column of all USET tables is
+        .. note:: The 2nd bit for the DOF column of all USET tables is
         cleared for all S-set.  See :func:`n2y.mkusetmask` for more
         information.
 
@@ -2604,7 +2604,7 @@ def _get_tinr(iddof, idj):
 
     Returns tuple of (type, start row)
 
-    Note: start row return value starts at 0, not at 1.
+    .. note:: start row return value starts at 0, not at 1.
     """
     i = np.nonzero(iddof[1] == idj)[0]
     tinr = iddof[:, i]
@@ -2954,9 +2954,9 @@ def read_post_op2(op2_filename, verbose=False, getougv1=False):
         cstm = None
         while 1:
             name, trailer, dbtype = o2._read_op2_name_trailer()
-            # print('name = %r' % name)
-            # print('trailer = %s' % str(trailer))
-            # print('dbtype = %r' % dbtype)
+             #print('name = %r' % name)
+             #print('trailer = %s' % str(trailer))
+             #print('dbtype = %r' % dbtype)
             if name is None:
                 break
             if name == '':

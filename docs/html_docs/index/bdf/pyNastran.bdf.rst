@@ -16,17 +16,6 @@ This is the pyNastran.bdf.rst file.
     :undoc-members:
     :show-inheritance:
 
-*************************
-:mod:`bdf_methods` Module
-*************************
-
-.. inheritance-diagram:: pyNastran.bdf.bdf_methods
-
-.. automodule:: pyNastran.bdf.bdf_methods
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 *******************************
 :mod:`case_control_deck` Module
 *******************************
@@ -38,16 +27,6 @@ This is the pyNastran.bdf.rst file.
     :undoc-members:
     :show-inheritance:
 
-************************
-:mod:`deprecated` Module
-************************
-
-.. inheritance-diagram:: pyNastran.bdf.deprecated
-
-.. automodule:: pyNastran.bdf.deprecated
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 *******************************
 :mod:`errors` Module
@@ -146,12 +125,13 @@ This is the pyNastran.bdf.rst file.
     :undoc-members:
     :show-inheritance:
 
+***********
 Subpackages
------------
+***********
 
 .. toctree::
 
    pyNastran.bdf.bdf_interface
-   pyNastran.bdf.cards
+   cards/pyNastran.bdf.cards
    pyNastran.bdf.mesh_utils
 

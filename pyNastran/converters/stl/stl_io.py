@@ -2,22 +2,20 @@
 Defines the GUI IO file for STL.
 """
 from __future__ import print_function
-from six import iteritems
-from six.moves import range
+from collections import OrderedDict
 from numpy import arange
 
 import vtk
-from vtk import vtkTriangle
 
 from pyNastran.converters.stl.stl import read_stl
 from pyNastran.gui.gui_objects.gui_result import GuiResult
-from pyNastran.gui.gui_utils.vtk_utils import (
+from pyNastran.gui.utils.vtk.vtk_utils import (
     create_vtk_cells_of_constant_element_type, numpy_to_vtk_points)
 
 
 class STL_IO(object):
-    def __init__(self):
-        pass
+    def __init__(self, gui):
+        self.gui = gui
 
     def get_stl_wildcard_geometry_results_functions(self):
         data = ('STL',
@@ -27,11 +25,12 @@ class STL_IO(object):
 
     def load_stl_geometry(self, stl_filename, name='main', plot=True):
         #print("load_stl_geometry...")
-        skip_reading = self._remove_old_geometry(stl_filename)
+        skip_reading = self.gui._remove_old_geometry(stl_filename)
         if skip_reading:
             return
 
-        model = read_stl(stl_filename, log=self.log, debug=False)
+        model = read_stl(stl_filename, remove_elements_with_bad_normals=True,
+                         log=self.gui.log, debug=False)
         #self.model_type = model.model_type
         nodes = model.nodes
         elements = model.elements
@@ -39,37 +38,26 @@ class STL_IO(object):
         normals = model.get_normals(elements, stop_on_failure=False)
         areas = model.get_area(elements, stop_on_failure=False)
         #nnormals = model.get_normals_at_nodes(elements)
-        self.nnodes = nodes.shape[0]
-        self.nelements = elements.shape[0]
+        self.gui.nnodes = nodes.shape[0]
+        self.gui.nelements = elements.shape[0]
 
-        self.log.info('nnodes=%s nelements=%s' % (self.nnodes, self.nelements))
-        grid = self.grid
-        grid.Allocate(self.nelements, 1000)
-        #self.gridResult.SetNumberOfComponents(self.nelements)
+        self.gui.log.info('nnodes=%s nelements=%s' % (self.gui.nnodes, self.gui.nelements))
+        grid = self.gui.grid
+        grid.Allocate(self.gui.nelements, 1000)
 
         points = numpy_to_vtk_points(nodes)
-        self.nid_map = {}
+        self.gui.nid_map = {}
         #elem.SetNumberOfPoints(nnodes)
-        if 0:
-            fraction = 1. / self.nnodes  # so you can color the nodes by ID
-            for nid, node in sorted(iteritems(nodes)):
-                self.gridResult.InsertNextValue(nid * fraction)
-                #print str(element)
-
-                #elem = vtk.vtkVertex()
-                #elem.GetPointIds().SetId(0, i)
-                #self.aQuadGrid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-                #vectorResult.InsertTuple3(0, 0.0, 0.0, 1.0)
 
         assert nodes is not None
-        nnodes = nodes.shape[0]
+        unused_nnodes = nodes.shape[0]
         xmax, ymax, zmax = nodes.max(axis=0)
         xmin, ymin, zmin = nodes.min(axis=0)
-        self.log.info('xmax=%s xmin=%s' % (xmax, xmin))
-        self.log.info('ymax=%s ymin=%s' % (ymax, ymin))
-        self.log.info('zmax=%s zmin=%s' % (zmax, zmin))
+        self.gui.log.info('xmax=%s xmin=%s' % (xmax, xmin))
+        self.gui.log.info('ymax=%s ymin=%s' % (ymax, ymin))
+        self.gui.log.info('zmax=%s zmin=%s' % (zmax, zmin))
         dim_max = max(xmax-xmin, ymax-ymin, zmax-zmin)
-        self.create_global_axes(dim_max)
+        self.gui.create_global_axes(dim_max)
 
 
         etype = 5  # vtkTriangle().GetCellType()
@@ -77,24 +65,26 @@ class STL_IO(object):
 
         grid.SetPoints(points)
         grid.Modified()
-        if hasattr(grid, 'Update'):
+        if hasattr(grid, 'Update'):  # pragma: no cover
             grid.Update()
-            self.log_info("updated grid")
 
         # loadSTLResults - regions/loads
-        self.scalarBar.VisibilityOff()
-        self.scalarBar.Modified()
+        self.gui.scalarBar.VisibilityOff()
+        self.gui.scalarBar.Modified()
 
-        cases = {}
-        self.isubcase_name_map = {}
+        cases = OrderedDict()
+        self.gui.isubcase_name_map = {}
         ID = 1
 
-        form, cases = self._fill_stl_case(cases, ID, elements, nodes, normals, areas)
-        self._finish_results_io2(form, cases)
+        form, cases, node_ids, element_ids = self._fill_stl_case(
+            cases, ID, elements, nodes, normals, areas)
+        self.gui.node_ids = node_ids
+        self.gui.element_ids = element_ids
+        self.gui._finish_results_io2(form, cases)
 
     def _fill_stl_case(self, cases, ID, elements, nodes, normals, areas):
         """adds the sidebar results"""
-        self.isubcase_name_map[ID] = ('STL', '')
+        self.gui.isubcase_name_map[ID] = ('STL', '')
 
         nelements = elements.shape[0]
         nnodes = nodes.shape[0]
@@ -129,4 +119,4 @@ class STL_IO(object):
             ('NormalY', icase + 4, []),
             ('NormalZ', icase + 5, []),
         ]
-        return form, cases
+        return form, cases, nids, eids

@@ -12,7 +12,7 @@ from pyNastran.bdf.cards.test.utils import save_load_deck
 
 class TestShells(unittest.TestCase):
     def test_pshell(self):
-        model = BDF()
+        model = BDF(debug=False)
         pid = 10
         pshell = model.add_pshell(pid, mid1=1, mid2=2, mid3=3, mid4=4, tst=3.14)
         assert ' 3.14' in pshell.rstrip(), pshell.rstrip()
@@ -50,6 +50,8 @@ class TestShells(unittest.TestCase):
         model.mass_properties()
         model._verify_bdf(xref=True)
         cquad4 = model.Element(eid)
+        cquad4.get_edge_axes()
+        cquad4.center_of_mass()
         pshell = model.Property(pid)
         node_ids = cquad4.node_ids
         assert node_ids == [n1, n2, n3, n4], node_ids
@@ -110,6 +112,8 @@ class TestShells(unittest.TestCase):
 
         # ctria3 / pshell
         ctria3 = model.Element(eid)
+        ctria3.get_edge_axes()
+        ctria3.center_of_mass()
         node_ids = ctria3.node_ids
         assert node_ids == [n1, n2, n3], node_ids
         mass = A * (t * rho + nsm)
@@ -466,38 +470,38 @@ class TestShells(unittest.TestCase):
         self.assertAlmostEqual(p.Thickness(0), 0.1)
         self.assertAlmostEqual(p.Thickness(1), 0.2)
         self.assertAlmostEqual(p.Thickness(2), 0.3)
-        self.assertAlmostEqual(p.Thickness(3), 0.1)
+        self.assertAlmostEqual(p.Thickness(3), 0.3)
         self.assertAlmostEqual(p.Thickness(4), 0.2)
-        self.assertAlmostEqual(p.Thickness(5), 0.3)
+        self.assertAlmostEqual(p.Thickness(5), 0.1)
         with self.assertRaises(IndexError):
             p.Thickness(6)
 
         self.assertAlmostEqual(p.Theta(0), 0.)
         self.assertAlmostEqual(p.Theta(1), 10.)
         self.assertAlmostEqual(p.Theta(2), 20.)
-        self.assertAlmostEqual(p.Theta(3), 0.)
+        self.assertAlmostEqual(p.Theta(3), 20.)
         self.assertAlmostEqual(p.Theta(4), 10.)
-        self.assertAlmostEqual(p.Theta(5), 20.)
+        self.assertAlmostEqual(p.Theta(5), 0.)
         with self.assertRaises(IndexError):
             p.Theta(6)
 
         self.assertEqual(p.Mid(0), 1)
         self.assertEqual(p.Mid(1), 2)
         self.assertEqual(p.Mid(2), 3)
-        self.assertEqual(p.Mid(3), 1)
+        self.assertEqual(p.Mid(3), 3)
         self.assertEqual(p.Mid(4), 2)
-        self.assertEqual(p.Mid(5), 3)
+        self.assertEqual(p.Mid(5), 1)
         with self.assertRaises(IndexError):
             p.Mid(6)
 
-        self.assertEqual(p.Mids(), [1, 2, 3, 1, 2, 3])
+        self.assertEqual(p.Mids(), [1, 2, 3, 3, 2, 1])
 
         self.assertEqual(p.sout(0), 'YES')
         self.assertEqual(p.sout(1), 'YES')
         self.assertEqual(p.sout(2), 'NO')
-        self.assertEqual(p.sout(3), 'YES')
+        self.assertEqual(p.sout(3), 'NO')
         self.assertEqual(p.sout(4), 'YES')
-        self.assertEqual(p.sout(5), 'NO')
+        self.assertEqual(p.sout(5), 'YES')
         with self.assertRaises(IndexError):
             p.sout(6)
 
@@ -540,9 +544,9 @@ class TestShells(unittest.TestCase):
         self.assertAlmostEqual(p.MassPerArea(0), 0.1)
         self.assertAlmostEqual(p.MassPerArea(1), 0.2)
         self.assertAlmostEqual(p.MassPerArea(2), 0.3)
-        self.assertAlmostEqual(p.MassPerArea(3), 0.1)
+        self.assertAlmostEqual(p.MassPerArea(3), 0.3)
         self.assertAlmostEqual(p.MassPerArea(4), 0.2)
-        self.assertAlmostEqual(p.MassPerArea(5), 0.3)
+        self.assertAlmostEqual(p.MassPerArea(5), 0.1)
         with self.assertRaises(IndexError):
             p.MassPerArea(6)
 
@@ -557,9 +561,9 @@ class TestShells(unittest.TestCase):
         self.assertAlmostEqual(p.MassPerArea(0, method='nplies'), 0.1+1/6.)
         self.assertAlmostEqual(p.MassPerArea(1, method='nplies'), 0.2+1/6.)
         self.assertAlmostEqual(p.MassPerArea(2, method='nplies'), 0.3+1/6.)
-        self.assertAlmostEqual(p.MassPerArea(3, method='nplies'), 0.1+1/6.)
+        self.assertAlmostEqual(p.MassPerArea(3, method='nplies'), 0.3+1/6.)
         self.assertAlmostEqual(p.MassPerArea(4, method='nplies'), 0.2+1/6.)
-        self.assertAlmostEqual(p.MassPerArea(5, method='nplies'), 0.3+1/6.)
+        self.assertAlmostEqual(p.MassPerArea(5, method='nplies'), 0.1+1/6.)
         with self.assertRaises(IndexError):
             p.MassPerArea(6)
 
@@ -779,7 +783,7 @@ class TestShells(unittest.TestCase):
         #pcomp.write_card(size=8)
         #pcomp.write_card(size=16)
         #pcomp.write_card(size=16, is_double=True)
-        save_load_deck(model)
+        save_load_deck(model, run_convert=False)
 
     def test_ctriar_cquadr(self):
         """tests a CTRIAR/PSHELL/MAT8"""
@@ -830,17 +834,23 @@ class TestShells(unittest.TestCase):
         eid = 3
         nids = [1, 2, 3, 4]
         cplstn4 = model.add_cplstn4(eid, pid, nids, comment='cplstn4')
+        cplstn4.flip_normal()
 
         eid = 5
         nids = [1, 2, 3]
         mid = 10
         cplstn3 = model.add_cplstn3(eid, pid, nids, comment='cplstn3')
+        cplstn3.flip_normal()
+
         pplane = model.add_pplane(pid, mid, t=0.1, nsm=0.,
                                   formulation_option=0, comment='pplane')
         E = 1e7
         G = None
         nu = 0.3
         model.add_mat1(mid, E, G, nu)
+
+        cplstn3.repr_fields()
+        cplstn4.repr_fields()
 
         cplstn3.raw_fields()
         cplstn4.raw_fields()
@@ -952,35 +962,59 @@ class TestShells(unittest.TestCase):
     def test_shear(self):
         """tests a CSHEAR, PSHEAR"""
         pid = 10
+        pid_pshell = 11
+
         mid = 100
         model = BDF(debug=False)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         model.add_grid(3, [1., 1., 0.])
         model.add_grid(4, [0., 1., 0.])
-        model.add_cquad4(10, pid, [1, 2, 3, 4])
+        nsm = 10.0
+        t = 1.0
+        rho = 1.0
+        cshear = model.add_cshear(10, pid, [1, 2, 3, 4],
+                                  comment='cshear')
 
-        model.add_cshear(14, pid, [1, 2, 3, 4],
-                         comment='cshear')
-        model.add_pshear(pid, mid, t=1., comment='pshear')
+        cquad4 = model.add_cquad4(14, pid_pshell, [1, 2, 3, 4],
+                                  comment='cquad4')
+        model.add_pshear(pid, mid, t=t,
+                         nsm=nsm, f1=0., f2=0., comment='pshear')
+        model.add_pshell(pid_pshell, mid1=mid, t=t, mid2=None, twelveIt3=1.0,
+                        mid3=None, tst=0.833333,
+                        nsm=nsm, z1=None, z2=None,
+                        mid4=None, comment='')
 
         E = 3.0e7
         G = None
         nu = 0.3
-        model.add_mat1(mid, E, G, nu, rho=1.0)
+        model.add_mat1(mid, E, G, nu, rho=rho)
         model.validate()
 
         model.cross_reference()
         model.pop_xref_errors()
 
+        area = 1.0
+        mass_expected = area * (rho * t + nsm)
+        mass = model.mass_properties()[0]
+        assert np.allclose(mass, mass_expected*2), 'mass_properties all: mass=%s mass_expected=%s' % (mass, mass_expected*2)
+
         mass = model.mass_properties(element_ids=10)[0]
+        assert np.allclose(mass, mass_expected), 'mass_properties reduced: mass=%s mass_expected=%s' % (mass, mass_expected)
+
+        mass = model.mass_properties_nsm()[0]
+        assert np.allclose(mass, mass_expected*2), 'mass_properties_nsm all: mass=%s mass_expected=%s' % (mass, mass_expected*2)
+
+        mass = model.mass_properties_nsm(element_ids=10)[0]
+        assert np.allclose(mass, mass_expected), 'mass_properties_nsm reduced: mass=%s mass_expected=%s' % (mass, mass_expected)
+
         bdf_file = StringIO()
         model.write_bdf(bdf_file)
         model.uncross_reference()
         model.cross_reference()
         model.pop_xref_errors()
 
-        assert np.allclose(mass, 1.0), mass
+        assert np.allclose(cshear.Mass(), mass_expected), cshear.Mass()
 
         model.uncross_reference()
         model.safe_cross_reference()
@@ -1035,8 +1069,10 @@ class TestShells(unittest.TestCase):
         model.add_grid(4, [0., 1., 0.])
         model.add_grid(8, [0., .5, 0.])
         model.add_grid(9, [.5, .5, 0.])
+
         nids = [1, 2, 3, 4, 5, 6, 7, 8]
         cquad8 = model.add_cquad8(eid, pid, nids, theta_mcid=0., comment='cquad8')
+        cquad8.flip_normal()
 
         eid = 2
         nids = [1, 2, 3, 4, 5, 6, 7, 8, 9]
@@ -1046,6 +1082,28 @@ class TestShells(unittest.TestCase):
         eid = 3
         nids = [1, 2, 3, 5, 6, 9]
         ctria6 = model.add_ctria6(eid, pid, nids, theta_mcid=0., comment='ctria6')
+        ctria6.flip_normal()
+
+        eid = 4
+        cquad4 = model.add_cquad4(eid, pid, [1, 2, 3, 4])
+        cquad4.flip_normal()
+        str(cquad4)
+
+        eid = 5
+        cquad4 = model.add_cquad4(eid, pid, [1, 2, 3, 4],
+                                  tflag=1, T1=2., T2=2., T3=2., T4=2.)
+        str(cquad4)
+
+        eid = 6
+        ctria3 = model.add_ctria3(eid, pid, [1, 2, 3])
+        ctria3.flip_normal()
+        str(ctria3)
+
+        eid = 7
+        ctria3 = model.add_ctria3(eid, pid, [1, 2, 3],
+                                  tflag=1, T1=2., T2=2., T3=2.)
+        str(ctria3)
+        str(ctria3)
 
         E = 3.0e7
         G = None
@@ -1054,6 +1112,14 @@ class TestShells(unittest.TestCase):
 
         model.cross_reference()
         model.pop_xref_errors()
+
+        ctria3.flip_normal()
+        cquad4.flip_normal()
+        ctria6.flip_normal()
+        cquad8.flip_normal()
+
+        assert len(ctria6.Centroid()) == 3, ctria6.Centroid()
+        assert len(ctria6.center_of_mass()) == 3, ctria6.center_of_mass()
 
         assert np.allclose(cquad8.Mass(), 0.1), cquad8.Mass()
         assert np.allclose(cquad.Mass(), 0.1), cquad.Mass()
@@ -1102,6 +1168,55 @@ class TestShells(unittest.TestCase):
         model.cross_reference()
         model.pop_xref_errors()
         save_load_deck(model)
+
+    def test_shell_mcid(self):
+        """tests that mcids=0 are correctly identified as not 0.0 and thus not dropped"""
+        model = BDF(debug=False)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [0., 1., 0.])
+        model.add_grid(3, [0., 1., 1.])
+        model.add_grid(4, [0., 0., 1.])
+
+        eid = 10
+        pid = 100
+        mid = 1000
+        model.add_ctria3(eid, pid, [1, 2, 3], zoffset=0., theta_mcid=0, tflag=0,
+                        T1=None, T2=None, T3=None,
+                        comment='')
+
+        eid = 11
+        model.add_cquad4(eid, pid, [1, 2,3, 4], theta_mcid=0, zoffset=0., tflag=0,
+                         T1=None, T2=None, T3=None, T4=None, comment='')
+
+        model.add_pshell(pid, mid1=mid, t=0.1, mid2=mid, twelveIt3=1.0,
+                        mid3=None, tst=0.833333,
+                        nsm=0.0, z1=None, z2=None,
+                        mid4=None, comment='')
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu)
+        #print(model.elements[11])
+        assert model.elements[10].rstrip() == 'CTRIA3        10     100       1       2       3       0'
+        assert model.elements[11].rstrip() == 'CQUAD4        11     100       1       2       3       4       0'
+        assert model.elements[10].write_card().rstrip() == 'CTRIA3        10     100       1       2       3       0'
+
+        model.cross_reference()
+        assert model.elements[10].rstrip() == 'CTRIA3        10     100       1       2       3       0'
+        assert model.elements[11].rstrip() == 'CQUAD4        11     100       1       2       3       4       0'
+
+        model.uncross_reference()
+        assert model.elements[10].rstrip() == 'CTRIA3        10     100       1       2       3       0'
+        assert model.elements[11].rstrip() == 'CQUAD4        11     100       1       2       3       4       0'
+        model.safe_cross_reference()
+        model.uncross_reference()
+        assert model.elements[10].rstrip() == 'CTRIA3        10     100       1       2       3       0'
+        assert model.elements[11].rstrip() == 'CQUAD4        11     100       1       2       3       4       0'
+
+        model2 = save_load_deck(model)
+        model2.elements[10].comment = ''
+        assert model2.elements[10].rstrip() == 'CTRIA3        10     100       1       2       3       0'
+        assert model2.elements[11].rstrip() == 'CQUAD4        11     100       1       2       3       4       0'
 
 def make_dvcrel_optimization(model, params, element_type, eid, i=1):
     j = i

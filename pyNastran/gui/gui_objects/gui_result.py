@@ -12,9 +12,12 @@ REAL_TYPES = ['<i4', '<i8', '<f4', '<f8',
 INT_TYPES = ['<i4', '<i8', '|i1',
              '>i4', '>i8']
 
+
 class GuiResultCommon(object):
     def __init__(self):
         self.class_name = self.__class__.__name__
+        self.is_real = False
+        self.is_complex = False
 
     #def get_data_type(self, i, name):
         #raise NotImplementedError(self.class_name)
@@ -99,6 +102,17 @@ class GuiResultCommon(object):
 
     def get_default_phase(self, i, name):
         return None
+
+class NullResult(GuiResultCommon):
+    def __init__(self):
+        super(NullResult, self).__init__()
+
+    def get_scalar(self, i, name):
+        return None
+
+    def __repr__(self):
+        msg = '<NormalResult>'
+        return msg
 
 class NormalResult(GuiResultCommon):
     def __init__(self, subcase_id, header, title,
@@ -245,8 +259,11 @@ class GuiResult(GuiResultCommon):
     deflects = False
     def __init__(self, subcase_id, header, title, location, scalar,
                  mask_value=None, nlabels=None, labelsize=None, ncolors=None, colormap='jet',
+                 data_map=None,
                  data_format=None, uname='GuiResult'):
         """
+        Parameters
+        ----------
         subcase_id : int
             the flag that points to self.subcases for a message
         header : str
@@ -255,8 +272,10 @@ class GuiResult(GuiResultCommon):
             the legend title
         location : str
             node, centroid
-        scalar : (n,) ndarray
+        scalar : (n,) int/float ndarray
             the data to make a contour plot with
+        mask_value : int; default=None
+            the NaN marker when scalars are ints
         data_format : str
             the type of data result (e.g. '%i', '%.2f', '%.3f')
         uname : str
@@ -264,6 +283,7 @@ class GuiResult(GuiResultCommon):
         """
         GuiResultCommon.__init__(self)
 
+        self.data_map = data_map
         self.subcase_id = subcase_id
         #assert self.subcase_id > 0, self.subcase_id
 
@@ -275,6 +295,8 @@ class GuiResult(GuiResultCommon):
         self.subcase_id = subcase_id
         self.uname = uname
 
+        if scalar is None:
+            raise RuntimeError('title=%r scalar is None...' % self.title)
         assert scalar.shape[0] == scalar.size, 'shape=%s size=%s' % (str(scalar.shape), scalar.size)
         self.scalar = scalar
         #self.data_type = self.dxyz.dtype.str # '<c8', '<f4'
@@ -298,8 +320,8 @@ class GuiResult(GuiResultCommon):
         self.header_default = self.header
         self.data_format_default = self.data_format
 
-        self.min_default = self.scalar.min()
-        self.max_default = self.scalar.max()
+        self.min_default = np.nanmin(self.scalar)
+        self.max_default = np.nanmax(self.scalar)
         if self.data_type in INT_TYPES:
             # turns out you can't have a NaN/inf with an integer array
             # we need to recast it
@@ -308,13 +330,14 @@ class GuiResult(GuiResultCommon):
                 if len(inan_short):
                     # overly complicated way to allow us to use ~inan to invert the array
                     inan = np.in1d(np.arange(len(self.scalar)), inan_short)
+                    inan_remaining = self.scalar[~inan]
 
                     self.scalar = np.asarray(self.scalar, 'f')
                     self.data_type = self.scalar.dtype.str
                     self.data_format = '%.0f'
                     self.scalar[inan] = np.nan
-                    self.min_default = self.scalar[~inan].min()
-                    self.max_default = self.scalar[~inan].max()
+                    self.min_default = inan_remaining.min()
+                    self.max_default = inan_remaining.max()
         else:
             # handling VTK NaN oddinty
             # filtering the inf values and replacing them with NaN
@@ -323,7 +346,12 @@ class GuiResult(GuiResultCommon):
             ifinite = np.isfinite(self.scalar)
             if not np.all(ifinite):
                 self.scalar[~ifinite] = np.nan
-                self.min_default = self.scalar[ifinite].min()
+                try:
+                    self.min_default = self.scalar[ifinite].min()
+                except ValueError:
+                    print(self.title)
+                    print(self.scalar)
+                    raise
                 self.max_default = self.scalar[ifinite].max()
         self.min_value = self.min_default
         self.max_value = self.max_default
@@ -426,6 +454,22 @@ class GuiResult(GuiResultCommon):
     #def get_plot_value(self, i, name):
         #if self.is_real:
             #return self.dxyz[i, :]
+
+    def get_vector_array_by_phase(self, i, unused_name, phase=0.):
+        #assert len(self.xyz.shape) == 2, self.xyz.shape
+        if self.is_real:
+            # e(i*theta) = cos(theta) + i*sin(theta)
+            if self.dim == 2:
+                # single result
+                dxyz = self.dxyz
+            elif self.dim == 3:
+                dxyz = self.dxyz[i, :]
+            else:
+                raise NotImplementedError('dim=%s' % self.dim)
+        else:
+            dxyz = self._get_complex_displacements_by_phase(i, phase)
+        assert len(dxyz.shape) == 2, dxyz.shape
+        return xyz, dxyz
 
     def get_result(self, i, name):
         if self.is_real:

@@ -10,6 +10,14 @@ Contains the following atmospheric functions:
  - mu = atm_dynamic_viscosity_mu(alt)
  - nu = atm_kinematic_viscosity_nu(alt)
  - eas = atm_equivalent_airspeed(alt, mach)
+ - rho, machs, velocity = make_flfacts_alt_sweep(
+       mach, alts, eas_limit=1000.,
+       alt_units='m', velocity_units='m/s', density_units='kg/m^3',
+       eas_units='m/s')
+ - rho, machs, velocity = make_flfacts_mach_sweep(
+       alt, machs, eas_limit=1000.,
+       alt_units='m', velocity_units='m/s', density_units='kg/m^3',
+       eas_units='m/s')
 
 All the default units are in English units because the source equations
 are in English units.
@@ -19,79 +27,9 @@ import sys
 from math import log, exp
 import numpy as np
 
-def _update_alt(alt, alt_units, debug=False):
-    """
-    Converts altitude alt_units to feet
 
-    Parameters
-    ----------
-    alt : float
-        altitude in feet or meters
-    alt_units : str; default='ft'
-        sets the units for altitude; ft, m, kft
-
-    Returns
-    -------
-    alt2 : float
-        altitude in feet
-    """
-    if alt_units == 'ft':
-        factor = 1.
-    elif alt_units == 'm':
-        factor = 1. / 0.3048
-    elif alt_units == 'kft':
-        factor = 1000.
-    else:
-        raise RuntimeError('alt_units=%r is not valid; use [ft, m, kft]' % alt_units)
-    alt2 = alt * factor
-
-    if debug:
-        if alt_units == 'ft':
-            SI = False
-        else:
-            SI = True
-        if SI:
-            print("z = %s [m] = %s [ft]"  % (alt, alt2))
-        else:
-            print("z = %s [m] = %s [ft]" % (alt * _feet_to_alt_units(alt_units), alt2))
-    return alt2
-
-def _update_velocity(velocity, velocity_units, debug=False):
-    """
-    Converts velocity velocity_units to ft/s
-
-    Parameters
-    ----------
-    velocity : float
-        altitude in feet or meters
-    velocity_units : str
-        sets the units for velocity; ft/s, m/s, knots
-
-    Returns
-    -------
-    velocity2 : float
-        velocity in feet/s
-    """
-    if velocity_units == 'ft/s':
-        factor = 1.
-    elif velocity_units == 'm/s':
-        factor = 1. / 0.3048
-    elif velocity_units == 'knots':
-        factor = 1.68781
-    else:
-        msg = 'velocity_units=%r is not valid; use [ft/s, m/s, knots]' % velocity_units
-        raise RuntimeError(msg)
-    velocity2 = velocity * factor
-
-    #if debug:
-        #if SI:
-            #print("z = %s [m] = %s [ft]"  % (alt, alt2))
-        #else:
-            #print("z = %s [m] = %s [ft]" % (alt * _feet_to_meters(True), alt2))
-    return velocity2
-
-
-def get_alt_for_density(density):
+def get_alt_for_density(density, density_units='slug/ft^3', alt_units='ft'):
+    # type : (float, str, str) -> float
     """
     Gets the altitude associated with a given air density.
 
@@ -99,34 +37,43 @@ def get_alt_for_density(density):
     ----------
     density : float
         the air density in slug/ft^3
+    density_units : str; default='slug/ft^3'
+        the density units; slug/ft^3, slinch/in^3, kg/m^3
+    alt_units : str; default='ft'
+        sets the units for the output altitude; ft, m, kft
 
     Returns
     -------
     alt : float
         the altitude in feet
     """
-    dalt = 500.
+    dalt = 500. # ft
     alt_old = 0.
     alt_final = 5000.
     n = 0
     tol = 5. # ft
+
+    #density_scale = _density_factor(density_units, "slug/ft^3")
 
     # Newton's method
     while abs(alt_final - alt_old) > tol and n < 20:
         alt_old = alt_final
         alt1 = alt_old
         alt2 = alt_old + dalt
-        rho1 = atm_density(alt1)
-        rho2 = atm_density(alt2)
+        rho1 = atm_density(alt1, density_units=density_units)
+        rho2 = atm_density(alt2, density_units=density_units)
         m = dalt / (rho2 - rho1)
         alt_final = m * (density - rho1) + alt1
         n += 1
     if n > 18:
         print('n = %s' % n)
-    return alt_final
+    alt_out = convert_altitude(alt_final, 'ft', alt_units)
+    return alt_out
 
 
-def get_alt_for_eas_mach(equivalent_airspeed, mach, velocity_units='ft/s', alt_units='ft'):
+def get_alt_for_eas_with_constant_mach(equivalent_airspeed, mach,
+                                       velocity_units='ft/s', alt_units='ft'):
+    # type : (float, float, str, str) -> float
     """
     Gets the altitude associated with a equivalent airspeed.
 
@@ -144,7 +91,7 @@ def get_alt_for_eas_mach(equivalent_airspeed, mach, velocity_units='ft/s', alt_u
     alt : float
         the altitude in alt units
     """
-    equivalent_airspeed = _convert_velocity(equivalent_airspeed, velocity_units, 'ft/s')
+    equivalent_airspeed = convert_velocity(equivalent_airspeed, velocity_units, 'ft/s')
     dalt = 500.
     alt_old = 0.
     alt_final = 5000.
@@ -177,12 +124,13 @@ def get_alt_for_eas_mach(equivalent_airspeed, mach, velocity_units='ft/s', alt_u
 
     if n > 18:
         print('n = %s' % n)
-    alt_final = _convert_alt(alt_final, 'ft', alt_units)
+    alt_final = convert_altitude(alt_final, 'ft', alt_units)
     return alt_final
 
-def get_alt_for_q_mach(q, mach, SI=False):
+def get_alt_for_q_with_constant_mach(q, mach, pressure_units='psf', alt_units='ft'):
+    # type : (float, float, str, str) -> float
     """
-    Gets the altitude associated with a equivalent airspeed.
+    Gets the altitude associated with a dynamic pressure.
 
     Parameters
     ----------
@@ -190,27 +138,24 @@ def get_alt_for_q_mach(q, mach, SI=False):
         the dynamic pressure lb/ft^2 (SI=Pa)
     mach : float
         the mach to hold constant
-    SI : bool
-        should SI units be used; default=False
+    pressure_units : str; default='psf'
+        the pressure units; psf, psi, Pa
+    alt_units : str; default='ft'
+        the altitude units; ft, kft, m
 
     Returns
     -------
     alt : float
-        the altitude in ft (SI=m)
+        the altitude in alt_units
     """
     pressure = 2 * q / (1.4 * mach ** 2) # gamma = 1.4
-    if SI:
-        alt_units = 'm'
-        pressure_units = 'Pa'
-    else:
-        alt_units = 'ft'
-        pressure_units = 'psf'
     alt = get_alt_for_pressure(pressure, pressure_units=pressure_units, alt_units=alt_units)
     return alt
 
 def get_alt_for_pressure(pressure, pressure_units='psf', alt_units='ft'):
+    # type : (float, str, str) -> float
     """
-    Gets the altitude associated with a equivalent airspeed.
+    Gets the altitude associated with a pressure.
 
     Parameters
     ----------
@@ -226,7 +171,7 @@ def get_alt_for_pressure(pressure, pressure_units='psf', alt_units='ft'):
     alt : float
         the altitude in alt_units
     """
-    pressure = _convert_pressure(pressure, pressure_units, 'psf')
+    pressure = convert_pressure(pressure, pressure_units, 'psf')
     dalt = 500.
     alt_old = 0.
     alt_final = 5000.
@@ -247,10 +192,12 @@ def get_alt_for_pressure(pressure, pressure_units='psf', alt_units='ft'):
     if n > 18:
         print('n = %s' % n)
 
-    alt_final = _convert_alt(alt_final, 'ft', alt_units)
+    alt_final = convert_altitude(alt_final, 'ft', alt_units)
     return alt_final
 
 def _feet_to_alt_units(alt_units):
+    # type : (str) -> float
+    """helper method"""
     if alt_units == 'm':
         factor = 0.3048
     elif alt_units == 'ft':
@@ -259,8 +206,16 @@ def _feet_to_alt_units(alt_units):
         raise RuntimeError('alt_units=%r is not valid; use [ft, m]' % alt_units)
     return factor
 
-def _convert_alt(alt, alt_units_in, alt_units_out):
+def convert_altitude(alt, alt_units_in, alt_units_out):
+    # type : (float, str, str) -> float
     """nominal unit is ft"""
+    if alt_units_in == alt_units_out:
+        return alt
+    return alt * _altitude_factor(alt_units_in, alt_units_out)
+
+def _altitude_factor(alt_units_in, alt_units_out):
+    # type : (str, str) -> float
+    """helper method for convert_altitude"""
     factor = 1.0
     # units to feet
     if alt_units_in == 'm':
@@ -271,8 +226,6 @@ def _convert_alt(alt, alt_units_in, alt_units_out):
         factor *= 1000.
     else:
         raise RuntimeError('alt_units_in=%r is not valid; use [ft, m, kft]' % alt_units_in)
-    #print('alt=%.1f alt_units_in=%s alt_mid=%.1f ft' % (
-        #alt, alt_units_in, alt*factor))
 
     # ft to m
     if alt_units_out == 'm':
@@ -283,40 +236,82 @@ def _convert_alt(alt, alt_units_in, alt_units_out):
         factor /= 1000.
     else:
         raise RuntimeError('alt_units_out=%r is not valid; use [ft, m, kft]' % alt_units_out)
-    #print('alt=%.1f alt_units_in=%s alt_units_out=%s alt2=%.1f' % (
-        #alt, alt_units_in, alt_units_out, alt*factor))
-    return alt * factor
+    return factor
 
-def _convert_velocity(velocity, velocity_units_in, velocity_units_out):
+def _reynolds_factor(reynolds_units_in, reynolds_units_out):
+    # type : (str, str) -> float
+    """helper method"""
+    factor = 1.0
+    # units to 1/feet
+    if reynolds_units_in == '1/m':
+        factor *= 0.3048
+    elif reynolds_units_in == '1/ft':
+        pass
+    elif reynolds_units_in == '1/in':
+        factor *= 12.
+    else:
+        msg = 'reynolds_units_in=%r is not valid; use [1/ft, 1/m, 1/in]' % reynolds_units_in
+        raise RuntimeError(msg)
+
+    # 1/ft to 1/m
+    if reynolds_units_out == '1/m':
+        factor /= 0.3048
+    elif reynolds_units_out == '1/ft':
+        pass
+    elif reynolds_units_out == '1/in':
+        factor /= 12.
+    else:
+        msg = 'reynolds_units_out=%r is not valid; use [1/ft, 1/m, 1/in]' % reynolds_units_out
+        raise RuntimeError(msg)
+    return factor
+
+def convert_velocity(velocity, velocity_units_in, velocity_units_out):
+    # type : (float, str, str) -> float
     """nominal unit is ft/s"""
+    if velocity_units_in == velocity_units_out:
+        return velocity
+    return velocity * _velocity_factor(velocity_units_in, velocity_units_out)
+
+def _velocity_factor(velocity_units_in, velocity_units_out):
+    # type : (str, str) -> float
+    """helper method for convert_velocity"""
     factor = 1.0
     if velocity_units_in == 'm/s':
         factor /= 0.3048
     elif velocity_units_in == 'ft/s':
         pass
+    elif velocity_units_in == 'in/s':
+        factor /= 12.
     elif velocity_units_in == 'knots':
         factor *= 1.68781
     else:
         msg = 'velocity_units_in=%r is not valid; use [ft/s, m/s, knots]' % velocity_units_in
         raise RuntimeError(msg)
-    #print('velocity=%.1f velocity_units_in=%s velocity_mid=%.1f' % (
-        #velocity, velocity_units_in, velocity * factor))
 
     if velocity_units_out == 'm/s':
         factor *= 0.3048
     elif velocity_units_out == 'ft/s':
         pass
+    elif velocity_units_out == 'in/s':
+        factor *= 12.
     elif velocity_units_out == 'knots':
         factor /= 1.68781
     else:
-        msg = 'velocity_units_out=%r is not valid; use [ft/s, m/s, knots]' % velocity_units_out
+        msg = 'velocity_units_out=%r is not valid; use [ft/s, m/s, in/s, knots]' % (
+            velocity_units_out)
         raise RuntimeError(msg)
-    #print('velocity=%.1f velocity_units_in=%s velocity_units_out=%s velocity2=%.1f' % (
-        #velocity, velocity_units_in, velocity_units_out, velocity * factor))
-    return velocity * factor
+    return factor
 
-def _convert_pressure(pressure, pressure_units_in, pressure_units_out):
+def convert_pressure(pressure, pressure_units_in, pressure_units_out):
+    # type : (float, str, str) -> float
     """nominal unit is psf"""
+    if pressure_units_in == pressure_units_out:
+        return pressure
+    return pressure * _pressure_factor(pressure_units_in, pressure_units_out)
+
+def _pressure_factor(pressure_units_in, pressure_units_out):
+    # type : (str, str) -> float
+    """helper method for convert_pressure"""
     factor = 1.0
     if pressure_units_in == 'psf':
         pass
@@ -337,48 +332,54 @@ def _convert_pressure(pressure, pressure_units_in, pressure_units_out):
     else:
         msg = 'pressure_units_out=%r is not valid; use [psf, psi, Pa]' % pressure_units_out
         raise RuntimeError(msg)
-    return pressure * factor
-
-def _feet_s_to_velocity_units(velocity_units):
-    if velocity_units == 'm/s':
-        factor = 0.3048
-    elif velocity_units == 'ft/s':
-        factor = 1.
-    elif velocity_units == 'knots':
-        factor = 1. / 1.68781
-    else:
-        raise RuntimeError('alt_units=%r is not valid; use [ft, m]' % velocity_units)
     return factor
 
-def _rankine_to_kelvin(SI):
-    if SI:
-        factor = 5 / 9.
+def convert_density(density, density_units_in, density_units_out):
+    # type : (float, str, str) -> float
+    """nominal unit is slug/ft^3"""
+    if density_units_in == density_units_out:
+        return density
+    return density * _density_factor(density_units_in, density_units_out)
+
+def _density_factor(density_units_in, density_units_out):
+    # type : (str, str) -> float
+    """helper method for convert_density"""
+    factor = 1.0
+    if density_units_in == 'slug/ft^3':
+        pass
+    elif density_units_in == 'slinch/in^3':
+        factor *= 12**4
+    elif density_units_in == 'kg/m^3':
+        factor /= 515.378818
     else:
-        factor = 1.
+        msg = 'density_units_in=%r is not valid; use [slug/ft^3]' % density_units_in
+        raise RuntimeError(msg)
+
+    # data is now in slug/ft^3
+    if density_units_out == 'slug/ft^3':
+        pass
+    elif density_units_out == 'slinch/in^3':
+        factor /= 12**4
+    elif density_units_out == 'kg/m^3':
+        factor *= 515.378818
+    else:
+        msg = 'density_units_out=%r is not valid; use [slug/ft^3, slinch/in^3]' % density_units_out
+        raise RuntimeError(msg)
     return factor
 
-def _psf_to_pressure_units(pressure_units):
-    """converts the pressure to output units"""
-    if pressure_units == 'psf':
-        factor = 1.
-    elif pressure_units == 'psi':
-        factor = 1./144.
-    elif pressure_units == 'Pa':
-        factor = 47.880259
-    else:
-        raise RuntimeError('pressure_units=%r is not valid; use [psi, psf, Pa]' % pressure_units)
-    return factor
-
-def atm_temperature(alt, alt_units='ft', temperature_units='R', debug=False):
+def atm_temperature(alt, alt_units='ft', temperature_units='R'):
+    # type : (float, str, str) -> float
     r"""
     Freestream Temperature \f$ T_{\infty} \f$
 
     Parameters
     ----------
-    alt : bool
-        Altitude in feet or meters (SI)
-    SI : bool; default=False
-        returns temperature in SI units if True
+    alt : float
+        Altitude in alt_units
+    alt_units : str; default='ft'
+        the altitude units; ft, kft, m
+    temperature_units : str; default='R'
+        the altitude units; R, K
 
     Returns
     -------
@@ -391,21 +392,21 @@ def atm_temperature(alt, alt_units='ft', temperature_units='R', debug=False):
         These equations were used because they are valid to 300k ft.\n
         Extrapolation is performed above that.
     """
-    z = _update_alt(alt, alt_units)
+    z = alt * _altitude_factor(alt_units, 'ft')
     if z < 36151.725:
-        T = 518.0-0.003559996 * z
+        T = 518.0 - 0.003559996 * z
     elif z < 82344.678:
         T = 389.988
     elif z < 155347.756:
-        T = 389.988+.0016273286 * (z - 82344.678)
+        T = 389.988 + .0016273286 * (z - 82344.678)
     elif z < 175346.171:
         T = 508.788
     elif z < 249000.304:
-        T = 508.788-.0020968273 * (z - 175346.171)
+        T = 508.788 - .0020968273 * (z - 175346.171)
     elif z < 299515.564:
         T = 354.348
     else:
-        print("alt=%i kft > 299.5 kft" % (z / 1000.))
+        #print("alt=%i kft > 299.5 kft" % (z / 1000.))
         T = 354.348
         #raise AtmosphereError("altitude is too high")
 
@@ -414,19 +415,13 @@ def atm_temperature(alt, alt_units='ft', temperature_units='R', debug=False):
     elif temperature_units == 'K':
         factor = 5. / 9.
     else:
-        raise RuntimeError('temperature_units=%r is not valid; use [ft, m]' % temperature_units)
+        raise RuntimeError('temperature_units=%r is not valid; use [R, K]' % temperature_units)
 
     T2 = T * factor
-    #if debug:
-        #if SI:
-            #print("z = %s [m] = %s [ft]"  % (alt, z))
-            #print("T = %s [K] = %s [R]"  % (T2, T))
-        #else:
-            #print("z = %s [m] = %s [ft]" % (alt * _feet_to_meters(True), z))
-            #print("T = %s [K] = %s [R]" % (T * _rankine_to_kelvin(True), T2))
     return T2
 
-def atm_pressure(alt, alt_units='ft', pressure_units='psf', debug=False):
+def atm_pressure(alt, alt_units='ft', pressure_units='psf'):
+    # type : (float, str, str) -> float
     r"""
     Freestream Pressure \f$ p_{\infty} \f$
 
@@ -450,38 +445,30 @@ def atm_pressure(alt, alt_units='ft', pressure_units='psf', debug=False):
         These equations were used b/c they are valid to 300k ft.\n
         Extrapolation is performed above that.\n
     """
-    z = _update_alt(alt, alt_units)
+    z = convert_altitude(alt, alt_units, 'ft')
     if z < 36151.725:
-        lnP = 7.657389 + 5.2561258 * log(1 - 6.8634634E-6 * z)
+        ln_pressure = 7.657389 + 5.2561258 * log(1 - 6.8634634E-6 * z)
     elif z < 82344.678:
-        lnP = 6.158411 - 4.77916918E-5 * (z-36151.725)
+        ln_pressure = 6.158411 - 4.77916918E-5 * (z - 36151.725)
     elif z < 155347.756:
-        lnP = 3.950775 - 11.3882724 * log(1.0 + 4.17276598E-6 * (z - 82344.678))
+        ln_pressure = 3.950775 - 11.3882724 * log(1.0 + 4.17276598E-6 * (z - 82344.678))
     elif z < 175346.171:
-        lnP = 0.922461 - 3.62635373E-5*(z - 155347.756)
+        ln_pressure = 0.922461 - 3.62635373E-5*(z - 155347.756)
     elif z < 249000.304:
-        lnP = 0.197235 + 8.7602095 * log(1.0 - 4.12122002E-6 * (z - 175346.171))
+        ln_pressure = 0.197235 + 8.7602095 * log(1.0 - 4.12122002E-6 * (z - 175346.171))
     elif z < 299515.564:
-        lnP = -2.971785 - 5.1533546650E-5 * (z - 249000.304)
+        ln_pressure = -2.971785 - 5.1533546650E-5 * (z - 249000.304)
     else:
-        print("alt=%i kft > 299.5 kft" % (z / 1000.))
-        lnP = -2.971785 - 5.1533546650E-5 * (z - 249000.304)
+        #print("alt=%i kft > 299.5 kft" % (z / 1000.))
+        ln_pressure = -2.971785 - 5.1533546650E-5 * (z - 249000.304)
 
-    p = exp(lnP)
+    p = exp(ln_pressure)
 
-    factor = _psf_to_pressure_units(pressure_units)
-
-    #if debug:
-        #ft_to_m = _feet_to_meters(True)
-        #if SI:
-            #print("z    = %s [m]  = %s [ft]" % (alt, z))
-            #print("Patm = %g [Pa] = %g [psf]" % (p * factor, p))
-        #else:
-            #print("z    = %s [m]  = %s [ft]" % (alt * ft_to_m, z))
-            #print("Patm = %g [Pa] = %g [psf]" % (p * _psf_to_pascals(True), p))
+    factor = _pressure_factor('psf', pressure_units)
     return p * factor
 
-def atm_dynamic_pressure(alt, mach, alt_units='ft', pressure_units='psf', debug=False):
+def atm_dynamic_pressure(alt, mach, alt_units='ft', pressure_units='psf'):
+    # type : (float, float, str, str) -> float
     r"""
     Freestream Dynamic Pressure  \f$ q_{\infty} \f$
 
@@ -509,26 +496,16 @@ def atm_dynamic_pressure(alt, mach, alt_units='ft', pressure_units='psf', debug=
     so...
     \f[  \large q = \frac{\gamma}{2} p M^2  \f]
     """
-    z = _update_alt(alt, alt_units)
+    z = alt * _altitude_factor(alt_units, 'ft')
     p = atm_pressure(z)
     q = 0.7 * p * mach ** 2
 
-    factor = _psf_to_pressure_units(pressure_units)
+    factor = _pressure_factor('psf', pressure_units)
     q2 = q * factor
-
-    #if debug:
-        #ft_to_m = _feet_to_meters(True)
-        #if SI:
-            #print("z = %s [m]   = %s [ft]" % (alt, z))
-            #print("p = %s [psf] = %s [Pa]" % (p, p * factor))
-            #print("q = %s [psf] = %s [Pa]" % (q, q2))
-        #else:
-            #print("z = %s [m]   = %s [ft]" % (alt * ft_to_m, z))
-            #print("p = %s [psf] = %s [Pa]" % (p, p * _psf_to_pascals(True)))
-            #print("q = %s [psf] = %s [Pa]" % (q, q * _psf_to_pascals(True)))
     return q2
 
-def atm_speed_of_sound(alt, alt_units='ft', velocity_units='ft/s', gamma=1.4, debug=False):
+def atm_speed_of_sound(alt, alt_units='ft', velocity_units='ft/s', gamma=1.4):
+    # type : (float, str, str, float) -> float
     r"""
     Freestream Speed of Sound  \f$ a_{\infty} \f$
 
@@ -539,7 +516,7 @@ def atm_speed_of_sound(alt, alt_units='ft', velocity_units='ft/s', gamma=1.4, de
     alt_units : str; default='ft'
         the altitude units; ft, kft, m
     velocity_units : str; default='ft/s'
-        the velocity units; ft/s, m/s, knots
+        the velocity units; ft/s, m/s, in/s, knots
 
     Returns
     -------
@@ -549,29 +526,22 @@ def atm_speed_of_sound(alt, alt_units='ft', velocity_units='ft/s', gamma=1.4, de
    \f[  \large a = \sqrt{\gamma R T}  \f]
     """
     # converts everything to English units first
-    z = _update_alt(alt, alt_units)
+    z = alt * _altitude_factor(alt_units, 'ft')
     T = atm_temperature(z)
     R = 1716. # 1716.59, dir air, R=287.04 J/kg*K
 
     a = (gamma * R * T) ** 0.5
-    factor = _feet_s_to_velocity_units(velocity_units) # ft/s to m/s
+    factor = _velocity_factor('ft/s', velocity_units) # ft/s to m/s
     a2 = a * factor
-
-    #if debug:
-        #ft_to_m = _feet_to_meters(True)
-        #if SI:
-            #print("z = %s [m]   = %s [ft]" % (alt, z))
-            #print("T = %s [K]   = %s [R]" % (T / 1.8, T))
-            #print("a = %s [m/s] = %s [ft/s]" % (a2, a))
-        #else:
-            #print("z = %s [m]   = %s [ft]" % (alt * ft_to_m, z))
-            #print("T = %s [K]   = %s [R]" % (T / 1.8, T))
-            #print("a = %s [m/s] = %s [ft/s]" % (a * _feet_to_meters(True), a2))
     return a2
 
-def atm_velocity(alt, mach, alt_units='ft', velocity_units='ft/s', debug=False):
+def atm_velocity(alt, mach, alt_units='ft', velocity_units='ft/s'):
+    # type : (float, float, str, str) -> float
     r"""
     Freestream Velocity  \f$ V_{\infty} \f$
+
+    Parameters
+    ----------
     alt : float
         altitude in alt_units
     Mach : float
@@ -579,9 +549,10 @@ def atm_velocity(alt, mach, alt_units='ft', velocity_units='ft/s', debug=False):
     alt_units : str; default='ft'
         the altitude units; ft, kft, m
     velocity_units : str; default='ft/s'
-        the velocity units; ft/s, m/s, knots
+        the velocity units; ft/s, m/s, in/s, knots
 
     Returns
+    -------
     velocity : float
         Returns velocity in velocity_units
 
@@ -589,20 +560,10 @@ def atm_velocity(alt, mach, alt_units='ft', velocity_units='ft/s', debug=False):
     """
     a = atm_speed_of_sound(alt, alt_units=alt_units, velocity_units=velocity_units)
     V = mach * a # units=ft/s or m/s
-
-    #if debug:
-        #ft_to_m = _feet_to_alt_units('m')
-        #if SI:
-            #print("z = %s [m]   = %s [ft]"  % (alt, alt))
-            #print("a = %s [m/s] = %s [ft/s]"  % (a, a / ft_to_m))
-            #print("V = %s [m/s] = %s [ft/s]"  % (V, V / ft_to_m))
-        #else:
-            #print("z = %s [m]   = %s [ft]" % (alt * ft_to_m, alt))
-            #print("a = %s [m/s] = %s [ft/s]" % (a * ft_to_m, a))
-            #print("V = %s [m/s] = %s [ft/s]" % (V * ft_to_m, V))
     return V
 
-def atm_equivalent_airspeed(alt, mach, alt_units='ft', eas_units='ft/s', debug=False):
+def atm_equivalent_airspeed(alt, mach, alt_units='ft', eas_units='ft/s'):
+    # type : (float, float, str, str) -> float
     """
     Parameters
     ----------
@@ -613,7 +574,7 @@ def atm_equivalent_airspeed(alt, mach, alt_units='ft', eas_units='ft/s', debug=F
     alt_units : str; default='ft'
         the altitude units; ft, kft, m
     velocity_units : str; default='ft/s'
-        the velocity units; ft/s, m/s, knots
+        the velocity units; ft/s, m/s, in/s, knots
 
     Returns
     -------
@@ -626,8 +587,9 @@ def atm_equivalent_airspeed(alt, mach, alt_units='ft', eas_units='ft/s', debug=F
     rho/rho0 = p/T * T0/p0
     TAS = a * M
     EAS = a * M * sqrt(p/T * T0/p0)
+    EAS = a * M * sqrt(p*T0 / (T*p0))
     """
-    z = _update_alt(alt, alt_units)
+    z = convert_altitude(alt, alt_units, 'ft')
     a = atm_speed_of_sound(z)
     #V = mach * a # units=ft/s or m/s
 
@@ -639,29 +601,11 @@ def atm_equivalent_airspeed(alt, mach, alt_units='ft', eas_units='ft/s', debug=F
     p = atm_pressure(z)
 
     eas = a * mach * np.sqrt((p * T0) / (T * p0))
-    if eas_units == 'ft/s':
-        pass
-    elif eas_units == 'knots':
-        eas /= 1.68781 # ft/s to knots
-    elif eas_units == 'm/s':
-        ft_to_m = _feet_to_alt_units('m')
-        eas *= ft_to_m
-    else:
-        raise NotImplementedError(eas_units)
+    eas2 = convert_velocity(eas, 'ft/s', eas_units)
+    return eas2
 
-    #if debug:
-        #if SI:
-            #print("z = %s [m]   = %s [ft]"  % (alt, z))
-            #print("a = %s [m/s] = %s [ft/s]"  % (a * ft_to_m, a))
-            #print("eas = %s [m/s] = %s [ft/s]"  % (eas, eas / ft_to_m))
-        #else:
-            #ft_to_m = _feet_to_meters(True)
-            #print("z = %s [m]   = %s [ft]" % (alt * ft_to_m, alt))
-            #print("a = %s [m/s] = %s [ft/s]" % (a * ft_to_m, a))
-            #print("eas = %s [m/s] = %s [ft/s]" % (eas * ft_to_m, eas))
-    return eas
-
-def atm_mach(alt, V, alt_units='ft', velocity_units='ft/s', debug=False):
+def atm_mach(alt, V, alt_units='ft', velocity_units='ft/s'):
+    # type : (float, float, str, str) -> float
     r"""
     Freestream Mach Number
 
@@ -674,7 +618,7 @@ def atm_mach(alt, V, alt_units='ft', velocity_units='ft/s', debug=False):
     alt_units : str; default='ft'
         the altitude units; ft, kft, m
     velocity_units : str; default='ft/s'
-        the velocity units; ft/s, m/s, knots
+        the velocity units; ft/s, m/s, in/s, knots
 
     Returns
     -------
@@ -683,32 +627,15 @@ def atm_mach(alt, V, alt_units='ft', velocity_units='ft/s', debug=False):
 
     \f[ \large M = \frac{V}{a} \f]
     """
-    z = _update_alt(alt, alt_units)
-    a = atm_speed_of_sound(z, alt_units='ft', velocity_units=velocity_units)
+    a = atm_speed_of_sound(alt, alt_units=alt_units, velocity_units=velocity_units)
     mach = V / a
-
-    if debug:
-        print("z = %.1f [m] = %.1f [ft] = %.1f [%s]"  % (
-            _convert_alt(alt, alt_units, 'm'),
-            z, # ft
-            alt, alt_units))
-        print("a = %.3f [m/s] = %.3f [ft/s] = %.3f [%s]"  % (
-            _convert_velocity(a, velocity_units, 'm/s'),
-            _convert_velocity(a, velocity_units, 'ft/s'),
-            a, velocity_units))
-        print("V = %.3f [m/s] = %.3f [ft/s] = %.3f [%s]"  % (
-            _convert_velocity(V, velocity_units, 'm/s'),
-            _convert_velocity(V, velocity_units, 'ft/s'),
-            V, velocity_units))
-        print("M = %.3f"  % (mach))
     return mach
 
-def atm_density(alt, R=1716., alt_units='ft', density_units='slug/ft^3', debug=False):
+def atm_density(alt, R=1716., alt_units='ft', density_units='slug/ft^3'):
+    # type : (float, float, str, str) -> float
     r"""
     Freestream Density   \f$ \rho_{\infty} \f$
 
-    Parameters
-    ----------
     Parameters
     ----------
     alt : float
@@ -718,7 +645,7 @@ def atm_density(alt, R=1716., alt_units='ft', density_units='slug/ft^3', debug=F
     alt_units : str; default='ft'
         the altitude units; ft, kft, m
     density_units : str; default='slug/ft^3'
-        the density units; slug/ft^3, kg/m^3
+        the density units; slug/ft^3, slinch/in^3, kg/m^3
 
     Returns
     -------
@@ -728,39 +655,17 @@ def atm_density(alt, R=1716., alt_units='ft', density_units='slug/ft^3', debug=F
     Based on the formula P=pRT
     \f[ \large \rho=\frac{p}{R T} \f]
     """
-    z = _update_alt(alt, alt_units)
+    z = convert_altitude(alt, alt_units, 'ft')
+    #z = alt * _altitude_factor(alt_units, 'ft')
     P = atm_pressure(z)
     T = atm_temperature(z)
 
-    # going from slug/ft^3 to kg/m^3
-    if density_units == 'slug/ft^3':
-        factor = 1.
-    elif density_units == 'kg/m^3':
-        factor = 515.378818
-    #elif density_units == 'slug/in^3':
-        #factor = None
-    else:
-        raise NotImplementedError(density_units)
+    rho = P / (R * T)
+    rho2 = convert_density(rho, 'slug/ft^3', density_units)
+    return rho2
 
-    #if debug:
-        #rho = P / (R * T)
-        #ft_to_m = _feet_to_alt_units('m')
-        #if SI:
-            #pressure_units = 'Pa'
-            #print("z    = %s [m] = %s [ft]" % (alt, z))
-            #print("Patm = %g [Pa] = %g [psf]" % (P * _psf_to_pressure_units(pressure_units), P))
-            #print("T    = %s [K] = %s [R]" % (T / 1.8, T))
-            #print("rho  = %e [kg/m^3] = %e [slug/ft^3]" % (rho * 515.378818, rho))
-        #else:
-            #pressure_units = 'Pa'
-            #print("z    = %s [m] = %s [ft]" % (alt * ft_to_m, z))
-            #print("Patm = %g [Pa] = %g [psf]" % (P * _psf_to_pressure_units(pressure_units), P))
-            #print("T    = %s [K] = %s [R]" % (T / 1.8, T))
-            #print("rho  = %e [kg/m^3] = %e [slug/ft^3]" % (rho * 515.378818, rho))
-
-    return P / (R * T) * factor
-
-def atm_kinematic_viscosity_nu(alt, alt_units='ft', visc_units='ft^2/s', debug=False):
+def atm_kinematic_viscosity_nu(alt, alt_units='ft', visc_units='ft^2/s'):
+    # type : (float, str, str) -> float
     r"""
     Freestream Kinematic Viscosity \f$ \nu_{\infty} \f$
 
@@ -780,15 +685,13 @@ def atm_kinematic_viscosity_nu(alt, alt_units='ft', visc_units='ft^2/s', debug=F
 
     \f[ \large \nu = \frac{\mu}{\rho} \f]
 
-    .. see ::  SutherlandVisc
+    .. seealso::  sutherland_viscoscity
     .. todo:: better debug
     """
-    z = _update_alt(alt, alt_units)
+    z = alt * _altitude_factor(alt_units, 'ft')
     rho = atm_density(z)
     mu = atm_dynamic_viscosity_mu(z)
     nu = mu / rho
-    if debug:  # doesnt work unless US units
-        print("atm_nu - rho=%g [slug/ft^3] mu=%e [lb*s/ft^2] nu=%e [ft^2/s]" % (rho, mu, nu))
 
     if visc_units == 'ft^2/s':
         factor = 1.
@@ -799,6 +702,7 @@ def atm_kinematic_viscosity_nu(alt, alt_units='ft', visc_units='ft^2/s', debug=F
     return nu * factor
 
 def atm_dynamic_viscosity_mu(alt, alt_units='ft', visc_units='(lbf*s)/ft^2'):
+    # type : (float, str, str) -> float
     r"""
     Freestream Dynamic Viscosity  \f$ \mu_{\infty} \f$
 
@@ -816,9 +720,9 @@ def atm_dynamic_viscosity_mu(alt, alt_units='ft', visc_units='(lbf*s)/ft^2'):
     mu : float
         dynamic viscosity  \f$ \mu_{\infty} \f$ in (lbf*s)/ft^2 or (N*s)/m^2 (SI)
 
-    .. see ::  SutherlandVisc
+    .. seealso::  sutherland_viscoscity
     """
-    z = _update_alt(alt, alt_units)
+    z = alt * _altitude_factor(alt_units, 'ft')
     T = atm_temperature(z)
     mu = sutherland_viscoscity(T)  # (lbf*s)/ft^2
     if visc_units == '(lbf*s)/ft^2':
@@ -829,7 +733,8 @@ def atm_dynamic_viscosity_mu(alt, alt_units='ft', visc_units='(lbf*s)/ft^2'):
         raise NotImplementedError('visc_units=%r; not in (lbf*s)/ft^2 or (N*s)/m^2 or Pa*s')
     return mu * factor
 
-def atm_unit_reynolds_number2(alt, mach, alt_units='ft', ReL_units='1/ft', debug=False):
+def atm_unit_reynolds_number2(alt, mach, alt_units='ft', reynolds_units='1/ft'):
+    # type : (float, float, str, str) -> float
     r"""
     Returns the Reynolds Number per unit length
 
@@ -841,8 +746,8 @@ def atm_unit_reynolds_number2(alt, mach, alt_units='ft', ReL_units='1/ft', debug
         Mach Number \f$ M \f$
     alt_units : str; default='ft'
         the altitude units; ft, kft, m
-    ReL_units : str; default='1/ft'
-        the altitude units; 1/ft, 1/m
+    reynolds_units : str; default='1/ft'
+        the altitude units; 1/ft, 1/m, 1/in
 
     Returns
     -------
@@ -855,8 +760,7 @@ def atm_unit_reynolds_number2(alt, mach, alt_units='ft', ReL_units='1/ft', debug
         this version of Reynolds number directly caculates the base quantities, so multiple
         calls to atm_press and atm_temp are not made
     """
-    z = _update_alt(alt, alt_units)
-    #print("z = ",z)
+    z = alt * _altitude_factor(alt_units, 'ft')
     gamma = 1.4
     R = 1716.
     p = atm_pressure(z)
@@ -866,68 +770,45 @@ def atm_unit_reynolds_number2(alt, mach, alt_units='ft', ReL_units='1/ft', debug
     mu = sutherland_viscoscity(T)
     ReL = p * a * mach / (mu * R * T)
 
-    if debug:
-        print("---atm_UnitReynoldsNumber2---")
-        print("z  = %s [m]   = %s [ft]"  % (alt * _feet_to_alt_units('m'), z))
-        print("a  = %s [m/s] = %s [ft/s]"  % (a * _feet_to_alt_units('m'), a))
-        rho = p / (R * T)
-        print("rho = %s [kg/m^3] = %s [slug/ft^3]"  % (rho * 515.378818, rho))
-        print("M  = %s"  % mach)
-        print("V  = %s [m/s] = %s [ft/s]"  % (a * mach * _feet_to_alt_units('m'), a * mach))
-        print("T  = %s [K] = %s [R]" % (T * 5 / 9., T))
-        print("mu = %s [(N*s)/m^2] = %s [(lbf*s)/ft^2]" % (mu * 47.88026, mu))
-        print("Re = %s [1/m] = %s [1/ft]" % (ReL / 0.3048, ReL))
+    ReL *= _reynolds_factor('1/ft', reynolds_units)
+    return ReL
 
-    # convert ReL in 1/ft to 1/m
-    if ReL_units == '1/ft':
-        factor = 1.
-    elif ReL_units == '1/m':
-        factor = 1. / .3048
-    else:
-        raise NotImplementedError(ReL_units)
-    return ReL * factor
-
-def atm_unit_reynolds_number(alt, mach, SI=False, debug=False):
+def atm_unit_reynolds_number(alt, mach, alt_units='ft', reynolds_units='1/ft'):
+    # type : (float, float, str, str) -> float
     r"""
     Returns the Reynolds Number per unit length
 
     Parameters
     ----------
-    alt : bool
-        Altitude in feet or meters (SI)
+    alt : float
+        Altitude in alt_units
     mach : float
         Mach Number \f$ M \f$
-    SI : bool; default=False
-        convert to SI units
+    alt_units : str; default='ft'
+        the altitude units; ft, kft, m
+    reynolds_units : str; default='1/ft'
+        the altitude units; 1/ft, 1/m, 1/in
 
     Returns
     -------
     ReynoldsNumber/L : float
-        1/ft or 1/m (SI)
+        Reynolds number per unit length in reynolds_units
 
     \f[ \large Re   = \frac{ \rho V L}{\mu} \f]
     \f[ \large Re_L = \frac{ \rho V  }{\mu} \f]
     """
-    z = _update_alt(alt, SI)
+    z = alt * _altitude_factor(alt_units, 'ft')
     rho = atm_density(z)
     V = atm_velocity(z, mach)
     mu = atm_dynamic_viscosity_mu(z)
 
     ReL = (rho * V) / mu
 
-    if debug:
-        print("---atm_UnitReynoldsNumber---")
-        print("z  = %s [m]   = %s [ft]"  % (alt * _feet_to_alt_units('m'), z))
-        print("rho = %s [kg/m^3] = %s [slug/ft^3]"  % (rho * 515.378818, rho))
-        print("V  = %s [m/s] = %s [ft/s]"  % (V * _feet_to_alt_units('m'), V))
-        print("mu = %s [(N*s)/m^2] = %s [(lbf*s)/ft^2]" % (mu * 47.88026, mu))
-        print("Re = %s [1/m] = %s [1/ft]" % (ReL / 0.3048, ReL))
-
-    if SI:
-        return ReL / .3048  # convert ReL in 1/ft to 1/m
+    ReL *= _reynolds_factor('1/ft', reynolds_units)
     return ReL
 
 def sutherland_viscoscity(T):
+    # type: (float) -> float
     r"""
     Helper function that calculates the dynamic viscosity \f$ \mu \f$ of air at
     a given temperature
@@ -944,8 +825,6 @@ def sutherland_viscoscity(T):
 
     .. note ::
         prints a warning if T>5400 deg R
-    .. todo:: Consider raising an error instead of writing to stderr
-               and letting the function return an answer.
 
     Sutherland's Equation\n
     From Aerodynamics for Engineers 4th Edition\n
@@ -956,7 +835,78 @@ def sutherland_viscoscity(T):
         viscosity = 8.0382436E-10 * T
     else:
         if T > 5400.:
-            msg = "WARNING:  viscosity - Temperature is too large (T>5400) T=%s\n" % T
+            msg = "WARNING:  viscosity - Temperature is too large (T>5400 R) T=%s\n" % T
             sys.stderr.write(msg)
         viscosity = 2.27E-8 * (T ** 1.5) / (T + 198.6)
     return viscosity
+
+def make_flfacts_alt_sweep(mach, alts, eas_limit=1000.,
+                           alt_units='m', velocity_units='m/s', density_units='kg/m^3',
+                           eas_units='m/s'):
+    """makes an altitude sweep"""
+    rho = np.array([atm_density(alt, R=1716., alt_units=alt_units,
+                                density_units=density_units)
+                    for alt in alts])
+    machs = np.ones(len(alts)) * mach
+    sos = np.array([atm_speed_of_sound(alt, alt_units=alt_units,
+                                       velocity_units=velocity_units)
+                    for alt in alts])
+    velocity = sos * machs
+    rho, machs, velocity = _limit_eas(rho, machs, velocity, eas_limit,
+                                      alt_units=alt_units,
+                                      density_units=density_units,
+                                      velocity_units=velocity_units,
+                                      eas_units=eas_units,)
+    return rho, machs, velocity
+
+def make_flfacts_mach_sweep(alt, machs, eas_limit=1000.,
+                            alt_units='m', velocity_units='m/s', density_units='kg/m^3',
+                            eas_units='m/s'):
+    """makes a mach sweep"""
+    machs = np.asarray(machs)
+    rho = np.ones(len(machs)) * atm_density(alt, R=1716., alt_units=alt_units,
+                                            density_units=density_units)
+    sos = np.ones(len(machs)) * atm_speed_of_sound(alt, alt_units=alt_units,
+                                                   velocity_units=velocity_units)
+    velocity = sos * machs
+    rho, machs, velocity = _limit_eas(rho, machs, velocity, eas_limit,
+                                      alt_units=alt_units,
+                                      density_units=density_units,
+                                      velocity_units=velocity_units,
+                                      eas_units=eas_units,)
+    return rho, machs, velocity
+
+def make_flfacts_eas_sweep(alt, eass, alt_units='m', velocity_units='m/s', density_units='kg/m^3',
+                           eas_units='m/s'):
+    """makes a mach sweep"""
+    rho = np.ones(len(eass)) * atm_density(alt, R=1716., alt_units=alt_units,
+                                           density_units=density_units)
+    sos = np.ones(len(eass)) * atm_speed_of_sound(alt, alt_units=alt_units,
+                                                  velocity_units=velocity_units)
+    rho_0 = atm_density(0., alt_units=alt_units, density_units=density_units)
+    velocity = eass * np.sqrt(rho_0/rho)
+    machs = velocity/sos
+
+    return rho, machs, velocity
+
+def _limit_eas(rho, machs, velocity, eas_limit=1000.,
+               alt_units='m', velocity_units='m/s', density_units='kg/m^3',
+               eas_units='m/s'):
+    """limits the equivalent airspeed"""
+    if eas_limit:
+        rho0 = atm_density(0., alt_units=alt_units, density_units=density_units)
+
+        # eas in velocity units
+        eas = velocity * np.sqrt(rho / rho0)
+        kvel = _velocity_factor(eas_units, velocity_units)
+        eas_limit_in_velocity_units = eas_limit * kvel
+
+        i = np.where(eas < eas_limit_in_velocity_units)
+        rho = rho[i]
+        machs = machs[i]
+        velocity = velocity[i]
+    if len(rho) == 0:
+        raise RuntimeError('EAS limit is too struct and has removed all the conditions.\n'
+                           'Increase eas_limit or change the mach/altude range.')
+
+    return rho, machs, velocity

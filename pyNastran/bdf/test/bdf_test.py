@@ -8,8 +8,7 @@ from six import PY2
 
 import pyNastran
 from pyNastran.bdf.test.test_bdf import run_lots_of_files
-from pyNastran.op2.test.test_op2 import get_failed_files
-from pyNastran.op2.test.op2_test import get_all_files
+from pyNastran.op2.test.op2_test import get_failed_files, get_all_files
 from pyNastran.utils.dev import get_files_of_type
 
 def remove_marc_files(filenames):
@@ -65,12 +64,14 @@ def run(regenerate=True, run_nastran=False, debug=False, sum_load=True, xref=Tru
         files2 = get_all_files(folders_file, '.bdf')
         files2 += get_all_files(folders_file, '.nas')
         files2 += get_all_files(folders_file, '.dat')
-        files2 += files
+        files2 = list(set(files2))
         files2.sort()
     else:
         print('failed_cases_filename = %r' % failed_cases_filename)
         files2 = get_failed_files(failed_cases_filename)
 
+    #for filename in files2:
+        #print(filename)
     skip_files = [
         'mp10a.dat',
         'mp20e.dat',
@@ -89,11 +90,10 @@ def run(regenerate=True, run_nastran=False, debug=False, sum_load=True, xref=Tru
              if not os.path.basename(fname).startswith('out_')
              and '.test_op2.' not in fname # removing test output files
              and '.test_bdf.' not in fname
+             and '.test_bdfv.' not in fname
              and 'tecplot' not in fname
              and os.path.basename(fname) not in skip_files]
 
-    # nstart = 0
-    # nstop = 10000
     if os.path.exists('skipped_cards.out'):
         os.remove('skipped_cards.out')
 
@@ -130,30 +130,26 @@ def main():
     from docopt import docopt
     ver = str(pyNastran.__version__)
 
-    msg = "Usage:\n"
     is_release = False
-    msg += "bdf_test [-r] [-n] [-s S...] [-e E] [-L] [-x] [-c C]\n"
-    msg += "  bdf_test -h | --help\n"
-    msg += "  bdf_test -v | --version\n"
-    msg += "\n"
-    msg += "Tests to see if many BDFs will work with pyNastran %s.\n" % ver
-    msg += "\n"
-    #msg += "Positional Arguments:\n"
-    #msg += "  OP2_FILENAME         Path to OP2 file\n"
-    #msg += "\n"
-    msg += "Options:\n"
-    msg += "  -r, --regenerate     Resets the tests\n"
-    msg += '  -c C, --crash_cards  Crash on specific cards (e.g. CGEN,EGRID)\n'
-    msg += "  -n, --run_nastran    Runs Nastran\n"
-    msg += "  -L, --sum_loads      Disables static/dynamic loads sum\n"
-    msg += "  -s S, --size S       Sets the field size\n"
-    msg += '  -e E, --nerrors E    Allow for cross-reference errors (default=100)\n'
-    msg += '  -x, --xref           disables cross-referencing and checks of the BDF.\n'
-    msg += '                       (default=False -> on)\n'
-    #msg += "  -c, --disablecompare  Doesn't do a validation of the vectorized result\n"
-    #msg += "  -z, --is_mag_phase    F06 Writer writes Magnitude/Phase instead of\n"
-    #msg += "                        Real/Imaginary (still stores Real/Imag); [default: False]\n"
-    #msg += "  -s <sub>, --subcase   Specify one or more subcases to parse; (e.g. 2_5)\n"
+    msg = (
+        'Usage:\n'
+        'bdf_test [-r] [-n] [-s S...] [-e E] [-L] [-x] [-c C] [--safe]\n'
+        '  bdf_test -h | --help\n'
+        '  bdf_test -v | --version\n'
+        '\n'
+        "Tests to see if many BDFs will work with pyNastran %s.\n"
+        '\n'
+        "Options:\n"
+        '  -r, --regenerate     Resets the tests\n'
+        '  -c C, --crash_cards  Crash on specific cards (e.g. CGEN,EGRID)\n'
+        '  -n, --run_nastran    Runs Nastran\n'
+        '  -L, --sum_loads      Disables static/dynamic loads sum\n'
+        '  -s S, --size S       Sets the field size\n'
+        '  -e E, --nerrors E    Allow for cross-reference errors (default=100)\n'
+        '  -x, --xref           disables cross-referencing and checks of the BDF.\n'
+        '                       (default=False -> on)\n'
+        '  --safe               Use safe cross-reference (default=False)\n' % ver
+    )
     if len(sys.argv) == 0:
         sys.exit(msg)
 

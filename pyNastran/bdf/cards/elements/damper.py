@@ -24,6 +24,18 @@ class DamperElement(Element):
     def __init__(self):
         Element.__init__(self)
 
+    #def Centroid(self):
+        ## same as below, but we ignore the 2nd point it it's None
+        ##p = (self.nodes_ref[1].get_position() + self.nodes_ref[0].get_position()) / 2.
+
+        #p = self.nodes_ref[0].get_position()
+        #if self.nodes_ref[1] is not None:
+            #p += self.nodes_ref[1].get_position()
+            #p /= 2.
+        #return p
+
+    #def center_of_mass(self):
+        #return self.Centroid()
 
 class LineDamper(DamperElement):
     def __init__(self):
@@ -116,7 +128,7 @@ class CDAMP1(LineDamper):
         assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=%r %s' % (self.c2, msg)
         assert len(self.nodes) == 2
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
@@ -157,7 +169,7 @@ class CDAMP1(LineDamper):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CDAMP1 eid=%s' % self.eid
+        msg = ', which is required by CDAMP1 eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
         pid = self.pid
@@ -171,6 +183,17 @@ class CDAMP1(LineDamper):
             msg = ('pid=%i not found which is required by CDAMP1 eid=%i.  '
                    'Allowed Pids=%s' % (self.pid, self.eid, pids))
             raise KeyError(msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        self.cross_reference(model)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -194,6 +217,7 @@ class CDAMP2(LineDamper):
     _field_map = {
         1: 'eid', 2:'b', 'c1':4, 'c2':6,
     }
+    cp_name_map = {'B' : 'b'}
     def _update_field_helper(self, n, value):
         if n == 3:
             self.nodes[0] = value
@@ -304,14 +328,25 @@ class CDAMP2(LineDamper):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CDAMP2 eid=%s' % self.eid
+        msg = ', which is required by CDAMP2 eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        self.cross_reference(model)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
         self.nodes_ref = None
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         eid = self.eid
         b = self.B()
         nids = self.node_ids
@@ -413,7 +448,7 @@ class CDAMP3(LineDamper):
         nids = [data[2], data[3]]
         return CDAMP3(eid, pid, nids, comment=comment)
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         b = self.B()
@@ -442,6 +477,20 @@ class CDAMP3(LineDamper):
         msg = ', which is required by CDAMP3 eid=%s' % (self.eid)
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CDAMP3 eid=%s' % self.eid
+        self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
+        #self.nodes_ref = model.safe_empty_nodes(self.nodes, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -531,7 +580,7 @@ class CDAMP4(LineDamper):
         nids = [data[2], data[3]]
         return CDAMP4(eid, b, nids, comment=comment)
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         eid = self.eid
         b = self.B()
         nids = self.node_ids
@@ -563,6 +612,19 @@ class CDAMP4(LineDamper):
         """
         msg = ', which is required by CDAMP4 eid=%s' % (self.eid)
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        #msg = ', which is required by CDAMP4 eid=%s' % (self.eid)
+        #self.nodes_ref = model.safe_empty_nodes(self.node_ids, msg=msg)
+        self.cross_reference(model)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -657,7 +719,7 @@ class CDAMP5(LineDamper):
         nids = [data[2], data[3]]
         return CDAMP5(eid, pid, nids, comment=comment)
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
@@ -683,6 +745,19 @@ class CDAMP5(LineDamper):
         msg = ', which is required by CDAMP5 eid=%s' % (self.eid)
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CDAMP5 eid=%s' % (self.eid)
+        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -800,9 +875,22 @@ class CVISC(LineDamper):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CVISC eid=%s' % self.eid
+        msg = ', which is required by CVISC eid=%s' % self.eid
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CVISC eid=%s' % (self.eid)
+        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -810,7 +898,7 @@ class CVISC(LineDamper):
         self.nodes_ref = None
         self.pid_ref = None
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         b = self.B()

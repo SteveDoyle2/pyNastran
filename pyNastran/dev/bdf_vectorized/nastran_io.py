@@ -1,6 +1,7 @@
 # pylint: disable=C0103,C0111,E1101
 from __future__ import print_function
 import os
+from collections import OrderedDict
 from six import iteritems
 from six.moves import zip
 
@@ -40,6 +41,7 @@ from pyNastran.dev.bdf_vectorized.bdf import BDF
 from pyNastran.op2.test.test_op2 import OP2
 from pyNastran.f06.f06 import F06
 from pyNastran.converters.nastran.nastranIO import NastranIO as NastranIO_xref
+from pyNastran.utils import integer_types
 
 class NastranIO(NastranIO_xref):
     def __init__(self):
@@ -55,7 +57,7 @@ class NastranIO(NastranIO_xref):
             self.turn_text_off()
             self.grid.Reset()
 
-            self.result_cases = {}
+            self.result_cases = OrderedDict()
             self.ncases = 0
         for i in ('case_keys', 'icase', 'isubcase_name_map'):
             if hasattr(self, i):
@@ -131,30 +133,10 @@ class NastranIO(NastranIO_xref):
         else:
             nconm2 = 0
         self.grid.Allocate(self.nElements, 1000)
-        #self.gridResult.SetNumberOfComponents(self.nElements)
         self.grid2.Allocate(ncaeros + nconm2, 1000)
 
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(self.nNodes)
-        #self.gridResult.Allocate(self.nNodes, 1000)
-        #vectorReselt.SetNumberOfComponents(3)
-        #elem.SetNumberOfPoints(nNodes)
-        #if 0:
-            #i = 0
-            #fraction = 1. / nNodes  # so you can color the nodes by ID
-            #for (nid, node) in sorted(iteritems(model.nodes)):
-                #point = node.get_position()
-                #points.InsertPoint(i, *point)
-                ##self.gridResult.InsertNextValue(i * fraction)
-
-                ##elem = vtk.vtkVertex()
-                ##elem.GetPointIds().SetId(0, i)
-                ##self.aQuadGrid.InsertNextCell(elem.GetCellType(),
-                ##                              elem.GetPointIds())
-                ##vectorResult.InsertTuple3(0, 0.0, 0.0, 1.0)
-
-                #self.nid_map[nid] = i
-                #i += 1
 
         # add the nodes
         node_ids = model.grid.node_id
@@ -172,7 +154,7 @@ class NastranIO(NastranIO_xref):
             self.nid_map[node_id] = i
 
         dim_max = max(xmax-xmin, ymax-ymin, zmax-zmin)
-        self.create_global_axes(dim_max)
+        self.gui.create_global_axes(dim_max)
 
 
         # add the CAERO/CONM2 elements
@@ -747,17 +729,13 @@ class NastranIO(NastranIO_xref):
 
         self.grid.SetPoints(points)
         self.grid2.SetPoints(points2)
-        #self.grid.GetPointData().SetScalars(self.gridResult)
-        #print(dir(self.grid)) #.SetNumberOfComponents(0)
-        #self.grid.GetCellData().SetNumberOfTuples(1);
-        #self.grid.GetCellData().SetScalars(self.gridResult)
         self.grid.Modified()
         self.grid2.Modified()
         self.grid.Update()
         self.grid2.Update()
         self.log_info("updated grid")
 
-        cases = {}
+        cases = OrderedDict()
 
         if 0:
             nelements = len(model.elements)
@@ -893,7 +871,7 @@ class NastranIO(NastranIO_xref):
                             pressures[eids.index(el.eid)] += p
                     #elif elem.type in ['CTETRA', 'CHEXA', 'CPENTA']:
                         #A, centroid, normal = elem.get_face_area_centroid_normal(
-                            #load.g34.nid, load.g1.nid)
+                            #load.g34_ref.nid, load.g1_ref.nid)
                         #r = centroid - p
 
             # if there is no applied pressure, don't make a plot
@@ -907,6 +885,10 @@ class NastranIO(NastranIO_xref):
             if subcase_id == 0:
                 continue
             load_case_id, options = model.case_control_deck.get_subcase_parameter(subcase_id, 'LOAD')
+            if not isinstance(load_case_id, integer_types):
+                msg = 'subcase_id LOAD=%r type=%s' % (
+                    subcase_id, load_case_id, type(load_case_id))
+                raise TypeError(msg)
             loadCase = model.loads[load_case_id]
 
             # account for scale factors
@@ -957,7 +939,6 @@ class NastranIO(NastranIO_xref):
         """
         Loads the Nastran results into the GUI
         """
-        #gridResult.SetNumberOfComponents(self.nElements)
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 
@@ -1008,7 +989,7 @@ class NastranIO(NastranIO_xref):
             #print("nodeID=%s t=%s" % (nodeID, translation))
         #self.isubcase_name_map[self.isubcase] = [Subtitle, Label]
 
-        cases = {}
+        cases = OrderedDict()
         subcase_ids = model.isubcase_name_map.keys()
         self.isubcase_name_map = model.isubcase_name_map
 

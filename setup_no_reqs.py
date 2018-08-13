@@ -42,10 +42,8 @@ setup(
     classifiers=[
         'Natural Language :: English',
         'Intended Audience :: Science/Research',
-        'License :: OSI Approved :: BSD License (BSD-3)',
-        'Programming Language :: Python :: 2',
+        'License :: OSI Approved :: BSD License',
         'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
@@ -83,6 +81,7 @@ setup(
 
             #'pyNastranv = pyNastran.dev.bdf_vectorized.solver.solver:main',
             #'test_bdfv = pyNastran.dev.bdf_vectorized.test.test_bdf_vectorized2:main',
+            'test_bdfv = pyNastran.dev.bdf_vectorized2.test.test_bdf:main',
             #'nastran_to_code_aster = pyNastran.converters.dev.code_aster.nastran_to_code_aster:main',
         ]
     },

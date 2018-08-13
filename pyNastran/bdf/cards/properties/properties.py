@@ -1,4 +1,4 @@
-#pylint: disable=C0103,C0111,R0902
+#pylint: disable=C0103
 """
 All ungrouped properties are defined in this file.  This includes:
  * PFAST
@@ -9,25 +9,43 @@ All ungrouped properties are defined in this file.  This includes:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six.moves import range
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.cards.base_card import Property, Material
+from pyNastran.bdf.cards.base_card import Property
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, double, double_or_blank,
-    blank)
+    integer, integer_or_blank, double, double_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
 
 class PFAST(Property):
+    """
+    +------+-----+-----+------+-------+---------+--------+--------+-----+
+    |   1  |  2  |  3  |   4  |   5   |    6    |    7   |    8   |  9  |
+    +======+=====+=====+======+=======+=========+========+========+=====+
+    |PFAST | PID |  D  | MCID | MFLAG |   KT1   |   KT2  |   KT3  | KR1 |
+    +------+-----+-----+------+-------+---------+--------+--------+-----+
+    |      | KR2 | KR3 | MASS |   GE  |         |        |        |     |
+    +------+-----+-----+------+-------+---------+--------+--------+-----+
+    |PFAST |  7  | 1.1 | 70   |       | 100000. | 46000. | 12300. |     |
+    +------+-----+-----+------+-------+---------+--------+--------+-----+
+    """
     type = 'PFAST'
     _field_map = {
         1: 'pid', 2:'d', 3:'mcid', 4:'mflag',
         5:'kt1', 6:'kt2', 7:'kt3',
         8:'kr1', 9:'kr2', 10:'kr3',
         11:'mass', 12:'ge'
+    }
+    pname_fid_map = {
+        'KT1' : 'kt1',
+        'KT2' : 'kt2',
+        'KT3' : 'kt3',
+        'KR1' : 'kr1',
+        'KR2' : 'kr2',
+        'KR3' : 'kr3',
+        'MASS' : 'mass',
     }
 
     def __init__(self, pid, d, kt1, kt2, kt3, mcid=-1, mflag=0,
@@ -84,6 +102,7 @@ class PFAST(Property):
         assert self.d > 0
         assert mflag in [0, 1]
         assert self.mcid >= -1
+        self.mcid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -147,18 +166,17 @@ class PFAST(Property):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by PFAST pid=%s' % self.pid
+        msg = ', which is required by PFAST pid=%s' % self.pid
         if self.mcid != -1:
-            self.mcid = model.Coord(self.Mcid(), msg)
-            self.mcid_ref = self.mcid
+            self.mcid_ref = model.Coord(self.Mcid(), msg)
 
     def uncross_reference(self):
         self.mcid = self.Mcid()
-        if self.mcid != -1:
-            del self.mcid_ref
+        #if self.mcid != -1:
+        self.mcid_ref = None
 
     def Mcid(self):
-        if isinstance(self.mcid, integer_types):
+        if self.mcid_ref is None:
             return self.mcid
         return self.mcid_ref.cid
 
@@ -218,12 +236,49 @@ class PGAP(Property):
         10 : 'tmax',
         11 : 'mar',
         12 : 'trmin',
+        'KA' : 'ka',
     }
 
-    def __init__(self, pid, u0=0., f0=0., ka=1.e8, kb=None, mu1=0., kt=None, mu2=None,
-                 tmax=0., mar=100., trmin=0.001, comment=''):
+    def __init__(self, pid, u0=0., f0=0., ka=1.e8, kb=None, mu1=0.,
+                 kt=None, mu2=None, tmax=0., mar=100., trmin=0.001,
+                 comment=''):
         """
         Defines the properties of the gap element (CGAP entry).
+
+        Parameters
+        ----------
+        pid : int
+            property id for a CGAP
+        u0 : float; default=0.
+            Initial gap opening
+        f0 : float; default=0.
+            Preload
+        ka : float; default=1.e8
+            Axial stiffness for the closed gap
+        kb : float; default=None -> 1e-14 * ka
+            Axial stiffness for the open gap
+        mu1 : float; default=0.
+            Coefficient of static friction for the adaptive gap element
+            or coefficient of friction in the y transverse direction
+            for the nonadaptive gap element
+        kt : float; default=None -> mu1*ka
+            Transverse stiffness when the gap is closed
+        mu2 : float; default=None -> mu1
+            Coefficient of kinetic friction for the adaptive gap element
+            or coefficient of friction in the z transverse direction
+            for the nonadaptive gap element
+        tmax : float; default=0.
+            Maximum allowable penetration used in the adjustment of
+            penalty values. The positive value activates the penalty
+            value adjustment
+        mar : float; default=100.
+            Maximum allowable adjustment ratio for adaptive penalty
+            values KA and KT
+        trmin : float; default=0.001
+            Fraction of TMAX defining the lower bound for the allowable
+            penetration
+        comment : str; default=''
+            a comment for the card
         """
         Property.__init__(self)
         if comment:
@@ -308,7 +363,7 @@ class PGAP(Property):
         return PGAP(pid, u0, f0, ka, kb, mu1, kt, mu2, tmax, mar, trmin,
                     comment=comment)
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         pid = self.Pid()
         assert isinstance(pid, int), 'pid=%r\n%s' % (pid, str(self))
 
@@ -397,9 +452,12 @@ class PRAC2D(CrackProperty):
         #: (Real; Default = 180.0)
         self.phi = phi
 
-        if iplane not in [0, 1]:
+        self.mid_ref = None
+
+    def validate(self):
+        if self.iplane not in [0, 1]:
             raise RuntimeError('Invalid value for iPlane on PRAC2D, can '
-                               'only be 0,1 iPlane=%r' % iplane)
+                               'only be 0,1 iPlane=%r' % self.iplane)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -424,7 +482,7 @@ class PRAC2D(CrackProperty):
         return PRAC2D(pid, mid, thick, iplane, nsm, gamma, phi,
                       comment=comment)
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         pid = self.Pid()
         assert isinstance(pid, int)
 
@@ -437,13 +495,13 @@ class PRAC2D(CrackProperty):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by PRAC2D pid=%s' % self.pid
+        msg = ', which is required by PRAC2D pid=%s' % self.pid
         self.mid = model.Material(self.mid, msg)  # MAT1, MAT2, MAT8
         self.mid_ref = self.mid
 
     def uncross_reference(self):
         self.mid = self.Mid()
-        del self.mid_ref
+        self.mid_ref = None
 
     def raw_fields(self):
         fields = ['PRAC2D', self.pid, self.Mid(), self.thick,
@@ -484,6 +542,7 @@ class PRAC3D(CrackProperty):
         #: stress intensity factors are to be calculated. See Remark 4.
         #: (Real; Default = 180.0)
         self.phi = phi
+        self.mid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -504,7 +563,7 @@ class PRAC3D(CrackProperty):
         assert len(card) <= 5, 'len(PRAC3D card) = %i\ncard=%s' % (len(card), card)
         return PRAC3D(pid, mid, gamma, phi, comment=comment)
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         pid = self.Pid()
         assert isinstance(pid, int)
 
@@ -517,13 +576,13 @@ class PRAC3D(CrackProperty):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by PRAC3D pid=%s' % self.pid
+        msg = ', which is required by PRAC3D pid=%s' % self.pid
         self.mid = model.Material(self.mid, msg)  # MAT1, MAT9
         self.mid_ref = self.mid
 
     def uncross_reference(self):
         self.mid = self.Mid()
-        del self.mid_ref
+        self.mid_ref = None
 
     def raw_fields(self):
         fields = ['PRAC3D', self.pid, self.Mid(), self.gamma, self.phi]

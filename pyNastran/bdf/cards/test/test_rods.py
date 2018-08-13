@@ -1,11 +1,13 @@
 from six.moves import StringIO
 from math import pi, sqrt
-
 import unittest
+
+import numpy as np
 
 from pyNastran.bdf.bdf import BDF, BDFCard
 from pyNastran.bdf.bdf import CROD, CONROD, PROD, CTUBE, PTUBE, GRID, MAT1
 from pyNastran.bdf.cards.test.test_shells import make_dvprel_optimization
+from pyNastran.bdf.cards.test.utils import save_load_deck
 
 #from pyNastran.bdf.field_writer_8 import print_card_8
 
@@ -61,13 +63,14 @@ class TestRods(unittest.TestCase):
         assert prod2.MassPerLength() == 21.0, prod2.MassPerLength()
 
     def test_ptube_nsm(self):
+        """tests a PTUBE for the NSM field"""
         model = BDF(debug=False)
         pid = 1
         mid = 1
         nsm = 1.
         OD1 = 2.0
         ptube = model.add_ptube(pid, mid, OD1, t=None, nsm=nsm, OD2=None,
-                              comment='')
+                                comment='ptube')
         #print(ptube)
 
         E = 1.0
@@ -100,6 +103,26 @@ class TestRods(unittest.TestCase):
         mat1.rho = rho
         mpl = area * rho + nsm
         assert ptube2.MassPerLength() == mpl, ptube2.MassPerLength()
+
+        eid = 100
+        nids = [10, 12]
+        ctube = model.add_ctube(eid, pid, nids, comment='ctube')
+        model.add_grid(10, [0., 0., 0.])
+        model.add_grid(12, [2., 0., 0.])
+
+        model.safe_cross_reference()
+        model.uncross_reference()
+        model.cross_reference()
+        mass, cg, inertia = model.mass_properties(
+            element_ids=None, mass_ids=None,
+            reference_point=None, sym_axis=None,
+            scale=None, inertia_reference='cg')
+
+        # L * (rho * a + nsm)
+        A = pi * (OD1**2) / 4.
+        mass_expected = 2.0 * (rho * A + nsm)
+        assert np.allclose(mass, mass_expected), mass
+        save_load_deck(model)
 
     def test_conrod_01(self):
         eid = 10

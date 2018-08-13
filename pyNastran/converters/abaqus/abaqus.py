@@ -9,7 +9,7 @@ from pyNastran.converters.abaqus.abaqus_cards import Material, Part, SolidSectio
 
 def read_abaqus(abaqus_inp_filename, log=None, debug=False):
     """reads an abaqus model"""
-    model = Abaqus(log=None, debug=False)
+    model = Abaqus(log=log, debug=debug)
     model.read_abaqus_inp(abaqus_inp_filename)
     return model
 
@@ -58,8 +58,15 @@ class Abaqus(object):
 
     def read_abaqus_inp(self, abaqus_inp_filename):
         """reads an abaqus model"""
-        with open(abaqus_inp_filename, 'r') as abaqus_inp:
-            lines = abaqus_inp.readlines()
+        if isinstance(abaqus_inp_filename, str):
+            with open(abaqus_inp_filename, 'r') as abaqus_inp:
+                lines = abaqus_inp.readlines()
+        elif isinstance(abaqus_inp_filename, list):
+            lines = abaqus_inp_filename
+        else:
+            msg = 'abaqus_inp_filename=%s type=%r' % (
+                abaqus_inp_filename, type(abaqus_inp_filename))
+            raise NotImplementedError(msg)
 
         lines = _clean_lines(lines)
 
@@ -114,7 +121,7 @@ class Abaqus(object):
                     data_lines, iline, line0 = self._read_star_block(lines, iline, line0)
 
                 elif word.startswith('amplitude'):
-                    param_map = get_param_map(word)
+                    param_map = get_param_map(iline, word)
                     name = param_map['name']
                     if name in self.amplitudes:
                         raise RuntimeError('name=%r is already defined...' % name)
@@ -266,7 +273,7 @@ class Abaqus(object):
 
     def read_material(self, lines, iline, word):
         """reads a Material card"""
-        param_map = get_param_map(word)
+        param_map = get_param_map(iline, word, required_keys=['name'])
         #print(param_map)
         name = param_map['name']
 
@@ -284,7 +291,7 @@ class Abaqus(object):
         sections = {}
         while word not in unallowed_words:
             data_lines = []
-            self.log.debug('  mat_word = %r' % word)
+            #self.log.info('  mat_word = %r' % word)
             if word.startswith('elastic'):
                 key = 'elastic'
                 sword = word.split(',')
@@ -386,12 +393,14 @@ class Abaqus(object):
             elif word.startswith('user material'):
                 key = 'user material'
                 words = word.split(',')[1:]
+
+                is_constants = False
                 for wordi in words:
-                    assert '=' in wordi, wordi
-                    mat_word, value = wordi.split('=')
+                    mat_word, value = split_by_equals(wordi, lines, iline-1)
                     mat_word = mat_word.strip()
                     if mat_word == 'constants':
                         nconstants = int(value)
+                        is_constants = True
                     elif mat_word == 'type':
                         mat_type = value.strip()
                         allowed_types = ['mechanical']
@@ -401,6 +410,10 @@ class Abaqus(object):
                             raise NotImplementedError(msg)
                     else:
                         raise NotImplementedError('mat_word=%r' % mat_word)
+
+                if not is_constants:
+                    msg = "line %i: 'constants' was not defined on %r" % (iline, lines[iline-1].rstrip())
+                    raise RuntimeError(msg)
 
                 #nconstants = 111
                 nlines_full = nconstants // 8
@@ -429,6 +442,7 @@ class Abaqus(object):
             else:
                 msg = print_data(lines, iline, word, 'is this an unallowed word for *Material?\n')
                 raise NotImplementedError(msg)
+
             if key in sections:
                 msg = 'key=%r already defined for Material name=%r' % (key, name)
                 self.log.warning(msg)
@@ -470,6 +484,7 @@ class Abaqus(object):
             #print('line0 assembly =', line0)
 
             word = line0.strip('*').lower()
+            #self.log.info('assembly: %s' % word)
             if '*instance' in line0:
                 # TODO: skips header parsing
                 iline += 1
@@ -494,19 +509,17 @@ class Abaqus(object):
                     line0 = lines[iline].strip().lower()
             elif word.startswith('nset'):
                 # TODO: skips header parsing
-                params_map = get_param_map(word)
+                params_map = get_param_map(iline, word, required_keys=['instance'])
                 name = params_map['nset']
                 iline += 1
                 line0 = lines[iline].strip().lower()
-                assert 'instance' in params_map, params_map
                 set_ids, iline, line0 = read_set(lines, iline, line0, params_map)
             elif word.startswith('elset'):
                 # TODO: skips header parsing
-                params_map = get_param_map(word)
+                params_map = get_param_map(iline, word, required_keys=['instance'])
                 name = params_map['elset']
                 iline += 1
                 line0 = lines[iline].strip().lower()
-                assert 'instance' in params_map, params_map
                 set_ids, iline, line0 = read_set(lines, iline, line0, params_map)
             elif word == 'node':
                 #self.log.debug('  skipping assembly *node')
@@ -562,6 +575,8 @@ class Abaqus(object):
             #if is_start:
             iline += 1 # skips over the header line
             self.log.debug('  ' + line0)
+            iword = line0.strip('*').lower()
+            #self.log.info('part: %s' % iword)
             if '*node' in line0:
                 #print('  Node iline=%s' % iline)
                 line0 = lines[iline].strip().lower()
@@ -599,18 +614,16 @@ class Abaqus(object):
                 element_types[etype] = elements
 
             elif '*nset' in line0:
-                params_map = get_param_map(word)
+                params_map = get_param_map(iline, word, required_keys=['name', 'part'])
                 name = params_map['name']
                 line0 = lines[iline].strip().lower()
-                assert 'part' in params_map, params_map
                 set_ids, iline, line0 = read_set(lines, iline, line0, params_map)
 
             elif '*elset' in line0:
                 # TODO: skips header parsing
                 #iline += 1
-                params_map = get_param_map(word)
+                params_map = get_param_map(iline, word, required_keys=['name', 'part'])
                 name = params_map['name']
-                assert 'part' in params_map, params_map
                 line0 = lines[iline].strip().lower()
                 set_ids, iline, line0 = read_set(lines, iline, line0, params_map)
 
@@ -628,13 +641,13 @@ class Abaqus(object):
                 # TODO: skips header parsing
                 #iline += 1
                 word2 = line0.strip('*').lower()
-                params_map = get_param_map(word2)
+                params_map = get_param_map(iline, word2, required_keys=['material'])
                 self.log.debug('    param_map = %s' % params_map)
                 #line0 = lines[iline].strip().lower()
                 data_lines, iline, line0 = self._read_star_block2(lines, iline, line0)
                 #for line in data_lines:
                     #print(line)
-                solid_section = SolidSection(params_map, data_lines)
+                solid_section = SolidSection(params_map, data_lines, self.log)
                 solid_sections.append(solid_section)
 
             elif '*cohesive section' in line0:
@@ -847,6 +860,26 @@ class Abaqus(object):
         self.log.debug('  end of step %i...' % istep)
         return iline, line0
 
+    def write(self, abqaqus_filename_out):
+        self.log.info('writing %r' % abqaqus_filename_out)
+        #self.parts = {}
+        #self.boundaries = {}
+        #self.materials = {}
+        #self.amplitudes = {}
+        #self.assembly = {}
+        #self.initial_conditions = {}
+        #self.steps = {}
+        #self.heading = None
+        #self.preprint = None
+        with open(abqaqus_filename_out, 'w') as abq_file:
+            print("  nparts = %s" % len(self.parts))
+            print("  nmaterials = %s" % len(self.materials))
+            for part_name, part in iteritems(self.parts):
+                part.write(abq_file)
+            for unused_mat_name, mat in iteritems(self.materials):
+                mat.write(abq_file)
+
+
 def read_set(lines, iline, line0, params_map):
     """reads a set"""
     set_ids = []
@@ -865,8 +898,23 @@ def read_set(lines, iline, line0, params_map):
             raise
     return set_ids, iline, line0
 
-def get_param_map(word):
-    """get the optional arguments on a line"""
+def get_param_map(iline, word, required_keys=None):
+    """
+    get the optional arguments on a line
+
+    Example
+    -------
+    >>> iline = 0
+    >>> word = 'elset,instance=dummy2,generate'
+    >>> params = get_param_map(iline, word, required_keys=['instance'])
+    params = {
+        'elset' : None,
+        'instance' : 'dummy2,
+        'generate' : None,
+    }
+    """
+    if required_keys is None:
+        required_keys = []
     words = word.split(',')
     param_map = {}
     for wordi in words:
@@ -879,7 +927,25 @@ def get_param_map(word):
             key = sword[0].strip()
             value = sword[1].strip()
         param_map[key] = value
+
+    msg = ''
+    for key in required_keys:
+        if key not in param_map:
+            msg += 'line %i: %r not found in %r\n' % (iline, key, word)
+    if msg:
+        raise RuntimeError(msg)
     return param_map
+
+def split_by_equals(word, lines, iline):
+    """
+    splits 'x = 42'
+    into 'x' and '42'
+    """
+    if '=' not in word:
+        msg = 'line %i: %r cannot be split by an equals sign (=)' % (iline, word)
+        raise RuntimeError(msg)
+    word_out, value = word.split('=')
+    return word_out, value
 
 def print_data(lines, iline, word, msg, nlines=20):
     """prints the last N lines"""
@@ -949,4 +1015,3 @@ def main(): # pragma: no cover
 
 if __name__ == '__main__': # pragma: no cover
     main()
-

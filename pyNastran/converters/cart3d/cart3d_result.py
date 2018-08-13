@@ -12,9 +12,10 @@ class Cart3dGeometry(GuiResultCommon):
     Stores the cart3d results.
     """
     def __init__(self, subcase_id, labels,
-                 nodes, elements, regions, area, cnormals,
+                 nodes, elements, regions, area, cnormals, colormap='jet',
                  uname='Cart3dGeometry'):
         GuiResultCommon.__init__(self)
+        self.colormap_default = colormap
         self.uname = uname
         self.n = 2
         self.nodes = nodes # 0
@@ -48,7 +49,7 @@ class Cart3dGeometry(GuiResultCommon):
         self.nlabels = [None] * ntitles
         self.labelsize = [None] * ntitles
         self.ncolors = [None] * ntitles
-        self.colormap = ['jet'] * ntitles
+        self.colormap = [self.colormap_default] * ntitles
 
     def get_header(self, i, name):
         """
@@ -117,7 +118,12 @@ class Cart3dGeometry(GuiResultCommon):
     #----------------------------------------------------
     # colormap
     def get_nlabels_labelsize_ncolors_colormap(self, i, name):
-        j = self.titles.index(name)
+        try:
+            j = self.titles.index(name)
+        except ValueError:
+            print('name=%s' % str(name))
+            print('self.titles=%r' % self.titles)
+            raise
         return self.nlabels[j], self.labelsize[j], self.ncolors[j], self.colormap[j]
 
     def get_default_nlabels_labelsize_ncolors_colormap(self, i, name):
@@ -184,7 +190,7 @@ class Cart3dGeometry(GuiResultCommon):
 
 class Cart3dResult(GuiResultCommon):
     """is this used???"""
-    def __init__(self, subcase_id, labels, loads, uname='Cart3dResult'):
+    def __init__(self, subcase_id, labels, loads, colormap='jet', uname='Cart3dResult'):
         GuiResultCommon.__init__(self)
         self.uname = uname
         self.labels = labels
@@ -206,7 +212,7 @@ class Cart3dResult(GuiResultCommon):
         self.nlabels = [None] * ntitles
         self.labelsize = [None] * ntitles
         self.ncolors = [None] * ntitles
-        self.colormap = ['jet'] * ntitles
+        self.colormap = [colormap] * ntitles
 
     def get_location(self, i, name):
         return 'centroid'

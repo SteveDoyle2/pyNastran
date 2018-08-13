@@ -223,3 +223,10 @@ PBEAM          5       1     .25.0052083.0052083        .0087949
 PBAR     1       1      0.25    .0052083.0052083.0088021
 PSOLID   2       1       0
 PSHELL   4       1      .25      1               1
+
+DESVAR	1	T4	1.0	0.001	1000.
+$
+$DVPRE	ID	TYPE	PID	PNAME	PMIN	PMAX	C0
+$        DVID1	COEF1	DVID2	COEF2	DVID3	-etc.-
+DVPREL1	10000	PSHELL	4	T
+	1	1.0

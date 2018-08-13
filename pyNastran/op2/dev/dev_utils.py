@@ -145,7 +145,6 @@ def get_nodal_avg_min_principal_stress(bdf, op2, subcase, eids):
 
 
 def main():
-    print('main...')
     bdf = None
     #op2_filename = 'model.op2'
     op2 = read_op2(op2_filename=None, combine=True, log=None, debug=True,

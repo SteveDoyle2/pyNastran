@@ -4,7 +4,7 @@ from six import string_types
 from docopt import docopt
 
 import pyNastran
-from pyNastran.converters.stl.stl import STL
+from pyNastran.converters.stl.stl import read_stl
 
 def main():
     # --ascii <fmt> doesn't work for binary properly, so we set:
@@ -94,8 +94,7 @@ def stl_reshape(data):
     out_stl_filename = data['<out_stl_filename>']
     assert in_stl_filename != out_stl_filename
 
-    stl = STL()
-    stl.read_stl(in_stl_filename)
+    stl = read_stl(in_stl_filename)
 
     if data['<fmt>'] in ['False', False]:
         is_binary = True
@@ -190,5 +189,5 @@ def stl_reshape(data):
 
     stl.write_stl(out_stl_filename, is_binary=is_binary, float_fmt=fmt)
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()

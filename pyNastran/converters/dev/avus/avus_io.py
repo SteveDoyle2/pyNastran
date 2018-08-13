@@ -1,4 +1,5 @@
 from __future__ import print_function
+from collections import OrderedDict
 from six.moves import range
 
 from numpy import arange, mean, amax, amin, array
@@ -7,11 +8,11 @@ from vtk import vtkHexahedron, vtkQuad, vtkTriangle, vtkTetra
 
 from pyNastran.converters.dev.avus.avus_grid import AvusGrid
 from pyNastran.gui.gui_objects.gui_result import GuiResult
-from pyNastran.gui.gui_utils.vtk_utils import numpy_to_vtk_points
+from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
 
 class AvusIO(object):
-    def __init__(self):
-        pass
+    def __init__(self, gui):
+        self.gui = gui
 
     def get_avus_wildcard_geometry_results_functions(self):
         data = ('Avus',
@@ -22,6 +23,34 @@ class AvusIO(object):
     #def removeOldGeometry(self, filename):
         #self._remove_old_cart3d_geometry(filename)
 
+    def _remove_old_cart3d_geometry(self, filename):
+        #return self._remove_old_geometry(filename)
+
+        self.gui.eid_map = {}
+        self.gui.nid_map = {}
+        if filename is None:
+            self.gui.scalarBar.VisibilityOff()
+            skip_reading = True
+        else:
+            self.gui.turn_text_off()
+            self.gui.grid.Reset()
+
+            self.gui.result_cases = OrderedDict()
+            self.gui.ncases = 0
+            try:
+                del self.gui.case_keys
+                del self.gui.icase
+                del self.gui.isubcase_name_map
+            except:
+                # print("cant delete geo")
+                pass
+
+            #print(dir(self))
+            skip_reading = False
+        #self.scalarBar.VisibilityOff()
+        self.gui.scalarBar.Modified()
+        return skip_reading
+
     def load_avus_geometry(self, avus_filename, name='main', plot=True):
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]
@@ -30,7 +59,7 @@ class AvusIO(object):
         if skip_reading:
             return
 
-        model = AvusGrid(log=self.log, debug=False)
+        model = AvusGrid(log=self.gui.log, debug=False)
         model.read_avus_grid(avus_filename)
 
         self.model_type = 'avus'
@@ -44,8 +73,8 @@ class AvusIO(object):
 
 
         # loadAvusResults - regions/loads
-        self.scalarBar.VisibilityOn()
-        self.scalarBar.Modified()
+        self.gui.scalarBar.VisibilityOn()
+        self.gui.scalarBar.Modified()
 
         loads = []
         assert loads is not None
@@ -54,12 +83,14 @@ class AvusIO(object):
             note = ':  avg(Mach)=%g' % avg_mach
         else:
             note = ''
-        self.isubcase_name_map = {1: ['Avus%s' % note, '']}
-        cases = {}
+        self.gui.isubcase_name_map = {1: ['Avus%s' % note, '']}
+        cases = OrderedDict()
         ID = 1
 
-        form, cases = self._fill_avus_case(cases, ID, model, is_surface)
-        self._finish_results_io2(form, cases)
+        form, cases, node_ids, element_ids = self._fill_avus_case(cases, ID, model, is_surface)
+        self.gui.node_ids = node_ids
+        self.gui.element_ids = element_ids
+        self.gui._finish_results_io2(form, cases)
 
         #if 0:
             # http://www.vtk.org/Wiki/VTK/Examples/Cxx/Filtering/AppendFilter
@@ -72,23 +103,17 @@ class AvusIO(object):
             #appendFilter.AddInputData()
             #appendFilter.Update()
 
+
     def _make_avus_geometry(self, model, quads_only=False):
         nodes = model.nodes
         #nnodes = self.nnodes
 
-        grid = self.grid
-        #self.gridResult.Allocate(self.nnodes, 1000)
-        #vectorReselt.SetNumberOfComponents(3)
-        #self.nid_map = {}
-        #elem.SetNumberOfPoints(nNodes)
-
-        #assert nodes is not None
-        #nnodes = nodes.shape[0]
+        grid = self.gui.grid
 
         mmax = amax(nodes, axis=0)
         mmin = amin(nodes, axis=0)
         dim_max = (mmax - mmin).max()
-        self.create_global_axes(dim_max)
+        self.gui.create_global_axes(dim_max)
         points = numpy_to_vtk_points(nodes)
 
         #elements = model.elements
@@ -193,12 +218,8 @@ class AvusIO(object):
             raise NotImplementedError()
 
         grid.SetPoints(points)
-        #self.grid.GetPointData().SetScalars(self.gridResult)
-        #print(dir(self.grid) #.SetNumberOfComponents(0))
-        #self.grid.GetCellData().SetNumberOfTuples(1);
-        #self.grid.GetCellData().SetScalars(self.gridResult)
         grid.Modified()
-        if hasattr(grid, 'Update'):
+        if hasattr(grid, 'Update'):  # pragma: no cover
             grid.Update()
         return is_surface
 
@@ -252,7 +273,7 @@ class AvusIO(object):
 
         #cases[(ID, 2, 'Region', 1, 'centroid', '%i')] = regions
 
-        return geometry_form, cases
+        return geometry_form, cases, nids, eids
 
         #results = model.results
         #if is_results and len(results):

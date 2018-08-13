@@ -13,7 +13,7 @@ import numpy as np
 #test_path = os.path.join(root_path, 'bdf', 'test', 'unit')
 
 import pyNastran
-from pyNastran.bdf.bdf import BDF, read_bdf
+from pyNastran.bdf.bdf import BDF, read_bdf, CORD2R
 from pyNastran.bdf.mesh_utils.bdf_equivalence import bdf_equivalence_nodes
 from pyNastran.bdf.mesh_utils.collapse_bad_quads import convert_bad_quads_to_tris
 from pyNastran.bdf.mesh_utils.delete_bad_elements import get_bad_shells
@@ -21,6 +21,9 @@ from pyNastran.bdf.mesh_utils.export_mcids import export_mcids
 from pyNastran.bdf.mesh_utils.split_cbars_by_pin_flag import split_cbars_by_pin_flag
 from pyNastran.bdf.mesh_utils.split_elements import split_line_elements
 from pyNastran.bdf.mesh_utils.pierce_shells import pierce_shell_model, quad_intersection, triangle_intersection
+from pyNastran.bdf.mesh_utils.mirror_mesh import write_bdf_symmetric, bdf_mirror, make_symmetric_model
+from pyNastran.bdf.mesh_utils.cut_model_by_plane import cut_edge_model_by_coord, cut_face_model_by_coord, connect_face_rows
+from pyNastran.bdf.mesh_utils.mesh import create_structured_cquad4s
 from pyNastran.utils.log import SimpleLogger
 
 # testing these imports are up to date
@@ -391,13 +394,13 @@ class TestMeshUtils(unittest.TestCase):
     def test_renumber_01(self):
         """renumbers a deck in a couple ways"""
         bdf_filename = os.path.abspath(
-            os.path.join(pkg_path, '..', 'models', 'bwb', 'BWB_saero.bdf'))
+            os.path.join(pkg_path, '..', 'models', 'bwb', 'bwb_saero.bdf'))
         bdf_filename_out1 = os.path.abspath(
-            os.path.join(pkg_path, '..', 'models', 'bwb', 'BWB_saero1.out'))
+            os.path.join(pkg_path, '..', 'models', 'bwb', 'bwb_saero1.out'))
         bdf_filename_out2 = os.path.abspath(
-            os.path.join(pkg_path, '..', 'models', 'bwb', 'BWB_saero2.out'))
+            os.path.join(pkg_path, '..', 'models', 'bwb', 'bwb_saero2.out'))
         bdf_filename_out3 = os.path.abspath(
-            os.path.join(pkg_path, '..', 'models', 'bwb', 'BWB_saero3.out'))
+            os.path.join(pkg_path, '..', 'models', 'bwb', 'bwb_saero3.out'))
         model = bdf_renumber(bdf_filename, bdf_filename_out1, size=8,
                              is_double=False, starting_id_dict=None,
                              round_ids=False, cards_to_skip=None, debug=False)
@@ -419,7 +422,7 @@ class TestMeshUtils(unittest.TestCase):
         """merges multiple bdfs into a single deck"""
         #log = SimpleLogger(level='info')
         bdf_filename1 = os.path.abspath(os.path.join(
-            pkg_path, '..', 'models', 'bwb', 'BWB_saero.bdf'))
+            pkg_path, '..', 'models', 'bwb', 'bwb_saero.bdf'))
         bdf_filename2 = os.path.abspath(os.path.join(
             pkg_path, '..', 'models', 'sol_101_elements', 'static_solid_shell_bar.bdf'))
         bdf_filename3 = os.path.abspath(os.path.join(
@@ -453,7 +456,7 @@ class TestMeshUtils(unittest.TestCase):
     def test_export_mcids(self):
         """creates material coordinate systems"""
         bdf_filename = os.path.abspath(os.path.join(
-            pkg_path, '..', 'models', 'bwb', 'BWB_saero.bdf'))
+            pkg_path, '..', 'models', 'bwb', 'bwb_saero.bdf'))
         csv_filename = os.path.abspath(os.path.join(
             pkg_path, '..', 'models', 'bwb', 'mcids.csv'))
         export_mcids(bdf_filename, csv_filename,
@@ -628,17 +631,17 @@ class TestMeshUtils(unittest.TestCase):
 
         pid = 11
         model.add_ctria3(12, pid, [1, 2, 3], theta_mcid=45., zoffset=0.,
-                         tflag=0, T1=0.1, T2=0.1, T3=0.1,
+                         tflag=0, T1=0.1, T2=0.1, T3=0.1,  # absolute - mass=0.1*0.5=0.05
                          comment='')
         model.add_ctria3(13, pid, [1, 2, 3], theta_mcid=1, zoffset=0.,
-                         tflag=0, T1=0.1, T2=0.1, T3=0.1,
+                         tflag=0, T1=0.1, T2=0.1, T3=0.1,  # absolute
                          comment='')
 
         model.add_cquad4(14, pid, [1, 2, 3, 4], theta_mcid=45., zoffset=0.,
-                         tflag=0, T1=0.1, T2=0.1, T3=0.1, T4=0.1,
+                         tflag=0, T1=0.1, T2=0.1, T3=0.1, T4=0.1,  # absolute
                          comment='')
         model.add_cquad4(15, pid, [1, 2, 3, 4], theta_mcid=1, zoffset=0.,
-                         tflag=1, T1=0.1, T2=0.1, T3=0.1, T4=0.1,
+                         tflag=1, T1=0.1, T2=0.1, T3=0.1, T4=0.1,  # relative
                          comment='')
         model.add_cord2r(1, rid=0,
                          origin=[0., 0., 0.],
@@ -662,13 +665,13 @@ class TestMeshUtils(unittest.TestCase):
         model.cross_reference()
         model.pop_xref_errors()
 
-        assert np.allclose(mass, 1.0), mass  ## TODO: wrong
+        assert np.allclose(mass, 0.05), mass # t=0.1; A=0.5; nsm=0.; mass=0.05
 
         mass = model.mass_properties(element_ids=14)[0]
         bdf_file = StringIO()
         model.write_bdf(bdf_file, close=False)
         bdf_file.seek(0)
-        assert np.allclose(mass, 2.0), mass
+        assert np.allclose(mass, 0.1), mass # t=0.1; A=1.0; nsm=0.; mass=0.1
 
         csv_filename = 'mcids.csv'
         export_mcids(model, csv_filename=csv_filename, eids=[12, 13],
@@ -697,6 +700,64 @@ class TestMeshUtils(unittest.TestCase):
             #for line in lines:
                 #print(line.rstrip())
 
+    def test_mirror(self):
+        """tests bdf mirroring"""
+        pid_pshell = 10
+        pid_psolid = 11
+        mid1 = 100
+        model = BDF(log=log) # (log=log)
+        model.add_grid(1, [10., 10., 10.])
+        model.add_grid(2, [11., 10., 10.])
+        model.add_grid(3, [11., 11., 10.])
+        model.add_grid(4, [10., 11., 10.])
+
+        model.add_grid(5, [10., 10., 11.])
+        model.add_grid(6, [11., 10., 11.])
+        model.add_grid(7, [11., 11., 11.])
+        model.add_grid(8, [10., 11., 11.])
+
+
+        model.add_cquad4(1, pid_pshell, [1, 2, 3, 4]) # mass=1
+        model.add_ctria3(2, pid_pshell, [1, 2, 3]) # mass=0.5
+        model.add_conrod(3, mid1, [1, 3], A=1.0, j=0.0, c=0.0, nsm=0.0)
+
+        #model.add_ctetra(4, pid_psolid, [1, 2, 3, 5])
+        # penta
+        # pyram
+        #model.add_chexa(7, pid_psolid, [1, 2, 3, 4, 5, 6, 7, 8])
+
+        model.add_pshell(pid_pshell, mid1=mid1, t=1.)
+        model.add_psolid(pid_psolid, mid1)
+        E = 1.0
+        G = None
+        nu = 0.3
+        model.add_mat1(mid1, E, G, nu, rho=1.0)
+        model.validate()
+        model.cross_reference()
+        mass1, cg1, inertia1 = model.mass_properties()
+
+        out_filename = 'sym.bdf'
+        write_bdf_symmetric(model, out_filename=out_filename, encoding=None, size=8,
+                           is_double=False,
+                           enddata=None,
+                           close=True, plane='xz') # +y/-y
+        model2 = read_bdf(out_filename, log=log)
+        assert len(model2.nodes) == 16, model2.nodes
+        mass2, cg2, inertia2 = model2.mass_properties()
+        #print('cg1=%s cg2=%s' % (cg1, cg2))
+        assert np.allclose(mass1*2, mass2), 'mass1=%s mass2=%s' % (mass1, mass2)
+        assert np.allclose(cg2[1], 0.), 'cg2=%s stats=%s' % (cg2, model2.get_bdf_stats())
+        os.remove('sym.bdf')
+
+    def test_mirror2(self):
+        """mirrors the BDF (we care about the aero cards)"""
+        log = SimpleLogger(level='warning')
+        bdf_filename = os.path.join(pkg_path, '..', 'models', 'bwb', 'bwb_saero.bdf')
+        model = bdf_mirror(bdf_filename, plane='xz', log=log)[0]
+        model.uncross_reference()
+        model.cross_reference()
+        make_symmetric_model(model, plane='xz', zero_tol=1e-12)
+        #model.validate()
 
     def test_pierce_model(self):
         """tests pierce_shell_model"""
@@ -762,6 +823,194 @@ class TestMeshUtils(unittest.TestCase):
                       #triangle_intersection(p, v, p0, p1, p2),
                       #quad_intersection(p, v, p0, p1, p3, p2))
 
+    def test_cut_shell_model_1(self):
+        """tests pierce_shell_model"""
+        model, nodal_result = _cut_shell_model_quads()
+        coord = CORD2R(1, rid=0, origin=[0.5, 0., 0.], zaxis=[0.5, 0., 1], xzplane=[1.5, 0., 0.],
+                      comment='')
+        model.coords[1] = coord
+        tol = 2.
+        #-------------------------------------------------------------------------
+        local_points_array, global_points_array, result_array = cut_edge_model_by_coord(
+            model, coord, tol, nodal_result,
+            plane_atol=1e-5)
+        assert len(result_array) == 16, len(result_array)
+
+        geometry_array, result_array = cut_face_model_by_coord(
+            model, coord, tol, nodal_result,
+            plane_atol=1e-5)
+        assert result_array is None, len(result_array) # no quad support
+
+    def test_cut_shell_model_2(self):
+        """tests pierce_shell_model"""
+        tol = 2.
+        coord = CORD2R(1, rid=0, origin=[0.5, 0., 0.], zaxis=[0.5, 0., 1], xzplane=[1.5, 0., 0.],
+                      comment='')
+        model, nodal_result = _cut_shell_model_quads()
+        #-------------------------------------------------------------------------
+        # triangles
+        elements2 = {}
+        neids = len(model.elements)
+        for eid, elem in iteritems(model.elements):
+            elem_a, elem_b = elem.split_to_ctria3(eid, eid + neids)
+            elements2[elem_a.eid] = elem_a
+            elements2[elem_b.eid] = elem_b
+        model.elements = elements2
+        print(elements2)
+        model.coords[1] = coord
+        model.write_bdf('tris.bdf')
+
+        print('----------------------------')
+        local_points_array, global_points_array, result_array = cut_edge_model_by_coord(
+            model, coord, tol, nodal_result,
+            plane_atol=1e-5, csv_filename='cut_edge_2.csv')
+        assert len(result_array) == 20, len(result_array)
+
+        geometry_arrays, result_arrays = cut_face_model_by_coord(
+            model, coord, tol, nodal_result,
+            plane_atol=1e-5, csv_filename='cut_face_2.csv')
+        assert len(result_arrays[0]) == 8, len(result_arrays)
+
+
+    def test_connect_face_rows(self):
+        # in order
+        geometry_array = np.array([
+            [1, 1, 2],
+            [2, 2, 3],
+            [3, 3, 4],
+            [4, 4, 5],
+            [5, 5, 6],
+        ])
+        nedges = geometry_array.shape[0]
+        results_array = np.arange(0, nedges)
+        #print(results_array)
+        iedges, geometry_arrays2, results_arrays2 = connect_face_rows(
+            geometry_array, results_array, skip_cleanup=False)
+        assert np.array_equal(iedges, [[0, 1, 2, 3, 4]]), 'iedges=%s' % iedges
+        #-----------------------------------------------------------------------
+
+        # out of order
+        geometry_array = np.array([
+            [1, 1, 2], # 0
+            [2, 4, 5], # 3
+            [3, 5, 6], # 4
+            [4, 3, 4], # 2
+            [5, 2, 3], # 1
+        ])
+        nedges = geometry_array.shape[0]
+        results_array = np.arange(0, nedges)
+        iedges, geometry_arrays2, results_arrays2 = connect_face_rows(
+            geometry_array, results_array, skip_cleanup=False)
+        assert np.array_equal(iedges, [[0, 4, 3, 1, 2]]), 'iedges=%s' % iedges
+        #print(geometry_array2)
+
+        #-----------------------------------------------------------------------
+
+        # in order, two blocks
+        #print('*****************')
+        geometry_array = np.array([
+            # block 1
+            [1, 1, 2],
+            [2, 2, 3],
+            [3, 3, 4],
+
+            # block 2
+            [10, 10, 20],
+            [20, 20, 30],
+            [30, 30, 40],
+        ])
+        nedges = geometry_array.shape[0]
+        results_array = np.arange(0, nedges)
+        #print(results_array)
+        iedges, geometry_array2, results_array2 = connect_face_rows(
+            geometry_array, results_array, skip_cleanup=False)
+        assert np.array_equal(iedges, [[0, 1, 2], [3, 4, 5]]), 'iedges=%s' % iedges
+
+    def test_connect_face_rows_ring_1(self):
+        # in order, one ring
+        geometry_array = np.array([
+            [1, 1, 2],
+            [2, 2, 3],
+            [3, 3, 4],
+            [4, 1, 4],
+        ])
+        nedges = geometry_array.shape[0]
+        results_array = np.arange(0, nedges)
+        #print(results_array)
+        iedges, geometry_array2, results_array2 = connect_face_rows(
+            geometry_array, results_array, skip_cleanup=False)
+        assert np.array_equal(iedges, [[0, 1, 2, 3, 0]]), 'iedges=%s' % iedges
+
+    def test_connect_face_rows_ring_2(self):
+        # in order, two rings
+        geometry_array = np.array([
+            [1, 1, 2],
+            [2, 2, 3],
+            [3, 3, 4],
+            [4, 1, 4],
+
+            [10, 10, 20],
+            [20, 20, 30],
+            [30, 30, 40],
+            [40, 10, 40],
+        ])
+        nedges = geometry_array.shape[0]
+        results_array = np.arange(0, nedges)
+        #print(results_array)
+        iedges, geometry_array2, results_array2 = connect_face_rows(
+            geometry_array, results_array, skip_cleanup=False)
+        assert np.array_equal(iedges, [[0, 1, 2, 3, 0], [4, 5, 6, 7, 4]]), 'iedges=%s' % iedges
+
+def _cut_shell_model_quads():
+    """helper method"""
+    pid = 10
+    mid1 = 100
+    model = BDF(log=log)
+
+    # intersects (min)
+    model.add_grid(1, [0., 0., 0.])
+    model.add_grid(2, [1., 0., 0.])
+    model.add_grid(3, [1., 1., 0.])
+    model.add_grid(4, [0., 1., 0.])
+    model.add_cquad4(1, pid, [1, 2, 3, 4])
+
+    # intersects (max)
+    model.add_grid(5, [0., 0., 1.])
+    model.add_grid(6, [1., 0., 1.])
+    model.add_grid(7, [1., 1., 1.])
+    model.add_grid(8, [0., 1., 1.])
+    model.add_cquad4(2, pid, [5, 6, 7, 8])
+
+    # intersects (mid)
+    model.add_grid(9, [0., 0., 0.5])
+    model.add_grid(10, [1., 0., 0.5])
+    model.add_grid(11, [1., 1., 0.5])
+    model.add_grid(12, [0., 1., 0.5])
+    model.add_cquad4(3, pid, [9, 10, 11, 12])
+
+    # doesn't intersect
+    model.add_grid(13, [10., 0., 0.])
+    model.add_grid(14, [11., 0., 0.])
+    model.add_grid(15, [11., 1., 0.])
+    model.add_grid(16, [10., 1., 0.])
+    model.add_cquad4(4, pid, [13, 14, 15, 16])
+
+    model.add_pshell(pid, mid1=mid1, t=2.)
+
+    E = 1.0
+    G = None
+    nu = 0.3
+    model.add_mat1(mid1, E, G, nu, rho=1.0)
+    model.validate()
+
+    model.cross_reference()
+
+    xyz_points = [
+        [0.4, 0.6, 0.], [-1., -1, 0.],]
+
+    tol = 2.
+    nodal_result = np.linspace(0., 1., num=16)
+    return model, nodal_result
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

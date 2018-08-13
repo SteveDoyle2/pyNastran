@@ -93,16 +93,16 @@ def get_doc(filenames):
             continue
 
         #absname = os.path.join(dirname, filename)
-        dirnamebase = dirname.strip('./')
-        rst_dirname = os.path.dirname(dirnamebase)
+        dirname_base = dirname.strip('./')
+        rst_dirname = os.path.dirname(dirname_base)
 
-        dot_dirname = dirnamebase.replace('\\', '.')
+        dot_dirname = dirname_base.replace('\\', '.')
 
         # ../../pyNastran\applications\aero_panel_buckling
         log.info("dirname = %s" % dirname)
 
         # pyNastran\applications\aero_panel_buckling
-        log.info("dirnamebase = %s" % dirnamebase)
+        log.info("dirname_base = %s" % dirname_base)
 
         # pyNastran.applications.aero_panel_buckling
         log.info('dot_dirname = %s' % dot_dirname)

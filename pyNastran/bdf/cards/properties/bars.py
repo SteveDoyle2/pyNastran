@@ -302,7 +302,9 @@ def _bar_areaL(class_name, beam_type, dim, prop):
     Area : float
         Area of the given cross section defined by **self.beam_type**
 
-    .. note:: internal method
+    Notes
+    -----
+    internal method
     """
     if beam_type == 'ROD':
         # This is a circle if you couldn't tell...
@@ -896,8 +898,7 @@ class PBAR(LineProperty):
         4 : 'A', 'A' : 'A',
         5 : 'i1', 'I1' : 'i1',
         6 : 'i2', 'I2' : 'i2',
-        7 : 'i12', 'I12' : 'i12',
-        5 : 'j', 'J' : 'j',
+        7 : 'j', 'J' : 'j',
         10 : 'c1',
         11 : 'c2',
         12 : 'd1',
@@ -908,7 +909,7 @@ class PBAR(LineProperty):
         17 : 'f2',
         18 : 'k1',
         19 : 'k1',
-        20 : 'i12',
+        20 : 'i12', 'I12' : 'i12',
     }
 
     def __init__(self, pid, mid, A=0., i1=0., i2=0., i12=0., j=0., nsm=0.,
@@ -1068,7 +1069,7 @@ class PBAR(LineProperty):
                     c1, c2, d1, d2, e1, e2,
                     f1, f2, k1, k2, comment=comment)
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         pid = self.pid
         mid = self.Mid()
         A = self.Area()
@@ -1105,7 +1106,7 @@ class PBAR(LineProperty):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by PBAR mid=%s' % self.mid
+        msg = ', which is required by PBAR mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
 
     def uncross_reference(self):
@@ -1212,6 +1213,19 @@ class PBARL(LineProperty):
         "HAT1": 5,
         "DBOX": 10,  # was 12
     }  # for GROUP="MSCBML0"
+    #pname_fid_map = {
+        #12 : 'DIM1',
+        #13 : 'DIM2',
+        #14 : 'DIM3',
+        #15 : 'DIM3',
+    #}
+    def update_by_pname_fid(self, pname_fid, value):
+        if isinstance(pname_fid, string_types) and pname_fid.startswith('DIM'):
+            num = int(pname_fid[3:])
+            self.dim[num - 1] = value
+        else:
+            raise NotImplementedError('PBARL Type=%r name=%r has not been implemented' % (
+                self.Type, self.pname_fid))
 
     def __init__(self, pid, mid, Type, dim, group='MSCBML0', nsm=0., comment=''):
         """
@@ -1344,14 +1358,14 @@ class PBARL(LineProperty):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by PBARL mid=%s' % self.mid
+        msg = ', which is required by PBARL mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
 
     def uncross_reference(self):
         self.mid = self.Mid()
         self.mid_ref = None
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         pid = self.pid
         mid = self.Mid()
         A = self.Area()
@@ -1421,7 +1435,8 @@ class PBARL(LineProperty):
             ##print
             ##J = Ix + Iy
         #else:
-            #msg = 'I11 for beam_type=%r dim=%r on PBARL is not supported' % (self.beam_type, self.dim)
+            #msg = 'I11 for beam_type=%r dim=%r on PBARL is not supported' % (
+                #self.beam_type, self.dim)
             #raise NotImplementedError(msg)
         #return Ix
 
@@ -1538,26 +1553,26 @@ class PBARL(LineProperty):
             r = self.dim[0]
             Ixx = pi * r**4 / 4.
             Iyy = Ixx
-            Ixy = 0.
+            unused_Ixy = 0.
         elif self.beam_type in ['TUBE']:
             rout, rin = self.dim
             #rin = rout - 2*t
             Ixx = pi * (rout**4 - rin**4) / 4.
             Iyy = Ixx
-            Ixy = 0.
+            unused_Ixy = 0.
         elif self.beam_type in ['TUBE2']:
             rout, t = self.dim
             rin = rout - 2*t
             Ixx = pi * (rout**4 - rin**4) / 4.
             Iyy = Ixx
-            Ixy = 0.
+            unused_Ixy = 0.
         elif self.beam_type in ['BOX']:
             (d1, d2, d3, d4) = self.dim
             hout = d2
             wout = d1
             hin = d2 - 2. * d3
             win = d1 - 2. * d4
-            points, Area = self._points('BAR', [hout, wout])
+            points, unused_Area = self._points('BAR', [hout, wout])
             yi = points[0, :-1]
             yip1 = points[0, 1:]
             xi = points[1, :-1]
@@ -1569,7 +1584,7 @@ class PBARL(LineProperty):
             Iyy1 = 1/12 * sum((xi**2 + xi * xip1 + xip1**2)*ai)
             #Ixy1 = 1/24*sum((xi*yip1 + 2*xi*yi + 2*xip1*yip1 + xip1*yi)*ai)
 
-            points, Area = self._points('BAR', [hin, win])
+            points, unused_Area = self._points('BAR', [hin, win])
             yi = points[0, :-1]
             yip1 = points[0, 1:]
             xi = points[1, :-1]
@@ -1591,7 +1606,7 @@ class PBARL(LineProperty):
             #(Ix, Iy, Ixy) = self.I1_I2_I12()
             #J = Ix + Iy
         elif self.beam_type in ['BAR', 'CROSS', 'HEXA', 'T2', 'H']:
-            points, Area = self._points(self.beam_type, self.dim)
+            points, unused_Area = self._points(self.beam_type, self.dim)
             yi = points[0, :-1]
             yip1 = points[0, 1:]
 
@@ -1755,7 +1770,7 @@ class PBRSECT(LineProperty):
             line0 = line0.expandtabs()
 
         bdf_card = BDFCard(to_fields([line0], 'PBMSECT'))
-        line0_eq = line0[16:]
+        unused_line0_eq = line0[16:]
         lines_joined = ''.join(card[1:]).replace(' ', '')
 
         if lines_joined:
@@ -1815,14 +1830,14 @@ class PBRSECT(LineProperty):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by PBRSECT mid=%s' % self.mid
+        msg = ', which is required by PBRSECT mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
 
     def uncross_reference(self):
         self.mid = self.Mid()
-        del self.mid_ref
+        self.mid_ref = None
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         pid = self.pid
         mid = self.Mid()
         #A = self.Area()
@@ -1966,7 +1981,7 @@ class PBEAM3(LineProperty):  # not done, cleanup
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by PBEAM3 mid=%s' % self.mid
+        msg = ', which is required by PBEAM3 mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
 
     def uncross_reference(self):
@@ -2077,6 +2092,8 @@ class PBEND(LineProperty):
         mid = integer(card, 2, 'mid')
 
         value3 = integer_or_double(card, 3, 'Area/FSI')
+        #print("PBEND: area/fsi=%s" % value3)
+
         # MSC/NX option A
         A = None
         i1 = None
@@ -2167,7 +2184,7 @@ class PBEND(LineProperty):
                 t = double(card, 5, 't')
 
                 #: Internal pressure
-                p = double(card, 6, 'p')
+                p = double_or_blank(card, 6, 'p')
 
                 # line3
                 # Non-structural mass :math:`nsm`
@@ -2225,12 +2242,17 @@ class PBEND(LineProperty):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by PBEND mid=%s' % self.mid
+        msg = ', which is required by PBEND mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
 
     def uncross_reference(self):
         self.mid = self.Mid()
         self.mid_ref = None
+
+    def MassPerLength(self):
+        """m/L = rho*A + nsm"""
+        rho = self.mid_ref.Rho()
+        return self.A * rho + self.nsm
 
     def raw_fields(self):
         return self.repr_fields()

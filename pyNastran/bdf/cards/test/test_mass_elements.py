@@ -10,7 +10,6 @@ import pyNastran
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.cards.test.utils import save_load_deck
 #from pyNastran.op2.op2 import OP2, read_op2
-#from pyNastran.f06.test.f06_unit_tests import run_model
 
 root_path = pyNastran.__path__[0]
 #test_path = os.path.join(root_path, 'bdf', 'cards', 'test')
@@ -40,7 +39,7 @@ class TestMassElements(unittest.TestCase):
 
         model.add_grid(nid, [0., 0., 0.])
         model.validate()
-        save_load_deck(model)
+        save_load_deck(model, run_convert=False)
 
     def test_conm2(self):
         """tests a conm2"""
@@ -52,7 +51,7 @@ class TestMassElements(unittest.TestCase):
         model.add_grid(nid, [0., 0., 0.])
         model.validate()
         model.cross_reference()
-        save_load_deck(model)
+        model = save_load_deck(model, run_convert=False)
         pids_to_mass, mass_type_to_mass = model.get_mass_breakdown(property_ids=None)
         assert len(pids_to_mass) == 0, pids_to_mass
         assert mass_type_to_mass['CONM2'] == 42., mass_type_to_mass
@@ -120,7 +119,7 @@ class TestMassElements(unittest.TestCase):
         cmass2.write_card(size=8)
         pmass.write_card(size=8)
         ddval.write_card(size=8)
-        save_load_deck(model)
+        save_load_deck(model, run_convert=False)
 
     def test_mass_3_4(self):
         """tests a CMASS3, PMASS, CMASS4"""
@@ -173,7 +172,7 @@ class TestMassElements(unittest.TestCase):
         model.add_cquad4(2, pid, [1, 2, 3, 4]) # A=1.0
         model.add_pshell(pid, mid, t=0.1)
         model.add_mat1(mid, 3.0e7, None, 0.3)
-        save_load_deck(model)
+        save_load_deck(model, run_convert=False)
 
     def test_nsm1(self):
         """tests the NSM1 card"""
@@ -192,7 +191,7 @@ class TestMassElements(unittest.TestCase):
         model.add_cquad4(2, pid, [1, 2, 3, 4]) # A=1.0
         model.add_pshell(pid, mid, t=0.1)
         model.add_mat1(mid, 3.0e7, None, 0.3)
-        save_load_deck(model)
+        save_load_deck(model, run_convert=False)
 
 
 if __name__ == '__main__':  # pragma: no cover

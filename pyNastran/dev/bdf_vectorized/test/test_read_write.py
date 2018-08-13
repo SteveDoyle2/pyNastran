@@ -70,9 +70,9 @@ class TestReadWriteVectorized(unittest.TestCase):
 
     @staticmethod
     def test_bwb():
-        """vectorized vs. standard test on BWB_saero.bdf"""
-        bdf_filename = os.path.join(test_path, 'bwb', 'BWB_saero.bdf')
-        bdf_filename_out = os.path.join(test_path, 'bwb', 'BWB_saero2.bdf')
+        """vectorized vs. standard test on bwb_saero.bdf"""
+        bdf_filename = os.path.join(test_path, 'bwb', 'bwb_saero.bdf')
+        bdf_filename_out = os.path.join(test_path, 'bwb', 'bwb_saero2.bdf')
 
         read_write_compare(bdf_filename, bdf_filename_out)
         os.remove(bdf_filename_out)

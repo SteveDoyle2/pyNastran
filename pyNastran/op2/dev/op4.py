@@ -10,12 +10,11 @@ matrices even if they were written a sparse format.
 
 @author: Tim Widrick
 """
-
-import numpy as np
-import itertools as it
 import struct
-import sys
 import warnings
+import sys
+import itertools as it
+import numpy as np
 
 
 class OP4(object):
@@ -124,63 +123,66 @@ class OP4(object):
         _bytes_i : integer
             Either 4 or 8, to go with Str_i.
         _str_sr : string
-            Either self._endian + '%df' or self._endian + '%dd',
+            Either self._endian + b'%df' or self._endian + b'%dd',
             depending on self._bit64; for reading single precision
             reals.
         _bytes_sr : integer
             Number of bytes in single real.
         _str_dr : string
-            self._endian + '%dd', for reading double precision reals.
+            self._endian + b'%dd', for reading double precision reals.
         _wordsperdouble : integer
             Either 1 or 2; 2 if self._bit64 is False.
         """
         self._fileh = open(filename, 'rb')
-        bytes = self._fileh.read(16)
-        self._endian = ''
+        header_bytes = self._fileh.read(16)
+        self._endian = b''
+        self._uendian = ''
         self._dformat = False
 
         # Assuming binary, check for a zero byte in the 'type' field;
         # will have one at front or back if binary:
-        if bytes[12] == 0 or bytes[15] == 0:
+        if header_bytes[12] == 0 or header_bytes[15] == 0:
             self._ascii = False
             if sys.byteorder == 'little':
-                if bytes[12] == 0:
-                    self._endian = '>'
+                if header_bytes[12] == 0:
+                    self._endian = b'>'
+                    self._uendian = '>'
             else:
-                if bytes[12] != 0:
-                    self._endian = '<'
-            self._Str_i4 = struct.Struct(self._endian + 'i')
-            reclen = self._Str_i4.unpack(bytes[:4])[0]
+                if header_bytes[12] != 0:
+                    self._endian = b'<'
+                    self._uendian = '<'
+            self._Str_i4 = struct.Struct(self._endian + b'i')
+            reclen = self._Str_i4.unpack(header_bytes[:4])[0]
             if reclen == 48:
                 self._bit64 = True
-                self._Str_i = struct.Struct(self._endian + 'q')
+                self._Str_i = struct.Struct(self._endian + b'q')
                 self._bytes_i = 8
-                self._Str_ii = struct.Struct(self._endian + 'qq')
+                self._Str_ii = struct.Struct(self._endian + b'qq')
                 self._bytes_ii = 16
-                self._Str_iii = struct.Struct(self._endian + '3q')
+                self._Str_iii = struct.Struct(self._endian + b'3q')
                 self._bytes_iii = 24
-                self._Str_iiii = struct.Struct(self._endian + '4q')
+                self._Str_iiii = struct.Struct(self._endian + b'4q')
                 self._bytes_iiii = 32
-                self._str_sr = self._endian + '%dd'
-                self._str_sr_fromfile = np.dtype(self._endian + 'f8')
+                self._str_sr = self._endian + b'%dd'
+                self._str_sr_fromfile = np.dtype(self._uendian + 'f8')
                 self._bytes_sr = 8
                 self._wordsperdouble = 1
             else:
                 self._bit64 = False
                 self._Str_i = self._Str_i4
                 self._bytes_i = 4
-                self._Str_ii = struct.Struct(self._endian + 'ii')
+                self._Str_ii = struct.Struct(self._endian + b'ii')
                 self._bytes_ii = 8
-                self._Str_iii = struct.Struct(self._endian + '3i')
+                self._Str_iii = struct.Struct(self._endian + b'3i')
                 self._bytes_iii = 12
-                self._Str_iiii = struct.Struct(self._endian + '4i')
+                self._Str_iiii = struct.Struct(self._endian + b'4i')
                 self._bytes_iiii = 16
-                self._str_sr = self._endian + '%df'
-                self._str_sr_fromfile = np.dtype(self._endian + 'f4')
+                self._str_sr = self._endian + b'%df'
+                self._str_sr_fromfile = np.dtype(self._uendian + 'f4')
                 self._bytes_sr = 4
                 self._wordsperdouble = 2
-            self._str_dr = self._endian + '%dd'
-            self._str_dr_fromfile = np.dtype(self._endian + 'f8')
+            self._str_dr = self._endian + b'%dd'
+            self._str_dr_fromfile = np.dtype(self._uendian + 'f8')
             self._fileh.seek(0)
         else:
             self._ascii = True
@@ -310,10 +312,9 @@ class OP4(object):
             mtype : integer
                 Nastran matrix type.
 
-        Notes:
-        - All outputs will be None if reached EOF.
-        - The `matrix` output will be [rows, cols] of the matrix if
-          the matrix is skipped.
+        .. note::  All outputs will be None if reached EOF.
+        .. note::  The `matrix` output will be [rows, cols] of the
+                   matrix if the matrix is skipped.
         """
         while 1:
             line = self._fileh.readline()
@@ -499,10 +500,9 @@ class OP4(object):
             mtype : integer
                 Nastran matrix type.
 
-        Notes:
-        - All outputs will be None if reached EOF.
-        - The `matrix` output will be [rows, cols] of the matrix if
-          the matrix is skipped.
+        .. note::  All outputs will be None if reached EOF.
+        .. note::  The `matrix` output will be [rows, cols] of the matrix
+                   if the matrix is skipped.
         """
         fp = self._fileh
         while 1:
@@ -665,14 +665,13 @@ class OP4(object):
         ind[:, 1] += 1
         return ind
 
-    def _write_ascii_header(self, f, name, matrix,
-                            digits, bigmat=False):
+    def _write_ascii_header(self, op4_file, name, matrix, digits, bigmat=False):
         """
         Utility routine that writes the header for ascii matrices.
 
         Parameters
         ----------
-        f : file handle
+        op4_file : file handle
             Output of open() using binary mode.
         name : string
             Name of matrix.
@@ -717,19 +716,19 @@ class OP4(object):
         if bigmat:
             if rows < self._rows4bigmat:
                 rows = -rows
-        f.write('{0:8}{1:8}{2:8}{3:8}{4:8s}1P,{5}E{6}.{7}\n'.
-                format(cols, rows, form, mtype, name.upper(),
-                       perline, numlen, digits))
+        op4_file.write('{0:8}{1:8}{2:8}{3:8}{4:8s}1P,{5}E{6}.{7}\n'.format(
+            cols, rows, form, mtype, name.upper(),
+            perline, numlen, digits))
         numform = '%{0}.{1}E'.format(numlen, digits)
         return cols, multiplier, perline, numlen, numform
 
-    def _write_ascii(self, f, name, matrix, digits):
+    def _write_ascii(self, op4_file, name, matrix, digits):
         """
         Write a matrix to a file in ascii, non-sparse format.
 
         Parameters
         ----------
-        f : file handle
+        op4_file : file handle
             Output of open() using text mode.
         name : string
             Name of matrix.
@@ -739,10 +738,8 @@ class OP4(object):
             Number of significant digits after the decimal to include
             in the ascii output.
         """
-        (cols, multiplier,
-         perline, numlen,
-         numform) = self._write_ascii_header(f, name, matrix,
-                                             digits, bigmat=False)
+        (cols, multiplier, perline, unused_numlen, numform) = self._write_ascii_header(
+             op4_file, name, matrix, digits, bigmat=False)
         for c in range(cols):
             v = matrix[:, c]
             if np.any(v):
@@ -750,28 +747,28 @@ class OP4(object):
                 s = pv[0, 0]
                 e = pv[0, -1]
                 elems = (e - s + 1) * multiplier
-                f.write('{0:8}{1:8}{2:8}\n'.format(c+1, s+1, elems))
+                op4_file.write('{0:8}{1:8}{2:8}\n'.format(c+1, s+1, elems))
                 v = np.asarray(v[s:e+1]).flatten()
                 v.dtype = float
                 neven = ((elems - 1) // perline) * perline
                 for i in range(0, neven, perline):
                     for j in range(perline):
-                        f.write(numform % v[i+j])
-                    f.write('\n')
+                        op4_file.write(numform % v[i+j])
+                    op4_file.write('\n')
                 for i in range(neven, elems):
-                    f.write(numform % v[i])
-                f.write('\n')
-        f.write('{0:8}{1:8}{2:8}\n'.format(cols+1, 1, 1))
-        f.write(numform % 2**.5)
-        f.write('\n')
+                    op4_file.write(numform % v[i])
+                op4_file.write('\n')
+        op4_file.write('{0:8}{1:8}{2:8}\n'.format(cols+1, 1, 1))
+        op4_file.write(numform % 2**.5)
+        op4_file.write('\n')
 
-    def _write_ascii_sparse_nonbigmat(self, f, name, matrix, digits):
+    def _write_ascii_sparse_nonbigmat(self, op4_file, name, matrix, digits):
         """
         Write a matrix to a file in ascii, non-bigmat sparse format.
 
         Parameters
         ----------
-        f : file handle
+        op4_file : file handle
             Output of open() using binary mode.
         name : string
             Name of matrix.
@@ -781,52 +778,50 @@ class OP4(object):
             Number of significant digits after the decimal to include
             in the ascii output.
 
-        Note: if rows > 65535, bigmat is turned on and the
-        :func:`write_ascii_sparse_bigmat` function is called ...
-        that's a Nastran rule.
+        .. note:: if rows > 65535, bigmat is turned on and the
+                  :func:`write_ascii_sparse_bigmat` function is
+                  called ...that's a Nastran rule.
         """
         rows, cols = matrix.shape
         if rows >= self._rows4bigmat:
-            self._write_ascii_sparse_bigmat(f, name, matrix, digits)
+            self._write_ascii_sparse_bigmat(op4_file, name, matrix, digits)
             return
-        (cols, multiplier,
-         perline, numlen,
-         numform) = self._write_ascii_header(f, name, matrix,
-                                             digits, bigmat=False)
+        (cols, multiplier, perline,  numform) = self._write_ascii_header(
+             op4_file, name, matrix, digits, bigmat=False)
         for c in range(cols):
             v = matrix[:, c]
             if np.any(v):
                 v = np.asarray(v).flatten()
                 ind = self._sparse_col_stats(v)
                 nwords = ind.shape[0] + 2*sum(ind[:, 1])*multiplier
-                f.write('{0:8}{1:8}{2:8}\n'.format(c+1, 0, nwords))
+                op4_file.write('{0:8}{1:8}{2:8}\n'.format(c+1, 0, nwords))
                 for row in ind:
                     r = row[0]
                     L = row[1]*2*multiplier
                     IS = (r+1) + ((L+1) << 16)
-                    f.write('{0:12}\n'.format(IS))
+                    op4_file.write('{0:12}\n'.format(IS))
                     string = v[r:r+row[1]]
                     string.dtype = float
                     elems = L // 2
                     neven = ((elems - 1) // perline) * perline
                     for i in range(0, neven, perline):
                         for j in range(perline):
-                            f.write(numform % string[i+j])
-                        f.write('\n')
+                            op4_file.write(numform % string[i+j])
+                        op4_file.write('\n')
                     for i in range(neven, elems):
-                        f.write(numform % string[i])
-                    f.write('\n')
-        f.write('{0:8}{1:8}{2:8}\n'.format(cols+1, 1, 1))
-        f.write(numform % 2**.5)
-        f.write('\n')
+                        op4_file.write(numform % string[i])
+                    op4_file.write('\n')
+        op4_file.write('{0:8}{1:8}{2:8}\n'.format(cols+1, 1, 1))
+        op4_file.write(numform % 2**.5)
+        op4_file.write('\n')
 
-    def _write_ascii_sparse_bigmat(self, f, name, matrix, digits):
+    def _write_ascii_sparse_bigmat(self, op4_file, name, matrix, digits):
         """
         Write a matrix to a file in ascii, bigmat sparse format.
 
         Parameters
         ----------
-        f : file handle
+        op4_file : file handle
             Output of open() using binary mode.
         name : string
             Name of matrix.
@@ -836,44 +831,42 @@ class OP4(object):
             Number of significant digits after the decimal to include
             in the ascii output.
         """
-        (cols, multiplier,
-         perline, numlen,
-         numform) = self._write_ascii_header(f, name, matrix,
-                                             digits, bigmat=True)
+        (cols, multiplier, perline, unused_numlen, numform) = self._write_ascii_header(
+             op4_file, name, matrix, digits, bigmat=True)
         for c in range(cols):
             v = matrix[:, c]
             if np.any(v):
                 v = np.asarray(v).flatten()
                 ind = self._sparse_col_stats(v)
                 nwords = 2*ind.shape[0] + 2*sum(ind[:, 1])*multiplier
-                f.write('{0:8}{1:8}{2:8}\n'.format(c+1, 0, nwords))
+                op4_file.write('{0:8}{1:8}{2:8}\n'.format(c+1, 0, nwords))
                 for row in ind:
                     r = row[0]
                     L = row[1]*2*multiplier
-                    f.write('{0:8}{1:8}\n'.format(L+1, r+1))
+                    op4_file.write('{0:8}{1:8}\n'.format(L+1, r+1))
                     string = v[r:r+row[1]]
                     string.dtype = float
                     elems = L // 2
                     neven = ((elems - 1) // perline) * perline
                     for i in range(0, neven, perline):
                         for j in range(perline):
-                            f.write(numform % string[i+j])
-                        f.write('\n')
+                            op4_file.write(numform % string[i+j])
+                        op4_file.write('\n')
                     for i in range(neven, elems):
-                        f.write(numform % string[i])
-                    f.write('\n')
-        f.write('{0:8}{1:8}{2:8}\n'.format(cols+1, 1, 1))
-        f.write(numform % 2**.5)
-        f.write('\n')
+                        op4_file.write(numform % string[i])
+                    op4_file.write('\n')
+        op4_file.write('{0:8}{1:8}{2:8}\n'.format(cols+1, 1, 1))
+        op4_file.write(numform % 2**.5)
+        op4_file.write('\n')
 
-    def _write_binary_header(self, f, name, matrix,
+    def _write_binary_header(self, op4_file, name, matrix,
                              endian, bigmat=False):
         """
         Utility routine that writes the header for binary matrices.
 
         Parameters
         ----------
-        f : file handle
+        op4_file : file handle
             Output of open() using binary mode.
         name : string
             Name of matrix.
@@ -913,17 +906,17 @@ class OP4(object):
         if bigmat:
             if rows < self._rows4bigmat:
                 rows = -rows
-        f.write(struct.pack(endian+'5i8si', 24, cols, rows,
-                            form, mtype, name, 24))
+        op4_file.write(struct.pack(endian+'5i8si', 24, cols, rows,
+                                   form, mtype, name, 24))
         return cols, multiplier
 
-    def _write_binary(self, f, name, matrix, endian):
+    def _write_binary(self, op4_file, name, matrix, endian):
         """
         Write a matrix to a file in double precision binary format.
 
         Parameters
         ----------
-        f : file handle
+        op4_file : file handle
             Output of open() using binary mode.
         name : string
             Name of matrix.
@@ -933,10 +926,10 @@ class OP4(object):
             Endian setting for binary output:  '' for native, '>' for
             big-endian and '<' for little-endian.
         """
-        cols, multiplier = self._write_binary_header(f, name,
-                                                     matrix, endian)
-        colHeader = struct.Struct(endian+'4i')
-        colTrailer = struct.Struct(endian+'i')
+        cols, multiplier = self._write_binary_header(
+            op4_file, name, matrix, endian)
+        col_header = struct.Struct(endian+'4i')
+        col_trailer = struct.Struct(endian+'i')
         for c in range(cols):
             v = matrix[:, c]
             if np.any(v):
@@ -945,24 +938,24 @@ class OP4(object):
                 e = pv[0, -1]
                 elems = (e - s + 1) * multiplier
                 reclen = 3*4 + elems*8
-                f.write(colHeader.pack(reclen, c+1, s+1, 2*elems))
+                op4_file.write(col_header.pack(reclen, c+1, s+1, 2*elems))
                 v = np.asarray(v[s:e+1]).flatten()
                 v.dtype = float
-                f.write(struct.pack(endian+('%dd' % elems), *v))
-                f.write(colTrailer.pack(reclen))
+                op4_file.write(struct.pack(endian+('%dd' % elems), *v))
+                op4_file.write(col_trailer.pack(reclen))
         reclen = 3*4 + 8
-        f.write(colHeader.pack(reclen, cols+1, 1, 2))
-        f.write(struct.pack(endian+'d', 2**.5))
-        f.write(colTrailer.pack(reclen))
+        op4_file.write(col_header.pack(reclen, cols+1, 1, 2))
+        op4_file.write(struct.pack(endian+'d', 2**.5))
+        op4_file.write(col_trailer.pack(reclen))
 
-    def _write_binary_sparse_nonbigmat(self, f, name, matrix, endian):
+    def _write_binary_sparse_nonbigmat(self, op4_file, name, matrix, endian):
         """
         Write a matrix to a file in double precision binary, non-bigmat
         sparse format.
 
         Parameters
         ----------
-        f : file handle
+        op4_file : file handle
             Output of open() using binary mode.
         name : string
             Name of matrix.
@@ -972,18 +965,18 @@ class OP4(object):
             Endian setting for binary output:  '' for native, '>' for
             big-endian and '<' for little-endian.
 
-        Note: if rows > 65535, bigmat is turned on and the
-        :func:`write_binary_sparse_bigmat` function is called ...
-        that's a Nastran rule.
+        .. note::  if rows > 65535, bigmat is turned on and the
+                   :func:`write_binary_sparse_bigmat` function is
+                   called ...that's a Nastran rule.
         """
         rows, cols = matrix.shape
         if rows >= self._rows4bigmat:
-            self._write_binary_sparse_bigmat(f, name, matrix, endian)
+            self._write_binary_sparse_bigmat(op4_file, name, matrix, endian)
             return
-        cols, multiplier = self._write_binary_header(f, name,
-                                                     matrix, endian)
-        colHeader = struct.Struct(endian+'4i')
-        colTrailer = struct.Struct(endian+'i')
+        cols, multiplier = self._write_binary_header(
+            op4_file, name, matrix, endian)
+        col_header = struct.Struct(endian+'4i')
+        col_trailer = struct.Struct(endian+'i')
         for c in range(cols):
             v = matrix[:, c]
             if np.any(v):
@@ -991,30 +984,29 @@ class OP4(object):
                 ind = self._sparse_col_stats(v)
                 nwords = ind.shape[0] + 2*sum(ind[:, 1])*multiplier
                 reclen = (3 + nwords)*4
-                f.write(colHeader.pack(reclen, c+1, 0, nwords))
+                op4_file.write(col_header.pack(reclen, c+1, 0, nwords))
                 for row in ind:
                     r = row[0]
                     L = row[1]*2*multiplier
                     IS = (r+1) + ((L+1) << 16)
-                    f.write(colTrailer.pack(IS))
+                    op4_file.write(col_trailer.pack(IS))
                     string = v[r:r+row[1]]
                     string.dtype = float
-                    f.write(struct.pack(endian+('%dd' % len(string)),
-                                        *string))
-                f.write(colTrailer.pack(reclen))
+                    op4_file.write(struct.pack(endian+('%dd' % len(string)), *string))
+                op4_file.write(col_trailer.pack(reclen))
         reclen = 3*4 + 8
-        f.write(colHeader.pack(reclen, cols+1, 1, 2))
-        f.write(struct.pack(endian+'d', 2**.5))
-        f.write(colTrailer.pack(reclen))
+        op4_file.write(col_header.pack(reclen, cols+1, 1, 2))
+        op4_file.write(struct.pack(endian+'d', 2**.5))
+        op4_file.write(col_trailer.pack(reclen))
 
-    def _write_binary_sparse_bigmat(self, f, name, matrix, endian):
+    def _write_binary_sparse_bigmat(self, op4_file, name, matrix, endian):
         """
         Write a matrix to a file in double precision binary, bigmat
         sparse format.
 
         Parameters
         ----------
-        f : file handle
+        op4_file : file handle
             Output of open() using binary mode.
         name : string
             Name of matrix.
@@ -1024,8 +1016,8 @@ class OP4(object):
             Endian setting for binary output:  '' for native, '>' for
             big-endian and '<' for little-endian.
         """
-        cols, multiplier = self._write_binary_header(f, name, matrix,
-                                                     endian, True)
+        cols, multiplier = self._write_binary_header(
+            op4_file, name, matrix, endian, True)
         colHeader = struct.Struct(endian+'4i')
         colTrailer = struct.Struct(endian+'i')
         LrStruct = struct.Struct(endian+'ii')
@@ -1036,20 +1028,19 @@ class OP4(object):
                 ind = self._sparse_col_stats(v)
                 nwords = 2*ind.shape[0] + 2*sum(ind[:, 1])*multiplier
                 reclen = (3 + nwords)*4
-                f.write(colHeader.pack(reclen, c+1, 0, nwords))
+                op4_file.write(colHeader.pack(reclen, c+1, 0, nwords))
                 for row in ind:
                     r = row[0]
                     L = row[1]*2*multiplier
-                    f.write(LrStruct.pack(L+1, r+1))
+                    op4_file.write(LrStruct.pack(L+1, r+1))
                     string = v[r:r+row[1]]
                     string.dtype = float
-                    f.write(struct.pack(endian+('%dd' % len(string)),
-                                        *string))
-                f.write(colTrailer.pack(reclen))
+                    op4_file.write(struct.pack(endian+('%dd' % len(string)), *string))
+                op4_file.write(colTrailer.pack(reclen))
         reclen = 3*4 + 8
-        f.write(colHeader.pack(reclen, cols+1, 1, 2))
-        f.write(struct.pack(endian+'d', 2**.5))
-        f.write(colTrailer.pack(reclen))
+        op4_file.write(colHeader.pack(reclen, cols+1, 1, 2))
+        op4_file.write(struct.pack(endian+'d', 2**.5))
+        op4_file.write(colTrailer.pack(reclen))
 
     def dctload(self, filename, namelist=None):
         """
@@ -1236,12 +1227,10 @@ class OP4(object):
         -------
         None.
 
-        Notes
-        -----
-        To write multiple matrices that have the same name or to write
-        the matrices in a specific order, `names` must be a list, not
-        a dictionary.  If a dictionary, the matrices are written in
-        alphabetical order.
+        .. note::  To write multiple matrices that have the same name
+                   or to write the matrices in a specific order, `names`
+                   must be a list, not a dictionary.  If a dictionary,
+                   the matrices are written in alphabetical order.
 
         See also :func:`dctload`, :func:`listload`, :func:`dir`.
 
@@ -1296,9 +1285,9 @@ class OP4(object):
                 wrtfunc = self._write_binary_sparse_nonbigmat
             else:
                 raise ValueError('invalid sparse option')
-            with open(filename, 'wb') as f:
+            with open(filename, 'wb') as op4_file:
                 for name, matrix in zip(names, matrices):
-                    wrtfunc(f, name, matrix, endian)
+                    wrtfunc(op4_file, name, matrix, endian)
         else:
             if sparse == '':
                 wrtfunc = self._write_ascii
@@ -1308,6 +1297,6 @@ class OP4(object):
                 wrtfunc = self._write_ascii_sparse_nonbigmat
             else:
                 raise ValueError('invalid sparse option')
-            with open(filename, 'w') as f:
+            with open(filename, 'w') as op4_file:
                 for name, matrix in zip(names, matrices):
-                    wrtfunc(f, name, matrix, digits)
+                    wrtfunc(op4_file, name, matrix, digits)

@@ -139,7 +139,7 @@ class CMASS1(PointMassElement):
     def Mass(self):
         return self.pid_ref.mass
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         mass = self.Mass()
@@ -162,7 +162,7 @@ class CMASS1(PointMassElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CMASS1 eid=%s' % self.eid
+        msg = ', which is required by CMASS1 eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.PropertyMass(self.pid, msg=msg)
 
@@ -189,18 +189,18 @@ class CMASS1(PointMassElement):
         Centroid is assumed to be c=(g1+g2)/2.
         If g2 is blank, then the centroid is the location of g1.
         """
-        f = 0.
+        factor = 0.
         p1 = np.array([0., 0., 0.])
         p2 = np.array([0., 0., 0.])
         if self.nodes_ref[0] is not None:
             p1 = self.nodes_ref[0].get_position()
-            f += 1.
+            factor += 1.
 
         g2 = self.G2()
         if g2 not in [None, 0]:
             p2 = self.nodes_ref[1].get_position()
-            f += 1.
-        c = (p1 + p2) / f
+            factor += 1.
+        c = (p1 + p2) / factor
         return c
 
     def center_of_mass(self):
@@ -218,7 +218,7 @@ class CMASS1(PointMassElement):
         return nodes
 
     def Pid(self):
-        if isinstance(self.pid, integer_types):
+        if self.pid_ref is None:
             return self.pid
         return self.pid_ref.pid
 
@@ -334,7 +334,7 @@ class CMASS2(PointMassElement):
     def validate(self):
         assert len(self.nodes) == 2, self.nodes
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         mass = self.Mass()
@@ -371,17 +371,17 @@ class CMASS2(PointMassElement):
         Centroid is assumed to be c=(g1+g2)/2.
         If g2 is blank, then the centroid is the location of g1.
         """
-        f = 0.
+        factor = 0.
         p1 = np.array([0., 0., 0.])
         p2 = np.array([0., 0., 0.])
         if self.nodes[0] is not None:
             p1 = self.nodes_ref[0].get_position()
-            f += 1.
+            factor += 1.
         if self.nodes[1] is not None:
             p2 = self.nodes_ref[1].get_position()
-            f += 1.
-        assert f > 0., str(self)
-        c = (p1 + p2) / f
+            factor += 1.
+        assert factor > 0., str(self)
+        c = (p1 + p2) / factor
         return c
 
     def center_of_mass(self):
@@ -396,7 +396,7 @@ class CMASS2(PointMassElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CMASS2 eid=%s' % self.eid
+        msg = ', which is required by CMASS2 eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
     def uncross_reference(self):
@@ -536,7 +536,7 @@ class CMASS3(PointMassElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CMASS3 eid=%s' % self.eid
+        msg = ', which is required by CMASS3 eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.PropertyMass(self.pid, msg=msg)
 
@@ -632,6 +632,9 @@ class CMASS4(PointMassElement):
     def Centroid(self):
         return np.zeros(3)
 
+    def center_of_mass(self):
+        return self.Centroid()
+
     @property
     def node_ids(self):
         return [self.S1(), self.S2()]
@@ -655,9 +658,10 @@ class CMASS4(PointMassElement):
         model : BDF()
             the BDF object
         """
-        self.nodes_ref = model.EmpyNodes(self.nodes)
+        msg = ', which is required by CMASS4 eid=%s' % self.eid
+        self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, xref_errors):
         self.cross_reference(model)
 
     def uncross_reference(self):
@@ -742,6 +746,23 @@ class CONM1(PointMassElement):
             m[5, 5] = value
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
+
+    def update_by_cp_name(self, name, value):
+        if name == 'M11':
+            self.mass_matrix[0, 0] = value
+        #elif name == 'M21':
+            #self.mass_matrix[1, 0] = value
+        elif name == 'M22':
+            self.mass_matrix[1, 1] = value
+        elif name == 'M33':
+            self.mass_matrix[2, 2] = value
+        elif name == 'M44':
+            self.mass_matrix[3, 3] = value
+        #elif name == 'X1':
+            #self.X[0] = value
+        else:
+            raise NotImplementedError('element_type=%r has not implemented %r in cp_name_map' % (
+                self.type, name))
 
     def __init__(self, eid, nid, mass_matrix, cid=0, comment=''):
         """
@@ -858,7 +879,7 @@ class CONM1(PointMassElement):
         m[5, 5] = m6f  # M66
         return CONM1(eid, nid, m, cid=cid, comment=comment)
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.eid
         assert isinstance(eid, integer_types), 'eid=%r' % eid
 
@@ -869,6 +890,9 @@ class CONM1(PointMassElement):
     @staticmethod
     def Centroid():
         return np.zeros(3, dtype='float64')
+
+    def center_of_mass(self):
+        return self.Centroid()
 
     @property
     def node_ids(self):
@@ -893,7 +917,7 @@ class CONM1(PointMassElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CONM1 eid=%s' % self.eid
+        msg = ', which is required by CONM1 eid=%s' % self.eid
         self.nid_ref = model.Node(self.Nid(), msg=msg)
         self.cid_ref = model.Coord(self.Cid(), msg=msg)
 
@@ -959,6 +983,19 @@ class CONM2(PointMassElement):
             self.X[2] = value
         elif name == 'X3':
             self.X[3] = value
+        elif name == 'I11':
+            #I11, I21, I22, I31, I32, I33 = I
+            self.I[0] = value
+        elif name == 'I21':
+            self.I[1] = value
+        elif name == 'I22':
+            self.I[2] = value
+        elif name == 'I31':
+            self.I[3] = value
+        elif name == 'I32':
+            self.I[4] = value
+        elif name == 'I33':
+            self.I[5] = value
         else:
             raise NotImplementedError('element_type=%r has not implemented %r in cp_name_map' % (
                 self.type, name))
@@ -1121,7 +1158,7 @@ class CONM2(PointMassElement):
         I = data[7:]
         return CONM2(eid, nid, mass, cid=cid, X=X, I=I, comment=comment)
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.eid
         nid = self.Nid()
         cid = self.Cid()
@@ -1156,6 +1193,38 @@ class CONM2(PointMassElement):
             raise NotImplementedError('CONM2 intertia method for CID != 0 is not implemented.')
             #A2 = A * matrix
             #return A2  # correct for offset using dx???
+
+    def offset(self, xyz_nid):
+        cid = self.Cid()
+        if cid == 0:
+            # no transform needed
+            X2 = xyz_nid + self.X
+        elif cid == -1:
+            # case X1, X2, X3 are the coordinates, not offsets, of the center of gravity of
+            # the mass in the basic coordinate system.
+
+            # 4. If CID = -1, offsets are internally computed as the difference between the grid
+            # point location and X1, X2, X3.
+            # this statement is not supported...
+            return self.X
+        else:
+            # Offset distances from the grid point to the center of gravity of the mass
+            # in the coordinate system
+
+            # If CID > 0, then X1, X2, and X3 are defined by a local Cartesian system, even
+            # if CID references a spherical or cylindrical coordinate system. This is similar
+            # to the manner in which displacement coordinate systems are defined.
+            # this statement is not supported...
+
+            # convert self.X into the global frame
+            x = self.cid_ref.transform_node_to_global(self.X)
+
+            # self.X is an offset
+            dx = x - self.cid_ref.origin
+
+            # the actual position of the CONM2
+            X2 = xyz_nid + dx
+        return X2
 
     def Centroid(self):
         """
@@ -1243,7 +1312,7 @@ class CONM2(PointMassElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CONM2 eid=%s' % self.eid
+        msg = ', which is required by CONM2 eid=%s' % self.eid
         self.nid_ref = model.Node(self.nid, msg=msg)
 
         cid = self.Cid()

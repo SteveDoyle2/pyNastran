@@ -1,103 +1,19 @@
 from __future__ import print_function
 import sys
-from copy import deepcopy
 
 # kills the program when you hit Cntl+C from the command line
 import signal
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 
-from six import string_types
+from six import string_types, integer_types
 
-from qtpy import QtGui
+#from qtpy import QtGui
+#from qtpy.QtCore import Qt
 from qtpy.QtWidgets import (
-    QTreeView, QWidget, QAbstractItemView, QVBoxLayout, QPushButton, QApplication,
-    QComboBox, QLabel, QHBoxLayout)
+    QWidget, QVBoxLayout, QPushButton, QApplication,
+    QComboBox, QLabel, QHBoxLayout, QBoxLayout)
+from pyNastran.gui.utils.qt.results_window import ResultsWindow
 
-
-class QTreeView2(QTreeView):
-    def __init__(self, data, choices):
-        self.old_rows = []
-        self.data = data
-        self.choices = choices
-        self.single = False
-        QTreeView.__init__(self)
-
-    def mousePressEvent(self, position):
-        QTreeView.mousePressEvent(self, position)
-        indexes = self.selectedIndexes()
-
-        # trace the tree to find the selected item
-        rows = []
-        for index in indexes:
-            row = index.row()
-            rows.append(row)
-            level = 0
-            while index.parent().isValid():
-                index = index.parent()
-                row = index.row()
-                rows.append(row)
-                level += 1
-        rows.reverse()
-
-        # TODO: what is this for???
-        if rows != self.old_rows:
-            self.old_rows = rows
-        valid, keys = self.get_row()
-        if not valid:
-            print('invalid=%s keys=%s' % (valid, keys))
-        else:
-            print('valid=%s keys=%s' % (valid, keys))
-            #print('choice =', self.choices[keys])
-
-    def get_row(self):
-        """
-        gets the row
-
-        Returns
-        -------
-        is_valid : bool
-            is this case valid
-        row : None or tuple
-            None : invalid case
-            tuple : valid case
-                ('centroid', None, [])
-                0 - the location (e.g. node, centroid)
-                1 - iCase
-                2 - []
-        """
-        # if there's only 1 data member, we don't need to extract the data id
-        if self.single:
-            return True, self.data[0]
-
-        irow = 0
-
-        # TODO: what is this for???
-        #     crashes some PyQt4 cases when clicking on the first
-        #     non-results level of the sidebar
-        #data = deepcopy(self.data)
-        data = self.data
-        for row in self.old_rows:
-            try:
-                key = data[row][0]
-            except IndexError:
-                return False, irow
-            irow = data[row][1]
-            data = data[row][2]
-
-        if data:
-            return False, None
-        return True, irow
-
-    def set_single(self, single):
-        self.single = single
-        self.old_rows = [0]
-
-
-#for subcase in subcases:
-#    for time in times:
-#        disp
-#        stress
-#        load
 
 class Sidebar(QWidget):
     """
@@ -198,39 +114,45 @@ class Sidebar(QWidget):
     | - avg/derive |
     +--------------+
     """
-    def __init__(self, parent, debug=False):
-        """creates the buttons in the Sidebar, not the actual layout"""
+    def __init__(self, parent, debug=False, data=None, clear_data=True, name='main',
+                 setup_dict=None):
+        """
+        Creates the buttons in the Sidebar, not the actual layout
+
+        Parameters
+        ----------
+        parent : MainWindow()
+            the gui
+        debug : bool; default=False
+            flag for debug info
+        data : List[tree]
+            the tree
+        clear_data : bool; default=True
+            ???
+        name : str; default='main'
+            the active name
+        setup_dict : Dict[irow] = List[QWidgets]
+            a way to add additional widgets to the sidebar
+        """
         QWidget.__init__(self)
         self.parent = parent
         self.debug = debug
-
-        name = 'main'
-        data = []
-        data = [
-            ("Alice", None, [
-                ("Keys", 1, []),
-                ("Purse", 2, [
-                    ("Cellphone", 3, [])
-                    ])
-                ]),
-            ("Bob", None, [
-                ("Wallet", None, [
-                    ("Credit card", 4, []),
-                    ("Money", 5, [])
-                    ])
-                ]),
-            ]
+        self.setup_dict = setup_dict
 
         choices = ['keys2', 'purse2', 'cellphone2', 'credit_card2', 'money2']
-        self.result_case_window = ResultsWindow('Case/Results', data, choices)
+        if data is None:
+            data = []
 
+        self.result_case_windows = [ResultsWindow(self, 'Case/Results', data, choices)]
         data = [
             ('A', 1, []),
             #('B', 2, []),
             #('C', 3, []),
         ]
-        self.result_data_window = ResultsWindow('Method', data, choices)
-        self.result_data_window.setVisible(False)
+        self.result_method_window = ResultsWindow(self, 'Method', data, choices)
+        self.result_method_window.setVisible(False)
+        #else:
+            #self.result_method_window = None
 
         self.show_pulldown = False
         if self.show_pulldown:
@@ -242,45 +164,140 @@ class Sidebar(QWidget):
         self.apply_button = QPushButton('Apply', self)
         self.apply_button.clicked.connect(self.on_apply)
 
-        self.name = str(name)
-        self.names = [name]
+        if name is None:
+            self.name = None
+            self.names = ['N/A']
+            name = 'N/A'
+        else:
+            self.name = str(name)
+            self.names = [name]
+
         self.name_label = QLabel("Name:")
         self.name_pulldown = QComboBox()
         self.name_pulldown.addItem(name)
         self.name_pulldown.setDisabled(True)
+
+        self.setup_layout(data, choices, clear_data=clear_data)
         self.name_pulldown.currentIndexChanged.connect(self.on_update_name)
 
-        self.setup_layout()
+    @property
+    def result_case_window(self):
+        if self.name is None:
+            i = 0
+        else:
+            i = self.names.index(self.name)
+        i = 0
+        return self.result_case_windows[i]
 
-    def setup_layout(self):
+    def setup_layout(self, data, choices, clear_data=True, init=True):
         """creates the sidebar visual layout"""
+        if not init:
+            #self.frameGeometry().
+            width = self.frameGeometry().width()
+            height = self.frameGeometry().height()
+            #print('width=%s height=%s' % (width, height))
+
+        #print('init...')
         vbox = QVBoxLayout()
         hbox = QHBoxLayout()
+
+        irow = 0
+        self._add_from_setup_dict(vbox, irow)
 
         hbox.addWidget(self.name_label)
         hbox.addWidget(self.name_pulldown)
         vbox.addLayout(hbox)
-        vbox.addWidget(self.result_case_window)
-        vbox.addWidget(self.result_data_window)
+
+        irow += 1
+        self._add_from_setup_dict(vbox, irow)
+
+        nwindows = len(self.result_case_windows)
+        #print('nwindows=%s self.names=%s' % (nwindows, self.names))
+        for i in range(nwindows):
+            #print('*using existing window')
+            result_case_window = self.result_case_windows[i]
+            vbox.addWidget(result_case_window)
+            #result_case_window.setVisible(False)  # be very careful of this...
+
+        nwindows = len(self.result_case_windows)
+        for name in self.names[nwindows:]:
+            #print('*creating a window')
+            result_case_window = ResultsWindow(self, 'Case/Results', data, choices)
+            result_case_window.setVisible(False)
+            vbox.addWidget(result_case_window)
+            self.result_case_windows.append(result_case_window)
+
+        iname = 0
+        #if self.name is None:
+            #iname = 0
+        #else:
+            #iname = self.names.index(self.name)
+        #for i in range(nwindows):
+            #if i != iname:
+                #self.result_case_windows[iname].setVisible(False)
+        #self.result_case_windows[iname].setVisible(True)
+
+        irow += 1
+        self._add_from_setup_dict(vbox, irow)
+
+        if self.result_method_window:
+            vbox.addWidget(self.result_method_window)
         if self.show_pulldown:
             vbox.addWidget(self.pulldown)
+
+        irow += 1
+        self._add_from_setup_dict(vbox, irow)
+
         vbox.addWidget(self.apply_button)
+
+        irow += 1
+        self._add_from_setup_dict(vbox, irow)
+
         self.setLayout(vbox)
 
-        self.clear_data()
+        if clear_data:
+            self.clear_data()
+
+        #if not init:
+            #self.frameGeometry().width()
+            #self.frameGeometry().height()
+            #self.resize(width, height)
+
+    def _add_from_setup_dict(self, vbox, irow):
+        if self.setup_dict is None:
+            return
+
+        if irow in self.setup_dict:
+            widgets = self.setup_dict[irow]
+            assert widgets is not None, widgets
+            if isinstance(widgets, list):
+                for widget_layout in widgets:
+                    if isinstance(widget_layout, QBoxLayout):
+                        vbox.addLayout(widget_layout)
+                    else:
+                        vbox.addWidget(widget_layout)
+            else:
+                widget_layout = widgets
+                if isinstance(widget_layout, QBoxLayout):
+                    vbox.addLayout(widget_layout)
+                else:
+                    vbox.addWidget(widget_layout)
 
     def update_method(self, method):
         if isinstance(method, string_types):
-            datai = self.result_data_window.data[0]
-            self.result_data_window.data[0] = (method, datai[1], datai[2])
+            datai = self.result_method_window.data[0]
+            self.result_method_window.data[0] = (method, datai[1], datai[2])
             #print('method=%s datai=%s' % (method, datai))
-            self.result_data_window.update_data(self.result_data_window.data)
+            self.result_method_window.update_data(self.result_method_window.data)
         else:
             return
              # pragma: no cover
-            #datai = self.result_data_window.data[0]
+            #datai = self.result_method_window.data[0]
 
     def get_form(self):
+        """
+        TODO: At this point, we should clear out the data block and refresh it
+        """
         return self.result_case_window.data
 
     def update_results(self, data, name):
@@ -295,49 +312,78 @@ class Sidebar(QWidget):
             the name that goes at the side
         """
         name = str(name)
-        if name in self.names:
-            i = self.names.index(name)
-            self.name_pulldown.setCurrentIndex(i)
+        update_name = False
+        setup_layout = False
+        if self.name is None:
+            self.names = [name]
+            self.name_pulldown.clear()
+            self.name_pulldown.addItems(self.names)
+            #self.name_pulldown.setItemText(0, name)
+            #self.name_pulldown.setCurrentIndex(1)
+            update_name = True
+            setup_layout = True
+
         else:
-            self.name_pulldown.addItem(name)
-            self.names.append(name)
-        if len(self.names) >= 2:
-            self.name_pulldown.setEnabled(True)
+            if name in self.names:
+                i = self.names.index(name)
+                self.name_pulldown.setCurrentIndex(i)
+            else:
+                self.name_pulldown.addItem(name)
+                self.names.append(name)
+                setup_layout = True
+
+            if len(self.names) >= 2:
+                self.name_pulldown.setEnabled(True)
         self.name = name
 
         self.result_case_window.update_data(data)
         self.apply_button.setEnabled(True)
+        if update_name:
+            self.on_update_name(None)
+
+        if setup_layout and 0:
+            #print('setup_layout******')
+            ## TODO: screws up the width of the window
+            choices = ['keys2', 'purse2', 'cellphone2', 'credit_card2', 'money2']
+            data = [
+                ('A', 1, []),
+                #('B', 2, []),
+                #('C', 3, []),
+            ]
+            self.setup_layout(data, choices, init=False, clear_data=True)
 
     def update_methods(self, data):
         """the methods is a hidden box"""
-        self.result_data_window.update_data(data)
+        if self.result_method_window is not None:
+            self.result_method_window.update_data(data)
         self.apply_button.setEnabled(True)
 
     def clear_data(self):
         self.result_case_window.clear_data()
-        self.result_data_window.clear_data()
+        if self.result_method_window is not None:
+            self.result_method_window.clear_data()
         self.apply_button.setEnabled(False)
 
-    def on_pulldown(self, event):
+    def on_pulldown(self):  # pragma: no cover
         print('pulldown...')
 
-    def on_update_name(self, event):
+    def on_update_name(self):  # pragma: no cover
         """user clicked the pulldown"""
         name = str(self.name_pulldown.currentText())
         data = self.parent._get_sidebar_data(name)
         #self.result_case_window.update_data(data)
 
-    def on_apply(self, event):
+    def on_apply(self):
         data = self.result_case_window.data
         valid_a, keys_a = self.result_case_window.treeView.get_row()
 
-        data = self.result_data_window.data
-        valid_b, keys_b = self.result_data_window.treeView.get_row()
+        data = self.result_method_window.data
+        valid_b, keys_b = self.result_method_window.treeView.get_row()
         if valid_a and valid_b:
             if self.debug:  # pragma: no cover
                 print('  rows1 = %s' % self.result_case_window.treeView.old_rows)
                 print('        = %s' % str(keys_a))
-                print('  rows2 = %s' % self.result_data_window.treeView.old_rows)
+                print('  rows2 = %s' % self.result_method_window.treeView.old_rows)
                 print('        = %s' % str(keys_b))
             else:
                 self.update_vtk_window(keys_a, keys_b)
@@ -358,112 +404,186 @@ class Sidebar(QWidget):
         result_name = None
         self.parent._set_case(result_name, i, explicit=True)
 
+    def on_clear_results(self):
+        if hasattr(self.parent, 'on_clear_results'):
+            self.parent.on_clear_results()
+    def on_fringe(self, icase):
+        if hasattr(self.parent, 'on_fringe'):
+            self.parent.on_fringe(icase)
+    def on_disp(self, icase):
+        if hasattr(self.parent, 'on_disp'):
+            self.parent.on_disp(icase)
+    def on_vector(self, icase):
+        if hasattr(self.parent, 'on_vector'):
+            self.parent.on_vector(icase)
 
-class ResultsWindow(QWidget):
+    def get_clicked(self):
+        self.result_method_window.treeView.get_clicked()
+
+def build_pruned_tree(tree, cases):
     """
-    A ResultsWindow creates the box where we actually select our
-    results case.  It does not have an apply button.
+    Build new tree with only the specifiied cases
+
+    Parameters
+    ----------
+    tree : List[...]
+        the sidebar tree
+    cases : List[int]
+        the cases to keep
+
+    Returns
+    -------
+    tree_final : List[...]
+        the updated sidebar tree
+
+    Example
+    -------
+    form = [
+        [u'Geometry', None, [
+            (u'NodeID', 0, []),
+            (u'ElementID', 1, []),
+            (u'PropertyID', 2, []),
+            (u'MaterialID', 3, []),
+            (u'E', 4, []),
+            (u'Element Checks', None, [
+                (u'ElementDim', 5, []),
+                (u'Min Edge Length', 6, []),
+                (u'Min Interior Angle', 7, []),
+                (u'Max Interior Angle', 8, [])],
+            ),],
+        ],
+    ]
+    cases = [1, 2, 5]
+    tree2 = prune_tree(form, cases)
+    >>> tree2
+    [
+        [u'Geometry', None, [
+            (u'ElementID', 1, []),
+            (u'PropertyID', 2, []),
+            (u'Element Checks', None, [
+                (u'ElementDim', 5, []),
+            ),],
+        ],
+    ]
     """
-    def __init__(self, name, data, choices):
-        QWidget.__init__(self)
-        self.name = name
-        self.data = data
-        self.choices = choices
+    tree_final = []
+    is_results, tree_final = _build_pruned_tree(tree, cases, tree_final)
+    return tree_final
 
-        self.treeView = QTreeView2(self.data, choices)
-        self.treeView.setEditTriggers(QAbstractItemView.NoEditTriggers)
-
-        self.model = QtGui.QStandardItemModel()
-        is_single = self.addItems(self.model, data)
-        self.treeView.setModel(self.model)
-        self.treeView.set_single(is_single)
-
-        self.model.setHorizontalHeaderLabels([self.tr(self.name)])
-
-        layout = QVBoxLayout()
-        layout.addWidget(self.treeView)
-        self.setLayout(layout)
-
-    def update_data(self, data):
-        self.clear_data()
-        self.data = data
+def _build_pruned_tree(tree, cases, tree2):
+    """helper method for ``build_pruned_tree``"""
+    is_results = False
+    if isinstance(tree[0], string_types):
         try:
-            self.addItems(self.model, data)
-        except:
-            raise RuntimeError('cannot add data=\n%s' % data)
-            #if isinstance(data, string_types):
-                #self.addItems(self.model, data)
-            #else:
-                #self.addItems(self.model, *tuple(data))
-        self.treeView.data = data
-        #layout = QVBoxLayout()
-        #layout.addWidget(self.treeView)
-        #self.setLayout(layout)
-
-    def clear_data(self):
-        self.model.clear()
-        self.treeView.data = []
-        self.model.setHorizontalHeaderLabels([self.tr(self.name)])
-
-    def addItems(self, parent, elements, level=0, count_check=False):
-        nelements = len(elements)
-        redo = False
-        #print(elements[0])
-        try:
-            #if len(elements):
-                #assert len(elements[0]) == 3, 'len=%s elements[0]=%s\nelements=\n%s\n' % (
-                    #len(elements[0]), elements[0], elements)
-            for element in elements:
-                #if isinstance(element, str):
-                    #print('elements = %r' % str(elements))
-
-                #print('element = %r' % str(element))
-                if not len(element) == 3:
-                    print('element = %r' % str(element))
-                text, i, children = element
-                nchildren = len(children)
-                #print('text=%r' % text)
-                item = QtGui.QStandardItem(text)
-                parent.appendRow(item)
-
-                # TODO: count_check and ???
-                if nelements == 1 and nchildren == 0 and level == 0:
-                    #self.result_data_window.setEnabled(False)
-                    item.setEnabled(False)
-                    #print(dir(self.treeView))
-                    #self.treeView.setCurrentItem(self, 0)
-                    #item.mousePressEvent(None)
-                    redo = True
-                #else:
-                    #pass
-                    #print('item=%s count_check=%s nelements=%s nchildren=%s' % (
-                        #text, count_check, nelements, nchildren))
-                if children:
-                    assert isinstance(children, list), children
-                    self.addItems(item, children, level + 1, count_check=count_check)
-            is_single = redo
-            return is_single
+            name, icase, cases2 = tree
         except ValueError:
-            print()
-            print('elements =', elements)
-            print('element =', element)
-            print('len(elements)=%s' % len(elements))
-            for e in elements:
-                print('  e = %s' % str(e))
+            print(tree)
             raise
-        #if redo:
-        #    data = [
-        #        ('A', []),
-        #        ('B', []),
-        #    ]
-        #    self.update_data(data)
+
+        if isinstance(icase, integer_types):
+            assert cases2 == [], tree
+            if icase in cases:
+                is_results = True
+                tree2.append(tree)
+        else:
+            assert icase is None, tree
+            tree3 = []
+            for case in cases2:
+                is_resultsi, tree3 = _build_pruned_tree(case, cases, tree3)
+                if is_resultsi:
+                    is_results = True
+            if is_results:
+                tree2.append((name, icase, tree3))
+    else:
+        tree3 = []
+        for case in tree:
+            is_resultsi, tree3 = _build_pruned_tree(case, cases, tree3)
+            if is_resultsi:
+                is_results = True
+        tree2 = tree3
+    return is_results, tree2
+
+def get_cases_from_tree(tree):
+    """
+    Get the cases found in the tree
+
+    Parameters
+    ----------
+    tree : List[...]
+        the sidebar tree
+
+    Returns
+    -------
+    cases : List[int]
+        the cases in the tree
+
+    Example
+    -------
+    form = [
+        [u'Geometry', None, [
+            (u'NodeID', 0, []),
+            (u'ElementID', 1, []),
+            (u'PropertyID', 2, []),
+            (u'MaterialID', 3, []),
+            (u'E', 4, []),
+            (u'Element Checks', None, [
+                (u'ElementDim', 5, []),
+                (u'Min Edge Length', 6, []),
+                (u'Min Interior Angle', 7, []),
+                (u'Max Interior Angle', 8, [])],
+            ),],
+        ],
+    ]
+    cases = get_cases_from_tree(form)
+    >>> cases
+    [0, 1, 2, 3, 4, 5, 6, 7, 8]
+    """
+    cases = []
+    if isinstance(tree[0], string_types):
+        try:
+            name, icase, cases2 = tree
+        except ValueError:  # pragma: no cover
+            print(tree)
+            raise
+        if isinstance(icase, integer_types):
+            assert cases2 == [], tree
+            cases.append(icase)
+        else:
+            assert icase is None or icase == '', tree
+            icase = None
+            for case in cases2:
+                cases += get_cases_from_tree(case)
+    else:
+        for case in tree:
+            cases += get_cases_from_tree(case)
+    return cases
 
 def main():  # pragma: no cover
     app = QApplication(sys.argv)
-    window = Sidebar(app, debug=True)
-    window.show()
+
+    form = [
+        [u'Geometry', None, [
+            (u'NodeID', 0, []),
+            (u'ElementID', 1, []),
+            (u'PropertyID', 2, []),
+            (u'MaterialID', 3, []),
+            (u'E', 4, []),
+            (u'Element Checks', None, [
+                (u'ElementDim', 5, []),
+                (u'Min Edge Length', 6, []),
+                (u'Min Interior Angle', 7, []),
+                (u'Max Interior Angle', 8, [])],
+            ),],
+        ],
+    ]
+    #form = []
+    res_widget = Sidebar(app, data=form, clear_data=False, debug=True)
+
+    name = 'name'
+    #res_widget.update_results(form, name)
+
+    res_widget.show()
     sys.exit(app.exec_())
 
 if __name__ == "__main__":  # pragma: no cover
     main()
-

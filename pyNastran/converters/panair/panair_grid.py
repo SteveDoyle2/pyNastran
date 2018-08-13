@@ -1,3 +1,7 @@
+"""
+defines:
+ - PanairGrid(log=None, debug=False)
+"""
 from __future__ import print_function
 import os
 from itertools import count
@@ -25,9 +29,24 @@ from pyNastran.utils import print_bad_path
 
 
 class PanairGrid(object):
+    """defines the PanairGrid class"""
     model_type = 'panair'
 
     def __init__(self, log=None, debug=True):
+        """
+        Initializes the PanairGrid object
+
+        Parameters
+        ----------
+        debug : bool/None; default=True
+            used to set the logger if no logger is passed in
+                True:  logs debug/info/error messages
+                False: logs info/error messages
+                None:  logs error messages
+        log : logging module object / None
+            if log is set, debug is ignored and uses the
+            settings the logging object has
+        """
         self.infilename = None
         self.title_lines = []
         self.xz_symmetry = 0
@@ -194,7 +213,7 @@ class PanairGrid(object):
 
             #panair_file.write(self.alphaSection)
             #panair_file.write(self.caseSection)
-            for patch_name, patch in sorted(iteritems(self.patches)):
+            for unused_patch_name, patch in sorted(iteritems(self.patches)):
                 panair_file.write(str(patch))
 
             panair_file.write(self.xyz_section)
@@ -243,15 +262,15 @@ class PanairGrid(object):
             self.xz_symmetry, self.xy_symmetry))
         return True
 
-    def split_points(self, lines, nactual, nremainder):
+    def split_points(self, lines, nfull_lines, npartial_lines):
         """
         reads the points
         """
         ipoint = 0
-        nrows = 2 * nactual + nremainder
+        nrows = 2 * nfull_lines + npartial_lines
         points = np.zeros((nrows, 3), dtype='float32')
 
-        for n in range(nactual):
+        for n in range(nfull_lines):
             line = lines[n]
             x1 = double(line[0:10], 'x%i' % (ipoint + 1))
             y1 = double(line[10:20], 'y%i' % (ipoint + 1))
@@ -265,7 +284,7 @@ class PanairGrid(object):
             points[ipoint, :] = [x2, y2, z2]
             ipoint += 1
 
-        if nremainder:
+        if npartial_lines:
             n += 1
             line = lines[n]
             x1 = double(line[0:10], 'x%i' % (ipoint + 1))
@@ -289,7 +308,7 @@ class PanairGrid(object):
 
     def find_patch_by_name(self, network_name):
         names = []
-        for patch_id, patch in iteritems(self.patches):
+        for unused_patch_id, patch in iteritems(self.patches):
             #self.log.debug("patch_id=%s" % (patch_id))
             #self.log.debug("*get_patch = %s" %(get_patch))
             #self.log.debug("get_patch.network_name=%s" % (get_patch.network_name))
@@ -326,7 +345,7 @@ class PanairGrid(object):
         n = 4
         self.msg += '      kn,kt            %i          %i\n' % (nnetworks, kt)
 
-        for inetwork in range(nnetworks):
+        for unused_inetwork in range(nnetworks):
             #self.log.debug("lines[* %s] = %s" % (n - 1, section[n - 1]))
             nm = integer(section[n - 1][0:10], 'nm')
             nn = integer(section[n - 1][10:20], 'nn')
@@ -393,7 +412,7 @@ class PanairGrid(object):
         n = 3
         self.msg += '      kn,kt            %i          %i\n' % (nnetworks, kt)
 
-        for inetwork in range(nnetworks):
+        for unused_inetwork in range(nnetworks):
             #self.log.debug("lines[%s] = %s" % (n, section[n]))
             # 0-noDisplacement; 1-Specify
             ndisplacement = integer(section[n][0:10], 'ndisplacement')
@@ -645,7 +664,7 @@ class PanairGrid(object):
         n = 3  # line number
         self.msg += '      kn,kt            %i          %i\n' % (nnetworks, kt)
         #self.log.debug('kt=%s cp_norm=%s matchw=%s' % (kt, cp_norm, matchw))
-        for inetwork in range(nnetworks):
+        for unused_inetwork in range(nnetworks):
             #self.log.debug("lines[* %s] = %s" % (n, section[n]))
 
             trailed_panel = section[n][0:10].strip()
@@ -664,7 +683,7 @@ class PanairGrid(object):
                 self.log.debug('trailed_panel isnt defined...trailed_panel=%r' % (trailed_panel))
                 raise
 
-            (p1, xyz1) = patch.get_edge(edge_number)
+            (unused_p1, xyz1) = patch.get_edge(edge_number)
 
             npoints = xyz1.shape[0]
             xyz = np.zeros([2, npoints, 3])
@@ -818,7 +837,7 @@ class PanairGrid(object):
 
         lines = remove_comments(self.lines, self.log)
         (sections, section_names) = split_into_sections(lines)
-        groups = self.group_sections(sections, section_names)
+        unused_groups = self.group_sections(sections, section_names)
         #self.log.debug("nPatches = %s" % (self.npatches))
         # split into headings
         #for panel in panels:
@@ -832,7 +851,7 @@ class PanairGrid(object):
         kt = []
         cp_norm = []
         npoints = 0
-        for name, panel in sorted(iteritems(self.patches)):
+        for unused_name, panel in sorted(iteritems(self.patches)):
             if not get_wakes:
                 if panel.is_wake():
                     continue
@@ -992,7 +1011,7 @@ class PanairGrid(object):
                                         self.dref)
         return out
 
-    def _read_end(self, section):
+    def _read_end(self, unused_section):
         self.is_end = True
         #self.log.debug("end...")
         return True
@@ -1026,48 +1045,76 @@ class PanairGrid(object):
         msg += '            bodyl      12     3.4-      1st p-o-s   0    -1.0\n'
 
         for patch_id, patch in iteritems(self.patches):
-            (p1, xyz1) = patch.get_edges()
+            (p1, unused_xyz1) = patch.get_edges()
             self.log.debug("p[%s] = %s" % (patch_id, p1))
         return msg
 
     def print_options(self):
-        msg = ''
-        msg += '0            options\n'
-        msg += '            %i = singularity grid print flag\n' % (self.isings)
-        msg += '            %i = panel geometry print flag\n' % (self.igeomp)
-        msg += '            %i = spline data flag  ( 0 ==> off, nonzero ==> on )\n' % (self.isingp)
-        msg += '            %i = control point information print flag\n' % (self.icontp)
-        msg += '            %i = boundary condition data print flag \n' % (self.ibconp)
-        msg += '            %i = edge matching information print flag\n' % (self.iedgep)
-        msg += '            %i = index of control point for which aic-s are printed\n' % (self.ipraic)
-        msg += '            %i = edge control point flow properties print flag\n' % (self.nexdgn)
-        msg += '            %i = output control flag (-1 ==> no surface flow properties, 0 ==> standard output, 1 ==> short form output )\n' % (self.ioutpr)
-        msg += '            %s = force/moment control flag (-1 ==> no force and moment data, 0 ==> standard output, 1 ==> nw totals only )\n' % (self.ifmcpr)
-        msg += '            %i = print flag for detailed cost information during execution of job\n' % (self.icostp)
-        msg += '            1 = print flag for singularity parameter maps\n'
-        msg += '0               abutment processing options\n'
-        msg += '   %10s = global edge abutment tolerance specified by user.  if this value is zero, a default value will be calculated\n' % (fortran_value(self.epsgeo))
-        msg += '                later.   this default value is taken as:  .001  * (minimum panel diameter)\n'
-        msg += '            %i = print flag controlling geometry printout  b e f o r e  the abutment processing.  ( nonzero ==> do print )\n' % (self.igeoin)
-        msg += '            %i = print flag controlling geometry printout  a f t e r    the abutment processing.  ( nonzero ==> do print )\n' % (self.igeout)
-        msg += '            %i = network/abutment/abutment-intersection print flag.  ( nonzero ==> generate the cross referenced abutment listing\n' % (self.nwxref)
-        msg += '            %i = control index for panel intersection checking.  ( nonzero ==> do perform the check. )\n' % (self.triint)
-        msg += '            %i = abutment/abutment-intersection (short listing) print flag ( 0 ==> suppress, nonzero ==> generate usual print )\n' % (2)
-        msg += ' \n'
-        msg += '                force and moment reference parameters\n'
-        msg += '   %10s = reference area for force and moment calculations.    (sref)\n' % (
-            fortran_value(self.sref))
-        msg += '   %10s = rolling moment reference length  (bref)\n' % (
-            fortran_value(self.bref))
-        msg += '   %10s = pitching moment reference length (cref)\n' % (
-            fortran_value(self.cref))
-        msg += '   %10s = yawing moment reference length   (dref)\n' % (
-            fortran_value(self.dref))
-        msg += '   %10s = x - coordinate for the point about which moments will be calculated  (xref)\n' % (fortran_value(self.xref))
-        msg += '   %10s = y - coordinate for the point about which moments will be calculated  (yref)\n' % (fortran_value(self.yref))
-        msg += '   %10s = z - coordinate for the point about which moments will be calculated  (zref)\n' % (fortran_value(self.zref))
-        msg += '            3 = pressure coefficient index (nprcof) (1=linear, 2=slenderbody, 3=2nd, 4=isentropic)\n'
-        msg += '1\n'
+        msg = (
+            '0            options\n'
+            '            %i = singularity grid print flag\n'
+            '            %i = panel geometry print flag\n'
+            '            %i = spline data flag  ( 0 ==> off, nonzero ==> on )\n'
+            '            %i = control point information print flag\n'
+            '            %i = boundary condition data print flag \n'
+            '            %i = edge matching information print flag\n'
+            '            %i = index of control point for which aic-s are printed\n'
+            '            %i = edge control point flow properties print flag\n'
+
+            # self.ioutpr, self.ifmcpr, self.icostp, fortran_value(self.epsgeo),
+            '            %i = output control flag (-1 ==> no surface flow properties, '
+            '0 ==> standard output, 1 ==> short form output )\n'
+            '            %s = force/moment control flag (-1 ==> no force and moment data, '
+            '0 ==> standard output, 1 ==> nw totals only )\n'
+            '            %i = print flag for detailed cost information during execution of job\n'
+            '            1 = print flag for singularity parameter maps\n'
+            '0               abutment processing options\n'
+            '   %10s = global edge abutment tolerance specified by user.  '
+            'if this value is zero, a default value will be calculated\n'
+            '                later.   this default value is taken as:  '
+            '.001  * (minimum panel diameter)\n'
+
+            # self.igeoin, self.igeout, self.nwxref,
+            '            %i = print flag controlling geometry printout  b e f o r e  '
+            'the abutment processing.''  ( nonzero ==> do print )\n'
+            '            %i = print flag controlling geometry printout  a f t e r    '
+            'the abutment processing.  ( nonzero ==> do print )\n'
+            '            %i = network/abutment/abutment-intersection print flag.  '
+            '( nonzero ==> generate the cross referenced abutment listing\n'
+
+            # self.triint, 2
+            '            %i = control index for panel intersection checking.  '
+            '( nonzero ==> do perform the check. )\n'
+            '            %i = abutment/abutment-intersection (short listing) print flag '
+            '( 0 ==> suppress, nonzero ==> generate usual print )\n'
+            ' \n'
+
+            '                force and moment reference parameters\n'
+            '   %10s = reference area for force and moment calculations.    (sref)\n'
+            '   %10s = rolling moment reference length  (bref)\n'
+            '   %10s = pitching moment reference length (cref)\n'
+            '   %10s = yawing moment reference length   (dref)\n'
+            '   %10s = x - coordinate for the point about which moments will be calculated  (xref)\n'
+            '   %10s = y - coordinate for the point about which moments will be calculated  (yref)\n'
+            '   %10s = z - coordinate for the point about which moments will be calculated  (zref)\n'
+            '            3 = pressure coefficient index (nprcof) '
+
+            '(1=linear, 2=slenderbody, 3=2nd, 4=isentropic)\n'
+            '1\n' % (
+                self.isings, self.igeomp, self.isingp, self.icontp, self.ibconp,
+                self.iedgep, self.ipraic, self.nexdgn,
+
+                self.ioutpr, self.ifmcpr, self.icostp, fortran_value(self.epsgeo),
+
+                self.igeoin, self.igeout, self.nwxref,
+
+                self.triint, 2,
+
+                fortran_value(self.sref), fortran_value(self.bref), fortran_value(self.cref),
+                fortran_value(self.dref),
+                fortran_value(self.xref), fortran_value(self.yref), fortran_value(self.zref),
+            )
+        )
         return msg
 
     def print_out_header(self):
@@ -1116,26 +1163,35 @@ class PanairGrid(object):
         for i, title_line in enumerate(self.title_lines):
             msg += "title%s:%s\n" % (i + 1, title_line)
 
-        msg += '0               processing options\n'
-        msg += '            %i = datacheck.   (0=regular run,1=full datacheck,2=short datacheck)\n' % (self.data_check)
-        msg += '            0 = s.p. flag.   (0 ==> no s.p. file (ft09) provided, 1 ==> local file ft09 with singularity values is provided)\n'
-        msg += '            0 = aic flag.    (0 ==>  no aic file (ft04) provided, 1 ==> local file ft04 with aic-s is provided by the user)\n'
-        msg += '            0 = b.l. flag    (0 ==> no boundary layer file requested, 1 ==> boundary layer data will be written to file ft17)\n'
-        msg += '            0 = velocity correction index.  (0 ==> no correction, 1 ==> mclean correction, 2 ==>  boctor correction)\n'
-        msg += '            0 = flow visualization flag.  (nonzero ==> off-body and streamline processing will be performed)\n'
-        msg += '            0 = off-body calculation type. (0 ==> mass flux, nonzero ==> velocity)\n'
-        msg += '            0 = streamline calculation type. (0 ==> mass flux, nonzero ==> velocity)\n'
-        msg += '           %2i = number of off-body points.\n' % (
-            self.noff_body_points)
-        msg += '           %2i = number of streamlines to be traced.\n' % (
-            self.nstreamlines)
-        msg += '0               case summary\n'
-        msg += '           %2i = number of cases\n' % (self.ncases)
-        msg += '     %f = mach number\n' % (self.mach)
-        msg += '     %f = compressibility axis angle of attack (alpc)\n' % (
-            self.alpha_compressibility)
-        msg += '     %f = compressibliity axis angle of sideslip (betc)\n' % (
-            self.beta_compressibility)
+        msg += (
+            '0               processing options\n'
+            '            %i = datacheck.   (0=regular run,1=full datacheck,2=short datacheck)\n'
+            '            0 = s.p. flag.   (0 ==> no s.p. file (ft09) provided, 1 ==> '
+            'local file ft09 with singularity values is provided)\n'
+            '            0 = aic flag.    (0 ==>  no aic file (ft04) provided, 1 ==> '
+            'local file ft04 with aic-s is provided by the user)\n'
+            '            0 = b.l. flag    (0 ==> no boundary layer file requested, 1 ==> '
+            'boundary layer data will be written to file ft17)\n'
+            '            0 = velocity correction index.  (0 ==> no correction, 1 ==> '
+            'mclean correction, 2 ==>  boctor correction)\n'
+            '            0 = flow visualization flag.  (nonzero ==> '
+            'off-body and streamline processing will be performed)\n'
+            '            0 = off-body calculation type. (0 ==> mass flux, nonzero ==> velocity)\n'
+            '            0 = streamline calculation type. (0 ==> mass flux, nonzero ==> velocity)\n'
+
+            '           %2i = number of off-body points.\n'
+            '           %2i = number of streamlines to be traced.\n'
+
+            '0               case summary\n'
+            '           %2i = number of cases\n'
+            '     %f = mach number\n'
+            '     %f = compressibility axis angle of attack (alpc)\n'
+            '     %f = compressibliity axis angle of sideslip (betc)\n' % (
+                self.data_check,
+                self.noff_body_points, self.nstreamlines,
+                self.ncases, self.mach, self.alpha_compressibility, self.beta_compressibility,
+            )
+        )
 
         msg3 += '0network id&index   #rows   #cols  kt  src  dblt  nlopt1  nropt1  nlopt2  nropt2    ipot   # pts  # pans  cpnorm  cum pt  cum pn\n'
         msg3 += '---------- -----   -----   -----  --  ---  ----  ------  ------  ------  ------    ----    ----    ----  ------  ------  ------\n'
@@ -1156,16 +1212,25 @@ class PanairGrid(object):
             msg2 += '     %2s      %f      %f      1.000000\n' % (
                 icase + 1, alpha, beta)
 
-        msg2 += '0               symmetry options\n'
-        msg2 += '            %s = number of planes of symmetry\n' % (
-            self.nsymmetry_planes)
-        msg2 += '            %s = x-z plane of symmetry flag (0 ==> no symmetry, 1==> flow symmetry, -1 ==> flow antisymmetry)\n' % (self.xz_symmetry)
-        msg2 += '            %s = x-y plane of symmetry flag (0 ==> no symmetry, 1==> flow symmetry, -1 ==> flow antisymmetry)\n' % (self.xy_symmetry)
-        msg2 += '0               configuration summary\n'
-        msg2 += '          %3s = total number of networks read in\n' % (
-            self.nnetworks)
-        msg2 += '         %4s = total number of mesh points\n' % (total_points)
-        msg2 += '         %4s = total number of panels\n' % (total_panels)
+        msg2 += (
+            '0               symmetry options\n'
+            '            %s = number of planes of symmetry\n'
+            '            %s = x-z plane of symmetry flag (0 ==> no symmetry, '
+            '1==> flow symmetry, -1 ==> flow antisymmetry)\n'
+            '            %s = x-y plane of symmetry flag (0 ==> no symmetry, '
+            '1==> flow symmetry, -1 ==> flow antisymmetry)\n'
+            '0               configuration summary\n'
+            '          %3s = total number of networks read in\n'
+
+            '         %4s = total number of mesh points\n'
+            '         %4s = total number of panels\n'
+            '' % (
+                self.nsymmetry_planes,
+                self.xz_symmetry, self.xy_symmetry,
+                self.nnetworks,
+                total_points, total_panels,
+            )
+        )
 
         return msg + msg2 + msg3
 

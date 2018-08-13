@@ -17,7 +17,7 @@ from pyNastran.bdf.mesh_utils.bdf_equivalence import bdf_equivalence_nodes
 from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
 from pyNastran.bdf.mesh_utils.remove_unused import remove_unused
 
-def remove_unassociated_nodes(bdf_filename, bdf_filename_out, renumber=False):
+def remove_unassociated_nodes(bdf_filename, unused_bdf_filename_out, renumber=False):
     """dummy function"""
     assert renumber is False, renumber
     remove_unused(bdf_filename, remove_nids=True, remove_cids=False,
@@ -56,7 +56,7 @@ def clear_out_solids(bdf_filename, bdf_filename_out=None,
 
 
     nids = set([])
-    elements2 = {}
+    unused_elements2 = {}
     print(model.elements)
     for eid, element in iteritems(model.elements):
         #if element.type not in ['CTRIA3', 'CQUAD4']:
@@ -177,7 +177,7 @@ def nastran_to_surf(bdf_filename, pid_to_element_flags, surf_filename,
     else:
         pass
 
-    nnodes = len(model.nodes)
+    unused_nnodes = len(model.nodes)
     #ntris = 0
     #nquads = 0
     nodes = []
@@ -256,7 +256,7 @@ def nastran_to_surf(bdf_filename, pid_to_element_flags, surf_filename,
         pid = element.Pid()
 
         element_flag = pid_to_element_flags[pid]
-        name, spacing, thickness, grid_bc = element_flag
+        unused_name, spacing, thickness, unused_grid_bc = element_flag
         element_flag_node = [spacing, thickness]
         for nid in nids:
             node_flags_temp[nid].append(element_flag_node)
@@ -293,7 +293,7 @@ def nastran_to_surf(bdf_filename, pid_to_element_flags, surf_filename,
             pidsi = tuple(pidsi)
             if pidsi in line_map:
                 element_flag = line_map[pidsi]
-                name, spacing, thickness, grid_bc = element_flag
+                unused_name, spacing, thickness, unused_grid_bc = element_flag
                 avg_node_flagsi = [spacing, thickness]
             else:
                 msg = ('\nERROR BL THICKNESS MISMATCH:\n  define a  line_map to resolve for nid=%s;'
@@ -357,8 +357,8 @@ def _write_surf(surf_filename, maxnode,
 
         # writing triangles
         rf = 0  # recon flag is used for tris and is super cobnfusing; quads are better
-        for eid, (element, pid) in enumerate(tris):
-            name, initial_normal_spacing, bl_thickness, grid_bc = pid_to_element_flags[pid]
+        for unused_eid, (element, pid) in enumerate(tris):
+            unused_name, initial_normal_spacing, bl_thickness, grid_bc = pid_to_element_flags[pid]
             if pid in renumber_pids:
                 pid = renumber_pids[pid]
             n1, n2, n3 = element
@@ -366,8 +366,8 @@ def _write_surf(surf_filename, maxnode,
 
         # writing quads
         rf = 0
-        for eid, (element, pid) in enumerate(quads):
-            name, initial_normal_spacing, bl_thickness, grid_bc = pid_to_element_flags[pid]
+        for unused_eid, (element, pid) in enumerate(quads):
+            unused_name, initial_normal_spacing, bl_thickness, grid_bc = pid_to_element_flags[pid]
             if pid in renumber_pids:
                 pid = renumber_pids[pid]
             n1, n2, n3, n4 = element

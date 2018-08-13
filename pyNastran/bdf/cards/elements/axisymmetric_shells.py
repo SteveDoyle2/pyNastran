@@ -1,4 +1,4 @@
-## pylint: disable=C0103,R0902,R0904,R0914,C0302
+## pylint: disable=C0103
 """
 All axisymmetric shell elements are defined in this file.  This includes:
  * CTRAX3
@@ -25,10 +25,10 @@ from pyNastran.bdf.field_writer_8 import (
     print_card_8, print_field_8)
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, double_or_blank, integer_double_or_blank, double)
+    integer, integer_or_blank, double_or_blank, integer_double_or_blank)
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.bdf.cards.elements.shell import TriShell, _triangle_area_centroid_normal, _normal
-from pyNastran.bdf.cards.base_card import BaseCard, Element
+from pyNastran.bdf.cards.base_card import Element
 
 __all__ = ['CTRAX3', 'CTRAX6', 'CTRIAX', 'CTRIAX6',
            'CQUADX', 'CQUADX4', 'CQUADX8']
@@ -56,14 +56,17 @@ class AxisymmetricTri(Element):
         Get the centroid.
 
         .. math::
-          CG = \frac{1}{3} (n_0+n_1+n_2)
+          CG = \frac{1}{3} (n_1+n_2+n_3)
         """
         n1, n2, n3 = self.get_node_positions(nodes=self.nodes_ref[:3])
         centroid = (n1 + n2 + n3) / 3.
         return centroid
 
+    def center_of_mass(self):
+        return self.Centroid()
+
     def Mass(self):
-        n1, n2, n3 = self.get_node_positions(nodes=self.nodes_ref[:3])
+        unused_n1, unused_n2, unused_n3 = self.get_node_positions(nodes=self.nodes_ref[:3])
         return 0.
 
 class AxisymmetricQuad(Element):
@@ -85,8 +88,23 @@ class AxisymmetricQuad(Element):
         ]
 
     def Mass(self):
-        n1, n2, n3, n4 = self.get_node_positions(nodes=self.nodes_ref[:4])
+        unused_n1, unused_n2, unused_n3, unused_n4 = self.get_node_positions(
+            nodes=self.nodes_ref[:4])
         return 0.
+
+    def Centroid(self):
+        r"""
+        Get the centroid.
+
+        .. math::
+          CG = \frac{1}{4} (n_1+n_2+n_3+n_4)
+        """
+        n1, n2, n3, n4 = self.get_node_positions(nodes=self.nodes_ref[:4])
+        centroid = (n1 + n2 + n3 + n4) / 4.
+        return centroid
+
+    def center_of_mass(self):
+        return self.Centroid()
 
 class CTRAX3(AxisymmetricTri):
     """
@@ -138,11 +156,11 @@ class CTRAX3(AxisymmetricTri):
         assert len(card) <= 7, 'len(CTRAX3 card) = %i\ncard=%s' % (len(card), card)
         return CTRAX3(eid, pid, nids, theta=theta, comment=comment)
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
-        edges = self.get_edge_ids()
+        unused_edges = self.get_edge_ids()
 
         assert isinstance(eid, integer_types)
         assert isinstance(pid, integer_types)
@@ -194,9 +212,22 @@ class CTRAX3(AxisymmetricTri):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CTRIAX eid=%s' % self.eid
+        msg = ', which is required by CTRAX eid=%s' % self.eid
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CTRAX eid=%s' % self.eid
+        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -284,11 +315,11 @@ class CTRAX6(AxisymmetricTri):
         assert len(card) <= 10, 'len(CTRAX6 card) = %i\ncard=%s' % (len(card), card)
         return CTRAX6(eid, pid, nids, theta=theta, comment=comment)
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
-        edges = self.get_edge_ids()
+        unused_edges = self.get_edge_ids()
 
         assert isinstance(eid, integer_types)
         assert isinstance(pid, integer_types)
@@ -337,9 +368,22 @@ class CTRAX6(AxisymmetricTri):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CTRAX6 eid=%s' % self.eid
+        msg = ', which is required by CTRAX6 eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CTRAX6 eid=%s' % self.eid
+        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -427,11 +471,11 @@ class CTRIAX(AxisymmetricTri):
         assert len(card) <= 10, 'len(CTRIAX card) = %i\ncard=%s' % (len(card), card)
         return CTRIAX(eid, pid, nids, theta_mcid=theta_mcid, comment=comment)
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
-        edges = self.get_edge_ids()
+        unused_edges = self.get_edge_ids()
 
         assert isinstance(eid, integer_types)
         assert isinstance(pid, integer_types)
@@ -485,9 +529,22 @@ class CTRIAX(AxisymmetricTri):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CTRIAX eid=%s' % self.eid
+        msg = ', which is required by CTRIAX eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CTRIAX eid=%s' % self.eid
+        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -555,6 +612,7 @@ class CTRIAX6(TriShell):
         self.theta = theta
         self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(nids) == 6, 'error on CTRIAX6'
+        self.mid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -585,7 +643,7 @@ class CTRIAX6(TriShell):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
-        eid, mid, n1, n2, n3, n4, n5, n6, theta, undef1, undef2 = data
+        eid, mid, n1, n2, n3, n4, n5, n6, theta, unused_undef1, unused_undef2 = data
         nids = [n1, n2, n3, n4, n5, n6]
         return CTRIAX6(eid, mid, nids, theta=theta, comment=comment)
 
@@ -598,9 +656,22 @@ class CTRIAX6(TriShell):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CTRIAX6 eid=%s' % self.eid
+        msg = ', which is required by CTRIAX6 eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
         self.mid_ref = model.Material(self.mid)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CTRIAX6 eid=%s' % self.eid
+        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
+        self.mid_ref = model.safe_material(self.mid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -608,10 +679,10 @@ class CTRIAX6(TriShell):
         self.nodes_ref = None  # type: Optional[List[Any]]
         self.mid_ref = None  # type: Optional[Any]
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         eid = self.eid
         nids = self.node_ids
-        edges = self.get_edge_ids()
+        unused_edges = self.get_edge_ids()
 
         assert self.pid == -53, 'pid = %s' % self.pid
         assert isinstance(eid, integer_types)
@@ -635,7 +706,7 @@ class CTRIAX6(TriShell):
         Returns area, centroid, normal as it's more efficient to do them
         together
         """
-        (n1, n2, n3, n4, n5, n6) = self.get_node_positions()
+        (n1, unused_n2, n3, unused_n4, n5, unused_n6) = self.get_node_positions()
         return _triangle_area_centroid_normal([n1, n3, n5], self)
 
     def Area(self):
@@ -643,7 +714,7 @@ class CTRIAX6(TriShell):
         Get the normal vector.
 
         .. math:: A = \frac{1}{2} \lvert (n_1-n_3) \times (n_1-n_5) \rvert"""
-        (n1, n2, n3, n4, n5, n6) = self.get_node_positions()
+        (n1, unused_n2, n3, unused_n4, n5, unused_n6) = self.get_node_positions()
         a = n1 - n3
         b = n1 - n5
         area = 0.5 * norm(cross(a, b))
@@ -656,7 +727,7 @@ class CTRIAX6(TriShell):
         .. math::
           CG = \frac{1}{3} (n_0+n_1+n_2)
         """
-        n1, n2, n3, n4, n5, n6 = self.get_node_positions()
+        n1, unused_n2, n3, unused_n4, n5, unused_n6 = self.get_node_positions()
         centroid = (n1 + n3 + n5) / 3.
         return centroid
 
@@ -671,7 +742,7 @@ class CTRIAX6(TriShell):
         return 0.
 
     def Mid(self):
-        if isinstance(self.mid, integer_types):
+        if self.mid_ref is None:
             return self.mid
         return self.mid_ref.mid
 
@@ -692,7 +763,7 @@ class CTRIAX6(TriShell):
              {\lvert (n_0-n_1) \times (n_0-n_2) \lvert}
         """
         nodes = [self.nodes_ref[inid] for inid in [0, 2, 4]]
-        n1, n3, n5  = self.get_node_positions(nodes=nodes)
+        n1, n3, n5 = self.get_node_positions(nodes=nodes)
         try:
             n = _normal(n1 - n3, n1 - n5)
         except:
@@ -827,9 +898,22 @@ class CQUADX(AxisymmetricQuad):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CQUADX eid=%s' % self.eid
+        msg = ', which is required by CQUADX eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.Property(self.Pid(), msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CQUADX eid=%s' % self.eid
+        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -952,9 +1036,22 @@ class CQUADX4(AxisymmetricQuad):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CQUADX eid=%s' % self.eid
+        msg = ', which is required by CQUADX4 eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.Property(self.Pid(), msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CQUADX4 eid=%s' % self.eid
+        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -1068,9 +1165,22 @@ class CQUADX8(AxisymmetricQuad):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CQUADX8 eid=%s' % self.eid
+        msg = ', which is required by CQUADX8 eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.Property(self.Pid(), msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CQUADX8 eid=%s' % self.eid
+        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids

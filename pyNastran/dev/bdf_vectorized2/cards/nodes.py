@@ -21,6 +21,11 @@ class Nodes(object):
         self.epoints = model.epoints
         self.xyz_cid0 = None
 
+    #@property
+    #def nids(self):
+        #self.grid.make_current()
+        #return self.grid.nid
+
     def write_card(self, size=8, is_double=False, bdf_file=None):
         assert bdf_file is not None
         if len(self.grid):
@@ -374,7 +379,6 @@ class GRIDv(object):
             self.ps = self.ps[isort]
             self.seid = self.seid[isort]
 
-            #print(self.nid)
             self._nid = []
             self._xyz = []
             self._cp = []
@@ -382,8 +386,6 @@ class GRIDv(object):
             self._ps = []
             self._seid = []
             self.is_current = True
-        #else:
-            #print('no GRIDs')
 
     def cross_reference(self, model):
         """does this do anything?"""

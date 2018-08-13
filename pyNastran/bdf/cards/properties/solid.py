@@ -132,7 +132,7 @@ class PLSOLID(SolidProperty):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by PLSOLID pid=%s' % self.pid
+        msg = ', which is required by PLSOLID pid=%s' % self.pid
         self.mid_ref = model.HyperelasticMaterial(self.mid, msg) # MATHP, MATHE
 
     def uncross_reference(self):
@@ -145,7 +145,7 @@ class PLSOLID(SolidProperty):
         """
         return self.mid_ref.rho
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         pass
 
     def raw_fields(self):
@@ -171,6 +171,8 @@ class PCOMPS(SolidProperty):
                  cordm=0, psdir=13, sb=None, nb=None, tref=0.0, ge=0.0,
                  failure_theories=None, interlaminar_failure_theories=None,
                  souts=None, comment=''):
+        if comment:
+            self.comment = comment
         nplies = len(mids)
         if failure_theories is None:
             failure_theories = [None] * nplies
@@ -194,6 +196,7 @@ class PCOMPS(SolidProperty):
         self.failure_theories = failure_theories
         self.interlaminar_failure_theories = interlaminar_failure_theories
         self.souts = souts
+        self.mids_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -260,7 +263,7 @@ class PCOMPS(SolidProperty):
         pass
 
     def Mid(self):
-        return self.pid_ref.mid
+        return self.mids[0]
 
     def Rho(self):
         """
@@ -277,14 +280,14 @@ class PCOMPS(SolidProperty):
         return self.mids
 
     def cross_reference(self, model):
-        msg = ' which is required by PSOLID pid=%s' % self.pid
+        msg = ', which is required by PSOLID pid=%s' % self.pid
         self.mids_ref = []
         for mid in self.mids:
             mid_ref = model.Material(mid, msg=msg)
             self.mids_ref.append(mid_ref)
 
     def uncross_reference(self):
-        del self.mids_ref
+        self.mids_ref = None
 
     def raw_fields(self):
         fields = ['PCOMPS', self.pid, self.cordm, self.psdir, self.sb,
@@ -451,7 +454,7 @@ class PSOLID(SolidProperty):
     def cross_reference(self, model):
         # type: (Any) -> None
         """cross reference method for a PSOLID"""
-        msg = ' which is required by PSOLID pid=%s' % (self.pid)
+        msg = ', which is required by PSOLID pid=%s' % (self.pid)
         self.mid_ref = model.Material(self.mid, msg)
 
     def uncross_reference(self):
@@ -477,7 +480,7 @@ class PSOLID(SolidProperty):
         """
         return self.mid_ref.rho
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         pid = self.Pid()
         mid = self.Mid()
         assert isinstance(pid, integer_types), 'pid=%r' % pid
@@ -524,5 +527,3 @@ class PIHEX(PSOLID):
         fields = ['PIHEX', self.pid, self.Mid(), cordm, self.integ,
                   self.stress, self.isop, fctn]
         return fields
-
-

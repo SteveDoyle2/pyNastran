@@ -5,9 +5,7 @@ from pyNastran.converters.panair.assign_type import integer
 
 
 def print_float(value):  # sInt #string_float_value
-    """
-    int represented as a short float
-    """
+    """int represented as a short float"""
     value = "%f" % value
     return value.rstrip('0')
 
@@ -247,8 +245,8 @@ class PanairPatch(object):
         p = np.arange(self.npoints)
         for point_id in p:
             #point_id = 2
-            p2 = self.get_ipoint(point_id)
-            #print("point[%s]=%s" % (point_id, p2))
+            unused_p2 = self.get_ipoint(point_id)
+            #print("point[%s]=%s" % (point_id, unused_p2))
 
         return (p, xyz)
 
@@ -267,7 +265,7 @@ class PanairPatch(object):
             #self.log.debug("-----")
         return (p, xyz)
 
-    def get_elements(self, ipoint):
+    def get_elements(self, unused_ipoint):
         #print('nrows=%s ncols=%s' % (self.nrows, self.ncols))
         panels = elements_from_quad(self.ncols, self.nrows)
         return panels

@@ -7,7 +7,7 @@ import io
 import sys
 from codecs import open
 
-from six import string_types, iteritems, StringIO, PY2
+from six import string_types, iteritems, StringIO, PY2, iterkeys
 from numpy import array, unique, concatenate, intersect1d, where
 
 from pyNastran.bdf.utils import print_filename
@@ -135,6 +135,8 @@ class WriteMesh(BDFAttributes):
 
         self.write_elements_properties(bdf_file, size, is_double, interspersed)
         self._write_materials(bdf_file, size, is_double)
+        self._write_rigid_elements(bdf_file, size, is_double) # split out for write_bdf_symmetric
+        self._write_aero(bdf_file, size, is_double) # split out for write_bdf_symmetric
         self._write_common(bdf_file, size, is_double)
 
         if (enddata is None and 'ENDDATA' in self.card_count) or enddata:
@@ -489,7 +491,6 @@ class WriteMesh(BDFAttributes):
         self._write_loads(bdf_file, size, is_double)
 
         self._write_dynamic(bdf_file, size, is_double)
-        self._write_aero(bdf_file, size, is_double)
         self._write_aero_control(bdf_file, size, is_double)
         self._write_static_aero(bdf_file, size, is_double)
 
@@ -523,7 +524,7 @@ class WriteMesh(BDFAttributes):
         else:
             ids = []
             for constraint_dict in constraint_dicts:
-                ids += constraint_dict.iterkeys()
+                ids += iterkeys(constraint_dict)
             #self.log.debug(ids)
             ids = unique(ids)
             ids.sort()
@@ -767,13 +768,15 @@ class WriteMesh(BDFAttributes):
 
     def _write_sets(self, bdf_file, size=8, is_double=False):
         """Writes the SETx cards sorted by ID"""
-        is_sets = bool(self.sets or self.asets or self.bsets or
+        is_sets = bool(self.sets or self.asets or self.omits or self.bsets or
                        self.csets or self.qsets or self.usets)
         if is_sets:
             msg = ['$SETS\n']
             for (unused_id, set_obj) in sorted(iteritems(self.sets)):  # dict
                 msg.append(set_obj.write_card(size, is_double))
             for set_obj in self.asets:  # list
+                msg.append(set_obj.write_card(size, is_double))
+            for set_obj in self.omits:  # list
                 msg.append(set_obj.write_card(size, is_double))
             for set_obj in self.bsets:  # list
                 msg.append(set_obj.write_card(size, is_double))

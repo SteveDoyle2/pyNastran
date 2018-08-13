@@ -200,7 +200,7 @@ class Solver(OP2):
         # normalization of mass matrix
         self.mnorm = fargs['--m']
 
-        self.iSubcases = []
+        self.isubcases = []
         self.nU = 0
         self.nUs = 0
         self.nUm = 0
@@ -1597,7 +1597,7 @@ class Solver(OP2):
         """
         fills the displacement object
         """
-        self.iSubcases = []
+        self.isubcases = []
         analysis_code = 1
         #transient = False
         isubcase = case.id
@@ -1630,7 +1630,7 @@ class Solver(OP2):
         disp.node_gridtype[:, 1] = 1 # GRID (TODO: no SPOINTs)
         disp.data[0, :, :] = U.reshape(1, nnodes, 6)
         self.displacements[isubcase] = disp
-        self.iSubcases.append(isubcase)
+        self.isubcases.append(isubcase)
 
     def setup_sol_101(self, model, case):
         # the (GridID,componentID) -> internalID
@@ -1899,7 +1899,7 @@ class Solver(OP2):
 
         #dofs_0 = [nid=2, 1] -> searchsorted(nids, nid)[0]
 
-        #for nid in sorted(self.nodes.iterkeys()):
+        #for nid in sorted(iterkeys(self.nodes)):
             #nid_dof_mapper[]
 
         self.log.info('start calculating xyz_cid0')

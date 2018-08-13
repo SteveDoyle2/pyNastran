@@ -10,6 +10,7 @@ import unittest
 from itertools import count
 
 from six.moves import zip
+import numpy as np
 from numpy import array, allclose
 
 from pyNastran.bdf.bdf import BDF, BDFCard, PBEAM
@@ -408,6 +409,48 @@ class TestBeams(unittest.TestCase):
             msg += 'expected = %r' % expected
             self.assertEqual(actual, expected, msg)
 
+    def test_pbeaml_01(self):
+        model = BDF()
+        model.validate()
+
+        fields = [
+            'PBEAML', '622', '623', None, 'BAR', None, None, None, None,
+            '.238', '.238', None,
+            'NO', '.166', '.238', '.238', None,
+            'NO', '.510', '.126', '.126', None,
+            'NO', '.565', '.117', '.117', None,
+            'NO', '.619', '.126', '.126', None,
+            'NO', '.963', '.238', '.238', None,
+            'NO', '1.0', '.238', '.238', None,
+            'NO']
+        model.add_card(fields, fields[0])
+
+        fields = [
+            'PBEAML', '623', '623', None, 'BAR', None, None, None, None,
+            '.238', '.238', None,
+            'NO', '.166', '.238', '.238', None,
+            'NO', '.510', '.126', '.126', None,
+            'NO', '.565', '.117', '.117', None,
+            'NO', '.619', '.126', '.126', None,
+            'NO', '.963', '.238', '.238', None,
+            'NO', '1.0', '.238', '.238', None,
+        ]
+        model.add_card(fields, fields[0])
+
+        #fields = [
+            #'PBEAML', 625, 624,   None, 'BAR',  None,  None,  None,  None,
+                    #0.238, 0.238, None, 'NO',   0.166, 0.238, 0.238, None,
+                    #'NO',  0.51,  0.126, 0.126, None,  'NO',  0.565, 0.177,
+                    #0.117, None, 'NO',   0.619, 0.126, 0.126, None,  'NO',
+                    #0.963, 0.238, 0.238, None,  'NO',  1.0,   0.238, 0.238,
+                    #None, 'NO',
+        #]
+        #model.add_card(fields, fields[0])
+
+        model.pop_parse_errors()
+        str(model.properties[622])
+        str(model.properties[623])
+
     def test_cbeam_01(self):
         """modification of test_pbeam_05"""
         model = BDF(debug=False)
@@ -448,7 +491,36 @@ class TestBeams(unittest.TestCase):
         self.assertEqual(cbeam.I12(), 0.4)
         self.assertEqual(cbeam.J(), 3.14)
 
-    def test_cbeam_02(self):
+    def test_cbeam_g0(self):
+        """modification of test_cbeam_01"""
+        model = BDF(debug=False)
+        lines = ['PBEAM,200,6,2.9,3.5,5.97,0.4,3.14',
+                 '     , , ,2.0,-4.0',]
+        model.add_card(lines, 'PBEAM', is_list=False)
+
+        eid = 100
+        pid = 200
+        nids = [10, 20]
+        x = None
+        g0 = 30
+        model.add_cbeam(eid, pid, nids, x, g0, offt='GGG', bit=None, pa=0,
+                       pb=0, wa=None, wb=None, sa=0,
+                       sb=0, comment='')
+
+        mid = 6
+        E = 1.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu)
+        model.add_grid(10, [0., 0., 0.])
+        model.add_grid(20, [0., 0., 0.])
+        model.add_grid(30, [0., 1., 0.])
+        model.cross_reference()
+
+        save_load_deck(model, punch=True, run_remove_unused=True,
+                       run_convert=True, run_renumber=True)
+
+    def test_cbeam_pbeaml(self):
         """CBEAM/PBEAML"""
         model = BDF(debug=False)
         model.add_grid(1, [0., 0., 0.])
@@ -587,6 +659,8 @@ class TestBeams(unittest.TestCase):
         cbeam = model.add_cbeam(eid, pid, nids, x, g0, offt='GGG', bit=None,
                                 pa=42, pb=5, wa=None, wb=None,
                                 sa=0, sb=0, comment='CBEAM')
+        assert cbeam.is_offt is True, cbeam.is_offt
+        assert cbeam.is_bit is False, cbeam.is_bit
 
         #pid : int
             #property id
@@ -661,7 +735,81 @@ class TestBeams(unittest.TestCase):
         model.safe_cross_reference()
         model.uncross_reference()
 
+    def test_cbeam_bit(self):
+        """tests an BIT field on the CBEAM"""
+        model = BDF(debug=False)
+
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+
+        eid = 1
+        pid = 1
+        bit = 42
+        nids = [1, 2]
+        x = [0., 0., 1.]
+        g0 = None
+        bit = None
+        cbeam = model.add_cbeam(eid, pid, nids, x, g0, offt=None, bit=bit, pa=0,
+                                pb=0, wa=None, wb=None, sa=0,
+                                sb=0, comment='')
+        with self.assertRaises(RuntimeError):
+            cbeam.validate()
+        del model.elements[eid]
+
+        bit = 12
+        cbeam = model.add_cbeam(eid, pid, nids, x, g0, offt=None, bit=bit, pa=0,
+                                pb=0, wa=None, wb=None, sa=0,
+                                sb=0, comment='')
+        with self.assertRaises(AssertionError):
+            cbeam.raw_fields()
+        del model.elements[eid]
+
+        bit = 42.
+        cbeam = model.add_cbeam(eid, pid, nids, x, g0, offt=None, bit=bit, pa=0,
+                                pb=0, wa=None, wb=None, sa=0,
+                                sb=0, comment='')
+        assert cbeam.is_offt is False, cbeam.is_offt
+        assert cbeam.is_bit is True, cbeam.is_bit
+        mid = 1
+        beam_type = 'BAR'
+        dim = [1., 2.]  # area = 2.0
+        nsm = 1.
+        xxb = [0., 1.]
+        dims = [dim, dim]
+        model.add_pbeaml(pid, mid, beam_type, xxb, dims, so=None,
+                         nsm=[1.0],
+                         group='MSCBML0',
+                         comment='')
+
+        pid += 1
+
+        so = ['YES', 'YESA', 'NO', 'YES']
+        xxb = [0., 0.5, 0.75, 1.]
+        area = [1., 2., 3., 4.]
+        i1 = [2., 3., 4., 5.]
+        i2 = [3., 4., .5, .6]
+        i12 = [0.1, 0.2, 0.3, 0.4]
+        j = [5., 6., 6.5, 7.0]
+        nsm = None
+        pbeam = model.add_pbeam(pid, mid, xxb, so, area, i1, i2, i12, j, nsm,
+                                c1=None, c2=None, d1=None, d2=None,
+                                e1=None, e2=None, f1=None, f2=None,
+                                k1=1., k2=1., s1=0., s2=0.,
+                                nsia=0., nsib=None, cwa=0., cwb=None,
+                                m1a=0., m2a=None, m1b=0., m2b=None,
+                                n1a=0., n2a=None, n1b=0., n2b=None,
+                                comment='')
+        str(pbeam)
+
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu, rho=1.)
+        save_load_deck(model)
+
+
     def test_beam_mass_01(self):
+        """tests a CBEAM/PBEAM and gets the mass_properties"""
         model = BDF(debug=False)
         #model.case_control_deck = CaseControlDeck(case_control_lines)
         spc = ['SPC1', 123456, 123456, 1]
@@ -776,6 +924,7 @@ class TestBeams(unittest.TestCase):
             print('cg =', op2_cg)
 
     def test_pbeam_nsm(self):
+        """tests a PBEAM with nonstructural mass"""
         model = BDF(debug=False)
         pid = 1
         mid = 1
@@ -783,20 +932,49 @@ class TestBeams(unittest.TestCase):
         xxb = [0., 1.]
         so = ['YES', 'YES']
 
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        x = [0., 1., 0.]
+        g0 = None
+
         area = [2.0, 2.0]
-        i1 = i2 = i12 = j = [0., 0.]
+        i1 = i2 = j = [0.1, 0.1]
+        i12 = [0.01, 0.01]
         c1 = c2 = d1 = d2 = e1 = e2 = f1 = f2 = [0., 0.]
-        pbeam = model.add_pbeam(pid, mid, xxb, so, area, i1, i2, i12, j, nsm,
-                               c1, c2, d1, d2,
-                               e1, e2, f1, f2,
-                               k1=1., k2=1.,
-                               s1=0., s2=0.,
-                               nsia=0., nsib=None,
-                               cwa=0., cwb=None,
-                               m1a=0., m2a=None,
-                               m1b=0., m2b=None,
-                               n1a=0., n2a=None,
-                               n1b=0., n2b=None, comment='')
+        pbeam_a1 = model.add_pbeam(pid, mid, xxb, so, area, i1, i2, i12, j, nsm,
+                                   c1, c2, d1, d2,
+                                   e1, e2, f1, f2,
+                                   k1=1., k2=1.,
+                                   s1=0., s2=0.,
+                                   nsia=0., nsib=None,
+                                   cwa=0., cwb=None,
+                                   m1a=0., m2a=None,
+                                   m1b=0., m2b=None,
+                                   n1a=0., n2a=None,
+                                   n1b=0., n2b=None, comment='')
+
+        nsm = [1., 1.]
+        pid_pbeam_nsm = 30
+        pbeam_b1 = model.add_pbeam(pid_pbeam_nsm, mid, xxb, so, area, i1, i2, i12, j, nsm,
+                                  c1, c2, d1, d2,
+                                  e1, e2, f1, f2,
+                                  k1=1., k2=1.,
+                                  s1=0., s2=0.,
+                                  nsia=10., nsib=10.,
+                                  cwa=0., cwb=None,
+                                  # cg location at A/B (1.,1.)
+                                  m1a=1., m2a=1.,
+                                  m1b=1., m2b=1.,
+                                  # neutral axis at A/B (0., 0.)
+                                  n1a=0., n2a=None,
+                                  n1b=0., n2b=None, comment='')
+        eid = 42
+        model.add_cbeam(eid, pid_pbeam_nsm, [1, 2], x, g0, offt='GGG', bit=None,
+                        pa=0, pb=0, wa=None, wb=None, sa=0, sb=0, comment='')
+
+        pbeam_a1.validate()
+        pbeam_b1.validate()
+
         E = 1.0
         G = None
         nu = 0.3
@@ -809,22 +987,50 @@ class TestBeams(unittest.TestCase):
         model.add_card(card_lines, 'PBEAML', comment='', is_list=False,
                        has_none=True)
         model.pop_parse_errors()
-        pbeam2 = model.properties[2]
+        pbeam_a2 = model.properties[2]
         #------------------
         model.cross_reference()
+        model.pop_xref_errors()
 
-        assert pbeam.Nsm() == 1.0
-        assert pbeam.Area() == 2.0
+        assert pbeam_a1.Nsm() == 1.0
+        assert pbeam_a1.Area() == 2.0
 
         # mass/L = area*rho + nsm
-        assert pbeam.MassPerLength() == 1.0
+        assert pbeam_a1.MassPerLength() == 1.0
+        assert pbeam_b1.MassPerLength() == 1.0, pbeam_b1.MassPerLength() # should be 10
+
+        mass, cg1, inertia = model.mass_properties(
+            element_ids=eid,
+            mass_ids=None,
+            reference_point=None,
+            sym_axis=None,
+            scale=None)
+        assert mass == 1.0, mass
+        #print('cg1=%s' % cg)
+        assert np.allclose(cg1, [0.5, 1., 1.]), cg1
+
+        mass, cg2, inertia = model.mass_properties_nsm(
+            element_ids=eid, mass_ids=None,
+            nsm_id=None,
+            reference_point=None,
+            sym_axis=None,
+            scale=None,
+            xyz_cid0_dict=None,
+            debug=False)
+        #print('mass =', mass)
+        #print('cg2=%s' % cg2)
+        assert mass == 1.0, mass
+        assert np.allclose(cg2, [0.5, 1., 1.]), cg2
 
         # area = 2.0
         mat1.rho = 10.0
-        assert pbeam.MassPerLength() == 21.0, pbeam.MassPerLength()
-        assert pbeam2.MassPerLength() == 21.0, pbeam2.MassPerLength()
+        assert pbeam_a1.MassPerLength() == 21.0, pbeam_a1.MassPerLength()
+        assert pbeam_a2.MassPerLength() == 21.0, pbeam_a2.MassPerLength()
+
+        save_load_deck(model)
 
     def test_pbeaml_nsm(self):
+        """tests the PBEAML with non structural mass"""
         model = BDF(debug=False)
         pid = 1
         mid = 1
@@ -863,6 +1069,71 @@ class TestBeams(unittest.TestCase):
         mat1.rho = 10.0
         assert pbeaml.MassPerLength() == 21.0, pbeaml.MassPerLength()
         assert pbeaml2.MassPerLength() == 21.0, pbeaml2.MassPerLength()
+        save_load_deck(model)
+
+    def test_pbeam_opt(self):
+        """tests a PBEAM with DVPREL1"""
+        model = BDF(debug=False)
+        pid = 1
+        mid = 1
+        nsm = [1., 1.]
+        xxb = [0., 1.]
+        so = ['YES', 'YES']
+
+        area = [2.0, 2.0]
+        i1 = i2 = j = [0.1, 0.1]
+        i12 = [0.01, 0.01]
+        c1 = c2 = d1 = d2 = e1 = e2 = f1 = f2 = [0., 0.]
+        pbeam = model.add_pbeam(pid, mid, xxb, so, area, i1, i2, i12, j, nsm,
+                               c1, c2, d1, d2,
+                               e1, e2, f1, f2,
+                               k1=1., k2=1.,
+                               s1=0., s2=0.,
+                               nsia=0., nsib=None,
+                               cwa=0., cwb=None,
+                               m1a=0., m2a=None,
+                               m1b=0., m2b=None,
+                               n1a=0., n2a=None,
+                               n1b=0., n2b=None, comment='')
+        pbeam.validate()
+
+        E = 1.0
+        G = None
+        nu = 0.3
+        mat1 = model.add_mat1(mid, E, G, nu)
+        prop_type = 'PBEAM'
+
+        desvar_id = 1
+        xinit = 1.0
+        label = 'VAR1'
+        model.add_desvar(desvar_id, label, xinit, xlb=-1e20, xub=1e20,
+                        delx=None, ddval=None,
+                        comment='')
+        desvar_id = 2
+        label = 'VAR2'
+        model.add_desvar(desvar_id, label, xinit, xlb=-1e20, xub=1e20,
+                        delx=None, ddval=None,
+                        comment='')
+        for i in range(15):
+            oid = i + 1
+            pname_fid = -8 - i
+            if pname_fid in [-11, -12, -13, -22, -23]:
+                continue
+            dvids = desvar_id
+            coeffs = 1.0
+            model.add_dvprel1(oid, prop_type, pid, pname_fid, dvids, coeffs,
+                              p_min=None, p_max=1e20,
+                              c0=0.0, validate=True,
+                              comment='')
+        oid = 20
+        dependent_desvar = 1
+        independent_desvars = 2
+        coeffs = 1.0
+        model.add_dlink(oid, dependent_desvar, independent_desvars, coeffs,
+                       c0=0., cmult=1., comment='')
+        model.cross_reference()
+        model.update_model_by_desvars()
+        save_load_deck(model)
 
     def test_pbcomp(self):
         """tests a PBCOMP"""
@@ -889,6 +1160,9 @@ class TestBeams(unittest.TestCase):
         cbeam = model.add_cbeam(eid, pid, nids, x, g0, offt='GGG', bit=None,
                                 pa=0, pb=0, wa=None, wb=None, sa=0, sb=0,
                                 comment='')
+        cbeam.raw_fields()
+        cbeam.write_card_16()
+
         E = 3.0e7
         G = None
         nu = 0.3
@@ -900,7 +1174,42 @@ class TestBeams(unittest.TestCase):
         model.pop_parse_errors()
         model.cross_reference()
         model.pop_xref_errors()
-        save_load_deck(model)
+        save_load_deck(model, run_convert=False, run_renumber=False)
+
+    def test_beamor(self):
+        """tests a BEAMOR"""
+        model = BDF(debug=False)
+        n1 = 10
+        n2 = 20
+        model.add_grid(n1, [0., 0., 0.])
+        model.add_grid(n2, [1., 0., 0.])
+
+        pid = 2
+        mid = 1
+        beam_type = 'BAR'
+        dim = [1., 2.]  # area = 2.0
+        nsm = 1.
+        xxb = [0., 1.]
+        dims = [dim, dim]
+        pbeaml = model.add_pbeaml(pid, mid, beam_type, xxb, dims, so=None,
+                                 nsm=[1.0],
+                                 group='MSCBML0',
+                                 comment='')
+
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu, rho=1.)
+
+        card_lines = ['BEAMOR', None, pid, None, None, 0.6, 2.9, -5.87, 'GOG']
+        model.add_card(card_lines, 'BEAMOR', comment='BEAMOR', is_list=True,
+                       has_none=True)
+
+        eid = 1
+        card_lines = ['CBEAM', eid, pid, n1, n2]
+        model.add_card(card_lines, 'CBEAM', comment='', is_list=True,
+                      has_none=True)
+        model.pop_parse_errors()
 
     def test_pbmsect(self):
         """tests a PBMSECT"""

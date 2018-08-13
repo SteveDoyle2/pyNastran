@@ -25,10 +25,8 @@ def validate_dvcrel(validate, Type, cp_name):
     """
     Valdiates the DVCREL1/2
 
-    Notes
-    -----
-    1.  words that start with integers (e.g., 12I/T**3) doesn't support
-        strings
+    .. note::  words that start with integers (e.g., 12I/T**3) doesn't
+               support strings
     """
     if validate:
         msg = 'DVCRELx: Type=%r cp_name=%r is invalid' % (Type, cp_name)
@@ -54,10 +52,8 @@ def validate_dvmrel(validate, mat_type, mp_name):
     """
     Valdiates the DVMREL1/2
 
-    Notes
-    -----
-    1.  words that start with integers (e.g., 12I/T**3) doesn't support
-        strings
+    .. note::  words that start with integers (e.g., 12I/T**3) doesn't
+               support strings
     """
     if validate:
         msg = 'DVMRELx: mat_type=%r mp_name=%r is invalid' % (mat_type, mp_name)
@@ -84,10 +80,8 @@ def validate_dvprel(prop_type, pname_fid, validate):
     """
     Valdiates the DVPREL1/2
 
-    Notes
-    -----
-    1.  words that start with integers (e.g., 12I/T**3) doesn't support
-        strings
+    .. note::  words that start with integers (e.g., 12I/T**3) doesn't
+               support strings
     """
     if validate:
         msg = 'DVPREL1: prop_type=%r pname_fid=%r is invalid' % (prop_type, pname_fid)
@@ -1132,32 +1126,34 @@ class DRESP1(OptConstraint):
         validate : bool; default=False
             should the card be validated when it's created
 
-        Example 1
-        ---------
-        dresp_id = 103
-        label = 'resp1'
-        response_type = 'STRESS'
-        property_type = 'PSHELL'
-        pid = 3
-        atta = 9 # von mises upper surface stress
-        region = None
-        attb = None
-        atti = [pid]
-        DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+        Examples
+        --------
+        **stress/PSHELL**
 
-        Example 2
-        ---------
-        dresp_id = 104
-        label = 'resp2'
-        response_type = 'STRESS'
-        property_type = 'PCOMP'
-        pid = 3
-        layer = 4
-        atta = 9 # von mises upper surface stress
-        region = None
-        attb = layer
-        atti = [pid]
-        DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+        >>> dresp_id = 103
+        >>> label = 'resp1'
+        >>> response_type = 'STRESS'
+        >>> property_type = 'PSHELL'
+        >>> pid = 3
+        >>> atta = 9 # von mises upper surface stress
+        >>> region = None
+        >>> attb = None
+        >>> atti = [pid]
+        >>> DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+
+        **stress/PCOMP**
+
+        >>> dresp_id = 104
+        >>> label = 'resp2'
+        >>> response_type = 'STRESS'
+        >>> property_type = 'PCOMP'
+        >>> pid = 3
+        >>> layer = 4
+        >>> atta = 9 # von mises upper surface stress
+        >>> region = None
+        >>> attb = layer
+        >>> atti = [pid]
+        >>> DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
         """
         if comment:
             self.comment = comment
@@ -2395,8 +2391,8 @@ class DVCREL2(OptConstraint):
         see the PBEAM for an example of get/set_opt_value
         """
         try:
-            get = pid_ref.get_optimization_value(self.pNameFid)
-            out = pid_ref.set_optimization_value(self.pNameFid, get)
+            get = pid_ref.get_optimization_value(self.pname_fid)
+            out = pid_ref.set_optimization_value(self.pname_fid, get)
         except:
             print('DVCREL2 calculate : %s[%r] = ???' % (self.Type, self.cp_name))
             raise
@@ -2555,8 +2551,8 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
             #self.mp_min = double_or_blank(card, 5, 'mpMin', 1e-15)
         #else: # negative
             #self.mp_min = double_or_blank(card, 5, 'mpMin', -1e-35)
-        mp_min = double_or_blank(card, 5, 'mpMin')  #: .. todo:: bad default
-        mp_max = double_or_blank(card, 6, 'mpMax', 1e20)
+        mp_min = double_or_blank(card, 5, 'mp_min')  #: .. todo:: bad default
+        mp_max = double_or_blank(card, 6, 'mp_max', 1e20)
         c0 = double_or_blank(card, 7, 'c0', 0.0)
 
         dvids = []
@@ -2832,7 +2828,7 @@ class DVMREL2(OptConstraint):
         dequation_ref = model.DEQATN(self.dequation)
 
     #def OptValue(self):  #: .. todo:: not implemented
-        #self.pid_ref.OptValue(self.pNameFid)
+        #self.pid_ref.OptValue(self.pname_fid)
 
     def raw_fields(self):
         list_fields = ['DVMREL2', self.oid, self.mat_ype, self.mid,
@@ -3006,8 +3002,8 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
 
         #: Minimum value allowed for this property.
         #: .. todo:: bad default (see DVMREL1)
-        p_min = double_or_blank(card, 5, 'pMin', None)
-        p_max = double_or_blank(card, 6, 'pMax', 1e20)
+        p_min = double_or_blank(card, 5, 'p_min', None)
+        p_max = double_or_blank(card, 6, 'p_max', 1e20)
         c0 = double_or_blank(card, 7, 'c0', 0.0)
 
         dvids = []
@@ -3259,8 +3255,8 @@ class DVPREL2(OptConstraint):
         Type = string(card, 2, 'Type')
         pid = integer(card, 3, 'pid')
         pname_fid = integer_or_string(card, 4, 'pName_FID')
-        p_min = double_or_blank(card, 5, 'pMin', None)
-        p_max = double_or_blank(card, 6, 'pMax', 1e20)
+        p_min = double_or_blank(card, 5, 'p_min', None)
+        p_max = double_or_blank(card, 6, 'p_max', 1e20)
         dequation = integer_or_blank(card, 7, 'dequation') #: .. todo:: or blank?
 
         fields = [interpret_value(field) for field in card[9:]]
@@ -3407,7 +3403,7 @@ class DVPREL2(OptConstraint):
         pass
 
     #def OptValue(self):  #: .. todo:: not implemented
-        #self.pid_ref.OptValue(self.pNameFid)
+        #self.pid_ref.OptValue(self.pname_fid)
 
     def raw_fields(self):
         list_fields = ['DVPREL2', self.oid, self.Type, self.pid,

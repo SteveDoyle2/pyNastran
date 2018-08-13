@@ -227,7 +227,7 @@ class TestDampers(unittest.TestCase):
         model.cross_reference()
         model.update_model_by_desvars()
 
-        save_load_deck(model)
+        save_load_deck(model, run_convert=True)
 
 
 if __name__ == '__main__':  # pragma: no cover

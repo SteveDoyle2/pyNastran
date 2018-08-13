@@ -24,26 +24,23 @@ import vtk
 
 # pyNastran
 import pyNastran
-from pyNastran.gui.formats import Cart3dIO, is_cart3d
+from pyNastran.gui.formats import Cart3dIO#, CLASS_MAP
 from pyNastran.gui.arg_handling import get_inputs
 #from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
 from pyNastran.gui.gui_common import GuiCommon2
 
 
-if not is_cart3d:
-    raise ImportError()
-
 try:
-    pkg_path = sys._MEIPASS #@UndefinedVariable
-    script_path = os.path.join(pkg_path, 'scripts')
-    icon_path = os.path.join(pkg_path, 'icons')
+    PKG_PATH = sys._MEIPASS #@UndefinedVariable
+    SCRIPT_PATH = os.path.join(PKG_PATH, 'scripts')
+    ICON_PATH = os.path.join(PKG_PATH, 'icons')
 except:
-    pkg_path = pyNastran.__path__[0]
-    script_path = os.path.join(pkg_path, 'gui', 'scripts')
-    icon_path = os.path.join(pkg_path, 'gui', 'icons')
+    PKG_PATH = pyNastran.__path__[0]
+    SCRIPT_PATH = os.path.join(PKG_PATH, 'gui', 'scripts')
+    ICON_PATH = os.path.join(PKG_PATH, 'gui', 'icons')
 
 
-class MainWindow(GuiCommon2, Cart3dIO):
+class MainWindow(GuiCommon2):
     def __init__(self, inputs, **kwds):
         html_logging = True
         fmt_order = ['cart3d']
@@ -52,14 +49,13 @@ class MainWindow(GuiCommon2, Cart3dIO):
         kwds['fmt_order'] = fmt_order
         kwds['html_logging'] = html_logging
         super(MainWindow, self).__init__(**kwds)
-        Cart3dIO.__init__(self)
         self.base_window_title = "pyCart3d v%s"  % pyNastran.__version__
 
         self.build_fmts(fmt_order, stop_on_failure=True)
-        logo = os.path.join(icon_path, 'logo.png')
+        logo = os.path.join(ICON_PATH, 'logo.png')
         self.logo = logo
-        self.set_script_path(script_path)
-        self.set_icon_path(icon_path)
+        self.set_script_path(SCRIPT_PATH)
+        self.set_icon_path(ICON_PATH)
 
         self.setup_gui()
         self.setup_post(inputs)

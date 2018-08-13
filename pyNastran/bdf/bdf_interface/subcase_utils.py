@@ -1,11 +1,84 @@
+"""
+defines:
+ - expand_thru_case_control(set_value)
+ - write_set(set_id, values, spaces='')
+ - write_stress_type(key, options, value, spaces='')
+"""
 from __future__ import print_function
-from six import string_types, iteritems
+from six import string_types
 from typing import List
 from pyNastran.utils import integer_types
 from pyNastran.bdf.cards.collpase_card import collapse_thru_packs
 from pyNastran.bdf.bdf_interface.assign_type import interpret_value
 
+def expand_thru_int(set_value):   # pragma: no cover
+    """
+    27,35,25,41234,123,thru,134,9701,9901
+    1,thru,9,by,2
+    9,THRU,19,EXCEPT,12
+    0.1 0.3 0.5 1.0 3.0 5.0 10.0 14.0
+    """
+    packs = []
+    assert '/' not in set_value, set_value
+    values = ','.join(set_value.split()).split(',')
+    nvalues = len(values)
+    i = 0
+    while i < nvalues:
+        start = int(values[i])
+        # A, THRU, B, BY, C
+        if i < (nvalues - 2):
+            values.append(start)
+            i += 1
+            continue
+
+        thru_value = values[i + 1].upper()
+        if thru_value != 'THRU':
+            values.append(start)
+            i += 1
+            continue
+
+        # there is a thru
+        stop = int(values[i + 2])
+        if i < (nvalues - 4):
+            values += range(start, stop, 1)
+            i += 3
+            continue
+
+
+        by_value = values[i + 3].upper()
+        if by_value != 'BY':
+            values += range(start, stop, 1)
+            i += 3
+            continue
+
+        by = int(values[i+4])
+        values += range(start, stop, by)
+        values.append(by)
+        i += 4
+
+
 def expand_thru_case_control(set_value):
+    """
+    Expands a case control SET card
+
+    Parameters
+    ----------
+    set_value : str???
+        ???
+
+    Returns
+    -------
+    values : List[int] / List[float]
+        the values in the SET
+
+    Examples
+    --------
+    **This hasn't been verified**
+    #set_value = 'SET 88 = 1 THRU 5, 20 THRU 30 BY 2'
+    set_value = ['1 THRU 5', '20 THRU 30 BY 2']
+    >>> values = expand_thru_case_control(set_value)
+    [1, 2, 3, 4, 5, 20, 22, 24, 26, 28, 30]
+    """
     set_value2 = set([])
     add_mode = True
     imin = 0
@@ -50,7 +123,7 @@ def expand_thru_case_control(set_value):
                 set_value2.add(ivalue)
             elif isinstance(ivalue, string_types):
                 #print('  not digit=%r' % set_value)
-                if set_value is 'EXCLUDE':
+                if set_value == 'EXCLUDE':
                     msg = ('EXCLUDE is not supported on CaseControlDeck '
                            'SET card\n')
                     raise RuntimeError(msg)
@@ -115,7 +188,7 @@ def expand_thru_case_control(set_value):
     #print('end of expansion = %s' % list_values)
     return list_values
 
-def write_stress_type(key, options, value, spaces):
+def write_stress_type(key, options, value, spaces=''):
     """
     writes:
      - STRESS(SORT1) = ALL
@@ -137,7 +210,6 @@ def write_stress_type(key, options, value, spaces):
             msg_done = ''
             i = 0
             while i < len(options):
-                option = options[i]
                 new_msgi = '%s,' % options[i]
                 if (len(msgi) + len(new_msgi)) < 64:
                     msgi += new_msgi
@@ -161,7 +233,7 @@ def write_stress_type(key, options, value, spaces):
     return msg
 
 
-def write_set(value, options, spaces=''):
+def write_set(set_id, values, spaces=''):
     # type: (List[int], int, str) -> str
     """
     writes
@@ -171,9 +243,9 @@ def write_set(value, options, spaces=''):
 
     Parameters
     ----------
-    value : List[int]
+    values : List[int]
         the Set values
-    options : int
+    options : int / str; default=''
         the Set ID
     spaces : str; default=''
         indentation
@@ -183,39 +255,47 @@ def write_set(value, options, spaces=''):
     msg : str
        the string of the set
 
-    Example
-    -------
-    value = 80
-    options = [1, 2, 3, 4, 5, 7]
-    set = write_set(value, options, spaces='')
-    print(set)
-    >>> SET 80 = 1 THRU 5, 7
+    Examples
+    --------
+    **Example 1**
+    >>> set_id = 80
+    >>> values = [1, 2, 3, 4, 5, 7]
+    >>> set = write_set(set_id, values, spaces='')
+    >>> set
+    SET 80 = 1 THRU 5, 7
+
+    **Example 2**
+    >>> set_id = ''
+    >>> values = ['ALL']
+    >>> set = write_set(set_id, values, spaces='')
+    >>> set
+    SET = ALL
     """
-    value.sort()
-    starter = 'SET %s = ' % (options)
+    values.sort()
+    starter = 'SET %s = ' % (set_id)
     msg2 = spaces + starter
 
     msg = ''
     nchars = len(msg2)
     is_valid = True
-    for valuei in value:
-        if not isinstance(valuei, integer_types):
+    for value in values:
+        if not isinstance(value, integer_types):
             is_valid = False
             break
 
     if is_valid:
-        singles, doubles = collapse_thru_packs(value)
+        singles, doubles = collapse_thru_packs(values)
 
-        out_value = singles
+        out_values = singles
         for double in doubles:
             assert len(double) == 3, double
             sdouble = '%i THRU %i' % (double[0], double[2])
-            out_value.append(sdouble)
+            out_values.append(sdouble)
     else:
-        out_value = value
+        out_values = values
 
-    for i, out_valuei in enumerate(out_value):
-        new_string = '%s, ' % out_valuei
+    for out_value in out_values:
+        new_string = '%s, ' % out_value
         if len(msg2 + new_string) > 70:
             msg += msg2 + '\n'
             msg2 = ' ' * nchars + new_string

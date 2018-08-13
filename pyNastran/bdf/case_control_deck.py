@@ -19,6 +19,7 @@ CaseControlDeck:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+import re
 import sys
 import copy
 from typing import List, Dict, Any
@@ -27,8 +28,8 @@ from six import iteritems, itervalues
 #from pyNastran.bdf import subcase
 from pyNastran.bdf.subcase import Subcase, update_param_name
 from pyNastran.bdf.bdf_interface.subcase_cards import (
-    EXTSEOUT, WEIGHTCHECK, MODCON,
-    SET, SETMC, #AXISYMMETRIC,
+    EXTSEOUT, WEIGHTCHECK, GROUNDCHECK,
+    MODCON, SET, SETMC, #AXISYMMETRIC,
     #INT_CARD_DICT, INT_CARD_NAMES,
     #INTSTR_CARD_DICT, INTSTR_CARD_NAMES,
     #STR_CARD_DICT, STR_CARD_NAMES,
@@ -62,6 +63,7 @@ class CaseControlDeck(object):
             ending with BEGIN BULK
         log : log()
             a :mod: `logging` object
+
         """
         # pulls the logger from the BDF object
         self.log = get_logger(log, "debug")
@@ -112,7 +114,7 @@ class CaseControlDeck(object):
         try:
             self._read(self.lines)
         except:
-            print('\n'.join(self.lines))
+            self.log.error('Invalid Case Control Deck:\n' + '\n'.join(self.lines))
             raise
 
     def suppress_output(self):
@@ -128,6 +130,7 @@ class CaseControlDeck(object):
             FORCE(PLOT,SORT1,REAL)
 
         .. warning:: most case control types are not supported
+
         """
         for subcase in itervalues(self.subcases):
             # if isubcase == 0:
@@ -145,6 +148,7 @@ class CaseControlDeck(object):
             the subcase ID to check
         param_names : List[str]
             the parameter name to look for
+
         """
         if self.has_subcase(isubcase):
             return any(self.subcases[isubcase].has_parameter(*param_names))
@@ -163,6 +167,7 @@ class CaseControlDeck(object):
             the parameter name to look for
         obj : bool; default=False
             should the object be returned
+
         """
         if self.has_subcase(isubcase):
             return self.subcases[isubcase].get_parameter(param_name.upper(), obj=obj)
@@ -184,6 +189,7 @@ class CaseControlDeck(object):
         -------
         val : bool
             does_subcase_exist (type = bool)
+
         """
         if isubcase in self.subcases:
             return True
@@ -203,10 +209,9 @@ class CaseControlDeck(object):
         subcase : Subcase()
             the new subcase
 
-        Warning
-        -------
-        - be careful you dont add data to the global subcase
-          after running this...is this True???
+        .. warning ::  be careful you dont add data to the global subcase
+                       after running this...is this True???
+
         """
         #print("creating subcase=%s" % isubcase)
         if self.has_subcase(isubcase):
@@ -222,8 +227,11 @@ class CaseControlDeck(object):
         """
         Deletes a subcase.
 
-        :param isubcase: the Subcase to delete
-        :type isubcase: int
+        Parameters
+        ----------
+        isubcase : int
+            the Subcase to delete
+
         """
         if not self.has_subcase(isubcase):
             sys.stderr.write('subcase %s doesnt exist...skipping\n' % isubcase)
@@ -246,6 +254,7 @@ class CaseControlDeck(object):
         -------
         subcase : Subcase()
             the new subcase
+
         """
         #print("copying subcase from=%s to=%s overwrite=%s" % (
             #i_from_subcase, i_to_subcase, overwrite_subcase))
@@ -298,16 +307,17 @@ class CaseControlDeck(object):
         sol : str
             the solution type to change the solution to
 
-        >>> print(bdf.case_control)
+        >>> bdf.case_control
         SUBCASE 1
             DISP = ALL
 
         >>> bdf.case_control.update_solution(1, 'FLUTTER')
-        >>> print(bdf.case_control)
+        >>> bdf.case_control
         SUBCASE 1
             ANALYSIS FLUTTER
             DISP = ALL
         >>>
+
         """
         self.add_parameter_to_local_subcase(isubcase, 'ANALYSIS %s' % sol)
 
@@ -320,14 +330,19 @@ class CaseControlDeck(object):
         param : str
             the variable to add
 
-        .. note:: dont worry about overbounding the line
+        Notes
+        -----
+        dont worry about overbounding the line
 
+        Examples
+        --------
         >>> bdf = BDF()
         >>> bdf.read_bdf(bdf_filename)
         >>> bdf.case_control.add_parameter_to_global_subcase('DISP=ALL')
-        >>> print(bdf.case_control)
+        >>> bdf.case_control
         TITLE = DUMMY LINE
         DISP = ALL
+
         """
         (j, key, value, options, param_type) = self._parse_data_from_user(param)
         subcase_list = self.get_subcase_list()
@@ -346,8 +361,12 @@ class CaseControlDeck(object):
         param_name : List[str]
             the parameter name to add
 
-        .. note::  dont worry about overbounding the line
+        Notes
+        -----
+        dont worry about overbounding the line
 
+        Examples
+        --------
         >>> bdf = BDF()
         >>> bdf.read_bdf(bdf_filename)
         >>> bdf.case_control.add_parameter_to_local_subcase(1, 'DISP=ALL')
@@ -356,6 +375,7 @@ class CaseControlDeck(object):
         SUBCASE 1
             DISP = ALL
         >>>
+
         """
         (j, key, value, options, param_type) = self._parse_data_from_user(param)
         self._add_parameter_to_subcase(key, value, options, param_type,
@@ -369,6 +389,7 @@ class CaseControlDeck(object):
         ----------
         param : str
             the variable to add
+
         """
         if '\n' in param or '\r' in param or '\t' in param:
             msg = 'doesnt support embedded endline/tab characters\n'
@@ -383,9 +404,13 @@ class CaseControlDeck(object):
         """
         Reads the case control deck
 
-        .. note::    supports comment lines
+        Notes
+        -----
+        supports comment lines
+
         .. warning:: doesnt check for 72 character width lines, but will
                      follow that when it's written out
+
         """
         isubcase = 0
         lines = _clean_lines(lines)
@@ -483,6 +508,7 @@ class CaseControlDeck(object):
             see brief
         param_type : str/int/float/List
             see brief
+
         """
         i = 0
         options = []
@@ -503,17 +529,11 @@ class CaseControlDeck(object):
         #print("line_upper = %r" % line)
         #print('  equals_count = %s' % equals_count)
         if line_upper.startswith('SUBCASE'):
-            #print("line = %r" % line)
-            line2 = line.replace('=', '')
-            sline = line2.split()
-            if len(sline) != 2:
-                msg = "trying to parse %r..." % line
-                raise RuntimeError(msg)
-            (key, param_type) = sline
-            key = key.upper()
+            param_type = split_equal_space(line_upper, 'SUBCASE', 'SUBCASE = 5')
+            key = 'SUBCASE'
 
             #print("key=%r isubcase=%r" % (key, isubcase))
-            value = int(param_type)
+            value = integer(param_type, line_upper)
             #self.isubcase = int(isubcase)
             param_type = 'SUBCASE-type'
             assert key.upper() == key, key
@@ -521,7 +541,7 @@ class CaseControlDeck(object):
         elif line_upper.startswith(('LABEL', 'SUBT', 'TITL')):  # SUBTITLE/TITLE
             try:
                 eindex = line.index('=')
-            except:
+            except ValueError:
                 msg = "cannot find an = sign in LABEL/SUBTITLE/TITLE line\n"
                 msg += "line = %r" % line_upper.strip()
                 raise RuntimeError(msg)
@@ -621,6 +641,12 @@ class CaseControlDeck(object):
             obj = WEIGHTCHECK.add_from_case_control(line, line_upper, lines, i)
             value = obj
             key = obj.type
+        elif line_upper.startswith('GROUNDCHECK'):
+            options = None
+            param_type = 'OBJ-type'
+            obj = GROUNDCHECK.add_from_case_control(line, line_upper, lines, i)
+            value = obj
+            key = obj.type
         elif line_upper.startswith('MODCON'):
             options = None
             param_type = 'OBJ-type'
@@ -676,6 +702,8 @@ class CaseControlDeck(object):
             else:
                 key = 'TEMPERATURE(BOTH)'
                 options = []
+            value = int(value)
+
         elif line_upper.startswith('RIGID'):
             if '=' in line:
                 (key, value) = line_upper.strip().split('=')
@@ -684,13 +712,14 @@ class CaseControlDeck(object):
             else:
                 msg = 'expected item of form "name = value"   line=%r' % line.strip()
                 raise RuntimeError(msg)
+            #print('line_upper=%r' % line_upper)
             assert key == 'RIGID', 'key=%r value=%r line=%r'  % (key, value, line)
             param_type = 'STRESS-type'
             options = []
             #RIGID = LAGR, LGELIM, LAGRANGE, STIFF, LINEAR
             if value in ['LAGR', 'LAGRAN']:
                 value = 'LAGRANGE'
-            elif value in ['LGELIM', 'LAGRANGE', 'STIFF', 'LINEAR']:
+            elif value in ['LGELIM', 'LAGRANGE', 'STIFF', 'LINEAR', 'AUTO']:
                 pass
             else:
                 raise NotImplementedError('key=%r value=%r line=%r'  % (key, value, line))
@@ -765,11 +794,11 @@ class CaseControlDeck(object):
             param_type = 'STRESS-type'
             key = key.upper()
             #print('options =', options)
-            #asdf
+
         elif line_upper.startswith('BEGIN'):  # begin bulk
             try:
                 (key, value) = line_upper.split(' ')
-            except:
+            except ValueError:
                 msg = 'excepted "BEGIN BULK" found=%r' % line
                 raise RuntimeError(msg)
             key = key.upper()
@@ -799,6 +828,7 @@ class CaseControlDeck(object):
         """
         Removes any unwanted data in the subcase...specifically the SUBCASE
         data member.  Otherwise it will print out after a key like stress.
+
         """
         for subcase in itervalues(self.subcases):
             subcase.finish_subcase()
@@ -814,6 +844,7 @@ class CaseControlDeck(object):
             the BDF object
 
         .. todo:: not done...
+
         """
         analysis = model.rsolmap_to_str[model.sol]
         model.sol = 200
@@ -823,9 +854,7 @@ class CaseControlDeck(object):
         #subcase.add_parameter_to_global_subcase('DESSUB', dessub)
 
     def _add_parameter_to_subcase(self, key, value, options, param_type, isubcase):
-        """
-        Internal method
-        """
+        """Internal method"""
         if self.debug:
             a = 'key=%r' % key
             b = 'value=%r' % value
@@ -839,7 +868,6 @@ class CaseControlDeck(object):
             assert value not in self.subcases, 'key=%s value=%s already exists' % (key, value)
             assert isinstance(value, int)
             isubcase = value
-            #print("value=", value)
             self.copy_subcase(i_from_subcase=0, i_to_subcase=isubcase,
                               overwrite_subcase=True)
             if self.debug:
@@ -866,6 +894,7 @@ class CaseControlDeck(object):
         ----------
         model : BDF()
             the BDF object
+
         """
         for isubcase, subcase in sorted(iteritems(self.subcases)):
             subcase.cross_reference(model)
@@ -925,17 +954,11 @@ def verify_card(key, value, options, line):
                'DIVERG', 'DLOAD', 'DRSPAN', 'FMETHOD', 'FREQUENCY', 'GUST',
                'HADAPART', 'LINE', 'LOAD', 'LOADSET', 'MAXLINES', 'MCHSTAT',
                'MFLUID', 'MODES', 'MODTRAK', 'MPC', 'NLHARM',]:
-        try:
-            value2 = int(value)
-        except:
-            print('line=%r is invalid; value=%r' % (line, value))
-            raise
+        value2 = integer(value, line)
         assert value2 > 0, 'line=%r is invalid; value=%r must be greater than 0.' % (line, value2)
 
 def verify_card2(key, value, options, line):
-    """
-    Make sure there are no obvious errors
-    """
+    """Make sure there are no obvious errors"""
     # this is purposely made overly strict to catch all the cases
     int_cards = [
         'SPC', 'MPC', 'TRIM', 'FMETHOD', 'METHOD', 'LOAD',
@@ -949,10 +972,8 @@ def verify_card2(key, value, options, line):
         'SEDR', 'SELG', 'SEFINAL', 'SEKR', 'TEMPERATURE(ESTIMATE)',
         'GPSDCON', 'AUXMODEL',
         'MODTRAK', 'OFREQ', 'DRSPAN', 'OMODES', 'ADACT', 'SERESP', 'STATSUB',
-        'CURVESYM', 'ELSDCON', 'CSSCHD', 'NSM', 'TSTRU', 'RANDVAR', ''
+        'CURVESYM', 'ELSDCON', 'CSSCHD', 'NSM', 'TSTRU', 'RANDVAR',
         'RGYRO', 'SELR', 'TEMPERATURE(ESTI)', 'RCROSS', 'SERE', 'SEMR',
-        '', '', '', '', '', '', '', '', '', '',
-        '',
     ]
 
     # these may only be integers
@@ -978,28 +999,20 @@ def verify_card2(key, value, options, line):
         'PLOTTER', 'XYPLOT',
 
         'PTITLE',
-        'HOUTPUT', 'PLOTID', '', '', '', '', '',
+        'HOUTPUT', 'PLOTID',
         'AXISYMMETRIC', 'CURVELINESYMBOL', 'CURVELINESYMB', 'AECONFIG',
         'B2GG', 'B2PP', 'AESYMXZ', 'TEMP', 'DSAPRT', 'MEFFMASS',
         'MAXMIN', 'RESVEC', 'MODESELECT', 'RIGID', 'TCURVE',
         'SUPER', 'MAXI DEFO', 'P2G',
         'EXTSEOUT', 'FLSTCNT PREFDB', 'AESYMXY',
-        'DSYM', '', '', ''
+        'DSYM',
     ]
     if key in ['BCONTACT', 'CURVELINESYMBOL']:
-        try:
-            value2 = int(value)
-        except:
-            print('line=%r is invalid; value=%r' % (line, value))
-            raise
+        value2 = integer(value, line)
 
     # these may only be integers greater than 0
     elif key in int_cards:
-        try:
-            value2 = int(value)
-        except:
-            print('line=%r is invalid; value=%r' % (line, value))
-            raise
+        value2 = integer(value, line)
         assert value2 > 0, 'line=%r is invalid; value=%r must be greater than 0.' % (line, value2)
 
     # these may have a value of all/none/integer, nothing else
@@ -1011,22 +1024,14 @@ def verify_card2(key, value, options, line):
                  'NOUTPUT', 'SEDV', 'APRES', 'HTFLOW', 'NLSTRESS', 'GPKE',
                  'SACCELERATION', 'SDISPLACEMENT', 'SEMG', 'HARMONICS', 'PRESSURE', 'VUGRID',
                  'ELSUM', 'SVELOCITY', 'STRFIELD REAL', 'SENSITY', 'MONITOR',
-                 'NLLOAD', 'GPSDCON', 'BOUTPUT', '', '', '']:
+                 'NLLOAD', 'GPSDCON', 'BOUTPUT']:
         if value not in ['ALL', 'NONE']:
             if ',' in value:
                 sline = value.split(',')
                 for spot in sline:
-                    try:
-                        value2 = int(spot)
-                    except:
-                        print('line=%r is invalid; value=%r' % (line, spot))
-                        raise
+                    value2 = integer(spot, line)
             else:
-                try:
-                    value2 = int(value)
-                except:
-                    print('line=%r is invalid; value=%r' % (line, value))
-                    raise
+                value2 = integer(value, line)
                 if value2 <= 0:
                     msg = 'line=%r is invalid; value=%r must be greater than 0.' % (line, value2)
                     raise ValueError(msg)
@@ -1047,7 +1052,7 @@ def verify_card2(key, value, options, line):
         assert value in ['HEAT', 'ANALYSIS', 'MFREQ', 'STATICS', 'MODES', 'DFREQ',
                          'MTRAN', 'BUCK', 'MCEIG', 'DCEIG', 'SAERO', 'NLSTATIC', 'NLSTAT',
                          'STATIC', 'MTRANS', 'MODE', 'FLUTTER', 'DIVERG', 'NLTRAN',
-                         '', '', '', '', ''], 'line=%r is invalid; value=%r' % (line, value)
+                         ], 'line=%r is invalid; value=%r' % (line, value)
     elif key == 'AUTOSPC':
         assert value in ['YES'], 'line=%r is invalid; value=%r' % (line, value)
     else:
@@ -1063,6 +1068,7 @@ def _clean_lines(lines):
     ----------
     lines : List[str, ...]
         the lines to clean.
+
     """
     lines2 = []  # type: List[str]
     for line in lines:
@@ -1097,38 +1103,24 @@ def _clean_lines(lines):
                 lines_pack = [line]
     return [''.join(pack) for pack in lines3]
 
-def main():  # pragma: no cover
-    """test case"""
-    lines = [
-        'SUBCASE 1',
-        '    ACCELERATION(PLOT,PRINT,PHASE) = ALL',
-        '    DISPLACEMENT(PLOT,PRINT,PHASE) = ALL',
-        '    DLOAD = 32',
-        '    M2GG = 111',
-        '    SET 88  = 5, 6, 7, 8, 9, 10 THRU 55 EXCEPT 15, 16, 77, 78, 79, '
-        '100 THRU 300',
-        '    SET 99  = 1 THRU 10',
-        '    SET 105 = 1.009, 10.2, 13.4, 14.0, 15.0',
-        '    SET 111 = MAAX1,MAAX2',
-        '    SET 1001 = 101/T1, 501/T3, 991/R3',
-        '    SET = ALL',
-        '    SPC = 42',
-        '    TSTEPNL = 22',
-        '    VELOCITY(PLOT,PRINT,PHASE) = ALL',
-        'BEGIN BULK',
-    ]
-    deck = CaseControlDeck(lines)
-    #deck.create_new_subcase(2)
-    #deck.add_parameter_to_local_subcase(0, 'SET 2 = 11,12,13,14,15,16,17,18,'
-    #   '19,20,21,22,23,24,25,26,'
-    #   '1000000000000000000000000000000000000000000000000000000,33')
-    str(deck)
-    #print('%s\n\n' % deck)
+def split_equal_space(line, word, example):
+    # (str, str, str) -> str
+    """
+    Splits a case insensative line by an
 
-    #deck2 = CaseControlDeck(['ACCELERATION(PLOT,PRINT,PHASE) = ALL',
-    #                         'DISPLACEMENT(PLOT,PRINT,PHASE) = ALL',
-    #                         'BEGIN BULK'])
-    #print('\n\n%s' % deck2)
+    reads:
+     - 'SUBCASE = 5'
+     - 'SUBCASE 5'
+    """
+    if ' ' not in line and '=' not in line:
+        raise SyntaxError("expected data of the form '%s', not %r" % (example, line))
+    out = re.split('\s*%s\s*=?\s*' % word, line, maxsplit=1, flags=re.IGNORECASE)
+    return out[1]
 
-if __name__ == '__main__':  # pragma: no cover
-    main()
+def integer(str_value, line):
+    # (str, str) -> int
+    try:
+        value = int(str_value)
+    except ValueError:
+        raise ValueError('%r is not an integer; line:\n%r' % (str_value, line))
+    return value

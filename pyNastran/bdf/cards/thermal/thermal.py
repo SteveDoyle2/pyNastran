@@ -11,7 +11,7 @@ from pyNastran.bdf.cards.base_card import (BaseCard, expand_thru_by,
 from pyNastran.bdf.cards.collpase_card import collapse_thru_by
 from pyNastran.bdf.bdf_interface.assign_type import (
     fields, integer, double, integer_or_blank, double_or_blank,
-    integer_or_string, string, blank)
+    integer_or_string, string, blank, string_or_blank)
 
 
 class ThermalCard(BaseCard):
@@ -33,6 +33,11 @@ class ThermalElement(ThermalCard):
     def __init__(self):
         ThermalCard.__init__(self)
 
+    #def Centroid(self):
+        #return np.zeros(3)
+
+    #def center_of_mass(self):
+        #return self.Centroid()
 
 class ThermalProperty(ThermalCard):
     def __init__(self):
@@ -111,6 +116,7 @@ class CHBDYE(ThermalElement):
             RADM identification number for back face of surface element
         comment : str; default=''
             a comment for the card
+
         """
         ThermalElement.__init__(self)
         if comment:
@@ -152,6 +158,7 @@ class CHBDYE(ThermalElement):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         eid = integer(card, 1, 'eid')
         eid2 = integer(card, 2, 'eid2')
@@ -176,6 +183,7 @@ class CHBDYE(ThermalElement):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         eid, eid2, side, iviewf, iviewb, radmidf, radmidb = data
         return CHBDYE(eid, eid2, side, iviewf, iviewb,
@@ -184,7 +192,7 @@ class CHBDYE(ThermalElement):
     def cross_reference(self, model):
         pass
 
-    def safe_cross_reference(self):
+    def safe_cross_reference(self, model, xref_errors):
         pass
 
     def uncross_reference(self):
@@ -208,7 +216,7 @@ class CHBDYE(ThermalElement):
         # TODO: not implemented
         return []
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.Eid()
         eid2 = self.Eid2()
         pid = self.Pid()
@@ -256,6 +264,7 @@ class CHBDYE(ThermalElement):
         -----------
         size : int; default=8
             the size of the card (8/16)
+
         """
         card = self.repr_fields()
         if size == 8:
@@ -352,6 +361,7 @@ class CHBDYG(ThermalElement):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         eid = integer(card, 1, 'eid')
         # no field 2
@@ -385,6 +395,7 @@ class CHBDYG(ThermalElement):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         eid = data[0]
         surface_type = data[1]
@@ -414,17 +425,9 @@ class CHBDYG(ThermalElement):
                       rad_mid_front=rad_mid_front, rad_mid_back=rad_mid_back,
                       comment=comment)
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.Eid()
         assert isinstance(eid, integer_types)
-
-    @property
-    def Type(self):
-        return self.surface_type
-
-    @Type.setter
-    def Type(self, surface_type):
-        self.surface_type = surface_type
 
     @property
     def node_ids(self):
@@ -445,12 +448,13 @@ class CHBDYG(ThermalElement):
         ----------
         model : BDF()
             the BDF object
+
         """
-        msg = ' which is required by CHBDYG eid=%s' % self.eid
+        msg = ', which is required by CHBDYG eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
-    def safe_cross_reference(self, model):
-        msg = ' which is required by CHBDYG eid=%s' % self.eid
+    def safe_cross_reference(self, model, xref_errors):
+        msg = ', which is required by CHBDYG eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
     def uncross_reference(self):
@@ -486,6 +490,7 @@ class CHBDYG(ThermalElement):
         -----------
         size : int; default=8
             the size of the card (8/16)
+
         """
         card = self.repr_fields()
         if size == 8:
@@ -546,6 +551,7 @@ class CHBDYP(ThermalElement):
             The origin of the orientation vector is grid point G1.
         comment : str; default=''
             a comment for the card
+
         """
         ThermalElement.__init__(self)
         if comment:
@@ -599,6 +605,7 @@ class CHBDYP(ThermalElement):
         assert self.pid > 0
         self.nodes_ref = None
         self.pid_ref = None
+        self.ce_ref = None
 
     @property
     def Type(self):
@@ -619,10 +626,10 @@ class CHBDYP(ThermalElement):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
-
         surface_type = string(card, 3, 'Type')
 
         iview_front = integer_or_blank(card, 4, 'iview_front', 0)
@@ -639,8 +646,8 @@ class CHBDYP(ThermalElement):
         rad_mid_back = integer_or_blank(card, 10, 'rad_mid_back', 0)
         gmid = integer_or_blank(card, 11, 'gmid')
         ce = integer_or_blank(card, 12, 'ce', 0)
-        e1 = double_or_blank(card, 13, 'e3')
-        e2 = double_or_blank(card, 14, 'e3')
+        e1 = double_or_blank(card, 13, 'e1')
+        e2 = double_or_blank(card, 14, 'e2')
         e3 = double_or_blank(card, 15, 'e3')
         assert len(card) <= 16, 'len(CHBDYP card) = %i\ncard=%s' % (len(card), card)
         return CHBDYP(eid, pid, surface_type, g1, g2, g0=g0, gmid=gmid, ce=ce,
@@ -659,6 +666,7 @@ class CHBDYP(ThermalElement):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         [eid, pid, surface_type, iviewf, iviewb, g1, g2, g0, radmidf, radmidb,
          dislin, ce, e1, e2, e3] = data
@@ -716,29 +724,38 @@ class CHBDYP(ThermalElement):
         ----------
         model : BDF()
             the BDF object
+
         """
-        msg = ' which is required by CHBDYP pid=%s' % self.pid
+        try:
+            msg = ', which is required by CHBDYP pid=%s' % self.pid
+            self.pid_ref = model.Phbdy(self.pid, msg=msg)
+            self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
+            self.ce_ref = model.Coord(self.ce, msg)
+        except KeyError:
+            print(self.get_stats())
+            raise
+
+    def safe_cross_reference(self, model, xref_errors):
+        msg = ', which is required by CHBDYP pid=%s' % self.pid
         self.pid_ref = model.Phbdy(self.pid, msg=msg)
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
-
-    def safe_cross_reference(self, model):
-        msg = ' which is required by CHBDYP pid=%s' % self.pid
-        self.pid = model.Phbdy(self.pid, msg=msg)
-        self.nodes = model.EmptyNodes(self.nodes, msg=msg)
-        self.pid_ref = self.pid
-        self.nodes_ref = self.nodes
+        self.ce_ref = model.safe_coord(self.ce, self.pid, xref_errors, msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
+        self.ce = self.Ce()
         self.nodes_ref = None
         self.pid_ref = None
+        self.ce_ref = None
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.Eid()
         pid = self.Pid()
+        ce = self.Ce()
         assert isinstance(eid, integer_types)
         assert isinstance(pid, integer_types)
+        assert isinstance(ce, integer_types)
 
     def Eid(self):
         return self.eid
@@ -748,11 +765,17 @@ class CHBDYP(ThermalElement):
             return self.pid_ref.pid
         return self.pid
 
+    def Ce(self):
+        """gets the coordinate system, CE"""
+        if self.ce_ref is not None:
+            return self.ce_ref.cid
+        return self.ce
+
     def raw_fields(self):
         (g1, g2, g0, gmid) = self.node_ids
         list_fields = ['CHBDYP', self.eid, self.Pid(), self.surface_type,
                        self.iview_front, self.ivew_back, g1, g2, g0,
-                       self.rad_mid_front, self.rad_mid_back, gmid, self.ce,
+                       self.rad_mid_front, self.rad_mid_back, gmid, self.Ce(),
                        self.e1, self.e2, self.e3]
         return list_fields
 
@@ -764,7 +787,7 @@ class CHBDYP(ThermalElement):
 
         (g1, g2, g0, gmid) = self.node_ids
         g0 = set_blank_if_default(g0, 0)
-        ce = set_blank_if_default(self.ce, 0)
+        ce = set_blank_if_default(self.Ce(), 0)
 
         list_fields = ['CHBDYP', self.eid, self.Pid(), self.surface_type, iview_front,
                        ivew_back, g1, g2, g0, rad_mid_front, rad_mid_back,
@@ -863,6 +886,7 @@ class PCONV(ThermalProperty):
             The origin of the orientation vector is grid point G1
         comment : str; default=''
             a comment for the card
+
         """
         ThermalProperty.__init__(self)
         if comment:
@@ -907,6 +931,7 @@ class PCONV(ThermalProperty):
         assert self.pconid > 0
         assert self.mid > 0
         assert self.form in [0, 1, 10, 11, 20, 21]
+        self.ce_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -919,6 +944,7 @@ class PCONV(ThermalProperty):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         pconid = integer(card, 1, 'pconid')
         mid = integer(card, 2, 'mid')
@@ -949,28 +975,37 @@ class PCONV(ThermalProperty):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         (pconid, mid, form, expf, ftype, tid, chlen, gidin, ce, e1, e2, e3) = data
         return PCONV(pconid, mid, form, expf, ftype, tid, chlen, gidin, ce,
                      e1, e2, e3, comment=comment)
 
-    #def cross_reference(self, model):
-        #pass
+    def Ce(self):
+        """gets the coordinate system, CE"""
+        if self.ce_ref is not None:
+            return self.ce_ref.cid
+        return self.ce
+
+    def cross_reference(self, model):
+        msg = 'which is required by PCONV pconid=%s' % self.pconid
+        self.ce_ref = model.Coord(self.ce, msg)
 
     def uncross_reference(self):
-        pass
+        self.ce = self.Ce()
+        self.ce_ref = None
 
     def raw_fields(self):
         list_fields = ['PCONV', self.pconid, self.mid, self.form, self.expf,
                        self.ftype, self.tid, None, None, self.chlen, self.gidin,
-                       self.ce, self.e1, self.e2, self.e3]
+                       self.Ce(), self.e1, self.e2, self.e3]
         return list_fields
 
     def repr_fields(self):
         form = set_blank_if_default(self.form, 0)
         expf = set_blank_if_default(self.expf, 0.0)
         ftype = set_blank_if_default(self.ftype, 0)
-        ce = set_blank_if_default(self.ce, 0)
+        ce = set_blank_if_default(self.Ce(), 0)
         list_fields = ['PCONV', self.pconid, self.mid, form, expf, ftype, self.tid,
                        None, None, self.chlen, self.gidin, ce, self.e1, self.e2,
                        self.e3]
@@ -985,6 +1020,7 @@ class PCONV(ThermalProperty):
         -----------
         size : int; default=8
             the size of the card (8/16)
+
         """
         card = self.repr_fields()
         if size == 8:
@@ -1035,6 +1071,7 @@ class PCONVM(ThermalProperty):
             the working fluid
         comment : str; default=''
             a comment for the card
+
         """
         ThermalProperty.__init__(self)
         if comment:
@@ -1080,6 +1117,7 @@ class PCONVM(ThermalProperty):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         pconid = integer(card, 1, 'pconid')
         mid = integer(card, 2, 'mid')
@@ -1123,6 +1161,7 @@ class PCONVM(ThermalProperty):
         -----------
         size : int; default=8
             the size of the card (8/16)
+
         """
         card = self.repr_fields()
         if size == 8:
@@ -1164,6 +1203,7 @@ class PHBDY(ThermalProperty):
             Used with CHBDYP [ELCYL, TUBE, FTUBE] surface elements
         comment : str; default=''
             a comment for the card
+
         """
         ThermalProperty.__init__(self)
         if comment:
@@ -1198,6 +1238,7 @@ class PHBDY(ThermalProperty):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         pid = integer(card, 1, 'pid')
         af = double_or_blank(card, 2, 'af')
@@ -1217,6 +1258,7 @@ class PHBDY(ThermalProperty):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         pid = data[0]
         af = data[1]
@@ -1249,6 +1291,7 @@ class PHBDY(ThermalProperty):
         -----------
         size : int; default=8
             the size of the card (8/16)
+
         """
         card = self.repr_fields()
         if size == 8:
@@ -1288,6 +1331,7 @@ class CONV(ThermalBC):
             Control point for free convection boundary condition
         comment : str; default=''
             a comment for the card
+
         """
         ThermalBC.__init__(self)
         if comment:
@@ -1327,6 +1371,7 @@ class CONV(ThermalBC):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         eid = integer(card, 1, 'eid')
         pconid = integer(card, 2, 'pconid')
@@ -1358,6 +1403,7 @@ class CONV(ThermalBC):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         #data_in = [eid, pconid, flmnd, cntrlnd,
                    #[ta1, ta2, ta3, ta5, ta6, ta7, ta8],
@@ -1378,8 +1424,9 @@ class CONV(ThermalBC):
         ----------
         model : BDF()
             the BDF object
+
         """
-        msg = ' which is required by CONV eid=%s' % self.eid
+        msg = ', which is required by CONV eid=%s' % self.eid
         ## TODO: eid???
         self.eid_ref = model.Element(self.eid, msg=msg)
         if model._xref == 1:  # True
@@ -1423,6 +1470,7 @@ class CONV(ThermalBC):
         -----------
         size : int; default=8
             the size of the card (8/16)
+
         """
         card = self.repr_fields()
         if size == 8:
@@ -1473,6 +1521,7 @@ class CONVM(ThermalBC):
             required if cntmdot = 0
         comment : str; default=''
             a comment for the card
+
         """
         ThermalBC.__init__(self)
         if comment:
@@ -1507,6 +1556,7 @@ class CONVM(ThermalBC):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         eid = integer(card, 1, 'eid')
         pconvm = integer(card, 2, 'pconvm')
@@ -1530,6 +1580,7 @@ class CONVM(ThermalBC):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         (eid, pconvm_id, film_node, cntrlnd, ta1, ta2, mdot) = data
         return CONVM(eid, pconvm_id, ta1, film_node, cntrlnd, ta2, mdot,
@@ -1543,8 +1594,9 @@ class CONVM(ThermalBC):
         ----------
         model : BDF()
             the BDF object
+
         """
-        msg = ' which is required by CONVM eid=%s' % self.eid
+        msg = ', which is required by CONVM eid=%s' % self.eid
         self.eid_ref = model.CYBDY(self.eid, msg=msg)
         self.pconvm_ref = model.PCONV(self.pconvm, msg=msg)
         self.film_node_ref = model.Grid(self.film_node, msg=msg)
@@ -1588,198 +1640,7 @@ class CONVM(ThermalBC):
         -----------
         size : int; default=8
             the size of the card (8/16)
-        """
-        card = self.repr_fields()
-        if size == 8:
-            return self.comment + print_card_8(card)
-        return self.comment + print_card_16(card)
 
-
-class RADM(ThermalBC):
-    """
-    Defines the radiation properties of a boundary element for heat transfer
-    analysis
-    """
-    type = 'RADM'
-
-    def __init__(self, radmid, absorb, emissivity, comment=''):
-        ThermalBC.__init__(self)
-        if comment:
-            self.comment = comment
-
-        #: Material identification number
-        self.radmid = radmid
-
-        self.absorb = absorb
-        if isinstance(emissivity, float):
-            self.emissivity = [emissivity]
-        else:
-            self.emissivity = emissivity
-
-        assert self.radmid > 0, str(self)
-        assert 0. <= self.absorb <= 1.0, str(self)
-        for e in self.emissivity:
-            assert 0. <= e <= 1.0, str(self)
-
-    @classmethod
-    def add_card(cls, card, comment=''):
-        """
-        Adds a RADM card from ``BDF.add_card(...)``
-
-        Parameters
-        ----------
-        card : BDFCard()
-            a BDFCard object
-        comment : str; default=''
-            a comment for the card
-        """
-        nfields = card.nfields
-        radmid = integer(card, 1, 'radmid')
-        absorb = double(card, 2, 'absorb')
-        emissivity = fields(double, card, 'emissivity', i=3, j=nfields)
-        return RADM(radmid, absorb, emissivity, comment=comment)
-
-    @classmethod
-    def add_op2_data(cls, data, comment=''):
-        """
-        Adds a RADM card from the OP2
-
-        Parameters
-        ----------
-        data : List[varies]
-            a list of fields defined in OP2 format
-        comment : str; default=''
-            a comment for the card
-        """
-        radmid, absorb = data[:2]
-        emissivity = data[2:]
-        return RADM(radmid, absorb, emissivity, comment=comment)
-
-    #def cross_reference(self, model):
-        #pass
-
-    def raw_fields(self):
-        list_fields = ['RADM', self.radmid, self.absorb] + self.emissivity
-        return list_fields
-
-    def repr_fields(self):
-        list_fields = ['RADM', self.radmid, self.absorb] + self.emissivity
-        return list_fields
-
-    def write_card(self, size=8, is_double=False):
-        # type: (int, bool) -> str
-        """
-        The writer method used by BDF.write_card()
-
-        Parameters
-        -----------
-        size : int; default=8
-            the size of the card (8/16)
-        """
-        card = self.repr_fields()
-        if size == 8:
-            return self.comment + print_card_8(card)
-        return self.comment + print_card_16(card)
-
-
-class RADBC(ThermalBC):
-    """
-    Specifies an CHBDYi element face for application of radiation boundary
-    conditions
-    """
-    type = 'RADBC'
-
-    def __init__(self, nodamb, famb, cntrlnd, eids, comment=''):
-        ThermalBC.__init__(self)
-        if comment:
-            self.comment = comment
-
-        #: NODAMB Ambient point for radiation exchange. (Integer > 0)
-        self.nodamb = nodamb
-
-        #: Radiation view factor between the face and the ambient point.
-        #: (Real > 0.0)
-        self.famb = famb
-
-        #: Control point for thermal flux load. (Integer > 0; Default = 0)
-        self.cntrlnd = cntrlnd
-
-        #: CHBDYi element identification number
-        self.eids = expand_thru_by(eids)
-
-        assert self.nodamb > 0
-        assert self.famb > 0.0
-        assert self.cntrlnd >= 0
-        min_eid = min(self.eids)
-        if min_eid < 1:
-            msg = 'min(eids)=%i' % min_eid
-            raise ValueError(msg)
-        self.eids_ref = None
-
-    @classmethod
-    def add_card(cls, card, comment=''):
-        """
-        Adds a RADBC card from ``BDF.add_card(...)``
-
-        Parameters
-        ----------
-        card : BDFCard()
-            a BDFCard object
-        comment : str; default=''
-            a comment for the card
-        """
-        nodamb = integer(card, 1, 'nodamb')
-        famb = double(card, 2, 'famb')
-        cntrlnd = integer_or_blank(card, 3, 'cntrlnd', 0)
-
-        nfields = card.nfields
-        eids = fields(integer_or_string, card, 'eid', i=4, j=nfields)
-        return RADBC(nodamb, famb, cntrlnd, eids, comment=comment)
-
-    def cross_reference(self, model):
-        """
-        Cross links the card so referenced cards can be extracted directly
-
-        Parameters
-        ----------
-        model : BDF()
-            the BDF object
-        """
-        msg = ' which is required by RADBC pid=%s' % self.nodamb
-        elems = []
-        for eid in self.eids:
-            elem = model.Element(eid, msg=msg)
-            elems.append(elem)
-        self.eids_ref = elems
-
-    def Eids(self):
-        if self.eids_ref is None:
-            return self.eids
-        eids = []
-        for eid_ref in self.eids_ref:
-            eids.append(eid_ref.eid)
-        return eids
-
-    def raw_fields(self):
-        list_fields = (['RADBC', self.nodamb, self.famb, self.cntrlnd] +
-                       self.Eids())
-        return list_fields
-
-    def repr_fields(self):
-        cntrlnd = set_blank_if_default(self.cntrlnd, 0)
-        eids = collapse_thru_by(self.Eids())
-        list_fields = ['RADBC', self.nodamb, self.famb, cntrlnd] + eids
-        return list_fields
-
-    def write_card(self, size=8, is_double=False):
-        # type: (int, bool) -> str
-        """
-        The writer method used by BDF.write_card()
-
-        Parameters
-        -----------
-        size : int; default=8
-            the size of the card (8/16)
         """
         card = self.repr_fields()
         if size == 8:

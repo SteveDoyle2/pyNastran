@@ -1,0 +1,10 @@
+RED_FLOAT = (1., 0., 0.)
+GREEN_FLOAT = (0., 1., 0.)
+BLUE_FLOAT = (0., 0., 1.)
+LIGHT_GREEN_FLOAT = (0.5, 1., 0.5)
+PINK_FLOAT = (0.98, 0.4, 0.93)
+
+ORANGE_FLOAT = (219/255., 168/255., 13/255.)
+YELLOW_FLOAT = (1., 1., 0.)
+PURPLE_FLOAT = (1., 0., 1.)
+BLACK_FLOAT = (0., 0., 0.)

@@ -1,3 +1,5 @@
+.. _xref-pynastran_gui:
+
 ==============================
 Graphical User Interface (GUI)
 ==============================
@@ -101,18 +103,14 @@ Setup Note
 Download the entire package from Github or just the `GUI
 <https://sourceforge.net/projects/pynastran/files/?source=navbar/>`_ executable.
 
-If you download the source, make sure you follow the `Installation Guide
-<https://github.com/SteveDoyle2/pyNastran/wiki/Installation>`_ and use
+If you download the source, make sure you follow the :doc:`installation` and use
 **setup.py develop** and not **setup.py install**.
 
-Python 2.7 with ``vtk==5.10.1`` or ``vtk==6.3.0`` will give you the best looking
-GUI.
+Python 2.7 with ``vtk==5.10.1`` or ``vtk==6.3.0`` with PyQt4 will give you the
+best looking GUI with v1.0; ``vtk==7`` will work though.
 
-VTK 7 issues:
- - edges can't be colored black.
-
-Python 3 issues:
- - the GUI in Python 3 won't save your settings (e.g., background color).
+The master **requires** ``vtk==7`` or ``vtk==8`` and works in either
+Python 2.7/3.5+ and PyQt4/5.
 
 
 Running the GUI
@@ -169,7 +167,9 @@ To view the options:
       -v, --version  show program's version number and exit
 
 
-The standard way to run the code:
+The standard way to run the code is simply by launching the exe.
+Alternatively, you can call it from the command line, which can directly
+load a model:
 
 .. code-block:: console
 
@@ -215,17 +215,17 @@ Minor Features
  * edges flippable from menu
  * change label color/size menu
  * change background color
- * attach simplistic custom geometry
- * additional points may be added with the ``-u`` option
+ * attach simplistic custom geometry with the ``Load CSV User Geometry`` or the ``-user_geom`` option
+ * additional points may be added with the ``Load CSV User Points`` or the ``--user_points`` option
 
 
 Nastran Specific Features
 =========================
  * attach multiple OP2 files
  * supports SPOINTs
- * displacement/eigenvectors now shown as a deformation (real)
+ * displacement/eigenvectors/nodal force results
 
-   * scale editable from legend menu
+   * scale/phase editable from legend menu
    * rotated into global frame
 
  * Edit Geometry Properties
@@ -333,8 +333,8 @@ OK/Cancel will close the window.
 Animation Menu
 ==============
 
-The animation menu is a sub-menu found on the Legend Menu.  
-However over the cells for more information.
+The animation menu is a sub-menu found on the ``legend menu``.
+Hover over the cells for more information.
 
 Animation of Displacment/Mode Shapes (Animate Scale)
 ----------------------------------------------------
@@ -342,7 +342,7 @@ You must load the animation menu when a displacement-like result is active.
 You may then change to a scalar result to show during the animation.  For the
 following SOL 101 static deflection result, **Animate Scale** is used to scale
 the current result (Displacement).  The ``iCase`` value corresponds to
-case that is currently active (Displacement) and is automatically populated when 
+case that is currently active (Displacement) and is automatically populated when
 you click the ``Create Animation`` button from the Legend menu.
 
 If you would like to plot a separate result (e.g., Node ID), switch to that
@@ -381,7 +381,7 @@ It is now necessary to learn how to set ``iCase``.  In the ``Application log``, 
 
   COMMAND: fname=gui_qt_common.pyc lineNo=316 cycle_results(case=10)
 
-Check your first (assume 10), second (assume 11), and final time step (assume 40) 
+Check your first (assume 10), second (assume 11), and final time step (assume 40)
 for their ``iCase`` values.
 
 For deflection results loaded from an OP2, the ``iCase Delta`` will be 1, but
@@ -406,8 +406,8 @@ Hover over the cells for more information.
 Picking Results
 ===============
 Click on the ``Probe`` button to activate probing.  Now click on a node/element.
-A label will appear .  This label will appear at the centroid of an elemental result 
-or the closest node to the selected location.  The value for the current result 
+A label will appear .  This label will appear at the centroid of an elemental result
+or the closest node to the selected location.  The value for the current result
 quantity will appear on the model.  You can also press the ``p`` button.
 
 .. image:: ../../../pyNastran/gui/images/picking_results.png
@@ -416,14 +416,14 @@ For "NodeID", the xyz of the selcted point and the node in global XYZ space will
 Labels may be cleared from the ``View`` menu.
 Text color may also be changed from the ``View -> Preferences`` menu.
 
-Note that for line elements, you need to be very accurate with your picking.  
+Note that for line elements, you need to be very accurate with your picking.
 Zooming in does not help with picking like it does for shells.
 
 
 Focal Point
 ===========
 Click the following button and click on the rotation center point of the model.
-The model will now rotate around that point.  
+The model will now rotate around that point.
 
 .. image:: ../../../pyNastran/gui/icons/trotation_center.png
 
@@ -545,8 +545,8 @@ Custom Scalar Results
 =====================
 Custom Elemental/Nodal CSV/TXT file results may be loaded.  The order and
 length is important.  Results must be in nodal/elemental sorted order.
-The following example has 3 scalar values with 2 locations.  The 
-corresponding model must have **only** two nodes.  By default, all results
+The following example has 3 scalar values with 2 locations.  The
+corresponding model must have **ONLY** two nodes.  By default, all results
 must be floatable (e.g., no NaN values).
 
 .. code-block:: console
@@ -591,8 +591,8 @@ aides in creating models.  The CAERO panels are seen when a model is loaded:
 
 .. image:: ../../../pyNastran/gui/images/caero.png
 
-Additionally, by clicking the ``Toggle CAERO Subpanels`` button
-(the figure is somewhat outdated), the subpanels may be seen:
+Additionally, by clicking the ``Toggle CAERO Subpanels`` button,
+the subpanels may be seen:
 
 .. image:: ../../../pyNastran/gui/images/caero_subpanels.png
 
@@ -615,6 +615,7 @@ For example, you can:
  - custom animations of mode shapes
  - high resolution screenshots
  - model introspection
+ - create custom annotations
 
 
 Using the scripting menu
@@ -654,8 +655,5 @@ Option #1
 Option #2
 ---------
 
-.. code-block:: python
-
-    self.magnify = 5
-
+On the ``View`` -> ``Preferences`` menu, change **Screenshot Magnify** and click **Apply**.
 Now take a screenshot.

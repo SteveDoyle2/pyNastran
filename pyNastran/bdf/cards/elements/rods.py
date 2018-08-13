@@ -1,4 +1,4 @@
-# pylint: disable=R0904,R0902,E1101,E1103,C0111,C0302,C0103,W0101
+# pylint: disable=C0103
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six.moves import range
@@ -9,7 +9,7 @@ from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Element #, Mid
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, double, double_or_blank)
+    integer, integer_or_blank, double_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
@@ -121,9 +121,22 @@ class CROD(RodElement):
 
 
     def cross_reference(self, model):
-        msg = ' which is required by CROD eid=%s' % (self.eid)
+        msg = ', which is required by CROD eid=%s' % (self.eid)
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CROD eid=%s' % self.eid
+        self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -131,10 +144,10 @@ class CROD(RodElement):
         self.nodes_ref = None
         self.pid_ref = None
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
-        edges = self.get_edge_ids()
+        unused_edges = self.get_edge_ids()
         assert isinstance(eid, int), 'eid=%r' % eid
         assert isinstance(pid, int), 'pid=%r' % pid
         if xref:  # True
@@ -240,6 +253,9 @@ class CROD(RodElement):
         card = self.raw_fields()
         return self.comment + print_card_8(card)
 
+    def write_card_16(self, is_double=False):
+        card = self.raw_fields()
+        return self.comment + print_card_16(card)
 
 class CTUBE(RodElement):
     """
@@ -324,9 +340,23 @@ class CTUBE(RodElement):
         return CTUBE(eid, pid, nids, comment=comment)
 
     def cross_reference(self, model):
-        msg = ' which is required by CTUBE eid=%s' % (self.eid)
+        msg = ', which is required by CTUBE eid=%s' % (self.eid)
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CTUBE eid=%s' % self.eid
+        self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
+        ## TODO: xref coord
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -334,9 +364,9 @@ class CTUBE(RodElement):
         self.nodes_ref = None
         self.pid_ref = None
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         pid = self.Pid()
-        edges = self.get_edge_ids()
+        unused_edges = self.get_edge_ids()
         assert isinstance(pid, int), 'pid=%r' % pid
         if xref:
             A = self.Area()
@@ -549,9 +579,22 @@ class CONROD(RodElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CONROD eid=%s' % (self.eid)
+        msg = ', which is required by CONROD eid=%s' % (self.eid)
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         self.mid_ref = model.Material(self.mid, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CONROD eid=%s' % self.eid
+        self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
+        self.mid_ref = model.safe_material(self.mid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -559,10 +602,10 @@ class CONROD(RodElement):
         self.nodes_ref = None
         self.mid_ref = None
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         pid = self.Pid()
         assert pid == -10, 'pid=%r' % pid
-        edges = self.get_edge_ids()
+        unused_edges = self.get_edge_ids()
         if xref:  # True
             mid = self.Mid()
             L = self.Length()

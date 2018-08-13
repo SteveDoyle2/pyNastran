@@ -2,14 +2,13 @@
 from __future__ import print_function
 import os
 import unittest
-from numpy import array_equal
 
 import pyNastran
 from pyNastran.converters.dev.avus.avus_grid import AvusGrid, read_avus
 from pyNastran.utils.log import get_logger
 
-pkg_path = pyNastran.__path__[0]
-test_path = os.path.join(pkg_path, 'converters', 'dev', 'avus')
+PKG_PATH = pyNastran.__path__[0]
+test_path = os.path.join(PKG_PATH, 'converters', 'dev', 'avus')
 
 class TestAvus(unittest.TestCase):
 

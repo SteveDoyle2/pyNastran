@@ -26,17 +26,19 @@ else:
         return 'dev.%s' % ghash
 
     revision = get_git_revision_short_hash()
-    __version__ = '1.1.0+%s' % revision
-    __releaseDate__ = '2017/5/xx'
-    __releaseDate2__ = 'MAY xx, 2017'
+    __version__ = '1.2.0+%s' % revision
+    __releaseDate__ = '2018/6/xx'
+    __releaseDate2__ = 'JUNE xx, 2018'
 
-__author__  = 'Steven Doyle, Saullo Castro, hurlei, Paul Blelloch, Nikita Kalutsky'
-__email__   = 'mesheb82@gmail.com'
-__desc__    = 'Nastran BDF/F06/OP2/OP4 File reader/editor/writer/viewer'
-__license__     = 'BSD-3'
-__copyright__   = 'Copyright %s; 2011-2017' % __license__
+__author__  = 'Steven Doyle, Michael Redmond, Saullo Castro, hurlei, Paul Blelloch, Nikita Kalutsky'
+__email__ = 'mesheb82@gmail.com'
+__desc__ = 'Nastran BDF/F06/OP2/OP4 File reader/editor/writer/viewer'
+__license__ = 'BSD-3'
+__copyright__ = 'Copyright %s; 2011-2018' % __license__
 __pyside_copyright__ = 'Copyright LGPLv3 - pySide'
 __pyqt_copyright__ = 'Copyright GPLv3 - PyQt'
-__website__     = 'https://github.com/SteveDoyle2/pyNastran'
+__website__ = 'https://github.com/SteveDoyle2/pyNastran'
+__docs__ = 'http://pynastran.m4-engineering.com/master'
+__discussion_forum__ = 'https://groups.google.com/forum/#!forum/pynastran-discuss'
 
-is_release = True  ## turns on skipping of tables that aren't supported
+is_release = True  ## True=turns on skipping of tables that aren't supported

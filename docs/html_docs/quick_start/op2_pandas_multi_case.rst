@@ -2,10 +2,10 @@
 Static & Transient DataFrames in PyNastran
 ==========================================
 
-The iPython notebook for this demo can be found in: -
-docs:raw-latex:`\quick`\_start:raw-latex:`\demo`:raw-latex:`\op`2\_pandas\_multi\_case.ipynb
+The Jupyter notebook for this demo can be found in: -
+docs:raw-latex:`\quick`\_start:raw-latex:`\demo`:raw-latex:`\op`2_pandas_multi_case.ipynb
 -
-https://github.com/SteveDoyle2/pyNastran/tree/master/docs/quick\_start/demo/op2\_pandas\_multi\_case.ipynb
+https://github.com/SteveDoyle2/pyNastran/tree/master/docs/quick_start/demo/op2_pandas_multi_case.ipynb
 
 .. code:: python
 
@@ -20,7 +20,7 @@ https://github.com/SteveDoyle2/pyNastran/tree/master/docs/quick\_start/demo/op2\
 Solid Bending
 -------------
 
-Let's show off ``combine=True/False``. We'll talk about the keys soon.
+Let’s show off ``combine=True/False``. We’ll talk about the keys soon.
 
 .. code:: python
 
@@ -29,10 +29,16 @@ Let's show off ``combine=True/False``. We'll talk about the keys soon.
     print(solid_bending.displacements.keys())
 
 
+
+.. raw:: html
+
+    <text style=color:green>INFO:    op2_scalar.py:1291           op2_filename = 'c:\\nasa\\m4\\formats\\git\\v1.1-dev\\pyNastran\\..\\models\\solid_bending\\solid_bending.op2'
+    </text>
+
+
 .. parsed-literal::
 
-    INFO:      fname=op2_scalar.py             lineNo=1176   op2_filename = 'f:\\work\\pynastran\\pynastran\\master3\\pyNastran\\..\\models\\solid_bending\\solid_bending.op2'
-    [(1, 1, 1, 0, u'DEFAULT')]
+    [(1, 1, 1, 0, 0, u'', u'')]
     
 
 .. code:: python
@@ -42,43 +48,49 @@ Let's show off ``combine=True/False``. We'll talk about the keys soon.
     print(solid_bending2.displacements.keys())
 
 
+
+.. raw:: html
+
+    <text style=color:green>INFO:    op2_scalar.py:1291           op2_filename = 'c:\\nasa\\m4\\formats\\git\\v1.1-dev\\pyNastran\\..\\models\\solid_bending\\solid_bending.op2'
+    </text>
+
+
 .. parsed-literal::
 
-    INFO:      fname=op2_scalar.py             lineNo=1176   op2_filename = 'f:\\work\\pynastran\\pynastran\\master3\\pyNastran\\..\\models\\solid_bending\\solid_bending.op2'
     [1]
     
 
 Single Subcase Buckling Example
 -------------------------------
 
-The keys cannot be "combined" despite us telling the program that it was
-OK. We'll get the following values that we need to handle. ####
-isubcase, analysis\_code, sort\_method, count, subtitle \* isubcase ->
-the same key that you're used to accessing \* sort\_method -> 1 (SORT1),
-2 (SORT2) \* count -> the optimization count \* subtitle -> the analysis
-subtitle (changes for superlements) \* analysis code -> the "type" of
+The keys cannot be “combined” despite us telling the program that it was
+OK. We’ll get the following values that we need to handle. ####
+isubcase, analysis_code, sort_method, count, subtitle \* isubcase -> the
+same key that you’re used to accessing \* sort_method -> 1 (SORT1), 2
+(SORT2) \* count -> the optimization count \* subtitle -> the analysis
+subtitle (changes for superlements) \* analysis code -> the “type” of
 solution
 
 ### Partial code for calculating analysis code:
 
 ::
 
-       if trans_word == 'LOAD STEP':  # nonlinear statics
-          analysis_code = 10
-      elif trans_word in ['TIME', 'TIME STEP']:  # TODO check name
-          analysis_code = 6
-      elif trans_word == 'EIGENVALUE':  # normal modes
-          analysis_code = 2
-      elif trans_word == 'FREQ':  # TODO check name
-          analysis_code = 5
-      elif trans_word == 'FREQUENCY':
-          analysis_code = 5
-      elif trans_word == 'COMPLEX EIGENVALUE':
-          analysis_code = 9
-      else:
-          raise NotImplementedError('transient_word=%r is not supported...' % trans_word)
+      if trans_word == 'LOAD STEP':  # nonlinear statics
+         analysis_code = 10
+     elif trans_word in ['TIME', 'TIME STEP']:  # TODO check name
+         analysis_code = 6
+     elif trans_word == 'EIGENVALUE':  # normal modes
+         analysis_code = 2
+     elif trans_word == 'FREQ':  # TODO check name
+         analysis_code = 5
+     elif trans_word == 'FREQUENCY':
+         analysis_code = 5
+     elif trans_word == 'COMPLEX EIGENVALUE':
+         analysis_code = 9
+     else:
+         raise NotImplementedError('transient_word=%r is not supported...' % trans_word)
 
-Let's look at an odd case:
+Let’s look at an odd case:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You can do buckling as one subcase or two subcases (makes parsing it a
@@ -98,27 +110,33 @@ It does not always do multi-step optimization.
     model = read_op2(op2_filename, combine=True, debug=False, build_dataframe=True)
 
 
-.. parsed-literal::
 
-    INFO:      fname=op2_scalar.py             lineNo=1176   op2_filename = 'f:\\work\\pynastran\\pynastran\\master3\\pyNastran\\..\\models\\sol_101_elements\\buckling_solid_shell_bar.op2'
-    
+.. raw:: html
+
+    <text style=color:green>INFO:    op2_scalar.py:1291           op2_filename = 'c:\\nasa\\m4\\formats\\git\\v1.1-dev\\pyNastran\\..\\models\\sol_101_elements\\buckling_solid_shell_bar.op2'
+    </text>
+
 
 .. code:: python
 
     stress_keys = model.cquad4_stress.keys()
     print (stress_keys)
     
-    # isubcase, analysis_code, sort_method, count, subtitle
-    key0 = (1, 1, 1, 0, 'DEFAULT1')
-    key1 = (1, 8, 1, 0, 'DEFAULT1')
+    # old: subcase, analysis_code, sort_method, count, ogs, subtitle
+    #key0 = (1, 1, 1, 0, '')
+    #key1 = (1, 8, 1, 0, '')
+    
+    # new: subcase, analysis_code, sort_method, count, isuperelmemnt_adaptivity_index, pval_step
+    key0 = (1, 1, 1, 0, 0, '', '')
+    key1 = (1, 8, 1, 0, 0, '', '')
 
 
 .. parsed-literal::
 
-    [(1, 1, 1, 0, u'DEFAULT1'), (1, 8, 1, 0, u'DEFAULT1')]
+    [(1, 1, 1, 0, 0, u'', u''), (1, 8, 1, 0, 0, u'', u'')]
     
 
-Keys: \* key0 is the "static" key \* key1 is the "buckling" key
+Keys: \* key0 is the “static” key \* key1 is the “buckling” key
 
 Similarly: \* Transient solutions can have preload \* Frequency
 solutions can have loadsets (???)
@@ -127,8 +145,8 @@ Moving onto the data frames
 ---------------------------
 
 -  The static case is the initial deflection state
--  The buckling case is "transient", where the modes (called load steps
-   or lsdvmn here) represent the "times"
+-  The buckling case is “transient”, where the modes (called load steps
+   or lsdvmn here) represent the “times”
 
 pyNastran reads these tables differently and handles them differently
 internally. They look very similar though.
@@ -175,6 +193,19 @@ Static Table
 .. raw:: html
 
     <div>
+    <style>
+        .dataframe thead tr:only-child th {
+            text-align: right;
+        }
+    
+        .dataframe thead th {
+            text-align: left;
+        }
+    
+        .dataframe tbody tr th {
+            vertical-align: top;
+        }
+    </style>
     <table border="1" class="dataframe">
       <thead>
         <tr style="text-align: right;">
@@ -483,6 +514,19 @@ Transient Table
 .. raw:: html
 
     <div>
+    <style>
+        .dataframe thead tr:only-child th {
+            text-align: right;
+        }
+    
+        .dataframe thead th {
+            text-align: left;
+        }
+    
+        .dataframe tbody tr th {
+            vertical-align: top;
+        }
+    </style>
     <table border="1" class="dataframe">
       <thead>
         <tr>
@@ -506,26 +550,6 @@ Transient Table
           <th>-4.28462538752e+11</th>
         </tr>
         <tr>
-          <th></th>
-          <th></th>
-          <th>Freq</th>
-          <th></th>
-          <th>35358.7915137</th>
-          <th>38330.227181</th>
-          <th>98077.5138317</th>
-          <th>104178.13059</th>
-        </tr>
-        <tr>
-          <th></th>
-          <th></th>
-          <th>Radians</th>
-          <th></th>
-          <th>222165.839318</th>
-          <th>240835.920244</th>
-          <th>616239.193872</th>
-          <th>654570.499451</th>
-        </tr>
-        <tr>
           <th>ElementID</th>
           <th>NodeID</th>
           <th>Location</th>
@@ -542,163 +566,163 @@ Transient Table
           <th rowspan="16" valign="top">CEN</th>
           <th>Top</th>
           <td>fiber_distance</td>
-          <td>-0.125</td>
-          <td>-0.125</td>
-          <td>-0.125</td>
-          <td>-0.125</td>
+          <td>-1.250e-01</td>
+          <td>-1.250e-01</td>
+          <td>-1.250e-01</td>
+          <td>-1.250e-01</td>
         </tr>
         <tr>
           <th>Top</th>
           <td>oxx</td>
-          <td>-36570.457</td>
-          <td>-158687.391</td>
-          <td>-149706.203</td>
-          <td>1068952.125</td>
+          <td>-3.657e+04</td>
+          <td>-1.587e+05</td>
+          <td>-1.497e+05</td>
+          <td>1.069e+06</td>
         </tr>
         <tr>
           <th>Top</th>
           <td>oyy</td>
-          <td>206374.969</td>
-          <td>1083602.750</td>
-          <td>403245.969</td>
-          <td>6158211.500</td>
+          <td>2.064e+05</td>
+          <td>1.084e+06</td>
+          <td>4.032e+05</td>
+          <td>6.158e+06</td>
         </tr>
         <tr>
           <th>Top</th>
           <td>txy</td>
-          <td>229.650</td>
-          <td>-12673.086</td>
-          <td>4394314.500</td>
-          <td>-357167.656</td>
+          <td>2.296e+02</td>
+          <td>-1.267e+04</td>
+          <td>4.394e+06</td>
+          <td>-3.572e+05</td>
         </tr>
         <tr>
           <th>Top</th>
           <td>angle</td>
-          <td>89.946</td>
-          <td>-89.416</td>
-          <td>46.800</td>
-          <td>-86.005</td>
+          <td>8.995e+01</td>
+          <td>-8.942e+01</td>
+          <td>4.680e+01</td>
+          <td>-8.601e+01</td>
         </tr>
         <tr>
           <th>Top</th>
           <td>omax</td>
-          <td>206375.188</td>
-          <td>1083732.125</td>
-          <td>4529773.000</td>
-          <td>6183155.500</td>
+          <td>2.064e+05</td>
+          <td>1.084e+06</td>
+          <td>4.530e+06</td>
+          <td>6.183e+06</td>
         </tr>
         <tr>
           <th>Top</th>
           <td>omin</td>
-          <td>-36570.672</td>
-          <td>-158816.656</td>
-          <td>-4276233.500</td>
-          <td>1044008.062</td>
+          <td>-3.657e+04</td>
+          <td>-1.588e+05</td>
+          <td>-4.276e+06</td>
+          <td>1.044e+06</td>
         </tr>
         <tr>
           <th>Top</th>
           <td>von_mises</td>
-          <td>226881.938</td>
-          <td>1171244.000</td>
-          <td>7627279.000</td>
-          <td>5732896.500</td>
+          <td>2.269e+05</td>
+          <td>1.171e+06</td>
+          <td>7.627e+06</td>
+          <td>5.733e+06</td>
         </tr>
         <tr>
           <th>Bottom</th>
           <td>fiber_distance</td>
-          <td>0.125</td>
-          <td>0.125</td>
-          <td>0.125</td>
-          <td>0.125</td>
+          <td>1.250e-01</td>
+          <td>1.250e-01</td>
+          <td>1.250e-01</td>
+          <td>1.250e-01</td>
         </tr>
         <tr>
           <th>Bottom</th>
           <td>oxx</td>
-          <td>-28156.799</td>
-          <td>-95551.906</td>
-          <td>-194234.062</td>
-          <td>-488197.969</td>
+          <td>-2.816e+04</td>
+          <td>-9.555e+04</td>
+          <td>-1.942e+05</td>
+          <td>-4.882e+05</td>
         </tr>
         <tr>
           <th>Bottom</th>
           <td>oyy</td>
-          <td>140208.719</td>
-          <td>732509.188</td>
-          <td>7016.848</td>
-          <td>-278514.844</td>
+          <td>1.402e+05</td>
+          <td>7.325e+05</td>
+          <td>7.017e+03</td>
+          <td>-2.785e+05</td>
         </tr>
         <tr>
           <th>Bottom</th>
           <td>txy</td>
-          <td>74085.039</td>
-          <td>-35219.672</td>
-          <td>4534850.000</td>
-          <td>-353332.000</td>
+          <td>7.409e+04</td>
+          <td>-3.522e+04</td>
+          <td>4.535e+06</td>
+          <td>-3.533e+05</td>
         </tr>
         <tr>
           <th>Bottom</th>
           <td>angle</td>
-          <td>69.325</td>
-          <td>-87.569</td>
-          <td>45.636</td>
-          <td>-53.263</td>
+          <td>6.933e+01</td>
+          <td>-8.757e+01</td>
+          <td>4.564e+01</td>
+          <td>-5.326e+01</td>
         </tr>
         <tr>
           <th>Bottom</th>
           <td>omax</td>
-          <td>168165.734</td>
-          <td>734004.500</td>
-          <td>4442357.500</td>
-          <td>-14798.063</td>
+          <td>1.682e+05</td>
+          <td>7.340e+05</td>
+          <td>4.442e+06</td>
+          <td>-1.480e+04</td>
         </tr>
         <tr>
           <th>Bottom</th>
           <td>omin</td>
-          <td>-56113.816</td>
-          <td>-97047.195</td>
-          <td>-4629575.000</td>
-          <td>-751914.750</td>
+          <td>-5.611e+04</td>
+          <td>-9.705e+04</td>
+          <td>-4.630e+06</td>
+          <td>-7.519e+05</td>
         </tr>
         <tr>
           <th>Bottom</th>
           <td>von_mises</td>
-          <td>202150.672</td>
-          <td>787028.500</td>
-          <td>7857081.500</td>
-          <td>744626.000</td>
+          <td>2.022e+05</td>
+          <td>7.870e+05</td>
+          <td>7.857e+06</td>
+          <td>7.446e+05</td>
         </tr>
         <tr>
           <th rowspan="4" valign="top">4</th>
           <th>Top</th>
           <td>fiber_distance</td>
-          <td>-0.125</td>
-          <td>-0.125</td>
-          <td>-0.125</td>
-          <td>-0.125</td>
+          <td>-1.250e-01</td>
+          <td>-1.250e-01</td>
+          <td>-1.250e-01</td>
+          <td>-1.250e-01</td>
         </tr>
         <tr>
           <th>Top</th>
           <td>oxx</td>
-          <td>-99755.844</td>
-          <td>-580174.062</td>
-          <td>-292532.719</td>
-          <td>793623.688</td>
+          <td>-9.976e+04</td>
+          <td>-5.802e+05</td>
+          <td>-2.925e+05</td>
+          <td>7.936e+05</td>
         </tr>
         <tr>
           <th>Top</th>
           <td>oyy</td>
-          <td>-1101563.000</td>
-          <td>1460770.000</td>
-          <td>-3137639.000</td>
-          <td>6441436.000</td>
+          <td>-1.102e+06</td>
+          <td>1.461e+06</td>
+          <td>-3.138e+06</td>
+          <td>6.441e+06</td>
         </tr>
         <tr>
           <th>Top</th>
           <td>txy</td>
-          <td>229.650</td>
-          <td>-12673.086</td>
-          <td>4394314.500</td>
-          <td>-357167.656</td>
+          <td>2.296e+02</td>
+          <td>-1.267e+04</td>
+          <td>4.394e+06</td>
+          <td>-3.572e+05</td>
         </tr>
       </tbody>
     </table>

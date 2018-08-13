@@ -1,6 +1,6 @@
 from qtpy import QtCore, QtGui
-from pyNastran.gui.qt_files.menu_utils import eval_float_from_string
-
+from pyNastran.gui.menus.menu_utils import eval_float_from_string
+from pyNastran.gui.utils.qt.pydialog import check_float
 
 class BCMap(QtGui.QDialog):
     def __init__(self, data, win_parent=None):
@@ -235,30 +235,23 @@ class BCMap(QtGui.QDialog):
         self.normal_y_edit.setText(str(1.0))
         self.normal_z_edit.setText(str(0.0))
 
-    def _on_float(self, field):
-        try:
-            eval_float_from_string(field.text())
-            field.setStyleSheet("QLineEdit{background: white;}")
-        except ValueError:
-            field.setStyleSheet("QLineEdit{background: red;}")
-
     def on_origin_x(self):
-        self._on_float(self.origin_x_edit)
+        _on_float(self.origin_x_edit)
 
     def on_origin_y(self):
-        self._on_float(self.origin_y_edit)
+        _on_float(self.origin_y_edit)
 
     def on_origin_z(self):
-        self._on_float(self.origin_z_edit)
+        _on_float(self.origin_z_edit)
 
     def on_normal_x(self):
-        self._on_float(self.normal_x_edit)
+        _on_float(self.normal_x_edit)
 
     def on_normal_y(self):
-        self._on_float(self.normal_y_edit)
+        _on_float(self.normal_y_edit)
 
     def on_normal_z(self):
-        self._on_float(self.normal_z_edit)
+        _on_float(self.normal_z_edit)
 
 
     def closeEvent(self, event):
@@ -284,16 +277,6 @@ class BCMap(QtGui.QDialog):
         self.normal_y_edit.setStyleSheet("QLineEdit{background: white;}")
         self.normal_z_edit.setStyleSheet("QLineEdit{background: white;}")
 
-    def check_float(self, cell):
-        text = cell.text()
-        try:
-            value = eval_float_from_string(text)
-            cell.setStyleSheet("QLineEdit{background: white;}")
-            return value, True
-        except ValueError:
-            cell.setStyleSheet("QLineEdit{background: red;}")
-            return None, False
-
     def check_name(self, cell):
         text = str(cell.text()).strip()
         if text:
@@ -305,13 +288,13 @@ class BCMap(QtGui.QDialog):
 
     def on_validate(self):
         name_value, flag0 = self.check_name(self.name_edit)
-        ox_value, flag1 = self.check_float(self.origin_x_edit)
-        oy_value, flag2 = self.check_float(self.origin_y_edit)
-        oz_value, flag3 = self.check_float(self.origin_z_edit)
+        ox_value, flag1 = check_float(self.origin_x_edit)
+        oy_value, flag2 = check_float(self.origin_y_edit)
+        oz_value, flag3 = check_float(self.origin_z_edit)
 
-        nx_value, flag4 = self.check_float(self.normal_x_edit)
-        ny_value, flag5 = self.check_float(self.normal_y_edit)
-        nz_value, flag6 = self.check_float(self.normal_z_edit)
+        nx_value, flag4 = check_float(self.normal_x_edit)
+        ny_value, flag5 = check_float(self.normal_y_edit)
+        nz_value, flag6 = check_float(self.normal_z_edit)
 
         if flag0 and flag1 and flag2 and flag3 and flag4 and flag5 and flag6:
             self.out_data['origin'] = [ox_value, oy_value, oz_value]
@@ -336,8 +319,15 @@ class BCMap(QtGui.QDialog):
     def on_cancel(self):
         self.close()
 
+def _on_float(field):
+    try:
+        eval_float_from_string(field.text())
+        field.setStyleSheet("QLineEdit{background: white;}")
+    except ValueError:
+        field.setStyleSheet("QLineEdit{background: red;}")
 
-def main():
+
+def main():  # pragma: no cover
     # kills the program when you hit Cntl+C from the command line
     # doesn't save the current state as presumably there's been an error
     import signal

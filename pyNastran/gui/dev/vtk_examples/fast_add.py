@@ -35,7 +35,7 @@ http://www.vtk.org/Wiki/VTK/Examples/Python/Visualization/ClampGlyphSizes
 """
 import numpy as np
 import vtk
-from vtk.util.numpy_support import numpy_to_vtk, numpy_to_vtkIdTypeArray
+from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk, numpy_to_vtkIdTypeArray, VTK_VERSION
 
 
 # kills the program when you hit Cntl+C from the command line
@@ -135,13 +135,13 @@ def main():
     force_scalar_array = numpy_to_vtk(scalars, deep=1)
 
     grid_mapper = vtk.vtkDataSetMapper()
-    vtk_version = int(vtk.VTK_VERSION[0])
+    vtk_version = int(VTK_VERSION[0])
     if vtk_version == 5 :
         grid_mapper.SetInput(ug)
     elif vtk_version in [6, 7]:
         grid_mapper.SetInputData(ug)
     else:
-        raise NotImplementedError(vtk.VTK_VERSION)
+        raise NotImplementedError(VTK_VERSION)
 
     if make_glyphs:
         glyphs = vtk.vtkGlyph3D()
@@ -165,7 +165,7 @@ def main():
         elif vtk_version in [6, 7]:
             glyphs.SetInputData(ug)
         else:
-            raise NotImplementedError(vtk.VTK_VERSION)
+            raise NotImplementedError(VTK_VERSION)
 
         #glyphs.SetSource(glyphSource.GetOutput())
         glyphs.SetSourceConnection(glyphSource.GetOutputPort())

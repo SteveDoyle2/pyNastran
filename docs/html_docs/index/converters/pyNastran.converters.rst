@@ -104,25 +104,25 @@ pyNastran/converters
     :show-inheritance:
 
 
-:mod:`test_formats` Module
---------------------------
+..  :mod:`test_formats` Module
+..  --------------------------
+..  
+..  .. inheritance-diagram:: pyNastran.converters.test_formats
+..  
+..  .. automodule:: pyNastran.converters.test_formats
+..      :members:
+..      :undoc-members:
+..      :show-inheritance:
 
-.. inheritance-diagram:: pyNastran.converters.test_formats
-
-.. automodule:: pyNastran.converters.test_formats
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`test_gui_formats` Module
-------------------------------
-
-.. inheritance-diagram:: pyNastran.converters.test_gui_formats
-
-.. automodule:: pyNastran.converters.test_gui_formats
-    :members:
-    :undoc-members:
-    :show-inheritance:
+..  :mod:`test_gui_formats` Module
+..  ------------------------------
+..  
+..  .. inheritance-diagram:: pyNastran.converters.test_gui_formats
+..  
+..  .. automodule:: pyNastran.converters.test_gui_formats
+..      :members:
+..      :undoc-members:
+..      :show-inheritance:
 
 :mod:`type_converter` Module
 ----------------------------

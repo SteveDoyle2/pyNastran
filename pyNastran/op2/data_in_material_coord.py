@@ -1,6 +1,7 @@
 """
 Defines:
  - data_in_material_coord(bdf, op2, in_place=False)
+
 """
 from __future__ import print_function
 import copy
@@ -104,6 +105,7 @@ def is_mcid(elem):
     -------
     is_mcid : bool
         the projected material coordinate system is used
+
     """
     theta_mcid = getattr(elem, 'theta_mcid', None)
     return isinstance(theta_mcid, integer_types)
@@ -125,6 +127,7 @@ def angle2vec(v1, v2):
 
     v1 o v2 = |v1| * |v2| * cos(theta)
     theta = np.arccos( (v1 o v2) / (|v1|*|v2|))
+
     """
     denom = norm(v1, axis=1) * norm(v2, axis=1)
     return np.arccos((v1 * v2).sum(axis=1) / denom)
@@ -138,8 +141,8 @@ def calc_imat(normals, csysi):
     jhat = j / |j|
     i = jhat x k
 
-    Note
-    ----
+    Notes
+    -----
     i is not a unit vector because k (the element normal)
     is not a unit vector.
     """
@@ -176,11 +179,10 @@ def data_in_material_coord(bdf, op2, in_place=False):
     op2_new : :class:`.OP2` object
         A :class:`.OP2` object with the abovementioned changes.
 
-    Warning
-    -------
-     - doesn't handle composite stresses/strains/forces
-     - doesn't handle solid stresses/strains/forces (e.g. MAT11)
-     - zeros out data for CQUAD8s
+    .. warning ::  doesn't handle composite stresses/strains/forces
+    .. warning ::  doesn't handle solid stresses/strains/forces (e.g. MAT11)
+    .. warning ::  zeros out data for CQUAD8s
+
     """
     if in_place:
         op2_new = op2
@@ -279,63 +281,67 @@ def data_in_material_coord(bdf, op2, in_place=False):
                 steps = [1]
 
             for start, step in enumerate(steps):
-                s = slice(start, vector.data.shape[1], step)
+                slicei = slice(start, vector.data.shape[1], step)
                 # membrane terms
-                Sxx = vector.data[:, s, 0]
-                Syy = vector.data[:, s, 1]
-                Sxy = vector.data[:, s, 2]
+                Sxx = vector.data[:, slicei, 0]
+                Syy = vector.data[:, slicei, 1]
+                Sxy = vector.data[:, slicei, 2]
                 if vector.data.dtype == np.complex64 or vector.data.dtype == np.complex128:
-                    Sxx_theta_real, Syy_theta_real, Sxy_theta_real = transf_Mohr(Sxx.real, Syy.real, Sxy.real, vecthetarad)
-                    new_vector.data[:, s, 0].real = Sxx_theta_real
-                    new_vector.data[:, s, 1].real = Syy_theta_real
-                    new_vector.data[:, s, 2].real = Sxy_theta_real
-                    Sxx_theta_imag, Syy_theta_imag, Sxy_theta_imag = transf_Mohr(Sxx.imag, Syy.imag, Sxy.imag, vecthetarad)
-                    new_vector.data[:, s, 0].imag = Sxx_theta_imag
-                    new_vector.data[:, s, 1].imag = Syy_theta_imag
-                    new_vector.data[:, s, 2].imag = Sxy_theta_imag
+                    Sxx_theta_real, Syy_theta_real, Sxy_theta_real = transf_Mohr(
+                        Sxx.real, Syy.real, Sxy.real, vecthetarad)
+                    new_vector.data[:, slicei, 0].real = Sxx_theta_real
+                    new_vector.data[:, slicei, 1].real = Syy_theta_real
+                    new_vector.data[:, slicei, 2].real = Sxy_theta_real
+                    Sxx_theta_imag, Syy_theta_imag, Sxy_theta_imag = transf_Mohr(
+                        Sxx.imag, Syy.imag, Sxy.imag, vecthetarad)
+                    new_vector.data[:, slicei, 0].imag = Sxx_theta_imag
+                    new_vector.data[:, slicei, 1].imag = Syy_theta_imag
+                    new_vector.data[:, slicei, 2].imag = Sxy_theta_imag
                 else:
                     Sxx_theta, Syy_theta, Sxy_theta = transf_Mohr(Sxx, Syy, Sxy, vecthetarad)
-                    new_vector.data[:, s, 0] = Sxx_theta
-                    new_vector.data[:, s, 1] = Syy_theta
-                    new_vector.data[:, s, 2] = Sxy_theta
+                    new_vector.data[:, slicei, 0] = Sxx_theta
+                    new_vector.data[:, slicei, 1] = Syy_theta
+                    new_vector.data[:, slicei, 2] = Sxy_theta
 
                 # bending terms
-                Sxx = vector.data[:, s, 3]
-                Syy = vector.data[:, s, 4]
-                Sxy = vector.data[:, s, 5]
+                Sxx = vector.data[:, slicei, 3]
+                Syy = vector.data[:, slicei, 4]
+                Sxy = vector.data[:, slicei, 5]
                 if vector.data.dtype == np.complex64 or vector.data.dtype == np.complex128:
-                    Sxx_theta_real, Syy_theta_real, Sxy_theta_real = transf_Mohr(Sxx.real, Syy.real, Sxy.real, vecthetarad)
-                    new_vector.data[:, s, 3].real = Sxx_theta_real
-                    new_vector.data[:, s, 4].real = Syy_theta_real
-                    new_vector.data[:, s, 5].real = Sxy_theta_real
-                    Sxx_theta_imag, Syy_theta_imag, Sxy_theta_imag = transf_Mohr(Sxx.imag, Syy.imag, Sxy.imag, vecthetarad)
-                    new_vector.data[:, s, 3].imag = Sxx_theta_imag
-                    new_vector.data[:, s, 4].imag = Syy_theta_imag
-                    new_vector.data[:, s, 5].imag = Sxy_theta_imag
+                    Sxx_theta_real, Syy_theta_real, Sxy_theta_real = transf_Mohr(
+                        Sxx.real, Syy.real, Sxy.real, vecthetarad)
+                    new_vector.data[:, slicei, 3].real = Sxx_theta_real
+                    new_vector.data[:, slicei, 4].real = Syy_theta_real
+                    new_vector.data[:, slicei, 5].real = Sxy_theta_real
+                    Sxx_theta_imag, Syy_theta_imag, Sxy_theta_imag = transf_Mohr(
+                        Sxx.imag, Syy.imag, Sxy.imag, vecthetarad)
+                    new_vector.data[:, slicei, 3].imag = Sxx_theta_imag
+                    new_vector.data[:, slicei, 4].imag = Syy_theta_imag
+                    new_vector.data[:, slicei, 5].imag = Sxy_theta_imag
 
                 else:
                     Sxx_theta, Syy_theta, Sxy_theta = transf_Mohr(Sxx, Syy, Sxy, vecthetarad)
-                    new_vector.data[:, s, 3] = Sxx_theta
-                    new_vector.data[:, s, 4] = Syy_theta
-                    new_vector.data[:, s, 5] = Sxy_theta
+                    new_vector.data[:, slicei, 3] = Sxx_theta
+                    new_vector.data[:, slicei, 4] = Syy_theta
+                    new_vector.data[:, slicei, 5] = Sxy_theta
 
                 # transverse terms
-                Qx = vector.data[:, s, 6]
-                Qy = vector.data[:, s, 7]
+                Qx = vector.data[:, slicei, 6]
+                Qy = vector.data[:, slicei, 7]
                 if vector.data.dtype == np.complex64 or vector.data.dtype == np.complex128:
                     Qx_new_real = cos(vecthetarad)*Qx.real + sin(vecthetarad)*Qy.real
                     Qy_new_real = -sin(vecthetarad)*Qx.real + cos(vecthetarad)*Qy.real
-                    new_vector.data[:, s, 6].real = Qx_new_real
-                    new_vector.data[:, s, 7].real = Qy_new_real
+                    new_vector.data[:, slicei, 6].real = Qx_new_real
+                    new_vector.data[:, slicei, 7].real = Qy_new_real
                     Qx_new_imag = cos(vecthetarad)*Qx.imag + sin(vecthetarad)*Qy.imag
                     Qy_new_imag = -sin(vecthetarad)*Qx.imag + cos(vecthetarad)*Qy.imag
-                    new_vector.data[:, s, 6].imag = Qx_new_imag
-                    new_vector.data[:, s, 7].imag = Qy_new_imag
+                    new_vector.data[:, slicei, 6].imag = Qx_new_imag
+                    new_vector.data[:, slicei, 7].imag = Qy_new_imag
                 else:
                     Qx_new = cos(vecthetarad)*Qx + sin(vecthetarad)*Qy
                     Qy_new = -sin(vecthetarad)*Qx + cos(vecthetarad)*Qy
-                    new_vector.data[:, s, 6] = Qx_new
-                    new_vector.data[:, s, 7] = Qy_new
+                    new_vector.data[:, slicei, 6] = Qx_new
+                    new_vector.data[:, slicei, 7] = Qy_new
 
             #TODO implement transformation for corner nodes
             #     for now we just zero the wrong values
@@ -438,6 +444,4 @@ def data_in_material_coord(bdf, op2, in_place=False):
             if 'quad8' in vecname:
                 for i in [2, 3, 4, 5, 6, 7, 8, 9]:
                     new_vector.data[:, i, :] = 0
-
     return op2_new
-

@@ -12,7 +12,7 @@ import os
 from struct import Struct
 from numpy import array, unique #, hstack
 
-from pyNastran.bdf.bdf import BDF
+from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.mesh_utils.bdf_equivalence import bdf_equivalence_nodes
 from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
 
@@ -88,21 +88,21 @@ def merge_ugrid3d_and_bdf_to_ugrid3d_filename(ugrid_filename, bdf_filename, ugri
             #out['CTETRA'] + out['CPYRAM'], out['CPENTA'], out['CHEXA']
         #])
         #fmt = '%ii' % (nsolids * nnodes)
-        s = Struct(endian + '7i')
-        f_ugrid.write(s.pack(nnodes, ntris, nquads, ntets, npyramids, npentas, nhexas))
+        structi = Struct(endian + '7i')
+        f_ugrid.write(structi.pack(nnodes, ntris, nquads, ntets, npyramids, npentas, nhexas))
 
         xyz = array([model.nodes[nid].xyz for nid in sorted(nids)],
                     dtype=ndarray_float)
 
         # %3f or %3d
         fmt = endian + '%i%s' % (nnodes * 3, float_fmt) # len(x,y,z) = 3
-        s = Struct(fmt)
+        structi = Struct(fmt)
         print('fmt = %r' % fmt)
-        f_ugrid.write(s.pack(*xyz.ravel()))
+        f_ugrid.write(structi.pack(*xyz.ravel()))
 
 
         # get the pshells
-        pshells = out['PSHELL']
+        #pshells = out['PSHELL']
         # TODO: need to think about property IDs
         tris = out['CTRIA3']
         quads = out['CQUAD4']
@@ -127,10 +127,10 @@ def merge_ugrid3d_and_bdf_to_ugrid3d_filename(ugrid_filename, bdf_filename, ugri
 
                 # %10i
                 fmt = endian + '%ii' % (nshells)
-                s = Struct(fmt)
+                structi = Struct(fmt)
                 print('fmt = %r' % fmt)
                 pids = pids_shrink
-                f_ugrid.write(s.pack(*pids))
+                f_ugrid.write(structi.pack(*pids))
             elif card_type in ['CTRIA3', 'CQUAD4'] and 0:
                 if card_type == 'CTRIA3':
                     eids = tris
@@ -152,8 +152,8 @@ def merge_ugrid3d_and_bdf_to_ugrid3d_filename(ugrid_filename, bdf_filename, ugri
 
                     # '%8i'
                     fmt = endian + '%ii' % (nelements * nnodes_per_element)
-                    s = Struct(fmt)
-                    f_ugrid.write(s.pack(*node_ids.ravel()))
+                    structi = Struct(fmt)
+                    f_ugrid.write(structi.pack(*node_ids.ravel()))
             else:
                 eids = out[card_type]
 
@@ -172,8 +172,8 @@ def merge_ugrid3d_and_bdf_to_ugrid3d_filename(ugrid_filename, bdf_filename, ugri
                     # '%8i'
                     fmt = endian + '%ii' % (nelements * nnodes_per_element)
                     print('fmt = %r' % fmt)
-                    s = Struct(fmt)
-                    f_ugrid.write(s.pack(*node_ids.ravel()))
+                    structi = Struct(fmt)
+                    f_ugrid.write(structi.pack(*node_ids.ravel()))
 
 
 
@@ -197,8 +197,7 @@ def equivalence_ugrid3d_and_bdf_to_bdf(ugrid_filename, bdf_filename,
         ugrid_model = UGRID(log=None, debug=False)
         ugrid_model.read_ugrid(ugrid_filename)
 
-        bdf_model = BDF()
-        bdf_model.read_bdf(bdf_filename, xref=False)
+        bdf_model = read_bdf(bdf_filename, xref=False)
         #bdf_model.write_bdf(bdf_merged_filename, interspersed=False, enddata=False)
 
         tol = 0.01
@@ -284,8 +283,8 @@ def equivalence_ugrid3d_and_bdf_to_bdf(ugrid_filename, bdf_filename,
 
 def main():  # pragma: no cover
     """demo problem"""
-    pkg_path = ''
-    model_dir = os.path.join(pkg_path, 'aflr_work', 'bay')
+    PKG_PATH = ''
+    model_dir = os.path.join(PKG_PATH, 'aflr_work', 'bay')
     ugrid_filename = os.path.join(model_dir, 'model.b8.ugrid')
     bdf_filename = os.path.join(model_dir, 'solid.bdf')
     ugrid_filename_out = os.path.join(model_dir, 'model_merged.b8.ugrid')

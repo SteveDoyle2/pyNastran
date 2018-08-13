@@ -36,6 +36,7 @@ class Load(BaseCard):
 
     @property
     def node_ids(self):
+        """get the node ids"""
         try:
             return self._node_ids()
         except:
@@ -43,7 +44,7 @@ class Load(BaseCard):
             raise RuntimeError('error processing nodes for \n%s' % str(self))
 
     def _node_ids(self, nodes=None):
-        """returns nodeIDs for repr functions"""
+        """returns node ids for repr functions"""
         if not nodes:
             nodes = self.nodes
         if isinstance(nodes[0], integer_types):
@@ -52,7 +53,7 @@ class Load(BaseCard):
             return [node.nid for node in nodes]
 
 
-class LoadCombination(Load):
+class LoadCombination(BaseCard):
     """Common method for LOAD, DLOAD"""
     def __init__(self, sid, scale, scale_factors, load_ids, comment=''):
         """
@@ -71,7 +72,7 @@ class LoadCombination(Load):
         comment : str; default=''
             a comment for the card
         """
-        Load.__init__(self)
+        BaseCard.__init__(self)
         if comment:
             self.comment = comment
 
@@ -102,7 +103,7 @@ class LoadCombination(Load):
         if len(self.scale_factors) != len(self.load_ids):
             msg += 'scale_factors=%s load_ids=%s\n' % (self.scale_factors, self.load_ids)
         if msg:
-            raise RuntimeError(msg)
+            raise IndexError(msg)
         for scalei, load_id in zip(self.scale_factors, self.get_load_ids()):
             assert isinstance(scalei, float_types), scalei
             assert isinstance(load_id, integer_types), load_id
@@ -151,9 +152,9 @@ class LoadCombination(Load):
         supported_loads = [
             'FORCE', 'FORCE1', 'FORCE2', 'MOMENT', 'MOMENT1', 'MOMENT2',
             'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4', 'GRAV', 'SPCD', 'GMLOAD',
-            'RLOAD1', 'RLOAD2', 'TLOAD1', 'TLOAD2',
+            'RLOAD1', 'RLOAD2', 'TLOAD1', 'TLOAD2', 'PLOADX1',
             'RFORCE', 'RFORCE1', #'RFORCE2'
-            'ACCEL', 'ACCEL1', #'SLOAD',
+            'ACCEL', 'ACCEL1', 'SLOAD', 'ACSRCE',
         ]
         for loads in self.load_ids_ref:
             for load in loads:
@@ -167,6 +168,7 @@ class LoadCombination(Load):
                     msg = ('The get_load_ids method doesnt support %s cards.\n'
                            '%s' % (load.__class__.__name__, str(load)))
                     raise NotImplementedError(msg)
+                break
         return load_ids
 
     def get_loads(self):
@@ -296,10 +298,13 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
         """
         sid = integer(card, 1, 'sid')
         excite_id = integer(card, 2, 'excite_id')
-        lid = integer(card, 3, 'lid')
-        tid = integer_or_blank(card, 4, 'tid')
+        load_id = integer_or_blank(card, 3, 'lid')
+        temp_id = integer_or_blank(card, 4, 'tid')
+        if load_id is None and temp_id is None:
+            msg = 'LSEQ load_id/temp_id must not be None; load_id=%s temp_id=%s' % (load_id, temp_id)
+            raise RuntimeError(msg)
         assert len(card) <= 5, 'len(LSEQ card) = %i\ncard=%s' % (len(card), card)
-        return LSEQ(sid, excite_id, lid, tid=tid, comment=comment)
+        return LSEQ(sid, excite_id, load_id, tid=temp_id, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -329,13 +334,13 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
             the BDF object
         """
         msg = ', which is required by LSEQ=%s' % (self.sid)
-        self.lid_ref = model.Load(self.lid, consider_load_combinations=False, msg=msg)
+        self.lid_ref = model.Load(self.lid, consider_load_combinations=True, msg=msg)
         #self.excite_id = model.Node(self.excite_id, msg=msg)
         if self.tid:
             # TODO: temperature set, not a table?
             self.tid_ref = model.Table(self.tid, msg=msg)
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, xref_errors):
         return self.cross_reference(model)
 
     def uncross_reference(self):
@@ -437,7 +442,7 @@ class LOADCYN(Load):
     def uncross_reference(self):
         pass
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, xref_errors):
         return self.cross_reference(model)
 
     def raw_fields(self):
@@ -559,7 +564,7 @@ class DAREA(BaseCard):
         msg = ', which is required by DAREA=%s' % (self.sid)
         self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
 
-    def safe_cross_reference(self, model, debug=True):
+    def safe_cross_reference(self, model, xref_errors, debug=True):
         nids2 = []
         msg = ', which is required by DAREA=%s' % (self.sid)
         for nid in self.node_ids:
@@ -713,7 +718,7 @@ class SPCD(Load):
         msg = ', which is required by SPCD=%s' % (self.sid)
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
-    def safe_cross_reference(self, model, debug=True):
+    def safe_cross_reference(self, model, xref_errors, debug=True):
         msg = ', which is required by SPCD=%s' % (self.sid)
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
@@ -729,6 +734,115 @@ class SPCD(Load):
         for (nid, constraint, enforced) in zip(self.node_ids, self.constraints,
                                                self.enforced):
             fields += [nid, constraint, enforced]
+        return fields
+
+    def write_card(self, size=8, is_double=False):
+        card = self.raw_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        elif is_double:
+            return self.comment + print_card_double(card)
+        return self.comment + print_card_16(card)
+
+class DEFORM(Load):
+    """
+    Defines an enforced displacement value for static analysis.
+
+     +--------+-----+-----+------+----+----+----+----+
+     |    1   |  2  |  3  |   5  |  6 |  8 |  6 |  8 |
+     +========+=====+=====+======+====+====+====+====+
+     | DEFORM | SID |  E1 |  D1  | E2 | D2 | E3 | D3 |
+     +--------+-----+-----+------+----+----+----+----+
+     | DEFORM | 100 | 32  | -2.6 | 5  | .9 | 6  | .9 |
+     +--------+-----+-----+------+----+----+----+----+
+    """
+    type = 'DEFORM'
+
+    def __init__(self, sid, eid, deformation, comment=''):
+        """
+        Creates an DEFORM card, which defines applied deformation on
+        a 1D elemment.  Links to the DEFORM card in the case control
+        deck.
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        eid : int
+            CTUBE/CROD/CONROD/CBAR/CBEAM element id
+        deformation : float
+            the applied deformation
+        """
+        if comment:
+            self.comment = comment
+        self.sid = sid
+        self.eid = eid
+        self.deformation = deformation
+        self.eid_ref = None
+
+    @classmethod
+    def add_card(cls, card, icard=0, comment=''):
+        """
+        Adds a DEFORM card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        offset = 2 * icard
+        sid = integer(card, 1, 'sid')
+        eid = integer(card, 2 + offset, 'eid')
+        deformation = double(card, 3 + offset, 'D1')
+        return DEFORM(sid, eid, deformation, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        """
+        Adds an DEFORM card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
+        sid = data[0]
+        eid = data[1]
+        defomation = data[2]
+        return DEFORM(sid, eid, deformation, comment=comment)
+
+    def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        return
+
+    def safe_cross_reference(self, model, xref_errors, debug=True):
+        msg = ', which is required by DEFORM=%s' % (self.sid)
+        self.eid_ref = model.Element(self.eid, msg)
+
+    def uncross_reference(self):
+        self.eid = self.Eid()
+        self.eid_ref = None
+
+    def get_loads(self):
+        return [self]
+
+    def Eid(self):
+        if self.eid_ref is None:
+            return self.eid
+        return self.eid_ref.eid
+    def raw_fields(self):
+        fields = ['DEFORM', self.sid, self.Eid(), self.deformation]
         return fields
 
     def write_card(self, size=8, is_double=False):
@@ -839,13 +953,16 @@ class SLOAD(Load):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by SLOAD=%s' % (self.sid)
+        msg = ', which is required by SLOAD=%s' % (self.sid)
         self.nodes_ref = []
         for nid in self.nodes:
             self.nodes_ref.append(model.Node(nid, msg=msg))
+        #self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, xref_errors):
         return self.cross_reference(model)
+        #msg = ', which is required by SLOAD=%s' % (self.sid)
+        #self.nodes_ref = model.safe_empty_nodes(self.nodes, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -962,13 +1079,16 @@ class RFORCE(Load):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by RFORCE sid=%s' % self.sid
+        msg = ', which is required by RFORCE sid=%s' % self.sid
         if self.nid > 0:
             self.nid_ref = model.Node(self.nid, msg=msg)
         self.cid_ref = model.Coord(self.cid, msg=msg)
 
-    def safe_cross_reference(self, model):
-        return self.cross_reference(model)
+    def safe_cross_reference(self, model, xref_errors):
+        msg = ', which is required by RFORCE sid=%s' % self.sid
+        if self.nid > 0:
+            self.nid_ref = model.Node(self.nid, msg=msg)
+        self.cid_ref = model.safe_coord(self.cid, self.sid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.nid = self.Nid()
@@ -1013,7 +1133,7 @@ class RFORCE(Load):
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
-        if is_double:
+        elif is_double:
             return self.comment + print_card_double(card)
         return self.comment + print_card_16(card)
 
@@ -1035,7 +1155,7 @@ class RFORCE1(Load):
     def __init__(self, sid, nid, scale, group_id,
                  cid=0, r123=None, racc=0., mb=0, method=2, comment=''):
         """
-        Defines the RFORCE1 card
+        Creates an RFORCE1 card
 
         Parameters
         ----------
@@ -1064,6 +1184,7 @@ class RFORCE1(Load):
             Method used to compute centrifugal forces due to angular velocity.
         comment : str; default=''
             a comment for the card
+
         """
         if comment:
             self.comment = comment
@@ -1128,13 +1249,16 @@ class RFORCE1(Load):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by RFORCE1 sid=%s' % self.sid
+        msg = ', which is required by RFORCE1 sid=%s' % self.sid
         #if self.nid > 0:  # TODO: why was this every here?
         self.nid_ref = model.Node(self.nid, msg=msg)
         self.cid_ref = model.Coord(self.cid, msg=msg)
 
-    def safe_cross_reference(self, model):
-        return self.cross_reference(model)
+    def safe_cross_reference(self, model, xref_errors):
+        msg = ', which is required by RFORCE1 sid=%s' % self.sid
+        #if self.nid > 0:  # TODO: why was this every here?
+        self.nid_ref = model.Node(self.nid, msg=msg)
+        self.cid_ref = model.safe_coord(self.cid, self.sid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.nid = self.node_id
@@ -1265,11 +1389,11 @@ class RANDPS(RandomLoad):
             the BDF object
         """
         if self.tid:
-            msg = ' which is required by RANDPS sid=%s' % (self.sid)
+            msg = ', which is required by RANDPS sid=%s' % (self.sid)
             #self.tid = model.Table(self.tid, msg=msg)
             self.tid_ref = model.RandomTable(self.tid, msg=msg)
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, xref_errors):
         return self.cross_reference(model)
 
     def uncross_reference(self):

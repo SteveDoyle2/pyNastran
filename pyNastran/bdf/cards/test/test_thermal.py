@@ -5,12 +5,13 @@ from six import StringIO
 from pyNastran.bdf.bdf import read_bdf, BDF, CHBDYG, CaseControlDeck
 from pyNastran.bdf.cards.test.utils import save_load_deck
 from pyNastran.bdf.mesh_utils.mirror_mesh import write_bdf_symmetric
-
+from pyNastran.utils.log import SimpleLogger
 
 class TestThermal(unittest.TestCase):
     def test_thermal_1(self):
         """tests various thermal cards"""
-        model = BDF(debug=False)
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log, debug=False)
         model.sol = 101
         lines = [
             'SUBCASE 1',
@@ -31,7 +32,7 @@ class TestThermal(unittest.TestCase):
         mid = 1
         nodes = [11, 12, 13, 14]
         model.add_cquad4(eid, pid, nodes, theta_mcid=0.0, zoffset=0.,
-                         tflag=0,  T1=1.0, T2=1.0, T3=1.0, T4=1.0, comment='')
+                         tflag=0, T1=1.0, T2=1.0, T3=1.0, T4=1.0, comment='')
         model.add_pshell(pid, mid1=1, t=0.1)
 
         eid = 10
@@ -56,9 +57,9 @@ class TestThermal(unittest.TestCase):
 
         Type = 'AREA4'
         chbdyg = model.add_chbdyg(eid, Type, nodes,
-                         iview_front=0, ivew_back=0,
-                         rad_mid_front=0, rad_mid_back=0,
-                         comment='chbdyg')
+                                  iview_front=0, ivew_back=0,
+                                  rad_mid_front=0, rad_mid_back=0,
+                                  comment='chbdyg')
         chbdyg.raw_fields()
 
         eid = 3
@@ -95,9 +96,9 @@ class TestThermal(unittest.TestCase):
                               comment='conv')
         conv.raw_fields()
         pconv = model.add_pconv(pconid, mid, form=0, expf=0.0, ftype=0,
-                               tid=None, chlen=None, gidin=None,
-                               ce=0, e1=None, e2=None, e3=None,
-                               comment='pconv')
+                                tid=None, chlen=None, gidin=None,
+                                ce=0, e1=None, e2=None, e3=None,
+                                comment='pconv')
         pconv.raw_fields()
 
         pconid = 12
@@ -107,7 +108,7 @@ class TestThermal(unittest.TestCase):
         coef = 0.023
         pconvm = model.add_pconvm(pconid, mid, coef, form=0, flag=0, expr=0.0,
                                   exppi=0.0, exppo=0.0, comment='pconvm')
-        pconv.raw_fields()
+        pconvm.raw_fields()
 
         radmid = 42
         absorb = 0.2
@@ -133,8 +134,8 @@ class TestThermal(unittest.TestCase):
         t_source = 19.
         eids = [2]
         qvect = model.add_qvect(sid, q0, eids, t_source, ce=0,
-                               vector_tableds=None, control_id=0,
-                               comment='qvect')
+                                vector_tableds=None, control_id=0,
+                                comment='qvect')
         qvect.raw_fields()
 
         q0 = 15.8
@@ -200,9 +201,9 @@ class TestThermal(unittest.TestCase):
         #print(bdf_filename.getvalue())
 
         bdf_filename2.seek(0)
-        model2 = read_bdf(bdf_filename2, xref=False, debug=False)
+        model2 = read_bdf(bdf_filename2, xref=False, log=log, debug=False)
         model2.safe_cross_reference()
-        save_load_deck(model, punch=False)
+        save_load_deck(model, punch=False, run_convert=False, run_renumber=False)
 
 
 if __name__ == '__main__':

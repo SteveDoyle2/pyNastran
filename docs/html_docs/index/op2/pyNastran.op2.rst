@@ -48,8 +48,6 @@ This is the pyNastran.op2.rst file.
 :mod:`op2_results` Module
 -------------------------
 
-.. inheritance-diagram:: pyNastran.op2.op2_results
-
 .. automodule:: pyNastran.op2.op2_results
     :members:
     :undoc-members:
@@ -66,20 +64,9 @@ This is the pyNastran.op2.rst file.
     :undoc-members:
     :show-inheritance:
 
-:mod:`export_to_vtk` Module
----------------------------
-
-.. inheritance-diagram:: pyNastran.op2.export_to_vtk
-
-.. automodule:: pyNastran.op2.export_to_vtk
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 :mod:`data_in_material_coord` Module
 ------------------------------------
-
-.. inheritance-diagram:: pyNastran.op2.data_in_material_coord
 
 .. automodule:: pyNastran.op2.data_in_material_coord
     :members:
@@ -88,8 +75,6 @@ This is the pyNastran.op2.rst file.
 
 :mod:`vector_utils` Module
 --------------------------
-
-.. inheritance-diagram:: pyNastran.op2.vector_utils
 
 .. automodule:: pyNastran.op2.vector_utils
     :members:
@@ -106,5 +91,3 @@ Subpackages
    pyNastran.op2.op2_interface
    pyNastran.op2.result_objects
    pyNastran.op2.tables
-   pyNastran.op2.test
-

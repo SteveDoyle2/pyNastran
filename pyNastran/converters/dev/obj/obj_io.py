@@ -2,12 +2,13 @@
 Defines the GUI IO file for OBJ.
 """
 from __future__ import print_function
+from collections import OrderedDict
 
 from numpy import arange
 import vtk
 
 from pyNastran.gui.gui_objects.gui_result import GuiResult
-from pyNastran.gui.gui_utils.vtk_utils import numpy_to_vtk_points
+from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
 from pyNastran.converters.dev.obj.obj import read_obj
 
 
@@ -15,14 +16,14 @@ class ObjIO(object):
     """
     Defines the GUI class for OBJ.
     """
-    def __init__(self):
-        pass
+    def __init__(self, gui):
+        self.gui = gui
 
     def get_obj_wildcard_geometry_results_functions(self):
         """
         gets the OBJ wildcard loader used in the file load menu
         """
-        data = ('OBJ',
+        data = ('obj',
                 'OBJ (*.obj)', self.load_obj_geometry,
                 None, None)
         return data
@@ -30,25 +31,21 @@ class ObjIO(object):
     def _remove_old_obj_geometry(self, filename):
         #return self._remove_old_geometry(filename)
 
-        self.eid_map = {}
-        self.nid_map = {}
+        self.gui.eid_map = {}
+        self.gui.nid_map = {}
         if filename is None:
-            #self.emptyResult = vtk.vtkFloatArray()
-            #self.vectorResult = vtk.vtkFloatArray()
-            self.scalarBar.VisibilityOff()
+            self.gui.scalarBar.VisibilityOff()
             skip_reading = True
         else:
-            self.turn_text_off()
-            self.grid.Reset()
-            #self.gridResult.Reset()
-            #self.gridResult.Modified()
+            self.gui.turn_text_off()
+            self.gui.grid.Reset()
 
-            self.result_cases = {}
-            self.ncases = 0
+            self.gui.result_cases = OrderedDict()
+            self.gui.ncases = 0
             try:
-                del self.case_keys
-                del self.icase
-                del self.isubcase_name_map
+                del self.gui.case_keys
+                del self.gui.icase
+                del self.gui.isubcase_name_map
             except:
                 # print("cant delete geo")
                 pass
@@ -56,7 +53,7 @@ class ObjIO(object):
             #print(dir(self))
             skip_reading = False
         #self.scalarBar.VisibilityOff()
-        self.scalarBar.Modified()
+        self.gui.scalarBar.Modified()
         return skip_reading
 
     def load_obj_geometry(self, obj_filename, name='main', plot=True):
@@ -77,18 +74,19 @@ class ObjIO(object):
         if skip_reading:
             return
 
-        self.eid_maps[name] = {}
-        self.nid_maps[name] = {}
-        model = read_obj(obj_filename, log=self.log, debug=False)
+        log = self.gui.log
+        self.gui.eid_maps[name] = {}
+        self.gui.nid_maps[name] = {}
+        model = read_obj(obj_filename, log=log, debug=False)
         self.model_type = 'obj'
         nodes = model.nodes
         nelements = model.nelements
 
-        self.nnodes = model.nnodes
-        self.nelements = nelements
+        self.gui.nnodes = model.nnodes
+        self.gui.nelements = nelements
 
-        grid = self.grid
-        grid.Allocate(self.nelements, 1000)
+        grid = self.gui.grid
+        grid.Allocate(self.gui.nelements, 1000)
 
         assert nodes is not None
         #nnodes = nodes.shape[0]
@@ -98,10 +96,10 @@ class ObjIO(object):
         dim_max = (mmax - mmin).max()
         xmax, ymax, zmax = mmax
         xmin, ymin, zmin = mmin
-        self.log_info("xmin=%s xmax=%s dx=%s" % (xmin, xmax, xmax-xmin))
-        self.log_info("ymin=%s ymax=%s dy=%s" % (ymin, ymax, ymax-ymin))
-        self.log_info("zmin=%s zmax=%s dz=%s" % (zmin, zmax, zmax-zmin))
-        self.create_global_axes(dim_max)
+        log.info("xmin=%s xmax=%s dx=%s" % (xmin, xmax, xmax-xmin))
+        log.info("ymin=%s ymax=%s dy=%s" % (ymin, ymax, ymax-ymin))
+        log.info("zmin=%s zmax=%s dz=%s" % (zmin, zmax, zmax-zmin))
+        self.gui.create_global_axes(dim_max)
         points = numpy_to_vtk_points(nodes)
 
         #assert elements.min() == 0, elements.min()
@@ -118,7 +116,7 @@ class ObjIO(object):
                 elem.GetPointIds().SetId(0, element[0])
                 elem.GetPointIds().SetId(1, element[1])
                 elem.GetPointIds().SetId(2, element[2])
-                self.grid.InsertNextCell(tri_etype, elem.GetPointIds())
+                grid.InsertNextCell(tri_etype, elem.GetPointIds())
         if len(quads):
             for eid, element in enumerate(quads):
                 elem = vtk.vtkQuad()
@@ -126,23 +124,25 @@ class ObjIO(object):
                 elem.GetPointIds().SetId(1, element[1])
                 elem.GetPointIds().SetId(2, element[2])
                 elem.GetPointIds().SetId(3, element[3])
-                self.grid.InsertNextCell(quad_etype, elem.GetPointIds())
+                grid.InsertNextCell(quad_etype, elem.GetPointIds())
 
         grid.SetPoints(points)
         grid.Modified()
-        if hasattr(grid, 'Update'):
+        if hasattr(grid, 'Update'):  # pragma: no cover
             grid.Update()
 
 
-        self.scalarBar.VisibilityOn()
-        self.scalarBar.Modified()
+        self.gui.scalarBar.VisibilityOn()
+        self.gui.scalarBar.Modified()
 
-        self.isubcase_name_map = {1: ['OBJ', '']}
-        cases = {}
+        self.gui.isubcase_name_map = {1: ['OBJ', '']}
+        cases = OrderedDict()
         ID = 1
-        form, cases, icase = self._fill_obj_geometry_objects(
+        form, cases, icase, node_ids, element_ids = self._fill_obj_geometry_objects(
             cases, ID, nodes, nelements, model)
-        self._finish_results_io2(form, cases)
+        self.gui.node_ids = node_ids
+        self.gui.element_ids = element_ids
+        self.gui._finish_results_io2(form, cases)
 
     def clear_obj(self):
         pass
@@ -157,14 +157,14 @@ class ObjIO(object):
         nid_res = GuiResult(subcase_id, 'NodeID', 'NodeID', 'node', nids)
         eid_res = GuiResult(subcase_id, 'ElementID', 'ElementID', 'centroid', eids)
 
-        cases = {
-            0 : (nid_res, (0, 'NodeID')),
-            1 : (eid_res, (0, 'ElementID')),
+
+        cases[0] = (nid_res, (0, 'NodeID'))
+        cases[1] = (eid_res, (0, 'ElementID'))
             #2 : (area_res, (0, 'Area')),
             #4 : (cart3d_geo, (0, 'NormalX')),
             #5 : (cart3d_geo, (0, 'NormalY')),
             #6 : (cart3d_geo, (0, 'NormalZ')),
-        }
+
         geometry_form = [
             ('NodeID', 0, []),
             ('ElementID', 1, []),
@@ -178,5 +178,4 @@ class ObjIO(object):
             ('Geometry', None, geometry_form),
         ]
         icase = 2
-        return form, cases, icase
-
+        return form, cases, icase, nids, eids

@@ -58,7 +58,7 @@ def make_xy(table_id, table_type, xy):
 
 class Table(BaseCard):
     def __init__(self):
-        pass
+        BaseCard.__init__(self)
 
     #def parse_fields(self, xy, nrepeated, is_data=False):
         #self.table = TableObj(xy, nrepeated, is_data)
@@ -96,7 +96,9 @@ class DTABLE(BaseCard):
                 the value
         comment : str; default=''
             a comment for the card
+
         """
+        BaseCard.__init__(self)
         if comment:
             self.comment = comment
         self.default_values = default_values
@@ -117,6 +119,7 @@ class DTABLE(BaseCard):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         nfields = len(card) - 1
         assert nfields % 2 == 0, nfields
@@ -181,6 +184,7 @@ class TABLED1(Table):
     +---------+------+-------+-------+--------+-----+-----+------+------+
 
     ..note:: EXTRAP is NX specific
+
     """
     type = 'TABLED1'
     #def __init__(self, tid, xaxis, yaxis, xy, comment=''):
@@ -208,6 +212,7 @@ class TABLED1(Table):
             .. note:: this is NX specific
         comment : str; default=''
             a comment for the card
+
         """
         Table.__init__(self)
         if comment:
@@ -232,33 +237,19 @@ class TABLED1(Table):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
-        tid = integer(card, 1, 'tid')
+        table_id = integer(card, 1, 'tid')
         xaxis = string_or_blank(card, 2, 'xaxis', 'LINEAR')
         yaxis = string_or_blank(card, 3, 'yaxis', 'LINEAR')
         extrap = integer_or_blank(card, 4, 'yaxis', 0)
 
-        nfields = len(card) - 1
-        nterms = (nfields - 9) // 2
-        if nterms < 0:
-            raise SyntaxError('%r card is too short' % cls.type)
-        xy = []
-        for i in range(nterms):
-            n = 9 + i * 2
-            if card.field(n) == 'ENDT':
-                break
-            xi = double_or_string(card, n, 'x' + str(i + 1))
-            yi = double_or_string(card, n + 1, 'y' + str(i + 1))
-            if xi == 'SKIP' or yi == 'SKIP':
-                continue
-            xy.append([xi, yi])
-        string(card, nfields, 'ENDT')
-        x, y = make_xy(tid, 'TABLED1', xy)
-        return TABLED1(tid, x, y, xaxis=xaxis, yaxis=yaxis, extrap=extrap, comment=comment)
+        x, y = read_table(card, table_id, 'TABLED1')
+        return TABLED1(table_id, x, y, xaxis=xaxis, yaxis=yaxis, extrap=extrap, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
-        tid = data[0]
+        table_id = data[0]
         xaxis = _map_axis(data[1])
         yaxis = _map_axis(data[2])
         xy = data[3:]
@@ -266,7 +257,7 @@ class TABLED1(Table):
         xy = xy.reshape(xy.size // 2, 2)
         x = xy[:, 0]
         y = xy[:, 1]
-        return TABLED1(tid, x, y, xaxis=xaxis, yaxis=yaxis, comment=comment)
+        return TABLED1(table_id, x, y, xaxis=xaxis, yaxis=yaxis, comment=comment)
 
     def raw_fields(self):
         xy = []
@@ -357,6 +348,7 @@ class TABLED2(Table):
             .. note:: this is NX specific
         comment : str; default=''
             a comment for the card
+
         """
         Table.__init__(self)
         if comment:
@@ -378,39 +370,24 @@ class TABLED2(Table):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
-        tid = integer(card, 1, 'tid')
+        table_id = integer(card, 1, 'tid')
         x1 = double(card, 2, 'x1')
         extrap = integer_or_blank(card, 3, 'extrap', default=0)
-
-        nfields = len(card) - 1
-        nterms = (nfields - 9) // 2
-        if nterms < 0:
-            raise SyntaxError('%r card is too short' % cls.type)
-        xy = []
-        for i in range(nterms):
-            n = 9 + i * 2
-            if card.field(n) == 'ENDT':
-                break
-            x = double_or_string(card, n, 'x' + str(i + 1))
-            y = double_or_string(card, n + 1, 'y' + str(i + 1))
-            if x == 'SKIP' or y == 'SKIP':
-                continue
-            xy.append([x, y])
-        string(card, nfields, 'ENDT')
-        x, y = make_xy(tid, 'TABLED2', xy)
-        return TABLED2(tid, x1, x, y, extrap=extrap, comment=comment)
+        x, y = read_table(card, table_id, 'TABLED2')
+        return TABLED2(table_id, x1, x, y, extrap=extrap, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
-        tid = data[0]
+        table_id = data[0]
         x1 = data[1]
         xy = data[2:]
         xy = np.array(xy, dtype='float64')
         xy = xy.reshape(xy.size // 2, 2)
         x = xy[:, 0]
         y = xy[:, 1]
-        return TABLED2(tid, x1, x, y, comment=comment)
+        return TABLED2(table_id, x1, x, y, comment=comment)
 
     def interpolate(self, x):
         if isinstance(x, float):
@@ -486,6 +463,7 @@ class TABLED3(Table):
             .. note:: this is NX specific
         comment : str; default=''
             a comment for the card
+
         """
         Table.__init__(self)
         if comment:
@@ -509,33 +487,18 @@ class TABLED3(Table):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
-        tid = integer(card, 1, 'tid')
+        table_id = integer(card, 1, 'tid')
         x1 = double(card, 2, 'x1')
         x2 = double(card, 3, 'x2')
         extrap = integer_or_blank(card, 4, 'extrap', default=0)
-
-        nfields = len(card) - 1
-        nterms = (nfields - 9) // 2
-        if nterms < 0:
-            raise SyntaxError('%r card is too short' % cls.type)
-        xy = []
-        for i in range(nterms):
-            n = 9 + i * 2
-            if card.field(n) == 'ENDT':
-                break
-            x = double_or_string(card, n, 'x' + str(i + 1))
-            y = double_or_string(card, n + 1, 'y' + str(i + 1))
-            if x == 'SKIP' or y == 'SKIP':
-                continue
-            xy.append([x, y])
-        string(card, nfields, 'ENDT')
-        x, y = make_xy(tid, 'TABLED3', xy)
-        return TABLED3(tid, x1, x2, x, y, extrap=extrap, comment=comment)
+        x, y = read_table(card, table_id, 'TABLED3')
+        return TABLED3(table_id, x1, x2, x, y, extrap=extrap, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
-        tid = data[0]
+        table_id = data[0]
         x1 = data[1]
         x2 = data[2]
         xy = data[3:]
@@ -543,7 +506,7 @@ class TABLED3(Table):
         xy = xy.reshape(xy.size // 2, 2)
         x = xy[:, 0]
         y = xy[:, 1]
-        return TABLED3(tid, x1, x2, x, y, comment=comment)
+        return TABLED3(table_id, x1, x2, x, y, comment=comment)
 
     def raw_fields(self):
         xy = []
@@ -569,6 +532,7 @@ class TABLED4(Table):
     Defines the coefficients of a power series for use in generating
     frequency-dependent and time-dependent dynamic loads. Also contains
     parametric data for use with the table.
+
     """
     type = 'TABLED4'
     def __init__(self, tid, x1, x2, x3, x4, a, comment=''):
@@ -596,8 +560,9 @@ class TABLED4(Table):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
-        tid = integer(card, 1, 'tid')
+        table_id = integer(card, 1, 'tid')
         x1 = double(card, 2, 'x1')
         x2 = double(card, 3, 'x2')
         x3 = double(card, 4, 'x3')
@@ -615,17 +580,17 @@ class TABLED4(Table):
             a.append(ai)
             j += 1
         string(card, nfields, 'ENDT')
-        return TABLED4(tid, x1, x2, x3, x4, a, comment=comment)
+        return TABLED4(table_id, x1, x2, x3, x4, a, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
-        tid = data[0]
+        table_id = data[0]
         x1 = data[1]
         x2 = data[2]
         x3 = data[3]
         x4 = data[4]
         a = data[5:]
-        return TABLED4(tid, x1, x2, x3, x4, a, comment=comment)
+        return TABLED4(table_id, x1, x2, x3, x4, a, comment=comment)
 
     def raw_fields(self):
         list_fields = ['TABLED4', self.tid, self.x1, self.x2, self.x3, self.x4,
@@ -664,6 +629,7 @@ class TABLED5(Table):
     Dynamic Load Tabular Function, Form 5
     Defines a value as a function of two variables for use in generating
     frequency-dependent and time-dependent dynamic loads.
+
     """
     type = 'TABLED5'
     def __init__(self, tid, xs, table_ids, comment=''):
@@ -685,8 +651,9 @@ class TABLED5(Table):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
-        tid = integer(card, 1, 'tid')
+        table_id = integer(card, 1, 'tid')
 
         nfields = len(card) - 1
         nterms = nfields - 9
@@ -710,17 +677,17 @@ class TABLED5(Table):
             xs.append(x)
             table_ids.append(table_id)
         string(card, nfields, 'ENDT')
-        return TABLED5(tid, xs, table_ids, comment=comment)
+        return TABLED5(table_id, xs, table_ids, comment=comment)
 
     #@classmethod
     #def add_op2_data(cls, data, comment=''):
-        #tid = data[0]
+        #table_id = data[0]
         #x1 = data[1]
         #x2 = data[2]
         #x3 = data[3]
         #x4 = data[4]
         #a = data[5:]
-        #return TABLED4(tid, x1, x2, x3, x4, a, comment=comment)
+        #return TABLED4(table_id, x1, x2, x3, x4, a, comment=comment)
 
     def raw_fields(self):
         x_table = []
@@ -781,39 +748,23 @@ class TABDMP1(Table):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
-        tid = integer(card, 1, 'tid')
+        table_id = integer(card, 1, 'tid')
         Type = string_or_blank(card, 2, 'Type', 'G')
-
-        nfields = len(card) - 1
-        nterms = (nfields - 9) // 2
-        if nterms < 0:
-            raise SyntaxError('%r card is too short' % cls.type)
-        xy = []
-        for i in range(nterms):
-            n = 9 + i * 2
-            if card.field(n) == 'ENDT':
-                break
-            x = double_or_string(card, n, 'x' + str(i + 1))
-            y = double_or_string(card, n + 1, 'y' + str(i + 1))
-            if x == 'SKIP' or y == 'SKIP':
-                continue
-            xy.append([x, y])
-        string(card, nfields, 'ENDT')
-
-        x, y = make_xy(tid, 'TABDMP1', xy)
-        return TABDMP1(tid, x, y, Type=Type, comment=comment)
+        x, y = read_table(card, table_id, 'TABDMP1')
+        return TABDMP1(table_id, x, y, Type=Type, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
-        tid = data[0]
+        table_id = data[0]
         x1 = data[1]
         Type = data[2]
         xy = data[5:]
         xy = np.array(xy, dtype='float64')
         x = xy[:, 0]
         y = xy[:, 1]
-        return TABDMP1(tid, Type, x, y, comment=comment)
+        return TABDMP1(table_id, Type, x, y, comment=comment)
 
     def raw_fields(self):
         xy = []
@@ -877,39 +828,23 @@ class TABLEM1(Table):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
-        tid = integer(card, 1, 'tid')
+        table_id = integer(card, 1, 'tid')
         xaxis = string_or_blank(card, 2, 'xaxis', 'LINEAR')
         yaxis = string_or_blank(card, 3, 'yaxis', 'LINEAR')
-
-        nfields = len(card) - 1
-        nterms = (nfields - 9) // 2
-        if nterms < 0:
-            raise SyntaxError('%r card is too short' % cls.type)
-        xy = []
-        for i in range(nterms):
-            n = 9 + i * 2
-            if card.field(n) == 'ENDT':
-                break
-            x = double_or_string(card, n, 'x' + str(i + 1))
-            y = double_or_string(card, n + 1, 'y' + str(i + 1))
-            if x == 'SKIP' or y == 'SKIP':
-                continue
-            xy.append([x, y])
-        string(card, nfields, 'ENDT')
-        x, y = make_xy(tid, 'TABLEM1', xy)
-        return TABLEM1(tid, x, y, xaxis=xaxis, yaxis=yaxis, comment=comment)
+        x, y = read_table(card, table_id, 'TABLEM1')
+        return TABLEM1(table_id, x, y, xaxis=xaxis, yaxis=yaxis, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
-        tid = data[0]
+        table_id = data[0]
         xy = data[1:]
         xy = np.array(xy, dtype='float64')
         xy = xy.reshape(xy.size // 2, 2)
         x = xy[:, 0]
         y = xy[:, 1]
-        return TABLEM1(tid, x, y, comment=comment)
-
+        return TABLEM1(table_id, x, y, comment=comment)
 
     def raw_fields(self):
         xy = []
@@ -945,6 +880,7 @@ class TABLEM2(Table):
     +---------+------+-------+--------+-----+-----+-----+------+------+
 
     ..note:: EXTRAP is NX specific
+
     """
     type = 'TABLEM2'
     def __init__(self, tid, x1, x, y, extrap=0, comment=''):
@@ -969,38 +905,22 @@ class TABLEM2(Table):
         comment : str; default=''
             a comment for the card
         """
-        tid = integer(card, 1, 'tid')
+        table_id = integer(card, 1, 'tid')
         x1 = double(card, 2, 'x1')
         extrap = integer_or_blank(card, 3, 'EXTRAP', default=0)
-
-        nfields = len(card) - 1
-        nterms = (nfields - 9) // 2
-        if nterms < 0:
-            raise SyntaxError('%r card is too short' % cls.type)
-        xy = []
-        for i in range(nterms):
-            n = 9 + i * 2
-            if card.field(n) == 'ENDT':
-                break
-            x = double_or_string(card, n, 'x' + str(i + 1))
-            y = double_or_string(card, n + 1, 'y' + str(i + 1))
-            if x == 'SKIP' or y == 'SKIP':
-                continue
-            xy.append([x, y])
-        string(card, nfields, 'ENDT')
-        x, y = make_xy(tid, 'TABLEM2', xy)
-        return TABLEM2(tid, x1, x, y, extrap=extrap, comment=comment)
+        x, y = read_table(card, table_id, 'TABLEM2')
+        return TABLEM2(table_id, x1, x, y, extrap=extrap, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
-        tid = data[0]
+        table_id = data[0]
         x1 = data[1]
         xy = data[2:]
         xy = np.array(xy, dtype='float64')
         xy = xy.reshape(xy.size // 2, 2)
         x = xy[:, 0]
         y = xy[:, 1]
-        return TABLEM2(tid, x1, x, y, comment=comment)
+        return TABLEM2(table_id, x1, x, y, comment=comment)
 
     def raw_fields(self):
         xy = []
@@ -1035,6 +955,7 @@ class TABLEM3(Table):
     +---------+------+-------+-------+--------+-----+-----+------+------+
 
     ..note:: EXTRAP is NX specific
+
     """
     type = 'TABLEM3'
     def __init__(self, tid, x1, x2, x, y, extrap=0, comment=''):
@@ -1060,33 +981,18 @@ class TABLEM3(Table):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
-        tid = integer(card, 1, 'tid')
+        table_id = integer(card, 1, 'tid')
         x1 = double(card, 2, 'x1')
         x2 = double(card, 3, 'x2')
         extrap = integer_or_blank(card, 4, 'extrap', default=0)
-
-        nfields = len(card) - 1
-        nterms = (nfields - 9) // 2
-        if nterms < 0:
-            raise SyntaxError('%r card is too short' % cls.type)
-        xy = []
-        for i in range(nterms):
-            n = 9 + i * 2
-            if card.field(n) == 'ENDT':
-                break
-            x = double_or_string(card, n, 'x' + str(i + 1))
-            y = double_or_string(card, n + 1, 'y' + str(i + 1))
-            if x == 'SKIP' or y == 'SKIP':
-                continue
-            xy.append([x, y])
-        string(card, nfields, 'ENDT')
-        x, y = make_xy(tid, 'TABLEM3', xy)
-        return TABLEM3(tid, x1, x2, x, y, extrap=extrap, comment=comment)
+        x, y = read_table(card, table_id, 'TABLEM3')
+        return TABLEM3(table_id, x1, x2, x, y, extrap=extrap, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
-        tid = data[0]
+        table_id = data[0]
         x1 = data[1]
         x2 = data[2]
         xy = data[3:]
@@ -1094,7 +1000,7 @@ class TABLEM3(Table):
         xy = xy.reshape(xy.size // 2, 2)
         x = xy[:, 0]
         y = xy[:, 1]
-        return TABLEM3(tid, x1, x2, x, y, comment=comment)
+        return TABLEM3(table_id, x1, x2, x, y, comment=comment)
 
     def raw_fields(self):
         xy = []
@@ -1153,8 +1059,9 @@ class TABLEM4(Table):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
-        tid = integer(card, 1, 'tid')
+        table_id = integer(card, 1, 'tid')
         x1 = double(card, 2, 'x1')
         x2 = double(card, 3, 'x2')
         x3 = double(card, 4, 'x3')
@@ -1172,7 +1079,7 @@ class TABLEM4(Table):
             a.append(ai)
             j += 1
         string(card, nfields, 'ENDT')
-        return TABLEM4(tid, x1, x2, x3, x4, a, comment=comment)
+        return TABLEM4(table_id, x1, x2, x3, x4, a, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -1185,14 +1092,15 @@ class TABLEM4(Table):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
-        tid = data[0]
+        table_id = data[0]
         x1 = data[1]
         x2 = data[2]
         x3 = data[3]
         x4 = data[4]
         a = data[3:]
-        return TABLEM4(tid, x1, x2, x3, x4, a, comment=comment)
+        return TABLEM4(table_id, x1, x2, x3, x4, a, comment=comment)
 
     def raw_fields(self):
         list_fields = ['TABLEM4', self.tid, self.x1, self.x2, self.x3, self.x4,
@@ -1204,6 +1112,19 @@ class TABLEM4(Table):
 
 
 class TABLES1(Table):
+    """
+    +---------+------+-------+-------+--------+-----+-------+------+------+
+    |    1    |   2  |   3   |   4   |    5   |  6  |   7   |  8   |   9  |
+    +=========+======+=======+=======+========+=====+=======+======+======+
+    | TABLES1 |  TID | TYPE  |       |        |     |       |      |      |
+    +---------+------+-------+-------+--------+-----+-------+------+------+
+    |         |  x1  |  y1   |   x2  |   y2   | x3  |  y3   | etc. | ENDT |
+    +---------+------+-------+-------+--------+-----+-------+------+------+
+    | TABLES1 |  32  |       |       |        |     |       |      |      |
+    +---------+------+-------+-------+--------+-----+-------+------+------+
+    |         |  0.0 |  0.0  |  0.01 |  1000. | 0.2 | 1500. | ENDT |      |
+    +---------+------+-------+-------+--------+-----+-------+------+------+
+    """
     type = 'TABLES1'
 
     def __init__(self, tid, x, y, Type=1, comment=''):
@@ -1218,10 +1139,13 @@ class TABLES1(Table):
             Type of stress-strain curve (1 or 2)
             1 - Cauchy (true) stress vs. total true strain
             2 - Cauchy (true) stress vs. plastic true strain (MSC only)
+            Type is MSC-specific and was added somewhere between
+            2006 and 2016.
         x, y : List[float]
             table values
         comment : str; default=''
             a comment for the card
+
         """
         Table.__init__(self)
         if comment:
@@ -1243,27 +1167,12 @@ class TABLES1(Table):
             a BDFCard object
         comment : str; default=''
             a comment for the card
-        """
-        tid = integer(card, 1, 'tid')
-        Type = integer_or_blank(card, 2, 'Type', 1)
 
-        nfields = len(card) - 1
-        nterms = (nfields - 9) // 2
-        if nterms < 0:
-            raise SyntaxError('%r card is too short' % cls.type)
-        xy = []
-        for i in range(nterms):
-            n = 9 + i * 2
-            if card.field(n) == 'ENDT':
-                break
-            x = double_or_string(card, n, 'x' + str(i + 1))
-            y = double_or_string(card, n + 1, 'y' + str(i + 1))
-            if x == 'SKIP' or y == 'SKIP':
-                continue
-            xy.append([x, y])
-        string(card, nfields, 'ENDT')
-        x, y = make_xy(tid, 'TABLES1', xy)
-        return TABLES1(tid, x, y, Type=Type, comment=comment)
+        """
+        table_id = integer(card, 1, 'tid')
+        Type = integer_or_blank(card, 2, 'Type', 1)
+        x, y = read_table(card, table_id, 'TABLES1')
+        return TABLES1(table_id, x, y, Type=Type, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -1276,14 +1185,15 @@ class TABLES1(Table):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
-        tid = data[0]
+        table_id = data[0]
         xy = data[1:]
         xy = np.array(xy, dtype='float64')
         xy = xy.reshape(xy.size // 2, 2)
         x = xy[:, 0]
         y = xy[:, 1]
-        return TABLES1(tid, x, y, Type=1, comment=comment)
+        return TABLES1(table_id, x, y, Type=1, comment=comment)
 
     def raw_fields(self):
         xy = []
@@ -1294,10 +1204,31 @@ class TABLES1(Table):
         return list_fields
 
     def repr_fields(self):
-        return self.raw_fields()
+        xy = []
+        for xi, yi in zip(self.x, self.y):
+            xy.extend([xi, yi])
+
+        # MSC 2005.2 doesn't support Type; 2016.1 does
+        stress_strain_curve_type = set_blank_if_default(self.Type, 1)
+        list_fields = ['TABLES1', self.tid, stress_strain_curve_type, None, None, None,
+                       None, None, None] + xy + ['ENDT']
+        return list_fields
 
 
 class TABLEST(Table):
+    """
+    +---------+-------+-------+-------+--------+------+------+------+------+
+    |    1    |   2   |   3   |   4   |    5   |  6  |   7   |  8   |   9  |
+    +=========+=======+=======+=======+========+=====+=======+======+======+
+    | TABLEST |  TID  |       |       |        |      |      |      |      |
+    +---------+-------+-------+-------+--------+------+------+------+------+
+    |         |   x1  |  y1   |   x2  |   y2   |  x3  |  y3  | etc. | ENDT |
+    +---------+-------+-------+-------+--------+------+------+------+------+
+    | TABLEST |   32  |       |       |        |      |      |      |      |
+    +---------+-------+-------+-------+--------+------+------+------+------+
+    |         | 150.0 |  10.0 | 175.0 |  20.   | ENDT |      |      |      |
+    +---------+-------+-------+-------+--------+------+------+------+------+
+    """
     type = 'TABLEST'
 
     def __init__(self, tid, x, y, comment=''):
@@ -1319,26 +1250,11 @@ class TABLEST(Table):
             a BDFCard object
         comment : str; default=''
             a comment for the card
-        """
-        tid = integer(card, 1, 'tid')
 
-        nfields = len(card) - 1
-        nterms = (nfields - 9) // 2
-        if nterms < 0:
-            raise SyntaxError('%r card is too short' % cls.type)
-        xy = []
-        for i in range(nterms):
-            n = 9 + i * 2
-            if card.field(n) == 'ENDT':
-                break
-            x = double_or_string(card, n, 'x' + str(i + 1))
-            y = double_or_string(card, n + 1, 'y' + str(i + 1))
-            if x == 'SKIP' or y == 'SKIP':
-                continue
-            xy.append([x, y])
-        string(card, nfields, 'ENDT')
-        x, y = make_xy(tid, 'TABLEST', xy)
-        return TABLEST(tid, x, y, comment=comment)
+        """
+        table_id = integer(card, 1, 'tid')
+        x, y = read_table(card, table_id, 'TABLEST')
+        return TABLEST(table_id, x, y, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -1351,14 +1267,15 @@ class TABLEST(Table):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
-        tid = data[0]
+        table_id = data[0]
         xy = data[1:]
         xy = np.array(xy, dtype='float64')
         xy = xy.reshape(xy.size // 2, 2)
         x = xy[:, 0]
         y = xy[:, 1]
-        return TABLEST(tid, x, y, comment=comment)
+        return TABLEST(table_id, x, y, comment=comment)
 
     def raw_fields(self):
         xy = []
@@ -1376,7 +1293,7 @@ class RandomTable(Table):
     type = 'TABLE??'
 
     def __init__(self):
-        pass
+        Table.__init__(self)
 
 
 class TABRND1(RandomTable):
@@ -1406,28 +1323,13 @@ class TABRND1(RandomTable):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
-        tid = integer(card, 1, 'tid')
+        table_id = integer(card, 1, 'tid')
         xaxis = string_or_blank(card, 2, 'xaxis', 'LINEAR')
         yaxis = string_or_blank(card, 3, 'yaxis', 'LINEAR')
-
-        nfields = len(card) - 1
-        nterms = (nfields - 9) // 2
-        if nterms < 0:
-            raise SyntaxError('%r card is too short' % cls.type)
-        xy = []
-        for i in range(nterms):
-            n = 9 + i * 2
-            if card.field(n) == 'ENDT':
-                break
-            x = double_or_string(card, n, 'x' + str(i + 1))
-            y = double_or_string(card, n + 1, 'y' + str(i + 1))
-            if x == 'SKIP' or y == 'SKIP':
-                continue
-            xy.append([x, y])
-        string(card, nfields, 'ENDT')
-        x, y = make_xy(tid, 'TABRND1', xy)
-        return TABRND1(tid, x, y, xaxis=xaxis, yaxis=yaxis, comment=comment)
+        x, y = read_table(card, table_id, 'TABRND1')
+        return TABRND1(table_id, x, y, xaxis=xaxis, yaxis=yaxis, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -1440,15 +1342,16 @@ class TABRND1(RandomTable):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
-        tid = data[0]
+        table_id = data[0]
         xaxis = _map_axis(data[1])
         yaxis = _map_axis(data[2])
         xy = data[3:]
         xy = np.array(xy, dtype='float64')
         x = xy[:, 0]
         y = xy[:, 1]
-        return TABRND1(tid, x, y, xaxis=xaxis, yaxis=yaxis, comment=comment)
+        return TABRND1(table_id, x, y, xaxis=xaxis, yaxis=yaxis, comment=comment)
 
     #def parse_fields(self, xy, nrepeated, is_data=False):
         #self.table = TableObj(xy, nrepeated, is_data)
@@ -1478,6 +1381,7 @@ class TABRNDG(RandomTable):
 
     Defines the power spectral density (PSD) of a gust for aeroelastic response
     analysis.
+
     """
     type = 'TABRNDG'
 
@@ -1499,6 +1403,7 @@ class TABRNDG(RandomTable):
             Root-mean-square gust velocity
         comment : str; default=''
             a comment for the card
+
         """
         RandomTable.__init__(self)
         if comment:
@@ -1525,12 +1430,13 @@ class TABRNDG(RandomTable):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
-        tid = integer(card, 1, 'tid')
+        table_id = integer(card, 1, 'tid')
         Type = integer(card, 2, 'Type')
         LU = double(card, 3, 'LU')
         WG = double(card, 4, 'WG')
-        return TABRNDG(tid, Type, LU, WG, comment=comment)
+        return TABRNDG(table_id, Type, LU, WG, comment=comment)
 
     def raw_fields(self):
         list_fields = ['TABRNDG', self.tid, self.Type, self.LU, self.WG]
@@ -1546,3 +1452,24 @@ def _map_axis(axis):
     else:
         raise ValueError('axis=%r' % axis)
     return axis_type
+
+def read_table(card, table_id, table_type):
+    """common method for reading tables that handles SKIP"""
+    nfields = len(card) - 1
+    nterms = (nfields - 9) // 2
+    if nterms < 0:
+        raise SyntaxError('%r card is too short' % table_type)
+
+    xy = []
+    for i in range(nterms):
+        n = 9 + i * 2
+        if card.field(n) == 'ENDT':
+            break
+        xi = double_or_string(card, n, 'x' + str(i + 1))
+        yi = double_or_string(card, n + 1, 'y' + str(i + 1))
+        if xi == 'SKIP' or yi == 'SKIP':
+            continue
+        xy.append([xi, yi])
+    string(card, nfields, 'ENDT')
+    x, y = make_xy(table_id, table_type, xy)
+    return x, y

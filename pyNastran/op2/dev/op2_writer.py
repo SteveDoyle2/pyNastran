@@ -251,7 +251,7 @@ class OP2Writer(OP2_F06_Common):
                     op2.write(pack('3i', *key))
                     op2_ascii.write(str(key) + '\n')
 
-                    spack = Struct(b(endian + '12i'))
+                    spack = Struct(endian + b'12i')
                     for eid in sorted(eids):
                         elem = obj.elements[eid]
                         nids = elem.node_ids
@@ -336,13 +336,13 @@ class OP2Writer(OP2_F06_Common):
 
         #op2_ascii.write('writing [3, 7, 0] header\n')
         #if markers == [3,]:  # PARAM, POST, -1
-            #self.read_markers([3])
+            #self.op2_reader.read_markers([3])
             #data = self.read_block()
 
-            #self.read_markers([7])
+            #self.op2_reader.read_markers([7])
             #data = self.read_block()
             #data = self._read_record()
-            #self.read_markers([-1, 0])
+            #self.op2_reader.read_markers([-1, 0])
         #elif markers == [2,]:  # PARAM, POST, -2
         if post == -1:
         #_write_markers(op2, op2_ascii, [3, 0, 7])
@@ -409,9 +409,9 @@ class OP2Writer(OP2_F06_Common):
 
 
         #if markers == [3,]:  # PARAM, POST, -2
-            #self.read_markers([3])
+            #self.op2_reader.read_markers([3])
             #data = self.read_block()
-            #self.read_markers([7])
+            #self.op2_reader.read_markers([7])
             #data = self.read_block()
             ##self.show(100)
             #data = self._read_record()

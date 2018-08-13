@@ -1,0 +1,44 @@
+SOL 103
+CEND
+TITLE = MSC.Nastran job
+ECHO = NONE
+$ Direct Text Input for Global Case Control Data
+SUBCASE 1
+$ Subcase name : Default
+   SUBTITLE=Default
+   SPC = 2
+   LOAD = 123458
+   DISPLACEMENT(PLOT,PRINT,SORT2,REAL)=ALL
+   SPCFORCES(PLOT,PRINT,SORT2,REAL)=ALL
+   STRESS(PLOT,PRINT,SORT2,REAL,VONMISES,BILIN)=ALL
+   STRAIN(PLOT,PRINT,SORT2,REAL,VONMISES,BILIN)=ALL
+   OLOAD(PLOT,PRINT,SORT2)=ALL
+   MPCFORCES(PLOT,PRINT,SORT2)=ALL
+   GPFORCE(PLOT,PRINT,SORT2)=ALL
+   GPKE=ALL
+   ESE(PLOT,SORT2)=ALL
+   FORCE(PLOT,PRINT,SORT2)=ALL
+   METHOD = 42
+BEGIN BULK
+PARAM    POST    -4
+PARAM    AUTOSPC NO
+PARAM   PRTMAXIM YES
+EIGRL	42			3
+
+INCLUDE 'geom.inc'
+MAT1     1      2.9+7   1.1+7   .32     .283
+
+$ Loads for Load Case : Default
+SPCADD   2       123456
+LOAD     123458 1.      1.       10000
+$ Displacement Constraints of Load Set : 123456
+SPC1     123456  123456  22      23      24      25
+SPC1     123456     456  5       thru    13
+$ Nodal Forces of Load Set : 10000
+FORCE    10000   13      0      10000.   0.      0.     1.
+$ Referenced Coordinate Frames
+$ global xyz
+CORD2R   1       0       0.      0.      0.      0.      0.      1.
+         1.      0.      0.
+ENDDATA 58e050da
+

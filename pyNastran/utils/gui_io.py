@@ -1,24 +1,28 @@
 import os
 import typing
 
+#try:
+    #import wx  # type: ignore
+    #_gui_mode = 'wx'
+
 try:
-    import wx  # type: ignore
-    _gui_mode = 'wx'
+    from PySide import QtCore, QtGui  # type: ignore
+    from PySide.QtGui import QWidget, QApplication, QFileDialog  # type: ignore
+    _gui_mode = 'pyside'
 except ImportError:
     try:
-        from PySide import QtCore, QtGui  # type: ignore
-        from PySide.QtGui import QWidget, QApplication, QFileDialog  # type: ignore
-        _gui_mode = 'pyside'
+        from PyQt4 import QtCore, QtGui  # type: ignore
+        from PyQt4.QtGui import QWidget, QApplication, QFileDialog  # type: ignore
+        _gui_mode = 'pyqt'
     except ImportError:
         try:
-            from PyQt4 import QtCore, QtGui  # type: ignore
-            from PyQt4.QtGui import QWidget, QApplication, QFileDialog  # type: ignore
+            from PyQt5 import QtCore, QtGui  # type: ignore
+            from PyQt5.QtWidgets import QWidget, QApplication, QFileDialog  # type: ignore
             _gui_mode = 'pyqt'
         except ImportError:
             try:
-                from PyQt5 import QtCore, QtGui  # type: ignore
-                from PyQt5.QtWidgets import QWidget, QApplication, QFileDialog  # type: ignore
-                _gui_mode = 'pyqt'
+                import wx  # type: ignore
+                _gui_mode = 'wx'
             except ImportError:
                 _gui_mode = None
 
@@ -63,7 +67,7 @@ def save_file_dialog(title, wx_wildcard, qt_wildcard, dirname=''):
     if dirname == '':
         dirname = os.getcwd()
 
-    if _gui_mode == 0: # wx
+    if _gui_mode == 'wx':
         app = wx.App(redirect=False)
         app.MainLoop()
         dlg = wx.FileDialog(None, title, dirname, "",
@@ -75,7 +79,7 @@ def save_file_dialog(title, wx_wildcard, qt_wildcard, dirname=''):
             dirname = dlg.GetDirectory()
             fname = os.path.join(dirname, filename)
 
-    elif _gui_mode in [1, 2]:  # PySide, PyQt4
+    elif _gui_mode in ['pyqt', 'pyside']:
         # checks if QApplication already exists
         app = QApplication.instance()
         if not app: # create QApplication if it doesnt exist
@@ -104,7 +108,8 @@ def load_file_dialog(title, wx_wildcard, qt_wildcard, dirname=''):
         dirname = os.getcwd()
 
     wildcard_level = None
-    if _gui_mode == 0: # wx
+    assert isinstance(_gui_mode, str), _gui_mode
+    if _gui_mode == 'wx': # wx
         app = wx.App(redirect=False)
         app.MainLoop()
         dlg = wx.FileDialog(None, title, dirname, "",
@@ -116,7 +121,7 @@ def load_file_dialog(title, wx_wildcard, qt_wildcard, dirname=''):
             dirname = dlg.GetDirectory()
             fname = os.path.join(dirname, filename)
 
-    elif _gui_mode in [1, 2]:  # PySide, PyQt4
+    elif _gui_mode in ['pyqt', 'pyside']:
         # checks if QApplication already exists
         app = QApplication.instance()
         if not app: # create QApplication if it doesnt exist
@@ -132,8 +137,8 @@ def load_file_dialog(title, wx_wildcard, qt_wildcard, dirname=''):
             fname = output
         app.exit()
     else:
-        msg = 'Could not import wx, PySide, or PyQt4.  '\
-            'Please specify the file explicitly.'
+        msg = 'Could not import wx, PySide, or PyQt4/5.  '\
+            'Please specify the file explicitly.' + '\ngui_mode=%r' % _gui_mode
         raise ImportError(msg)
     return fname, wildcard_level
 

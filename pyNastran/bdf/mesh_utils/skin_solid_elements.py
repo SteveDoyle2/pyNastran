@@ -29,13 +29,13 @@ def write_skin_solid_faces(model, skin_filename,
     write_shells : bool; default=False
         write newly created shell elements
         if there are shells in the model, doesn't write these
-
     size : int; default=8
         the field width
     is_double : bool; default=False
         double precision flag
     encoding : str; default=None -> system default
         the string encoding
+
     """
     if(len(model.element_ids) == 0 or len(model.material_ids) == 0 or
        len(model.property_ids) == 0):
@@ -122,6 +122,7 @@ def get_solid_skin_faces(model):
            the face nids in sorted order
        face : List(int, int, ...)
            the face nids
+
     """
     eid_faces = model.get_element_faces()
     face_set = defaultdict(int)
@@ -181,7 +182,6 @@ def _write_skin_solid_faces(model, skin_filename, face_map,
     face_map : dict[sorted_face] : face
         sorted_face : List[int, int, int] / List[int, int, int, int]
         face : List[int, int, int] / List[int, int, int, int]
-
     nids_to_write : List[int, int, ...]
         list of node ids to write
     eids_to_write : List[int, int, ...]
@@ -190,14 +190,12 @@ def _write_skin_solid_faces(model, skin_filename, face_map,
         list of material ids to write
     eid_set : dict[face] : eids
         ???
-
     eid_shell : int
         the next id to use for the shell id
     pid_shell : int
         the next id to use for the shell property
     mid_shell : int
         the next id to use for the shell material
-
     write_solids : bool; default=False
         write solid elements that have skinned faces
     write_shells : bool; default=True
@@ -208,6 +206,7 @@ def _write_skin_solid_faces(model, skin_filename, face_map,
         double precision flag
     encoding : str; default=None -> system default
         the string encoding
+
     """
     encoding = model.get_encoding(encoding)
     if PY2:

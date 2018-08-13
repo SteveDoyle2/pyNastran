@@ -1,4 +1,4 @@
-# pylint: disable=C0103,R0902,R0904,R0914
+# pylint: disable=C0103
 """
 All mass properties are defined in this file.  This includes:
 
@@ -9,13 +9,13 @@ All mass properties are PointProperty and Property objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import integer_types
-from pyNastran.bdf.cards.base_card import expand_thru
-from pyNastran.bdf.cards.base_card import BaseCard, Property
+from six import string_types
+from pyNastran.bdf.cards.base_card import expand_thru_by, expand_thru, BaseCard, Property
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, double, double_or_blank, string)
+    integer, integer_or_string, double, double_or_blank, string)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
+from pyNastran.utils import float_types, integer_types
 
 
 class NSMx(Property):
@@ -29,7 +29,7 @@ class NSMx(Property):
     valid_properties = [
         'PSHELL', 'PCOMP', 'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PBCOMP',
         'PROD', 'CONROD', 'PBEND', 'PSHEAR', 'PTUBE', 'PCONEAX', 'PRAC2D',
-        'ELEMENT',
+        'ELEMENT', 'PDUM8',
     ]
 
     def __init__(self, sid, nsm_type, pid_eid, value, comment=''):
@@ -61,9 +61,16 @@ class NSMx(Property):
         self.nsm_type = nsm_type
         self.id = pid_eid
         self.value = value
+        assert isinstance(pid_eid, integer_types), 'pid_eid=%s type=%s' % (pid_eid, type(pid_eid))
+        assert isinstance(value, float_types), 'value=%s type=%s' % (value, type(value))
+
         if self.nsm_type not in self.valid_properties:
             raise TypeError('nsm_type=%r must be in [%s]' % (
                 self.nsm_type, ', '.join(self.valid_properties)))
+
+    @property
+    def ids(self):
+        return [self.id]
 
     @classmethod
     def add_card(cls, card, icard=0, comment=''):
@@ -158,7 +165,9 @@ class NSM1x(Property):
                 ELEMENT
             }
         value : float
-            the non-structural pass per unit length/area
+            NSM1:  the non-structural pass per unit length/area
+            NSML1: the total non-structural pass per unit length/area;
+                   the nsm will be broken down based on a weighted area/length
         ids : List[int]
             property ids or element ids depending on nsm_type
         comment : str; default=''
@@ -167,8 +176,20 @@ class NSM1x(Property):
         Property.__init__(self)
         if comment:
             self.comment = comment
+
         if isinstance(ids, integer_types):
             ids = [ids]
+        if isinstance(ids, string_types):
+            assert ids == 'ALL', 'ids=%r is not ALL' % ids
+            ids = [ids]
+        else:
+            # With the 'THRU' and 'THRU', 'BY' forms, blanks fields are
+            # allowed for readability. Any combination of a list of IDs
+            # and 'THRU' and 'THRU', 'BY' is allowed. The "THRU" and "BY"
+            # lists may have missing IDs. That is the list of IDs in a
+            # THRU range need not be continuous.
+            ids = expand_thru_by(ids, allow_blanks=True)
+        assert len(ids) > 0, ids
         self.sid = sid
         self.nsm_type = nsm_type
 
@@ -185,6 +206,7 @@ class NSM1x(Property):
     def Type(self):
         """gets the nsm_type"""
         return self.nsm_type
+
     @Type.setter
     def Type(self, nsm_type):
         """sets the nsm_type"""
@@ -205,7 +227,21 @@ class NSM1x(Property):
         sid = integer(card, 1, 'sid')
         nsm_type = string(card, 2, 'Type')
         value = double(card, 3, 'value')
-        ids = card[4:]
+
+        # TODO: doesn't support 1 THRU 11 BY 2
+        ids = []
+        _id = 1
+        nfields = len(card)
+        if nfields == 5:
+            id1 = integer_or_string(card, 4, 'ID_1')
+            if id1 != 'ALL' and not isinstance(id1, int):
+                msg = ('*ID_1 = %r (field #4) on card must be an integer or ALL.\n'
+                       'card=%s' % (id1, card))
+                raise SyntaxError(msg)
+            ids = id1
+        else:
+            # we'll handle expansion in the init
+            ids = card[4:]
         return cls(sid, nsm_type, value, ids, comment=comment)
 
     def cross_reference(self, model):
@@ -239,9 +275,10 @@ class NSM1(NSM1x):
     +------+-----+------+-------+-----+----+----+----+----+
     """
     type = 'NSM1'
-    def __init__(self, sid, nsm_type, pid_eid, value, comment=''):
+    def __init__(self, sid, nsm_type, value, pid_eid, comment=''):
         """See ``NSM1x``"""
-        NSM1x.__init__(self, sid, nsm_type, pid_eid, value, comment='')
+        assert isinstance(value, float), 'NSM1; value=%r and must be a float' % (value)
+        NSM1x.__init__(self, sid, nsm_type, value, pid_eid, comment='')
 
 
 class NSM(NSMx):
@@ -300,13 +337,37 @@ class NSML1(NSM1x):
     """
     Defines lumped non structural mass entries by VALUE,ID list.
 
-    +-------+-----+------+-------+-----+----+----+----+----+
-    |   1   |  2  |  3   |   4   |  5  | 6  | 7  | 8  | 9  |
-    +=======+=====+======+=======+=====+====+====+====+====+
-    | NSML1 | SID | TYPE | VALUE | ID  | ID | ID | ID | ID |
-    +-------+-----+------+-------+-----+----+----+----+----+
-    |       |  ID |  ID  |  ID   | etc |    |    |    |    |
-    +-------+-----+------+-------+-----+----+----+----+----+
+    +-------+-------+---------+-------+-------+------+-------+------+------+
+    |   1   |   2   |    3    |   4   |   5   |  6   |   7   |  8   |  9   |
+    +=======+=======+=========+=======+=======+======+=======+======+======+
+    | NSML1 |  SID  |   TYPE  | VALUE |  ID   |  ID  |   ID  |  ID  |  ID  |
+    +-------+-------+---------+-------+-------+------+-------+------+------+
+    |       |   ID  |    ID   |  ID   |  etc  |      |       |      |      |
+    +-------+-------+---------+-------+-------+------+-------+------+------+
+    | NSML1 |   3   | ELEMENT |  .044 |  1240 | 1500 |       |      |      |
+    +-------+-------+---------+-------+-------+------+-------+------+------+
+    | NSML1 |  SID  |  TYPE   | VALUE |   ID  | THRU |   ID  |  ID  | THRU |
+    +-------+-------+---------+-------+-------+------+-------+------+------+
+    |       |   ID  |    ID   | THRU  |   ID  |  ID  |  THRU |  ID  |  ID  |
+    +-------+-------+---------+-------+-------+------+-------+------+------+
+    |       |  THRU |    ID   |  ...  |       |      |       |      |      |
+    +-------+-------+---------+-------+-------+------+-------+------+------+
+    | NSML1 |   15  |  PSHELL |  .067 |  1240 | THRU |  1760 |      |      |
+    +-------+-------+---------+-------+-------+------+-------+------+------+
+    |       |  2567 |   THRU  |  2568 | 35689 | THRU | 40998 |      |      |
+    +-------+-------+---------+-------+-------+------+-------+------+------+
+    |       |   76  |   THRU  |  300  |       |      |       |      |      |
+    +-------+-------+---------+-------+-------+------+-------+------+------+
+    | NSML1 |  SID  |   TYPE  | VALUE |   ID  | THRU |   ID  |  BY  |   N  |
+    +-------+-------+---------+-------+-------+------+-------+------+------+
+    |       |   ID  |   THRU  |   ID  |   BY  |   N  |       |      |      |
+    +-------+-------+---------+-------+-------+------+-------+------+------+
+    | NSML1 |   3   |  PSHELL |  .067 |  1240 | THRU |  1760 | 1763 | 1764 |
+    +-------+-------+---------+-------+-------+------+-------+------+------+
+    |       |  2567 |   THRU  |  2568 | 35689 |  TO  | 40999 |  BY  |   2  |
+    +-------+-------+---------+-------+-------+------+-------+------+------+
+    |       | 76666 |  76668  | 79834 |       |      |       |      |      |
+    +-------+-------+---------+-------+-------+------+-------+------+------+
     """
     type = 'NSML1'
     def __init__(self, sid, nsm_type, value, ids, comment=''):
@@ -331,6 +392,7 @@ class NSML1(NSM1x):
         comment : str; default=''
             a comment for the card
         """
+        assert isinstance(value, float), 'NSML1; value=%r and must be a float' % (value)
         NSM1x.__init__(self, sid, nsm_type, value, ids, comment=comment)
 
 
@@ -432,7 +494,7 @@ class NSMADD(BaseCard):
 
     def safe_cross_reference(self, model, debug=True):
         nsms = []
-        msg = ' which is required by NSMADD=%s' % self.sid
+        msg = ', which is required by NSMADD=%s' % self.sid
         for nsm_id in self.sets:
             try:
                 nsm = model.NSM(nsm_id, msg=msg)
@@ -545,7 +607,7 @@ class PMASS(Property):
     def uncross_reference(self):
         pass
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         pid = self.Pid()
         mass = self.Mass()
         assert isinstance(pid, integer_types), 'pid=%r' % pid

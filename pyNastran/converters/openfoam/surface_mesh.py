@@ -1,7 +1,8 @@
 from __future__ import print_function
 from numpy import zeros
 from pyNastran.converters.openfoam.openfoam_parser import (
-    write_dict, FoamFile, convert_to_dict)
+    #write_dict,
+    FoamFile, convert_to_dict)
 from pyNastran.bdf.field_writer import print_card_8
 
 
@@ -9,11 +10,11 @@ class Points(object):
     def __init__(self):
         foam_points = FoamFile('points')
         lines = foam_points.read_foam_file()
-        self.d = convert_to_dict(self, lines)
+        self.points_dict = convert_to_dict(self, lines)
 
     def read_points(self):
         #print write_dict(d, baseword='Points = ')
-        keys = self.d.keys()
+        keys = self.points_dict.keys()
 
         ifoam = keys.index('FoamFile')
         keys.pop(ifoam)
@@ -21,7 +22,7 @@ class Points(object):
         npoints = keys[0]
         print("npoints = ", npoints)
 
-        nodes = self.d[npoints]
+        nodes = self.points_dict[npoints]
         #f = open('points2.bdf', 'wb')
         #f.write('CEND\n')
         #f.write('BEGIN BULK\n')
@@ -41,12 +42,12 @@ class Points(object):
 
 class Faces(object):
     def __init__(self):
-        f = FoamFile('faces')
-        lines = f.read_foam_file()
-        self.d = convert_to_dict(self, lines)
+        foam_file = FoamFile('faces')
+        lines = foam_file.read_foam_file()
+        self.foam_dict = convert_to_dict(self, lines)
 
     def read_faces(self):
-        keys = self.d.keys()
+        keys = self.foam_dict.keys()
 
         ifoam = keys.index('FoamFile')
         keys.pop(ifoam)
@@ -54,7 +55,7 @@ class Faces(object):
         nfaces = keys[0]
         print("nfaces = ", nfaces)
 
-        faces = self.d[nfaces]
+        faces = self.foam_dict[nfaces]
         nfaces = len(faces)
         faces_array = zeros((nfaces, 4), dtype='int32')
         for iface, face in enumerate(faces):
@@ -71,12 +72,12 @@ class Faces(object):
         return faces_array
 
 def main():
-    fp = Points()
-    nodes = fp.read_points()
-    nnodes = nodes.shape[0]
+    foam_points = Points()
+    nodes = foam_points.read_points()
+    unused_nnodes = nodes.shape[0]
 
-    fe = Faces()
-    quads = fe.read_faces()
+    foam_faces = Faces()
+    quads = foam_faces.read_faces()
     quads += 1
 
     with open('points_faces.bdf', 'wb') as bdf_file:

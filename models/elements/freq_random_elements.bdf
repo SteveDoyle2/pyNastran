@@ -1,0 +1,105 @@
+SOL 108
+CEND
+TITLE = MSC.Nastran job
+ECHO = NONE
+$ Direct Text Input for Global Case Control Data
+SUBCASE 1
+$ Subcase name : Default
+   SUBTITLE=Default
+   SPC = 2
+   LOAD = 123458
+   RANDOM = 10
+   DISPLACEMENT(PLOT,PRINT,SORT1,IMAG,RALL,RPRINT,RPUNCH)=ALL
+   SPCFORCES(PLOT,PRINT,SORT1,IMAG,RALL,RPRINT,RPUNCH)=ALL
+   STRESS(PLOT,PRINT,SORT1,VONMISES,BILIN,IMAG,RALL,RPRINT,RPUNCH)=ALL
+   STRAIN(PLOT,PRINT,SORT1,VONMISES,BILIN,IMAG,RALL,RPRINT,RPUNCH)=ALL
+   OLOAD(PLOT,PRINT,IMAG,RALL,RPRINT,RPUNCH,sort1)=ALL
+   MPCFORCES(PLOT,PRINT,IMAG,RALL,RPRINT,RPUNCH,sort1)=ALL
+   GPFORCE(PLOT,PRINT,IMAG,RALL,RPRINT,RPUNCH,sort1)=ALL
+   FORCE(PLOT,PRINT,IMAG,RALL,RPRINT,RPUNCH,sort1)=ALL
+   ESE(PLOT,IMAG,RALL,RPRINT,RPUNCH,sort1)=ALL
+   GPKE=ALL
+   METHOD = 42
+   FREQUENCY = 22  $ defines frequency parameters
+   DLOAD     = 32  $ points to the RLOAD2 cards
+BEGIN BULK
+PARAM    POST    -1
+PARAM    AUTOSPC NO
+PARAM   PRTMAXIM YES
+EIGRL	42			3
+$
+RANDPS  10      1       1       4.              1
+RANDPS  10      2       2       8.              1
+RANDT1  10      4       0.0     0.4
+TABLED1 1                                                               +TAB1
++TAB1   0.      1.      1.      1.      ENDT
+TABRNDG 1       1       .2      6.
+$
+$  1. Applied Load - AssemblyLoad
+$     References an AssemblyElasticBody named Right Superelement
+$DAREA  sid             nodeID1         compID1         value1
+DAREA*  8001            13              1                           1.e0
+
+$ loadMotionProfile named Applied Load Profile - SinusoidalSeriesLoadMotionProfile
+$RLOAD2 LOAD_ID         exciteID        delay           dPhase
+$       xTable          yTable          Load
+RLOAD2* 8001            8001                        0.e0            0.e0
+*       8003            8004            LOAD
+$ Defines Magnitude vs. Frequency
+$TABLEx TableID         InterpType
+$       Frequency       Magnitude       Frequency       Magnitude
+TABLED1*8003            LINEAR          LINEAR
+*
+*                   0.e0            0.e0            1.e1            0.e0
+*                   2.e1            0.e0            3.e1            0.e0
+*                   4.e1  1.0141996972e4            5.e1            0.e0
+*                   6.e1            0.e0            7.e1            0.e0
+*                   8.e2            0.e0ENDT
+*
+TABLED1*8004            LINEAR          LINEAR
+*
+*                   0.e0            0.e0            1.e1            0.e0
+*                   2.e1            0.e0            3.e1            0.e0
+*                   4.e1  1.0141996972e4            5.e1            0.e0
+*                   6.e1            0.e0            7.e1            0.e0
+*                   8.e2            0.e0ENDT
+*
+$-------------------------------------------------------------------------------
+$ this is a preload buckling case
+$FREQ   FreqID          Freq1           Freq2           etc
+FREQ*   22                         1.e-5            1.e1            2.e1
+*                   3.e1            4.e1
+$ freq1
+FREQ1	23		10.
+$ freq2
+FREQ2	24	2.	10000.
+$ freq3
+FREQ3	25	0.
+$ freq4
+FREQ4	26
+$ freq5
+FREQ5	27	0.	1000.	0.1	0.2	0.3	0.4
+$
+$DLOAD  dLoadID         GlobalScale     Scale           LoadID
+$       Scale           LoadID
+DLOAD*  32                          1.e0            1.e0 8001
+*
+$-------------------------------------------------------------------------------
+
+
+INCLUDE 'geom.inc'
+MAT1     1      2.9+7   1.1+7   .32     .283
+
+$ Loads for Load Case : Default
+SPCADD   2       123456
+LOAD     123458 1.      1.       10000
+$ Displacement Constraints of Load Set : 123456
+SPC1     123456  123456  22      23      24      25
+SPC1     123456     456  5       thru    13
+$ Nodal Forces of Load Set : 10000
+FORCE    10000   13      0      10000.   0.      0.     1.
+$ Referenced Coordinate Frames
+$ global xyz
+CORD2R   1       0       0.      0.      0.      0.      0.      1.
+         1.      0.      0.
+ENDDATA 58e050da

@@ -2,7 +2,7 @@ from __future__ import print_function
 from collections import defaultdict
 from six import iteritems
 from numpy import array, linspace, hstack, vstack
-from pyNastran.bdf.cards.aero import points_elements_from_quad_points
+from pyNastran.bdf.cards.aero.utils import points_elements_from_quad_points
 from pyNastran.utils.log import get_logger2
 
 

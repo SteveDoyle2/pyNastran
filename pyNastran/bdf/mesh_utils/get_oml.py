@@ -17,6 +17,8 @@ def get_oml_eids(bdf_filename, eid_start, theta_tol=30.,
     """
     extracts the OML faces (outer mold line)
 
+    Parameters
+    ----------
     bdf_filename : str or BDF()
         the bdf filename
     eid_start : int
@@ -46,7 +48,9 @@ def get_oml_eids(bdf_filename, eid_start, theta_tol=30.,
         eids=None, map_names=None,
         consider_0d=False, consider_0d_rigid=False,
         consider_1d=False, consider_2d=True, consider_3d=False)
-    (edge_to_eid_map, eid_to_edge_map, nid_to_edge_map) = maps
+    edge_to_eid_map = maps['edge_to_eid_map']
+    eid_to_edge_map = maps['eid_to_edge_map']
+    nid_to_edge_map = maps['nid_to_edge_map']
 
     #free_edges = get_free_edges(model, maps=maps)
     #---------------------------------
@@ -66,7 +70,7 @@ def get_oml_eids(bdf_filename, eid_start, theta_tol=30.,
     while eids_next:
         eid_starts = deepcopy(eids_next)
         eids_oml_start = deepcopy(eids_oml)
-        print(len(eid_starts))
+        model.log.warning(len(eid_starts))
         while eid_starts:
             eid_start = eid_starts.pop()
             normal_start = normals[eid_start]
@@ -119,7 +123,7 @@ def get_oml_eids(bdf_filename, eid_start, theta_tol=30.,
         #eids_next = eids_next.difference(eid_starts)
         #print('eids_next =', eids_next)
         #print('-------------------------------')
-    print('done...')
+    model.log.warning('done...')
 
     with open('eids_oml.txt', 'w') as eids_file:
         eids_file.write('eids_oml = %s\n' % list(eids_oml))
@@ -131,5 +135,5 @@ def main():
     eid_start = 2810
     eids_oml = get_oml_eids(bdf_filename, eid_start)
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()

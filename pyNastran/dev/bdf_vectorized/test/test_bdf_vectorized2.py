@@ -16,7 +16,7 @@ import warnings
 from six import iteritems
 warnings.simplefilter('always')
 numpy.seterr(all='raise')
-import traceback
+#import traceback
 #import resource
 
 from pyNastran.utils import print_bad_path

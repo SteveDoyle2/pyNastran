@@ -11,12 +11,21 @@ Defines:
 from __future__ import print_function
 import os
 from struct import pack, unpack
+from collections import OrderedDict
 
 from six.moves import range
-from numpy import array, zeros, where
 import numpy as np
+from pyNastran.utils import print_bad_path
 from pyNastran.utils.log import get_logger2
 
+
+def read_usm3d(basename, log=None, debug=None):
+    """reads a usm3d file"""
+    model = Usm3d(log=log, debug=debug)
+    #model.read_cogsg(cogsg_filename, stop_after_header=False)
+    unused_dimension_flag = None
+    model.read_usm3d(basename, unused_dimension_flag, read_loads=True)
+    return model
 
 class Usm3d(object):
     """
@@ -53,6 +62,20 @@ class Usm3d(object):
     }
 
     def __init__(self, log=None, debug=None):
+        """
+        Initializes the Usm3d object
+
+        Parameters
+        ----------
+        debug : bool/None; default=True
+            used to set the logger if no logger is passed in
+                True:  logs debug/info/error messages
+                False: logs info/error messages
+                None:  logs error messages
+        log : logging module object / None
+            if log is set, debug is ignored and uses the
+            settings the logging object has
+        """
         self.nodes = None
         self.tris = None
         self.tets = None
@@ -115,13 +138,13 @@ class Usm3d(object):
             mapbc[int(patch_id)] = [int(bc), int(family), int(surf), surf_ids]
         return mapbc
 
-    def read_usm3d(self, basename, dimension_flag, read_loads=True):
+    def read_usm3d(self, basename, unused_dimension_flag, read_loads=True):
         """
         Parameters
         ----------
         basename : str
             the root path to the *.cogsg, *.bc, *.mapbc, *.face, *.front files
-        dimension_flag : int; unused
+        unused_dimension_flag : int; unused
             ???
             2?/3
         read_loads : bool; default=True
@@ -158,8 +181,8 @@ class Usm3d(object):
         """
         cogsg_filename = basename + '.cogsg'
         bc_filename = basename + '.bc'
-        face_filename = basename + '.face'
-        front_filename = basename + '.front'
+        unused_face_filename = basename + '.face'
+        unused_front_filename = basename + '.front'
         mapbc_filename = basename + '.mapbc'
         flo_filename = None
 
@@ -187,12 +210,14 @@ class Usm3d(object):
             flo_filename = basename + '.flo'
 
         nodes, elements = self.read_cogsg(cogsg_filename)
+
         try:
-            header, tris, bcs = self.read_bc(bc_filename)
+            unused_header, tris, bcs = self.read_bc(bc_filename)
         except IOError:
             tris = None
             bcs = None
             self.log.error('Cannot find %r...skipping; required for geometry' % bc_filename)
+
         try:
             mapbc = self.read_mapbc(mapbc_filename)
         except IOError:
@@ -206,7 +231,7 @@ class Usm3d(object):
         if read_loads and os.path.exists(flo_filename):
             npoints = nodes.shape[0]
             try:
-                node_ids_volume, loads = self.read_flo(flo_filename, n=npoints)
+                unused_node_ids_volume, loads = self.read_flo(flo_filename, n=npoints)
             except:
                 self.log.error('Had trouble reading %r...' % flo_filename)
                 raise
@@ -217,7 +242,6 @@ class Usm3d(object):
         return nodes, elements, tris, bcs, mapbc, loads, flo_filename
         #self.read_front(front_file)
         #self.read_face(face_file)
-
 
     def write_usm3d(self, basename):
         """
@@ -245,19 +269,19 @@ class Usm3d(object):
             return header, None, None
 
         if get_lbouf:
-            lbouf = zeros((ntris, 4), dtype='int32')
+            lbouf = np.zeros((ntris, 4), dtype='int32')
             for i in range(ntris):
                 line = lines[i+2].strip()
                 #print('%r' % line)
-                (n, isurf, n1, n2, n3) = line.split()
+                (unused_n, isurf, n1, n2, n3) = line.split()
                 lbouf[i, :] = [isurf, n1, n2, n3]
             return header, lbouf
         else:
-            tris = zeros((ntris, 3), dtype='int32')
-            bcs = zeros(ntris, dtype='int32')
+            tris = np.zeros((ntris, 3), dtype='int32')
+            bcs = np.zeros(ntris, dtype='int32')
 
             for i in range(ntris):
-                (n, isurf, n1, n2, n3) = lines[i+2].split()
+                (unused_n, isurf, n1, n2, n3) = lines[i+2].split()
                 tris[i] = [n1, n2, n3]
                 bcs[i] = isurf
             tris = tris - 1
@@ -275,6 +299,7 @@ class Usm3d(object):
         tet_elements : ???
            ???
         """
+        assert os.path.exists(cogsg_filename), print_bad_path(cogsg_filename)
         with open(cogsg_filename, 'rb') as cogsg_file:
             # nelements * 4 * 4 + 32 ???
             dummy = cogsg_file.read(4)  # 1022848
@@ -328,7 +353,7 @@ class Usm3d(object):
                 data = cogsg_file.read(4 * data_length)
 
                 faces = unpack(str_format, data)
-                faces = array(faces)
+                faces = np.array(faces)
                 faces = faces.reshape((nfaces, 3))
             else:
                 faces = None
@@ -353,32 +378,17 @@ class Usm3d(object):
             else:
                 if self.precision == 'double':
                     str_format = '>%sd' % nnodes
-                    node_array_format = 'float64'
+                    unused_node_array_format = 'float64'
                 elif self.precision == 'single':
                     str_format = '>%sd' % nnodes
-                    node_array_format = 'float32'
+                    unused_node_array_format = 'float32'
                 else:
                     raise RuntimeError('precision = %r' % self.precision)
 
-                if 0:
-                    data = cogsg_file.read(data_length)
-                    X = unpack(str_format, data)
-                    data = cogsg_file.read(data_length)
-                    Y = unpack(str_format, data)
-                    data = cogsg_file.read(data_length)
-                    Z = unpack(str_format, data)
-                    nodes = np.array([X, Y, Z])
-
-                    nodes = np.zeros((nnodes, 3), node_array_format)
-                    nodes[:, 0] = X
-                    nodes[:, 1] = Y
-                    nodes[:, 2] = Z
-                    del X, Y, Z
-                else:
-                    data = cogsg_file.read(3 * data_length)
-                    assert self.precision == 'single', self.precision
-                    nodes = np.fromstring(data, '>4f').reshape(3, nnodes).T
-                    #nodes = np.fromstring(data, '>4f').reshape(nnodes, 3)
+                data = cogsg_file.read(3 * data_length)
+                assert self.precision == 'single', self.precision
+                nodes = np.frombuffer(data, '>4f').reshape(3, nnodes).T.copy()
+                #nodes = np.frombuffer(data, '>4f').reshape(nnodes, 3).copy()
 
 
             cogsg_file.read(nnodes * 3 * 8)  # 3 -> xyz, 8 -> double precision ???
@@ -414,25 +424,16 @@ class Usm3d(object):
         self.log.debug('tell volume = %s' % cogsg_file.tell())
         # surface + volume cells ???
         nelements = self.header['nElements']
-        str_format = '>%si' % nelements
+        #str_format = '>%si' % nelements
 
 
         self.log.debug("fv.tell = %s" % cogsg_file.tell())
-        use_fromstring = True
+        ndata = 4 * (4 * nelements)
+        data = cogsg_file.read(ndata)
 
-        if use_fromstring:
-            ndata = 4 * (4 * nelements)
-            data = cogsg_file.read(ndata)
-
-            # the 4 means that we make a (nelements, 4) array?
-            elements = np.fromstring(data, dtype='>4f') - 1
-        else:
-            elements = np.zeros((nelements, 4), 'int32')
-            for i in range(4): #  tets
-                data = cogsg_file.read(4 * nelements)
-                elements[:, i] = unpack(str_format, data)
-            elements -= 1
-
+        # the 4 means that we make a (nelements, 4) array?
+        elements = np.frombuffer(data, dtype='>i').copy() - 1
+        elements = elements.reshape((4, nelements)).T
         assert elements.shape == (nelements, 4), elements.shape
 
         dummy2 = cogsg_file.read(4)
@@ -445,29 +446,21 @@ class Usm3d(object):
         #-----------------------------------
         # nodes
         nnodes = self.header['nPoints']
-        str_format = '>%sd' % nnodes
+        #str_format = '>%sd' % nnodes
 
         dummy3 = cogsg_file.read(4)  # nnodes * 3 * 8
         dummy3_int, = unpack('>i', dummy3)
         #assert dummy3_int == 298560
         self.log.debug("dummy3 = %i" % unpack('>i', dummy3)) #, unpack('>f', dummy3)
 
-        if use_fromstring:
-            data_length = 8 * nnodes
-            data = cogsg_file.read(3 * data_length)
-            assert self.precision == 'double', self.precision
-            nodes = np.fromstring(data, '>d').reshape(3, nnodes).T
+        data_length = 8 * nnodes
+        data = cogsg_file.read(3 * data_length)
+        assert self.precision == 'double', self.precision
+        nodes = np.frombuffer(data, '>d').reshape(3, nnodes).T
 
-            # the ravel creates a copy that we can then use to put in
-            # a contigous order
-            nodes = np.asarray(nodes.ravel(), dtype='<d').reshape(nnodes, 3)
-        else:
-            nodes = zeros((nnodes, 3), 'float64')
-            for i in range(3): #  x, y, z
-                data = cogsg_file.read(8 * nnodes)
-                assert len(data) == (8 * nnodes)
-                nodes[:, i] = unpack(str_format, data)
-
+        # the ravel creates a copy that we can then use to put in
+        # a contigous order
+        nodes = np.asarray(nodes.ravel(), dtype='<d').reshape(nnodes, 3)
 
         dummy4 = cogsg_file.read(4) # nnodes * 3 * 8
         dummy4_int, = unpack('>i', dummy4)
@@ -498,13 +491,13 @@ class Usm3d(object):
             the specific points to read (n must be set to None).
 
         nvars = 5
-          - (nodeID,rho,rhoU,rhoV,rhoW) = sline
+          - (nodeID, rho, rhoU, rhoV, rhoW) = sline
             (e) = line
 
         nvars = 6
-          - (nodeID,rho,rhoU,rhoV,rhoW,e) = line
+          - (nodeID, rho, rhoU, rhoV, rhoW, e) = line
 
-        Also, stupid Nastran-esque float formatting is sometimes used,
+        Also, Nastran-esque float formatting is sometimes used,
         so 5.0-100 exists, which is 5.0E-100.  We just assume it's 0.
 
         Returns
@@ -517,52 +510,77 @@ class Usm3d(object):
             data : (nnodes, ) float ndarray
                 the data corresponding to the result_name
         """
-        result_names = ['Mach', 'U', 'V', 'W', 'T', 'rho', 'rhoU', 'rhoV', 'rhoW', 'p', 'Cp']
+        node_id, loads = read_flo(flo_filename, n=n, node_ids=node_ids)
+        return node_id, loads
 
-        is_sparse = None
-        if n is None:
-            assert node_ids is not None, node_ids
-            assert len(node_ids) > 0, node_ids
-            n = len(node_ids)
-            is_sparse = True
+def read_flo(flo_filename, n=None, node_ids=None):
+    """reads a *.flo file"""
+    result_names = ['Mach', 'U', 'V', 'W', 'T', 'rho', 'rhoU', 'rhoV', 'rhoW', 'p', 'Cp']
+
+    is_sparse = None
+    if n is None:
+        assert node_ids is not None, node_ids
+        assert len(node_ids) > 0, node_ids
+        n = len(node_ids)
+        is_sparse = True
+    else:
+        assert node_ids is None, node_ids
+        is_sparse = False
+
+    #formatCode = 2
+    node_id = np.zeros(n, 'int32')
+    rho = np.zeros(n, 'float32')
+    rhoU = np.zeros(n, 'float32')
+    rhoV = np.zeros(n, 'float32')
+    rhoW = np.zeros(n, 'float32')
+    e = np.zeros(n, 'float32')
+
+    with open(flo_filename, 'r') as flo_file:
+        line = flo_file.readline().strip()
+        try:
+            #file is messsed up
+            mach = float(line)
+        except:
+            raise
+            #loads['Cp'] = e  # it's 0 anyways...
+            #return node_id, loads
+
+
+        # determine the number of variables on each line
+        sline1 = flo_file.readline().strip().split()
+        nvars = None
+        if len(sline1) == 6:
+            nvars = 6
+            rhoi = parse_float(sline1[1])
+            rhoui = parse_float(sline1[2])
+            rhovi = parse_float(sline1[3])
+            rhowi = parse_float(sline1[4])
+            ei = parse_float(sline1[5])
         else:
-            assert node_ids is None, node_ids
-            is_sparse = False
+            nvars = 5
+            rhoi = parse_float(sline1[1])
+            rhoui = parse_float(sline1[2])
+            rhovi = parse_float(sline1[3])
+            rhowi = parse_float(sline1[4])
 
-        #formatCode = 2
-        node_id = np.zeros(n, 'int32')
-        rho = np.zeros(n, 'float32')
-        rhoU = np.zeros(n, 'float32')
-        rhoV = np.zeros(n, 'float32')
-        rhoW = np.zeros(n, 'float32')
-        e = np.zeros(n, 'float32')
+            sline2 = flo_file.readline().strip().split()
+            ei = parse_float(sline2)
 
-        with open(flo_filename, 'r') as flo_file:
-            line = flo_file.readline().strip()
-            try:
-                #file is messsed up
-                mach = float(line)
-            except:
-                raise
-                #loads['Cp'] = e  # it's 0 anyways...
-                #return node_id, loads
-
-
-            # determine the number of variables on each line
-            sline1 = flo_file.readline().strip().split()
-            nvars = None
-            if len(sline1) == 6:
-                nvars = 6
-                rhoi, rhoui, rhovi, rhowi, ei = parse_floats(sline1[1:], 5)
-            else:
-                nvars = 5
-                rhoi, rhoui, rhovi, rhowi = parse_floats(sline1[1:], 4)
-                sline2 = flo_file.readline().strip().split()
-                ei = parse_floats(sline2, 1)[0]
-
-            # set the i=0 values
-            if not is_sparse:
-                nmax = n
+        # set the i=0 values
+        if not is_sparse:
+            nmax = n
+            i = 0
+            node_id[i] = sline1[0]
+            rho[i] = rhoi
+            rhoU[i] = rhoui
+            rhoV[i] = rhovi
+            rhoW[i] = rhowi
+            e[i] = ei
+        else:
+            ni = 0
+            node_ids_minus_1 = np.array(node_ids) - 1
+            nmax = node_ids_minus_1.max() + 1
+            if 0 in node_ids_minus_1:
                 i = 0
                 node_id[i] = sline1[0]
                 rho[i] = rhoi
@@ -570,170 +588,171 @@ class Usm3d(object):
                 rhoV[i] = rhovi
                 rhoW[i] = rhowi
                 e[i] = ei
-            else:
-                ni = 0
-                node_ids_minus_1 = array(node_ids) - 1
-                nmax = node_ids_minus_1.max() + 1
-                if 0 in node_ids_minus_1:
-                    i = 0
+                ni += 1
+
+        # loop over the rest of the data in the flo file
+        if node_ids is None:
+            ni = n
+            # extract nodes 1, 2, ... 10, but not 11+
+            if nvars == 6:  # sequential nvars=6
+                for i in range(1, n):
+                    sline1 = flo_file.readline().strip().split()
+                    rhoi = parse_float(sline1[1])
+                    rhoui = parse_float(sline1[2])
+                    rhovi = parse_float(sline1[3])
+                    rhowi = parse_float(sline1[4])
+                    ei = parse_float(sline1[5])
+
                     node_id[i] = sline1[0]
                     rho[i] = rhoi
                     rhoU[i] = rhoui
                     rhoV[i] = rhovi
                     rhoW[i] = rhowi
                     e[i] = ei
-                    ni += 1
+                    assert len(sline1) == 6, 'len(sline1)=%s' % len(sline1)
+            else:  # sequential nvars=5
+                for i in range(1, n):
+                    sline1 = flo_file.readline().strip().split()
+                    rhoi = parse_float(sline1[1])
+                    rhoui = parse_float(sline1[2])
+                    rhovi = parse_float(sline1[3])
+                    rhowi = parse_float(sline1[4])
+                    assert len(sline1) == 5, 'len(sline1)=%s' % len(sline1)
 
-            # loop over the rest of the data in the flo file
-            if node_ids is None:
-                ni = n
-                # extract nodes 1, 2, ... 10, but not 11+
-                if nvars == 6:  # sequential nvars=6
-                    for i in range(1, n):
+                    sline2 = flo_file.readline().strip().split()
+                    ei = parse_float(sline2)
+
+                    node_id[i] = sline1[0]
+                    rho[i] = rhoi
+                    rhoU[i] = rhoui
+                    rhoV[i] = rhovi
+                    rhoW[i] = rhowi
+                    e[i] = ei
+                    assert len(sline2) == 1, 'len(sline2)=%s' % len(sline2)
+        else:
+            # extract node 1, 2, and 10
+            if nvars == 6:  # dynamic nvars=6
+                for i in range(1, nmax):
+                    if i in node_ids_minus_1:
                         sline1 = flo_file.readline().strip().split()
-                        rhoi, rhoui, rhovi, rhowi, ei = parse_floats(sline1[1:], 5)
-                        node_id[i] = sline1[0]
-                        rho[i] = rhoi
-                        rhoU[i] = rhoui
-                        rhoV[i] = rhovi
-                        rhoW[i] = rhowi
-                        e[i] = ei
+                        rhoi = parse_float(sline1[1])
+                        rhoui = parse_float(sline1[2])
+                        rhovi = parse_float(sline1[3])
+                        rhowi = parse_float(sline1[4])
+                        ei = parse_float(sline1[5])
+
+                        node_id[ni] = sline1[0]
+                        rho[ni] = rhoi
+                        rhoU[ni] = rhoui
+                        rhoV[ni] = rhovi
+                        rhoW[ni] = rhowi
+                        e[ni] = ei
                         assert len(sline1) == 6, 'len(sline1)=%s' % len(sline1)
-                else:  # sequential nvars=5
-                    for i in range(1, n):
+                        ni += 1
+                    else:
+                        unused_line1 = flo_file.readline()
+            else:  # dynamic nvars=5
+                for i in range(1, nmax):
+                    if i in node_ids_minus_1:
                         sline1 = flo_file.readline().strip().split()
-                        rhoi, rhoui, rhovi, rhowi = parse_floats(sline1[1:], 4)
+                        rhoi = parse_float(sline1[1])
+                        rhoui = parse_float(sline1[2])
+                        rhovi = parse_float(sline1[3])
+                        rhowi = parse_float(sline1[4])
                         assert len(sline1) == 5, 'len(sline1)=%s' % len(sline1)
 
                         sline2 = flo_file.readline().strip().split()
-                        ei = parse_floats(sline2, 1)[0]
+                        ei = parse_float(sline2[1])
 
-                        node_id[i] = sline1[0]
-                        rho[i] = rhoi
-                        rhoU[i] = rhoui
-                        rhoV[i] = rhovi
-                        rhoW[i] = rhowi
-                        e[i] = ei
+                        node_id[ni] = sline1[0]
+                        rho[ni] = rhoi
+                        rhoU[ni] = rhoui
+                        rhoV[ni] = rhovi
+                        rhoW[ni] = rhowi
+                        e[ni] = ei
                         assert len(sline2) == 1, 'len(sline2)=%s' % len(sline2)
-            else:
-                # extract node 1, 2, and 10
-                if nvars == 6:  # dynamic nvars=6
-                    for i in range(1, nmax):
-                        if i in node_ids_minus_1:
-                            sline1 = flo_file.readline().strip().split()
-                            rhoi, rhoui, rhovi, rhowi, ei = parse_floats(sline1[1:], 5)
+                        ni += 1
+                    else:
+                        unused_line1 = flo_file.readline()
+                        unused_line2 = flo_file.readline()
 
-                            node_id[ni] = sline1[0]
-                            rho[ni] = rhoi
-                            rhoU[ni] = rhoui
-                            rhoV[ni] = rhovi
-                            rhoW[ni] = rhowi
-                            e[ni] = ei
-                            assert len(sline1) == 6, 'len(sline1)=%s' % len(sline1)
-                            ni += 1
-                        else:
-                            line1 = flo_file.readline()
-                else:  # dynamic nvars=5
-                    for i in range(1, nmax):
-                        if i in node_ids_minus_1:
-                            sline1 = flo_file.readline().strip().split()
-                            rhoi, rhoui, rhovi, rhowi = parse_floats(sline1[1:], 4)
-                            assert len(sline1) == 5, 'len(sline1)=%s' % len(sline1)
+    assert len(rho) == ni
 
-                            sline2 = flo_file.readline().strip().split()
-                            ei = parse_float(sline2[1])
+    # limit the minimum density (to prevent division errors)
+    rho_min = 0.001
+    irho_zero = np.where(rho < rho_min)[0]
+    rho[irho_zero] = rho_min
 
-                            node_id[ni] = sline1[0]
-                            rho[ni] = rhoi
-                            rhoU[ni] = rhoui
-                            rhoV[ni] = rhovi
-                            rhoW[ni] = rhowi
-                            e[ni] = ei
-                            assert len(sline2) == 1, 'len(sline2)=%s' % len(sline2)
-                            ni += 1
-                        else:
-                            line1 = flo_file.readline()
-                            line2 = flo_file.readline()
+    loads = OrderedDict()
 
-        assert len(rho) == ni
-
-        # llimit the minimum density (to prevent division errors)
-        rho_min = 0.001
-        irho_zero = where(rho < rho_min)[0]
-        rho[irho_zero] = rho_min
-
-        loads = {}
-
-        if '.aux.' in flo_filename:
-            # the names (rho, e, rhoU, etc.) aren't correct, but that's OK
-            # the load names are correct
-            loads['inst vor'] = rho
-            loads['timeavg vor'] = rhoU
-            loads['inst visc'] = rhoV
-            loads['timeavg visc'] = rhoW
-            loads['local CFL'] = e
-            return node_id, loads
-
-        # standard outputs
-        gamma = 1.4
-        two_over_Mach2 = 2.0 / mach ** 2
-        one_over_gamma = 1.0 / gamma
-
-        gm1 = gamma - 1
-
-        # node_id, rhoi, rhoui, rhovi, rhowi, ei
-        rhoVV = (rhoU**2 + rhoV**2 + rhoW**2) / rho
-        if 'p' in result_names or 'Mach' in result_names or 'Cp' in result_names:
-            pND = gm1*(e - rhoVV/2.)
-            if 'p' in result_names:
-                loads['p'] = pND
-        if 'Mach' in result_names:
-            Mach = (rhoVV / (gamma * pND))**0.5
-            loads['Mach'] = Mach
-        if 'Cp' in result_names:
-            Cp = two_over_Mach2 * (pND - one_over_gamma)
-            loads['Cp'] = Cp
-
-        T = gamma * pND / rho # =a^2 as well
-        #a = T.sqrt()
-        if 'T' in result_names:
-            loads['T'] = T
-
-        if 'rho' in result_names:
-            loads['rho'] = rho
-
-        if 'rhoU' in result_names:
-            loads['rhoU'] = rhoU
-        if 'rhoV' in result_names:
-            loads['rhoV'] = rhoV
-        if 'rhoW' in result_names:
-            loads['rhoW'] = rhoW
-
-        if 'U' in result_names:
-            loads['U'] = rhoU / rho
-        if 'V' in result_names:
-            loads['V'] = rhoV / rho
-        if 'W' in result_names:
-            loads['W'] = rhoW / rho
+    if '.aux.' in flo_filename:
+        # the names (rho, e, rhoU, etc.) aren't correct, but that's OK
+        # the load names are correct
+        loads['inst vor'] = rho
+        loads['timeavg vor'] = rhoU
+        loads['inst visc'] = rhoV
+        loads['timeavg visc'] = rhoW
+        loads['local CFL'] = e
         return node_id, loads
 
-#def parse_float(svalue):
-    #"""floats a value"""
-    #try:
-        #val = float(sval)
-    #except:
-        #val = 0.0
-    #return val
+    # standard outputs
+    gamma = 1.4
+    two_over_mach2 = 2.0 / mach ** 2
+    one_over_gamma = 1.0 / gamma
 
-def parse_floats(sline, n):
-    """floats a series of values"""
-    vals = []
-    for val in sline:
-        try:
-            vals.append(float(val))
-        except:
-            vals.append(0.0)
-    return vals
+    gm1 = gamma - 1
+
+    # node_id, rhoi, rhoui, rhovi, rhowi, ei
+    rhoVV = (rhoU ** 2 + rhoV ** 2 + rhoW ** 2) / rho
+    if 'p' in result_names or 'Mach' in result_names or 'Cp' in result_names:
+        pND = gm1 * (e - rhoVV / 2.)
+        if 'p' in result_names:
+            loads['p'] = pND
+    if 'Mach' in result_names:
+        pabs = np.abs(pND)
+        Mach = np.full(n, np.nan, dtype='float32')
+
+        ipwhere = np.where(pabs > 0.0)[0]
+        if len(ipwhere):
+            inner = rhoVV[ipwhere] / (gamma * pabs[ipwhere])
+            inwhere = ipwhere[np.where(inner >= 0.0)[0]]
+            if len(inwhere):
+                Mach[inwhere] = np.sqrt(rhoVV[inwhere] / (gamma * pabs[inwhere]))
+        loads['Mach'] = Mach
+    if 'Cp' in result_names:
+        Cp = two_over_mach2 * (pND - one_over_gamma)
+        loads['Cp'] = Cp
+
+    T = gamma * pND / rho # =a^2 as well
+    #a = T.sqrt()
+    if 'T' in result_names:
+        loads['T'] = T
+
+    if 'rho' in result_names:
+        loads['rho'] = rho
+
+    if 'rhoU' in result_names:
+        loads['rhoU'] = rhoU
+    if 'rhoV' in result_names:
+        loads['rhoV'] = rhoV
+    if 'rhoW' in result_names:
+        loads['rhoW'] = rhoW
+
+    if 'U' in result_names:
+        loads['U'] = rhoU / rho
+    if 'V' in result_names:
+        loads['V'] = rhoV / rho
+    if 'W' in result_names:
+        loads['W'] = rhoW / rho
+    return node_id, loads
+
+def parse_float(svalue):
+    """floats a value"""
+    try:
+        val = float(svalue)
+    except:
+        val = 0.0
+    return val
 
 def write_usm3d_volume(model, basename):
     """
@@ -836,7 +855,6 @@ def main():  # pragma: no cover
     """test problem"""
     model = Usm3d()
     if 1:
-        #basename = 'HSCT_inviscid'
         #basename = 'box'
         basename = 'new2'
         model.read_usm3d(basename, 3)
@@ -854,8 +872,7 @@ def main():  # pragma: no cover
         flo_filename = basename + '.flo'
 
         #model.read_usm3d(basename, 3)
-
-        node_ids, loads = model.read_flo(flo_filename, node_ids=[10])
+        unused_node_ids, unused_loads = model.read_flo(flo_filename, node_ids=[10])
 
 
 if __name__ == '__main__':  # pragma: no cover

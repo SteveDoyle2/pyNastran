@@ -177,9 +177,9 @@ class ChangeBCs(QDialog):
             value = parse_patran_syntax(text, pound=pound)
             cell.setStyleSheet("QLineEdit{background: white;}")
             return value, True
-        except ValueError as e:
+        except ValueError as error:
             cell.setStyleSheet("QLineEdit{background: red;}")
-            cell.setToolTip(str(e))
+            cell.setToolTip(str(error))
             return None, False
 
     def check_patran_syntax_dict(self, cell, pound=None):
@@ -189,9 +189,9 @@ class ChangeBCs(QDialog):
             cell.setStyleSheet("QLineEdit{background: white;}")
             cell.setToolTip('')
             return value, True
-        except (ValueError, SyntaxError, KeyError) as e:
+        except (ValueError, SyntaxError, KeyError) as error:
             cell.setStyleSheet("QLineEdit{background: red;}")
-            cell.setToolTip(str(e))
+            cell.setToolTip(str(error))
             return None, False
 
     def check_float(self, cell):
@@ -208,41 +208,6 @@ class ChangeBCs(QDialog):
     def check_name(self, cell):
         text = str(cell.text()).strip()
         if len(text):
-            cell.setStyleSheet("QLineEdit{background: white;}")
-            return text, True
-        else:
-            cell.setStyleSheet("QLineEdit{background: red;}")
-            return None, False
-
-    def check_format(self, cell):
-        text = str(cell.text())
-
-        is_valid = True
-        if len(text) < 2:
-            is_valid = False
-        elif 's' in text.lower():
-            is_valid = False
-        elif '%' not in text[0]:
-            is_valid = False
-        elif text[-1].lower() not in ['g', 'f', 'i', 'e']:
-            is_valid = False
-
-        try:
-            text % 1
-            text % .2
-            text % 1e3
-            text % -5.
-            text % -5
-        except ValueError:
-            is_valid = False
-
-        try:
-            text % 's'
-            is_valid = False
-        except TypeError:
-            pass
-
-        if is_valid:
             cell.setStyleSheet("QLineEdit{background: white;}")
             return text, True
         else:

@@ -1,5 +1,28 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=C0103
+"""
+Various mathematical functions are defined in this file.  This includes:
+ - augmented_identity(A)
+ - gauss(n)
+ - get_abs_index(data, axis=1)
+ - get_abs_max(min_values, max_values)
+ - get_max_index(data, axis=1)
+ - get_min_index(data, axis=1)
+ - integrate_positive_unit_line(x, y, min_value=0.)
+ - integrate_unit_line(x, y)
+ - is_float_ranged(a, x, b)
+ - is_list_ranged(a, List, b)
+ - list_print(list_a, tol=1e-8, float_fmt='%-3.2g', zero_fmt='    0')
+ - print_annotated_matrix(A, row_names=None, col_names=None, tol=1e-8)
+ - print_matrix(A, tol=1e-8)
+ - reduce_matrix(matrix_a, nids)
+ - roundup(value, round_increment=100)
+ - solve_tridag(A, D)
+ - unique2d(a)
+
+All beams are LineProperty objects.
+Multi-segment beams are IntegratedLineProperty objects.
+"""
 from __future__ import print_function
 from math import sqrt, ceil
 from six import string_types
@@ -11,9 +34,8 @@ import numpy as np
 from numpy.linalg import norm  # type: ignore
 
 from scipy.linalg import solve_banded  # type: ignore
-from scipy.interpolate import splrep, splev  # type: ignore
 from scipy.integrate import quad  # type: ignore
-
+from pyNastran.utils.numpy_utils import unique2d as unique2d_numpy
 
 # should future proof this as it handles 1.9.0.dev-d1dbf8e, 1.10.2, and 1.6.2
 #_numpy_version = [int(i) for i in numpy.__version__.split('.') if i.isdigit()]
@@ -30,6 +52,9 @@ from scipy.integrate import quad  # type: ignore
         # i.append(where(eids_all == eid)[0])
     # return hstack(i)
 
+def unique2d(A):
+    return unique2d_numpy(A)
+
 def get_abs_max(min_values, max_values):
     """Get return the value with the greatest magnitude, preserving sign."""
     nvalues = len(min_values)
@@ -45,15 +70,18 @@ def get_abs_index(data, axis=1):
     """
     Gets the maximum absolute value of a 2D matrix along an axis
 
-    Example
-    -------
+    Examples
+    --------
     >>> data = [
             [4.0, 2.2, 3.0, 5.0, 2.2]  # subcase 1
             [4.1, 2.1, 3.1, 5.1, 2.1], # subcase 2
         ]
     >>> max_values, index = get_min_index(data, axis=1)
-    >>> out   = [4.1, 2.2, 3.1, 5.1, 2.2]
-    >>> index = [1, 0, 1, 1, 0]
+    >>> out
+    [4.1, 2.2, 3.1, 5.1, 2.2]
+
+    >>> index
+    [1, 0, 1, 1, 0]
     """
     nvalues = data.shape[axis]
     # isubcase, nelements
@@ -67,15 +95,18 @@ def get_max_index(data, axis=1):
     """
     Gets the maximum values of a 2D matrix along an axis
 
-    Example
-    -------
+    Examples
+    --------
     >>> data = [
             [4.0, 2.2, 3.0, 5.0, 2.2]  # subcase 1
             [4.1, 2.1, 3.1, 5.1, 2.1], # subcase 2
         ]
-    >>> max_values, index = get_min_index(data, axis=1)
-    >>> out   = [4.1, 2.2, 3.1, 5.1, 2.2]
-    >>> index = [1, 0, 1, 1, 0]
+    >>> max_values, index = get_max_index(data, axis=1)
+    >>> out
+    [4.1, 2.2, 3.1, 5.1, 2.2]
+
+    >>> index
+    [1, 0, 1, 1, 0]
     """
     nvalues = data.shape[axis]
     # isubcase, nelements
@@ -89,15 +120,18 @@ def get_min_index(data, axis=1):
     """
     Gets the minimum values of a 2D matrix along an axis
 
-    Example
-    -------
+    Examples
+    --------
     >>> data = [
             [4.0, 2.2, 3.0, 5.0, 2.2]  # subcase 1
             [4.1, 2.1, 3.1, 5.1, 2.1], # subcase 2
         ]
     >>> min_values, index = get_min_index(data, axis=1)
-    >>> out   = [4.0, 2.1, 3.0, 5.0, 2.1]
-    >>> index = [0, 1, 0, 0, 1]
+    >>> out
+    [4.0, 2.1, 3.0, 5.0, 2.1]
+
+    >>> index
+    [0, 1, 0, 0, 1]
     """
     nvalues = data.shape[axis]
     axis2 = abs(axis - 1)
@@ -109,7 +143,7 @@ def get_min_index(data, axis=1):
 
 def integrate_unit_line(x, y):
     """
-    Integrates a line of length 1.0
+    Integrates a line of length 1.0 by linear interpolation
 
     Parameters
     ----------
@@ -128,46 +162,20 @@ def integrate_unit_line(x, y):
     try:
         assert len(x) == len(y), 'x=%s y=%s' % (x, y)
         # integrate the area; y=f(x); A=integral(y*dx,x)
-        out = quad(splev, 0., 1., args=(build_spline(x, y)))
+
+        #f = np.interp(_xi, x, y, left=y[0], right=y[-1])
+        out = quad(np.interp, 0., 1., args=(x, y, y[0], y[-1]))
     except:
         # print('spline Error x=%s y=%s' % (x, y))
         raise
     return out[0]
 
 
-def build_spline(x, y):
-    """
-    Builds a cubic spline or 1st order spline if there are less than 3 terms
-
-    Parameters
-    ----------
-    x : List[float]
-        the independent variable
-    y : List[float]
-        the dependent variable
-
-    Returns
-    -------
-    splrep : splrep object
-        linear or cubic spline depending on the length of x
-
-    .. note:: a 1st order spline is the same as linear interpolation
-    """
-    #return splrep(x, y, k=1) if len(x) < 3 else splrep(x, y)
-    if len(x) == 2:
-        # build a linearly interpolated spline
-        return splrep(x, y, k=1)
-    elif len(x) == 3:
-        # build a quadratic spline
-        return splrep(x, y, k=2)
-    else:
-        # build a cubic spline
-        return splrep(x, y)
 
 
 def integrate_positive_unit_line(x, y, min_value=0.):
     """
-    Integrates a line of length 1.0
+    Integrates a line of length 1.0 by linear interpolation
 
     Parameters
     ----------
@@ -183,16 +191,11 @@ def integrate_positive_unit_line(x, y, min_value=0.):
     integrated_value : float
         the area under the curve
     """
-    if len(set(y)) == 1:
-        return y[0]  # (x1-x0 = 1., so yBar*1 = yBar)
-    try:
-        assert len(x) == len(y), 'x=%s y=%s' % (x, y)
-        # now integrate the area
-        eval_posit_spline = lambda x, spl, min_val: max(splev([x], spl), min_val)
-        out = quad(eval_posit_spline, 0., 1., args=(build_spline(x, y), min_value))
-    except:
-        raise RuntimeError('spline Error x=%s y=%s' % (x, y))
-    return out[0]
+
+    for i, yi in enumerate(y):
+        if yi < min_value:
+            raise ValueError('y%i=%s and must be greater than %s' % (i+1, yi, min_value))
+    return integrate_unit_line(x, y)
 
 
 def reduce_matrix(matrix_a, nids):
@@ -287,11 +290,13 @@ def print_annotated_matrix(A, row_names=None, col_names=None, tol=1e-8):
 
 
 def print_matrix(A, tol=1e-8):
+    """prints a 2d matrix in a readable format"""
     B = array(A)
     return ''.join([list_print(B[i, :], tol) + '\n' for i in range(B.shape[0])])
 
 
 def list_print(list_a, tol=1e-8, float_fmt='%-3.2g', zero_fmt='    0'):
+    """prints a list / numpy array in a readable format"""
     if len(list_a) == 0:
         return '[]'
 
@@ -420,33 +425,6 @@ def gauss(n):
 
     raise NotImplementedError('The current implementation only supports up to '
                               '5 quadrature points')
-
-def unique2d(a):
-    """
-    Gets the unique pairs in a 2D vector where the pairs are defined:
-    (column 0, column 1).
-
-    Parameters
-    ----------
-    a : (n,2) ndarray
-        the input data
-
-    Returns
-    -------
-    u : (m,2)
-        the unique values in a
-
-    .. note:: this is intended to be used to find unique rows of
-              element-id/property-id or property-id/material-id pairs
-    .. note:: it works by finding the unique complex numbers and doesn't
-              extend well to a 3 column pair
-    """
-    print(a)
-    x, y = a.T
-    b = x + y*1.0j
-    print(b)
-    idx = np.unique(b, return_index=True)[1]
-    return a[idx]
 
 def roundup(value, round_increment=100):
     """

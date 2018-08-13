@@ -23,7 +23,7 @@ All cards are BaseCard objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from math import log, exp, ceil
+from math import log, exp
 from six.moves import zip, range
 import numpy as np
 from numpy import unique, hstack
@@ -104,12 +104,12 @@ class DELAY(BaseCard):
         """
         sid = integer(card, 1, 'sid')
         nodes = [integer(card, 2, 'node')]
-        components = [integer(card, 3, 'components')]
+        components = [integer_or_blank(card, 3, 'components', 0)]
         delays = [double_or_blank(card, 4, 'delay')]
         assert components[0] in [0, 1, 2, 3, 4, 5, 6], components
         if card.field(5):
             nodes.append(integer(card, 5, 'node'))
-            components.append(integer(card, 6, 'components'))
+            components.append(integer_or_blank(card, 6, 'components', 0))
             delays.append(double_or_blank(card, 7, 'delay'))
             assert components[1] in [0, 1, 2, 3, 4, 5, 6], components
         return DELAY(sid, nodes, components, delays, comment=comment)
@@ -128,7 +128,7 @@ class DELAY(BaseCard):
     def get_delay_at_freq(self, freq):
         return self.nodes, self.components, self.delays
 
-    def cross_reference(self, model):
+    def cross_reference(self, model, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -280,7 +280,7 @@ class DPHASE(BaseCard):
         msg = ', which is required by DPHASE sid=%s' % self.sid
         self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, xref_errors):
         return self.cross_reference(model)
 
     def uncross_reference(self):
@@ -582,7 +582,7 @@ class FREQ3(FREQ):
 
     def __init__(self, sid, f1, f2=None, freq_type='LINEAR', nef=10, cluster=1.0, comment=''):
         """
-        Creates a FREQ4 card
+        Creates a FREQ3 card
 
         Parameters
         ----------
@@ -821,12 +821,68 @@ class NLPARM(BaseCard):
     """
     type = 'NLPARM'
 
-    def __init__(self, nlparm_id, ninc=10, dt=0.0, kmethod='AUTO', kstep=5,
+    def __init__(self, nlparm_id, ninc=None, dt=0.0, kmethod='AUTO', kstep=5,
                  max_iter=25, conv='PW', int_out='NO',
                  eps_u=0.01, eps_p=0.01, eps_w=0.01, max_div=3, max_qn=None, max_ls=4,
                  fstress=0.2, ls_tol=0.5, max_bisect=5, max_r=20., rtol_b=20., comment=''):
+        """
+        Creates an NLPARM card
+
+        Parameters
+        ----------
+        nlparm_id : int
+            NLPARM id; points to the Case Control NLPARM
+        ninc :int; default=None
+            The default ninc changes default based on the solution/element
+            type & params.  The default for NINC is 10, except if there is
+            a GAP, Line Contact, Heat Transfer or PARAM,NLTOL,0, in which
+            case the default is 1.
+        dt : float; default=0.0
+            ???
+        kmethod : str; default='AUTO'
+            ???
+        kstep : int; default=5
+            ???
+        max_iter : int; default=25
+            ???
+        conv : str; default='PW'
+            ???
+        int_out : str; default='NO'
+            ???
+        eps_u : float; default=0.01
+            ???
+        eps_p : float; default=0.01
+            ???
+        eps_w : float; default=0.01
+            ???
+        max_div : int; default=3
+            ???
+        max_qn; default=None -> varies
+            ???
+        max_ls : int; default=4
+            ???
+        fstress : float; default=0.2
+            ???
+        ls_tol : float; default=0.5
+            ???
+        max_bisect : int; default=5
+            ???
+        max_r : float; default=20.
+            ???
+        rtol_b : float; default=20.
+            ???
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
+
+        if max_qn is None:
+            if kmethod == 'PFNT':
+                max_qn = 0
+            else:
+                max_qn = max_iter
+
         self.nlparm_id = nlparm_id
         self.ninc = ninc
         self.dt = dt
@@ -851,12 +907,6 @@ class NLPARM(BaseCard):
         self.max_r = max_r
         self.rtol_b = rtol_b
 
-        if self.max_qn is None:
-            if kmethod == 'PFNT':
-                self.max_qn = 0
-            else:
-                self.max_qn = max_iter
-
     @classmethod
     def add_card(cls, card, comment=''):
         """
@@ -870,7 +920,13 @@ class NLPARM(BaseCard):
             a comment for the card
         """
         nlparm_id = integer(card, 1, 'nlparm_id')
-        ninc = integer_or_blank(card, 2, 'ninc', 10)
+
+        # ninc changes default based on the solution/element type & params
+        #
+        # The default for NINC is 10, except if there is a GAP, Line Contact, Heat Transfer or
+        # PARAM,NLTOL,0, in which case the default is 1.
+        ninc = integer_or_blank(card, 2, 'ninc')
+
         dt = double_or_blank(card, 3, 'dt', 0.0)
         kmethod = string_or_blank(card, 4, 'kmethod', 'AUTO')
         kstep = integer_or_blank(card, 5, 'kstep', 5)
@@ -924,6 +980,8 @@ class NLPARM(BaseCard):
             kmethod = 'AUTO'
         elif kmethod == 2:
             kmethod = 'ITER'
+        elif kmethod == 3:
+            kmethod = 'ADAPT'
         elif kmethod == 4:
             kmethod = 'SEMI'
         else:
@@ -972,7 +1030,10 @@ class NLPARM(BaseCard):
         return list_fields
 
     def repr_fields(self):
-        ninc = set_blank_if_default(self.ninc, 10)
+        # ninc changes default based on the solution/element type & params
+        #
+        # The default for NINC is 10, except if there is a GAP, Line Contact, Heat Transfer or
+        # PARAM,NLTOL,0, in which case the default is 1.
         dt = set_blank_if_default(self.dt, 0.0)
         kmethod = set_blank_if_default(self.kmethod, 'AUTO')
         kstep = set_blank_if_default(self.kstep, 5)
@@ -991,7 +1052,7 @@ class NLPARM(BaseCard):
         max_r = set_blank_if_default(self.max_r, 20.)
         rtol_b = set_blank_if_default(self.rtol_b, 20.)
 
-        list_fields = ['NLPARM', self.nlparm_id, ninc, dt, kmethod, kstep, max_iter,
+        list_fields = ['NLPARM', self.nlparm_id, self.ninc, dt, kmethod, kstep, max_iter,
                        conv, int_out, eps_u, eps_p, eps_w, max_div, max_qn, max_ls,
                        fstress, ls_tol, max_bisect, None, None, None, max_r, None,
                        rtol_b]
@@ -1656,11 +1717,19 @@ class TSTEP(BaseCard):
         DT = []
         NO = []
 
-        nrows = int(ceil((len(card) - 1.) / 8.))
+        nfields = len(card)
+        nrows = (nfields - 1) // 8
+        if (nfields - 1) % 8 != 0:
+            nrows += 1
+
         for i in range(nrows):
             n = 8 * i + 1
-            ni = integer_or_blank(card, n + 1, 'N' + str(i), 1)
-            dt = double_or_blank(card, n + 2, 'dt' + str(i), 0.)
+            #if i == 0:
+            ni = integer(card, n + 1, 'Ntimes' + str(i))
+            dt = double(card, n + 2, 'dt' + str(i))
+            #else:
+            #ni = integer_or_blank(card, n + 1, 'N' + str(i), 1)
+            #dt = double_or_blank(card, n + 2, 'dt' + str(i), 0.)
             no = integer_or_blank(card, n + 3, 'NO' + str(i), 1)
             N.append(ni)
             DT.append(dt)
@@ -1752,7 +1821,10 @@ class TSTEP1(BaseCard):
         ninc = []
         nout = []
 
-        nrows = int(ceil((len(card) - 1.) / 8.))
+        nfields = len(card)
+        nrows = (nfields - 1) // 8
+        if (nfields - 1) % 8 != 0:
+            nrows += 1
         for i in range(nrows):
             n = 8 * i + 1
             tendi = double_or_blank(card, n + 1, 'TEND' + str(i), 1.)
@@ -1895,7 +1967,7 @@ class TSTEPNL(BaseCard):
         self.utol = utol
         self.rtol_b = rtol_b
         self.min_iter = min_iter
-        assert self.ndt >= 3, self
+        #assert self.ndt >= 3, self
         assert self.dt > 0.
 
     def validate(self):

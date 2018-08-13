@@ -1,8 +1,7 @@
 """
 defines some methods for cleaning up a model
- - remove_unassociated_nodes(...)
- - remove_unassociated_properties(...)
- - remove_unused_materials(...)
+ - model = remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
+                         remove_pids=True, remove_mids=True)
 """
 from __future__ import print_function
 from six import iteritems, itervalues, integer_types
@@ -20,6 +19,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
      - properties
      - materials
      - coords
+
     """
     if isinstance(bdf_filename, BDF):
         model = bdf_filename
@@ -38,6 +38,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
     pids_mass_used = set([])
     mids_used = set([])
     mids_thermal_used = set([])
+    #nsms_used = set([])
 
     #card_types = list(model.card_count.keys())
     #card_map = model.get_card_ids_by_card_types(
@@ -59,7 +60,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
         'DMIG', 'DMI', 'DMIJ', 'DMIK', 'DMIJI',
         'POINT', 'EPOINT',
         'DELAY', 'DPHASE',
-        'CBARAO',
+        'CBARAO', 'AEPARM',
 
 
         # properties
@@ -76,16 +77,24 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
         # not checked------------------------------------------
         'PHBDY', 'CHBDYG', 'CHBDYP', 'CHBDYE', 'RADBC', 'CONV',
         'QVOL', 'PCONV', 'PCONVM',
-        #'PBCOMP', 'PDAMP5',
-        'AECOMP', 'CAERO2', 'CAERO3', 'CAERO4', 'PAERO3', 'PAERO4', #'CFAST',
+        #'PBCOMP', 'PDAMP5', 'CFAST',
+        'AECOMP', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5',
+        'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5',
         'DCONADD',
         'GMCORD',
         'MONPNT1', 'MONPNT2', 'MONPNT3',
+        'DSCREEN', 'DTI', 'NSMADD',
+        'AESURFS', 'CSSCHD',
+        'CGEN', 'NXSTRAT',
+    ]
+    set_types_simple = [
+        'SET1', 'SET3',
     ]
     set_types = [
-        'SET1', 'SET3',
         'ASET', 'ASET1', 'BSET', 'BSET1', 'CSET', 'CSET1',
-        'QSET', 'SSET1', 'USET', 'USET1',
+        'QSET', 'QSET1', 'USET', 'USET1', 'OMIT', 'OMIT1',
+    ]
+    seset_types = [
         'SESET',
     ]
     load_types = [
@@ -95,7 +104,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
         'GMLOAD', 'RFORCE', 'RFORCE1',
         'TEMP', 'QBDY1', 'QBDY2', 'QBDY3', 'QHBDY',
         'ACCEL', 'PLOADX1', 'SLOAD', 'ACCEL1', 'LOADCYN', 'LOAD',
-        'LSEQ', 'DLOAD',
+        'LSEQ', 'DLOAD', 'QVECT', 'RADM', 'TEMPAX',
     ]
 
     # could remove some if we look at the rid_trace
@@ -110,12 +119,10 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
     for card_type, ids in iteritems(model._type_to_id_map):
     #for card_type, ids in iteritems(card_map):
         if card_type in ['CORD1R', 'CORD1C', 'CORD1S']:
-            #print(ids)
             for cid in ids:
                 coord = model.coords[cid]
                 nids_used.update(coord.node_ids)
         elif card_type in ['CORD2R', 'CORD2C', 'CORD2S']:
-            #print(ids)
             for cid in ids:
                 coord = model.coords[cid]
                 cids_used.add(coord.Rid())
@@ -124,8 +131,8 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
                            'MAT8', 'MAT9', 'MAT10', 'MAT11']:
             # todo: MATS1, MATT1, etc.
             pass
-        elif card_type in ['MATS1', 'MATT1', 'MATT2', 'MATT4', 'MATT5',
-                           'MATHE', 'MATHP', 'CREEP']:
+        elif card_type in ['MATS1', 'MATT1', 'MATT2', 'MATT3', 'MATT4', 'MATT5',
+                           'MATT8', 'MATHE', 'MATHP', 'CREEP']:
             mids_used.update(ids)
 
         elif card_type in ['CTETRA', 'CPENTA', 'CPYRAM', 'CHEXA']:
@@ -217,6 +224,11 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
                 elem = model.elements[eid]
                 nids_used.update(elem.node_ids)
                 pids_used.add(elem.Mid())
+        elif card_type == 'CCONEAX':
+            for eid in ids:
+                elem = model.elements[eid]
+                pids_used.add(elem.Pid())
+
         elif card_type in ['PLOTEL']:
             for eid in ids:
                 elem = model.plotels[eid]
@@ -257,7 +269,16 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
                 mids_used.update(mids)
                 cids_used.update(prop.cordm)
 
-        elif card_type in ['RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3', 'RROD', 'RSPLINE']:
+        elif card_type == 'PCONEAX':
+            for pid in ids:
+                # MID1 T1 MID2 I MID3 T2 NSM
+                prop = model.properties[pid]
+                #print(prop.object_methods())
+                mids = [mid for mid in prop.Mids() if mid not in (0, None)]
+                prop = model.properties[pid]
+                mids_used.update(mids)
+
+        elif card_type in ['RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3', 'RROD', 'RSPLINE', 'RSSCON']:
             for eid in ids:
                 elem = model.rigid_elements[eid]
                 #print(elem.object_attributes())
@@ -317,6 +338,8 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
                     elif load.type in ['QVOL']:
                         # eids
                         pass
+                    elif load.type in ['TEMPAX']:
+                        pass # not done...
                     else:
                         raise NotImplementedError(load)
 
@@ -430,8 +453,26 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
 
         elif card_type in skip_cards:
             pass
-        elif card_type in set_types:
+        elif card_type in set_types_simple:
+            # handled based on context in other blocks
             pass
+        elif card_type in ['USET', 'USET1']:
+            for set_cards in itervalues(model.usets):
+                for set_card in set_cards:
+                    nids_used.update(set_card.ids)
+
+        elif card_type in set_types:
+            obj = card_type[:4].lower() + 's'
+            sets = getattr(model, obj) # list of SETs
+            for set_card in sets:
+                nids_used.update(set_card.ids)
+
+        elif card_type in seset_types:
+            obj = card_type[:6].lower() + 's'
+            sets = getattr(model, obj) # list of SETs
+            for set_card in sets:
+                nids_used.update(set_card.ids)
+
         elif card_type in ['DCONSTR']:
             pass
         elif card_type == 'DRESP1':
@@ -508,34 +549,37 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
         elif card_type in ['DVPREL1', 'DVPREL2']:
             for dvprel_id in ids:
                 dvprel = model.dvprels[dvprel_id]
-                if dvprel.Type in ['PSHELL', 'PCOMP', 'PBAR', 'PBARL', 'PBEAM',
-                                   'PROD', 'PELAS', 'PBUSH', 'PDAMP', 'PTUBE',
-                                   'PSHEAR', 'PDAMP', 'PMASS', 'PBEAML', 'PCOMPG',
-                                   'PVISC', 'PBUSHT', 'PELAST', 'PBUSH1D', 'PGAP']:
+                if dvprel.prop_type in ['PSHELL', 'PCOMP', 'PBAR', 'PBARL', 'PBEAM',
+                                        'PROD', 'PELAS', 'PBUSH', 'PDAMP', 'PTUBE',
+                                        'PSHEAR', 'PDAMP', 'PMASS', 'PBEAML', 'PCOMPG',
+                                        'PVISC', 'PBUSHT', 'PELAST', 'PBUSH1D', 'PGAP']:
                     pids_used.add(dvprel.Pid())
-                elif dvprel.Type in ['DISP']:
-                    raise NotImplementedError(str(dvprel) + 'dvprel.Type=DISP')
+                elif dvprel.prop_type in ['DISP']:
+                    msg = str(dvprel) + 'dvprel.prop_type=%r' % dvprel.prop_type
+                    raise NotImplementedError(msg)
                 else:
                     raise NotImplementedError(dvprel)
 
         elif card_type in ['DVCREL1', 'DVCREL2']:
             for dvcrel_id in ids:
                 dvcrel = model.dvcrels[dvcrel_id]
-                if dvcrel.Type in ['CMASS2', 'CMASS4', 'CONM1', 'CONM2',
-                                   'CELAS2', 'CELAS4',
-                                   'CDAMP2', 'CQUAD4', 'CGAP', 'CBAR']:
+                if dvcrel.element_type in ['CMASS2', 'CMASS4', 'CONM1', 'CONM2',
+                                           'CELAS2', 'CELAS4', 'CBUSH',
+                                           'CDAMP2', 'CQUAD4', 'CGAP', 'CBAR']:
+                    #eids_used.add(dvcrel.Eid())  # we don't remove elements...for now
                     pass
-                    #pids_used.add(dvcrel.Eid())
                 else:
-                    raise NotImplementedError(str(dvcrel) + 'Type=%r' % dvcrel.Type)
+                    msg = str(dvcrel) + 'element_type=%r' % dvcrel.element_type
+                    raise NotImplementedError(msg)
 
         elif card_type in ['DVMREL1', 'DVMREL2']:
             for dvmrel_id in ids:
                 dvmrel = model.dvmrels[dvmrel_id]
-                if dvmrel.Type in ['MAT1', 'MAT2', 'MAT8', 'MAT9', 'MAT11']:
+                if dvmrel.mat_type in ['MAT1', 'MAT2', 'MAT8', 'MAT9', 'MAT10', 'MAT11']:
                     mids_used.add(dvmrel.Mid())
                 else:
-                    raise NotImplementedError(str(dvmrel) + 'Type=%r' % dvmrel.Type)
+                    msg = str(dvmrel) + 'mat_type=%r' % dvmrel.mat_type
+                    raise NotImplementedError(msg)
         elif card_type == 'DVGRID':
             for dvgrid_id in ids:
                 dvgrids = model.dvgrids[dvgrid_id]
@@ -547,6 +591,32 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
                 tfs = model.transfer_functions[tf_id]
                 for transfer_function in tfs:
                     nids_used.update(transfer_function.nids)
+        elif card_type in ['NSM', 'NSM1', 'NSML', 'NSML1']:
+            for nsm_id in ids:
+                nsms = model.nsms[nsm_id]
+                for nsm in nsms:
+                    idsi = nsm.ids
+
+                    if nsm.nsm_type in ['PROD', 'PBARL', 'PBEAML',
+                                        'PSHELL', 'PCOMP', ]:
+                        if len(idsi) == 1 and idsi[0] == 'ALL':
+                            idsi = list(model.properties.keys())
+                            #raise NotImplementedError('found ALL...\n%s' % str(nsm))
+                        pids_used.update(idsi)
+                    elif nsm.nsm_type in ['CONROD', 'ELEMENT']:
+                        # we skip this because we assume all elements are used
+                        #if len(idsi) == 1 and idsi[0] == 'ALL':
+                            #raise NotImplementedError('found ALL...\n%s' % str(nsm))
+                        #eids_used.update(idsi)
+                        pass
+                    else:
+                        msg = 'found nsm_type=%r...\n%s' % (nsm.nsm_type, str(nsm))
+                        raise NotImplementedError(msg)
+        elif card_type in ['POINTAX', 'AXIC', 'RINGAX']:
+            pass
+            #for eid in ids:
+                #elem = model.plotels[eid]
+                #nids_used.update(elem.node_ids)
         else:
             raise NotImplementedError(card_type)
 
@@ -581,18 +651,20 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
     pids_mass_to_remove = list(pids_mass - pids_mass_used)
     mids_to_remove = list(mids - mids_used)
     cids_to_remove = list(cids - cids_used)
+    if 0 in cids_to_remove:
+        cids_to_remove.remove(0)
 
-    if remove_nids:
+    if remove_nids and nids_to_remove:
         for nid in nids_to_remove:
             del model.nodes[nid]
         model.log.debug('removed nodes %s' % nids_to_remove)
 
-    if remove_cids:
+    if remove_cids and cids_to_remove:
         for cid in cids_to_remove:
             del model.coords[cid]
         model.log.debug('removing coords %s' % cids_to_remove)
 
-    if remove_pids:
+    if remove_pids and pids_to_remove:
         for pid in pids_mass_to_remove:
             del model.properties_mass[pid]
         model.log.debug('removing properties_mass %s' % pids_mass_to_remove)
@@ -601,7 +673,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
             del model.properties[pid]
         model.log.debug('removing properties %s' % pids_to_remove)
 
-    if remove_mids:
+    if remove_mids and mids_to_remove:
         for mid in mids_to_remove:
             del model.materials[mid]
         model.log.debug('removing materials %s' % mids_to_remove)

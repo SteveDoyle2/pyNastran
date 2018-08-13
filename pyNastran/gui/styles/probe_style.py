@@ -32,7 +32,7 @@ class ProbeResultStyle(vtk.vtkInteractorStyleTrackballCamera):
                 result_name, result_value, node_id, node_xyz = out
                 focal_point = node_xyz
                 self.parent.log_info('focal_point = %s' % str(focal_point))
-                self.parent.setup_mouse_buttons(mode='default')
+                self.parent.mouse_actions.setup_mouse_buttons(mode='default')
 
                 # now we can actually modify the camera
                 camera.SetFocalPoint(focal_point[0], focal_point[1], focal_point[2])
@@ -82,7 +82,8 @@ class ProbeResultStyle(vtk.vtkInteractorStyleTrackballCamera):
             text = '(%.3g, %.3g, %.3g); %s' % (x, y, z, result_value)
             text = str(result_value)
             assert result_name in self.parent.label_actors, result_name
-            self.parent._create_annotation(text, result_name, x, y, z)
+            slot = self.label_actors[result_name]
+            self.parent.create_annotation(text, slot, x, y, z)
             self.parent.vtk_interactor.Render()
             self.parent.vtk_interactor.Update()
             self.parent.Update()
@@ -91,5 +92,5 @@ class ProbeResultStyle(vtk.vtkInteractorStyleTrackballCamera):
     #def right_button_press_event(self, obj, event):
         #"""cancels the probe button"""
         #self.probe_result_button.setChecked(False)
-        #self.parent.setup_mouse_buttons(mode='default')
+        #self.parent.mouse_actions.setup_mouse_buttons(mode='default')
         #self.parent.vtk_interactor.Render()

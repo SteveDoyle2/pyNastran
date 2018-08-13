@@ -14,6 +14,7 @@ All constraint cards are defined in this file.  This includes:
   * MPCADD
 
 The ConstraintObject contain multiple constraints.
+
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -40,13 +41,10 @@ class Constraint(BaseCard):
      - SPC / SPC1
      - SPCAX
      - SPCOFF / SPCOFF1
+
      """
     def __init__(self):
         pass
-
-    #def raw_fields(self):
-        #fields = [self.type, self.conid]
-        #return fields
 
     def _node_ids(self, nodes=None, allow_empty_nodes=False, msg=''):
         """returns nodeIDs for repr functions"""
@@ -83,6 +81,7 @@ class SUPORT1(Constraint):
             compoents to support at each node
         comment : str; default=''
             a comment for the card
+
         """
         Constraint.__init__(self)
         if comment:
@@ -105,6 +104,7 @@ class SUPORT1(Constraint):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         conid = integer(card, 1, 'conid')  # really a support id sid
 
@@ -134,6 +134,7 @@ class SUPORT1(Constraint):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         conid = data[0]
         assert (len(data) - 1) % 2 == 0, data
@@ -169,13 +170,14 @@ class SUPORT1(Constraint):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by SUPORT1'
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
     def safe_cross_reference(self, model, debug=True):
         nids2 = []
-        msg = ' which is required by SUPORT1=%s' % self.conid
+        msg = ', which is required by SUPORT1=%s' % self.conid
         for nid in self.nodes:
             try:
                 nid2 = model.Node(nid, msg=msg)
@@ -183,7 +185,7 @@ class SUPORT1(Constraint):
                 if debug:
                     msg = 'Couldnt find nid=%i, which is required by SUPORT1=%s' % (
                         nid, self.conid)
-                    print(msg)
+                    model.log.warning(msg)
                 continue
             nids2.append(nid2)
         self.nodes_ref = nids2
@@ -228,6 +230,7 @@ class SUPORT(Constraint):
             compoents to support at each node
         comment : str; default=''
             a comment for the card
+
         """
         Constraint.__init__(self)
         if comment:
@@ -255,24 +258,22 @@ class SUPORT(Constraint):
             a BDFCard object
         comment : str; default=''
             a comment for the card
-        """
-        # TODO: remove fields...
-        #fields = card.fields(1)
 
+        """
         nfields = len(card)
         assert len(card) > 1, card
         nterms = int(nfields / 2.)
         n = 1
         nodes = []
-        Cs = []
+        components = []
         for i in range(nterms):
             nstart = 1 + 2 * i
             nid = integer(card, nstart, 'ID%s' % n)
-            C = components_or_blank(card, nstart + 1, 'component%s' % n, '0')
+            componentsi = components_or_blank(card, nstart + 1, 'component%s' % n, '0')
             nodes.append(nid)
-            Cs.append(C)
+            components.append(componentsi)
             n += 1
-        return SUPORT(nodes, Cs, comment=comment)
+        return SUPORT(nodes, components, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -285,14 +286,15 @@ class SUPORT(Constraint):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         fields = data
         nodes = []
-        Cs = []
+        components = []
         for i in range(0, len(fields), 2):
             nodes.append(fields[i])
-            Cs.append(fields[i + 1])
-        return SUPORT(nodes, Cs, comment=comment)
+            components.append(fields[i + 1])
+        return SUPORT(nodes, components, comment=comment)
 
     @property
     def node_ids(self):
@@ -309,20 +311,21 @@ class SUPORT(Constraint):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by SUPORT'
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
     def safe_cross_reference(self, model, debug=True):
         nids2 = []
-        msg = ' which is required by SUPORT'
+        msg = ', which is required by SUPORT'
         for nid in self.nodes:
             try:
                 nid2 = model.Node(nid, msg=msg)
             except KeyError:
                 if debug:
                     msg = 'Couldnt find nid=%i, which is required by SUPORT' % nid
-                    print(msg)
+                    model.log.warning(msg)
                 continue
             nids2.append(nid2)
         self.nodes_ref = nids2
@@ -383,6 +386,7 @@ class MPC(Constraint):
             the degree of freedoms to constrain (e.g., '1', '123')
         coefficients : List[float]
             the scaling coefficients
+
         """
         Constraint.__init__(self)
         if comment:
@@ -420,6 +424,7 @@ class MPC(Constraint):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         conid = integer(card, 1, 'conid')
         nodes = []
@@ -468,6 +473,7 @@ class MPC(Constraint):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         #msg = 'MPC has not implemented data parsing'
         conid = data[0]
@@ -494,6 +500,7 @@ class MPC(Constraint):
     @property
     def gids_ref(self):
         return self.nodes_ref
+
     @gids_ref.setter
     def gids_ref(self, nodes_ref):
         self.nodes_ref = nodes_ref
@@ -501,6 +508,7 @@ class MPC(Constraint):
     @property
     def gids(self):
         return self.nodes
+
     @gids.setter
     def gids(self, nodes):
         self.nodes = nodes
@@ -520,13 +528,14 @@ class MPC(Constraint):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by MPC=%s' % self.conid
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
     def safe_cross_reference(self, model, debug=True):
         nids2 = []
-        msg = ' which is required by SPC=%s' % self.conid
+        msg = ', which is required by SPC=%s' % self.conid
         for nid in self.nodes:
             try:
                 nid2 = model.Node(nid, msg=msg)
@@ -534,7 +543,7 @@ class MPC(Constraint):
                 if debug:
                     msg = 'Couldnt find nid=%i, which is required by SPC=%s' % (
                         nid, self.conid)
-                    print(msg)
+                    model.log.warning(msg)
                 continue
             nids2.append(nid2)
         self.nodes_ref = nids2
@@ -556,8 +565,7 @@ class MPC(Constraint):
         """see BaseCard.write_card``"""
         if size == 8:
             return self.write_card_8()
-        else:
-            return self.write_card_16(is_double)
+        return self.write_card_16(is_double)
 
     def write_card_8(self):
         msg = 'MPC     %8s' % self.conid
@@ -630,6 +638,7 @@ class SPC(Constraint):
 
         .. note:: len(gids) == len(components) == len(enforced)
         .. warning:: non-zero enforced deflection requires an SPCD as well
+
         """
         Constraint.__init__(self)
         if comment:
@@ -662,6 +671,7 @@ class SPC(Constraint):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         conid = integer(card, 1, 'sid')
         if card.field(5) in [None, '']:
@@ -691,6 +701,7 @@ class SPC(Constraint):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         conid = data[0]
         gids = [data[1]]
@@ -734,13 +745,14 @@ class SPC(Constraint):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by SPC=%s' % (self.conid)
         self.gids_ref = model.EmptyNodes(self.gids, msg=msg)
 
     def safe_cross_reference(self, model, debug=True):
         nids2 = []
-        msg = ' which is required by SPC=%s' % self.conid
+        msg = ', which is required by SPC=%s' % self.conid
         for nid in self.node_ids:
             try:
                 nid2 = model.Node(nid, msg=msg)
@@ -748,7 +760,7 @@ class SPC(Constraint):
                 if debug:
                     msg = 'Couldnt find nid=%i, which is required by SPC=%s' % (
                         nid, self.conid)
-                    print(msg)
+                    model.log.warning(msg)
                 continue
             nids2.append(nid2)
         self.gids_ref = nids2
@@ -792,6 +804,7 @@ class GMSPC(Constraint):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         conid = integer(card, 1, 'sid')
         component = parse_components(card, 2, 'components')
@@ -869,6 +882,7 @@ class SPCAX(Constraint):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         conid = integer(card, 1, 'conid')
         rid = integer(card, 2, 'rid')
@@ -887,6 +901,9 @@ class SPCAX(Constraint):
         #msg = ', which is required by SPCAX=%s' % (self.conid)
         #self.rid = model.ring[self.rid]
         #self.hid = model.harmonic[self.hid]
+
+    def safe_cross_reference(self, model):
+        self.cross_reference(model)
 
     def uncross_reference(self):
         pass
@@ -945,6 +962,8 @@ class SPC1(Constraint):
             self.comment = comment
         if isinstance(nodes, integer_types):
             nodes = [nodes]
+        if isinstance(components, int):
+            components = str(components)
         self.conid = conid
         self.components = components
         self.nodes = expand_thru(nodes)
@@ -966,6 +985,7 @@ class SPC1(Constraint):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         conid = integer(card, 1, 'conid')
         components = parse_components(card, 2, 'components')  # 246 = y; dx, dz dir
@@ -983,6 +1003,7 @@ class SPC1(Constraint):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         conid = data[0]
         components = str(data[1])
@@ -1017,23 +1038,24 @@ class SPC1(Constraint):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by SPC1; conid=%s' % self.conid
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
     def safe_cross_reference(self, model, debug=True):
         nids2 = []
-        msg = ' which is required by SPC1=%s' % self.conid
+        missing_nids = []
         for nid in self.node_ids:
             try:
-                nid2 = model.Node(nid, msg=msg)
+                nid2 = model.Node(nid)
             except KeyError:
-                if debug:
-                    msg = 'Couldnt find nid=%i, which is required by SPC1=%s' % (
-                        nid, self.conid)
-                    print(msg)
+                missing_nids.append(str(nid))
                 continue
             nids2.append(nid2)
+        if missing_nids and debug:
+            model.log.warning("Couldn't find nids=[%s], which is required by SPC1=%s" % (
+                ', '.join(missing_nids), self.conid))
         self.nodes_ref = nids2
 
     def uncross_reference(self):
@@ -1082,6 +1104,7 @@ class SPCOFF(Constraint):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         raise NotImplementedError()
         #if card.field(5) in [None, '']:
@@ -1111,6 +1134,7 @@ class SPCOFF(Constraint):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         nodes = [data[0]]
         components = data[1]
@@ -1152,23 +1176,25 @@ class SPCOFF(Constraint):
         ----------
         model : BDF()
             the BDF object
+
         """
-        msg = ', which is required by SPCOFF=%s' % (self.conid)
+        msg = ', which is required by SPCOFF'
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
     def safe_cross_reference(self, model, debug=True):
         nids2 = []
-        msg = ' which is required by SPCOFF=%s' % (self.conid)
+        missing_nids = []
         for nid in self.node_ids:
             try:
-                nid2 = model.Node(nid, msg=msg)
+                nid2 = model.Node(nid)
             except KeyError:
-                if debug:
-                    msg = 'Couldnt find nid=%i, which is required by SPCOFF=%s' % (
-                        nid, self.conid)
-                    print(msg)
+                missing_nids.append(str(nid))
                 continue
             nids2.append(nid2)
+
+        if missing_nids and debug:
+            model.log.warning("Couldn't find nids=[%s], which is required by SPCOFF" % (
+                ', '.join(missing_nids)))
         self.nodes_ref = nids2
 
     def uncross_reference(self):
@@ -1214,6 +1240,7 @@ class SPCOFF1(Constraint):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         components = parse_components(card, 1, 'components')  # 246 = y; dx, dz dir
         nodes = card.fields(2)
@@ -1230,6 +1257,7 @@ class SPCOFF1(Constraint):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         components = str(data[0])
         nodes = data[1]
@@ -1262,23 +1290,25 @@ class SPCOFF1(Constraint):
         ----------
         model : BDF()
             the BDF object
+
         """
-        msg = ', which is required by SPCOFF1; conid=%s' % (self.conid)
+        msg = ', which is required by SPCOFF1'
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
     def safe_cross_reference(self, model, debug=True):
         nids2 = []
-        msg = ' which is required by SPCOFF1=%s' % (self.conid)
+        missing_nids = []
         for nid in self.node_ids:
             try:
-                nid2 = model.Node(nid, msg=msg)
+                nid2 = model.Node(nid)
             except KeyError:
-                if debug:
-                    msg = 'Couldnt find nid=%i, which is required by SPC1=%s' % (
-                        nid, self.conid)
-                    print(msg)
+                missing_nids.append(str(nid))
                 continue
             nids2.append(nid2)
+
+        if missing_nids and debug:
+            model.log.warning("Couldn't find nids=[%s], which is required by SPCOFF1" % (
+                ', '.join(missing_nids)))
         self.nodes_ref = nids2
 
     def uncross_reference(self):
@@ -1292,6 +1322,10 @@ class SPCOFF1(Constraint):
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
         return self.comment + print_card_8(card)
+
+    def write_card_16(self, is_double=False):
+        card = self.raw_fields()
+        return self.comment + print_card_16(card)
 
 
 class ConstraintAdd(Constraint):
@@ -1313,7 +1347,6 @@ class SPCADD(ConstraintAdd):
     +--------+----+----+-----+
     """
     type = 'SPCADD'
-
     def __init__(self, conid, sets, comment=''):
         ConstraintAdd.__init__(self)
         if comment:
@@ -1349,6 +1382,7 @@ class SPCADD(ConstraintAdd):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         conid = data[0]
         sets = list(data[1:-1])
@@ -1380,6 +1414,7 @@ class SPCADD(ConstraintAdd):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by SPCADD=%s' % self.conid
         self.sets_ref = []
@@ -1388,7 +1423,7 @@ class SPCADD(ConstraintAdd):
 
     def safe_cross_reference(self, model, debug=True):
         self.sets_ref = []
-        msg = ' which is required by SPCADD=%s' % self.conid
+        msg = ', which is required by SPCADD=%s' % self.conid
         for spc_id in self.sets:
             try:
                 spc = model.SPC(spc_id, consider_spcadd=False, msg=msg)
@@ -1396,7 +1431,7 @@ class SPCADD(ConstraintAdd):
                 if debug:
                     msg = 'Couldnt find SPC=%i, which is required by SPCADD=%s' % (
                         spc_id, self.conid)
-                    print(msg)
+                    model.log.warning(msg)
                 continue
             self.sets_ref.append(spc)
 
@@ -1450,6 +1485,7 @@ class MPCADD(ConstraintAdd):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         conid = integer(card, 1, 'conid')
         sets = card.fields(2)
@@ -1466,6 +1502,7 @@ class MPCADD(ConstraintAdd):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         conid = data[0]
         sets = list(data[1:-1])
@@ -1491,6 +1528,7 @@ class MPCADD(ConstraintAdd):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by MPCADD=%s' % self.conid
         self.sets_ref = []
@@ -1499,7 +1537,7 @@ class MPCADD(ConstraintAdd):
 
     def safe_cross_reference(self, model, debug=True):
         self.sets_ref = []
-        msg = ' which is required by MPCADD=%s' % self.conid
+        msg = ', which is required by MPCADD=%s' % self.conid
         for mpc_id in self.sets:
             try:
                 mpc = model.MPC(mpc_id, consider_mpcadd=False, msg=msg)
@@ -1507,7 +1545,7 @@ class MPCADD(ConstraintAdd):
                 if debug:
                     msg = 'Couldnt find MPC=%i, which is required by MPCADD=%s' % (
                         mpc_id, self.conid)
-                    print(msg)
+                    model.log.warning(msg)
                 continue
             self.sets_ref.append(mpc)
 

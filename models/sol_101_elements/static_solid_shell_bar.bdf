@@ -87,4 +87,6 @@ CORD2C   12      0       1.      2.      3.      0.      0.      1.
 $ local spherical
 CORD2S   13      0       1.      2.      3.      0.      0.      1.
          0.      1.      0.
+CORD2R   1000000 0       0.      0.      0.      0.      0.      1.
+         1.      0.      0.
 ENDDATA 58e050da

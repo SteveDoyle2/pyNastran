@@ -7,12 +7,12 @@ from six import iteritems
 from numpy import zeros, unique, where, argsort, searchsorted, allclose, array
 
 from pyNastran.converters.aflr.ugrid.ugrid_reader import read_ugrid
-from pyNastran.converters.aflr.ugrid.surf_reader import TagReader
+from pyNastran.converters.aflr.surf.surf_reader import TagReader
 
 def write_foam(ugrid, foam_filename, tag_filename):
     """writes an OpenFOAM file"""
     dirname = os.path.dirname(foam_filename)
-    base = os.path.splitext(foam_filename)[0]
+    unused_base = os.path.splitext(foam_filename)[0]
 
     points_filename = os.path.join(dirname, 'points')
     boundary_filename = os.path.join(dirname, 'boundary')
@@ -43,8 +43,8 @@ def write_foam(ugrid, foam_filename, tag_filename):
 
     #pids = self.pids
     #mid = 1
-    points_filename = foam_filename  # remove...
-    #_write_points(ugrid, points_filename)
+    #points_filename = foam_filename  # remove...
+    _write_points(ugrid, points_filename)
     _write_boundary(ugrid, boundary_filename + '2', tag_filename)
     _write_faces(ugrid, faces_filename + '2')
 
@@ -310,7 +310,7 @@ def _write_faces(ugrid, faces_filename):
         #iq_start_keys.sort()
         #it_start_keys.sort()
 
-        face_to_eid = []
+        unused_face_to_eid = []
 
         eid_keys = min_eids.keys()
         eid_keys.sort()
@@ -328,8 +328,8 @@ def _write_faces(ugrid, faces_filename):
                 #print('*face=%s eids=%s' % (face, eids))
                 #pid = lookup from quads/tris
                 eid = eids[0]
-                owner = eid
-                neighbor = -1
+                unused_owner = eid
+                unused_neighbor = -1
                 continue
                 #raise RuntimeError()
 
@@ -363,26 +363,26 @@ def _write_faces(ugrid, faces_filename):
                     raise RuntimeError('cant find face=%s in faces for eid1=%s' % (face, e1))
 
                 if allclose(face, faces1_unsorted[n1, :]):
-                    owner = e1
-                    neighbor = e2
+                    unused_owner = e1
+                    unused_neighbor = e2
                 else:
-                    owner = e2
-                    neighbor = e1
-                face_new = faces1_unsorted[n1, :]
+                    unused_owner = e2
+                    unused_neighbor = e1
+                unused_face_new = faces1_unsorted[n1, :]
 
             elif i1 == 2:  # CHEXA
                 iq1 = iq_start[2]
-                iq2 = iq1 + 6
+                unused_iq2 = iq1 + 6
 
             elif i1 == 3:  # CPENTA5
                 #e1_new = e1 - eid_keys[2]
                 iq1 = iq_start[3]
-                iq2 = iq1 + 1
+                unused_iq2 = iq1 + 1
                 it1 = it_start[3]
                 it2 = it1 + 4
             elif i1 == 4:  # CPENTA6
                 iq1 = iq_start[4]
-                iq2 = iq1 + 3
+                unused_iq2 = iq1 + 3
                 it1 = it_start[4]
                 it2 = it1 + 2
             else:
@@ -394,9 +394,9 @@ def _write_faces(ugrid, faces_filename):
 
                     it1 = it_start_keys[i1]
                     it2 = it1 + 4
-                    faces2 = tri_faces_sort[it1:it2, :]
+                    unused_faces2 = tri_faces_sort[it1:it2, :]
                     #print('face=%s eids=%s' % (face, eids))
-                    #print("faces2 = \n", faces2)
+                    #print("faces2 = \n", unused_faces2)
                     # spits out 3
                 else:
                     asdf

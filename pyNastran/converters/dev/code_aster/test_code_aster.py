@@ -6,10 +6,10 @@ from numpy import array_equal, allclose
 import pyNastran
 from pyNastran.converters.dev.code_aster.nastran_to_code_aster import CodeAsterConverter
 
-pkg_path = pyNastran.__path__[0]
-model_path = os.path.join(pkg_path, '..', 'models')
-test_path = os.path.join(pkg_path, 'converters', 'dev', 'code_aster')
-test_path = os.path.join(pkg_path, 'converters', 'dev', 'code_aster')
+PKG_PATH = pyNastran.__path__[0]
+model_path = os.path.join(PKG_PATH, '..', 'models')
+test_path = os.path.join(PKG_PATH, 'converters', 'dev', 'code_aster')
+test_path = os.path.join(PKG_PATH, 'converters', 'dev', 'code_aster')
 
 class TestCodeAster(unittest.TestCase):
 

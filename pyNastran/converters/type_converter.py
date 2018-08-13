@@ -13,7 +13,7 @@ def process_nastran(bdf_filename, fmt2, fname2, data=None, debug=True):
     """
     Converts Nastran to STL/Cart3d/Tecplot/UGRID3d
     """
-    assert fmt2 in ['stl', 'cart3d', 'tecplot', 'ugrid', 'nastran'], 'format2=%s' % fmt2
+    assert fmt2 in ['stl', 'cart3d', 'tecplot', 'ugrid', 'nastran', 'abaqus'], 'format2=%s' % fmt2
     from pyNastran.bdf.bdf import BDF
     xref = True
     if fmt2 == 'ugrid':
@@ -44,6 +44,9 @@ def process_nastran(bdf_filename, fmt2, fname2, data=None, debug=True):
     elif fmt2 == 'ugrid':
         from pyNastran.converters.nastran.nastran_to_ugrid import nastran_to_ugrid
         nastran_to_ugrid(model, fname2)
+    elif fmt2 == 'abaqus':
+        from pyNastran.converters.nastran.nastran_to_abaqus import nastran_to_abaqus
+        nastran_to_abaqus(model, fname2)
     elif fmt2 == 'nastran':
         model.write_bdf(fname2, size=16)
     else:
@@ -146,7 +149,7 @@ def process_tecplot(tecplot_filename, fmt2, fname2, data=None):
     assert len(tecplot_filenames) > 0, tecplot_filename
     from pyNastran.converters.tecplot.utils import merge_tecplot_files
     from pyNastran.converters.tecplot.tecplot_to_nastran import tecplot_to_nastran_filename
-    from pyNastran.converters.tecplot.tecplot_to_cart3d import tecplot_to_cart3d_filename
+    #from pyNastran.converters.tecplot.tecplot_to_cart3d import tecplot_to_cart3d_filename
 
     model = merge_tecplot_files(tecplot_filenames, tecplot_filename_out=None)
     #if fmt2 == 'cart3d':

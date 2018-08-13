@@ -6,6 +6,7 @@ import numpy as np
 from pyNastran.converters.stl.stl import STL, read_stl
 from pyNastran.converters.cart3d.cart3d import Cart3D
 
+
 def stl_to_cart3d(stl_filename, cart3d_filename=None, log=None, debug=False,
                   is_binary=False, float_fmt='%6.7f'):
     """

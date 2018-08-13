@@ -15,10 +15,11 @@ PKG_PATH = pyNastran.__path__[0]
 MODEL_PATH = os.path.join(PKG_PATH, 'converters', 'usm3d', 'box')
 
 
-class Usm3dGUI(Usm3dIO, FakeGUIMethods):
+class Usm3dGUI(FakeGUIMethods):
     def __init__(self):
         FakeGUIMethods.__init__(self)
-        Usm3dIO.__init__(self)
+        self.model = Usm3dIO(self)
+        self.build_fmts(['usm3d'], stop_on_failure=True)
 
 
 class TestUsm3dGUI(unittest.TestCase):
@@ -31,13 +32,14 @@ class TestUsm3dGUI(unittest.TestCase):
 
         test = Usm3dGUI()
         test.log = log
-        test.load_usm3d_geometry(geometry_filename)
-        test.load_usm3d_results(flo_filename)
-        test.on_reload_usm3d()
+        #test.on_load_geometry(geometry_filename, geometry_format='usm3d', raise_error=True)
+        test.model.load_usm3d_geometry(geometry_filename)
+        test.model.load_usm3d_results(flo_filename)
+        test.model.on_reload_usm3d()
 
-        test.load_usm3d_geometry(geometry_filename)
-        test.load_usm3d_results(flo_filename)
-        test.on_reload_usm3d()
+        test.model.load_usm3d_geometry(geometry_filename)
+        test.model.load_usm3d_results(flo_filename)
+        test.model.on_reload_usm3d()
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

@@ -72,15 +72,19 @@ class Subcase(object):
         self.sol = None
         self.log = None
         #print("\n***adding subcase %s***" % self.id)
-        
+
     def __deepcopy__(self, memo):
-        # custom method for copy.deepcopy to improve speed by more than 2x (tested with timeit)
-        # default method is a bit slow for a list of lists and can take a long time to read a bdf with many subcases
-        # this method removes some of the overhead
-        # if the subcase is the default subcase, it is shallow copied instead
-        # this greatly improves bdf read speed, since it avoids deepcopying large sets defined in the default subcase
-        # for every subcase that is defined
-        
+        """
+        Custom method for copy.deepcopy to improve speed by more than
+        2x (tested with timeit).
+
+        Default method is a bit slow for a list of lists and can take a
+        long time to read a bdf with many subcases this method removes
+        some of the overhead if the subcase is the default subcase, it
+        is shallow copied instead this greatly improves bdf read speed,
+        since it avoids deepcopying large sets defined in the default
+        subcase for every subcase that is defined.
+        """
         _copy = self.__copy__()
         memo[id(self)] = _copy
 
@@ -88,22 +92,22 @@ class Subcase(object):
             return _copy
 
         def _deepcopy(lst):
+            """
+            Deep copies objects that aren't lists; references lists.
+            """
             _cpy = list(lst)
 
             for i in range(len(_cpy)):
-                _ = _cpy[i]
-                if isinstance(_, list):
-                    _cpy[i] = _deepcopy(_)
-
+                cpyi = _cpy[i]
+                if isinstance(cpyi, list):
+                    _cpy[i] = _deepcopy(cpyi)
             return _cpy
 
         params = _copy.params
-
         for key, val in iteritems(self.params):
             if isinstance(val, list):
                 val = _deepcopy(val)
             params[key] = val
-
         return _copy
 
     def __copy__(self):
@@ -115,33 +119,20 @@ class Subcase(object):
         return _copy
 
     def deprecated(self, old_name, new_name, deprecated_version):
+        # type: (str, str, str) -> None
+        """
+        Throws a deprecation message and crashes if past a specific version.
+
+        Parameters
+        ----------
+        old_name : str
+            the old function name
+        new_name : str
+            the new function name
+        deprecated_version : float
+            the version the method was first deprecated in
+        """
         return deprecated(old_name, new_name, deprecated_version, levels=[0, 1, 2])
-
-    def get_stress_code(self, key, options, value):
-        # type: (str, Dict[str, Any], Any) -> int
-        """
-        Method get_stress_code:
-
-        .. note:: the individual element must take the stress_code and reduce
-        it to what the element can return.  For example, for an isotropic
-        CQUAD4 the fiber field doesnt mean anything.
-
-        BAR - no von mises/fiber
-        ISOTROPIC - no fiber
-
-        .. todo:: how does the MATERIAL bit get turned on?  I'm assuming it's
-                  element dependent...
-        """
-        stress_code = 0
-        if 'VONMISES' in options:
-            stress_code += 1
-        if key == 'STRAIN':
-            stress_code += 10  # 2+8=10 - fields 2 and 4
-        if 'FIBER' in options:
-            stress_code += 4
-        #if 'MATERIAL' in options:
-        #    stress_code += 16  material coord (1) vs element (0)
-        return stress_code
 
     def add_op2_data(self, data_code, msg, log):
         """
@@ -160,8 +151,8 @@ class Subcase(object):
             raise NotImplementedError('table_name=%r PY2=%s PY3=%s' % (table_name, PY2, PY3))
 
         table_code = data_code['table_code']
-        sort_code = data_code['sort_code']
-        device_code = data_code['device_code']
+        unused_sort_code = data_code['sort_code']
+        unused_device_code = data_code['device_code']
         #print(data_code)
         #print('table_name=%r table_code=%s sort_code=%r device_code=%r' % (
             #table_name, table_code, sort_code, device_code))
@@ -227,7 +218,7 @@ class Subcase(object):
                 self.add('DISPLACEMENT', 'ALL', options, 'STRESS-type')
             else:
                 self._write_op2_error_msg(log, self.log, msg, data_code)
-        elif table_name == 'BOPHIG':
+        elif table_name in ['OPHIG', 'BOPHIG']:
             if table_code == 7:
                 self.add('ANALYSIS', 'HEAT', options, 'KEY-type')
             else:
@@ -242,13 +233,19 @@ class Subcase(object):
             else:
                 self._write_op2_error_msg(log, self.log, msg, data_code)
 
-        elif table_name in ['OQG1', 'OQG2']:
+        elif table_name in ['OQG1', 'OQG2', 'OQGV1']:
             if table_code == 3:
                 self.add('SPCFORCES', 'ALL', options, 'STRESS-type')
             else:
                 self._write_op2_error_msg(log, self.log, msg, data_code)
-        elif table_name in ['OEF1X', 'OEF1']:
+        elif table_name in ['OEF1X', 'OEF1', 'RAFCONS', 'RAFEATC']:
             if table_code in [4]:
+                self.add('FORCE', 'ALL', options, 'STRESS-type')
+            else:
+                self._write_op2_error_msg(log, self.log, msg, data_code)
+        elif table_name in ['OEF2']:
+            options.append('SORT2')
+            if table_code == 4:
                 self.add('FORCE', 'ALL', options, 'STRESS-type')
             else:
                 self._write_op2_error_msg(log, self.log, msg, data_code)
@@ -269,6 +266,38 @@ class Subcase(object):
             options.append('PSDF')
             self.add('FORCE', 'ALL', options, 'STRESS-type')
 
+        elif table_name in ['OESATO1', 'OESATO2']:
+            options.append('PSDF')
+            self.add('STRESS', 'ALL', options, 'STRESS-type')
+        elif table_name in ['OESCRM1', 'OESCRM2']:
+            options.append('CRM')
+            self.add('STRESS', 'ALL', options, 'STRESS-type')
+        elif table_name in ['OESRMS1', 'OESRMS2', 'OESXRMS1']:
+            options.append('RMS')
+            self.add('STRESS', 'ALL', options, 'STRESS-type')
+        elif table_name in ['OESNO1', 'OESNO2']:
+            options.append('NO')
+            self.add('STRESS', 'ALL', options, 'STRESS-type')
+        elif table_name in ['OESPSD1', 'OESPSD2']:
+            options.append('PSDF')
+            self.add('STRESS', 'ALL', options, 'STRESS-type')
+
+        elif table_name in ['OSTRATO1', 'OSTRATO2']:
+            options.append('PSDF')
+            self.add('STRAIN', 'ALL', options, 'STRESS-type')
+        elif table_name in ['OSTRCRM1', 'OSTRCRM2']:
+            options.append('CRM')
+            self.add('STRAIN', 'ALL', options, 'STRESS-type')
+        elif table_name in ['OSTRRMS1', 'OSTRRMS2']:
+            options.append('RMS')
+            self.add('STRAIN', 'ALL', options, 'STRESS-type')
+        elif table_name in ['OSTRNO1', 'OSTRNO2']:
+            options.append('NO')
+            self.add('STRAIN', 'ALL', options, 'STRESS-type')
+        elif table_name in ['OSTRPSD1', 'OSTRPSD2']:
+            options.append('PSDF')
+            self.add('STRAIN', 'ALL', options, 'STRESS-type')
+
         elif table_name in ['OEFIT']:
             if table_code in [25]:
                 self.add('FORCE', 'ALL', options, 'STRESS-type')
@@ -279,7 +308,7 @@ class Subcase(object):
                 self.add('MPCFORCES', 'ALL', options, 'STRESS-type')
             else:
                 self._write_op2_error_msg(log, self.log, msg, data_code)
-        elif table_name in ['OGPFB1']:
+        elif table_name in ['OGPFB1', 'RAGCONS', 'RAGEATC']:
             if table_code == 19:
                 self.add('GPFORCE', 'ALL', options, 'STRESS-type')
             else:
@@ -288,12 +317,26 @@ class Subcase(object):
         # stress
         elif table_name in ['OES1', 'OES1X', 'OES1X1', 'OES1C', 'OESCP',
                             'OESNLXD', 'OESNLXR', 'OESNLBR', 'OESTRCP',
-                            'OESVM1', 'OESVM1C', 'OESNL1X']:
+                            'OESVM1', 'OESVM1C', 'OESNL1X', 'RASCONS', 'RASEATC']:
             #assert data_code['is_stress_flag'] == True, data_code
+            options.append('SORT1')
             if table_code == 5:
                 self.add('STRESS', 'ALL', options, 'STRESS-type')
             else:
                 self._write_op2_error_msg(log, self.log, msg, data_code)
+        elif table_name in ['OES2', 'OES2C']:
+            options.append('SORT2')
+            if table_code == 5:
+                self.add('STRESS', 'ALL', options, 'STRESS-type')
+            else:
+                self._write_op2_error_msg(log, self.log, msg, data_code)
+        elif table_name in ['OSTR2', 'OSTR2C']:
+            options.append('SORT2')
+            if table_code == 5:
+                self.add('STRAIN', 'ALL', options, 'STRESS-type')
+            else:
+                self._write_op2_error_msg(log, self.log, msg, data_code)
+
         elif table_name in ['OESRT']:
             #assert data_code['is_stress_flag'] == True, data_code
             if table_code == 25:
@@ -302,8 +345,8 @@ class Subcase(object):
                 self._write_op2_error_msg(log, self.log, msg, data_code)
 
         # strain
-        elif table_name in ['OSTR1X', 'OSTR1C']:
-            assert data_code['is_strain_flag'] == True, data_code
+        elif table_name in ['OSTR1X', 'OSTR1C', 'RAECONS', 'RAEEATC']:
+            assert data_code['is_strain_flag'] is True, data_code
             if table_code == 5:
                 self.add('STRAIN', 'ALL', options, 'STRESS-type')
             else:
@@ -319,6 +362,11 @@ class Subcase(object):
         elif table_name in ['RADCONS', 'RADEFFM', 'RADEATC', 'RAPEATC', 'RAQEATC', 'RADCONS',
                             'RASEATC', 'RAFEATC', 'RAEEATC', 'RANEATC', 'RAGEATC', 'RAQCONS',
                             'RAPCONS']:
+            pass
+        elif table_name in ['OUGPSD2',
+                            'OSTRNO1', 'OSTNO1C', 'OSTRNO1C',
+                            'OSTRMS1C', 'OSTRRMS1', 'OSTRRMS1C',
+                            'OQMPSD2']:
             pass
         else:
             self._write_op2_error_msg(log, self.log, msg, data_code)
@@ -337,328 +385,6 @@ class Subcase(object):
             print(msg)
             print(data_code)
             raise RuntimeError(data_code)
-
-    def get_format_code(self, options, value):
-        # type: (Any, Any) -> int
-        """
-        Gets the format code that will be used by the op2 based on
-        the options.
-
-        Parameters
-        ----------
-        options : list[int/float/str]
-            the options for a parameter
-        value : int/float/str
-            the value of the parameter
-
-        .. todo::  not done...only supports REAL, IMAG, PHASE, not RANDOM
-        """
-        format_code = 0
-        if 'REAL' in options:
-            format_code += 1
-        if 'IMAG' in options:
-            format_code += 2
-        if 'PHASE' in options:
-            format_code += 4
-        format_code = max(format_code, 1)
-        return format_code
-
-    def get_sort_code(self, options, value):
-        """
-        Gets the sort code of a given set of options and value
-
-        Parameters
-        ----------
-        options : List[int/str]
-            the options for a parameter
-        value : int; str
-            the value of the parameter
-        """
-        sort_code = 0
-        if 'COMPLEX' in options:
-            sort_code += 1
-        if 'SORT2' in options:
-            sort_code += 2
-        if 'RANDOM' in options:
-            sort_code += 4
-        return sort_code
-
-    def get_device_code(self, options, value):
-        # type: (Any, Any) -> int
-        """
-        Gets the device code of a given set of options and value
-
-        Parameters
-        ----------
-        options : list[int/float/str]
-            the options for a parameter
-        value : int/float/str
-            the value of the parameter
-
-        Returns
-        -------
-        device_code : int
-           The OP2 device code
-
-           0 - No output
-           1 - PRINT
-           2 - PLOT
-           3 - PRINT, PLOT
-           4 - PUNCH
-           5 - PRINT, PUNCH
-           6 - PRINT, PLOT, PUNCH
-        """
-        device_code = 0
-        if 'PRINT' in options:
-            device_code += 1
-        if 'PLOT' in options:
-            device_code += 2
-        if 'PUNCH' in options:
-            device_code += 4
-        device_code = max(device_code, 1)
-        #if device_code==0:
-        #    device_code=1  # PRINT
-        return device_code
-
-    def get_analysis_code(self, sol):
-        """
-        Maps the solution number to the OP2 analysis code.
-
-         * 8 - post-buckling (maybe 7 depending on NLPARM???)
-
-        # not important
-         * 3/4 - differential stiffness (obsolete)
-         * 11  - old geometric nonlinear statics
-         * 12  - contran (???)
-
-        .. todo:: verify
-        """
-        codes = {
-            101 : 1,  # staics
-            103 : 2,  # modes
-            105 : 7,  # pre-buckling
-            106 : 10, # nonlinear statics
-            107 : 9,  # complex eigenvalues
-            108 : 5,  # frequency
-            111 : 5,
-            112 : 6,
-            114 : 1,
-            115 : 2,
-            116 : 7,
-            118 : 5,
-            129 : 6,  # nonlinear
-            144 : 1,  # static aero
-            145 : 1,
-            146 : 1,  # flutter
-            153 : 10,
-            159 : 6,  # transient thermal
-        }
-        #print("sol=%s" % sol)
-        approach_code = codes[sol]
-        #print('approach_code = %s' % approach_code)
-        return approach_code
-
-    def get_table_code(self, sol, table_name, options):
-        """
-        Gets the table code of a given parameter.  For example, the
-        DISPLACMENT(PLOT,POST)=ALL makes an OUGV1 table and stores the
-        displacement.  This has an OP2 table code of 1, unless you're running a
-        modal solution, in which case it makes an OUGV1 table of eigenvectors
-        and has a table code of 7.
-
-        Parameters
-        ----------
-        options : list[int/float/str]
-            the options for a parameter
-        value : int/float/str
-            the value of the parameter
-
-        Returns
-        -------
-        table_code : int
-           the OP2 table_code
-        """
-        if table_name in ['VECTOR', 'PRESSURE']:
-            table_name = 'DISPLACEMENT'  # equivalent tables...
-
-        key = (sol, table_name)
-        tables = {
-            # SOL, table_name      table_code
-            (101, 'ACCELERATION'): 11,
-            (103, 'ACCELERATION'): 11,
-            (106, 'ACCELERATION'): 11,
-            (107, 'ACCELERATION'): 11,
-            (108, 'ACCELERATION'): 11,
-            (129, 'ACCELERATION'): 11,
-            #(144, 'ACCELERATION'): 11,
-            (145, 'ACCELERATION'): 11,
-            (146, 'ACCELERATION'): 11,
-
-            (101, 'DISPLACEMENT'): 1,
-            (103, 'DISPLACEMENT'): 7,  # VECTOR
-            (105, 'DISPLACEMENT'): 7,
-            (106, 'DISPLACEMENT'): 1,
-            (107, 'DISPLACEMENT'): 7,
-            (108, 'DISPLACEMENT'): 1,
-            (109, 'DISPLACEMENT'): 1,
-            (111, 'DISPLACEMENT'): 7,
-            (112, 'DISPLACEMENT'): 1,
-            (129, 'DISPLACEMENT'): 7,
-            #(144, 'DISPLACEMENT'): 1,
-            (145, 'DISPLACEMENT'): 1,
-            (146, 'DISPLACEMENT'): 1,
-
-            (101, 'ESE'): 18,  # energy
-            (103, 'ESE'): 18,  # energy
-            (105, 'ESE'): 18,  # energy
-            (106, 'ESE'): 18,  # energy
-            (107, 'ESE'): 18,  # energy
-            (108, 'ESE'): 18,  # energy
-            (109, 'ESE'): 18,  # energy
-            (110, 'ESE'): 18,  # energy
-            (111, 'ESE'): 18,  # energy
-            (112, 'ESE'): 18,  # energy
-            (145, 'ESE'): 18,  # energy
-            (146, 'ESE'): 18,  # energy
-
-            (101, 'FORCE'): 3,  # ???
-            (103, 'FORCE'): 3,  # ???
-            (105, 'FORCE'): 3,  # ???
-            (106, 'FORCE'): 3,  # ???
-            (107, 'FORCE'): 4,  # ???
-            (108, 'FORCE'): 3,  # ???
-            (111, 'FORCE'): 3,  # ???
-            (112, 'FORCE'): 3,  # ???
-            (129, 'FORCE'): 3,  # ???
-            (145, 'FORCE'): 3,  # ???
-            (146, 'FORCE'): 3,  # ???
-
-            (101, 'GPFORCE'): 19,
-            (105, 'GPFORCE'): 19,
-            (106, 'GPFORCE'): 19,
-            (107, 'GPFORCE'): 19,
-            (108, 'GPFORCE'): 19,
-            (111, 'GPFORCE'): 19,
-            (112, 'GPFORCE'): 19,
-            (129, 'GPFORCE'): 19,
-            (145, 'GPFORCE'): 19,
-            (146, 'GPFORCE'): 19,
-
-            (101, 'GPSTRESS'): 20,
-            (105, 'GPSTRESS'): 20,
-            (106, 'GPSTRESS'): 20,
-            (107, 'GPSTRESS'): 20,
-            (108, 'GPSTRESS'): 20,
-            (111, 'GPSTRESS'): 20,
-            (112, 'GPSTRESS'): 20,
-            (129, 'GPSTRESS'): 20,
-            (145, 'GPSTRESS'): 20,
-            (146, 'GPSTRESS'): 20,
-
-            (101, 'GPSTRAIN'): 21,
-            (105, 'GPSTRAIN'): 21,
-            (106, 'GPSTRAIN'): 21,
-            (107, 'GPSTRAIN'): 21,
-            (108, 'GPSTRAIN'): 21,
-            (111, 'GPSTRAIN'): 21,
-            (112, 'GPSTRAIN'): 21,
-            (129, 'GPSTRAIN'): 21,
-            (145, 'GPSTRAIN'): 21,
-            (146, 'GPSTRAIN'): 21,
-
-            (101, 'MPCFORCES'): 3,
-            (103, 'MPCFORCES'): 3,
-            (106, 'MPCFORCES'): 3,
-            (108, 'MPCFORCES'): 3,
-            (112, 'MPCFORCES'): 3,
-            (129, 'MPCFORCES'): 3,
-            #(144, 'MPCFORCES'): 3,
-            (145, 'MPCFORCES'): 3,
-            (146, 'MPCFORCES'): 3,
-
-            (101, 'OLOAD'): 2,
-            (103, 'OLOAD'): 2,
-            (105, 'OLOAD'): 2,
-            (106, 'OLOAD'): 2,
-            (107, 'OLOAD'): 2,
-            (108, 'OLOAD'): 2,
-            (111, 'OLOAD'): 2,
-            (112, 'OLOAD'): 2,
-            (129, 'OLOAD'): 2,
-            #(144, 'OLOAD'): 2,
-            (145, 'OLOAD'): 2,
-            (146, 'OLOAD'): 2,
-
-            (101, 'SPCFORCES'): 3,
-            (103, 'SPCFORCES'): 3,
-            (105, 'SPCFORCES'): 3,
-            (106, 'SPCFORCES'): 3,
-            (107, 'SPCFORCES'): 3,
-            (108, 'SPCFORCES'): 3,
-            (110, 'SPCFORCES'): 3,
-            (111, 'SPCFORCES'): 3,
-            (112, 'SPCFORCES'): 3,
-            (129, 'SPCFORCES'): 3,
-            #(144, 'SPCFORCES'): 3,
-            (145, 'SPCFORCES'): 3,
-            (146, 'SPCFORCES'): 3,
-
-            (101, 'STRAIN'): 5,  # 5/20/21 ???
-            (105, 'STRAIN'): 5,
-            (106, 'STRAIN'): 5,
-            (107, 'STRAIN'): 5,
-            (108, 'STRAIN'): 5,
-            (110, 'STRAIN'): 5,
-            (111, 'STRAIN'): 5,
-            (112, 'STRAIN'): 5,
-            (129, 'STRAIN'): 5,
-            (145, 'STRAIN'): 5,
-            (146, 'STRAIN'): 5,
-
-            (101, 'STRESS'): 5,  # 5/20/21 ???
-            (103, 'STRESS'): 5,
-            (105, 'STRESS'): 5,
-            (106, 'STRESS'): 5,
-            (107, 'STRESS'): 5,
-            (108, 'STRESS'): 5,
-            (111, 'STRESS'): 5,
-            (112, 'STRESS'): 5,
-            (129, 'STRESS'): 5,
-            (145, 'STRESS'): 5,
-            (146, 'STRESS'): 5,
-
-            (145, 'SVECTOR'): 14,
-
-            (101, 'FLUX'): 4,
-            (103, 'FLUX'): 4,
-            (106, 'FLUX'): 4,
-            (112, 'FLUX'): 4,
-            (108, 'FLUX'): 4,
-            (153, 'FLUX'): 4,
-            (159, 'FLUX'): 4,
-
-            (101, 'THERMAL'): 3,  # 3/4 ???
-            (159, 'THERMAL'): 3,  # 3/4 ???
-
-            (101, 'VELOCITY'): 10,
-            (103, 'VELOCITY'): 10,
-            (106, 'VELOCITY'): 10,
-            (107, 'VELOCITY'): 10,
-            (108, 'VELOCITY'): 10,
-            (111, 'VELOCITY'): 10,
-            (112, 'VELOCITY'): 10,
-            (129, 'VELOCITY'): 10,
-            #(144, 'VELOCITY'): 10,
-            (145, 'VELOCITY'): 10,
-            (146, 'VELOCITY'): 10,
-
-            (101, 'VUGRID'): 10,
-        }
-        #print("key=%s" % str(key))
-        if key not in tables:
-            raise KeyError(key)
-        table_code = tables[key]
-        return table_code
 
     def __contains__(self, param_name):
         # type: (str) -> bool
@@ -753,7 +479,7 @@ class Subcase(object):
         .. warning:: needs more validation
         """
         for key, param in iteritems(self.params):
-            value, options, param_type = param
+            (unused_value, options, unused_param_type) = param
             if key in INT_CARDS or key in ('SUBTITLE', 'LABEL', 'TITLE', 'ECHO'):
                 pass
             elif key in PLOTTABLE_TYPES:
@@ -806,13 +532,13 @@ class Subcase(object):
     def add(self, key, value, options, param_type):
         if param_type not in self.allowed_param_types:
             msg = 'param_type=%r allowed_types=%s' % (param_type, ''.join(self.allowed_param_types))
-            raise TypeError(param_type)
+            raise TypeError(msg)
         self._add_data(key, value, options, param_type)
 
     def update(self, key, value, options, param_type):
         if param_type not in self.allowed_param_types:
             msg = 'param_type=%r allowed_types=%s' % (param_type, ''.join(self.allowed_param_types))
-            raise TypeError(param_type)
+            raise TypeError(msg)
         assert key in self.params, 'key=%r is not in isubcase=%s' % (key, self.id)
         self._add_data(key, value, options, param_type)
 
@@ -923,18 +649,18 @@ class Subcase(object):
             elif key == 'TEMPERATURE':
                 thermal = 1
             elif key in results:
-                sort_code = self.get_sort_code(options, value)
-                device_code = self.get_device_code(options, value)
+                sort_code = get_sort_code(options, value)
+                device_code = get_device_code(options, value)
 
                 if key in ['STRESS', 'STRAIN']:
-                    stress_code = self.get_stress_code(key, options, value)
+                    stress_code = get_stress_code(key, options, value)
                     op2_params['stress_codes'].append(stress_code)
                 else:
                     op2_params['stress_codes'].append(0)
 
-                format_code = self.get_format_code(options, value)
-                table_code = self.get_table_code(sol, key, options)
-                analysis_code = self.get_analysis_code(sol)
+                format_code = get_format_code(options, value)
+                table_code = get_table_code(sol, key, options)
+                analysis_code = get_analysis_code(sol)
 
                 approach_code = analysis_code * 10 + device_code
                 tcode = table_code * 1000 + sort_code
@@ -1014,7 +740,7 @@ class Subcase(object):
 
         elif param_type == 'SET-type':
             #: .. todo:: collapse data...not written yet
-            msg += write_set(value, options, spaces)
+            msg += write_set(options, value, spaces)
         elif param_type == 'OBJ-type':
             msg += value.write(spaces)
         else:
@@ -1108,7 +834,7 @@ class Subcase(object):
         Returns
         -------
         msg : str
-           the string of the current Subcase
+            the string of the current Subcase
         """
         if self.id == 0:
             msg = str(self)
@@ -1120,7 +846,7 @@ class Subcase(object):
                     pass  # dont write global subcase parameters
                 else:
                     #print("key=%s param=%s" %(key, param))
-                    (value, options, param_type) = param
+                    #(unused_value, unused_options, unused_param_type) = param
                     #print("  *key=%r value=%r options=%s "
                           #"param_type=%r" % (key, value, options, param_type))
                     msg += self.print_param(key, param)
@@ -1129,7 +855,7 @@ class Subcase(object):
             if nparams == 0:
                 for (key, param) in self.subcase_sorted(self.params.items()):
                     #print("key=%s param=%s" %(key, param))
-                    (value, options, param_type) = param
+                    #(unused_value, unused_options, unused_param_type) = param
                     #print("  *key=%r value=%r options=%s "
                           #"param_type=%r" % (key, value, options, param_type))
                     msg += self.print_param(key, param)
@@ -1210,7 +936,7 @@ class Subcase(object):
 
         nparams = 0
         for key, param in self.subcase_sorted(iteritems(self.params)):
-            (value, options, param_type) = param
+            #(unused_value, unused_options, unused_param_type) = param
             #print('key=%r value=%s options=%s' % (key, value, options))
             msg += self.print_param(key, param)
             nparams += 1
@@ -1324,3 +1050,350 @@ def update_param_name(param_name):
     #print '*param_name = ',param_name
     return param_name
 
+def get_analysis_code(sol):
+    """
+    Maps the solution number to the OP2 analysis code.
+
+     * 8 - post-buckling (maybe 7 depending on NLPARM???)
+
+    # not important
+     * 3/4 - differential stiffness (obsolete)
+     * 11  - old geometric nonlinear statics
+     * 12  - contran (???)
+
+    .. todo:: verify
+    """
+    codes = {
+        101 : 1,  # staics
+        103 : 2,  # modes
+        105 : 7,  # pre-buckling
+        106 : 10, # nonlinear statics
+        107 : 9,  # complex eigenvalues
+        108 : 5,  # frequency
+        111 : 5,
+        112 : 6,
+        114 : 1,
+        115 : 2,
+        116 : 7,
+        118 : 5,
+        129 : 6,  # nonlinear
+        144 : 1,  # static aero
+        145 : 1,
+        146 : 1,  # flutter
+        153 : 10,
+        159 : 6,  # transient thermal
+    }
+    #print("sol=%s" % sol)
+    approach_code = codes[sol]
+    #print('approach_code = %s' % approach_code)
+    return approach_code
+
+def get_device_code(options, unused_value):
+    # type: (Any, Any) -> int
+    """
+    Gets the device code of a given set of options and value
+
+    Parameters
+    ----------
+    options : list[int/float/str]
+        the options for a parameter
+    unused_value : int/float/str
+        the value of the parameter
+
+    Returns
+    -------
+    device_code : int
+       The OP2 device code
+
+       0 - No output
+       1 - PRINT
+       2 - PLOT
+       3 - PRINT, PLOT
+       4 - PUNCH
+       5 - PRINT, PUNCH
+       6 - PRINT, PLOT, PUNCH
+    """
+    device_code = 0
+    if 'PRINT' in options:
+        device_code += 1
+    if 'PLOT' in options:
+        device_code += 2
+    if 'PUNCH' in options:
+        device_code += 4
+    device_code = max(device_code, 1)
+    #if device_code==0:
+    #    device_code=1  # PRINT
+    return device_code
+
+def get_table_code(sol, table_name, unused_options):
+    """
+    Gets the table code of a given parameter.  For example, the
+    DISPLACMENT(PLOT,POST)=ALL makes an OUGV1 table and stores the
+    displacement.  This has an OP2 table code of 1, unless you're running a
+    modal solution, in which case it makes an OUGV1 table of eigenvectors
+    and has a table code of 7.
+
+    Parameters
+    ----------
+    options : list[int/float/str]
+        the options for a parameter
+    value : int/float/str
+        the value of the parameter
+
+    Returns
+    -------
+    table_code : int
+       the OP2 table_code
+    """
+    if table_name in ['VECTOR', 'PRESSURE']:
+        table_name = 'DISPLACEMENT'  # equivalent tables...
+
+    key = (sol, table_name)
+    tables = {
+        # SOL, table_name      table_code
+        (101, 'ACCELERATION'): 11,
+        (103, 'ACCELERATION'): 11,
+        (106, 'ACCELERATION'): 11,
+        (107, 'ACCELERATION'): 11,
+        (108, 'ACCELERATION'): 11,
+        (129, 'ACCELERATION'): 11,
+        #(144, 'ACCELERATION'): 11,
+        (145, 'ACCELERATION'): 11,
+        (146, 'ACCELERATION'): 11,
+
+        (101, 'DISPLACEMENT'): 1,
+        (103, 'DISPLACEMENT'): 7,  # VECTOR
+        (105, 'DISPLACEMENT'): 7,
+        (106, 'DISPLACEMENT'): 1,
+        (107, 'DISPLACEMENT'): 7,
+        (108, 'DISPLACEMENT'): 1,
+        (109, 'DISPLACEMENT'): 1,
+        (111, 'DISPLACEMENT'): 7,
+        (112, 'DISPLACEMENT'): 1,
+        (129, 'DISPLACEMENT'): 7,
+        #(144, 'DISPLACEMENT'): 1,
+        (145, 'DISPLACEMENT'): 1,
+        (146, 'DISPLACEMENT'): 1,
+
+        (101, 'ESE'): 18,  # energy
+        (103, 'ESE'): 18,  # energy
+        (105, 'ESE'): 18,  # energy
+        (106, 'ESE'): 18,  # energy
+        (107, 'ESE'): 18,  # energy
+        (108, 'ESE'): 18,  # energy
+        (109, 'ESE'): 18,  # energy
+        (110, 'ESE'): 18,  # energy
+        (111, 'ESE'): 18,  # energy
+        (112, 'ESE'): 18,  # energy
+        (145, 'ESE'): 18,  # energy
+        (146, 'ESE'): 18,  # energy
+
+        (101, 'FORCE'): 3,  # ???
+        (103, 'FORCE'): 3,  # ???
+        (105, 'FORCE'): 3,  # ???
+        (106, 'FORCE'): 3,  # ???
+        (107, 'FORCE'): 4,  # ???
+        (108, 'FORCE'): 3,  # ???
+        (111, 'FORCE'): 3,  # ???
+        (112, 'FORCE'): 3,  # ???
+        (129, 'FORCE'): 3,  # ???
+        (145, 'FORCE'): 3,  # ???
+        (146, 'FORCE'): 3,  # ???
+
+        (101, 'GPFORCE'): 19,
+        (105, 'GPFORCE'): 19,
+        (106, 'GPFORCE'): 19,
+        (107, 'GPFORCE'): 19,
+        (108, 'GPFORCE'): 19,
+        (111, 'GPFORCE'): 19,
+        (112, 'GPFORCE'): 19,
+        (129, 'GPFORCE'): 19,
+        (145, 'GPFORCE'): 19,
+        (146, 'GPFORCE'): 19,
+
+        (101, 'GPSTRESS'): 20,
+        (105, 'GPSTRESS'): 20,
+        (106, 'GPSTRESS'): 20,
+        (107, 'GPSTRESS'): 20,
+        (108, 'GPSTRESS'): 20,
+        (111, 'GPSTRESS'): 20,
+        (112, 'GPSTRESS'): 20,
+        (129, 'GPSTRESS'): 20,
+        (145, 'GPSTRESS'): 20,
+        (146, 'GPSTRESS'): 20,
+
+        (101, 'GPSTRAIN'): 21,
+        (105, 'GPSTRAIN'): 21,
+        (106, 'GPSTRAIN'): 21,
+        (107, 'GPSTRAIN'): 21,
+        (108, 'GPSTRAIN'): 21,
+        (111, 'GPSTRAIN'): 21,
+        (112, 'GPSTRAIN'): 21,
+        (129, 'GPSTRAIN'): 21,
+        (145, 'GPSTRAIN'): 21,
+        (146, 'GPSTRAIN'): 21,
+
+        (101, 'MPCFORCES'): 3,
+        (103, 'MPCFORCES'): 3,
+        (106, 'MPCFORCES'): 3,
+        (108, 'MPCFORCES'): 3,
+        (112, 'MPCFORCES'): 3,
+        (129, 'MPCFORCES'): 3,
+        #(144, 'MPCFORCES'): 3,
+        (145, 'MPCFORCES'): 3,
+        (146, 'MPCFORCES'): 3,
+
+        (101, 'OLOAD'): 2,
+        (103, 'OLOAD'): 2,
+        (105, 'OLOAD'): 2,
+        (106, 'OLOAD'): 2,
+        (107, 'OLOAD'): 2,
+        (108, 'OLOAD'): 2,
+        (111, 'OLOAD'): 2,
+        (112, 'OLOAD'): 2,
+        (129, 'OLOAD'): 2,
+        #(144, 'OLOAD'): 2,
+        (145, 'OLOAD'): 2,
+        (146, 'OLOAD'): 2,
+
+        (101, 'SPCFORCES'): 3,
+        (103, 'SPCFORCES'): 3,
+        (105, 'SPCFORCES'): 3,
+        (106, 'SPCFORCES'): 3,
+        (107, 'SPCFORCES'): 3,
+        (108, 'SPCFORCES'): 3,
+        (110, 'SPCFORCES'): 3,
+        (111, 'SPCFORCES'): 3,
+        (112, 'SPCFORCES'): 3,
+        (129, 'SPCFORCES'): 3,
+        #(144, 'SPCFORCES'): 3,
+        (145, 'SPCFORCES'): 3,
+        (146, 'SPCFORCES'): 3,
+
+        (101, 'STRAIN'): 5,  # 5/20/21 ???
+        (105, 'STRAIN'): 5,
+        (106, 'STRAIN'): 5,
+        (107, 'STRAIN'): 5,
+        (108, 'STRAIN'): 5,
+        (110, 'STRAIN'): 5,
+        (111, 'STRAIN'): 5,
+        (112, 'STRAIN'): 5,
+        (129, 'STRAIN'): 5,
+        (145, 'STRAIN'): 5,
+        (146, 'STRAIN'): 5,
+
+        (101, 'STRESS'): 5,  # 5/20/21 ???
+        (103, 'STRESS'): 5,
+        (105, 'STRESS'): 5,
+        (106, 'STRESS'): 5,
+        (107, 'STRESS'): 5,
+        (108, 'STRESS'): 5,
+        (111, 'STRESS'): 5,
+        (112, 'STRESS'): 5,
+        (129, 'STRESS'): 5,
+        (145, 'STRESS'): 5,
+        (146, 'STRESS'): 5,
+
+        (145, 'SVECTOR'): 14,
+
+        (101, 'FLUX'): 4,
+        (103, 'FLUX'): 4,
+        (106, 'FLUX'): 4,
+        (112, 'FLUX'): 4,
+        (108, 'FLUX'): 4,
+        (153, 'FLUX'): 4,
+        (159, 'FLUX'): 4,
+
+        (101, 'THERMAL'): 3,  # 3/4 ???
+        (159, 'THERMAL'): 3,  # 3/4 ???
+
+        (101, 'VELOCITY'): 10,
+        (103, 'VELOCITY'): 10,
+        (106, 'VELOCITY'): 10,
+        (107, 'VELOCITY'): 10,
+        (108, 'VELOCITY'): 10,
+        (111, 'VELOCITY'): 10,
+        (112, 'VELOCITY'): 10,
+        (129, 'VELOCITY'): 10,
+        #(144, 'VELOCITY'): 10,
+        (145, 'VELOCITY'): 10,
+        (146, 'VELOCITY'): 10,
+
+        (101, 'VUGRID'): 10,
+    }
+    #print("key=%s" % str(key))
+    if key not in tables:
+        raise KeyError(key)
+    table_code = tables[key]
+    return table_code
+
+def get_sort_code(options, unused_value):
+    """
+    Gets the sort code of a given set of options and value
+
+    Parameters
+    ----------
+    options : List[int/str]
+        the options for a parameter
+    unused_value : int; str
+        the value of the parameter
+    """
+    sort_code = 0
+    if 'COMPLEX' in options:
+        sort_code += 1
+    if 'SORT2' in options:
+        sort_code += 2
+    if 'RANDOM' in options:
+        sort_code += 4
+    return sort_code
+
+def get_format_code(options, unused_value):
+    # type: (Any, Any) -> int
+    """
+    Gets the format code that will be used by the op2 based on
+    the options.
+
+    Parameters
+    ----------
+    options : list[int/float/str]
+        the options for a parameter
+    unused_value : int/float/str
+        the value of the parameter
+
+    .. todo::  not done...only supports REAL, IMAG, PHASE, not RANDOM
+    """
+    format_code = 0
+    if 'REAL' in options:
+        format_code += 1
+    if 'IMAG' in options:
+        format_code += 2
+    if 'PHASE' in options:
+        format_code += 4
+    format_code = max(format_code, 1)
+    return format_code
+
+def get_stress_code(key, options, unused_value):
+    # type: (str, Dict[str, Any], Any) -> int
+    """
+    Method get_stress_code:
+
+    .. note:: the individual element must take the stress_code and reduce
+    it to what the element can return.  For example, for an isotropic
+    CQUAD4 the fiber field doesnt mean anything.
+
+    BAR - no von mises/fiber
+    ISOTROPIC - no fiber
+
+    .. todo:: how does the MATERIAL bit get turned on?  I'm assuming it's
+              element dependent...
+    """
+    stress_code = 0
+    if 'VONMISES' in options:
+        stress_code += 1
+    if key == 'STRAIN':
+        stress_code += 10  # 2+8=10 - fields 2 and 4
+    if 'FIBER' in options:
+        stress_code += 4
+    #if 'MATERIAL' in options:
+    #    stress_code += 16  material coord (1) vs element (0)
+    return stress_code

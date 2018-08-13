@@ -7,7 +7,7 @@ from __future__ import print_function
 from itertools import chain
 
 import io
-from six import PY2, PY3, iteritems, string_types, StringIO
+from six import PY2, PY3, iteritems, itervalues, StringIO
 import numpy as np
 
 from pyNastran.bdf.bdf import BDF
@@ -23,10 +23,10 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
 
     Parameters
     ----------
-    bdf_filename : str
-        a bdf_filename (string; supported) or a BDF model (BDF)
-        that has been cross referenced and is fully valid (an
-        equivalenced deck is not valid)
+    bdf_filename : str / BDF
+        str : a bdf_filename (string; supported)
+        BDF : a BDF model that has been cross referenced and is
+        fully valid (an equivalenced deck is not valid)
     bdf_filename_out : str
         a bdf_filename to write
     size : int; {8, 16}; default=8
@@ -69,7 +69,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
 
      - elements
         - CELASx/CONROD/CBAR/CBEAM/CQUAD4/CTRIA3/CTETRA/CPENTA/CHEXA
-        - RBAR/RBAR1/RBE1/RBE2/RBE3/RSPLINE
+        - RBAR/RBAR1/RBE1/RBE2/RBE3/RSPLINE/RSSCON
 
      - properties
         - PSHELL/PCOMP/PCOMPG/PSOLID/PSHEAR/PBAR/PBARL
@@ -130,22 +130,24 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
        - SUBCASE
        - global SET cards won't be renumbered properly
 
-    Example 1 - Renumber Everything; Start from 1
-    ---------------------------------------------
-    bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
-                 round_ids=False)
+    Examples
+    --------
+    **Renumber Everything; Start from 1**
 
-    Example 2 - Renumber Everything; Start Material IDs from 100
-    ------------------------------------------------------------
-    starting_id_dict = {
+    >>> bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
+                     round_ids=False)
+
+    **Renumber Everything; Start Material IDs from 100**
+
+    >>> starting_id_dict = {
         'mid' : 100,
     }
-    bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
-                 starting_ids_dict=starting_ids_dict, round_ids=False)
+    >>> bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
+                     starting_ids_dict=starting_ids_dict, round_ids=False)
 
-    Example 3 - Only Renumber Material IDs
-    --------------------------------------
-    starting_id_dict = {
+    **Only Renumber Material IDs**
+
+    >>> starting_id_dict = {
         'cid' : None,
         'nid' : None,
         'eid' : None,
@@ -168,9 +170,11 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         'suport_id' : None,
         'suport1_id' : None,
         'tf_id' : None,
+        'set_id' : None,
     }
-    bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
-                 starting_ids_dict=starting_ids_dict, round_ids=False)
+    >>> bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
+                     starting_ids_dict=starting_ids_dict, round_ids=False)
+
     """
     starting_id_dict_default = {
         'cid' : 1,
@@ -187,6 +191,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         'method_id' : 1,
         'cmethod_id' : 1,
         'spline_id' : 1,
+        'caero_id' : 1,
         'table_id' : 1,
         'flfact_id' : 1,
         'flutter_id' : 1,
@@ -224,6 +229,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     freq_id = None
     tstep_id = None
     tstepnl_id = None
+    set_id = None
     suport_id = None
     suport1_id = None
     tf_id = None
@@ -280,6 +286,8 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
             cmethod_id = int(value)
         elif key == 'spline_id':
             spline_id = int(value)
+        elif key == 'caero_id':
+            caero_id = int(value)
         elif key == 'table_id':
             table_id = int(value)
         elif key == 'flfact_id':
@@ -292,6 +300,8 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
             tstep_id = int(value)
         elif key == 'tstepnl_id':
             tstepnl_id = int(value)
+        elif key == 'set_id':
+            set_id = int(value)
         elif key == 'suport_id':
             suport_id = int(value)
         elif key == 'suport1_id':
@@ -327,12 +337,12 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     #suport_map = {}
     suport1_map = {}
 
-    if isinstance(bdf_filename, string_types):
+    if isinstance(bdf_filename, BDF):
+        model = bdf_filename
+    else:
         model = BDF(log=log, debug=debug)
         model.disable_cards(cards_to_skip)
         model.read_bdf(bdf_filename)
-    else:
-        model = bdf_filename
 
     spoints = list(model.spoints.keys())
     epoints = list(model.epoints.keys())
@@ -409,13 +419,19 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
 
     if 'nid' in starting_id_dict and nid is not None:
         #spoints2 = arange(1, len(spoints) + 1)
+        #nid = _create_dict_mapper(model.nodes, nid_map, 'nid', nid)
+
         for nid, node in sorted(iteritems(model.nodes)):
             nid_new = nid_map[nid]
-            #print('nid=%s -> %s' % (nid,nid_new))
+            #print('nid=%s -> %s' % (nid, nid_new))
             node.nid = nid_new
 
     if 'pid' in starting_id_dict and pid is not None:
         # properties
+        #pid = _create_dict_mapper(model.properties, properties_map, 'pid', pid)
+        #pid = _create_dict_mapper(model.properties_mass, properties_mass_map, 'pid', pid)
+        #pid = _update(model.convection_properties, properties_mass_map, pid)
+
         for pidi, prop in sorted(iteritems(model.properties)):
             prop.pid = pid
             properties_map[pidi] = pid
@@ -436,6 +452,8 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
 
     if 'eid' in starting_id_dict and eid is not None:
         # elements
+        #eid = _create_dict_mapper(model.elements, eid_map, 'eid', eid)
+
         for eidi, element in sorted(iteritems(model.elements)):
             element.eid = eid
             eid_map[eidi] = eid
@@ -447,7 +465,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
             mass_id_map[eidi] = eid
             eid += 1
         for eidi, elem in sorted(iteritems(model.rigid_elements)):
-            # RBAR/RBAR1/RBE1/RBE2/RBE3/RSPLINE
+            # RBAR/RBAR1/RBE1/RBE2/RBE3/RSPLINE/RSSCON
             elem.eid = eid
             eid_map[eidi] = eid
             rigid_elements_map[eidi] = eid
@@ -529,11 +547,49 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
             set_map[sidi] = set_id
             set_id += 1
 
+    if 'spline_id' in starting_id_dict and spline_id is not None:
+        # set up spline1 box mapping
+        delta_box1_map = {}
+        delta_box2_map = {}
+        for sidi, spline in sorted(iteritems(model.splines)):
+            if spline.type in ['SPLINE1', 'SPLINE2']:
+                delta_box1_map[sidi] = spline.box1 - spline.caero
+                delta_box2_map[sidi] = spline.box2 - spline.caero
+            else:
+                # should be handled by the xref?
+                pass
+            #else:
+                #raise NotImplementedError(spline)
+
+    caero_id_map = {}
+    if 'caero_id' in starting_id_dict and caero_id is not None:
+        # caeros
+        for caero_idi, caero in sorted(iteritems(model.caeros)):
+            if caero.type in ['CAERO1', 'CAERO3', 'CAERO4']: # not CAERO5
+                caero.eid = caero_id
+                caero_id_map[caero_idi] = caero_id
+                caero_id += caero.shape[0] * caero.shape[1]
+            elif caero.type == 'CAERO2':
+                caero.eid = caero_id
+                caero_id_map[caero_idi] = caero_id
+                caero_id += caero.nboxes
+            else:
+                raise NotImplementedError(caero)
+
     spline_id_map = {}
     if 'spline_id' in starting_id_dict and spline_id is not None:
-        # sets
+        # splines
         for sidi, spline in sorted(iteritems(model.splines)):
             spline.eid = spline_id
+            #spline.cross_reference(model)
+            if spline.type in ['SPLINE1', 'SPLINE2']:
+                spline.box1 = caero_id_map[spline.caero] + delta_box1_map[sidi]
+                spline.box2 = caero_id_map[spline.caero] + delta_box2_map[sidi]
+            else:
+                # should be handled by the xref?
+                pass
+            #else:
+                #raise NotImplementedError(spline)
             spline_id_map[sidi] = spline_id
             spline_id += 1
 
@@ -595,8 +651,9 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         else:
             param_id = 1
         for idi, param in sorted(iteritems(dict_obj)):
+            #print('working on id=%s param=%s' % (str(idi), str(param)))
             try:
-                msg = '%s has no %r; use %s' % (param.type, param_name, object_attributes(param))
+                msg = '%s has no %r; use %s' % (param.type, param_name, param.object_attributes())
             except AttributeError:
                 model.log.error('param = %r' % param)
                 raise
@@ -681,6 +738,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         'FREQUENCY' : freq_map,
         'sets' : set_map,
         'splines' : spline_id_map,
+        'caeros' : caero_id_map,
 
         'DLOAD' : dload_map,
         'LOAD' : load_map,
@@ -721,6 +779,36 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
                         interspersed=False, close=close)
     return model, mapper
 
+def get_renumber_starting_ids_from_model(model):
+    """
+    Get the starting ids dictionary used for renumbering with ids greater than those in model.
+    Parameters
+    -----------
+    model : BDF
+        BDF object to get maximum ids from.
+    Returns
+    --------
+    starting_id_dict : dict {str : int, ...}
+        Dictionary from id type to starting id.
+    """
+    starting_id_dict = {
+        'cid' : max(model.coords.keys()) + 1,
+        'nid' : max(model.point_ids) + 1,
+        'eid' : max([max(model.elements.keys()),
+                     max(model.masses.keys()) if model.masses else 0,
+                     max(model.rigid_elements.keys()) if model.rigid_elements else 0,
+                     ]) + 1,
+        'pid' : max([max(model.properties.keys()),
+                     0 if len(model.properties_mass) == 0 else max(model.properties_mass.keys()),
+                     ]) + 1,
+        'mid' : max(model.material_ids) + 1,
+        'set_id' : max(model.sets.keys()) + 1 if model.sets else 1,
+        'spline_id' : max(model.splines.keys()) + 1 if model.splines else 1,
+        'caero_id' : max(caero.box_ids[-1, -1]
+                         for caero in itervalues(model.caeros)) + 1 if model.caeros else 1,
+    }
+    return starting_id_dict
+
 def _update_case_control(model, mapper):
     """
     Updates the case control deck; helper method for ``bdf_renumber``.
@@ -731,6 +819,7 @@ def _update_case_control(model, mapper):
         the BDF object
     mapper : dict[str] = List[int]
         Defines the possible case control header values for each entry (e.g. `LOAD`)
+
     """
     elemental_quantities = ['STRESS', 'STRAIN', 'FORCE', 'ESE', 'EKE']
     nodal_quantities = [
@@ -881,14 +970,13 @@ def _update_case_control(model, mapper):
                             global_subcase.update(
                                 seti, values2, seti_key, param_type)
                     else:
-                        #pass
                         #print('key=%s seti2=%s' % (key, seti2))
                         model.log.error('key=%r options=%r param_type=%r value=%r' % (
                             key, options, param_type, value))
                         raise RuntimeError(key)
                 elif value in ['NONE', 'ALL']:
-                    # print('*ALL -> key=%s options=%s param_type=%s value=%s' % (
-                        # key, options, param_type, value))
+                    #print('*ALL -> key=%s options=%s param_type=%s value=%s' % (
+                        #key, options, param_type, value))
                     #print('*all')
                     pass
                 elif key == '':
@@ -902,3 +990,10 @@ def _update_case_control(model, mapper):
                 raise RuntimeError(key)
                     #if value ==
         #print()
+
+#def _create_dict_mapper(properties, properties_map, pid_name, pid):
+    #for pidi, prop in sorted(iteritems(mydict)):
+        #setattr(prop, pid_name, pid)
+        #properties_map[pidi] = pid
+        #pid += 1
+    #return pid

@@ -1,37 +1,40 @@
 from __future__ import print_function
-from collections import defaultdict
 from six import iteritems
-import numpy as np
+#import numpy as np
 
 from pyNastran.bdf.bdf import BDF_, LOAD
 #from pyNastran.bdf.bdf import BDF as BDF_, LOAD
 from pyNastran.dev.bdf_vectorized2.cards.nodes import GRIDv, Nodes
-from pyNastran.dev.bdf_vectorized2.cards.elements import Elements
+from pyNastran.dev.bdf_vectorized2.cards.elements.elements import Elements
 
-from pyNastran.dev.bdf_vectorized2.cards.springs import (
+from pyNastran.dev.bdf_vectorized2.cards.elements.springs import (
     CELAS1, CELAS2, CELAS3, CELAS4, Springs)
-from pyNastran.dev.bdf_vectorized2.cards.dampers import (
+from pyNastran.dev.bdf_vectorized2.cards.elements.dampers import (
     CDAMP1, CDAMP2, CDAMP3, CDAMP4, CDAMP5, CVISCv, PLOTELv, Dampers)
-from pyNastran.dev.bdf_vectorized2.cards.bush import (
+from pyNastran.dev.bdf_vectorized2.cards.elements.bush import (
     CBUSHv, Bushes)
 
-from pyNastran.dev.bdf_vectorized2.cards.rods import (
+from pyNastran.dev.bdf_vectorized2.cards.elements.rods import (
     CONRODv, CRODv, CTUBEv, Rods)
-from pyNastran.dev.bdf_vectorized2.cards.masses import (
+from pyNastran.dev.bdf_vectorized2.cards.elements.masses import (
     CONM2v, Masses)
-from pyNastran.dev.bdf_vectorized2.cards.loads import (
-    Loads, PLOADv, PLOAD1v, PLOAD2v, PLOAD4v,
-    FORCEv, FORCE1v, FORCE2v,
-    MOMENTv, MOMENT1v, MOMENT2v,
-    SLOADv)
-from pyNastran.dev.bdf_vectorized2.cards.bars import CBARv, Bars
-from pyNastran.dev.bdf_vectorized2.cards.beams import CBEAMv, Beams
-from pyNastran.dev.bdf_vectorized2.cards.shears import CSHEARv, Shears
-from pyNastran.dev.bdf_vectorized2.cards.shells import (
+from pyNastran.dev.bdf_vectorized2.cards.elements.bars import CBARv, Bars
+from pyNastran.dev.bdf_vectorized2.cards.elements.beams import CBEAMv, Beams
+from pyNastran.dev.bdf_vectorized2.cards.elements.shears import CSHEARv, Shears
+from pyNastran.dev.bdf_vectorized2.cards.elements.shells import (
     CTRIA3v, CTRIA6v, CTRIARv, CQUAD4v, CQUAD8v, CQUADv, CQUADRv, Shells)
-from pyNastran.dev.bdf_vectorized2.cards.solids import (
+from pyNastran.dev.bdf_vectorized2.cards.elements.solids import (
     CTETRA4v, CPENTA6v, CHEXA8v, CPYRAM5v,
     CTETRA10v, CPENTA15v, CHEXA20v, CPYRAM13v, Solids)
+
+from pyNastran.dev.bdf_vectorized2.cards.loads.loads import (
+    Loads, FORCEv, FORCE1v, FORCE2v,
+    MOMENTv, MOMENT1v, MOMENT2v,
+    SLOADv, SPCDv, GRAVv, LSEQv)
+from pyNastran.dev.bdf_vectorized2.cards.loads.pressure_loads import (
+    PLOADv, PLOAD1v, PLOAD2v, PLOAD4v)
+from pyNastran.dev.bdf_vectorized2.cards.loads.thermal_loads import (
+    TEMPv, TEMPDv)
 
 
 class BDF(BDF_):
@@ -45,7 +48,6 @@ class BDF(BDF_):
         # type: (Optional[bool], SimpleLogger, str) -> None
         BDF_.__init__(self, debug=debug, log=log, mode=mode)
         #super(BDF, self).__init__(debug=debug, log=log, mode=mode)
-        #del
         #self._grids_temp = []
 
         model = self
@@ -122,7 +124,7 @@ class BDF(BDF_):
 
 
         self.sload = SLOADv(model)
-        #self.grav = GRAVv(model)
+        self.grav = GRAVv(model)
         self.force = FORCEv(model)
         self.force1 = FORCE1v(model)
         self.force2 = FORCE2v(model)
@@ -135,11 +137,21 @@ class BDF(BDF_):
         self.moment1 = MOMENT1v(model)
         self.moment2 = MOMENT2v(model)
 
+        self.spcd = SPCDv(model)
+        self.temp = TEMPv(model)
+        self.tempd = TEMPDv(model)
+
         self.load_combinations = {}
+        #def lseqi():
+            #return LSEQv(model)
+        #self.lseqs = defaultdict(lseqi)
+        self.lseq = LSEQv(model)
         self.loads = Loads(model)
 
         self._update_card_parser()
 
+    def uncross_reference(self):
+        pass
     def _prepare_grid(self, card, card_obj, comment=''):
         self.grid.add_card(card_obj, comment=comment)
     def _add_node_object(self, node, allow_overwrites=False):
@@ -214,21 +226,29 @@ class BDF(BDF_):
         self.cbeam.add_card(card_obj, comment=comment)
 
     def _prepare_cquad4(self, card, card_obj, comment=''):
+        """adds a CQUAD4"""
         self.cquad4.add_card(card_obj, comment=comment)
     def _prepare_ctria3(self, card, card_obj, comment=''):
+        """adds a CTRIA3"""
         self.ctria3.add_card(card_obj, comment=comment)
     def _prepare_ctria6(self, card, card_obj, comment=''):
+        """adds a CTRIA6"""
         self.ctria6.add_card(card_obj, comment=comment)
     def _prepare_cquad8(self, card, card_obj, comment=''):
+        """adds a CQUAD8"""
         self.cquad8.add_card(card_obj, comment=comment)
     def _prepare_cquad(self, card, card_obj, comment=''):
+        """adds a CQUAD"""
         self.cquad.add_card(card_obj, comment=comment)
     def _prepare_cquadr(self, card, card_obj, comment=''):
+        """adds a CQUADR"""
         self.cquadr.add_card(card_obj, comment=comment)
     def _prepare_ctriar(self, card, card_obj, comment=''):
+        """adds a CTRIAR"""
         self.ctriar.add_card(card_obj, comment=comment)
 
     def _prepare_cshear(self, card, card_obj, comment=''):
+        """adds a CSHEAR"""
         self.cshear.add_card(card_obj, comment=comment)
 
     def _prepare_ctetra(self, card, card_obj, comment=''):
@@ -265,11 +285,22 @@ class BDF(BDF_):
         assert key not in self.load_combinations
         self.load_combinations[key] = load
 
-    #def _prepare_grav(self, card, card_obj, comment=''):
-        #self.grav.add_card(card_obj, comment=comment)
-    #def _prepare_accel(self, card, card_obj, comment=''):
+    def _prepare_lseq(self, card, card_obj, comment=''):
+        #self.lseq.add_card(card_obj, comment=comment)
+        #lseq = LSEQ.add_card(card_obj, comment=comment)
+        #key = lseq.sid
+        #assert key not in self.lseqs
+        self.lseq.add_card(card_obj, comment=comment)
+
+    def _prepare_grav(self, card, card_obj, comment=''):
+        self.grav.add_card(card_obj, comment=comment)
+    def _prepare_accel(self, card, card_obj, comment=''):
+        if self.card_count['ACCEL'] == 1:
+            self.log.warning('skipping %s' % str(card))
         #self.accel.add_card(card_obj, comment=comment)
-    #def _prepare_accel1(self, card, card_obj, comment=''):
+    def _prepare_accel1(self, card, card_obj, comment=''):
+        if self.card_count['ACCEL1'] == 1:
+            self.log.warning('skipping %s' % str(card))
         #self.accel1.add_card(card_obj, comment=comment)
     def _prepare_sload(self, card, card_obj, comment=''):
         self.sload.add_card(card_obj, comment=comment)
@@ -295,11 +326,56 @@ class BDF(BDF_):
     def _prepare_pload4(self, card, card_obj, comment=''):
         self.pload4.add_card(card_obj, comment=comment)
 
+    def _prepare_spcd(self, card, card_obj, comment=''):
+        self.spcd.add_card(card_obj, comment=comment)
+    def _prepare_temp(self, card, card_obj, comment=''):
+        self.temp.add_card(card_obj, comment=comment)
+    def _prepare_tempd(self, card, card_obj, comment=''):
+        self.tempd.add_card(card_obj, comment=comment)
+
+    def _prepare_ploadx1(self, card, card_obj, comment=''):
+        if self.card_count['PLOADX1'] == 1:
+            self.log.warning('skipping %s' % str(card))
+    def _prepare_qvol(self, card, card_obj, comment=''):
+        if self.card_count['QVOL'] == 1:
+            self.log.warning('skipping %s' % str(card))
+    def _prepare_qhbdy(self, card, card_obj, comment=''):
+        if self.card_count['QHBDY'] == 1:
+            self.log.warning('skipping %s' % str(card))
+    def _prepare_rforce(self, card, card_obj, comment=''):
+        if self.card_count['RFORCE'] == 1:
+            self.log.warning('skipping %s' % str(card))
+    def _prepare_rforce1(self, card, card_obj, comment=''):
+        if self.card_count['RFORCE1'] == 1:
+            self.log.warning('skipping %s' % str(card))
+    def _prepare_qbdy1(self, card, card_obj, comment=''):
+        if self.card_count['QBDY1'] == 1:
+            self.log.warning('skipping %s' % str(card))
+    def _prepare_qbdy2(self, card, card_obj, comment=''):
+        if self.card_count['QBDY2'] == 1:
+            self.log.warning('skipping %s' % str(card))
+    def _prepare_qbdy3(self, card, card_obj, comment=''):
+        if self.card_count['QBDY3'] == 1:
+            self.log.warning('skipping %s' % str(card))
+    def _prepare_gmload(self, card, card_obj, comment=''):
+        if self.card_count['GMLOAD'] == 1:
+            self.log.warning('skipping %s' % str(card))
+    def _prepare_loadcyn(self, card, card_obj, comment=''):
+        if self.card_count['LOADCYN'] == 1:
+            self.log.warning('skipping %s' % str(card))
+    def _prepare_presax(self, card, card_obj, comment=''):
+        if self.card_count['PRESAX'] == 1:
+            self.log.warning('skipping %s' % str(card))
+
+
     def _update_card_parser(self):
         del self._card_parser['GRID']
         self._card_parser_prepare['GRID'] = self._prepare_grid
+        self._update_card_parser_elements()
+        self._update_card_parser_loads()
 
 
+    def _update_card_parser_elements(self):
         #del self._card_parser['CONM1']
         del self._card_parser['CONM2']
         #del self._card_parser['CMASS1']
@@ -351,8 +427,8 @@ class BDF(BDF_):
         self._card_parser_prepare['CROD'] = self._prepare_crod
         self._card_parser_prepare['CTUBE'] = self._prepare_ctube
 
-        del self._card_parser['CBAR']
-        del self._card_parser['CBEAM']
+        #del self._card_parser_prepare['CBAR']
+        #del self._card_parser_prepare['CBEAM']
         self._card_parser_prepare['CBAR'] = self._prepare_cbar
         self._card_parser_prepare['CBEAM'] = self._prepare_cbeam
 
@@ -374,9 +450,11 @@ class BDF(BDF_):
         del self._card_parser['CSHEAR']
         self._card_parser_prepare['CSHEAR'] = self._prepare_cshear
 
+    def _update_card_parser_loads(self):
         del self._card_parser['LOAD']
+        del self._card_parser['LSEQ']
         del self._card_parser['SLOAD']
-        #del self._card_parser['GRAV']
+        del self._card_parser['GRAV']
         del self._card_parser['PLOAD']
         del self._card_parser['PLOAD1']
         del self._card_parser['PLOAD2']
@@ -387,9 +465,25 @@ class BDF(BDF_):
         del self._card_parser['MOMENT']
         del self._card_parser['MOMENT1']
         del self._card_parser['MOMENT2']
+        del self._card_parser['SPCD']
+        del self._card_parser['TEMP']
+        del self._card_parser['PLOADX1']
+        del self._card_parser['ACCEL']
+        del self._card_parser['ACCEL1']
+        del self._card_parser['QVOL']
+        del self._card_parser['QHBDY']
+        del self._card_parser['RFORCE']
+        del self._card_parser['RFORCE1']
+        del self._card_parser['QBDY1']
+        del self._card_parser['QBDY2']
+        del self._card_parser['QBDY3']
+        del self._card_parser['GMLOAD']
+        del self._card_parser['LOADCYN']
+        del self._card_parser['PRESAX']
         self._card_parser_prepare['LOAD'] = self._prepare_load
+        self._card_parser_prepare['LSEQ'] = self._prepare_lseq
         self._card_parser_prepare['SLOAD'] = self._prepare_sload
-        #self._card_parser_prepare['GRAV'] = self._prepare_grav
+        self._card_parser_prepare['GRAV'] = self._prepare_grav
         self._card_parser_prepare['PLOAD'] = self._prepare_pload
         self._card_parser_prepare['PLOAD1'] = self._prepare_pload1
         self._card_parser_prepare['PLOAD2'] = self._prepare_pload2
@@ -400,6 +494,23 @@ class BDF(BDF_):
         self._card_parser_prepare['MOMENT'] = self._prepare_moment
         self._card_parser_prepare['MOMENT1'] = self._prepare_moment1
         self._card_parser_prepare['MOMENT2'] = self._prepare_moment2
+        self._card_parser_prepare['SPCD'] = self._prepare_spcd
+
+        self._card_parser_prepare['TEMP'] = self._prepare_temp
+        self._card_parser_prepare['TEMPD'] = self._prepare_tempd
+        self._card_parser_prepare['PLOADX1'] = self._prepare_ploadx1
+        self._card_parser_prepare['ACCEL'] = self._prepare_accel
+        self._card_parser_prepare['ACCEL1'] = self._prepare_accel1
+        self._card_parser_prepare['QVOL'] = self._prepare_qvol
+        self._card_parser_prepare['QHBDY'] = self._prepare_qhbdy
+        self._card_parser_prepare['RFORCE'] = self._prepare_rforce
+        self._card_parser_prepare['RFORCE1'] = self._prepare_rforce1
+        self._card_parser_prepare['QBDY1'] = self._prepare_qbdy1
+        self._card_parser_prepare['QBDY2'] = self._prepare_qbdy2
+        self._card_parser_prepare['QBDY3'] = self._prepare_qbdy3
+        self._card_parser_prepare['GMLOAD'] = self._prepare_gmload
+        self._card_parser_prepare['LOADCYN'] = self._prepare_loadcyn
+        self._card_parser_prepare['PRESAX'] = self._prepare_presax
 
 
     #def add_grid(self, nid, xyz, cp=0, cd=0, ps='', seid=0, comment=''):
@@ -437,7 +548,6 @@ class BDF(BDF_):
 
     @grids.setter
     def grids(self, grid):
-        print('setter')
         key = grid.nid
         self.grid.update(grid)
         #self.grid.add_grid(grid.nid, grid.xyz, cp=grid.cp, cd=grid.cd,
@@ -489,12 +599,18 @@ class BDF(BDF_):
         #"""
         #BDF_._write_nodes(self, bdf_file, size=size, is_double=is_double)
 
-    def _write_grids(self, bdf_file, size=8, is_double=False):
+    def _write_grids(self, bdf_file, size=8, is_double=False, is_long_ids=None):
         # type: (Any, int, bool) -> None
         """Writes the GRID-type cards"""
         self.nodes.write_card(size=size, is_double=is_double, bdf_file=bdf_file)
 
-    def _write_elements(self, bdf_file, size=8, is_double=False):
+    def _write_elements_interspersed(self, bdf_file, size=8, is_double=False, is_long_ids=None):
+        # type: (Any, int, bool) -> None
+        """spoofed method"""
+        self._write_elements(bdf_file, size=size, is_double=is_double, is_long_ids=is_long_ids)
+        self._write_properties(bdf_file, size=size, is_double=is_double, is_long_ids=is_long_ids)
+
+    def _write_elements(self, bdf_file, size=8, is_double=False, is_long_ids=None):
         # type: (Any, int, bool) -> None
         """Writes the elements in a sorted order"""
         if self.elements:
@@ -516,7 +632,7 @@ class BDF(BDF_):
         if self.ao_element_flags:
             for (eid, element) in sorted(iteritems(self.ao_element_flags)):
                 bdf_file.write(element.write_card(size, is_double))
-        self._write_nsm(bdf_file, size, is_double)
+        self._write_nsm(bdf_file, size, is_double, is_long_ids=is_long_ids)
 
     #def _write_loads(self, bdf_file, size=8, is_double=False):
         #"""Writes the loads in a sorted order"""
@@ -524,19 +640,30 @@ class BDF(BDF_):
         ##for key, loadi in sorted(self.loads):
             ##bdf_file.write(loadi.write_card(size=size, is_double=is_double))
 
-    def _write_loads(self, bdf_file, size=8, is_double=False):
+    def _write_loads(self, bdf_file, size=8, is_double=False, is_long_ids=None):
         # type: (Any, int, bool) -> None
         """Writes the load cards sorted by ID"""
         if self.loads or self.tempds:
-            msg = ['$LOADS\n']
-            self.loads.write_card(size=size, is_double=is_double, bdf_file=bdf_file)
-            for key, load in sorted(iteritems(self.load_combinations)):
-                bdf_file.write(load.write_card(size=size, is_double=is_double))
+            #msg = ['$LOADS\n']
+            try:
+                self.loads.write_card(size=size, is_double=is_double, bdf_file=bdf_file)
+            except TypeError:
+                print(self.loads)
+                raise
+
+            try:
+                for key, load_combinations in sorted(iteritems(self.load_combinations)):
+                    bdf_file.write(load_combinations.write_card(size=size, is_double=is_double))
+                    #for load_combination in load_combinations:
+                        #bdf_file.write(load_combination.write_card(size=size, is_double=is_double))
+            except(TypeError, AttributeError):
+                print(self.load_combinations)
+                raise
 
         assert len(self.tempds) == 0, self.tempds
-        self._write_dloads(bdf_file, size=size, is_double=is_double)
+        self._write_dloads(bdf_file, size=size, is_double=is_double, is_long_ids=is_long_ids)
 
-    def get_displacement_index_xyz_cp_cd(self, fdtype='float64', idtype='int32'):
+    def get_displacement_index_xyz_cp_cd(self, fdtype='float64', idtype='int32', sort_ids=True):
         # type: (str, str, bool) -> Any
         """
         Get index and transformation matricies for nodes with
@@ -565,7 +692,7 @@ class BDF(BDF_):
         nid_cp_cd : (n, 3) int ndarray
             node id, CP, CD for each node
 
-        Example
+        Examples
         --------
         # assume GRID 1 has a CD=10, CP=0
         # assume GRID 2 has a CD=10, CP=0
@@ -662,6 +789,6 @@ def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
     if skip_cards:
         model.disable_cards(skip_cards)
     model.read_bdf(bdf_filename=bdf_filename, validate=validate,
-                   xref=xref, punch=punch, read_includes=True, encoding=encoding)
+                   xref=False, punch=punch, read_includes=True, encoding=encoding)
     model.elements2.make_current()
     return model

@@ -208,16 +208,16 @@ def get_free_edges(bdf_filename, eids=None, maps=None):
     Parameters
     ----------
     bdf_filename : str, BDF()
-       a BDF object or filename
+        a BDF object or filename
     maps : List[...] (default=None -> calculate)
-       the output from _get_maps(eids, map_names=None,
-                              consider_0d=False, consider_0d_rigid=False,
-                              consider_1d=False, consider_2d=True, consider_3d=False)
+        the output from _get_maps(eids, map_names=None,
+                                  consider_0d=False, consider_0d_rigid=False,
+                                  consider_1d=False, consider_2d=True, consider_3d=False)
 
     Returns
     -------
     free_edges : List[(int nid1, int nid2), ...]
-       the free edges
+        the free edges
     """
     if isinstance(bdf_filename, string_types):
         model = BDF(debug=False)
@@ -227,10 +227,10 @@ def get_free_edges(bdf_filename, eids=None, maps=None):
 
     free_edges = []
     if maps is None:
-        maps = model._get_maps(eids, map_names=None,
+        maps = model._get_maps(eids, map_names='edge_to_eid_map',
                                consider_0d=False, consider_0d_rigid=False,
                                consider_1d=False, consider_2d=True, consider_3d=False)
-    edge_to_eid_map = maps[0]
+    edge_to_eid_map = maps['edge_to_eid_map']
     for edge, eids in iteritems(edge_to_eid_map):
         if len(eids) == 2:
             continue
@@ -256,14 +256,14 @@ def get_joints(model, pid_sets):
     joints : (N, ) int nodes
         the list of joint node ids
 
-    Example
-    -------
+    Examples
+    --------
     For a set of ribs, spars, and skins:
      - ribs intersect spars
      - ribs and spars intersect skins
 
     We want the nodes on the skin at the intersections.
-    pid_sets = [
+    >>> pid_sets = [
         [rib1_pid, rib2_pid, rib3_pid, ...],
         [spar1_pid, spar2_pid, spar3_pid, ...],
         [skin],
@@ -337,8 +337,8 @@ def extract_surface_patches(bdf_filename, starting_eids, theta_tols=40.):
     #print('shell_eids = %s' % shell_eids)
 
     # get neighboring shell elements
-    out_map = model._get_maps(eids=shell_eids)
-    edge_to_eid_map = out_map[0]
+    out_map = model._get_maps(eids=shell_eids, map_names='edge_to_eid_map')
+    edge_to_eid_map = out_map['edge_to_eid_map']
 
     eid_to_eid_map = defaultdict(set)
     #if 1:
@@ -524,16 +524,16 @@ def create_spar_cap(model, eids, nids, width, nelements=1, symmetric=True, xyz_c
         For an aircraft rib, y would be the preferred direction for the normal.
         For an aircraft spar, x/z would work.
 
-    Example
-    -------
-    eids = [A, B, C]
-    nids = [1, 2, 3, 4]
-    width = 3.0
-    nodes, elements = create_spar_cap(model, eids, nids, width)
-    nodes
-    >>> [5, 6]
-    elements
-    >>> [D, E]
+    Examples
+    --------
+    >>> eids = [A, B, C]
+    >>> nids = [1, 2, 3, 4]
+    >>> width = 3.0
+    >>> nodes, elements = create_spar_cap(model, eids, nids, width)
+    >>> nodes
+    [5, 6]
+    >>> elements
+    [D, E]
     """
     assert vector1 is None, vector1
     assert vector2 is None, vector2

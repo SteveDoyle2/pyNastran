@@ -144,7 +144,7 @@ class TestElements(unittest.TestCase):
         model.uncross_reference()
         model.safe_cross_reference()
         model.mass_properties()
-        save_load_deck(model)
+        save_load_deck(model, run_convert=False)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

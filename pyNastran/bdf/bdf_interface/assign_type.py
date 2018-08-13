@@ -39,7 +39,7 @@ def parse_components(card, ifield, fieldname):
 
     try:
         value = int(svalue)
-    except:
+    except ValueError:
         dtype = _get_dtype(svalue)
         msg = ('%s = %r (field #%s) on card must be an integer (not %s).\n'
                'card=%s' % (fieldname, svalue, ifield, dtype, card))
@@ -255,7 +255,7 @@ def integer(card, ifield, fieldname):
 
     try:
         return int(svalue)
-    except:
+    except(ValueError, TypeError):
         dtype = _get_dtype(svalue)
         raise SyntaxError('%s = %r (field #%s) on card must be an integer (not %s).\n'
                           'card=%s' % (fieldname, svalue, ifield, dtype, card))
@@ -290,7 +290,7 @@ def integer_or_blank(card, ifield, fieldname, default=None):
 
         try:
             return int(svalue)
-        except:
+        except(ValueError, TypeError):
             dtype = _get_dtype(svalue)
             raise SyntaxError('%s = %r (field #%s) on card must be an integer or blank (not %s).\n'
                               'card=%s' % (fieldname, svalue, ifield, dtype, card))
@@ -555,8 +555,8 @@ def integer_or_double(card, ifield, fieldname):
         # int
         try:
             value = int(svalue)
-        except:
-            value = interpret_value(svalue)
+        except(ValueError, TypeError):
+            value = interpret_value(svalue, card)
             if isinstance(value, (int, float)):
                 return value
             dtype = _get_dtype(svalue)
@@ -747,7 +747,7 @@ def integer_double_or_string(card, ifield, fieldname):
             # int
             try:
                 value = int(svalue)
-            except ValueError:
+            except(ValueError, TypeError):
                 msg = ('%s = %r (field #%s) on card must be an integer, float, '
                        'or string (not blank).\n'
                        'card=%s' % (fieldname, svalue, ifield, card))
@@ -759,7 +759,7 @@ def integer_double_or_string(card, ifield, fieldname):
             raise SyntaxError('%s = %r (field #%s) on card must be an integer, float, or string (not a string with a leading integer).\n'
                               'card=%s' % (fieldname, svalue, ifield, card))
         else:
-            value = interpret_value(svalue)
+            value = interpret_value(svalue, card)
         return value
     dtype = _get_dtype(svalue)
     raise SyntaxError('%s = %r (field #%s) on card must be an integer, float, or string (not %s).\n'
@@ -837,8 +837,9 @@ def string_or_blank(card, ifield, fieldname, default=None):
             raise SyntaxError('%s = %r (field #%s) on card must be an string without a space.\n'
                               'card=%s' % (fieldname, svalue, ifield, card))
         if svalue[0].isdigit() or '.' in svalue or '+' in svalue or '-' in svalue[0]:
-            raise SyntaxError('%s = %r (field #%s) on card must not have the following characters .+-\n'
-                              'card=%s' % (fieldname, svalue, ifield, card))
+            chars = ''.join(list(set('%s.+-' % svalue[0] if svalue[0].isdigit() else '')))
+            raise SyntaxError('%s = %r (field #%s) on card must not have the following characters %s\n'
+                              'card=%s' % (fieldname, svalue, ifield, chars, card))
     else:
         dtype = _get_dtype(svalue)
         raise SyntaxError('%s = %r (field #%s) on card must be an string (not %s).\n'
@@ -924,8 +925,8 @@ def interpret_value(value_raw, card=''):
         pass
 
     #if('=' in value_in or '(' in value_in or ')' in value_in):
-    #    print("=()!")
-    #    return value_in
+        #print("=()!")
+        #return value_in
 
     # if there are non-floats/scientific notation -> string
     no_ed = list(set(value_in) - set('ED 1234567890+-'))
@@ -962,10 +963,14 @@ def interpret_value(value_raw, card=''):
         sline = value_left.split('+')
         exp_factor = 1.
     else:
-        msg = ("I thought this was in scientific notation, but i can't find "
-               "the exponent sign...value_raw=%r fname, =%r "
-               "card=%s\nYou also might have mixed tabs/spaces/commas."
-               % (value_raw, value_left, card))
+        card_msg = ''
+        if card:
+            card_msg = 'card = %s\n' % card
+        msg = ("I thought this was in scientific notation, but I can't find "
+               "the exponent sign...\n"
+               "value_raw=%r value_left=%r\n%s"
+               "You also might have mixed tabs/spaces/commas or misaligned fields."
+               % (value_raw, value_left, card_msg))
         raise SyntaxError(msg)
 
     if sline[0][-1] == 'D':

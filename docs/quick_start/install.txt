@@ -1,27 +1,2 @@
-pyNastran has the following requirements for full operation:
- - Python>=2.7.7 (Python 2)
- - Python>=3.4   (Python 3)
- 
-The following third party packages are used:
- - numpy>=1.11.0
- - scipy>=0.17.0
- - docopt==0.6.2
- - PyQt4>=4.11
- - vtk==5.10.1    required for GUI
- - pillow>=2.7.0  required for GUI
- - pandas>0.16    not required by OP2; needed for OP2 dataframes
- - six==1.9.0
- - numpydoc
- - ipython/jupyter notebook; contains various interactive examples
-Note that the GUI is not available in Python 3
-
-The easist way to install pyNastran is to:
- - download & install Anaconda Python
-   - https://www.continuum.io/downloads
- - download pyNastran from:
-   - https://github.com/SteveDoyle2/pyNastran/releases
- - run setup.py in the root pyNastran folder
-   >>> python setup.py develop
-
-See the following link for more info:
+See the following link for install instructions:
 http://pynastran-git.readthedocs.io/en/latest/quick_start/Installation.html

@@ -2,21 +2,23 @@
 Defines the GUI IO file for SU2.
 """
 from __future__ import print_function
+from collections import OrderedDict
+
 from six import iteritems
 from six.moves import range
 import numpy as np
 
 import vtk
-from vtk import vtkTriangle, vtkQuad
+from vtk import vtkTriangle#, vtkQuad
 
 from pyNastran.converters.su2.su2_reader import SU2Reader as SU2
 from pyNastran.gui.gui_objects.gui_result import GuiResult
-from pyNastran.gui.gui_utils.vtk_utils import numpy_to_vtk_points
+from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
 
 
 class SU2_IO(object):
-    def __init__(self):
-        pass
+    def __init__(self, gui):
+        self.gui = gui
 
     def get_su2_wildcard_geometry_results_functions(self):
         data = ('SU2',
@@ -26,13 +28,13 @@ class SU2_IO(object):
 
     def load_su2_geometry(self, su2_filename, name='main', plot=True):
         #print("load_su2_geometry...")
-        skip_reading = self._remove_old_geometry(su2_filename)
+        skip_reading = self.gui._remove_old_geometry(su2_filename)
         if skip_reading:
             return
 
-        model = SU2(log=self.log, debug=False)
+        model = SU2(log=self.gui.log, debug=False)
         #self.model_type = model.model_type
-        ndim, nodes, elements, regions = model.read_su2(su2_filename)
+        ndim, nodes, elements, unused_regions = model.read_su2(su2_filename)
 
         nnodes = nodes.shape[0]
         nelements = 0
@@ -44,33 +46,33 @@ class SU2_IO(object):
         assert nnodes > 0, nnodes
         assert nelements > 0, nelements
 
-        self.nnodes = nnodes
-        self.nelements = nelements
+        self.gui.nnodes = nnodes
+        self.gui.nelements = nelements
 
-        self.log.info('nnodes=%s nelements=%s' % (self.nnodes, self.nelements))
-        self.grid.Allocate(self.nelements, 1000)
-        #self.gridResult.SetNumberOfComponents(self.nelements)
+        self.gui.log.info('nnodes=%s nelements=%s' % (self.gui.nnodes, self.gui.nelements))
 
-        #vectorReselt.SetNumberOfComponents(3)
-        self.nid_map = {}
+        grid = self.gui.grid
+        grid.Allocate(self.gui.nelements, 1000)
+
+        self.gui.nid_map = {}
 
         assert nodes is not None
         nnodes = nodes.shape[0]
         if ndim == 3:
             xmax, ymax, zmax = nodes.max(axis=0)
             xmin, ymin, zmin = nodes.min(axis=0)
-            self.log.info('xmax=%s xmin=%s' % (xmax, xmin))
-            self.log.info('ymax=%s ymin=%s' % (ymax, ymin))
-            self.log.info('zmax=%s zmin=%s' % (zmax, zmin))
+            self.gui.log.info('xmax=%s xmin=%s' % (xmax, xmin))
+            self.gui.log.info('ymax=%s ymin=%s' % (ymax, ymin))
+            self.gui.log.info('zmax=%s zmin=%s' % (zmax, zmin))
             dim_max = max(xmax-xmin, ymax-ymin, zmax-zmin)
         elif ndim == 2:
             xmax, ymax = nodes.max(axis=0)
             xmin, ymin = nodes.min(axis=0)
-            self.log.info('xmax=%s xmin=%s' % (xmax, xmin))
-            self.log.info('ymax=%s ymin=%s' % (ymax, ymin))
+            self.gui.log.info('xmax=%s xmin=%s' % (xmax, xmin))
+            self.gui.log.info('ymax=%s ymin=%s' % (ymax, ymin))
             dim_max = max(xmax-xmin, ymax-ymin)
 
-        self.create_global_axes(dim_max)
+        self.gui.create_global_axes(dim_max)
 
         if ndim == 2:
             nodes = np.hstack([nodes, np.zeros((nnodes, 1), dtype=nodes.dtype)])
@@ -105,7 +107,8 @@ class SU2_IO(object):
                     elem.GetPointIds().SetId(0, node_ids[0])
                     elem.GetPointIds().SetId(1, node_ids[1])
                     elem.GetPointIds().SetId(2, node_ids[2])
-                    self.grid.InsertNextCell(5, elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
+                    #elem.GetCellType() = 5  # vtkTriangle
+                    grid.InsertNextCell(5, elem.GetPointIds())
             elif etype == 9:
                 for eid in range(nsub_elements):
                     elem = vtk.vtkQuad()
@@ -114,30 +117,31 @@ class SU2_IO(object):
                     elem.GetPointIds().SetId(1, node_ids[1])
                     elem.GetPointIds().SetId(2, node_ids[2])
                     elem.GetPointIds().SetId(3, node_ids[3])
-                    self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                    grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             else:
                 raise NotImplementedError(etype)
 
-        self.grid.SetPoints(points)
-        self.grid.Modified()
-        if hasattr(self.grid, 'Update'):
-            self.grid.Update()
-            self.log_info("updated grid")
+        grid.SetPoints(points)
+        grid.Modified()
+        if hasattr(grid, 'Update'):  # pragma: no cover
+            grid.Update()
 
         # loadSTLResults - regions/loads
-        self.scalarBar.VisibilityOff()
-        self.scalarBar.Modified()
+        self.gui.scalarBar.VisibilityOff()
+        self.gui.scalarBar.Modified()
 
-        cases = {}
-        self.isubcase_name_map = {}
+        cases = OrderedDict()
+        self.gui.isubcase_name_map = {}
         ID = 1
 
-        form, cases = self._fill_su2_case(cases, ID, nelements, nnodes)
-        self._finish_results_io2(form, cases)
+        form, cases, node_ids, element_ids = self._fill_su2_case(cases, ID, nelements, nnodes)
+        self.gui.node_ids = node_ids
+        self.gui.element_ids = element_ids
+        self.gui._finish_results_io2(form, cases)
 
     def _fill_su2_case(self, cases, ID, nelements, nnodes):
         """adds the sidebar results"""
-        self.isubcase_name_map[ID] = ('SU2', '')
+        self.gui.isubcase_name_map = {ID : ('SU2', ''), }
 
         #nelements = elements.shape[0]
         #nnodes = nodes.shape[0]
@@ -158,4 +162,4 @@ class SU2_IO(object):
             ('ElementID', icase, []),
             ('NodeID', icase + 1, []),
         ]
-        return form, cases
+        return form, cases, nids, eids

@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 PY2 = False
 if sys.version_info < (3, 0):
     PY2 = True
-if sys.version_info < (2, 7, 7):
+if sys.version_info < (2, 7, 7):  # 2.7.13 used
     imajor, minor1, minor2 = sys.version_info[:3]
     # makes sure we don't get the following bug:
     #   Issue #19099: The struct module now supports Unicode format strings.
@@ -32,11 +32,11 @@ except ImportError:
 try:
     import scipy
     ver = scipy.version.short_version
-    if ver < '0.17.0':
-        print("scipy.version.short_version = %r < '0.17.0'" % scipy.version.short_version)
+    if ver < '0.18.1':
+        print("scipy.version.short_version = %r < '0.18.1'" % scipy.version.short_version)
         py_packages.append('scipy >= 0.17.0')
 except ImportError:
-    py_packages.append('scipy >= 0.17.0')  # 0.18.1 used
+    py_packages.append('scipy >= 0.18.1')  # 0.18.1 used
 
 try:
     import six
@@ -131,10 +131,8 @@ setup(
     classifiers=[
         'Natural Language :: English',
         'Intended Audience :: Science/Research',
-        'License :: OSI Approved :: BSD License (BSD-3)',
-        'Programming Language :: Python :: 2',
+        'License :: OSI Approved :: BSD License',
         'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',

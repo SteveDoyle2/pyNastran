@@ -8,12 +8,10 @@ from __future__ import division, unicode_literals, print_function
 # standard library
 import sys
 import os.path
+import imp
 #import traceback
 #import webbrowser
 #webbrowser.open("http://xkcd.com/353/")
-
-#from six import string_types, iteritems
-from six.moves import range
 
 
 from pyNastran.gui.qt_version import qt_version
@@ -24,29 +22,25 @@ from qtpy.QtWidgets import QMessageBox, qApp
 import vtk
 
 import pyNastran
-from pyNastran.gui.gui_utils.utils import check_for_newer_version
+from pyNastran.gui.utils.version import check_for_newer_version
 
 
 # pyNastran
-#from pyNastran.utils import print_bad_path
-from pyNastran.gui.formats import (
-    NastranIO, Cart3dIO, DegenGeomIO, PanairIO, LaWGS_IO,
-    STL_IO, TecplotIO, TetgenIO, Usm3dIO, ShabpIO, ADB_IO, FastIO, # Plot3d_io,
-    AvusIO, SurfIO, UGRID_IO, AbaqusIO, BEdge_IO, SU2_IO, OpenFoamIO, ObjIO,
-)
+from pyNastran.gui.plugins import plugin_name_to_path
+from pyNastran.gui.formats import NastranIO
 from pyNastran.gui.gui_common import GuiCommon2
 
 try:
-    pkg_path = sys._MEIPASS #@UndefinedVariable
-    script_path = os.path.join(pkg_path, 'scripts')
-    icon_path = os.path.join(pkg_path, 'icons')
+    PKG_PATH = sys._MEIPASS #@UndefinedVariable
+    SCRIPT_PATH = os.path.join(PKG_PATH, 'scripts')
+    ICON_PATH = os.path.join(PKG_PATH, 'icons')
 except:
-    pkg_path = pyNastran.__path__[0]
-    script_path = os.path.join(pkg_path, 'gui', 'scripts')
-    icon_path = os.path.join(pkg_path, 'gui', 'icons')
+    PKG_PATH = pyNastran.__path__[0]
+    SCRIPT_PATH = os.path.join(PKG_PATH, 'gui', 'scripts')
+    ICON_PATH = os.path.join(PKG_PATH, 'gui', 'icons')
 
-#print('script_path = %s' % script_path)
-#print('icon_path = %s' % icon_path)
+#print('SCRIPT_PATH = %s' % SCRIPT_PATH)
+#print('ICON_PATH = %s' % ICON_PATH)
 
 # tcolorpick.png and tabout.png trefresh.png icons on LGPL license, see
 # http://openiconlibrary.sourceforge.net/gallery2/?./Icons/actions/color-picker-grey.png
@@ -54,11 +48,7 @@ except:
 # http://openiconlibrary.sourceforge.net/gallery2/?./Icons/actions/view-refresh-8.png
 
 
-class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO,
-                 LaWGS_IO, STL_IO, TetgenIO, Usm3dIO, TecplotIO, ADB_IO, # Plot3d_io,
-                 FastIO, AvusIO, SurfIO, UGRID_IO, AbaqusIO, BEdge_IO, SU2_IO,
-                 OpenFoamIO, ObjIO,
-                 ):
+class MainWindow(GuiCommon2, NastranIO):
     """
     MainWindow -> GuiCommon2 -> GuiCommon
     gui.py     -> gui_common -> gui_qt_common
@@ -95,17 +85,28 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
         inputs=None
         """
         html_logging = True
+
+        # these are in alphabetical order except for Nastran
+        # this includes the bedge, surf, ugrid line (listed as AFLR in the gui)
         fmt_order = [
-            # results
-            'nastran', 'cart3d', 'panair', 'shabp', 'usm3d',
-            'tecplot', 'surf', 'ugrid',
-
-            # no results
-            'lawgs', 'stl', 'fast',
-            'bedge', 'su2', 'tetgen', 'avus', 'abaqus',
-
-            # openfoam
-            'openfoam_hex', 'openfoam_shell', 'openfoam_faces', 'obj',
+            # no results unless specified
+            'nastran',  # results
+            'abaqus',
+            'avus',
+            'bedge', 'surf', 'ugrid', 'ugrid3d', # aflr
+            'cart3d',  # results
+            'degen_geom',
+            'fast',
+            'lawgs',
+            'obj',
+            'openfoam_hex', 'openfoam_shell', 'openfoam_faces', # openfoam - results
+            'panair',  # results
+            'shabp',  # results
+            'stl',
+            'su2',
+            'tecplot',  # results
+            'tetgen',
+            'usm3d',  # results
         ]
         #GuiCommon2.__init__(self, fmt_order, html_logging, inputs, parent)
         kwds['inputs'] = inputs
@@ -115,40 +116,44 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
         #fmt_order=fmt_order, inputs=inputs,
         #html_logging=html_logging,
 
-        if qt_version in [4, 5]:
-            ADB_IO.__init__(self)
-            AvusIO.__init__(self)
-            BEdge_IO.__init__(self)
+        if qt_version in ['pyqt4', 'pyqt5', 'pyside']:
             NastranIO.__init__(self)
-            Cart3dIO.__init__(self)
-            DegenGeomIO.__init__(self)
-            FastIO.__init__(self)
-            LaWGS_IO.__init__(self)
-            PanairIO.__init__(self)
-            #Plot3d_io.__init__(self)
-            STL_IO.__init__(self)
-            ShabpIO.__init__(self)
-            SurfIO.__init__(self)
-            TetgenIO.__init__(self)
-            TecplotIO.__init__(self)
-            Usm3dIO.__init__(self)
-            UGRID_IO.__init__(self)
-            AbaqusIO.__init__(self)
-            SU2_IO.__init__(self)
-            OpenFoamIO.__init__(self)
-            ObjIO.__init__(self)
+        else:
+            raise NotImplementedError('qt_version=%r is not supported' % qt_version)
 
         self.build_fmts(fmt_order, stop_on_failure=False)
 
-        logo = os.path.join(icon_path, 'logo.png')
+        logo = os.path.join(ICON_PATH, 'logo.png')
         self.logo = logo
-        self.set_script_path(script_path)
-        self.set_icon_path(icon_path)
+        self.set_script_path(SCRIPT_PATH)
+        self.set_icon_path(ICON_PATH)
 
+        self._load_plugins()
         self.setup_gui()
         self.setup_post(inputs)
-
         self._check_for_latest_version(inputs['no_update'])
+
+    def _load_plugins(self):
+        """loads the plugins from pyNastran/gui/plugins.py"""
+        for module_name, plugin_file, class_name in plugin_name_to_path:  # list
+            assert module_name not in self.modules, 'module_name=%r is already defined' % module_name
+
+            if not os.path.exists(plugin_file):
+                # auto_wireframe is a test module and is not intended to
+                # actually load unless you're testing
+                if module_name != 'auto_wireframe':
+                    self.log_warning('Failed to load plugin %r' % module_name)
+                continue
+
+            module = imp.load_source(module_name, plugin_file)
+            my_class = getattr(module, class_name)
+            self.modules[module_name] = my_class(self)
+
+            # tools/checkables
+            tools, checkables = my_class.get_tools_checkables()
+            self.tools += tools
+            for key, is_active in iteritems(checkables):
+                self.checkables[key] = is_active
 
     def _check_for_latest_version(self, check=True):
         """
@@ -157,18 +162,18 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
         Looks for:
             ## pyNastran v0.7.2 has been Released (4/25/2015)
         """
-        import time
-        time0 = time.time()
-        version_latest, version_current, is_newer = check_for_newer_version()
-        if is_newer:
+        #import time
+        #time0 = time.time()
+        version_latest, unused_version_current, is_newer = check_for_newer_version()
+        if is_newer and check:
             url = pyNastran.__website__
             from pyNastran.gui.menus.download import DownloadWindow
             win = DownloadWindow(url, version_latest, win_parent=self)
             win.show()
-        dt = time.time() - time0
+        #dt = time.time() - time0
         #print('dt_version_check = %.2f' % dt)
 
-    def mousePressEvent(self, ev):
+    def mousePressEvent(self, event):
         if not self.run_vtk:
             return
         #print('press x,y = (%s, %s)' % (ev.x(), ev.y()))
@@ -177,21 +182,39 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
             #self.___saveY = ev.y()
             pass
         else:
-            self.iren.mousePressEvent(ev)
+            self.vtk_interactor.mousePressEvent(event)
 
     #def LeftButtonPressEvent(self, ev):
 
-    def mouseReleaseEvent(self, ev):
+    def mouseReleaseEvent(self, event):
         #print('release x,y = (%s, %s)' % (ev.x(), ev.y()))
         if self.is_pick:
             pass
         else:
-            self.iren.mousePressEvent(ev)
+            self.vtk_interactor.mousePressEvent(event)
+
+    def open_website(self):
+        """loads the pyNastran main website"""
+        import webbrowser
+        url = pyNastran.__website__
+        webbrowser.open(url)
+
+    def open_docs(self):
+        """loads the pyNastran docs website"""
+        import webbrowser
+        url = pyNastran.__docs__
+        webbrowser.open(url)
+
+    def open_discussion_forum(self):
+        """loads the pyNastran discussion forum website"""
+        import webbrowser
+        url = pyNastran.__discussion_forum__
+        webbrowser.open(url)
 
     def about_dialog(self):
         """ Display about dialog """
         copyright = pyNastran.__copyright__
-        if qt_version == 'pyside':
+        if qt_version in ['pyside', 'pyside2']:
             word = 'PySide'
             copyright_qt = pyNastran.__pyside_copyright__
         else:
@@ -256,14 +279,14 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
         method for a given format.
         """
         camera = self.get_camera_data()
-        Title = self.title
+        unused_title = self.title
         case = self.icase
 
         on_reload_name = 'on_reload_%s' % self.format
-        if hasattr(self, on_reload_name) or 1:
-            getattr(self, on_reload_name)()
+        if hasattr(self, on_reload_name):
+            getattr(self, on_reload_name)()  # on_reload_nastran
         else:
-            self.on_load_geometry(self.infile_name, self.format)
+            self.on_load_geometry(self.infile_name, self.format, raise_error=False)
 
         if self.out_filename is None:
             msg = '%s - %s' % (self.format, self.infile_name)
@@ -274,7 +297,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
         self.cycle_results(case)
         self.on_set_camera_data(camera, show_log=False)
 
-    def closeEvent(self, event):
+    def closeEvent(self, *args):
         """
         Handling saving state before application when application is
         being closed.
@@ -283,4 +306,6 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
         settings.clear()
         self.settings.save(settings)
 
+        if qApp is None:
+            sys.exit()
         qApp.quit()

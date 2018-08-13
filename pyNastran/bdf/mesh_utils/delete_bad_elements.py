@@ -20,6 +20,7 @@ def delete_bad_shells(model, max_theta=175., max_skew=70., max_aspect_ratio=100.
     ----------
     model : BDF ()
         this should be equivalenced
+
     """
     xyz_cid0 = model.get_xyz_in_coord(cid=0, fdtype='float32')
     nid_map = {}
@@ -70,6 +71,7 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70.,
         element ids that fail the criteria
 
     shells with a edge length=0.0 are automatically added
+
     """
     min_theta_quad = 0.1
     min_theta_tri = 0.1
@@ -286,9 +288,3 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70.,
                     eid, np.degrees(theta_maxi)))
                 continue
     return eids_failed
-
-#def main():  # pragma: no cover
-    #delete_bad_shells()
-
-#if __name__ == '__main__':  # pragma: no cover
-    #main()

@@ -56,6 +56,8 @@ class UnXrefMesh(SafeXrefMesh):
             except AttributeError:
                 print(element)
                 raise
+        for element in itervalues(self.masses):
+            element.uncross_reference()
         for element in itervalues(self.rigid_elements):
             element.uncross_reference()
         for element in itervalues(self.plotels):
@@ -83,6 +85,14 @@ class UnXrefMesh(SafeXrefMesh):
         except AttributeError:
             print(material)
             raise
+
+        try:
+            for material in itervalues(self.creep_materials):
+                material.uncross_reference()
+        except AttributeError:
+            print(material)
+            raise
+
         data = [self.MATS1, self.MATS3, self.MATS8,
                 self.MATT1, self.MATT2, self.MATT3, self.MATT4, self.MATT5,
                 self.MATT8, self.MATT9]
@@ -145,6 +155,9 @@ class UnXrefMesh(SafeXrefMesh):
         for flutter in itervalues(self.flutters):
             flutter.uncross_reference()
 
+        for monitor_point in self.monitor_points:
+            monitor_point.uncross_reference()
+
         if self.aero:
             self.aero.uncross_reference()
         if self.aeros:
@@ -192,23 +205,23 @@ class UnXrefMesh(SafeXrefMesh):
 
         TEMP
         """
-        for (lid, load_combinations) in iteritems(self.load_combinations):
+        for (unused_lid, load_combinations) in iteritems(self.load_combinations):
             for load_combination in load_combinations:
                 load_combination.uncross_reference()
 
-        for (lid, loads) in iteritems(self.loads):
+        for (unused_lid, loads) in iteritems(self.loads):
             for load in loads:
                 load.uncross_reference()
 
-        for (lid, dloads) in iteritems(self.dloads):
+        for (unused_lid, dloads) in iteritems(self.dloads):
             for dload in dloads:
                 dload.uncross_reference()
-        for (lid, dload_entries) in iteritems(self.dload_entries):
+        for (unused_lid, dload_entries) in iteritems(self.dload_entries):
             for dload_entry in dload_entries:
                 dload_entry.uncross_reference()
-        for key, darea in iteritems(self.dareas):
+        for unused_key, darea in iteritems(self.dareas):
             darea.uncross_reference()
-        for key, dphase in iteritems(self.dphases):
+        for unused_key, dphase in iteritems(self.dphases):
             dphase.uncross_reference()
 
     def _uncross_reference_sets(self):
@@ -216,18 +229,20 @@ class UnXrefMesh(SafeXrefMesh):
         """uncross references the set objects"""
         for set_obj in self.asets:
             set_obj.uncross_reference()
+        for set_obj in self.omits:
+            set_obj.uncross_reference()
         for set_obj in self.bsets:
             set_obj.uncross_reference()
         for set_obj in self.csets:
             set_obj.uncross_reference()
         for set_obj in self.qsets:
             set_obj.uncross_reference()
-        for name, set_objs in iteritems(self.usets):
+        for unused_name, set_objs in iteritems(self.usets):
             for set_obj in set_objs:
                 set_obj.uncross_reference()
 
         # superelements
-        for key, set_obj in iteritems(self.se_sets):
+        for unused_key, set_obj in iteritems(self.se_sets):
             set_obj.uncross_reference()
         for set_obj in self.se_bsets:
             set_obj.uncross_reference()
@@ -240,17 +255,17 @@ class UnXrefMesh(SafeXrefMesh):
 
     def _uncross_reference_optimization(self):
         """uncross references the optimization objects"""
-        for key, deqatn in iteritems(self.dequations):
+        for unused_key, deqatn in iteritems(self.dequations):
             deqatn.uncross_reference()
-        for key, dresp in iteritems(self.dresps):
+        for unused_key, dresp in iteritems(self.dresps):
             dresp.uncross_reference()
-        for key, dconstrs in iteritems(self.dconstrs):
+        for unused_key, dconstrs in iteritems(self.dconstrs):
             for dconstr in dconstrs:
                 dconstr.uncross_reference()
 
-        for key, dvcrel in iteritems(self.dvcrels):
+        for unused_key, dvcrel in iteritems(self.dvcrels):
             dvcrel.uncross_reference()
-        for key, dvmrel in iteritems(self.dvmrels):
+        for unused_key, dvmrel in iteritems(self.dvmrels):
             dvmrel.uncross_reference()
-        for key, dvprel in iteritems(self.dvprels):
+        for unused_key, dvprel in iteritems(self.dvprels):
             dvprel.uncross_reference()

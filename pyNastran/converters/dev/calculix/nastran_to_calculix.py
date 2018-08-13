@@ -4,7 +4,7 @@ defines:
 """
 from __future__ import print_function
 from collections import defaultdict
-from six import iteritems
+from six import iteritems, iterkeys
 from six.moves import zip
 
 from numpy import array, zeros, cross
@@ -60,7 +60,7 @@ class CalculixConverter(BDF):
         is a list of element IDs
         """
         if element_ids is None:
-            element_ids = self.elements.iterkeys()
+            element_ids = iterkeys(self.elements)
 
         props = defaultdict(list)
         for eid in element_ids:
@@ -92,7 +92,7 @@ class CalculixConverter(BDF):
         is a list of element IDs
         """
         if element_ids is None:
-            element_ids = self.elements.iterkeys()
+            element_ids = iterkeys(self.elements)
 
         elems = defaultdict(list)
         for eid in element_ids:
@@ -147,8 +147,8 @@ class CalculixConverter(BDF):
         form = '%-' + str(self.max_nid_len) + 's %8s,%8s,%8s\n'
 
         for nid, node in sorted(iteritems(self.nodes)):
-            p = node.get_position()
-            dat = form % (nid, p[0], p[1], p[2])
+            xyz = node.get_position()
+            dat = form % (nid, xyz[0], xyz[1], xyz[2])
             fdat.write(dat)
         dat = '\n\n'
         dat += self.breaker()
@@ -344,12 +344,12 @@ class CalculixConverter(BDF):
                 loadcase_id = self.case_control_deck.get_subcase_parameter(
                     isubcase, param_name)[0]
                 #loadcase = self.loads[loadcase_id]
-                self._write_loads(loadcase_id) # bdf_file, size=8, is_double=False
+                self._write_loads_p0(loadcase_id) # bdf_file, size=8, is_double=False
 
         inp += self.breaker()
         return inp
 
-    def _write_loads(self, loadcase_id, p0=None):
+    def _write_loads_p0(self, loadcase_id, p0=None):
         if not isinstance(loadcase_id, int):
             raise RuntimeError('loadcase_id must be an integer; loadcase_id=%r' % loadcase_id)
         if p0 is None:
@@ -378,10 +378,10 @@ class CalculixConverter(BDF):
 
         nnodes = self.nnodes
         print('nnodes = %s' % nnodes)
-        FM = zeros((nnodes, 6), 'float64')
-        #print(FM.shape)
-        F = FM[:, :3]
-        M = FM[:, 3:]
+        force_moment = zeros((nnodes, 6), 'float64')
+        #print(force_moment.shape)
+        force = force_moment[:, :3]
+        moment = force_moment[:, 3:]
 
         i = 0
         xyz = {}
@@ -396,11 +396,11 @@ class CalculixConverter(BDF):
                 forcei = load.mag * load.xyz
                 self.log.info('%s %s' % (load, load.node))
                 i = nid_to_i_map[load.node]
-                F[i, :] += forcei * scale
+                force[i, :] += forcei * scale
             elif isinstance(load, Moment):  # MOMENT, MOMENT1, MOMENT2
                 momenti = load.mag * load.xyz
                 i = nid_to_i_map[load.node]
-                M[i, :] += momenti * scale
+                moment[i, :] += momenti * scale
             elif load.type == 'PLOAD':
                 nodes = load.node_ids
                 nnodes = len(nodes)
@@ -417,7 +417,7 @@ class CalculixConverter(BDF):
                     raise RuntimeError(msg)
 
                 nunit = norm(axb)
-                A = 0.5 * nunit
+                area = 0.5 * nunit
                 try:
                     n = axb / nunit
                 except FloatingPointError:
@@ -427,11 +427,11 @@ class CalculixConverter(BDF):
                     msg += 'a x b = %s\n' % axb
                     msg += 'nunit = %s\n' % nunit
                     raise FloatingPointError(msg)
-                forcei = load.pressure * A * n * scale / nnodes
+                forcei = load.pressure * area * n * scale / nnodes
 
                 for nid in nodes:
                     i = nid_to_i_map[nid]
-                    F[i, :] = forcei
+                    force[i, :] = forcei
 
             elif load.type == 'PLOAD1':
                 elem = load.eid
@@ -446,11 +446,11 @@ class CalculixConverter(BDF):
                         nodes = elem.node_ids
                         nnodes = len(nodes)
                         n = elem.Normal()
-                        A = elem.Area()
-                        forcei = pressure * n * A / nnodes
+                        area = elem.Area()
+                        forcei = pressure * n * area / nnodes
                         for nid in nodes:
                             i = nid_to_i_map[nid]
-                            F[i, :] = forcei
+                            force[i, :] = forcei
                     else:
                         self.log.debug('case=%s etype=%r loadtype=%r not supported' % (
                             loadcase_id, elem.type, load.type))
@@ -469,7 +469,7 @@ class CalculixConverter(BDF):
                         n1, n2, n3 = xyz[nodes[0]], xyz[nodes[1]], xyz[nodes[2]]
                         axb = cross(n1 - n2, n1 - n3)
                         nunit = norm(axb)
-                        A = 0.5 * nunit
+                        area = 0.5 * nunit
                         try:
                             n = axb / nunit
                         except FloatingPointError:
@@ -487,7 +487,7 @@ class CalculixConverter(BDF):
                         n1, n2, n3, n4 = xyz[nodes[0]], xyz[nodes[1]], xyz[nodes[2]], xyz[nodes[3]]
                         axb = cross(n1 - n3, n2 - n4)
                         nunit = norm(axb)
-                        A = 0.5 * nunit
+                        area = 0.5 * nunit
                         try:
                             n = axb / nunit
                         except FloatingPointError:
@@ -500,19 +500,19 @@ class CalculixConverter(BDF):
 
                         centroid = (n1 + n2 + n3 + n4) / 4.
                     elif elem.type in ['CTETRA', 'CHEXA', 'CPENTA']:
-                        A, centroid, normal = elem.get_face_area_centroid_normal(
-                            load.g34.nid, load.g1.nid)
+                        area, centroid, normal = elem.get_face_area_centroid_normal(
+                            load.g34_ref.nid, load.g1_ref.nid)
                         nnodes = None
                     else:
                         self.log.debug('case=%s eid=%s etype=%r loadtype=%r not supported' % (
                             loadcase_id, eid, elem.type, load.type))
                         continue
                     #r = centroid - p
-                    forcei = pressure * A * n / nnodes
+                    forcei = pressure * area * n / nnodes
                     #m = cross(r, f)
                     for nid in nodes:
                         i = nid_to_i_map[nid]
-                        F[i, :] = forcei
+                        force[i, :] = forcei
             elif load.type == 'GRAV':
                 pass
                 #def write_calculix_grav(self, gx, gy, gz):
@@ -526,8 +526,8 @@ class CalculixConverter(BDF):
 
         for load_type in unsupported_types:
             self.log.debug('case=%s load_type=%r not supported' % (loadcase_id, load_type))
-        FM.reshape((nnodes*6, 1))
-        return FM
+        force_moment.reshape((nnodes*6, 1))
+        return force_moment
 
     def calculix_constraints(self):
         return self.calculix_spcs()
@@ -616,7 +616,7 @@ def _write_mat1(material, element_set='ELSetDummyMat'):
         msg += '%s,%s\n\n' % (material.a, material.a * material.tref)
     return msg
 
-def main():
+def main():  # pragma: no cover
     import sys
     code_aster = CalculixConverter()
     #bdf_filename = 'solidBending.bdf'

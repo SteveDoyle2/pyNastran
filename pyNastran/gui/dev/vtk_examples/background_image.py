@@ -29,7 +29,7 @@ def main(argv):
         jpeg_reader.Update()
         image_data = jpeg_reader.GetOutput()
     else:
-        canvas_source = vtk.vtkImageCanvasSource2D()
+        canvas_source = vtkImageCanvasSource2D()
         canvas_source.SetExtent(0, 100, 0, 100, 0, 0)
         canvas_source.SetScalarTypeToUnsignedChar()
         canvas_source.SetNumberOfScalarComponents(3)

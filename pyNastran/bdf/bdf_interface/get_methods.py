@@ -4,7 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 import numpy as np
 
 from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
-from pyNastran.bdf.cards.nodes import SPOINT, EPOINT
+#from pyNastran.bdf.cards.nodes import SPOINT, EPOINT
 from pyNastran.utils import integer_types, ChainMap
 
 
@@ -109,6 +109,7 @@ class GetMethods(BDFAttributes):
         return nodes
 
     def Point(self, nid, msg=''):
+        """Returns a POINT card"""
         if nid in self.points:
             return self.points[nid]
         else:
@@ -129,8 +130,8 @@ class GetMethods(BDFAttributes):
         """
         Gets an element
 
-        Doesn't get rigid (RROD, RBAR, RBE2, RBE3, RBAR, RBAR1, RSPLINE)
-        or mass (CMASS1, CONM2))
+        Doesn't get rigid (RROD, RBAR, RBE2, RBE3, RBAR, RBAR1, RSPLINE, RSSCON)
+        or mass (CMASS1, CONM2)
         """
         try:
             return self.elements[eid]
@@ -139,6 +140,12 @@ class GetMethods(BDFAttributes):
                            % (eid, msg, np.unique(list(self.elements.keys()))))
 
     def Elements(self, eids, msg=''):
+        """
+        Gets an series of elements
+
+        Doesn't get rigid (RROD, RBAR, RBE2, RBE3, RBAR, RBAR1, RSPLINE, RSSCON)
+        or mass (CMASS1, CONM2)
+        """
         elements = []
         bad_eids = []
         for eid in eids:
@@ -161,7 +168,7 @@ class GetMethods(BDFAttributes):
                            % (eid, msg, np.unique(list(self.masses.keys()))))
 
     def RigidElement(self, eid, msg=''):
-        """gets a rigid element (RBAR, RBE2, RBE3, RBAR, RBAR1, RROD, RSPLINE)"""
+        """gets a rigid element (RBAR, RBE2, RBE3, RBAR, RBAR1, RROD, RSPLINE, RSSCON)"""
         try:
             return self.rigid_elements[eid]
         except KeyError:
@@ -183,6 +190,10 @@ class GetMethods(BDFAttributes):
                            % (pid, msg, self.property_ids))
 
     def Properties(self, pids, msg=''):
+        """
+        gets one or more elemental property (e.g. PSOLID, PLSOLID,
+        PCOMP, PSHELL, PSHEAR); not mass property (PMASS)
+        """
         properties = []
         for pid in pids:
             properties.append(self.Property(pid, msg))
@@ -221,22 +232,27 @@ class GetMethods(BDFAttributes):
         )
         return keys
 
-
     def get_thermal_material_ids(self):
         """gets the thermal material ids"""
         return self.thermal_materials.keys()
 
     def Material(self, mid, msg=''):
+        """gets a structural or thermal material"""
         if mid in self.materials:
             return self.materials[mid]
         elif mid in self.thermal_materials:
             return self.thermal_materials[mid]
         else:
             msg = '\n' + msg
-            raise KeyError('Invalid Material ID:  mid=%s%s\nAllowed=%s' % (
-                mid, msg, np.unique(list(self.materials.keys())) ))
+            msg2 = (
+                'Invalid Material ID:  mid=%s%s\nAllowed=%s' % (
+                    mid, msg, np.unique(list(self.materials.keys()))
+                )
+            )
+            raise KeyError(msg2)
 
     def StructuralMaterial(self, mid, msg=''):
+        """gets a structural material"""
         try:
             mat = self.materials[mid]
         except KeyError:
@@ -245,6 +261,7 @@ class GetMethods(BDFAttributes):
         return mat
 
     def ThermalMaterial(self, mid, msg=''):
+        """gets a thermal material"""
         try:
             mat = self.thermal_materials[mid]
         except KeyError:
@@ -253,6 +270,7 @@ class GetMethods(BDFAttributes):
         return mat
 
     def HyperelasticMaterial(self, mid, msg=''):
+        """gets a hyperelastic material"""
         try:
             mat = self.hyperelastic_materials[mid]
         except KeyError:
@@ -261,6 +279,7 @@ class GetMethods(BDFAttributes):
         return mat
 
     def Materials(self, mids, msg=''):
+        """gets one or more Materials"""
         if isinstance(mids, integer_types):
             mids = [mids]
         materials = []
@@ -297,24 +316,33 @@ class GetMethods(BDFAttributes):
                 sid, msg, np.unique(loads_ids), np.unique(load_combination_ids)))
         return load
 
-    def DLoad(self, sid, msg=''):
-        """gets a DLOAD"""
+    def DLoad(self, sid, consider_dload_combinations=True, msg=''):
+        """
+        Gets a DLOAD, TLOAD1, TLOAD2, etc. associcated with the
+        Case Control DLOAD entry
+        """
         assert isinstance(sid, integer_types), 'sid=%s is not an integer\n' % sid
-        if sid in self.dloads:
-            load = self.dloads[sid]
+
+        if consider_dload_combinations and sid in self.dloads:
+            dload = self.dloads[sid]
+        elif sid in self.dload_entries:
+            dload = self.dload_entries[sid]
         else:
-            raise KeyError('cannot find DLoadID=%r%s.\nDLoadIDs=%s\n' % (
-                sid, msg, np.unique(list(self.dloads.keys()))))
-        return load
+            dloads_ids = list(self.dload_entries.keys())
+            dload_combination_ids = list(self.dloads.keys())
+            raise KeyError('cannot find DLOAD ID=%r%s.\nAllowed dloads '
+                           '(e.g., TLOAD1)=%s; DLOAD=%s' % (
+                               sid, msg, np.unique(dloads_ids),
+                               np.unique(dload_combination_ids)))
+        return dload
 
     def get_dload_entries(self, sid, msg=''):
-        assert isinstance(sid, integer_types), 'sid=%s is not an integer\n' % sid
-        if sid in self.dload_entries:
-            load = self.dload_entries[sid]
-        else:
-            raise KeyError('cannot find DLoad Entry ID=%r%s.\nDLoadEntryIDs=%s\n' % (
-                sid, msg, np.unique(list(self.dload_entries.keys()))))
-        return load
+        """gets the dload entries (e.g., TLOAD1, TLOAD2)"""
+        self.deprecated(
+            "get_dload_entries(sid, msg='')",
+            "DLoad(sid, consider_dload_combinations=False, msg='')",
+            '1.1')
+        return self.DLoad(sid, consider_dload_combinations=False, msg=msg)
 
     def DAREA(self, darea_id, msg=''):
         """gets a DAREA"""
@@ -396,6 +424,34 @@ class GetMethods(BDFAttributes):
                 spc_id, msg, np.unique(spc_ids), np.unique(spcadd_ids)))
         return constraint
 
+    def NSM(self, nsm_id, consider_nsmadd=True, msg=''):
+        """
+        Gets an LOAD or FORCE/PLOAD4/etc.
+
+        Parameters
+        ---------
+        nsm_id : int
+            the LOAD id
+        consider_nsmadd : bool; default=True
+            NSMADDs should not be considered when referenced from an NSM card
+            from a case control, True should be used.
+        msg : str
+            additional message to print when failing
+        """
+        assert isinstance(nsm_id, integer_types), 'nsm_id=%s is not an integer\n' % nsm_id
+        if consider_nsmadd and nsm_id in self.nsmadds:
+            nsm = self.nsmadds[nsm_id]
+        elif nsm_id in self.nsms:
+            nsm = self.nsms[nsm_id]
+        else:
+            nsm_ids = list(self.nsms.keys())
+            nsmadd_ids = list(self.nsmadds.keys())
+            raise KeyError('cannot find NSM ID=%r%s.\nAllowed NSMs (e.g., NSM1)=%s; '
+                           'NSMADDs=%s; consider_nsmadd=%s' % (
+                               nsm_id, msg, np.unique(nsm_ids), np.unique(nsmadd_ids),
+                               consider_nsmadd))
+        return nsm
+
     #--------------------
     # Sets
     def SET1(self, set_id, msg=''):
@@ -445,7 +501,7 @@ class GetMethods(BDFAttributes):
                            % (aesurf_id, msg, np.unique(list(self.aesurf.keys()))))
 
     def Acsid(self, msg=''):
-        """gets the aerodynamic system coordinate"""
+        """gets the aerodynamic coordinate system"""
         if self.aero is not None:
             acsid_aero = self.aero.Acsid()
         if self.aeros is not None:
@@ -461,6 +517,26 @@ class GetMethods(BDFAttributes):
         else:
             msg = 'neither AERO nor AEROS cards exist.'
             raise RuntimeError(msg)
+        return cid
+
+    def safe_acsid(self, msg=''):
+        """gets the aerodynamic coordinate system"""
+        if self.aero is not None:
+            acsid_aero = self.aero.Acsid()
+        if self.aeros is not None:
+            acsid_aeros = self.aeros.Acsid()
+
+        if self.aero is not None:
+            if self.aeros is not None:
+                assert acsid_aero == acsid_aeros, 'AERO acsid=%s, AEROS acsid=%s' % (acsid_aero,
+                                                                                     acsid_aeros)
+            cid = self.Coord(acsid_aero, msg=msg)
+        elif self.aeros is not None:
+            cid = self.Coord(acsid_aeros, msg=msg)
+        else:
+            ## TODO: consider changing this...
+            self.log.error('neither AERO nor AEROS cards exist; assuming global (cid=0).')
+            return self.Coord(0, msg=msg)
         return cid
 
     def Aero(self, msg=''):
@@ -625,6 +701,7 @@ class GetMethods(BDFAttributes):
     # SET CARDS
 
     def Set(self, sid, msg=''):
+        """gets a SET, SET1, SET2, or SET3 card"""
         try:
             return self.sets[sid]
         except KeyError:

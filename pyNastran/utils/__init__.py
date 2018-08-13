@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-from types import MethodType
+from types import MethodType, FunctionType
 import os
 import io
 import sys
@@ -14,9 +14,11 @@ import numpy as np
 
 if PY2:
     integer_types = (int, long, np.int32, np.int64)
+    integer_string_types = (int, long, np.int32, np.int64, str, unicode)
     integer_float_types = (int, long, np.int32, np.int64, float)
 else:
     integer_types = (int, np.int32, np.int64)
+    integer_string_types = (int, np.int32, np.int64, bytes, str)
     integer_float_types = (int, np.int32, np.int64, float)
 float_types = (float, np.float32)
 
@@ -34,12 +36,15 @@ else:
 def ipython_info():
     # type: () -> Optional[str]
     """determines if iPython/Jupyter notebook is running"""
-    ip = None
-    if 'ipykernel' in sys.modules:
-        ip = 'notebook'
-    elif 'Ipython' in sys.modules:
-        ip = 'terminal'
-    return ip
+    try:
+        return get_ipython()
+    except NameError:
+        return None
+    #if 'ipykernel' in sys.modules:
+        #ip = 'notebook'
+    #elif 'Ipython' in sys.modules:
+        #ip = 'terminal'
+    #return ip
 
 def is_file_obj(filename):
     """does this object behave like a file object?"""
@@ -52,20 +57,20 @@ def b(string):
     """reimplementation of six.b(...) to work in Python 2"""
     return string.encode('latin-1')
 
-def merge_dicts(dict_list, strict=True):
-    """merges two or more dictionaries"""
-    assert isinstance(dict_list, list), type(dict_list)
-    dict_out = {}
-    for adict in dict_list:
-        assert isinstance(adict, dict), adict
-        for key, value in iteritems(adict):
-            if key not in dict_out:
-                dict_out[key] = value
-            elif strict:
-                raise RuntimeError('key=%r exists in multiple dictionaries' % key)
-            else:
-                print('key=%r is dropped?' % key)
-    return dict_out
+#def merge_dicts(dict_list, strict=True):
+    #"""merges two or more dictionaries"""
+    #assert isinstance(dict_list, list), type(dict_list)
+    #dict_out = {}
+    #for adict in dict_list:
+        #assert isinstance(adict, dict), adict
+        #for key, value in iteritems(adict):
+            #if key not in dict_out:
+                #dict_out[key] = value
+            #elif strict:
+                #raise RuntimeError('key=%r exists in multiple dictionaries' % key)
+            #else:
+                #print('key=%r is dropped?' % key)
+    #return dict_out
 
 
 def is_binary_file(filename):
@@ -232,15 +237,18 @@ def object_attributes(obj, mode='public', keys_to_skip=None):
         sorted list of the names of attributes of a given type or None
         if the mode is wrong
     """
-    return __object_attr(obj, mode, keys_to_skip, lambda x: not isinstance(x, MethodType))
+    return __object_attr(
+        obj, mode, keys_to_skip,
+        lambda x: not isinstance(x, (MethodType, FunctionType))
+    )
 
 
-def remove_files(*filenames):
-    """delete a list of files"""
-    failed_list = []
-    for filename in filenames:
-        try:
-            os.remove(filename)
-        except OSError:  # OSError is the general version of WindowsError
-            failed_list.append(filename)
-    return failed_list
+#def remove_files(*filenames):
+    #"""delete a list of files"""
+    #failed_list = []
+    #for filename in filenames:
+        #try:
+            #os.remove(filename)
+        #except OSError:  # OSError is the general version of WindowsError
+            #failed_list.append(filename)
+    #return failed_list

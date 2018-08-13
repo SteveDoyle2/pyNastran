@@ -24,7 +24,7 @@ class TestSolids(unittest.TestCase):
         penta.allocate(1)
         penta.add(card)
         penta.write_card(f, size)
-        #card.rawFields()
+        #card.raw_fields()
         print(f.getvalue())
 
     def test_cpenta_02(self):
@@ -40,7 +40,7 @@ class TestSolids(unittest.TestCase):
         penta.allocate(1)
         penta.add(card)
         penta.write_card(f, size)
-        #card.rawFields()
+        #card.raw_fields()
         print(f.getvalue())
 
     def test_chexa_01(self):
@@ -57,7 +57,7 @@ class TestSolids(unittest.TestCase):
         hexa.allocate(1)
         hexa.add(card)
         hexa.write_card(f, size)
-        #card.rawFields()
+        #card.raw_fields()
         print(f.getvalue())
 
     def test_chexa_02(self):
@@ -74,7 +74,7 @@ class TestSolids(unittest.TestCase):
         hexa.allocate(1)
         hexa.add(card)
         hexa.write_card(f, size)
-        #card.rawFields()
+        #card.raw_fields()
         print(f.getvalue())
 
     def test_ctetra_01(self):
@@ -89,7 +89,7 @@ class TestSolids(unittest.TestCase):
         hexa.allocate(1)
         hexa.add(card)
         hexa.write_card(f, size)
-        #card.rawFields()
+        #card.raw_fields()
         print(f.getvalue())
 
     def test_ctetra_02(self):
@@ -105,7 +105,7 @@ class TestSolids(unittest.TestCase):
         hexa.allocate(1)
         hexa.add(card)
         hexa.write_card(f, size)
-        #card.rawFields()
+        #card.raw_fields()
         print(f.getvalue())
 
     def test_solid_01(self):

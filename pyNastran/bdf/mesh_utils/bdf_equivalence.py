@@ -9,16 +9,18 @@ defines:
                                   crash_on_collapse=False, log=None, debug=True)
 """
 from __future__ import print_function
-from six import iteritems, string_types, PY2
+from six import iteritems, PY2
 
 import numpy as np
 from numpy import (array, unique, arange, searchsorted,
                    setdiff1d, intersect1d, asarray)
 from numpy.linalg import norm  # type: ignore
 import scipy
+import scipy.spatial
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.bdf import BDF
+from pyNastran.bdf.mesh_utils.internal_utils import get_bdf_model
 
 
 def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
@@ -44,7 +46,7 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
         should the nodes be renumbered (default=False)
     neq_max : int
         the number of "close" points (default=4)
-    xref bool: bool
+    xref : bool
         does the model need to be cross_referenced
         (default=True; only applies to model option)
     node_set : List[int] / (n, ) ndarray
@@ -53,12 +55,6 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
         the bdf write precision
     is_double : bool; default=False
         the field precision to write
-    crash_on_collapse : bool; default=False
-        stop if nodes have been collapsed
-           False: blindly move on
-           True: rereads the BDF which catches doubled nodes (temporary);
-                 in the future collapse=True won't need to double read;
-                 an alternative is to do Patran's method of avoiding collapse)
     remove_collapsed_elements : bool; default=False (unsupported)
         True  : 1D/2D/3D elements will not be collapsed;
                 CELASx/CDAMP/MPC/etc. are not considered
@@ -67,6 +63,12 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
         True  : only collapses that don't break 1D/2D/3D elements will be considered;
                 CELASx/CDAMP/MPC/etc. are considered
         False : element can be collapsed
+    crash_on_collapse : bool; default=False
+        stop if nodes have been collapsed
+           False: blindly move on
+           True: rereads the BDF which catches doubled nodes (temporary);
+                 in the future collapse=True won't need to double read;
+                 an alternative is to do Patran's method of avoiding collapse)
     debug : bool
         bdf debugging
     log : logger(); default=None
@@ -84,6 +86,7 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
                kdtree loop, which is very inefficient
     .. todo:: remove_collapsed_elements is not supported
     .. todo:: avoid_collapsed_elements is not supported
+
     """
     if not isinstance(tol, float):
         tol = float(tol)
@@ -106,7 +109,7 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
     return model
 
 
-def _eq_nodes_setup(bdf_filename, tol,
+def _eq_nodes_setup(bdf_filename, unused_tol,
                     renumber_nodes=False, xref=True,
                     node_set=None, debug=True):
     """helper function for `bdf_equivalence_nodes`"""
@@ -122,13 +125,7 @@ def _eq_nodes_setup(bdf_filename, tol,
         else:
             node_set = asarray(node_set, dtype='int32')
 
-    if isinstance(bdf_filename, string_types):
-        xref = True
-        model = BDF(debug=debug)
-        model.read_bdf(bdf_filename, xref=True)
-    else:
-        model = bdf_filename
-        model.cross_reference(xref=xref)
+    model = get_bdf_model(bdf_filename, xref=xref, log=None, debug=debug)
 
     coord_ids = model.coord_ids
     needs_get_position = True if coord_ids == [0] else False
@@ -215,9 +212,9 @@ def _eq_nodes_setup(bdf_filename, tol,
         # Presumably this is enough to capture all the node ids and NOT
         # spoints, but I doubt it...
         spoint_epoint_nid_set = set([])
-        for eid, element in sorted(iteritems(model.elements)):
+        for unused_eid, element in sorted(iteritems(model.elements)):
             spoint_epoint_nid_set.update(element.node_ids)
-        for eid, element in sorted(iteritems(model.masses)):
+        for unused_eid, element in sorted(iteritems(model.masses)):
             spoint_epoint_nid_set.update(element.node_ids)
 
         nids_new = spoint_epoint_nid_set - set(model.spoints) - set(model.epoints)
@@ -303,15 +300,41 @@ def _eq_nodes_final(nid_pairs, model, tol, node_set=None):
         #skip_nodes.append(nid2)
     return
 
-def _eq_nodes_build_tree(nodes_xyz, nids, tol, inew=None, node_set=None, neq_max=4, msg=''):
+def _eq_nodes_build_tree(nodes_xyz, nids, tol,
+                         inew=None, node_set=None, neq_max=4, msg=''):
     """
     helper function for `bdf_equivalence_nodes`
 
     Parameters
     ----------
+    nodes_xyz : (nnodes, 3) float ndarray
+        the xyzs to equivalence
+    nids : (nnodes,) int ndarray
+        the node ids
+    tol : float
+        the spherical equivalence tolerance
+    inew : int ndarray; default=None -> slice(None)
+        a slice on nodes_xyz to exclude some nodes from the equivalencing
+    node_set : ???; default=None
+        ???
+    neq_max : int; default=4
+        the number of nodes to consider for equivalencing
     msg : str; default=''
         custom message used for errors
+
+    Returns
+    -------
+    kdt : cKDTree()
+        the kdtree object
+    ieq : (nnodes, neq) int ndarray
+        ???
+    slots : (nnodes, neq) int ndarray
+        ???
+
     """
+    if inew is None:
+        inew = slice(None)
+
     assert isinstance(tol, float), 'tol=%r' % tol
     kdt = _get_tree(nodes_xyz, msg=msg)
 

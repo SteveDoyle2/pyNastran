@@ -1,9 +1,27 @@
+"""
+defines:
+ - AGPS(log=None, debug=False)
+"""
 from __future__ import print_function
-#from six import iteritems
 import numpy as np
 
 class AGPS(object):
+    """Interface to the AGPS file"""
     def __init__(self, log=None, debug=False):
+        """
+        Initializes the AGPS object
+
+        Parameters
+        ----------
+        debug : bool/None; default=True
+            used to set the logger if no logger is passed in
+                True:  logs debug/info/error messages
+                False: logs info/error messages
+                None:  logs error messages
+        log : logging module object / None
+            if log is set, debug is ignored and uses the
+            settings the logging object has
+        """
         self.infilename = None
         self.pressures = {}
         self.log = log
@@ -74,10 +92,3 @@ class AGPS(object):
                 print('')
         #for ipatch, Cp in sorted(iteritems(self.pressures)):
             #print(Cp)
-
-def main():  # pragma: no cover
-    agps = AGPS()
-    agps.read_agps('agps')
-
-if __name__ == '__main__':  # pragma: no cover
-    main()

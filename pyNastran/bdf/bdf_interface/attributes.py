@@ -9,6 +9,8 @@ from pyNastran.bdf.utils import deprecated
 #from pyNastran.bdf.case_control_deck import CaseControlDeck
 from pyNastran.bdf.cards.coordinate_systems import CORD2R
 #from pyNastran.bdf.cards.constraints import ConstraintObject
+from pyNastran.bdf.cards.aero.zona import ZONA
+
 
 class BDFAttributes(object):
     """defines attributes of the BDF"""
@@ -18,6 +20,9 @@ class BDFAttributes(object):
         self.__init_attributes()
         self._is_cards_dict = False
 
+        self.is_nx = False
+        self.is_msc = False
+        self.is_zona = False
         self.set_as_msc()
 
         self.units = []  # type: List[str]
@@ -26,11 +31,19 @@ class BDFAttributes(object):
         self._nastran_format = 'msc'
         self.is_nx = False
         self.is_msc = True
+        self.is_zona = False
 
     def set_as_nx(self):
         self._nastran_format = 'nx'
         self.is_nx = True
         self.is_msc = False
+        self.is_zona = False
+
+    def set_as_zona(self):
+        self._nastran_format = 'zona'
+        self.is_nx = False
+        self.is_msc = False
+        self.is_zona = True
 
     def object_attributes(self, mode='public', keys_to_skip=None):
         # type: (str, Optional[List[str]]) -> List[str]
@@ -138,6 +151,7 @@ class BDFAttributes(object):
         self.bdf_filename = None
         self.punch = None
         self._encoding = None
+        self._is_long_ids = False # ids > 8 characters
 
         #: ignore any ECHOON flags
         self.force_echo_off = True
@@ -275,6 +289,12 @@ class BDFAttributes(object):
 
         #: stores CBARAO, CBEAMAO
         self.ao_element_flags = {}  # type: Dict[int, Any]
+        #: stores BAROR
+        self.baror = None
+        #: stores BEAMOR
+        self.beamor = None
+        #: stores SNORM
+        self.normals = {}
 
         #: stores rigid elements (RBE2, RBE3, RJOINT, etc.)
         self.rigid_elements = {}  # type: Dict[int, Any]
@@ -285,8 +305,11 @@ class BDFAttributes(object):
         self.masses = {}  # type: Dict[int, Any]
         #: stores PMASS
         self.properties_mass = {}  # type: Dict[int, Any]
-        #: stores NSM, NSM1
+
+        #: stores NSM, NSM1, NSML, NSML1
         self.nsms = {}  # type: Dict[int, List[Any]]
+        #: stores NSMADD
+        self.nsmadds = {}  # type: Dict[int, List[Any]]
 
         #: stores LOTS of propeties (PBAR, PBEAM, PSHELL, PCOMP, etc.)
         self.properties = {}  # type: Dict[int, Any]
@@ -313,6 +336,7 @@ class BDFAttributes(object):
         self.MATT5 = {}  # type: Dict[int, Any]
         self.MATT8 = {}  # type: Dict[int, Any]
         self.MATT9 = {}  # type: Dict[int, Any]
+        self.nxstrats = {}  # type: Dict[int, Any]
 
         #: stores the CREEP card
         self.creep_materials = {}  # type: Dict[int, Any]
@@ -342,11 +366,12 @@ class BDFAttributes(object):
         self.suport1 = {}  # type: Dict[int, Any]
         self.se_suport = []  # type: List[Any]
 
-        #: stores SPCADD, SPC, SPC1, SPCAX, GMSPC
+        #: stores SPC, SPC1, SPCAX, GMSPC
         self.spcs = {}  # type: Dict[int, List[Any]]
+        #: stores SPCADD
         self.spcadds = {}  # type: Dict[int, List[Any]]
-
         self.spcoffs = {}  # type: Dict[int, List[Any]]
+
         self.mpcs = {}  # type: Dict[int, List[Any]]
         self.mpcadds = {}  # type: Dict[int, List[Any]]
 
@@ -376,6 +401,7 @@ class BDFAttributes(object):
         #: SETy
         self.sets = {}  # type: Dict[int, Any]
         self.asets = []  # type: List[Any]
+        self.omits = []  # type: List[Any]
         self.bsets = []  # type: List[Any]
         self.csets = []  # type: List[Any]
         self.qsets = []  # type: List[Any]
@@ -477,6 +503,7 @@ class BDFAttributes(object):
 
         #: store SPLINE1,SPLINE2,SPLINE4,SPLINE5
         self.splines = {}  # type: Dict[int, Any]
+        self.zona = ZONA(self)
 
         # axisymmetric
         self.axic = None  # type: Optional[Any]
@@ -520,6 +547,13 @@ class BDFAttributes(object):
         self.convection_properties = {}  # type: Dict[int, Any]
         #: stores TEMPD
         self.tempds = {}  # type: Dict[int, Any]
+
+        #: stores VIEW
+        self.views = {}
+        #: stores VIEW3D
+        self.view3ds = {}
+        self.radset = None
+        self.radcavs = {}
 
         # -------------------------contact cards-------------------------------
         self.bcrparas = {}  # type: Dict[int, Any]
@@ -568,8 +602,10 @@ class BDFAttributes(object):
                 # thermal
                 'CHBDYE', 'CHBDYG', 'CHBDYP',
             ],
-            'nsms' : ['NSM', 'NSM1', 'NSML', 'NSML1', 'NSMADD'],
-            'rigid_elements' : ['RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3', 'RROD', 'RSPLINE'],
+            'normals' : ['SNORM'],
+            'nsms' : ['NSM', 'NSM1', 'NSML', 'NSML1'],
+            'nsmadds' : ['NSMADD'],
+            'rigid_elements' : ['RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3', 'RROD', 'RSPLINE', 'RSSCON'],
             'plotels' : ['PLOTEL',],
 
             'properties_mass' : ['PMASS'],
@@ -605,6 +641,7 @@ class BDFAttributes(object):
             'MATS1' : ['MATS1'],
             'MATS3' : ['MATS3'],
             'MATS8' : ['MATS8'],
+            'nxstrats' : ['NXSTRAT'],
 
             # 'MATHE'
             #'EQUIV', # testing only, should never be activated...
@@ -656,19 +693,20 @@ class BDFAttributes(object):
             'aesurf' : ['AESURF'],
             'aesurfs' : ['AESURFS'],
             'aestats' : ['AESTAT'],
-            'caeros' : ['CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5'],
-            'paeros' : ['PAERO1', 'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5'],
+            'caeros' : ['CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5', 'CAERO7', 'BODY7'],
+            'paeros' : ['PAERO1', 'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5', 'SEGMESH'],
             'monitor_points' : ['MONPNT1', 'MONPNT2', 'MONPNT3'],
             'splines' : ['SPLINE1', 'SPLINE2', 'SPLINE4', 'SPLINE5',],
+            'panlsts' : ['PANLST1', 'PANLST2', 'PANLST3',],
             'csschds' : ['CSSCHD',],
             #'SPLINE3', 'SPLINE6', 'SPLINE7',
-            'trims' : ['TRIM',],
+            'trims' : ['TRIM', 'TRIM2'],
             'divergs' : ['DIVERG'],
 
             # coords
             'coords' : ['CORD1R', 'CORD1C', 'CORD1S',
                         'CORD2R', 'CORD2C', 'CORD2S',
-                        'GMCORD'],
+                        'GMCORD', 'ACOORD', 'CORD3G'],
 
             # temperature cards
             'tempds' : ['TEMPD'],
@@ -720,6 +758,10 @@ class BDFAttributes(object):
 
             # sets
             'asets' : ['ASET', 'ASET1'],
+            'omits' : [
+                #'OMIT',
+                'OMIT1'
+            ],
             'bsets' : ['BSET', 'BSET1',],
             'qsets' : ['QSET', 'QSET1'],
             'csets' : ['CSET', 'CSET1',],
@@ -732,6 +774,8 @@ class BDFAttributes(object):
             'se_qsets' : ['SEQSET', 'SEQSET1'],
             'se_usets' : ['SEUSET', 'SEQSET1'],
             'se_sets' : ['SESET'],
+            'radset' : ['RADSET'],
+            'radcavs' : ['RADCAV'],
             # SEBSEP
 
             'tables' : [
@@ -759,6 +803,8 @@ class BDFAttributes(object):
             'bctsets' : ['BCTSET'],
             'bsurf' : ['BSURF'],
             'bsurfs' : ['BSURFS'],
+            'views' : ['VIEW'],
+            'view3ds' : ['VIEW3D'],
 
             ## other
             #'INCLUDE',  # '='
@@ -773,16 +819,17 @@ class BDFAttributes(object):
     @nastran_format.setter
     def nastran_format(self, nastran_format):
         fmt_lower = nastran_format.lower().strip()
-        if fmt_lower not in ['nx', 'msc']:
+        if fmt_lower not in ['nx', 'msc', 'zona']:
             raise RuntimeError(nastran_format)
         self._nastran_format = fmt_lower
 
     @property
     def is_long_ids(self):
         # type: () -> bool
-        if self._nastran_format == 'nx':
-            return True
-        return False
+        return self._is_long_ids
+        #if self._nastran_format == 'nx' or self._is_long_ids:
+            #return True
+        #return False
 
     @property
     def sol(self):
@@ -807,15 +854,6 @@ class BDFAttributes(object):
         if self.case_control_deck is None:
             return {}
         return self.case_control_deck.subcases
-
-    @property
-    def rejects(self):
-        #: lines that were rejected b/c they were for a card that isnt supported
-        return self.reject_lines
-
-    @rejects.setter
-    def rejects(self, rejects):
-        self.reject_lines = rejects
 
     #@property
     #def grids(self):
@@ -911,3 +949,19 @@ class BDFAttributes(object):
     def caero_ids(self):
         """gets the CAEROx ids"""
         return self.caeros.keys()
+
+    @property
+    def wtmass(self):
+        """
+        Gets the PARAM,WTMASS value, which defines the weight to mass
+        conversion factor
+
+        kg -> kg : 1.0
+        lb -> slug : 1/32.2
+        lb -> slinch : 1/(32.2*12)=1/386.4
+        """
+        wtmass = 1.0
+        if 'WTMASS' in self.params:
+            param = self.params['WTMASS']
+            wtmass = param.values[0]
+        return wtmass

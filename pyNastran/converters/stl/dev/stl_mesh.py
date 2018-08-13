@@ -27,7 +27,7 @@ def projected_barycentric_coord(p, q, u, v):
     n = cross(u, v)
     one_over_4_area_squared = 1.0 / np.dot(n, n)
     w = p - q
-    b[2] = np.dot(crnp.oss(u, w), n) * one_over_4_area_squared
+    b[2] = np.dot(np.cross(u, w), n) * one_over_4_area_squared
     b[1] = np.dot(np.cross(w, v), n) * one_over_4_area_squared
     b[0] = 1.0 - b[1] - b[2]
     return b
@@ -197,8 +197,8 @@ def main():
     import os
     import pyNastran
 
-    pkg_path = pyNastran.__path__[0]
-    stl_filename = os.path.join(pkg_path, 'converters', 'stl', 'sphere.stl')
+    PKG_PATH = pyNastran.__path__[0]
+    stl_filename = os.path.join(PKG_PATH, 'converters', 'stl', 'sphere.stl')
 
     stl = read_stl(stl_filename)
     #XYZ Global = (2.0035907914418716, 1.3287668328026303, 2.873731014735773)

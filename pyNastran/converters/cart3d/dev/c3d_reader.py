@@ -1,34 +1,34 @@
+from __future__ import print_function
 from struct import unpack, Struct
 
 from numpy import zeros
 
-from pyNastran.op2.fortran_format import FortranFormat
-
-from pyNastran.utils import is_binary
+#from pyNastran.utils import is_binary_file
 from pyNastran.utils.log import get_logger2
 
 
-class C3D_Reader(FortranFormat):
+class C3D_Reader(object):
     def __init__(self, log=None, debug=False):
         self.log = get_logger2(log, debug=debug)
-        FortranFormat.__init__(self)
 
     def read_c3d(self, c3d_filename):
         self.f = open(c3d_filename, 'r')
         data = self.f.read(32)
-        nVolHexes, nCutHexes, nSplitCells, nFlowFaces, facesX, facesY, facesZ, nCutFaces = unpack(b'8i', data)
-        print('nVolHexes=%s nCutHexes=%s nSplitCells=%s nFlowFaces=%s' % (nVolHexes, nCutHexes, nSplitCells, nFlowFaces))
-        print('facesX=%s facesY=%s facesZ=%s nCutFaces=%s' % (facesX, facesY, facesZ, nCutFaces))
+        nvol_hexes, ncut_hexes, nsplit_cells, nflow_faces, faces_x, faces_y, faces_z, ncut_faces = unpack(b'8i', data)
+        print('nvol_hexes=%s ncut_hexes=%s nsplit_cells=%s nflow_faces=%s' % (
+            nvol_hexes, ncut_hexes, nsplit_cells, nflow_faces))
+        print('faces_x=%s faces_y=%s faces_z=%s ncut_faces=%s' % (
+            faces_x, faces_y, faces_z, ncut_faces))
 
         #facesXYZ
-        #nCutFaces
+        #ncut_faces
         self.n += 32
 
         fmt = 'Iccc'
         s = Struct(fmt)
         n = 10
         vol_hexs = zeros((n, 3), dtype='int32')
-        for j in range(nVolHexes):
+        for j in range(nvol_hexes):
             data = self.f.read(7)
             self.n += 7
             n, x, y, z = s.unpack(data)

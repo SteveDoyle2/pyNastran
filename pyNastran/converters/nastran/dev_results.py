@@ -2,14 +2,13 @@ from __future__ import print_function
 
 from copy import deepcopy
 from numpy import zeros
-import numpy as np
 from numpy.linalg import norm  # type: ignore
 from pyNastran.gui.gui_objects.gui_result import GuiResultCommon
 
 
 class TransientElementResults(object):
     deflects = False
-    def __init__(self, subcase_id, titles, headers, scalars,
+    def __init__(self, subcase_id, titles, headers, unused_scalars,
                  scales, data_formats=None,
                  nlabels=None, labelsize=None, ncolors=None, colormap='jet',
                  set_max_min=False, uname='NastranGeometry'):
@@ -105,7 +104,7 @@ class TransientElementResults(object):
     #-------------------------------------
     # getters
 
-    def get_header(self, i, name):
+    def get_header(self, i, unused_name):
         return self.headers[i]
 
     #def get_phase(self, i, name):
@@ -113,19 +112,19 @@ class TransientElementResults(object):
             #return None
         #return self.phases[i]
 
-    def get_data_format(self, i, name):
+    def get_data_format(self, i, unused_name):
         return self.data_formats[i]
 
-    def get_title(self, i, name):
+    def get_title(self, i, unused_name):
         return self.titles[i]
 
-    def get_min_max(self, i, name):
+    def get_min_max(self, i, unused_name):
         return self.min_values[i], self.max_values[i]
 
     #-------------------------------------
     # setters
 
-    def set_data_format(self, i, name, data_format):
+    def set_data_format(self, i, unused_name, data_format):
         self.data_formats[i] = data_format
 
     #def set_scale(self, i, name, scale):
@@ -136,25 +135,25 @@ class TransientElementResults(object):
             #return
         #self.phases[i] = phase
 
-    def set_title(self, i, name, title):
+    def set_title(self, i, unused_name, title):
         self.titles[i] = title
 
-    def set_min_max(self, i, name, min_value, max_value):
+    def set_min_max(self, i, unused_name, min_value, max_value):
         self.min_values[i] = min_value
         self.max_values[i] = max_value
 
     #-------------------------------------
     # default getters
-    def get_default_data_format(self, i, name):
+    def get_default_data_format(self, i, unused_name):
         return self.data_formats_default[i]
 
-    def get_default_min_max(self, i, name):
+    def get_default_min_max(self, i, unused_name):
         return self.default_mins[i], self.default_maxs[i]
 
-    def get_nlabels_labelsize_ncolors_colormap(self, i, name):
+    def get_nlabels_labelsize_ncolors_colormap(self, unused_i, unused_name):
         return self.nlabels, self.labelsize, self.ncolors, self.colormap
 
-    def set_nlabels_labelsize_ncolors_colormap(self, i, name, nlabels, labelsize,
+    def set_nlabels_labelsize_ncolors_colormap(self, unused_i, unused_name, nlabels, labelsize,
                                                ncolors, colormap):
         self.nlabels = nlabels
         self.labelsize = labelsize
@@ -175,33 +174,33 @@ class TransientElementResults(object):
     def get_default_nlabels_labelsize_ncolors_colormap(self, i, name):
         return self.get_nlabels_labelsize_ncolors_colormap(i, name)
 
-    def get_default_title(self, i, name):
+    def get_default_title(self, i, unused_sname):
         return self.titles_default[i]
 
     #-------------------------------------
     # unmodifyable getters
 
-    def get_data_type(self, i, name):
+    def get_data_type(self, unused_i, unused_name):
         """the precision of the data"""
         return self.data_type
 
-    def get_location(self, i, name):
+    def get_location(self, unused_i, unused_name):
         """the result type"""
         return 'centroid'
 
-    def get_vector_size(self, i, name):
+    def get_vector_size(self, unused_i, unused_name):
         """the result size"""
         return 3
 
     #-------------------------------------
 
-    def get_methods(self, i):
+    def get_methods(self, unused_i):
         if self.is_real:
             return ['magnitude', 'tx', 'ty', 'tz', 'rx', 'ry', 'rz']
         else:
             return ['node real', 'node imag', 'node magnitude', 'node phase']
 
-    def get_plot_value(self, i, name):
+    def get_plot_value(self, i, unused_name):
         if self.is_real:
             if self.dim == 2:
                 dxyz = self.dxyz
@@ -228,7 +227,7 @@ class TransientElementResults(object):
         #dxyz = self._get_complex_displacements_by_phase(i, self.phases[i])
         #return dxyz
 
-    def get_result(self, i, name):
+    def get_result(self, i, unused_name):
         if self.is_real:
             if self.dim == 2:
                 # single result

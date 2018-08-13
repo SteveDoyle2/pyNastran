@@ -14,6 +14,8 @@ def find_coplanar_triangles(bdf_filename, eids):
     bdf_filename : str
         the path to the bdf input file
     eids : list
+        the element ids to consider
+
     """
     model = read_bdf(bdf_filename, xref=False)
 
@@ -75,7 +77,7 @@ def find_coplanar_triangles(bdf_filename, eids):
     print(nids2)
     return model, eids_to_remove
 
-def main():
-    """the test case"""
-    eids = parse_patran_syntax_dict(' Element 830:84798')['Element']
-    eids = find_coplanar_elements(bdf_filename, eids)
+#def main():
+    #"""the test case"""
+    #eids = parse_patran_syntax_dict(' Element 830:84798')['Element']
+    #eids = find_coplanar_elements(bdf_filename, eids)

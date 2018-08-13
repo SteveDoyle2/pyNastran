@@ -25,7 +25,7 @@ EPOINTs/SPOINTs classes are for multiple degrees of freedom
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
-from six import string_types, PY2
+from six import string_types, PY2, iteritems
 from typing import List, Union, Optional, Any
 import numpy as np
 
@@ -265,8 +265,17 @@ class EPOINT(XPoint):
         XPoint.__init__(self, nid, comment)
 
 def write_xpoints(cardtype, points, comment=''):
+    """writes SPOINTs/EPOINTs"""
     msg = comment
-    lists_fields = compress_xpoints(cardtype, points)
+    if isinstance(points, dict):
+        point_ids = []
+        for point_id, point in sorted(iteritems(points)):
+            point_ids.append(point_id)
+            if point.comment:
+                msg += point.comment
+    else:
+        point_ids = points
+    lists_fields = compress_xpoints(cardtype, point_ids)
     for list_fields in lists_fields:
         if 'THRU' not in list_fields:
             msg += print_int_card(list_fields)
@@ -275,9 +284,9 @@ def write_xpoints(cardtype, points, comment=''):
     return msg
 
 
-def compress_xpoints(Type, xpoints):
+def compress_xpoints(point_type, xpoints):
     """
-    Gets the spoints in sorted, short form.
+    Gets the SPOINTs/EPOINTs in sorted, short form.
 
       uncompresed:  SPOINT,1,3,5
       compressed:   SPOINT,1,3,5
@@ -289,9 +298,9 @@ def compress_xpoints(Type, xpoints):
       compressed:   SPOINT,7
                     SPOINT,1,THRU,5
 
-    Type = 'SPOINT'
+    point_type = 'SPOINT'
     spoints = [1, 2, 3, 4, 5]
-    fields = compressed_xpoints(Type, spoints)
+    fields = compressed_xpoints(point_type, spoints)
     >>> fields
     ['SPOINT', 1, 'THRU', 5]
     """
@@ -302,11 +311,11 @@ def compress_xpoints(Type, xpoints):
 
     lists_fields = []
     if singles:
-        list_fields = [Type] + singles
+        list_fields = [point_type] + singles
         lists_fields.append(list_fields)
     if doubles:
         for spoint_double in doubles:
-            list_fields = [Type] + spoint_double
+            list_fields = [point_type] + spoint_double
             lists_fields.append(list_fields)
     return lists_fields
 
@@ -548,6 +557,10 @@ class GRDSET(BaseCard):
         #: Superelement ID
         self.seid = seid
 
+        self.cp_ref = None
+        self.cd_ref = None
+        self.seid_ref = None
+
     @classmethod
     def add_card(cls, card, comment=''):
         """
@@ -583,18 +596,18 @@ class GRDSET(BaseCard):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by the GRDSET'
-        self.cp = model.Coord(self.cp, msg=msg)
-        self.cp_ref = self.cp
-        self.cd = model.Coord(self.cd, msg=msg)
-        self.cd_ref = self.cd
+        msg = ', which is required by the GRDSET'
+        self.cp_ref = model.Coord(self.cp, msg=msg)
+        self.cd_ref = model.Coord(self.cd, msg=msg)
         #self.seid = model.SuperElement(self.seid, msg)
         #self.seid_ref = self.seid
 
     def uncross_reference(self):
         self.cp = self.Cp()
         self.cd = self.Cd()
-        del self.cp_ref, self.cd_ref
+        self.cp_ref = None
+        self.cd_ref = None
+        self.seid_ref = None
 
     def Cd(self):
         """
@@ -605,10 +618,9 @@ class GRDSET(BaseCard):
         cd : int
             the output coordinate system
         """
-        if isinstance(self.cd, integer_types):
+        if self.cd_ref is None:
             return self.cd
-        else:
-            return self.cd.cid
+        return self.cd.cid
 
     def Cp(self):
         """
@@ -619,10 +631,9 @@ class GRDSET(BaseCard):
         cp : int
             the analysis coordinate system
         """
-        if isinstance(self.cp, integer_types):
+        if self.cp_ref is None:
             return self.cp
-        else:
-            return self.cp.cid
+        return self.cp.cid
 
     def Ps(self):
         """
@@ -644,10 +655,9 @@ class GRDSET(BaseCard):
         seid : int
             the Superelement ID
         """
-        if isinstance(self.seid, integer_types):
+        if self.seid_ref is None:
             return self.seid
-        else:
-            return self.seid.seid
+        return self.seid_ref.seid
 
     def _verify(self, xref):
         """
@@ -738,6 +748,7 @@ class GRIDB(BaseCard):
         assert self.cd >= 0, 'cd=%s' % self.cd
         assert self.ps >= 0, 'ps=%s' % self.ps
         assert self.idf >= 0, 'idf=%s' % self.idf
+        self.cd_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -797,10 +808,9 @@ class GRIDB(BaseCard):
         cd : int
             the output coordinate system
         """
-        if isinstance(self.cd, integer_types):
+        if self.cd_ref is None:
             return self.cd
-        else:
-            return self.cd.cid
+        return self.cd_ref.cid
 
     def raw_fields(self):
         """
@@ -819,10 +829,10 @@ class GRIDB(BaseCard):
         """
         Gets the fields in their simplified form
 
-        :returns fields:
+        Returns
+        -------
+        fields : List[varies]
           the fields that define the card
-        :type fields:
-          LIST
         """
         #phi = set_blank_if_default(self.phi, 0.0)
         cd = set_blank_if_default(self.Cd(), 0)
@@ -861,6 +871,63 @@ class GRID(BaseCard):
     +======+=====+====+====+====+====+====+====+======+
     | GRID | NID | CP | X1 | X2 | X3 | CD | PS | SEID |
     +------+-----+----+----+----+----+----+----+------+
+
+    Attributes
+    ----------
+    nid : int
+        node id
+    xyz : float ndarray
+        Raw location <:math:`x_1, x_2, x_3`>
+    cp : int
+        reference coordinate system
+    cd : int
+        analysis coordinate system
+    ps : str
+        nodal-based constraints
+    seid : int
+        superelement id
+    cp_ref : Coord() or None
+        cross-referenced cp
+    cd_ref : Coord() or None
+        cross-referenced cd
+
+    Methods
+    -------
+    Nid()
+        gets nid
+    Cp()
+        gets cp_ref.cid or cp depending on cross-referencing
+    Cd()
+        gets cd_ref.cid or cd depending on cross-referencing
+    Ps()
+        gets ps
+    SEid()
+        superelement id
+    get_position()
+        gets xyz in the global frame
+    get_position_wrt(model, cid)
+        gets xyz in a local frame
+    cross_reference(model)
+        cross-references the card
+    uncross_reference()
+        uncross-references the card
+    set_position(model, xyz, cid=0, xref=True)
+        updates the coordinate system
+
+    Using the GRID object::
+
+     model = read_bdf(bdf_filename)
+     node = model.Node(nid)
+
+     # gets the position of the node in the global frame
+     node.get_position()
+     node.get_position_wrt(model, cid=0)
+
+     # gets the position of the node in a local frame
+     node.get_position_wrt(model, cid=1)
+
+     # change the location of the node
+     node.set_position(model, array([1.,2.,3.]), cid=3)
     """
     type = 'GRID'
 
@@ -1133,7 +1200,7 @@ class GRID(BaseCard):
         """
         return 6
 
-    def set_position(self, model, xyz, cid=0):
+    def set_position(self, model, xyz, cid=0, xref=True):
         # type: (Any, np.ndarray, int) -> None
         """
         Updates the GRID location
@@ -1144,10 +1211,14 @@ class GRID(BaseCard):
             the location of the node.
         cp : int; default=0 (global)
             the analysis coordinate system
+        xref : bool; default=True
+            cross-references the coordinate system
         """
         self.xyz = xyz
-        msg = ' which is required by GRID nid=%s' % self.nid
-        self.cp = model.Coord(cid, msg=msg)
+        msg = ', which is required by GRID nid=%s' % self.nid
+        self.cp = cid
+        if xref:
+            self.cp_ref = model.Coord(cid, msg=msg)
 
     def get_position_no_xref(self, model):
         # type: (Any) -> np.ndarray
@@ -1202,7 +1273,7 @@ class GRID(BaseCard):
         """see get_position_wrt"""
         if cid == self.cp: # same coordinate system
             return self.xyz
-        msg = ' which is required by GRID nid=%s' % (self.nid)
+        msg = ', which is required by GRID nid=%s' % (self.nid)
 
         # converting the xyz point arbitrary->global
         cp_ref = model.Coord(self.cp, msg=msg)
@@ -1238,7 +1309,7 @@ class GRID(BaseCard):
         p = self.cp_ref.transform_node_to_global(self.xyz)
 
         # a matrix global->local matrix is found
-        msg = ' which is required by GRID nid=%s' % (self.nid)
+        msg = ', which is required by GRID nid=%s' % (self.nid)
         coord_b = model.Coord(cid, msg=msg)
         xyz = coord_b.transform_node_to_local(p)
         return xyz
@@ -1261,15 +1332,15 @@ class GRID(BaseCard):
         if grdset:
             # update using a grdset object
             if not self.cp:
-                self.cp_ref = grdset.cp
+                self.cp_ref = grdset.cp_ref
             if not self.cd:
                 self.cd = grdset.cd
-                self.cd_ref = self.cd
+                self.cd_ref = self.cd_ref
             if not self.ps:
                 self.ps_ref = grdset.ps
             if not self.seid:
                 self.seid_ref = grdset.seid
-        msg = ' which is required by GRID nid=%s' % (self.nid)
+        msg = ', which is required by GRID nid=%s' % (self.nid)
         self.cp_ref = model.Coord(self.cp, msg=msg)
         if self.cd != -1:
             self.cd_ref = model.Coord(self.cd, msg=msg)
@@ -1498,6 +1569,7 @@ class POINT(BaseCard):
         #: node location in local frame
         self.xyz = np.asarray(xyz, dtype='float64')
         assert self.xyz.size == 3, self.xyz.shape
+        self.cp_ref = None
 
     def validate(self):
         # type: () -> None
@@ -1560,7 +1632,7 @@ class POINT(BaseCard):
             the analysis coordinate system
         """
         self.xyz = xyz
-        msg = ' which is required by POINT nid=%s' % self.nid
+        msg = ', which is required by POINT nid=%s' % self.nid
         self.cp = model.Coord(cid, msg=msg)
 
     def get_position(self):
@@ -1601,7 +1673,7 @@ class POINT(BaseCard):
         p = self.cp.transform_node_to_global(self.xyz)
 
         # a matrix global->local matrix is found
-        msg = ' which is required by POINT nid=%s' % (self.nid)
+        msg = ', which is required by POINT nid=%s' % (self.nid)
         coord_b = model.Coord(cid, msg=msg)
         xyz = coord_b.transform_node_to_local(p)
         return xyz
@@ -1616,10 +1688,9 @@ class POINT(BaseCard):
         cp : int
             the analysis coordinate system
         """
-        if isinstance(self.cp, integer_types):
+        if self.cp_ref is None:
             return self.cp
-        else:
-            return self.cp_ref.cid
+        return self.cp_ref.cid
 
     def cross_reference(self, model):
         # type: (Any) -> None
@@ -1631,13 +1702,11 @@ class POINT(BaseCard):
         model : BDF()
             the BDF object
         """
-        self.cp = model.Coord(self.cp)
-        self.cp_ref = self.cp
+        self.cp_ref = model.Coord(self.cp)
 
     def uncross_reference(self):
         # type: () -> None
-        self.cp = self.Cp()
-        del self.cp_ref
+        self.cp_ref = self.Cp()
 
     def raw_fields(self):
         # type: () -> List[Union[str, int, float]]

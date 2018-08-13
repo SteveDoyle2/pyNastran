@@ -110,7 +110,7 @@ class PROD(Property):
         nsm = data[5]
         return PROD(pid, mid, A, j, c, nsm, comment=comment)
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         pid = self.Pid()
         mid = self.Mid()
         A = self.Area()
@@ -171,7 +171,7 @@ class PROD(Property):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by PROD mid=%s' % self.mid
+        msg = ', which is required by PROD mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
 
     def uncross_reference(self):
@@ -197,6 +197,10 @@ class PROD(Property):
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
+    def write_card_16(self, is_double=False):
+        card = self.raw_fields()
+        return self.comment + print_card_16(card)
+
 
 class PTUBE(Property):
     """
@@ -210,7 +214,9 @@ class PTUBE(Property):
     """
     type = 'PTUBE'
     pname_fid_map = {
+        4 : 'OD1', 'OD' : 'OD1',
         5 : 't', 'T' : 't',
+        7 : 'OD2', 'OD2' : 'OD2',
     }
 
     def __init__(self, pid, mid, OD1, t=None, nsm=0., OD2=None, comment=''):
@@ -296,7 +302,7 @@ class PTUBE(Property):
         #OD2 = data[5]  #: .. note:: quirk to this one...
         return PTUBE(pid, mid, OD1, t, nsm, OD2, comment=comment)
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         pid = self.Pid()
         mid = self.Mid()
         A = self.Area()
@@ -321,7 +327,7 @@ class PTUBE(Property):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by PTUBE mid=%s' % self.mid
+        msg = ', which is required by PTUBE mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
 
     def uncross_reference(self):

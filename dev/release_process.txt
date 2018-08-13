@@ -1,0 +1,18 @@
+>>> python setup_no_reqs.py develop
+>>> python all_tests.py
+
+build docs
+>>>make html
+upload docs
+
+build gui
+>>> pyinstaller pyNastran.spec
+test docs
+
+build egg
+>>> python setup_no_reqs.py bdist_egg
+
+per https://pypi.org/project/twine/
+ >>> twine upload *.whl
+
+fix website version

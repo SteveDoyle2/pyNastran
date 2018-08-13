@@ -201,6 +201,7 @@ def to_fields(card_lines, card_name):
       >>> fields = to_fields(lines, card_name)
       >>> fields
       ['GRID', '1', '', '1.0', '2.0', '3.0']
+
     """
     fields = []  # type: List[str]
 
@@ -277,9 +278,7 @@ def to_fields(card_lines, card_name):
     return fields #[field.strip() for field in fields]
 
 def parse_executive_control_deck(executive_control_lines):
-    """
-    Extracts the solution from the executive control deck
-    """
+    """Extracts the solution from the executive control deck"""
     sol = None
     method = None
     sol_iline = None
@@ -341,6 +340,7 @@ def _parse_pynastran_header(line):
 
     or a line without a valid pyNastran flag, we'll stop reading,
     even a valid header statement is on the following line.
+
     """
     lline = line[1:].lower().strip()
     if len(lline) == 0 or lline[0] == '$':
@@ -410,6 +410,7 @@ def print_filename(filename, relpath=True):
     -------
     filename_string : str
         a shortened representation of the filename
+
     """
     if isinstance(filename, StringIO):
         return '<StringIO>'
@@ -448,28 +449,27 @@ def parse_patran_syntax(node_sets, pound=None):
       |"12:20:2"   | [12, 14, 16, 18, 20] |
       +------------+----------------------+
 
-    Example 1
-    ----------
-    .. code-block:: python
+    Examples
+    --------
+    **Example 1**
 
-      >>> node_sets = "1 2 3 5:10 12:20:2"
-      >>> data = parse_patran_syntax(node_sets)
-      >>> data
-      data = [1, 2, 3, 5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20]
+    >>> node_sets = "1 2 3 5:10 12:20:2"
+    >>> data = parse_patran_syntax(node_sets)
+    >>> data
+    data = [1, 2, 3, 5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20]
 
-    Example 2
-    ----------
-    .. code-block:: python
+    **Example 2**
 
-      >>> node_sets = "1 2 3:#"
-      >>> data = parse_patran_syntax(node_sets, pound=10)
-      >>> data
-      data = [1, 2, 3, 5, 6, 7, 8, 9, 10]
+    >>> node_sets = "1 2 3:#"
+    >>> data = parse_patran_syntax(node_sets, pound=10)
+    >>> data
+    data = [1, 2, 3, 5, 6, 7, 8, 9, 10]
 
 
     .. warning::  Don't include the n/node or e/element or any other
                   identifier, just a string of "1 2 3 5:10 12:20:2".
                   Use parse_patran_syntax_dict to consider the identifier.
+
     """
     assert isinstance(node_sets, string_types), type(node_sets)
     if pound is not None:
@@ -481,27 +481,40 @@ def parse_patran_syntax(node_sets, pound=None):
     snodes = node_sets.split()
     nodes = []  # type: List[int]
     for snode in snodes:
-        if ':' in snode:
-            ssnode = snode.split(':')
-            if len(ssnode) == 2:
-                nmin = int(ssnode[0])
-                nmax = int(ssnode[1])
-                new_set = list(range(nmin, nmax + 1))
-            elif len(ssnode) == 3:
-                nmin = int(ssnode[0])
-                nmax = int(ssnode[1])
-                delta = int(ssnode[2])
-                nmin, nmax = min([nmin, nmax]), max([nmin, nmax])
-                if delta > 0:
-                    new_set = list(range(nmin, nmax + 1, delta))
-                else:
-                    new_set = list(range(nmin, nmax + 1, -delta))
-            else:
-                raise NotImplementedError(snode)
-            nodes += new_set
-        else:
-            nodes.append(int(snode))
+        _apply_comma_colon_int_node(nodes, snode)
     return unique(nodes)
+
+def _apply_comma_colon_int_node(nodes, snode):
+    """helper method for parse_patran_syntax"""
+    if ',' in snode:
+        comma_split_node = snode.split(',')
+        for comma_node in comma_split_node:
+            _apply_comma_colon_int_node(nodes, comma_node)
+    elif ':' in snode:
+        new_set = _apply_colon_set(snode)
+        nodes += new_set
+    else:
+        nodes.append(int(snode))
+
+def _apply_colon_set(snode):
+    """helper method for parse_patran_syntax"""
+    ssnode = snode.split(':')
+    if len(ssnode) == 2:
+        nmin = int(ssnode[0])
+        nmax = int(ssnode[1])
+        new_set = list(range(nmin, nmax + 1))
+    elif len(ssnode) == 3:
+        nmin = int(ssnode[0])
+        nmax = int(ssnode[1])
+        delta = int(ssnode[2])
+        nmin, nmax = min([nmin, nmax]), max([nmin, nmax])
+        if delta > 0:
+            new_set = list(range(nmin, nmax + 1, delta))
+        else:
+            new_set = list(range(nmin, nmax + 1, -delta))
+    else:
+        raise NotImplementedError(snode)
+    return new_set
 
 def write_patran_syntax_dict(dict_sets):
     # type: (Dict[str, np.ndarray]) -> str
@@ -520,13 +533,14 @@ def write_patran_syntax_dict(dict_sets):
         the node_set to parse
 
     See ``parse_patran_syntax_dict`` for explanation of usage
+
     """
     msg = ''
     for key, dict_set in sorted(iteritems(dict_sets)):
         singles, doubles = collapse_colon_packs(dict_set, thru_split=4)
-        double_list = ['%s:%s' % (double[0], double[2])
+        double_list = ('%s:%s' % (double[0], double[2])
                        if len(double) == 3 else '%s:%s:%s' % (double[0], double[2], double[4])
-                       for double in doubles]
+                       for double in doubles)
         double_str = ' '.join(double_list)
         msg += '%s %s %s ' % (
             key,
@@ -558,37 +572,40 @@ def parse_patran_syntax_dict(node_sets, pound_dict=None, msg=''):
         str : the key
         values : the integer values for that key
 
-    Example 1
-    ---------
-    .. code-block:: python
+    Examples
+    --------
+    **Example 1**
 
-      node_sets = "e 1:3 n 2:6:2 Node 10:13"
-      data = parse_patran_syntax_dict(node_sets)
-      data = {
+    >>> node_sets = "e 1:3 n 2:6:2 Node 10:13"
+    >>> data = parse_patran_syntax_dict(node_sets)
+    >>> data = {
+          'e'    : [1, 2, 3],
+          'n'    : [2, 4, 6],
+          'Node' : [10, 11, 12, 13],
+    }
+
+
+    **Example 2**
+
+    >>> node_sets = "e 1:3 n 2:6:2 Node 10:#"
+
+    # a pound character will be set to 20, but only for 'Node', but not
+    # 'n' so define it twice if needed
+    >>> pounds = {'Node' : 20}
+    >>> data = parse_patran_syntax_dict(node_sets, pounds=pounds)
+    >>> data = {
           'e'    : [1, 2, 3],
           'n'    : [2, 4, 6],
           'Node' : [10, 11, 12, 13],
       }
 
-    Example 2
-    ---------
-    .. code-block:: python
+    Notes
+    -----
+    An identifier (e.g. "e") must be used.
+    Use parse_patran_syntax to skip the identifier.
 
-      node_sets = "e 1:3 n 2:6:2 Node 10:#"
-
-      # a pound character will be set to 20, but only for 'Node', but not 'n'
-      # so define it twice if needed
-      pounds = {'Node' : 20}
-      data = parse_patran_syntax_dict(node_sets, pounds=pounds)
-      data = {
-          'e'    : [1, 2, 3],
-          'n'    : [2, 4, 6],
-          'Node' : [10, 11, 12, 13],
-      }
-
-    .. note:: an identifier (e.g. "e") must be used.
-              Use parse_patran_syntax to skip the identifier.
     .. warning:: case sensitive
+
     """
     data = {}  # type: Dict[str, List[int]]
     try:
@@ -688,29 +705,32 @@ def parse_patran_syntax_dict_map(node_sets, type_map, msg=''):
         str : the key
         values : the integer values for that key
 
-    Example 1
-    ---------
+    Examples
+    --------
+    **Example 1**
     .. code-block:: python
 
       # we drop the coordinate systems because we didn't request them
       # (coord is not referenced)
       #
-      node_sets = "e 1:3 n 2:6:2 Node 10:13 N 15 coord 1:10"
-      type_map = {
+      >>> node_sets = "e 1:3 n 2:6:2 Node 10:13 N 15 coord 1:10"
+      >>> type_map = {
           'n' : 'Node',
           'Node' : 'Node',
           'e' : 'Element',
           'Elm' : 'Element',
           'Element' : 'Element',
       }
-      data = parse_patran_syntax_dict(node_sets, type_map)
-      data = {
+
+      **Example 2**
+      >>> data = parse_patran_syntax_dict(node_sets, type_map)
+      >>> data = {
           'Element' : [1, 2, 3],
           'Node' : [2, 4, 6, 10, 11, 12, 13, 15],
       }
 
     .. todo:: doesn't support pound_dict
-    .. todo:: doesn't support msg
+
     """
     # makes it so we can pass in 'N' and 'n' and still get 'Node' out
     update_type_map = {}  # type: Dict[str, str]
@@ -761,6 +781,7 @@ def Position(xyz, cid, model, is_cid_int=True):
     -------
     xyz2 : (3,) ndarray
         the position of the GRID in an arbitrary coordinate system
+
     """
     if is_cid_int:
         cp_ref = model.Coord(cid)
@@ -796,6 +817,7 @@ def TransformLoadWRT(F, M, cid, cid_new, model, is_cid_int=True):
         the force in an arbitrary coordinate system
     Mxyz_local : (3, ) float ndarray
         the force in an arbitrary coordinate system
+
     """
     if cid == cid_new: # same coordinate system
         return F, M
@@ -860,6 +882,7 @@ def PositionWRT(xyz, cid, cid_new, model, is_cid_int=True):
     -------
     xyz_local : (3, ) float ndarray
         the position of the GRID in an arbitrary coordinate system
+
     """
     if cid == cid_new: # same coordinate system
         return xyz
@@ -917,6 +940,7 @@ def deprecated(old_name, new_name, deprecated_version, levels=None):
         [1, 2, 3] shows 3 levels up from this function
 
     TODO: turn this into a decorator?
+
     """
     assert isinstance(deprecated_version, string_types), type(deprecated_version)
     assert isinstance(levels, list), type(levels)
@@ -927,10 +951,10 @@ def deprecated(old_name, new_name, deprecated_version, levels=None):
     ver_tuple = tuple([int(i) for i in version.split('.')[:2]])
 
     new_line = ''
+    msg = "'%s' was deprecated in v%s (current=%s)" % (
+        old_name, deprecated_version, version)
     if new_name:
-        new_line = "; replace it with '%s'\n" % new_name
-    msg = "'%s' was deprecated in v%s%s (current=%s)" % (
-        old_name, version, deprecated_version, new_line)
+        msg += "; replace it with '%s'\n" % new_name
 
     for level in levels:
         # jump to get out of the inspection code
@@ -942,7 +966,6 @@ def deprecated(old_name, new_name, deprecated_version, levels=None):
             filename = os.path.basename(inspect.getfile(code))
         except:
             print(code)
-        print(code)
 
         source_lines, line_no0 = inspect.getsourcelines(code)
         di = line_no - line_no0
@@ -952,7 +975,7 @@ def deprecated(old_name, new_name, deprecated_version, levels=None):
             break
         msg += '  %-25s:%-4s %s\n' % (filename, str(line_no) + ';', line.strip())
 
-    if ver_tuple > dep_ver_tuple:
+    if ver_tuple > dep_ver_tuple: # or 'id' in msg:
         # fail
         raise NotImplementedError(msg)
     else:
@@ -980,7 +1003,10 @@ def split_eids_along_nids(model, eids, nids):
 
     Implicitly returns model with additional nodes.
 
-    .. note :: xref should be set to False for this function.
+    Note
+    ----
+    xref should be set to False for this function.
+
     """
     #assert model.xref == False, model.xref
     nid = max(model.nodes.keys()) + 1

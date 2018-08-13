@@ -143,7 +143,7 @@ class CGEN(BaseCard):
                     t_abcd=t_abcd, direction=direction,
                     comment=comment)
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         pass
 
     def cross_reference(self, model):
@@ -201,7 +201,7 @@ class CGEN(BaseCard):
             #if not self.seid:
                 #self.seid = grdset.seid
                 #self.seid_ref = self.seid
-        #msg = ' which is required by CGEN nid=%s' % (self.nid)
+        #msg = ', which is required by CGEN nid=%s' % (self.nid)
         #self.cp = model.Coord(self.cp, msg=msg)
         #self.cp_ref = self.cp
         #if self.cd != -1:

@@ -1,27 +1,43 @@
 from __future__ import print_function
-import os
 from six import iteritems
-from six.moves import range, zip
+from six.moves import range
 import numpy as np
 
 
 def read_su2(su2_filename, log=None, debug=False):
-    model = SU2Reader()
-    nodes, elements, regions = model.read_su2(su2_filename)
+    model = SU2Reader(log=log, debug=debug)
+    unused_ndim, nodes, elements, regions = model.read_su2(su2_filename)
     #model.to_cart3d()
     return model, nodes, elements, regions
 
 class SU2Reader(object):
+    etype_nnodes_map = {
+        #Line       3
+        #Triangle   5
+        #Quadrilateral  9
+        #Tetrahedral    10
+        #Hexahedral 12
+        #Wedge      13
+        #Pyramid    14
+        3 : 2,
+        5 : 3,
+        9 : 4,
+        10 : 4,
+        12 : 8,
+        13 : 6,
+        14 : 5,
+    }
     def __init__(self, log=None, debug=False):
         self.log = log
         self.debug = debug
+        self.su2_filename = None
 
     def read_2d(self, su2_file, ndim):
         # elements
         nelem = int(su2_file.readline().split('=')[1])
         tris = []
         quads = []
-        for ne in range(nelem):
+        for unused_ne in range(nelem):
             # what's the 0th slot?
             #Line           3
             #Triangle       5
@@ -31,16 +47,16 @@ class SU2Reader(object):
             #Wedge          13
             #Pyramid        14
             data = su2_file.readline().split()[:-1]
-            Type = data[0]
+            etype = data[0]
             nodes = data[1:]
-            if Type == '9':
+            if etype == '9':
                 assert len(nodes) == 4, nodes
                 quads.append(nodes)
-            elif Type == '5':
+            elif etype == '5':
                 assert len(nodes) == 3, nodes
                 tris.append(nodes)
             else:
-                raise NotImplementedError(Type)
+                raise NotImplementedError(etype)
 
         tris = np.asarray(tris, dtype='int32')
         quads = np.asarray(quads, dtype='int32')
@@ -52,31 +68,31 @@ class SU2Reader(object):
         for inode in range(nnodes):
             sline = su2_file.readline().split()
             assert len(sline) == 3, sline
-            x, y, z = sline
+            x, y, unused_z = sline
             #print(x, y, z)
             nodes[inode, :] = [float(x), float(y)]
 
         # boundary conditions
         nmark = int(su2_file.readline().split('=')[1])
-        for imark in range(nmark):
-            marker = su2_file.readline().split('=')[1].strip()
+        for unused_imark in range(nmark):
+            unused_marker = su2_file.readline().split('=')[1].strip()
             nelements_mark = int(su2_file.readline().split('=')[1])
 
             if ndim == 2:
                 lines = []
                 #np.zeros((nelements_mark, 2), dtype='int32')
-                for ne in range(nelements_mark):
+                for unused_ne in range(nelements_mark):
                     # what are the 3 slots?
                     #Line          (2D)     3
                     #Triangle      (3D)     5
                     #Quadrilateral (3D)     9
                     sline = su2_file.readline().split()
-                    Type = int(sline[0])
-                    if Type == 3:
-                        Type, n1, n2 = sline
+                    etype = int(sline[0])
+                    if etype == 3:
+                        etype, n1, n2 = sline
                         lines.append([n1, n2])
                     else:
-                        raise NotImplementedError(Type)
+                        raise NotImplementedError(etype)
 
         assert len(tris) > 0 or len(quads) > 0
         elements = {
@@ -86,27 +102,27 @@ class SU2Reader(object):
         regions = {3 : lines}
         return nodes, elements, regions
 
-    def read_3d(self, su2_file, ndim):
+    def read_3d(self, su2_file, unused_ndim):
         nelem = int(su2_file.readline().split('=')[1])
         tets = []
         hexs = []
         wedges = []
         #pents = []
         pyramids = []
-        for ne in range(nelem):
+        for unused_ne in range(nelem):
             data = su2_file.readline().split()[1:-1]
-            Type = data[0]
+            etype = data[0]
             nodes = data[1:]
-            if Type == '10':
+            if etype == '10':
                 tets.append(nodes)
-            elif Type == '12':
+            elif etype == '12':
                 hexs.append(nodes)
-            elif Type == '13':
+            elif etype == '13':
                 wedges.append(nodes)
-            elif Type == '14':
+            elif etype == '14':
                 pyramids.append(nodes)
             else:
-                raise NotImplementedError(Type)
+                raise NotImplementedError(etype)
         tets = np.array(tets, dtype='int32')
         #pents = np.array(pents, dtype='int32')
         wedges = np.array(wedges, dtype='int32')
@@ -125,18 +141,18 @@ class SU2Reader(object):
             nodes[inode, :] = [x, y, z]
 
         nmark = int(su2_file.readline().split('=')[1])
-        for imark in range(nmark):
-            marker = su2_file.readline().split('=')[1].strip()
+        for unused_imark in range(nmark):
+            unused_marker = su2_file.readline().split('=')[1].strip()
             nelements_mark = int(su2_file.readline().split('=')[1])
             tris = []
             quads = []
-            for ne in range(nelements_mark):
+            for unused_ne in range(nelements_mark):
                 data = su2_file.readline().split()[1:-1]
-                Type = data[0]
+                etype = data[0]
                 nodes = data[1:]
-                if Type == '9':
+                if etype == '9':
                     quads.append(nodes)
-                elif Type == '5':
+                elif etype == '5':
                     tris.append(nodes)
             tris = np.array(tris, dtype='int32')
             quads = np.array(quads, dtype='int32')
@@ -160,31 +176,15 @@ class SU2Reader(object):
                 raise RuntimeError(ndim)
         return ndim, nodes, elements, regions
 
-    def write_su2(self, su2_filename, nodes, elements, regions):
+    def write_su2(self, su2_filename, nodes, elements, unused_regions):
         nnodes, ndim = nodes.shape
         nnodes, ndim = nodes.shape
         with open(su2_filename, 'wb') as su2_file:
             su2_file.write('NDIM = %i\n' % ndim)
-            self.Type_nnodes_map = {
-                #Line       3
-                #Triangle   5
-                #Quadrilateral  9
-                #Tetrahedral    10
-                #Hexahedral 12
-                #Wedge      13
-                #Pyramid    14
-                3 : 2,
-                5 : 3,
-                9 : 4,
-                10 : 4,
-                12 : 8,
-                13 : 6,
-                14 : 5,
-            }
             if ndim == 2:
-                for Type, elementsi in sorted(iteritems(elements)):
-                    n = self.Type_nnodes_map[Type]
-                    fmt = '%%s' + ' %%s' * (n-1) + '\n'
+                for etype, elementsi in sorted(iteritems(elements)):
+                    element_num = self.etype_nnodes_map[etype]
+                    fmt = '%%s' + ' %%s' * (element_num-1) + '\n'
                     for element in elementsi:
                         su2_file.write(fmt % element)
 

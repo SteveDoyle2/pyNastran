@@ -14,6 +14,7 @@ def collapse_thru_by(fields, get_packs=False):
     fields              packs
     [1, 2, 3...150]  -> [1, 150, 1]
     [1, 3, 5...150]  -> [1, 150, 2]
+
     """
     assert 'THRU' not in fields, fields
     fields.sort()
@@ -47,6 +48,7 @@ def collapse_thru(fields, nthru=None):
     -------
     packs = list[pack]
        pack = list[int first_val, int last_val, int_by]
+
     """
     assert 'THRU' not in fields, fields
     fields.sort()
@@ -60,7 +62,6 @@ def collapse_thru(fields, nthru=None):
 
 def collapse_thru_packs(fields):
     assert 'THRU' not in fields, fields
-    fields.sort()
     packs = condense(fields)
     singles, doubles = build_thru_packs(packs, max_dv=1)
 
@@ -70,6 +71,9 @@ def collapse_thru_packs(fields):
 
 def collapse_colon_packs(fields, thru_split=3):
     """
+    Applies colons (:) to packs to represent THRU and BY as is used by
+    Patran.
+
     Parameters
     ----------
     fields : List[int]
@@ -97,12 +101,11 @@ def collapse_colon_packs(fields, thru_split=3):
     SET1,4000, 3,  :, 10
     SET1,4000, 20, :, 30
 
-    Returns
-    -------
-      singles = [1]
-      doubles = [[3, ':', 10], [20, ':', 30]]
+    # output
+    singles = [1]
+    doubles = [[3, ':', 10], [20, ':', 30]]
+
     """
-    fields.sort()
     packs = condense(fields)
     singles, doubles = build_thru_packs(packs, max_dv=None, thru_split=thru_split)
     doubles2 = []
@@ -123,7 +126,19 @@ def condense(value_list):
     Builds a list of packs (list of 3 values representing the first, last,
     and delta values for condensing a SET card.
 
+    Parameters
+    ----------
+    value_list : List[int]
+        list of values to pack
+
+    Returns
+    -------
+    packs : List[pack]
+       pack : List[id_low, id_high, delta_id]
+           a list representation of the min/max/delta id values
+
     .. seealso:: build_thru
+
     """
     if len(value_list) == 0:
         return []
@@ -167,12 +182,16 @@ def condense(value_list):
 
 def build_thru_packs(packs, max_dv=1, thru_split=3):
     """
+    Applies THRU and BY to packs to shorten output as Nastran does on
+    cards like the SPOINT
+
     Parameters
     ----------
-    packs : ???
-        ???
+    packs : List[pack]
+       pack : List[id_low, id_high, delta_id]
+           a list representation of the min/max/delta id values
     max_dv : int; default=1
-        ???
+        maximum allowed delta between two values
     thru_split : int; default=3
         the length to not write THRU
         3 : [10, 11, 12] will write as '10 THRU 12'
@@ -199,6 +218,7 @@ def build_thru_packs(packs, max_dv=1, thru_split=3):
     returns
       singles = [1]
       doubles = [[3, 'THRU', 10], [20, 'THRU', 30]]
+
     """
     singles = []
     doubles = []
@@ -234,17 +254,18 @@ def build_thru(packs, max_dv=None, nthru=None):
     Parameters
     ----------
     packs : List[pack]
-        pack : List[first, last, delta]
-        first, last, delta are integers
+        pack : List[int first, int last, int delta]
+            the first, last, delta id values
     max_dv : int; default=None -> no limit
         defines the max allowable delta between two values
-    nthru : ???
-        ???
+    nthru : int; default=None
+        don't use this; it will crash
 
     Returns
     -------
     value : varies
         the value of the field
+
     """
     singles = []
     fields = []
@@ -312,6 +333,7 @@ def build_thru_float(packs, max_dv=None):
     max_dv : int; default=None -> no limit
         integer defining the max allowable delta between two values
         (default=None; no limit)
+
     """
     fields = []
     for (first_val, last_val, dv) in packs:

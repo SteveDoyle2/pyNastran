@@ -3,6 +3,7 @@
 Defines the DEQATN class and sub-functions.
 
 The capitalization of the sub-functions is important.
+
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -70,6 +71,7 @@ def dba(p, pref, f):
     -------
     dbi : float
         acoustic pressure in Decibels
+
     """
     ta1, ta2 = _get_ta(f)
     return 20. * log(p / pref) + 10 * log(ta1) + 10. * log(ta2)
@@ -91,6 +93,7 @@ def invdba(dbai, pref, f):
     -------
     p : float
         structural responses or acoustic pressure
+
     """
     ta1, ta2 = _get_ta(f)
     #dbai = dba(p, pref, f)
@@ -107,6 +110,9 @@ def _get_ta(f):
     ta1 = k3 * f**4 / ((f**2 + p2**2) * (f**2 + p3**2))
     ta2 = k1 * f**4 / ((f**2 + p1**2)**2 * (f**2 + p4**2)**2)
     return ta1, ta2
+
+BUILTINS = ['del', 'eval', 'yield', 'async', 'await', 'property',
+            'slice', 'filter', 'map']
 
 class DEQATN(BaseCard):  # needs work...
     """
@@ -150,6 +156,7 @@ class DEQATN(BaseCard):  # needs work...
             'F = A + B – F1 * D',
         ]
         >>> deqatn = DEQATN(41, eq, comment='')
+
         """
         if comment:
             self.comment = comment
@@ -170,6 +177,7 @@ class DEQATN(BaseCard):  # needs work...
             this card is special and is not a ``BDFCard`` like other cards
         comment : str; default=''
             a comment for the card
+
         """
         #print(card)
         line0 = card[0]
@@ -209,6 +217,7 @@ class DEQATN(BaseCard):  # needs work...
         def stress(x):
             x = float(x)
             return x + 32.
+
         """
         default_values = {}
         if self.dtable is not None:
@@ -217,7 +226,11 @@ class DEQATN(BaseCard):  # needs work...
             self.eqs, default_values, str(self))
         self.func_str = func_str
         self.func_name = func_name
-        exec_(func_str)
+        try:
+            exec_(func_str)
+        except SyntaxError:
+            print(func_str)
+            raise
         #print(locals().keys())
         func = locals()[func_name]
         setattr(self, func_name, func)
@@ -233,6 +246,7 @@ class DEQATN(BaseCard):  # needs work...
         ----------
         model : BDF()
             the BDF object
+
         """
         # TODO: get defaults from DTABLE
         # TODO: get limits from DCONSTR
@@ -375,6 +389,7 @@ def _split_equation(lines_out, line, n, isplit=0):
     -------
     lines_out : List[str]
         the long line broken into shorter lines
+
     """
     #print('n=%s -> line=%r len=%s' % (n, line, len(line)))
     if len(line) <= n:
@@ -447,6 +462,7 @@ def fortran_to_python(lines, default_values, comment=''):
             raise
         f = x + y
         return f
+
     """
     func_msg = ''
     variables = []
@@ -455,12 +471,13 @@ def fortran_to_python(lines, default_values, comment=''):
         #print('--------------------')
         line = line.lower()
         #func_msg += '#i=%s\n' % i
+
         try:
             # f(x, y) = 10.
             # f(x, y) = abs(x) + y
             # f = 42.
             f, eq = line.split('=')
-        except:
+        except ValueError:
             if '=' not in line:
                 raise SyntaxError('= not found in %r' % (line))
             else:
@@ -471,7 +488,11 @@ def fortran_to_python(lines, default_values, comment=''):
                 raise SyntaxError(msg)
         f = f.strip()
         eq = eq.strip().rstrip(';')
+
         #print('f=%r eq=%r' % (f, eq))
+        for builtin in BUILTINS:
+            if builtin == eq:
+                eq = eq.replace(builtin, builtin + '_')
 
         if i == 0:
             func_name, func_msg, variables = write_function_header(
@@ -482,6 +503,8 @@ def fortran_to_python(lines, default_values, comment=''):
         else:
             out = f
             func_msg += '    %s = %s\n' % (out, eq)
+            #print('out = %r' % out)
+            #print('eq = %r' % eq)
 
     func_msg += '    return %s' % f
     #print(func_msg)
@@ -528,6 +551,7 @@ def write_function_header(func_header, eq, default_values, comment=''):
     variables : List[str]
         the variables used by the equation header
         a, b, c
+
     """
     msg = ''
 
@@ -540,6 +564,9 @@ def write_function_header(func_header, eq, default_values, comment=''):
     func_name, arguments = func_header.strip('(,)').split('(')
     func_name = func_name.strip(' ')
     variables = arguments.split(',')
+
+    if func_name in BUILTINS:
+        func_name += '_'
 
     if is_float:
         # f(a,b,c) = 1.
@@ -561,6 +588,23 @@ def write_function_header(func_header, eq, default_values, comment=''):
         msg += _write_function_line(func_name, variables, default_values)
     msg += _write_comment(comment)
     msg += _write_variables(variables)
+    for builtin in BUILTINS:
+        if builtin in eq and '_' + builtin not in eq:
+            raise RuntimeError('cannot have an equation with %r\n%s' % (builtin, eq))
+            #import re
+            #eq = 'YIELD_A_YIELD'
+            #eq = '/YIELD'
+            #p = re.compile(r"\byield\b", flags=re.IGNORECASE)
+            #p2 = p.sub(eq,'_yield')
+            #print('P2 = %r' % p2)
+            #y = re.search(r"\byield\b", eq, flags=re.IGNORECASE)
+            #if y is not None:
+                #print('groups= ', y.groups())
+                #for group in y.groups():
+                    #print('group = %r' % group)
+                #print(y.group(0))
+                #print('***eq = %r' % eq)
+            #aaa
     msg += '    %s = %s\n' % (func_name, eq)
     return func_name, msg, variables
 
@@ -568,8 +612,10 @@ def _write_function_line(func_name, variables, default_values):
     """writes the ``def f(x, y, z=1.):`` part of the function"""
     vals = []
     is_default = False
-    #print('default_values = %s' % default_values)
     for var in variables:
+        if var in BUILTINS:
+            var += '_'
+
         if var in default_values:
             vals.append('%s=%s' % (var, default_values[var]))
             is_default = True
@@ -595,6 +641,8 @@ def _write_variables(variables):
     """type checks the inputs"""
     msg = '    try:\n'
     for var in variables:
+        if var in BUILTINS:
+            var += '_'
         #msg += "    assert isinstance(%s, float), '%s is not a float; type(%s)=%s' % (%s)")
         #msg += '        %s = float(%s)\n' % (var, var)
         msg += '        if isinstance(%s, (int, str)):\n' % var

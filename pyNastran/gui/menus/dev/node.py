@@ -7,10 +7,9 @@ http://stackoverflow.com/questions/12152060/how-does-the-keypressevent-method-wo
 """
 from __future__ import print_function
 #from PyQt4 import QtCore, QtGui
-#from pyNastran.gui.qt_files.menu_utils import eval_float_from_string
-from pyNastran.gui.qt_files.alt_geometry_storage import AltGeometry
+from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.gui.menus.manage_actors import Model, SingleChoiceQTableView
-from pyNastran.gui.qt_version import qt_version
+from pyNastran.gui.qt_version import qt_int as qt_version
 
 from qtpy import QtCore#, QtGui
 from qtpy.QtGui import QColor, QPalette
@@ -80,7 +79,7 @@ class EditNodeProperties(QDialog):
         table_model = Model(items, header_labels, self)
         view = SingleChoiceQTableView(self) #Call your custom QTableView here
         view.setModel(table_model)
-        if qt_version in [4, 'pyside']:
+        if qt_version == 4:
             view.horizontalHeader().setResizeMode(QHeaderView.Stretch)
         else:
             view.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
@@ -460,16 +459,6 @@ class EditNodeProperties(QDialog):
         #self.name_edit.setText(str(self._default_name))
         #self.name_edit.setStyleSheet("QLineEdit{background: white;}")
 
-    #def check_float(self, cell):
-        #text = cell.text()
-        #try:
-            #value = eval_float_from_string(text)
-            #cell.setStyleSheet("QLineEdit{background: white;}")
-            #return value, True
-        #except ValueError:
-            #cell.setStyleSheet("QLineEdit{background: red;}")
-            #return None, False
-
     #def check_name(self, cell):
         #text = str(cell.text()).strip()
         #if len(text):
@@ -489,7 +478,7 @@ class EditNodeProperties(QDialog):
         old_obj.is_visible = self.checkbox_show.isChecked()
         return True
         #name_value, flag0 = self.check_name(self.name_edit)
-        #ox_value, flag1 = self.check_float(self.transparency_edit)
+        #ox_value, flag1 = check_float(self.transparency_edit)
         #if flag0 and flag1:
             #self.out_data['clicked_ok'] = True
             #return True

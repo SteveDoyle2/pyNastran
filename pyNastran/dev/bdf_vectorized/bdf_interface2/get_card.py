@@ -2,7 +2,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import string_types, iteritems, iterkeys
-from collections import defaultdict
 
 import numpy as np
 from pyNastran.utils import integer_types
@@ -16,6 +15,8 @@ class GetMethods(BDFAttributes):
         self._type_to_slot_map = {}
         BDFAttributes.__init__(self)
 
+    #--------------------
+    # SET CARDS
     def Set(self, sid, msg=''):
         try:
             return self.sets[sid]
@@ -23,7 +24,6 @@ class GetMethods(BDFAttributes):
             raise KeyError('sid=%s not found%s.  Allowed SETx=%s'
                            % (sid, msg, np.unique(list(self.sets.keys()))))
 
-    # Sets
     def SET1(self, set_id, msg=''):
         """gets a SET1"""
         assert isinstance(set_id, integer_types), 'set_id=%s is not an integer\n' % set_id
@@ -238,16 +238,6 @@ class GetMethods(BDFAttributes):
         except KeyError:
             raise KeyError('dv_id=%s not found%s.  Allowed DVPRELx=%s'
                            % (dv_id, msg, np.unique(list(self.dvprels.keys()))))
-
-    #--------------------
-    # SET CARDS
-
-    def Set(self, sid, msg=''):
-        try:
-            return self.sets[sid]
-        except KeyError:
-            raise KeyError('sid=%s not found%s.  Allowed SETx=%s'
-                           % (sid, msg, np.unique(list(self.sets.keys()))))
 
     #--------------------
     # METHOD CARDS

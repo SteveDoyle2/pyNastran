@@ -162,7 +162,7 @@ class Cart3dToPanair(PanairGridHelper):
         self.bref = varmap['Bref']
         self.cref = varmap['Cref']
         self.dref = varmap['Dref']
-        self.isEnd = True
+        self.is_end = True
         msg = ''
         with open(oname, 'w') as f:
             msg += self.write_title()

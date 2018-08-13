@@ -7,7 +7,8 @@ from numpy.linalg import norm  # type: ignore
 from pyNastran.gui.gui_objects.gui_result import GuiResultCommon
 
 class NastranTable(GuiResultCommon):
-    def __init__(self, subcase_id, titles, headers, dxyz, linked_scale_factor, #xyz, scalar,
+    def __init__(self, subcase_id, location,
+                 titles, headers, dxyz, linked_scale_factor, #xyz, scalar,
                  scales, data_formats=None,
                  nlabels=None, labelsize=None, ncolors=None, colormap='jet',
                  set_max_min=False, uname='NastranGeometry'):
@@ -56,6 +57,8 @@ class NastranTable(GuiResultCommon):
         GuiResultCommon.__init__(self)
 
         self.subcase_id = subcase_id
+        self.location = location
+        assert location in ['node', 'centroid'], 'location=%r' % location
         self.linked_scale_factor = linked_scale_factor
         #assert self.subcase_id > 0, self.subcase_id
 
@@ -132,7 +135,10 @@ class NastranTable(GuiResultCommon):
 
     # getters
 
-    def get_header(self, i, name):
+    def get_location(self, i, unused_name):
+        return self.location
+
+    def get_header(self, i, unused_name):
         #j = self.titles_default.index(name)
         #return self.titles[j]
         return self.headers[i]
@@ -219,17 +225,17 @@ class NastranTable(GuiResultCommon):
     #-------------------------------------
     # unmodifyable getters
 
-    def get_data_type(self, i, name):
+    def get_data_type(self, unused_i, unused_name):
         """the precision of the data"""
         return self.data_type
 
-    def get_vector_size(self, i, name):
+    def get_vector_size(self, i, unused_name):
         """the result size"""
         #print(i)
         #j = self.titles_default.index(name)
         return 3
 
-    def get_plot_value(self, i, name):
+    def get_plot_value(self, i, unused_name):
         if self.is_real:
             if self.dim == 2:
                 dxyz = self.dxyz
@@ -286,14 +292,53 @@ class NastranTable(GuiResultCommon):
         return xyz, deflected_xyz
 
 
-class ForceTableResults(NastranTable):
-    def __init__(self, subcase_id, titles, headers, dxyz, scalar,
+class ElementalTableResults(NastranTable):
+    def __init__(self, subcase_id, titles, headers, dxyz, unused_scalar,
                  scales, data_formats=None,
                  nlabels=None, labelsize=None, ncolors=None, colormap='jet',
                  set_max_min=False, uname='NastranGeometry'):
+        """this is a nodal result"""
         linked_scale_factor = False
+        location = 'centroid'
         NastranTable.__init__(
-            self, subcase_id, titles, headers, dxyz, linked_scale_factor, scales,
+            self, subcase_id, location, titles, headers, dxyz, linked_scale_factor, scales,
+            data_formats=data_formats, nlabels=nlabels,
+            labelsize=labelsize, ncolors=ncolors,
+            colormap=colormap, set_max_min=set_max_min,
+            uname=uname)
+    def get_methods(self, i):
+        if self.is_real:
+            return ['magnitude', 'x', 'y', 'z']
+        else:
+            raise NotImplementedError('self.is_real=%s' % self.is_real)
+    def deflects(self, unused_i, unused_res_name):
+        return False
+    def get_vector_result_by_scale_phase(self, i, unused_name, unused_scale, phase=0.):
+        xyz = None
+        #assert len(self.xyz.shape) == 2, self.xyz.shape
+        if self.is_real:
+            if self.dim == 2:
+                # single result
+                deflected_xyz = self.dxyz
+            elif self.dim == 3:
+                deflected_xyz = self.dxyz[i, :]
+            else:
+                raise NotImplementedError('dim=%s' % self.dim)
+        else:
+            deflected_xyz = self._get_complex_displacements_by_phase(i, phase)
+        assert len(deflected_xyz.shape) == 2, deflected_xyz.shape
+        return xyz, deflected_xyz
+
+class ForceTableResults(NastranTable):
+    def __init__(self, subcase_id, titles, headers, dxyz, unused_scalar,
+                 scales, data_formats=None,
+                 nlabels=None, labelsize=None, ncolors=None, colormap='jet',
+                 set_max_min=False, uname='NastranGeometry'):
+        """this is a nodal result"""
+        linked_scale_factor = False
+        location = 'node'
+        NastranTable.__init__(
+            self, subcase_id, location, titles, headers, dxyz, linked_scale_factor, scales,
             data_formats=data_formats, nlabels=nlabels,
             labelsize=labelsize, ncolors=ncolors,
             colormap=colormap, set_max_min=set_max_min,
@@ -305,14 +350,14 @@ class ForceTableResults(NastranTable):
         else:
             return ['node real', 'node imag', 'node magnitude', 'node phase']
 
-    def get_location(self, i, name):
-        """the result type"""
-        return 'node'
+    #def get_location(self, i, name):
+        #"""the result type"""
+        #return 'node'
 
-    def deflects(self, i, res_name):
+    def deflects(self, unused_i, unused_res_name):
         return False
 
-    def get_vector_result_by_scale_phase(self, i, name, scale, phase=0.):
+    def get_vector_result_by_scale_phase(self, i, unused_name, unused_scale, phase=0.):
         """
         Gets the real/complex deflection result
 
@@ -352,10 +397,10 @@ class ForceTableResults(NastranTable):
 
 
 class DisplacementResults(NastranTable):
-    def __init__(self, subcase_id, titles, headers, xyz, dxyz, scalar,
+    def __init__(self, subcase_id, titles, headers, xyz, dxyz, unused_scalar,
                  scales, data_formats=None,
                  nlabels=None, labelsize=None, ncolors=None, colormap='jet',
-                 deflects=True, set_max_min=False, uname='NastranGeometry'):
+                 set_max_min=False, uname='NastranGeometry'):
         """
         Defines a Displacement/Eigenvector result
 
@@ -392,8 +437,9 @@ class DisplacementResults(NastranTable):
             some unique name for ...
         """
         linked_scale_factor = False
+        location = 'node'
         NastranTable.__init__(
-            self, subcase_id, titles, headers, dxyz, linked_scale_factor,
+            self, subcase_id, location, titles, headers, dxyz, linked_scale_factor,
             scales,
             data_formats=data_formats, nlabels=nlabels,
             labelsize=labelsize, ncolors=ncolors,
@@ -405,10 +451,10 @@ class DisplacementResults(NastranTable):
     #-------------------------------------
     # unmodifyable getters
 
-    def deflects(self, i, res_name):
+    def deflects(self, unused_i, unused_res_name):
         return True
 
-    def get_location(self, i, name):
+    def get_location(self, unused_i, unused_name):
         """the result type"""
         return 'node'
 
@@ -428,7 +474,7 @@ class DisplacementResults(NastranTable):
         #print(self.dxyz_norm)
         #return self.dxyz_norm
 
-    def get_vector_result_by_scale_phase(self, i, name, scale, phase=0.):
+    def get_vector_result_by_scale_phase(self, i, unused_name, scale, phase=0.):
         """
         Gets the real/complex deflection result
 

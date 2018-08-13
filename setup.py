@@ -39,7 +39,7 @@ if sys.version_info <= (3,) or not is_dev:
             print("vtk.VTK_VERSION = %r < '5.10.1'" % vtk.VTK_VERSION)
             py2_packages.append('vtk >= 5.10.1')
     except ImportError:
-        py2_packages.append('vtk >= 5.10.1')  # 6.3.0 used
+        py2_packages.append('vtk >= 5.10.1')  # 8.x used
 
     py2_packages += [
         ##'dill'
@@ -65,14 +65,17 @@ else:
     except ImportError:
         py_packages.append('numpy >= 1.11.0') # ,<1.13.0
 
-try:
-    import scipy
-    ver = scipy.version.short_version
-    if ver < '0.17.0':
-        print("scipy.version.short_version = %r < '0.17.0'" % scipy.version.short_version)
-        py_packages.append('scipy >= 0.17.0')
-except ImportError:
-    py_packages.append('scipy >= 0.17.0')  # 0.18.1 used
+if is_rtd:
+    py_packages.append('scipy')
+else:
+    try:
+        import scipy
+        ver = scipy.version.short_version
+        if ver < '0.18.1':
+            print("scipy.version.short_version = %r < '0.18.1'" % scipy.version.short_version)
+            py_packages.append('scipy >= 0.18.1')
+    except ImportError:
+        py_packages.append('scipy >= 0.18.1')  # 0.18.1 used
 
 try:
     import six
@@ -105,14 +108,17 @@ except ImportError:
     py_packages.append('docopt == 0.6.2')  # 0.6.2 used
 
 
-try:
-    import qtpy
-    sver = [int(val) for val in qtpy.__version__.split('-')[0].split('.')]
-    if sver < [1, 3, 1]:
-        print("qtpy.__version__ = %r < '1.3.1'" % qtpy.__version__)
-        py_packages.append('qtpy >= 1.3.1')
-except ImportError:
-    py_packages.append('qtpy >= 1.3.1')  # 1.3.1 used
+if is_rtd:
+    pass
+else:
+    try:
+        import qtpy
+        sver = [int(val) for val in qtpy.__version__.split('-')[0].split('.')]
+        if sver < [1, 3, 1]:
+            print("qtpy.__version__ = %r < '1.3.1'" % qtpy.__version__)
+            py_packages.append('qtpy >= 1.3.1')
+    except ImportError:
+        py_packages.append('qtpy >= 1.3.1')  # 1.3.1 used
 
 
 try:
@@ -137,13 +143,16 @@ if PY2:
         py_packages.append('scandir >= 1.4.0')  # 1.4.0 used
 
 
-try:
-    import imageio
-    if imageio.__version__ < '2.2.0':
-        #print("imageio.version = %r < '2.2.0'" % imageio.__version__)
+if is_rtd:
+    pass
+else:
+    try:
+        import imageio
+        if imageio.__version__ < '2.2.0':
+            #print("imageio.version = %r < '2.2.0'" % imageio.__version__)
+            py_packages.append('imageio >= 2.2.0')
+    except ImportError:
         py_packages.append('imageio >= 2.2.0')
-except ImportError:
-    py_packages.append('imageio >= 2.2.0')
 
 #py_packages = [
 #    'numpy >= 1.9.2',
@@ -191,10 +200,8 @@ setup(
     classifiers=[
         'Natural Language :: English',
         'Intended Audience :: Science/Research',
-        'License :: OSI Approved :: BSD License (BSD-3)',
-        'Programming Language :: Python :: 2',
+        'License :: OSI Approved :: BSD License',
         'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',

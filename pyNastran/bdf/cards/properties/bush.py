@@ -59,31 +59,43 @@ class PBUSH(BushingProperty):
     }
     def update_by_pname_fid(self, name, value):
         if name == 'B1':
-            self.Bi[0]
+            self.Bi[0] = value
         elif name == 'B2':
-            self.Bi[1]
+            self.Bi[1] = value
         elif name == 'B3':
-            self.Bi[2]
+            self.Bi[2] = value
         elif name == 'B4':
-            self.Bi[3]
+            self.Bi[3] = value
         elif name == 'B5':
-            self.Bi[4]
+            self.Bi[4] = value
         elif name == 'B6':
-            self.Bi[5]
+            self.Bi[5] = value
 
         elif name == 'K1':
-            self.Ki[0]
+            self.Ki[0] = value
         elif name == 'K2':
-            self.Ki[1]
+            self.Ki[1] = value
         elif name == 'K3':
-            self.Ki[2]
+            self.Ki[2] = value
         elif name == 'K4':
-            self.Ki[3]
+            self.Ki[3] = value
         elif name == 'K5':
-            self.Ki[4]
+            self.Ki[4] = value
         elif name == 'K6':
-            self.Ki[5]
+            self.Ki[5] = value
 
+        elif name == 'GE1':
+            self.GEi[0] = value
+        elif name == 'GE2':
+            self.GEi[1] = value
+        elif name == 'GE3':
+            self.GEi[2] = value
+        elif name == 'GE4':
+            self.GEi[3] = value
+        elif name == 'GE5':
+            self.GEi[4] = value
+        elif name == 'GE6':
+            self.GEi[5] = value
         #elif name == 'M':
             #self.mass
         else:
@@ -243,7 +255,7 @@ class PBUSH(BushingProperty):
 
     @classmethod
     def _read_var(cls, card, var_prefix, istart, iend):
-        Ki = fields(double_or_blank, card, 'Ki', istart, iend)
+        Ki = fields(double_or_blank, card, var_prefix, istart, iend)
         return Ki
 
     @classmethod
@@ -268,7 +280,7 @@ class PBUSH(BushingProperty):
         return PBUSH(pid, k_fields, b_fields, ge_fields, rcv_fields, mass,
                      comment=comment)
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         pid = self.Pid()
         assert isinstance(pid, integer_types), 'pid=%r' % pid
 
@@ -321,7 +333,7 @@ class PBUSH1D(BushingProperty):
     +---------+--------+-------+--------+--------+-------+-------+-------+
     |   1     |    2   |   3   |    4   |    5   |   6   |   7   |   8   |
     +=========+========+=======+========+========+=======+=======+=======+
-    | PBUSH1D |   PID  |   K   |    C   |    M   |   SA  |  SE   |       |
+    | PBUSH1D |   PID  |   K   |    C   |    M   |       |   SA  |   SE  |
     +---------+--------+-------+--------+--------+-------+-------+-------+
     |         | SHOCKA | TYPE  |   CVT  |   CVC  | EXPVT | EXPVC |  IDTS |
     +---------+--------+-------+--------+--------+-------+-------+-------+
@@ -439,10 +451,11 @@ class PBUSH1D(BushingProperty):
                     self.damper_idcdv = damper_idcdv
 
                 elif key == 'GENER':
-                    (gener_idt, gener_idc,
-                     gener_idtdu, gener_idcdu,
-                     gener_idtdv, gener_idcdv
-                     ) = values
+                    (
+                        gener_idt, gener_idc,
+                        gener_idtdu, gener_idcdu,
+                        gener_idtdv, gener_idcdv
+                    ) = values
 
                     self.gener_idt = gener_idt
                     self.gener_idc = gener_idc
@@ -520,7 +533,7 @@ class PBUSH1D(BushingProperty):
         #b = data[1]
         #raise NotImplementedError('PBUSH1D data...')
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         pid = self.Pid()
         assert isinstance(pid, int), 'pid=%r' % pid
 
@@ -622,10 +635,10 @@ class PBUSH1D(BushingProperty):
         """
         gener_idt = integer(card, istart + 2, 'generIDT')
         gener_idc = integer_or_blank(card, istart + 3,
-                                    'generIDC', gener_idt)
+                                     'generIDC', gener_idt)
         gener_idtdu = integer(card, istart + 4, 'generIDTDU')
         gener_idcdu = integer_or_blank(card, istart + 5,
-                                      'generIDCDU', gener_idtdu)
+                                       'generIDCDU', gener_idtdu)
         gener_idtdv = integer(card, istart + 6, 'generIDTDV')
         gener_idcdv = integer_or_blank(card, istart + 7,
                                        'generIDCDV', gener_idtdv)
@@ -722,6 +735,13 @@ class PBUSH2D(BushingProperty):
 
 class PBUSHT(BushingProperty):
     type = 'PBUSHT'
+    def update_by_pname_fid(self, name, value):
+        if name == 'TGEID1':
+            self.ge_tables[0] = value
+        elif name == 'TGEID2':
+            self.ge_tables[1] = value
+        else:
+            raise NotImplementedError('%r has not implemented update_by_pname_fid for %r' % (self.type, name))
 
     def __init__(self, pid, k_tables, b_tables,
                  ge_tables, kn_tables, comment=''):

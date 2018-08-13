@@ -5,12 +5,10 @@ from pyNastran.converters.usm3d.time_accurate_results import get_flo_files_from_
 # disable logging
 info = self.show_info
 debug = self.show_debug
-gui = self.show_gui
 command = self.show_command
 
 self.show_info = False
 self.show_debug = False
-self.show_gui = False
 self.show_command = False
 
 #===========================
@@ -23,7 +21,7 @@ n_list = get_n_list(dirname, model_name)#[:20]
 #n_list = [65495, 65475]
 # take pictures every N steps
 N = 440
-nlist = [i for i in xrange(max(n_list)) if i%N==0 ]
+nlist = [i for i in range(max(n_list)) if i%N==0 ]
 flo_filenames = get_flo_files_from_n(dirname, model_name, n_list, include_dirname_in_path=True)
 
 
@@ -39,5 +37,4 @@ for ni, flo_filename in zip(n_list, flo_filenames):
 # reenable the logging
 self.show_info = info
 self.show_debug = debug
-self.show_gui = gui
 self.show_command = command

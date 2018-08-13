@@ -1,5 +1,7 @@
+from __future__ import print_function
 import os
 import unittest
+import numpy as np
 
 import pyNastran
 from pyNastran.gui.testing_methods import FakeGUIMethods
@@ -11,14 +13,15 @@ from pyNastran.converters.nastran.nastran_to_cart3d import (
 from pyNastran.utils.log import get_logger
 
 
-pkg_path = pyNastran.__path__[0]
-model_path = os.path.join(pkg_path, 'converters', 'cart3d', 'models')
+PKG_PATH = pyNastran.__path__[0]
+MODEL_PATH = os.path.join(PKG_PATH, 'converters', 'cart3d', 'models')
 
 
-class Cart3dGUI(Cart3dIO, FakeGUIMethods):
+class Cart3dGUI(FakeGUIMethods):
     def __init__(self):
         FakeGUIMethods.__init__(self)
-        Cart3dIO.__init__(self)
+        self.model = Cart3dIO(self)
+        self.build_fmts(['cart3d'], stop_on_failure=True)
 
 
 class TestCart3dGUI(unittest.TestCase):
@@ -26,38 +29,38 @@ class TestCart3dGUI(unittest.TestCase):
     def test_cart3d_geometry_01(self):
         """tests the ascii three plugs model"""
         log = get_logger(level='warning', encoding='utf-8')
-        geometry_filename = os.path.join(model_path, 'threePlugs.a.tri')
+        geometry_filename = os.path.join(MODEL_PATH, 'threePlugs.a.tri')
 
         test = Cart3dGUI()
         test.log = log
-        test.load_cart3d_geometry(geometry_filename)
+        test.on_load_geometry(geometry_filename, geometry_format='cart3d', raise_error=True)
 
     def test_cart3d_geometry_02(self):
         """tests the binary three plugs model"""
         log = get_logger(level='warning', encoding='utf-8')
-        geometry_filename = os.path.join(model_path, 'threePlugs.bin.tri')
+        geometry_filename = os.path.join(MODEL_PATH, 'threePlugs.bin.tri')
 
         test = Cart3dGUI()
         test.log = log
-        test.load_cart3d_geometry(geometry_filename)
+        test.model.load_cart3d_geometry(geometry_filename)
 
     def test_cart3d_geometry_03(self):
         """tests the business jet model"""
         log = get_logger(level='warning', encoding='utf-8')
-        geometry_filename = os.path.join(model_path, 'business_jet', 'bJet.a.tri')
+        geometry_filename = os.path.join(MODEL_PATH, 'business_jet', 'bJet.a.tri')
 
         test = Cart3dGUI()
         test.log = log
-        test.load_cart3d_geometry(geometry_filename)
+        test.model.load_cart3d_geometry(geometry_filename)
 
     def test_cart3d_bcs(self):
         """tests the power cube model"""
         log = get_logger(level='warning', encoding='utf-8')
-        geometry_filename = os.path.join(model_path, 'power_cube', 'Components.i.tri')
+        geometry_filename = os.path.join(MODEL_PATH, 'power_cube', 'Components.i.tri')
 
         test = Cart3dGUI()
         test.log = log
-        test.load_cart3d_geometry(geometry_filename)
+        test.model.load_cart3d_geometry(geometry_filename)
 
     def test_cart3d_results(self):
         log = get_logger(level='warning', encoding='utf-8')
@@ -85,7 +88,7 @@ class TestCart3dGUI(unittest.TestCase):
             "5.\n"
             "5. 5. 5. 5. 5.\n"
         )
-        test_path = os.path.join(pkg_path, 'converters', 'cart3d', 'models')
+        test_path = os.path.join(PKG_PATH, 'converters', 'cart3d', 'models')
         geometry_filename = os.path.join(test_path, 'flat.tri')
         with open(geometry_filename, 'w') as cart3d_file:
             cart3d_file.write(lines)
@@ -96,7 +99,13 @@ class TestCart3dGUI(unittest.TestCase):
         test = Cart3dGUI()
         test.log = log
         #test.load_nastran_geometry(geometry_filename)
-        test.load_cart3d_geometry(geometry_filename)
+        test.model.load_cart3d_geometry(geometry_filename)
+        assert test.model.data_map is not None, data_map
+
+        data = np.array([1., 2., 3.,])
+        key = ('centroid', 'Node')
+        out = test.model.data_map[key](data)
+        #print(out)
         os.remove(geometry_filename)
 
     def test_nastran_to_cart3d_01(self):
@@ -113,9 +122,9 @@ class TestCart3dGUI(unittest.TestCase):
             'MAT1,1000,3.0e7,,0.3\n'
             'ENDDATA\n'
         )
-        bdf_filename = os.path.join(model_path, 'test01.bdf')
-        cart3d_filename = os.path.join(model_path, 'test01.tri')
-        cart3d_filename_out = os.path.join(model_path, 'test01_out.tri')
+        bdf_filename = os.path.join(MODEL_PATH, 'test01.bdf')
+        cart3d_filename = os.path.join(MODEL_PATH, 'test01.tri')
+        cart3d_filename_out = os.path.join(MODEL_PATH, 'test01_out.tri')
         with open(bdf_filename, 'w') as bdf_file:
             bdf_file.write(lines)
 
@@ -126,7 +135,7 @@ class TestCart3dGUI(unittest.TestCase):
 
         test = Cart3dGUI()
         test.log = log
-        test.load_cart3d_geometry(cart3d_filename)
+        test.model.load_cart3d_geometry(cart3d_filename)
         os.remove(bdf_filename)
         os.remove(cart3d_filename)
         os.remove(cart3d_filename_out)
@@ -145,9 +154,9 @@ class TestCart3dGUI(unittest.TestCase):
             'MAT1,1000,3.0e7,,0.3\n'
             'ENDDATA\n'
         )
-        bdf_filename = os.path.join(model_path, 'test02.bdf')
-        cart3d_filename = os.path.join(model_path, 'test02.tri')
-        cart3d_filename_out = os.path.join(model_path, 'test02_out.tri')
+        bdf_filename = os.path.join(MODEL_PATH, 'test02.bdf')
+        cart3d_filename = os.path.join(MODEL_PATH, 'test02.tri')
+        cart3d_filename_out = os.path.join(MODEL_PATH, 'test02_out.tri')
         with open(bdf_filename, 'w') as bdf_file:
             bdf_file.write(lines)
 
@@ -158,7 +167,7 @@ class TestCart3dGUI(unittest.TestCase):
 
         test = Cart3dGUI()
         test.log = log
-        test.load_cart3d_geometry(cart3d_filename)
+        test.model.load_cart3d_geometry(cart3d_filename)
         os.remove(bdf_filename)
         os.remove(cart3d_filename)
         os.remove(cart3d_filename_out)
@@ -180,9 +189,9 @@ class TestCart3dGUI(unittest.TestCase):
             'MAT1,1000,3.0e7,,0.3\n'
             'ENDDATA\n'
         )
-        bdf_filename = os.path.join(model_path, 'test03.bdf')
-        cart3d_filename = os.path.join(model_path, 'test03.tri')
-        #cart3d_filename_out = os.path.join(model_path, 'test03_out.tri')
+        bdf_filename = os.path.join(MODEL_PATH, 'test03.bdf')
+        cart3d_filename = os.path.join(MODEL_PATH, 'test03.tri')
+        #cart3d_filename_out = os.path.join(MODEL_PATH, 'test03_out.tri')
         with open(bdf_filename, 'w') as bdf_file:
             bdf_file.write(lines)
 

@@ -25,31 +25,31 @@ def WritePNG(ren, fn, magnification = 1):
     imgWriter.SetFileName(fn)
     imgWriter.Write()
 
-def MakeBands(dR, numberOfBands, nearestInteger):
+def MakeBands(dR, nbands, nearestInteger):
     """
     Divide a range into bands
     :param: dR - [min, max] the range that is to be covered by the bands.
-    :param: numberOfBands - the number of bands, a positive integer.
+    :param: nbands - the number of bands, a positive integer.
     :param: nearestInteger - if True then [floor(min), ceil(max)] is used.
     :return: A List consisting of [min, midpoint, max] for each band.
     """
     bands = list()
-    if (dR[1] < dR[0]) or (numberOfBands <= 0):
+    if (dR[1] < dR[0]) or (nbands <= 0):
         return bands
     x = list(dR)
     if nearestInteger:
         x[0] = math.floor(x[0])
         x[1] = math.ceil(x[1])
-    dx = (x[1] - x[0])/float(numberOfBands)
+    dx = (x[1] - x[0])/float(nbands)
     b = [x[0], x[0] + dx / 2.0, x[0] + dx]
     i = 0
-    while i < numberOfBands:
+    while i < nbands:
         bands.append(b)
         b = [b[0] + dx, b[1] + dx, b[2] + dx]
         i += 1
     return bands
 
-def MakeCustomBands(dR, numberOfBands):
+def MakeCustomBands(dR, nbands):
     """
     Divide a range into custom bands.
 
@@ -59,12 +59,12 @@ def MakeCustomBands(dR, numberOfBands):
     like this: x = [[r1, r2], [r2, r3], [r3, r4]...]
 
     :param: dR - [min, max] the range that is to be covered by the bands.
-    :param: numberOfBands - the number of bands, a positive integer.
+    :param: nbands - the number of bands, a positive integer.
 
     :return: A List consisting of [min, midpoint, max] for each band.
     """
     bands = list()
-    if (dR[1] < dR[0]) or (numberOfBands <= 0):
+    if (dR[1] < dR[0]) or (nbands <= 0):
         return bands
     x = list()
     x.append([-0.7, -0.05])
@@ -75,8 +75,8 @@ def MakeCustomBands(dR, numberOfBands):
     x.append([35.4, 37.1])
     # Set the minimum to match the range minimum.
     x[0][0] = dR[0]
-    if len(x) >= numberOfBands:
-        x = x[:numberOfBands]
+    if len(x) >= nbands:
+        x = x[:nbands]
     # Adjust the last band.
     t = (x[len(x) - 1])
     if t[0] > dR[1]:
@@ -326,19 +326,19 @@ def MakeLUT():
     :return: An indexed lookup table.
     """
     # Make the lookup table.
-    colorSeries = vtk.vtkColorSeries()
+    color_series = vtk.vtkColorSeries()
     # Select a color scheme.
-    #colorSeriesEnum = colorSeries.BREWER_DIVERGING_BROWN_BLUE_GREEN_9
-    #colorSeriesEnum = colorSeries.BREWER_DIVERGING_SPECTRAL_10
-    #colorSeriesEnum = colorSeries.BREWER_DIVERGING_SPECTRAL_3
-    #colorSeriesEnum = colorSeries.BREWER_DIVERGING_PURPLE_ORANGE_9
-    #colorSeriesEnum = colorSeries.BREWER_SEQUENTIAL_BLUE_PURPLE_9
-    #colorSeriesEnum = colorSeries.BREWER_SEQUENTIAL_BLUE_GREEN_9
-    colorSeriesEnum = colorSeries.BREWER_QUALITATIVE_SET3
-    #colorSeriesEnum = colorSeries.CITRUS
-    colorSeries.SetColorScheme(colorSeriesEnum)
+    #color_seriesEnum = color_series.BREWER_DIVERGING_BROWN_BLUE_GREEN_9
+    #color_seriesEnum = color_series.BREWER_DIVERGING_SPECTRAL_10
+    #color_seriesEnum = color_series.BREWER_DIVERGING_SPECTRAL_3
+    #color_seriesEnum = color_series.BREWER_DIVERGING_PURPLE_ORANGE_9
+    #color_seriesEnum = color_series.BREWER_SEQUENTIAL_BLUE_PURPLE_9
+    #color_seriesEnum = color_series.BREWER_SEQUENTIAL_BLUE_GREEN_9
+    color_seriesEnum = color_series.BREWER_QUALITATIVE_SET3
+    #color_seriesEnum = color_series.CITRUS
+    color_series.SetColorScheme(color_seriesEnum)
     lut = vtk.vtkLookupTable()
-    colorSeries.BuildLookupTable(lut)
+    color_series.BuildLookupTable(lut)
     lut.SetNanColor(0,0,0,1)
     return lut
 
@@ -369,7 +369,7 @@ def MakeGlyphs(src, reverseNormals):
     """
     Glyph the normals on the surface.
 
-    You may need to adjust the parameters for maskPts, arrow and glyph for a
+    You may need to adjust the parameters for mask_points, arrow and glyph for a
     nice appearance.
 
     :param: src - the surface to glyph.
@@ -383,16 +383,16 @@ def MakeGlyphs(src, reverseNormals):
     reverse = vtk.vtkReverseSense()
 
     # Choose a random subset of points.
-    maskPts = vtk.vtkMaskPoints()
-    maskPts.SetOnRatio(5)
-    maskPts.RandomModeOn()
+    mask_points = vtk.vtkMaskPoints()
+    mask_points.SetOnRatio(5)
+    mask_points.RandomModeOn()
     if reverseNormals:
         reverse.SetInputData(src)
         reverse.ReverseCellsOn()
         reverse.ReverseNormalsOn()
-        maskPts.SetInputConnection(reverse.GetOutputPort())
+        mask_points.SetInputConnection(reverse.GetOutputPort())
     else:
-        maskPts.SetInputData(src)
+        mask_points.SetInputData(src)
 
     # Source for the glyph filter
     arrow = vtk.vtkArrowSource()
@@ -402,7 +402,7 @@ def MakeGlyphs(src, reverseNormals):
 
     glyph = vtk.vtkGlyph3D()
     glyph.SetSourceConnection(arrow.GetOutputPort())
-    glyph.SetInputConnection(maskPts.GetOutputPort())
+    glyph.SetInputConnection(mask_points.GetOutputPort())
     glyph.SetVectorModeToUseNormal()
     glyph.SetScaleFactor(1)
     glyph.SetColorModeToColorByVector()
@@ -437,30 +437,30 @@ def DisplaySurface(st):
     else:
         raise RuntimeError(surface)
     # Here we are assuming that the active scalars are the curvatures.
-    curvatureName = src.GetPointData().GetScalars().GetName()
+    curvature_name = src.GetPointData().GetScalars().GetName()
     # Use this range to color the glyphs for the normals by elevation.
     src.GetPointData().SetActiveScalars('Elevation')
-    scalarRangeElevation = src.GetScalarRange()
-    src.GetPointData().SetActiveScalars(curvatureName)
-    scalarRangeCurvatures = src.GetScalarRange()
-    scalarRange = scalarRangeCurvatures
+    scalar_range_elevation = src.GetScalarRange()
+    src.GetPointData().SetActiveScalars(curvature_name)
+    scalar_range_curvatures = src.GetScalarRange()
+    scalar_range = scalar_range_curvatures
 
     lut = MakeLUT()
-    numberOfBands = lut.GetNumberOfTableValues()
-    bands = MakeBands(scalarRange, numberOfBands, False)
+    nbands = lut.GetNumberOfTableValues()
+    bands = MakeBands(scalar_range, nbands, False)
     if surface == "PARAMETRIC_HILLS":
         # Comment this out if you want to see how allocating
         # equally spaced bands works.
-        bands = MakeCustomBands(scalarRange, numberOfBands)
+        bands = MakeCustomBands(scalar_range, nbands)
         # Adjust the number of table values
-        numberOfBands = len(bands)
-        lut.SetNumberOfTableValues(numberOfBands)
+        nbands = len(bands)
+        lut.SetNumberOfTableValues(nbands)
 
-    lut.SetTableRange(scalarRange)
+    lut.SetTableRange(scalar_range)
 
     # We will use the midpoint of the band as the label.
     labels = []
-    for i in range(numberOfBands):
+    for i in range(nbands):
         labels.append('{:4.2f}'.format(bands[i][1]))
 
     # Annotate
@@ -468,7 +468,7 @@ def DisplaySurface(st):
     for i in range(len(labels)):
         values.InsertNextValue(vtk.vtkVariant(labels[i]))
     for i in range(values.GetNumberOfTuples()):
-        lut.SetAnnotation(i, values.GetValue(i).ToString());
+        lut.SetAnnotation(i, values.GetValue(i).ToString())
 
     # Create a lookup table with the colors reversed.
     lutr = ReverseLUT(lut)
@@ -477,7 +477,7 @@ def DisplaySurface(st):
     bcf = vtk.vtkBandedPolyDataContourFilter()
     bcf.SetInputData(src)
     # Use either the minimum or maximum value for each band.
-    for i in range(0, numberOfBands):
+    for i in range(0, nbands):
         bcf.SetValue(i, bands[i][2])
     # We will use an indexed lookup table.
     bcf.SetScalarModeToIndex()
@@ -489,69 +489,69 @@ def DisplaySurface(st):
     # ------------------------------------------------------------
     # Create the mappers and actors
     # ------------------------------------------------------------
-    srcMapper = vtk.vtkPolyDataMapper()
-    srcMapper.SetInputConnection(bcf.GetOutputPort())
-    srcMapper.SetScalarRange(scalarRange)
-    srcMapper.SetLookupTable(lut)
-    srcMapper.SetScalarModeToUseCellData()
+    src_mapper = vtk.vtkPolyDataMapper()
+    src_mapper.SetInputConnection(bcf.GetOutputPort())
+    src_mapper.SetScalarRange(scalar_range)
+    src_mapper.SetLookupTable(lut)
+    src_mapper.SetScalarModeToUseCellData()
 
-    srcActor = vtk.vtkActor()
-    srcActor.SetMapper(srcMapper)
-    srcActor.RotateX(-45)
-    srcActor.RotateZ(45)
+    src_actor = vtk.vtkActor()
+    src_actor.SetMapper(src_mapper)
+    src_actor.RotateX(-45)
+    src_actor.RotateZ(45)
 
     # Create contour edges
-    edgeMapper = vtk.vtkPolyDataMapper()
-    edgeMapper.SetInputData(bcf.GetContourEdgesOutput())
-    edgeMapper.SetResolveCoincidentTopologyToPolygonOffset()
+    edge_mapper = vtk.vtkPolyDataMapper()
+    edge_mapper.SetInputData(bcf.GetContourEdgesOutput())
+    edge_mapper.SetResolveCoincidentTopologyToPolygonOffset()
 
-    edgeActor = vtk.vtkActor()
-    edgeActor.SetMapper(edgeMapper)
-    edgeActor.GetProperty().SetColor(0, 0, 0)
-    edgeActor.RotateX(-45)
-    edgeActor.RotateZ(45)
+    edge_actor = vtk.vtkActor()
+    edge_actor.SetMapper(edge_mapper)
+    edge_actor.GetProperty().SetColor(0, 0, 0)
+    edge_actor.RotateX(-45)
+    edge_actor.RotateZ(45)
 
-    glyphMapper = vtk.vtkPolyDataMapper()
-    glyphMapper.SetInputConnection(glyph.GetOutputPort())
-    glyphMapper.SetScalarModeToUsePointFieldData()
-    glyphMapper.SetColorModeToMapScalars()
-    glyphMapper.ScalarVisibilityOn()
-    glyphMapper.SelectColorArray('Elevation')
+    glyph_mapper = vtk.vtkPolyDataMapper()
+    glyph_mapper.SetInputConnection(glyph.GetOutputPort())
+    glyph_mapper.SetScalarModeToUsePointFieldData()
+    glyph_mapper.SetColorModeToMapScalars()
+    glyph_mapper.ScalarVisibilityOn()
+    glyph_mapper.SelectColorArray('Elevation')
     # Colour by scalars.
-    glyphMapper.SetScalarRange(scalarRangeElevation)
+    glyph_mapper.SetScalarRange(scalar_range_elevation)
 
-    glyphActor = vtk.vtkActor()
-    glyphActor.SetMapper(glyphMapper)
-    glyphActor.RotateX(-45)
-    glyphActor.RotateZ(45)
+    glyph_actor = vtk.vtkActor()
+    glyph_actor.SetMapper(glyph_mapper)
+    glyph_actor.RotateX(-45)
+    glyph_actor.RotateZ(45)
 
     # Add a scalar bar.
-    scalarBar = vtk.vtkScalarBarActor()
+    scalar_bar = vtk.vtkScalarBarActor()
     # This LUT puts the lowest value at the top of the scalar bar.
-    # scalarBar->SetLookupTable(lut);
+    # scalar_bar->SetLookupTable(lut);
     # Use this LUT if you want the highest value at the top.
-    scalarBar.SetLookupTable(lutr)
-    scalarBar.SetTitle('Gaussian\nCurvature')
+    scalar_bar.SetLookupTable(lutr)
+    scalar_bar.SetTitle('Gaussian\nCurvature')
 
     # ------------------------------------------------------------
     # Create the RenderWindow, Renderer and Interactor
     # ------------------------------------------------------------
     ren = vtk.vtkRenderer()
-    renWin = vtk.vtkRenderWindow()
+    ren_win = vtk.vtkRenderWindow()
     iren = vtk.vtkRenderWindowInteractor()
 
-    renWin.AddRenderer(ren)
-    iren.SetRenderWindow(renWin)
+    ren_win.AddRenderer(ren)
+    iren.SetRenderWindow(ren_win)
 
     # add actors
-    ren.AddViewProp(srcActor)
-    ren.AddViewProp(edgeActor)
-    ren.AddViewProp(glyphActor)
-    ren.AddActor2D(scalarBar)
+    ren.AddViewProp(src_actor)
+    ren.AddViewProp(edge_actor)
+    ren.AddViewProp(glyph_actor)
+    ren.AddActor2D(scalar_bar)
 
     ren.SetBackground(0.7, 0.8, 1.0)
-    renWin.SetSize(800, 800)
-    renWin.Render()
+    ren_win.SetSize(800, 800)
+    ren_win.Render()
 
     ren.GetActiveCamera().Zoom(1.5)
 

@@ -6,6 +6,8 @@ from numpy import allclose, array
 
 from pyNastran.bdf.bdf import BDF, BDFCard, CBAR, PBAR, PBARL, GRID, MAT1
 from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.cards.test.utils import save_load_deck
+
 
 class TestBars(unittest.TestCase):
     """test CBAR/PBAR/PBARL classes"""
@@ -24,10 +26,10 @@ class TestBars(unittest.TestCase):
         card = model.process_card(lines)
         cardi = BDFCard(card)
         pbar = PBAR.add_card(cardi)
-        self.assertEqual(pbar.A, 0.), pbar.A
-        self.assertEqual(pbar.i12, 0.), pbar.i12
-        self.assertEqual(pbar.k1, None), pbar.k1
-        self.assertEqual(pbar.k2, None), pbar.k2
+        self.assertEqual(pbar.A, 0.)
+        self.assertEqual(pbar.i12, 0.)
+        self.assertEqual(pbar.k1, None)
+        self.assertEqual(pbar.k2, None)
         #with self.assertRaises(AssertionError):  # A=0, I12=0, K1=0
             #pbar = PBAR(card2)
 
@@ -119,7 +121,7 @@ class TestBars(unittest.TestCase):
         j = -4.
         pbar = PBAR(pid, mid, A=0., i1=i1, i2=i2, i12=i12, j=j, nsm=0., c1=0., c2=0.,
                     d1=0., d2=0., e1=0., e2=0., f1=0., f2=0., k1=1.e8,
-                    k2=1.e8, comment='cat')
+                    k2=1.e8, comment='pbar')
         with self.assertRaises(ValueError):
             pbar.validate()
 
@@ -133,6 +135,51 @@ class TestBars(unittest.TestCase):
 
         pbar.j = 4.
         pbar.validate()
+
+        model = BDF(debug=False)
+        pbar = model.add_pbar(pid, mid, A=0., i1=2., i2=2., i12=1., j=4., nsm=0., c1=0., c2=0.,
+                              d1=0., d2=0., e1=0., e2=0., f1=0., f2=0., k1=1.e8,
+                              k2=1.e8, comment='pbar')
+        pbar.validate()
+        nids = [100, 101]
+        eid = 1000
+        x = [0., 0., 1.]
+        g0 = None
+        model.add_cbar(eid, pid, nids, x, g0, comment='cbar')
+        model.add_grid(100, [0., 0., 0.])
+        model.add_grid(101, [1., 0., 0.])
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu)
+        save_load_deck(model)
+
+    def test_cbar_g0(self):
+        """modification of test_cbeam_01"""
+        model = BDF(debug=False)
+        pid = 200
+        mid = 6
+        model.add_pbar(pid, mid, A=0., i1=2., i2=2., i12=1., j=4., nsm=0., c1=0., c2=0.,
+                       d1=0., d2=0., e1=0., e2=0., f1=0., f2=0., k1=1.e8,
+                       k2=1.e8, comment='pbar')
+
+        eid = 100
+        nids = [10, 20]
+        x = None
+        g0 = 30
+        model.add_cbar(eid, pid, nids, x, g0, comment='cbar')
+
+        E = 1.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu)
+        model.add_grid(10, [0., 0., 0.])
+        model.add_grid(20, [0., 0., 0.])
+        model.add_grid(30, [0., 1., 0.])
+        model.cross_reference()
+
+        save_load_deck(model, punch=True, run_remove_unused=True,
+                       run_convert=True, run_renumber=True)
 
     def test_pbarl_1(self):
         """tests the PBARL"""
@@ -158,7 +205,7 @@ class TestBars(unittest.TestCase):
         pbarl.dim = [2., 1.]
         #with self.assertRaises(ValueError):
             #pbarl.validate()
-        #pbarl.group = 'MSCBMLO'
+        #pbarl.group = 'MSCBML0'
 
         pbarl.validate()
         str(pbarl)
@@ -186,6 +233,9 @@ class TestBars(unittest.TestCase):
         g0 = None
         cbar = CBAR(eid, pid, [nid1, nid2], x, g0, offt='GGG',
                     pa=0, pb=0, wa=None, wb=None, comment='')
+        with self.assertRaises(ValueError):
+            cbar.validate()
+        cbar.x = [0., 1., 2.]
         cbar.validate()
         model.elements[eid] = cbar
         pbarl._verify(xref=False)
@@ -198,6 +248,11 @@ class TestBars(unittest.TestCase):
         mat.rho = 0.
         assert allclose(cbar.Mass(), 0.5), cbar.Mass()
 
+        scale = 'FR'
+        x = [0.2, 0.4, 0.6, 0.8]
+        model.add_cbarao(eid, scale, x, comment='cbarao')
+        model.add_card(['CBARAO', eid+1, 'RF', 6, 0.1, 0.2], 'CBARAO')
+        save_load_deck(model)
 
     def test_bar_mass_1(self):
         """tests CBAR/PBAR mass"""
@@ -325,7 +380,7 @@ class TestBars(unittest.TestCase):
         dim = [1., 2., 0.1, 0.1]
         #pbeaml = model.add_pbeaml(pid, mid, Type, xxb, dims, nsm=None,
                                   #so=None, comment='PBEAML')
-        pbarl = model.add_pbarl(pid, mid, Type, dim, group='MSCBMLO', nsm=0.,
+        pbarl = model.add_pbarl(pid, mid, Type, dim, group='MSCBML0', nsm=0.,
                                 comment='PBARL')
         #---------------------------------------------------------------
         eid = 2
@@ -337,7 +392,7 @@ class TestBars(unittest.TestCase):
                               comment='CBAR')
         Type = 'BOX'
         dim = [1., 2., 0.1, 0.1]
-        pbarl = model.add_pbarl(pid, mid, Type, dim, group='MSCBMLO', nsm=0.,
+        pbarl = model.add_pbarl(pid, mid, Type, dim, group='MSCBML0', nsm=0.,
                                 comment='PBARL')
         #---------------------------------------------------------------
         eid = 3
@@ -417,7 +472,7 @@ class TestBars(unittest.TestCase):
         bar_type = 'BAR'
         dim = [1., 2.]  # area = 2.0
         nsm = 1.
-        pbarl = model.add_pbarl(pid, mid, bar_type, dim, group='MSCBMLO', nsm=1.,
+        pbarl = model.add_pbarl(pid, mid, bar_type, dim, group='MSCBML0', nsm=1.,
                                comment='')
 
         E = 1.0
@@ -447,6 +502,36 @@ class TestBars(unittest.TestCase):
         assert pbarl.MassPerLength() == 21.0, pbarl.MassPerLength()
         assert pbarl2.MassPerLength() == 21.0, pbarl2.MassPerLength()
 
+    def test_baror(self):
+        """tests a BAROR"""
+        model = BDF(debug=False)
+        n1 = 10
+        n2 = 20
+        model.add_grid(n1, [0., 0., 0.])
+        model.add_grid(n2, [1., 0., 0.])
+
+        pid = 2
+        mid = 1
+        bar_type = 'BAR'
+        dim = [1., 2.]  # area = 2.0
+        nsm = 1.
+        pbarl = model.add_pbarl(pid, mid, bar_type, dim, group='MSCBML0', nsm=1.,
+                               comment='')
+
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu, rho=1.)
+
+        card_lines = ['BAROR', None, pid, None, None, 0.6, 2.9, -5.87, 'GOG']
+        model.add_card(card_lines, 'BAROR', comment='BAROR', is_list=True,
+                       has_none=True)
+
+        eid = 1
+        card_lines = ['CBAR', eid, pid, n1, n2]
+        model.add_card(card_lines, 'CBAR', comment='', is_list=True,
+                      has_none=True)
+        model.pop_parse_errors()
 
     def test_pbrsect(self):
         """tests a PBRSECT"""

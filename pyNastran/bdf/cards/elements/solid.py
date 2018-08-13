@@ -87,20 +87,9 @@ def area_centroid(n1, n2, n3, n4):
       | /   |
       4-----3
     """
-    area1 = 0.5 * norm(cross(n1 - n2, n2 - n4))
-    c1 = (n1 + n2 + n4) / 3.
-
-    area2 = 0.5 * norm(cross(n2 - n4, n2 - n3))
-    c2 = (n2 + n3 + n4) / 3.
-
-    area = area1 + area2
-    try:
-        centroid = (c1 * area1 + c2 * area2) / area
-    except FloatingPointError:
-        msg = '\nc1=%r\narea1=%r\n' % (c1, area1)
-        msg += 'c2=%r\narea2=%r' % (c2, area2)
-        raise FloatingPointError(msg)
-    return(area, centroid)
+    area = 0.5 * norm(cross(n3 - n1, n4 - n2))
+    centroid = (n1 + n2 + n3 + n4) / 4.
+    return area, centroid
 
 
 class SolidElement(Element):
@@ -151,7 +140,7 @@ class SolidElement(Element):
         Calculates the mass of the solid element
         Mass = Rho * Volume
         """
-        #print('rho=%e volume=%e' % (self.Rho(), self.Volume()))
+        #print('  rho=%e volume=%e' % (self.Rho(), self.Volume()))
         return self.Rho() * self.Volume()
 
     def Mid(self):
@@ -285,9 +274,22 @@ class CHEXA8(SolidElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CHEXA eid=%s' % self.eid
+        msg = ', which is required by CHEXA eid=%s' % self.eid
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CHEXA eid=%s' % self.eid
+        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     @property
     def faces(self):
@@ -303,11 +305,11 @@ class CHEXA8(SolidElement):
         .. note::  The order of the nodes are consistent with normals that point outwards
                    The face numbering is meaningless
 
-        .. old_note::  The order of the nodes are consistent with ANSYS numbering.
-        .. old_warning:: higher order element ids not verified with ANSYS.
+        .. note::  The order of the nodes are consistent with ANSYS numbering; is this current?
+        .. warning:: higher order element ids not verified with ANSYS; is this current?
 
-        Example
-        =======
+        Examples
+        --------
         >>> print(element.faces)
         """
         nodes = self.node_ids
@@ -355,7 +357,7 @@ class CHEXA8(SolidElement):
         y /= np.linalg.norm(y)
         return centroid, xe, y, z
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         assert isinstance(eid, integer_types)
@@ -562,9 +564,22 @@ class CHEXA20(SolidElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CHEXA eid=%s' % self.eid
+        msg = ', which is required by CHEXA eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CHEXA eid=%s' % self.eid
+        self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     @property
     def faces(self):
@@ -580,11 +595,11 @@ class CHEXA20(SolidElement):
         .. note::  The order of the nodes are consistent with normals that point outwards
                    The face numbering is meaningless
 
-        .. old_note::  The order of the nodes are consistent with ANSYS numbering.
-        .. old_warning:: higher order element ids not verified with ANSYS.
+        .. note::  The order of the nodes are consistent with ANSYS numbering; is this current?
+        .. warning:: higher order element ids not verified with ANSYS; is this current?
 
-        Example
-        =======
+        Examples
+        --------
         >>> print(element.faces)
         """
         (n1, n2, n3, n4, n5, n6, n7, n8,
@@ -640,7 +655,7 @@ class CHEXA20(SolidElement):
         nids = self.node_ids[:8]
         return chexa_face_area_centroid_normal(nid, nid_opposite, nids, self.nodes_ref[:8])
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         edges = self.get_edge_ids()
@@ -839,9 +854,22 @@ class CPENTA6(SolidElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CPENTA eid=%s' % self.eid
+        msg = ', which is required by CPENTA eid=%s' % self.eid
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CPENTA eid=%s' % self.eid
+        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     @property
     def faces(self):
@@ -857,11 +885,11 @@ class CPENTA6(SolidElement):
         .. note::  The order of the nodes are consistent with normals that point outwards
                    The face numbering is meaningless
 
-        .. old_note::  The order of the nodes are consistent with ANSYS numbering.
-        .. old_warning:: higher order element ids not verified with ANSYS.
+        .. note::  The order of the nodes are consistent with ANSYS numbering; is this current?
+        .. warning:: higher order element ids not verified with ANSYS; is this current?
 
-        Example
-        =======
+        Examples
+        --------
         >>> print(element.faces)
         """
         nodes = self.node_ids
@@ -957,7 +985,7 @@ class CPENTA6(SolidElement):
             area = 0.5 * norm(cross(p1 - p3, p2 - p4))
         return [face_node_ids, area]
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
@@ -1220,9 +1248,22 @@ class CPENTA15(SolidElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CPENTA eid=%s' % self.eid
+        msg = ', which is required by CPENTA eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CPENTA eid=%s' % self.eid
+        self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     @property
     def faces(self):
@@ -1238,11 +1279,11 @@ class CPENTA15(SolidElement):
         .. note::  The order of the nodes are consistent with normals that point outwards
                    The face numbering is meaningless
 
-        .. old_note::  The order of the nodes are consistent with ANSYS numbering.
-        .. old_warning:: higher order element ids not verified with ANSYS.
+        .. note::  The order of the nodes are consistent with ANSYS numbering; is this current?
+        .. warning:: higher order element ids not verified with ANSYS; is this current?
 
-        Example
-        =======
+        Examples
+        --------
         >>> print(element.faces)
         """
         n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12, n13, n14, n15 = self.node_ids
@@ -1285,7 +1326,7 @@ class CPENTA15(SolidElement):
             tuple(sorted([node_ids[2], node_ids[5]])),
         ]
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
@@ -1307,7 +1348,7 @@ class CPENTA15(SolidElement):
         (n1, n2, n3, n4, n5, n6) = self.get_node_positions()[:6]
         c1 = (n1 + n2 + n3) / 3.
         c2 = (n4 + n5 + n6) / 3.
-        centroid = (c1 - c2) / 2.
+        centroid = (c1 + c2) / 2.
         return centroid
 
     def Volume(self):
@@ -1319,7 +1360,6 @@ class CPENTA15(SolidElement):
         area2 = Area(n6 - n4, n5 - n4)
         c1 = (n1 + n2 + n3) / 3.
         c2 = (n4 + n5 + n6) / 3.
-
         volume = (area1 + area2) / 2. * norm(c1 - c2)
         return abs(volume)
 
@@ -1417,9 +1457,22 @@ class CPYRAM5(SolidElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CPYRAM eid=%s' % self.eid
+        msg = ', which is required by CPYRAM eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CPYRAM eid=%s' % self.eid
+        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     @property
     def faces(self):
@@ -1435,11 +1488,11 @@ class CPYRAM5(SolidElement):
         .. note::  The order of the nodes are consistent with normals that point outwards
                    The face numbering is meaningless
 
-        .. old_note::  The order of the nodes are consistent with ANSYS numbering.
-        .. old_warning:: higher order element ids not verified with ANSYS.
+        .. note::  The order of the nodes are consistent with ANSYS numbering; is this current?
+        .. warning:: higher order element ids not verified with ANSYS; is this current?
 
-        Example
-        =======
+        Examples
+        --------
         >>> print(element.faces)
         """
         nodes = self.node_ids
@@ -1471,7 +1524,7 @@ class CPYRAM5(SolidElement):
             tuple(sorted([node_ids[3], node_ids[4]])),
         ]
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
@@ -1498,6 +1551,9 @@ class CPYRAM5(SolidElement):
     def Volume(self):
         """
         .. seealso:: CPYRAM5.Volume
+
+        V = (l * w) * h / 3
+        V = A * h / 3
         """
         (n1, n2, n3, n4, n5) = self.get_node_positions()
         area1, c1 = area_centroid(n1, n2, n3, n4)
@@ -1606,9 +1662,22 @@ class CPYRAM13(SolidElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CPYRAM eid=%s' % self.eid
+        msg = ', which is required by CPYRAM eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CPYRAM eid=%s' % self.eid
+        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     @property
     def faces(self):
@@ -1624,11 +1693,11 @@ class CPYRAM13(SolidElement):
         .. note::  The order of the nodes are consistent with normals that point outwards
                    The face numbering is meaningless
 
-        .. old_note::  The order of the nodes are consistent with ANSYS numbering.
-        .. old_warning:: higher order element ids not verified with ANSYS.
+        .. note::  The order of the nodes are consistent with ANSYS numbering; is this current?
+        .. warning:: higher order element ids not verified with ANSYS; is this current?
 
-        Example
-        =======
+        Examples
+        --------
         >>> print(element.faces)
         """
         node_ids = self.node_ids
@@ -1661,7 +1730,7 @@ class CPYRAM13(SolidElement):
             tuple(sorted([node_ids[3], node_ids[4]])),
         ]
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
@@ -1690,12 +1759,15 @@ class CPYRAM13(SolidElement):
     def Volume(self):
         """
         .. seealso:: CPYRAM5.Volume
+
+        V = (l * w) * h / 3
+        V = A * h / 3
         """
         (n1, n2, n3, n4, n5,
          n6, n7, n8, n9, n10,
          n11, n12, n13) = self.get_node_positions()
         area1, c1 = area_centroid(n1, n2, n3, n4)
-        volume = area1 / 2. * norm(c1 - n5)
+        volume = area1 / 3. * norm(c1 - n5)
         return abs(volume)
 
     @property
@@ -1745,8 +1817,8 @@ class CTETRA4(SolidElement):
         .. note::  The order of the nodes are consistent with normals that point outwards
                    The face numbering is meaningless
 
-        Example
-        =======
+        Examples
+        --------
         >>> print(element.faces)
         """
         nodes = self.node_ids
@@ -1772,8 +1844,8 @@ class CTETRA4(SolidElement):
         .. note::  The order of the nodes are consistent with ANSYS numbering.
         .. warning:: higher order element ids not verified with ANSYS.
 
-        Example
-        =======
+        Examples
+        --------
         >>> print(element.faces)
         """
         nodes = self.node_ids
@@ -1871,11 +1943,24 @@ class CTETRA4(SolidElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CTETRA eid=%s' % self.eid
+        msg = ', which is required by CTETRA eid=%s' % self.eid
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
 
-    def _verify(self, xref=False):
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CTETRA eid=%s' % self.eid
+        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
+
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
@@ -2093,9 +2178,22 @@ class CTETRA10(SolidElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CTETRA eid=%s' % self.eid
+        msg = ', which is required by CTETRA eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CTETRA eid=%s' % self.eid
+        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     @property
     def faces(self):
@@ -2111,11 +2209,11 @@ class CTETRA10(SolidElement):
         .. note::  The order of the nodes are consistent with normals that point outwards
                    The face numbering is meaningless
 
-        .. old_note::  The order of the nodes are consistent with ANSYS numbering.
-        .. old_warning:: higher order element ids not verified with ANSYS.
+        .. note::  The order of the nodes are consistent with ANSYS numbering; is this current?
+        .. warning:: higher order element ids not verified with ANSYS; is this current?
 
-        Example
-        =======
+        Examples
+        --------
         >>> print(element.faces)
         """
         n1, n2, n3, n4, n5, n6, n7, n8, n9, n10 = self.node_ids
@@ -2144,7 +2242,7 @@ class CTETRA10(SolidElement):
             tuple(sorted([node_ids[2], node_ids[3]])),
         ]
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids

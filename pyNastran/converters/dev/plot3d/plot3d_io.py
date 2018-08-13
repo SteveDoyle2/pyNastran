@@ -1,4 +1,5 @@
 from __future__ import print_function
+from collections import OrderedDict
 from six import iteritems
 from six.moves import range
 import vtk
@@ -13,8 +14,8 @@ from pyNastran.gui.gui_objects.gui_result import GuiResult
 raise NotImplementedError()
 
 class Plot3d_io(object):  # pragma: no cover
-    def __init__(self):
-        pass
+    def __init__(self, gui):
+        self.gui = gui
 
     def get_plot3d_wildcard_geometry_results_functions(self):
         data = ('Plot3D',
@@ -48,9 +49,9 @@ class Plot3d_io(object):  # pragma: no cover
         self.nelements = nelements
 
 
-        #nodes, elements, regions = model.getPointsElementsRegions()
+        #nodes, elements, regions = model.get_points_elements_regions()
         #for nid,node in enumerate(nodes):
-            #print "node[%s] = %s" %(nid,str(node))
+            #print "node[%s] = %s" % (nid, str(node))
 
         self.grid.Allocate(self.nelements, 1000)
 
@@ -106,26 +107,23 @@ class Plot3d_io(object):  # pragma: no cover
             break
 
         #print("eid = ", eid)
-        self.grid.SetPoints(points)
-        #print dir(self.grid) #.SetNumberOfComponents(0)
-        #self.grid.GetCellData().SetNumberOfTuples(1);
-        #self.grid.GetCellData().SetScalars(self.gridResult)
-        self.grid.Modified()
-        self.grid.Update()
+        grid = self.gui.grid
+        grid.SetPoints(points)
+        grid.Modified()
+        grid.Update()
         self.log_info("updated grid")
 
         #return
 
         # loadPlot3dResults - regions/loads
-        self.scalarBar.VisibilityOn()
-        self.scalarBar.Modified()
+        self.gui.scalarBar.VisibilityOn()
+        self.gui.scalarBar.Modified()
 
-        self.isubcase_name_map = {1: ['Plot3d', '']}
-        cases = {}
+        self.gui.isubcase_name_map = {1: ['Plot3d', '']}
+        cases = OrderedDict()
         ID = 1
 
         #cases = self._fill_stl_case(cases, ID, elements)
-        #self.finish_io()
         self.result_cases = cases
         self.case_keys = sorted(cases.keys())
         #print "case_keys = ",self.case_keys
@@ -197,7 +195,3 @@ class Plot3d_io(object):  # pragma: no cover
                 #nodal_data = loads[key]
                 #cases[(ID, key, 1, 'node', '%.3f')] = nodal_data
         return cases
-
-    #def load_panair_results(self, panairFileName):
-        ##self.result_cases = {}
-        #pass

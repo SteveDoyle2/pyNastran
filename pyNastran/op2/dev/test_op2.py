@@ -7,7 +7,6 @@ import timeit
 
 
 import pyNastran
-from pyNastran.utils import object_attributes
 test_path = pyNastran.__path__[0]
 
 class TestOP2New(unittest.TestCase):
@@ -16,11 +15,11 @@ class TestOP2New(unittest.TestCase):
         op2_filename = os.path.join(folder, 'solid_bending', 'solid_bending.op2')
         op2_filename = os.path.join(folder, 'solid_bending', 'solid_bending.op2')
 
-        # op2 = OP2(op2_filename)
-        # op2.rdn2cop2()
-        # print(object_attributes(op2))
-        # print('dbnames =', op2.dbnames)
-        # print('dblist =', op2.dblist)
+        #op2 = OP2(op2_filename)
+        #op2.rdn2cop2()
+        #print(op2.object_attributes())
+        #print('dbnames =', op2.dbnames)
+        #print('dblist =', op2.dblist)
 
         o2 = read_post_op2(op2_filename, verbose=True, getougv1=True)
         print('a =', o2.keys())
@@ -31,11 +30,11 @@ class TestOP2New(unittest.TestCase):
         folder = os.path.abspath(os.path.join(test_path, '..', 'models'))
         op2_filename = os.path.join(folder, 'iSat', 'isat_dploy_sm_orig.op2')
 
-        # op2 = OP2(op2_filename)
-        # op2.rdn2cop2()
-        # print(object_attributes(op2))
-        # print('dbnames =', op2.dbnames)
-        # print('dblist =', op2.dblist)
+        #op2 = OP2(op2_filename)
+        #op2.rdn2cop2()
+        #print(op2.object_attributes())
+        #print('dbnames =', op2.dbnames)
+        #print('dblist =', op2.dblist)
         o2 = read_post_op2(op2_filename, verbose=True, getougv1=True)
         #print('a =', o2.keys())
         #print('b =', o2['mats'].keys())
@@ -63,9 +62,9 @@ class TestOP2New(unittest.TestCase):
 
         # op2 = OP2(op2_filename)
         # op2.rdn2cop2()
-        # print(object_attributes(op2))
-        # print('dbnames =', op2.dbnames)
-        # print('dblist =', op2.dblist)
+        # print(op2.object_attributes())
+        #print('dbnames =', op2.dbnames)
+        #print('dblist =', op2.dblist)
         o2 = read_post_op2(op2_filename, verbose=True, getougv1=True)
 
     def test_04(self):

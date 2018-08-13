@@ -11,17 +11,16 @@ from pyNastran.converters.cart3d.cart3d_io import Cart3dIO
     #nastran_to_cart3d, nastran_to_cart3d_filename)
 from pyNastran.utils.log import get_logger
 
-pkg_path = pyNastran.__path__[0]
-test_path = os.path.join(pkg_path, 'converters', 'dev', 'avus')
+PKG_PATH = pyNastran.__path__[0]
+test_path = os.path.join(PKG_PATH, 'converters', 'dev', 'avus')
 
-#model_path = os.path.join(pkg_path, 'converters', 'cart3d', 'models')
+#model_path = os.path.join(PKG_PATH, 'converters', 'cart3d', 'models')
 
 
-class AvusGUI(AvusIO, Cart3dIO, FakeGUIMethods):
+class AvusGUI(FakeGUIMethods):
     def __init__(self):
         FakeGUIMethods.__init__(self)
-        AvusIO.__init__(self)
-        Cart3dIO.__init__(self)
+        self.model = AvusIO(self)
 
 
 class TestAvusGUI(unittest.TestCase):
@@ -62,7 +61,7 @@ class TestAvusGUI(unittest.TestCase):
 
         test = AvusGUI()
         test.log = get_logger(level='warning', encoding='utf-8')
-        test.load_avus_geometry(avus_filename)
+        test.model.load_avus_geometry(avus_filename)
         os.remove(avus_filename)
 
     def test_avus_geometry_01(self):
@@ -94,7 +93,7 @@ class TestAvusGUI(unittest.TestCase):
 
         test = AvusGUI()
         test.log = get_logger(level='warning', encoding='utf-8')
-        test.load_avus_geometry(avus_filename)
+        test.model.load_avus_geometry(avus_filename)
 
 
 if __name__ == '__main__':  # pragma: no cover

@@ -233,7 +233,7 @@ class F06Writer(OP2_F06_Common):
                 self._results.add('constraint_forces')
             elif 'force' in result.lower(): # could use more validation...
                 self._results.add('element_forces')
-            # thermalLoad_VU_3D, thermalLoad_1D, thermalLoad_CONV, thermalLoad_2D_3D
+            # thermalLoad_VU_3D, thermalLoad_1D, conv_thermal_load, thermalLoad_2D_3D
             self._results.add(result)
 
     def set_results(self, results):
@@ -567,250 +567,269 @@ class F06Writer(OP2_F06_Common):
         header_old = ['     DEFAULT                                                                                                                        \n',
                       '\n', ' \n']
         header = copy.deepcopy(header_old)
-        res_types = [
-            self.displacements, self.displacements_ROUGV1,
-            self.displacements_PSD, self.displacements_ATO, self.displacements_RMS,
-            self.displacements_CRM, self.displacements_NO,
-            self.displacements_scaled,  # ???
+        unallowed_results = ['eigenvectors', 'eigenvalues']
+        res_types = list(self.get_result(table_type) for table_type in sorted(self.get_table_types())
+                         if table_type not in unallowed_results)
 
-            self.accelerations, self.accelerations_ROUGV1,
-            self.accelerations_PSD, self.accelerations_ATO, self.accelerations_RMS,
-            self.accelerations_CRM, self.accelerations_NO,
+        #ROUGV1 = self.op2_results.ROUGV1
+        #psd = self.op2_results.psd
+        #ato = self.op2_results.ato
+        #rms = self.op2_results.rms
+        #crm = self.op2_results.crm
+        #no = self.op2_results.no
+        #modal_contribution = self.op2_results.modal_contribution
+        #res_types = [
+            #self.displacements, ROUGV1.displacements, psd.displacements, ato.displacements, rms.displacements, crm.displacements, no.displacements, self.displacements_scaled,  # ???
+            #self.accelerations, ROUGV1.accelerations, psd.accelerations, ato.accelerations, rms.accelerations, crm.accelerations, no.accelerations,
+            #self.velocities, ROUGV1.velocities, psd.velocities, ato.velocities, rms.velocities, crm.velocities, no.velocities,
+            #self.force_vectors,
+            #self.load_vectors, ato.load_vectors, crm.load_vectors, psd.load_vectors, no.load_vectors,
+            #self.temperatures,
 
-            self.velocities, self.velocities_ROUGV1,
-            self.velocities_PSD, self.velocities_ATO, self.velocities_RMS,
-            self.velocities_CRM, self.velocities_NO,
-
-            self.force_vectors,
-            self.load_vectors,
-            self.temperatures,
             #self.eigenvectors,
-            self.eigenvectors_RADCONS,
-            self.eigenvectors_RADEFFM,
-            self.eigenvectors_RADEATC,
-            self.eigenvectors_ROUGV1,
+            #self.eigenvectors_RADCONS,
+            #self.eigenvectors_RADEFFM,
+            #self.eigenvectors_RADEATC,
+            #self.eigenvectors_ROUGV1,
 
-            self.mpc_forces, self.mpc_forces_PSD, self.mpc_forces_ATO, self.mpc_forces_RMS,
-            self.mpc_forces_RAQCONS,
-            #self.mpc_forces_RAQEATC,
+            #self.mpc_forces, psd.mpc_forces, ato.mpc_forces, rms.mpc_forces,
+            ##self.mpc_forces_RAQCONS,
+            ##self.mpc_forces_RAQEATC,
 
-            self.spc_forces, self.spc_forces_PSD, self.spc_forces_ATO, self.spc_forces_RMS,
-            self.thermal_load_vectors,
+            #self.spc_forces, psd.spc_forces, ato.spc_forces, rms.spc_forces,
+            #self.thermal_load_vectors,
 
-            #self.strain_energy,
-            self.cquad4_strain_energy, self.cquad8_strain_energy,
-            self.cquadr_strain_energy, self.cquadx_strain_energy,
-            self.ctria3_strain_energy, self.ctria6_strain_energy,
-            self.ctriar_strain_energy, self.ctriax_strain_energy,
-            self.ctriax6_strain_energy,
-            self.ctetra_strain_energy, self.cpenta_strain_energy,
-            self.chexa_strain_energy, self.cpyram_strain_energy,
-            self.crod_strain_energy, self.ctube_strain_energy,
-            self.conrod_strain_energy,
-            self.cbar_strain_energy, self.cbeam_strain_energy,
-            self.cgap_strain_energy, self.cbush_strain_energy,
-            self.celas1_strain_energy, self.celas2_strain_energy,
-            self.celas3_strain_energy, self.celas4_strain_energy,
-            self.cdum8_strain_energy, self.dmig_strain_energy,
-            self.cbend_strain_energy,
-            self.genel_strain_energy, self.cshear_strain_energy,
-            #------------------------------------------
-            # OEF - forces
+            ##self.strain_energy,
+            #self.cquad4_strain_energy, self.cquad8_strain_energy,
+            #self.cquadr_strain_energy, self.cquadx_strain_energy,
+            #self.ctria3_strain_energy, self.ctria6_strain_energy,
+            #self.ctriar_strain_energy, self.ctriax_strain_energy,
+            #self.ctriax6_strain_energy,
+            #self.ctetra_strain_energy, self.cpenta_strain_energy,
+            #self.chexa_strain_energy, self.cpyram_strain_energy,
+            #self.crod_strain_energy, self.ctube_strain_energy,
+            #self.conrod_strain_energy,
+            #self.cbar_strain_energy, self.cbeam_strain_energy,
+            #self.cgap_strain_energy, self.cbush_strain_energy,
+            #self.celas1_strain_energy, self.celas2_strain_energy,
+            #self.celas3_strain_energy, self.celas4_strain_energy,
+            #self.cdum8_strain_energy, self.dmig_strain_energy,
+            #self.cbend_strain_energy, self.conm2_strain_energy,
+            #self.genel_strain_energy, self.cshear_strain_energy,
+            ##------------------------------------------
+            ## OEF - forces
 
-            # alphabetical order...
-            # bars
-            self.cbar_force, self.cbar_force_ATO, self.cbar_force_CRM, self.cbar_force_PSD, self.cbar_force_RMS, self.cbar_force_NO,
-            self.cbar_force_10nodes,
+            ## alphabetical order...
+            ## bars
+            #self.cbar_force, ato.cbar_force, crm.cbar_force, psd.cbar_force, rms.cbar_force, no.cbar_force,
+            #self.cbar_force_10nodes,
 
-            # beam
-            self.cbend_force,
-            self.cbeam_force, self.cbeam_force_ATO, self.cbeam_force_CRM, self.cbeam_force_PSD, self.cbeam_force_RMS, self.cbeam_force_NO,
-            self.cbeam_force_vu,
+            ## beam
+            #self.cbend_force,
+            #self.cbeam_force, ato.cbeam_force, crm.cbeam_force, psd.cbeam_force, rms.cbeam_force, no.cbeam_force,
+            #self.cbeam_force_vu,
 
-            # alphabetical
-            self.celas1_force,
-            self.celas2_force,
-            self.celas3_force,
-            self.celas4_force,
+            ## alphabetical
+            #self.celas1_force,
+            #self.celas2_force,
+            #self.celas3_force,
+            #self.celas4_force,
 
-            self.cquad4_force, self.cquad4_force_ATO, self.cquad4_force_CRM, self.cquad4_force_PSD, self.cquad4_force_RMS, self.cquad4_force_NO,
-            self.cquad8_force, self.cquad8_force_ATO, self.cquad8_force_CRM, self.cquad8_force_PSD, self.cquad8_force_RMS, self.cquad8_force_NO,
-            self.cquadr_force, self.cquadr_force_ATO, self.cquadr_force_CRM, self.cquadr_force_PSD, self.cquadr_force_RMS, self.cquadr_force_NO,
+            #self.cquad4_force, ato.cquad4_force, crm.cquad4_force, psd.cquad4_force, rms.cquad4_force, no.cquad4_force,
+            #self.cquad8_force, ato.cquad8_force, crm.cquad8_force, psd.cquad8_force, rms.cquad8_force, no.cquad8_force,
+            #self.cquadr_force, ato.cquadr_force, crm.cquadr_force, psd.cquadr_force, rms.cquadr_force, no.cquadr_force,
 
-            self.conrod_force,
-            self.crod_force,
-            self.cshear_force,
-            self.ctria3_force, self.ctria3_force_ATO, self.ctria3_force_CRM, self.ctria3_force_PSD, self.ctria3_force_RMS, self.ctria3_force_NO,
-            self.ctria6_force, self.ctria3_force_ATO, self.ctria6_force_CRM, self.ctria6_force_PSD, self.ctria6_force_RMS, self.ctria6_force_NO,
-            self.ctriar_force, self.ctriar_force_ATO, self.ctriar_force_CRM, self.ctriar_force_PSD, self.ctriar_force_RMS, self.ctriar_force_NO,
-            self.ctube_force,
+            #self.conrod_force,
+            #self.crod_force,
+            #self.cshear_force,
+            #self.ctria3_force, ato.ctria3_force, crm.ctria3_force, psd.ctria3_force, rms.ctria3_force, no.ctria3_force,
+            #self.ctria6_force, ato.ctria3_force, crm.ctria6_force, psd.ctria6_force, rms.ctria6_force, no.ctria6_force,
+            #self.ctriar_force, ato.ctriar_force, crm.ctriar_force, psd.ctriar_force, rms.ctriar_force, no.ctriar_force,
+            #self.ctube_force,
 
-            # springs
-            self.celas1_force,
-            self.celas2_force,
-            self.celas3_force,
-            self.celas4_force,
+            ## springs
+            #self.celas1_force,
+            #self.celas2_force,
+            #self.celas3_force,
+            #self.celas4_force,
 
-            # dampers
-            self.cdamp1_force,
-            self.cdamp2_force,
-            self.cdamp3_force,
-            self.cdamp4_force,
+            ## dampers
+            #self.cdamp1_force,
+            #self.cdamp2_force,
+            #self.cdamp3_force,
+            #self.cdamp4_force,
 
-            # other
-            self.cbush_force, self.cbush_force_ATO, self.cbush_force_PSD, self.cbush_force_CRM, self.cbush_force_RMS, self.cbush_force_NO,
-            self.cgap_force,
-            self.cvisc_force,
+            ## other
+            #self.cbush_force, ato.cbush_force, crm.cbush_force, psd.cbush_force, rms.cbush_force, no.cbush_force,
+            #self.cgap_force,
+            #self.cvisc_force,
 
-            self.chexa_pressure_force,
-            self.cpenta_pressure_force,
-            self.ctetra_pressure_force,
+            #self.chexa_pressure_force,
+            #self.cpenta_pressure_force,
+            #self.ctetra_pressure_force,
 
-            self.coneax_force,
+            #self.coneax_force,
 
-            #------------------------------------------
-            # OES - strain
-            # 1.  cbar
-            # 2.  cbeam
-            # 3.  crod/ctube/conrod
+            ##------------------------------------------
+            ## OES - strain
+            ## 1.  cbar
+            ## 2.  cbeam
+            ## 3.  crod/ctube/conrod
 
-            # springs
-            self.celas1_strain,
-            self.celas2_strain,
-            self.celas3_strain,
-            self.celas4_strain,
+            ## springs
+            #self.celas1_strain,
+            #self.celas2_strain,
+            #self.celas3_strain,
+            #self.celas4_strain,
 
-            self.nonlinear_celas1_stress,
-            self.nonlinear_celas3_stress,
+            #self.nonlinear_celas1_stress,
+            #self.nonlinear_celas3_stress,
 
-            # bars/beams
-            self.cbar_strain,
-            self.cbar_strain_10nodes,
-            self.cbeam_strain,
+            ## bars/beams
+            #self.cbar_strain, ato.cbar_strain, crm.cbar_strain, psd.cbar_strain, rms.cbar_strain, no.cbar_strain,
+            #self.cbar_strain_10nodes,
+            #self.cbeam_strain,
 
-            # plates
-            self.cquad4_composite_strain,
-            self.cquad8_composite_strain,
-            self.cquadr_composite_strain,
-            self.ctria3_composite_strain,
-            self.ctria6_composite_strain,
-            self.ctriar_composite_strain,
+            ## plates
+            #self.cquad4_composite_strain,
+            #self.cquad8_composite_strain,
+            #self.cquadr_composite_strain,
+            #self.ctria3_composite_strain,
+            #self.ctria6_composite_strain,
+            #self.ctriar_composite_strain,
 
-            self.nonlinear_ctria3_strain,
-            self.nonlinear_cquad4_strain,
-            self.ctriax_strain,
+            #self.nonlinear_ctria3_strain,
+            #self.nonlinear_cquad4_strain,
+            #self.ctriax_strain,
 
-            # rods
-            self.nonlinear_crod_strain,
-            self.nonlinear_ctube_strain,
-            self.nonlinear_conrod_strain,
+            ## rods
+            #self.nonlinear_crod_strain,
+            #self.nonlinear_ctube_strain,
+            #self.nonlinear_conrod_strain,
 
-            self.chexa_strain,
-            self.conrod_strain,
-            self.cpenta_strain,
-            self.cquad4_strain,
-            self.cquad8_strain,
-            self.cquadr_strain,
-            self.crod_strain,
-            self.cshear_strain,
-            self.ctetra_strain,
-            self.ctria3_strain,
-            self.ctria6_strain,
-            self.ctriar_strain,
-            self.ctube_strain,
+            #self.chexa_strain,  modal_contribution.chexa_strain,
+            #self.conrod_strain, modal_contribution.conrod_strain,
+            #self.cpenta_strain, modal_contribution.cpenta_strain,
+            #self.cquad4_strain, modal_contribution.cquad4_strain,
+            #self.cquad8_strain, modal_contribution.cquad8_strain,
+            #self.cquadr_strain, modal_contribution.cquadr_strain,
+            #self.crod_strain, modal_contribution_crod_strain,
+            #self.cshear_strain, modal_contribution.cshear_strain,
+            #self.ctetra_strain, modal_contribution.ctetra_strain,
+            #self.ctria3_strain, modal_contribution.ctria3_strain,
+            #self.ctria6_strain, modal_contribution.ctria6_strain,
+            #self.ctriar_strain, modal_contribution.ctriar_strain,
+            #self.ctube_strain,  modal_contribution.ctube_strain,
 
-            # bush
-            self.cbush_strain,
-            self.nonlinear_cbush_stress,
-            self.cbush1d_stress_strain,
-            #------------------------------------------
-            # cbars/cbeams
-            self.cbar_stress,
-            self.cbar_stress_10nodes,
-            self.nonlinear_cbeam_stress,
-            self.cbeam_stress,
+            ## bush
+            #self.cbush_strain,
+            #self.nonlinear_cbush_stress,
+            #self.cbush1d_stress_strain,
+            ##------------------------------------------
+            ## cbars/cbeams
+            #self.cbar_stress, ato.cbar_stress, crm.cbar_stress, psd.cbar_stress, rms.cbar_stress, no.cbar_stress,
+            #self.cbar_stress_10nodes,
+            #self.nonlinear_cbeam_stress,
+            #self.cbeam_stress,
 
-            # bush
-            self.cbush_stress,
+            ## bush
+            #self.cbush_stress,
 
-            # rods
-            self.nonlinear_crod_stress,
-            self.nonlinear_ctube_stress,
-            self.nonlinear_conrod_stress,
+            ## rods
+            #self.nonlinear_crod_stress,
+            #self.nonlinear_ctube_stress,
+            #self.nonlinear_conrod_stress,
 
-            # shear
-            # OES - stress
-            self.celas1_stress,
-            self.celas2_stress,
-            self.celas3_stress,
-            self.celas4_stress,
+            ## shear
+            ## OES - stress
+            #self.celas1_stress, modal_contribution.celas1_stress,
+            #self.celas2_stress, modal_contribution.celas2_stress,
+            #self.celas3_stress, modal_contribution.celas3_stress,
+            #self.celas4_stress, modal_contribution.celas4_stress,
 
-            self.chexa_stress,
-            self.conrod_stress,
-            self.cpenta_stress,
-            self.cquad4_stress,
-            self.cquad8_stress,
-            self.cquadr_stress,
+            #self.chexa_stress,
+            #self.conrod_stress,
+            #self.cpenta_stress,
+            #self.cquad4_stress,
+            #self.cquad8_stress,
+            #self.cquadr_stress,
 
-            self.crod_stress,
-            self.cshear_stress,
-            self.ctetra_stress,
-            self.ctria3_stress,
-            self.ctria6_stress,
-            self.ctriar_stress,
-            self.ctube_stress,
+            #self.crod_stress,
+            #self.cshear_stress,
+            #self.ctetra_stress,
+            #self.ctria3_stress,
+            #self.ctria6_stress,
+            #self.ctriar_stress,
+            #self.ctube_stress,
 
-            self.cquad4_composite_stress,
-            self.cquad8_composite_stress,
-            self.cquadr_composite_stress,
-            self.ctria3_composite_stress,
-            self.ctria6_composite_stress,
-            self.ctriar_composite_stress,
+            #self.cquad4_composite_stress,
+            #self.cquad8_composite_stress,
+            #self.cquadr_composite_stress,
+            #self.ctria3_composite_stress,
+            #self.ctria6_composite_stress,
+            #self.ctriar_composite_stress,
 
-            self.nonlinear_ctria3_stress,
-            self.nonlinear_cquad4_stress,
-            self.ctriax_stress,
+            #self.nonlinear_ctria3_stress,
+            #self.nonlinear_cquad4_stress,
+            #self.ctriax_stress,
 
-            self.hyperelastic_cquad4_strain,
+            #self.hyperelastic_cquad4_strain,
 
-            #------------------------------------------
-            #OEF - Fluxes - tCode=4 thermal=1
-            self.thermalLoad_CONV,
+            ##------------------------------------------
+            ##OEF - Fluxes - tCode=4 thermal=1
+            #self.conv_thermal_load,
 
-            #self.thermalLoad_CHBDY,
-            self.chbdye_thermal_load,
-            self.chbdyg_thermal_load,
-            self.chbdyp_thermal_load,
+            ##self.thermalLoad_CHBDY,
+            #self.chbdye_thermal_load,
+            #self.chbdyg_thermal_load,
+            #self.chbdyp_thermal_load,
+            #self.chbdye_thermal_load_flux,
+            #self.chbdyg_thermal_load_flux,
+            #self.chbdyp_thermal_load_flux,
 
-            #self.thermalLoad_1D,
-            self.crod_thermal_load,
-            self.cbeam_thermal_load,
-            self.ctube_thermal_load,
-            self.conrod_thermal_load,
-            self.cbar_thermal_load,
-            self.cbend_thermal_load,
+            ##self.thermalLoad_1D,
+            #self.crod_thermal_load,
+            #self.cbeam_thermal_load,
+            #self.ctube_thermal_load,
+            #self.conrod_thermal_load,
+            #self.cbar_thermal_load,
+            #self.cbend_thermal_load,
+            #self.crod_thermal_load_flux,
+            #self.cbeam_thermal_load_flux,
+            #self.ctube_thermal_load_flux,
+            #self.conrod_thermal_load_flux,
+            #self.cbar_thermal_load_flux,
+            #self.cbend_thermal_load_flux,
 
-            #self.thermalLoad_2D_3D,
-            self.cquad4_thermal_load,
-            self.ctriax6_thermal_load,
-            self.cquad8_thermal_load,
-            self.ctria3_thermal_load,
-            self.ctria6_thermal_load,
-            self.ctetra_thermal_load,
-            self.chexa_thermal_load,
-            self.cpenta_thermal_load,
+            ##self.thermalLoad_2D_3D,
+            #self.cquad4_thermal_load,
+            #self.ctriax6_thermal_load,
+            #self.cquad8_thermal_load,
+            #self.ctria3_thermal_load,
+            #self.ctria6_thermal_load,
+            #self.ctetra_thermal_load,
+            #self.chexa_thermal_load,
+            #self.cpenta_thermal_load,
+            #self.cquad4_thermal_load_flux,
+            #self.ctriax6_thermal_load_flux,
+            #self.cquad8_thermal_load_flux,
+            #self.ctria3_thermal_load_flux,
+            #self.ctria6_thermal_load_flux,
+            #self.ctetra_thermal_load_flux,
+            #self.chexa_thermal_load_flux,
+            #self.cpenta_thermal_load_flux,
 
 
-            self.thermalLoad_VU,
-            self.thermalLoad_VU_3D,
-            self.thermalLoad_VUBeam,
-            self.vuquad_force,
-            self.vutria_force,
+            #self.thermalLoad_VU,
+            #self.thermalLoad_VU_3D,
+            #self.vu_beam_thermal_load,
+            #self.vu_quad_force,
+            #self.vu_tria_force,
 
-            #------------------------------------------
+            ##------------------------------------------
 
-            self.grid_point_stresses, self.grid_point_volume_stresses, self.grid_point_forces,
-        ]
+            #self.grid_point_stresses, self.grid_point_volume_stresses, self.grid_point_forces,
+        #]
         for isubcase, res_keys in sorted(iteritems(res_keys_subcase)):
             # print(res_keys)
             for res_key in res_keys:
@@ -860,7 +879,7 @@ class F06Writer(OP2_F06_Common):
                             self.page_num = result.write_f06(
                                 f06, header, page_stamp, page_num=self.page_num,
                                 is_mag_phase=is_mag_phase, is_sort1=is_sort1)
-                        except Exception as e:
+                        except Exception as error:
                             print_exc(file=sys.stdout)
                             raise
 

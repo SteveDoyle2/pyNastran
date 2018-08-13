@@ -9,7 +9,7 @@ The pyNastran software interfaces to Nastran's complicated input and output
 files and provides a simplified interface to read/edit/write the various files.
 The software is compatible currently being used on Windows, Linux, and Mac.
 
-The **BDF reader/editor/writer** supports 312 cards including coordinate
+The **BDF reader/editor/writer** supports 343 cards including coordinate
 systems. Card objects have methods to access data such as Mass, Area, etc.
 The BDF writer writes a small field formatted file, but makes full use of
 the 8-character Nastran field. The OpenMDAO BDF parametrization syntax
@@ -32,7 +32,6 @@ included for use.
 
 
 .. toctree::
-   :maxdepth: 4
 
    quick_start/index
    index/pyNastran

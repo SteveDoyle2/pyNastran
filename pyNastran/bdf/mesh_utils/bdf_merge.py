@@ -6,9 +6,9 @@ defines:
 from __future__ import print_function
 from six.moves import StringIO
 from six import string_types, iteritems
-from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
 from pyNastran.bdf.bdf import BDF, read_bdf
-
+from pyNastran.bdf.case_control_deck import CaseControlDeck
+from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber, get_renumber_starting_ids_from_model
 
 def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None, size=8,
               is_double=False, cards_to_skip=None, log=None, skip_case_control_deck=False):
@@ -40,8 +40,20 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
     --------
     model : BDF
         Merged model.
-    mappers_all : list [dict{str, dict{int:int, ...}}, ...]
-        List of mapper dictionaries of original ids to merged
+    mappers_all : List[mapper]
+        mapper : Dict[bdf_attribute] : old_id_to_new_id_dict
+            List of mapper dictionaries of original ids to merged
+
+            bdf_attribute : str
+                a BDF attribute (e.g., 'nodes', 'elements')
+            old_id_to_new_id_dict : dict[id_old] : id_new
+                a sub dictionary that is used to map the node/element/etc. ids
+            mapper = {
+                'elements' : eid_map,
+                'nodes' : nid_map,
+                'coords' : cid_map,
+                ...
+            }
 
     Supports
     --------
@@ -54,6 +66,7 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
 
     .. todo:: doesn't support SPOINTs/EPOINTs
     .. warning:: still very preliminary
+
     """
     if not isinstance(bdf_filenames, (list, tuple)):
         raise TypeError('bdf_filenames is not a list/tuple...%s' % str(bdf_filenames))
@@ -61,8 +74,9 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
     if not len(bdf_filenames) > 1:
         raise RuntimeError("You can't merge one BDF...bdf_filenames=%s" % str(bdf_filenames))
     for bdf_filename in bdf_filenames:
-        if not isinstance(bdf_filename, string_types):
-            raise TypeError('bdf_filenames is not a string...%s' % bdf_filename)
+        if not isinstance(bdf_filename, (string_types, BDF, StringIO)):
+            raise TypeError('bdf_filenames is not a string/BDF...%s' % bdf_filename)
+
         #bdf_filenames = [bdf_filenames]
 
     #starting_id_dict_default = {
@@ -78,11 +92,14 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
         #]),
         #'mid' : max(model.material_ids),
     #}
-    from pyNastran.bdf.case_control_deck import CaseControlDeck
-    model = BDF(debug=False, log=log)
-    model.disable_cards(cards_to_skip)
     bdf_filename0 = bdf_filenames[0]
-    model.read_bdf(bdf_filename0, encoding=encoding, validate=False)
+    if isinstance(bdf_filename0, BDF):
+        model = bdf_filename0
+    else:
+        model = BDF(debug=False, log=log)
+        model.disable_cards(cards_to_skip)
+        model.read_bdf(bdf_filename0, encoding=encoding, validate=False)
+
     if skip_case_control_deck:
         model.case_control_deck = CaseControlDeck([], log=None)
     model.log.info('primary=%s' % bdf_filename0)
@@ -91,41 +108,31 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
 
     data_members = [
         'coords', 'nodes', 'elements', 'masses', 'properties', 'properties_mass',
-        'materials', 'sets', 'rigid_elements', 'mpcs',
+        'materials', 'sets', 'rigid_elements', 'mpcs', 'caeros', 'splines',
     ]
     mappers = []
     for bdf_filename in bdf_filenames[1:]:
-        #model.log.info('model.masses = %s' % model.masses)
-        starting_id_dict = {
-            'cid' : max(model.coords.keys()) + 1,
-            'nid' : max(model.point_ids) + 1,
-            'eid' : max([max(model.elements.keys()),
-                         max(model.masses.keys()) if model.masses else 0,
-                         max(model.rigid_elements.keys()) if model.rigid_elements else 0,
-                        ]) + 1,
-            'pid' : max([max(model.properties.keys()),
-                         0 if len(model.properties_mass) == 0 else max(model.properties_mass.keys()),
-                         ]) + 1,
-            'mid' : max(model.material_ids) + 1,
-            'set_id' : max(model.sets.keys()) + 1 if model.sets else 1,
-            'spline_id' : max(model.splines.keys()) + 1 if model.splines else 1,
-        }
+        starting_id_dict = get_renumber_starting_ids_from_model(model)
         #for param, val in sorted(iteritems(starting_id_dict)):
             #print('  %-3s %s' % (param, val))
 
         model.log.info('secondary=%s' % bdf_filename)
-        model2 = BDF(debug=False)
-        if skip_case_control_deck:
-            model2.case_control_deck = CaseControlDeck([], log=None)
-        model2.disable_cards(cards_to_skip)
+        if isinstance(bdf_filename, BDF):
+            model2_renumber = bdf_filename
+        else:
+            model2_renumber = BDF(debug=False, log=log)
+            model2_renumber.disable_cards(cards_to_skip)
+            model2_renumber.read_bdf(bdf_filename)
+
+        _apply_scalar_cards(model, model2_renumber)
 
         bdf_dump = StringIO() # 'bdf_merge_temp.bdf'
-        _, mapperi = bdf_renumber(bdf_filename, bdf_dump, starting_id_dict=starting_id_dict,
+        _, mapperi = bdf_renumber(model2_renumber, bdf_dump, starting_id_dict=starting_id_dict,
                                   size=size, is_double=is_double, cards_to_skip=cards_to_skip)
         bdf_dump.seek(0)
 
         mappers.append(mapperi)
-        model2 = BDF(debug=False)
+        model2 = BDF(debug=False, log=log)
         model2.disable_cards(cards_to_skip)
         model2.read_bdf(bdf_dump)
 
@@ -182,10 +189,58 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
                                      mapper_renumber=mapper_renumber)
     return model, mappers_final
 
+def _apply_scalar_cards(model, model2_renumber):
+    """apply cards from model2 to model if they don't exist in model"""
+    if model.aero is None and model2_renumber.aero:
+        model.aero = model2_renumber.aero
+    if model.aeros is None and model2_renumber.aeros:
+        model.aeros = model2_renumber.aeros
+    model.mkaeros += model2_renumber.mkaeros
+    for key, param in iteritems(model2_renumber.params):
+        if key not in model.params:
+            model.params[key] = param
+
 def _assemble_mapper(mappers, mapper_0, data_members, mapper_renumber=None):
     """
     Assemble final mappings from all original ids to the ids in the merged and possibly
     renumbered model.
+
+    Parameters
+    ----------
+    mappers : List[mapper]
+       mapper : dict[key] : value
+            key : ???
+                ???
+            value : ???
+                ???
+    mapper_0 : mapper
+        key : ???
+            ???
+        value : ???
+            ???
+    data_members : List[str]
+       list of things to include in the mappers?
+        data_members = [
+            'coords', 'nodes', 'elements', 'masses', 'properties', 'properties_mass',
+            'materials', 'sets', 'rigid_elements', 'mpcs',
+        ]
+    mapper_renumber : dict[key]: value; default=None
+        key : str
+            a BDF attribute
+        value : dict[id_old] : id_new
+            a sub dictionary that is used to map the node/element/etc. ids
+        mapper = {
+            'elements' : eid_map,
+            'nodes' : nid_map,
+            'coords' : cid_map,
+            ...
+        }
+
+    Returns
+    -------
+    mappers_all : List[mappers]
+        One mapper for each bdf_filename
+
     """
     if mapper_renumber is not None:
         mappers_all = [_renumber_mapper(mapper_0, mapper_renumber)]
@@ -209,10 +264,33 @@ def _assemble_mapper(mappers, mapper_0, data_members, mapper_renumber=None):
 def _get_mapper_0(model):
     """
     Get the mapper for the first model.
+
+    Parameters
+    ----------
+    model : BDF()
+        the bdf model object
+
+    Returns
+    -------
+    mapper : dict[key]: value
+        key : str
+            a BDF attribute
+        value : dict[id_old] : id_new
+            a sub dictionary that is used to map the node/element/etc. ids
+        mapper = {
+            'elements' : eid_map,
+            'nodes' : nid_map,
+            'coords' : cid_map,
+            ...
+        }
+
     """
-    isinstance(model, BDF)
     # build the maps
-    eids_all = list(model.elements.keys()) + list(model.masses.keys()) + list(model.rigid_elements.keys())
+    eids_all = (
+        list(model.elements.keys()) +
+        list(model.masses.keys()) +
+        list(model.rigid_elements.keys())
+    )
     eid_map = {eid : eid for eid in eids_all}
     nid_map = {nid : nid for nid in model.point_ids}
     cid_map = {cid : cid for cid in model.coord_ids}
@@ -220,9 +298,12 @@ def _get_mapper_0(model):
     spc_map = _dicts_key_to_key((model.spcs, model.spcadds))
     mpc_map = _dicts_key_to_key((model.mpcs, model.mpcadds))
     method_map = _dict_key_to_key(model.methods)
+    properties_map = _dict_key_to_key(model.properties)
+    rigid_elements_map = _dict_key_to_key(model.rigid_elements)
     cmethod_map = _dict_key_to_key(model.cMethods)
     flfact_map = _dict_key_to_key(model.flfacts)
     flutter_map = _dict_key_to_key(model.flutters)
+    caero_map = _dict_key_to_key(model.caeros)
     freq_map = _dict_key_to_key(model.frequencies)
 
     dload_map = _dicts_key_to_key((model.dload_entries, model.dloads))
@@ -233,10 +314,10 @@ def _get_mapper_0(model):
     tstep_map = _dict_key_to_key(model.tsteps)
     tstepnl_map = _dict_key_to_key(model.tstepnls)
     suport1_map = _dict_key_to_key(model.suport1)
-    suport_map = {}
+    #suport_map = {}
 
     nlparm_map = _dict_key_to_key(model.nlparms)
-    nlpci_map = _dict_key_to_key(model.nlpcis)
+    #nlpci_map = _dict_key_to_key(model.nlpcis)
     table_sdamping_map = _dict_key_to_key(model.tables_sdamping)
     dconadd_map = _dict_key_to_key(model.dconadds)
     dconstr_map = _dict_key_to_key(model.dconstrs)
@@ -257,12 +338,15 @@ def _get_mapper_0(model):
         'nodes' : nid_map,
         'coords' : cid_map,
         'materials' : mid_map,
+        'properties' : properties_map,
+        'rigid_elements': rigid_elements_map,
         'SPC' : spc_map,
         'MPC' : mpc_map,
         'METHOD' : method_map,
         'CMETHOD' : cmethod_map,
         'FLFACT' : flfact_map,
         'FMETHOD' : flutter_map,
+        'caeros' : caero_map,
         'FREQUENCY' : freq_map,
 
         'DLOAD' : dload_map,
@@ -294,6 +378,35 @@ def _get_mapper_0(model):
     return mapper
 
 def _renumber_mapper(mapper_0, mapper_renumber):
+    """
+    Parameters
+    ----------
+    mapper_0 : dict[key]: value
+        key : str
+            a BDF attribute
+        value : dict[id_old] : id_new
+            a sub dictionary that is used to map the node/element/etc. ids
+        mapper = {
+            'elements' : eid_map,
+            'nodes' : nid_map,
+            'coords' : cid_map,
+            ...
+        }
+    mapper_renumber : ???
+        ???
+
+    Returns
+    -------
+    mapper : dict[map_type] : sub_mapper
+        map_type : ???
+            ???
+        sub_mapper : dict[key] : value
+            key : ???
+                ???
+            value : ???
+                ???
+
+    """
     mapper = mapper_0.copy()
     # apply any renumbering
     for map_type, sub_mapper in iteritems(mapper):
@@ -311,6 +424,7 @@ def _dicts_key_to_key(dictionaries):
     """
     creates a dummy map from the nominal key to the nominal key for
     multiple input dictionaries
+
     """
     out = {}
     for dicti in dictionaries:
