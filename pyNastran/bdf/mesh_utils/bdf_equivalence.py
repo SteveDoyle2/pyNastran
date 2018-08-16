@@ -22,6 +22,9 @@ from pyNastran.utils import integer_types
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.mesh_utils.internal_utils import get_bdf_model
 
+if scipy.__version__ < '0.18.1':
+    raise RuntimeError('scipy_version=%r and is less than 0.18.1.  Upgrade your scipy.')
+
 
 def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
                           renumber_nodes=False, neq_max=4, xref=True,
@@ -356,16 +359,9 @@ def _get_tree(nodes_xyz, msg=''):
     assert nodes_xyz.shape[0] > 0, 'nnodes=0%s' % msg
 
     # build the kdtree
-    if scipy.__version__ < '0.18.1':
-        try:
-            kdt = scipy.spatial.KDTree(nodes_xyz)
-        except RuntimeError:
-            print(nodes_xyz)
-            raise RuntimeError(nodes_xyz)
-    else:
-        try:
-            kdt = scipy.spatial.cKDTree(nodes_xyz)
-        except RuntimeError:
-            print(nodes_xyz)
-            raise RuntimeError(nodes_xyz)
+    try:
+        kdt = scipy.spatial.cKDTree(nodes_xyz)
+    except RuntimeError:
+        print(nodes_xyz)
+        raise RuntimeError(nodes_xyz)
     return kdt

@@ -121,7 +121,7 @@ class Tetgen(object):
             iline = 1
             nelements, unused_zero = lines[iline].split() # nelements, 0
             nelements = int(nelements)
-            self.log.info('nelements = %s' % nelements)
+            self.log.debug('nelements = %s' % nelements)
 
             # facet section
             tri_list = []
