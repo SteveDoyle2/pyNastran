@@ -571,7 +571,7 @@ class OP2(OP2_Scalar):
     def create_objects_from_matrices(self):
         """
         creates the following objects:
-          - sonitor3 : MONPNT3 object from the MP3F matrix
+          - monitor3 : MONPNT3 object from the MP3F matrix
           - monitor1 : MONPNT1 object from the PMRF, PERF, PFRF, AGRF, PGRF, AFRF matrices
 
         """

@@ -58,7 +58,7 @@ class TestUtils(unittest.TestCase):
 
         #def get_max_index(data, axis=1):
         """
-        Gets the maximum values of a 2D matrix along an axis
+        Gets the maximum values of a 2D array along an axis
         >>> data = [
                 [4.0, 2.2, 3.0, 5.0, 2.2]  # subcase 1
                 [4.1, 2.1, 3.1, 5.1, 2.1], # subcase 2
@@ -93,23 +93,20 @@ class TestUtils(unittest.TestCase):
 
     def test_list_print(self):
         #self.b = B(7)
-        """tests the list_print method, which is a nice way to write a 2d matrix"""
+        """tests the list_print method, which is a nice way to write a 2d array"""
         self.assertEqual(list_print(None), 'None')
         #self.assertRaises(TypeError, lambda: list_print(None))
 
-        for ai, bi in [([], '[]'), (np.array([]), '[]'), (tuple(), '[]'), (np.matrix([]), '[[]]')]:
+        for ai, bi in [([], '[]'), (np.array([]), '[]'), (tuple(), '[]')]:
             self.assertEqual(list_print(ai), bi)
         r = ('[[1         ,2         ,3         ],\n'
              ' [4         ,5         ,6         ],\n'
              ' [7         ,8         ,9         ]]')
         self.assertEqual(list_print(np.array([(1, 2, 3), (4, 5, 6), (7, 8, 9)]), float_fmt='%-10g'), r)
-        self.assertEqual(list_print(np.matrix([(1, 2, 3), (4, 5, 6), (7, 8, 9)]), float_fmt='%-10g'), r)
         self.assertEqual(list_print(np.array([(1., 2, 3.), (4., 5., 6), (7., 8, 9)]), float_fmt='%-10g'), r)
-        self.assertEqual(list_print(np.matrix([(1, 2, 3.), (4, 5., 6), (7., 8, 9.)]), float_fmt='%-10g'), r)
 
         r = "[[1.1       ,2.234     ,3.00001   ],\n [4.001     ,5         ,6.2       ]]"
         self.assertEqual(list_print(np.array([(1.1, 2.234, 3.00001), (4.001, 5.0000005, 6.2)]), float_fmt='%-10g'), r)
-        self.assertEqual(list_print(np.matrix([(1.1, 2.234, 3.00001), (4.001, 5.0000005, 6.2)]), float_fmt='%-10g'), r)
 
         self.assertEqual(list_print(['a', None, 11, '']), '[a, None, 11, ]')
         self.assertEqual(list_print(('a', None, 11, '')), '[a, None, 11, ]')

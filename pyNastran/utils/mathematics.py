@@ -29,7 +29,7 @@ from six import string_types
 from six.moves import range
 
 from numpy import (float32, float64, complex64, complex128, array, cross,
-                   allclose, zeros, matrix, insert, diag, eye, argmax, argmin, arange)
+                   allclose, zeros, insert, diag, eye, argmax, argmin, arange)
 import numpy as np
 from numpy.linalg import norm  # type: ignore
 
@@ -203,7 +203,7 @@ def reduce_matrix(matrix_a, nids):
     takes a list of ids and removes those rows and cols
     """
     nrows = len(nids)
-    matrix_b = matrix(zeros((nrows, nrows), dtype='float64'))
+    matrix_b = np.zeros((nrows, nrows), dtype='float64')
     for i, irow in enumerate(nids):
         for j, jcol in enumerate(nids):
             matrix_b[i, j] = matrix_a[irow, jcol]
@@ -339,29 +339,29 @@ def augmented_identity(A):
     return I[:nx, :ny]
 
 
-def solve_tridag(A, D):
-    """
-    Solves a tridagonal matrix [A]{x}={b} for {x}
+#def solve_tridag(A, D):
+    #"""
+    #Solves a tridagonal matrix [A]{x}={b} for {x}
 
-    Parameters
-    ----------
-    A : (N,) float ndarray
-        main diagonal
-    D : (N-1,) float ndarray)
-        off diagonal
+    #Parameters
+    #----------
+    #A : (N,) float ndarray
+        #main diagonal
+    #D : (N-1,) float ndarray)
+        #off diagonal
 
-    Returns
-    -------
-    x : (N, )
-        the result
-    """
-    # Find the diagonals
-    ud = insert(diag(A, 1), 0, 0)  # upper diagonal
-    d = diag(A)  # main diagonal
-    ld = insert(diag(A, -1), len(d) - 1, 0)  # lower diagonal
-    # simplified matrix
-    ab = matrix([ud, d, ld])
-    return solve_banded((1, 1), ab, D, overwrite_ab=True, overwrite_b=True)
+    #Returns
+    #-------
+    #x : (N, )
+        #the result
+    #"""
+    ## Find the diagonals
+    #ud = insert(diag(A, 1), 0, 0)  # upper diagonal
+    #d = diag(A)  # main diagonal
+    #ld = insert(diag(A, -1), len(d) - 1, 0)  # lower diagonal
+    ## simplified matrix
+    #ab = np.matrix([ud, d, ld])
+    #return solve_banded((1, 1), ab, D, overwrite_ab=True, overwrite_b=True)
 
 
 Area = lambda a, b: 0.5 * norm(cross(a, b))

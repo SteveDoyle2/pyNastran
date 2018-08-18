@@ -16,7 +16,7 @@ import warnings
 from six import PY2
 import numpy as np
 
-import pyNastran.op2.dev.n2y as n2y
+import pyNastran.op2.dev.pyyeti.n2y as n2y
 
 #  Notes on the op2 format.
 #

@@ -56,12 +56,12 @@ def get_files_of_type(dirname, extension='.txt', max_size=100., limit_file='no_d
 def list_print(lst, float_fmt='%-4.2f'):
     # type: (List[Any], str) -> str
     """
-    Prints a list, numpy array, or numpy matrix in an abbreviated format.
+    Prints a list or numpy array in an abbreviated format.
     Supported element types: None, string, numbers. Useful for debugging.
 
     Parameters
     ----------
-    lst : list / numpy array / numpy matrix
+    lst : list / numpy array
         the value to print
 
     Returns
@@ -85,7 +85,7 @@ def list_print(lst, float_fmt='%-4.2f'):
         if len(lst) == 0:
             return '[]'
 
-        if isinstance(lst, (np.ndarray, np.matrix)) and lst.ndim == 2:
+        if isinstance(lst, (np.ndarray)) and lst.ndim == 2:
             row, col = lst.shape
             return ("["+",\n ".join(["["+",".join([float_fmt % lst[i, j]
                     for j in range(col)])+"]" for i in range(row)])+"]")

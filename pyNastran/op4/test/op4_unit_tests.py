@@ -196,9 +196,9 @@ class TestOP4(unittest.TestCase):
         form1 = 1
         form2 = 2
         form3 = 2
-        A1 = np.matrix(ones((3, 3), dtype='float64'))
+        A1 = np.ones((3, 3), dtype='float64')
         A2 = reshape(arange(9, dtype='float64'), (3, 3))
-        A3 = np.matrix(ones((1, 1), dtype='float32'))
+        A3 = np.ones((1, 1), dtype='float32')
         matrices = {
             'A1': (form1, A1),
             'A2': (form2, A2),
