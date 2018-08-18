@@ -12,7 +12,7 @@ import os
 from struct import Struct
 from numpy import array, unique #, hstack
 
-from pyNastran.bdf.bdf import BDF, read_bdf
+from pyNastran.bdf.bdf import read_bdf
 from pyNastran.bdf.mesh_utils.bdf_equivalence import bdf_equivalence_nodes
 from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
 
@@ -25,6 +25,21 @@ def merge_ugrid3d_and_bdf_to_ugrid3d_filename(ugrid_filename, bdf_filename, ugri
                                               update_equivalence=True, tol=0.01):
     """
     assumes cid=0
+
+        Parameters
+    ----------
+    ugrid_filename : str
+        the AFLR3/UGrid3d filename
+    bdf_filename : str
+        the BDF filename
+    ugrid_filename_out : str
+        the output AFLR3/UGrid3d filename
+    pshell_pids_to_remove : List[int, ...]
+        ???
+    tol : float; default=0.01
+        the equivalence tolerance
+    update_equivalence : bool; default=True
+        calls ``equivalence_ugrid3d_and_bdf_to_bdf`` to equivalence nodes
     """
     #base, ext = os.path.splitext(ugrid_filename_out)
     #bdf_filename = base + '.bdf'
@@ -43,11 +58,11 @@ def merge_ugrid3d_and_bdf_to_ugrid3d_filename(ugrid_filename, bdf_filename, ugri
         bdf_filename2 = bdf_renumber_filename
 
     print('**** bdf_filename2 = ', bdf_filename2)
-    model = BDF()
-    model.read_bdf(bdf_filename2, xref=False)
+    model = read_bdf(bdf_filename2, xref=False)
 
     outi = determine_dytpe_nfloat_endian_from_ugrid_filename(ugrid_filename)
-    ndarray_float, float_fmt, nfloat, endian = outi
+    ndarray_float, float_fmt, nfloat, endian, ugrid_filename = outi
+    #ndarray_float, float_fmt, nfloat, endian, ugrid_filename
 
     # more for documentation than anything else
     assert ndarray_float in ['float32', 'float64'], ndarray_float
@@ -69,7 +84,8 @@ def merge_ugrid3d_and_bdf_to_ugrid3d_filename(ugrid_filename, bdf_filename, ugri
     nhexas = len(out['CHEXA'])
     nshells = ntris + nquads
     nsolids = ntets + npyramids + npentas + nhexas
-    assert nshells > 0, nshells
+    if nshells == 0:
+        raise RuntimeError('the UGRID model does not have any boundary condition surfaces...')
     assert nsolids > 0, nsolids
 
     #nodes = zeros((nnodes, 3), dtype=ndarray_float)
@@ -82,6 +98,32 @@ def merge_ugrid3d_and_bdf_to_ugrid3d_filename(ugrid_filename, bdf_filename, ugri
     #pentas = zeros((npyramids, 6), dtype='int32')
     #hexas = zeros((nhexas, 6), dtype='int32')
 
+    xyz = array([model.nodes[nid].xyz for nid in sorted(nids)],
+                dtype=ndarray_float)
+
+    # get the pshells
+    #pshells = out['PSHELL']
+    # TODO: need to think about property IDs
+    tris = out['CTRIA3']
+    quads = out['CQUAD4']
+    eids = tris + quads
+    pids = [model.elements[eid].pid for eid in eids]
+
+    #tris_shrink = [eid for eid, pid in zip(eids[:ntris], pids[:ntris])
+                   #if pid in pshell_pids_to_save]
+    #quads_shrink = [eid for eid, pid in zip(eids[ntris:], pids[ntris:])
+                    #if pid in pshell_pids_to_save]
+    #ntris = len(tris_shrink)
+    #nquads = len(quads_shrink)
+    nshells = nquads + ntris
+    npids = len(pids)
+    if not nshells == npids:
+        raise RuntimeError('nshells=%s npids=%s; must be the same' % (nshells, npids))
+
+    #pids_shrink = [pidi for pidi in pids
+                   #if pidi in pshell_pids_to_save]
+    pids_shrink = pids
+
     with open(ugrid_filename_out, 'wb') as f_ugrid:
         #element_ids = hstack([
             #out['CTRIA3'], out['CQUAD4'],
@@ -91,44 +133,19 @@ def merge_ugrid3d_and_bdf_to_ugrid3d_filename(ugrid_filename, bdf_filename, ugri
         structi = Struct(endian + '7i')
         f_ugrid.write(structi.pack(nnodes, ntris, nquads, ntets, npyramids, npentas, nhexas))
 
-        xyz = array([model.nodes[nid].xyz for nid in sorted(nids)],
-                    dtype=ndarray_float)
-
         # %3f or %3d
         fmt = endian + '%i%s' % (nnodes * 3, float_fmt) # len(x,y,z) = 3
         structi = Struct(fmt)
-        print('fmt = %r' % fmt)
         f_ugrid.write(structi.pack(*xyz.ravel()))
-
-
-        # get the pshells
-        #pshells = out['PSHELL']
-        # TODO: need to think about property IDs
-        tris = out['CTRIA3']
-        quads = out['CQUAD4']
-        eids = tris + quads
-        pids = [model.elements[eid].pid for eid in eids]
-
-        #tris_shrink = [eid for eid, pid in zip(eids[:ntris], pids[:ntris])
-                       #if pid in pshell_pids_to_save]
-        #quads_shrink = [eid for eid, pid in zip(eids[ntris:], pids[ntris:])
-                        #if pid in pshell_pids_to_save]
-        #ntris = len(tris_shrink)
-        #nquads = len(quads_shrink)
-        nshells = nquads + ntris
-
-        #pids_shrink = [pidi for pidi in pids
-                       #if pidi in pshell_pids_to_save]
-        pids_shrink = pids
 
         for card_type in cards_to_get[1:]:  # drop the GRIDs & PSHELLs
             if card_type == 'PSHELL':
-                print('writing %s' % card_type)
+                assert len(pids) > 0, 'pids=%s' % pids
+                #print('writing %s' % card_type)
 
                 # %10i
                 fmt = endian + '%ii' % (nshells)
                 structi = Struct(fmt)
-                print('fmt = %r' % fmt)
                 pids = pids_shrink
                 f_ugrid.write(structi.pack(*pids))
             elif card_type in ['CTRIA3', 'CQUAD4'] and 0:
@@ -139,7 +156,7 @@ def merge_ugrid3d_and_bdf_to_ugrid3d_filename(ugrid_filename, bdf_filename, ugri
 
                 # if there are cards
                 if len(eids):
-                    print('writing %s' % card_type)
+                    #print('writing %s' % card_type)
                     nelements = len(eids)
                     eid0 = eids[0]
 
@@ -159,7 +176,7 @@ def merge_ugrid3d_and_bdf_to_ugrid3d_filename(ugrid_filename, bdf_filename, ugri
 
                 # if there are cards
                 if len(eids):
-                    print('writing %s' % card_type)
+                    #print('writing %s' % card_type)
                     nelements = len(eids)
                     eid0 = eids[0]
 
@@ -171,7 +188,6 @@ def merge_ugrid3d_and_bdf_to_ugrid3d_filename(ugrid_filename, bdf_filename, ugri
                                      dtype='int32')
                     # '%8i'
                     fmt = endian + '%ii' % (nelements * nnodes_per_element)
-                    print('fmt = %r' % fmt)
                     structi = Struct(fmt)
                     f_ugrid.write(structi.pack(*node_ids.ravel()))
 
@@ -181,7 +197,25 @@ def equivalence_ugrid3d_and_bdf_to_bdf(ugrid_filename, bdf_filename,
                                        pshell_pids_to_remove,
                                        tol=0.01, renumber=True):
     """
-    Merges a UGRID3D (*.ugrid) with a BDF and exports a BDF that is equivalenced and renumbered.
+    Merges a UGRID3D (*.ugrid) with a BDF and exports a BDF that is
+    equivalenced and renumbered.
+
+    Parameters
+    ----------
+    ugrid_filename : str
+        the AFLR3/UGrid3d filename
+    bdf_filename : str
+        the BDF filename
+    pshell_pids_to_remove : List[int, ...]
+    tol : float; default=0.01
+        the equivalence tolerance
+    renumber : bool; default=True
+        calls ``bdf_renumber`` to renumber the output BDF model
+
+    Returns
+    -------
+    out_bdf_filename : str
+        the output BDF filename
     """
     print('equivalence_ugrid3d_and_bdf_to_bdf - bdf_filename=%s' % bdf_filename)
     print('equivalence_ugrid3d_and_bdf_to_bdf - ugrid_filename=%s' % ugrid_filename)

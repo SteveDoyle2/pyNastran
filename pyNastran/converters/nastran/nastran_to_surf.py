@@ -9,7 +9,7 @@ defines:
 """
 from __future__ import print_function
 from collections import defaultdict
-from six import iteritems
+from six import iteritems, string_types
 from numpy import array, allclose, unique, zeros
 from pyNastran.bdf.bdf import read_bdf
 
@@ -65,8 +65,7 @@ def clear_out_solids(bdf_filename, bdf_filename_out=None,
         nids.update(element.node_ids)
     nids = list(nids)
     nids.sort()
-    #print('nids = ', nids)
-    #print('eids = ', eids)
+
     nodes2 = {nid : node for nid, node in iteritems(model.nodes) if nid in nids}
     properties2 = {pid : prop for pid, prop in iteritems(model.properties) if prop.type == 'PSHELL'}
 
@@ -112,9 +111,9 @@ def nastran_to_surf(bdf_filename, pid_to_element_flags, surf_filename,
 
     Parameters
     ----------
-    bdf_filename : str
-        the input BDF filename (supported)
-        a BDF model that has been cross-referenced(unsupported)
+    bdf_filename : str/BDF
+        str : the input BDF filename
+        BDF : a BDF model that has been cross-referenced
     surf_filename : str
         the output SURF filename
     pid_to_element_flags : dict[key] = value
@@ -172,14 +171,12 @@ def nastran_to_surf(bdf_filename, pid_to_element_flags, surf_filename,
     if line_map is None:
         line_map = {}
 
-    if isinstance(bdf_filename, str):
+    if isinstance(bdf_filename, string_types):
         model = read_bdf(bdf_filename, xref=xref)
     else:
-        pass
+        model = bdf_filename
 
     unused_nnodes = len(model.nodes)
-    #ntris = 0
-    #nquads = 0
     nodes = []
     quads = []
     tris = []
@@ -215,22 +212,22 @@ def nastran_to_surf(bdf_filename, pid_to_element_flags, surf_filename,
             nid0 += 1
 
     node_remaps = {}
-    if 0:
-        xyz_array = array(nodes, dtype='float64')
-        for nid, xyz in enumerate(xyz_array):
-            for nidi, xyz2 in enumerate(xyz_array[nid+1:, :]):
-                nid2 = nid + nidi + 1
-                if not allclose(nid + 1, nid2 + 1):
-                    msg = 'nid=%s nid2=%s xyz=%s' % (nid+1, nid2+1, xyz)
-                    raise RuntimeError(msg)
-                if allclose(xyz, xyz2):
-                    #print(nid, nid2, nidi)
-                    #if nid + 1 in node_remaps:
+    #if 0:
+        #xyz_array = array(nodes, dtype='float64')
+        #for nid, xyz in enumerate(xyz_array):
+            #for nidi, xyz2 in enumerate(xyz_array[nid+1:, :]):
+                #nid2 = nid + nidi + 1
+                #if not allclose(nid + 1, nid2 + 1):
+                    #msg = 'nid=%s nid2=%s xyz=%s' % (nid+1, nid2+1, xyz)
+                    #raise RuntimeError(msg)
+                #if allclose(xyz, xyz2):
+                    ##print(nid, nid2, nidi)
+                    ##if nid + 1 in node_remaps:
 
-                    node_remaps[nid2 + 1] = nid + 1
-                    print('nid=%s nid2=%s xyz=%s xyz2=%s' % (nid+1, nid2+1, xyz, xyz2))
-                assert not(allclose(xyz, xyz2)), 'nid=%s nid2=%s xyz=%s' % (nid+1, nid2+1, xyz)
-        del xyz_array
+                    #node_remaps[nid2 + 1] = nid + 1
+                    #print('nid=%s nid2=%s xyz=%s xyz2=%s' % (nid+1, nid2+1, xyz, xyz2))
+                #assert not(allclose(xyz, xyz2)), 'nid=%s nid2=%s xyz=%s' % (nid+1, nid2+1, xyz)
+        #del xyz_array
 
     pid0 = 1
     for pid, prop in sorted(iteritems(model.properties)):
