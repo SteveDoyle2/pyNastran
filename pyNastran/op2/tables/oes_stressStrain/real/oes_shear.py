@@ -19,10 +19,10 @@ class RealShearArray(OES_Object):
         #self.code = [self.format_code, self.sort_code, self.s_code]
         self.nelements = 0  # result specific
 
-        if is_sort1:
-            self.add_new_eid = self.add_new_eid_sort1
-        else:
-            raise NotImplementedError('SORT2')
+        #if is_sort1:
+            #self.add_new_eid = self.add_new_eid_sort1
+        #else:
+            #raise NotImplementedError('SORT2')
 
     @property
     def is_real(self):
@@ -116,7 +116,7 @@ class RealShearArray(OES_Object):
                 raise ValueError(msg)
         return True
 
-    def add_new_eid_sort1(self, dt, eid, max_shear, avg_shear, margin):
+    def add_sort1(self, dt, eid, max_shear, avg_shear, margin):
         """
         ELEMENT            MAX            AVG        SAFETY         ELEMENT            MAX            AVG        SAFETY
           ID.             SHEAR          SHEAR       MARGIN           ID.             SHEAR          SHEAR       MARGIN

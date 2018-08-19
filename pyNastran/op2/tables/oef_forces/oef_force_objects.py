@@ -3222,7 +3222,7 @@ class RealCBeamForceVUArray(RealForceObject):  # 191-VUBEAM
         self.data[self.itime, self.ielement, :] = [xxb, fx, fy, fz, mx, my, mz]
         self.ielement += 1
 
-    #def add(self, nnodes, dt, data):
+    #def add_sort1(self, nnodes, dt, data):
         #[eid, parent, coord, icord, forces] = data
         #self.parent[eid] = parent
         #self.coord[eid] = coord
@@ -3824,7 +3824,7 @@ class RealForce_VU_2D(ScalarObject):  # 190-VUTRIA # 189-VUQUAD
         self.shear_yz[dt] = {}
         self.shear_xz[dt] = {}
 
-    def add(self, nnodes, dt, data):
+    def add_sort1(self, nnodes, dt, data):
         """deprecated"""
         [eid, parent, coord, icord, theta, forces] = data
         self.parent[eid] = parent

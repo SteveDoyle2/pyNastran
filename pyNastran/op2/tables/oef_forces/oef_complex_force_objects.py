@@ -3074,7 +3074,7 @@ class ComplexForce_VU_2D(ScalarObject):  # 189-VUQUAD,190-VUTRIA
         self.shearYZ[dt] = {}
         self.shearXZ[dt] = {}
 
-    def add(self, nnodes, dt, data):
+    def add_sort1(self, nnodes, dt, data):
         [eid, parent, coord, icord, theta, forces] = data
         self.parent[eid] = parent
         self.coord[eid] = coord

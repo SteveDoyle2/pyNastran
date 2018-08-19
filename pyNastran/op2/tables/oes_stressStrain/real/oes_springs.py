@@ -115,7 +115,7 @@ class RealSpringArray(OES_Object):
                 raise ValueError(msg)
         return True
 
-    def add_new_eid_sort1(self, dt, eid, stress):
+    def add_sort1(self, dt, eid, stress):
         self._times[self.itime] = dt
         #if self.itime == 0:
         #print('itime=%s eid=%s' % (self.itime, eid))

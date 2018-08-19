@@ -449,7 +449,7 @@ class HeatFlux_VU_3D(ScalarObject):
         self.grad[dt] = {}
         self.flux[dt] = {}
 
-    def add(self, dt, eid, parent, grad_fluxes):
+    def add_sort1(self, dt, eid, parent, grad_fluxes):
         self.parent[eid] = parent
         #self.eType[eid]    = eType
         self.grad[eid] = {}
@@ -730,7 +730,7 @@ class HeatFlux_VU(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
         self.grad[dt] = {}
         self.flux[dt] = {}
 
-    def add(self, nnodes, dt, eid, parent, coord, icord, theta, grad_fluxes):
+    def add_sort1(self, nnodes, dt, eid, parent, coord, icord, theta, grad_fluxes):
         self.parent[eid] = parent
         self.coord[eid] = coord
         self.icord[eid] = icord
@@ -1031,7 +1031,7 @@ class HeatFlux_VUBEAM(ScalarObject):  # 191-VUBEAM
         self.grad[dt] = {}
         self.flux[dt] = {}
 
-    def add(self, nnodes, dt, data):
+    def add_sort1(self, nnodes, dt, data):
         [eid, parent, coord, icord, grad_fluxes] = data
         self.parent[eid] = parent
         self.coord[eid] = coord

@@ -163,9 +163,6 @@ class RandomBendArray(OES_Object):
                 raise ValueError(msg)
         return True
 
-    #def add_new_eid(self, dt, eid, grid, sd, sxc, sxd, sxe, sxf):
-        #self.add_new_eid_sort1(dt, eid, grid, sd, sxc, sxd, sxe, sxf)
-
     #def add_new_eid_sort1(self, dt, eid, grid, angle, sxc, sxd, sxe, sxf):
         #assert isinstance(eid, ints), eid
         #assert eid >= 0, eid

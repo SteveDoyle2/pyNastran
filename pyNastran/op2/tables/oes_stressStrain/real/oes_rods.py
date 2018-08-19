@@ -21,10 +21,10 @@ class RealRodArray(OES_Object):
 
         self.nelements = 0  # result specific
 
-        if is_sort1:
-            self.add_new_eid = self.add_new_eid_sort1
-        else:
-            raise NotImplementedError('SORT2')
+        #if is_sort1:
+            #self.add_new_eid = self.add_new_eid_sort1
+        #else:
+            #raise NotImplementedError('SORT2')
 
     @property
     def is_real(self):
@@ -124,7 +124,7 @@ class RealRodArray(OES_Object):
                 raise ValueError(msg)
         return True
 
-    def add_new_eid_sort1(self, dt, eid, axial, SMa, torsion, SMt):
+    def add_sort1(self, dt, eid, axial, SMa, torsion, SMt):
         self._times[self.itime] = dt
         #if self.itime == 0:
         #print('itime=%s eid=%s' % (self.itime, eid))

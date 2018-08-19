@@ -994,7 +994,7 @@ class GetCard(GetMethods):
                         if elem.type == 'CTETRA':
                             #face1 = elem.get_face(load.g1_ref.nid, load.g34_ref.nid)
                             facn = elem.get_face_area_centroid_normal(load.g1_ref.nid, load.g34_ref.nid)
-                            face, area, centroid, normal
+                            face, area, centroid, normal = facn
                             #assert face == face1
                             nface = 3
                         elif elem.type == 'CHEXA':

@@ -1480,9 +1480,8 @@ class RADSET(Set):  # not integrated
         comment : str; default=''
             a comment for the card
         """
-        seid = integer(card, 1, 'seid')
-        ids = fields(integer_or_string, card, 'ID', i=2, j=len(card))
-        return RADSET(seid, ids, comment=comment)
+        ids = fields(integer_or_string, card, 'Cavity_', i=1, j=len(card))
+        return RADSET(ids, comment=comment)
 
     def add_radset(self, radset):
         self.ids += radset.ids

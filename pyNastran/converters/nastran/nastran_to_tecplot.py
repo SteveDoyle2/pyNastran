@@ -13,7 +13,7 @@ from pyNastran.converters.tecplot.tecplot import Tecplot
 
 def nastran_to_tecplot(model):
     """assumes sequential nodes"""
-    tecplot = Tecplot()
+    tecplot = Tecplot(log=model.log)
 
     nnodes = len(model.nodes)
     inode_max = max(model.nodes)
@@ -23,10 +23,10 @@ def nastran_to_tecplot(model):
         for unused_nid, node in sorted(iteritems(model.nodes)):
             xyz[i, :] = node.get_position()
             i += 1
-        else:
-            msg = 'sequential node IDs required; nnodes=%s inode_max=%s' % (
-                nnodes, inode_max)
-            raise RuntimeError(msg)
+    else:
+        msg = 'sequential node IDs required; nnodes=%s inode_max=%s' % (
+            nnodes, inode_max)
+        raise RuntimeError(msg)
     tecplot.xyz = xyz
 
     nquads = model.card_count['CQUAD4'] if 'CQUAD4' in model.card_count else 0

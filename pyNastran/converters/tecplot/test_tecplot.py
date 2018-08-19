@@ -1,10 +1,11 @@
 import os
 import unittest
 
+from pyNastran.bdf.bdf import read_bdf
 from pyNastran.converters.tecplot.tecplot import read_tecplot
 from pyNastran.converters.tecplot.tecplot_to_nastran import tecplot_to_nastran_filename
 from pyNastran.converters.nastran.nastran_to_tecplot import (
-    nastran_to_tecplot_filename)
+    nastran_to_tecplot, nastran_to_tecplot_filename)
 from pyNastran.utils.log import get_logger
 import pyNastran
 
@@ -35,6 +36,20 @@ class TestTecplot(unittest.TestCase):
         tecplot_to_nastran_filename(tecplot_filename, nastran_filename2, log=log)
         #os.remove(nastran_filename2)
         #os.remove(tecplot_filename)
+
+        bdf_model = read_bdf(nastran_filename1, log=log)
+        unused_tecplot = nastran_to_tecplot(bdf_model)
+
+    def test_tecplot_02(self):
+        log = get_logger(level='warning')
+        nastran_filename = os.path.join(NASTRAN_MODEL_PATH, 'elements', 'static_elements.bdf')
+        tecplot_filename = os.path.join(NASTRAN_MODEL_PATH, 'elements', 'static_elements.plt')
+        tecplot = nastran_to_tecplot_filename(nastran_filename, tecplot_filename, log=log)
+        #tecplot2 = read_tecplot(tecplot_filename)
+
+        bdf_model = read_bdf(nastran_filename, log=log)
+        with self.assertRaises(RuntimeError):
+            unused_tecplot = nastran_to_tecplot(bdf_model)
 
 
 if __name__ == '__main__':  # pragma: no cover

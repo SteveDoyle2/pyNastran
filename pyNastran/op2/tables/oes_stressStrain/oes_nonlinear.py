@@ -140,9 +140,6 @@ class RealNonlinearPlateArray(OES_Object):
         self.data_frame = self.data_frame.reset_index().set_index(['ElementID'])
         #print(self.data_frame)
 
-    #def add_new_eid(self, dt, eid, etype, fd, sx, sy, sz, txy, es, eps, ecs, ex, ey, ez, exy):
-        #self.add_sort1(dt, eid, etype, fd, sx, sy, sz, txy, es, eps, ecs, ex, ey, ez, exy)
-
     def add_new_eid_sort1(self, dt, eid, etype, fd, sx, sy, sz, txy, es, eps, ecs, ex, ey, ez, exy):
         self.element[self.ielement] = eid
         self.ielement += 1

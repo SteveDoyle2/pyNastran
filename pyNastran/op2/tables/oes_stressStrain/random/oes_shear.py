@@ -117,7 +117,7 @@ class RandomShearArray(OES_Object):
                 raise ValueError(msg)
         return True
 
-    def add_new_eid_sort1(self, dt, eid, max_shear, avg_shear):
+    def add_sort1(self, dt, eid, max_shear, avg_shear):
         """
         ELEMENT            MAX            AVG       ELEMENT            MAX            AVG
           ID.             SHEAR          SHEAR        ID.             SHEAR          SHEAR

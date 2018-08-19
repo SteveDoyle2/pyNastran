@@ -289,6 +289,6 @@ class OGS(OP2Common):
             (ekey, nx, ny, nz, txy, pressure) = out
             nid = ekey // 10
             assert nid > 0, nid
-            self.obj.add(dt, nid, nx, ny, nz, txy, tyz, txz, pressure, ovm)
+            self.obj.add_sort1(dt, nid, nx, ny, nz, txy, tyz, txz, pressure, ovm)
             n += 24
         return n

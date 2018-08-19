@@ -220,7 +220,7 @@ def write_rst_file(rst_filename, files, dirname, sub_dirs, msg):
             msg += '\n'
             for diri in sub_dirs:
                 sub_rst_filename = diri.strip('/.').replace('\\', '.')
-                log.debug("    sub_rst_filename =", sub_rst_filename)
+                log.debug("    sub_rst_filename = %s" % sub_rst_filename)
                 msg += '    %s\n' % sub_rst_filename
             msg += '\n'
             rst_file.write(msg)

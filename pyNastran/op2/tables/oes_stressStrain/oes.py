@@ -218,7 +218,7 @@ class OES(OP2Common):
     def _set_element_name(self):
         try:
             self.element_name = self.element_mapper[self.element_type]
-        except KeyError:
+        except KeyError:  # pragma: no cover
             self.log.error(self.code_information())
             raise
         self.data_code['element_name'] = self.element_name
@@ -1048,7 +1048,7 @@ class OES(OP2Common):
         key = (self.element_type, self.format_code, self.num_wide, self.table_name)
         try:
             return stress_mapper[key]
-        except KeyError:
+        except KeyError:  # pragma: no cover
             self.log.error(self.code_information())
             msg = ('stress_mapper (~line 850 of oes.py) does not contain the '
                    'following key and must be added\n'
@@ -1467,8 +1467,8 @@ class OES(OP2Common):
                     if self.is_debug_file:
                         self.binary_debug.write('%s-%s - %s\n' % (etype, self.element_type, str(out)))
 
-                    #obj.add_new_node(dt, eid, parent, coord, icord, theta, itype)
-                    #obj.add_new_eid(eType, dt, eid, parent, coord, icord, theta, itype)
+                    #obj.add_new_node_sort1(dt, eid, parent, coord, icord, theta, itype)
+                    #obj.add_new_eid_sort1(eType, dt, eid, parent, coord, icord, theta, itype)
                     for node_id in range(nnodes - 1):  # nodes pts
                         edata = data[n:n + 68]
                         n += 68
@@ -1478,10 +1478,10 @@ class OES(OP2Common):
 
                         (vuid, dummy, dummy2, msx, msy, mxy, dummy3, dummy4, dummy5,
                          unused_bcx, bcy, bcxy, tyz, tzx, dummy6, dummy7, dummy8) = out
-                        #obj.add(vuid, dummy, dummy2, msx, msy, mxy,
-                                     #dummy3, dummy4, dummy5,
-                                     #bcx, bcy, bcxy, tyz, tzx,
-                                     #dummy6, dummy7, dummy8)
+                        #obj.add_sort1(vuid, dummy, dummy2, msx, msy, mxy,
+                                       #dummy3, dummy4, dummy5,
+                                       #bcx, bcy, bcxy, tyz, tzx,
+                                       #dummy6, dummy7, dummy8)
             elif self.num_wide == numwide_imag:
                 ntotal = numwide_imag * 4
                 nelements = ndata // ntotal
@@ -1554,7 +1554,7 @@ class OES(OP2Common):
                 result_name = 'cplsts3'
                 nnodes = 1
                 ntotal = 4 * 6
-            else:
+            else:  # pragma: no cover
                 raise RuntimeError(self.code_information())
             if self.is_stress:
                 obj_vector_real = RealCPLSTRNPlateStressArray
@@ -1874,7 +1874,7 @@ class OES(OP2Common):
                     if self.is_debug_file:
                         self.binary_debug.write('  eid=%i result%i=[%i, %f]\n' % (
                             eid, i, eid_device, ox))
-                    obj.add_new_eid_sort1(dt, eid, ox)
+                    obj.add_sort1(dt, eid, ox)
                     n += ntotal
         elif self.format_code in [2, 3] and self.num_wide == 3:  # imag
             ntotal = 12
@@ -1934,7 +1934,7 @@ class OES(OP2Common):
             raise RuntimeError(self.code_information())
             #msg = self.code_information()
             #return self._not_implemented_or_skip(data, ndata, msg)
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(self.code_information())
         return n, nelements, ntotal
 
@@ -1956,7 +1956,7 @@ class OES(OP2Common):
                 result_name = prefix + 'ctube_stress' + postfix
             elif self.element_type == 10:  # CONROD
                 result_name = prefix + 'conrod_stress' + postfix
-            else:
+            else:  # pragma: no cover
                 msg = self.code_information()
                 return self._not_implemented_or_skip(data, ndata, msg)
         else:
@@ -1969,7 +1969,7 @@ class OES(OP2Common):
                 result_name = prefix + 'ctube_strain' + postfix
             elif self.element_type == 10:  # CONROD
                 result_name = prefix + 'conrod_strain' + postfix
-            else:
+            else:  # pragma: no cover
                 msg = self.code_information()
                 return self._not_implemented_or_skip(data, ndata, msg)
 
@@ -2021,7 +2021,7 @@ class OES(OP2Common):
                     if self.is_debug_file:
                         self.binary_debug.write('  eid=%i; C=[%s]\n' % (
                             eid, ', '.join(['%r' % di for di in out])))
-                    obj.add_new_eid(dt, eid, axial, axial_margin, torsion, torsion_margin)
+                    obj.add_sort1(dt, eid, axial, axial_margin, torsion, torsion_margin)
                     n += ntotal
         elif self.format_code in [2, 3] and self.num_wide == 5: # imag
             ntotal = 20
@@ -2115,9 +2115,9 @@ class OES(OP2Common):
                     if self.is_debug_file:
                         self.binary_debug.write('  eid=%i; C=[%s]\n' % (
                             eid, ', '.join(['%r' % di for di in out])))
-                    obj.add_new_eid_sort1(dt, eid, axial, torsion)
+                    obj.add_sort1(dt, eid, axial, torsion)
                     n += ntotal
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(self.code_information())
         return n, nelements, ntotal
 
@@ -2179,7 +2179,7 @@ class OES(OP2Common):
                         self.binary_debug.write('CBEAM-2 - eid=%i out=%s\n' % (eid, str(out)))
 
                     #(grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
-                    obj.add_new_eid(dt, eid, *out[1:])
+                    obj.add_new_eid_sort1(dt, eid, *out[1:])
 
                     for inode in range(nnodes):
                         edata = data[n:n+n2]
@@ -2342,7 +2342,7 @@ class OES(OP2Common):
                         self.binary_debug.write('CBEAM-2 - eid=%i out=%s\n' % (eid, str(out)))
 
                     #(grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
-                    obj.add_new_eid(dt, eid, *out[1:])
+                    obj.add_new_eid_sort1(dt, eid, *out[1:])
 
                     for inode in range(nnodes):
                         edata = data[n:n+n2]
@@ -2350,7 +2350,7 @@ class OES(OP2Common):
                         out = s2.unpack(edata)
                         # (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
                         obj.add_sort1(dt, eid, *out)
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(self.code_information())
         return n, nelements, ntotal
 
@@ -2413,7 +2413,7 @@ class OES(OP2Common):
                     (eid_device, max_strain, avg_strain, margin) = out
                     eid, dt = get_eid_dt_from_eid_device(
                         eid_device, self.nonlinear_factor, self.sort_method)
-                    obj.add_new_eid(dt, eid, max_strain, avg_strain, margin)
+                    obj.add_sort1(dt, eid, max_strain, avg_strain, margin)
                     n += ntotal
 
         elif self.format_code in [2, 3] and self.num_wide == 5:  # imag
@@ -2495,9 +2495,9 @@ class OES(OP2Common):
                     (eid_device, max_strain, avg_strain) = out
                     eid, dt = get_eid_dt_from_eid_device(
                         eid_device, self.nonlinear_factor, self.sort_method)
-                    obj.add_new_eid_sort1(dt, eid, max_strain, avg_strain)
+                    obj.add_sort1(dt, eid, max_strain, avg_strain)
                     n += ntotal
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(self.code_information())
         return n, nelements, ntotal
 
@@ -2747,7 +2747,7 @@ class OES(OP2Common):
                         dt, eid,
                         s1a, s2a, s3a, s4a, axial,
                         s1b, s2b, s3b, s4b)
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(self.code_information())
         return n, nelements, ntotal
 
@@ -2775,7 +2775,7 @@ class OES(OP2Common):
                 nnodes_expected = 7
                 result_name = prefix + 'cpenta_stress' + postfix
                 element_name = 'CPENTA6'
-            else:
+            else:  # pragma: no cover
                 raise RuntimeError(self.code_information())
         else:
             obj_vector_real = RealSolidStrainArray
@@ -2794,7 +2794,7 @@ class OES(OP2Common):
                 nnodes_expected = 7
                 result_name = prefix + 'cpenta_strain' + postfix
                 element_name = 'CPENTA6'
-            else:
+            else:  # pragma: no cover
                 raise RuntimeError(self.code_information())
                 #msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
                 #return self._not_implemented_or_skip(data, ndata, msg)
@@ -3214,7 +3214,7 @@ class OES(OP2Common):
             n = self._not_implemented_or_skip(data, ndata, msg)
             nelements = None
             ntotal = None
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(self.code_information() +
                                '\nnumwide real=%s imag=%s random=%s' % (
                                    numwide_real, numwide_imag, numwide_random2))
@@ -3242,7 +3242,7 @@ class OES(OP2Common):
         elif self.element_type == 93:
             etype = 'CHEXANL'
             nnodes = 9
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(self.code_information())
 
         numwide_real = 4 + (25 - 4) * nnodes  # real???
@@ -3299,7 +3299,7 @@ class OES(OP2Common):
                     #(grid,
                      #sx, sy, sz, sxy, syz, sxz, se, eps, ecs,
                      #ex, ey, ez, unused_exy, eyz, exz) = out
-        else:
+        else:  # pragma: no cover
             #msg = self.code_information()
             msg = "format_code=%s numwide=%s numwide_real=%s numwide_random=%s" % (
                 self.format_code, self.num_wide, numwide_real, numwide_random)
@@ -3652,7 +3652,7 @@ class OES(OP2Common):
                     obj.add_new_eid_ovm_sort1(dt, eid, fd1, sx1, sy1, txy1, ovm1)
                     obj.add_ovm_sort1(dt, eid, fd2, sx2, sy2, txy2, ovm2)
                     n += ntotal
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(self.code_information())
         return n, nelements, ntotal
 
@@ -3983,7 +3983,7 @@ class OES(OP2Common):
                     obj.add_new_eid_sort1(dt, eid, fd1, sx1, sy1, txy1)
                     obj.add_sort1(dt, eid, fd2, sx2, sy2, txy2)
                     n += ntotal
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(self.code_information())
         return n, nelements, ntotal
 
@@ -4019,7 +4019,7 @@ class OES(OP2Common):
                 # because you can only have one in a given OP2
                 result_name = prefix + 'cquad4_stress' + postfix
                 #gridC = 'CEN/4'
-            else:
+            else:  # pragma: no cover
                 raise RuntimeError(self.code_information())
                 #msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
                 #return self._not_implemented_or_skip(data, ndata, msg)
@@ -4045,7 +4045,7 @@ class OES(OP2Common):
                 # because you can only have one in a given OP2
                 result_name = prefix + 'cquad4_strain' + postfix
                 #gridC = 'CEN/4'
-            else:
+            else:  # pragma: no cover
                 raise RuntimeError(self.code_information())
 
         if self._results.is_not_saved(result_name):
@@ -4056,7 +4056,7 @@ class OES(OP2Common):
             nnodes = 4 # + 1 centroid
         elif self.element_type in [70, 75]:
             nnodes = 3 # + 1 centroid
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(self.code_information())
         nnodes_all = nnodes + 1 # adding the centroid
 
@@ -4448,7 +4448,7 @@ class OES(OP2Common):
             #msg = '%s-CTRIA6-numwide=%s numwide_real=%s numwide_imag=%s numwide_random=%s' % (
                 #self.table_name_str, self.num_wide, numwide_real, numwide_imag, numwide_random)
             #return self._not_implemented_or_skip(data, ndata, msg), None, None
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(self.code_information())
         return n, nelements, ntotal
 
@@ -4607,7 +4607,7 @@ class OES(OP2Common):
         elif self.format_code == 1 and self.num_wide == 0: # random
             msg = self.code_information()
             return self._not_implemented_or_skip(data, ndata, msg)
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(self.code_information())
         return n, nelements, ntotal
 
@@ -4636,7 +4636,7 @@ class OES(OP2Common):
             #elif self.element_type == ???:  # CTRIA6
                 #result_name = prefix + 'ctriar_composite_stress' + postfix
             #elif self.element_type == 10:  # CTRIA6
-            else:
+            else:  # pragma: no cover
                 raise RuntimeError(self.code_information())
         else:
             obj_vector_real = RealCompositePlateStrainArray
@@ -4652,7 +4652,7 @@ class OES(OP2Common):
                 result_name = prefix + 'ctria6_composite_strain' + postfix
             #elif self.element_type == ???:  # CTRIA6
                 #result_name = prefix + 'ctriar_composite_strain' + postfix
-            else:
+            else:  # pragma: no cover
                 raise RuntimeError(self.code_information())
 
         if self._results.is_not_saved(result_name):
@@ -4748,7 +4748,7 @@ class OES(OP2Common):
 
                 if self.is_debug_file:
                     self.binary_debug.write('%s-%s - (%s) + %s\n' % (self.element_name, self.element_type, eid_device, str(out)))
-                obj.add_new_eid(dt, eid, theory, lamid, fp, fm, fb, fmax, fflag)
+                obj.add_new_eid_sort1(dt, eid, theory, lamid, fp, fm, fb, fmax, fflag)
                 n += ntotal
             raise NotImplementedError('this is a really weird case...')
         elif self.format_code == 2 and self.num_wide == 11:
@@ -4771,7 +4771,7 @@ class OES(OP2Common):
 
                 #if self.is_debug_file:
                     #self.binary_debug.write('%s-%s - (%s) + %s\n' % (self.element_name, self.element_type, eid_device, str(out)))
-                #obj.add_new_eid(dt, eid, theory, lamid, fp, fm, fb, fmax, fflag)
+                #obj.add_new_eid_sort1(dt, eid, theory, lamid, fp, fm, fb, fmax, fflag)
                 n += ntotal
         elif self.num_wide == 9 and self.table_name == 'OESRT':
             # strength_ratio.cquad4_composite_stress
@@ -4795,7 +4795,7 @@ class OES(OP2Common):
 
                 #if self.is_debug_file:
                     #self.binary_debug.write('%s-%s - (%s) + %s\n' % (self.element_name, self.element_type, eid_device, str(out)))
-                #obj.add_new_eid(dt, eid, theory, lamid, fp, fm, fb, fmax, fflag)
+                #obj.add_new_eid_sort1(dt, eid, theory, lamid, fp, fm, fb, fmax, fflag)
                 n += ntotal
         elif self.format_code in [2, 3] and self.num_wide == 13 and self.table_name in ['OESVM1C', 'OSTRVM1C']:
             # OESCP - STRAINS IN LAYERED COMPOSITE ELEMENTS (QUAD4)
@@ -4819,7 +4819,7 @@ class OES(OP2Common):
                 #print('%s-%s - (%s) + %s\n' % (self.element_name, self.element_type, eid_device, str(out)))
                 #if self.is_debug_file:
                     #self.binary_debug.write('%s-%s - (%s) + %s\n' % (self.element_name, self.element_type, eid_device, str(out)))
-                #obj.add_new_eid(dt, eid, theory, lamid, fp, fm, fb, fmax, fflag)
+                #obj.add_new_eid_sort1(dt, eid, theory, lamid, fp, fm, fb, fmax, fflag)
                 n += ntotal
         else:
             #msg = self.code_information()
@@ -4996,7 +4996,7 @@ class OES(OP2Common):
                         azs = complex(azsr, azsi)
                         As = complex(Asr, Asi)
                         ss = complex(ssr, ssi)
-                    #obj.add_new_eid(dt, eid, loc, rs, azs, As, ss)
+                    #obj.add_new_eid_sort1(dt, eid, loc, rs, azs, As, ss)
 
                     n += 40
                     for j in range(3):
@@ -5019,7 +5019,7 @@ class OES(OP2Common):
                             ss = complex(ssr, ssi)
                         #obj.add_sort1(dt, eid, loc, rs, azs, As, ss)
                         n += 36  # 4*8
-        else:
+        else:  # pragma: no cover
             msg = self.code_information()
             raise NotImplementedError(msg)
             #return self._not_implemented_or_skip(data, ndata, msg)
@@ -5145,7 +5145,7 @@ class OES(OP2Common):
                         rz = complex(rzr, rzi)
                     obj.add_sort1(dt, eid, tx, ty, tz, rx, ry, rz)
                     n += ntotal
-        else:
+        else:  # pragma: no cover
             msg = self.code_information()
             raise NotImplementedError(msg)
             #return self._not_implemented_or_skip(data, ndata, msg)
@@ -5275,7 +5275,7 @@ class OES(OP2Common):
                         ao = complex(aor, aoi)
                         ae = complex(aer, aei)
                     obj.add_new_eid(self.element_type, dt, eid, fe, ue, ao, ae)
-        else:
+        else:  # pragma: no cover
             msg = self.code_information()
             raise NotImplementedError(msg)
             #return self._not_implemented_or_skip(data, ndata, msg)
@@ -5301,7 +5301,7 @@ class OES(OP2Common):
             elif self.element_type == 92:
                 result_name = prefix + 'conrod_stress' + postfix
                 name = 'CONRODNL-92'
-            else:
+            else:  # pragma: no cover
                 raise RuntimeError(self.code_information())
         else:
             if self.element_type == 87:
@@ -5313,7 +5313,7 @@ class OES(OP2Common):
             elif self.element_type == 92:
                 result_name = prefix + 'conrod_strain' + postfix
                 name = 'CONRODNL-92'
-            else:
+            else:  # pragma: no cover
                 raise RuntimeError(self.code_information())
 
         if self._results.is_not_saved(result_name):
@@ -5364,7 +5364,7 @@ class OES(OP2Common):
                     obj.add_sort1(dt, eid, axial_stress, equiv_stress, total_strain,
                                   eff_plastic_creep_strain, eff_creep_strain, linear_torsional_stresss)
                     n += ntotal
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(self.code_information())
         return n, nelements, ntotal
 
@@ -5438,7 +5438,7 @@ class OES(OP2Common):
                         self.binary_debug.write('%s-%s - %s\n' % (self.element_name, self.element_type, str(out)))
                     obj.add_sort1(dt, eid, force, stress)
                     n += ntotal
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(self.code_information())
         return n, nelements, ntotal
 
@@ -5686,7 +5686,7 @@ class OES(OP2Common):
                         obj.add_sort1(dt, eid, grid, angle, sc, sd, se, sf)
                         n += ntotali
 
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(self.code_information())
         return n, nelements, ntotal
 
@@ -5752,7 +5752,7 @@ class OES(OP2Common):
                         self.binary_debug.write('CGAPNL-86 - %s\n' % str(out))
                     obj.add_sort1(dt, eid, cpx, shy, shz, au, shv, shw, slv, slp, form1, form2)
                     n += ntotal
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(self.code_information())
         return n, nelements, ntotal
 
@@ -5838,7 +5838,7 @@ class OES(OP2Common):
             msg = self.code_information()
             raise NotImplementedError(msg)
             #return self._not_implemented_or_skip(data, ndata, msg)
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(self.code_information())
         return n, nelements, ntotal
 
@@ -5909,9 +5909,9 @@ class OES(OP2Common):
                         self.binary_debug.write('  eid=%i; C%i=[%s]\n' % (
                             eid, i, ', '.join(['%r' % di for di in out])))
                     n += ntotal
-                    obj.add_new_eid(self.element_name, dt, eid,
-                                    sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS)
-        else:
+                    obj.add_new_eid_sort1(self.element_name, dt, eid,
+                                          sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS)
+        else:  # pragma: no cover
             raise RuntimeError(self.code_information())
         return n, nelements, ntotal
 
@@ -5935,12 +5935,13 @@ class OES(OP2Common):
         elif self.element_type == 145:
             etype = 'VUHEXA'
             nnodes = 8
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(self.code_information())
 
         #num_wideA = 2 + 12 * nnodes
         #ntotal = 8 + 48 * nnodes
 
+        n = 0
         if self.format_code == -1 and self.num_wide == 33: # real
             # assuming TETRA...
             # TODO: vectorize
@@ -5979,10 +5980,11 @@ class OES(OP2Common):
             else:
                 msg = 'numwide=%s A=%s B=%s C=%s' % (self.num_wide, numwide_a, numwide_b, numwide_c)
                 raise RuntimeError(self.code_information())
-        else:
+        else:  # pragma: no cover
             #raise RuntimeError(self.code_information())
             msg = self.code_information()
-            return self._not_implemented_or_skip(data, ndata, msg), None, None
+            raise RuntimeError(msg)
+            #return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
 
     def _oes_hyperelastic_quad(self, data, ndata, dt, is_magnitude_phase, stress_name,

@@ -11,7 +11,7 @@ from numpy.linalg import norm  # type: ignore
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.cards.elements.bars import (
-    CBAR, LineElement, init_x_g0, BaseCard, rotate_v_wa_wb)
+    LineElement, init_x_g0, BaseCard, rotate_v_wa_wb, check_offt)
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double_or_blank, integer_double_string_or_blank,
     integer_double_or_blank, integer_string_or_blank,
@@ -22,7 +22,7 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.utils.mathematics import integrate_positive_unit_line
 
 
-class CBEAM(CBAR):
+class CBEAM(LineElement):
     """
     +-------+-----+-----+-----+-----+-----+-----+-----+----------+
     |   1   |  2  |  3  |  4  |  5  |  6  |  7  |  8  |    9     |
@@ -197,7 +197,7 @@ class CBEAM(CBAR):
             elif not isinstance(self.offt, string_types):
                 raise SyntaxError('invalid offt expected a string of length 3 '
                                   'offt=%r; Type=%s' % (self.offt, type(self.offt)))
-            self.check_offt()
+            check_offt(self)
 
     @classmethod
     def add_card(cls, card, beamor=None, comment=''):
@@ -351,7 +351,7 @@ class CBEAM(CBAR):
         xyz2 = node2.get_position()
         #centroid = ( + self.gb_ref.get_position()) / 2.
         centroid = (xyz1 + xyz2) / 2.
-        length = norm(xyz2 - xyz1)
+        #length = norm(xyz2 - xyz1)
         #cda = model.nodes[n1].cid_ref
         #cdb = model.nodes[n2].cid_ref
 
@@ -463,7 +463,7 @@ class CBEAM(CBAR):
 
         TODO: not integrated with CBAR yet...
         """
-        self.check_offt()
+        check_offt(self)
         is_failed = True
         ihat = None
         yhat = None
@@ -496,6 +496,7 @@ class CBEAM(CBAR):
 
         TODO: not integrated with CBAR yet...
         """
+        is_failed = True
         eid = self.eid
         #centroid = (n1 + n2) / 2.
         #i = n2 - n1
@@ -503,7 +504,7 @@ class CBEAM(CBAR):
         #ihat = i / Li
 
         elem = self
-        (nid1, nid2) = elem.node_ids
+        #(nid1, nid2) = elem.node_ids
         #node1 = model.nodes[nid1]
         #node2 = model.nodes[nid2]
         #xyz1 = node1.get_position()
@@ -521,6 +522,11 @@ class CBEAM(CBAR):
             i_offset, i, eid, Li, log)
         if wb is None:
             # one or more of v, wa, wb are bad
+
+            # xform is xform_offset...assuming None
+            ihat = None
+            yhat = None
+            zhat = None
             return is_failed, (wa, wb, ihat, yhat, zhat)
 
         ihat = xform[0, :]
@@ -529,6 +535,22 @@ class CBEAM(CBAR):
 
         is_failed = False
         return is_failed, (wa, wb, ihat, yhat, zhat)
+
+    @property
+    def node_ids(self):
+        return [self.Ga(), self.Gb()]
+
+    def get_edge_ids(self):
+        return [tuple(sorted(self.node_ids))]
+
+    @property
+    def nodes(self):
+        return [self.ga, self.gb]
+
+    @nodes.setter
+    def nodes(self, values):
+        self.ga = values[0]
+        self.gb = values[1]
 
     @property
     def nodes_ref(self):
@@ -649,6 +671,44 @@ class CBEAM(CBAR):
             assert isinstance(mpl, float), 'eid=%s mass_per_length=%r' % (eid, mpl)
             assert isinstance(mass, float), 'eid=%s mass=%r' % (eid, mass)
             assert L > 0.0, 'eid=%s L=%s' % (eid, L)
+
+    def Ga(self):
+        """gets Ga/G1"""
+        if self.ga_ref is None:
+            return self.ga
+        return self.ga_ref.nid
+
+    def Gb(self):
+        """gets Gb/G2"""
+        if self.gb_ref is None:
+            return self.gb
+        return self.gb_ref.nid
+
+    def G0(self):
+        """gets G0"""
+        if self.g0_ref is None:
+            return self.g0
+        return self.g0_ref.nid
+
+    def get_x_g0_defaults(self):
+        """
+        X and G0 compete for the same fields, so the method exists to
+        make it easier to write the card
+
+        Returns
+        -------
+        x_g0 : varies
+            g0 : List[int, None, None]
+            x : List[float, float, float]
+
+        Note
+        ----
+        Used by CBAR and CBEAM
+        """
+        if self.g0 is not None:
+            return (self.G0(), None, None)
+        else:
+            return list(self.x)
 
     def raw_fields(self):
         (x1, x2, x3) = self.get_x_g0_defaults()

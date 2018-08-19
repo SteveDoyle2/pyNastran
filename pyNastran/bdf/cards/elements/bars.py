@@ -477,17 +477,7 @@ class CBAR(LineElement):
             msg = 'G0=%s cannot be GA=%s or GB=%s' % (self.g0, self.ga, self.gb)
             raise RuntimeError(msg)
 
-        self.check_offt()
-
-    def check_offt(self):
-        """
-        B,G,O
-        Note: The character 'O' in the table replaces the obsolete character 'E'
-        """
-        msg = 'invalid offt parameter of %s...offt=%s' % (self.type, self.offt)
-        assert self.offt[0] in ['G', 'B'], msg
-        assert self.offt[1] in ['G', 'O', 'E'], msg
-        assert self.offt[2] in ['G', 'O', 'E'], msg
+        check_offt(self)
 
     @classmethod
     def add_card(cls, card, baror=None, comment=''):
@@ -1432,7 +1422,7 @@ def rotate_v_wa_wb(model, elem, xyz1, xyz2, node1, node2, ihat_offset, i_offset,
     - orientation -> wa/wb are defined in the xform_offset (yz) frame;
                      this is likely the easiest frame for a user
     """
-    elem.check_offt()
+    check_offt(elem)
     v, cd1, cd1_ref, cd2, cd2_ref = get_bar_vector(model, elem, node1, node2, xyz1)
 
     #--------------------------------------------------------------------------
@@ -1573,3 +1563,13 @@ def get_bar_yz_transform(v, ihat, eid, xyz1, xyz2, nid1, nid2, i, Li):
               ' v=%s i=%s n%s=%s n%s=%s' % (
                   eid, Li, norm(yhat), norm(zhat), v, i, nid1, xyz1, nid2, xyz2))
     return yhat, zhat
+
+def check_offt(element):
+    """
+    B,G,O
+    Note: The character 'O' in the table replaces the obsolete character 'E'
+    """
+    msg = 'invalid offt parameter of %s...offt=%s' % (element.type, element.offt)
+    assert element.offt[0] in ['G', 'B'], msg
+    assert element.offt[1] in ['G', 'O', 'E'], msg
+    assert element.offt[2] in ['G', 'O', 'E'], msg

@@ -120,7 +120,7 @@ class RandomRodArray(OES_Object):
                 raise ValueError(msg)
         return True
 
-    def add_new_eid_sort1(self, dt, eid, axial, torsion):
+    def add_sort1(self, dt, eid, axial, torsion):
         self._times[self.itime] = dt
         #if self.itime == 0:
         #print('itime=%s eid=%s' % (self.itime, eid))

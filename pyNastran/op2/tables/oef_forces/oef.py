@@ -1500,7 +1500,7 @@ class OEF(OP2Common):
                             forces.append(out2)
                         data_in.append(forces)
                         #data_in = [vugrid, mfx, mfy, mfxy, a, b,c, bmx, bmy, bmxy, syz, szx, d]
-                        obj.add(nnodes, dt, data_in)
+                        obj.add_sort1(nnodes, dt, data_in)
 
             elif self.format_code in [2, 3] and self.num_wide == numwide_imag:  # imag
                 if 0:
@@ -1640,7 +1640,7 @@ class OEF(OP2Common):
                             data_in.append(forces)
                             #data_in = [vugrid,mfxr,mfyr,mfxyr,bmxr,bmyr,bmxyr,syzr,szxr,
                                              #mfxi,mfyi,mfxyi,bmxi,bmyi,bmxyi,syzi,szxi]
-                            obj.add(nnodes, dt, data_in)
+                            obj.add_sort1(nnodes, dt, data_in)
 
                 else:
                     if self.read_mode == 1:
@@ -2702,7 +2702,6 @@ class OEF(OP2Common):
 
                 #data_in = [bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq]
                 #print "%s" % (self.get_element_type(self.element_type)), data_in
-                #eid = obj.add_new_eid(out)
                 eid, dt = get_eid_dt_from_eid_device(
                     eid_device, self.nonlinear_factor, self.sort_method)
                 obj.add_sort1(dt, eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq)
@@ -3185,14 +3184,13 @@ class OEF(OP2Common):
                         #self.binary_debug.write('      %s  C=[%s]\n' % (' ' * len(str(eid)), ', '.join(['%r' % di for di in out]) ))
 
                 #if eid > 0:
-                    #obj.add_new_eid(eType, dt, eid, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
+                    #obj.add_new_eid_sort1(eType, dt, eid, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
                 #else:
-                    #obj.add(dt, eid, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
+                    #obj.add_sort1(dt, eid, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
                 #n += ntotal
         else:
             msg = self.code_information()
             print(msg)
-            aa
             return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
 
@@ -3463,7 +3461,7 @@ class OEF(OP2Common):
                         eid_device, self.nonlinear_factor, self.sort_method)
                     data_in = [eid, fx, sfy, sfz, u, v, w, sv, sw]
                     #print "%s" %(self.get_element_type(self.element_type)), data_in
-                    #eid = obj.add_new_eid(out)
+                    #eid = obj.add_new_eid_sort1(out)
                     obj.add_sort1(dt, eid, fx, sfy, sfz, u, v, w, sv, sw)
                     n += ntotal
         else:

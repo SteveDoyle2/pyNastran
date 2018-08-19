@@ -141,11 +141,7 @@ class RealBar10NodesArray(OES_Object):
                 raise ValueError(msg)
         return True
 
-    def add_new_eid(self, eType, dt, eid, sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS):
-        self.add_new_eid_sort1(eType, dt, eid,
-                               sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS)
-
-    def add_new_eid_sort1(self, eType, dt, eid,
+    def add_new_eid_sort1(self, etype, dt, eid,
                           sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS):
         self._times[self.itime] = dt
         #print('isubcase=%s itotal=%s ieid=%s eid=%s' % (self.isubcase, self.itotal, self.ielement, eid))

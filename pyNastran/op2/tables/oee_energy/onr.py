@@ -582,7 +582,7 @@ class ONR(OP2Common):
                     word = word.strip()
                     #print "eType=%s" % (eType)
                     #print "%s" %(self.get_element_type(self.element_type)), data_in
-                    #eid = self.obj.add_new_eid(out)
+                    #eid = self.obj.add_new_eid_sort1(out)
                     if self.is_debug_file:
                         self.binary_debug.write('  eid/word=%r; %s\n' % (word, str(out)))
                     obj.add_sort1(dt, word, energy, percent, density)
@@ -678,10 +678,10 @@ class ONR(OP2Common):
                     word = word.strip()
                     #print "eType=%s" % (eType)
                     #print "%s" %(self.get_element_type(self.element_type)), data_in
-                    #eid = self.obj.add_new_eid(out)
+                    #eid = self.obj.add_new_eid_sort1(out)
                     if self.is_debug_file:
                         self.binary_debug.write('  eid=%i; %s\n' % (eid, str(out)))
-                    obj.add(dt, word, energy, percent, density)
+                    obj.add_sort1(dt, word, energy, percent, density)
                     n += ntotal
         elif self.format_code in [2, 3] and self.num_wide == 4:
             """
