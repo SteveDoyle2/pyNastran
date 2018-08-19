@@ -12,6 +12,7 @@ from collections import defaultdict
 from six import iteritems, string_types
 from numpy import array, allclose, unique, zeros
 from pyNastran.bdf.bdf import read_bdf
+from codecs import open
 
 from pyNastran.bdf.mesh_utils.bdf_equivalence import bdf_equivalence_nodes
 from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
