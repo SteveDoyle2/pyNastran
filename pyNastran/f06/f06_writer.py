@@ -18,9 +18,9 @@ import pyNastran
 from pyNastran.op2.op2_interface.op2_f06_common import OP2_F06_Common
 from pyNastran.op2.op2_interface.result_set import ResultSet
 
-def make_stamp(Title, today=None):
-    if 'Title' is None:
-        Title = ''
+def make_stamp(title, today=None):
+    if title is None:
+        title = ''
 
     #lenghts = [7, 8, 5, 5, 3, 4, 4, 6, 9, 7, 8, 8]
     months = [' January', 'February', 'March', 'April', 'May', 'June',
@@ -35,12 +35,10 @@ def make_stamp(Title, today=None):
         str_today = '%-9s %2s, %4s' % (str_month, day, year)
     str_today = str_today  #.strip()
 
-    release_date = '02/08/12'  # pyNastran.__releaseDate__
+    #release_date = '02/08/12'  # pyNastran.__releaseDate__
     release_date = ''
     build = 'pyNastran v%s %s' % (pyNastran.__version__, release_date)
-    if Title is None:
-        Title = ''
-    out = '1    %-67s   %-19s %-22s PAGE %%5i\n' % (Title.strip(), str_today, build)
+    out = '1    %-67s   %-19s %-22s PAGE %%5i\n' % (title.strip(), str_today, build)
     return out
 
 

@@ -502,6 +502,7 @@ class TestOP2(Tester):
     def test_op2_solid_bending_02_geom(self):
         folder = os.path.join(MODEL_PATH, 'solid_bending')
         op2_filename = os.path.join(folder, 'solid_bending.op2')
+        hdf5_filename = os.path.join(folder, 'solid_bending.h5')
         op2, is_passed = run_op2(
             op2_filename, make_geom=True, write_bdf=False,
             write_f06=True, write_op2=False,
@@ -509,7 +510,14 @@ class TestOP2(Tester):
             subcases=None, exclude=None, short_stats=False,
             compare=True, debug=False, binary_debug=False,
             quiet=True, check_memory=False, stop_on_failure=True,
-            dev=False)
+            dev=False, skip_dataframe=False)
+        assert op2.displacements[1].data_frame is not None
+        op2.export_to_hdf5(hdf5_filename)
+        op2.print_subcase_key()
+
+        op2b = OP2(debug=False)
+        op2b.load_hdf5(hdf5_filename, combine=True)
+        op2b.print_subcase_key()
 
     def _test_op2_solid_bending_03(self):
         """tests basic op2 writing"""
