@@ -86,22 +86,12 @@ class FortranFormat(object):
         op2_reader = self.op2_reader
         datai = b''
         n = 0
-        is_streaming = False
         if self.read_mode == 2:
             self.ntotal = 0
 
-            if is_streaming:  # pragma: no cover
-                # we stream the record because we get it in partial blocks
-                for data in op2_reader._stream_record():
-                    data = datai + data
-                    ndata = len(data)
-                    n = table4_parser(data, ndata)
-                    assert isinstance(n, integer_types), self.table_name
-                    datai = data[n:]
-            else:
-                data, ndata = op2_reader._read_record_ndata()
-                n = table4_parser(data, ndata)
-                assert isinstance(n, integer_types), self.table_name
+            data, ndata = op2_reader._read_record_ndata()
+            n = table4_parser(data, ndata)
+            assert isinstance(n, integer_types), self.table_name
 
             self._reset_vector_counter()
 
@@ -110,29 +100,15 @@ class FortranFormat(object):
 
             #n = op2_reader._skip_record()
             #n = table4_parser(datai, 300000)
-            if is_streaming:  # pragma: no cover
-                self.ntotal = 0
-                #n = self.n
-                n = 0
-                for unused_i, data in enumerate(op2_reader._stream_record()):
-                    data = datai + data
-                    ndata = len(data)
-                    n = table4_parser(data, ndata)
-                    assert isinstance(n, integer_types), self.table_name
-                    datai = data[n:]
-                assert len(datai) == 0, len(datai)
-                #n = record_len
-                #break
+            if self.table_name in [b'R1TABRG', b'ONRGY1']:
+                data, ndata = op2_reader._read_record_ndata()
             else:
-                if self.table_name in [b'R1TABRG', b'ONRGY1']:
-                    data, ndata = op2_reader._read_record_ndata()
-                else:
-                    data, ndata = op2_reader._skip_record_ndata()
-                n = table4_parser(data, ndata)
-                if not isinstance(n, integer_types):
-                    msg = 'n is not an integer; table_name=%s n=%s table4_parser=%s' % (
-                        self.table_name, n, table4_parser)
-                    raise TypeError(msg)
+                data, ndata = op2_reader._skip_record_ndata()
+            n = table4_parser(data, ndata)
+            if not isinstance(n, integer_types):
+                msg = 'n is not an integer; table_name=%s n=%s table4_parser=%s' % (
+                    self.table_name, n, table4_parser)
+                raise TypeError(msg)
 
             #op2_reader._goto(n)
             #n = op2_reader._skip_record()

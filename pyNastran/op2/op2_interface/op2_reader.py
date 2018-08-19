@@ -2526,41 +2526,6 @@ class OP2Reader(object):
         return None, ndata
 
     #---------------------------------------------------------------------------
-    def _stream_record(self, debug=True):
-        """
-        Creates a "for" loop that keeps giving us records until we're done.
-        """
-        op2 = self.op2
-        op2.istream = 0
-        markers0 = self.get_nmarkers(1, rewind=False)
-        if self.is_debug_file and debug:
-            self.binary_debug.write('_stream_record - marker = [4, %i, 4]\n' % markers0[0])
-        record, nrecord = self._read_block_ndata()
-        if self.is_debug_file and debug:
-            self.binary_debug.write('_stream_record - record = [%i, recordi, %i]\n' % (
-                nrecord, nrecord))
-        if(markers0[0]*4) != len(record):
-            raise FortranMarkerError('markers0=%s*4 len(record)=%s; table_name=%r' % (
-                markers0[0]*4, len(record), op2.table_name))
-        yield record
-        op2.istream += 1
-
-        markers1 = self.get_nmarkers(1, rewind=True)
-        if self.is_debug_file and debug:
-            self.binary_debug.write('_stream_record - markers1 = [4, %s, 4]\n' % str(markers1))
-
-        # handling continuation blocks
-        #nloop = 0
-        while markers1[0] > 0:
-            markers1 = self.get_nmarkers(1, rewind=False)
-            if self.is_debug_file and debug:
-                self.binary_debug.write('_stream_record - markers1 = [4, %s, 4]\n' % str(markers1))
-            record, unused_nrecordi = self._read_block_ndata()
-            yield record
-            op2.istream += 1
-            markers1 = self.get_nmarkers(1, rewind=True)
-            #nloop += 1
-    #---------------------------------------------------------------------------
     def _goto(self, n):
         """
         Jumps to position n in the file
