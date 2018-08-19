@@ -130,6 +130,9 @@ def nastran_to_surf(bdf_filename, pid_to_element_flags, surf_filename,
         scales the mesh by scale for unit conversion
     tol : float; default=1e-16
         I hate 1e-16 values in my model
+    xref : bool; default=True
+        does the model need to be cross-referenced to calculate the
+        node positions?
 
     # these pids correspond to the BDF
     pid_to_element_flags = {
@@ -272,6 +275,7 @@ def nastran_to_surf(bdf_filename, pid_to_element_flags, surf_filename,
                 renumber_pids, tol)
 
 def _get_nodes(model, scale, xref):
+    """helper method for ``nastran_to_surf``"""
     # assume nodes go from 1:#
     #nid0 = 1
     node_flags = {}
@@ -304,6 +308,7 @@ def _get_nodes(model, scale, xref):
 def get_nid_to_eid_map(model,
                        node_flags_temp, pid_to_element_flags, node_remaps,
                        tris, quads):
+    """helper method for ``nastran_to_surf``"""
     nid_to_eid_map = defaultdict(list)
     for eid, element in sorted(iteritems(model.elements)):
         #if element.type not in ['CQUAD4', 'CTRIA3']:
@@ -349,7 +354,7 @@ def _write_surf(surf_filename, maxnode,
     nquads = len(quads)
     assert ntris + nquads > 0, 'nelements=%s' % (ntris + nquads)
 
-    with open(surf_filename, 'wb') as surf_file:
+    with open(surf_filename, 'w', encoding='ascii') as surf_file:
         #surf_file.write('ntris nquads nnodes\n')
         surf_file.write('%i %i %i\n' % (ntris, nquads, maxnode))
 

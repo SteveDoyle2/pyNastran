@@ -9,13 +9,14 @@ import numpy as np
 
 import pyNastran
 from pyNastran.utils import is_binary_file, object_methods, object_attributes
-from pyNastran.utils.numpy_utils import loadtxt_nice
+from pyNastran.utils.numpy_utils import loadtxt_nice, augmented_identity
 from pyNastran.utils.dev import list_print
 from pyNastran.utils.mathematics import (
-    get_abs_max, get_abs_index, get_max_index, get_min_index, is_list_ranged)
+    get_abs_max, get_max_index, get_min_index, get_abs_index,
+    is_list_ranged)
 
 
-pkg_path = pyNastran.__path__[0]
+PKG_PATH = pyNastran.__path__[0]
 
 class A1(object):
     def __init__(self):
@@ -44,6 +45,14 @@ class B1(A1):
 
 
 class TestUtils(unittest.TestCase):
+    def test_augmented_identity(self):
+        expected_array = np.array([
+            [1., 0., 0., 0.],
+            [0., 1., 0., 0.],
+            [0., 0., 1., 0.],
+        ])
+        actual_array = augmented_identity(4, 3)
+        assert np.array_equal(expected_array, actual_array)
 
     def test_is_list_ranged(self):
         """tests the is_list_ranged function"""
@@ -80,14 +89,14 @@ class TestUtils(unittest.TestCase):
         assert np.array_equal(max_index, [1, 0, 1, 1, 0]), max_index
         assert np.array_equal(abs_index, [1, 0, 1, 1, 0]), abs_index
 
-        assert np.array_equal(min_values, [4. ,  2.1,  3. ,  5. ,  2.1]), min_values
-        assert np.array_equal(max_values, [4.1,  2.2,  3.1,  5.1,  2.2]), max_values
-        assert np.array_equal(abs_values, [4.1,  2.2,  3.1,  5.1,  2.2]), abs_values
+        assert np.array_equal(min_values, [4.0, 2.1, 3.0, 5.0, 2.1]), min_values
+        assert np.array_equal(max_values, [4.1, 2.2, 3.1, 5.1, 2.2]), max_values
+        assert np.array_equal(abs_values, [4.1, 2.2, 3.1, 5.1, 2.2]), abs_values
 
     def test_is_binary(self):
         """tests if a file is binary"""
-        bdf_filename = os.path.join(pkg_path, '..', 'models', 'solid_bending', 'solid_bending.bdf')
-        op2_filename = os.path.join(pkg_path, '..', 'models', 'solid_bending', 'solid_bending.op2')
+        bdf_filename = os.path.join(PKG_PATH, '..', 'models', 'solid_bending', 'solid_bending.bdf')
+        op2_filename = os.path.join(PKG_PATH, '..', 'models', 'solid_bending', 'solid_bending.op2')
         self.assertTrue(is_binary_file(op2_filename))
         self.assertFalse(is_binary_file(bdf_filename))
 
@@ -99,14 +108,25 @@ class TestUtils(unittest.TestCase):
 
         for ai, bi in [([], '[]'), (np.array([]), '[]'), (tuple(), '[]')]:
             self.assertEqual(list_print(ai), bi)
-        r = ('[[1         ,2         ,3         ],\n'
-             ' [4         ,5         ,6         ],\n'
-             ' [7         ,8         ,9         ]]')
-        self.assertEqual(list_print(np.array([(1, 2, 3), (4, 5, 6), (7, 8, 9)]), float_fmt='%-10g'), r)
-        self.assertEqual(list_print(np.array([(1., 2, 3.), (4., 5., 6), (7., 8, 9)]), float_fmt='%-10g'), r)
+        expected_array_str = (
+            '[[1         ,2         ,3         ],\n'
+            ' [4         ,5         ,6         ],\n'
+            ' [7         ,8         ,9         ]]'
+        )
+        self.assertEqual(
+            list_print(np.array([(1, 2, 3), (4, 5, 6), (7, 8, 9)]), float_fmt='%-10g'),
+            expected_array_str)
+        self.assertEqual(
+            list_print(np.array([(1., 2, 3.), (4., 5., 6), (7., 8, 9)]), float_fmt='%-10g'),
+            expected_array_str)
 
-        r = "[[1.1       ,2.234     ,3.00001   ],\n [4.001     ,5         ,6.2       ]]"
-        self.assertEqual(list_print(np.array([(1.1, 2.234, 3.00001), (4.001, 5.0000005, 6.2)]), float_fmt='%-10g'), r)
+        expected_array_str = (
+            '[[1.1       ,2.234     ,3.00001   ],\n'
+            ' [4.001     ,5         ,6.2       ]]'
+        )
+        self.assertEqual(
+            list_print(np.array([(1.1, 2.234, 3.00001), (4.001, 5.0000005, 6.2)]), float_fmt='%-10g'),
+            expected_array_str)
 
         self.assertEqual(list_print(['a', None, 11, '']), '[a, None, 11, ]')
         self.assertEqual(list_print(('a', None, 11, '')), '[a, None, 11, ]')

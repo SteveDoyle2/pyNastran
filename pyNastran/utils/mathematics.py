@@ -2,7 +2,6 @@
 # pylint: disable=C0103
 """
 Various mathematical functions are defined in this file.  This includes:
- - augmented_identity(A)
  - gauss(n)
  - get_abs_index(data, axis=1)
  - get_abs_max(min_values, max_values)
@@ -321,22 +320,6 @@ def list_print(list_a, tol=1e-8, float_fmt='%-3.2g', zero_fmt='    0'):
             raise
 
     return '[ '+ ', '.join([_print(a) for a in list_a])+ ']'
-
-
-def augmented_identity(A):
-    """
-    Creates an Identity Matrix augmented with zeros.
-    The location of the extra zeros depends on A.
-
-    .. code-block:: python
-
-      [ 1, 0, 0, 0 ]
-      [ 0, 1, 0, 0 ]
-      [ 0, 0, 1, 0 ]
-    """
-    (nx, ny) = A.shape
-    I = eye(max(nx, ny), 'float64')
-    return I[:nx, :ny]
 
 
 #def solve_tridag(A, D):

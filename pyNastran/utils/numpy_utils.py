@@ -1,6 +1,19 @@
 """
-defines:
- - loadtxt_nice
+Various numpy dependent mathematical functions are defined in this file.
+This includes:
+ - is_array = isfinite(array)
+ - is_array = isfinite_and_greater_than(array, value)
+ - is_array = isfinite_and_nonzero(array)
+ - c = cross2d(a, b)
+ - row_col_pairs = unique2d(array)
+ - row_col_pairs, optional_index, optional_inverse = unique_rows(
+       return_index=False, return_inverse=False):
+ - augmented_identity(A)
+ - loadtxt_nice(filename, delimiter=None, skiprows=0, comment='#', dtype=np.float64,
+                converters=None, usecols=None, unpack=False,
+                ndmin=0,)
+ - savetxt_nice(fname, X, fmt='%.18e', delimiter=' ', newline='\n', header='',
+                footer='', comments='# ')
 """
 from __future__ import print_function
 import sys
@@ -112,6 +125,20 @@ def cross2d(a, b):
     """
     # axisa=-1, axisb=-1, axisc=-1,
     return np.cross(a, b, axis=1)
+
+def augmented_identity(nx, ny):
+    """
+    Creates an Identity Matrix augmented with zeros.
+    The location of the extra zeros depends on nx/ny.
+
+    .. code-block:: python
+
+      [ 1, 0, 0, 0 ]
+      [ 0, 1, 0, 0 ]
+      [ 0, 0, 1, 0 ]
+    """
+    I = eye(max(nx, ny), 'float64')
+    return I[:nx, :ny]
 
 def loadtxt_nice(filename, delimiter=None, skiprows=0, comment='#', dtype=np.float64,
                  converters=None, usecols=None, unpack=False,
@@ -463,7 +490,7 @@ def savetxt_nice(fname, X, fmt='%.18e', delimiter=' ', newline='\n', header='',
         iscomplex_X = np.iscomplexobj(X)
         # `fmt` can be a string with multiple insertion points or a
         # list of formats.  E.g. '%10.5f\t%10d' or ('%10.5f', '$10d')
-        print("type(fmt) = %s" % type(fmt))
+        #print("type(fmt) = %s" % type(fmt))
         if isinstance(fmt, (list, tuple)):
             if len(fmt) != ncol:
                 raise AttributeError('fmt has wrong shape.  %s' % str(fmt))
