@@ -1344,17 +1344,22 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         self._make_tables()
         table_names = self._read_tables(table_name)
+
+        self.close_op2(force=False)
+        #self.remove_unpickable_data()
+        return table_names
+
+    def close_op2(self, force=True):
+        """closes the OP2 and debug file"""
         if self.is_debug_file:
             self.binary_debug.write('-' * 80 + '\n')
             self.binary_debug.write('f.tell()=%s\ndone...\n' % self.f.tell())
             self.binary_debug.close()
 
-        if self._close_op2:
+        if self._close_op2 or force:
             self.f.close()
             del self.binary_debug
             del self.f
-        #self.remove_unpickable_data()
-        return table_names
 
     def _setup_op2(self):
         """

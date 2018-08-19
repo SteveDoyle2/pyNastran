@@ -28,13 +28,12 @@ from six import string_types
 from six.moves import range
 
 from numpy import (float32, float64, complex64, complex128, array, cross,
-                   allclose, zeros, insert, diag, eye, argmax, argmin, arange)
+                   allclose, argmax, argmin, arange)
 import numpy as np
 from numpy.linalg import norm  # type: ignore
 
-from scipy.linalg import solve_banded  # type: ignore
+#from scipy.linalg import solve_banded  # type: ignore
 from scipy.integrate import quad  # type: ignore
-from pyNastran.utils.numpy_utils import unique2d as unique2d_numpy
 
 # should future proof this as it handles 1.9.0.dev-d1dbf8e, 1.10.2, and 1.6.2
 #_numpy_version = [int(i) for i in numpy.__version__.split('.') if i.isdigit()]
@@ -50,9 +49,6 @@ from pyNastran.utils.numpy_utils import unique2d as unique2d_numpy
     # for eid in eids:
         # i.append(where(eids_all == eid)[0])
     # return hstack(i)
-
-def unique2d(A):
-    return unique2d_numpy(A)
 
 def get_abs_max(min_values, max_values):
     """Get return the value with the greatest magnitude, preserving sign."""

@@ -146,9 +146,10 @@ class TestOP2(Tester):
             PKG_PATH, 'op2', 'test', 'examples', 'ibulk', 'model1_sim1-solution_1.test_op2.f06'))
         op2_filename = os.path.abspath(os.path.join(
             PKG_PATH, 'op2', 'test', 'examples', 'ibulk', 'model1_sim1-solution_1.op2'))
-        op2 = read_op2_geom(op2_filename, xref=False, debug=False)
+        op2 = read_op2_geom(op2_filename, xref=False, debug=False, debug_file='temp.debug')
         op2.write_f06(f06_filename)
         os.remove(f06_filename)
+        os.remove('temp.debug')
 
     def test_beam_modes(self):
         """tests the eigenvalue table reading"""
@@ -159,9 +160,10 @@ class TestOP2(Tester):
         op2_filename_m2 = os.path.abspath(os.path.join(
             MODEL_PATH, 'beam_modes', 'beam_modes_m2.op2'))
         op2_1 = read_op2(op2_filename_m1, debug=False)
-        op2_2 = read_op2_geom(op2_filename_m2, debug=False)
+        op2_2 = read_op2_geom(op2_filename_m2, debug=False, debug_file='temp.debug')
         op2_1.write_f06(f06_filename)
         os.remove(f06_filename)
+        os.remove('temp.debug')
 
     def test_bdf_op2_elements_01(self):
         """tests a large number of elements and results in SOL 101"""
@@ -314,6 +316,34 @@ class TestOP2(Tester):
         #op2.write_f06(f06_filename)
         #os.remove(f06_filename)
 
+    def test_bdf_op2_post_minus4(self):
+        """tests a large number of elements and results in SOL 107-complex modes"""
+        bdf_filename = os.path.join(MODEL_PATH, 'elements', 'modes_elements_post4.op2')
+        #f06_filename = os.path.join(MODEL_PATH, 'elements', 'modes_complex_elements.test_op2.f06')
+        op2_filename = os.path.join(MODEL_PATH, 'elements', 'modes_elements_post4.op2')
+        #fem1, fem2, diff_cards = self.run_bdf('', bdf_filename)
+        #diff_cards2 = list(set(diff_cards))
+        #diff_cards2.sort()
+        #assert len(diff_cards2) == 0, diff_cards2
+
+        #read_op2(op2_filename=op2_filename, combine=True, subcases=None,
+                 #exclude_results=None, include_results=None,
+                 #log=None, debug=True, debug_file=None,
+                 #build_dataframe=None,
+                 #skip_undefined_matrices=True, mode='msc',
+                 #encoding=None)
+        run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
+                write_f06=True, write_op2=False,
+                is_mag_phase=False,
+                is_sort2=False, is_nx=None, delete_f06=True,
+                subcases=None, exclude=None, short_stats=False,
+                compare=True, debug=False, binary_debug=True,
+                quiet=True, check_memory=False,
+                stop_on_failure=True, dev=False, post=-4)
+        #op2 = read_op2_geom(op2_filename, debug=False)
+        #op2.write_f06(f06_filename)
+        #os.remove(f06_filename)
+
     def test_bdf_op2_thermal_01(self):
         """checks time_thermal_elements.bdf"""
         bdf_filename = os.path.join(MODEL_PATH, 'elements', 'time_thermal_elements.bdf')
@@ -361,6 +391,25 @@ class TestOP2(Tester):
         #op2 = read_op2_geom(op2_filename, debug=False)
         #op2.write_f06(f06_filename)
         #os.remove(f06_filename)
+
+    def test_bdf_op2_thermal_03(self):
+        """checks time_thermal_elements.bdf"""
+        bdf_filename = os.path.join(MODEL_PATH, 'elements', 'time_thermal_elements.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'elements', 'time_thermal_elements.op2')
+        fem1, fem2, diff_cards = self.run_bdf('', bdf_filename)
+        diff_cards2 = list(set(diff_cards))
+        diff_cards2.sort()
+        assert len(diff_cards2) == 0, diff_cards2
+
+        run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=True,
+                write_f06=True, write_op2=False,
+                is_mag_phase=False,
+                is_sort2=False, is_nx=None, delete_f06=True,
+                subcases=None, exclude=None, short_stats=False,
+                compare=True, debug=False, binary_debug=True,
+                quiet=True, check_memory=False,
+                stop_on_failure=True, dev=False,
+                skip_dataframe=True)
 
     def test_bdf_op2_other_01(self):
         """checks ofprand1.bdf"""
@@ -663,12 +712,13 @@ class TestOP2(Tester):
         folder = os.path.join(MODEL_PATH, 'aero', 'monpnt3')
         op2_filename = os.path.join(folder, 'Monitor_Points_data_LINE5000000_10FREQs.op2')
         f06_filename = os.path.join(folder, 'Monitor_Points_data_LINE5000000_10FREQs.test_op2.f06')
-        op2 = read_op2(op2_filename, debug=False)
+        op2 = read_op2(op2_filename, debug=False, debug_file='temp.debug')
         monitor3 = op2.monitor3
         assert len(monitor3.frequencies) == 11, monitor3
         str(monitor3)
         op2.write_f06(f06_filename)
         os.remove(f06_filename)
+        os.remove('temp.debug')
 
     def test_op2_nastran_2005r3b(self):
         """Nastran2005r3 bug"""

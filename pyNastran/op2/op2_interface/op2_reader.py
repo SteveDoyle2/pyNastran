@@ -108,7 +108,8 @@ class OP2Reader(object):
         if markers == [3,]:  # PARAM, POST, -1
             if self.is_debug_file:
                 self.binary_debug.write('marker = 3 -> PARAM,POST,-1?\n')
-            op2.post = -1
+            if op2.post is None:
+                op2.post = -1
             self.read_markers([3])
             data = self.read_block()   # TODO: is this the date?
             #assert len(data) == 12, len(data)
@@ -186,7 +187,8 @@ class OP2Reader(object):
         elif markers == [2,]:  # PARAM, POST, -2
             if self.is_debug_file:
                 self.binary_debug.write('marker = 2 -> PARAM,POST,-2?\n')
-            op2.post = -2
+            if op2.post is None:
+                op2.post = -2
         else:
             raise NotImplementedError(markers)
 
@@ -561,6 +563,8 @@ class OP2Reader(object):
         Reads the FOL table
         Frequency response frequency output list
 
+        tested by TestOP2.test_monpnt3
+
         +------+---------+-------+-----------------+
         | Word |  Name   | Type  |   Description   |
         +======+=========+=======+=================+
@@ -615,7 +619,11 @@ class OP2Reader(object):
         self._read_subtables()
 
     def read_frl(self):
-        """reads the FRL (Frequency Response List) table"""
+        """
+        reads the FRL (Frequency Response List) table
+
+        tested by TestOP2.test_op2_good_sine_01
+        """
         op2 = self.op2
         op2.table_name = self._read_table_name(rewind=False)
         self.read_markers([-1])
@@ -665,7 +673,11 @@ class OP2Reader(object):
         self.read_markers([0])
 
     def read_gpl(self):
-        """reads the GPL table (grid point list?)"""
+        """
+        reads the GPL table (grid point list?)
+
+        tested by TestOP2.test_beam_modes
+        """
         op2 = self.op2
         op2.table_name = self._read_table_name(rewind=False)
         self.log.debug('table_name = %r' % op2.table_name)
@@ -785,6 +797,7 @@ class OP2Reader(object):
         self.read_markers([-4, 1, 0, 0])
 
     def read_ibulk(self):
+        """tested by TestOP2.test_ibulk"""
         op2 = self.op2
         op2.table_name = self._read_table_name(rewind=False)
         op2.log.debug('table_name = %r' % op2.table_name)
@@ -935,7 +948,11 @@ class OP2Reader(object):
         self.read_markers([n, 1, 0, 0])
 
     def read_intmod(self):
-        """reads the INTMOD table"""
+        """
+        reads the INTMOD table
+
+        tested by TestNastranGUI.test_femap_rougv1_01
+        """
         op2 = self.op2
         op2.table_name = self._read_table_name(rewind=False)
         #op2.log.debug('table_name = %r' % op2.table_name)
@@ -1112,8 +1129,8 @@ class OP2Reader(object):
 
             elif response_type == 10:  # CSTRESS
                 stress_code = out[6]
-                ply = out[7]
-                pid = out[8]  # is this element id?
+                #ply = out[7]
+                #pid = out[8]  # is this element id?
                 #msg = 'CSTRESS - label=%r region=%s subcase=%s stress_code=%s ply=%s pid=%s' % (
                     #response_label, region, subcase, stress_code, ply, pid)
                 #print(msg)
@@ -2062,7 +2079,7 @@ class OP2Reader(object):
         return date
 
     #----------------------------------------------------------------------------------------
-    def _read_record(self, stream=False, debug=True, macro_rewind=False):
+    def _read_record(self, debug=True, macro_rewind=False):
         """
         Reads a record.
 
@@ -2075,9 +2092,9 @@ class OP2Reader(object):
         is a block.
 
         """
-        return self._read_record_ndata(stream, debug, macro_rewind)[0]
+        return self._read_record_ndata(debug, macro_rewind)[0]
 
-    def _read_record_ndata(self, stream=False, debug=True, macro_rewind=False):
+    def _read_record_ndata(self, debug=True, macro_rewind=False):
         """reads a record and the length of the record"""
         op2 = self.op2
         markers0 = self.get_nmarkers(1, rewind=False, macro_rewind=macro_rewind)
@@ -2423,7 +2440,7 @@ class OP2Reader(object):
             markers1 = self.get_nmarkers(1, rewind=True)
         return record
 
-    def _skip_record_ndata(self, stream=False, debug=True, macro_rewind=False):
+    def _skip_record_ndata(self, debug=True, macro_rewind=False):
         """the skip version of ``_read_record_ndata``"""
         op2 = self.op2
         marker0 = self.get_marker1(rewind=False, macro_rewind=macro_rewind)

@@ -195,7 +195,8 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
             delete_f06=False, skip_dataframe=False,
             subcases=None, exclude=None, short_stats=False,
             compare=True, debug=False, log=None, binary_debug=False,
-            quiet=False, check_memory=False, stop_on_failure=True, dev=False, xref_safe=False):
+            quiet=False, check_memory=False, stop_on_failure=True,
+            dev=False, xref_safe=False, post=None):
     """
     Runs an OP2
 
@@ -301,12 +302,20 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
             op2.set_as_msc()
             op2_nv.set_as_msc()
             op2_bdf.set_as_msc()
+        if post is not None:
+            op2.post = -4
+            op2_nv.post = -4
+            op2_bdf.post = -4
 
         op2_bdf.set_error_storage(nparse_errors=0, stop_on_parsing_error=True,
                                   nxref_errors=0, stop_on_xref_error=True)
     else:
         op2 = OP2(debug=debug, log=log)
-        op2_nv = OP2(debug=debug, log=log, debug_file=debug_file) # have to double write this until
+        # have to double write this until ???
+        op2_nv = OP2(debug=debug, log=log, debug_file=debug_file)
+        if post is not None:
+            op2.post = -4
+            op2_nv.post = -4
         op2_bdf = None
     op2_nv.use_vector = False
 

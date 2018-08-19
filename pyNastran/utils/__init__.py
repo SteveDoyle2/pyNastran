@@ -48,9 +48,18 @@ def ipython_info():
 
 def is_file_obj(filename):
     """does this object behave like a file object?"""
-    return ((hasattr(filename, 'read') and hasattr(filename, 'write'))
+    if PY2:
+        return (
+            (hasattr(filename, 'read') and hasattr(filename, 'write'))
             or isinstance(filename, file)
-            or isinstance(filename, StringIO))
+            or isinstance(filename, StringIO)
+        )
+    else:
+        return (
+            (hasattr(filename, 'read') and hasattr(filename, 'write'))
+            or isinstance(filename, io.IOBase)
+            or isinstance(filename, StringIO)
+        )
 
 def b(string):
     # type: (str) -> bytes

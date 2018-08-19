@@ -2382,7 +2382,7 @@ class OP2Reader(Op2Codes):
         return date
 
     #----------------------------------------------------------------------------------------
-    def _read_record(self, stream=False, debug=True, macro_rewind=False):
+    def _read_record(self, debug=True, macro_rewind=False):
         """
         Reads a record.
 
@@ -2395,9 +2395,9 @@ class OP2Reader(Op2Codes):
         is a block.
 
         """
-        return self._read_record_ndata(stream, debug, macro_rewind)[0]
+        return self._read_record_ndata(debug, macro_rewind)[0]
 
-    def _read_record_ndata(self, stream=False, debug=True, macro_rewind=False):
+    def _read_record_ndata(self, debug=True, macro_rewind=False):
         """reads a record and the length of the record"""
         op2 = self.op2
         markers0 = self.get_nmarkers(1, rewind=False, macro_rewind=macro_rewind)
@@ -2743,7 +2743,7 @@ class OP2Reader(Op2Codes):
             markers1 = self.get_nmarkers(1, rewind=True)
         return record
 
-    def _skip_record_ndata(self, stream=False, debug=True, macro_rewind=False):
+    def _skip_record_ndata(self, debug=True, macro_rewind=False):
         """the skip version of ``_read_record_ndata``"""
         op2 = self.op2
         marker0 = self.get_marker1(rewind=False, macro_rewind=macro_rewind)

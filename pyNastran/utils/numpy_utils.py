@@ -23,6 +23,7 @@ from itertools import count
 from six import StringIO
 import numpy as np
 #from numpy._iotools import _is_string_like
+from numpy.lib._iotools import _is_string_like
 from numpy.compat import asstr, asbytes
 
 from pyNastran.utils import is_file_obj, _filename
@@ -62,12 +63,17 @@ def unique2d(a):
     .. note:: it works by finding the unique complex numbers and doesn't
               extend well to a 3 column pair
     """
-    print(a)
     x, y = a.T
     b = x + y*1.0j
-    print(b)
     idx = np.unique(b, return_index=True)[1]
     return a[idx]
+
+#def unique_rows(data):
+    #"""
+    #finds the unique rows of a numpy array
+    #"""
+    #uniq = unique(data.view(data.dtype.descr * data.shape[1]))
+    #return uniq.view(data.dtype).reshape(-1, data.shape[1])
 
 def unique_rows(A, return_index=False, return_inverse=False):
     """
@@ -106,14 +112,6 @@ def unique_rows(A, return_index=False, return_inverse=False):
     else:
         return B.view(A.dtype).reshape((-1, A.shape[1]), order='C')
 
-#def unique_rows(data):
-    #"""
-    #finds the unique rows of a numpy array
-    #"""
-    #uniq = unique(data.view(data.dtype.descr * data.shape[1]))
-    #return uniq.view(data.dtype).reshape(-1, data.shape[1])
-
-
 def cross2d(a, b):
     """
     Interface to np.cross for 2d matrices
@@ -137,8 +135,8 @@ def augmented_identity(nx, ny):
       [ 0, 1, 0, 0 ]
       [ 0, 0, 1, 0 ]
     """
-    I = eye(max(nx, ny), 'float64')
-    return I[:nx, :ny]
+    eye = np.eye(max(nx, ny), dtype='float64')
+    return eye[:nx, :ny]
 
 def loadtxt_nice(filename, delimiter=None, skiprows=0, comment='#', dtype=np.float64,
                  converters=None, usecols=None, unpack=False,
@@ -196,8 +194,20 @@ def loadtxt_nice(filename, delimiter=None, skiprows=0, comment='#', dtype=np.flo
     data : (nrows, ncols) ndarray
         the data object
     """
+    complex_dtypes = [
+        'complex128', np.complex128,
+    ]
+    if dtype in complex_dtypes:
+        return np.loadtxt(
+            filename, dtype=dtype, comments=comment, delimiter=delimiter,
+            converters=converters,
+            skiprows=skiprows, usecols=usecols,
+            unpack=unpack, ndmin=ndmin,
+            encoding='bytes')
+
     if converters is not None:
         raise NotImplementedError('converters=%r must be None' % converters)
+
     #if ndmin is not [0, 2]: ## TODO: remove 2
         #raise NotImplementedError('ndmin=%r must be 0' % ndmin)
 
@@ -210,15 +220,17 @@ def loadtxt_nice(filename, delimiter=None, skiprows=0, comment='#', dtype=np.flo
     if isinstance(filename, StringIO):
         lines = filename.getvalue().split('\n')[skiprows:]
         filename = None
-    elif is_file_obj(filename):
-        lines = filename.readlines()[skiprows:]
-        filename = filename.name
-    else:
+    elif isinstance(filename, str):
         with codec_open(_filename(filename), 'r') as file_obj:
             if skiprows:
                 lines = file_obj.readlines()[skiprows:]
             else:
                 lines = file_obj.readlines()
+    elif is_file_obj(filename):
+        lines = filename.readlines()[skiprows:]
+        filename = filename.name
+    else:  # pragma: no cover
+        raise TypeError('filename=%s is not a file-like object' % filename)
 
     if usecols:
         for usecol in usecols:
@@ -238,56 +250,30 @@ def loadtxt_nice(filename, delimiter=None, skiprows=0, comment='#', dtype=np.flo
     del lines
 
     #print(data)
-    allowed_dtypes = ['float32', 'float64', 'float128', np.float64, 'int32', 'int64', 'int128']
-    if dtype in allowed_dtypes:
-        if dtype not in allowed_dtypes:
-            raise RuntimeError('dtype=%r allowed_dtypes=[%s]' % (dtype, ', '.join(allowed_dtypes)))
+    allowed_float_dtypes = [
+        'int32', 'int64', 'int128',
+        'float32', 'float64', 'float128', np.float64,
+    ]
+    #if dtype not in allowed_float_dtypes:  # pragma: no cover
+        #'dtype=%r allowed_float_dtypes=[%s]' % (
+            #dtype, ', '.join(allowed_float_dtypes))
+        #raise RuntimeError(msg)
+
+    if dtype in allowed_float_dtypes:
         X = np.array(data, dtype=dtype)
+    #elif dtype in complex_dtypes:
+        #return np.loadtxt(fname, dtype=dtype, comments=comment, delimiter=delimiter,
+                          #converters=converters,
+                          #skiprows=skiprows, usecols=usecols,
+                          #unpack=unpack, ndmin=ndmin,
+                          #encoding='bytes')
+        #if dtype not in allowed_complex_dtypes:  # pragma: no cover
+            #'dtype=%r allowed_complex_dtypes=[%s]' % (
+                #dtype, ', '.join(allowed_complex_dtypes))
+            #raise RuntimeError(msg)
+        #data2 = (d.strip('()'))
     elif isinstance(dtype, dict):
-        a = np.array(data, dtype=object)
-
-        X = {}
-        names = dtype['names']
-        nnames = len(names)
-        assert len(set(names)) == nnames, 'non-unique headers in %s' % str(names)
-        for icol, name, dtypei in zip(count(), dtype['names'], dtype['formats']):
-            if dtypei not in allowed_dtypes:
-                raise RuntimeError('dtype=%r allowed_dtypes=[%s]' % (
-                    dtypei, ', '.join(allowed_dtypes)))
-            try:
-                X[name] = np.asarray(a[:, icol], dtype=dtypei)
-            except IndexError:
-                # the number of columns in A is not consistent
-                ncols = [len(datai) for datai in data]
-                ucols = np.unique(ncols)
-                msg = 'The number of columns is not consistent; expected=%s; actual=%s' % (
-                    nnames, ucols)
-                raise IndexError(msg)
-            except ValueError:
-                print(a)
-                # we only allow floats
-                msg = ''
-                if dtypei in ['float32', 'float64', 'float128', np.float64]:
-                    for irow, val in zip(count(), a[:, icol]):
-                        try:
-                            float(val)
-                        except ValueError:
-                            msg += 'for name=%r, row=%s -> val=%r (expected float)\n' % (
-                                name, irow, val)
-                            is_failed = True
-                elif dtypei in ['int32', 'int64', 'int128']:
-                    for irow, val in zip(count(), a[:, icol]):
-                        try:
-                            int(val)
-                        except ValueError:
-                            msg += 'for name=%r, row=%s -> val=%r (expected int)\n' % (
-                                name, irow, val)
-                            is_failed = True
-                else:
-                    raise NotImplementedError(dtype)
-                if is_failed:
-                    raise RuntimeError(msg)
-
+        X = _loadtxt_as_dict(data, dtype, allowed_float_dtypes)
         #print('A =', A)
     else:
         raise NotImplementedError('dtype_else=%s' % dtype)
@@ -333,6 +319,50 @@ def loadtxt_nice(filename, delimiter=None, skiprows=0, comment='#', dtype=np.flo
         return X
     #return np.array(data)
 
+def _loadtxt_as_dict(data, dtype, allowed_dtypes):
+    """helper method for ``loadtxt_nice``"""
+    a = np.array(data, dtype=object)
+    X = {}
+    names = dtype['names']
+    nnames = len(names)
+    assert len(set(names)) == nnames, 'non-unique headers in %s' % str(names)
+    for icol, name, dtypei in zip(count(), dtype['names'], dtype['formats']):
+        if dtypei not in allowed_dtypes:
+            raise RuntimeError('dtype=%r allowed_dtypes=[%s]' % (
+                dtypei, ', '.join(allowed_dtypes)))
+        try:
+            X[name] = np.asarray(a[:, icol], dtype=dtypei)
+        except IndexError:
+            # the number of columns in A is not consistent
+            ncols = [len(datai) for datai in data]
+            ucols = np.unique(ncols)
+            msg = 'The number of columns is not consistent; expected=%s; actual=%s' % (
+                nnames, ucols)
+            raise IndexError(msg)
+        except ValueError:
+            # we only allow floats
+            msg = ''
+            if dtypei in ['float32', 'float64', 'float128', np.float64]:
+                for irow, val in zip(count(), a[:, icol]):
+                    try:
+                        float(val)
+                    except ValueError:
+                        msg += 'for name=%r, row=%s -> val=%r (expected float)\n' % (
+                            name, irow, val)
+                        is_failed = True
+            elif dtypei in ['int32', 'int64', 'int128']:
+                for irow, val in zip(count(), a[:, icol]):
+                    try:
+                        int(val)
+                    except ValueError:
+                        msg += 'for name=%r, row=%s -> val=%r (expected int)\n' % (
+                            name, irow, val)
+                        is_failed = True
+            else:
+                raise NotImplementedError(dtype)
+            if is_failed:
+                raise RuntimeError(msg)
+    return X
 
 def savetxt_nice(fname, X, fmt='%.18e', delimiter=' ', newline='\n', header='',
                  footer='', comments='# '):
@@ -490,11 +520,10 @@ def savetxt_nice(fname, X, fmt='%.18e', delimiter=' ', newline='\n', header='',
         iscomplex_X = np.iscomplexobj(X)
         # `fmt` can be a string with multiple insertion points or a
         # list of formats.  E.g. '%10.5f\t%10d' or ('%10.5f', '$10d')
-        #print("type(fmt) = %s" % type(fmt))
         if isinstance(fmt, (list, tuple)):
             if len(fmt) != ncol:
                 raise AttributeError('fmt has wrong shape.  %s' % str(fmt))
-            format = asstr(delimiter).join(map(asstr, fmt))
+            txt_format = asstr(delimiter).join(map(asstr, fmt))
         elif isinstance(fmt, str):
             n_fmt_chars = fmt.count('%')
             error = ValueError('fmt has wrong number of %% formats:  %s' % fmt)
@@ -503,13 +532,13 @@ def savetxt_nice(fname, X, fmt='%.18e', delimiter=' ', newline='\n', header='',
                     fmt = [' (%s+%sj)' % (fmt, fmt), ] * ncol
                 else:
                     fmt = [fmt, ] * ncol
-                format = delimiter.join(fmt)
+                txt_format = delimiter.join(fmt)
             elif iscomplex_X and n_fmt_chars != (2 * ncol):
                 raise error
             elif ((not iscomplex_X) and n_fmt_chars != ncol):
                 raise error
             else:
-                format = fmt
+                txt_format = fmt
         else:
             raise ValueError('invalid fmt: %r' % (fmt,))
 
@@ -522,16 +551,16 @@ def savetxt_nice(fname, X, fmt='%.18e', delimiter=' ', newline='\n', header='',
                 for number in row:
                     row2.append(number.real)
                     row2.append(number.imag)
-                fh.write(asbytes(format % tuple(row2) + newline))
+                fh.write(asbytes(txt_format % tuple(row2) + newline))
         else:
             for row in X:
                 try:
-                    print('format = %r' % format, type(format))
-                    fh.write(asbytes(format % tuple(row) + newline))
+                    #print('txt_format = %r' % txt_format, type(txt_format))
+                    fh.write(asbytes(txt_format % tuple(row) + newline))
                 except TypeError:
                     raise TypeError("Mismatch between array dtype ('%s') and "
                                     "format specifier ('%s')"
-                                    % (str(X.dtype), format))
+                                    % (str(X.dtype), txt_format))
         if len(footer) > 0:
             footer = footer.replace('\n', '\n' + comments)
             fh.write(asbytes(comments + footer + newline))

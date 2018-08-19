@@ -147,6 +147,7 @@ class OP2(OP2_Scalar):
         assert make_geom is False, make_geom
         OP2_Scalar.__init__(self, debug=debug, log=log, debug_file=debug_file)
         self.ask = False
+        self.post = None
 
     def object_attributes(self, mode='public', keys_to_skip=None):
         # type: (str, Optional[List[str]]) -> List[str]
@@ -550,17 +551,20 @@ class OP2(OP2_Scalar):
         self.read_mode = 1
         self._close_op2 = False
 
-        # get GUI object names, build objects, but don't read data
-        OP2_Scalar.read_op2(self, op2_filename=op2_filename)
+        try:
+            # get GUI object names, build objects, but don't read data
+            OP2_Scalar.read_op2(self, op2_filename=op2_filename)
 
-        # TODO: stuff to figure out objects
-        # TODO: stuff to show gui of table names
-        # TODO: clear out objects the user doesn't want
-        self.read_mode = 2
-        self._close_op2 = True
-        self.log.debug('-------- reading op2 with read_mode=2 (array filling) --------')
-        OP2_Scalar.read_op2(self, op2_filename=self.op2_filename)
-
+            # TODO: stuff to figure out objects
+            # TODO: stuff to show gui of table names
+            # TODO: clear out objects the user doesn't want
+            self.read_mode = 2
+            self._close_op2 = True
+            self.log.debug('-------- reading op2 with read_mode=2 (array filling) --------')
+            OP2_Scalar.read_op2(self, op2_filename=self.op2_filename)
+        except:
+            OP2_Scalar.close_op2(self, force=True)
+            raise
         self._finalize()
         if build_dataframe:
             self.build_dataframe()

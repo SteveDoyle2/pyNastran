@@ -33,14 +33,14 @@ class TestOpt(unittest.TestCase):
         #bdf, op2 = run_model(bdf_filename, op2_filename,
                              #f06_has_weight=False, vectorized=True,
                              #encoding='utf-8')
-        op2 = read_op2(op2_filename, log=log, debug=True)
-
+        op2 = read_op2(op2_filename, log=log, debug=True, debug_file='temp.debug')
         subcase_ids = op2.subcase_key.keys()
         #for subcase_id in subcase_ids:
             #assert isinstance(subcase_id, integer_types), subcase_id
             #for key, dresp in sorted(iteritems(model.dresps)):
                 #print(dresp)
                 #dresp.calculate(op2, subcase_id)
+        os.remove('temp.debug')
 
     def test_opt_2(self):
         """tests updating model based on DESVARs"""
