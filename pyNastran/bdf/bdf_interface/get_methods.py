@@ -1,6 +1,7 @@
 """defines various methods to access low level BDF data"""
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+import sys
 import numpy as np
 
 from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
@@ -225,11 +226,20 @@ class GetMethods(BDFAttributes):
 
     def get_material_ids(self):
         """gets the material ids"""
-        keys = ChainMap(
-            self.materials.keys(),
-            self.thermal_materials.keys(),
-            self.hyperelastic_materials.keys(),
-        )
+        if sys.version_info[:2] >= (3, 7):
+            # TODOO: the most inefficient Python 3.7 hack I can do...
+            keys = list(set(
+                list(self.materials.keys()) +
+                list(self.thermal_materials.keys()) +
+                list(self.hyperelastic_materials.keys())
+            ))
+            #raise RuntimeError(keys)
+        else:
+            keys = ChainMap(
+                self.materials.keys(),
+                self.thermal_materials.keys(),
+                self.hyperelastic_materials.keys(),
+            )
         return keys
 
     def get_thermal_material_ids(self):

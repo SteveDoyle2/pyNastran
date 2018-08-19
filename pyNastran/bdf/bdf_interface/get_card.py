@@ -2332,7 +2332,8 @@ class GetCard(GetMethods):
                   PCOMP, which has multiple mids)
         """
         mid_to_pids_map = {}
-        for mid in self.get_material_ids():
+        mids = self.get_material_ids()
+        for mid in mids:
             mid_to_pids_map[mid] = []
 
         properties_without_materials = [

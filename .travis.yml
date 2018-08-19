@@ -7,6 +7,7 @@ python:
   - "2.7"
   - "3.5"
   - "3.6"
+  - "3.7"
 #  - "3.5-dev" # 3.5 development branch
 #  - "nightly" # currently points to 3.6-dev
 
@@ -68,10 +69,13 @@ install:
   # if line per https://docs.travis-ci.com/user/multi-os/
   - echo "python version=$TRAVIS_PYTHON_VERSION"
   
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy       scipy matplotlib pandas h5py vtk pyqt; fi
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.5" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy       scipy matplotlib pandas h5py vtk pyqt; fi
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy>=1.12 scipy matplotlib pandas h5py vtk pyqt; fi
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "nightly" ]]; then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy<1.13  scipy matplotlib     ; fi
+  # PY2: numpy 1.14.2: pandas works in 0.20.3; broken in 0.22.0, 0.23.4
+  # PY3: numpy 1.14.2; pandas is fine: 0.22.0
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy       scipy matplotlib pandas=0.20 h5py vtk pyqt; fi
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.5" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy       scipy matplotlib pandas      h5py vtk pyqt; fi
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy>=1.12 scipy matplotlib pandas      h5py vtk pyqt; fi
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.7" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy>=1.12 scipy matplotlib pandas      h5py; fi
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "nightly" ]]; then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy<1.13  scipy matplotlib pandas; fi
   - source activate test-environment
   - conda list
   - python setup.py develop
@@ -83,6 +87,7 @@ script:
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then coverage run pyNastran/all_tests.py; fi
   - if [[ "$TRAVIS_PYTHON_VERSION" == "3.5" ]]; then python pyNastran/all_tests.py; fi
   - if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then python pyNastran/all_tests.py; fi
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.7" ]]; then python pyNastran/all_tests_no_gui.py; fi
   - if [[ "$TRAVIS_PYTHON_VERSION" == "nightly" ]]; then python pyNastran/all_tests_no_gui.py; fi
 
   # good
