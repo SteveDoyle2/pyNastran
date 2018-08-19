@@ -13,7 +13,7 @@ import warnings
 import scipy.linalg as linalg
 import numpy as np
 
-import pyNastran.op2.dev.locate as locate
+import pyNastran.op2.dev.pyyeti.locate as locate
 
 
 def rigid_body_geom(grids, refpoint=np.array([[0, 0, 0]])):

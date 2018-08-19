@@ -67,7 +67,7 @@ def clear_out_solids(bdf_filename, bdf_filename_out=None,
     nids.sort()
 
     nodes2 = {nid : node for nid, node in iteritems(model.nodes) if nid in nids}
-    properties2 = {pid : prop for pid, prop in iteritems(model.properties) if prop.type == 'PSHELL'}
+    properties2 = {pid : prop for pid, prop in model.properties.items() if prop.type == 'PSHELL'}
 
     model.nodes = nodes2
     #model.elements = elements2
@@ -181,35 +181,7 @@ def nastran_to_surf(bdf_filename, pid_to_element_flags, surf_filename,
     quads = []
     tris = []
 
-    node_flags = {}
-    node_flags_temp = {}
-
-    # assume nodes go from 1:#
-    nid0 = 1
-
-    maxnode = max(model.nodes.keys())
-    nodes = zeros((maxnode, 3), dtype='float64')
-
-    if xref:
-        for nid, node in sorted(iteritems(model.nodes)):
-            #if nid != nid0:
-                #msg = 'nodes must go from 1 to N, no gaps; nid=%s expected=%s' % (nid, nid0)
-                #raise RuntimeError(msg)
-            xyz = node.get_position()
-            nodes[nid-1] = xyz * scale
-            node_flags[nid] = []
-            node_flags_temp[nid] = []
-            nid0 += 1
-    else:
-        for nid, node in sorted(iteritems(model.nodes)):
-            #if nid != nid0:
-                #msg = 'nodes must go from 1 to N, no gaps; nid=%s expected=%s' % (nid, nid0)
-                #raise RuntimeError(msg)
-            xyz = node.xyz
-            nodes[nid-1] = xyz * scale
-            node_flags[nid] = []
-            node_flags_temp[nid] = []
-            nid0 += 1
+    maxnode, nodes, node_flags, node_flags_temp = _get_nodes(model, scale, xref)
 
     node_remaps = {}
     #if 0:
@@ -230,42 +202,22 @@ def nastran_to_surf(bdf_filename, pid_to_element_flags, surf_filename,
         #del xyz_array
 
     pid0 = 1
-    for pid, prop in sorted(iteritems(model.properties)):
+    for pid, prop in sorted(model.properties.items()):
         if pid != pid0:
-            msg = 'properties must go from 1 to N, no gaps; pid=%s expected=%s' % (pid, pid0)
+            msg = 'properties must go from 1 to N, no gaps; pid=%s expected=%s' % (
+                pid, pid0)
             raise RuntimeError(msg)
         #assert pid in pid_to_element_flags, pid
         if prop.type in ['PSOLID']:
             continue
         if prop.type not in ['PSHELL', 'PCOMP', 'PCOMPG']:
             raise NotImplementedError(prop)
-        #pid0 += 1
+        pid0 += 1
 
-    nid_to_eid_map = defaultdict(list)
-    for eid, element in sorted(iteritems(model.elements)):
-        nids = element.node_ids
-        nids2 = []
-        for nid in nids:
-            nid_to_eid_map[nid].append(eid)
-            if nid in node_remaps:
-                nid = node_remaps[nid]
-            nids2.append(nid)
-        pid = element.Pid()
-
-        element_flag = pid_to_element_flags[pid]
-        unused_name, spacing, thickness, unused_grid_bc = element_flag
-        element_flag_node = [spacing, thickness]
-        for nid in nids:
-            node_flags_temp[nid].append(element_flag_node)
-            assert nid > 0, element
-
-        if element.type == 'CTRIA3':
-            tris.append([nids2, pid])
-        elif element.type == 'CQUAD4':
-            quads.append([nids2, pid])
-        else:
-            raise NotImplementedError(element)
-    del pid, nids
+    nid_to_eid_map = get_nid_to_eid_map(
+        model,
+        node_flags_temp, pid_to_element_flags, node_remaps,
+        tris, quads)
 
     initial_normal_spacing0 = 0
     bl_thickness0 = 0
@@ -313,10 +265,80 @@ def nastran_to_surf(bdf_filename, pid_to_element_flags, surf_filename,
 
         assert nid > 0, nid
         node_flags[nid] = avg_node_flagsi
+
     _write_surf(surf_filename, maxnode,
                 nodes, tris, quads,
                 node_flags, initial_normal_spacing0, pid_to_element_flags, bl_thickness0,
                 renumber_pids, tol)
+
+def _get_nodes(model, scale, xref):
+    # assume nodes go from 1:#
+    #nid0 = 1
+    node_flags = {}
+    node_flags_temp = {}
+
+    maxnode = max(model.nodes.keys())
+    nodes = zeros((maxnode, 3), dtype='float64')
+    if xref:
+        for nid, node in sorted(iteritems(model.nodes)):
+            #if nid != nid0:
+                #msg = 'nodes must go from 1 to N, no gaps; nid=%s expected=%s' % (nid, nid0)
+                #raise RuntimeError(msg)
+            xyz = node.get_position()
+            nodes[nid-1] = xyz * scale
+            node_flags[nid] = []
+            node_flags_temp[nid] = []
+            #nid0 += 1
+    else:
+        for nid, node in sorted(iteritems(model.nodes)):
+            #if nid != nid0:
+                #msg = 'nodes must go from 1 to N, no gaps; nid=%s expected=%s' % (nid, nid0)
+                #raise RuntimeError(msg)
+            xyz = node.xyz
+            nodes[nid-1] = xyz * scale
+            node_flags[nid] = []
+            node_flags_temp[nid] = []
+            #nid0 += 1
+    return maxnode, nodes, node_flags, node_flags_temp
+
+def get_nid_to_eid_map(model,
+                       node_flags_temp, pid_to_element_flags, node_remaps,
+                       tris, quads):
+    nid_to_eid_map = defaultdict(list)
+    for eid, element in sorted(iteritems(model.elements)):
+        #if element.type not in ['CQUAD4', 'CTRIA3']:
+            #continue
+        nids = element.node_ids
+        nids2 = []
+        for nid in nids:
+            nid_to_eid_map[nid].append(eid)
+            if nid in node_remaps:
+                nid = node_remaps[nid]
+            nids2.append(nid)
+        pid = element.Pid()
+
+        element_flag = pid_to_element_flags[pid]
+        unused_name, spacing, thickness, unused_grid_bc = element_flag
+        element_flag_node = [spacing, thickness]
+
+        for nid in nids:
+            try:
+                node_flags_temp[nid].append(element_flag_node)
+            except KeyError:
+                print('max_nid=%s max_temp_nid=%s' % (max(nids), max(node_flags_temp)))
+                print("nids = %s" % nids)
+                print("node_flags_temp = %s" % node_flags_temp.keys())
+                raise
+            assert nid > 0, element
+
+        if element.type == 'CTRIA3':
+            tris.append([nids2, pid])
+        elif element.type == 'CQUAD4':
+            quads.append([nids2, pid])
+        else:
+            raise NotImplementedError(element)
+    #del pid, nids
+    return nid_to_eid_map
 
 def _write_surf(surf_filename, maxnode,
                 nodes, tris, quads,

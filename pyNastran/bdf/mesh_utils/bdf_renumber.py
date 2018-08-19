@@ -7,7 +7,7 @@ from __future__ import print_function
 from itertools import chain
 
 import io
-from six import PY2, PY3, iteritems, itervalues, StringIO
+from six import PY2, PY3, iteritems, StringIO
 import numpy as np
 
 from pyNastran.bdf.bdf import BDF
@@ -27,8 +27,9 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         str : a bdf_filename (string; supported)
         BDF : a BDF model that has been cross referenced and is
         fully valid (an equivalenced deck is not valid)
-    bdf_filename_out : str
-        a bdf_filename to write
+    bdf_filename_out : str / None
+        str : a bdf_filename to write
+        None : don't write the BDF
     size : int; {8, 16}; default=8
         the bdf write precision
     is_double : bool; default=False
@@ -206,7 +207,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     if starting_id_dict is None:
         starting_id_dict = starting_id_dict_default
     else:
-        for key, value in iteritems(starting_id_dict_default):
+        for key, value in starting_id_dict_default.items():
             if key not in starting_id_dict:
                 starting_id_dict[key] = value
 
@@ -235,7 +236,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     tf_id = None
 
     # turn them into variables
-    for key, value in sorted(iteritems(starting_id_dict)):
+    for key, value in sorted(starting_id_dict.items()):
         #assert isinstance(key, string_types), key
         assert key in starting_id_dict_default, 'key=%r is invalid' % (key)
         #assert isidentifier(key), 'key=%s is invalid' % key
@@ -432,20 +433,20 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         #pid = _create_dict_mapper(model.properties_mass, properties_mass_map, 'pid', pid)
         #pid = _update(model.convection_properties, properties_mass_map, pid)
 
-        for pidi, prop in sorted(iteritems(model.properties)):
+        for pidi, prop in sorted(model.properties.items()):
             prop.pid = pid
             properties_map[pidi] = pid
             pid += 1
-        for pidi, prop in sorted(iteritems(model.properties_mass)):
+        for pidi, prop in sorted(model.properties_mass.items()):
             # PMASS
             prop.pid = pid
             properties_mass_map[pidi] = pid
             pid += 1
-        for pidi, prop in sorted(iteritems(model.convection_properties)):
+        for pidi, prop in sorted(model.convection_properties.items()):
             # PCONV
             prop.pid = pid
             pid += 1
-        for pidi, prop in sorted(iteritems(model.phbdys)):
+        for pidi, prop in sorted(model.phbdys.items()):
             # PHBDY
             prop.pid = pid
             pid += 1
@@ -464,7 +465,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
             eid_map[eidi] = eid
             mass_id_map[eidi] = eid
             eid += 1
-        for eidi, elem in sorted(iteritems(model.rigid_elements)):
+        for eidi, elem in sorted(model.rigid_elements.items()):
             # RBAR/RBAR1/RBE1/RBE2/RBE3/RSPLINE/RSSCON
             elem.eid = eid
             eid_map[eidi] = eid
@@ -476,20 +477,20 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     if 'mid' in starting_id_dict and mid is not None:
         #mid = 1
         for materials in all_materials:
-            for midi, material in iteritems(materials):
+            for midi, material in materials.items():
                 mid = mid_map[midi]
                 assert hasattr(material, 'mid')
                 material.mid = mid
 
     if 'spc_id' in starting_id_dict and spc_id is not None:
         # spc
-        for spc_idi, spc_group in sorted(iteritems(model.spcadds)):
+        for spc_idi, spc_group in sorted(model.spcadds.items()):
             for i, spc in enumerate(spc_group):
                 assert hasattr(spc, 'conid')
                 spc.conid = spc_id
             spc_map[spc_idi] = spc_id
             spc_id += 1
-        for spc_idi, spc_group in sorted(iteritems(model.spcs)):
+        for spc_idi, spc_group in sorted(model.spcs.items()):
             for i, spc in enumerate(spc_group):
                 assert hasattr(spc, 'conid')
                 spc.conid = spc_id
@@ -503,13 +504,13 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
 
     if 'mpc_id' in starting_id_dict and mpc_id is not None:
         # mpc
-        for mpc_idi, mpc_group in sorted(iteritems(model.mpcadds)):
+        for mpc_idi, mpc_group in sorted(model.mpcadds.items()):
             for i, mpc in enumerate(mpc_group):
                 assert hasattr(mpc, 'conid')
                 mpc.conid = mpc_id
             mpc_map[mpc_idi] = mpc_id
             mpc_id += 1
-        for mpc_idi, mpc_group in sorted(iteritems(model.mpcs)):
+        for mpc_idi, mpc_group in sorted(model.mpcs.items()):
             for i, mpc in enumerate(mpc_group):
                 assert hasattr(mpc, 'conid')
                 mpc.conid = mpc_id
@@ -523,7 +524,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
 
     if 'cid' in starting_id_dict and cid is not None:
         # coords
-        for cidi, coord in sorted(iteritems(model.coords)):
+        for cidi, coord in sorted(model.coords.items()):
             if cidi == 0:
                 cid_map[0] = 0
                 continue
@@ -533,7 +534,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
 
     if 'freq_id' in starting_id_dict and freq_id is not None:
         # frequencies
-        for freqi, freqs in sorted(iteritems(model.frequencies)):
+        for freqi, freqs in sorted(model.frequencies.items()):
             freq_map[freqi] = freq_id
             for freq in freqs:
                 freq.sid = freqi
@@ -542,7 +543,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     set_map = {}
     if 'set_id' in starting_id_dict and set_id is not None:
         # sets
-        for sidi, set_ in sorted(iteritems(model.sets)):
+        for sidi, set_ in sorted(model.sets.items()):
             set_.sid = set_id
             set_map[sidi] = set_id
             set_id += 1
@@ -551,7 +552,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         # set up spline1 box mapping
         delta_box1_map = {}
         delta_box2_map = {}
-        for sidi, spline in sorted(iteritems(model.splines)):
+        for sidi, spline in sorted(model.splines.items()):
             if spline.type in ['SPLINE1', 'SPLINE2']:
                 delta_box1_map[sidi] = spline.box1 - spline.caero
                 delta_box2_map[sidi] = spline.box2 - spline.caero
@@ -564,7 +565,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     caero_id_map = {}
     if 'caero_id' in starting_id_dict and caero_id is not None:
         # caeros
-        for caero_idi, caero in sorted(iteritems(model.caeros)):
+        for caero_idi, caero in sorted(model.caeros.items()):
             if caero.type in ['CAERO1', 'CAERO3', 'CAERO4']: # not CAERO5
                 caero.eid = caero_id
                 caero_id_map[caero_idi] = caero_id
@@ -579,7 +580,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     spline_id_map = {}
     if 'spline_id' in starting_id_dict and spline_id is not None:
         # splines
-        for sidi, spline in sorted(iteritems(model.splines)):
+        for sidi, spline in sorted(model.splines.items()):
             spline.eid = spline_id
             #spline.cross_reference(model)
             if spline.type in ['SPLINE1', 'SPLINE2']:
@@ -666,29 +667,29 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     # start the complicated set
     # dconstr
     dessub_map = dconadd_map
-    for key, value in iteritems(dconstr_map):
+    for key, value in dconstr_map.items():
         if key in dessub_map:
             raise NotImplementedError()
         dessub_map[key] = value
 
     # tables
-    for table_idi, table in sorted(sorted(iteritems(model.tables))):
+    for table_idi, table in sorted(model.tables.items()):
         assert hasattr(table, 'tid')
         table.tid = table_id
         table_id += 1
-    for table_idi, table in sorted(sorted(iteritems(model.random_tables))):
+    for table_idi, table in sorted(model.random_tables.items()):
         assert hasattr(table, 'tid')
         table.tid = table_id
         table_id += 1
 
     # dloads
-    for dload_idi, dloads in sorted(iteritems(model.dloads)):
+    for dload_idi, dloads in sorted(model.dloads.items()):
         for dload in dloads:
             assert hasattr(dload, 'sid')
             dload.sid = dload_id
         dload_map[dload_idi] = dload_id
         dload_id += 1
-    for dload_idi, dloads in sorted(iteritems(model.dload_entries)):
+    for dload_idi, dloads in sorted(model.dload_entries.items()):
         for dload in dloads:
             assert hasattr(dload, 'sid')
             dload.sid = dload_id
@@ -696,13 +697,13 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         dload_id += 1
 
     # loads
-    for load_idi, load_combinations in sorted(iteritems(model.load_combinations)):
+    for load_idi, load_combinations in sorted(model.load_combinations.items()):
         for load_combination in load_combinations:
             assert hasattr(load_combination, 'sid')
             load_combination.sid = load_id
         load_map[load_idi] = load_id
         load_id += 1
-    for load_idi, loads in sorted(iteritems(model.loads)):
+    for load_idi, loads in sorted(model.loads.items()):
         for load in loads:
             assert hasattr(load, 'sid')
             load.sid = load_id
@@ -710,7 +711,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         load_id += 1
 
     # transfer_functions
-    for tf_idi, tfs in sorted(iteritems(model.transfer_functions)):
+    for tf_idi, tfs in sorted(model.transfer_functions.items()):
         for tf in tfs:
             assert hasattr(tf, 'sid')
             tf.sid = tf_id
@@ -805,7 +806,7 @@ def get_renumber_starting_ids_from_model(model):
         'set_id' : max(model.sets.keys()) + 1 if model.sets else 1,
         'spline_id' : max(model.splines.keys()) + 1 if model.splines else 1,
         'caero_id' : max(caero.box_ids[-1, -1]
-                         for caero in itervalues(model.caeros)) + 1 if model.caeros else 1,
+                         for caero in model.caeros.values()) + 1 if model.caeros else 1,
     }
     return starting_id_dict
 
@@ -858,8 +859,8 @@ def _update_case_control(model, mapper):
     if case_control is None:
         return
 
-    for isubcase, subcase in sorted(iteritems(case_control.subcases)):
-        for key, values in sorted(iteritems(subcase.params)):
+    for isubcase, subcase in sorted(case_control.subcases.items()):
+        for key, values in sorted(subcase.params.items()):
             value, options, param_type = values
             if 'SET ' in key:
                 #print(isubcase, key, value, options, param_type)
@@ -872,10 +873,10 @@ def _update_case_control(model, mapper):
     #print('set_locations =', set_locations)
     #iset = 1
     global_subcase = case_control.subcases[0]
-    for isubcase, subcase in sorted(iteritems(case_control.subcases)):
+    for isubcase, subcase in sorted(case_control.subcases.items()):
         #print('-----------------------')
         #print(subcase)
-        for key, values in sorted(iteritems(subcase.params)):
+        for key, values in sorted(subcase.params.items()):
             if key in skip_keys:
                 pass
             elif 'SET ' in key:
@@ -924,11 +925,13 @@ def _update_case_control(model, mapper):
                             raise NotImplementedError(key)
 
                         values2 = []
+                        eids_missing = []
+                        nids_missing = []
                         if key in elemental_quantities:
                             # renumber eids
                             for eid in seti2:
                                 if eid not in eid_map:
-                                    model.log.warning("  couldn't find eid=%s...dropping" % eid)
+                                    eids_missing.append(eid)
                                     continue
                                 eid_new = eid_map[eid]
                                 values2.append(eid_new)
@@ -937,16 +940,22 @@ def _update_case_control(model, mapper):
                             # renumber nids
                             for nid in seti2:
                                 if nid not in nid_map:
-                                    model.log.warning("  couldn't find nid=%s...dropping" % nid)
+                                    nids_missing.append(nid)
                                     continue
                                 nid_new = nid_map[nid]
                                 values2.append(nid_new)
                             #print('updating node SET %r' % options)
+                        if eids_missing:
+                            model.log.warning("  couldn't find eids=%s...dropping" % eids_missing)
+                        if nids_missing:
+                            model.log.warning("  couldn't find nids=%s...dropping" % nids_missing)
+
 
                         param_type = 'SET-type'
                         #print('adding seti=%r values2=%r seti_key=%r param_type=%r'  % (
                             #seti, values2, seti_key, param_type))
-                        assert len(values2) > 0, values2
+                        assert len(values2) > 0, 'key=%r values2=%s' % (key, values2)
+
                         if isubcase in set_locations and key in set_locations[isubcase]:
                             # or not key in global_subcase
                             gset = subcase.get_parameter(seti)
