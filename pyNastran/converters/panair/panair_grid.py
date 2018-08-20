@@ -19,7 +19,7 @@ from pyNastran.converters.panair.panair_grid_patch import (
 from pyNastran.converters.panair.assign_type import (
     integer, double, integer_or_blank, double_or_blank, fortran_value)
 from pyNastran.utils.log import get_logger2
-from pyNastran.utils import print_bad_path
+from pyNastran.utils import check_path
 
 #from pyNastran.utils import list_print
 
@@ -829,7 +829,7 @@ class PanairGrid(object):
 
     def read_panair(self, infilename):
         """reads a panair input file"""
-        assert os.path.exists(infilename), print_bad_path(infilename)
+        check_path(infilename, 'panair_input_Filename')
         self.infilename = infilename
 
         with open(self.infilename, 'r') as infile:

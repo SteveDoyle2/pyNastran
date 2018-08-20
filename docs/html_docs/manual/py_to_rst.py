@@ -5,7 +5,7 @@ from importlib import import_module
 from docutils import core
 
 import pyNastran
-from pyNastran.utils import print_bad_path
+from pyNastran.utils import check_path
 pkg_path = pyNastran.__path__[0]
 
 class Section(object):
@@ -94,7 +94,7 @@ def create_rst_from_python_files():
     if not os.path.exists(pydocs_dir):
         os.makedirs(pydocs_dir)
 
-    assert os.path.exists(quick_start_pydocs_dir), print_bad_path(quick_start_pydocs_dir)
+    check_path(quick_start_pydocs_dir, 'quick_start_pydocs_dir')
     for fname in os.listdir(quick_start_pydocs_dir):
         fname1 = os.path.join(quick_start_pydocs_dir, fname)
         fname2 = os.path.join(pydocs_dir, fname)

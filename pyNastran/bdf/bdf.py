@@ -21,7 +21,7 @@ from six.moves.cPickle import load, dump, dumps  # type: ignore
 
 import numpy as np  # type: ignore
 
-from pyNastran.utils import object_attributes, print_bad_path
+from pyNastran.utils import object_attributes, check_path
 from pyNastran.utils.log import get_logger2, write_error
 from pyNastran.bdf.utils import (
     _parse_pynastran_header, to_fields, parse_executive_control_deck, parse_patran_syntax)
@@ -1274,9 +1274,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         else:
             raise NotImplementedError(bdf_filename)
 
-        if not os.path.exists(bdf_filename):
-            msg = 'cannot find bdf_filename=%r\n%s' % (bdf_filename, print_bad_path(bdf_filename))
-            raise IOError(msg)
+        check_path(bdf_filename, 'bdf_filename')
         if bdf_filename.lower().endswith('.pch'):  # .. todo:: should this be removed???
             punch = True
 

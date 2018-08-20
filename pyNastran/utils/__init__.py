@@ -16,6 +16,7 @@ if PY2:
     integer_types = (int, long, np.int32, np.int64)
     integer_string_types = (int, long, np.int32, np.int64, str, unicode)
     integer_float_types = (int, long, np.int32, np.int64, float)
+    FileNotFoundError = IOError
 else:
     integer_types = (int, np.int32, np.int64)
     integer_string_types = (int, np.int32, np.int64, bytes, str)
@@ -105,13 +106,19 @@ def is_binary_file(filename):
 
     .. warning:: this may not work for unicode."""
     assert isinstance(filename, string_types), '%r is not a valid filename' % filename
-    assert os.path.exists(filename), '%r does not exist\n%s' % (filename, print_bad_path(filename))
+    check_path(filename, '')
     with io.open(filename, mode='rb') as fil:
         for chunk in iter(lambda: fil.read(1024), bytes()):
             if b'\0' in chunk:  # found null byte
                 return True
     return False
 
+
+def check_path(filename, name='file'):
+    # type: (str, str) -> None
+    if not os.path.exists(filename):
+        msg = 'cannot find %s=%r\n%s' % (name, print_bad_path(filename))
+        raise FileNotFoundError(msg)
 
 def print_bad_path(path):
     # type: (str) -> str

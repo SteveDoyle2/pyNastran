@@ -34,7 +34,7 @@ else:
     from pyNastran.gui.qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
 from pyNastran.utils.log import SimpleLogger
-from pyNastran.utils import integer_types
+from pyNastran.utils import check_path, integer_types
 
 from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
 from pyNastran.gui.qt_files.scalar_bar import ScalarBar
@@ -2111,7 +2111,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             for istep in isteps:
                 png_filename = fmt % istep
                 png_filenames.append(png_filename)
-                assert os.path.exists(png_filename), 'png_filename=%s' % png_filename
+                check_path(png_filename, 'png_filename)
 
         if gif_filename is not None and png_filenames:
             is_failed = write_gif(

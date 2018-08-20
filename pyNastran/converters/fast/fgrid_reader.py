@@ -1,7 +1,7 @@
 from __future__ import print_function
 import os
 import numpy as np
-from pyNastran.utils import print_bad_path
+from pyNastran.utils import check_path
 from pyNastran.utils.log import get_logger2
 
 
@@ -38,7 +38,7 @@ class FGridReader(object):
 
     def read_fgrid(self, fgrid_filename, dimension_flag=3):
         """extracts the nodes, tris, bcs, tets"""
-        assert os.path.exists(fgrid_filename), print_bad_path(fgrid_filename)
+        check_path(fgrid_filename, 'fgrid_filename')
         with open(fgrid_filename, 'r') as fgrid:
             nnodes, ntris, ntets = fgrid.readline().split()
             nnodes = int(nnodes)

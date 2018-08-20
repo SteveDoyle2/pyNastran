@@ -19,7 +19,7 @@ numpy.seterr(all='raise')
 #import traceback
 #import resource
 
-from pyNastran.utils import print_bad_path
+from pyNastran.utils import check_path
 from pyNastran.dev.bdf_vectorized.bdf import BDF, read_bdf #, NastranMatrix
 
 import pyNastran.dev.bdf_vectorized.test
@@ -273,7 +273,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
 
 
 def run_fem1(fem1, bdf_model, mesh_form, xref, punch, sum_load, size, is_double, cid):
-    assert os.path.exists(bdf_model), print_bad_path(bdf_model)
+    check_path(bdf_model, 'bdf_model')
     try:
         if '.pch' in bdf_model:
             fem1.read_bdf(bdf_model, xref=False, punch=True)

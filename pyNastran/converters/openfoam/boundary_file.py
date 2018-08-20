@@ -15,7 +15,7 @@ import numpy as np
 from pyNastran.converters.openfoam.points_file import PointFile
 from pyNastran.converters.openfoam.face_file import FaceFile
 from pyNastran.utils.log import get_logger2
-from pyNastran.utils import print_bad_path
+from pyNastran.utils import check_path
 
 
 class BoundaryFile(object):
@@ -141,9 +141,9 @@ class Boundary(object):
 
     def read_openfoam(self, point_filename, face_filename, boundary_filename):
         """reads a Boundary file"""
-        assert os.path.exists(face_filename), print_bad_path(face_filename)
-        assert os.path.exists(point_filename), print_bad_path(point_filename)
-        assert os.path.exists(boundary_filename), print_bad_path(boundary_filename)
+        check_path(face_filename, 'face_filename')
+        check_path(point_filename, 'point_filename')
+        check_path(boundary_filename, 'boundary_filename')
 
         #self.log.info('face_filename = %r' % face_filename)
         #self.log.info('point_filename = %r' % point_filename)

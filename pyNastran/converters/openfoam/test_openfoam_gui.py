@@ -7,7 +7,7 @@ from pyNastran.converters.openfoam.block_mesh import read_block_mesh, mirror_blo
 from pyNastran.converters.openfoam.face_file import FaceFile
 from pyNastran.converters.openfoam.openfoam_io import OpenFoamIO
 from pyNastran.utils.log import get_logger
-from pyNastran.utils import print_bad_path
+from pyNastran.utils import check_path
 
 PKG_PATH = pyNastran.__path__[0]
 MODEL_PATH = os.path.join(PKG_PATH, 'converters', 'openfoam', 'models')
@@ -27,7 +27,7 @@ class TestOpenFoamGUI(unittest.TestCase):
         geometry_filename = os.path.join(MODEL_PATH, 'SnakeRiverCanyon', 'system', 'blockMeshDict')
         bdf_filename = os.path.join(MODEL_PATH, 'SnakeRiverCanyon', 'system', 'blockMeshDict.bdf')
         face_filename = os.path.join(MODEL_PATH, 'SnakeRiverCanyon', 'system', 'faces')
-        assert os.path.exists(geometry_filename), print_bad_path(geometry_filename)
+        check_path(geometry_filename, 'geometry_filename')
         test = OpenFoamGUI()
         test.log = log
         test.on_load_geometry(geometry_filename, geometry_format='openfoam_shell', raise_error=True)

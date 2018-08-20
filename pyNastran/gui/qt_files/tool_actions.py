@@ -10,7 +10,7 @@ import vtk
 
 from qtpy.compat import getsavefilename
 
-from pyNastran.utils import print_bad_path, integer_types
+from pyNastran.utils import print_bad_path, integer_types, check_path
 from pyNastran.gui.gui_objects.coord_properties import CoordProperties
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
 from pyNastran.gui.utils.load_results import load_user_geom
@@ -604,7 +604,7 @@ class ToolActions(object):
         """
         is_failed = True
         try:
-            assert os.path.exists(csv_points_filename), print_bad_path(csv_points_filename)
+            check_path(csv_points_filename, 'csv_points_filename')
             # read input file
             try:
                 user_points = np.loadtxt(csv_points_filename, delimiter=',')

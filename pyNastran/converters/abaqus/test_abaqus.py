@@ -13,7 +13,7 @@ import numpy as np
 #warnings.simplefilter('always')
 
 
-from pyNastran.utils import print_bad_path, integer_types
+from pyNastran.utils import integer_types
 from pyNastran.converters.abaqus.abaqus import read_abaqus
 
 np.seterr(all='raise')

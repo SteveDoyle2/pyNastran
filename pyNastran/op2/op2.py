@@ -25,7 +25,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
 import sys
-from six import iteritems, string_types, itervalues
+from six import PY2, iteritems, string_types, itervalues
 from six.moves.cPickle import load, dump, dumps
 
 import numpy as np
@@ -40,7 +40,10 @@ from pyNastran.op2.errors import SortCodeError, DeviceCodeError, FortranMarkerEr
 #from pyNastran.op2.op2_interface.op2_writer import OP2Writer
 #from pyNastran.op2.op2_interface.op2_f06_common import Op2F06Attributes
 from pyNastran.op2.op2_interface.op2_scalar import OP2_Scalar
-from pyNastran.utils import print_bad_path
+from pyNastran.utils import check_path
+
+if PY2:
+    FileNotFound = IOError
 
 def read_op2(op2_filename=None, combine=True, subcases=None,
              exclude_results=None, include_results=None,
@@ -562,7 +565,7 @@ class OP2(OP2_Scalar):
             self._close_op2 = True
             self.log.debug('-------- reading op2 with read_mode=2 (array filling) --------')
             OP2_Scalar.read_op2(self, op2_filename=self.op2_filename)
-        except IOError:
+        except FileNotFoundError:
             raise
         except:
             OP2_Scalar.close_op2(self, force=True)
@@ -676,7 +679,7 @@ class OP2(OP2_Scalar):
 
     def load_hdf5(self, hdf5_filename, combine=True):
         """loads an h5 file into an OP2 object"""
-        assert os.path.exists(hdf5_filename), print_bad_path(hdf5_filename)
+        check_path(hdf5_filename, 'hdf5_filename')
         from pyNastran.op2.op2_interface.hdf5_interface import load_op2_from_hdf5_file
         import h5py
         self.op2_filename = hdf5_filename

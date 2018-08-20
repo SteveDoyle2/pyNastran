@@ -15,7 +15,7 @@ from collections import OrderedDict
 
 from six.moves import range
 import numpy as np
-from pyNastran.utils import print_bad_path
+from pyNastran.utils import check_path
 from pyNastran.utils.log import get_logger2
 
 
@@ -299,7 +299,7 @@ class Usm3d(object):
         tet_elements : ???
            ???
         """
-        assert os.path.exists(cogsg_filename), print_bad_path(cogsg_filename)
+        check_path(cogsg_filename, 'cogsg file')
         with open(cogsg_filename, 'rb') as cogsg_file:
             # nelements * 4 * 4 + 32 ???
             dummy = cogsg_file.read(4)  # 1022848

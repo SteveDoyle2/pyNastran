@@ -20,7 +20,7 @@ warnings.simplefilter('always')
 
 np.seterr(all='raise')
 
-from pyNastran.utils import print_bad_path, integer_types
+from pyNastran.utils import check_path, integer_types
 from pyNastran.bdf.errors import (
     #CrossReferenceError,
     CardParseSyntaxError, DuplicateIDsError, MissingDeckSections)
@@ -527,7 +527,7 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
     """
     if crash_cards is None:
         crash_cards = []
-    assert os.path.exists(bdf_model), print_bad_path(bdf_model)
+    check_path(bdf_model, 'bdf_model')
     try:
         if '.pch' in bdf_model:
             fem1.read_bdf(bdf_model, xref=False, punch=True, encoding=encoding)

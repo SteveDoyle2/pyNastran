@@ -110,7 +110,7 @@ from pyNastran.op2.tables.oef_forces.oef_thermal_objects import (
     RealHeatFlux_2D_3DArray,
 )
 #from pyNastran.op2.tables.oqg_constraintForces.oqg_thermal_gradient_and_flux import RealTemperatureGradientAndFluxArray
-from pyNastran.utils import print_bad_path
+from pyNastran.utils import check_path
 
 def _cast(h5_result_attr):
     """converts the h5py type back into the OP2 type"""
@@ -1110,7 +1110,7 @@ def _export_subcases(hdf5_file, op2_model):
 
 def load_op2_from_hdf5(hdf5_filename, combine=True, log=None):
     """loads an hdf5 file into an OP2 object"""
-    assert os.path.exists(hdf5_filename), print_bad_path(hdf5_filename)
+    check_path(hdf5_filename, 'hdf5_filename')
     model = OP2(log=None)
     model.op2_filename = hdf5_filename
 

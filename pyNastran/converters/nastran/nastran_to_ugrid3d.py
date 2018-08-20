@@ -12,6 +12,7 @@ import os
 from struct import Struct
 from numpy import array, unique #, hstack
 
+from pyNastran.utils import check_path
 from pyNastran.bdf.bdf import read_bdf
 from pyNastran.bdf.mesh_utils.bdf_equivalence import bdf_equivalence_nodes
 from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
@@ -219,7 +220,7 @@ def equivalence_ugrid3d_and_bdf_to_bdf(ugrid_filename, bdf_filename,
     """
     print('equivalence_ugrid3d_and_bdf_to_bdf - bdf_filename=%s' % bdf_filename)
     print('equivalence_ugrid3d_and_bdf_to_bdf - ugrid_filename=%s' % ugrid_filename)
-    assert os.path.exists(ugrid_filename), '%r doesnt exist' % ugrid_filename
+    check_path(ugrid_filename, 'ugrid_filename)
 
     base = os.path.splitext(bdf_filename)[0]
     #bdf_merged_filename = base + '_merged.bdf'

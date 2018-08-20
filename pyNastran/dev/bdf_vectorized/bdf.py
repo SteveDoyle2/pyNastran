@@ -19,7 +19,7 @@ from six.moves.cPickle import load, dump
 
 import numpy as np
 
-from pyNastran.utils import object_attributes, print_bad_path, _filename
+from pyNastran.utils import object_attributes, check_path, _filename
 from pyNastran.utils.log import get_logger2
 from pyNastran.bdf.bdf_interface.include_file import get_include_filename
 from pyNastran.bdf.utils import (
@@ -975,9 +975,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             bdf_filename = load_file_dialog(title, wildcard_wx, wildcard_qt)[0]
             assert bdf_filename is not None, bdf_filename
 
-        if not os.path.exists(bdf_filename):
-            msg = 'cannot find bdf_filename=%r\n%s' % (bdf_filename, print_bad_path(bdf_filename))
-            raise IOError(msg)
+        check_path(bdf_filename, 'bdf_filename')
         if bdf_filename.lower().endswith('.pch'):  # .. todo:: should this be removed???
             punch = True
 

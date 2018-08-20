@@ -40,7 +40,8 @@ from pyNastran.op2.errors import SortCodeError, DeviceCodeError, FortranMarkerEr
 #from pyNastran.op2.op2_interface.op2_writer import OP2Writer
 #from pyNastran.op2.op2_interface.op2_f06_common import Op2F06Attributes
 from pyNastran.op2.op2_interface.op2_scalar import OP2_Scalar
-from pyNastran.utils import print_bad_path
+from pyNastran.utils import check_path
+
 
 def read_op2(op2_filename=None, combine=True, subcases=None,
              exclude_results=None, include_results=None,
@@ -670,7 +671,7 @@ class OP2(OP2_Scalar):
 
     def load_hdf5(self, hdf5_filename, combine=True):
         """loads an h5 file into an OP2 object"""
-        assert os.path.exists(hdf5_filename), print_bad_path(hdf5_filename)
+        check_path(hdf5_filename, 'hdf5_filename')
         from pyNastran.op2.op2_interface.hdf5_interface import load_op2_from_hdf5_file
         import h5py
         self.op2_filename = hdf5_filename
