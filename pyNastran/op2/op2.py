@@ -562,6 +562,8 @@ class OP2(OP2_Scalar):
             self._close_op2 = True
             self.log.debug('-------- reading op2 with read_mode=2 (array filling) --------')
             OP2_Scalar.read_op2(self, op2_filename=self.op2_filename)
+        except IOError:
+            raise
         except:
             OP2_Scalar.close_op2(self, force=True)
             raise

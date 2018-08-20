@@ -5935,6 +5935,7 @@ class OES(OP2Common):
         elif self.element_type == 145:
             etype = 'VUHEXA'
             nnodes = 8
+            # numwide=145
         else:  # pragma: no cover
             raise RuntimeError(self.code_information())
 
@@ -5942,7 +5943,7 @@ class OES(OP2Common):
         #ntotal = 8 + 48 * nnodes
 
         n = 0
-        if self.format_code == -1 and self.num_wide == 33: # real
+        if self.format_code == 1: # real
             # assuming TETRA...
             # TODO: vectorize
             numwide_a = 2 + (14 - 2) * nnodes  # 50
@@ -5979,12 +5980,12 @@ class OES(OP2Common):
                 n = nelements * ntotal
             else:
                 msg = 'numwide=%s A=%s B=%s C=%s' % (self.num_wide, numwide_a, numwide_b, numwide_c)
-                raise RuntimeError(self.code_information())
-        else:  # pragma: no cover
+                raise RuntimeError(self.code_information() + msg)
+        else:
             #raise RuntimeError(self.code_information())
             msg = self.code_information()
-            raise RuntimeError(msg)
-            #return self._not_implemented_or_skip(data, ndata, msg), None, None
+            #raise RuntimeError(msg)
+            return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
 
     def _oes_hyperelastic_quad(self, data, ndata, dt, is_magnitude_phase, stress_name,

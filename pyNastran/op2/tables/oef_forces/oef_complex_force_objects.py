@@ -245,10 +245,10 @@ class ComplexCShearForceArray(ScalarObject):
         #self.ntotal = 0
         self.nelements = 0  # result specific
 
-        if is_sort1:
-            pass
-        else:
-            raise NotImplementedError('SORT2')
+        #if is_sort1:
+            #pass
+        #else:
+            #raise NotImplementedError('SORT2')
 
     @property
     def is_real(self):
@@ -1769,9 +1769,12 @@ class ComplexCBeamForceArray(ScalarObject):
         #print(self.data_frame)
 
     def __eq__(self, table):
+        return self.assert_equal(table)
+
+    def assert_equal(self, table, rtol=1.e-5, atol=1.e-8):
         assert self.is_sort1 == table.is_sort1
         self._eq_header(table)
-        if not np.array_equal(self.data, table.data):
+        if not np.allclose(self.data, table.data, atol=atol):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
             ntimes = self.data.shape[0]
@@ -1789,26 +1792,35 @@ class ComplexCBeamForceArray(ScalarObject):
                         (sd1, bm11, bm21, shear11, shear21, axial1, total_torque1, warp_torque1) = t1
                         (sd2, bm12, bm22, shear12, shear22, axial2, total_torque2, warp_torque2) = t2
                         d = t1 - t2
-                        if not allclose(
+                        if not allclose(t1, t2, atol=atol):
                             [bm11.real, bm11.imag, bm21.real, bm21.imag,
                              shear11.real, shear11.imag, shear21.real, shear21.imag,
-                             axial1.real, axial1.imag,],
+                             axial1.real, axial1.imag, total_torque1.real, total_torque1.imag, warp_torque1.real, warp_torque1.imag],
 
                             [bm12.real, bm12.imag, bm22.real, bm22.imag,
                              shear12.real, shear12.imag, shear22.real, shear22.imag,
-                             axial2.real, axial2.imag,], atol=0.0001):
+                             axial2.real, axial2.imag, total_torque2.real, total_torque2.imag, warp_torque2.real, warp_torque2.imag], atol=atol):
                         #if not np.array_equal(t1, t2):
-                            msg += ('%-4s  (%s, %sj, %s, %sj, %s, %sj, %s, %sj, %s, %sj)\n'
-                                    '      (%s, %sj, %s, %sj, %s, %sj, %s, %sj, %s, %sj)\n'
+                            msg += ('%-4s  (%s, %sj, %s, %sj, %s, %sj, %s, %sj, %s, %sj, %s, %sj, %s, %sj, %s, %sj)\n'
+                                    '      (%s, %sj, %s, %sj, %s, %sj, %s, %sj, %s, %sj, %s, %sj, %s, %sj)\n'
                                     '  dt12=(%s, %sj, %s, %sj)\n' % (
                                         eid,
-                                        bm11.real, bm11.imag, bm21.real, bm21.imag,
-                                        shear11.real, shear11.imag, shear21.real, shear21.imag,
+                                        bm11.real, bm11.imag,
+                                        bm21.real, bm21.imag,
+                                        shear11.real, shear11.imag,
+                                        shear21.real, shear21.imag,
                                         axial1.real, axial1.imag,
+                                        total_torque1.real, total_torque1.imag,
+                                        warp_torque1.real, warp_torque1.imag,
 
-                                        bm12.real, bm12.imag, bm22.real, bm22.imag,
-                                        shear12.real, shear12.imag, shear22.real, shear22.imag,
+                                        bm12.real, bm12.imag,
+                                        bm22.real, bm22.imag,
+                                        shear12.real, shear12.imag,
+                                        shear22.real, shear22.imag,
                                         axial2.real, axial2.imag,
+                                        total_torque2.real, total_torque2.imag,
+                                        warp_torque2.real, warp_torque2.imag,
+
                                         d[0].real, d[0].imag, d[1].real, d[1].imag,))
                             i += 1
                         if i > 10:
@@ -3023,22 +3035,18 @@ class ComplexCBeamForceVUArray(ScalarObject):  # 191-VUBEAM
         return page_num - 1
 
 
-class ComplexForce_VU_2D(ScalarObject):  # 189-VUQUAD,190-VUTRIA
+class ComplexForceVU_2DArray(ScalarObject):  # 189-VUQUAD,190-VUTRIA
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
-        self.parent = {}
-        self.coord = {}
-        self.icord = {}
-        self.theta = {}
 
-        self.membraneX = {}
-        self.membraneY = {}
-        self.membraneXY = {}
-        self.bendingX = {}
-        self.bendingY = {}
-        self.bendingXY = {}
-        self.shearYZ = {}
-        self.shearXZ = {}
+        #self.parent = {}
+        #self.coord = {}
+        #self.icord = {}
+        #self.theta = {}
+
+        #self.ntimes = 0  # or frequency/mode
+        #self.ntotal = 0
+        self.nelements = 0  # result specific
 
         # TODO if dt=None, handle SORT1 case
         self.dt = dt
@@ -3050,95 +3058,84 @@ class ComplexForce_VU_2D(ScalarObject):  # 189-VUQUAD,190-VUTRIA
             #self.add = self.add_sort2
 
     def get_stats(self, short=False):
-        msg = [''] + self.get_data_code()
-        nelements = len(self.coord)
-        if self.dt is not None:  # transient
-            ntimes = len(self.membraneX)
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       % (self.__class__.__name__, ntimes, nelements))
+        if not self.is_built:
+            return [
+                '<%s>\n' % self.__class__.__name__,
+                '  ntimes: %i\n' % self.ntimes,
+                '  ntotal: %i\n' % self.ntotal,
+            ]
+
+        nelements = self.nelements
+        ntimes = self.ntimes
+        #ntotal = self.ntotal
+
+        msg = []
+        if self.nonlinear_factor is not None:  # transient
+            msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, ntimes, nelements, self.table_name))
+            ntimes_word = 'ntimes'
         else:
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        msg.append('  parent, coord, icord, theta, membraneX, membraneY, '
-                   'membraneXY, bendingX, bendingY, bendingXY, '
-                   'shearYZ, shearXZ\n')
+            msg.append('  type=%s nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, nelements, self.table_name))
+            ntimes_word = '1'
+        msg.append('  eType\n')
+        headers = self.get_headers()
+        n = len(headers)
+        msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (
+            ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        #msg.append('  element type: %s\n' % self.element_type)
+        msg.append('  element name: %s\n' % self.element_name)
+        msg += self.get_data_code()
         return msg
 
-    def add_new_transient(self, dt):
-        self.membraneX[dt] = {}
-        self.membraneY[dt] = {}
-        self.membraneXY[dt] = {}
-        self.bendingX[dt] = {}
-        self.bendingY[dt] = {}
-        self.bendingXY[dt] = {}
-        self.shearYZ[dt] = {}
-        self.shearXZ[dt] = {}
+    def build(self):
+        """sizes the vectorized attributes of the ComplexCShearForceArray"""
+        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
+        if self.is_built:
+            return
 
-    def add_sort1(self, nnodes, dt, data):
-        [eid, parent, coord, icord, theta, forces] = data
-        self.parent[eid] = parent
-        self.coord[eid] = coord
-        self.icord[eid] = icord
-        self.theta[eid] = theta
+        assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
+        assert self.nelements > 0, 'nelements=%s' % self.nelements
+        assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
+        #self.names = []
+        self.nelements //= self.ntimes
+        self.itime = 0
+        self.ielement = 0
+        self.itotal = 0
+        #self.ntimes = 0
+        #self.nelements = 0
+        self.is_built = True
 
-        self.membraneX[eid] = {}
-        self.membraneY[eid] = {}
-        self.membraneXY[eid] = {}
-        self.bendingX[eid] = {}
-        self.bendingY[eid] = {}
-        self.bendingXY[eid] = {}
-        self.shearYZ[eid] = {}
-        self.shearXZ[eid] = {}
+        #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
+        dtype = 'float32'
+        if isinstance(self.nonlinear_factor, integer_types):
+            dtype = 'int32'
+        self._times = zeros(self.ntimes, dtype=dtype)
+        self.element = zeros(self.nelements, dtype='int32')
 
-        for force in forces:
-            [nid, membraneX, membraneY, membraneXY, bendingX,
-                bendingY, bendingXY, shearYZ, shearXZ] = force
-            self.membraneX[eid][nid] = membraneX
-            self.membraneY[eid][nid] = membraneY
-            self.membraneXY[eid][nid] = membraneXY
-            self.bendingX[eid][nid] = bendingX
-            self.bendingY[eid][nid] = bendingY
-            self.bendingXY[eid][nid] = bendingXY
-            self.shearYZ[eid][nid] = shearYZ
-            self.shearXZ[eid][nid] = shearXZ
+        #[membrane_x, membrane_y, membrane_xy, bending_x, bending_y, bending_xy,
+        # shear_yz, shear_xz]
+        self.data = zeros((self.ntimes, self.ntotal, 8), dtype='complex64')
+
+    def get_headers(self):
+        headers = [
+            'membrane_x', 'membrane_y', 'membrane_xy',
+            'bending_x', 'bending_y', 'bending_xy',
+            'shear_yz', 'shear_xz']
+        return headers
 
     def add_sort1(self, nnodes, dt, eid, parent, coord, icord, theta, forces):
         """unvectorized method for adding SORT1 transient data"""
         assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
-        self._fill_object(dt, eid, parent, coord, icord, theta, forces)
+        self._times[self.itime] = dt
 
-    def add_sort2(self, nnodes, eid, dt, parent, coord, icord, theta, forces):
-        self._fill_object(dt, eid, parent, coord, icord, theta, forces)
-
-    def _fill_object(self, dt, eid, parent, coord, icord, theta, forces):
-        if dt not in self.membraneX:
-            self.add_new_transient(dt)
-        self.parent[eid] = parent
-        self.coord[eid] = coord
-        self.icord[eid] = icord
-        self.theta[eid] = theta
-
-        self.membraneX[dt][eid] = {}
-        self.membraneY[dt][eid] = {}
-        self.membraneXY[dt][eid] = {}
-        self.bendingX[dt][eid] = {}
-        self.bendingY[dt][eid] = {}
-        self.bendingXY[dt][eid] = {}
-        self.shearYZ[dt][eid] = {}
-        self.shearXZ[dt][eid] = {}
-
-        for force in forces:
-            [nid, membraneX, membraneY, membraneXY, bendingX,
-                bendingY, bendingXY, shearYZ, shearXZ] = force
-            self.membraneX[dt][eid][nid] = membraneX
-            self.membraneY[dt][eid][nid] = membraneY
-            self.membraneXY[dt][eid][nid] = membraneXY
-            self.bendingX[dt][eid][nid] = bendingX
-            self.bendingY[dt][eid][nid] = bendingY
-            self.bendingXY[dt][eid][nid] = bendingXY
-            self.shearYZ[dt][eid][nid] = shearYZ
-            self.shearXZ[dt][eid][nid] = shearXZ
-
+        #self.parent[eid] = parent
+        #self.coord[eid] = coord
+        #self.icord[eid] = icord
+        #self.theta[eid] = theta
+        self.element[self.ielement] = eid
+        self.data[self.itime, self.ielement, :] = forces
 
 #'                  C O M P L E X   F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )'
 #'                                                          (REAL/IMAGINARY)'

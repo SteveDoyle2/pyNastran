@@ -107,7 +107,7 @@ from pyNastran.op2.tables.oef_forces.oef_thermal_objects import (
     Real1DHeatFluxArray,
     #RealElementTableArray, RealHeatFluxVUArray, RealHeatFluxVUBeamArray,
     #RealHeatFluxVU3DArray,
-    HeatFlux_2D_3DArray,
+    RealHeatFlux_2D_3DArray,
 )
 #from pyNastran.op2.tables.oqg_constraintForces.oqg_thermal_gradient_and_flux import RealTemperatureGradientAndFluxArray
 from pyNastran.utils import print_bad_path
@@ -856,15 +856,15 @@ TABLE_OBJ_MAP = {
     'cbeam_thermal_load' : (Real1DHeatFluxArray, ),
     'cbend_thermal_load' : (Real1DHeatFluxArray, ),
 
-    'cquad4_thermal_load' : (HeatFlux_2D_3DArray, ),
-    'cquad8_thermal_load' : (HeatFlux_2D_3DArray, ),
-    'ctria3_thermal_load' : (HeatFlux_2D_3DArray, ),
-    'ctria6_thermal_load' : (HeatFlux_2D_3DArray, ),
-    'ctriax6_thermal_load' : (HeatFlux_2D_3DArray, ),
+    'cquad4_thermal_load' : (RealHeatFlux_2D_3DArray, ),
+    'cquad8_thermal_load' : (RealHeatFlux_2D_3DArray, ),
+    'ctria3_thermal_load' : (RealHeatFlux_2D_3DArray, ),
+    'ctria6_thermal_load' : (RealHeatFlux_2D_3DArray, ),
+    'ctriax6_thermal_load' : (RealHeatFlux_2D_3DArray, ),
 
-    'ctetra_thermal_load' : (HeatFlux_2D_3DArray, ),
-    'cpenta_thermal_load' : (HeatFlux_2D_3DArray, ),
-    'chexa_thermal_load' : (HeatFlux_2D_3DArray, ),
+    'ctetra_thermal_load' : (RealHeatFlux_2D_3DArray, ),
+    'cpenta_thermal_load' : (RealHeatFlux_2D_3DArray, ),
+    'chexa_thermal_load' : (RealHeatFlux_2D_3DArray, ),
 
     'chbdye_thermal_load' :  (RealChbdyHeatFluxArray, ),
     'chbdyp_thermal_load' : (RealChbdyHeatFluxArray, ),

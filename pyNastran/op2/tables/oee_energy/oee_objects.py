@@ -1,6 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import integer_types
+from six import integer_types, binary_type
 from numpy import zeros
 import numpy as np
 
@@ -268,7 +268,7 @@ class RealStrainEnergyArray(ScalarObject):
     def add_sort1(self, dt, eid, energyi, percenti, densityi):
         """unvectorized method for adding SORT1 transient data"""
         #itime = self.itime // self.nelement_types
-        assert isinstance(eid, (int, str)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert (isinstance(eid, int) and eid > 0) or isinstance(eid, binary_type), 'dt=%s eid=%s' % (dt, eid)
         itime = self.itime
         self._times[itime] = dt
         self.element[itime, self.ielement] = eid

@@ -510,7 +510,7 @@ class ONR(OP2Common):
                 obj.ielement = ielement2
             else:
                 struct1 = Struct(self._endian + self._analysis_code_fmt + b'3f')
-                for i in range(nelements):
+                for unused_i in range(nelements):
                     edata = data[n:n+ntotal]
 
                     out = struct1.unpack(edata)
