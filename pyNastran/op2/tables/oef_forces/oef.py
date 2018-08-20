@@ -33,9 +33,6 @@ from pyNastran.op2.tables.oef_forces.oef_thermal_objects import (
 
     RealHeatFluxVUBeamArray,
     RealHeatFluxVU3DArray,
-
-    # TODO: vectorize 1
-    HeatFlux_VUBEAM,
 )
 from pyNastran.op2.tables.oef_forces.oef_force_objects import (
     RealRodForceArray, RealViscForceArray,
@@ -1073,17 +1070,11 @@ class OEF(OP2Common):
                 ntotal = 16 + 28 * nnodes
                 nelements = ndata // ntotal
 
-                if 0:
-                    if self.read_mode == 1:
-                        return ndata
-                    #assert self.num_wide==27,self.code_information()
-                    self.create_transient_object(slot, HeatFlux_VUBEAM)
-                else:
-                    auto_return, is_vectorized = self._create_oes_object4(
-                        nelements, result_name, slot, RealHeatFluxVUBeamArray)
-                    if auto_return:
-                        self._data_factor = nnodes
-                        return nelements * self.num_wide * 4
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nelements, result_name, slot, RealHeatFluxVUBeamArray)
+                if auto_return:
+                    self._data_factor = nnodes
+                    return nelements * self.num_wide * 4
 
                 obj = self.obj
                 if self.use_vector and is_vectorized and self.sort_method == 1:

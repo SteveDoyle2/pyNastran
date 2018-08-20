@@ -160,8 +160,9 @@ class ComplexRodArray(OES_Object):
         ind = np.searchsorted(eids, self.element)
         return ind
 
-    def get_f06_header(self):
+    def get_f06_header(self, is_mag_phase=True):
         raise NotImplementedError('overwrite this')
+
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
