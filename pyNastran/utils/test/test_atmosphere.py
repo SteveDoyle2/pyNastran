@@ -2,7 +2,7 @@
 import unittest
 import numpy as np
 
-from pyNastran.utils.atmosphere import (
+from pyNastran.utils.atmosphere_old import (
     atm_density, atm_temperature, atm_pressure,
     atm_dynamic_viscosity_mu, atm_dynamic_pressure,
     atm_velocity, atm_mach,
@@ -16,7 +16,7 @@ from pyNastran.utils.atmosphere import (
     atm_unit_reynolds_number as atm_unit_reynolds_number1a,
     atm_unit_reynolds_number2 as atm_unit_reynolds_number2a,
 )
-from pyNastran.utils.atmosphere2 import (
+from pyNastran.utils.atmosphere import (
     atm_density as atm_density2,
     atm_dynamic_pressure as atm_dynamic_pressure2,
     atm_temperature as atm_temperature2,

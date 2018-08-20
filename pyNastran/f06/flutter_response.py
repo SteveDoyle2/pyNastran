@@ -4,10 +4,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
-from pyNastran.utils.atmosphere import get_alt_for_density
-from pyNastran.utils.atmosphere2 import (
-    convert_altitude, convert_density, convert_pressure, convert_velocity,
-    atm_density,
+from pyNastran.utils.atmosphere import (
+    get_alt_for_density, convert_altitude, atm_density,
+    convert_density, convert_pressure, convert_velocity,
 )
 from pyNastran.utils import object_attributes, object_methods
 
@@ -192,7 +191,8 @@ class FlutterResponse(object):
         vel *= kvel
         if self.make_alt:
             rho_in_slug_ft3 = rho * kdensityi
-            alt_ft = [get_alt_for_density(densityi, nmax=20)
+            alt_ft = [get_alt_for_density(densityi, density_units='slug/ft^3',
+                                          alt_units='ft', nmax=20)
                       for densityi in rho_in_slug_ft3.ravel()]
 
             ft_to_alt_unit = convert_altitude(1., 'ft', altitude_units)
