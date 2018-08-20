@@ -1793,39 +1793,39 @@ class ComplexCBeamForceArray(ScalarObject):
                         (sd2, bm12, bm22, shear12, shear22, axial2, total_torque2, warp_torque2) = t2
                         d = t1 - t2
                         if not allclose(t1, t2, atol=atol):
-                            [bm11.real, bm11.imag, bm21.real, bm21.imag,
-                             shear11.real, shear11.imag, shear21.real, shear21.imag,
-                             axial1.real, axial1.imag, total_torque1.real, total_torque1.imag, warp_torque1.real, warp_torque1.imag],
+                            msg += (
+                                '%-4s  (%s, %sj, %s, %sj, %s, %sj, %s, %sj, %s, %sj, %s, %sj, %s, %sj)\n'
+                                '      (%s, %sj, %s, %sj, %s, %sj, %s, %sj, %s, %sj, %s, %sj, %s, %sj)\n'
+                                '  dt12=(%s, %sj, %s, %sj, %s, %sj, %s, %sj, %s, %sj, %s, %sj, %s, %sj)\n' % (
+                                    eid,
+                                    bm11.real, bm11.imag,
+                                    bm21.real, bm21.imag,
+                                    shear11.real, shear11.imag,
+                                    shear21.real, shear21.imag,
+                                    axial1.real, axial1.imag,
+                                    total_torque1.real, total_torque1.imag,
+                                    warp_torque1.real, warp_torque1.imag,
 
-                            [bm12.real, bm12.imag, bm22.real, bm22.imag,
-                             shear12.real, shear12.imag, shear22.real, shear22.imag,
-                             axial2.real, axial2.imag, total_torque2.real, total_torque2.imag, warp_torque2.real, warp_torque2.imag], atol=atol):
-                        #if not np.array_equal(t1, t2):
-                            msg += ('%-4s  (%s, %sj, %s, %sj, %s, %sj, %s, %sj, %s, %sj, %s, %sj, %s, %sj, %s, %sj)\n'
-                                    '      (%s, %sj, %s, %sj, %s, %sj, %s, %sj, %s, %sj, %s, %sj, %s, %sj)\n'
-                                    '  dt12=(%s, %sj, %s, %sj)\n' % (
-                                        eid,
-                                        bm11.real, bm11.imag,
-                                        bm21.real, bm21.imag,
-                                        shear11.real, shear11.imag,
-                                        shear21.real, shear21.imag,
-                                        axial1.real, axial1.imag,
-                                        total_torque1.real, total_torque1.imag,
-                                        warp_torque1.real, warp_torque1.imag,
+                                    bm12.real, bm12.imag,
+                                    bm22.real, bm22.imag,
+                                    shear12.real, shear12.imag,
+                                    shear22.real, shear22.imag,
+                                    axial2.real, axial2.imag,
+                                    total_torque2.real, total_torque2.imag,
+                                    warp_torque2.real, warp_torque2.imag,
 
-                                        bm12.real, bm12.imag,
-                                        bm22.real, bm22.imag,
-                                        shear12.real, shear12.imag,
-                                        shear22.real, shear22.imag,
-                                        axial2.real, axial2.imag,
-                                        total_torque2.real, total_torque2.imag,
-                                        warp_torque2.real, warp_torque2.imag,
-
-                                        d[0].real, d[0].imag, d[1].real, d[1].imag,))
-                            i += 1
-                        if i > 10:
-                            print(msg)
-                            raise ValueError(msg)
+                                    d[0].real, d[0].imag,
+                                    d[1].real, d[1].imag,
+                                    d[2].real, d[2].imag,
+                                    d[3].real, d[3].imag,
+                                    d[4].real, d[4].imag,
+                                    d[5].real, d[5].imag,
+                                    d[6].real, d[6].imag,
+                                ))
+                        i += 1
+                    if i > 10:
+                        print(msg)
+                        raise ValueError(msg)
             else:
                 raise NotImplementedError(self.is_sort2)
             if i > 0:
