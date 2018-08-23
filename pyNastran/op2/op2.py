@@ -43,7 +43,7 @@ from pyNastran.op2.op2_interface.op2_scalar import OP2_Scalar
 from pyNastran.utils import check_path
 
 if PY2:
-    FileNotFound = IOError
+    FileNotFoundError = IOError
 
 def read_op2(op2_filename=None, combine=True, subcases=None,
              exclude_results=None, include_results=None,

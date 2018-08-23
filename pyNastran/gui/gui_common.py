@@ -654,61 +654,68 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.actions['reswidget'].setStatusTip("Show/Hide results selection")
         return self.actions
 
-    def _logg_msg(self, typ, msg):
+    def _logg_msg(self, log_type, filename, lineno, msg):
         """
         Add message to log widget trying to choose right color for it.
 
         Parameters
         ----------
-        typ : str
+        log_type : str
             {DEBUG, INFO, ERROR, COMMAND, WARNING} or prepend 'GUI '
+        filename : str
+            the active file
+        lineno : int
+            line number
         msg : str
             message to be displayed
         """
         if not self.html_logging:
-            print(typ, msg)
+            # standard logger
+            name = '%-8s' % (log_type + ':')
+            filename_n = '%s:%s' % (filename, lineno)
+            msg2 = ' %-28s %s\n' % (filename_n, msg)
+            print(name, msg2)
             return
 
-        if 'DEBUG' in typ and not self.settings.show_debug:
+        if 'DEBUG' in log_type and not self.settings.show_debug:
             return
-        elif 'INFO' in typ and not self.settings.show_info:
+        elif 'INFO' in log_type and not self.settings.show_info:
             return
-        elif 'COMMAND' in typ and not self.settings.show_command:
+        elif 'COMMAND' in log_type and not self.settings.show_command:
             return
-        elif 'WARNING' in typ and not self.settings.show_warning:
+        elif 'WARNING' in log_type and not self.settings.show_warning:
             return
-        elif 'ERROR' in typ and not self.settings.show_error:
+        elif 'ERROR' in log_type and not self.settings.show_error:
             return
 
-        frame = sys._getframe(4)  # jump to get out of the logger code
-        lineno = frame.f_lineno
-        filename = os.path.basename(frame.f_globals['__file__'])
+        if log_type in ['GUI ERROR', 'GUI COMMAND', 'GUI DEBUG', 'GUI INFO', 'GUI WARNING']:
+            log_type = log_type[4:] # drop the GUI
 
-        if typ in ['GUI ERROR', 'GUI COMMAND', 'GUI DEBUG', 'GUI INFO', 'GUI WARNING']:
-            typ = typ[4:]
-            msg = '   fname=%-25s:%-4s   %s\n' % (filename, lineno, msg)
+        if 0:
+            msg = str_to_html(log_type, filename, lineno, msg)
+        else:
+            tim = datetime.datetime.now().strftime('[%Y-%m-%d %H:%M:%S]')
+            msg = cgi.escape(msg)
 
-        tim = datetime.datetime.now().strftime('[%Y-%m-%d %H:%M:%S]')
-        msg = cgi.escape(msg)
+            #message colors
+            dark_orange = '#EB9100'
+            colors = {
+                'COMMAND' : 'blue',
+                'ERROR' : 'Crimson',
+                'DEBUG' : dark_orange,
+                'WARNING' : 'purple',
+                'INFO' : 'green',
+            }
+            color = colors[log_type]
 
-        #message colors
-        dark_orange = '#EB9100'
-        colors = {
-            'COMMAND' : 'blue',
-            'ERROR' : 'Crimson',
-            'DEBUG' : dark_orange,
-            'WARNING' : 'purple',
-            'INFO' : 'green',
-        }
-        msg = msg.rstrip().replace('\n', '<br>')
-        msg = tim + ' ' + (typ + ': ' + msg) if typ else msg
-        if typ in colors:
-            msg = r'<font color="%s"> %s </font> <br />' % (colors[typ], msg)
+            if filename.endswith('.pyc'):
+                filename = filename[:-1]
+            html_msg = get_html_msg(color, tim, log_type, filename, lineno, msg)
 
         if self.performance_mode:
-            self._log_messages.append(msg)
+            self._log_messages.append(html_msg)
         else:
-            self._log_msg(msg)
+            self._log_msg(html_msg)
 
     def _log_msg(self, msg):
         """prints an HTML log message"""
@@ -992,7 +999,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         """turn edges on/off"""
         self.is_edges = not self.is_edges
         self.edge_actor.SetVisibility(self.is_edges)
-        #self.edge_actor.GetProperty().SetColor(0, 0, 0)  # cart3d edge color isn't black...
+        # cart3d edge color isn't black...
+        #self.edge_actor.GetProperty().SetColor(0, 0, 0)
         self.edge_actor.Modified()
         #self.widget.Update()
         #self._update_camera()
@@ -1403,7 +1411,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def start_logging(self):
         if self.html_logging is True:
-            log = SimpleLogger('debug', 'utf-8', lambda x, y: self._logg_msg(x, y))
+            log = SimpleLogger(
+                'debug', 'utf-8',
+                lambda w, x, y, z: self._logg_msg(w, x, y, z))
             # logging needs synchronizing, so the messages from different
             # threads would not be interleave
             self.log_mutex = QtCore.QReadWriteLock()
@@ -2111,7 +2121,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             for istep in isteps:
                 png_filename = fmt % istep
                 png_filenames.append(png_filename)
-                check_path(png_filename, 'png_filename)
+                check_path(png_filename, 'png_filename')
 
         if gif_filename is not None and png_filenames:
             is_failed = write_gif(
@@ -2582,3 +2592,65 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 continue
             data[group.name] = group
         self.groups = data
+
+
+def str_to_html(log_type, filename, lineno, msg):
+    """
+    converts the message to html
+
+    Parameters
+    ----------
+    color : str
+        the HTML color
+    log_type : str
+        the message type
+    filename : str
+        the filename the message came from
+    lineno : int
+        the line number the message came from
+    message : str
+        the message
+
+    Returns
+    -------
+    html_msg : str
+        the HTML message
+    """
+    tim = datetime.datetime.now().strftime('[%Y-%m-%d %H:%M:%S]')
+    msg = cgi.escape(msg)
+
+    #message colors
+    msg = msg.rstrip().replace('\n', '<br>')
+    color = COLORS[typ]
+    html_msg = r'<font color="%s"> %s %s : %s:%i</font> %s <br>' % (
+        color, tim, log_type, filename, lineno, msg.replace('\n', '<br>'))
+    return msg
+
+def get_html_msg(color, tim, log_type, filename, lineno, msg):
+    """
+    converts the message to html
+
+    Parameters
+    ----------
+    color : str
+        the HTML color
+    time : str
+        the time for the message
+    log_type : str
+        the message type
+    filename : str
+        the filename the message came from
+    lineno : int
+        the line number the message came from
+    message : str
+        the message
+
+    Returns
+    -------
+    html_msg : str
+        the HTML message
+    """
+    # log_type, filename, lineno, msg
+    html_msg = r'<font color="%s"> %s %s : %s:%i</font> %s <br>' % (
+        color, tim, log_type, filename, lineno, msg.replace('\n', '<br>'))
+    return html_msg

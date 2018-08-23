@@ -21,6 +21,7 @@ from pyNastran.op2.tables.grid_point_weight import GridPointWeight
 
 class Results(object):
     def __init__(self):
+        self.eqexin = None
         self.ato = AutoCorrelationObjects()
         self.psd = PowerSpectralDensityObjects()
         self.rms = RootMeansSquareObjects()

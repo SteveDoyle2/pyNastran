@@ -75,18 +75,23 @@ class OP2Reader(object):
             b'OMM2' : self.read_omm2,
             b'TOL' : self.read_tol,
             b'PCOMPTS' : self._read_pcompts,
-            b'MONITOR' : self._read_monitor,
-            b'AEMONPT' : self._read_aemonpt,
+            b'MONITOR' : self.read_monitor,
+            b'AEMONPT' : self.read_aemonpt,
             b'FOL' : self.read_fol,  # frequency response list
             b'FRL' : self.read_frl,  # frequency response list
             b'SDF' : self.read_sdf,
             b'IBULK' : self.read_ibulk,
             b'CDDATA' : self.read_ibulk,
             b'CMODEXT' : self._read_cmodext,
-            b'CSTM' : self.read_cstm,  # coordinate system transformation matrices
+
+            # coordinate system transformation matrices
+            b'CSTM' : self.read_cstm,
+
+            # Equivalence between external and internal grid/scalar numbers
+            b'EQEXIN' : self.read_eqexin,
+            b'EQEXINS' : self.read_eqexin,
         }
         #self.op2_skip = OP2Skip(op2)
-
     def read_nastran_version(self):
         """reads the version header"""
         #try:
@@ -192,7 +197,42 @@ class OP2Reader(object):
         else:
             raise NotImplementedError(markers)
 
-    def _read_aemonpt(self):
+    def read_eqexin(self):
+        """isat_random.op2"""
+        op2 = self.op2
+        unused_table_name = self._read_table_name(rewind=False)
+        self.read_markers([-1])
+        data = self._read_record()
+        idata = unpack(self._uendian + '7i', data)
+        assert idata[0] == 101, idata
+        assert idata[1] == 5383, idata
+        assert idata[2] == 0, idata
+        assert idata[3] == 0, idata
+        assert idata[4] == 0, idata
+        assert idata[5] == 0, idata
+        assert idata[6] == 0, idata
+        #print('----------------------')
+
+        self.read_markers([-2, 1, 0])
+        data = self._read_record()
+        word, = op2.struct_8s.unpack(data)
+        sword = word.encode('utf-8').strip()
+        assert sword in ['EQEXIN', 'EQEXINS'], sword
+        #print('----------------------')
+        # ints
+        self.read_markers([-3, 1, 0])
+        data = self._read_record()
+        eqexin1 = np.frombuffer(data, dtype=op2.idtype)
+
+        self.read_markers([-4, 1, 0])
+        data = self._read_record()
+        eqexin2 = np.frombuffer(data, dtype=op2.idtype)
+
+        self.read_markers([-5, 1, 0, 0])
+        nid, dof, doftype = eqexin_to_nid_dof_doftype(eqexin1, eqexin2)
+        op2.op2_results.eqexin = EQEXIN(nid, dof, doftype)
+
+    def read_aemonpt(self):
         """reads the AEMONPT table"""
         #self.log.debug("table_name = %r" % op2.table_name)
         unused_table_name = self._read_table_name(rewind=False)
@@ -256,7 +296,7 @@ class OP2Reader(object):
         #self.show(200)
         #aaa
 
-    def _read_monitor(self):
+    def read_monitor(self):
         """reads the MONITOR table"""
         op2 = self.op2
         self.log.debug("table_name = %r" % op2.table_name)
@@ -2954,3 +2994,22 @@ def grids_comp_array_to_index(grids1, comps1, grids2, comps2,
             jb[i] = nid_comp_to_dof_index[tuple(nid_dof)]
 
         return ja, jb, nja, njb, nj
+
+def eqexin_to_nid_dof_doftype(eqexin1, eqexin2):
+    """assemble dof table"""
+    dof = eqexin2[1::2] // 10
+    doftype = eqexin2[1::2] - 10*dof
+    nid = eqexin2[::2]
+
+    # eqexin is in external sort, so sort it
+    i = eqexin1[1::2].argsort()
+    dof = dof[i]
+    doftype = doftype[i]
+    nid = nid[i]
+    return nid, dof, doftype
+
+class EQEXIN(object):
+    def __init__(self, nid, dof, doftype):
+        self.nid = nid
+        self.dof = dof
+        self.doftype = doftype

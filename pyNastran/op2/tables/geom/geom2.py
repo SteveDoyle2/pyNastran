@@ -6,6 +6,7 @@ defines readers for BDF objects in the OP2 GEOM2/GEOM2S table
 from struct import unpack, Struct
 from six import b
 from six.moves import range
+import numpy as np
 
 from pyNastran.bdf.cards.elements.elements import CGAP, PLOTEL
 from pyNastran.bdf.cards.elements.damper import (CDAMP1, CDAMP2, CDAMP3,
@@ -1420,6 +1421,7 @@ class GEOM2(GeomCommon):
         s = Struct(self._endian + b'6iffii4f')
         if self.is_debug_file:
             self.binary_debug.write('ndata=%s\n' % (nelements * 44))
+
         for i in range(nelements):
             edata = data[n:n + 56]  # 14*4
             out = s.unpack(edata)
@@ -1427,14 +1429,19 @@ class GEOM2(GeomCommon):
              t1, t2, t3, t4) = out
             if self.is_debug_file:
                 self.binary_debug.write('  %s=%s\n' % (element.type, str(out)))
+
+            theta_mcid = convert_theta_to_mcid(theta)
             #print("eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s blank=%s tflag=%s t1=%s t2=%s t3=%s t4=%s" % (
                 #eid, pid, n1, n2, n3, n4, theta, zoffs, blank, tflag, t1, t2, t3, t4))
+
             data_init = [
-                eid, pid, n1, n2, n3, n4, theta, zoffs,
+                eid, pid, n1, n2, n3, n4, theta_mcid, zoffs,
                 tflag, t1, t2, t3, t4]
             elem = element.add_op2_data(data_init)
             self.add_op2_element(elem)
             n += 56
+        #if stop:
+            #raise RuntimeError('theta is too large...make the quad wrong')
         self.card_count[element.type] = nelements
         return n
 
@@ -1662,7 +1669,9 @@ class GEOM2(GeomCommon):
              blank2, tflag, t1, t2, t3) = out
             if self.is_debug_file:
                 self.binary_debug.write('  CTRIA3=%s\n' % str(out))
-            data_in = [eid, pid, n1, n2, n3, theta, zoffs, tflag, t1, t2, t3]
+
+            theta_mcid = convert_theta_to_mcid(theta)
+            data_in = [eid, pid, n1, n2, n3, theta_mcid, zoffs, tflag, t1, t2, t3]
             elem = CTRIA3.add_op2_data(data_in)
             self.add_op2_element(elem)
             n += ntotal
@@ -1837,6 +1846,7 @@ class GEOM2(GeomCommon):
 # GMBNDS
 # GMINTC
 # GMINTS
+
     def _read_plotel(self, data, n):  # 114
         struct_3i = Struct(self._endian + b'3i')
         ntotal = 12
@@ -1905,3 +1915,18 @@ class GEOM2(GeomCommon):
     def _read_cquadx8(self, data, n):
         self.log.info('skipping CQUADX8 in GEOM2')
         return len(data)
+
+def convert_theta_to_mcid(theta):
+    """odd function..."""
+    # sort of guessed at this number...it seems reasonable-ish
+    if theta > 511.:
+        # per DMAP...you couldn't make a new record number?
+        # theta = 512. * (cid + 1)
+        # theta/512 = cid + 1
+        # cid = theta/512. - 1
+        #
+        cid_float = theta / 512. - 1
+        cid = int(cid_float)
+        assert np.allclose(cid, cid_float), 'theta=%s cid=%s cid_float=%s' % (theta, cid, cid_float)
+        theta = cid
+    return theta

@@ -1120,8 +1120,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             # =========================end geom passers=========================
 
             # ===passers===
-            b'EQEXIN': [self._table_passer, self._table_passer],
-            b'EQEXINS': [self._table_passer, self._table_passer],
+            #b'EQEXIN': [self._table_passer, self._table_passer],
+            #b'EQEXINS': [self._table_passer, self._table_passer],
 
             b'GPDT' : [self._table_passer, self._table_passer],     # grid points?
             b'BGPDT' : [self._table_passer, self._table_passer],    # basic grid point defintion table
@@ -1479,12 +1479,12 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 t0 = self.f.tell()
                 self.generalized_tables[table_name](self)
                 assert self.f.tell() != t0, 'the position was unchanged...'
-            elif table_name in GEOM_TABLES:
-                op2_reader.read_geom_table()  # DIT (agard)
             elif table_name in op2_reader.mapped_tables:
                 t0 = self.f.tell()
                 op2_reader.mapped_tables[table_name]()
                 assert self.f.tell() != t0, 'the position was unchanged...'
+            elif table_name in GEOM_TABLES:
+                op2_reader.read_geom_table()  # DIT (agard)
             elif table_name in MATRIX_TABLES:
                 op2_reader.read_matrix(table_name)
             elif table_name in RESULT_TABLES:

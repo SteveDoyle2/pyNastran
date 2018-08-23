@@ -111,6 +111,8 @@ from pyNastran.op2.tables.oef_forces.oef_thermal_objects import (
 )
 #from pyNastran.op2.tables.oqg_constraintForces.oqg_thermal_gradient_and_flux import RealTemperatureGradientAndFluxArray
 from pyNastran.utils import check_path
+from pyNastran.op2.tables.matrix import Matrix
+
 
 def _cast(h5_result_attr):
     """converts the h5py type back into the OP2 type"""
@@ -1174,17 +1176,39 @@ def load_op2_from_hdf5_file(model, h5_file, log, debug=False):
             log.warning('key = %r' % key)
             #raise NotImplementedError('  unhandled %r...' % key)
 
-def _read_h5_matrix(h5_file, unused_model, key, log):
+def _read_h5_matrix(h5_file, model, key, log):
     """reads an hdf5 matrix"""
-    log.debug('matrices:')
     h5_matrix_group = h5_file.get(key)
-    for matrix_name in h5_matrix_group.keys():
+    matrix_names = []
+    matrix_keys = h5_matrix_group.keys()
+    for matrix_name in matrix_keys:
         h5_matrix = h5_matrix_group.get(matrix_name)
         nkeys = len(h5_matrix.keys())
         if not nkeys:
             log.warning('  %s is empty...skipping' % h5_matrix)
         else:
-            log.warning('  skipping %r...' % matrix_name)
-            #raise NotImplementedError('matrix=%r' % matrix_name)
-            #for attr in h5_matrix.keys():
-                #print('    attr=%s' % attr)
+            #log.warning('  skipping %r...' % matrix_name)
+
+            #[u'col', u'data', u'form', u'is_matpool', u'name', u'row', u'shape_str']
+            name = _cast(h5_matrix.get('name'))
+            form = _cast(h5_matrix.get('form'))
+            is_matpool = _cast(h5_matrix.get('is_matpool'))
+            matrix_obj = Matrix(name, form, is_matpool=False)
+
+            #matrix = scipy.sparse.coo_matrix(
+                #(real_imag, (GCi, GCj)),
+                #shape=(mrows, ncols), dtype=dtype)
+
+            skip_keys = ['name', 'form', 'is_matpool', 'shape_str']
+            for key in h5_matrix.keys():
+                if key in skip_keys:
+                    continue
+                h5_result_attr = h5_matrix.get(key)
+                value = _cast(h5_result_attr)
+                #print('    %s = %r' % (key, value))
+                setattr(matrix_obj, key, value)
+            model.matrices[name] = matrix_obj
+            matrix_names.append(matrix_name)
+
+    if len(matrix_keys):
+        log.debug('matrices: %s' % matrix_names)
