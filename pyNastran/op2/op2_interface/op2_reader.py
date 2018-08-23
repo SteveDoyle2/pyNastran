@@ -40,7 +40,7 @@ Defines various tables that don't fit in other sections:
     - _print_month(self, month, day, year, zero, one)
     - read_results_table(self)
 """
-from __future__ import print_function, unicode_literals
+from __future__ import print_function, unicode_literals, division
 import sys
 from copy import deepcopy
 from itertools import count
@@ -68,6 +68,7 @@ class OP2Reader(object):
 
         self.mapped_tables = {
             b'GPL' : self.read_gpl,
+            b'GPDT' : self.read_gpdt,
             #b'MEFF' : self.read_meff,
             b'INTMOD' : self.read_intmod,
             b'HISADD' : self.read_hisadd,
@@ -205,7 +206,7 @@ class OP2Reader(object):
         data = self._read_record()
         idata = unpack(self._uendian + '7i', data)
         assert idata[0] == 101, idata
-        assert idata[1] == 5383, idata
+        nnodes = idata[1]
         assert idata[2] == 0, idata
         assert idata[3] == 0, idata
         assert idata[4] == 0, idata
@@ -231,6 +232,9 @@ class OP2Reader(object):
         self.read_markers([-5, 1, 0, 0])
         nid, dof, doftype = eqexin_to_nid_dof_doftype(eqexin1, eqexin2)
         op2.op2_results.eqexin = EQEXIN(nid, dof, doftype)
+        #print('nid = %s' % nid.tolist()) [1,2,3,...]
+        #print('dof = %s' % dof.tolist()) [1,7,13,...]
+        #print('doftype = %s' % doftype.tolist())
 
     def read_aemonpt(self):
         """reads the AEMONPT table"""
@@ -496,7 +500,7 @@ class OP2Reader(object):
         floats = np.frombuffer(data, dtype='float32')
         nints = len(ints)
         assert nints % 14 == 0, 'nints=%s' % (nints)
-        ncstm = nints // 14
+        ncstm = get_table_size_from_ncolumns('CSTM', nints, 14)
         ints = ints.reshape(ncstm, 14)[:, :2]
         floats = floats.reshape(ncstm, 14)[:, 2:]
         #assert ncstm == 1, 'ncoords = %s' % ncstm
@@ -718,33 +722,108 @@ class OP2Reader(object):
 
         tested by TestOP2.test_beam_modes
         """
+        if self.read_mode == 1:
+            read_record = self._skip_record
+        else:
+            read_record = self._read_record
+
         op2 = self.op2
         op2.table_name = self._read_table_name(rewind=False)
         self.log.debug('table_name = %r' % op2.table_name)
         if self.is_debug_file:
             self.binary_debug.write('read_geom_table - %s\n' % op2.table_name)
+
         self.read_markers([-1])
+        header_data = self._read_record()  # (102, 117, 0, 0, 0, 0, 0)
+        ints = np.frombuffer(header_data, op2.idtype)
+
+        #seid = ints[0] # ???
+        nnodes = ints[1]
+
         if self.is_debug_file:
             self.binary_debug.write('---markers = [-1]---\n')
-        unused_data = self._read_record()
+        #self.show_data(unused_data)
+        #print('--------------------')
 
-        markers = self.get_nmarkers(1, rewind=True)
+        self.read_markers([-2, 1, 0])
+        unused_data = self._read_record() # GPL
+        gpl, = op2.struct_8s.unpack(unused_data)
+        gpl_str = gpl.decode('utf-8').strip()
+        assert gpl_str == 'GPL', gpl_str
+        #self.show_data(unused_data)
+        #print('--------------------')
+
+        self.read_markers([-3, 1, 0])
+        unused_data = read_record() # nids 1-117
+
+        self.read_markers([-4, 1, 0])
+        data = read_record()
+        if self.read_mode == 2:
+            # nids 1-117 (column 1) with nid*1000 (column 2)
+            #
+            # External grid or scalar identification number = node_id
+            # Sequence number = 1000 * external identification number
+            unused_nid_seq = np.frombuffer(data, op2.idtype).reshape(nnodes, 2)
+        self.read_markers([-5, 1, 0, 0])
+
+    def read_gpdt(self):
+        """
+        reads the
+
+        tested by ???
+        """
+        #if self.read_mode == 1:
+            #read_record = self._skip_record
+        #else:
+        read_record = self._read_record
+
+        op2 = self.op2
+        op2.table_name = self._read_table_name(rewind=False)
+        self.log.debug('table_name = %r' % op2.table_name)
         if self.is_debug_file:
-            self.binary_debug.write('---marker0 = %s---\n' % markers)
-        n = -2
-        while markers[0] != 0:
-            self.read_markers([n, 1, 0])
-            if self.is_debug_file:
-                self.binary_debug.write('---markers = [%i, 1, 0]---\n' % n)
+            self.binary_debug.write('read_geom_table - %s\n' % op2.table_name)
 
-            markers = self.get_nmarkers(1, rewind=True)
-            if markers[0] == 0:
-                markers = self.get_nmarkers(1, rewind=False)
-                break
-            unused_data = self._read_record()
-            #self.show_data(data, 'i')
-            n -= 1
-            markers = self.get_nmarkers(1, rewind=True)
+        self.read_markers([-1])
+        header_data = self._read_record()  # (103, 117, 0, 0, 0, 0, 0)
+        ints = np.frombuffer(header_data, op2.idtype)
+
+        #seid = ints[0] # ??? is this a table number>
+        nnodes = ints[1]
+
+        if self.is_debug_file:
+            self.binary_debug.write('---markers = [-1]---\n')
+        #print('--------------------')
+
+        self.read_markers([-2, 1, 0])
+        unused_data = self._read_record() # GPL
+        gpdt, = op2.struct_8s.unpack(unused_data)
+        gpdt_str = gpdt.decode('utf-8').strip()
+        assert gpdt_str == 'GPDT', gpl_str
+        #print('--------------------')
+
+        self.read_markers([-3, 1, 0])
+        data = read_record() # nid,cp,x,y,z,cd,ps
+
+        nvalues = len(data) // 4
+        nrows = get_table_size_from_ncolumns('GPDT', nvalues, 7)
+
+        ints = np.frombuffer(data, op2.idtype).reshape(nrows, 7).copy()
+        floats = np.frombuffer(data, op2.fdtype).reshape(nrows, 7).copy()
+
+        iints = [0, 1, 5, 6] # [1, 2, 6, 7] - 1
+        nid_cp_cd_ps = ints[:, iints]
+        xyz = floats[:, 2:5]
+        gpdt = {
+            'nid_cp_cd_ps' : nid_cp_cd_ps,
+            'xyz' : xyz,
+        }
+
+        # 1. Scalar points are identified by CP=-1 and words X1 through
+        #    PS are zero.
+        # 3. or fluid grid points, CD=-1.
+        #print(nid_cp_cd_ps)
+        #print(xyz)
+        self.read_markers([-4, 1, 0, 0])
 
     def read_hisadd(self):
         """optimization history (SOL200) table"""
@@ -2998,7 +3077,7 @@ def grids_comp_array_to_index(grids1, comps1, grids2, comps2,
 def eqexin_to_nid_dof_doftype(eqexin1, eqexin2):
     """assemble dof table"""
     dof = eqexin2[1::2] // 10
-    doftype = eqexin2[1::2] - 10*dof
+    doftype = eqexin2[1::2] - 10 * dof
     nid = eqexin2[::2]
 
     # eqexin is in external sort, so sort it
@@ -3007,6 +3086,14 @@ def eqexin_to_nid_dof_doftype(eqexin1, eqexin2):
     doftype = doftype[i]
     nid = nid[i]
     return nid, dof, doftype
+
+def get_table_size_from_ncolumns(table_name, nvalues, ncolumns):
+    nrows = nvalues // ncolumns
+    if nvalues % ncolumns != 0:
+        msg = 'nrows=nvalues/ncolumns=%s/%s=%s; nrows=%s must be an int' % (
+            nvalues, ncolumns, nrows, nvalues / ncolumns)
+        raise RuntimeError(msg)
+    return nrows
 
 class EQEXIN(object):
     def __init__(self, nid, dof, doftype):

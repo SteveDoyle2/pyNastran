@@ -28,6 +28,66 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
 
+def global_to_basic_rectangular(coord, unused_xyz_global, dtype='float64'):
+    coord_transform = coord.local_to_global()
+    return coord_transform
+    #transform = array([ex, ey, ez], dtype=dtype)
+    #return tranform
+
+def _primary_axes(coord):
+    """gets the i,j,k axes from the """
+    ## TODO: not sure...needs testing
+    coord_transform = coord.transform_node_to_global()
+    ex = coord_transform[0, :]
+    ey = coord_transform[1, :]
+    ez = coord_transform[2, :]
+    return ex, ey, ez
+
+def global_to_basic_cylindrical(coord, xyz_global, dtype='float64'):
+    ex, ey, ez = _primary_axes(coord)
+    rtz = coord.transform_node_to_global(xyz_global)
+    r1_rad = radians(rtz[1])
+    er = ex * cos(r1_rad) + ey * sin(r1_rad)
+    et = ey * cos(r1_rad) - ex * sin(r1_rad)
+    transform = np.array([er, et, ez], dtype=dtype)
+    return transform
+
+def global_to_basic_spherical(coord, xyz_global, dtype='float64'):
+    ex, ey, ez = _primary_axes(coord)
+
+    rtp = coord.transform_node_to_global(xyz_global)
+    #deg_to_rad = 1. / 57.29577951
+    #cr0 = cos(rtp[0] * deg_to_rad)
+    #cr1 = cos(rtp[1] * deg_to_rad)
+    #sr0 = sin(rtp[0] * deg_to_rad)
+    #sr1 = sin(rtp[1] * deg_to_rad)
+    #
+    #er = ex * cr0 * cr1 + \
+    #     ey * sr0 * sr1 + \
+    #     ez * sr1
+    #et = ex * cr0 * cr1 - \
+    #     ey * sr0 * cr1
+    #ep = ez * cr1 - \
+    #     ex * cr0 * sr1 - \
+    #     ey * sr0 * sr1
+    theta = radians(rtp[1])
+    phi = radians(rtp[2])
+
+    sint = sin(theta)
+    cost = cos(theta)
+    sinp = sin(phi)
+    cosp = cos(phi)
+
+    er = ex * sint * cosp + \
+         ey * sint * sinp + \
+         ez * cost
+    et = ex * cost * cosp + \
+         ey * cost * sinp - \
+         ez * sint
+    ep = -ex * sinp + ey * cosp
+
+    transform = np.array([er, et, ep], dtype=dtype)
+    return transform
 
 def normalize(v):
     r"""
@@ -1178,6 +1238,9 @@ class RectangularCoord(object):
         """
         return p
 
+    def global_to_basic(self, xyz_global):
+        return global_to_basic_rectangular(self, xyz_global, dtype='float64')
+
 
 class CylindricalCoord(object):
     r"""
@@ -1305,6 +1368,9 @@ class CylindricalCoord(object):
         R = np.sqrt(x * x + y * y)
         return np.array([R, theta, p[:, 2]], dtype='float64').T
 
+    def global_to_basic(self, xyz_global):
+        return global_to_basic_cylindrical(self, xyz_global, dtype='float64')
+
 
 class SphericalCoord(object):
     r"""
@@ -1419,6 +1485,10 @@ class SphericalCoord(object):
         z = rho * cos(thetar)
         t = phi
         return np.array([r, t, z], dtype='float64')
+
+
+    def global_to_basic(self, xyz_global):
+        return global_to_basic_spherical(self, xyz_global, dtype='float64')
 
 
 class Cord2x(Coord):
@@ -1758,7 +1828,8 @@ class Cord2x(Coord):
             #self.e1 = self.rid_ref.transform_node_to_local(xyz)
             #self.e2 = self.rid_ref.transform_node_to_local(xyz + e12)
             #self.e3 = self.rid_ref.transform_node_to_local(xyz + e13)
-            raise RuntimeError('this method is very confusing...xyz is not defined...is that origin?')
+            msg = 'this method is very confusing...xyz is not defined...is that origin?'
+            raise RuntimeError(msg)
         else:
             self.rid = 0
             self.rid_ref = None

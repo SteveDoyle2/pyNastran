@@ -1,5 +1,7 @@
 """Defines the Matrix class"""
 from __future__ import print_function
+from six import text_type
+
 from scipy.sparse import coo_matrix  # type: ignore
 import numpy as np
 from pyNastran.op2.op2_interface.write_utils import export_to_hdf5
@@ -59,6 +61,7 @@ class Matrix(object):
         self.col_dof = None
         self.row_nid = None
         self.row_dof = None
+        assert isinstance(name, text_type), 'name=%r' % name
 
     @property
     def shape_str(self):
@@ -74,7 +77,7 @@ class Matrix(object):
         elif self.form == 9:
             return 'pseudo-identity'
         else:
-            raise RuntimeError('form = %s' % self.form)
+            raise RuntimeError('form = %r' % self.form)
 
     def export_to_hdf5(self, group, log):
         """exports the object to HDF5 format"""
