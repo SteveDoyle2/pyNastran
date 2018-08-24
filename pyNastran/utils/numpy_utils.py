@@ -155,7 +155,8 @@ def perpendicular_vector(v):
     """
     # for two vectors (x, y, z) and (a, b, c) to be perpendicular,
     # the following equation has to be fulfilled
-    #     0 = ax + by + cz
+    #     xyz dot abc = 0
+    #     0 = ax + by + cz = 0
 
     # x = y = z = 0 is not an acceptable solution
     if v[0] == v[1] == v[2] == 0.:
@@ -175,6 +176,72 @@ def perpendicular_vector(v):
     # then the equation simplifies to
     #     c = -(x + y)/z
     return np.array([1., 1., -1.0 * (v[0] + v[1]) / v[2]])
+
+def perpendicular_vector2d(v_array):
+    """
+    Finds an array of arbitrary perpendicular vector to *v_array*.
+
+    Parameters
+    -----------
+    v_array : (3, ) or (n, 3) float ndarray
+        Vector
+
+    Returns
+    --------
+    v_array : (n, 3) float ndarray
+        Perpendicular vector
+
+    """
+    v = np.atleast_2d(v_array)
+    # for two vectors (x, y, z) and (a, b, c) to be perpendicular,
+    # the following equation has to be fulfilled
+    #     xyz dot abc = 0
+    #     0 = ax + by + cz = 0
+
+    # x = y = z = 0 is not an acceptable solution
+    v1 = v[:, 0]
+    v2 = v[:, 1]
+    v3 = v[:, 2]
+
+    v1_equals_0 = v1 == 0.
+    v2_equals_0 = v2 == 0.
+    v3_equals_0 = v3 == 0.
+    ibad = np.where(v1_equals_0 & v2_equals_0 & v3_equals_0)[0]
+    if ibad:
+        raise ValueError('zero-vector')
+
+    vout = np.full(v.shape, np.nan, dtype=None, order='C')
+    # If one dimension is zero, this can be solved by setting that to
+    # non-zero and the others to zero. Example: (4, 2, 0) lies in the
+    # x-y-Plane, so (0, 0, 1) is orthogonal to the plane.
+    iv1 = np.where(v1_equals_0)[0]
+    iv2 = np.where(v2_equals_0)[0]
+    iv3 = np.where(v3_equals_0)[0]
+    if len(iv1):
+        vout[iv1] = [1., 0., 0.]
+    if len(iv2):
+        vout[iv2] = [0., 1., 0.]
+    if len(iv3):
+        vout[iv3] = [0., 0., 1.]
+
+    all_true = v1_equals_0 | v2_equals_0 | v3_equals_0
+    #print('iv1 =', iv1)
+    #print('iv2 =', iv2)
+    #print('iv3 =', iv3)
+    #print('all_true =', all_true)
+    if np.all(all_true):
+        return vout
+    is_3d = np.where(~all_true)[0]
+    #print('----------')
+    #print('is_3d =', is_3d)
+    #print(vout)
+
+    # arbitrarily set a = b = 1
+    # then the equation simplifies to
+    #     c = -(x + y)/z
+    vout[is_3d, :2] = 1.
+    vout[is_3d, 2] = -1. * (v[is_3d, 0] + v[is_3d, 1]) / v[is_3d, 2]
+    return vout
 
 def loadtxt_nice(filename, delimiter=None, skiprows=0, comment='#', dtype=np.float64,
                  converters=None, usecols=None, unpack=False,

@@ -3,7 +3,7 @@
 from __future__ import division, unicode_literals, print_function
 
 # standard library
-import sys
+#import sys
 import os.path
 import datetime
 from collections import OrderedDict
@@ -1665,7 +1665,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
         ..todo :: support cids
         ..todo :: fix the coords
         """
-        for axis in itervalues(self.axes):
+        if cids is None:
+            cids = self.axes.keys()
+        for key in self.axes:
+            axis = self.axes[cid]
             axis.VisibilityOff()
         self.corner_axis.EnabledOff()
 
@@ -1674,7 +1677,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
         ..todo :: support cids
         ..todo :: fix the coords
         """
-        for axis in itervalues(self.axes):
+        if cids is None:
+            cids = self.axes.keys()
+        for key in self.axes:
+            axis = self.axes[cid]
             axis.VisibilityOn()
         self.corner_axis.EnabledOn()
 
@@ -1811,7 +1817,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.log_error(str(error))
             self.stop_animation()
             return is_failed
-        phases, icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, onesided, endpoint = out
+        (phases, icases_fringe, icases_disp, icases_vector,
+         isteps, scales,
+         analysis_time, onesided, endpoint) = out
 
         if animate_time:
             icase_msg = '         icase_start=%s, icase_end=%s, icase_delta=%s,\n' % (
@@ -1934,7 +1942,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                          min_value, max_value):
         """applies the animation update callback"""
         #print('icase_fringe=%r icase_fringe0=%r' % (icase_fringe, icase_fringe0))
-        arrow_scale = None # self.glyph_scale_factor * scale
+        arrow_scale = None  # self.glyph_scale_factor * scale
         icase_vector = None
         is_legend_shown = self.scalar_bar.is_shown
         if icase_disp != icase_disp0:
@@ -1958,7 +1966,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 self.log_error('Invalid Fringe Case %i' % icase_fringe)
                 return False
 
-        is_valid = self.animation_update_fringe(icase_fringe, animate_fringe, normalized_frings_scale)
+        is_valid = self.animation_update_fringe(
+            icase_fringe, animate_fringe, normalized_frings_scale)
         if not is_valid:
             return is_valid
 
@@ -2593,6 +2602,16 @@ class GuiCommon2(QMainWindow, GuiCommon):
             data[group.name] = group
         self.groups = data
 
+#message colors
+DARK_ORANGE = '#EB9100'
+
+COLORS = {
+    'COMMAND' : 'blue',
+    'ERROR' : 'Crimson',
+    'DEBUG' : DARK_ORANGE,
+    'WARNING' : 'purple',
+    'INFO' : 'green',
+}
 
 def str_to_html(log_type, filename, lineno, msg):
     """
@@ -2621,10 +2640,10 @@ def str_to_html(log_type, filename, lineno, msg):
 
     #message colors
     msg = msg.rstrip().replace('\n', '<br>')
-    color = COLORS[typ]
+    color = COLORS[log_type]
     html_msg = r'<font color="%s"> %s %s : %s:%i</font> %s <br>' % (
         color, tim, log_type, filename, lineno, msg.replace('\n', '<br>'))
-    return msg
+    return html_msg
 
 def get_html_msg(color, tim, log_type, filename, lineno, msg):
     """
