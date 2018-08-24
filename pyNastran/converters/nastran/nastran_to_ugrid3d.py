@@ -220,7 +220,7 @@ def equivalence_ugrid3d_and_bdf_to_bdf(ugrid_filename, bdf_filename,
     """
     print('equivalence_ugrid3d_and_bdf_to_bdf - bdf_filename=%s' % bdf_filename)
     print('equivalence_ugrid3d_and_bdf_to_bdf - ugrid_filename=%s' % ugrid_filename)
-    check_path(ugrid_filename, 'ugrid_filename)
+    check_path(ugrid_filename, 'ugrid_filename')
 
     base = os.path.splitext(bdf_filename)[0]
     #bdf_merged_filename = base + '_merged.bdf'
