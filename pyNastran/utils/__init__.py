@@ -17,10 +17,12 @@ if PY2:
     integer_string_types = (int, long, np.int32, np.int64, str, unicode)
     integer_float_types = (int, long, np.int32, np.int64, float)
     FileNotFoundError = IOError
+    unicode_type = unicode
 else:
     integer_types = (int, np.int32, np.int64)
     integer_string_types = (int, np.int32, np.int64, bytes, str)
     integer_float_types = (int, np.int32, np.int64, float)
+    unicode_type = str
 float_types = (float, np.float32)
 
 

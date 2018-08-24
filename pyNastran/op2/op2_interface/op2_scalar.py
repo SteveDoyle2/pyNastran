@@ -205,15 +205,10 @@ GEOM_TABLES = [
 
     b'PVT0', b'CASECC',
     b'EDOM', b'OGPFB1',
-    # GPDT  - Grid point definition table
-    # BGPDT - Basic grid point definition table.
-    b'GPDT', b'BGPDT', b'BGPDTS', b'BGPDTOLD',
     b'DYNAMIC', b'DYNAMICS',
 
-    # EQEXIN - quivalence table between external and internal grid/scalaridentification numbers.
-    b'EQEXIN', b'EQEXINS',
     b'ERRORN',
-    b'DESTAB', b'R1TABRG',# b'HISADD',
+    b'DESTAB', b'R1TABRG',
 
     # eigenvalues
     b'BLAMA', b'LAMA', b'CLAMA',  #CLAMA is new
@@ -622,6 +617,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
     def modal_effective_weight(self):
         """6xnmodes matrix"""
         return self.matrices['MEFWTS']#.dataframe
+
+    @property
+    def matrix_tables(self):
+        return MATRIX_TABLES
 
     def set_as_nx(self):
         self.is_nx = True

@@ -1995,8 +1995,9 @@ class OP2Common(Op2Codes, F06Writer):
         self.struct_3i = Struct(self._endian + b'3i')
         self.struct_8s = Struct(self._endian + b'8s')
         self.struct_2i = Struct(self._endian + b'ii')
+        self.struct_8s_i = Struct(self._endian + b'8si')
 
     def del_structs(self):
         """deepcopy(OP2) fails on Python 3.6 without doing this"""
         del self.fdtype, self.idtype, self.double_dtype, self.long_dtype
-        del self.struct_i, self.struct_2i, self.struct_3i, self.struct_8s
+        del self.struct_i, self.struct_2i, self.struct_3i, self.struct_8s, self.struct_8s_i
