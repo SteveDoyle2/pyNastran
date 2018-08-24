@@ -746,11 +746,13 @@ class OP2Reader(object):
         #print('--------------------')
 
         self.read_markers([-2, 1, 0])
-        unused_data = self._read_record() # GPL
-        gpl, = op2.struct_8s.unpack(unused_data)
-        gpl_str = gpl.decode('utf-8').strip()
-        assert gpl_str == 'GPL', gpl_str
-        #self.show_data(unused_data)
+        data = self._read_record() # GPL
+        ndata = len(data)
+        if ndata == 8:
+            gpl, = op2.struct_8s.unpack(data)
+            gpl_str = gpl.decode('utf-8').strip()
+            assert gpl_str == 'GPL', gpl_str
+        #else ndata == 12:  # TestOP2Matrix.test_gpspc
         #print('--------------------')
 
         self.read_markers([-3, 1, 0])
@@ -1743,17 +1745,37 @@ class OP2Reader(object):
         |  9   | Pseudo identity |
         +------+-----------------+
         """
+        #print('-------------------------------------')
+
         op2 = self.op2
         table_name = self._read_table_name(rewind=False, stop_on_failure=True)
         utable_name = table_name.decode('utf-8')
+        #print(utable_name)
         self.read_markers([-1])
         data = self._read_record()
 
         self.read_markers([-2, 1, 0])
         data = self._read_record()
+        #self.show_data(data)
+        ndata = len(data)
+        if ndata == 8:
+            table_name2, = op2.struct_8s.unpack(data)
+            utable_name2 = table_name2.decode('utf-8').strip()
+            assert utable_name == utable_name2, utable_name2
 
-        self.read_markers([-3, 1, 0])
+        self.read_markers([-3, 1])
+        #if utable_name == 'DELTAK':
+            #pass
+            ##self.read_markers([1])
+            #self.show(200)
+        #else:
+        self.read_markers([0])
+
+        #self.show(36)
+
         data = self._read_record()
+        #if utable_name == 'DELTAK':
+            #self.show_data(data)
 
         #nvalues = len(data) // 4
         assert len(data) % 4 == 0, len(data) / 4.
