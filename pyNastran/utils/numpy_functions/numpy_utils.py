@@ -177,7 +177,7 @@ def perpendicular_vector2d(v_array):
     v2_equals_0 = v2 == 0.
     v3_equals_0 = v3 == 0.
     ibad = np.where(v1_equals_0 & v2_equals_0 & v3_equals_0)[0]
-    if ibad:
+    if ibad.size:
         raise ValueError('zero-vector')
 
     vout = np.full(v.shape, np.nan, dtype=None, order='C')
@@ -187,11 +187,11 @@ def perpendicular_vector2d(v_array):
     iv1 = np.where(v1_equals_0)[0]
     iv2 = np.where(v2_equals_0)[0]
     iv3 = np.where(v3_equals_0)[0]
-    if len(iv1):
+    if iv1.size:
         vout[iv1] = [1., 0., 0.]
-    if len(iv2):
+    if iv2.size:
         vout[iv2] = [0., 1., 0.]
-    if len(iv3):
+    if iv3.size:
         vout[iv3] = [0., 0., 1.]
 
     all_true = v1_equals_0 | v2_equals_0 | v3_equals_0

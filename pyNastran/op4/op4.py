@@ -4,6 +4,7 @@ Main OP4 class
 from __future__ import print_function
 import sys
 import os
+from io import open
 from struct import pack, unpack, Struct
 from six import string_types, iteritems, PY2, PY3
 from six.moves import range
@@ -670,7 +671,7 @@ class OP4(object):
 #--------------------------------------------------------------------------
     def read_op4_binary(self, op4_filename, matrix_names=None, precision='default'):
         """matrix_names must be a list or None, but basically the same"""
-        with io.open(op4_filename, mode='rb') as op4:
+        with open(op4_filename, mode='rb') as op4:
             self.n = 0
             self._endian = self._determine_endian(op4)
 

@@ -12,7 +12,7 @@ from pyNastran.utils.numpy_utils import (
     perpendicular_vector, perpendicular_vector2d,
     dot3d,
 )
-from pyNastran.utils.test.coord_utils import (
+from pyNastran.utils.numpy_functions.coord_utils import (
     cylindrical_rotation_matrix,
 )
 
