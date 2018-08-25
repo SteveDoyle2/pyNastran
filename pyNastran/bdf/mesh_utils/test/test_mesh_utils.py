@@ -860,7 +860,7 @@ class TestMeshUtils(unittest.TestCase):
         model.coords[1] = coord
         model.write_bdf('tris.bdf')
 
-        print('----------------------------')
+        #print('----------------------------')
         local_points_array, global_points_array, result_array = cut_edge_model_by_coord(
             model, coord, tol, nodal_result,
             plane_atol=1e-5, csv_filename='cut_edge_2.csv')

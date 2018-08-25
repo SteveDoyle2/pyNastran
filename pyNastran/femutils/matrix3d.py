@@ -48,7 +48,7 @@ def dot3d(A, B, debug=True):
     C = np.matmul(A, B)
     if debug:
         dtype = A.dtype
-        print('------------------------')
+        #print('------------------------')
         D = np.zeros(A.shape, dtype=dtype)
         for i, Ai, Bi in zip(count(), A, B):
             D[i, :, :] = Ai.dot(Bi)

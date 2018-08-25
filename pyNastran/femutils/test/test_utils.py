@@ -1,5 +1,9 @@
+"""tests general femutils"""
 # -*- coding: utf-8 -*-
+# pylint:  disable=R0201,C0103
 from __future__ import print_function, absolute_import
+__all__ = ['TestMatrix3d', 'TestNumpyUtils', 'TestFemIO']
+
 import os
 import unittest
 
@@ -12,14 +16,14 @@ from pyNastran.utils.numpy_utils import (
     perpendicular_vector, perpendicular_vector2d,
     dot3d,
 )
-from pyNastran.femutils.coord_utils import (
-    cylindrical_rotation_matrix, coordinate_system_from_vector_2d_tri,
-)
+from pyNastran.femutils.coord_transforms import cylindrical_rotation_matrix
+
 from .utils import is_array_close
 
 PKG_PATH = pyNastran.__path__[0]
 
-__all__ = ['TestMatrix3d', 'TestNumpyUtils', 'TestFemIO']
+if PY2:
+    FileNotFoundError = IOError
 
 #class TestNan(unittest.TestCase):
 
@@ -49,40 +53,6 @@ class TestMatrix3d(unittest.TestCase):
             #print(Ci)
             #print('-------')
         ## TODO: not compared
-
-    def test_cylindrical_rotation_matrix(self):
-        """tests cylindrical_rotation_matrix"""
-        theta = [0., 0.]
-        coords = cylindrical_rotation_matrix(theta, dtype='float64')
-
-        theta = np.radians([0., 45., 90.])
-        coords = cylindrical_rotation_matrix(theta, dtype='float64')
-        #print(coords)
-        ## TODO: not compared
-
-    def test_coordinate_system_from_vector_2d_tri(self):
-        """tests coordinate_system_from_vector_2d_tri"""
-        xyz1 = [0., 0., 0.]
-        xyz2 = [1., 0., 0.]
-        xyz3 = [0., 1., 0.]
-        coords1 = coordinate_system_from_vector_2d_tri(xyz1, xyz2, xyz3)
-        assert np.allclose(coords1[0, 2, 2], 1.0), '\n' + str(coords1[0, :, :])
-
-        xyz1 = [
-            [0., 0., 0.],
-            [0., 0., 0.],
-        ]
-        xyz2 = [
-            [1., 0., 0.],
-            [1., 0., 0.],
-        ]
-        xyz3 = [
-            [0., 1., 0.],
-            [0., 1., 0.],
-        ]
-        coords2 = coordinate_system_from_vector_2d_tri(xyz1, xyz2, xyz3)
-        two_coords = np.vstack([coords1, coords1])
-        assert np.array_equal(two_coords, coords2)
 
 
 class TestNumpyUtils(unittest.TestCase):
@@ -119,7 +89,7 @@ class TestNumpyUtils(unittest.TestCase):
             [0., 1., 0.],   # [0., 0., 1.],
             [0., 0., 1.],   # [1., 1., 0.],
             [1., 1., -2.],  # [1., 1., 1.],
-          ])
+        ])
         assert np.allclose(out, expected2)
         #print('out')
         #print(out)
@@ -129,25 +99,6 @@ class TestNumpyUtils(unittest.TestCase):
         #print('-----------')
         #print('diff')
         #print(v2 - out)
-
-    def coords_from_vector_1d(self):
-        """tests coords_from_vector_1d"""
-        v = [ # duplicate
-            [0, 0., 1.],
-            [0., 0., 1.],
-        ]
-        expected = np.array([
-            [[0., 0., 1.],
-             [ 0., 1., 0.],
-             [-1., 0., 0.],],
-
-            [[ 0., 0., 1.],
-             [ 0., 1., 0.],
-             [-1., 0., 0.],],
-        ])
-        #out = perpendicular_vector2d(v)
-        out = coords_from_vector_1d(v)
-        assert np.allclose(out, expected)
 
     def test_augmented_identity(self):
         """tests augmented_identity"""

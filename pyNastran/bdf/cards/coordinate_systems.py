@@ -1,4 +1,4 @@
-# pylint: disable=R0902,R0904,R0914
+# pylint: disable=R0902,R0904,R0914,C0103,C1801,R0913
 """
 All coordinate cards are defined in this file.  This includes:
 
@@ -28,7 +28,7 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
 
-from pyNastran.femutils.coord_utils import (
+from pyNastran.femutils.coord_transforms import (
     xyz_to_rtz_array, xyz_to_rtp_array, # xyz to xxx transforms
     rtz_to_xyz_array, rtp_to_xyz_array, # xxx to xyz transforms
     #rtz_to_rtp_array, rtp_to_rtz_array, # rtp/rtz and rtz/rtp transforms
@@ -279,7 +279,9 @@ class Coord(BaseCard):
             self.rid_trace = copy.deepcopy(rid_ref.rid_trace)
             if rid not in self.rid_trace:
                 self.rid_trace.append(rid)
-            assert self.cid not in self.rid_trace, 'cid=%s rid_trace=%s' % (self.cid, self.rid_trace)
+            if self.cid in self.rid_trace:
+                msg = 'Circular Reference: cid=%s rid_trace=%s' % (self.cid, self.rid_trace)
+                raise RuntimeError(msg)
 
         if rid == 0:
             self.origin = copy.deepcopy(self.e1)
@@ -438,7 +440,9 @@ class Coord(BaseCard):
             self.rid_trace = copy.deepcopy(rid_ref.rid_trace)
             if rid not in self.rid_trace:
                 self.rid_trace.append(rid)
-            assert self.cid not in self.rid_trace, 'cid=%s rid_trace=%s' % (self.cid, self.rid_trace)
+            if self.cid in self.rid_trace:
+                msg = 'Circular Reference: cid=%s rid_trace=%s' % (self.cid, self.rid_trace)
+                raise RuntimeError(msg)
 
         if rid == 0:
             self.origin = copy.deepcopy(self.e1)
@@ -1200,7 +1204,7 @@ def define_coord_ijk(model, cord2_type, cid, origin, rid=0, i=None, j=None, k=No
 
 
 class RectangularCoord(object):
-
+    """defines common methods for rectangular coordinate systems"""
     @staticmethod
     def coord_to_xyz(p):
         """
@@ -1251,6 +1255,8 @@ class RectangularCoord(object):
 
 class CylindricalCoord(object):
     r"""
+    defines common methods for cylindrical coordinate systems
+
     .. math:: r      = \sqrt(x^2+y^2)
     .. math:: \theta = tan^{-1}\left(\frac{y}{x}\right)
     .. math:: z      = z
@@ -1316,7 +1322,7 @@ class CylindricalCoord(object):
         return rtz_to_xyz_array(p)
 
     @staticmethod
-    def coord_to_spherical(p):
+    def coord_to_spherical(rtz):
         """R-theta-z to rho-theta-phi transform"""
         r, t, z = rtz
         rho = (r**2 + z**2)**0.5
@@ -1370,6 +1376,8 @@ class CylindricalCoord(object):
 
 class SphericalCoord(object):
     r"""
+    defines common methods for spherical coordinate systems
+
     .. math:: r = \rho = \sqrt(x^2+y^2+z^2)
 
     .. math:: \theta   = \cos^{-1}\left(\frac{z}{r}\right)
@@ -2097,9 +2105,11 @@ class Cord1x(Coord):
 
 
 class GMCORD(BaseCard):
+    """defines the GMCOORD class"""
     type = 'GMCORD'
 
     def __init__(self, cid, entity, gm_ids, comment=''):
+        """Creates a GMCOORD"""
         if comment:
             self.comment = comment
         self.cid = cid

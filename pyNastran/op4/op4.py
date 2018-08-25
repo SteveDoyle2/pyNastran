@@ -4,7 +4,7 @@ Main OP4 class
 from __future__ import print_function
 import sys
 import os
-from io import open
+from codecs import open
 from struct import pack, unpack, Struct
 from six import string_types, iteritems, PY2, PY3
 from six.moves import range
