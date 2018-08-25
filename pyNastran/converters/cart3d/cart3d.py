@@ -20,7 +20,7 @@ import sys
 from struct import pack, unpack
 from math import ceil
 from collections import defaultdict
-from codecs import open as codec_open
+from codecs import open
 
 from six import iteritems, PY2
 from six.moves import zip, range
@@ -755,7 +755,7 @@ class Cart3D(Cart3dIO):
                     raise
 
         else:
-            with codec_open(_filename(infilename), 'r', encoding=self._encoding) as self.infile:
+            with open(_filename(infilename), 'r', encoding=self._encoding) as self.infile:
                 try:
                     npoints, nelements, nresults = self._read_header_ascii()
                     self.points = self._read_points_ascii(npoints)
@@ -789,7 +789,7 @@ class Cart3D(Cart3dIO):
         else:
             form = WRITE_ASCII
 
-        with codec_open(outfilename, form) as outfile:
+        with open(outfilename, form) as outfile:
             int_fmt = self._write_header(outfile, self.points, self.elements, is_loads, is_binary)
             self._write_points(outfile, self.points, is_binary, float_fmt)
             self._write_elements(outfile, self.elements, is_binary, int_fmt)

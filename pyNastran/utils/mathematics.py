@@ -22,7 +22,7 @@ Various mathematical functions are defined in this file.  This includes:
 All beams are LineProperty objects.
 Multi-segment beams are IntegratedLineProperty objects.
 """
-from __future__ import print_function
+from __future__ import print_function, absolute_import
 from math import sqrt, ceil
 from six import string_types
 from six.moves import range

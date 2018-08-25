@@ -117,7 +117,7 @@ def run(regenerate=True, make_geom=False, write_bdf=False, skip_dataframe=False,
     failed_cases_filename = 'failed_cases%s%s.in' % (sys.version_info[:2])
     if get_skip_cards:
         files2 = parse_skipped_cards('skipped_cards.out')
-    elif regenerate:
+    elif regenerate or not os.path.exists(failed_cases_filename):
         files2 = get_all_files(folders_file, '.op2')
         files2 += files
         assert len(files2) > 0, files2

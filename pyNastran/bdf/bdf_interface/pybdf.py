@@ -6,7 +6,7 @@ Main BDF class.  Defines:
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
-from codecs import open as codec_open
+from codecs import open
 from typing import List, Dict, Optional, Union, Set, Any, cast
 from six import StringIO
 
@@ -273,7 +273,7 @@ class BDFInputPy(object):
         i : int
             the last index to write
         """
-        with codec_open(_filename(bdf_dump_filename),
+        with open(_filename(bdf_dump_filename),
                         'w', encoding=self.encoding) as crash_file:
             for line in lines[:i]:
                 crash_file.write(line)
@@ -344,7 +344,7 @@ class BDFInputPy(object):
         self.active_filenames.append(bdf_filename_inc)
 
         #print('ENCODING - _open_file=%r' % self.encoding)
-        bdf_file = codec_open(_filename(bdf_filename_inc), 'r', encoding=self.encoding)
+        bdf_file = open(_filename(bdf_filename_inc), 'r', encoding=self.encoding)
         return bdf_file
 
     def _validate_open_file(self, bdf_filename, bdf_filename_inc, check):
@@ -643,7 +643,7 @@ def _show_bad_file(self, bdf_filename, encoding, nlines_previous=10):
     lines = []  # type: List[str]
     print('ENCODING - show_bad_file=%r' % encoding)
 
-    with codec_open(_filename(bdf_filename), 'r', encoding=encoding) as bdf_file:
+    with open(_filename(bdf_filename), 'r', encoding=encoding) as bdf_file:
         iline = 0
         nblank = 0
         while 1:

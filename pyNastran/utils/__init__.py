@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function
+from __future__ import print_function, absolute_import
 from types import MethodType, FunctionType
 import os
 import io
 import sys
-from codecs import open as codec_open
+from codecs import open
 from itertools import count
 
 from typing import List, Union, Optional

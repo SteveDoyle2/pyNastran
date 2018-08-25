@@ -3,7 +3,7 @@ import os
 #import re
 import sys
 import traceback
-from codecs import open as codec_open
+from codecs import open
 from six.moves import urllib
 
 import numpy as np
@@ -173,7 +173,7 @@ def load_deflection_csv(out_filename, encoding='latin1'):
     if ext not in ['.csv', '.dat', '.txt']:
         raise NotImplementedError('extension=%r is not supported (use .dat, .txt, or .csv)' % ext)
 
-    with codec_open(_filename(out_filename), 'r', encoding=encoding) as file_obj:
+    with open(_filename(out_filename), 'r', encoding=encoding) as file_obj:
         names, fmt_dict, dtype, delimiter = _load_format_header(file_obj, ext, force_float=False)
 
         try:
@@ -224,7 +224,7 @@ def load_csv(out_filename, encoding='latin1'):
     if ext not in ['.csv', '.dat', '.txt']:
         raise NotImplementedError('extension=%r is not supported (use .dat, .txt, or .csv)' % ext)
 
-    with codec_open(_filename(out_filename), 'r', encoding=encoding) as file_obj:
+    with open(_filename(out_filename), 'r', encoding=encoding) as file_obj:
         names, fmt_dict, dtype, delimiter = _load_format_header(file_obj, ext, force_float=False)
 
         try:
@@ -378,7 +378,7 @@ def load_user_geom(fname, encoding='latin1'):
     QUAD, 3, 1, 5, 3, 4
     QUAD, 4, 1, 2, 3, 4  # this is after a blank line
     """
-    with codec_open(_filename(fname), 'r', encoding=encoding) as user_geom:
+    with open(_filename(fname), 'r', encoding=encoding) as user_geom:
         lines = user_geom.readlines()
 
     grid_ids = []

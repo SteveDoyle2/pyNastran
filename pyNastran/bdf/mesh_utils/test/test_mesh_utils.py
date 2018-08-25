@@ -2,7 +2,7 @@
 from __future__ import print_function
 import os
 import unittest
-from codecs import open as codec_open
+from codecs import open
 
 from six import StringIO, iteritems
 import numpy as np
@@ -70,7 +70,7 @@ class TestMeshUtils(unittest.TestCase):
             'ENDDATA'
         )
         bdf_filename = 'cquad4.bdf'
-        with codec_open(bdf_filename, 'w') as bdf_file:
+        with open(bdf_filename, 'w') as bdf_file:
             bdf_file.write(msg)
 
         model = read_bdf(bdf_filename, log=log, xref=True)
@@ -107,7 +107,7 @@ class TestMeshUtils(unittest.TestCase):
         bdf_filename = 'nonunique.bdf'
         bdf_filename_out = 'unique.bdf'
 
-        with codec_open(bdf_filename, 'w') as bdf_file:
+        with open(bdf_filename, 'w') as bdf_file:
             bdf_file.write(msg)
 
         tol = 0.2
@@ -151,7 +151,7 @@ class TestMeshUtils(unittest.TestCase):
         bdf_filename = 'nonunique.bdf'
         bdf_filename_out = 'unique.bdf'
 
-        with codec_open(bdf_filename, 'w') as bdf_file:
+        with open(bdf_filename, 'w') as bdf_file:
             bdf_file.write(msg)
 
         tol = 0.2
@@ -280,7 +280,7 @@ class TestMeshUtils(unittest.TestCase):
         bdf_filename = 'nonunique2.bdf'
         bdf_filename_out = 'unique2.bdf'
 
-        with codec_open(bdf_filename, 'w') as bdf_file:
+        with open(bdf_filename, 'w') as bdf_file:
             bdf_file.write('\n'.join(lines))
 
         tol = 0.01
@@ -327,7 +327,7 @@ class TestMeshUtils(unittest.TestCase):
         bdf_filename = 'nonunique.bdf'
         bdf_filename_out = 'unique.bdf'
 
-        with codec_open(bdf_filename, 'w') as bdf_file:
+        with open(bdf_filename, 'w') as bdf_file:
             bdf_file.write(msg)
 
         tol = 0.2

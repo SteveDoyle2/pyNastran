@@ -9,6 +9,7 @@ import numpy as np
     #oxx, oyy, txy, max_principal, min_principal, ovm, is_element_on,
     #header_dict, keys_map)
 
+IS_TESTING = 'test' in sys.argv[0]
 class StressObject(object):
     def __init__(self, model, key, all_eids, is_stress=True):
         #print('--StressObject--')
@@ -20,7 +21,8 @@ class StressObject(object):
         self.is_stress = is_stress
 
         self.composite_data_dict = create_composite_plates(model, key, is_stress, self.keys_map)
-        #self.plates_data_dict = create_plates(model, key, is_stress)
+        if IS_TESTING:
+            self.plates_data_dict = create_plates(model, key, is_stress)
 
         #for key in iterkeys(self.plates_data_dict):
             #(case.element_node, ueids, data2, vm_word, ntimes) = self.plates_data_dict[key]

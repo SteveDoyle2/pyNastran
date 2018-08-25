@@ -1,7 +1,7 @@
 from __future__ import print_function
 import os
 import unittest
-from codecs import open as codec_open
+from codecs import open
 from six import PY2
 from six.moves import zip
 
@@ -292,14 +292,14 @@ class CaseControlTest(unittest.TestCase):
         ]
         bdf_filename = 'test7.bdf'
         bdf_filename2 = 'test7_bad.bdf'
-        with codec_open(bdf_filename, 'w', encoding='ascii') as bdf_file:
+        with open(bdf_filename, 'w', encoding='ascii') as bdf_file:
             for line in lines_expected:
                 bdf_file.write(line)
         bdf = BDF(debug=False)
         bdf.read_bdf(bdf_filename)
         bdf.write_bdf(bdf_filename2)
 
-        with codec_open(bdf_filename, 'r', encoding='ascii') as bdf_file:
+        with open(bdf_filename, 'r', encoding='ascii') as bdf_file:
             lines = bdf_file.readlines()
             compare_lines(self, lines, lines_expected, has_endline=True)
         os.remove(bdf_filename)

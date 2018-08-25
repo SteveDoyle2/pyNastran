@@ -1356,7 +1356,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             self.binary_debug.close()
 
         if self._close_op2 or force:
-            self.f.close()
+            if self.f is not None:
+                # can happen if:
+                #  - is ascii file
+                self.f.close()
             del self.binary_debug
             del self.f
 

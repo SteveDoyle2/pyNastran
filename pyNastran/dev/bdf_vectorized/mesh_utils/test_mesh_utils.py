@@ -6,7 +6,7 @@ tests
 from __future__ import print_function
 import os
 import unittest
-from codecs import open as codec_open
+from codecs import open
 
 import numpy as np
 #import pyNastran
@@ -87,7 +87,7 @@ class TestMeshUtilsVectorized(unittest.TestCase):
             'ENDDATA'
         )
         bdf_filename = 'cquad4.bdf'
-        with codec_open(bdf_filename, 'w') as bdf_file:
+        with open(bdf_filename, 'w') as bdf_file:
             bdf_file.write(msg)
 
         model = read_bdf(bdf_filename, xref=True)
@@ -122,7 +122,7 @@ class TestMeshUtilsVectorized(unittest.TestCase):
             'ENDDATA'
         )
         bdf_filename = 'ctria3.bdf'
-        with codec_open(bdf_filename, 'w') as bdf_file:
+        with open(bdf_filename, 'w') as bdf_file:
             bdf_file.write(msg)
 
         model = read_bdf(bdf_filename, xref=True)

@@ -5,7 +5,7 @@ defines:
                               log=None, debug=False)
 """
 from __future__ import print_function
-from codecs import open as codec_open
+from codecs import open
 from six import iteritems
 from numpy import zeros, arange, array, array_equal
 import numpy as np
@@ -136,7 +136,7 @@ def nastran_to_cart3d_filename(bdf_filename, cart3d_filename, log=None, debug=Fa
     nnodes = len(model.nodes)
     nelements = len(model.elements)
 
-    with codec_open(cart3d_filename, 'w', encoding='utf8') as cart3d:
+    with open(cart3d_filename, 'w', encoding='utf8') as cart3d:
         cart3d.write('%s %s\n' % (nnodes, nelements))
         node_id_shift = {}
         i = 1

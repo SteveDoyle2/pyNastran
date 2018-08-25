@@ -10,12 +10,17 @@ import pyNastran
 from pyNastran.utils.numpy_utils import (
     loadtxt_nice, augmented_identity, savetxt_nice,
     perpendicular_vector, perpendicular_vector2d,
+    dot3d,
+)
+from pyNastran.utils.test.coord_utils import (
+    cylindrical_rotation_matrix,
 )
 
 PKG_PATH = pyNastran.__path__[0]
 
 
 def is_array_close(v1, v2):
+    """are two arrays close"""
     return np.all(np.isclose(v1, v2))
 
 class TestNumpyUtils(unittest.TestCase):
@@ -37,22 +42,22 @@ class TestNumpyUtils(unittest.TestCase):
         a1 = perpendicular_vector2d((1., 0., 0.))
 
         #-----------------------------
-        v = np.array([
+        expected = np.array([
             [1., 0., 0.],
             [0., 1., 0.],
             [0., 0., 1.],
             [1., 1., 0.],
             [1., 1., 1.],
         ])
-        out = perpendicular_vector2d(v)
-        v2 = np.array([     # input
+        out = perpendicular_vector2d(expected)
+        expected2 = np.array([     # input
             [0., 0., 1.],   # [1., 0., 0.],
             [0., 0., 1.],   # [0., 1., 0.],
             [0., 1., 0.],   # [0., 0., 1.],
             [0., 0., 1.],   # [1., 1., 0.],
             [1., 1., -2.],  # [1., 1., 1.],
           ])
-        assert np.allclose(out, v2)
+        assert np.allclose(out, expected2)
         #print('out')
         #print(out)
         #print('-----------')
@@ -61,6 +66,58 @@ class TestNumpyUtils(unittest.TestCase):
         #print('-----------')
         #print('diff')
         #print(v2 - out)
+
+    def coords_from_vector_1d(self):
+        """tests coords_from_vector_1d"""
+        v = [ # duplicate
+            [0, 0., 1.],
+            [0., 0., 1.],
+        ]
+        expected = np.array([
+            [[0., 0., 1.],
+             [ 0., 1., 0.],
+             [-1., 0., 0.],],
+
+            [[ 0., 0., 1.],
+             [ 0., 1., 0.],
+             [-1., 0., 0.],],
+        ])
+        #out = perpendicular_vector2d(v)
+        out = coords_from_vector_1d(v)
+        assert np.allclose(out, expected)
+
+    def test_cylindrical_rotation_matrix(self):
+        """tests cylindrical_rotation_matrix"""
+        theta = [0., 0.]
+        coords = cylindrical_rotation_matrix(theta, dtype='float64')
+
+        theta = np.radians([0., 45., 90.])
+        coords = cylindrical_rotation_matrix(theta, dtype='float64')
+        #print(coords)
+
+    def test_dot3d(self):
+        """tests dot3d"""
+        A = np.array([
+            [[1., 0., 0.],
+             [0., 1., 0.],
+             [0., 0., 1.],],
+
+            [[1., 0., 0.],
+             [0., 1., 0.],
+             [0., 0., 1.],],
+
+            [[1., 0., 0.],
+             [0., 1., 0.],
+             [0., 0., 1.],],
+        ])
+        theta = np.radians([0., 45., 90])
+        B = cylindrical_rotation_matrix(theta, dtype='float64')
+        C = dot3d(A, B)
+        print('-------')
+        for Ci in C:
+            print(Ci.shape)
+            print(Ci)
+            print('-------')
 
     def test_augmented_identity(self):
         """tests augmented_identity"""
@@ -137,8 +194,8 @@ class TestNumpyUtils(unittest.TestCase):
         os.remove(csv_filename)
 
         if 0:  ## TODO: not done with filehandle test
-            from codecs import open as codec_open
-            with codec_open(csv_filename, 'w') as csv_file:
+            from codecs import open
+            with open(csv_filename, 'w') as csv_file:
                 savetxt_nice(csv_file, B, fmt='%.18e', delimiter=',', newline='\n',
                              header='', footer='', comments='# ')
             os.remove(csv_filename)

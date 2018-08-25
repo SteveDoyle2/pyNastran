@@ -11,7 +11,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 import os
 import sys
 import traceback
-from codecs import open as codec_open
+from codecs import open
 from collections import defaultdict
 
 from six import string_types, iteritems, itervalues, iterkeys
