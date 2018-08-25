@@ -29,6 +29,7 @@ from pyNastran.op4.test.op4_unit_tests import TestOP4
 
 #utils
 from pyNastran.utils.test.all_tests import *
+from pyNastran.femutils.test.all_tests import *
 
 # converters
 from pyNastran.converters.test_formats import *

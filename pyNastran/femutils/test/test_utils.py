@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+from __future__ import print_function, absolute_import
 import os
 import unittest
 
@@ -12,18 +12,81 @@ from pyNastran.utils.numpy_utils import (
     perpendicular_vector, perpendicular_vector2d,
     dot3d,
 )
-from pyNastran.utils.numpy_functions.coord_utils import (
-    cylindrical_rotation_matrix,
+from pyNastran.femutils.coord_utils import (
+    cylindrical_rotation_matrix, coordinate_system_from_vector_2d_tri,
 )
+from .utils import is_array_close
 
 PKG_PATH = pyNastran.__path__[0]
 
+__all__ = ['TestMatrix3d', 'TestNumpyUtils', 'TestFemIO']
 
-def is_array_close(v1, v2):
-    """are two arrays close"""
-    return np.all(np.isclose(v1, v2))
+#class TestNan(unittest.TestCase):
+
+class TestMatrix3d(unittest.TestCase):
+    """tests functions in femutils.matrix3d"""
+    def test_dot3d(self):
+        """tests dot3d"""
+        A = np.array([
+            [[1., 0., 0.],
+             [0., 1., 0.],
+             [0., 0., 1.],],
+
+            [[1., 0., 0.],
+             [0., 1., 0.],
+             [0., 0., 1.],],
+
+            [[1., 0., 0.],
+             [0., 1., 0.],
+             [0., 0., 1.],],
+        ])
+        theta = np.radians([0., 45., 90])
+        B = cylindrical_rotation_matrix(theta, dtype='float64')
+        C = dot3d(A, B)
+        #print('-------')
+        #for Ci in C:
+            #print(Ci.shape)
+            #print(Ci)
+            #print('-------')
+        ## TODO: not compared
+
+    def test_cylindrical_rotation_matrix(self):
+        """tests cylindrical_rotation_matrix"""
+        theta = [0., 0.]
+        coords = cylindrical_rotation_matrix(theta, dtype='float64')
+
+        theta = np.radians([0., 45., 90.])
+        coords = cylindrical_rotation_matrix(theta, dtype='float64')
+        #print(coords)
+        ## TODO: not compared
+
+    def test_coordinate_system_from_vector_2d_tri(self):
+        """tests coordinate_system_from_vector_2d_tri"""
+        xyz1 = [0., 0., 0.]
+        xyz2 = [1., 0., 0.]
+        xyz3 = [0., 1., 0.]
+        coords1 = coordinate_system_from_vector_2d_tri(xyz1, xyz2, xyz3)
+        assert np.allclose(coords1[0, 2, 2], 1.0), '\n' + str(coords1[0, :, :])
+
+        xyz1 = [
+            [0., 0., 0.],
+            [0., 0., 0.],
+        ]
+        xyz2 = [
+            [1., 0., 0.],
+            [1., 0., 0.],
+        ]
+        xyz3 = [
+            [0., 1., 0.],
+            [0., 1., 0.],
+        ]
+        coords2 = coordinate_system_from_vector_2d_tri(xyz1, xyz2, xyz3)
+        two_coords = np.vstack([coords1, coords1])
+        assert np.array_equal(two_coords, coords2)
+
 
 class TestNumpyUtils(unittest.TestCase):
+    """tests functions in femutils.utils"""
     def test_perpendicular_vector(self):
         """tests perpendicular_vector"""
         with self.assertRaises(ValueError):
@@ -86,39 +149,6 @@ class TestNumpyUtils(unittest.TestCase):
         out = coords_from_vector_1d(v)
         assert np.allclose(out, expected)
 
-    def test_cylindrical_rotation_matrix(self):
-        """tests cylindrical_rotation_matrix"""
-        theta = [0., 0.]
-        coords = cylindrical_rotation_matrix(theta, dtype='float64')
-
-        theta = np.radians([0., 45., 90.])
-        coords = cylindrical_rotation_matrix(theta, dtype='float64')
-        #print(coords)
-
-    def test_dot3d(self):
-        """tests dot3d"""
-        A = np.array([
-            [[1., 0., 0.],
-             [0., 1., 0.],
-             [0., 0., 1.],],
-
-            [[1., 0., 0.],
-             [0., 1., 0.],
-             [0., 0., 1.],],
-
-            [[1., 0., 0.],
-             [0., 1., 0.],
-             [0., 0., 1.],],
-        ])
-        theta = np.radians([0., 45., 90])
-        B = cylindrical_rotation_matrix(theta, dtype='float64')
-        C = dot3d(A, B)
-        print('-------')
-        for Ci in C:
-            print(Ci.shape)
-            print(Ci)
-            print('-------')
-
     def test_augmented_identity(self):
         """tests augmented_identity"""
         expected_array = np.array([
@@ -130,8 +160,10 @@ class TestNumpyUtils(unittest.TestCase):
         msg = 'expected:\n%s\nactual:\n%s' % (expected_array, actual_array)
         assert np.array_equal(expected_array, actual_array), msg
 
-    def test_loadtxt_01(self):
-        """tests that we can reimplement loadtxt so it doesn't suck"""
+class TestFemIO(unittest.TestCase):
+    """tests functions in femutils.io"""
+    def test_loadtxt_nice(self):
+        """tests that we can reimplement loadtxt so it has good error messages"""
         str_data = StringIO("1,0,2\n3,0,4")
         x1, y1 = np.loadtxt(str_data, delimiter=',', usecols=(0, 2), unpack=True)
         x2, y2 = loadtxt_nice(str_data, delimiter=',', usecols=(0, 2), unpack=True)
@@ -165,7 +197,7 @@ class TestNumpyUtils(unittest.TestCase):
         assert np.array_equal(y1, y2), 'y1=%s y2=%s' % (y1, y2)
 
     def test_savetxt_nice(self):
-        """tests that we can reimplement savetxt so it doesn't suck"""
+        """tests that we can reimplement savetxt so it works on unicode for unicode file handlers"""
         A = np.eye(10)
         csv_filename = 'savetxt_real.csv'
         savetxt_nice(csv_filename, A, fmt='%.18e', delimiter=',', newline='\n',
@@ -210,6 +242,7 @@ class TestNumpyUtils(unittest.TestCase):
                 B2 = loadtxt_nice('missing.txt', delimiter=',', skiprows=0, comment='#',
                                   dtype=np.float64, converters=None,
                                   usecols=None, unpack=False, ndmin=0)
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

@@ -14,19 +14,21 @@ from itertools import count
 
 from six import StringIO
 import numpy as np
-#from numpy._iotools import _is_string_like
 from numpy.lib._iotools import _is_string_like
 from numpy.compat import asstr, asbytes
 
 from pyNastran.utils import is_file_obj, _filename
 
+__all__ = ['loadtxt_nice', 'savetxt_nice']
+
 def loadtxt_nice(filename, delimiter=None, skiprows=0, comment='#', dtype=np.float64,
                  converters=None, usecols=None, unpack=False,
                  ndmin=0,):
     """
-    Reimplmenentation of numpy's loadtxt that doesn't complain about
+    Reimplementation of numpy's loadtxt that doesn't complain about
     training commas (or other delimiter) that vary from  one line to
-    the other.  It also provides better error messages.
+    the other.  It also provides better error messages when failing to
+    load files.
 
     Parameters
     ----------
@@ -77,7 +79,7 @@ def loadtxt_nice(filename, delimiter=None, skiprows=0, comment='#', dtype=np.flo
         the data object
     """
     complex_dtypes = [
-        'complex128', np.complex128,
+        'complex64', 'complex128', np.complex128, np.complex64,
     ]
     if dtype in complex_dtypes:
         return np.loadtxt(
@@ -133,8 +135,10 @@ def loadtxt_nice(filename, delimiter=None, skiprows=0, comment='#', dtype=np.flo
 
     #print(data)
     allowed_float_dtypes = [
-        'int32', 'int64', 'int128',
-        'float32', 'float64', 'float128', np.float64,
+        np.float64, np.float32, 'float32', 'float64',
+        np.int32, np.int64, 'int32', 'int64',
+        #'float128', np.float128,
+        #'int128', np.int128,
     ]
     #if dtype not in allowed_float_dtypes:  # pragma: no cover
         #'dtype=%r allowed_float_dtypes=[%s]' % (
@@ -249,7 +253,7 @@ def _loadtxt_as_dict(data, dtype, allowed_dtypes):
 def savetxt_nice(fname, X, fmt='%.18e', delimiter=' ', newline='\n', header='',
                  footer='', comments='# '):
     """
-    Reimplmenentation of numpy's savetxt that doesn't complain about
+    Reimplementation of numpy's savetxt that doesn't complain about
     bytes when saving to unicode files in Python 3.
 
     Save an array to a text file.

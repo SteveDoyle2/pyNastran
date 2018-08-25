@@ -28,6 +28,13 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
 
+from pyNastran.femutils.coord_utils import (
+    xyz_to_rtz_array, xyz_to_rtp_array, # xyz to xxx transforms
+    rtz_to_xyz_array, rtp_to_xyz_array, # xxx to xyz transforms
+    #rtz_to_rtp_array, rtp_to_rtz_array, # rtp/rtz and rtz/rtp transforms
+)
+
+
 def global_to_basic_rectangular(coord, unused_xyz_global, dtype='float64'):
     coord_transform = coord.local_to_global()
     return coord_transform
@@ -1306,20 +1313,14 @@ class CylindricalCoord(object):
             the point in the local coordinate system
 
         """
-        assert len(p.shape) == 2, p.shape
-        R = p[:, 0]
-        theta = np.radians(p[:, 1])
-        x = R * np.cos(theta)
-        y = R * np.sin(theta)
-        out = np.array([x, y, p[:, 2]], dtype='float64').T
-        return out
+        return rtz_to_xyz_array(p)
 
     @staticmethod
     def coord_to_spherical(p):
-        """hasn't been tested"""
-        r, t, z = p
+        """R-theta-z to rho-theta-phi transform"""
+        r, t, z = rtz
         rho = (r**2 + z**2)**0.5
-        theta = degrees(acos(z / rho))
+        theta = np.degrees(acos(z / rho))
         phi = t
         return np.array([rho, theta, phi], dtype='float64')
 
@@ -1357,16 +1358,11 @@ class CylindricalCoord(object):
 
         Returns
         -------
-        xyz : (3,) float ndarray
+        rtp : (3,) float ndarray
             the point in the local coordinate system
 
         """
-        assert len(p.shape) == 2, p.shape
-        x = p[:, 0]
-        y = p[:, 1]
-        theta = np.degrees(np.arctan2(y, x))
-        R = np.sqrt(x * x + y * y)
-        return np.array([R, theta, p[:, 2]], dtype='float64').T
+        return xyz_to_rtz_array(p)
 
     def global_to_basic(self, xyz_global):
         return global_to_basic_cylindrical(self, xyz_global, dtype='float64')
@@ -1420,19 +1416,7 @@ class SphericalCoord(object):
             the local XYZ point in the R, \theta, \phi coordinate system
 
         """
-        assert len(p.shape) == 2, p.shape
-        x = p[:, 0]
-        y = p[:, 1]
-        z = p[:, 2]
-        radius = np.sqrt(x * x + y * y + z * z)
-        phi = np.degrees(np.arctan2(y, x))
-
-        i = np.where(radius == 0.0)
-        if len(i):
-            theta = np.zeros(len(z), dtype=z.dtype)
-            ir = np.where(radius != 0.0)
-            theta[ir] = np.degrees(np.arccos(z[ir] / radius[ir]))
-        return np.array([radius, theta, phi], dtype='float64').T
+        return xyz_to_rtp_array(p)
 
     @staticmethod
     def coord_to_xyz(p):
@@ -1460,14 +1444,7 @@ class SphericalCoord(object):
             the R, \theta, \phi in the local coordinate system
 
         """
-        assert len(p.shape) == 2, p.shape
-        R = p[:, 0]
-        theta = np.radians(p[:, 1])
-        phi = np.radians(p[:, 2])
-        x = R * np.sin(theta) * np.cos(phi)
-        y = R * np.sin(theta) * np.sin(phi)
-        z = R * np.cos(theta)
-        return np.array([x, y, z], dtype='float64').T
+        return rtp_to_xyz_array(p)
 
     @staticmethod
     def coord_to_spherical(p):
@@ -1485,7 +1462,6 @@ class SphericalCoord(object):
         z = rho * cos(thetar)
         t = phi
         return np.array([r, t, z], dtype='float64')
-
 
     def global_to_basic(self, xyz_global):
         return global_to_basic_spherical(self, xyz_global, dtype='float64')
