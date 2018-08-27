@@ -535,19 +535,19 @@ class TestCoords(unittest.TestCase):
         model.write_bdf(bdf_file, close=False)
 
         model3 = BDF(debug=False)
-        origin = [14., 30., 70.],
-        zaxis = [13.431863852, 32.1458443949, 75.2107442927],
-        xzplane = [14.4583462334, 33.4569982885, 68.2297989286],
+        origin = [14., 30., 70.]
+        zaxis = [13.431863852, 32.1458443949, 75.2107442927]
+        xzplane = [14.4583462334, 33.4569982885, 68.2297989286]
         cord2r = model3.add_cord2r(30, origin, zaxis, xzplane, rid=2, comment='')
 
-        origin = [3., 42., -173.],
-        zaxis = [2.86526881213, 45.5425615252, 159.180363517],
-        xzplane = [3.65222385965, 29.2536614627, -178.631312271],
+        origin = [3., 42., -173.]
+        zaxis = [2.86526881213, 45.5425615252, 159.180363517]
+        xzplane = [3.65222385965, 29.2536614627, -178.631312271]
         cord2c = model3.add_cord2c(31, origin, zaxis, xzplane, rid=2, comment='')
 
-        origin = [22., 14., 85.],
-        zaxis = [22.1243073983, 11.9537753718, 77.9978191005],
-        xzplane = [21.0997242967, 13.1806120497, 88.4824763008],
+        origin = [22., 14., 85.]
+        zaxis = [22.1243073983, 11.9537753718, 77.9978191005]
+        xzplane = [21.0997242967, 13.1806120497, 88.4824763008]
         cord2s = model3.add_cord2s(32, origin, zaxis, xzplane, rid=2, comment='')
 
         assert cord2r == model.coords[cord2r.cid], 'cord2r:\n%r\ncord2r[cid]:\n%r' % (str(cord2r), str(model.coords[cord2r.cid]))
@@ -641,9 +641,9 @@ class TestCoords(unittest.TestCase):
 
         model2 = BDF(debug=False)
         cid = 7
-        origin = [1.135, .089237, -.0676],
-        zaxis = [.135, .089237, -.0676],
-        xzplane = [1.135, .089237, .9324],
+        origin = [1.135, .089237, -.0676]
+        zaxis = [.135, .089237, -.0676]
+        xzplane = [1.135, .089237, .9324]
         coord2 = model2.add_cord2r(cid, origin, zaxis, xzplane, rid=0, comment='cord2r')
         coord2.comment = ''
         assert coord == coord2, 'coord:\n%r\ncoord2:\n%r' % (str(coord), str(coord2))

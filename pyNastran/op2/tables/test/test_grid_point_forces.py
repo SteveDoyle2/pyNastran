@@ -66,7 +66,7 @@ class TestGridPointForces(unittest.TestCase):
             [3, 0],
         ])
         from pyNastran.bdf.bdf import CORD2R
-        coord_out = CORD2R(cid=0)
+        coord_out = CORD2R(cid=0, origin=None, zaxis=None, xzplane=None)
         coords = {0 : coord_out}
 
         #eids = [1]

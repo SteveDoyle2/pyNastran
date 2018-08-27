@@ -47,14 +47,14 @@ def dot_33_n33(A, B, debug=True):
     C : (n, 3, 3) float ndarray
         the set of 3 x 3 matrix multiplies
     """
-    #C = np.matmul(A, B)
+    C = np.matmul(A, B)
     assert A.shape == (3, 3), A.shape
     assert len(B.shape) == 3, B.shape
     assert B.shape[1:] == (3, 3), B.shape
     if debug:
         dtype = A.dtype
         #print('------------------------')
-        D = np.zeros(A.shape, dtype=dtype)
+        D = np.zeros(B.shape, dtype=dtype)
         print('A.shape =', A.shape)
         for i, Bi in zip(count(), B):
             print('Bi.shape =', Bi.shape)
@@ -63,7 +63,7 @@ def dot_33_n33(A, B, debug=True):
             D[i, :, :] = ABi
             #print(D[i, :, :])
             #print('------------------------')
-        #assert np.all(np.allclose(C, D))
+        assert np.all(np.allclose(C, D))
     return D
 
 def dot_n33_33(A, B, debug=True):
@@ -121,7 +121,7 @@ def dot_n33_n33(A, B, debug=True):
     assert len(A.shape) == 3, A.shape
     assert A.shape[1:] == (3, 3), A.shape
     assert len(B.shape) == 3, B.shape
-    assert B.shape == (3, 3), B.shape
+    assert B.shape[1:] == (3, 3), B.shape
     #C = np.matmul(A, B)
     if debug:
         dtype = A.dtype

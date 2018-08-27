@@ -644,8 +644,8 @@ class TestMeshUtils(unittest.TestCase):
                          tflag=1, T1=0.1, T2=0.1, T3=0.1, T4=0.1,  # relative
                          comment='')
 
-        origin = [0., 0., 0.],
-        zaxis = [0., 0., 1.],
+        origin = [0., 0., 0.]
+        zaxis = [0., 0., 1.]
         xzplane = [1., 0., 0.]
         model.add_cord2r(1, origin, zaxis, xzplane, rid=0)
         model.add_pshell(pid, mid1=mid1, t=2.)

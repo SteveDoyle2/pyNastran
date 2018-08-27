@@ -64,7 +64,7 @@ class TestOP2(Tester):
             [2, 0],
             [3, 0],
         ])
-        coord_out = CORD2R(cid=0)
+        coord_out = CORD2R(cid=0, origin=None, zaxis=None, xzplane=None)
         coords = {0 : coord_out}
 
         #eids = [1]

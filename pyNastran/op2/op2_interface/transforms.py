@@ -14,8 +14,7 @@ from pyNastran.femutils.coord_transforms import cylindrical_rotation_matrix
 from pyNastran.femutils.matrix3d import (
     dot_n33_33,
     #dot_n33_n33,
-    #dot_33_n33,
-    dot_n33_n3)
+    dot_33_n33, dot_n33_n3)
 
 
 def transform_displacement_to_global(subcase, result, icd_transform, coords, xyz_cid0,
@@ -70,7 +69,8 @@ def transform_displacement_to_global(subcase, result, icd_transform, coords, xyz
             if xyz_cid0 is None:
                 msg = 'xyz_cid0 is required for cylindrical coordinate transforms'
                 raise RuntimeError(msg)
-            _transform_cylindrical_displacement(inode, data, coord, xyz_cid0, cid_transform)
+            _transform_cylindrical_displacement(inode, data, coord, xyz_cid0, cid_transform,
+                                                is_global_cid)
 
         elif coord_type in ['CORD2S', 'CORD1S']:
             #print('spherical')
@@ -84,7 +84,7 @@ def transform_displacement_to_global(subcase, result, icd_transform, coords, xyz
             raise RuntimeError(coord)
 
 
-def _transform_cylindrical_displacement(inode, data, coord, xyz_cid0, cid_transform):
+def _transform_cylindrical_displacement(inode, data, coord, xyz_cid0, cid_transform, is_global_cid):
     """helper method for transform_displacement_to_global"""
     xyzi = xyz_cid0[inode, :]
     rtz_cid = coord.xyz_to_coord_array(xyzi)
@@ -93,15 +93,14 @@ def _transform_cylindrical_displacement(inode, data, coord, xyz_cid0, cid_transf
     #print(rtz_cid)
     thetad = rtz_cid[:, 1]
     thetar = np.radians(thetad)
-    #print('thetad = ', thetad)
+    #print('thetad[cid=%s] = %s' % (coord.cid, thetad))
     #print('thetar = ', thetar)
     #self.log.debug('thetad = %s' % list(thetad))
 
+    np.set_printoptions(precision=None, threshold=None, edgeitems=None, linewidth=None, suppress=True,
+                        nanstr=None, infstr=None, formatter=None, sign=None, floatmode=None)
     xforms = cylindrical_rotation_matrix(thetar, dtype='float64')
     #print('xforms.shape = %s' % str(xforms.shape))
-
-    #xforms2 = dot_33_n33(xforms, cid_transform)  # wrong shape
-    #xforms2 = dot_n33_33(xforms, cid_transform)
 
     for itime in range(data.shape[0]):
         translation = data[itime, inode, :3]
@@ -110,18 +109,26 @@ def _transform_cylindrical_displacement(inode, data, coord, xyz_cid0, cid_transf
         #theta_max2 = rotation[:, 1].max()
         #print('theta_max = ', max(theta_max1, theta_max2))
 
-        if 0:
-            # old - same as rectangular
-            data[itime, inode, :3] = translation.dot(cid_transform)
-            data[itime, inode, 3:] = rotation.dot(cid_transform)
-        elif 1:
+        if is_global_cid:
             translation2 = dot_n33_n3(xforms, translation)
-            #print('translation.shape', translation.shape)
-            #print('translation2.shape', translation2.shape)
-            data[itime, inode, :3] = translation2
-            data[itime, inode, 3:] = dot_n33_n3(xforms, rotation)
+            rotation2 = dot_n33_n3(xforms, rotation)
         else:
-            raise RuntimeError('no option selected...')
+            #print('cid_transform[cid=%s]:\n%s' % (coord.cid, cid_transform))
+            #print('xforms:\n%s' % (xforms))
+            #xforms2 = dot_33_n33(xforms, cid_transform)  # wrong shape
+            #xforms2a = dot_33_n33(cid_transform, xforms)
+            xforms2b = dot_n33_33(xforms, cid_transform)
+            #print('xform A:\n%s'  % xforms2a)
+            #print('xform B:\n%s'  % xforms2b)
+            #translation2 = dot_n33_n3(xforms2a, translation)
+            xforms2 = xforms2b
+            translation2 = dot_n33_n3(xforms2, translation)
+            rotation2 = dot_n33_n3(xforms2, rotation)
+
+        #print('translation.shape', translation.shape)
+        #print('translation2.shape', translation2.shape)
+        data[itime, inode, :3] = translation2
+        data[itime, inode, 3:] = rotation2
 
 def _transform_spherical_displacement(inode, data, coord, xyz_cid0, cid_transform, is_global_cid):
     """helper method for transform_displacement_to_global"""

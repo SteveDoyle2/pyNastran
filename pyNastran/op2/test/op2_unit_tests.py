@@ -78,11 +78,20 @@ class TestOP2(Tester):
         bdf_model.add_grid(23, [1., 90., 0.], cp=2, cd=2)
         bdf_model.add_grid(24, [0., 1., 0.], cp=0, cd=2)
         bdf_model.add_grid(25, [-1., 0., 0.], cp=0, cd=2)
+
+        #bdf_model.add_grid(31, [1., 0., 0.], cp=3, cd=3)  # [0,1,0]
+        #bdf_model.add_grid(32, [1., 90., 0.], cp=3, cd=3) # [0,-1,0]
+
         origin = [0., 0., 0.]
         zaxis = [0., 0., 1.]
         xzplane = [1., 0., 0.]
         bdf_model.add_cord2r(1, origin, zaxis, xzplane, rid=0, comment='')
         coord = bdf_model.add_cord2c(2, origin, zaxis, xzplane, rid=0, comment='')
+
+        origin = [0., 0., 0.]
+        zaxis = [1., 0., 0.]
+        xzplane = [0., 1., 0.]
+        bdf_model.add_cord2c(3, origin, zaxis, xzplane, rid=0, comment='')
 
         dxyz = np.array([[
             [1., 0., 0., 0., 0., 0.], # 1
@@ -95,7 +104,10 @@ class TestOP2(Tester):
 
             [1., 0., 0., 0., 0., 0.], # 23 - [0., 1., 0.]
             [1., 0., 0., 0., 0., 0.], # 24 - answer=same as 23
-            [1., 0., 0., 0., 0., 0.], # 24 - [-1, 0., 0.]
+            [1., 0., 0., 0., 0., 0.], # 25 - [-1, 0., 0.]
+
+            #[1., 0., 0., 0., 0., 0.], # 31 - [0,1,0]
+            #[1., 0., 0., 0., 0., 0.], # 32 - [0,-1,0]
         ]])
         #--------------------------------------------
         #icd_transform, icp_transform, xyz_cp, nid_cp_cd - bdf_model.get_displacement_index_xyz_cp_cd(
@@ -123,7 +135,7 @@ class TestOP2(Tester):
         #op2_model.log.info("dispi2:\n%s" % dispi_cd2)
 
         dispi = op2_model.displacements[1].data[0, :, :2]
-        expected_disp = [
+        expected_disp = np.array([
             [1., 0.,], # 1
             [1., 0.,], # 2
             [1., 0.,], # 3
@@ -135,12 +147,14 @@ class TestOP2(Tester):
             [0., 1.,], # 23
             [0., 1.,], # 24
             [-1., 0.,], # 25
-        ]
+
+            #[0., 1.,], # 31
+            #[0., -1.,], # 32
+        ])
         assert is_array_close(dispi, expected_disp)
+        #print(dispi)
 
-
-        ## TODO: not checked
-
+        ## TODO: fix the thetad in the cid=3 coordinates (nid=33,34)
 
     def test_generalized_tables(self):
         """tests that set_additional_generalized_tables_to_read overwrites the GEOM1S class"""

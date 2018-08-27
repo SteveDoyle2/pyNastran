@@ -1190,12 +1190,15 @@ def define_coord_ijk(model, cord2_type, cid, origin, rid=0, i=None, j=None, k=No
     e3 = rcoord.transform_node_to_local(origin + i) # point on x-z plane / point on x axis
     card = [cord2_type, cid, rid] + list(e1) + list(e2) + list(e3)
 
+    origin = e1
+    zaxis = e2
+    xzplane = e3
     if cord2_type == 'CORD2R':
-        coord = CORD2R(cid, rid, origin=e1, zaxis=e2, xzplane=e3, comment='')
+        coord = CORD2R(cid, origin, zaxis, xzplane, rid=rid, comment='')
     elif cord2_type == 'CORD2C':
-        coord = CORD2C(cid, rid, origin=e1, zaxis=e2, xzplane=e3, comment='')
+        coord = CORD2C(cid, origin, zaxis, xzplane, rid=rid, comment='')
     elif cord2_type == 'CORD2S':
-        coord = CORD2S(cid, rid, origin=e1, zaxis=e2, xzplane=e3, comment='')
+        coord = CORD2S(cid, origin, zaxis, xzplane, rid=rid, comment='')
     else:
         raise NotImplementedError(card)
     if add:
@@ -1505,11 +1508,11 @@ class Cord2x(Coord):
         .. note :: no type checking
 
         """
+        assert isinstance(rid, int), rid
         Coord.__init__(self)
         if comment:
             self.comment = comment
         self.cid = cid
-        assert isinstance(rid, int), rid
         self.rid = rid
         if origin is None:
             self.e1 = np.array([0., 0., 0.], dtype='float64')
@@ -1530,7 +1533,8 @@ class Cord2x(Coord):
         self._finish_setup()
 
     @classmethod
-    def _add(cls, cid, rid=0, origin=None, zaxis=None, xzplane=None, comment=''):
+    def _add(cls, cid, origin, zaxis, xzplane, rid=0, comment=''):
+        assert isinstance(rid, int), rid
         cid = cid
         rid = rid
 
@@ -1655,10 +1659,10 @@ class Cord2x(Coord):
                 jhat = np.cross(k, xzplane) # xzplane is "defining" xaxis
                 j = jhat / norm(jhat)
                 i = np.cross(j, k)
-        return cls.add_ijk(cid, rid, origin, i, j, k, comment=comment)
+        return cls.add_ijk(cid, origin, i, j, k, rid=rid, comment=comment)
 
     @classmethod
-    def add_ijk(cls, cid, rid=0, origin=None, i=None, j=None, k=None, comment=''):
+    def add_ijk(cls, cid, origin=None, i=None, j=None, k=None, rid=0, comment=''):
         """
         Create a coordinate system based on 2 or 3 perpendicular unit vectors
 
@@ -1718,7 +1722,7 @@ class Cord2x(Coord):
 
         # point on x-z plane / point on x axis
         e3 = origin + i
-        return cls(cid, e1, e2, e3, rid, comment=comment)
+        return cls(cid, e1, e2, e3, rid=rid, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -1728,7 +1732,7 @@ class Cord2x(Coord):
         e2 = np.array(data[5:8], dtype='float64')
         e3 = np.array(data[8:11], dtype='float64')
         assert len(data) == 11, 'data = %s' % (data)
-        return cls(cid, e1, e2, e3, rid, comment=comment)
+        return cls(cid, e1, e2, e3, rid=rid, comment=comment)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1753,7 +1757,7 @@ class Cord2x(Coord):
                             double_or_blank(card, 10, 'e3y', 0.0),
                             double_or_blank(card, 11, 'e3z', 0.0)],
                            dtype='float64')
-        return cls(cid, origin, zaxis, xzplane, rid, comment=comment)
+        return cls(cid, origin, zaxis, xzplane, rid=rid, comment=comment)
         #self._finish_setup()
 
     def _finish_setup(self):
@@ -2502,7 +2506,7 @@ class CORD2R(Cord2x, RectangularCoord):
             a comment for the card
 
         """
-        Cord2x.__init__(self, cid, origin, zaxis, xzplane, rid, comment=comment)
+        Cord2x.__init__(self, cid, origin, zaxis, xzplane, rid=rid, comment=comment)
 
     def _verify(self, xref):
         """
