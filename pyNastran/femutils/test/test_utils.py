@@ -6,6 +6,7 @@ __all__ = ['TestMatrix3d', 'TestNumpyUtils', 'TestFemIO']
 
 import os
 import unittest
+from codecs import open
 
 from six import PY2, StringIO
 import numpy as np
@@ -14,11 +15,11 @@ import pyNastran
 from pyNastran.utils.numpy_utils import (
     loadtxt_nice, augmented_identity, savetxt_nice,
 )
-from pyNastran.femutils.matrix3d import dot_n33_n33
+from pyNastran.femutils.matrix3d import dot_n33_n33, transpose3d, triple_n33_n33, triple_n33_33
 from pyNastran.femutils.utils import perpendicular_vector, perpendicular_vector2d
 from pyNastran.femutils.coord_transforms import cylindrical_rotation_matrix
 
-from .utils import is_array_close
+from pyNastran.femutils.test.utils import is_array_close
 
 PKG_PATH = pyNastran.__path__[0]
 
@@ -53,6 +54,122 @@ class TestMatrix3d(unittest.TestCase):
             #print(Ci)
             #print('-------')
         ## TODO: not compared
+
+    def test_trapose3d(self):
+        """tests transpose3d"""
+        A = np.array([
+            [[1., 2., 3.],
+             [4., 5., 6.],
+             [7., 8., 9.],],
+
+            [[1., 2., 3.],
+             [4., 5., 6.],
+             [7., 8., 9.],],
+
+            [[1., 2., 3.],
+             [4., 5., 6.],
+             [7., 8., 9.],],
+        ])
+
+        B_expected = np.array([
+            [[1., 4., 7.],
+             [2., 5., 8.],
+             [3., 6., 9.],],
+
+            [[1., 4., 7.],
+             [2., 5., 8.],
+             [3., 6., 9.],],
+
+            [[1., 4., 7.],
+             [2., 5., 8.],
+             [3., 6., 9.],],
+        ])
+        B_actual = transpose3d(A)
+        #print('transpose B_actual:')
+        #print(B_actual)
+        assert is_array_close(B_expected, B_actual)
+
+    def test_triple_n33_n33(self):
+        """tests triple_n33_n33"""
+        A = np.array([
+            [[1., 2., 3.],
+             [4., 5., 6.],
+             [7., 8., 9.],],
+
+            [[1., 2., 3.],
+             [4., 5., 6.],
+             [7., 8., 9.],],
+        ])
+        T = np.array([
+            [[0., 1., 0.],
+             [0., 0., 1.],
+             [1., 0., 9.],],
+
+            [[0., 1., 0.],
+             [0., 0., 1.],
+             [1., 0., 9.],],
+        ])
+        TtAT_actual = triple_n33_n33(A, T, tranpose=False)
+        TtAT_expected = [
+            [[5., 6., 58.],
+             [8., 9., 88.],
+             [74., 84., 820.],],
+
+            [[5., 6., 58.],
+             [8., 9., 88.],
+             [74., 84., 820.],],
+        ]
+        assert is_array_close(TtAT_expected, TtAT_actual)
+        TATt_actual = triple_n33_n33(A, T, tranpose=True)
+        TATt_expected = [
+            [[9., 7., 89.],
+             [3., 1., 29.],
+             [87., 67., 860.],],
+
+            [[9., 7., 89.],
+             [3., 1., 29.],
+             [87., 67., 860.],],
+        ]
+        assert is_array_close(TATt_expected, TATt_actual)
+
+    def test_triple_n33_33(self):
+        """tests test_triple_n33_33"""
+        A = np.array([
+            [[1., 2., 3.],
+             [4., 5., 6.],
+             [7., 8., 9.],],
+
+            [[1., 2., 3.],
+             [4., 5., 6.],
+             [7., 8., 9.],],
+        ])
+        T = np.array([
+            [0., 1., 0.],
+            [0., 0., 1.],
+            [1., 0., 9.],
+        ])
+        TtAT_actual = triple_n33_33(A, T, tranpose=False)
+        TtAT_expected = [
+            [[5., 6., 58.],
+             [8., 9., 88.],
+             [74., 84., 820.],],
+
+            [[5., 6., 58.],
+             [8., 9., 88.],
+             [74., 84., 820.],],
+        ]
+        assert is_array_close(TtAT_expected, TtAT_actual)
+        TATt_actual = triple_n33_33(A, T, tranpose=True)
+        TATt_expected = [
+            [[9., 7., 89.],
+             [3., 1., 29.],
+             [87., 67., 860.],],
+
+            [[9., 7., 89.],
+             [3., 1., 29.],
+             [87., 67., 860.],],
+        ]
+        assert is_array_close(TATt_expected, TATt_actual)
 
 
 class TestNumpyUtils(unittest.TestCase):
@@ -177,7 +294,6 @@ class TestFemIO(unittest.TestCase):
         os.remove(csv_filename)
 
         if 0:  ## TODO: not done with filehandle test
-            from codecs import open
             with open(csv_filename, 'w') as csv_file:
                 savetxt_nice(csv_file, B, fmt='%.18e', delimiter=',', newline='\n',
                              header='', footer='', comments='# ')
