@@ -1,13 +1,12 @@
 from __future__ import print_function
-import os
-import numpy as np
-from pyNastran.f06.parse_flutter import plot_flutter_f06
 
 
 def cmd_line_plot_flutter():  # pragma: no cover
+    import os
     import sys
     from docopt import docopt
     import pyNastran
+    from pyNastran.f06.parse_flutter import plot_flutter_f06
     msg = (
         'Usage:\n'
         '  f06 plot_145 F06_FILENAME [--noline] [--modes MODES] [--subcases SUB] [--xlim FREQ] [--ylimdamp DAMP] '
@@ -64,7 +63,7 @@ def cmd_line_plot_flutter():  # pragma: no cover
         base = os.path.splitext(f06_filename)[0]
         f06_filename = base + '.f06'
 
-    modes = _split_modes(data['--modes'])
+    modes = split_int_colon(data['--modes'])
     ylim_damping = [-.3, .3]
     if data['--ylimdamp']:
         ylim_damping = split_float_colons(data['--ylimdamp'])
@@ -98,6 +97,8 @@ def cmd_line_plot_flutter():  # pragma: no cover
 
 def split_float_colons(string_values):
     """
+    Uses numpy-ish syntax to parse a set of two floats.  Blanks are interpreted as None.
+
     Parse the following:
        1:10
        1:
@@ -122,7 +123,18 @@ def split_float_colons(string_values):
         values = None # all values
     return values
 
-def _split_modes(modes):
+def split_int_colon(modes):
+    """
+    Uses numpy-ish syntax to parse a set of integers.  Values are inclusive.
+    Blanks are interpreted as 0.
+
+    Parse the following:
+       1:10
+       1:
+       :100
+       1:5:2
+       :5,11:15:2,10:20
+    """
     modes2 = []
     if modes is not None:
         smodes = modes.strip().split(',')
@@ -131,6 +143,8 @@ def _split_modes(modes):
             if ':' in mode:
                 smode = mode.split(':')
                 if len(smode) == 2:
+                    if smode[0] == '':
+                        smode[0] = 0
                     istart = int(smode[0])
                     if smode[1] == '':
                         iend = None
@@ -153,6 +167,9 @@ def _split_modes(modes):
                 modes2.append(imode)
         #modes = np.array(modes2, dtype='int32') - 1
         modes = modes2
+
+    if None not in modes:
+        modes.sort()
     return modes
 
 def cmd_line():  # pragma: no cover
@@ -179,5 +196,4 @@ def cmd_line():  # pragma: no cover
         #raise NotImplementedError('arg1=%r' % sys.argv[1])
 
 if __name__ == '__main__':  # pragma: no cover
-    main()
-
+    cmd_line()

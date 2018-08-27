@@ -2,6 +2,7 @@
 defines:
  - TestCoords
 """
+# pylint: disable=R0201,C0103
 from __future__ import print_function
 import unittest
 from six import iteritems
@@ -501,7 +502,8 @@ class TestCoords(unittest.TestCase):
         xyz_cid0 = model.get_xyz_in_coord(cid=0, fdtype='float64')
         assert np.allclose(xyz_cid0_actual, xyz_cid0), '%s' % (xyz_cid0_actual - xyz_cid0)
 
-        unused_icd_transform, icp_transform, xyz_cp, nid_cp_cd = model.get_displacement_index_xyz_cp_cd()
+        out = model.get_displacement_index_xyz_cp_cd()
+        unused_icd_transform, icp_transform, xyz_cp, nid_cp_cd = out
         nids = nid_cp_cd[:, 0]
         xyz_cid0_xform = model.transform_xyzcp_to_xyz_cid(
             xyz_cp, nids, icp_transform, cid=0)
@@ -533,21 +535,20 @@ class TestCoords(unittest.TestCase):
         model.write_bdf(bdf_file, close=False)
 
         model3 = BDF(debug=False)
-        cord2r = model3.add_cord2r(30, rid=2,
-                                   origin=[14., 30., 70.],
-                                   zaxis=[13.431863852, 32.1458443949, 75.2107442927],
-                                   xzplane=[14.4583462334, 33.4569982885, 68.2297989286],
-                                   comment='')
-        cord2c = model3.add_cord2c(31, rid=2,
-                                   origin=[3., 42., -173.],
-                                   zaxis=[2.86526881213, 45.5425615252, 159.180363517],
-                                   xzplane=[3.65222385965, 29.2536614627, -178.631312271],
-                                   comment='')
-        cord2s = model3.add_cord2s(32, rid=2,
-                                   origin=[22., 14., 85.],
-                                   zaxis=[22.1243073983, 11.9537753718, 77.9978191005],
-                                   xzplane=[21.0997242967, 13.1806120497, 88.4824763008],
-                                   comment='')
+        origin = [14., 30., 70.],
+        zaxis = [13.431863852, 32.1458443949, 75.2107442927],
+        xzplane = [14.4583462334, 33.4569982885, 68.2297989286],
+        cord2r = model3.add_cord2r(30, origin, zaxis, xzplane, rid=2, comment='')
+
+        origin = [3., 42., -173.],
+        zaxis = [2.86526881213, 45.5425615252, 159.180363517],
+        xzplane = [3.65222385965, 29.2536614627, -178.631312271],
+        cord2c = model3.add_cord2c(31, origin, zaxis, xzplane, rid=2, comment='')
+
+        origin = [22., 14., 85.],
+        zaxis = [22.1243073983, 11.9537753718, 77.9978191005],
+        xzplane = [21.0997242967, 13.1806120497, 88.4824763008],
+        cord2s = model3.add_cord2s(32, origin, zaxis, xzplane, rid=2, comment='')
 
         assert cord2r == model.coords[cord2r.cid], 'cord2r:\n%r\ncord2r[cid]:\n%r' % (str(cord2r), str(model.coords[cord2r.cid]))
         assert cord2c == model.coords[cord2c.cid], 'cord2c:\n%r\ncord2c[cid]:\n%r' % (str(cord2c), str(model.coords[cord2c.cid]))
@@ -640,11 +641,10 @@ class TestCoords(unittest.TestCase):
 
         model2 = BDF(debug=False)
         cid = 7
-        coord2 = model2.add_cord2r(cid, rid=0,
-                                   origin=[1.135, .089237, -.0676],
-                                   zaxis=[.135, .089237, -.0676],
-                                   xzplane=[1.135, .089237, .9324],
-                                   comment='cord2r')
+        origin = [1.135, .089237, -.0676],
+        zaxis = [.135, .089237, -.0676],
+        xzplane = [1.135, .089237, .9324],
+        coord2 = model2.add_cord2r(cid, origin, zaxis, xzplane, rid=0, comment='cord2r')
         coord2.comment = ''
         assert coord == coord2, 'coord:\n%r\ncoord2:\n%r' % (str(coord), str(coord2))
 

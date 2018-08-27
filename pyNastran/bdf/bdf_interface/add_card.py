@@ -255,9 +255,8 @@ class AddCards(AddMethods):
         self._add_point_object(point)
         return point
 
-    def add_cord2r(self, cid, rid=0, origin=None, zaxis=None, xzplane=None,
-                   comment=''):
-        # type: (int, int, Optional[Union[List[float], np.ndarray]], Any, Any, str) -> CORD2R
+    def add_cord2r(self, cid, origin, zaxis, xzplane, rid=0, comment=''):
+        # type: (int, Optional[Union[List[float], np.ndarray]], Any, Any, int, str) -> CORD2R
         """
         Creates the CORD2R card, which defines a rectangular coordinate
         system using 3 vectors.
@@ -269,27 +268,22 @@ class AddCards(AddMethods):
         rid : int; default=0
             the referenced coordinate system that defines the system the
             vectors
-        origin : List[float, float, float]; default=None
+        origin : List[float, float, float]
             the origin of the coordinate system
-            None : [0., 0., 0.]
-        zaxis : List[float, float, float]; default=None
+        zaxis : List[float, float, float]
             the z-axis of the coordinate system
-            None : [0., 0., 1.]
-        xzplane : List[float, float, float]; default=None
+        xzplane : List[float, float, float]
             a point on the xz plane
-            None : [1., 0., 0.]
         comment : str; default=''
             a comment for the card
 
         """
-        coord = CORD2R(cid, rid=rid, origin=origin, zaxis=zaxis, xzplane=xzplane,
-                       comment=comment)
+        coord = CORD2R(cid, origin, zaxis, xzplane, rid=rid, comment=comment)
         self._add_coord_object(coord)
         return coord
 
-    def add_cord2c(self, cid, rid=0, origin=None, zaxis=None, xzplane=None,
-                   comment=''):
-        # type: (int, int, Optional[Union[List[float], np.ndarray]], Any, Any, str) -> CORD2C
+    def add_cord2c(self, cid, origin, zaxis, xzplane, rid=0, comment=''):
+        # type: (int, Optional[Union[List[float], np.ndarray]], Any, Any, int, str) -> CORD2C
         """
         Creates the CORD2C card, which defines a cylindrical coordinate
         system using 3 vectors.
@@ -301,27 +295,22 @@ class AddCards(AddMethods):
         rid : int; default=0
             the referenced coordinate system that defines the system the
             vectors
-        origin : List[float, float, float]; default=None
+        origin : List[float, float, float]
             the origin of the coordinate system
-            None : [0., 0., 0.]
-        zaxis : List[float, float, float]; default=None
+        zaxis : List[float, float, float]
             the z-axis of the coordinate system
-            None : [0., 0., 1.]
-        xzplane : List[float, float, float]; default=None
+        xzplane : List[float, float, float]
             a point on the xz plane
-            None : [1., 0., 0.]
         comment : str; default=''
             a comment for the card
 
         """
-        coord = CORD2C(cid, rid=rid, origin=origin, zaxis=zaxis, xzplane=xzplane,
-                       comment=comment)
+        coord = CORD2C(cid, origin, zaxis, xzplane, rid=rid, comment=comment)
         self._add_coord_object(coord)
         return coord
 
-    def add_cord2s(self, cid, rid=0, origin=None, zaxis=None, xzplane=None,
-                   comment=''):
-        # type: (int, int, Optional[Union[List[float], np.ndarray]], Any, Any, str) -> CORD2S
+    def add_cord2s(self, cid, origin, zaxis, xzplane, rid=0, comment=''):
+        # type: (int, Optional[Union[List[float], np.ndarray]], Any, Any, int, str) -> CORD2S
         """
         Creates the CORD2C card, which defines a spherical coordinate
         system using 3 vectors.
@@ -330,18 +319,15 @@ class AddCards(AddMethods):
         ----------
         cid : int
             coordinate system id
+        origin : List[float, float, float]
+            the origin of the coordinate system
+        zaxis : List[float, float, float]
+            the z-axis of the coordinate system
+        xzplane : List[float, float, float]
+            a point on the xz plane
         rid : int; default=0
             the referenced coordinate system that defines the system the
             vectors
-        origin : List[float, float, float]; default=None
-            the origin of the coordinate system
-            None : [0., 0., 0.]
-        zaxis : List[float, float, float]; default=None
-            the z-axis of the coordinate system
-            None : [0., 0., 1.]
-        xzplane : List[float, float, float]; default=None
-            a point on the xz plane
-            None : [1., 0., 0.]
         comment : str; default=''
             a comment for the card
 

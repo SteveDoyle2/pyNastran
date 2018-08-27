@@ -9,7 +9,7 @@ from __future__ import print_function, absolute_import, division
 
 import numpy as np
 from .utils import cross2d, perpendicular_vector2d
-from .matrix3d import axes_stack, normalize_vector2d, dot3d
+from .matrix3d import axes_stack, normalize_vector2d, dot_n33_n33
 
 
 def coords_from_vector_1d(v_array):

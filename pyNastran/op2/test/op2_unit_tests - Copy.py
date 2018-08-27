@@ -101,7 +101,6 @@ class TestOP2(Tester):
             itime=0,
             debug=True,
             logger=op2.log)
-
         #print(gpforce)
 
     def test_op2_solid_shell_bar_01_gpforce(self):

@@ -13,9 +13,9 @@ import numpy as np
 import pyNastran
 from pyNastran.utils.numpy_utils import (
     loadtxt_nice, augmented_identity, savetxt_nice,
-    perpendicular_vector, perpendicular_vector2d,
-    dot3d,
 )
+from pyNastran.femutils.matrix3d import dot_n33_n33
+from pyNastran.femutils.utils import perpendicular_vector, perpendicular_vector2d
 from pyNastran.femutils.coord_transforms import cylindrical_rotation_matrix
 
 from .utils import is_array_close
@@ -29,8 +29,8 @@ if PY2:
 
 class TestMatrix3d(unittest.TestCase):
     """tests functions in femutils.matrix3d"""
-    def test_dot3d(self):
-        """tests dot3d"""
+    def test_dot_n33_n33(self):
+        """tests dot_n33_n33"""
         A = np.array([
             [[1., 0., 0.],
              [0., 1., 0.],
@@ -46,7 +46,7 @@ class TestMatrix3d(unittest.TestCase):
         ])
         theta = np.radians([0., 45., 90])
         B = cylindrical_rotation_matrix(theta, dtype='float64')
-        C = dot3d(A, B)
+        C = dot_n33_n33(A, B)
         #print('-------')
         #for Ci in C:
             #print(Ci.shape)

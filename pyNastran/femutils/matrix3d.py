@@ -4,7 +4,7 @@ This includes:
  - mag = norm2d(v)
  - normalize_vector2d(v)
  - ijk = axes_stack(i, j, k, nmag)
- - C = dot3d(A, B)
+ - C = dot_n33_n33(A, B)
  - Tt = transpose3d(T)
  - C = triple(A, T)
  - C = triple_transpose(A, T)
@@ -31,9 +31,82 @@ def axes_stack(i, j, k, nmag):
     ijk = np.hstack([i, j, k])
     return ijk
 
-def dot3d(A, B, debug=True):
+def dot_33_n33(A, B, debug=True):
     """
-    Multiplies two N x 3 x 3 matrices together
+    Multiplies a (3x3) matrix by a Nx3x3 matrix
+
+    Parameters
+    ----------
+    A : (3, 3) float ndarray
+        the transformation matrix
+    B : (n, 3, 3) float ndarray
+        the set of matrices to multiply
+
+    Returns
+    -------
+    C : (n, 3, 3) float ndarray
+        the set of 3 x 3 matrix multiplies
+    """
+    #C = np.matmul(A, B)
+    assert A.shape == (3, 3), A.shape
+    assert len(B.shape) == 3, B.shape
+    assert B.shape[1:] == (3, 3), B.shape
+    if debug:
+        dtype = A.dtype
+        #print('------------------------')
+        D = np.zeros(A.shape, dtype=dtype)
+        print('A.shape =', A.shape)
+        for i, Bi in zip(count(), B):
+            print('Bi.shape =', Bi.shape)
+            ABi = A.dot(Bi)
+            print('A @ Bi.shape =', ABi.shape)
+            D[i, :, :] = ABi
+            #print(D[i, :, :])
+            #print('------------------------')
+        #assert np.all(np.allclose(C, D))
+    return D
+
+def dot_n33_33(A, B, debug=True):
+    """
+    Multiplies a (3x3) matrix by a Nx3x3 matrix
+
+    Parameters
+    ----------
+    A : (n, 3, 3) float ndarray
+        the set of matrices to multiply
+    B : (3, 3) float ndarray
+        the transformation matrix
+
+    Returns
+    -------
+    C : (n, 3, 3) float ndarray
+        the set of 3 x 3 matrix multiplies
+    """
+    assert len(A.shape) == 3, A.shape
+    assert A.shape[1:] == (3, 3), A.shape
+    assert B.shape == (3, 3), B.shape
+    #C = np.matmul(B, A.T) # 3x3x4
+    #C = B.dot(A)  # 3x4x3
+    C = np.tensordot(A, B, axes=(1))
+
+    #print('C (nx3x3 @ 33).shape = ', C.shape)
+    if debug:
+        dtype = A.dtype
+        #print('------------------------')
+        #print('dot_n33_33: A.shape=%s; B.shape=%s' % (str(A.shape), str(B.shape)))
+        D = np.zeros(A.shape, dtype=dtype)
+        for i, Ai in zip(count(), A):
+            AiB = Ai.dot(B)
+            #print(AiB.shape)
+            D[i, :, :] = AiB
+            #print(D[i, :, :])
+            #print('------------------------')
+        assert np.all(np.allclose(C, D))
+    return C
+
+def dot_n33_n33(A, B, debug=True):
+    """
+    Multiplies two matrices together
 
     Parameters
     ----------
@@ -45,7 +118,11 @@ def dot3d(A, B, debug=True):
     C : (n, 3, 3) float ndarray
         the set of 3 x 3 matrix multiplies
     """
-    C = np.matmul(A, B)
+    assert len(A.shape) == 3, A.shape
+    assert A.shape[1:] == (3, 3), A.shape
+    assert len(B.shape) == 3, B.shape
+    assert B.shape == (3, 3), B.shape
+    #C = np.matmul(A, B)
     if debug:
         dtype = A.dtype
         #print('------------------------')
@@ -54,8 +131,36 @@ def dot3d(A, B, debug=True):
             D[i, :, :] = Ai.dot(Bi)
             #print(D[i, :, :])
             #print('------------------------')
-    assert np.all(np.allclose(C, D))
-    return C
+    #if not np.all(np.allclose(C, D)):
+        #print('C:\n%s'% C)
+        #print('D:\n%s'% D)
+    return D
+
+def dot_n33_n3(A, B, debug=True):
+    """
+    Multiplies two N x 3 x 3 matrices together
+
+    Parameters
+    ----------
+    A : (n, 3, 3) float ndarray
+        the first matrix
+    B : (n, 3) float ndarray
+        the second matrix
+
+    Returns
+    -------
+    C : (n, 3) float ndarray
+        the set of 3 x 3 matrix multiplies
+    """
+    dtype = A.dtype
+    D = np.zeros(B.shape, dtype=dtype)
+    for i, Ai, Bi in zip(count(), A, B):
+        #print('------------')
+        #print('dot_n33_n3')
+        #print(Ai)
+        #print(Bi)
+        D[i, :] = Ai.dot(Bi)
+    return D
 
 def transpose3d(T):
     """

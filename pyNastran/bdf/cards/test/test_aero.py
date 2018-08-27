@@ -685,9 +685,10 @@ class TestAero(unittest.TestCase):
                                   comment='')
         caero_body_ids = [3]
         paero = model.add_paero1(pid, caero_body_ids=caero_body_ids, comment='')
-        model.add_cord2r(cid, rid=0,
-                         origin=None, zaxis=None, xzplane=None,
-                         comment='')
+        origin = None
+        zaxis = None
+        xzplane = None
+        model.add_cord2r(cid, origin, zaxis, xzplane, rid=0, comment='')
         velocity = 0.0
         cref = 1.0
         rho_ref = 1.225
@@ -1002,8 +1003,10 @@ class TestAero(unittest.TestCase):
                                          0., 0., 0.,
                                          0., 0., 1.,
                                          1., 0., 0.]))
-        model.add_cord2r(cp, rid=0, origin=None, zaxis=None, xzplane=None,
-                         comment='cord2r')
+        origin = None
+        zaxis = None
+        xzplane = None
+        model.add_cord2r(cp, origin, zaxis, xzplane, rid=0, comment='cord2r')
         coord.validate()
         model.coords[cp] = coord
 

@@ -643,10 +643,11 @@ class TestMeshUtils(unittest.TestCase):
         model.add_cquad4(15, pid, [1, 2, 3, 4], theta_mcid=1, zoffset=0.,
                          tflag=1, T1=0.1, T2=0.1, T3=0.1, T4=0.1,  # relative
                          comment='')
-        model.add_cord2r(1, rid=0,
-                         origin=[0., 0., 0.],
-                         zaxis=[0., 0., 1.],
-                         xzplane=[1., 0., 0.])
+
+        origin = [0., 0., 0.],
+        zaxis = [0., 0., 1.],
+        xzplane = [1., 0., 0.]
+        model.add_cord2r(1, origin, zaxis, xzplane, rid=0)
         model.add_pshell(pid, mid1=mid1, t=2.)
 
         e11 = 1.0

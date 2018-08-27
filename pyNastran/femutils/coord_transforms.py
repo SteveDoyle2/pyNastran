@@ -122,7 +122,17 @@ def rtz_to_rtp_array(rtz):
     rho = (r**2 + z**2)**0.5
     irho0 = np.where(rho > 0.0)[0]
     dtype = thetad.dtype
-    phi = np.full(thetad.shape, 90., dtype=thetad.dtype) # pi/2.
+
+    # We need to choose a default.  The equation for phi is:
+    #    phi = acos(z/sqrt(x^2 + y^2 + z^2))
+    #
+    # If we let x and y go to 0, we're left with z/z=1 and
+    # phi = acos(1) = 0.  The other alternative is to let
+    # z -> 0 and x/y be non-zero, but that leaves us with
+    # a 90 degree angle, which feels wrong.
+    #
+    phi = np.full(thetad.shape, 0., dtype=thetad.dtype)
+
     phi[irho0] = np.degrees(np.arccos(z[irho0] / rho[irho0]))
     return np.array([rho, thetad, phi], dtype=dtype).T
 

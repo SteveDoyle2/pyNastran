@@ -695,6 +695,11 @@ class GuiCommon2(QMainWindow, GuiCommon):
             msg = str_to_html(log_type, filename, lineno, msg)
         else:
             tim = datetime.datetime.now().strftime('[%Y-%m-%d %H:%M:%S]')
+            #print('log_type = %s' % log_type)
+            #print('filename = %s' % filename)
+            #print('lineno = %s' % lineno)
+            #print('msg = %s' % msg)
+            #assert isinstance(msg, string_types), msg
             msg = cgi.escape(msg)
 
             #message colors

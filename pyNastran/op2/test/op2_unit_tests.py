@@ -33,6 +33,8 @@ from pyNastran.bdf.test.bdf_unit_tests import Tester
 #from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
 from pyNastran.op2.export_to_vtk import export_to_vtk_filename
 from pyNastran.op2.vector_utils import filter1d, abs_max_min_global, abs_max_min_vector
+from pyNastran.op2.tables.oug.oug_displacements import RealDisplacementArray
+from pyNastran.femutils.test.utils import is_array_close
 
 PKG_PATH = pyNastran.__path__[0]
 MODEL_PATH = os.path.abspath(os.path.join(PKG_PATH, '..', 'models'))
@@ -44,6 +46,101 @@ class TestOP2(Tester):
         #op2 = OP2()
         #op2.set_results('solidStress.oxx')
         #op2.read_op2(op2_filename, vectorized=False)
+
+    def test_cd_displacement(self):
+        log = get_logger(level='debug')
+        data_code = {
+            'device_code' : 1,
+            'analysis_code' : 1,
+            'table_code' : 1,
+            'nonlinear_factor' : None,
+            'sort_bits' : [0, 0, 0],
+            'sort_method' : 1,
+            'is_msc' : True,
+            'format_code' : 1,
+            'data_names' : [],
+            'tCode' : 1,
+            'table_name' : 'OUGV1',
+            '_encoding' : 'utf-8',
+        }
+
+        bdf_model = BDF(log=log)
+        bdf_model.add_grid(1, [0., 0., 0.], cd=0)
+        bdf_model.add_grid(2, [0., 0., 0.], cd=1)
+        bdf_model.add_grid(3, [0., 0., 0.], cp=2, cd=2)
+
+        bdf_model.add_grid(11, [1., 0., 0.], cd=0)
+        bdf_model.add_grid(12, [1., 0., 0.], cd=1)
+        bdf_model.add_grid(13, [1., 0., 0.], cp=2, cd=2)
+
+        #bdf_model.add_grid(21, [1., 0., 0.], cd=0)
+        #bdf_model.add_grid(22, [1., 0., 0.], cd=1)
+        bdf_model.add_grid(23, [1., 90., 0.], cp=2, cd=2)
+        bdf_model.add_grid(24, [0., 1., 0.], cp=0, cd=2)
+        bdf_model.add_grid(25, [-1., 0., 0.], cp=0, cd=2)
+        origin = [0., 0., 0.]
+        zaxis = [0., 0., 1.]
+        xzplane = [1., 0., 0.]
+        bdf_model.add_cord2r(1, origin, zaxis, xzplane, rid=0, comment='')
+        coord = bdf_model.add_cord2c(2, origin, zaxis, xzplane, rid=0, comment='')
+
+        dxyz = np.array([[
+            [1., 0., 0., 0., 0., 0.], # 1
+            [1., 0., 0., 0., 0., 0.], # 2
+            [1., 0., 0., 0., 0., 0.], # 3
+
+            [1., 0., 0., 0., 0., 0.], # 11
+            [1., 0., 0., 0., 0., 0.], # 12
+            [1., 0., 0., 0., 0., 0.], # 13
+
+            [1., 0., 0., 0., 0., 0.], # 23 - [0., 1., 0.]
+            [1., 0., 0., 0., 0., 0.], # 24 - answer=same as 23
+            [1., 0., 0., 0., 0., 0.], # 24 - [-1, 0., 0.]
+        ]])
+        #--------------------------------------------
+        #icd_transform, icp_transform, xyz_cp, nid_cp_cd - bdf_model.get_displacement_index_xyz_cp_cd(
+            #fdtype='float64', idtype='int32', sort_ids=True)
+        nid_cp_cd, xyz_cid0, xyz_cp, icd_transform, icp_transform = bdf_model.get_xyz_in_coord_array(
+            cid=0, fdtype='float64', idtype='int32')
+
+
+        op2_model = OP2(log=log)
+
+        is_sort1 = True
+        isubcase = 1
+        dt = None
+        disp = RealDisplacementArray(data_code, is_sort1, isubcase, dt)
+        disp.data = dxyz
+        op2_model.displacements[1] = disp
+
+        op2_model.transform_displacements_to_global(
+            icd_transform, bdf_model.coords, xyz_cid0=xyz_cid0, debug=True)
+
+
+        # we're working in a 2D plane
+        icd2 = icd_transform[2]
+        dispi_cd2 = op2_model.displacements[1].data[0, icd2, :2]
+        #op2_model.log.info("dispi2:\n%s" % dispi_cd2)
+
+        dispi = op2_model.displacements[1].data[0, :, :2]
+        expected_disp = [
+            [1., 0.,], # 1
+            [1., 0.,], # 2
+            [1., 0.,], # 3
+
+            [1., 0.,], # 11
+            [1., 0.,], # 12
+            [1., 0.,], # 13
+
+            [0., 1.,], # 23
+            [0., 1.,], # 24
+            [-1., 0.,], # 25
+        ]
+        assert is_array_close(dispi, expected_disp)
+
+
+        ## TODO: not checked
+
 
     def test_generalized_tables(self):
         """tests that set_additional_generalized_tables_to_read overwrites the GEOM1S class"""

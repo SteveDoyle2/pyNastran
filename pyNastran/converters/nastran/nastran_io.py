@@ -10,6 +10,7 @@ from collections import defaultdict, OrderedDict
 import traceback
 from six import iteritems, itervalues, StringIO, string_types
 from six.moves import range
+from pyNastran.op2.result_objects.stress_object import StressObject
 
 SIDE_MAP = {}
 SIDE_MAP['CHEXA'] = {
@@ -5963,12 +5964,12 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 label = values
                 self.gui.log.debug('label_str = %r' % label)
             elif isinstance(values, list):
-                self.gui.log.debug(values)
+                self.gui.log.debug(str(values))
                 subtitle, superelement_adaptivity, analysis_code, label = values
                 del analysis_code
             else:
-                self.gui.log.debug(values)
-                self.gui.log.debug(type(values))
+                self.gui.log.debug(str(values))
+                self.gui.log.debug(str(type(values)))
                 raise RuntimeError(values)
 
             if superelement_adaptivity:
@@ -6041,10 +6042,13 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         keys_map = {}
         key_itime = []
 
-        from pyNastran.op2.result_objects.stress_object import StressObject
         for key in keys:
             unused_is_data, unused_is_static, unused_is_real, times = _get_times(model, key)
-            assert times is not None
+            if times is None:
+                # we dynamically created the keys and created extra ones
+                continue
+            #assert times is not None  # gen22x_modes
+
             #print('--------------')
             #print('key = %r' % str(key))
             self.stress[key] = StressObject(model, key, self.element_ids, is_stress=True)
