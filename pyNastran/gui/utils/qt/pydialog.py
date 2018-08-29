@@ -119,9 +119,54 @@ def check_float(cell):
         return None, False
 
 def check_format(cell):
-    text = str(cell.text())
+    """
+    Checks a QLineEdit string formatter
 
+    Parameters
+    ----------
+    cell : QLineEdit
+        a QLineEdit containing a string formatter like:
+        {'%s', '%i', '%f', '%g', '%.3f', '%e'}
+
+    Returns
+    -------
+    text : str / None
+        str : the validated text of the QLineEdit
+        None : the format is invalid
+    is_valid : bool
+        The str/None flag to indicate if the string formatter is valid
+    """
+    text = str(cell.text())
+    text2, is_valid = check_format_str(text)
+
+    if is_valid:
+        cell.setStyleSheet("QLineEdit{background: white;}")
+        return text2, True
+    cell.setStyleSheet("QLineEdit{background: red;}")
+    return None, False
+
+def check_format_str(text):
+    """
+    Checks a QLineEdit string formatter
+
+    Parameters
+    ----------
+    text : str
+        a QLineEdit containing a string formatter like:
+        {'%s', '%i', '%f', '%g', '%.3f', '%e'}
+
+    Returns
+    -------
+    text : str / None
+        str : the validated text of the QLineEdit
+        None : the format is invalid
+    is_valid : bool
+        The str/None flag to indicate if the string formatter is valid
+    """
+    text = text.strip()
     is_valid = True
+
+    # basic length checks
     if len(text) < 2:
         is_valid = False
     elif 's' in text.lower():
@@ -131,6 +176,7 @@ def check_format(cell):
     elif text[-1].lower() not in ['g', 'f', 'i', 'e']:
         is_valid = False
 
+    # the float formatter handles ints/floats?
     try:
         text % 1
         text % .2
@@ -140,14 +186,11 @@ def check_format(cell):
     except ValueError:
         is_valid = False
 
+    # the float formatter isn't supposed to handle strings?
+    # doesn't this break %g?
     try:
         text % 's'
         is_valid = False
     except TypeError:
         pass
-
-    if is_valid:
-        cell.setStyleSheet("QLineEdit{background: white;}")
-        return text, True
-    cell.setStyleSheet("QLineEdit{background: red;}")
-    return None, False
+    return text, is_valid
