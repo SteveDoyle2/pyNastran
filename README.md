@@ -61,10 +61,36 @@ Using the pyNastran GUI, you can read in Nastran models and quickly view results
 
 <!--- 
 ### pyNastran v1.2.0 has not been released (x/xx/xx)
+Programmatics
+ - xxx
+
+BDF:
+ - xxx cards supported (up from 343)
+ - 
+
+OP2:
+ - reorganization of random op2 results into op2.results.psd (or ato, no, crm, rms) to aide in finding data
+ - reorganization of op2 class to reduce number of functions in the object.  This affects any custom op2 table reading, but is simple to upgrade
+ - preliminary SORT2 support
+ - reading EQEXIN/S, GPT, GPDT, CSTM/S tables
+ - improved optimzation response reading
+ - fixed theta/mcid reading for CTRIA3/CQUAD4
+ - Imrpoved HDF5 export/import support (e.g., matrices, random results)
+ - TODO: CD transforms for cylindrical/spherical displacement, velocity, acceleration, forces.  This shouldn't be terrible.
+ - TODO: stress transforms.  This is probably a bit of work.
+ - TODO: use hdf5 instead of numpy.  This should be eay.
+
+GUI:
+ - sped up html logging 
+
+Known issues:
+ - Transient Pandas Dataframes will fail for newer versions of numpy/pandas.  If anyone knows how to use a MultiIndex,
+ - CD transforms
 This should be hidden...
 
 ### pyNastran v1.1.1 has not been released (x/xx/xx)
 This should be hidden...
+
 --->
 
 # News
