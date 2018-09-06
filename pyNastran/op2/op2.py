@@ -98,17 +98,8 @@ def read_op2(op2_filename=None, combine=True, subcases=None,
     """
     model = OP2(log=log, debug=debug, debug_file=debug_file, mode=mode)
     model.set_subcases(subcases)
-    if exclude_results and include_results:
-        msg = (
-            'exclude_results or include_results must be None\n'
-            'exclude_results=%r\n'
-            'include_results=%r\n' % (exclude_results, include_results)
-        )
-        raise RuntimeError(msg)
-    elif exclude_results:
-        model.remove_results(exclude_results)
-    elif include_results:
-        model.set_results(include_results)
+    model.include_exclude_results(exclude_results=exclude_results,
+                                  include_results=include_results)
 
     model.read_op2(op2_filename=op2_filename, build_dataframe=build_dataframe,
                    skip_undefined_matrices=skip_undefined_matrices, combine=combine,
@@ -371,6 +362,29 @@ class OP2(OP2_Scalar):
             self.set_as_nx()
         else:
             raise RuntimeError("mode=%r and must be 'msc' or 'nx'")
+
+    def include_exclude_results(self, exclude_results=None, include_results=None):
+        """
+        Sets results to include/exclude
+
+        Parameters
+        ----------
+        exclude_results / include_results : List[str] / str; default=None
+            a list of result types to exclude/include
+            one of these must be None
+
+        """
+        if exclude_results and include_results:
+            msg = (
+                'exclude_results or include_results must be None\n'
+                'exclude_results=%r\n'
+                'include_results=%r\n' % (exclude_results, include_results)
+            )
+            raise RuntimeError(msg)
+        elif exclude_results:
+            self.remove_results(exclude_results)
+        elif include_results:
+            self.set_results(include_results)
 
     def saves(self):
         """Saves a pickled string"""

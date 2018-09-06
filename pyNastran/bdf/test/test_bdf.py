@@ -16,7 +16,8 @@ from itertools import chain
 from typing import List, Tuple, Optional
 from six import iteritems
 import numpy as np
-warnings.simplefilter('always')
+#warnings.simplefilter('always')
+warnings.simplefilter('default')
 
 np.seterr(all='raise')
 

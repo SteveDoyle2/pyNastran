@@ -298,12 +298,11 @@ def lines_to_eqs(eqs_temp1):
     """splits the equations"""
     eqs_temp = []
     for eq in eqs_temp1:
-        eq2 = eq.rstrip(';')
+        eq2 = eq.rstrip('; \n')
         if ';' in eq2:
             eqs_temp += [eqi + ';' for eqi in eq.split(';')]
         else:
             eqs_temp.append(eq)
-    #print('eqs_temp = ', eqs_temp)
 
     eqs = []
     neqs = len(eqs_temp)
@@ -436,6 +435,27 @@ def fortran_to_python_short(line, default_values):
     exec_(func_str, globals(), d)
     return d['func']
 
+def split_to_equations(lines):
+    """
+    Splits a line like::
+
+        b = a + z; c = 42
+
+    into::
+
+        b = a + z
+        c = 42
+    """
+    equation_lines = []
+    for line in lines:
+        line = line.rstrip(' ;')
+        if ';' in line:
+            lines2 = line.split(';')
+            equation_lines.extend(lines2)
+        else:
+            equation_lines.append(line)
+    return equation_lines
+
 def fortran_to_python(lines, default_values, comment=''):
     """
     Creates the python function
@@ -467,11 +487,13 @@ def fortran_to_python(lines, default_values, comment=''):
     func_msg = ''
     variables = []
     assert len(lines) > 0, lines
-    for i, line in enumerate(lines):
+
+    equation_lines = split_to_equations(lines)
+    for i, line in enumerate(equation_lines):
         #print('--------------------')
         line = line.lower()
         #func_msg += '#i=%s\n' % i
-
+        assert ';' not in line, line
         try:
             # f(x, y) = 10.
             # f(x, y) = abs(x) + y

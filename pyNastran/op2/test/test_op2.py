@@ -526,7 +526,7 @@ def get_test_op2_data():
 
     msg = "Usage:\n"
     #is_release = True
-    options = '[--skip_dataframe] [-z] [-w] [-t] [-s <sub>] [-x <arg>]... [--nx] [--safe]'
+    options = '[--skip_dataframe] [-z] [-w] [-t] [-s <sub>] [-x <arg>]... [--nx] [--safe] [--post POST]'
     if is_release:
         line1 = "test_op2 [-q] [-b] [-c] [-g] [-n] [-f] %s OP2_FILENAME\n" % options
     else:
@@ -560,6 +560,7 @@ def get_test_op2_data():
     msg += "  -w, --is_sort2         Sets the F06 transient to SORT2\n"
     msg += "  -x <arg>, --exclude    Exclude specific results\n"
     msg += "  --nx                   Assume NX Nastran\n"
+    msg += "  --post POST            Set the PARAM,POST flag\n"
     msg += "  --safe                 Safe cross-references BDF (default=False)\n"
 
 
@@ -626,6 +627,7 @@ def main():
             quiet=data['--quiet'],
             is_nx=data['--nx'],
             safe=data['--safe'],
+            post=data['--post'],
         )
         prof.dump_stats('op2.profile')
 
@@ -653,6 +655,7 @@ def main():
             quiet=data['--quiet'],
             is_nx=data['--nx'],
             xref_safe=data['--safe'],
+            post=data['--post'],
         )
     print("dt = %f" % (time.time() - time0))
 

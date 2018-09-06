@@ -368,9 +368,29 @@ class SafeXrefMesh(XrefMesh):
         ----------
         ref_id : int
             the referencing value (e.g., an element references a property)
+
+        ref_id = 10 # CQUAD4
+        pid = 42  # PSHELL
+        xref_errors = {'pid' : []}
+        self.safe_property(pid, ref_id, xref_errors)
         """
         try:
             pid_ref = self.Property(pid, msg=msg)
+        except KeyError:
+            pid_ref = None
+            #self.log.error('cant find Property=%s%s' % (mid, msg))
+            xref_errors['pid'].append((ref_id, pid))
+        return pid_ref
+
+    def safe_property_mass(self, pid, ref_id, xref_errors, msg=''):
+        """
+        Parameters
+        ----------
+        ref_id : int
+            the referencing value (e.g., an element references a property)
+        """
+        try:
+            pid_ref = self.PropertyMass(pid, msg=msg)
         except KeyError:
             pid_ref = None
             #self.log.error('cant find Property=%s%s' % (mid, msg))

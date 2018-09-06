@@ -34,7 +34,8 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     string_or_blank, integer_or_string,
     interpret_value, parse_components)
 from pyNastran.bdf.cards.utils import wipe_empty_fields
-from pyNastran.bdf.cards.aero.utils import elements_from_quad, points_elements_from_quad_points
+from pyNastran.bdf.cards.aero.utils import (
+    points_elements_from_quad_points, create_axisymmetric_body)
 
 
 class AECOMP(BaseCard):
@@ -1485,14 +1486,13 @@ class CAERO1(BaseCard):
         self.box_ids = np.zeros((nchord, nspan), dtype=dtype)
 
         npanels = nchord * nspan
-        i = 0
         try:
             self.box_ids = np.arange(self.eid, self.eid + npanels, dtype=dtype).reshape(nspan, nchord).T
         except OverflowError:
             if dtype == 'int64':
                 # we already tried int64
-                msg = 'eid=%s ichord=%s ispan=%s nchord=%s' % (
-                    self.eid, ichord, ispan, nchord)
+                msg = 'eid=%s lchord=%s lspan=%s nchord=%s' % (
+                    self.eid, self.lchord, self.lspan, nchord)
                 raise OverflowError(msg)
             self._init_ids(dtype='int64')
 
@@ -2226,102 +2226,17 @@ class CAERO2(BaseCard):
         #assert paero2.orient == 'ZY', paero2.orient
         aspect_ratio = paero2.AR
 
-        #Rs = []
         assert len(radii) == (nx + 1), 'len(radii)=%s nx=%s' % (len(radii), nx)
         if len(xstation) != (nx + 1):
             msg = 'len(xstation)=%s nx=%s\nxstation=%s\n%s' % (
                 len(xstation), nx, xstation, str(self))
             raise RuntimeError(msg)
 
-        xs = []
-        ys = []
-        zs = []
-        yzs = []
-        for i, xi, yi, zi, radius in zip(count(), xstation, ystation, zstation, radii):
-            #print('  station=%s xi=%.4f radius=%s' % (i, xi, radius))
-            yz = self.create_ellipse(aspect_ratio, radius)
-            yzs.append(yz)
-            try:
-                y = yz[:, 0] + yi
-                z = yz[:, 1] + zi
-            except ValueError:
-                print('yz = %s' % yz)
-                print('yz.shape = %s' % str(yz.shape))
-                print('dy = %s' % dy)
-                print('dz = %s' % dz)
-                raise
-            ntheta = yz.shape[0]
-            x = np.ones(ntheta) * xi
-            xs.append(x)
-            ys.append(y)
-            zs.append(z)
-            #Rs.append(np.sqrt(y**2 + z**2))
-        #print('yz.shape=%s xs.shape=%s' % (str(np.array(yzs).shape), str(np.array(xs).shape)))
-        #xyz = np.hstack([yzs, xs])
-        xs = np.array(xs)
-        ys = np.array(ys)
-        zs = np.array(zs)
-        try:
-            xyz = np.vstack([
-                np.hstack(xs),
-                np.hstack(ys),
-                np.hstack(zs),
-            ]).T + p1
-        except:
-            print('xs =', xs.shape)
-            print('ys =', ys.shape)
-            print('zs =', zs.shape)
-            raise
+        xyz, elems = create_axisymmetric_body(
+            xstation, ystation, zstation, radii, aspect_ratio,
+            p1)
 
-        #R = np.hstack(Rs)
-        #print('xyz.shape =', xyz.shape)
-        #print('xyz =', xyz)
-        #print('R =', R)
-
-        ny = ntheta
-        elems = elements_from_quad(nx+1, ny)
-        #print('elems =\n', elems)
         return xyz, elems
-
-    @staticmethod
-    def create_ellipse(aspect_ratio, radius, thetas=None):
-        r"""
-        a : major radius
-        b : minor radius
-
-        Parameters
-        ----------
-        aspect_ratio : float
-            AR = height/width
-
-        https://en.wikipedia.org/wiki/Ellipse#Polar_form_relative_to_center
-
-        .. math::
-
-            r(\theta )={\frac {ab}{\sqrt {(b\cos \theta )^{2}+(a\sin \theta )^{2}}}}
-
-        R(theta) = a*b / ((b*cos(theta))**2 + (a*sin(theta))**2)
-
-        TODO: doesn't support the aero coordinate system
-
-        """
-        if thetas is None: # 41
-            thetas = np.radians(np.linspace(0., 360., 17)) # 4,8,12,16,... becomes 5,9,13,17,...
-        ntheta = len(thetas)
-
-        a = radius
-        b = radius * aspect_ratio
-        if a == 0.0 and b == 0.0:
-            xy = np.zeros((ntheta, 2)) # this is just R
-            return xy
-
-        R = a * b / np.sqrt((b*np.cos(thetas))**2 + (a*np.sin(thetas))**2)
-        x = R * np.cos(thetas)
-        y = R * np.sin(thetas)
-
-        xy = np.vstack([x, y]).T
-        assert xy.shape == (ntheta, 2), xy.shape
-        return xy
 
     def set_points(self, points):
         self.p1 = np.asarray(points[0])
@@ -2439,7 +2354,7 @@ class CAERO3(BaseCard):
         assert len(self.p4) == 3, 'p4=%s' % self.p4
         assert self.x12 > 0., 'x12=%s' % self.x12
         assert self.x43 >= 0., 'x43=%s' % self.x43
-        assert isinstance(self.cp, int), 'cp=%r' % cp
+        assert isinstance(self.cp, int), 'cp=%r' % self.cp
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -3874,7 +3789,8 @@ class PAERO1(BaseCard):
             if isinstance(caero_body_id, integer_types) and caero_body_id >= 0:
                 caero_body_ids2.append(caero_body_id)
             elif caero_body_id is not None:
-                raise RuntimeError('invalid caero_body_id value on PAERO1; caero_body_id=%r' % (caero_body_id))
+                msg = 'invalid caero_body_id value on PAERO1; caero_body_id=%r' % (caero_body_id)
+                raise RuntimeError(msg)
             #else:
                 #pass
         return PAERO1(pid, caero_body_ids, comment=comment)
@@ -4064,11 +3980,11 @@ class PAERO2(BaseCard):
 
     @lth1.setter
     def lth1(self, lth1):
-        self.lth[0] = lth
+        self.lth[0] = lth1
 
     @lth2.setter
     def lth2(self, lth2):
-        self.lth[1] = lth
+        self.lth[1] = lth2
 
     def validate(self):
         assert self.orient in ['Z', 'Y', 'ZY'], 'PAERO2: orient=%r' % self.orient

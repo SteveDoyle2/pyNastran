@@ -217,7 +217,7 @@ class OP2Reader(object):
         data = self._read_record()
         idata = unpack(self._uendian + '7i', data)
         assert idata[0] == 101, idata
-        nnodes = idata[1]
+        unused_nnodes = idata[1]
         assert idata[2] == 0, idata
         assert idata[3] == 0, idata
         assert idata[4] == 0, idata
@@ -896,7 +896,7 @@ class OP2Reader(object):
         ints = np.frombuffer(header_data, op2.idtype)
 
         #seid = ints[0] # ??? is this a table number>
-        nnodes = ints[1]  # validated
+        unused_nnodes = ints[1]  # validated
 
         if self.is_debug_file:
             self.binary_debug.write('---markers = [-1]---\n')
@@ -2878,6 +2878,17 @@ class OP2Reader(object):
         op2.subtable_name = subtable_name
         self._read_subtables()
 
+    def generic_stop_table(self, data, ndata):  # pragma: no cover
+        """print table data when things get weird"""
+        strings, ints, floats = self.show_data(data)
+        msg = 'Unhandled table length error\n'
+        msg += 'table_name = %s\n' % self.op2.table_name
+        msg += 'len(data) = %i\n' % ndata
+        msg += 'strings  = %r\n' % strings
+        msg += 'ints     = %r\n' % str(ints)
+        msg += 'floats   = %r' % str(floats)
+        raise NotImplementedError(msg)
+
     def read_geom_table(self):
         """Reads a geometry table"""
         op2 = self.op2
@@ -2885,21 +2896,20 @@ class OP2Reader(object):
         if self.is_debug_file:
             self.binary_debug.write('read_geom_table - %s\n' % op2.table_name)
         self.read_markers([-1])
-        data = self._read_record()
+        data = self._read_record() # length=28
 
         self.read_markers([-2, 1, 0])
         data, ndata = self._read_record_ndata()
         if ndata == 8:
             subtable_name, = self.op2.struct_8s.unpack(data)
+        elif ndata == 28:
+            fmt = self._endian + b'8s 3i 2i'
+            subtable_name, month, day, year, zero, one = Struct(fmt).unpack(data)
+            if zero != 0 or one != 1:  # pragma: no cover
+                self.generic_stop_table(data, ndata)
+            self._set_op2_date(month, day, year)
         else:
-            strings, ints, floats = self.show_data(data)
-            msg = 'Unhandled table length error\n'
-            msg += 'table_name = %s\n' % op2.table_name
-            msg += 'len(data) = %i\n' % ndata
-            msg += 'strings  = %r\n' % strings
-            msg += 'ints     = %r\n' % str(ints)
-            msg += 'floats   = %r' % str(floats)
-            raise NotImplementedError(msg)
+            self.generic_stop_table(data, ndata)
 
         op2.subtable_name = subtable_name.rstrip()
         self._read_subtables()

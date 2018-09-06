@@ -152,6 +152,7 @@ class TestOP2(Tester):
             #[0., -1.,], # 32
         ])
         assert is_array_close(dispi, expected_disp)
+        #print(is_array_close(dispi, expected_disp))
         #print(dispi)
 
         ## TODO: fix the thetad in the cid=3 coordinates (nid=33,34)
@@ -1483,7 +1484,31 @@ class TestOP2(Tester):
         assert os.path.exists(debug_file), os.listdir(folder)
         os.remove(debug_file)
 
-    def test_op2_optistruct_01(self):
+    def test_op2_autodesk_1(self):
+        """tests an Autodesk Nastran example"""
+        op2_filename = os.path.join(PKG_PATH, 'op2', 'test', 'examples',
+                                    'autodesk', 'aa8lzviq9.op2')
+        log = get_logger(level='warning')
+        op2, is_passed = run_op2(op2_filename, make_geom=False, write_bdf=False, write_f06=False,
+                                 log=log, stop_on_failure=True, binary_debug=True, quiet=True,
+                                 post=-4)
+
+        assert len(op2.displacements) == 1
+        assert len(op2.spc_forces) == 1
+        assert len(op2.ctetra_stress) == 1
+
+        isubcase = 1
+        ctetra_stress = op2.ctetra_stress[isubcase]
+        if IS_PANDAS:
+            ctetra_stress.build_dataframe()
+        assert ctetra_stress.nelements == 810, ctetra_stress.nelements
+        assert ctetra_stress.data.shape == (1, 810*5, 10), ctetra_stress.data.shape
+
+        assert len(op2.cpenta_stress) == 0
+        assert len(op2.chexa_stress) == 0
+        assert len(op2.grid_point_forces) == 0
+
+    def test_op2_optistruct_1(self):
         """
         Optistruct 2012 Tables : CASECC, GEOM1S, GEOM2S, GEOM3S, GEOM4S, EPTS, MPTS,
                                 OUGV1, OES1X

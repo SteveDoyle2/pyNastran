@@ -166,6 +166,21 @@ class CMASS1(PointMassElement):
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.PropertyMass(self.pid, msg=msg)
 
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CMASS1 eid=%s' % self.eid
+        self.nodes_ref, missing_nodes = model.safe_empty_nodes(self.node_ids, msg=msg)
+        self.pid_ref = model.safe_property_mass(self.pid, self.eid, xref_errors, msg=msg)
+        if missing_nodes:
+            model.log.warning(missing_nodes)
+
     def uncross_reference(self):
         self.nodes = [self.G1(), self.G2()]
         self.pid = self.Pid()
@@ -398,6 +413,20 @@ class CMASS2(PointMassElement):
         """
         msg = ', which is required by CMASS2 eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CMASS2 eid=%s' % self.eid
+        self.nodes_ref, missing_nodes = model.safe_empty_nodes(self.node_ids, msg=msg)
+        if missing_nodes:
+            model.log.warning(missing_nodes)
 
     def uncross_reference(self):
         self.nodes = [self.G1(), self.G2()]
@@ -918,8 +947,21 @@ class CONM1(PointMassElement):
             the BDF object
         """
         msg = ', which is required by CONM1 eid=%s' % self.eid
-        self.nid_ref = model.Node(self.Nid(), msg=msg)
-        self.cid_ref = model.Coord(self.Cid(), msg=msg)
+        self.nid_ref = model.Node(self.nid, msg=msg)
+        self.cid_ref = model.Coord(self.cid, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CONM1 eid=%s' % self.eid
+        self.nid_ref = model.Node(self.nid, msg=msg)
+        self.cid_ref = model.safe_coord(self.cid, self.eid, xref_errors, msg='')
 
     def uncross_reference(self):
         self.nid = self.Nid()
@@ -1318,6 +1360,21 @@ class CONM2(PointMassElement):
         cid = self.Cid()
         if cid != -1:
             self.cid_ref = model.Coord(cid, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CONM2 eid=%s' % self.eid
+        self.nid_ref = model.Node(self.nid, msg=msg)
+        cid = self.Cid()
+        if cid != -1:
+            self.cid_ref = model.safe_coord(cid, self.eid, xref_errors, msg='')
 
     def uncross_reference(self):
         self.nid = self.Nid()

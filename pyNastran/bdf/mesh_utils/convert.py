@@ -750,42 +750,18 @@ def _convert_optimization(model, xyz_scale, mass_scale, weight_scale):
         #desvar.xub *= scale
         #desvar.delx *= scale
         #raise NotImplementedError(desvar)
+
     for unused_key, dconstrs in iteritems(model.dconstrs):
         for dconstr in dconstrs:
-            otype = dconstr.type
-            if otype == 'DCONSTR':
-                dresp = dconstr.rid
-                if dresp.type == 'DRESP1':
-                    property_type = dresp.ptype
-                    response_type = dresp.rtype
-                    assert len(dresp.atti) == 1, dresp.atti
-                    for atti in dresp.atti:
-                        #label = dresp.label
-                        #atti_type = atti.type
-                        if response_type == 'STRESS':
-                            scale = pressure_scale
-                        else:
-                            raise RuntimeError(atti)
-                        #if atti
-                        #if property_type == 'PSHELL':
-                            #if rst
-                else:
-                    raise NotImplementedError(dresp)
-                dconstr.lid *= scale
-                dconstr.uid *= scale
-            else:
-                raise NotImplementedError(dconstr)
+            # scale is appled to lid/uid
+            _convert_dconstr(model, dconstr, pressure_scale)
 
     for unused_key, dvcrel in iteritems(model.dvcrels):
         if dvcrel.type == 'DVCREL1':
-            element_type = dvcrel.element_type
-            if element_type == 'CBUSH':
-                if dvcrel.cp_name in ['X1', 'X2', 'X3', 'S', 'S1', 'S2', 'S3']:
-                    scale = xyz_scale
-                else:
-                    raise NotImplementedError(dvcrel)
-            else:
-                raise NotImplementedError(dvcrel)
+            scale = _convert_dvcrel1(dvcrel, xyz_scale)
+            desvars = dvcrel.dvids_ref
+            assert len(desvars) == 1, len(desvars)
+            scale_desvars(desvars, scale)
         else:
             raise NotImplementedError(dvcrel)
 
@@ -793,7 +769,7 @@ def _convert_optimization(model, xyz_scale, mass_scale, weight_scale):
         assert len(desvars) == 1, len(desvars)
         scale_desvars(desvars, scale)
 
-    for key, dvmrel in iteritems(model.dvmrels):
+    for unused_key, dvmrel in iteritems(model.dvmrels):
         raise NotImplementedError(dvmrel)
 
     for key, dvprel in iteritems(model.dvprels):
@@ -810,7 +786,56 @@ def _convert_optimization(model, xyz_scale, mass_scale, weight_scale):
             dvprel.p_min *= scale
         #print('------------')
         #print(dvprel)
-        #pass
+
+def _convert_dconstr(model, dconstr, pressure_scale):
+    """helper for ``_convert_optimization``"""
+    otype = dconstr.type
+    if otype == 'DCONSTR':
+        dresp = dconstr.dresp_id_ref
+        if dresp.type == 'DRESP1':
+            #property_type = dresp.ptype
+            response_type = dresp.rtype
+            assert len(dresp.atti) == 1, dresp.atti
+            for atti in dresp.atti:
+                #label = dresp.label
+                #atti_type = atti.type
+                if response_type == 'STRESS':
+                    scale = pressure_scale
+                else:
+                    raise RuntimeError(atti)
+                #if atti
+                #if property_type == 'PSHELL':
+                    #if rst
+        elif dresp.type == 'DRESP2':
+            msg = 'skipping:\n%s%s' % (str(dconstr), str(dresp))
+            model.log.warning(msg)
+            return
+        else:
+            raise NotImplementedError(dresp)
+
+        # lower bound
+        dconstr.lid *= scale
+        # upper bound
+        dconstr.uid *= scale
+
+        # low end of frequency range (Hz)
+        self.lowfq = scale
+        # high end of frequency range (Hz)
+        self.highfq = scale
+    else:
+        raise NotImplementedError(dconstr)
+
+def _convert_dvcrel1(dvcrel, xyz_scale):
+    """helper for ``_convert_optimization``"""
+    element_type = dvcrel.element_type
+    if element_type == 'CBUSH':
+        if dvcrel.cp_name in ['X1', 'X2', 'X3', 'S', 'S1', 'S2', 'S3']:
+            scale = xyz_scale
+        else:
+            raise NotImplementedError(dvcrel)
+    else:
+        raise NotImplementedError(dvcrel)
+    return scale
 
 def _convert_dvprel1(dvprel, xyz_scale, mass_scale, weight_scale):
     """helper for ``_convert_optimization``"""
@@ -966,7 +991,9 @@ def get_scale_factors(units_from, units_to):
 
     #print('gravity_scale_length=%s gravity_scale_mass=%s gravity_scale=%s' % (
         #gravity_scale_length, gravity_scale_mass, gravity_scale))
-    gravity_scale = gravity_scale_length * gravity_scale_mass / time_scale ** 2  # doesn't consider cm/mm
+
+    ## doesn't consider cm/mm
+    gravity_scale = gravity_scale_length * gravity_scale_mass / time_scale ** 2
     # 4.448N = 1 lbm
     # 1 slug = 14.5939 kg
     # 1g = 32.174 ft/s^2 = 386.088 = 9.80665 m/s^2

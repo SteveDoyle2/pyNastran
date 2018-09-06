@@ -373,8 +373,7 @@ class TestDEQATN(unittest.TestCase):
         #print('out9 = %r' % out)
 
 
-    @unittest.skipUnless(2 < 1, 'skipping')
-    def test_deqatn_11_skip(self):
+    def test_deqatn_11(self):
         """
         based off nast/tpl/ptdmi1.dat
 
@@ -393,19 +392,21 @@ class TestDEQATN(unittest.TestCase):
             ['dconstr,6,11,',],
         ]
         dresp_cards = [
-            [
+            [ # card1
                 'dresp2,10,respA,2',
-                'desvar,100,101,102',
+                ',desvar,100,101,102',
             ],
-            [
+            [ # card2
                 'dresp2,11,respB,2',
-                'desvar,100,101,102',
+                ',desvar,100,101,102',
             ],
+            ## TODO: support this...
             #[
             #'dresp2,11,respB,F(A,B)=A+B**2*SIN(A*B)'
             #',desvar,100,101',
             #],
         ]
+        #model.add_desvar(100, 'varA', 100.1, xlb=-1e20, xub=1e20, delx=None, ddval=None, comment='')
         desvar_cards = [
             ['desvar,100,varA,100.1',],
             ['desvar,101,varB,100.2',],
@@ -418,8 +419,7 @@ class TestDEQATN(unittest.TestCase):
             model.add_card(dconstr, 'DCONSTR', is_list=False)
         for dresp in dresp_cards:
             model.add_card(dresp, 'DRESP2', is_list=False)
-        #for desvar in desvar_cards:
-            #model.add_card(desvar, 'DESVAR', is_list=True)
+        model._verify_bdf()
         model.cross_reference()
         model._verify_bdf()
         save_load_deck(model)
@@ -453,10 +453,9 @@ class TestDEQATN(unittest.TestCase):
         model.cross_reference()
         #print(model.dequations[41].eqs)
         #print(model.dequations[41].func_str)
-        #save_load_deck(model)
+        save_load_deck(model)
 
-    @unittest.expectedFailure
-    def test_deqatn_13_fail(self):
+    def test_deqatn_13(self):
         """
         add_deqatn doesnt support semicolons (;) in the eqs
         You're defining them; break it up

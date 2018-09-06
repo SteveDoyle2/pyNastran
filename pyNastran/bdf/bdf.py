@@ -291,7 +291,9 @@ def load_bdf_object(obj_filename, xref=True, log=None, debug=True):
 
 class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
     """
-    Base class for the BDF Reader/Writer/Editor class.
+    Base class for the BDF Reader/Writer/Editor class that's used by the
+    main BDF object and (temporarily) the in-development vectorized object
+    to keep things working.
 
     If you add very few methods and attributes to this, you get the ``BDF``
     class.  The point of this class is to break out a attributes, so the
@@ -620,6 +622,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             'INCLUDE',  # '='
             'ENDDATA',
         ])
+        self._xref = False
 
         case_control_cards = set(['FREQ', 'GUST', 'MPC', 'SPC', 'NLPARM', 'NSM',
                                   'TEMP', 'TSTEPNL', 'INCLUDE'])
@@ -3899,6 +3902,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         """Cross reference verification method."""
         if xref is None:
             xref = self._xref
+
         #for key, card in sorted(iteritems(self.params)):
             #card._verify(xref)
         for unused_key, card in sorted(iteritems(self.nodes)):
