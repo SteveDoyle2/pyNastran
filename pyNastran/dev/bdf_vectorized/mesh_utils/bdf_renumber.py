@@ -4,7 +4,7 @@ from six import iteritems, string_types, itervalues
 import numpy as np
 
 from pyNastran.dev.bdf_vectorized.bdf import BDF
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 
 
 def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,

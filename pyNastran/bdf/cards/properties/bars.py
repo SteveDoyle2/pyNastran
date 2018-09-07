@@ -27,7 +27,7 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.utils import to_fields
-from pyNastran.utils import float_types
+from pyNastran.utils.numpy_utils import float_types
 
 
 def Iyy_beam(b, h):

@@ -10,20 +10,15 @@ from itertools import count
 from typing import List, Union, Optional
 from six import PY2, string_types, iteritems, StringIO
 
-import numpy as np
+#from pyNastran.utils.numpy_utils import (
+    #integer_types, integer_string_types, integer_float_types, float_types)
+#import numpy as np
 
 if PY2:
-    integer_types = (int, long, np.int32, np.int64)
-    integer_string_types = (int, long, np.int32, np.int64, str, unicode)
-    integer_float_types = (int, long, np.int32, np.int64, float)
     FileNotFoundError = IOError
     unicode_type = unicode
 else:
-    integer_types = (int, np.int32, np.int64)
-    integer_string_types = (int, np.int32, np.int64, bytes, str)
-    integer_float_types = (int, np.int32, np.int64, float)
     unicode_type = str
-float_types = (float, np.float32)
 
 
 #if PY2:
@@ -108,7 +103,7 @@ def is_binary_file(filename):
 
     .. warning:: this may not work for unicode."""
     assert isinstance(filename, string_types), '%r is not a valid filename' % filename
-    check_path(filename, '')
+    check_path(filename)
     with io.open(filename, mode='rb') as fil:
         for chunk in iter(lambda: fil.read(1024), bytes()):
             if b'\0' in chunk:  # found null byte

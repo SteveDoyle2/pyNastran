@@ -3,10 +3,9 @@ from six.moves import zip
 from numpy import array, arange, zeros, unique, searchsorted, full, nan
 from numpy.linalg import norm  # type: ignore
 
-from pyNastran.utils import integer_types
-from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.bdf.field_writer_8 import print_card_8, set_blank_if_default
 from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, string_or_blank)

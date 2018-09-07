@@ -5,7 +5,7 @@ from numpy import zeros, unique, array_equal, empty
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header, write_imag_floats_13e
 from pyNastran.op2.vector_utils import transform_force_moment, transform_force_moment_sum, sortedsum1d
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 
 try:
     import pandas as pd  # type: ignore

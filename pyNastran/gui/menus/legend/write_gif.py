@@ -13,7 +13,7 @@ try:
     IS_IMAGEIO = True
 except ImportError:
     IS_IMAGEIO = False
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 
 
 def setup_animation(scale, istep=None,

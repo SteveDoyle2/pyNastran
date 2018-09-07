@@ -5,7 +5,7 @@ from itertools import chain
 import numpy as np
 
 from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 
 class GetMethods(BDFAttributes):
     """defines various methods to access low level BDF data"""

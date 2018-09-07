@@ -18,12 +18,13 @@ from numpy.linalg import norm  # type: ignore
 import scipy
 import scipy.spatial
 
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.mesh_utils.internal_utils import get_bdf_model
 
 if scipy.__version__ < '0.18.1':
-    raise RuntimeError('scipy_version=%r and is less than 0.18.1.  Upgrade your scipy.')
+    msg = 'scipy_version=%r and is less than 0.18.1.  Upgrade your scipy.' % scipy.__version__
+    raise RuntimeError(msg)
 
 
 def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,

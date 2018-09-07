@@ -41,7 +41,7 @@ from pyNastran.dev.bdf_vectorized.bdf import BDF
 from pyNastran.op2.test.test_op2 import OP2
 from pyNastran.f06.f06 import F06
 from pyNastran.converters.nastran.nastranIO import NastranIO as NastranIO_xref
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 
 class NastranIO(NastranIO_xref):
     def __init__(self):

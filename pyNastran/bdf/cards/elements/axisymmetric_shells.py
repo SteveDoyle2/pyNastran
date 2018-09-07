@@ -19,7 +19,7 @@ from six.moves import range
 from numpy import cross
 from numpy.linalg import norm  # type: ignore
 
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import (
     set_blank_if_default, set_default_if_blank,
     print_card_8, print_field_8)

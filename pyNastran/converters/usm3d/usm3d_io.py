@@ -8,7 +8,8 @@ from six import iteritems, string_types
 
 import numpy as np
 
-from pyNastran.utils import integer_float_types, object_attributes
+from pyNastran.utils import object_attributes
+from pyNastran.utils.numpy_utils import integer_float_types
 from pyNastran.converters.usm3d.usm3d_reader import Usm3d
 from pyNastran.converters.usm3d.time_accurate_results import get_n_list
 

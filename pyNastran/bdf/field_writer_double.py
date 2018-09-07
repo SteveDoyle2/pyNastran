@@ -7,7 +7,7 @@ from six.moves import range
 
 import sys
 from typing import List, Union
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 
 def print_scientific_double(value):

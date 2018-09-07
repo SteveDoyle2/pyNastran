@@ -11,7 +11,7 @@ from qtpy.QtWidgets import (
     QApplication, QLabel, QPushButton, QLineEdit, QComboBox, QWidget, QRadioButton,
     QButtonGroup, QGridLayout, QHBoxLayout, QVBoxLayout)
 
-from pyNastran.utils import float_types
+from pyNastran.utils.numpy_utils import float_types
 from pyNastran.gui.utils.colormaps import colormap_keys
 from pyNastran.gui.utils.qt.pydialog import (
     PyDialog, check_float, check_format, check_positive_int_or_blank)

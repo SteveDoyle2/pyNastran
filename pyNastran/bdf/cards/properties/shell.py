@@ -17,7 +17,7 @@ from six.moves import zip, range
 from numpy import array
 import numpy as np
 
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Property, Material
 from pyNastran.bdf.cards.optimization import break_word_by_trailing_integer

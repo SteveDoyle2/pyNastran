@@ -9,7 +9,7 @@ import numpy as np
 from numpy import array, zeros
 from scipy.sparse import coo_matrix  # type: ignore
 
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16

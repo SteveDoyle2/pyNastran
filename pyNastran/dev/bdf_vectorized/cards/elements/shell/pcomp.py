@@ -6,7 +6,7 @@ from itertools import count
 from numpy import (array, zeros, searchsorted, where, unique,
                    hstack)
 
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 #from pyNastran.dev.bdf_vectorized.utils import slice_to_iter
 #from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.field_writer import print_card_8

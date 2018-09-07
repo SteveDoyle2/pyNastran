@@ -6,7 +6,7 @@ defines:
 """
 from __future__ import print_function
 import numpy as np
-from pyNastran.utils import float_types
+from pyNastran.utils.numpy_utils import float_types
 
 def elements_from_quad(nx, ny, dtype='int32'):
     """

@@ -4,7 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import string_types, iteritems, iterkeys
 
 import numpy as np
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 #from pyNastran.bdf.deprecated import GetMethodsDeprecated
 #from pyNastran.bdf.cards.nodes import SPOINT, EPOINT
 from pyNastran.dev.bdf_vectorized.bdf_interface2.attributes import BDFAttributes

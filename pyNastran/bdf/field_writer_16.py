@@ -9,7 +9,7 @@ import sys
 from typing import List, Union, Optional, Any
 from numpy import float32, isnan  # type: ignore
 
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 

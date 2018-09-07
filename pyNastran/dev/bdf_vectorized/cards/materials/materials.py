@@ -8,7 +8,7 @@ from numpy import zeros, where, array, unique, concatenate
 #from pyNastran.dev.bdf_vectorized.cards.materials.mat4 import MAT4
 #from pyNastran.dev.bdf_vectorized.cards.materials.mat10 import MAT10
 
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.dev.bdf_vectorized.utils import slice_to_iter
 
 #from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT4, MAT5, MAT8,

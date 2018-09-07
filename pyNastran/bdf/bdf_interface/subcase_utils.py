@@ -7,7 +7,7 @@ defines:
 from __future__ import print_function
 from six import string_types
 from typing import List
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.collpase_card import collapse_thru_packs
 from pyNastran.bdf.bdf_interface.assign_type import interpret_value
 

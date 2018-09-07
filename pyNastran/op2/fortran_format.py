@@ -10,9 +10,9 @@ from struct import unpack
 from six import iteritems
 from six.moves import range
 
-from pyNastran.utils import integer_types
-from pyNastran.op2.errors import FortranMarkerError, SortCodeError
 from pyNastran.utils import object_attributes
+from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.op2.errors import FortranMarkerError, SortCodeError
 
 # this is still a requirement, but disabling it so readthedocs works
 if sys.version_info < (2, 7, 7):

@@ -11,7 +11,8 @@ from six import PY2, PY3, iteritems, StringIO
 import numpy as np
 
 from pyNastran.bdf.bdf import BDF
-from pyNastran.utils import integer_types, object_attributes
+from pyNastran.utils import object_attributes
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.utils.mathematics import roundup
 
 

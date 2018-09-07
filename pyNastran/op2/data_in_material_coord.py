@@ -10,7 +10,7 @@ import numpy as np
 from numpy import cos, sin, cross
 from numpy.linalg import norm  # type: ignore
 
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 
 force_vectors = ['cquad4_force', 'cquad8_force', 'cquadr_force',
                  'ctria3_force', 'ctria6_force', 'ctriar_force']

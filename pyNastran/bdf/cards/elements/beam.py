@@ -9,7 +9,7 @@ from six import string_types
 import numpy as np
 from numpy.linalg import norm  # type: ignore
 
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.elements.bars import (
     LineElement, init_x_g0, BaseCard, rotate_v_wa_wb, check_offt)
 from pyNastran.bdf.bdf_interface.assign_type import (

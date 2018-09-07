@@ -119,7 +119,7 @@ from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
                                             TABLES1, TABDMP1, TABLEST, TABRND1, TABRNDG,
                                             DTABLE)
 from pyNastran.bdf.cards.contact import BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA
-from pyNastran.utils import integer_string_types
+from pyNastran.utils.numpy_utils import integer_string_types
 
 
 class AddCards(AddMethods):

@@ -34,7 +34,8 @@ else:
     from pyNastran.gui.qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
 from pyNastran.utils.log import SimpleLogger
-from pyNastran.utils import check_path, integer_types
+from pyNastran.utils import check_path
+from pyNastran.utils.numpy_utils import integer_types
 
 from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
 from pyNastran.gui.qt_files.scalar_bar import ScalarBar

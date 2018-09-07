@@ -5,7 +5,7 @@ from six import iteritems, string_types
 from six.moves import zip, range
 import numpy as np
 
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import (BaseCard, expand_thru_by)
 from pyNastran.bdf.cards.deqatn import fortran_to_python_short

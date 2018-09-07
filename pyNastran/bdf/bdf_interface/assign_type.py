@@ -5,7 +5,8 @@ from __future__ import print_function
 from typing import Union, Optional
 from six import string_types
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
-from pyNastran.utils import integer_types, integer_float_types, float_types
+from pyNastran.utils.numpy_utils import (
+    integer_types, integer_float_types, float_types)
 
 
 def parse_components(card, ifield, fieldname):

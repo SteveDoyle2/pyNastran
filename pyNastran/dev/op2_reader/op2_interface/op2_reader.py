@@ -50,7 +50,7 @@ import numpy as np
 from numpy import frombuffer
 import scipy  # type: ignore
 
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.f06.errors import FatalError
 from pyNastran.op2.errors import FortranMarkerError, SortCodeError
 from pyNastran.op2.tables.design_response import (

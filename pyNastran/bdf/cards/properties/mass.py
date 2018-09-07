@@ -15,7 +15,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_string, double, double_or_blank, string)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.utils import float_types, integer_types
+from pyNastran.utils.numpy_utils import integer_types, float_types
 
 
 class NSMx(Property):

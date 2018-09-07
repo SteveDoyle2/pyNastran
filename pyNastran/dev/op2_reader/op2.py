@@ -32,7 +32,8 @@ import numpy as np
 
 import pyNastran
 from pyNastran.utils import (
-    object_attributes, object_methods, integer_types, ipython_info)
+    object_attributes, object_methods, ipython_info, check_path)
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.tables.monpnt import MONPNT1, MONPNT3
 
 from pyNastran.f06.errors import FatalError
@@ -40,7 +41,6 @@ from pyNastran.op2.errors import SortCodeError, DeviceCodeError, FortranMarkerEr
 #from pyNastran.op2.op2_interface.op2_writer import OP2Writer
 #from pyNastran.op2.op2_interface.op2_f06_common import Op2F06Attributes
 from pyNastran.op2.op2_interface.op2_scalar import OP2_Scalar
-from pyNastran.utils import check_path
 
 
 def read_op2(op2_filename=None, combine=True, subcases=None,

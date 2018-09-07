@@ -10,7 +10,6 @@ try:
 except ImportError:
     pass
 
-#from pyNastran.utils import object_attributes
 
 
 class Matrix(object):

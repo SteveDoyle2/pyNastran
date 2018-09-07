@@ -20,7 +20,8 @@ warnings.simplefilter('always')
 
 np.seterr(all='raise')
 
-from pyNastran.utils import check_path, integer_types
+from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.utils import check_path
 from pyNastran.bdf.errors import (
     #CrossReferenceError,
     CardParseSyntaxError, DuplicateIDsError, MissingDeckSections)

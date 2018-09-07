@@ -62,7 +62,7 @@ from vtk import (vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
                  vtkPyramid) #vtkQuadraticPyramid
 
 #from pyNastran import is_release
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.utils.log import properties as log_properties
 from pyNastran.utils.numpy_utils import isfinite_and_nonzero, isfinite_and_greater_than, isfinite
 from pyNastran.bdf.bdf import (BDF,

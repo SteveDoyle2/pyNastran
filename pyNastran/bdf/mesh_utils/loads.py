@@ -10,8 +10,7 @@ from six import iteritems
 import numpy as np
 from numpy import array, cross, allclose, mean
 from numpy.linalg import norm  # type: ignore
-from pyNastran.utils import integer_types
-
+from pyNastran.utils.numpy_utils import integer_types
 
 def sum_forces_moments(model, p0, loadcase_id, include_grav=False, xyz_cid0=None):
     """

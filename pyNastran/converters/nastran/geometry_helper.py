@@ -7,10 +7,11 @@ this is no longer true...but should be
 from __future__ import print_function
 import sys
 from collections import defaultdict
+from six import iteritems
 import numpy as np
 from numpy.linalg import norm
 import vtk
-from pyNastran.utils import integer_types, iteritems
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.elements.beam_connectivity import (
     rod_faces, tube_faces, chan1_faces,
     bar_faces, box_faces, i_faces, t_faces, t1_faces, t2_faces,

@@ -16,7 +16,6 @@ All cards are Material objects.
 #pylint: disable=E1103,C0103,C0111
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-#from pyNastran.utils import integer_types
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, string)

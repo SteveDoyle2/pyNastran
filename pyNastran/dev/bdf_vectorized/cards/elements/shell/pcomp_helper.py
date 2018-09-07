@@ -2,7 +2,7 @@ from __future__ import print_function
 
 from numpy import array
 
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 #from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
                                                     #double_or_blank, integer_double_or_blank, blank, string_or_blank)
 from pyNastran.bdf.bdf_interface.assign_type import integer, double_or_blank, string_or_blank, integer_or_blank

@@ -45,7 +45,7 @@ import numpy as np
 from pyNastran.bdf.bdf_interface.get_methods import GetMethods
 #from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
 from pyNastran.bdf.cards.optimization import get_dvprel_key
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 
 
 class GetCard(GetMethods):

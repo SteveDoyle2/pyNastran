@@ -12,7 +12,7 @@ from six import string_types, itervalues, iteritems
 import numpy as np
 
 from pyNastran.bdf.cards.aero.dynamic_loads import Aero
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (

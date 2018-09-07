@@ -2,7 +2,8 @@ from __future__ import print_function
 from six.moves import StringIO
 from numpy import (array, searchsorted, array_equal, setdiff1d, int64, argsort,
                    arange, ndarray, asarray)
-from pyNastran.utils import object_attributes, object_methods, integer_types
+from pyNastran.utils import object_attributes, object_methods
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.base_card import _format_comment
 
 

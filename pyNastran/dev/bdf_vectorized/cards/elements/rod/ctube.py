@@ -4,7 +4,7 @@ from numpy import array, dot, arange, zeros, unique, searchsorted, transpose, in
 from numpy.linalg import norm  # type: ignore
 
 from pyNastran.dev.bdf_vectorized.cards.elements.rod.conrod import _Lambda
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.utils.dev import list_print
 
 from pyNastran.bdf.field_writer_8 import print_card_8

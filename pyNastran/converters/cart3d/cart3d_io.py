@@ -10,7 +10,7 @@ import collections
 from numpy import arange, mean, vstack, unique, where, sqrt
 import numpy as np
 
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.gui.qt_files.colors import RED_FLOAT, BLUE_FLOAT, GREEN_FLOAT, PINK_FLOAT
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.gui.utils.vtk.vtk_utils import (
