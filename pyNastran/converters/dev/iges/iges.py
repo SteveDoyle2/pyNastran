@@ -85,7 +85,7 @@ class IGES(object):
         print("G =", g_global.split(','))
         print("----P----")
         p_parameter_data = self.combine(parameter1, True)
-        #for key, line in sorted(iteritems(p_parameter_data)):
+        #for key, line in sorted(p_parameter_data.items()):
             #print(key, line)
 
         print("----D----")
@@ -96,7 +96,7 @@ class IGES(object):
             assert dtype in self.supported+self.maybe_supported, '%i is not supported' % dtype
 
         #D_directory_entry = self.combine(Directory1)
-        #for key, line in sorted(iteritems(D_directory_entry)):
+        #for key, line in sorted(D_directory_entry.items()):
             #print('***', key, line)
 
     def combine(self, input_dict, debug=False):

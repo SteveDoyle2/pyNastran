@@ -8,7 +8,7 @@ import sys
 import traceback
 from collections import OrderedDict
 
-from six import iteritems, itervalues
+from six import iteritems
 
 import numpy as np
 import vtk
@@ -831,7 +831,7 @@ class GuiAttributes(object):
         """
         if dim is None:
             dim = self.settings.dim_max * self.settings.coord_scale
-        for axes in itervalues(self.axes):
+        for axes in self.axes.values():
             axes.SetTotalLength(dim, dim, dim)
 
     #---------------------------------------------------------------------------

@@ -62,11 +62,23 @@ class RealSpringArray(OES_Object):
         """actually performs the build step"""
         self.ntimes = ntimes
         self.nelements = nelements
-        self._times = zeros(ntimes, dtype=dtype)
-        self.element = zeros(nelements, dtype='int32')
+        _times = zeros(ntimes, dtype=dtype)
+        element = zeros(nelements, dtype='int32')
 
         #[stress]
-        self.data = zeros((ntimes, nelements, 1), dtype='float32')
+        data = zeros((ntimes, nelements, 1), dtype='float32')
+
+        if self.load_as_h5:
+            #for key, value in sorted(self.data_code.items()):
+                #print(key, value)
+            group = self._get_result_group()
+            self._times = group.create_dataset('_times', data=_times)
+            self.element = group.create_dataset('element', data=element)
+            self.data = group.create_dataset('data', data=data)
+        else:
+            self._times = _times
+            self.element = element
+            self.data = data
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -340,11 +352,23 @@ class RealNonlinearSpringStressArray(OES_Object):
         dtype = 'float32'
         if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
-        self._times = zeros(self.ntimes, dtype=dtype)
-        self.element = zeros(self.nelements, dtype='int32')
+        _times = zeros(self.ntimes, dtype=dtype)
+        element = zeros(self.nelements, dtype='int32')
 
         #[force, stress]
-        self.data = zeros((self.ntimes, self.nelements, 2), dtype='float32')
+        data = zeros((self.ntimes, self.nelements, 2), dtype='float32')
+
+        if self.load_as_h5:
+            #for key, value in sorted(self.data_code.items()):
+                #print(key, value)
+            group = self._get_result_group()
+            self._times = group.create_dataset('_times', data=_times)
+            self.element = group.create_dataset('element', data=element)
+            self.data = group.create_dataset('data', data=data)
+        else:
+            self._times = _times
+            self.element = element
+            self.data = data
 
     def __eq__(self, table):
         self._eq_header(table)

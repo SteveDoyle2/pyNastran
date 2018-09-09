@@ -78,11 +78,23 @@ class NonlinearGapStressArray(OES_Object):
         dtype = 'float32'
         if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
-        self._times = zeros(self.ntimes, dtype=dtype)
-        self.element = zeros(self.ntotal, dtype='int32')
+        _times = zeros(self.ntimes, dtype=dtype)
+        element = zeros(self.ntotal, dtype='int32')
 
         # [comp_x, shear_y, shear_z, axial_u, shear_v, shear_w, slip_v, slip_w]
-        self.data = zeros((self.ntimes, self.ntotal, 8), dtype='float32')
+        data = zeros((self.ntimes, self.ntotal, 8), dtype='float32')
+
+        if self.load_as_h5:
+            #for key, value in sorted(self.data_code.items()):
+                #print(key, value)
+            group = self._get_result_group()
+            self._times = group.create_dataset('_times', data=_times)
+            self.element = group.create_dataset('element', data=element)
+            self.data = group.create_dataset('data', data=data)
+        else:
+            self._times = _times
+            self.element = element
+            self.data = data
 
     def build_dataframe(self):
         """creates a pandas dataframe"""

@@ -7,7 +7,6 @@ this is no longer true...but should be
 from __future__ import print_function
 import sys
 from collections import defaultdict
-from six import iteritems
 import numpy as np
 from numpy.linalg import norm
 import vtk
@@ -138,7 +137,7 @@ class NastranGeometryHelper(NastranGuiAttributes):
 
         found_bar_types = set([])
         #neids = len(self.element_ids)
-        for bar_type, data in iteritems(bar_types):
+        for bar_type, data in bar_types.items():
             eids = []
             lines_bar_y = []
             lines_bar_z = []
@@ -317,7 +316,7 @@ class NastranGeometryHelper(NastranGuiAttributes):
         debug = False
         if debug:  # pragma: no cover
             #np.set_printoptions(formatter={'float': '{: 0.3f}'.format})
-            for bar_type, data in sorted(iteritems(bar_types)):
+            for bar_type, data in sorted(bar_types.items()):
                 eids, lines_bar_y, lines_bar_z = data
                 if len(eids):
                     #print('barsi =', barsi)

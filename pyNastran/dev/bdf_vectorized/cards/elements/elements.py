@@ -1,6 +1,5 @@
 from __future__ import print_function
 from six import iteritems, integer_types
-from six.moves import zip
 
 import numpy as np
 from pyNastran.utils.mathematics import unique2d

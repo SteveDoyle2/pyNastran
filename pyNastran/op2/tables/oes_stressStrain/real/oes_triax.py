@@ -69,11 +69,23 @@ class RealTriaxArray(OES_Object):
         dtype = 'float32'
         if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
-        self._times = zeros(self.ntimes, dtype=dtype)
-        self.element_node = zeros((self.ntotal, 2), dtype='int32')
+        _times = zeros(self.ntimes, dtype=dtype)
+        element_node = zeros((self.ntotal, 2), dtype='int32')
 
         # [radial, azimuthal, axial, shear, omax, oms, ovm]
-        self.data = zeros((self.ntimes, self.ntotal, 7), dtype='float32')
+        data = zeros((self.ntimes, self.ntotal, 7), dtype='float32')
+
+        if self.load_as_h5:
+            #for key, value in sorted(self.data_code.items()):
+                #print(key, value)
+            group = self._get_result_group()
+            self._times = group.create_dataset('_times', data=_times)
+            self.element_node = group.create_dataset('element_node', data=element_node)
+            self.data = group.create_dataset('data', data=data)
+        else:
+            self._times = _times
+            self.element_node = element_node
+            self.data = data
 
     def build_dataframe(self):
         """creates a pandas dataframe"""

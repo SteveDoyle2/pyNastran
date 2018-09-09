@@ -1,5 +1,4 @@
 from six import iteritems, string_types
-from six.moves import zip, range
 from itertools import count
 from numpy import array, zeros, unique, searchsorted, asarray, int64, where
 

@@ -13,7 +13,6 @@ All mass elements are PointMassElement and Element objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six.moves import range
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types

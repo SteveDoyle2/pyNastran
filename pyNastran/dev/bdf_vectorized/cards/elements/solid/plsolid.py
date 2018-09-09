@@ -1,4 +1,4 @@
-from six.moves import zip, StringIO
+from six.moves import StringIO
 from numpy import zeros, unique, searchsorted, array
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default

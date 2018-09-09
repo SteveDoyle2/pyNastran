@@ -1,4 +1,3 @@
-from six.moves import zip
 from numpy import where, zeros, unique, dot, transpose, arange
 from pyNastran.bdf.bdf_interface.assign_type import double_or_blank, integer_or_blank, integer
 

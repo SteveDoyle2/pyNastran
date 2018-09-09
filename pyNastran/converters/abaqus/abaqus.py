@@ -2,7 +2,6 @@
 Defines the Abaqus class
 """
 from __future__ import print_function
-from six import iteritems
 import numpy as np
 from pyNastran.utils.log import get_logger2
 from pyNastran.converters.abaqus.abaqus_cards import Material, Part, SolidSection
@@ -226,10 +225,10 @@ class Abaqus(object):
                 self.log.debug('')
 
         self.log.debug('nassembly = %s' % nassembly)
-        for part_name, part in sorted(iteritems(self.parts)):
+        for part_name, part in sorted(self.parts.items()):
             self.log.info(part)
             part.check_materials(self.materials)
-        for mat_name, mat in sorted(iteritems(self.materials)):
+        for mat_name, mat in sorted(self.materials.items()):
             self.log.debug(mat)
 
     def _read_star_block(self, lines, iline, line0, debug=False):
@@ -874,9 +873,9 @@ class Abaqus(object):
         with open(abqaqus_filename_out, 'w') as abq_file:
             print("  nparts = %s" % len(self.parts))
             print("  nmaterials = %s" % len(self.materials))
-            for part_name, part in iteritems(self.parts):
+            for part_name, part in self.parts.items():
                 part.write(abq_file)
-            for unused_mat_name, mat in iteritems(self.materials):
+            for unused_mat_name, mat in self.materials.items():
                 mat.write(abq_file)
 
 

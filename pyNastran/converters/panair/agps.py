@@ -90,5 +90,5 @@ class AGPS(object):
             self.pressures[ipatch] = Cp
             if self.debug:  # pragma: no cover
                 print('')
-        #for ipatch, Cp in sorted(iteritems(self.pressures)):
+        #for ipatch, Cp in sorted(self.pressures.items()):
             #print(Cp)

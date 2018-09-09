@@ -129,7 +129,7 @@ class TestLoadSum(unittest.TestCase):
         #---------
         loadcase_id = 3
         A = 0.
-        for e, element in iteritems(model.elements):
+        for e, element in model.elements.items():
             A += element.Area()
         A_expected = 100.
         self.assertTrue(allclose(A, A_expected), 'loadcase_id=%s A_expected=%s A=%s' % (loadcase_id, A_expected, A))

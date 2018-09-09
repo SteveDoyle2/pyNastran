@@ -110,7 +110,7 @@ class TestBdfUtils(unittest.TestCase):
 
         data = parse_patran_syntax_dict_map(node_sets, type_map, msg='')
         assert len(data.keys()) == len(data_expected.keys()), 'data.keys=%s data_expected.keys=%s' % (data.keys(), data_expected.keys())
-        for key, value in sorted(iteritems(data)):
+        for key, value in sorted(data.items()):
             assert key in data_expected, 'cant find key=%r' % key
             value_expected = data_expected[key]
             assert np.array_equal(value, value_expected), 'key=%r\nvalue=%r\nexpected=%r' % (key, value, value_expected)

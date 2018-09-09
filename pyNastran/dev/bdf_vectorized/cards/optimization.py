@@ -2,7 +2,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import iteritems, string_types
-from six.moves import zip, range
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types

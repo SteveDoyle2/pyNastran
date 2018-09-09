@@ -48,7 +48,7 @@ class InputC3dReader(object):
                 pack_values = line.split()
                 packs[pack_key].append(pack_values)
 
-        for key, values in sorted(iteritems(packs)):
+        for key, values in sorted(packs.items()):
             self.log.debug(key)
             for value in values:
                 self.log.debug('    %s' % value)

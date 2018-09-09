@@ -1874,11 +1874,10 @@ class GEOM2(GeomCommon):
         (5551,49,105)    - the marker for Record 118
         """
         npoints = (len(data) - n) // 4
-        fmt = b(self._uendian + '%ii' % npoints)
-        nids = unpack(fmt, data[n:])
+        nids = np.frombuffer(data[n:], self.idtype).tolist()
         if self.is_debug_file:
-            self.binary_debug.write('SPOINT=%s\n' % str(nids))
-        spoint = SPOINTs.add_op2_data(list(nids))
+            self.binary_debug.write('SPOINT=%s\n' % nids)
+        spoint = SPOINTs.add_op2_data(nids)
         self._add_spoint_object(spoint)
         self.card_count['SPOINT'] = npoints
         return n

@@ -586,7 +586,7 @@ def get_test_op2_data():
 def main():
     """the interface for test_op2"""
     data = get_test_op2_data()
-    for key, value in sorted(iteritems(data)):
+    for key, value in sorted(data.items()):
         print("%-12s = %r" % (key.strip('--'), value))
 
     if os.path.exists('skippedCards.out'):

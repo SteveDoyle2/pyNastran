@@ -1,7 +1,7 @@
 from __future__ import print_function
 import sys
 from collections import OrderedDict
-from six import iteritems, iterkeys
+from six import iteritems
 import numpy as np
 
 #vm_word = get_plate_stress_strain(
@@ -24,7 +24,7 @@ class StressObject(object):
         if IS_TESTING:
             self.plates_data_dict = create_plates(model, key, is_stress)
 
-        #for key in iterkeys(self.plates_data_dict):
+        #for key in self.plates_data_dict.keys():
             #(case.element_node, ueids, data2, vm_word, ntimes) = self.plates_data_dict[key]
             #(min_data, max_data) = data2
 

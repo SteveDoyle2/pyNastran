@@ -8,7 +8,6 @@ from pyNastran.bdf.utils import deprecated
 from pyNastran.bdf.field_writer import print_card
 from pyNastran.bdf.field_writer_16 import print_field_16
 from pyNastran.bdf.cards.utils import wipe_empty_fields
-from six.moves import range
 
 
 class BDFCard(object):

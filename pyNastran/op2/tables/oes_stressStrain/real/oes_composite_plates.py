@@ -79,12 +79,24 @@ class RealCompositePlateArray(OES_Object):
         dtype = 'float32'
         if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
-        self._times = zeros(self.ntimes, dtype=dtype)
 
-        self.element_layer = zeros((self.ntotal, 2), dtype='int32')
+        _times = zeros(self.ntimes, dtype=dtype)
+        element_layer = zeros((self.ntotal, 2), dtype='int32')
 
         #[o11, o22, t12, t1z, t2z, angle, major, minor, ovm]
-        self.data = zeros((self.ntimes, self.ntotal, 9), dtype='float32')
+        data = zeros((self.ntimes, self.ntotal, 9), dtype='float32')
+
+        if self.load_as_h5:
+            #for key, value in sorted(self.data_code.items()):
+                #print(key, value)
+            group = self._get_result_group()
+            self._times = group.create_dataset('_times', data=_times)
+            self.element_layer = group.create_dataset('element_layer', data=element_layer)
+            self.data = group.create_dataset('data', data=data)
+        else:
+            self._times = _times
+            self.element_layer = element_layer
+            self.data = data
 
     def build_dataframe(self):
         """

@@ -1,6 +1,5 @@
 import copy
 import unittest
-from six.moves import zip
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.cards.test.utils import save_load_deck

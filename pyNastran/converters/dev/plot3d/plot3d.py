@@ -1,5 +1,4 @@
 from __future__ import print_function
-from six.moves import range
 from numpy import zeros
 from pyNastran.utils.log import get_logger2
 

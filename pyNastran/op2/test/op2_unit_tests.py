@@ -590,7 +590,8 @@ class TestOP2(Tester):
         read_op2(op2_filename, debug=False)
         run_op2(op2_filename, write_bdf=write_bdf,
                 write_f06=write_f06,
-                debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
+                debug=debug, stop_on_failure=True, binary_debug=True, quiet=True,
+                load_as_h5=True)
         assert os.path.exists(debug_file), os.listdir(folder)
 
         make_geom = False
@@ -867,7 +868,8 @@ class TestOP2(Tester):
         read_op2_geom(op2_filename, debug=False)
         op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf,
                                  write_f06=write_f06,
-                                 debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
+                                 debug=debug, stop_on_failure=True, binary_debug=True, quiet=True,
+                                 load_as_h5=False)
 
         isubcase = 1
         rod_force = op2.crod_force[isubcase]

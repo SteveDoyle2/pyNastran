@@ -1,5 +1,4 @@
 from copy import deepcopy
-from six.moves import range
 
 from numpy import zeros
 

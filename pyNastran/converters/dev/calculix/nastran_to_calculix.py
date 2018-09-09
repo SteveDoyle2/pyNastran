@@ -5,7 +5,6 @@ defines:
 from __future__ import print_function
 from collections import defaultdict
 from six import iteritems, iterkeys
-from six.moves import zip
 
 from numpy import array, zeros, cross
 from numpy.linalg import norm  # type: ignore

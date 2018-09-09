@@ -4,7 +4,6 @@ defines:
                              min_edge_length=0.0)
 """
 from __future__ import print_function
-from six import iteritems
 import numpy as np
 from pyNastran.bdf.cards.elements.shell import CTRIA3
 
@@ -43,7 +42,7 @@ def convert_bad_quads_to_tris(model, eids_to_check=None, xyz_cid0=None, min_edge
 
     if xyz_cid0 is None:
         xyz_cid0 = model.get_xyz_in_coord(cid=0)
-    nid_cd = np.array([[nid, node.Cd()] for nid, node in sorted(iteritems(model.nodes))])
+    nid_cd = np.array([[nid, node.Cd()] for nid, node in sorted(model.nodes.items())])
     all_nids = nid_cd[:, 0]
 
     if len(cquad4s_to_check) == 0:

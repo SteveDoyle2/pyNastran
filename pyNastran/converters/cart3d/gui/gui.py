@@ -3,9 +3,6 @@ An attempt at a user friendly Cart3d GUI
 """
 # -*- coding: utf-8 -*-
 from __future__ import division, unicode_literals, print_function
-#from six.moves import range
-
-# standard library
 import sys
 import os.path
 

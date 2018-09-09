@@ -189,7 +189,7 @@ class InputCntlReader(object):
                 comment = ''
         sections[name] = [name, comment, data]
 
-        for name, section in iteritems(sections):
+        for name, section in sections.items():
             name, comment, data = section
             self.log.debug('name = %r' % name)
             if comment.strip() and 1:

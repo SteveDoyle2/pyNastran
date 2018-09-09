@@ -1,4 +1,3 @@
-from six.moves import range
 from numpy import zeros
 
 class ShabpOut(object):

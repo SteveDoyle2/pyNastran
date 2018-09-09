@@ -2,7 +2,6 @@ from __future__ import print_function
 import copy
 from struct import Struct, unpack
 from six import string_types
-from six.moves import range
 
 
 class GenericTableReader(object):

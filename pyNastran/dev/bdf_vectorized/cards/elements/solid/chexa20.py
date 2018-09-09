@@ -1,4 +1,3 @@
-from six.moves import zip
 from numpy import arange, searchsorted, array, eye, ones
 from numpy.linalg import norm  # type: ignore
 

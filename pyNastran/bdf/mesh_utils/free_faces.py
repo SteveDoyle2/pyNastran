@@ -378,7 +378,7 @@ def main():  # pragma: no cover
     if not data['--encoding']:
         data['--encoding'] = None
 
-    for key, value in sorted(iteritems(data)):
+    for key, value in sorted(data.items()):
         print("%-12s = %r" % (key.strip('--'), value))
 
     import time

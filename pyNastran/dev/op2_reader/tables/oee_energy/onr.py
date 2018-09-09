@@ -1,6 +1,5 @@
 #pylint: disable=C0326,C0301
 from __future__ import print_function, unicode_literals
-from six.moves import range
 from struct import Struct
 from numpy import frombuffer, array
 

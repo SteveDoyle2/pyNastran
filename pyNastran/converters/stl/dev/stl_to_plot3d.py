@@ -1,4 +1,3 @@
-from six.moves import range
 from numpy import savetxt
 
 from pyNastran.converters.stl.stl import STL

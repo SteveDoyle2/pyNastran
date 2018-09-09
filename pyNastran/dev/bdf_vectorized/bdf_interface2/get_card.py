@@ -1,7 +1,7 @@
 # pylint: disable=E1101,C0103
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types, iteritems, iterkeys
+from six import string_types, iteritems
 
 import numpy as np
 from pyNastran.utils.numpy_utils import integer_types

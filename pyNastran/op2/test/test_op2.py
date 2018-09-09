@@ -196,7 +196,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
             subcases=None, exclude=None, short_stats=False,
             compare=True, debug=False, log=None, binary_debug=False,
             quiet=False, check_memory=False, stop_on_failure=True,
-            dev=False, xref_safe=False, post=None):
+            dev=False, xref_safe=False, post=None, load_as_h5=False):
     """
     Runs an OP2
 
@@ -306,6 +306,11 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
             op2.post = -4
             op2_nv.post = -4
             op2_bdf.post = -4
+        if load_as_h5:
+            # you can't open the same h5 file twice
+            op2.load_as_h5 = load_as_h5
+            #op2_nv.load_as_h5 = load_as_h5
+            #op2_bdf.load_as_h5 = load_as_h5
 
         op2_bdf.set_error_storage(nparse_errors=0, stop_on_parsing_error=True,
                                   nxref_errors=0, stop_on_xref_error=True)
@@ -316,6 +321,10 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
         if post is not None:
             op2.post = -4
             op2_nv.post = -4
+        if load_as_h5:
+            # you can't open the same h5 file twice
+            op2.load_as_h5 = load_as_h5
+            #op2_nv.load_as_h5 = load_as_h5
         op2_bdf = None
     op2_nv.use_vector = False
 

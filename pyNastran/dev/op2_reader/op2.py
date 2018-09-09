@@ -25,7 +25,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
 import sys
-from six import iteritems, string_types, itervalues
+from six import iteritems, string_types
 from six.moves.cPickle import load, dump, dumps
 
 import numpy as np
@@ -598,7 +598,7 @@ class OP2(OP2_Scalar):
         result_types = self.get_table_types()
         for result_type in result_types:
             result = self.get_result(result_type)
-            for obj in itervalues(result):
+            for obj in result.values():
                 if hasattr(obj, 'finalize'):
                     obj.finalize()
                 elif hasattr(obj, 'tCode') and not obj.is_sort1:
@@ -635,7 +635,7 @@ class OP2(OP2_Scalar):
 
         for result_type in result_types:
             result = self.get_result(result_type)
-            for obj in itervalues(result):
+            for obj in result.values():
                 class_name = obj.__class__.__name__
                 #print('working on %s' % class_name)
                 obj.object_attributes()

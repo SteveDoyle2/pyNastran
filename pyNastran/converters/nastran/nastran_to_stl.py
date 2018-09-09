@@ -52,13 +52,13 @@ def nastran_to_stl(bdf_filename, stl_filename, is_binary=False, log=None, stop_o
         xyz0 = model.nodes[nid].get_position()
     else:
         xyz0 = np.zeros(3, dtype='float64')
-    for node_id, node in sorted(iteritems(model.nodes)):
+    for node_id, node in sorted(model.nodes.items()):
         xyz = node.get_position()
         nodes[i, :] = xyz - xyz0
         nodeid_to_i_map[node_id] = i
         i += 1
     assert len(model.nodes) == i, 'model.nodes=%s i=%s' % (len(model.nodes), i)
-    for unused_eid, element in sorted(iteritems(model.elements)):
+    for unused_eid, element in sorted(model.elements.items()):
         if element.type in ['CQUADR']:
             continue
         elif element.type in ['CBAR', 'CBEAM', 'CONM2', 'RBE2', 'RBE3',

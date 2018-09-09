@@ -146,7 +146,7 @@ def write_loads(csv_filename, loads, node_id):
     f.write('time\t')
     savetxt(f, t, delimiter='', newline=',')
     f.write('\n')
-    for node_id, Cpi in sorted(iteritems(Cp)):
+    for node_id, Cpi in sorted(Cp.items()):
         f.write("\nnode_id=%i\n" % node_id)
 
         f.write('Cp[%s],' % node_id)

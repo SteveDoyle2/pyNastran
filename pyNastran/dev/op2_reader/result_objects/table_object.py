@@ -26,8 +26,6 @@ import copy
 from struct import Struct, pack
 import warnings
 
-from six.moves import zip, range
-
 import numpy as np
 from numpy import zeros, abs, angle, float32, searchsorted, unique, where
 from numpy import allclose, asarray, vstack, swapaxes, hstack

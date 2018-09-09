@@ -349,7 +349,7 @@ class BucklingEigenvalues(BaseScalarObject):
         #msg = '%-7s %15s %15s %10s %10s %10s\n' % (
             #'RootNum', 'ExtractionOrder', 'Eigenvalue', '', 'Cycles', 'Damping')
         #msg += '%-7s %15s %15s %10s\n' % ('', '', 'Real', 'Imaginary')
-        #for root_num, extract_order in sorted(iteritems(self.extraction_order)):
+        #for root_num, extract_order in sorted(self.extraction_order.items()):
             #eigenvalue = self.eigenvalues[root_num]
             #cycle = self.cycles[root_num]
             #damping = self.damping[root_num]

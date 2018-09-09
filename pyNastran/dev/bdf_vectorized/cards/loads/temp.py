@@ -1,5 +1,4 @@
 from six import iteritems
-from six.moves import zip
 from collections import defaultdict
 from numpy import zeros, array
 

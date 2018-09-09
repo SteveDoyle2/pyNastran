@@ -2,7 +2,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from typing import List, Dict, Union, Optional, Any
 from six import string_types, PY2
-from six.moves import zip, range
 
 import numpy as np
 #from numpy import nan, empty, unique

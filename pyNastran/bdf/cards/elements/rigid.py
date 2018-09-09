@@ -16,7 +16,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
 from six import string_types
-from six.moves import zip, range
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types, float_types

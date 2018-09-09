@@ -24,7 +24,6 @@ All quads are QuadShell, ShellElement, and Element objects.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from typing import List, Tuple, Union, Any
-from six.moves import range
 
 import numpy as np
 from numpy import cross, allclose

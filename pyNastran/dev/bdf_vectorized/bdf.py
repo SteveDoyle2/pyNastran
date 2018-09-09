@@ -14,7 +14,7 @@ import traceback
 from codecs import open
 from collections import defaultdict
 
-from six import string_types, iteritems, itervalues, iterkeys
+from six import string_types, iteritems
 from six.moves.cPickle import load, dump
 
 import numpy as np
@@ -510,20 +510,20 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             self.nodes[nid] = node
         for eid, elem in iteritems(replace_model.elements):
             self.elements[eid] = elem
-        for eid, elem in iteritems(replace_model.rigid_elements):
+        for eid, elem in replace_model.rigid_elements.items():
             self.rigid_elements[eid] = elem
         for pid, prop in iteritems(replace_model.properties):
             self.properties[pid] = prop
-        for mid, mat in iteritems(replace_model.materials):
+        for mid, mat in replace_model.materials.items():
             self.materials[mid] = mat
 
-        for dvid, desvar in iteritems(replace_model.desvars):
+        for dvid, desvar in replace_model.desvars.items():
             self.desvars[dvid] = desvar
-        for dvid, dvprel in iteritems(replace_model.dvprels):
+        for dvid, dvprel in replace_model.dvprels.items():
             self.dvprels[dvid] = dvprel
-        for dvid, dvmrel in iteritems(replace_model.dvmrels):
+        for dvid, dvmrel in replace_model.dvmrels.items():
             self.dvmrels[dvid] = dvmrel
-        for dvid, dvgrid in iteritems(replace_model.dvgrids):
+        for dvid, dvgrid in replace_model.dvgrids.items():
             self.dvgrids[dvid] = dvgrid
 
     def disable_cards(self, cards):
@@ -582,110 +582,110 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             #elem.validate()
         for nid, node in sorted(iteritems(self.nodes)):
             node.validate()
-        for cid, coord in sorted(iteritems(self.coords)):
+        for cid, coord in sorted(self.coords.items()):
             coord.validate()
         for eid, elem in sorted(iteritems(self.elements)):
             elem.validate()
         for pid, prop in sorted(iteritems(self.properties)):
             prop.validate()
 
-        for eid, elem in sorted(iteritems(self.rigid_elements)):
+        for eid, elem in sorted(self.rigid_elements.items()):
             elem.validate()
-        for eid, plotel in sorted(iteritems(self.plotels)):
+        for eid, plotel in sorted(self.plotels.items()):
             plotel.validate()
-        #for eid, mass in sorted(iteritems(self.masses)):
+        #for eid, mass in sorted(self.masses.items()):
             #mass.validate()
-        for pid, property_mass in sorted(iteritems(self.properties_mass)):
+        for pid, property_mass in sorted(self.properties_mass.items()):
             property_mass.validate()
 
         #------------------------------------------------
-        for mid, mat in sorted(iteritems(self.materials)):
+        for mid, mat in sorted(self.materials.items()):
             mat.validate()
-        for mid, mat in sorted(iteritems(self.thermal_materials)):
+        for mid, mat in sorted(self.thermal_materials.items()):
             mat.validate()
-        for mid, mat in sorted(iteritems(self.MATS1)):
+        for mid, mat in sorted(self.MATS1.items()):
             mat.validate()
-        for mid, mat in sorted(iteritems(self.MATS3)):
+        for mid, mat in sorted(self.MATS3.items()):
             mat.validate()
-        for mid, mat in sorted(iteritems(self.MATS8)):
+        for mid, mat in sorted(self.MATS8.items()):
             mat.validate()
-        for mid, mat in sorted(iteritems(self.MATT1)):
+        for mid, mat in sorted(self.MATT1.items()):
             mat.validate()
-        for mid, mat in sorted(iteritems(self.MATT2)):
+        for mid, mat in sorted(self.MATT2.items()):
             mat.validate()
-        for mid, mat in sorted(iteritems(self.MATT3)):
+        for mid, mat in sorted(self.MATT3.items()):
             mat.validate()
-        for mid, mat in sorted(iteritems(self.MATT4)):
+        for mid, mat in sorted(self.MATT4.items()):
             mat.validate()
-        for mid, mat in sorted(iteritems(self.MATT5)):
+        for mid, mat in sorted(self.MATT5.items()):
             mat.validate()
-        for mid, mat in sorted(iteritems(self.MATT8)):
+        for mid, mat in sorted(self.MATT8.items()):
             mat.validate()
-        for mid, mat in sorted(iteritems(self.MATT9)):
+        for mid, mat in sorted(self.MATT9.items()):
             mat.validate()
-        for mid, mat in sorted(iteritems(self.creep_materials)):
+        for mid, mat in sorted(self.creep_materials.items()):
             mat.validate()
-        for mid, mat in sorted(iteritems(self.hyperelastic_materials)):
+        for mid, mat in sorted(self.hyperelastic_materials.items()):
             mat.validate()
 
         #------------------------------------------------
-        for key, loads in sorted(iteritems(self.loads)):
+        for key, loads in sorted(self.loads.items()):
             for loadi in loads:
                 loadi.validate()
-        for key, tic in sorted(iteritems(self.tics)):
+        for key, tic in sorted(self.tics.items()):
             tic.validate()
-        for key, dloads in sorted(iteritems(self.dloads)):
+        for key, dloads in sorted(self.dloads.items()):
             for dload in dloads:
                 dload.validate()
-        for key, dload_entries in sorted(iteritems(self.dload_entries)):
+        for key, dload_entries in sorted(self.dload_entries.items()):
             for dload_entry in dload_entries:
                 dload_entry.validate()
 
         #------------------------------------------------
-        for key, nlpci in sorted(iteritems(self.nlpcis)):
+        for key, nlpci in sorted(self.nlpcis.items()):
             nlpci.validate()
-        for key, nlparm in sorted(iteritems(self.nlparms)):
+        for key, nlparm in sorted(self.nlparms.items()):
             nlparm.validate()
-        for key, tstep in sorted(iteritems(self.tsteps)):
+        for key, tstep in sorted(self.tsteps.items()):
             tstep.validate()
-        for key, tstepnl in sorted(iteritems(self.tstepnls)):
+        for key, tstepnl in sorted(self.tstepnls.items()):
             tstepnl.validate()
-        for key, transfer_functions in sorted(iteritems(self.transfer_functions)):
+        for key, transfer_functions in sorted(self.transfer_functions.items()):
             for transfer_function in transfer_functions:
                 transfer_function.validate()
-        for key, delay in sorted(iteritems(self.delays)):
+        for key, delay in sorted(self.delays.items()):
             delay.validate()
 
         #------------------------------------------------
         if self.aeros is not None:
             self.aeros.validate()
-        for caero_id, caero in sorted(iteritems(self.caeros)):
+        for caero_id, caero in sorted(self.caeros.items()):
             caero.validate()
-        for key, paero in sorted(iteritems(self.paeros)):
+        for key, paero in sorted(self.paeros.items()):
             paero.validate()
-        for spline_id, spline in sorted(iteritems(self.splines)):
+        for spline_id, spline in sorted(self.splines.items()):
             spline.validate()
 
-        for key, aecomp in sorted(iteritems(self.aecomps)):
+        for key, aecomp in sorted(self.aecomps.items()):
             aecomp.validate()
-        for key, aefact in sorted(iteritems(self.aefacts)):
+        for key, aefact in sorted(self.aefacts.items()):
             aefact.validate()
-        for key, aelinks in sorted(iteritems(self.aelinks)):
+        for key, aelinks in sorted(self.aelinks.items()):
             for aelink in aelinks:
                 aelink.validate()
-        for key, aeparam in sorted(iteritems(self.aeparams)):
+        for key, aeparam in sortedself.aeparams.items()):
             aeparam.validate()
-        for key, aesurf in sorted(iteritems(self.aesurf)):
+        for key, aesurf in sorted(self.aesurf.items()):
             aesurf.validate()
-        for key, aesurfs in sorted(iteritems(self.aesurfs)):
+        for key, aesurfs in sorted(self.aesurfs.items()):
             aesurfs.validate()
-        for key, aestat in sorted(iteritems(self.aestats)):
+        for key, aestat in sorted(self.aestats.items()):
             aestat.validate()
-        for key, trim in sorted(iteritems(self.trims)):
+        for key, trim in sorted(self.trims.items()):
             trim.validate()
-        for key, diverg in sorted(iteritems(self.divergs)):
+        for key, diverg in sorted(self.divergs.items()):
             diverg.validate()
-        for key, csschd in sorted(iteritems(self.csschds)):
+        for key, csschd in sorted(self.csschds.items()):
             csschd.validate()
         for monitor in self.monitor_points:
             monitor.validate()
@@ -693,83 +693,83 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         #------------------------------------------------
         if self.aero is not None:
             self.aero.validate()
-        for key, flfact in sorted(iteritems(self.flfacts)):
+        for key, flfact in sorted(self.flfacts.items()):
             flfact.validate()
-        for key, flutter in sorted(iteritems(self.flutters)):
+        for key, flutter in sorted(self.flutters.items()):
             flutter.validate()
-        for key, gust in sorted(iteritems(self.gusts)):
+        for key, gust in sorted(self.gusts.items()):
             gust.validate()
         #self.mkaeros = []
 
         #------------------------------------------------
-        for key, bcs in sorted(iteritems(self.bcs)):
+        for key, bcs in sorted(self.bcs.items()):
             for bc in bcs:
                 bc.validate()
-        for key, phbdy in sorted(iteritems(self.phbdys)):
+        for key, phbdy in sorted(self.phbdys.items()):
             phbdy.validate()
-        for key, convection_property in sorted(iteritems(self.convection_properties)):
+        for key, convection_property in sorted(self.convection_properties.items()):
             convection_property.validate()
-        for key, tempd in sorted(iteritems(self.tempds)):
+        for key, tempd in sorted(self.tempds.items()):
             tempd.validate()
         #------------------------------------------------
-        for key, bcrpara in sorted(iteritems(self.bcrparas)):
+        for key, bcrpara in sorted(self.bcrparas.items()):
             bcrpara.validate()
-        for key, bctadd in sorted(iteritems(self.bctadds)):
+        for key, bctadd in sorted(self.bctadds.items()):
             bctadd.validate()
-        for key, bctpara in sorted(iteritems(self.bctparas)):
+        for key, bctpara in sorted(self.bctparas.items()):
             bctpara.validate()
-        for key, bctset in sorted(iteritems(self.bctsets)):
+        for key, bctset in sorted(self.bctsets.items()):
             bctset.validate()
-        for key, bsurf in sorted(iteritems(self.bsurf)):
+        for key, bsurf in sorted(self.bsurf.items()):
             bsurf.validate()
-        for key, bsurfs in sorted(iteritems(self.bsurfs)):
+        for key, bsurfs in sorted(self.bsurfs.items()):
             bsurfs.validate()
 
         #------------------------------------------------
-        for key, suport1 in sorted(iteritems(self.suport1)):
+        for key, suport1 in sorted(self.suport1.items()):
             suport1.validate()
         for suport in self.suport:
             suport.validate()
         for se_suport in self.se_suport:
             se_suport.validate()
 
-        for key, spcs in sorted(iteritems(self.spcs)):
+        for key, spcs in sorted(self.spcs.items()):
             for spc in spcs:
                 spc.validate()
-        for key, spcadd in sorted(iteritems(self.spcadds)):
+        for key, spcadd in sorted(self.spcadds.items()):
             spcadd.validate()
 
-        for key, mpcs in sorted(iteritems(self.mpcs)):
+        for key, mpcs in sorted(self.mpcs.items()):
             for mpc in mpcs:
                 mpc.validate()
-        for key, mpcadd in sorted(iteritems(self.mpcadds)):
+        for key, mpcadd in sorted(self.mpcadds.items()):
             mpcadd.validate()
 
         #------------------------------------------------
-        #for key, darea in sorted(iteritems(self.dareas)):
+        #for key, darea in sorted(self.dareas.items()):
             #darea.validate()
-        #for key, dphase in sorted(iteritems(self.dphases)):
+        #for key, dphase in sorted(self.dphases.items()):
             #dphase.validate()
 
-        for pid, pbusht in sorted(iteritems(self.pbusht)):
+        for pid, pbusht in sorted(self.pbusht.items()):
             pbusht.validate()
-        for pid, pdampt in sorted(iteritems(self.pdampt)):
+        for pid, pdampt in sorted(self.pdampt.items()):
             pdampt.validate()
-        for pid, pelast in sorted(iteritems(self.pelast)):
+        for pid, pelast in sorted(self.pelast.items()):
             pelast.validate()
 
-        for pid, frequency in sorted(iteritems(self.frequencies)):
+        for pid, frequency in sorted(self.frequencies.items()):
             frequency.validate()
         #------------------------------------------------
-        for key, dmi in sorted(iteritems(self.dmis)):
+        for key, dmi in sorted(self.dmis.items()):
             dmi.validate()
-        for key, dmig in sorted(iteritems(self.dmigs)):
+        for key, dmig in sorted(self.dmigs.items()):
             dmig.validate()
-        for key, dmij in sorted(iteritems(self.dmijs)):
+        for key, dmij in sorted(self.dmijs.items()):
             dmij.validate()
-        for key, dmiji in sorted(iteritems(self.dmijis)):
+        for key, dmiji in sorted(self.dmijis.items()):
             dmiji.validate()
-        for key, dmik in sorted(iteritems(self.dmiks)):
+        for key, dmik in sorted(self.dmiks.items()):
             dmik.validate()
         #------------------------------------------------
         #self.asets = []
@@ -785,9 +785,9 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         #self.se_usets = {}
         #self.se_sets = {}
 
-        for key, sets in sorted(iteritems(self.sets)):
+        for key, sets in sorted(self.sets.items()):
             sets.validate()
-        for key, uset in sorted(iteritems(self.usets)):
+        for key, uset in sorted(self.usets.items()):
             for useti in uset:
                 useti.validate()
 
@@ -802,9 +802,9 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         for qset in self.qsets:
             qset.validate()
 
-        for key, se_set in sorted(iteritems(self.se_sets)):
+        for key, se_set in sorted(self.se_sets.items()):
             se_set.validate()
-        for key, se_uset in sorted(iteritems(self.se_usets)):
+        for key, se_uset in sorted(self.se_usets.items()):
             se_uset.validate()
         for se_bset in self.se_bsets:
             se_bset.validate()
@@ -813,51 +813,51 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         for se_qset in self.se_qsets:
             se_qset.validate()
         #------------------------------------------------
-        for key, table in sorted(iteritems(self.tables)):
+        for key, table in sorted(self.tables.items()):
             table.validate()
-        for key, table in sorted(iteritems(self.tables_d)):
+        for key, table in sorted(self.tables_d.items()):
             table.validate()
-        for key, table in sorted(iteritems(self.tables_m)):
+        for key, table in sorted(self.tables_m.items()):
             table.validate()
-        for key, random_table in sorted(iteritems(self.random_tables)):
+        for key, random_table in sorted(self.random_tables.items()):
             random_table.validate()
-        for key, table_sdamping in sorted(iteritems(self.tables_sdamping)):
+        for key, table_sdamping in sorted(self.tables_sdamping.items()):
             table_sdamping.validate()
         #------------------------------------------------
-        for key, method in sorted(iteritems(self.methods)):
+        for key, method in sorted(self.methods.items()):
             method.validate()
-        for key, cmethod in sorted(iteritems(self.cMethods)):
+        for key, cmethod in sorted(self.cMethods.items()):
             cmethod.validate()
         #------------------------------------------------
-        for key, dconadd in sorted(iteritems(self.dconadds)):
+        for key, dconadd in sorted(self.dconadds.items()):
             dconadd.validate()
-        for key, dconstrs in sorted(iteritems(self.dconstrs)):
+        for key, dconstrs in sorted(self.dconstrs.items()):
             for dconstr in dconstrs:
                 dconstr.validate()
-        for key, desvar in sorted(iteritems(self.desvars)):
+        for key, desvar in sorted(self.desvars.items()):
             desvar.validate()
-        for key, ddval in sorted(iteritems(self.ddvals)):
+        for key, ddval in sorted(self.ddvals.items()):
             ddval.validate()
-        for key, dlink in sorted(iteritems(self.dlinks)):
+        for key, dlink in sorted(self.dlinks.items()):
             dlink.validate()
-        for key, dresp in sorted(iteritems(self.dresps)):
+        for key, dresp in sorted(self.dresps.items()):
             dresp.validate()
 
         if self.dtable is not None:
             self.dtable.validate()
         if self.doptprm is not None:
             self.doptprm.validate()
-        for key, dequation in sorted(iteritems(self.dequations)):
+        for key, dequation in sorted(self.dequations.items()):
             dequation.validate()
-        for key, dvprel in sorted(iteritems(self.dvprels)):
+        for key, dvprel in sorted(self.dvprels.items()):
             dvprel.validate()
-        for key, dvmrel in sorted(iteritems(self.dvmrels)):
+        for key, dvmrel in sorted(self.dvmrels.items()):
             dvmrel.validate()
-        for key, dvcrel in sorted(iteritems(self.dvcrels)):
+        for key, dvcrel in sorted(self.dvcrels.items()):
             dvcrel.validate()
-        for key, dscreen in sorted(iteritems(self.dscreen)):
+        for key, dscreen in sorted(self.dscreen.items()):
             dscreen.validate()
-        for dvid, dvgrid in iteritems(self.dvgrids):
+        for dvid, dvgrid in self.dvgrids.items():
             dvgrid.validate()
         #------------------------------------------------
 
@@ -990,7 +990,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
     def fill_dmigs(self):
         """fills the DMIx cards with the column data that's been stored"""
         return
-        for name, card_comments in iteritems(self._dmig_temp):
+        for name, card_comments in self._dmig_temp.items():
             card0, comment0 = card_comments[0]
             card_name = card0[0]
             card_name = card_name.rstrip(' *').upper()
@@ -2544,22 +2544,22 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         msg.append('SOL %s\n' % self.sol)
 
         # loads
-        for (lid, loads) in sorted(iteritems(self.loads)):
+        for (lid, loads) in sorted(self.loads.items()):
             msg.append('bdf.loads[%s]' % lid)
             groups_dict = {}
             for loadi in loads:
                 groups_dict[loadi.type] = groups_dict.get(loadi.type, 0) + 1
-            for name, count_name in sorted(iteritems(groups_dict)):
+            for name, count_name in sorted(groups_dict.items()):
                 msg.append('  %-8s %s' % (name + ':', count_name))
             msg.append('')
 
         # dloads
-        for (lid, loads) in sorted(iteritems(self.dloads)):
+        for (lid, loads) in sorted(self.dloads.items()):
             msg.append('bdf.dloads[%s]' % lid)
             groups_dict = {}
             for loadi in loads:
                 groups_dict[loadi.type] = groups_dict.get(loadi.type, 0) + 1
-            for name, count_name in sorted(iteritems(groups_dict)):
+            for name, count_name in sorted(groups_dict.items()):
                 msg.append('  %-8s %s' % (name + ':', count_name))
             msg.append('')
 
@@ -2594,7 +2594,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             if not isinstance(card_group, dict):
                 msg = '%s is a %s; not dictionary' % (card_group_name, type(card_group))
                 raise RuntimeError(msg)
-            for card in itervalues(card_group):
+            for card in card_group.values():
                 if isinstance(card, list):
                     for card2 in card:
                         groups.add(card2.type)
@@ -2617,7 +2617,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         # rejects
         if self.rejects:
             msg.append('Rejected Cards')
-            for name, counter in sorted(iteritems(self.card_count)):
+            for name, counter in sorted(self.card_count.items()):
                 if name not in self.cards_to_read:
                     msg.append('  %-8s %s' % (name + ':', counter))
         msg.append('')
@@ -2730,14 +2730,14 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         icp_transform = {}
         icd_transform = {}
         nids_all = np.array(sorted(self.point_ids))
-        for cd, nids in sorted(iteritems(nids_cd_transform)):
+        for cd, nids in sorted(nids_cd_transform.items()):
             if cd in [0, -1]:
                 continue
             nids = np.array(nids)
             icd_transform[cd] = np.where(np.in1d(nids_all, nids))[0]
             if cd in nids_cp_transform:
                 icp_transform[cd] = icd_transform[cd]
-        for cp, nids in sorted(iteritems(nids_cd_transform)):
+        for cp, nids in sorted(nids_cd_transform.items()):
             if cp in [0, -1]:
                 continue
             if cp in icd_transform:
@@ -2777,7 +2777,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             xyz_cid0 = np.copy(xyz_cp)
 
         # transform the grids to the global coordinate system
-        for cp, inode in iteritems(icp_transform):
+        for cp, inode in icp_transform.items():
             if cp == 0:
                 continue
             coord = self.coords[cp]
@@ -2844,7 +2844,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                 nids_transform[cid_d].append(nid)
 
         nids_all = np.array(sorted(self.point_ids))
-        for cid in sorted(iterkeys(nids_transform)):
+        for cid in sorted(nids_transform.keys()):
             nids = np.array(nids_transform[cid])
             icd_transform[cid] = np.where(np.in1d(nids_all, nids))[0]
         return nids_all, nids_transform, icd_transform
@@ -2901,7 +2901,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                 nids_transform[cid_d].append(nid)
 
         nids_all = np.array(sorted(self.point_ids))
-        for cid in sorted(iterkeys(nids_transform)):
+        for cid in sorted(nids_transform.keys()):
             nids = np.array(nids_transform[cid])
             icd_transform[cid] = np.where(np.in1d(nids_all, nids))[0]
             beta_transforms[cid] = self.coords[cid].beta()
@@ -2983,7 +2983,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             #mpc = self.mpc.setdefault(constraint_id, MPC(self))
             #mpc.add_card(card_obj, comment=comment)
             mpc.add(constraint_id, constraint, comment=comment)
-        for constraint_id, constraint in iteritems(self.mpc):
+        for constraint_id, constraint in self.mpc.items():
             constraint.build()
         self.increase_card_count(card_name, len(cards))
 

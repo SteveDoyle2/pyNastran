@@ -4,7 +4,6 @@ Defines functions for single precision 8 character field writing.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import string_types, integer_types
-from six.moves import range
 import sys
 from typing import List, Union, Any
 from numpy import float32, isnan

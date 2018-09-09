@@ -7,8 +7,6 @@ from __future__ import print_function
 import os
 from codecs import open
 from collections import OrderedDict
-from six import iteritems
-from six.moves import range
 
 import numpy as np
 
@@ -126,7 +124,7 @@ class BoundaryFile(object):
                                    'boundaries must have unique names' % boundary_name)
                 boundaries[boundary_name] = [boundary_type, nfaces, startfaces]
 
-        for name, boundary in iteritems(boundaries):
+        for name, boundary in boundaries.items():
             self.log.info('name=%s boundary=%s' % (name, boundary))
         return boundaries
 
@@ -182,7 +180,7 @@ class Boundary(object):
         nfaces2 = 0
         ifaces_to_read = []
         #f_boundary_faces = open('boundary_faces.py', 'wb')
-        for name, boundary in iteritems(boundaries):
+        for name, boundary in boundaries.items():
             # type            patch;  # 0
             # nFaces          nFaces; # 1
             # startFace       777700; # 2
@@ -250,7 +248,7 @@ class Boundary(object):
         iname = 1
         snames = [None] * (len(boundaries) + 1)
         self.log.info('')
-        for name, boundary in iteritems(boundaries):
+        for name, boundary in boundaries.items():
             self.log.info('iname=%s name=%s boundary=%s' % (iname, name, boundary))
             # type            patch;
             # nFaces          nFaces;

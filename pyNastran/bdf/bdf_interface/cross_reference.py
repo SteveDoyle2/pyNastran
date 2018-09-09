@@ -183,20 +183,20 @@ class XrefMesh(BDFAttributes):
         Links the SPCADD, SPC, SPCAX, SPCD, MPCADD, MPC, SUPORT,
         SUPORT1, SESUPORT cards.
         """
-        for spcadds in itervalues(self.spcadds):
+        for spcadds in self.spcadds.values():
             for spcadd in spcadds:
                 spcadd.cross_reference(self)
-        for spcs in itervalues(self.spcs):
+        for spcs in self.spcs.values():
             for spc in spcs:
                 spc.cross_reference(self)
-        for spcoffs in itervalues(self.spcoffs):
+        for spcoffs in self.spcoffs.values():
             for spcoff in spcoffs:
                 spcoff.cross_reference(self)
 
-        for mpcadds in itervalues(self.mpcadds):
+        for mpcadds in self.mpcadds.values():
             for mpcadd in mpcadds:
                 mpcadd.cross_reference(self)
-        for mpcs in itervalues(self.mpcs):
+        for mpcs in self.mpcs.values():
             for mpc in mpcs:
                 mpc.cross_reference(self)
 
@@ -218,10 +218,10 @@ class XrefMesh(BDFAttributes):
         """
         # CORD2x: links the rid to coordinate systems
         # CORD1x: links g1,g2,g3 to grid points
-        for coord in itervalues(self.coords):
+        for coord in self.coords.values():
             coord.cross_reference(self)
 
-        for coord in itervalues(self.coords):
+        for coord in self.coords.values():
             coord.setup()
 
     def _cross_reference_aero(self, check_caero_element_ids=False):
@@ -231,40 +231,40 @@ class XrefMesh(BDFAttributes):
           - CAEROx, PAEROx, SPLINEx, AECOMP, AELIST, AEPARAM, AESTAT, AESURF, AESURFS
         """
         self.zona.cross_reference()
-        for caero in itervalues(self.caeros):
+        for caero in self.caeros.values():
             caero.cross_reference(self)
 
-        for paero in itervalues(self.paeros):
+        for paero in self.paeros.values():
             paero.cross_reference(self)
 
-        for trim in itervalues(self.trims):
+        for trim in self.trims.values():
             trim.cross_reference(self)
 
-        for csschd in itervalues(self.csschds):
+        for csschd in self.csschds.values():
             csschd.cross_reference(self)
 
-        for spline in itervalues(self.splines):
+        for spline in self.splines.values():
             spline.cross_reference(self)
 
-        for aecomp in itervalues(self.aecomps):
+        for aecomp in self.aecomps.values():
             aecomp.cross_reference(self)
 
-        for aelist in itervalues(self.aelists):
+        for aelist in self.aelists.values():
             aelist.cross_reference(self)
 
-        for aeparam in itervalues(self.aeparams):
+        for aeparam in self.aeparams.values():
             aeparam.cross_reference(self)
 
-        #for aestat in itervalues(self.aestats):
+        #for aestat in self.aestats.values(s):
             #aestat.cross_reference(self)
 
-        for aesurf in itervalues(self.aesurf):
+        for aesurf in self.aesurf.values():
             aesurf.cross_reference(self)
 
-        for aesurfs in itervalues(self.aesurfs):
+        for aesurfs in self.aesurfs.values():
             aesurfs.cross_reference(self)
 
-        for flutter in itervalues(self.flutters):
+        for flutter in self.flutters.values():
             flutter.cross_reference(self)
 
         for monitor_point in self.monitor_points:
@@ -340,7 +340,7 @@ class XrefMesh(BDFAttributes):
                 if self._ixref_errors > self._nxref_errors:
                     self.pop_xref_errors()
 
-        for elem in itervalues(self.masses):
+        for elem in self.masses.values():
             try:
                 elem.cross_reference(self)
             except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
@@ -350,7 +350,7 @@ class XrefMesh(BDFAttributes):
                 if self._ixref_errors > self._nxref_errors:
                     self.pop_xref_errors()
 
-        for elem in itervalues(self.rigid_elements):
+        for elem in self.rigid_elements.values():
             try:
                 elem.cross_reference(self)
             except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
@@ -360,7 +360,7 @@ class XrefMesh(BDFAttributes):
                 if self._ixref_errors > self._nxref_errors:
                     self.pop_xref_errors()
 
-        for elem in itervalues(self.plotels):
+        for elem in self.plotels.values():
             try:
                 elem.cross_reference(self)
             except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
@@ -398,7 +398,7 @@ class XrefMesh(BDFAttributes):
         Links the mass to nodes, properties (and materials depending on
         the card).
         """
-        for mass in itervalues(self.masses):
+        for mass in self.masses.values():
             try:
                 mass.cross_reference(self)
             except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
@@ -408,7 +408,7 @@ class XrefMesh(BDFAttributes):
                 if self._ixref_errors > self._nxref_errors:
                     self.pop_xref_errors()
 
-        for prop in itervalues(self.properties_mass):
+        for prop in self.properties_mass.values():
             try:
                 prop.cross_reference(self)
             except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
@@ -439,7 +439,7 @@ class XrefMesh(BDFAttributes):
         Links the materials to materials (e.g. MAT1, CREEP)
         often this is a pass statement
         """
-        for mat in itervalues(self.materials):  # MAT1
+        for mat in self.materials.values():  # MAT1
             try:
                 mat.cross_reference(self)
             except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
@@ -449,7 +449,7 @@ class XrefMesh(BDFAttributes):
                 if self._ixref_errors > self._nxref_errors:
                     self.pop_xref_errors()
 
-        for mat in itervalues(self.creep_materials):  # CREEP
+        for mat in self.creep_materials.values():  # CREEP
             try:
                 mat.cross_reference(self)
             except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
@@ -464,7 +464,7 @@ class XrefMesh(BDFAttributes):
                 self.MATT1, self.MATT2, self.MATT3, self.MATT4, self.MATT5,
                 self.MATT8, self.MATT9]
         for material_deps in data:
-            for mat in itervalues(material_deps):
+            for mat in material_deps.values():
                 try:
                     mat.cross_reference(self)
                 except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:

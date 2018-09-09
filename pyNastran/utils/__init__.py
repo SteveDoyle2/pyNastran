@@ -8,7 +8,7 @@ from codecs import open
 from itertools import count
 
 from typing import List, Union, Optional
-from six import PY2, string_types, iteritems, StringIO
+from six import PY2, string_types, StringIO
 
 if PY2:
     FileNotFoundError = IOError
@@ -66,7 +66,7 @@ def b(string):
     #dict_out = {}
     #for adict in dict_list:
         #assert isinstance(adict, dict), adict
-        #for key, value in iteritems(adict):
+        #for key, value in adict.items():
             #if key not in dict_out:
                 #dict_out[key] = value
             #elif strict:

@@ -4,8 +4,6 @@ Defines:
 """
 from itertools import count
 from typing import List, Optional
-from six import iteritems
-from six.moves import zip
 import numpy as np
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.mesh_utils.bdf_equivalence import _get_tree
@@ -130,7 +128,7 @@ def pierce_shell_model(bdf_filename, xyz_points, tol=1.0):
         'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
         'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
     ]
-    for eid, elem in iteritems(model.elements):
+    for eid, elem in model.elements.items():
         if elem.type in ['CQUAD4', 'CTRIA3']:
             centroid = elem.Centroid()
         elif elem.type in etypes_to_skip:

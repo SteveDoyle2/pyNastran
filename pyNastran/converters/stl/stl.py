@@ -5,7 +5,6 @@ from struct import unpack, Struct, pack
 from collections import defaultdict
 
 from six import iteritems
-from six.moves import zip, range
 
 import numpy as np
 import scipy

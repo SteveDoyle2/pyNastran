@@ -1,6 +1,5 @@
 from __future__ import print_function
 from six import iteritems
-from six.moves import zip
 from numpy import zeros, where, array, unique, concatenate
 
 #from pyNastran.dev.bdf_vectorized.cards.materials.mat1 import MAT1

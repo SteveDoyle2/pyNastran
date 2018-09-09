@@ -3,7 +3,6 @@ Defines functions for single precision 16 character field writing.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six.moves import range
 
 import sys
 from typing import List, Union, Optional, Any

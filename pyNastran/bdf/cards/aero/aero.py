@@ -21,7 +21,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
 import math
-from six.moves import zip, range
 from six import string_types
 
 import numpy as np

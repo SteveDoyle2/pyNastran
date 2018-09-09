@@ -1,6 +1,5 @@
 from __future__ import print_function, unicode_literals
 from six import iteritems, itervalues
-from six.moves import zip
 from numpy import (array, searchsorted, zeros, full,
                    nan, where, vstack, dot, cross, degrees, radians, arctan2,
                    cos, sin, arccos, hstack, eye, ndarray, sqrt, unique,

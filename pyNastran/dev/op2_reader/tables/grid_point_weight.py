@@ -2,7 +2,6 @@
 defines the GridPointWeight class
 """
 from __future__ import print_function
-from six.moves import range
 from six import StringIO
 
 from numpy import zeros

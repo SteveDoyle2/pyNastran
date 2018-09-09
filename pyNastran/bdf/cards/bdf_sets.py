@@ -37,7 +37,6 @@ The superelement sets start with SE:
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import string_types
-from six.moves import zip, range
 
 from pyNastran.utils.numpy_utils import integer_types, integer_string_types
 from pyNastran.bdf.cards.base_card import (

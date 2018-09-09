@@ -13,7 +13,6 @@ import os
 from struct import pack, unpack
 from collections import OrderedDict
 
-from six.moves import range
 import numpy as np
 from pyNastran.utils import check_path
 from pyNastran.utils.log import get_logger2

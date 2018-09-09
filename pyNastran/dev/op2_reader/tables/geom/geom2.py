@@ -5,7 +5,6 @@ defines readers for BDF objects in the OP2 GEOM2/GEOM2S table
 ### pyldint: disable=W0612,C0103,C0302,W0613,R0914,R0201
 from struct import unpack, Struct
 from six import b
-from six.moves import range
 
 from pyNastran.bdf.cards.elements.elements import CGAP, PLOTEL
 from pyNastran.bdf.cards.elements.damper import (CDAMP1, CDAMP2, CDAMP3,

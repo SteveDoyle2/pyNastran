@@ -3,7 +3,6 @@ defines readers for BDF objects in the OP2 GEOM1/GEOM1S table
 """
 #pylint: disable=C0301,C0103,W0612,R0914,C0326
 from struct import Struct
-from six.moves import range
 import numpy as np
 
 from pyNastran.bdf.cards.nodes import GRID, POINT, SEQGP

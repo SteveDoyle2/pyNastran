@@ -9,7 +9,6 @@ from math import ceil, sin, cos, radians
 
 from six import iteritems
 from six import PY2
-from six.moves import zip, range
 
 import numpy as np
 

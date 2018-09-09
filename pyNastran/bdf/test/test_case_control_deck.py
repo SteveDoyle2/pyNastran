@@ -3,7 +3,6 @@ import os
 import unittest
 from codecs import open
 from six import PY2
-from six.moves import zip
 
 import pyNastran
 from pyNastran.bdf.bdf import BDF

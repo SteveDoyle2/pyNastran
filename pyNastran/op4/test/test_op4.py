@@ -79,7 +79,7 @@ def run_op4(op4_filename, write_op4=True, debug=True,
             #print('matrices =', matrices.keys())
 
             #assert list(sorted(matrices.keys())) == list(sorted(matrices2.keys()))
-            #for key, (form, matrix) in sorted(iteritems(matrices)):
+            #for key, (form, matrix) in sorted(matrices.items()):
                 #form2, matrix2 = matrices2[key]
                 #assert form == form2
                 #delta = matrix - matrix2
@@ -172,7 +172,7 @@ def main():
     data = docopt(msg, version=ver)
     #print("data", data)
 
-    for key, value in sorted(iteritems(data)):
+    for key, value in sorted(data.items()):
         print("%-12s = %r" % (key.strip('--'), value))
 
     time0 = time.time()

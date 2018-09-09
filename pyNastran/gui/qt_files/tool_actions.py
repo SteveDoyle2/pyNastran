@@ -3,7 +3,7 @@ from __future__ import print_function
 import os
 import traceback
 
-from six import iteritems, itervalues, string_types
+from six import iteritems, string_types
 
 import numpy as np
 import vtk
@@ -215,12 +215,12 @@ class ToolActions(object):
 
     def turn_text_off(self):
         """turns all the text actors off"""
-        for text in itervalues(self.gui.text_actors):
+        for text in self.gui.text_actors.values():
             text.VisibilityOff()
 
     def turn_text_on(self):
         """turns all the text actors on"""
-        for text in itervalues(self.gui.text_actors):
+        for text in self.gui.text_actors.values():
             text.VisibilityOn()
 
     #---------------------------------------------------------------------------
@@ -339,7 +339,7 @@ class ToolActions(object):
         # multiply linewidth by magnify
         line_widths0 = {}
         point_sizes0 = {}
-        for key, geom_actor in iteritems(self.gui.geometry_actors):
+        for key, geom_actor in self.gui.geometry_actors.items():
             if isinstance(geom_actor, vtk.vtkActor):
                 prop = geom_actor.GetProperty()
                 line_width0 = prop.GetLineWidth()
@@ -369,7 +369,7 @@ class ToolActions(object):
         axes_actor.SetVisibility(True)
 
         # set linewidth back
-        for key, geom_actor in iteritems(self.gui.geometry_actors):
+        for key, geom_actor in self.gui.geometry_actors.items():
             if isinstance(geom_actor, vtk.vtkActor):
                 prop = geom_actor.GetProperty()
                 prop.SetLineWidth(line_widths0[key])

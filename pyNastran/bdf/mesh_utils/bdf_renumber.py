@@ -460,7 +460,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
             element.eid = eid
             eid_map[eidi] = eid
             eid += 1
-        for eidi, element in sorted(iteritems(model.masses)):
+        for eidi, element in sorted(model.masses.items()):
             # CONM1, CONM2, CMASSx
             element.eid = eid
             eid_map[eidi] = eid
@@ -472,7 +472,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
             eid_map[eidi] = eid
             rigid_elements_map[eidi] = eid
             eid += 1
-        #for eidi, elem in iteritems(model.caeros):
+        #for eidi, elem in model.caeros.items():
             #pass
 
     if 'mid' in starting_id_dict and mid is not None:
@@ -652,7 +652,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
             param_id = roundup(param_id, 1000) + 1
         else:
             param_id = 1
-        for idi, param in sorted(iteritems(dict_obj)):
+        for idi, param in sorted(dict_obj.items()):
             #print('working on id=%s param=%s' % (str(idi), str(param)))
             try:
                 msg = '%s has no %r; use %s' % (param.type, param_name, param.object_attributes())
@@ -1002,7 +1002,7 @@ def _update_case_control(model, mapper):
         #print()
 
 #def _create_dict_mapper(properties, properties_map, pid_name, pid):
-    #for pidi, prop in sorted(iteritems(mydict)):
+    #for pidi, prop in sorted(mydict.items()):
         #setattr(prop, pid_name, pid)
         #properties_map[pidi] = pid
         #pid += 1

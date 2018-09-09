@@ -1,5 +1,4 @@
 from six import iteritems
-from six.moves import zip, range
 from numpy import dot, ndarray, zeros
 
 def partition_sparse(Is, Js, Vs):

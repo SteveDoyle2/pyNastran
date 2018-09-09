@@ -18,7 +18,6 @@ All cards are BaseCard objects.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from math import log, exp, ceil
-from six.moves import zip, range
 import numpy as np
 from numpy import unique, hstack
 

@@ -1,7 +1,5 @@
 from __future__ import print_function
 from collections import OrderedDict
-from six import iteritems
-from six.moves import range
 import vtk
 from vtk import vtkQuad
 
@@ -40,7 +38,7 @@ class Plot3d_io(object):  # pragma: no cover
 
         npoints = 0
         nelements = 0
-        for iblock, shape in sorted(iteritems(model.block_shapes)):
+        for iblock, shape in sorted(model.block_shapes.items()):
             npoints += shape[0] * shape[1] * shape[2]
             nelements += (shape[0] - 1)  * (shape[1] - 1) * (shape[2] - 1)
 

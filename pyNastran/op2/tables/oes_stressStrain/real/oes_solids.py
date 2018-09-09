@@ -71,11 +71,12 @@ class RealSolidArray(OES_Object):
         dtype = 'float32'
         if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
-        self._times = zeros(self.ntimes, dtype=dtype)
+
+        _times = zeros(self.ntimes, dtype=dtype)
 
         # TODO: could be more efficient by using nelements for cid
-        self.element_node = zeros((self.ntotal, 2), dtype='int32')
-        self.element_cid = zeros((self.nelements, 2), dtype='int32')
+        element_node = zeros((self.ntotal, 2), dtype='int32')
+        element_cid = zeros((self.nelements, 2), dtype='int32')
 
         #if self.element_name == 'CTETRA':
             #nnodes = 4
@@ -86,9 +87,23 @@ class RealSolidArray(OES_Object):
         #self.element_node = zeros((self.ntotal, nnodes, 2), 'int32')
 
         #[oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, ovmShear]
-        self.data = zeros((self.ntimes, self.ntotal, 10), 'float32')
-        self.nnodes = self.element_node.shape[0] // self.nelements
+        data = zeros((self.ntimes, self.ntotal, 10), 'float32')
+        self.nnodes = element_node.shape[0] // self.nelements
         #self.data = zeros((self.ntimes, self.nelements, nnodes+1, 10), 'float32')
+
+        if self.load_as_h5:
+            #for key, value in sorted(self.data_code.items()):
+                #print(key, value)
+            group = self._get_result_group()
+            self._times = group.create_dataset('_times', data=_times)
+            self.element_node = group.create_dataset('element_node', data=element_node)
+            self.element_cid = group.create_dataset('element_cid', data=element_cid)
+            self.data = group.create_dataset('data', data=data)
+        else:
+            self._times = _times
+            self.element_node = element_node
+            self.element_cid = element_cid
+            self.data = data
 
     def build_dataframe(self):
         """creates a pandas dataframe"""

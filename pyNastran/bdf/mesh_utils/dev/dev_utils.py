@@ -13,7 +13,6 @@ from collections import defaultdict
 from functools import reduce
 
 from six import iteritems, string_types
-from six.moves import zip, range
 
 
 import numpy as np

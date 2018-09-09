@@ -23,7 +23,6 @@ import re
 import sys
 import copy
 from typing import List, Dict, Any
-from six import iteritems, itervalues
 
 #from pyNastran.bdf import subcase
 from pyNastran.bdf.subcase import Subcase, update_param_name
@@ -132,7 +131,7 @@ class CaseControlDeck(object):
         .. warning:: most case control types are not supported
 
         """
-        for subcase in itervalues(self.subcases):
+        for subcase in self.subcases.values():
             # if isubcase == 0:
                 # continue
             subcase.suppress_output()
@@ -266,7 +265,7 @@ class CaseControlDeck(object):
             subcase_from = self.subcases[i_from_subcase]
             subcase_to = copy.deepcopy(subcase_from)
             subcase_to.id = i_to_subcase
-            #for key, param in sorted(iteritems(subcase_from.params)):
+            #for key, param in sorted(subcase_from.params.items()):
                 #print("going to copy key=%s param=%s" % (key, param))
             self.subcases[i_to_subcase] = subcase_to
         else:
@@ -276,7 +275,7 @@ class CaseControlDeck(object):
                 raise RuntimeError(msg)
             subcase_to = self.subcases[i_to_subcase]
 
-            for key, param in sorted(iteritems(subcase_to)):
+            for key, param in sorted(subcase_to.items()):
                 #print('copying key=%s param=%s' % (key, param))
                 if key == 'BEGIN':
                     pass
@@ -830,7 +829,7 @@ class CaseControlDeck(object):
         data member.  Otherwise it will print out after a key like stress.
 
         """
-        for subcase in itervalues(self.subcases):
+        for subcase in self.subcases.values():
             subcase.finish_subcase()
 
     def convert_to_sol_200(self, model):
@@ -896,7 +895,7 @@ class CaseControlDeck(object):
             the BDF object
 
         """
-        for isubcase, subcase in sorted(iteritems(self.subcases)):
+        for isubcase, subcase in sorted(self.subcases.items()):
             subcase.cross_reference(model)
 
     def get_op2_data(self):
@@ -907,7 +906,7 @@ class CaseControlDeck(object):
         .. todo:: not done...
         """
         cases = {}
-        for isubcase, subcase in sorted(iteritems(self.subcases)):
+        for isubcase, subcase in sorted(self.subcases.items()):
             if isubcase:
                 cases[isubcase] = subcase.get_op2_data(self.sol, subcase.solmap_to_value)
         return cases
@@ -916,7 +915,7 @@ class CaseControlDeck(object):
         # type: () -> str
         msg = ''
         subcase0 = self.subcases[0]
-        for subcase_id, subcase in sorted(iteritems(self.subcases)):
+        for subcase_id, subcase in sorted(self.subcases.items()):
             msg += subcase.write_subcase(subcase0)
         #if len(self.subcases) == 1:
             #msg += 'BEGIN BULK\n'

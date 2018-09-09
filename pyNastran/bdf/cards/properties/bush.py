@@ -10,7 +10,6 @@ All bush properties are BushingProperty and Property objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.base_card import Property
@@ -415,7 +414,7 @@ class PBUSH1D(BushingProperty):
         #self.shockIDETSD = None
         #self.shockIDECSD = None
         if optional_vars:
-            for key, values in iteritems(optional_vars):
+            for key, values in optional_vars.items():
                 if key == 'SHOCKA':
                     (shock_type, shock_cvt, shock_cvc, shock_exp_vt, shock_exp_vc,
                      shock_idts, shock_idets, shock_idecs, shock_idetsd, shock_idecsd

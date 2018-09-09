@@ -11,7 +11,6 @@ from math import ceil
 import cgi #  html lib
 
 from six import string_types, iteritems, itervalues
-from six.moves import range
 
 import numpy as np
 
@@ -561,7 +560,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def _update_menu(self, menu_items):
         assert isinstance(menu_items, dict), menu_items
-        for unused_name, (menu, unused_items) in iteritems(menu_items):
+        for unused_name, (menu, unused_items) in menu_items.items():
             menu.clear()
         self._populate_menu(menu_items)
 
@@ -935,7 +934,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.vtk_interactor.GetRenderWindow().Render()
         #self.load_nastran_geometry(None, None)
 
-        #for cid, axes in iteritems(self.axes):
+        #for cid, axes in self.axes.items():
             #self.rend.AddActor(axes)
         self.add_geometry()
         if nframes == 2:
@@ -1658,7 +1657,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             except_names = [except_names]
 
         # hide everything but the main grid
-        for key, actor in iteritems(self.geometry_actors):
+        for key, actor in self.geometry_actors.items():
             if key not in except_names:
                 actor.VisibilityOff()
 
@@ -2473,7 +2472,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.post_group(main_group)
             #self.show_elements_mask(np.arange(self.nelements))
 
-        for unused_module_name, module in iteritems(self.modules):
+        for unused_module_name, module in self.modules.items():
             module.post_load_geometry()
 
     def cell_centroid(self, cell_id):
@@ -2602,7 +2601,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         """
         #self.groups = out_data
         data = {}
-        for unused_group_id, group in sorted(iteritems(out_data)):
+        for unused_group_id, group in sorted(out_data.items()):
             if not isinstance(group, Group):
                 continue
             data[group.name] = group

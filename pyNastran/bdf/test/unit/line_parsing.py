@@ -1,4 +1,3 @@
-from six.moves import range
 from pyNastran.bdf.bdf_interface.assign_type import interpret_value
 #from pyNastran.bdf.caseControlDeck import CaseControlDeck
 

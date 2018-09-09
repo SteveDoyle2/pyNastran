@@ -5,7 +5,6 @@ defines readers for BDF objects in the OP2 MPT/MPTS table
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from struct import Struct
-from six.moves import range
 
 from pyNastran.bdf.cards.materials import (CREEP, MAT1, MAT2, MAT3, MAT4, MAT5,
                                            MAT8, MAT9, MAT10, MAT11, MATHP)

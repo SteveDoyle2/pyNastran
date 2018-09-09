@@ -1,4 +1,3 @@
-from six.moves import zip, range
 from numpy import array
 
 from pyNastran.op2.result_objects.table_object import RealTableArray, ComplexTableArray

@@ -22,8 +22,7 @@ from math import ceil
 from collections import defaultdict
 from codecs import open
 
-from six import iteritems, PY2
-from six.moves import zip, range
+from six import PY2
 
 import numpy as np
 
@@ -585,7 +584,7 @@ class Cart3D(Cart3dIO):
         #regions2 = np.hstack([regions, regions_upper])
 
         #loads2 = {}
-        #for key, data in iteritems(loads):
+        #for key, data in loads.items():
 
             ## flip the sign on the flipping axis terms
             #if((key in ['U', 'rhoU'] and ax2 == 0) or
@@ -704,7 +703,7 @@ class Cart3D(Cart3dIO):
                 elements[ielement, :] = [nodes_map[nid] for nid in element]
 
         loads2 = {} # 'Cp', 'Mach', 'U', etc.
-        for key, load in iteritems(loads):
+        for key, load in loads.items():
             loads2[key] = load[inodes_save]
 
         self.log.info('---finished make_half_model---')
@@ -730,7 +729,7 @@ class Cart3D(Cart3dIO):
             edge_to_eid_map[edge3].append(i)
 
         free_edges = []
-        for edge, eids in sorted(iteritems(edge_to_eid_map)):
+        for edge, eids in sorted(edge_to_eid_map.items()):
             if len(eids) != 2:
                 free_edges.append(edge)
         return np.array(free_edges, dtype='int32')

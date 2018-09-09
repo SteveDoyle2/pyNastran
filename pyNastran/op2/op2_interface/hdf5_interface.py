@@ -1063,16 +1063,20 @@ def export_op2_to_hdf5_file(hdf5_filename, op2_model):
 
 def export_op2_to_hdf5(hdf5_file, op2_model):
     """exports an OP2 object to an HDF5 file object"""
+    create_info_group(hdf5_file, op2_model)
+    export_matrices(hdf5_file, op2_model)
+    _export_subcases(hdf5_file, op2_model)
+
+def create_info_group(hdf5_file, op2_model):
+    """creates the info HDF5 group"""
     info_group = hdf5_file.create_group('info')
     info_group.create_dataset('pyNastran_version', data=pyNastran.__version__)
     info_group.create_dataset('nastran_format', data=op2_model._nastran_format)
     #info_group.create_dataset('is_msc', data=self.is_msc)
     #info_group.create_dataset('is_nx', data=self.is_nx)
     #info_group.create_dataset('nastran_version', data=self.is_nx)
-    _export_matrices(hdf5_file, op2_model)
-    _export_subcases(hdf5_file, op2_model)
 
-def _export_matrices(hdf5_file, op2_model):
+def export_matrices(hdf5_file, op2_model):
     """exports the matrices to HDF5"""
     if len(op2_model.matrices):
         matrix_group = hdf5_file.create_group('matrices')

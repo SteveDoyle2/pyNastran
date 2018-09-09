@@ -20,7 +20,6 @@ MODCON           OSTRMC        Modal contributions
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from struct import Struct
-from six.moves import range
 from numpy import fromstring, frombuffer, radians, sin, cos, vstack, repeat, array
 import numpy as np
 

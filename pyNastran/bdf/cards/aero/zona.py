@@ -8,7 +8,7 @@ All cards are BaseCard objects.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
-from six import string_types, itervalues, iteritems
+from six import string_types
 import numpy as np
 
 from pyNastran.bdf.cards.aero.dynamic_loads import Aero
@@ -105,32 +105,32 @@ class ZONA(object):
     def cross_reference(self):
         if self.model.nastran_format != 'zona':
             return
-        for mkaeroz in itervalues(self.mkaeroz):
+        for mkaeroz in self.mkaeroz.values():
             mkaeroz.cross_reference(self.model)
-        for trimvar in itervalues(self.trimvar):
+        for trimvar in self.trimvar.values():
             trimvar.cross_reference(self.model)
-        for trimlnk in itervalues(self.trimlnk):
+        for trimlnk in self.trimlnk.values():
             trimlnk.cross_reference(self.model)
-        #for aeroz in itervalues(self.aeroz):
+        #for aeroz in self.aeroz.values():
             #aeroz.cross_reference(self.model)
 
-        for caero in itervalues(self.model.caeros):
+        for caero in self.model.caeros.values():
             self.caero_to_name_map[caero.label] = caero.eid
 
     def safe_cross_reference(self):
         self.cross_reference()
 
     def write_bdf(self, bdf_file, size=8, is_double=False):
-        for unused_id, panlst in iteritems(self.panlsts):
+        for unused_id, panlst in self.panlsts.items():
             bdf_file.write(panlst.write_card(size=size, is_double=is_double))
 
-        for unused_id, mkaeroz in iteritems(self.mkaeroz):
+        for unused_id, mkaeroz in self.mkaeroz.items():
             bdf_file.write(mkaeroz.write_card(size=size, is_double=is_double))
 
-        for unused_id, trimvar in iteritems(self.trimvar):
+        for unused_id, trimvar in self.trimvar.items():
             bdf_file.write(trimvar.write_card(size=size, is_double=is_double))
 
-        for unused_id, trimlnk in iteritems(self.trimlnk):
+        for unused_id, trimlnk in self.trimlnk.items():
             bdf_file.write(trimlnk.write_card(size=size, is_double=is_double))
 
     def __repr__(self):

@@ -16,7 +16,7 @@ import traceback
 from collections import defaultdict
 
 from typing import List, Dict, Optional, Union, Set, Any, cast
-from six import string_types, iteritems, itervalues, iterkeys, StringIO
+from six import string_types, iteritems, StringIO
 from six.moves.cPickle import load, dump, dumps  # type: ignore
 
 import numpy as np  # type: ignore
@@ -743,20 +743,20 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             self.nodes[nid] = node
         for eid, elem in iteritems(replace_model.elements):
             self.elements[eid] = elem
-        for eid, elem in iteritems(replace_model.rigid_elements):
+        for eid, elem in replace_model.rigid_elements.items():
             self.rigid_elements[eid] = elem
         for pid, prop in iteritems(replace_model.properties):
             self.properties[pid] = prop
-        for mid, mat in iteritems(replace_model.materials):
+        for mid, mat in replace_model.materials.items():
             self.materials[mid] = mat
 
-        for dvid, desvar in iteritems(replace_model.desvars):
+        for dvid, desvar in replace_model.desvars.items():
             self.desvars[dvid] = desvar
-        for dvid, dvprel in iteritems(replace_model.dvprels):
+        for dvid, dvprel in replace_model.dvprels.items():
             self.dvprels[dvid] = dvprel
-        for dvid, dvmrel in iteritems(replace_model.dvmrels):
+        for dvid, dvmrel in replace_model.dvmrels.items():
             self.dvmrels[dvid] = dvmrel
-        for dvid, dvgrid in iteritems(replace_model.dvgrids):
+        for dvid, dvgrid in replace_model.dvgrids.items():
             self.dvgrids[dvid] = dvgrid
 
     def disable_cards(self, cards):
@@ -848,7 +848,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             ifailed = 0
             nmax_failed = 0
             assert isinstance(objects_dict, dict), type(objects_dict)
-            for unused_key, objects in sorted(iteritems(objects_dict)):
+            for unused_key, objects in sorted(objects_dict.items()):
                 assert isinstance(objects, list), type(objects)
                 for obj in objects:
                     #print('obj.get_stats =', obj.get_stats())
@@ -885,7 +885,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             assert isinstance(objects, dict), type(objects)
             ifailed = 0
             nmax_failed = 0
-            for unused_id, obj in sorted(iteritems(objects)):
+            for unused_id, obj in sorted(objects.items()):
                 try:
                     obj.validate()
                 except(ValueError, AssertionError, RuntimeError, IndexError) as error:
@@ -1103,7 +1103,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         _validate_dict(self.dvprels)
         _validate_dict(self.dvmrels)
         _validate_dict(self.dvcrels)
-        for unused_key, dscreen in sorted(iteritems(self.dscreen)):
+        for unused_key, dscreen in sorted(self.dscreen.items()):
             dscreen.validate()
         _validate_dict_list(self.dvgrids)
         #------------------------------------------------
@@ -1215,7 +1215,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 #with open('dump.bdf', 'w') as bdf_file_obj:
                     #bdf_file_obj.write('\n'.join(executive_control_lines))
                     #bdf_file_obj.write(str(case_control_deck))
-                    #for cardname, cards in iteritems(cards):
+                    #for cardname, cards in cards.items():
                         #for (comment, cardlines) in cards:
                             ##bdf_file_obj.write(comment + '\n')
                             #bdf_file_obj.write('\n'.join(cardlines) + '\n')
@@ -1227,7 +1227,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         self._parse_cards(cards_list, cards_dict, card_count)
 
         if self.values_to_skip:
-            for key, values in iteritems(self.values_to_skip):
+            for key, values in self.values_to_skip.items():
                 dict_values = getattr(self, key)
                 if not isinstance(dict_values, dict):
                     msg = '%r is an invalid type; only dictionaries are supported' % key
@@ -1290,7 +1290,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
     def fill_dmigs(self):
         # type : (None) -> None
         """fills the DMIx cards with the column data that's been stored"""
-        for name, card_comments in iteritems(self._dmig_temp):
+        for name, card_comments in self._dmig_temp.items():
             card0, unused_comment0 = card_comments[0]
             card_name = card0[0]
             card_name = card_name.rstrip(' *').upper()
@@ -1729,7 +1729,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         """
         self.dict_of_vars = {}
         assert len(dict_of_vars) > 0, 'nvars = %s' % len(dict_of_vars)
-        for (key, value) in sorted(iteritems(dict_of_vars)):
+        for (key, value) in sorted(dict_of_vars.items()):
             assert len(key) <= 7, ('max length for key is 7; '
                                    'len(%s)=%s' % (key, len(key)))
             assert len(key) >= 1, ('min length for key is 1; '
@@ -3035,59 +3035,59 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         msg.extend(self._get_bdf_stats_loads())
 
         # dloads
-        for (lid, loads) in sorted(iteritems(self.dloads)):
+        for (lid, loads) in sorted(self.dloads.items()):
             msg.append('bdf.dloads[%s]' % lid)
             groups_dict = {}
             for loadi in loads:
                 groups_dict[loadi.type] = groups_dict.get(loadi.type, 0) + 1
-            for name, count_name in sorted(iteritems(groups_dict)):
+            for name, count_name in sorted(groups_dict.items()):
                 msg.append('  %-8s %s' % (name + ':', count_name))
             msg.append('')
 
-        for (lid, loads) in sorted(iteritems(self.dload_entries)):
+        for (lid, loads) in sorted(self.dload_entries.items()):
             msg.append('bdf.dload_entries[%s]' % lid)
             groups_dict = {}
             for loadi in loads:
                 groups_dict[loadi.type] = groups_dict.get(loadi.type, 0) + 1
-            for name, count_name in sorted(iteritems(groups_dict)):
+            for name, count_name in sorted(groups_dict.items()):
                 msg.append('  %-8s %s' % (name + ':', count_name))
             msg.append('')
 
         # spcs
-        for (spc_id, spcadds) in sorted(iteritems(self.spcadds)):
+        for (spc_id, spcadds) in sorted(self.spcadds.items()):
             msg.append('bdf.spcadds[%s]' % spc_id)
             groups_dict = {}
             for spcadd in spcadds:
                 groups_dict[spcadd.type] = groups_dict.get(spcadd.type, 0) + 1
-            for name, count_name in sorted(iteritems(groups_dict)):
+            for name, count_name in sorted(groups_dict.items()):
                 msg.append('  %-8s %s' % (name + ':', count_name))
             msg.append('')
 
-        for (spc_id, spcs) in sorted(iteritems(self.spcs)):
+        for (spc_id, spcs) in sorted(self.spcs.items()):
             msg.append('bdf.spcs[%s]' % spc_id)
             groups_dict = {}
             for spc in spcs:
                 groups_dict[spc.type] = groups_dict.get(spc.type, 0) + 1
-            for name, count_name in sorted(iteritems(groups_dict)):
+            for name, count_name in sorted(groups_dict.items()):
                 msg.append('  %-8s %s' % (name + ':', count_name))
             msg.append('')
 
         # mpcs
-        for (mpc_id, mpcadds) in sorted(iteritems(self.mpcadds)):
+        for (mpc_id, mpcadds) in sorted(self.mpcadds.items()):
             msg.append('bdf.mpcadds[%s]' % mpc_id)
             groups_dict = {}
             for mpcadd in mpcadds:
                 groups_dict[mpcadd.type] = groups_dict.get(mpcadd.type, 0) + 1
-            for name, count_name in sorted(iteritems(groups_dict)):
+            for name, count_name in sorted(groups_dict.items()):
                 msg.append('  %-8s %s' % (name + ':', count_name))
             msg.append('')
 
-        for (mpc_id, mpcs) in sorted(iteritems(self.mpcs)):
+        for (mpc_id, mpcs) in sorted(self.mpcs.items()):
             msg.append('bdf.mpcs[%s]' % mpc_id)
             groups_dict = {}
             for mpc in mpcs:
                 groups_dict[mpc.type] = groups_dict.get(mpc.type, 0) + 1
-            for name, count_name in sorted(iteritems(groups_dict)):
+            for name, count_name in sorted(groups_dict.items()):
                 msg.append('  %-8s %s' % (name + ':', count_name))
             msg.append('')
 
@@ -3127,7 +3127,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 continue
                 #raise RuntimeError(msg)
 
-            for card in itervalues(card_group):
+            for card in card_group.values():
                 if isinstance(card, list):
                     for card2 in card:
                         groups.add(card2.type)
@@ -3151,7 +3151,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
         if self.reject_lines:  # List[card]; card = List[str]
             msg.append('Rejected Cards')
-            for name, counter in sorted(iteritems(self.card_count)):
+            for name, counter in sorted(self.card_count.items()):
                 if name not in self.cards_to_read:
                     msg.append('  %-8s %s' % (name + ':', counter))
         msg.append('')
@@ -3163,21 +3163,21 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         """helper for ``get_bdf_stats(...)``"""
         # loads
         msg = []
-        for (lid, load_combinations) in sorted(iteritems(self.load_combinations)):
+        for (lid, load_combinations) in sorted(self.load_combinations.items()):
             msg.append('bdf.load_combinations[%s]' % lid)
             groups_dict = {}  # type: Dict[str, int]
             for load_combination in load_combinations:
                 groups_dict[load_combination.type] = groups_dict.get(load_combination.type, 0) + 1
-            for name, count_name in sorted(iteritems(groups_dict)):
+            for name, count_name in sorted(groups_dict.items()):
                 msg.append('  %-8s %s' % (name + ':', count_name))
             msg.append('')
 
-        for (lid, loads) in sorted(iteritems(self.loads)):
+        for (lid, loads) in sorted(self.loads.items()):
             msg.append('bdf.loads[%s]' % lid)
             groups_dict = {}  # type: Dict[str, int]
             for loadi in loads:
                 groups_dict[loadi.type] = groups_dict.get(loadi.type, 0) + 1
-            for name, count_name in sorted(iteritems(groups_dict)):
+            for name, count_name in sorted(groups_dict.items()):
                 msg.append('  %-8s %s' % (name + ':', count_name))
             msg.append('')
         return msg
@@ -3289,13 +3289,13 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
         # get the indicies of the xyz array where the nodes that
         # need to be transformed are
-        for cd, nids in sorted(iteritems(nids_cd_transform)):
+        for cd, nids in sorted(nids_cd_transform.items()):
             if cd in [0, -1]:
                 continue
             nids = np.array(nids)
             icd_transform[cd] = np.where(np.in1d(nids_all, nids))[0]
 
-        for cp, nids in sorted(iteritems(nids_cp_transform)):
+        for cp, nids in sorted(nids_cp_transform.items()):
             if cp in [-1]:
                 continue
             nids = np.array(nids)
@@ -3694,7 +3694,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 nids_transform[cid_d].append(nid)
 
         nids_all = np.array(sorted(self.point_ids))
-        for cid in sorted(iterkeys(nids_transform)):
+        for cid in sorted(nids_transform.keys()):
             nids = np.array(nids_transform[cid])
             icd_transform[cid] = np.where(np.in1d(nids_all, nids))[0]
         return nids_all, nids_transform, icd_transform
@@ -3755,7 +3755,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
         self.echo = False
         if cards_dict: # self._is_cards_dict = True
-            for card_name, cards in sorted(iteritems(cards_dict)):
+            for card_name, cards in sorted(cards_dict.items()):
                 if self.is_reject(card_name):
                     self.log.info('    rejecting card_name = %s' % card_name)
                     for comment, card_lines in cards:
@@ -3903,7 +3903,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         if xref is None:
             xref = self._xref
 
-        #for key, card in sorted(iteritems(self.params)):
+        #for key, card in sorted(self.params.items()):
             #card._verify(xref)
         for unused_key, card in sorted(iteritems(self.nodes)):
             try:
@@ -3911,7 +3911,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             except:
                 print(str(card))
                 raise
-        for unused_key, card in sorted(iteritems(self.coords)):
+        for unused_key, card in sorted(self.coords.items()):
             try:
                 card._verify(xref)
             except:
@@ -3927,7 +3927,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 print(str(card))
                 raise
 
-        for eid, cbarao in sorted(iteritems(self.ao_element_flags)):
+        for eid, cbarao in sorted(self.ao_element_flags.items()):
             try:
                 assert self.elements[eid].type == 'CBAR', 'CBARAO error: eid=%s is not a CBAR' % eid
             except:
@@ -3940,39 +3940,39 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             except:
                 print(str(card))
                 raise
-        for unused_key, card in sorted(iteritems(self.materials)):
+        for unused_key, card in sorted(self.materials.items()):
             try:
                 card._verify(xref)
             except:
                 print(str(card))
                 raise
 
-        for unused_key, card in sorted(iteritems(self.dresps)):
+        for unused_key, card in sorted(self.dresps.items()):
             try:
                 card._verify(xref)
             except:
                 print(str(card))
                 raise
 
-        for unused_key, card in sorted(iteritems(self.dvcrels)):
+        for unused_key, card in sorted(self.dvcrels.items()):
             try:
                 card._verify(xref)
             except:
                 print(str(card))
                 raise
-        for unused_key, card in sorted(iteritems(self.dvmrels)):
+        for unused_key, card in sorted(self.dvmrels.items()):
             try:
                 card._verify(xref)
             except:
                 print(str(card))
                 raise
-        for unused_key, card in sorted(iteritems(self.dvprels)):
+        for unused_key, card in sorted(self.dvprels.items()):
             try:
                 card._verify(xref)
             except:
                 print(str(card))
                 raise
-        for unused_key, cards in sorted(iteritems(self.dvgrids)):
+        for unused_key, cards in sorted(self.dvgrids.items()):
             for card in cards:
                 try:
                     card._verify(xref)
@@ -3980,7 +3980,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                     print(str(card))
                     raise
 
-        for unused_key, card in sorted(iteritems(self.gusts)):
+        for unused_key, card in sorted(self.gusts.items()):
             try:
                 card._verify(self, xref)
             except:

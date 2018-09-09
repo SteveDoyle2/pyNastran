@@ -8,7 +8,7 @@ This file defines functions related to the result updating that are VTK specific
 from __future__ import print_function, unicode_literals
 import sys
 from copy import deepcopy
-from six import iteritems, iterkeys
+from six import iteritems
 
 import numpy as np
 from numpy import full, issubdtype
@@ -1223,7 +1223,7 @@ class GuiCommon(GuiAttributes):
 
     def _update_follower_grids(self, nodes):
         """updates grids that use the same ids as the parent model"""
-        for name, nids in iteritems(self.follower_nodes):
+        for name, nids in self.follower_nodes.items():
             grid = self.alt_grids[name]
             points = grid.GetPoints()
             for j, nid in enumerate(nids):
@@ -1233,7 +1233,7 @@ class GuiCommon(GuiAttributes):
 
     def _update_follower_grids_complex(self, nodes):
         """updates grids that use a complicated update method"""
-        for name, follower_function in iteritems(self.follower_functions):
+        for name, follower_function in self.follower_functions.items():
             grid = self.alt_grids[name]
             points = grid.GetPoints()
             follower_function(self.nid_map, grid, points, nodes)
@@ -1246,7 +1246,7 @@ class GuiCommon(GuiAttributes):
         #print('result_cases.keys() =', self.result_cases.keys())
         i = 0
         icase = None
-        for icase in sorted(iterkeys(self.result_cases)):
+        for icase in sorted(self.result_cases.keys()):
             #cases = self.result_cases[icase]
             if result_name == icase[1]:
                 unused_found_case = True

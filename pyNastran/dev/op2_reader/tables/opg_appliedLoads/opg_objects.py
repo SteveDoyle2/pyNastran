@@ -1,4 +1,3 @@
-from six.moves import zip
 from numpy import zeros
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
 from pyNastran.f06.f06_formatting import write_floats_13e, write_imag_floats_13e

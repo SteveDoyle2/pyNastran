@@ -1,4 +1,3 @@
-from six.moves import zip
 from numpy import (array, zeros, arange, searchsorted,
     unique)
 

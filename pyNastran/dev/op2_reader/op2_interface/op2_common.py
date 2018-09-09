@@ -2,7 +2,6 @@ from __future__ import print_function, unicode_literals
 import copy
 from struct import Struct, unpack
 from six import string_types
-from six.moves import range
 
 import numpy as np
 from numpy import frombuffer, radians, sin, cos, ones, dtype as npdtype

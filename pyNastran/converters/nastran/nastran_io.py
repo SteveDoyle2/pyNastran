@@ -9,7 +9,6 @@ import sys
 from collections import defaultdict, OrderedDict
 import traceback
 from six import iteritems, itervalues, StringIO, string_types
-from six.moves import range
 from pyNastran.op2.result_objects.stress_object import StressObject
 
 SIDE_MAP = {}
@@ -1755,7 +1754,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 zfighting_offset += zfighting_offset0
 
                 # sort the control surfaces
-                labels_to_aesurfs = {aesurf.label: aesurf for aesurf in itervalues(model.aesurf)}
+                labels_to_aesurfs = {aesurf.label: aesurf for aesurf in model.aesurf.values()}
                 if len(labels_to_aesurfs) != len(model.aesurf):
                     msg = (
                         'Expected same number of label->aesurf as aid->aesurf\n'
@@ -2036,7 +2035,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         # count caeros
         # sorting doesn't matter here because we're just trying to size the array
-        for caero in itervalues(model.caeros):
+        for caero in model.caeros.values():
             if hasattr(caero, 'panel_points_elements'):
                 npoints, ncelements = caero.get_npanel_points_elements()
                 ncaeros_sub += npoints
@@ -2094,7 +2093,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     representation='surface', is_visible=False)
 
             # sort the control surfaces
-            labels_to_aesurfs = {aesurf.label: aesurf for aesurf in itervalues(model.aesurf)}
+            labels_to_aesurfs = {aesurf.label: aesurf for aesurf in model.aesurf.values()}
             if len(labels_to_aesurfs) != len(model.aesurf):
                 msg = (
                     'Expected same number of label->aesurf as aid->aesurf\n'

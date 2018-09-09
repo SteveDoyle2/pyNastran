@@ -88,20 +88,20 @@ class SafeXrefMesh(XrefMesh):
         Links the SPCADD, SPC, SPCAX, SPCD, MPCADD, MPC, SUPORT,
         SUPORT1, SESUPORT cards.
         """
-        for spcadds in itervalues(self.spcadds):
+        for spcadds in self.spcadds.values():
             for spcadd in spcadds:
                 spcadd.safe_cross_reference(self)
-        for spcs in itervalues(self.spcs):
+        for spcs in self.spcs.values():
             for spc in spcs:
                 spc.safe_cross_reference(self)
-        for spcoffs in itervalues(self.spcoffs):
+        for spcoffs in self.spcoffs.values():
             for spcoff in spcoffs:
                 spcoff.safe_cross_reference(self)
 
-        for mpcadds in itervalues(self.mpcadds):
+        for mpcadds in self.mpcadds.values():
             for mpcadd in mpcadds:
                 mpcadd.safe_cross_reference(self)
-        for mpcs in itervalues(self.mpcs):
+        for mpcs in self.mpcs.values():
             for mpc in mpcs:
                 mpc.safe_cross_reference(self)
 
@@ -122,49 +122,49 @@ class SafeXrefMesh(XrefMesh):
         """
         self.zona.safe_cross_reference()
         xref_errors = defaultdict(list)
-        for caero in itervalues(self.caeros):
+        for caero in self.caeros.values():
             caero.safe_cross_reference(self, xref_errors)
         self._show_safe_xref_errors('caeros', xref_errors)
 
         xref_errors = defaultdict(list)
-        for paero in itervalues(self.paeros):
+        for paero in self.paeros.values():
             paero.safe_cross_reference(self, xref_errors)
         self._show_safe_xref_errors('paeros', xref_errors)
 
-        for trim in itervalues(self.trims):
+        for trim in self.trims.values():
             trim.safe_cross_reference(self)
 
         xref_errors = defaultdict(list)
-        for csschd in itervalues(self.csschds):
+        for csschd in self.csschds.values():
             csschd.safe_cross_reference(self, xref_errors)
         self._show_safe_xref_errors('csschds', xref_errors)
 
         xref_errors = defaultdict(list)
-        for spline in itervalues(self.splines):
+        for spline in self.splines.values():
             spline.safe_cross_reference(self, xref_errors)
         self._show_safe_xref_errors('splines', xref_errors)
 
-        for aecomp in itervalues(self.aecomps):
+        for aecomp in self.aecomps.values():
             aecomp.safe_cross_reference(self)
 
-        for aelist in itervalues(self.aelists):
+        for aelist in self.aelists.values():
             aelist.safe_cross_reference(self)
 
-        for aeparam in itervalues(self.aeparams):
+        for aeparam in self.aeparams.values():
             aeparam.safe_cross_reference(self)
 
-        #for aestat in itervalues(self.aestats):
+        #for aestat in self.aestats):
             #aestat.safe_cross_reference(self)
 
         xref_errors = defaultdict(list)
-        for aesurf in itervalues(self.aesurf):
+        for aesurf in self.aesurf.values():
             aesurf.safe_cross_reference(self, xref_errors)
         self._show_safe_xref_errors('caeros', xref_errors)
 
-        for aesurfs in itervalues(self.aesurfs):
+        for aesurfs in self.aesurfs.values():
             aesurfs.safe_cross_reference(self)
 
-        for flutter in itervalues(self.flutters):
+        for flutter in self.flutters.values():
             flutter.safe_cross_reference(self)
 
         xref_errors = defaultdict(list)
@@ -230,7 +230,7 @@ class SafeXrefMesh(XrefMesh):
                 elem.cross_reference(self)
                 missing_safe_xref.add(elem.type)
 
-        for elem in itervalues(self.masses):
+        for elem in self.masses.values():
             if hasattr(elem, 'safe_cross_reference'):
                 try:
                     elem.safe_cross_reference(self, xref_errors)
@@ -241,7 +241,7 @@ class SafeXrefMesh(XrefMesh):
                 elem.cross_reference(self)
                 missing_safe_xref.add(elem.type)
 
-        for elem in itervalues(self.rigid_elements):
+        for elem in self.rigid_elements.values():
             if hasattr(elem, 'safe_cross_reference'):
                 try:
                     elem.safe_cross_reference(self, xref_errors)

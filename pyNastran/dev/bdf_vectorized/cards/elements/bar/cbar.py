@@ -1,5 +1,4 @@
 from __future__ import print_function
-from six.moves import zip
 from numpy import array, arange, zeros, unique, searchsorted, full, nan
 from numpy.linalg import norm  # type: ignore
 

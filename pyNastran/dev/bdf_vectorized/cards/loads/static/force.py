@@ -1,4 +1,4 @@
-from six.moves import zip, StringIO
+from six.moves import StringIO
 
 from numpy import zeros, unique
 

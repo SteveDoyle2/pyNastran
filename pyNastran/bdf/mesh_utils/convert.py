@@ -3,7 +3,7 @@ defines:
  - convert(model, units_to, units=None)
 """
 from __future__ import print_function
-from six import iteritems, itervalues, string_types
+from six import iteritems, string_types
 import numpy as np
 from pyNastran.bdf.cards.base_card import break_word_by_trailing_parentheses_integer_ab
 
@@ -72,7 +72,7 @@ def _set_wtmass(model, gravity_scale):
 
 def _convert_nodes(model, xyz_scale):
     """converts the nodes"""
-    for node in itervalues(model.nodes):
+    for node in model.nodes.values():
         if node.cp == 0:
             node.xyz *= xyz_scale
         elif node.cp_ref.type in ['CORD1R', 'CORD2R']:
@@ -83,7 +83,7 @@ def _convert_nodes(model, xyz_scale):
 
 def _convert_coordinates(model, xyz_scale):
     """converts the coordinate systems"""
-    for cid, coord in iteritems(model.coords):
+    for cid, coord in model.coords.items():
         if cid == 0:
             continue
         if coord.rid == 0:
@@ -158,7 +158,7 @@ def _convert_elements(model, xyz_scale, mass_scale, weight_scale):
     if len(model.masses):
         model.log.debug('mass_moi_scale = %g' % mass_moi_scale)
 
-    for elem in itervalues(model.elements):
+    for elem in model.elements.values():
         elem_type = elem.type
         if elem_type in skip_elements:
             continue
@@ -218,7 +218,7 @@ def _convert_elements(model, xyz_scale, mass_scale, weight_scale):
         else:
             raise NotImplementedError('type=%r; elem:\n%s' % (elem.type, elem))
 
-    for elem in itervalues(model.masses):
+    for elem in model.masses.values():
         elem_type = elem.type
         if elem_type == 'CONM2':
             elem.mass *= mass_scale
@@ -257,7 +257,7 @@ def _convert_properties(model, xyz_scale, mass_scale, weight_scale):
         # TODO: NX-verify
         'PPLANE',
     ]
-    for prop in itervalues(model.properties):
+    for prop in model.properties.values():
         prop_type = prop.type
         if prop_type in skip_properties:
             continue
@@ -445,7 +445,7 @@ def _convert_materials(model, xyz_scale, mass_scale, weight_scale):
     model.log.debug('density_scale = %g' % density_scale)
     model.log.debug('stress_scale = %g\n' % stress_scale)
 
-    for mat in itervalues(model.materials):
+    for mat in model.materials.values():
         mat_type = mat.type
         if mat_type == 'MAT1':
             mat.e *= stress_scale
@@ -579,10 +579,10 @@ def _convert_loads(model, xyz_scale, weight_scale):
     model.log.debug('pressure_scale = %s' % pressure_scale)
     model.log.debug('accel_scale = %s\n' % accel_scale)
 
-    for dloads in itervalues(model.dloads):
+    for dloads in model.dloads.values():
         assert isinstance(dloads, str), dloads  # TEMP
 
-    for dloads in itervalues(model.dload_entries):
+    for dloads in model.dload_entries.values():
         for dload in dloads:
             if dload.type == 'RLOAD1':
                 #self.excite_id = excite_id
@@ -604,7 +604,7 @@ def _convert_loads(model, xyz_scale, weight_scale):
             else:
                 raise NotImplementedError(dload)
 
-    for loads in itervalues(model.loads):
+    for loads in model.loads.values():
         assert isinstance(loads, list), loads
         for load in loads: # list
             load_type = load.type
@@ -689,7 +689,7 @@ def _convert_aero(model, xyz_scale, time_scale, weight_scale):
         model.aeros.bref *= xyz_scale
         model.aeros.sref *= area_scale
 
-    for caero in itervalues(model.caeros):
+    for caero in model.caeros.values():
         if caero.type == 'CAERO1':
             caero.p1 *= xyz_scale
             caero.p4 *= xyz_scale
@@ -700,30 +700,30 @@ def _convert_aero(model, xyz_scale, time_scale, weight_scale):
             caero.x12 *= xyz_scale
         else:
             raise NotImplementedError('\n' + str(caero))
-    #for paero in itervalues(model.paeros):
+    #for paero in model.paeros.values():
         #paero.cross_reference(model)
-    for trim in itervalues(model.trims):
+    for trim in model.trims.values():
         trim.q *= pressure_scale
-    #for spline in itervalues(model.splines):
+    #for spline in model.splines.values():
         #spline.convert(model)
-    #for aecomp in itervalues(model.aecomps):
+    #for aecomp in model.aecomps.values():
         #aecomp.cross_reference(model)
-    #for aelist in itervalues(model.aelists):
+    #for aelist in model.aelists.values():
         #aelist.cross_reference(model)
-    #for aeparam in itervalues(model.aeparams):
+    #for aeparam in model.aeparams.values():
         #aeparam.cross_reference(model)
-    #for aestat in itervalues(model.aestats):
+    #for aestat in model.aestats.values():
         #aestat.cross_reference(model)
-    #for aesurf in itervalues(model.aesurf):
+    #for aesurf in model.aesurf.values():
         #aesurf.cross_reference(model)
-    #for aesurfs in itervalues(model.aesurfs):
+    #for aesurfs in model.aesurfs.values():
         #aesurfs.cross_reference(model)
     for monitor in model.monitor_points:
         if hasattr(monitor, 'xyz'):
             monitor.xyz *= xyz_scale
     # update only the FLFACTs corresponding to density
     flfact_ids = set([])
-    for flutter in itervalues(model.flutters):
+    for flutter in model.flutters.values():
         flfact = flutter.density
         flfact_ids.add(flfact.sid)
     for flfact_id in flfact_ids: # density

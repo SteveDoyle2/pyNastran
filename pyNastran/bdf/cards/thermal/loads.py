@@ -2,7 +2,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import  iteritems
-from six.moves import range
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -913,7 +912,7 @@ class TEMP(ThermalLoad):
 
     def add(self, temp_obj):
         assert self.sid == temp_obj.sid
-        for (gid, temp) in iteritems(temp_obj.temperatures):
+        for (gid, temp) in temp_obj.temperatures.items():
             self.temperatures[gid] = temp
 
     def cross_reference(self, model):

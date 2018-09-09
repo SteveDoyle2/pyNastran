@@ -152,7 +152,7 @@ class MainWindow(GuiCommon2, NastranIO):
             # tools/checkables
             tools, checkables = my_class.get_tools_checkables()
             self.tools += tools
-            for key, is_active in iteritems(checkables):
+            for key, is_active in checkables.items():
                 self.checkables[key] = is_active
 
     def _check_for_latest_version(self, check=True):

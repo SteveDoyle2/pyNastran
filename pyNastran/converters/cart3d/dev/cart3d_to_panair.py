@@ -1,7 +1,6 @@
 from __future__ import print_function
 import os
 import sys
-from six import iteritems
 
 from pyNastran.converters.panair.panairGridPatch import PanairGridHelper
 from pyNastran.converters.cart3d.cart3d_reader import Cart3d
@@ -31,7 +30,7 @@ def load_panair_file(fname='panair.in'):
                 }
     varmap = {}
     localvars = locals()
-    for varname, default in sorted(iteritems(varnames)):
+    for varname, default in sorted(varnames.items()):
         if varname in localvars:
             print("type(%s)=%s type(localvars[varname])=%s" % (varname, type(default), type(localvars[varname])))
             if type(default) != type(localvars[varname]):
@@ -183,12 +182,12 @@ class Cart3dToPanair(PanairGridHelper):
             regions = cart.regions
             #(points, elements, regions, loads) =
 
-            #for pid, point in sorted(iteritems(points)):
+            #for pid, point in sorted(points.items()):
                 #if pid<85:
                 #    print(pid,point)
                 #pass
             region_old = 9
-            for eid, element in sorted(iteritems(elements)):
+            for eid, element in sorted(elements.items()):
                 header = ''
                 region = regions[eid]
                 if region not in BCMap:

@@ -662,7 +662,7 @@ class GetCard(GetMethods):
             dvprel_dict[key] = (design_region, dvprel_t_init, dvprel_t_min, dvprel_t_max)
             return design_region, dvprel_t_init, dvprel_t_min, dvprel_t_max
 
-        for dvprel_key, dvprel in iteritems(self.dvprels):
+        for dvprel_key, dvprel in self.dvprels.items():
             prop_type = dvprel.prop_type
             desvars = dvprel.dvids
             if dvprel.pid_ref is not None:

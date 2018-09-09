@@ -25,7 +25,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
 import sys
-from six import PY2, string_types, itervalues
+from six import PY2, string_types
 from six.moves.cPickle import load, dump, dumps
 
 import numpy as np
@@ -559,8 +559,6 @@ class OP2(OP2_Scalar):
             the unicode encoding (default=None; system default)
 
         """
-        load_as_h5 = False
-
         if build_dataframe is None:
             build_dataframe = False
             if ipython_info():
@@ -578,6 +576,9 @@ class OP2(OP2_Scalar):
         self.read_mode = 1
         self._close_op2 = False
 
+        load_as_h5 = False
+        if hasattr(self, 'load_as_h5'):
+            load_as_h5 = self.load_as_h5
         try:
             # get GUI object names, build objects, but don't read data
             OP2_Scalar.read_op2(self, op2_filename=op2_filename,
@@ -589,6 +590,7 @@ class OP2(OP2_Scalar):
             self.read_mode = 2
             self._close_op2 = True
             self.log.debug('-------- reading op2 with read_mode=2 (array filling) --------')
+            _create_hdf5_info(self.op2_reader.h5_file, self)
             OP2_Scalar.read_op2(self, op2_filename=self.op2_filename)
         except FileNotFoundError:
             raise
@@ -631,7 +633,7 @@ class OP2(OP2_Scalar):
         result_types = self.get_table_types()
         for result_type in result_types:
             result = self.get_result(result_type)
-            for obj in itervalues(result):
+            for obj in result.values():
                 if hasattr(obj, 'finalize'):
                     obj.finalize()
                 elif hasattr(obj, 'tCode') and not obj.is_sort1:
@@ -668,7 +670,7 @@ class OP2(OP2_Scalar):
 
         for result_type in result_types:
             result = self.get_result(result_type)
-            for obj in itervalues(result):
+            for obj in result.values():
                 class_name = obj.__class__.__name__
                 #print('working on %s' % class_name)
                 obj.object_attributes()
@@ -1250,6 +1252,15 @@ def main():  # pragma: no cover
     ielem1_layer = solid_stress.getElementLayerIndex([[1, 0]])
     datai = data[0, ielem1_layer, :]
 
+def _create_hdf5_info(h5_file, op2_model):
+    """exports the h5 info group"""
+    load_as_h5 = False
+    if hasattr(op2_model, 'load_as_h5'):
+        load_as_h5 = op2_model.load_as_h5
+    if not load_as_h5:
+        return
+    from pyNastran.op2.op2_interface.hdf5_interface import create_info_group
+    create_info_group(h5_file, op2_model)
 
 if __name__ == '__main__':  # pragma: no cover
     main()

@@ -802,7 +802,7 @@ class TestCoords(unittest.TestCase):
         assert model.card_count['CORD2R'] == 11, model.card_count
         assert model.card_count['GRID'] == 3, model.card_count
         model.cross_reference()
-        for unused_cid, coord in sorted(iteritems(model.coords)):
+        for unused_cid, coord in sorted(model.coords.items()):
             assert coord.i is not None, coord
 
     def test_define_coords_from_axes(self):

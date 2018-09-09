@@ -7,7 +7,6 @@ import os
 from codecs import open
 from struct import pack, unpack, Struct
 from six import string_types, iteritems, PY2, PY3
-from six.moves import range
 
 import numpy as np
 from numpy import array, zeros, float32, float64, complex64, complex128, ndarray

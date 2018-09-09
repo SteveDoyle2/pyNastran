@@ -1,7 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
-from six.moves import zip, range
 
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.bdf.bdf_interface.assign_type import interpret_value

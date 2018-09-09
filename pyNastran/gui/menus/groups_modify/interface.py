@@ -29,7 +29,7 @@ def on_set_modify_groups(self):
     }
 
     i = 1
-    for name, group in sorted(iteritems(self.groups)):
+    for name, group in sorted(self.groups.items()):
         if name == 'main':
             continue
         data[i] = group

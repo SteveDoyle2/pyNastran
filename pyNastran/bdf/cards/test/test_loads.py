@@ -717,7 +717,7 @@ class TestLoads(unittest.TestCase):
         #p0 = model.nodes[1].xyz
 
         #fail = False
-        #for isubcase, subcase in sorted(iteritems(model.subcases)):
+        #for isubcase, subcase in sorted(model.subcases.items()):
             #if isubcase == 0:
                 #continue
             ##if isubcase != 17:

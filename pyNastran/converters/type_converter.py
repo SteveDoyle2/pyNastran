@@ -3,7 +3,6 @@ Multi-input/output format converter
 """
 from __future__ import print_function
 import glob
-from six import itervalues
 from docopt import docopt
 
 # stl_to_plot3d ???
@@ -24,7 +23,7 @@ def process_nastran(bdf_filename, fmt2, fname2, data=None, debug=True):
     if data['--scale'] != 1.0:
         scale = data['--scale']
         data['--scale'] = 1.0
-        for node in itervalues(model.nodes):
+        for node in model.nodes.values():
             node.xyz = node.get_position() * scale
             node.cp = 0
             del node.cp_ref

@@ -840,7 +840,7 @@ class OEF(OP2Common):
                 if 0:
                     if self.read_mode == 1:
                         return ndata
-                    self.create_transient_object(slot, HeatFlux_CONV)
+                    self.create_transient_object(result_name, slot, HeatFlux_CONV)
                 else:
                     auto_return, is_vectorized = self._create_oes_object4(
                         nelements, result_name, slot, RealConvHeatFluxArray)
@@ -914,7 +914,7 @@ class OEF(OP2Common):
             if self.format_code == 1 and self.num_wide == numwide_real:  # real
                 ntotal = 8 + 28 * nnodes
                 nelements = ndata // ntotal
-                #self.create_transient_object(self.thermalLoad_VU_3D, HeatFluxVU_3DArray)
+                #self.create_transient_object(result_name, self.thermalLoad_VU_3D, HeatFluxVU_3DArray)
                 #is_vectorized = False
 
                 auto_return, is_vectorized = self._create_oes_object4(
@@ -1276,7 +1276,7 @@ class OEF(OP2Common):
             #self._results._found_result('solid_forces')
             raise RuntimeError(self.code_information())
             #if self.format_code == 1 and self.num_wide == 0:  # real
-                ##self.create_transient_object(self.solidForces, RealCSolidForce)
+                ##self.create_transient_object(result_name, self.solidForces, RealCSolidForce)
                 #raise RuntimeError(self.code_information())
             #else:
                 #msg = self.code_information()

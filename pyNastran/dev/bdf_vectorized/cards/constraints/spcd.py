@@ -1,4 +1,3 @@
-from six.moves import zip
 import numpy as np
 from numpy import array
 

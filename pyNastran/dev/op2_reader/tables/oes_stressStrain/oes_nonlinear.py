@@ -7,7 +7,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from math import isnan
 from itertools import cycle
 from six import integer_types
-from six.moves import range
 import numpy as np
 from numpy import zeros
 

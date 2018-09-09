@@ -1,6 +1,5 @@
 from __future__ import print_function
 
-from six import iteritems
 import numpy as np
 from qtpy import QtCore
 from qtpy.QtWidgets import (
@@ -54,7 +53,7 @@ class PropertyPlotter(QDialog):
         #
         property_label = QLabel('Property')
         self.property_pulldown_edit = QComboBox()
-        for pid, prop in sorted(iteritems(self.model.properties)):
+        for pid, prop in sorted(self.model.properties.items()):
             name = 'Property %i: %s' % (pid, prop.type)
             self.property_ids.append(pid)
             self.property_pulldown_edit.addItem(name)

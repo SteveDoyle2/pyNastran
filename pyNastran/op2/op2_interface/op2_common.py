@@ -1334,14 +1334,17 @@ class OP2Common(Op2Codes, F06Writer):
                 n += 56
         return n
 
-    def create_transient_object(self, storage_obj, class_obj, is_cid=False, debug=False):
+    def create_transient_object(self, result_name, storage_obj, class_obj,
+                                is_cid=False, debug=False):
         """
         Creates a transient object (or None if the subcase should be skippied).
 
         Parameters
         ----------
-        storageName : str
+        result_name : str
             the name of the dictionary to store the object in (e.g. 'displacements')
+        storage_obj : dict
+            the dictionary to store the object in (e.g. self.displacements)
         class_obj : object()
             the class object to instantiate
         debug : bool
@@ -1349,9 +1352,10 @@ class OP2Common(Op2Codes, F06Writer):
 
         .. python ::
 
+            result_name = 'displacements'
             slot = self.displacements
-            slot_vector = RealDisplacementArray
-            self.create_transient_object(slot, slot_vector, is_cid=is_cid)
+            class_obj = RealDisplacementArray
+            self.create_transient_object(result_name, storage_obj, class_obj, is_cid=is_cid)
 
         .. note:: dt can also be load_step depending on the class
 
@@ -1372,6 +1376,8 @@ class OP2Common(Op2Codes, F06Writer):
         #self.log.debug('self.table_name=%s isubcase=%s subtitle=%r' % (
             #self.table_name, self.isubcase, self.subtitle.strip()))
         self.data_code['table_name'] = self.table_name.decode(self.encoding)
+        self.data_code['result_name'] = result_name
+        self.data_code['_count'] = self._count
         assert self.log is not None
 
         code = self._get_code()
@@ -1833,7 +1839,7 @@ class OP2Common(Op2Codes, F06Writer):
 
         if is_vectorized:
             if self.read_mode == 1:
-                self.create_transient_object(slot, slot_vector, is_cid=is_cid)
+                self.create_transient_object(result_name, slot, slot_vector, is_cid=is_cid)
                 self.result_names.add(result_name)
                 self.obj._nnodes += nnodes
                 auto_return = True
@@ -1848,7 +1854,7 @@ class OP2Common(Op2Codes, F06Writer):
                 auto_return = True
                 return auto_return, is_vectorized
             # pass = 0/2
-            self.create_transient_object(slot, slot_object)
+            self.create_transient_object(result_name, slot, slot_object)
         return auto_return, is_vectorized
 
     def _create_table_vector(self, result_name, nnodes,
@@ -1859,8 +1865,8 @@ class OP2Common(Op2Codes, F06Writer):
         #print('%s nnodes=%s' % (result_name, nnodes))
         self.result_names.add(result_name)
         if self.read_mode == 1:
-            self.create_transient_object(slot, slot_vector, is_cid=is_cid)
-            self.result_names.add(result_name)
+            self.create_transient_object(result_name, slot, slot_vector, is_cid=is_cid)
+            #self.result_names.add(result_name)
             self.obj._nnodes += nnodes
             auto_return = True
         elif self.read_mode == 2:
@@ -1881,7 +1887,7 @@ class OP2Common(Op2Codes, F06Writer):
         nelements :  int
             the number of elements to preallocate for vectorization
         result_name : str
-            unused
+            the name of the dictionary to store the object in (e.g. 'displacements')
         slot : dict[(int, int, str)=obj
             the self dictionary that will be filled with a
             non-vectorized result
@@ -1922,7 +1928,7 @@ class OP2Common(Op2Codes, F06Writer):
             if self.read_mode == 1:
                 #print('oes-self.nonlinear_factor =', self.nonlinear_factor)
                 #print(self.data_code)
-                self.create_transient_object(slot, obj_vector)
+                self.create_transient_object(result_name, slot, obj_vector)
                 #print("read_mode 1; ntimes=%s" % obj.ntimes)
                 self.result_names.add(result_name)
                 #print('self.obj =', self.obj)

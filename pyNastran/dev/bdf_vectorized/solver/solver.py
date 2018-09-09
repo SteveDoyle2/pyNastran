@@ -11,8 +11,6 @@ from struct import pack
 from codecs import open
 
 from six import iteritems
-from six.moves import range
-from six.moves import zip
 
 # 3rd party
 import numpy as np
@@ -1899,7 +1897,7 @@ class Solver(OP2):
 
         #dofs_0 = [nid=2, 1] -> searchsorted(nids, nid)[0]
 
-        #for nid in sorted(iterkeys(self.nodes)):
+        #for nid in sorted(self.nodes.keys()):
             #nid_dof_mapper[]
 
         self.log.info('start calculating xyz_cid0')

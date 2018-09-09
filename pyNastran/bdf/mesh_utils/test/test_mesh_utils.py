@@ -76,7 +76,7 @@ class TestMeshUtils(unittest.TestCase):
         model = read_bdf(bdf_filename, log=log, xref=True)
         xyz_cid0 = model.get_xyz_in_coord(cid=0, fdtype='float32')
         nid_map = {}
-        for i, (nid, node) in enumerate(sorted(iteritems(model.nodes))):
+        for i, (nid, node) in enumerate(sorted(model.nodes.items())):
             #xyz = node.get_position()
             #xyz_cid0[i, :] = xyz
             nid_map[nid] = i
@@ -165,7 +165,7 @@ class TestMeshUtils(unittest.TestCase):
         model.read_bdf(bdf_filename_out)
 
         msg = 'nnodes=%s\n' % len(model.nodes)
-        for nid, node in sorted(iteritems(model.nodes)):
+        for nid, node in sorted(model.nodes.items()):
             msg += 'nid=%s xyz=%s\n' % (nid, node.xyz)
 
         assert len(model.nodes) == 4, msg
@@ -385,7 +385,7 @@ class TestMeshUtils(unittest.TestCase):
                               xref_sets=False,
                               xref_optimization=False)
         convert_bad_quads_to_tris(model, min_edge_length=0.01)
-        #for eid, elem in sorted(iteritems(model.elements)):
+        #for eid, elem in sorted(model.elements.items()):
             #print(elem)
         assert model.card_count['CQUAD4'] == 2, model.card_count
         assert model.card_count['CTRIA3'] == 1, model.card_count
@@ -852,7 +852,7 @@ class TestMeshUtils(unittest.TestCase):
         # triangles
         elements2 = {}
         neids = len(model.elements)
-        for eid, elem in iteritems(model.elements):
+        for eid, elem in model.elements.items():
             elem_a, elem_b = elem.split_to_ctria3(eid, eid + neids)
             elements2[elem_a.eid] = elem_a
             elements2[elem_b.eid] = elem_b

@@ -7,7 +7,6 @@
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems
 
 from pyNastran.bdf.cards.base_card import BaseCard, expand_thru_by
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -446,7 +445,7 @@ class BCTPARA(BaseCard):
     def raw_fields(self):
         fields = ['BCTPARA', self.csid]
         i = 0
-        for key, value in sorted(iteritems(self.params)):
+        for key, value in sorted(self.params.items()):
             if i == 3:
                 fields.append(None)
                 i = 0

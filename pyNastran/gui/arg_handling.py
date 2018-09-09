@@ -1,7 +1,6 @@
 from __future__ import print_function
 import os
 import sys
-from six import iteritems
 
 from docopt import docopt
 import pyNastran
@@ -50,7 +49,7 @@ def determine_format(input_filename, allowed_formats=None):
         ]
 
     ext = os.path.splitext(input_filename)[1].lower()
-    extension_to_format = {val : key for key, value in iteritems(FORMAT_TO_EXTENSION)
+    extension_to_format = {val : key for key, value in FORMAT_TO_EXTENSION.items()
                            for val in value}
     try:
         formati = extension_to_format[ext]
@@ -176,7 +175,7 @@ def run_docopt():
         assert qt in ['pyside', 'pyqt4', 'pyqt5'], 'qt=%r' % qt
         os.environ.setdefault('QT_API', qt)
 
-    for key, value in sorted(iteritems(data)):
+    for key, value in sorted(data.items()):
         print(key, value)
     #print("shots", shots)
 

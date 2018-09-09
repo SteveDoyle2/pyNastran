@@ -1,6 +1,5 @@
 from __future__ import print_function
 from six import iteritems
-from six.moves import range
 from numpy import loadtxt, argsort, allclose, vstack, array, abs, where
 
 

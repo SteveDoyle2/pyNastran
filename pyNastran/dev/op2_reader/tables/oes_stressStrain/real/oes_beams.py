@@ -1,7 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import integer_types
-from six.moves import range, zip
 import numpy as np
 from numpy import zeros
 ints = (int, np.int32)

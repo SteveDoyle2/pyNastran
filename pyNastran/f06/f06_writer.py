@@ -12,7 +12,7 @@ from datetime import date
 from collections import defaultdict
 from traceback import print_exc
 
-from six import string_types, iteritems, PY2
+from six import string_types, PY2
 
 import pyNastran
 from pyNastran.op2.op2_interface.op2_f06_common import OP2_F06_Common
@@ -454,7 +454,7 @@ class F06Writer(OP2_F06_Common):
                 print('MONPNT1 from [PMRF, PERF, PFRF, AGRF]')
 
             with open(matrix_filename, 'wb') as mat:
-                for name, matrix in iteritems(self.matrices):
+                for name, matrix in self.matrices.items():
                     if name == 'MP3F':
                         page_num = self.monitor3.write(f06, page_stamp=page_stamp, page_num=page_num)
                         print('MONPNT3 from MP3F')
@@ -500,7 +500,7 @@ class F06Writer(OP2_F06_Common):
         # eigenvalues are written first
         f06.write(page_stamp % self.page_num)
         self.page_num += 1
-        for ikey, result in sorted(iteritems(self.eigenvalues)):
+        for ikey, result in sorted(self.eigenvalues.items()):
             if not quiet:
                 print('%-18s case=%r' % (result.__class__.__name__, ikey))
             self.page_num = result.write_f06(f06, header, page_stamp,
@@ -521,7 +521,7 @@ class F06Writer(OP2_F06_Common):
         if len(res_keys_subcase) == 0:
             self.log.warning('no cases to write...self.subcase_key=%r' % self.subcase_key)
             return
-        for isubcase, res_keys in sorted(iteritems(res_keys_subcase)):
+        for isubcase, res_keys in sorted(res_keys_subcase.items()):
             for res_key in res_keys:
                 if isinstance(res_key, tuple):
                     is_compressed = False
@@ -828,7 +828,7 @@ class F06Writer(OP2_F06_Common):
 
             #self.grid_point_stresses, self.grid_point_volume_stresses, self.grid_point_forces,
         #]
-        for isubcase, res_keys in sorted(iteritems(res_keys_subcase)):
+        for isubcase, res_keys in sorted(res_keys_subcase.items()):
             # print(res_keys)
             for res_key in res_keys:
                 if isinstance(res_key, tuple):

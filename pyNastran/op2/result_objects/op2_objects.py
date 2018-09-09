@@ -351,6 +351,45 @@ class ScalarObject(BaseScalarObject):
     #def isImaginary(self):
         #return bool(self.sort_bits[1])
 
+    def _get_result_group(self):
+        """gets the h5 result group"""
+        code = self._get_code()
+        case_name = 'Subcase=%s' % str(code) # (self.isubcase)
+        if case_name in self.h5_file:
+            subcase_group = self.h5_file[case_name]
+        else:
+            subcase_group = self.h5_file.create_group(case_name)
+        group = subcase_group.create_group(self.result_name)
+        return group
+
+    def _get_code(self):
+        code = self.isubcase
+        ogs = 0
+        if hasattr(self, 'ogs'):
+            ogs = self.ogs
+        #if self.binary_debug:
+            #self.binary_debug.write(self.code_information(include_time=True))
+
+        code = (self.isubcase, self.analysis_code, self._sort_method(), self._count, ogs,
+                self.superelement_adaptivity_index, self.pval_step)
+        #code = (self.isubcase, self.analysis_code, self._sort_method, self._count,
+                #self.superelement_adaptivity_index, self.table_name_str)
+        #print('%r' % self.subtitle)
+        #self.code = code
+        #self.log.debug('code = %s' % str(self.code))
+        return code
+
+    #@property
+    def _sort_method(self):
+        try:
+            sort_method, is_real, is_random = self._table_specs()
+        except:
+            sort_method = get_sort_method_from_table_name(self.table_name)
+        #is_sort1 = self.table_name.endswith('1')
+        #is_sort1 = self.is_sort1  # uses the sort_bits
+        assert sort_method in [1, 2], 'sort_method=%r\n%s' % (sort_method, self.code_information())
+        return sort_method
+
     @property
     def dataframe(self):
         """alternate way to get the dataframe"""

@@ -1,4 +1,3 @@
-from six.moves import range
 from numpy import array, ndarray
 from pyNastran.utils.mathematics import unique2d
 

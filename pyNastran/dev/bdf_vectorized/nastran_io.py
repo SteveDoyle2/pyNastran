@@ -3,7 +3,6 @@ from __future__ import print_function
 import os
 from collections import OrderedDict
 from six import iteritems
-from six.moves import zip
 
 #VTK_TRIANGLE = 5
 #VTK_QUADRATIC_TRIANGLE = 22

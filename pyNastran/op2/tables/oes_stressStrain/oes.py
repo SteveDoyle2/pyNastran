@@ -1726,7 +1726,7 @@ class OES(OP2Common):
             if self.read_mode == 1:
                 #print('oes-self.nonlinear_factor =', self.nonlinear_factor)
                 #print(self.data_code)
-                self.create_transient_object(slot, obj_vector)
+                self.create_transient_object(result_name, slot, obj_vector)
                 #print("read_mode 1; ntimes=%s" % self.obj.ntimes)
                 self.result_names.add(result_name)
                 #print('self.obj =', self.obj)
@@ -1765,7 +1765,7 @@ class OES(OP2Common):
             if self.read_mode == 1:
                 #print('oes-self.nonlinear_factor =', self.nonlinear_factor)
                 #print(self.data_code)
-                self.create_transient_object(slot, obj_vector)
+                self.create_transient_object(result_name, slot, obj_vector)
                 #print("read_mode 1; ntimes=%s" % self.obj.ntimes)
                 self.result_names.add(result_name)
                 #print('self.obj =', self.obj)
@@ -5997,8 +5997,9 @@ class OES(OP2Common):
         if self.format_code == 1 and self.num_wide == 30:
             if self.is_stress:
                 obj_vector_real = HyperelasticQuadArray
-                self.create_transient_object(self.hyperelastic_cquad4_strain, obj_vector_real)
                 result_name = prefix + 'hyperelastic_cquad4_strain' + postfix
+                self.create_transient_object(
+                    result_name, self.hyperelastic_cquad4_strain, obj_vector_real)
             else:
                 msg = 'HyperelasticQuadArray???'
                 return self._not_implemented_or_skip(data, ndata, msg)

@@ -6,7 +6,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from struct import unpack, Struct
 from six import b
-from six.moves import range
 
 import numpy as np
 

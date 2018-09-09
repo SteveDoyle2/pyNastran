@@ -4,7 +4,6 @@ import copy
 from itertools import count
 from struct import pack
 from six import text_type, binary_type, iteritems, PY3, string_types
-from six.moves import range
 import numpy as np
 
 from pyNastran import is_release

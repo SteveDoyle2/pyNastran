@@ -83,12 +83,24 @@ class RealBarArray(OES_Object):
         dtype = 'float32'
         if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
-        self._times = zeros(self.ntimes, dtype=dtype)
-        self.element = zeros(self.ntotal, dtype='int32')
+
+        _times = zeros(self.ntimes, dtype=dtype)
+        element = zeros(self.ntotal, dtype='int32')
 
         #[s1a, s2a, s3a, s4a, axial, smaxa, smina, MS_tension,
         # s1b, s2b, s3b, s4b,        sminb, sminb, MS_compression]
-        self.data = zeros((self.ntimes, self.ntotal, 15), dtype='float32')
+        data = zeros((self.ntimes, self.ntotal, 15), dtype='float32')
+        if self.load_as_h5:
+            #for key, value in sorted(self.data_code.items()):
+                #print(key, value)
+            group = self._get_result_group()
+            self._times = group.create_dataset('_times', data=_times)
+            self.element = group.create_dataset('element', data=element)
+            self.data = group.create_dataset('data', data=data)
+        else:
+            self._times = _times
+            self.element = element
+            self.data = data
 
     def build_dataframe(self):
         """creates a pandas dataframe"""

@@ -13,7 +13,6 @@ All shell properties are ShellProperty and Property objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six.moves import zip, range
 from numpy import array
 import numpy as np
 

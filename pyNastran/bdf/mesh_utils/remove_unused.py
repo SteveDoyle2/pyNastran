@@ -4,7 +4,7 @@ defines some methods for cleaning up a model
                          remove_pids=True, remove_mids=True)
 """
 from __future__ import print_function
-from six import iteritems, itervalues, integer_types
+from six import iteritems, integer_types
 
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
@@ -289,7 +289,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
         elif card_type in ['TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2', 'ACSRCE']:
             pass
         elif card_type in load_types:
-            for loads in itervalues(model.loads):
+            for loads in model.loads.values():
                 for load in loads:
                     if load.type in ['FORCE', 'MOMENT']:
                         nids_used.add(load.node_id)
@@ -350,21 +350,21 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
 
         elif card_type == 'MPCADD':
             pass
-            #for mpcadds in itervalues(model.mpcadds):
+            #for mpcadds in model.mpcadds.values():
                 #for mpcadd in mpcadds:
                     #nids_used.update(mpc.node_ids)
         elif card_type == 'MPC':
-            for mpcs in itervalues(model.mpcs):
+            for mpcs in model.mpcs.values():
                 for mpc in mpcs:
                     nids_used.update(mpc.node_ids)
 
         elif card_type == 'SPCADD':
             pass
-            #for spcadds in itervalues(model.spcadds):
+            #for spcadds in model.spcadds.values():
                 #for spcadd in spcadds:
                     #nids_used.update(spc.node_ids)
         elif card_type in ['SPC1', 'SPC', 'GMSPC', 'SPCAX']:
-            for spcs in itervalues(model.spcs):
+            for spcs in model.spcs.values():
                 for spc in spcs:
                     if spc.type in ['GMSPC', 'SPCAX']:
                         pass
@@ -381,7 +381,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
             for suport in model.suport:
                 nids_used.update(suport.node_ids)
         elif card_type == 'SUPORT1':
-            for suport1 in itervalues(model.suport1):
+            for suport1 in model.suport1.values():
                 nids_used.update(suport1.node_ids)
         elif card_type == 'GRID':
             for nid, node in iteritems(model.nodes):
@@ -436,7 +436,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
 
         elif card_type == 'AESURF':
             #CID1  | ALID1 | CID2   | ALID2
-            for aesurf in itervalues(model.aesurf):
+            for aesurf in model.aesurf.values():
                 cids_used.add(aesurf.Cid1())
                 cid2 = aesurf.Cid2()
                 if cid2 is not None:
@@ -457,7 +457,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
             # handled based on context in other blocks
             pass
         elif card_type in ['USET', 'USET1']:
-            for set_cards in itervalues(model.usets):
+            for set_cards in model.usets.values():
                 for set_card in set_cards:
                     nids_used.update(set_card.ids)
 

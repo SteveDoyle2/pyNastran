@@ -1,5 +1,4 @@
 from __future__ import print_function
-from six.moves import range
 import numpy as np
 from pyNastran.converters.panair.assign_type import integer
 

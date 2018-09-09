@@ -2,7 +2,6 @@
 http://www.ce.memphis.edu/7117/notes/presentations/chapter_04b.pdf
 """
 from six import string_types
-from six.moves import zip
 import numpy as np
 from numpy import array, arange, zeros, unique, searchsorted, nan, full
 from numpy.linalg import norm  # type: ignore

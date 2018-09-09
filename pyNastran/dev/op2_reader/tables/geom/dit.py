@@ -3,7 +3,6 @@ defines readers for BDF objects in the OP2 DIT/DITS table
 """
 from __future__ import print_function
 from struct import Struct, error as struct_error
-from six.moves import range
 import numpy as np
 
 from pyNastran.bdf.cards.aero.dynamic_loads import GUST

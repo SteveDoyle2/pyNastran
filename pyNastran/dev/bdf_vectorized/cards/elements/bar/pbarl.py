@@ -1,7 +1,6 @@
 from __future__ import print_function
-from six import iteritems
-from six.moves import zip
 from itertools import count
+from six import iteritems
 from numpy import array, zeros, arange, searchsorted, unique
 
 from pyNastran.dev.bdf_vectorized.cards.elements.property import Property

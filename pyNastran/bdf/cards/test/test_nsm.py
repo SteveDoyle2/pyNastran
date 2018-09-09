@@ -196,7 +196,7 @@ class TestNsm(unittest.TestCase):
         model2.elements = {}
 
         type_to_id_map = {}
-        for card_type, ids in iteritems(model2._type_to_id_map):
+        for card_type, ids in model2._type_to_id_map.items():
             if card_type in ['CQUAD4', 'CTRIA3', 'CBEAM', 'CONROD', 'CBAR', 'CROD']:
                 pass
             elif card_type in ['NSM', 'NSM1', 'NSML', 'NSML1', 'MAT1',

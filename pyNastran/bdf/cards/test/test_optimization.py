@@ -37,7 +37,7 @@ class TestOpt(unittest.TestCase):
         subcase_ids = op2.subcase_key.keys()
         #for subcase_id in subcase_ids:
             #assert isinstance(subcase_id, integer_types), subcase_id
-            #for key, dresp in sorted(iteritems(model.dresps)):
+            #for key, dresp in sorted(model.dresps.items()):
                 #print(dresp)
                 #dresp.calculate(op2, subcase_id)
         os.remove('temp.debug')

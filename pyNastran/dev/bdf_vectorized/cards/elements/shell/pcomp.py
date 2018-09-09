@@ -1,6 +1,6 @@
 from __future__ import print_function
 from six import iteritems
-from six.moves import StringIO, zip
+from six.moves import StringIO
 from itertools import count
 
 from numpy import (array, zeros, searchsorted, where, unique,
