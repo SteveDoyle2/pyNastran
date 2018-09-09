@@ -29,7 +29,7 @@ class RealMPCForcesArray(RealTableArray):
 
         #words += self.get_table_marker()
         write_words = True
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             return self._write_f06_transient_block(words, header, page_stamp, page_num, f06_file, write_words,
                                                    is_mag_phase=is_mag_phase, is_sort1=is_sort1)
         return self._write_f06_block(words, header, page_stamp, page_num, f06_file, write_words,

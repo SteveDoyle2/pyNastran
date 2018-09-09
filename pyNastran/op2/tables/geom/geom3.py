@@ -235,8 +235,7 @@ class GEOM3(GeomCommon):
                 n += 8
                 (si, l1) = struct_fi.unpack(edata)
                 siTest, = self.struct_i.unpack(edata[0:4])
-                #print(si,siTest, l1)
-                #print(type(si))
+                #print(si, siTest, l1)
 
                 if [siTest, l1] == [-1, -1]:
                     break

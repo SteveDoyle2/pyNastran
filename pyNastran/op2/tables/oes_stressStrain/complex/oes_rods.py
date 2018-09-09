@@ -134,7 +134,7 @@ class ComplexRodArray(OES_Object):
         assert self.nelements == nelements, 'nelements=%s expected=%s' % (self.nelements, nelements)
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
                        % (self.__class__.__name__, ntimes, nelements, self.table_name))
             ntimes_word = 'ntimes'

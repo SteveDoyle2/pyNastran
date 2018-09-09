@@ -61,7 +61,7 @@ class GridPointStressesArray(ScalarObject):
         #"""creates a pandas dataframe"""
         #headers = self.get_headers()
         #element_node = [self.element_node[:, 0], self.element_node[:, 1]]
-        #if self.nonlinear_factor is not None:
+        #if self.nonlinear_factor not in (None, np.nan):
             #column_names, column_values = self._build_dataframe_transient_header()
             #self.data_frame = pd.Panel(self.data, items=column_values, major_axis=element_node, minor_axis=headers).to_frame()
             #self.data_frame.columns.names = column_names
@@ -92,7 +92,7 @@ class GridPointStressesArray(ScalarObject):
         assert self.nelements == nelements, 'nelements=%s expected=%s' % (self.nelements, nelements)
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i\n'
                        % (self.__class__.__name__, ntimes, nelements))
             ntimes_word = 'ntimes'
@@ -262,7 +262,7 @@ class GridPointStressesVolumeArray(ScalarObject):
         assert self.nelements == nelements, 'nelements=%s expected=%s' % (self.nelements, nelements)
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i\n'
                        % (self.__class__.__name__, ntimes, nelements))
             ntimes_word = 'ntimes'

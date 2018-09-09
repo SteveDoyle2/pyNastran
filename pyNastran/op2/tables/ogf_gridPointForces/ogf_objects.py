@@ -129,7 +129,7 @@ class RealGridPointForcesArray(ScalarObject):
             nnodes = self.data.shape[1]
             nvalues = ntimes * nnodes
             node_element = self.node_element.reshape((ntimes * nnodes, 2))
-            if self.nonlinear_factor is not None:
+            if self.nonlinear_factor not in (None, np.nan):
                 column_names, column_values = self._build_dataframe_transient_header()
                 #column_names = column_names[0]
                 #column_values = column_values[0]
@@ -170,7 +170,7 @@ class RealGridPointForcesArray(ScalarObject):
                 #print(self.data_frame)
         else:
             node_element = [self.node_element[:, 0], self.node_element[:, 1]]
-            if self.nonlinear_factor is not None:
+            if self.nonlinear_factor not in (None, np.nan):
                 column_names, column_values = self._build_dataframe_transient_header()
                 self.data_frame = pd.Panel(self.data, items=column_values, major_axis=node_element, minor_axis=headers).to_frame()
                 self.data_frame.columns.names = column_names
@@ -677,7 +677,7 @@ class RealGridPointForcesArray(ScalarObject):
         nelements = unique(self.node_element[:, 1]).size
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msgi = '  type=%s ntimes=%i nelements=%i ntotal=%i\n' % (
                 self.__class__.__name__, ntimes, nelements, ntotal)
             if self.ntotal != min(self._ntotals):
@@ -1019,7 +1019,7 @@ class ComplexGridPointForcesArray(ScalarObject):
             #print(self.data_frame)
         else:
             node_element = [self.node_element[:, 0], self.node_element[:, 1]]
-            if self.nonlinear_factor is not None:
+            if self.nonlinear_factor not in (None, np.nan):
                 column_names, column_values = self._build_dataframe_transient_header()
                 self.data_frame = pd.Panel(self.data, items=column_values, major_axis=node_element, minor_axis=headers).to_frame()
                 self.data_frame.columns.names = column_names
@@ -1170,7 +1170,7 @@ class ComplexGridPointForcesArray(ScalarObject):
         nelements = unique(self.node_element[:, 1]).size
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msgi = '  type=%s ntimes=%i nelements=%i ntotal=%i\n' % (
                 self.__class__.__name__, ntimes, nelements, ntotal)
             ntimes_word = 'ntimes'

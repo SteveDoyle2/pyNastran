@@ -9,6 +9,7 @@ This file defines the OUG Table, which contains:
 """
 from __future__ import print_function
 from six import integer_types
+import numpy as np
 from pyNastran.op2.op2_interface.op2_common import OP2Common
 
 from pyNastran.op2.tables.oqg_constraintForces.oqg_spc_forces import (
@@ -29,7 +30,7 @@ class OQG(OP2Common):
         OP2Common.__init__(self)
 
     def _read_oqg1_3(self, data, ndata):
-        self.nonlinear_factor = None
+        self.nonlinear_factor = np.nan #None
         self.is_table_1 = True
         self.is_table_2 = False
         unused_three = self.parse_approach_code(data)
@@ -146,7 +147,7 @@ class OQG(OP2Common):
 
     def _read_oqg2_3(self, data, ndata):
         """reads the SORT2 version of table 4 (the data table)"""
-        self.nonlinear_factor = None
+        self.nonlinear_factor = np.nan
         self.is_table_1 = False
         self.is_table_2 = True
         unused_three = self.parse_approach_code(data)

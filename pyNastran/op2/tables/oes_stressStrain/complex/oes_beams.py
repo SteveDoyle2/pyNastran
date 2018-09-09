@@ -169,7 +169,7 @@ class ComplexBeamArray(OES_Object):
         assert nelements, nelements2
         msg = []
 
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i\n'
                        % (self.__class__.__name__, ntimes, nelements))
         else:

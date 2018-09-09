@@ -51,7 +51,6 @@ class ComplexShearArray(OES_Object):
 
     def build(self):
         """sizes the vectorized attributes of the ComplexShearArray"""
-        #print('data_code = %s' % self.data_code)
         if not hasattr(self, 'subtitle'):
             self.subtitle = self.data_code['subtitle']
         #print('ntimes=%s nelements=%s ntotal=%s subtitle=%s' % (
@@ -154,7 +153,7 @@ class ComplexShearArray(OES_Object):
         nnodes = self.element.shape[0]
         #ntotal = self.ntotal
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i nnodes=%i\n'
                        % (self.__class__.__name__, ntimes, nelements, nnodes))
         else:

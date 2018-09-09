@@ -57,7 +57,10 @@ class OP2Common(Op2Codes, F06Writer):
         #: the storage dictionary that is passed to OP2 objects (e.g. RealDisplacementArray)
         #: the key-value pairs are extracted and used to generate dynamic self
         #: variables for the OP2 objects
-        self.data_code = {}
+        #self.data_code = {
+            #'_encoding' : self._encoding,
+            #'load_as_h5' :
+        #}
 
         #: current subcase ID
         #: non-transient (SOL101) cases have isubcase set to None
@@ -244,10 +247,11 @@ class OP2Common(Op2Codes, F06Writer):
         #setattr(self, var_name, value)  # set the parameter to the local namespace
 
         if apply_nonlinear_factor:
-            self.nonlinear_factor = value
+            npvalue = _cast_nonlinear_factor(value)
+            self.nonlinear_factor = npvalue
             #if self.table_name == b'OUGV2':
                 #assert isinstance(self.nonlinear_factor, int), self.nonlinear_factor
-            self.data_code['nonlinear_factor'] = value
+            self.data_code['nonlinear_factor'] = npvalue
             self.data_code['name'] = var_name
 
         if add_to_dict:
@@ -269,8 +273,8 @@ class OP2Common(Op2Codes, F06Writer):
         this is a transient solution or not.
 
         """
-        self.nonlinear_factor = None
-        self.data_code['nonlinear_factor'] = None
+        self.nonlinear_factor = np.nan #np.float32(None)
+        self.data_code['nonlinear_factor'] = np.nan
 
     def _read_title_helper(self, data):
         assert len(data) == 584, len(data)
@@ -599,7 +603,7 @@ class OP2Common(Op2Codes, F06Writer):
 
         if is_sort1:
             #self.log.debug('   sort1; table_name=%r' % self.table_name)
-            if self.nonlinear_factor is None:
+            if self.nonlinear_factor in (None, np.nan):
                 n = self._read_real_table_static(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
             else:
                 n = self._read_real_table_sort1(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
@@ -628,7 +632,7 @@ class OP2Common(Op2Codes, F06Writer):
 
         #self._fix_format_code(format_code=1)
         self.log.debug('   sort1; table_name=%r' % self.table_name)
-        if self.nonlinear_factor is None:
+        if self.nonlinear_factor in (None, np.nan):
             n = self._read_real_table_static(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
         else:
             n = self._read_real_table_sort1(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
@@ -655,7 +659,7 @@ class OP2Common(Op2Codes, F06Writer):
 
             self._fix_format_code(format_code=1)
             if self.is_sort1:
-                if self.nonlinear_factor is None:
+                if self.nonlinear_factor in (None, np.nan):
                     n = self._read_real_table_static(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
                 else:
                     n = self._read_real_table_sort1(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
@@ -750,7 +754,7 @@ class OP2Common(Op2Codes, F06Writer):
 
             self._fix_format_code(format_code=1)
             if self.is_sort1:
-                if self.nonlinear_factor is None:
+                if self.nonlinear_factor in (None, np.nan):
                     n = self._read_real_scalar_table_static(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
                 else:
                     n = self._read_real_scalar_table_sort1(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
@@ -862,7 +866,7 @@ class OP2Common(Op2Codes, F06Writer):
                 raise ValueError(msg.rstrip())
             obj.itotal = itotal2
         else:
-            dt = None
+            dt = np.nan
             n = 0
             s = Struct(self._endian + b'2i6f')
             for inode in range(nnodes):
@@ -1004,7 +1008,7 @@ class OP2Common(Op2Codes, F06Writer):
             obj.itotal = itotal2
         else:
             n = 0
-            dt = None
+            dt = np.nan
             s = Struct(self._endian + b'2i6f')
             for inode in range(nnodes):
                 out = s.unpack(data[n:n+32])
@@ -1012,7 +1016,7 @@ class OP2Common(Op2Codes, F06Writer):
                 eid = eid_device // 10
                 if self.is_debug_file:
                     self.binary_debug.write('  %s=%i; %s\n' % (flag, eid, str(out)))
-                obj.add_sort1(None, eid, grid_type, tx, ty, tz, rx, ry, rz)
+                obj.add_sort1(dt, eid, grid_type, tx, ty, tz, rx, ry, rz)
                 n += 32
         return n
 
@@ -1376,8 +1380,8 @@ class OP2Common(Op2Codes, F06Writer):
         if hasattr(self, 'isubcase'):
             if self.code in storage_obj:
                 self.obj = storage_obj[code]
-                if self.nonlinear_factor is not None:
-                    if self.obj.nonlinear_factor is None:
+                if self.nonlinear_factor not in (None, np.nan):
+                    if self.obj.nonlinear_factor in (None, np.nan):
                         msg = 'The object is flipping from a static (e.g. preload)\n'
                         msg += 'result to a transient/frequency based results\n'
                         msg += '%s -> %s\n' % (self.obj.nonlinear_factor, self.nonlinear_factor)
@@ -2001,3 +2005,15 @@ class OP2Common(Op2Codes, F06Writer):
         """deepcopy(OP2) fails on Python 3.6 without doing this"""
         del self.fdtype, self.idtype, self.double_dtype, self.long_dtype
         del self.struct_i, self.struct_2i, self.struct_3i, self.struct_8s, self.struct_8s_i
+
+def _cast_nonlinear_factor(value):
+    """h5py is picky about it's data types"""
+    if isinstance(value, int):
+        value = np.int32(value)
+    elif isinstance(value, float):
+        value = np.float32(value)
+    elif isinstance(value, (np.int32, np.float32)):  # pragma: no cover
+        pass
+    else: # pragma: no cover
+        raise NotImplementedError('value=%s type=%s' % (value, type(value)))
+    return value

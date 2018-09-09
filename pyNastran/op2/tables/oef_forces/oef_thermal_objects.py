@@ -78,7 +78,7 @@ class Real1DHeatFluxArray(ScalarObject):
         """creates a pandas dataframe"""
         headers = self.get_headers()
         assert 0 not in self.element
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=self.element,
@@ -154,7 +154,7 @@ class Real1DHeatFluxArray(ScalarObject):
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i\n'
                        % (self.__class__.__name__, ntimes, nelements))
             ntimes_word = 'ntimes'
@@ -272,7 +272,7 @@ class RealHeatFluxVU3DArray(ScalarObject):
             self.element_node[:, 0],
             self.element_node[:, 1],
         ]
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=element_node,
@@ -356,7 +356,7 @@ class RealHeatFluxVU3DArray(ScalarObject):
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i\n'
                        % (self.__class__.__name__, ntimes, nelements))
             ntimes_word = 'ntimes'
@@ -487,7 +487,7 @@ class RealHeatFluxVUBeamArray(ScalarObject):  # 191-VUBEAM
             np.vstack([self.element_parent_coord[:, 2], self.element_parent_coord[:, 2]]).T.ravel(),
         ]
         #print(element_parent_coord)
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             # TODO: rework
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
@@ -573,7 +573,7 @@ class RealHeatFluxVUBeamArray(ScalarObject):  # 191-VUBEAM
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i\n'
                        % (self.__class__.__name__, ntimes, nelements))
             ntimes_word = 'ntimes'
@@ -645,7 +645,7 @@ class RealHeatFlux_2D_3DArray(RealElementTableArray):
         headers = self.get_headers()
 
         #nelements = self.element.shape[0]# // 2
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=self.element,
@@ -670,7 +670,7 @@ class RealHeatFlux_2D_3DArray(RealElementTableArray):
                  #' \n',
                  #'      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         #words += self.get_table_marker()
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             return self._write_f06_transient_block(words, header, page_stamp, page_num, f06_file,
                                                    is_mag_phase=is_mag_phase, is_sort1=is_sort1)
         return self._write_f06_block(words, header, page_stamp, page_num, f06_file,
@@ -743,7 +743,7 @@ class RealConvHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
             self.element_node[:, 0],
             self.element_node[:, 1],
         ]
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=element_node,
@@ -809,7 +809,7 @@ class RealConvHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i\n'
                        % (self.__class__.__name__, ntimes, nelements))
             ntimes_word = 'ntimes'
@@ -923,7 +923,7 @@ class RealChbdyHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         """creates a pandas dataframe"""
         headers = self.get_headers()
         assert 0 not in self.element
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
@@ -986,7 +986,7 @@ class RealChbdyHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i\n'
                        % (self.__class__.__name__, ntimes, nelements))
             ntimes_word = 'ntimes'

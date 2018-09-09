@@ -96,7 +96,7 @@ class RealSolidArray(OES_Object):
         headers = self.get_headers()
         # TODO: cid?
         element_node = [self.element_node[:, 0], self.element_node[:, 1]]
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values, major_axis=element_node, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
@@ -215,7 +215,7 @@ class RealSolidArray(OES_Object):
 
         msg = []
 
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i nnodes=%i\n  nnodes_per_element=%s (including centroid)\n'
                        % (self.__class__.__name__, ntimes, nelements, nnodes, nnodes_per_element))
             ntimes_word = 'ntimes'

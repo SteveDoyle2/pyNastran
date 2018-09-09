@@ -10,10 +10,6 @@ from itertools import count
 from typing import List, Union, Optional
 from six import PY2, string_types, iteritems, StringIO
 
-#from pyNastran.utils.numpy_utils import (
-    #integer_types, integer_string_types, integer_float_types, float_types)
-#import numpy as np
-
 if PY2:
     FileNotFoundError = IOError
     unicode_type = unicode

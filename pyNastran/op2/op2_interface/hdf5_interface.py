@@ -919,6 +919,7 @@ def _load_table(result_name, h5_result, objs, log, debug=False):# real_obj, comp
     data_names = [name.decode('utf8') for name in _cast(h5_result.get('data_names')).tolist()]
     str_data_names = [data_name + 's' for data_name in data_names]
     data_code = {
+        'load_as_h5' : _cast(h5_result.get('load_as_h5')),
         'nonlinear_factor' : nonlinear_factor,
         'sort_bits' : _cast(h5_result.get('sort_bits')).tolist(),
         'sort_method' : _cast(h5_result.get('sort_method')),
@@ -940,7 +941,9 @@ def _load_table(result_name, h5_result, objs, log, debug=False):# real_obj, comp
         'table_name' : _cast(h5_result.get('table_name')),
     }
     for key, value in list(iteritems(data_code)):
-        if value is None:
+        if isinstance(value, np.ndarray):
+            pass
+        elif value in (None, np.nan):
             if key in ['nonlinear_factor']:
                 pass
             elif key in ['acoustic_flag', 'stress_bits', 's_code', 'thermal']:

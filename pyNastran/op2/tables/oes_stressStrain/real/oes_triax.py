@@ -79,7 +79,7 @@ class RealTriaxArray(OES_Object):
         """creates a pandas dataframe"""
         headers = self.get_headers()
         element_node = [self.element_node[:, 0], self.element_node[:, 1]]
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values, major_axis=element_node, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
@@ -155,7 +155,7 @@ class RealTriaxArray(OES_Object):
         nelements = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i\n'
                        % (self.__class__.__name__, ntimes, nelements))
             ntimes_word = 'ntimes'
@@ -217,7 +217,7 @@ class RealTriaxArray(OES_Object):
                     % (eid, nid, radiali, azimuthali, axiali, sheari, omaxi, omsi, ovmi))
             f06_file.write(page_stamp % page_num)
             page_num += 1
-        if self.nonlinear_factor is None:
+        if self.nonlinear_factor in (None, np.nan):
             page_num -= 1
         return page_num
 

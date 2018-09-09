@@ -125,7 +125,7 @@ class RealNonlinearPlateArray(OES_Object):
         headers = self.get_headers()[1:]
         #nelements = self.element.shape[0]
 
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data[:, :, 1:], items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
@@ -216,7 +216,7 @@ class RealNonlinearPlateArray(OES_Object):
         nelements = self.ntotal // self.nnodes // 2
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msgi = '  type=%s ntimes=%i nelements=%i nnodes_per_element=%i nlayers=%i ntotal=%i\n' % (
                 self.__class__.__name__, ntimes, nelements, nnodes, nlayers, ntotal)
             ntimes_word = 'ntimes'

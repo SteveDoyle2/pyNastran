@@ -35,9 +35,6 @@ class GEOM1(GeomCommon):
         self.nodes[key] = node
 
     def _read_geom1_4(self, data, ndata):
-        #if data is None:
-            #return ndata
-        #self.show_ndata(140)
         return self._read_geom_4(self._geom1_map, data, ndata)
 
     def __init__(self):

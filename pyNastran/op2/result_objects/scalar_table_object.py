@@ -27,7 +27,7 @@ SORT2_TABLE_NAME_MAP = {
 }
 class ScalarTableArray(ScalarObject):  # displacement style table
     def __init__(self, data_code, unused_is_sort1, isubcase, unused_dt):
-        self.nonlinear_factor = None
+        self.nonlinear_factor = np.nan
         self.table_name = None
         self.approach_code = None
         self.analysis_code = None
@@ -132,7 +132,7 @@ class ScalarTableArray(ScalarObject):  # displacement style table
             assert nminor == ntotal, 'ntotal=%s expected=%s' % (nminor, ntimes)
 
         msg.append('  isubcase = %s\n' % self.isubcase)
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%s nnodes=%s, table_name=%s\n'
                        % (self.__class__.__name__, ntimes, nnodes, self.table_name))
         else:
@@ -216,7 +216,7 @@ class ScalarTableArray(ScalarObject):  # displacement style table
         node_gridtype = [self.node_gridtype[:, 0], self.gridtype_str]
         ugridtype_str = unique(self.gridtype_str)
 
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=node_gridtype, minor_axis=headers).to_frame()
@@ -395,7 +395,6 @@ class RealScalarTableArray(ScalarTableArray):  # temperature style table
         call_frame = inspect.getouterframes(frame, 2)
         fascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
 
-        #print('data_code =', self.data_code)
         if itable == -1:
             self._write_table_header(op2_file, fascii, date)
             itable = -3
@@ -592,7 +591,7 @@ class RealScalarTableArray(ScalarTableArray):  # temperature style table
             header.append('')
 
         is_sort2 = not is_sort1
-        if self.is_sort1 or self.nonlinear_factor is None:
+        if self.is_sort1 or self.nonlinear_factor in (None, np.nan):
             if is_sort2 and self.nonlinear_factor is not None:
                 page_num = self._write_sort1_as_sort2(f06_file, page_num, page_stamp, header, words)
             else:

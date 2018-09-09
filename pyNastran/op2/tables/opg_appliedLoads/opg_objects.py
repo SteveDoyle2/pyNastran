@@ -44,7 +44,7 @@ class AppliedLoadsVectorArray(ScalarObject):
         #nnodes, two = self.node_gridtype.shape
         nelements = 0
         ntimes = self.data.shape[0]
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
         else:
@@ -86,7 +86,7 @@ class RealAppliedLoadsVectorArray(AppliedLoadsVectorArray):
 
         eids = self.eids
         for itime, dt in enumerate(self._times):
-            if self.nonlinear_factor is not None:
+            if self.nonlinear_factor not in (None, np.nan):
                 if isinstance(dt, float):
                     header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
                 else:
@@ -130,7 +130,7 @@ class ComplexAppliedLoadsVectorArray(AppliedLoadsVectorArray):
 
         eids = self.eids
         for itime, dt in enumerate(self._times):
-            if self.nonlinear_factor is not None:
+            if self.nonlinear_factor not in (None, np.nan):
                 if isinstance(dt, float):
                     header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
                 else:

@@ -135,7 +135,7 @@ class ComplexRodForceArray(ScalarObject):
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
                        % (self.__class__.__name__, ntimes, nelements, self.table_name))
             ntimes_word = 'ntimes'
@@ -381,7 +381,7 @@ class ComplexCShearForceArray(ScalarObject):
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
                        % (self.__class__.__name__, ntimes, nelements, self.table_name))
             ntimes_word = 'ntimes'
@@ -615,7 +615,7 @@ class ComplexSpringDamperForceArray(ScalarObject):
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
                        % (self.__class__.__name__, ntimes, nelements, self.table_name))
             ntimes_word = 'ntimes'
@@ -833,7 +833,7 @@ class ComplexViscForceArray(ScalarObject):
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
                        % (self.__class__.__name__, ntimes, nelements, self.table_name))
             ntimes_word = 'ntimes'
@@ -1052,7 +1052,7 @@ class ComplexPlateForceArray(ScalarObject):
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
                        % (self.__class__.__name__, ntimes, nelements, self.table_name))
             ntimes_word = 'ntimes'
@@ -1224,7 +1224,7 @@ class ComplexPlate2ForceArray(ScalarObject):
         #print(self.element_node)
         element_node = [self.element_node[:, 0], self.element_node[:, 1]]
         assert 0 not in self.element_node[:, 0]
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=element_node, minor_axis=headers).to_frame()
@@ -1298,7 +1298,7 @@ class ComplexPlate2ForceArray(ScalarObject):
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
                        % (self.__class__.__name__, ntimes, nelements, self.table_name))
             ntimes_word = 'ntimes'
@@ -1547,7 +1547,7 @@ class ComplexCBarForceArray(ScalarObject):
         ntimes = self.ntimes
         msg = []
 
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
                        % (self.__class__.__name__, ntimes, nelements, self.table_name))
         else:
@@ -1857,7 +1857,7 @@ class ComplexCBeamForceArray(ScalarObject):
         ntimes = self.ntimes
         msg = []
 
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i\n'
                        % (self.__class__.__name__, ntimes, nelements))
         else:
@@ -2116,7 +2116,7 @@ class ComplexCBendForceArray(ScalarObject):  # 69-CBEND
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
                        % (self.__class__.__name__, ntimes, nelements, self.table_name))
             ntimes_word = 'ntimes'
@@ -2338,7 +2338,7 @@ class ComplexSolidPressureForceArray(ScalarObject):
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
                        % (self.__class__.__name__, ntimes, nelements, self.table_name))
             ntimes_word = 'ntimes'
@@ -2575,7 +2575,7 @@ class ComplexCBushForceArray(ScalarObject):
         #ntotal = self.ntotal
         msg = []
 
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
                        % (self.__class__.__name__, ntimes, nelements, self.table_name))
         else:
@@ -2823,7 +2823,7 @@ class ComplexCBeamForceVUArray(ScalarObject):  # 191-VUBEAM
         #fd = np.array(fiber_distance, dtype='unicode')
         #element_node = [self.element_node[:, 0], self.element_node[:, 1], fd]
 
-        #if self.nonlinear_factor is not None:
+        #if self.nonlinear_factor not in (None, np.nan):
             #column_names, column_values = self._build_dataframe_transient_header()
             #self.data_frame = pd.Panel(self.data, items=column_values, major_axis=element_node, minor_axis=headers).to_frame()
             #self.data_frame.columns.names = column_names
@@ -2897,7 +2897,7 @@ class ComplexCBeamForceVUArray(ScalarObject):  # 191-VUBEAM
         nelements = self.ntotal // self.nnodes // 2
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msgi = '  type=%s ntimes=%i nelements=%i nnodes_per_element=%i nlayers=%i ntotal=%i\n' % (
                 self.__class__.__name__, ntimes, nelements, nnodes, nlayers, ntotal)
             ntimes_word = 'ntimes'
@@ -3070,7 +3070,7 @@ class ComplexForceVU_2DArray(ScalarObject):  # 189-VUQUAD,190-VUTRIA
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
                        % (self.__class__.__name__, ntimes, nelements, self.table_name))
             ntimes_word = 'ntimes'

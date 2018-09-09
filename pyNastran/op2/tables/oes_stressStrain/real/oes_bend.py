@@ -52,7 +52,6 @@ class RealBendArray(OES_Object):
 
     def build(self):
         """sizes the vectorized attributes of the ComplexBendArray"""
-        #print('data_code = %s' % self.data_code)
         if not hasattr(self, 'subtitle'):
             self.subtitle = self.data_code['subtitle']
         #print('ntimes=%s nelements=%s ntotal=%s subtitle=%s' % (
@@ -156,7 +155,7 @@ class RealBendArray(OES_Object):
         nnodes = self.element_node.shape[0]
         #ntotal = self.ntotal
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i nnodes=%i\n'
                        % (self.__class__.__name__, ntimes, nelements, nnodes))
         else:
@@ -194,7 +193,7 @@ class RealBendArray(OES_Object):
             if is_sort1:
                 for itime in range(ntimes):
                     dt = self._times[itime]
-                    if self.nonlinear_factor is None:
+                    if self.nonlinear_factor in (None, np.nan):
                         dt_line = ''
                     else:
 

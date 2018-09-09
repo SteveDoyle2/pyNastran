@@ -534,8 +534,8 @@ class OP2(OP2_Scalar):
         #"""
         #self.ask = ask
 
-    def read_op2(self, op2_filename=None, combine=True, build_dataframe=None,
-                 skip_undefined_matrices=False, encoding=None):
+    def read_op2(self, op2_filename=None, combine=True,
+                 build_dataframe=None, skip_undefined_matrices=False, encoding=None):
         """
         Starts the OP2 file reading
 
@@ -547,6 +547,9 @@ class OP2(OP2_Scalar):
             True : objects are isubcase based
             False : objects are (isubcase, subtitle) based;
                     will be used for superelements regardless of the option
+        #load_as_h5 : default=False
+            #loads the op2 as an h5 file to save memory
+            #stores the result.element/data attributes in h5 format
         build_dataframe : bool (default=None -> True if in iPython, False otherwise)
             builds a pandas DataFrame for op2 objects
         skip_undefined_matrices : bool; default=False
@@ -555,6 +558,8 @@ class OP2(OP2_Scalar):
             the unicode encoding (default=None; system default)
 
         """
+        load_as_h5 = False
+
         if build_dataframe is None:
             build_dataframe = False
             if ipython_info():
@@ -574,7 +579,8 @@ class OP2(OP2_Scalar):
 
         try:
             # get GUI object names, build objects, but don't read data
-            OP2_Scalar.read_op2(self, op2_filename=op2_filename)
+            OP2_Scalar.read_op2(self, op2_filename=op2_filename,
+                                load_as_h5=load_as_h5)
 
             # TODO: stuff to figure out objects
             # TODO: stuff to show gui of table names

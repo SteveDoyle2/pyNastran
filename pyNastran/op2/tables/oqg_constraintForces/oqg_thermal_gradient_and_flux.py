@@ -28,6 +28,6 @@ class RealTemperatureGradientAndFluxArray(RealTableArray):
             raise NotImplementedError('table_name=%r' % self.table_name)
         #words += self.get_table_marker()
         write_words = False
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             return self._write_f06_transient_block(words, header, page_stamp, page_num, f06_file, write_words)
         return self._write_f06_block(words, header, page_stamp, page_num, f06_file, write_words)

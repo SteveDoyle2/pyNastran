@@ -76,7 +76,7 @@ class RandomRodArray(OES_Object):
     def build_dataframe(self):
         """creates a pandas dataframe"""
         headers = self.get_headers()
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=self.element, minor_axis=headers).to_frame()
@@ -141,7 +141,7 @@ class RandomRodArray(OES_Object):
         assert self.nelements == nelements, 'nelements=%s expected=%s' % (self.nelements, nelements)
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
                        % (self.__class__.__name__, ntimes, nelements, self.table_name))
             ntimes_word = 'ntimes'

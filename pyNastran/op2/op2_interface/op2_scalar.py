@@ -672,6 +672,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self.op2_filename = None
         self.bdf_filename = None
         self.f06_filename = None
+        self.h5_filename = None
         self._encoding = 'utf8'
 
         #: should a MATPOOL "symmetric" matrix be stored as symmetric
@@ -1291,7 +1292,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self.is_debug_file, self.binary_debug = create_binary_debug(
             self.op2_filename, self.debug_file, self.log)
 
-    def read_op2(self, op2_filename=None, combine=False):
+    def read_op2(self, op2_filename=None, combine=False, load_as_h5=None, h5_file=None):
         """
         Starts the OP2 file reading
 
@@ -1299,6 +1300,14 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         ----------
         op2_filename : str
             the op2 file
+        combine : bool; default=True
+            True : objects are isubcase based
+            False : objects are (isubcase, subtitle) based;
+                    will be used for superelements regardless of the option
+        load_as_h5 : default=None
+            None : don't setup the h5_file
+            True/False : loads the op2 as an h5 file to save memory
+                         stores the result.element/data attributes in h5 format
 
         +--------------+-----------------------+
         | op2_filename | Description           |
@@ -1308,6 +1317,18 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         |    string    | the path is used      |
         +--------------+-----------------------+
         """
+        fname = os.path.splitext(op2_filename)[0]
+        self.op2_filename = op2_filename
+        self.bdf_filename = fname + '.bdf'
+        self.f06_filename = fname + '.f06'
+        self.h5_filename = fname + '.h5'
+
+        self.op2_reader.load_as_h5 = load_as_h5
+        if load_as_h5:
+            h5_file = None
+            import h5py
+            self.op2_reader.h5_file = h5py.File(self.h5_filename, 'w')
+
         self._count = 0
         if self.read_mode == 1:
             #sr = list(self._results.saved)
@@ -1323,14 +1344,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 if os.path.getsize(op2_filename) == 0:
                     raise IOError('op2_filename=%r is empty.' % op2_filename)
                 raise IOError('op2_filename=%r is not a binary OP2.' % op2_filename)
-
-        bdf_extension = '.bdf'
-        f06_extension = '.f06'
-        fname = os.path.splitext(op2_filename)[0]
-
-        self.op2_filename = op2_filename
-        self.bdf_filename = fname + bdf_extension
-        self.f06_filename = fname + f06_extension
 
         self._create_binary_debug()
         self._setup_op2()
@@ -1362,6 +1375,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 self.f.close()
             del self.binary_debug
             del self.f
+            #self.op2_reader.h5_file.close()
 
     def _setup_op2(self):
         """
@@ -1408,36 +1422,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         if self.read_mode == 1:
             self._set_structs()
-
-    #def create_unpickable_data(self):
-        #raise NotImplementedError()
-        ##==== not needed ====
-        ##self.f
-        ##self.binary_debug
-
-        ## needed
-        #self._geom1_map
-        #self._geom2_map
-        #self._geom3_map
-        #self._geom4_map
-        #self._dit_map
-        #self._dynamics_map
-        #self._ept_map
-        #self._mpt_map
-        #self._table_mapper
-
-    #def remove_unpickable_data(self):
-        #del self.f
-        #del self.binary_debug
-        #del self._geom1_map
-        #del self._geom2_map
-        #del self._geom3_map
-        #del self._geom4_map
-        #del self._dit_map
-        #del self._dynamics_map
-        #del self._ept_map
-        #del self._mpt_map
-        #del self._table_mapper
 
     def _make_tables(self):
         return

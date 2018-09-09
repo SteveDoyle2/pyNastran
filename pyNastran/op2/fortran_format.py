@@ -28,7 +28,6 @@ class FortranFormat(object):
         self.n = 0
         self.f = None
         self.obj = None
-        self.data_code = None
         self.table_name = None
         self.isubcase = None
         self.binary_debug = None

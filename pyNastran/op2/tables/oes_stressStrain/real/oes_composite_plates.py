@@ -109,7 +109,7 @@ class RealCompositePlateArray(OES_Object):
         """
         headers = self.get_headers()
         element_layer = [self.element_layer[:, 0], self.element_layer[:, 1]]
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=element_layer, minor_axis=headers).to_frame()
@@ -196,7 +196,7 @@ class RealCompositePlateArray(OES_Object):
         nelements = len(unique(self.element_layer[:, 0]))
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i ntotal=%i\n'
                        % (self.__class__.__name__, ntimes, nelements, ntotal))
             ntimes_word = 'ntimes'

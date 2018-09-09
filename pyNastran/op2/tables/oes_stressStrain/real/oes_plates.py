@@ -117,7 +117,7 @@ class RealPlateArray(OES_Object):
         fd = np.array(fiber_distance, dtype='unicode')
         element_node = [self.element_node[:, 0], self.element_node[:, 1], fd]
 
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=element_node, minor_axis=headers).to_frame()
@@ -207,7 +207,7 @@ class RealPlateArray(OES_Object):
         nelements = self.ntotal // self.nnodes // 2
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msgi = '  type=%s ntimes=%i nelements=%i nnodes_per_element=%i nlayers=%i ntotal=%i\n' % (
                 self.__class__.__name__, ntimes, nelements, nnodes, nlayers, ntotal)
             ntimes_word = 'ntimes'

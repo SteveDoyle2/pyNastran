@@ -94,7 +94,7 @@ class RealBush1DStressArray(OES_Object):
     def build_dataframe(self):
         """creates a pandas dataframe"""
         headers = self.get_headers()
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
@@ -173,7 +173,7 @@ class RealBush1DStressArray(OES_Object):
         nelements = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i\n'
                        % (self.__class__.__name__, ntimes, nelements))
             ntimes_word = 'ntimes'
@@ -235,6 +235,6 @@ class RealBush1DStressArray(OES_Object):
                        axial_straini, plastic_straini, is_failedi))
             f06_file.write(page_stamp % page_num)
             page_num += 1
-        if self.nonlinear_factor is None:
+        if self.nonlinear_factor in (None, np.nan):
             page_num -= 1
         return page_num

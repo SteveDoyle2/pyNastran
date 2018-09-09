@@ -30,7 +30,7 @@ class RealForceObject(ScalarObject):
     def __init__(self, data_code, isubcase, apply_data_code=True):
         self.element_type = None
         self.element_name = None
-        self.nonlinear_factor = None
+        self.nonlinear_factor = np.nan
         self.element = None
         self._times = None
         ScalarObject.__init__(self, data_code, isubcase, apply_data_code=apply_data_code)
@@ -112,7 +112,7 @@ class FailureIndices(RealForceObject):
     def build_dataframe(self):
         """creates a pandas dataframe"""
         headers = self.get_headers()
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=self.element, minor_axis=headers).to_frame()
@@ -145,7 +145,7 @@ class FailureIndices(RealForceObject):
         assert self.nelements == nelements, 'nelements=%s expected=%s' % (self.nelements, nelements)
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
                        % (self.__class__.__name__, ntimes, nelements, self.table_name))
             ntimes_word = 'ntimes'
@@ -233,7 +233,7 @@ class RealSpringDamperForceArray(RealForceObject):
     def build_dataframe(self):
         """creates a pandas dataframe"""
         headers = self.get_headers()
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=self.element, minor_axis=headers).to_frame()
@@ -250,7 +250,7 @@ class RealSpringDamperForceArray(RealForceObject):
         assert self.ntotal == table.ntotal
         assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
         assert self.approach_code == table.approach_code
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
                 self.element_name, self.element_type, self._times, table._times)
         if not np.array_equal(self.element, table.element):
@@ -313,7 +313,7 @@ class RealSpringDamperForceArray(RealForceObject):
         assert self.nelements == nelements, 'nelements=%s expected=%s' % (self.nelements, nelements)
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
                        % (self.__class__.__name__, ntimes, nelements, self.table_name))
             ntimes_word = 'ntimes'
@@ -509,7 +509,7 @@ class RealRodForceArray(RealForceObject):
     def build_dataframe(self):
         """creates a pandas dataframe"""
         headers = self.get_headers()
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=self.element, minor_axis=headers).to_frame()
@@ -543,7 +543,7 @@ class RealRodForceArray(RealForceObject):
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
                        % (self.__class__.__name__, ntimes, nelements, self.table_name))
             ntimes_word = 'ntimes'
@@ -620,7 +620,7 @@ class RealRodForceArray(RealForceObject):
         assert self.ntotal == table.ntotal
         assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
         assert self.approach_code == table.approach_code
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
                 self.element_name, self.element_type, self._times, table._times)
         if not np.array_equal(self.element, table.element):
@@ -738,7 +738,7 @@ class RealCBeamForceArray(RealForceObject):
             self.element_node[:, 0],
             self.data[0, :, 0],
         ]
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data[:, :, 1:], items=column_values,
                                        major_axis=element_location, minor_axis=headers[1:]).to_frame()
@@ -811,7 +811,7 @@ class RealCBeamForceArray(RealForceObject):
         ntimes = self.ntimes
         msg = []
 
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
                        % (self.__class__.__name__, ntimes, nelements, self.table_name))
         else:
@@ -876,7 +876,7 @@ class RealCBeamForceArray(RealForceObject):
         #times = self._times
         ntimes = self.data.shape[0]
         for itime in range(ntimes):
-            if self.nonlinear_factor is not None:
+            if self.nonlinear_factor not in (None, np.nan):
                 dt = self._times[itime]
                 dt_line = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
                 header[1] = dt_line
@@ -977,7 +977,7 @@ class RealCShearForceArray(RealForceObject):
     def build_dataframe(self):
         """creates a pandas dataframe"""
         headers = self.get_headers()
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=self.element, minor_axis=headers).to_frame()
@@ -995,7 +995,7 @@ class RealCShearForceArray(RealForceObject):
         assert self.ntotal == table.ntotal
         assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
         assert self.approach_code == table.approach_code
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
                 self.element_name, self.element_type, self._times, table._times)
         if not np.array_equal(self.element, table.element):
@@ -1062,7 +1062,7 @@ class RealCShearForceArray(RealForceObject):
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
                        % (self.__class__.__name__, ntimes, nelements, self.table_name))
             ntimes_word = 'ntimes'
@@ -1200,7 +1200,7 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
     def build_dataframe(self):
         """creates a pandas dataframe"""
         headers = self.get_headers()
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=self.element, minor_axis=headers).to_frame()
@@ -1232,7 +1232,7 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i\n'
                        % (self.__class__.__name__, ntimes, nelements))
             ntimes_word = 'ntimes'
@@ -1404,7 +1404,7 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
         """creates a pandas dataframe"""
         headers = self.get_headers()
         assert 0 not in self.element
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=self.element, minor_axis=headers).to_frame()
@@ -1479,7 +1479,7 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i\n'
                        % (self.__class__.__name__, ntimes, nelements))
             ntimes_word = 'ntimes'
@@ -1626,7 +1626,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
         """creates a pandas dataframe"""
         headers = self.get_headers()
         element_node = [self.element_node[:, 0], self.element_node[:, 1]]
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=element_node, minor_axis=headers).to_frame()
@@ -1714,7 +1714,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
         ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i ntotal=%i nnodes/element=%i\n'
                        % (self.__class__.__name__, ntimes, nelements, ntotal, self.nnodes_per_element))
             ntimes_word = 'ntimes'
@@ -1924,7 +1924,7 @@ class RealCBarForceArray(RealForceObject):  # 34-CBAR
     def build_dataframe(self):
         """creates a pandas dataframe"""
         headers = self.get_headers()
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             # Create a 3D Panel
             #column_values = [modes, freq]
@@ -1969,7 +1969,7 @@ class RealCBarForceArray(RealForceObject):  # 34-CBAR
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
                        % (self.__class__.__name__, ntimes, nelements, self.table_name))
             ntimes_word = 'ntimes'
@@ -2115,7 +2115,7 @@ class RealConeAxForceArray(RealForceObject):
     def build_dataframe(self):
         """creates a pandas dataframe"""
         headers = self.get_headers()
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=self.element, minor_axis=headers).to_frame()
@@ -2183,7 +2183,7 @@ class RealConeAxForceArray(RealForceObject):
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
                        % (self.__class__.__name__, ntimes, nelements, self.table_name))
             ntimes_word = 'ntimes'
@@ -2319,7 +2319,7 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
             self.element,
             self.data[0, :, 0],
         ]
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data[:, :, 1:], items=column_values,
                                        major_axis=element_location, minor_axis=headers[1:]).to_frame()
@@ -2358,7 +2358,7 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
                        % (self.__class__.__name__, ntimes, nelements, self.table_name))
             ntimes_word = 'ntimes'
@@ -2510,7 +2510,7 @@ class RealCGapForceArray(RealForceObject):  # 38-CGAP
     def build_dataframe(self):
         """creates a pandas dataframe"""
         headers = self.get_headers()
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=self.element, minor_axis=headers).to_frame()
@@ -2575,7 +2575,7 @@ class RealCGapForceArray(RealForceObject):  # 38-CGAP
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i\n'
                        % (self.__class__.__name__, ntimes, nelements))
             ntimes_word = 'ntimes'
@@ -2680,7 +2680,7 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
         """creates a pandas dataframe"""
         element = self.element_node[:, 0]
         headers = self.get_headers()
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             # TODO: add NodeA, NodeB
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
@@ -2724,7 +2724,7 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i\n'
                        % (self.__class__.__name__, ntimes, nelements))
             ntimes_word = 'ntimes'
@@ -2955,7 +2955,7 @@ class RealSolidPressureForceArray(RealForceObject):  # 77-PENTA_PR,78-TETRA_PR
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i\n'
                        % (self.__class__.__name__, ntimes, nelements))
             ntimes_word = 'ntimes'
@@ -3150,7 +3150,7 @@ class RealCBeamForceVUArray(RealForceObject):  # 191-VUBEAM
     def build_dataframe(self):
         """creates a pandas dataframe"""
         headers = self.get_headers()
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=self.element_node[:, 0], minor_axis=headers).to_frame()
@@ -3168,7 +3168,7 @@ class RealCBeamForceVUArray(RealForceObject):  # 191-VUBEAM
         assert self.ntotal == table.ntotal
         assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
         assert self.approach_code == table.approach_code
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
                 self.element_name, self.element_type, self._times, table._times)
         if not np.array_equal(self.element_node, table.element_node):
@@ -3249,7 +3249,7 @@ class RealCBeamForceVUArray(RealForceObject):  # 191-VUBEAM
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i\n'
                        % (self.__class__.__name__, ntimes, nelements))
             ntimes_word = 'ntimes'
@@ -3378,7 +3378,7 @@ class RealCBushForceArray(RealForceObject):
     def build_dataframe(self):
         """creates a pandas dataframe"""
         headers = self.get_headers()
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=self.element, minor_axis=headers).to_frame()
@@ -3396,7 +3396,7 @@ class RealCBushForceArray(RealForceObject):
         assert self.ntotal == table.ntotal
         assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
         assert self.approach_code == table.approach_code
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
                 self.element_name, self.element_type, self._times, table._times)
         if not np.array_equal(self.element, table.element):
@@ -3458,7 +3458,7 @@ class RealCBushForceArray(RealForceObject):
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i\n'
                        % (self.__class__.__name__, ntimes, nelements))
             ntimes_word = 'ntimes'
@@ -3584,7 +3584,7 @@ class RealForceVU2DArray(RealForceObject):  # 189-VUQUAD, 190-VUTRIA
         return
         #headers = self.get_headers()
         #assert 0 not in self.element_node
-        #if self.nonlinear_factor is not None:
+        #if self.nonlinear_factor not in (None, np.nan):
             #column_names, column_values = self._build_dataframe_transient_header()
             #self.data_frame = pd.Panel(self.data, items=column_values,
                                        #major_axis=self.element, minor_axis=headers).to_frame()
@@ -3655,7 +3655,7 @@ class RealForceVU2DArray(RealForceObject):  # 189-VUQUAD, 190-VUTRIA
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i\n'
                        % (self.__class__.__name__, ntimes, nelements))
             ntimes_word = 'ntimes'

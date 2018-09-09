@@ -66,6 +66,11 @@ class SubTableReadError(Exception):
 class OP2Reader(object):
     """Stores methods that aren't useful to an end user"""
     def __init__(self, op2):
+        #: should an h5_file be created
+        self.load_as_h5 = False
+        #: the h5 file object used to reduce memory usage  
+        self.h5_file = None
+
         self.op2 = op2
         #self.minor_tables = MinorTables(self)
 
@@ -3013,7 +3018,11 @@ class OP2Reader(object):
             if op2.table_name in oes_nl and hasattr(op2, 'num_wide') and op2.num_wide == 146:
                 data_code_old = deepcopy(op2.data_code)
 
-            op2.data_code = {'_encoding' : self._encoding}
+            op2.data_code = {
+                '_encoding' : self._encoding,
+                'load_as_h5' : self.load_as_h5,
+                'h5_file' : self.h5_file,
+            }
             op2.obj = None
             data, ndata = self._read_record_ndata()
             if not passer:

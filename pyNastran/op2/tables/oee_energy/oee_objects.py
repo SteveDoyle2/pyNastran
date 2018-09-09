@@ -162,7 +162,7 @@ class RealStrainEnergyArray(ScalarObject):
 
             nvalues = ntimes * nelements
 
-            #if self.nonlinear_factor is not None:
+            #if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             #column_names = column_names[0]
             #column_values = column_values[0]
@@ -334,7 +334,7 @@ class RealStrainEnergyArray(ScalarObject):
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s element_name=%r ntimes=%i nelements=%i\n'
                        % (self.__class__.__name__, self.element_name, ntimes, nelements))
             ntimes_word = 'ntimes'
@@ -563,7 +563,7 @@ class ComplexStrainEnergyArray(ScalarObject):
         #else:
             #nvalues = ntimes * nelements
             #element = self.element.ravel()
-            #if self.nonlinear_factor is not None:
+            #if self.nonlinear_factor not in (None, np.nan):
                 #column_names, column_values = self._build_dataframe_transient_header()
                 ##column_names = column_names[0]
                 ##column_values = column_values[0]
@@ -689,7 +689,7 @@ class ComplexStrainEnergyArray(ScalarObject):
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i\n'
                        % (self.__class__.__name__, ntimes, nelements))
             ntimes_word = 'ntimes'

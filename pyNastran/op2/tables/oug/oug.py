@@ -61,7 +61,7 @@ class OUG(OP2Common):
     def _read_oug1_3(self, data, ndata):
         """reads table 3 (the header table)"""
         #self._set_times_dtype()
-        self.nonlinear_factor = None
+        self.nonlinear_factor = np.nan
         self.is_table_1 = True
         self.is_table_2 = False
         three = self.parse_approach_code(data)
@@ -176,7 +176,7 @@ class OUG(OP2Common):
         """reads the SORT2 version of table 4 (the data table)"""
         #self._set_times_dtype()
         #return self._read_oug1_3(data)
-        self.nonlinear_factor = None
+        self.nonlinear_factor = np.nan
 
         self.is_table_1 = False
         self.is_table_2 = True
