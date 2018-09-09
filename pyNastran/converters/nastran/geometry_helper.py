@@ -171,7 +171,7 @@ class NastranGeometryHelper(NastranGuiAttributes):
 
             if debug:  # pragma: no cover
                 print('%s' % elem)
-                print('  bar_type =', bar_type)
+                print('  bar_type = %s' % bar_type)
             found_bar_types.add(bar_type)
 
             (nid1, nid2) = elem.node_ids
@@ -453,6 +453,7 @@ def get_material_arrays(model, mids):
         #elif mat.type == 'MAT9':
             # Defines the material properties for linear, temperature-independent,
             #anisotropic materials for solid isoparametric elements (PSOLID)
+            #g11i = mat.G11
         elif mat.type in ['MAT11', 'MAT3D']:
             e11i = mat.e1
             e22i = mat.e2
@@ -467,7 +468,9 @@ def get_material_arrays(model, mids):
             #self.log.info('skipping\n%s' % mat)
             #continue
         else:
-            print('skipping\n%s' % mat)
+            msg = 'skipping\n%s' % mat
+            #print(msg.encode('utf16'))
+            print(msg.encode(model._encoding))
             continue
             #raise NotImplementedError(mat)
         #print('mid=%s e11=%e e22=%e' % (umid, e11i, e22i))

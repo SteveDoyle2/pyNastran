@@ -97,8 +97,8 @@ def _transform_cylindrical_displacement(inode, data, coord, xyz_cid0, cid_transf
     #print('thetar = ', thetar)
     #self.log.debug('thetad = %s' % list(thetad))
 
-    np.set_printoptions(precision=None, threshold=None, edgeitems=None, linewidth=None, suppress=True,
-                        nanstr=None, infstr=None, formatter=None, sign=None, floatmode=None)
+    #np.set_printoptions(precision=None, threshold=None, edgeitems=None, linewidth=None, suppress=True,
+                        #nanstr=None, infstr=None, formatter=None, sign=None, floatmode=None)
     xforms = cylindrical_rotation_matrix(thetar, dtype='float64')
     #print('xforms.shape = %s' % str(xforms.shape))
 
@@ -117,14 +117,41 @@ def _transform_cylindrical_displacement(inode, data, coord, xyz_cid0, cid_transf
             #print('xforms:\n%s' % (xforms))
             #xforms2 = dot_33_n33(xforms, cid_transform)  # wrong shape
             #xforms2a = dot_33_n33(cid_transform, xforms)
-            xforms2b = dot_n33_33(xforms, cid_transform)
+            #xforms2b = dot_n33_33(xforms, cid_transform)
+            #xforms2b = xforms
+            # triple products
+            #xforms2c = dot_33_n33(cid_transform.T, dot_n33_33(xforms, cid_transform))
+            #xforms2d = dot_33_n33(cid_transform, dot_n33_33(xforms, cid_transform.T))
+
             #print('xform A:\n%s'  % xforms2a)
             #print('xform B:\n%s'  % xforms2b)
             #translation2 = dot_n33_n3(xforms2a, translation)
-            xforms2 = xforms2b
-            translation2 = dot_n33_n3(xforms2, translation)
-            rotation2 = dot_n33_n3(xforms2, rotation)
+            #xforms2 = xforms2b
+            if 1:
+                xforms2b = dot_n33_33(xforms, cid_transform)
+                translation2 = dot_n33_n3(xforms2b, translation)
+                rotation2 = dot_n33_n3(xforms2b, rotation)
+            elif 0:  ## pragma: no cover
+                xforms2b = dot_n33_33(xforms, cid_transform)
+                translation2a = dot_n33_n3(xforms2b, translation)
+                rotation2a = dot_n33_n3(xforms2b, rotation)
+                print('translation2a.shape =', translation2a.shape)
+                assert translation.shape == translation2a.shape
 
+                translation2 = translation2a.dot(cid_transform)
+                rotation2 = rotation2a.dot(cid_transform)
+
+            elif 0:  ## pragma: no cover
+                # bad shape
+                translation2a = dot_n33_n3(xforms, translation)
+                rotation2a = dot_n33_n3(xforms, rotation)
+                print('translation2a.shape =', translation2a.shape)
+                assert translation.shape == translation2a.shape
+
+                translation2 = cid_transform.dot(translation2a.dot(cid_transform))
+                rotation2 = cid_transform.dot(rotation2a.dot(cid_transform))
+            else:  ## pragma: no cover
+                raise NotImplementedError('pick an option...')
         #print('translation.shape', translation.shape)
         #print('translation2.shape', translation2.shape)
         data[itime, inode, :3] = translation2

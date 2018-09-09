@@ -31,6 +31,20 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
+#from functools import wraps
+#def unicode_check(func):
+    #@wraps(func)
+    #def wrapper(self, **kwargs):
+        #try:
+            #func(self, **kwargs)
+        #except UnicodeEncodeError:
+            #print('removing comment')
+            #comment = self.comment
+            #self.comment = ''
+            #out = func(self, **kwargs)
+            #self.comment = comment
+            #return out
+    #return wrapper
 
 class IsotropicMaterial(Material):
     """Isotropic Material Class"""
