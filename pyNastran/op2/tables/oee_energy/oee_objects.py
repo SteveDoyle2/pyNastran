@@ -1,7 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import integer_types, binary_type
-from numpy import zeros
 import numpy as np
 
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
@@ -99,20 +98,20 @@ class RealStrainEnergyArray(ScalarObject):
 
     def build_data(self, dtype):
         """actually performs the build step"""
-        self._times = zeros(self.ntimes, dtype=dtype)
+        self._times = np.zeros(self.ntimes, dtype=dtype)
         #self.element = zeros(self.nelements, dtype='int32')
         #if dtype in 'DMIG':
         #print(self.element_name, self.element_type)
         if self.element_name == 'DMIG':
-            self.element = zeros((self.ntimes, self.nelements), dtype='|U8')
+            self.element = np.zeros((self.ntimes, self.nelements), dtype='|U8')
         else:
-            self.element = zeros((self.ntimes, self.nelements), dtype='int32')
+            self.element = np.zeros((self.ntimes, self.nelements), dtype='int32')
         #self.element_data_type = empty(self.nelements, dtype='|U8')
 
         #[energy, percent, density]
         assert isinstance(self.ntimes, integer_types), self.ntimes
         assert isinstance(self.ntotal, integer_types), self.ntotal
-        self.data = zeros((self.ntimes, self.nelements, 3), dtype='float32')
+        self.data = np.zeros((self.ntimes, self.nelements, 3), dtype='float32')
 
     def build_dataframe(self):
         """
@@ -522,15 +521,15 @@ class ComplexStrainEnergyArray(ScalarObject):
 
     def build_data(self, dtype):
         """actually performs the build step"""
-        self._times = zeros(self.ntimes, dtype=dtype)
-        #self.element = zeros(self.nelements, dtype='int32')
-        self.element = zeros((self.ntimes, self.nelements), dtype='int32')
+        self._times = np.zeros(self.ntimes, dtype=dtype)
+        #self.element = np.zeros(self.nelements, dtype='int32')
+        self.element = np.zeros((self.ntimes, self.nelements), dtype='int32')
         #self.element_data_type = empty(self.nelements, dtype='|U8')
 
         #[energy, percent, density]
         assert isinstance(self.ntimes, integer_types), self.ntimes
         assert isinstance(self.ntotal, integer_types), self.ntotal
-        self.data = zeros((self.ntimes, self.nelements, 4), dtype='float32')
+        self.data = np.zeros((self.ntimes, self.nelements, 4), dtype='float32')
 
     #def build_dataframe(self):
         #"""

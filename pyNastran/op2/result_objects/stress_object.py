@@ -1,7 +1,7 @@
 from __future__ import print_function
 import sys
 from collections import OrderedDict
-from six import iteritems, iterkeys
+from six import iterkeys
 import numpy as np
 
 #vm_word = get_plate_stress_strain(
@@ -26,7 +26,7 @@ class StressObject(object):
             #(case.element_node, ueids, data2, vm_word, ntimes) = self.plates_data_dict[key]
             #(min_data, max_data) = data2
 
-        for element_type, composite_data in iteritems(self.composite_data_dict):
+        for element_type, composite_data in self.composite_data_dict.items():
             for key in composite_data:
                 element_layer, ueids, data2, vm_word, ntimes, headers = composite_data[key]
                 #all_eids = ueids
@@ -46,7 +46,7 @@ class StressObject(object):
                                  is_element_on, header_dict):
         #print("setting...")
 
-        for element_type, composite_data in iteritems(self.composite_data_dict):
+        for element_type, composite_data in self.composite_data_dict.items():
             try:
                 element_layer, ueids, data2, vm_word, ntimes, headers = composite_data[key]
             except KeyError:
@@ -81,7 +81,7 @@ class StressObject(object):
                              max_principal, min_principal, ovm,
                              ):  # pragma: no cover
 
-        for element_type, composite_data in iteritems(self.composite_data_dict):
+        for element_type, composite_data in self.composite_data_dict.items():
             element_layer, ueids, data2, vm_word, ntimes, headers = composite_data[key]
 
             ntimes, neids, nlayers, nresults = data2.shape
@@ -127,7 +127,7 @@ def create_plates(model, key, is_stress):
     isotropic_data_dict = {}
     for obj_dict in plates:
         cases_to_delete = []
-        for case_key, case in iteritems(obj_dict):
+        for case_key, case in obj_dict.items():
             if case_key == key:
                 #data_dict[element_type] = [ueids, data]
                 case_to_delete = case_key
@@ -228,7 +228,7 @@ def create_composite_plates(model, key, is_stress, keys_map):
             continue
 
         composite_data_dict[element_type] = {}
-        for case_key, case in iteritems(obj_dict):
+        for case_key, case in obj_dict.items():
             if case_key == key:
                 keys_map[key] = (case.subtitle, case.label,
                                  case.superelement_adaptivity_index, case.pval_step)

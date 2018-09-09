@@ -4,7 +4,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from itertools import count
 from struct import Struct, pack
 from six import integer_types
-from six.moves import zip, range
 
 import numpy as np
 from numpy import zeros, where, searchsorted

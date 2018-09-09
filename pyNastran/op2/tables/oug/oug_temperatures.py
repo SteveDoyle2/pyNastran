@@ -1,4 +1,5 @@
 # pylint: disable=E1101
+import numpy as np
 from pyNastran.op2.result_objects.table_object import RealTableArray
 from pyNastran.op2.result_objects.scalar_table_object import RealScalarTableArray
 

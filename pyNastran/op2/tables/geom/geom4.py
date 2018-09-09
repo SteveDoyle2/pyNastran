@@ -5,7 +5,6 @@ defines readers for BDF objects in the OP2 GEOM4/GEOM4S table
 from __future__ import print_function
 from struct import unpack, Struct
 from six import b
-from six.moves import range
 import numpy as np
 
 from pyNastran.bdf.cards.elements.rigid import RBAR, RBE2, RBE3, RROD

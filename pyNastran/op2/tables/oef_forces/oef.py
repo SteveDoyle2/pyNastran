@@ -16,7 +16,6 @@ FLUX             HOEF1         Element heat flux
 """
 from __future__ import print_function
 from struct import Struct
-from six.moves import range
 import numpy as np
 from numpy import frombuffer, vstack, sin, cos, radians, array, hstack, zeros
 

@@ -1108,7 +1108,7 @@ class OP2_F06_Common(Deprecated):
                     self.log.warning(table)
                     raise
 
-        for unused_name, matrix in sorted(iteritems(self.matrices)):
+        for unused_name, matrix in sorted(self.matrices.items()):
             #msg.append('matrices[%s].shape = %s\n' % (name, matrix.data.shape))
             msg.append(str(matrix) + '\n')
         try:

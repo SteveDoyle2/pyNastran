@@ -15,7 +15,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 import os
 from six import b
 
-from six import iteritems, PY3, binary_type
+from six import PY3, binary_type
 import numpy as np
 import h5py
 
@@ -940,7 +940,7 @@ def _load_table(result_name, h5_result, objs, log, debug=False):# real_obj, comp
         'name' : data_names[0],
         'table_name' : _cast(h5_result.get('table_name')),
     }
-    for key, value in list(iteritems(data_code)):
+    for key, value in list(data_code.items()):
         if isinstance(value, np.ndarray):
             pass
         elif value in (None, np.nan):
@@ -1027,7 +1027,7 @@ def _get_obj_class(objs, class_name, result_name, unused_is_real, log):
         print(objs)
 
         print('obj_map:')
-        for key, value in iteritems(obj_map):
+        for key, value in obj_map.items():
             print('  %s : %s' % (key, value))
 
         # if the obj_map is wrong, you probably have an issue in:
@@ -1076,7 +1076,7 @@ def _export_matrices(hdf5_file, op2_model):
     """exports the matrices to HDF5"""
     if len(op2_model.matrices):
         matrix_group = hdf5_file.create_group('matrices')
-        for key, matrix in sorted(iteritems(op2_model.matrices)):
+        for key, matrix in sorted(op2_model.matrices.items()):
             matrixi_group = matrix_group.create_group(b(key))
             if hasattr(matrix, 'export_to_hdf5'):
                 matrix.export_to_hdf5(matrixi_group, op2_model.log)
@@ -1094,7 +1094,7 @@ def _export_subcases(hdf5_file, op2_model):
         #if len(result):
             #print(result)
 
-        for key, obj in iteritems(result):
+        for key, obj in result.items():
             #class_name = obj.__class__.__name__
             #print('working on %s' % class_name)
             obj.object_attributes()

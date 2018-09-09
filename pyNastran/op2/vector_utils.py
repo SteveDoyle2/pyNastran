@@ -212,7 +212,6 @@ def sortedsum1d(ids, values, axis=None):
     uids = unique(ids)
     i1 = np.searchsorted(ids, uids, side='left') # left is the default
     i2 = np.searchsorted(ids, uids, side='right')
-    print(i1, i2)
     out = np.zeros(values.shape, dtype=values.dtype)
 
     for i, i1i, i2i in zip(count(), i1, i2):

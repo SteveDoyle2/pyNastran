@@ -1,4 +1,5 @@
-from numpy import angle, float32
+import numpy as np
+#from numpy import angle, float32
 from pyNastran.utils import object_attributes
 
 
@@ -63,7 +64,7 @@ def write_imag_floats_13e(vals, is_mag_phase):
 
         # phase
         for v in vals:
-            v2 = angle(v, deg=True)
+            v2 = np.angle(v, deg=True)
 
             v3 = '%-13.4f' % v2 if v2 >= 0.0 else '%-13.4f' % (v2 + 360.)
             if v3 == '0.0000       ':
@@ -107,11 +108,11 @@ def write_floats_8p1e(vals):
     return vals2
 
 def _eigenvalue_header(obj, header, itime, ntimes, dt):
-    if obj.nonlinear_factor is not None:
+    if obj.nonlinear_factor not in (None, np.nan):
         name = obj.data_code['name']
         if isinstance(dt, int):
             dt_line = ' %14s = %i\n' % (name.upper(), dt)
-        elif isinstance(dt, (float, float32)):
+        elif isinstance(dt, (float, np.float32)):
             dt_line = ' %14s = %12.5E\n' % (name, dt)
         else:
             dt_line = ' %14s = %12.5E %12.5Ej\n' % (name, dt.real, dt.imag)

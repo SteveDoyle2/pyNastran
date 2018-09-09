@@ -25,7 +25,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
 import sys
-from six import PY2, iteritems, string_types, itervalues
+from six import PY2, string_types, itervalues
 from six.moves.cPickle import load, dump, dumps
 
 import numpy as np
@@ -224,6 +224,7 @@ class OP2(OP2_Scalar):
                                              stop_on_failure=True, debug=False)
         except (AssertionError, ValueError):
             is_equal = False
+            raise
         return is_equal
 
     def assert_op2_equal(self, op2_model, stop_on_failure=True, debug=False):
@@ -657,7 +658,7 @@ class OP2(OP2_Scalar):
         result_types = self.get_table_types()
 
         if len(self.matrices):
-            for key, matrix in sorted(iteritems(self.matrices)):
+            for key, matrix in sorted(self.matrices.items()):
                 if hasattr(matrix, 'build_dataframe'):
                     matrix.build_dataframe()
                 else:
@@ -779,7 +780,7 @@ class OP2(OP2_Scalar):
 
         if not combine:
             subcase_key2 = {}
-            for key, value in iteritems(self.subcase_key):
+            for key, value in self.subcase_key.items():
                 subcase_key2[key] = value
             self.subcase_key = subcase_key2
             #print('self.subcase_key =', self.subcase_key)
@@ -999,7 +1000,7 @@ class OP2(OP2_Scalar):
 
     def print_subcase_key(self):
         self.log.info('---self.subcase_key---')
-        for isubcase, keys in sorted(iteritems(self.subcase_key)):
+        for isubcase, keys in sorted(self.subcase_key.items()):
             if len(keys) == 1:
                 self.log.info('subcase_id=%s : keys=%s' % (isubcase, keys))
             else:
@@ -1130,7 +1131,7 @@ class OP2(OP2_Scalar):
             if not disp_like_dict:
                 continue
             self.log.debug('-----------')
-            for subcase, result in iteritems(disp_like_dict):
+            for subcase, result in disp_like_dict.items():
                 transform_gpforce_to_globali(subcase, result,
                                              nids_all, nids_transform,
                                              icd_transform, coords, xyz_cid0, self.log)

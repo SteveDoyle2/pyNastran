@@ -6,7 +6,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from datetime import date
 #from collections import defaultdict
 from struct import pack, Struct
-from six import iteritems
 
 import pyNastran
 from pyNastran.op2.op2_f06_common import OP2_F06_Common
@@ -120,7 +119,7 @@ class OP2Writer(OP2_F06_Common):
                 op2_ascii.write(str(key) + '\n')
 
                 spack = Struct('ii 3f 3i')
-                for nid, node in sorted(iteritems(obj.nodes)):
+                for nid, node in sorted(obj.nodes.items()):
                     xyz = node.xyz
                     ps = node.ps
                     if ps == '':
@@ -378,7 +377,7 @@ class OP2Writer(OP2_F06_Common):
         #is_mag_phase = False
 
         # eigenvalues are written first
-        for ikey, result in sorted(iteritems(obj.eigenvalues)):
+        for ikey, result in sorted(obj.eigenvalues.items()):
             header
             #print('%-18s SUBCASE=%i' % (result.__class__.__name__, isubcase))
             if hasattr(result, 'write_op2'):
@@ -391,7 +390,7 @@ class OP2Writer(OP2_F06_Common):
 
         # then eigenvectors
         # has a special header
-        for isubcase, result in sorted(iteritems(obj.eigenvectors)):
+        for isubcase, result in sorted(obj.eigenvectors.items()):
             (subtitle, label) = obj.isubcase_name_map[isubcase]
 
             if hasattr(result, 'write_op2'):

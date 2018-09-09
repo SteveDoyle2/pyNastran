@@ -6,7 +6,7 @@ import os
 import sys
 import time
 from traceback import print_exc
-from six import string_types, iteritems
+from six import string_types
 
 import numpy as np
 np.set_printoptions(precision=3, threshold=20)
@@ -596,7 +596,7 @@ def get_test_op2_data():
 def main():
     """the interface for test_op2"""
     data = get_test_op2_data()
-    for key, value in sorted(iteritems(data)):
+    for key, value in sorted(data.items()):
         print("%-12s = %r" % (key.strip('--'), value))
 
     if os.path.exists('skippedCards.out'):

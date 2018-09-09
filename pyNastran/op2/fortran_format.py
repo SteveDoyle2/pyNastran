@@ -7,8 +7,6 @@ from __future__ import print_function
 import sys
 from copy import deepcopy
 from struct import unpack
-from six import iteritems
-from six.moves import range
 
 from pyNastran.utils import object_attributes
 from pyNastran.utils.numpy_utils import integer_types

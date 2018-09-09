@@ -1,6 +1,5 @@
 from __future__ import print_function
 from struct import Struct
-from six.moves import range
 from numpy import frombuffer
 from pyNastran.op2.op2_interface.op2_common import OP2Common
 from pyNastran.op2.tables.ogs_grid_point_stresses.ogs_surface_stresses import (

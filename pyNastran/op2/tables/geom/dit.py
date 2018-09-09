@@ -109,26 +109,7 @@ class DIT(GeomCommon):
             (tid, table_type, lu, wg, dunno_a, dunno_b, dunno_c, dunno_d) = out
             if tid > 100000000:
                 tid = -(tid - 100000000)
-            #if add_codes:
-            #data_in = [tid, table_type, lu, wg]
-            #else:
-                #data_in = [tid, x, y]
-
             n += 32
-            #if 0:
-                #while 1:
-                    #(xint, yint) = struct_2i.unpack(data[n:n + 8])
-                    #(x, y) = struct_ff.unpack(data[n:n + 8])
-
-                    #n += 8
-                    #if [xint, yint] == [-1, -1]:
-                        #break
-                    #else:
-                        #data_in += [x, y]
-
-            #print('data_in =', data_in)
-            #table = cls.add_op2_data(data_in)
-            #add_method(table)
             self.add_tabrndg(tid, table_type, lu, wg, comment='')
             #nentries += 1
         #self.increase_card_count('TABRNDG', nentries)

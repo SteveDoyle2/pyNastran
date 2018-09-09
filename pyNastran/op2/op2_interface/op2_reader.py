@@ -45,7 +45,7 @@ import sys
 from copy import deepcopy
 from itertools import count
 from struct import unpack, Struct
-from six import b, iteritems
+from six import b
 import numpy as np
 import scipy  # type: ignore
 
@@ -68,7 +68,7 @@ class OP2Reader(object):
     def __init__(self, op2):
         #: should an h5_file be created
         self.load_as_h5 = False
-        #: the h5 file object used to reduce memory usage  
+        #: the h5 file object used to reduce memory usage
         self.h5_file = None
 
         self.op2 = op2
@@ -3033,7 +3033,7 @@ class OP2Reader(object):
                         self.binary_debug.write('except SortCodeError!\n')
                     if op2.table_name in oes_nl:
                         op2.data_code = data_code_old
-                        for key, value in iteritems(data_code_old):
+                        for key, value in data_code_old.items():
                             setattr(op2, key, value)
                         table4_parser(data, ndata)
                         return False

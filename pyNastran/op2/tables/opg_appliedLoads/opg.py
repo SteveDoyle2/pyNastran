@@ -3,7 +3,7 @@
 Defines the Real/Complex Forces created by:
     OLOAD = ALL
 """
-
+import numpy as np
 #from pyNastran.op2.tables.opg_appliedLoads.opg_objects import (#RealAppliedLoads,  #ComplexAppliedLoads,
                                                                #RealAppliedLoadsVectorArray, ComplexAppliedLoadsVectorArray)
 from pyNastran.op2.tables.opg_appliedLoads.opg_load_vector import (

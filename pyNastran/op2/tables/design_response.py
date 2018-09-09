@@ -103,7 +103,6 @@ class WeightResponse(object):
         seid = out[13]
 
         #--------------------------------------------------
-        #print(out)
         #row_id = out[4]
 
         # these should be blank?
@@ -126,7 +125,6 @@ class WeightResponse(object):
             #response_type, response_label, row_id, column_id,
             #dunno_6, dunno_7, dunno_8, dunno_9, dunno_10, dunno_11, dunno_12, seid))
         #out = unpack(self._endian + b'iii 8s iiff f fffff', data)
-        #print(out)
         #msg = 'WEIGHT - label=%r region=%s subcase=%s row_id=%r column_id=%r' % (
             #response_label, region, subcase, row_id, column_id)
         self.append(internal_id, dresp_id, response_label, region,
@@ -148,8 +146,6 @@ class WeightResponse(object):
         #self.flutter_id.append(flutter_id)
         #self.subcase.append(subcase)
         self._n += 1
-        #if self.n == self._n:
-            #print(self)
 
     def __repr__(self):
         msg = 'responses.WeightResponse()\n'
@@ -185,8 +181,6 @@ class GeneralResponse(object):
         self.item_code.append(item_code)
         self.pid.append(pid)
         self._n += 1
-        #if self.n == self._n:
-            #print(self)
 
     def __repr__(self):
         name = self.__class__.__name__
@@ -236,8 +230,6 @@ class FlutterResponse(object):
         self.density.append(density)
         self.flutter_id.append(flutter_id)
         self._n += 1
-        #if self.n == self._n:
-            #print(self)
 
     def __repr__(self):
         msg = 'FlutterResponse()\n'
@@ -312,8 +304,6 @@ class Convergence(object):
         self.row_constraint_max[n] = row_constraint_max
         self.desvar_values[n, :] = desvar_values
         self._n += 1
-        #if self.n == self._n:
-            #print(self)
 
     def __repr__(self):
         msg = 'Convergence()\n'

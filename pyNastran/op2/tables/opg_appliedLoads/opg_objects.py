@@ -1,5 +1,4 @@
-from six.moves import zip
-from numpy import zeros
+import numpy as np
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
 from pyNastran.f06.f06_formatting import write_floats_13e, write_imag_floats_13e
 
@@ -24,10 +23,10 @@ class AppliedLoadsVectorArray(ScalarObject):
         """sizes the vectorized attributes of the AppliedLoadsVectorArray"""
         if self.is_built:
             return
-        self.eids = zeros(self.itotal, dtype='int32')
-        self.sources = zeros(self.itotal, dtype='|S8')
+        self.eids = np.zeros(self.itotal, dtype='int32')
+        self.sources = np.zeros(self.itotal, dtype='|S8')
         #[f1, f2, f3, m1, m2, m3]
-        self.data = zeros((self.ntimes, self.itotal, 6), dtype=self.data_type())
+        self.data = np.zeros((self.ntimes, self.itotal, 6), dtype=self.data_type())
 
     def get_stats(self, short=False):
         if not self.is_built:

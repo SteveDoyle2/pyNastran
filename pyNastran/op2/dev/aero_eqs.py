@@ -1,7 +1,6 @@
 #pylint: disable=C0301,W0612,C0111,R0201,C0103,W0613,R0914
 from __future__ import print_function
 import numpy as np
-from six import iteritems
 
 def merge(amatrix, bmatrix):
     return amatrix + bmatrix
@@ -301,7 +300,7 @@ def thin_plate_spline(C, wS, mesh, aero_points, node_list, D=1.0):
 
     wa = {}
     i = 0
-    for iaero, aero_node in sorted(iteritems(aero_points)):
+    for iaero, aero_node in sorted(aero_points.items()):
         xK = np.zeros(nnodes+3, 'd')
         #nodeI = mesh.Node(iNode)
 

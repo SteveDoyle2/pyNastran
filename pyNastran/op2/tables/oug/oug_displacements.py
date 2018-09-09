@@ -1,5 +1,6 @@
 from __future__ import print_function
 from six import string_types
+import numpy as np
 #from struct import pack
 
 
@@ -172,7 +173,7 @@ class ComplexDisplacementArray(ComplexTableArray):
         #data = []
         #fmt = '2i 6f'
         #device_code = self.device_code
-        #for nodeID, translation in sorted(iteritems(self.translations)):
+        #for nodeID, translation in sorted(self.translations.items()):
             #rotation = self.rotations[nodeID]
             #grid_type = self.gridTypes[nodeID]
             #if grid_type == 'G':

@@ -1,7 +1,7 @@
 from __future__ import print_function
 import os
 import sys
-from six import iteritems, PY2
+from six import PY2
 
 import pyNastran
 from pyNastran.utils.dev import get_files_of_type
@@ -40,7 +40,7 @@ def parse_skipped_cards(fname):
                 results[key] = fpath
 
     files_to_analyze = []
-    for key, value in sorted(iteritems(results)):
+    for key, value in sorted(results.items()):
         files_to_analyze.append(value)
 
     with open('new_elements.in', 'wb') as new_elements_file:

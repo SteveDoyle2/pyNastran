@@ -2,7 +2,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import integer_types
-from six.moves import zip, range
 import numpy as np
 from numpy import zeros, searchsorted, allclose
 
@@ -246,7 +245,13 @@ class RealSpringDamperForceArray(RealForceObject):
 
     def __eq__(self, table):
         assert self.is_sort1 == table.is_sort1
-        assert self.nonlinear_factor == table.nonlinear_factor
+        is_nan = (
+            self.nonlinear_factor is not None and
+            np.isnan(self.nonlinear_factor) and
+            np.isnan(table.nonlinear_factor)
+        )
+        if not is_nan:
+            assert self.nonlinear_factor == table.nonlinear_factor
         assert self.ntotal == table.ntotal
         assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
         assert self.approach_code == table.approach_code
@@ -616,7 +621,13 @@ class RealRodForceArray(RealForceObject):
 
     def __eq__(self, table):
         assert self.is_sort1 == table.is_sort1
-        assert self.nonlinear_factor == table.nonlinear_factor
+        is_nan = (
+            self.nonlinear_factor is not None and
+            np.isnan(self.nonlinear_factor) and
+            np.isnan(table.nonlinear_factor)
+        )
+        if not is_nan:
+            assert self.nonlinear_factor == table.nonlinear_factor
         assert self.ntotal == table.ntotal
         assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
         assert self.approach_code == table.approach_code
@@ -991,7 +1002,13 @@ class RealCShearForceArray(RealForceObject):
 
     def __eq__(self, table):
         assert self.is_sort1 == table.is_sort1
-        assert self.nonlinear_factor == table.nonlinear_factor
+        is_nan = (
+            self.nonlinear_factor is not None and
+            np.isnan(self.nonlinear_factor) and
+            np.isnan(table.nonlinear_factor)
+        )
+        if not is_nan:
+            assert self.nonlinear_factor == table.nonlinear_factor
         assert self.ntotal == table.ntotal
         assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
         assert self.approach_code == table.approach_code
@@ -1313,7 +1330,13 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
 
     def __eq__(self, table):
         assert self.is_sort1 == table.is_sort1
-        assert self.nonlinear_factor == table.nonlinear_factor
+        is_nan = (
+            self.nonlinear_factor is not None and
+            np.isnan(self.nonlinear_factor) and
+            np.isnan(table.nonlinear_factor)
+        )
+        if not is_nan:
+            assert self.nonlinear_factor == table.nonlinear_factor
         assert self.ntotal == table.ntotal
         assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
         assert self.approach_code == table.approach_code
@@ -3164,7 +3187,13 @@ class RealCBeamForceVUArray(RealForceObject):  # 191-VUBEAM
 
     def __eq__(self, table):
         assert self.is_sort1 == table.is_sort1
-        assert self.nonlinear_factor == table.nonlinear_factor
+        is_nan = (
+            self.nonlinear_factor is not None and
+            np.isnan(self.nonlinear_factor) and
+            np.isnan(table.nonlinear_factor)
+        )
+        if not is_nan:
+            assert self.nonlinear_factor == table.nonlinear_factor
         assert self.ntotal == table.ntotal
         assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
         assert self.approach_code == table.approach_code
@@ -3392,7 +3421,13 @@ class RealCBushForceArray(RealForceObject):
 
     def __eq__(self, table):
         assert self.is_sort1 == table.is_sort1
-        assert self.nonlinear_factor == table.nonlinear_factor
+        is_nan = (
+            self.nonlinear_factor is not None and
+            np.isnan(self.nonlinear_factor) and
+            np.isnan(table.nonlinear_factor)
+        )
+        if not is_nan:
+            assert self.nonlinear_factor == table.nonlinear_factor
         assert self.ntotal == table.ntotal
         assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
         assert self.approach_code == table.approach_code
