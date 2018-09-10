@@ -12,7 +12,7 @@ from datetime import date
 from collections import defaultdict
 from traceback import print_exc
 
-from six import string_types, PY2
+from six import string_types
 
 import pyNastran
 from pyNastran.op2.op2_interface.op2_f06_common import OP2_F06_Common
@@ -404,10 +404,7 @@ class F06Writer(OP2_F06_Common):
             #print("matrix_filename =", matrix_filename)
             #mat = open(matrix_filename, 'wb')
 
-            if PY2:
-                f06 = open(f06_outname, 'wb')
-            else:
-                f06 = open(f06_outname, 'w')
+            f06 = open(f06_outname, 'w')
             self._write_summary(f06)
         elif hasattr(f06_outname, 'read') and hasattr(f06_outname, 'write'):
             #f06 = f06_outname

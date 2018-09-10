@@ -9,7 +9,6 @@ defines:
                                   crash_on_collapse=False, log=None, debug=True)
 """
 from __future__ import print_function
-from six import PY2
 
 import numpy as np
 from numpy import (array, unique, arange, searchsorted,
@@ -146,10 +145,7 @@ def _eq_nodes_setup(bdf_filename, unused_tol,
     inode = 0
     nid_map = {}
     if node_set is not None:
-        if PY2:
-            all_nids = array(model.nodes.keys(), dtype='int32')
-        else:
-            all_nids = array(list(model.nodes.keys()), dtype='int32')
+        all_nids = array(list(model.nodes.keys()), dtype='int32')
 
         # B - A
         # these are all the nodes that are requested from node_set that are missing

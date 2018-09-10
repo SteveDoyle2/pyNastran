@@ -12,7 +12,7 @@ from codecs import open
 from copy import deepcopy
 from collections import defaultdict
 
-from six import PY2, string_types
+from six import string_types
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdf import read_bdf

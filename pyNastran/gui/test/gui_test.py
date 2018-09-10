@@ -4,7 +4,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
 import sys
-from six import PY2
 
 import pyNastran
 from pyNastran.gui.test.test_gui import run_lots_of_files
@@ -95,10 +94,7 @@ def run(regenerate=True):
     npassed = ntotal - nfailed
     sys.stderr.write('%i/%i passed\n' % (npassed, ntotal))
 
-    if PY2:
-        write = 'wb'
-    else:
-        write = 'w'
+    write = 'w'
     with open(failed_cases_filename, write) as failed_cases_file:
         for fname in failed_files:
             failed_cases_file.write('%s\n' % fname)

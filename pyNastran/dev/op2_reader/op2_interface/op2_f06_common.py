@@ -1,6 +1,6 @@
 from __future__ import print_function
 from collections import defaultdict
-from six import iteritems, string_types, binary_type, text_type
+from six import string_types, binary_type, text_type
 from numpy import unique, int32, int64
 
 from pyNastran import is_release
@@ -1061,7 +1061,7 @@ class OP2_F06_Common(Deprecated):
             no_data_classes = ['RealEigenvalues', 'ComplexEigenvalues', 'BucklingEigenvalues']
             for table_type in table_types:
                 table = self.get_result(table_type)
-                for isubcase, subcase in sorted(iteritems(table), key=compare):
+                for isubcase, subcase in sorted(table.items(), key=compare):
                     class_name = subcase.__class__.__name__
                     if class_name in no_data_classes:
                         msg.append('%s[%r]\n' % (table_type, isubcase))
@@ -1084,7 +1084,7 @@ class OP2_F06_Common(Deprecated):
             for table_type in table_types:
                 table = self.get_result(table_type)
                 try:
-                    for isubcase, subcase in sorted(iteritems(table), key=compare):
+                    for isubcase, subcase in sorted(table.items(), key=compare):
                         class_name = subcase.__class__.__name__
                         if hasattr(subcase, 'get_stats'):
                             try:

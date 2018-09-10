@@ -377,7 +377,7 @@ class WriteMesh(BDFAttributes):
         pid_eids = self.get_element_ids_dict_with_pids(pids, stop_if_no_eids=False)
 
         #failed_element_types = set([])
-        for (pid, eids) in sorted(iteritems(pid_eids)):
+        for (pid, eids) in sorted(pid_eids.items()):
             prop = self.properties[pid]
             if eids:
                 bdf_file.write(prop.write_card(size, is_double))
@@ -624,7 +624,7 @@ class WriteMesh(BDFAttributes):
         size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
         if len(self.coords) > 1:
             bdf_file.write('$COORDS\n')
-        for (unused_id, coord) in sorted(iteritems(self.coords)):
+        for (unused_id, coord) in sorted(self.coords.items()):
             if unused_id != 0:
                 try:
                     bdf_file.write(coord.write_card(size, is_double))
@@ -882,7 +882,7 @@ class WriteMesh(BDFAttributes):
             #if self.grdset:
                 #bdf_file.write(self.grdset.write_card(size, is_double))
             ## TODO: this really shouldn't be a dictionary...???
-            #for key, node in sorted(iteritems(associated_nodes)):
+            #for key, node in sorted(associated_nodes.items()):
                 #bdf_file.write(node.write_card(size, is_double))
 
         #if unassociated_nodes:
