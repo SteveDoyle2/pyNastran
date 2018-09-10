@@ -1486,7 +1486,7 @@ class TestOP2(Tester):
         assert os.path.exists(debug_file), os.listdir(folder)
         os.remove(debug_file)
 
-    def test_op2_autodesk_1(self):
+    def _test_op2_autodesk_1(self):
         """tests an Autodesk Nastran example"""
         op2_filename = os.path.join(PKG_PATH, 'op2', 'test', 'examples',
                                     'autodesk', 'aa8lzviq9.op2')

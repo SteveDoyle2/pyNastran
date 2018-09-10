@@ -27,7 +27,7 @@ from numpy.linalg import norm  # type: ignore
 from pyNastran.utils.numpy_utils import integer_types, float_types
 from pyNastran.bdf.cards.loads.loads import Load, LoadCombination
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.cards.base_card import BaseCard, expand_thru, expand_thru_by, range #  _node_ids,
+from pyNastran.bdf.cards.base_card import BaseCard, expand_thru, expand_thru_by #  _node_ids,
 from pyNastran.bdf.cards.collpase_card import collapse_thru_by
 
 from pyNastran.bdf.bdf_interface.assign_type import (

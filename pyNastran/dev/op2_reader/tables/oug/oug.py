@@ -303,7 +303,7 @@ class OUG(TableReader):
             self.binary_debug.write('  %-14s = %r\n' % ('isubcase', self.isubcase))
         self._read_title(data)
         self._write_debug_bits()
-        assert isinstance(self.nonlinear_factor, int), self.nonlinear_factor
+        assert isinstance(self.nonlinear_factor, (int, np.int32)), self.nonlinear_factor
 
     def _read_oug_4(self, data, ndata):
         """reads the SORT1 version of table 4 (the data table)"""
