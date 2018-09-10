@@ -3,7 +3,6 @@ import os
 from copy import deepcopy
 from collections import defaultdict
 
-from six import iteritems
 from numpy import zeros, unique, where, argsort, searchsorted, allclose, array
 
 from pyNastran.converters.aflr.ugrid.ugrid_reader import read_ugrid

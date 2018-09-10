@@ -5,7 +5,6 @@ defines:
                                          log=None, debug=False)
 """
 from __future__ import print_function
-from six import iteritems
 from numpy import zeros, array
 from pyNastran.bdf.bdf import BDF
 from pyNastran.converters.tecplot.tecplot import Tecplot
@@ -20,7 +19,7 @@ def nastran_to_tecplot(model):
     if nnodes == inode_max:
         xyz = zeros((nnodes, 3), dtype='float64')
         i = 0
-        for unused_nid, node in sorted(iteritems(model.nodes)):
+        for unused_nid, node in sorted(model.nodes.items()):
             xyz[i, :] = node.get_position()
             i += 1
     else:
@@ -43,7 +42,7 @@ def nastran_to_tecplot(model):
     #pids = zeros(nelements, dtype='int32')
     #mids = zeros(nelements, dtype='int32')
     unhandled_types = set([])
-    for unused_eid, element in iteritems(model.elements):
+    for unused_eid, element in model.elements.items():
         if element.type in ['CTRIA3']:
             tris.append(element.node_ids)
         elif element.type in ['CQUAD4']:
@@ -140,14 +139,14 @@ def nastran_to_tecplot_filename(bdf_filename, tecplot_filename, log=None, debug=
 
     i = 0
     nodeid_to_i_map = {}
-    for node_id, node in sorted(iteritems(model.nodes)):
+    for node_id, node in sorted(model.nodes.items()):
         xyz = node.get_position()
         nodes[i, :] = xyz
         nodeid_to_i_map[node_id] = i
         i += 1
     assert len(model.nodes) == i, 'model.nodes=%s i=%s' % (len(model.nodes), i)
 
-    for unused_eid, element in sorted(iteritems(model.elements)):
+    for unused_eid, element in sorted(model.elements.items()):
         if element.type in ['CTETRA']:
             n1, n2, n3, n4 = element.node_ids
             i1, i2, i3, i4 = (nodeid_to_i_map[n1], nodeid_to_i_map[n2],

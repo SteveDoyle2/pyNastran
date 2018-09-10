@@ -6,7 +6,7 @@ from __future__ import print_function
 import os
 import unittest
 
-from six import iteritems, integer_types
+from six import integer_types
 import numpy as np
 
 import pyNastran

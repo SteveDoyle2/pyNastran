@@ -6,7 +6,6 @@ Defines:
       find the net force/moment on the model for a subset of elements
 """
 from __future__ import print_function
-from six import iteritems
 import numpy as np
 from numpy import array, cross, allclose, mean
 from numpy.linalg import norm  # type: ignore
@@ -69,7 +68,7 @@ def sum_forces_moments(model, p0, loadcase_id, include_grav=False, xyz_cid0=None
     M = array([0., 0., 0.])
     if xyz_cid0 is None:
         xyz = {}
-        for nid, node in iteritems(model.nodes):
+        for nid, node in model.nodes.items():
             xyz[nid] = node.get_position()
     else:
         xyz = xyz_cid0
@@ -169,7 +168,7 @@ def sum_forces_moments(model, p0, loadcase_id, include_grav=False, xyz_cid0=None
         elif load.type == 'GRAV':
             if include_grav:  # this will be super slow
                 g = load.GravityVector() * scale
-                for eid, elem in iteritems(model.elements):
+                for eid, elem in model.elements.items():
                     centroid = elem.Centroid()
                     mass = elem.Mass()
                     r = centroid - p
@@ -530,7 +529,7 @@ def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
     if nids is None:
         nids = list(model.node_ids)
 
-    #for (key, load_case) in iteritems(model.loads):
+    #for (key, load_case) in model.loads.items():
         #if key != loadcase_id:
             #continue
 
@@ -542,7 +541,7 @@ def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
 
     if xyz_cid0 is None:
         xyz = {}
-        for nid, node in iteritems(model.nodes):
+        for nid, node in model.nodes.items():
             xyz[nid] = node.get_position()
     else:
         xyz = xyz_cid0
@@ -697,7 +696,7 @@ def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
         elif load.type == 'GRAV':
             if include_grav:  # this will be super slow
                 g = load.GravityVector() * scale
-                for eid, elem in iteritems(model.elements):
+                for eid, elem in model.elements.items():
                     if eid not in eids:
                         continue
                     centroid = elem.Centroid()

@@ -172,7 +172,7 @@ class ComplexDisplacementArray(ComplexTableArray):
         #data = []
         #fmt = '2i 6f'
         #device_code = self.device_code
-        #for nodeID, translation in sorted(iteritems(self.translations)):
+        #for nodeID, translation in sorted(self.translations.items()):
             #rotation = self.rotations[nodeID]
             #grid_type = self.gridTypes[nodeID]
             #if grid_type == 'G':

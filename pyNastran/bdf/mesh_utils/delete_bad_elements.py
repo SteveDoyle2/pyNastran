@@ -8,7 +8,6 @@ defines:
 
 from __future__ import print_function
 import numpy as np
-from six import iteritems
 
 
 def delete_bad_shells(model, max_theta=175., max_skew=70., max_aspect_ratio=100.,
@@ -24,7 +23,7 @@ def delete_bad_shells(model, max_theta=175., max_skew=70., max_aspect_ratio=100.
     """
     xyz_cid0 = model.get_xyz_in_coord(cid=0, fdtype='float32')
     nid_map = {}
-    for i, (nid, node) in enumerate(sorted(iteritems(model.nodes))):
+    for i, (nid, node) in enumerate(sorted(model.nodes.items())):
         #xyz = node.get_position()
         #xyz_cid0[i, :] = xyz
         nid_map[nid] = i
@@ -80,7 +79,7 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70.,
     max_theta = np.radians(max_theta)
     max_skew = np.radians(max_skew)
     eids_failed = []
-    for eid, element in sorted(iteritems(model.elements)):
+    for eid, element in sorted(model.elements.items()):
         if element.type == 'CQUAD4':
             node_ids = element.node_ids
             #pid = element.Pid()

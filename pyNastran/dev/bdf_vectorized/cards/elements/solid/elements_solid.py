@@ -1,4 +1,3 @@
-#from six import iteritems
 import numpy as np
 from numpy import  zeros, where, searchsorted, argsort, full, nan, unique, array
 
@@ -96,7 +95,7 @@ class ElementsSolid(object):
         }
         #element_property = zeros((self.n, 2), dtype='int32')
         #n0 = n
-        #for etype, elements in iteritems(etypes):
+        #for etype, elements in etypes.items():
         #    n = element_property.n
         #    element_property[n0:n0+n, 0] = element_property.element_id
         #    element_property[n0:n0+n, 1] = element_property.property_id

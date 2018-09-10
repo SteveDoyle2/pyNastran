@@ -2,7 +2,7 @@
 from __future__ import print_function
 import os
 import unittest
-from six import iteritems, PY2
+from six import PY2
 
 import numpy as np
 from numpy import ones, reshape, arange
@@ -24,7 +24,7 @@ class TestOP4(unittest.TestCase):
         ]
         for fname in fnames:
             matrices = read_op4(os.path.join(OP4_PATH, fname))
-            for name, (form, matrix) in sorted(iteritems(matrices)):
+            for name, (form, matrix) in sorted(matrices.items()):
                 #print("name = %s" % (name))
                 if isinstance(matrix, ndarray):
                     pass
@@ -44,7 +44,7 @@ class TestOP4(unittest.TestCase):
         for fname in fnames:
             op4 = OP4()
             matrices = op4.read_op4(os.path.join(OP4_PATH, fname))
-            for name, (form, matrix) in sorted(iteritems(matrices)):
+            for name, (form, matrix) in sorted(matrices.items()):
                 #print("name = %s" % name)
                 if isinstance(matrix, ndarray):
                     #print(matrix)
@@ -280,7 +280,7 @@ class TestOP4(unittest.TestCase):
                                         precision='default')
                 #print("keys = %s" % matrices.keys())
                 #print("fname=%s" % fname)
-                for name, (form, matrix) in sorted(iteritems(matrices)):
+                for name, (form, matrix) in sorted(matrices.items()):
                     op4.write_op4(op4_filea, matrices, name_order=name,
                                   is_binary=False)
                     if write_binary:

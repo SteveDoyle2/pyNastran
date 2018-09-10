@@ -1,7 +1,6 @@
 from __future__ import print_function
 from collections import defaultdict
 
-from six import iteritems
 from pyNastran.bdf.bdf import read_bdf, BDF, FORCE, PLOAD4
 
 
@@ -31,7 +30,7 @@ def force_to_pressure(bdf_filename, bdf_filename_out=None):
 
     nid_elem_count = defaultdict(int)
     nid_elem_map = defaultdict(list)
-    for eid, elem in iteritems(model.elements):
+    for eid, elem in model.elements.items():
         for nid in elem.nodes:
             nid_elem_count[nid] += 1
             nid_elem_map[nid].append(eid)
@@ -40,7 +39,7 @@ def force_to_pressure(bdf_filename, bdf_filename_out=None):
     #model.cross_reference()
 
     forces = defaultdict(float)
-    for load_id, load in iteritems(model.loads):
+    for load_id, load in model.loads.items():
         for loadi in loads:
             if loadi.type == 'FORCE':
                 loadi = FORCE(sid, node, cid, mag, xyz)
@@ -71,7 +70,7 @@ def force_to_pressure(bdf_filename, bdf_filename_out=None):
     model.cross_reference()
     model.loads = {}
     with open('pressures.out', 'w') as pressure_file:
-        for eid, press in iteritems(forces):
+        for eid, press in forces.items():
             eids = [eid]
             forcei = forces[eid]
             elem = model.elements[eid]

@@ -9,7 +9,7 @@ defines:
 """
 from __future__ import print_function
 from collections import defaultdict
-from six import iteritems, string_types
+from six import string_types
 from numpy import array, allclose, unique, zeros
 from pyNastran.bdf.bdf import read_bdf
 from codecs import open
@@ -36,8 +36,8 @@ def clear_out_solids(bdf_filename, bdf_filename_out=None,
 
     print('clearing out solids from %s' % bdf_filename)
     model = read_bdf(bdf_filename, xref=False)
-    #nodes2    = {nid, node for nid, node in iteritems(model.nodes)}
-    #elements2 = {eid, element for eid, element in iteritems(model.elements)
+    #nodes2    = {nid, node for nid, node in model.nodes.items()}
+    #elements2 = {eid, element for eid, element in model.elements.items()
                  #if element.type in ['CTRIA3', 'CQUAD4']}
 
     out_dict = model.get_card_ids_by_card_types(card_types=['CTRIA3', 'CQUAD4'])
@@ -59,7 +59,7 @@ def clear_out_solids(bdf_filename, bdf_filename_out=None,
     nids = set([])
     unused_elements2 = {}
     print(model.elements)
-    for eid, element in iteritems(model.elements):
+    for eid, element in model.elements.items():
         #if element.type not in ['CTRIA3', 'CQUAD4']:
             #continue
         #elements2[eid] = element
@@ -67,7 +67,7 @@ def clear_out_solids(bdf_filename, bdf_filename_out=None,
     nids = list(nids)
     nids.sort()
 
-    nodes2 = {nid : node for nid, node in iteritems(model.nodes) if nid in nids}
+    nodes2 = {nid : node for nid, node in model.nodes.items() if nid in nids}
     properties2 = {pid : prop for pid, prop in model.properties.items() if prop.type == 'PSHELL'}
 
     model.nodes = nodes2
@@ -225,7 +225,7 @@ def nastran_to_surf(bdf_filename, pid_to_element_flags, surf_filename,
 
     initial_normal_spacing0 = 0
     bl_thickness0 = 0
-    for nid, node_flagsi in iteritems(node_flags_temp):
+    for nid, node_flagsi in node_flags_temp.items():
         nodes_flags_array = array(node_flagsi)  # (N, 2)
         nflags = nodes_flags_array.shape[0]
         if nflags == 0:
@@ -285,7 +285,7 @@ def _get_nodes(model, scale, xref):
     maxnode = max(model.nodes.keys())
     nodes = zeros((maxnode, 3), dtype='float64')
     if xref:
-        for nid, node in sorted(iteritems(model.nodes)):
+        for nid, node in sorted(model.nodes.items()):
             #if nid != nid0:
                 #msg = 'nodes must go from 1 to N, no gaps; nid=%s expected=%s' % (nid, nid0)
                 #raise RuntimeError(msg)
@@ -295,7 +295,7 @@ def _get_nodes(model, scale, xref):
             node_flags_temp[nid] = []
             #nid0 += 1
     else:
-        for nid, node in sorted(iteritems(model.nodes)):
+        for nid, node in sorted(model.nodes.items()):
             #if nid != nid0:
                 #msg = 'nodes must go from 1 to N, no gaps; nid=%s expected=%s' % (nid, nid0)
                 #raise RuntimeError(msg)
@@ -311,7 +311,7 @@ def get_nid_to_eid_map(model,
                        tris, quads):
     """helper method for ``nastran_to_surf``"""
     nid_to_eid_map = defaultdict(list)
-    for eid, element in sorted(iteritems(model.elements)):
+    for eid, element in sorted(model.elements.items()):
         #if element.type not in ['CQUAD4', 'CTRIA3']:
             #continue
         nids = element.node_ids

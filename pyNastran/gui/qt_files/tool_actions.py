@@ -3,7 +3,7 @@ from __future__ import print_function
 import os
 import traceback
 
-from six import iteritems, string_types
+from six import string_types
 
 import numpy as np
 import vtk

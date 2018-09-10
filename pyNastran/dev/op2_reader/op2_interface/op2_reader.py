@@ -45,7 +45,7 @@ import sys
 from copy import deepcopy
 from itertools import count
 from struct import unpack, Struct
-from six import b, iteritems, string_types
+from six import b, string_types
 import numpy as np
 from numpy import frombuffer
 import scipy  # type: ignore
@@ -3060,7 +3060,7 @@ class OP2Reader(Op2Codes):
                         self.binary_debug.write('except SortCodeError!\n')
                     if self.table_name in oes_nl:
                         self.data_code = data_code_old
-                        for key, value in iteritems(data_code_old):
+                        for key, value in data_code_old.items():
                             setattr(self, key, value)
                         table4_parser(data, ndata)
                         return False

@@ -6,7 +6,6 @@ defines:
                         log=None, stop_on_failure=False)
 """
 from __future__ import print_function
-from six import iteritems
 import numpy as np
 from pyNastran.bdf.bdf import read_bdf
 from pyNastran.converters.stl.stl import STL

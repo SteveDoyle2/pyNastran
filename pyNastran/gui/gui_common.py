@@ -10,7 +10,7 @@ from collections import OrderedDict
 from math import ceil
 import cgi #  html lib
 
-from six import string_types, iteritems, itervalues
+from six import string_types, itervalues
 
 import numpy as np
 
@@ -529,7 +529,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
     def _populate_menu(self, menu_items):
         """populate menus and toolbar"""
         assert isinstance(menu_items, dict), menu_items
-        for unused_menu_name, (menu, items) in iteritems(menu_items):
+        for unused_menu_name, (menu, items) in menu_items.items():
             if menu is None:
                 continue
             for i in items:

@@ -1,6 +1,4 @@
 from __future__ import print_function
-from six import iteritems
-#import numpy as np
 
 from pyNastran.bdf.bdf import BDF_, LOAD
 #from pyNastran.bdf.bdf import BDF as BDF_, LOAD
@@ -616,10 +614,10 @@ class BDF(BDF_):
         if self.elements:
             bdf_file.write('$ELEMENTS\n')
             if self.is_long_ids:
-                for (eid, element) in sorted(iteritems(self.elements)):
+                for (eid, element) in sorted(self.elements.items()):
                     bdf_file.write(element.write_card_16(is_double))
             else:
-                for (eid, element) in sorted(iteritems(self.elements)):
+                for (eid, element) in sorted(self.elements.items()):
                     try:
                         bdf_file.write(element.write_card(size, is_double))
                     except:
@@ -630,7 +628,7 @@ class BDF(BDF_):
         #bdf_file.write(self.shells.write_card(size, is_double))
         #bdf_file.write(self.solids.write_card(size, is_double))
         if self.ao_element_flags:
-            for (eid, element) in sorted(iteritems(self.ao_element_flags)):
+            for (eid, element) in sorted(self.ao_element_flags.items()):
                 bdf_file.write(element.write_card(size, is_double))
         self._write_nsm(bdf_file, size, is_double, is_long_ids=is_long_ids)
 
@@ -652,7 +650,7 @@ class BDF(BDF_):
                 raise
 
             try:
-                for key, load_combinations in sorted(iteritems(self.load_combinations)):
+                for key, load_combinations in sorted(self.load_combinations.items()):
                     bdf_file.write(load_combinations.write_card(size=size, is_double=is_double))
                     #for load_combination in load_combinations:
                         #bdf_file.write(load_combination.write_card(size=size, is_double=is_double))

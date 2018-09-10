@@ -1,5 +1,4 @@
 from __future__ import print_function
-from six import iteritems
 from numpy import zeros, where, array, unique, concatenate
 
 #from pyNastran.dev.bdf_vectorized.cards.materials.mat1 import MAT1
@@ -262,7 +261,7 @@ class Materials(object):
         self.model.log.debug('material_ids = %s' % material_id)
         for mid in material_id:
             obj = None
-            for Type, (mdict, mids) in iteritems(TypeMap):
+            for Type, (mdict, mids) in TypeMap.items():
                 if mdict.n:
                     self.model.log.debug('Type=%s mid=%s mids=%s' % (Type, mid, mids))
                     if mid in mids:
@@ -295,7 +294,7 @@ class Materials(object):
         types = self._get_types()
         for materials in types:
             if materials.n:
-                for mid, mat in iteritems(materials):
+                for mid, mat in materials.items():
                     yield mat
 
     def _get_types(self):
@@ -317,7 +316,7 @@ class Materials(object):
                 ]
 
     def _verify(self, xref=True):
-        for mid, material in sorted(iteritems(self.mat1)):
+        for mid, material in sorted(self.mat1.items()):
             material._verify(xref)
 
     def write_card(self, bdf_file, size=8, is_double=False, material_id=None):

@@ -2,7 +2,7 @@ from __future__ import print_function
 import os
 import unittest
 
-from six import iteritems, StringIO
+from six import StringIO
 import numpy as np
 
 import pyNastran
@@ -131,7 +131,7 @@ class TestGridPointForces(unittest.TestCase):
                             xref_sets=False,
                             xref_optimization=False)
         xyz_cid0 = op2.get_xyz_in_coord(cid=0)
-        nid_cd = np.array([[nid, node.Cd()] for nid, node in sorted(iteritems(op2.nodes))])
+        nid_cd = np.array([[nid, node.Cd()] for nid, node in sorted(op2.nodes.items())])
         coords = op2.coords
 
         data = _get_gpforce_data()
@@ -190,7 +190,7 @@ class TestGridPointForces(unittest.TestCase):
                               xref_sets=False,
                               xref_optimization=False)
         xyz_cid0 = op2_1.get_xyz_in_coord(cid=0)
-        nid_cd = np.array([[nid, node.Cd()] for nid, node in sorted(iteritems(op2_1.nodes))])
+        nid_cd = np.array([[nid, node.Cd()] for nid, node in sorted(op2_1.nodes.items())])
 
         #bdf_filename2 = os.path.join(folder, 'static_solid_shell_bar.bdf')
         op2_filename2 = os.path.join(folder, 'static_solid_shell_bar.op2')
@@ -281,7 +281,7 @@ class TestGridPointForces(unittest.TestCase):
                               xref_optimization=False)
         xyz_cid0 = op2_1.get_xyz_in_coord(cid=0)
 
-        nid_cd = np.array([[nid, node.Cd()] for nid, node in sorted(iteritems(op2_1.nodes))])
+        nid_cd = np.array([[nid, node.Cd()] for nid, node in sorted(op2_1.nodes.items())])
         #-------------------------------------------------
         #coords = op2_1.coords
         #used_cds = np.unique(nid_cd[:, 1])
@@ -396,7 +396,7 @@ class TestGridPointForces(unittest.TestCase):
                               xref_optimization=False)
         xyz_cid0 = op2_1.get_xyz_in_coord(cid=0)
 
-        nid_cd = np.array([[nid, node.Cd()] for nid, node in sorted(iteritems(op2_1.nodes))])
+        nid_cd = np.array([[nid, node.Cd()] for nid, node in sorted(op2_1.nodes.items())])
         #-------------------------------------------------
         #coords = op2_1.coords
         #used_cds = np.unique(nid_cd[:, 1])

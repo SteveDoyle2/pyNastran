@@ -1,7 +1,6 @@
 from __future__ import print_function
 import os
 import multiprocessing as mp
-from six import iteritems
 from numpy import savetxt, arange, zeros
 
 from pyNastran.converters.usm3d.usm3d_reader import Usm3d

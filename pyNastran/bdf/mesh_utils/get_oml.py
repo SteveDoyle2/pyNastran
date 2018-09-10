@@ -5,7 +5,6 @@ defines:
 """
 from __future__ import print_function
 from copy import deepcopy
-from six import iteritems
 import numpy as np
 
 from pyNastran.bdf.bdf import read_bdf
@@ -56,7 +55,7 @@ def get_oml_eids(bdf_filename, eid_start, theta_tol=30.,
     #---------------------------------
     normals = {}
     etypes_skipped = set([])
-    for eid, elem in iteritems(model.elements):
+    for eid, elem in model.elements.items():
         if elem.type in ['CTRIA3', 'CQUAD4']:
             normals[eid] = elem.Normal()
         else:

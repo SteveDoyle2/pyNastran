@@ -1,4 +1,3 @@
-from six import iteritems
 from collections import defaultdict
 from numpy import zeros, array
 
@@ -186,7 +185,7 @@ class TEMPs(VectorizedCardDict):
 
     def write_card(self, bdf_file, size=8, is_double=False, load_id=None, sort_data=False):
         #self.model.log.debug('TEMPs keys=%s' % self._objs.keys())
-        for load_id, load in sorted(iteritems(self._objs)):
+        for load_id, load in sorted(self._objs.items()):
             #self.model.log.debug('TEMPs write_card load_id=%s' % load_id)
             load.write_card(bdf_file, size=size, is_double=is_double)
         self.tempp1.write_card(bdf_file, size=size, is_double=is_double)

@@ -18,7 +18,7 @@ All optimization cards are defined in this file.  This includes:
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import cycle, count
-from six import iteritems, string_types
+from six import string_types
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types, float_types
@@ -937,7 +937,7 @@ class DOPTPRM(OptConstraint):
 
     def raw_fields(self):
         list_fields = ['DOPTPRM']
-        for param, val in sorted(iteritems(self.params)):
+        for param, val in sorted(self.params.items()):
             list_fields += [param, val]
         return list_fields
 
@@ -1973,7 +1973,7 @@ class DRESP2(OptConstraint):
     def _validate(self):
         assert isinstance(self.params, dict), self.params
 
-        for key, values in iteritems(self.params):
+        for key, values in self.params.items():
             assert isinstance(key, tuple), 'key=%s' % str(key)
             assert len(key) == 2, 'key=%s' % str(key)
             iorder, name = key
@@ -2026,7 +2026,7 @@ class DRESP2(OptConstraint):
         params = parse_table_fields('DRESP2', card, fields)
 
         #print("--DRESP2 Params--")
-        #for key, value_list in sorted(iteritems(params)):
+        #for key, value_list in sorted(params.items()):
             #print("  key=%s value_list=%s" %(key, value_list))
         return DRESP2(dresp_id, label, dequation, region, params,
                       method, c1, c2, c3, comment=comment)
@@ -2039,13 +2039,13 @@ class DRESP2(OptConstraint):
 
     def _verify(self, xref):
         pass
-        #for (j, name), value_list in sorted(iteritems(self.params)):
+        #for (j, name), value_list in sorted(self.params.items()):
             #print('  DRESP2 verify - key=%s values=%s' % (name,
                 #self._get_values(name, value_list)))
 
     def calculate(self, op2_model, subcase_id):
         argsi = []
-        for key, vals in sorted(iteritems(self.params_ref)):
+        for key, vals in sorted(self.params_ref.items()):
             unused_j, name = key
             if name in ['DRESP1', 'DRESP2']:
                 #print('vals =', vals)
@@ -2086,7 +2086,7 @@ class DRESP2(OptConstraint):
         msg = ', which is required by DRESP2 ID=%s' % (self.dresp_id)
         default_values = {}
         params = {}
-        for key, vals in sorted(iteritems(self.params)):
+        for key, vals in sorted(self.params.items()):
             try:
                 unused_j, name = key
             except:
@@ -2129,7 +2129,7 @@ class DRESP2(OptConstraint):
                 raise NotImplementedError('  TODO: xref %s\n%s' % (str(key), str(self)))
 
         # what does this do???
-        #for key, value_list in sorted(iteritems(self.params)):
+        #for key, value_list in sorted(self.params.items()):
             #j, name = key
             #values_list2 = self._get_values(name, value_list)
             #self.params[key] = values_list2
@@ -2148,7 +2148,7 @@ class DRESP2(OptConstraint):
             del self.func
 
         params = {}
-        for key, value_list in sorted(iteritems(self.params_ref)):
+        for key, value_list in sorted(self.params_ref.items()):
             unused_j, name = key
             values_list2 = _get_dresp23_table_values(name, value_list)
             params[key] = values_list2
@@ -2187,7 +2187,7 @@ class DRESP2(OptConstraint):
         }
 
         list_fields = []
-        for (j, name), value_list in sorted(iteritems(params)):
+        for (j, name), value_list in sorted(params.items()):
             values_list2 = _get_dresp23_table_values(name, value_list, inline=True)
             fields2 = [name] + values_list2
             #try:
@@ -2357,7 +2357,7 @@ class DRESP3(OptConstraint):
         assert isinstance(self.group, str), 'group=%r' % self.group
         assert isinstance(self.Type, str), 'Type=%r' % self.Type
 
-        for key, values in iteritems(self.params):
+        for key, values in self.params.items():
             assert isinstance(key, tuple), 'key=%s' % str(key)
             assert len(key) == 2, 'key=%s' % str(key)
             iorder, name = key
@@ -2432,7 +2432,7 @@ class DRESP3(OptConstraint):
         }
         #print('------------')
         list_fields = []
-        for key, value_list in sorted(iteritems(params)):
+        for key, value_list in sorted(params.items()):
             #print(params[key])
             unused_iorder, name = key
             values_list2 = _get_dresp23_table_values(name, value_list, inline=True)
@@ -2459,7 +2459,7 @@ class DRESP3(OptConstraint):
         msg = ', which is required by DRESP3 ID=%s' % (self.dresp_id)
         default_values = {}
         params = {}
-        for key, vals in sorted(iteritems(self.params)):
+        for key, vals in sorted(self.params.items()):
             unused_iorder, name = key
             if name in ['DRESP1', 'DRESP2']:
                 params[key] = []
@@ -2510,7 +2510,7 @@ class DRESP3(OptConstraint):
         self.dtable_ref = {}
 
         params = {}
-        for key, value_list in sorted(iteritems(self.params_ref)):
+        for key, value_list in sorted(self.params_ref.items()):
             unused_iorder, name = key
             #print(key)
             #j, name = key
@@ -4551,7 +4551,7 @@ def parse_table_fields(card_type, card, fields):
 
     assert None not in params, params
     params2 = {}
-    for (i, name), values in iteritems(params):
+    for (i, name), values in params.items():
         if name != 'DNODE':
             params2[(i, name)] = values
             continue

@@ -4,7 +4,6 @@ defines:
                         eid_start=1, nid_start=1)
 """
 from __future__ import print_function
-from six import iteritems
 import numpy as np
 from pyNastran.bdf.bdf import read_bdf
 
@@ -109,7 +108,7 @@ def split_line_elements(bdf_model, eids, neids=2,
 def split_elements(bdf_filename):
     """unimplmented method for splitting elements"""
     model = read_bdf(bdf_filename, xref=True)
-    for eid, elem in iteritems(model.elements):
+    for eid, elem in model.elements.items():
         if elem.type == 'CTRIA3':
             #
             #        3

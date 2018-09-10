@@ -13,7 +13,6 @@ import os
 import sys
 import numpy
 import warnings
-from six import iteritems
 warnings.simplefilter('always')
 numpy.seterr(all='raise')
 #import traceback
@@ -436,7 +435,7 @@ def compute(cards1, cards2):
 def get_element_stats(fem1, fem2):
     """verifies that the various element methods work"""
     if 0:
-        for (key, loads) in sorted(iteritems(fem1.loads)):
+        for (key, loads) in sorted(fem1.loads.items()):
             for load in loads:
                 try:
                     all_loads = load.get_loads()
@@ -450,7 +449,7 @@ def get_element_stats(fem1, fem2):
 
     fem1._verify_bdf()
 
-   # for (key, e) in sorted(iteritems(fem1.elements)):
+   # for (key, e) in sorted(fem1.elements.items()):
    #     try:
    #         e._verify()
    #         #if isinstance(e, RigidElement):
@@ -477,7 +476,7 @@ def get_element_stats(fem1, fem2):
 
 
 def get_matrix_stats(fem1, fem2):
-    for (key, dmig) in sorted(iteritems(fem1.dmigs)):
+    for (key, dmig) in sorted(fem1.dmigs.items()):
         try:
             if isinstance(dmig, NastranMatrix):
                 dmig.get_matrix()
@@ -509,7 +508,7 @@ def compare_params(fem1, fem2):
 
 
 def print_points(fem1, fem2):
-    for (nid, n1) in sorted(iteritems(fem1.nodes)):
+    for (nid, n1) in sorted(fem1.nodes.items()):
         print("%s   xyz=%s  n1=%s  n2=%s" % (nid, n1.xyz, n1.Position(True),
                                              fem2.Node(nid).get_position()))
         break
@@ -562,7 +561,7 @@ def main():
     ver = str(pyNastran.__version__)
     data = docopt(msg, version=ver)
 
-    for key, value in sorted(iteritems(data)):
+    for key, value in sorted(data.items()):
         print("%-12s = %r" % (key.strip('--'), value))
 
     import time

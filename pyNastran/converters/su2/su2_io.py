@@ -4,7 +4,6 @@ Defines the GUI IO file for SU2.
 from __future__ import print_function
 from collections import OrderedDict
 
-from six import iteritems
 import numpy as np
 
 import vtk
@@ -37,7 +36,7 @@ class SU2_IO(object):
 
         nnodes = nodes.shape[0]
         nelements = 0
-        for etype, elems in iteritems(elements):
+        for etype, elems in elements.items():
             nsub_elements = elems.shape[0]
             if nsub_elements:
                 nelements += nsub_elements
@@ -87,7 +86,7 @@ class SU2_IO(object):
             #9 : quads,
         #}
         #print('dict =', elements)
-        for etype, elems in iteritems(elements):
+        for etype, elems in elements.items():
             #print(etype, elems)
             if isinstance(elems, list):
                 #print('continue')

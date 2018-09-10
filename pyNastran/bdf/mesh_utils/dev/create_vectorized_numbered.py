@@ -3,7 +3,6 @@ defines:
  - FakeBDFVectorized
 """
 from __future__ import print_function
-from six import itervalues
 from pyNastran.bdf.bdf import BDF as BDF
 
 class FakeBDFVectorized(BDF):
@@ -56,7 +55,7 @@ class FakeBDFVectorized(BDF):
                     eid0 += 1
 
         failed_types = set([])
-        for elem in itervalues(self.elements):
+        for elem in self.elements.values():
             if elem.type not in etypes:
                 failed_types.add(elem.type)
         self.elements = elements2

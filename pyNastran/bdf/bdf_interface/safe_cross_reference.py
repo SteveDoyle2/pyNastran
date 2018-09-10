@@ -7,7 +7,7 @@ from __future__ import print_function
 from collections import defaultdict
 import traceback
 from typing import List, Dict, Any
-from six import iteritems, itervalues
+from six import itervalues
 
 import numpy as np
 from numpy import zeros, argsort, arange, array_equal
@@ -108,7 +108,7 @@ class SafeXrefMesh(XrefMesh):
         for suport in self.suport:
             suport.safe_cross_reference(self)
 
-        for suport1_id, suport1 in iteritems(self.suport1):
+        for suport1_id, suport1 in self.suport1.items():
             suport1.safe_cross_reference(self)
 
         for se_suport in self.se_suport:
@@ -187,7 +187,7 @@ class SafeXrefMesh(XrefMesh):
                 # we don't need to check the ncaeros=1 case
                 i = 0
                 min_maxs = zeros((ncaeros, 2), dtype='int32')
-                for eid, caero in sorted(iteritems(self.caeros)):
+                for eid, caero in sorted(self.caeros.items()):
                     min_maxs[i, :] = caero.min_max_eid
                     i += 1
                 isort = argsort(min_maxs.ravel())
@@ -260,7 +260,7 @@ class SafeXrefMesh(XrefMesh):
         """helper method to show errors"""
         if xref_errors:
             msg = 'Failed to safe xref %s\n' % elements_word
-            for key, eids_pids in sorted(iteritems(xref_errors)):
+            for key, eids_pids in sorted(xref_errors.items()):
                 eids = [eid_pid[0] for eid_pid in eids_pids]
                 eids.sort()
                 pids = np.unique([eid_pid[1] for eid_pid in eids_pids]).tolist()
@@ -274,7 +274,7 @@ class SafeXrefMesh(XrefMesh):
         Links the loads to nodes, coordinate systems, and other loads.
         """
         xref_errors = defaultdict(list)
-        for (lid, load_combinations) in iteritems(self.load_combinations):
+        for (lid, load_combinations) in self.load_combinations.items():
             for load_combination in load_combinations:
                 try:
                     load_combination.safe_cross_reference(self, xref_errors)
@@ -283,7 +283,7 @@ class SafeXrefMesh(XrefMesh):
                     raise
         self._show_safe_xref_errors('loads', xref_errors)
 
-        for (lid, loads) in iteritems(self.loads):
+        for (lid, loads) in self.loads.items():
             for load in loads:
                 try:
                     load.safe_cross_reference(self, xref_errors)
@@ -292,10 +292,10 @@ class SafeXrefMesh(XrefMesh):
                     raise
         self._show_safe_xref_errors('loads', xref_errors)
 
-        for (lid, sid) in iteritems(self.dloads):
+        for (lid, sid) in self.dloads.items():
             for load in sid:
                 load.safe_cross_reference(self, xref_errors)
-        for (lid, sid) in iteritems(self.dload_entries):
+        for (lid, sid) in self.dload_entries.items():
             for load in sid:
                 try:
                     load.safe_cross_reference(self, xref_errors)
@@ -303,13 +303,13 @@ class SafeXrefMesh(XrefMesh):
                     print(load)
                     raise
 
-        for key, darea in iteritems(self.dareas):
+        for key, darea in self.dareas.items():
             try:
                 darea.safe_cross_reference(self, xref_errors)
             except TypeError:  # pragma: no cover
                 print(darea)
                 raise
-        for key, dphase in iteritems(self.dphases):
+        for key, dphase in self.dphases.items():
             try:
                 dphase.safe_cross_reference(self, xref_errors)
             except TypeError:  # pragma: no cover

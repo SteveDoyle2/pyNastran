@@ -95,7 +95,7 @@ class NastranIO(NastranIO_xref):
             if self.is_sub_panels:
                 nsub_elements_caeros = 0
                 nsub_points_caeros = 0
-                for key, caero in iteritems(model.caeros):
+                for key, caero in model.caeros.items():
                     if hasattr(caero, 'panel_points_elements'):
                         npoints, nelements = caero.get_npanel_points_elements()
                         nsub_elements_caeros += npoints
@@ -174,7 +174,7 @@ class NastranIO(NastranIO_xref):
                             #nsprings += 1
 
         points2.SetNumberOfPoints(nCAerosPoints * 4 + nCONM2 + nsprings)
-        for (eid, element) in sorted(iteritems(model.caeros)):
+        for (eid, element) in sorted(model.caeros.items()):
             if isinstance(element, (CAERO1, CAERO3, CAERO4, CAERO5)):
                 if self.is_sub_panels:
                     pointsi, elementsi = element.panel_points_elements()
@@ -781,7 +781,7 @@ class NastranIO(NastranIO_xref):
         if eidsSet:
             #eids = zeros(nElements, dtype='int32')
             #for (eid, eid2) in iteritems(self.eid_map):
-            #    eids[eid2] = eid
+               #eids[eid2] = eid
             #eids = model.elements.element_id
             cases[(0, 'Element_ID', 1, 'centroid', '%i')] = eids
             eidsSet = True

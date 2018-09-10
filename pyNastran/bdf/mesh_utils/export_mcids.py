@@ -3,7 +3,7 @@ Defines:
  - nodes, bars = export_mcids(bdf_filename, csv_filename=None)
 """
 from __future__ import print_function
-from six import integer_types, iteritems
+from six import integer_types
 import numpy as np
 from pyNastran.bdf.bdf import BDF, read_bdf
 
@@ -92,7 +92,7 @@ def export_mcids(bdf_filename, csv_filename=None,
         elements = {eid : model.elements[eid] for eid in eids}
 
     pids_failed = set([])
-    for unused_eidi, elem in sorted(iteritems(elements)):
+    for unused_eidi, elem in sorted(elements.items()):
         if elem.type in ['CQUAD4', 'CQUAD8', 'CQUAD']:
             nid, eid = _export_quad(elem, nodes,
                                     iply, nid, eid,

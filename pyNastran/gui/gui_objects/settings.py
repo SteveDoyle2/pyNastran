@@ -18,7 +18,6 @@ defines:
  - repr_settings(settings)
 """
 from __future__ import print_function
-from six import iteritems # PY3
 import numpy as np
 from qtpy import QtGui
 
@@ -338,7 +337,7 @@ class Settings(object):
         dim_max = self.dim_max
         scale = coord_scale * dim_max
 
-        for unused_coord_id, axes in iteritems(self.parent.axes):
+        for unused_coord_id, axes in self.parent.axes.items():
             axes.SetTotalLength(scale, scale, scale)
         if render:
             self.parent.vtk_interactor.GetRenderWindow().Render()
@@ -348,7 +347,7 @@ class Settings(object):
         if coord_text_scale is None:
             coord_text_scale = self.coord_text_scale
 
-        for unused_coord_id, axes in iteritems(self.parent.axes):
+        for unused_coord_id, axes in self.parent.axes.items():
             texts = [
                 axes.GetXAxisCaptionActor2D(),
                 axes.GetYAxisCaptionActor2D(),

@@ -18,7 +18,6 @@ All cards are Material objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems
 import numpy as np
 from numpy import zeros, array
 
@@ -286,7 +285,7 @@ class NXSTRAT(BaseCard):
     def raw_fields(self):
         list_fields = ['NXSTRAT', self.sid]
         i = 0
-        for key, value in sorted(iteritems(self.params)):
+        for key, value in sorted(self.params.items()):
             list_fields += [key, value]
             i += 1
             if i == 3:

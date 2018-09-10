@@ -8,7 +8,6 @@ This file defines functions related to the result updating that are VTK specific
 from __future__ import print_function, unicode_literals
 import sys
 from copy import deepcopy
-from six import iteritems
 
 import numpy as np
 from numpy import full, issubdtype

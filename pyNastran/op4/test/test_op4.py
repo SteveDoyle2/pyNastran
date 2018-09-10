@@ -6,7 +6,6 @@ import os
 import sys
 import time
 from traceback import print_exc
-from six import iteritems
 
 import pyNastran
 from pyNastran.op4.op4 import read_op4

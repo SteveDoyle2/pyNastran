@@ -13,7 +13,7 @@ import sys
 import inspect
 import warnings
 from copy import deepcopy
-from six import iteritems, StringIO, string_types
+from six import StringIO, string_types
 from typing import List, Union, Dict, Tuple, Optional
 
 import numpy as np  # type: ignore
@@ -536,7 +536,7 @@ def write_patran_syntax_dict(dict_sets):
 
     """
     msg = ''
-    for key, dict_set in sorted(iteritems(dict_sets)):
+    for key, dict_set in sorted(dict_sets.items()):
         singles, doubles = collapse_colon_packs(dict_set, thru_split=4)
         double_list = ('%s:%s' % (double[0], double[2])
                        if len(double) == 3 else '%s:%s:%s' % (double[0], double[2], double[4])
@@ -674,7 +674,7 @@ def parse_patran_syntax_dict(node_sets, pound_dict=None, msg=''):
                     raise SyntaxError(msg)
                 if key not in data:
                     data[key] = []
-    for key, ints in iteritems(data):
+    for key, ints in data.items():
         data[key] = unique(ints)
     return data
 
@@ -734,14 +734,14 @@ def parse_patran_syntax_dict_map(node_sets, type_map, msg=''):
     """
     # makes it so we can pass in 'N' and 'n' and still get 'Node' out
     update_type_map = {}  # type: Dict[str, str]
-    for key, value in iteritems(type_map):
+    for key, value in type_map.items():
         if key in update_type_map:
             assert update_type_map[key] == value
         update_type_map[key.upper()] = value
 
     dict_in = parse_patran_syntax_dict(node_sets.upper(), pound_dict=None)
     dict_temp = {}  # type: Dict[str, np.ndarray]
-    for key_in, value in sorted(iteritems(dict_in)):
+    for key_in, value in sorted(dict_in.items()):
         key_in2 = key_in.upper()
         if key_in2 in update_type_map:
             key_out = update_type_map[key_in2]
@@ -754,7 +754,7 @@ def parse_patran_syntax_dict_map(node_sets, type_map, msg=''):
             print('skipping key=%r while parsing %s' % (key_in, msg))
 
     dict_out = {}  # type: Dict[str, np.ndarray]
-    for key, value_list in iteritems(dict_temp):
+    for key, value_list in dict_temp.items():
         if len(value_list) == 1:
             value = value_list[0]
         else:

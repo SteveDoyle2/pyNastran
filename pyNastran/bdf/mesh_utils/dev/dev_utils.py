@@ -12,7 +12,7 @@ from __future__ import print_function
 from collections import defaultdict
 from functools import reduce
 
-from six import iteritems, string_types
+from six import string_types
 
 
 import numpy as np
@@ -146,13 +146,13 @@ def cut_model(model, axis='-y'):
         raise NotImplementedError(axis)
 
     remove_nids = []
-    for nid, node in iteritems(model.nodes):
+    for nid, node in model.nodes.items():
         xyz = node.get_position()
         if xyz[iaxis] < 0.0:
             remove_nids.append(nid)
 
     remove_eids = []
-    for eid, element in iteritems(model.elements):
+    for eid, element in model.elements.items():
         centroid = element.Centroid()
         if centroid[iaxis] <= 0.0:
             remove_eids.append(eid)
@@ -165,7 +165,7 @@ def cut_model(model, axis='-y'):
         del model.elements[eid]
 
     loads2 = {}
-    for load_id, loadcase in iteritems(model.loads):
+    for load_id, loadcase in model.loads.items():
         loadcase2 = []
         for load in loadcase:
             if load.type == 'LOAD':
@@ -194,7 +194,7 @@ def _write_nodes(self, outfile, size, is_double):
         msg.append('$NODES\n')
         if self.grdset:
             msg.append(self.grdset.print_card(size))
-        for (nid, node) in sorted(iteritems(self.nodes)):
+        for (nid, node) in sorted(self.nodes.items()):
             if nid not in self.remove_nodes:
                 msg.append(node.write_card(size, is_double))
         outfile.write(''.join(msg))
@@ -230,7 +230,7 @@ def get_free_edges(bdf_filename, eids=None, maps=None):
                                consider_0d=False, consider_0d_rigid=False,
                                consider_1d=False, consider_2d=True, consider_3d=False)
     edge_to_eid_map = maps['edge_to_eid_map']
-    for edge, eids in iteritems(edge_to_eid_map):
+    for edge, eids in edge_to_eid_map.items():
         if len(eids) == 2:
             continue
         free_edges.append(edge)
@@ -269,7 +269,7 @@ def get_joints(model, pid_sets):
     ]
     """
     nid_sets = defaultdict(set)
-    for eid, elem in iteritems(model.elements):
+    for eid, elem in model.elements.items():
         pid = elem.Pid()
         nid_sets[pid].update(elem.node_ids)
 
@@ -341,12 +341,12 @@ def extract_surface_patches(bdf_filename, starting_eids, theta_tols=40.):
 
     eid_to_eid_map = defaultdict(set)
     #if 1:
-    for edge, eids in iteritems(edge_to_eid_map):
+    for edge, eids in edge_to_eid_map.items():
         for eid_a in eids:
             for eid_b in eids:
                 eid_to_eid_map[eid_a].add(eid_b)
     # else:
-        # for edge, eids in iteritems(edge_to_eid_map):
+        # for edge, eids in edge_to_eid_map.items():
             # for eid_a in eids:
                 # for eid_b in eids:
                     # if eid_a < eid_b:
@@ -354,7 +354,7 @@ def extract_surface_patches(bdf_filename, starting_eids, theta_tols=40.):
                         # eid_to_eid_map[eid_b].add(eid_a)
 
     #print('\neid_to_eid_map:')
-    #for eid, eids in iteritems(eid_to_eid_map):
+    #for eid, eids in eid_to_eid_map.items():
         #print('%-6s %s' % (eid, eids))
 
     groups = []
@@ -447,7 +447,7 @@ def split_model_by_material_id(bdf_filename, bdf_filename_base,
         'CONROD',
     ]
     #invalid_properties = ['PCOMP', 'PCOMPG']
-    for eid, elem in iteritems(model.elements):
+    for eid, elem in model.elements.items():
         etype = elem.type
         if etype in elements_with_properties:
             pid = elem.pid
@@ -465,7 +465,7 @@ def split_model_by_material_id(bdf_filename, bdf_filename_base,
         else:
             model.log.warning('skipping eid=%s elem.type=%s' % (eid, etype))
 
-    for mid, eids in iteritems(mid_to_eids_map):
+    for mid, eids in mid_to_eids_map.items():
         if not eids:
             continue
         bdf_filename_out = bdf_filename_base + '_mid=%s.bdf' % mid
@@ -542,7 +542,7 @@ def create_spar_cap(model, eids, nids, width, nelements=1, symmetric=True, xyz_c
     if xyz_cid0 is None:
         xyz_cid0 = model.get_xyz_in_coord(cid=0)
     #print(xyz_cid0)
-    nid_cd = np.array([[nid, node.Cd()] for nid, node in sorted(iteritems(model.nodes))])
+    nid_cd = np.array([[nid, node.Cd()] for nid, node in sorted(model.nodes.items())])
     all_nids = nid_cd[:, 0]
 
     width_array = np.linspace(0., width, num=nelements, endpoint=True)[1:]

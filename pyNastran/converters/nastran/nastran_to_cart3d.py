@@ -6,7 +6,6 @@ defines:
 """
 from __future__ import print_function
 from codecs import open
-from six import iteritems
 from numpy import zeros, arange, array, array_equal
 import numpy as np
 
@@ -56,14 +55,14 @@ def nastran_to_cart3d(bdf, log=None, debug=False):
         #i = 0
         nid_map = {}
 
-        for node_id, node in sorted(iteritems(bdf.nodes)):
+        for node_id, node in sorted(bdf.nodes.items()):
             i = np.where(nids == node_id)[0][0]
             nodes[i, :] = node.get_position()
             nid_map[node_id] = i + 1
         #print('nid_map =', nid_map)
 
         i = 0
-        for unused_element_id, element in sorted(iteritems(bdf.elements)):
+        for unused_element_id, element in sorted(bdf.elements.items()):
             if element.type == 'CTRIA3':
                 nids = element.node_ids
                 elements[i, :] = [nid_map[nid] for nid in nids]
@@ -96,12 +95,12 @@ def _store_sequential_nodes(bdf, nodes, elements, regions):
     # we don't need to renumber the nodes
     # so we don't need to make an nid_map
     i = 0
-    for node_id, node in sorted(iteritems(bdf.nodes)):
+    for node_id, node in sorted(bdf.nodes.items()):
         nodes[i, :] = node.get_position()
         i += 1
 
     j = 0
-    for unused_element_id, element in sorted(iteritems(bdf.elements)):
+    for unused_element_id, element in sorted(bdf.elements.items()):
         if element.type == 'CTRIA3':
             nids = element.node_ids
             elements[j, :] = nids
@@ -140,14 +139,14 @@ def nastran_to_cart3d_filename(bdf_filename, cart3d_filename, log=None, debug=Fa
         cart3d.write('%s %s\n' % (nnodes, nelements))
         node_id_shift = {}
         i = 1
-        for node_id, node in sorted(iteritems(model.nodes)):
+        for node_id, node in sorted(model.nodes.items()):
             node_id_shift[node_id] = i
             x, y, z = node.get_position()
             cart3d.write('%s %s %s\n' % (x, y, z))
             i += 1
         mids = ''
         j = 0
-        for unused_element_id, element in sorted(iteritems(model.elements)):
+        for unused_element_id, element in sorted(model.elements.items()):
             if element.type in ['CQUADR', 'CQUAD4', 'CONM2']:
                 print('element type=%s is not supported' % element.type)
                 continue

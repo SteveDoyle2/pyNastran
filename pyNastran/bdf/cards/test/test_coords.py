@@ -5,7 +5,6 @@ defines:
 # pylint: disable=R0201,C0103
 from __future__ import print_function
 import unittest
-from six import iteritems
 from six.moves import StringIO
 import numpy as np
 from numpy import array, allclose, array_equal, cross

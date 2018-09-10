@@ -52,7 +52,7 @@ import os
 from struct import unpack
 from collections import Counter
 from typing import List
-from six import binary_type, string_types, iteritems, PY2, PY3, b
+from six import binary_type, string_types, PY2, PY3, b
 
 from numpy import array
 import numpy as np
@@ -751,7 +751,7 @@ class OP2_Scalar(ONR, OGPF, OEF, OGS, OPG, OGPWG, FortranFormat):
 
         """
         expected_times = {}
-        for (isubcase, etimes) in iteritems(times):
+        for (isubcase, etimes) in times.items():
             etimes = list(times)
             etimes.sort()
             expected_times[isubcase] = array(etimes)
@@ -1573,7 +1573,7 @@ class OP2_Scalar(ONR, OGPF, OEF, OGS, OPG, OGPWG, FortranFormat):
             """overloaded version of _get_table_mapper"""
             #if is_added:
                 #return table_mapper
-            for _key, methods in iteritems(tables):
+            for _key, methods in tables.items():
                 if methods is False:
                     table_mapper[_key] = [self._table_passer, self._table_passer]
                 else:
@@ -1644,7 +1644,7 @@ class OP2_Scalar(ONR, OGPF, OEF, OGS, OPG, OGPWG, FortranFormat):
             self.additional_matrices = matrices
         else:
             self.additional_matrices = {}
-            for matrix_name, matrix in iteritems(matrices):
+            for matrix_name, matrix in matrices.items():
                 if isinstance(matrix_name, binary_type):
                     self.additional_matrices[matrix_name] = matrix
                 else:

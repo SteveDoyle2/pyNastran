@@ -1,4 +1,3 @@
-from six import iteritems
 from pyNastran.converters.abaqus.abaqus import Abaqus
 from pyNastran.converters.abaqus.abaqus_cards import Part
 
@@ -18,7 +17,7 @@ def nastran_to_abaqus(nastran_model, abqaqus_filename_out):
 
     ctria3s = []
     cquad4s = []
-    for eid, elem in iteritems(nastran_model.elements):
+    for eid, elem in nastran_model.elements.items():
         if elem.type == 'CTRIA3':
             node_ids = elem.nodes
             ctria3 = [eid] + node_ids

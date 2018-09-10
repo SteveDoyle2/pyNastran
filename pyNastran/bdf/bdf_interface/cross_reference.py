@@ -203,7 +203,7 @@ class XrefMesh(BDFAttributes):
         for suport in self.suport:
             suport.cross_reference(self)
 
-        for unused_suport1_id, suport1 in iteritems(self.suport1):
+        for unused_suport1_id, suport1 in self.suport1.items():
             suport1.cross_reference(self)
 
         for se_suport in self.se_suport:
@@ -281,7 +281,7 @@ class XrefMesh(BDFAttributes):
                 # we don't need to check the ncaeros=1 case
                 i = 0
                 min_maxs = zeros((ncaeros, 2), dtype='int32')
-                for unused_eid, caero in sorted(iteritems(self.caeros)):
+                for unused_eid, caero in sorted(self.caeros.items()):
                     min_maxs[i, :] = caero.min_max_eid
                     i += 1
                 isort = argsort(min_maxs.ravel())
@@ -479,7 +479,7 @@ class XrefMesh(BDFAttributes):
         """
         Links the loads to nodes, coordinate systems, and other loads.
         """
-        for (unused_lid, load_combinations) in iteritems(self.load_combinations):
+        for (unused_lid, load_combinations) in self.load_combinations.items():
             for load_combination in load_combinations:
                 try:
                     load_combination.cross_reference(self)
@@ -490,7 +490,7 @@ class XrefMesh(BDFAttributes):
                     if self._ixref_errors > self._nxref_errors:
                         self.pop_xref_errors()
 
-        for (unused_lid, loads) in iteritems(self.loads):
+        for (unused_lid, loads) in self.loads.items():
             for load in loads:
                 try:
                     load.cross_reference(self)
@@ -501,7 +501,7 @@ class XrefMesh(BDFAttributes):
                     if self._ixref_errors > self._nxref_errors:
                         self.pop_xref_errors()
 
-        for (unused_lid, sid) in iteritems(self.dloads):
+        for (unused_lid, sid) in self.dloads.items():
             for load in sid:
                 #self.log.debug("  dloadi load=%s" % (load))
                 try:
@@ -513,7 +513,7 @@ class XrefMesh(BDFAttributes):
                     if self._ixref_errors > self._nxref_errors:
                         self.pop_xref_errors()
 
-        for (unused_lid, sid) in iteritems(self.dload_entries):
+        for (unused_lid, sid) in self.dload_entries.items():
             for load in sid:
                 #self.log.debug("  dloadi load=%s" % (load))
                 try:
@@ -526,7 +526,7 @@ class XrefMesh(BDFAttributes):
                     if self._ixref_errors > self._nxref_errors:
                         self.pop_xref_errors()
 
-        for unused_key, darea in iteritems(self.dareas):
+        for unused_key, darea in self.dareas.items():
             try:
                 darea.cross_reference(self)
             except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
@@ -537,7 +537,7 @@ class XrefMesh(BDFAttributes):
                 if self._ixref_errors > self._nxref_errors:
                     self.pop_xref_errors()
 
-        for unused_key, tic in iteritems(self.tics):
+        for unused_key, tic in self.tics.items():
             try:
                 tic.cross_reference(self)
             except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
@@ -548,7 +548,7 @@ class XrefMesh(BDFAttributes):
                 if self._ixref_errors > self._nxref_errors:
                     self.pop_xref_errors()
 
-        for unused_key, dphase in iteritems(self.dphases):
+        for unused_key, dphase in self.dphases.items():
             try:
                 dphase.cross_reference(self)
             except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
@@ -572,12 +572,12 @@ class XrefMesh(BDFAttributes):
             set_obj.cross_reference(self)
         for set_obj in self.qsets:
             set_obj.cross_reference(self)
-        for unused_name, set_objs in iteritems(self.usets):
+        for unused_name, set_objs in self.usets.items():
             for set_obj in set_objs:
                 set_obj.cross_reference(self)
 
         # superelements
-        for unused_key, set_obj in iteritems(self.se_sets):
+        for unused_key, set_obj in self.se_sets.items():
             set_obj.cross_reference(self)
         for set_obj in self.se_bsets:
             set_obj.cross_reference(self)
@@ -591,19 +591,19 @@ class XrefMesh(BDFAttributes):
     def _cross_reference_optimization(self):
         # type: () -> None
         """cross references the optimization objects"""
-        for unused_key, deqatn in iteritems(self.dequations):
+        for unused_key, deqatn in self.dequations.items():
             deqatn.cross_reference(self)
-        for unused_key, dresp in iteritems(self.dresps):
+        for unused_key, dresp in self.dresps.items():
             dresp.cross_reference(self)
-        for unused_key, dconstrs in iteritems(self.dconstrs):
+        for unused_key, dconstrs in self.dconstrs.items():
             for dconstr in dconstrs:
                 dconstr.cross_reference(self)
 
-        for unused_key, dvcrel in iteritems(self.dvcrels):
+        for unused_key, dvcrel in self.dvcrels.items():
             dvcrel.cross_reference(self)
-        for unused_key, dvmrel in iteritems(self.dvmrels):
+        for unused_key, dvmrel in self.dvmrels.items():
             dvmrel.cross_reference(self)
-        for unused_key, dvprel in iteritems(self.dvprels):
+        for unused_key, dvprel in self.dvprels.items():
             dvprel.cross_reference(self)
 
     def geom_check(self, geom_check, xref):

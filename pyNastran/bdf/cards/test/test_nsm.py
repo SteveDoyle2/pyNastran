@@ -3,7 +3,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
 import unittest
-from six import iteritems
 from six.moves import StringIO
 import numpy as np
 from numpy import array

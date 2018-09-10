@@ -25,7 +25,7 @@ EPOINTs/SPOINTs classes are for multiple degrees of freedom
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
-from six import string_types, PY2, iteritems
+from six import string_types, PY2
 from typing import List, Union, Optional, Any
 import numpy as np
 
@@ -269,7 +269,7 @@ def write_xpoints(cardtype, points, comment=''):
     msg = comment
     if isinstance(points, dict):
         point_ids = []
-        for point_id, point in sorted(iteritems(points)):
+        for point_id, point in sorted(points.items()):
             point_ids.append(point_id)
             if point.comment:
                 msg += point.comment

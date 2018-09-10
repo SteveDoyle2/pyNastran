@@ -2,7 +2,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from math import sin, cos, radians, atan2, sqrt, degrees
-from six import iteritems
 
 import numpy as np
 from numpy import array, zeros
@@ -974,7 +973,7 @@ class DMIG_UACCEL(BaseCard):
         list_fields = [
             'DMI', 'UACCEL', 0, 9, self.tin, None, None, None, self.ncol
         ]
-        for lseq, ncx in sorted(iteritems(self.load_sequences)):
+        for lseq, ncx in sorted(self.load_sequences.items()):
             list_fields += [lseq, None, None]
             for ncxi in ncx:
                 list_fields += ncxi
@@ -1013,7 +1012,7 @@ class DMIG_UACCEL(BaseCard):
         msg += func(list_fields)
 
         list_fields = ['DMIG', 'UACCEL']
-        for lseq, ncx in sorted(iteritems(self.load_sequences)):
+        for lseq, ncx in sorted(self.load_sequences.items()):
             list_fields += [lseq, None, None]
             for ncxi in ncx:
                 list_fields += ncxi

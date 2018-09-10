@@ -1,5 +1,4 @@
 from __future__ import print_function
-from six import iteritems
 from pyNastran.gui.menus.groups_modify.groups_modify import GroupsModify
 
 def on_set_modify_groups(self):

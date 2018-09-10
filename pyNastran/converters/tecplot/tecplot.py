@@ -9,7 +9,7 @@ from struct import unpack
 from collections import defaultdict
 import itertools
 
-from six import iteritems, string_types, PY3
+from six import string_types, PY3
 from numpy import (
     array, vstack, hstack, where, unique, zeros, loadtxt, savetxt, intersect1d, in1d)
 #import numpy as np
@@ -1093,7 +1093,7 @@ class Tecplot(object):
                     sort_face_to_face[sort_face] = face
 
         free_faces = []
-        for sort_face, eids in iteritems(sort_face_to_element_map):
+        for sort_face, eids in sort_face_to_element_map.items():
             if len(eids) == 1:
                 free_faces.append(sort_face_to_face[sort_face])
         self.log.info('finished get_free_faces')

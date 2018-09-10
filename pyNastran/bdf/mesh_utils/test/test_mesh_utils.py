@@ -4,7 +4,7 @@ import os
 import unittest
 from codecs import open
 
-from six import StringIO, iteritems
+from six import StringIO
 import numpy as np
 #import pyNastran
 #from pyNastran.bdf.bdf import BDF

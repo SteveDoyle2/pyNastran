@@ -3,7 +3,7 @@ Unlinks up the various cards in the BDF.
 """
 from __future__ import print_function
 from typing import List, Dict, Any
-from six import iteritems, itervalues
+from six import itervalues
 from pyNastran.bdf.bdf_interface.safe_cross_reference import SafeXrefMesh
 
 class UnXrefMesh(SafeXrefMesh):
@@ -40,7 +40,7 @@ class UnXrefMesh(SafeXrefMesh):
     def _uncross_reference_coords(self):
         # type: () -> None
         """uncross references the CORDx objects"""
-        for cid, coord in iteritems(self.coords):
+        for cid, coord in self.coords.items():
             if cid == 0:
                 continue
             coord.uncross_reference()
@@ -205,23 +205,23 @@ class UnXrefMesh(SafeXrefMesh):
 
         TEMP
         """
-        for (unused_lid, load_combinations) in iteritems(self.load_combinations):
+        for (unused_lid, load_combinations) in self.load_combinations.items():
             for load_combination in load_combinations:
                 load_combination.uncross_reference()
 
-        for (unused_lid, loads) in iteritems(self.loads):
+        for (unused_lid, loads) in self.loads.items():
             for load in loads:
                 load.uncross_reference()
 
-        for (unused_lid, dloads) in iteritems(self.dloads):
+        for (unused_lid, dloads) in self.dloads.items():
             for dload in dloads:
                 dload.uncross_reference()
-        for (unused_lid, dload_entries) in iteritems(self.dload_entries):
+        for (unused_lid, dload_entries) in self.dload_entries.items():
             for dload_entry in dload_entries:
                 dload_entry.uncross_reference()
-        for unused_key, darea in iteritems(self.dareas):
+        for unused_key, darea in self.dareas.items():
             darea.uncross_reference()
-        for unused_key, dphase in iteritems(self.dphases):
+        for unused_key, dphase in self.dphases.items():
             dphase.uncross_reference()
 
     def _uncross_reference_sets(self):
@@ -237,12 +237,12 @@ class UnXrefMesh(SafeXrefMesh):
             set_obj.uncross_reference()
         for set_obj in self.qsets:
             set_obj.uncross_reference()
-        for unused_name, set_objs in iteritems(self.usets):
+        for unused_name, set_objs in self.usets.items():
             for set_obj in set_objs:
                 set_obj.uncross_reference()
 
         # superelements
-        for unused_key, set_obj in iteritems(self.se_sets):
+        for unused_key, set_obj in self.se_sets.items():
             set_obj.uncross_reference()
         for set_obj in self.se_bsets:
             set_obj.uncross_reference()
@@ -255,17 +255,17 @@ class UnXrefMesh(SafeXrefMesh):
 
     def _uncross_reference_optimization(self):
         """uncross references the optimization objects"""
-        for unused_key, deqatn in iteritems(self.dequations):
+        for unused_key, deqatn in self.dequations.items():
             deqatn.uncross_reference()
-        for unused_key, dresp in iteritems(self.dresps):
+        for unused_key, dresp in self.dresps.items():
             dresp.uncross_reference()
-        for unused_key, dconstrs in iteritems(self.dconstrs):
+        for unused_key, dconstrs in self.dconstrs.items():
             for dconstr in dconstrs:
                 dconstr.uncross_reference()
 
-        for unused_key, dvcrel in iteritems(self.dvcrels):
+        for unused_key, dvcrel in self.dvcrels.items():
             dvcrel.uncross_reference()
-        for unused_key, dvmrel in iteritems(self.dvmrels):
+        for unused_key, dvmrel in self.dvmrels.items():
             dvmrel.uncross_reference()
-        for unused_key, dvprel in iteritems(self.dvprels):
+        for unused_key, dvprel in self.dvprels.items():
             dvprel.uncross_reference()

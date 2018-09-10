@@ -2,7 +2,7 @@ from __future__ import print_function
 #import os
 from collections import OrderedDict
 
-from six import iteritems, integer_types
+from six import integer_types
 
 from vtk import (
     vtkTextActor, vtkLODActor, vtkActor,

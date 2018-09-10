@@ -2,8 +2,6 @@ from __future__ import print_function
 import os
 from collections import OrderedDict
 
-from six import iteritems
-
 from numpy import amax, amin, arange, ones, zeros, where, unique
 
 #VTK_TRIANGLE = 5

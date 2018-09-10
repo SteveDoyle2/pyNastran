@@ -1,5 +1,4 @@
 from collections import defaultdict
-from six import iteritems
 
 #import numpy as np
 from numpy import array
@@ -83,7 +82,7 @@ class SPC(object):
         self.n = len(self.components)
         if self.n:
             self.grid_id = array(self.grid_id)
-            for dof, nodes in iteritems(self.components):
+            for dof, nodes in self.components.items():
                 self.components[dof] = array(nodes)
 
     def update(self, maps):
@@ -97,14 +96,14 @@ class SPC(object):
         """
         nid_map = maps['node']
         components = {}
-        for dof, nids in iteritems(self.components):
+        for dof, nids in self.components.items():
             components[dof] = [nid_map[nid] for nid in nids]
         self.components = components
         # TODO: constraint_map...
 
     def write_card(self, bdf_file, size=8):
         if self.n:
-            for dof, node_ids in sorted(iteritems(self.components)):
+            for dof, node_ids in sorted(self.components.items()):
                 card = ['SPC', self.constraint_id]
                 for node_id in node_ids:
                     card += [node_id, dof, 0.0]

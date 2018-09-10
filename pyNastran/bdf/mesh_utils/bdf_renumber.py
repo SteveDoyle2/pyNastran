@@ -7,7 +7,7 @@ from __future__ import print_function
 from itertools import chain
 
 import io
-from six import PY2, PY3, iteritems, StringIO
+from six import PY2, PY3, StringIO
 import numpy as np
 
 from pyNastran.bdf.bdf import BDF
@@ -423,7 +423,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         #spoints2 = arange(1, len(spoints) + 1)
         #nid = _create_dict_mapper(model.nodes, nid_map, 'nid', nid)
 
-        for nid, node in sorted(iteritems(model.nodes)):
+        for nid, node in sorted(model.nodes.items()):
             nid_new = nid_map[nid]
             #print('nid=%s -> %s' % (nid, nid_new))
             node.nid = nid_new
@@ -456,7 +456,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         # elements
         #eid = _create_dict_mapper(model.elements, eid_map, 'eid', eid)
 
-        for eidi, element in sorted(iteritems(model.elements)):
+        for eidi, element in sorted(model.elements.items()):
             element.eid = eid
             eid_map[eidi] = eid
             eid += 1

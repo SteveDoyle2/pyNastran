@@ -6,7 +6,7 @@ import sys
 import os
 from codecs import open
 from struct import pack, unpack, Struct
-from six import string_types, iteritems, PY2, PY3
+from six import string_types, PY2, PY3
 
 import numpy as np
 from numpy import array, zeros, float32, float64, complex64, complex128, ndarray
@@ -1731,7 +1731,7 @@ def _write_sparse_matrix_ascii(op4, name, A, form=2, is_big_mat=False,
 
     op4.write(msg)
     msg = ''
-    for j, col in iteritems(cols):
+    for j, col in cols.items():
         #print("***********")
         #print("j=%s col=%s" % (j, col))
         #col.sort()

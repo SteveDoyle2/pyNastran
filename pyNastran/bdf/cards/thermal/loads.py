@@ -1,7 +1,6 @@
 # pylint: disable=R0902,R0904,R0914,C0111
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import  iteritems
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -928,7 +927,7 @@ class TEMP(ThermalLoad):
         """Writes the TEMP card"""
         list_fields = ['TEMP', self.sid]
         ntemps = len(self.temperatures) - 1
-        for i, (gid, temp) in enumerate(sorted(iteritems(self.temperatures))):
+        for i, (gid, temp) in enumerate(sorted(self.temperatures.items())):
             list_fields += [gid, temp]
             if i % 3 == 2 and ntemps > i:  # start a new TEMP card
                 list_fields += [None, 'TEMP', self.sid]
@@ -1076,7 +1075,7 @@ class TEMPD(BaseCard):
         return TEMPD(sid, temperature, comment=comment)
 
     def add(self, tempd_obj):
-        for (lid, tempd) in iteritems(tempd_obj.temperature):
+        for (lid, tempd) in tempd_obj.temperature.items():
             self.temperature[lid] = tempd
 
     def cross_reference(self, model):

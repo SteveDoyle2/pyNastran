@@ -739,13 +739,13 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         cards one-to-one...not sure what to do
 
         """
-        for nid, node in iteritems(replace_model.nodes):
+        for nid, node in replace_model.nodes.items():
             self.nodes[nid] = node
-        for eid, elem in iteritems(replace_model.elements):
+        for eid, elem in self.elements.items():
             self.elements[eid] = elem
         for eid, elem in replace_model.rigid_elements.items():
             self.rigid_elements[eid] = elem
-        for pid, prop in iteritems(replace_model.properties):
+        for pid, prop in replace_model.properties.items():
             self.properties[pid] = prop
         for mid, mat in replace_model.materials.items():
             self.materials[mid] = mat
@@ -4062,7 +4062,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         """creates card objects and adds the parsed cards to the deck"""
         self.echo = False
         cards_out = {}
-        for card_name, card in sorted(iteritems(cards)):
+        for card_name, card in sorted(cards.items()):
             cards_list = []
             cards_out[card_name] = cards_list
             if self.is_reject(card_name):

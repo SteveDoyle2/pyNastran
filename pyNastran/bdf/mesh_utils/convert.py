@@ -3,7 +3,7 @@ defines:
  - convert(model, units_to, units=None)
 """
 from __future__ import print_function
-from six import iteritems, string_types
+from six import string_types
 import numpy as np
 from pyNastran.bdf.cards.base_card import break_word_by_trailing_parentheses_integer_ab
 
@@ -550,7 +550,7 @@ def _convert_materials(model, xyz_scale, mass_scale, weight_scale):
 
 def _convert_constraints(model, xyz_scale):
     """converts the spc/mpcs"""
-    for unused_spc_id, spcs in iteritems(model.spcs):
+    for unused_spc_id, spcs in model.spcs.items():
         for spc in spcs:
             if spc.type in ['SPCADD', 'SPC1']:
                 continue
@@ -740,23 +740,23 @@ def _convert_optimization(model, xyz_scale, mass_scale, weight_scale):
     pressure_scale = weight_scale / xyz_scale ** 2
     #stiffness_scale = force_scale / xyz_scale
     #damping_scale = force_scale / velocity_scale
-    #for key, deqatn in iteritems(model.dequations):
+    #for key, deqatn in model.dequations.items():
         #deqatn.cross_reference(model)
-    #for key, dresp in iteritems(model.dresps):
+    #for key, dresp in model.dresps.items():
         #dresp.cross_reference(model)
-    #for key, desvar in iteritems(model.desvars):
+    #for key, desvar in model.desvars.items():
         #desvar.xinit *= scale
         #desvar.xlb *= scale
         #desvar.xub *= scale
         #desvar.delx *= scale
         #raise NotImplementedError(desvar)
 
-    for unused_key, dconstrs in iteritems(model.dconstrs):
+    for unused_key, dconstrs in model.dconstrs.items():
         for dconstr in dconstrs:
             # scale is appled to lid/uid
             _convert_dconstr(model, dconstr, pressure_scale)
 
-    for unused_key, dvcrel in iteritems(model.dvcrels):
+    for unused_key, dvcrel in model.dvcrels.items():
         if dvcrel.type == 'DVCREL1':
             scale = _convert_dvcrel1(dvcrel, xyz_scale)
             desvars = dvcrel.dvids_ref
@@ -769,10 +769,10 @@ def _convert_optimization(model, xyz_scale, mass_scale, weight_scale):
         assert len(desvars) == 1, len(desvars)
         scale_desvars(desvars, scale)
 
-    for unused_key, dvmrel in iteritems(model.dvmrels):
+    for unused_key, dvmrel in model.dvmrels.items():
         raise NotImplementedError(dvmrel)
 
-    for key, dvprel in iteritems(model.dvprels):
+    for key, dvprel in model.dvprels.items():
         if dvprel.type == 'DVPREL1':
             scale = _convert_dvprel1(dvprel, xyz_scale, mass_scale, weight_scale)
             desvars = dvprel.dvids_ref

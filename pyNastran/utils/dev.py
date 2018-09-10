@@ -1,7 +1,7 @@
 from __future__ import print_function, absolute_import
 import os
 from typing import List
-from six import string_types, iteritems
+from six import string_types
 
 import numpy as np
 

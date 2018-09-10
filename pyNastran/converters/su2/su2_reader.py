@@ -1,5 +1,4 @@
 from __future__ import print_function
-from six import iteritems
 import numpy as np
 
 
@@ -181,7 +180,7 @@ class SU2Reader(object):
         with open(su2_filename, 'wb') as su2_file:
             su2_file.write('NDIM = %i\n' % ndim)
             if ndim == 2:
-                for etype, elementsi in sorted(iteritems(elements)):
+                for etype, elementsi in sorted(elements.items()):
                     element_num = self.etype_nnodes_map[etype]
                     fmt = '%%s' + ' %%s' * (element_num-1) + '\n'
                     for element in elementsi:

@@ -1,5 +1,4 @@
 from __future__ import print_function
-from six import iteritems
 from numpy import loadtxt, argsort, allclose, vstack, array, abs, where
 
 
@@ -53,7 +52,7 @@ def rpt_read():
 def main():
     headers, results, key_map = rpt_read()
 
-    for key, rows in iteritems(results):
+    for key, rows in results.items():
         data2 = {}
         iz = key_map['X Location']
         iozz = key_map['Z Component']

@@ -11,7 +11,7 @@ defines:
 from __future__ import print_function
 from itertools import count
 
-from six import iterkeys, iteritems
+from six import iterkeys
 import numpy as np
 from pyNastran.bdf.cards.coordinate_systems import CORD2R
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -64,7 +64,7 @@ def _setup_faces(bdf_filename):
         'CTRIA3', 'CTRIAX', 'CTRIA6', 'CTRIAX6',
         'CQUAD4', 'CQUAD', 'CQUAD8', 'CQUADR', 'CQUADX', 'CQUADX8',
         'CSHEAR'])
-    for eid, elem in iteritems(model.elements):
+    for eid, elem in model.elements.items():
         if elem.type in shells:
             #if elem.type == 'CQUAD4':
                 # split to 2 faces...not done

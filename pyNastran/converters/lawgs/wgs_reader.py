@@ -10,7 +10,6 @@ from __future__ import print_function
 import copy
 from math import sin, cos
 
-from six import iteritems
 import numpy as np
 from numpy import array, radians, dot, zeros
 from pyNastran.utils.log import get_logger2

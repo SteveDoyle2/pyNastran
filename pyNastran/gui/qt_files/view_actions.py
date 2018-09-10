@@ -2,8 +2,6 @@
 from __future__ import print_function
 #import os
 
-from six import iteritems #, string_types
-
 #import numpy as np
 import vtk
 

@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-from six import iteritems, string_types
+from six import string_types
 import numpy as np
 
 from pyNastran.dev.bdf_vectorized.bdf import BDF

@@ -1,4 +1,3 @@
-from six import iteritems
 from numpy import dot, ndarray, zeros
 
 def partition_sparse(Is, Js, Vs):
@@ -75,7 +74,7 @@ def departition_dense_vector(n, IsVs):
 
 
 def reverse_dict(A):
-    return {v: k for k, v in iteritems(A)}
+    return {v: k for k, v in A.items()}
 
 
 def triple(A, B):

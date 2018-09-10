@@ -14,7 +14,6 @@ import traceback
 import warnings
 from itertools import chain
 from typing import List, Tuple, Optional
-from six import iteritems
 import numpy as np
 #warnings.simplefilter('always')
 warnings.simplefilter('default')
@@ -366,7 +365,7 @@ def run_and_compare_fems(
             if not quiet:
                 print('card_count:')
                 print('-----------')
-                for card_name, card_count in sorted(iteritems(fem1.card_count)):
+                for card_name, card_count in sorted(fem1.card_count.items()):
                     print('key=%-8s value=%s' % (card_name, card_count))
             return fem1, None, None
 
@@ -811,7 +810,7 @@ def _assert_has_spc(subcase, fem):
     """
     if 'SPC' not in subcase:
         has_ps = False
-        for unused_nid, node in iteritems(fem.nodes):
+        for unused_nid, node in fem.nodes.items():
             if node.ps:
                 has_ps = True
                 break
@@ -853,12 +852,12 @@ def check_for_flag_in_subcases(fem2, subcase, parameters):
         unused_subcases = fem2.subcases
         #subcase_ids = [isubcase for isubcase in subcases if isubcase > 0]
         has_flag = False
-        for unused_isubcase, subcasei in iteritems(fem2.subcases):
+        for unused_isubcase, subcasei in fem2.subcases.items():
             if any(subcasei.has_parameter(*parameters)):
                 has_flag = True
         if not has_flag:
             msg = 'sol=%r; %s not in subcase\n' % (fem2.sol, str(parameters))
-            for unused_isubcase, subcasei in iteritems(fem2.subcases):
+            for unused_isubcase, subcasei in fem2.subcases.items():
                 msg += str(subcasei)
             raise RuntimeError(msg)
 
@@ -1567,7 +1566,7 @@ def test_get_cards_by_card_types(model):
     # we'll get the associated cards
     card_dict = model.get_cards_by_card_types(card_types,
                                               reset_type_to_slot_map=False)
-    for card_type, cards in iteritems(card_dict):
+    for card_type, cards in card_dict.items():
         for card in cards:
             msg = 'this should never crash here...card_type=%s card.type=%s' % (
                 card_type, card.type)
@@ -1696,7 +1695,7 @@ def compute(cards1, cards2, quiet=False):
 def get_element_stats(fem1, unused_fem2, quiet=False):
     # type: (BDF, BDF, bool) -> None
     """verifies that the various element methods work"""
-    for (unused_key, loads) in sorted(iteritems(fem1.loads)):
+    for (unused_key, loads) in sorted(fem1.loads.items()):
         for load in loads:
             try:
                 all_loads = load.get_loads()
@@ -1744,7 +1743,7 @@ def get_matrix_stats(fem1, unused_fem2):
     """
     Verifies the dmig.get_matrix() method works.
     """
-    for (unused_key, dmig) in sorted(iteritems(fem1.dmigs)):
+    for (unused_key, dmig) in sorted(fem1.dmigs.items()):
         try:
             if isinstance(dmig, NastranMatrix):
                 dmig.get_matrix()
@@ -1756,7 +1755,7 @@ def get_matrix_stats(fem1, unused_fem2):
                   % (dmig.type, dmig.name, str(dmig)))
             raise
 
-    for (unused_key, dmi) in sorted(iteritems(fem1.dmis)):
+    for (unused_key, dmi) in sorted(fem1.dmis.items()):
         try:
             if isinstance(dmi, NastranMatrix):
                 dmi.get_matrix()
@@ -1768,7 +1767,7 @@ def get_matrix_stats(fem1, unused_fem2):
                   % (dmi.type, dmi.name, str(dmi)))
             raise
 
-    for (unused_key, dmij) in sorted(iteritems(fem1.dmijs)):
+    for (unused_key, dmij) in sorted(fem1.dmijs.items()):
         try:
             if isinstance(dmij, NastranMatrix):
                 dmij.get_matrix()
@@ -1780,7 +1779,7 @@ def get_matrix_stats(fem1, unused_fem2):
                   % (dmij.type, dmij.name, str(dmij)))
             raise
 
-    for (unused_key, dmiji) in sorted(iteritems(fem1.dmijis)):
+    for (unused_key, dmiji) in sorted(fem1.dmijis.items()):
         try:
             if isinstance(dmiji, NastranMatrix):
                 dmiji.get_matrix()
@@ -1792,7 +1791,7 @@ def get_matrix_stats(fem1, unused_fem2):
                   % (dmiji.type, dmiji.name, str(dmiji)))
             raise
 
-    for (unused_key, dmik) in sorted(iteritems(fem1.dmiks)):
+    for (unused_key, dmik) in sorted(fem1.dmiks.items()):
         try:
             if isinstance(dmik, NastranMatrix):
                 dmik.get_matrix()
@@ -1896,7 +1895,7 @@ def main():
     The main function for the command line ``test_bdf`` script.
     """
     data = get_test_bdf_data()
-    for key, value in sorted(iteritems(data)):
+    for key, value in sorted(data.items()):
         print("%-12s = %r" % (key.strip('--'), value))
 
     import time

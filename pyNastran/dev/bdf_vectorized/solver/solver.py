@@ -10,9 +10,6 @@ from datetime import date
 from struct import pack
 from codecs import open
 
-from six import iteritems
-
-# 3rd party
 import numpy as np
 from numpy import (array, zeros, ones, arange,
                    eye, searchsorted, array_equal, diag, fill_diagonal,
@@ -518,7 +515,7 @@ class Solver(OP2):
         cc = self.model.case_control_deck
         #print(cc.subcases)
         analysis_cases = []
-        for (isub, subcase) in sorted(iteritems(cc.subcases)):
+        for (isub, subcase) in sorted(cc.subcases.items()):
             self.subcase_key[isub] = [isub]
             self.log.info(subcase)
             if 'LOAD' in subcase:
@@ -1127,7 +1124,7 @@ class Solver(OP2):
         #self._op2_header(op2_file, packing=packing)
 
         #for result in results:
-            #for subcase, case in sorted(iteritems(result)):
+            #for subcase, case in sorted(result.items()):
                 #case.write_op2(header, page_stamp, op2_file, is_mag_phase=False, packing=packing)
                 #if not packing:
                     #op2_file.write('\n')
@@ -1682,7 +1679,7 @@ class Solver(OP2):
             self.log.info('cg = %s' % cg)
         else:
             xyz_cid0 = zeros((self.model.grid.n, 3), dtype='float32')
-            for i, (key, xyz) in enumerate(sorted(iteritems(self.positions))):
+            for i, (key, xyz) in enumerate(sorted(self.positions.items())):
                 xyz_cid0[i, :] = xyz
 
             #xyz_cid0 = self.model.grid.get_xyz(cid=0)
@@ -2110,7 +2107,7 @@ class Solver(OP2):
                 #print("spc_set =", spc_set)
                 for spc in spc_set:
                     if spc.type == 'SPC1':
-                        for dof, node_ids in iteritems(spc.components):
+                        for dof, node_ids in spc.components.items():
                             #print("dof =", dof)
                             for dofi in dof:
                                 dofi = int(dofi)
@@ -2340,7 +2337,7 @@ class Solver(OP2):
                         #Fg[Dofs[(nid, 6)]] += moment[2]
 
         #if sum(abs(self.grav_load)) > 0.0:
-            #for (eid, elem) in sorted(iteritems(model.elements)):  # CROD, CONROD
+            #for (eid, elem) in sorted(model.elements.items()):  # CROD, CONROD
                 #self.log.info("----------------------------")
                 #node_ids, index0s = self.element_dof_start(elem, nids)
                 #self.log.info("node_ids=%s index0s=%s" % (node_ids, index0s))

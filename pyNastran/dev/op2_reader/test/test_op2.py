@@ -6,7 +6,7 @@ import os
 import sys
 import time
 from traceback import print_exc
-from six import string_types, iteritems
+from six import string_types
 
 import numpy as np
 np.set_printoptions(precision=3, threshold=20)

@@ -7,7 +7,7 @@ Defines:
 """
 from __future__ import print_function, unicode_literals
 from collections import defaultdict
-from six import string_types, iteritems
+from six import string_types
 from numpy import array, cross, dot
 from numpy.linalg import norm  # type: ignore
 import numpy as np
@@ -451,7 +451,7 @@ def mass_properties_nsm(model, element_ids=None, mass_ids=None, nsm_id=None,
     **mass properties of model based on Property ID**
     >>> pids = list(model.pids.keys())
     >>> pid_eids = model.get_element_ids_dict_with_pids(pids)
-    >>> for pid, eids in sorted(iteritems(pid_eids)):
+    >>> for pid, eids in sorted(pid_eids.items()):
     >>>     mass, cg, I = mass_properties(model, element_ids=eids)
 
     Warning
@@ -469,7 +469,7 @@ def mass_properties_nsm(model, element_ids=None, mass_ids=None, nsm_id=None,
 
     if xyz_cid0_dict is None:
         xyz = {}
-        for nid, node in iteritems(model.nodes):
+        for nid, node in model.nodes.items():
             xyz[nid] = node.get_position()
     else:
         xyz = xyz_cid0_dict
@@ -506,7 +506,7 @@ def mass_properties_nsm(model, element_ids=None, mass_ids=None, nsm_id=None,
     lengths = defaultdict(list)
 
     no_mass = NO_MASS
-    for etype, eids in iteritems(model._type_to_id_map):
+    for etype, eids in model._type_to_id_map.items():
         #assert isinstance(eids, list), 'etype=%r eids=%s'%  (etype, eids)
         if etype in no_mass or len(eids) == 0:
             continue
@@ -824,9 +824,9 @@ def _get_mass_nsm(model, element_ids, mass_ids,
                                mass, cg, I, reference_point)
 
     #property_nsms[nsm_id][nsm.nsm_type][nsm_idi]
-    #for nsm_id, prop_types in sorted(iteritems(property_nsms)):
-        #for prop_type, prop_id_to_val in sorted(iteritems(prop_types)):
-            #for pid, val in sorted(iteritems(prop_id_to_val)):
+    #for nsm_id, prop_types in sorted(property_nsms.items()):
+        #for prop_type, prop_id_to_val in sorted(prop_types.items()):
+            #for pid, val in sorted(prop_id_to_val.items()):
         #TODO: CRAC2D mass not supported...how does this work???
         #      I know it's an "area" element similar to a CQUAD4
         #TODO: CCONEAX mass not supported...how does this work???
@@ -1172,7 +1172,7 @@ def _setup_apply_nsm(area_eids_pids, areas, nsm_centroids_area,
     is_area = []
     #is_data = False
     #print(areas)
-    for ptype, eids_pids in iteritems(area_eids_pids):
+    for ptype, eids_pids in area_eids_pids.items():
         areasi = np.array(areas[ptype], dtype='float64')
         area_eids_pids[ptype] = np.array(eids_pids, dtype='int32')
         areas[ptype] = areasi
@@ -1187,7 +1187,7 @@ def _setup_apply_nsm(area_eids_pids, areas, nsm_centroids_area,
         #is_data = True
         nsm_centroids_area[ptype] = nsm_centroidsi
 
-    for ptype, eids_pids in iteritems(length_eids_pids):
+    for ptype, eids_pids in length_eids_pids.items():
         lengthsi = np.array(lengths[ptype], dtype='float64')
         length_eids_pids[ptype] = np.array(eids_pids, dtype='int32')
         lengths[ptype] = lengthsi
@@ -1579,7 +1579,7 @@ def _apply_nsm(model, nsm_id,
 
 
     #print('area:')
-    #for ptype, eids_pids in sorted(iteritems(area_eids_pids)):
+    #for ptype, eids_pids in sorted(area_eids_pids.items()):
         #eids = eids_pids[:, 0]
         #pids = eids_pids[:, 1]
         #area = np.array(areas[ptype])
@@ -1589,7 +1589,7 @@ def _apply_nsm(model, nsm_id,
         #print('  ', ptype, eids_sorted, area_sorted)
 
     #print('length:')
-    #for ptype, length_eid in sorted(iteritems(length_eids_pids)):
+    #for ptype, length_eid in sorted(length_eids_pids.items()):
         #eids = np.array(length_eid, dtype='int32')
         #length = np.array(lengths[ptype])
         #print('  ', ptype, eids, length)

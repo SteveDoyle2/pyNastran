@@ -1,6 +1,5 @@
 from __future__ import print_function
 from itertools import count
-from six import iteritems
 from numpy import array, zeros, arange, searchsorted, unique
 
 from pyNastran.dev.bdf_vectorized.cards.elements.property import Property
@@ -270,7 +269,7 @@ class PBARL(Property):
 
         dim = {}
         j = 0
-        for ii, dimi in iteritems(self.dim):
+        for ii, dimi in self.dim.items():
             if ii in i:
                 dim[j] = dimi
                 j += 1

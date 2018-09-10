@@ -1,7 +1,6 @@
 from __future__ import print_function
 from copy import deepcopy
 from collections import defaultdict
-from six import iteritems
 
 import numpy as np
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -95,7 +94,7 @@ class DegenGeom(object):
         nu = 0.3
         card = ['MAT1', mid, E, G, nu]
         bdf_file.write(print_card_8(card))
-        for name, comps in sorted(iteritems(self.components)):
+        for name, comps in sorted(self.components.items()):
             bdf_file.write('$ name = %r\n' % name)
             for comp in comps:
                 card = ['PSHELL', pid, mid, t]
@@ -115,7 +114,7 @@ class DegenGeom(object):
         pan.nNetworks = 1
         kt = 1
         cp_norm = 1
-        for name, comps in sorted(iteritems(self.components)):
+        for name, comps in sorted(self.components.items()):
             #panair_file.write('$ name = %r\n' % name)
             for comp in comps:
                 namei = name + str(i)

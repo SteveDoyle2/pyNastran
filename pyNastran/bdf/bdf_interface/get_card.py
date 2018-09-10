@@ -38,7 +38,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from copy import deepcopy
 from collections import defaultdict
 from typing import List, Dict, Set, Optional, Any
-from six import string_types, iteritems, iterkeys
+from six import string_types, iteritems, iterkeys, itervalues
 
 import numpy as np
 
@@ -1242,7 +1242,7 @@ class GetCard(GetMethods):
             assert scale == 1.0, str(load)
             if load.type == 'TEMP':
                 temps_dict = load.temperatures
-                for nid, val in iteritems(temps_dict):
+                for nid, val in temps_dict.items():
                     nidi = nid_map[nid]
                     temperatures[nidi] = val
             elif load.type in skip_loads:
@@ -1259,7 +1259,7 @@ class GetCard(GetMethods):
         independent = np.unique(lines[:, 1])
         """
         lines_rigid = []
-        for eid, elem in iteritems(self.rigid_elements):
+        for eid, elem in self.rigid_elements.items():
             if elem.type == 'RBE3':
                 if elem.Gmi != []:
                     # UM are dependent
@@ -1563,7 +1563,7 @@ class GetCard(GetMethods):
                 else:
                     raise NotImplementedError(mpc)
 
-        for unused_eid, rigid_element in iteritems(self.rigid_elements):
+        for unused_eid, rigid_element in self.rigid_elements.items():
             if rigid_element.type == 'RBE2':
                 dependent_nodes = set(rigid_element.dependent_nodes)
                 components = rigid_element.cm
@@ -2273,7 +2273,7 @@ class GetCard(GetMethods):
         for nid in self.epoints:
             nid_to_elements_map[nid] = []
 
-        for (unused_eid, element) in iteritems(self.elements):  # load the mapper
+        for element in itervalues(self.elements):  # load the mapper
             try:
                 # not supported for 0-D and 1-D elements
                 nids = element.node_ids

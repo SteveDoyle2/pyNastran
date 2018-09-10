@@ -26,8 +26,8 @@ from pyNastran.op2.op2 import read_op2
 
 def update_bdf(model, post=-1):
     #cc = model.case_control_deck
-    #for isubcase, subcase in sorted(iteritems(cc.subcases)):
-        #for param, values in iteritems(subcase.params):
+    #for isubcase, subcase in sorted(cc.subcases.items()):
+        #for param, values in subcase..items(params):
             #if param in ['SPCFORCES', 'STRESS', 'DISPLACEMENT', 'STRAIN', 'MPCFORCES',
                          #'GPFORCE', 'GPSTRESS', 'VELOCITY', 'ACCELERATION']:
                 #print('values =', values)

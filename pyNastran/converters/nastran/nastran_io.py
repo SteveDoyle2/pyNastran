@@ -362,7 +362,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             'S' : 'Rtp',
         }
         self.gui.create_global_axes(dim_max)
-        for cid, coord in sorted(iteritems(model.coords)):
+        for cid, coord in sorted(model.coords.items()):
             if cid in [0, -1]:
                 continue
             cid_type = cid_types[coord.Type]
@@ -418,7 +418,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         #print('model.spoints =', model.spoints)
         #import json
-        #for spoint_id, spoint in iteritems(model.spoints):
+        #for spoint_id, spoint in model.spoints.items():
             #if spoint.comment: # or spoint._comment?
                 #print('SPOINT comment=%r _comment=%r' % (spoint.comment, spoint._comment))
                 #comment_lower = spoint.comment.lower()
@@ -429,7 +429,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     #print('dict_str = %r' % dict_str)
                     #dicti = json.loads(dict_str)
                     #print(dicti)
-        #for epoint_id, epoint in iteritems(model.epoints):
+        #for epoint_id, epoint in model.epoints.items():
             #if epoints.comment:
                 #print('EPOINT comment=%r _comment=%r' % (spoint.comment, spoint._comment))
         #sys.stdout.flush()
@@ -1676,7 +1676,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             def update_conm2s_function(unused_nid_map, unused_ugrid, points, nodes):
                 j2 = 0
                 mass_grid = self.gui.alt_grids['conm2']
-                for unused_eid, element in sorted(iteritems(model.masses)):
+                for unused_eid, element in sorted(model.masses.items()):
                     if isinstance(element, CONM2):
                         nid = element.nid
                         inid = np.searchsorted(self.node_ids, nid)
@@ -1762,7 +1762,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                         'model.aesurf = %r\n' % (labels_to_aesurfs, model.aesurf))
                     raise RuntimeError(msg)
 
-                for unused_label, aesurf in sorted(iteritems(labels_to_aesurfs)):
+                for unused_label, aesurf in sorted(labels_to_aesurfs.items()):
                     reset_labels = False
                     cs_name = '%s_control_surface' % aesurf.label
                     self.set_caero_control_surface_grid(
@@ -1789,7 +1789,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         form0 = form[2]
         assert icase is not None
         nsubcases = len(model.subcases)
-        for subcase_idi, subcase in sorted(iteritems(model.subcases)):
+        for subcase_idi, subcase in sorted(model.subcases.items()):
             if not xref_nodes:
                 continue
 
@@ -1924,7 +1924,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             # 3/5/7/... - spline points
             # 2/4/6/... - spline panels
             iaero = 2
-            for spline_id, spline in sorted(iteritems(model.splines)):
+            for spline_id, spline in sorted(model.splines.items()):
                 setg_ref = spline.setg_ref
                 if setg_ref is None:
                     msg = 'error cross referencing SPLINE:\n%s' % spline.rstrip()
@@ -2046,7 +2046,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 msg = '%r doesnt support panel_points_elements\n%s' % (caero.type, caero.rstrip())
                 raise NotImplementedError(msg)
 
-        for unused_eid, caero in sorted(iteritems(model.caeros)):
+        for unused_eid, caero in sorted(model.caeros.items()):
             if isinstance(caero, (CAERO1, CAERO3, CAERO4, CAERO5, CAERO7)):
                 ncaeros_points += 4
                 ncaeros += 1
@@ -2064,7 +2064,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         ncaeros_sub = 0
         if model.caeros:
             caero_points = []
-            for unused_eid, caero in sorted(iteritems(model.caeros)):
+            for unused_eid, caero in sorted(model.caeros.items()):
                 if caero.type in ['CAERO1', 'CAERO4', 'CAERO7']:
                     ncaeros_sub += 1
                     pointsi, elementsi = caero.panel_points_elements()
@@ -2101,7 +2101,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     'model.aesurf = %r\n' % (labels_to_aesurfs, model.aesurf))
                 raise RuntimeError(msg)
 
-            for unused_label, aesurf in sorted(iteritems(model.aesurf)):
+            for unused_label, aesurf in sorted(model.aesurf.items()):
                 if aesurf.type == 'AESURFZ':
                     aero_element_ids = aesurf.aero_element_ids
                     ncaeros_cs += len(aero_element_ids)
@@ -2167,7 +2167,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         zfighting_offset = 0.0001
         caero_grid = self.gui.alt_grids['caero']
-        for unused_eid, element in sorted(iteritems(model.caeros)):
+        for unused_eid, element in sorted(model.caeros.items()):
             if isinstance(element, (CAERO1, CAERO3, CAERO4, CAERO5, CAERO7)):
                 # wing panel
                 cpoints = element.get_points()
@@ -2254,7 +2254,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         points.SetNumberOfPoints(ncaero_sub_points)
 
         vtk_type = vtkQuad().GetCellType()
-        for unused_eid, element in sorted(iteritems(model.caeros)):
+        for unused_eid, element in sorted(model.caeros.items()):
             if isinstance(element, (CAERO1, CAERO3, CAERO4, CAERO5, CAERO7)):
                 pointsi, elementsi = element.panel_points_elements()
 
@@ -2412,7 +2412,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         #sphere_size = self._get_sphere_size(dim_max)
         alt_grid = self.gui.alt_grids['conm2']
-        for unused_eid, element in sorted(iteritems(model.masses)):
+        for unused_eid, element in sorted(model.masses.items()):
             if isinstance(element, CONM2):
                 xyz_nid = element.nid_ref.get_position()
                 centroid = element.offset(xyz_nid)
@@ -2467,7 +2467,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         spc_ids_used = set()
         mpc_ids_used = set()
         suport1_ids_used = set()
-        for subcase_id, subcase in sorted(iteritems(model.subcases)):
+        for subcase_id, subcase in sorted(model.subcases.items()):
             if 'SPC' in subcase:
                 spc_id = subcase.get_parameter('SPC')[0]
                 if spc_id is not None and spc_id not in spc_ids_used:
@@ -2545,7 +2545,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             spc_id, stop_on_failure=False)
 
         node_ids = []
-        for nid, c1 in iteritems(node_ids_c1):
+        for nid, c1 in node_ids_c1.items():
             if nid_to_pid_map is not None:
                 plot_node = False
                 pids = nid_to_pid_map[nid]
@@ -2582,7 +2582,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         text = []
         #result_name = self.icase
         result_name = str('ElementID')
-        for nid, data in sorted(iteritems(self.nid_release_map)):
+        for nid, data in sorted(self.nid_release_map.items()):
             sub_release_map = defaultdict(str)
             for (eid, pin_flagi) in data:
                 sub_release_map[pin_flagi] += (str(eid) + ', ')
@@ -3935,7 +3935,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         nplotels = len(model.plotels)
         if nplotels:
             lines = []
-            for unused_eid, element in sorted(iteritems(model.plotels)):
+            for unused_eid, element in sorted(model.plotels.items()):
                 node_ids = element.node_ids
                 lines.append(node_ids)
             lines = np.array(lines, dtype='int32')
@@ -5629,7 +5629,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             out_dict = model._get_dvprel_ndarrays(nelements, pids)
 
             optimization_cases = []
-            for key, dvprel_data in iteritems(out_dict):
+            for key, dvprel_data in out_dict.items():
                 design_region, dvprel_init, dvprel_min, dvprel_max = dvprel_data
                 if np.nanmax(design_region) == 0:
                     continue
@@ -5954,7 +5954,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #self.isubcase_name_map = model.isubcase_name_map
         # self.isubcase_name_map = model.subcase_key
         #print(self.isubcase_name_map)
-        for isubcase, values in iteritems(model.isubcase_name_map):
+        for isubcase, values in model.isubcase_name_map.items():
             if not isinstance(isubcase, integer_types):
                 print('isubcase type =', type(isubcase))
                 continue

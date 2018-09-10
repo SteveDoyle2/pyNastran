@@ -2,7 +2,6 @@
 SOL 145 plotter
 """
 from __future__ import print_function
-from six import iteritems
 
 import matplotlib.pyplot as plt
 
@@ -313,7 +312,7 @@ def make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq,
                        nopoints,
                        show=True):
     """actually makes the flutter plots"""
-    for unused_subcase, flutter in sorted(iteritems(flutters)):
+    for unused_subcase, flutter in sorted(flutters.items()):
         if plot_vg:
             flutter.plot_vg(modes=modes,
                             show=False,

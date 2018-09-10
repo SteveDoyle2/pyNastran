@@ -8,8 +8,6 @@ import sys
 import traceback
 from collections import OrderedDict
 
-from six import iteritems
-
 import numpy as np
 import vtk
 from qtpy import QtGui
@@ -597,7 +595,7 @@ class GuiAttributes(object):
             return
 
         # existing geometry
-        for icase, actors in iteritems(self.label_actors):
+        for icase, actors in self.label_actors.items():
             if icase == -1:
                 continue
             for actor in actors:

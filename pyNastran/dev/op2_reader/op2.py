@@ -25,7 +25,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
 import sys
-from six import iteritems, string_types
+from six import string_types
 from six.moves.cPickle import load, dump, dumps
 
 import numpy as np
@@ -271,7 +271,7 @@ class OP2(OP2_Scalar):
                 continue
 
             # loop over each DisplacementArray
-            for key, avalue in iteritems(adict):
+            for key, avalue in adict.items():
                 if debug:
                     self.log.debug('working on %r subcase=%s' % (table_type, str(key)))
 
@@ -625,7 +625,7 @@ class OP2(OP2_Scalar):
         result_types = self.get_table_types()
 
         if len(self.matrices):
-            for key, matrix in sorted(iteritems(self.matrices)):
+            for key, matrix in sorted(self.matrices.items()):
                 if hasattr(matrix, 'build_dataframe'):
                     matrix.build_dataframe()
                 else:
@@ -747,7 +747,7 @@ class OP2(OP2_Scalar):
 
         if not combine:
             subcase_key2 = {}
-            for key, value in iteritems(self.subcase_key):
+            for key, value in self.subcase_key.items():
                 subcase_key2[key] = value
             self.subcase_key = subcase_key2
             #print('self.subcase_key =', self.subcase_key)
@@ -967,7 +967,7 @@ class OP2(OP2_Scalar):
 
     def print_subcase_key(self):
         self.log.info('---self.subcase_key---')
-        for isubcase, keys in sorted(iteritems(self.subcase_key)):
+        for isubcase, keys in sorted(self.subcase_key.items()):
             if len(keys) == 1:
                 self.log.info('subcase_id=%s : keys=%s' % (isubcase, keys))
             else:
@@ -1057,7 +1057,7 @@ class OP2(OP2_Scalar):
             if not disp_like_dict:
                 continue
             #print('-----------')
-            for subcase, result in iteritems(disp_like_dict):
+            for subcase, result in disp_like_dict.items():
                 transform_displacement_to_global(subcase, result, i_transform, coords, xyz_cid0,
                                                  self.log, debug=debug)
 
@@ -1098,7 +1098,7 @@ class OP2(OP2_Scalar):
             if not disp_like_dict:
                 continue
             self.log.debug('-----------')
-            for subcase, result in iteritems(disp_like_dict):
+            for subcase, result in disp_like_dict.items():
                 transform_gpforce_to_globali(subcase, result,
                                              nids_all, nids_transform,
                                              i_transform, coords, xyz_cid0, self.log)
@@ -1109,7 +1109,7 @@ class OP2(OP2_Scalar):
 def transform_displacement_to_global(subcase, result, i_transform, coords, xyz_cid0, log, debug=False):
     #print('result.name = ', result.class_name)
     data = result.data
-    for cid, inode in iteritems(i_transform):
+    for cid, inode in i_transform.items():
         if cid in [-1, 0]:
             continue
         coord = coords[cid]
@@ -1233,7 +1233,7 @@ def transform_gpforce_to_globali(subcase, result,
 
     # inode_xyz :
     #    the indices of the nodes in the model grid point list
-    for cid, inode_xyz in iteritems(i_transform):
+    for cid, inode_xyz in i_transform.items():
         log.debug('cid = %s' % cid)
         if cid in [-1, 0]:
             continue

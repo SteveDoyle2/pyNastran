@@ -1,6 +1,5 @@
 from __future__ import print_function
 from collections import defaultdict
-from six import iteritems
 import numpy as np
 from pyNastran.bdf.bdf import GRID
 
@@ -161,13 +160,13 @@ class Nodes(object):
 
         # get the indicies of the xyz array where the nodes that
         # need to be transformed are
-        for cd, nids in sorted(iteritems(nids_cd_transform)):
+        for cd, nids in sorted(nids_cd_transform.items()):
             if cd in [0, -1]:
                 continue
             nids = np.array(nids)
             icd_transform[cd] = np.where(np.in1d(nids_all, nids))[0]
 
-        for cp, nids in sorted(iteritems(nids_cp_transform)):
+        for cp, nids in sorted(nids_cp_transform.items()):
             if cp in [-1]:
                 continue
             nids = np.array(nids)

@@ -4,7 +4,7 @@ defines some methods for cleaning up a model
                          remove_pids=True, remove_mids=True)
 """
 from __future__ import print_function
-from six import iteritems, integer_types
+from six import integer_types
 
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
@@ -46,7 +46,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
         #reset_type_to_slot_map=False,
         #stop_on_missing_card=True)
 
-    #for nid, node in iteritems(model.nodes):
+    #for nid, node in model.nodes.items():
         #cids_used.update([node.Cp(), node.Cd()])
 
     skip_cards = [
@@ -108,7 +108,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
     ]
 
     # could remove some if we look at the rid_trace
-    #for cid, coord in iteritems(model.coords):
+    #for cid, coord in model.coords.items():
         #if coord.type in ['CORD1R', 'CORD1C', 'CORD1S']:
             #nids_used.update(node_ids)
         #elif coord.type in ['CORD1R', 'CORD1C', 'CORD1S']:
@@ -116,8 +116,8 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
         #else:
             #raise NotImplementedError(coord)
 
-    for card_type, ids in iteritems(model._type_to_id_map):
-    #for card_type, ids in iteritems(card_map):
+    for card_type, ids in model._type_to_id_map.items():
+    #for card_type, ids in card_map.items():
         if card_type in ['CORD1R', 'CORD1C', 'CORD1S']:
             for cid in ids:
                 coord = model.coords[cid]
@@ -384,7 +384,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
             for suport1 in model.suport1.values():
                 nids_used.update(suport1.node_ids)
         elif card_type == 'GRID':
-            for nid, node in iteritems(model.nodes):
+            for nid, node in model.nodes.items():
                 cids_used.update([node.Cp(), node.Cd()])
 
         elif card_type in ['CBAR', 'CBEAM', 'CBEND']:
@@ -621,7 +621,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
             raise NotImplementedError(card_type)
 
 
-    #for pid, prop in iteritems(model.properties):
+    #for pid, prop in model.properties.items():
         #prop = model.properties[pid]
         #if prop.type in no_materials:
             #continue

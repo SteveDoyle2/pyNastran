@@ -1,4 +1,3 @@
-from six import iteritems
 from six.moves import StringIO
 from collections import defaultdict
 #from itertools import count
@@ -74,7 +73,7 @@ class SPC1(object):
         #pass
 
     def build(self):
-        for comp, nodes_lists in iteritems(self.components):
+        for comp, nodes_lists in self.components.items():
             nodes2 = []
             for nodes in nodes_lists:
                 nodes2 += nodes
@@ -92,13 +91,13 @@ class SPC1(object):
         """
         nid_map = maps['node']
         components = {}
-        for dof, nids in iteritems(self.components):
+        for dof, nids in self.components.items():
             components[dof] = [nid_map[nid] for nid in nids]
         self.components = components
         # TODO: constraint_map...
 
     def write_card(self, bdf_file, size=8):
-        for comp, nodes in iteritems(self.components):
+        for comp, nodes in self.components.items():
             nodes = np.array(nodes, dtype='int32')
             nodes = np.unique(nodes)
             dnid = nodes.max() - nodes.min() + 1

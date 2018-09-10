@@ -9,7 +9,7 @@ defines:
                                   crash_on_collapse=False, log=None, debug=True)
 """
 from __future__ import print_function
-from six import iteritems, PY2
+from six import PY2
 
 import numpy as np
 from numpy import (array, unique, arange, searchsorted,
@@ -172,12 +172,12 @@ def _eq_nodes_setup(bdf_filename, unused_tol,
             for nid in all_nids:
                 nid_map[inode] = nid
                 inode += 1
-        #nids = array([node.nid for nid, node in sorted(iteritems(model.nodes))
+        #nids = array([node.nid for nid, node in sorted(model.nodes.items())
                         #if nid in node_set], dtype='int32')
 
     else:
         if renumber_nodes:
-            for nid, node in sorted(iteritems(model.nodes)):
+            for nid, node in sorted(model.nodes.items()):
                 node.nid = inode + 1
                 nid_map[inode] = nid
                 inode += 1
@@ -185,10 +185,10 @@ def _eq_nodes_setup(bdf_filename, unused_tol,
             nids = arange(1, inode + 1, dtype='int32')
             assert nids[-1] == nnodes
         else:
-            for nid, node in sorted(iteritems(model.nodes)):
+            for nid, node in sorted(model.nodes.items()):
                 nid_map[inode] = nid
                 inode += 1
-            nids = array([node.nid for nid, node in sorted(iteritems(model.nodes))], dtype='int32')
+            nids = array([node.nid for nid, node in sorted(model.nodes.items())], dtype='int32')
         all_nids = nids
 
     if needs_get_position:
@@ -216,9 +216,9 @@ def _eq_nodes_setup(bdf_filename, unused_tol,
         # Presumably this is enough to capture all the node ids and NOT
         # spoints, but I doubt it...
         spoint_epoint_nid_set = set([])
-        for unused_eid, element in sorted(iteritems(model.elements)):
+        for unused_eid, element in sorted(model.elements.items()):
             spoint_epoint_nid_set.update(element.node_ids)
-        for unused_eid, element in sorted(iteritems(model.masses)):
+        for unused_eid, element in sorted(model.masses.items()):
             spoint_epoint_nid_set.update(element.node_ids)
 
         nids_new = spoint_epoint_nid_set - set(model.spoints) - set(model.epoints)

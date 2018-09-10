@@ -1,6 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems, integer_types
+from six import integer_types
 from itertools import count
 import numpy as np
 from numpy import zeros, searchsorted, ravel

@@ -1,5 +1,4 @@
 from collections import OrderedDict
-from six import iteritems
 
 
 def remove_c_comments(lines):
@@ -171,7 +170,7 @@ def write_dict(openfoam_dict, nbase=0, baseword='name'):
 
     msg += '%s{\n' % baseword
     msg += '%s#keys (%s)=%s\n' % (space2, type(openfoam_dict), openfoam_dict.keys())
-    for key, value in sorted(iteritems(openfoam_dict)):
+    for key, value in sorted(openfoam_dict.items()):
         if isinstance(value, basestring):
             value = value.strip()
 

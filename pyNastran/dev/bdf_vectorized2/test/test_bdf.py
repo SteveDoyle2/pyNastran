@@ -14,7 +14,6 @@ import traceback
 import warnings
 from itertools import chain
 from typing import List, Tuple, Optional
-from six import iteritems
 import numpy as np
 warnings.simplefilter('always')
 
@@ -348,7 +347,7 @@ def run_and_compare_fems(
             if not quiet:
                 print('card_count:')
                 print('-----------')
-                for card_name, card_count in sorted(iteritems(fem1.card_count)):
+                for card_name, card_count in sorted(fem1.card_count.items()):
                     print('key=%-8s value=%s' % (card_name, card_count))
             return fem1, None, None
         fem2 = run_fem2(bdf_model, out_model, xref, punch, sum_load, size, is_double, mesh_form,
@@ -762,7 +761,7 @@ def _assert_has_spc(subcase, fem):
     """
     if 'SPC' not in subcase:
         has_ps = False
-        for nid, node in iteritems(fem.nodes):
+        for nid, node in fem.nodes.items():
             if node.ps:
                 has_ps = True
                 break
@@ -807,7 +806,7 @@ def test_get_cards_by_card_types(model):
     # we'll get the associated cards
     card_dict = model.get_cards_by_card_types(card_types,
                                               reset_type_to_slot_map=False)
-    for card_type, cards in iteritems(card_dict):
+    for card_type, cards in card_dict.items():
         for card in cards:
             msg = 'this should never crash here...card_type=%s card.type=%s' % (
                 card_type, card.type)
@@ -1019,7 +1018,7 @@ def main():
     The main function for the command line ``test_bdfv`` script.
     """
     data = get_test_bdf_data()
-    for key, value in sorted(iteritems(data)):
+    for key, value in sorted(data.items()):
         print("%-12s = %r" % (key.strip('--'), value))
 
     import time

@@ -3041,7 +3041,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                 data_comments[constraint_id].append((data, comment))
                 comment = ''
 
-            for constraint_id, data_commentsi in iteritems(data_comments):
+            for constraint_id, data_commentsi in data_comments.items():
                 instance = obj(self)
                 slot[constraint_id] = instance
                 instance.allocate({card_name : len(data_commentsi)})
@@ -3442,7 +3442,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         """
         if xref is None:
             xref = self._xref
-        #for key, card in sorted(iteritems(self.params)):
+        #for key, card in sorted(self.params.items()):
             #card._verify(xref)
         for key, card in sorted(iteritems(self.nodes)):
             try:
@@ -3450,7 +3450,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             except:
                 print(str(card))
                 raise
-        for key, card in sorted(iteritems(self.coords)):
+        for key, card in sorted(self.coords.items()):
             try:
                 card._verify(xref)
             except:
@@ -3472,39 +3472,39 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             except:
                 print(str(card))
                 raise
-        for key, card in sorted(iteritems(self.materials)):
+        for key, card in sorted(self.materials.items()):
             try:
                 card._verify(xref)
             except:
                 print(str(card))
                 raise
 
-        for key, card in sorted(iteritems(self.dresps)):
+        for key, card in sorted(self.dresps.items()):
             try:
                 card._verify(xref)
             except:
                 print(str(card))
                 raise
 
-        for key, card in sorted(iteritems(self.dvcrels)):
+        for key, card in sorted(self.dvcrels.items()):
             try:
                 card._verify(xref)
             except:
                 print(str(card))
                 raise
-        for key, card in sorted(iteritems(self.dvmrels)):
+        for key, card in sorted(self.dvmrels.items()):
             try:
                 card._verify(xref)
             except:
                 print(str(card))
                 raise
-        for key, card in sorted(iteritems(self.dvprels)):
+        for key, card in sorted(self.dvprels.items()):
             try:
                 card._verify(xref)
             except:
                 print(str(card))
                 raise
-        for key, cards in sorted(iteritems(self.dvgrids)):
+        for key, cards in sorted(self.dvgrids.items()):
             for card in cards:
                 try:
                     card._verify(xref)

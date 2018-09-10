@@ -1,6 +1,5 @@
 from __future__ import print_function
 import unittest
-from six import iteritems
 import numpy as np
 
 from pyNastran.bdf.utils import (

@@ -4,7 +4,6 @@ tests static load cards
 from __future__ import print_function
 import os
 import unittest
-from six import iteritems
 import numpy as np
 from numpy import array, allclose, array_equal, set_printoptions
 set_printoptions(suppress=True, precision=3)
@@ -313,7 +312,7 @@ class TestLoads(unittest.TestCase):
         ]
 
         msg = ''
-        for isubcase, subcase in sorted(iteritems(model.subcases)):
+        for isubcase, subcase in sorted(model.subcases.items()):
             if isubcase == 0:
                 continue
             #if isubcase != 17:
@@ -518,7 +517,7 @@ class TestLoads(unittest.TestCase):
             #(24, 21), (24, 22), (24, 23),
         ]
 
-        for isubcase, subcase in sorted(iteritems(model.subcases)):
+        for isubcase, subcase in sorted(model.subcases.items()):
             if isubcase == 0:
                 continue
             loadcase_id = subcase.get_parameter('LOAD')[0]
@@ -627,7 +626,7 @@ class TestLoads(unittest.TestCase):
             (24, 22), (22, 24),
         ]
 
-        for isubcase, subcase in sorted(iteritems(model.subcases)):
+        for isubcase, subcase in sorted(model.subcases.items()):
             if isubcase == 0:
                 continue
             loadcase_id = subcase.get_parameter('LOAD')[0]

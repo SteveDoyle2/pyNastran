@@ -17,7 +17,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from collections import defaultdict
 from typing import List, Tuple, Any, Union, Dict
 
-from six import iteritems
 import numpy as np
 
 from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
@@ -71,7 +70,7 @@ class BDFMethods(BDFAttributes):
         pid_eids = self.get_element_ids_dict_with_pids(
             property_ids, msg=' which is required by get_length_breakdown')
         pids_to_length = {}
-        for pid, eids in iteritems(pid_eids):
+        for pid, eids in pid_eids.items():
             prop = self.properties[pid]
             lengths = []
             if prop.type in skip_props:
@@ -136,7 +135,7 @@ class BDFMethods(BDFAttributes):
         pid_eids = self.get_element_ids_dict_with_pids(
             property_ids, msg=' which is required by get_area_breakdown')
         pids_to_area = {}
-        for pid, eids in iteritems(pid_eids):
+        for pid, eids in pid_eids.items():
             prop = self.properties[pid]
             areas = []
             if prop.type in ['PSHELL', 'PCOMP', 'PSHEAR', 'PCOMPG', ]:
@@ -198,7 +197,7 @@ class BDFMethods(BDFAttributes):
         ]
         pids_to_volume = {}
         skipped_eid_pid = set([])
-        for pid, eids in iteritems(pid_eids):
+        for pid, eids in pid_eids.items():
             prop = self.properties[pid]
             volumes = []
             if prop.type == 'PSHELL':
@@ -302,7 +301,7 @@ class BDFMethods(BDFAttributes):
         pids_to_mass = {}
         pids_to_mass_nonstructural = {}
         skipped_eid_pid = set([])
-        for eid, elem in iteritems(self.masses):
+        for eid, elem in self.masses.items():
             if elem.type not in mass_type_to_mass:
                 mass_type_to_mass[elem.type] = elem.Mass()
             else:
@@ -314,7 +313,7 @@ class BDFMethods(BDFAttributes):
             'PELAST', 'PDAMPT', 'PBUSHT', 'PDAMP5',
             'PFAST', 'PGAP', 'PRAC2D', 'PRAC3D', 'PCONEAX',
             'PVISC', 'PBCOMP', 'PBEND', ]
-        for pid, eids in iteritems(pid_eids):
+        for pid, eids in pid_eids.items():
             prop = self.properties[pid]
             masses = []
             masses_nonstructural = []
@@ -473,7 +472,7 @@ class BDFMethods(BDFAttributes):
 
         >>> pids = list(model.pids.keys())
         >>> pid_eids = self.get_element_ids_dict_with_pids(pids)
-        >>> for pid, eids in sorted(iteritems(pid_eids)):
+        >>> for pid, eids in sorted(pid_eids.items()):
         >>>     mass, cg, I = model.mass_properties(element_ids=eids)
         """
         mass, cg, I = mass_properties(
@@ -554,7 +553,7 @@ class BDFMethods(BDFAttributes):
 
         >>> pids = list(model.pids.keys())
         >>> pid_eids = self.get_element_ids_dict_with_pids(pids)
-        >>> for pid, eids in sorted(iteritems(pid_eids)):
+        >>> for pid, eids in sorted(pid_eids.items()):
         >>>     mass, cg, I = model.mass_properties(element_ids=eids)
         """
         mass, cg, I = mass_properties_no_xref(
@@ -642,7 +641,7 @@ class BDFMethods(BDFAttributes):
         **mass properties of model based on Property ID**
         >>> pids = list(model.pids.keys())
         >>> pid_eids = model.get_element_ids_dict_with_pids(pids)
-        >>> for pid, eids in sorted(iteritems(pid_eids)):
+        >>> for pid, eids in sorted(pid_eids.items()):
         >>>     mass, cg, I = mass_properties(model, element_ids=eids)
 
         Warning
@@ -822,14 +821,14 @@ class BDFMethods(BDFAttributes):
                 elem = self.elements[eid]
                 if elem.type in ['CTETRA', 'CPENTA', 'CHEXA', 'CPYRAM']:
                     faces = elem.faces
-                    for face_id, face in iteritems(faces):
+                    for face_id, face in faces.items():
                         eid_faces.append((eid, face))
         else:
             for eid in element_ids:
                 elem = self.elements[eid]
                 if elem.type in ['CTETRA', 'CPENTA', 'CHEXA', 'CPYRAM']:
                     faces = elem.faces
-                    for face_id, face in iteritems(faces):
+                    for face_id, face in faces.items():
                         if None in face:
                             msg = 'There is a None in the face.\n'
                             msg = 'face_id=%s face=%s\n%s' % (face_id, str(face), str(elem))
@@ -868,15 +867,15 @@ class BDFMethods(BDFAttributes):
         """doesn't require cross referenceing"""
         # these are the nominal values of the desvars
         desvar_init = {key : desvar.value
-                       for key, desvar in iteritems(self.desvars)}
+                       for key, desvar in self.desvars.items()}
 
         # these are the current values of the desvars
         if desvar_values is None:
             desvar_values = {key : min(max(desvar.value + 0.1, desvar.xlb), desvar.xub)
-                             for key, desvar in iteritems(self.desvars)}
+                             for key, desvar in self.desvars.items()}
 
         # Relates one design variable to one or more other design variables.
-        for dlink_id, dlink in iteritems(self.dlinks):
+        for dlink_id, dlink in self.dlinks.items():
             value = dlink.c0
             desvar = dlink.dependent_desvar #get_stats()
             desvar_ref = self.desvars[desvar]
@@ -895,19 +894,19 @@ class BDFMethods(BDFAttributes):
 
         # DVxREL1
         dvxrel2s = {}
-        for dvid, dvprel in iteritems(self.dvprels):
+        for dvid, dvprel in self.dvprels.items():
             if dvprel.type == 'DVPREL2':
                 dvxrel2s[('DVPREL2', dvid)] = dvprel
                 continue
             dvprel.update_model(self, desvar_values)
 
-        for dvid, dvmrel in iteritems(self.dvmrels):
+        for dvid, dvmrel in self.dvmrels.items():
             if dvmrel.type == 'DVPREL2':
                 dvxrel2s[('DVMREL2', dvid)] = dvmrel
                 continue
             dvmrel.update_model(self, desvar_values)
 
-        for dvid, dvcrel in iteritems(self.dvcrels):
+        for dvid, dvcrel in self.dvcrels.items():
             if dvcrel.type == 'DVPREL2':
                 dvxrel2s[('DVMREL2', dvid)] = dvcrel
                 continue
@@ -921,13 +920,13 @@ class BDFMethods(BDFAttributes):
 
         # grid_i - grid_i0 = sum(coeffj * (x_desvar_j - x0_desvar_j)) * {Nxyz_f}
         dxyzs = defaultdict(list)
-        for dvid, dvgrids in iteritems(self.dvgrids):
+        for dvid, dvgrids in self.dvgrids.items():
             for dvgrid in dvgrids:
                 dxyz_cid = dvgrid.coeff * desvar_delta[dvid] * dvgrid.dxyz
                 dxyzs[(dvgrid.nid, dvgrid.cid)].append(dxyz_cid)
 
         # TODO: could be vectorized
-        for (nid, cid), dxyz in iteritems(dxyzs):
+        for (nid, cid), dxyz in dxyzs.items():
             dxyz2 = np.linalg.norm(dxyz, axis=0)
             assert len(dxyz2) == 3, len(dxyz2)
             grid = self.nodes[nid]
@@ -937,7 +936,7 @@ class BDFMethods(BDFAttributes):
                 coord_to, dxyz2)
 
         if xref:
-            for key, dvxrel2 in iteritems(dvxrel2s):
+            for key, dvxrel2 in dvxrel2s.items():
                 dvxrel2.update_model(self, desvar_values)
         #self.nid = nid
         #self.cid = cid

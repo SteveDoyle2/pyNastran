@@ -3,7 +3,7 @@ defines:
  - ugrid = nastran_to_ugrid(bdf_filename, ugrid_filename_out=None, properties=None,
                             check_shells=True, check_solids=True, log=None)
 """
-from six import iteritems, string_types
+from six import string_types
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.converters.aflr.ugrid.ugrid_reader import UGRID
 
@@ -37,11 +37,11 @@ def nastran_to_ugrid(bdf_filename, ugrid_filename_out=None, properties=None,
         log = bdf_model.log
 
     # pids_to_inlcude = []
-    # for pid, prop in iteritems(model.properties):
+    # for pid, prop in model.properties.items():
         # if prop.type == 'PSHELL':
             # pids_to_include.append(pid)
     if properties is not None:
-        for pid, pid_new in iteritems(properties):
+        for pid, pid_new in properties.items():
             bdf_model.properties[pid].pid = pid_new
 
     card_types = ['CQUAD4', 'CTRIA3', 'CTETRA', 'CHEXA', 'GRID', 'CPENTA', 'CPYRAM']
@@ -152,7 +152,7 @@ def main():  # pragma: no cover
     pid = 1
     properties = {}
     with open('fun3d.mapbc', 'wb') as mapbc:
-        for name, (bcname, pids) in sorted(iteritems(properties_orig)):
+        for name, (bcname, pids) in sorted(properties_orig.items()):
             for pidi in pids:
                 properties[pidi] = pid
             bc = bcname_to_bckey[bcname]

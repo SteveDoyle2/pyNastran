@@ -3,7 +3,7 @@ from __future__ import print_function, unicode_literals
 import copy
 from itertools import count
 from struct import pack
-from six import text_type, binary_type, iteritems, PY3, string_types
+from six import text_type, binary_type, PY3, string_types
 import numpy as np
 
 from pyNastran import is_release
@@ -134,7 +134,7 @@ class BaseScalarObject(Op2Codes):
         if '_add_new_node' in state:
             del state['_add_new_node']
 
-        #for key, value in iteritems(state):
+        #for key, value in state.items():
             #if isinstance(value, (int, float, str, np.ndarray, list)) or value is None:
                 #continue
             #print(' %s = %s' % (key, value))
@@ -357,7 +357,7 @@ class ScalarObject(BaseScalarObject):
             msg = 'old_table_name=%r new_table_name=%r' % (
                 self.table_name, self.data_code['table_name'])
             raise RuntimeError(msg)
-        for key, value in sorted(iteritems(self.data_code)):
+        for key, value in sorted(self.data_code.items()):
             if PY3 and isinstance(value, bytes):
                 print("  key=%s value=%s; value is bytes" % (key, value))
             self.__setattr__(key, value)

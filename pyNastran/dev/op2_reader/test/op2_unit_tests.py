@@ -1,7 +1,7 @@
 from __future__ import print_function
 import os
 import unittest
-from six import iteritems, PY3
+from six import PY3
 import numpy as np
 try:
     import pandas
@@ -1469,7 +1469,7 @@ class TestOP2(Tester):
         self._verify_ids(bdf, op2, isubcase=1)
 
         msg = ''
-        for isubcase, keys in sorted(iteritems(op2.subcase_key)):
+        for isubcase, keys in sorted(op2.subcase_key.items()):
             if len(keys) != 1:
                 msg += 'isubcase=%s keys=%s len(keys) != 1\n' % (isubcase, keys)
                 if len(keys) == 0:
