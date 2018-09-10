@@ -144,7 +144,7 @@ class RealBush1DStressArray(OES_Object):
                   axial_stress, axial_strain, plastic_strain, is_failed):
         """unvectorized method for adding SORT1 transient data"""
         assert isinstance(eid, ints)
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         # pyNastran_examples\move_tpl\ar29scb1.op2
         #print('dt=%s eid=%s force=%s' % (dt, eid, element_force))
         #print('element.shape=%s' % self.element.shape)

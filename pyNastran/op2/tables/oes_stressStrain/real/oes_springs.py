@@ -405,7 +405,7 @@ class RealNonlinearSpringStressArray(OES_Object):
 
     def add_sort1(self, dt, eid, force, stress):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [force, stress]

@@ -116,7 +116,7 @@ class ComplexRodForceArray(ScalarObject):
 
     def add_sort1(self, dt, eid, axial, torque):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [axial, torque]
@@ -359,7 +359,7 @@ class ComplexCShearForceArray(ScalarObject):
                   kick_force1, kick_force2, kick_force3, kick_force4,
                   shear12, shear23, shear34, shear41):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [
@@ -596,7 +596,7 @@ class ComplexSpringDamperForceArray(ScalarObject):
 
     def add_sort1(self, dt, eid, force):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, 0] = force
@@ -814,7 +814,7 @@ class ComplexViscForceArray(ScalarObject):
 
     def add_sort1(self, dt, eid, axial, torque):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [axial, torque]
@@ -1032,7 +1032,7 @@ class ComplexPlateForceArray(ScalarObject):
 
     def add_sort1(self, dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
@@ -1278,7 +1278,7 @@ class ComplexPlate2ForceArray(ScalarObject):
 
     def add_sort1(self, dt, eid, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         #assert self.element[self.ielement - 1] == eid, eid
         self.element_node[self.itotal, :] = [eid, nid]
@@ -1529,7 +1529,7 @@ class ComplexCBarForceArray(ScalarObject):
 
     def add_sort1(self, dt, eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.data[self.itime, self.itotal, :] = [bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq]
         self.element[self.itotal] = eid
@@ -1838,7 +1838,7 @@ class ComplexCBeamForceArray(ScalarObject):
 
     def add_sort1(self, dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.data[self.itime, self.itotal, :] = [sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq]
         self.element[self.itotal] = eid
@@ -2089,7 +2089,7 @@ class ComplexCBendForceArray(ScalarObject):  # 69-CBEND
                   nid_a, bending_moment_1a, bending_moment_2a, shear_1a, shear_2a, axial_a, torque_a,
                   nid_b, bending_moment_1b, bending_moment_2b, shear_1b, shear_2b, axial_b, torque_b):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         #bending_moment_1a, bending_moment_2a, shear_1a, shear_2a, axial_a, torque_a,
         #bending_moment_1b, bending_moment_2b, shear_1b, shear_2b, axial_b, torque_b
 
@@ -2319,7 +2319,7 @@ class ComplexSolidPressureForceArray(ScalarObject):
 
     def add_sort1(self, dt, eid, ename, ax, ay, az, vx, vy, vz, pressure):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [ax, ay, az, vx, vy, vz, pressure]
@@ -2555,7 +2555,7 @@ class ComplexCBushForceArray(ScalarObject):
 
     def add_sort1(self, dt, eid, fx, fy, fz, mx, my, mz):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         #[fx, fy, fz, mx, my, mz]
         self._times[self.itime] = dt
         self.data[self.itime, self.itotal, :] = [fx, fy, fz, mx, my, mz]
@@ -3127,7 +3127,7 @@ class ComplexForceVU_2DArray(ScalarObject):  # 189-VUQUAD,190-VUTRIA
 
     def add_sort1(self, nnodes, dt, eid, parent, coord, icord, theta, forces):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
 
         #self.parent[eid] = parent

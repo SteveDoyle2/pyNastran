@@ -134,7 +134,7 @@ class Real1DHeatFluxArray(ScalarObject):
 
     def add_sort1(self, dt, eid, etype, xgrad, ygrad, zgrad, xflux, yflux, zflux):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.element_data_type[self.ielement] = etype
@@ -331,7 +331,7 @@ class RealHeatFluxVU3DArray(ScalarObject):
 
     def add_sort1(self, dt, eid, parent, grad_fluxes):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         #icord,
         #print([eid, parent])
@@ -551,7 +551,7 @@ class RealHeatFluxVUBeamArray(ScalarObject):  # 191-VUBEAM
 
     def add_sort1(self, dt, eid, parent, coord, icord, grad_fluxes):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element_parent_coord[self.ielement, :] = [eid, parent, coord]
         for grad_flux in grad_fluxes:
@@ -790,7 +790,7 @@ class RealConvHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
 
     def add_sort1(self, dt, eid, cntl_node, free_conv, free_conv_k):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element_node[self.ielement, :] = [eid, cntl_node]
         self.data[self.itime, self.ielement, :] = [free_conv, free_conv_k]
@@ -966,7 +966,7 @@ class RealChbdyHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
 
     def add_sort1(self, dt, eid, etype, fapplied, free_conv, force_conv, frad, ftotal):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.element_type[self.ielement] = etype

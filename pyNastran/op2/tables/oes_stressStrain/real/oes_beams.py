@@ -430,7 +430,7 @@ class RealNonlinearBeamArray(OES_Object):
          unused_fb, long_fb, eqs_fb, te_fb, eps_fb, ecs_fb):
         assert isinstance(eid, ints), eid
         assert eid >= 0, eid
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         #(grid_a,
          #unused_ca, long_ca, eqs_ca, te_ca, eps_ca, ecs_ca,

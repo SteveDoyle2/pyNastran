@@ -124,7 +124,7 @@ class FailureIndices(RealForceObject):
 
     def add_sort1(self, dt, eid, force):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [force]
@@ -298,7 +298,7 @@ class RealSpringDamperForceArray(RealForceObject):
 
     def add_sort1(self, dt, eid, force):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [force]
@@ -527,7 +527,7 @@ class RealRodForceArray(RealForceObject):
 
     def add_sort1(self, dt, eid, axial, torque):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [axial, torque]
@@ -803,7 +803,7 @@ class RealCBeamForceArray(RealForceObject):
 
     def add_sort1(self, dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.data[self.itime, self.itotal, :] = [sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq]
         self.element[self.itotal] = eid
@@ -1057,7 +1057,7 @@ class RealCShearForceArray(RealForceObject):
                   kick_force1, kick_force2, kick_force3, kick_force4,
                   shear12, shear23, shear34, shear41):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [
@@ -1230,7 +1230,7 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
 
     def add_sort1(self, dt, eid, axial, torque):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [axial, torque]
@@ -1477,7 +1477,7 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
 
     def add_sort1(self, dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.itotal] = eid
         self.data[self.itime, self.itotal, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
@@ -1696,7 +1696,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
 
     def add_sort1(self, dt, eid, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element_node[self.itotal] = [eid, nid]
         self.data[self.itime, self.itotal, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
@@ -1968,7 +1968,7 @@ class RealCBarForceArray(RealForceObject):  # 34-CBAR
     def add_sort1(self, dt, eid, bending_moment_a1, bending_moment_a2,
                   bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         #[eid, bending_moment_a1, bending_moment_a2,
          #bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque] = data
         self._times[self.itime] = dt
@@ -2187,7 +2187,7 @@ class RealConeAxForceArray(RealForceObject):
 
     def add_sort1(self, dt, eid, hopa, bmu, bmv, tm, su, sv):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [hopa, bmu, bmv, tm, su, sv]
@@ -2359,7 +2359,7 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
 
     def add_sort1(self, dt, eid, sd, bm1, bm2, ts1, ts2, af, trq):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
 
@@ -2579,7 +2579,7 @@ class RealCGapForceArray(RealForceObject):  # 38-CGAP
 
     def add_sort1(self, dt, eid, fx, sfy, sfz, u, v, w, sv, sw):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [fx, sfy, sfz, u, v, w, sv, sw]
@@ -2722,7 +2722,7 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
                   nid_a, bending_moment_1a, bending_moment_2a, shear_1a, shear_2a, axial_a, torque_a,
                   nid_b, bending_moment_1b, bending_moment_2b, shear_1b, shear_2b, axial_b, torque_b):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
 
         self._times[self.itime] = dt
         self.element_node[self.ielement] = [eid, nid_a, nid_b]
@@ -2959,7 +2959,7 @@ class RealSolidPressureForceArray(RealForceObject):  # 77-PENTA_PR,78-TETRA_PR
 
     def add_sort1(self, dt, eid, etype, ax, ay, az, vx, vy, vz, pressure):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [ax, ay, az, vx, vy, vz, pressure]
@@ -3241,7 +3241,7 @@ class RealCBeamForceVUArray(RealForceObject):  # 191-VUBEAM
     def _add_sort1(self, dt, eid, parent, coord, icord,
                    nid, xxb, fx, fy, fz, mx, my, mz):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
 
         eids = self.element_node[:, 0]
@@ -3474,7 +3474,7 @@ class RealCBushForceArray(RealForceObject):
 
     def add_sort1(self, dt, eid, fx, fy, fz, mx, my, mz):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [fx, fy, fz, mx, my, mz]
@@ -3664,7 +3664,7 @@ class RealForceVU2DArray(RealForceObject):  # 189-VUQUAD, 190-VUTRIA
     def add_sort1(self, dt, eid, parent, coord, icord, theta,
                   vugrid, mfx, mfy, mfxy, bmx, bmy, bmxy, syz, szx):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         #print('adding %s, %s' % (eid, vugrid))
         self._times[self.itime] = dt
         self.element_node[self.itotal, :] = [eid, vugrid]

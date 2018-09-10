@@ -135,7 +135,7 @@ class RealBendArray(OES_Object):
 
     def add_sort1(self, dt, eid, grid, angle, sc, sd, se, sf, omax, omin, mst, msc):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.data[self.itime, self.itotal] = [angle, sc, sd, se, sf, omax, omin, mst, msc]
         self.element_node[self.itotal] = [eid, grid]

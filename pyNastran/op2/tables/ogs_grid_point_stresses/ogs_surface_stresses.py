@@ -72,7 +72,7 @@ class GridPointStressesArray(ScalarObject):
 
     def add_sort1(self, dt, nid, eid, fiber, nx, ny, txy, angle, majorP, minorP, tmax, ovm):
         """unvectorized method for adding SORT1 transient data"""
-        #assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        #assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.node_element[self.itotal, :] = [nid, eid]
         self.location[self.itotal] = fiber

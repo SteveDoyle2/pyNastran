@@ -133,7 +133,7 @@ class ComplexShearArray(OES_Object):
 
     def add_sort1(self, dt, eid, max_shear, avg_shear):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.data[self.itime, self.itotal] = [max_shear, avg_shear]
         self.element[self.itotal] = eid

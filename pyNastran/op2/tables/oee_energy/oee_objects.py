@@ -662,7 +662,7 @@ class ComplexStrainEnergyArray(ScalarObject):
     def add_sort1(self, dt, eid, energyr, energyi, percenti, densityi):
         """unvectorized method for adding SORT1 transient data"""
         #itime = self.itime // self.nelement_types
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         itime = self.itime
         self._times[itime] = dt
         try:

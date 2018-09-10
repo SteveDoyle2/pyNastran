@@ -186,7 +186,7 @@ class RealCompositePlateArray(OES_Object):
                   major, minor, ovm):
         """unvectorized method for adding SORT1 transient data"""
         assert eid is not None
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self.element_layer[self.itotal, :] = [eid, layer]
         self.data[self.itime, self.itotal, :] = [o11, o22, t12, t1z, t2z, angle, major, minor, ovm]
         self.itotal += 1

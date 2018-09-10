@@ -184,7 +184,7 @@ class ElementTableArray(ScalarObject):  # displacement style table
 
     def add_sort1(self, dt, eid, etype, v1, v2, v3, v4, v5, v6):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         # itotal - the node number
         # itime - the time/frequency step
 
