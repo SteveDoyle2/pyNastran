@@ -1538,8 +1538,8 @@ class POINT(BaseCard):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, nid, cp, xyz, comment=''):
-        # type: (int, int, Optional[Union[List[float], np.ndarray]], str) -> None
+    def __init__(self, nid, xyz, cp=0, comment=''):
+        # type: (int, Union[List[float], np.ndarray], int, str) -> None
         """
         Creates the POINT card
 
@@ -1547,10 +1547,10 @@ class POINT(BaseCard):
         ----------
         nid : int
             node id
-        cp : int
-            coordinate system for the xyz location
         xyz : (3, ) float ndarray; default=None -> [0., 0., 0.]
             the xyz/r-theta-z/rho-theta-phi values
+        cp : int; default=0
+            coordinate system for the xyz location
         comment : str; default=''
             a comment for the card
         """
@@ -1599,7 +1599,7 @@ class POINT(BaseCard):
             double_or_blank(card, 5, 'x3', 0.)], dtype='float64')
 
         assert len(card) <= 9, 'len(POINT card) = %i\ncard=%s' % (len(card), card)
-        return POINT(nid, cp, xyz, comment=comment)
+        return POINT(nid, xyz, cp=cp, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):

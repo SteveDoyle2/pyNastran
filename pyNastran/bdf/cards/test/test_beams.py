@@ -15,7 +15,7 @@ from numpy import array, allclose
 from pyNastran.bdf.bdf import BDF, BDFCard, PBEAM, PBEND, PBMSECT, PBRSECT
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.cards.test.utils import save_load_deck
-
+from pyNastran.bdf.cards.properties.bars import get_beam_sections
 
 class TestBeams(unittest.TestCase):
     """
@@ -1210,24 +1210,6 @@ class TestBeams(unittest.TestCase):
                       has_none=True)
         model.pop_parse_errors()
 
-    def test_pbmsect(self):
-        """tests a PBMSECT"""
-        model = BDF(debug=False)
-        pid = 10
-        mid = 11
-        form = 'GS'
-        options = {'OUTP' : 2}
-        #pbrsect = model.add_pbrsect(pid, mid, form, options, comment='pbrsect')
-        pbrsect = model.add_pbmsect(pid, mid, form, options, comment='pbmsect')
-
-        pbrsect.validate()
-        pbrsect.raw_fields()
-        pbrsect.write_card()
-        pbrsect.write_card(size=16)
-
-        #PBMSECT 32      10      OP
-            #OUTP=101,T=0.1,brp=102,brp=103,brp=104,nsm=0.015
-
     def test_pbeam3(self):
         """tests a PBEAM3"""
         model = BDF(debug=False)
@@ -1333,9 +1315,19 @@ class TestBeams(unittest.TestCase):
                        run_convert=False, run_renumber=True, run_mirror=True)
 
     def test_pbrsect(self):
+        """tests a PBRSECT"""
         model = BDF(debug=False)
         pid = 2
         mid = 3
+        model.add_mat1(mid, 3.0e7, None, 0.3, rho=0.2)
+
+        form = 'GS'
+        options = {}
+        pbrsect = model.add_pbrsect(pid, mid, form, options, comment='pbrsect')
+        with self.assertRaises(AssertionError):
+            pbrsect.validate()
+
+        #------------------------------------
         form = 'GS'
         options = {
             'OUTP' : 10,
@@ -1345,27 +1337,58 @@ class TestBeams(unittest.TestCase):
         pbrsect.validate()
         pbrsect.write_card()
 
+        #------------------------------------
         card = [
             'PBRSECT 4       3       GS',
             '        OUTP=10,INP=20',
         ]
         PBRSECT.add_card(card, comment='')
 
+        #------------------------------------
+        card = [
+            'PBRSECT 4\t3\tGS',
+            '        OUTP=10,INP=20',
+        ]
+        PBRSECT.add_card(card, comment='')
+
+        #------------------------------------
         card = [
             'PBRSECT 4       3       GS',
             '        OUTP=10,BRP=20,T=1.0,T(11)=1.2, NSM=0.01',
         ]
-        PBRSECT.add_card(card, comment='')
+        pbrsect = PBRSECT.add_card(card, comment='')
+        pbrsect.cross_reference(model)
+
+        #------------------------------------
+        card = [
+            'PBRSECT 5       3       CP',
+            '        OUTP=10,BRP=20,T=1.0,T(11)=[1.2,PT=(123,204)], NSM=0.01',
+        ]
+        pbrsect = PBRSECT.add_card(card, comment='')
+        pbrsect.write_card()
 
     def test_pbmsect(self):
         model = BDF(debug=False)
         pid = 2
         mid = 3
+        model.add_mat1(mid, 3.0e7, None, 0.3, rho=0.2)
+
+        #PBMSECT 32      10      OP
+            #OUTP=101,T=0.1,brp=102,brp=103,brp=104,nsm=0.015
+
+        outp_id = 10
+        ids = [1, 2]
+        model.add_point(1, [0., 0., 0.], cp=0, comment='point')
+        model.add_point(2, [1., 0., 0.], cp=0, comment='point')
+        model.add_set1(outp_id, ids, is_skin=False, comment='')
+
         form = 'GS'
         options = {
-            'OUTP' : 2,
+            'OUTP' : outp_id,
         }
         pbmsect = model.add_pbmsect(pid, mid, form, options, comment='pbmsect')
+        pbmsect.cross_reference(model)
+
 
         pbmsect.validate()
         pbmsect.write_card()
@@ -1376,17 +1399,32 @@ class TestBeams(unittest.TestCase):
         PBMSECT.add_card(card, comment='')
 
         card = [
-            'PBMSECT 4       3       GS',
-            '        OUTP=10,BRP=20,T=1.0,T(11)=1.2, NSM=0.01',
+            'PBMSECT 4\t3\tGS',
+            '        OUTP=10,INP=20',
         ]
         PBMSECT.add_card(card, comment='')
 
-        # doesn't work...
-        #card = [
-            #'PBMSECT 5       3       CP',
-            #'        OUTP=10,BRP=20,T=1.0,T(11)=[1.2,PT=(123,204)], NSM=0.01',
-        #]
-        #PBMSECT.add_card(card, comment='')
+        card = [
+            'PBMSECT 4       3       GS',
+            '        OUTP=10,BRP=20,T=1.0,T(11)=1.2, NSM=0.01',
+        ]
+        pbmsect = PBMSECT.add_card(card, comment='')
+        # doesn't work because missing SET=20 (from BRP=20)
+        #pbmsect.cross_reference(model)
+
+        line = 'OUTP=10,BRP=20,T=1.0,T(11)=[1.2,PT=(123,204)], NSM=0.01'
+        sections = get_beam_sections(line)
+        msg = '\nsections: %s\n' % sections
+        msg += "expected: [u'OUTP=10', u'BRP=20', u'T=1.0', u'T(11)=[1.2,PT=(123,204)']"
+        assert sections == ['OUTP=10', 'BRP=20', 'T=1.0', 'T(11)=[1.2,PT=(123,204)]'], msg
+
+        card = [
+            'PBMSECT 5       3       CP',
+            '        OUTP=10,BRP=20,T=1.0,T(11)=[1.2,PT=(123,204)], NSM=0.01',
+        ]
+        pbmsect = PBMSECT.add_card(card, comment='')
+        pbmsect.write_card()
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

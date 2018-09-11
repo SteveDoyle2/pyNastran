@@ -234,7 +234,7 @@ class AddCards(AddMethods):
         self._add_epoint_object(epoint)
         return epoint
 
-    def add_point(self, nid, cp, xyz, comment=''):
+    def add_point(self, nid, xyz, cp=0, comment=''):
         # type: (int, int, Any, str) -> POINT
         """
         Creates the POINT card
@@ -243,15 +243,15 @@ class AddCards(AddMethods):
         ----------
         nid : int
             node id
-        cp : int
-            coordinate system for the xyz location
         xyz : (3, ) float ndarray; default=None -> [0., 0., 0.]
             the xyz/r-theta-z/rho-theta-phi values
+        cp : int; default=0
+            coordinate system for the xyz location
         comment : str; default=''
             a comment for the card
 
         """
-        point = POINT(nid, cp, xyz, comment=comment)
+        point = POINT(nid, xyz, cp=cp, comment=comment)
         self._add_point_object(point)
         return point
 

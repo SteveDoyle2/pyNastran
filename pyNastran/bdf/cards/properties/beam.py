@@ -19,7 +19,9 @@ from numpy import array, unique, argsort, allclose, ndarray
 
 from pyNastran.bdf.utils import to_fields
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
-from pyNastran.bdf.cards.properties.bars import IntegratedLineProperty, LineProperty, _bar_areaL
+from pyNastran.bdf.cards.properties.bars import (
+    IntegratedLineProperty, LineProperty, _bar_areaL,
+    get_beam_sections, split_arbitrary_thickness_section, write_arbitrary_beam_section)
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank,
@@ -1634,14 +1636,8 @@ class PBMSECT(LineProperty):
                     self.brps[0] = int(value)
 
             elif key.startswith('T('):
-                if key.startswith('T('):
-                    assert key.endswith(')'), 'key=%r' % key
-                    key_id = int(key[2:-1])
-                    self.ts[key_id] = float(value)
-                elif key == 'T':
-                    self.ts[0] = int(value)
-                else:
-                    raise NotImplementedError('PBMSECT.pid=%s key=%r value=%r' % (pid, key, value))
+                index, out = split_arbitrary_thickness_section(key, value)
+                self.ts[index] = out
             elif key == 'T':
                 self.ts[0] = float(value)
             else:
@@ -1670,14 +1666,13 @@ class PBMSECT(LineProperty):
         line0 = card[0]
         if '\t' in line0:
             line0 = line0.expandtabs()
-
         bdf_card = BDFCard(to_fields([line0], 'PBMSECT'))
         #line0_eq = line0[16:]
         lines_joined = ''.join(card[1:]).replace(' ', '')
 
         if lines_joined:
-            fields = lines_joined.split(',')
-            slines = [field.split('=') for field in fields]
+            fields = get_beam_sections(lines_joined)
+            slines = [field.split('=', 1) for field in fields]
             options = {key : value for (key, value) in slines}
         else:
             options = {}
@@ -1804,23 +1799,9 @@ class PBMSECT(LineProperty):
 
     def write_card(self, size=8, is_double=False):
         card = ['PBMSECT', self.pid, self.Mid(), self.form]
-        end = ''
-        for key, dicts in [('INP', self.inps), ('T', self.ts), ('BRP', self.brps)]:
-            # dicts = {int index : int/float value}
-            for k, v in sorted(dicts.items()):
-                if k == 0:
-                    end += '        %s=%s,\n' % (key, v)
-                else:
-                    end += '        %s(%s)=%s,\n' % (key, k, v)
-
-        for key, value in [('NSM', self.nsm), ('outp', self.outp_id),]:
-            if value:
-                end += '        %s=%s,\n' % (key, value)
-        if end:
-            end = end[:-2] + '\n'
+        end = write_arbitrary_beam_section(self.inps, self.ts, self.brps, self.nsm, self.outp_id)
         out = self.comment + print_card_8(card) + end
         return out
-
 
 class PBCOMP(LineProperty):
     """

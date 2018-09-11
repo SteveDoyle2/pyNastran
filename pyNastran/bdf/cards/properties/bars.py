@@ -103,6 +103,89 @@ def get_inertia_rectangular(sections):
     return (A, Ixx, Iyy, Ixy)
 
 
+def _IAreaL(prop, dim):
+    beam_type = prop.beam_type
+    if beam_type == 'ROD':
+        R = dim[0]
+        A = pi * R ** 2
+        Iyy = A * R ** 2 / 4.
+        Izz = Iyy
+        Iyz = 0.
+    elif beam_type == 'TUBE':
+        R1 = dim[0]
+        R2 = dim[1]
+        A1 = pi * R1 ** 2
+        Iyy1 = A1 * R1 ** 2 / 4.
+        A2 = pi * R2 ** 2
+        Iyy2 = A2 * R2 ** 2 / 4.
+        A = A1 - A2
+        Iyy = Iyy1 - Iyy2
+        Izz = Iyy
+        Iyz = 0.
+    elif beam_type == 'TUBE2':
+        R1 = dim[0]
+        t = dim[1]
+        R2 = R1 - t
+        A1 = pi * R1 ** 2
+        Iyy1 = A1 * R1 ** 2 / 4.
+        A2 = pi * R2 ** 2
+        Iyy2 = A2 * R2 ** 2 / 4.
+        A = A1 - A2
+        Iyy = Iyy1 - Iyy2
+        Izz = Iyy
+        Iyz = 0.
+
+    elif beam_type == 'I':
+        # |  ------------
+        # |  |    A     | d5
+        # |  ------------
+        # |     >| |<--d3
+        # |      |B|           "I" beam
+        # | d1   | |
+        # |      | |
+        # |   ----------
+        # |   |   C    |  d5
+        # |   ----------
+        sections = []
+        h1 = dim[5]  # d2
+        w1 = dim[2]
+        y1 = dim[0] / 2. - h1
+        sections.append([w1, h1, 0., y1])
+
+        h3 = dim[4]
+        w3 = dim[1]
+        #y3 = -dim[0] / 2. + h3
+        sections.append([w3, h3, 0., y1])
+
+        h2 = dim[0] - h1 - h3
+        w2 = dim[3]  # d1
+        sections.append([w2, h2, 0., 0.])
+
+        (A, Iyy, Izz, Iyz) = get_inertia_rectangular(sections)
+        assert Iyz == 0.
+
+    elif beam_type == 'BAR':
+        #: *-------*
+        #: |       |
+        #: |  BAR  |h1
+        #: |       |
+        #: *-------*
+        #:    w1
+        #: I_{xx}=\frac{bh^3}{12}
+        #: I_{yy}=\frac{hb^3}{12}
+        h1 = dim[1]
+        w1 = dim[0]
+        A = h1 * w1
+        Iyy = 1 / 12. * w1 * h1 ** 3
+        Izz = 1 / 12. * h1 * w1 ** 3
+        Iyz = 0.  #: .. todo:: is the Ixy of a bar 0 ???
+
+    else:
+        msg = 'beam_type=%s is not supported for %s class...' % (
+            beam_type, prop.type)
+        raise NotImplementedError(msg)
+    return (A, Iyy, Izz, Iyz)
+
 class LineProperty(Property):
     def __init__(self):
         self.beam_type = None
@@ -163,88 +246,6 @@ class LineProperty(Property):
     def Nu(self):
         """gets the material Poisson's ratio"""
         return self.mid_ref.nu
-
-    def IAreaL(self, dim):
-        if self.beam_type == 'ROD':
-            R = dim[0]
-            A = pi * R ** 2
-            Iyy = A * R ** 2 / 4.
-            Izz = Iyy
-            Iyz = 0.
-        elif self.beam_type == 'TUBE':
-            R1 = dim[0]
-            R2 = dim[1]
-            A1 = pi * R1 ** 2
-            Iyy1 = A1 * R1 ** 2 / 4.
-            A2 = pi * R2 ** 2
-            Iyy2 = A2 * R2 ** 2 / 4.
-            A = A1 - A2
-            Iyy = Iyy1 - Iyy2
-            Izz = Iyy
-            Iyz = 0.
-        elif self.beam_type == 'TUBE2':
-            R1 = dim[0]
-            t = dim[1]
-            R2 = R1 - t
-            A1 = pi * R1 ** 2
-            Iyy1 = A1 * R1 ** 2 / 4.
-            A2 = pi * R2 ** 2
-            Iyy2 = A2 * R2 ** 2 / 4.
-            A = A1 - A2
-            Iyy = Iyy1 - Iyy2
-            Izz = Iyy
-            Iyz = 0.
-
-        elif self.beam_type == 'I':
-            # |  ------------
-            # |  |    A     | d5
-            # |  ------------
-            # |     >| |<--d3
-            # |      |B|           "I" beam
-            # | d1   | |
-            # |      | |
-            # |   ----------
-            # |   |   C    |  d5
-            # |   ----------
-            sections = []
-            h1 = dim[5]  # d2
-            w1 = dim[2]
-            y1 = dim[0] / 2. - h1
-            sections.append([w1, h1, 0., y1])
-
-            h3 = dim[4]
-            w3 = dim[1]
-            #y3 = -dim[0] / 2. + h3
-            sections.append([w3, h3, 0., y1])
-
-            h2 = dim[0] - h1 - h3
-            w2 = dim[3]  # d1
-            sections.append([w2, h2, 0., 0.])
-
-            (A, Iyy, Izz, Iyz) = get_inertia_rectangular(sections)
-            assert Iyz == 0.
-
-        elif self.beam_type == 'BAR':
-            #: *-------*
-            #: |       |
-            #: |  BAR  |h1
-            #: |       |
-            #: *-------*
-            #:    w1
-            #: I_{xx}=\frac{bh^3}{12}
-            #: I_{yy}=\frac{hb^3}{12}
-            h1 = dim[1]
-            w1 = dim[0]
-            A = h1 * w1
-            Iyy = 1 / 12. * w1 * h1 ** 3
-            Izz = 1 / 12. * h1 * w1 ** 3
-            Iyz = 0.  #: .. todo:: is the Ixy of a bar 0 ???
-
-        else:
-            msg = 'beam_type=%s is not supported for %s class...' % (
-                self.beam_type, self.type)
-            raise NotImplementedError(msg)
-        return (A, Iyy, Izz, Iyz)
 
     def I1(self):
         I = self.I1_I2_I12()
@@ -1779,14 +1780,8 @@ class PBRSECT(LineProperty):
                     self.brps[0] = int(value)
 
             elif key.startswith('T('):
-                if key.startswith('T('):
-                    assert key.endswith(')'), 'key=%r' % key
-                    key_id = int(key[2:-1])
-                    self.ts[key_id] = float(value)
-                elif key == 'T':
-                    self.ts[0] = int(value)
-                else:
-                    raise NotImplementedError('PBMSECT.pid=%s key=%r value=%r' % (pid, key, value))
+                index, out = split_arbitrary_thickness_section(key, value)
+                self.ts[index] = out
             elif key == 'T':
                 self.ts[0] = float(value)
 
@@ -1837,8 +1832,8 @@ class PBRSECT(LineProperty):
         lines_joined = ''.join(card[1:]).replace(' ', '')
 
         if lines_joined:
-            fields = lines_joined.split(',')
-            slines = [field.split('=') for field in fields]
+            fields = get_beam_sections(lines_joined)
+            slines = [field.split('=', 1) for field in fields]
             #C:\MSC.Software\MSC.Nastran\msc20051\nast\tpl\zbr3.dat
             #slines = [
                 #[u'OUTP', u'201'],
@@ -1956,6 +1951,7 @@ class PBRSECT(LineProperty):
     def repr_fields(self):
         """not done..."""
         list_fields = ['PBRSECT', self.pid, self.Mid(), self.form]
+        end = write_arbitrary_beam_section(self.inps, self.ts, self.brps, self.nsm, self.outp)
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -2492,3 +2488,92 @@ class PBEND(LineProperty):
         if size == 8:
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
+
+
+def split_arbitrary_thickness_section(key, value):
+    """
+    >>> key = 'T(11)'
+    >>> value = '[1.2,PT=(123,204)]'
+    >>> index, out = split_arbitrary_thickness_section(key, value)
+    >>> index
+    11
+    >>> out
+    [1.2, [123, 204]]
+    """
+    #if key.startswith('T('):
+    assert key.endswith(')'), 'key=%r' % key
+    key_id = int(key[2:-1])
+    if 'PT' in value:
+        bracketed_values = value.strip('[]')
+        sline = bracketed_values.split(',', 1)
+        thicknessi = float(sline[0])
+        pt_value = sline[1].split('=')
+        assert pt_value[0] == 'PT', pt_value
+        points = pt_value[1].strip('()').split(',')
+        assert len(points) == 2, pt_value
+        int_points = [int(pointi) for pointi in points]
+        out = [thicknessi, int_points]
+    else:
+        out = float(value)
+    return key_id, out
+
+
+def get_beam_sections(line):
+    """
+    Splits a PBRSECT/PBMSECT line
+
+    >>> line = 'OUTP=10,BRP=20,T=1.0,T(11)=[1.2,PT=(123,204)], NSM=0.01'
+    >>> sections = get_beam_sections(line)
+    >>> sections
+    ['OUTP=10', 'BRP=20', 'T=1.0', 'T(11)=[1.2,PT=(123,204)'], sections
+    """
+    line.replace(' ', '')
+    words = []
+    i0 = None
+    nopen_parantheses = 0
+    nopen_brackets = 0
+    i = 0
+    while i < len(line):
+        char = line[i]
+        if char == '(':
+            nopen_parantheses += 1
+        elif char == ')':
+            nopen_parantheses -= 1
+        elif char == '[':
+            nopen_brackets += 1
+        elif char == ']':
+            nopen_brackets -= 1
+
+        elif nopen_parantheses == 0 and nopen_brackets == 0 and char == ',':
+            word = line[i0:i].strip(',')
+            words.append(word)
+            i0 = i
+        i += 1
+    return words
+
+def write_arbitrary_beam_section(inps, ts, brps, nsm, outp_id):
+    """helper for PBRSECT/PBMSECT"""
+    end = ''
+    for key, dicts in [('INP', inps), ('T', ts), ('BRP', brps)]:
+        # dicts = {int index : int/float value}
+        for index, value1 in sorted(dicts.items()):
+            if index == 0:
+                end += '        %s=%s,\n' % (key, value1)
+            else:
+                if isinstance(value1, list):
+                    assert len(value1) == 2, value1
+                    thicknessi = value1[0]
+                    points = value1[1]
+                    end += '        %s(%s)=[%s, PT=(%s,%s)],\n' % (
+                        key, index, thicknessi, points[0], points[1])
+                else:
+                    end += '        %s(%s)=%s,\n' % (key, index, value1)
+
+    for key, value in [('NSM', nsm), ('outp', outp_id),]:
+        if value:
+            end += '        %s=%s,\n' % (key, value)
+    if end:
+        end = end[:-2] + '\n'
+    return end
+
+

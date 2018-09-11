@@ -343,6 +343,10 @@ def validate_dvprel(prop_type, pname_fid, validate):
         options = ['KT1', 'KT2', 'KT3', 'KR1', 'KR2', 'KR3', 'MASS']
         _check_dvprel_options(pname_fid, prop_type, options)
 
+    elif prop_type == 'PBRSECT':
+        options = ['T']
+        _check_dvprel_options(pname_fid, prop_type, options)
+
     elif prop_type == 'PBMSECT':
         options = ['T', 'W', 'H']
         _check_dvprel_options(pname_fid, prop_type, options)
@@ -3962,7 +3966,7 @@ class DVPREL1(DVXREL1):
             pid_ref = model.pbusht[pid]
         elif self.prop_type == 'PELAST':
             pid_ref = model.pelast[pid]
-        elif self.prop_type == 'PFAST':
+        elif self.prop_type in ['PFAST', 'PBRSECT']:
             pid_ref = model.properties[pid]
         else:
             raise NotImplementedError('prop_type=%r is not supported' % self.prop_type)
@@ -3989,7 +3993,7 @@ class DVPREL1(DVXREL1):
             #pid = self.pid_ref.eid
         elif self.prop_type in self.allowed_properties_mass:
             pid = self.pid_ref.pid
-        elif self.prop_type in ['PBUSHT', 'PELAST', 'PFAST']:
+        elif self.prop_type in ['PBUSHT', 'PELAST', 'PFAST', 'PBRSECT']:
             pid = self.pid_ref.pid
         else:
             raise NotImplementedError('prop_type=%r is not supported' % self.prop_type)
@@ -4987,6 +4991,12 @@ def get_dvprel_key(dvprel, prop=None):
             pass
         #elif isinstance(var_to_change, int):  # pragma: no cover
             #msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
+        else:  # pragma: no cover
+            msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
+
+    elif prop_type == 'PBRSECT': # 3
+        if var_to_change in ['T']:
+            pass
         else:  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
 

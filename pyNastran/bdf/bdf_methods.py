@@ -66,7 +66,7 @@ class BDFMethods(BDFAttributes):
             'PBEND',
         ]
         bar_properties = ['PBAR', 'PBARL', 'PBEAM', 'PBEAML',
-                          'PROD', 'PTUBE', 'PBMSECT', 'PBCOMP']
+                          'PROD', 'PTUBE', 'PBRSECT', 'PBMSECT', 'PBCOMP']
         pid_eids = self.get_element_ids_dict_with_pids(
             property_ids, msg=' which is required by get_length_breakdown')
         pids_to_length = {}
@@ -160,6 +160,9 @@ class BDFMethods(BDFAttributes):
                         areas = [area]
             elif prop.type in skip_props:
                 pass
+            elif prop.type in ['PBRSECT']:
+                self.log.warning('skipping:\n%s' % prop)
+                continue
             else:
                 raise NotImplementedError(prop)
             if areas:
@@ -249,6 +252,9 @@ class BDFMethods(BDFAttributes):
                 volumes.extend(volumesi)
             elif prop.type in no_volume:
                 pass
+            elif prop.type in ['PBRSECT']:
+                self.log.warning('skipping:\n%s' % prop)
+                continue
             else:
                 raise NotImplementedError(prop)
             if volumes:
@@ -286,7 +292,6 @@ class BDFMethods(BDFAttributes):
             Map from mass id to mass for mass elements.
 
         TODO: What about CONRODs, CONM2s?
-        #'PBRSECT',
         #'PBCOMP',
         #'PBMSECT',
         #'PBEAM3',
@@ -385,6 +390,9 @@ class BDFMethods(BDFAttributes):
                         masses_nonstructural.append(area * nsm)
                     else:
                         masses.append(area * (rho * thickness + nsm))
+            elif prop.type in ['PBRSECT']:
+                self.log.warning('skipping:\n%s' % prop)
+                continue
             else:
                 raise NotImplementedError(prop)
             if masses:
