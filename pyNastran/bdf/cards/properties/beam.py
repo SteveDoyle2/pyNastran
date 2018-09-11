@@ -1597,8 +1597,6 @@ class PBMSECT(LineProperty):
         self.mid = mid
         self.form = form
 
-        assert form in ['GS', 'OP', 'CP'], 'pid=%s form=%r' % (pid, form)
-
         # integer
         self.outp = None
 
@@ -1650,10 +1648,12 @@ class PBMSECT(LineProperty):
                 raise NotImplementedError('PBMSECT.pid=%s key=%r value=%r' % (pid, key, value))
 
         assert self.outp is not None, 'options=%s' % str(options)
-        self._validate_input()
         self.mid_ref = None
         self.outp_ref = None
         self.brp1_ref = None
+
+    def validate(self):
+        assert self.form in ['GS', 'OP', 'CP'], 'pid=%s form=%r' % (self.pid, self.form)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1689,7 +1689,7 @@ class PBMSECT(LineProperty):
         return PBMSECT(pid, mid, form, options, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment=''):  # pragma: no cover
         #pid = data[0]
         #mid = data[1]
         #group = data[2].strip()
@@ -1703,9 +1703,6 @@ class PBMSECT(LineProperty):
         print("*PBMSECT = ", data)
         raise NotImplementedError('PBMSECT not finished...data=%s' % str(data))
         #return PBMSECT(pid, mid, group, Type, dim, nsm, comment=comment)
-
-    def _validate_input(self):
-        pass
 
     def cross_reference(self, model):
         """

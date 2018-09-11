@@ -1038,7 +1038,7 @@ class CBEND(LineElement):
 
     def __init__(self, eid, pid, nids, g0, x, geom, comment=''):
         """
-        Creates a CEND card
+        Creates a CBEND card
 
         Parameters
         ----------
@@ -1052,8 +1052,18 @@ class CBEND(LineElement):
             ???
         x : List[float, float, float]
             ???
-        geom : ???
-            ???
+        geom : int
+            1 : The center of curvature lies on the line AO (or its extension) or vector v.
+            2 : The tangent of centroid arc at end A is parallel to line AO or vector v.
+                Point O (or vector v) and the arc must be on the same side of the chord AB.
+            3 : The bend radius (RB) is specified on the PBEND entry:
+                Points A, B, and O (or vector v) define a plane parallel or coincident
+                with the plane of the element arc. Point O (or vector v) lies on the
+                opposite side of line AB from the center of the curvature.
+            4 : THETAB is specified on the PBEND entry. Points A, B, and O (or vector v)
+                define a plane parallel or coincident with the plane of the element arc.
+                Point O (or vector v) lies on the opposite side of line AB from the center
+                of curvature.
         comment : str; default=''
             a comment for the card
         """

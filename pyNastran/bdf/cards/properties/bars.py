@@ -1,3 +1,4 @@
+# pylint: disable=C0103
 """
 All bar properties are defined in this file.  This includes:
  *   PBAR
@@ -11,7 +12,6 @@ Multi-segment beams are IntegratedLineProperty objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-#import sys
 from six import integer_types, string_types
 from numpy import pi, array
 import numpy as np
@@ -31,10 +31,12 @@ from pyNastran.utils.numpy_utils import float_types
 
 
 def Iyy_beam(b, h):
+    """gets the Iyy for a solid beam"""
     return 1 / 12. * b * h ** 3
 
 
 def I_beam(b, h):
+    """gets the Iyy, Izz, Iyz for a solid beam"""
     f = 1 / 12. * b * h
     Iyy = f * h * h  # 1/12.*b*h**3
     Izz = f * b * b  # 1/12.*h*b**3
@@ -126,31 +128,40 @@ class LineProperty(Property):
     #def D_shear(self):
         #pass
 
-    def Rho(self):
-        return self.mid_ref.rho
-
     def Area(self):
+        """gets area"""
         return self.A
 
     def Nsm(self):
+        """gets nonstructural mass per unit length"""
         return self.nsm
 
     def J(self):
+        """gets J"""
         return self.j
 
     def I11(self):
+        """gets I11"""
         return self.i1
 
     def I22(self):
+        """gets I22"""
         return self.i2
 
+    def Rho(self):
+        """gets the material density"""
+        return self.mid_ref.rho
+
     def E(self):
+        """gets the material Young's ratio"""
         return self.mid_ref.E
 
     def G(self):
+        """gets the material Shear ratio"""
         return self.mid_ref.G
 
     def Nu(self):
+        """gets the material Poisson's ratio"""
         return self.mid_ref.nu
 
     def IAreaL(self, dim):
@@ -1225,7 +1236,7 @@ class PBARL(LineProperty):
             self.dim[num - 1] = value
         else:
             raise NotImplementedError('PBARL Type=%r name=%r has not been implemented' % (
-                self.Type, self.pname_fid))
+                self.Type, pname_fid))
 
     def __init__(self, pid, mid, Type, dim, group='MSCBML0', nsm=0., comment=''):
         """
@@ -1737,8 +1748,48 @@ class PBRSECT(LineProperty):
         self.t = None
         self.outp = None
         self.brp1 = None
+
+        # int : int
+        self.brps = {}
+        self.inps = {}
+
+        # int : floats
+        self.ts = {}
         for key, value in options.items():
             key = key.upper()
+
+            if key == 'NSM':
+                self.nsm = float(value)
+            elif 'INP' in key:
+                if key.startswith('INP('):
+                    assert key.endswith(')'), 'key=%r' % key
+                    key_id = int(key[4:-1])
+                    self.inps[key_id] = int(value)
+                else:
+                    self.inps[0] = int(value)
+            elif key == 'OUTP':
+                self.outp = int(value)
+
+            elif key.startswith('BRP'):
+                if key.startswith('BRP('):
+                    assert key.endswith(')'), 'key=%r' % key
+                    key_id = int(key[4:-1])
+                    self.brps[key_id] = int(value)
+                else:
+                    self.brps[0] = int(value)
+
+            elif key.startswith('T('):
+                if key.startswith('T('):
+                    assert key.endswith(')'), 'key=%r' % key
+                    key_id = int(key[2:-1])
+                    self.ts[key_id] = float(value)
+                elif key == 'T':
+                    self.ts[0] = int(value)
+                else:
+                    raise NotImplementedError('PBMSECT.pid=%s key=%r value=%r' % (pid, key, value))
+            elif key == 'T':
+                self.ts[0] = float(value)
+
             #if key == 'NSM':
                 #self.nsm = float(value)
             #elif key == 'OUTP':
@@ -1747,11 +1798,23 @@ class PBRSECT(LineProperty):
                 #self.brp1 = int(value)
             #elif key == 'T':
                 #self.t = float(value)
-            #else:
-            raise NotImplementedError('PBRSECT.pid=%s key=%r value=%r' % (pid, key, value))
+            else:
+                raise NotImplementedError('PBRSECT.pid=%s key=%r value=%r' % (pid, key, value))
 
-        self._validate_input()
         self.mid_ref = None
+
+    def validate(self):
+        assert self.form in ['GS', 'OP', 'CP'], 'pid=%s form=%r' % (self.pid, self.form)
+
+        assert self.outp is not None, 'form=%s outp=%s' % (self.form, self.outp)
+        if self.form == 'GS':
+            assert len(self.inps) > 0, 'form=%s inps=%s' % (self.form, self.inps)
+            assert len(self.brps) == 0, 'form=%s brps=%s' % (self.form, self.brps)
+            assert len(self.ts) == 0, 'form=%s ts=%s' % (self.form, self.ts)
+        elif self.form in ['OP', 'CP']:
+            assert len(self.inps) == 0, 'form=%s inps=%s' % (self.form, self.inps)
+            assert len(self.brps) >= 0, 'form=%s brps=%s' % (self.form, self.brps)
+            assert len(self.ts) >= 0, 'form=%s ts=%s' % (self.form, self.ts)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1798,7 +1861,6 @@ class PBRSECT(LineProperty):
         pid = integer(bdf_card, 1, 'pid')
         mid = integer(bdf_card, 2, 'mid')
         form = string_or_blank(bdf_card, 3, 'form')
-        assert form in ['GS', 'OP', 'CP'], 'pid=%s form=%r' % (pid, form)
 
         return PBRSECT(pid, mid, form, options, comment=comment)
 
@@ -1817,9 +1879,6 @@ class PBRSECT(LineProperty):
         #print("*PBARL = ",data)
         raise NotImplementedError('not finished...')
         #return PBRSECT(pid, mid, group, beam_type, dim, nsm, comment=comment)
-
-    def _validate_input(self):
-        pass
 
     def cross_reference(self, model):
         """
@@ -2075,6 +2134,153 @@ class PBEND(LineProperty):
         self.rb = rb
         self.theta_b = theta_b
         self.mid_ref = None
+
+    @classmethod
+    def add_beam_type_1(cls, pid, mid,
+                        A, i1, i2, j,
+                        rb=None, theta_b=None,
+                        c1=0., c2=0., d1=0., d2=0., e1=0., e2=0., f1=0., f2=0.,
+                        k1=None, k2=None,
+                        nsm=0., rc=0., zc=0., delta_n=0., comment=''):
+        """
+        +-------+------+-------+-----+----+----+--------+----+--------+
+        |   1   |   2  |   3   |  4  |  5 |  6 |   7    |  7 |    8   |
+        +=======+======+=======+=====+====+====+========+====+========+
+        | PBEND | PID  |  MID  | A   | I1 | I2 |   J    | RB | THETAB |
+        +-------+------+-------+-----+----+----+--------+----+--------+
+        |       |  C1  |  C2   | D1  | D2 | E1 |   E2   | F1 |   F2   |
+        +-------+------+-------+-----+----+----+--------+----+--------+
+        |       |  K1  |  K2   | NSM | RC | ZC | DELTAN |    |        |
+        +-------+------+-------+-----+----+----+--------+----+--------+
+
+        Parameters
+        ----------
+        A : float
+            cross-sectional area
+        i1, i2 : float
+            area moments of inertia for plane 1/2
+        j : float
+            torsional stiffness
+        rb : float; default=None
+            bend radius of the line of centroids
+        theta_b : float; default=None
+            arc angle of element (degrees)
+        c1, c2, d1, d2, e1, e2, f1, f2 : float; default=0.0
+            the r/z locations from the geometric centroid for stress recovery
+        k1, k2 : float; default=None
+            Shear stiffness factor K in K*A*G for plane 1 and plane 2
+        nsm : float; default=0.
+            nonstructural mass per unit length???
+        zc : float; default=None
+            Offset of the geometric centroid in a direction perpendicular to
+            the plane of points GA and GB and vector v.
+        delta_n : float; default=None
+            Radial offset of the neutral axis from the geometric centroid,
+            positive is toward the center of curvature
+        """
+        beam_type = 1
+        fsi = None
+        rm = None
+        t = None
+        p = None
+        return PBEND(pid, mid, beam_type, A, i1, i2, j,
+                     c1, c2, d1, d2, e1, e2, f1, f2, k1, k2,
+                     nsm, rc, zc, delta_n, fsi, rm, t, p, rb, theta_b, comment=comment)
+
+    @classmethod
+    def add_beam_type_2(cls, pid, mid,
+                        fsi, rm, t, p=None, rb=None, theta_b=None,
+                        nsm=0., rc=0., zc=0., comment=''):
+        """
+        +-------+------+-------+-----+----+----+--------+----+--------+
+        |   1   |   2  |   3   |  4  |  5 |  6 |   7    |  7 |    8   |
+        +=======+======+=======+=====+====+====+========+====+========+
+        | PBEND | PID  |  MID  | FSI | RM | T  |   P    | RB | THETAB |
+        +-------+------+-------+-----+----+----+--------+----+--------+
+        |       |      |       | NSM | RC | ZC |        |    |        |
+        +-------+------+-------+-----+----+----+--------+----+--------+
+
+        Parameters
+        ----------
+        fsi : int
+            Flag selecting the flexibility and stress intensification
+            factors. See Remark 3. (Integer = 1, 2, or 3)
+        rm : float
+            Mean cross-sectional radius of the curved pipe
+        t : float
+            Wall thickness of the curved pipe
+        p : float; default=None
+            Internal pressure
+        rb : float; default=None
+            bend radius of the line of centroids
+        theta_b : float; default=None
+            arc angle of element (degrees)
+        nsm : float; default=0.
+            nonstructural mass per unit length???
+        rc : float; default=None
+            Radial offset of the geometric centroid from points GA and GB.
+        zc : float; default=None
+            Offset of the geometric centroid in a direction perpendicular
+            to the plane of points GA and GB and vector v
+        """
+        beam_type = 2
+        A = None
+        i1 = None
+        i2 = None
+        j = None
+        c1 = None
+        c2 = None
+        d1 = None
+        d2 = None
+        e1 = None
+        e2 = None
+        f1 = None
+        f2 = None
+        k1 = None
+        k2 = None
+        delta_n = None
+        return PBEND(pid, mid, beam_type, A, i1, i2, j,
+                     c1, c2, d1, d2, e1, e2, f1, f2, k1, k2,
+                     nsm, rc, zc, delta_n, fsi, rm, t, p, rb, theta_b, comment=comment)
+
+    #@classmethod
+    #def add_beam_type_3(cls, pid, mid,
+                        #fsi, rm, t, p, rb, theta_b,
+                        ##sacl, alpha, nsm, rc, zc, flange, kx, ky, kz, sy, sz,
+                        #comment=''):
+        #"""
+        #+-------+------+-------+-----+----+----+--------+----+--------+
+        #|   1   |   2  |   3   |  4  |  5 |  6 |   7    |  7 |    8   |
+        #+=======+======+=======+=====+====+====+========+====+========+
+        #| PBEND | PID  |  MID  | FSI | RM | T  |   P    | RB | THETAB |
+        #+-------+------+-------+-----+----+----+--------+----+--------+
+        #|       | SACL | ALPHA | NSM | RC | ZC | FLANGE |    |        |
+        #+-------+------+-------+-----+----+----+--------+----+--------+
+        #|       |  KX  |  KY   | KZ  |    | SY |   SZ   |    |        |
+        #+-------+------+-------+-----+----+----+--------+----+--------+
+        #"""
+        #beam_type = 3
+        #A = None
+        #i1 = None
+        #i2 = None
+        #j = None
+        #c1 = None
+        #c2 = None
+        #d1 = None
+        #d2 = None
+        #e1 = None
+        #e2 = None
+        #f1 = None
+        #f2 = None
+        #k1 = None
+        #k2 = None
+        #rc = None
+        #zc = None
+        #nsm = None
+        #delta_n = None
+        #return PBEND(pid, mid, beam_type, A, i1, i2, j,
+                     #c1, c2, d1, d2, e1, e2, f1, f2, k1, k2,
+                     #nsm, rc, zc, delta_n, fsi, rm, t, p, rb, theta_b, comment=comment)
 
     @classmethod
     def add_card(cls, card, comment=''):
