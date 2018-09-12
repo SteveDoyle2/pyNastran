@@ -4,6 +4,12 @@ SOL 145 plotter
 from __future__ import print_function
 
 import matplotlib.pyplot as plt
+try:  # pragma: no cover
+    plt.figure()
+    plt.close()
+except:  # pragma: no cover
+    plt.switch_backend('Agg')
+
 
 from pyNastran.utils.log import get_logger2
 from pyNastran.f06.flutter_response import FlutterResponse

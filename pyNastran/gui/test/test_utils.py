@@ -10,7 +10,7 @@ import pyNastran
 from pyNastran.gui.utils.load_results import (
     load_csv, load_deflection_csv, load_user_geom, create_res_obj)
 from pyNastran.gui.menus.legend.write_gif import setup_animation, make_two_sided, make_symmetric
-from pyNastran.gui.menus.results_sidebar import get_cases_from_tree, build_pruned_tree
+from pyNastran.gui.menus.results_sidebar_utils import get_cases_from_tree, build_pruned_tree
 
 PKG_PATH = pyNastran.__path__[0]
 MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')

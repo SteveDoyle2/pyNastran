@@ -1,9 +1,6 @@
 import os
 import unittest
 
-import matplotlib
-matplotlib.use('Agg')
-
 import pyNastran
 from pyNastran.utils.log import get_logger2
 from pyNastran.f06.utils import split_float_colons, split_int_colon

@@ -269,7 +269,7 @@ class LaWGS(object):
 
     def write_as_plot3d(self, p3dname):
         """writes a plot3d file"""
-        with open(p3dname, 'wb') as p3d_file:
+        with open(p3dname, 'w') as p3d_file:
             p3d_file.write('%s\n' % (len(self.panels)))
             for (unused_name, panel) in sorted(self.panels.items()):
                 p3d_file.write('%s %s 1\n' % (panel.nrows, panel.ncols))
