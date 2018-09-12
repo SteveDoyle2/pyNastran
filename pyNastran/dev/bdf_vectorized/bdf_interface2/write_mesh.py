@@ -7,7 +7,7 @@ import io
 import sys
 from codecs import open
 
-from six import string_types, iteritems, StringIO, PY2, iterkeys
+from six import string_types, StringIO, PY2, iterkeys
 from numpy import array, unique, concatenate, intersect1d, where
 
 from pyNastran.bdf.utils import print_filename
@@ -124,10 +124,6 @@ class WriteMesh(BDFAttributes):
         if hasattr(out_filename, 'read') and hasattr(out_filename, 'write'):
             bdf_file = out_filename
         else:
-            if PY2:
-                wb = 'wb'
-            else:
-                wb = 'w'
             bdf_file = open(out_filename, 'w', encoding=encoding)
         self._write_header(bdf_file, encoding)
         self._write_params(bdf_file, size, is_double)
@@ -230,12 +226,12 @@ class WriteMesh(BDFAttributes):
         Writes the elements and properties in and interspersed order
         """
         #return self._write_elements_properties2(f, size)
-        msg = []
-        missing_properties = []
+        #msg = []
+        #missing_properties = []
         if self.properties:
             bdf_file.write('$ELEMENTS_WITH_PROPERTIES\n')
 
-        eids_written = []
+        #eids_written = []
         #pids = sorted(self.properties.keys())
 
         ptypes = [
@@ -364,9 +360,9 @@ class WriteMesh(BDFAttributes):
             pids_list = list(pids_set)
             bdf_file.write('$UNASSOCIATED_PROPERTIES\n')
             for pid in pids_list:
-                for t in ptypes:
-                    if t.n and pid in t.property_id:
-                        t.write_card(bdf_file, size=size, property_ids=[pid])
+                for prop in ptypes:
+                    if prop.n and pid in prop.property_id:
+                        prop.write_card(bdf_file, size=size, property_ids=[pid])
 
         #.. todo:: finish...
         bdf_file.write('$UNASSOCIATED_ELEMENTS\n')
@@ -395,24 +391,24 @@ class WriteMesh(BDFAttributes):
         if(self.aecomps or self.aefacts or self.aeparams or self.aelinks or
            self.aelists or self.aestats or self.aesurf or self.aesurfs):
             msg = ['$AERO CONTROL SURFACES\n']
-            for (unused_id, aelinks) in sorted(self.aelinks)):
+            for unused_id, aelinks in sorted(self.aelinks.items()):
                 for aelink in aelinks:
                     msg.append(aelink.write_card(size, is_double))
 
-            for (unused_id, aecomp) in sorted(self.aecomps.items()):
+            for unused_id, aecomp in sorted(self.aecomps.items()):
                 msg.append(aecomp.write_card(size, is_double))
-            for (unused_id, aeparam) in sorted(self.aeparams.items()):
+            for unused_id, aeparam in sorted(self.aeparams.items()):
                 msg.append(aeparam.write_card(size, is_double))
-            for (unused_id, aestat) in sorted(self.aestats.items()):
+            for unused_id, aestat in sorted(self.aestats.items()):
                 msg.append(aestat.write_card(size, is_double))
 
-            for (unused_id, aelist) in sorted(self.aelists.items()):
+            for unused_id, aelist in sorted(self.aelists.items()):
                 msg.append(aelist.write_card(size, is_double))
-            for (unused_id, aesurf) in sorted(self.aesurf.items()):
+            for unused_id, aesurf in sorted(self.aesurf.items()):
                 msg.append(aesurf.write_card(size, is_double))
-            for (unused_id, aesurfs) in sorted(self.aesurfs.items()):
+            for unused_id, aesurfs in sorted(self.aesurfs.items()):
                 msg.append(aesurfs.write_card(size, is_double))
-            for (unused_id, aefact) in sorted(self.aefacts.items()):
+            for unused_id, aefact in sorted(self.aefacts.items()):
                 msg.append(aefact.write_card(size, is_double))
             bdf_file.write(''.join(msg))
 
@@ -425,7 +421,7 @@ class WriteMesh(BDFAttributes):
                 msg.append(self.aeros.write_card(size, is_double))
             for (unused_id, trim) in sorted(self.trims.items()):
                 msg.append(trim.write_card(size, is_double))
-            for (unused_id, diverg) in sorted(self.divergs.items(s)):
+            for (unused_id, diverg) in sorted(self.divergs.items()):
                 msg.append(diverg.write_card(size, is_double))
             bdf_file.write(''.join(msg))
 
@@ -578,15 +574,15 @@ class WriteMesh(BDFAttributes):
             string representation of the DMIGs
         """
         msg = []
-        for (unused_name, dmig) in sorted(self.dmigs.items()):
+        for unused_name, dmig in sorted(self.dmigs.items()):
             msg.append(dmig.write_card(size, is_double))
-        for (unused_name, dmi) in sorted(self.dmis.items()):
+        for unused_name, dmi in sorted(self.dmis.items()):
             msg.append(dmi.write_card(size, is_double))
-        for (unused_name, dmij) in sorted(self.dmijs.items()):
+        for unused_name, dmij in sorted(self.dmijs.items()):
             msg.append(dmij.write_card(size, is_double))
-        for (unused_name, dmiji) in sorted(self.dmijis.items()):
+        for unused_name, dmiji in sorted(self.dmijis.items()):
             msg.append(dmiji.write_card(size, is_double))
-        for (unused_name, dmik) in sorted(self.dmiks.items()):
+        for unused_name, dmik in sorted(self.dmiks.items()):
             msg.append(dmik.write_card(size, is_double))
         bdf_file.write(''.join(msg))
 
@@ -596,28 +592,28 @@ class WriteMesh(BDFAttributes):
                       self.cMethods or self.tsteps or self.tstepnls)
         if is_dynamic:
             msg = ['$DYNAMIC\n']
-            for (unused_id, method) in sorted(self.methods.items()):
+            for unused_id, method in sorted(self.methods.items()):
                 msg.append(method.write_card(size, is_double))
-            for (unused_id, cMethod) in sorted(self.cMethods.items()):
-                msg.append(cMethod.write_card(size, is_double))
+            for unused_id, cmethod in sorted(self.cMethods.items()):
+                msg.append(cmethod.write_card(size, is_double))
             #for (unused_id, darea) in sorted(self.dareas.items()):
                 #msg.append(darea.write_card(size, is_double))
-            for (unused_id, nlparm) in sorted(self.nlparms.items()):
+            for unused_id, nlparm in sorted(self.nlparms.items()):
                 msg.append(nlparm.write_card(size, is_double))
-            for (unused_id, nlpci) in sorted(self.nlpcis.items()):
+            for unused_id, nlpci in sorted(self.nlpcis.items()):
                 msg.append(nlpci.write_card(size, is_double))
-            for (unused_id, tstep) in sorted(self.tsteps.items()):
+            for unused_id, tstep in sorted(self.tsteps.items()):
                 msg.append(tstep.write_card(size, is_double))
-            for (unused_id, tstepnl) in sorted(self.tstepnls.items()):
+            for unused_id, tstepnl in sorted(self.tstepnls.items()):
                 msg.append(tstepnl.write_card(size, is_double))
-            for (unused_id, freq) in sorted(self.frequencies.items()):
+            for unused_id, freq in sorted(self.frequencies.items()):
                 msg.append(freq.write_card(size, is_double))
             bdf_file.write(''.join(msg))
 
     def _write_nonlinear(self, bdf_file, size):
-        for key, card in sorted(self.nlparms.items()):
+        for unused_key, card in sorted(self.nlparms.items()):
             card.write_card(bdf_file, size)
-        for key, card in sorted(self.nlpcis.items()):
+        for unused_key, card in sorted(self.nlpcis.items()):
             card.write_card(bdf_file, size)
         #self.tables1.write_card(bdf_file, size)
 
@@ -784,7 +780,7 @@ class WriteMesh(BDFAttributes):
                 msg.append(set_obj.write_card(size, is_double))
             for set_obj in self.qsets:  # list
                 msg.append(set_obj.write_card(size, is_double))
-            for name, usets in sorted(self.usets.items()):  # dict
+            for unused_name, usets in sorted(self.usets.items()):  # dict
                 for set_obj in usets:  # list
                     msg.append(set_obj.write_card(size, is_double))
             bdf_file.write(''.join(msg))
@@ -801,9 +797,9 @@ class WriteMesh(BDFAttributes):
                 msg.append(set_obj.write_card(size, is_double))
             for set_obj in self.se_qsets:  # list
                 msg.append(set_obj.write_card(size, is_double))
-            for (set_id, set_obj) in sorted(self.se_sets.items()):  # dict
+            for unused_set_id, set_obj in sorted(self.se_sets.items()):  # dict
                 msg.append(set_obj.write_card(size, is_double))
-            for name, usets in sorted(self.se_usets.items()):  # dict
+            for unused_name, usets in sorted(self.se_usets.items()):  # dict
                 for set_obj in usets:  # list
                     msg.append(set_obj.write_card(size, is_double))
             for suport in self.se_suport:  # list
@@ -831,16 +827,16 @@ class WriteMesh(BDFAttributes):
             # self.thermalProperties or
             msg = ['$THERMAL\n']
 
-            for (unused_key, phbdy) in sorted(self.phbdys.items()):
+            for unused_key, phbdy in sorted(self.phbdys.items()):
                 msg.append(phbdy.write_card(size, is_double))
 
             #for unused_key, prop in sorted(self.thermalProperties.items()):
             #    msg.append(str(prop))
-            for (unused_key, prop) in sorted(self.convection_properties.items()):
+            for unused_key, prop in sorted(self.convection_properties.items()):
                 msg.append(prop.write_card(size, is_double))
 
             # BCs
-            for (unused_key, bcs) in sorted(self.bcs.items()):
+            for unused_key, bcs in sorted(self.bcs.items()):
                 for bc in bcs:  # list
                     msg.append(bc.write_card(size, is_double))
             bdf_file.write(''.join(msg))
@@ -849,7 +845,6 @@ class WriteMesh(BDFAttributes):
         """Writes the thermal materials in a sorted order"""
         if self.thermal_materials:
             msg = ['$THERMAL MATERIALS\n']
-            for (mid, material) in sorted(self.thermal_materials.items()):
+            for unused_mid, material in sorted(self.thermal_materials.items()):
                 msg.append(material.write_card(size, is_double))
             bdf_file.write(''.join(msg))
-

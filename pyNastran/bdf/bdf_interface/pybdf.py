@@ -78,7 +78,7 @@ class BDFInputPy(object):
                     split_system = system_line.split(',')
                     header = split_system[0].upper()
                     if header.startswith('ASSIGN FEM'):
-                        fem, filename = header.split('=')
+                        unused_fem, filename = header.split('=')
                         filename = filename.strip('"\'')
                         self.log.debug('reading %s' % filename)
                         if filename.lower().endswith('.f06'):
@@ -274,7 +274,7 @@ class BDFInputPy(object):
             the last index to write
         """
         with open(_filename(bdf_dump_filename),
-                        'w', encoding=self.encoding) as crash_file:
+                  'w', encoding=self.encoding) as crash_file:
             for line in lines[:i]:
                 crash_file.write(line)
 

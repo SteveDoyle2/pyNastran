@@ -411,7 +411,7 @@ class TestBeams(unittest.TestCase):
             self.assertEqual(actual, expected, msg)
 
     def test_pbeaml_01(self):
-        model = BDF()
+        model = BDF(debug=False)
         model.validate()
 
         fields = [
@@ -518,8 +518,7 @@ class TestBeams(unittest.TestCase):
         model.add_grid(30, [0., 1., 0.])
         model.cross_reference()
 
-        save_load_deck(model, punch=True, run_remove_unused=True,
-                       run_convert=True, run_renumber=True)
+        save_load_deck(model)
 
     def test_cbeam_pbeaml(self):
         """CBEAM/PBEAML"""
@@ -906,23 +905,22 @@ class TestBeams(unittest.TestCase):
         model2 = BDF(debug=False)
         model2.read_bdf('pbeam12.bdf')
 
-        if not os.path.exists('pbeam12.op2') and 0:  # pragma: no cover
-            os.system('nastran scr=yes bat=no old=no pbeam12.bdf')
+        #if not os.path.exists('pbeam12.op2') and 0:  # pragma: no cover
+            #os.system('nastran scr=yes bat=no old=no pbeam12.bdf')
         os.remove('pbeam12.bdf')
 
-        if 0:  # pragma: no cover
-            from pyNastran.op2.op2 import OP2
-            op2 = OP2()
-            op2.read_op2('pbeam12.op2')
-            #os.remove('pbeam12.op2')
-            gpw = op2.grid_point_weight
-            op2_mass = gpw.mass.max()
-            assert op2_mass == mass, 'op2_mass=%s mass=%s' % (op2_mass, mass)
-            print('op2_mass=%s mass=%s' % (op2_mass, mass))
-            op2_cg = gpw.cg
-
-            cg = array([0.5, 0., 0.], dtype='float32')
-            print('cg =', op2_cg)
+        #if 0:  # pragma: no cover
+            #from pyNastran.op2.op2 import OP2
+            #op2 = OP2()
+            #op2.read_op2('pbeam12.op2')
+            ##os.remove('pbeam12.op2')
+            #gpw = op2.grid_point_weight
+            #op2_mass = gpw.mass.max()
+            #assert op2_mass == mass, 'op2_mass=%s mass=%s' % (op2_mass, mass)
+            #print('op2_mass=%s mass=%s' % (op2_mass, mass))
+            #op2_cg = gpw.cg
+            #cg = array([0.5, 0., 0.], dtype='float32')
+            #print('cg =', op2_cg)
 
     def test_pbeam_nsm(self):
         """tests a PBEAM with nonstructural mass"""
@@ -1547,6 +1545,7 @@ class TestBeams(unittest.TestCase):
         #plt.close()
         prop2.plot(model, figure_id=pid+1, show=False)
         #plt.close()
+        #save_load_deck(model, run_convert=False, run_remove_unused=False)
 
     def test_pbmsect_1(self):
         model = BDF(debug=True, log=None, mode='msc')

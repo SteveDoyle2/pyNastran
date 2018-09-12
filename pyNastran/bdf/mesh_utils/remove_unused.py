@@ -38,6 +38,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
     pids_mass_used = set([])
     mids_used = set([])
     mids_thermal_used = set([])
+    sets_used = set([])
     #nsms_used = set([])
 
     #card_types = list(model.card_count.keys())
@@ -617,6 +618,17 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
             #for eid in ids:
                 #elem = model.plotels[eid]
                 #nids_used.update(elem.node_ids)
+        elif card_type in ['PBMSECT']:
+            for pid in ids:
+                prop = model.properties[pid]
+                if prop.outp:
+                    sets_used.add(prop.outp)
+                if prop.brps:
+                    for key, value in prop.brps.items():
+                        sets_used.add(value)
+                #if prop.cores:
+                    #for key, value in prop.cores.items():
+                        #pids_used.add(value)
         else:
             raise NotImplementedError(card_type)
 

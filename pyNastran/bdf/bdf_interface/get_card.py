@@ -993,13 +993,15 @@ class GetCard(GetMethods):
                         elem_node_ids = elem.node_ids
                         if elem.type == 'CTETRA':
                             #face1 = elem.get_face(load.g1_ref.nid, load.g34_ref.nid)
-                            facn = elem.get_face_area_centroid_normal(load.g1_ref.nid, load.g34_ref.nid)
+                            facn = elem.get_face_area_centroid_normal(
+                                load.g1_ref.nid, load.g34_ref.nid)
                             face, area, centroid, normal = facn
                             #assert face == face1
                             nface = 3
                         elif elem.type == 'CHEXA':
                             #face1 = elem.get_face(load.g34_ref.nid, load.g1_ref.nid)
-                            facn = elem.get_face_area_centroid_normal(load.g34_ref.nid, load.g1_ref.nid)
+                            facn = elem.get_face_area_centroid_normal(
+                                load.g34_ref.nid, load.g1_ref.nid)
                             face, area, centroid, normal = facn
                             #assert face == face1
                             nface = 4
@@ -1061,7 +1063,8 @@ class GetCard(GetMethods):
                         #m = cross(r, f)
                         #M += m
                 if eids_missing:
-                    self.log.error('missing PLOAD4 element ids=%s on:\n%s' % (eids_missing, load.rstrip()))
+                    self.log.error('missing PLOAD4 element ids=%s on:\n%s' % (
+                        eids_missing, load.rstrip()))
 
             elif load_type == 'SPCD':
                 #self.gids = [integer(card, 2, 'G1'),]
@@ -1170,7 +1173,8 @@ class GetCard(GetMethods):
                     else:
                         etypes_skipped.add(elem.type)
                 if eids_missing:
-                    self.log.error('missing PLOAD4 element ids=%s on:\n%s' % (eids_missing, load.rstrip()))
+                    self.log.error('missing PLOAD4 element ids=%s on:\n%s' % (
+                        eids_missing, load.rstrip()))
 
             elif load.type == 'PLOAD2':
                 pressure = load.pressure * scale  # there are 4 pressures, but we assume p0
@@ -1451,11 +1455,38 @@ class GetCard(GetMethods):
             dload_id,
             consider_dload_combinations=consider_dload_combinations,
             msg=msg)
-        dloads, scale_factors = self._reduce_dload_case(dload_case, scale=scale, msg=msg)
+        dloads, scale_factors = self._reduce_dload_case(
+            dload_case, scale=scale, skip_scale_factor0=skip_scale_factor0,
+            msg=msg)
         return dloads, scale_factors
 
-    def _reduce_dload_case(self, dload_case, scale=1., unallowed_dload_ids=None, msg=''):
-        """reduces a dload case"""
+    def _reduce_dload_case(self, dload_case, scale=1., unallowed_dload_ids=None,
+                           skip_scale_factor0=False, msg=''):
+        """
+        Reduces a dload case
+
+        Parameters
+        ----------
+        dload_case : List[???]
+            a series of DLOAD cards
+        scale : float; default=1.0
+            additional scale factor on top of the existing LOADs
+        unallowed_dload_ids : List[int]; default=None
+            helper to prevent recursion
+        skip_scale_factor0 : bool; default=False
+            Skip loads with scale factor=0.0.
+            Nastran does not do this.
+            Nastran will fail if referenced loads do not exist.
+        msg : str
+            debug message
+
+        Returns
+        -------
+        dloads : List[loads]
+            a series of dload objects
+        scale_factors : List[float]
+            the associated scale factors
+        """
         scale_factors_out = []
         dloads_out = []
         if unallowed_dload_ids is None:
@@ -1670,7 +1701,7 @@ class GetCard(GetMethods):
                 map_names = [map_names]
             if not isinstance(map_names, (list, tuple)):
                 msg = 'map_names=%s must be a list or tuple; not %s' % (
-                    map_names, type( map_names))
+                    map_names, type(map_names))
                 raise TypeError(msg)
             for name in map_names:
                 if name not in allowed_maps:
@@ -1925,7 +1956,7 @@ class GetCard(GetMethods):
                     except TypeError:
                         #print(elem)
                         #print('nidsi =', nidsi)
-                        nidsi2 = [nid  if nid is not None else 0
+                        nidsi2 = [nid if nid is not None else 0
                                   for nid in nidsi]
                         try:
                             nids[i, :] = nidsi2
@@ -2643,6 +2674,6 @@ class GetCard(GetMethods):
             mklist += mkaero.mklist()
         if mklist:
             mkarray = np.hstack([mklist])
-            new_array = [tuple(row) for row in mkarray]
+            #new_array = [tuple(row) for row in mkarray]
             #unique_pairs = np.lib.arraysetops.unique(new_array, axis=0).tolist()
         return mkarray

@@ -25,8 +25,8 @@ EPOINTs/SPOINTs classes are for multiple degrees of freedom
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
-from six import string_types, PY2
 from typing import List, Union, Optional, Any
+from six import string_types, PY2
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -89,7 +89,6 @@ class SEQGP(BaseCard):
             a comment for the card
         """
         ncard = len(card) - 1
-        n = ncard // 2
         assert ncard % 2 == 0, card
         nids = []
         seqids = []
@@ -1401,8 +1400,7 @@ class GRID(BaseCard):
         """
         if size == 8:
             return self.write_card_8()
-        else:
-            return self.write_card_16(is_double)
+        return self.write_card_16(is_double)
 
     def write_card_8(self):
         # type: () -> str

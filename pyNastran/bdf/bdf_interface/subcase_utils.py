@@ -5,8 +5,8 @@ defines:
  - write_stress_type(key, options, value, spaces='')
 """
 from __future__ import print_function
-from six import string_types
 from typing import List
+from six import string_types
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.collpase_card import collapse_thru_packs
 from pyNastran.bdf.bdf_interface.assign_type import interpret_value
@@ -18,7 +18,7 @@ def expand_thru_int(set_value):   # pragma: no cover
     9,THRU,19,EXCEPT,12
     0.1 0.3 0.5 1.0 3.0 5.0 10.0 14.0
     """
-    packs = []
+    #packs = []
     assert '/' not in set_value, set_value
     values = ','.join(set_value.split()).split(',')
     nvalues = len(values)

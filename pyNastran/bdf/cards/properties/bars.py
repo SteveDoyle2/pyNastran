@@ -1,4 +1,4 @@
-# pylint: disable=C0103
+# pylint: disable=C0103,R0914,R0902,R0913
 """
 All bar properties are defined in this file.  This includes:
  *   PBAR
@@ -248,14 +248,17 @@ class LineProperty(Property):
         return self.mid_ref.nu
 
     def I1(self):
+        """gets the section I1 moment of inertia"""
         I = self.I1_I2_I12()
         return I[0]
 
     def I2(self):
+        """gets the section I2 moment of inertia"""
         I = self.I1_I2_I12()
         return I[1]
 
     def I12(self):
+        """gets the section I12 moment of inertia"""
         try:
             I = self.I1_I2_I12()
         except:
@@ -1126,24 +1129,25 @@ class PBAR(LineProperty):
         self.mid_ref = None
 
     def Area(self):
-        """
-        Gets the area :math:`A` of the CBAR.
-        """
+        """Gets the area :math:`A` of the CBAR."""
         return self.A
 
     #def Nsm(self):
     #    return self.nsm
 
     #def J(self):
-    #    return self.j
+       #return self.j
 
     def I11(self):
+        """gets the section I11 moment of inertia"""
         return self.i1
 
     def I22(self):
+        """gets the section I22 moment of inertia"""
         return self.i2
 
     def I12(self):
+        """gets the section I12 moment of inertia"""
         return self.i12
 
     def raw_fields(self):
@@ -1899,6 +1903,18 @@ class PBRSECT(LineProperty):
                 self.brps_ref[key] = brpi_ref
 
     def plot(self, model, figure_id=1, show=False):
+        """
+        Plots the beam section
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        figure_id : int; default=1
+            the figure id
+        show : bool; default=False
+            show the figure when done
+        """
         class_name = self.__class__.__name__
         form_map = {
             'GS' : 'General Section',
@@ -1996,6 +2012,7 @@ class PBEAM3(LineProperty):  # not done, cleanup
 
     def __init__(self, pid, mid, A, iz, iy, iyz, j, nsm=0.,
                  cy=0., cz=0., dy=0., dz=0., ey=0., ez=0., fy=0., fz=0., comment=''):
+        """Creates a PBEAM3 card"""
         LineProperty.__init__(self)
         if comment:
             self.comment = comment
@@ -2644,56 +2661,40 @@ def plot_arbitrary_section(model, self,
         ts = ts2
 
     def _plot_rectangles(ax, sections, xy_dict, ts):
-        i = 0
+        """helper method for ``plot_arbitrary_section``"""
         for section in sections:
-            p1, p2 = section
-            #print(section, type(section))
-            #print(xy_dict)
+            #p1, p2 = section
             out = xy_dict[section]
             (x1, x2, y1, y2) = out
             dy = y2 - y1
             dx = x2 - x1
-            height = np.sqrt(dy**2 + dx**2)
+            length = np.sqrt(dy**2 + dx**2)
             angle = np.arctan2(dy, dx)
-            angle2 = angle + np.pi/2.
             angled = np.degrees(angle)
-            angled2 = np.degrees(angle2)
 
-            #print(ts)
-            #print('section = %s' % str(section))
             thickness = ts.get(section, ts[1])
             assert isinstance(thickness, float), thickness
 
-            # rotate by 90 degrees
             width = thickness
-            #print('angle[%i]=%.0f' % (i, np.degrees(angle)))
 
-            #width2 = height*np.cos(angle) - width*np.sin(angle)
-            #height2 = height*np.sin(angle) + width*np.cos(angle)
-            dx_height = 0.
-            dy_height = 0.
-            #dx_height = -width / 2. * np.sin(angle)
-            #dy_height = -width / 2. * np.cos(angle)
-            dx_width = 0. #-height / 2. * np.sin(angle2)
-            dy_width = 0. # -height / 2. * np.sin(angle2)
-            xy = (x1+dx_width+dx_height, y1+dy_width+dy_height)
+            dx_width = +width / 2. * np.sin(angle)
+            dy_width = -width / 2. * np.cos(angle)
+            xy = (x1+dx_width, y1+dy_width)
+
+            rect_height = length
+            rect_width = width
 
             #print('dxy_width = (%.2f,%.2f)' % (dx_width, dy_width))
-            #print('dxy_height = (%.2f,%.2f)' % (dx_height, dy_height))
-            #print('p1,2=(%s, %s) xy=(%.2f,%.2f) t=%s height=%s width=%s angled=%s\n' % (
-                #p1, p2, xy[0], xy[1], thickness, width, height, angled))
+            #print('p1,2=(%s, %s) xy=(%.2f,%.2f) t=%s width=%s height=%s angled=%s\n' % (
+                #p1, p2, xy[0], xy[1], thickness, rect_width, rect_height, angled))
 
-
-            rect = plt.Rectangle(xy, height, width, angle=angled,
-                                 fill=True, alpha=1.2+0.15*i)
+            rect = plt.Rectangle(xy, rect_height, rect_width, angle=angled,
+                                 fill=True) #, alpha=1.2+0.15*i)
             ax.add_patch(rect)
-            i += 1
             #break
 
     def add_to_sections(sections, xy, points, x, y):
-        i = 0
-        #print(points)
-        #print(x, y)
+        """helper method for ``plot_arbitrary_section``"""
         for i in range(len(points)-1):
             p1 = points[i]
             p2 = points[i+1]
@@ -2800,5 +2801,3 @@ def plot_arbitrary_section(model, self,
     ax.legend()
     if show:
         plt.show()
-
-

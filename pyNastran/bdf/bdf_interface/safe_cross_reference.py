@@ -5,7 +5,6 @@ Safe cross-referencing skips failed xref's
 """
 from __future__ import print_function
 from collections import defaultdict
-import traceback
 from typing import List, Dict, Any
 from six import itervalues
 
@@ -108,7 +107,7 @@ class SafeXrefMesh(XrefMesh):
         for suport in self.suport:
             suport.safe_cross_reference(self)
 
-        for suport1_id, suport1 in self.suport1.items():
+        for unused_suport1_id, suport1 in self.suport1.items():
             suport1.safe_cross_reference(self)
 
         for se_suport in self.se_suport:
@@ -187,7 +186,7 @@ class SafeXrefMesh(XrefMesh):
                 # we don't need to check the ncaeros=1 case
                 i = 0
                 min_maxs = zeros((ncaeros, 2), dtype='int32')
-                for eid, caero in sorted(self.caeros.items()):
+                for unused_eid, caero in sorted(self.caeros.items()):
                     min_maxs[i, :] = caero.min_max_eid
                     i += 1
                 isort = argsort(min_maxs.ravel())
@@ -254,7 +253,8 @@ class SafeXrefMesh(XrefMesh):
         self._show_safe_xref_errors('elements', xref_errors)
 
         if missing_safe_xref:
-            self.log.warning('These cards dont support safe_xref; %s' % str(list(missing_safe_xref)))
+            self.log.warning('These cards dont support safe_xref; %s' %
+                             str(list(missing_safe_xref)))
 
     def _show_safe_xref_errors(self, elements_word, xref_errors):
         """helper method to show errors"""
@@ -274,7 +274,7 @@ class SafeXrefMesh(XrefMesh):
         Links the loads to nodes, coordinate systems, and other loads.
         """
         xref_errors = defaultdict(list)
-        for (lid, load_combinations) in self.load_combinations.items():
+        for unused_lid, load_combinations in self.load_combinations.items():
             for load_combination in load_combinations:
                 try:
                     load_combination.safe_cross_reference(self, xref_errors)
@@ -283,7 +283,7 @@ class SafeXrefMesh(XrefMesh):
                     raise
         self._show_safe_xref_errors('loads', xref_errors)
 
-        for (lid, loads) in self.loads.items():
+        for unused_lid, loads in self.loads.items():
             for load in loads:
                 try:
                     load.safe_cross_reference(self, xref_errors)
@@ -292,10 +292,10 @@ class SafeXrefMesh(XrefMesh):
                     raise
         self._show_safe_xref_errors('loads', xref_errors)
 
-        for (lid, sid) in self.dloads.items():
+        for unused_lid, sid in self.dloads.items():
             for load in sid:
                 load.safe_cross_reference(self, xref_errors)
-        for (lid, sid) in self.dload_entries.items():
+        for unused_lid, sid in self.dload_entries.items():
             for load in sid:
                 try:
                     load.safe_cross_reference(self, xref_errors)
@@ -303,13 +303,13 @@ class SafeXrefMesh(XrefMesh):
                     print(load)
                     raise
 
-        for key, darea in self.dareas.items():
+        for unused_key, darea in self.dareas.items():
             try:
                 darea.safe_cross_reference(self, xref_errors)
             except TypeError:  # pragma: no cover
                 print(darea)
                 raise
-        for key, dphase in self.dphases.items():
+        for unused_key, dphase in self.dphases.items():
             try:
                 dphase.safe_cross_reference(self, xref_errors)
             except TypeError:  # pragma: no cover
@@ -346,8 +346,23 @@ class SafeXrefMesh(XrefMesh):
             nodes.append(nid)
         if error_nodes:
             msgi += 'Could not find nodes %s%s\n' % (', '.join(error_nodes), msg)
-
         return nodes, msgi
+
+    def safe_get_points(self, point_ids, msg=''):
+        """safe xref version of self.Points(point_ids, msg='')"""
+        points = []
+        error_points = []
+        msgi = ''
+        for point_id in point_ids:
+            try:
+                point = self.Point(point_id)
+            except KeyError:
+                error_points.append(str(point_id))
+                point = point_id
+            points.append(point)
+        if error_points:
+            msgi += 'Could not find POINTs %s%s\n' % (', '.join(error_points), msg)
+        return points, msgi
 
     def safe_get_elements(self, eids, msg=''):
         """safe xref version of self.Elements(eid, msg='')"""

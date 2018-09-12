@@ -947,7 +947,6 @@ class SET1(Set):
         skin = []
         if self.is_skin:
             skin = ['SKIN']
-        ids = self.get_ids()
         return ['SET1', self.sid] + skin + self.get_ids()
 
     def cross_reference_set(self, model, xref_type, msg='', allow_empty_nodes=False):
@@ -1016,7 +1015,7 @@ class SET1(Set):
             if len(out):
                 model.log.warning(out)
         elif xref_type == 'Point':
-            self.ids_ref, out = model.SafePoints(self.get_ids(), msg=msg)
+            self.ids_ref, out = model.safe_points(self.get_ids(), msg=msg)
         else:
             raise NotImplementedError("xref_type=%r and must be ['Node', 'Point']" % xref_type)
         self.xref_type = xref_type

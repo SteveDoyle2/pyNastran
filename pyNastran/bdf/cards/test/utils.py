@@ -50,6 +50,7 @@ def save_load_deck(model, punch=True, run_remove_unused=True,
             #
             # shouldn't have any effect model2.bdf
             bdf_mirror('model2.bdf', plane='xz', log=model.log)
+    os.remove('model2.bdf')
     return model3
 
 def cross_reference(model):

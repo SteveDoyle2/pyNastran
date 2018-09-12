@@ -1111,8 +1111,8 @@ def update_pbeam_negative_integer(pname_fid):
         word = 'F2'
     else:
         print('istation=%s iterm=%s' % (istation, iterm))
-        msg = "property_type='PBEAM' has not implemented %r (istation=%r, iterm=%r) in pname_map" % (
-            pname_fid, istation, iterm)
+        msg = ("property_type='PBEAM' has not implemented %r (istation=%r, iterm=%r)"
+               " in pname_map" % (pname_fid, istation, iterm))
         raise NotImplementedError(msg)
     word = '%s(%i)' % (word, istation + 1)
     return word
@@ -1699,8 +1699,8 @@ class PBMSECT(LineProperty):
 
         return PBMSECT(pid, mid, form, options, comment=comment)
 
-    @classmethod
-    def add_op2_data(cls, data, comment=''):  # pragma: no cover
+    #@classmethod
+    #def add_op2_data(cls, data, comment=''):  # pragma: no cover
         #pid = data[0]
         #mid = data[1]
         #group = data[2].strip()
@@ -1711,8 +1711,8 @@ class PBMSECT(LineProperty):
         #print("Type  = %r" % Type)
         #print("dim = ",dim)
         #print(str(self))
-        print("*PBMSECT = ", data)
-        raise NotImplementedError('PBMSECT not finished...data=%s' % str(data))
+        #print("*PBMSECT = ", data)
+        #raise NotImplementedError('PBMSECT not finished...data=%s' % str(data))
         #return PBMSECT(pid, mid, group, Type, dim, nsm, comment=comment)
 
     def cross_reference(self, model):
@@ -1738,6 +1738,18 @@ class PBMSECT(LineProperty):
                 self.brps_ref[key] = brpi_ref
 
     def plot(self, model, figure_id=1, show=False):
+        """
+        Plots the beam section
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        figure_id : int; default=1
+            the figure id
+        show : bool; default=False
+            show the figure when done
+        """
         class_name = self.__class__.__name__
         form_map = {
             'GS' : 'General Section',

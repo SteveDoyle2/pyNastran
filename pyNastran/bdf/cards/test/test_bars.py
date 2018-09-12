@@ -193,8 +193,7 @@ class TestBars(unittest.TestCase):
         model.add_grid(30, [0., 1., 0.])
         model.cross_reference()
 
-        save_load_deck(model, punch=True, run_remove_unused=True,
-                       run_convert=True, run_renumber=True)
+        save_load_deck(model)
 
     def test_pbarl_1(self):
         """tests the PBARL"""
