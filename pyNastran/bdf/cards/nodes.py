@@ -1645,7 +1645,7 @@ class POINT(BaseCard):
         position : (3,) float ndarray
             the position of the POINT in the globaly coordinate system
         """
-        p = self.cp.transform_node_to_global(self.xyz)
+        p = self.cp_ref.transform_node_to_global(self.xyz)
         return p
 
     def get_position_wrt(self, model, cid):
@@ -1670,7 +1670,7 @@ class POINT(BaseCard):
             return self.xyz
 
         # converting the xyz point arbitrary->global
-        p = self.cp.transform_node_to_global(self.xyz)
+        p = self.cp_ref.transform_node_to_global(self.xyz)
 
         # a matrix global->local matrix is found
         msg = ', which is required by POINT nid=%s' % (self.nid)

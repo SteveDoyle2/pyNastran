@@ -567,7 +567,7 @@ class CBAR(LineElement):
         unused_pid = self.Pid()
         unused_edges = self.get_edge_ids()
         if xref:  # True
-            assert self.pid_ref.type in ['PBAR', 'PBARL'], '%s%s' % (self, self.pid_ref)
+            assert self.pid_ref.type in ['PBAR', 'PBARL', 'PBRSECT'], '%s%s' % (self, self.pid_ref)
             mid = self.Mid()
             A = self.Area()
             nsm = self.Nsm()

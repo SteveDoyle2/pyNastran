@@ -1748,7 +1748,6 @@ class PBRSECT(LineProperty):
         self.nsm = 0.
         self.t = None
         self.outp = None
-        self.brp1 = None
 
         # int : int
         self.brps = {}
@@ -1756,7 +1755,13 @@ class PBRSECT(LineProperty):
 
         # int : floats
         self.ts = {}
-        for key, value in options.items():
+        assert isinstance(options, list), options
+        for key_value in options:
+            try:
+                key, value = key_value
+            except ValueError:
+                print(key_value)
+                raise
             key = key.upper()
 
             if key == 'NSM':
@@ -1783,7 +1788,7 @@ class PBRSECT(LineProperty):
                 index, out = split_arbitrary_thickness_section(key, value)
                 self.ts[index] = out
             elif key == 'T':
-                self.ts[0] = float(value)
+                self.ts[1] = float(value)
 
             #if key == 'NSM':
                 #self.nsm = float(value)
@@ -1797,11 +1802,12 @@ class PBRSECT(LineProperty):
                 raise NotImplementedError('PBRSECT.pid=%s key=%r value=%r' % (pid, key, value))
 
         self.mid_ref = None
+        self.brps_ref = {}
 
     def validate(self):
         assert self.form in ['GS', 'OP', 'CP'], 'pid=%s form=%r' % (self.pid, self.form)
 
-        assert self.outp is not None, 'form=%s outp=%s' % (self.form, self.outp)
+        #assert self.outp is not None, 'form=%s outp=%s' % (self.form, self.outp)
         if self.form == 'GS':
             assert len(self.inps) > 0, 'form=%s inps=%s' % (self.form, self.inps)
             assert len(self.brps) == 0, 'form=%s brps=%s' % (self.form, self.brps)
@@ -1829,13 +1835,13 @@ class PBRSECT(LineProperty):
 
         bdf_card = BDFCard(to_fields([line0], 'PBMSECT'))
         unused_line0_eq = line0[16:]
-        lines_joined = ''.join(card[1:]).replace(' ', '')
+        lines_joined = ','.join(card[1:]).replace(' ', '').replace(',,', ',')
 
         if lines_joined:
             fields = get_beam_sections(lines_joined)
-            slines = [field.split('=', 1) for field in fields]
+            options = [field.split('=', 1) for field in fields]
             #C:\MSC.Software\MSC.Nastran\msc20051\nast\tpl\zbr3.dat
-            #slines = [
+            #options = [
                 #[u'OUTP', u'201'],
                 #[u'T', u'1.0'],
                 #[u'BRP', u'202'],
@@ -1845,13 +1851,8 @@ class PBRSECT(LineProperty):
                 #[u'PT', u'(224'],
                 #[u'205)]'],
             #]
-            try:
-                options = {key : value for (key, value) in slines}
-            except:
-                print('PBRSECT slines=%s' % slines)
-                raise
         else:
-            options = {}
+            options = []
 
         pid = integer(bdf_card, 1, 'pid')
         mid = integer(bdf_card, 2, 'mid')
@@ -1884,12 +1885,39 @@ class PBRSECT(LineProperty):
         model : BDF()
             the BDF object
         """
-        msg = ', which is required by PBRSECT mid=%s' % self.mid
+        msg = ', which is required by PBMSECT mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
+
+        if self.outp is not None:
+            self.outp_ref = model.Set(self.outp)
+            self.outp_ref.cross_reference_set(model, 'Point', msg=msg)
+
+        if len(self.brps):
+            for key, brpi in self.brps.items():
+                brpi_ref = model.Set(brpi, msg=msg)
+                brpi_ref.cross_reference_set(model, 'Point', msg=msg)
+                self.brps_ref[key] = brpi_ref
+
+    def plot(self, model, figure_id=1, show=False):
+        class_name = self.__class__.__name__
+        form_map = {
+            'GS' : 'General Section',
+            'OP' : 'Open Profile',
+            'CP' : 'Closed Profile',
+        }
+        formi = ' form=%s' % form_map[self.form]
+        plot_arbitrary_section(
+            model, self,
+            self.inps, self.ts, self.brps_ref, self.nsm, self.outp_ref,
+            figure_id=figure_id,
+            title=class_name + ' pid=%s' % self.pid + formi,
+            show=show)
 
     def uncross_reference(self):
         self.mid = self.Mid()
         self.mid_ref = None
+        self.outp_ref = None
+        self.brps_ref = {}
 
     def _verify(self, xref):
         pid = self.pid
@@ -1951,14 +1979,16 @@ class PBRSECT(LineProperty):
     def repr_fields(self):
         """not done..."""
         list_fields = ['PBRSECT', self.pid, self.Mid(), self.form]
-        end = write_arbitrary_beam_section(self.inps, self.ts, self.brps, self.nsm, self.outp)
         return list_fields
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
-        if size == 8:
-            return self.comment + print_card_8(card)
-        return self.comment + print_card_16(card)
+        end = write_arbitrary_beam_section(self.inps, self.ts, self.brps, self.nsm, self.outp)
+        out = self.comment + print_card_8(card) + end
+        return out
+
+    def __repr__(self):
+        return self.write_card()
 
 
 class PBEAM3(LineProperty):  # not done, cleanup
@@ -2500,9 +2530,15 @@ def split_arbitrary_thickness_section(key, value):
     >>> out
     [1.2, [123, 204]]
     """
-    #if key.startswith('T('):
     assert key.endswith(')'), 'key=%r' % key
-    key_id = int(key[2:-1])
+    # T(3), CORE(3)
+    key_id = key[:-1].split('(', 1)[1]
+    key_id = int(key_id)
+
+    if isinstance(value, (int, float)):
+        return key_id, value
+
+    value = value.replace(' ', '')
     if 'PT' in value:
         bracketed_values = value.strip('[]')
         sline = bracketed_values.split(',', 1)
@@ -2525,9 +2561,9 @@ def get_beam_sections(line):
     >>> line = 'OUTP=10,BRP=20,T=1.0,T(11)=[1.2,PT=(123,204)], NSM=0.01'
     >>> sections = get_beam_sections(line)
     >>> sections
-    ['OUTP=10', 'BRP=20', 'T=1.0', 'T(11)=[1.2,PT=(123,204)'], sections
+    ['OUTP=10', 'BRP=20', 'T=1.0', 'T(11)=[1.2,PT=(123,204)', 'NSM=0.01'], sections
     """
-    line.replace(' ', '')
+    line = line.replace(' ', '')
     words = []
     i0 = None
     nopen_parantheses = 0
@@ -2549,16 +2585,25 @@ def get_beam_sections(line):
             words.append(word)
             i0 = i
         i += 1
+    word = line[i0:].strip(',')
+    if word:
+        words.append(word)
     return words
 
-def write_arbitrary_beam_section(inps, ts, brps, nsm, outp_id):
-    """helper for PBRSECT/PBMSECT"""
+def write_arbitrary_beam_section(inps, ts, brps, nsm, outp_id, core=None):
+    """writes the PBRSECT/PBMSECT card"""
     end = ''
-    for key, dicts in [('INP', inps), ('T', ts), ('BRP', brps)]:
+    for key, dicts in [('INP', inps), ('T', ts), ('BRP', brps), ('CORE', core)]:
+        if dicts is None:
+            continue
         # dicts = {int index : int/float value}
         for index, value1 in sorted(dicts.items()):
             if index == 0:
-                end += '        %s=%s,\n' % (key, value1)
+                if isinstance(value1, list):
+                    for value1i in value1:
+                        end += '        %s=%s,\n' % (key, value1i)
+                else:
+                    end += '        %s=%s,\n' % (key, value1)
             else:
                 if isinstance(value1, list):
                     assert len(value1) == 2, value1
@@ -2575,5 +2620,185 @@ def write_arbitrary_beam_section(inps, ts, brps, nsm, outp_id):
     if end:
         end = end[:-2] + '\n'
     return end
+
+def plot_arbitrary_section(model, self,
+                           inps, ts, brps, nsm, outp_ref,
+                           figure_id=1, title='', show=False):
+    """helper for PBRSECT/PBMSECT"""
+    import matplotlib.pyplot as plt
+    if ts:
+        try:
+            ts2 = {1 : ts[1]}
+        except KeyError:
+            print('ts =', ts)
+            print(self)
+            raise
+        for key, value in ts.items():
+            if key == 1:
+                ts2[key] = value
+            else:
+                thickness_value, section = value
+                p1, p2 = section
+                p1, p2 = min(p1, p2), max(p1, p2)
+                ts2[(p1, p2)] = thickness_value
+        ts = ts2
+
+    def _plot_rectangles(ax, sections, xy_dict, ts):
+        i = 0
+        for section in sections:
+            p1, p2 = section
+            #print(section, type(section))
+            #print(xy_dict)
+            out = xy_dict[section]
+            (x1, x2, y1, y2) = out
+            dy = y2 - y1
+            dx = x2 - x1
+            height = np.sqrt(dy**2 + dx**2)
+            angle = np.arctan2(dy, dx)
+            angle2 = angle + np.pi/2.
+            angled = np.degrees(angle)
+            angled2 = np.degrees(angle2)
+
+            #print(ts)
+            #print('section = %s' % str(section))
+            thickness = ts.get(section, ts[1])
+            assert isinstance(thickness, float), thickness
+
+            # rotate by 90 degrees
+            width = thickness
+            #print('angle[%i]=%.0f' % (i, np.degrees(angle)))
+
+            #width2 = height*np.cos(angle) - width*np.sin(angle)
+            #height2 = height*np.sin(angle) + width*np.cos(angle)
+            dx_height = 0.
+            dy_height = 0.
+            #dx_height = -width / 2. * np.sin(angle)
+            #dy_height = -width / 2. * np.cos(angle)
+            dx_width = 0. #-height / 2. * np.sin(angle2)
+            dy_width = 0. # -height / 2. * np.sin(angle2)
+            xy = (x1+dx_width+dx_height, y1+dy_width+dy_height)
+
+            #print('dxy_width = (%.2f,%.2f)' % (dx_width, dy_width))
+            #print('dxy_height = (%.2f,%.2f)' % (dx_height, dy_height))
+            #print('p1,2=(%s, %s) xy=(%.2f,%.2f) t=%s height=%s width=%s angled=%s\n' % (
+                #p1, p2, xy[0], xy[1], thickness, width, height, angled))
+
+
+            rect = plt.Rectangle(xy, height, width, angle=angled,
+                                 fill=True, alpha=1.2+0.15*i)
+            ax.add_patch(rect)
+            i += 1
+            #break
+
+    def add_to_sections(sections, xy, points, x, y):
+        i = 0
+        #print(points)
+        #print(x, y)
+        for i in range(len(points)-1):
+            p1 = points[i]
+            p2 = points[i+1]
+            x1 = x[i]
+            x2 = x[i+1]
+            y1 = y[i]
+            y2 = y[i+1]
+            p1, p2 = min(p1, p2), max(p1, p2)
+            sections.add((p1, p2))
+            xy[(p1, p2)] = (x1, x2, y1, y2)
+
+    fig = plt.figure(figure_id)
+    ax = fig.add_subplot(111, aspect='equal')
+    #print('outp:\n%s' % outp_ref)
+    out_points = outp_ref.ids
+    if self.form == 'CP' and out_points[0] != out_points[-1]:
+        out_points = out_points + [out_points[0]]
+
+    #out_points_ref = outp_ref.ids_ref
+    #print('out_points =', out_points)
+    #out_xyz = np.array([point.get_position() for point in out_points_ref])
+    out_xyz = np.array([model.points[point_id].get_position()
+                        for point_id in out_points])
+    #print('out_xyz:\n%s' % out_xyz)
+    sections = set([])
+    x = out_xyz[:, 0]
+    y = out_xyz[:, 1]
+    xy = {}
+    add_to_sections(sections, xy, out_points, x, y)
+    #print('x=%s y=%s' % (x, y))
+    ax.plot(x, y, '-o', label='OUTP')
+    all_points = {point_id : (xi, yi)
+                  for point_id, xi, yi in zip(out_points, x, y)}
+    #print('out_points =', out_points)
+    #print('all_points =', all_points)
+    #plt.show()
+
+    for key, thickness in ts.items():
+        if key == 1:
+            continue
+        #print(thickness)
+        section = key
+        #print(model.points)
+        #thickness_value, section = thickness
+        out_xyz = np.array([model.points[point_id].get_position()
+                            for point_id in section])
+        x = out_xyz[:, 0]
+        y = out_xyz[:, 1]
+        #print('adding t=%s section %s' % (thickness, str(section)))
+        #print(sections)
+
+        add_to_sections(sections, xy, section, x, y)
+        #print(sections)
+
+    if brps:
+        for key, brp_set_ref in brps.items():
+            brp_points = brp_set_ref.ids
+            brp_points_ref = brp_set_ref.ids_ref
+            brp_xyz = np.array([point.get_position() for point in brp_points_ref])
+            #print('branch = %s' % brp_points)
+            x = brp_xyz[:, 0]
+            y = brp_xyz[:, 1]
+            ax.plot(x, y, '-o', label='BRP(%i)' % key)
+            add_to_sections(sections, xy, brp_points, x, y)
+
+            for point_id, xi, yi in zip(brp_points, x, y):
+                all_points[point_id] = (xi, yi)
+
+    #print('xy =', xy)
+
+    if inps:
+        #print('inps! = %s' % inps)
+        for key, inp in inps.items():
+            if isinstance(inp, int):
+                inp = [inp]
+            for inpi in inp:
+                inp_ref = model.Set(inpi)
+                #inp_ref.cross_reference_set(model, 'Point', msg='')
+                inp_points = inp_ref.ids
+                #if inp_points[0] != inp_points[-1]:
+                    #inp_points = inp_points + [inp_points[0]]
+                #print('inp_points = %s' % inp_points)
+                #inp_points_ref = inp_ref.ids_ref
+                inp_xyz = np.array([model.points[point_id].get_position()
+                                    for point_id in inp_points])
+                #inp_xyz = np.array([point.get_position() for point in inp_points_ref])
+                #print('inp_xyz:\n%s' % (inp_xyz[:, :2]))
+                x = inp_xyz[:, 0]
+                y = inp_xyz[:, 1]
+                ax.plot(x, y, '--x', label='INP')
+
+
+    if ts:
+        _plot_rectangles(ax, sections, xy, ts)
+
+    #print('all_points =', all_points)
+    for point_id, xy in sorted(all_points.items()):
+        ax.annotate(str(point_id), xy=xy)
+
+    ax.grid(True)
+    ax.set_title(title)
+    ax.set_ylabel('Y')
+    ax.set_xlabel('X')
+    ax.legend()
+    if show:
+        plt.show()
 
 

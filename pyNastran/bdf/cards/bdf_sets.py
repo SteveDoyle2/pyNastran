@@ -894,8 +894,8 @@ class SET1(Set):
         #:  List of structural grid point or element identification numbers.
         #:  (Integer > 0 or 'THRU'; for the 'THRU' option, ID1 < ID2 or 'SKIN';
         #:  in field 3)
-        self.ids = expand_thru(ids)
-        self.clean_ids()
+        self.ids = expand_thru(ids, set_fields=False, sort_fields=False)
+        #self.clean_ids()
 
         self.is_skin = is_skin
         self.xref_type = None
@@ -1118,7 +1118,7 @@ class SET3(Set):
 
         #:  Identifiers of grids points, elements, points or properties.
         #:  (Integer > 0)
-        self.ids = expand_thru(ids)
+        self.ids = expand_thru(ids, set_fields=False, sort_fields=False)
         self.ids_ref = None
         self.xref_type = None
 

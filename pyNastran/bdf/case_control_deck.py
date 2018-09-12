@@ -523,7 +523,7 @@ class CaseControlDeck(object):
         for letter in line:
             if letter == '=':
                 equals_count += 1
-        line_upper = line.upper()
+        line_upper = line.upper().expandtabs()
 
         #print("line_upper = %r" % line)
         #print('  equals_count = %s' % equals_count)

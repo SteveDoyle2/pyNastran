@@ -715,7 +715,7 @@ def expand_thru(fields, set_fields=True, sort_fields=False):
             iend = int(fields[i + 1])
 
             # adding 1 to iend for the range offset
-            for j in range(istart, iend + 1):
+            for j in range(istart+1, iend + 1):
                 out.append(j)
             i += 2
         else:

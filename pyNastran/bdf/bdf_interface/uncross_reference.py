@@ -36,6 +36,8 @@ class UnXrefMesh(SafeXrefMesh):
         """uncross references the GRID objects"""
         for node in itervalues(self.nodes):
             node.uncross_reference()
+        for point in self.points.values():
+            point.uncross_reference()
 
     def _uncross_reference_coords(self):
         # type: () -> None

@@ -13,7 +13,9 @@ All optimization cards are defined in this file.  This includes:
 * dvmrels - DVMREL1, DVMREL2
 * dvprels - DVPREL1, DVPREL2
 * doptprm - DOPTPRM
-"""
+
+some missing optimization flags
+http://mscnastrannovice.blogspot.com/2014/06/msc-nastran-design-optimization-quick.html"""
 # pylint: disable=C0103,R0902,R0904,R0914
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -212,6 +214,13 @@ def validate_dvprel(prop_type, pname_fid, validate):
     #elif prop_type == 'CBEAM':
         #assert pname_fid in ['X1', 'X2', 'X3', 'W1A', 'W2A', 'W3A', 'W1B', 'W2B', 'W3B'], msg
     elif prop_type == 'PBEAM':
+        options1 = [
+            'I1', 'I2', 'A', 'J',
+            'C1', 'C2', 'D1', 'D2', 'E1', 'E2', 'F1', 'F2',
+            #-8, -9, -10, -14, -15, -16, -17, -18, -19, -20, -21,
+            #-168, -169, -170, -174, -175, -176, -177, -178, -179,
+            #-180, -181,
+        ]
         options = [
             'I1', 'I2', 'A', 'J',
             'I1(A)', 'I1(B)', 'I2(B)',
@@ -224,8 +233,12 @@ def validate_dvprel(prop_type, pname_fid, validate):
             pname_fid = update_pbeam_negative_integer(pname_fid)
 
         if isinstance(pname_fid, string_types):
-            word, num = break_word_by_trailing_parentheses_integer_ab(
-                pname_fid)
+            if pname_fid in options1:
+                word = pname_fid
+                num = 'A'
+            else:
+                word, num = break_word_by_trailing_parentheses_integer_ab(
+                    pname_fid)
         _check_dvprel_options(word, prop_type, options)
 
     elif prop_type == 'PBEAML':
@@ -344,7 +357,7 @@ def validate_dvprel(prop_type, pname_fid, validate):
         _check_dvprel_options(pname_fid, prop_type, options)
 
     elif prop_type == 'PBRSECT':
-        options = ['T']
+        options = ['T', 'W']
         _check_dvprel_options(pname_fid, prop_type, options)
 
     elif prop_type == 'PBMSECT':
@@ -4995,7 +5008,12 @@ def get_dvprel_key(dvprel, prop=None):
             msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
 
     elif prop_type == 'PBRSECT': # 3
-        if var_to_change in ['T']:
+        if var_to_change in ['T', 'W']:
+            pass
+        else:  # pragma: no cover
+            msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
+    elif prop_type == 'PBMSECT': # 3
+        if var_to_change in ['T', 'W', 'H']:
             pass
         else:  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)

@@ -317,6 +317,14 @@ class XrefMesh(BDFAttributes):
             except:
                 self.log.error("Couldn't cross reference GRID.\n%s" % (str(node)))
                 raise
+
+        for point in self.points.values():
+            try:
+                point.cross_reference(self)
+            except:
+                self.log.error("Couldn't cross reference POINT.\n%s" % (str(point)))
+                raise
+
         # SPOINTs, EPOINTs don't need xref
 
         # GRDPNT for mass calculations

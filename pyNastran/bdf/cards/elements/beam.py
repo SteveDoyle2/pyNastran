@@ -416,6 +416,10 @@ class CBEAM(LineElement):
             #mass_per_length = prop.MassPerLength()
             #m = mass_per_length * length
             #nsm = prop.nsm
+        elif prop.type == 'PBMSECT':
+            mass_per_length = 0.  ## TODO: fix me
+            nsm_per_length = prop.nsm
+            nsm_centroid = (p1 + p2) / 2.
         else:
             raise NotImplementedError(prop.type)
 

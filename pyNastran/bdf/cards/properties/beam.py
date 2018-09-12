@@ -21,7 +21,8 @@ from pyNastran.bdf.utils import to_fields
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.cards.properties.bars import (
     IntegratedLineProperty, LineProperty, _bar_areaL,
-    get_beam_sections, split_arbitrary_thickness_section, write_arbitrary_beam_section)
+    get_beam_sections, split_arbitrary_thickness_section, write_arbitrary_beam_section,
+    plot_arbitrary_section)
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank,
@@ -1608,10 +1609,17 @@ class PBMSECT(LineProperty):
         # int : int
         self.brps = {}
         self.inps = {}
+        self.core = {}
 
         # int : floats
         self.ts = {}
-        for key, value in options.items():
+        assert isinstance(options, list), options
+        for key_value in options:
+            try:
+                key, value = key_value
+            except ValueError:
+                print(key_value)
+                raise
             key = key.upper()
             if key == 'NSM':
                 self.nsm = float(value)
@@ -1622,7 +1630,9 @@ class PBMSECT(LineProperty):
                     key_id = int(key[4:-1])
                     self.inps[key_id] = int(value)
                 else:
-                    self.inps[0] = int(value)
+                    if 1 not in self.inps:
+                        self.inps[1] = []
+                    self.inps[1].append(int(value))
 
             elif key == 'OUTP':
                 self.outp = int(value)
@@ -1639,14 +1649,21 @@ class PBMSECT(LineProperty):
                 index, out = split_arbitrary_thickness_section(key, value)
                 self.ts[index] = out
             elif key == 'T':
-                self.ts[0] = float(value)
+                self.ts[1] = float(value)
+            elif key == 'CORE':
+                key = 'CORE(1)'
+                index, out = split_arbitrary_thickness_section(key, value)
+                self.core[index] = out
+            elif key.startswith(('CORE(', 'C(')):
+                index, out = split_arbitrary_thickness_section(key, value)
+                self.core[index] = out
             else:
                 raise NotImplementedError('PBMSECT.pid=%s key=%r value=%r' % (pid, key, value))
 
         assert self.outp is not None, 'options=%s' % str(options)
         self.mid_ref = None
         self.outp_ref = None
-        self.brp1_ref = None
+        self.brps_ref = {}
 
     def validate(self):
         assert self.form in ['GS', 'OP', 'CP'], 'pid=%s form=%r' % (self.pid, self.form)
@@ -1668,14 +1685,13 @@ class PBMSECT(LineProperty):
             line0 = line0.expandtabs()
         bdf_card = BDFCard(to_fields([line0], 'PBMSECT'))
         #line0_eq = line0[16:]
-        lines_joined = ''.join(card[1:]).replace(' ', '')
+        lines_joined = ','.join(card[1:]).replace(' ', '').replace(',,', ',')
 
         if lines_joined:
             fields = get_beam_sections(lines_joined)
-            slines = [field.split('=', 1) for field in fields]
-            options = {key : value for (key, value) in slines}
+            options = [field.split('=', 1) for field in fields]
         else:
-            options = {}
+            options = []
 
         pid = integer(bdf_card, 1, 'pid')
         mid = integer(bdf_card, 2, 'mid')
@@ -1714,9 +1730,27 @@ class PBMSECT(LineProperty):
         self.outp_ref = model.Set(self.outp)
         self.outp_ref.cross_reference_set(model, 'Point', msg=msg)
 
+        self.brps_ref = {}
         if len(self.brps):
-            self.brp1_ref = model.Set(self.brp1)
-            self.brp1_ref.cross_reference_set(model, 'Point', msg=msg)
+            for key, brpi in self.brps.items():
+                brpi_ref = model.Set(brpi, msg=msg)
+                brpi_ref.cross_reference_set(model, 'Point', msg=msg)
+                self.brps_ref[key] = brpi_ref
+
+    def plot(self, model, figure_id=1, show=False):
+        class_name = self.__class__.__name__
+        form_map = {
+            'GS' : 'General Section',
+            'OP' : 'Open Profile',
+            'CP' : 'Closed Profile',
+        }
+        formi = ' form=%s' % form_map[self.form]
+        plot_arbitrary_section(
+            model, self,
+            self.inps, self.ts, self.brps_ref, self.nsm, self.outp_ref,
+            figure_id=figure_id,
+            title=class_name + ' pid=%s' % self.pid + formi,
+            show=show)
 
     @property
     def outp_id(self):
@@ -1724,17 +1758,17 @@ class PBMSECT(LineProperty):
             return self.outp_ref.sid
         return self.outp
 
-    @property
-    def brp1_id(self):
-        if self.brp1_ref is not None:
-            return self.brp1_ref.sid
-        return self.brp1
+    #@property
+    #def brp1_id(self):
+        #if self.brp1_ref is not None:
+            #return self.brp1_ref.sid
+        #return self.brp1
 
     def uncross_reference(self):
         self.mid = self.Mid()
         self.mid_ref = None
         self.outp_ref = None
-        self.brp1_ref = None
+        self.brps_ref = {}
 
     def _verify(self, xref):
         pid = self.Pid()
@@ -1799,9 +1833,14 @@ class PBMSECT(LineProperty):
 
     def write_card(self, size=8, is_double=False):
         card = ['PBMSECT', self.pid, self.Mid(), self.form]
-        end = write_arbitrary_beam_section(self.inps, self.ts, self.brps, self.nsm, self.outp_id)
+        end = write_arbitrary_beam_section(
+            self.inps, self.ts, self.brps, self.nsm, self.outp_id, self.core)
         out = self.comment + print_card_8(card) + end
         return out
+
+    def __repr__(self):
+        return self.write_card()
+
 
 class PBCOMP(LineProperty):
     """

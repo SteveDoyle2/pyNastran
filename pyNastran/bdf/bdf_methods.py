@@ -160,7 +160,7 @@ class BDFMethods(BDFAttributes):
                         areas = [area]
             elif prop.type in skip_props:
                 pass
-            elif prop.type in ['PBRSECT']:
+            elif prop.type in ['PBRSECT', 'PBMSECT']:
                 self.log.warning('skipping:\n%s' % prop)
                 continue
             else:
@@ -252,7 +252,7 @@ class BDFMethods(BDFAttributes):
                 volumes.extend(volumesi)
             elif prop.type in no_volume:
                 pass
-            elif prop.type in ['PBRSECT']:
+            elif prop.type in ['PBRSECT', 'PBMSECT']:
                 self.log.warning('skipping:\n%s' % prop)
                 continue
             else:
@@ -390,7 +390,7 @@ class BDFMethods(BDFAttributes):
                         masses_nonstructural.append(area * nsm)
                     else:
                         masses.append(area * (rho * thickness + nsm))
-            elif prop.type in ['PBRSECT']:
+            elif prop.type in ['PBRSECT', 'PBMSECT']:
                 self.log.warning('skipping:\n%s' % prop)
                 continue
             else:
