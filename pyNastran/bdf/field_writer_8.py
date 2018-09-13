@@ -123,8 +123,8 @@ def print_float_8(value):
             if len(field2) <= 8 and float(field1) == float(field2):
                 field = field2
                 field = field.strip(' 0')
-        elif value < 0.1:
-            field = "%8.7f" % value
+        #elif value < 0.1:
+            #field = "%8.7f" % value
         elif value < 1.:
             field = "%8.7f" % value  # same as before...
         elif value < 10.:
@@ -164,10 +164,10 @@ def print_float_8(value):
                 field = field2.rstrip(' 0')
                 field = field.replace('-0.', '-.')
 
-        elif value > -0.1:
+        #elif value > -0.1:
             # -0.01 >x>-0.1...should be 5 (maybe scientific...)
-            field = "%8.6f" % value
-            field = field.replace('-0.', '-.')
+            #field = "%8.6f" % value
+            #field = field.replace('-0.', '-.')
         elif value > -1.:
             # -0.1  >x>-1.....should be 6, but the baseline 0 is kept...
             field = "%8.6f" % value
