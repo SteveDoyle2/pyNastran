@@ -288,6 +288,12 @@ class TestAssignType(unittest.TestCase):
         self.assertEqual(2, method(BDFCard(['2']), 0, 'field'))
         self.assertEqual(-1, method(BDFCard(['-1']), 0, 'field'))
 
+        #if check_space:
+        with self.assertRaises(SyntaxError):
+            method(BDFCard(['1 3']), 0, 'field')
+        with self.assertRaises(SyntaxError):
+            method(BDFCard(['-1 3']), 0, 'field')
+
     def check_double(self, method):
         """common double checks"""
         method(BDFCard([3.0]), 0, 'field')
@@ -319,17 +325,25 @@ class TestAssignType(unittest.TestCase):
         self.assertEqual(1.e-9, method(BDFCard(['1.D-9']), 0, 'field'))
         self.assertEqual(1.e+9, method(BDFCard(['1.D+9']), 0, 'field'))
 
+        #if check_space:
+        with self.assertRaises(SyntaxError):
+            method(BDFCard(['-9. 31-4']), 0, 'field')
 
-    def check_string(self, method, dash=True):
+
+    def check_string(self, method, check_dash=True):
         """common string checks"""
         self.assertEqual('A', method(BDFCard(['a']), 0, 'field'))
         self.assertEqual('B1', method(BDFCard(['b1']), 0, 'field'))
         self.assertEqual('C', method(BDFCard(['C']), 0, 'field'))
         self.assertEqual('FROG', method(BDFCard(['FROG']), 0, 'field'))
 
-        if dash:
+        if check_dash:
             self.assertEqual('VONE-MIS', method(BDFCard(['VONE-MIS']), 0, 'field'))
         self.assertEqual('VONE_MIS', method(BDFCard(['VONE_MIS']), 0, 'field'))
+
+        with self.assertRaises(SyntaxError):
+            method(BDFCard(['VON MISES']), 0, 'field')
+        #with self.assertRaises(Syntt)
 
     def check_blank(self, method):
         """common blank checks"""
@@ -372,7 +386,7 @@ class TestAssignType(unittest.TestCase):
         self.assertEqual(1.e+9, double_or_string(BDFCard(['1+9']), 0, 'field'))
 
         self.check_double(double_or_string)
-        self.check_string(double_or_string, dash=False)
+        self.check_string(double_or_string, check_dash=False)
 
     def test_double_string_or_blank(self):
         """tests the double_string_or_blank function"""
@@ -394,7 +408,7 @@ class TestAssignType(unittest.TestCase):
         self.assertEqual(double_string_or_blank(BDFCard(['  ']), 0, 'field'), None)
 
         self.check_double(double_string_or_blank)
-        self.check_string(double_string_or_blank, dash=False)
+        self.check_string(double_string_or_blank, check_dash=False)
         self.check_blank(double_string_or_blank)
 
     def test_integer_or_double(self):

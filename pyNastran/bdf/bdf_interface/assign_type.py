@@ -229,6 +229,10 @@ def integer_double_string_or_blank(card, ifield, fieldname, default=None):
                        'or string (not %s).\n'
                        'card=%s' % (fieldname, svalue, ifield, dtype, card))
                 raise SyntaxError(msg)
+        elif ' ' in svalue:
+            raise SyntaxError('%s = %r (field #%s) on card must be an integer, float or string '
+                              '(without a blank space).\n'
+                              'card=%s' % (fieldname, svalue, ifield, card))
         else:
             value = svalue
         return value
@@ -484,12 +488,12 @@ def double_or_string(card, ifield, fieldname):
         if ' ' in svalue:
             dtype = _get_dtype(svalue)
             raise SyntaxError('%s = %r (field #%s) on card must be an float or '
-                              'string without a blank space (not %s).\n'
+                              'string (without a blank space; not %s).\n'
                               'card=%s' % (fieldname, svalue, ifield, dtype, card))
         elif svalue[0].isdigit() or '.' in svalue or '+' in svalue or '-' in svalue:
             dtype = _get_dtype(svalue)
             raise SyntaxError('%s = %r (field #%s) on card must be an float or '
-                              'string without a blank space (not %s).\n'
+                              'string (without a blank space; not %s).\n'
                               'card=%s' % (fieldname, svalue, ifield, dtype, card))
         return str(svalue)
     dtype = _get_dtype(svalue)
@@ -546,6 +550,11 @@ def double_string_or_blank(card, ifield, fieldname, default=None):
                           'card=%s' % (fieldname, svalue, ifield, dtype, card))
     elif svalue == '':
         return default
+    if ' ' in svalue:
+        dtype = _get_dtype(svalue)
+        raise SyntaxError('%s = %r (field #%s) on card must be an float, '
+                          'string (without a blank space) or blank (not %s).\n'
+                          'card=%s' % (fieldname, svalue, ifield, dtype, card))
     return svalue
 
 def integer_or_double(card, ifield, fieldname):
@@ -671,6 +680,11 @@ def integer_or_string(card, ifield, fieldname):
                           'strings must start with a character).\n'
                           'card=%s' % (fieldname, svalue, ifield, dtype, card))
 
+    elif ' ' in svalue:
+        raise SyntaxError('%s = %r (field #%s) on card must be an integer or string '
+                          '(without a blank space).\n'
+                          'card=%s' % (fieldname, svalue, ifield, card))
+
     # string
     try:
         value = double(card, ifield, fieldname)
@@ -716,7 +730,7 @@ def integer_string_or_blank(card, ifield, fieldname, default=None):
         except:
             dtype = _get_dtype(svalue)
             raise SyntaxError('%s = %r (field #%s) on card must be an integer, '
-                              'string (without a blank), or blank (not %s).\n'
+                              'string (without a blank space), or blank (not %s).\n'
                               'card=%s' % (fieldname, svalue, ifield, dtype, card))
     return default
 
@@ -1020,10 +1034,10 @@ def interpret_value(value_raw, card=''):
         sci0 = factor * float(sline[0])
         sci1 = exp_factor * int(sline[1])
     except ValueError:
-        msg = "vm=%s vp=%s value_raw=%r sline=%s" % (val_minus, val_plus, value_raw, sline)
-        raise SyntaxError('cannot parse sline[0] into a float and sline[1] '
+        msg = "val_minus=%s val_plus=%s value_raw=%r" % (val_minus, val_plus, value_raw)
+        raise SyntaxError("cannot parse '%s' into a float and '%s' "
                           'into an integer\n%s\nYou HAVE mixed '
-                          'tabs/spaces/commas!  Fix it!' % msg)
+                          'tabs/spaces/commas!' % (sline[0], sline[1], msg))
 
     value = sci0 * 10 ** sci1
     # scientific
