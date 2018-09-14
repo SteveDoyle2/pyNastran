@@ -579,9 +579,9 @@ def _get_mass_nsm(model, element_ids, mass_ids,
                 lengths['PROD'].append(length)
             #m = (mpl + nsm) * length
             massi = mpl * length
-            if massi != elem.Mass():  # pragma: no cover
-                msg = 'mass_new=%s mass_old=%s\n%s' % (massi, elem.Mass(), str(elem))
-                raise RuntimeError(msg)
+            #if massi != elem.Mass():  # pragma: no cover
+                #msg = 'mass_new=%s mass_old=%s\n%s' % (massi, elem.Mass(), str(elem))
+                #raise RuntimeError(msg)
             if eid in element_ids:
                 mass = _increment_inertia(centroid, reference_point, massi, mass, cg, I)
     elif etype == 'CTUBE':
@@ -598,9 +598,9 @@ def _get_mass_nsm(model, element_ids, mass_ids,
             #nsm = property_nsms[nsm_id]['PTUBE'][pid] + element_nsms[nsm_id][eid]
             #m = (mpl + nsm) * length
             massi = mpl * length
-            if massi != elem.Mass():  # pragma: no cover
-                msg = 'mass_new=%s mass_old=%s\n%s' % (massi, elem.Mass(), str(elem))
-                raise RuntimeError(msg)
+            #if massi != elem.Mass():  # pragma: no cover
+                #msg = 'mass_new=%s mass_old=%s\n%s' % (massi, elem.Mass(), str(elem))
+                #raise RuntimeError(msg)
             if eid in element_ids:
                 mass = _increment_inertia(centroid, reference_point, massi, mass, cg, I)
     elif etype == 'CBAR':
@@ -618,11 +618,11 @@ def _get_mass_nsm(model, element_ids, mass_ids,
             #nsm = property_nsms[nsm_id]['PBAR'][pid] + element_nsms[nsm_id][eid]
             #m = (mpl + nsm) * length
             massi = mpl * length
-            if massi != elem.Mass() or not np.array_equal(centroid, elem.Centroid()):  # pragma: no cover
-                msg = 'mass_new=%s mass_old=%s\n' % (massi, elem.Mass())
-                msg += 'centroid_new=%s centroid_old=%s\n%s' % (
-                    str(centroid), str(elem.Centroid()), str(elem))
-                raise RuntimeError(msg)
+            #if massi != elem.Mass() or not np.array_equal(centroid, elem.Centroid()):  # pragma: no cover
+                #msg = 'mass_new=%s mass_old=%s\n' % (massi, elem.Mass())
+                #msg += 'centroid_new=%s centroid_old=%s\n%s' % (
+                    #str(centroid), str(elem.Centroid()), str(elem))
+                #raise RuntimeError(msg)
             if eid in element_ids:
                 mass = _increment_inertia(centroid, reference_point, massi, mass, cg, I)
 
@@ -690,11 +690,11 @@ def _get_mass_nsm(model, element_ids, mass_ids,
             #nsm = property_nsms[nsm_id]['PSHEAR'][pid] + element_nsms[nsm_id][eid]
             #m = area * (mpa + nsm)
             m = area * mpa
-            if m != elem.Mass() or not np.array_equal(centroid, elem.Centroid()):  # pragma: no cover
-                msg = 'mass_new=%s mass_old=%s\n' % (m, elem.Mass())
-                msg += 'centroid_new=%s centroid_old=%s\n%s' % (
-                    str(centroid), str(elem.Centroid()), str(elem))
-                raise RuntimeError(msg)
+            #if m != elem.Mass() or not np.array_equal(centroid, elem.Centroid()):  # pragma: no cover
+                #msg = 'mass_new=%s mass_old=%s\n' % (m, elem.Mass())
+                #msg += 'centroid_new=%s centroid_old=%s\n%s' % (
+                    #str(centroid), str(elem.Centroid()), str(elem))
+                #raise RuntimeError(msg)
             if eid in element_ids:
                 mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
     elif etype in ['CONM1', 'CONM2', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4']:
@@ -714,11 +714,11 @@ def _get_mass_nsm(model, element_ids, mass_ids,
             #V = -dot(n1 - n4, cross(n2 - n4, n3 - n4)) / 6.
             volume = -dot(xyz[n1] - xyz[n4], cross(xyz[n2] - xyz[n4], xyz[n3] - xyz[n4])) / 6.
             m = elem.Rho() * volume
-            if m != elem.Mass() or not np.array_equal(centroid, elem.Centroid()):  # pragma: no cover
-                msg = 'mass_new=%s mass_old=%s\n' % (m, elem.Mass())
-                msg += 'centroid_new=%s centroid_old=%s\n%s' % (
-                    str(centroid), str(elem.Centroid()), str(elem))
-                raise RuntimeError(msg)
+            #if m != elem.Mass() or not np.array_equal(centroid, elem.Centroid()):  # pragma: no cover
+                #msg = 'mass_new=%s mass_old=%s\n' % (m, elem.Mass())
+                #msg += 'centroid_new=%s centroid_old=%s\n%s' % (
+                    #str(centroid), str(elem.Centroid()), str(elem))
+                #raise RuntimeError(msg)
             if eid in element_ids:
                 mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
 
@@ -762,11 +762,11 @@ def _get_mass_nsm(model, element_ids, mass_ids,
             centroid = (centroid1 + centroid2) / 2.
             volume = (area1 + area2) / 2. * norm(centroid1 - centroid2)
             m = elem.Rho() * volume
-            if m != elem.Mass() or not np.array_equal(centroid, elem.Centroid()):  # pragma: no cover
-                msg = 'mass_new=%s mass_old=%s\n' % (m, elem.Mass())
-                msg += 'centroid_new=%s centroid_old=%s\n%s' % (
-                    str(centroid), str(elem.Centroid()), str(elem))
-                raise RuntimeError(msg)
+            #if m != elem.Mass() or not np.array_equal(centroid, elem.Centroid()):  # pragma: no cover
+                #msg = 'mass_new=%s mass_old=%s\n' % (m, elem.Mass())
+                #msg += 'centroid_new=%s centroid_old=%s\n%s' % (
+                    #str(centroid), str(elem.Centroid()), str(elem))
+                #raise RuntimeError(msg)
             #print('*eid=%s type=%s mass=%s rho=%s V=%s' % (
                 #elem.eid, 'CPENTA', m, elem.Rho(), volume))
             if eid in element_ids:
@@ -787,11 +787,11 @@ def _get_mass_nsm(model, element_ids, mass_ids,
             volume = (area1 + area2) / 2. * norm(centroid1 - centroid2)
             m = elem.Rho() * volume
             centroid = (centroid1 + centroid2) / 2.
-            if m != elem.Mass() or not np.array_equal(centroid, elem.Centroid()):  # pragma: no cover
-                msg = 'mass_new=%s mass_old=%s\n' % (m, elem.Mass())
-                msg = 'centroid_new=%s centroid_old=%s\n%s' % (
-                    str(centroid), str(elem.Centroid()), str(elem))
-                raise RuntimeError(msg)
+            #if m != elem.Mass() or not np.array_equal(centroid, elem.Centroid()):  # pragma: no cover
+                #msg = 'mass_new=%s mass_old=%s\n' % (m, elem.Mass())
+                #msg = 'centroid_new=%s centroid_old=%s\n%s' % (
+                    #str(centroid), str(elem.Centroid()), str(elem))
+                #raise RuntimeError(msg)
             #print('*centroid1=%s centroid2=%s' % (str(centroid1), str(centroid2)))
             #print('*area1=%s area2=%s length=%s' % (area1, area2, norm(centroid1 - centroid2)))
             #print('*eid=%s type=%s mass=%s rho=%s V=%s' % (
@@ -1115,18 +1115,20 @@ def _get_quad_mass(model, xyz, element_ids, all_eids,
                 str(centroid), str(elem.Centroid()), str(elem))
             raise RuntimeError(msg)
         #elem = model.elements[eid]
-        mass_expected = elem.Mass()
-        if not np.allclose(m, mass_expected):  # pragma: no cover
-            msg = 'massi=%s expected=%s' % (m, mass_expected)
-            for node in elem.nodes_ref:
-                node.comment = ''
-            elem.comment = ''
-            prop.comment = ''
-            prop.mid1_ref.comment = ''
-            msg += elem.get_stats()
-            msg += prop.get_stats()
-            msg += prop.mid_ref.get_stats()
-            raise RuntimeError(msg)
+
+        #mass_expected = elem.Mass()
+        #if not np.allclose(m, mass_expected):  # pragma: no cover
+            #msg = 'massi=%s expected=%s' % (m, mass_expected)
+            #for node in elem.nodes_ref:
+                #node.comment = ''
+            #elem.comment = ''
+            #prop.comment = ''
+            #prop.mid1_ref.comment = ''
+            #msg += elem.get_stats()
+            #msg += prop.get_stats()
+            #msg += prop.mid_ref.get_stats()
+            #raise RuntimeError(msg)
+
         #print(elem)
         #print(prop)
         #print('eid=%s type=%s mass=%s; area=%s mpa=%s'  % (elem.eid, elem.type, m, area, mpa))

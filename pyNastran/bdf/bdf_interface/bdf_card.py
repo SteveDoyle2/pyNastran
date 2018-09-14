@@ -112,8 +112,8 @@ class BDFCard(object):
         if defaults is None:
             defaults = []
         if j is None:
-            if self.nfields is None:
-                return [None]
+            #if self.nfields is None:
+                #return [None]
             j = self.nfields
 
         if defaults == []:
@@ -147,6 +147,4 @@ class BDFCard(object):
         if i < self.nfields and self.card[i] is not None and self.card[i] is not '':
             return self.card[i]
         else:
-            #if default is None:
-                #return u''
             return default
