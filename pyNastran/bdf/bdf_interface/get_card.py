@@ -2325,6 +2325,9 @@ class GetCard(GetMethods):
         pids = self.property_ids
         for pid in pids:
             pid_to_eids_map[pid] = []
+        for pid in self.phbdys.keys():
+            assert pid not in pid_to_eids_map, 'pid=%s is already used and must be used by PHBDY' % pid
+            pid_to_eids_map[pid] = []
 
         for eid in self.element_ids:
             element = self.Element(eid)

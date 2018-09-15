@@ -142,6 +142,11 @@ class BDFAttributes(object):
         self.loads = {}  # type: Dict[int, List[Any]]
         self.load_combinations = {}  # type: Dict[int, List[Any]]
 
+    def reset_errors(self):
+        """removes the errors from the model"""
+        self._ixref_errors = 0
+        self._stored_xref_errors = []
+
     def __init_attributes(self):
         # type: () -> None
         """
@@ -152,9 +157,7 @@ class BDFAttributes(object):
         References:
           1.  http://www.mscsoftware.com/support/library/conf/wuc87/p02387.pdf
         """
-        self._ixref_errors = 0
-        self._stored_xref_errors = []
-
+        self.reset_errors()
         self.bdf_filename = None
         self.punch = None
         self._encoding = None

@@ -1,0 +1,369 @@
+ID NX Nastran, resvec23
+$
+$ DESCRIPTION - Case control RESVEC test for multi-level
+$               superelement.
+$
+$ SOLUTION    - 103
+$
+$
+SOL 103
+diag 8,15
+CEND
+TITLE = S.E. residual vector, single level
+$
+METHOD = 2
+resvec(applod,rvdof) = yes
+SUBCASE 10
+  SUPER = 1
+  METHOD = 1
+  resvec(noappl,rvdof) = yes
+SUBCASE 11
+  SUPER = 2
+  METHOD = 1
+  resvec(applod,norvdo) = yes
+SUBCASE 20
+  SUPER = 3
+  METHOD = 3
+  resvec(applod,rvdof) = nocomponent
+SUBCASE 21
+  SUPER = 4
+  METHOD = 3
+  resvec(applod,rvdof) = nosystem
+SUBCASE 30
+  SET 56 = 5,6
+  SUPER = 56
+SUBCASE 40
+  SUPER = 7
+  $resvec(noinrl,rvdof,applod) = yes
+  resvec(inrlod,norvdo,noappl) = yes
+  $resvec(inrlod,rvdof,applod) = yes
+  $resvec(inrlod,norvdo,applod) = yes
+  $resvec(inrlod,rvdof,noappl) = yes
+SUBCASE 50
+  SUPER = 0
+  LABEL = RES STR - SOLVE PROBLEM FOR SYSTEM MODES
+  METHOD = 4
+  resvec(applod,rvdof) = system
+BEGIN BULK
+RLOAD2  1       401                     200
+RLOAD2  2       402                     200
+RLOAD2  3       403                     200
+RLOAD2  4       404                     200
+RLOAD2  5       405                     200
+RLOAD2  6       406                     200
+TABLED1 200                                                             +TBL1
++TBL1   0.      1.0     100.    1.0     ENDT
+force,401,23,,1.,0.,0.,1.
+force,402,29,,1.,0.,0.,1.
+force,403,41,,1.,0.,0.,1.
+force,404,93,,1.,0.,0.,1.
+force,405,99,,1.,0.,0.,1.
+force,406,7,,1.,0.,0.,1.
+$
+rvdof1,3,6,19,21,26,28,31,98,104
+rvdof,104,1
+$
+eigrl,1,,1000.
+eigrl,2,,2000.
+eigrl,3,,4000.
+eigrl,4,,100.
+GRID        1001
+GRID        1002
+GRID        1003
+GRID        1004
+GRID        1005
+GRID        1006
+GRID        1007
+GRID        1008
+GRID        1009
+GRID        1010
+GRID        1011
+GRID        1012
+GRID        1013
+GRID        1014
+GRID        1015
+GRID        1016
+GRID        1017
+GRID        1018
+GRID        1019
+GRID        1020
+GRID        1021
+GRID        1022
+GRID        1023
+GRID        1024
+GRID        1025
+GRID        1026
+GRID        1027
+$
+$  DEFINE QSET DOF FOR S.E.
+$
+$qset1,0,100001,thru,100010
+$spoint,100001,thru,100010
+SEQSET1,1,12345,1001,1002,1003
+SEQSET1,2,12345,1004,1005,1006
+SEQSET1,3,12345,1007,1008,1009,1010
+SEQSET1,4,12345,1011,1012,1013,1014
+SEQSET1,5,12345,1015,1016,1017,1018,1019,1020
+SEQSET1,6,12345,1020,1021,1022,1023,1024,1025
+SEQSET1,7,12345,1026,1027
+$
+$ DEFINE S.E. - ONLY CHANGES ARE INCLUSION OF BOUNDARY GRIDS AND SEQSET
+$               IN DOWNSTREAM S.E. AND DTI,SETREE CARD
+$
+DTI,SETREE,1,1,3,2,4,3,5,+SETRE1
++SETRE1,4,6,5,0,6,0,7,0
+$
+SESET,1,33,34,37,38
+SESET,1,45,THRU,50
+SESET,1,57,THRU,62
+SESET,1,69,THRU,74
+SESET,1,81,THRU,86
+SESET,1,93,THRU,98
+$
+SESET,2,39,40,43,44
+SESET,2,51,THRU,56
+SESET,2,63,THRU,68
+SESET,2,75,THRU,80
+SESET,2,87,THRU,92
+SESET,2,99,THRU,104
+$
+$ ADD BOUNDARY GRIDS AND UPSTREAM MODES TO DOWNSTREAM S.E.
+$
+SESET,3,35,36
+SESET,3,29,30
+SESET,3,1001,1002,1003
+$
+$ ADD BOUNDARY GRIDS AND UPSTREAM MODES TO DOWNSTREAM S.E.
+$
+SESET,4,41,42
+SESET,4,31,32
+SESET,4,1004,1005,1006
+$
+$ ADD BOUNDARY GRIDS AND UPSTREAM MODES TO DOWNSTREAM S.E.
+$
+SESET,5,19,20
+SESET,5,21,22
+SESET,5,9,THRU,12
+SESET,5,1007,1008,1009,1010
+$
+$ ADD BOUNDARY GRIDS AND UPSTREAM MODES TO DOWNSTREAM S.E.
+$
+SESET,6,27,28
+SESET,6,25,26
+SESET,6,15,THRU,18
+SESET,6,1011,1012,1013,1014
+$
+SESET,7,1,THRU,8
+$
+$ *******************************************************************
+$  BASIC MODEL DEFINITION - SAME FOR ALL RUNS
+$ *******************************************************************
+$
+$GRDSET,1,2,3,4,5,,6
+GRDSET,,,,,,,6
+GRID,1,,-.4,0.,0.,,123456
+GRID           3            -0.4     0.9     0.0
+GRID           5            -0.4     1.8     0.0
+GRID           7            -0.4     2.7     0.0
+GRID,2,,.4,0.,0.,,123456
+GRID           4             0.4     0.9     0.0
+GRID           6             0.4     1.8     0.0
+GRID           8             0.4     2.7     0.0
+GRID           9            -3.6     3.6     0.0
+GRID          10            -2.8     3.6     0.0
+GRID          11            -2.0     3.6     0.0
+GRID          12            -1.2     3.6     0.0
+GRID          13            -0.4     3.6     0.0
+GRID          14             0.4     3.6     0.0
+GRID          15             1.2     3.6     0.0
+GRID          16             2.0     3.6     0.0
+GRID          17             2.8     3.6     0.0
+GRID          18             3.6     3.6     0.0
+GRID          19            -3.6     4.4     0.0
+GRID          20            -2.8     4.4     0.0
+GRID          21            -2.0     4.4     0.0
+GRID          22            -1.2     4.4     0.0
+GRID          23            -0.4     4.4     0.0
+GRID          24             0.4     4.4     0.0
+GRID          25             1.2     4.4     0.0
+GRID          26             2.0     4.4     0.0
+GRID          27             2.8     4.4     0.0
+GRID          28             3.6     4.4     0.0
+GRID,29,,-3.6,5.2,0.
+GRID,30,,-2.8,5.2,0.
+GRID,31,,2.8,5.2,0.
+GRID,32,,3.6,5.2,0.
+GRID          33            -5.2     6.0     0.0
+GRID          34            -4.4     6.0     0.0
+GRID          35            -3.6     6.0     0.0
+GRID          36            -2.8     6.0     0.0
+GRID          37            -2.0     6.0     0.0
+GRID          38            -1.2     6.0     0.0
+GRID          39             1.2     6.0     0.0
+GRID          40             2.0     6.0     0.0
+GRID          41             2.8     6.0     0.0
+GRID          42             3.6     6.0     0.0
+GRID          43             4.4     6.0     0.0
+GRID          44             5.2     6.0     0.0
+GRID          45            -5.2     6.8     0.0
+GRID          46            -4.4     6.8     0.0
+GRID          47            -3.6     6.8     0.0
+GRID          48            -2.8     6.8     0.0
+GRID          49            -2.0     6.8     0.0
+GRID          50            -1.2     6.8     0.0
+GRID          51             1.2     6.8     0.0
+GRID          52             2.0     6.8     0.0
+GRID          53             2.8     6.8     0.0
+GRID          54             3.6     6.8     0.0
+GRID          55             4.4     6.8     0.0
+GRID          56             5.2     6.8     0.0
+GRID          57            -5.2     7.6     0.0
+GRID          58            -4.4     7.6     0.0
+GRID          59            -3.6     7.6     0.0
+GRID          60            -2.8     7.6     0.0
+GRID          61            -2.0     7.6     0.0
+GRID          62            -1.2     7.6     0.0
+GRID          63             1.2     7.6     0.0
+GRID          64             2.0     7.6     0.0
+GRID          65             2.8     7.6     0.0
+GRID          66             3.6     7.6     0.0
+GRID          67             4.4     7.6     0.0
+GRID          68             5.2     7.6     0.0
+GRID          69            -5.2     8.4     0.0
+GRID          70            -4.4     8.4     0.0
+GRID          71            -3.6     8.4     0.0
+GRID          72            -2.8     8.4     0.0
+GRID          73            -2.0     8.4     0.0
+GRID          74            -1.2     8.4     0.0
+GRID          75             1.2     8.4     0.0
+GRID          76             2.0     8.4     0.0
+GRID          77             2.8     8.4     0.0
+GRID          78             3.6     8.4     0.0
+GRID          79             4.4     8.4     0.0
+GRID          80             5.2     8.4     0.0
+GRID          81            -5.2     9.2     0.0
+GRID          82            -4.4     9.2     0.0
+GRID          83            -3.6     9.2     0.0
+GRID          84            -2.8     9.2     0.0
+GRID          85            -2.0     9.2     0.0
+GRID          86            -1.2     9.2     0.0
+GRID          87             1.2     9.2     0.0
+GRID          88             2.0     9.2     0.0
+GRID          89             2.8     9.2     0.0
+GRID          90             3.6     9.2     0.0
+GRID          91             4.4     9.2     0.0
+GRID          92             5.2     9.2     0.0
+GRID          93            -5.2    10.0     0.0
+GRID          94            -4.4    10.0     0.0
+GRID          95            -3.6    10.0     0.0
+GRID          96            -2.8    10.0     0.0
+GRID          97            -2.0    10.0     0.0
+GRID          98            -1.2    10.0     0.0
+GRID          99             1.2    10.0     0.0
+GRID         100             2.0    10.0     0.0
+GRID         101             2.8    10.0     0.0
+GRID         102             3.6    10.0     0.0
+GRID         103             4.4    10.0     0.0
+GRID         104             5.2    10.0     0.0
+$
+$  ELEMENTS
+$
+cdamp2,101,.1,1,1,2,1
+cdamp2,102,.1,1,2,2,2
+cdamp2,103,.1,1,3,2,3
+
+cdamp2,201,.1,51,1,54,1
+cdamp2,202,.1,51,2,54,2
+cdamp2,203,.1,51,3,54,3
+
+CQUAD4         1       1       1       2       4       3
+CQUAD4         2       1       3       4       6       5
+CQUAD4         3       1       5       6       8       7
+CQUAD4,4,1,7,8,14,13
+CQUAD4         6       1       9      10      20      19
+CQUAD4         7       1      10      11      21      20
+CQUAD4         8       1      11      12      22      21
+CQUAD4         9       1      12      13      23      22
+CQUAD4,5,1,13,14,24,23
+CQUAD4        10       1      14      15      25      24
+CQUAD4        11       1      15      16      26      25
+CQUAD4        12       1      16      17      27      26
+CQUAD4        13       1      17      18      28      27
+CQUAD4,14,1,19,20,30,29
+CQUAD4,15,1,29,30,36,35
+CQUAD4,16,1,27,28,32,31
+CQUAD4,17,1,31,32,42,41
+CQUAD4        18       1      33      34      46      45
+CQUAD4        19       1      34      35      47      46
+CQUAD4        20       1      35      36      48      47
+CQUAD4        21       1      36      37      49      48
+CQUAD4        22       1      37      38      50      49
+CQUAD4        23       1      45      46      58      57
+CQUAD4        24       1      46      47      59      58
+CQUAD4        25       1      47      48      60      59
+CQUAD4        26       1      48      49      61      60
+CQUAD4        27       1      49      50      62      61
+CQUAD4        28       1      57      58      70      69
+CQUAD4        29       1      58      59      71      70
+CQUAD4        30       1      59      60      72      71
+CQUAD4        31       1      60      61      73      72
+CQUAD4        32       1      61      62      74      73
+CQUAD4        33       1      69      70      82      81
+CQUAD4        34       1      70      71      83      82
+CQUAD4        35       1      71      72      84      83
+CQUAD4        36       1      72      73      85      84
+CQUAD4        37       1      73      74      86      85
+CQUAD4        38       1      81      82      94      93
+CQUAD4        39       1      82      83      95      94
+CQUAD4        40       1      83      84      96      95
+CQUAD4        41       1      84      85      97      96
+CQUAD4        42       1      85      86      98      97
+CQUAD4        43       1      39      40      52      51
+CQUAD4        44       1      40      41      53      52
+CQUAD4        45       1      41      42      54      53
+CQUAD4        46       1      42      43      55      54
+CQUAD4        47       1      43      44      56      55
+CQUAD4        48       1      51      52      64      63
+CQUAD4        49       1      52      53      65      64
+CQUAD4        50       1      53      54      66      65
+CQUAD4        51       1      54      55      67      66
+CQUAD4        52       1      55      56      68      67
+CQUAD4        53       1      63      64      76      75
+CQUAD4        54       1      64      65      77      76
+CQUAD4        55       1      65      66      78      77
+CQUAD4        56       1      66      67      79      78
+CQUAD4        57       1      67      68      80      79
+CQUAD4        58       1      75      76      88      87
+CQUAD4        59       1      76      77      89      88
+CQUAD4        60       1      77      78      90      89
+CQUAD4        61       1      78      79      91      90
+CQUAD4        62       1      79      80      92      91
+CQUAD4        63       1      87      88     100      99
+CQUAD4        64       1      88      89     101     100
+CQUAD4        65       1      89      90     102     101
+CQUAD4        66       1      90      91     103     102
+CQUAD4        67       1      91      92     104     103
+MAT1,1,30.+6,,.3,.283
+PARAM,WTMASS,.00259
+PSHELL,1,1,.05,1,,1
+$
+$ LOADINGS
+$
+$ LOAD CASE 1 - PRESSURE LOAD
+$
+PLOAD2,101,-1.,18,THRU,42
+PLOAD2,102,-1.,43,THRU,67
+$
+$ LOAD CASE 2 - 2 POINT LOADS AT CORNERS
+$
+FORCE,201,93,,2.,0.,0.,1.
+FORCE,202,104,,2.,0.,0.,1.
+$
+$ LOAD CASE 3 - OPPOSING POINT LOADS AT CORNERS
+$
+FORCE,301,93,,2.,0.,0.,1.
+FORCE,302,104,,2.,0.,0.,-1.
+$ *******************************************************************
+$  END OF BASIC MODEL DEFINITION
+$ *******************************************************************
+ENDDATA

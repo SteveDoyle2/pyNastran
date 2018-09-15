@@ -1513,5 +1513,79 @@ class MATT8(MaterialDependenceThermal):
         list_fields = self.raw_fields()
         return self.comment + print_card_8(list_fields)
 
+class MATT9(MaterialDependenceThermal):
+    type = 'MATT8'
 
-#MATT9
+    def __init__(self, mid, e1_table=None, e2_table=None, nu12_table=None,
+                 g12_table=None, g1z_table=None, g2z_table=None, rho_table=None,
+                 a1_table=None, a2_table=None,
+                 xt_table=None, xc_table=None, yt_table=None, yc_table=None,
+                 s_table=None, ge_table=None, f12_table=None, comment=''):
+        MaterialDependenceThermal.__init__(self)
+        if comment:
+            self.comment = comment
+
+        self.mid = mid
+        self.e1_table = e1_table
+        self.e2_table = e2_table
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a MATT8 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        raise NotImplementedError('MATT9')
+        mid = integer(card, 1, 'mid')
+        e1_table = integer_or_blank(card, 2, 'T(E1)')
+        e2_table = integer_or_blank(card, 3, 'T(E2)')
+
+        assert len(card) <= 19, 'len(MATT8 card) = %i\ncard=%s' % (len(card), card)
+        return MATT9(mid, e1_table, e2_table, nu12_table, g12_table,
+                     g1z_table, g2z_table, rho_table,
+                     a1_table, a2_table, xt_table,
+                     xc_table, yt_table, yc_table,
+                     s_table, ge_table, f12_table,
+                     comment=comment)
+
+    def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by MATT1 mid=%s' % self.mid
+        self.mid_ref = model.Material(self.mid, msg=msg)
+
+        if self.e1_table is not None:
+            self.e1_table_ref = model.TableM(self.e1_table)
+        if self.e2_table is not None:
+            self.e2_table_ref = model.TableM(self.e2_table)
+
+    def uncross_reference(self):
+        self.e1_table = self.E1_table()
+        self.e2_table = self.E2_table()
+        self.e1_table_ref = None
+        self.e2_table_ref = None
+
+    def E1_table(self):
+        if self.e1_table_ref is not None:
+            return self.e1_table_ref.tid
+        return self.e1_table
+
+    def raw_fields(self):
+        list_fields = ['MATT9', self.mid,]
+        return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        list_fields = self.raw_fields()
+        return self.comment + print_card_8(list_fields)

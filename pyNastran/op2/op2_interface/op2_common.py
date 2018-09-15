@@ -1,3 +1,4 @@
+# pylint: disable=C0301,W0201
 from __future__ import print_function, unicode_literals
 import copy
 from struct import Struct, unpack
@@ -579,7 +580,8 @@ class OP2Common(Op2Codes, F06Writer):
             # self.obj.data_code['format_code'] = format_code
 
     def _read_random_table(self, data, ndata, result_name, storage_obj,
-                           real_vector, node_elem, random_code=None, is_cid=False):
+                           real_vector, node_elem,
+                           random_code=None, is_cid=False):
         """
         Reads a real table (for random analysis)
         """
@@ -613,7 +615,8 @@ class OP2Common(Op2Codes, F06Writer):
         return n
 
     def _read_table_sort1_real(self, data, ndata, result_name, storage_obj,
-                               real_vector, node_elem, random_code=None, is_cid=False):
+                               real_vector, node_elem,
+                               random_code=None, is_cid=False):
         """Reads a real table (for random analysis)"""
         assert self.format_code == 1, self.format_code
         assert self.num_wide == 8, self.num_wide
@@ -825,7 +828,8 @@ class OP2Common(Op2Codes, F06Writer):
             raise NotImplementedError(self.function_code)
         return out
 
-    def _read_real_scalar_table_static(self, data, is_vectorized, nnodes, result_name, flag, is_cid=False):
+    def _read_real_scalar_table_static(self, data, is_vectorized, nnodes,
+                                       unused_result_name, flag, is_cid=False):
         """
         With a static (e.g. SOL 101) result, reads a complex OUG-style
         table created by:
@@ -868,7 +872,7 @@ class OP2Common(Op2Codes, F06Writer):
             dt = np.nan
             n = 0
             s = Struct(self._endian + b'2i6f')
-            for inode in range(nnodes):
+            for unused_inode in range(nnodes):
                 out = s.unpack(data[n:n+32])
                 eid_device, grid_type, tx = out[:3]
                 eid = eid_device // 10
@@ -878,7 +882,8 @@ class OP2Common(Op2Codes, F06Writer):
                 n += 32
         return n
 
-    def _read_real_scalar_table_sort1(self, data, is_vectorized, nnodes, result_name, flag, is_cid=False):
+    def _read_real_scalar_table_sort1(self, data, is_vectorized, nnodes,
+                                      unused_result_name, flag, is_cid=False):
         """
         With a real transient result (e.g. SOL 109/159), reads a
         real OUG-style table created by:
@@ -914,7 +919,7 @@ class OP2Common(Op2Codes, F06Writer):
             n = 0
             assert nnodes > 0, nnodes
             s = Struct(self._endian + b'2i6f')
-            for inode in range(nnodes):
+            for unused_inode in range(nnodes):
                 out = s.unpack(data[n:n+32])
                 eid_device, grid_type, tx = out[:3]
                 eid = eid_device // 10
@@ -964,7 +969,7 @@ class OP2Common(Op2Codes, F06Writer):
             flag = 'freq/dt/mode'
             s = Struct(self._endian + self._analysis_code_fmt + b'i6f')
             assert eid > 0, self.code_information()
-            for inode in range(nnodes):
+            for unused_inode in range(nnodes):
                 edata = data[n:n+32]
                 out = s.unpack(edata)
                 (dt, grid_type, tx) = out[:3]
@@ -974,8 +979,8 @@ class OP2Common(Op2Codes, F06Writer):
                 n += 32
         return n
 
-    def _read_real_table_static(self, data, is_vectorized, nnodes, result_name,
-                                flag, is_cid=False):
+    def _read_real_table_static(self, data, is_vectorized, nnodes,
+                                unused_result_name, flag, is_cid=False):
         """
         With a static (e.g. SOL 101) result, reads a complex OUG-style
         table created by:
@@ -1009,7 +1014,7 @@ class OP2Common(Op2Codes, F06Writer):
             n = 0
             dt = np.nan
             s = Struct(self._endian + b'2i6f')
-            for inode in range(nnodes):
+            for unused_inode in range(nnodes):
                 out = s.unpack(data[n:n+32])
                 (eid_device, grid_type, tx, ty, tz, rx, ry, rz) = out
                 eid = eid_device // 10
@@ -1019,7 +1024,8 @@ class OP2Common(Op2Codes, F06Writer):
                 n += 32
         return n
 
-    def _read_real_table_sort1(self, data, is_vectorized, nnodes, result_name, flag, is_cid=False):
+    def _read_real_table_sort1(self, data, is_vectorized, nnodes,
+                               unused_result_name, flag, is_cid=False):
         """
         With a real transient result (e.g. SOL 109/159), reads a
         real OUG-style table created by:
@@ -1055,7 +1061,7 @@ class OP2Common(Op2Codes, F06Writer):
             n = 0
             assert nnodes > 0, nnodes
             s = Struct(self._endian + b'2i6f')
-            for inode in range(nnodes):
+            for unused_inode in range(nnodes):
                 out = s.unpack(data[n:n+32])
                 (eid_device, grid_type, tx, ty, tz, rx, ry, rz) = out
                 eid = eid_device // 10
@@ -1108,7 +1114,7 @@ class OP2Common(Op2Codes, F06Writer):
             #psds = ('CRM2', 'NO2', 'PSD2', 'RMS2')
             #print('sort_method=%s' % self.sort_method)
             #if self.table_name_str.endswith(psds):
-            for inode in range(nnodes):
+            for unused_inode in range(nnodes):
                 edata = data[n:n+32]
                 out = structi.unpack(edata)
                 (dt, grid_type, tx, ty, tz, rx, ry, rz) = out
@@ -1171,7 +1177,8 @@ class OP2Common(Op2Codes, F06Writer):
                 n += 56
         return n
 
-    def _read_complex_table_sort1_imag(self, data, is_vectorized, nnodes, result_name, flag):
+    def _read_complex_table_sort1_imag(self, data, is_vectorized, nnodes,
+                                       unused_result_name, flag):
         if self.is_debug_file:
             self.binary_debug.write('  _read_complex_table_sort1_imag\n')
         #assert flag in ['node', 'elem'], flag
@@ -1222,7 +1229,7 @@ class OP2Common(Op2Codes, F06Writer):
                 n += 56
         return n
 
-    def _check_id(self, eid_device, flag, bdf_name, out):
+    def _check_id(self, eid_device, unused_flag, bdf_name, unused_out):
         """
         Somewhat risky method for calculating the eid because the device code
         is ignored.  However, this might be the actual way to parse the id.
@@ -1271,7 +1278,7 @@ class OP2Common(Op2Codes, F06Writer):
             n = 0
             s = Struct(self._endian + self._analysis_code_fmt + 'i12f')
             binary_debug_fmt = '  %s=%s %%s\n' % (flag, flag_type)
-            for inode in range(nnodes):
+            for unused_inode in range(nnodes):
                 edata = data[n:n+56]
                 out = s.unpack(edata)
                 (freq, grid_type, txr, tyr, tzr, rxr, ryr, rzr,
@@ -1315,7 +1322,7 @@ class OP2Common(Op2Codes, F06Writer):
 
             binary_debug_fmt = '  %s=%s %%s\n' % (flag, flag_type)
 
-            for inode in range(nnodes):
+            for unused_inode in range(nnodes):
                 edata = data[n:n+56]
                 out = s.unpack(edata)
 
@@ -1424,7 +1431,7 @@ class OP2Common(Op2Codes, F06Writer):
         #self.log.debug('code = %s' % str(self.code))
         return self.code
 
-    def _not_implemented_or_skip(self, data, ndata, msg=''):
+    def _not_implemented_or_skip(self, unused_data, ndata, msg=''):
         """
         A simple pass loop for unsupported tables that can be hacked on
         to crash the program everywhere that uses it.
@@ -1739,7 +1746,7 @@ class OP2Common(Op2Codes, F06Writer):
     @property
     def _sort_method(self):
         try:
-            sort_method, is_real, is_random = self._table_specs()
+            sort_method, unused_is_real, unused_is_random = self._table_specs()
         except:
             sort_method = get_sort_method_from_table_name(self.table_name)
         #is_sort1 = self.table_name.endswith('1')
@@ -1749,17 +1756,16 @@ class OP2Common(Op2Codes, F06Writer):
 
     @property
     def is_real(self):
-        sort_method, is_real, is_random = self._table_specs()
+        unused_sort_method, is_real, unused_is_random = self._table_specs()
         return is_real
 
     @property
     def is_complex(self):
-        sort_method, is_real, is_random = self._table_specs()
-        return not is_real
+        return not self.is_real
 
     @property
     def is_random(self):
-        sort_method, is_real, is_random = self._table_specs()
+        unused_sort_method, unused_is_real, is_random = self._table_specs()
         return is_random
 
     #def is_mag_phase(self):

@@ -36,6 +36,7 @@ from pyNastran.bdf.test.compare_card_content import compare_card_content
 
 import pyNastran.bdf.test
 TEST_PATH = pyNastran.bdf.test.__path__[0]
+#warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 class DisabledCardError(RuntimeError):
     """lets bdf_test.py flag cards as auto-crashing and then skipping the deck (e.g., CGEN)"""
@@ -1584,7 +1585,7 @@ def compare_card_count(fem1, fem2, print_stats=False, quiet=False):
     for key in cards1:
         if key != key.upper():
             raise RuntimeError('Proper capitalization wasnt determined')
-    if print_stats:
+    if print_stats and not quiet:
         print(fem1.get_bdf_stats())
     else:
         fem1.get_bdf_stats()

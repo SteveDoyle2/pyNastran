@@ -297,12 +297,23 @@ class DEQATN(BaseCard):  # needs work...
 def lines_to_eqs(eqs_temp1):
     """splits the equations"""
     eqs_temp = []
+    nstart = 0
+    nchars = 72 - 16
     for eq in eqs_temp1:
-        eq2 = eq.rstrip('; \n')
+        eq2 = eq[nstart:nchars].strip(' \t\n')
+        semicolon = ''
+        if eq2.endswith(';'):
+            eq2 = eq2.rstrip(' \t;')
+            semicolon = ';'
+        nline = len(eq.rstrip('; \n')) + 16
         if ';' in eq2:
-            eqs_temp += [eqi + ';' for eqi in eq.split(';')]
+            eq_tempi = [eqi.strip() + ';' for eqi in eq2.split(';') if eqi.strip() ]
+            eq_tempi[-1] += semicolon
+            eqs_temp += eq_tempi
         else:
-            eqs_temp.append(eq)
+            eqs_temp.append(eq2 + semicolon)
+        nstart = 8
+        nchars = 72
 
     eqs = []
     neqs = len(eqs_temp)

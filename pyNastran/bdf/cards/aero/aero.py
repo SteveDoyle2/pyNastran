@@ -1,5 +1,5 @@
 # coding: utf-8
-# pylint: disable=R0902,R0904,R0914,C0302,C0111
+# pylint: disable=R0902,R0904,R0914,C0302,C0111,C0103,R0913
 """
 All aero cards are defined in this file.  This includes:
 
@@ -342,7 +342,8 @@ class AELINK(BaseCard):
     """
     type = 'AELINK'
 
-    def __init__(self, aelink_id, label, independent_labels, Cis, comment=''):
+    def __init__(self, aelink_id, label, independent_labels, linking_coefficents,
+                 comment=''):
         """
         Creates an AELINK card, which defines an equation linking
         AESTAT and AESURF cards
@@ -355,7 +356,7 @@ class AELINK(BaseCard):
             name of the dependent AESURF card
         independent_labels : List[str, ..., str]
             name for the independent variables (AESTATs)
-        Cis : List[float]
+        linking_coefficents : List[float]
             linking coefficients
         comment : str; default=''
             a comment for the card
@@ -371,7 +372,7 @@ class AELINK(BaseCard):
         self.independent_labels = independent_labels
 
         #: linking coefficients (real)
-        self.Cis = Cis
+        self.linking_coefficents = linking_coefficents
 
         if isinstance(aelink_id, string_types):
             if aelink_id != 'ALWAYS':
@@ -380,8 +381,17 @@ class AELINK(BaseCard):
         #: an ID=0 is applicable to the global subcase, ID=1 only subcase 1
         self.aelink_id = aelink_id
 
+    @property
+    def Cis(self):
+        self.deprecated('Cis', 'linking_coefficents', '1.2')
+        return self.linking_coefficents
+    @Cis.setter
+    def Cis(self, linking_coefficents):
+        self.deprecated('Cis', 'linking_coefficents', '1.2')
+        self.linking_coefficents = linking_coefficents
+
     def validate(self):
-        if len(self.independent_labels) != len(self.Cis):
+        if len(self.independent_labels) != len(self.linking_coefficents):
             msg = 'nlabels=%s nci=%s\nindependent_labels=%s Cis=%s\n%s' % (
                 len(self.independent_labels), len(self.Cis),
                 self.independent_labels, self.Cis, str(self))
@@ -408,16 +418,17 @@ class AELINK(BaseCard):
         aelink_id = integer_or_string(card, 1, 'ID')
         label = string(card, 2, 'label')
         independent_labels = []
-        Cis = []
+        linking_coefficents = []
 
         list_fields = [interpret_value(field, card) for field in card[3:]]
         assert len(list_fields) % 2 == 0, 'list_fields=%s' % list_fields
         for i in range(0, len(list_fields), 2):
             independent_label = list_fields[i]
-            Ci = list_fields[i + 1]
+            linking_coefficent = list_fields[i + 1]
             independent_labels.append(independent_label)
-            Cis.append(Ci)
-        return AELINK(aelink_id, label, independent_labels, Cis, comment=comment)
+            linking_coefficents.append(linking_coefficent)
+        return AELINK(aelink_id, label, independent_labels, linking_coefficents,
+                      comment=comment)
 
     #def uncross_reference(self):
         #pass
@@ -433,7 +444,7 @@ class AELINK(BaseCard):
 
         """
         list_fields = ['AELINK', self.aelink_id, self.label]
-        for (ivar, ival) in zip(self.independent_labels, self.Cis):
+        for (ivar, ival) in zip(self.independent_labels, self.linking_coefficents):
             list_fields += [ivar, ival]
         return list_fields
 
@@ -848,13 +859,13 @@ class AESURF(BaseCard):
             return self.alid2_ref.sid
         return self.alid2
 
-    def AELIST_id1(self):
-        self.deprecated('AESURF.AELIST_id1()', 'AESURF.aelist_id1()', '1.1')
-        return self.aelist_id1()
+    #def AELIST_id1(self):
+        #self.deprecated('AESURF.AELIST_id1()', 'AESURF.aelist_id1()', '1.1')
+        #return self.aelist_id1()
 
-    def AELIST_id2(self):
-        self.deprecated('AESURF.AELIST_id2()', 'AESURF.aelist_id2()', '1.1')
-        return self.aelist_id2()
+    #def AELIST_id2(self):
+        #self.deprecated('AESURF.AELIST_id2()', 'AESURF.aelist_id2()', '1.1')
+        #return self.aelist_id2()
 
     def cross_reference(self, model):
         """
@@ -882,25 +893,14 @@ class AESURF(BaseCard):
         self.cid1_ref = model.safe_coord(self.cid1, self.aesid, xref_errors, msg=msg)
         if self.cid2 is not None:
             self.cid2_ref = model.safe_coord(self.cid2, self.aesid, xref_errors, msg=msg)
-        try:
-            self.alid1_ref = model.AELIST(self.alid1)
-        except KeyError:
-            pass
+
+        self.alid1_ref = model.safe_aelist(self.alid1, self.aesid, xref_errors, msg=msg)
         if self.alid2:
-            try:
-                self.alid2_ref = model.AELIST(self.alid2)
-            except KeyError:
-                pass
-        if self.tqllim is not None:
-            try:
-                self.tqllim_ref = model.TableD(self.tqllim)
-            except KeyError:
-                pass
+            self.alid2_ref = model.safe_aelist(self.alid2, self.aesid, xref_errors, msg=msg)
+
+        self.tqllim_ref = model.safe_tabled(self.tqllim, self.aesid, xref_errors, msg=msg)
         if self.tqulim is not None:
-            try:
-                self.tqulim_ref = model.TableD(self.tqulim)
-            except KeyError:
-                pass
+            self.tqulim_ref = model.safe_tabled(self.tqulim, self.aesid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.cid1 = self.Cid1()
@@ -2122,7 +2122,7 @@ class CAERO2(BaseCard):
             self.lint_ref = model.AEFact(self.lint, msg=msg)
         self.ascid_ref = model.Acsid(msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors, debug=False):
+    def safe_cross_reference(self, model, xref_errors):
         msg = ', which is required by CAERO2 eid=%s' % self.eid
         try:
             self.pid_ref = model.PAero(self.pid, msg=msg)  # links to PAERO2
@@ -3293,9 +3293,9 @@ class PAERO5(BaseCard):
         """
         msg = ', which is required by PAERO5 eid=%s' % self.pid
         if self.lxis != 0:
-            self.lxis_ref = model.AEFact(self.lxis_id)
+            self.lxis_ref = model.AEFact(self.lxis_id, msg=msg)
         if self.ltaus != 0:
-            self.ltaus_ref = model.AEFact(self.ltaus_id)
+            self.ltaus_ref = model.AEFact(self.ltaus_id, msg=msg)
 
     def safe_cross_reference(self, model, xref_errors):
         msg = ', which is required by PAERO5 eid=%s' % self.pid
@@ -3527,7 +3527,7 @@ class MONPNT2(BaseCard):
     def cross_reference(self, model):
         pass
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model, unused_xref_errors):
         self.cross_reference(model)
 
     def uncross_reference(self):
@@ -4033,7 +4033,7 @@ class PAERO2(BaseCard):
         if self.lrib is not None and isinstance(self.lrib, integer_types):
             self.lrib_ref = model.AEFact(self.lrib, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors, debug=False):
+    def safe_cross_reference(self, model, xref_errors):
         msg = ', which is required by PAERO2 eid=%s' % self.pid
         if self.lrsb is not None and isinstance(self.lrsb, integer_types):
             self.lrsb_ref = model.safe_aefact(self.lrsb, self.pid, xref_errors, msg=msg)
@@ -4225,7 +4225,7 @@ class PAERO3(BaseCard):
     def cross_reference(self, model):
         pass
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model, unused_xref_errors):
         return self.cross_reference(model)
 
     def uncross_reference(self):
@@ -4578,11 +4578,9 @@ class SPLINE1(Spline):
 
     def safe_cross_reference(self, model, xref_errors):
         msg = ', which is required by SPLINE1 eid=%s' % self.eid
-        try:
-            self.caero_ref = model.CAero(self.caero, msg=msg)
-        except KeyError:
-            pass
-
+        self.caero_ref = model.safe_caero(self, self.caero, self.eid, xref_errors, msg=msg)
+        #self.setg_ref = model.safe_set(self, self.setg, self.eid, xref_errors, msg=msg)
+    #def safe_set(self, setg, set_type, self.eid, xref_errors, msg=''):
         try:
             self.setg_ref = model.Set(self.setg, msg=msg)
             try:
@@ -5036,7 +5034,9 @@ class SPLINE3(Spline):
         self.caero_ref = model.CAero(self.caero, msg=msg)
 
     def safe_cross_reference(self, model, xref_errors):
-        self.cross_reference(model)
+        msg = ', which is required by SPLINE3 eid=%s' % self.eid
+        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+        self.caero_ref = model.safe_caero(self, self.caero, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.caero = self.CAero()
@@ -5258,7 +5258,18 @@ class SPLINE4(Spline):
             the BDF object
 
         """
-        self.cross_reference(model)
+        msg = ', which is required by SPLINE4 eid=%s' % self.eid
+        self.caero_ref = model.safe_caero(self.caero, self.eid, xref_errors, msg=msg)
+        self.aelist_ref = model.safe_aelist(self.aelist, self.eid, xref_errors, msg=msg)
+        self.setg_ref = model.Set(self.Set(), msg=msg)
+        self.setg_ref.cross_reference_set(model, 'Node', msg)
+
+        nnodes = len(self.setg_ref.ids)
+        if nnodes < 3:
+            msg = 'SPLINE4 requires at least 3 nodes; nnodes=%s\n' % (nnodes)
+            msg += str(self)
+            msg += str(self.setg_ref)
+            raise ValueError(msg)
 
     def uncross_reference(self):
         self.caero = self.CAero()

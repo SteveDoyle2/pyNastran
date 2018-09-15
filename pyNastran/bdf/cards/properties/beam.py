@@ -1357,6 +1357,7 @@ class PBEAML(IntegratedLineProperty):
             nsm.append(nsmi)
             n += 1
             i += 1
+        assert len(card) > 5, card
         return PBEAML(pid, mid, beam_type, xxb, dims, group=group,
                       so=so, nsm=nsm, comment=comment)
 

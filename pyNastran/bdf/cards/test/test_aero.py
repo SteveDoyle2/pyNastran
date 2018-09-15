@@ -1,4 +1,5 @@
 # coding: utf-8
+# pylint: disable=R0914
 """
 tests aero cards
 """
@@ -15,8 +16,8 @@ from pyNastran.bdf.bdf import BDF, CORD2R, BDFCard, SET1, GRID, read_bdf
 from pyNastran.bdf.test.test_bdf import run_bdf
 from pyNastran.bdf.cards.aero.aero import (
     AEFACT, AELIST, AEPARM,
-    CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
-    PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
+    CAERO1, CAERO2, CAERO3, CAERO4, #CAERO5,
+    PAERO1, PAERO2, PAERO4, #PAERO3, PAERO5,
     AESURF, AESURFS,
     AELINK, AECOMP,
     SPLINE1, SPLINE2 #, SPLINE3, SPLINE4, SPLINE5
@@ -187,8 +188,8 @@ class TestAero(unittest.TestCase):
         #with self.assertRaises(SyntaxError):
             #model.add_card(data, data[0], comment_good, is_list=True)
 
-        Di = [1., 2., 3.]
-        aefact = AEFACT(200, Di, comment='')
+        fractions = [1., 2., 3.]
+        aefact = AEFACT(200, fractions, comment='')
         aefact.validate()
         aefact.write_card()
         #model = BDF()
@@ -204,21 +205,21 @@ class TestAero(unittest.TestCase):
         idi = 10
         label = 'CS'
         independent_labels = ['A', 'B', 'C']
-        Cis = [1.0, 2.0]
-        aelink = AELINK(idi, label, independent_labels, Cis, comment='')
+        linking_coefficents = [1.0, 2.0]
+        aelink = AELINK(idi, label, independent_labels, linking_coefficents, comment='')
         assert aelink.aelink_id == idi
         with self.assertRaises(RuntimeError):
             aelink.validate()
         str(aelink)
         aelink.write_card()
 
-        card = ['AELINK', idi, label, independent_labels[0], Cis[0],
-                independent_labels[1], Cis[1], independent_labels[2]]
+        card = ['AELINK', idi, label, independent_labels[0], linking_coefficents[0],
+                independent_labels[1], linking_coefficents[1], independent_labels[2]]
         with self.assertRaises(AssertionError):
             model.add_card(card, 'AELINK')
 
-        card = ['AELINK', idi, label, independent_labels[0], Cis[0],
-                independent_labels[1], Cis[1]]
+        card = ['AELINK', idi, label, independent_labels[0], linking_coefficents[0],
+                independent_labels[1], linking_coefficents[1]]
         model.add_card(card, 'AELINK', comment='cat')
         #print(model.aelinks[idi])
         assert model.aelinks[idi][0].comment == '$cat\n', 'comment=%r' % str(model.aelinks[idi][0].comment)
@@ -226,8 +227,8 @@ class TestAero(unittest.TestCase):
         idi = 11
         label = 'LABEL'
         independent_labels = ['pig', 'frog', 'dog']
-        Cis = []
-        aelink2 = model.add_aelink(idi, label, independent_labels, Cis)
+        linking_coefficents = []
+        aelink2 = model.add_aelink(idi, label, independent_labels, linking_coefficents)
         with self.assertRaises(RuntimeError):
             model.validate()
         aelink2.Cis = [1.0, 2.0, 3.0]
@@ -684,7 +685,7 @@ class TestAero(unittest.TestCase):
                                   lspan=0, nchord=6, lchord=0,
                                   comment='')
         caero_body_ids = [3]
-        paero = model.add_paero1(pid, caero_body_ids=caero_body_ids, comment='')
+        unused_paero = model.add_paero1(pid, caero_body_ids=caero_body_ids, comment='')
         origin = None
         zaxis = None
         xzplane = None
@@ -711,7 +712,7 @@ class TestAero(unittest.TestCase):
         setg = 43
         spline2 = model.add_spline2(eid, caero, id1, id2, setg, dz=0.0, dtor=1.0, cid=1,
                                     dthx=None, dthy=None, usage='BOTH', comment='')
-        spline.validate()
+        spline2.validate()
 
         pid = 3
         caero2 = model.add_caero2(caero, pid, igid, p1, x12, cp=1, nsb=4,
@@ -937,12 +938,12 @@ class TestAero(unittest.TestCase):
         caero2f.raw_fields()
         caero2f.get_points_elements_3d()
         caero2f.get_points()
-        xyz, elems = caero2f.get_points_elements_3d()
+        unused_xyz, unused_elems = caero2f.get_points_elements_3d()
 
 
         caero2g.get_points()
         caero2g.get_points_elements_3d()
-        xyz, elems = caero2g.get_points_elements_3d()
+        unused_xyz, unused_elems = caero2g.get_points_elements_3d()
 
         model.uncross_reference()
         model.safe_cross_reference()
@@ -1174,7 +1175,7 @@ class TestAero(unittest.TestCase):
         points, elements = caero4b.panel_points_elements()
         del points, elements
 
-        p1, p2, p3, p4 = caero4b.get_points()
+        p1, unused_p2, unused_p3, p4 = caero4b.get_points()
 
         caero4c = CAERO4(eid, pid, p1, x12, p4, x43,
                          cp=0, nspan=0, lspan=0,
@@ -1193,6 +1194,7 @@ class TestAero(unittest.TestCase):
         bdf_filename.seek(0)
         model2 = read_bdf(bdf_filename, xref=False, punch=True, debug=False)
         model.safe_cross_reference()
+        model2.safe_cross_reference()
 
     def test_caero5_1(self):
         """checks the CAERO5/PAERO5"""
@@ -1252,12 +1254,12 @@ class TestAero(unittest.TestCase):
         paero5.ltaus = ltaus
         aefact_sid = ltaus
         Di = [0., 0.5, 1.]
-        aefact = model.add_aefact(aefact_sid, Di, comment='aefact2')
+        unused_aefact = model.add_aefact(aefact_sid, Di, comment='aefact2')
 
         #caero5.cross_reference(model)
         model.cross_reference()
-        npoints, nelements = caero5.get_npanel_points_elements()
-        points, elements = caero5.panel_points_elements()
+        unused_npoints, unused_nelements = caero5.get_npanel_points_elements()
+        unused_points, unused_elements = caero5.panel_points_elements()
         caero5.write_card()
         #caero5.raw_fields()
 
@@ -1511,12 +1513,10 @@ class TestAero(unittest.TestCase):
         model._add_aesurf_object(aesurf1)
 
         elements = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
-        aelist = AELIST(aelist_id1, elements)
-        model._add_aelist_object(aelist)
+        unused_aelist = model.add_aelist(aelist_id1, elements, comment='')
 
         elements = [11, 22, 33, 44, 55, 66, 77, 88, 99]
-        aelist = AELIST(aelist_id2, elements)
-        model._add_aelist_object(aelist)
+        unused_aelist = model.add_aelist(aelist_id2, elements, comment='')
 
         aesid += 1
         model.add_aesurf(
@@ -1614,7 +1614,7 @@ class TestAero(unittest.TestCase):
         flutter2.write_card()
 
         densities = np.linspace(0., 1.)
-        density = model.add_flfact(idensity, densities)
+        unused_density = model.add_flfact(idensity, densities)
 
         machs = np.linspace(0.7, 0.8)
         mach = FLFACT(imach, machs)
@@ -1836,8 +1836,6 @@ class TestAero(unittest.TestCase):
         sid = 100
         nroots = 21
         machs = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
-        x0 = 3.
-        V = 42.
         diverg = DIVERG(sid, nroots, machs, comment='divergence')
         diverg.validate()
         diverg.write_card()
@@ -2022,29 +2020,30 @@ class TestAero(unittest.TestCase):
         label = 'ELEV'
         cid1 = 0
         alid1 = 37
-        aesurf = model.add_aesurf(aesid, label, cid1, alid1, cid2=None, alid2=None,
-                                  eff=1.0, ldw='LDW', crefc=1.0, crefs=1.0,
-                                  pllim=-np.pi/2., pulim=np.pi/2.,
-                                  hmllim=None, hmulim=None,
-                                  tqllim=None, tqulim=None, comment='aesurf')
+        unused_aesurf = model.add_aesurf(
+            aesid, label, cid1, alid1, cid2=None, alid2=None,
+            eff=1.0, ldw='LDW', crefc=1.0, crefs=1.0,
+            pllim=-np.pi/2., pulim=np.pi/2.,
+            hmllim=None, hmulim=None,
+            tqllim=None, tqulim=None, comment='aesurf')
 
-        aelist = model.add_aelist(alid1, [1, 2, 3], comment='')
+        unused_aelist = model.add_aelist(alid1, [1, 2, 3], comment='')
 
         aefact_sid = alid1
-        Di = [0., 0.5, 1.]
-        aefact_elev = model.add_aefact(aefact_sid, Di, comment='aefact')
+        fractions = [0., 0.5, 1.]
+        unused_aefact_elev = model.add_aefact(aefact_sid, fractions, comment='aefact')
 
         aefact_sid = lalpha
-        Di = [0., 5., 10.]
-        aefact_alpha = model.add_aefact(aefact_sid, Di, comment='aefact')
+        fractions = [0., 5., 10.]
+        unused_aefact_alpha = model.add_aefact(aefact_sid, fractions, comment='aefact')
 
         aefact_sid = lmach
-        Di = [0., 0.7, 0.8]
-        aefact_mach = model.add_aefact(aefact_sid, Di, comment='aefact')
+        fractions = [0., 0.7, 0.8]
+        unused_aefact_mach = model.add_aefact(aefact_sid, fractions, comment='aefact')
 
         aefact_sid = lschd
-        Di = [0., 15., 30., 45.]
-        aefact_delta = model.add_aefact(aefact_sid, Di, comment='aefact')
+        fractions = [0., 15., 30., 45.]
+        unused_aefact_delta = model.add_aefact(aefact_sid, fractions, comment='aefact')
 
         model.cross_reference()
         csshcd2.write_card()
@@ -2063,6 +2062,7 @@ class TestAero(unittest.TestCase):
 
         bdf_filename2 = StringIO()
         model.write_bdf(bdf_filename2, size=16, close=False)
+        model2.write_bdf(bdf_filename2, size=16, close=False)
 
         #-----------
         csshcd3 = CSSCHD(sid, aesid, lschd, lalpha=None, lmach=None, comment='cssch card')

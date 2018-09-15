@@ -179,7 +179,7 @@ class UnXrefMesh(SafeXrefMesh):
                 spci.uncross_reference()
         for spcoffs in self.spcoffs.values():
             for spcoff in spcoffs:
-                spcoff.uncross_reference(self)
+                spcoff.uncross_reference()
 
         for mpcadds in self.mpcadds.values():
             for mpcadd in mpcadds:
@@ -225,6 +225,8 @@ class UnXrefMesh(SafeXrefMesh):
             darea.uncross_reference()
         for unused_key, dphase in self.dphases.items():
             dphase.uncross_reference()
+        for unused_key, tic in self.tics.items():
+            tic.uncross_reference()
 
     def _uncross_reference_sets(self):
         # type: () -> None

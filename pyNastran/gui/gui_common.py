@@ -1,5 +1,5 @@
 # coding: utf-8
-# pylint: disable=W0201,C0111
+# pylint: disable=W0201,C0111,C0301
 from __future__ import division, unicode_literals, print_function
 
 # standard library
@@ -10,7 +10,7 @@ from collections import OrderedDict
 from math import ceil
 import cgi #  html lib
 
-from six import string_types, itervalues
+from six import string_types
 
 import numpy as np
 
@@ -1672,7 +1672,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         """
         if cids is None:
             cids = self.axes.keys()
-        for key in self.axes:
+        for unused_key in self.axes:
             axis = self.axes[cid]
             axis.VisibilityOff()
         self.corner_axis.EnabledOff()
@@ -1684,7 +1684,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         """
         if cids is None:
             cids = self.axes.keys()
-        for key in self.axes:
+        for unused_key in self.axes:
             axis = self.axes[cid]
             axis.VisibilityOn()
         self.corner_axis.EnabledOn()
@@ -1824,7 +1824,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             return is_failed
         (phases, icases_fringe, icases_disp, icases_vector,
          isteps, scales,
-         analysis_time, onesided, endpoint) = out
+         analysis_time, onesided, unused_endpoint) = out
 
         if animate_time:
             icase_msg = '         icase_start=%s, icase_end=%s, icase_delta=%s,\n' % (
@@ -1869,7 +1869,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 icases_fringe, icases_disp, icases_vector,
                 animate_fringe, animate_vector,
                 fps)
-            return
+            is_failed = False
+            return is_failed
 
         try:
             is_failed = self.make_gif_helper(
@@ -1942,7 +1943,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def animation_update(self, icase_fringe0, icase_disp0, icase_vector0,
                          icase_fringe, icase_disp, icase_vector, scale, phase,
-                         animate_fringe, animate_vector,
+                         animate_fringe, unused_animate_vector,
                          normalized_frings_scale,
                          min_value, max_value):
         """applies the animation update callback"""

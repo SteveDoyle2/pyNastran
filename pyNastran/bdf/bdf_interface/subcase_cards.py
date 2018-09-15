@@ -798,6 +798,8 @@ class CheckCard(CaseControlCard):
                 else:
                     msg += '%s=%s, ' % (key, value)
             msg = msg.strip(', ') + ') = %s' % self.value
+        else:
+            msg += ' = %s' % self.value
         return msg + '\n'
 
 def split_by_mixed_commas_parentheses(str_options):

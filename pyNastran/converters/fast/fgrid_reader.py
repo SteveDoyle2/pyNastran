@@ -1,11 +1,10 @@
 from __future__ import print_function
-import os
 import numpy as np
 from pyNastran.utils import check_path
 from pyNastran.utils.log import get_logger2
 
 
-def read_fgrid(fgrid_filename, dimension_flag, log=None, debug=False):
+def read_fgrid(fgrid_filename, unused_dimension_flag, log=None, debug=False):
     """loads a *.fgrid file"""
     model = FGridReader(log=log, debug=debug)
     model.read_fgrid(fgrid_filename, dimension_flag=3)
@@ -36,7 +35,7 @@ class FGridReader(object):
         self.tris = None
         self.tets = None
 
-    def read_fgrid(self, fgrid_filename, dimension_flag=3):
+    def read_fgrid(self, fgrid_filename, unused_dimension_flag=3):
         """extracts the nodes, tris, bcs, tets"""
         check_path(fgrid_filename, 'fgrid_filename')
         with open(fgrid_filename, 'r') as fgrid:
@@ -47,7 +46,7 @@ class FGridReader(object):
 
             self.log.info('nnodes=%s ntris=%s ntets=%s' % (nnodes, ntris, ntets))
             assert nnodes > 0, nnodes
-            inode = 0
+            #inode = 0
             # I think this goes xxx, yyy, zzz
             # instead of x, y, z
             #            x, y, z

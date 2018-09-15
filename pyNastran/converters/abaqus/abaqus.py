@@ -69,7 +69,7 @@ class Abaqus(object):
 
         lines = _clean_lines(lines)
 
-        ilines = []
+        unused_ilines = []
         iline = 0
         nlines = len(lines)
         nassembly = 0
@@ -166,40 +166,40 @@ class Abaqus(object):
                         print(line)
                     print('line_end_of_IC =', line0)
                 elif word.startswith('surface interaction'):
-                    key = 'surface interaction'
-                    data = []
+                    unused_key = 'surface interaction'
+                    unused_data = []
                     while '*' not in line0:
                         sline = line0.split(',')
                         iline += 1
                         line0 = lines[iline].strip().lower()
                     self.log.debug(line0)
                 elif word.startswith('friction'):
-                    key = 'friction'
-                    data = []
+                    unused_key = 'friction'
+                    unused_data = []
                     while '*' not in line0:
                         sline = line0.split(',')
                         iline += 1
                         line0 = lines[iline].strip().lower()
                     self.log.debug(line0)
                 elif word.startswith('surface behavior'):
-                    key = 'surface behavior'
-                    data = []
+                    unused_key = 'surface behavior'
+                    unused_data = []
                     while '*' not in line0:
                         sline = line0.split(',')
                         iline += 1
                         line0 = lines[iline].strip().lower()
                     self.log.debug(line0)
                 elif word.startswith('contact damping'):
-                    key = 'contact damping'
-                    data = []
+                    unused_key = 'contact damping'
+                    unused_data = []
                     while '*' not in line0:
                         sline = line0.split(',')
                         iline += 1
                         line0 = lines[iline].strip().lower()
                     self.log.debug(line0)
                 elif word.startswith('contact pair'):
-                    key = 'contact pair'
-                    data = []
+                    unused_key = 'contact pair'
+                    unused_data = []
                     while '*' not in line0:
                         sline = line0.split(',')
                         iline += 1
@@ -228,7 +228,7 @@ class Abaqus(object):
         for part_name, part in sorted(self.parts.items()):
             self.log.info(part)
             part.check_materials(self.materials)
-        for mat_name, mat in sorted(self.materials.items()):
+        for unused_mat_name, mat in sorted(self.materials.items()):
             self.log.debug(mat)
 
     def _read_star_block(self, lines, iline, line0, debug=False):
@@ -279,7 +279,7 @@ class Abaqus(object):
         iline += 1
         line0 = lines[iline].strip().lower()
         word = line0.strip('*').lower()
-        allowed_words = ['elastic']
+        unused_allowed_words = ['elastic']
         unallowed_words = [
             'material', 'step', 'boundary', 'amplitude', 'surface interaction',
             'assembly']
@@ -337,7 +337,7 @@ class Abaqus(object):
             elif word.startswith('damage evolution'):
                 key = 'damage evolution'
                 #self.log.debug('  damage_e %s' % line0)
-                data = []
+                unused_data = []
                 while '*' not in line0:
                     sline = line0.split(',')
                     assert len(sline) == 3, sline
@@ -387,7 +387,7 @@ class Abaqus(object):
                 key = 'depvar'
                 sline = line0.split(',')
                 assert len(sline) == 1, sline
-                ndepvars = int(sline[0])
+                unused_ndepvars = int(sline[0])
                 iline += 1
             elif word.startswith('user material'):
                 key = 'user material'
@@ -411,14 +411,15 @@ class Abaqus(object):
                         raise NotImplementedError('mat_word=%r' % mat_word)
 
                 if not is_constants:
-                    msg = "line %i: 'constants' was not defined on %r" % (iline, lines[iline-1].rstrip())
+                    msg = "line %i: 'constants' was not defined on %r" % (
+                        iline, lines[iline-1].rstrip())
                     raise RuntimeError(msg)
 
                 #nconstants = 111
                 nlines_full = nconstants // 8
                 nleftover = nconstants % 8
                 mat_data = []
-                for iiline in range(nlines_full):
+                for unused_iiline in range(nlines_full):
                     sline = line0.split(',')
                     assert len(sline) == 8, 'len(sline)=%s; sline=%s' % (len(sline), sline)
                     mat_data += sline
@@ -432,7 +433,7 @@ class Abaqus(object):
                 # TODO: skips header parsing
                 #iline += 1
                 #line0 = lines[iline].strip().lower()
-                data = []
+                unused_data = []
                 while '*' not in line0:
                     sline = line0.split(',')
                     iline += 1
@@ -509,17 +510,17 @@ class Abaqus(object):
             elif word.startswith('nset'):
                 # TODO: skips header parsing
                 params_map = get_param_map(iline, word, required_keys=['instance'])
-                name = params_map['nset']
+                unused_name = params_map['nset']
                 iline += 1
                 line0 = lines[iline].strip().lower()
-                set_ids, iline, line0 = read_set(lines, iline, line0, params_map)
+                unused_set_ids, iline, line0 = read_set(lines, iline, line0, params_map)
             elif word.startswith('elset'):
                 # TODO: skips header parsing
                 params_map = get_param_map(iline, word, required_keys=['instance'])
-                name = params_map['elset']
+                unused_name = params_map['elset']
                 iline += 1
                 line0 = lines[iline].strip().lower()
-                set_ids, iline, line0 = read_set(lines, iline, line0, params_map)
+                unused_set_ids, iline, line0 = read_set(lines, iline, line0, params_map)
             elif word == 'node':
                 #self.log.debug('  skipping assembly *node')
                 node_output = []
@@ -568,13 +569,13 @@ class Abaqus(object):
         #print('resetting nids...')
         nids = []
         nodes = []
-        is_start = True
+        unused_is_start = True
         solid_sections = []
         while not line0.startswith('*end part'):
             #if is_start:
             iline += 1 # skips over the header line
             self.log.debug('  ' + line0)
-            iword = line0.strip('*').lower()
+            unused_iword = line0.strip('*').lower()
             #self.log.info('part: %s' % iword)
             if '*node' in line0:
                 #print('  Node iline=%s' % iline)
@@ -601,7 +602,7 @@ class Abaqus(object):
 
                     iline += 1
                     line0 = lines[iline].strip().lower()
-                nnodes = len(nids)
+                unused_nnodes = len(nids)
                 if is_failed:
                     msg = 'nids will overwrite nids0!\n'
                     #msg += 'nids0 = %s\n' % nids0
@@ -614,17 +615,17 @@ class Abaqus(object):
 
             elif '*nset' in line0:
                 params_map = get_param_map(iline, word, required_keys=['name', 'part'])
-                name = params_map['name']
+                unused_name = params_map['name']
                 line0 = lines[iline].strip().lower()
-                set_ids, iline, line0 = read_set(lines, iline, line0, params_map)
+                unused_set_ids, iline, line0 = read_set(lines, iline, line0, params_map)
 
             elif '*elset' in line0:
                 # TODO: skips header parsing
                 #iline += 1
                 params_map = get_param_map(iline, word, required_keys=['name', 'part'])
-                name = params_map['name']
+                unused_name = params_map['name']
                 line0 = lines[iline].strip().lower()
-                set_ids, iline, line0 = read_set(lines, iline, line0, params_map)
+                unused_set_ids, iline, line0 = read_set(lines, iline, line0, params_map)
 
             elif '*surface' in line0:
                 # TODO: skips header parsing
@@ -684,7 +685,7 @@ class Abaqus(object):
                 raise NotImplementedError(msg)
 
             line0 = lines[iline].strip().lower()
-            is_start = False
+            unused_is_start = False
 
             #print(line0)
             #qqq
@@ -751,9 +752,9 @@ class Abaqus(object):
         # 0.01, 1., 1e-05, 0.01
         iline += 1
         line0 = lines[iline].strip().lower()
-        step_name = ''
+        unused_step_name = ''
         if not line0.startswith('*'):
-            step_name = lines[iline].strip()
+            unused_step_name = lines[iline].strip()
             iline += 1
             line0 = lines[iline].strip().lower()
         word = line0.strip('*').lower()
@@ -769,7 +770,7 @@ class Abaqus(object):
             line0 = lines[iline].strip().lower()
             #print('word =', word)
             #print('active_line =', line0)
-            data_lines = []
+            unused_data_lines = []
             if word == 'static':
                 #print('static!!!!!!!')
                 sline = line0.split(',')
@@ -805,11 +806,12 @@ class Abaqus(object):
             elif word.startswith('temperature'):
                 iline -= 1
                 line0 = lines[iline].strip().lower()
-                data_lines, iline, line0 = self._read_star_block(lines, iline, line0, debug=True)
+                unused_data_lines, iline, line0 = self._read_star_block(
+                    lines, iline, line0, debug=True)
                 iline += 1
             elif word.startswith('controls'):
                 #self.log.debug('      controls')
-                data_lines, iline, line0 = self._read_star_block(lines, iline, line0)
+                unused_data_lines, iline, line0 = self._read_star_block(lines, iline, line0)
                 iline += 1
                 line0 = lines[iline].strip().lower()
                 #for line in data_lines:
@@ -834,7 +836,7 @@ class Abaqus(object):
                     iline += 1
                     line0 = lines[iline].strip().lower()
             elif word.startswith('contact output'):
-                contact_output = []
+                unused_contact_output = []
                 while '*' not in line0:
                     sline = line0.split(',')
                     element_output += sline
@@ -873,7 +875,7 @@ class Abaqus(object):
         with open(abqaqus_filename_out, 'w') as abq_file:
             print("  nparts = %s" % len(self.parts))
             print("  nmaterials = %s" % len(self.materials))
-            for part_name, part in self.parts.items():
+            for unused_part_name, part in self.parts.items():
                 part.write(abq_file)
             for unused_mat_name, mat in self.materials.items():
                 mat.write(abq_file)
@@ -935,7 +937,7 @@ def get_param_map(iline, word, required_keys=None):
         raise RuntimeError(msg)
     return param_map
 
-def split_by_equals(word, lines, iline):
+def split_by_equals(word, unused_lines, iline):
     """
     splits 'x = 42'
     into 'x' and '42'
@@ -968,7 +970,7 @@ def main(): # pragma: no cover
     print('etype=%s ieid=%s elem=%s' % (etype, ieid, elem))
     #return
 
-    nids = part.nids - 1
+    unused_nids = part.nids - 1
     nodes = part.nodes
     cohesive_elements = part.coh2d4
     assert cohesive_elements is not None, cohesive_elements

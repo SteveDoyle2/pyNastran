@@ -70,6 +70,7 @@ class LoadCombination(BaseCard):
             individual load_ids (corresponds to scale_factors)
         comment : str; default=''
             a comment for the card
+
         """
         BaseCard.__init__(self)
         if comment:
@@ -275,6 +276,7 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
             TEMP(LOAD) in the Case Control
         comment : str; default=''
             a comment for the card
+
         """
         if comment:
             self.comment = comment
@@ -296,6 +298,7 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         sid = integer(card, 1, 'sid')
         excite_id = integer(card, 2, 'excite_id')
@@ -318,6 +321,7 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         sid = data[0]
         excite_id = data[1]
@@ -333,6 +337,7 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by LSEQ=%s' % (self.sid)
         self.lid_ref = model.Load(self.lid, consider_load_combinations=True, msg=msg)
@@ -415,18 +420,19 @@ class LOADCYN(Load):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         sid = integer(card, 1, 'sid')
         scale = double(card, 2, 'scale')
         segment_id = integer(card, 3, 'segment_id')
         segment_type = string_or_blank(card, 4, 'segment_type')
 
-        scalei = double(card, 5, 'sid1')
+        scalei = double(card, 5, 'scale1')
         loadi = integer(card, 6, 'load1')
         scales = [scalei]
         load_ids = [loadi]
 
-        scalei = double_or_blank(card, 7, 'sid2')
+        scalei = double_or_blank(card, 7, 'scale2')
         if scalei is not None:
             loadi = double_or_blank(card, 8, 'load2')
             scales.append(scalei)
@@ -494,6 +500,9 @@ class DAREA(BaseCard):
             Component number. (0-6; 0-EPOINT/SPOINT; 1-6 GRID)
         scales : List[float]
             Scale (area) factor
+        comment : str; default=''
+            a comment for the card
+
         """
         if comment:
             self.comment = comment
@@ -534,6 +543,7 @@ class DAREA(BaseCard):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         sid = data[0]
         p = data[1]
@@ -561,6 +571,7 @@ class DAREA(BaseCard):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by DAREA=%s' % (self.sid)
         self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
@@ -664,6 +675,7 @@ class SPCD(Load):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         sid = integer(card, 1, 'sid')
         if card.field(5) in [None, '']:
@@ -693,6 +705,7 @@ class SPCD(Load):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         sid = data[0]
         nodes = [data[1]]
@@ -715,6 +728,7 @@ class SPCD(Load):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by SPCD=%s' % (self.sid)
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
@@ -773,6 +787,9 @@ class DEFORM(Load):
             CTUBE/CROD/CONROD/CBAR/CBEAM element id
         deformation : float
             the applied deformation
+        comment : str; default=''
+            a comment for the card
+
         """
         if comment:
             self.comment = comment
@@ -792,6 +809,7 @@ class DEFORM(Load):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         offset = 2 * icard
         sid = integer(card, 1, 'sid')
@@ -810,6 +828,7 @@ class DEFORM(Load):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         sid = data[0]
         eid = data[1]
@@ -824,12 +843,14 @@ class DEFORM(Load):
         ----------
         model : BDF()
             the BDF object
+
         """
-        return
+        msg = ', which is required by DEFORM=%s' % (self.sid)
+        self.eid_ref = model.Element(self.eid, msg)
 
     def safe_cross_reference(self, model, xref_errors, debug=True):
         msg = ', which is required by DEFORM=%s' % (self.sid)
-        self.eid_ref = model.Element(self.eid, msg)
+        self.eid_ref = model.safe_element(self.eid, self.sid, xref_errors, msg)
 
     def uncross_reference(self):
         self.eid = self.Eid()
@@ -885,6 +906,7 @@ class SLOAD(Load):
             the load magnitude
         comment : str; default=''
             a comment for the card
+
         """
         if comment:
             self.comment = comment
@@ -912,6 +934,7 @@ class SLOAD(Load):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         sid = integer(card, 1, 'sid')
 
@@ -941,6 +964,7 @@ class SLOAD(Load):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         (sid, nid, scale_factor) = data
         return SLOAD(sid, [nid], [scale_factor], comment=comment)
@@ -953,6 +977,7 @@ class SLOAD(Load):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by SLOAD=%s' % (self.sid)
         self.nodes_ref = []
@@ -1003,10 +1028,46 @@ class SLOAD(Load):
 class RFORCE(Load):
     type = 'RFORCE'
 
-    def __init__(self, sid, nid, cid, scale, r1, r2, r3, method=1, racc=0.,
+    def __init__(self, sid, nid, scale, r123, cid=0, method=1, racc=0.,
                  mb=0, idrf=0, comment=''):
         """
         idrf doesn't exist in MSC 2005r2; exists in MSC 2016
+
+        Parameters
+        ----------
+        sid : int
+            load set id
+        nid : int
+            grid point through which the rotation vector acts
+        scale : float
+            scale factor of the angular velocity in revolutions/time
+        r123 : List[float, float, float] / (3, ) float ndarray
+            rectangular components of the rotation vector R that passes
+            through point G (R1**2+R2**2+R3**2 > 0 unless A and RACC are
+            both zero).
+        cid : int; default=0
+            Coordinate system defining the components of the rotation vector.
+        method : int; default=1
+            Method used to compute centrifugal forces due to angular velocity.
+        racc : int; default=0.0
+            Scale factor of the angular acceleration in revolutions per
+            unit time squared.
+        mb : int; default=0
+            Indicates whether the CID coordinate system is defined in the main
+            Bulk Data Section (MB = -1) or the partitioned superelement Bulk
+            Data Section (MB = 0). Coordinate systems referenced in the main
+            Bulk Data Section are considered stationary with respect to the
+            assembly basic coordinate system.
+        idrf : int; default=0
+            ID indicating to which portion of the structure this particular
+            RFORCE entry applies. It is possible to have multiple RFORCE
+            entries in the same subcase for SOL 600 to represent different
+            portions of the structure with different rotational accelerations.
+            IDRF corresponds to a SET3 entry specifying the elements with this
+            acceleration. A BRKSQL entry may also be specified with a matching
+            IDRF entry.
+        comment : str; default=''
+            a comment for the card
         """
         if comment:
             self.comment = comment
@@ -1014,18 +1075,23 @@ class RFORCE(Load):
         self.nid = nid
         self.cid = cid
         self.scale = scale
-        self.r1 = r1
-        self.r2 = r2
-        self.r3 = r3
+        self.r123 = r123
         self.method = method
         self.racc = racc
         self.mb = mb
         self.idrf = idrf
         self.nid_ref = None
         self.cid_ref = None
+        self.validate()
 
     def validate(self):
         assert self.method in [1, 2], self.method
+        assert isinstance(self.r123, list), self.r123
+        assert isinstance(self.scale, float), self.scale
+        assert isinstance(self.cid, int), self.cid
+        assert isinstance(self.mb, int), self.mb
+        assert isinstance(self.idrf, int), self.idrf
+        assert isinstance(self.racc, float), self.racc
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1038,6 +1104,7 @@ class RFORCE(Load):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         sid = integer(card, 1, 'sid')
         nid = integer_or_blank(card, 2, 'nid', 0)
@@ -1051,8 +1118,8 @@ class RFORCE(Load):
         mb = integer_or_blank(card, 10, 'mb', 0)
         idrf = integer_or_blank(card, 11, 'idrf', 0)
         assert len(card) <= 12, 'len(RFORCE card) = %i\ncard=%s' % (len(card), card)
-        return RFORCE(sid, nid, cid, scale, r1, r2, r3, method, racc, mb,
-                      idrf, comment=comment)
+        return RFORCE(sid, nid, scale, [r1, r2, r3],
+                      cid=cid, method=method, racc=racc, mb=mb, idrf=idrf, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -1065,10 +1132,11 @@ class RFORCE(Load):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         sid, nid, cid, a, r1, r2, r3, method, racc, mb = data
         scale = 1.0
-        return RFORCE(sid, nid, cid, scale, r1, r2, r3, method=method, racc=racc, mb=mb,
+        return RFORCE(sid, nid, scale, [r1, r2, r3], cid=cid, method=method, racc=racc, mb=mb,
                       idrf=0, comment=comment)
 
     def cross_reference(self, model):
@@ -1079,6 +1147,7 @@ class RFORCE(Load):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by RFORCE sid=%s' % self.sid
         if self.nid > 0:
@@ -1115,9 +1184,8 @@ class RFORCE(Load):
         return [self]
 
     def raw_fields(self):
-        list_fields = ['RFORCE', self.sid, self.node_id, self.Cid(), self.scale,
-                       self.r1, self.r2, self.r3, self.method, self.racc,
-                       self.mb, self.idrf]
+        list_fields = (['RFORCE', self.sid, self.node_id, self.Cid(), self.scale] +
+                       list(self.r123) + [self.method, self.racc, self.mb, self.idrf])
         return list_fields
 
     def repr_fields(self):
@@ -1125,9 +1193,8 @@ class RFORCE(Load):
         racc = set_blank_if_default(self.racc, 0.)
         mb = set_blank_if_default(self.mb, 0)
         idrf = set_blank_if_default(self.idrf, 0)
-        list_fields = ['RFORCE', self.sid, self.node_id, self.Cid(), self.scale,
-                       self.r1, self.r2, self.r3, self.method, racc,
-                       mb, idrf]
+        list_fields = (['RFORCE', self.sid, self.node_id, self.Cid(), self.scale] +
+                       list(self.r123) + [self.method, racc, mb, idrf])
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -1168,8 +1235,11 @@ class RFORCE1(Load):
             scale factor of the angular velocity in revolutions/time
         r123 : List[float, float, float] / (3, ) float ndarray
             rectangular components of the rotation vector R that passes
-            through point G
+            through point G (R1**2+R2**2+R3**2 > 0 unless A and RACC are
+            both zero).
         racc : int; default=0.0
+            Scale factor of the angular acceleration in revolutions per
+            unit time squared.
         mb : int; default=0
             Indicates whether the CID coordinate system is defined in the main
             Bulk Data Section (MB = -1) or the partitioned superelement Bulk
@@ -1220,6 +1290,7 @@ class RFORCE1(Load):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         sid = integer(card, 1, 'sid')
         nid = integer_or_blank(card, 2, 'nid', 0)
@@ -1249,6 +1320,7 @@ class RFORCE1(Load):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by RFORCE1 sid=%s' % self.sid
         #if self.nid > 0:  # TODO: why was this every here?
@@ -1332,6 +1404,7 @@ class RANDPS(RandomLoad):
             TABRNDi id that defines G(F)
         comment : str; default=''
             a comment for the card
+
         """
         if comment:
             self.comment = comment
@@ -1370,6 +1443,7 @@ class RANDPS(RandomLoad):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         sid = integer(card, 1, 'sid')
         j = integer(card, 2, 'j')
@@ -1388,6 +1462,7 @@ class RANDPS(RandomLoad):
         ----------
         model : BDF()
             the BDF object
+
         """
         if self.tid:
             msg = ', which is required by RANDPS sid=%s' % (self.sid)

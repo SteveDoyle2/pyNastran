@@ -94,8 +94,8 @@ from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
                                            MAT8, MAT9, MAT10, MAT11, MAT3D,
                                            MATG, MATHE, MATHP, CREEP, EQUIV,
                                            NXSTRAT)
-# TODO: add MATT3, MATT8, MATT9
-from pyNastran.bdf.cards.material_deps import MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATS1
+from pyNastran.bdf.cards.material_deps import (MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9,
+                                               MATS1)
 
 from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
 from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs, POINT, SEQGP
@@ -142,6 +142,7 @@ from pyNastran.bdf.bdf_interface.add_card import AddCards
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.bdf_interface.write_mesh import WriteMesh
 from pyNastran.bdf.bdf_interface.uncross_reference import UnXrefMesh
+from pyNastran.bdf.bdf_interface.verify_validate import verify_bdf, validate_bdf
 from pyNastran.bdf.errors import (CrossReferenceError, DuplicateIDsError,
                                   CardParseSyntaxError, UnsupportedCard)
 from pyNastran.bdf.bdf_interface.pybdf import (
@@ -447,7 +448,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             'MATG', 'MATHE', 'MATHP',
 
             ## Material dependence - MATT1/MATT2/etc.
-            'MATT1', 'MATT2', 'MATT3', 'MATT4', 'MATT5', 'MATT8', # 'MATT9',
+            'MATT1', 'MATT2', 'MATT3', 'MATT4', 'MATT5', 'MATT8', 'MATT9',
             'MATS1', #'MATS3', 'MATS8',
             # 'MATHE'
             #'EQUIV', # testing only, should never be activated...
@@ -459,7 +460,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             'MAT4', 'MAT5',
 
             ## spcs
-            'SPC', 'SPCADD', 'SPC1', 'SPCAX',
+            'SPC', 'SPCADD', 'SPC1', 'SPCAX', 'SPCOFF', 'SPCOFF1',
             'GMSPC',
 
             ## mpcs
@@ -837,276 +838,13 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
     def validate(self):
         # type : (None) -> None
         """runs some checks on the input data beyond just type checking"""
-        def _print_card(card):
-            try:
-                return card.write_card(size=8)
-            except RuntimeError:
-                return ''
+        validate_bdf(self)
 
-        def _validate_dict_list(objects_dict):
-            """helper method for validate"""
-            ifailed = 0
-            nmax_failed = 0
-            assert isinstance(objects_dict, dict), type(objects_dict)
-            for unused_key, objects in sorted(objects_dict.items()):
-                assert isinstance(objects, list), type(objects)
-                for obj in objects:
-                    #print('obj.get_stats =', obj.get_stats())
-                    #print(obj.rstrip())
-                    try:
-                        obj.validate()
-                    except(ValueError, AssertionError, RuntimeError, IndexError) as error:
-                        #exc_type, exc_value, exc_traceback = sys.exc_info()
-                        # format_tb(exc_traceback)  # works; ugly
-                        # format_exc(e) # works; short
-                        #traceback.format_stack()
-                        #print('validate_dict_list')
-                        #print('traceback.format_stack()[:-1] = \n', ''.join(traceback.format_stack()[:-1]))
-                        #self.log.info('info2')
-                        #self.log.error('error2')
-                        #msg = (
-                            #'\nTraceback (most recent call last):\n' +
-                            #''.join(traceback.format_stack()) +
-                            ##''.join(traceback.format_tb(exc_traceback)) + #'\n' +
-                            #'%s: %s\n' % (exc_type.__name__, exc_value) +
-                            #obj.get_stats() +
-                            #'----------------------------------------------------------------\n')
-                        #self.log.error(msg)
-                        self.log.error(('\n' + obj.get_stats() + '\n' + _print_card(obj)).rstrip())
-                        ifailed += 1
-                        if ifailed > nmax_failed:
-                            raise
-                if ifailed:
-                    raise
-
-        def _validate_dict(objects):
-            # type : (dict) -> None
-            """helper method for validate"""
-            assert isinstance(objects, dict), type(objects)
-            ifailed = 0
-            nmax_failed = 0
-            for unused_id, obj in sorted(objects.items()):
-                try:
-                    obj.validate()
-                except(ValueError, AssertionError, RuntimeError, IndexError) as error:
-                    #exc_type, exc_value, exc_traceback = sys.exc_info()
-                    # format_tb(exc_traceback)  # works; ugly
-                    # format_exc(e) # works; short
-                    #traceback.format_stack()
-                    #msg = (
-                        #'\nTraceback (most recent call last):\n' +
-                        #''.join(traceback.format_stack()[:-1])
-                    #)
-                    #write_error(msg)
-                    #write_error(''.join(traceback.format_tb(exc_traceback)) + '\n')
-                    #self.log.error('\n' + obj.rstrip())
-                    #write_error('----------------------------------------------------------------\n')
-                    self.log.error(('\n' + obj.get_stats() + '\n' + _print_card(obj)).rstrip())
-                    _print_card(obj)
-                    ifailed += 1
-                    if ifailed > nmax_failed:
-                        raise
-            if ifailed:
-                raise
-
-        def _validate_list(objects):
-            # type : (List) -> None
-            """helper method for validate"""
-            ifailed = 0
-            nmax_failed = 0
-            assert isinstance(objects, list), type(objects)
-            for obj in objects:
-                try:
-                    obj.validate()
-                except(ValueError, AssertionError, RuntimeError) as error:
-                    #exc_type, exc_value, exc_traceback = sys.exc_info()
-                    # format_tb(exc_traceback)  # works; ugly
-                    # format_exc(e) # works; short
-                    #traceback.format_stack()
-                    #self.log.error(
-                        #'\nTraceback (most recent call last):\n' +
-                        #''.join(traceback.format_stack()[:-1]) +
-                        #''.join(traceback.format_tb(exc_traceback)) + '\n' +
-                        #'\n' + obj.rstrip() +
-                        #'----------------------------------------------------------------\n')
-                    self.log.error(('\n' + obj.get_stats() + '\n' + _print_card(obj)).rstrip())
-                    ifailed += 1
-                    if ifailed > nmax_failed:
-                        raise
-            if ifailed:
-                raise
-
-        _validate_dict(self.nodes)
-        _validate_dict(self.coords)
-        _validate_dict(self.elements)
-        _validate_dict(self.properties)
-        _validate_dict(self.rigid_elements)
-        _validate_dict(self.plotels)
-        _validate_dict(self.masses)
-        _validate_dict(self.properties_mass)
-
-        #------------------------------------------------
-        _validate_dict(self.materials)
-        _validate_dict(self.thermal_materials)
-        _validate_dict(self.MATS1)
-        _validate_dict(self.MATS3)
-        _validate_dict(self.MATS8)
-        _validate_dict(self.MATT1)
-        _validate_dict(self.MATT2)
-        _validate_dict(self.MATT3)
-        _validate_dict(self.MATT4)
-        _validate_dict(self.MATT5)
-        _validate_dict(self.MATT8)
-        _validate_dict(self.MATT9)
-        _validate_dict(self.creep_materials)
-        _validate_dict(self.hyperelastic_materials)
-
-        #------------------------------------------------
-        _validate_dict_list(self.load_combinations)
-        _validate_dict_list(self.loads)
-        _validate_dict_list(self.dloads)
-        _validate_dict_list(self.dloads)
-
-        #------------------------------------------------
-        _validate_dict(self.nlpcis)
-        _validate_dict(self.nlparms)
-        _validate_dict(self.rotors)
-        _validate_dict(self.tsteps)
-        _validate_dict(self.tstepnls)
-        _validate_dict_list(self.transfer_functions)
-        _validate_dict(self.delays)
-
-        #------------------------------------------------
-        if self.aeros is not None:
-            self.aeros.validate()
-        _validate_dict(self.caeros)
-        _validate_dict(self.paeros)
-        _validate_dict(self.splines)
-        _validate_dict(self.aecomps)
-        _validate_dict(self.aefacts)
-        #_validate_dict(self.panlists)
-
-        _validate_dict_list(self.aelinks)
-
-        _validate_dict(self.aeparams)
-        _validate_dict(self.aesurf)
-        _validate_dict(self.aesurfs)
-        _validate_dict(self.aestats)
-        _validate_dict(self.trims)
-
-        _validate_dict(self.divergs)
-        _validate_dict(self.csschds)
-        _validate_list(self.mkaeros)
-        _validate_list(self.monitor_points)
-
-        #------------------------------------------------
-        if self.aero is not None:
-            self.aero.validate()
-
-        _validate_dict(self.flfacts)
-        _validate_dict(self.flutters)
-        _validate_dict(self.gusts)
-
-        #------------------------------------------------
-        _validate_dict_list(self.bcs)
-        _validate_dict(self.phbdys)
-        _validate_dict(self.convection_properties)
-        _validate_dict(self.tempds)
-        #------------------------------------------------
-        _validate_dict(self.bcrparas)
-        _validate_dict(self.bctadds)
-        _validate_dict(self.bctparas)
-        _validate_dict(self.bctsets)
-        _validate_dict(self.bsurf)
-        _validate_dict(self.bsurfs)
-
-        #------------------------------------------------
-        _validate_dict(self.suport1)
-        _validate_list(self.suport)
-        _validate_list(self.se_suport)
-
-        _validate_dict_list(self.spcadds)
-        _validate_dict_list(self.spcs)
-        _validate_dict_list(self.mpcadds)
-        _validate_dict_list(self.mpcs)
-
-        #------------------------------------------------
-        _validate_dict(self.dareas)
-        _validate_dict(self.dphases)
-
-        _validate_dict(self.pbusht)
-        _validate_dict(self.pdampt)
-        _validate_dict(self.pelast)
-
-        _validate_dict_list(self.frequencies)
-        #------------------------------------------------
-        _validate_dict(self.dmis)
-        _validate_dict(self.dmigs)
-        _validate_dict(self.dmijs)
-        _validate_dict(self.dmijis)
-        _validate_dict(self.dmiks)
-        #------------------------------------------------
-        #self.asets = []
-        #self.bsets = []
-        #self.csets = []
-        #self.qsets = []
-        #self.usets = {}
-
-        ##: SExSETy
-        #self.se_bsets = []
-        #self.se_csets = []
-        #self.se_qsets = []
-        #self.se_usets = {}
-        #self.se_sets = {}
-
-        _validate_dict(self.sets)
-        _validate_dict_list(self.usets)
-
-        _validate_list(self.asets)
-        _validate_list(self.omits)
-        _validate_list(self.bsets)
-        _validate_list(self.csets)
-        _validate_list(self.qsets)
-
-        _validate_dict(self.se_sets)
-        _validate_dict(self.se_usets)
-
-        _validate_list(self.se_bsets)
-        _validate_list(self.se_csets)
-        _validate_list(self.se_qsets)
-        #------------------------------------------------
-        _validate_dict(self.tables)
-        _validate_dict(self.tables_d)
-        _validate_dict(self.tables_m)
-        _validate_dict(self.random_tables)
-        _validate_dict(self.tables_sdamping)
-        _validate_dict(self.sets)
-
-        #------------------------------------------------
-        _validate_dict(self.methods)
-        _validate_dict(self.cMethods)
-        #------------------------------------------------
-        _validate_dict(self.dconadds)
-        _validate_dict_list(self.dconstrs)
-
-        _validate_dict(self.desvars)
-        _validate_dict(self.ddvals)
-        _validate_dict(self.dlinks)
-        _validate_dict(self.dresps)
-
-        if self.dtable is not None:
-            self.dtable.validate()
-        if self.doptprm is not None:
-            self.doptprm.validate()
-
-        _validate_dict(self.dequations)
-        _validate_dict(self.dvprels)
-        _validate_dict(self.dvmrels)
-        _validate_dict(self.dvcrels)
-        for unused_key, dscreen in sorted(self.dscreen.items()):
-            dscreen.validate()
-        _validate_dict_list(self.dvgrids)
-        #------------------------------------------------
+    def _verify_bdf(self, xref=None):
+        """Cross reference verification method."""
+        if xref is None:
+            xref = self._xref
+        verify_bdf(self, xref)
 
     def include_zip(self, bdf_filename=None, encoding=None):
         """
@@ -2023,7 +1761,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             'MATT4' : (MATT4, self._add_material_dependence_object),
             'MATT5' : (MATT5, self._add_material_dependence_object),
             'MATT8' : (MATT8, self._add_material_dependence_object),
-            #'MATT9' : (MATT9, self._add_material_dependence_object),
+            'MATT9' : (MATT9, self._add_material_dependence_object),
             'NXSTRAT' : (NXSTRAT, self._add_nxstrat_object),
 
             # hasnt been verified, links up to MAT1, MAT2, MAT9 w/ same MID
@@ -2364,7 +2102,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 _check_for_spaces(card_name, card_lines, comment)
             self.log.info('    rejecting card_name = %s' % card_name)
 
-
     def _prepare_cbar(self, unused_card, card_obj, comment=''):
         """adds a CBAR"""
         elem = CBAR.add_card(card_obj, baror=self.baror, comment=comment)
@@ -2488,7 +2225,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             self._add_dti_object(DTI.add_card(card_obj, comment=comment))
         else:
             if comment:
-                self.reject_lines.append([comment])
+                self.reject_lines.append([_format_comment(comment)])
             self.reject_cards.append(card_obj)
             self._write_reject_message(card_name, card_obj, comment=comment)
 
@@ -3842,12 +3579,12 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         try:
             with open(bdf_filename, 'r') as bdf_file:
                 lines = bdf_file.readlines()
-        except (AttributeError, TypeError) as e:
+        except (AttributeError, TypeError) as error:
             if hasattr(bdf_filename, 'read') and hasattr(bdf_filename, 'write'):
                 lines = bdf_filename.readlines()
                 bdf_filename.seek(0)  # need to rewind the buffer!
             else:
-                raise e
+                raise error
 
         check_header = True
         for line in lines:
@@ -3897,95 +3634,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
         if self.nastran_format == 'zona':
             self.zona.update_for_zona()
-
-    def _verify_bdf(self, xref=None):
-        """Cross reference verification method."""
-        if xref is None:
-            xref = self._xref
-
-        #for key, card in sorted(self.params.items()):
-            #card._verify(xref)
-        for unused_key, card in sorted(iteritems(self.nodes)):
-            try:
-                card._verify(xref)
-            except:
-                print(str(card))
-                raise
-        for unused_key, card in sorted(self.coords.items()):
-            try:
-                card._verify(xref)
-            except:
-                print(str(card))
-                raise
-        for unused_key, card in sorted(iteritems(self.elements)):
-            try:
-                card._verify(xref)
-            except:
-                exc_type, exc_value, exc_traceback = sys.exc_info()
-                print(repr(traceback.format_exception(exc_type, exc_value,
-                                                      exc_traceback)))
-                print(str(card))
-                raise
-
-        for eid, cbarao in sorted(self.ao_element_flags.items()):
-            try:
-                assert self.elements[eid].type == 'CBAR', 'CBARAO error: eid=%s is not a CBAR' % eid
-            except:
-                print(str(cbarao))
-                raise
-
-        for unused_key, card in sorted(iteritems(self.properties)):
-            try:
-                card._verify(xref)
-            except:
-                print(str(card))
-                raise
-        for unused_key, card in sorted(self.materials.items()):
-            try:
-                card._verify(xref)
-            except:
-                print(str(card))
-                raise
-
-        for unused_key, card in sorted(self.dresps.items()):
-            try:
-                card._verify(xref)
-            except:
-                print(str(card))
-                raise
-
-        for unused_key, card in sorted(self.dvcrels.items()):
-            try:
-                card._verify(xref)
-            except:
-                print(str(card))
-                raise
-        for unused_key, card in sorted(self.dvmrels.items()):
-            try:
-                card._verify(xref)
-            except:
-                print(str(card))
-                raise
-        for unused_key, card in sorted(self.dvprels.items()):
-            try:
-                card._verify(xref)
-            except:
-                print(str(card))
-                raise
-        for unused_key, cards in sorted(self.dvgrids.items()):
-            for card in cards:
-                try:
-                    card._verify(xref)
-                except:
-                    print(str(card))
-                    raise
-
-        for unused_key, card in sorted(self.gusts.items()):
-            try:
-                card._verify(self, xref)
-            except:
-                print(str(card))
-                raise
 
 #------------------------------------------------------------------------------------------------------
     # HDF5
@@ -4249,8 +3897,8 @@ class BDF(BDF_):
         cls = self.__class__
         result = cls.__new__(cls)
         memo[id(self)] = result
-        for k, v in self.__dict__.items():
-            setattr(result, k, deepcopy(v, memo))
+        for key, value in self.__dict__.items():
+            setattr(result, key, deepcopy(value, memo))
         return result
 
     def __copy__(self):
@@ -4287,6 +3935,7 @@ def _check_for_spaces(card_name, card_lines, comment):
 
     if card_name in ['SUBCASE ', 'CEND']:
         raise RuntimeError('No executive/case control deck was defined.')
+
 
 def main():  # pragma: no cover
     """shows off how unicode works becausee it's overly complicated"""

@@ -411,6 +411,10 @@ class MPC(Constraint):
         assert isinstance(self.coefficients, list), type(self.coefficients)
         assert len(self.nodes) == len(self.components)
         assert len(self.nodes) == len(self.coefficients)
+        for nid, comp, enforcedi in zip(self.nodes, self.components, self.enforced):
+            assert isinstance(nid, integer_types), self.nodes
+            assert isinstance(comp, string_types), self.components
+            assert isinstance(enforcedi, float), self.enforced
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -477,45 +481,53 @@ class MPC(Constraint):
         #msg = 'MPC has not implemented data parsing'
         conid = data[0]
         nodes = data[1]
-        constraints = data[2]
+        components = [str(component) for component in data[2]]
         enforced = data[3]
-        return MPC(conid, nodes, constraints, enforced, comment=comment)
+        return MPC(conid, nodes, components, enforced, comment=comment)
 
     @property
     def constraints(self):
+        self.deprecated('constraints', 'components', '1.2')
         return self.components
     @constraints.setter
     def constraints(self, constraints):
+        self.deprecated('constraints', 'components', '1.2')
         self.components = constraints
 
     @property
     def enforced(self):
+        self.deprecated('enforced', 'coefficients', '1.2')
         return self.coefficients
     @enforced.setter
     def enforced(self, enforced):
+        self.deprecated('enforced', 'coefficients', '1.2')
         self.coefficients = enforced
 
 
     @property
     def gids_ref(self):
+        self.deprecated('gids_ref', 'nodes_ref', '1.2')
         return self.nodes_ref
 
     @gids_ref.setter
     def gids_ref(self, nodes_ref):
+        self.deprecated('gids_ref', 'nodes_ref', '1.2')
         self.nodes_ref = nodes_ref
 
     @property
     def gids(self):
+        self.deprecated('gids', 'nodes', '1.2')
         return self.nodes
 
     @gids.setter
     def gids(self, nodes):
+        self.deprecated('gids', 'nodes', '1.2')
         self.nodes = nodes
 
     @property
     def node_ids(self):
         if self.gids_ref is None:
-            return self.gids
+            return self.nodes
         msg = ', which is required by MPC=%s' % self.conid
         return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True, msg=msg)
 
@@ -619,7 +631,7 @@ class SPC(Constraint):
      +-----+-----+----+----+------+----+----+----+
     """
     type = 'SPC'
-    def __init__(self, conid, gids, components, enforced, comment=''):
+    def __init__(self, conid, nodes, components, enforced, comment=''):
         """
         Creates an SPC card, which defines the degree of freedoms to be
         constrained
@@ -628,14 +640,14 @@ class SPC(Constraint):
         ----------
         conid : int
             constraint id
-        gids : List[int]
+        nodes : List[int]
             GRID/SPOINT ids
         components : List[str]
             the degree of freedoms to constrain (e.g., '1', '123')
         enforced : List[float]
             the constrained value for the given node (typically 0.0)
 
-        .. note:: len(gids) == len(components) == len(enforced)
+        .. note:: len(nodes) == len(components) == len(enforced)
         .. warning:: non-zero enforced deflection requires an SPCD as well
 
         """
@@ -643,7 +655,7 @@ class SPC(Constraint):
         if comment:
             self.comment = comment
         self.conid = conid
-        self.gids = gids
+        self.nodes = nodes
         self.components = components
         self.enforced = enforced
         self.gids_ref = None
@@ -652,10 +664,10 @@ class SPC(Constraint):
         assert isinstance(self.gids, list), self.gids
         assert isinstance(self.components, list), self.components
         assert isinstance(self.enforced, list), self.enforced
-        assert len(self.gids) == len(self.components), 'len(self.gids)=%s len(self.components)=%s' % (len(self.gids), len(self.components))
-        assert len(self.gids) == len(self.enforced), 'len(self.gids)=%s len(self.enforced)=%s' % (len(self.gids), len(self.enforced))
-        for nid, comp, enforcedi in zip(self.gids, self.components, self.enforced):
-            assert isinstance(nid, integer_types), self.gids
+        assert len(self.nodes) == len(self.components), 'len(self.nodes)=%s len(self.components)=%s' % (len(self.nodes), len(self.components))
+        assert len(self.nodes) == len(self.enforced), 'len(self.nodes)=%s len(self.enforced)=%s' % (len(self.nodes), len(self.enforced))
+        for nid, comp, enforcedi in zip(self.nodes, self.components, self.enforced):
+            assert isinstance(nid, integer_types), self.nodes
             assert isinstance(comp, string_types), self.components
             assert isinstance(enforcedi, float), self.enforced
 
@@ -674,11 +686,11 @@ class SPC(Constraint):
         """
         conid = integer(card, 1, 'sid')
         if card.field(5) in [None, '']:
-            gids = [integer(card, 2, 'G1'),]
+            nodes = [integer(card, 2, 'G1'),]
             components = [components_or_blank(card, 3, 'C1', '0')]
             enforced = [double_or_blank(card, 4, 'D1', 0.0)]
         else:
-            gids = [
+            nodes = [
                 integer(card, 2, 'G1'),
                 integer_or_blank(card, 5, 'G2'),
             ]
@@ -687,7 +699,7 @@ class SPC(Constraint):
                           components_or_blank(card, 6, 'C2', '0')]
             enforced = [double_or_blank(card, 4, 'D1', 0.0),
                         double_or_blank(card, 7, 'D2', 0.0)]
-        return SPC(conid, gids, components, enforced, comment=comment)
+        return SPC(conid, nodes, components, enforced, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -703,12 +715,12 @@ class SPC(Constraint):
 
         """
         conid = data[0]
-        gids = [data[1]]
+        nodes = [data[1]]
         components = data[2]
         assert 0 <= components <= 123456, data
         enforced = [data[3]]
         assert conid > 0, data
-        assert gids[0] > 0, data
+        assert nodes[0] > 0, data
         components_str = str(components)
         assert len(components_str) <= 6, data
         components = [components_str]
@@ -719,7 +731,7 @@ class SPC(Constraint):
         #else:
             #raise RuntimeError('SPC; components=%s data=%s' % (components, data))
         #assert 0 < components[0] > 1000, data
-        return SPC(conid, gids, components, enforced, comment=comment)
+        return SPC(conid, nodes, components, enforced, comment=comment)
 
     @property
     def constraints(self):
@@ -730,11 +742,31 @@ class SPC(Constraint):
         self.components = constraints
 
     @property
+    def gids_ref(self):
+        self.deprecated('gids_ref', 'nodes_ref', '1.2')
+        return self.nodes_ref
+
+    @gids_ref.setter
+    def gids_ref(self, nodes_ref):
+        self.deprecated('gids_ref', 'nodes_ref', '1.2')
+        self.nodes_ref = nodes_ref
+
+    @property
+    def gids(self):
+        self.deprecated('gids', 'nodes', '1.2')
+        return self.nodes
+
+    @gids.setter
+    def gids(self, nodes):
+        self.deprecated('gids', 'nodes', '1.2')
+        self.nodes = nodes
+
+    @property
     def node_ids(self):
-        if self.gids_ref is None:
-            return self.gids
+        if self.nodes_ref is None:
+            return self.nodes
         msg = ', which is required by SPC=%s' % (self.conid)
-        return self._node_ids(nodes=self.gids_ref, allow_empty_nodes=True, msg=msg)
+        return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True, msg=msg)
 
     def cross_reference(self, model):
         """
@@ -762,17 +794,17 @@ class SPC(Constraint):
                     model.log.warning(msg)
                 continue
             nids2.append(nid2)
-        self.gids_ref = nids2
+        self.nodes_ref = nids2
 
     def uncross_reference(self):
-        self.gids = self.node_ids
-        self.gids_ref = None
+        self.nodes = self.node_ids
+        self.nodes_ref = None
 
     def raw_fields(self):
         fields = ['SPC', self.conid]
-        for (gid, constraint, enforced) in zip(self.node_ids, self.components,
+        for (node_id, constraint, enforced) in zip(self.node_ids, self.components,
                                                self.enforced):
-            fields += [gid, constraint, enforced]
+            fields += [node_id, constraint, enforced]
         return fields
 
     def write_card(self, size=8, is_double=False):
@@ -852,7 +884,24 @@ class SPCAX(Constraint):
     """
     type = 'SPCAX'
 
-    def __init__(self, conid, rid, hid, c, d, comment=''):
+    def __init__(self, conid, ringax, hid, component, enforced, comment=''):
+        """
+        Creates an SPCAX card
+
+        Parameters
+        ----------
+        conid : int
+            Identification number of a single-point constraint set.
+        ringax : int
+            Ring identification number. See RINGAX entry.
+        hid : int
+            Harmonic identification number. (Integer >= 0)
+        component : int
+            Component identification number. (Any unique combination of the
+            Integers 1 through 6.)
+        enforced : float
+            Enforced displacement value
+        """
         # defines everything :) at least until cross-referencing methods are
         # implemented
         Constraint.__init__(self)
@@ -861,14 +910,14 @@ class SPCAX(Constraint):
         #: Identification number of a single-point constraint set.
         self.conid = conid
         #: Ring identification number. See RINGAX entry.
-        self.rid = rid
+        self.ringax = ringax
         #: Harmonic identification number. (Integer >= 0)
         self.hid = hid
         #: Component identification number. (Any unique combination of the
         #: Integers 1 through 6.)
-        self.c = c
+        self.component = component
         #: Enforced displacement value
-        self.d = d
+        self.enforced = enforced
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -884,11 +933,11 @@ class SPCAX(Constraint):
 
         """
         conid = integer(card, 1, 'conid')
-        rid = integer(card, 2, 'rid')
+        ringax = integer(card, 2, 'ringax')
         hid = integer(card, 3, 'hid')
-        c = parse_components(card, 4, 'c')
-        d = double(card, 5, 'd')
-        return SPCAX(conid, rid, hid, c, d, comment=comment)
+        component = parse_components(card, 4, 'component')
+        enforced = double(card, 5, 'enforced')
+        return SPCAX(conid, ringax, hid, component, enforced, comment=comment)
 
     #@classmethod
     #def add_op2_data(cls, data, comment=''):
@@ -898,7 +947,7 @@ class SPCAX(Constraint):
     def cross_reference(self, model):
         pass
         #msg = ', which is required by SPCAX=%s' % (self.conid)
-        #self.rid = model.ring[self.rid]
+        #self.ringax = model.ring[self.ringax]
         #self.hid = model.harmonic[self.hid]
 
     def safe_cross_reference(self, model):
@@ -908,7 +957,7 @@ class SPCAX(Constraint):
         pass
 
     def raw_fields(self):
-        fields = ['SPCAX', self.conid, self.rid, self.hid, self.c, self.d]
+        fields = ['SPCAX', self.conid, self.ringax, self.hid, self.component, self.enforced]
         return fields
 
     def write_card(self, size=8, is_double=False):
@@ -1082,25 +1131,21 @@ class SPCOFF(Constraint):
     """
     type = 'SPCOFF'
 
-    def __init__(self, nodes, components, enforced, comment=''):
+    def __init__(self, nodes, components, comment=''):
         Constraint.__init__(self)
         if comment:
             self.comment = comment
         self.nodes = nodes
         self.components = components
-        self.enforced = enforced
         self.nodes_ref = None
 
     def validate(self):
         assert isinstance(self.nodes, list), self.nodes
         assert isinstance(self.components, list), self.components
-        assert isinstance(self.enforced, list), self.enforced
         assert len(self.nodes) == len(self.components), 'len(self.nodes)=%s len(self.components)=%s' % (len(self.nodes), len(self.components))
-        assert len(self.nodes) == len(self.enforced), 'len(self.nodes)=%s len(self.enforced)=%s' % (len(self.nodes), len(self.enforced))
-        for nid, comp, enforcedi in zip(self.nodes, self.components, self.enforced):
+        for nid, comp in zip(self.nodes, self.components):
             assert isinstance(nid, integer_types), self.nodes
             assert isinstance(comp, string_types), self.components
-            assert isinstance(enforcedi, float), self.enforced
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1115,22 +1160,21 @@ class SPCOFF(Constraint):
             a comment for the card
 
         """
-        raise NotImplementedError()
-        #if card.field(5) in [None, '']:
-            #nodes = [integer(card, 2, 'G1'),]
-            #components = [components_or_blank(card, 3, 'C1', '0')]
-            #enforced = [double_or_blank(card, 4, 'D1', 0.0)]
-        #else:
-            #nodes = [
-                #integer(card, 2, 'G1'),
-                #integer_or_blank(card, 5, 'G2'),
-            #]
-            ## :0 if scalar point 1-6 if grid
-            #components = [components_or_blank(card, 3, 'C1', '0'),
-                          #components_or_blank(card, 6, 'C2', '0')]
-            #enforced = [double_or_blank(card, 4, 'D1', 0.0),
-                        #double_or_blank(card, 7, 'D2', 0.0)]
-        #return cls(nodes, components, enforced, comment=comment)
+        nodes = []
+        components = []
+        ncards = len(card) - 1
+        nconstraints = ncards // 2
+        if ncards % 2 == 1:
+            nconstraints += 1
+        for counter in range(ncards):
+            igrid = counter + 1
+            ifield = 1 + counter * 2
+            node = integer(card, ifield, 'G%i' % igrid)
+            component = components_or_blank(card, ifield+1, 'C%i' % igrid, '0')
+            nodes.append(node)
+            components.append(component)
+        assert len(card) > 1, 'len(SPCOFF card) = %i\ncard=%s' % (len(card), card)
+        return SPCOFF(nodes, components, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -1212,9 +1256,8 @@ class SPCOFF(Constraint):
 
     def raw_fields(self):
         fields = ['SPCOFF']
-        for (gid, constraint, enforced) in zip(self.node_ids, self.components,
-                                               self.enforced):
-            fields += [gid, constraint, enforced]
+        for (gid, constraint) in zip(self.node_ids, self.components):
+            fields += [gid, constraint]
         return fields
 
     def write_card(self, size=8, is_double=False):

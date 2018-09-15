@@ -254,6 +254,7 @@ class TestBDF(Tester):
                 model.read_bdf(bdf_filename)
             model.clear_attributes()
             model.safe_cross_reference()
+            model.uncross_reference()
             model.safe_cross_reference(xref=False)
             model.clear_attributes()
         #-------------------------------------------------
@@ -399,6 +400,37 @@ class TestBDF(Tester):
             "RBE2,10,1,123456\n"
         )
         _run(model, bdf_filename)
+
+        #-------------------------------------------------
+        # missing node_id on TIC
+        bdf_filename = StringIO()
+        bdf_filename.write(
+            'CEND\n'
+            'BEGIN BULK\n'
+            'TIC,14,1,-1\n'
+            'TIC,10,1,0\n'
+            'TIC,11,1,1\n'
+            'TIC,12,1,2\n'
+            'TIC,13,1,3\n'
+            'TIC,14,1,4\n'
+            'TIC,15,1,5\n'
+            'TIC,16,1,6\n'
+        )
+        #_run(model, bdf_filename)
+        bdf_filename.seek(0)
+        with self.assertRaises(CrossReferenceError):
+            model.read_bdf(bdf_filename)
+        model.pop_parse_errors()
+        model.clear_attributes()
+        model.safe_cross_reference()
+        model.uncross_reference()
+        model.safe_cross_reference(xref=False)
+        model.clear_attributes()
+
+        with self.assertRaises(SyntaxError):
+            model.add_card(['TIC', 15, -2, -5], 'TIC', comment='tic', is_list=True, has_none=True)
+        with self.assertRaises(SyntaxError):
+            model.pop_parse_errors()
 
     def test_bdf_xref_safe(self):
         model = BDF(debug=False, log=None, mode='msc')

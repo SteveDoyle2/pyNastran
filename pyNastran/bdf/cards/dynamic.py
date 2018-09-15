@@ -2177,17 +2177,18 @@ class TIC(BaseCard):
         Parameters
         ----------
         sid : int
-            ???
+            Case Control IC id
         nodes : int / List[int]
             the nodes to which apply the initial conditions
         components : int / List[int]
             the DOFs to which apply the initial conditions
         u0 : float / List[float]
-            ???
+            Initial displacement.
         v0 : float / List[float]
-            ???
+            Initial velocity.
         comment : str; default=''
             a comment for the card
+
         """
         BaseCard.__init__(self)
         if comment:
@@ -2206,6 +2207,7 @@ class TIC(BaseCard):
         self.components = components
         self.u0 = u0
         self.v0 = v0
+        self.nodes_ref = None
 
     def validate(self):
         for nid in self.nodes:
@@ -2252,7 +2254,12 @@ class TIC(BaseCard):
     @property
     def node_ids(self):
         #return _node_ids(self, self.nodes, )
-        return self.nodes
+        if self.nodes_ref is None:
+            return self.nodes
+        nodes = []
+        for node in self.nodes_ref:
+            nodes.append(node.nid)
+        return nodes
 
     def add(self, tic):
         assert self.sid == tic.sid, 'sid=%s tic.sid=%s' % (self.sid, tic.sid)
@@ -2267,7 +2274,11 @@ class TIC(BaseCard):
         self.v0 += tic.v0
 
     def cross_reference(self, model):
-        pass
+        self.nodes_ref = model.Nodes(self.nodes)
+
+    def uncross_reference(self):
+        self.nodes = self.node_ids
+        self.nodes_ref = None
 
     def raw_fields(self):
         list_fields = []

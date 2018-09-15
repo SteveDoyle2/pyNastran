@@ -291,6 +291,9 @@ class SafeXrefMesh(XrefMesh):
         for unused_key, dphase in self.dphases.items():
             dphase.safe_cross_reference(self, xref_errors)
 
+        for unused_key, tic in self.tics.items():
+            tic.safe_cross_reference(self, xref_errors)
+
     def safe_empty_nodes(self, nids, msg=''):
         """safe xref version of self.Nodes(nid, msg='')"""
         nodes = []
@@ -351,6 +354,26 @@ class SafeXrefMesh(XrefMesh):
                 msgi += msg % (eid)
             elements.append(element)
         return elements, msgi
+
+    def safe_element(self, eid, ref_id, xref_errors, msg=''):
+        """
+        Parameters
+        ----------
+        ref_id : int
+            the referencing value (e.g., a load references an element)
+
+        ref_id = 10 # PLOAD4
+        pid = 42  # CQUAD4
+        xref_errors = {'eid' : []}
+        self.safe_element(eid, ref_id, xref_errors)
+        """
+        try:
+            eid_ref = self.Element(eid, msg=msg)
+        except KeyError:
+            eid_ref = None
+            #self.log.error('cant find Element=%s%s' % (mid, msg))
+            xref_errors['eid'].append((ref_id, eid))
+        return eid_ref
 
     def safe_property(self, pid, ref_id, xref_errors, msg=''):
         """
@@ -431,3 +454,53 @@ class SafeXrefMesh(XrefMesh):
             #self.log.error('cant find AFEACT=%s%s' % (aefact_id, msg))
             xref_errors['aefact'].append((ref_id, aefact_id))
         return aefact_ref
+
+    def safe_aelist(self, aelist_id, ref_id, xref_errors, msg=''):
+        """
+        Parameters
+        ----------
+        ref_id : int
+            the referencing value (e.g., an AESURF eid references a AELIST)
+        """
+        try:
+            self.alid2_ref = self.AELIST(aelist_id, msg=msg)
+        except KeyError:
+            aefact_ref = None
+            xref_errors['aelist'].append((ref_id, aelist_id))
+        return aefact_ref
+
+    def safe_caero(self, caero_id, ref_id, xref_errors, msg=''):
+        try:
+            caero_ref = model.CAero(caero_id, msg=msg)
+        except KeyError:
+            caero_ref = None
+            xref_errors['caero'].append((ref_id, caero_id))
+        return caero_ref
+
+    def safe_tabled(self, tabled_id, ref_id, xref_errors, msg=''):
+        """
+        Parameters
+        ----------
+        ref_id : int
+            the referencing value (e.g., an TLOAD1 eid references a TABLED1)
+        """
+        try:
+            tabled_ref = model.TableD(tabled_id)
+        except KeyError:
+            tabled_ref = None
+            xref_errors['tabled'].append((ref_id, tabled_id))
+        return tabled_ref
+
+    def safe_tableh(self, tableh_id, ref_id, xref_errors, msg=''):
+        """
+        Parameters
+        ----------
+        ref_id : int
+            the referencing value (e.g., an MATT1 eid references a TABLEH1)
+        """
+        try:
+            tableh_ref = model.TableH(tableh_id)
+        except KeyError:
+            tableh_ref = None
+            xref_errors['tableh'].append((ref_id, tableh_id))
+        return tableh_ref

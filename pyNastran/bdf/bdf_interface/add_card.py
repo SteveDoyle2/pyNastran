@@ -68,7 +68,7 @@ from pyNastran.bdf.cards.dynamic import (
     DELAY, DPHASE, FREQ, FREQ1, FREQ2, FREQ3, FREQ4, FREQ5,
     TSTEP, TSTEP1, TSTEPNL, NLPARM, NLPCI, TF, ROTORG, ROTORD, TIC)
 from pyNastran.bdf.cards.loads.loads import (
-    LSEQ, SLOAD, DAREA, RANDPS, RFORCE, RFORCE1, SPCD, LOADCYN)
+    LSEQ, SLOAD, DAREA, RANDPS, RFORCE, RFORCE1, SPCD, LOADCYN, DEFORM)
 from pyNastran.bdf.cards.loads.dloads import ACSRCE, DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
 from pyNastran.bdf.cards.loads.static_loads import (LOAD, GRAV, ACCEL, ACCEL1, FORCE,
                                                     FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
@@ -3188,10 +3188,10 @@ class AddCards(AddMethods):
         self._add_dload_entry(load)
         return load
 
-    def add_rforce(self, sid, nid, cid, scale, r1, r2, r3, method=1, racc=0.,
+    def add_rforce(self, sid, nid, scale, r123, cid=0, method=1, racc=0.,
                    mb=0, idrf=0, comment=''):
         """Creates an RFORCE card"""
-        load = RFORCE(sid, nid, cid, scale, r1, r2, r3, method=method, racc=racc,
+        load = RFORCE(sid, nid, scale, r123, cid=cid, method=method, racc=racc,
                       mb=mb, idrf=idrf, comment=comment)
         self._add_load_object(load)
         return load
@@ -3213,6 +3213,7 @@ class AddCards(AddMethods):
             rectangular components of the rotation vector R that passes
             through point G
         racc : int; default=0.0
+            ???
         mb : int; default=0
             Indicates whether the CID coordinate system is defined in the main
             Bulk Data Section (MB = -1) or the partitioned superelement Bulk
@@ -3228,6 +3229,7 @@ class AddCards(AddMethods):
             Method used to compute centrifugal forces due to angular velocity.
         comment : str; default=''
             a comment for the card
+
         """
         load = RFORCE1(sid, nid, scale, group_id, cid=cid, r123=r123, racc=racc,
                        mb=mb, method=method, comment=comment)
@@ -3450,6 +3452,28 @@ class AddCards(AddMethods):
 
         """
         load = MOMENT2(sid, node, mag, g1, g2, g3, g4, comment=comment)
+        self._add_load_object(load)
+        return load
+
+    def add_deform(self, sid, eid, deformation, comment=''):
+        """
+        Creates an DEFORM card, which defines applied deformation on
+        a 1D elemment.  Links to the DEFORM card in the case control
+        deck.
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        eid : int
+            CTUBE/CROD/CONROD/CBAR/CBEAM element id
+        deformation : float
+            the applied deformation
+        comment : str; default=''
+            a comment for the card
+
+        """
+        load = DEFORM(sid, eid, deformation, comment=comment)
         self._add_load_object(load)
         return load
 
@@ -3770,9 +3794,9 @@ class AddCards(AddMethods):
         self._add_constraint_spcadd_object(spcadd)
         return spcadd
 
-    def add_spcax(self, conid, rid, hid, c, d, comment=''):
+    def add_spcax(self, conid, ringax, hid, component, enforced, comment=''):
         """Creates an SPCAX card"""
-        spcax = SPCAX(conid, rid, hid, c, d, comment=comment)
+        spcax = SPCAX(conid, ringax, hid, component, enforced, comment=comment)
         self._add_constraint_spc_object(spcax)
         return spcax
 
@@ -6323,7 +6347,25 @@ class AddCards(AddMethods):
         return bcrpara
 
     def add_tic(self, sid, nodes, components, u0=0., v0=0., comment=''):
-        """Creates a TIC card"""
+        """
+        Creates a TIC card
+
+        Parameters
+        ----------
+        sid : int
+            Case Control IC id
+        nodes : int / List[int]
+            the nodes to which apply the initial conditions
+        components : int / List[int]
+            the DOFs to which apply the initial conditions
+        u0 : float / List[float]
+            Initial displacement.
+        v0 : float / List[float]
+            Initial velocity.
+        comment : str; default=''
+            a comment for the card
+
+        """
         tic = TIC(sid, nodes, components, u0=u0, v0=v0, comment=comment)
         self._add_tic_object(tic)
         return tic
@@ -6892,7 +6934,7 @@ class AddCards(AddMethods):
             self._add_dti_object(dti)
         else:
             if comment:
-                self.reject_lines.append([comment])
+                self.reject_lines.append([_format_comment(comment)])
                 msg = "DTI only supports name='UNITS'; name=%r fields=%s" % (name, str(fields))
             raise NotImplementedError(msg)
             #self.reject_cards.append(card_obj)
