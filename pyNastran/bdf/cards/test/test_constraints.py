@@ -173,6 +173,7 @@ class TestConstraints(unittest.TestCase):
         self.check_card(msg16, msg_16_actual)
 
     def test_mpcadd(self):
+        """tests MPCADD"""
         model = BDF(debug=False)
         mpc_id = 42
         sets = [1, 2]
@@ -212,6 +213,7 @@ class TestConstraints(unittest.TestCase):
         model.cross_reference()
 
     def test_spcadd(self):
+        """tests SPCADD"""
         model = BDF(debug=False)
         spc_id = 42
         sets = [1, 2]
@@ -253,6 +255,7 @@ class TestConstraints(unittest.TestCase):
         model.add_grid(4, [0., 0., 0.])
 
     def test_spcoff(self):
+        """tests SPCOFF/SPCOFF1"""
         model = BDF(debug=False)
         with self.assertRaises(KeyError):
             model.EmptyNodes([1, 2], msg='')
@@ -300,6 +303,7 @@ class TestConstraints(unittest.TestCase):
         #model.add_grid(43, [0., 0., 0.])
 
     def test_gmspc(self):
+        """tests GMSPC"""
         model = BDF(debug=False, log=None, mode='msc')
         conid = 1
         component = 42
@@ -321,6 +325,7 @@ class TestConstraints(unittest.TestCase):
         str(gmspc)
 
     def test_spcax(self):
+        """tests SPCAX"""
         model = BDF(debug=False, log=None, mode='msc')
         conid = 1
         ringax = 42

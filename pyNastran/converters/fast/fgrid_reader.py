@@ -7,7 +7,7 @@ from pyNastran.utils.log import get_logger2
 def read_fgrid(fgrid_filename, unused_dimension_flag, log=None, debug=False):
     """loads a *.fgrid file"""
     model = FGridReader(log=log, debug=debug)
-    model.read_fgrid(fgrid_filename, dimension_flag=3)
+    model.read_fgrid(fgrid_filename, unused_dimension_flag=3)
     return model
 
 

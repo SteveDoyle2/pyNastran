@@ -243,12 +243,20 @@ class TestDEQATN(unittest.TestCase):
         """
         tests comments
         """
+        model = BDF(debug=False)
         card_lines = [
             'DEQATN  100     f(x,y,z,w)=1.;',
-            '    c = 3;',
-            '    d = x + y + z + c'
+            'c = 3;',
+            'd = x + y + z + c'
         ]
-        model = BDF(debug=False)
+        with self.assertRaises(SyntaxError):
+            model.add_card(card_lines, 'DEQATN', comment='deqatn', is_list=False)
+
+        card_lines = [
+            'DEQATN  100     f(x,y,z,w)=1.;',
+            '        c = 3;',
+            '        d = x + y + z + c'
+        ]
         model.add_card(card_lines, 'DEQATN', comment='deqatn', is_list=False)
         deqatn = model.dequations[100]
         assert deqatn._comment == '$deqatn\n', '_comment=%r' % deqatn._comment

@@ -969,8 +969,8 @@ class TestLoads(unittest.TestCase):
             9, 9, 9, 9, 9, 9,
         ]
         components = [
-            1, 2, 3, 4, 5, 6,
-            1, 2, 3, 4, 5, 6,
+            '1', '2', '3', '4', '5', '6',
+            '1', '2', '3', '4', '5', '6',
         ]
         enforced = [
             1., 1., 1., 1., 1., 1.,
@@ -998,7 +998,7 @@ class TestLoads(unittest.TestCase):
 
         conid = 43
         gids = [10, 11]
-        components = [1, 0]
+        components = ['1', '0']
         enforced = [1., 1.]
         mpc = model.add_mpc(conid, gids, components, enforced)
         model.add_spoint(11, comment='spoint')

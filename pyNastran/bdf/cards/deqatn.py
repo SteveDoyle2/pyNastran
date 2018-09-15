@@ -47,7 +47,33 @@ def db(p, pref):
     """sound pressure in decibels"""
     return 20. * log(p / pref)
 
+#def _Log(z):
+
 def atan2h(x, y):
+    """
+    Hyperbolic arctangent
+    >>> arctanh(z) = 1/2 Log((1+z)/(1-z))
+
+    real:
+        the following must be true: |x1| > |x2| and x2 ≠ 0.
+
+    complex:
+        x1 = a + bi
+        x2 = b + di
+        a = b = 0 and (sign of c) = (sign of d):
+             the result is 0.
+        a = b = 0 and (sign of c) ≠ (sign of d):
+             the result is π.
+        c = d = 0 and (sign of a) = (sign of b):
+             the result is π/2.
+        c = d = 0 and (sign of a) ≠ (sign of b):
+             the result is −π/2
+    """
+    #integer_float_types = (int, np.int32, float, np.float32)
+    #if isinstance(x, integer_float_types):
+        #assert x >= 0, 'x=%s y=%s' % (x, y)
+        #assert y > 0, 'x=%s y=%s' % (x, y)
+    #return np.arctanh(x, y)
     raise NotImplementedError()
 
 def invdb(dbi, pref):
@@ -294,27 +320,54 @@ class DEQATN(BaseCard):  # needs work...
         #print(msg)
         return msg
 
-def lines_to_eqs(eqs_temp1):
+def lines_to_eqs(eqs_in):
     """splits the equations"""
-    eqs_temp = []
+    eqs_wrapped = _split_equations_by_semicolon(eqs_in)
+    eqs = _join_wrapped_equation_lines(eqs_in, eqs_wrapped)
+    assert len(eqs) > 0, eqs
+    return eqs
+
+def _split_equations_by_semicolon(eqs_in):
+    """helper for ``lines_to_eqs``"""
+    eqs_temp_out = []
     nstart = 0
     nchars = 72 - 16
-    for eq in eqs_temp1:
+    for eq in eqs_in:
         eq2 = eq[nstart:nchars].strip(' \t\n')
         semicolon = ''
         if eq2.endswith(';'):
             eq2 = eq2.rstrip(' \t;')
             semicolon = ';'
-        nline = len(eq.rstrip('; \n')) + 16
+        #nline = len(eq.rstrip('; \n')) + 16
         if ';' in eq2:
-            eq_tempi = [eqi.strip() + ';' for eqi in eq2.split(';') if eqi.strip() ]
+            eq2s = eq2.split(';')
+            eq_tempi = [eqi.strip() + ';' for eqi in eq2s if eqi.strip() ]
+            #for check_line in eq2s:
+                #print(check_line)
+                #_check_for_valid_line(check_line, eq)
+
+            #print('eq_tempi =' % eq_tempi)
             eq_tempi[-1] += semicolon
-            eqs_temp += eq_tempi
+            eqs_temp_out += eq_tempi
         else:
-            eqs_temp.append(eq2 + semicolon)
+            check_line = eq2 + semicolon
+            #print('check_line = %r' % (check_line))
+            #_check_for_valid_line(check_line, eq)
+            eqs_temp_out.append(check_line)
         nstart = 8
         nchars = 72
+    return eqs_temp_out
 
+#def _check_for_valid_line(check_line, full_line):
+    #if '=' not in check_line:
+        #msg = (
+            #'expected an equal sign (the first 8 characters are removed)\n'
+            #'line     =%r\n'
+            #'full_line=%r' % (check_line, full_line))
+        #raise SyntaxError(msg)
+
+def _join_wrapped_equation_lines(unused_eqs_temp_in, eqs_temp):
+    """helper for ``lines_to_eqs``"""
     eqs = []
     neqs = len(eqs_temp)
     is_join = False
@@ -356,8 +409,6 @@ def lines_to_eqs(eqs_temp1):
     #assert not is_join
     if is_join:
         eqs.append(eqi)
-    assert len(eqs) > 0, eqs
-    #assert len(eqs) <= 8, 'len(eqID)==%s' % (len(eqID))
     return eqs
 
 def split_equations(lines):
@@ -424,7 +475,7 @@ def _split_equation(lines_out, line, n, isplit=0):
 
     operator = out[imin]
     #print('operator = %r' % operator)
-    fore, aft = line0.split(operator, 1)
+    unused_fore, aft = line0.split(operator, 1)
     i = len(aft) + 1
 
     line_out = line[:i]
@@ -438,7 +489,7 @@ def _split_equation(lines_out, line, n, isplit=0):
     lines_out = _split_equation(lines_out, line[i:], n, isplit+1)
     return lines_out
 
-def fortran_to_python_short(line, default_values):
+def fortran_to_python_short(line, unused_default_values):
     """the function used by the DRESP2"""
     func_str = 'def func(args):\n'
     func_str += '    return %s(args)\n' % line.strip()

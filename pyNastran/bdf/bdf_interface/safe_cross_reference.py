@@ -463,7 +463,7 @@ class SafeXrefMesh(XrefMesh):
             the referencing value (e.g., an AESURF eid references a AELIST)
         """
         try:
-            self.alid2_ref = self.AELIST(aelist_id, msg=msg)
+            aefact_ref = self.AELIST(aelist_id, msg=msg)
         except KeyError:
             aefact_ref = None
             xref_errors['aelist'].append((ref_id, aelist_id))
@@ -471,7 +471,7 @@ class SafeXrefMesh(XrefMesh):
 
     def safe_caero(self, caero_id, ref_id, xref_errors, msg=''):
         try:
-            caero_ref = model.CAero(caero_id, msg=msg)
+            caero_ref = self.CAero(caero_id, msg=msg)
         except KeyError:
             caero_ref = None
             xref_errors['caero'].append((ref_id, caero_id))
@@ -485,7 +485,7 @@ class SafeXrefMesh(XrefMesh):
             the referencing value (e.g., an TLOAD1 eid references a TABLED1)
         """
         try:
-            tabled_ref = model.TableD(tabled_id)
+            tabled_ref = self.TableD(tabled_id)
         except KeyError:
             tabled_ref = None
             xref_errors['tabled'].append((ref_id, tabled_id))

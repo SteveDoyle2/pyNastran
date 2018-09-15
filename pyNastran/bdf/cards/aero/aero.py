@@ -4578,7 +4578,7 @@ class SPLINE1(Spline):
 
     def safe_cross_reference(self, model, xref_errors):
         msg = ', which is required by SPLINE1 eid=%s' % self.eid
-        self.caero_ref = model.safe_caero(self, self.caero, self.eid, xref_errors, msg=msg)
+        self.caero_ref = model.safe_caero(self.caero, self.eid, xref_errors, msg=msg)
         #self.setg_ref = model.safe_set(self, self.setg, self.eid, xref_errors, msg=msg)
     #def safe_set(self, setg, set_type, self.eid, xref_errors, msg=''):
         try:
@@ -5036,7 +5036,7 @@ class SPLINE3(Spline):
     def safe_cross_reference(self, model, xref_errors):
         msg = ', which is required by SPLINE3 eid=%s' % self.eid
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
-        self.caero_ref = model.safe_caero(self, self.caero, self.eid, xref_errors, msg=msg)
+        self.caero_ref = model.safe_caero(self.caero, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.caero = self.CAero()

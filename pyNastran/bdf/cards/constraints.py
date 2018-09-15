@@ -440,7 +440,7 @@ class MPC(Constraint):
         i = 1
         for ifield in range(2, nfields, 8):
             nid = integer(card, ifield, 'G%i' % i)
-            component = components_or_blank(card, ifield + 1, 'constraint%i' % i, 0)  # scalar point
+            component = components_or_blank(card, ifield + 1, 'constraint%i' % i, '0')  # scalar point
             if i == 1:
                 coefficient = double(card, ifield + 2, 'coefficient%i' % i)
                 if coefficient == 0.0:
@@ -457,7 +457,7 @@ class MPC(Constraint):
                 # and not loop friendly)
                 break
             nid = integer(card, ifield + 3, 'G%i' % i)
-            component = components_or_blank(card, ifield + 4, 'constraint%i' % i, 0)  # scalar point
+            component = components_or_blank(card, ifield + 4, 'constraint%i' % i, '0')  # scalar point
             coefficient = double_or_blank(card, ifield + 5, 'coefficient%i' % i)
             nodes.append(nid)
             components.append(component)
