@@ -6250,10 +6250,61 @@ class AddCards(AddMethods):
         bctpara = BCTPARA(csid, params, comment=comment)
         self._add_bctpara_object(bctpara)
         return bctpara
+        """
+        Creates a BCRPARA card
 
-    def add_bcrpara(self, crid, surf='TOP', offset=None, Type='FLEX', mgp=0, comment=''):
-        """Creates a BCRPARA card"""
-        bcrpara = BCRPARA(crid, surf=surf, offset=offset, Type=Type, mgp=mgp, comment=comment)
+        Parameters
+        ----------
+        crid : int
+            CRID Contact region ID.
+        offset : float; default=None
+            Offset distance for the contact region (Real > 0.0).
+            None : OFFSET value in BCTPARA entry
+        surf : str; default='TOP'
+            SURF Indicates the contact side. See Remark 1.  {'TOP', 'BOT'; )
+        Type : str; default='FLEX'
+            Indicates whether a contact region is a rigid surface if it
+            is used as a target region. {'RIGID', 'FLEX'}.
+            This is not supported for SOL 101.
+        master_grid_point : int; default=0
+            Master grid point for a target contact region with TYPE=RIGID
+            or when the rigid-target algorithm is used.  The master grid
+            point may be used to control the motion of a rigid surface.
+            (Integer > 0).  This is not supported for SOL 101.
+        comment : str; default=''
+            a comment for the card
+
+        """
+
+    def add_bcrpara(self, crid, surf='TOP', offset=None, Type='FLEX',
+                    master_grid_point=0, comment=''):
+        """
+        Creates a BCRPARA card
+
+        Parameters
+        ----------
+        crid : int
+            CRID Contact region ID.
+        offset : float; default=None
+            Offset distance for the contact region (Real > 0.0).
+            None : OFFSET value in BCTPARA entry
+        surf : str; default='TOP'
+            SURF Indicates the contact side. See Remark 1.  {'TOP', 'BOT'; )
+        Type : str; default='FLEX'
+            Indicates whether a contact region is a rigid surface if it
+            is used as a target region. {'RIGID', 'FLEX'}.
+            This is not supported for SOL 101.
+        master_grid_point : int; default=0
+            Master grid point for a target contact region with TYPE=RIGID
+            or when the rigid-target algorithm is used.  The master grid
+            point may be used to control the motion of a rigid surface.
+            (Integer > 0).  This is not supported for SOL 101.
+        comment : str; default=''
+            a comment for the card
+
+        """
+        bcrpara = BCRPARA(crid, surf=surf, offset=offset, Type=Type,
+                          master_grid_point=master_grid_point, comment=comment)
         self._add_bcrpara_object(bcrpara)
         return bcrpara
 

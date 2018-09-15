@@ -286,7 +286,33 @@ class BCRPARA(BaseCard):
     +---------+------+------+--------+------+-----+---+---+---+----+
     """
     type = 'BCRPARA'
-    def __init__(self, crid, offset=None, surf='TOP', Type='FLEX', mgp=0, comment=''):
+    def __init__(self, crid, offset=None, surf='TOP', Type='FLEX', master_grid_point=0,
+                 comment=''):
+        """
+        Creates a BCRPARA card
+
+        Parameters
+        ----------
+        crid : int
+            CRID Contact region ID.
+        offset : float; default=None
+            Offset distance for the contact region (Real > 0.0).
+            None : OFFSET value in BCTPARA entry
+        surf : str; default='TOP'
+            SURF Indicates the contact side. See Remark 1.  {'TOP', 'BOT'; )
+        Type : str; default='FLEX'
+            Indicates whether a contact region is a rigid surface if it
+            is used as a target region. {'RIGID', 'FLEX'}.
+            This is not supported for SOL 101.
+        master_grid_point : int; default=0
+            Master grid point for a target contact region with TYPE=RIGID
+            or when the rigid-target algorithm is used.  The master grid
+            point may be used to control the motion of a rigid surface.
+            (Integer > 0).  This is not supported for SOL 101.
+        comment : str; default=''
+            a comment for the card
+
+        """
         if comment:
             self.comment = comment
 
@@ -310,7 +336,7 @@ class BCRPARA(BaseCard):
         #: when the rigid-target algorithm is used. The master grid point may be
         #: used to control the motion of a rigid surface. (Integer > 0,; Default = 0)
         #: This is not supported for SOL 101.
-        self.mgp = mgp
+        self.master_grid_point = master_grid_point
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -328,11 +354,12 @@ class BCRPARA(BaseCard):
         surf = string_or_blank(card, 2, 'surf', 'TOP')
         offset = double_or_blank(card, 3, 'offset', None)
         Type = string_or_blank(card, 4, 'type', 'FLEX')
-        mgp = integer_or_blank(card, 5, 'mpg', 0)
-        return BCRPARA(crid, surf=surf, offset=offset, Type=Type, mgp=mgp, comment=comment)
+        master_grid_point = integer_or_blank(card, 5, 'master_grid_point', 0)
+        return BCRPARA(crid, surf=surf, offset=offset, Type=Type,
+                       master_grid_point=master_grid_point, comment=comment)
 
     def raw_fields(self):
-        fields = ['BCRPARA', self.crid, self.surf, self.offset, self.Type, self.mgp]
+        fields = ['BCRPARA', self.crid, self.surf, self.offset, self.Type, self.master_grid_point]
         return fields
 
     def write_card(self, size=8, is_double=False):

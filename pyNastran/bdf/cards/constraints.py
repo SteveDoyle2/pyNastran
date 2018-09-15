@@ -1070,6 +1070,16 @@ class SPC1(Constraint):
         return self.comment + print_card_8(card)
 
 class SPCOFF(Constraint):
+    """
+     +-----+----+----+----+----+----+----+----+----+
+     |  1  |  2 |  3 |  4 |  5 |  6 |  7 |  8 |  9 |
+     +=====+====+====+====+====+====+====+====+====+
+     | SPC | G1 | C1 | G2 | C2 | G3 | C3 | G4 | C4 |
+     +-----+----+----+----+----+----+----+----+----+
+     | SPC | 32 | 3  |  5 |    |    |    |    |    |
+     +-----+----+----+----+----+----+----+----+----+
+
+    """
     type = 'SPCOFF'
 
     def __init__(self, nodes, components, enforced, comment=''):
@@ -1243,6 +1253,7 @@ class SPCOFF1(Constraint):
         """
         components = parse_components(card, 1, 'components')  # 246 = y; dx, dz dir
         nodes = card.fields(2)
+        assert len(card) > 2, 'len(SPCOFF1 card) = %i\ncard=%s' % (len(card), card)
         return cls(components, nodes, comment=comment)
 
     @classmethod

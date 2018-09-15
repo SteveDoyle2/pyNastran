@@ -122,6 +122,8 @@ class LoadCombination(BaseCard):
             n = 2 * i + 3
             scale_factors.append(double(card, n, 'scale_factor'))
             load_ids.append(integer(card, n + 1, 'load_id'))
+
+        assert len(card) > 3, 'len(%s card) = %i\ncard=%s' % (cls.__name__, len(card), card)
         return cls(sid, scale, scale_factors, load_ids, comment=comment)
 
     @classmethod

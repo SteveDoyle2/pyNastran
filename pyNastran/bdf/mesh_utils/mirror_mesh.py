@@ -293,7 +293,7 @@ def _mirror_elements(model, nid_offset):
                 ref_grid_id = rigid_element.ref_grid_id
                 Gn = None
             else:
-                msg = '_write_elements_symmetric: %s not implimented' % rigid_element.type
+                msg = '_write_elements_symmetric: %s not implemented' % rigid_element.type
                 warn(msg)
                 continue
                 #raise NotImplementedError(msg)

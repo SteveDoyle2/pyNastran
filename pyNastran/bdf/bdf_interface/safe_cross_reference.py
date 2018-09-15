@@ -34,7 +34,7 @@ class SafeXrefMesh(XrefMesh):
     def safe_cross_reference(self, xref=True,
                              xref_nodes=True,
                              xref_elements=True,
-                             xref_nodes_with_elements=True,
+                             xref_nodes_with_elements=False,
                              xref_properties=True,
                              xref_masses=True,
                              xref_materials=True,
@@ -220,32 +220,21 @@ class SafeXrefMesh(XrefMesh):
         missing_safe_xref = set([])
         for elem in itervalues(self.elements):
             if hasattr(elem, 'safe_cross_reference'):
-                try:
-                    elem.safe_cross_reference(self, xref_errors)
-                except TypeError:
-                    self.log.warning('element has not added xref_errors\n%s' % str(elem))
-                    raise
+                elem.safe_cross_reference(self, xref_errors)
             else:
                 elem.cross_reference(self)
                 missing_safe_xref.add(elem.type)
 
         for elem in self.masses.values():
             if hasattr(elem, 'safe_cross_reference'):
-                try:
-                    elem.safe_cross_reference(self, xref_errors)
-                except TypeError:
-                    self.log.warning('element has not added xref_errors\n%s' % str(elem))
-                    raise
+                elem.safe_cross_reference(self, xref_errors)
             else:
                 elem.cross_reference(self)
                 missing_safe_xref.add(elem.type)
 
         for elem in self.rigid_elements.values():
             if hasattr(elem, 'safe_cross_reference'):
-                try:
-                    elem.safe_cross_reference(self, xref_errors)
-                except TypeError:
-                    self.log.warning('element has not added xref_errors\n%s' % str(elem))
+                elem.safe_cross_reference(self, xref_errors)
             else:
                 missing_safe_xref.add(elem.type)
                 elem.cross_reference(self)
@@ -285,36 +274,22 @@ class SafeXrefMesh(XrefMesh):
 
         for unused_lid, loads in self.loads.items():
             for load in loads:
-                try:
-                    load.safe_cross_reference(self, xref_errors)
-                except TypeError:  # pragma: no cover
-                    print(load)
-                    raise
+                load.safe_cross_reference(self, xref_errors)
         self._show_safe_xref_errors('loads', xref_errors)
 
         for unused_lid, sid in self.dloads.items():
             for load in sid:
                 load.safe_cross_reference(self, xref_errors)
+
         for unused_lid, sid in self.dload_entries.items():
             for load in sid:
-                try:
-                    load.safe_cross_reference(self, xref_errors)
-                except TypeError:  # pragma: no cover
-                    print(load)
-                    raise
+                load.safe_cross_reference(self, xref_errors)
 
         for unused_key, darea in self.dareas.items():
-            try:
-                darea.safe_cross_reference(self, xref_errors)
-            except TypeError:  # pragma: no cover
-                print(darea)
-                raise
+            darea.safe_cross_reference(self, xref_errors)
+
         for unused_key, dphase in self.dphases.items():
-            try:
-                dphase.safe_cross_reference(self, xref_errors)
-            except TypeError:  # pragma: no cover
-                print(dphase)
-                raise
+            dphase.safe_cross_reference(self, xref_errors)
 
     def safe_empty_nodes(self, nids, msg=''):
         """safe xref version of self.Nodes(nid, msg='')"""

@@ -172,6 +172,35 @@ class TestConstraints(unittest.TestCase):
         self.check_card(msg8, msg_8_actual)
         self.check_card(msg16, msg_16_actual)
 
+    def test_spcoff(self):
+        model = BDF(debug=False)
+        with self.assertRaises(KeyError):
+            model.EmptyNodes([1, 2], msg='')
+        #model.add_spcoff()
+        card_lines = ['SPCOFF',]
+        with self.assertRaises(NotImplementedError):
+            model.add_card(card_lines, 'SPCOFF', comment='spcoff', is_list=True, has_none=True)
+
+        card_lines = ['SPCOFF1', 24, 43]
+        model.add_card(card_lines, 'SPCOFF1', comment='spcoff1', is_list=True, has_none=True)
+
+        card_lines = ['SPCOFF1', 5, 50, 'THRU', 52]
+        model.add_card(card_lines, 'SPCOFF1', comment='spcoff1', is_list=True, has_none=True)
+
+        model.pop_parse_errors()
+        model.pop_xref_errors()
+        spcoff1 = model.spcoffs['SPCOFF1'][0]
+        spcoff1.write_card(size=8)
+        spcoff1.write_card(size=16)
+        spcoff1.raw_fields()
+
+        with self.assertRaises(KeyError):
+            spcoff1.cross_reference(model)
+        model.add_grid(43, [0., 0., 0.])
+        spcoff1.cross_reference(model)
+
+        #model.add_grid(43, [0., 0., 0.])
+
     def check_card(self, msg_expected, msg_actual):
         if isinstance(msg_expected, tuple):
             msg_expected = msg_expected[0]

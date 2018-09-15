@@ -8,7 +8,7 @@ from six import StringIO
 import pyNastran
 from pyNastran.utils import object_attributes, object_methods
 from pyNastran.bdf.cards.collpase_card import collapse_thru_by
-from pyNastran.bdf.bdf import BDF, read_bdf
+from pyNastran.bdf.bdf import BDF, read_bdf, CrossReferenceError
 from pyNastran.bdf.write_path import write_include, _split_path
 from pyNastran.bdf.test.test_bdf import run_bdf, run_all_files_in_folder
 
@@ -244,6 +244,210 @@ class TestBDF(Tester):
                          encoding=None, log=None,
                          debug=True, mode='msc')
 
+    def test_bdf_xref_fail(self):
+        """tests various xref's failing"""
+        model = BDF(debug=False, log=None, mode='msc')
+        def _run(model, bdf_filename):
+            """helper for ``test_bdf_xref_fail``"""
+            bdf_filename.seek(0)
+            with self.assertRaises(CrossReferenceError):
+                model.read_bdf(bdf_filename)
+            model.clear_attributes()
+            model.safe_cross_reference()
+            model.safe_cross_reference(xref=False)
+            model.clear_attributes()
+        #-------------------------------------------------
+        # missing node_id on element
+        bdf_filename = StringIO()
+        bdf_filename.write(
+            "CEND\n"
+            "BEGIN BULK\n"
+            "GRID,1\n"
+            "CONROD,10,1,2,1000,\n"
+            "MAT1,1000,3.0e7,,0.3\n"
+        )
+        _run(model, bdf_filename)
+
+        #-------------------------------------------------
+        # missing coord_id on grid
+        bdf_filename = StringIO()
+        bdf_filename.write(
+            "CEND\n"
+            "BEGIN BULK\n"
+            "GRID,1,2\n"
+            "GRID,2\n"
+            "CONROD,10,1,2,1000,\n"
+            "MAT1,1000,3.0e7,,0.3\n"
+        )
+        #_run(model, bdf_filename)
+        bdf_filename.seek(0)
+        with self.assertRaises(KeyError):
+            model.read_bdf(bdf_filename)
+        model.clear_attributes()
+        model.safe_cross_reference()
+        model.clear_attributes()
+
+        #-------------------------------------------------
+        # missing material on property
+        bdf_filename = StringIO()
+        bdf_filename.write(
+            "CEND\n"
+            "BEGIN BULK\n"
+            "GRID,1\n"
+            "GRID,2\n"
+            "CROD,10,100,1,2\n"
+            "PROD,100,1000,1.0\n"
+            #"MAT1,1000,3.0e7,,0.3\n"
+        )
+        _run(model, bdf_filename)
+
+        #-------------------------------------------------
+        # missing node_id on conm2
+        bdf_filename = StringIO()
+        bdf_filename.write(
+            "CEND\n"
+            "BEGIN BULK\n"
+            #"GRID,1\n"
+            "CONM2,10,1\n"
+        )
+        _run(model, bdf_filename)
+
+        #-------------------------------------------------
+        # missing node_id on plotel
+        bdf_filename = StringIO()
+        bdf_filename.write(
+            "CEND\n"
+            "BEGIN BULK\n"
+            "GRID,1\n"
+            #"GRID,2\n"
+            "PLOTEL,10,1,2\n"
+        )
+        _run(model, bdf_filename)
+
+        #-------------------------------------------------
+        # missing load on LOAD
+        bdf_filename = StringIO()
+        bdf_filename.write(
+            "CEND\n"
+            "BEGIN BULK\n"
+            "GRID,1\n"
+            "GRID,2\n"
+            "CONROD,10,1,2,1000,\n"
+            "MAT1,1000,3.0e7,,0.3\n"
+            "LOAD,1,1.0,1.0,10000\n"
+        )
+        _run(model, bdf_filename)
+
+        #-------------------------------------------------
+        # missing load on LOAD
+        bdf_filename = StringIO()
+        bdf_filename.write(
+            "CEND\n"
+            "BEGIN BULK\n"
+            "GRID,1\n"
+            "GRID,2\n"
+            "CONROD,10,1,2,1000,\n"
+            "MAT1,1000,3.0e7,,0.3\n"
+            "LOAD,1,1.0,1.0,10000\n"
+        )
+        _run(model, bdf_filename)
+
+        #-------------------------------------------------
+        # missing element_id on PLOAD4
+        bdf_filename = StringIO()
+        bdf_filename.write(
+            "CEND\n"
+            "BEGIN BULK\n"
+            #"GRID,1\n"
+            #"GRID,2\n"
+            #"GRID,3\n"
+            #"GRID,4\n"
+            #"CQUAD4,10,1000,1,2,3,4\n"
+            "MAT1,1000,3.0e7,,0.3\n"
+            "LOAD,1,1.0,1.0,10000\n"
+            "PLOAD4,10000,10\n"
+        )
+        _run(model, bdf_filename)
+
+        #-------------------------------------------------
+        # missing node_id on DPHASE
+        bdf_filename = StringIO()
+        bdf_filename.write(
+            "CEND\n"
+            "BEGIN BULK\n"
+            "DPHASE,200, 1,4\n"
+            #"GRID,1\n"
+        )
+        _run(model, bdf_filename)
+
+        #-------------------------------------------------
+        # missing TLOAD1/RLOAD1 on DLOAD
+        bdf_filename = StringIO()
+        bdf_filename.write(
+            "CEND\n"
+            "BEGIN BULK\n"
+            "DLOAD,1,1.0,1.0,10000\n"
+        )
+        _run(model, bdf_filename)
+
+        #-------------------------------------------------
+        # missing node_id on RBE2
+        bdf_filename = StringIO()
+        bdf_filename.write(
+            "CEND\n"
+            "BEGIN BULK\n"
+            "RBE2,10,1,123456\n"
+        )
+        _run(model, bdf_filename)
+
+    def test_bdf_xref_safe(self):
+        model = BDF(debug=False, log=None, mode='msc')
+        aefact_id = 2
+        caero_id = 1
+        ref_id = caero_id
+        xref_errors = {'aefact' : []}
+        assert model.safe_aefact(aefact_id, ref_id, xref_errors, msg='') is None
+        assert xref_errors == {'aefact' : [(1, 2)]}, xref_errors
+
+        #--------------------------------------------------------
+        cid = 2
+        eid = 1
+        ref_id = eid
+        xref_errors = {'cid' : []}
+        assert model.safe_coord(cid, ref_id, xref_errors, msg='') is None
+        assert xref_errors == {'cid' : [(1, 2)]}, xref_errors
+
+        #--------------------------------------------------------
+        mid = 2
+        pid = 1
+        ref_id = eid
+        xref_errors = {'mid' : []}
+        assert model.safe_material(mid, ref_id, xref_errors, msg='') is None
+        assert xref_errors == {'mid' : [(1, 2)]}, xref_errors
+
+        #--------------------------------------------------------
+        pid = 2
+        eid = 1
+        ref_id = eid
+        xref_errors = {'pid' : []}
+        assert model.safe_property(pid, ref_id, xref_errors, msg='') is None
+        assert xref_errors == {'pid' : [(1, 2)]}, xref_errors
+
+        #--------------------------------------------------------
+        pid = 2
+        eid = 1
+        ref_id = eid
+        xref_errors = {'pid' : []}
+        assert model.safe_property_mass(pid, ref_id, xref_errors, msg='') is None
+        assert xref_errors == {'pid' : [(1, 2)]}, xref_errors
+
+        #--------------------------------------------------------
+        point_ids = [1, 2, 3]
+        eid = 1
+        ref_id = eid
+        #xref_errors = {'pid' : []}
+        assert model.safe_get_points(point_ids, msg='')[0] == point_ids, model.safe_get_points(point_ids, msg='')
+        #assert xref_errors == {'pid' : [(1, 2)]}, xref_errors
 
     def test_bdf_05(self):
         """checks testA.dat"""

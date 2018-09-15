@@ -27,6 +27,22 @@ EXECUTIVE_CASE_SPACES = tuple(list(FILE_MANAGEMENT) + ['SOL ', 'SET ', 'SUBCASE 
 class BDFInputPy(object):
     def __init__(self, read_includes, dumplines, encoding, nastran_format='msc',
                  log=None, debug=False):
+        """
+        Parameters
+        ----------
+        read_includes : bool
+            ???
+        dumplines : bool
+            ???
+        encoding : str
+            ???
+        nastran_format : str; default='msc'
+            ???
+        log : logger(); default=None
+            ???
+        debug : bool; default=False
+            ???
+        """
         self.dumplines = dumplines
         self.encoding = encoding
         self.nastran_format = nastran_format
@@ -76,8 +92,9 @@ class BDFInputPy(object):
             for system_line in system_lines:
                 if system_line.upper().startswith('ASSIGN'):
                     split_system = system_line.split(',')
-                    header = split_system[0].upper()
-                    if header.startswith('ASSIGN FEM'):
+                    header = split_system[0]
+                    header_upper = header.upper()
+                    if header_upper.startswith('ASSIGN FEM'):
                         unused_fem, filename = header.split('=')
                         filename = filename.strip('"\'')
                         self.log.debug('reading %s' % filename)
@@ -91,11 +108,11 @@ class BDFInputPy(object):
                         _system_lines, _executive_control_lines, _case_control_lines, bulk_data_lines2 = _out
                         bulk_data_lines = bulk_data_lines2 + bulk_data_lines
                         continue
-                    elif header.startswith('ASSIGN MATRIX'):
+                    elif header_upper.startswith('ASSIGN MATRIX'):
                         pass
-                    elif header.startswith('ASSIGN OUTPUT4'):
+                    elif header_upper.startswith('ASSIGN OUTPUT4'):
                         pass
-                    else:
+                    else:  # pragma: no cover
                         raise NotImplementedError(system_line)
                 system_lines2.append(system_line)
             system_lines = system_lines
@@ -111,7 +128,7 @@ class BDFInputPy(object):
 
         Parameters
         ----------
-        bdf_filename : str
+        bdf_filename : str / StringIO
             the main bdf_filename
 
         Returns
@@ -186,7 +203,7 @@ class BDFInputPy(object):
                             lines2 = bdf_file.readlines()
                         except UnicodeDecodeError:
                             msg = 'Invalid Encoding: encoding=%r.  Fix it by:\n' % self.encoding
-                            msg += '  1.  try a different encoding (e.g., latin1)\n'
+                            msg += '  1.  try a different encoding (e.g., latin1, cp1252, utf8)\n'
                             msg += "  2.  call read_bdf(...) with `encoding`'\n"
                             msg += ("  3.  Add '$ pyNastran : encoding=latin1"
                                     ' (or other encoding) to the top of the main file\n')
@@ -286,6 +303,13 @@ class BDFInputPy(object):
            2.  Is Unique
            3.  Isn't an OP2
            4.  Is a File
+
+        Parameters
+        ----------
+        bdf_filename : str
+            the bdf filename to open
+        basename : bool; default=False
+            only take the basename of the bdf
         """
         if basename:
             bdf_filename_inc = os.path.join(self.include_dir, os.path.basename(bdf_filename))
@@ -300,8 +324,8 @@ class BDFInputPy(object):
             print(msg)
             raise IOError(msg)
         elif bdf_filename_inc.endswith('.op2'):
-            print(msg)
             msg = 'Invalid filetype: bdf_filename=%r' % bdf_filename_inc
+            print(msg)
             raise IOError(msg)
         bdf_filename = bdf_filename_inc
 
@@ -331,6 +355,8 @@ class BDFInputPy(object):
             the filename to open
         basename : bool (default=False)
             should the basename of bdf_filename be appended to the include directory
+        check : bool; default=True
+            you can disable the checks
         """
         if basename:
             bdf_filename_inc = os.path.join(self.include_dir, os.path.basename(bdf_filename))
@@ -347,7 +373,7 @@ class BDFInputPy(object):
         bdf_file = open(_filename(bdf_filename_inc), 'r', encoding=self.encoding)
         return bdf_file
 
-    def _validate_open_file(self, bdf_filename, bdf_filename_inc, check):
+    def _validate_open_file(self, bdf_filename, bdf_filename_inc, check=True):
         """
         checks that the file doesn't have obvious errors
          - hasn't been used
@@ -360,6 +386,8 @@ class BDFInputPy(object):
            the current bdf filename
         bdf_filename_inc : str
            the next bdf filename
+        check : bool; default=True
+            you can disable the checks
 
         Raises
         ------
@@ -449,7 +477,9 @@ def _lines_to_decks(lines, punch, keep_enddata=True):
     punch : bool
         True : starts from the bulk data deck
         False : read the entire deck
-
+    keep_enddata : bool; default=True
+        True : don't throw away the enddata card
+        False : throw away the enddata card
     Returns
     -------
     system_lines : List[str]
@@ -657,6 +687,7 @@ def _show_bad_file(self, bdf_filename, encoding, nlines_previous=10):
                 msg = "\n%s encoding error on line=%s of %s; not '%s'" % (
                     encoding, iline, bdf_filename, encoding)
                 raise RuntimeError(msg)
+
             if line:
                 nblank = 0
             else:

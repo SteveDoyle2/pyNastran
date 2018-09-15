@@ -80,10 +80,8 @@ class XrefMesh(BDFAttributes):
         The main BDF class defines all the parameters that are used.
         """
         BDFAttributes.__init__(self)
-        self._ixref_errors = 0
         self._nxref_errors = 100
         self._stop_on_xref_error = True
-        self._stored_xref_errors = []
 
     # def geom_check(self):
         # """
@@ -614,7 +612,7 @@ class XrefMesh(BDFAttributes):
         for unused_key, dvprel in self.dvprels.items():
             dvprel.cross_reference(self)
 
-    def geom_check(self, geom_check, xref):
+    def geom_check(self, geom_check, xref):  # pragma: no cover
         # type: (bool, bool) -> None
         """
         what about xref?
