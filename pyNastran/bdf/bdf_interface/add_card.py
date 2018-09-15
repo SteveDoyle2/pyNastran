@@ -3782,9 +3782,23 @@ class AddCards(AddMethods):
         self._add_constraint_spc_object(spc)
         return spc
 
-    def add_mpc(self, conid, gids, components, enforced, comment=''):
-        """Creates an MPC card"""
-        mpc = MPC(conid, gids, components, enforced, comment=comment)
+    def add_mpc(self, conid, gids, components, coefficients, comment=''):
+        """
+        Creates an MPC card
+
+        Parameters
+        ----------
+        conid : int
+            Case Control MPC id
+        nodes : List[int]
+            GRID/SPOINT ids
+        components : List[str]
+            the degree of freedoms to constrain (e.g., '1', '123')
+        coefficients : List[float]
+            the scaling coefficients
+
+        """
+        mpc = MPC(conid, gids, components, coefficients, comment=comment)
         self._add_constraint_mpc_object(mpc)
         return mpc
 

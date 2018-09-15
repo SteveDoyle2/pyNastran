@@ -172,6 +172,27 @@ class TestConstraints(unittest.TestCase):
         self.check_card(msg8, msg_8_actual)
         self.check_card(msg16, msg_16_actual)
 
+    def test_mpcadd(self):
+        model = BDF(debug=False)
+        mpc_id = 42
+        sets = [1, 2]
+        model.add_mpcadd(mpc_id, sets, comment='mpcadd')
+
+        components = [42, 3, 1]
+        coefficients = [1000, 1, 101]
+        mpc = model.add_mpc(1, [2, 3, 4], components, coefficients, comment='mpc')
+        mpc.validate()
+        mpc.raw_fields()
+        card = mpc.write_card(size=8)
+        print(card)
+        mpc.write_card(size=16, is_double=False)
+        mpc.write_card(size=16, is_double=True)
+        model.pop_parse_errors()
+        model.pop_xref_errors()
+
+        model.mpcs = {}
+        mpc = model.add_card(card.split('\n')[1:], 'MPC', is_list=False)
+
     def test_spcoff(self):
         model = BDF(debug=False)
         with self.assertRaises(KeyError):
