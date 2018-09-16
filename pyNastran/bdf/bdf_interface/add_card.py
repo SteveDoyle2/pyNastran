@@ -3807,7 +3807,7 @@ class AddCards(AddMethods):
         self._add_constraint_spc_object(spc)
         return spc
 
-    def add_mpc(self, conid, gids, components, coefficients, comment=''):
+    def add_mpc(self, conid, nodes, components, coefficients, comment=''):
         """
         Creates an MPC card
 
@@ -3823,7 +3823,7 @@ class AddCards(AddMethods):
             the scaling coefficients
 
         """
-        mpc = MPC(conid, gids, components, coefficients, comment=comment)
+        mpc = MPC(conid, nodes, components, coefficients, comment=comment)
         self._add_constraint_mpc_object(mpc)
         return mpc
 

@@ -457,10 +457,11 @@ class TestBDF(Tester):
 
         with self.assertRaises(SyntaxError):
             model.add_card(['TIC', 15, -2, -5], 'TIC', comment='tic', is_list=True, has_none=True)
-        with self.assertRaises(SyntaxError):
-            model.pop_parse_errors()
+        #with self.assertRaises(SyntaxError):
+            #model.pop_parse_errors()
 
     def test_bdf_xref_safe(self):
+        """testing various safe_xref methods"""
         model = BDF(debug=False, log=None, mode='msc')
         aefact_id = 2
         caero_id = 1

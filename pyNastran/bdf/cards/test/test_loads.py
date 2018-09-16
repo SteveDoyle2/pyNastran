@@ -291,6 +291,83 @@ class TestLoads(unittest.TestCase):
         card.write_card(size, 'dummy')
         card.raw_fields()
 
+    def test_pload4_line(self):
+        """tests a PLOAD4 LINE option"""
+        #PLOAD4        10      10      0.819.2319
+        #0      1.      0.      0.    LINE    NORM
+        model = BDF(debug=True, log=None, mode='msc')
+        eid = 10
+        pid = 20
+        mid = 100
+        nids = [1, 2, 3, 4]
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        model.add_pshell(pid, mid1=mid, t=0.1, mid2=None, twelveIt3=1.0,
+                         mid3=None, tst=0.833333, nsm=0.0, z1=None, z2=None, mid4=None, comment='')
+
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu,
+                       rho=0.0, a=0.0, tref=0.0, ge=0.0,
+                       St=0.0, Sc=0.0, Ss=0.0, mcsid=0, comment='')
+        model.add_cquadr(eid, pid, nids,
+                         theta_mcid=0.0, zoffset=0., tflag=0,
+                         T1=None, T2=None, T3=None, T4=None, comment='')
+        model.add_ctriar(eid+1, pid, nids[:-1],
+                         theta_mcid=0.0, zoffset=0., tflag=0,
+                         T1=None, T2=None, T3=None, comment='')
+
+        # The SORL field is ignored by all elements except QUADR and TRIAR.
+        #    For QUADR or TRIAR only, if SORL=LINE, the consistent edge loads
+        #    are defined by the PLOAD4 entry. P1, P2, P3 and  P4 are load per
+        #    unit length at the corner of the element.
+        #
+        # All four Ps are given:
+        #    The line loads along all four edges of the element are defined.
+        #
+        # If any P is blank:
+        #    The line loads for only two edges are defined. For example,
+        #    if P1 is blank, the line loads of the two edges connecting to G1 are zero.
+        #
+        # If two Ps are given:
+        #    The line load of the edge connecting to the two grid points is defined.
+        #
+        # If only one P is given:
+        #    The second P value default to the first P value.  For example,
+        #    P1 denotes that the line load along edge G1 and G2 has the
+        #    constant value of P1.
+        #
+        sid = 10
+        eids = [10, 11]
+        pressures = [1., 0., 0., 0.]
+        cid = 0
+
+        #The direction of the line load (SORL=LINE) is defined by either (CID, N1, N2, N3) or LDIR.
+        #Fatal error will be issued if both methods are given. TANG denotes that the line load is in
+        #tangential direction of the edge, pointing from G1 to G2 if the edge is connecting G1 and G2.
+        #NORM denotes that the line load is in the mean plan, normal to the edge, and pointing outward
+        #from the element. X, Y, or Z denotes the line load is in the X, Y, or Z direction of the element
+        #coordinate system. If both (CID, N1, n2, N3) and LDIR are blank, then the default is
+        #LDIR=NORM.
+        nvector = [1., 0., 0.]
+        model.add_pload4(sid, eids, pressures, g1=None, g34=None,
+                         cid=cid, nvector=nvector,
+                         surf_or_line='LINE', line_load_dir='NORM', comment='pload4_line')
+        model.validate()
+        model.cross_reference()
+
+        p0 = [0., 0., 0.]
+        loadcase_id = sid
+        model.sum_forces_moments(p0, loadcase_id, include_grav=False, xyz_cid0=None)
+
+        eids = None
+        nids = None
+        model.sum_forces_moments_elements(p0, loadcase_id, eids, nids,
+                                          include_grav=False, xyz_cid0=None)
+
     def test_pload4_cpenta(self):
         """tests a PLOAD4 with a CPENTA"""
         bdf_filename = os.path.join(test_path, '..', 'models', 'pload4', 'cpenta.bdf')
@@ -1048,7 +1125,7 @@ class TestLoads(unittest.TestCase):
         g34 = 8
         pressures = [1., 1., 1., 1.]
         pload4 = model.add_pload4(sid, eids, pressures, g1=1, g34=8,
-                                  cid=0, nvector=None, surf_or_line='SURF',
+                                  cid=None, nvector=None, surf_or_line='SURF',
                                   line_load_dir='NORM', comment='pload4')
         #print(model.loads)
         #print(model.load_combinations)

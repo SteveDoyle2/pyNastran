@@ -43,9 +43,9 @@ from six import string_types, iteritems, iterkeys, itervalues
 import numpy as np
 
 from pyNastran.bdf.bdf_interface.get_methods import GetMethods
-#from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
 from pyNastran.bdf.cards.optimization import get_dvprel_key
 from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.bdf.cards.loads.static_loads import update_pload4_vector_for_surf
 
 
 class GetCard(GetMethods):
@@ -450,11 +450,11 @@ class GetCard(GetMethods):
             if card.type == 'MPC':
                 nids = card.node_ids
                 nid0 = nids[0]
-                #constraint0 = card.constraints[0]
-                #enforced0 = card.enforced[0]
+                #component0 = card.components[0]
+                #enforced0 = card.coefficients[0]
                 #card.constraints[1:]
-                for nid, enforced in zip(nids[1:], card.enforced[1:]):
-                    if enforced != 0.0:
+                for nid, coefficient in zip(nids[1:], card.coefficients[1:]):
+                    if coefficient != 0.0:
                         lines.append([nid0, nid])
             else:
                 msg = 'get_MPCx_node_ids doesnt support %r' % card.type
@@ -506,14 +506,14 @@ class GetCard(GetMethods):
             if card.type == 'MPC':
                 nids = card.node_ids
                 nid0 = nids[0]
-                #constraint0 = card.constraints[0]
-                #enforced0 = card.enforced[0]
+                #component0 = card.components[0]
+                #coefficient0 = card.coefficients[0]
                 #card.constraints[1:]
                 dofs = card.components
                 for dof in dofs:
                     independent_node_ids_c1[dof].append(nid0)
-                for nid, enforced in zip(nids[1:], card.enforced[1:]):
-                    if enforced != 0.0:
+                for nid, coefficient in zip(nids[1:], card.coefficients[1:]):
+                    if coefficient != 0.0:
                         for dof in dofs:
                             dependent_node_ids_c1[dof].append(nid)
             else:
@@ -904,13 +904,8 @@ class GetCard(GetMethods):
                         nface = len(elem_node_ids)
 
                         if load.surf_or_line == 'SURF':
-                            if np.linalg.norm(load.nvector) != 0.0 or load.Cid() != 0:
-                                normal = load.nvector / np.linalg.norm(load.nvector)
-                                cid = load.Cid()
-                                if cid != 0:
-                                    msg = 'cid=%r on a PLOAD4 is not supported\n%s' % (
-                                        cid, str(load))
-                                    raise NotImplementedError(msg)
+                            cid = load.Cid()
+                            normal = update_pload4_vector_for_surf(load, normal, cid)
                         else:
                             msg = 'surf_or_line=%r on PLOAD4 is not supported\n%s' % (
                                 load.surf_or_line, str(load))
@@ -949,14 +944,17 @@ class GetCard(GetMethods):
                         nface = len(elem_node_ids)
 
                         if load.surf_or_line == 'SURF':
-                            if np.linalg.norm(load.nvector) != 0.0 or load.Cid() != 0:
-                                normal = load.nvector / np.linalg.norm(load.nvector)
-                                cid = load.Cid()
-                                if cid != 0:
-                                    msg = 'cid=%r on a PLOAD4 is not supported\n%s' % (
-                                        cid, str(load))
-                                    raise NotImplementedError(msg)
-                        else:
+                            cid = load.Cid()
+                            if cid is None and np.all(np.isnan(load.nvector)):
+                                # element surface normal
+                                pass
+                            else:
+                                if norm(load.nvector) != 0.0 and cid == 0:
+                                    normal = load.nvector / np.linalg.norm(load.nvector)
+                                else:
+                                    raise NotImplementedError('cid=%r nvector=%s on a PLOAD4 is not supported\n%s' % (
+                                        cid, load.nvector, str(load)))
+                        else:  # pragma: no cover
                             msg = 'surf_or_line=%r on PLOAD4 is not supported\n%s' % (
                                 load.surf_or_line, str(load))
                             self.log.debug(msg)
@@ -2667,7 +2665,7 @@ class GetCard(GetMethods):
         comps = []
         for mpc in mpcs:
             if mpc.type == 'MPC':
-                for nid, comp, unused_enforced in zip(mpc.gids, mpc.constraints, mpc.enforced):
+                for nid, comp, unused_enforced in zip(mpc.nodes, mpc.components, mpc.coefficients):
                     nids.append(nid)
                     comps.append(comp)
             else:

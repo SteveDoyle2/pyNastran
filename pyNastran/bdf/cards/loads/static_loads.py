@@ -2357,10 +2357,10 @@ class PLOAD4(Load):
         g34 : int / None
             only used for solid elements
         cid : int; default=0
-            the coordinate system for ???
+            the coordinate system for nvector
         nvector : (3, ) float ndarray
            blank : load acts normal to the face
-           the local pressure vector
+           float : the local pressure vector
         surf_or_line : str; default='SURF'
            SURF : surface load
            LINE : line load    (only defined for QUADR, TRIAR)
@@ -2374,7 +2374,7 @@ class PLOAD4(Load):
         TODO: fix the way "pressures" works
         """
         if nvector is None:
-            nvector = np.zeros(3, dtype='float64')
+            nvector = np.full((3, ), np.nan, dtype='float64')
         else:
             nvector = np.asarray(nvector, dtype='float64')
 
@@ -2390,7 +2390,10 @@ class PLOAD4(Load):
 
         # these can be greater than 1 if it's a shell (not a solid)
         self.eids = eids
-        self.pressures = np.asarray(pressures)
+        self.pressures = np.asarray(pressures, dtype='float64')
+        if surf_or_line == 'SURF':
+            inan = np.isnan(self.pressures)
+            self.pressures[inan] = pressures[0]
 
         #: used for solid element only
         self.g1 = g1
@@ -2447,9 +2450,9 @@ class PLOAD4(Load):
         p1 = double_or_blank(card, 3, 'p1', 0.0)
         pressures = [
             p1,
-            double_or_blank(card, 4, 'p2', p1),
-            double_or_blank(card, 5, 'p3', p1),
-            double_or_blank(card, 6, 'p4', p1)]
+            double_or_blank(card, 4, 'p2'),
+            double_or_blank(card, 5, 'p3'),
+            double_or_blank(card, 6, 'p4')]
 
         eids = [eid]
         g1_thru = integer_string_or_blank(card, 7, 'g1/THRU')
@@ -2468,10 +2471,28 @@ class PLOAD4(Load):
             g1 = integer_or_blank(card, 7, 'g1')
             g34 = integer_or_blank(card, 8, 'g34')
 
-        cid = integer_or_blank(card, 9, 'cid', 0)
-        nvector = array([double_or_blank(card, 10, 'N1', 0.0),
-                         double_or_blank(card, 11, 'N2', 0.0),
-                         double_or_blank(card, 12, 'N3', 0.0)])
+        # If both (CID, N1, n2, N3) and LDIR are blank, then the default is
+        # LDIR=NORM.
+        cid = integer_or_blank(card, 9, 'cid')
+        n1 = double_or_blank(card, 10, 'N1')
+        n2 = double_or_blank(card, 11, 'N2')
+        n3 = double_or_blank(card, 12, 'N3')
+        is_not_none = [value for value in [cid, n1, n2, n3]
+                       if value is not None]
+
+        # set the nvector defaults only if one of them have a value
+        # otherwise, they're all None
+        if is_not_none:
+            if cid is None:
+                cid = 0
+            if n1 is None:
+                n1 = 0.
+            if n2 is None:
+                n2 = 0.
+            if n3 is None:
+                n3 = 0.
+        nvector = array([n1, n2, n3])
+
         surf_or_line = string_or_blank(card, 13, 'sorl', 'SURF')
         line_load_dir = string_or_blank(card, 14, 'ldir', 'NORM')
         assert len(card) <= 15, 'len(PLOAD4 card) = %i\ncard=%s' % (len(card), card)
@@ -2587,7 +2608,8 @@ class PLOAD4(Load):
             the BDF object
         """
         msg = ', which is required by PLOAD4 sid=%s' % self.sid
-        self.cid_ref = model.Coord(self.cid, msg=msg)
+        if self.cid is not None:
+            self.cid_ref = model.Coord(self.cid, msg=msg)
         if self.g1 is not None:
             self.g1_ref = model.Node(self.g1, msg=msg + '; g1')
         if self.g34 is not None:
@@ -2598,7 +2620,8 @@ class PLOAD4(Load):
     def safe_cross_reference(self, model, xref_errors, debug=True):
         msg = ', which is required by PLOAD4 sid=%s' % self.sid
         #self.eid = model.Element(self.eid, msg=msg)
-        self.cid_ref = model.safe_coord(self.cid, self.sid, xref_errors, msg=msg)
+        if self.cid is not None:
+            self.cid_ref = model.safe_coord(self.cid, self.sid, xref_errors, msg=msg)
 
         #self.eid_ref = self.eid
         if self.g1 is not None:
@@ -2772,6 +2795,19 @@ class PLOAD4(Load):
         if size == 8:
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
+
+def update_pload4_vector_for_surf(pload4, normal, cid):
+    """helper method"""
+    if cid is None and np.all(np.isnan(pload4.nvector)):
+        # element surface normal
+        pass
+    else:
+        if norm(pload4.nvector) != 0.0 and cid == 0:
+            normal = pload4.nvector / np.linalg.norm(pload4.nvector)
+        else:
+            raise NotImplementedError('cid=%r nvector=%s on a PLOAD4 is not supported\n%s' % (
+                cid, pload4.nvector, str(pload4)))
+    return normal
 
 
 class PLOADX1(BaseCard):

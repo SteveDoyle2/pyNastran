@@ -189,7 +189,6 @@ def _IAreaL(prop, dim):
 class LineProperty(Property):
     def __init__(self):
         self.beam_type = None
-        self.dim = None
         self.A = None
         self.i1 = None
         self.i2 = None
@@ -247,61 +246,41 @@ class LineProperty(Property):
         """gets the material Poisson's ratio"""
         return self.mid_ref.nu
 
-    def I1(self):
-        """gets the section I1 moment of inertia"""
-        I = self.I1_I2_I12()
-        return I[0]
+def I1_I2_I12(prop, dim):
+    r"""
+    ::
 
-    def I2(self):
-        """gets the section I2 moment of inertia"""
-        I = self.I1_I2_I12()
-        return I[1]
+      BAR
+          2
+          ^
+          |
+      *---|--*
+      |   |  |
+      |   |  |
+      |h  *-----------> 1
+      |      |
+      |   b  |
+      *------*
 
-    def I12(self):
-        """gets the section I12 moment of inertia"""
-        try:
-            I = self.I1_I2_I12()
-        except:
-            print(str(self))
-            raise
-        return I[2]
+    .. math:: I_1 = \frac{1}{12} b h^3
 
-    def I1_I2_I12(self):
-        r"""
-        ::
-
-          BAR
-              2
-              ^
-              |
-          *---|--*
-          |   |  |
-          |   |  |
-          |h  *-----------> 1
-          |      |
-          |   b  |
-          *------*
-
-        .. math:: I_1 = \frac{1}{12} b h^3
-
-        .. math:: I_2 = \frac{1}{12} h b^3
-        """
-        dim = self.dim
-        if self.beam_type == 'ROD':
-            R = dim[0]
-            A = pi * R ** 2
-            I1 = A * R ** 2 / 4.
-            I2 = I1
-            I12 = 0.
-        elif self.beam_type == 'BAR':
-            I1 = 1 / 12. * dim[0] * dim[1] ** 3
-            I2 = 1 / 12. * dim[1] * dim[0] ** 3
-            I12 = 0.
-        else:
-            msg = 'I1_I2_I12; beam_type=%s is not supported for %s class...' % (
-                self.beam_type, self.type)
-            raise NotImplementedError(msg)
-        return(I1, I2, I12)
+    .. math:: I_2 = \frac{1}{12} h b^3
+    """
+    if prop.beam_type == 'ROD':
+        R = dim[0]
+        A = pi * R ** 2
+        I1 = A * R ** 2 / 4.
+        I2 = I1
+        I12 = 0.
+    elif prop.beam_type == 'BAR':
+        I1 = 1 / 12. * dim[0] * dim[1] ** 3
+        I2 = 1 / 12. * dim[1] * dim[0] ** 3
+        I12 = 0.
+    else:
+        msg = 'I1_I2_I12; beam_type=%s is not supported for %s class...' % (
+            prop.beam_type, prop.type)
+        raise NotImplementedError(msg)
+    return(I1, I2, I12)
 
 def _bar_areaL(class_name, beam_type, dim, prop):
     """
@@ -1433,31 +1412,31 @@ class PBARL(LineProperty):
         nsm = self.Nsm()
         return area * rho + nsm
 
+    def I1(self):
+        """gets the section I1 moment of inertia"""
+        I = self.I1_I2_I12()
+        return I[0]
+
+    def I2(self):
+        """gets the section I2 moment of inertia"""
+        I = self.I1_I2_I12()
+        return I[1]
+
+    def I12(self):
+        """gets the section I12 moment of inertia"""
+        try:
+            I = self.I1_I2_I12()
+        except:
+            print(str(self))
+            raise
+        return I[2]
+
+    def I1_I2_I12(self):
+        """gets the section I1, I2, I12 moment of inertia"""
+        return I1_I2_I12(prop, prop.dim)
+
     def I11(self):
         return self.I1()
-        #if self.beam_type in ['ROD']:
-            #assert len(self.dim) == 1, 'dim=%r' % self.dim
-            #r = self.dim[0]
-            ##Ix = pi*r**4/4.
-            ##J = pi*r**4/2.
-            #(Ix, Iy, Ixy) = self.I1_I2_I12()
-
-        #elif self.beam_type in ['BAR']:
-            #assert len(self.dim) == 2, 'dim=%r' % self.dim
-            #b, h = self.dim
-            ##Ix = self.I11()
-            ##Iy = self.I22()
-            #(Ix, Iy, Ixy) = self.I1_I2_I12()
-            ##print
-            ##J = Ix + Iy
-        #else:
-            #msg = 'I11 for beam_type=%r dim=%r on PBARL is not supported' % (
-                #self.beam_type, self.dim)
-            #raise NotImplementedError(msg)
-        #return Ix
-
-    #def I12(self):
-        #return self.I12()
 
     def _points(self, beam_type, dim):
         if beam_type == 'BAR':  # origin ar center

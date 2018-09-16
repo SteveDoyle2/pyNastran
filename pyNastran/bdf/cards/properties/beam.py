@@ -854,14 +854,14 @@ class PBEAM(IntegratedLineProperty):
             raise NotImplementedError(name_str)
 
     #def Area(self):
-    #    """.. warning:: area field not supported fully on PBEAM card"""
-    #    #raise RuntimeError(self.A[0])
-    #    return self.A[0]
+       #""".. warning:: area field not supported fully on PBEAM card"""
+       ##raise RuntimeError(self.A[0])
+       #return self.A[0]
 
     #def Nsm(self):
-    #    """.. warning:: nsm field not supported fully on PBEAM card"""
-    #    #raise RuntimeError(self.nsm[0])
-    #    return self.nsm[0]
+       #""".. warning:: nsm field not supported fully on PBEAM card"""
+       ##raise RuntimeError(self.nsm[0])
+       #return self.nsm[0]
 
     def I1_I2_I12(self):
         #assert self.i1  is not None, 'I1=%r' % self.i1
@@ -1526,16 +1526,10 @@ class PBEAML(IntegratedLineProperty):
         else:
             assert self.mid_ref.type in ['MAT1']
 
-    def _J(self):
-        j = []
-        for unused_dims in self.dim:
-            pass
-            #print("dims = ",dims)
-            #IAreaL()
-        return j
-
     def J(self):
-        #raise NotImplementedError()
+        #j = []
+        #for unused_dims in self.dim:
+            # calculate J for the station
         #Js = self._J()
         #j = integrate_positive_unit_line(self.xxb, Js)
         j = None

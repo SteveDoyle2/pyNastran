@@ -405,16 +405,26 @@ class MPC(Constraint):
 
         self.nodes_ref = None
 
+    def object_attributes(self, mode='public', keys_to_skip=None):
+        """.. seealso:: `pyNastran.utils.object_attributes(...)`"""
+        my_keys_to_skip = ['gids_ref', 'gids', 'constraints', 'enforced']
+        return Constraint.object_attributes(mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
+
+    def object_methods(self, mode='public', keys_to_skip=None):
+        """.. seealso:: `pyNastran.utils.object_methods(...)`"""
+        my_keys_to_skip = ['gids_ref', 'gids', 'constraints', 'enforced']
+        return Constraint.object_methods(mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
+
     def validate(self):
         assert isinstance(self.nodes, list), type(self.nodes)
         assert isinstance(self.components, list), type(self.components)
         assert isinstance(self.coefficients, list), type(self.coefficients)
         assert len(self.nodes) == len(self.components)
         assert len(self.nodes) == len(self.coefficients)
-        for nid, comp, enforcedi in zip(self.nodes, self.components, self.enforced):
+        for nid, comp, coefficient in zip(self.nodes, self.components, self.coefficients):
             assert isinstance(nid, integer_types), self.nodes
             assert isinstance(comp, string_types), self.components
-            assert isinstance(enforcedi, float), self.enforced
+            assert isinstance(coefficient, float), self.coefficients
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -526,7 +536,7 @@ class MPC(Constraint):
 
     @property
     def node_ids(self):
-        if self.gids_ref is None:
+        if self.nodes_ref is None:
             return self.nodes
         msg = ', which is required by MPC=%s' % self.conid
         return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True, msg=msg)
@@ -658,10 +668,20 @@ class SPC(Constraint):
         self.nodes = nodes
         self.components = components
         self.enforced = enforced
-        self.gids_ref = None
+        self.nodes_ref = None
+
+    def object_attributes(self, mode='public', keys_to_skip=None):
+        """.. seealso:: `pyNastran.utils.object_attributes(...)`"""
+        my_keys_to_skip = ['gids_ref', 'gids']
+        return Constraint.object_attributes(mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
+
+    def object_methods(self, mode='public', keys_to_skip=None):
+        """.. seealso:: `pyNastran.utils.object_methods(...)`"""
+        my_keys_to_skip = ['gids_ref', 'gids']
+        return Constraint.object_methods(mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     def validate(self):
-        assert isinstance(self.gids, list), self.gids
+        assert isinstance(self.nodes, list), self.nodes
         assert isinstance(self.components, list), self.components
         assert isinstance(self.enforced, list), self.enforced
         assert len(self.nodes) == len(self.components), 'len(self.nodes)=%s len(self.components)=%s' % (len(self.nodes), len(self.components))
@@ -779,7 +799,7 @@ class SPC(Constraint):
 
         """
         msg = ', which is required by SPC=%s' % (self.conid)
-        self.gids_ref = model.EmptyNodes(self.gids, msg=msg)
+        self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
     def safe_cross_reference(self, model, debug=True):
         nids2 = []

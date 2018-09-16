@@ -893,7 +893,10 @@ class TRIM(BaseCard):
                         #naestat, naesurf, naeparms, ntrim_aesurf,
                         #ntrim, naelink, nsuport_dofs, nsuport1_dofs))
 
-            ndelta = (naestat + naesurf + naeparm) - (ntrim + naelink + nsuport_dofs + nsuport1_dofs) + 2*ntrim_aesurfs
+            nplus = (naestat + naesurf + naeparm)
+            nminus = ntrim + naelink + nsuport_dofs + nsuport1_dofs
+
+            ndelta = nplus - nminus + 0*2*ntrim_aesurfs
             if ndelta != 0:
                 #msg = (
                     #'(naestat + naesurf + naeparm) - (ntrim + ntrim_aesurf? + naelink + '
@@ -906,9 +909,8 @@ class TRIM(BaseCard):
                 #)
                 msg = (
                     'Invalid trim state (ndelta != 0):\n'
-                    '   (naestat + naesurf + naeparm + 2*ntrim_aesurf) = (%s + %s + %s + 2*%s)\n'
-                    ' - (ntrim + naelink + nsuport_dofs + nsuport1_dofs)'
-                    ' = (%s + %s + %s + %s)\n'
+                    '   (naestat + naesurf + naeparm + 0*2*ntrim_aesurf?) = (%s + %s + %s + 0*2*%s) = %s\n'
+                    ' - (ntrim + naelink + nsuport_dofs + nsuport1_dofs) = (%s + %s + %s + %s) = %s\n'
                     '===================================================================\n'
                     '  ndelta = %s\n\n'
                     'Summary\n'
@@ -916,14 +918,14 @@ class TRIM(BaseCard):
                     '  +naestat = %s; %s\n'
                     '  +naesurf = %s; %s\n'
                     '  +naeparm = %s; %s\n'
-                    '  +2*ntrim_aesurf = %s; %s\n'
+                    '  +0*2*ntrim_aesurf? = %s -> 0; %s\n'
                     '  -ntrim = %s; %s\n'
                     '  -naelink = %s; %s\n'
                     '  -nsuport_dofs = %s\n'
                     '  -nsuport1_dofs = %s\n'
                     '%s\n\n' % (
-                        naestat, naesurf, naeparm, ntrim_aesurf,
-                        ntrim, naelink, nsuport_dofs, nsuport1_dofs,
+                        naestat, naesurf, naeparm, ntrim_aesurf, nplus,
+                        ntrim, naelink, nsuport_dofs, nsuport1_dofs, nminus,
 
                         ndelta,
                         naestat, aestat_labels,
