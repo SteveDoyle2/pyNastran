@@ -1825,7 +1825,7 @@ class GetCard(GetMethods):
         dtype : str; default='int32'
             the type of the integers
         save_element_types : bool; default=False
-            adds the etypes output
+            adds the etype_to_eids_pids_nids output
 
         Returns
         -------
@@ -1851,19 +1851,28 @@ class GetCard(GetMethods):
             nids : (neids, nnodes/element) int ndarray
                 the nodes corresponding to the element
         """
-        etypes = self.get_element_nodes_by_element_type(dtype=dtype)
+        etype_to_eids_pids_nids = self.get_elements_properties_nodes_by_element_type(dtype=dtype)
         output = {}
-        for etype, (eids, pids, nids) in iteritems(etypes):
+        for etype, (eids, pids, nids) in iteritems(etype_to_eids_pids_nids):
             upids = np.unique(pids)
             for upid in upids:
                 ipid = np.where(pids == upid)[0]
                 output[(etype, upid)] = [eids[ipid], nids[ipid, :]]
+
         if save_element_types:
-            return output, None
+            return output, etype_to_eids_pids_nids
         else:
-            return output, etypes
+            return output, None
 
     def get_element_nodes_by_element_type(self, dtype='int32', solids=None):
+        # type: (str, bool) -> Any
+        """see ``get_elements_properties_nodes_by_element_type``"""
+        self.deprecated('get_element_nodes_by_element_type',
+                        'get_elements_properties_nodes_by_element_type', '1.2')
+        return self.get_elements_properties_nodes_by_element_type(
+            dtype=dtype, solids=solids)
+
+    def get_elements_properties_nodes_by_element_type(self, dtype='int32', solids=None):
         # type: (str, Optional[Dict[str, Any]]) -> Any
         """
         Gets a dictionary of element type to [eids, pids, node_ids]
@@ -1872,6 +1881,17 @@ class GetCard(GetMethods):
         ----------
         dtype : str; default='int32'
             the type of the integers
+        solids : dict[etype] : value
+            etype : str
+                the element type
+                should only be CTETRA, CHEXA, CPENTA, CPYRAM
+            value : varies
+                (nnodes_min, nnodes_max) : Tuple(int, int)
+                    the min/max number of nodes for the element
+                (nnodes, ) : Tuple(int, )
+                    the number of nodes
+                    useful if you only have CTETRA4s or only want CTETRA10s
+                    fails if you're wrong (and too low)
 
         Returns
         -------
@@ -1885,17 +1905,6 @@ class GetCard(GetMethods):
                 CONRODS have a pid of 0
             nids : (neids, nnodes/element) int ndarray
                 the nodes corresponding to the element
-        solids : dict[etype] : value
-            etype : str
-                the element type
-                should only be CTETRA, CHEXA, CPENTA, CPYRAM
-            value : varies
-                (nnodes_min, nnodes_max) : Tuple(int, int)
-                    the min/max number of nodes for the element
-                (nnodes, ) : Tuple(int, )
-                    the number of nodes
-                    useful if you only have CTETRA4s or only want CTETRA10s
-                    fails if you're wrong
         """
         etypes_no_pids = [
             'CELAS4', 'CDAMP4', 'CHBDYG',
@@ -1949,8 +1958,8 @@ class GetCard(GetMethods):
                     else:
                         pid = elem.Pid()
                     assert pid is not None, elem
+                    pids[i] = pid
                     nidsi = elem.node_ids
-                    #self.log.info(str(elem))
                     try:
                         nids[i, :] = nidsi
                     except TypeError:
@@ -1965,7 +1974,6 @@ class GetCard(GetMethods):
                             print(nidsi)
                             print(nidsi2)
                             raise
-                pids[i] = pid
                 output[etype] = [eids, pids, nids]
             else:
                 # SOLID elements can be variable length
@@ -1979,6 +1987,7 @@ class GetCard(GetMethods):
                     elem = self.elements[eid]
                     pid = elem.Pid()
                     assert pid is not None, elem
+                    pids[i] = pid
                     nidsi = elem.node_ids
                     nnodesi = len(nidsi)
                     if nnodesi == nnodes_max:
@@ -1997,7 +2006,6 @@ class GetCard(GetMethods):
                             nids[i, :] = nidsi2
                         except:
                             raise
-                pids[i] = pid
                 if len(ieids_max):
                     etype_max = elem.type + str(nnodes_max)
                     ieids_max = np.array(ieids_max, dtype=dtype)

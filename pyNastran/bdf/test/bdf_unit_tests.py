@@ -138,11 +138,39 @@ class TestBDF(Tester):
                                       punch=False, read_includes=True, encoding=None)
         assert len(cards) == 9, len(cards)
 
+
+        etype_to_eids_pids_nids = model.get_element_nodes_by_element_type()
+        assert len(etype_to_eids_pids_nids) == 1, list(etype_to_eids_pids_nids.keys())
+        #etype_to_eids_pids_nids[etype] : [eids, pids, nids]
+        eids, pids, node_ids = etype_to_eids_pids_nids['CTETRA4']
+        assert pids.min() == 1, pids.min()
+        assert pids.max() == 1, pids.max()
+
+        etype_pid_to_eids_nids, _etype_to_eids_pids_nids = model.get_elements_nodes_by_property_type(
+            dtype='int32', save_element_types=False)
+        #etype_pid_to_eids_nids[(etype, pid)] : [eids, nids]
+        assert _etype_to_eids_pids_nids is None, _etype_to_eids_pids_nids
+        assert len(etype_pid_to_eids_nids) == 1, list(etype_pid_to_eids_nids.keys())
+
     def test_bdf_02(self):
         """checks plate_py.dat"""
         bdf_filename = os.path.join(MODEL_PATH, 'plate_py', 'plate_py.dat')
         self.run_bdf('', bdf_filename)
         fem1, fem2, diff_cards = self.run_bdf('', bdf_filename, xref=True)
+
+        etype_to_eids_pids_nids = fem1.get_element_nodes_by_element_type()
+        assert len(etype_to_eids_pids_nids) == 1, list(etype_to_eids_pids_nids.keys())
+        #etype_to_eids_pids_nids[etype] : [eids, pids, nids]
+        eids, pids, node_ids = etype_to_eids_pids_nids['CQUAD4']
+        assert pids.min() == 1, pids.min()
+        assert pids.max() == 1, pids.max()
+
+        etype_pid_to_eids_nids, _etype_to_eids_pids_nids = fem1.get_elements_nodes_by_property_type(
+            dtype='int32', save_element_types=False)
+        #etype_pid_to_eids_nids[(etype, pid)] : [eids, nids]
+        assert _etype_to_eids_pids_nids is None, _etype_to_eids_pids_nids
+        assert len(etype_pid_to_eids_nids) == 1, list(etype_pid_to_eids_nids.keys())
+
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
