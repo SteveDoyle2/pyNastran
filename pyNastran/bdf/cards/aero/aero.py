@@ -390,6 +390,20 @@ class AELINK(BaseCard):
         self.deprecated('Cis', 'linking_coefficents', '1.2')
         self.linking_coefficents = linking_coefficents
 
+    def object_attributes(self, mode='public', keys_to_skip=None):
+        """.. seealso:: `pyNastran.utils.object_methods(...)`"""
+        if keys_to_skip is None:
+            keys_to_skip = []
+        my_keys_to_skip = ['Cis']
+        return BaseCard.object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
+
+    def object_methods(self, mode='public', keys_to_skip=None):
+        """.. seealso:: `pyNastran.utils.object_methods(...)`"""
+        if keys_to_skip is None:
+            keys_to_skip = []
+        my_keys_to_skip = ['Cis']
+        return BaseCard.object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
+
     def validate(self):
         if len(self.independent_labels) != len(self.linking_coefficents):
             msg = 'nlabels=%s nci=%s\nindependent_labels=%s Cis=%s\n%s' % (

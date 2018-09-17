@@ -5020,7 +5020,7 @@ class AddCards(AddMethods):
         aestat = AESTAT(aestat_id, label, comment=comment)
         self._add_aestat_object(aestat)
 
-    def add_aelink(self, aelink_id, label, independent_labels, Cis, comment=''):
+    def add_aelink(self, aelink_id, label, independent_labels, linking_coefficents, comment=''):
         """
         Creates an AELINK card, which defines an equation linking
         AESTAT and AESURF cards
@@ -5033,13 +5033,13 @@ class AddCards(AddMethods):
             name of the dependent AESURF card
         independent_labels : List[str, ..., str]
             name for the independent variables (AESTATs)
-        Cis : List[float]
+        linking_coefficents : List[float]
             linking coefficients
         comment : str; default=''
             a comment for the card
 
         """
-        aelink = AELINK(aelink_id, label, independent_labels, Cis, comment=comment)
+        aelink = AELINK(aelink_id, label, independent_labels, linking_coefficents, comment=comment)
         self._add_aelink_object(aelink)
         return aelink
 

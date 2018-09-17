@@ -84,9 +84,7 @@ class BaseCard(object):
         """.. seealso:: `pyNastran.utils.object_attributes(...)`"""
         if keys_to_skip is None:
             keys_to_skip = []
-
-        my_keys_to_skip = [
-        ]
+        my_keys_to_skip = []
         return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     def object_methods(self, mode='public', keys_to_skip=None):
@@ -94,9 +92,6 @@ class BaseCard(object):
         if keys_to_skip is None:
             keys_to_skip = []
         my_keys_to_skip = []
-
-        my_keys_to_skip = [
-        ]
         return object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     @property

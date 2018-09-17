@@ -690,14 +690,13 @@ class TestShells(unittest.TestCase):
         make_dvprel_optimization(model, params, 'PCOMP', pid)
         #--------------------------------
         model.cross_reference()
+        model._verify_bdf(xref=True)
 
         model.get_area_breakdown(property_ids=None, stop_if_no_area=True)
         model.get_mass_breakdown(property_ids=None, stop_if_no_mass=True, detailed=False)
         model.get_mass_breakdown(property_ids=None, stop_if_no_mass=True, detailed=True)
         model.get_volume_breakdown(property_ids=None, stop_if_no_volume=True)
         model.update_model_by_desvars(xref=True)
-
-        model._verify_bdf(xref=True)
 
         ctria6.raw_fields()
         ctria6.write_card(size=8)
@@ -712,6 +711,7 @@ class TestShells(unittest.TestCase):
         pcomp.write_card(size=8)
         pcomp.write_card(size=16)
         pcomp.write_card(size=16, is_double=True)
+        model._verify_bdf(xref=False)
 
     def test_trax(self):
         """tests a CTRAX3/CTRAX6/???"""

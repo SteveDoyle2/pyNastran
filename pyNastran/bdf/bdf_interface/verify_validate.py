@@ -31,10 +31,12 @@ def verify_bdf(model, xref):
             print(str(cbarao))
             raise
 
-        _verify_dict(model.properties, xref)
-        _verify_dict(model.properties_mass, xref)
-        _verify_dict(model.materials, xref)
+    _verify_dict(model.properties, xref)
+    _verify_dict(model.properties_mass, xref)
+    _verify_dict(model.materials, xref)
 
+    _verify_dict(model.dequations, xref)
+    _verify_dict(model.desvars, xref)
     _verify_dict(model.dresps, xref)
     _verify_dict(model.dvcrels, xref)
     _verify_dict(model.dvmrels, xref)
@@ -47,6 +49,7 @@ def verify_bdf(model, xref):
     _verify_dict(model.tics, xref)
 
 def _verify_dict(dict_obj, xref):
+    """helper for ``verify_bdf``"""
     for unused_key, card in sorted(dict_obj.items()):
         try:
             card._verify(xref)
@@ -55,6 +58,7 @@ def _verify_dict(dict_obj, xref):
             raise
 
 def _verify_dict_list(dict_list, xref):
+    """helper for ``verify_bdf``"""
     for unused_key, cards in sorted(dict_list.items()):
         for card in cards:
             try:
@@ -65,13 +69,14 @@ def _verify_dict_list(dict_list, xref):
 
 def validate_bdf(model):
     def _print_card(card):
+        """helper for ``validate_bdf``"""
         try:
             return card.write_card(size=8)
         except RuntimeError:
             return ''
 
     def _validate_dict_list(objects_dict):
-        """helper method for validate"""
+        """helper method for validate_bdf"""
         ifailed = 0
         nmax_failed = 0
         assert isinstance(objects_dict, dict), type(objects_dict)
@@ -108,7 +113,7 @@ def validate_bdf(model):
 
     def _validate_dict(objects):
         # type : (dict) -> None
-        """helper method for validate"""
+        """helper method for validate_bdf"""
         assert isinstance(objects, dict), type(objects)
         ifailed = 0
         nmax_failed = 0
@@ -138,7 +143,7 @@ def validate_bdf(model):
 
     def _validate_list(objects):
         # type : (List) -> None
-        """helper method for validate"""
+        """helper method for validate_bdf"""
         ifailed = 0
         nmax_failed = 0
         assert isinstance(objects, list), type(objects)
