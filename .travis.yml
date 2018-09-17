@@ -7,10 +7,10 @@ python:
   - "2.7"
   - "3.5"
   - "3.6"
-  - "3.7"     # no travis build yet (2018/8/19)
-    # https://github.com/travis-ci/travis-ci/issues/9815
-    dist: xenial
-    sudo: true
+  #- "3.7"     # no travis build yet (2018/8/19)
+  #  # https://github.com/travis-ci/travis-ci/issues/9815
+  #  dist: xenial
+  #  sudo: true
 #  - "3.5-dev" # 3.5 development branch
 #  - "nightly" # currently points to 3.6-dev
 
