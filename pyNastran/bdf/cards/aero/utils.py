@@ -185,6 +185,8 @@ def create_ellipse(aspect_ratio, radius, thetas=None):
     ----------
     aspect_ratio : float
         AR = height/width
+        a = radius (theta=90)
+        b = AR*radius (theta=0)
 
     https://en.wikipedia.org/wiki/Ellipse#Polar_form_relative_to_center
 
@@ -207,6 +209,10 @@ def create_ellipse(aspect_ratio, radius, thetas=None):
         xy = np.zeros((ntheta, 2)) # this is just R
         return xy
 
+    #a = r
+    #b = r*2
+    #R = 2R^2 / np.sqrt(2r*cos(theta)**2 + r*sin(theta)**2)
+    #R = 2R / np.sqrt(2*cos(theta)**2 + sin(theta)**2)
     R = a * b / np.sqrt((b*np.cos(thetas))**2 + (a*np.sin(thetas))**2)
     x = R * np.cos(thetas)
     y = R * np.sin(thetas)

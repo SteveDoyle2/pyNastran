@@ -25,7 +25,7 @@ log = get_logger(level='warning')
 
 class TestLoads(unittest.TestCase):
     def test_force(self):
-        """CONROD, FORCE"""
+        """tests CONROD, FORCE"""
         model = BDF(debug=False)
         eid = 1
         mid = 100
@@ -54,7 +54,7 @@ class TestLoads(unittest.TestCase):
         save_load_deck(model)
 
     def test_moment(self):
-        """CONROD, MOMENT"""
+        """tests CONROD, MOMENT"""
         model = BDF(debug=False)
         eid = 1
         mid = 100
@@ -254,6 +254,7 @@ class TestLoads(unittest.TestCase):
         save_load_deck(model)
 
     def test_gmload(self):
+        """tests GMLOAD"""
         model = BDF(debug=False)
         sid = 1
         normal = [1., 2., 3.]
@@ -1071,7 +1072,7 @@ class TestLoads(unittest.TestCase):
 
 
         conid = 42
-        gids = [
+        nodes = [
             2, 2, 2, 2, 2, 2,
             9, 9, 9, 9, 9, 9,
         ]
@@ -1079,11 +1080,11 @@ class TestLoads(unittest.TestCase):
             '1', '2', '3', '4', '5', '6',
             '1', '2', '3', '4', '5', '6',
         ]
-        enforced = [
+        coefficients = [
             1., 1., 1., 1., 1., 1.,
             1., 1., 1., 1., 1., 1.,
         ]
-        mpc = model.add_mpc(conid, gids, components, enforced, comment='mpc')
+        mpc = model.add_mpc(conid, nodes, components, coefficients, comment='mpc')
 
         eid = 1
         ga = 9
@@ -1104,10 +1105,10 @@ class TestLoads(unittest.TestCase):
         rrod_b = model.add_rrod(eid, [ga, gb], cma='3', cmb=None, alpha=0.0, comment='')
 
         conid = 43
-        gids = [10, 11]
+        nodes = [10, 11]
         components = ['1', '0']
-        enforced = [1., 1.]
-        mpc = model.add_mpc(conid, gids, components, enforced)
+        coefficients = [1., 1.]
+        mpc = model.add_mpc(conid, nodes, components, coefficients)
         model.add_spoint(11, comment='spoint')
         conid = 44
         sets = [42, 43]
@@ -1163,10 +1164,10 @@ class TestLoads(unittest.TestCase):
         #-----------------------------------------------------------------------
         # constraints
         conid = 42
-        gids = [1, 2]
+        nodes = [1, 2]
         components = ['123', '123']
         enforced = [0., 0.]
-        spc = model.add_spc(conid, gids, components, enforced, comment='spc')
+        spc = model.add_spc(conid, nodes, components, enforced, comment='spc')
         conid = 43
         nodes = [1, 2]
         components2 = '123456'
@@ -1264,6 +1265,7 @@ class TestLoads(unittest.TestCase):
             model.validate()
 
     def test_sload(self):
+        """tests SLOAD"""
         model = BDF(debug=False)
         model.add_spoint([11, 12])
         sid = 14

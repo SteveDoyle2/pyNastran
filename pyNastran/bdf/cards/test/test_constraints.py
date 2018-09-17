@@ -194,8 +194,12 @@ class TestConstraints(unittest.TestCase):
         #print(card)
         mpc.write_card(size=16, is_double=False)
         mpc.write_card(size=16, is_double=True)
-        assert mpc.enforced == coefficients
-        assert mpc.gids == node_ids
+
+        assert mpc.enforced == coefficients  # testing deprecation
+        assert mpc.gids == node_ids  # testing deprecation
+        assert mpc.coefficients == coefficients
+        assert mpc.nodes == node_ids
+
         model.pop_parse_errors()
         model.pop_xref_errors()
 

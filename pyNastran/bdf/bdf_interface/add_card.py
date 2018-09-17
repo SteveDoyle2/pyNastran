@@ -3763,7 +3763,7 @@ class AddCards(AddMethods):
         self._add_constraint_spc_object(spc)
         return spc
 
-    def add_spcd(self, sid, gids, components, enforced, comment=''):
+    def add_spcd(self, sid, nodes, components, enforced, comment=''):
         """
         Creates an SPCD card, which defines the degree of freedoms to be
         set during enforced motion
@@ -3791,7 +3791,7 @@ class AddCards(AddMethods):
                      SPCD card.
 
         """
-        spc = SPCD(sid, gids, components, enforced, comment=comment)
+        spc = SPCD(sid, nodes, components, enforced, comment=comment)
         self._add_load_object(spc)
         return spc
 

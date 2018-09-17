@@ -1065,7 +1065,7 @@ class GetCard(GetMethods):
                         eids_missing, load.rstrip()))
 
             elif load_type == 'SPCD':
-                #self.gids = [integer(card, 2, 'G1'),]
+                #self.nodes = [integer(card, 2, 'G1'),]
                 #self.constraints = [components_or_blank(card, 3, 'C1', 0)]
                 #self.enforced = [double_or_blank(card, 4, 'D1', 0.0)]
                 for nid, c1, d1 in zip(load.node_ids, load.constraints, load.enforced):
@@ -2620,9 +2620,9 @@ class GetCard(GetMethods):
                 nodes = spc.nodes
                 nnodes = len(nodes)
                 nids += nodes
-                comps += [str(spc.constraints)] * nnodes
+                comps += [str(spc.components)] * nnodes
             elif spc.type == 'SPC':
-                for nid, comp, unused_enforced in zip(spc.gids, spc.constraints, spc.enforced):
+                for nid, comp, unused_enforced in zip(spc.nodes, spc.components, spc.enforced):
                     nids.append(nid)
                     comps.append(comp)
             else:
@@ -2665,7 +2665,7 @@ class GetCard(GetMethods):
         comps = []
         for mpc in mpcs:
             if mpc.type == 'MPC':
-                for nid, comp, unused_enforced in zip(mpc.nodes, mpc.components, mpc.coefficients):
+                for nid, comp, unused_coefficient in zip(mpc.nodes, mpc.components, mpc.coefficients):
                     nids.append(nid)
                     comps.append(comp)
             else:

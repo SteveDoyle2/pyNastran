@@ -1,4 +1,5 @@
 # coding: utf-8
+# pylint: disable=W0212,C0103
 """
 All ZONA aero cards are defined in this file.  This includes:
  * TRIM
@@ -17,13 +18,13 @@ from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, string,
-    string_or_blank, integer_or_string, double_or_string, blank,
+    string_or_blank, double_or_string, blank,
 )
-from pyNastran.bdf.cards.aero.aero import (Spline, CAERO1, CAERO2, PAERO1, PAERO2,
-                                           SPLINE1, SPLINE2, SPLINE3, AESURF, AELIST,
+from pyNastran.bdf.cards.aero.aero import (Spline, CAERO1, CAERO2, PAERO2, # PAERO1,
+                                           SPLINE1, AESURF, AELIST, # SPLINE2, SPLINE3,
                                            AELINK, AEFACT)
 from pyNastran.bdf.cards.aero.static_loads import TRIM, AEROS
-from pyNastran.bdf.cards.aero.dynamic_loads import MKAERO1, AERO
+from pyNastran.bdf.cards.aero.dynamic_loads import AERO # MKAERO1,
 from pyNastran.bdf.cards.aero.utils import (
     elements_from_quad, points_elements_from_quad_points, create_ellipse)
 from pyNastran.bdf.cards.coordinate_systems import Coord
@@ -46,12 +47,32 @@ class ZONA(object):
         self.trimlnk = {}
         #self.aeroz = {}
 
+    def verify(self, xref):
+        for panlst in self.panlsts.values():
+            panlst._verify(xref)
+        for mkaeroz in self.mkaeroz.values():
+            mkaeroz._verify(xref)
+        for trimvar in self.trimvar.values():
+            trimvar._verify(xref)
+        for trimlnk in self.trimlnk.values():
+            trimlnk._verify(xref)
+
+    def validate(self):
+        for panlst in self.panlsts.values():
+            panlst.validate()
+        for mkaeroz in self.mkaeroz.values():
+            mkaeroz.validate()
+        for trimvar in self.trimvar.values():
+            trimvar.validate()
+        for trimlnk in self.trimlnk.values():
+            trimlnk.validate()
+
     def update_for_zona(self):
         card_parser = self.model._card_parser
         card_parser['TRIM'] = (TRIM_ZONA, self.model._add_trim_object)
         card_parser['CAERO7'] = (CAERO7, self.model._add_caero_object)
         card_parser['AEROZ'] = (AEROZ, self.model._add_aeros_object)
-        card_parser['AESURFZ'] = (AESURFZ, self.model._add_aesurf_object)
+        card_parser['AESURFZ'] = (AESURFZ, self._add_aesurfz_object)
         card_parser['SPLINE1'] = (SPLINE1_ZONA, self.model._add_spline_object)
         card_parser['SPLINE2'] = (SPLINE2_ZONA, self.model._add_spline_object)
         card_parser['SPLINE3'] = (SPLINE3_ZONA, self.model._add_spline_object)
@@ -75,6 +96,16 @@ class ZONA(object):
         key = panlst.eid
         self.panlsts[key] = panlst
         self.model._type_to_id_map[panlst.type].append(key)
+
+    def _add_aesurfz_object(self, aesurf):
+        # type: (Any) -> None
+        """adds an AESURFZ object"""
+        key = aesurf.aesid
+        model = self.model
+        assert key not in model.aesurf, '\naesurf=\n%s old=\n%s' % (
+            aesurf, model.aesurf[key])
+        model.aesurf[key] = aesurf
+        model._type_to_id_map[aesurf.type].append(key)
 
     def _add_mkaeroz_object(self, mkaeroz):
         # type: (Any) -> None
@@ -133,6 +164,127 @@ class ZONA(object):
 
         for unused_id, trimlnk in self.trimlnk.items():
             bdf_file.write(trimlnk.write_card(size=size, is_double=is_double))
+
+    def convert_to_nastran(self, save=True):
+        """Converts a ZONA model to Nastran"""
+        caeros, caero2s, make_paero1 = self._convert_caeros()
+        splines = self._convert_splines()
+        aesurf, aelists = self._convert_aesurf_aelist()
+
+        trims = self._convert_trim()
+        aeros, aero = self.model.aeros.convert_to_zona(self.model)
+
+        aelinks = self._convert_trimlnk()
+
+        if save:
+            self.clear()
+            self.model.splines = splines
+            self.model.aesurf = aesurf
+            self.model.aelists = aelists
+            self.model.aelinks = aelinks
+            self.model.trims = trims
+            self.model.aeros = aeros
+            self.model.aero = aero
+        return caeros, caero2s, make_paero1
+
+    def _convert_caeros(self):
+        """Converts ZONA CAERO7/BODY7 to CAERO1/CAERO2"""
+        model = self.model
+        caeros = {}
+        caero2s = []
+        make_paero1 = False
+        for caero_id, caero in sorted(model.caeros.items()):
+            if caero.type == 'CAERO7':
+                caero_new = caero.convert_to_nastran()
+                make_paero1 = True
+            elif caero.type == 'BODY7':
+                caero2s.append(caero)
+                continue
+            else:
+                raise NotImplementedError(caero)
+            caeros[caero_id] = caero_new
+
+        self._add_caero2s(caero2s, add=False)
+        return caeros, caero2s, make_paero1
+
+    def _add_caero2s(self, caero2s, add=False):
+        """Converts ZONA BODY7 to CAERO2/PAERO2/AEFACT"""
+        model = self.model
+        caero_body_ids = []
+        for caero2 in caero2s:
+            caero_id = caero2.eid
+            out = caero2.convert_to_nastran(model)
+            caero_new, paero2, aefact_xs, aefact_width, aefact_theta1, aefact_theta2 = out
+            caero_body_ids.append(caero_id)
+            if add:
+                model._add_aefact_object(aefact_xs)
+                model._add_aefact_object(aefact_width)
+                model._add_aefact_object(aefact_theta1)
+                model._add_aefact_object(aefact_theta2)
+                model._add_paero_object(paero2)
+                model._add_caero_object(caero_new)
+        return
+
+    def _convert_splines(self):
+        """Converts ZONA splines to splines"""
+        splines = {}
+        for unused_spline_id, spline in self.model.splines.items():
+            #print(spline)
+            if spline.type == 'SPLINE1_ZONA':
+                splines_new = spline.convert_to_nastran(self.model)
+            elif spline.type == 'SPLINE3_ZONA':
+                splines_new = spline.convert_to_nastran(self.model)
+            else:
+                raise NotImplementedError(spline)
+            for spline_new in splines_new:
+                splines[spline.eid] = spline_new
+        return splines
+
+    def _convert_aesurf_aelist(self):
+        """
+        Converts ZONA AESURFZ to AESURF/AELIST
+
+        +---------+--------+-------+-------+-------+--------+--------+
+        |    1    |   2    |   3   |   4   |   5   |   6    |    7   |
+        +=========+========+=======+=======+=======+========+========+
+        | AESURFZ | LABEL  |  TYPE |  CID  |  SETK |  SETG  |  ACTID |
+        +---------+--------+-------+-------+-------+--------+--------+
+        | AESURFZ | RUDDER |  ASYM |   1   |   10  |   20   |    0   |
+        +---------+--------+-------+-------+-------+--------+--------+
+        """
+        model = self.model
+        aelist_id = max(model.aelists) + 1 if model.aelists else 1
+        aesurf_id = aelist_id
+        aesurf = {}
+        aelists = {}
+        for unused_aesurf_name, aesurfi in sorted(model.aesurf.items()):
+            aelist, aesurfi2 = aesurfi.convert_to_nastran(model, aesurf_id, aelist_id)
+            aelists[aelist.sid] = aelist
+            aesurf[aesurfi2.aesid] = aesurfi2
+            aesurf_id += 1
+            aelist_id += 1
+        return aesurf, aelists
+
+    def _convert_trim(self):
+        """Converts ZONA TRIM to TRIM"""
+        trims = {}
+        model = self.model
+        for trim_id, trim in sorted(model.trims.items()):
+            trim_new = trim.convert_to_nastran(model)
+            trims[trim_id] = trim_new
+            #print(trim_new)
+        return trims
+
+    def _convert_trimlnk(self):
+        """Converts ZONA TRIMLNK to AELINK"""
+        model = self.model
+        assert isinstance(model.aelinks, dict), model.aelinks
+        aelinks = {}
+        for trim_id, trimlnk in sorted(self.trimlnk.items()):
+            aelink = trimlnk.convert_to_nastran(model)
+            #print(aelink.get_stats())
+            aelinks[trim_id] = aelink
+        return aelinks
 
     def __repr__(self):
         msg = '<ZONA>; nPANLSTs=%s nmkaeroz=%s' % (
@@ -313,7 +465,7 @@ class AESURFZ(BaseCard):
     def alid1_ref(self):
         return None
 
-    def __init__(self, label, surface_type, cid, setk, setg, actuator_tf,
+    def __init__(self, label, surface_type, cid, panlst, setg, actuator_tf,
                  comment=''):
         """
         Creates an AESURF card, which defines a control surface
@@ -326,7 +478,7 @@ class AESURFZ(BaseCard):
             defines the control surface type {SYM, ASYM}
         cid : int
             coordinate system id to define the hinge axis
-        setk : int
+        panlst : int
             aero panels defined by PANLST
         setg : int
            ???
@@ -343,7 +495,7 @@ class AESURFZ(BaseCard):
         #: Controller name.
         self.label = label
         self.surface_type = surface_type
-        self.setk = setk
+        self.panlst = panlst
         self.setg = setg
         self.actuator_tf = actuator_tf
 
@@ -351,6 +503,10 @@ class AESURFZ(BaseCard):
         #: y-axis that defines the hinge line of the control surface
         #: component.
         self.cid = cid
+
+        self.cid_ref = None
+        self.panlst_ref = None
+        self.aero_element_ids = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -368,12 +524,12 @@ class AESURFZ(BaseCard):
         label = string(card, 1, 'label')
         surface_type = string(card, 2, 'TYPE')
         cid = integer(card, 3, 'CID')
-        setk = integer(card, 4, 'SETK') # PANLST1, PANLST2, PANLST3
+        panlst = integer(card, 4, 'PANLST/SETK') # PANLST1, PANLST2, PANLST3
         setg = integer(card, 5, 'SETG') # SET1, SETADD
         actuator_tf = integer_or_blank(card, 6, 'ACTID') # ACTU card
         assert len(card) <= 7, 'len(AESURFZ card) = %i\ncard=%s' % (len(card), card)
         assert surface_type in ['SYM', 'ANTISYM', 'ASYM']
-        return AESURFZ(label, surface_type, cid, setk, setg, actuator_tf, comment=comment)
+        return AESURFZ(label, surface_type, cid, panlst, setg, actuator_tf, comment=comment)
 
     def Cid(self):
         if self.cid_ref is not None:
@@ -381,9 +537,9 @@ class AESURFZ(BaseCard):
         return self.cid
 
     def SetK(self):
-        if self.setk_ref is not None:
-            return self.setk_ref.eid
-        return self.setk
+        if self.panlst_ref is not None:
+            return self.panlst_ref.eid
+        return self.panlst
 
     #def aelist_id1(self):
         #if self.alid1_ref is not None:
@@ -414,9 +570,9 @@ class AESURFZ(BaseCard):
             #self.tqllim_ref = model.TableD(self.tqllim)
         #if self.tqulim is not None:
             #self.tqulim_ref = model.TableD(self.tqulim)
-        self.setk_ref = model.zona.panlsts[self.setk]
-        self.setk_ref.cross_reference(model)
-        self.aero_element_ids = self.setk_ref.aero_element_ids
+        self.panlst_ref = model.zona.panlsts[self.panlst]
+        self.panlst_ref.cross_reference(model)
+        self.aero_element_ids = self.panlst_ref.aero_element_ids
 
     def safe_cross_reference(self, model, xref_errors):
         msg = ', which is required by AESURF aesid=%s' % self.aesid
@@ -442,16 +598,16 @@ class AESURFZ(BaseCard):
                 #self.tqulim_ref = model.TableD(self.tqulim)
             #except KeyError:
                 #pass
-        self.setk_ref = model.zona.panlsts[self.setk]
-        self.setk_ref.cross_reference(model)
-        self.aero_element_ids = self.setk_ref.aero_element_ids
+        self.panlst_ref = model.zona.panlsts[self.panlst]
+        self.panlst_ref.cross_reference(model)
+        self.aero_element_ids = self.panlst_ref.aero_element_ids
 
     def uncross_reference(self):
         self.cid = self.Cid()
         self.cid_ref = None
 
-        self.setk = self.SetK()
-        self.setk_ref = None
+        self.panlst = self.SetK()
+        self.panlst_ref = None
 
     def convert_to_nastran(self, model, aesurf_id, aelist_id):
         """
@@ -494,7 +650,7 @@ class AESURFZ(BaseCard):
 
         """
         list_fields = ['AESURFZ', self.label, self.surface_type, self.cid,
-                       self.setk, self.setg, self.actuator_tf]
+                       self.panlst, self.setg, self.actuator_tf]
         return list_fields
 
     def repr_fields(self):
@@ -836,6 +992,8 @@ class MKAEROZ(BaseCard):
             the length of the file must be at most 56 characters
         print_flag : int
             ???
+        freqs : List[float]
+            ???
         method : int
             ???
         save : ???
@@ -872,6 +1030,7 @@ class MKAEROZ(BaseCard):
         ifreq = 1
         for ifield in range(9, len(card)):
             freq = double(card, ifield, 'FREQ%i'%  ifreq)
+            freqs.append(freq)
             ifreq += 1
         return MKAEROZ(sid, mach, flt_id, filename, print_flag, freqs,
                        method=method, save=save, comment=comment)
@@ -939,6 +1098,7 @@ class PANLST3(Spline):
         self.eid = eid
         self.panel_groups = panel_groups # points to CAERO7 / BODY7
         self.aero_element_ids = []
+        self.caero_refs = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1061,6 +1221,8 @@ class BODY7(BaseCard):
         self.acoord = acoord
         self.pid_ref = None
         self.acoord_ref = None
+        self.ascid_ref = None
+        self.segmesh_refs = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1077,6 +1239,7 @@ class BODY7(BaseCard):
         """
         eid = integer(card, 1, 'eid')
         label = string(card, 2, 'label')
+        assert len(card) >= 3, 'len(BODY7 card) = %i\ncard=%s' % (len(card), card)
         pid = integer_or_blank(card, 3, 'pid')
         acoord = integer_or_blank(card, 4, 'acoord', 0)
         nseg = integer_or_blank(card, 5, 'nseg')
@@ -1137,12 +1300,12 @@ class BODY7(BaseCard):
             #self.lsb_ref = model.AEFact(self.lsb, msg=msg)
         #if self.nint == 0:
             #self.lint_ref = model.AEFact(self.lint, msg=msg)
-        if self.acoord:
+        if self.acoord is not None:
             self.acoord_ref = model.Coord(self.acoord, msg=msg)
         #self.ascid_ref = model.Acsid(msg=msg)
         self.ascid_ref = model.Coord(0, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors, debug=False):
+    def safe_cross_reference(self, model, xref_errors):
         self.cross_reference(model)
 
     def uncross_reference(self):
@@ -1200,35 +1363,84 @@ class BODY7(BaseCard):
         #|         | ITYPE2 |   X2  | CAM2 |   YR2   |  ZR2  | IDY2 | IDZ2 |     |
         #|         | ITYPE3 |   X3  | CAM3 |   YR3   |  ZR3  | IDY3 | IDZ3 |     |
         #+---------+--------+-------+------+---------+-------+------+------+-----+
-        nsegments = len(self.segmesh_refs)
         xpoints = []
         half_widths = []
 
-        origin_x, origin_y, origin_z = self.acoord_ref.origin
+        try:
+            origin_x, origin_y, origin_z = self.acoord_ref.origin
+        except AttributeError:  # pragma: no cover
+            print(self.get_stats())
+            raise
         #x_offset = origin_x + x
         #y_offset = origin_y + y
         #z_offset = origin_z + z
         nsegmesh = len(self.segmesh_refs)
+        if nsegmesh == 0:
+            raise RuntimeError('Number of SEGMESH  references on BODY7=0\n%s' % str(self))
         for isegmesh, segmesh in enumerate(self.segmesh_refs):
-            for itype in segmesh.itypes:
-                if itype not in [3]:
-                    raise NotImplementedError(self)
+            itypes = segmesh.itypes
 
-            # aefacts
+            xs = segmesh.xs
+            #idys_ref = segmesh.idys_ref
+            #idzs_ref = segmesh.idzs_ref
+            nitypes = len(itypes)
+            idys_ref = [None] * nitypes if segmesh.idys_ref is None else segmesh.idys_ref
+            idzs_ref = [None] * nitypes if segmesh.idzs_ref is None else segmesh.idzs_ref
+
+            cambers = segmesh.cambers
+            yrads = segmesh.ys
+            zrads = segmesh.zs
+
+            # what????
             if isegmesh in [0, nsegmesh - 1]:
-                xs = segmesh.xs
-                idys_ref = segmesh.idys_ref
-                idzs_ref = segmesh.idzs_ref
+                xs2 = segmesh.xs
+                idys_ref2 = idys_ref
+                idzs_ref2 = idzs_ref
             else:
-                xs = segmesh.xs[1:]
-                idys_ref = segmesh.idys_ref[1:]
-                idzs_ref = segmesh.idzs_ref[1:]
+                xs2 = segmesh.xs[1:]
+                idys_ref2 = idys_ref[1:]
+                idzs_ref2 = idzs_ref[1:]
 
-            xpoints += xs
+            xpoints += xs2
             yz_mean = []
-            for idy_ref, idz_ref in zip(idys_ref, idzs_ref):
-                ypoints = idy_ref.fractions
-                zpoints = idz_ref.fractions
+
+
+            thetas = self._get_thetas(itypes, idys_ref2, idzs_ref2)
+            for istation, itype, camber, yrad, zrad, idy_ref, idz_ref in zip(
+                count(), itypes, cambers, yrads, zrads, idys_ref2, idzs_ref2):
+                if itype == 1:
+                    # Body of Revolution
+                    # Xi, CAMi, YRi
+                    ## TODO: doesn't consider camber
+                    radius = yrad
+                    aspect_ratio = 1.
+                    yz = create_ellipse(aspect_ratio, radius, thetas=thetas)
+                    ypoints = yz[:, 0]
+                    zpoints = yz[:, 1]
+                elif itype == 2:
+                    # Elliptical body
+                    height = zrad
+                    width = yrad
+                    aspect_ratio = height / width
+                    radius = height
+                    yz = create_ellipse(aspect_ratio, radius, thetas=thetas)
+                    ypoints = yz[:, 0]
+                    zpoints = yz[:, 1]
+
+                elif itype == 3:
+                    # Arbitrary body using AEFACTss
+                    try:
+                        ypoints = idy_ref.fractions
+                        zpoints = idz_ref.fractions
+                    except AttributeError:  # pragma: no cover
+                        print('idy_ref = %s' % idy_ref)
+                        print('idz_ref = %s' % idz_ref)
+                        print(self.get_stats())
+                        raise
+                else:  # pramga: no cover
+                    msg = 'Unsupported itype=%s (must be 1/2/3)\n%s' % (itype, str(self))
+                    raise NotImplementedError(msg)
+
                 width = ypoints.max() - ypoints.min()
                 height = zpoints.max() - zpoints.min()
                 #elliptical_area = pi * width * height
@@ -1264,8 +1476,8 @@ class BODY7(BaseCard):
 
 
         # theta arrays (AEFACTs)
-        lth1 = theta1_id
-        lth2 = theta2_id
+        #lth1 = theta1_id
+        #lth2 = theta2_id
 
         # 0-57 is excluded
         angles_body = [20.0, 40.0, 60.0, 80.0, 100.0, 120.0, 140.0, 160.0,
@@ -1290,6 +1502,20 @@ class BODY7(BaseCard):
         paero2.validate()
         return caero2, paero2, aefact_xs, aefact_width, aefact_theta1, aefact_theta2
 
+    def _get_nthetas(self, itypes, idys_ref2, idzs_ref2):
+        nthetas = 17
+        for itype, idy_ref, idz_ref in zip(itypes, idys_ref2, idzs_ref2):
+            if itype == 3:
+                fractions = idy_ref.fractions
+                nthetas = len(fractions)
+                break
+        return nthetas
+
+    def _get_thetas(self, itypes, idys_ref2, idzs_ref2):
+        nthetas = self._get_nthetas(itypes, idys_ref2, idzs_ref2)
+        thetas = np.radians(np.linspace(0., 360., nthetas))
+        return thetas
+
     def get_points(self):
         """creates a 1D representation of the CAERO2"""
         p1 = self.cp_ref.transform_node_to_global(self.p1)
@@ -1301,14 +1527,11 @@ class BODY7(BaseCard):
 
     @property
     def npanels(self):
-        npanels = 0
-        for segmesh in self.segmesh_refs:
-            for itype in segmesh.itypes:
-                if itype not in [3]:
-                    return 0
-            nx = segmesh.naxial
-            ny = segmesh.nradial
-            npanels += nx * ny
+        nz = len(self.segmesh_refs)
+        segmesh = self.segmesh_refs[0]
+        thetas = self._get_thetas(segmesh.itypes, segmesh.idys_ref, segmesh.idzs_ref)
+        nthetas = len(thetas)
+        npanels = nz * (nthetas - 1)
         return npanels
 
     def get_points_elements_3d(self):
@@ -1319,7 +1542,7 @@ class BODY7(BaseCard):
         TODO: doesn't support the aero coordinate system
 
         """
-        paero2 = self.pid_ref
+        #paero2 = self.pid_ref
         xyz = []
         element = []
         npoints = 0
@@ -1345,8 +1568,8 @@ class BODY7(BaseCard):
             series of quad elements
             nquads = (nchord-1) * (nspan-1)
         """
-        lengths_y = []
-        lengths_z = []
+        #lengths_y = []
+        #lengths_z = []
         nx = segmesh.naxial
         ny = segmesh.nradial
 
@@ -1365,6 +1588,12 @@ class BODY7(BaseCard):
                 raise NotImplementedError(msg)
             assert camber == 0.0, 'camber is not supported'
 
+            # ITYPEi = 1 (Body of Revolution):
+            #    Xi, CAMi, YRi
+            # ITYPEi = 2 (Elliptical Body):
+            #    Xi, YRi, ZRi
+            # ITYPEi = 3 (Arbitrary Body):
+            #    Xi, IDYi, IDZi
             ynodes = idy_ref.fractions
             znodes = idz_ref.fractions
             assert len(ynodes) == len(znodes), 'len(ynodes)=%s len(znodes)=%s' % (len(ynodes), len(znodes))
@@ -1385,11 +1614,11 @@ class BODY7(BaseCard):
         elements = elements_from_quad(nx, ny, dtype='int32')
         return xyz, elements
 
-    def set_points(self, points):
-        self.p1 = np.asarray(points[0])
-        p2 = np.asarray(points[1])
-        x12 = p2 - self.p1
-        self.x12 = x12[0]
+    #def set_points(self, points):
+        #self.p1 = np.asarray(points[0])
+        #p2 = np.asarray(points[1])
+        #x12 = p2 - self.p1
+        #self.x12 = x12[0]
 
     def shift(self, dxyz):
         """shifts the aero panel"""
@@ -1510,6 +1739,8 @@ class SEGMESH(BaseCard):
             a comment for the card
 
         """
+        if comment:
+            self.comment = comment
         BaseCard.__init__(self)
         self.segmesh_id = segmesh_id
         self.naxial = naxial
@@ -1527,6 +1758,16 @@ class SEGMESH(BaseCard):
         self.idys_ref = None
         self.idzs_ref = None
         self.pid_ref = None
+
+    def validate(self):
+        for i, itype in enumerate(self.itypes):
+            assert itype in [1, 2, 3], 'itypes[%i]=%s is invalid; itypes=%s' % (i, itype, self.itypes)
+
+        xi_old = self.xs[0]
+        for i, xi in enumerate(self.xs[1:]):
+            if xi <= xi_old:
+                raise RuntimeError('xs=%s must be in ascending order\nx%i=%s x%i=%s (old)\n%s' % (
+                    xs, i+2, xi, i+1, xi_old, str(self)))
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1573,7 +1814,7 @@ class SEGMESH(BaseCard):
             idzs.append(idz)
         assert len(itypes) == naxial, 'naxial=%s nradial=%s len(itypes)=%s' % (naxial, nradial, len(itypes))
         return SEGMESH(segmesh_id, naxial, nradial, nose_radius, iaxis,
-                       itypes, xs, cambers, ys, zs, idys, idzs)
+                       itypes, xs, cambers, ys, zs, idys, idzs, comment=comment)
 
     def Cp(self):
         if self.cp_ref is not None:
@@ -1609,12 +1850,14 @@ class SEGMESH(BaseCard):
             idy_ref = None
             if idy is not None and isinstance(idy, integer_types):
                 idy_ref = model.AEFact(idy, msg=msg)
+                assert len(idy_ref.fractions) > 2, 'idy_ref=%s' % idy_ref
             idys_ref.append(idy_ref)
 
         for idz in self.idzs:
             idz_ref = None
             if idz is not None and isinstance(idz, integer_types):
                 idz_ref = model.AEFact(idz, msg=msg)
+                assert len(idz_ref.fractions) > 2, 'idz_ref=%s' % idz_ref
             idzs_ref.append(idz_ref)
         self.idys_ref = idys_ref
         self.idzs_ref = idzs_ref
@@ -1767,11 +2010,11 @@ class SEGMESH(BaseCard):
         #print('elems =\n', elems)
         return xyz, elems
 
-    def set_points(self, points):
-        self.p1 = np.asarray(points[0])
-        p2 = np.asarray(points[1])
-        x12 = p2 - self.p1
-        self.x12 = x12[0]
+    #def set_points(self, points):
+        #self.p1 = np.asarray(points[0])
+        #p2 = np.asarray(points[1])
+        #x12 = p2 - self.p1
+        #self.x12 = x12[0]
 
     def shift(self, dxyz):
         """shifts the aero panel"""
@@ -1956,7 +2199,7 @@ class CAERO7(BaseCard):
         self.x12 = x12
         self.p4 = p4
         self.x43 = x43
-        self.ztaic = None
+        self.ztaic = ztaic
 
         self.pid_ref = None
         self.cp_ref = None
@@ -2041,7 +2284,8 @@ class CAERO7(BaseCard):
 
         assert len(card) <= 23, 'len(CAERO7 card) = %i\ncard=%s' % (len(card), card)
         return CAERO7(eid, name, p1, x12, p4, x43,
-                      cp=cp, nspan=nspan, nchord=nchord, lspan=lspan, p_airfoil=p_airfoil,
+                      cp=cp, nspan=nspan, nchord=nchord, lspan=lspan,
+                      p_airfoil=p_airfoil, ztaic=ztaic,
                       comment=comment)
 
     def flip_normal(self):
@@ -2059,7 +2303,6 @@ class CAERO7(BaseCard):
         self.box_ids = np.zeros((nchord, nspan), dtype=dtype)
 
         npanels = nchord * nspan
-        i = 0
         try:
             self.box_ids = np.arange(self.eid, self.eid + npanels, dtype=dtype).reshape(nspan, nchord).T
         except OverflowError:
@@ -2430,7 +2673,7 @@ class CAERO7(BaseCard):
         nchord = set_blank_if_default(self.nchord, 0)
         #lchord = set_blank_if_default(self.get_LChord(), 0)
         lspan = set_blank_if_default(self.get_LSpan(), 0)
-        lchord = 0
+        #lchord = 0
         lspan = 0
         list_fields = (
             ['CAERO7', self.eid, self.label, cp, nspan, nchord, lspan, self.ztaic,
@@ -2448,13 +2691,6 @@ class TRIM_ZONA(BaseCard):
     """
     Specifies constraints for aeroelastic trim variables.
 
-    +------+--------+------+--------+--------+-----+--------+-----+----------+
-    |   1  |   2    |   3  |    4   |    5   |  6  |    7   |  8  |     9    |
-    +======+========+======+========+========+=====+========+=====+==========+
-    | TRIM |   ID   | MACH |    Q   | LABEL1 | UX1 | LABEL2 | UX2 | IS_RIGID |
-    +------+--------+------+--------+--------+-----+--------+-----+----------+
-    |      | LABEL3 |  UX3 | LABEL4 |   UX4  | ... |        |     |          |
-    +------+--------+------+--------+--------+-----+--------+-----+----------+
     """
     type = 'TRIM_ZONA'
     _field_map = {
@@ -2573,6 +2809,7 @@ class TRIM_ZONA(BaseCard):
             uxs.append(ux)
             i += 2
             n += 1
+        assert len(card) >= 25, 'len(TRIM card) = %i\ncard=%s' % (len(card), card)
         return TRIM_ZONA(sid, mkaeroz, qinf, cg, true_g, nxyz, pqr, loadset,
                          labels, uxs, comment=comment)
 
@@ -2706,7 +2943,7 @@ class TRIMLNK(BaseCard):
     @classmethod
     def add_card(cls, card, comment=''):
         """
-        Adds a TRIM card from ``BDF.add_card(...)``
+        Adds a TRIMLNK card from ``BDF.add_card(...)``
 
         Parameters
         ----------
@@ -2730,6 +2967,7 @@ class TRIMLNK(BaseCard):
             coeffs.append(coeff)
             var_ids.append(var_id)
             icoeff += 1
+        assert len(card) >= 5, 'len(TRIMLNK card) = %i\ncard=%s' % (len(card), card)
         return TRIMLNK(link_id, sym, coeffs, var_ids, comment=comment)
 
     def cross_reference(self, model):
@@ -2829,7 +3067,7 @@ class TRIMVAR(BaseCard):
     @classmethod
     def add_card(cls, card, comment=''):
         """
-        Adds a TRIM card from ``BDF.add_card(...)``
+        Adds a TRIMVAR card from ``BDF.add_card(...)``
 
         Parameters
         ----------
@@ -2872,22 +3110,21 @@ class TRIMVAR(BaseCard):
         pass
 
     def convert_to_nastran(self, model):
-        aaa
-        mkaeroz_id = self.mkaeroz
-        mkaeroz = model.zona.mkaeroz[mkaeroz_id]
-        #print(mkaeroz)
-        mach = mkaeroz.mach
-        labels = []
-        uxs = []
-        for label_id, ux in zip(self.labels, self.uxs):
-            if ux != 'FREE':
-                label = model.zona.trimvar[label_id]
-                labels.append(label)
-                uxs.append(ux)
-        trim = TRIM(self.sid, mach, self.q, labels, uxs,
-                    aeqr=1.0, comment=str(self))
-        trim.validate()
-        return trim
+        raise NotImplementedError()
+        #mkaeroz_id = self.mkaeroz
+        #mkaeroz = model.zona.mkaeroz[mkaeroz_id]
+        #mach = mkaeroz.mach
+        #labels = []
+        #uxs = []
+        #for label_id, ux in zip(self.labels, self.uxs):
+            #if ux != 'FREE':
+                #label = model.zona.trimvar[label_id]
+                #labels.append(label)
+                #uxs.append(ux)
+        #trim = TRIM(self.sid, mach, self.q, labels, uxs,
+                    #aeqr=1.0, comment=str(self))
+        #trim.validate()
+        #return trim
 
     def raw_fields(self):
         """
@@ -2936,7 +3173,8 @@ class SPLINE1_ZONA(Spline):
     """
     type = 'SPLINE1_ZONA'
 
-    def __init__(self, eid, setk, setg, model=None, cp=None, dz=None, eps=0.01, comment=''):
+    def __init__(self, eid, panlst, setg, model=None, cp=None,
+                 dz=None, eps=0.01, comment=''):
         """
         Creates a SPLINE1 card, which is useful for control surface
         constraints.
@@ -2957,11 +3195,11 @@ class SPLINE1_ZONA(Spline):
         self.eid = eid
         self.model = model
         self.cp = cp
-        self.setk = setk
+        self.panlst = panlst
         self.setg = setg
         self.dz = dz
         self.eps = eps
-        self.setk_ref = None
+        self.panlst_ref = None
         self.setg_ref = None
         self.aero_element_ids = []
 
@@ -2982,11 +3220,11 @@ class SPLINE1_ZONA(Spline):
         model = blank(card, 2, 'model')
         cp = blank(card, 3, 'cp')
 
-        setk = integer(card, 4, 'setk')
+        panlst = integer(card, 4, 'panlst/setk')
         setg = integer(card, 5, 'setg')
         dz = blank(card, 6, 'dz')
         eps = double_or_blank(card, 6, 'eps', 0.01)
-        return SPLINE1_ZONA(eid, setk, setg, model=model, cp=cp, dz=dz, eps=eps,
+        return SPLINE1_ZONA(eid, panlst, setg, model=model, cp=cp, dz=dz, eps=eps,
                             comment=comment)
 
     def cross_reference(self, model):
@@ -2994,9 +3232,9 @@ class SPLINE1_ZONA(Spline):
         self.setg_ref = model.Set(self.setg, msg=msg)
         self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
 
-        self.setk_ref = model.zona.panlsts[self.setk]
-        self.setk_ref.cross_reference(model)
-        self.aero_element_ids = self.setk_ref.aero_element_ids
+        self.panlst_ref = model.zona.panlsts[self.panlst]
+        self.panlst_ref.cross_reference(model)
+        self.aero_element_ids = self.panlst_ref.aero_element_ids
 
     def safe_cross_reference(self, model, xref_errors):
         msg = ', which is required by SPLINE1 eid=%s' % self.eid
@@ -3008,14 +3246,14 @@ class SPLINE1_ZONA(Spline):
                 self.setg, msg, np.unique(list(model.sets.keys()))))
 
         try:
-            self.setk_ref = model.zona.panlsts[self.setk]
-            self.setk_ref.safe_cross_reference(model, xref_errors)
-            self.aero_element_ids = self.setk_ref.aero_element_ids
+            self.panlst_ref = model.zona.panlsts[self.panlst]
+            self.panlst_ref.safe_cross_reference(model, xref_errors)
+            self.aero_element_ids = self.panlst_ref.aero_element_ids
         except KeyError:
             pass
 
     def uncross_reference(self):
-        self.setk_ref = None
+        self.panlst_ref = None
         self.setg_ref = None
 
     def convert_to_nastran(self, model):
@@ -3039,8 +3277,8 @@ class SPLINE1_ZONA(Spline):
         +---------+------+-------+-------+------+------+----+-----+-------+
         """
         #print('self.aero_element_ids =', self.aero_element_ids)
-        #setk = 100 # set_aero
-        #return SPLINE1(self.eid, setk, self.setg, model=None, cp=self.cp, dz=self.dz,
+        #panlst = 100 # set_aero
+        #return SPLINE1(self.eid, panlst, self.setg, model=None, cp=self.cp, dz=self.dz,
                        #eps=0.01, comment=self.comment)
         splines = []
         if not hasattr(self, '_comment'):
@@ -3048,7 +3286,7 @@ class SPLINE1_ZONA(Spline):
         comment = '-' * 72 + '\n' #+ self._comment
         #self._comment = ''
         comment += str(self)
-        for panel_groups in self.setk_ref.panel_groups:
+        for panel_groups in self.panlst_ref.panel_groups:
             #print(panel_groups)
             eid = model.zona.caero_to_name_map[panel_groups]
             caero = model.caeros[eid]
@@ -3056,6 +3294,8 @@ class SPLINE1_ZONA(Spline):
             caero_id = eid
             box1 = caero.eid
             box2 = box1 + caero.npanels - 1
+            #assert caero.npanels > 0, caero
+            #assert box1 > 0 and box2 > 0, 'box1=%s box2=%s' % (box1, box2)
             spline = SPLINE1(eid, caero_id, box1, box2, self.setg, dz=self.dz,
                              method='IPS', usage='BOTH',
                              nelements=10, melements=10, comment=comment)
@@ -3065,7 +3305,7 @@ class SPLINE1_ZONA(Spline):
         return splines
 
     def raw_fields(self):
-        list_fields = ['SPLINE1', self.eid, self.model, self.cp, self.setk, self.setg,
+        list_fields = ['SPLINE1', self.eid, self.model, self.cp, self.panlst, self.setg,
                        self.dz, self.eps]
         return list_fields
 
@@ -3088,7 +3328,7 @@ class SPLINE2_ZONA(Spline):
     """
     type = 'SPLINE2_ZONA'
 
-    def __init__(self, eid, setk, setg, model=None, dz=None, eps=0.01,
+    def __init__(self, eid, panlst, setg, model=None, dz=None, eps=0.01,
                  cp=None, curvature=None, comment=''):
         """
         Creates a SPLINE1 card, which is useful for control surface
@@ -3110,12 +3350,12 @@ class SPLINE2_ZONA(Spline):
         self.eid = eid
         self.model = model
         self.cp = cp
-        self.setk = setk
+        self.panlst = panlst
         self.setg = setg
         self.dz = dz
         self.eps = eps
         self.curvature = curvature
-        self.setk_ref = None
+        self.panlst_ref = None
         self.setg_ref = None
 
     @classmethod
@@ -3133,13 +3373,13 @@ class SPLINE2_ZONA(Spline):
         """
         eid = integer(card, 1, 'eid')
         model = string_or_blank(card, 2, 'model')
-        setk = integer(card, 3, 'setk')
+        panlst = integer(card, 3, 'panlst/setk')
         setg = integer(card, 4, 'setg')
         dz = blank(card, 5, 'dz')
         eps = double_or_blank(card, 6, 'eps', 0.01)
         cp = integer_or_blank(card, 7, 'cp', 0)
         curvature = double_or_blank(card, 8, 'curvature', 1.0)
-        return SPLINE2_ZONA(eid, setk, setg, model=model, cp=cp, dz=dz, eps=eps,
+        return SPLINE2_ZONA(eid, panlst, setg, model=model, cp=cp, dz=dz, eps=eps,
                             curvature=curvature, comment=comment)
 
     def cross_reference(self, model):
@@ -3148,8 +3388,8 @@ class SPLINE2_ZONA(Spline):
         self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
         #self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         #self.caero_ref = model.CAero(self.caero, msg=msg)
-        self.setk_ref = model.zona.panlsts[self.setk]
-        self.setk_ref.cross_reference(model)
+        self.panlst_ref = model.zona.panlsts[self.panlst]
+        self.panlst_ref.cross_reference(model)
 
     def safe_cross_reference(self, model, xref_errors):
         try:
@@ -3160,15 +3400,15 @@ class SPLINE2_ZONA(Spline):
             pass
         #self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         #self.caero_ref = model.CAero(self.caero, msg=msg)
-        self.setk_ref = model.zona.panlsts[self.setk]
-        self.setk_ref.safe_cross_reference(model, xref_errors)
+        self.panlst_ref = model.zona.panlsts[self.panlst]
+        self.panlst_ref.safe_cross_reference(model, xref_errors)
 
     def uncross_reference(self):
-        self.setk_ref = None
+        self.panlst_ref = None
         self.setg_ref = None
 
     def raw_fields(self):
-        list_fields = ['SPLINE2', self.eid, self.model, self.setk, self.setg,
+        list_fields = ['SPLINE2', self.eid, self.model, self.panlst, self.setg,
                        self.dz, self.eps, self.cp, self.curvature]
         return list_fields
 
@@ -3190,7 +3430,8 @@ class SPLINE3_ZONA(Spline):
     """
     type = 'SPLINE3_ZONA'
 
-    def __init__(self, eid, setk, setg, model=None, cp=None, dz=None, eps=0.01, comment=''):
+    def __init__(self, eid, panlst, setg, model=None, cp=None,
+                 dz=None, eps=0.01, comment=''):
         """
         Creates a SPLINE3 card, which is useful for control surface
         constraints.
@@ -3211,11 +3452,11 @@ class SPLINE3_ZONA(Spline):
         self.eid = eid
         self.model = model
         self.cp = cp
-        self.setk = setk
+        self.panlst = panlst
         self.setg = setg
         self.dz = dz
         self.eps = eps
-        self.setk_ref = None
+        self.panlst_ref = None
         self.setg_ref = None
         self.aero_element_ids = []
 
@@ -3236,11 +3477,11 @@ class SPLINE3_ZONA(Spline):
         model = blank(card, 2, 'model')
         cp = blank(card, 3, 'cp')
 
-        setk = integer(card, 4, 'setk')
+        panlst = integer(card, 4, 'panlst/setk')
         setg = integer(card, 5, 'setg')
         dz = blank(card, 6, 'dz')
         eps = double_or_blank(card, 6, 'eps', 0.01)
-        return SPLINE3_ZONA(eid, setk, setg, model=model, cp=cp, dz=dz, eps=eps,
+        return SPLINE3_ZONA(eid, panlst, setg, model=model, cp=cp, dz=dz, eps=eps,
                             comment=comment)
 
     def cross_reference(self, model):
@@ -3249,9 +3490,9 @@ class SPLINE3_ZONA(Spline):
         self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
         #self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         #self.caero_ref = model.CAero(self.caero, msg=msg)
-        self.setk_ref = model.zona.panlsts[self.setk]
-        self.setk_ref.cross_reference(model)
-        self.aero_element_ids = self.setk_ref.aero_element_ids
+        self.panlst_ref = model.zona.panlsts[self.panlst]
+        self.panlst_ref.cross_reference(model)
+        self.aero_element_ids = self.panlst_ref.aero_element_ids
 
     def safe_cross_reference(self, model, xref_errors):
         msg = ', which is required by SPLINE3 eid=%s' % self.eid
@@ -3260,12 +3501,12 @@ class SPLINE3_ZONA(Spline):
             self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
         except:
             pass
-        self.setk_ref = model.zona.panlsts[self.setk]
-        self.setk_ref.safe_cross_reference(model, xref_errors)
-        self.aero_element_ids = self.setk_ref.aero_element_ids
+        self.panlst_ref = model.zona.panlsts[self.panlst]
+        self.panlst_ref.safe_cross_reference(model, xref_errors)
+        self.aero_element_ids = self.panlst_ref.aero_element_ids
 
     def uncross_reference(self):
-        self.setk_ref = None
+        self.panlst_ref = None
         self.setg_ref = None
 
     def convert_to_nastran(self, model):
@@ -3283,7 +3524,7 @@ class SPLINE3_ZONA(Spline):
         |         |  G4  |  C4   |  A4   | etc. |    |    |     |       |
         +---------+------+-------+-------+------+----+----+-----+-------+
         """
-        list_fields = ['SPLINE3', self.eid, self.model, self.cp, self.setk, self.setg,
+        list_fields = ['SPLINE3', self.eid, self.model, self.cp, self.panlst, self.setg,
                        self.dz, self.eps]
         return list_fields
 

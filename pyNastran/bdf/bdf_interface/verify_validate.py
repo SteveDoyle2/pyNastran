@@ -47,6 +47,7 @@ def verify_bdf(model, xref):
     _verify_dict(model.dresps, xref)
     _verify_dict(model.gusts, xref)
     _verify_dict(model.tics, xref)
+    model.zona.verify(xref)
 
 def _verify_dict(dict_obj, xref):
     """helper for ``verify_bdf``"""
@@ -339,3 +340,4 @@ def validate_bdf(model):
     for unused_key, dscreen in sorted(model.dscreen.items()):
         dscreen.validate()
     _validate_dict_list(model.dvgrids)
+    model.zona.validate()

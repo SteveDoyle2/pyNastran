@@ -287,6 +287,7 @@ class AEFACT(BaseCard):
         for i in range(2, len(card)):
             fraction = double(card, i, 'factor_%i' % (i - 1))
             fractions.append(fraction)
+        assert len(card) > 2, 'len(AEFACT card) = %i\n%s' % (len(card), card)
         return AEFACT(sid, fractions, comment=comment)
 
     #def cross_reference(self, model):
@@ -406,14 +407,14 @@ class AELINK(BaseCard):
 
     def validate(self):
         if len(self.independent_labels) != len(self.linking_coefficents):
-            msg = 'nlabels=%s nci=%s\nindependent_labels=%s Cis=%s\n%s' % (
-                len(self.independent_labels), len(self.Cis),
-                self.independent_labels, self.Cis, str(self))
+            msg = 'nlabels=%s nci=%s\nindependent_labels=%s linking_coefficents=%s\n%s' % (
+                len(self.independent_labels), len(self.linking_coefficents),
+                self.independent_labels, self.linking_coefficents, str(self))
             raise RuntimeError(msg)
         if len(self.independent_labels) == 0:
-            msg = 'nlabels=%s nci=%s\nindependent_labels=%s Cis=%s\n%s' % (
-                len(self.independent_labels), len(self.Cis),
-                self.independent_labels, self.Cis, str(self))
+            msg = 'nlabels=%s nci=%s\nindependent_labels=%s linking_coefficents=%s\n%s' % (
+                len(self.independent_labels), len(self.linking_coefficents),
+                self.independent_labels, self.linking_coefficents, str(self))
             raise RuntimeError(msg)
 
     @classmethod
