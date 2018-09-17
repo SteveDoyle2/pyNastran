@@ -82,12 +82,12 @@ class BDFMethods(BDFAttributes):
                     elem = self.elements[eid]
                     try:
                         lengths.append(elem.Length())
-                    except AttributeError:
+                    except AttributeError:  # pragma: no cover
                         print(prop)
                         print(elem)
                         raise
-            else:
-                print('prop =', prop)
+            else:  # pragma: no cover
+                print('prop\n%s' % prop)
                 eid0 = eids[0]
                 elem = self.elements[eid0]
                 msg = str(prop) + str(elem)
@@ -119,10 +119,9 @@ class BDFMethods(BDFAttributes):
         #'PCOMPS',
 
         sum_bar_area : bool; default=True
-            True : sum the areas for CBAR/CBEAM/CROD/CONROD/CTUBE elements
+            sum the areas for CBAR/CBEAM/CROD/CONROD/CTUBE elements
+            True : get the area of the model by property id
             False : only get the cross sectional properties
-            TODO: why is True even an option; it seems nonsensical to sum the areas
-                  of CBARs with the same cross-section?
         """
         skip_props = [
             'PSOLID', 'PLPLANE', 'PPLANE', 'PELAS',
@@ -145,7 +144,7 @@ class BDFMethods(BDFAttributes):
                         continue
                     try:
                         areas.append(elem.Area())
-                    except AttributeError:
+                    except AttributeError:  # pragma: no cover
                         print(prop)
                         print(elem)
                         raise
@@ -163,7 +162,7 @@ class BDFMethods(BDFAttributes):
             elif prop.type in ['PBRSECT', 'PBMSECT']:
                 self.log.warning('skipping:\n%s' % prop)
                 continue
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError(prop)
             if areas:
                 pids_to_area[pid] = sum(areas)
@@ -255,7 +254,7 @@ class BDFMethods(BDFAttributes):
             elif prop.type in ['PBRSECT', 'PBMSECT']:
                 self.log.warning('skipping:\n%s' % prop)
                 continue
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError(prop)
             if volumes:
                 pids_to_volume[pid] = sum(volumes)
@@ -393,7 +392,7 @@ class BDFMethods(BDFAttributes):
             elif prop.type in ['PBRSECT', 'PBMSECT']:
                 self.log.warning('skipping:\n%s' % prop)
                 continue
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError(prop)
             if masses:
                 pids_to_mass[pid] = sum(masses)

@@ -89,6 +89,7 @@ class SEQGP(BaseCard):
             a comment for the card
         """
         ncard = len(card) - 1
+        assert len(card) > 1, 'len(SEQGP) = 1; card=%s' % card
         assert ncard % 2 == 0, card
         nids = []
         seqids = []
@@ -379,9 +380,6 @@ class XPoints(BaseCard):
             the number of degrees of freedom
         """
         return len(self.points)
-
-    def get_ndof(self):  # TODO: deprecate?
-        return self.__len__()
 
     def add_points(self, sList):
         """
@@ -1186,18 +1184,6 @@ class GRID(BaseCard):
         if xref:
             pos_xyz = self.get_position()
             assert isinstance(pos_xyz, np.ndarray), 'pos_xyz=%r' % pos_xyz
-
-    def get_ndof(self):
-        # type: () -> int
-        """
-        Gets the number of degrees of freedom for the GRID
-
-        Returns
-        -------
-        six : int
-            the value 6
-        """
-        return 6
 
     def set_position(self, model, xyz, cid=0, xref=True):
         # type: (Any, np.ndarray, int) -> None

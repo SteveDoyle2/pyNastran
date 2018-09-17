@@ -1263,10 +1263,10 @@ class AddCards(AddMethods):
         self._add_element_object(elem)
         return elem
 
-    def add_cbush2d(self, eid, pid, nids, cid, plane, sptid, comment=''):
+    def add_cbush2d(self, eid, pid, nids, cid=0, plane='XY', sptid=None, comment=''):
         # type: (int, int, List[int], int, str, int, str) -> CBUSH2D
         """Creates a CBUSH2D card"""
-        elem = CBUSH2D(eid, pid, nids, cid, plane, sptid, comment=comment)
+        elem = CBUSH2D(eid, pid, nids, cid=cid, plane=plane, sptid=sptid, comment=comment)
         self._add_element_object(elem)
         return elem
 
@@ -3713,7 +3713,7 @@ class AddCards(AddMethods):
         self._add_load_object(load)
         return load
 
-    def add_spc(self, conid, gids, components, enforced, comment=''):
+    def add_spc(self, conid, nodes, components, enforced, comment=''):
         """
         Creates an SPC card, which defines the degree of freedoms to be
         constrained
@@ -3722,21 +3722,23 @@ class AddCards(AddMethods):
         ----------
         conid : int
             constraint id
-        gids : List[int]
+        nodes : List[int]
             GRID/SPOINT ids
         components : List[str]
             the degree of freedoms to constrain (e.g., '1', '123')
         enforced : List[float]
             the constrained value for the given node (typically 0.0)
+        comment : str; default=''
+            a comment for the card
 
         Notes
         -----
-        len(gids) == len(components) == len(enforced)
+        len(nodes) == len(components) == len(enforced)
 
         .. warning:: non-zero enforced deflection requires an SPCD as well
 
         """
-        spc = SPC(conid, gids, components, enforced, comment=comment)
+        spc = SPC(conid, nodes, components, enforced, comment=comment)
         self._add_constraint_spc_object(spc)
         return spc
 
@@ -3753,13 +3755,15 @@ class AddCards(AddMethods):
             the degree of freedoms to constrain (e.g., '1', '123')
         nodes : List[int]
             GRID/SPOINT ids
+        comment : str; default=''
+            a comment for the card
 
         """
         spc = SPC1(conid, components, nodes, comment=comment)
         self._add_constraint_spc_object(spc)
         return spc
 
-    def add_spcd(self, sid, gids, constraints, enforced, comment=''):
+    def add_spcd(self, sid, gids, components, enforced, comment=''):
         """
         Creates an SPCD card, which defines the degree of freedoms to be
         set during enforced motion
@@ -3770,14 +3774,16 @@ class AddCards(AddMethods):
             constraint id
         nodes : List[int]
             GRID/SPOINT ids
-        constraints : List[str]
+        components : List[str]
             the degree of freedoms to constrain (e.g., '1', '123')
         enforced : List[float]
             the constrained value for the given node (typically 0.0)
+        comment : str; default=''
+            a comment for the card
 
         Notes
         -----
-        len(nodes) == len(constraints) == len(enforced)
+        len(nodes) == len(components) == len(enforced)
 
         .. warning:: Non-zero enforced deflection requires an SPC/SPC1 as well.
                      Yes, you really want to constrain the deflection to 0.0
@@ -3785,7 +3791,7 @@ class AddCards(AddMethods):
                      SPCD card.
 
         """
-        spc = SPCD(sid, gids, constraints, enforced, comment=comment)
+        spc = SPCD(sid, gids, components, enforced, comment=comment)
         self._add_load_object(spc)
         return spc
 
@@ -6289,34 +6295,9 @@ class AddCards(AddMethods):
         bctpara = BCTPARA(csid, params, comment=comment)
         self._add_bctpara_object(bctpara)
         return bctpara
-        """
-        Creates a BCRPARA card
-
-        Parameters
-        ----------
-        crid : int
-            CRID Contact region ID.
-        offset : float; default=None
-            Offset distance for the contact region (Real > 0.0).
-            None : OFFSET value in BCTPARA entry
-        surf : str; default='TOP'
-            SURF Indicates the contact side. See Remark 1.  {'TOP', 'BOT'; )
-        Type : str; default='FLEX'
-            Indicates whether a contact region is a rigid surface if it
-            is used as a target region. {'RIGID', 'FLEX'}.
-            This is not supported for SOL 101.
-        master_grid_point : int; default=0
-            Master grid point for a target contact region with TYPE=RIGID
-            or when the rigid-target algorithm is used.  The master grid
-            point may be used to control the motion of a rigid surface.
-            (Integer > 0).  This is not supported for SOL 101.
-        comment : str; default=''
-            a comment for the card
-
-        """
 
     def add_bcrpara(self, crid, surf='TOP', offset=None, Type='FLEX',
-                    master_grid_point=0, comment=''):
+                    grid_point=0, comment=''):
         """
         Creates a BCRPARA card
 
@@ -6333,17 +6314,17 @@ class AddCards(AddMethods):
             Indicates whether a contact region is a rigid surface if it
             is used as a target region. {'RIGID', 'FLEX'}.
             This is not supported for SOL 101.
-        master_grid_point : int; default=0
-            Master grid point for a target contact region with TYPE=RIGID
-            or when the rigid-target algorithm is used.  The master grid
-            point may be used to control the motion of a rigid surface.
+        grid_point : int; default=0
+            Control grid point for a target contact region with TYPE=RIGID
+            or when the rigid-target algorithm is used.  The grid point
+            may be used to control the motion of a rigid surface.
             (Integer > 0).  This is not supported for SOL 101.
         comment : str; default=''
             a comment for the card
 
         """
         bcrpara = BCRPARA(crid, surf=surf, offset=offset, Type=Type,
-                          master_grid_point=master_grid_point, comment=comment)
+                          grid_point=grid_point, comment=comment)
         self._add_bcrpara_object(bcrpara)
         return bcrpara
 

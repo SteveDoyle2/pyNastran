@@ -1,4 +1,5 @@
 import unittest
+import numpy as np
 from pyNastran.bdf.bdf import BDF, BDFCard
 from pyNastran.bdf.cards.bdf_tables import (
     TABLED1, TABLED2, TABLED3, TABLED4,
@@ -16,11 +17,15 @@ class TestTables(unittest.TestCase):
         card = model.process_card(lines)
         card = BDFCard(card)
         #print(card)
-        card2 = TABDMP1.add_card(card, comment='table')
-        assert card2._comment == '$table\n', '%r' % card2._comment
-        assert card2.comment == '$table\n', '%r' % card2.comment
-        fields = card2.raw_fields()
-        msg = card2.write_card(size=8).rstrip()
+        table = TABDMP1.add_card(card, comment='table')
+        table.write_card(size=8)
+        table.write_card_16(is_double=False)
+        table.write_card_16(is_double=True)
+
+        assert table._comment == '$table\n', '%r' % table._comment
+        assert table.comment == '$table\n', '%r' % table.comment
+        fields = table.raw_fields()
+        msg = table.write_card(size=8).rstrip()
         #print(msg)
         lines_expected = [
             '$table',
@@ -34,7 +39,7 @@ class TestTables(unittest.TestCase):
         for actual, expected in zip(lines_actual, lines_expected):
             self.assertEqual(actual, expected, msg)
 
-        msg = card2.write_card(size=16).rstrip()
+        msg = table.write_card(size=16).rstrip()
         #print(msg)
         lines_expected = [
             '$table',
@@ -53,12 +58,18 @@ class TestTables(unittest.TestCase):
     def test_tabled1(self):
         lines = [
             'TABLED1, 32',
-            ',-3.0, 6.9, 2.0, 5.6, 3.0, 5.6, ENDT',
+            ',-2.0, 6.0, 2.0, 5.0, 3.0, 5.6, ENDT',
         ]
         card = model.process_card(lines)
         card = BDFCard(card)
-        card2 = TABLED1.add_card(card)
-        #print(card2)
+        table = TABLED1.add_card(card, comment='table')
+        table.write_card(size=8)
+        table.write_card_16(is_double=False)
+        table.write_card_16(is_double=True)
+
+        interp = table.interpolate(0.)
+        assert np.allclose(interp, [5.5]), interp
+        interp = table.interpolate([0., 5.])
 
     def test_tabled2(self):
         lines = [
@@ -68,8 +79,14 @@ class TestTables(unittest.TestCase):
         ]
         card = model.process_card(lines)
         card = BDFCard(card)
-        card2 = TABLED2.add_card(card)
-        #print(card2)
+        table = TABLED2.add_card(card, comment='table')
+        table.write_card(size=8)
+        table.write_card_16(is_double=False)
+        table.write_card_16(is_double=True)
+
+        interp = table.interpolate(0.)
+        assert np.allclose(interp, [-5.875]), interp
+        interp = table.interpolate([0., 5.])
 
     def test_tabled3(self):
         lines = [
@@ -78,8 +95,11 @@ class TestTables(unittest.TestCase):
         ]
         card = model.process_card(lines)
         card = BDFCard(card)
-        card2 = TABLED3.add_card(card)
-        #print(card2)
+        table = TABLED3.add_card(card, comment='table')
+
+        #interp = table.interpolate(0.)
+        #print('interp =', interp, type(interp))
+        #assert np.allclose(interp, [5.5]), interp
 
     def test_tabled4(self):
         lines = [
@@ -88,8 +108,15 @@ class TestTables(unittest.TestCase):
         ]
         card = model.process_card(lines)
         card = BDFCard(card)
-        card2 = TABLED4.add_card(card)
-        #print(card2)
+        table = TABLED4.add_card(card)
+        table.write_card(size=8)
+        table.write_card_16(is_double=False)
+        table.write_card_16(is_double=True)
+
+        interp = table.interpolate(5.)
+        assert np.allclose(interp, [2.746915]), interp
+        with self.assertRaises(ValueError): # bug...
+            interp = table.interpolate([0., 5.])
 
     #def test_tableht(self):
         #lines = [
@@ -107,8 +134,11 @@ class TestTables(unittest.TestCase):
         ]
         card = model.process_card(lines)
         card = BDFCard(card)
-        card2 = TABLEM1.add_card(card)
-        #print(card2)
+        table = TABLEM1.add_card(card, comment='table')
+
+        #interp = table.interpolate(0.)
+        #print('interp =', interp, type(interp))
+        #assert np.allclose(interp, [5.5]), interp
 
     def test_tablem2(self):
         lines = [
@@ -118,8 +148,14 @@ class TestTables(unittest.TestCase):
         ]
         card = model.process_card(lines)
         card = BDFCard(card)
-        card2 = TABLEM2.add_card(card)
-        #print(card2)
+        table = TABLEM2.add_card(card)
+        table.write_card(size=8)
+        table.write_card_16(is_double=False)
+        table.write_card_16(is_double=True)
+
+        #interp = table.interpolate(0.)
+        #print('interp =', interp, type(interp))
+        #assert np.allclose(interp, [5.5]), interp
 
     def test_tablem3(self):
         lines = [
@@ -128,8 +164,11 @@ class TestTables(unittest.TestCase):
         ]
         card = model.process_card(lines)
         card = BDFCard(card)
-        card2 = TABLEM3.add_card(card)
-        #print(card2)
+        table = TABLEM3.add_card(card, comment='table')
+
+        #interp = table.interpolate(0.)
+        #print('interp =', interp, type(interp))
+        #assert np.allclose(interp, [5.5]), interp
 
     def test_tablem4(self):
         lines = [
@@ -138,8 +177,15 @@ class TestTables(unittest.TestCase):
         ]
         card = model.process_card(lines)
         card = BDFCard(card)
-        card2 = TABLEM4.add_card(card)
-        #print(card2)
+        table = TABLEM4.add_card(card, comment='table')
+        table.raw_fields()
+        table.write_card(size=8)
+        table.write_card_16(is_double=False)
+        table.write_card_16(is_double=True)
+
+        #interp = table.interpolate(0.)
+        #print('interp =', interp, type(interp))
+        #assert np.allclose(interp, [5.5]), interp
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

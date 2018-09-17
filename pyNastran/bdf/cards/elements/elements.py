@@ -514,8 +514,13 @@ class CRAC2D(CrackElement):
             self.comment = comment
         self.eid = eid
         self.pid = pid
+
+        nnodes = len(nids)
+        if nnodes < 18:
+            nids = nids + [None] * (18-nnodes)
+
         self.prepare_node_ids(nids, allow_empty_nodes=True)
-        assert len(self.nodes) == 18
+        assert len(self.nodes) == 18, 'eid=%s nnodes=%s' % (self.eid, len(self.nodes))
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -603,8 +608,11 @@ class CRAC3D(CrackElement):
             self.comment = comment
         self.eid = eid
         self.pid = pid
+        nnodes = len(nids)
+        if nnodes < 64:
+            nids = nids + [None] * (64-nnodes)
         self.prepare_node_ids(nids, allow_empty_nodes=True)
-        assert len(self.nodes) == 64
+        assert len(self.nodes) == 64, 'eid=%s nnodes=%s' % (self.eid, len(self.nodes))
 
     @classmethod
     def add_card(cls, card, comment=''):

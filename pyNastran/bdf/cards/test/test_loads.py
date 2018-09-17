@@ -296,6 +296,22 @@ class TestLoads(unittest.TestCase):
         #PLOAD4        10      10      0.819.2319
         #0      1.      0.      0.    LINE    NORM
         model = BDF(debug=True, log=None, mode='msc')
+
+        sid = 1
+        eids = 1
+        pressures = 1.
+        dummy = model.add_pload4(sid, eids, pressures,
+                                 g1=None, g34=None, cid=0, nvector=None,
+                                 surf_or_line='SURFBAD', line_load_dir='NORMBAD', comment='')
+        with self.assertRaises(RuntimeError):
+            dummy.validate()
+        dummy.surf_or_line = 'SURF'
+        with self.assertRaises(RuntimeError):
+            dummy.validate()
+        dummy.line_load_dir = 'NORM'
+        dummy.validate()
+        model.clear_attributes()
+
         eid = 10
         pid = 20
         mid = 100
@@ -353,9 +369,23 @@ class TestLoads(unittest.TestCase):
         #coordinate system. If both (CID, N1, n2, N3) and LDIR are blank, then the default is
         #LDIR=NORM.
         nvector = [1., 0., 0.]
-        model.add_pload4(sid, eids, pressures, g1=None, g34=None,
-                         cid=cid, nvector=nvector,
-                         surf_or_line='LINE', line_load_dir='NORM', comment='pload4_line')
+        pload4 = model.add_pload4(sid, eids, pressures, g1=None, g34=None,
+                                  cid=cid, nvector=nvector,
+                                  surf_or_line='LINE', line_load_dir='NORM', comment='pload4_line')
+        assert pload4.raw_fields() == ['PLOAD4', 10, 10, 1.0, 0.0, 0.0, 0.0, 'THRU', 11, 0, 1.0, 0.0, 0.0, 'LINE', 'NORM']
+        str(pload4)
+
+        pload4_surf = model.add_pload4(sid, eids, pressures, g1=None, g34=None,
+                                       cid=cid, nvector=nvector,
+                                       surf_or_line='SURF', line_load_dir='NORM', comment='pload4_line')
+        str(pload4.raw_fields())
+
+        sid = 11
+        eids = 10
+        pressures = 1.0
+        pload4_surf = model.add_pload4(sid, eids, pressures, g1=None, g34=None,
+                                       cid=cid, nvector=nvector,
+                                       surf_or_line='SURF', line_load_dir='NORM', comment='pload4_line')
         model.validate()
         model.cross_reference()
 

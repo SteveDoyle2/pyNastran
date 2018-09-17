@@ -53,26 +53,13 @@ def sum_forces_moments(model, p0, loadcase_id, include_grav=False, xyz_cid0=None
     if not isinstance(loadcase_id, integer_types):
         raise RuntimeError('loadcase_id must be an integer; loadcase_id=%r' % loadcase_id)
 
-    cid = 0
-    if isinstance(p0, integer_types):
-        if cid == 0:
-            p = model.nodes[p0].get_position()
-        else:
-            p = model.nodes[p0].get_position_wrt(model, cid)
-    else:
-        p = array(p0)
-
+    p = _get_load_summation_point(model, p0, cid=0)
     loads, scale_factors, unused_is_grav = model.get_reduced_loads(
         loadcase_id, skip_scale_factor0=True)
 
     F = array([0., 0., 0.])
     M = array([0., 0., 0.])
-    if xyz_cid0 is None:
-        xyz = {}
-        for nid, node in model.nodes.items():
-            xyz[nid] = node.get_position()
-    else:
-        xyz = xyz_cid0
+    xyz = _get_xyz_cid0_dict(model, xyz_cid0=xyz_cid0)
 
     unsupported_types = set([])
     for load, scale in zip(loads, scale_factors):
@@ -575,10 +562,7 @@ def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
     """
     if not isinstance(loadcase_id, integer_types):
         raise RuntimeError('loadcase_id must be an integer; loadcase_id=%r' % loadcase_id)
-    if isinstance(p0, integer_types):
-        p = model.nodes[p0].get_position()
-    else:
-        p = array(p0)
+    p = _get_load_summation_point(model, p0, cid=0)
 
     if eids is None:
         eids = list(model.element_ids)
@@ -595,12 +579,7 @@ def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
     F = array([0., 0., 0.])
     M = array([0., 0., 0.])
 
-    if xyz_cid0 is None:
-        xyz = {}
-        for nid, node in model.nodes.items():
-            xyz[nid] = node.get_position()
-    else:
-        xyz = xyz_cid0
+    xyz = _get_xyz_cid0_dict(model, xyz_cid0)
 
     unsupported_types = set([])
     for load, scale in zip(loads, scale_factors):
@@ -1062,11 +1041,51 @@ def _mean_pressure_on_pload4(pressures, load, elem):
     """gets the mean pressure"""
     if min(pressures) != max(pressures):
         pressure = mean(pressures)
-        msg = ('%s%s\npressure.min=%s != pressure.max=%s using average of %%s; '
-               'load=%s eid=%%s'  % (str(load), str(elem), min(pressures),
-                                     max(pressures), load.sid))
-
+        #msg = ('%s%s\npressure.min=%s != pressure.max=%s using average of %%s; '
+               #'load=%s eid=%%s'  % (str(load), str(elem), min(pressures),
+                                     #max(pressures), load.sid))
         #print(msg % (pressure, eid))
     else:
         pressure = load.pressures[0]
     return pressure
+
+def _get_xyz_cid0_dict(model, xyz_cid0=None):
+    """
+    helper method
+
+    Parameters
+    ----------
+    model : BDF()
+        a BDF object
+    xyz_cid0 : None / Dict[int] = (3, ) ndarray
+        the nodes in the global coordinate system
+
+    """
+    if xyz_cid0 is None:
+        xyz = {}
+        for nid, node in model.nodes.items():
+            xyz[nid] = node.get_position()
+    else:
+        xyz = xyz_cid0
+    return xyz
+
+def _get_load_summation_point(model, p0, cid=0):
+    """
+    helper method
+
+    Parameters
+    ----------
+    model : BDF()
+        a BDF object
+    p0 : NUMPY.NDARRAY shape=(3,) or integer (node ID)
+        the reference point
+
+    """
+    if isinstance(p0, integer_types):
+        if cid == 0:
+            p = model.nodes[p0].get_position()
+        else:
+            p = model.nodes[p0].get_position_wrt(model, cid)
+    else:
+        p = array(p0)
+    return p

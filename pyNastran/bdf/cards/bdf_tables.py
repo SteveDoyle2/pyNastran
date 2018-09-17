@@ -619,6 +619,7 @@ class TABLED4(Table):
         j = np.where(x > self.x4)[0]
         x[j] = self.x4
 
+        #yi = np.zeros(x.shape, dtype=x.dtype)
         yi = self.a * ((x - x1) / x2) ** n
         return yi.sum()
 

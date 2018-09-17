@@ -1,11 +1,42 @@
+"""tests nodes.py"""
 from __future__ import print_function, unicode_literals
 import unittest
 
-from pyNastran.bdf.bdf import BDFCard
+from pyNastran.bdf.bdf import BDF, BDFCard
 from pyNastran.bdf.cards.nodes import GRID, SPOINTs as SPOINT
 
 class TestNodes(unittest.TestCase):
+    def test_point(self):
+        """tests POINT"""
+        model = BDF(debug=False)
+        card_lines = ['POINT', 10]
+        model.add_card(card_lines, 'POINT', comment='point')
+        point = model.points[10]
+        point.raw_fields()
+        point.write_card(size=8)
+        point.write_card(size=16, is_double=False)
+        point.write_card(size=16, is_double=True)
+        model.validate()
+
+    def test_seqgp(self):
+        """tests SEQGP"""
+        model = BDF(debug=True)
+        card_lines = ['SEQGP', 10, 20]
+        model.add_card(card_lines, 'SEQGP', comment='seqgp', is_list=True, has_none=True)
+        model.get_bdf_stats()
+        seqgp = model.seqgp
+        seqgp.raw_fields()
+        seqgp.write_card(size=8)
+        seqgp.write_card(size=16, is_double=False)
+        seqgp.write_card(size=16, is_double=True)
+
+        nids = [42]
+        seqids = [32.]
+        model.add_seqgp(nids, seqids, comment='seqgp')
+        model.validate()
+
     def test_grid_01(self):
+        """tests GRID"""
         nid = 1
         cp = 2
         cd = 0
@@ -47,6 +78,7 @@ class TestNodes(unittest.TestCase):
             self.assertEqual(msg, card), ref
 
     def test_grid_02(self):
+        """tests GRID"""
         nid = 1
         cp = 2
         cd = 0
@@ -87,6 +119,7 @@ class TestNodes(unittest.TestCase):
 
 
     def test_spoint_01(self):
+        """tests SPOINT"""
         #      12345678 2345678 2345678 2345678 2345678 2345678
         msg = 'SPOINT         1       3       5\n'
         card = BDFCard(['SPOINT', 1, 3, 5])

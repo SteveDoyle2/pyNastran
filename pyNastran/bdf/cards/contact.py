@@ -282,11 +282,11 @@ class BCRPARA(BaseCard):
     +---------+------+------+--------+------+-----+---+---+---+----+
     |    1    |   2  |   3  |   4    |   5  |  6  | 7 | 8 | 9 | 10 |
     +=========+======+======+========+======+=====+===+===+===+====+
-    | BCRPARA | CRID | SURF | OFFSET | TYPE | MGP |   |   |   |    |
+    | BCRPARA | CRID | SURF | OFFSET | TYPE | GP  |   |   |   |    |
     +---------+------+------+--------+------+-----+---+---+---+----+
     """
     type = 'BCRPARA'
-    def __init__(self, crid, offset=None, surf='TOP', Type='FLEX', master_grid_point=0,
+    def __init__(self, crid, offset=None, surf='TOP', Type='FLEX', grid_point=0,
                  comment=''):
         """
         Creates a BCRPARA card
@@ -304,10 +304,10 @@ class BCRPARA(BaseCard):
             Indicates whether a contact region is a rigid surface if it
             is used as a target region. {'RIGID', 'FLEX'}.
             This is not supported for SOL 101.
-        master_grid_point : int; default=0
-            Master grid point for a target contact region with TYPE=RIGID
-            or when the rigid-target algorithm is used.  The master grid
-            point may be used to control the motion of a rigid surface.
+        grid_point : int; default=0
+            Control grid point for a target contact region with TYPE=RIGID
+            or when the rigid-target algorithm is used.  The grid point
+            may be used to control the motion of a rigid surface.
             (Integer > 0).  This is not supported for SOL 101.
         comment : str; default=''
             a comment for the card
@@ -332,11 +332,11 @@ class BCRPARA(BaseCard):
         #: Default = "FLEX"). This is not supported for SOL 101.
         self.Type = Type
 
-        #: Master grid point for a target contact region with TYPE=RIGID or
-        #: when the rigid-target algorithm is used. The master grid point may be
-        #: used to control the motion of a rigid surface. (Integer > 0,; Default = 0)
+        #: Control grid point for a target contact region with TYPE=RIGID or
+        #: when the rigid-target algorithm is used. The grid point may be
+        #: used to control the motion of a rigid surface. (Integer > 0)
         #: This is not supported for SOL 101.
-        self.master_grid_point = master_grid_point
+        self.grid_point = grid_point
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -354,12 +354,12 @@ class BCRPARA(BaseCard):
         surf = string_or_blank(card, 2, 'surf', 'TOP')
         offset = double_or_blank(card, 3, 'offset', None)
         Type = string_or_blank(card, 4, 'type', 'FLEX')
-        master_grid_point = integer_or_blank(card, 5, 'master_grid_point', 0)
+        grid_point = integer_or_blank(card, 5, 'grid_point', 0)
         return BCRPARA(crid, surf=surf, offset=offset, Type=Type,
-                       master_grid_point=master_grid_point, comment=comment)
+                       grid_point=grid_point, comment=comment)
 
     def raw_fields(self):
-        fields = ['BCRPARA', self.crid, self.surf, self.offset, self.Type, self.master_grid_point]
+        fields = ['BCRPARA', self.crid, self.surf, self.offset, self.Type, self.grid_point]
         return fields
 
     def write_card(self, size=8, is_double=False):
@@ -387,6 +387,20 @@ class BCTPARA(BaseCard):
     """
     type = 'BCTPARA'
     def __init__(self, csid, params, comment=''):
+        """
+        Creates a BCTPARA card
+
+        Parameters
+        ----------
+        csid : int
+            Contact set ID. Parameters defined in this command apply to
+            contact set CSID defined by a BCTSET entry. (Integer > 0)
+        params : dict[key] : value
+            the optional parameters
+        comment : str; default=''
+            a comment for the card
+
+        """
         if comment:
             self.comment = comment
 

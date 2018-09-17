@@ -598,11 +598,10 @@ class MPC(Constraint):
         return self.comment + msg.rstrip() + '\n'
 
     def write_card_16(self, is_double=False):
-        # TODO: we're sure MPCs support double precision?
         msg = 'MPC*    %16s' % self.conid
-        grids, constraints, coefficients = self.node_ids, self.constraints, self.coefficients
+        grids, components, coefficients = self.node_ids, self.components, self.coefficients
         if is_double:
-            for i, grid, component, coefficient in zip(count(), grids, constraints, coefficients):
+            for i, grid, component, coefficient in zip(count(), grids, components, coefficients):
                 if i == 0:
                     msg += '%16i%16s%16s\n' % (
                         grid, component, print_scientific_double(coefficient))
@@ -613,7 +612,7 @@ class MPC(Constraint):
                     msg += '%-8s%16s%16i%16s%16s\n' % (
                         '*', '', grid, component, print_scientific_double(coefficient))
         else:
-            for i, grid, component, coefficient in zip(count(), grids, constraints, coefficients):
+            for i, grid, component, coefficient in zip(count(), grids, components, coefficients):
                 if i == 0:
                     msg += '%16i%16s%16s\n' % (grid, component, print_float_16(coefficient))
                 elif i % 2 == 1:
@@ -656,6 +655,8 @@ class SPC(Constraint):
             the degree of freedoms to constrain (e.g., '1', '123')
         enforced : List[float]
             the constrained value for the given node (typically 0.0)
+        comment : str; default=''
+            a comment for the card
 
         .. note:: len(nodes) == len(components) == len(enforced)
         .. warning:: non-zero enforced deflection requires an SPCD as well
@@ -673,12 +674,12 @@ class SPC(Constraint):
     def object_attributes(self, mode='public', keys_to_skip=None):
         """.. seealso:: `pyNastran.utils.object_attributes(...)`"""
         my_keys_to_skip = ['gids_ref', 'gids']
-        return Constraint.object_attributes(mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
+        return Constraint.object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     def object_methods(self, mode='public', keys_to_skip=None):
         """.. seealso:: `pyNastran.utils.object_methods(...)`"""
         my_keys_to_skip = ['gids_ref', 'gids']
-        return Constraint.object_methods(mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
+        return Constraint.object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     def validate(self):
         assert isinstance(self.nodes, list), self.nodes
@@ -1024,6 +1025,8 @@ class SPC1(Constraint):
             the degree of freedoms to constrain (e.g., '1', '123')
         nodes : List[int]
             GRID/SPOINT ids
+        comment : str; default=''
+            a comment for the card
         """
         Constraint.__init__(self)
         if comment:
@@ -1085,10 +1088,12 @@ class SPC1(Constraint):
 
     @property
     def constraints(self):
+        self.deprecated('constraints', 'components', '1.2')
         return self.components
 
     @constraints.setter
     def constraints(self, constraints):
+        self.deprecated('constraints', 'components', '1.2')
         self.components = constraints
 
     @property

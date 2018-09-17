@@ -146,5 +146,115 @@ class TestElements(unittest.TestCase):
         model.mass_properties()
         save_load_deck(model, run_convert=False)
 
+    def test_cbush1d(self):
+        model = BDF(debug=False)
+
+        model.add_grid(2, [0., 0., 0.])
+        model.add_grid(3, [1., 0., 0.])
+        nids = [2, 3]
+        eid = 10
+        pid = 100
+        model.add_cbush1d(eid, pid, nids, cid=None, comment='cbush1d')
+        model.add_pbush1d(pid, k=0., c=0., m=0., sa=0., se=0., optional_vars=None, comment='pbush1d')
+
+        model.pop_parse_errors()
+        model.cross_reference()
+        save_load_deck(model)
+
+    def test_cbush2d(self):
+        model = BDF(debug=False)
+
+        model.add_grid(2, [0., 0., 0.])
+        model.add_grid(3, [1., 0., 0.])
+        nids = [2, 3]
+        eid = 10
+        pid = 100
+        cbush2d = model.add_cbush2d(eid, pid, nids, cid=0, plane='XY', sptid=None, comment='cbush2d')
+        #model.add_pbush2d()
+
+        #model.pop_parse_errors()
+        #model.cross_reference()
+        #save_load_deck(model)
+
+    def test_crac2d(self):
+        model = BDF(debug=False)
+
+        model.add_grid(2, [0., 0., 0.])
+        model.add_grid(3, [1., 0., 0.])
+        model.add_grid(4, [1., 0., 0.])
+        model.add_grid(5, [1., 0., 0.])
+        model.add_grid(6, [1., 0., 0.])
+        model.add_grid(7, [1., 0., 0.])
+        model.add_grid(8, [1., 0., 0.])
+        model.add_grid(9, [1., 0., 0.])
+        model.add_grid(10, [1., 0., 0.])
+        model.add_grid(11, [1., 0., 0.])
+        model.add_grid(12, [1., 0., 0.])
+        model.add_grid(13, [1., 0., 0.])
+        model.add_grid(14, [1., 0., 0.])
+        model.add_grid(15, [1., 0., 0.])
+        model.add_grid(16, [1., 0., 0.])
+        model.add_grid(17, [1., 0., 0.])
+        model.add_grid(18, [1., 0., 0.])
+        model.add_grid(19, [1., 0., 0.])
+        nids = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 ,13, 14, 15, 16, 17, 18]
+        eid = 10
+        pid = 100
+        mid = 1000
+        thick = 20.
+        iplane = 1
+        crac2d = model.add_crac2d(eid, pid, nids, comment='crac2d')
+        prac2d = model.add_prac2d(pid, mid, thick, iplane, nsm=0., gamma=0.5, phi=180., comment='')
+
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu)
+        #model.add_pbush2d()
+
+        #model.pop_parse_errors()
+        #model.cross_reference()
+        save_load_deck(model, run_convert=False)
+
+    def test_crac3d(self):
+        model = BDF(debug=False)
+
+        model.add_grid(2, [0., 0., 0.])
+        model.add_grid(3, [1., 0., 0.])
+        model.add_grid(4, [1., 0., 0.])
+        model.add_grid(5, [1., 0., 0.])
+        model.add_grid(6, [1., 0., 0.])
+        model.add_grid(7, [1., 0., 0.])
+        model.add_grid(8, [1., 0., 0.])
+        model.add_grid(9, [1., 0., 0.])
+        model.add_grid(10, [1., 0., 0.])
+        model.add_grid(11, [1., 0., 0.])
+        model.add_grid(12, [1., 0., 0.])
+        model.add_grid(13, [1., 0., 0.])
+        model.add_grid(14, [1., 0., 0.])
+        model.add_grid(15, [1., 0., 0.])
+        model.add_grid(16, [1., 0., 0.])
+        model.add_grid(17, [1., 0., 0.])
+        model.add_grid(18, [1., 0., 0.])
+        model.add_grid(19, [1., 0., 0.])
+        nids = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 ,13, 14, 15, 16, 17, 18, 19]
+        eid = 10
+        pid = 100
+        mid = 1000
+        thick = 20.
+        iplane = 1
+        crac3d = model.add_crac3d(eid, pid, nids, comment='crac3d')
+        prac3d = model.add_prac3d(pid, mid, gamma=0.5, phi=180., comment='crac3d')
+
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu)
+        #model.add_pbush2d()
+
+        #model.pop_parse_errors()
+        #model.cross_reference()
+        save_load_deck(model, run_convert=False)
+
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

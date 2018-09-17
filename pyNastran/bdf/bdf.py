@@ -572,6 +572,11 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
             'RADSET',  # radset
 
+            # superelements
+            #'SETREE', 'SENQSET', 'SEBULK', 'SEBNDRY', 'SEELT', 'SELOC', 'SEMPLN',
+            #'SECONCT', 'SELABEL', 'SECONCT', 'SEMPLN', 'SEEXCLD', 'CSUPER', 'CSUPEXT',
+            #'SELOAD',
+
             # super-element sets
             'SESET',  ## se_sets
 
@@ -1605,6 +1610,22 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         self._card_parser = {
             #'=' : (Crash, None),
             '/' : (Crash, None),
+            #'SETREE' : (Crash, None),
+            #'SENQSET' : (Crash, None),
+            #'SEBULK' : (Crash, None),
+            #'SEBNDRY' : (Crash, None),
+            #'SEELT' : (Crash, None),
+            #'SELOC' : (Crash, None),
+            #'SEMPLN' : (Crash, None),
+            #'SECONCT' : (Crash, None),
+            #'SELABEL' : (Crash, None),
+            #'SECONCT' : (Crash, None),
+            #'SEMPLN' : (Crash, None),
+            #'SEEXCLD' : (Crash, None),
+            #'CSUPER' : (Crash, None),
+            #'CSUPEXT' : (Crash, None),
+            #'SELOAD' : (Crash, None),
+
             # nodes
             'GRID' : (GRID, self._add_node_object),
             'SPOINT' : (SPOINTs, self._add_spoint_object),
@@ -2831,12 +2852,12 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         # aero
         if self.aero:
             msg.append('bdf:aero')
-            msg.append('  %-8s %s' % ('AERO:', 1))
+            msg.append('  %-8s 1' % ('AERO:'))
 
         # aeros
         if self.aeros:
             msg.append('bdf:aeros')
-            msg.append('  %-8s %s' % ('AEROS:', 1))
+            msg.append('  %-8s 1' % ('AEROS:'))
 
         #mkaeros
         if self.mkaeros:
@@ -2846,7 +2867,12 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         # radset
         if self.radset:
             msg.append('bdf:radset')
-            msg.append('  %-8s %s' % ('RADSET:', 1))
+            msg.append('  %-8s 1' % ('RADSET:'))
+
+        #mkaeros
+        if self.seqgp:
+            msg.append('bdf:seqgp')
+            msg.append('  %-8s 1' % ('SEQGP:'))
 
         for card_group_name in card_dict_groups:
             try:

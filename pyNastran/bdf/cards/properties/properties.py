@@ -407,9 +407,9 @@ class CrackProperty(Property):
         Property.__init__(self)
 
     def Mid(self):
-        if isinstance(self.mid, int):
-            return self.mid
-        return self.mid_ref.mid
+        if self.mid_ref is not None:
+            return self.mid_ref.mid
+        return self.mid
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
@@ -496,8 +496,7 @@ class PRAC2D(CrackProperty):
             the BDF object
         """
         msg = ', which is required by PRAC2D pid=%s' % self.pid
-        self.mid = model.Material(self.mid, msg)  # MAT1, MAT2, MAT8
-        self.mid_ref = self.mid
+        self.mid_ref = model.Material(self.mid, msg)  # MAT1, MAT2, MAT8
 
     def uncross_reference(self):
         self.mid = self.Mid()
@@ -577,8 +576,7 @@ class PRAC3D(CrackProperty):
             the BDF object
         """
         msg = ', which is required by PRAC3D pid=%s' % self.pid
-        self.mid = model.Material(self.mid, msg)  # MAT1, MAT9
-        self.mid_ref = self.mid
+        self.mid_ref = model.Material(self.mid, msg)  # MAT1, MAT9
 
     def uncross_reference(self):
         self.mid = self.Mid()

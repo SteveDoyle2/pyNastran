@@ -251,6 +251,11 @@ class TestSolids(unittest.TestCase):
 
         mat = model.Material(mid)
         mat.E()
+
+        model.get_mass_breakdown(property_ids=None, stop_if_no_mass=True, detailed=False)
+        model.get_mass_breakdown(property_ids=None, stop_if_no_mass=True, detailed=True)
+        model.get_volume_breakdown(property_ids=None, stop_if_no_volume=True)
+
         save_load_deck(model)
 
     def test_solids_ctetra4(self):
@@ -271,6 +276,12 @@ class TestSolids(unittest.TestCase):
         nids = [11, 12, 13, 15]
         model.add_ctetra(eid, pid, nids, comment='ctetra')
         end_checks(model)
+
+        model.cross_reference()
+        model.get_mass_breakdown(property_ids=None, stop_if_no_mass=True, detailed=False)
+        model.get_mass_breakdown(property_ids=None, stop_if_no_mass=True, detailed=True)
+        model.get_volume_breakdown(property_ids=None, stop_if_no_volume=True)
+
         save_load_deck(model)
 
     def test_solids_ctetra4_mat9(self):
@@ -292,7 +303,13 @@ class TestSolids(unittest.TestCase):
 
         nids = [11, 12, 13, 15]
         model.add_ctetra(eid, pid, nids, comment='ctetra')
+
         end_checks(model)
+
+        model.cross_reference()
+        model.get_mass_breakdown(property_ids=None, stop_if_no_mass=True, detailed=False)
+        model.get_mass_breakdown(property_ids=None, stop_if_no_mass=True, detailed=True)
+        model.get_volume_breakdown(property_ids=None, stop_if_no_volume=True)
 
     def test_solids_ctetra10(self):
         """tests a CTETRA10"""
@@ -325,6 +342,16 @@ class TestSolids(unittest.TestCase):
         ]
         model.add_ctetra(eid, pid, nids, comment='ctetra10')
         end_checks(model)
+
+        with self.assertRaises(RuntimeError):
+            model.get_length_breakdown(property_ids=None, stop_if_no_length=True)
+        with self.assertRaises(RuntimeError):
+            model.get_area_breakdown(property_ids=None, stop_if_no_area=True)
+
+        model.get_mass_breakdown(property_ids=None, stop_if_no_mass=True, detailed=False)
+        model.get_mass_breakdown(property_ids=None, stop_if_no_mass=True, detailed=True)
+        model.get_volume_breakdown(property_ids=None, stop_if_no_volume=True)
+
         save_load_deck(model)
 
     def test_solids_cpyram5(self):

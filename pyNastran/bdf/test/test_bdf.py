@@ -396,10 +396,10 @@ def run_and_compare_fems(
         if not dev:
             raise
         print('failed test because CardParseSyntaxError...ignoring')
-    except UnsupportedCard:
-        if not dev:
-            raise
-        print('failed test because UnsupportedCard...ignoring')
+    #except UnsupportedCard:
+        #if not dev:
+            #raise
+        #print('failed test because UnsupportedCard...ignoring')
     except MissingDeckSections:
         if not dev:
             raise

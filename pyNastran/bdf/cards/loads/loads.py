@@ -634,7 +634,7 @@ class SPCD(Load):
     """
     type = 'SPCD'
 
-    def __init__(self, sid, nodes, constraints, enforced, comment=''):
+    def __init__(self, sid, nodes, components, enforced, comment=''):
         """
         Creates an SPCD card, which defines the degree of freedoms to be
         set during enforced motion
@@ -645,12 +645,14 @@ class SPCD(Load):
             constraint id
         nodes : List[int]
             GRID/SPOINT ids
-        constraints : List[str]
+        components : List[str]
             the degree of freedoms to constrain (e.g., '1', '123')
         enforced : List[float]
             the constrained value for the given node (typically 0.0)
+        comment : str; default=''
+            a comment for the card
 
-        .. note:: len(nodes) == len(constraints) == len(enforced)
+        .. note:: len(nodes) == len(components) == len(enforced)
         .. warning:: Non-zero enforced deflection requires an SPC/SPC1 as well.
                      Yes, you really want to constrain the deflection to 0.0
                      with an SPC1 card and then reset the deflection using an
@@ -660,7 +662,7 @@ class SPCD(Load):
             self.comment = comment
         self.sid = sid
         self.nodes = nodes
-        self.constraints = constraints
+        self.components = components
         self.enforced = enforced
         self.nodes_ref = None
 
@@ -680,7 +682,7 @@ class SPCD(Load):
         sid = integer(card, 1, 'sid')
         if card.field(5) in [None, '']:
             nodes = [integer(card, 2, 'G1'),]
-            constraints = [components_or_blank(card, 3, 'C1', 0)]
+            components = [components_or_blank(card, 3, 'C1', 0)]
             enforced = [double_or_blank(card, 4, 'D1', 0.0)]
         else:
             nodes = [
@@ -688,11 +690,11 @@ class SPCD(Load):
                 integer(card, 5, 'G2'),
             ]
             # :0 if scalar point 1-6 if grid
-            constraints = [components_or_blank(card, 3, 'C1', 0),
-                           components_or_blank(card, 6, 'C2', 0)]
+            components = [components_or_blank(card, 3, 'C1', 0),
+                          components_or_blank(card, 6, 'C2', 0)]
             enforced = [double_or_blank(card, 4, 'D1', 0.0),
                         double_or_blank(card, 7, 'D2', 0.0)]
-        return SPCD(sid, nodes, constraints, enforced, comment=comment)
+        return SPCD(sid, nodes, components, enforced, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -709,9 +711,19 @@ class SPCD(Load):
         """
         sid = data[0]
         nodes = [data[1]]
-        constraints = [data[2]]
+        components = [data[2]]
         enforced = [data[3]]
-        return SPCD(sid, nodes, constraints, enforced, comment=comment)
+        return SPCD(sid, nodes, components, enforced, comment=comment)
+
+    @property
+    def constraints(self):
+        self.deprecated('constraints', 'components', '1.2')
+        return self.components
+
+    @constraints.setter
+    def constraints(self, constraints):
+        self.deprecated('constraints', 'components', '1.2')
+        self.components = constraints
 
     @property
     def node_ids(self):
@@ -746,9 +758,9 @@ class SPCD(Load):
 
     def raw_fields(self):
         fields = ['SPCD', self.sid]
-        for (nid, constraint, enforced) in zip(self.node_ids, self.constraints,
+        for (nid, component, enforced) in zip(self.node_ids, self.components,
                                                self.enforced):
-            fields += [nid, constraint, enforced]
+            fields += [nid, component, enforced]
         return fields
 
     def write_card(self, size=8, is_double=False):

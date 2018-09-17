@@ -505,7 +505,7 @@ class CBUSH2D(BushElement):
         1: 'eid', 2:'pid', 3:'ga', 4:'gb', 5:'cid', 6:'plane', 7:'sptid',
     }
 
-    def __init__(self, eid, pid, nids, cid, plane, sptid, comment=''):
+    def __init__(self, eid, pid, nids, cid=0, plane='XY', sptid=None, comment=''):
         BushElement.__init__(self)
         if comment:
             self.comment = comment
