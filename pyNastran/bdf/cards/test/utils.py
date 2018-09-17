@@ -8,8 +8,8 @@ from pyNastran.bdf.mesh_utils.convert import convert
 from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
 from pyNastran.bdf.mesh_utils.mirror_mesh import bdf_mirror
 
-def save_load_deck(model, punch=True, run_remove_unused=True,
-                   run_convert=True, run_renumber=True, run_mirror=True):
+def save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
+                   run_convert=True, run_renumber=True, run_mirror=True, run_save_load=True):
     """writes, re-reads, saves an obj, loads an obj, and returns the deck"""
     model.validate()
     model.pop_parse_errors()
@@ -31,17 +31,23 @@ def save_load_deck(model, punch=True, run_remove_unused=True,
 
     model2 = BDF(log=model.log)
     #print(bdf_file.getvalue())
-    model2.read_bdf(bdf_file, punch=punch)
+    model2.read_bdf(bdf_file, punch=punch, xref=False)
+    _cross_reference(model2, xref)
+
     model2.pop_parse_errors()
     model2.get_bdf_stats()
     model2.write_bdf('model2.bdf')
 
-    model2.save(obj_filename='model.obj', unxref=True)
-    model3 = BDF(debug=False, log=model.log, mode='msc')
-    model3.load(obj_filename='model.obj')
-    os.remove('model.obj')
+    if run_save_load:
+        model2.save(obj_filename='model.obj', unxref=True)
+        model3 = BDF(debug=False, log=model.log, mode='msc')
+        model3.load(obj_filename='model.obj')
+        os.remove('model.obj')
+    else:
+        model2.uncross_reference()
+        model3 = model2
 
-    cross_reference(model3)
+    cross_reference(model3, xref)
     if run_renumber:
         renumber('model2.bdf', model.log)
         if run_mirror:
@@ -53,15 +59,22 @@ def save_load_deck(model, punch=True, run_remove_unused=True,
     os.remove('model2.bdf')
     return model3
 
-def cross_reference(model):
+def _cross_reference(model, xref):
+    """helper method for ``_cross_reference``"""
+    if xref in [True, 'standard']:
+        model.cross_reference()
+    elif xref in ['safe']:
+        model.safe_cross_reference()
+
+def cross_reference(model, xref):
     """validate we're doing xref right"""
-    model.cross_reference()
+    _cross_reference(model, xref)
     model.pop_xref_errors()
 
     model.safe_cross_reference()
     model.pop_xref_errors()
 
-    model.cross_reference()
+    _cross_reference(model, xref)
     model.pop_xref_errors()
 
 

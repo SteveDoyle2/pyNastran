@@ -24,7 +24,8 @@ from pyNastran.bdf.cards.aero.aero import (Spline, CAERO1, CAERO2, PAERO1, PAERO
                                            AELINK, AEFACT)
 from pyNastran.bdf.cards.aero.static_loads import TRIM, AEROS
 from pyNastran.bdf.cards.aero.dynamic_loads import MKAERO1, AERO
-from pyNastran.bdf.cards.aero.utils import elements_from_quad, points_elements_from_quad_points
+from pyNastran.bdf.cards.aero.utils import (
+    elements_from_quad, points_elements_from_quad_points, create_ellipse)
 from pyNastran.bdf.cards.coordinate_systems import Coord
 
 class ZONA(object):
@@ -370,7 +371,7 @@ class AESURFZ(BaseCard):
         setk = integer(card, 4, 'SETK') # PANLST1, PANLST2, PANLST3
         setg = integer(card, 5, 'SETG') # SET1, SETADD
         actuator_tf = integer_or_blank(card, 6, 'ACTID') # ACTU card
-        assert len(card) <= 6, 'len(AESURFZ card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 7, 'len(AESURFZ card) = %i\ncard=%s' % (len(card), card)
         assert surface_type in ['SYM', 'ANTISYM', 'ASYM']
         return AESURFZ(label, surface_type, cid, setk, setg, actuator_tf, comment=comment)
 
@@ -379,15 +380,20 @@ class AESURFZ(BaseCard):
             return self.cid_ref.cid
         return self.cid
 
-    def aelist_id1(self):
-        if self.alid1_ref is not None:
-            return self.alid1_ref.sid
-        return self.alid1
+    def SetK(self):
+        if self.setk_ref is not None:
+            return self.setk_ref.eid
+        return self.setk
 
-    def aelist_id2(self):
-        if self.alid2_ref is not None:
-            return self.alid2_ref.sid
-        return self.alid2
+    #def aelist_id1(self):
+        #if self.alid1_ref is not None:
+            #return self.alid1_ref.sid
+        #return self.alid1
+
+    #def aelist_id2(self):
+        #if self.alid2_ref is not None:
+            #return self.alid2_ref.sid
+        #return self.alid2
 
     def cross_reference(self, model):
         """
@@ -441,19 +447,11 @@ class AESURFZ(BaseCard):
         self.aero_element_ids = self.setk_ref.aero_element_ids
 
     def uncross_reference(self):
-        self.cid1 = self.Cid1()
-        self.cid2 = self.Cid2()
-        self.cid1_ref = None
-        self.cid2_ref = None
+        self.cid = self.Cid()
+        self.cid_ref = None
 
-        self.alid1 = self.aelist_id1()
-        self.alid2 = self.aelist_id2()
-        self.alid1_ref = None
-        self.alid2_ref = None
-        #self.tqulim
-        #self.tqllim
-        self.tqllim_ref = None
-        self.tqulim_ref = None
+        self.setk = self.SetK()
+        self.setk_ref = None
 
     def convert_to_nastran(self, model, aesurf_id, aelist_id):
         """
@@ -476,25 +474,14 @@ class AESURFZ(BaseCard):
         assert self.surface_type == 'ASYM', str(self)
         aelist = AELIST(aelist_id, self.aero_element_ids)
         aesurf = AESURF(aesurf_id, self.label, self.cid, aelist_id, cid2=None, alid2=None,
-                       eff=1.0, ldw='LDW', crefc=1.0,
-                       crefs=1.0, pllim=-np.pi/2.,
-                       pulim=np.pi/2., hmllim=None,
-                       hmulim=None, tqllim=None,
-                       tqulim=None, comment=self.comment)
+                        eff=1.0, ldw='LDW', crefc=1.0,
+                        crefs=1.0, pllim=-np.pi/2.,
+                        pulim=np.pi/2., hmllim=None,
+                        hmulim=None, tqllim=None,
+                        tqulim=None, comment=self.comment)
         aesurf.validate()
         aelist.validate()
         return aelist, aesurf
-
-    def update(self, unused_model, maps):
-        coord_map = maps['coord']
-        aelist_map = maps['aelist']
-        self.cid1 = coord_map[self.cid1]
-        if self.cid2:
-            self.cid2 = coord_map[self.cid2]
-
-        self.alid1 = aelist_map[self.alid1]
-        if self.alid2:
-            self.alid2 = aelist_map[self.alid2]
 
     def raw_fields(self):
         """
@@ -779,7 +766,7 @@ class AEROZ(Aero):
         else:
             raise NotImplementedError(self.sym_xz)
         aeros = AEROS(cref, bref, sref, acsid=acsid, rcsid=0, sym_xz=sym_xz, sym_xy=0,
-                    comment=str(self))
+                      comment=str(self))
 
         velocity = 1.
         aero = AERO(velocity, cref, rho_ref, acsid=acsid, sym_xz=sym_xz, sym_xy=0,
@@ -956,7 +943,7 @@ class PANLST3(Spline):
     @classmethod
     def add_card(cls, card, comment=''):
         """
-        Adds a SPLINE1 card from ``BDF.add_card(...)``
+        Adds a PANLST3 card from ``BDF.add_card(...)``
 
         Parameters
         ----------
@@ -972,6 +959,7 @@ class PANLST3(Spline):
         for ifield in range(2, len(card)):
             name = string(card, ifield, 'group_%i'%  (group_id))
             panel_groups.append(name)
+        assert len(card) > 2, 'len(PANLST3 card) = %i; no panel_groups were defined\ncard=%s' % (len(card), card)
         return PANLST3(eid, panel_groups, comment=comment)
 
     def cross_reference(self, model):
@@ -1418,7 +1406,7 @@ class BODY7(BaseCard):
 
         """
         list_fields = ['BODY7', self.eid, self.label, self.Pid(), self.ACoord(),
-                        self.nseg] + self.idmeshes
+                       self.nseg] + self.idmeshes
         return list_fields
 
     def repr_fields(self):
@@ -1467,6 +1455,9 @@ class SEGMESH(BaseCard):
     @property
     def pid(self):
         return self.segmesh_id
+    @pid.setter
+    def pid(self, segmesh_id):
+        self.segmesh_id = segmesh_id
 
     def __init__(self, segmesh_id, naxial, nradial, nose_radius, iaxis,
                  itypes, xs, cambers, ys, zs, idys, idzs, comment=''):
@@ -1535,6 +1526,7 @@ class SEGMESH(BaseCard):
 
         self.idys_ref = None
         self.idzs_ref = None
+        self.pid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1562,6 +1554,8 @@ class SEGMESH(BaseCard):
         cambers = []
         idys = []
         idzs = []
+        assert len(card) >= 9, 'len(SEGMESH card) = %i\ncard=%s' % (len(card), card)
+
         for counter, ifield in enumerate(range(9, len(card), 8)):
             itype = integer(card, ifield, 'itype%i' % (counter+1))
             x = double_or_blank(card, ifield+1, 'itype%i' % (counter+1), 0.)
@@ -1631,16 +1625,14 @@ class SEGMESH(BaseCard):
 
     def uncross_reference(self):
         self.pid = self.Pid()
-        self.cp = self.Cp()
-        if self.nsb == 0:
-            self.lsb = self.Lsb()
-        if self.nint == 0:
-            self.lint = self.Lint()
+        #self.cp = self.Cp()
+        #self.idys = idys_ref
+        #self.idzs = idzs_ref
+
         self.pid_ref = None
-        self.cp_ref = None
-        self.lint_ref = None
-        self.lsb_ref = None
-        self.ascid_ref = None
+        #self.cp_ref = None
+        self.idys_ref = None
+        self.idzs_ref = None
 
     def get_points(self):
         """creates a 1D representation of the CAERO2"""
@@ -1731,12 +1723,12 @@ class SEGMESH(BaseCard):
         yzs = []
         for i, xi, yi, zi, radius in zip(count(), xstation, ystation, zstation, radii):
             #print('  station=%s xi=%.4f radius=%s' % (i, xi, radius))
-            yz = self.create_ellipse(aspect_ratio, radius)
+            yz = create_ellipse(aspect_ratio, radius)
             yzs.append(yz)
             try:
                 y = yz[:, 0] + yi
                 z = yz[:, 1] + zi
-            except ValueError:
+            except ValueError:  # pragma: no cover
                 print('yz = %s' % yz)
                 print('yz.shape = %s' % str(yz.shape))
                 print('dy = %s' % dy)
@@ -1759,7 +1751,7 @@ class SEGMESH(BaseCard):
                 np.hstack(ys),
                 np.hstack(zs),
             ]).T + p1
-        except:
+        except:  # pragma: no cover
             print('xs =', xs.shape)
             print('ys =', ys.shape)
             print('zs =', zs.shape)
@@ -2073,8 +2065,8 @@ class CAERO7(BaseCard):
         except OverflowError:
             if dtype == 'int64':
                 # we already tried int64
-                msg = 'eid=%s ichord=%s ispan=%s nchord=%s' % (
-                    self.eid, ichord, ispan, nchord)
+                msg = 'eid=%s nspan=%s nchord=%s' % (
+                    self.eid, nspan, nchord)
                 raise OverflowError(msg)
             self._init_ids(dtype='int64')
 
@@ -2103,9 +2095,9 @@ class CAERO7(BaseCard):
         self.cp_ref = model.Coord(self.cp, msg=msg)
         self.ascid_ref = model.Acsid(msg=msg)
 
-        if self.nchord == 0:
-            assert isinstance(self.lchord, integer_types), self.lchord
-            self.lchord_ref = model.AEFact(self.lchord, msg)
+        #if self.nchord == 0:
+            #assert isinstance(self.lchord, integer_types), self.lchord
+            #self.lchord_ref = model.AEFact(self.lchord, msg)
         if self.nspan == 0:
             assert isinstance(self.lspan, integer_types), self.lspan
             self.lspan_ref = model.AEFact(self.lspan, msg)
@@ -2130,9 +2122,9 @@ class CAERO7(BaseCard):
         self.cp_ref = model.safe_coord(self.cp, self.eid, xref_errors, msg=msg)
         self.ascid_ref = model.safe_acsid(msg=msg)
 
-        if self.nchord == 0:
-            assert isinstance(self.lchord, integer_types), self.lchord
-            self.lchord_ref = model.safe_aefact(self.lchord, self.eid, xref_errors, msg)
+        #if self.nchord == 0:
+            #assert isinstance(self.lchord, integer_types), self.lchord
+            #self.lchord_ref = model.safe_aefact(self.lchord, self.eid, xref_errors, msg)
 
         if self.nspan == 0:
             assert isinstance(self.lspan, integer_types), self.lspan
@@ -2143,11 +2135,9 @@ class CAERO7(BaseCard):
     def uncross_reference(self):
         #self.pid = self.Pid()
         self.cp = self.Cp()
-        self.lchord = self.get_LChord()
         self.lspan = self.get_LSpan()
         #self.pid_ref = None
         self.cp_ref = None
-        self.lchord_ref = None
         self.lspan_ref = None
         self.ascid_ref = None
 
@@ -2357,7 +2347,7 @@ class CAERO7(BaseCard):
             y = np.linspace(0., 1., nspan + 1)
 
         if nchord < 1 or nspan < 1:
-            msg = 'CAERO1 eid=%s nchord=%s nspan=%s lchord=%s lspan=%s' % (
+            msg = 'CAERO7 eid=%s nchord=%s nspan=%s lchord=%s lspan=%s' % (
                 self.eid, self.nchord, self.nspan, self.lchord, self.lspan)
             raise RuntimeError(msg)
         return x, y
@@ -2409,17 +2399,16 @@ class CAERO7(BaseCard):
           the fields that define the card
 
         """
-        lchord = self.get_LChord()
+        cp = self.Cp()
+        nspan = self.nspan
+        nchord = self.nchord
         lspan = self.get_LSpan()
-        list_fields = (['CAERO1', self.eid, self.name, self.Cp(), self.nspan,
-                        self.nchord, lspan, lchord, self.igroup, ] +
-                       list(self.p1) + [self.x12] + list(self.p4) + [self.x43])
+        list_fields = (
+            ['CAERO7', self.eid, self.label, cp, nspan, nchord, lspan, self.ztaic,
+             self.p_airfoil,] +
+            list(self.p1) + [self.x12, None, None, None, None] +
+            list(self.p4) + [self.x43, None, None, None, None])
         return list_fields
-
-    def get_LChord(self):
-        if self.lchord_ref is not None:
-            return self.lchord_ref.sid
-        return self.lchord
 
     def get_LSpan(self):
         if self.lspan_ref is not None:
@@ -2444,7 +2433,8 @@ class CAERO7(BaseCard):
         lchord = 0
         lspan = 0
         list_fields = (
-            ['CAERO7', self.eid, self.label, cp, nspan, nchord, lspan, self.ztaic, self.p_airfoil,] +
+            ['CAERO7', self.eid, self.label, cp, nspan, nchord, lspan, self.ztaic,
+             self.p_airfoil,] +
             list(self.p1) + [self.x12, None, None, None, None] +
             list(self.p4) + [self.x43, None, None, None, None])
         return list_fields
@@ -3067,8 +3057,8 @@ class SPLINE1_ZONA(Spline):
             box1 = caero.eid
             box2 = box1 + caero.npanels - 1
             spline = SPLINE1(eid, caero_id, box1, box2, self.setg, dz=self.dz,
-                           method='IPS', usage='BOTH',
-                           nelements=10, melements=10, comment=comment)
+                             method='IPS', usage='BOTH',
+                             nelements=10, melements=10, comment=comment)
             spline.validate()
             splines.append(spline)
             comment = ''
@@ -3098,7 +3088,8 @@ class SPLINE2_ZONA(Spline):
     """
     type = 'SPLINE2_ZONA'
 
-    def __init__(self, eid, setk, setg, model=None, dz=None, eps=0.01, cp=None, curvature=None, comment=''):
+    def __init__(self, eid, setk, setg, model=None, dz=None, eps=0.01,
+                 cp=None, curvature=None, comment=''):
         """
         Creates a SPLINE1 card, which is useful for control surface
         constraints.

@@ -2152,9 +2152,60 @@ class TestAero(unittest.TestCase):
         save_load_deck(model)
 
     def test_zona(self):
+        """zona explicit test"""
         bdf_filename = os.path.join(MODEL_PATH, 'aero', 'f16_ma41.bdf')
         model = read_bdf(bdf_filename, xref=False, debug=False)
         model.safe_cross_reference()
+        save_load_deck(model, xref='safe',
+                       run_renumber=False, run_convert=False, run_remove_unused=False,
+                       run_save_load=False)
+
+    def test_zona_2(self):
+        """totally fake zona model"""
+        bdf_file = StringIO()
+        bdf_file.write(
+            'CEND\n'
+            'BEGIN BULK\n'
+            #'$       acsid, rcsid, cref, bref, sref, symxz, symxy\n'
+            #'AEROZ, 10,     0,     1.,   10.,  100., YES\n'
+            '$       ACSID XZSYM FLIP FMMUNIT FMLUNIT REFC   REFB   REFS\n'
+            '$+ABC   REFX  REFY  REFZ\n'
+            'AEROZ,  0,    YES,  NO,  SLIN,   IN,      22.73,59.394,1175.8\n'
+            ',       59.53,0.0,  0.0\n'
+
+            '$       label, type, cid, setk, setg, actid\n'
+            'AESURFZ,FLAP,  SYM,  1,   10,   20,   0\n'
+            'CORD2R, 1,0, 0.,0.,0., 0.,0.,1.,\n'
+            ',1.,0.,0.\n'
+            'BODY7,1,FUSE,\n'
+            'PANLST3,10, FUSE, \n'
+            '$       id,naxial,nradial, \n'
+            'SEGMESH,1, 4,     3,       \n'
+            '$       itype, \n'
+            ',       0,     \n'
+            ',       1,     \n'
+            ',       2,     \n'
+            ',       3,     \n'
+            '$ TRIM, ID, MKAEROZ, Q,   LABEL1, UX1,    CGX, CGY,\n'
+            'TRIM, 100,  101,     42., ALPHA,  5., 0., 0.,  0.,\n'
+            '$CGZ, WEIGHT, Ixx, Ixy, Iyy, Ixz, Iyz, Izz\n'
+            ',0.,  1e4,    1e3, 1e3, 1e5, 1e3, 1e3, 1e4\n'
+            '$TRUE/G, NX,   NY,   NZ,  P, Q, R, \n'
+            ', CAT,   NX1,  NY1,  NZ1, P, Q, R, \n'
+        )
+        bdf_file.seek(0)
+        model = read_bdf(bdf_filename=bdf_file, validate=True, xref=True, punch=False,
+                         skip_cards=None, read_cards=None, encoding=None,
+                         log=None, debug=True, mode='zona')
+        model.uncross_reference()
+        model.write_bdf('zona.bdf')
+        model.safe_cross_reference()
+        model.write_bdf('zona.bdf')
+
+        bdf_file.seek(0)
+        model.clear_attributes()
+        read_bdf('zona.bdf')
+        os.remove('zona.bdf')
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

@@ -493,8 +493,8 @@ def fortran_to_python_short(line, unused_default_values):
     """the function used by the DRESP2"""
     func_str = 'def func(args):\n'
     func_str += '    return %s(args)\n' % line.strip()
-    d = {}
-    exec_(func_str, globals(), d)
+    local_dict = {}
+    exec_(func_str, globals(), local_dict)
     return d['func']
 
 def split_to_equations(lines):

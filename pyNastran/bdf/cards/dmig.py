@@ -50,6 +50,8 @@ class DTI(BaseCard):
         comment : str; default=''
             a comment for the card
         """
+        if comment:
+            self.comment = comment
         self.name = name
         self.fields = fields
 
@@ -302,9 +304,6 @@ class NastranMatrix(BaseCard):
         else:
             raise NotImplementedError('matrix_form=%s' % self.matrix_form)
         return shape
-
-    def _add_column_uaccel(self, comment=''):
-        raise NotImplementedError('UACCEL')
 
     def _add_column(self, card, comment=''):
         """adds an additional column entry to the matrix"""
@@ -953,7 +952,15 @@ class DMIG_UACCEL(BaseCard):
         ncol = integer_or_blank(card, 8, 'ncol')
         return DMIG_UACCEL(tin, ncol, load_sequences={}, comment=comment)
 
+    def _add_column_uaccel(self, comment=''):
+        raise NotImplementedError('UACCEL')
+
     def _add_column(self, card, comment=''):
+        if comment:
+            if hasattr(self, '_comment'):
+                self.comment += comment
+            else:
+                self.comment = comment
         load_seq = integer(card, 2, 'load_seq')
 
         g1 = integer(card, 5, 'nid1')
@@ -1246,11 +1253,11 @@ class DMIAX(object):
         tout = integer_or_blank(card, 5, 'tout', 0)
         polar = integer_or_blank(card, 6, 'polar', 0)
         if matrix_form == 1: # square
-            ncols = integer_or_blank(card, 8, 'matrix_form=%s; ncol' % matrix_form)
+            unused_ncols = integer_or_blank(card, 8, 'matrix_form=%s; ncol' % matrix_form)
         elif matrix_form == 6: # symmetric
-            ncols = integer_or_blank(card, 8, 'matrix_form=%s; ncol' % matrix_form)
+            unused_ncols = integer_or_blank(card, 8, 'matrix_form=%s; ncol' % matrix_form)
         elif matrix_form in [2, 9]: # rectangular
-            ncols = integer(card, 8, 'matrix_form=%s; ncol' % (matrix_form))
+            unused_ncols = integer(card, 8, 'matrix_form=%s; ncol' % (matrix_form))
         else:
             # technically right, but nulling this will fix bad decks
             #self.ncols = blank(card, 8, 'matrix_form=%s; ncol' % self.matrix_form)
