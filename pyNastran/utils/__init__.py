@@ -48,12 +48,11 @@ def is_file_obj(filename):
             or isinstance(filename, file)
             or isinstance(filename, StringIO)
         )
-    else:
-        return (
-            (hasattr(filename, 'read') and hasattr(filename, 'write'))
-            or isinstance(filename, io.IOBase)
-            or isinstance(filename, StringIO)
-        )
+    return (
+        (hasattr(filename, 'read') and hasattr(filename, 'write'))
+        or isinstance(filename, io.IOBase)
+        or isinstance(filename, StringIO)
+    )
 
 def b(string):
     # type: (str) -> bytes
