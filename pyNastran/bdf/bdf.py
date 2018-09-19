@@ -3617,7 +3617,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             self.zona.update_for_zona()
 
     def _check_pynastran_header(self, lines, check_header=True):
-       """updates the $pyNastran: key=value variables"""
+        """updates the $pyNastran: key=value variables"""
         if not check_header:
             return
         for line in lines:
