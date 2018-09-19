@@ -8,7 +8,7 @@ import os
 import sys
 from collections import defaultdict, OrderedDict
 import traceback
-from six import iteritems, itervalues, StringIO, string_types
+from six import iteritems, StringIO, string_types
 from pyNastran.op2.result_objects.stress_object import StressObject
 
 SIDE_MAP = {}
@@ -479,7 +479,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
     def _get_model_unvectorized(self, bdf_filename, xref_loads=True):
         """Loads the BDF/OP2 geometry"""
-        ext = os.path.splitext(bdf_filename)[1].lower()
+        ext = '.bdf'
+        if isinstance(bdf_filename, str):
+            ext = os.path.splitext(bdf_filename)[1].lower()
+
         punch = False
         if ext == '.pch':
             punch = True
@@ -558,7 +561,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             return
 
         #load_geom = True
-        if bdf_filename.lower().endswith(('.bdf', '.dat', '.pch',)): # '.op2'
+        if isinstance(bdf_filename, str) and bdf_filename.lower().endswith(('.bdf', '.dat', '.pch',)): # '.op2'
             if IS_TESTING or self.gui.is_testing_flag:
                 self.load_nastran_geometry_vectorized(bdf_filename, plot=plot)
                 self.load_nastran_geometry_unvectorized(bdf_filename, plot=plot)
@@ -881,8 +884,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 self.gui._set_results([form], cases)
 
 
-    def _map_elements_vectorized(self, nid_map, model, j, dim_max,
-                                 nid_cp_cd, plot=True, xref_loads=True):
+    def _map_elements_vectorized(self, unused_nid_map, model, unused_j, unused_dim_max,
+                                 unused_nid_cp_cd, plot=True, xref_loads=True):
         """
         Much, much faster way to add elements that directly builds the
         VTK objects rather than using for loops.
@@ -1475,9 +1478,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 inids = inids[:, :nrequired]
                 nnodesi = nrequired
                 assert cell_type_allow is not None
-                eid_type = np.full(nelems, cell_type_allow, dtype='int32')
+                unused_eid_type = np.full(nelems, cell_type_allow, dtype='int32')
             else:
-                eid_type = np.full(nelems, cell_type, dtype='int32')
+                unused_eid_type = np.full(nelems, cell_type, dtype='int32')
 
             nnodes = np.full((nelems, 1), nnodesi, dtype='int32')
             if len(ieid) != len(nnodes):
@@ -2000,9 +2003,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         ncaeros_cs : int
             ???
         ncaeros_points : int
-            ???
+            number of points for the caero coarse grid
         ncaero_sub_points : int
-            ???
+            number of points for the caero fine/subpanel grid
         has_control_surface : bool
             is there a control surface
         box_id_to_caero_element_map : dict[box_id] = box_index
@@ -2066,9 +2069,16 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             caero_points = []
             for unused_eid, caero in sorted(model.caeros.items()):
                 if caero.type in ['CAERO1', 'CAERO4', 'CAERO7']:
+                    box_ids = caero.box_ids
+                    nboxes = len(box_ids.ravel())
+                    if nboxes > 1000:
+                        print('skipping nboxes=%s for:\n%s' % (nboxes, str(caero)))
+                        continue
+
                     ncaeros_sub += 1
                     pointsi, elementsi = caero.panel_points_elements()
                     caero_points.append(pointsi)
+
                     for i, box_id in enumerate(caero.box_ids.flat):
                         box_id_to_caero_element_map[box_id] = elementsi[i, :] + num_prev
                     num_prev += pointsi.shape[0]
@@ -2117,7 +2127,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 else:
                     aelist_ref = aesurf.alid1_ref
                     if aelist_ref is None:
-                        self.log.error('AESURF does not reference an AELIST\n%s' % (aesurf.rstrip()))
+                        self.log.error('AESURF does not reference an AELIST\n%s' % (
+                            aesurf.rstrip()))
                         continue
                     ncaeros_cs += len(aelist_ref.elements)
 
@@ -2189,42 +2200,52 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 j += 4
             elif isinstance(element, (CAERO2, BODY7)):
                 # slender body
-                if 0:  # pragma: no cover
-                    # 1D version
-                    cpoints = element.get_points()
-                    cpoints[:, 2] += zfighting_offset
-                    max_cpoints.append(np.array(cpoints).max(axis=0))
-                    min_cpoints.append(np.array(cpoints).min(axis=0))
 
-                    elem = vtk.vtkLine()
+                #if 0:  # pragma: no cover
+                # 1D version
+                #cpoints = element.get_points()
+                #cpoints[:, 2] += zfighting_offset
+                #max_cpoints.append(np.array(cpoints).max(axis=0))
+                #min_cpoints.append(np.array(cpoints).min(axis=0))
+
+                #elem = vtk.vtkLine()
+                #elem.GetPointIds().SetId(0, j)
+                #elem.GetPointIds().SetId(1, j + 1)
+                #points.InsertPoint(j, *cpoints[0])
+                #points.InsertPoint(j + 1, *cpoints[1])
+                #j += 2
+                #caero_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+
+                #else:
+                # 3D version
+                xyz, elems = element.get_points_elements_3d()
+                assert xyz is not None, element
+                xyz[:, 2] += zfighting_offset
+                for elemi in elems:
+                    elem = vtkQuad()
                     elem.GetPointIds().SetId(0, j)
                     elem.GetPointIds().SetId(1, j + 1)
-                    points.InsertPoint(j, *cpoints[0])
-                    points.InsertPoint(j + 1, *cpoints[1])
-                    j += 2
-                    caero_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-                else:
-                    # 3D version
-                    xyz, elems = element.get_points_elements_3d()
-                    xyz[:, 2] += zfighting_offset
-                    for elemi in elems:
-                        elem = vtkQuad()
-                        elem.GetPointIds().SetId(0, j)
-                        elem.GetPointIds().SetId(1, j + 1)
-                        elem.GetPointIds().SetId(2, j + 2)
-                        elem.GetPointIds().SetId(3, j + 3)
-                        n1, n2, n3, n4 = elemi
+                    elem.GetPointIds().SetId(2, j + 2)
+                    elem.GetPointIds().SetId(3, j + 3)
+                    n1, n2, n3, n4 = elemi
 
-                        points.InsertPoint(j, *xyz[n1])
-                        points.InsertPoint(j + 1, *xyz[n2])
-                        points.InsertPoint(j + 2, *xyz[n3])
-                        points.InsertPoint(j + 3, *xyz[n4])
-                        caero_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-                        j += 4
+                    points.InsertPoint(j, *xyz[n1])
+                    points.InsertPoint(j + 1, *xyz[n2])
+                    points.InsertPoint(j + 2, *xyz[n3])
+                    points.InsertPoint(j + 3, *xyz[n4])
+
+                    #cpoints = element.get_points()
+                    #cpoints[0][2] += zfighting_offset
+                    #cpoints[1][2] += zfighting_offset
+                    #max_cpoints.append(np.array(cpoints).max(axis=0))
+                    #min_cpoints.append(np.array(cpoints).min(axis=0))
+
+                    caero_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                    j += 4
             else:
                 self.gui.log_info("skipping %s" % element.type)
 
-        if ncaeros_points:
+        if ncaeros_points and len(max_cpoints):
             self.gui.log_info('CAERO.max = %s' % np.vstack(max_cpoints).max(axis=0))
             self.gui.log_info('CAERO.min = %s' % np.vstack(min_cpoints).min(axis=0))
         caero_grid.SetPoints(points)
@@ -2269,7 +2290,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     elem.GetPointIds().SetId(1, j + elementi[1])
                     elem.GetPointIds().SetId(2, j + elementi[2])
                     elem.GetPointIds().SetId(3, j + elementi[3])
-                    self.gui.alt_grids['caero_subpanels'].InsertNextCell(vtk_type, elem.GetPointIds())
+                    self.gui.alt_grids['caero_subpanels'].InsertNextCell(
+                        vtk_type, elem.GetPointIds())
                 j += ipoint + 1
             else:
                 self.gui.log_info("skipping %s" % element.type)
@@ -4796,7 +4818,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 nodes = element_solid.node_ids
 
                 pid = 0
-                nnodes = len(side_inids)
+                unused_nnodes = len(side_inids)
                 node_ids = [nodes[inid] for inid in side_inids]
                 #inids = np.searchsorted(all_nids, node_ids)
 
@@ -6126,9 +6148,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #  count, ogs, superelement_adaptivity_index, pval_step) = key
         subcase_id_old = key0[0]
         count_old = key0[3]
-        ogs_old = key0[4]
+        unused_ogs_old = key0[4]
         subtitle_old = key0[5]
-        subtitle_old, label_old, superelement_adaptivity_index_old, pval_step_old = keys_map[key0]
+        subtitle_old, label_old, superelement_adaptivity_index_old, unused_pval_step_old = keys_map[key0]
         del label_old
         del superelement_adaptivity_index_old
 
@@ -6144,7 +6166,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             count = key[3]
             #subtitle = key[4]
             try:
-                subtitle, unused_label, superelement_adaptivity_index, pval_step = keys_map[key]
+                subtitle, unused_label, superelement_adaptivity_index, unused_pval_step = keys_map[key]
             except:
                 subcase_id = subcase_id_old
                 subtitle = subtitle_old + '?'
@@ -6258,7 +6280,8 @@ def _get_shell_material_coord_int(element):
 
 def _get_nastran_gui_layer_word(i, ilayer, is_pshell_pcomp):
     """gets the PSHELL/PCOMP layer word"""
-    is_pshell, is_pcomp = is_pshell_pcomp
+    ## TODO: this makes no sense...
+    is_pshell, unused_is_pcomp = is_pshell_pcomp
     word = ''
     if i == 0:
         if ilayer == 0:

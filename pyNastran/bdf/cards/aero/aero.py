@@ -2250,7 +2250,7 @@ class CAERO2(BaseCard):
         xyz, elems = create_axisymmetric_body(
             xstation, ystation, zstation, radii, aspect_ratio,
             p1)
-
+        assert xyz is not None, str(self)
         return xyz, elems
 
     def set_points(self, points):

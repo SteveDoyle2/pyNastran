@@ -3612,11 +3612,15 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             else:
                 raise error
 
-        check_header = True
-        for line in lines:
-            if not check_header:
-                break
+        self._check_pynastran_header(lines, check_header=True)
+        if self.nastran_format == 'zona':
+            self.zona.update_for_zona()
 
+    def _check_pynastran_header(self, lines, check_header=True):
+       """updates the $pyNastran: key=value variables"""
+        if not check_header:
+            return
+        for line in lines:
             if line.startswith('$'):
                 key, value = _parse_pynastran_header(line)
 
@@ -3657,9 +3661,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                     break
             else:
                 break
-
-        if self.nastran_format == 'zona':
-            self.zona.update_for_zona()
+        ###
+        return
 
 #------------------------------------------------------------------------------------------------------
     # HDF5

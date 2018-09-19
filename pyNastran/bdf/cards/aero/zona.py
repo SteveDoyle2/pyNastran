@@ -76,6 +76,7 @@ class ZONA(object):
         card_parser['SPLINE1'] = (SPLINE1_ZONA, self.model._add_spline_object)
         card_parser['SPLINE2'] = (SPLINE2_ZONA, self.model._add_spline_object)
         card_parser['SPLINE3'] = (SPLINE3_ZONA, self.model._add_spline_object)
+        card_parser['PANLST1'] = (PANLST1, self._add_panlst_object)
         card_parser['PANLST3'] = (PANLST3, self._add_panlst_object)
         card_parser['MKAEROZ'] = (MKAEROZ, self._add_mkaeroz_object)
         card_parser['SEGMESH'] = (SEGMESH, self.model._add_paero_object)
@@ -84,7 +85,7 @@ class ZONA(object):
         card_parser['TRIMVAR'] = (TRIMVAR, self._add_trimvar_object)
         card_parser['TRIMLNK'] = (TRIMLNK, self._add_trimlnk_object)
         cards = [
-            'CAERO7', 'AEROZ', 'AESURFZ', 'PANLST3', 'SEGMESH',
+            'CAERO7', 'AEROZ', 'AESURFZ', 'PANLST1', 'PANLST3', 'SEGMESH',
             'BODY7', 'ACOORD', 'MKAEROZ', 'TRIMVAR', 'TRIMLNK']
         self.model.cards_to_read.update(set(cards))
 
@@ -1058,6 +1059,93 @@ class MKAEROZ(BaseCard):
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
+class PANLST1(Spline):
+    """
+    Defines a set of aerodynamic boxes by the LABEL entry in CAERO7 or BODY7
+    bulk data cards.
+
+    +---------+------+-------+-------+------+------+----+-----+-------+
+    |    1    |  2   |   3   |   4   |  5   |   6  |  7 |  8  |   9   |
+    +=========+======+=======+=======+======+======+====+=====+=======+
+    | SPLINE1 | EID  | MODEL |  CP   | SETK | SETG | DZ | EPS |       |
+    +---------+------+-------+-------+------+------+----+-----+-------+
+    | SPLINE1 | 100  |       |       |  1   |  10  | 0. |     |       |
+    +---------+------+-------+-------+------+------+----+-----+-------+
+
+    +---------+-------+---------+------+------+------+----+-----+-------+
+    |    1    |   2   |    3    |   4  |  5   |   6  |  7 |  8  |   9   |
+    +=========+=======+=========+======+======+======+====+=====+=======+
+    | PANLST1 | SETID | MACROID | BOX1 | BOX2 |      |    |     |       |
+    +---------+-------+---------+------+------+------+----+-----+-------+
+    | PANLST1 |  100  |   111   |  111 |  118 |      |    |     |       |
+    +---------+-------+---------+------+------+------+----+-----+-------+
+
+    PANLST1 is referred to by SPLINEi, ATTACH, LOADMOD, CPFACT, JETFRC, and/or
+    AESURFZ bulk data card.
+    """
+    type = 'PANLST1'
+
+    def __init__(self, eid, macro_id, box1, box2, comment=''):
+        """
+        Creates a PANLST1 card
+
+        Parameters
+        ----------
+        eid : int
+            spline id
+        comment : str; default=''
+            a comment for the card
+
+        """
+        # https://www.zonatech.com/Documentation/ZAERO_9.2_Users_3rd_Ed.pdf
+        Spline.__init__(self)
+        if comment:
+            self.comment = comment
+
+        self.eid = eid
+        self.macro_id = macro_id # points to CAERO7 / BODY7
+        self.box1 = box1
+        self.box2 = box2
+        self.aero_element_ids = []
+        self.caero_refs = None
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a PANLST3 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        eid = integer(card, 1, 'eid')
+        macro_id = integer(card, 2, 'macro_id')
+        box1 = integer(card, 3, 'box1')
+        box2 = integer(card, 4, 'box2')
+        assert len(card) == 5, 'len(PANLST1 card) = %i\ncard=%s' % (len(card), card)
+        return PANLST1(eid, macro_id, box1, box2, comment=comment)
+
+    def cross_reference(self, model):
+        msg = ', which is required by PANLST1 eid=%s' % self.eid
+        self.caero_ref = model.CAero(self.macro_id, msg=msg)
+        self.aero_element_ids = np.arange(self.box1, self.box2)
+
+    def safe_cross_reference(self, model, xref_errors):
+        self.cross_reference(model)
+
+    def raw_fields(self):
+        list_fields = ['PANLST1', self.eid, self.macro_id, self.box1, self.box2]
+        return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
+
+
 class PANLST3(Spline):
     """
     Defines a set of aerodynamic boxes by the LABEL entry in CAERO7 or BODY7
@@ -1224,6 +1312,13 @@ class BODY7(BaseCard):
         self.ascid_ref = None
         self.segmesh_refs = None
 
+    #@property
+    #def cp(self):
+        #return self.acoord
+    #@property
+    #def cp_ref(self):
+        #return self.acoord_ref
+
     @classmethod
     def add_card(cls, card, comment=''):
         """
@@ -1380,7 +1475,7 @@ class BODY7(BaseCard):
         for isegmesh, segmesh in enumerate(self.segmesh_refs):
             itypes = segmesh.itypes
 
-            xs = segmesh.xs
+            #xs = segmesh.xs
             #idys_ref = segmesh.idys_ref
             #idzs_ref = segmesh.idzs_ref
             nitypes = len(itypes)
@@ -1411,12 +1506,11 @@ class BODY7(BaseCard):
                 if itype == 1:
                     # Body of Revolution
                     # Xi, CAMi, YRi
-                    ## TODO: doesn't consider camber
                     radius = yrad
                     aspect_ratio = 1.
                     yz = create_ellipse(aspect_ratio, radius, thetas=thetas)
                     ypoints = yz[:, 0]
-                    zpoints = yz[:, 1]
+                    zpoints = camber + yz[:, 1]
                 elif itype == 2:
                     # Elliptical body
                     height = zrad
@@ -1503,13 +1597,14 @@ class BODY7(BaseCard):
         return caero2, paero2, aefact_xs, aefact_width, aefact_theta1, aefact_theta2
 
     def _get_nthetas(self, itypes, idys_ref2, idzs_ref2):
-        nthetas = 17
-        for itype, idy_ref, idz_ref in zip(itypes, idys_ref2, idzs_ref2):
-            if itype == 3:
-                fractions = idy_ref.fractions
-                nthetas = len(fractions)
-                break
-        return nthetas
+        return self.segmesh_refs[0].nradial  # npoints
+        #nthetas = 17
+        #for itype, idy_ref, unused_idz_ref in zip(itypes, idys_ref2, idzs_ref2):
+            #if itype == 3:
+                #fractions = idy_ref.fractions
+                #nthetas = len(fractions)
+                #break
+        #return nthetas
 
     def _get_thetas(self, itypes, idys_ref2, idzs_ref2):
         nthetas = self._get_nthetas(itypes, idys_ref2, idzs_ref2)
@@ -1517,7 +1612,7 @@ class BODY7(BaseCard):
         return thetas
 
     def get_points(self):
-        """creates a 1D representation of the CAERO2"""
+        """creates a 1D representation of the BODY7"""
         p1 = self.cp_ref.transform_node_to_global(self.p1)
         p2 = p1 + self.ascid_ref.transform_vector_to_global(np.array([self.x12, 0., 0.]))
 
@@ -1548,16 +1643,16 @@ class BODY7(BaseCard):
         npoints = 0
         for segmesh in self.segmesh_refs:
             #print(segmesh)
-            try:
-                xyzi, elementi = self._get_points_elements_3di(segmesh)
-            except NotImplementedError:
-                return None, None
+            xyzi, elementi = self._get_points_elements_3di(segmesh)
             xyz.append(xyzi)
             element.append(elementi + npoints)
             npoints += xyzi.shape[0]
 
         xyzs = np.vstack(xyz)
         elements = np.vstack(element)
+        assert xyzs is not None, str(self)
+        assert elements is not None, str(self)
+
         return xyzs, elements
 
     def _get_points_elements_3di(self, segmesh):
@@ -1578,40 +1673,62 @@ class BODY7(BaseCard):
         zs = []
 
         origin_x, origin_y, origin_z = self.acoord_ref.origin
-        for itype, x, y, z, camber, idy_ref, idz_ref in zip(segmesh.itypes,
-                                                            segmesh.xs, segmesh.ys, segmesh.zs,
-                                                            segmesh.cambers,
-                                                            segmesh.idys_ref, segmesh.idzs_ref):
-            if itype not in [3]:
-                msg = ('only itype=3 is supported; not %r (1=body of revolution, '
-                       '2=elliptical body, 3=arbitrary body)' % itype)
-                raise NotImplementedError(msg)
-            assert camber == 0.0, 'camber is not supported'
 
-            # ITYPEi = 1 (Body of Revolution):
-            #    Xi, CAMi, YRi
-            # ITYPEi = 2 (Elliptical Body):
-            #    Xi, YRi, ZRi
-            # ITYPEi = 3 (Arbitrary Body):
-            #    Xi, IDYi, IDZi
-            ynodes = idy_ref.fractions
-            znodes = idz_ref.fractions
-            assert len(ynodes) == len(znodes), 'len(ynodes)=%s len(znodes)=%s' % (len(ynodes), len(znodes))
-            nnodes = len(ynodes)
+        nthetas = segmesh.nradial
+        thetas = np.radians(np.linspace(0., 360., nthetas))
+        for itype, x, yrad, zrad, camber, idy_ref, idz_ref in zip(segmesh.itypes,
+                                                                  segmesh.xs, segmesh.ys, segmesh.zs,
+                                                                  segmesh.cambers,
+                                                                  segmesh.idys_ref, segmesh.idzs_ref):
+            y = 0.
+            z = 0.
+            if itype == 1:
+                # Body of Revolution
+                # Xi, CAMi, YRi
+                ## TODO: doesn't consider camber
+                radius = yrad
+                aspect_ratio = 1.
+                yz = create_ellipse(aspect_ratio, radius, thetas=thetas)
+                ypoints = yz[:, 0]
+                zpoints = camber + yz[:, 1]
+            elif itype == 2:
+                # Elliptical body
+                #  Xi, YRi, ZRi
+                height = zrad
+                width = yrad
+                aspect_ratio = height / width
+                radius = height
+                yz = create_ellipse(aspect_ratio, radius, thetas=thetas)
+                ypoints = yz[:, 0]
+                zpoints = yz[:, 1]
+
+            elif itype == 3:
+                # Arbitrary body using AEFACTss
+                #  Xi, IDYi, IDZi
+                ypoints = idy_ref.fractions
+                zpoints = idz_ref.fractions
+                y = yrad
+                z = zrad
+            else:  # pramga: no cover
+                msg = 'Unsupported itype=%s (must be 1/2/3)\n%s' % (itype, str(self))
+                raise NotImplementedError(msg)
+
+            assert len(ypoints) == len(zpoints), 'len(ypoints)=%s len(zpoints)=%s' % (len(ypoints), len(zpoints))
+            nnodes = len(ypoints)
 
             x_offset = origin_x + x
             y_offset = origin_y + y
             z_offset = origin_z + z
             xs.append([x_offset] * nnodes)
-            ys.append(y_offset + ynodes)
-            zs.append(z_offset + znodes)
+            ys.append(y_offset + ypoints)
+            zs.append(z_offset + zpoints)
 
         xyz = np.vstack([
             np.hstack(xs),
             np.hstack(ys),
             np.hstack(zs),
         ]).T
-        elements = elements_from_quad(nx, ny, dtype='int32')
+        elements = elements_from_quad(nx, ny, dtype='int32')  # nx,ny are points
         return xyz, elements
 
     #def set_points(self, points):
@@ -1863,7 +1980,7 @@ class SEGMESH(BaseCard):
         self.idzs_ref = idzs_ref
         #print(self.idys_ref)
 
-    def safe_cross_reference(self, model, xref_errors, debug=False):
+    def safe_cross_reference(self, model, xref_errors):
         return self.cross_reference(model)
 
     def uncross_reference(self):
@@ -2008,6 +2125,8 @@ class SEGMESH(BaseCard):
         ny = ntheta
         elems = elements_from_quad(nx+1, ny)
         #print('elems =\n', elems)
+        assert xyz is not None, str(self)
+        assert elems is not None, str(elems)
         return xyz, elems
 
     #def set_points(self, points):
@@ -2230,6 +2349,8 @@ class CAERO7(BaseCard):
             raise ValueError(msg)
         assert len(self.p1) == 3, 'p1=%s' % self.p1
         assert len(self.p4) == 3, 'p4=%s' % self.p4
+        assert self.nspan < 100, 'nspan=%s\n%s' % (self.nspan, str(self))
+        assert self.nchord < 100, 'nchord=%s\n%s' % (self.nchord, str(self))
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -2542,7 +2663,7 @@ class CAERO7(BaseCard):
         else:
             nspan = self.nspan
         if nchord < 1 or nspan < 1:
-            msg = 'CAERO1 eid=%s nchord=%s nspan=%s lchord=%s lspan=%s' % (
+            msg = 'CAERO7 eid=%s nchord=%s nspan=%s lchord=%s lspan=%s' % (
                 self.eid, self.nchord, self.nspan, self.lchord, self.lspan)
             raise RuntimeError(msg)
         return nchord, nspan
@@ -3276,7 +3397,6 @@ class SPLINE1_ZONA(Spline):
         | SPLINE1 | 100  |       |       |  1   |  10  | 0. |     |       |
         +---------+------+-------+-------+------+------+----+-----+-------+
         """
-        #print('self.aero_element_ids =', self.aero_element_ids)
         #panlst = 100 # set_aero
         #return SPLINE1(self.eid, panlst, self.setg, model=None, cp=self.cp, dz=self.dz,
                        #eps=0.01, comment=self.comment)
@@ -3287,14 +3407,12 @@ class SPLINE1_ZONA(Spline):
         #self._comment = ''
         comment += str(self)
         for panel_groups in self.panlst_ref.panel_groups:
-            #print(panel_groups)
             eid = model.zona.caero_to_name_map[panel_groups]
             caero = model.caeros[eid]
-            #print(caero)
             caero_id = eid
             box1 = caero.eid
             box2 = box1 + caero.npanels - 1
-            #assert caero.npanels > 0, caero
+            assert caero.npanels > 0, caero
             #assert box1 > 0 and box2 > 0, 'box1=%s box2=%s' % (box1, box2)
             spline = SPLINE1(eid, caero_id, box1, box2, self.setg, dz=self.dz,
                              method='IPS', usage='BOTH',
@@ -3357,6 +3475,7 @@ class SPLINE2_ZONA(Spline):
         self.curvature = curvature
         self.panlst_ref = None
         self.setg_ref = None
+        self.aero_element_ids = []
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -3390,6 +3509,7 @@ class SPLINE2_ZONA(Spline):
         #self.caero_ref = model.CAero(self.caero, msg=msg)
         self.panlst_ref = model.zona.panlsts[self.panlst]
         self.panlst_ref.cross_reference(model)
+        self.aero_element_ids = self.panlst_ref.aero_element_ids
 
     def safe_cross_reference(self, model, xref_errors):
         try:
@@ -3402,6 +3522,7 @@ class SPLINE2_ZONA(Spline):
         #self.caero_ref = model.CAero(self.caero, msg=msg)
         self.panlst_ref = model.zona.panlsts[self.panlst]
         self.panlst_ref.safe_cross_reference(model, xref_errors)
+        self.aero_element_ids = self.panlst_ref.aero_element_ids
 
     def uncross_reference(self):
         self.panlst_ref = None

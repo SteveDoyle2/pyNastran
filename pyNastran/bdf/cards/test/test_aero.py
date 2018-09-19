@@ -2151,7 +2151,7 @@ class TestAero(unittest.TestCase):
         rotorg.validate()
         save_load_deck(model)
 
-    def test_zona(self):
+    def test_zona_1(self):
         """zona explicit test"""
         bdf_filename = os.path.join(MODEL_PATH, 'aero', 'f16_ma41.bdf')
         model = read_bdf(bdf_filename, xref=False, debug=False)
@@ -2164,68 +2164,8 @@ class TestAero(unittest.TestCase):
 
     def test_zona_2(self):
         """totally fake zona model"""
-        bdf_file = StringIO()
-        bdf_file.write(
-            'CEND\n'
-            'BEGIN BULK\n'
-            #'$       acsid, rcsid, cref, bref, sref, symxz, symxy\n'
-            #'AEROZ, 10,     0,     1.,   10.,  100., YES\n'
-            '$       ACSID XZSYM FLIP FMMUNIT FMLUNIT REFC   REFB   REFS\n'
-            '$+ABC   REFX  REFY  REFZ\n'
-            'AEROZ,  0,    YES,  NO,  SLIN,   IN,      22.73,59.394,1175.8\n'
-            ',       59.53,0.0,  0.0\n'
+        bdf_file = get_zona_model()
 
-            '$       label, type, cid, PANLST, setg, actid\n'
-            'AESURFZ,FLAP,  ASYM, 1,   10,       20,   0\n'
-            #'AESURFZ,FLAP,  SYM,  1,  10,       20,   0\n'
-            'CORD2R, 1,0, 0.,0.,0., 0.,0.,1.,\n'
-            ',1.,0.,0.\n'
-            '$BODY7,ID,LABEL,IPBODY7, ACOORD, NSEG, IDMESH1\n'
-            'BODY7, 1, FUSE,        ,      2,     , 1\n'
-            'PANLST3,10, FUSE, \n'
-            '$       id,naxial,nradial, \n'
-            'SEGMESH,1, 4,     3,       \n'
-
-            # ITYPEi = 1 (Body of Revolution):
-            #    Xi, CAMi, YRi
-            # ITYPEi = 2 (Elliptical Body):
-            #    Xi, YRi, ZRi
-            # ITYPEi = 3 (Arbitrary Body):
-            #    Xi, IDYi, IDZi
-            '$       itype, x1, cam, yr1, zr1, idy1, idz1 \n'
-            ',       1,        ,  1.,  1.,    ,\n'
-            ',       2,      1.,    ,  1.,  2.,\n'
-            ',       3,      2.,    ,    ,    , 13,   14   \n'
-            ',       3,      3.,    ,    ,    , 13,   14   \n'
-
-            # y
-            'AEFACT,13, 1., 0.,  0.,-1.\n'
-            'AEFACT,14, 0., 1., -1., 0.\n'
-            '$ MKAEROZ, ID, MACH, METHOD, IDFLT\n'
-            'MKAEROZ,   101, 0.8, -1,     -1,  \n'
-            '$ TRIM, ID, MKAEROZ, Q,   LABEL1, UX1,    CGX, CGY,\n'
-            'TRIM, 100,  101,     42., ALPHA,  5., 0., 0.,  0.,\n'
-            '$CGZ, WEIGHT, Ixx, Ixy, Iyy, Ixz, Iyz, Izz\n'
-            ',0.,  1e4,    1e3, 1e3, 1e5, 1e3, 1e3, 1e4\n'
-            '$TRUE/G, NX,   NY,   NZ,  P, Q, R, \n'
-            ', CAT,   NX1,  NY1,  NZ1, P, Q, R, \n'
-            '$var, value\n'
-            ',17,  1.0,\n'
-            '$\n'
-            'TRIMVAR,17,VAR\n'
-            '$\n'
-            'TRIMLNK,10,SYM, -1, 17\n'
-            'ACOORD, 2, 0.,0.,0., 1.0,0.\n'
-            '$       ID,    MODEL, CP, PANLST, SETG, DZ, EPS\n'
-            'SPLINE1,100,        ,   ,    422, 423,\n'
-            '$       NELEM, MELEM\n'
-            'PANLST3,422, FUSE, \n'
-            '$       id,naxial,nradial, \n'
-
-            'SET1,423,10\n'
-            'GRID,10\n'
-        )
-        bdf_file.seek(0)
         model = read_bdf(bdf_filename=bdf_file, validate=True, xref=True, punch=False,
                          skip_cards=None, read_cards=None, encoding=None,
                          log=None, debug=True, mode='zona')
@@ -2242,6 +2182,82 @@ class TestAero(unittest.TestCase):
         os.remove('zona.bdf')
 
         model2.zona.convert_to_nastran()
+
+def get_zona_model():
+    bdf_file = StringIO()
+    bdf_file.write(
+        '$ pyNastran: version=zona\n'
+        'CEND\n'
+        'BEGIN BULK\n'
+        #'$       acsid, rcsid, cref, bref, sref, symxz, symxy\n'
+        #'AEROZ, 10,     0,     1.,   10.,  100., YES\n'
+        '$       ACSID XZSYM FLIP FMMUNIT FMLUNIT REFC   REFB   REFS\n'
+        '$+ABC   REFX  REFY  REFZ\n'
+        'AEROZ,  0,    YES,  NO,  SLIN,   IN,      22.73,59.394,1175.8\n'
+        ',       59.53,0.0,  0.0\n'
+
+        '$       label, type, cid, PANLST, setg, actid\n'
+        'AESURFZ,FLAP,  ASYM, 1,   10,       20,   0\n'
+        #'AESURFZ,FLAP,  SYM,  1,  10,       20,   0\n'
+        'CORD2R, 1,0, 0.,0.,0., 0.,0.,1.,\n'
+        ',1.,0.,0.\n'
+        '$BODY7,ID,LABEL,IPBODY7, ACOORD, NSEG, IDMESH1\n'
+        'BODY7, 1, FUSE,        ,      2,     , 1\n'
+        'PANLST3,10, FUSE, \n'
+        '$       id,naxial,nradial, \n'
+        'SEGMESH,1, 4,     3,       \n'
+
+        # ITYPEi = 1 (Body of Revolution):
+        #    Xi, CAMi, YRi
+        # ITYPEi = 2 (Elliptical Body):
+        #    Xi, YRi, ZRi
+        # ITYPEi = 3 (Arbitrary Body):
+        #    Xi, IDYi, IDZi
+        '$       itype, x1, cam, yr1, zr1, idy1, idz1 \n'
+        ',       1,        ,  1.,  1.,    ,\n'
+        ',       2,      1.,    ,  1.,  2.,\n'
+        ',       3,      2.,    ,    ,    , 13,   14   \n'
+        ',       3,      3.,    ,    ,    , 13,   14   \n'
+
+        # y
+        'AEFACT,13, 1., 0.,  0.,-1.\n'
+        'AEFACT,14, 0., 1., -1., 0.\n'
+        '$ MKAEROZ, ID, MACH, METHOD, IDFLT\n'
+        'MKAEROZ,   101, 0.8, -1,     -1,  \n'
+        '$ TRIM, ID, MKAEROZ, Q,   LABEL1, UX1,    CGX, CGY,\n'
+        'TRIM, 100,  101,     42., ALPHA,  5., 0., 0.,  0.,\n'
+        '$CGZ, WEIGHT, Ixx, Ixy, Iyy, Ixz, Iyz, Izz\n'
+        ',0.,  1e4,    1e3, 1e3, 1e5, 1e3, 1e3, 1e4\n'
+        '$TRUE/G, NX,   NY,   NZ,  P, Q, R, \n'
+        ', CAT,   NX1,  NY1,  NZ1, P, Q, R, \n'
+        '$var, value\n'
+        ',17,  1.0,\n'
+        '$\n'
+        'TRIMVAR,17,VAR\n'
+        '$\n'
+        'TRIMLNK,10,SYM, -1, 17\n'
+        'ACOORD, 2, 0.,0.,0., 1.0,0.\n'
+        '$       ID,    MODEL, CP, PANLST, SETG, DZ, EPS\n'
+        'SPLINE1,100,        ,   ,    422, 423,\n'
+        '$,      NELEM, MELEM\n'
+        '$,      10,    10\n'
+        'PANLST3,422, FUSE, \n'
+        '$       id,naxial,nradial, \n'
+
+        #'$       ID,   MODEL, PANLST, SETG,\n'
+        #'SPLINE2,1000,      ,    422,  423,\n'
+
+        '$       ID,   MODEL, CP, PANLST, SETG,\n'
+        'SPLINE3,1200,      ,   ,    422,  423,\n'
+
+        'SET1,423,10\n'
+        'GRID,10,,0.,0.,0.\n'
+        'GRID,11,,1.,0.,0.\n'
+        'CONROD,100, 10,11, 101,1.0\n'
+        'MAT1,101,3.0e7,,0.3\n'
+    )
+    bdf_file.seek(0)
+    return bdf_file
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

@@ -6,6 +6,7 @@ import unittest
 import numpy as np
 import vtk
 
+from pyNastran.bdf.cards.test.test_aero import get_zona_model
 from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.converters.nastran.nastran_io import NastranIO
 import pyNastran
@@ -604,6 +605,16 @@ class TestNastranGUI(unittest.TestCase):
         bdf_filename = os.path.join(MODEL_PATH, 'axisymmetric', 'model.bdf')
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
+
+    def test_gui_zona_model_1(self):
+        bdf_filename = os.path.join(MODEL_PATH, 'aero', 'f16_ma41.bdf')
+        test = NastranGUI()
+        test.load_nastran_geometry(bdf_filename)
+
+    def test_gui_zona_model_2(self):
+        bdf_file = get_zona_model()
+        test = NastranGUI()
+        test.load_nastran_geometry(bdf_file)
 
 #def test_bottle():  # pragma: no cover
     #"""
