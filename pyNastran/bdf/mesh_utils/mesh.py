@@ -1,5 +1,6 @@
 import numpy as np
-from pyNastran.bdf.cards.aero.utils import points_elements_from_quad_points, create_axisymmetric_body
+from pyNastran.bdf.cards.aero.utils import (
+    points_elements_from_quad_points, create_axisymmetric_body)
 
 def create_structured_cquad4s(model, pid,
                               p1, p2, p3, p4, nx, ny, nid=1, eid=1):

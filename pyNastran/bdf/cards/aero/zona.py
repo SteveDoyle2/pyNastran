@@ -80,7 +80,12 @@ class ZONA(object):
             pafoil.validate()
 
     def PAFOIL(self, pid, msg=''):
-        return self.pafoil[pid]
+        """gets a pafoil profile (PAFOIL7/PAFOIL8)"""
+        try:
+            return self.pafoil[pid]
+        except KeyError:
+            raise KeyError('pid=%s not found%s.  Allowed pafoils=%s'
+                           % (pid, msg, np.unique(list(self.pafoil.keys()))))
 
     def update_for_zona(self):
         card_parser = self.model._card_parser
@@ -199,7 +204,11 @@ class ZONA(object):
     def convert_to_nastran(self, save=True):
         """Converts a ZONA model to Nastran"""
         if self.model.nastran_format != 'zona':
-            return
+            caeros = {}
+            caero2s = []
+            make_paero1 = False
+            return caeros, caero2s, make_paero1
+
         caeros, caero2s, make_paero1 = self._convert_caeros()
         splines = self._convert_splines()
         aesurf, aelists = self._convert_aesurf_aelist()
@@ -1126,7 +1135,7 @@ class PANLST1(Spline):
         self.box1 = box1
         self.box2 = box2
         self.aero_element_ids = []
-        self.caero_refs = None
+        self.caero_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1390,12 +1399,6 @@ class PAFOIL7(BaseCard):
             #return self.lint_ref.sid
         #return self.lint
 
-    @property
-    def nboxes(self):
-        if self.nsb > 0:
-            return self.nsb
-        return len(self.lsb_ref.fractions) # AEFACT
-
     def cross_reference(self, model):
         """
         Cross links the card so referenced cards can be extracted directly
@@ -1426,95 +1429,19 @@ class PAFOIL7(BaseCard):
 
     def convert_to_nastran(self, model):
         """
-        +--------+-----+-----+----+-----+------+-----+------+------+
-        |    1   |  2  |  3  |  4 |  5  |   6  |   7 |   8  |  9   |
-        +========+=====+=====+====+=====+======+=====+======+======+
-        | CAERO2 | EID | PID | CP | NSB | NINT | LSB | LINT | IGID |
-        +--------+-----+-----+----+-----+------+-----+------+------+
-        |        | X1  |  Y1 | Z1 | X12 |      |     |      |      |
-        +--------+-----+-----+----+-----+------+-----+------+------+
+        Should this be converted to a DMIG?
 
-        +-------+---------+-------+---------+--------+------+---------+---------+---------+
-        |   1   |    2    |   3   |     4   |    5   |   6  |     7   |    8    |    9    |
-        +=======+=========+=======+=========+========+======+=========+=========+=========+
-        | BODY7 |   BID   | LABEL | IPBODY7 | ACOORD | NSEG | IDMESH1 | IDMESH2 | IDMESH3 |
-        +-------+---------+-------+---------+--------+------+---------+---------+---------+
-        |       | IDMESH4 |  etc  |         |        |      |         |         |         |
-        +-------+---------+-------+---------+--------+------+---------+---------+---------+
-        | BODY7 |    4    |  BODY |    2    |    8   |   4  |    20   |    21   |    22   |
-        +-------+---------+-------+---------+--------+------+---------+---------+---------+
-        |       |    23   |       |         |        |      |         |         |         |
-        +-------+---------+-------+---------+--------+------+---------+---------+---------+
+        +---------+----+------+------+-------+------+------+-------+------+
+        |   1     |  2 |   3  |  4   |   5   |   6  |   7  |   8   |  9   |
+        +=========+====+======+======+=======+======+======+=======+======+
+        | PAFOIL7 | ID | ITAX | ITHR | ICAMR | RADR | ITHT | ICAMT | RADT |
+        +---------+----+------+------+-------+------+------+-------+------+
+        | PAFOIL7 |  1 | -201 |  202 |  203  |  0.1 |  211 |  212  |  0.1 |
+        +---------+----+------+------+-------+------+------+-------+------+
         """
-        asdf
+        raise NotImplementedError('PAFOIL7: convert_to_nastran')
 
-    def _get_nthetas(self, itypes, idys_ref2, idzs_ref2):
-        return self.segmesh_refs[0].nradial  # npoints
-        #nthetas = 17
-        #for itype, idy_ref, unused_idz_ref in zip(itypes, idys_ref2, idzs_ref2):
-            #if itype == 3:
-                #fractions = idy_ref.fractions
-                #nthetas = len(fractions)
-                #break
-        #return nthetas
 
-    def get_points(self):
-        """creates a 1D representation of the BODY7"""
-        p1 = self.cp_ref.transform_node_to_global(self.p1)
-        p2 = p1 + self.ascid_ref.transform_vector_to_global(np.array([self.x12, 0., 0.]))
-
-        #print("x12 = %s" % self.x12)
-        #print("pcaero[%s] = %s" % (self.eid, [p1,p2]))
-        return [p1, p2]
-
-    @property
-    def npanels(self):
-        nz = len(self.segmesh_refs)
-        segmesh = self.segmesh_refs[0]
-        thetas = self._get_thetas(segmesh.itypes, segmesh.idys_ref, segmesh.idzs_ref)
-        nthetas = len(thetas)
-        npanels = nz * (nthetas - 1)
-        return npanels
-
-    def get_points_elements_3d(self):
-        """
-        Gets the points/elements in 3d space as CQUAD4s
-        The idea is that this is used by the GUI to display CAERO panels.
-
-        TODO: doesn't support the aero coordinate system
-
-        """
-        #paero2 = self.pid_ref
-        xyz = []
-        element = []
-        npoints = 0
-        for segmesh in self.segmesh_refs:
-            #print(segmesh)
-            xyzi, elementi = self._get_points_elements_3di(segmesh)
-            xyz.append(xyzi)
-            element.append(elementi + npoints)
-            npoints += xyzi.shape[0]
-
-        xyzs = np.vstack(xyz)
-        elements = np.vstack(element)
-        assert xyzs is not None, str(self)
-        assert elements is not None, str(self)
-
-        return xyzs, elements
-
-    def _get_points_elements_3di(self, segmesh):
-        """
-        points (nchord, nspan) float ndarray; might be backwards???
-            the points
-        elements (nquads, 4) int ndarray
-            series of quad elements
-            nquads = (nchord-1) * (nspan-1)
-        """
-        return xyz, elements
-
-    def shift(self, dxyz):
-        """shifts the aero panel"""
-        self.p1 += dxyz
 
     def raw_fields(self):
         """
@@ -1675,16 +1602,6 @@ class BODY7(BaseCard):
             return self.pid_ref.pid
         return self.pid
 
-    def Lsb(self):  # AEFACT
-        if self.lsb_ref is not None:
-            return self.lsb_ref.sid
-        return self.lsb
-
-    def Lint(self):  # AEFACT
-        if self.lint_ref is not None:
-            return self.lint_ref.sid
-        return self.lint
-
     @property
     def nboxes(self):
         if self.nsb > 0:
@@ -1819,9 +1736,9 @@ class BODY7(BaseCard):
             yz_mean = []
 
 
-            thetas = self._get_thetas(itypes, idys_ref2, idzs_ref2)
-            for istation, itype, camber, yrad, zrad, idy_ref, idz_ref in zip(
-                count(), itypes, cambers, yrads, zrads, idys_ref2, idzs_ref2):
+            thetas = self._get_thetas()
+            for itype, camber, yrad, zrad, idy_ref, idz_ref in zip(
+                itypes, cambers, yrads, zrads, idys_ref2, idzs_ref2):
                 if itype == 1:
                     # Body of Revolution
                     # Xi, CAMi, YRi
@@ -1915,7 +1832,7 @@ class BODY7(BaseCard):
         paero2.validate()
         return caero2, paero2, aefact_xs, aefact_width, aefact_theta1, aefact_theta2
 
-    def _get_nthetas(self, itypes, idys_ref2, idzs_ref2):
+    def _get_nthetas(self):
         return self.segmesh_refs[0].nradial  # npoints
         #nthetas = 17
         #for itype, idy_ref, unused_idz_ref in zip(itypes, idys_ref2, idzs_ref2):
@@ -1925,8 +1842,8 @@ class BODY7(BaseCard):
                 #break
         #return nthetas
 
-    def _get_thetas(self, itypes, idys_ref2, idzs_ref2):
-        nthetas = self._get_nthetas(itypes, idys_ref2, idzs_ref2)
+    def _get_thetas(self):
+        nthetas = self._get_nthetas()
         thetas = np.radians(np.linspace(0., 360., nthetas))
         return thetas
 
@@ -1943,8 +1860,7 @@ class BODY7(BaseCard):
     def npanels(self):
         nz = len(self.segmesh_refs)
         segmesh = self.segmesh_refs[0]
-        thetas = self._get_thetas(segmesh.itypes, segmesh.idys_ref, segmesh.idzs_ref)
-        nthetas = len(thetas)
+        nthetas = self._get_nthetas()
         npanels = nz * (nthetas - 1)
         return npanels
 
@@ -2056,9 +1972,9 @@ class BODY7(BaseCard):
         #x12 = p2 - self.p1
         #self.x12 = x12[0]
 
-    def shift(self, dxyz):
-        """shifts the aero panel"""
-        self.p1 += dxyz
+    #def shift(self, dxyz):
+        #"""shifts the aero panel"""
+        #self.p1 += dxyz
 
     def raw_fields(self):
         """
@@ -2203,7 +2119,7 @@ class SEGMESH(BaseCard):
         for i, xi in enumerate(self.xs[1:]):
             if xi <= xi_old:
                 raise RuntimeError('xs=%s must be in ascending order\nx%i=%s x%i=%s (old)\n%s' % (
-                    xs, i+2, xi, i+1, xi_old, str(self)))
+                    self.xs, i+2, xi, i+1, xi_old, str(self)))
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -2262,22 +2178,6 @@ class SEGMESH(BaseCard):
             return self.pid_ref.pid
         return self.pid
 
-    def Lsb(self):  # AEFACT
-        if self.lsb_ref is not None:
-            return self.lsb_ref.sid
-        return self.lsb
-
-    def Lint(self):  # AEFACT
-        if self.lint_ref is not None:
-            return self.lint_ref.sid
-        return self.lint
-
-    @property
-    def nboxes(self):
-        if self.nsb > 0:
-            return self.nsb
-        return len(self.lsb_ref.fractions) # AEFACT
-
     def cross_reference(self, model):
         msg = ', which is required by SEGMESH eid=%s' % self.pid
         idys_ref = []
@@ -2312,141 +2212,6 @@ class SEGMESH(BaseCard):
         #self.cp_ref = None
         self.idys_ref = None
         self.idzs_ref = None
-
-    def get_points(self):
-        """creates a 1D representation of the CAERO2"""
-        p1 = self.cp_ref.transform_node_to_global(self.p1)
-        p2 = p1 + self.ascid_ref.transform_vector_to_global(np.array([self.x12, 0., 0.]))
-
-        #print("x12 = %s" % self.x12)
-        #print("pcaero[%s] = %s" % (self.eid, [p1,p2]))
-        return [p1, p2]
-
-    def get_points_elements_3d(self):
-        """
-        Gets the points/elements in 3d space as CQUAD4s
-        The idea is that this is used by the GUI to display CAERO panels.
-
-        TODO: doesn't support the aero coordinate system
-
-        """
-        paero2 = self.pid_ref
-
-        if self.nsb == 0:
-            xstation = self.lsb_ref.fractions
-            nx = len(xstation) - 1
-            #print('xstation = ', xstation)
-        else:
-            nx = self.nsb
-            station = np.linspace(0., nx, num=nx+1) # *dx?
-        assert nx > 0, 'nx=%s' % nx
-
-
-        #print('paero2 - pid=%s lrsb=%s lrib=%s' % (paero2.pid, paero2.lrsb, paero2.lrib))
-        if paero2.lrsb in [0, None]:
-            radii_slender = np.ones(nx + 1) * paero2.width
-        else:
-            radii_slender = paero2.lrsb_ref.fractions
-
-        # TODO: not suppported
-        if paero2.lrib in [0, None]:
-            unused_radii_interference = np.ones(nx + 1) * paero2.width
-        else:
-            #print('lrib = ', paero2.lrib)
-            unused_radii_interference = paero2.lrib_ref.fractions
-        radii = radii_slender
-
-        # TODO: not suppported
-        #theta_interference1 = paero2.theta1
-        #theta_interference2 = paero2.theta2
-
-        if self.nsb != 0:
-            p1, p2 = self.get_points()
-            L = p2 - p1
-            #print('L=%s nx=%s' % (L, nx))
-            dxyz = L / nx
-            #print('dxyz\n%s' % (dxyz))
-            dx, dy, dz = dxyz
-            xstation = station * dx
-            ystation = station * dy
-            zstation = station * dz
-        else:
-            p1, p2 = self.get_points()
-            L = p2 - p1
-            dxi = xstation.max() - xstation.min()
-
-            #print('L=%s nx=%s dxi=%s' % (L, nx, dxi))
-            xratio = xstation / dxi
-            #print('xstation/dxi=%s' % xratio)
-            dxyz = np.zeros((nx+1, 3))
-            for i, xr in enumerate(xratio):
-                dxyz[i, :] = xr * L
-            ystation = dxyz[:, 1]
-            zstation = dxyz[:, 2]
-
-        # I think this just lets you know what directions it can pivot in
-        # and therefore doesn't affect visualization
-        #assert paero2.orient == 'ZY', paero2.orient
-        aspect_ratio = paero2.AR
-
-        #Rs = []
-        assert len(radii) == (nx + 1), 'len(radii)=%s nx=%s' % (len(radii), nx)
-        if len(xstation) != (nx + 1):
-            msg = 'len(xstation)=%s nx=%s\nxstation=%s\n%s' % (
-                len(xstation), nx, xstation, str(self))
-            raise RuntimeError(msg)
-
-        xs = []
-        ys = []
-        zs = []
-        yzs = []
-        for i, xi, yi, zi, radius in zip(count(), xstation, ystation, zstation, radii):
-            #print('  station=%s xi=%.4f radius=%s' % (i, xi, radius))
-            yz = create_ellipse(aspect_ratio, radius)
-            yzs.append(yz)
-            try:
-                y = yz[:, 0] + yi
-                z = yz[:, 1] + zi
-            except ValueError:  # pragma: no cover
-                print('yz = %s' % yz)
-                print('yz.shape = %s' % str(yz.shape))
-                print('dy = %s' % dy)
-                print('dz = %s' % dz)
-                raise
-            ntheta = yz.shape[0]
-            x = np.ones(ntheta) * xi
-            xs.append(x)
-            ys.append(y)
-            zs.append(z)
-            #Rs.append(np.sqrt(y**2 + z**2))
-        #print('yz.shape=%s xs.shape=%s' % (str(np.array(yzs).shape), str(np.array(xs).shape)))
-        #xyz = np.hstack([yzs, xs])
-        xs = np.array(xs)
-        ys = np.array(ys)
-        zs = np.array(zs)
-        try:
-            xyz = np.vstack([
-                np.hstack(xs),
-                np.hstack(ys),
-                np.hstack(zs),
-            ]).T + p1
-        except:  # pragma: no cover
-            print('xs =', xs.shape)
-            print('ys =', ys.shape)
-            print('zs =', zs.shape)
-            raise
-
-        #R = np.hstack(Rs)
-        #print('xyz.shape =', xyz.shape)
-        #print('xyz =', xyz)
-        #print('R =', R)
-
-        ny = ntheta
-        elems = elements_from_quad(nx+1, ny)
-        #print('elems =\n', elems)
-        assert xyz is not None, str(self)
-        assert elems is not None, str(elems)
-        return xyz, elems
 
     #def set_points(self, points):
         #self.p1 = np.asarray(points[0])
@@ -2946,16 +2711,17 @@ class CAERO7(BaseCard):
         """
         The the location of the x_chord of the box along the centerline.
         """
-        if self.lchord != 0 or self.lspan != 0:
-            raise NotImplementedError()
-        ichord, ispan = self.get_box_index(box_id)
+        raise NotImplementedError('CAERO7: _get_box_x_chord_center')
+        #if self.lchord != 0 or self.lspan != 0:
+            #raise NotImplementedError()
+        #ichord, ispan = self.get_box_index(box_id)
 
-        le_vector = self.p4 - self.p1
-        delta_xyz = le_vector * ((ispan + 0.5)/self.nspan)
-        yz = delta_xyz[1:3] + self.p1[1:3]
-        chord = ((ispan + 0.5)/self.nspan) * (self.x43 - self.x12) + self.x12
-        x = (ichord + x_chord)/self.nchord * chord + self.p1[0] + delta_xyz[0]
-        return np.array([x, yz[0], yz[1]])
+        #le_vector = self.p4 - self.p1
+        #delta_xyz = le_vector * ((ispan + 0.5)/self.nspan)
+        #yz = delta_xyz[1:3] + self.p1[1:3]
+        #chord = ((ispan + 0.5)/self.nspan) * (self.x43 - self.x12) + self.x12
+        #x = (ichord + x_chord)/self.nchord * chord + self.p1[0] + delta_xyz[0]
+        #return np.array([x, yz[0], yz[1]])
 
     def _box_id_error(self, box_id):
         """

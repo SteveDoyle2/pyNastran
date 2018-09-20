@@ -51,9 +51,7 @@ def delete_bad_shells(model,
 def get_node_map(model):
     """gets an nid->inid mapper"""
     nid_map = {}
-    for i, (nid, node) in enumerate(sorted(model.nodes.items())):
-        #xyz = node.get_position()
-        #xyz_cid0[i, :] = xyz
+    for i, nid in enumerate(sorted(model.nodes.keys())):
         nid_map[nid] = i
     return nid_map
 
@@ -119,13 +117,26 @@ def get_bad_shells(model, xyz_cid0, nid_map,
             v43 = p4 - p3
             v14 = p1 - p4
 
-            v42 = p4 - p2
-            v31 = p3 - p1
+            #aspect_ratio = max(p12, p23, p34, p14) / max(p12, p23, p34, p14)
+            lengths = np.linalg.norm([v21, v32, v43, v14], axis=1)
+            #assert len(lengths) == 3, lengths
+            length_min = lengths.min()
+            if length_min == 0.0:
+                eids_failed.append(eid)
+                model.log.debug('eid=%s failed length_min check; length_min=%s' % (eid, length_min))
+                continue
+
+            aspect_ratio = lengths.max() / length_min
+            if aspect_ratio > max_aspect_ratio:
+                eids_failed.append(eid)
+                model.log.debug('eid=%s failed aspect_ratio check; AR=%.2f' % (eid, aspect_ratio))
+                continue
+
             p12 = (p1 + p2) / 2.
             p23 = (p2 + p3) / 2.
             p34 = (p3 + p4) / 2.
             p14 = (p4 + p1) / 2.
-            normal = np.cross(v31, v42)
+            normal = np.cross(p3 - p1, p4 - p2)  # v42 x v31
             #    e3
             # 4-------3
             # |       |
@@ -141,21 +152,6 @@ def get_bad_shells(model, xyz_cid0, nid_map,
             if skew > max_skew:
                 eids_failed.append(eid)
                 model.log.debug('eid=%s failed max_skew check; skew=%.2f' % (eid, np.degrees(skew)))
-                continue
-
-            #aspect_ratio = max(p12, p23, p34, p14) / max(p12, p23, p34, p14)
-            lengths = np.linalg.norm([v21, v32, v43, v14], axis=1)
-            #assert len(lengths) == 3, lengths
-            length_min = lengths.min()
-            if length_min == 0.0:
-                eids_failed.append(eid)
-                model.log.debug('eid=%s failed length_min check; length_min=%s' % (eid, length_min))
-                continue
-
-            aspect_ratio = lengths.max() / length_min
-            if aspect_ratio > max_aspect_ratio:
-                eids_failed.append(eid)
-                model.log.debug('eid=%s failed aspect_ratio check; AR=%.2f' % (eid, aspect_ratio))
                 continue
 
             area1 = 0.5 * np.linalg.norm(np.cross(-v14, v21)) # v41 x v21
@@ -224,10 +220,11 @@ def get_bad_shells(model, xyz_cid0, nid_map,
                 model.log.debug('eid=%s failed max_theta check; theta=%.2f' % (
                     eid, np.degrees(theta_maxi)))
                 continue
-            #print('eid=%s theta_min=%-5.2f theta_max=%-5.2f skew=%-5.2f AR=%-5.2f taper_ratioi=%.2f' % (
-                #eid,
-                #np.degrees(theta_mini), np.degrees(theta_maxi),
-                #np.degrees(skew), aspect_ratio, taper_ratioi))
+            #print('eid=%s theta_min=%-5.2f theta_max=%-5.2f '
+                  #'skew=%-5.2f AR=%-5.2f taper_ratioi=%.2f' % (
+                      #eid,
+                      #np.degrees(theta_mini), np.degrees(theta_maxi),
+                      #np.degrees(skew), aspect_ratio, taper_ratioi))
 
         elif element.type == 'CTRIA3':
             node_ids = element.node_ids
@@ -251,6 +248,33 @@ def get_bad_shells(model, xyz_cid0, nid_map,
                 eids_failed.append(eid)
                 model.log.debug('eid=%s failed length_min check; length_min=%s' % (
                     eid, length_min))
+                continue
+
+            #assert len(lengths) == 3, lengths
+            aspect_ratio = lengths.max() / length_min
+            if aspect_ratio > max_aspect_ratio:
+                eids_failed.append(eid)
+                model.log.debug('eid=%s failed aspect_ratio check; AR=%s' % (eid, aspect_ratio))
+                continue
+
+            cos_theta1 = np.dot(v21, -v13) / (np.linalg.norm(v21) * np.linalg.norm(v13))
+            cos_theta2 = np.dot(v32, -v21) / (np.linalg.norm(v32) * np.linalg.norm(v21))
+            cos_theta3 = np.dot(v13, -v32) / (np.linalg.norm(v13) * np.linalg.norm(v32))
+
+            theta = np.arccos(np.clip(
+                [cos_theta1, cos_theta2, cos_theta3], -1., 1.))
+            theta_mini = theta.min()
+            theta_maxi = theta.max()
+
+            if theta_mini < min_theta_tri:
+                eids_failed.append(eid)
+                model.log.debug('eid=%s failed min_theta check; theta=%s' % (
+                    eid, np.degrees(theta_mini)))
+                continue
+            if theta_maxi > max_theta:
+                eids_failed.append(eid)
+                model.log.debug('eid=%s failed max_theta check; theta=%s' % (
+                    eid, np.degrees(theta_maxi)))
                 continue
 
             #     3
@@ -286,30 +310,8 @@ def get_bad_shells(model, xyz_cid0, nid_map,
                 model.log.debug('eid=%s failed max_skew check; skew=%s' % (eid, np.degrees(skew)))
                 continue
 
-            #assert len(lengths) == 3, lengths
-            aspect_ratio = lengths.max() / length_min
-            if aspect_ratio > max_aspect_ratio:
-                eids_failed.append(eid)
-                model.log.debug('eid=%s failed aspect_ratio check; AR=%s' % (eid, aspect_ratio))
-                continue
-
-            cos_theta1 = np.dot(v21, -v13) / (np.linalg.norm(v21) * np.linalg.norm(v13))
-            cos_theta2 = np.dot(v32, -v21) / (np.linalg.norm(v32) * np.linalg.norm(v21))
-            cos_theta3 = np.dot(v13, -v32) / (np.linalg.norm(v13) * np.linalg.norm(v32))
-
-            theta = np.arccos(np.clip(
-                [cos_theta1, cos_theta2, cos_theta3], -1., 1.))
-            theta_mini = theta.min()
-            theta_maxi = theta.max()
-
-            if theta_mini < min_theta_tri:
-                eids_failed.append(eid)
-                model.log.debug('eid=%s failed min_theta check; theta=%s' % (
-                    eid, np.degrees(theta_mini)))
-                continue
-            if theta_maxi > max_theta:
-                eids_failed.append(eid)
-                model.log.debug('eid=%s failed max_theta check; theta=%s' % (
-                    eid, np.degrees(theta_maxi)))
-                continue
+            #print('eid=%s theta_min=%-5.2f theta_max=%-5.2f skew=%-5.2f AR=%-5.2f' % (
+                #eid,
+                #np.degrees(theta_mini), np.degrees(theta_maxi),
+                #np.degrees(skew), aspect_ratio))
     return eids_failed

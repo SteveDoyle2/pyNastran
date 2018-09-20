@@ -132,6 +132,7 @@ class SafeXrefMesh(XrefMesh):
 
         for trim in self.trims.values():
             trim.safe_cross_reference(self)
+        self._show_safe_xref_errors('trims', xref_errors)
 
         xref_errors = defaultdict(list)
         for csschd in self.csschds.values():
@@ -158,7 +159,7 @@ class SafeXrefMesh(XrefMesh):
         xref_errors = defaultdict(list)
         for aesurf in self.aesurf.values():
             aesurf.safe_cross_reference(self, xref_errors)
-        self._show_safe_xref_errors('caeros', xref_errors)
+        self._show_safe_xref_errors('aesurf', xref_errors)
 
         for aesurfs in self.aesurfs.values():
             aesurfs.safe_cross_reference(self)

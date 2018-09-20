@@ -23,7 +23,7 @@ from pyNastran.bdf.cards.aero.aero import (
     SPLINE1, SPLINE2 #, SPLINE3, SPLINE4, SPLINE5
 )
 from pyNastran.bdf.cards.aero.dynamic_loads import AERO, FLFACT, FLUTTER, GUST, MKAERO1, MKAERO2
-from pyNastran.bdf.cards.aero.static_loads import AESTAT, AEROS, CSSCHD, TRIM, DIVERG
+from pyNastran.bdf.cards.aero.static_loads import AESTAT, AEROS, CSSCHD, TRIM, TRIM2, DIVERG
 from pyNastran.bdf.cards.test.utils import save_load_deck
 
 ROOTPATH = pyNastran.__path__[0]
@@ -1856,33 +1856,48 @@ class TestAero(unittest.TestCase):
         q = 100.
         labels = ['ALPHA', 'ALPHA']
         uxs = [10., 20.]
-        trim = TRIM(sid, mach, q, labels, uxs)
+        trim1 = TRIM(sid, mach, q, labels, uxs)
+        trim2 = TRIM2(sid+1, mach, q, labels, uxs)
         with self.assertRaises(RuntimeError):
-            trim.validate()
+            trim1.validate()
+        with self.assertRaises(RuntimeError):
+            trim2.validate()
 
         labels = ['ALPHA']
         uxs = [10., 20.]
-        trim = TRIM(sid, mach, q, labels, uxs)
+        trim1 = TRIM(sid, mach, q, labels, uxs)
+        trim2 = TRIM2(sid, mach, q, labels, uxs)
         with self.assertRaises(RuntimeError):
-            trim.validate()
+            trim1.validate()
+        with self.assertRaises(RuntimeError):
+            trim2.validate()
 
         labels = ['ALPHA', 'BETA']
         uxs = [10., 20.]
-        trim = TRIM(sid, mach, q, labels, uxs)
-        trim.validate()
-        trim.write_card()
+        trim1 = TRIM(sid, mach, q, labels, uxs)
+        trim1.validate()
+        trim1.write_card()
+        trim2 = TRIM2(sid, mach, q, labels, uxs)
+        trim2.validate()
+        trim2.write_card()
 
         labels = ['ALPHA']
         uxs = [10.]
-        trim = TRIM(sid, mach, q, labels, uxs, aeqr=3.0, comment='')
-        trim.validate()
-        trim.write_card()
+        trim1 = TRIM(sid, mach, q, labels, uxs, aeqr=3.0, comment='')
+        trim1.validate()
+        trim1.write_card()
+        trim2 = TRIM2(sid, mach, q, labels, uxs, aeqr=3.0, comment='')
+        trim2.validate()
+        trim2.write_card()
 
         labels = ['ALPHA', 'BETA']
         uxs = [10., 20.]
-        trim = TRIM(sid, mach, q, labels, uxs, aeqr=3.0, comment='')
-        trim.validate()
-        trim.write_card()
+        trim1 = TRIM(sid, mach, q, labels, uxs, aeqr=3.0, comment='')
+        trim1.validate()
+        trim1.write_card()
+        trim2 = TRIM(sid, mach, q, labels, uxs, aeqr=3.0, comment='')
+        trim2.validate()
+        trim2.write_card()
 
         model.add_card(['TRIM', sid, mach, q, labels[0], uxs[0]], 'TRIM', comment='$ trim')
         model.validate()
@@ -1896,8 +1911,11 @@ class TestAero(unittest.TestCase):
         q = 100.
         labels = ['NZ']
         uxs = [2.5]
-        trim = model.add_trim(sid, mach, q, labels, uxs, aeqr=0.0, comment='')
-        trim.validate()
+        trim1 = model.add_trim(sid, mach, q, labels, uxs, aeqr=0.0, comment='')
+        trim1.validate()
+
+        trim2 = model.add_trim(sid+1, mach, q, labels, uxs, aeqr=0.0, trim_type=2, comment='')
+        trim2.validate()
 
     def test_trim_03(self):
         """checks the TRIM card with a 2.5g pullup"""
@@ -1907,13 +1925,14 @@ class TestAero(unittest.TestCase):
         q = 100.
         labels = ['URDD3', 'PITCH']
         uxs = [2.5, 0.0]
-        trim1 = model.add_trim(sid, mach, q, labels, uxs, aeqr=0.0, comment='')
+        trim1a = model.add_trim(sid, mach, q, labels, uxs, aeqr=0.0, trim_type=1, comment='') # 75
+        trim2a = model.add_trim(sid+1, mach, q, labels, uxs, aeqr=0.0, trim_type=2, comment='') # 76
 
-        sid = 76
         labels = ['URDD3', 'URDD5', 'PITCH']
         uxs = [2.5, 0.0, 0.0]
         # good
-        trim2 = model.add_trim(sid, mach, q, labels, uxs, aeqr=0.0, comment='trim')
+        trim1b = model.add_trim(sid+2, mach, q, labels, uxs, aeqr=0.0, trim_type=1, comment='trim') # 77
+        trim2b = model.add_trim(sid+3, mach, q, labels, uxs, aeqr=0.0, trim_type=2, comment='trim') # 78
 
         model.add_aestat(1, 'URDD3', comment='aestat')
         model.add_aestat(2, 'URDD5', comment='aestat')
@@ -1950,10 +1969,14 @@ class TestAero(unittest.TestCase):
 
         # why doesn't this work?
         with self.assertRaises(RuntimeError):
-            trim1.verify_trim(model.suport, model.suport1, model.aestats, model.aeparams,
-                              model.aelinks, model.aesurf, xref=True)
-        trim2.verify_trim(model.suport, model.suport1, model.aestats, model.aeparams,
-                          model.aelinks, model.aesurf, xref=True)
+            trim1a.verify_trim(model.suport, model.suport1, model.aestats, model.aeparams,
+                               model.aelinks, model.aesurf, xref=True)
+            trim2a.verify_trim(model.suport, model.suport1, model.aestats, model.aeparams,
+                               model.aelinks, model.aesurf, xref=True)
+        trim1b.verify_trim(model.suport, model.suport1, model.aestats, model.aeparams,
+                           model.aelinks, model.aesurf, xref=True)
+        trim2b.verify_trim(model.suport, model.suport1, model.aestats, model.aeparams,
+                           model.aelinks, model.aesurf, xref=True)
         model.write_bdf('trim.bdf')
         model2 = read_bdf('trim.bdf', debug=None)
         model2._verify_bdf(xref=True)
@@ -2238,8 +2261,8 @@ def get_zona_model():
         'TRIM, 100,  101,     42., ALPHA,  5., 0., 0.,  0.,\n'
         '$CGZ, WEIGHT, Ixx, Ixy, Iyy, Ixz, Iyz, Izz\n'
         ',0.,  1e4,    1e3, 1e3, 1e5, 1e3, 1e3, 1e4\n'
-        '$TRUE/G, NX,   NY,   NZ,  P, Q, R, \n'
-        ', CAT,   NX1,  NY1,  NZ1, P, Q, R, \n'
+        '$TRUE/G, NX,     NY,  NZ,  P,       Q,   R, \n'
+        ', TRUE,  FREE, NONE,  32., FREE, NONE, 42., \n'
         '$var, value\n'
         ',17,  1.0,\n'
         '$\n'
