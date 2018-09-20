@@ -25,6 +25,7 @@ class TestUsm3d(unittest.TestCase):
         model = read_usm3d(base_filename, log=log)
         basename = 'cat'
         model.write_usm3d(basename)
+        os.remove('cat.cogsg')
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

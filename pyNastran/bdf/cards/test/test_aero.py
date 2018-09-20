@@ -2163,6 +2163,16 @@ class TestAero(unittest.TestCase):
             model.zona.convert_to_nastran()
 
     def test_zona_2(self):
+        """zona explicit test"""
+        bdf_filename = os.path.join(MODEL_PATH, 'aero', 'ztran.bdf')
+        model = read_bdf(bdf_filename, xref=False, debug=True)
+        model.safe_cross_reference()
+        save_load_deck(model, xref='safe',
+                       run_renumber=False, run_convert=False, run_remove_unused=False,
+                       run_save_load=False)
+        model.zona.convert_to_nastran()
+
+    def test_zona_3(self):
         """totally fake zona model"""
         bdf_file = get_zona_model()
 

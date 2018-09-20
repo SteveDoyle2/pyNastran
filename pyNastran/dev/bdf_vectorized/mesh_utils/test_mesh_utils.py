@@ -91,8 +91,15 @@ class TestMeshUtilsVectorized(unittest.TestCase):
             bdf_file.write(msg)
 
         model = read_bdf(bdf_filename, xref=True)
-        eids_to_delete = get_bad_shells(model, max_theta=180.,
-                                        max_skew=1000., max_aspect_ratio=1000.)
+        max_theta = 180.
+        max_skew = 1000.
+        max_aspect_ratio = 1000.
+        eids_to_delete = get_bad_shells(
+            model,
+            max_theta=max_theta,
+            max_skew=max_skew,
+            max_aspect_ratio=max_aspect_ratio,
+            max_taper_ratio=4.0)
         assert eids_to_delete == [100], eids_to_delete
         os.remove(bdf_filename)
 

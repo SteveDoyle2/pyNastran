@@ -448,6 +448,7 @@ class TestNastranGUI(unittest.TestCase):
         with open('rotate.py', 'w') as pyfile:
             pyfile.write('self.rotate(20.)\n')
         test.on_run_script('rotate.py')
+        os.remove('rotate.py')
 
     def test_gui_screenshot(self):
         bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_chan.bdf')

@@ -36,14 +36,15 @@ class TestOpenFoamGUI(unittest.TestCase):
         #test.load_openfoam_geometry_faces(geometry_filename)
 
         model = read_block_mesh(geometry_filename, log=log)
-        model.write_block_mesh(block_mesh_name_out='blockMeshDict.out',
-                               make_symmetry=False)
-        model.write_block_mesh(block_mesh_name_out='blockMeshDict.out',
-                               make_symmetry=True)
+        block_mesh_name_out = 'blockMeshDict.out'
+        model.write_block_mesh(
+            block_mesh_name_out=block_mesh_name_out, make_symmetry=False)
+        model.write_block_mesh(
+            block_mesh_name_out=block_mesh_name_out, make_symmetry=True)
         model.write_bdf(bdf_filename, model.nodes, model.hexas)
 
-        block_mesh_name_out = 'blockMeshDict.out'
         mirror_block_mesh(geometry_filename, block_mesh_name_out)
+        os.remove(block_mesh_name_out)
         #nodes, hexas, quads, inames, bcs
 
     def test_openfoam_2(self):
@@ -67,6 +68,8 @@ class TestOpenFoamGUI(unittest.TestCase):
 
         faces.read_face_file(face_filename, ifaces_to_read=[1])
         faces.read_face_file(face_filename, ifaces_to_read=[0, 1])
+        os.remove(point_filename)
+        os.remove(face_filename)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

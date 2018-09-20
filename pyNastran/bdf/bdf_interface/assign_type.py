@@ -910,6 +910,52 @@ def string_or_blank(card, ifield, fieldname, default=None):
         return str(svalue.upper())
     return default
 
+def loose_string_or_blank(card, ifield, fieldname, default=None):
+    """
+    Parameters
+    ----------
+    card : BDFCard()
+        BDF card as a list
+    ifield : int
+        field number
+    fieldname : str
+        name of field
+    default : str, None
+        the default value for the field (default=None)
+
+    Returns
+    -------
+    value : varies
+        the value of the field
+    """
+    svalue = card.field(ifield)
+    if svalue is None:
+        return default
+    elif isinstance(svalue, string_types):
+        svalue = svalue.strip().upper()
+        if ' ' in svalue:
+            raise SyntaxError('%s = %r (field #%s) on card must be a string without a space.\n'
+                              'card=%s' % (fieldname, svalue, ifield, card))
+        if svalue[0].isdigit() or '+' in svalue or '-' in svalue[0]:
+            chars = ''.join(list(set('%s+-' % svalue[0] if svalue[0].isdigit() else '')))
+            raise SyntaxError('%s = %r (field #%s) on card must not have the '
+                              'following characters %s\n'
+                              'card=%s' % (fieldname, svalue, ifield, chars, card))
+    else:
+        dtype = _get_dtype(svalue)
+        raise SyntaxError('%s = %r (field #%s) on card must be a string (not %s).\n'
+                          'card=%s' % (fieldname, svalue, ifield, dtype, card))
+
+    svalue = svalue.strip()
+    if svalue.isdigit() or '+' in svalue or '-' in svalue[0]:
+        # integer or float
+        dtype = _get_dtype(svalue)
+        raise SyntaxError('%s = %r (field #%s) on card must be a string or blank (not %s).\n'
+                          'card=%s' % (fieldname, svalue, ifield, dtype, card))
+
+    if svalue:  # string
+        return str(svalue.upper())
+    return default
 # int                    - done
 # int/blank              - done
 # int/float              - done

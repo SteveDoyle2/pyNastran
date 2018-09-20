@@ -673,7 +673,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         for key, aelinks in sorted(self.aelinks.items()):
             for aelink in aelinks:
                 aelink.validate()
-        for key, aeparam in sortedself.aeparams.items()):
+        for key, aeparam in sorted(self.aeparams.items()):
             aeparam.validate()
         for key, aesurf in sorted(self.aesurf.items()):
             aesurf.validate()

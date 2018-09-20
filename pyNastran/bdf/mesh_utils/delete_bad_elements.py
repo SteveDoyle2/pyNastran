@@ -10,7 +10,9 @@ from __future__ import print_function
 import numpy as np
 
 
-def delete_bad_shells(model, max_theta=175., max_skew=70., max_aspect_ratio=100.,
+def delete_bad_shells(model,
+                      min_theta=0.1, max_theta=175.,
+                      max_skew=70., max_aspect_ratio=100.,
                       max_taper_ratio=4.0):
     """
     Removes bad CQUAD4/CTRIA3 elements
@@ -19,16 +21,24 @@ def delete_bad_shells(model, max_theta=175., max_skew=70., max_aspect_ratio=100.
     ----------
     model : BDF ()
         this should be equivalenced
+    min_theta : float; default=0.1
+        the maximum interior angle (degrees)
+    max_theta : float; default=175.
+        the maximum interior angle (degrees)
+    max_skew : float; default=70.
+        the maximum skew angle (degrees)
+    max_aspect_ratio : float; default=100.
+        the max aspect ratio
+    taper_ratio : float; default=4.0
+        the taper ratio; applies to CQUAD4s only
 
     """
     xyz_cid0 = model.get_xyz_in_coord(cid=0, fdtype='float32')
-    nid_map = {}
-    for i, (nid, node) in enumerate(sorted(model.nodes.items())):
-        #xyz = node.get_position()
-        #xyz_cid0[i, :] = xyz
-        nid_map[nid] = i
-    eids_to_delete = get_bad_shells(model, xyz_cid0, nid_map, max_theta=max_theta,
-                                    max_skew=max_skew, max_aspect_ratio=max_aspect_ratio,
+    nid_map = get_node_map(model)
+    eids_to_delete = get_bad_shells(model, xyz_cid0, nid_map,
+                                    min_theta=min_theta, max_theta=max_theta,
+                                    max_skew=max_skew,
+                                    max_aspect_ratio=max_aspect_ratio,
                                     max_taper_ratio=max_taper_ratio)
 
     for eid in eids_to_delete:
@@ -38,8 +48,17 @@ def delete_bad_shells(model, max_theta=175., max_skew=70., max_aspect_ratio=100.
     model.validate()
     return model
 
+def get_node_map(model):
+    """gets an nid->inid mapper"""
+    nid_map = {}
+    for i, (nid, node) in enumerate(sorted(model.nodes.items())):
+        #xyz = node.get_position()
+        #xyz_cid0[i, :] = xyz
+        nid_map[nid] = i
+    return nid_map
 
-def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70.,
+def get_bad_shells(model, xyz_cid0, nid_map,
+                   min_theta=0.1, max_theta=175., max_skew=70.,
                    max_aspect_ratio=100., max_taper_ratio=4.0):
     """
     Get the bad shell elements
@@ -55,10 +74,12 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70.,
             the node id
         index : int
             the index of the node id in xyz_cid0
+    min_theta : float; default=0.1
+        the maximum interior angle (degrees)
     max_theta : float; default=175.
-        the maximum interior angle
+        the maximum interior angle (degrees)
     max_skew : float; default=70.
-        the maximum skew angle
+        the maximum skew angle (degrees)
     max_aspect_ratio : float; default=100.
         the max aspect ratio
     taper_ratio : float; default=4.0
@@ -72,8 +93,8 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70.,
     shells with a edge length=0.0 are automatically added
 
     """
-    min_theta_quad = 0.1
-    min_theta_tri = 0.1
+    min_theta_quad = min_theta
+    min_theta_tri = min_theta
     min_theta_quad = np.radians(min_theta_quad)
     min_theta_tri = np.radians(min_theta_tri)
     max_theta = np.radians(max_theta)
@@ -119,7 +140,7 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70.,
             skew = np.pi / 2. - np.abs(np.arccos(np.clip([cos_skew1, cos_skew2], -1., 1.))).min()
             if skew > max_skew:
                 eids_failed.append(eid)
-                model.log.debug('eid=%s failed max_skew check; skew=%s' % (eid, np.degrees(skew)))
+                model.log.debug('eid=%s failed max_skew check; skew=%.2f' % (eid, np.degrees(skew)))
                 continue
 
             #aspect_ratio = max(p12, p23, p34, p14) / max(p12, p23, p34, p14)
@@ -134,7 +155,7 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70.,
             aspect_ratio = lengths.max() / length_min
             if aspect_ratio > max_aspect_ratio:
                 eids_failed.append(eid)
-                model.log.debug('eid=%s failed aspect_ratio check; AR=%s' % (eid, aspect_ratio))
+                model.log.debug('eid=%s failed aspect_ratio check; AR=%.2f' % (eid, aspect_ratio))
                 continue
 
             area1 = 0.5 * np.linalg.norm(np.cross(-v14, v21)) # v41 x v21
@@ -146,7 +167,7 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70.,
                             abs(area3 - aavg) + abs(area4 - aavg)) / aavg
             if taper_ratioi > max_taper_ratio:
                 eids_failed.append(eid)
-                model.log.debug('eid=%s failed taper_ratio check; AR=%s' % (eid, taper_ratioi))
+                model.log.debug('eid=%s failed taper_ratio check; taper=%.2f' % (eid, taper_ratioi))
                 continue
 
             #if 0:
@@ -195,14 +216,18 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70.,
 
             if theta_mini < min_theta_quad:
                 eids_failed.append(eid)
-                model.log.debug('eid=%s failed min_theta check; theta=%s' % (
+                model.log.debug('eid=%s failed min_theta check; theta=%.2f' % (
                     eid, np.degrees(theta_mini)))
                 continue
             if theta_maxi > max_theta:
                 eids_failed.append(eid)
-                model.log.debug('eid=%s failed max_theta check; theta=%s' % (
+                model.log.debug('eid=%s failed max_theta check; theta=%.2f' % (
                     eid, np.degrees(theta_maxi)))
                 continue
+            #print('eid=%s theta_min=%-5.2f theta_max=%-5.2f skew=%-5.2f AR=%-5.2f taper_ratioi=%.2f' % (
+                #eid,
+                #np.degrees(theta_mini), np.degrees(theta_maxi),
+                #np.degrees(skew), aspect_ratio, taper_ratioi))
 
         elif element.type == 'CTRIA3':
             node_ids = element.node_ids
@@ -224,7 +249,8 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70.,
             length_min = lengths.min()
             if length_min == 0.0:
                 eids_failed.append(eid)
-                model.log.debug('eid=%s failed length_min check; length_min=%s' % (eid, length_min))
+                model.log.debug('eid=%s failed length_min check; length_min=%s' % (
+                    eid, length_min))
                 continue
 
             #     3

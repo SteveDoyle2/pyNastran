@@ -18,7 +18,7 @@ from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, string,
-    string_or_blank, double_or_string, blank,
+    loose_string_or_blank, string_or_blank, double_or_string, blank,
 )
 from pyNastran.bdf.cards.aero.aero import (Spline, CAERO1, CAERO2, PAERO2, # PAERO1,
                                            SPLINE1, AESURF, AELIST, # SPLINE2, SPLINE3,
@@ -33,11 +33,14 @@ class ZONA(object):
     def __init__(self, model):
         self.model = model
         self.caero_to_name_map = {}
+
         #: store PANLST1,PANLST2,PANLST3
         self.panlsts = {}
         self.mkaeroz = {}
         self.trimvar = {}
         self.trimlnk = {}
+        #: store PAFOIL7/PAFOIL8
+        self.pafoil = {}
 
     def clear(self):
         """clears out the ZONA object"""
@@ -45,9 +48,12 @@ class ZONA(object):
         self.mkaeroz = {}
         self.trimvar = {}
         self.trimlnk = {}
+        self.pafoil = {}
         #self.aeroz = {}
 
     def verify(self, xref):
+        if self.model.nastran_format != 'zona':
+            return
         for panlst in self.panlsts.values():
             panlst._verify(xref)
         for mkaeroz in self.mkaeroz.values():
@@ -56,8 +62,12 @@ class ZONA(object):
             trimvar._verify(xref)
         for trimlnk in self.trimlnk.values():
             trimlnk._verify(xref)
+        for pafoil in self.pafoil.values():
+            pafoil._verify(xref)
 
     def validate(self):
+        if self.model.nastran_format != 'zona':
+            return
         for panlst in self.panlsts.values():
             panlst.validate()
         for mkaeroz in self.mkaeroz.values():
@@ -66,6 +76,11 @@ class ZONA(object):
             trimvar.validate()
         for trimlnk in self.trimlnk.values():
             trimlnk.validate()
+        for pafoil in self.pafoil.values():
+            pafoil.validate()
+
+    def PAFOIL(self, pid, msg=''):
+        return self.pafoil[pid]
 
     def update_for_zona(self):
         card_parser = self.model._card_parser
@@ -78,6 +93,7 @@ class ZONA(object):
         card_parser['SPLINE3'] = (SPLINE3_ZONA, self.model._add_spline_object)
         card_parser['PANLST1'] = (PANLST1, self._add_panlst_object)
         card_parser['PANLST3'] = (PANLST3, self._add_panlst_object)
+        card_parser['PAFOIL7'] = (PAFOIL7, self._add_pafoil_object)
         card_parser['MKAEROZ'] = (MKAEROZ, self._add_mkaeroz_object)
         card_parser['SEGMESH'] = (SEGMESH, self.model._add_paero_object)
         card_parser['BODY7'] = (BODY7, self.model._add_caero_object)
@@ -85,8 +101,9 @@ class ZONA(object):
         card_parser['TRIMVAR'] = (TRIMVAR, self._add_trimvar_object)
         card_parser['TRIMLNK'] = (TRIMLNK, self._add_trimlnk_object)
         cards = [
-            'CAERO7', 'AEROZ', 'AESURFZ', 'PANLST1', 'PANLST3', 'SEGMESH',
-            'BODY7', 'ACOORD', 'MKAEROZ', 'TRIMVAR', 'TRIMLNK']
+            'CAERO7', 'AEROZ', 'AESURFZ', 'PANLST1', 'PANLST3', 'PAFOIL7',
+            'SEGMESH', 'BODY7', 'ACOORD', 'MKAEROZ',
+            'TRIMVAR', 'TRIMLNK']
         self.model.cards_to_read.update(set(cards))
 
     def _add_panlst_object(self, panlst):
@@ -97,6 +114,15 @@ class ZONA(object):
         key = panlst.eid
         self.panlsts[key] = panlst
         self.model._type_to_id_map[panlst.type].append(key)
+
+    def _add_pafoil_object(self, pafoil):
+        # type: (Any) -> None
+        """adds an PAFOIL7/PAFOIL8 object"""
+        assert pafoil.pid not in self.pafoil
+        assert pafoil.pid > 0
+        key = pafoil.pid
+        self.pafoil[key] = pafoil
+        self.model._type_to_id_map[pafoil.type].append(key)
 
     def _add_aesurfz_object(self, aesurf):
         # type: (Any) -> None
@@ -144,30 +170,36 @@ class ZONA(object):
             trimvar.cross_reference(self.model)
         for trimlnk in self.trimlnk.values():
             trimlnk.cross_reference(self.model)
+        for unused_id, pafoil in self.pafoil.items():
+            pafoil.cross_reference(self.model)
         #for aeroz in self.aeroz.values():
             #aeroz.cross_reference(self.model)
 
         for caero in self.model.caeros.values():
+            #print('%s uses CAERO eid=%s' % (caero.label, caero.eid))
             self.caero_to_name_map[caero.label] = caero.eid
 
     def safe_cross_reference(self):
         self.cross_reference()
 
     def write_bdf(self, bdf_file, size=8, is_double=False):
+        #if self.model.nastran_format != 'zona':
+            #return
         for unused_id, panlst in self.panlsts.items():
             bdf_file.write(panlst.write_card(size=size, is_double=is_double))
-
         for unused_id, mkaeroz in self.mkaeroz.items():
             bdf_file.write(mkaeroz.write_card(size=size, is_double=is_double))
-
         for unused_id, trimvar in self.trimvar.items():
             bdf_file.write(trimvar.write_card(size=size, is_double=is_double))
-
         for unused_id, trimlnk in self.trimlnk.items():
             bdf_file.write(trimlnk.write_card(size=size, is_double=is_double))
+        for unused_id, pafoil in self.pafoil.items():
+            bdf_file.write(pafoil.write_card(size=size, is_double=is_double))
 
     def convert_to_nastran(self, save=True):
         """Converts a ZONA model to Nastran"""
+        if self.model.nastran_format != 'zona':
+            return
         caeros, caero2s, make_paero1 = self._convert_caeros()
         splines = self._convert_splines()
         aesurf, aelists = self._convert_aesurf_aelist()
@@ -273,7 +305,6 @@ class ZONA(object):
         for trim_id, trim in sorted(model.trims.items()):
             trim_new = trim.convert_to_nastran(model)
             trims[trim_id] = trim_new
-            #print(trim_new)
         return trims
 
     def _convert_trimlnk(self):
@@ -283,7 +314,6 @@ class ZONA(object):
         aelinks = {}
         for trim_id, trimlnk in sorted(self.trimlnk.items()):
             aelink = trimlnk.convert_to_nastran(model)
-            #print(aelink.get_stats())
             aelinks[trim_id] = aelink
         return aelinks
 
@@ -813,13 +843,13 @@ class AEROZ(Aero):
 
         #rcsid = integer_or_blank(card, 2, 'rcsid', 0)
 
-        cref = double(card, 6, 'cRef')
-        bref = double(card, 7, 'bRef')
-        sref = double(card, 8, 'Sref')
+        cref = double_or_blank(card, 6, 'cRef', 1.)
+        bref = double_or_blank(card, 7, 'bRef', 1.)
+        sref = double_or_blank(card, 8, 'Sref', 1.)
 
-        xref = double(card, 9, 'xRef')
-        yref = double(card, 10, 'yRef')
-        zref = double(card, 11, 'zref')
+        xref = double_or_blank(card, 9, 'xRef', 0.)
+        yref = double_or_blank(card, 10, 'yRef', 0.)
+        zref = double_or_blank(card, 11, 'zref', 0.)
         xyz_ref = [xref, yref, zref]
 
         assert len(card) <= 12, 'len(AEROZ card) = %i\ncard=%s' % (len(card), card)
@@ -1022,8 +1052,8 @@ class MKAEROZ(BaseCard):
         method = integer(card, 3, 'METHOD')
         flt_id = integer(card, 4, 'IDFLT')
         save = string_or_blank(card, 5, 'SAVE')
-        filename_a = string_or_blank(card, 6, 'FILENAMEA', '')
-        filename_b = string_or_blank(card, 7, 'FILENAMEB', '')
+        filename_a = loose_string_or_blank(card, 6, 'FILENAMEA', '')
+        filename_b = loose_string_or_blank(card, 7, 'FILENAMEB', '')
         #print(filename_a, filename_b)
         filename = (filename_a + filename_b).rstrip()
         print_flag = integer_or_blank(card, 8, 'PRINT_FLAG', 0)
@@ -1236,6 +1266,306 @@ class PANLST3(Spline):
     def raw_fields(self):
         list_fields = ['PANLST3', self.eid] + self.panel_groups
         return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
+
+class PAFOIL7(BaseCard):
+    """
+    Defines an aerodynamic body macroelement of a body-like component.
+    Similar to Nastran's CAERO2.
+
+    +---------+----+------+------+-------+------+------+-------+------+
+    |   1     |  2 |   3  |  4   |   5   |   6  |   7  |   8   |  9   |
+    +=========+====+======+======+=======+======+======+=======+======+
+    | PAFOIL7 | ID | ITAX | ITHR | ICAMR | RADR | ITHT | ICAMT | RADT |
+    +---------+----+------+------+-------+------+------+-------+------+
+    | PAFOIL7 |  1 | -201 |  202 |  203  |  0.1 |  211 |  212  |  0.1 |
+    +---------+----+------+------+-------+------+------+-------+------+
+    """
+    type = 'PAFOIL7'
+
+    def __init__(self, pid, i_axial,
+                 i_thickness_root, i_camber_root, le_radius_root,
+                 i_thickness_tip, i_camber_tip, le_radius_tip,
+                 comment=''):
+        """
+        Defines a BODY7 card, which defines a slender body
+        (e.g., fuselage/wingtip tank).
+
+        Parameters
+        ----------
+        pid : int
+            PAFOIL7 identification number.
+        i_axial : str
+            Identification number of an AEFACT bulk data card used to
+            specify the xcoordinate locations, in percentage of the
+            chord length, where the thickness and camber are specified.
+            ITAX can be a negative number (where ABS (ITAX) = AEFACT
+            bulk data card identification number) to request linear
+            interpolation.
+        i_thickness_root / i_thickness_tip : int
+            Identification number of an AEFACT bulk data card used to
+            specify the half thickness of the airfoil at the wing
+            root/tip.
+        i_camber : int; default=0
+            Identification number of an AEFACT bulk data card used to
+            specify the camber of the airfoil at the wing root.
+        le_radius_root / le_radius_root: float
+            Leading edge radius at the root/tip normalized by the
+            root/tip chord.
+        i_thickness_tip : int
+            Identification number of an AEFACT bulk data card used to
+            specify the half thickness at the wing tip.
+        comment : str; default=''
+            a comment for the card
+
+        """
+        BaseCard.__init__(self)
+
+        if comment:
+            self.comment = comment
+
+        self.pid = pid
+        self.i_axial = i_axial
+
+        self.i_thickness_root = i_thickness_root
+        self.i_camber_root = i_camber_root
+        self.le_radius_root = le_radius_root
+
+        self.i_camber_tip = i_camber_tip
+        self.le_radius_tip = le_radius_tip
+        self.i_thickness_tip = i_thickness_tip
+
+        self.i_thickness_root_ref = None
+        self.i_camber_root_ref = None
+        self.i_thickness_tip_ref = None
+        self.i_camber_tip_ref = None
+
+    #@property
+    #def cp(self):
+        #return self.acoord
+    #@property
+    #def cp_ref(self):
+        #return self.acoord_ref
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a PAFOIL7 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+
+        pid = integer(card, 1, 'pid')
+        i_axial = integer(card, 2, 'i_axial')
+
+        i_thickness_root = integer(card, 3, 'i_thickness_root')
+        i_camber_root = integer(card, 4, 'i_camber_root')
+        le_radius_root = double_or_blank(card, 5, 'le_radius_root')
+
+        i_thickness_tip = integer(card, 6, 'i_thickness_tip')
+        i_camber_tip = integer(card, 7, 'i_camber_tip')
+        le_radius_tip = double_or_blank(card, 8, 'le_radius_tip')
+
+        assert len(card) <= 9, 'len(PAFOIL7 card) = %i\ncard=%s' % (len(card), card)
+        return PAFOIL7(pid, i_axial,
+                       i_thickness_root, i_camber_root, le_radius_root,
+                       i_thickness_tip, i_camber_tip, le_radius_tip,
+                       comment=comment)
+
+    #def ACoord(self):
+        #if self.acoord_ref is not None:
+            #return self.acoord_ref.cid
+        #return self.acoord
+
+    #def Pid(self):
+        #if self.pid_ref is not None:
+            #return self.pid_ref.pid
+        #return self.pid
+
+    #def Lsb(self):  # AEFACT
+        #if self.lsb_ref is not None:
+            #return self.lsb_ref.sid
+        #return self.lsb
+
+    #def Lint(self):  # AEFACT
+        #if self.lint_ref is not None:
+            #return self.lint_ref.sid
+        #return self.lint
+
+    @property
+    def nboxes(self):
+        if self.nsb > 0:
+            return self.nsb
+        return len(self.lsb_ref.fractions) # AEFACT
+
+    def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        msg = ', which is required by PAFOIL7 pid=%s' % self.pid
+        self.i_axial_ref = model.AEFact(abs(self.i_axial), msg=msg)
+
+        self.i_thickness_root_ref = model.AEFact(self.i_thickness_root, msg=msg)
+        self.i_camber_root_ref = model.AEFact(self.i_camber_root, msg=msg)
+
+        self.i_thickness_tip_ref = model.AEFact(self.i_thickness_tip, msg=msg)
+        self.i_camber_tip_ref = model.AEFact(self.i_camber_tip, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        self.cross_reference(model)
+
+    def uncross_reference(self):
+        self.i_thickness_root_ref = None
+        self.i_camber_root_ref = None
+        self.i_thickness_tip_ref = None
+        self.i_camber_tip_ref = None
+
+    def convert_to_nastran(self, model):
+        """
+        +--------+-----+-----+----+-----+------+-----+------+------+
+        |    1   |  2  |  3  |  4 |  5  |   6  |   7 |   8  |  9   |
+        +========+=====+=====+====+=====+======+=====+======+======+
+        | CAERO2 | EID | PID | CP | NSB | NINT | LSB | LINT | IGID |
+        +--------+-----+-----+----+-----+------+-----+------+------+
+        |        | X1  |  Y1 | Z1 | X12 |      |     |      |      |
+        +--------+-----+-----+----+-----+------+-----+------+------+
+
+        +-------+---------+-------+---------+--------+------+---------+---------+---------+
+        |   1   |    2    |   3   |     4   |    5   |   6  |     7   |    8    |    9    |
+        +=======+=========+=======+=========+========+======+=========+=========+=========+
+        | BODY7 |   BID   | LABEL | IPBODY7 | ACOORD | NSEG | IDMESH1 | IDMESH2 | IDMESH3 |
+        +-------+---------+-------+---------+--------+------+---------+---------+---------+
+        |       | IDMESH4 |  etc  |         |        |      |         |         |         |
+        +-------+---------+-------+---------+--------+------+---------+---------+---------+
+        | BODY7 |    4    |  BODY |    2    |    8   |   4  |    20   |    21   |    22   |
+        +-------+---------+-------+---------+--------+------+---------+---------+---------+
+        |       |    23   |       |         |        |      |         |         |         |
+        +-------+---------+-------+---------+--------+------+---------+---------+---------+
+        """
+        asdf
+
+    def _get_nthetas(self, itypes, idys_ref2, idzs_ref2):
+        return self.segmesh_refs[0].nradial  # npoints
+        #nthetas = 17
+        #for itype, idy_ref, unused_idz_ref in zip(itypes, idys_ref2, idzs_ref2):
+            #if itype == 3:
+                #fractions = idy_ref.fractions
+                #nthetas = len(fractions)
+                #break
+        #return nthetas
+
+    def get_points(self):
+        """creates a 1D representation of the BODY7"""
+        p1 = self.cp_ref.transform_node_to_global(self.p1)
+        p2 = p1 + self.ascid_ref.transform_vector_to_global(np.array([self.x12, 0., 0.]))
+
+        #print("x12 = %s" % self.x12)
+        #print("pcaero[%s] = %s" % (self.eid, [p1,p2]))
+        return [p1, p2]
+
+    @property
+    def npanels(self):
+        nz = len(self.segmesh_refs)
+        segmesh = self.segmesh_refs[0]
+        thetas = self._get_thetas(segmesh.itypes, segmesh.idys_ref, segmesh.idzs_ref)
+        nthetas = len(thetas)
+        npanels = nz * (nthetas - 1)
+        return npanels
+
+    def get_points_elements_3d(self):
+        """
+        Gets the points/elements in 3d space as CQUAD4s
+        The idea is that this is used by the GUI to display CAERO panels.
+
+        TODO: doesn't support the aero coordinate system
+
+        """
+        #paero2 = self.pid_ref
+        xyz = []
+        element = []
+        npoints = 0
+        for segmesh in self.segmesh_refs:
+            #print(segmesh)
+            xyzi, elementi = self._get_points_elements_3di(segmesh)
+            xyz.append(xyzi)
+            element.append(elementi + npoints)
+            npoints += xyzi.shape[0]
+
+        xyzs = np.vstack(xyz)
+        elements = np.vstack(element)
+        assert xyzs is not None, str(self)
+        assert elements is not None, str(self)
+
+        return xyzs, elements
+
+    def _get_points_elements_3di(self, segmesh):
+        """
+        points (nchord, nspan) float ndarray; might be backwards???
+            the points
+        elements (nquads, 4) int ndarray
+            series of quad elements
+            nquads = (nchord-1) * (nspan-1)
+        """
+        return xyz, elements
+
+    def shift(self, dxyz):
+        """shifts the aero panel"""
+        self.p1 += dxyz
+
+    def raw_fields(self):
+        """
+        Gets the fields in their unmodified form
+
+        Returns
+        -------
+        fields : list
+            The fields that define the card
+
+        """
+        #pid = integer(card, 1, 'pid')
+        #i_axial = integer(card, 2, 'i_axial')
+
+        #i_thickness_root = integer(card, 3, 'i_thickness_root')
+        #i_camber_root = integer(card, 4, 'i_camber_root')
+        #le_radius_root = double_or_blank(card, 5, 'le_radius_root')
+
+        #i_thickness_tip = integer(card, 6, 'i_thickness_tip')
+        #le_radius_tip = integer(card, 7, 'le_radius_tip')
+        #i_camber_tip = double_or_blank(card, 8, 'i_camber_tip')
+
+        list_fields = [
+            'PAFOIL7', self.pid, self.i_axial,
+            self.i_thickness_root, self.i_camber_root, self.le_radius_root,
+            self.i_thickness_tip, self.i_camber_tip, self.le_radius_tip,
+        ]
+        return list_fields
+
+    def repr_fields(self):
+        """
+        Gets the fields in their simplified form
+
+        Returns
+        -------
+        fields : list
+            The fields that define the card
+
+        """
+        return self.raw_fields()
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
@@ -2465,6 +2795,9 @@ class CAERO7(BaseCard):
         if self.nspan == 0:
             assert isinstance(self.lspan, integer_types), self.lspan
             self.lspan_ref = model.AEFact(self.lspan, msg)
+
+        if self.p_airfoil:
+            self.pafoil_ref = model.zona.PAFOIL(self.p_airfoil, msg)
         self._init_ids()
 
     def safe_cross_reference(self, model, xref_errors):
@@ -2836,7 +3169,11 @@ class TRIM_ZONA(BaseCard):
         pqr : List[float]
             [roll_rate, pitch_rate, yaw_rate]
         loadset : int
-            ???
+            Identification number of a SET1 or SETADD bulk data card that
+            specifies a set of identification numbers of TRIMFNC or
+            TRIMADD bulk data card.  All values of the trim functions
+            defined by the TRIMFNC or TRIMADD bulk data card are computed
+            and printed out.
         labels : List[str]
             names of the fixed variables
         uxs : List[float]
@@ -2867,6 +3204,17 @@ class TRIM_ZONA(BaseCard):
         #: The magnitude of the aerodynamic extra point degree-of-freedom.
         #: (Real)
         self.uxs = uxs
+
+    def validate(self):
+        assert self.true_g in ['TRUE', 'G'], 'true_g=%r' % self.true_g
+
+        assert isinstance(self.nxyz[0], float) or self.nxyz[0] in ['FREE', 'NONE'], 'nx=%r' % self.nxyz[0]
+        assert isinstance(self.nxyz[1], float) or self.nxyz[1] in ['FREE', 'NONE'], 'ny=%r' % self.nxyz[1]
+        assert isinstance(self.nxyz[2], float) or self.nxyz[2] in ['FREE', 'NONE'], 'nz=%r' % self.nxyz[2]
+
+        assert isinstance(self.pqr[0], float) or self.pqr[0] in ['FREE', 'NONE'], 'p=%r' % self.pqr[0]
+        assert isinstance(self.pqr[1], float) or self.pqr[1] in ['FREE', 'NONE'], 'q=%r' % self.pqr[1]
+        assert isinstance(self.pqr[2], float) or self.pqr[2] in ['FREE', 'NONE'], 'r=%r' % self.pqr[2]
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -2913,7 +3261,7 @@ class TRIM_ZONA(BaseCard):
         q = double_or_string(card, 22, 'Q')
         r = double_or_string(card, 23, 'R')
         pqr = [p, q, r]
-        loadset = blank(card, 24, 'loadset')
+        loadset = integer_or_blank(card, 24, 'loadset')
 
         labels = []
         uxs = []
@@ -3338,7 +3686,7 @@ class SPLINE1_ZONA(Spline):
 
         """
         eid = integer(card, 1, 'eid')
-        model = blank(card, 2, 'model')
+        model = string_or_blank(card, 2, 'model')
         cp = blank(card, 3, 'cp')
 
         panlst = integer(card, 4, 'panlst/setk')
