@@ -925,17 +925,6 @@ class AEROZ(Aero):
         self.acsid_ref = None
         self.rcsid_ref = None
 
-    def update(self, maps):
-        """
-        maps = {
-            'coord' : cid_map,
-        }
-
-        """
-        cid_map = maps['coord']
-        self.acsid = cid_map[self.acsid]
-        self.rcsid = cid_map[self.rcsid]
-
     def convert_to_zona(self, unused_model):
         #$       ACSID XZSYM FLIP FMMUNIT FMLUNIT REFC   REFB   REFS
         #$+ABC   REFX  REFY  REFZ
@@ -3205,17 +3194,6 @@ class TRIM_ZONA(BaseCard):
         #: (Real)
         self.uxs = uxs
 
-    def validate(self):
-        assert self.true_g in ['TRUE', 'G'], 'true_g=%r' % self.true_g
-
-        assert isinstance(self.nxyz[0], float) or self.nxyz[0] in ['FREE', 'NONE'], 'nx=%r' % self.nxyz[0]
-        assert isinstance(self.nxyz[1], float) or self.nxyz[1] in ['FREE', 'NONE'], 'ny=%r' % self.nxyz[1]
-        assert isinstance(self.nxyz[2], float) or self.nxyz[2] in ['FREE', 'NONE'], 'nz=%r' % self.nxyz[2]
-
-        assert isinstance(self.pqr[0], float) or self.pqr[0] in ['FREE', 'NONE'], 'p=%r' % self.pqr[0]
-        assert isinstance(self.pqr[1], float) or self.pqr[1] in ['FREE', 'NONE'], 'q=%r' % self.pqr[1]
-        assert isinstance(self.pqr[2], float) or self.pqr[2] in ['FREE', 'NONE'], 'r=%r' % self.pqr[2]
-
     @classmethod
     def add_card(cls, card, comment=''):
         """
@@ -3283,6 +3261,16 @@ class TRIM_ZONA(BaseCard):
                          labels, uxs, comment=comment)
 
     def validate(self):
+        assert self.true_g in ['TRUE', 'G'], 'true_g=%r' % self.true_g
+
+        assert isinstance(self.nxyz[0], float) or self.nxyz[0] in ['FREE', 'NONE'], 'nx=%r' % self.nxyz[0]
+        assert isinstance(self.nxyz[1], float) or self.nxyz[1] in ['FREE', 'NONE'], 'ny=%r' % self.nxyz[1]
+        assert isinstance(self.nxyz[2], float) or self.nxyz[2] in ['FREE', 'NONE'], 'nz=%r' % self.nxyz[2]
+
+        assert isinstance(self.pqr[0], float) or self.pqr[0] in ['FREE', 'NONE'], 'p=%r' % self.pqr[0]
+        assert isinstance(self.pqr[1], float) or self.pqr[1] in ['FREE', 'NONE'], 'q=%r' % self.pqr[1]
+        assert isinstance(self.pqr[2], float) or self.pqr[2] in ['FREE', 'NONE'], 'r=%r' % self.pqr[2]
+
         assert self.q > 0.0, 'q=%s\n%s' % (self.q, str(self))
         if len(set(self.labels)) != len(self.labels):
             msg = 'not all labels are unique; labels=%s' % str(self.labels)

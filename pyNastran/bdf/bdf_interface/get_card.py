@@ -38,7 +38,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from copy import deepcopy
 from collections import defaultdict
 from typing import List, Dict, Set, Optional, Any
-from six import string_types, iteritems, iterkeys, itervalues
+from six import string_types
 
 import numpy as np
 
@@ -124,7 +124,7 @@ class GetCard(GetMethods):
                 out_dict[key] = []
         if combine:
             out_list = []
-            for key, value in sorted(iteritems(out_dict)):
+            for key, value in sorted(out_dict.items()):
                 out_list += value
             return out_list
         return out_dict
@@ -132,7 +132,7 @@ class GetCard(GetMethods):
     def _reset_type_to_slot_map(self):
         """resets self._type_to_slot_map"""
         rslot_map = defaultdict(list)
-        for dict_name, card_names in iteritems(self._slot_to_type_map):
+        for dict_name, card_names in self._slot_to_type_map.items():
             #print('card_names=%s dict_name=%s' % (card_names, dict_name))
             card_name0 = card_names[0]
             if card_name0 in ['DTABLE', 'GRDSET', 'SESUP', 'DOPTPRM', 'MONPNT1', 'SUPORT',
@@ -141,7 +141,7 @@ class GetCard(GetMethods):
             else:
                 adict = getattr(self, dict_name)
                 if isinstance(adict, dict):
-                    for key, card in iteritems(adict):
+                    for key, card in adict.items():
                         if isinstance(card, list):
                             alist = card
                             for cardi in alist:
@@ -179,7 +179,7 @@ class GetCard(GetMethods):
     def reset_rslot_map(self):
         """helper method for get_rslot_map"""
         rslot_map = {}
-        for key, values in iteritems(self._slot_to_type_map):
+        for key, values in self._slot_to_type_map.items():
             for value in values:
                 rslot_map[value] = key
         self._type_to_slot_map = rslot_map
@@ -1540,7 +1540,7 @@ class GetCard(GetMethods):
             print(node_ids)
             raise
         rbes = []
-        for eid, rigid_element in iteritems(self.rigid_elements):
+        for eid, rigid_element in self.rigid_elements.items():
             if rigid_element.type in ['RBE3', 'RBE2', 'RBE1', 'RBAR', 'RSPLINE', 'RROD']:
                 independent_nodes = set(rigid_element.independent_nodes)
                 dependent_nodes = set(rigid_element.dependent_nodes)
@@ -1714,7 +1714,7 @@ class GetCard(GetMethods):
         nid_to_eid_map = defaultdict(set)
 
         if eids is None:
-            eids = iterkeys(self.elements)
+            eids = self.elements.keys()
 
         types_to_consider = []
         if consider_0d:
@@ -1851,7 +1851,7 @@ class GetCard(GetMethods):
         """
         etype_to_eids_pids_nids = self.get_elements_properties_nodes_by_element_type(dtype=dtype)
         output = {}
-        for etype, (eids, pids, nids) in iteritems(etype_to_eids_pids_nids):
+        for etype, (eids, pids, nids) in etype_to_eids_pids_nids.items():
             upids = np.unique(pids)
             for upid in upids:
                 ipid = np.where(pids == upid)[0]
@@ -2046,14 +2046,14 @@ class GetCard(GetMethods):
         ]
 
         if pids is None:
-            pids = iterkeys(self.properties)
+            pids = self.properties.keys()
         elif isinstance(pids, integer_types):
             pids = [int]
         else:
             assert isinstance(pids, (list, tuple)), 'pids=%s type=%s' % (pids, type(pids))
 
         eids2 = []
-        for eid, element in sorted(iteritems(self.elements)):
+        for eid, element in sorted(self.elements.items()):
             if element.type in etypes_no_pids:
                 pid = 0
             else:
@@ -2179,7 +2179,7 @@ class GetCard(GetMethods):
                         print(element)
                         raise
                 etype_to_nids_map[etype] = node_ids
-            for key, value in iteritems(pid_to_eids_ieids_map):
+            for key, value in pid_to_eids_ieids_map.items():
                 pid_to_eids_ieids_map[key] = np.array(value, dtype=idtype)
         except OverflowError:
             assert idtype == 'int32', 'idtype=%r while overflowing...' % idtype
@@ -2245,7 +2245,7 @@ class GetCard(GetMethods):
             #'CHBDYG' : -108,
         #}
         elements_without_properties = ['CONROD', 'CELAS2', 'CELAS4', 'CDAMP2', 'CDAMP4', 'CHBDYG']
-        for eid, element in iteritems(self.elements):
+        for eid, element in self.elements.items():
             try:
                 pid = element.Pid()
             except AttributeError:
@@ -2280,7 +2280,7 @@ class GetCard(GetMethods):
             for nid in sorted(self.spoints):  # SPOINTs
                 nid_to_eids_map[nid] = []
 
-        for (eid, element) in iteritems(self.elements):  # load the mapper
+        for (eid, element) in self.elements.items():  # load the mapper
             try:
                 # not supported for 0-D and 1-D elements
                 nids = element.node_ids
@@ -2310,7 +2310,7 @@ class GetCard(GetMethods):
         for nid in self.epoints:
             nid_to_elements_map[nid] = []
 
-        for element in itervalues(self.elements):  # load the mapper
+        for element in self.elements.values():  # load the mapper
             try:
                 # not supported for 0-D and 1-D elements
                 nids = element.node_ids
@@ -2632,7 +2632,7 @@ class GetCard(GetMethods):
             self.log.warning("get_spcs doesn't consider:\n%s" % warnings.rstrip('\n'))
 
         if consider_nodes:
-            for nid, node in iteritems(self.nodes):
+            for nid, node in self.nodes.items():
                 if node.ps:
                     nids.append(nid)
                     comps.append(node.ps)

@@ -2201,8 +2201,8 @@ def get_zona_model():
         'BEGIN BULK\n'
         #'$       acsid, rcsid, cref, bref, sref, symxz, symxy\n'
         #'AEROZ, 10,     0,     1.,   10.,  100., YES\n'
-        '$       ACSID XZSYM FLIP FMMUNIT FMLUNIT REFC   REFB   REFS\n'
-        '$+ABC   REFX  REFY  REFZ\n'
+        '$AEROZ  ACSID XZSYM FLIP FMMUNIT FMLUNIT REFC   REFB   REFS\n'
+        '$       REFX  REFY  REFZ\n'
         'AEROZ,  0,    YES,  NO,  SLIN,   IN,      22.73,59.394,1175.8\n'
         ',       59.53,0.0,  0.0\n'
 
@@ -2245,6 +2245,7 @@ def get_zona_model():
         '$\n'
         'TRIMVAR,17,VAR\n'
         '$\n'
+        '$trimlnk,id,sym, ?,  ?\n'
         'TRIMLNK,10,SYM, -1, 17\n'
         'ACOORD, 2, 0.,0.,0., 1.0,0.\n'
         '$       ID,    MODEL, CP, PANLST, SETG, DZ, EPS\n'
