@@ -2570,6 +2570,9 @@ class MAT3D(Material):
         assert len(card) <= 17, 'len(MAT3D card) = %i\ncard=%s' % (len(card), card)
         return MAT3D(mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho, comment=comment)
 
+    def uncross_reference(self):
+        pass
+
     def _verify(self, xref):
         """
         Verifies all methods for this object work

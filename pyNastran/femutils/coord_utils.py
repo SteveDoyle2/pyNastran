@@ -79,7 +79,7 @@ def shape4(xy):
     n = np.hstack([n1, n2, n3, n4]) / 4
     return np.atleast_2d(n)
 
-def tet_coord(p1, p2, p3, p4):
+def tet_coord(p1, p2, p3, p4):  # pragma: no cover
     """doesn't compute the elemental for a tet element"""
     ## R vector joins midpoints of edges G1-G2 and G3-G4.
     p12 = (p1 + p2) / 2.
@@ -108,7 +108,7 @@ def tet_coord(p1, p2, p3, p4):
     # ???
     return r, s, t, origin
 
-def shape8(xyz):
+def shape8(xyz):  # pragma: no cover
     """
     xyz : (n, 3)
     """
@@ -160,7 +160,7 @@ def shape4_to_xyz(p1234, n4):
     #assert xyz.shape == (nquads, 3), 'shape=%s' % str(p1234.shape)
     return p
 
-def hexa_coord(xyz1, xyz2, xyz3, xyz4):
+def hexa_coord(xyz1, xyz2, xyz3, xyz4):  # pragma: no cover
     """doesn't computes the elemental for a hexa element"""
     xyz1 = np.atleast_2d(xyz1)
     xyz2 = np.atleast_2d(xyz2)

@@ -12,6 +12,20 @@ class TestElements(unittest.TestCase):
     def test_cbush_01(self):
         """tests a CBUSH"""
         model = BDF(debug=False)
+        eid = 9
+        nodes = [10, 11]
+        plotel = model.add_plotel(eid, nodes, comment='plotel')
+        plotel.write_card(size=8, is_double=False)
+        plotel.write_card(size=16, is_double=False)
+        plotel.write_card(size=16, is_double=True)
+        model.cross_reference()
+        model.uncross_reference()
+        model.safe_cross_reference()
+        save_load_deck(model)
+
+    def test_cbush_01(self):
+        """tests a CBUSH"""
+        model = BDF(debug=False)
         lines = ['cbush,101,102,1,,,,,0']
         card = model.process_card(lines)
         card = BDFCard(card)

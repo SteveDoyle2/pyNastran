@@ -18,6 +18,18 @@ class TestNodes(unittest.TestCase):
         point.write_card(size=16, is_double=True)
         model.validate()
 
+    def test_epoint(self):
+        """tests EPOINT"""
+        model = BDF(debug=False)
+        card_lines = ['EPOINT', 10]
+        model.add_card(card_lines, 'EPOINT', comment='point')
+        epoint = model.epoints[10]
+        epoint.raw_fields()
+        epoint.write_card(size=8)
+        epoint.write_card(size=16, is_double=False)
+        epoint.write_card(size=16, is_double=True)
+        model.validate()
+
     def test_seqgp(self):
         """tests SEQGP"""
         model = BDF(debug=True)

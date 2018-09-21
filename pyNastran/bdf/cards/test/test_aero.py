@@ -1971,8 +1971,10 @@ class TestAero(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             trim1a.verify_trim(model.suport, model.suport1, model.aestats, model.aeparams,
                                model.aelinks, model.aesurf, xref=True)
+        with self.assertRaises(RuntimeError):
             trim2a.verify_trim(model.suport, model.suport1, model.aestats, model.aeparams,
                                model.aelinks, model.aesurf, xref=True)
+
         trim1b.verify_trim(model.suport, model.suport1, model.aestats, model.aeparams,
                            model.aelinks, model.aesurf, xref=True)
         trim2b.verify_trim(model.suport, model.suport1, model.aestats, model.aeparams,

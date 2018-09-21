@@ -3594,8 +3594,9 @@ class AddCards(AddMethods):
             type of load that's applied
             valid_types = {FX, FY, FZ, FXE, FYE, FZE,
                            MX, MY, MZ, MXE, MYE, MZE}
-        scale : float
-            local pressure scaling factor
+        scale : str
+            Determines scale factor for X1, X2.
+            {LE, FR, LEPR, FRPR}
         x1 / x2 : float / float
             the starting/end position for the load application
             the default for x2 is x1

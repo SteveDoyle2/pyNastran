@@ -84,8 +84,10 @@ class TestSolids(unittest.TestCase):
             ['GRID', 25, 0, 1., 0., 2., 0,],
             ['GRID', 26, 0, 1., 1., 2., 0,],
             ['CPENTA', 9, pid, 21, 22, 23, 24, 25, 26],
+            #['CPENTA',19, pid+1, 21, 22, 23, 24, 25, 26],
 
             # static
+            #['PIHEX', pid+1, mid],
             ['PSOLID', pid, mid, 0],
             ['MAT1', mid, 1.0, 2.0, 3.0, rho]
         ]
@@ -183,6 +185,8 @@ class TestSolids(unittest.TestCase):
 
             # Solids
             ['CHEXA', 7, pid, 11, 12, 13, 14, 15, 16, 17, 18],
+            ['CIHEX1', 17, pid+1, 11, 12, 13, 14, 15, 16, 17, 18],
+            ['CIHEX2', 18, pid+1, 11, 12, 13, 14, 15, 16, 17, 18],
             ['CTETRA', 8, pid, 11, 12, 13, 15],
 
             # Solid Nodes
@@ -196,6 +200,7 @@ class TestSolids(unittest.TestCase):
 
             # static
             ['PSOLID', pid, mid, 0],
+            ['PIHEX', pid+1, mid, 0],
             ['MAT1', mid, 1.0, 2.0, 3.0, rho],
             ['MATS1', mid, None, 'PLASTIC', 0.0, 1, 1, 100000., ],
         ]

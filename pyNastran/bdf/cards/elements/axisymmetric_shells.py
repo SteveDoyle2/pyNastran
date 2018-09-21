@@ -885,7 +885,7 @@ class CQUADX(AxisymmetricQuad):
             integer_or_blank(card, 11, 'n9')
         ]
         theta_mcid = integer_double_or_blank(card, 12, 'theta/mcid', 0.)
-        assert len(card) <= 12, 'len(CQUADX card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 13, 'len(CQUADX card) = %i\ncard=%s' % (len(card), card)
         return CQUADX(eid, pid, nids, theta_mcid=theta_mcid, comment=comment)
 
     def cross_reference(self, model):

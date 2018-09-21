@@ -234,7 +234,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
             for eid in ids:
                 elem = model.plotels[eid]
                 nids_used.update(elem.node_ids)
-        elif card_type in ['PSOLID', 'PLSOLID']:
+        elif card_type in ['PSOLID', 'PLSOLID', 'PIHEX']:
             for pid in ids:
                 prop = model.properties[pid]
                 mids_used.add(prop.Mid())

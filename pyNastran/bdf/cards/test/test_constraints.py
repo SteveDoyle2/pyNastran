@@ -215,6 +215,7 @@ class TestConstraints(unittest.TestCase):
         model.add_grid(3, [0., 0., 0.])
         model.add_grid(4, [0., 0., 0.])
         model.cross_reference()
+        check_mpc_spc(model)
 
     def test_spcadd(self):
         """tests SPCADD"""
@@ -257,6 +258,7 @@ class TestConstraints(unittest.TestCase):
         model.add_grid(2, [0., 0., 0.])
         model.add_grid(3, [0., 0., 0.])
         model.add_grid(4, [0., 0., 0.])
+        check_mpc_spc(model)
 
     def test_spcoff(self):
         """tests SPCOFF/SPCOFF1"""
@@ -327,6 +329,7 @@ class TestConstraints(unittest.TestCase):
         model.uncross_reference()
         model.safe_cross_reference()
         str(gmspc)
+        check_mpc_spc(model)
 
     def test_spcax(self):
         """tests SPCAX"""
@@ -350,6 +353,7 @@ class TestConstraints(unittest.TestCase):
         model.uncross_reference()
         model.safe_cross_reference()
         str(spcax)
+        check_mpc_spc(model)
 
     def check_card(self, msg_expected, msg_actual):
         if isinstance(msg_expected, tuple):
@@ -364,6 +368,20 @@ class TestConstraints(unittest.TestCase):
             msg += '\nExpected Card =\n%s\n' % '\n'.join(msg_expected_lines)
             assert actual == expected, msg
 
+def check_mpc_spc(model):
+    """simple MPC/SPC checks"""
+    mpc_ids = list(model.mpcs.keys()) + list(model.mpcadds.keys())
+    spc_ids = list(model.spcs.keys()) + list(model.spcadds.keys())
+    #node_ids = []
+    #for nid in rbe.independent_nodes + rbe.dependent_nodes:
+        #node_ids.append(nid)
+
+    for mpc_id in mpc_ids:
+        mpcs1 = model.get_reduced_mpcs(mpc_id, consider_mpcadd=True, stop_on_failure=True)
+        mpcs2 = model.get_mpcs(mpc_id, stop_on_failure=True)
+    for spc_id in spc_ids:
+        spcs1 = model.get_reduced_spcs(spc_id, consider_spcadd=True, stop_on_failure=True)
+        spcs2 = model.get_spcs(spc_id, consider_nodes=False, stop_on_failure=True)
 
 
 if __name__ == '__main__':  # pragma: no cover

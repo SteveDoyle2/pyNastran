@@ -516,6 +516,39 @@ class TestBars(unittest.TestCase):
         assert pbarl.MassPerLength() == 21.0, pbarl.MassPerLength()
         assert pbarl2.MassPerLength() == 21.0, pbarl2.MassPerLength()
 
+        loadcase_id = 10
+        eid = 11
+        load_type = 'FZ'
+        x1 = 0.
+        x2 = None
+        p1 = 10.
+        scale = 'FR'
+        model.add_pload1(loadcase_id, eid, load_type, scale, x1, p1,
+                         x2=x2, p2=None, comment='pload1')
+
+        scale = 'LE'
+        model.add_pload1(loadcase_id, eid, load_type, scale, x1, p1,
+                         x2=x2, p2=None, comment='')
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [0., 1., 0.])
+        x = None
+        g0 = 3
+        model.add_cbar(eid, pid, [1, 2], x, g0)
+        model.cross_reference()
+
+        p0 = 1
+        eids = None
+        nids = None
+        force1, moment1 = model.sum_forces_moments(p0, loadcase_id, include_grav=False, xyz_cid0=None)
+        force2, moment2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False, xyz_cid0=None)
+        #print(force1, force2)
+        assert np.allclose(force1, force2), force1
+        assert np.allclose(moment1, moment2), moment1
+        save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
+                       run_convert=True, run_renumber=True, run_mirror=True,
+                       run_save_load=True)
+
     def test_baror(self):
         """tests a BAROR"""
         model = BDF(debug=False)

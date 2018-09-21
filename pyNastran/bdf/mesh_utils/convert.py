@@ -145,7 +145,7 @@ def _convert_elements(model, xyz_scale, mass_scale, weight_scale):
 
     tri_shells = ['CTRIA3', 'CTRIA6', 'CTRIAR']
     quad_shells = [
-        'CQUAD4', 'CQUAD8', 'CQUADX', 'CQUADR']
+        'CQUAD4', 'CQUAD8', 'CQUADR']
     spring_elements = ['CELAS2', 'CELAS4']
     damper_elements = ['CDAMP2', 'CDAMP4']
 
@@ -194,6 +194,8 @@ def _convert_elements(model, xyz_scale, mass_scale, weight_scale):
                     elem.T4 *= xyz_scale
             # nsm
             #elem.nsm *= nsm_scale
+        elif elem_type in ['CQUADX']:
+            pass
 
         elif elem_type == 'CONROD':
             elem.A *= area_scale # area
@@ -251,12 +253,12 @@ def _convert_properties(model, xyz_scale, mass_scale, weight_scale):
     model.log.debug('damping_scale = %g' % damping_scale)
     model.log.debug('stress_scale = %g\n' % stress_scale)
 
-    skip_properties = [
-        'PSOLID', 'PLSOLID', 'PLPLANE',
+    skip_properties = (
+        'PSOLID', 'PLSOLID', 'PLPLANE', 'PIHEX',
 
         # TODO: NX-verify
         'PPLANE',
-    ]
+    )
     for prop in model.properties.values():
         prop_type = prop.type
         if prop_type in skip_properties:
@@ -544,7 +546,27 @@ def _convert_materials(model, xyz_scale, mass_scale, weight_scale):
             mat.rho *= density_scale
             mat.A *= a_scale
             mat.tref *= temp_scale
-
+        elif mat.type == 'MAT3D':
+            mat.e1 *= stress_scale
+            mat.e2 *= stress_scale
+            mat.e3 *= stress_scale
+            mat.g12 *= stress_scale
+            mat.g13 *= stress_scale
+            mat.g23 *= stress_scale
+            mat.rho = density_scale
+        elif mat.type == 'MAT11':
+            mat.e1 *= stress_scale
+            mat.e2 *= stress_scale
+            mat.e3 *= stress_scale
+            mat.g12 *= stress_scale
+            mat.g13 *= stress_scale
+            mat.g23 *= stress_scale
+            mat.rho = density_scale
+            #mat.a1 = a1
+            #mat.a2 = a2
+            #mat.a3 = a3
+            mat.tref *= temp_scale
+            #mat.ge = ge
         else:
             raise NotImplementedError(mat)
 
