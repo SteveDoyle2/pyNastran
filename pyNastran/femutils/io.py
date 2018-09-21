@@ -9,13 +9,25 @@ This includes:
 """
 from __future__ import print_function, absolute_import
 import sys
-from codecs import open
+from io import open
 from itertools import count
 
 from six import StringIO
 import numpy as np
 from numpy.lib._iotools import _is_string_like
-from numpy.compat import asstr, asbytes
+from numpy.compat import asstr, asunicode#, is_pathlib_path, asunicode
+
+#try:
+    #from pathlib import Path
+#except ImportError:
+    #Path = None
+
+#def is_pathlib_path(obj):
+    #"""
+    #Check whether obj is a pathlib.Path object.
+    #"""
+    #return Path is not None and isinstance(obj, Path)
+
 
 from pyNastran.utils import is_file_obj, _filename
 
@@ -133,10 +145,9 @@ def loadtxt_nice(filename, delimiter=None, skiprows=0, comment='#', dtype=np.flo
             data.append(sline)
     del lines
 
-    #print(data)
     allowed_float_dtypes = [
-        np.float64, np.float32, 'float32', 'float64',
-        np.int32, np.int64, 'int32', 'int64',
+        np.float64, np.float32, 'float32', 'float64', 'f4',
+        np.int32, np.int64, 'int32', 'int64', 'i4',
         #'float128', np.float128,
         #'int128', np.int128,
     ]
@@ -161,6 +172,20 @@ def loadtxt_nice(filename, delimiter=None, skiprows=0, comment='#', dtype=np.flo
     elif isinstance(dtype, dict):
         X = _loadtxt_as_dict(data, dtype, allowed_float_dtypes)
         #print('A =', A)
+    elif isinstance(dtype, list): # tuple
+        assert len(data) == len(dtype)
+        X = []
+        for name_dtypei, datai in zip(dtype, data):
+            unused_name, dtypei = name_dtypei
+            xi = np.array(datai, dtype=dtypei)
+            X.append(xi)
+        unpack = False
+        dtype = {name_dtypei[0] : name_dtypei[1] for name_dtypei in dtype}
+        #X = np.vstack(X)#.astype(dtype)
+        #X = X.astype(dtype)
+        #print('X =', X)
+        #dtype = np.dtype(dtype)
+        #X = np.array(data, dtype=dtype)
     else:
         raise NotImplementedError('dtype_else=%s' % dtype)
         #return np.array(data, dtype=dtype)
@@ -201,8 +226,7 @@ def loadtxt_nice(filename, delimiter=None, skiprows=0, comment='#', dtype=np.flo
                 #return (X[:, i] for i in range(X.shape[1]))
             #return (X[:, i] for i in range(X.shape[1]))
             return X.T
-    else:
-        return X
+    return X
     #return np.array(data)
 
 def _loadtxt_as_dict(data, dtype, allowed_dtypes):
@@ -213,9 +237,14 @@ def _loadtxt_as_dict(data, dtype, allowed_dtypes):
     nnames = len(names)
     assert len(set(names)) == nnames, 'non-unique headers in %s' % str(names)
     for icol, name, dtypei in zip(count(), dtype['names'], dtype['formats']):
-        if dtypei not in allowed_dtypes:
+        if isinstance(dtypei, str) and 's' in dtypei.lower():
+            pass
+        elif dtypei not in allowed_dtypes:
+            allowed_dtypes_str = ', '.join([str(allowed_dtype)
+                                            for allowed_dtype in allowed_dtypes])
             raise RuntimeError('dtype=%r allowed_dtypes=[%s]' % (
-                dtypei, ', '.join(allowed_dtypes)))
+                dtypei, allowed_dtypes_str))
+
         try:
             X[name] = np.asarray(a[:, icol], dtype=dtypei)
         except IndexError:
@@ -228,7 +257,7 @@ def _loadtxt_as_dict(data, dtype, allowed_dtypes):
         except ValueError:
             # we only allow floats
             msg = ''
-            if dtypei in ['float32', 'float64', 'float128', np.float64]:
+            if dtypei in ['float32', 'float64', 'float128', np.float64, 'f4']:
                 for irow, val in zip(count(), a[:, icol]):
                     try:
                         float(val)
@@ -236,7 +265,7 @@ def _loadtxt_as_dict(data, dtype, allowed_dtypes):
                         msg += 'for name=%r, row=%s -> val=%r (expected float)\n' % (
                             name, irow, val)
                         is_failed = True
-            elif dtypei in ['int32', 'int64', 'int128']:
+            elif dtypei in ['int32', 'int64', 'int128', 'i4']:
                 for irow, val in zip(count(), a[:, icol]):
                     try:
                         int(val)
@@ -245,18 +274,19 @@ def _loadtxt_as_dict(data, dtype, allowed_dtypes):
                             name, irow, val)
                         is_failed = True
             else:
-                raise NotImplementedError(dtype)
+                raise NotImplementedError('dtypei=%s dtype=%s' % (dtypei, dtype))
             if is_failed:
                 raise RuntimeError(msg)
     return X
 
 def savetxt_nice(fname, X, fmt='%.18e', delimiter=' ', newline='\n', header='',
-                 footer='', comments='# '):
+                 footer='', comments='# ', encoding=None):
     """
-    Reimplementation of numpy's savetxt that doesn't complain about
-    bytes when saving to unicode files in Python 3.
-
-    Save an array to a text file.
+    Save an array to a text file.  This is 95% a backport of numpy 1.15.1's
+    savetxt.  It does not support:
+      - DataSource's URL
+      - pathlib fnames
+      - gz files
 
     Parameters
     ----------
@@ -264,20 +294,21 @@ def savetxt_nice(fname, X, fmt='%.18e', delimiter=' ', newline='\n', header='',
         If the filename ends in ``.gz``, the file is automatically saved in
         compressed gzip format.  `loadtxt` understands gzipped files
         transparently.
-    X : array_like
+    X : 1D or 2D array_like
         Data to be saved to a text file.
     fmt : str or sequence of strs, optional
         A single format (%10.5f), a sequence of formats, or a
         multi-format string, e.g. 'Iteration %d -- %10.5f', in which
         case `delimiter` is ignored. For complex `X`, the legal options
         for `fmt` are:
-            a) a single specifier, `fmt='%.4e'`, resulting in numbers formatted
-                like `' (%s+%sj)' % (fmt, fmt)`
-            b) a full string specifying every real and imaginary part, e.g.
-                `' %.4e %+.4j %.4e %+.4j %.4e %+.4j'` for 3 columns
-            c) a list of specifiers, one per column - in this case, the real
-                and imaginary part must have separate specifiers,
-                e.g. `['%.3e + %.3ej', '(%.15e%+.15ej)']` for 2 columns
+
+        * a single specifier, `fmt='%.4e'`, resulting in numbers formatted
+          like `' (%s+%sj)' % (fmt, fmt)`
+        * a full string specifying every real and imaginary part, e.g.
+          `' %.4e %+.4ej %.4e %+.4ej %.4e %+.4ej'` for 3 columns
+        * a list of specifiers, one per column - in this case, the real
+          and imaginary part must have separate specifiers,
+          e.g. `['%.3e + %.3ej', '(%.15e%+.15ej)']` for 2 columns
     delimiter : str, optional
         String or character separating columns.
     newline : str, optional
@@ -298,6 +329,13 @@ def savetxt_nice(fname, X, fmt='%.18e', delimiter=' ', newline='\n', header='',
         ``numpy.loadtxt``.
 
         .. versionadded:: 1.7.0
+    encoding : {None, str}, optional
+        Encoding used to encode the outputfile. Does not apply to output
+        streams. If the encoding is something other than 'bytes' or 'latin1'
+        you will not be able to load the file in NumPy versions < 1.14. Default
+        is 'latin1'.
+
+        .. versionadded:: 1.14.0
 
 
     See Also
@@ -371,19 +409,65 @@ def savetxt_nice(fname, X, fmt='%.18e', delimiter=' ', newline='\n', header='',
         fmt = asstr(fmt)
     delimiter = asstr(delimiter)
 
-    own_fh = False
-    if _is_string_like(fname):
-        own_fh = True
-        if fname.endswith('.gz'):
-            import gzip
-            fh = gzip.open(fname, 'wb')
-        else:
-            if sys.version_info[0] >= 3:
-                fh = open(fname, 'wb')
+    class WriteWrap(object):
+        """Convert to unicode in py2 or to bytes on bytestream inputs."""
+        def __init__(self, fh, encoding):
+            self.fh = fh
+            self.encoding = encoding
+            self.do_write = self.first_write
+
+        def close(self):
+            self.fh.close()
+
+        def write(self, v):
+            self.do_write(v)
+
+        def write_bytes(self, v):
+            if isinstance(v, bytes):
+                self.fh.write(v)
             else:
-                fh = open(fname, 'w')
+                self.fh.write(v.encode(self.encoding))
+
+        def write_normal(self, v):
+            self.fh.write(asunicode(v))
+
+        def first_write(self, v):
+            try:
+                self.write_normal(v)
+                self.write = self.write_normal
+            except TypeError:
+                # input is probably a bytestream
+                self.write_bytes(v)
+                self.write = self.write_bytes
+
+    own_fh = False
+    #if is_pathlib_path(fname):
+        #fname = str(fname)
+
+    if _is_string_like(fname):
+        # datasource doesn't support creating a new file ...
+        open(fname, 'wt').close()
+        fh = open(fname, 'wt', encoding=encoding)
+        own_fh = True
+        # need to convert str to unicode for text io output
+        if sys.version_info[0] == 2:
+            fh = WriteWrap(fh, encoding or 'latin1')
     elif hasattr(fname, 'write'):
-        fh = fname
+        # wrap to handle byte output streams
+        fh = WriteWrap(fname, encoding or 'latin1')
+
+    #if _is_string_like(fname):
+        #own_fh = True
+        #if fname.endswith('.gz'):
+            #import gzip
+            #fh = gzip.open(fname, 'wb')
+        #else:
+            #if sys.version_info[0] >= 3:
+                #fh = open(fname, 'wb')
+            #else:
+                #fh = open(fname, 'w')
+    #elif hasattr(fname, 'write'):
+        #fh = fname
     else:
         raise ValueError('fname must be a string or file handle')
 
@@ -391,7 +475,10 @@ def savetxt_nice(fname, X, fmt='%.18e', delimiter=' ', newline='\n', header='',
         X = np.asarray(X)
 
         # Handle 1-dimensional arrays
-        if X.ndim == 1:
+        if X.ndim == 0 or X.ndim > 2:
+            raise ValueError(
+                "Expected 1D or 2D array, got %dD array instead" % X.ndim)
+        elif X.ndim == 1:
             # Common case -- 1d array of numbers
             if X.dtype.names is None:
                 X = np.atleast_2d(X).T
@@ -430,26 +517,28 @@ def savetxt_nice(fname, X, fmt='%.18e', delimiter=' ', newline='\n', header='',
 
         if len(header) > 0:
             header = header.replace('\n', '\n' + comments)
-            fh.write(asbytes(comments + header + newline))
+            fh.write(comments + header + newline)
         if iscomplex_X:
             for row in X:
                 row2 = []
                 for number in row:
                     row2.append(number.real)
                     row2.append(number.imag)
-                fh.write(asbytes(txt_format % tuple(row2) + newline))
+                s = txt_format % tuple(row2) + newline
+                fh.write(s.replace('+-', '-'))
         else:
             for row in X:
                 try:
-                    #print('txt_format = %r' % txt_format, type(txt_format))
-                    fh.write(asbytes(txt_format % tuple(row) + newline))
+                    v = txt_format % tuple(row) + newline
                 except TypeError:
                     raise TypeError("Mismatch between array dtype ('%s') and "
                                     "format specifier ('%s')"
                                     % (str(X.dtype), txt_format))
+                fh.write(v)
+
         if len(footer) > 0:
             footer = footer.replace('\n', '\n' + comments)
-            fh.write(asbytes(comments + footer + newline))
+            fh.write(comments + footer + newline)
     finally:
         if own_fh:
             fh.close()

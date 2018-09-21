@@ -6,10 +6,11 @@ __all__ = ['TestMatrix3d', 'TestNumpyUtils', 'TestFemIO']
 
 import os
 import unittest
-from codecs import open
+from io import open, BytesIO #, StringIO
 
-from six import PY2, StringIO
+from six import PY2, StringIO, BytesIO
 import numpy as np
+from numpy.testing import assert_equal, assert_array_equal
 
 import pyNastran
 from pyNastran.utils.numpy_utils import (
@@ -20,14 +21,15 @@ from pyNastran.femutils.utils import perpendicular_vector, perpendicular_vector2
 from pyNastran.femutils.coord_transforms import cylindrical_rotation_matrix
 
 from pyNastran.femutils.test.utils import is_array_close
+from numpy.compat import asbytes
 
 PKG_PATH = pyNastran.__path__[0]
 
 if PY2:
     FileNotFoundError = IOError
 
-#class TestNan(unittest.TestCase):
 
+#class TestNan(unittest.TestCase):
 class TestMatrix3d(unittest.TestCase):
     """tests functions in femutils.matrix3d"""
     def test_dot_n33_n33(self):
@@ -230,6 +232,120 @@ class TestNumpyUtils(unittest.TestCase):
 
 class TestFemIO(unittest.TestCase):
     """tests functions in femutils.io"""
+
+    def test_file_roundtrip(self):
+        """per numpy"""
+        a = np.array([(1, 2), (3, 4)])
+        np.savetxt('temp.txt', a)
+        b = loadtxt_nice('temp.txt')
+        assert_array_equal(a, b)
+        os.remove('temp.txt')
+
+    def test_record(self):
+        """per numpy"""
+        c = StringIO()
+        c.write('1 2\n3 4')
+        c.seek(0)
+
+        x = loadtxt_nice(c, dtype=[('x', np.int32), ('y', np.float32)])
+        x2 = np.loadtxt(c, dtype=[('x', np.int32), ('y', np.float32)])
+
+        #print('x =', x, type(x2))
+        #print('x2 =', x2, type(x2))
+        #a = np.array([(1, 2), (3, 4)], dtype=[('x', 'i4'), ('y', 'i4')])
+        #assert_array_equal(x, a)
+
+        d = StringIO()
+        d.write('M 64 75.0\nF 25 60.0')
+        d.seek(0)
+        mydescriptor = {'names': ('gender', 'age', 'weight'),
+                        'formats': ('S1', 'i4', 'f4')}
+        b = np.array([('M', 64.0, 75.0),
+                      ('F', 25.0, 60.0)], dtype=mydescriptor)
+        y = loadtxt_nice(d, dtype=mydescriptor)
+        #assert_array_equal(y, b)
+
+    #def test_loadtxt_fields_subarrays(self):
+        #"""per numpy"""
+        #from numpy.testing import assert_, assert_equal, temppath, assert_array_equal
+        ## For ticket #1936
+        #dt = [("a", 'u1', 2), ("b", 'u1', 2)]
+        #x = np.loadtxt(StringIO("0 1 2 3"), dtype=dt)
+        #assert_equal(x, np.array([((0, 1), (2, 3))], dtype=dt))
+
+        #dt = [("a", [("a", 'u1', (1, 3)), ("b", 'u1')])]
+        #x = np.loadtxt(StringIO("0 1 2 3"), dtype=dt)
+        #assert_equal(x, np.array([(((0, 1, 2), 3),)], dtype=dt))
+
+        #dt = [("a", 'u1', (2, 2))]
+        #x = np.loadtxt(StringIO("0 1 2 3"), dtype=dt)
+        #assert_equal(x, np.array([(((0, 1), (2, 3)),)], dtype=dt))
+
+        #dt = [("a", 'u1', (2, 3, 2))]
+        #x = np.loadtxt(StringIO("0 1 2 3 4 5 6 7 8 9 10 11"), dtype=dt)
+        #data = [((((0, 1), (2, 3), (4, 5)), ((6, 7), (8, 9), (10, 11))),)]
+        #assert_equal(x, np.array(data, dtype=dt))
+
+
+    #def test_complex_arrays(self):
+        #"""per numpy"""
+        #from io import BytesIO, StringIO
+        #from numpy.testing import assert_, assert_equal, temppath, assert_array_equal
+        #ncols = 2
+        #nrows = 2
+        #a = np.zeros((ncols, nrows), dtype=np.complex128)
+        #re = np.pi
+        #im = np.e
+        #a[:] = re + 1.0j * im
+
+        ## One format only
+        #c = BytesIO()
+        #np.savetxt(c, a, fmt=' %+.3e')
+        #c.seek(0)
+        #lines = c.readlines()
+        #assert_equal(
+            #lines,
+            #[b' ( +3.142e+00+ +2.718e+00j)  ( +3.142e+00+ +2.718e+00j)\n',
+             #b' ( +3.142e+00+ +2.718e+00j)  ( +3.142e+00+ +2.718e+00j)\n'])
+
+        ## One format for each real and imaginary part
+        #c = BytesIO()
+        #np.savetxt(c, a, fmt='  %+.3e' * 2 * ncols)
+        #c.seek(0)
+        #lines = c.readlines()
+        #assert_equal(
+            #lines,
+            #[b'  +3.142e+00  +2.718e+00  +3.142e+00  +2.718e+00\n',
+             #b'  +3.142e+00  +2.718e+00  +3.142e+00  +2.718e+00\n'])
+
+        ## One format for each complex number
+        #c = BytesIO()
+        #np.savetxt(c, a, fmt=['(%.3e%+.3ej)'] * ncols)
+        #c.seek(0)
+        #lines = c.readlines()
+        #assert_equal(
+            #lines,
+            #[b'(3.142e+00+2.718e+00j) (3.142e+00+2.718e+00j)\n',
+             #b'(3.142e+00+2.718e+00j) (3.142e+00+2.718e+00j)\n'])
+
+    def test_complex_negative_exponent(self):
+        """per numpy"""
+        # Previous to 1.15, some formats generated x+-yj, gh 7895
+        ncols = 2
+        nrows = 2
+        a = np.zeros((ncols, nrows), dtype=np.complex128)
+        re = np.pi
+        im = np.e
+        a[:] = re - 1.0j * im
+        c = BytesIO()
+        savetxt_nice(c, a, fmt='%.3e')
+        c.seek(0)
+        lines = c.readlines()
+        assert_equal(
+            lines,
+            [b' (3.142e+00-2.718e+00j)  (3.142e+00-2.718e+00j)\n',
+             b' (3.142e+00-2.718e+00j)  (3.142e+00-2.718e+00j)\n'])
+
     def test_loadtxt_nice(self):
         """tests that we can reimplement loadtxt so it has good error messages"""
         str_data = StringIO("1,0,2\n3,0,4")
