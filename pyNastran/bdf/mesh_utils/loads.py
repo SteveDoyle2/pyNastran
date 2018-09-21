@@ -410,82 +410,20 @@ def _elementi_pload4(model, loadcase_id, load, scale, xyz, F, M, p):
             cid = load.Cid()
             normal = update_pload4_vector_for_surf(load, normal, cid)
 
+            r = centroid - p
+            fi = pressure * area * normal * scale
+            #load.cid_ref.transform_to_global()
+            mi = cross(r, fi)
+
         elif load.surf_or_line == 'LINE':
-            # this is pressure per unit length?
-            # edge_length * thickness I assume?
-            edges = []
-            if len(pressures) == 4:
-                p1, p2, p3, p4 = pressures
-                if p1 or p2:
-                    edges.append((0, 1))
-                if p2 or p3:
-                    edges.append((1, 2))
-                if p3 or p4:
-                    edges.append((2, 3))
-                if p4 or p1:
-                    edges.append((3, 1))
-            elif len(pressures) == 3:
-                p1, p2, p3, p4 = pressures
-                if p1 or p2:
-                    edges.append((0, 1))
-                if p2 or p3:
-                    edges.append((1, 2))
-                if p3 or p1:
-                    edges.append((2, 1))
-            else:  # pragma: no cover
-                raise NotImplementedError(pressures)
-
-            thickness = elem.Thickness()
-            load_dir = load.nvector / np.linalg.norm(load.nvector)
-            for edge in edges:
-                inode1, inode2 = edge
-                ixyz1 = nodes[inode1]
-                ixyz2 = nodes[inode2]
-                xyz1 = xyz[ixyz1]
-                xyz2 = xyz[ixyz2]
-                p1 = pressures[inode1]
-                p2 = pressures[inode2]
-                area_edge = thickness * np.linalg.norm(xyz2 - xyz1)
-                if p1 is None:
-                    p1 = p2
-                if p2 is None:
-                    p2 = p1
-
-                centroid1 = (xyz2 + xyz1) / 2.
-                if p1 > p2:
-                    dp = p1 - p2
-                    pnominal = p2
-                    centroid2 = (2*xyz1 + xyz2) / 3.
-                else:
-                    dp = p2 - p1
-                    centroid2 = (2*xyz2 + xyz1) / 3.
-                    pnominal = p1
-
-                r1 = centroid1 - p
-                r2 = centroid2 - p
-                f1 = pnominal * area_edge * load_dir * scale
-                f2 = dp * area_edge * load_dir * scale
-                m1 = cross(r1, f1)
-                m2 = cross(r2, f2)
-                F += f1 + f2
-                M += m1 + m2
-
-            cid = load.Cid()
-            if cid != 0:
-                raise NotImplementedError('cid=%r nvector=%s on a PLOAD4 is not supported\n%s' % (
-                    cid, load.nvector, str(load)))
-            return
+            fi, mi = _pload4_line(load, elem, scale, pressures, nodes, xyz, p)
         else:  # pragma: no cover
             msg = 'surf_or_line=%r on PLOAD4 is not supported\n%s' % (
                 load.surf_or_line, str(load))
             raise NotImplementedError(msg)
-
-        r = centroid - p
-        f = pressure * area * normal * scale
-        #load.cid_ref.transform_to_global()
-        m = cross(r, f)
-        F += f
-        M += m
+        F += fi
+        M += mi
+    return
 
 def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
                                 include_grav=False, xyz_cid0=None):
@@ -582,6 +520,9 @@ def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
     xyz = _get_xyz_cid0_dict(model, xyz_cid0)
 
     unsupported_types = set([])
+    shell_elements = [
+        'CTRIA3', 'CQUAD4', 'CTRIAR', 'CQUADR',
+        'CTRIA6', 'CQUAD8', 'CQUAD', 'CSHEAR']
     for load, scale in zip(loads, scale_factors):
         #if load.type not in ['FORCE1']:
             #continue
@@ -712,7 +653,7 @@ def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
                 if eid not in eids:
                     continue
                 elem = model.elements[eid]
-                if elem.type in ['CTRIA3', 'CQUAD4', 'CTRIAR', 'CQUADR', 'CTRIA6', 'CQUAD8', 'CQUAD', 'CSHEAR']:
+                if elem.type in shell_elements:
                     normal = elem.Normal()
                     area = elem.Area()
                     f = pressure * normal * area
@@ -948,79 +889,20 @@ def _elements_pload4(loadcase_id, load, scale, eids, xyz, F, M, p):
             cid = load.Cid()
             normal = update_pload4_vector_for_surf(load, normal, cid)
 
+            fi = pressure * area * normal * scale
+            #load.cid.transform_to_global()
+            mi = cross(r, fi)
+
         elif load.surf_or_line == 'LINE':
-            # this is pressure per unit length?
-            # edge_length * thickness I assume?
-            edges = []
-            if len(pressures) == 4:
-                p1, p2, p3, p4 = pressures
-                if p1 or p2:
-                    edges.append((0, 1))
-                if p2 or p3:
-                    edges.append((1, 2))
-                if p3 or p4:
-                    edges.append((2, 3))
-                if p4 or p1:
-                    edges.append((3, 1))
-            elif len(pressures) == 3:
-                p1, p2, p3, p4 = pressures
-                if p1 or p2:
-                    edges.append((0, 1))
-                if p2 or p3:
-                    edges.append((1, 2))
-                if p3 or p1:
-                    edges.append((2, 1))
-            else:  # pragma: no cover
-                raise NotImplementedError(pressures)
-
-            thickness = elem.Thickness()
-            load_dir = load.nvector / np.linalg.norm(load.nvector)
-            for edge in edges:
-                inode1, inode2 = edge
-                ixyz1 = nodes[inode1]
-                ixyz2 = nodes[inode2]
-                xyz1 = xyz[ixyz1]
-                xyz2 = xyz[ixyz2]
-                p1 = pressures[inode1]
-                p2 = pressures[inode2]
-                area_edge = thickness * np.linalg.norm(xyz2 - xyz1)
-                if p1 is None:
-                    p1 = p2
-                if p2 is None:
-                    p2 = p1
-
-                centroid1 = (xyz2 + xyz1) / 2.
-                if p1 > p2:
-                    dp = p1 - p2
-                    pnominal = p2
-                    centroid2 = (2*xyz1 + xyz2) / 3.
-                else:
-                    dp = p2 - p1
-                    centroid2 = (2*xyz2 + xyz1) / 3.
-                    pnominal = p1
-
-                r1 = centroid1 - p
-                r2 = centroid2 - p
-                f1 = pnominal * area_edge * load_dir * scale
-                f2 = dp * area_edge * load_dir * scale
-                m1 = cross(r1, f1)
-                m2 = cross(r2, f2)
-                F += f1 + f2
-                M += m1 + m2
-            if load.Cid() != 0:
-                raise NotImplementedError('cid=%r on a PLOAD4 is not supported\n%s' % (
-                    load.Cid(), str(load)))
-            return
+            fi, mi = _pload4_line(load, elem, scale, pressures, nodes, xyz, p)
         else:  # pragma: no cover
             msg = 'surf_or_line=%r on PLOAD4 is not supported\n%s' % (
                 load.surf_or_line, str(load))
             raise NotImplementedError(msg)
 
-        f = pressure * area * normal * scale
-        #load.cid.transform_to_global()
-        m = cross(r, f)
-        F += f
-        M += m
+        F += fi
+        M += mi
+    return
 
 def _get_area_normal(axb, nodes, xyz):
     """gets the area/normal vector"""
@@ -1037,7 +919,7 @@ def _get_area_normal(axb, nodes, xyz):
         raise FloatingPointError(msg)
     return area, normal
 
-def _mean_pressure_on_pload4(pressures, load, elem):
+def _mean_pressure_on_pload4(pressures, load, unused_elem):
     """gets the mean pressure"""
     if min(pressures) != max(pressures):
         pressure = mean(pressures)
@@ -1089,3 +971,71 @@ def _get_load_summation_point(model, p0, cid=0):
     else:
         p = array(p0)
     return p
+
+def _pload4_line(load, elem, scale, pressures, nodes, xyz, p):
+    # this is pressure per unit length?
+    # edge_length * thickness I assume?
+    fi = np.zeros(3)
+    mi = np.zeros(3)
+    edges = []
+    if len(pressures) == 4:
+        p1, p2, p3, p4 = pressures
+        if p1 or p2:
+            edges.append((0, 1))
+        if p2 or p3:
+            edges.append((1, 2))
+        if p3 or p4:
+            edges.append((2, 3))
+        if p4 or p1:
+            edges.append((3, 1))
+    elif len(pressures) == 3:
+        p1, p2, p3, p4 = pressures
+        if p1 or p2:
+            edges.append((0, 1))
+        if p2 or p3:
+            edges.append((1, 2))
+        if p3 or p1:
+            edges.append((2, 1))
+    else:  # pragma: no cover
+        raise NotImplementedError(pressures)
+
+    thickness = elem.Thickness()
+    load_dir = load.nvector / np.linalg.norm(load.nvector)
+    for edge in edges:
+        inode1, inode2 = edge
+        ixyz1 = nodes[inode1]
+        ixyz2 = nodes[inode2]
+        xyz1 = xyz[ixyz1]
+        xyz2 = xyz[ixyz2]
+        p1 = pressures[inode1]
+        p2 = pressures[inode2]
+        area_edge = thickness * np.linalg.norm(xyz2 - xyz1)
+        if p1 is None:
+            p1 = p2
+        if p2 is None:
+            p2 = p1
+
+        centroid1 = (xyz2 + xyz1) / 2.
+        if p1 > p2:
+            dp = p1 - p2
+            pnominal = p2
+            centroid2 = (2*xyz1 + xyz2) / 3.
+        else:
+            dp = p2 - p1
+            centroid2 = (2*xyz2 + xyz1) / 3.
+            pnominal = p1
+
+        r1 = centroid1 - p
+        r2 = centroid2 - p
+        f1 = pnominal * area_edge * load_dir * scale
+        f2 = dp * area_edge * load_dir * scale
+        m1 = cross(r1, f1)
+        m2 = cross(r2, f2)
+        fi += f1 + f2
+        mi += m1 + m2
+
+    cid = load.Cid()
+    if cid != 0:
+        raise NotImplementedError('cid=%r nvector=%s on a PLOAD4 is not supported\n%s' % (
+            cid, load.nvector, str(load)))
+    return fi, mi

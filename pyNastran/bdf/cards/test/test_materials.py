@@ -534,7 +534,7 @@ class TestMaterials(unittest.TestCase):
         E = 3.0e7
         G = None
         nu = 0.3
-        mat1 = model.add_mat1(mid, E, G, nu)
+        model.add_mat1(mid, E, G, nu)
 
         tid = None
         Type = 'NLELAST'
@@ -543,7 +543,8 @@ class TestMaterials(unittest.TestCase):
         yf = None
         limit1 = None
         limit2 = None
-        mats1 = model.add_mats1(mid, tid, Type, h, hr, yf, limit1, limit2, comment='mats1')
+        unused_mats1 = model.add_mats1(mid, tid, Type, h, hr, yf, limit1, limit2,
+                                       comment='mats1')
         save_load_deck(model, xref='standard', punch=True, run_remove_unused=False,
                        run_convert=True, run_renumber=True, run_mirror=True,
                        run_save_load=True)

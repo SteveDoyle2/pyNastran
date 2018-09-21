@@ -377,11 +377,11 @@ def check_mpc_spc(model):
         #node_ids.append(nid)
 
     for mpc_id in mpc_ids:
-        mpcs1 = model.get_reduced_mpcs(mpc_id, consider_mpcadd=True, stop_on_failure=True)
-        mpcs2 = model.get_mpcs(mpc_id, stop_on_failure=True)
+        unused_mpcs1 = model.get_reduced_mpcs(mpc_id, consider_mpcadd=True, stop_on_failure=True)
+        unused_mpcs2 = model.get_mpcs(mpc_id, stop_on_failure=True)
     for spc_id in spc_ids:
-        spcs1 = model.get_reduced_spcs(spc_id, consider_spcadd=True, stop_on_failure=True)
-        spcs2 = model.get_spcs(spc_id, consider_nodes=False, stop_on_failure=True)
+        unused_spcs1 = model.get_reduced_spcs(spc_id, consider_spcadd=True, stop_on_failure=True)
+        unused_spcs2 = model.get_spcs(spc_id, consider_nodes=False, stop_on_failure=True)
 
 
 if __name__ == '__main__':  # pragma: no cover
