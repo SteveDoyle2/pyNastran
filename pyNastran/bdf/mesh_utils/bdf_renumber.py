@@ -11,7 +11,6 @@ from six import PY2, PY3, StringIO
 import numpy as np
 
 from pyNastran.bdf.bdf import BDF
-from pyNastran.utils import object_attributes
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.utils.mathematics import roundup
 
@@ -315,10 +314,8 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
 
     # build the maps
     mass_id_map = {}
-    nid_map = {}
     properties_map = {}
     properties_mass_map = {}
-    reverse_nid_map = {}
     eid_map = {}
     rigid_elements_map = {}
     nsm_map = {}
@@ -346,47 +343,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         model.disable_cards(cards_to_skip)
         model.read_bdf(bdf_filename)
 
-    spoints = list(model.spoints.keys())
-    epoints = list(model.epoints.keys())
-
-    nids = model.nodes.keys()
-
-    nids_spoints_epoints = sorted(chain(nids, spoints, epoints))
-    #spoints_nids.sort()
-    i = 1
-    #nnodes = len(spoints_nids)
-
-    i = 1
-    #j = 1
-    #print(spoints_nids)
-    #k = 0
-    #model.log.debug(starting_id_dict)
-    if 'nid' in starting_id_dict and nid is not None:
-        i = nid
-        #banned_nodes = spoints
-        for nidi in nids_spoints_epoints:
-            if nidi in spoints or nidi in epoints:
-                pass
-                #print('sid=%s -> %s' % (nid, i))
-                #i += 1
-            else:
-                while i in spoints or i in epoints:
-                    #print('*bump')
-                    i += 1
-                #print('nid=%s -> %s' % (nid, i))
-                nid_map[nidi] = i
-                reverse_nid_map[i] = nidi
-                i += 1
-        #for nid in sorted(nids):
-            #nid_map[nid] = i
-            #reverse_nid_map[i] = nid
-            #i += 1
-        #print(nid_map)
-        #print(reverse_nid_map)
-    else:
-        for nid in nids_spoints_epoints:
-            nid_map[nid] = nid
-            reverse_nid_map[nid] = nid
+    nid_map, reverse_nid_map = _create_nid_maps(model, starting_id_dict, nid)
 
     all_materials = (
         model.materials,
@@ -419,119 +376,33 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
             midi = mids[i]
             mid_map[midi] = mid + i
 
-    if 'nid' in starting_id_dict and nid is not None:
-        #spoints2 = arange(1, len(spoints) + 1)
-        #nid = _create_dict_mapper(model.nodes, nid_map, 'nid', nid)
+    _update_nodes(
+        model, starting_id_dict, nid,
+        nid_map)
 
-        for nid, node in sorted(model.nodes.items()):
-            nid_new = nid_map[nid]
-            #print('nid=%s -> %s' % (nid, nid_new))
-            node.nid = nid_new
+    _update_properties(
+        model, starting_id_dict, pid,
+        properties_map, properties_mass_map)
 
-    if 'pid' in starting_id_dict and pid is not None:
-        # properties
-        #pid = _create_dict_mapper(model.properties, properties_map, 'pid', pid)
-        #pid = _create_dict_mapper(model.properties_mass, properties_mass_map, 'pid', pid)
-        #pid = _update(model.convection_properties, properties_mass_map, pid)
+    _update_elements(
+        model, starting_id_dict, eid,
+        eid_map, mass_id_map, rigid_elements_map)
 
-        for pidi, prop in sorted(model.properties.items()):
-            prop.pid = pid
-            properties_map[pidi] = pid
-            pid += 1
-        for pidi, prop in sorted(model.properties_mass.items()):
-            # PMASS
-            prop.pid = pid
-            properties_mass_map[pidi] = pid
-            pid += 1
-        for pidi, prop in sorted(model.convection_properties.items()):
-            # PCONV
-            prop.pid = pid
-            pid += 1
-        for pidi, prop in sorted(model.phbdys.items()):
-            # PHBDY
-            prop.pid = pid
-            pid += 1
+    _update_materials(
+        model, starting_id_dict, mid,
+        mid_map, all_materials)
 
-    if 'eid' in starting_id_dict and eid is not None:
-        # elements
-        #eid = _create_dict_mapper(model.elements, eid_map, 'eid', eid)
+    _update_spcs(
+        model, starting_id_dict, spc_id,
+        spc_map)
 
-        for eidi, element in sorted(model.elements.items()):
-            element.eid = eid
-            eid_map[eidi] = eid
-            eid += 1
-        for eidi, element in sorted(model.masses.items()):
-            # CONM1, CONM2, CMASSx
-            element.eid = eid
-            eid_map[eidi] = eid
-            mass_id_map[eidi] = eid
-            eid += 1
-        for eidi, elem in sorted(model.rigid_elements.items()):
-            # RBAR/RBAR1/RBE1/RBE2/RBE3/RSPLINE/RSSCON
-            elem.eid = eid
-            eid_map[eidi] = eid
-            rigid_elements_map[eidi] = eid
-            eid += 1
-        #for eidi, elem in model.caeros.items():
-            #pass
+    _update_mpcs(
+        model, starting_id_dict, mpc_id,
+        mpc_map)
 
-    if 'mid' in starting_id_dict and mid is not None:
-        #mid = 1
-        for materials in all_materials:
-            for midi, material in materials.items():
-                mid = mid_map[midi]
-                assert hasattr(material, 'mid')
-                material.mid = mid
-
-    if 'spc_id' in starting_id_dict and spc_id is not None:
-        # spc
-        for spc_idi, spc_group in sorted(model.spcadds.items()):
-            for i, spc in enumerate(spc_group):
-                assert hasattr(spc, 'conid')
-                spc.conid = spc_id
-            spc_map[spc_idi] = spc_id
-            spc_id += 1
-        for spc_idi, spc_group in sorted(model.spcs.items()):
-            for i, spc in enumerate(spc_group):
-                assert hasattr(spc, 'conid')
-                spc.conid = spc_id
-            spc_map[spc_idi] = spc_id
-            spc_id += 1
-    else:
-        for spc_id in model.spcadds:
-            spc_map[spc_id] = spc_id
-        for spc_id in model.spcs:
-            spc_map[spc_id] = spc_id
-
-    if 'mpc_id' in starting_id_dict and mpc_id is not None:
-        # mpc
-        for mpc_idi, mpc_group in sorted(model.mpcadds.items()):
-            for i, mpc in enumerate(mpc_group):
-                assert hasattr(mpc, 'conid')
-                mpc.conid = mpc_id
-            mpc_map[mpc_idi] = mpc_id
-            mpc_id += 1
-        for mpc_idi, mpc_group in sorted(model.mpcs.items()):
-            for i, mpc in enumerate(mpc_group):
-                assert hasattr(mpc, 'conid')
-                mpc.conid = mpc_id
-            mpc_map[mpc_idi] = mpc_id
-            mpc_id += 1
-    else:
-        for mpc_id in model.mpcadds:
-            mpc_map[mpc_id] = mpc_id
-        for mpc_id in model.mpcs:
-            mpc_map[mpc_id] = mpc_id
-
-    if 'cid' in starting_id_dict and cid is not None:
-        # coords
-        for cidi, coord in sorted(model.coords.items()):
-            if cidi == 0:
-                cid_map[0] = 0
-                continue
-            coord.cid = cid
-            cid_map[cidi] = cid
-            cid += 1
+    _update_coords(
+        model, starting_id_dict, cid,
+        cid_map)
 
     if 'freq_id' in starting_id_dict and freq_id is not None:
         # frequencies
@@ -712,15 +583,16 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         load_id += 1
 
     # transfer_functions
-    for tf_idi, tfs in sorted(model.transfer_functions.items()):
-        for tf in tfs:
-            assert hasattr(tf, 'sid')
-            tf.sid = tf_id
+    for tf_idi, transfer_functions in sorted(model.transfer_functions.items()):
+        for transfer_function in transfer_functions:
+            assert hasattr(transfer_function, 'sid')
+            transfer_function.sid = tf_id
         tranfer_function_map[tf_idi] = tf_id
         load_id += 1
 
     lseq_map = load_map # wrong???
     temp_map = load_map # wrong???
+
     mapper = {
         'elements' : eid_map,
         'masses' : mass_id_map,
@@ -730,8 +602,9 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         'materials' : mid_map,
         'properties' : properties_map,
         'properties_mass' : properties_mass_map,
-        'SPC' : spc_map,
-        'MPC' : mpc_map,   # TODO: come up with unified system that uses the same key
+        #'SPC' : spc_map,
+        'spcs' : spc_map,
+        #'MPC' : mpc_map,   # TODO: come up with unified system that uses the same key
         'mpcs' : mpc_map,  #       for bdf_merge and _update_case_control
         'METHOD' : method_map,
         'CMETHOD' : cmethod_map,
@@ -793,16 +666,20 @@ def get_renumber_starting_ids_from_model(model):
     starting_id_dict : dict {str : int, ...}
         Dictionary from id type to starting id.
     """
+    eid_max = max([
+        max(model.elements.keys()),
+        max(model.masses.keys()) if model.masses else 0,
+        max(model.rigid_elements.keys()) if model.rigid_elements else 0,
+    ])
+    pid_max = max([
+        max(model.properties.keys()),
+        0 if len(model.properties_mass) == 0 else max(model.properties_mass.keys()),
+    ])
     starting_id_dict = {
         'cid' : max(model.coords.keys()) + 1,
         'nid' : max(model.point_ids) + 1,
-        'eid' : max([max(model.elements.keys()),
-                     max(model.masses.keys()) if model.masses else 0,
-                     max(model.rigid_elements.keys()) if model.rigid_elements else 0,
-                     ]) + 1,
-        'pid' : max([max(model.properties.keys()),
-                     0 if len(model.properties_mass) == 0 else max(model.properties_mass.keys()),
-                     ]) + 1,
+        'eid' : eid_max + 1,
+        'pid' : pid_max + 1,
         'mid' : max(model.material_ids) + 1,
         'set_id' : max(model.sets.keys()) + 1 if model.sets else 1,
         'spline_id' : max(model.splines.keys()) + 1 if model.splines else 1,
@@ -810,6 +687,191 @@ def get_renumber_starting_ids_from_model(model):
                          for caero in model.caeros.values()) + 1 if model.caeros else 1,
     }
     return starting_id_dict
+
+def _create_nid_maps(model, starting_id_dict, nid):
+    """builds the nid_maps"""
+    nid_map = {}
+    reverse_nid_map = {}
+
+    spoints = list(model.spoints.keys())
+    epoints = list(model.epoints.keys())
+    nids = model.nodes.keys()
+
+    nids_spoints_epoints = sorted(chain(nids, spoints, epoints))
+
+    #spoints_nids.sort()
+    i = 1
+    #nnodes = len(spoints_nids)
+
+    i = 1
+    #j = 1
+    #print(spoints_nids)
+    #k = 0
+    #model.log.debug(starting_id_dict)
+    if 'nid' in starting_id_dict and nid is not None:
+        i = nid
+        #banned_nodes = spoints
+        for nidi in nids_spoints_epoints:
+            if nidi in spoints or nidi in epoints:
+                pass
+                #print('sid=%s -> %s' % (nid, i))
+                #i += 1
+            else:
+                while i in spoints or i in epoints:
+                    #print('*bump')
+                    i += 1
+                #print('nid=%s -> %s' % (nid, i))
+                nid_map[nidi] = i
+                reverse_nid_map[i] = nidi
+                i += 1
+        #for nid in sorted(nids):
+            #nid_map[nid] = i
+            #reverse_nid_map[i] = nid
+            #i += 1
+        #print(nid_map)
+        #print(reverse_nid_map)
+    else:
+        for nid in nids_spoints_epoints:
+            nid_map[nid] = nid
+            reverse_nid_map[nid] = nid
+    return nid_map, reverse_nid_map
+
+def _update_nodes(model, starting_id_dict, nid, nid_map):
+    """updates the nodes"""
+    if 'nid' in starting_id_dict and nid is not None:
+        #spoints2 = arange(1, len(spoints) + 1)
+        #nid = _create_dict_mapper(model.nodes, nid_map, 'nid', nid)
+
+        for nid, node in sorted(model.nodes.items()):
+            nid_new = nid_map[nid]
+            #print('nid=%s -> %s' % (nid, nid_new))
+            node.nid = nid_new
+
+def _update_properties(model, starting_id_dict, pid,
+                       properties_map, properties_mass_map):
+    """updates the properties"""
+    if 'pid' in starting_id_dict and pid is not None:
+        # properties
+        #pid = _create_dict_mapper(model.properties, properties_map, 'pid', pid)
+        #pid = _create_dict_mapper(model.properties_mass, properties_mass_map, 'pid', pid)
+        #pid = _update(model.convection_properties, properties_mass_map, pid)
+
+        for pidi, prop in sorted(model.properties.items()):
+            prop.pid = pid
+            properties_map[pidi] = pid
+            pid += 1
+        for pidi, prop in sorted(model.properties_mass.items()):
+            # PMASS
+            prop.pid = pid
+            properties_mass_map[pidi] = pid
+            pid += 1
+        for pidi, prop in sorted(model.convection_properties.items()):
+            # PCONV
+            prop.pid = pid
+            pid += 1
+        for pidi, prop in sorted(model.phbdys.items()):
+            # PHBDY
+            prop.pid = pid
+            pid += 1
+
+def _update_elements(model, starting_id_dict, eid,
+                     eid_map, mass_id_map, rigid_elements_map):
+    """updates the elements"""
+    if 'eid' in starting_id_dict and eid is not None:
+        # elements
+        #eid = _create_dict_mapper(model.elements, eid_map, 'eid', eid)
+
+        for eidi, element in sorted(model.elements.items()):
+            element.eid = eid
+            eid_map[eidi] = eid
+            eid += 1
+        for eidi, element in sorted(model.masses.items()):
+            # CONM1, CONM2, CMASSx
+            element.eid = eid
+            eid_map[eidi] = eid
+            mass_id_map[eidi] = eid
+            eid += 1
+        for eidi, elem in sorted(model.rigid_elements.items()):
+            # RBAR/RBAR1/RBE1/RBE2/RBE3/RSPLINE/RSSCON
+            elem.eid = eid
+            eid_map[eidi] = eid
+            rigid_elements_map[eidi] = eid
+            eid += 1
+        #for eidi, elem in model.caeros.items():
+            #pass
+
+def _update_materials(unused_model, starting_id_dict, mid,
+                      mid_map, all_materials):
+    if 'mid' in starting_id_dict and mid is not None:
+        #mid = 1
+        for materials in all_materials:
+            for midi, material in materials.items():
+                mid = mid_map[midi]
+                assert hasattr(material, 'mid')
+                material.mid = mid
+
+def _update_spcs(model, starting_id_dict, spc_id,
+                 spc_map):
+    """updates the spcs"""
+    if 'spc_id' in starting_id_dict and spc_id is not None:
+        # spc
+        for spc_idi, spc_group in sorted(model.spcadds.items()):
+            for unused_i, spc in enumerate(spc_group):
+                assert hasattr(spc, 'conid')
+                spc.conid = spc_id
+            spc_map[spc_idi] = spc_id
+            spc_id += 1
+
+        for spc_idi, spc_group in sorted(model.spcs.items()):
+            for unused_i, spc in enumerate(spc_group):
+                assert hasattr(spc, 'conid')
+                spc.conid = spc_id
+            spc_map[spc_idi] = spc_id
+            spc_id += 1
+    else:
+        # TODO: why are we doing this?
+        for spc_id in model.spcadds:
+            spc_map[spc_id] = spc_id
+        for spc_id in model.spcs:
+            spc_map[spc_id] = spc_id
+
+def _update_mpcs(model, starting_id_dict, mpc_id,
+                 mpc_map):
+    """updates the mpcs"""
+    if 'mpc_id' in starting_id_dict and mpc_id is not None:
+        # mpc
+        for mpc_idi, mpc_group in sorted(model.mpcadds.items()):
+            for unused_i, mpc in enumerate(mpc_group):
+                assert hasattr(mpc, 'conid')
+                mpc.conid = mpc_id
+            mpc_map[mpc_idi] = mpc_id
+            mpc_id += 1
+
+        for mpc_idi, mpc_group in sorted(model.mpcs.items()):
+            for unused_i, mpc in enumerate(mpc_group):
+                assert hasattr(mpc, 'conid')
+                mpc.conid = mpc_id
+            mpc_map[mpc_idi] = mpc_id
+            mpc_id += 1
+    else:
+        # TODO: why are we doing this?
+        for mpc_id in model.mpcadds:
+            mpc_map[mpc_id] = mpc_id
+        for mpc_id in model.mpcs:
+            mpc_map[mpc_id] = mpc_id
+
+def _update_coords(model, starting_id_dict, cid,
+                   cid_map):
+    """updates the coords"""
+    if 'cid' in starting_id_dict and cid is not None:
+        # coords
+        for cidi, coord in sorted(model.coords.items()):
+            if cidi == 0:
+                cid_map[0] = 0
+                continue
+            coord.cid = cid
+            cid_map[cidi] = cid
+            cid += 1
 
 def _update_case_control(model, mapper):
     """
@@ -823,6 +885,13 @@ def _update_case_control(model, mapper):
         Defines the possible case control header values for each entry (e.g. `LOAD`)
 
     """
+    # unified system that uses the same key
+    # for bdf_merge and _update_case_control
+    case_control_card_to_pynastran_key = {
+        'MPC' : 'mpcs',
+        'SPC' : 'spcs',
+    }
+
     elemental_quantities = ['STRESS', 'STRAIN', 'FORCE', 'ESE', 'EKE']
     nodal_quantities = [
         'DISPLACEMENT', 'VELOCITY', 'ACCELERATION', 'SPCFORCES', 'MPCFORCES',
@@ -878,6 +947,10 @@ def _update_case_control(model, mapper):
         #print('-----------------------')
         #print(subcase)
         for key, values in sorted(subcase.params.items()):
+            mapper_key = key
+            if key in case_control_card_to_pynastran_key:
+                mapper_key = case_control_card_to_pynastran_key[key]
+
             if key in skip_keys:
                 pass
             elif 'SET ' in key:
@@ -891,7 +964,7 @@ def _update_case_control(model, mapper):
 
                     if key in mapper_quantities:
                         #print('mapper = %s, value=%s' % (key, value))
-                        kmap = mapper[key]
+                        kmap = mapper[mapper_key]
                         try:
                             value2 = kmap[value]
                         except KeyError:

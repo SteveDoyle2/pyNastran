@@ -7,7 +7,7 @@ from __future__ import print_function
 from six import integer_types
 
 from pyNastran.bdf.bdf import BDF, read_bdf
-from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
+#from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
 
 def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
                   remove_pids=True, remove_mids=True):
@@ -62,7 +62,6 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
         'POINT', 'EPOINT',
         'DELAY', 'DPHASE',
         'CBARAO', 'AEPARM',
-
 
         # properties
         'PELAS', 'PDAMP', 'PBUSH',
@@ -290,59 +289,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
         elif card_type in ['TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2', 'ACSRCE']:
             pass
         elif card_type in load_types:
-            for loads in model.loads.values():
-                for load in loads:
-                    if load.type in ['FORCE', 'MOMENT']:
-                        nids_used.add(load.node_id)
-                        cids_used.add(load.Cid())
-                    elif load.type in ['FORCE1', 'FORCE2', 'MOMENT1', 'MOMENT2']:
-                        nids_used.update(load.node_ids)
-                    elif load.type == 'GRAV':
-                        cids_used.add(load.Cid())
-                    elif load.type == 'RANDPS':
-                        pass
-                    elif load.type == 'PLOAD':
-                        nids_used.update(load.node_ids)
-                    elif load.type == 'PLOAD1':
-                        #eid = integer(card, 2, 'eid')
-                        pass
-                    elif load.type == 'PLOAD2':
-                        #eids_used.update(load.element_ids)
-                        pass
-                    elif load.type == 'PLOAD4':
-                        # eids, g1, g34
-                        cids_used.add(load.Cid())
-                    elif load.type == 'SPCD':
-                        nids_used.update(load.node_ids)
-                    elif load.type == 'GMLOAD':
-                        cids_used.add(load.Cid())
-                    elif load.type in ['RFORCE', 'RFORCE1']:
-                        nids_used.add(load.node_id)
-                        cids_used.add(load.Cid())
-                    elif load.type == 'TEMP':
-                        nids_used.update(list(load.temperatures.keys()))
-                    elif load.type == 'ACCEL':
-                        # nids?
-                        cids_used.add(load.Cid())
-                    elif load.type == 'ACCEL1':
-                        # nids?
-                        cids_used.add(load.Cid())
-                    elif load.type in ['QBDY1', 'QBDY2', 'QBDY3', 'QHBDY']:
-                        pass
-                    #'QBDY1', 'QBDY2', 'QBDY3', 'QHBDY', 'PLOADX1
-                    elif load.type in ['PLOADX1']:
-                        nids_used.update(load.node_ids)
-                    elif load.type in ['SLOAD']:
-                        nids_used.update(load.node_ids)
-                    elif load.type in ['LOAD', 'LSEQ', 'LOADCYN']:
-                        pass
-                    elif load.type in ['QVOL']:
-                        # eids
-                        pass
-                    elif load.type in ['TEMPAX']:
-                        pass # not done...
-                    else:
-                        raise NotImplementedError(load)
+            _store_loads(model, card_type, ids, nids_used, cids_used)
 
         elif card_type == 'TEMPD':
             pass
@@ -385,7 +332,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
             for suport1 in model.suport1.values():
                 nids_used.update(suport1.node_ids)
         elif card_type == 'GRID':
-            for nid, node in model.nodes.items():
+            for unused_nid, node in model.nodes.items():
                 cids_used.update([node.Cp(), node.Cd()])
 
         elif card_type in ['CBAR', 'CBEAM', 'CBEND']:
@@ -624,7 +571,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
                 if prop.outp:
                     sets_used.add(prop.outp)
                 if prop.brps:
-                    for key, value in prop.brps.items():
+                    for unused_key, value in prop.brps.items():
                         sets_used.add(value)
                 #if prop.cores:
                     #for key, value in prop.cores.items():
@@ -652,7 +599,80 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
             #mids_used.extend(prop.Mids())
         #else:
             #raise NotImplementedError(prop)
+    _remove(
+        model,
+        nids_used, cids_used,
+        pids_used, pids_mass_used,
+        mids_used,
+        remove_nids=remove_nids,
+        remove_cids=remove_cids,
+        remove_pids=remove_pids,
+        remove_mids=remove_mids,
+    )
 
+def _store_loads(model, unused_card_type, unused_ids, nids_used, cids_used):
+    """helper for ``remove_unused``"""
+    for loads in model.loads.values():
+        for load in loads:
+            if load.type in ['FORCE', 'MOMENT']:
+                nids_used.add(load.node_id)
+                cids_used.add(load.Cid())
+            elif load.type in ['FORCE1', 'FORCE2', 'MOMENT1', 'MOMENT2']:
+                nids_used.update(load.node_ids)
+            elif load.type == 'GRAV':
+                cids_used.add(load.Cid())
+            elif load.type == 'RANDPS':
+                pass
+            elif load.type == 'PLOAD':
+                nids_used.update(load.node_ids)
+            elif load.type == 'PLOAD1':
+                #eid = integer(card, 2, 'eid')
+                pass
+            elif load.type == 'PLOAD2':
+                #eids_used.update(load.element_ids)
+                pass
+            elif load.type == 'PLOAD4':
+                # eids, g1, g34
+                cids_used.add(load.Cid())
+            elif load.type == 'SPCD':
+                nids_used.update(load.node_ids)
+            elif load.type == 'GMLOAD':
+                cids_used.add(load.Cid())
+            elif load.type in ['RFORCE', 'RFORCE1']:
+                nids_used.add(load.node_id)
+                cids_used.add(load.Cid())
+            elif load.type == 'TEMP':
+                nids_used.update(list(load.temperatures.keys()))
+            elif load.type == 'ACCEL':
+                # nids?
+                cids_used.add(load.Cid())
+            elif load.type == 'ACCEL1':
+                # nids?
+                cids_used.add(load.Cid())
+            elif load.type in ['QBDY1', 'QBDY2', 'QBDY3', 'QHBDY']:
+                pass
+            #'QBDY1', 'QBDY2', 'QBDY3', 'QHBDY', 'PLOADX1
+            elif load.type in ['PLOADX1']:
+                nids_used.update(load.node_ids)
+            elif load.type in ['SLOAD']:
+                nids_used.update(load.node_ids)
+            elif load.type in ['LOAD', 'LSEQ', 'LOADCYN']:
+                pass
+            elif load.type in ['QVOL']:
+                # eids
+                pass
+            elif load.type in ['TEMPAX']:
+                pass # not done...
+            else:
+                raise NotImplementedError(load)
+
+
+def _remove(model,
+            nids_used, cids_used,
+            pids_used, pids_mass_used, mids_used,
+            remove_nids=True, remove_cids=True,
+            remove_pids=True, remove_mids=True):
+    """actually removes the cards"""
     nids = set(model.nodes.keys())
     pids = set(model.properties.keys())
     pids_mass = set(model.properties_mass.keys())
