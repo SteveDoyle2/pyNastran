@@ -2129,17 +2129,11 @@ class GetCard(GetMethods):
                         etype, msg))
                     continue
 
-                try:
-                    eid = eids[0]
-                except:
-                    #self.log.warning('skipping etype=%s; eids=%s' % (etype, str(eids)))
-                    continue
-
+                # get the number of nodes of the first element
+                eid = eids[0]
                 element0 = self.elements[eid]
-                #if etype in ['CTETRA', 'CPENTA', 'CHEXA', 'CPYRAM']:
-                    #nnodes_array = np.zeros(neids, dtype='int32')
-                    #eids_min =
                 nnodes = len(element0.node_ids)
+
                 neids = len(eids)
                 node_ids = np.zeros((neids, nnodes), dtype=idtype)
                 if etype in etypes_none_nodes:
@@ -2295,7 +2289,12 @@ class GetCard(GetMethods):
 
     def get_node_id_to_elements_map(self):
         """
-        Returns a dictionary that maps node IDs to a list of elemnents
+        Returns a dictionary that maps node IDs to a list of elements.
+
+        Returns
+        -------
+        nid_to_elements_map : Dict[nid]=List[eid]
+            node id to a list of elements
 
         .. todo:: support 0d or 1d elements
         .. todo:: support elements with missing nodes
@@ -2325,7 +2324,15 @@ class GetCard(GetMethods):
 
     def get_property_id_to_element_ids_map(self, msg=''):
         """
-        Returns a dictionary that maps a property ID to a list of elemnents
+        Returns a dictionary that maps a property ID to a list of elements.
+
+        Returns
+        -------
+        pid_to_eids_map : Dict[pid]=List[eid]
+            property id to a list of elements
+        msg : str; default=''
+            a message added to the error message
+
         """
         pid_to_eids_map = {}
         pids = self.property_ids
@@ -2359,6 +2366,8 @@ class GetCard(GetMethods):
         -------
         mid_to_pids_map : dict[int] = int
             the mapping
+        msg : str; default=''
+            a message added to the error message
 
         .. code-block:: python
 

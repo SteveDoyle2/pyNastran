@@ -176,116 +176,138 @@ def _pload1_total(model, loadcase_id, load, scale, xyz, F, M, p):
     """helper method for ``sum_forces_moments``"""
     elem = load.eid_ref
     if elem.type in ['CBAR', 'CBEAM']:
-        p1 = load.p1 * scale
-        p2 = load.p2 * scale
-
-        nodes = elem.node_ids
-        n1, n2 = xyz[nodes[0]], xyz[nodes[1]]
-        n1 += elem.wa
-        n2 += elem.wb
-
-        bar_vector = n2 - n1
-        L = norm(bar_vector)
-        try:
-            Ldir = bar_vector / L
-        except:
-            msg = 'Length=0.0; nid1=%s nid2=%s\n' % (nodes[0], nodes[1])
-            msg += '%s%s' % (str(elem.nodes[0]), str(elem.nodes[1]))
-            raise FloatingPointError(msg)
-
-        if load.scale == 'FR':  # x1, x2 are fractional lengths
-            x1 = load.x1
-            x2 = load.x2
-            #compute_fx = False
-        elif load.scale == 'LE': # x1, x2 are actual lengths
-            x1 = load.x1 / L
-            x2 = load.x2 / L
-        elif load.scale == 'LEPR':
-            model.log.warning('PLOAD1 LEPR continue')
-            return
-            #msg = 'scale=%r is not supported.  Use "FR", "LE".' % load.scale
-            #raise NotImplementedError(msg)
-        elif load.scale == 'FRPR':
-            model.log.warning('PLOAD1 FRPR continue')
-            return
-            #msg = 'scale=%r is not supported.  Use "FR", "LE".' % load.scale
-            #raise NotImplementedError(msg)
-        else:
-            msg = 'PLOAD1: scale=%r is not supported.  Use "FR", "LE".' % load.scale
-            raise NotImplementedError(msg)
-
-        # FY - force in basic coordinate system
-        # FR - fractional;
-        assert x1 <= x2, 'x1=%s x2=%s' % (x1, x2)
-        if x1 != x2:
-            # continue
-            if not load.type in ['FX', 'FY', 'FZ']:
-                model.log.warning('PLOAD1 x1 != x2 continue; x1=%s x2=%s; scale=%r\n%s%s'% (
-                    x1, x2, load.scale, str(elem), str(load)))
-                return
-            model.log.warning('check this...PLOAD1 x1 != x2; x1=%s x2=%s; scale=%r\n%s%s'% (
-                x1, x2, load.scale, str(elem), str(load)))
-
-            # y = (y2-y1)/(x2-x1)*(x-x1) + y1
-            # y = (y2-y1) * (x-x1)/(x2-x1) + y1
-            # y = y2*(x-x1)/(x2-x1) + y1*(1-(x-x1)/(x2-x1))
-            # y = y2 * r + y1 * (1-r)
-            # r = (x-x1)/(x2-x1)
-            #
-            # y = y2 * r + y1 - y1 * r
-            # yi = y2 * ri + y1 * x + y1 * ri
-            # yi = y2 * ri + y1 * (x2-x1) + y1 * ri
-            #
-            # ri = integral(r)
-            # ri = 1/(x2-x1) * (0.5) * (x1-x2)**2
-            #
-            # yi = integral(y)
-            # yi = y2 * ri + y1 * (x2-x1) + y1 * ri
-            # ri = 1./(x2-x1) * (0.5) * (x1-x2)**2
-            # y1 = p1
-            # y2 = p2
-            # yi = y2 * ri + y1 * (x2-x1) + y1 * ri
-            # F = yi
-            if allclose(p1, -p2):
-                Ftotal = p1
-                x = (x1 + x2) / 2.
-            else:
-                Ftotal = L * (x2-x1) * (p1 + p2)/2.
-                Mx = L * p1 * (x2-x1)/2. + L * (p2-p1) * (2./3. * x2 + 1./3. * x1)
-                x = Mx / Ftotal
-            model.log.info('L=%s x1=%s x2=%s p1/L=%s p2/L=%s Ftotal=%s Mtotal=%s x=%s' % (
-                L, x1, x2, p1, p2, Ftotal, Mx, x))
-
-            unused_i = Ldir
-            if load.Type in ['FX', 'FY', 'FZ']:
-                r = (1. - x) * n1 + x * n2
-                #print('r=%s n1=%s n2=%s' % (r, n1, n2))
-                if load.Type == 'FX':
-                    force_dir = array([1., 0., 0.])
-                elif load.Type == 'FY':
-                    force_dir = array([0., 1., 0.])
-                elif load.Type == 'FZ':
-                    force_dir = array([0., 0., 1.])
-                else:
-                    raise NotImplementedError('Type=%r is not supported.  '
-                                              'Use "FX", "FY", "FZ".' % load.Type)
-
-            Fi = Ftotal * force_dir
-            Mi = cross(r - p, force_dir * Ftotal)
-            F += Fi
-            M += Mi
-            model.log.info('Fi=%s Mi=%s x=%s' % (Fi, Mi, x))
-        else:
-            _bar_eq_pload1(load, elem, xyz, Ldir,
-                           n1, n2,
-                           x1, x2,
-                           p1, p2,
-                           F, M, p)
+        _pload1_bar_beam(model, loadcase_id, load, elem, scale, xyz, F, M, p)
     elif elem.type == 'CBEND':
         model.log.warning('case=%s etype=%r loadtype=%r not supported' % (
             loadcase_id, elem.type, load.type))
     else:
         raise RuntimeError('element.type=%r is not a CBAR, CBEAM, or CBEND' % elem.type)
+    return
+
+def _pload1_elements(model, loadcase_id, load, scale, eids, xyz, F, M, p):
+    """helper method for ``sum_forces_moments_elements``"""
+    #elem = model.elements[load.eid]
+    elem = load.eid_ref
+    if elem.eid not in eids:
+        return
+    if elem.type in ['CBAR', 'CBEAM']:
+        _pload1_bar_beam(model, loadcase_id, load, elem, scale, xyz, F, M, p)
+    elif elem.type == 'CBEND':
+        model.log.warning('case=%s etype=%r loadtype=%r not supported' % (
+            loadcase_id, elem.type, load.type))
+    else:
+        raise RuntimeError('element.type=%r is not a CBAR, CBEAM, or CBEND' % elem.type)
+    return
+
+def _pload1_bar_beam(model, unused_loadcase_id, load, elem, scale, xyz, F, M, p):
+    """
+    helper method for ``sum_forces_moments`` and ``sum_forces_moments_elements``
+    """
+    p1 = load.p1 * scale
+    p2 = load.p2 * scale
+
+    nodes = elem.node_ids
+    n1, n2 = xyz[nodes[0]], xyz[nodes[1]]
+    n1 += elem.wa
+    n2 += elem.wb
+
+    bar_vector = n2 - n1
+    L = norm(bar_vector)
+    try:
+        Ldir = bar_vector / L
+    except:
+        msg = 'Length=0.0; nid1=%s nid2=%s\n' % (nodes[0], nodes[1])
+        msg += '%s%s' % (str(elem.nodes[0]), str(elem.nodes[1]))
+        raise FloatingPointError(msg)
+
+    if load.scale == 'FR':  # x1, x2 are fractional lengths
+        x1 = load.x1
+        x2 = load.x2
+        #compute_fx = False
+    elif load.scale == 'LE': # x1, x2 are actual lengths
+        x1 = load.x1 / L
+        x2 = load.x2 / L
+    elif load.scale == 'LEPR':
+        model.log.warning('PLOAD1: LEPR continue')
+        return
+        #msg = 'scale=%r is not supported.  Use "FR", "LE".' % load.scale
+        #raise NotImplementedError(msg)
+    elif load.scale == 'FRPR':
+        model.log.warning('PLOAD1: FRPR continue')
+        return
+        #msg = 'scale=%r is not supported.  Use "FR", "LE".' % load.scale
+        #raise NotImplementedError(msg)
+    else:
+        msg = 'PLOAD1: scale=%r is not supported.  Use "FR", "LE".' % load.scale
+        raise NotImplementedError(msg)
+
+    # FY - force in basic coordinate system
+    # FR - fractional;
+    assert x1 <= x2, 'x1=%s x2=%s' % (x1, x2)
+    if x1 != x2:
+        # continue
+        if not load.type in ['FX', 'FY', 'FZ']:
+            model.log.warning('PLOAD1 x1 != x2 continue; x1=%s x2=%s; scale=%r\n%s%s'% (
+                x1, x2, load.scale, str(elem), str(load)))
+            return
+        model.log.warning('check this...PLOAD1 x1 != x2; x1=%s x2=%s; scale=%r\n%s%s'% (
+            x1, x2, load.scale, str(elem), str(load)))
+
+        # y = (y2-y1)/(x2-x1)*(x-x1) + y1
+        # y = (y2-y1) * (x-x1)/(x2-x1) + y1
+        # y = y2*(x-x1)/(x2-x1) + y1*(1-(x-x1)/(x2-x1))
+        # y = y2 * r + y1 * (1-r)
+        # r = (x-x1)/(x2-x1)
+        #
+        # y = y2 * r + y1 - y1 * r
+        # yi = y2 * ri + y1 * x + y1 * ri
+        # yi = y2 * ri + y1 * (x2-x1) + y1 * ri
+        #
+        # ri = integral(r)
+        # ri = 1/(x2-x1) * (0.5) * (x1-x2)**2
+        #
+        # yi = integral(y)
+        # yi = y2 * ri + y1 * (x2-x1) + y1 * ri
+        # ri = 1./(x2-x1) * (0.5) * (x1-x2)**2
+        # y1 = p1
+        # y2 = p2
+        # yi = y2 * ri + y1 * (x2-x1) + y1 * ri
+        # F = yi
+        if allclose(p1, -p2):
+            Ftotal = p1
+            x = (x1 + x2) / 2.
+        else:
+            Ftotal = L * (x2-x1) * (p1 + p2)/2.
+            Mx = L * p1 * (x2-x1)/2. + L * (p2-p1) * (2./3. * x2 + 1./3. * x1)
+            x = Mx / Ftotal
+        model.log.info('L=%s x1=%s x2=%s p1/L=%s p2/L=%s Ftotal=%s Mtotal=%s x=%s' % (
+            L, x1, x2, p1, p2, Ftotal, Mx, x))
+
+        unused_i = Ldir
+        if load.Type in ['FX', 'FY', 'FZ']:
+            r = (1. - x) * n1 + x * n2
+            #print('r=%s n1=%s n2=%s' % (r, n1, n2))
+            if load.Type == 'FX':
+                force_dir = array([1., 0., 0.])
+            elif load.Type == 'FY':
+                force_dir = array([0., 1., 0.])
+            elif load.Type == 'FZ':
+                force_dir = array([0., 0., 1.])
+            else:
+                raise NotImplementedError('Type=%r is not supported.  '
+                                          'Use "FX", "FY", "FZ".' % load.Type)
+
+        Fi = Ftotal * force_dir
+        Mi = cross(r - p, force_dir * Ftotal)
+        F += Fi
+        M += Mi
+        model.log.info('Fi=%s Mi=%s x=%s' % (Fi, Mi, x))
+    else:
+        _bar_eq_pload1(load, elem, xyz, Ldir,
+                       n1, n2,
+                       x1, x2,
+                       p1, p2,
+                       F, M, p)
     return
 
 def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
@@ -554,71 +576,6 @@ def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
     #model.log.info("case=%s F=%s M=%s\n" % (loadcase_id, F, M))
     return (F, M)
 
-def _pload1_elements(model, loadcase_id, load, scale, eids, xyz, F, M, p):
-    """helper method for ``sum_forces_moments_elements``"""
-    #elem = model.elements[load.eid]
-    elem = load.eid_ref
-    if elem.eid not in eids:
-        return
-
-    if elem.type in ['CBAR', 'CBEAM']:
-        p1 = load.p1 * scale
-        p2 = load.p2 * scale
-
-        nodes = elem.node_ids
-        n1, n2 = xyz[nodes[0]], xyz[nodes[1]]
-        n1 += elem.wa
-        n2 += elem.wb
-
-        bar_vector = n2 - n1
-        L = norm(bar_vector)
-
-        try:
-            Ldir = bar_vector / L
-        except:
-            msg = 'Length=0.0; nid1=%s nid2=%s\n' % (nodes[0], nodes[1])
-            msg += '%s%s' % (str(elem.nodes[0]), str(elem.nodes[1]))
-            raise FloatingPointError(msg)
-
-        if load.scale == 'FR':  # x1, x2 are fractional lengths
-            x1 = load.x1
-            x2 = load.x2
-            #compute_fx = False
-        elif load.scale == 'LE': # x1, x2 are actual lengths
-            x1 = load.x1 / L
-            x2 = load.x2 / L
-        elif load.scale == 'LEPR':
-            model.log.warning('PLOAD1: LEPR continue')
-            return
-            #msg = 'scale=%r is not supported.  Use "FR", "LE".' % load.scale
-            #raise NotImplementedError(msg)
-        elif load.scale == 'FRPR':
-            model.log.warning('PLOAD1: FRPR continue')
-            return
-            #msg = 'scale=%r is not supported.  Use "FR", "LE".' % load.scale
-            #raise NotImplementedError(msg)
-        else:
-            msg = 'PLOAD1: scale=%r is not supported.  Use "FR", "LE".' % load.scale
-            raise NotImplementedError(msg)
-
-        # FY - force in basic coordinate system
-        # FR - fractional;
-        if x1 != x2:
-            model.log.warning('PLOAD1: x1 != x2 continue\n%s%s'% (str(elem), str(load)))
-            return
-
-        #print(load)
-        _bar_eq_pload1(load, elem, xyz, Ldir,
-                       n1, n2,
-                       x1, x2,
-                       p1, p2,
-                       F, M, p)
-    elif elem.type == 'CBEND':
-        model.log.warning('case=%s etype=%r loadtype=%r not supported' % (
-            loadcase_id, elem.type, load.type))
-    else:
-        raise RuntimeError('element.type=%r is not a CBAR, CBEAM, or CBEND' % elem.type)
-    return
 
 def _bar_eq_pload1(load, elem, xyz, Ldir,
                    n1, n2,

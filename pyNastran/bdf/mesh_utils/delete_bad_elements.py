@@ -1,3 +1,4 @@
+# pylint: disable=C0103
 """
 defines:
  - model = delete_bad_shells(model, max_theta=175., max_skew=70., max_aspect_ratio=100.,
@@ -8,6 +9,19 @@ defines:
 
 from __future__ import print_function
 import numpy as np
+
+from pyNastran.converters.nastran.geometry_helper import (
+    tri_quality, quad_quality, get_min_max_theta)
+
+SIDE_MAP = {}
+SIDE_MAP['CHEXA'] = {
+    1 : [4, 3, 2, 1],
+    2 : [1, 2, 6, 5],
+    3 : [2, 3, 7, 6],
+    4 : [3, 4, 8, 7],
+    5 : [4, 1, 5, 8],
+    6 : [5, 6, 7, 8],
+}
 
 
 def delete_bad_shells(model,
@@ -315,3 +329,315 @@ def get_bad_shells(model, xyz_cid0, nid_map,
                 #np.degrees(theta_mini), np.degrees(theta_maxi),
                 #np.degrees(skew), aspect_ratio))
     return eids_failed
+
+def element_quality(model, nid_cp_cd, xyz_cid0, nid_map):
+    # these normals point inwards
+    #      4
+    #    / | \
+    #   /  |  \
+    #  3-------2
+    #   \  |   /
+    #    \ | /
+    #      1
+    _ctetra_faces = (
+        (0, 1, 2), # (1, 2, 3),
+        (0, 3, 1), # (1, 4, 2),
+        (0, 3, 2), # (1, 3, 4),
+        (1, 3, 2), # (2, 4, 3),
+    )
+
+    # these normals point inwards
+    #
+    #
+    #
+    #
+    #        /4-----3
+    #       /       /
+    #      /  5    /
+    #    /    \   /
+    #   /      \ /
+    # 1---------2
+    _cpyram_faces = (
+        (0, 1, 2, 3), # (1, 2, 3, 4),
+        (1, 4, 2), # (2, 5, 3),
+        (2, 4, 3), # (3, 5, 4),
+        (0, 3, 4), # (1, 4, 5),
+        (0, 4, 1), # (1, 5, 2),
+    )
+
+    # these normals point inwards
+    #       /6
+    #     /  | \
+    #   /    |   \
+    # 3\     |     \
+    # |  \   /4-----5
+    # |    \/       /
+    # |   /  \     /
+    # |  /    \   /
+    # | /      \ /
+    # 1---------2
+    _cpenta_faces = (
+        (0, 2, 1), # (1, 3, 2),
+        (3, 4, 5), # (4, 5, 6),
+
+        (0, 1, 4, 3), # (1, 2, 5, 4), # bottom
+        (1, 2, 5, 4), # (2, 3, 6, 5), # right
+        (0, 3, 5, 2), # (1, 4, 6, 3), # left
+    )
+
+    # these normals point inwards
+    #      8----7
+    #     /|   /|
+    #    / |  / |
+    #   /  5-/--6
+    # 4-----3   /
+    # |  /  |  /
+    # | /   | /
+    # 1-----2
+    _chexa_faces = (
+        (4, 5, 6, 7), # (5, 6, 7, 8),
+        (0, 3, 2, 1), # (1, 4, 3, 2),
+        (1, 2, 6, 5), # (2, 3, 7, 6),
+        (2, 3, 7, 6), # (3, 4, 8, 7),
+        (0, 4, 7, 3), # (1, 5, 8, 4),
+        (0, 6, 5, 4), # (1, 7, 6, 5),
+    )
+
+    # quality
+    nelements = len(model.elements)
+    min_interior_angle = np.zeros(nelements, 'float32')
+    max_interior_angle = np.zeros(nelements, 'float32')
+    dideal_theta = np.zeros(nelements, 'float32')
+    max_skew_angle = np.zeros(nelements, 'float32')
+    max_warp_angle = np.zeros(nelements, 'float32')
+    max_aspect_ratio = np.zeros(nelements, 'float32')
+    #area = np.zeros(nelements, 'float32')
+    area_ratio = np.zeros(nelements, 'float32')
+    taper_ratio = np.zeros(nelements, 'float32')
+    min_edge_length = np.zeros(nelements, 'float32')
+    #normals = np.full((nelements, 3), np.nan, 'float32')
+
+
+    #nids_list = []
+    ieid = 0
+
+    all_nids = nid_cp_cd[:, 0]
+    ieid = 0
+    for eid, elem in sorted(model.elements.items()):
+        if ieid % 5000 == 0 and ieid > 0:
+            print('  map_elements = %i' % ieid)
+        etype = elem.type
+        nids = None
+        inids = None
+
+        dideal_thetai = np.nan
+        min_thetai = np.nan
+        max_thetai = np.nan
+        #max_thetai = np.nan
+        max_skew = np.nan
+        #max_warp = np.nan
+        max_warp = np.nan
+        aspect_ratio = np.nan
+        #areai = np.nan
+        area_ratioi = np.nan
+        taper_ratioi = np.nan
+        min_edge_lengthi = np.nan
+        #normali = np.nan
+        if etype in ['CTRIA3', 'CTRIAR', 'CTRAX3', 'CPLSTN3']:
+            nids = elem.nodes
+            inids = np.searchsorted(all_nids, nids)
+            p1, p2, p3 = xyz_cid0[inids, :]
+            out = tri_quality(p1, p2, p3)
+            (areai, max_skew, aspect_ratio,
+             min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
+            #normali = np.cross(p1 - p2, p1 - p3)
+
+        elif etype in ['CQUAD4', 'CQUADR', 'CPLSTN4', 'CQUADX4']:
+            nids = elem.nodes
+            inids = np.searchsorted(all_nids, nids)
+            p1, p2, p3, p4 = xyz_cid0[inids, :]
+            out = quad_quality(p1, p2, p3, p4)
+            (areai, taper_ratioi, area_ratioi, max_skew, aspect_ratio,
+             min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
+
+        elif etype == 'CTRIA6':
+            nids = elem.nodes
+            if None in nids:
+                inids = np.searchsorted(all_nids, nids[:3])
+                nids = nids[:3]
+                p1, p2, p3 = xyz_cid0[inids, :]
+            else:
+                inids = np.searchsorted(all_nids, nids)
+                p1, p2, p3, p4, unused_p5, unused_p6 = xyz_cid0[inids, :]
+            out = tri_quality(p1, p2, p3)
+            (areai, max_skew, aspect_ratio,
+             min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
+
+        elif etype == 'CQUAD8':
+            nids = elem.nodes
+            if None in nids:
+                inids = np.searchsorted(all_nids, nids[:4])
+                nids = nids[:4]
+                p1, p2, p3, p4 = xyz_cid0[inids, :]
+            else:
+                inids = np.searchsorted(all_nids, nids)
+                p1, p2, p3, p4, unused_p5, unused_p6 = xyz_cid0[inids, :]
+            out = quad_quality(p1, p2, p3, p4)
+            (areai, taper_ratioi, area_ratioi, max_skew, aspect_ratio,
+             min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
+            #normali = np.cross(p1 - p3, p2 - p4)
+
+        elif etype == 'CSHEAR':
+            nids = elem.nodes
+            inids = np.searchsorted(all_nids, nids)
+            p1, p2, p3, p4 = xyz_cid0[inids, :]
+            out = quad_quality(p1, p2, p3, p4)
+            (areai, taper_ratioi, area_ratioi, max_skew, aspect_ratio,
+             min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
+
+        elif etype == 'CTETRA':
+            nids = elem.nodes
+            if None in nids:
+                nids = nids[:4]
+            inids = np.searchsorted(all_nids, nids)
+            min_thetai, max_thetai, dideal_thetai, min_edge_lengthi = get_min_max_theta(
+                _ctetra_faces, nids, nid_map, xyz_cid0)
+
+        elif etype == 'CHEXA':
+            nids = elem.nodes
+            if None in nids:
+                nids = nids[:8]
+            inids = np.searchsorted(all_nids, nids)
+            min_thetai, max_thetai, dideal_thetai, min_edge_lengthi = get_min_max_theta(
+                _chexa_faces, nids, nid_map, xyz_cid0)
+
+        elif etype == 'CPENTA':
+            nids = elem.nodes
+            if None in nids:
+                nids = nids[:6]
+            inids = np.searchsorted(all_nids, nids)
+            min_thetai, max_thetai, dideal_thetai, min_edge_lengthi = get_min_max_theta(
+                _cpenta_faces, nids, nid_map, xyz_cid0)
+
+        elif etype == 'CPYRAM':
+            # TODO: assuming 5
+            nids = elem.nodes
+            if None in nids:
+                nids = nids[:5]
+            inids = np.searchsorted(all_nids, nids)
+            min_thetai, max_thetai, dideal_thetai, min_edge_lengthi = get_min_max_theta(
+                _cpyram_faces, nids, nid_map, xyz_cid0)
+        elif etype in ['CELAS2', 'CELAS4', 'CDAMP4']:
+            # these can have empty nodes and have no property
+            # CELAS1: 1/2 GRID/SPOINT and pid
+            # CELAS2: 1/2 GRID/SPOINT, k, ge, and s
+            # CELAS3: 1/2 SPOINT and pid
+            # CELAS4: 1/2 SPOINT and k
+            nids = elem.nodes
+            assert nids[0] != nids[1]
+            if None in nids:
+                assert nids[0] is not None, nids
+                assert nids[1] is None, nids
+                nids = [nids[0]]
+            else:
+                nids = elem.nodes
+                assert nids[0] != nids[1]
+            inids = np.searchsorted(all_nids, nids)
+        elif etype in ['CBUSH', 'CBUSH1D', 'CBUSH2D',
+                       'CELAS1', 'CELAS3',
+                       'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP5',
+                       'CFAST', 'CGAP', 'CVISC']:
+            nids = elem.nodes
+            assert nids[0] != nids[1]
+            assert None not in nids, 'nids=%s\n%s' % (nids, elem)
+            inids = np.searchsorted(all_nids, nids)
+        elif etype in ['CBAR', 'CBEAM']:
+            nids = elem.nodes
+            inids = np.searchsorted(all_nids, nids)
+            p1, p2 = xyz_cid0[inids, :]
+            min_edge_lengthi = np.linalg.norm(p2 - p1)
+        elif etype in ['CROD', 'CTUBE']:
+            nids = elem.nodes
+            inids = np.searchsorted(all_nids, nids)
+            p1, p2 = xyz_cid0[inids, :]
+            min_edge_lengthi = np.linalg.norm(p2 - p1)
+            #nnodes = 2
+            #dim = 1
+        elif etype == 'CONROD':
+            nids = elem.nodes
+            inids = np.searchsorted(all_nids, nids)
+            p1, p2 = xyz_cid0[inids, :]
+            min_edge_lengthi = np.linalg.norm(p2 - p1)
+        #------------------------------
+        # rare
+        #elif etype == 'CIHEX1':
+            #nids = elem.nodes
+            #pid = elem.pid
+            #cell_type = cell_type_hexa8
+            #inids = np.searchsorted(all_nids, nids)
+            #min_thetai, max_thetai, dideal_thetai, min_edge_lengthi = get_min_max_theta(
+                #_chexa_faces, nids, nid_map, xyz_cid0)
+            #nnodes = 8
+            #dim = 3
+        elif etype == 'CHBDYE':
+            #self.eid_map[eid] = ieid
+            eid_solid = elem.eid2
+            side = elem.side
+            element_solid = model.elements[eid_solid]
+
+            mapped_inids = SIDE_MAP[element_solid.type][side]
+            side_inids = [nid - 1 for nid in mapped_inids]
+            nodes = element_solid.node_ids
+
+            #nnodes = len(side_inids)
+            nids = [nodes[inid] for inid in side_inids]
+            inids = np.searchsorted(all_nids, nids)
+
+            if len(side_inids) == 4:
+                pass
+            else:
+                msg = 'element_solid:\n%s' % (str(element_solid))
+                msg += 'mapped_inids = %s\n' % mapped_inids
+                msg += 'side_inids = %s\n' % side_inids
+                msg += 'nodes = %s\n' % nodes
+                #msg += 'side_nodes = %s\n' % side_nodes
+                raise NotImplementedError(msg)
+        else:
+            #raise NotImplementedError(elem)
+            nelements -= 1
+            continue
+        #nids_list.append(nnodes)
+        #nids_list.extend(inids)
+        #normals[ieid] = normali
+        #eids_array[ieid] = eid
+        #pids_array[ieid] = pid
+        #dim_array[ieid] = dim
+        #cell_types_array[ieid] = cell_type
+        #cell_offsets_array[ieid] = cell_offset  # I assume the problem is here
+        #cell_offset += nnodes + 1
+        #eid_map[eid] = ieid
+
+        min_interior_angle[ieid] = min_thetai
+        max_interior_angle[ieid] = max_thetai
+        dideal_theta[ieid] = dideal_thetai
+        max_skew_angle[ieid] = max_skew
+        max_warp_angle[ieid] = max_warp
+        max_aspect_ratio[ieid] = aspect_ratio
+        #area[ieid] = areai
+        area_ratio[ieid] = area_ratioi
+        taper_ratio[ieid] = taper_ratioi
+        min_edge_length[ieid] = min_edge_lengthi
+        ieid += 1
+    quality = {
+        'min_interior_angle' : min_interior_angle,
+        'max_interior_angle' : max_interior_angle,
+        'dideal_theta' : dideal_theta,
+        'max_skew_angle' : max_skew_angle,
+        'max_warp_angle' : max_warp_angle,
+        'max_aspect_ratio' : max_aspect_ratio,
+        #'area' : area,
+        'area_ratio' : area_ratio,
+        'taper_ratio' : taper_ratio,
+        'min_edge_length' : min_edge_length,
+    }
+    return quality

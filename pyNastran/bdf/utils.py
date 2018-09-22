@@ -50,7 +50,7 @@ def _to_fields_mntpnt1(card_lines):
     line1, line2 = card_lines
 
     base = line1[:24]
-    comment = line1[24:]  # len=56 max
+    unused_comment = line1[24:]  # len=56 max
     assert ',' not in base, base
     assert '\t' not in base, base
 
@@ -209,21 +209,18 @@ def to_fields(card_lines, card_name):
         return _to_fields_mntpnt1(card_lines)
 
     # first line
-    line = card_lines.pop(0)
+    line = card_lines[0]
     if '=' in line:
         msg = 'card_name=%r\nequal signs are not supported...line=%r' % (card_name, line)
         raise CardParseSyntaxError(msg)
 
     if '\t' in line:
-        line = line.expandtabs()
-        if ',' in line:
-            msg = 'tabs and commas in the same line are not supported...line=%r' % line
-            raise CardParseSyntaxError(msg)
+        line = expand_tabs(line)
 
     if '*' in line:  # large field
         if ',' in line:  # csv
             new_fields = line.split(',')[:5]
-            for i in range(5 - len(new_fields)):
+            for unused_i in range(5 - len(new_fields)):
                 new_fields.append('')
         else:  # standard
             new_fields = [line[0:8], line[8:24], line[24:40], line[40:56],
@@ -242,15 +239,12 @@ def to_fields(card_lines, card_name):
         fields += new_fields
         assert len(fields) == 9, fields
 
-    for j, line in enumerate(card_lines): # continuation lines
+    for line in card_lines[1:]: # continuation lines
         if '=' in line and card_name != 'EIGRL':
-            msg = 'card_name=%r\nequal signs are not supported...line=%r' % (card_name, line)
+            msg = 'card_name=%r\nequal signs are not supported...\nline=%r' % (card_name, line)
             raise CardParseSyntaxError(msg)
         if '\t' in line:
-            line = line.expandtabs()
-            if ',' in line:
-                msg = 'tabs and commas in the same line are not supported...line=%r' % line
-                raise CardParseSyntaxError(msg)
+            line = expand_tabs(line)
 
         if '*' in line:  # large field
             if ',' in line:  # csv
@@ -271,11 +265,20 @@ def to_fields(card_lines, card_name):
                               line[56:64], line[64:72]]
             if len(new_fields) != 8:
                 nfields = len(new_fields)
-                msg = 'nFields=%s new_fields=%s' % (nfields, new_fields)
+                msg = 'nfields=%s new_fields=%s' % (nfields, new_fields)
                 raise RuntimeError(msg)
 
         fields += new_fields
-    return fields #[field.strip() for field in fields]
+    return fields
+
+def expand_tabs(line):
+    """expands the tabs; breaks if you mix commas and tabs"""
+    line = line.expandtabs()
+    if ',' in line:
+        line = line.replace('\t', '')
+        msg = 'tabs and commas in the same line are not supported...\nline=%r' % line
+        raise CardParseSyntaxError(msg)
+    return line
 
 def parse_executive_control_deck(executive_control_lines):
     """Extracts the solution from the executive control deck"""
@@ -894,7 +897,7 @@ def PositionWRT(xyz, cid, cid_new, model, is_cid_int=True):
         cp_ref = cid
         coord_to_ref = cid_new
 
-    if 0:
+    if 0:  # pragma: no cover
         # pGlobal = pLocal1 * beta1 + porigin1
         # pGlobal = pLocal2 * beta2 + porigin2
         # pLocal1 * beta1 + porigin1 = pLocal2 * beta2 + porigin2
@@ -950,7 +953,7 @@ def deprecated(old_name, new_name, deprecated_version, levels=None):
     dep_ver_tuple = tuple([int(i) for i in deprecated_version.split('.')])
     ver_tuple = tuple([int(i) for i in version.split('.')[:2]])
 
-    new_line = ''
+    #new_line = ''
     msg = "'%s' was deprecated in v%s (current=%s)" % (
         old_name, deprecated_version, version)
     if new_name:
