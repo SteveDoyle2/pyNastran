@@ -116,6 +116,12 @@ from pyNastran.bdf.cards.optimization import (
     DVMREL1, DVMREL2,
     DVPREL1, DVPREL2,
     DVGRID, DSCREEN)
+from pyNastran.bdf.cards.superelements import (
+    SEBNDRY, SELABEL, SELOAD, SELOC, SEBULK, SEELT,
+    SETREE, SEMPLN, SEEXCLD, SENQSET, SECONCT,
+    CSUPER, CSUPEXT,
+)
+
 from pyNastran.bdf.cards.bdf_sets import (
     ASET, BSET, CSET, QSET, USET,
     ASET1, BSET1, CSET1, QSET1, USET1,
@@ -575,9 +581,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             'RADSET',  # radset
 
             # superelements
-            #'SETREE', 'SENQSET', 'SEBULK', 'SEBNDRY', 'SEELT', 'SELOC', 'SEMPLN',
-            #'SECONCT', 'SELABEL', 'SECONCT', 'SEMPLN', 'SEEXCLD', 'CSUPER', 'CSUPEXT',
-            #'SELOAD',
+            'SETREE', 'SENQSET', 'SEBULK', 'SEBNDRY', 'SEELT', 'SELOC', 'SEMPLN',
+            'SECONCT', 'SELABEL', 'SECONCT', 'SEEXCLD', 'CSUPER', 'CSUPEXT',
+            'SELOAD',
 
             # super-element sets
             'SESET',  ## se_sets
@@ -1615,21 +1621,20 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         self._card_parser = {
             #'=' : (Crash, None),
             '/' : (Crash, None),
-            #'SETREE' : (Crash, None),
-            #'SENQSET' : (Crash, None),
-            #'SEBULK' : (Crash, None),
-            #'SEBNDRY' : (Crash, None),
-            #'SEELT' : (Crash, None),
-            #'SELOC' : (Crash, None),
-            #'SEMPLN' : (Crash, None),
-            #'SECONCT' : (Crash, None),
-            #'SELABEL' : (Crash, None),
-            #'SECONCT' : (Crash, None),
-            #'SEMPLN' : (Crash, None),
-            #'SEEXCLD' : (Crash, None),
-            #'CSUPER' : (Crash, None),
-            #'CSUPEXT' : (Crash, None),
-            #'SELOAD' : (Crash, None),
+            'SETREE' : (SETREE, self._add_csupext_object),
+            'SENQSET' : (SENQSET, self._add_csupext_object),
+            'SEBULK' : (SEBULK, self._add_csupext_object),
+            'SEBNDRY' : (SEBNDRY, self._add_csupext_object),
+            'SEELT' : (SEELT, self._add_seelt_object),
+            'SELOC' : (SELOC, self._add_seelt_object),
+            'SEMPLN' : (SEMPLN, self._add_seelt_object),
+            'SECONCT' : (SECONCT, self._add_csupext_object),
+            'SELABEL' : (SELABEL, self._add_seelt_object),
+            'SECONCT' : (Crash, None),
+            'SEEXCLD' : (SEEXCLD, self._add_seelt_object),
+            'CSUPER' : (CSUPER, self._add_csupext_object),
+            'CSUPEXT' : (CSUPEXT, self._add_csupext_object),
+            'SELOAD' : (SELOAD, self._add_seelt_object),
 
             # nodes
             'GRID' : (GRID, self._add_node_object),

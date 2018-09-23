@@ -956,6 +956,33 @@ def loose_string_or_blank(card, ifield, fieldname, default=None):
     if svalue:  # string
         return str(svalue.upper())
     return default
+
+def exact_string_or_blank(card, ifield, fieldname, default=None):
+    """
+    Parameters
+    ----------
+    card : BDFCard()
+        BDF card as a list
+    ifield : int
+        field number
+    fieldname : str
+        name of field
+    default : str, None
+        the default value for the field (default=None)
+
+    Returns
+    -------
+    value : varies
+        the value of the field
+    """
+    svalue = card.field(ifield)
+    if svalue is None:
+        return default
+    svalue = '%-8s' % svalue
+    if svalue == '':
+        return default
+    return svalue
+
 # int                    - done
 # int/blank              - done
 # int/float              - done

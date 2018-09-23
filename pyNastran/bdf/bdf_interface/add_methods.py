@@ -145,6 +145,12 @@ class AddMethods(BDFAttributes):
             comment = ''
             self.epoints[nid] = epoint
 
+    def _add_seelt_object(self, seelt):
+        #self.seelt.append(seelt)
+        pass
+    def _add_csupext_object(self, csupext):
+        pass
+
     def _add_plotel_object(self, elem, allow_overwrites=False):
         # type: (Any, bool) -> None
         """adds an PLOTEL object"""

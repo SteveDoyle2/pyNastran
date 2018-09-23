@@ -495,7 +495,7 @@ def fortran_to_python_short(line, unused_default_values):
     func_str += '    return %s(args)\n' % line.strip()
     local_dict = {}
     exec_(func_str, globals(), local_dict)
-    return d['func']
+    return local_dict['func']
 
 def split_to_equations(lines):
     """

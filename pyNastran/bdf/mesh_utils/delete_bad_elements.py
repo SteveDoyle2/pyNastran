@@ -423,7 +423,7 @@ def element_quality(model, nid_cp_cd, xyz_cid0, nid_map):
 
     all_nids = nid_cp_cd[:, 0]
     ieid = 0
-    for eid, elem in sorted(model.elements.items()):
+    for unused_eid, elem in sorted(model.elements.items()):
         if ieid % 5000 == 0 and ieid > 0:
             print('  map_elements = %i' % ieid)
         etype = elem.type
@@ -533,24 +533,26 @@ def element_quality(model, nid_cp_cd, xyz_cid0, nid_map):
             # CELAS2: 1/2 GRID/SPOINT, k, ge, and s
             # CELAS3: 1/2 SPOINT and pid
             # CELAS4: 1/2 SPOINT and k
-            nids = elem.nodes
-            assert nids[0] != nids[1]
-            if None in nids:
-                assert nids[0] is not None, nids
-                assert nids[1] is None, nids
-                nids = [nids[0]]
-            else:
-                nids = elem.nodes
-                assert nids[0] != nids[1]
-            inids = np.searchsorted(all_nids, nids)
+            continue
+            #nids = elem.nodes
+            #assert nids[0] != nids[1]
+            #if None in nids:
+                #assert nids[0] is not None, nids
+                #assert nids[1] is None, nids
+                #nids = [nids[0]]
+            #else:
+                #nids = elem.nodes
+                #assert nids[0] != nids[1]
+            #inids = np.searchsorted(all_nids, nids)
         elif etype in ['CBUSH', 'CBUSH1D', 'CBUSH2D',
                        'CELAS1', 'CELAS3',
                        'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP5',
                        'CFAST', 'CGAP', 'CVISC']:
-            nids = elem.nodes
-            assert nids[0] != nids[1]
-            assert None not in nids, 'nids=%s\n%s' % (nids, elem)
-            inids = np.searchsorted(all_nids, nids)
+            #nids = elem.nodes
+            #assert nids[0] != nids[1]
+            #assert None not in nids, 'nids=%s\n%s' % (nids, elem)
+            #inids = np.searchsorted(all_nids, nids)
+            continue
         elif etype in ['CBAR', 'CBEAM']:
             nids = elem.nodes
             inids = np.searchsorted(all_nids, nids)
@@ -580,28 +582,29 @@ def element_quality(model, nid_cp_cd, xyz_cid0, nid_map):
             #nnodes = 8
             #dim = 3
         elif etype == 'CHBDYE':
+            continue
             #self.eid_map[eid] = ieid
-            eid_solid = elem.eid2
-            side = elem.side
-            element_solid = model.elements[eid_solid]
+            #eid_solid = elem.eid2
+            #side = elem.side
+            #element_solid = model.elements[eid_solid]
 
-            mapped_inids = SIDE_MAP[element_solid.type][side]
-            side_inids = [nid - 1 for nid in mapped_inids]
-            nodes = element_solid.node_ids
+            #mapped_inids = SIDE_MAP[element_solid.type][side]
+            #side_inids = [nid - 1 for nid in mapped_inids]
+            #nodes = element_solid.node_ids
 
-            #nnodes = len(side_inids)
-            nids = [nodes[inid] for inid in side_inids]
-            inids = np.searchsorted(all_nids, nids)
+            ##nnodes = len(side_inids)
+            #nids = [nodes[inid] for inid in side_inids]
+            #inids = np.searchsorted(all_nids, nids)
 
-            if len(side_inids) == 4:
-                pass
-            else:
-                msg = 'element_solid:\n%s' % (str(element_solid))
-                msg += 'mapped_inids = %s\n' % mapped_inids
-                msg += 'side_inids = %s\n' % side_inids
-                msg += 'nodes = %s\n' % nodes
-                #msg += 'side_nodes = %s\n' % side_nodes
-                raise NotImplementedError(msg)
+            #if len(side_inids) == 4:
+                #pass
+            #else:
+                #msg = 'element_solid:\n%s' % (str(element_solid))
+                #msg += 'mapped_inids = %s\n' % mapped_inids
+                #msg += 'side_inids = %s\n' % side_inids
+                #msg += 'nodes = %s\n' % nodes
+                ##msg += 'side_nodes = %s\n' % side_nodes
+                #raise NotImplementedError(msg)
         else:
             #raise NotImplementedError(elem)
             nelements -= 1
