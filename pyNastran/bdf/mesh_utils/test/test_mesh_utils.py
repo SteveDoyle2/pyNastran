@@ -126,7 +126,7 @@ class TestMeshUtils(unittest.TestCase):
             msg += 'nid=%s xyz=%s\n' % (nid, node.xyz)
 
         assert len(model.nodes) == 4, msg
-        # os.remove(bdf_filename)
+        os.remove(bdf_filename)
         os.remove(bdf_filename_out)
 
         tol = 0.009

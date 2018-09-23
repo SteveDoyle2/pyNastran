@@ -11,7 +11,7 @@ from typing import List, Dict, Union, Optional, Tuple, Any, cast
 from codecs import open
 from six import string_types, iteritems, PY2, StringIO
 
-from pyNastran.bdf.utils import print_filename
+from pyNastran.bdf.bdf_interface.utils import print_filename
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdf_interface.attributes import BDFAttributes

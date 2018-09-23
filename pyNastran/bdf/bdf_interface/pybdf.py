@@ -518,8 +518,8 @@ def _lines_to_decks(lines, punch, keep_enddata=True):
                     line, comment = line.split('$', 1)
                     case_control_lines.append('$' + comment.rstrip())
 
-                uline = line.upper()
-                if 'BEGIN' in uline and ('BULK' in uline or 'SUPER' in uline):
+                uline = line.upper().strip()
+                if uline.startswith('BEGIN') and ('BULK' in uline or 'SUPER' in uline):
                     assert flag == 2
                     flag = 3
                 case_control_lines.append(line.rstrip())

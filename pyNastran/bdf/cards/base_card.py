@@ -13,7 +13,7 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer import print_card
 from pyNastran.bdf.field_writer_8 import is_same
 from pyNastran.bdf.bdf_interface.assign_type import interpret_value
-from pyNastran.bdf.utils import deprecated
+from pyNastran.bdf.bdf_interface.utils import deprecated
 
 
 if PY2:

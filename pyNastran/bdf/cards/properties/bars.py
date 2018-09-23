@@ -26,7 +26,7 @@ from pyNastran.utils.mathematics import integrate_unit_line, integrate_positive_
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
-from pyNastran.bdf.utils import to_fields
+from pyNastran.bdf.bdf_interface.utils import to_fields
 from pyNastran.utils.numpy_utils import float_types
 
 
@@ -2602,11 +2602,15 @@ def write_arbitrary_beam_section(inps, ts, brps, nsm, outp_id, core=None):
                     end += '        %s=%s,\n' % (key, value1)
             else:
                 if isinstance(value1, list):
-                    assert len(value1) == 2, value1
-                    thicknessi = value1[0]
-                    points = value1[1]
-                    end += '        %s(%s)=[%s, PT=(%s,%s)],\n' % (
-                        key, index, thicknessi, points[0], points[1])
+                    if len(value1) == 2:
+                        assert len(value1) == 2, value1
+                        thicknessi = value1[0]
+                        points = value1[1]
+                        end += '        %s(%s)=[%s, PT=(%s,%s)],\n' % (
+                            key, index, thicknessi, points[0], points[1])
+                    else:
+                        assert len(value1) == 1, value1
+                        end += '        %s=%s,\n' % (key, value1[0])
                 else:
                     end += '        %s(%s)=%s,\n' % (key, index, value1)
 

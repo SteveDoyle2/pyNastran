@@ -7,7 +7,7 @@ from six import string_types, PY2, PY3
 from numpy import ndarray
 
 from pyNastran.utils.numpy_utils import integer_types
-from pyNastran.bdf.cards.base_card import deprecated
+from pyNastran.bdf.bdf_interface.utils import deprecated
 from pyNastran.bdf.bdf_interface.subcase_utils import (
     write_stress_type, write_set, expand_thru_case_control)
 

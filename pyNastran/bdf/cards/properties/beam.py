@@ -17,7 +17,7 @@ from six import string_types
 import numpy as np
 from numpy import array, unique, argsort, allclose, ndarray
 
-from pyNastran.bdf.utils import to_fields
+from pyNastran.bdf.bdf_interface.utils import to_fields
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.cards.properties.bars import (
     IntegratedLineProperty, LineProperty, _bar_areaL,
@@ -1110,7 +1110,7 @@ def update_pbeam_negative_integer(pname_fid):
     elif iterm == 15:
         word = 'F2'
     else:
-        print('istation=%s iterm=%s' % (istation, iterm))
+        #print('istation=%s iterm=%s' % (istation, iterm))
         msg = ("property_type='PBEAM' has not implemented %r (istation=%r, iterm=%r)"
                " in pname_map" % (pname_fid, istation, iterm))
         raise NotImplementedError(msg)
@@ -1196,6 +1196,19 @@ class PBEAML(IntegratedLineProperty):
                 print('istation=%r idim=%r' % (istation, idim))
                 print(self)
                 raise
+        elif isinstance(pname_fid, str):
+            if not pname_fid[-1].isdigit():
+                param_name = pname_fid
+                idim = -1
+            else:
+                param_name, num = break_word_by_trailing_integer(pname_fid)
+                idim = int(num) - 1
+
+            if param_name == 'NSM':
+                self.nsm[idim] = value
+            else:
+                raise NotImplementedError('property_type=%r param_name=%r idim=%s has not implemented %r in pname_map' % (
+                    self.type, param_name, idim, pname_fid))
         else:
             raise NotImplementedError('property_type=%r has not implemented %r in pname_map' % (
                 self.type, pname_fid))

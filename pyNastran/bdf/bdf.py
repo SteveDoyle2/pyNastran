@@ -23,8 +23,10 @@ import numpy as np  # type: ignore
 
 from pyNastran.utils import object_attributes, check_path
 from pyNastran.utils.log import get_logger2, write_error
-from pyNastran.bdf.utils import (
-    _parse_pynastran_header, to_fields, parse_executive_control_deck, parse_patran_syntax)
+from pyNastran.bdf.utils import parse_patran_syntax
+from pyNastran.bdf.bdf_interface.utils import (
+    _parse_pynastran_header, to_fields, parse_executive_control_deck,
+    to_fields_replication, get_nrepeats, int_replication, float_replication)
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16, print_field_16
@@ -1229,6 +1231,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 #print("card_name = %s" % card_name)
 
             comment = _clean_comment(comment)
+
+            #TODO: these additional \n need to be there for rejected cards
+            #      but not parsed cards
             if line.rstrip():
                 card_lines.append(line)
                 if backup_comment:
@@ -1243,7 +1248,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
             elif comment:
                 backup_comment += comment + '\n'
-                #print('add backup=%r' % backup_comment)
             #elif comment:
                 #backup_comment += '$' + comment + '\n'
 
@@ -1495,6 +1499,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             the card_name -> 'GRID'
 
         """
+        assert '=' not in card_name, card_name
         if card_name.startswith('='):
             return False
         elif card_name in self.cards_to_read:
@@ -3506,15 +3511,182 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         50
 
         """
+        assert '=' not in card_name, card_name
         if card_name in self.card_count:
             self.card_count[card_name] += count_num
         else:
             self.card_count[card_name] = count_num
 
+    def _old_card_fields(self, card_lines, card_name, is_list=False, has_none=True):
+        if is_list:
+            fields = card_lines
+        else:
+            fields = to_fields(card_lines, card_name)
 
-    def _parse_cards(self, cards_list, cards_dict, unused_card_count):
+        # apply OPENMDAO syntax
+        if self._is_dynamic_syntax:
+            fields = [print_field_16(self._parse_dynamic_syntax(field)) if '%' in
+                      field.strip()[0:1] else print_field_16(field) for field in fields]
+            has_none = False
+
+        if has_none:
+            card = wipe_empty_fields([print_field_16(field) for field in fields])
+        else:
+            card = wipe_empty_fields(fields)
+        card_obj = BDFCard(card, has_none=False)
+        return card_obj
+
+    def expand_replication(self, card_name, icard, cards_list, card_lines_new, dig=True):
+        dig_str = '  ' if dig==False else ''
+        #print(dig_str, '-----------************---------')
+        #print(dig_str, '--dig=%s--' % dig)
+        #print(dig_str, 'card_lines_new=%s' % card_lines_new)
+        card = []
+        cards = []
+        card_lines_old = cards_list[icard-1][2]
+
+        is_star_lines = any('*' in line for line in card_lines_old)
+        if is_star_lines:
+            #new_fields = to_fields_replication(card_lines_old)
+            old_card = to_fields_replication(card_lines_old)
+        else:
+            #old_card, unused_card = self.create_card_object(
+                #card_lines_old, card_name,
+                #is_list=False, has_none=True)
+            #print(old_card)
+            old_card = self._old_card_fields(card_lines_old, card_name, is_list=False, has_none=True)
+            #print(old_card)
+            #assert '=' not in card_name
+
+        nlines = len(card_lines_new)
+        #print(dig_str, "card_lines_new =", card_lines_new)
+        new_card = to_fields_replication(card_lines_new)
+        assert len(card_lines_new) == nlines, card_lines_new
+
+        #print(dig_str, 'old_card =', old_card)
+        #print(dig_str, 'card_name = %r' % card_name)
+        old_card_real = None
+        if '=' == old_card[0]:
+            #print(dig_str, 'A!!!')
+            assert dig is True, dig
+            cards2 = self.expand_replication(card_name, icard-1, cards_list, card_lines_old, dig=False)
+            assert len(cards2) == 1, 'cards2=%s; ncards=%s' % (cards2, len(cards2))
+            #print(dig_str, 'cards_equal =', cards2)
+            old_card_fields = cards2[0]
+            old_card_real = old_card
+            #print(dig_str, 'old_card_fields =', old_card_fields)
+            #print(dig_str, 'old_card_real =', old_card_real)
+            #print(dig_str, 'card_lines_old =', card_lines_old)
+            old_card = self._old_card_fields(old_card_fields, card_name, is_list=True, has_none=True)
+        elif '=' in card_name:
+            #print(dig_str, 'B!!!')
+            #print(dig_str, 'old_card =', old_card)
+            #print(dig_str, 'card_lines_new =', card_lines_new)
+            #print(dig_str, 'card_name = %r' % card_name)
+
+            # good
+            #new_card = [u'=3']
+            #old_card = [u'CQUAD4', u'64', u'1', u'88', u'89', u'101', u'100']
+            #old_card_real = [u'=', u'*1', u'=', u'*1', u'*1', u'*1', u'*1']
+
+            # bad
+            #card_name = u'=(7)'
+            #new_card = [u'=(7)', u'*(10)', u'=', u'=', u'=', u'*(1.0)']
+            #old_card = [u'grid', u'1001', None, u'0.', u'0.', u'0.']
+            #old_card_real = [u'grid', u'1001', None, u'0.', u'0.', u'0.']
+            old_card_real = new_card
+        #else:
+            #print('old_card[0] %r' % old_card[0])
+
+        #print(dig_str, "old_card =", old_card)
+        #print(dig_str, "new_card =", new_card)
+        for ifield, field in enumerate(new_card):
+            if field is None:
+                field2 = old_card.field(ifield)
+                #print(' %i: %r -> %r' % (ifield, field, field2))
+                #assert field2 is None, 'field=%s field2=%s' % (field, field2)
+                card.append(field2)
+                continue
+
+            #if field == '':
+                #pass
+
+            field = field.strip()
+            if field == '=':
+                field2 = old_card[ifield]
+                #field2 = old_card.field(ifield)
+            elif field == '==':
+                # just append the remaining fields
+                card.extend(old_card[ifield:])
+                #print(dig_str, ' %i : extending %s' % (ifield, old_card[ifield:]))
+                #print(dig_str, ' break expand_replication...')
+                break
+            elif '=' in field:
+                # =4
+                assert ifield == 0, 'ifield=%s field=%r new_card=%s' % (ifield, field, new_card)
+                nrepeats = get_nrepeats(field, old_card, new_card)
+                if old_card_real is None:
+                    #old_card_real = old_card
+                    msg = (
+                        'Invalid Replication Syntax (continuations arent supported)\n'
+                        'old:\n%s\n'
+                        'new:\n%s'
+                        % (old_card, new_card))
+                    raise RuntimeError(msg)
+
+                #new_card = [u'=3']
+                #old_card = [u'CQUAD4', u'64', u'1', u'88', u'89', u'101', u'100']
+                #old_card_real = [u'=', u'*1', u'=', u'*1', u'*1', u'*1', u'*1']
+
+                #print('---')
+                #print(dig_str, "nrepeats =", nrepeats)
+                new_card[0] = '='
+                #print(dig_str, "new_card =", new_card)
+                #print(dig_str, "old_card =", old_card)
+                #print(dig_str, "old_card_real =", old_card_real)
+                for irepeat in range(nrepeats):
+                    repeated_cards = repeat_cards(old_card, old_card_real)
+                    if len(repeated_cards) != 1:
+                        for repeated_card in repeated_cards:
+                            print("  repeated_card =", repeated_card)
+                        raise RuntimeError('too many repeated cards')
+                    #for repeated_card in repeated_cards:
+                        #print("  repeated_card =", repeated_card)
+                    repeated_card = repeated_cards[0]
+                    cards.append(repeated_card)
+                    old_card = repeated_card
+                    #print(dig_str, "  repeated_card =", repeated_card)
+                #print(dig_str, 'breaking...')
+                return cards
+
+            elif '*' in field:
+                # this is an increment, not multiplication...
+                old_field = _field(old_card, ifield)
+                if '.' in field:
+                    field2 = float_replication(field, old_field)
+                else:
+                    field2 = int_replication(field, old_field)
+            else:
+                assert '(' not in field, 'field=%r' % field
+                assert '*' not in field, 'field=%r' % field
+                assert '=' not in field, 'field=%r' % field
+                field2 = field
+            #print(dig_str, ' %i: %r -> %r' % (ifield, field, field2))
+            card.append(field2)
+        if card:
+            cards.append(card)
+            #print(dig_str, 'card_expanded = %s' % card)
+        else:  # pragma: no cover
+            raise RuntimeError(card)
+        return cards
+
+    def _parse_cards(self, cards_list, cards_dict, card_count):
         """creates card objects and adds the parsed cards to the deck"""
-        #print('card_count = %s' % card_count)
+        # we don't want replication markers in the card_count
+        card_names_to_remove = (card_name for card_name in list(card_count.keys())
+                                if '=' in card_name)
+        for card_name in card_names_to_remove:
+            del card_count[card_name]
 
         self.echo = False
         if cards_dict: # self._is_cards_dict = True
@@ -3528,14 +3700,41 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                     for comment, card_lines in cards:
                         self.add_card(card_lines, card_name, comment=comment,
                                       is_list=False, has_none=False)
+
         if cards_list:
             # this is the block that actually runs
-            for card in cards_list:
+            for icard, card in enumerate(cards_list):
                 card_name, comment, card_lines = card
                 if card_name is None:
                     msg = 'card_name = %r\n' % card_name
                     msg += 'card_lines = %s' % card_lines
                     raise RuntimeError(msg)
+
+                if '=' in card_name:
+                    #print(card)
+                    replicated_cards = self.expand_replication(
+                        card_name, icard, cards_list, card_lines)
+                    replicated_card_old = []
+                    try:
+                        for replicated_card in replicated_cards:
+                            assert replicated_card != replicated_card_old
+                            replicated_card_old = replicated_card
+                    except AssertionError:
+                        #print('card_list = %s' % card_list)
+                        #print('card_lines = %s' % card_lines)
+                        replicated_card_old = []
+                        for replicated_card in replicated_cards:
+                            #print('adding ', replicated_card)
+                            assert replicated_card != replicated_card_old
+                            replicated_card_old = replicated_card
+                        raise
+
+                    for replicated_card in replicated_cards:
+                        self.add_card(replicated_card, replicated_card[0], comment=comment,
+                                      is_list=True, has_none=True)
+                    continue
+
+
                 if self.is_reject(card_name):
                     self.reject_card_lines(card_name, card_lines, comment)
                 else:
@@ -3965,6 +4164,57 @@ def _check_for_spaces(card_name, card_lines, comment):
     if card_name in ['SUBCASE ', 'CEND']:
         raise RuntimeError('No executive/case control deck was defined.')
 
+def _field(old_card, ifield):
+    #if isinstance(old_card, list):
+    #print(old_card, ifield)
+    field2 = old_card[ifield]
+    #else:
+        #field2 = old_card.field(ifield)
+    return field2
+
+def repeat_cards(old_card, new_card):
+    card = []
+    cards = []
+    #print('*old_card = %s' % old_card)
+    #print('*new_card = %s' % new_card)
+    assert old_card != new_card
+    for ifield, field in enumerate(new_card):
+        if field is None:
+            field2 = _field(old_card, ifield)
+            #field2 = old_card.field(ifield)
+            #print(' %i: %r -> %r' % (ifield, field, field2))
+            #assert field2 is None, 'field=%s field2=%s' % (field, field2)
+            card.append(field2)
+            continue
+
+        if field == '':
+            field2 = field
+        elif field == '=':
+            field2 = _field(old_card, ifield)
+        elif field == '==':
+            # just append the remaining fields
+            #print(' %s : extending %s' % (ifield, old_card[ifield:]))
+            card.extend(old_card[ifield:])
+            break
+
+        elif '*' in field:
+            # this is an increment, not multiplication...
+            old_field = _field(old_card, ifield)
+            #old_field = old_card.field(ifield)
+            if '.' in field:
+                field2 = float_replication(field, old_field)
+            else:
+                field2 = int_replication(field, old_field)
+        else:
+            assert '(' not in field, 'field=%r\nold_card=%s\nnew_card=%s' % (field, old_card, new_card)
+            assert '*' not in field, 'field=%r\nold_card=%s\nnew_card=%s' % (field, old_card, new_card)
+            assert '=' not in field, 'field=%r\nold_card=%s\nnew_card=%s' % (field, old_card, new_card)
+            field = field2
+        #print(' %i: %r -> %r' % (ifield, field, field2))
+        card.append(field2)
+    #print(' appending %s' % card)
+    cards.append(card)
+    return cards
 
 def main():  # pragma: no cover
     """shows off how unicode works becausee it's overly complicated"""

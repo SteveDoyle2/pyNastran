@@ -1443,6 +1443,26 @@ class MAT8(OrthotropicMaterial):
         8: 'rho', 9:'a1', 10:'a2', 11:'tref', 12:'Xt', 13:'Xc', 14:'Yt',
         15:'Yc', 16: 'S', 17:'ge', 18:'F12', 19:'strn',
     }
+    mp_name_map = {
+        'E1' : 'e11',
+        'E2' : 'e22',
+        'NU12' : 'nu12',
+        'G12' : 'g12',
+        'G1Z' : 'g1z',
+        'RHO' : 'rho', #6 : 'rho',
+        'A1' : 'a1',
+        'A2' : 'a2',
+        'A3' : 'a3',
+        #'TREF' : 'tref', #8 : 'tref',
+        #'E' : 'e', #3 : 'e',
+        #'G' : 'g', #4 : 'g',
+        #'NU' : 'nu', #5: 'nu',
+        #'A' : 'a', #7 : 'a',
+        #'GE' : 'ge', #9 : 'ge',
+        #'ST' : 'st', #10 : 'st',
+        #'SC' : 'sc', #11 : 'sc',
+        #'SS' : 'ss', #12 : 'ss',
+    }
 
     def __init__(self, mid, e11, e22, nu12, g12=0.0, g1z=1e8, g2z=1e8, rho=0.,
                  a1=0., a2=0., tref=0.,

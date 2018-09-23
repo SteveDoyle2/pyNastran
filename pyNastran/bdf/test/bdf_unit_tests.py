@@ -555,6 +555,28 @@ class TestBDF(Tester):
         fem1.pop_xref_errors()
         compare_mass_cg_inertia(fem1)
 
+    def test_bdf_superelement_1(self):
+        """checks resvec23.bdf"""
+        bdf_filename = os.path.join(MODEL_PATH, 'superelements', 'resvec23.bdf')
+        (fem1, fem2, diff_cards) = self.run_bdf(
+            '', bdf_filename, xref=False, run_extract_bodies=False,
+        )
+        diff_cards2 = list(set(diff_cards))
+        diff_cards2.sort()
+        assert len(diff_cards2) == 0, diff_cards2
+
+    def test_bdf_superelement_2(self):
+        """checks superelement.bdf"""
+        bdf_filename = os.path.join(MODEL_PATH, 'superelements', 'superelement.bdf')
+        (fem1, fem2, diff_cards) = self.run_bdf(
+            '', bdf_filename, xref=False, run_extract_bodies=False,
+        )
+        diff_cards2 = list(set(diff_cards))
+        diff_cards2.sort()
+        assert len(diff_cards2) == 0, diff_cards2
+        #os.remove(bdf_filename + '_out')
+        #self.run_bdf(folder, bdf_filename, xref=True) # PBEAML is not supported
+
     def test_bdf_thermal_01(self):
         """checks time_thermal_elements.bdf"""
         bdf_filename = os.path.join(MODEL_PATH, 'elements', 'time_thermal_elements.bdf')

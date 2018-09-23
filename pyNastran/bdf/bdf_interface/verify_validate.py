@@ -45,7 +45,8 @@ def verify_bdf(model, xref):
     _verify_dict_list(model.dvgrids, xref)
 
     _verify_dict(model.dresps, xref)
-    _verify_dict(model.gusts, xref)
+    for unused_id, gust in sorted(model.gusts.items()):
+        gust._verify(model, xref)
     _verify_dict(model.tics, xref)
     model.zona.verify(xref)
 

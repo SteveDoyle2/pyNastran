@@ -708,6 +708,9 @@ class DESVAR(OptConstraint):
         # DDVAL id if you want discrete values
         self.ddval = ddval
 
+    def _verify(self, xref):
+        pass
+
     @classmethod
     def add_card(cls, card, comment=''):
         """

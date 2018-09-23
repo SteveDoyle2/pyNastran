@@ -32,7 +32,7 @@ class TestOpenFoamGUI(unittest.TestCase):
         test.log = log
         test.on_load_geometry(geometry_filename, geometry_format='openfoam_shell', raise_error=True)
         test.on_load_geometry(geometry_filename, geometry_format='openfoam_hex', raise_error=True)
-
+        os.remove('points.bdf')
         #test.load_openfoam_geometry_faces(geometry_filename)
 
         model = read_block_mesh(geometry_filename, log=log)

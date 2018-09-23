@@ -773,7 +773,7 @@ def _init_offt_bit(card, unused_eid, offt_default):
     else:
         msg = ('field8 on %s card is not a string(offt) or bit '
                '(float)...field8=%s\n' % (card.field(0), field8))
-        raise RuntimeError("Card Instantiation: %s" % msg)
+        raise SyntaxError("Card Instantiation: %s" % msg)
     return offt, bit
 
 
