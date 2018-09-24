@@ -385,7 +385,7 @@ class TriShell(ShellElement):
         normal (3, ) float ndarray
             the unit normal vector
 
-        TODO: rotate the coordinate system by the angle theta
+        .. todo:: rotate the coordinate system by the angle theta
         """
         if normal is None:
             normal = self.Normal() # k = kmat
@@ -1633,7 +1633,7 @@ class QuadShell(ShellElement):
         normal (3, ) float ndarray
             the unit normal vector
 
-        TODO: rotate the coordinate system by the angle theta
+        .. todo:: rotate the coordinate system by the angle theta
         """
         if normal is None:
             normal = self.Normal() # k = kmat
@@ -2389,10 +2389,8 @@ class CQUAD4(QuadShell):
         """
         Splits a CQUAD4 into two CTRIA3s
 
-        TODO
-        ----
-         - doesn't consider theta_mcid if a float correctly (use an integer)
-         - doesn't optimize the orientation of the nodes yet...
+        .. todo:: doesn't consider theta_mcid if a float correctly (use an integer)
+        .. todo:: doesn't optimize the orientation of the nodes yet...
         """
         n1, n2, n3, n4 = self.nodes
         nids = [n1, n2, n3]

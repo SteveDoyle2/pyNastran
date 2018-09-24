@@ -243,8 +243,8 @@ def make_monpnt1s_from_cids(model, nids, cids, cid_to_inids,
     delete_unused_coords : bool; default=True
         delete coordinate systems from the model that aren't used
 
-    Note
-    ----
+    Notes
+    -----
     Doesn't write duplicate sets
     """
     nnodes_old = 0

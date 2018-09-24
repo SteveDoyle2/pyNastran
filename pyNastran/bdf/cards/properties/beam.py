@@ -48,6 +48,7 @@ class PBEAM(IntegratedLineProperty):
 
     The next two continuations are repeated for each intermediate station as
     described in Remark 5. and SO and X/XB must be specified.
+
     +----+------+----+----+----+-----+----+-----+
     | SO | X/XB | A  | I1 | I2 | I12 | J  | NSM |
     +----+------+----+----+----+-----+----+-----+
@@ -231,24 +232,25 @@ class PBEAM(IntegratedLineProperty):
         if n2b is None:
             n2b = n1b
 
+        nxxb = len(xxb)
         if nsm is None:
-            nsm = [0.] * len(xxb)
+            nsm = [0.] * nxxb
         if c1 is None:
-            c1 = [None] * len(xxb)
+            c1 = [None] * nxxb
         if c2 is None:
-            c2 = [None] * len(xxb)
+            c2 = [None] * nxxb
         if d1 is None:
-            d1 = [None] * len(xxb)
+            d1 = [None] * nxxb
         if d2 is None:
-            d2 = [None] * len(xxb)
+            d2 = [None] * nxxb
         if e1 is None:
-            e1 = [None] * len(xxb)
+            e1 = [None] * nxxb
         if e2 is None:
-            e2 = [None] * len(xxb)
+            e2 = [None] * nxxb
         if f1 is None:
-            f1 = [None] * len(xxb)
+            f1 = [None] * nxxb
         if f2 is None:
-            f2 = [None] * len(xxb)
+            f2 = [None] * nxxb
 
         #: Property ID
         self.pid = pid
@@ -390,12 +392,17 @@ class PBEAM(IntegratedLineProperty):
         self.e2 = array(e2, dtype='float64')[ixxb]
         self.f1 = array(f1, dtype='float64')[ixxb]
         self.f2 = array(f2, dtype='float64')[ixxb]
+        self._interpolate_sections()
+        self.mid_ref = None
 
-        # now we interpolate to fix up missing data
-        # from arrays that were potentially out of order
-        # (they're sorted now)
-        #
-        # we've also already checked xxb=0.0 and xxb=1.0 for I1, I2, I12, J
+    def _interpolate_sections(self):
+        """
+        now we interpolate to fix up missing data
+        from arrays that were potentially out of order
+        (they're sorted now)
+
+        we've also already checked xxb=0.0 and xxb=1.0 for I1, I2, I12, J
+        """
         loop_vars = (
             count(), self.xxb, self.A, self.i1, self.i2, self.i12, self.j, self.nsm,
             self.c1, self.c2, self.d1, self.d2, self.e1, self.e2, self.f1, self.f2
@@ -408,7 +415,9 @@ class PBEAM(IntegratedLineProperty):
                 if i1 == 0.0:
                     self.i1[i] = self.i1[-1] + self.i1[0] * (1 - xxb)
                 if i2 == 0.0:
-                    self.i12[i] = self.i2[-1] + self.i2[0] * (1 - xxb)
+                    self.i2[i] = self.i2[-1] + self.i2[0] * (1 - xxb)
+                if i12 == 0.0:
+                    self.i12[i] = self.i12[-1] + self.i12[0] * (1 - xxb)
                 if j == 0.0:
                     self.j[i] = self.j[-1] + self.j[0] * (1 - xxb)
 
@@ -449,7 +458,6 @@ class PBEAM(IntegratedLineProperty):
                     msg += '  cwa=%s cwb=%s\n' % (self.cwa, self.cwb)
                     msg += '  i=%s xxb=%s j=%s; j[%i]=%s\n' % (i, xxbi, self.j, i, ji)
                     raise ValueError(msg)
-        self.mid_ref = None
 
     def validate(self):
         nstations = len(self.A)
@@ -1207,8 +1215,9 @@ class PBEAML(IntegratedLineProperty):
             if param_name == 'NSM':
                 self.nsm[idim] = value
             else:
-                raise NotImplementedError('property_type=%r param_name=%r idim=%s has not implemented %r in pname_map' % (
-                    self.type, param_name, idim, pname_fid))
+                raise NotImplementedError('property_type=%r param_name=%r idim=%s '
+                                          'has not implemented %r in pname_map' % (
+                                              self.type, param_name, idim, pname_fid))
         else:
             raise NotImplementedError('property_type=%r has not implemented %r in pname_map' % (
                 self.type, pname_fid))
@@ -1888,7 +1897,7 @@ class PBCOMP(LineProperty):
         Creates a PBCOMP card
 
         Parameters
-        ---------
+        ----------
         pid : int
             Property ID
         mid : int
@@ -1922,6 +1931,7 @@ class PBCOMP(LineProperty):
             0 < Integer < 5
         comment : str; default=''
             a comment for the card
+
         """
         LineProperty.__init__(self)
         if comment:
@@ -1960,9 +1970,10 @@ class PBCOMP(LineProperty):
         assert isinstance(self.z, list), 'z=%r type=%s' % (self.z, type(self.z))
         assert isinstance(self.c, list), 'c=%r type=%s' % (self.c, type(self.c))
 
-        assert len(self.mids) == len(self.y), 'len(mids)=%s len(y)=%s' % (len(self.mids), len(self.y))
-        assert len(self.mids) == len(self.z), 'len(mids)=%s len(z)=%s' % (len(self.mids), len(self.z))
-        assert len(self.mids) == len(self.c), 'len(mids)=%s len(c)=%s' % (len(self.mids), len(self.c))
+        nmids = len(self.mids)
+        assert nmids == len(self.y), 'len(mids)=%s len(y)=%s' % (nmids, len(self.y))
+        assert nmids == len(self.z), 'len(mids)=%s len(z)=%s' % (nmids, len(self.z))
+        assert nmids == len(self.c), 'len(mids)=%s len(c)=%s' % (nmids, len(self.c))
         assert self.symopt in [0, 1, 2, 3, 4, 5], 'symopt=%r' % self.symopt
 
     @classmethod
@@ -1976,6 +1987,7 @@ class PBCOMP(LineProperty):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
@@ -2032,7 +2044,6 @@ class PBCOMP(LineProperty):
             z.append(zi)
             c.append(ci)
             mids.append(midi)
-        #raise NotImplementedError(data)
         return PBCOMP(pid, mid, y, z, c, mids,
                       area, i1, i2, i12, j, nsm,
                       k1, k2, m1, m2, n1, n2,

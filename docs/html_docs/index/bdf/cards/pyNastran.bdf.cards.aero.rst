@@ -43,4 +43,3 @@ aero Package
     :members:
     :private-members:
     :undoc-members:
-    :show-inheritance:

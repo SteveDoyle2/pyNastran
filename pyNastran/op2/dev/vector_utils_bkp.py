@@ -49,8 +49,7 @@ def transform_force_moment(force_in_local, moment_in_local,
     xyz2 = T_2_to_0.T @ xyz0
     xyz2 = T_2_to_0.T @ T_1_to_0 @ xyz1
 
-    Method
-    ------
+
     xyz_g = T_a2g @ xyz_a
     xyz_g = T_b2g @ xyz_b
     T_b2g @ xyz_b = T_a2g @ xyz_a

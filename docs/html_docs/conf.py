@@ -156,6 +156,9 @@ extensions = [
     'numpydoc',
 ]
 
+# suppress warnings
+numpydoc_show_class_members = False
+
 # display todos
 todo_include_todos = True
 

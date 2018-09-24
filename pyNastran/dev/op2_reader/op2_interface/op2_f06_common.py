@@ -259,13 +259,13 @@ class OP2_F06_Common(Deprecated):
         """
         Getattr, but considers sub-objects
 
-        Example 1
-        =========
-        self.eigenvectors = get_result('eigenvectors')
+        Examples
+        --------
+        **Example 1**
+        >>> self.eigenvectors = get_result('eigenvectors')
 
-        Example 2
-        =========
-        self.ato.displacements = get_result('ato.displacements')
+        **Example 2**
+         >>> self.ato.displacements = get_result('ato.displacements')
 
         """
         if '.' in result_name:

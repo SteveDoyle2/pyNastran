@@ -63,26 +63,21 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     ..warning :: be careful of card unsupported cards (e.g. ones not read in)
 
     Supports
-    ========
      - GRIDs
        - no superelements
      - COORDx
-
      - elements
         - CELASx/CONROD/CBAR/CBEAM/CQUAD4/CTRIA3/CTETRA/CPENTA/CHEXA
         - RBAR/RBAR1/RBE1/RBE2/RBE3/RSPLINE/RSSCON
-
      - properties
         - PSHELL/PCOMP/PCOMPG/PSOLID/PSHEAR/PBAR/PBARL
           PROD/PTUBE/PBEAM
      - mass
         - CMASSx/CONMx/PMASS
-
      - aero
        - FLFACT
        - SPLINEx
        - FLUTTER
-
      - partial case control
        - METHOD/CMETHOD/FREQENCY
        - LOAD/DLOAD/LSEQ/LOADSET...LOADSET/LSEQ is iffy
@@ -90,28 +85,23 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
          - nodes
          - elements
        - SPC/MPC/FLUTTER/FLFACT
-
     - constraints
        - SPC/SPCADD/SPCAX/SPCD
        - MPC/MPCADD
        - SUPORT/SUPORT1
-
     - solution control/methods
        - TSTEP/TSTEPNL
        - NLPARM
        - EIGB/EIGC/EIGRL/EIGR
-
     - sets
        - USET
-
     - other
       - tables
       - materials
       - loads/dloads
 
-
     Not Done
-    ========
+
      - SPOINT
      - any cards with SPOINTs
        - DMIG/DMI/DMIJ/DMIJI/DMIK/etc.

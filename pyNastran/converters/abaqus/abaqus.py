@@ -903,8 +903,8 @@ def get_param_map(iline, word, required_keys=None):
     """
     get the optional arguments on a line
 
-    Example
-    -------
+    Examples
+    --------
     >>> iline = 0
     >>> word = 'elset,instance=dummy2,generate'
     >>> params = get_param_map(iline, word, required_keys=['instance'])

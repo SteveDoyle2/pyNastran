@@ -1392,13 +1392,14 @@ class OP4(object):
             Overwrite the default precision ('single', 'double', 'default')
             Applies to all matrices
 
-        Method 1:
-        ---------
+        Examples
+        --------
+        # simple
         >>> write_op4(op4_filename, name_order=['A', 'B', 'C'],
                       precision='default', is_binary=True)
-        Method 2:
-        ---------
-        matrices = {
+
+        # another method
+        >>> matrices = {
             'A' : (formA, matrixA),
             'B' : (formB, matrixB),
         }

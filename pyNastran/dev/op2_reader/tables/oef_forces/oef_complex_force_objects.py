@@ -2695,8 +2695,8 @@ class ComplexCBushForceArray(ScalarObject):
 
 class ComplexCBeamForceVUArray(ScalarObject):  # 191-VUBEAM
     """
-    ELTYPE = 191 Beam view element (VUBEAM)
-    ---------------------------------------
+    **ELTYPE = 191 Beam view element (VUBEAM)**
+
     2 PARENT I     Parent p-element identification number
     3 COORD  I     CID coordinate system identification number
     4 ICORD  CHAR4 ICORD flat/curved and so on TCODE,7 =0 Real
@@ -2707,8 +2707,8 @@ class ComplexCBeamForceVUArray(ScalarObject):  # 191-VUBEAM
     11 TXY   RS    Shear xy
     12 TZX   RS    Shear zx
 
-    ELTYPE = 191 Beam view element (VUBEAM)
-    ---------------------------------------
+    **ELTYPE = 191 Beam view element (VUBEAM)**
+
     TCODE,7 = 1 Real/imaginary or magnitude/phase
     5 VUGRID   I  VU grid identification number for output grid
     6 POSIT    RS x/L position of VU grid identification number

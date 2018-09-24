@@ -2739,9 +2739,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         .. note:: if a card is not supported and not added to the proper
                   lists, this method will fail
 
-        TODO
-        ----
-         - RBE3s from OP2s can show up as ???s
+        .. todo:: RBE3s from OP2s can show up as ???s
 
         """
         card_dict_groups = [
@@ -3130,9 +3128,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             ``self.point_ids`` that their input (`CP`) in that
             coordinate system.
 
-        TODO
-        ----
-        how are SPOINTs/EPOINTs identified?
+        .. todo:: how are SPOINTs/EPOINTs identified?
         """
         icd_transform, icp_transform, xyz_cp, nid_cp_cd = self.get_displacement_index_xyz_cp_cd(
             fdtype=fdtype, idtype=idtype, sort_ids=True)

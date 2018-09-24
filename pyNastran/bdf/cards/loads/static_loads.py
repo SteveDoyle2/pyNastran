@@ -2248,8 +2248,8 @@ class PLOAD2(Load):
 
 class PLOAD4(Load):
     """
-    Solid Format
-    ============
+    ``Solid Format``
+
     Defines a pressure load on a face of a CHEXA, CPENTA, or CTETRA element.
 
     +--------+-----+-----+----+----+------+------+------+-------+
@@ -2260,8 +2260,8 @@ class PLOAD4(Load):
     |        | CID | N1  | N2 | N3 | SORL | LDIR |      |       |
     +--------+-----+-----+----+----+------+------+------+-------+
 
-    Shell Format
-    ============
+    ``Shell Format``
+
     Defines a pressure load on a face of a CTRIA3, CTRIA6, CTRIAR,
     CQUAD4, CQUAD8, or CQUADR element.
 

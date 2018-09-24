@@ -1084,29 +1084,23 @@ class RBE3(RigidElement):
             element id
         refgrid : int
             dependent node
-        refc - str
+        refc : str
             dependent components for refgrid???
-
-        Independent Set
-        ---------------
-          GiJs : List[int, ..., int]
-              independent nodes
-          comps : List[str, ..., str]
-              independent components
-          weights : List[float, ..., float]
-              weights for the importance of the DOF
-
-        Dependent / UM Set
-        ------------------
-          Gmi : List[int, ..., int]; default=None -> []
-              dependent nodes
-          Cmi : List[str, ..., str]; default=None -> []
-              dependent components
-
+        GiJs : List[int, ..., int]
+            independent nodes
+        comps : List[str, ..., str]
+            independent components
+        weights : List[float, ..., float]
+            weights for the importance of the DOF
+        Gmi : List[int, ..., int]; default=None -> []
+            dependent nodes / UM Set
+        Cmi : List[str, ..., str]; default=None -> []
+            dependent components / UM Set
         alpha : float; default=0.0
             thermal expansion coefficient
         comment : str; default=''
             a comment for the card
+
         """
         RigidElement.__init__(self)
         if comment:

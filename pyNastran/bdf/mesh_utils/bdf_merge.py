@@ -56,7 +56,6 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
             }
 
     Supports
-    --------
       nodes:      GRID
       coords:     CORDx
       elements:   CQUAD4, CTRIA3, CTETRA, CPENTA, CHEXA, CELASx, CBAR, CBEAM

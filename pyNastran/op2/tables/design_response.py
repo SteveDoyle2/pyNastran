@@ -41,7 +41,7 @@ class WeightResponse(object):
     def add_from_op2(self, out, log):
         """
         Weight Response
-        ---------------
+
         1 IRID         I Internal response identification number
         2 RID          I External response identification number
         3 TYPE(C)      I Response type

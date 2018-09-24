@@ -5546,8 +5546,8 @@ class AddCards(AddMethods):
         self._add_rigid_element_object(elem)
         return elem
 
-    def add_rbe3(self, eid, refgrid, refc, weights, comps, Gijs, Gmi=None,
-                 Cmi=None, alpha=0.0, comment=''):
+    def add_rbe3(self, eid, refgrid, refc, weights, comps, Gijs,
+                 Gmi=None, Cmi=None, alpha=0.0, comment=''):
         """
         Creates an RBE3 element
 
@@ -5565,18 +5565,18 @@ class AddCards(AddMethods):
             independent components
         weights : List[float, ..., float]
             independent weights for the importance of the DOF
-        Gmi : List[int, ..., int]
-            dependent nodes; UM Set
-        Cmi : List[str, ..., str]
-            dependent components; UM Set
+        Gmi : List[int, ..., int]; default=None -> []
+            dependent nodes / UM Set
+        Cmi : List[str, ..., str]; default=None -> []
+            dependent components / UM Set
         alpha : float; default=0.0
             thermal expansion coefficient
         comment : str; default=''
             a comment for the card
 
         """
-        elem = RBE3(eid, refgrid, refc, weights, comps, Gijs, Gmi=Gmi,
-                    Cmi=Cmi, alpha=alpha, comment=comment)
+        elem = RBE3(eid, refgrid, refc, weights, comps, Gijs,
+                    Gmi=Gmi, Cmi=Cmi, alpha=alpha, comment=comment)
         self._add_rigid_element_object(elem)
         return elem
 

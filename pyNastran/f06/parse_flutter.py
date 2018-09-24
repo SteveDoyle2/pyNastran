@@ -285,7 +285,6 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None,
         value : FlutterResponse()
 
     Supports:
-    ---------
      o single subcase
      o single subcase, no subcase marker
      o multiple subcases
@@ -297,10 +296,10 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None,
          - altitude
 
     Doesn't support:
-    ----------------
      o SOL 200
      o fixing mode switching problem
      o fixing unconverged points
+
     """
     flutters = make_flutter_response(
         f06_filename, f06_units=f06_units, out_units=out_units, log=log)

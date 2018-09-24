@@ -219,8 +219,8 @@ def numpy_to_vtk(num_array, deep=0, array_type=None):
     ----------
     - num_array :  a contiguous 1D or 2D, real numpy array.
 
-    Note
-    ----
+    Notes
+    -----
     This was pulled from VTK and modified to eliminate numpy 1.14 warnings.
     VTK uses a BSD license, so it's OK to do  that.
     """
@@ -283,8 +283,8 @@ def numpy_to_vtk(num_array, deep=0, array_type=None):
 
 def numpy_to_vtkIdTypeArray(num_array, deep=0):
     """
-    Note
-    ----
+    Notes
+    -----
     This was pulled from VTK and modified to eliminate numpy 1.14 warnings.
     VTK uses a BSD license, so it's OK to do  that.
     """

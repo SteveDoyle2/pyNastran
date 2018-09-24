@@ -540,8 +540,8 @@ def split_eids_along_nids(model, eids, nids):
 
     Implicitly returns model with additional nodes.
 
-    Note
-    ----
+    Notes
+    -----
     xref should be set to False for this function.
 
     """
