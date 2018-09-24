@@ -39,6 +39,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
     mids_used = set([])
     mids_thermal_used = set([])
     sets_used = set([])
+    desvars_used = set([])
     #nsms_used = set([])
 
     #card_types = list(model.card_count.keys())
@@ -389,10 +390,14 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
                 cid2 = aesurf.Cid2()
                 if cid2 is not None:
                     cids_used.add(cid2)
+
         elif card_type in ['SPLINE1', 'SPLINE2', 'SPLINE3', 'SPLINE4', 'SPLINE5']:
             pass
             #for spline_id in ids:
                 #spline = model.splines[spline_id]
+                #if card_type in ['SPLINE1', 'SPLINE2', 'SPLINE4', 'SPLINE5']:
+                    #sets_used.add(spline.Set())
+
         elif card_type in ['CAERO1']:
             for eid in ids:
                 caero = model.caeros[eid]
@@ -424,59 +429,12 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
         elif card_type in ['DCONSTR']:
             pass
         elif card_type == 'DRESP1':
-            for dresp_id in ids:
-                dresp = model.dresps[dresp_id]
-                if dresp.property_type in ['PSHELL', 'PCOMP', 'PCOMPG', 'PBAR', 'PBARL', 'PBEAM',
-                                           'PROD', 'PDAMP', 'PVISC', 'PTUBE', 'PSHEAR', 'PELAS',
-                                           'PSOLID', 'PBEAML']:
-                    pids_used.update(dresp.atti_values())
-                elif dresp.property_type == 'ELEM':
-                    if dresp.response_type in ['STRESS', 'FRSTRE',
-                                               'CFAILURE',
-                                               'TFORC', 'FRFORC']:
-                        #eids_used.update(dresp.atti_values())
-                        pass
-                    else:
-                        msg = (
-                            str(dresp) + 'region=%r property_type=%r response_type=%r, '
-                            'atta=%r attb=%s atti=%s' % (
-                                dresp.region, dresp.property_type, dresp.response_type,
-                                dresp.atta, dresp.attb, dresp.atti))
-                        raise NotImplementedError(msg)
-
-                #elif dresp.property_type == 'STRESS':
-
-                elif dresp.property_type is None:
-                    if dresp.response_type in ['WEIGHT', 'EIGN', 'VOLUME', 'LAMA', 'CEIG',
-                                               'FREQ', 'STABDER']:
-                        pass
-                    elif dresp.response_type in ['DISP', 'FRDISP', 'TDISP', 'RMSDISP', 'PSDDISP',
-                                                 'TVELO', 'FRVELO', 'RMSVELO',
-                                                 'TACCL', 'FRACCL', 'RMSACCL',
-                                                 'SPCFORCE', 'TSPCF', 'FRSPCF',
-                                                 'FORCE', 'TFORC', 'FRFORC']:
-                        nids_used.update(dresp.atti)
-                    elif dresp.response_type in ['FLUTTER', 'TRIM', 'DIVERG']:
-                        # flutter_id / trim_id
-                        pass
-                    else:
-                        msg = (
-                            str(dresp) + 'region=%r property_type=%r response_type=%r '
-                            'atta=%r attb=%s atti=%s' % (
-                                dresp.region, dresp.property_type, dresp.response_type,
-                                dresp.atta, dresp.attb, dresp.atti))
-                        raise NotImplementedError(msg)
-                else:
-                    msg = (
-                        str(dresp) + 'region=%r property_type=%r response_type=%r '
-                        'atta=%r attb=%s atti=%s' % (
-                            dresp.region, dresp.property_type, dresp.response_type,
-                            dresp.atta, dresp.attb, dresp.atti))
-                    raise NotImplementedError(msg)
+            _store_dresp1(model, ids, nids_used, pids_used)
         elif card_type == 'DRESP2':
             pass
             #for dresp_id in ids:
                 #dresp = model.dresps[dresp_id]
+                #dresp.deqatn
                 #if dresp.property_type in ['PSHELL', 'PCOMP', 'PBAR', 'PBARL', 'PBEAM', 'PROD']:
                     #pids_used.update(dresp.atti_values())
                 #elif dresp.property_type is None:
@@ -497,6 +455,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
         elif card_type in ['DVPREL1', 'DVPREL2']:
             for dvprel_id in ids:
                 dvprel = model.dvprels[dvprel_id]
+                desvars_used.update(dvprel.desvar_ids)
                 if dvprel.prop_type in ['PSHELL', 'PCOMP', 'PBAR', 'PBARL', 'PBEAM',
                                         'PROD', 'PELAS', 'PBUSH', 'PDAMP', 'PTUBE',
                                         'PSHEAR', 'PDAMP', 'PMASS', 'PBEAML', 'PCOMPG',
@@ -511,6 +470,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
         elif card_type in ['DVCREL1', 'DVCREL2']:
             for dvcrel_id in ids:
                 dvcrel = model.dvcrels[dvcrel_id]
+                desvars_used.update(dvcrel.desvar_ids)
                 if dvcrel.element_type in ['CMASS2', 'CMASS4', 'CONM1', 'CONM2',
                                            'CELAS2', 'CELAS4', 'CBUSH',
                                            'CDAMP2', 'CQUAD4', 'CGAP', 'CBAR']:
@@ -523,6 +483,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
         elif card_type in ['DVMREL1', 'DVMREL2']:
             for dvmrel_id in ids:
                 dvmrel = model.dvmrels[dvmrel_id]
+                desvars_used.update(dvmrel.desvar_ids)
                 if dvmrel.mat_type in ['MAT1', 'MAT2', 'MAT8', 'MAT9', 'MAT10', 'MAT11']:
                     mids_used.add(dvmrel.Mid())
                 else:
@@ -532,6 +493,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
             for dvgrid_id in ids:
                 dvgrids = model.dvgrids[dvgrid_id]
                 for dvgrid in dvgrids:
+                    desvars_used.add(dvgrid.desvar_id)
                     nids_used.add(dvgrid.nid)
                     cids_used.add(dvgrid.cid)
         elif card_type == 'TF':
@@ -540,32 +502,14 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
                 for transfer_function in tfs:
                     nids_used.update(transfer_function.nids)
         elif card_type in ['NSM', 'NSM1', 'NSML', 'NSML1']:
-            for nsm_id in ids:
-                nsms = model.nsms[nsm_id]
-                for nsm in nsms:
-                    idsi = nsm.ids
+            _store_nsm(model, ids, pids_used)
 
-                    if nsm.nsm_type in ['PROD', 'PBARL', 'PBEAML',
-                                        'PSHELL', 'PCOMP', ]:
-                        if len(idsi) == 1 and idsi[0] == 'ALL':
-                            idsi = list(model.properties.keys())
-                            #raise NotImplementedError('found ALL...\n%s' % str(nsm))
-                        pids_used.update(idsi)
-                    elif nsm.nsm_type in ['CONROD', 'ELEMENT']:
-                        # we skip this because we assume all elements are used
-                        #if len(idsi) == 1 and idsi[0] == 'ALL':
-                            #raise NotImplementedError('found ALL...\n%s' % str(nsm))
-                        #eids_used.update(idsi)
-                        pass
-                    else:
-                        msg = 'found nsm_type=%r...\n%s' % (nsm.nsm_type, str(nsm))
-                        raise NotImplementedError(msg)
         elif card_type in ['POINTAX', 'AXIC', 'RINGAX']:
             pass
             #for eid in ids:
                 #elem = model.plotels[eid]
                 #nids_used.update(elem.node_ids)
-        elif card_type in ['PBMSECT']:
+        elif card_type in ['PBRSECT', 'PBMSECT']:
             for pid in ids:
                 prop = model.properties[pid]
                 if prop.outp:
@@ -599,16 +543,42 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
             #mids_used.extend(prop.Mids())
         #else:
             #raise NotImplementedError(prop)
+    remove_desvars = False
     _remove(
         model,
         nids_used, cids_used,
         pids_used, pids_mass_used,
         mids_used,
+        desvars_used,
         remove_nids=remove_nids,
         remove_cids=remove_cids,
         remove_pids=remove_pids,
         remove_mids=remove_mids,
+        unused_remove_desvars=remove_desvars,
     )
+
+def _store_nsm(model, ids, pids_used):
+    """helper for ``remove_unused``"""
+    for nsm_id in ids:
+        nsms = model.nsms[nsm_id]
+        for nsm in nsms:
+            idsi = nsm.ids
+
+            if nsm.nsm_type in ['PROD', 'PBARL', 'PBEAML',
+                                'PSHELL', 'PCOMP', ]:
+                if len(idsi) == 1 and idsi[0] == 'ALL':
+                    idsi = list(model.properties.keys())
+                    #raise NotImplementedError('found ALL...\n%s' % str(nsm))
+                pids_used.update(idsi)
+            elif nsm.nsm_type in ['CONROD', 'ELEMENT']:
+                # we skip this because we assume all elements are used
+                #if len(idsi) == 1 and idsi[0] == 'ALL':
+                    #raise NotImplementedError('found ALL...\n%s' % str(nsm))
+                #eids_used.update(idsi)
+                pass
+            else:
+                msg = 'found nsm_type=%r...\n%s' % (nsm.nsm_type, str(nsm))
+                raise NotImplementedError(msg)
 
 def _store_loads(model, unused_card_type, unused_ids, nids_used, cids_used):
     """helper for ``remove_unused``"""
@@ -666,12 +636,65 @@ def _store_loads(model, unused_card_type, unused_ids, nids_used, cids_used):
             else:
                 raise NotImplementedError(load)
 
+def _store_dresp1(model, ids, nids_used, pids_used):
+    """helper for ``remove_unused``"""
+    for dresp_id in ids:
+        dresp = model.dresps[dresp_id]
+        if dresp.property_type in ['PSHELL', 'PCOMP', 'PCOMPG', 'PBAR', 'PBARL', 'PBEAM',
+                                   'PROD', 'PDAMP', 'PVISC', 'PTUBE', 'PSHEAR', 'PELAS',
+                                   'PSOLID', 'PBEAML']:
+            pids_used.update(dresp.atti_values())
+        elif dresp.property_type == 'ELEM':
+            if dresp.response_type in ['STRESS', 'FRSTRE',
+                                       'CFAILURE',
+                                       'TFORC', 'FRFORC']:
+                #eids_used.update(dresp.atti_values())
+                pass
+            else:
+                msg = (
+                    str(dresp) + 'region=%r property_type=%r response_type=%r, '
+                    'atta=%r attb=%s atti=%s' % (
+                        dresp.region, dresp.property_type, dresp.response_type,
+                        dresp.atta, dresp.attb, dresp.atti))
+                raise NotImplementedError(msg)
+
+        #elif dresp.property_type == 'STRESS':
+
+        elif dresp.property_type is None:
+            if dresp.response_type in ['WEIGHT', 'EIGN', 'VOLUME', 'LAMA', 'CEIG',
+                                       'FREQ', 'STABDER']:
+                pass
+            elif dresp.response_type in ['DISP', 'FRDISP', 'TDISP', 'RMSDISP', 'PSDDISP',
+                                         'TVELO', 'FRVELO', 'RMSVELO',
+                                         'TACCL', 'FRACCL', 'RMSACCL',
+                                         'SPCFORCE', 'TSPCF', 'FRSPCF',
+                                         'FORCE', 'TFORC', 'FRFORC']:
+                nids_used.update(dresp.atti)
+            elif dresp.response_type in ['FLUTTER', 'TRIM', 'DIVERG']:
+                # flutter_id / trim_id
+                pass
+            else:
+                msg = (
+                    str(dresp) + 'region=%r property_type=%r response_type=%r '
+                    'atta=%r attb=%s atti=%s' % (
+                        dresp.region, dresp.property_type, dresp.response_type,
+                        dresp.atta, dresp.attb, dresp.atti))
+                raise NotImplementedError(msg)
+        else:
+            msg = (
+                str(dresp) + 'region=%r property_type=%r response_type=%r '
+                'atta=%r attb=%s atti=%s' % (
+                    dresp.region, dresp.property_type, dresp.response_type,
+                    dresp.atta, dresp.attb, dresp.atti))
+            raise NotImplementedError(msg)
 
 def _remove(model,
             nids_used, cids_used,
             pids_used, pids_mass_used, mids_used,
+            unused_desvars_used,
             remove_nids=True, remove_cids=True,
-            remove_pids=True, remove_mids=True):
+            remove_pids=True, remove_mids=True,
+            unused_remove_desvars=True):
     """actually removes the cards"""
     nids = set(model.nodes.keys())
     pids = set(model.properties.keys())

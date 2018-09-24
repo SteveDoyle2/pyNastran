@@ -3170,7 +3170,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 else:
                     cell_type = cell_type_tri6
                     inids = np.searchsorted(all_nids, nids)
-                    p1, p2, p3, p4, unused_p5, unused_p6 = xyz_cid0[inids, :]
+                    p1, p2, p3, p4 = xyz_cid0[inids[:4], :]
                     nnodes = 8
                 out = quad_quality(p1, p2, p3, p4)
                 (areai, taper_ratioi, area_ratioi, max_skew, aspect_ratio,

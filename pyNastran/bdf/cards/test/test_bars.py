@@ -266,7 +266,7 @@ class TestBars(unittest.TestCase):
         x = [0.2, 0.4, 0.6, 0.8]
         model.add_cbarao(eid, scale, x, comment='cbarao')
         model.add_card(['CBARAO', eid+1, 'RF', 6, 0.1, 0.2], 'CBARAO')
-        save_load_deck(model)
+        save_load_deck(model, run_quality=False)
 
     def test_bar_mass_1(self):
         """tests CBAR/PBAR mass"""

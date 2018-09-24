@@ -3,13 +3,15 @@ import os
 from copy import deepcopy
 from six import StringIO
 from pyNastran.bdf.bdf import BDF
+from pyNastran.bdf.mesh_utils.delete_bad_elements import element_quality
 from pyNastran.bdf.mesh_utils.remove_unused import remove_unused
 from pyNastran.bdf.mesh_utils.convert import convert
 from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
 from pyNastran.bdf.mesh_utils.mirror_mesh import bdf_mirror
 
 def save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
-                   run_convert=True, run_renumber=True, run_mirror=True, run_save_load=True):
+                   run_convert=True, run_renumber=True, run_mirror=True,
+                   run_save_load=True, run_quality=True):
     """writes, re-reads, saves an obj, loads an obj, and returns the deck"""
     model.validate()
     model.pop_parse_errors()
@@ -57,6 +59,9 @@ def save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
             # shouldn't have any effect model2.bdf
             bdf_mirror('model2.bdf', plane='xz', log=model.log)
     os.remove('model2.bdf')
+
+    if model.elements and run_quality:
+        element_quality(model)
     return model3
 
 def _cross_reference(model, xref):

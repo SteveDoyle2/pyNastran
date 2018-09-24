@@ -330,7 +330,54 @@ def get_bad_shells(model, xyz_cid0, nid_map,
                 #np.degrees(skew), aspect_ratio))
     return eids_failed
 
-def element_quality(model, nid_cp_cd, xyz_cid0, nid_map):
+def element_quality(model, nids=None, xyz_cid0=None, nid_map=None):
+    """
+    Gets various measures of element quality
+
+    Parameters
+    ----------
+    model : BDF()
+        a cross-referenced model
+    nids : (nnodes, ) int ndarray; default=None
+        the nodes of the model in sorted order
+        includes GRID, SPOINT, & EPOINTs
+    xyz_cid0 : (nnodes, 3) float ndarray; default=None
+        the associated global xyz locations
+    nid_map : Dict[nid]->index; default=None
+        a mapper dictionary
+
+    Returns
+    -------
+    quality : Dict[name] : (nelements, ) float ndarray
+        Various quality metrics
+        names : min_interior_angle, max_interior_angle, dideal_theta,
+                max_skew_angle, max_aspect_ratio,
+                area_ratio, taper_ratio, min_edge_length
+        values : The result is ``np.nan`` if element type does not define
+                 the parameter.  For example, CELAS1 doesn't have an 
+                 aspect ratio.
+
+    Notes
+    -----
+     - pulled from nastran_io.py
+    """
+    if nids is None or xyz_cid0 is None:
+        out = model.get_displacement_index_xyz_cp_cd(
+            fdtype='float64', idtype='int32', sort_ids=True)
+        unused_icd_transform, icp_transform, xyz_cp, nid_cp_cd = out
+        nids = nid_cp_cd[:, 0]
+        xyz_cid0 = model.transform_xyzcp_to_xyz_cid(
+            xyz_cp, nids, icp_transform, cid=0,
+            in_place=False)
+
+    if nid_map is None:
+        nid_map = {}
+        for i, nid in enumerate(nids):
+            nid_map[nid] = i
+
+    all_nids = nids
+    del nids
+
     # these normals point inwards
     #      4
     #    / | \
@@ -420,9 +467,6 @@ def element_quality(model, nid_cp_cd, xyz_cid0, nid_map):
 
     #nids_list = []
     ieid = 0
-
-    all_nids = nid_cp_cd[:, 0]
-    ieid = 0
     for unused_eid, elem in sorted(model.elements.items()):
         if ieid % 5000 == 0 and ieid > 0:
             print('  map_elements = %i' % ieid)
@@ -481,7 +525,7 @@ def element_quality(model, nid_cp_cd, xyz_cid0, nid_map):
                 p1, p2, p3, p4 = xyz_cid0[inids, :]
             else:
                 inids = np.searchsorted(all_nids, nids)
-                p1, p2, p3, p4, unused_p5, unused_p6 = xyz_cid0[inids, :]
+                p1, p2, p3, p4 = xyz_cid0[inids[:4], :]
             out = quad_quality(p1, p2, p3, p4)
             (areai, taper_ratioi, area_ratioi, max_skew, aspect_ratio,
              min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
