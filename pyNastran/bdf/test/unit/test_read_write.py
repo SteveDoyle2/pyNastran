@@ -196,7 +196,7 @@ class TestReadWrite(unittest.TestCase):
         self.assertEqual(model.nnodes, 3, 'nnodes=%s' % model.nnodes)
 
         model = BDF(log=log, debug=False)
-        lines = model.include_zip(bdf_filename='a.bdf', encoding=None)
+        lines, ilines = model.include_zip(bdf_filename='a.bdf', encoding=None)
         assert len(lines) == 11, len(lines)
 
         os.remove('a.bdf')

@@ -108,7 +108,26 @@ bdf_interface Package
     :members:
     :private-members:
     :undoc-members:
-    :show-inheritance:
+
+:mod:`replication` Module
+-----------------------------
+
+.. inheritance-diagram:: pyNastran.bdf.bdf_interface.replication
+
+.. automodule:: pyNastran.bdf.bdf_interface.replication
+    :members:
+    :private-members:
+    :undoc-members:
+
+:mod:`verify_validate` Module
+-----------------------------
+
+.. inheritance-diagram:: pyNastran.bdf.bdf_interface.verify_validate
+
+.. automodule:: pyNastran.bdf.bdf_interface.verify_validate
+    :members:
+    :private-members:
+    :undoc-members:
 
 :mod:`safe_cross_reference` Module
 ----------------------------------
@@ -140,7 +159,15 @@ bdf_interface Package
 .. automodule:: pyNastran.bdf.bdf_interface.subcase_utils
     :members:
     :undoc-members:
-    :show-inheritance:
+
+:mod:`utils` Module
+---------------------------
+
+.. inheritance-diagram:: pyNastran.bdf.bdf_interface.utils
+
+.. automodule:: pyNastran.bdf.bdf_interface.utils
+    :members:
+    :undoc-members:
 
 :mod:`uncross_reference` Module
 -------------------------------

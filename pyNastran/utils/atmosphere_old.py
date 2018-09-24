@@ -470,6 +470,8 @@ def atm_velocity(alt, mach, SI=False, debug=False):
 def atm_equivalent_airspeed(alt, mach, SI=False, debug=False):
     # type: (float, float, bool, bool) -> float
     """
+    Freestream equivalent airspeed
+
     EAS = TAS * sqrt(rho/rho0)
     p = rho * R * T
     rho = p/(RT)

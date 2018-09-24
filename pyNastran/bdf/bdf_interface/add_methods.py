@@ -602,7 +602,7 @@ class AddMethods(BDFAttributes):
         key = view3d.icavity
         assert key > 0, 'key=%s; view3d=%s\n' % (key, view3d)
         if key in self.view3ds:
-            if not view == self.view3cs[key]:
+            if not view == self.view3ds[key]:
                 assert key not in self.view3ds, 'VIEW3D.icavity=%s\nold=\n%snew=\n%s' % (
                     key, self.view3ds[key], view3d)
         else:

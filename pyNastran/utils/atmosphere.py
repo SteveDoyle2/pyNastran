@@ -533,7 +533,8 @@ def atm_speed_of_sound(alt, alt_units='ft', velocity_units='ft/s', gamma=1.4):
     speed_of_sound, a : float
         Returns speed of sound in velocity_units
 
-   \f[  \large a = \sqrt{\gamma R T}  \f]
+    \f[  \large a = \sqrt{\gamma R T}  \f]
+
     """
     # converts everything to English units first
     z = alt * _altitude_factor(alt_units, 'ft')
@@ -575,6 +576,8 @@ def atm_velocity(alt, mach, alt_units='ft', velocity_units='ft/s'):
 def atm_equivalent_airspeed(alt, mach, alt_units='ft', eas_units='ft/s'):
     # type : (float, float, str, str) -> float
     """
+    Freestream equivalent airspeed
+
     Parameters
     ----------
     alt : float
@@ -598,6 +601,7 @@ def atm_equivalent_airspeed(alt, mach, alt_units='ft', eas_units='ft/s'):
     TAS = a * M
     EAS = a * M * sqrt(p/T * T0/p0)
     EAS = a * M * sqrt(p*T0 / (T*p0))
+
     """
     z = convert_altitude(alt, alt_units, 'ft')
     a = atm_speed_of_sound(z)

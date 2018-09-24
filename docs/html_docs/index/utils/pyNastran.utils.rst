@@ -11,15 +11,6 @@ This is the pyNastran.utils.rst file.
     :members:
     :undoc-members:
 
-:mod:`atmosphere2` Module
--------------------------
-
-.. inheritance-diagram:: pyNastran.utils.atmosphere2
-
-.. automodule:: pyNastran.utils.atmosphere2
-    :members:
-    :undoc-members:
-
 :mod:`dev` Module
 -----------------
 
