@@ -2878,7 +2878,7 @@ class AddCards(AddMethods):
         return mat
 
     def add_matt8(self, mid, e1_table=None, e2_table=None, nu12_table=None,
-                  g12_table=None, g1z_table=None, g2z_table=None, e2z_table=None, rho_table=None,
+                  g12_table=None, g1z_table=None, g2z_table=None, rho_table=None,
                   a1_table=None, a2_table=None,
                   xt_table=None, xc_table=None, yt_table=None, yc_table=None,
                   s_table=None, ge_table=None, f12_table=None, comment=''):

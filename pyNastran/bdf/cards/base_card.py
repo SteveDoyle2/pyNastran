@@ -553,8 +553,10 @@ def _format_comment(comment):
     <empty string>
 
     >>> _format_comment('$ a comment within a comment looks weird')
-    $$ a comment within a comment looks weird
+    '$$ a comment within a comment looks weird'
 
+    >>> _format_comment('no trailing whitespace   ')
+    $no trailing extra whitespace
     """
     if comment.strip() == '':  # deals with a bunch of spaces
         return ''

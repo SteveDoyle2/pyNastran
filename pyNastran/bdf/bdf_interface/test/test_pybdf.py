@@ -87,7 +87,7 @@ class TestPyBDF(unittest.TestCase):
         encoding = None
         pybdf = BDFInputPy(read_includes, dumplines, encoding, nastran_format='zona',
                            log=None, debug=False)
-        pybdf._get_lines(bdf_filename, punch=False)
+        pybdf._get_lines(bdf_filename, punch=False, make_ilines=True)
         #----------------------------------------------------------------
         bdf_filename = StringIO()
         bdf_filename.write(
@@ -102,7 +102,7 @@ class TestPyBDF(unittest.TestCase):
         encoding = None
         pybdf = BDFInputPy(read_includes, dumplines, encoding, nastran_format='zona',
                            log=None, debug=False)
-        pybdf._get_lines(bdf_filename, punch=False)
+        pybdf._get_lines(bdf_filename, punch=False, make_ilines=True)
 
         #----------------------------------------------------------------
         bdf_filename = StringIO()
@@ -118,7 +118,7 @@ class TestPyBDF(unittest.TestCase):
         encoding = None
         pybdf = BDFInputPy(read_includes, dumplines, encoding, nastran_format='zona',
                            log=None, debug=False)
-        pybdf._get_lines(bdf_filename, punch=False)
+        pybdf._get_lines(bdf_filename, punch=False, make_ilines=True)
 
 if __name__ == '__main__':
     unittest.main()

@@ -22,11 +22,14 @@ from six.moves.cPickle import load, dump, dumps  # type: ignore
 import numpy as np  # type: ignore
 
 from pyNastran.utils import object_attributes, check_path
-from pyNastran.utils.log import get_logger2, write_error
+from pyNastran.utils.log import get_logger2
 from pyNastran.bdf.utils import parse_patran_syntax
 from pyNastran.bdf.bdf_interface.utils import (
-    _parse_pynastran_header, to_fields, parse_executive_control_deck,
-    to_fields_replication, get_nrepeats, int_replication, float_replication)
+    _parse_pynastran_header, to_fields, parse_executive_control_deck)
+
+from pyNastran.bdf.bdf_interface.replication import (
+    to_fields_replication, get_nrepeats, int_replication, float_replication,
+    _field, repeat_cards)
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16, print_field_16
@@ -386,10 +389,15 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             ## ringaxs
             'RINGAX', 'POINTAX',
 
-            # mass
-            'CONM1', 'CONM2', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4',
-            # nsm
-            'NSM', 'NSM1', 'NSML', 'NSML1', 'NSMADD',
+            ## masses
+            'CONM1', 'CONM2',
+            'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4',
+
+            ## nsms
+            'NSM', 'NSM1', 'NSML', 'NSML1',
+
+            ## nsmadds
+            'NSMADD',
 
             ## elements
             # springs
@@ -593,11 +601,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             'SEQSET', 'SEQSET1',  ## se_qsets
             #'SEUSET', 'SEUSET1',  ## se_usets
             'SEQSEP',
-            #'RADSET',
 
             #------------------------------------------------------------------
             ## tables
-            #'TABLEHT', 'TABRNDG',
+            #'TABLEHT',
             'TABLED1', 'TABLED2', 'TABLED3', 'TABLED4',  # dynamic tables - freq/time loads
             'TABLEM1', 'TABLEM2', 'TABLEM3', 'TABLEM4',  # material tables - temperature
 
@@ -859,7 +866,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             xref = self._xref
         verify_bdf(self, xref)
 
-    def include_zip(self, bdf_filename=None, encoding=None):
+    def include_zip(self, bdf_filename=None, encoding=None, make_ilines=True):
         """
         Read a bdf without perform any other operation, except (optionally)
         insert the INCLUDE files in the bdf
@@ -870,11 +877,18 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             the input bdf (default=None; popup a dialog)
         encoding : str; default=None -> system default
             the unicode encoding
+        make_ilines : bool; default=True
+            flag for ilines
 
         Returns
         -------
         all_lines : List[str]
             all the lines packed into a single line stream
+        ilines : (nlines, 2) int ndarray
+            if make_ilines = True:
+                the [ifile, iline] pair for each line in the file
+            if make_ilines = False:
+                 ilines = None
 
         .. note::  Setting read_includes to False is kind of pointless if
                    called directly; it's useful for ``read_bdf``
@@ -889,9 +903,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                          nastran_format=self.nastran_format,
                          log=self.log, debug=self.debug)
         main_lines = obj._get_main_lines(self.bdf_filename)
-        all_lines = obj._lines_to_deck_lines(main_lines)
+        all_lines, ilines = obj._lines_to_deck_lines(main_lines)
         self._set_pybdf_attributes(obj)
-        return all_lines
+        return all_lines, ilines
 
     def _set_pybdf_attributes(self, obj):
         """common method for all functions that use BDFInputPy"""
@@ -943,8 +957,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         obj = BDFInputPy(self.read_includes, self.dumplines, self._encoding,
                          nastran_format=self.nastran_format,
                          log=self.log, debug=self.debug)
-        out = obj._get_lines(bdf_filename, punch=self.punch)
-        system_lines, executive_control_lines, case_control_lines, bulk_data_lines = out
+        out = obj._get_lines(bdf_filename, punch=self.punch, make_ilines=True)
+        system_lines, executive_control_lines, case_control_lines, bulk_data_lines, bulk_data_ilines = out
         self._set_pybdf_attributes(obj)
 
         self.system_command_lines = system_lines
@@ -961,7 +975,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         cards_list = []
         cards_dict = {}
         if self._is_cards_dict:
-            cards_dict, card_count = self.get_bdf_cards_dict(bulk_data_lines)
+            cards_dict, card_count = self.get_bdf_cards_dict(
+                bulk_data_lines, bulk_data_ilines)
             #if 0:
                 #with open('dump.bdf', 'w') as bdf_file_obj:
                     #bdf_file_obj.write('\n'.join(executive_control_lines))
@@ -972,7 +987,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                             #bdf_file_obj.write('\n'.join(cardlines) + '\n')
                         #bdf_file_obj.write('\n')
         else:
-            cards_list, cards_dict, card_count = self.get_bdf_cards(bulk_data_lines)
+            cards_list, cards_dict, card_count = self.get_bdf_cards(
+                bulk_data_lines, bulk_data_ilines)
             #for card in cards:
                 #print(card)
         self._parse_cards(cards_list, cards_dict, card_count)
@@ -1182,8 +1198,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 if is_error and self._stop_on_xref_error:
                     raise CrossReferenceError(msg.rstrip())
 
-    def get_bdf_cards(self, bulk_data_lines):
+    def get_bdf_cards(self, bulk_data_lines, bulk_data_ilines=None):
         """Parses the BDF lines into a list of card_lines"""
+        if bulk_data_ilines is None:
+            bulk_data_ilines = np.zeros((len(bulk_data_lines), 2), dtype='int32')
         cards_list = []
         cards_dict = defaultdict(list)
         dict_cards = ['BAROR', 'BEAMOR']
@@ -1195,7 +1213,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         backup_comment = ''
         nlines = len(bulk_data_lines)
 
-        for i, line in enumerate(bulk_data_lines):
+        for iline_bulk, line in enumerate(bulk_data_lines):
+            ifile_iline = bulk_data_ilines[iline_bulk, :]
             #print('    backup=%r' % backup_comment)
             comment = ''
             if '$' in line:
@@ -1208,15 +1227,15 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                                       old_card_name + full_comment + ''.join(card_lines))
 
                     # old dictionary version
-                    # cards_list[old_card_name].append([full_comment, card_lines])
+                    # cards_list[old_card_name].append([full_comment, card_lines, ifile_iline])
 
                     # new list version
                     #if full_comment:
                         #print('full_comment = ', full_comment)
                     if old_card_name in dict_cards:
-                        cards_dict[old_card_name].append([_prep_comment(full_comment), card_lines])
+                        cards_dict[old_card_name].append([_prep_comment(full_comment), card_lines, ifile_iline])
                     else:
-                        cards_list.append([old_card_name, _prep_comment(full_comment), card_lines])
+                        cards_list.append([old_card_name, _prep_comment(full_comment), card_lines, ifile_iline])
 
                     card_count[old_card_name] += 1
                     card_lines = []
@@ -1229,8 +1248,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 old_card_name = card_name.rstrip(' *')
                 if old_card_name == 'ENDDATA':
                     self.card_count['ENDDATA'] = 1
-                    if nlines - i > 1:
-                        nleftover = nlines - i - 1
+                    if nlines - iline_bulk > 1:
+                        nleftover = nlines - iline_bulk - 1
                         msg = 'exiting due to ENDDATA found with %i lines left' % nleftover
                         self.log.debug(msg)
                     return cards_list, cards_dict, card_count
@@ -1269,15 +1288,20 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             #if backup_comment + full_comment:
                 #print('backup_comment + full_comment = ', backup_comment + full_comment)
             if old_card_name in dict_cards:
-                cards_dict[old_card_name].append([_prep_comment(backup_comment + full_comment), card_lines])
+                cards_dict[old_card_name].append([_prep_comment(
+                    backup_comment + full_comment), card_lines, ifile_iline])
             else:
-                cards_list.append([old_card_name, _prep_comment(backup_comment + full_comment), card_lines])
+                cards_list.append([old_card_name, _prep_comment(
+                    backup_comment + full_comment), card_lines, ifile_iline])
             card_count[old_card_name] += 1
         self.echo = False
         return cards_list, cards_dict, card_count
 
-    def get_bdf_cards_dict(self, bulk_data_lines):
+    def get_bdf_cards_dict(self, bulk_data_lines, bulk_data_ilines=None):
         """Parses the BDF lines into a list of card_lines"""
+        if bulk_data_ilines is None:
+            bulk_data_ilines = np.zeros((len(bulk_data_lines), 2), dtype='int32')
+
         cards_dict = defaultdict(list)
         card_count = defaultdict(int)
         full_comment = ''
@@ -1285,7 +1309,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         old_card_name = None
         backup_comment = ''
         nlines = len(bulk_data_lines)
-        for i, line in enumerate(bulk_data_lines):
+        for iline_bulk, line in enumerate(bulk_data_lines):
+            ifile_iline = bulk_data_ilines[iline_bulk, :]
             #print('    backup=%r' % backup_comment)
             comment = ''
             if '$' in line:
@@ -1298,10 +1323,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                                       old_card_name + full_comment + ''.join(card_lines))
 
                     # old dictionary version
-                    cards_dict[old_card_name].append([full_comment, card_lines])
+                    cards_dict[old_card_name].append([full_comment, card_lines, ifile_iline])
 
                     # new list version
-                    #cards.append([old_card_name, full_comment, card_lines])
+                    #cards.append([old_card_name, full_comment, card_lines, ifile_iline])
 
                     card_count[old_card_name] += 1
                     card_lines = []
@@ -1314,8 +1339,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 old_card_name = card_name.rstrip(' *')
                 if old_card_name == 'ENDDATA':
                     self.card_count['ENDDATA'] = 1
-                    if nlines - i > 1:
-                        nleftover = nlines - i - 1
+                    if nlines - iline_bulk > 1:
+                        nleftover = nlines - iline_bulk - 1
                         msg = 'exiting due to ENDDATA found with %i lines left' % nleftover
                         self.log.debug(msg)
                     return cards_dict, card_count
@@ -1346,7 +1371,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             #print('end_add %s' % card_lines)
 
             # old dictionary version
-            cards_dict[old_card_name].append([backup_comment + full_comment, card_lines])
+            cards_dict[old_card_name].append([backup_comment + full_comment, card_lines, ifile_iline])
 
             # new list version
             #cards.append([old_card_name, backup_comment + full_comment, card_lines])
@@ -1615,7 +1640,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             def add_card(cls, card, comment=''):
                 """the method that forces the crash"""
                 #raise CardParseSyntaxError(card)
-                raise UnsupportedCard(card)
+                msg = _format_comment(comment) + card
+                raise UnsupportedCard(msg)
 
         #: a storage of card_name to (card_class, add_method)
         self._card_parser = {
@@ -1630,7 +1656,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             'SEMPLN' : (SEMPLN, self._add_seelt_object),
             'SECONCT' : (SECONCT, self._add_csupext_object),
             'SELABEL' : (SELABEL, self._add_seelt_object),
-            'SECONCT' : (Crash, None),
             'SEEXCLD' : (SEEXCLD, self._add_seelt_object),
             'CSUPER' : (CSUPER, self._add_csupext_object),
             'CSUPEXT' : (CSUPEXT, self._add_csupext_object),
@@ -2129,8 +2154,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
     def _write_reject_message(self, card_name, card_obj, comment=''):
         """common method to not write duplicate reject card names"""
         if card_name not in self.card_count:
-            if ' ' in card_name:
-                _check_for_spaces(card_name, card_lines, comment)
+            #if ' ' in card_name:
+                #_check_for_spaces(card_name, card_lines, comment)
             self.log.info('    rejecting card_name = %s' % card_name)
 
     def _prepare_cbar(self, unused_card, card_obj, comment=''):
@@ -3215,8 +3240,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             if cps_to_check:
                 nids_checked.append(nids_checkedi)
                 #print("nids_checkedi =", nids_checkedi)
-                _ncoords_to_setup, cord1s_to_update, cord2s_to_update, nids_checked = self._get_coords_to_update(
-                    cps_to_check, cps_checked, nids_checked)
+                out = self._get_coords_to_update(cps_to_check, cps_checked, nids_checked)
+                unused_ncoords_to_setup, cord1s_to_update, cord2s_to_update, nids_checked = out
                 #print('CPs not handled=%s\n  cord1s_to_update=%s\n  cord2s_to_update=%s' % (
                     #cps_to_check, cord1s_to_update, cord2s_to_update))
 
@@ -3523,6 +3548,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             self.card_count[card_name] = count_num
 
     def _old_card_fields(self, card_lines, card_name, is_list=False, has_none=True):
+        """replication helper"""
         if is_list:
             fields = card_lines
         else:
@@ -3542,7 +3568,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         return card_obj
 
     def expand_replication(self, card_name, icard, cards_list, card_lines_new, dig=True):
-        dig_str = '  ' if dig==False else ''
+        """replication helper"""
+        dig_str = '  ' if dig is False else ''
         #print(dig_str, '-----------************---------')
         #print(dig_str, '--dig=%s--' % dig)
         #print(dig_str, 'card_lines_new=%s' % card_lines_new)
@@ -3559,7 +3586,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 #card_lines_old, card_name,
                 #is_list=False, has_none=True)
             #print(old_card)
-            old_card = self._old_card_fields(card_lines_old, card_name, is_list=False, has_none=True)
+            old_card = self._old_card_fields(card_lines_old, card_name,
+                                             is_list=False, has_none=True)
             #print(old_card)
             #assert '=' not in card_name
 
@@ -3574,7 +3602,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         if '=' == old_card[0]:
             #print(dig_str, 'A!!!')
             assert dig is True, dig
-            cards2 = self.expand_replication(card_name, icard-1, cards_list, card_lines_old, dig=False)
+            cards2 = self.expand_replication(card_name, icard-1, cards_list, card_lines_old,
+                                             dig=False)
             assert len(cards2) == 1, 'cards2=%s; ncards=%s' % (cards2, len(cards2))
             #print(dig_str, 'cards_equal =', cards2)
             old_card_fields = cards2[0]
@@ -3582,7 +3611,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             #print(dig_str, 'old_card_fields =', old_card_fields)
             #print(dig_str, 'old_card_real =', old_card_real)
             #print(dig_str, 'card_lines_old =', card_lines_old)
-            old_card = self._old_card_fields(old_card_fields, card_name, is_list=True, has_none=True)
+            old_card = self._old_card_fields(old_card_fields, card_name,
+                                             is_list=True, has_none=True)
         elif '=' in card_name:
             #print(dig_str, 'B!!!')
             #print(dig_str, 'old_card =', old_card)
@@ -3698,18 +3728,18 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             for card_name, cards in sorted(cards_dict.items()):
                 if self.is_reject(card_name):
                     self.log.info('    rejecting card_name = %s' % card_name)
-                    for comment, card_lines in cards:
+                    for comment, card_lines, ifile_iline in cards:
                         self.increase_card_count(card_name)
                         self.reject_lines.append([_format_comment(comment)] + card_lines)
                 else:
-                    for comment, card_lines in cards:
+                    for comment, card_lines, ifile_iline in cards:
                         self.add_card(card_lines, card_name, comment=comment,
                                       is_list=False, has_none=False)
 
         if cards_list:
             # this is the block that actually runs
             for icard, card in enumerate(cards_list):
-                card_name, comment, card_lines = card
+                card_name, comment, card_lines, ifile_iline = card
                 if card_name is None:
                     msg = 'card_name = %r\n' % card_name
                     msg += 'card_lines = %s' % card_lines
@@ -3825,50 +3855,49 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         if not check_header:
             return
         for line in lines:
-            if line.startswith('$'):
-                key, value = _parse_pynastran_header(line)
-
-                if key:
-                    if key == 'version':
-                        self.nastran_format = value
-                    elif key == 'encoding':
-                        self._encoding = value
-                    elif key == 'punch':
-                        self.punch = True if value == 'true' else False
-                    elif key in ['nnodes', 'nelements']:
-                        pass
-                    elif key == 'dumplines':
-                        self.dumplines = True if value == 'true' else False
-                    elif key == 'skip_cards':
-                        cards = {value.strip() for value in value.upper().split(',')}
-                        self.cards_to_read = self.cards_to_read - cards
-                    elif 'skip ' in key:
-                        type_to_skip = key[5:].strip()
-                        #values = [int(value) for value in value.upper().split(',')]
-                        values = parse_patran_syntax(value)
-                        if type_to_skip not in self.object_attributes():
-                            raise RuntimeError('%r is an invalid key' % type_to_skip)
-                        if type_to_skip not in self.values_to_skip:
-                            self.values_to_skip[type_to_skip] = values
-                        else:
-                            self.values_to_skip[type_to_skip] = np.hstack([
-                                self.values_to_skip[type_to_skip],
-                                values
-                            ])
-                    #elif key == 'skip_elements'
-                    #elif key == 'skip_properties'
-                    elif key == 'units':
-                        self.units = [value.strip() for value in value.upper().split(',')]
-                    else:
-                        raise NotImplementedError(key)
-                else:
-                    break
-            else:
+            if not line.startswith('$'):
                 break
-        ###
+
+            key, value = _parse_pynastran_header(line)
+            if not key:
+                break
+
+            # key/value are lowercase
+            if key == 'version':
+                self.nastran_format = value
+            elif key == 'encoding':
+                self._encoding = value
+            elif key == 'punch':
+                self.punch = True if value == 'true' else False
+            elif key in ['nnodes', 'nelements']:
+                pass
+            elif key == 'dumplines':
+                self.dumplines = True if value == 'true' else False
+            elif key == 'skip_cards':
+                cards = {value.strip() for value in value.upper().split(',')}
+                self.cards_to_read = self.cards_to_read - cards
+            elif 'skip ' in key:
+                type_to_skip = key[5:].strip()
+                #values = [int(value) for value in value.upper().split(',')]
+                values = parse_patran_syntax(value)
+                if type_to_skip not in self.object_attributes():
+                    raise RuntimeError('%r is an invalid key' % type_to_skip)
+                if type_to_skip not in self.values_to_skip:
+                    self.values_to_skip[type_to_skip] = values
+                else:
+                    self.values_to_skip[type_to_skip] = np.hstack([
+                        self.values_to_skip[type_to_skip],
+                        values
+                    ])
+            #elif key == 'skip_elements'
+            #elif key == 'skip_properties'
+            elif key == 'units':
+                self.units = [value.strip() for value in value.upper().split(',')]
+            else:
+                raise NotImplementedError(key)
         return
 
-#------------------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------
     # HDF5
     def _read_bdf_cards(self, bdf_filename=None,
                         validate=True, xref=False, punch=False,
@@ -3917,8 +3946,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         obj = BDFInputPy(self.read_includes, self.dumplines, self._encoding,
                          nastran_format=self.nastran_format,
                          log=self.log, debug=self.debug)
-        out = obj._get_lines(bdf_filename, punch=self.punch)
-        system_lines, executive_control_lines, case_control_lines, bulk_data_lines = out
+        out = obj._get_lines(bdf_filename, punch=self.punch, make_ilines=True)
+        system_lines, executive_control_lines, case_control_lines, bulk_data_lines, bulk_data_ilines = out
         self._set_pybdf_attributes(obj)
 
         self.system_command_lines = system_lines
@@ -3934,7 +3963,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
         #self._is_cards_dict = True
         if self._is_cards_dict:
-            cards, card_count = self.get_bdf_cards_dict(bulk_data_lines)
+            cards, card_count = self.get_bdf_cards_dict(bulk_data_lines, bulk_data_ilines)
         cards_out = self._parse_cards_hdf5(cards, card_count)
         assert isinstance(cards_out, dict), cards_out
         return cards_out
@@ -3948,11 +3977,11 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             cards_out[card_name] = cards_list
             if self.is_reject(card_name):
                 self.log.info('    rejecting card_name = %s' % card_name)
-                for comment, card_lines in card:
+                for comment, card_lines, ifile_iline in card:
                     self.increase_card_count(card_name)
                     self.reject_lines.append([_format_comment(comment)] + card_lines)
             else:
-                for comment, card_lines in card:
+                for comment, card_lines, ifile_iline in card:
                     class_instance = self._add_card_hdf5(card_lines, card_name, comment=comment,
                                                          is_list=False, has_none=False)
                     cards_list.append(class_instance)
@@ -4169,57 +4198,6 @@ def _check_for_spaces(card_name, card_lines, comment):
     if card_name in ['SUBCASE ', 'CEND']:
         raise RuntimeError('No executive/case control deck was defined.')
 
-def _field(old_card, ifield):
-    #if isinstance(old_card, list):
-    #print(old_card, ifield)
-    field2 = old_card[ifield]
-    #else:
-        #field2 = old_card.field(ifield)
-    return field2
-
-def repeat_cards(old_card, new_card):
-    card = []
-    cards = []
-    #print('*old_card = %s' % old_card)
-    #print('*new_card = %s' % new_card)
-    assert old_card != new_card
-    for ifield, field in enumerate(new_card):
-        if field is None:
-            field2 = _field(old_card, ifield)
-            #field2 = old_card.field(ifield)
-            #print(' %i: %r -> %r' % (ifield, field, field2))
-            #assert field2 is None, 'field=%s field2=%s' % (field, field2)
-            card.append(field2)
-            continue
-
-        if field == '':
-            field2 = field
-        elif field == '=':
-            field2 = _field(old_card, ifield)
-        elif field == '==':
-            # just append the remaining fields
-            #print(' %s : extending %s' % (ifield, old_card[ifield:]))
-            card.extend(old_card[ifield:])
-            break
-
-        elif '*' in field:
-            # this is an increment, not multiplication...
-            old_field = _field(old_card, ifield)
-            #old_field = old_card.field(ifield)
-            if '.' in field:
-                field2 = float_replication(field, old_field)
-            else:
-                field2 = int_replication(field, old_field)
-        else:
-            assert '(' not in field, 'field=%r\nold_card=%s\nnew_card=%s' % (field, old_card, new_card)
-            assert '*' not in field, 'field=%r\nold_card=%s\nnew_card=%s' % (field, old_card, new_card)
-            assert '=' not in field, 'field=%r\nold_card=%s\nnew_card=%s' % (field, old_card, new_card)
-            field = field2
-        #print(' %i: %r -> %r' % (ifield, field, field2))
-        card.append(field2)
-    #print(' appending %s' % card)
-    cards.append(card)
-    return cards
 
 def main():  # pragma: no cover
     """shows off how unicode works becausee it's overly complicated"""

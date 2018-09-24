@@ -10,6 +10,7 @@ from io import open
 from typing import List, Dict, Optional, Union, Set, Any, cast
 from six import StringIO
 
+import numpy as np
 from pyNastran.utils import print_bad_path, _filename
 from pyNastran.utils.log import get_logger2
 from pyNastran.bdf.bdf_interface.include_file import get_include_filename
@@ -31,13 +32,14 @@ class BDFInputPy(object):
         Parameters
         ----------
         read_includes : bool
-            ???
+            should include files be read
         dumplines : bool
             ???
         encoding : str
             ???
         nastran_format : str; default='msc'
-            ???
+            'zona' has a special read method
+            {msc, nx, zona}
         log : logger(); default=None
             ???
         debug : bool; default=False
@@ -56,7 +58,7 @@ class BDFInputPy(object):
         self.debug = debug
         self.log = get_logger2(log, debug)
 
-    def _get_lines(self, bdf_filename, punch=False):
+    def _get_lines(self, bdf_filename, punch=False, make_ilines=True):
         # type: (Union[str, StringIO], bool) -> List[str]
         """
         Opens the bdf and extracts the lines by group
@@ -69,6 +71,8 @@ class BDFInputPy(object):
             is this a punch file
             True : no executive/case control decks
             False : executive/case control decks exist
+        make_ilines : bool; default=True
+            flag for bulk_data_ilines
 
         Returns
         -------
@@ -80,11 +84,18 @@ class BDFInputPy(object):
             the case control lines (stores subcases)
         bulk_data_lines : List[str]
             the bulk data lines (stores geometry, boundary conditions, loads, etc.)
+        bulk_data_ilines : None / (nlines, 2) int ndarray
+            if make_ilines = True:
+                the [ifile, iline] pair for each line in the file
+            if make_ilines = False:
+                 ilines = None
+
         """
         main_lines = self._get_main_lines(bdf_filename)
-        all_lines = self._lines_to_deck_lines(main_lines)
-        out = _lines_to_decks(all_lines, punch)
-        system_lines, executive_control_lines, case_control_lines, bulk_data_lines = out
+        all_lines, ilines = self._lines_to_deck_lines(main_lines, make_ilines=make_ilines)
+
+        out = _lines_to_decks(all_lines, ilines, punch, keep_enddata=True)
+        system_lines, executive_control_lines, case_control_lines, bulk_data_lines, bulk_data_ilines = out
         if self.nastran_format in ['msc', 'nx']:
             pass
         elif self.nastran_format == 'zona':
@@ -103,9 +114,9 @@ class BDFInputPy(object):
                         assert filename.endswith('.bdf'), filename
 
                         _main_lines = self._get_main_lines(filename)
-                        _all_lines = self._lines_to_deck_lines(_main_lines)
-                        _out = _lines_to_decks(_all_lines, punch, keep_enddata=False)
-                        _system_lines, _executive_control_lines, _case_control_lines, bulk_data_lines2 = _out
+                        _all_lines, _ilines = self._lines_to_deck_lines(_main_lines, make_ilines=False)
+                        _out = _lines_to_decks(_all_lines, _ilines, punch, keep_enddata=False)
+                        _system_lines, _executive_control_lines, _case_control_lines, bulk_data_lines2, _bulk_data_ilines2 = _out
                         bulk_data_lines = bulk_data_lines2 + bulk_data_lines
                         continue
                     elif header_upper.startswith('ASSIGN MATRIX'):
@@ -119,7 +130,7 @@ class BDFInputPy(object):
         else:
             msg = 'nastran_format=%r and must be msc, nx, or zona' % self.nastran_format
             raise NotImplementedError(msg)
-        return system_lines, executive_control_lines, case_control_lines, bulk_data_lines
+        return system_lines, executive_control_lines, case_control_lines, bulk_data_lines, bulk_data_ilines
 
     def _get_main_lines(self, bdf_filename):
         # type: (Union[str, StringIO]) -> List[str]
@@ -155,7 +166,7 @@ class BDFInputPy(object):
                 _show_bad_file(self, bdf_filename, encoding=self.encoding)
         return lines
 
-    def _lines_to_deck_lines(self, lines):
+    def _lines_to_deck_lines(self, lines, make_ilines=True):
         # type: (List[str]) -> List[str], int
         """
         Merges the includes into the main deck.
@@ -164,15 +175,27 @@ class BDFInputPy(object):
         ----------
         lines : List[str]
             the lines from the main BDF
+        make_ilines : bool; default=True
+            flag for ilines
 
         Returns
         -------
         active_lines : List[str]
             all the active lines in the deck
+        ilines : (nlines, 2) int ndarray
+            if make_ilines = True:
+                the [ifile, iline] pair for each line in the file
+            if make_ilines = False:
+                 ilines = None
         """
         nlines = len(lines)
 
+        ilines = None
+        if make_ilines:
+            ilines = _make_ilines(nlines, ifile=0)
+
         i = 0
+        ifile = 1
         while i < nlines:
             try:
                 line = lines[i].rstrip('\r\n\t')
@@ -183,54 +206,118 @@ class BDFInputPy(object):
                 j, include_lines = self._get_include_lines(lines, line, i, nlines)
                 bdf_filename2 = get_include_filename(include_lines, include_dir=self.include_dir)
                 if self.read_includes:
-                    try:
-                        self._open_file_checks(bdf_filename2)
-                    except IOError:
-                        crash_name = 'pyNastran_crash.bdf'
-                        self._dump_file(crash_name, lines, j)
-                        msg = 'There was an invalid filename found while parsing.\n'
-                        msg += 'Check the end of %r\n' % crash_name
-                        msg += 'bdf_filename2 = %r\n' % bdf_filename2
-                        msg += 'abs_filename2 = %r\n' % os.path.abspath(bdf_filename2)
-                        #msg += 'len(bdf_filename2) = %s' % len(bdf_filename2)
-                        print(msg)
-                        raise
-                        #raise IOError(msg)
-
-                    with self._open_file(bdf_filename2, basename=False) as bdf_file:
-                        #print('bdf_file.name = %s' % bdf_file.name)
-                        try:
-                            lines2 = bdf_file.readlines()
-                        except UnicodeDecodeError:
-                            msg = 'Invalid Encoding: encoding=%r.  Fix it by:\n' % self.encoding
-                            msg += '  1.  try a different encoding (e.g., latin1, cp1252, utf8)\n'
-                            msg += "  2.  call read_bdf(...) with `encoding`'\n"
-                            msg += ("  3.  Add '$ pyNastran : encoding=latin1"
-                                    ' (or other encoding) to the top of the main file\n')
-                            raise RuntimeError(msg)
-
-                    #print('lines2 = %s' % lines2)
-                    nlines += len(lines2)
-
-                    #line2 = lines[j].split('$')
-                    #if not line2[0].isalpha():
-                        #print('** %s' % line2)
-
-                    include_comment = '\n$ INCLUDE processed:  %s\n' % bdf_filename2
-                    #for line in lines2:
-                        #print("  ?%s" % line.rstrip())
-                    lines = lines[:i] + [include_comment] + lines2 + lines[j:]
-                    #for line in lines:
-                        #print("  *%s" % line.rstrip())
+                    lines, nlines, ilines = self._update_include(
+                        lines, nlines, ilines,
+                        bdf_filename2, i, j, ifile, make_ilines=make_ilines)
+                    ifile += 1
                 else:
                     lines = lines[:i] + lines[j:]
+                    if make_ilines:
+                        ilines = np.vstack([
+                            ilines[:i, :],
+                            ilines[j:, :],
+                        ])
                     self.reject_lines.append(include_lines)
                     #self.reject_lines.append(write_include(bdf_filename2))
             i += 1
 
         if self.dumplines:
             self._dump_file('pyNastran_dump.bdf', lines, i)
-        return lines
+
+        #if make_ilines:
+            #nilines = ilines.shape[0]
+            #assert nlines == ilines.shape[0], 'nlines=%s nilines=%s' % (nlines, nilines)
+        return lines, ilines
+
+    def _update_include(self, lines, nlines, ilines,
+                        bdf_filename2, i, j, ifile, make_ilines=False):
+        """incorporates an include file into the lines"""
+        try:
+            self._open_file_checks(bdf_filename2)
+        except IOError:
+            crash_name = 'pyNastran_crash.bdf'
+            self._dump_file(crash_name, lines, j)
+            msg = 'There was an invalid filename found while parsing.\n'
+            msg += 'Check the end of %r\n' % crash_name
+            msg += 'bdf_filename2 = %r\n' % bdf_filename2
+            msg += 'abs_filename2 = %r\n' % os.path.abspath(bdf_filename2)
+            #msg += 'len(bdf_filename2) = %s' % len(bdf_filename2)
+            print(msg)
+            raise
+            #raise IOError(msg)
+
+        with self._open_file(bdf_filename2, basename=False) as bdf_file:
+            #print('bdf_file.name = %s' % bdf_file.name)
+            try:
+                lines2 = bdf_file.readlines()
+            except UnicodeDecodeError:
+                msg = (
+                    'Invalid Encoding: encoding=%r.  Fix it by:\n'
+                    '  1.  try a different encoding (e.g., latin1, cp1252, utf8)\n'
+                    "  2.  call read_bdf(...) with `encoding`'\n"
+                    "  3.  Add '$ pyNastran : encoding=latin1"
+                    ' (or other encoding) to the top of the main file\n' % self.encoding)
+                raise RuntimeError(msg)
+
+        #print('lines2 = %s' % lines2)
+
+        #line2 = lines[j].split('$')
+        #if not line2[0].isalpha():
+            #print('** %s' % line2)
+
+        include_comment = '\n$ INCLUDE processed:  %s\n' % bdf_filename2
+        #for line in lines2:
+            #print("  ?%s" % line.rstrip())
+
+            #for ii, line in enumerate(lines):
+                #print('  %i %r' % (ii, line))
+
+        #for ii in range(i):
+            #print('i=%i %r' % (ii, lines[ii]))
+        #print('---------')
+        #for jj in range(j, len(lines)):
+            #print('j=%i %r' % (jj, lines[jj]))
+        #print('include_comment = %r' % include_comment)
+
+        nlines2 = len(lines2)
+        if make_ilines:
+            ilines2 = _make_ilines(nlines2, ifile)
+            #n_ilines = ilines.shape[0]
+            #print(ilines[j:, :])
+            #assert len(lines[:i]) == ilines[:i+1, :].shape[0] - ifile, 'A: nlines=%s nilines=%s' % (len(lines[:i]), ilines[:i+1, :].shape[0])
+            #assert len(lines[j:]) == ilines[j:, :].shape[0],           'B: nlines=%s nilines=%s' % (len(lines[j:]), ilines[j:, :].shape[0])
+            #assert len(lines2) == ilines2.shape[0],                    'C: nlines=%s nilines=%s' % (len(lines2),    ilines2.shape[0])
+            #assert nlines == ilines.shape[0], 'B: nlines=%s nilines=%s' % (nlines, nilines)
+            #assert nlines == ilines.shape[0], 'C: nlines=%s nilines=%s' % (nlines, nilines)
+
+            #print(nlines-ifile+1, nlines2)
+            #print(
+                #len(lines[:i]),
+                #len([include_comment]),
+                #len(lines2),
+                #len(lines[j:]),
+            #)
+            #print(
+                #ilines[:i+1, :].shape[0],
+                #ilines2.shape[0],
+                #ilines[j:, :].shape[0],
+            #)
+            ilines = np.vstack([
+                ilines[:i+1, :],
+                ilines2,
+                ilines[j:, :],
+            ])
+            #dij = j - i
+
+        nlines += nlines2
+        lines = lines[:i] + [include_comment] + lines2 + lines[j:]
+        #if make_ilines:
+            #n_ilines = ilines.shape[0]
+            #ncompare = n_ilines - dij
+            #assert n_ilines == n_ilines, 'nlines=%s dij=%s n_ilines=%s' % (n_ilines, dij, n_ilines)
+        #for line in lines:
+            #print("  *%s" % line.rstrip())
+        return lines, nlines, ilines
 
     def _get_include_lines(self, lines, line, i, nlines):
         """
@@ -462,7 +549,7 @@ def _clean_comment(comment):
     return comment
 
 
-def _lines_to_decks(lines, punch, keep_enddata=True):
+def _lines_to_decks(lines, ilines, punch, keep_enddata=True):
     """
     Splits the BDF lines into:
      - system lines
@@ -474,12 +561,16 @@ def _lines_to_decks(lines, punch, keep_enddata=True):
     ----------
     lines : List[str]
         all the active lines in the deck
+    ilines : None / (nlines, 2) int ndarray
+        None : the old behavior
+        narray : the [iline, ifile] pair for each line in the file
     punch : bool
         True : starts from the bulk data deck
         False : read the entire deck
     keep_enddata : bool; default=True
         True : don't throw away the enddata card
         False : throw away the enddata card
+
     Returns
     -------
     system_lines : List[str]
@@ -490,17 +581,22 @@ def _lines_to_decks(lines, punch, keep_enddata=True):
         the case control lines (stores subcases)
     bulk_data_lines : List[str]
         the bulk data lines (stores geometry, boundary conditions, loads, etc.)
+    bulk_data_ilines : None / (nlines, 2) int ndarray
+        None : the old behavior
+        narray : the [ifile, iline] pair for each line in the file
     """
+    make_ilines = ilines is not None
     executive_control_lines = []
     case_control_lines = []
     bulk_data_lines = []
-
+    bulk_data_ilines = None
     if punch:
         bulk_data_lines = lines
+        bulk_data_ilines = ilines
     else:
         flag = 1
-        i = 0
-        for i, line in enumerate(lines):
+        iline = 0
+        for iline, line in enumerate(lines):
             #print(flag, line.rstrip())
             if flag == 1:
                 # I don't think we need to handle the comment because
@@ -525,16 +621,20 @@ def _lines_to_decks(lines, punch, keep_enddata=True):
                 case_control_lines.append(line.rstrip())
             else:
                 break
+
         if keep_enddata:
-            for line in lines[i:]:
+            for line in lines[iline:]:
                 bulk_data_lines.append(line.rstrip())
+            #bulk_data_lines = [line.rstrip() for line in lines[iline:]]
         else:
-            for line in lines[i:]:
+            for line in lines[iline:]:
                 if line.upper().startswith('ENDDATA'):
                     continue
                 bulk_data_lines.append(line.rstrip())
 
         _check_valid_deck(flag)
+        if make_ilines:
+            bulk_data_ilines = ilines[iline:, :]
 
     del lines
     #for line in bulk_data_lines:
@@ -550,7 +650,7 @@ def _lines_to_decks(lines, punch, keep_enddata=True):
                                if _clean_comment(line) is not None]
     case_control_lines = [_clean_comment(line) for line in case_control_lines
                           if _clean_comment(line) is not None]
-    return system_lines, executive_control_lines, case_control_lines, bulk_data_lines
+    return system_lines, executive_control_lines, case_control_lines, bulk_data_lines, bulk_data_ilines
 
 def _break_system_lines(executive_control_lines):
     """
@@ -726,3 +826,10 @@ def _clean_comment_bulk(comment):
     #if comment:
         #print(comment)
     return comment
+
+def _make_ilines(nlines, ifile):
+    """helper method"""
+    ilines = np.empty((nlines, 2), dtype='int32')
+    ilines[:, 0] = ifile
+    ilines[:, 1] = np.arange(nlines) # 0 to N-1
+    return ilines
