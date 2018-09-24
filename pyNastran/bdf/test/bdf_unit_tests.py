@@ -10,7 +10,7 @@ from pyNastran.utils import object_attributes, object_methods
 from pyNastran.bdf.cards.collpase_card import collapse_thru_by
 from pyNastran.bdf.bdf import BDF, read_bdf, CrossReferenceError
 from pyNastran.bdf.write_path import write_include, _split_path
-from pyNastran.bdf.test.test_bdf import run_bdf, run_all_files_in_folder
+from pyNastran.bdf.test.test_bdf import run_bdf, run_all_files_in_folder, compare
 
 PKG_PATH = pyNastran.__path__[0]
 TEST_PATH = os.path.join(PKG_PATH, 'bdf', 'test')
@@ -574,6 +574,26 @@ class TestBDF(Tester):
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
+        #os.remove(bdf_filename + '_out')
+        #self.run_bdf(folder, bdf_filename, xref=True) # PBEAML is not supported
+
+    def test_bdf_other_1(self):
+        """checks axisymmetric model"""
+        bdf_filename = os.path.join(MODEL_PATH, 'other', 'd07d2.bdf')
+        bdf_filename_test = os.path.join(MODEL_PATH, 'other', 'd07d2.test_bdf.bdf')
+        fem1 = read_bdf(bdf_filename, validate=True, xref=True, punch=False,
+                        skip_cards=None, read_cards=None,
+                        encoding=None, log=None, debug=True, mode='msc')
+        fem1.write_bdf(bdf_filename_test)
+        fem2 = read_bdf(bdf_filename_test)
+
+        diff_cards = compare(fem1, fem2, xref=True, check=False,
+                             print_stats=True, quiet=True)
+
+        diff_cards2 = list(set(diff_cards))
+        diff_cards2.sort()
+        assert len(diff_cards2) == 0, diff_cards2
+
         #os.remove(bdf_filename + '_out')
         #self.run_bdf(folder, bdf_filename, xref=True) # PBEAML is not supported
 

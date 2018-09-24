@@ -10,19 +10,14 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import (
     set_blank_if_default,
-    #set_default_if_blank,
-    #print_card_8, print_field_8)
 )
-#from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double_or_blank, double, blank,
+    string, string_or_blank, integer_or_string, fields,
 )
-#from pyNastran.bdf.cards.utils import wipe_empty_fields
-#from pyNastran.bdf.cards.elements.shell import TriShell, _triangle_area_centroid_normal, _normal
 from pyNastran.bdf.cards.base_card import BaseCard, Element
 
-#from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.cards.base_card import Property #, Material
+from pyNastran.bdf.cards.base_card import Property
 from pyNastran.bdf.cards.thermal.loads import ThermalLoad
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -55,6 +50,86 @@ class AXIC(BaseCard):
 
     def raw_fields(self):
         list_fields = ['AXIC', self.nharmonics]
+        return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        msg = self.comment + print_card_8(card)
+        return msg
+
+class AXIF(BaseCard):
+    """
+    AXIF CID G  DRHO DB NOSYM F
+         N1  N2 N3   N4  N5   -etc.-
+    """
+    type = 'AXIF'
+    def __init__(self, cid, g, drho, db, no_sym, f, n, comment=''):
+        """
+        cid : int
+            Fluid coordinate system identification number. (Integer > 0)
+        G : float
+            Value of gravity for fluid elements in the axial direction. (Real)
+        drho : float
+            Default mass density for fluid elements. (Real > 0.0 or blank)
+        db : float
+            Default bulk modulus for fluid elements.
+        no_sym : str
+            Request for nonsymmetric (sine) terms of series.
+            {YES, NO}
+        F : str; default=None
+            Flag specifying harmonics. (Blank if harmonic is specified, or Character:
+            'NONE')
+        Ni : List[int]
+            Harmonic numbers for the solution, represented by an increasing
+            sequence of integers. On continuation entries, without the 'THRU'
+            option, blank fields are ignored. 'THRU' implies all numbers including
+            upper and lower harmonics. (0 < Integer < 100, or Character: 'THRU',
+            'STEP' or blank)
+        """
+        if comment:
+            self.comment = comment
+        self.cid = cid
+        self.g = g
+        self.drho = drho
+        self.db = db
+        self.no_sym = no_sym
+        self.f = f
+        self.n = n
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a AXIF card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        cid = integer(card, 1, 'cid')
+        g = double(card, 2, 'g')
+        drho = double(card, 3, 'drho')
+        db = double_or_blank(card, 4, 'db')
+        no_sym = string(card, 5, 'no_sym')
+        f = string_or_blank(card, 6, 'f')
+        n = fields(integer_or_string, card, 'n', i=9, j=len(card))
+        #cid : int
+        #G : float
+        #drho : float
+        #db : float
+        #no_sym : str
+        #F : str
+        #Ni : List[int]
+
+
+        assert len(card) >= 7, 'len(AXIF card) = %i\ncard=%s' % (len(card), card)
+        return AXIF(cid, g, drho, db, no_sym, f, n, comment=comment)
+
+    def raw_fields(self):
+        list_fields = ['AXIF', self.cid, self.g, self.drho, self.db, self.no_sym, self.f] + self.n
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -123,6 +198,95 @@ class POINTAX(BaseCard):
         msg = self.comment + print_card_8(card)
         return msg
 
+
+class RINGFL(BaseCard):
+    type = 'RINGFL'
+
+    #: allows the get_field method and update_field methods to be used
+    #_field_map = {1: 'mid', 3:'R', 4:'z', 7:'ps'}
+
+    def __init__(self, ringfl, xa, xb, comment=''):  # this card has missing fields
+        # type: (int, float, float, Optional[str], str) -> None
+        """
+        Creates the RINGFL card
+        """
+        #Ring.__init__(self)
+        if comment:
+            self.comment = comment
+
+        self.ringfl = ringfl
+        self.xa = xa
+        self.xb = xb
+
+    @classmethod
+    def add_card(cls, card, icard=0, comment=''):
+        """
+        Adds a RINGAX card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        ioffset = 2 * icard
+        j = icard + 1
+        ringfl = integer(card, 1+ioffset, 'ringfl_%i' % j)
+        xa = double(card, 2+ioffset, 'xa_%i' % j)
+        xb = double_or_blank(card, 3+ioffset, 'xa_%i' % j)
+        assert len(card) <= 9, 'len(RINGFL card) = %i\ncard=%s' % (len(card), card)
+        return RINGFL(ringfl, xa, xb, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        """
+        Adds a RINGAX card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+
+        """
+        nid = data[0]
+        R = data[1]
+        z = data[2]
+        ps = data[3]
+        assert len(data) == 4, data
+        return RINGAX(nid, R, z, ps, comment=comment)
+
+    def raw_fields(self):
+        """
+        Gets the fields in their unmodified form
+
+        Returns
+        -------
+        fields : List[varies]
+            the fields that define the card
+
+        """
+        list_fields = ['RINGFL', self.ringfl, self.xa, self.xb]
+        return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        # (int, bool) -> str
+        """
+        The writer method used by BDF.write_card()
+
+        Parameters
+        -----------
+        size : int; default=8
+            the size of the card (8/16)
+
+        """
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 class RINGAX(BaseCard):
     """

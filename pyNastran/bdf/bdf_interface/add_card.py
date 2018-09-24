@@ -6473,6 +6473,22 @@ class AddCards(AddMethods):
         self._add_rotor_object(rotor)
         return rotor
 
+    def add_cmfree(self, eid, s, s2, y, n):
+        fields = ['CMFREE', eid, s, s2, y, n]
+        self.reject_card_lines('CMFREE', print_card_8(fields).split('\n'))
+
+    def add_cfluid2(self, eid, ringfls, rho, b, harmonic):
+        fields = ['CFLUID2', eid] + ringfls + [rho, b, harmonic]
+        self.reject_card_lines('CFLUID2', print_card_8(fields).split('\n'))
+
+    def add_cfluid3(self, eid, ringfls, rho, b, harmonic):
+        fields = ['CFLUID3', eid] + ringfls + [rho, b, harmonic]
+        self.reject_card_lines('CFLUID3', print_card_8(fields).split('\n'))
+
+    def add_cfluid4(self, eid, ringfls, rho, b, harmonic):
+        fields = ['CFLUID4', eid] + ringfls + [rho, b, harmonic]
+        self.reject_card_lines('CFLUID4', print_card_8(fields).split('\n'))
+
     def add_rgyro(self, sid, asynci, refrot, unit, speed_low, speed_high, speed, comment=''):
         """Creates an RGYRO card"""
         fields = ['RGYRO', sid, asynci, refrot, unit, speed_low, speed_high, speed]

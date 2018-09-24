@@ -791,23 +791,77 @@ class GEOM2(GeomCommon):
     def _read_cfluid2(self, data, n):
         """
         CFLUID2(8515,85,209) - the marker for Record 35
+
+        1 EID       I Element identification number
+        2 IDF1      I RINGFL point 1 identification number
+        3 IDF2      I RINGFL point 2 identification number
+        4 RHO      RS Mass density
+        5 B        RS Bulk modulus
+        6 HARMINDX  I Harmonic index
         """
-        self.log.info('skipping CFLUID2 in GEOM2')
-        return len(data)
+        s = Struct(self._endian + b'3i2fi')
+        nelements = (len(data) - n) // 24
+        for i in range(nelements):
+            edata = data[n:n + 24]  # 6*4
+            out = s.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  CFLUID2=%s\n' % str(out))
+            eid, idf1, idf2, rho, b, harmonic = out
+            self.add_cfluid2(eid, [idf1, idf2], rho, b, harmonic)
+            n += 24
+        self.card_count['CFLUID2'] = nelements
+        return n
 
     def _read_cfluid3(self, data, n):
         """
         CFLUID3(8615,86,210) - the marker for Record 36
+
+        1 EID       I Element identification number
+        2 IDF1      I RINGFL point 1 identification number
+        3 IDF2      I RINGFL point 2 identification number
+        4 IDF3      I RINGFL point 3 identification number
+        5 RHO      RS Mass density
+        6 B        RS Bulk modulus
+        7 HARMINDX  I Harmonic index
         """
-        self.log.info('skipping CFLUID3 in GEOM2')
-        return len(data)
+        s = Struct(self._endian + b'4i2fi')
+        nelements = (len(data) - n) // 28
+        for i in range(nelements):
+            edata = data[n:n + 28]  # 7*4
+            out = s.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  CFLUID3=%s\n' % str(out))
+            eid, idf1, idf2, idf3, rho, b, harmonic = out
+            self.add_cfluid3(eid, [idf1, idf2, idf3], rho, b, harmonic)
+            n += 28
+        self.card_count['CFLUID3'] = nelements
+        return n
 
     def _read_cfluid4(self, data, n):
         """
         CFLUID4(8715,87,211) - the marker for Record 37
+
+        1 EID       I Element identification number
+        2 IDF1      I RINGFL point 1 identification number
+        3 IDF2      I RINGFL point 2 identification number
+        4 IDF3      I RINGFL point 3 identification number
+        5 IDF4      I RINGFL point 4 identification number
+        6 RHO      RS Mass density
+        7 B        RS Bulk modulus
+        8 HARMINDX  I Harmonic index
         """
-        self.log.info('skipping CFLUID4 in GEOM2')
-        return len(data)
+        s = Struct(self._endian + b'5i2fi')
+        nelements = (len(data) - n) // 32
+        for i in range(nelements):
+            edata = data[n:n + 32]  # 8*4
+            out = s.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  CFLUID4=%s\n' % str(out))
+            eid, idf1, idf2, idf3, idf4, rho, b, harmonic = out
+            self.add_cfluid4(eid, [idf1, idf2, idf3, idf4], rho, b, harmonic)
+            n += 32
+        self.card_count['CFLUID4'] = nelements
+        return n
 
 # CINT
 
@@ -1030,11 +1084,25 @@ class GEOM2(GeomCommon):
     def _read_cmfree(self, data, n):
         """
         CMFREE(2508,25,0) - the marker for Record 55
+
+        1 EID  I Element identification number
+        2   S  I
+        3  S2  I
+        4   Y RS
+        5   N  I
         """
-        self.log.info('skipping CMFREE in GEOM2')
-        if self.is_debug_file:
-            self.binary_debug.write('skipping CMFREE in GEOM2\n')
-        return len(data)
+        assert n == 12, n
+        nelements = (len(data) - n) // 20
+        assert (len(data) - n) % 20 == 0
+        struct_3ifi = Struct(self._endian + b'3ifi')
+        for i in range(nelements):
+            edata = data[n:n + 20]  # 5*4
+            out = struct_3ifi.unpack(edata)
+            eid, s, s2, y, ncm = out
+            self.add_cmfree(eid, s, s2, y, ncm)
+            n += 20
+        self.card_count['CMFREE'] = nelements
+        return n
 
     def _read_conm1(self, data, n):
         """

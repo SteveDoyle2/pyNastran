@@ -55,6 +55,7 @@ from pyNastran.bdf.cards.elements.solid import (CIHEX1, CIHEX2,
 from pyNastran.bdf.cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE, RSSCON
 
 from pyNastran.bdf.cards.axisymmetric.axisymmetric import (
+    AXIF, RINGFL,
     AXIC, RINGAX, POINTAX, CCONEAX, PCONEAX, PRESAX, TEMPAX,)
 from pyNastran.bdf.cards.elements.axisymmetric_shells import (
     CTRAX3, CTRAX6, CTRIAX, CTRIAX6, CQUADX, CQUADX4, CQUADX8)
@@ -103,7 +104,7 @@ from pyNastran.bdf.cards.material_deps import (MATT1, MATT2, MATT3, MATT4, MATT5
                                                MATS1)
 
 from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
-from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs, POINT, SEQGP
+from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs, POINT, SEQGP, GRIDB
 from pyNastran.bdf.cards.aero.aero import (
     AECOMP, AEFACT, AELINK, AELIST, AEPARM, AESURF, AESURFS,
     CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
@@ -380,12 +381,14 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             'PARAM',
 
             ## nodes
-            'GRID', 'GRDSET', 'SPOINT', 'EPOINT', 'SEQGP',
+            'GRID', 'GRDSET', 'SPOINT', 'EPOINT', 'SEQGP', 'GRIDB',
 
             # points
             'POINT',
             #'GRIDG'
 
+            ## ringfl
+            'RINGFL',
             ## ringaxs
             'RINGAX', 'POINTAX',
 
@@ -446,6 +449,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             'CCONEAX', # element
             'PCONEAX', # property
             'AXIC', # axic
+            'AXIF', # axif
 
             ## pdampt
             'PDAMPT',
@@ -1669,6 +1673,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             'POINTAX' : (POINTAX, self._add_ringax_object),
             'POINT' : (POINT, self._add_point_object),
             'SEQGP' : (SEQGP, self._add_seqgp_object),
+            'GRIDB' : (GRIDB, self._add_gridb_object),
 
             'PARAM' : (PARAM, self._add_param_object),
 
@@ -1780,6 +1785,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             'CCONEAX' : (CCONEAX, self._add_element_object),
             'PCONEAX' : (PCONEAX, self._add_property_object),
             'AXIC' : (AXIC, self._add_axic_object),
+            'AXIF' : (AXIF, self._add_axif_object),
 
             'RBAR' : (RBAR, self._add_rigid_element_object),
             'RBAR1' : (RBAR1, self._add_rigid_element_object),
@@ -2093,6 +2099,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             'DMIJ' : self._prepare_dmij,
             'DMIK' : self._prepare_dmik,
             'DMIJI' : self._prepare_dmiji,
+            'RINGFL' : self._prepare_ringfl,
 
             'DEQATN' : self._prepare_dequatn,
 
@@ -2376,6 +2383,17 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         if card_obj.field(5):
             class_instance = PVISC.add_card(card_obj, icard=1, comment=comment)
             self._add_property_object(class_instance)
+
+    def _prepare_ringfl(self, unused_card, card_obj, comment=''):
+        """adds a RINGFL"""
+        class_instance = RINGFL.add_card(card_obj, icard=0, comment=comment)
+        self._add_ringfl_object(class_instance)
+        if card_obj.field(3):
+            class_instance = RINGFL.add_card(card_obj, icard=1, comment=comment)
+            self._add_ringfl_object(class_instance)
+        if card_obj.field(5):
+            class_instance = RINGFL.add_card(card_obj, icard=2, comment=comment)
+            self._add_ringfl_object(class_instance)
 
     def _prepare_pdamp(self, unused_card, card_obj, comment=''):
         """adds a PDAMP"""
@@ -3048,14 +3066,16 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             epoints = list(self.epoints)
             nepoints = len(epoints)
 
-        if nnodes + nspoints + nepoints + nrings == 0:
+        ngridb = len(self.gridb)
+        if nnodes + nspoints + nepoints + ngridb + nrings == 0:
             msg = 'nnodes=%s nspoints=%s nepoints=%s nrings=%s' % (
                 nnodes, nspoints, nepoints, nrings)
             raise ValueError(msg)
 
         i = 0
-        xyz_cp = np.zeros((nnodes + nspoints + nepoints, 3), dtype=fdtype)
-        nid_cp_cd = np.zeros((nnodes + nspoints + nepoints, 3), dtype=idtype)
+        nxyz = nnodes + nspoints + nepoints + ngridb
+        xyz_cp = np.zeros((nxyz, 3), dtype=fdtype)
+        nid_cp_cd = np.zeros((nxyz, 3), dtype=idtype)
         for nid, node in sorted(iteritems(self.nodes)):
             cd = node.Cd()
             cp = node.Cp()
@@ -3071,6 +3091,20 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         if nepoints:
             for nid in sorted(epoints):
                 nid_cp_cd[i, 0] = nid
+                i += 1
+        if ngridb:
+            for nid, node in sorted(iteritems(self.gridb)):
+                phi = node.phi
+                cd = node.cd
+                ringfl_id = node.ringfl
+                ringfl = self.ringfl[ringfl_id]
+                x = ringfl.xa  ## TODO: what about xb?
+                y = phi  ## TODO: is this really phi?
+                z = 0.
+                axif = self.axif
+                cp = axif.cid
+                nid_cp_cd[i, :] = [nid, cp, cd]
+                xyz_cp[i, :] = [x, y, z]
                 i += 1
 
         if sort_ids:

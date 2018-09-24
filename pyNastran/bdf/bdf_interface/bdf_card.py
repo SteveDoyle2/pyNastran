@@ -146,5 +146,4 @@ class BDFCard(object):
         """
         if i < self.nfields and self.card[i] is not None and self.card[i] is not '':
             return self.card[i]
-        else:
-            return default
+        return default

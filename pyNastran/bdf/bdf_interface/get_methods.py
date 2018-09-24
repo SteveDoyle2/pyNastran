@@ -103,8 +103,20 @@ class GetMethods(BDFAttributes):
         Returns a series of node objects given a list of IDs
         """
         nodes = []
-        for nid in nids:
-            nodes.append(self.Node(nid, msg=msg))
+        #self.axic
+        if self._is_axis_symmetric and self.axif is not None:
+            # GRIDB is only active if AXIF exists
+            for nid in nids:
+                try:
+                    gridb = self.gridb[nid]
+                except KeyError:
+                    assert isinstance(nid, integer_types), 'nid should be an integer; not %s' % type(nid)
+                    nid_list = np.unique(list(self.gridb.keys()))
+                    raise KeyError('nid=%s is not a GRIDB%s\n%s' % (nid, msg, nid_list))
+                nodes.append(gridb)
+        else:
+            for nid in nids:
+                nodes.append(self.Node(nid, msg=msg))
         return nodes
 
     def Point(self, nid, msg=''):

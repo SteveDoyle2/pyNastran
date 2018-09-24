@@ -198,21 +198,8 @@ class StrengthRatio(object):
         ]
         return ['strength_ratio.' + table for table in tables]
 
-class Deprecated(object):
-    def __init__(self):
-        pass
-    #@property
-    #def iSubcases(self):
-        #self.deprecated('iSubcases', 'isubcases', '1.2')
-        #return self.isubcases
 
-    #@iSubcases.setter
-    #def iSubcases(self, isubcases):
-        #self.deprecated('iSubcases', 'isubcases', '1.2')
-        #self.isubcases = isubcases
-
-
-class OP2_F06_Common(Deprecated):
+class OP2_F06_Common(object):
     def __init__(self):
         #: a dictionary that maps an integer of the subcaseName to the
         #: subcase_id

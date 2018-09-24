@@ -595,12 +595,14 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         nspoints = len(model.spoints)
         nepoints = len(model.epoints)
         ncaero_cards = len(model.caeros)
+        ngridb = len(model.gridb)
         #if model.spoints:
             #spoints = sorted([spoint.nid for spoint in itervalues(model.spoints)])
         #if model.epoints:
             #epoints = sorted([epoint.nid for epoint in itervalues(model.epoints)])
 
-        if nnodes + nspoints + nepoints + ncaero_cards == 0:
+        ngui_nodes = nnodes + nspoints + nepoints + ngridb
+        if ngui_nodes + ncaero_cards == 0:
             msg = 'nnodes + nspoints + nepoints = 0\n'
             msg += 'card_count = %r' % str(model.card_count)
             raise NoGeometry(msg)
@@ -622,7 +624,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             msg += 'card_count = %r' % str(model.card_count)
             raise NoGeometry(msg)
 
-        self.gui.nnodes = nnodes + nspoints + nepoints
+        self.gui.nnodes = ngui_nodes
         self.gui.nelements = nelements  # approximate...
 
         self.gui.log_info("nnodes=%i nelements=%i" % (self.nnodes, self.nelements))
@@ -1625,13 +1627,11 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         nnodes = len(model.nodes)
         nspoints = len(model.spoints)
         nepoints = len(model.epoints)
+        ngridb = len(model.gridb)
         ncaero_cards = len(model.caeros)
-        #if model.spoints:
-            #spoints = sorted([spoint.nid for spoint in itervalues(model.spoints)])
-        #if model.epoints:
-            #epoints = sorted([epoint.nid for epoint in itervalues(model.epoints)])
 
-        if nnodes + nspoints + nepoints + ncaero_cards == 0:
+        ngui_nodes = nnodes + nspoints + nepoints + ngridb
+        if ngui_nodes + ncaero_cards == 0:
             msg = 'nnodes + nspoints + nepoints = 0\n'
             msg += 'card_count = %r' % str(model.card_count)
             raise NoGeometry(msg)
@@ -1646,7 +1646,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             msg += 'card_count = %r' % str(model.card_count)
             raise NoGeometry(msg)
 
-        self.nnodes = nnodes + nspoints + nepoints
+        self.nnodes = ngui_nodes
         self.nelements = nelements  # approximate...
 
         out = self.make_caeros(model)

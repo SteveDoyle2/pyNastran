@@ -85,6 +85,26 @@ class AddMethods(BDFAttributes):
             self.nodes[key] = node
             self._type_to_id_map[node.type].append(key)
 
+    def _add_gridb_object(self, node, allow_overwrites=False):
+        """adds a GRIDB card"""
+        key = node.nid
+        assert key > 0, 'eid=%s node=%s' % (key, node)
+        if key in self.gridb and not allow_overwrites:
+            assert node.nid not in self.gridb, 'nid=%s\nold_node=\n%snew_node=\n%s' % (node.nid, self.gridb[key], node)
+        self.gridb[key] = node
+        self._type_to_id_map[node.type].append(key)
+        self._is_axis_symmetric = True
+
+    def _add_ringfl_object(self, ringfl, allow_overwrites=False):
+        """adds a RINGFL card"""
+        key = ringfl.ringfl
+        assert key > 0, 'eid=%s ringfl=%s' % (key, ringfl)
+        if key in self.ringfl and not allow_overwrites:
+            assert ring.ringfl not in self.ringfl, 'ringfl=%s\nold_ringfl=\n%snew_ringfl=\n%s' % (ringfl.ringfl, self.ringfl[key], ringfl)
+        self.ringfl[key] = ringfl
+        self._type_to_id_map[ringfl.type].append(key)
+        self._is_axis_symmetric = True
+
     def _add_ringax_object(self, ringax, allow_overwrites=False):
         # type: (Any, bool) -> None
         """adds a RINGAX card"""
@@ -99,6 +119,7 @@ class AddMethods(BDFAttributes):
             assert key > 0, 'nid=%s ringax=%s' % (key, ringax)
             self.ringaxs[key] = ringax
             self._type_to_id_map[ringax.type].append(key)
+        self._is_axis_symmetric = True
 
     def _add_seqgp_object(self, seqgp):
         # type: (Any) -> None
@@ -806,6 +827,13 @@ class AddMethods(BDFAttributes):
         # only one AXIC card allowed
         assert self.axic is None, '\naxic=\n%s old=\n%s' % (axic, self.axic)
         self.axic = axic
+
+    def _add_axif_object(self, axif):
+        # type: (Any) -> None
+        """adds an AXIF object"""
+        # only one AXIC card allowed
+        assert self.axif is None, '\naxif=\n%s old=\n%s' % (axif, self.axif)
+        self.axif = axif
 
     def _add_aefact_object(self, aefact, allow_overwrites=False):
         # type: (Any, bool) -> None

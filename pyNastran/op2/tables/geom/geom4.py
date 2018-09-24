@@ -50,6 +50,8 @@ class GEOM4(GeomCommon):
             #: ['', self._read_fake],
 
 
+            #(4901, 49, 420017): ['', self._read_fake],    # record
+            (4901, 49, 420017) : ['MPC', self._read_mpc2],  # this theoretically shouldn't exist
             (4901, 49, 17) : ['MPC', self._read_mpc],             # record 17
             (4891, 60, 83) : ['MPCADD', self._read_mpcadd],       # record 18
             (5001, 50, 15) : ['OMIT', self._read_omit],           # record 19 - not done
@@ -87,7 +89,6 @@ class GEOM4(GeomCommon):
             (2110, 21, 194) : ['USET1', self._read_uset1],  # record
             (1010, 10, 320): ['SECSET1', self._read_secset1],  # record
 
-            (4901, 49, 420017): ['', self._read_fake],    # record
             (5561, 76, 0): ['PLOTEL/SESET?', self._read_fake],         # record
             (610, 6, 0): ['', self._read_fake],           # record
             (5110, 51, 620256): ['', self._read_fake],    # record
@@ -332,6 +333,34 @@ class GEOM4(GeomCommon):
     def _read_gmspc(self, data, n):
         self.log.info('skipping GMSPC in GEOM4')
         return len(data)
+
+    def _read_mpc2(self, data, n):
+        """MPC(4901,49,420017) - Record 16"""
+        self.log.info('skipping MPC? in GEOM4')
+        return len(data)
+        #ndata = len(data)
+        #nfields = (ndata - n) // 4
+        #datan = data[n:]
+        #ints = unpack(b(self._uendian + '%ii' % nfields), datan)
+        #floats = unpack(b(self._uendian + '%if' % nfields), datan)
+
+        #self.show_data(data[12:100], 'ifs')
+        #i = 0
+        #nentries = 0
+        #while i < nfields:
+            #sid, grid, comp, comp2 = ints[i:i+4]
+            #if (sid, grid, comp, comp2) == (-1, -1, -1, -1):
+                #print('--------------')
+                #i += 4
+                #continue
+            ##comp2 = floats[i+3]
+            #coeff = floats[i+4]
+            #print(sid, grid, comp, comp2)
+            #print(coeff)
+            #i += 5
+            #nentries += 1
+        #self.increase_card_count('MPC', nentries)
+        #return len(dat)
 
     def _read_mpc(self, data, n):
         """MPC(4901,49,17) - Record 16"""
@@ -1445,6 +1474,17 @@ def _read_spcadd_mpcadd(model, card_name, datai):
     if model.is_debug_file:
         model.binary_debug.write('  %s - %s' % (card_name, str(datai)))
     iend = np.where(datai == -1)[0]
+    if len(datai) == 3:
+        dataii = datai
+        if card_name == 'MPCADD':
+            constraint = MPCADD.add_op2_data(dataii)
+            model._add_constraint_mpcadd_object(constraint)
+        else:
+            constraint = SPCADD.add_op2_data(dataii)
+            model._add_constraint_spcadd_object(constraint)
+        model.increase_card_count(card_name, count_num=1)
+        return
+
     i0 = 0
     count_num = len(iend)
     for iendi in iend:

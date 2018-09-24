@@ -833,10 +833,18 @@ class WriteMesh(BDFAttributes):
             bdf_file.write('$POINTS\n')
             for unused_point_id, point in sorted(self.points.items()):
                 bdf_file.write(point.write_card(size, is_double))
-        if self.axic:
-            bdf_file.write(self.axic.write_card(size, is_double))
-            for unused_nid, ringax_pointax in self.ringaxs.items():
+
+        if self._is_axis_symmetric:
+            if self.axic:
+                bdf_file.write(self.axic.write_card(size, is_double))
+            if self.axif:
+                bdf_file.write(self.axif.write_card(size, is_double))
+            for unused_nid, ringax_pointax in sorted(self.ringaxs.items()):
                 bdf_file.write(ringax_pointax.write_card(size, is_double))
+            for unused_ringfl, ringfl in sorted(self.ringfl.items()):
+                bdf_file.write(ringfl.write_card(size, is_double))
+            for unused_nid, gridb in sorted(self.gridb.items()):
+                bdf_file.write(gridb.write_card(size, is_double))
 
         self._write_grids(bdf_file, size=size, is_double=is_double)
         if self.seqgp:

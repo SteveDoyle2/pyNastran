@@ -813,9 +813,7 @@ def _remove_invalid_filename_characters(basename):
     Invalid for Linux
      / (forward slash)
 
-    TODO
-    ----
-    do a check for linux
+    .. todo:: do a check for linux
     """
     invalid_chars = ':*?<>|/\\'
     for char in invalid_chars:

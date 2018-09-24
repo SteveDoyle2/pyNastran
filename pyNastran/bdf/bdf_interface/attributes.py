@@ -280,7 +280,6 @@ class BDFAttributes(object):
         # main structural block
         #: stores POINT cards
         self.points = {}  # type: Dict[int, Any]
-        self.ringaxs = {}  # type: Dict[int, Any]
         #self.grids = {}
 
         self.spoints = {}  # type: Dict[int, Any]
@@ -292,6 +291,11 @@ class BDFAttributes(object):
         #: stores SEQGP cards
         self.seqgp = None  # type: Optional[Any]
 
+        ## stores RINGAX
+        self.ringaxs = {}  # type: Dict[int, Any]
+
+        ## stores GRIDB
+        self.gridb = {}  # type: Dict[int, Any]
 
         #: stores elements (CQUAD4, CTRIA3, CHEXA8, CTETRA4, CROD, CONROD,
         #: etc.)
@@ -517,6 +521,9 @@ class BDFAttributes(object):
 
         # axisymmetric
         self.axic = None  # type: Optional[Any]
+        self.axif = None  # type: Optional[Any]
+        self.ringfl = {}  # type: Dict[int, Any]
+        self._is_axis_symmetric = False
 
         # ------ SOL 144 ------
         #: stores AEROS
@@ -580,8 +587,11 @@ class BDFAttributes(object):
             'nodes' : ['GRID', 'SPOINT', 'EPOINT'], # 'RINGAX',
             'points' : ['POINT'],
             'ringaxs' : ['RINGAX', 'POINTAX'],
+            'ringfl' : ['RINGFL'],
             'axic' : ['AXIC'],
+            'axif' : ['AXIF'],
             'grdset' : ['GRDSET'],
+            'gridb' : ['GRIDB'],
             'seqgp' : ['SEQGP'],
             'ao_element_flags' : ['CBARAO'],
             #'POINTAX', 'RINGAX',

@@ -723,7 +723,7 @@ def _create_nid_maps(model, starting_id_dict, nid):
     else:
         for nid in nids_spoints_epoints:
             nid_map[nid] = nid
-            reverse_nid_map[nid] = nid
+        reverse_nid_map = nid_map
     return nid_map, reverse_nid_map
 
 def _update_nodes(model, starting_id_dict, nid, nid_map):
@@ -988,27 +988,8 @@ def _update_case_control(model, mapper):
                                 key, options, param_type, value))
                             raise NotImplementedError(key)
 
-                        values2 = []
-                        eids_missing = []
-                        nids_missing = []
-                        if key in elemental_quantities:
-                            # renumber eids
-                            for eid in seti2:
-                                if eid not in eid_map:
-                                    eids_missing.append(eid)
-                                    continue
-                                eid_new = eid_map[eid]
-                                values2.append(eid_new)
-                            #print('updating element SET %r' % options)
-                        else:
-                            # renumber nids
-                            for nid in seti2:
-                                if nid not in nid_map:
-                                    nids_missing.append(nid)
-                                    continue
-                                nid_new = nid_map[nid]
-                                values2.append(nid_new)
-                            #print('updating node SET %r' % options)
+                        eids_missing, nids_missing, values2 = _update_case_key(
+                            key, elemental_quantities, seti2, eid_map, nid_map)
                         if eids_missing:
                             model.log.warning("  couldn't find eids=%s...dropping" % eids_missing)
                         if nids_missing:
@@ -1063,6 +1044,30 @@ def _update_case_control(model, mapper):
                 raise RuntimeError(key)
                     #if value ==
         #print()
+
+def _update_case_key(key, elemental_quantities, seti2, eid_map, nid_map):
+    values2 = []
+    eids_missing = []
+    nids_missing = []
+    if key in elemental_quantities:
+        # renumber eids
+        for eid in seti2:
+            if eid not in eid_map:
+                eids_missing.append(eid)
+                continue
+            eid_new = eid_map[eid]
+            values2.append(eid_new)
+        #print('updating element SET %r' % options)
+    else:
+        # renumber nids
+        for nid in seti2:
+            if nid not in nid_map:
+                nids_missing.append(nid)
+                continue
+            nid_new = nid_map[nid]
+            values2.append(nid_new)
+        #print('updating node SET %r' % options)
+    return eids_missing, nids_missing, values2
 
 #def _create_dict_mapper(properties, properties_map, pid_name, pid):
     #for pidi, prop in sorted(mydict.items()):

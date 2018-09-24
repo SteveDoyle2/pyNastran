@@ -723,7 +723,7 @@ class GRIDB(BaseCard):
     #: allows the get_field method and update_field methods to be used
     _field_map = {1: 'nid', 4:'phi', 6:'cd', 7:'ps', 8:'idf'}
 
-    def __init__(self, nid, phi, cd, ps, idf, comment=''):
+    def __init__(self, nid, phi, cd, ps, ringfl, comment=''):
         """
         Creates the GRIDB card
         """
@@ -738,13 +738,13 @@ class GRIDB(BaseCard):
         self.cd = cd
         #: local SPC constraint
         self.ps = ps
-        self.idf = idf
+        #: ringfl
+        self.ringfl = ringfl
 
         assert self.nid > 0, 'nid=%s' % self.nid
         assert self.phi >= 0, 'phi=%s' % self.phi
         assert self.cd >= 0, 'cd=%s' % self.cd
-        assert self.ps >= 0, 'ps=%s' % self.ps
-        assert self.idf >= 0, 'idf=%s' % self.idf
+        assert self.ringfl >= 0, 'ringfl=%s' % self.ringfl
         self.cd_ref = None
 
     @classmethod
@@ -762,8 +762,8 @@ class GRIDB(BaseCard):
         nid = integer(card, 1, 'nid')
         phi = double(card, 4, 'phi')
         cd = integer(card, 6, 'cd')
-        ps = integer(card, 7, 'ps')
-        idf = integer(card, 8, 'idf')
+        ps = components_or_blank(card, 7, 'ps', '')
+        idf = integer(card, 8, 'ringfl/idf')
         return GRIDB(nid, phi, cd, ps, idf, comment=comment)
 
     @classmethod
@@ -819,8 +819,12 @@ class GRIDB(BaseCard):
             the fields that define the card
         """
         list_fields = ['GRIDB', self.nid, None, None, self.phi, None,
-                       self.Cd(), self.ps, self.idf]
+                       self.Cd(), self.ps, self.ringfl]
         return list_fields
+
+    def get_position(self):
+        ## TODO: fixme
+        return np.array([0., 0., 0.])
 
     def repr_fields(self):
         """
@@ -834,7 +838,7 @@ class GRIDB(BaseCard):
         #phi = set_blank_if_default(self.phi, 0.0)
         cd = set_blank_if_default(self.Cd(), 0)
         ps = set_blank_if_default(self.ps, 0)
-        idf = set_blank_if_default(self.idf, 0)
+        idf = set_blank_if_default(self.ringfl, 0)
         list_fields = ['GRIDB', self.nid, None, None, self.phi, None, cd, ps,
                        idf]
         return list_fields
