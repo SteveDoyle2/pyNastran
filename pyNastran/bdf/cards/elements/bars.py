@@ -721,8 +721,8 @@ class CBAR(LineElement):
             g0 : List[int, None, None]
             x : List[float, float, float]
 
-        Note
-        ----
+        Notes
+        -----
         Used by CBAR and CBEAM
         """
         if self.g0 is not None:

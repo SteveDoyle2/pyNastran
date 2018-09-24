@@ -381,8 +381,8 @@ class AELIST(BaseCard):
     |         | 1202 |      |      |      |      |      |      |      |
     +---------+------+------+------+------+------+------+------+------+
 
-    Remarks
-    -------
+    Notes
+    -----
     1. These entries are referenced by the AESURF entry.
     2. When the THRU option is used, all intermediate grid points must exist.
        The word THRU may not appear in field 3 or 9 (2 or 9 for continuations).

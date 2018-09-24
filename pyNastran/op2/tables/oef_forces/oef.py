@@ -528,611 +528,33 @@ class OEF(OP2Common):
 
         #flag = 'element_id'
         if self.element_type in [1, 2, 3, 10, 34, 69]:  # ROD,BEAM,TUBE,CONROD,BAR,BEND
-            # 1-CROD
-            # 2-CBEAM
-            # 3-CTUBE
-            # 10-CONROD
-            # 34-CBAR
-            # 69-CBEND
-            obj_vector_real = Real1DHeatFluxArray
-            #if self.element_type == 1: # CROD
-            if self.element_type == 1:
-                result_name = prefix + 'crod_thermal_load' + postfix
-            elif self.element_type == 2:
-                result_name = prefix + 'cbeam_thermal_load' + postfix
-            elif self.element_type == 3:
-                result_name = prefix + 'ctube_thermal_load' + postfix
-            elif self.element_type == 10:
-                result_name = prefix + 'conrod_thermal_load' + postfix
-            elif self.element_type == 34:
-                result_name = prefix + 'cbar_thermal_load' + postfix
-            elif self.element_type == 69:
-                result_name = prefix + 'cbend_thermal_load' + postfix
-            else:
-                raise NotImplementedError('element_type=%s element_name=%s' % (
-                    self.element_type, self.element_name))
-
-            if self._results.is_not_saved(result_name):
-                return ndata
-            self._results._found_result(result_name)
-            slot = self.get_result(result_name)
-
-            if self.format_code == 1 and self.num_wide == 9:  # real
-                ntotal = 36
-                nelements = ndata // ntotal
-                auto_return, is_vectorized = self._create_oes_object4(
-                    nelements, result_name, slot, obj_vector_real)
-                if auto_return:
-                    return nelements * self.num_wide * 4
-                obj = self.obj
-                #if self.is_debug_file:
-                    #self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
-                    #self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
-                    #self.binary_debug.write('  #elementi = [eid_device, axial, torque]\n')
-                    #self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
-
-                if self.use_vector and is_vectorized and self.sort_method == 1:
-                    n = nelements * 4 * self.num_wide
-                    itotal = obj.ielement
-                    ielement2 = obj.itotal + nelements
-                    itotal2 = ielement2
-
-                    floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 9)
-                    obj._times[obj.itime] = dt
-
-                    strings = frombuffer(data, dtype=self._uendian + 'S4').reshape(nelements, 9)
-                    s = array([s1+s2 for s1, s2 in zip(strings[:, 1], strings[:, 2])])
-                    #print(s)
-                    #print('itime = ', obj.itime)
-                    #print('---------')
-                    if obj.itime == 0:
-                        ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 9)
-                        eids = ints[:, 0] // 10
-                        assert eids.min() > 0, eids.min()
-                        obj.element[itotal:itotal2] = eids
-                        obj.element_data_type[itotal:itotal2] = s
-                        #obj.element_type[obj.itime, itotal:itotal2, :] = strings[:, 3:]
-
-                    #[etype, xgrad, ygrad, zgrad, xflux, yflux, zflux]
-                    obj.data[obj.itime, itotal:itotal2, :] = floats[:, 3:].copy()
-                    obj.itotal = itotal2
-                    obj.ielement = ielement2
-                else:
-                    s = Struct(self._endian + self._analysis_code_fmt + b'8s6f')
-                    for unused_i in range(nelements):
-                        edata = data[n:n+ntotal]
-                        out = s.unpack(edata)
-                        (eid_device, eType, xgrad, ygrad, zgrad, xflux, yflux, zflux) = out
-                        eid, dt = get_eid_dt_from_eid_device(
-                            eid_device, self.nonlinear_factor, self.sort_method)
-                        obj.add_sort1(dt, eid, eType, xgrad, ygrad, zgrad, xflux, yflux, zflux)
-                        n += ntotal
-            else:
-                msg = self.code_information()
-                return self._not_implemented_or_skip(data, ndata, msg)
+            n, nelements, ntotal = self._thermal_1d_heat_flux(data, ndata, dt, prefix, postfix)
+            if nelements is None:
+                return n
 
         elif self.element_type in [33, 53, 64, 74, 75,  # CQUAD4, CTRIAX6, CQUAD8, CTRIA3, CTRIA6
                                    39, 67, 68]:  # TETRA, HEXA, PENTA
-            # 33-QUAD4-centroidal
-            # 53-TRIAX6
-            # 64-QUAD8
-            # 74-TRIA3
-            # 75-TRIA6
+            n, nelements, ntotal = self._thermal_2d_3d_heat_flux(data, ndata, dt, prefix, postfix)
 
-            # 39-TETRA
-            # 67-HEXA
-            # 68-PENTA
-            if self.element_type == 33:
-                result_name = 'cquad4_thermal_load' + postfix
-            elif self.element_type == 53:
-                result_name = 'ctriax6_thermal_load' + postfix
-            elif self.element_type == 64:
-                result_name = 'cquad8_thermal_load' + postfix
-            elif self.element_type == 74:
-                result_name = 'ctria3_thermal_load' + postfix
-            elif self.element_type == 75:
-                result_name = 'ctria6_thermal_load' + postfix
-            elif self.element_type == 39:
-                result_name = 'ctetra_thermal_load' + postfix
-            elif self.element_type == 67:
-                result_name = 'chexa_thermal_load' + postfix
-            elif self.element_type == 68:
-                result_name = 'cpenta_thermal_load' + postfix
-            else:
-                raise NotImplementedError('element_type=%s element_name=%s' % (
-                    self.element_type, self.element_name))
-
-            obj_vector_real = RealHeatFlux_2D_3DArray
-            #if self.element_type == 1: # CROD
-            #result_name = 'thermalLoad_2D_3D'
-
-            if self._results.is_not_saved(result_name):
-                return ndata
-            self._results._found_result(result_name)
-            slot = self.get_result(result_name)
-            if self.format_code == 1 and self.num_wide == 9:  # real - 2D
-                # [33, 53, 64, 74, 75]
-                ntotal = 36
-                nelements = ndata // ntotal
-                auto_return, is_vectorized = self._create_oes_object4(
-                    nelements, result_name, slot, obj_vector_real)
-                if auto_return:
-                    return nelements * self.num_wide * 4
-                obj = self.obj
-                #if self.is_debug_file:
-                    #self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
-                    #self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
-                    #self.binary_debug.write('  #elementi = [eid_device, axial, torque]\n')
-                    #self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
-
-                if self.use_vector and is_vectorized and self.sort_method == 1:
-                    n = nelements * 4 * self.num_wide
-                    itotal = obj.ielement
-                    ielement2 = obj.itotal + nelements
-                    itotal2 = ielement2
-
-                    floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 9)
-                    obj._times[obj.itime] = dt
-                    #if obj.itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 9)
-                    eids = ints[:, 0] // 10
-                    assert eids.min() > 0, eids.min()
-                    obj.element[itotal:itotal2] = eids
-                    strings = frombuffer(data, dtype=self._uendian + 'S4').reshape(nelements, 9)
-                    obj.element_data_type[itotal:itotal2] = array([s1+s2 for s1, s2 in zip(strings[:, 1], strings[:, 2])])
-
-                    #[etype, xgrad, ygrad, zgrad, xflux, yflux, zflux]
-                    obj.data[obj.itime, itotal:itotal2, :] = floats[:, 3:].copy()
-                    obj.itotal = itotal2
-                    obj.ielement = ielement2
-                else:
-                    # no zed on this element for some reason...
-                    s = Struct(self._endian + self._analysis_code_fmt + b'8s6f')
-                    for unused_i in range(nelements):
-                        edata = data[n:n+ntotal]
-                        n += ntotal
-                        out = s.unpack(edata)
-                        (eid_device, etype, xgrad, ygrad, zgrad, xflux, yflux, zflux) = out
-                        eid, dt = get_eid_dt_from_eid_device(
-                            eid_device, self.nonlinear_factor, self.sort_method)
-                        obj.add_sort1(dt, eid, etype, xgrad, ygrad, zgrad, xflux, yflux, zflux)
-
-            elif self.format_code == 1 and self.num_wide == 10:  # real - 3D
-                # [39, 67, 68]:  # HEXA,PENTA
-                ntotal = 40
-                nelements = ndata // ntotal
-                auto_return, is_vectorized = self._create_oes_object4(
-                    nelements, result_name, slot, obj_vector_real)
-                if auto_return:
-                    return nelements * self.num_wide * 4
-                obj = self.obj
-                assert nelements > 0, 'ndata=%s ntotal=%s' % (ndata, ntotal)
-                if self.use_vector and is_vectorized and self.sort_method == 1:
-                    n = nelements * 4 * self.num_wide
-                    itotal = obj.ielement
-                    ielement2 = obj.itotal + nelements
-                    itotal2 = ielement2
-
-                    floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 10)
-                    obj._times[obj.itime] = dt
-                    if obj.itime == 0:
-                        ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 10)
-                        eids = ints[:, 0] // 10
-                        assert eids.min() > 0, eids.min()
-                        obj.element[itotal:itotal2] = eids
-                        strings = frombuffer(data, dtype=self._uendian + 'S4').reshape(nelements, 10)
-                        obj.element_data_type[itotal:itotal2] = array([s1+s2 for s1, s2 in zip(strings[:, 1], strings[:, 2])])
-
-                    #[etype, xgrad, ygrad, zgrad, xflux, yflux, zflux, zed]
-                    obj.data[obj.itime, itotal:itotal2, :] = floats[:, 3:-1].copy()
-                    obj.itotal = itotal2
-                    obj.ielement = ielement2
-                else:
-                    s = Struct(self._endian + self._analysis_code_fmt + b'8s6fi')
-                    for unused_i in range(nelements):
-                        edata = data[n:n+ntotal]
-                        n += ntotal
-                        out = s.unpack(edata)
-                        (eid_device, etype, xgrad, ygrad, zgrad, xflux, yflux, zflux, unused_zed) = out
-                        eid, dt = get_eid_dt_from_eid_device(
-                            eid_device, self.nonlinear_factor, self.sort_method)
-                        obj.add_sort1(dt, eid, etype, xgrad, ygrad, zgrad, xflux, yflux, zflux)
-            else:
-                raise RuntimeError(self.code_information())
         elif self.element_type in [107, 108, 109]:  # CHBDYE, CHBDYG, CHBDYP
-            # 107-CHBDYE
-            # 108-CHBDYG
-            # 109-CHBDYP
-            #if self.table_name in ['OEF1X']:
-            if self.element_type == 107:
-                result_name = 'chbdye_thermal_load' + postfix
-            elif self.element_type == 108:
-                result_name = 'chbdyg_thermal_load' + postfix
-            elif self.element_type == 109:
-                result_name = 'chbdyp_thermal_load' + postfix
-            else:
-                raise NotImplementedError('element_type=%s element_name=%s' % (
-                    self.element_type, self.element_name))
-            #elif self.table_name in ['HOEF1']:
-                #if self.element_type == 107:
-                    #result_name = 'chbdye_thermal_flux'
-                #elif self.element_type == 108:
-                    #result_name = 'chbdyg_thermal_flux'
-                #elif self.element_type == 109:
-                    #result_name = 'chbdyp_thermal_flux'
-                #else:
-                    #raise NotImplementedError('element_type=%s element_name=%s' % (
-                        #self.element_type, self.element_name))
-            #else:
-                #raise NotImplementedError(msg)
+            n, nelements, ntotal = self._thermal_chbdy(data, ndata, dt, prefix, postfix)
 
-            if self.format_code == 1 and self.num_wide == 8:  # real
-                #result_name = 'thermalLoad_CHBDY'
-                if self._results.is_not_saved(result_name):
-                    return ndata
-                self._results._found_result(result_name)
-                slot = self.get_result(result_name)
-
-                if self.format_code == 1 and self.num_wide == 8:  # real
-                    obj_vector_real = RealChbdyHeatFluxArray
-                    ntotal = 32
-                    nelements = ndata // ntotal
-                    auto_return, is_vectorized = self._create_oes_object4(
-                        nelements, result_name, slot, obj_vector_real)
-                    if auto_return:
-                        return nelements * self.num_wide * 4
-                    obj = self.obj
-                    #if self.is_debug_file:
-                        #self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
-                        #self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
-                        #self.binary_debug.write('  #elementi = [eid_device, etype, fapplied, free_conv, force_conv, frad, ftotal]\n')
-                        #self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
-
-                    if self.use_vector and is_vectorized and self.sort_method == 1:
-                        n = nelements * 4 * self.num_wide
-                        itotal = obj.ielement
-                        ielement2 = obj.itotal + nelements
-                        itotal2 = ielement2
-
-                        floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 8)
-                        obj._times[obj.itime] = dt
-                        if obj.itime == 0:
-                            ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 8)
-                            eids = ints[:, 0] // 10
-                            assert eids.min() > 0, eids.min()
-                            obj.element[itotal:itotal2] = eids
-                            #obj.element_type[obj.itime, itotal:itotal2, :] = strings[:, 3:]
-
-                        #[fapplied, free_conv, force_conv, frad, ftotal]
-                        obj.data[obj.itime, itotal:itotal2, :] = floats[:, 3:].copy()
-                        obj.itotal = itotal2
-                        obj.ielement = ielement2
-                    else:
-                        s1 = Struct(self._endian + self._analysis_code_fmt + b'8s5f')
-                        for unused_i in range(nelements):
-                            edata = data[n:n+32]
-                            n += ntotal
-                            out = s1.unpack(edata)
-                            (eid_device, etype, fapplied, free_conv, force_conv, frad, ftotal) = out
-                            eid, dt = get_eid_dt_from_eid_device(
-                                eid_device, self.nonlinear_factor, self.sort_method)
-
-                            if self.is_debug_file:
-                                self.binary_debug.write('  %s -> [%s, %s, %s, %s, %s, %s, %s]\n'
-                                                        % (eid, eid_device, etype, fapplied, free_conv, force_conv, frad, ftotal))
-                            obj.add_sort1(dt, eid, etype, fapplied, free_conv, force_conv, frad, ftotal)
-            else:
-                msg = self.code_information()
-                return self._not_implemented_or_skip(data, ndata, msg)
-
-        elif self.element_type == 110:
-            # 110-CONV
-            result_name = 'conv_thermal_load' + postfix
-            if self._results.is_not_saved(result_name):
-                return ndata
-            self._results._found_result(result_name)
-            slot = self.get_result(result_name)
-
-            if self.format_code == 1 and self.num_wide == 4:
-                ntotal = 16
-                nelements = ndata // ntotal
-
-                auto_return, is_vectorized = self._create_oes_object4(
-                    nelements, result_name, slot, RealConvHeatFluxArray)
-                if auto_return:
-                    return nelements * self.num_wide * 4
-                obj = self.obj
-                #if self.is_debug_file:
-                    #self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
-                    #self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
-                    #self.binary_debug.write('  #elementi = [eid_device, etype, fapplied, free_conv, force_conv, frad, ftotal]\n')
-                    #self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
-
-                if self.use_vector and is_vectorized and self.sort_method == 1:
-                    n = nelements * 4 * self.num_wide
-                    ielement = obj.ielement
-                    ielement2 = ielement + nelements
-
-                    floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 4).copy()
-                    obj._times[obj.itime] = dt
-                    if obj.itime == 0:
-                        ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 4).copy()
-                        eids = ints[:, 0] // 10
-                        nids = ints[:, 2]
-                        assert eids.min() > 0, eids.min()
-                        assert nids.min() >= 0, nids.min()
-                        obj.element_node[ielement:ielement2, 0] = eids
-                        obj.element_node[ielement:ielement2, 1] = nids
-
-                    #[eid, free_conv, cntl_node, free_conv_k]
-                    obj.data[obj.itime, ielement:ielement2, :] = floats[:, [1, 3]]
-                    obj.itotal = ielement2
-                    obj.ielement = ielement2
-                else:
-                    s1 = Struct(self._endian + self._analysis_code_fmt + b'fif')
-                    for unused_i in range(nelements):
-                        edata = data[n:n+16]
-                        n += 16
-                        out = s1.unpack(edata)
-                        (eid_device, free_conv, cntl_node, free_conv_k) = out
-                        eid, dt = get_eid_dt_from_eid_device(
-                            eid_device, self.nonlinear_factor, self.sort_method)
-                        assert cntl_node >= 0, cntl_node
-                        obj.add_sort1(dt, eid, cntl_node, free_conv, free_conv_k)
-            else:
-                msg = self.code_information()
-                return self._not_implemented_or_skip(data, ndata, msg)
+        elif self.element_type == 110:  # CONV
+            n, nelements, ntotal = self._thermal_conv(data, ndata, dt, prefix, postfix)
 
         elif self.element_type in [145, 146, 147]:  # VUHEXA,VUPENTA,VUTETRA
-            # TODO: vectorize
-
-            # 145-VUHEXA
-            # 146-VUPENTA
-            # 147-VUTETRA
-            if self.element_type == 147:  # VUTETRA
-                nnodes = 4
-            elif self.element_type == 146:  # VUPENTA
-                nnodes = 6
-            elif self.element_type == 145:  # VUHEXA
-                nnodes = 8
-            else:
-                msg = self.code_information()
-                return self._not_implemented_or_skip(data, ndata, msg)
-
-            result_name = 'thermalLoad_VU_3D' + postfix
-            if self._results.is_not_saved(result_name):
-                return ndata
-            self._results._found_result(result_name)
-            slot = self.get_result(result_name)
-
-            numwide_real = 2 + 7 * nnodes
-            if self.format_code == 1 and self.num_wide == numwide_real:  # real
-                ntotal = 8 + 28 * nnodes
-                nelements = ndata // ntotal
-                #self.create_transient_object(result_name, self.thermalLoad_VU_3D, HeatFluxVU_3DArray)
-                #is_vectorized = False
-
-                auto_return, is_vectorized = self._create_oes_object4(
-                    nelements, result_name, slot, RealHeatFluxVU3DArray)
-                if auto_return:
-                    self._data_factor = nnodes
-                    return nelements * self.num_wide * 4
-
-                obj = self.obj
-                if self.use_vector and is_vectorized and self.sort_method == 1:
-                    n = nelements * 4 * self.num_wide
-                    ielement = obj.ielement
-                    ielement2 = ielement + nelements
-                    itotal = obj.itotal
-                    itotal2 = itotal + nelements * nnodes
-
-                    floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, numwide_real)
-                    floats2 = floats[:, 2:].reshape(nelements * nnodes, 7)
-                    obj._times[obj.itime] = dt
-                    #if obj.itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, numwide_real).copy()
-                    ints2 = ints[:, 2:].reshape(nelements * nnodes, 7)
-                    eids = ints[:, 0] // 10
-                    parent = ints[:, 1]
-                    assert eids.min() > 0, eids.min()
-                    obj.element_parent[ielement:ielement2] = eids
-                    obj.element_parent[ielement:ielement2] = parent
-
-                    #[vugrid, xgrad, ygrad, zgrad, xflux, yflux, zflux]
-                    obj.vugrid[obj.itime, itotal:itotal2, :] = ints2[:, 0]
-                    obj.data[obj.itime, itotal:itotal2, :] = floats2[:, 3:].copy()
-                    obj.itotal = itotal2
-                    obj.ielement = ielement2
-                else:
-                    s1 = self.struct_2i
-                    s2 = Struct(self._endian + self._analysis_code_fmt + b'6f')
-                    grad_fluxes = []
-                    for unused_i in range(nelements):
-                        out = s1.unpack(data[n:n+8])
-                        n += 8
-                        (eid_device, parent) = out
-                        eid, dt = get_eid_dt_from_eid_device(
-                            eid_device, self.nonlinear_factor, self.sort_method)
-                        for unused_j in range(nnodes):
-                            out = s2.unpack(data[n:n+28])
-                            grad_fluxes.append(out)
-                            n += 28
-                        obj.add_sort1(dt, eid, parent, grad_fluxes)
-            else:
-                msg = self.code_information()
-                return self._not_implemented_or_skip(data, ndata, msg)
+            n, nelements, ntotal = self._thermal_vu_solid(data, ndata, dt, prefix, postfix)
 
         elif self.element_type in [189, 190]:  # VUQUAD,VUTRIA
-            # TODO: vectorize
-            # 189-VUQUAD
-            # 190-VUTRIA
-            if self.format_code == 1 and self.num_wide == 27:  # real
-                result_name = 'thermalLoad_VU' + postfix
-                if self._results.is_not_saved(result_name):
-                    return ndata
-                self._results._found_result(result_name)
-                slot = self.get_result(result_name)
-
-                if self.element_type == 189:
-                    nnodes = 4
-                elif self.element_type == 190:
-                    nnodes = 3
-                elif self.element_type == 191:
-                    nnodes = 2
-                else:
-                    raise NotImplementedError(self.code_information())
-
-                numwide = 6 + 7 * nnodes
-                ntotal = 24 + 28 * nnodes
-                assert ntotal == numwide * 4
-                nelements = ndata // ntotal
-                auto_return, is_vectorized = self._create_oes_object4(
-                    nelements, result_name, slot, RealHeatFlux_2D_3DArray)
-                if auto_return:
-                    self._data_factor = nnodes
-                    return nelements * self.num_wide * 4
-
-                obj = self.obj
-                if self.use_vector and is_vectorized and self.sort_method == 1:
-                    n = nelements * 4 * self.num_wide
-                    itotal = obj.itotal
-                    itotal2 = itotal + nelements * nnodes
-                    ielement = obj.ielement
-                    ielement2 = obj.ielement + nelements
-
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, numwide).copy()
-                    floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, numwide)
-                    obj._times[obj.itime] = dt
-                    if obj.itime == 0:
-                        eids = ints[:, 0] // 10
-                        parent = ints[:, 1]
-                        coord = ints[:, 2]
-                        # icord - 4s
-                        theta = ints[:, 4]
-                        assert eids.min() > 0, eids.min()
-                        obj.element_parent_coord_icord[ielement:ielement2, 0] = eids
-                        obj.element_parent_coord_icord[ielement:ielement2, 1] = parent
-                        obj.element_parent_coord_icord[ielement:ielement2, 2] = coord
-                        obj.element_parent_coord_icord[ielement:ielement2, 3] = theta
-                    #obj.data[itotal:itotal2, 0] = floats[:, 4]
-
-                    ints2 = ints[:, 6:].reshape(nelements * nnodes, 7)
-                    floats2 = floats[:, 6:].reshape(nelements * nnodes, 7)
-
-                    #[vugrid]
-                    #[xgrad, ygrad, zgrad, xflux, yflux, zflux]
-                    obj.int_data[obj.itime, itotal:itotal2, 0] = ints2[:, 0]
-                    obj.data[obj.itime, itotal:itotal2, :] = floats2[:, 1:].copy()
-                    obj.itotal = itotal2
-                    obj.ielement = ielement2
-                else:
-                    s1 = Struct(self._endian + b'3i4s2i')
-                    s2 = Struct(self._endian + b'i6f')
-                    for unused_i in range(nelements):
-                        edata = data[n:n+24]  # 6*4
-                        n += 24
-
-                        out = s1.unpack(edata)
-                        (eid_device, parent, coord, icord, theta, unused_null) = out
-                        eid, dt = get_eid_dt_from_eid_device(
-                            eid_device, self.nonlinear_factor, self.sort_method)
-                        data_in = [eid, parent, coord, icord, theta]
-                        #self.log.debug('RealHeatFluxVUArray = %s' % data_in)
-                        grad_fluxes = []
-                        for unused_j in range(nnodes):
-                            edata = data[n:n+28]  # 7*4
-                            n += 28
-                            out = s2.unpack(edata)
-                            grad_fluxes.append(out)
-                        data_in.append(grad_fluxes)
-                        obj.add_sort1(dt, eid, parent, coord, icord, theta, grad_fluxes)
-            else:
-                msg = self.code_information()
-                return self._not_implemented_or_skip(data, ndata, msg)
+            n, nelements, ntotal = self._thermal_vu_shell(data, ndata, dt, prefix, postfix)
 
         elif self.element_type == 191:  # VUBEAM
-            # TODO: vectorize
-            nnodes = 2
-            numwide_real = 4 + 7 * nnodes
-
-            result_name = 'vu_beam_thermal_load' + postfix
-            if self._results.is_not_saved(result_name):
-                return ndata
-            self._results._found_result(result_name)
-            slot = self.get_result(result_name)
-            if self.format_code == 1 and self.num_wide == numwide_real:  # real
-                ntotal = 16 + 28 * nnodes
-                nelements = ndata // ntotal
-
-                auto_return, is_vectorized = self._create_oes_object4(
-                    nelements, result_name, slot, RealHeatFluxVUBeamArray)
-                if auto_return:
-                    self._data_factor = nnodes
-                    return nelements * self.num_wide * 4
-
-                obj = self.obj
-                if self.use_vector and is_vectorized and self.sort_method == 1:
-                    n = nelements * 4 * self.num_wide
-                    itotal = obj.itotal
-                    itotal2 = itotal + nelements * nnodes
-                    ielement = obj.ielement
-                    ielement2 = obj.ielement + nelements
-
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, numwide_real).copy()
-                    floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, numwide_real)
-                    obj._times[obj.itime] = dt
-                    if obj.itime == 0:
-                        eids = ints[:, 0] // 10
-                        parent = ints[:, 1]
-                        coord = ints[:, 2]
-                        # icord - 4s
-                        assert eids.min() > 0, eids.min()
-                        obj.element_parent_coord[ielement:ielement2, 0] = eids
-                        obj.element_parent_coord[ielement:ielement2, 1] = parent
-                        obj.element_parent_coord[ielement:ielement2, 2] = coord
-                    #obj.data[itotal:itotal2, 0] = floats[:, 4]
-
-                    ints2 = ints[:, 4:].reshape(nelements * nnodes, 7)
-                    floats2 = floats[:, 4:].reshape(nelements * nnodes, 7)
-
-                    #[vugrid]
-                    #[xgrad, ygrad, zgrad, xflux, yflux, zflux]
-                    obj.vugrid[obj.itime, itotal:itotal2, 0] = ints2[:, 0]
-                    obj.data[obj.itime, itotal:itotal2, :] = floats2[:, 1:].copy()
-                    obj.itotal = itotal2
-                    obj.ielement = ielement2
-                else:
-                    s1 = Struct(self._endian + b'iii4s')
-                    s2 = Struct(self._endian + b'i6f')
-                    for unused_i in range(nelements):
-                        edata = data[n:n+16]  # 4*4
-                        n += 16
-
-                        out = s1.unpack(edata)
-                        (eid_device, parent, coord, icord) = out
-                        eid, dt = get_eid_dt_from_eid_device(
-                            eid_device, self.nonlinear_factor, self.sort_method)
-                        data_in = [eid, parent, coord, icord]
-                        self.log.debug('VUBeam %s' % data_in)
-
-                        grad_fluxes = []
-                        for unused_j in range(nnodes):
-                            edata = data[n:n+28]  # 7*4
-                            n += 28
-                            out = s2.unpack(edata)
-                            grad_fluxes.append(out)
-                        data_in.append(grad_fluxes)
-                        obj.add_sort1(dt, eid, parent, coord, icord, grad_fluxes)
-
-            elif self.element_type == 118:  # CWELDP
-                msg = 'OEF sort1 thermal Type=%s num=%s' % (self.element_name, self.element_type)
-                return self._not_implemented_or_skip(data, ndata, msg)
-            else:
-                msg = 'OEF sort1 thermal Type=%s num=%s' % (self.element_name, self.element_type)
-                return self._not_implemented_or_skip(data, ndata, msg)
+            n, nelements, ntotal = self._thermal_vu_beam(data, ndata, dt, prefix, postfix)
         else:
             msg = 'OEF sort1 thermal Type=%s num=%s' % (self.element_name, self.element_type)
             return self._not_implemented_or_skip(data, ndata, msg)
+        if nelements is None:
+            return n
 
 
         assert self.thermal == 1, self.thermal
@@ -1146,6 +568,635 @@ class OEF(OP2Common):
         assert n > 0, 'n=%s element_type=%s element_name=%s numwide=%s' % (
             n, self.element_type, self.element_name, self.num_wide)
         return n
+
+    def _thermal_1d_heat_flux(self, data, ndata, dt, prefix, postfix):
+        """
+        1-CROD
+        2-CBEAM
+        3-CTUBE
+        10-CONROD
+        34-CBAR
+        69-CBEND
+        """
+        n = 0
+        obj_vector_real = Real1DHeatFluxArray
+        #if self.element_type == 1: # CROD
+        if self.element_type == 1:
+            result_name = prefix + 'crod_thermal_load' + postfix
+        elif self.element_type == 2:
+            result_name = prefix + 'cbeam_thermal_load' + postfix
+        elif self.element_type == 3:
+            result_name = prefix + 'ctube_thermal_load' + postfix
+        elif self.element_type == 10:
+            result_name = prefix + 'conrod_thermal_load' + postfix
+        elif self.element_type == 34:
+            result_name = prefix + 'cbar_thermal_load' + postfix
+        elif self.element_type == 69:
+            result_name = prefix + 'cbend_thermal_load' + postfix
+        else:
+            raise NotImplementedError('element_type=%s element_name=%s' % (
+                self.element_type, self.element_name))
+
+        if self._results.is_not_saved(result_name):
+            return ndata, None, None
+        self._results._found_result(result_name)
+        slot = self.get_result(result_name)
+
+        if self.format_code == 1 and self.num_wide == 9:  # real
+            ntotal = 36
+            nelements = ndata // ntotal
+            auto_return, is_vectorized = self._create_oes_object4(
+                nelements, result_name, slot, obj_vector_real)
+            if auto_return:
+                return nelements * self.num_wide * 4, None, None
+            obj = self.obj
+            #if self.is_debug_file:
+                #self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
+                #self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
+                #self.binary_debug.write('  #elementi = [eid_device, axial, torque]\n')
+                #self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
+
+            if self.use_vector and is_vectorized and self.sort_method == 1:
+                n = nelements * 4 * self.num_wide
+                itotal = obj.ielement
+                ielement2 = obj.itotal + nelements
+                itotal2 = ielement2
+
+                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 9)
+                obj._times[obj.itime] = dt
+
+                strings = frombuffer(data, dtype=self._uendian + 'S4').reshape(nelements, 9)
+                s = array([s1+s2 for s1, s2 in zip(strings[:, 1], strings[:, 2])])
+                #print(s)
+                #print('itime = ', obj.itime)
+                #print('---------')
+                if obj.itime == 0:
+                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 9)
+                    eids = ints[:, 0] // 10
+                    assert eids.min() > 0, eids.min()
+                    obj.element[itotal:itotal2] = eids
+                    obj.element_data_type[itotal:itotal2] = s
+                    #obj.element_type[obj.itime, itotal:itotal2, :] = strings[:, 3:]
+
+                #[etype, xgrad, ygrad, zgrad, xflux, yflux, zflux]
+                obj.data[obj.itime, itotal:itotal2, :] = floats[:, 3:].copy()
+                obj.itotal = itotal2
+                obj.ielement = ielement2
+            else:
+                s = Struct(self._endian + self._analysis_code_fmt + b'8s6f')
+                for unused_i in range(nelements):
+                    edata = data[n:n+ntotal]
+                    out = s.unpack(edata)
+                    (eid_device, eType, xgrad, ygrad, zgrad, xflux, yflux, zflux) = out
+                    eid, dt = get_eid_dt_from_eid_device(
+                        eid_device, self.nonlinear_factor, self.sort_method)
+                    obj.add_sort1(dt, eid, eType, xgrad, ygrad, zgrad, xflux, yflux, zflux)
+                    n += ntotal
+        else:
+            msg = self.code_information()
+            return self._not_implemented_or_skip(data, ndata, msg), None, None
+        return n, nelements, ntotal
+
+    def _thermal_2d_3d_heat_flux(self, data, ndata, dt, prefix, postfix):
+        """
+        33-QUAD4-centroidal
+        53-TRIAX6
+        64-QUAD8
+        74-TRIA3
+        75-TRIA6
+
+        39-TETRA
+        67-HEXA
+        68-PENTA
+        """
+        n = 0
+        if self.element_type == 33:
+            result_name = 'cquad4_thermal_load' + postfix
+        elif self.element_type == 53:
+            result_name = 'ctriax6_thermal_load' + postfix
+        elif self.element_type == 64:
+            result_name = 'cquad8_thermal_load' + postfix
+        elif self.element_type == 74:
+            result_name = 'ctria3_thermal_load' + postfix
+        elif self.element_type == 75:
+            result_name = 'ctria6_thermal_load' + postfix
+        elif self.element_type == 39:
+            result_name = 'ctetra_thermal_load' + postfix
+        elif self.element_type == 67:
+            result_name = 'chexa_thermal_load' + postfix
+        elif self.element_type == 68:
+            result_name = 'cpenta_thermal_load' + postfix
+        else:
+            raise NotImplementedError('element_type=%s element_name=%s' % (
+                self.element_type, self.element_name))
+
+        obj_vector_real = RealHeatFlux_2D_3DArray
+        #if self.element_type == 1: # CROD
+        #result_name = 'thermalLoad_2D_3D'
+
+        if self._results.is_not_saved(result_name):
+            return ndata, None, None
+        self._results._found_result(result_name)
+        slot = self.get_result(result_name)
+        if self.format_code == 1 and self.num_wide == 9:  # real - 2D
+            # [33, 53, 64, 74, 75]
+            ntotal = 36
+            nelements = ndata // ntotal
+            auto_return, is_vectorized = self._create_oes_object4(
+                nelements, result_name, slot, obj_vector_real)
+            if auto_return:
+                return nelements * self.num_wide * 4, None, None
+            obj = self.obj
+            #if self.is_debug_file:
+                #self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
+                #self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
+                #self.binary_debug.write('  #elementi = [eid_device, axial, torque]\n')
+                #self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
+
+            if self.use_vector and is_vectorized and self.sort_method == 1:
+                n = nelements * 4 * self.num_wide
+                itotal = obj.ielement
+                ielement2 = obj.itotal + nelements
+                itotal2 = ielement2
+
+                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 9)
+                obj._times[obj.itime] = dt
+                #if obj.itime == 0:
+                ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 9)
+                eids = ints[:, 0] // 10
+                assert eids.min() > 0, eids.min()
+                obj.element[itotal:itotal2] = eids
+                strings = frombuffer(data, dtype=self._uendian + 'S4').reshape(nelements, 9)
+                obj.element_data_type[itotal:itotal2] = array([s1+s2 for s1, s2 in zip(strings[:, 1], strings[:, 2])])
+
+                #[etype, xgrad, ygrad, zgrad, xflux, yflux, zflux]
+                obj.data[obj.itime, itotal:itotal2, :] = floats[:, 3:].copy()
+                obj.itotal = itotal2
+                obj.ielement = ielement2
+            else:
+                # no zed on this element for some reason...
+                s = Struct(self._endian + self._analysis_code_fmt + b'8s6f')
+                for unused_i in range(nelements):
+                    edata = data[n:n+ntotal]
+                    n += ntotal
+                    out = s.unpack(edata)
+                    (eid_device, etype, xgrad, ygrad, zgrad, xflux, yflux, zflux) = out
+                    eid, dt = get_eid_dt_from_eid_device(
+                        eid_device, self.nonlinear_factor, self.sort_method)
+                    obj.add_sort1(dt, eid, etype, xgrad, ygrad, zgrad, xflux, yflux, zflux)
+
+        elif self.format_code == 1 and self.num_wide == 10:  # real - 3D
+            # [39, 67, 68]:  # HEXA,PENTA
+            ntotal = 40
+            nelements = ndata // ntotal
+            auto_return, is_vectorized = self._create_oes_object4(
+                nelements, result_name, slot, obj_vector_real)
+            if auto_return:
+                return nelements * self.num_wide * 4, None, None
+            obj = self.obj
+            assert nelements > 0, 'ndata=%s ntotal=%s' % (ndata, ntotal)
+            if self.use_vector and is_vectorized and self.sort_method == 1:
+                n = nelements * 4 * self.num_wide
+                itotal = obj.ielement
+                ielement2 = obj.itotal + nelements
+                itotal2 = ielement2
+
+                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 10)
+                obj._times[obj.itime] = dt
+                if obj.itime == 0:
+                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 10)
+                    eids = ints[:, 0] // 10
+                    assert eids.min() > 0, eids.min()
+                    obj.element[itotal:itotal2] = eids
+                    strings = frombuffer(data, dtype=self._uendian + 'S4').reshape(nelements, 10)
+                    obj.element_data_type[itotal:itotal2] = array([s1+s2 for s1, s2 in zip(strings[:, 1], strings[:, 2])])
+
+                #[etype, xgrad, ygrad, zgrad, xflux, yflux, zflux, zed]
+                obj.data[obj.itime, itotal:itotal2, :] = floats[:, 3:-1].copy()
+                obj.itotal = itotal2
+                obj.ielement = ielement2
+            else:
+                s = Struct(self._endian + self._analysis_code_fmt + b'8s6fi')
+                for unused_i in range(nelements):
+                    edata = data[n:n+ntotal]
+                    n += ntotal
+                    out = s.unpack(edata)
+                    (eid_device, etype, xgrad, ygrad, zgrad, xflux, yflux, zflux, unused_zed) = out
+                    eid, dt = get_eid_dt_from_eid_device(
+                        eid_device, self.nonlinear_factor, self.sort_method)
+                    obj.add_sort1(dt, eid, etype, xgrad, ygrad, zgrad, xflux, yflux, zflux)
+        else:
+            raise RuntimeError(self.code_information())
+        return n, nelements, ntotal
+
+    def _thermal_chbdy(self, data, ndata, dt, prefix, postfix):
+        """
+        107-CHBDYE
+        108-CHBDYG
+        109-CHBDYP
+        """
+        n = 0
+        #if self.table_name in ['OEF1X']:
+        if self.element_type == 107:
+            result_name = 'chbdye_thermal_load' + postfix
+        elif self.element_type == 108:
+            result_name = 'chbdyg_thermal_load' + postfix
+        elif self.element_type == 109:
+            result_name = 'chbdyp_thermal_load' + postfix
+        else:
+            raise NotImplementedError('element_type=%s element_name=%s' % (
+                self.element_type, self.element_name))
+        #elif self.table_name in ['HOEF1']:
+            #if self.element_type == 107:
+                #result_name = 'chbdye_thermal_flux'
+            #elif self.element_type == 108:
+                #result_name = 'chbdyg_thermal_flux'
+            #elif self.element_type == 109:
+                #result_name = 'chbdyp_thermal_flux'
+            #else:
+                #raise NotImplementedError('element_type=%s element_name=%s' % (
+                    #self.element_type, self.element_name))
+        #else:
+            #raise NotImplementedError(msg)
+
+        if self.format_code == 1 and self.num_wide == 8:  # real
+            #result_name = 'thermalLoad_CHBDY'
+            if self._results.is_not_saved(result_name):
+                return ndata, None, None
+            self._results._found_result(result_name)
+            slot = self.get_result(result_name)
+
+            if self.format_code == 1 and self.num_wide == 8:  # real
+                obj_vector_real = RealChbdyHeatFluxArray
+                ntotal = 32
+                nelements = ndata // ntotal
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nelements, result_name, slot, obj_vector_real)
+                if auto_return:
+                    return nelements * self.num_wide * 4, None, None
+                obj = self.obj
+                #if self.is_debug_file:
+                    #self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
+                    #self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
+                    #self.binary_debug.write('  #elementi = [eid_device, etype, fapplied, free_conv, force_conv, frad, ftotal]\n')
+                    #self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
+
+                if self.use_vector and is_vectorized and self.sort_method == 1:
+                    n = nelements * 4 * self.num_wide
+                    itotal = obj.ielement
+                    ielement2 = obj.itotal + nelements
+                    itotal2 = ielement2
+
+                    floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 8)
+                    obj._times[obj.itime] = dt
+                    if obj.itime == 0:
+                        ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 8)
+                        eids = ints[:, 0] // 10
+                        assert eids.min() > 0, eids.min()
+                        obj.element[itotal:itotal2] = eids
+                        #obj.element_type[obj.itime, itotal:itotal2, :] = strings[:, 3:]
+
+                    #[fapplied, free_conv, force_conv, frad, ftotal]
+                    obj.data[obj.itime, itotal:itotal2, :] = floats[:, 3:].copy()
+                    obj.itotal = itotal2
+                    obj.ielement = ielement2
+                else:
+                    s1 = Struct(self._endian + self._analysis_code_fmt + b'8s5f')
+                    for unused_i in range(nelements):
+                        edata = data[n:n+32]
+                        n += ntotal
+                        out = s1.unpack(edata)
+                        (eid_device, etype, fapplied, free_conv, force_conv, frad, ftotal) = out
+                        eid, dt = get_eid_dt_from_eid_device(
+                            eid_device, self.nonlinear_factor, self.sort_method)
+
+                        if self.is_debug_file:
+                            self.binary_debug.write('  %s -> [%s, %s, %s, %s, %s, %s, %s]\n'
+                                                    % (eid, eid_device, etype, fapplied, free_conv, force_conv, frad, ftotal))
+                        obj.add_sort1(dt, eid, etype, fapplied, free_conv, force_conv, frad, ftotal)
+        else:
+            msg = self.code_information()
+            return self._not_implemented_or_skip(data, ndata, msg), None, None
+        return n, nelements, ntotal
+
+    def _thermal_conv(self, data, ndata, dt, prefix, postfix):
+        n = 0
+        # 110-CONV
+        result_name = 'conv_thermal_load' + postfix
+        if self._results.is_not_saved(result_name):
+            return ndata, None, None
+        self._results._found_result(result_name)
+        slot = self.get_result(result_name)
+
+        if self.format_code == 1 and self.num_wide == 4:
+            ntotal = 16
+            nelements = ndata // ntotal
+
+            auto_return, is_vectorized = self._create_oes_object4(
+                nelements, result_name, slot, RealConvHeatFluxArray)
+            if auto_return:
+                return nelements * self.num_wide * 4, None, None
+            obj = self.obj
+            #if self.is_debug_file:
+                #self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
+                #self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
+                #self.binary_debug.write('  #elementi = [eid_device, etype, fapplied, free_conv, force_conv, frad, ftotal]\n')
+                #self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
+
+            if self.use_vector and is_vectorized and self.sort_method == 1:
+                n = nelements * 4 * self.num_wide
+                ielement = obj.ielement
+                ielement2 = ielement + nelements
+
+                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 4).copy()
+                obj._times[obj.itime] = dt
+                if obj.itime == 0:
+                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 4).copy()
+                    eids = ints[:, 0] // 10
+                    nids = ints[:, 2]
+                    assert eids.min() > 0, eids.min()
+                    assert nids.min() >= 0, nids.min()
+                    obj.element_node[ielement:ielement2, 0] = eids
+                    obj.element_node[ielement:ielement2, 1] = nids
+
+                #[eid, free_conv, cntl_node, free_conv_k]
+                obj.data[obj.itime, ielement:ielement2, :] = floats[:, [1, 3]]
+                obj.itotal = ielement2
+                obj.ielement = ielement2
+            else:
+                s1 = Struct(self._endian + self._analysis_code_fmt + b'fif')
+                for unused_i in range(nelements):
+                    edata = data[n:n+16]
+                    n += 16
+                    out = s1.unpack(edata)
+                    (eid_device, free_conv, cntl_node, free_conv_k) = out
+                    eid, dt = get_eid_dt_from_eid_device(
+                        eid_device, self.nonlinear_factor, self.sort_method)
+                    assert cntl_node >= 0, cntl_node
+                    obj.add_sort1(dt, eid, cntl_node, free_conv, free_conv_k)
+        else:
+            msg = self.code_information()
+            return self._not_implemented_or_skip(data, ndata, msg), None, None
+        return n, nelements, ntotal
+
+    def _thermal_vu_shell(self, data, ndata, dt, prefix, postfix):
+        """
+        189-VUQUAD
+        190-VUTRIA
+
+        TODO: vectorize
+        """
+        n = 0
+        if self.format_code == 1 and self.num_wide == 27:  # real
+            result_name = 'thermalLoad_VU' + postfix
+            if self._results.is_not_saved(result_name):
+                return ndata
+            self._results._found_result(result_name)
+            slot = self.get_result(result_name)
+
+            if self.element_type == 189:
+                nnodes = 4
+            elif self.element_type == 190:
+                nnodes = 3
+            elif self.element_type == 191:
+                nnodes = 2
+            else:
+                raise NotImplementedError(self.code_information())
+
+            numwide = 6 + 7 * nnodes
+            ntotal = 24 + 28 * nnodes
+            assert ntotal == numwide * 4
+            nelements = ndata // ntotal
+            auto_return, is_vectorized = self._create_oes_object4(
+                nelements, result_name, slot, RealHeatFlux_2D_3DArray)
+            if auto_return:
+                self._data_factor = nnodes
+                return nelements * self.num_wide * 4
+
+            obj = self.obj
+            if self.use_vector and is_vectorized and self.sort_method == 1:
+                n = nelements * 4 * self.num_wide
+                itotal = obj.itotal
+                itotal2 = itotal + nelements * nnodes
+                ielement = obj.ielement
+                ielement2 = obj.ielement + nelements
+
+                ints = frombuffer(data, dtype=self.idtype).reshape(nelements, numwide).copy()
+                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, numwide)
+                obj._times[obj.itime] = dt
+                if obj.itime == 0:
+                    eids = ints[:, 0] // 10
+                    parent = ints[:, 1]
+                    coord = ints[:, 2]
+                    # icord - 4s
+                    theta = ints[:, 4]
+                    assert eids.min() > 0, eids.min()
+                    obj.element_parent_coord_icord[ielement:ielement2, 0] = eids
+                    obj.element_parent_coord_icord[ielement:ielement2, 1] = parent
+                    obj.element_parent_coord_icord[ielement:ielement2, 2] = coord
+                    obj.element_parent_coord_icord[ielement:ielement2, 3] = theta
+                #obj.data[itotal:itotal2, 0] = floats[:, 4]
+
+                ints2 = ints[:, 6:].reshape(nelements * nnodes, 7)
+                floats2 = floats[:, 6:].reshape(nelements * nnodes, 7)
+
+                #[vugrid]
+                #[xgrad, ygrad, zgrad, xflux, yflux, zflux]
+                obj.int_data[obj.itime, itotal:itotal2, 0] = ints2[:, 0]
+                obj.data[obj.itime, itotal:itotal2, :] = floats2[:, 1:].copy()
+                obj.itotal = itotal2
+                obj.ielement = ielement2
+            else:
+                s1 = Struct(self._endian + b'3i4s2i')
+                s2 = Struct(self._endian + b'i6f')
+                for unused_i in range(nelements):
+                    edata = data[n:n+24]  # 6*4
+                    n += 24
+
+                    out = s1.unpack(edata)
+                    (eid_device, parent, coord, icord, theta, unused_null) = out
+                    eid, dt = get_eid_dt_from_eid_device(
+                        eid_device, self.nonlinear_factor, self.sort_method)
+                    data_in = [eid, parent, coord, icord, theta]
+                    #self.log.debug('RealHeatFluxVUArray = %s' % data_in)
+                    grad_fluxes = []
+                    for unused_j in range(nnodes):
+                        edata = data[n:n+28]  # 7*4
+                        n += 28
+                        out = s2.unpack(edata)
+                        grad_fluxes.append(out)
+                    data_in.append(grad_fluxes)
+                    obj.add_sort1(dt, eid, parent, coord, icord, theta, grad_fluxes)
+        else:
+            msg = self.code_information()
+            return self._not_implemented_or_skip(data, ndata, msg), None, None
+        return n, nelements, ntotal
+
+    def _thermal_vu_solid(self, data, ndata, dt, prefix, postfix):
+        """
+        145-VUHEXA
+        146-VUPENTA
+        147-VUTETRA
+
+        TODO: vectorize
+        """
+        n = 0
+        if self.element_type == 147:  # VUTETRA
+            nnodes = 4
+        elif self.element_type == 146:  # VUPENTA
+            nnodes = 6
+        elif self.element_type == 145:  # VUHEXA
+            nnodes = 8
+        else:
+            msg = self.code_information()
+            return self._not_implemented_or_skip(data, ndata, msg), None, None
+
+        result_name = 'thermalLoad_VU_3D' + postfix
+        if self._results.is_not_saved(result_name):
+            return ndata, None, None
+        self._results._found_result(result_name)
+        slot = self.get_result(result_name)
+
+        numwide_real = 2 + 7 * nnodes
+        if self.format_code == 1 and self.num_wide == numwide_real:  # real
+            ntotal = 8 + 28 * nnodes
+            nelements = ndata // ntotal
+            #self.create_transient_object(result_name, self.thermalLoad_VU_3D, HeatFluxVU_3DArray)
+            #is_vectorized = False
+
+            auto_return, is_vectorized = self._create_oes_object4(
+                nelements, result_name, slot, RealHeatFluxVU3DArray)
+            if auto_return:
+                self._data_factor = nnodes
+                return nelements * self.num_wide * 4, None, None
+
+            obj = self.obj
+            if self.use_vector and is_vectorized and self.sort_method == 1:
+                n = nelements * 4 * self.num_wide
+                ielement = obj.ielement
+                ielement2 = ielement + nelements
+                itotal = obj.itotal
+                itotal2 = itotal + nelements * nnodes
+
+                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, numwide_real)
+                floats2 = floats[:, 2:].reshape(nelements * nnodes, 7)
+                obj._times[obj.itime] = dt
+                #if obj.itime == 0:
+                ints = frombuffer(data, dtype=self.idtype).reshape(nelements, numwide_real).copy()
+                ints2 = ints[:, 2:].reshape(nelements * nnodes, 7)
+                eids = ints[:, 0] // 10
+                parent = ints[:, 1]
+                assert eids.min() > 0, eids.min()
+                obj.element_parent[ielement:ielement2] = eids
+                obj.element_parent[ielement:ielement2] = parent
+
+                #[vugrid, xgrad, ygrad, zgrad, xflux, yflux, zflux]
+                obj.vugrid[obj.itime, itotal:itotal2, :] = ints2[:, 0]
+                obj.data[obj.itime, itotal:itotal2, :] = floats2[:, 3:].copy()
+                obj.itotal = itotal2
+                obj.ielement = ielement2
+            else:
+                s1 = self.struct_2i
+                s2 = Struct(self._endian + self._analysis_code_fmt + b'6f')
+                grad_fluxes = []
+                for unused_i in range(nelements):
+                    out = s1.unpack(data[n:n+8])
+                    n += 8
+                    (eid_device, parent) = out
+                    eid, dt = get_eid_dt_from_eid_device(
+                        eid_device, self.nonlinear_factor, self.sort_method)
+                    for unused_j in range(nnodes):
+                        out = s2.unpack(data[n:n+28])
+                        grad_fluxes.append(out)
+                        n += 28
+                    obj.add_sort1(dt, eid, parent, grad_fluxes)
+        else:
+            msg = self.code_information()
+            return self._not_implemented_or_skip(data, ndata, msg), None, None
+        return n, nelements, ntotal
+
+    def _thermal_vu_beam(self, data, ndata, dt, prefix, postfix):
+        n = 0
+        # TODO: vectorize
+        nnodes = 2
+        numwide_real = 4 + 7 * nnodes
+
+        result_name = 'vu_beam_thermal_load' + postfix
+        if self._results.is_not_saved(result_name):
+            return ndata
+        self._results._found_result(result_name)
+        slot = self.get_result(result_name)
+        if self.format_code == 1 and self.num_wide == numwide_real:  # real
+            ntotal = 16 + 28 * nnodes
+            nelements = ndata // ntotal
+
+            auto_return, is_vectorized = self._create_oes_object4(
+                nelements, result_name, slot, RealHeatFluxVUBeamArray)
+            if auto_return:
+                self._data_factor = nnodes
+                return nelements * self.num_wide * 4
+
+            obj = self.obj
+            if self.use_vector and is_vectorized and self.sort_method == 1:
+                n = nelements * 4 * self.num_wide
+                itotal = obj.itotal
+                itotal2 = itotal + nelements * nnodes
+                ielement = obj.ielement
+                ielement2 = obj.ielement + nelements
+
+                ints = frombuffer(data, dtype=self.idtype).reshape(nelements, numwide_real).copy()
+                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, numwide_real)
+                obj._times[obj.itime] = dt
+                if obj.itime == 0:
+                    eids = ints[:, 0] // 10
+                    parent = ints[:, 1]
+                    coord = ints[:, 2]
+                    # icord - 4s
+                    assert eids.min() > 0, eids.min()
+                    obj.element_parent_coord[ielement:ielement2, 0] = eids
+                    obj.element_parent_coord[ielement:ielement2, 1] = parent
+                    obj.element_parent_coord[ielement:ielement2, 2] = coord
+                #obj.data[itotal:itotal2, 0] = floats[:, 4]
+
+                ints2 = ints[:, 4:].reshape(nelements * nnodes, 7)
+                floats2 = floats[:, 4:].reshape(nelements * nnodes, 7)
+
+                #[vugrid]
+                #[xgrad, ygrad, zgrad, xflux, yflux, zflux]
+                obj.vugrid[obj.itime, itotal:itotal2, 0] = ints2[:, 0]
+                obj.data[obj.itime, itotal:itotal2, :] = floats2[:, 1:].copy()
+                obj.itotal = itotal2
+                obj.ielement = ielement2
+            else:
+                s1 = Struct(self._endian + b'iii4s')
+                s2 = Struct(self._endian + b'i6f')
+                for unused_i in range(nelements):
+                    edata = data[n:n+16]  # 4*4
+                    n += 16
+
+                    out = s1.unpack(edata)
+                    (eid_device, parent, coord, icord) = out
+                    eid, dt = get_eid_dt_from_eid_device(
+                        eid_device, self.nonlinear_factor, self.sort_method)
+                    data_in = [eid, parent, coord, icord]
+                    self.log.debug('VUBeam %s' % data_in)
+
+                    grad_fluxes = []
+                    for unused_j in range(nnodes):
+                        edata = data[n:n+28]  # 7*4
+                        n += 28
+                        out = s2.unpack(edata)
+                        grad_fluxes.append(out)
+                    data_in.append(grad_fluxes)
+                    obj.add_sort1(dt, eid, parent, coord, icord, grad_fluxes)
+
+        elif self.element_type == 118:  # CWELDP
+            msg = 'OEF sort1 thermal Type=%s num=%s' % (self.element_name, self.element_type)
+            return self._not_implemented_or_skip(data, ndata, msg)
+        else:
+            msg = 'OEF sort1 thermal Type=%s num=%s' % (self.element_name, self.element_type)
+            return self._not_implemented_or_skip(data, ndata, msg)
+        return n, nelements, ntotal
 
     def _print_obj_name_on_crash(func):
         """
@@ -2268,7 +2319,6 @@ class OEF(OP2Common):
         else:
             msg = self.code_information()
             print(msg)
-            aa
             return self._not_implemented_or_skip(data, ndata, msg)
         return n, nelements, ntotal
 
@@ -2845,12 +2895,11 @@ class OEF(OP2Common):
         else:
             msg = self.code_information()
             print(msg)
-            aa
             return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
 
     def _oef_cbend(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
-        # 69-CBEND
+        """69-CBEND"""
         n = 0
         result_name = prefix + 'cbend_force' + postfix
         self._results._found_result(result_name)
@@ -3016,9 +3065,11 @@ class OEF(OP2Common):
         return n, nelements, ntotal
 
     def _oef_csolid_pressure(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
-        # 76-HEXPR
-        # 77-PENPR
-        # 78-TETPR
+        """
+        76-HEXPR
+        77-PENPR
+        78-TETPR
+        """
         n = 0
         if self.element_type == 76:
             result_name = prefix + 'chexa_pressure_force' + postfix
@@ -3172,7 +3223,7 @@ class OEF(OP2Common):
         return n, nelements, ntotal
 
     def _oef_cbush(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
-        # 102-CBUSH
+        """102-CBUSH"""
         result_name = prefix + 'cbush_force' + postfix
         #result_name, is_random = self._apply_oef_ato_crm_psd_rms_no(result_name)
         self._results._found_result(result_name)

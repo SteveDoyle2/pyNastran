@@ -1099,6 +1099,7 @@ class SET3(Set):
     +------+-----+-------+-----+-----+-----+-----+-----+-----+
     | SET3 |  1  | POINT | 11  | 12  |     |     |     |     |
     +------+-----+-------+-----+-----+-----+-----+-----+-----+
+
     """
     type = 'SET3'
     valid_descs = ['GRID', 'POINT', 'ELEMENT', 'PROP', 'RBEIN', 'RBEEX']
@@ -1256,6 +1257,7 @@ class SET3(Set):
 class SESET(SetSuper):
     """
     Defines interior grid points for a superelement.
+
     """
     type = 'SESET'
 

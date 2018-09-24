@@ -651,8 +651,8 @@ class BDFMethods(BDFAttributes):
         >>> for pid, eids in sorted(pid_eids.items()):
         >>>     mass, cg, I = mass_properties(model, element_ids=eids)
 
-        Warning
-        -------
+        Warnings
+        --------
          - If eids are requested, but don't exist, no warning is thrown.
            Decide if this is the desired behavior.
          - If the NSMx ALL option is used, the mass from all elements

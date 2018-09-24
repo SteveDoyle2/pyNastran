@@ -137,12 +137,12 @@ class BaseCard(object):
         .. note::
             This is dynamic if the card length changes.
 
-        .. code-block:: python
+        update_field can be used as follows to change the z coordinate
+        of a node::
 
-          nid = 1
-          node = model.nodes[nid]
-          # ['GRID', nid, cp, x, y, z]
-          node.update_field(3, 0.1) # change the z coordinate
+          >>> nid = 1
+          >>> node = model.nodes[nid]
+          >>> node.update_field(3, 0.1)
 
         """
         try:

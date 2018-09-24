@@ -2658,8 +2658,8 @@ def create_coords_along_line(model, p1, p2, percents, cid=0, axis=1):
            the coord id
         inids : (nnodes_in_cid)
 
-    Warning
-    -------
+    Warnings
+    --------
      - requires at least 1 node
     """
     cid = max(list(model.coords.keys())) + 1

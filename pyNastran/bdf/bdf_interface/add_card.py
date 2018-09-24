@@ -1466,8 +1466,8 @@ class AddCards(AddMethods):
         comment : str; default=''
             a comment for the card
 
-        Note
-        ----
+        Notes
+        -----
         MSC only
 
         """
@@ -1630,8 +1630,8 @@ class AddCards(AddMethods):
         comment : str; default=''
             a comment for the card
 
-        Note
-        ----
+        Notes
+        -----
         offt/bit are MSC specific fields
         """
         elem = CBEAM(eid, pid, nids, x, g0, offt=offt, bit=bit,
@@ -4650,8 +4650,8 @@ class AddCards(AddMethods):
         comment : str; default=''
             a comment for the card
 
-        Note
-        ----
+        Notes
+        -----
         the length of components and ids must be the same
         """
         if isinstance(components, string_types):
@@ -4682,8 +4682,8 @@ class AddCards(AddMethods):
         comment : str; default=''
             a comment for the card
 
-        Note
-        ----
+        Notes
+        -----
         the length of components and ids must be the same
         """
         if isinstance(components, string_types):
@@ -4714,8 +4714,8 @@ class AddCards(AddMethods):
         comment : str; default=''
             a comment for the card
 
-        Note
-        ----
+        Notes
+        -----
         the length of components and ids must be the same
 
         """

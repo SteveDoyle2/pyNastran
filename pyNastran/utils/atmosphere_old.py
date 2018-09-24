@@ -440,10 +440,10 @@ def atm_velocity(alt, mach, SI=False, debug=False):
     ----------
     alt : float
         altitude in feet or meters
-    SI : bool; default=False
-        convert velocity to SI units
     Mach : float
         Mach Number \f$ M \f$
+    SI : bool; default=False
+        convert velocity to SI units
 
     Returns
     -------
@@ -471,6 +471,15 @@ def atm_equivalent_airspeed(alt, mach, SI=False, debug=False):
     # type: (float, float, bool, bool) -> float
     """
     Freestream equivalent airspeed
+
+    Parameters
+    ----------
+    alt : float
+        altitude in alt_units
+    Mach : float
+        Mach Number \f$ M \f$
+    SI : bool; default=False
+        convert velocity to SI units
 
     EAS = TAS * sqrt(rho/rho0)
     p = rho * R * T

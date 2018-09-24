@@ -178,8 +178,8 @@ def _mirror_elements(model, nid_offset):
     rigid_elements : N/A
     mass_elements : N/A
 
-    Note
-    ----
+    Notes
+    -----
     Doesn't handle CBAR/CBEAM offsets
     Doesn't handle CBEAM SPOINTs
     """

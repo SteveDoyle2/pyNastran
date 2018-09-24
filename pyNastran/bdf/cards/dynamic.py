@@ -1190,9 +1190,6 @@ class ROTORD(BaseCard):
             Step-size of reference rotor speed. See Remark 3. (Real ≠ 0.0)
         numstep : int
             Number of steps for reference rotor speed including RSTART.
-
-        Parameter Lists
-        ---------------
         rids : List[int]
             Identification number of rotor i.
             (Integer > 0 with RID(i+1) > RIDi; Default = i)
@@ -1213,9 +1210,6 @@ class ROTORD(BaseCard):
             ???
         brgsets : List[int]
             ???
-
-        Optional
-        --------
         refsys : str; default='ROT'
             Reference system
                 'FIX' analysis is performed in the fixed reference system.

@@ -125,9 +125,8 @@ class BSURFS(BaseCard):
     Defines a 3D contact region by the faces of the CHEXA, CPENTA or CTETRA
     elements.
 
-    Remarks
-    -------
-    Remarks:
+    Notes
+    -----
     1. The continuation field is optional.
     2. BSURFS is a collection of one or more element faces on solid elements.
        BSURFS defines a contact region which may act as a contact source
