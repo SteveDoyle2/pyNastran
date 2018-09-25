@@ -154,7 +154,7 @@ class TestCoords(unittest.TestCase):
         """simple CORD1R input/output test"""
         lines = ['cord1r,2,1,4,3']
         model = BDF(debug=False)
-        card = model.process_card(lines)
+        card = model._process_card(lines)
         card = BDFCard(card)
 
         size = 8
@@ -172,7 +172,7 @@ class TestCoords(unittest.TestCase):
             '*                     1.              0.              1.'
         ]
         model = BDF(debug=False)
-        card = model.process_card(lines)
+        card = model._process_card(lines)
         cardi = BDFCard(card)
         cord2c = CORD2C.add_card(cardi)
         model._add_coord_object(cord2c)
@@ -181,7 +181,7 @@ class TestCoords(unittest.TestCase):
             'CORD2R         4       3     10.      0.      5.     10.     90.      5.',
             '             10.      0.      6.'
         ]
-        card = model.process_card(lines)
+        card = model._process_card(lines)
         cardi = BDFCard(card)
         cord2r = CORD2R.add_card(cardi)
         model._add_coord_object(cord2r)
@@ -333,7 +333,7 @@ class TestCoords(unittest.TestCase):
                 '*          75.7955331161               0',],
         ]
         for lines in cards:
-            card = model.process_card(lines)
+            card = model._process_card(lines)
             model.add_card(card, card[0])
 
         unused_xyz_cid0b = model.get_xyz_in_coord_no_xref(cid=0, fdtype='float64')
@@ -403,7 +403,7 @@ class TestCoords(unittest.TestCase):
                 '*           -167.4951724               0',],
         ]
         for lines in cards:
-            card = model.process_card(lines)
+            card = model._process_card(lines)
             model.add_card(card, card[0])
         unused_xyz_cid0b = model.get_xyz_in_coord_no_xref(cid=0, fdtype='float64')
         unused_xyz_cid0c = model.get_xyz_in_coord_no_xref(cid=22, fdtype='float64')
@@ -472,7 +472,7 @@ class TestCoords(unittest.TestCase):
                 '*          159.097767463               0',],
         ]
         for lines in cards:
-            card = model.process_card(lines)
+            card = model._process_card(lines)
             model.add_card(card, card[0])
         unused_xyz_cid0b = model.get_xyz_in_coord_no_xref(cid=0, fdtype='float64')
         unused_xyz_cid0c = model.get_xyz_in_coord_no_xref(cid=32, fdtype='float64')
@@ -556,7 +556,7 @@ class TestCoords(unittest.TestCase):
     def test_cord1c_01(self):
         lines = ['cord1c,2,1,4,3']
         model = BDF(debug=False)
-        card = model.process_card(lines)
+        card = model._process_card(lines)
         cardi = BDFCard(card)
 
         size = 8
@@ -576,7 +576,7 @@ class TestCoords(unittest.TestCase):
     def test_cord1s_01(self):
         lines = ['cord1s,2,1,4,3']
         model = BDF(debug=False)
-        card = model.process_card(lines)
+        card = model._process_card(lines)
         cardi = BDFCard(card)
 
         size = 8
@@ -607,10 +607,10 @@ class TestCoords(unittest.TestCase):
         ]
 
         model = BDF(debug=False)
-        card = model.process_card(grid)
+        card = model._process_card(grid)
         model.add_card(card, card[0])
 
-        card = model.process_card(coord)
+        card = model._process_card(coord)
         model.add_card(card, card[0])
         model.cross_reference()
         coord = model.Coord(7)

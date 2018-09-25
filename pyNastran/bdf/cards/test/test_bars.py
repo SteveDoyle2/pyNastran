@@ -29,7 +29,7 @@ class TestBars(unittest.TestCase):
         card = print_card_8(fields)
         lines = card.split('\n')
         model = BDF(debug=False)
-        card = model.process_card(lines)
+        card = model._process_card(lines)
         cardi = BDFCard(card)
         pbar = PBAR.add_card(cardi)
         pbar.raw_fields()
@@ -67,7 +67,7 @@ class TestBars(unittest.TestCase):
         card = print_card_8(fields)
         lines = card.split('\n')
         model = BDF(debug=False)
-        card = model.process_card(lines)
+        card = model._process_card(lines)
         cardi = BDFCard(card)
 
         pbar = PBAR.add_card(cardi)
@@ -104,7 +104,7 @@ class TestBars(unittest.TestCase):
         card = print_card_8(fields)
         lines = card.split('\n')
         model = BDF(debug=False)
-        card = model.process_card(lines)
+        card = model._process_card(lines)
 
         cardi = BDFCard(card)
         pbar = PBAR.add_card(cardi)

@@ -7,7 +7,7 @@ class TestConstraints(unittest.TestCase):
     def test_support_01(self):
         lines = ['SUPORT, 1,      126']
         bdf = BDF(debug=False)
-        card = bdf.process_card(lines)
+        card = bdf._process_card(lines)
         card = BDFCard(card)
 
         size = 8
@@ -65,7 +65,7 @@ class TestConstraints(unittest.TestCase):
     def test_support1_01(self):
         lines = ['SUPORT1, 1,      126']
         bdf = BDF(debug=False)
-        card = bdf.process_card(lines)
+        card = bdf._process_card(lines)
         cardi = BDFCard(card)
 
         size = 8

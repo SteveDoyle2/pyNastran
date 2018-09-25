@@ -11,7 +11,7 @@ class TestRigid(unittest.TestCase):
             'rbe3,6, ,3,123456,1.0,123456,41,4,+rbe3',
             '+rbe3,alpha,2.0e-4',
         ]
-        card = bdf.process_card(lines)
+        card = bdf._process_card(lines)
         card = BDFCard(card)
         rbe = RBE3.add_card(card)
         fields = rbe.raw_fields()
@@ -48,7 +48,7 @@ class TestRigid(unittest.TestCase):
             '+         117765  117764  117763  109821  117743  117744  117750 117751',
             '+         117745  117746  101902    1.-6',
         ]
-        card = bdf.process_card(lines)
+        card = bdf._process_card(lines)
         card = BDFCard(card)
         rbe = RBE2.add_card(card)
         fields = rbe.raw_fields()
@@ -79,7 +79,7 @@ class TestRigid(unittest.TestCase):
             '+         117765  117764  117763  109821  117743  117744  117750 117751',
             '+         117745  117746  101902    ',
         ]
-        card = bdf.process_card(lines)
+        card = bdf._process_card(lines)
         card = BDFCard(card)
         rbe = RBE2.add_card(card)
         fields = rbe.raw_fields()
@@ -110,7 +110,7 @@ class TestRigid(unittest.TestCase):
             '           UM   10201   456     10202   123',
         ]
 
-        card = bdf.process_card(lines)
+        card = bdf._process_card(lines)
         #print(print_card_8(card))
         card = BDFCard(card)
         rbe = RBE1.add_card(card)
@@ -139,7 +139,7 @@ class TestRigid(unittest.TestCase):
             '                    1009     123    1010     123    1011     123',
             '                    1012     123',
         ]
-        card = bdf.process_card(lines)
+        card = bdf._process_card(lines)
         #print(print_card_8(card))
         card = BDFCard(card)
         rbe = RBE1.add_card(card)
@@ -168,7 +168,7 @@ class TestRigid(unittest.TestCase):
             'rbe1,46,3,123456, , , , , ,+rbe46',
             '+rbe46,UM,4,123456,5,123456,2.0-6'
         ]
-        card = bdf.process_card(lines)
+        card = bdf._process_card(lines)
         card = BDFCard(card)
         rbe = RBE1.add_card(card)
         fields = rbe.raw_fields()

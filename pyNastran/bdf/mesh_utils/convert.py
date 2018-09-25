@@ -227,6 +227,10 @@ def _convert_elements(model, xyz_scale, mass_scale, weight_scale):
             elem.X *= xyz_scale
             # I = m * r^2
             elem.I = [moi * mass_moi_scale for moi in elem.I]
+        elif elem.type == 'CMASS1':
+            pass
+        elif elem.type == 'CMASS4':
+            elem.mass *= mass_scale
         else:
             raise NotImplementedError(elem)
 

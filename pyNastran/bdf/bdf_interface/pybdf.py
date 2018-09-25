@@ -58,7 +58,7 @@ class BDFInputPy(object):
         self.debug = debug
         self.log = get_logger2(log, debug)
 
-    def _get_lines(self, bdf_filename, punch=False, make_ilines=True):
+    def get_lines(self, bdf_filename, punch=False, make_ilines=True):
         # type: (Union[str, StringIO], bool) -> List[str]
         """
         Opens the bdf and extracts the lines by group
@@ -91,8 +91,8 @@ class BDFInputPy(object):
                  ilines = None
 
         """
-        main_lines = self._get_main_lines(bdf_filename)
-        all_lines, ilines = self._lines_to_deck_lines(main_lines, make_ilines=make_ilines)
+        main_lines = self.get_main_lines(bdf_filename)
+        all_lines, ilines = self.lines_to_deck_lines(main_lines, make_ilines=make_ilines)
 
         out = _lines_to_decks(all_lines, ilines, punch, keep_enddata=True)
         system_lines, executive_control_lines, case_control_lines, bulk_data_lines, bulk_data_ilines = out
@@ -113,8 +113,9 @@ class BDFInputPy(object):
                             filename = os.path.splitext(filename)[0] + '.bdf'
                         assert filename.endswith('.bdf'), filename
 
-                        _main_lines = self._get_main_lines(filename)
-                        _all_lines, _ilines = self._lines_to_deck_lines(_main_lines, make_ilines=False)
+                        _main_lines = self.get_main_lines(filename)
+                        _all_lines, _ilines = self.lines_to_deck_lines(
+                            _main_lines, make_ilines=False)
                         _out = _lines_to_decks(_all_lines, _ilines, punch, keep_enddata=False)
                         _system_lines, _executive_control_lines, _case_control_lines, bulk_data_lines2, _bulk_data_ilines2 = _out
                         bulk_data_lines = bulk_data_lines2 + bulk_data_lines
@@ -132,7 +133,7 @@ class BDFInputPy(object):
             raise NotImplementedError(msg)
         return system_lines, executive_control_lines, case_control_lines, bulk_data_lines, bulk_data_ilines
 
-    def _get_main_lines(self, bdf_filename):
+    def get_main_lines(self, bdf_filename):
         # type: (Union[str, StringIO]) -> List[str]
         """
         Opens the bdf and extracts the lines
@@ -162,11 +163,11 @@ class BDFInputPy(object):
         with self._open_file(bdf_filename, basename=True) as bdf_file:
             try:
                 lines = bdf_file.readlines()
-            except:
+            except UnicodeDecodeError:
                 _show_bad_file(self, bdf_filename, encoding=self.encoding)
         return lines
 
-    def _lines_to_deck_lines(self, lines, make_ilines=True):
+    def lines_to_deck_lines(self, lines, make_ilines=True):
         # type: (List[str]) -> List[str], int
         """
         Merges the includes into the main deck.

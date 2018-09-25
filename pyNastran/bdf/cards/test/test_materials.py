@@ -374,7 +374,7 @@ class TestMaterials(unittest.TestCase):
         ]
 
         model = BDF(debug=False)
-        card = model.process_card(lines)
+        card = model._process_card(lines)
         #print(print_card_8(card))
         cardi = BDFCard(card)
         card2 = MAT8.add_card(cardi)
@@ -480,7 +480,7 @@ class TestMaterials(unittest.TestCase):
             '        9000000.3000000.      .1  .00001 .000007 .000008     50.'
         ]
         model = BDF(debug=False)
-        card = model.process_card(lines)
+        card = model._process_card(lines)
         cardi = BDFCard(card)
         mat = MAT11.add_card(cardi)
 

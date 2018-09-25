@@ -15,7 +15,7 @@ class TestSolids(unittest.TestCase):
     def test_cpenta_01(self):
         model = BDF(debug=False)
         lines = ['CPENTA,85,22,201,202,203,205,206,207']
-        card = model.process_card(lines)
+        card = model._process_card(lines)
         card = BDFCard(card)
 
         size = 8
@@ -31,7 +31,7 @@ class TestSolids(unittest.TestCase):
         model = BDF(debug=False)
         lines = ['CPENTA,85,22,201,202,203,205,206,207,+PN2',
                  '+PN2,209,210,217,  ,  ,  ,213,214,218']
-        card = model.process_card(lines)
+        card = model._process_card(lines)
         card = BDFCard(card)
 
         size = 8
@@ -48,7 +48,7 @@ class TestSolids(unittest.TestCase):
         lines = [
             'CHEXA,85,22,201,202,203,205,206,207,+PN2',
             '+PN2,209,210']
-        card = model.process_card(lines)
+        card = model._process_card(lines)
         card = BDFCard(card)
 
         size = 8
@@ -65,7 +65,7 @@ class TestSolids(unittest.TestCase):
         lines = [
             'CHEXA,85,22,201,202,203,205,206,207,+PN2',
             '+PN2,209,210,217,  ,  ,  ,213,214,218']
-        card = model.process_card(lines)
+        card = model._process_card(lines)
         card = BDFCard(card)
 
         size = 8
@@ -80,7 +80,7 @@ class TestSolids(unittest.TestCase):
     def test_ctetra_01(self):
         model = BDF(debug=False)
         lines = ['CTETRA,85,22,201,202,203,205']
-        card = model.process_card(lines)
+        card = model._process_card(lines)
         card = BDFCard(card)
 
         size = 8
@@ -96,7 +96,7 @@ class TestSolids(unittest.TestCase):
         model = BDF(debug=False)
         lines = ['CTETRA,85,22,201,202,203,205,206,207,+PN2',
                  '+PN2,209,210,217']
-        card = model.process_card(lines)
+        card = model._process_card(lines)
         card = BDFCard(card)
 
         size = 8

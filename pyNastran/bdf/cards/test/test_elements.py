@@ -31,7 +31,7 @@ class TestElements(unittest.TestCase):
         """tests a CBUSH"""
         model = BDF(debug=False)
         lines = ['cbush,101,102,1,,,,,0']
-        card = model.process_card(lines)
+        card = model._process_card(lines)
         card = BDFCard(card)
 
         size = 8
@@ -45,7 +45,7 @@ class TestElements(unittest.TestCase):
         """tests a CDAMP1"""
         model = BDF(debug=False)
         lines = ['CDAMP1, 2001, 20, 1001, 1']
-        card = model.process_card(lines)
+        card = model._process_card(lines)
         card = BDFCard(card)
 
         size = 8
@@ -61,7 +61,7 @@ class TestElements(unittest.TestCase):
         """tests a CGAP/PGAP"""
         model = BDF(debug=False)
         lines = ['CGAP    899     90      21      99      0.      1.      0.      0']
-        card = model.process_card(lines)
+        card = model._process_card(lines)
         card = BDFCard(card)
 
         cgap = CGAP.add_card(card, comment='cgap')
@@ -73,7 +73,7 @@ class TestElements(unittest.TestCase):
         cgap.raw_fields()
 
         lines = ['PGAP    90                      1.E+5']
-        card = model.process_card(lines)
+        card = model._process_card(lines)
         card = BDFCard(card)
 
         pgap = PGAP.add_card(card, comment='pgap')

@@ -156,6 +156,55 @@ class TestMassElements(unittest.TestCase):
         pmass.write_card(size=8)
         #save_load_deck(model)
 
+    def test_cmass4(self):
+        """CMASS4"""
+        model = BDF(debug=False)
+        eid1 = 101
+        eid2 = 102
+        eid3 = 103
+        mass1 = 1.0
+        mass2 = 2.0
+        mass3 = 3.0
+        nodes1 = [11, 12]
+        nodes2 = [21, 22]
+        nodes3 = [31, 32]
+        model.add_grid(11, [0., 0., 0.])
+        model.add_grid(12, [0., 0., 0.])
+        model.add_grid(21, [0., 0., 0.])
+        model.add_spoint(22)
+        model.add_spoint([31, 32])
+        model.add_spoint((33, 34))
+        card_lines = ['CMASS4', eid1, mass1] + nodes1 + [eid2, mass2] + nodes2
+        model.add_card(card_lines, 'CMASS4', comment='', is_list=True, has_none=True)
+
+        card_lines = ['CMASS4', eid3, mass3] + nodes3
+        model.add_card(card_lines, 'CMASS4', comment='', is_list=True, has_none=True)
+
+    def test_pmass(self):
+        """CMASS1/PMASS"""
+        model = BDF(debug=False)
+        eid1 = 101
+        mass1 = 1.0
+        mass2 = 2.0
+        mass3 = 3.0
+        nodes1 = [11, 12]
+        model.add_grid(11, [0., 0., 0.])
+        model.add_grid(12, [0., 0., 0.])
+        pid1 = 1000
+        pid2 = 2000
+        pid3 = 3000
+        card_lines = ['CMASS1', eid1, pid1] + nodes1
+        model.add_card(card_lines, 'CMASS1', comment='', is_list=True, has_none=True)
+
+        card_lines = ['PMASS', pid1, mass1, pid2, mass2, pid3, mass3]
+        model.add_card(card_lines, 'PMASS', comment='', is_list=True, has_none=True)
+        model.validate()
+        model._verify_bdf()
+
+        model.cross_reference()
+        model._verify_bdf()
+        save_load_deck(model)
+
     def test_nsm(self):
         """tests the NSM card"""
         model = BDF(debug=False)

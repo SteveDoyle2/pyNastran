@@ -5,10 +5,12 @@ Defines various utilities for BDF parsing including:
 from __future__ import print_function, unicode_literals
 import os
 import sys
+from collections import defaultdict
 import inspect
 import warnings
-from six import StringIO, string_types
 from typing import List, Union, Dict, Tuple, Optional
+
+from six import StringIO, string_types
 
 import pyNastran
 from pyNastran.bdf.errors import CardParseSyntaxError
@@ -262,6 +264,7 @@ def to_fields(card_lines, card_name):
     return fields
 
 def expand_tabs(line):
+    # type: (str) -> str
     """expands the tabs; breaks if you mix commas and tabs"""
     line = line.expandtabs()
     if ',' in line:
@@ -271,6 +274,7 @@ def expand_tabs(line):
     return line
 
 def parse_executive_control_deck(executive_control_lines):
+    # type: (List[str]) -> Optional[int], Optional[str], Optional[int]
     """Extracts the solution from the executive control deck"""
     sol = None
     method = None
@@ -357,7 +361,8 @@ def _parse_pynastran_header(line):
         else:
             msg = '\nunrecognized pyNastran key=%r type(key)=%s\n' % (key, type(key))
             msg += 'line=%r\n' % line
-            msg += 'expected_keys = [%s]\n' % ', '.join(EXPECTED_HEADER_KEYS_CHECK + EXPECTED_HEADER_KEYS_NO_CHECK)
+            msg += 'expected_keys = [%s]\n' % ', '.join(
+                EXPECTED_HEADER_KEYS_CHECK + EXPECTED_HEADER_KEYS_NO_CHECK)
             msg += 'type(key0) = %s' % type(EXPECTED_HEADER_KEYS_CHECK[0])
             print(msg)
             raise KeyError(msg)
@@ -471,3 +476,86 @@ def deprecated(old_name, new_name, deprecated_version, levels=None):
         raise NotImplementedError(msg)
     else:
         warnings.warn(msg, DeprecationWarning)
+
+
+def _parse_dynamic_syntax(key, dict_of_vars, log):
+    # type: (key, Any, Any) -> Any
+    """
+    Applies the dynamic syntax for %varName
+
+    Parameters
+    ----------
+    key : str
+        the uppercased key
+
+    Returns
+    -------
+    value : int/float/str
+        the dynamic value defined by dict_of_vars
+
+    .. seealso:: :func: `set_dynamic_syntax`
+
+    """
+
+    key = key.strip()[1:]
+    log.debug("dynamic key = %r" % key)
+    #dict_of_vars = {'P5':0.5,'ONEK':1000.}
+    if key not in dict_of_vars:
+        msg = "key=%r not found in keys=%s" % (key, dict_of_vars.keys())
+        raise KeyError(msg)
+    return dict_of_vars[key]
+
+def _get_card_name(lines, active_filename):
+    # type: (List[str], str) -> str
+    """
+    Returns the name of the card defined by the provided lines
+
+    Parameters
+    ----------
+    lines : list[str]
+        the lines of the card
+
+    Returns
+    -------
+    card_name : str
+        the name of the card
+
+    """
+    card_name = lines[0][:8].rstrip('\t, ').split(',')[0].split('\t')[0].strip('*\t ')
+    if len(card_name) == 0:
+        return None
+    if ' ' in card_name or len(card_name) == 0:
+        msg = 'card_name=%r\nline=%r in filename=%r is invalid' \
+              % (card_name, lines[0], active_filename)
+        print(msg)
+        raise CardParseSyntaxError(msg)
+    return card_name.upper()
+
+def fill_dmigs(model):
+    # type : (BDF) -> None
+    """fills the DMIx cards with the column data that's been stored"""
+    for name, card_comments in model._dmig_temp.items():
+        card0, unused_comment0 = card_comments[0]
+        card_name = card0[0]
+        card_name = card_name.rstrip(' *').upper()
+
+        if card_name == 'DMIG':
+            # if field2 == 'UACCEL':  # special DMIG card
+            card = model.dmigs[name]
+        elif card_name == 'DMI':
+            card = model.dmis[name]
+        elif card_name == 'DMIJ':
+            card = model.dmijs[name]
+        elif card_name == 'DMIJI':
+            card = model.dmijis[name]
+        elif card_name == 'DMIK':
+            card = model.dmiks[name]
+        else:  # pragma: no cover
+            raise NotImplementedError(card_name)
+
+        for (card_obj, comment) in card_comments:
+            card._add_column(card_obj, comment=comment)
+        card.finalize()
+
+    # empty the _dmig_temp variable
+    model._dmig_temp = defaultdict(list)

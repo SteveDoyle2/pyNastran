@@ -55,7 +55,7 @@ class TestAero(unittest.TestCase):
     def test_aestat_1(self):
         bdf = BDF(debug=False)
         lines = ['AESTAT  502     PITCH']
-        card = bdf.process_card(lines)
+        card = bdf._process_card(lines)
         card = BDFCard(card)
 
         size = 8

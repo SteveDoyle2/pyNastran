@@ -554,19 +554,6 @@ class BDF(BDF_):
     #def xyz_cid0(self):
         #return self.xyz_cid0
 
-    def _get_bdf_stats_loads(self):
-        # loads
-        msg = []
-        #for (lid, loads) in sorted(self.loads.items()):
-            #msg.append('bdf.loads[%s]' % lid)
-            #groups_dict = {}  # type: Dict[str, int]
-            #for loadi in loads:
-                #groups_dict[loadi.type] = groups_dict.get(loadi.type, 0) + 1
-            #for name, count_name in sorted(groups_dict.items()):
-                #msg.append('  %-8s %s' % (name + ':', count_name))
-            #msg.append('')
-        return msg
-
 
     #def _write_header(self, bdf_file, encoding):
         #"""

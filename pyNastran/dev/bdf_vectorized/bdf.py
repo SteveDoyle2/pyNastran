@@ -40,6 +40,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 
 from pyNastran.bdf.case_control_deck import CaseControlDeck
 
+from pyNastran.bdf.bdf_interface.utils import fill_dmigs
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.dev.bdf_vectorized.bdf_interface2.write_mesh import WriteMesh
 from pyNastran.dev.bdf_vectorized.bdf_interface2.get_card import GetMethods
@@ -165,7 +166,7 @@ def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
         #method_names = model.object_methods(keys_to_skip=keys_to_suppress)
 
         #methods_to_remove = [
-            #'process_card', 'read_bdf', 'fill_dmigs', 'disable_cards', 'set_dynamic_syntax',
+            #'_process_card', 'read_bdf', 'disable_cards', 'set_dynamic_syntax',
             #'create_card_object', 'create_card_object_fields', 'create_card_object_list',
 
             #'add_AECOMP', 'add_AEFACT', 'add_AELINK', 'add_AELIST', 'add_AEPARM', 'add_AERO',
@@ -940,7 +941,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             # TODO: redo get_card_ids_by_card_types & card_count
 
         #self.pop_parse_errors()
-        self.fill_dmigs()
+        fill_dmigs(self)
 
         if validate:
             self.validate()
@@ -1386,7 +1387,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             self.reject_count[card_name] += 1
         return True
 
-    def process_card(self, card_lines):
+    def _process_card(self, card_lines):
         """
         Converts card_lines into a card.
         Considers dynamic syntax and removes empty fields
@@ -1407,7 +1408,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
 
             >>> card_lines = ['GRID,1,,1.0,2.0,3.0,,']
             >>> model = BDF()
-            >>> fields, card_name = model.process_card(card_lines)
+            >>> fields, card_name = model._process_card(card_lines)
             >>> fields
             ['GRID', '1', '', '1.0', '2.0', '3.0']
             >>> card_name

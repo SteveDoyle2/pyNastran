@@ -187,7 +187,7 @@ class TestLoads(unittest.TestCase):
         #DAREA SID P1 C1 A1  P2 C2 A2
         #DAREA 3   6   2 8.2 15 1  10.1
         lines = ['DAREA,3,6,2,8.2,15,1,10.1']
-        card = bdf.process_card(lines)
+        card = bdf._process_card(lines)
         cardi = BDFCard(card)
 
         size = 8
@@ -273,7 +273,7 @@ class TestLoads(unittest.TestCase):
     def test_pload4_01(self):
         """tests a PLOAD4"""
         lines = ['PLOAD4  1000    1       -60.    -60.    60.             1']
-        card = bdf.process_card(lines)
+        card = bdf._process_card(lines)
         cardi = BDFCard(card)
 
         size = 8
@@ -284,7 +284,7 @@ class TestLoads(unittest.TestCase):
     def test_pload4_02(self):
         """tests a PLOAD4"""
         lines = ['PLOAD4  1       101     1.                              10000   10011']
-        card = bdf.process_card(lines)
+        card = bdf._process_card(lines)
         cardi = BDFCard(card)
 
         size = 8

@@ -4,6 +4,8 @@ from __future__ import print_function, unicode_literals
 import os
 from io import open
 import unittest
+from six import StringIO
+
 from pyNastran.bdf.bdf_interface.pybdf import BDFInputPy, _show_bad_file, _lines_to_decks
 
 class TestPyBDF(unittest.TestCase):
@@ -65,8 +67,6 @@ class TestPyBDF(unittest.TestCase):
         os.rmdir(bdf_dir)
 
     def test_get_lines(self):
-        from six import StringIO
-
         with open('junk.bdf', 'w') as bdf_file:
             bdf_file.write('CEND\n')
             bdf_file.write('BEGIN BULK\n')
@@ -87,7 +87,7 @@ class TestPyBDF(unittest.TestCase):
         encoding = None
         pybdf = BDFInputPy(read_includes, dumplines, encoding, nastran_format='zona',
                            log=None, debug=False)
-        pybdf._get_lines(bdf_filename, punch=False, make_ilines=True)
+        pybdf.get_lines(bdf_filename, punch=False, make_ilines=True)
         #----------------------------------------------------------------
         bdf_filename = StringIO()
         bdf_filename.write(
@@ -102,7 +102,7 @@ class TestPyBDF(unittest.TestCase):
         encoding = None
         pybdf = BDFInputPy(read_includes, dumplines, encoding, nastran_format='zona',
                            log=None, debug=False)
-        pybdf._get_lines(bdf_filename, punch=False, make_ilines=True)
+        pybdf.get_lines(bdf_filename, punch=False, make_ilines=True)
 
         #----------------------------------------------------------------
         bdf_filename = StringIO()
@@ -118,7 +118,7 @@ class TestPyBDF(unittest.TestCase):
         encoding = None
         pybdf = BDFInputPy(read_includes, dumplines, encoding, nastran_format='zona',
                            log=None, debug=False)
-        pybdf._get_lines(bdf_filename, punch=False, make_ilines=True)
+        pybdf.get_lines(bdf_filename, punch=False, make_ilines=True)
 
 if __name__ == '__main__':
     unittest.main()

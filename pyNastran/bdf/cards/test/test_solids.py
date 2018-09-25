@@ -25,7 +25,7 @@ class TestSolids(unittest.TestCase):
             ',218'
         ]
         bdf = BDF(debug=False)
-        card = bdf.process_card(lines)
+        card = bdf._process_card(lines)
         card = BDFCard(card)
 
         solid = CPENTA15.add_card(card, comment='cpenta15')

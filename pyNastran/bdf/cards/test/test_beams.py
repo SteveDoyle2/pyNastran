@@ -36,7 +36,7 @@ class TestBeams(unittest.TestCase):
             '     ,   ,   ,   ,    ,0.5,,0.0',
         ]
         bdf = BDF(debug=False)
-        card = bdf.process_card(lines)
+        card = bdf._process_card(lines)
         #print(print_card_8(card))
         cardi = BDFCard(card)
         card2 = PBEAM.add_card(cardi)
@@ -81,7 +81,7 @@ class TestBeams(unittest.TestCase):
             '     ,   ,   ,   ,    ,0.5,,0.0',
         ]
 
-        card = bdf.process_card(lines)
+        card = bdf._process_card(lines)
         cardi = BDFCard(card)
         card2 = PBEAM.add_card(cardi)
         fields = card2.raw_fields()
@@ -112,7 +112,7 @@ class TestBeams(unittest.TestCase):
             '     ,   ,   ,   ,    ,0.5,,0.0',
         ]
 
-        card = bdf.process_card(lines)
+        card = bdf._process_card(lines)
         cardi = BDFCard(card)
         card2 = PBEAM.add_card(cardi)
         fields = card2.raw_fields()
@@ -137,7 +137,7 @@ class TestBeams(unittest.TestCase):
             '     ,   ,   ,   ,    ,0.5,,0.0',
         ]
 
-        card = bdf.process_card(lines)
+        card = bdf._process_card(lines)
         cardi = BDFCard(card)
         card2 = PBEAM.add_card(cardi)
         fields = card2.raw_fields()
@@ -157,7 +157,7 @@ class TestBeams(unittest.TestCase):
             '     ,  , ,2.0,-4.0',
         ]
 
-        card = bdf.process_card(lines)
+        card = bdf._process_card(lines)
         #print(print_card_8(card))
         cardi = BDFCard(card)
         card2 = PBEAM.add_card(cardi)
@@ -183,7 +183,7 @@ class TestBeams(unittest.TestCase):
             '+BEAM4                  -.666667',
         ]
 
-        card = bdf.process_card(lines)
+        card = bdf._process_card(lines)
         cardi = BDFCard(card)
         card2 = PBEAM.add_card(cardi)
         fields = card2.raw_fields()
@@ -206,7 +206,7 @@ class TestBeams(unittest.TestCase):
             '+Z1     NO      1.0                                                     +Z4',
             '+Z4     0.0     0.0',
         ]
-        card = bdf.process_card(lines)
+        card = bdf._process_card(lines)
         cardi = BDFCard(card)
         PBEAM.add_card(cardi)
 
@@ -251,7 +251,7 @@ class TestBeams(unittest.TestCase):
             '*',
         ]
 
-        card = bdf.process_card(lines)
+        card = bdf._process_card(lines)
         cardi = BDFCard(card)
         card2 = PBEAM.add_card(cardi)
 
@@ -289,7 +289,7 @@ class TestBeams(unittest.TestCase):
         #print(card)
         card = print_card_8(fields)
         lines = card.split('\n')
-        card = bdf.process_card(lines)
+        card = bdf._process_card(lines)
         cardi = BDFCard(card)
         #with self.assertRaises(AssertionError):  # A=0, I12=0, K1=0
         pbeam = PBEAM.add_card(cardi)
