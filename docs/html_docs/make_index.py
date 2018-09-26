@@ -1,25 +1,42 @@
 """
-regenerates the *.rst files based on the code
+Regenerates the *.rst files based on the code.
+There is some manual work that has to happen afterwards.
 """
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
 import os
-from six import iteritems
-import pyNastran
+from io import open
 from pyNastran.utils.log import get_logger2
-log = get_logger2(log=None, debug=True, encoding='utf-8')
+
+log_debug = get_logger2(log=None, debug=True, encoding='utf-8')
+log_warning = get_logger2(log=None, debug=None, encoding='utf-8')
 
 
-pkg_path = pyNastran.__path__[0]
-
-ignore_dirs = ['src', 'dmap', 'solver', '__pycache__',
+IGNORE_DIRS = ['src', 'dmap', 'solver', '__pycache__',
                'op4_old', 'calculix', 'bars', 'case_control',
-               'pch', 'old', 'solver', 'test']
-mods_skip = ['spike', 'shell_backup']
+               'pch', 'old', 'solver', 'test', 'dev', 'bkp', 'bdf_vectorized']
+MODS_SKIP = ['spike', 'shell_backup']
 
-make_files = True
+SKIP_DIRECTORIES = ['.svn', '.idea', '.settings', '.git', 'test', 'bkp', '__pycache__', 'dev',
+                    'htmlcov', 'vtk_examples', 'SnakeRiverCanyon', 'M100', 'SWB']
+SKIP_FILE_SUFFIX = [
+    '.pyc', '.pyx', # python
+    '.bdf', '.op2', '.f06', '.op4', '.dat', '.inp', # nastran
+    '.err', '.log', '.rej', '.db', '.db.jou', '.ses', '.ses.01', # patran
+    '.pptx',
+    '.png', '.gif', # pictures
+    '.txt', '.csv', '.out', '.coverage', '.whl', # generic
+    '.mapbc', '.front', '.flo', 'cogsg', '.bc', '.d3m', '.inpt', '.nml', # usm3d/fun3d
+    '.ele', '.node', '.smesh', '.off',
+    '.mk5', '.wgs', '.stl', '.fgrid', '.su2', '.obj', # other formats
+    '.tri', '.cntl', '.c3d',  # cart3d
+    '.surf', '.tags', '.ugrid', '.bedge', # aflr
+    '.plt', # tecplot
+    '.p3d',
+    '.tex', '.bib', # latex
+    ]
+MAKE_FILES = True
 
-def get_folders_files(dirname, skip_file_suffix=('.pyc', '.pyx', '.bdf', '.op2', '.f06', '.op4'),
-                      skip_directories=('.svn', '.idea', '.settings', '.git')):
+def get_folders_files(dirname, skip_file_suffix=None, skip_directories=None):
     """
     Return list of directories and files in a given tree path. By default discards:
 
@@ -27,6 +44,11 @@ def get_folders_files(dirname, skip_file_suffix=('.pyc', '.pyx', '.bdf', '.op2',
 
     * files that ends with ".pyc", .pyx", ".bdf"
     """
+    if skip_directories is None:
+        skip_directories = SKIP_DIRECTORIES
+    if skip_file_suffix is None:
+        skip_file_suffix = tuple(SKIP_FILE_SUFFIX)
+
     dirname = os.path.join(dirname)
     files = []
     folders = []
@@ -35,14 +57,18 @@ def get_folders_files(dirname, skip_file_suffix=('.pyc', '.pyx', '.bdf', '.op2',
         files += [os.path.join(root, i) for i in fil
                   if not i.endswith(skip_file_suffix)]
         dirs[:] = [d for d in dirs if not d in skip_directories]
-    return (folders, files)
+        #if len(dirs):
+            #print('root = %s' % root)
+            #print(dirs)
+            #print('------------------')
+    return folders, files
 
-def get_classes(filenames):
+def get_classes(py_filenames, log):
     d = {}
-    for filename in filenames:
-        #log.info("filename =", filename)
-        with open(filename, 'r') as f:
-            lines = f.readlines()
+    for py_filename in py_filenames:
+        #log.info("py_filename =", py_filename)
+        with open(py_filename, 'r') as py_file:
+            lines = py_file.readlines()
 
         for line in lines:
             if 'class' in line:
@@ -59,16 +85,17 @@ def get_classes(filenames):
                 pre, post = pre.split('class')
                 name = post.strip()
                 log.info("name = %s" % name)
-                dirname = os.path.dirname(filename)
+                dirname = os.path.dirname(py_filename)
                 d[dirname] = name
 
-def get_doc(filenames):
+def get_doc(filenames, log):
     """regenerate the *.rst files"""
     dirs = {}
     for filename in filenames:
-        log.debug('trying %s' % filename)
         if '.py' not in filename[-3:]:
+            log.info('skipping %s' % filename)
             continue
+        log.debug('trying %s' % filename)
 
         dirname = os.path.dirname(filename)
         dirname = os.path.join(dirname)
@@ -80,12 +107,19 @@ def get_doc(filenames):
         dirs[dirname].append(filename)
 
     i = 0
-    for dirname, files in sorted(iteritems(dirs)):
+    for dirname, files in sorted(dirs.items()):
+        # temporarily suppressing log messages for classes that aren't the bdf
+        #if 'cards' not in dirname: # 'bdf' not in dirname and
+        if 'cards' not in dirname:
+            log = log_warning
+        else:
+            log = log_debug
+
         if len(files) == 0:
             continue
         log.info("******************************************************************************")
         basepath = os.path.basename(dirname)
-        if basepath in ignore_dirs:
+        if basepath in IGNORE_DIRS:
             log.debug('skipping ignore_dirs %r' % dirname)
             continue
         if 'dev_' in basepath:
@@ -112,7 +146,7 @@ def get_doc(filenames):
 
         rst_sline = rst_dirname.split('\\', 2)
 
-        #log.info('rst_sline = ', rst_sline)
+        log.info('rst_sline = %s' % rst_sline)
         if len(rst_sline) == 1 and rst_sline[0] in ('', 'pyNastran'):
             # what's the quote directory?
             # pyNastran
@@ -124,7 +158,8 @@ def get_doc(filenames):
         elif len(rst_sline) == 2 or len(rst_sline) == 3:
             # pyNastran\bdf\cards -> bdf
             # pyNastran\bdf\cards\elements -> bdf
-            rst_dirname2 = rst_sline[1]
+            rst_dirname2 = os.path.join(rst_sline[1])
+            #rst_dirname2 = os.path.join(*rst_sline[1:])
             #rst_sline2 =  = rst_sline[0].split('\\', 1)
             #raise NotImplementedError()
         else:
@@ -149,23 +184,24 @@ def get_doc(filenames):
         #log.info('absname2 = ' % absname2)
         log.debug('rst_path = %s' % rst_path)
         log.debug("basepath = %s" % basepath)
+        #print(msg)
 
         if len(files) == 0:
             continue
 
-        if not make_files:
+        if not MAKE_FILES:
             continue
 
-        sub_dirs = get_sub_dirs(dirname)
-        write_rst_file(rst_path, files, dirname, sub_dirs, msg)
+        sub_dirs = get_sub_dirs(dirname, log)
+        write_rst_file(rst_path, files, dirname, sub_dirs, msg, log)
 
         #if i == 5:
             #break
         i += 1
 
-def write_rst_file(rst_filename, files, dirname, sub_dirs, msg):
+def write_rst_file(rst_filename, files, unused_dirname, sub_dirs, msg, log):
     log.info('working on rst_filename = %s' % rst_filename)
-    with open(rst_filename, 'wb') as rst_file:
+    with open(rst_filename, 'w') as rst_file:
         rst_file.write(msg)
         for fname in files:
             if os.path.getsize(fname) == 0:
@@ -188,7 +224,7 @@ def write_rst_file(rst_filename, files, dirname, sub_dirs, msg):
             log.debug("  pynastran_path = %s.py" % pynastran_path)
             #log.info("automodname    = %s" % automodname)
 
-            if modname in mods_skip:
+            if modname in MODS_SKIP:
                 continue
 
             msg = ':mod:`%s` Module\n' % modname  # `loads\  # fname2
@@ -225,29 +261,30 @@ def write_rst_file(rst_filename, files, dirname, sub_dirs, msg):
             msg += '\n'
             rst_file.write(msg)
 
-def get_sub_dirs(dirname):
+def get_sub_dirs(dirname, log):
     maybe_dirs = os.listdir(dirname)
     sub_dirs = []
     #print("dirname_check = %s" % dirname)
 
     for idir in maybe_dirs:
-        if idir in ignore_dirs:
+        if idir in IGNORE_DIRS:
             continue
 
         dir2 = os.path.join(dirname, idir)
         if os.path.isdir(dir2):
             init_file = os.path.join(idir, '__init__.py')
             log.warning(init_file)
-            if idir not in ignore_dirs and os.path.exists(init_file):
+            if idir not in IGNORE_DIRS and os.path.exists(init_file):
                 #print("adding %s" % dir2)
                 sub_dirs.append(dir2)
     return sub_dirs
 
 def run():
     """regenerates the *.rst files"""
-    folders, files = get_folders_files('../../pyNastran')
+    log = get_logger2(log=None, debug=True, encoding='utf-8')
+    unused_folders, files = get_folders_files('../../pyNastran')
     #c = get_classes(files)
-    get_doc(files)
+    get_doc(files, log)
 
 
 if __name__ == '__main__':  # pragma: no cover

@@ -145,3 +145,24 @@ elements Package
     :undoc-members:
     :show-inheritance:
 
+:mod:`beam_connectivity` Module
+-------------------------------
+
+.. inheritance-diagram:: pyNastran.bdf.cards.elements.beam_connectivity
+
+.. automodule:: pyNastran.bdf.cards.elements.beam_connectivity
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`beam_line_connectivity` Module
+------------------------------------
+
+.. inheritance-diagram:: pyNastran.bdf.cards.elements.beam_line_connectivity
+
+.. automodule:: pyNastran.bdf.cards.elements.beam_line_connectivity
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+

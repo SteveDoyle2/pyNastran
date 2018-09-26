@@ -12,7 +12,6 @@ This is the pyNastran.bdf.rst file.
     :members:
     :private-members:
     :undoc-members:
-    :show-inheritance:
 
 :mod:`field_writer_8` Module
 ----------------------------
@@ -23,7 +22,6 @@ This is the pyNastran.bdf.rst file.
     :members:
     :private-members:
     :undoc-members:
-    :show-inheritance:
 
 :mod:`field_writer_16` Module
 -----------------------------
@@ -34,7 +32,6 @@ This is the pyNastran.bdf.rst file.
     :members:
     :private-members:
     :undoc-members:
-    :show-inheritance:
 
 :mod:`field_writer_double` Module
 ---------------------------------
@@ -45,4 +42,3 @@ This is the pyNastran.bdf.rst file.
     :members:
     :private-members:
     :undoc-members:
-    :show-inheritance:

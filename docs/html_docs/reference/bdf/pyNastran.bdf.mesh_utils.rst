@@ -9,7 +9,6 @@ mesh_utils Package
     :members:
     :private-members:
     :undoc-members:
-    :show-inheritance:
 
 ***********************
 :mod:`bdf_merge` Module
@@ -69,8 +68,6 @@ mesh_utils Package
 *************************
 :mod:`mirror_mesh` Module
 *************************
-
-.. inheritance-diagram:: pyNastran.bdf.mesh_utils.mirror_mesh
 
 .. automodule:: pyNastran.bdf.mesh_utils.mirror_mesh
     :members:
@@ -139,7 +136,6 @@ mesh_utils Package
     :members:
     :private-members:
     :undoc-members:
-    :show-inheritance:
 
 ***************************
 :mod:`remove_unused` Module

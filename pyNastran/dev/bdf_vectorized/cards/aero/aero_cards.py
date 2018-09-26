@@ -5953,15 +5953,15 @@ class TRIM(BaseCard):
 
         .. warning ::  This probably gets AELINKs/AEPARMs/AESURFSs wrong.
 
-        The TRIM equality
-        -----------------
+        Notes
+        -----
+        **The TRIM equality**
         ndelta = (naestat + naesurf + naeparm) - (
                - (ntrim + ntrim_aesurf? + naelink + nsuport_dofs + nsuport1_dofs)
         ndelta = 0
         ntrim_aesurf is not included, but it might exist...
 
-        Steps to a TRIM analysis
-        ------------------------
+        **Steps to a TRIM analysis**
         1.  Define the number of independent control surfaces (naesurf)
             Make an AESURF for each.  Dual link the AESURFs if you can
             to avoid needing an AELINK (e.g., +roll is left aileron down,
@@ -6006,8 +6006,7 @@ class TRIM(BaseCard):
             certain DOFs (e.g., z-motion).  Add enough to satisfy the TRIM
             equality.
 
-        Doesn't Consider
-        ----------------
+        **Doesn't Consider**
          - AELINK
          - AEPARM
          - AESURFS

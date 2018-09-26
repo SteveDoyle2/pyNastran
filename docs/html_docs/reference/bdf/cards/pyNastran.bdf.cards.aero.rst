@@ -1,8 +1,10 @@
 aero Package
-============
+------------
+
+.. toctree::
 
 :mod:`aero` Module
-------------------
+^^^^^^^^^^^^^^^^^^
 
 .. inheritance-diagram:: pyNastran.bdf.cards.aero.aero
 
@@ -13,7 +15,7 @@ aero Package
     :show-inheritance:
 
 :mod:`static_loads` Module
---------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. inheritance-diagram:: pyNastran.bdf.cards.aero.static_loads
 
@@ -24,7 +26,7 @@ aero Package
     :show-inheritance:
 
 :mod:`dynamic_loads` Module
----------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. inheritance-diagram:: pyNastran.bdf.cards.aero.dynamic_loads
 
@@ -35,9 +37,7 @@ aero Package
     :show-inheritance:
 
 :mod:`utils` Module
--------------------
-
-.. inheritance-diagram:: pyNastran.bdf.cards.aero.utils
+^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: pyNastran.bdf.cards.aero.utils
     :members:

@@ -13,4 +13,3 @@ This is the pyNastran.rst file for Master.
    converters/pyNastran.converters
    reference.rst
    pyNastran.__init__.py
-

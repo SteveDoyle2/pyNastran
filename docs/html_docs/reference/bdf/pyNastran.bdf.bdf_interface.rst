@@ -29,7 +29,6 @@ bdf_interface Package
 
 .. automodule:: pyNastran.bdf.bdf_interface.assign_type
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -100,17 +99,26 @@ bdf_interface Package
     :show-inheritance:
 
 :mod:`include_file` Module
------------------------------
+--------------------------
 
 .. inheritance-diagram:: pyNastran.bdf.bdf_interface.include_file
 
 .. automodule:: pyNastran.bdf.bdf_interface.include_file
     :members:
-    :private-members:
     :undoc-members:
 
+:mod:`pybdf` Module
+-------------------
+
+.. inheritance-diagram:: pyNastran.bdf.bdf_interface.pybdf
+
+.. automodule:: pyNastran.bdf.bdf_interface.pybdf
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`replication` Module
------------------------------
+-------------------------
 
 .. inheritance-diagram:: pyNastran.bdf.bdf_interface.replication
 
@@ -140,6 +148,17 @@ bdf_interface Package
     :undoc-members:
     :show-inheritance:
 
+:mod:`stats` Module
+-------------------
+
+.. inheritance-diagram:: pyNastran.bdf.bdf_interface.stats
+
+.. automodule:: pyNastran.bdf.bdf_interface.stats
+    :members:
+    :private-members:
+    :undoc-members:
+    :undoc-members:
+
 :mod:`subcase_cards` Module
 ---------------------------
 
@@ -161,7 +180,7 @@ bdf_interface Package
     :undoc-members:
 
 :mod:`utils` Module
----------------------------
+-------------------
 
 .. inheritance-diagram:: pyNastran.bdf.bdf_interface.utils
 

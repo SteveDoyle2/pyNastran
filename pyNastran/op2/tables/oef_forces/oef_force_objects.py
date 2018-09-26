@@ -3081,8 +3081,8 @@ class RealSolidPressureForceArray(RealForceObject):  # 77-PENTA_PR,78-TETRA_PR
 # F:\work\pyNastran\examples\Dropbox\move_tpl\beamp11.op2
 class RealCBeamForceVUArray(RealForceObject):  # 191-VUBEAM
     """
-    ELTYPE = 191 Beam view element (VUBEAM)
-    ---------------------------------------
+    **ELTYPE = 191 Beam view element (VUBEAM)**
+
     2 PARENT I     Parent p-element identification number
     3 COORD  I     Coordinate system identification number
     4 ICORD  CHAR4 Flat/curved and so on
