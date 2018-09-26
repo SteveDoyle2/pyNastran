@@ -23,19 +23,16 @@ def extract_bodies(bdf_filename, mpc_id=0):
         not supported
 
     Considers:
-    ----------
      - elements
      - rigid_elements
 
     Doesn't consider:
-    -----------------
       - elements_mass
       - MPC
       - MPCADD
       - DMIx
 
     Doesn't support:
-    ----------------
       - xref
       - duplicate element ids
       - large values

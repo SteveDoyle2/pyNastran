@@ -125,8 +125,7 @@ def cut_model(model, axis='-y'):
     axis : {'-x', '-y', '-z'}
         What direction should be removed?
 
-    Considers
-    =========
+    Considers:
       - nodes
       - elements
       - loads (LOAD/PLOAD4)

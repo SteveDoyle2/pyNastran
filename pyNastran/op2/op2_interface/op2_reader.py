@@ -1771,8 +1771,8 @@ class OP2Reader(object):
         """
         Reads a matrix in "standard" form.
 
-        See
-        ---
+        See also
+        --------
         read_matrix_mat
         """
         unused_table_name = self._read_table_name(rewind=False, stop_on_failure=True)
@@ -2470,15 +2470,15 @@ class OP2Reader(object):
         Reads a block following a pattern of:
             [nbytes, data, nbytes]
 
-        See
-        ---
-        read_3_blocks - reds 3 blocks
-        ??? - reads multi-blocks
-
         Returns
         -------
         data : bytes
             the data in binary
+
+        See also
+        --------
+        read_3_blocks - reds 3 blocks
+        ??? - reads multi-blocks
 
         """
         op2 = self.op2

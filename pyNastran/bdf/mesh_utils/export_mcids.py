@@ -32,8 +32,8 @@ def export_mcids(bdf_filename, csv_filename=None,
         TODO: not validated
         the ply to consider
 
-        PSHELL
-        ======
+        **PSHELL**
+
         iply   location
         ----   --------
          0      mid1 or mid2
@@ -42,8 +42,8 @@ def export_mcids(bdf_filename, csv_filename=None,
          3      mid3
          4      mid4
 
-        PCOMP/PCOMPG
-        ============
+        **PCOMP/PCOMPG**
+
         iply   location
         ----   --------
         0      layer1

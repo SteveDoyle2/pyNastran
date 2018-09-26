@@ -10,7 +10,6 @@ This is the pyNastran.bdf.rst file.
 
 .. automodule:: pyNastran.bdf.utils
     :members:
-    :private-members:
     :undoc-members:
 
 :mod:`write_path` Module

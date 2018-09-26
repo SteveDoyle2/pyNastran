@@ -117,11 +117,10 @@ def write_bdf_symmetric(bdf_filename, out_filename=None, encoding=None,
     Doesn't equivalence nodes on the centerline.
 
     Considers
-    ---------
-    nodes : GRID
-    elements, rigid_elements, mass_elements : see ``_mirror_elements``
-    loads : see ``_mirror_loads``
-    aero cards : see ``_mirror_aero``
+     - nodes : GRID
+     - elements, rigid_elements, mass_elements : see ``_mirror_elements``
+     - loads : see ``_mirror_loads``
+     - aero cards : see ``_mirror_aero``
 
     """
     #model.write_caero_model()
@@ -354,19 +353,14 @@ def _mirror_aero(model, nid_offset, plane):
     """
     Mirrors the aero elements
 
-    Considers
-    ---------
-    AEROS
-     - doesn't consider sideslip
-    CAERO1
-     - doesn't consider sideslip
-     - doesn't consider lspan/lchord
-    SPLINE1
-    SET1
-
-    splines : SPLINE1 -> SET1
-    caeros : CAERO1
-    aeros
+    Considers:
+     - AEROS
+      - doesn't consider sideslip
+     - CAERO1
+      - doesn't consider sideslip
+      - doesn't consider lspan/lchord
+     - SPLINE1
+     - SET1
     """
     if model.aeros is not None:
         aeros = model.aeros

@@ -1408,8 +1408,10 @@ def rotate_v_wa_wb(model, elem, xyz1, xyz2, node1, node2, ihat_offset, i_offset,
     xform : (3, 3) float ndarray
         a vstack of the [ihat, jhat, khat] axes
 
-    OFFT flag
-    ---------
+    Notes
+    -----
+    This section details the OFFT flag.
+
     ABC or A-B-C (an example is G-G-G or B-G-G)
     while the slots are:
      - A -> orientation; values=[G, B]

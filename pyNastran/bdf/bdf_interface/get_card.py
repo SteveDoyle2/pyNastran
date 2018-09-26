@@ -783,7 +783,6 @@ class GetCard(GetMethods):
                 the SPCD load application
 
         Considers
-        ---------
         FORCE
         PLOAD2 - CTRIA3, CQUAD4, CSHEAR
         PLOAD4 - CTRIA3, CTRIA6, CTRIAR

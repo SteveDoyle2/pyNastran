@@ -60,64 +60,13 @@ class IFace(object):
         nRegions - number of independent surfaces that are set in the mapbc file
         ????     -
 
-        #--------------------------------
-        New2:
-
-        BC File...
-           56864     944       7          2
-        nFaces     nBouc       nRegions ???
-
-        Cogsg File...
-            {'dummy': 6266912, 'nBoundPts': 28434,
+        **Cogsg File...**
+        header = {
+            'dummy': 6266912, 'nBoundPts': 28434,
             'nPoints': 79734,  'nElements': 391680,
             'nViscPts': 26304, 'nViscElem': 130560,
-            'tc': 0.0, 'inew': -1, }
-
-        IFace File...
-        A=16235848 B=811792 C=56864
-        A = [2, 2, 2, 1051, 1931]
-        B = [2, 2, 2, 2, 113, 449]
-        C = nfaces = [2, 2, 2, 2, 2, 1777]
-
-        Flo File...
-        nPoints = nlines = 79734
-
-        --------------------------------------------------------------
-        Box:
-
-        BC File...
-        6810     284       6          2
-        nFaces   nBouc     nRegions ???
-
-        Cogsg File...
-            {'dummy': 1006496, 'nBoundPts': 3407,
-            'nPoints': 12283, 'nElements': 62904,
-            'nViscPts': 10907, 'nViscElem': 51564,
-            'tc': 0.0, 'inew': -1,}
-
-        Front File...
-        npoit      nelet    npoif    nface    nboun    nfacs    nbouc    nfaci      npoiv      nelev
-        12283      62904        0        0     3407     6810      284     6236      10907      51564
-
-             6
-
-        Poin1 File...
-        3407       10907
-       1       1
-       2       2
-       3       3
-       4       4
-       10907 lines
-
-        IFace File...
-
-        A=2584268 B=129213 C=6810
-        # A = [2, 2, 646067]
-        # B = [3, 3, 7, 7, 293]
-        # C = [2, 3, 5, 227]
-        A = ???
-        B =
-        C = nfaces
+            'tc': 0.0, 'inew': -1,
+        }
         """
         with open(iface_filename, 'rb') as iface_file:
 

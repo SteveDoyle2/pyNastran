@@ -72,7 +72,7 @@ try:
     import scipy
 except ImportError:
     MOCK_MODULES += [
-        'scipy', 'scipy.linalg', 'scipy.sparse', #'scipy.weave',
+        'scipy', 'scipy.linalg', 'scipy.sparse',
         'scipy.integrate', 'scipy.interpolate', 'scipy.spatial',
     ]
 
@@ -379,7 +379,7 @@ latex_elements = {
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
     (master_doc, 'pyNastran.tex', u'pyNastran Documentation',
-     u'Steven Doyle & Saullo Castro', 'manual'),
+     u'Steven Doyle', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -441,9 +441,9 @@ texinfo_documents = [
 
 # Bibliographic Dublin Core info.
 epub_title = u'pyNastran'
-epub_author = u'Steven Doyle & Saullo Castro'
+epub_author = u'Steven Doyle'
 epub_publisher = u'pyNastran'
-epub_copyright = u'2018, Steven Doyle & Saullo Castro'
+epub_copyright = u'2018, Steven Doyle'
 
 # The language of the text. It defaults to the language option
 # or en if the language is not set.
