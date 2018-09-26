@@ -89,12 +89,11 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
     pickle_obj : bool; default=True
         tests pickling
 
-    Usage
-    -----
+    Examples
+    --------
     All control lists must be the same length.
-    You can run xref=True and xref=False with:
 
-    .. python ::
+    You can run xref=True and xref=False with::
 
         run_lots_of_files(filenames, xref=[True, False]) # valid
     """
@@ -837,8 +836,8 @@ def compute_ints(cards1, cards2, fem1, quiet=True):
     computes the difference / ratio / inverse-ratio between
     fem1 and fem2 to verify the number of card are the same:
 
-    Example
-    -------
+    Examples
+    --------
 
     name   fem1  fem2  diff  ratio  1/ratio
     ====   ====  ====  ==== ======  =======

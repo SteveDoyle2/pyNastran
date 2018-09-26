@@ -29,6 +29,12 @@ C:\MSC.Software\MSC.Nastran\msc20051\nast\demo
 C:\MSC.Software\MSC.Nastran\msc20051\nast\doc
 C:\MSC.Software\MSC.Nastran\msc20051\nast\tpl
 
+# MSC 2005r3
+C:\MSC.Software\MSC.Nastran2005r3\msc20055\nast\nast
+C:\MSC.Software\MSC.Nastran2005r3\msc20055\nast\demo
+C:\MSC.Software\MSC.Nastran2005r3\msc20055\nast\doc
+C:\MSC.Software\MSC.Nastran2005r3\msc20055\nast\tpl
+
 # these don't work - nx 10.2
 "C:\Program Files\Siemens\NXNastran\nxn10p2\nxn10p2\nast"
 "C:\Program Files\Siemens\NXNastran\nxn10p2\nxn10p2\doc"

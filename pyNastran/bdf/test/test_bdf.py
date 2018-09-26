@@ -1597,8 +1597,8 @@ def compute_ints(cards1, cards2, fem1, quiet=True):
     computes the difference / ratio / inverse-ratio between
     fem1 and fem2 to verify the number of card are the same:
 
-    Example
-    -------
+    Examples
+    --------
 
     name   fem1  fem2  diff  ratio  1/ratio
     ====   ====  ====  ==== ======  =======

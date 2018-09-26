@@ -632,6 +632,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             # gust for aeroelastic response; used by RANDPS card
             'TABRNDG',
 
+            # ???
+            'TABLEHT', 'TABLEH1',
+
             #------------------------------------------------------------------
             #: methods
             'EIGB', 'EIGR', 'EIGRL',
@@ -646,6 +649,17 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             'BCTSET',  ## bctsets
             'BSURF',  ## bsurf
             'BSURFS',  ## bsurfs
+
+
+            ## ???
+
+            'ACMODL', 'CHACAB', 'PACABS', 'PANEL', 'RANDT1', 'BCONP', 'BLSEG', 'BFRIC', 'SWLDPRM',
+            'CWELD', 'PWELD', 'PWSEAM', 'CWSEAM', 'CSEAM', 'PSEAM', 'DVSHAP', 'BNDGRID',
+            'CYSYM', 'CYJOIN', 'MODTRAK', 'TEMPP1', 'TEMPRB', 'DSCONS', 'DVAR', 'DVSET', 'DYNRED',
+            'CONVM', 'TEMPBC', 'BNDFIX', 'BNDFIX1',
+            'AECOMPL', 'AEFORCE', 'UXVEC', 'GUST2',
+            'RADMT', 'RADLST', 'RADMTX', 'RADBND',
+
 
             # other
             'INCLUDE',  # '='
@@ -1629,7 +1643,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             def add_card(cls, card, comment=''):
                 """the method that forces the crash"""
                 #raise CardParseSyntaxError(card)
-                msg = _format_comment(comment) + card
+                msg = _format_comment(comment) + str(card)
                 raise UnsupportedCard(msg)
 
         #: a storage of card_name to (card_class, add_method)
@@ -1649,6 +1663,55 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             'CSUPER' : (CSUPER, self._add_csupext_object),
             'CSUPEXT' : (CSUPEXT, self._add_csupext_object),
             'SELOAD' : (SELOAD, self._add_seelt_object),
+            'SELOAD' : (SELOAD, self._add_seelt_object),
+
+            'ACMODL' : (Crash, None),
+            'CHACAB' : (Crash, None),
+            'PACABS' : (Crash, None),
+            'PANEL' : (Crash, None),
+            'RANDT1' : (Crash, None),
+
+            'BCONP' : (Crash, None),
+            'BLSEG' : (Crash, None),
+            'BFRIC' : (Crash, None),
+            'SWLDPRM' : (Crash, None),
+
+            'CWELD' : (Crash, None),
+            'PWELD' : (Crash, None),
+            'PWSEAM' : (Crash, None),
+            'CWSEAM' : (Crash, None),
+            'CSEAM' : (Crash, None),
+            'PSEAM' : (Crash, None),
+
+            'DVSHAP' : (Crash, None),
+            'BNDGRID' : (Crash, None),
+
+            'CYSYM' : (Crash, None),
+            'CYJOIN' : (Crash, None),
+            'MODTRAK' : (Crash, None),
+            'TEMPP1' : (Crash, None),
+            'TEMPRB' : (Crash, None),
+            'DSCONS' : (Crash, None),
+            'DVAR' : (Crash, None),
+            'DVSET' : (Crash, None),
+            'DYNRED' : (Crash, None),
+            'CONVM' : (Crash, None),
+            'TEMPBC' : (Crash, None),
+            'BNDFIX' : (Crash, None),
+            'BNDFIX1' : (Crash, None),
+
+            'AECOMPL' : (Crash, None),
+            'AEFORCE' : (Crash, None),
+            'UXVEC' : (Crash, None),
+            'GUST2' : (Crash, None),
+
+            'RADMT' : (Crash, None),
+            'RADLST' : (Crash, None),
+            'RADMTX' : (Crash, None),
+            'RADBND' : (Crash, None),
+            'TABLEHT' : (Crash, None),
+            'TABLEH1' : (Crash, None),
+
 
             # nodes
             'GRID' : (GRID, self._add_node_object),

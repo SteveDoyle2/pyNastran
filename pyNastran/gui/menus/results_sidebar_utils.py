@@ -19,8 +19,8 @@ def build_pruned_tree(tree, cases):
     tree_final : List[...]
         the updated sidebar tree
 
-    Example
-    -------
+    Examples
+    --------
     form = [
         [u'Geometry', None, [
             (u'NodeID', 0, []),
@@ -101,8 +101,8 @@ def get_cases_from_tree(tree):
     cases : List[int]
         the cases in the tree
 
-    Example
-    -------
+    Examples
+    --------
     form = [
         [u'Geometry', None, [
             (u'NodeID', 0, []),

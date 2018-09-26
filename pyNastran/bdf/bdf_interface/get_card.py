@@ -1792,13 +1792,11 @@ class GetCard(GetMethods):
         node_ids : Set[int]
             set of node IDs
 
-        For example
+        For example::
 
-        .. code-block:: python
-
-          >>> eids = [1, 2, 3]  # list of elements with pid=1
-          >>> msg = ' which are required for pid=1'
-          >>> node_ids = bdf.get_node_ids_with_elements(eids, msg=msg)
+          eids = [1, 2, 3]  # list of elements with pid=1
+          msg = ' which are required for pid=1'
+          node_ids = bdf.get_node_ids_with_elements(eids, msg=msg)
         """
         if isinstance(eids, integer_types):
             eids = [eids]

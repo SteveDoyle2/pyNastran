@@ -79,12 +79,12 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
         False : doesn't crash; useful for running many tests
     crash_cards : List[str, str, ...]
         list of cards that are invalid and automatically crash the run
-    Usage
-    -----
-    All control lists must be the same length.
-    You can run xref=True and xref=False with:
 
-    .. python ::
+    Examples
+    --------
+    All control lists must be the same length.
+
+    You can run xref=True and xref=False with::
 
         run_lots_of_files(filenames, xref=[True, False]) # valid
     """

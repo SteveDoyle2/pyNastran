@@ -568,8 +568,7 @@ class RealGridPointForcesArray(ScalarObject):
         idir : int; default=0
             the axis of the coordinate system to consider
 
-        Procedure
-        ---------
+        **Procedure**
         1.  Clip elements based on centroid.
             Elements that are less than the ith station are kept.
         2.  Get the nodes for those elements.
@@ -578,8 +577,8 @@ class RealGridPointForcesArray(ScalarObject):
         3b. Extract the interface loads and sum them about the
             summation point.
 
-        Example
-        -------
+        Examples
+        --------
         Imagine a swept aircraft wing.  Define a coordinate system
         in the primary direction of the sweep.  Note that station 0
         doesn't have to be perfectly at the root of the wing.

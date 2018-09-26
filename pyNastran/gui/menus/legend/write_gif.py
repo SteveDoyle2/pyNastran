@@ -436,15 +436,15 @@ def make_symmetric(scales, phases, icases_fringe, icases_disp, icases_vector, is
     """
     Chop the frames in half at the middle frame
 
-    Example
-    -------
+    Examples
+    --------
     >>> isteps = [1, 2, 3, 4, 5, 4, 3, 2, 1]
     >>> make_symmetric(scales, phases, icases_fringe, icases_disp, icases_vector,
                        isteps, is_symmetric)
     isteps = [1, 2, 3, 4, 5]
 
-    Example
-    -------
+    Examples
+    --------
     >>> scales = [0., 1., 0.]
     >>> isteps = [1, 2, 3]
     >>> make_symmetric(scales, phases, icases_fringe, icases_disp, icases_vector,
@@ -490,8 +490,8 @@ def make_two_sided(scales, phases, icases_fringe, icases_disp, icases_vector, is
     """
     Drop the duplicate middle frame if we're onesided.  Only for the GUI.
 
-    Example
-    -------
+    Examples
+    --------
     this is a onesided "mountain", we only go up
     >>> a = [1, 2, 3, 4, 5]
     >>> a + a[-2::-1]
