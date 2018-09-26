@@ -463,7 +463,8 @@ class CBEAM(LineElement):
 
         See also
         --------
-        ``_rotate_v_wa_wb`` for a description of the OFFT flag.
+        :func:`pyNastran.bdf.cards.elements.bars._rotate_v_wa_wb` for a
+        description of the OFFT flag.
 
         TODO: not integrated with CBAR yet...
         """
@@ -496,7 +497,8 @@ class CBEAM(LineElement):
 
         See also
         --------
-        ``_rotate_v_wa_wb`` for a description of the OFFT flag.
+        :func:`pyNastran.bdf.cards.elements.bars._rotate_v_wa_wb` for a
+        description of the OFFT flag.
 
         TODO: not integrated with CBAR yet...
         """
