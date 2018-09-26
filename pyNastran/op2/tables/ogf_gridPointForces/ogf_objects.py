@@ -1029,7 +1029,7 @@ class ComplexGridPointForcesArray(ScalarObject):
             #print(self.data_frame)
 
     def _build_dataframe(self):
-        """
+        """::
         major-axis - the axis
 
         mode              1     2   3

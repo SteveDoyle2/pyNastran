@@ -4,8 +4,7 @@ Defines the sub-OP2 class.  This should never be called outisde of the OP2 class
 
  - OP2_Scalar(debug=False, log=None, debug_file=None)
 
-   Methods
-   -------
+   **Methods**
    - set_subcases(subcases=None)
    - set_transient_times(times)
    - read_op2(op2_filename=None, combine=False)
@@ -13,8 +12,7 @@ Defines the sub-OP2 class.  This should never be called outisde of the OP2 class
    - set_additional_result_tables_to_read(tables)
    - set_additional_matrices_to_read(matrices)
 
-   Attributes
-   ----------
+   **Attributes**
    - total_effective_mass_matrix
    - effective_mass_matrix
    - rigid_body_mass_matrix
@@ -26,8 +24,7 @@ Defines the sub-OP2 class.  This should never be called outisde of the OP2 class
    - set_as_optistruct()
    - set_as_radioss()
 
-   Private Methods
-   ---------------
+   **Private Methods**
    - _get_table_mapper()
    - _not_available(data, ndata)
    - _table_crasher(data, ndata)

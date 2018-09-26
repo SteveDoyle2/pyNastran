@@ -16,6 +16,7 @@ def sum_forces_moments(model, p0, loadcase_id, include_grav=False, xyz_cid0=None
     """
     Sums applied forces & moments about a reference point p0 for all
     load cases.
+
     Considers:
       - FORCE, FORCE1, FORCE2
       - MOMENT, MOMENT1, MOMENT2

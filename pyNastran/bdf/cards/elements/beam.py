@@ -461,8 +461,8 @@ class CBEAM(LineElement):
         """
         Gets the axes of a CBAR/CBEAM, while respecting the OFFT flag.
 
-        See
-        ---
+        See also
+        --------
         ``_rotate_v_wa_wb`` for a description of the OFFT flag.
 
         TODO: not integrated with CBAR yet...
@@ -494,8 +494,8 @@ class CBEAM(LineElement):
         """
         Gets the axes of a CBAR/CBEAM, while respecting the OFFT flag.
 
-        See
-        ---
+        See also
+        --------
         ``_rotate_v_wa_wb`` for a description of the OFFT flag.
 
         TODO: not integrated with CBAR yet...
