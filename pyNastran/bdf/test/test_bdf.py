@@ -25,7 +25,8 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.errors import (
     #CrossReferenceError,
     CardParseSyntaxError, DuplicateIDsError, MissingDeckSections,
-    UnsupportedCard,
+    #UnsupportedCard,
+    DisabledCardError,
 )
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.mesh_utils.extract_bodies import extract_bodies
@@ -38,22 +39,18 @@ import pyNastran.bdf.test
 TEST_PATH = pyNastran.bdf.test.__path__[0]
 #warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-class DisabledCardError(RuntimeError):
-    """lets bdf_test.py flag cards as auto-crashing and then skipping the deck (e.g., CGEN)"""
-    pass
-
 def run_all_files_in_folder(folder, debug=False, xref=True, check=True,
-                            punch=False, cid=None, nastran=''):
+                            punch=False, nastran=''):
     # type: (str, bool, bool, bool, bool, Optional[int], str) -> None
     """runs all the BDFs in a given folder"""
     print("folder = %s" % folder)
     filenames = os.listdir(folder)
     run_lots_of_files(filenames, debug=debug, xref=xref, check=check,
-                      punch=punch, cid=cid, nastran=nastran)
+                      punch=punch, nastran=nastran)
 
 
 def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
-                      punch=False, cid=None, nastran='', encoding=None,
+                      punch=False, nastran='', encoding=None,
                       size=None, is_double=None, post=None, sum_load=True, dev=True,
                       crash_cards=None, pickle_obj=True):
     """
@@ -157,7 +154,7 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
                 fem1, fem2, unused_diff_cards2 = run_bdf(
                     folder, filename, debug=debug,
                     xref=xref, check=check, punch=punch,
-                    cid=cid, encoding=encoding,
+                    encoding=encoding,
                     is_folder=True, dynamic_vars={},
                     nastran=nastran, size=size, is_double=is_double,
                     nerrors=0,
@@ -219,7 +216,7 @@ def memory_usage_psutil():
 
 
 def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=False,
-            cid=None, mesh_form='separate', is_folder=False, print_stats=False,
+            mesh_form='separate', is_folder=False, print_stats=False,
             encoding=None, sum_load=True, size=8, is_double=False,
             stop=False, nastran='', post=-1, dynamic_vars=None,
             quiet=False, dumplines=False, dictsort=False, run_extract_bodies=False,
@@ -302,7 +299,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
 
     fem1, fem2, diff_cards = run_and_compare_fems(
         bdf_model, out_model, debug=debug, xref=xref, check=check,
-        punch=punch, cid=cid, mesh_form=mesh_form,
+        punch=punch, mesh_form=mesh_form,
         print_stats=print_stats, encoding=encoding,
         sum_load=sum_load, size=size, is_double=is_double,
         stop=stop, nastran=nastran, post=post,
@@ -317,7 +314,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
 
 def run_and_compare_fems(
         bdf_model, out_model, debug=False, xref=True, check=True,
-        punch=False, cid=None, mesh_form='combined',
+        punch=False, mesh_form='combined',
         print_stats=False, encoding=None,
         sum_load=True, size=8, is_double=False,
         stop=False, nastran='', post=-1, dynamic_vars=None,
@@ -354,7 +351,7 @@ def run_and_compare_fems(
         #try:
 
         fem1 = run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load,
-                        size, is_double, cid,
+                        size, is_double,
                         run_extract_bodies=run_extract_bodies,
                         encoding=encoding, crash_cards=crash_cards, safe_xref=safe_xref,
                         pickle_obj=pickle_obj, stop=stop)
@@ -514,7 +511,7 @@ def run_nastran(bdf_model, nastran, post=-1, size=8, is_double=False):
         op2 = read_op2(op2_model2)
         print(op2.get_op2_stats())
 
-def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size, is_double, cid,
+def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size, is_double,
              run_extract_bodies=False, encoding=None, crash_cards=None, safe_xref=True,
              pickle_obj=False, stop=False):
     """
@@ -733,7 +730,8 @@ def run_fem2(bdf_model, out_model, xref, punch,
     ----------
     bdf_model : str
         the filename to run
-    out_model
+    out_model : ???
+        ???
     xref : bool
        xrefs
     punch : bool
@@ -869,7 +867,7 @@ def stop_if_max_error(msg, error, ierror, nerrors):
     ierror += 1
     return ierror
 
-def check_for_optional_param(keys, subcase, msg, error, ierror, nerrors):
+def check_for_optional_param(keys, subcase, msg, error, log, ierror, nerrors):
     """one or more must be True"""
     if not subcase.has_parameter(*keys):
         msg = 'Must have one of %s\n%s' % (str(keys), msg)
@@ -931,7 +929,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases,
         _assert_has_spc(subcase, fem2)
         msg = 'sol=%s\n%s' % (sol, subcase)
         ierror = check_for_optional_param(('LOAD', 'TEMPERATURE(LOAD)'), subcase, msg,
-                                          RuntimeError, ierror, nerrors)
+                                          RuntimeError, log, ierror, nerrors)
     elif sol == 99:
         assert 'DLOAD' in subcase, subcase
         assert 'LOADSET' in subcase, subcase
@@ -939,21 +937,21 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases,
         #assert True in subcase.has_parameter('LOAD', 'TEMPERATURE'), 'sol=%s\n%s' % (sol, subcase)
         msg = 'sol=%s\n%s' % (sol, subcase)
         ierror = check_for_optional_param(('TSTEP', 'TSTEPNL'), subcase, msg,
-                                          RuntimeError, ierror, nerrors)
+                                          RuntimeError, log, ierror, nerrors)
     elif sol == 101:
         _assert_has_spc(subcase, fem2)
         msg = 'sol=%s\n%s' % (sol, subcase)
         ierror = check_for_optional_param(('LOAD', 'TEMPERATURE(LOAD)', 'P2G'), subcase, msg,
-                                          RuntimeError, ierror, nerrors)
+                                          RuntimeError, log, ierror, nerrors)
     elif sol == 103:
         msg = 'sol=%s\n%s' % (sol, subcase)
         ierror = check_for_optional_param(('METHOD', 'RSMETHOD', 'RIGID', 'BOLTID'), subcase, msg,
-                                          RuntimeError, ierror, nerrors)
+                                          RuntimeError, log, ierror, nerrors)
     elif sol == 105: # buckling
         _assert_has_spc(subcase, fem2)
         msg = 'sol=%s\n%s' % (sol, subcase)
         ierror = check_for_optional_param(('LOAD', 'METHOD'), subcase, msg,
-                                          RuntimeError, ierror, nerrors)
+                                          RuntimeError, log, ierror, nerrors)
         #if 0:  # pragma: no cover
             #if 'METHOD' not in subcase:
                 #subcases = fem2.subcases
@@ -971,12 +969,12 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases,
         assert 'NLPARM' in subcase, subcase
         msg = 'sol=%s\n%s' % (sol, subcase)
         ierror = check_for_optional_param(('LOAD', 'TEMPERATURE(LOAD)'), subcase, msg,
-                                          RuntimeError, ierror, nerrors)
+                                          RuntimeError, log, ierror, nerrors)
     elif sol == 107: # ???
         _assert_has_spc(subcase, fem2)
         msg = 'sol=%s\n%s' % (sol, subcase)
         ierror = check_for_optional_param(('LOAD', 'TEMPERATURE(LOAD)'), subcase, msg,
-                                          RuntimeError, ierror, nerrors)
+                                          RuntimeError, log, ierror, nerrors)
     elif sol == 108: # freq
         assert 'FREQUENCY' in subcase, subcase
     elif sol == 109:  # time
@@ -986,7 +984,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases,
         _assert_has_spc(subcase, fem2)
         msg = 'sol=%s\n%s' % (sol, subcase)
         ierror = check_for_optional_param(('LOAD', 'STATSUB'), subcase, msg,
-                                          RuntimeError, ierror, nerrors)
+                                          RuntimeError, log, ierror, nerrors)
     elif sol == 111:  # modal frequency
         assert subcase.has_parameter('FREQUENCY'), 'sol=%s\n%s' % (sol, subcase)
         assert any(subcase.has_parameter('METHOD', 'RMETHOD')), 'sol=%s\n%s' % (sol, subcase)
@@ -1097,7 +1095,7 @@ def _check_flutter_case(fem2, log, sol, subcase, ierror, nerrors):
         msg = 'An MKAERO1/2 card is required for FLUTTER - SOL %i' % (sol)
         log.error(msg)
         ierror = stop_if_max_error(msg, RuntimeError, ierror, nerrors)
-    mklist = fem2.get_mklist()
+    unused_mklist = fem2.get_mklist()
 
     soltype = 'FLUTTER'
     # METHOD - EIGRL
@@ -1154,7 +1152,7 @@ def _check_gust_case(fem2, log, sol, subcase, ierror, nerrors):
         msg = 'An MKAERO1/2 card is required for GUST - SOL %i' % (sol)
         log.error(msg)
         ierror = stop_if_max_error(msg, RuntimeError, ierror, nerrors)
-    mklist = fem2.get_mklist()
+    unused_mklist = fem2.get_mklist()
     return ierror
 
 def _check_case_sol_200(sol, subcase, fem2, p0, isubcase, subcases, log):
@@ -1242,6 +1240,9 @@ def _check_case_sol_200(sol, subcase, fem2, p0, isubcase, subcases, log):
     #elif analysis == 'MCEIG': # modal direct complex eigenvalues
     elif analysis == 'HEAT': # heat transfer analysis
         solution = 159
+        check_case(solution, subcase, fem2, p0, isubcase, subcases)
+    elif analysis == 'MCEIG': # modal complex eigenvalues
+        solution = 110
         check_case(solution, subcase, fem2, p0, isubcase, subcases)
     else:
         msg = 'analysis = %s\nsubcase =\n%s' % (analysis, subcase)
@@ -1725,7 +1726,8 @@ def get_element_stats(fem1, unused_fem2, quiet=False):
     assert np.allclose(inertia1, inertia2), 'mass=%s cg=%s inertia1=%s inertia2=%s' % (mass1, cg1, inertia1, inertia2)
 
     for nsm_id in chain(fem1.nsms, fem1.nsmadds):
-        mass, cg, inertia = fem1.mass_properties_nsm(reference_point=None, sym_axis=None, nsm_id=nsm_id)
+        mass, unused_cg, unused_inertia = fem1.mass_properties_nsm(
+            reference_point=None, sym_axis=None, nsm_id=nsm_id)
         print('nsm_id=%s' % nsm_id)
         print('  mass = %s' % mass)
         print('  cg = %s' % cg1)

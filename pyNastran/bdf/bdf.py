@@ -91,12 +91,13 @@ from pyNastran.bdf.cards.dynamic import (
     DELAY, DPHASE, FREQ, FREQ1, FREQ2, FREQ3, FREQ4, FREQ5,
     TSTEP, TSTEP1, TSTEPNL, NLPARM, NLPCI, TF, ROTORG, ROTORD, TIC)
 from pyNastran.bdf.cards.loads.loads import (
-    LSEQ, SLOAD, DAREA, RANDPS, RFORCE, RFORCE1, SPCD, DEFORM, LOADCYN)
+    LSEQ, SLOAD, DAREA, RFORCE, RFORCE1, SPCD, DEFORM, LOADCYN)
 from pyNastran.bdf.cards.loads.dloads import ACSRCE, DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
 from pyNastran.bdf.cards.loads.static_loads import (LOAD, GRAV, ACCEL, ACCEL1, FORCE,
                                                     FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
                                                     PLOAD, PLOAD1, PLOAD2, PLOAD4, PLOADX1,
                                                     GMLOAD)
+from pyNastran.bdf.cards.loads.random_loads import RANDPS, RANDT1
 
 from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
                                            MAT8, MAT9, MAT10, MAT11, MAT3D,
@@ -142,8 +143,8 @@ from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL, 
 from pyNastran.bdf.cards.thermal.loads import (QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD,
                                                QVOL, QVECT)
 from pyNastran.bdf.cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
-                                                 PHBDY, CONV, CONVM)
-from pyNastran.bdf.cards.thermal.radiation import RADM, RADBC, RADCAV, VIEW, VIEW3D
+                                                 PHBDY, CONV, CONVM, TEMPBC)
+from pyNastran.bdf.cards.thermal.radiation import RADM, RADBC, RADCAV, RADLST, RADMTX, VIEW, VIEW3D
 from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
                                             TABLEM1, TABLEM2, TABLEM3, TABLEM4,
                                             TABLES1, TABDMP1, TABLEST, TABRND1, TABRNDG,
@@ -160,7 +161,7 @@ from pyNastran.bdf.bdf_interface.verify_validate import verify_bdf, validate_bdf
 from pyNastran.bdf.bdf_interface.stats import get_bdf_stats
 
 from pyNastran.bdf.errors import (CrossReferenceError, DuplicateIDsError,
-                                  CardParseSyntaxError, UnsupportedCard)
+                                  CardParseSyntaxError, UnsupportedCard, DisabledCardError)
 from pyNastran.bdf.bdf_interface.pybdf import (
     BDFInputPy, _clean_comment, _clean_comment_bulk, EXECUTIVE_CASE_SPACES)
 
@@ -378,8 +379,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
         # self.__init_attributes()
 
-        # the list of possible cards that will be parsed
-        self.cards_to_read = set([
+        cards_to_read = [
             '/',
             'ECHOON', 'ECHOOFF',
             'PARAM',
@@ -499,9 +499,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             ## dload_entries
             'ACSRCE', 'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',
             'QVECT',
+            'RANDPS', 'RANDT1', # random
 
             ## loads
-            'LOAD', 'LSEQ', 'LOADCYN', 'RANDPS',
+            'LOAD', 'LSEQ', 'LOADCYN',
             'SLOAD',
             'FORCE', 'FORCE1', 'FORCE2',
             'MOMENT', 'MOMENT1', 'MOMENT2',
@@ -511,7 +512,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             'GMLOAD', 'SPCD', 'DEFORM',
 
             # axisymmetric
-            'PRESAX', 'TEMPAX',
+            'PRESAX',
 
             #thermal
             'QVOL',
@@ -523,7 +524,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             'FLUTTER',   ## flutters
             'FLFACT',   ## flfacts
             'MKAERO1', 'MKAERO2',  ## mkaeros
-            'AECOMP',   ## aecomps
+            'AECOMP', 'AECOMPL',   ## aecomps
             'AEFACT',   ## aefacts
             'AELINK',   ## aelinks
             'AELIST',   ## aelists
@@ -598,7 +599,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
             # superelements
             'SETREE', 'SENQSET', 'SEBULK', 'SEBNDRY', 'SEELT', 'SELOC', 'SEMPLN',
-            'SECONCT', 'SELABEL', 'SECONCT', 'SEEXCLD', 'CSUPER', 'CSUPEXT',
+            'SECONCT', 'SELABEL', 'SEEXCLD', 'CSUPER', 'CSUPEXT',
             'SELOAD',
 
             # super-element sets
@@ -649,22 +650,40 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             'BCTSET',  ## bctsets
             'BSURF',  ## bsurf
             'BSURFS',  ## bsurfs
+            'BCONP', ## bconp
+            'BLSEG', ## blseg
+            #'BFRIC',
 
 
+            'TEMPBC',
+            #'RADMT',
+            'RADLST', 'RADMTX', 'RADBND',
+            #'TEMPP1',
+            #'TEMPRB',
+            'CONVM',
             ## ???
+            #'ACMODL', 'CHACAB', 'PACABS', 'PANEL', 'SWLDPRM',
+            #'CWELD', 'PWELD', 'PWSEAM', 'CWSEAM', 'CSEAM', 'PSEAM', 'DVSHAP', 'BNDGRID',
+            #'CYSYM', 'CYJOIN', 'MODTRAK', 'DSCONS', 'DVAR', 'DVSET', 'DYNRED',
+            #'BNDFIX', 'BNDFIX1',
+            #'AEFORCE', 'UXVEC', 'GUST2',
 
-            'ACMODL', 'CHACAB', 'PACABS', 'PANEL', 'RANDT1', 'BCONP', 'BLSEG', 'BFRIC', 'SWLDPRM',
-            'CWELD', 'PWELD', 'PWSEAM', 'CWSEAM', 'CSEAM', 'PSEAM', 'DVSHAP', 'BNDGRID',
-            'CYSYM', 'CYJOIN', 'MODTRAK', 'TEMPP1', 'TEMPRB', 'DSCONS', 'DVAR', 'DVSET', 'DYNRED',
-            'CONVM', 'TEMPBC', 'BNDFIX', 'BNDFIX1',
-            'AECOMPL', 'AEFORCE', 'UXVEC', 'GUST2',
-            'RADMT', 'RADLST', 'RADMTX', 'RADBND',
 
 
             # other
             'INCLUDE',  # '='
             'ENDDATA',
-        ])
+        ]
+        set_cards_to_read = set(cards_to_read)
+        from collections import Counter
+        if len(cards_to_read) != len(set_cards_to_read):  # pragma: no cover
+            bad_cards = [key for key, value in Counter(cards_to_read).items()
+                         if value > 1]
+            raise RuntimeError(bad_cards)
+
+        # the list of possible cards that will be parsed
+        self.cards_to_read = set_cards_to_read
+
         self._xref = False
 
         case_control_cards = set(['FREQ', 'GUST', 'MPC', 'SPC', 'NLPARM', 'NSM',
@@ -1646,10 +1665,25 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 msg = _format_comment(comment) + str(card)
                 raise UnsupportedCard(msg)
 
+        #class CrashIgnore(object):
+            #"""class for crashing on specific cards"""
+            #def __init__(self):
+                #"""dummy init"""
+                #pass
+            #@classmethod
+            #def add_card(cls, card, comment=''):
+                #"""the method that forces the crash"""
+                ##raise CardParseSyntaxError(card)
+                #msg = _format_comment(comment) + str(card)
+                #raise DisabledCardError(msg)
+
         #: a storage of card_name to (card_class, add_method)
         self._card_parser = {
             #'=' : (Crash, None),
             '/' : (Crash, None),
+
+            #'CGEN' : (CrashIgnore, None),
+
             'SETREE' : (SETREE, self._add_setree_object),
             'SENQSET' : (SENQSET, self._add_senqset_object),
             'SEBULK' : (SEBULK, self._add_sebulk_object),
@@ -1659,53 +1693,60 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             'SEMPLN' : (SEMPLN, self._add_sempln_object),
             'SECONCT' : (SECONCT, self._add_secontct_object),
             'SELABEL' : (SELABEL, self._add_selabel_object),
-            'SEEXCLD' : (SEEXCLD, self._add_seelt_object),
+            'SEEXCLD' : (SEEXCLD, self._add_seexcld_object),
             'CSUPER' : (CSUPER, self._add_csuper_object),
             'CSUPEXT' : (CSUPEXT, self._add_csupext_object),
             'SELOAD' : (SELOAD, self._add_seload_object),
 
-            'ACMODL' : (Crash, None),
-            'CHACAB' : (Crash, None),
-            'PACABS' : (Crash, None),
-            'PANEL' : (Crash, None),
-            'RANDT1' : (Crash, None),
+            #'ACMODL' : (Crash, None),
+            #'CHACAB' : (Crash, None),
+            #'PACABS' : (Crash, None),
+            #'PANEL' : (Crash, None),
 
-            'BCONP' : (BCONP, self._add_seelt_object),
-            'BLSEG' : (BLSEG, self._add_seelt_object),
-            'BFRIC' : (Crash, None),
-            'SWLDPRM' : (Crash, None),
+            'BCONP' : (BCONP, self._add_bconp_object),
+            'BLSEG' : (BLSEG, self._add_blseg_object),
+            #'BFRIC' : (Crash, None),
 
-            'CWELD' : (Crash, None),
-            'PWELD' : (Crash, None),
-            'PWSEAM' : (Crash, None),
-            'CWSEAM' : (Crash, None),
-            'CSEAM' : (Crash, None),
-            'PSEAM' : (Crash, None),
+            #'BGADD', 'BGSET', 'BOLT', 'BOLTFOR'
+            #'BGADD' : (Crash, None),
+            #'BGSET' : (Crash, None),
+            #'BOLT' : (Crash, None),
+            #'BOLTFOR' : (Crash, None),
 
-            'DVSHAP' : (Crash, None),
-            'BNDGRID' : (Crash, None),
+            #'CBEAR', 'PBEAR', 'ROTORB',
+            #'CBEAR' : (Crash, None),
+            #'PBEAR' : (Crash, None),
+            #'ROTORB' : (Crash, None),
 
-            'CYSYM' : (Crash, None),
-            'CYJOIN' : (Crash, None),
-            'MODTRAK' : (Crash, None),
-            'TEMPP1' : (Crash, None),
-            'TEMPRB' : (Crash, None),
-            'DSCONS' : (Crash, None),
-            'DVAR' : (Crash, None),
-            'DVSET' : (Crash, None),
-            'DYNRED' : (Crash, None),
-            'TEMPBC' : (Crash, None),
-            'BNDFIX' : (Crash, None),
-            'BNDFIX1' : (Crash, None),
+            #'SWLDPRM' : (Crash, None),
 
-            'AEFORCE' : (Crash, None),
-            'UXVEC' : (Crash, None),
-            'GUST2' : (Crash, None),
+            #'CWELD' : (Crash, None),
+            #'PWELD' : (Crash, None),
+            #'PWSEAM' : (Crash, None),
+            #'CWSEAM' : (Crash, None),
+            #'CSEAM' : (Crash, None),
+            #'PSEAM' : (Crash, None),
 
-            'RADMT' : (Crash, None),
-            'RADLST' : (Crash, None),
-            'RADMTX' : (Crash, None),
-            'RADBND' : (Crash, None),
+            #'DVSHAP' : (Crash, None),
+            #'BNDGRID' : (Crash, None),
+
+            #'CYSYM' : (Crash, None),
+            #'CYJOIN' : (Crash, None),
+            #'MODTRAK' : (Crash, None),
+            #'TEMPP1' : (Crash, None),
+            #'TEMPRB' : (Crash, None),
+            #'DSCONS' : (Crash, None),
+            #'DVAR' : (Crash, None),
+            #'DVSET' : (Crash, None),
+            #'DYNRED' : (Crash, None),
+            #'BNDFIX' : (Crash, None),
+            #'BNDFIX1' : (Crash, None),
+
+            #'AEFORCE' : (Crash, None),
+            #'UXVEC' : (Crash, None),
+            #'GUST2' : (Crash, None),
+
+            #'RADBND' : (Crash, None),
             'TABLEHT' : (Crash, None),
             'TABLEH1' : (Crash, None),
 
@@ -1934,7 +1975,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             'TLOAD2' : (TLOAD2, self._add_dload_entry),
             'RLOAD1' : (RLOAD1, self._add_dload_entry),
             'RLOAD2' : (RLOAD2, self._add_dload_entry),
-            'RANDPS' : (RANDPS, self._add_dload_entry),
+            'RANDPS' : (RANDPS, self._add_dload_entry), # random
+            'RANDT1' : (RANDT1, self._add_dload_entry), # random
             'QVECT' : (QVECT, self._add_dload_entry),
 
             'FREQ' : (FREQ, self._add_freq_object),
@@ -2072,7 +2114,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             'BSURF' : (BSURF, self._add_bsurf_object),
             'BSURFS' : (BSURFS, self._add_bsurfs_object),
 
-            'RADCAV' : (RADCAV, self._add_radcav_object),
+            'RADCAV' : (RADCAV, self._add_radcav_object), #
+            #'RADLST' : (RADLST, self._add_radcav_object), # TestOP2.test_bdf_op2_thermal_02
+            'RADMTX' : (RADMTX, self._add_radmtx_object), # TestOP2.test_bdf_op2_thermal_02
+            #'RADMT' : (Crash, None),
 
             'ASET' : (ASET, self._add_aset_object),
             'ASET1' : (ASET1, self._add_aset_object),
@@ -2156,6 +2201,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
             'TEMPAX' : self._prepare_tempax,
             'TEMPD' : self._prepare_tempd,
+            'TEMPBC' : self._prepare_tempbc,
             'CONVM' : self._prepare_convm,
             'CONV' : self._prepare_conv,
             'RADM' : self._prepare_radm,
@@ -2284,6 +2330,11 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         if card_obj.field(6):
             self._add_load_object(DEFORM.add_card(card_obj, 3, comment=comment))
         return card_obj
+
+    def _prepare_tempbc(self, unused_card, card_obj, comment=''):
+        """adds a TEMPBC"""
+        boundary_condition = TEMPBC.add_card(card_obj, comment=comment)
+        self._add_thermal_bc_object(boundary_condition, boundary_condition.eid)
 
     def _prepare_convm(self, unused_card, card_obj, comment=''):
         """adds a CONVM"""
@@ -3558,7 +3609,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         if cards_list:
             # this is the block that actually runs
             for icard, card in enumerate(cards_list):
-                card_name, comment, card_lines, ifile_iline = card
+                card_name, comment, card_lines, unused_ifile_iline = card
                 if card_name is None:
                     msg = 'card_name = %r\n' % card_name
                     msg += 'card_lines = %s' % card_lines
@@ -3694,7 +3745,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 #---------------------------------------------------------------------------------------------------
     # HDF5
     def _read_bdf_cards(self, bdf_filename=None,
-                        validate=True, xref=False, punch=False,
+                        punch=False,
                         read_includes=True, encoding=None):
         """
         Read method for the bdf files
@@ -3703,10 +3754,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         ----------
         bdf_filename : str / None
             the input bdf (default=None; popup a dialog)
-        validate : bool; default=True
-            runs various checks on the BDF
-        xref :  bool; default=False
-            should the bdf be cross referenced
+        #validate : bool; default=True
+            #runs various checks on the BDF
+        #xref :  bool; default=False
+            #should the bdf be cross referenced
         punch : bool; default=False
             indicates whether the file is a punch file
         read_includes : bool; default=True

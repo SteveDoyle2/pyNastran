@@ -1476,6 +1476,73 @@ class CONV(ThermalBC):
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
+class TEMPBC(ThermalBC):
+    type = 'TEMPBC'
+
+    def __init__(self, sid, Type, nodes, temps, comment=''):
+        ThermalBC.__init__(self)
+        if comment:
+            self.comment = comment
+
+        self.sid = sid
+        self.Type = Type
+        self.nodes = nodes
+        self.temps = temps
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a TEMPBC card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        sid = integer(card, 1, 'sid')
+        Type = string_or_blank(card, 2, 'Type', 'STAT')
+        nfields_left = len(card) - 3
+        assert nfields_left > 0, card
+        assert nfields_left % 2 == 0, card
+
+        temps = []
+        nodes = []
+        for i in range(nfields_left // 2):
+            ifield = 3 + i*2
+            temp = double(card, ifield, 'temp_%i'%  ((i+1)))
+            nid = integer(card, ifield+1, 'temp_%i'%  ((i+1)))
+            temps.append(temp)
+            nodes.append(nid)
+        return TEMPBC(sid, Type, nodes, temps, comment=comment)
+
+    @property
+    def eid(self):
+        return self.sid
+
+    def raw_fields(self):
+        list_fields = ['TEMPBC', self.sid, self.Type]
+        for temp, node in zip(self.temps, self.nodes):
+            list_fields.extend([temp, node])
+        return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        # type: (int, bool) -> str
+        """
+        The writer method used by BDF.write_card()
+
+        Parameters
+        -----------
+        size : int; default=8
+            the size of the card (8/16)
+
+        """
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 class CONVM(ThermalBC):
     """

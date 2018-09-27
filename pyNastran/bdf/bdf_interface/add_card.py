@@ -68,12 +68,14 @@ from pyNastran.bdf.cards.dynamic import (
     DELAY, DPHASE, FREQ, FREQ1, FREQ2, FREQ3, FREQ4, FREQ5,
     TSTEP, TSTEP1, TSTEPNL, NLPARM, NLPCI, TF, ROTORG, ROTORD, TIC)
 from pyNastran.bdf.cards.loads.loads import (
-    LSEQ, SLOAD, DAREA, RANDPS, RFORCE, RFORCE1, SPCD, LOADCYN, DEFORM)
+    LSEQ, SLOAD, DAREA, RFORCE, RFORCE1, SPCD, LOADCYN, DEFORM)
 from pyNastran.bdf.cards.loads.dloads import ACSRCE, DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
 from pyNastran.bdf.cards.loads.static_loads import (LOAD, GRAV, ACCEL, ACCEL1, FORCE,
                                                     FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
                                                     PLOAD, PLOAD1, PLOAD2, PLOAD4, PLOADX1,
                                                     GMLOAD)
+from pyNastran.bdf.cards.loads.random_loads import (
+    RANDPS, RANDT1)
 
 from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
                                            MAT8, MAT9, MAT10, MAT11, MAT3D,
@@ -113,15 +115,17 @@ from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL, 
 from pyNastran.bdf.cards.thermal.loads import (QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD,
                                                QVOL, QVECT)
 from pyNastran.bdf.cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
-                                                 PHBDY, CONV, CONVM)
-from pyNastran.bdf.cards.thermal.radiation import RADM, RADBC, RADCAV, VIEW, VIEW3D
+                                                 PHBDY, CONV, CONVM, TEMPBC)
+from pyNastran.bdf.cards.thermal.radiation import RADM, RADBC, RADCAV, RADLST, RADMTX, VIEW, VIEW3D
 from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
                                             TABLEM1, TABLEM2, TABLEM3, TABLEM4,
                                             TABLES1, TABDMP1, TABLEST, TABRND1, TABRNDG,
                                             DTABLE)
-from pyNastran.bdf.cards.contact import BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA
+from pyNastran.bdf.cards.contact import BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA, BCONP, BLSEG
 from pyNastran.utils.numpy_utils import integer_string_types
-
+from pyNastran.bdf.cards.superelements import (
+    CSUPER, CSUPEXT, SEBNDRY, SECONCT, SEELT, SEEXCLD, SELABEL, SELOAD,
+    SELOC, SEMPLN, SENQSET, SETREE)
 
 class AddCards(AddMethods):
     """defines the add_cardname functions that use the object inits"""
@@ -3260,15 +3264,31 @@ class AddCards(AddMethods):
 
         """
         randps = RANDPS(sid, j, k, x=x, y=y, tid=tid, comment=comment)
-        self._add_load_object(randps)
+        self._add_dload_entry(randps)
         return randps
 
     def add_randt1(self, sid, n, t0, tmax, comment=''):
-        """RANDT1"""
-        fields = ['RANDT1', n, t0, tmax]
-        self.reject_card_lines('RANDT1', print_card_8(fields).split('\n'))
-        #randt1 = RANDT1(sid, n, t0, tmax, comment=comment)
-        #self._add_load_object(randt1)
+        """
+        Creates a RANDT1 card
+
+        Parameters
+        ----------
+        sid : int
+            random analysis set id
+            defined by RANDOM in the case control deck
+        n : int
+            ???
+        t0 : int
+            ???
+        tmax : float
+            ???
+        comment : str; default=''
+            a comment for the card
+
+        """
+        dload = RANDT1(sid, n, t0, tmax, comment=comment)
+        self._add_dload_entry(dload)
+        return dload
 
     def add_acsrce(self, sid, excite_id, rho, b, delay=0, dphase=0, power=0,
                    comment=''):
@@ -3305,7 +3325,7 @@ class AddCards(AddMethods):
         """
         load = ACSRCE(sid, excite_id, rho, b, delay=delay, dphase=dphase, power=power,
                       comment=comment)
-        self._add_load_object(load)
+        self._add_dload_entry(load)
         return load
 
     def add_loadcyn(self, sid, scale, segment_id, scales, load_ids,

@@ -18,19 +18,18 @@ MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
 
 class Tester(unittest.TestCase):
 
-    def run_bdf(self, folder, bdf_filename, xref=False, cid=None, size=8,
+    def run_bdf(self, folder, bdf_filename, xref=False, size=8,
                 mesh_form='combined', dynamic_vars=None, debug=False, quiet=True,
                 run_extract_bodies=True):
-        cid = 0
         #xref = False
-        return run_bdf(folder, bdf_filename, xref=xref, cid=cid, size=size,
+        return run_bdf(folder, bdf_filename, xref=xref, size=size,
                        is_folder=True,
                        mesh_form=mesh_form, dynamic_vars=dynamic_vars,
                        debug=debug, quiet=quiet,
                        sum_load=True, run_extract_bodies=run_extract_bodies)
 
     def run_all_files_in_folder(self, folder, xref=False, cid=None, debug=False):
-        run_all_files_in_folder(folder, xref=xref, cid=cid, debug=debug)
+        run_all_files_in_folder(folder, xref=xref, debug=debug)
 
 is_windows = 'nt' in os.name
 

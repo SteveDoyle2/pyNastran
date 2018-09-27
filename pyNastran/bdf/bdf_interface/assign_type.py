@@ -312,6 +312,7 @@ def integer_or_blank(card, ifield, fieldname, default=None):
         name of field
     default : int, None
         the default value for the field (default=None)
+
     """
     svalue = card.field(ifield)
 

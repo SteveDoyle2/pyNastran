@@ -1570,6 +1570,7 @@ class MATT9(MaterialDependenceThermal):
         self.a6_table = a6_table
 
         self.ge_table = ge_table
+        self.mid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):

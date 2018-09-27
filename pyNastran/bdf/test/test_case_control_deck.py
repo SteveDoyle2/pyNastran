@@ -403,7 +403,7 @@ class CaseControlTest(unittest.TestCase):
             'SUBCASE 1',
             '    DISPLACEMENT = ALL',
         ]
-        with self.assertRaises(KeyError):
+        with self.assertRaises(KeyError):  # FAKE is not a key
             unused_deck = CaseControlDeck(lines)
 
     def test_weightcheck(self):
@@ -414,6 +414,16 @@ class CaseControlTest(unittest.TestCase):
         for weightcheck in weightchecks:
             deck = CaseControlDeck([weightcheck])
             str(deck)
+
+    def test_groundcheck(self):
+        groundchecks = [
+            'groundcheck=YES',
+            'groundcheck(set=(g),datarec=yes,rthresh=.8)=yes',
+        ]
+        for groundcheck in groundchecks:
+            deck = CaseControlDeck([groundcheck])
+            str(deck)
+
 
     def test_subcase_equals(self):
         lines = [

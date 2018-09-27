@@ -2136,7 +2136,7 @@ class TestAero(unittest.TestCase):
         bdf_filename = os.path.join(MODEL_PATH, 'aero', 'bah_plane', 'bah_plane.bdf')
         folder = ''
         run_bdf(folder, bdf_filename, debug=False, xref=True, check=True,
-                punch=False, cid=None, mesh_form='combined',
+                punch=False, mesh_form='combined',
                 is_folder=False, print_stats=False,
                 encoding=None, sum_load=True, size=8,
                 is_double=False, stop=False, nastran='',

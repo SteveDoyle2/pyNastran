@@ -9,7 +9,7 @@ All set cards are defined in this file.  This includes:
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
-from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types, float_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.cards.base_card import BaseCard, expand_thru_by
@@ -528,6 +528,150 @@ class RADCAV(ThermalBC):
         list_fields = ['RADCAV', self.icavity, self.ele_amb, self.shadow, self.scale,
                        self.prtpch, self.nefci, self.rmax, self.ncomp] + self.sets
         return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        # type: (int, bool) -> str
+        """
+        The writer method used by BDF.write_card()
+
+        Parameters
+        -----------
+        size : int; default=8
+            the size of the card (8/16)
+
+        """
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
+
+class RADLST(ThermalBC):
+    """
+    Identifies the characteristics of each radiant enclosure.
+
+    +--------+---------+--------+------+-------+--------+-------+------+--------+
+    |    1   |    2    |    3   |  4   |   5   |    6   |   7   |   8  |    9   |
+    +========+=========+========+======+=======+========+=======+======+========+
+    | RADLST | ICAVITY | MTXTYP | EID1 |  EID2 |  EID3  |  EID4 | EID5 |  EID6  |
+    +--------+---------+--------+------+-------+--------+-------+------+--------+
+    |        |   EID7  |  etc.  |      |       |        |       |      |        |
+    +--------+---------+--------+------+-------+--------+-------+------+--------+
+    | RADLST |    3    |    5   |  4   |   5   |    7   |   5   |      |        |
+    +--------+---------+--------+------+-------+--------+-------+------+--------+
+    """
+    type = 'RADCAV'
+
+    def __init__(self, icavity, eids, matrix_type=1, comment=''):
+        ThermalBC.__init__(self)
+        if comment:
+            self.comment = comment
+
+        self.icavity = icavity
+        self.matrix_type = matrix_type
+        assert isinstance(matrix_type, integer_types), matrix_type
+        if isinstance(eids, integer_types):
+            eids = [eids]
+        self.eids = eids
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a RADLST card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        icavity = integer(card, 1, 'icavity')
+        matrix_type = integer_or_blank(card, 2, 'matrix_type', 1)
+
+        eids = fields(integer, card, 'eid', i=3, j=card.nfields)
+        return RADLST(icavity, eids, matrix_type=matrix_type, comment=comment)
+
+    def raw_fields(self):
+        list_fields = ['RADLST', self.icavity, self.matrix_type] + self.eids
+        return list_fields
+
+    #def repr_fields(self):
+        #list_fields = ['RADCAV', self.icavity, self.ele_amb, self.shadow, self.scale,
+                       #self.prtpch, self.nefci, self.rmax, self.ncomp] + self.sets
+        #return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        # type: (int, bool) -> str
+        """
+        The writer method used by BDF.write_card()
+
+        Parameters
+        -----------
+        size : int; default=8
+            the size of the card (8/16)
+
+        """
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
+
+class RADMTX(ThermalBC):
+    """
+    Provides the Fji=Aj*fji exchange factors for all the faces of a
+    radiation enclosure specified in the corresponding RADLST entry.
+
+    +--------+---------+--------+--------+--------+--------+--------+--------+--------+
+    |    1   |    2    |    3   |   4    |    5   |    6   |    7   |    8   |    9   |
+    +========+=========+========+========+========+========+========+========+========+
+    | RADMTX | ICAVITY | INDEX  |  Fi,j  | Fi+1,j | Fi+2,j | Fi+3,j | Fi+4,j | Fi+5,j |
+    +--------+---------+--------+--------+--------+--------+--------+--------+--------+
+    |        | Fi+6,j  |  etc.  |        |        |        |        |        |        |
+    +--------+---------+--------+--------+--------+--------+--------+--------+--------+
+    | RADMTX |    2    |    1   |  0.0   |  0.1   |   0.2  |   0.2  |   0.3  |   0.2  |
+    +--------+---------+--------+--------+--------+--------+--------+--------+--------+
+    """
+    type = 'RADMTX'
+
+    def __init__(self, icavity, index, exchange_factors, comment=''):
+        ThermalBC.__init__(self)
+        if comment:
+            self.comment = comment
+
+        self.icavity = icavity
+        assert isinstance(index, integer_types), type(index)
+        self.index = index
+
+        if isinstance(exchange_factors, float_types):
+            exchange_factors = [exchange_factors]
+        self.exchange_factors = exchange_factors
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a RADMTX card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        icavity = integer(card, 1, 'icavity')
+        index = integer(card, 2, 'index')
+        exchange_factors = fields(double, card, 'eid', i=3, j=card.nfields)
+        return RADMTX(icavity, index, exchange_factors, comment=comment)
+
+    def raw_fields(self):
+        assert isinstance(self.index, integer_types), type(self.index)
+        list_fields = ['RADMTX', self.icavity, self.index] + self.exchange_factors
+        return list_fields
+
+    #def repr_fields(self):
+        #list_fields = ['RADCAV', self.icavity, self.ele_amb, self.shadow, self.scale,
+                       #self.prtpch, self.nefci, self.rmax, self.ncomp] + self.sets
+        #return list_fields
 
     def write_card(self, size=8, is_double=False):
         # type: (int, bool) -> str

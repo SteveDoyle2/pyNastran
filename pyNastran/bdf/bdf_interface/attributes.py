@@ -571,6 +571,7 @@ class BDFAttributes(object):
         self.view3ds = {}
         self.radset = None
         self.radcavs = {}
+        self.radmtx = {}
 
         # -------------------------contact cards-------------------------------
         self.bcrparas = {}  # type: Dict[int, Any]
@@ -579,6 +580,24 @@ class BDFAttributes(object):
         self.bctsets = {}  # type: Dict[int, Any]
         self.bsurf = {}  # type: Dict[int, Any]
         self.bsurfs = {}  # type: Dict[int, Any]
+        self.bconp = {}  # type: Dict[int, Any]
+        self.blseg = {}  # type: Dict[int, Any]
+
+
+        #--------------------------superelements------------------------------
+        self.setree = {}
+        self.senqset = {}
+        self.sebulk = {}
+        self.sebndry = {}
+        self.seloc = {}
+        self.sempln = {}
+        self.secontct = {}
+        self.selabel = {}
+        self.seexcld = {}
+        self.seelt = {}
+        self.seload = {}
+        self.csuper = {}
+        self.csupext = {}
 
         # ---------------------------------------------------------------------
         self._type_to_id_map = defaultdict(list)  # type: Dict[int, List[Any]]
@@ -679,6 +698,20 @@ class BDFAttributes(object):
             'suport1' : ['SUPORT1'],
             'se_suport' : ['SESUP'],
 
+            'setree' : ['SETREE'],
+            'senqset' : ['SENQSET'],
+            'sebulk' : ['SEBULK'],
+            'sebndry' : ['SEBNDRY'],
+            'seloc' : ['SELOC'],
+            'sempln' : ['SEMPLN'],
+            'secontct' : ['SECONTCT'],
+            'selabel' : ['SELABEL'],
+            'seexcld' : ['SEEXCLD'],
+            'seelt' : ['SEELT'],
+            'seload' : ['SELOAD'],
+            'csuper' : ['CSUPER'],
+            'csupext' : ['CSUPEXT'],
+
             # loads
             'load_combinations' : ['LOAD', 'LSEQ'],
             'loads' : [
@@ -696,7 +729,7 @@ class BDFAttributes(object):
             'dloads' : ['DLOAD', ],
             # stores RLOAD1, RLOAD2, TLOAD1, TLOAD2, and ACSRCE entries.
             'dload_entries' : ['ACSRCE', 'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',
-                               'QVECT', 'RANDPS'],
+                               'QVECT', 'RANDPS', 'RANDT1'],
 
             # aero cards
             'aero' : ['AERO'],
@@ -735,7 +768,7 @@ class BDFAttributes(object):
             'convection_properties' : ['PCONV', 'PCONVM'],
 
             # stores thermal boundary conditions
-            'bcs' : ['CONV', 'RADBC', 'RADM'],
+            'bcs' : ['CONV', 'RADBC', 'RADM', 'TEMPBC'],
 
 
             # dynamic cards
@@ -796,6 +829,7 @@ class BDFAttributes(object):
             'se_sets' : ['SESET'],
             'radset' : ['RADSET'],
             'radcavs' : ['RADCAV'],
+            'radmtx' : ['RADMTX'],
             # SEBSEP
 
             'tables' : [
@@ -823,6 +857,8 @@ class BDFAttributes(object):
             'bctsets' : ['BCTSET'],
             'bsurf' : ['BSURF'],
             'bsurfs' : ['BSURFS'],
+            'bconp' : ['BCONP'],
+            'blseg' : ['BLSEG'],
             'views' : ['VIEW'],
             'view3ds' : ['VIEW3D'],
 

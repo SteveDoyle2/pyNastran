@@ -866,6 +866,7 @@ class CBEAM3(LineElement):  # was CBAR
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
@@ -888,13 +889,14 @@ class CBEAM3(LineElement):  # was CBAR
                        double_or_blank(card, 16, 'w2c', 0.0),
                        double_or_blank(card, 17, 'w3c', 0.0)], dtype='float64')
 
-        tw = np.array([double_or_blank(card, 18, 0., 'twa'),
-                       double_or_blank(card, 19, 0., 'twb'),
-                       double_or_blank(card, 20, 0., 'twc')], dtype='float64')
+        tw = np.array([double_or_blank(card, 18, 'twa', 0.),
+                       double_or_blank(card, 19, 'twb', 0.),
+                       double_or_blank(card, 20, 'twc', 0.)], dtype='float64')
 
-        s = np.array([integer_or_blank(card, 21, 'sa'),
-                      integer_or_blank(card, 22, 'sb'),
-                      integer_or_blank(card, 23, 'sc')], dtype='int32')
+        # TODO: what are the defaults?
+        s = np.array([integer_or_blank(card, 21, 'sa', -1),
+                      integer_or_blank(card, 22, 'sb', -1),
+                      integer_or_blank(card, 23, 'sc', -1)], dtype='int32')
         assert len(card) <= 24, 'len(CBEAM3 card) = %i\ncard=%s' % (len(card), card)
         return CBEAM3(eid, pid, [ga, gb, gc], x, g0,
                       wa, wb, wc, tw, s, comment=comment)
@@ -907,6 +909,7 @@ class CBEAM3(LineElement):  # was CBAR
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by CBEAM3 eid=%s' % (self.eid)
         self.ga_ref = model.Node(self.ga, msg=msg)
@@ -976,8 +979,8 @@ class CBEAM3(LineElement):  # was CBAR
         return [self.Ga(), self.Gb(), self.Gc()]
 
     def raw_fields(self):
-        (x1, x2, x3) = self.get_x_g0_defaults()
-        (ga, gb, gc) = self.node_ids
+        x1, x2, x3 = self.get_x_g0_defaults()
+        ga, gb, gc = self.node_ids
         list_fields = ['CBEAM3', self.eid, self.Pid(), ga, gb, gc, x1, x2, x3] + \
                   list(self.wa) + list(self.wb) + list(self.wc) + list(self.tw) + list(self.s)
         return list_fields

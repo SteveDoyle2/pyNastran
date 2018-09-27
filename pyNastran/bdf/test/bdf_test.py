@@ -98,14 +98,13 @@ def run(regenerate=True, run_nastran=False, debug=False, sum_load=True, xref=Tru
         os.remove('skipped_cards.out')
 
     print("nfiles = %s" % len(files))
-    cid = None
     check = True
     debug = False
     size = [8]
     is_double = [False]
     post = -1
     failed_files = run_lots_of_files(files, debug=debug, xref=xref,
-                                     check=check, cid=cid,
+                                     check=check,
                                      nastran=nastran,
                                      size=size, is_double=is_double, post=post,
                                      encoding='latin1', crash_cards=crash_cards,
