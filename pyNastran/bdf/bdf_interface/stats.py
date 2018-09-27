@@ -250,7 +250,6 @@ def _get_bdf_stats_loads(model):
         for (lid, load_combinations) in sorted(model.load_combinations.items()):
             msg.append('bdf.load_combinations[%s]' % lid)
             groups_dict = {}  # type: Dict[str, int]
-            print(type(load_combinations))
             for load_combination in load_combinations:
                 groups_dict[load_combination.type] = groups_dict.get(load_combination.type, 0) + 1
             for name, count_name in sorted(groups_dict.items()):

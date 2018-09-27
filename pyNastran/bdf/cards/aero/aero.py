@@ -223,6 +223,87 @@ class AECOMP(BaseCard):
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
+class AECOMPL(BaseCard):
+    type = 'AECOMPL'
+
+    def __init__(self, name, list_type, lists, comment=''):
+        # type: (str, List[str], Union[int, List[int]], str) -> None
+        """
+        Creates an AECOMP card
+
+        Parameters
+        ----------
+        name : str
+            the name of the component
+        list_type : str
+            One of CAERO, AELIST or CMPID for aerodynamic components and
+            SET1 for structural components. Aerodynamic components are
+            defined on the aerodynamic ks-set mesh while the structural
+            components are defined on the g-set mesh.
+        lists : List[int, int, ...]; int
+            The identification number of either SET1, AELIST or CAEROi
+            entries that define the set of grid points that comprise
+            the component
+        comment : str; default=''
+            a comment for the card
+
+        """
+        BaseCard.__init__(self)
+        if comment:
+            self.comment = comment
+        if isinstance(lists, integer_types):
+            lists = [lists]
+        elif not isinstance(lists, (list, tuple)):
+            raise TypeError('AECOMP; type(lists)=%s and must be a list/tuple' % type(lists))
+
+        self.name = name
+        self.list_type = list_type
+        self.lists = lists
+        self.lists_ref = None
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        # type: (Any, str) -> AECOMP
+        """
+        Adds an AECOMP card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        aecompl
+        name = string(card, 1, 'name')
+        list_type = string(card, 2, 'list_type')
+        j = 1
+        lists = []
+        for i in range(3, len(card)):
+            list_i = integer(card, i, '%s_%i' % (list_type, j))
+            lists.append(list_i)
+            j += 1
+        return AECOMPL(name, list_type, lists, comment=comment)
+
+    #def raw_fields(self):
+        #list_fields = ['AECOMP', self.name, self.list_type] + self.get_lists()
+        #return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        # (int, bool) -> str
+        """
+        The writer method used by BDF.write_card()
+
+        Parameters
+        -----------
+        size : int; default=8
+            the size of the card (8/16)
+
+        """
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
+
 
 class AEFACT(BaseCard):
     """

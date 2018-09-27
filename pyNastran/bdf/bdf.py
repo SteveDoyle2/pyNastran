@@ -108,7 +108,7 @@ from pyNastran.bdf.cards.material_deps import (MATT1, MATT2, MATT3, MATT4, MATT5
 from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
 from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs, POINT, SEQGP, GRIDB
 from pyNastran.bdf.cards.aero.aero import (
-    AECOMP, AEFACT, AELINK, AELIST, AEPARM, AESURF, AESURFS,
+    AECOMP, AECOMPL, AEFACT, AELINK, AELIST, AEPARM, AESURF, AESURFS,
     CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
     PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
     MONPNT1, MONPNT2, MONPNT3,
@@ -148,7 +148,7 @@ from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
                                             TABLEM1, TABLEM2, TABLEM3, TABLEM4,
                                             TABLES1, TABDMP1, TABLEST, TABRND1, TABRNDG,
                                             DTABLE)
-from pyNastran.bdf.cards.contact import BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA
+from pyNastran.bdf.cards.contact import BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA, BCONP, BLSEG
 from pyNastran.bdf.case_control_deck import CaseControlDeck
 from pyNastran.bdf.bdf_methods import BDFMethods
 from pyNastran.bdf.bdf_interface.get_card import GetCard
@@ -1650,20 +1650,19 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         self._card_parser = {
             #'=' : (Crash, None),
             '/' : (Crash, None),
-            'SETREE' : (SETREE, self._add_csupext_object),
-            'SENQSET' : (SENQSET, self._add_csupext_object),
-            'SEBULK' : (SEBULK, self._add_csupext_object),
-            'SEBNDRY' : (SEBNDRY, self._add_csupext_object),
+            'SETREE' : (SETREE, self._add_setree_object),
+            'SENQSET' : (SENQSET, self._add_senqset_object),
+            'SEBULK' : (SEBULK, self._add_sebulk_object),
+            'SEBNDRY' : (SEBNDRY, self._add_sebndry_object),
             'SEELT' : (SEELT, self._add_seelt_object),
-            'SELOC' : (SELOC, self._add_seelt_object),
-            'SEMPLN' : (SEMPLN, self._add_seelt_object),
-            'SECONCT' : (SECONCT, self._add_csupext_object),
-            'SELABEL' : (SELABEL, self._add_seelt_object),
+            'SELOC' : (SELOC, self._add_seloc_object),
+            'SEMPLN' : (SEMPLN, self._add_sempln_object),
+            'SECONCT' : (SECONCT, self._add_secontct_object),
+            'SELABEL' : (SELABEL, self._add_selabel_object),
             'SEEXCLD' : (SEEXCLD, self._add_seelt_object),
-            'CSUPER' : (CSUPER, self._add_csupext_object),
+            'CSUPER' : (CSUPER, self._add_csuper_object),
             'CSUPEXT' : (CSUPEXT, self._add_csupext_object),
-            'SELOAD' : (SELOAD, self._add_seelt_object),
-            'SELOAD' : (SELOAD, self._add_seelt_object),
+            'SELOAD' : (SELOAD, self._add_seload_object),
 
             'ACMODL' : (Crash, None),
             'CHACAB' : (Crash, None),
@@ -1671,8 +1670,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             'PANEL' : (Crash, None),
             'RANDT1' : (Crash, None),
 
-            'BCONP' : (Crash, None),
-            'BLSEG' : (Crash, None),
+            'BCONP' : (BCONP, self._add_seelt_object),
+            'BLSEG' : (BLSEG, self._add_seelt_object),
             'BFRIC' : (Crash, None),
             'SWLDPRM' : (Crash, None),
 
@@ -1695,12 +1694,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             'DVAR' : (Crash, None),
             'DVSET' : (Crash, None),
             'DYNRED' : (Crash, None),
-            'CONVM' : (Crash, None),
             'TEMPBC' : (Crash, None),
             'BNDFIX' : (Crash, None),
             'BNDFIX1' : (Crash, None),
 
-            'AECOMPL' : (Crash, None),
             'AEFORCE' : (Crash, None),
             'UXVEC' : (Crash, None),
             'GUST2' : (Crash, None),
@@ -1969,7 +1966,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
             # aero
             'AECOMP' : (AECOMP, self._add_aecomp_object),
-            #'AECOMPL' : (AECOMPL, self._add_aecomp_object),
+            'AECOMPL' : (AECOMPL, self._add_aecomp_object),
             'AEFACT' : (AEFACT, self._add_aefact_object),
             'AELINK' : (AELINK, self._add_aelink_object),
             'AELIST' : (AELIST, self._add_aelist_object),

@@ -587,6 +587,10 @@ class SENQSET(BaseCard):
         assert len(card) <= 3, 'len(SENQSET card) = %i\ncard=%s' % (len(card), card)
         return SENQSET(set_id, n, comment=comment)
 
+    def raw_fields(self):
+        list_fields = ['SENQSET', self.set_id, self.n]
+        return list_fields
+
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment + print_card_8(card)

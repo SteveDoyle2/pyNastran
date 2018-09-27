@@ -166,11 +166,35 @@ class AddMethods(BDFAttributes):
             comment = ''
             self.epoints[nid] = epoint
 
+    def _add_setree_object(self, setree):
+        key = setree.seid
+    def _add_senqset_object(self, senqset):
+        key = senqset.seid
+    def _add_sebulk_object(self, sebulk):
+        key = sebulk.seid
+    def _add_sebndry_object(self, sebndry):
+        key = sebndry.seid
+    def _add_seloc_object(self, seloc):
+        key = seloc.seid
+    def _add_sempln_object(self, sempln):
+        key = sempln.seid
+
+    def _add_secontct_object(self, secontct):
+        key = secontct.seid
+    def _add_selabel_object(self, selabel):
+        key = selabel.seid
+    def _add_seexcld_object(self, seexcld):
+        key = seexcld.seid
+
     def _add_seelt_object(self, seelt):
         #self.seelt.append(seelt)
-        pass
+        key = seelt.seid
+    def _add_seload_object(self, seload):
+        key = seload.seid
+    def _add_csuper_object(self, csuper):
+        key = csuper.seid
     def _add_csupext_object(self, csupext):
-        pass
+        key = csupext.seid
 
     def _add_plotel_object(self, elem, allow_overwrites=False):
         # type: (Any, bool) -> None

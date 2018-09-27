@@ -15,6 +15,111 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
+class BLSEG(BaseCard):
+    """
+    3D Contact Region Definition by Shell Elements (SOLs 101, 601 and 701)
+
+    Defines a 3D contact region by shell element IDs.
+
+    BLSEG ID G1 G2 G3 G4 G5 G6 G7
+    BLSEG ID G1 THRU G2 BY INC
+    """
+    type = 'BLSEG'
+    def __init__(self, line_id, nodes, comment=''):
+        if comment:
+            self.comment = comment
+
+        self.line_id = line_id
+        self.nodes = expand_thru_by(nodes)
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a BLSEG card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        line_id = integer(card, 1, 'line_id')
+        #: Number (float)
+        nfields = card.nfields
+        i = 2
+        nodes = []
+        while i < nfields:
+            d = integer_string_or_blank(card, i, 'field_%s' % i)
+            if d is not None:
+                nodes.append(d)
+            i += 1
+        return BLSEG(line_id, nodes, comment=comment)
+
+    #def raw_fields(self):
+        #fields = ['BSURF', self.sid]
+        #return fields + list(self.eids)
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
+
+class BCONP(BaseCard):
+    """
+    3D Contact Region Definition by Shell Elements (SOLs 101, 601 and 701)
+
+    Defines a 3D contact region by shell element IDs.
+
+    +-------+----+-------+--------+-----+------+--------+-------+-----+
+    |   1   |  2 |   3   |   4    |  5  |   6  |   7    |   8   |  9  |
+    +=======+====+=======+========+=====+======+========+=======+=====+
+    | BCONP | ID | SLAVE | MASTER |     | SFAC | FRICID | PTYPE | CID |
+    +-------+----+-------+--------+-----+------+--------+-------+-----+
+    | BCONP | 95 |   10  |   15   |     |  1.0 |   33   |   1   |     |
+    +-------+----+-------+--------+-----+------+--------+-------+-----+
+
+    """
+    type = 'BCONP'
+    def __init__(self, contact_id, slave, master, sfac, fric_id, ptype, cid, comment=''):
+        if comment:
+            self.comment = comment
+
+        self.contact_id = contact_id
+        self.slave = slave
+        self.master = master
+        self.sfac = sfac
+        self.fric_id = fric_id
+        self.ptype = ptype
+        self.cid = cid
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a BCONP card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        contact_id = integer(card, 1, 'contact_id')
+        slave = integer(card, 2, 'slave')
+        master = integer(card, 3, 'master')
+        sfac = double_or_blank(card, 5, 'sfac', 1.0)
+        fric_id = integer_or_blank(card, 6, 'fric_id')
+        ptype = integer_or_blank(card, 7, 'ptype', 1)
+        cid = integer_or_blank(card, 8, 'cid', 0)
+        return BCONP(contact_id, slave, master, sfac, fric_id, ptype, cid, comment=comment)
+
+    #def raw_fields(self):
+        #fields = ['BSURF', self.sid]
+        #return fields + list(self.eids)
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
 
 class BSURF(BaseCard):
     """
