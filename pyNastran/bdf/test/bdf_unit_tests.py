@@ -576,6 +576,16 @@ class TestBDF(Tester):
         #os.remove(bdf_filename + '_out')
         #self.run_bdf(folder, bdf_filename, xref=True) # PBEAML is not supported
 
+    def test_bdf_superelement_3(self):
+        """checks cqrsee101b2.bdf"""
+        bdf_filename = os.path.join(MODEL_PATH, 'superelements', 'cqrsee101b2.bdf')
+        (fem1, fem2, diff_cards) = self.run_bdf(
+            '', bdf_filename, xref=False, run_extract_bodies=False,
+        )
+        diff_cards2 = list(set(diff_cards))
+        diff_cards2.sort()
+        assert len(diff_cards2) == 0, diff_cards2
+
     def test_bdf_other_1(self):
         """checks axisymmetric model"""
         bdf_filename = os.path.join(MODEL_PATH, 'other', 'd07d2.bdf')

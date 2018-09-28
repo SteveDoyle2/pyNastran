@@ -539,7 +539,6 @@ class WriteMesh(BDFAttributes):
 
         """
         self._write_dmigs(bdf_file, size, is_double, is_long_ids=is_long_ids)
-        self._write_superelements(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_loads(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_dynamic(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_aero_control(bdf_file, size, is_double, is_long_ids=is_long_ids)
