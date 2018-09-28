@@ -563,6 +563,8 @@ class TestBDF(Tester):
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
+        bdf_filenames = {0 : 'cat.bdf',}
+        fem1.write_bdfs(bdf_filenames)
 
     def test_bdf_superelement_2(self):
         """checks superelement.bdf"""

@@ -484,7 +484,7 @@ class TestCoords(unittest.TestCase):
         model.cross_reference()
 
         model2 = BDFv(debug=False)
-        model2.read_bdf(bdf_file, punch=True, xref=False)
+        model2.read_bdf(bdf_file, punch=True, xref=False, save_file_structure=False)
         bdf_file.seek(0)
         #-------------------------------------------------
 

@@ -23,8 +23,8 @@ class TestElements(unittest.TestCase):
         model.cross_reference()
         model.uncross_reference()
         model.safe_cross_reference()
-        save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
-                       run_convert=True, run_renumber=False, run_mirror=True,
+        save_load_deck(model, xref='standard', punch=True,
+                       run_renumber=False,
                        run_save_load=True)
 
     def test_cbush_01(self):

@@ -212,10 +212,10 @@ class WriteMesh(BDFAttributes):
         """
         is_long_ids = False
 
-        # required for MasterModelTaxi
         if self.is_bdf_vectorized:
             pass
         else:
+            # required for MasterModelTaxi
             is_long_ids = (
                 self.nodes and max(self.nodes) > 100000000 or
                 self.coords and max(self.coords) > 100000000 or

@@ -155,7 +155,7 @@ from pyNastran.bdf.bdf_methods import BDFMethods
 from pyNastran.bdf.bdf_interface.get_card import GetCard
 from pyNastran.bdf.bdf_interface.add_card import AddCards
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
-from pyNastran.bdf.bdf_interface.write_mesh import WriteMesh
+from pyNastran.bdf.bdf_interface.write_mesh_file import WriteMeshs
 from pyNastran.bdf.bdf_interface.uncross_reference import UnXrefMesh
 from pyNastran.bdf.bdf_interface.verify_validate import verify_bdf, validate_bdf
 from pyNastran.bdf.bdf_interface.stats import get_bdf_stats
@@ -236,7 +236,9 @@ def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
     elif read_cards:
         model.set_cards(read_cards)
     model.read_bdf(bdf_filename=bdf_filename, validate=validate,
-                   xref=xref, punch=punch, read_includes=True, encoding=encoding)
+                   xref=xref, punch=punch, read_includes=True,
+                   save_file_structure=False,
+                   encoding=encoding)
 
     #if 0:
         ### TODO: remove all the extra methods
@@ -307,7 +309,7 @@ def load_bdf_object(obj_filename, xref=True, log=None, debug=True):
                           xref_optimization=True)
     return model
 
-class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
+class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
     """
     Base class for the BDF Reader/Writer/Editor class that's used by the
     main BDF object and (temporarily) the in-development vectorized object
@@ -362,7 +364,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         GetCard.__init__(self)
         AddCards.__init__(self)
         BDFMethods.__init__(self)
-        WriteMesh.__init__(self)
+        WriteMeshs.__init__(self)
         UnXrefMesh.__init__(self)
 
         # useful in debugging errors in input
@@ -956,7 +958,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         self.include_dir = obj.include_dir
 
     def read_bdf(self, bdf_filename=None,
-                 validate=True, xref=True, punch=False, read_includes=True, encoding=None):
+                 validate=True, xref=True, punch=False, read_includes=True,
+                 save_file_structure=True, encoding=None):
         """
         Read method for the bdf files
 
@@ -972,6 +975,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             indicates whether the file is a punch file
         read_includes : bool; default=True
             indicates whether INCLUDE files should be read
+        save_file_structure : bool; default=False
+            enables the ``write_bdfs`` method
+            not implemented
         encoding : str; default=None -> system default
             the unicode encoding
 
@@ -992,6 +998,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
           etc.
 
         """
+        self.save_file_structure = save_file_structure
         self._read_bdf_helper(bdf_filename, encoding, punch, read_includes)
         self.log.debug('---starting BDF.read_bdf of %s---' % self.bdf_filename)
         self._parse_primary_file_header(bdf_filename)
@@ -1215,8 +1222,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
     def get_bdf_cards(self, bulk_data_lines, bulk_data_ilines=None):
         """Parses the BDF lines into a list of card_lines"""
         if bulk_data_ilines is None:
-            asdf
             bulk_data_ilines = np.zeros((len(bulk_data_lines), 2), dtype='int32')
+
         cards_list = []
         cards_dict = defaultdict(list)
         dict_cards = ['BAROR', 'BEAMOR']
@@ -2252,7 +2259,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         self.increase_card_count(card_name)
         self.reject_lines.append([_format_comment(comment)] + card_lines)
 
-    def _write_reject_message(self, card_name, card_obj, comment=''):
+    def _write_reject_message(self, card_name, unused_card_obj, comment=''):
         """common method to not write duplicate reject card names"""
         if card_name not in self.card_count:
             #if ' ' in card_name:
@@ -2263,11 +2270,13 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         """adds a CBAR"""
         elem = CBAR.add_card(card_obj, baror=self.baror, comment=comment)
         self._add_element_object(elem)
+        return elem
 
     def _prepare_cbeam(self, unused_card, card_obj, comment=''):
         """adds a CBEAM"""
         elem = CBEAM.add_card(card_obj, beamor=self.beamor, comment=comment)
         self._add_element_object(elem)
+        return elem
 
     def _prepare_ctetra(self, unused_card, card_obj, comment=''):
         """adds a CTETRA4/CTETRA10"""
@@ -2310,86 +2319,107 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
     def _prepare_bctset(self, unused_card, card_obj, comment=''):
         # type: (BDFCard, List[str], str) -> None
         """adds a BCTSET"""
-        card = BCTSET.add_card(card_obj, comment=comment, sol=self.sol)
-        self._add_bctset_object(card)
+        bctset = BCTSET.add_card(card_obj, comment=comment, sol=self.sol)
+        self._add_bctset_object(bctset)
+        return bctset
 
     def _prepare_grdset(self, unused_card, card_obj, comment=''):
         # type: (BDFCard, List[str], str) -> None
         """adds a GRDSET"""
         self.grdset = GRDSET.add_card(card_obj, comment=comment)
+        return self.grdset
 
     def _prepare_cdamp4(self, unused_card, card_obj, comment=''):
         """adds a CDAMP4"""
-        self._add_damper_object(CDAMP4.add_card(card_obj, comment=comment))
+        dampers = [CDAMP4.add_card(card_obj, comment=comment)]
         if card_obj.field(5):
-            self._add_damper_object(CDAMP4.add_card(card_obj, 1, comment=''))
-        return card_obj
+            dampers.append(CDAMP4.add_card(card_obj, 1, comment=''))
+        for damper in dampers:
+            self._add_damper_object(damper)
+        return dampers
 
     def _prepare_deform(self, unused_card, card_obj, comment=''):
         """adds a DEFORM"""
-        self._add_load_object(DEFORM.add_card(card_obj, comment=comment))
+        loads = [DEFORM.add_card(card_obj, comment=comment)]
         if card_obj.field(4):
-            self._add_load_object(DEFORM.add_card(card_obj, 2, comment=comment))
+            loads.append(DEFORM.add_card(card_obj, 2, comment=comment))
         if card_obj.field(6):
-            self._add_load_object(DEFORM.add_card(card_obj, 3, comment=comment))
-        return card_obj
+            loads.append(DEFORM.add_card(card_obj, 3, comment=comment))
+        for load in loads:
+            self._add_load_object(load)
+        return loads
 
     def _prepare_tempbc(self, unused_card, card_obj, comment=''):
         """adds a TEMPBC"""
         boundary_condition = TEMPBC.add_card(card_obj, comment=comment)
         self._add_thermal_bc_object(boundary_condition, boundary_condition.eid)
+        return boundary_condition
 
     def _prepare_convm(self, unused_card, card_obj, comment=''):
         """adds a CONVM"""
         boundary_condition = CONVM.add_card(card_obj, comment=comment)
         self._add_thermal_bc_object(boundary_condition, boundary_condition.eid)
+        return boundary_condition
 
     def _prepare_conv(self, unused_card, card_obj, comment=''):
         """adds a CONV"""
         boundary_condition = CONV.add_card(card_obj, comment=comment)
         self._add_thermal_bc_object(boundary_condition, boundary_condition.eid)
+        return boundary_condition
 
     def _prepare_radm(self, unused_card, card_obj, comment=''):
         """adds a RADM"""
         boundary_condition = RADM.add_card(card_obj, comment=comment)
         self._add_thermal_bc_object(boundary_condition, boundary_condition.radmid)
+        return boundary_condition
 
     def _prepare_radbc(self, unused_card, card_obj, comment=''):
         """adds a RADBC"""
         boundary_condition = RADBC.add_card(card_obj, comment=comment)
         self._add_thermal_bc_object(boundary_condition, boundary_condition.nodamb)
+        return boundary_condition
 
     def _prepare_tempd(self, unused_card, card_obj, comment=''):
         """adds a TEMPD"""
-        self._add_tempd_object(TEMPD.add_card(card_obj, 0, comment=comment))
+        tempds = [TEMPD.add_card(card_obj, 0, comment=comment)]
         if card_obj.field(3):
-            self._add_tempd_object(TEMPD.add_card(card_obj, 1, comment=''))
+            tempds.append(TEMPD.add_card(card_obj, 1, comment=''))
             if card_obj.field(5):
-                self._add_tempd_object(TEMPD.add_card(card_obj, 2, comment=''))
+                tempds.append(TEMPD.add_card(card_obj, 2, comment=''))
                 if card_obj.field(7):
-                    self._add_tempd_object(TEMPD.add_card(card_obj, 3, comment=''))
+                    tempds.append(TEMPD.add_card(card_obj, 3, comment=''))
+        for tempd in tempds:
+            self._add_tempd_object(tempd)
+        return tempds
 
     def _prepare_tempax(self, unused_card, card_obj, comment=''):
         """adds a TEMPAX"""
-        self._add_load_object(TEMPAX.add_card(card_obj, 0, comment=comment))
+        tempaxs = [TEMPAX.add_card(card_obj, 0, comment=comment)]
         if card_obj.field(5):
-            self._add_load_object(TEMPAX.add_card(card_obj, 1, comment=''))
-        return card_obj
+            tempaxs.append(TEMPAX.add_card(card_obj, 1, comment=''))
+        for tempax in tempaxs:
+            self._add_load_object(tempax)
+        return tempaxs
 
     def _prepare_dequatn(self, unused_card, card_obj, comment=''):
         """adds a DEQATN"""
-        self._add_deqatn_object(DEQATN.add_card(card_obj, comment=comment))
+        deqatn = DEQATN.add_card(card_obj, comment=comment)
+        self._add_deqatn_object(deqatn)
+        return deqatn
 
     def _prepare_dti(self, card_name, card_obj, comment=''):
         """adds a DTI"""
         name = string(card_obj, 1, 'name')
         if name.upper() == 'UNITS':
-            self._add_dti_object(DTI.add_card(card_obj, comment=comment))
+            dti = DTI.add_card(card_obj, comment=comment)
+            self._add_dti_object(dti)
         else:
+            dti = -1
             if comment:
                 self.reject_lines.append([_format_comment(comment)])
             self.reject_cards.append(card_obj)
             self._write_reject_message(card_name, card_obj, comment=comment)
+        return dti
 
     def _prepare_dmig(self, unused_card, card_obj, comment=''):
         """adds a DMIG"""
@@ -2401,6 +2431,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 dmig = DMIG_UACCEL.add_card(card_obj, comment=comment)
                 self._add_dmig_object(dmig)
             else:
+                dmig = -1
                 self._dmig_temp[name].append((card_obj, comment))
         else:
             field2 = integer_or_string(card_obj, 2, 'flag')
@@ -2408,48 +2439,55 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 dmig = DMIG.add_card(card_obj, comment=comment)
                 self._add_dmig_object(dmig)
             else:
+                dmig = -1
                 self._dmig_temp[name].append((card_obj, comment))
+        return dmig
 
     def _prepare_dmix(self, class_obj, add_method, card_obj, comment=''):
         """adds a DMI, DMIJ, DMIJI, or DMIK"""
         field2 = integer(card_obj, 2, 'flag')
         if field2 == 0:
-            add_method(class_obj.add_card(card_obj, comment=comment))
+            dmix = class_obj.add_card(card_obj, comment=comment)
+            add_method(dmix)
         else:
+            dmix = -1
             name = string(card_obj, 1, 'name')
             self._dmig_temp[name].append((card_obj, comment))
+        return dmix
 
     def _prepare_dmi(self, unused_card, card_obj, comment=''):
         """adds a DMI"""
-        self._prepare_dmix(DMI, self._add_dmi_object, card_obj, comment=comment)
+        return self._prepare_dmix(DMI, self._add_dmi_object, card_obj, comment=comment)
 
     def _prepare_dmij(self, unused_card, card_obj, comment=''):
         """adds a DMIJ"""
-        self._prepare_dmix(DMIJ, self._add_dmij_object, card_obj, comment=comment)
+        return self._prepare_dmix(DMIJ, self._add_dmij_object, card_obj, comment=comment)
 
     def _prepare_dmik(self, unused_card, card_obj, comment=''):
         """adds a DMIK"""
-        self._prepare_dmix(DMIK, self._add_dmik_object, card_obj, comment=comment)
+        return self._prepare_dmix(DMIK, self._add_dmik_object, card_obj, comment=comment)
 
     def _prepare_dmiji(self, unused_card, card_obj, comment=''):
         """adds a DMIJI"""
-        self._prepare_dmix(DMIJI, self._add_dmiji_object, card_obj, comment=comment)
+        return self._prepare_dmix(DMIJI, self._add_dmiji_object, card_obj, comment=comment)
 
     def _prepare_cmass4(self, unused_card, card_obj, comment=''):
         """adds a CMASS4"""
-        class_instance = CMASS4.add_card(card_obj, icard=0, comment=comment)
-        self._add_mass_object(class_instance)
+        elements = [CMASS4.add_card(card_obj, icard=0, comment=comment)]
         if card_obj.field(5):
-            class_instance = CMASS4.add_card(card_obj, icard=1, comment=comment)
-            self._add_mass_object(class_instance)
+            elements.append(CMASS4.add_card(card_obj, icard=1, comment=comment))
+        for elem in elements:
+            self._add_mass_object(elem)
+        return elements
 
     def _prepare_pelas(self, unused_card, card_obj, comment=''):
         """adds a PELAS"""
-        class_instance = PELAS.add_card(card_obj, icard=0, comment=comment)
-        self._add_property_object(class_instance)
+        properties = [PELAS.add_card(card_obj, icard=0, comment=comment)]
         if card_obj.field(5):
-            class_instance = PELAS.add_card(card_obj, icard=1, comment=comment)
-            self._add_property_object(class_instance)
+            properties.append(PELAS.add_card(card_obj, icard=1, comment=comment))
+        for prop in properties:
+            self._add_property_object(prop)
+        return properties
 
     def _prepare_nsm(self, unused_card, card_obj, comment=''):
         """adds an NSM"""
@@ -2458,9 +2496,13 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         nextra = (nfields - 3) % 2
         assert nextra == 0, 'NSM error; nfields=%s must have an odd number of fields\ncard=%s' % (
             nfields, card_obj)
+
+        nsms = []
         for icard in range(ncards):
-            class_instance = NSM.add_card(card_obj, icard, comment=comment)
-            self._add_nsm_object(class_instance)
+            nsms.append(NSM.add_card(card_obj, icard, comment=comment))
+        for nsm in nsms:
+            self._add_nsm_object(nsm)
+        return nsms
 
     def _prepare_nsml(self, unused_card, card_obj, comment=''):
         """adds an NSML"""
@@ -2469,75 +2511,90 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         nextra = (nfields - 3) % 2
         assert nextra == 0, 'NSML error; nfields=%s must have an odd number of fields\ncard=%s' % (
             nfields, card_obj)
+        nsms = []
         for icard in range(ncards):
-            class_instance = NSML.add_card(card_obj, icard, comment=comment)
-            self._add_nsm_object(class_instance)
+            nsms.append(NSML.add_card(card_obj, icard, comment=comment))
+        for nsm in nsms:
+            self._add_nsm_object(nsm)
+        return nsms
 
     def _prepare_pvisc(self, unused_card, card_obj, comment=''):
         """adds a PVISC"""
-        class_instance = PVISC.add_card(card_obj, icard=0, comment=comment)
-        self._add_property_object(class_instance)
+        properties = [PVISC.add_card(card_obj, icard=0, comment=comment)]
         if card_obj.field(5):
-            class_instance = PVISC.add_card(card_obj, icard=1, comment=comment)
-            self._add_property_object(class_instance)
+            properties.append(PVISC.add_card(card_obj, icard=1, comment=comment))
+        for prop in properties:
+            self._add_property_object(prop)
+        return properties
 
     def _prepare_ringfl(self, unused_card, card_obj, comment=''):
         """adds a RINGFL"""
-        class_instance = RINGFL.add_card(card_obj, icard=0, comment=comment)
-        self._add_ringfl_object(class_instance)
+        rings = [RINGFL.add_card(card_obj, icard=0, comment=comment)]
         if card_obj.field(3):
-            class_instance = RINGFL.add_card(card_obj, icard=1, comment=comment)
-            self._add_ringfl_object(class_instance)
+            rings.append(RINGFL.add_card(card_obj, icard=1, comment=comment))
         if card_obj.field(5):
-            class_instance = RINGFL.add_card(card_obj, icard=2, comment=comment)
-            self._add_ringfl_object(class_instance)
+            rings.append(RINGFL.add_card(card_obj, icard=2, comment=comment))
+        for ring in rings:
+            self._add_ringfl_object(ring)
+        return rings
 
     def _prepare_pdamp(self, unused_card, card_obj, comment=''):
         """adds a PDAMP"""
-        class_instance = PDAMP.add_card(card_obj, icard=0, comment=comment)
-        self._add_property_object(class_instance)
+        properties = [PDAMP.add_card(card_obj, icard=0, comment=comment)]
         if card_obj.field(3):
-            class_instance = PDAMP.add_card(card_obj, icard=1, comment=comment)
-            self._add_property_object(class_instance)
+            properties.append(PDAMP.add_card(card_obj, icard=1, comment=comment))
         if card_obj.field(5):
-            class_instance = PDAMP.add_card(card_obj, icard=2, comment=comment)
-            self._add_property_object(class_instance)
+            properties.append(PDAMP.add_card(card_obj, icard=2, comment=comment))
         if card_obj.field(7):
-            class_instance = PDAMP.add_card(card_obj, icard=3, comment=comment)
-            self._add_property_object(class_instance)
+            properties.append(PDAMP.add_card(card_obj, icard=3, comment=comment))
+        for prop in properties:
+            self._add_property_object(prop)
+        return properties
 
     def _prepare_pmass(self, unused_card, card_obj, comment=''):
         """adds a PMASS"""
-        card_instance = PMASS.add_card(card_obj, icard=0, comment=comment)
-        self._add_property_mass_object(card_instance)
+        properties = [PMASS.add_card(card_obj, icard=0, comment=comment)]
         for (i, j) in enumerate([3, 5, 7]):
             if card_obj.field(j):
-                card_instance = PMASS.add_card(card_obj, icard=i+1, comment=comment)
-                self._add_property_mass_object(card_instance)
+                properties.append(PMASS.add_card(card_obj, icard=i+1, comment=comment))
+        for prop in properties:
+            self._add_property_mass_object(prop)
+        return properties
 
     def _prepare_cord1r(self, unused_card, card_obj, comment=''):
         """adds a CORD1R"""
-        class_instance = CORD1R.add_card(card_obj, comment=comment)
-        self._add_coord_object(class_instance)
+        coords = [CORD1R.add_card(card_obj, comment=comment)]
         if card_obj.field(5):
-            class_instance = CORD1R.add_card(card_obj, icard=1, comment=comment)
-            self._add_coord_object(class_instance)
+            coords.append(CORD1R.add_card(card_obj, icard=1, comment=comment))
+        for coord in coords:
+            self._add_coord_object(coord)
 
     def _prepare_cord1c(self, unused_card, card_obj, comment=''):
         """adds a CORD1C"""
-        class_instance = CORD1C.add_card(card_obj, comment=comment)
-        self._add_coord_object(class_instance)
+        coords = [CORD1C.add_card(card_obj, comment=comment)]
         if card_obj.field(5):
-            class_instance = CORD1C.add_card(card_obj, icard=1, comment=comment)
-            self._add_coord_object(class_instance)
+            coords.append(CORD1C.add_card(card_obj, icard=1, comment=comment))
+        for coord in coords:
+            self._add_coord_object(coord)
 
     def _prepare_cord1s(self, unused_card, card_obj, comment=''):
         """adds a CORD1S"""
-        class_instance = CORD1S.add_card(card_obj, comment=comment)
-        self._add_coord_object(class_instance)
+        coords = [CORD1S.add_card(card_obj, comment=comment)]
         if card_obj.field(5):
-            class_instance = CORD1S.add_card(card_obj, icard=1, comment=comment)
-            self._add_coord_object(class_instance)
+            coords.append(CORD1S.add_card(card_obj, icard=1, comment=comment))
+        for coord in coords:
+            self._add_coord_object(coord)
+
+    def add_card_ifile(self, ifile, card_lines, card_name,
+                       comment='', is_list=True, has_none=True):
+        """Same as ``add_card`` except it has an ifile parameter"""
+        assert isinstance(ifile, int), ifile
+        card_name = card_name.upper()
+        card_obj, unused_card = self.create_card_object(
+            card_lines, card_name,
+            is_list=is_list, has_none=has_none)
+        self._add_card_helper_ifile(ifile, card_obj, card_name, card_name, comment)
+        return card_obj
 
     def add_card(self, card_lines, card_name, comment='', is_list=True, has_none=True):
         """
@@ -2751,6 +2808,76 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             xyz_cid0 = xyz_cid0[isort, :]
         return xyz_cid0
 
+    def _add_card_helper_ifile(self, ifile, card_obj, card, card_name, comment=''):
+        """See ``_add_card_helper``"""
+        if card_name == 'ECHOON':
+            self.echo = True
+            return
+        elif card_name == 'ECHOOFF':
+            self.echo = False
+            return
+
+        if self.echo and not self.force_echo_off:
+            self._echo_card(card, card_obj)
+
+        if card_name in self._card_parser:
+            card_class, add_card_function = self._card_parser[card_name]
+            try:
+                class_instance = card_class.add_card(card_obj, comment=comment)
+                add_card_function(class_instance)
+            except TypeError:
+                # this should never be turned on, but is useful for testing
+                msg = 'problem adding %s' % card_obj
+                print(msg)
+                raise
+            except (SyntaxError, AssertionError, KeyError, ValueError) as exception:
+                self._iparse_errors += 1
+                self.log.error(card_obj)
+                var = traceback.format_exception_only(type(exception), exception)
+                self._stored_parse_errors.append((card, var))
+                if self._iparse_errors > self._nparse_errors:
+                    self.pop_parse_errors()
+            class_instance.ifile = ifile
+
+        elif card_name in self._card_parser_prepare:
+            add_card_function = self._card_parser_prepare[card_name]
+            try:
+                obj = add_card_function(card, card_obj, comment=comment)
+            except (SyntaxError, AssertionError, KeyError, ValueError) as exception:
+                raise
+                #self._iparse_errors += 1
+                #self.log.error(card_obj)
+                #var = traceback.format_exception_only(type(exception), exception)
+                #self._stored_parse_errors.append((card, var))
+                #if self._iparse_errors > self._nparse_errors:
+                    #self.pop_parse_errors()
+
+            if obj is None:
+                print(add_card_function)
+                print(card)
+                print(card_obj)
+                raise RuntimeError('_prepare_%s needs to implement obj' % card_name.lower())
+            elif isinstance(obj, list):
+                for obji in obj:
+                    obji.ifile = ifile
+            elif obj == -1:
+                pass
+            else:
+                obj.ifile = ifile
+
+        else:
+            self.reject_cards.append(card_obj)
+
+    def _echo_card(self, card, card_obj):
+        """echos a card"""
+        try:
+            print(print_card_8(card_obj).rstrip())
+        except:
+            if card in ['DEQATN']:
+                print(str(card_obj).rstrip())
+            else:
+                print(print_card_16(card_obj).rstrip())
+
     def _add_card_helper(self, card_obj, card, card_name, comment=''):
         # type: (BDFCard, List[str], str, str) -> None
         """
@@ -2776,13 +2903,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             return
 
         if self.echo and not self.force_echo_off:
-            try:
-                print(print_card_8(card_obj).rstrip())
-            except:
-                if card in ['DEQATN']:
-                    print(str(card_obj).rstrip())
-                else:
-                    print(print_card_16(card_obj).rstrip())
+            self._echo_card(card, card_obj)
 
         if card_name in self._card_parser:
             card_class, add_card_function = self._card_parser[card_name]
@@ -3598,19 +3719,55 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
         self.echo = False
         if cards_dict: # self._is_cards_dict = True
-            for card_name, cards in sorted(cards_dict.items()):
-                if self.is_reject(card_name):
-                    self.log.info('    rejecting card_name = %s' % card_name)
-                    for comment, card_lines, unused_ifile_iline in cards:
-                        self.increase_card_count(card_name)
-                        self.reject_lines.append([_format_comment(comment)] + card_lines)
-                else:
-                    for comment, card_lines, unused_ifile_iline in cards:
-                        self.add_card(card_lines, card_name, comment=comment,
-                                      is_list=False, has_none=False)
+            self._parse_cards_dict(cards_dict)
 
         if cards_list:
             # this is the block that actually runs
+            self._parse_cards_list(cards_list)
+
+    def _parse_cards_dict(self, cards_dict):
+        if save_file_structure:
+            raise NotImplementedError(list('save_file_structure=True is not supported\n%s' % cards_dict.keys())
+
+        for card_name, cards in sorted(cards_dict.items()):
+            if self.is_reject(card_name):
+                self.log.info('    rejecting card_name = %s' % card_name)
+                for comment, card_lines, unused_ifile_iline in cards:
+                    self.increase_card_count(card_name)
+                    self.reject_lines.append([_format_comment(comment)] + card_lines)
+            else:
+                for comment, card_lines, unused_ifile_iline in cards:
+                    self.add_card(card_lines, card_name, comment=comment,
+                                  is_list=False, has_none=False)
+
+    def _parse_cards_list(self, cards_list):
+        save_file_structure = self.save_file_structure
+        if save_file_structure:
+            for icard, card in enumerate(cards_list):
+                card_name, comment, card_lines, (ifile, unused_iline) = card
+                if card_name is None:
+                    msg = 'card_name = %r\n' % card_name
+                    msg += 'card_lines = %s' % card_lines
+                    raise RuntimeError(msg)
+
+                if '=' in card_name:
+                    #print(card)
+                    replicated_cards = self.expand_replication(
+                        card_name, icard, cards_list, card_lines)
+
+                    _check_replicated_cards(replicated_cards)
+                    for replicated_card in replicated_cards:
+                        self.add_card_ifile(ifile, replicated_card, replicated_card[0], comment=comment,
+                                            is_list=True, has_none=True)
+                    continue
+
+                if self.is_reject(card_name):
+                    self.reject_card_lines(card_name, card_lines, comment)
+                else:
+                    self.add_card_ifile(ifile, card_lines, card_name, comment=comment,
+                                        is_list=False, has_none=False)
+
+        else:
             for icard, card in enumerate(cards_list):
                 card_name, comment, card_lines, unused_ifile_iline = card
                 if card_name is None:
@@ -3622,21 +3779,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                     #print(card)
                     replicated_cards = self.expand_replication(
                         card_name, icard, cards_list, card_lines)
-                    replicated_card_old = []
-                    try:
-                        for replicated_card in replicated_cards:
-                            assert replicated_card != replicated_card_old
-                            replicated_card_old = replicated_card
-                    except AssertionError:
-                        #print('card_list = %s' % card_list)
-                        #print('card_lines = %s' % card_lines)
-                        replicated_card_old = []
-                        for replicated_card in replicated_cards:
-                            #print('adding ', replicated_card)
-                            assert replicated_card != replicated_card_old
-                            replicated_card_old = replicated_card
-                        raise
 
+                    _check_replicated_cards(replicated_cards)
                     for replicated_card in replicated_cards:
                         self.add_card(replicated_card, replicated_card[0], comment=comment,
                                       is_list=True, has_none=True)
@@ -4051,6 +4195,21 @@ def _check_for_spaces(card_name, card_lines, comment):
     if card_name in ['SUBCASE ', 'CEND']:
         raise RuntimeError('No executive/case control deck was defined.')
 
+def _check_replicated_cards(replicated_cards):
+    replicated_card_old = []
+    try:
+        for replicated_card in replicated_cards:
+            assert replicated_card != replicated_card_old
+            replicated_card_old = replicated_card
+    except AssertionError:
+        #print('card_list = %s' % card_list)
+        #print('card_lines = %s' % card_lines)
+        replicated_card_old = []
+        for replicated_card in replicated_cards:
+            #print('adding ', replicated_card)
+            assert replicated_card != replicated_card_old
+            replicated_card_old = replicated_card
+        raise
 
 def main():  # pragma: no cover
     """shows off how unicode works becausee it's overly complicated"""

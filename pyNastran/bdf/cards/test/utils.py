@@ -11,7 +11,7 @@ from pyNastran.bdf.mesh_utils.mirror_mesh import bdf_mirror
 
 def save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
                    run_convert=True, run_renumber=True, run_mirror=True,
-                   run_save_load=True, run_quality=True):
+                   run_save_load=True, run_quality=True, write_saves=True):
     """writes, re-reads, saves an obj, loads an obj, and returns the deck"""
     model.validate()
     model.pop_parse_errors()
@@ -22,8 +22,13 @@ def save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
     model.write_bdf(bdf_file, size=16, close=False)
     bdf_file.seek(0)
     model.write_bdf(bdf_file, size=16, is_double=True, close=False)
-
     bdf_file.seek(0)
+
+    if write_saves and model.save_file_structure:
+        bdf_filenames = {0 : 'junk.bdf',}
+        model.write_bdfs(bdf_filenames)
+        os.remove('junk.bdf')
+
     if run_remove_unused:
         remove_unused(model)
     if run_convert:

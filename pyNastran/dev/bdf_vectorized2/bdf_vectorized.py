@@ -152,6 +152,7 @@ class BDF(BDF_):
         pass
     def _prepare_grid(self, card, card_obj, comment=''):
         self.grid.add_card(card_obj, comment=comment)
+
     def _add_node_object(self, node, allow_overwrites=False):
         raise AttributeError("'BDF' object has no attribute '_add_node_object'")
     def _add_element_object(self, elem, allow_overwrites=False):

@@ -738,7 +738,7 @@ class TestAero(unittest.TestCase):
         model.cross_reference(model)
         caero1.panel_points_elements()
         caero2.get_points_elements_3d()
-        save_load_deck(model, run_renumber=True)
+        save_load_deck(model)
 
 
     def test_spline2(self):

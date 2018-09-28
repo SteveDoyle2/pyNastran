@@ -23,6 +23,7 @@ class BDFAttributes(object):
         self.is_nx = False
         self.is_msc = False
         self.is_zona = False
+        self.save_file_structure = False
         self.set_as_msc()
 
         self.units = []  # type: List[str]

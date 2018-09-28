@@ -545,9 +545,7 @@ class TestBars(unittest.TestCase):
         #print(force1, force2)
         assert np.allclose(force1, force2), force1
         assert np.allclose(moment1, moment2), moment1
-        save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
-                       run_convert=True, run_renumber=True, run_mirror=True,
-                       run_save_load=True)
+        save_load_deck(model, xref='standard', punch=True)
 
     def test_baror(self):
         """tests a BAROR"""
