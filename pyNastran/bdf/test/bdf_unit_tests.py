@@ -133,7 +133,7 @@ class TestBDF(Tester):
         """checks solid_bending.dat"""
         bdf_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending.bdf')
         model = BDF(debug=False)
-        cards = model._read_bdf_cards(bdf_filename, validate=True, xref=False,
+        cards = model._read_bdf_cards(bdf_filename,
                                       punch=False, read_includes=True, encoding=None)
         assert len(cards) == 9, len(cards)
 

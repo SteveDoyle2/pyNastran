@@ -79,6 +79,7 @@ class TestPyBDF(unittest.TestCase):
             'ASSIGN OUTPUT4=junk.op4\n'
             'CEND\n'
             'BEGIN BULK\n'
+            'GRID,1'
         )
         bdf_filename.seek(0)
 
@@ -94,6 +95,7 @@ class TestPyBDF(unittest.TestCase):
             'ASSIGN FEM=junk.f06\n'
             'CEND\n'
             'BEGIN BULK\n'
+            'GRID,1'
         )
         bdf_filename.seek(0)
 

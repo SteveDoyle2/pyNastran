@@ -828,7 +828,7 @@ class BDFAttributes(object):
             'se_usets' : ['SEUSET', 'SEQSET1'],
             'se_sets' : ['SESET'],
             'radset' : ['RADSET'],
-            'radcavs' : ['RADCAV'],
+            'radcavs' : ['RADCAV', 'RADLST'],
             'radmtx' : ['RADMTX'],
             # SEBSEP
 

@@ -170,7 +170,7 @@ class AddMethods(BDFAttributes):
         key = setree.seid
         self.setree[key] = setree
     def _add_senqset_object(self, senqset):
-        key = senqset.seid
+        key = senqset.set_id
         self.senqset[key] = senqset
     def _add_sebulk_object(self, sebulk):
         key = sebulk.seid

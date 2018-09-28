@@ -539,6 +539,7 @@ class WriteMesh(BDFAttributes):
 
         """
         self._write_dmigs(bdf_file, size, is_double, is_long_ids=is_long_ids)
+        self._write_superelements(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_loads(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_dynamic(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_aero_control(bdf_file, size, is_double, is_long_ids=is_long_ids)
@@ -550,7 +551,6 @@ class WriteMesh(BDFAttributes):
 
         self._write_thermal(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_thermal_materials(bdf_file, size, is_double, is_long_ids=is_long_ids)
-
         self._write_constraints(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_optimization(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_tables(bdf_file, size, is_double, is_long_ids=is_long_ids)
@@ -1071,7 +1071,15 @@ class WriteMesh(BDFAttributes):
 
     def _write_superelements(self, bdf_file, size=8, is_double=False, is_long_ids=None):
         # type: (Any, int, bool) -> None
-        """Writes the SETx cards sorted by ID"""
+        """
+        Writes the Superelement cards
+
+        Parameters
+        ----------
+        size : int
+            large field (16) or small field (8)
+
+        """
         is_sets = (self.se_sets or self.se_bsets or self.se_csets or self.se_qsets
                    or self.se_usets)
         if is_sets:
@@ -1089,6 +1097,30 @@ class WriteMesh(BDFAttributes):
                     bdf_file.write(set_obj.write_card(size, is_double))
             for suport in self.se_suport:  # list
                 bdf_file.write(suport.write_card(size, is_double))
+
+        for unused_seid, csuper in sorted(self.csuper.items()):
+            bdf_file.write(csuper.write_card(size, is_double))
+        for unused_seid, csupext in sorted(self.csupext.items()):
+            bdf_file.write(csupext.write_card(size, is_double))
+
+        for unused_seid, sebndry in sorted(self.sebndry.items()):
+            bdf_file.write(sebndry.write_card(size, is_double))
+        for unused_seid, seelt in sorted(self.seelt.items()):
+            bdf_file.write(seelt.write_card(size, is_double))
+        for unused_seid, seexcld in sorted(self.seexcld.items()):
+            bdf_file.write(seexcld.write_card(size, is_double))
+
+        for unused_seid, seloc in sorted(self.seloc.items()):
+            bdf_file.write(seloc.write_card(size, is_double))
+        for unused_seid, seload in sorted(self.seload.items()):
+            bdf_file.write(seload.write_card(size, is_double))
+        for unused_seid, sempln in sorted(self.sempln.items()):
+            bdf_file.write(sempln.write_card(size, is_double))
+        for unused_setid, senqset in sorted(self.senqset.items()):
+            bdf_file.write(senqset.write_card(size, is_double))
+        for unused_seid, setree in sorted(self.setree.items()):
+            bdf_file.write(setree.write_card(size, is_double))
+
 
     def _write_tables(self, bdf_file, size=8, is_double=False, is_long_ids=None):
         # type: (Any, int, bool) -> None

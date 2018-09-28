@@ -359,7 +359,6 @@ class CSUPER(BaseCard):
         #:  Identifiers of grids points. (Integer > 0)
         self.ids = expand_thru(ids)
         self.ids_ref = None
-        print(self)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -375,6 +374,10 @@ class CSUPER(BaseCard):
                 ids.append(idi)
         assert len(card) >= 3, 'len(CSUPER card) = %i\ncard=%s' % (len(card), card)
         return CSUPER(seid, psid, ids, comment=comment)
+
+    def raw_fields(self):
+        list_fields = ['CSUPER', self.seid, self.psid] + self.ids
+        return list_fields
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
@@ -414,6 +417,10 @@ class CSUPEXT(BaseCard):
                 ids.append(idi)
         assert len(card) <= 9, 'len(CSUPEXT card) = %i\ncard=%s' % (len(card), card)
         return CSUPEXT(seid, ids, comment=comment)
+
+    def raw_fields(self):
+        list_fields = ['CSUPEXT', self.seid] + self.ids
+        return list_fields
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
@@ -578,7 +585,6 @@ class SENQSET(BaseCard):
             self.comment = comment
         self.set_id = set_id
         self.n = n
-        print(self)
 
     @classmethod
     def add_card(cls, card, comment=''):

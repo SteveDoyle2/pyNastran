@@ -998,6 +998,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
         obj = BDFInputPy(self.read_includes, self.dumplines, self._encoding,
                          nastran_format=self.nastran_format,
+                         consider_superelements=True,
                          log=self.log, debug=self.debug)
         out = obj.get_lines(bdf_filename, punch=self.punch, make_ilines=True)
         system_lines, executive_control_lines, case_control_lines, bulk_data_lines, bulk_data_ilines = out
@@ -1214,6 +1215,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
     def get_bdf_cards(self, bulk_data_lines, bulk_data_ilines=None):
         """Parses the BDF lines into a list of card_lines"""
         if bulk_data_ilines is None:
+            asdf
             bulk_data_ilines = np.zeros((len(bulk_data_lines), 2), dtype='int32')
         cards_list = []
         cards_dict = defaultdict(list)
@@ -1228,6 +1230,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
         for iline_bulk, line in enumerate(bulk_data_lines):
             ifile_iline = bulk_data_ilines[iline_bulk, :]
+            #print(iline_bulk, ifile_iline, line)
             #print('    backup=%r' % backup_comment)
             comment = ''
             if '$' in line:
@@ -2116,7 +2119,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
             'RADCAV' : (RADCAV, self._add_radcav_object), #
             #'RADLST' : (RADLST, self._add_radcav_object), # TestOP2.test_bdf_op2_thermal_02
-            'RADMTX' : (RADMTX, self._add_radmtx_object), # TestOP2.test_bdf_op2_thermal_02
+            #'RADMTX' : (RADMTX, self._add_radmtx_object), # TestOP2.test_bdf_op2_thermal_02
             #'RADMT' : (Crash, None),
 
             'ASET' : (ASET, self._add_aset_object),
