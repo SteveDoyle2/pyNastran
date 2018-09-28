@@ -71,6 +71,7 @@ class TestPyBDF(unittest.TestCase):
             bdf_file.write('CEND\n')
             bdf_file.write('BEGIN BULK\n')
             bdf_file.write('GRID,1\n')
+            bdf_file.write('ENDDATA\n')
 
         bdf_filename = StringIO()
         bdf_filename.write(
@@ -79,7 +80,7 @@ class TestPyBDF(unittest.TestCase):
             'ASSIGN OUTPUT4=junk.op4\n'
             'CEND\n'
             'BEGIN BULK\n'
-            'GRID,1'
+            'GRID,2'
         )
         bdf_filename.seek(0)
 
@@ -88,14 +89,23 @@ class TestPyBDF(unittest.TestCase):
         encoding = None
         pybdf = BDFInputPy(read_includes, dumplines, encoding, nastran_format='zona',
                            log=None, debug=False)
-        pybdf.get_lines(bdf_filename, punch=False, make_ilines=True)
-        #----------------------------------------------------------------
+        bulk_data_lines = pybdf.get_lines(bdf_filename, punch=False, make_ilines=True)[3]
+        #(unused_system_lines,
+         #unused_executive_control_lines,
+         #unused_case_control_lines,
+         #bulk_data_lines,
+         #unused_bulk_data_ilines) = out
+        #print('bulk_data_linesA =', bulk_data_lines)
+        assert bulk_data_lines == ['GRID,1', 'GRID,2'], bulk_data_lines
+
+        #-----------------------------------------------------------------------
         bdf_filename = StringIO()
         bdf_filename.write(
             'ASSIGN FEM=junk.f06\n'
             'CEND\n'
             'BEGIN BULK\n'
-            'GRID,1'
+            'GRID,2\n'
+            #'ENDDATA'
         )
         bdf_filename.seek(0)
 
@@ -104,14 +114,17 @@ class TestPyBDF(unittest.TestCase):
         encoding = None
         pybdf = BDFInputPy(read_includes, dumplines, encoding, nastran_format='zona',
                            log=None, debug=False)
-        pybdf.get_lines(bdf_filename, punch=False, make_ilines=True)
+        bulk_data_lines = pybdf.get_lines(bdf_filename, punch=False, make_ilines=True)[3]
+        #print('bulk_data_linesB =', bulk_data_lines)
 
-        #----------------------------------------------------------------
+        #-----------------------------------------------------------------------
         bdf_filename = StringIO()
         bdf_filename.write(
             "ASSIGN FEM='junk.f06'\n"
             'CEND\n'
             'BEGIN BULK\n'
+            'GRID,3\n'
+            #'ENDDATA'
         )
         bdf_filename.seek(0)
 
@@ -120,7 +133,8 @@ class TestPyBDF(unittest.TestCase):
         encoding = None
         pybdf = BDFInputPy(read_includes, dumplines, encoding, nastran_format='zona',
                            log=None, debug=False)
-        pybdf.get_lines(bdf_filename, punch=False, make_ilines=True)
+        bulk_data_lines = pybdf.get_lines(bdf_filename, punch=False, make_ilines=True)[3]
+        #print('bulk_data_linesC =', bulk_data_lines)
 
 if __name__ == '__main__':
     unittest.main()

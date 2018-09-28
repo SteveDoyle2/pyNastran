@@ -186,8 +186,13 @@ class SEMPLN(BaseCard):
     Superelement Mirror Plane
     Defines a mirror plane for mirroring a partitioned superelement.
 
-    SEMPLN SEID PLANE P1 P2  P3
-    SEMPLN 110  PLANE 12 45 1125
+    +--------+------+-------+----+----+------+
+    |    1   |   2  |    3  | 4  | 5  |   6  |
+    +========+======+=======+====+====+======+
+    | SEMPLN | SEID | PLANE | P1 | P2 |  P3  |
+    +--------+------+-------+----+----+------+
+    | SEMPLN | 110  | PLANE | 12 | 45 | 1125 |
+    +--------+------+-------+----+----+------+
     """
     type = 'SEMPLN'
     def __init__(self, seid, p1, p2, p3, comment=''):
@@ -259,8 +264,14 @@ class SELOC(BaseCard):
     Defines a partitioned superelement relocation by listing three noncolinear points in
     the superelement and three corresponding points not belonging to the superelement.
 
-    SELOC SEID PA1 PA2 PA3  PB1 PB2 PB
-    SELOC 110  10  100 111 1010 112 30
+    +-------+------+-----+-----+-----+------+-----+----+
+    |   1   |   2  |  3  |  4  |  5  |   6  |  7  |  8 |
+    +=======+======+=====+=====+=====+======+=====+====+
+    | SELOC | SEID | PA1 | PA2 | PA3 |  PB1 | PB2 | PB |
+    +-------+------+-----+-----+-----+------+-----+----+
+    | SELOC | 110  | 10  | 100 | 111 | 1010 | 112 | 30 |
+    +-------+------+-----+-----+-----+------+-----+----+
+
     """
     type = 'SELOC'
     def __init__(self, seid, ids, comment=''):
@@ -301,9 +312,15 @@ class SETREE(BaseCard):
 
     Specifies superelement reduction order.
 
-    SETREE SEID SEUP1 SEUP2 SEUP3 SEUP4 SEUP5 SEUP6 SEUP7
-           SEUP8 SEUP9 -etc.-
-    SETREE 400 10 20 30 40
+    +--------+-------+-------+-------+-------+-------+-------+-------+-------+
+    |    1   |    2  |   3   |   4   |   5   |   6   |   7   |   8   |   9   |
+    +========+=======+=======+=======+=======+=======+=======+=======+=======+
+    | SETREE |  SEID | SEUP1 | SEUP2 | SEUP3 | SEUP4 | SEUP5 | SEUP6 | SEUP7 |
+    +--------+-------+-------+-------+-------+-------+-------+-------+-------+
+    |        | SEUP8 | SEUP9 |  etc. |       |       |       |       |       |
+    +--------+-------+-------+-------+-------+-------+-------+-------+-------+
+    | SETREE |  400  |   10  |   20  |   30  |   40  |       |       |       |
+    +--------+-------+-------+-------+-------+-------+-------+-------+-------+
     """
     type = 'SETREE'
     def __init__(self, seid, ids, comment=''):
@@ -345,8 +362,8 @@ class CSUPER(BaseCard):
     superelements or superelements from an external source. These are all known as
     secondary superelements.
 
-    CSUPER SSlD PSID GP1 GP2 GP3 GP4 GP5 GP6
-           GP7 GP8 -etc.-
+    | CSUPER | SSlD | PSID |  GP1 | GP2 | GP3 | GP4 | GP5 | GP6 |
+    |        |  GP7 |  GP8 | etc. |     |     |     |     |     |
     """
     type = 'CSUPER'
     def __init__(self, seid, psid, ids, comment=''):
@@ -390,7 +407,7 @@ class CSUPEXT(BaseCard):
 
     Assigns exterior points to a superelement.
 
-    CSUPEXT SEID GP1 GP2 GP3 GP4 GP5 GP6 GP7
+    | CSUPEXT | SEID | GP1 | GP2 | GP3 | GP4 | GP5 | GP6 | GP7 |
     """
     type = 'CSUPEXT'
     def __init__(self, seid, ids, comment=''):
@@ -434,10 +451,16 @@ class SEBULK(BaseCard):
     Defines superelement boundary search options and a repeated,
     mirrored, or collector superelement.
 
-    | SEBULK | SEID |  TYPE  | RSEID | METHOD |  TOL   | LOC | UNITNO
-    | SEBULK | 14   | REPEAT |   4   |  AUTO  | 1.0E-3 |     |
+    +--------+------+--------+-------+--------+--------+-----+--------+
+    |    1   |   2  |    3   |    4  |    5   |   6    |  7  |    8   |
+    +========+======+========+=======+========+========+=====+========+
+    | SEBULK | SEID |  TYPE  | RSEID | METHOD |  TOL   | LOC | UNITNO |
+    +--------+------+--------+-------+--------+--------+-----+--------+
+    | SEBULK | 14   | REPEAT |   4   |  AUTO  | 1.0E-3 |     |        |
+    +--------+------+--------+-------+--------+--------+-----+--------+
+
     """
-    type = 'SECONCT'
+    type = 'SEBULK'
     def __init__(self, seid, Type, rseid,
                  method='AUTO', tol=1e-5, loc='YES', unitno=None,
                  comment=''):
@@ -485,7 +508,7 @@ class SEBULK(BaseCard):
         tol = double_or_blank(card, 5, 'tol', 1e-5)
         loc = string_or_blank(card, 6, 'loc', 'YES')
         unitno = integer_or_blank(card, 7, 'seid')
-        assert len(card) <= 8, 'len(SENQSET card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 8, 'len(SEBULK card) = %i\ncard=%s' % (len(card), card)
         return SEBULK(seid, Type, rseid, method=method, tol=tol,
                       loc=loc, unitno=unitno, comment=comment)
 
@@ -550,8 +573,8 @@ class SECONCT(BaseCard):
         raise NotImplementedError('SECONCT')
         set_id = integer_or_string(card, 1, 'set_id')
         n = integer_or_blank(card, 2, 'n', 0)
-        assert len(card) <= 3, 'len(SENQSET card) = %i\ncard=%s' % (len(card), card)
-        return SENQSET(set_id, n, comment=comment)
+        assert len(card) <= 3, 'len(SECONCT card) = %i\ncard=%s' % (len(card), card)
+        return SECONCT(set_id, n, comment=comment)
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
