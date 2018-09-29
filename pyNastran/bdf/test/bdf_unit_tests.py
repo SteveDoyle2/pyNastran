@@ -516,7 +516,10 @@ class TestBDF(Tester):
         )
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
-        assert len(diff_cards2) == 0, diff_cards2
+        if len(diff_cards2) != 0:  # pragma: no cover
+            msg = 'check testA.test_bdf.out\ndiff_cards2=%s\n' % (diff_cards2)
+            raise AssertionError(msg)
+
         #os.remove(bdf_filename + '_out')
         #self.run_bdf(folder, bdf_filename, xref=True) # PBEAML is not supported
 

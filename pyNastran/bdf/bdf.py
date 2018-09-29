@@ -965,7 +965,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             for include_lines, bdf_filename2 in include_lines_filename_pairs:
                 #print(ifile, include_lines)
                 self.include_filenames[ifile].append(bdf_filename2)
-                if not save_file_structure:
+                if not save_file_structure and not obj.read_includes:
                     self.reject_lines += include_lines
         #print('-------------ssett (end)----------')
         self.active_filenames += obj.active_filenames
@@ -3745,7 +3745,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             self._parse_cards_list(cards_list)
 
     def _parse_cards_dict(self, cards_dict):
-        if save_file_structure:
+        if self.save_file_structure:
             raise NotImplementedError('save_file_structure=True is not supported\n%s' % (
                 list(cards_dict.keys())))
 
@@ -3792,6 +3792,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         else:
             for icard, card in enumerate(cards_list):
                 card_name, comment, card_lines, unused_ifile_iline = card
+                #print(unused_ifile_iline, card_lines[0])
                 if card_name is None:
                     msg = 'card_name = %r\n' % card_name
                     msg += 'card_lines = %s' % card_lines
