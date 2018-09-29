@@ -361,7 +361,7 @@ def validate_dvprel(prop_type, pname_fid, validate):
         _check_dvprel_options(pname_fid, prop_type, options)
 
     elif prop_type == 'PBMSECT':
-        options = ['T', 'W', 'H']
+        options = ['T', 'W', 'H', 'T(2)']
         _check_dvprel_options(pname_fid, prop_type, options)
 
     elif prop_type == 'PBEND':

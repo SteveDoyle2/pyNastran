@@ -54,7 +54,7 @@ class BDFInputPy(object):
         self.nastran_format = nastran_format
         self.include_dir = ''
 
-        self.reject_lines = []
+        self.include_lines = defaultdict(list)
         self.read_includes = read_includes
         self.active_filenames = []
         self.active_filename = None
@@ -99,7 +99,9 @@ class BDFInputPy(object):
         main_lines = self.get_main_lines(bdf_filename)
         all_lines, ilines = self.lines_to_deck_lines(main_lines, make_ilines=make_ilines)
 
-        out = _lines_to_decks(all_lines, ilines, punch, self.log, keep_enddata=True)
+        out = _lines_to_decks(all_lines, ilines, punch, self.log,
+                              keep_enddata=True,
+                              consider_superelements=self.consider_superelements)
         system_lines, executive_control_lines, case_control_lines, bulk_data_lines, bulk_data_ilines = out
         if self.nastran_format in ['msc', 'nx']:
             pass
@@ -129,7 +131,9 @@ class BDFInputPy(object):
                     _main_lines = self.get_main_lines(filename)
                     _all_lines, _ilines = self.lines_to_deck_lines(
                         _main_lines, make_ilines=False)
-                    _out = _lines_to_decks(_all_lines, _ilines, punch, self.log, keep_enddata=False)
+                    _out = _lines_to_decks(_all_lines, _ilines, punch, self.log,
+                                           keep_enddata=False,
+                                           consider_superelements=self.consider_superelements)
                     _system_lines, _executive_control_lines, _case_control_lines, bulk_data_lines2, _bulk_data_ilines2 = _out
                     bulk_data_lines = bulk_data_lines2 + bulk_data_lines
                     continue
@@ -216,10 +220,12 @@ class BDFInputPy(object):
             if uline.startswith('INCLUDE'):
                 j, include_lines = self._get_include_lines(lines, line, i, nlines)
                 bdf_filename2 = get_include_filename(include_lines, include_dir=self.include_dir)
+                self.include_lines[ifile-1].append((include_lines, bdf_filename2))
+
                 if self.read_includes:
                     lines, nlines, ilines = self._update_include(
                         lines, nlines, ilines,
-                        bdf_filename2, i, j, ifile, make_ilines=make_ilines)
+                        include_lines, bdf_filename2, i, j, ifile, make_ilines=make_ilines)
                     ifile += 1
                 else:
                     lines = lines[:i] + lines[j:]
@@ -229,7 +235,7 @@ class BDFInputPy(object):
                             ilines[j:, :],
                         ])
                         #assert len(ilines[:, 1]) == len(np.unique(ilines[:, 1]))
-                    self.reject_lines.append(include_lines)
+                    #self.include_lines[ifile].append(include_lines)
                     #self.reject_lines.append(write_include(bdf_filename2))
             i += 1
 
@@ -242,7 +248,7 @@ class BDFInputPy(object):
         return lines, ilines
 
     def _update_include(self, lines, nlines, ilines,
-                        bdf_filename2, i, j, ifile, make_ilines=False):
+                        include_lines, bdf_filename2, i, j, ifile, make_ilines=False):
         """incorporates an include file into the lines"""
         try:
             self._open_file_checks(bdf_filename2)
@@ -253,6 +259,7 @@ class BDFInputPy(object):
             msg += 'Check the end of %r\n' % crash_name
             msg += 'bdf_filename2 = %r\n' % bdf_filename2
             msg += 'abs_filename2 = %r\n' % os.path.abspath(bdf_filename2)
+            msg += 'include_lines = %s' % include_lines
             #msg += 'len(bdf_filename2) = %s' % len(bdf_filename2)
             print(msg)
             raise
@@ -314,6 +321,9 @@ class BDFInputPy(object):
                 #ilines2.shape[0],
                 #ilines[j:, :].shape[0],
             #)
+            #print('ilines:\n%s' % ilines)
+            #print('ilines2:\n%s' % ilines2)
+            #print('lines2:\n%s' % ''.join(lines2))
             ilines = np.vstack([
                 ilines[:i+1, :],
                 ilines2,
@@ -323,6 +333,9 @@ class BDFInputPy(object):
 
         nlines += nlines2
         lines = lines[:i] + [include_comment] + lines2 + lines[j:]
+        #print('*lines:\n%s' % ''.join(lines))
+        #for ifile_iline, line in zip(ilines, lines):
+            #print(ifile_iline, line.rstrip())
         #if make_ilines:
             #n_ilines = ilines.shape[0]
             #ncompare = n_ilines - dij
@@ -363,8 +376,8 @@ class BDFInputPy(object):
                         #msg += 'bdf_filename2 = %r\n' % bdf_filename
                         msg += 'include_lines = %s' % include_lines
                         raise IndexError(msg)
-                     #print('endswith_quote=%s; %r' % (
-                         #line.split('$')[0].strip().endswith(""), line.strip()))
+                    #print('endswith_quote=%s; %r' % (
+                        #line.split('$')[0].strip().endswith(""), line.strip()))
                     include_lines.append(line.strip())
                     j += 1
                 #print('j=%s nlines=%s less?=%s'  % (j, nlines, j < nlines))
@@ -561,7 +574,8 @@ def _clean_comment(comment):
     return comment
 
 
-def _lines_to_decks(lines, ilines, punch, log, keep_enddata=True):
+def _lines_to_decks(lines, ilines, punch, log, keep_enddata=True,
+                                   consider_superelements=False):
     """
     Splits the BDF lines into:
      - system lines
@@ -607,7 +621,8 @@ def _lines_to_decks(lines, ilines, punch, log, keep_enddata=True):
         auxmodel_lines = {}
     else:
         #print(ilines)
-        out = _lines_to_decks_main(lines, ilines, keep_enddata=keep_enddata)
+        out = _lines_to_decks_main(lines, ilines, keep_enddata=keep_enddata,
+                                   consider_superelements=consider_superelements)
         (executive_control_lines, case_control_lines, bulk_data_lines,
          bulk_data_ilines, superelement_lines, auxmodel_lines) = out
 
@@ -639,7 +654,7 @@ def _lines_to_decks(lines, ilines, punch, log, keep_enddata=True):
                           if _clean_comment(line) is not None]
     return system_lines, executive_control_lines, case_control_lines, bulk_data_lines, bulk_data_ilines
 
-def _lines_to_decks_main(lines, ilines, keep_enddata=True):
+def _lines_to_decks_main(lines, ilines, keep_enddata=True, consider_superelements=False):
     make_ilines = ilines is not None
 
     executive_control_lines = []
@@ -664,7 +679,7 @@ def _lines_to_decks_main(lines, ilines, keep_enddata=True):
         ilines = count()
 
     for i, ifile_iline, line in zip(count(), ilines, lines):
-        #print('%i %i %s' % (ifile_iline[1], flag, line.rstrip()))
+        #print('%s %i %s' % (ifile_iline, flag, line.rstrip()))
         #if flag == 3:
             #print(iline, flag, len(bulk_data_lines), len(bulk_data_ilines), line.rstrip(), end='')
         if flag == 1:
@@ -707,7 +722,7 @@ def _lines_to_decks_main(lines, ilines, keep_enddata=True):
 
                     # we're about to break because we found begin bulk
                     flag = 3
-                    is_extra_bulk = is_auxmodel or is_superelement
+                    is_extra_bulk = is_auxmodel or is_superelement or consider_superelements
                     if not is_extra_bulk:
                         #print('breaking begin bulk...')
                         bulk_data_ilines = _bulk_data_lines_extract(
@@ -719,10 +734,7 @@ def _lines_to_decks_main(lines, ilines, keep_enddata=True):
                     continue
 
                 elif 'SUPER' in uline and '=' in uline:
-                    super_id = int(uline.split('=')[1])
-                    if super_id < 0:
-                        raise SyntaxError('super_id=%i must be greater than 0; line=%s' % (
-                            super_id, line))
+                    super_id = _get_super_id(line, uline)
                     old_flags.append(flag)
                     flag = -super_id
                     current_lines = superelement_lines[super_id]
@@ -759,7 +771,7 @@ def _lines_to_decks_main(lines, ilines, keep_enddata=True):
             #print('cappend %s' % flag)
             current_lines.append(line.rstrip())
         elif flag == 3:
-            assert is_auxmodel is True or is_superelement is True #, is_auxmodel
+            assert is_auxmodel is True or is_superelement is True or consider_superelements #, is_auxmodel
 
             # we have to handle the comment because we could incorrectly
             # flag the model as flipping to the BULK data section if we
@@ -877,8 +889,7 @@ def _read_bulk_for_auxmodel(ifile_iline, line, flag, bulk_data_lines, current_li
     if uline.startswith('BEGIN'):
         if 'AUXMODEL' in uline:
             is_auxmodel_active = True
-            auxmodel_id = int(uline.split('=')[1])
-            assert auxmodel_id > 0, 'auxmodel_id=%i must be greater than 0; line=%s' % (auxmodel_id, line)
+            auxmodel_id = _get_auxmodel_id(line, uline)
             old_flags.append(flag)
             flag = -auxmodel_id
             current_lines = auxmodel_lines[auxmodel_id]
@@ -888,8 +899,7 @@ def _read_bulk_for_auxmodel(ifile_iline, line, flag, bulk_data_lines, current_li
                 is_broken = True
                 return is_broken, auxmodel_id, is_auxmodel_active, flag, current_lines
         elif 'SUPER' in uline:
-            super_id = int(uline.split('=')[1])
-            assert super_id > 0, 'super_id=%i must be greater than 0; line=%s' % (super_id, line)
+            super_id = _get_super_id(line, uline)
             old_flags.append(flag)
             flag = -super_id
             current_lines = superelement_lines[super_id]
@@ -1052,6 +1062,37 @@ def _show_bad_file(self, bdf_filename, encoding, nlines_previous=10):
             iline += 1
             lines.append(line)
 
+def _get_auxmodel_id(line, uline):
+    #if '=' in uline:
+    sline = uline.split('=')
+    #else:
+        #sline = uline.split()
+    try:
+        auxmodel_id = int(sline[1])
+    except (IndexError, ValueError):
+        msg = 'expected "BEGIN AUXMODEL=1"\nline = %s' % line
+        raise SyntaxError(msg)
+
+    if auxmodel_id < 0:
+        raise SyntaxError('auxmodel_id=%i must be greater than 0; line=%s' % (
+            auxmodel_id, line))
+    return auxmodel_id
+
+def _get_super_id(line, uline):
+    if '=' in uline:
+        sline = uline.split('=')
+    else:
+        sline = uline.split()
+
+    try:
+        super_id = int(sline[1])
+    except (IndexError, ValueError):
+        msg = 'expected "BEGIN SUPER=1"\nline = %s' % line
+        raise SyntaxError(msg)
+    if super_id < 0:
+        raise SyntaxError('super_id=%i must be greater than 0; line=%s' % (
+            super_id, line))
+    return super_id
 
 def _clean_comment_bulk(comment):
     # type: (str) -> str

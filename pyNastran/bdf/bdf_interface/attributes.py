@@ -24,8 +24,8 @@ class BDFAttributes(object):
         self.is_msc = False
         self.is_zona = False
         self.save_file_structure = False
+        self.is_superelements = False
         self.set_as_msc()
-
         self.units = []  # type: List[str]
 
     def set_as_msc(self):

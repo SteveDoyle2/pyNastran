@@ -220,6 +220,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
             encoding=None, sum_load=True, size=8, is_double=False,
             stop=False, nastran='', post=-1, dynamic_vars=None,
             quiet=False, dumplines=False, dictsort=False, run_extract_bodies=False,
+            save_file_structure=False,
             nerrors=0, dev=False, crash_cards=None, safe_xref=False, pickle_obj=False,
             stop_on_failure=True):
     """
@@ -307,7 +308,9 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         quiet=quiet, dumplines=dumplines, dictsort=dictsort,
         nerrors=nerrors, dev=dev, crash_cards=crash_cards,
         safe_xref=safe_xref,
-        run_extract_bodies=run_extract_bodies, pickle_obj=pickle_obj,
+        run_extract_bodies=run_extract_bodies,
+        save_file_structure=save_file_structure,
+        pickle_obj=pickle_obj,
         stop_on_failure=stop_on_failure,
     )
     return fem1, fem2, diff_cards
@@ -317,6 +320,7 @@ def run_and_compare_fems(
         punch=False, mesh_form='combined',
         print_stats=False, encoding=None,
         sum_load=True, size=8, is_double=False,
+        save_file_structure=False,
         stop=False, nastran='', post=-1, dynamic_vars=None,
         quiet=False, dumplines=False, dictsort=False,
         nerrors=0, dev=False, crash_cards=None,
@@ -353,6 +357,7 @@ def run_and_compare_fems(
         fem1 = run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load,
                         size, is_double,
                         run_extract_bodies=run_extract_bodies,
+                        save_file_structure=save_file_structure,
                         encoding=encoding, crash_cards=crash_cards, safe_xref=safe_xref,
                         pickle_obj=pickle_obj, stop=stop)
         is_mesh_opt = any([card_name in fem1.card_count for card_name in mesh_opt_cards])
@@ -512,7 +517,8 @@ def run_nastran(bdf_model, nastran, post=-1, size=8, is_double=False):
         print(op2.get_op2_stats())
 
 def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size, is_double,
-             run_extract_bodies=False, encoding=None, crash_cards=None, safe_xref=True,
+             run_extract_bodies=False, save_file_structure=False,
+             encoding=None, crash_cards=None, safe_xref=True,
              pickle_obj=False, stop=False):
     """
     Reads/writes the BDF
@@ -554,9 +560,11 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
     check_path(bdf_model, 'bdf_model')
     try:
         if '.pch' in bdf_model:
-            fem1.read_bdf(bdf_model, xref=False, punch=True, encoding=encoding)
+            fem1.read_bdf(bdf_model, xref=False, punch=True, encoding=encoding,
+                          save_file_structure=save_file_structure)
         else:
-            fem1.read_bdf(bdf_model, xref=False, punch=punch, encoding=encoding)
+            fem1.read_bdf(bdf_model, xref=False, punch=punch, encoding=encoding,
+                          save_file_structure=save_file_structure)
             for card in crash_cards:
                 if card in fem1.card_count:
                     raise DisabledCardError('card=%r has been disabled' % card)

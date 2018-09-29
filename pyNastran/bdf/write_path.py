@@ -1,12 +1,19 @@
 """
 Defines following useful methods:
-  - write_include
+  - write_include(filename, is_windows=True)
 """
 from __future__ import print_function
+import sys
 import os
 import typing
+from six import PY2
+if PY2:
+    from pathlib2 import PurePosixPath, PureWindowsPath
+else:
+    from pathlib import PurePosixPath, PureWindowsPath
 
-def write_include(filename, is_windows=True):
+
+def write_include(filename, is_windows=None):
     # type: (str, bool) -> str
     """
     Writes a bdf INCLUDE file line given an imported filename.
@@ -15,11 +22,11 @@ def write_include(filename, is_windows=True):
     ----------
     filename : str
         the filename to write
-    is_windows : bool; default=True
-        Windows has a special format for writing INCLUDE files, so the
-        format for a BDF that will run on Linux and Windows is
-        different.  We could check the platform, but since you might
-        need to change platforms, it's an option
+    is_windows : bool; default=None
+        True/False : Windows has a special format for writing INCLUDE
+            files, so the format for a BDF that will run on Linux and
+            Windows is different.
+        None : Check the platform
 
     For a model that will run on Linux:
 
@@ -36,7 +43,9 @@ def write_include(filename, is_windows=True):
       INCLUDE /opt/NASA/test1/test2/test3/test4/formats/pynastran_v0.6/
               pyNastran/bdf/model.inc
     """
-    msg = 'INCLUDE '  # len=8
+    is_windows = is_windows if is_windows is not None else sys.platform in ['win32']
+
+    msg = "INCLUDE '"  # len=8
     #nmax = 72 - 8 # 64
 
     if is_windows:
@@ -44,7 +53,7 @@ def write_include(filename, is_windows=True):
     else:
         marker = '/'
 
-    sline = _split_path(filename)
+    sline = _split_path(filename, is_windows)
     #print('sline =', sline)
     nsline = len(sline)
     if len(filename) > 52: # 62
@@ -66,32 +75,18 @@ def write_include(filename, is_windows=True):
                     pth = ''
     else:
         pth = marker.join(sline)
-    out = msg + pth.rstrip('\n ' + marker) + '\n'
+    out = msg + pth.rstrip('\n ' + marker) + "'\n"
     return out
 
 
-def _split_path(abspath):
+def _split_path(abspath, is_windows):
     """
     Takes a path and splits it into the various components.
 
-    This is a helper method for write_include
+    This is a helper method for ``write_include``
     """
-    path = abspath
-
-    basepaths = []
-    npaths_old = -1
-    npaths_new = 0
-    dpaths = 1
-    while dpaths:
-        npaths_old = len(basepaths)
-        basepath = os.path.basename(path)
-        if basepath:
-            basepaths.append(basepath)
-            path = os.path.dirname(path)
-        npaths_new = len(basepaths)
-        dpaths = npaths_new - npaths_old
-    if path:
-        basepaths.append(path)
-
-    basepaths.reverse()
-    return basepaths
+    if is_windows:
+        parts = PureWindowsPath(abspath).parts
+    else:
+        parts = PurePosixPath(abspath).parts
+    return parts

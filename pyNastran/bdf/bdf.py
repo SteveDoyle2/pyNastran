@@ -166,6 +166,7 @@ from pyNastran.bdf.bdf_interface.pybdf import (
     BDFInputPy, _clean_comment, _clean_comment_bulk, EXECUTIVE_CASE_SPACES)
 
 def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
+             save_file_structure=False,
              skip_cards=None, read_cards=None,
              encoding=None, log=None, debug=True, mode='msc'):
     # type: (Union[str, None], bool, bool, bool, Union[List[str], None], Union[str, None], Union[SimpleLogger, None], Optional[bool], str) -> BDF
@@ -190,6 +191,8 @@ def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
         should the bdf be cross referenced
     punch : bool; default=False
         indicates whether the file is a punch file
+    save_file_structure : bool; default=False
+        enables the ``write_bdfs`` method
     skip_cards : List[str]; default=None
         None : include all cards
         list of cards to skip
@@ -237,7 +240,7 @@ def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
         model.set_cards(read_cards)
     model.read_bdf(bdf_filename=bdf_filename, validate=validate,
                    xref=xref, punch=punch, read_includes=True,
-                   save_file_structure=False,
+                   save_file_structure=save_file_structure,
                    encoding=encoding)
 
     #if 0:
@@ -379,6 +382,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         # cards that were created, but not processed
         self.reject_cards = []  # type: List[str]
 
+        self.include_filenames = defaultdict(list)
         # self.__init_attributes()
 
         cards_to_read = [
@@ -944,22 +948,33 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         obj = BDFInputPy(self.read_includes, self.dumplines, self._encoding,
                          nastran_format=self.nastran_format,
+                         consider_superelements=self.is_superelements,
                          log=self.log, debug=self.debug)
         main_lines = obj.get_main_lines(self.bdf_filename)
         all_lines, ilines = obj.lines_to_deck_lines(main_lines, make_ilines=make_ilines)
-        self._set_pybdf_attributes(obj)
+        self._set_pybdf_attributes(obj, save_file_structure=False)
         return all_lines, ilines
 
-    def _set_pybdf_attributes(self, obj):
+    def _set_pybdf_attributes(self, obj, save_file_structure):
         """common method for all functions that use BDFInputPy"""
-        self.reject_lines += obj.reject_lines
+        #print('-------------ssett----------')
+        # these are include line pairs
+        #print(obj.include_lines)
+        for ifile, include_lines_filename_pairs in obj.include_lines.items():
+            assert len(include_lines_filename_pairs) > 0, include_lines_filename_pairs
+            for include_lines, bdf_filename2 in include_lines_filename_pairs:
+                #print(ifile, include_lines)
+                self.include_filenames[ifile].append(bdf_filename2)
+                if not save_file_structure:
+                    self.reject_lines += include_lines
+        #print('-------------ssett (end)----------')
         self.active_filenames += obj.active_filenames
         self.active_filename = obj.active_filename
         self.include_dir = obj.include_dir
 
     def read_bdf(self, bdf_filename=None,
                  validate=True, xref=True, punch=False, read_includes=True,
-                 save_file_structure=True, encoding=None):
+                 save_file_structure=False, encoding=None):
         """
         Read method for the bdf files
 
@@ -977,7 +992,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             indicates whether INCLUDE files should be read
         save_file_structure : bool; default=False
             enables the ``write_bdfs`` method
-            not implemented
         encoding : str; default=None -> system default
             the unicode encoding
 
@@ -1005,11 +1019,11 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         obj = BDFInputPy(self.read_includes, self.dumplines, self._encoding,
                          nastran_format=self.nastran_format,
-                         consider_superelements=True,
+                         consider_superelements=self.is_superelements,
                          log=self.log, debug=self.debug)
         out = obj.get_lines(bdf_filename, punch=self.punch, make_ilines=True)
         system_lines, executive_control_lines, case_control_lines, bulk_data_lines, bulk_data_ilines = out
-        self._set_pybdf_attributes(obj)
+        self._set_pybdf_attributes(obj, save_file_structure)
 
         self.system_command_lines = system_lines
         self.executive_control_lines = executive_control_lines
@@ -1231,9 +1245,11 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         card_count = defaultdict(int)
         full_comment = ''
         card_lines = []
+        old_ifile_iline = None
         old_card_name = None
         backup_comment = ''
         nlines = len(bulk_data_lines)
+        assert len(bulk_data_lines) == len(bulk_data_ilines)
 
         for iline_bulk, line in enumerate(bulk_data_lines):
             ifile_iline = bulk_data_ilines[iline_bulk, :]
@@ -1260,7 +1276,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                                                           card_lines, ifile_iline])
                     else:
                         cards_list.append([old_card_name, _prep_comment(full_comment),
-                                           card_lines, ifile_iline])
+                                           card_lines, old_ifile_iline])
 
                     card_count[old_card_name] += 1
                     card_lines = []
@@ -1270,7 +1286,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                         self.echo = True
                     elif old_card_name == 'ECHOOFF':
                         self.echo = False
+                old_ifile_iline = ifile_iline
                 old_card_name = card_name.rstrip(' *')
+
                 if old_card_name == 'ENDDATA':
                     self.card_count['ENDDATA'] = 1
                     if nlines - iline_bulk > 1:
@@ -1300,6 +1318,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 backup_comment += comment + '\n'
             #elif comment:
                 #backup_comment += '$' + comment + '\n'
+
 
         if card_lines:
             if self.echo and not self.force_echo_off:
@@ -2588,7 +2607,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
     def add_card_ifile(self, ifile, card_lines, card_name,
                        comment='', is_list=True, has_none=True):
         """Same as ``add_card`` except it has an ifile parameter"""
-        assert isinstance(ifile, int), ifile
+        assert isinstance(ifile, (int, np.int32)), 'ifile=%s type=%s' % (ifile, type(ifile))
         card_name = card_name.upper()
         card_obj, unused_card = self.create_card_object(
             card_lines, card_name,
@@ -3727,7 +3746,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
     def _parse_cards_dict(self, cards_dict):
         if save_file_structure:
-            raise NotImplementedError(list('save_file_structure=True is not supported\n%s' % cards_dict.keys())
+            raise NotImplementedError('save_file_structure=True is not supported\n%s' % (
+                list(cards_dict.keys())))
 
         for card_name, cards in sorted(cards_dict.items()):
             if self.is_reject(card_name):
@@ -3761,8 +3781,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                                             is_list=True, has_none=True)
                     continue
 
-                if self.is_reject(card_name):
-                    self.reject_card_lines(card_name, card_lines, comment)
+                if self.is_reject(card_name):  # pragma: no cover
+                    msg = "save_file_structure=True doesn't support %s" % card_name
+                    raise NotImplementedError(msg)
+                    #self.reject_card_lines(card_name, card_lines, comment)
                 else:
                     self.add_card_ifile(ifile, card_lines, card_name, comment=comment,
                                         is_list=False, has_none=False)
@@ -3860,11 +3882,13 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             elif key == 'encoding':
                 self._encoding = value
             elif key == 'punch':
-                self.punch = True if value == 'true' else False
+                self.punch = _bool(value)
             elif key in ['nnodes', 'nelements']:
                 pass
             elif key == 'dumplines':
-                self.dumplines = True if value == 'true' else False
+                self.dumplines = _bool(value)
+            elif key == 'is_superelements':
+                self.is_superelements = _bool(value)
             elif key == 'skip_cards':
                 cards = {value.strip() for value in value.upper().split(',')}
                 self.cards_to_read = self.cards_to_read - cards
@@ -3940,7 +3964,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                          log=self.log, debug=self.debug)
         out = obj.get_lines(bdf_filename, punch=self.punch, make_ilines=True)
         system_lines, executive_control_lines, case_control_lines, bulk_data_lines, bulk_data_ilines = out
-        self._set_pybdf_attributes(obj)
+        self._set_pybdf_attributes(obj, save_file_structure=False)
 
         self.system_command_lines = system_lines
         self.executive_control_lines = executive_control_lines
@@ -4196,6 +4220,7 @@ def _check_for_spaces(card_name, card_lines, comment):
         raise RuntimeError('No executive/case control deck was defined.')
 
 def _check_replicated_cards(replicated_cards):
+    """helper method for ``parse_cards_list``"""
     replicated_card_old = []
     try:
         for replicated_card in replicated_cards:
@@ -4210,6 +4235,10 @@ def _check_replicated_cards(replicated_cards):
             assert replicated_card != replicated_card_old
             replicated_card_old = replicated_card
         raise
+
+def _bool(value):
+    """casts a lower string to a booean"""
+    return True if value == 'true' else False
 
 def main():  # pragma: no cover
     """shows off how unicode works becausee it's overly complicated"""

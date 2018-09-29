@@ -32,7 +32,10 @@ _REMOVED_LINES = [
     '$SETS', '$CONTACT', '$REJECTS', '$REJECT_LINES',
     '$PROPERTIES_MASS', '$MASSES',
 ]
-EXPECTED_HEADER_KEYS_CHECK = ['version', 'encoding', 'punch', 'nnodes', 'nelements', 'dumplines']
+EXPECTED_HEADER_KEYS_CHECK = [
+    'version', 'encoding', 'nnodes', 'nelements',
+    'punch', 'dumplines', 'is_superelements', # booleans
+]
 EXPECTED_HEADER_KEYS_NO_CHECK = ['skip_cards', 'units']
 
 

@@ -81,6 +81,41 @@ class TestReadWrite(unittest.TestCase):
         model.read_bdf(bdf_filename, xref=True, punch=False)
         #model.write_bdf('junk.bdf')
 
+    def test_read_include_dir_2_save(self):
+        full_path = os.path.join(TEST_PATH)
+        model = BDF(log=log, debug=False)
+        bdf_filename = 'test_include2.bdf'
+        if not os.path.exists(bdf_filename):
+            bdf_filename = os.path.join(full_path, 'test_include2.bdf')
+            #print(full_path)
+        #print(bdf_filename)
+        model.read_bdf(bdf_filename, xref=True, punch=False, save_file_structure=True)
+
+        out_filenames = {}
+        for filename in model.active_filenames:
+            dirname = os.path.dirname(filename)
+            basename = os.path.basename(filename)
+            filename2 = os.path.join(dirname, 'out_' + basename)
+            abs_path = os.path.abspath(filename)
+            out_filenames[abs_path] = filename2
+
+        model.write_bdfs(out_filenames, encoding=None,
+                         size=8, is_double=False,
+                         enddata=None, close=True, relative_dirname='')
+        read_bdf('out_test_include2.bdf')
+
+        model.write_bdfs(out_filenames, encoding=None,
+                         size=8, is_double=False,
+                         enddata=None, close=True, relative_dirname=None)
+        read_bdf('out_test_include2.bdf')
+
+        out_filenames2 = {abs_path : filename2}
+        model.write_bdfs(out_filenames2, encoding=None,
+                         size=8, is_double=False,
+                         enddata=None, close=True)
+        read_bdf('out_test_include2.bdf')
+        os.remove('out_test_include2.bdf')
+
     def test_enddata_1(self):
         """There is an ENDDATA is in the baseline BDF, so None -> ENDDATA"""
         model2 = BDF(log=log, debug=False)
