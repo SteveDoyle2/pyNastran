@@ -20,8 +20,6 @@ All tables have a self.table parameter that is a TableObj
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems
-from six.moves import range
 
 import numpy as np
 
@@ -103,7 +101,7 @@ class DTABLE(BaseCard):
             self.comment = comment
         self.default_values = default_values
         #print('default_values = %s' % default_values)
-        #for key, value in iteritems(self.default_values):
+        #for key, value in self.default_values.items():
             #print(key, type(key))
         assert len(self.default_values) > 0, self.default_values
         #print(self)
@@ -140,7 +138,7 @@ class DTABLE(BaseCard):
             item = self.default_values[key]
         except KeyError:
             msg = 'expected_key=%r\n' % str(key)
-            for keyi, value in iteritems(self.default_values):
+            for keyi, value in self.default_values.items():
                 msg += 'DTABLE; key=%r value=%r\n' % (keyi, value)
             raise KeyError(msg)
         return item
@@ -149,7 +147,7 @@ class DTABLE(BaseCard):
         list_fields = ['DTABLE']
         #print('***default_values = %s' % self.default_values)
         assert len(self.default_values) > 0, self.default_values
-        for label, value in sorted(iteritems(self.default_values)):
+        for label, value in sorted(self.default_values.items()):
             list_fields += [label, value]
         return list_fields
 
@@ -621,6 +619,7 @@ class TABLED4(Table):
         j = np.where(x > self.x4)[0]
         x[j] = self.x4
 
+        #yi = np.zeros(x.shape, dtype=x.dtype)
         yi = self.a * ((x - x1) / x2) ** n
         return yi.sum()
 

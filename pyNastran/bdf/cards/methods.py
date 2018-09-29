@@ -12,8 +12,6 @@ All cards are Method objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-#import sys
-from six.moves import zip, range
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import BaseCard
@@ -141,8 +139,8 @@ class EIGC(Method):
     Defines data needed to perform complex eigenvalue analysis
     .. todo: not done
 
-    inverse power
-    =============
+    ``inverse power``
+
     +------+---------+---------+---------+---------+---------+---------+-----+
     |   1  |    2    |    3    |    4    |    5    |    6    |   7     |  8  |
     +======+=========+=========+=========+=========+=========+=========+=====+
@@ -151,16 +149,16 @@ class EIGC(Method):
     |      | ALPHAAj | OMEGAAj | ALPHABj | OMEGABj |   Lj    |   NEj   | NDj |
     +------+---------+---------+---------+---------+---------+---------+-----+
 
-    complex Lanczos
-    ===============
+    ``complex Lanczos``
+
     +------+---------+---------+---------+---------+---------+---------+-----+
     |   1  |    2    |    3    |    4    |    5    |    6    |   7     |  8  |
     +======+=========+=========+=========+=========+=========+=========+=====+
     |      | SHIFTRj | SHIFTIj | MBLKSZj | IBLKSZj | KSTEPSj |   NDj   |     |
     +------+---------+---------+---------+---------+---------+---------+-----+
 
-    iterative Schur-Rayleigh-Ritz
-    =============================
+    ``iterative Schur-Rayleigh-Ritz``
+
     +------+---------+---------+---------+---------+---------+---------+-----+
     |   1  |    2    |    3    |    4    |    5    |    6    |   7     |  8  |
     +======+=========+=========+=========+=========+=========+=========+=====+
@@ -205,48 +203,38 @@ class EIGC(Method):
         component : int
             Required if norm='POINT'
         epsilon : float
-
         neigenvalues : int
             Number of Eigenvalues
-
-        CLAN Parameters
-        ---------------
-        mblkszs : ???; default=None
-            ???
-        iblkszs : ???; default=None
-            ???
-        ksteps : ???; default=None
-            ???
-        NJIs : ???; default=None
-            ???
-
-        HESS/INV Parameters
-        -------------------
-        alphaAjs : ???; default=None
-            ???
-        omegaAjs : ???; default=None
-            ???
-        alphaBjs : ???; default=None
-            ???
-        omegaBjs : ???; default=None
-            ???
-        LJs : ???; default=None
-            ???
-        NEJs : ???; default=None
-            ???
-        NDJs : ???; default=None
-            ???
-
-        ISSR Parameters
-        ---------------
-        shift_r1 : ???; default=None
-            ???
-        shift_i1 : ???; default=None
-            ???
-        isrr_flag : ???; default=None
-            ???
-        nd1 : ???; default=None
-            ???
+        mblkszs : List[float]; default=None
+            used by CLAN
+        iblkszs : List[int]; default=None
+            used by CLAN
+        ksteps : List[int]; default=None
+            used by CLAN
+        NJIs : List[int]; default=None
+            used by CLAN
+        alphaAjs : List[float]; default=None
+            used by HESS/INV
+        omegaAjs : List[float]; default=None
+            used by HESS/INV
+        alphaBjs : List[float]; default=None
+            used by HESS/INV
+        omegaBjs : List[float]; default=None
+            used by HESS/INV
+        LJs : List[float]; default=None
+            used by HESS/INV
+        NEJs : List[int]; default=None
+            used by HESS/INV
+        NDJs : List[int]; default=None
+            used by HESS/INV
+        shift_r1 : List[float]; default=None
+            used by ISSR
+        shift_i1 : List[float]; default=None
+            used by ISSR
+        isrr_flag : List[int]; default=None
+            used by ISSR
+        nd1 : List[int]; default=None
+            used by ISSR
         comment : str; default=''
             a comment for the card
         """

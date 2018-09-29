@@ -5,7 +5,7 @@ from typing import List, Dict, Optional, Any
 from numpy import array  # type: ignore
 
 from pyNastran.utils import object_attributes, object_methods
-from pyNastran.bdf.utils import deprecated
+from pyNastran.bdf.bdf_interface.utils import deprecated
 #from pyNastran.bdf.case_control_deck import CaseControlDeck
 from pyNastran.bdf.cards.coordinate_systems import CORD2R
 #from pyNastran.bdf.cards.constraints import ConstraintObject
@@ -138,6 +138,15 @@ class BDFAttributes(object):
         """removes the attributes from the model"""
         self.__init_attributes()
 
+        self.nodes = {}
+        self.loads = {}  # type: Dict[int, List[Any]]
+        self.load_combinations = {}  # type: Dict[int, List[Any]]
+
+    def reset_errors(self):
+        """removes the errors from the model"""
+        self._ixref_errors = 0
+        self._stored_xref_errors = []
+
     def __init_attributes(self):
         # type: () -> None
         """
@@ -148,6 +157,7 @@ class BDFAttributes(object):
         References:
           1.  http://www.mscsoftware.com/support/library/conf/wuc87/p02387.pdf
         """
+        self.reset_errors()
         self.bdf_filename = None
         self.punch = None
         self._encoding = None
@@ -270,7 +280,6 @@ class BDFAttributes(object):
         # main structural block
         #: stores POINT cards
         self.points = {}  # type: Dict[int, Any]
-        self.ringaxs = {}  # type: Dict[int, Any]
         #self.grids = {}
 
         self.spoints = {}  # type: Dict[int, Any]
@@ -282,6 +291,11 @@ class BDFAttributes(object):
         #: stores SEQGP cards
         self.seqgp = None  # type: Optional[Any]
 
+        ## stores RINGAX
+        self.ringaxs = {}  # type: Dict[int, Any]
+
+        ## stores GRIDB
+        self.gridb = {}  # type: Dict[int, Any]
 
         #: stores elements (CQUAD4, CTRIA3, CHEXA8, CTETRA4, CROD, CONROD,
         #: etc.)
@@ -507,6 +521,9 @@ class BDFAttributes(object):
 
         # axisymmetric
         self.axic = None  # type: Optional[Any]
+        self.axif = None  # type: Optional[Any]
+        self.ringfl = {}  # type: Dict[int, Any]
+        self._is_axis_symmetric = False
 
         # ------ SOL 144 ------
         #: stores AEROS
@@ -554,6 +571,7 @@ class BDFAttributes(object):
         self.view3ds = {}
         self.radset = None
         self.radcavs = {}
+        self.radmtx = {}
 
         # -------------------------contact cards-------------------------------
         self.bcrparas = {}  # type: Dict[int, Any]
@@ -562,6 +580,24 @@ class BDFAttributes(object):
         self.bctsets = {}  # type: Dict[int, Any]
         self.bsurf = {}  # type: Dict[int, Any]
         self.bsurfs = {}  # type: Dict[int, Any]
+        self.bconp = {}  # type: Dict[int, Any]
+        self.blseg = {}  # type: Dict[int, Any]
+
+
+        #--------------------------superelements------------------------------
+        self.setree = {}
+        self.senqset = {}
+        self.sebulk = {}
+        self.sebndry = {}
+        self.seloc = {}
+        self.sempln = {}
+        self.secontct = {}
+        self.selabel = {}
+        self.seexcld = {}
+        self.seelt = {}
+        self.seload = {}
+        self.csuper = {}
+        self.csupext = {}
 
         # ---------------------------------------------------------------------
         self._type_to_id_map = defaultdict(list)  # type: Dict[int, List[Any]]
@@ -570,8 +606,11 @@ class BDFAttributes(object):
             'nodes' : ['GRID', 'SPOINT', 'EPOINT'], # 'RINGAX',
             'points' : ['POINT'],
             'ringaxs' : ['RINGAX', 'POINTAX'],
+            'ringfl' : ['RINGFL'],
             'axic' : ['AXIC'],
+            'axif' : ['AXIF'],
             'grdset' : ['GRDSET'],
+            'gridb' : ['GRIDB'],
             'seqgp' : ['SEQGP'],
             'ao_element_flags' : ['CBARAO'],
             #'POINTAX', 'RINGAX',
@@ -659,6 +698,20 @@ class BDFAttributes(object):
             'suport1' : ['SUPORT1'],
             'se_suport' : ['SESUP'],
 
+            'setree' : ['SETREE'],
+            'senqset' : ['SENQSET'],
+            'sebulk' : ['SEBULK'],
+            'sebndry' : ['SEBNDRY'],
+            'seloc' : ['SELOC'],
+            'sempln' : ['SEMPLN'],
+            'secontct' : ['SECONTCT'],
+            'selabel' : ['SELABEL'],
+            'seexcld' : ['SEEXCLD'],
+            'seelt' : ['SEELT'],
+            'seload' : ['SELOAD'],
+            'csuper' : ['CSUPER'],
+            'csupext' : ['CSUPEXT'],
+
             # loads
             'load_combinations' : ['LOAD', 'LSEQ'],
             'loads' : [
@@ -676,7 +729,7 @@ class BDFAttributes(object):
             'dloads' : ['DLOAD', ],
             # stores RLOAD1, RLOAD2, TLOAD1, TLOAD2, and ACSRCE entries.
             'dload_entries' : ['ACSRCE', 'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',
-                               'QVECT', 'RANDPS'],
+                               'QVECT', 'RANDPS', 'RANDT1'],
 
             # aero cards
             'aero' : ['AERO'],
@@ -715,7 +768,7 @@ class BDFAttributes(object):
             'convection_properties' : ['PCONV', 'PCONVM'],
 
             # stores thermal boundary conditions
-            'bcs' : ['CONV', 'RADBC', 'RADM'],
+            'bcs' : ['CONV', 'RADBC', 'RADM', 'TEMPBC'],
 
 
             # dynamic cards
@@ -775,7 +828,8 @@ class BDFAttributes(object):
             'se_usets' : ['SEUSET', 'SEQSET1'],
             'se_sets' : ['SESET'],
             'radset' : ['RADSET'],
-            'radcavs' : ['RADCAV'],
+            'radcavs' : ['RADCAV', 'RADLST'],
+            'radmtx' : ['RADMTX'],
             # SEBSEP
 
             'tables' : [
@@ -803,6 +857,8 @@ class BDFAttributes(object):
             'bctsets' : ['BCTSET'],
             'bsurf' : ['BSURF'],
             'bsurfs' : ['BSURFS'],
+            'bconp' : ['BCONP'],
+            'blseg' : ['BLSEG'],
             'views' : ['VIEW'],
             'view3ds' : ['VIEW3D'],
 

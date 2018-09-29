@@ -3,11 +3,11 @@ Subcase creation/extraction class
 """
 from __future__ import print_function
 from typing import Dict, Any
-from six import string_types, iteritems, PY2, PY3
+from six import string_types, PY2, PY3
 from numpy import ndarray
 
-from pyNastran.utils import integer_types
-from pyNastran.bdf.cards.base_card import deprecated
+from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.bdf.bdf_interface.utils import deprecated
 from pyNastran.bdf.bdf_interface.subcase_utils import (
     write_stress_type, write_set, expand_thru_case_control)
 
@@ -104,7 +104,7 @@ class Subcase(object):
             return _cpy
 
         params = _copy.params
-        for key, val in iteritems(self.params):
+        for key, val in self.params.items():
             if isinstance(val, list):
                 val = _deepcopy(val)
             params[key] = val
@@ -478,7 +478,7 @@ class Subcase(object):
 
         .. warning:: needs more validation
         """
-        for key, param in iteritems(self.params):
+        for key, param in self.params.items():
             (unused_value, options, unused_param_type) = param
             if key in INT_CARDS or key in ('SUBTITLE', 'LABEL', 'TITLE', 'ECHO'):
                 pass
@@ -628,14 +628,14 @@ class Subcase(object):
         if sol in self.solCodeMap:  # reduces SOL 144 to SOL 101
             sol = self.solCodeMap[sol]
 
-        for (key, param) in iteritems(self.params):
+        for (key, param) in self.params.items():
             key = key.upper()
             (value, options, param_type) = param
             #msg = ("  -key=|%s| value=|%s| options=%s param_type=|%s|"
             #    % (key, value, options, param_type))
 
         thermal = 0
-        for (key, param) in iteritems(self.params):
+        for (key, param) in self.params.items():
             key = key.upper()
             (value, options, param_type) = param
             #msg = ("  *key=|%s| value=|%s| options=%s param_type=|%s|"
@@ -688,7 +688,7 @@ class Subcase(object):
         op2_params['thermal'] = thermal
 
         #print("\nThe estimated results...")
-        #for (key, value) in sorted(iteritems(op2_params)):
+        #for (key, value) in sorted(op2_params.items()):
             #if value is not None:
                 #print("   key=%r value=%r" % (key, value))
 
@@ -935,7 +935,7 @@ class Subcase(object):
             msg += 'SUBCASE %s\n' % self.id
 
         nparams = 0
-        for key, param in self.subcase_sorted(iteritems(self.params)):
+        for key, param in self.subcase_sorted(self.params.items()):
             #(unused_value, unused_options, unused_param_type) = param
             #print('key=%r value=%s options=%s' % (key, value, options))
             msg += self.print_param(key, param)

@@ -1,3 +1,4 @@
+import numpy as np
 from pyNastran.op2.result_objects.table_object import RealTableArray, ComplexTableArray
 from pyNastran.op2.result_objects.scalar_table_object import RealScalarTableArray
 
@@ -14,7 +15,7 @@ class RealLoadVectorArray(RealTableArray):  # table_code=2, sort_code=0, thermal
         words = ['                                                     L O A D   V E C T O R\n', ]
         #words += self.get_table_marker()
         write_words = True
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             return self._write_f06_transient_block(
                 words, header, page_stamp, page_num, f06_file, write_words,
                 is_mag_phase=is_mag_phase, is_sort1=is_sort1)
@@ -52,7 +53,7 @@ class RealTemperatureVectorArray(RealScalarTableArray):
         ]
         #words += self.get_table_marker()
         write_words = False
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             return self._write_f06_transient_block(
                 words, header, page_stamp, page_num, f06_file, write_words,
                 is_mag_phase=is_mag_phase, is_sort1=is_sort1)
@@ -74,7 +75,7 @@ class RealThermalVelocityVectorArray(RealScalarTableArray):
         ]
         #words += self.get_table_marker()
         write_words = False
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             return self._write_f06_transient_block(
                 words, header, page_stamp, page_num, f06_file, write_words,
                 is_mag_phase=is_mag_phase, is_sort1=is_sort1)

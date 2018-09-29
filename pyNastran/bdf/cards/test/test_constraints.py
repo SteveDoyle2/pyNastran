@@ -7,7 +7,7 @@ class TestConstraints(unittest.TestCase):
     def test_support_01(self):
         lines = ['SUPORT, 1,      126']
         bdf = BDF(debug=False)
-        card = bdf.process_card(lines)
+        card = bdf._process_card(lines)
         card = BDFCard(card)
 
         size = 8
@@ -65,7 +65,7 @@ class TestConstraints(unittest.TestCase):
     def test_support1_01(self):
         lines = ['SUPORT1, 1,      126']
         bdf = BDF(debug=False)
-        card = bdf.process_card(lines)
+        card = bdf._process_card(lines)
         cardi = BDFCard(card)
 
         size = 8
@@ -172,6 +172,189 @@ class TestConstraints(unittest.TestCase):
         self.check_card(msg8, msg_8_actual)
         self.check_card(msg16, msg_16_actual)
 
+    def test_mpcadd(self):
+        """tests MPCADD"""
+        model = BDF(debug=False)
+        mpc_id = 42
+        sets = [1, 2]
+        model.add_mpcadd(mpc_id, sets, comment='mpcadd')
+
+        components = ['42', '3', '1']
+        coefficients = [1000, 1, 101]
+        node_ids = [2, 3, 4]
+        mpc = model.add_mpc(1, node_ids, components, coefficients, comment='mpc')
+        with self.assertRaises(AssertionError):
+            mpc.validate()
+        model.mpcs = {}
+
+        coefficients = [1000., 1., 101.]
+        mpc = model.add_mpc(1, node_ids, components, coefficients, comment='mpc')
+        mpc.raw_fields()
+        card = mpc.write_card(size=8)
+        #print(card)
+        mpc.write_card(size=16, is_double=False)
+        mpc.write_card(size=16, is_double=True)
+
+        assert mpc.enforced == coefficients  # testing deprecation
+        assert mpc.gids == node_ids  # testing deprecation
+        assert mpc.coefficients == coefficients
+        assert mpc.nodes == node_ids
+
+        model.pop_parse_errors()
+        model.pop_xref_errors()
+
+        model.mpcs = {}
+        model.add_card(card.split('\n')[1:], 'MPC', is_list=False)
+        with self.assertRaises(KeyError):
+            model.cross_reference()
+
+        model.add_mpc(2, node_ids, components, coefficients, comment='mpc')
+        with self.assertRaises(KeyError):
+            model.cross_reference()
+        model.add_grid(2, [0., 0., 0.])
+        model.add_grid(3, [0., 0., 0.])
+        model.add_grid(4, [0., 0., 0.])
+        model.cross_reference()
+        check_mpc_spc(model)
+
+    def test_spcadd(self):
+        """tests SPCADD"""
+        model = BDF(debug=False)
+        spc_id = 42
+        sets = [1, 2]
+        model.add_spcadd(spc_id, sets, comment='spcadd')
+
+        components = ['42', '3', '1']
+        enforced = [1000, 1, 101]
+        node_ids = [2, 3, 4]
+        spc = model.add_spc(1, node_ids, components, enforced, comment='spc')
+        with self.assertRaises(AssertionError):
+            spc.validate()
+        model.spcs = {}
+
+        enforced = [1000., 1., 101.]
+        node_ids = [2, 3, 4]
+        spc = model.add_spc(1, node_ids, components, enforced, comment='spc')
+        spc.validate()
+        #assert spc.enforced == enforced
+        assert spc.gids == node_ids
+
+        spc.raw_fields()
+        card = spc.write_card(size=8)
+        #print(card)
+        spc.write_card(size=16, is_double=False)
+        spc.write_card(size=16, is_double=True)
+        model.pop_parse_errors()
+        model.pop_xref_errors()
+
+        model.spcs = {}
+        model.add_card(card.split('\n')[1:], 'SPC', is_list=False)
+        with self.assertRaises(KeyError):
+            model.cross_reference()
+
+        model.add_spc(2, node_ids, components, enforced, comment='spc')
+        with self.assertRaises(KeyError):
+            model.cross_reference()
+        model.add_grid(2, [0., 0., 0.])
+        model.add_grid(3, [0., 0., 0.])
+        model.add_grid(4, [0., 0., 0.])
+        check_mpc_spc(model)
+
+    def test_spcoff(self):
+        """tests SPCOFF/SPCOFF1"""
+        model = BDF(debug=False)
+        with self.assertRaises(KeyError):
+            model.EmptyNodes([1, 2], msg='')
+        #model.add_spcoff()
+        card_lines = ['SPCOFF', 1]
+        #with self.assertRaises(NotImplementedError):
+        model.add_card(card_lines, 'SPCOFF', comment='spcoff', is_list=True, has_none=True)
+        spcoff = model.spcoffs['SPCOFF'][0]
+        spcoff.write_card(size=8)
+        spcoff.write_card(size=16)
+        spcoff.raw_fields()
+        with self.assertRaises(KeyError):
+            spcoff.cross_reference(model)
+        model.add_grid(1, [0., 0., 0.])
+        spcoff.cross_reference(model)
+
+        card_lines = ['SPCOFF1', 24, 43]
+        model.add_card(card_lines, 'SPCOFF1', comment='spcoff1', is_list=True, has_none=True)
+
+        card_lines = ['SPCOFF1', 5, 50, 'THRU', 52]
+        model.add_card(card_lines, 'SPCOFF1', comment='spcoff1', is_list=True, has_none=True)
+
+        model.pop_parse_errors()
+        model.pop_xref_errors()
+        spcoff1 = model.spcoffs['SPCOFF1'][0]
+        spcoff1.write_card(size=8)
+        spcoff1.write_card(size=16)
+        spcoff1.raw_fields()
+        model.uncross_reference()
+
+        with self.assertRaises(KeyError):
+            spcoff1.cross_reference(model)
+        model.add_grid(43, [0., 0., 0.])
+        spcoff1.cross_reference(model)
+        model.uncross_reference()
+
+        model.add_grid(50, [0., 0., 0.])
+        model.add_grid(51, [0., 0., 0.])
+        model.add_grid(52, [0., 0., 0.])
+        model.cross_reference()
+        model.uncross_reference()
+        model.validate()
+        model.safe_cross_reference()
+
+        #model.add_grid(43, [0., 0., 0.])
+
+    def test_gmspc(self):
+        """tests GMSPC"""
+        model = BDF(debug=False, log=None, mode='msc')
+        conid = 1
+        component = 42
+        entity = 'cat'
+        entity_id = 100
+        model.add_gmspc(conid, component, entity, entity_id, comment='gmspc')
+        gmspc = model.spcs[1][0]
+        card = gmspc.write_card(size=8)
+        gmspc.raw_fields()
+        gmspc.write_card(size=16)
+        gmspc.write_card(size=16, is_double=True)
+        model.add_card(card.split('\n')[1:], 'GMSPC', is_list=False)
+
+        model.pop_parse_errors()
+        model.validate()
+        model.cross_reference()
+        model.uncross_reference()
+        model.safe_cross_reference()
+        str(gmspc)
+        check_mpc_spc(model)
+
+    def test_spcax(self):
+        """tests SPCAX"""
+        model = BDF(debug=False, log=None, mode='msc')
+        conid = 1
+        ringax = 42
+        hid = 43
+        component = 52
+        enforced = 101.
+        model.add_spcax(conid, ringax, hid, component, enforced, comment='spcax')
+        spcax = model.spcs[1][0]
+        card = spcax.write_card(size=8)
+        spcax.raw_fields()
+        spcax.write_card(size=16)
+        spcax.write_card(size=16, is_double=True)
+        model.add_card(card.split('\n')[1:], 'SPCAX', is_list=False)
+
+        model.pop_parse_errors()
+        model.validate()
+        model.cross_reference()
+        model.uncross_reference()
+        model.safe_cross_reference()
+        str(spcax)
+        check_mpc_spc(model)
+
     def check_card(self, msg_expected, msg_actual):
         if isinstance(msg_expected, tuple):
             msg_expected = msg_expected[0]
@@ -185,6 +368,20 @@ class TestConstraints(unittest.TestCase):
             msg += '\nExpected Card =\n%s\n' % '\n'.join(msg_expected_lines)
             assert actual == expected, msg
 
+def check_mpc_spc(model):
+    """simple MPC/SPC checks"""
+    mpc_ids = list(model.mpcs.keys()) + list(model.mpcadds.keys())
+    spc_ids = list(model.spcs.keys()) + list(model.spcadds.keys())
+    #node_ids = []
+    #for nid in rbe.independent_nodes + rbe.dependent_nodes:
+        #node_ids.append(nid)
+
+    for mpc_id in mpc_ids:
+        unused_mpcs1 = model.get_reduced_mpcs(mpc_id, consider_mpcadd=True, stop_on_failure=True)
+        unused_mpcs2 = model.get_mpcs(mpc_id, stop_on_failure=True)
+    for spc_id in spc_ids:
+        unused_spcs1 = model.get_reduced_spcs(spc_id, consider_spcadd=True, stop_on_failure=True)
+        unused_spcs2 = model.get_spcs(spc_id, consider_nodes=False, stop_on_failure=True)
 
 
 if __name__ == '__main__':  # pragma: no cover

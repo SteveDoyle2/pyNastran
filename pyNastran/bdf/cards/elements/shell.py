@@ -24,13 +24,12 @@ All quads are QuadShell, ShellElement, and Element objects.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from typing import List, Tuple, Union, Any
-from six.moves import range
 
 import numpy as np
 from numpy import cross, allclose
 from numpy.linalg import norm  # type: ignore
 
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_float_8
 from pyNastran.bdf.cards.base_card import Element, BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -111,11 +110,11 @@ def _normal(a, b):
 def _normal4(n1, n2, n3, n4, card):
     """Finds the unit normal vector of 2 vectors"""
     a = n1 - n3
-    b = n2 - n4 #_normal(n1 - n3, n2 - n4)
+    b = n2 - n4
     vector = cross(a, b)
     normal = vector / norm(vector)
     if not allclose(norm(normal), 1.):
-        msg = ('function _normal, check...\n'
+        msg = ('function _normal4, check...\n'
                'a = {0}\nb = {1}\nnormal = {2}\n'.format(
                    a, b, normal))
         raise RuntimeError(msg)
@@ -386,7 +385,7 @@ class TriShell(ShellElement):
         normal (3, ) float ndarray
             the unit normal vector
 
-        TODO: rotate the coordinate system by the angle theta
+        .. todo:: rotate the coordinate system by the angle theta
         """
         if normal is None:
             normal = self.Normal() # k = kmat
@@ -404,26 +403,31 @@ class TriShell(ShellElement):
             xyz2 = xyz123[:, 1]
             xyz3 = xyz123[:, 2]
         centroid = (xyz1 + xyz2 + xyz3) / 3.
-
-        if self.theta_mcid is None:
-            raise NotImplementedError('theta_mcid=%r' % self.theta_mcid)
-        if isinstance(self.theta_mcid, integer_types):
-            i = self.theta_mcid_ref.i
-            jmat = np.cross(normal, i) # k x i
-            jmat /= np.linalg.norm(jmat)
-            # we do an extra normalization here because
-            # we had to project i onto the elemental plane
-            # unlike in the next block
-            imat = np.cross(jmat, normal)
-        elif isinstance(self.theta_mcid, float):
-            # TODO: rotate by the angle theta
-            imat = xyz2 - xyz1
-            imat /= np.linalg.norm(imat)
-            jmat = np.cross(normal, imat) # k x i
-            jmat /= np.linalg.norm(jmat)
-        else:
-            raise RuntimeError(self.theta_mcid)
+        imat, jmat = _material_coordinate_system(self, normal, xyz1, xyz2)
         return centroid, imat, jmat, normal
+
+
+def _material_coordinate_system(element, normal, xyz1, xyz2):
+    """helper function for material_coordinate_system"""
+    if element.theta_mcid is None:
+        raise NotImplementedError('theta_mcid=%r' % element.theta_mcid)
+    if isinstance(element.theta_mcid, integer_types):
+        i = element.theta_mcid_ref.i
+        jmat = np.cross(normal, i) # k x i
+        jmat /= np.linalg.norm(jmat)
+        # we do an extra normalization here because
+        # we had to project i onto the elemental plane
+        # unlike in the next block
+        imat = np.cross(jmat, normal)
+    elif isinstance(element.theta_mcid, float):
+        # TODO: rotate by the angle theta
+        imat = xyz2 - xyz1
+        imat /= np.linalg.norm(imat)
+        jmat = np.cross(normal, imat) # k x i
+        jmat /= np.linalg.norm(jmat)
+    else:
+        raise RuntimeError(element.theta_mcid)
+    return imat, jmat
 
 
 class CTRIA3(TriShell):
@@ -1629,7 +1633,7 @@ class QuadShell(ShellElement):
         normal (3, ) float ndarray
             the unit normal vector
 
-        TODO: rotate the coordinate system by the angle theta
+        .. todo:: rotate the coordinate system by the angle theta
         """
         if normal is None:
             normal = self.Normal() # k = kmat
@@ -1650,24 +1654,7 @@ class QuadShell(ShellElement):
             xyz4 = xyz1234[:, 3]
         centroid = (xyz1 + xyz2 + xyz3 + xyz4) / 4.
 
-        if self.theta_mcid is None:
-            raise NotImplementedError('theta_mcid=%r' % self.theta_mcid)
-        if isinstance(self.theta_mcid, integer_types):
-            i = self.theta_mcid_ref.i
-            jmat = np.cross(normal, i) # k x i
-            jmat /= np.linalg.norm(jmat)
-            # we do an extra normalization here because
-            # we had to project i onto the elemental plane
-            # unlike in the next block
-            imat = np.cross(jmat, normal)
-        elif isinstance(self.theta_mcid, float):
-            # TODO: rotate by the angle theta
-            imat = xyz2 - xyz1
-            imat /= np.linalg.norm(imat)
-            jmat = np.cross(normal, imat) # k x i
-            jmat /= np.linalg.norm(jmat)
-        else:
-            raise RuntimeError(self.theta_mcid)
+        imat, jmat = _material_coordinate_system(self, normal, xyz1, xyz2)
         return centroid, imat, jmat, normal
 
 
@@ -2402,10 +2389,8 @@ class CQUAD4(QuadShell):
         """
         Splits a CQUAD4 into two CTRIA3s
 
-        TODO
-        ----
-         - doesn't consider theta_mcid if a float correctly (use an integer)
-         - doesn't optimize the orientation of the nodes yet...
+        .. todo:: doesn't consider theta_mcid if a float correctly (use an integer)
+        .. todo:: doesn't optimize the orientation of the nodes yet...
         """
         n1, n2, n3, n4 = self.nodes
         nids = [n1, n2, n3]

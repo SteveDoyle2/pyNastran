@@ -4,9 +4,6 @@ import copy
 from struct import unpack, Struct, pack
 from collections import defaultdict
 
-from six import iteritems
-from six.moves import zip, range
-
 import numpy as np
 import scipy
 
@@ -220,7 +217,7 @@ class STL(object):
         self.elements = elements
 
         nodes = np.zeros((nnodes, 3), 'float64')
-        for node, inode in iteritems(nodes_dict):
+        for node, inode in nodes_dict.items():
             nodes[inode] = node
         self.nodes = nodes
 
@@ -391,7 +388,7 @@ class STL(object):
 
         normals_at_nodes = np.zeros(nodes.shape, 'float64')
         eid = 0
-        for nid, elementsi in iteritems(nid_to_eid):
+        for nid, elementsi in nid_to_eid.items():
             pe = normals[elementsi]
             m = pe.mean(axis=0)
             normals_at_nodes[nid] = m / np.linalg.norm(m)
@@ -560,7 +557,7 @@ class STL(object):
         self.elements = np.array(elements, 'int32')
         nodes = np.zeros((nnodes, 3), 'float64')
 
-        for node, inode in iteritems(nodes_dict):
+        for node, inode in nodes_dict.items():
             nodes[inode] = node
         self.nodes = nodes
 

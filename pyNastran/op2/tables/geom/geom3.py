@@ -4,7 +4,6 @@ defines readers for BDF objects in the OP2 GEOM3/GEOM3S table
 #pylint: disable=C0103,C0111,C0301,W0612,W0613,R0914,C0326
 from __future__ import print_function
 from struct import Struct
-from six.moves import range
 import numpy as np
 
 from pyNastran.bdf.cards.loads.static_loads import (
@@ -235,8 +234,7 @@ class GEOM3(GeomCommon):
                 n += 8
                 (si, l1) = struct_fi.unpack(edata)
                 siTest, = self.struct_i.unpack(edata[0:4])
-                #print(si,siTest, l1)
-                #print(type(si))
+                #print(si, siTest, l1)
 
                 if [siTest, l1] == [-1, -1]:
                     break

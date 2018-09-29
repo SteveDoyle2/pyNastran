@@ -11,7 +11,7 @@ All bush elements are BushElement and Element objects.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Element
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -505,7 +505,7 @@ class CBUSH2D(BushElement):
         1: 'eid', 2:'pid', 3:'ga', 4:'gb', 5:'cid', 6:'plane', 7:'sptid',
     }
 
-    def __init__(self, eid, pid, nids, cid, plane, sptid, comment=''):
+    def __init__(self, eid, pid, nids, cid=0, plane='XY', sptid=None, comment=''):
         BushElement.__init__(self)
         if comment:
             self.comment = comment

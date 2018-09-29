@@ -1,5 +1,4 @@
 from __future__ import print_function
-from six.moves import zip
 
 from numpy import array, zeros, unique, searchsorted, arange, pi
 

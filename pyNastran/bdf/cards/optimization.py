@@ -13,16 +13,17 @@ All optimization cards are defined in this file.  This includes:
 * dvmrels - DVMREL1, DVMREL2
 * dvprels - DVPREL1, DVPREL2
 * doptprm - DOPTPRM
-"""
+
+some missing optimization flags
+http://mscnastrannovice.blogspot.com/2014/06/msc-nastran-design-optimization-quick.html"""
 # pylint: disable=C0103,R0902,R0904,R0914
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import cycle, count
-from six import iteritems, string_types
-from six.moves import zip, range
+from six import string_types
 import numpy as np
 
-from pyNastran.utils import integer_types, float_types
+from pyNastran.utils.numpy_utils import integer_types, float_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import (
     BaseCard, expand_thru_by, break_word_by_trailing_integer,
@@ -213,6 +214,13 @@ def validate_dvprel(prop_type, pname_fid, validate):
     #elif prop_type == 'CBEAM':
         #assert pname_fid in ['X1', 'X2', 'X3', 'W1A', 'W2A', 'W3A', 'W1B', 'W2B', 'W3B'], msg
     elif prop_type == 'PBEAM':
+        options1 = [
+            'I1', 'I2', 'A', 'J',
+            'C1', 'C2', 'D1', 'D2', 'E1', 'E2', 'F1', 'F2',
+            #-8, -9, -10, -14, -15, -16, -17, -18, -19, -20, -21,
+            #-168, -169, -170, -174, -175, -176, -177, -178, -179,
+            #-180, -181,
+        ]
         options = [
             'I1', 'I2', 'A', 'J',
             'I1(A)', 'I1(B)', 'I2(B)',
@@ -225,8 +233,12 @@ def validate_dvprel(prop_type, pname_fid, validate):
             pname_fid = update_pbeam_negative_integer(pname_fid)
 
         if isinstance(pname_fid, string_types):
-            word, num = break_word_by_trailing_parentheses_integer_ab(
-                pname_fid)
+            if pname_fid in options1:
+                word = pname_fid
+                num = 'A'
+            else:
+                word, num = break_word_by_trailing_parentheses_integer_ab(
+                    pname_fid)
         _check_dvprel_options(word, prop_type, options)
 
     elif prop_type == 'PBEAML':
@@ -342,6 +354,10 @@ def validate_dvprel(prop_type, pname_fid, validate):
 
     elif prop_type == 'PFAST':
         options = ['KT1', 'KT2', 'KT3', 'KR1', 'KR2', 'KR3', 'MASS']
+        _check_dvprel_options(pname_fid, prop_type, options)
+
+    elif prop_type == 'PBRSECT':
+        options = ['T', 'W']
         _check_dvprel_options(pname_fid, prop_type, options)
 
     elif prop_type == 'PBMSECT':
@@ -692,6 +708,9 @@ class DESVAR(OptConstraint):
         # DDVAL id if you want discrete values
         self.ddval = ddval
 
+    def _verify(self, xref):
+        pass
+
     @classmethod
     def add_card(cls, card, comment=''):
         """
@@ -938,7 +957,7 @@ class DOPTPRM(OptConstraint):
 
     def raw_fields(self):
         list_fields = ['DOPTPRM']
-        for param, val in sorted(iteritems(self.params)):
+        for param, val in sorted(self.params.items()):
             list_fields += [param, val]
         return list_fields
 
@@ -1974,7 +1993,7 @@ class DRESP2(OptConstraint):
     def _validate(self):
         assert isinstance(self.params, dict), self.params
 
-        for key, values in iteritems(self.params):
+        for key, values in self.params.items():
             assert isinstance(key, tuple), 'key=%s' % str(key)
             assert len(key) == 2, 'key=%s' % str(key)
             iorder, name = key
@@ -2027,7 +2046,7 @@ class DRESP2(OptConstraint):
         params = parse_table_fields('DRESP2', card, fields)
 
         #print("--DRESP2 Params--")
-        #for key, value_list in sorted(iteritems(params)):
+        #for key, value_list in sorted(params.items()):
             #print("  key=%s value_list=%s" %(key, value_list))
         return DRESP2(dresp_id, label, dequation, region, params,
                       method, c1, c2, c3, comment=comment)
@@ -2040,13 +2059,13 @@ class DRESP2(OptConstraint):
 
     def _verify(self, xref):
         pass
-        #for (j, name), value_list in sorted(iteritems(self.params)):
+        #for (j, name), value_list in sorted(self.params.items()):
             #print('  DRESP2 verify - key=%s values=%s' % (name,
                 #self._get_values(name, value_list)))
 
     def calculate(self, op2_model, subcase_id):
         argsi = []
-        for key, vals in sorted(iteritems(self.params_ref)):
+        for key, vals in sorted(self.params_ref.items()):
             unused_j, name = key
             if name in ['DRESP1', 'DRESP2']:
                 #print('vals =', vals)
@@ -2087,7 +2106,7 @@ class DRESP2(OptConstraint):
         msg = ', which is required by DRESP2 ID=%s' % (self.dresp_id)
         default_values = {}
         params = {}
-        for key, vals in sorted(iteritems(self.params)):
+        for key, vals in sorted(self.params.items()):
             try:
                 unused_j, name = key
             except:
@@ -2130,7 +2149,7 @@ class DRESP2(OptConstraint):
                 raise NotImplementedError('  TODO: xref %s\n%s' % (str(key), str(self)))
 
         # what does this do???
-        #for key, value_list in sorted(iteritems(self.params)):
+        #for key, value_list in sorted(self.params.items()):
             #j, name = key
             #values_list2 = self._get_values(name, value_list)
             #self.params[key] = values_list2
@@ -2149,7 +2168,7 @@ class DRESP2(OptConstraint):
             del self.func
 
         params = {}
-        for key, value_list in sorted(iteritems(self.params_ref)):
+        for key, value_list in sorted(self.params_ref.items()):
             unused_j, name = key
             values_list2 = _get_dresp23_table_values(name, value_list)
             params[key] = values_list2
@@ -2188,7 +2207,7 @@ class DRESP2(OptConstraint):
         }
 
         list_fields = []
-        for (j, name), value_list in sorted(iteritems(params)):
+        for (j, name), value_list in sorted(params.items()):
             values_list2 = _get_dresp23_table_values(name, value_list, inline=True)
             fields2 = [name] + values_list2
             #try:
@@ -2358,7 +2377,7 @@ class DRESP3(OptConstraint):
         assert isinstance(self.group, str), 'group=%r' % self.group
         assert isinstance(self.Type, str), 'Type=%r' % self.Type
 
-        for key, values in iteritems(self.params):
+        for key, values in self.params.items():
             assert isinstance(key, tuple), 'key=%s' % str(key)
             assert len(key) == 2, 'key=%s' % str(key)
             iorder, name = key
@@ -2433,7 +2452,7 @@ class DRESP3(OptConstraint):
         }
         #print('------------')
         list_fields = []
-        for key, value_list in sorted(iteritems(params)):
+        for key, value_list in sorted(params.items()):
             #print(params[key])
             unused_iorder, name = key
             values_list2 = _get_dresp23_table_values(name, value_list, inline=True)
@@ -2460,7 +2479,7 @@ class DRESP3(OptConstraint):
         msg = ', which is required by DRESP3 ID=%s' % (self.dresp_id)
         default_values = {}
         params = {}
-        for key, vals in sorted(iteritems(self.params)):
+        for key, vals in sorted(self.params.items()):
             unused_iorder, name = key
             if name in ['DRESP1', 'DRESP2']:
                 params[key] = []
@@ -2511,7 +2530,7 @@ class DRESP3(OptConstraint):
         self.dtable_ref = {}
 
         params = {}
-        for key, value_list in sorted(iteritems(self.params_ref)):
+        for key, value_list in sorted(self.params_ref.items()):
             unused_iorder, name = key
             #print(key)
             #j, name = key
@@ -3963,7 +3982,7 @@ class DVPREL1(DVXREL1):
             pid_ref = model.pbusht[pid]
         elif self.prop_type == 'PELAST':
             pid_ref = model.pelast[pid]
-        elif self.prop_type == 'PFAST':
+        elif self.prop_type in ['PFAST', 'PBRSECT']:
             pid_ref = model.properties[pid]
         else:
             raise NotImplementedError('prop_type=%r is not supported' % self.prop_type)
@@ -3990,7 +4009,7 @@ class DVPREL1(DVXREL1):
             #pid = self.pid_ref.eid
         elif self.prop_type in self.allowed_properties_mass:
             pid = self.pid_ref.pid
-        elif self.prop_type in ['PBUSHT', 'PELAST', 'PFAST']:
+        elif self.prop_type in ['PBUSHT', 'PELAST', 'PFAST', 'PBRSECT']:
             pid = self.pid_ref.pid
         else:
             raise NotImplementedError('prop_type=%r is not supported' % self.prop_type)
@@ -4552,7 +4571,7 @@ def parse_table_fields(card_type, card, fields):
 
     assert None not in params, params
     params2 = {}
-    for (i, name), values in iteritems(params):
+    for (i, name), values in params.items():
         if name != 'DNODE':
             params2[(i, name)] = values
             continue
@@ -4988,6 +5007,17 @@ def get_dvprel_key(dvprel, prop=None):
             pass
         #elif isinstance(var_to_change, int):  # pragma: no cover
             #msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
+        else:  # pragma: no cover
+            msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
+
+    elif prop_type == 'PBRSECT': # 3
+        if var_to_change in ['T', 'W']:
+            pass
+        else:  # pragma: no cover
+            msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
+    elif prop_type == 'PBMSECT': # 3
+        if var_to_change in ['T', 'W', 'H']:
+            pass
         else:  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
 

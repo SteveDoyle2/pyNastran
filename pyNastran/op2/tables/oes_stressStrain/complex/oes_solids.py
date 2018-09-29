@@ -1,7 +1,6 @@
 #pylint: disable=C0301,C0111
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six.moves import zip, range
 
 import numpy as np
 from numpy import zeros, concatenate
@@ -213,7 +212,7 @@ class ComplexSolidArray(OES_Object):
         nnodes = self.element_node.shape[0]
         msg = []
 
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i nnodes=%i\n'
                        % (self.__class__.__name__, ntimes, nelements, nnodes))
         else:

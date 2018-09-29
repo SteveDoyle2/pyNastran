@@ -1,15 +1,15 @@
 """Defines the Matrix class"""
 from __future__ import print_function
+
 from scipy.sparse import coo_matrix  # type: ignore
 import numpy as np
 from pyNastran.op2.op2_interface.write_utils import export_to_hdf5
-from pyNastran.utils import object_attributes, object_methods
+from pyNastran.utils import object_attributes, object_methods, unicode_type
 try:
     import pandas as pd  # type: ignore
 except ImportError:
     pass
 
-#from pyNastran.utils import object_attributes
 
 
 class Matrix(object):
@@ -59,6 +59,8 @@ class Matrix(object):
         self.col_dof = None
         self.row_nid = None
         self.row_dof = None
+        if not isinstance(name, unicode_type):
+            raise TypeError('name=%r must be a string' % name)
 
     @property
     def shape_str(self):
@@ -74,7 +76,7 @@ class Matrix(object):
         elif self.form == 9:
             return 'pseudo-identity'
         else:
-            raise RuntimeError('form = %s' % self.form)
+            raise RuntimeError('form = %r' % self.form)
 
     def export_to_hdf5(self, group, log):
         """exports the object to HDF5 format"""

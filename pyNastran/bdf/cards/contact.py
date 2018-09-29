@@ -7,7 +7,6 @@
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems
 
 from pyNastran.bdf.cards.base_card import BaseCard, expand_thru_by
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -16,6 +15,111 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
+class BLSEG(BaseCard):
+    """
+    3D Contact Region Definition by Shell Elements (SOLs 101, 601 and 701)
+
+    Defines a 3D contact region by shell element IDs.
+
+    BLSEG ID G1 G2 G3 G4 G5 G6 G7
+    BLSEG ID G1 THRU G2 BY INC
+    """
+    type = 'BLSEG'
+    def __init__(self, line_id, nodes, comment=''):
+        if comment:
+            self.comment = comment
+
+        self.line_id = line_id
+        self.nodes = expand_thru_by(nodes)
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a BLSEG card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        line_id = integer(card, 1, 'line_id')
+        #: Number (float)
+        nfields = card.nfields
+        i = 2
+        nodes = []
+        while i < nfields:
+            d = integer_string_or_blank(card, i, 'field_%s' % i)
+            if d is not None:
+                nodes.append(d)
+            i += 1
+        return BLSEG(line_id, nodes, comment=comment)
+
+    #def raw_fields(self):
+        #fields = ['BSURF', self.sid]
+        #return fields + list(self.eids)
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
+
+class BCONP(BaseCard):
+    """
+    3D Contact Region Definition by Shell Elements (SOLs 101, 601 and 701)
+
+    Defines a 3D contact region by shell element IDs.
+
+    +-------+----+-------+--------+-----+------+--------+-------+-----+
+    |   1   |  2 |   3   |   4    |  5  |   6  |   7    |   8   |  9  |
+    +=======+====+=======+========+=====+======+========+=======+=====+
+    | BCONP | ID | SLAVE | MASTER |     | SFAC | FRICID | PTYPE | CID |
+    +-------+----+-------+--------+-----+------+--------+-------+-----+
+    | BCONP | 95 |   10  |   15   |     |  1.0 |   33   |   1   |     |
+    +-------+----+-------+--------+-----+------+--------+-------+-----+
+
+    """
+    type = 'BCONP'
+    def __init__(self, contact_id, slave, master, sfac, fric_id, ptype, cid, comment=''):
+        if comment:
+            self.comment = comment
+
+        self.contact_id = contact_id
+        self.slave = slave
+        self.master = master
+        self.sfac = sfac
+        self.fric_id = fric_id
+        self.ptype = ptype
+        self.cid = cid
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a BCONP card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        contact_id = integer(card, 1, 'contact_id')
+        slave = integer(card, 2, 'slave')
+        master = integer(card, 3, 'master')
+        sfac = double_or_blank(card, 5, 'sfac', 1.0)
+        fric_id = integer_or_blank(card, 6, 'fric_id')
+        ptype = integer_or_blank(card, 7, 'ptype', 1)
+        cid = integer_or_blank(card, 8, 'cid', 0)
+        return BCONP(contact_id, slave, master, sfac, fric_id, ptype, cid, comment=comment)
+
+    #def raw_fields(self):
+        #fields = ['BSURF', self.sid]
+        #return fields + list(self.eids)
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
 
 class BSURF(BaseCard):
     """
@@ -126,9 +230,8 @@ class BSURFS(BaseCard):
     Defines a 3D contact region by the faces of the CHEXA, CPENTA or CTETRA
     elements.
 
-    Remarks
-    -------
-    Remarks:
+    Notes
+    -----
     1. The continuation field is optional.
     2. BSURFS is a collection of one or more element faces on solid elements.
        BSURFS defines a contact region which may act as a contact source
@@ -283,11 +386,37 @@ class BCRPARA(BaseCard):
     +---------+------+------+--------+------+-----+---+---+---+----+
     |    1    |   2  |   3  |   4    |   5  |  6  | 7 | 8 | 9 | 10 |
     +=========+======+======+========+======+=====+===+===+===+====+
-    | BCRPARA | CRID | SURF | OFFSET | TYPE | MGP |   |   |   |    |
+    | BCRPARA | CRID | SURF | OFFSET | TYPE | GP  |   |   |   |    |
     +---------+------+------+--------+------+-----+---+---+---+----+
     """
     type = 'BCRPARA'
-    def __init__(self, crid, offset=None, surf='TOP', Type='FLEX', mgp=0, comment=''):
+    def __init__(self, crid, offset=None, surf='TOP', Type='FLEX', grid_point=0,
+                 comment=''):
+        """
+        Creates a BCRPARA card
+
+        Parameters
+        ----------
+        crid : int
+            CRID Contact region ID.
+        offset : float; default=None
+            Offset distance for the contact region (Real > 0.0).
+            None : OFFSET value in BCTPARA entry
+        surf : str; default='TOP'
+            SURF Indicates the contact side. See Remark 1.  {'TOP', 'BOT'; )
+        Type : str; default='FLEX'
+            Indicates whether a contact region is a rigid surface if it
+            is used as a target region. {'RIGID', 'FLEX'}.
+            This is not supported for SOL 101.
+        grid_point : int; default=0
+            Control grid point for a target contact region with TYPE=RIGID
+            or when the rigid-target algorithm is used.  The grid point
+            may be used to control the motion of a rigid surface.
+            (Integer > 0).  This is not supported for SOL 101.
+        comment : str; default=''
+            a comment for the card
+
+        """
         if comment:
             self.comment = comment
 
@@ -307,11 +436,11 @@ class BCRPARA(BaseCard):
         #: Default = "FLEX"). This is not supported for SOL 101.
         self.Type = Type
 
-        #: Master grid point for a target contact region with TYPE=RIGID or
-        #: when the rigid-target algorithm is used. The master grid point may be
-        #: used to control the motion of a rigid surface. (Integer > 0,; Default = 0)
+        #: Control grid point for a target contact region with TYPE=RIGID or
+        #: when the rigid-target algorithm is used. The grid point may be
+        #: used to control the motion of a rigid surface. (Integer > 0)
         #: This is not supported for SOL 101.
-        self.mgp = mgp
+        self.grid_point = grid_point
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -329,11 +458,12 @@ class BCRPARA(BaseCard):
         surf = string_or_blank(card, 2, 'surf', 'TOP')
         offset = double_or_blank(card, 3, 'offset', None)
         Type = string_or_blank(card, 4, 'type', 'FLEX')
-        mgp = integer_or_blank(card, 5, 'mpg', 0)
-        return BCRPARA(crid, surf=surf, offset=offset, Type=Type, mgp=mgp, comment=comment)
+        grid_point = integer_or_blank(card, 5, 'grid_point', 0)
+        return BCRPARA(crid, surf=surf, offset=offset, Type=Type,
+                       grid_point=grid_point, comment=comment)
 
     def raw_fields(self):
-        fields = ['BCRPARA', self.crid, self.surf, self.offset, self.Type, self.mgp]
+        fields = ['BCRPARA', self.crid, self.surf, self.offset, self.Type, self.grid_point]
         return fields
 
     def write_card(self, size=8, is_double=False):
@@ -361,6 +491,20 @@ class BCTPARA(BaseCard):
     """
     type = 'BCTPARA'
     def __init__(self, csid, params, comment=''):
+        """
+        Creates a BCTPARA card
+
+        Parameters
+        ----------
+        csid : int
+            Contact set ID. Parameters defined in this command apply to
+            contact set CSID defined by a BCTSET entry. (Integer > 0)
+        params : dict[key] : value
+            the optional parameters
+        comment : str; default=''
+            a comment for the card
+
+        """
         if comment:
             self.comment = comment
 
@@ -446,7 +590,7 @@ class BCTPARA(BaseCard):
     def raw_fields(self):
         fields = ['BCTPARA', self.csid]
         i = 0
-        for key, value in sorted(iteritems(self.params)):
+        for key, value in sorted(self.params.items()):
             if i == 3:
                 fields.append(None)
                 i = 0

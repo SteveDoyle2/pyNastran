@@ -12,15 +12,15 @@ from datetime import date
 from collections import defaultdict
 from traceback import print_exc
 
-from six import string_types, iteritems, PY2
+from six import string_types
 
 import pyNastran
 from pyNastran.op2.op2_interface.op2_f06_common import OP2_F06_Common
 from pyNastran.op2.op2_interface.result_set import ResultSet
 
-def make_stamp(Title, today=None):
-    if 'Title' is None:
-        Title = ''
+def make_stamp(title, today=None):
+    if title is None:
+        title = ''
 
     #lenghts = [7, 8, 5, 5, 3, 4, 4, 6, 9, 7, 8, 8]
     months = [' January', 'February', 'March', 'April', 'May', 'June',
@@ -35,12 +35,10 @@ def make_stamp(Title, today=None):
         str_today = '%-9s %2s, %4s' % (str_month, day, year)
     str_today = str_today  #.strip()
 
-    release_date = '02/08/12'  # pyNastran.__releaseDate__
+    #release_date = '02/08/12'  # pyNastran.__releaseDate__
     release_date = ''
     build = 'pyNastran v%s %s' % (pyNastran.__version__, release_date)
-    if Title is None:
-        Title = ''
-    out = '1    %-67s   %-19s %-22s PAGE %%5i\n' % (Title.strip(), str_today, build)
+    out = '1    %-67s   %-19s %-22s PAGE %%5i\n' % (title.strip(), str_today, build)
     return out
 
 
@@ -406,10 +404,7 @@ class F06Writer(OP2_F06_Common):
             #print("matrix_filename =", matrix_filename)
             #mat = open(matrix_filename, 'wb')
 
-            if PY2:
-                f06 = open(f06_outname, 'wb')
-            else:
-                f06 = open(f06_outname, 'w')
+            f06 = open(f06_outname, 'w')
             self._write_summary(f06)
         elif hasattr(f06_outname, 'read') and hasattr(f06_outname, 'write'):
             #f06 = f06_outname
@@ -456,7 +451,7 @@ class F06Writer(OP2_F06_Common):
                 print('MONPNT1 from [PMRF, PERF, PFRF, AGRF]')
 
             with open(matrix_filename, 'wb') as mat:
-                for name, matrix in iteritems(self.matrices):
+                for name, matrix in self.matrices.items():
                     if name == 'MP3F':
                         page_num = self.monitor3.write(f06, page_stamp=page_stamp, page_num=page_num)
                         print('MONPNT3 from MP3F')
@@ -502,7 +497,7 @@ class F06Writer(OP2_F06_Common):
         # eigenvalues are written first
         f06.write(page_stamp % self.page_num)
         self.page_num += 1
-        for ikey, result in sorted(iteritems(self.eigenvalues)):
+        for ikey, result in sorted(self.eigenvalues.items()):
             if not quiet:
                 print('%-18s case=%r' % (result.__class__.__name__, ikey))
             self.page_num = result.write_f06(f06, header, page_stamp,
@@ -523,7 +518,7 @@ class F06Writer(OP2_F06_Common):
         if len(res_keys_subcase) == 0:
             self.log.warning('no cases to write...self.subcase_key=%r' % self.subcase_key)
             return
-        for isubcase, res_keys in sorted(iteritems(res_keys_subcase)):
+        for isubcase, res_keys in sorted(res_keys_subcase.items()):
             for res_key in res_keys:
                 if isinstance(res_key, tuple):
                     is_compressed = False
@@ -830,7 +825,7 @@ class F06Writer(OP2_F06_Common):
 
             #self.grid_point_stresses, self.grid_point_volume_stresses, self.grid_point_forces,
         #]
-        for isubcase, res_keys in sorted(iteritems(res_keys_subcase)):
+        for isubcase, res_keys in sorted(res_keys_subcase.items()):
             # print(res_keys)
             for res_key in res_keys:
                 if isinstance(res_key, tuple):
@@ -881,8 +876,10 @@ class F06Writer(OP2_F06_Common):
                                 is_mag_phase=is_mag_phase, is_sort1=is_sort1)
                         except Exception as error:
                             print_exc(file=sys.stdout)
+                            print(''.join(result.get_stats()))
                             raise
 
+                        #assert 'table_name=' in ''.join(result.get_stats())
                         assert isinstance(self.page_num, int), 'pageNum=%r' % str(self.page_num)
                     except:
                         #print("result name = %r" % result.name())

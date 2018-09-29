@@ -1,7 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import integer_types
-from numpy import zeros
+from six import integer_types, binary_type
 import numpy as np
 
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
@@ -99,20 +98,20 @@ class RealStrainEnergyArray(ScalarObject):
 
     def build_data(self, dtype):
         """actually performs the build step"""
-        self._times = zeros(self.ntimes, dtype=dtype)
+        self._times = np.zeros(self.ntimes, dtype=dtype)
         #self.element = zeros(self.nelements, dtype='int32')
         #if dtype in 'DMIG':
         #print(self.element_name, self.element_type)
         if self.element_name == 'DMIG':
-            self.element = zeros((self.ntimes, self.nelements), dtype='|U8')
+            self.element = np.zeros((self.ntimes, self.nelements), dtype='|U8')
         else:
-            self.element = zeros((self.ntimes, self.nelements), dtype='int32')
+            self.element = np.zeros((self.ntimes, self.nelements), dtype='int32')
         #self.element_data_type = empty(self.nelements, dtype='|U8')
 
         #[energy, percent, density]
         assert isinstance(self.ntimes, integer_types), self.ntimes
         assert isinstance(self.ntotal, integer_types), self.ntotal
-        self.data = zeros((self.ntimes, self.nelements, 3), dtype='float32')
+        self.data = np.zeros((self.ntimes, self.nelements, 3), dtype='float32')
 
     def build_dataframe(self):
         """
@@ -162,7 +161,7 @@ class RealStrainEnergyArray(ScalarObject):
 
             nvalues = ntimes * nelements
 
-            #if self.nonlinear_factor is not None:
+            #if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             #column_names = column_names[0]
             #column_values = column_values[0]
@@ -268,7 +267,7 @@ class RealStrainEnergyArray(ScalarObject):
     def add_sort1(self, dt, eid, energyi, percenti, densityi):
         """unvectorized method for adding SORT1 transient data"""
         #itime = self.itime // self.nelement_types
-        assert isinstance(eid, (int, str)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert (isinstance(eid, int) and eid > 0) or isinstance(eid, binary_type), 'dt=%s eid=%s' % (dt, eid)
         itime = self.itime
         self._times[itime] = dt
         self.element[itime, self.ielement] = eid
@@ -334,7 +333,7 @@ class RealStrainEnergyArray(ScalarObject):
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s element_name=%r ntimes=%i nelements=%i\n'
                        % (self.__class__.__name__, self.element_name, ntimes, nelements))
             ntimes_word = 'ntimes'
@@ -522,15 +521,15 @@ class ComplexStrainEnergyArray(ScalarObject):
 
     def build_data(self, dtype):
         """actually performs the build step"""
-        self._times = zeros(self.ntimes, dtype=dtype)
-        #self.element = zeros(self.nelements, dtype='int32')
-        self.element = zeros((self.ntimes, self.nelements), dtype='int32')
+        self._times = np.zeros(self.ntimes, dtype=dtype)
+        #self.element = np.zeros(self.nelements, dtype='int32')
+        self.element = np.zeros((self.ntimes, self.nelements), dtype='int32')
         #self.element_data_type = empty(self.nelements, dtype='|U8')
 
         #[energy, percent, density]
         assert isinstance(self.ntimes, integer_types), self.ntimes
         assert isinstance(self.ntotal, integer_types), self.ntotal
-        self.data = zeros((self.ntimes, self.nelements, 4), dtype='float32')
+        self.data = np.zeros((self.ntimes, self.nelements, 4), dtype='float32')
 
     #def build_dataframe(self):
         #"""
@@ -563,7 +562,7 @@ class ComplexStrainEnergyArray(ScalarObject):
         #else:
             #nvalues = ntimes * nelements
             #element = self.element.ravel()
-            #if self.nonlinear_factor is not None:
+            #if self.nonlinear_factor not in (None, np.nan):
                 #column_names, column_values = self._build_dataframe_transient_header()
                 ##column_names = column_names[0]
                 ##column_values = column_values[0]
@@ -663,7 +662,7 @@ class ComplexStrainEnergyArray(ScalarObject):
     def add_sort1(self, dt, eid, energyr, energyi, percenti, densityi):
         """unvectorized method for adding SORT1 transient data"""
         #itime = self.itime // self.nelement_types
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         itime = self.itime
         self._times[itime] = dt
         try:
@@ -689,7 +688,7 @@ class ComplexStrainEnergyArray(ScalarObject):
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i\n'
                        % (self.__class__.__name__, ntimes, nelements))
             ntimes_word = 'ntimes'

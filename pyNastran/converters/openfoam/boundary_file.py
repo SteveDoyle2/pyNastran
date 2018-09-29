@@ -7,15 +7,13 @@ from __future__ import print_function
 import os
 from codecs import open
 from collections import OrderedDict
-from six import iteritems
-from six.moves import range
 
 import numpy as np
 
 from pyNastran.converters.openfoam.points_file import PointFile
 from pyNastran.converters.openfoam.face_file import FaceFile
 from pyNastran.utils.log import get_logger2
-from pyNastran.utils import print_bad_path
+from pyNastran.utils import check_path
 
 
 class BoundaryFile(object):
@@ -126,7 +124,7 @@ class BoundaryFile(object):
                                    'boundaries must have unique names' % boundary_name)
                 boundaries[boundary_name] = [boundary_type, nfaces, startfaces]
 
-        for name, boundary in iteritems(boundaries):
+        for name, boundary in boundaries.items():
             self.log.info('name=%s boundary=%s' % (name, boundary))
         return boundaries
 
@@ -141,9 +139,9 @@ class Boundary(object):
 
     def read_openfoam(self, point_filename, face_filename, boundary_filename):
         """reads a Boundary file"""
-        assert os.path.exists(face_filename), print_bad_path(face_filename)
-        assert os.path.exists(point_filename), print_bad_path(point_filename)
-        assert os.path.exists(boundary_filename), print_bad_path(boundary_filename)
+        check_path(face_filename, 'face_filename')
+        check_path(point_filename, 'point_filename')
+        check_path(boundary_filename, 'boundary_filename')
 
         #self.log.info('face_filename = %r' % face_filename)
         #self.log.info('point_filename = %r' % point_filename)
@@ -182,7 +180,7 @@ class Boundary(object):
         nfaces2 = 0
         ifaces_to_read = []
         #f_boundary_faces = open('boundary_faces.py', 'wb')
-        for name, boundary in iteritems(boundaries):
+        for name, boundary in boundaries.items():
             # type            patch;  # 0
             # nFaces          nFaces; # 1
             # startFace       777700; # 2
@@ -250,7 +248,7 @@ class Boundary(object):
         iname = 1
         snames = [None] * (len(boundaries) + 1)
         self.log.info('')
-        for name, boundary in iteritems(boundaries):
+        for name, boundary in boundaries.items():
             self.log.info('iname=%s name=%s boundary=%s' % (iname, name, boundary))
             # type            patch;
             # nFaces          nFaces;

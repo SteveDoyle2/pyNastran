@@ -7,7 +7,7 @@ from six import string_types
 import numpy as np
 import vtk
 
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 
 
 class MarkActions(object):

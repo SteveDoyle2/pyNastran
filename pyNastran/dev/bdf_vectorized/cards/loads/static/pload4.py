@@ -1,5 +1,4 @@
 from __future__ import print_function
-from six.moves import zip, range
 import numpy as np
 from numpy import arange, array, zeros, searchsorted, unique, full, nan, where
 

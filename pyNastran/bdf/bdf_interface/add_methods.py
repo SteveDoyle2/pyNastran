@@ -85,6 +85,26 @@ class AddMethods(BDFAttributes):
             self.nodes[key] = node
             self._type_to_id_map[node.type].append(key)
 
+    def _add_gridb_object(self, node, allow_overwrites=False):
+        """adds a GRIDB card"""
+        key = node.nid
+        assert key > 0, 'eid=%s node=%s' % (key, node)
+        if key in self.gridb and not allow_overwrites:
+            assert node.nid not in self.gridb, 'nid=%s\nold_node=\n%snew_node=\n%s' % (node.nid, self.gridb[key], node)
+        self.gridb[key] = node
+        self._type_to_id_map[node.type].append(key)
+        self._is_axis_symmetric = True
+
+    def _add_ringfl_object(self, ringfl, allow_overwrites=False):
+        """adds a RINGFL card"""
+        key = ringfl.ringfl
+        assert key > 0, 'eid=%s ringfl=%s' % (key, ringfl)
+        if key in self.ringfl and not allow_overwrites:
+            assert ring.ringfl not in self.ringfl, 'ringfl=%s\nold_ringfl=\n%snew_ringfl=\n%s' % (ringfl.ringfl, self.ringfl[key], ringfl)
+        self.ringfl[key] = ringfl
+        self._type_to_id_map[ringfl.type].append(key)
+        self._is_axis_symmetric = True
+
     def _add_ringax_object(self, ringax, allow_overwrites=False):
         # type: (Any, bool) -> None
         """adds a RINGAX card"""
@@ -99,6 +119,7 @@ class AddMethods(BDFAttributes):
             assert key > 0, 'nid=%s ringax=%s' % (key, ringax)
             self.ringaxs[key] = ringax
             self._type_to_id_map[ringax.type].append(key)
+        self._is_axis_symmetric = True
 
     def _add_seqgp_object(self, seqgp):
         # type: (Any) -> None
@@ -144,6 +165,49 @@ class AddMethods(BDFAttributes):
             epoint = EPOINT(nid, comment=comment)
             comment = ''
             self.epoints[nid] = epoint
+
+    def _add_setree_object(self, setree):
+        key = setree.seid
+        self.setree[key] = setree
+    def _add_senqset_object(self, senqset):
+        key = senqset.set_id
+        self.senqset[key] = senqset
+    def _add_sebulk_object(self, sebulk):
+        key = sebulk.seid
+        self.sebulk[key] = sebulk
+    def _add_sebndry_object(self, sebndry):
+        key = sebndry.seid
+        self.sebndry[key] = sebndry
+    def _add_seloc_object(self, seloc):
+        key = seloc.seid
+        self.seloc[key] = seloc
+    def _add_sempln_object(self, sempln):
+        key = sempln.seid
+        self.sempln[key] = sempln
+
+    def _add_secontct_object(self, secontct):
+        key = secontct.seid
+        self.secontct[key] = secontct
+    def _add_selabel_object(self, selabel):
+        key = selabel.seid
+        self.selabel[key] = selabel
+    def _add_seexcld_object(self, seexcld):
+        key = seexcld.seid
+        self.seexcld[key] = seexcld
+
+    def _add_seelt_object(self, seelt):
+        #self.seelt.append(seelt)
+        key = seelt.seid
+        self.seelt[key] = seelt
+    def _add_seload_object(self, seload):
+        key = seload.seid
+        self.seload[key] = seload
+    def _add_csuper_object(self, csuper):
+        key = csuper.seid
+        self.csuper[key] = csuper
+    def _add_csupext_object(self, csupext):
+        key = csupext.seid
+        self.csupext[key] = csupext
 
     def _add_plotel_object(self, elem, allow_overwrites=False):
         # type: (Any, bool) -> None
@@ -319,6 +383,18 @@ class AddMethods(BDFAttributes):
         self.bctsets[key] = card
         self._type_to_id_map[card.type].append(key)
 
+    def _add_bconp_object(self, bconp):
+        """adds an BCONP object"""
+        key = bconp.sid
+        self.bconp[key] = bconp
+        self._type_to_id_map[bconp.type].append(key)
+
+    def _add_blseg_object(self, blseg):
+        """adds an BLSEG object"""
+        key = blseg.line_id
+        self.blseg[key] = blseg
+        self._type_to_id_map[blseg.type].append(key)
+
     def _add_bsurf_object(self, card, allow_overwrites=False):
         """adds an BSURF object"""
         key = card.sid
@@ -341,6 +417,17 @@ class AddMethods(BDFAttributes):
             assert key > 0, 'pid=%s radcav=%s' % (key, radcav)
             self.radcavs[key] = radcav
             self._type_to_id_map[radcav.type].append(key)
+
+    def _add_radmtx_object(self, radmtx, allow_overwrites=False):
+        """adds an RADMTX object"""
+        key = radmtx.icavity
+        if key in self.radmtx and not allow_overwrites:
+            if not radmtx == self.radmtx[key]:
+                assert key not in self.radmtx, 'pid=%s old RADMTX=\n%snew RADMTX=\n%s' % (key, self.radmtx[key], radmtx)
+        else:
+            assert key > 0, 'pid=%s radmtx=%s' % (key, radmtx)
+            self.radmtx[key] = radmtx
+            self._type_to_id_map[radmtx.type].append(key)
 
     def _add_tempd_object(self, tempd, allow_overwrites=False):
         """adds an TEMPD object"""
@@ -596,7 +683,7 @@ class AddMethods(BDFAttributes):
         key = view3d.icavity
         assert key > 0, 'key=%s; view3d=%s\n' % (key, view3d)
         if key in self.view3ds:
-            if not view == self.view3cs[key]:
+            if not view == self.view3ds[key]:
                 assert key not in self.view3ds, 'VIEW3D.icavity=%s\nold=\n%snew=\n%s' % (
                     key, self.view3ds[key], view3d)
         else:
@@ -800,6 +887,13 @@ class AddMethods(BDFAttributes):
         # only one AXIC card allowed
         assert self.axic is None, '\naxic=\n%s old=\n%s' % (axic, self.axic)
         self.axic = axic
+
+    def _add_axif_object(self, axif):
+        # type: (Any) -> None
+        """adds an AXIF object"""
+        # only one AXIC card allowed
+        assert self.axif is None, '\naxif=\n%s old=\n%s' % (axif, self.axif)
+        self.axif = axif
 
     def _add_aefact_object(self, aefact, allow_overwrites=False):
         # type: (Any, bool) -> None

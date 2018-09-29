@@ -1,6 +1,5 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six.moves import zip, range
 import random
 import unittest
 
@@ -436,10 +435,9 @@ class Testfield_writer_8(unittest.TestCase):
             self.assertEqual(len(output), 16, msg='output=%r len(output)=%i' % (output, len(output)))
             self.assertEqual(output, expectedi, msg='num=%s output=%r expected=%r' % (x, output, expectedi))
 
-        if 0:
-            nums = [0.99999999999999 * 10**x for x in range(small_exponent, large_exponent+1)]
-            positive_output = [print_float_16(x) for x in nums]
-            negative_output = [print_float_16(-x) for x in nums]
+        nums = [0.99999999999999 * 10**x for x in range(small_exponent, large_exponent+1)]
+        positive_output = [print_float_16(x) for x in nums]
+        negative_output = [print_float_16(-x) for x in nums]
 
 def compare(value_in):
     field = print_field_8(value_in)

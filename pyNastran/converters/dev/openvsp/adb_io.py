@@ -1,6 +1,5 @@
 from __future__ import print_function
 from collections import OrderedDict
-from six.moves import range
 from numpy import arange, amax, amin, zeros, hstack
 
 import vtk

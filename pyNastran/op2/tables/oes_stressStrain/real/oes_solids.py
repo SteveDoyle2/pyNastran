@@ -4,7 +4,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from itertools import count
 from struct import Struct, pack
 from six import integer_types
-from six.moves import zip, range
 
 import numpy as np
 from numpy import zeros, where, searchsorted
@@ -72,11 +71,12 @@ class RealSolidArray(OES_Object):
         dtype = 'float32'
         if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
-        self._times = zeros(self.ntimes, dtype=dtype)
+
+        _times = zeros(self.ntimes, dtype=dtype)
 
         # TODO: could be more efficient by using nelements for cid
-        self.element_node = zeros((self.ntotal, 2), dtype='int32')
-        self.element_cid = zeros((self.nelements, 2), dtype='int32')
+        element_node = zeros((self.ntotal, 2), dtype='int32')
+        element_cid = zeros((self.nelements, 2), dtype='int32')
 
         #if self.element_name == 'CTETRA':
             #nnodes = 4
@@ -87,16 +87,30 @@ class RealSolidArray(OES_Object):
         #self.element_node = zeros((self.ntotal, nnodes, 2), 'int32')
 
         #[oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, ovmShear]
-        self.data = zeros((self.ntimes, self.ntotal, 10), 'float32')
-        self.nnodes = self.element_node.shape[0] // self.nelements
+        data = zeros((self.ntimes, self.ntotal, 10), 'float32')
+        self.nnodes = element_node.shape[0] // self.nelements
         #self.data = zeros((self.ntimes, self.nelements, nnodes+1, 10), 'float32')
+
+        if self.load_as_h5:
+            #for key, value in sorted(self.data_code.items()):
+                #print(key, value)
+            group = self._get_result_group()
+            self._times = group.create_dataset('_times', data=_times)
+            self.element_node = group.create_dataset('element_node', data=element_node)
+            self.element_cid = group.create_dataset('element_cid', data=element_cid)
+            self.data = group.create_dataset('data', data=data)
+        else:
+            self._times = _times
+            self.element_node = element_node
+            self.element_cid = element_cid
+            self.data = data
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
         headers = self.get_headers()
         # TODO: cid?
         element_node = [self.element_node[:, 0], self.element_node[:, 1]]
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values, major_axis=element_node, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
@@ -215,7 +229,7 @@ class RealSolidArray(OES_Object):
 
         msg = []
 
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i nnodes=%i\n  nnodes_per_element=%s (including centroid)\n'
                        % (self.__class__.__name__, ntimes, nelements, nnodes, nnodes_per_element))
             ntimes_word = 'ntimes'

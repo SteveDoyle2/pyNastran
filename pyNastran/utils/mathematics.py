@@ -2,7 +2,6 @@
 # pylint: disable=C0103
 """
 Various mathematical functions are defined in this file.  This includes:
- - augmented_identity(A)
  - gauss(n)
  - get_abs_index(data, axis=1)
  - get_abs_max(min_values, max_values)
@@ -23,19 +22,17 @@ Various mathematical functions are defined in this file.  This includes:
 All beams are LineProperty objects.
 Multi-segment beams are IntegratedLineProperty objects.
 """
-from __future__ import print_function
+from __future__ import print_function, absolute_import
 from math import sqrt, ceil
 from six import string_types
-from six.moves import range
 
 from numpy import (float32, float64, complex64, complex128, array, cross,
-                   allclose, zeros, matrix, insert, diag, eye, argmax, argmin, arange)
+                   allclose, argmax, argmin, arange)
 import numpy as np
 from numpy.linalg import norm  # type: ignore
 
-from scipy.linalg import solve_banded  # type: ignore
+#from scipy.linalg import solve_banded  # type: ignore
 from scipy.integrate import quad  # type: ignore
-from pyNastran.utils.numpy_utils import unique2d as unique2d_numpy
 
 # should future proof this as it handles 1.9.0.dev-d1dbf8e, 1.10.2, and 1.6.2
 #_numpy_version = [int(i) for i in numpy.__version__.split('.') if i.isdigit()]
@@ -51,9 +48,6 @@ from pyNastran.utils.numpy_utils import unique2d as unique2d_numpy
     # for eid in eids:
         # i.append(where(eids_all == eid)[0])
     # return hstack(i)
-
-def unique2d(A):
-    return unique2d_numpy(A)
 
 def get_abs_max(min_values, max_values):
     """Get return the value with the greatest magnitude, preserving sign."""
@@ -203,7 +197,7 @@ def reduce_matrix(matrix_a, nids):
     takes a list of ids and removes those rows and cols
     """
     nrows = len(nids)
-    matrix_b = matrix(zeros((nrows, nrows), dtype='float64'))
+    matrix_b = np.zeros((nrows, nrows), dtype='float64')
     for i, irow in enumerate(nids):
         for j, jcol in enumerate(nids):
             matrix_b[i, j] = matrix_a[irow, jcol]
@@ -323,45 +317,29 @@ def list_print(list_a, tol=1e-8, float_fmt='%-3.2g', zero_fmt='    0'):
     return '[ '+ ', '.join([_print(a) for a in list_a])+ ']'
 
 
-def augmented_identity(A):
-    """
-    Creates an Identity Matrix augmented with zeros.
-    The location of the extra zeros depends on A.
+#def solve_tridag(A, D):
+    #"""
+    #Solves a tridagonal matrix [A]{x}={b} for {x}
 
-    .. code-block:: python
+    #Parameters
+    #----------
+    #A : (N,) float ndarray
+        #main diagonal
+    #D : (N-1,) float ndarray)
+        #off diagonal
 
-      [ 1, 0, 0, 0 ]
-      [ 0, 1, 0, 0 ]
-      [ 0, 0, 1, 0 ]
-    """
-    (nx, ny) = A.shape
-    I = eye(max(nx, ny), 'float64')
-    return I[:nx, :ny]
-
-
-def solve_tridag(A, D):
-    """
-    Solves a tridagonal matrix [A]{x}={b} for {x}
-
-    Parameters
-    ----------
-    A : (N,) float ndarray
-        main diagonal
-    D : (N-1,) float ndarray)
-        off diagonal
-
-    Returns
-    -------
-    x : (N, )
-        the result
-    """
-    # Find the diagonals
-    ud = insert(diag(A, 1), 0, 0)  # upper diagonal
-    d = diag(A)  # main diagonal
-    ld = insert(diag(A, -1), len(d) - 1, 0)  # lower diagonal
-    # simplified matrix
-    ab = matrix([ud, d, ld])
-    return solve_banded((1, 1), ab, D, overwrite_ab=True, overwrite_b=True)
+    #Returns
+    #-------
+    #x : (N, )
+        #the result
+    #"""
+    ## Find the diagonals
+    #ud = insert(diag(A, 1), 0, 0)  # upper diagonal
+    #d = diag(A)  # main diagonal
+    #ld = insert(diag(A, -1), len(d) - 1, 0)  # lower diagonal
+    ## simplified matrix
+    #ab = np.matrix([ud, d, ld])
+    #return solve_banded((1, 1), ab, D, overwrite_ab=True, overwrite_b=True)
 
 
 Area = lambda a, b: 0.5 * norm(cross(a, b))

@@ -1,5 +1,6 @@
 from __future__ import print_function
 from typing import List, Dict, Tuple, Union, Any
+from six import string_types
 from pyNastran.bdf.bdf_interface.subcase_utils import write_set
 
 class CaseControlCard(object):
@@ -577,17 +578,18 @@ class CheckCard(CaseControlCard):
         self.options = options
         self.data = []
         for key_value in options:
-            if key_value.startswith('SET'):
+            if key_value.upper().startswith('SET'):
                 key = self._parse_set(key_value, options)
             else:
                 key = self._parse(key_value, options)
+
             if key not in self.allowed_keys:
                 msg = '%s: key=%r allowed_keys=[%r]' % (
                     self.type, key, ', '.join(self.allowed_keys))
                 raise KeyError(msg)
 
-        if isinstance(value, str):
-            value = value.strip()
+        if isinstance(value, string_types):
+            value = value.strip().upper()
         if self.allow_ints:
             try:
                 value = int(value)
@@ -639,9 +641,13 @@ class CheckCard(CaseControlCard):
                                 self.type, key, val, ', '.join(allowed_values))
                             msg += '\noptions = %r' % options
                             raise ValueError(msg)
+
+            key = key.upper()
+            if isinstance(valuei, string_types):
+                valuei = valuei.upper()
             self.data.append((key, valuei))
         else:
-            key = key_value
+            key = key_value.upper()
             self.data.append((key, None))
         return key
 
@@ -698,6 +704,8 @@ class CheckCard(CaseControlCard):
         else:
             key = key_value
             self.data.append((key, None))
+
+        key = key.upper()
         return key
 
     @classmethod
@@ -798,6 +806,8 @@ class CheckCard(CaseControlCard):
                 else:
                     msg += '%s=%s, ' % (key, value)
             msg = msg.strip(', ') + ') = %s' % self.value
+        else:
+            msg += ' = %s' % self.value
         return msg + '\n'
 
 def split_by_mixed_commas_parentheses(str_options):
@@ -848,9 +858,11 @@ def split_by_mixed_commas_parentheses(str_options):
     while icomma > iparen:
         str_options, end = str_options.rsplit(')', 1)
         str_options = str_options.strip() + ')'
-        #print('  str_options = %r' % str_options)
-        icomma = str_options.rindex(',')
         iparen = str_options.rindex(')')
+        if ',' in str_options:
+            icomma = str_options.rindex(',')
+        else:
+            icomma = -1
         options_end.append(end.strip(' ,'))
         #print('  icomma=%s iparen=%s' % (icomma, iparen))
         #print('  options_end=%s' % options_end[::-1])
@@ -871,7 +883,6 @@ def split_by_mixed_commas_parentheses(str_options):
         assert '(' not in option, option
         assert ')' not in option, option
         options_end_new += [optioni.strip() for optioni in option.split(',')]
-
 
     options = options_start_new + [str_options] + options_end_new
     return options

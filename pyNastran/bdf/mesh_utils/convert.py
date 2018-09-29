@@ -3,7 +3,7 @@ defines:
  - convert(model, units_to, units=None)
 """
 from __future__ import print_function
-from six import iteritems, itervalues, string_types
+from six import string_types
 import numpy as np
 from pyNastran.bdf.cards.base_card import break_word_by_trailing_parentheses_integer_ab
 
@@ -72,7 +72,7 @@ def _set_wtmass(model, gravity_scale):
 
 def _convert_nodes(model, xyz_scale):
     """converts the nodes"""
-    for node in itervalues(model.nodes):
+    for node in model.nodes.values():
         if node.cp == 0:
             node.xyz *= xyz_scale
         elif node.cp_ref.type in ['CORD1R', 'CORD2R']:
@@ -83,7 +83,7 @@ def _convert_nodes(model, xyz_scale):
 
 def _convert_coordinates(model, xyz_scale):
     """converts the coordinate systems"""
-    for cid, coord in iteritems(model.coords):
+    for cid, coord in model.coords.items():
         if cid == 0:
             continue
         if coord.rid == 0:
@@ -145,7 +145,7 @@ def _convert_elements(model, xyz_scale, mass_scale, weight_scale):
 
     tri_shells = ['CTRIA3', 'CTRIA6', 'CTRIAR']
     quad_shells = [
-        'CQUAD4', 'CQUAD8', 'CQUADX', 'CQUADR']
+        'CQUAD4', 'CQUAD8', 'CQUADR']
     spring_elements = ['CELAS2', 'CELAS4']
     damper_elements = ['CDAMP2', 'CDAMP4']
 
@@ -158,7 +158,7 @@ def _convert_elements(model, xyz_scale, mass_scale, weight_scale):
     if len(model.masses):
         model.log.debug('mass_moi_scale = %g' % mass_moi_scale)
 
-    for elem in itervalues(model.elements):
+    for elem in model.elements.values():
         elem_type = elem.type
         if elem_type in skip_elements:
             continue
@@ -194,6 +194,8 @@ def _convert_elements(model, xyz_scale, mass_scale, weight_scale):
                     elem.T4 *= xyz_scale
             # nsm
             #elem.nsm *= nsm_scale
+        elif elem_type in ['CQUADX']:
+            pass
 
         elif elem_type == 'CONROD':
             elem.A *= area_scale # area
@@ -218,13 +220,17 @@ def _convert_elements(model, xyz_scale, mass_scale, weight_scale):
         else:
             raise NotImplementedError('type=%r; elem:\n%s' % (elem.type, elem))
 
-    for elem in itervalues(model.masses):
+    for elem in model.masses.values():
         elem_type = elem.type
         if elem_type == 'CONM2':
             elem.mass *= mass_scale
             elem.X *= xyz_scale
             # I = m * r^2
             elem.I = [moi * mass_moi_scale for moi in elem.I]
+        elif elem.type == 'CMASS1':
+            pass
+        elif elem.type == 'CMASS4':
+            elem.mass *= mass_scale
         else:
             raise NotImplementedError(elem)
 
@@ -251,13 +257,13 @@ def _convert_properties(model, xyz_scale, mass_scale, weight_scale):
     model.log.debug('damping_scale = %g' % damping_scale)
     model.log.debug('stress_scale = %g\n' % stress_scale)
 
-    skip_properties = [
-        'PSOLID', 'PLSOLID', 'PLPLANE',
+    skip_properties = (
+        'PSOLID', 'PLSOLID', 'PLPLANE', 'PIHEX',
 
         # TODO: NX-verify
         'PPLANE',
-    ]
-    for prop in itervalues(model.properties):
+    )
+    for prop in model.properties.values():
         prop_type = prop.type
         if prop_type in skip_properties:
             continue
@@ -445,7 +451,7 @@ def _convert_materials(model, xyz_scale, mass_scale, weight_scale):
     model.log.debug('density_scale = %g' % density_scale)
     model.log.debug('stress_scale = %g\n' % stress_scale)
 
-    for mat in itervalues(model.materials):
+    for mat in model.materials.values():
         mat_type = mat.type
         if mat_type == 'MAT1':
             mat.e *= stress_scale
@@ -544,13 +550,33 @@ def _convert_materials(model, xyz_scale, mass_scale, weight_scale):
             mat.rho *= density_scale
             mat.A *= a_scale
             mat.tref *= temp_scale
-
+        elif mat.type == 'MAT3D':
+            mat.e1 *= stress_scale
+            mat.e2 *= stress_scale
+            mat.e3 *= stress_scale
+            mat.g12 *= stress_scale
+            mat.g13 *= stress_scale
+            mat.g23 *= stress_scale
+            mat.rho = density_scale
+        elif mat.type == 'MAT11':
+            mat.e1 *= stress_scale
+            mat.e2 *= stress_scale
+            mat.e3 *= stress_scale
+            mat.g12 *= stress_scale
+            mat.g13 *= stress_scale
+            mat.g23 *= stress_scale
+            mat.rho = density_scale
+            #mat.a1 = a1
+            #mat.a2 = a2
+            #mat.a3 = a3
+            mat.tref *= temp_scale
+            #mat.ge = ge
         else:
             raise NotImplementedError(mat)
 
 def _convert_constraints(model, xyz_scale):
     """converts the spc/mpcs"""
-    for unused_spc_id, spcs in iteritems(model.spcs):
+    for unused_spc_id, spcs in model.spcs.items():
         for spc in spcs:
             if spc.type in ['SPCADD', 'SPC1']:
                 continue
@@ -579,10 +605,10 @@ def _convert_loads(model, xyz_scale, weight_scale):
     model.log.debug('pressure_scale = %s' % pressure_scale)
     model.log.debug('accel_scale = %s\n' % accel_scale)
 
-    for dloads in itervalues(model.dloads):
+    for dloads in model.dloads.values():
         assert isinstance(dloads, str), dloads  # TEMP
 
-    for dloads in itervalues(model.dload_entries):
+    for dloads in model.dload_entries.values():
         for dload in dloads:
             if dload.type == 'RLOAD1':
                 #self.excite_id = excite_id
@@ -604,7 +630,7 @@ def _convert_loads(model, xyz_scale, weight_scale):
             else:
                 raise NotImplementedError(dload)
 
-    for loads in itervalues(model.loads):
+    for loads in model.loads.values():
         assert isinstance(loads, list), loads
         for load in loads: # list
             load_type = load.type
@@ -689,7 +715,7 @@ def _convert_aero(model, xyz_scale, time_scale, weight_scale):
         model.aeros.bref *= xyz_scale
         model.aeros.sref *= area_scale
 
-    for caero in itervalues(model.caeros):
+    for caero in model.caeros.values():
         if caero.type == 'CAERO1':
             caero.p1 *= xyz_scale
             caero.p4 *= xyz_scale
@@ -700,30 +726,30 @@ def _convert_aero(model, xyz_scale, time_scale, weight_scale):
             caero.x12 *= xyz_scale
         else:
             raise NotImplementedError('\n' + str(caero))
-    #for paero in itervalues(model.paeros):
+    #for paero in model.paeros.values():
         #paero.cross_reference(model)
-    for trim in itervalues(model.trims):
+    for trim in model.trims.values():
         trim.q *= pressure_scale
-    #for spline in itervalues(model.splines):
+    #for spline in model.splines.values():
         #spline.convert(model)
-    #for aecomp in itervalues(model.aecomps):
+    #for aecomp in model.aecomps.values():
         #aecomp.cross_reference(model)
-    #for aelist in itervalues(model.aelists):
+    #for aelist in model.aelists.values():
         #aelist.cross_reference(model)
-    #for aeparam in itervalues(model.aeparams):
+    #for aeparam in model.aeparams.values():
         #aeparam.cross_reference(model)
-    #for aestat in itervalues(model.aestats):
+    #for aestat in model.aestats.values():
         #aestat.cross_reference(model)
-    #for aesurf in itervalues(model.aesurf):
+    #for aesurf in model.aesurf.values():
         #aesurf.cross_reference(model)
-    #for aesurfs in itervalues(model.aesurfs):
+    #for aesurfs in model.aesurfs.values():
         #aesurfs.cross_reference(model)
     for monitor in model.monitor_points:
         if hasattr(monitor, 'xyz'):
             monitor.xyz *= xyz_scale
     # update only the FLFACTs corresponding to density
     flfact_ids = set([])
-    for flutter in itervalues(model.flutters):
+    for flutter in model.flutters.values():
         flfact = flutter.density
         flfact_ids.add(flfact.sid)
     for flfact_id in flfact_ids: # density
@@ -740,52 +766,28 @@ def _convert_optimization(model, xyz_scale, mass_scale, weight_scale):
     pressure_scale = weight_scale / xyz_scale ** 2
     #stiffness_scale = force_scale / xyz_scale
     #damping_scale = force_scale / velocity_scale
-    #for key, deqatn in iteritems(model.dequations):
+    #for key, deqatn in model.dequations.items():
         #deqatn.cross_reference(model)
-    #for key, dresp in iteritems(model.dresps):
+    #for key, dresp in model.dresps.items():
         #dresp.cross_reference(model)
-    #for key, desvar in iteritems(model.desvars):
+    #for key, desvar in model.desvars.items():
         #desvar.xinit *= scale
         #desvar.xlb *= scale
         #desvar.xub *= scale
         #desvar.delx *= scale
         #raise NotImplementedError(desvar)
-    for unused_key, dconstrs in iteritems(model.dconstrs):
-        for dconstr in dconstrs:
-            otype = dconstr.type
-            if otype == 'DCONSTR':
-                dresp = dconstr.rid
-                if dresp.type == 'DRESP1':
-                    property_type = dresp.ptype
-                    response_type = dresp.rtype
-                    assert len(dresp.atti) == 1, dresp.atti
-                    for atti in dresp.atti:
-                        #label = dresp.label
-                        #atti_type = atti.type
-                        if response_type == 'STRESS':
-                            scale = pressure_scale
-                        else:
-                            raise RuntimeError(atti)
-                        #if atti
-                        #if property_type == 'PSHELL':
-                            #if rst
-                else:
-                    raise NotImplementedError(dresp)
-                dconstr.lid *= scale
-                dconstr.uid *= scale
-            else:
-                raise NotImplementedError(dconstr)
 
-    for unused_key, dvcrel in iteritems(model.dvcrels):
+    for unused_key, dconstrs in model.dconstrs.items():
+        for dconstr in dconstrs:
+            # scale is appled to lid/uid
+            _convert_dconstr(model, dconstr, pressure_scale)
+
+    for unused_key, dvcrel in model.dvcrels.items():
         if dvcrel.type == 'DVCREL1':
-            element_type = dvcrel.element_type
-            if element_type == 'CBUSH':
-                if dvcrel.cp_name in ['X1', 'X2', 'X3', 'S', 'S1', 'S2', 'S3']:
-                    scale = xyz_scale
-                else:
-                    raise NotImplementedError(dvcrel)
-            else:
-                raise NotImplementedError(dvcrel)
+            scale = _convert_dvcrel1(dvcrel, xyz_scale)
+            desvars = dvcrel.dvids_ref
+            assert len(desvars) == 1, len(desvars)
+            scale_desvars(desvars, scale)
         else:
             raise NotImplementedError(dvcrel)
 
@@ -793,10 +795,10 @@ def _convert_optimization(model, xyz_scale, mass_scale, weight_scale):
         assert len(desvars) == 1, len(desvars)
         scale_desvars(desvars, scale)
 
-    for key, dvmrel in iteritems(model.dvmrels):
+    for unused_key, dvmrel in model.dvmrels.items():
         raise NotImplementedError(dvmrel)
 
-    for key, dvprel in iteritems(model.dvprels):
+    for key, dvprel in model.dvprels.items():
         if dvprel.type == 'DVPREL1':
             scale = _convert_dvprel1(dvprel, xyz_scale, mass_scale, weight_scale)
             desvars = dvprel.dvids_ref
@@ -810,7 +812,56 @@ def _convert_optimization(model, xyz_scale, mass_scale, weight_scale):
             dvprel.p_min *= scale
         #print('------------')
         #print(dvprel)
-        #pass
+
+def _convert_dconstr(model, dconstr, pressure_scale):
+    """helper for ``_convert_optimization``"""
+    otype = dconstr.type
+    if otype == 'DCONSTR':
+        dresp = dconstr.dresp_id_ref
+        if dresp.type == 'DRESP1':
+            #property_type = dresp.ptype
+            response_type = dresp.rtype
+            assert len(dresp.atti) == 1, dresp.atti
+            for atti in dresp.atti:
+                #label = dresp.label
+                #atti_type = atti.type
+                if response_type == 'STRESS':
+                    scale = pressure_scale
+                else:
+                    raise RuntimeError(atti)
+                #if atti
+                #if property_type == 'PSHELL':
+                    #if rst
+        elif dresp.type == 'DRESP2':
+            msg = 'skipping:\n%s%s' % (str(dconstr), str(dresp))
+            model.log.warning(msg)
+            return
+        else:
+            raise NotImplementedError(dresp)
+
+        # lower bound
+        dconstr.lid *= scale
+        # upper bound
+        dconstr.uid *= scale
+
+        # low end of frequency range (Hz)
+        self.lowfq = scale
+        # high end of frequency range (Hz)
+        self.highfq = scale
+    else:
+        raise NotImplementedError(dconstr)
+
+def _convert_dvcrel1(dvcrel, xyz_scale):
+    """helper for ``_convert_optimization``"""
+    element_type = dvcrel.element_type
+    if element_type == 'CBUSH':
+        if dvcrel.cp_name in ['X1', 'X2', 'X3', 'S', 'S1', 'S2', 'S3']:
+            scale = xyz_scale
+        else:
+            raise NotImplementedError(dvcrel)
+    else:
+        raise NotImplementedError(dvcrel)
+    return scale
 
 def _convert_dvprel1(dvprel, xyz_scale, mass_scale, weight_scale):
     """helper for ``_convert_optimization``"""
@@ -966,7 +1017,9 @@ def get_scale_factors(units_from, units_to):
 
     #print('gravity_scale_length=%s gravity_scale_mass=%s gravity_scale=%s' % (
         #gravity_scale_length, gravity_scale_mass, gravity_scale))
-    gravity_scale = gravity_scale_length * gravity_scale_mass / time_scale ** 2  # doesn't consider cm/mm
+
+    ## doesn't consider cm/mm
+    gravity_scale = gravity_scale_length * gravity_scale_mass / time_scale ** 2
     # 4.448N = 1 lbm
     # 1 slug = 14.5939 kg
     # 1g = 32.174 ft/s^2 = 386.088 = 9.80665 m/s^2

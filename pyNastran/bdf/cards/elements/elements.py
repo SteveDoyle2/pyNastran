@@ -13,7 +13,7 @@ All ungrouped elements are Element objects.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.base_card import Element, BaseCard, break_word_by_trailing_integer
 from pyNastran.bdf.bdf_interface.assign_type import (
     fields, integer, integer_or_blank, integer_double_or_blank,
@@ -514,8 +514,13 @@ class CRAC2D(CrackElement):
             self.comment = comment
         self.eid = eid
         self.pid = pid
+
+        nnodes = len(nids)
+        if nnodes < 18:
+            nids = nids + [None] * (18-nnodes)
+
         self.prepare_node_ids(nids, allow_empty_nodes=True)
-        assert len(self.nodes) == 18
+        assert len(self.nodes) == 18, 'eid=%s nnodes=%s' % (self.eid, len(self.nodes))
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -603,8 +608,11 @@ class CRAC3D(CrackElement):
             self.comment = comment
         self.eid = eid
         self.pid = pid
+        nnodes = len(nids)
+        if nnodes < 64:
+            nids = nids + [None] * (64-nnodes)
         self.prepare_node_ids(nids, allow_empty_nodes=True)
-        assert len(self.nodes) == 64
+        assert len(self.nodes) == 64, 'eid=%s nnodes=%s' % (self.eid, len(self.nodes))
 
     @classmethod
     def add_card(cls, card, comment=''):

@@ -26,8 +26,6 @@ import copy
 from struct import Struct, pack
 import warnings
 
-from six.moves import zip, range
-
 import numpy as np
 from numpy import zeros, abs, angle, float32, searchsorted, unique, where
 from numpy import allclose, asarray, vstack, swapaxes, hstack
@@ -109,7 +107,7 @@ class TableArray(ScalarObject):  # displacement style table
      - ComplexTableArray
     """
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        self.nonlinear_factor = None
+        self.nonlinear_factor = np.nan
         self.table_name = None
         self.approach_code = None
         self.analysis_code = None
@@ -236,7 +234,7 @@ class TableArray(ScalarObject):  # displacement style table
             assert nminor == ntotal, 'ntotal=%s expected=%s' % (nminor, ntimes)
 
         msg.append('  isubcase = %s\n' % self.isubcase)
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%s nnodes=%s, table_name=%s\n'
                        % (self.__class__.__name__, ntimes, nnodes, self.table_name))
         else:
@@ -321,11 +319,22 @@ class TableArray(ScalarObject):  # displacement style table
         self._nnodes = nnodes
         self.ntotal = ntotal
 
-        self._times = zeros(ntimes, dtype=float_fmt)
-        self.node_gridtype = zeros((nnodes, 2), dtype='int32')
+        _times = zeros(ntimes, dtype=float_fmt)
+        node_gridtype = zeros((nnodes, 2), dtype='int32')
 
         #[t1, t2, t3, r1, r2, r3]
-        self.data = zeros((nx, ny, 6), self.data_type())
+        data = zeros((nx, ny, 6), self.data_type())
+        if self.load_as_h5:
+            #for key, value in sorted(self.data_code.items()):
+                #print(key, value)
+            group = self._get_result_group()
+            self._times = group.create_dataset('_times', data=_times)
+            self.node_gridtype = group.create_dataset('node_gridtype', data=node_gridtype)
+            self.data = group.create_dataset('data', data=data)
+        else:
+            self._times = _times
+            self.node_gridtype = node_gridtype
+            self.data = data
         #print('ntimes=%s nnodes=%s; nx=%s ny=%s; ntotal=%s' % (
             #ntimes, nnodes, nx, ny, self.ntotal))
 
@@ -337,7 +346,7 @@ class TableArray(ScalarObject):  # displacement style table
         #node_gridtype = self.node_gridtype
         ugridtype_str = unique(self.gridtype_str)
 
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             #print('data.shape = %s' % str(self.data.shape))
             #print('column_values = %s' % column_values)
@@ -561,7 +570,6 @@ class RealTableArray(TableArray):
         call_frame = inspect.getouterframes(frame, 2)
         fascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
 
-        #print('data_code =', self.data_code)
         if itable == -1:
             self._write_table_header(f, fascii, date)
             itable = -3
@@ -790,7 +798,7 @@ class RealTableArray(TableArray):
             header.append('')
 
         is_sort2 = not is_sort1
-        if self.is_sort1 or self.nonlinear_factor is None:
+        if self.is_sort1 or self.nonlinear_factor in (None, np.nan):
             if is_sort2 and self.nonlinear_factor is not None:
                 page_num = self._write_sort1_as_sort2(f06_file, page_num, page_stamp, header, words)
             else:

@@ -4,8 +4,7 @@ Defines the sub-OP2 class.  This should never be called outisde of the OP2 class
 
  - OP2_Scalar(debug=False, log=None, debug_file=None)
 
-   Methods
-   -------
+   **Methods**
    - set_subcases(subcases=None)
    - set_transient_times(times)
    - read_op2(op2_filename=None, combine=False)
@@ -13,8 +12,7 @@ Defines the sub-OP2 class.  This should never be called outisde of the OP2 class
    - set_additional_result_tables_to_read(tables)
    - set_additional_matrices_to_read(matrices)
 
-   Attributes
-   ----------
+   **Attributes**
    - total_effective_mass_matrix
    - effective_mass_matrix
    - rigid_body_mass_matrix
@@ -26,8 +24,7 @@ Defines the sub-OP2 class.  This should never be called outisde of the OP2 class
    - set_as_optistruct()
    - set_as_radioss()
 
-   Private Methods
-   ---------------
+   **Private Methods**
    - _get_table_mapper()
    - _not_available(data, ndata)
    - _table_crasher(data, ndata)
@@ -52,7 +49,7 @@ import os
 from struct import unpack
 from collections import Counter
 from typing import List
-from six import binary_type, string_types, iteritems, PY2, PY3, b
+from six import binary_type, string_types, PY2, PY3, b
 
 from numpy import array
 import numpy as np
@@ -205,15 +202,10 @@ GEOM_TABLES = [
 
     b'PVT0', b'CASECC',
     b'EDOM', b'OGPFB1',
-    # GPDT  - Grid point definition table
-    # BGPDT - Basic grid point definition table.
-    b'GPDT', b'BGPDT', b'BGPDTS', b'BGPDTOLD',
     b'DYNAMIC', b'DYNAMICS',
 
-    # EQEXIN - quivalence table between external and internal grid/scalaridentification numbers.
-    b'EQEXIN', b'EQEXINS',
     b'ERRORN',
-    b'DESTAB', b'R1TABRG',# b'HISADD',
+    b'DESTAB', b'R1TABRG',
 
     # eigenvalues
     b'BLAMA', b'LAMA', b'CLAMA',  #CLAMA is new
@@ -623,6 +615,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         """6xnmodes matrix"""
         return self.matrices['MEFWTS']#.dataframe
 
+    @property
+    def matrix_tables(self):
+        return MATRIX_TABLES
+
     def set_as_nx(self):
         self.is_nx = True
         self.is_msc = False
@@ -673,6 +669,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self.op2_filename = None
         self.bdf_filename = None
         self.f06_filename = None
+        self.h5_filename = None
         self._encoding = 'utf8'
 
         #: should a MATPOOL "symmetric" matrix be stored as symmetric
@@ -755,7 +752,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         """
         expected_times = {}
-        for (isubcase, etimes) in iteritems(times):
+        for (isubcase, etimes) in times.items():
             etimes = list(times)
             etimes.sort()
             expected_times[isubcase] = array(etimes)
@@ -1120,8 +1117,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             # =========================end geom passers=========================
 
             # ===passers===
-            b'EQEXIN': [self._table_passer, self._table_passer],
-            b'EQEXINS': [self._table_passer, self._table_passer],
+            #b'EQEXIN': [self._table_passer, self._table_passer],
+            #b'EQEXINS': [self._table_passer, self._table_passer],
 
             b'GPDT' : [self._table_passer, self._table_passer],     # grid points?
             b'BGPDT' : [self._table_passer, self._table_passer],    # basic grid point defintion table
@@ -1292,7 +1289,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self.is_debug_file, self.binary_debug = create_binary_debug(
             self.op2_filename, self.debug_file, self.log)
 
-    def read_op2(self, op2_filename=None, combine=False):
+    def read_op2(self, op2_filename=None, combine=False, load_as_h5=None, h5_file=None):
         """
         Starts the OP2 file reading
 
@@ -1300,6 +1297,14 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         ----------
         op2_filename : str
             the op2 file
+        combine : bool; default=True
+            True : objects are isubcase based
+            False : objects are (isubcase, subtitle) based;
+                    will be used for superelements regardless of the option
+        load_as_h5 : default=None
+            None : don't setup the h5_file
+            True/False : loads the op2 as an h5 file to save memory
+                         stores the result.element/data attributes in h5 format
 
         +--------------+-----------------------+
         | op2_filename | Description           |
@@ -1309,6 +1314,18 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         |    string    | the path is used      |
         +--------------+-----------------------+
         """
+        fname = os.path.splitext(op2_filename)[0]
+        self.op2_filename = op2_filename
+        self.bdf_filename = fname + '.bdf'
+        self.f06_filename = fname + '.f06'
+        self.h5_filename = fname + '.h5'
+
+        self.op2_reader.load_as_h5 = load_as_h5
+        if load_as_h5:
+            h5_file = None
+            import h5py
+            self.op2_reader.h5_file = h5py.File(self.h5_filename, 'w')
+
         self._count = 0
         if self.read_mode == 1:
             #sr = list(self._results.saved)
@@ -1325,14 +1342,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                     raise IOError('op2_filename=%r is empty.' % op2_filename)
                 raise IOError('op2_filename=%r is not a binary OP2.' % op2_filename)
 
-        bdf_extension = '.bdf'
-        f06_extension = '.f06'
-        fname = os.path.splitext(op2_filename)[0]
-
-        self.op2_filename = op2_filename
-        self.bdf_filename = fname + bdf_extension
-        self.f06_filename = fname + f06_extension
-
         self._create_binary_debug()
         self._setup_op2()
         self.op2_reader.read_nastran_version()
@@ -1344,17 +1353,26 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         self._make_tables()
         table_names = self._read_tables(table_name)
+
+        self.close_op2(force=False)
+        #self.remove_unpickable_data()
+        return table_names
+
+    def close_op2(self, force=True):
+        """closes the OP2 and debug file"""
         if self.is_debug_file:
             self.binary_debug.write('-' * 80 + '\n')
             self.binary_debug.write('f.tell()=%s\ndone...\n' % self.f.tell())
             self.binary_debug.close()
 
-        if self._close_op2:
-            self.f.close()
+        if self._close_op2 or force:
+            if self.f is not None:
+                # can happen if:
+                #  - is ascii file
+                self.f.close()
             del self.binary_debug
             del self.f
-        #self.remove_unpickable_data()
-        return table_names
+            #self.op2_reader.h5_file.close()
 
     def _setup_op2(self):
         """
@@ -1402,36 +1420,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         if self.read_mode == 1:
             self._set_structs()
 
-    #def create_unpickable_data(self):
-        #raise NotImplementedError()
-        ##==== not needed ====
-        ##self.f
-        ##self.binary_debug
-
-        ## needed
-        #self._geom1_map
-        #self._geom2_map
-        #self._geom3_map
-        #self._geom4_map
-        #self._dit_map
-        #self._dynamics_map
-        #self._ept_map
-        #self._mpt_map
-        #self._table_mapper
-
-    #def remove_unpickable_data(self):
-        #del self.f
-        #del self.binary_debug
-        #del self._geom1_map
-        #del self._geom2_map
-        #del self._geom3_map
-        #del self._geom4_map
-        #del self._dit_map
-        #del self._dynamics_map
-        #del self._ept_map
-        #del self._mpt_map
-        #del self._table_mapper
-
     def _make_tables(self):
         return
         #global RESULT_TABLES, NX_RESULT_TABLES, MSC_RESULT_TABLES
@@ -1474,12 +1462,12 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 t0 = self.f.tell()
                 self.generalized_tables[table_name](self)
                 assert self.f.tell() != t0, 'the position was unchanged...'
-            elif table_name in GEOM_TABLES:
-                op2_reader.read_geom_table()  # DIT (agard)
             elif table_name in op2_reader.mapped_tables:
                 t0 = self.f.tell()
                 op2_reader.mapped_tables[table_name]()
                 assert self.f.tell() != t0, 'the position was unchanged...'
+            elif table_name in GEOM_TABLES:
+                op2_reader.read_geom_table()  # DIT (agard)
             elif table_name in MATRIX_TABLES:
                 op2_reader.read_matrix(table_name)
             elif table_name in RESULT_TABLES:
@@ -1569,7 +1557,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             """overloaded version of _get_table_mapper"""
             #if is_added:
                 #return table_mapper
-            for _key, methods in iteritems(tables):
+            for _key, methods in tables.items():
                 if methods is False:
                     table_mapper[_key] = [self._table_passer, self._table_passer]
                 else:
@@ -1640,7 +1628,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             self.additional_matrices = matrices
         else:
             self.additional_matrices = {}
-            for matrix_name, matrix in iteritems(matrices):
+            for matrix_name, matrix in matrices.items():
                 if isinstance(matrix_name, binary_type):
                     self.additional_matrices[matrix_name] = matrix
                 else:

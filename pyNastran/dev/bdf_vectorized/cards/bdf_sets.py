@@ -36,9 +36,8 @@ The superelement sets start with SE:
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import string_types
-from six.moves import zip, range
 
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.base_card import (
     BaseCard, _node_ids, expand_thru
 )
@@ -1075,9 +1074,8 @@ class RADSET(Set):  # not integrated
         comment : str; default=''
             a comment for the card
         """
-        seid = integer(card, 1, 'seid')
-        ids = fields(integer_or_string, card, 'ID', i=2, j=len(card))
-        return RADSET(seid, ids, comment=comment)
+        ids = fields(integer_or_string, card, 'Cavity_', i=1, j=len(card))
+        return RADSET(ids, comment=comment)
 
     def add_radset(self, radset):
         self.ids += radset.ids

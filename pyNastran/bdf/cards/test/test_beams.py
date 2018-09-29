@@ -9,14 +9,15 @@ import os
 import unittest
 from itertools import count
 
-from six.moves import zip
 import numpy as np
 from numpy import array, allclose
 
-from pyNastran.bdf.bdf import BDF, BDFCard, PBEAM
+import matplotlib.pyplot as plt
+
+from pyNastran.bdf.bdf import BDF, BDFCard, PBEAM, PBEND, PBMSECT, PBRSECT
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.cards.test.utils import save_load_deck
-
+from pyNastran.bdf.cards.properties.bars import get_beam_sections
 
 class TestBeams(unittest.TestCase):
     """
@@ -35,7 +36,7 @@ class TestBeams(unittest.TestCase):
             '     ,   ,   ,   ,    ,0.5,,0.0',
         ]
         bdf = BDF(debug=False)
-        card = bdf.process_card(lines)
+        card = bdf._process_card(lines)
         #print(print_card_8(card))
         cardi = BDFCard(card)
         card2 = PBEAM.add_card(cardi)
@@ -80,7 +81,7 @@ class TestBeams(unittest.TestCase):
             '     ,   ,   ,   ,    ,0.5,,0.0',
         ]
 
-        card = bdf.process_card(lines)
+        card = bdf._process_card(lines)
         cardi = BDFCard(card)
         card2 = PBEAM.add_card(cardi)
         fields = card2.raw_fields()
@@ -111,7 +112,7 @@ class TestBeams(unittest.TestCase):
             '     ,   ,   ,   ,    ,0.5,,0.0',
         ]
 
-        card = bdf.process_card(lines)
+        card = bdf._process_card(lines)
         cardi = BDFCard(card)
         card2 = PBEAM.add_card(cardi)
         fields = card2.raw_fields()
@@ -136,7 +137,7 @@ class TestBeams(unittest.TestCase):
             '     ,   ,   ,   ,    ,0.5,,0.0',
         ]
 
-        card = bdf.process_card(lines)
+        card = bdf._process_card(lines)
         cardi = BDFCard(card)
         card2 = PBEAM.add_card(cardi)
         fields = card2.raw_fields()
@@ -156,7 +157,7 @@ class TestBeams(unittest.TestCase):
             '     ,  , ,2.0,-4.0',
         ]
 
-        card = bdf.process_card(lines)
+        card = bdf._process_card(lines)
         #print(print_card_8(card))
         cardi = BDFCard(card)
         card2 = PBEAM.add_card(cardi)
@@ -182,7 +183,7 @@ class TestBeams(unittest.TestCase):
             '+BEAM4                  -.666667',
         ]
 
-        card = bdf.process_card(lines)
+        card = bdf._process_card(lines)
         cardi = BDFCard(card)
         card2 = PBEAM.add_card(cardi)
         fields = card2.raw_fields()
@@ -205,7 +206,7 @@ class TestBeams(unittest.TestCase):
             '+Z1     NO      1.0                                                     +Z4',
             '+Z4     0.0     0.0',
         ]
-        card = bdf.process_card(lines)
+        card = bdf._process_card(lines)
         cardi = BDFCard(card)
         PBEAM.add_card(cardi)
 
@@ -250,7 +251,7 @@ class TestBeams(unittest.TestCase):
             '*',
         ]
 
-        card = bdf.process_card(lines)
+        card = bdf._process_card(lines)
         cardi = BDFCard(card)
         card2 = PBEAM.add_card(cardi)
 
@@ -288,7 +289,7 @@ class TestBeams(unittest.TestCase):
         #print(card)
         card = print_card_8(fields)
         lines = card.split('\n')
-        card = bdf.process_card(lines)
+        card = bdf._process_card(lines)
         cardi = BDFCard(card)
         #with self.assertRaises(AssertionError):  # A=0, I12=0, K1=0
         pbeam = PBEAM.add_card(cardi)
@@ -410,7 +411,7 @@ class TestBeams(unittest.TestCase):
             self.assertEqual(actual, expected, msg)
 
     def test_pbeaml_01(self):
-        model = BDF()
+        model = BDF(debug=False)
         model.validate()
 
         fields = [
@@ -517,8 +518,7 @@ class TestBeams(unittest.TestCase):
         model.add_grid(30, [0., 1., 0.])
         model.cross_reference()
 
-        save_load_deck(model, punch=True, run_remove_unused=True,
-                       run_convert=True, run_renumber=True)
+        save_load_deck(model)
 
     def test_cbeam_pbeaml(self):
         """CBEAM/PBEAML"""
@@ -905,23 +905,22 @@ class TestBeams(unittest.TestCase):
         model2 = BDF(debug=False)
         model2.read_bdf('pbeam12.bdf')
 
-        if not os.path.exists('pbeam12.op2') and 0:  # pragma: no cover
-            os.system('nastran scr=yes bat=no old=no pbeam12.bdf')
+        #if not os.path.exists('pbeam12.op2') and 0:  # pragma: no cover
+            #os.system('nastran scr=yes bat=no old=no pbeam12.bdf')
         os.remove('pbeam12.bdf')
 
-        if 0:  # pragma: no cover
-            from pyNastran.op2.op2 import OP2
-            op2 = OP2()
-            op2.read_op2('pbeam12.op2')
-            #os.remove('pbeam12.op2')
-            gpw = op2.grid_point_weight
-            op2_mass = gpw.mass.max()
-            assert op2_mass == mass, 'op2_mass=%s mass=%s' % (op2_mass, mass)
-            print('op2_mass=%s mass=%s' % (op2_mass, mass))
-            op2_cg = gpw.cg
-
-            cg = array([0.5, 0., 0.], dtype='float32')
-            print('cg =', op2_cg)
+        #if 0:  # pragma: no cover
+            #from pyNastran.op2.op2 import OP2
+            #op2 = OP2()
+            #op2.read_op2('pbeam12.op2')
+            ##os.remove('pbeam12.op2')
+            #gpw = op2.grid_point_weight
+            #op2_mass = gpw.mass.max()
+            #assert op2_mass == mass, 'op2_mass=%s mass=%s' % (op2_mass, mass)
+            #print('op2_mass=%s mass=%s' % (op2_mass, mass))
+            #op2_cg = gpw.cg
+            #cg = array([0.5, 0., 0.], dtype='float32')
+            #print('cg =', op2_cg)
 
     def test_pbeam_nsm(self):
         """tests a PBEAM with nonstructural mass"""
@@ -1211,24 +1210,6 @@ class TestBeams(unittest.TestCase):
                       has_none=True)
         model.pop_parse_errors()
 
-    def test_pbmsect(self):
-        """tests a PBMSECT"""
-        model = BDF(debug=False)
-        pid = 10
-        mid = 11
-        form = 'GS'
-        options = {'OUTP' : 2}
-        #pbrsect = model.add_pbrsect(pid, mid, form, options, comment='pbrsect')
-        pbrsect = model.add_pbmsect(pid, mid, form, options, comment='pbmsect')
-
-        pbrsect.validate()
-        pbrsect.raw_fields()
-        pbrsect.write_card()
-        pbrsect.write_card(size=16)
-
-        #PBMSECT 32      10      OP
-            #OUTP=101,T=0.1,brp=102,brp=103,brp=104,nsm=0.015
-
     def test_pbeam3(self):
         """tests a PBEAM3"""
         model = BDF(debug=False)
@@ -1260,6 +1241,427 @@ class TestBeams(unittest.TestCase):
         model.uncross_reference()
         pbeam3.write_card()
         pbeam3.write_card(size=16)
+
+    def test_cbend(self):
+        model = BDF(debug=False)
+        model.add_grid(10, [1., 0., 0.])
+        model.add_grid(11, [.707, .707, 0.])
+        model.add_grid(12, [0., 1., 0.])
+        eid = 2
+        pid = 3
+        nids = [10, 11]
+        g0 = 12
+        geom = 1
+
+        mid = 100
+
+        # The center of curvature lies on the line AO (or its
+        # extension) or vector v.
+        #
+        #      0
+        #     /
+        #    +
+        #   / \
+        #  A   R   B
+        #    ------
+        #      --   <---- curve A-B
+        #
+        x = None
+        cbend = model.add_cbend(eid, pid, nids, g0, x, geom, comment='cbend')
+
+        A = 1.0
+        i1 = 2.0
+        i2 = 3.0
+        j = 4.0
+        pbend1 = PBEND.add_beam_type_1(
+            pid, mid, A, i1, i2, j,
+            rb=None, theta_b=None,
+            c1=0., c2=0., d1=0., d2=0., e1=0., e2=0., f1=0., f2=0.,
+            k1=None, k2=None, nsm=0.,
+            rc=0., zc=0., delta_n=0., comment='pbend1')
+
+        fsi = 1
+        rm = 0.2
+        t = 0.4
+        p = 0.5
+        rb = 0.6
+        theta_b = 0.7
+        pbend2 = PBEND.add_beam_type_2(
+            pid, mid, fsi, rm, t,
+            p=None, rb=None, theta_b=None,
+            nsm=0., rc=0., zc=0., comment='')
+        model.properties[pid] = pbend1
+
+        #model.add_pbend(pid, mid, beam_type, A, i1, i2, j,
+                        #c1, c2, d1, d2, e1, e2, f1, f2, k1, k2,
+                        #nsm, rc, zc, delta_n, fsi, rm, t, p, rb, theta_b, comment='')
+        model.add_mat1(mid, 3.0e7, None, 0.3, rho=0.2)
+        model.validate()
+        model.cross_reference()
+        model.pop_xref_errors()
+
+        model.uncross_reference()
+
+        cbend.write_card()
+        cbend.write_card(size=16)
+
+        pbend1.write_card()
+        pbend1.write_card(size=16)
+
+        pbend2.write_card()
+        pbend2.write_card(size=16)
+
+        save_load_deck(model, punch=True, run_remove_unused=True,
+                       run_convert=False, run_renumber=True, run_mirror=True)
+
+    def test_pbrsect(self):
+        """tests a PBRSECT"""
+        model = BDF(debug=False)
+        pid = 2
+        mid = 3
+        model.add_mat1(mid, 3.0e7, None, 0.3, rho=0.2)
+
+        outp_id = 10
+        ids = [1, 2]
+        model.add_point(1, [0., 0., 0.], cp=0, comment='point')
+        model.add_point(2, [1., 0., 0.], cp=0, comment='point')
+        model.add_set1(outp_id, ids, is_skin=False, comment='')
+
+        form = 'GS'
+        options = []
+        pbrsect = model.add_pbrsect(pid, mid, form, options, comment='pbrsect')
+        with self.assertRaises(AssertionError):
+            pbrsect.validate()
+
+        #------------------------------------
+        form = 'GS'
+        options = [
+            ['OUTP', 10],
+            ['INP', 20],
+        ]
+        pbrsect = model.add_pbrsect(pid, mid, form, options, comment='pbrsect')
+        pbrsect.validate()
+        pbrsect.write_card()
+
+        #------------------------------------
+        card = [
+            'PBRSECT 4       3       GS',
+            '        OUTP=10,INP=20',
+        ]
+        PBRSECT.add_card(card, comment='')
+
+        #------------------------------------
+        card = [
+            'PBRSECT 4\t3\tGS',
+            '        OUTP=10,INP=20',
+        ]
+        PBRSECT.add_card(card, comment='')
+
+        #------------------------------------
+        card = [
+            'PBRSECT 4       3       GS',
+            '        OUTP=10,BRP=20,T=1.0,T(11)=1.2, NSM=0.01',
+        ]
+        pbrsect = PBRSECT.add_card(card, comment='')
+        #pbrsect.cross_reference(model)
+
+        #------------------------------------
+        card = [
+            'PBRSECT 5       3       CP',
+            '        OUTP=10,BRP=20,T=1.0,T(11)=[1.2,PT=(123,204)], NSM=0.01',
+        ]
+        pbrsect = PBRSECT.add_card(card, comment='')
+        pbrsect.write_card()
+
+    def test_pbrsect_1(self):
+        model = BDF(debug=True, log=None, mode='msc')
+        mid = 10
+        model.add_mat1(mid, 3.0e7, None, 0.3, rho=0.2)
+
+        #POINT   201             0.5     0.5
+        #POINT   202             10.5    0.5
+        #POINT   203             19.5    0.5
+        #POINT   204             19.5    18.9
+        #POINT   205             10.5    18.9
+        #POINT   206             0.5     18.9
+        #POINT   224             10.5    10.0
+        model.add_point(201, [0.5, 0.5, 0.])
+        model.add_point(202, [10.5, 0.5, 0.])
+        model.add_point(203, [19.5, 0.5, 0.])
+        model.add_point(204, [19.5, 18.9, 0.])
+        model.add_point(205, [10.5, 18.9, 0.])
+        model.add_point(206, [0.5, 18.9, 0.])
+        model.add_point(224, [10.5, 10.0, 0.])
+
+        #SET1    201     201     THRU    206
+        #SET1    202     202     224     205
+        model.add_set1(201, [201, 202, 203, 204, 205, 206])
+        set_card = model.add_set1(202, [202, 224, 205])
+        assert set_card.ids == [202, 224, 205]
+
+        pid = 32
+        form = 'CP'
+        options = [
+            ['OUTP', 201],
+            ['T', 1.0],
+            ['BRP', 202],
+            ['T(11)', '[2.0, PT=(202,224)]'],
+            ['T(12)', '[4.0, PT=(224,205)]'],
+        ]
+        model.add_pbrsect(pid, mid, form, options)
+        model.cross_reference()
+        #PBRSECT 32      10      CP
+            #OUTP=201,T=1.0,BRP=202,
+            #T(11)=[2.0,PT=(202,224)],T(12)=[1.2,PT=(224,205)]
+
+        #model2 = BDF(debug=True, log=None, mode='msc')
+        #model2.read_bdf(r'C:\MSC.Software\MSC.Nastran\msc20051\nast\tpl\zbr3.dat')
+        for pid, prop in model.properties.items():
+            prop.plot(model, show=False)
+        plt.close()
+
+    def test_pbrsect_2(self):
+        model = BDF(debug=False)
+        pid = 2
+        mid = 3
+        model.add_mat1(mid, 3.0e7, None, 0.3, rho=0.2)
+        model.add_point(1001, [0.,    0., 0.])
+        model.add_point(1002, [22.5,  0., 0.])
+        model.add_point(1003, [22.5, 45., 0.])
+        model.add_point(1004, [0.,   45., 0.])
+        model.add_point(1005, [45.,   0., 0.])
+        model.add_point(1006, [45.,  45., 0.])
+        #point, 1001,,   0.,   0.
+        #point, 1002,,  22.5,  0.
+        #point, 1003,,  22.5, 45.
+        #point, 1004,,   0.,  45.
+        #point, 1005,,  45.,   0.
+        #point, 1006,,  45.,  45.
+        model.add_set1(1000, [1001, 1002, 1003, 1004])
+        model.add_set1(2000, [1002, 1005])
+        model.add_set1(3000, [1003, 1006])
+        set3 = model.add_set3(3001, 'POINT', [1006, 1001])
+        assert set3.ids == [1006, 1001]
+        #set3, 1000, point, 1001, 1002, 1003, 1004
+        #set3, 2000, point, 1002, 1005
+        #set3, 3000, point, 1003, 1006
+        options = [
+            ['OUTP', 1000],
+            ['BRP(1)', 2000],
+            ['BRP(2)', 3000],
+            ['T(1)', 5.],
+        ]
+        prop = model.add_pbmsect(pid, mid, 'OP', options)
+
+        #pbmsect, 100, 200, op
+            #outp=1000, brp(1)=2000, brp(2)=3000
+            #t(1)=5.
+        model.cross_reference()
+        prop.plot(model, show=False)
+        plt.close()
+
+    def test_pbmsect_2(self):
+        """
+        PBMSECT bulk data entry is utilized to describe the shape of I section
+        and PARAM,ARBMSTYP is used to control the selection of formulation.
+        Note that default value for PARAM,ARBMSTYP select VKI formulation
+        to compute sectional properties of arbitrary cross section with
+        isotropic material. However, PARAM,ARBMSTYP,TIMISHEN must be present
+        in the bulk data section if PBMSECT entry with Core and/or Layer
+        keywords exists in the deck.
+
+        ftp://ftp.uni-siegen.de/lokales/div/MSC/mdnastran_r3_doc_application.pdf
+        """
+        model = BDF(debug=False)
+        pid = 2
+        mid = 3
+        model.add_mat1(mid, 3.0e7, None, 0.3, rho=0.2)
+        # to select VAM
+        #PARAM,ARBMSTYPE,TIMOSHEN
+
+        #$ Composite case
+        #PBMSECT 32 1 OP 0.015
+        #OUTP=101,C=101,brp=103,c(1)=[201,pt=(15,34)]
+        #---------------------
+        #$ Section profile
+        model.add_point(1, [-0.5, .23, 0.])
+        model.add_point(2, [0.0,  .23, 0.])
+        model.add_point(3, [0.5,  .23, 0.])
+        model.add_point(4, [-0.5,-.23, 0.])
+        model.add_point(5, [0.,  -.23, 0.])
+        model.add_point(6, [0.5, -.23, 0.])
+        #point 1 -0.50 0.23
+        #point 2 0.00 0.23
+        #point 3 0.50 0.23
+        #point 4 -0.50 -0.23
+        #point 5 0.00 -0.23
+        #point 6 0.50 -0.23
+
+        #.......2.......3.......4.......5.......6.......7.......8.......9.......10.....
+        model.add_set1(101, [1, 2, 5, 6])
+        model.add_set1(201, [2, 3])
+        model.add_set1(102, [5, 4])
+        #SET1 101 1 2 5 6
+        #SET1 201 2 3
+        #SET1 102 5 4
+
+        # Ply properties
+        #.......2.......3.......4.......5.......6.......7.......8.......9.......10.....
+        #$MAT8 501 20.59e6 1.42e6 0.42 0.89e6 0.89e6 0.89e6
+        #$MAT1 501 1.+7 .3
+
+        # isotropic case using T keyword
+        options = [
+            ['OUTP', 101],
+            ['T', 0.04],
+            ['BRP(1)', 201],
+            ['BRP(3)', 102],
+        ]
+        prop1 = model.add_pbmsect(pid, mid, 'OP', options)
+        #PBMSECT 31 1 OP
+        #OUTP=101,t=0.04,BRP(1)=201,BRP(3)=102
+
+        # isotropic case using C and MAT1
+        options = [
+            ['OUTP', 101],
+            ['CORE', 301],
+            ['CORE(1)', '[101,PT=(1,2)]'],
+            ['CORE(2)', '[202,PT=(5,6)]'],
+            ['BRP(1)', 201],
+            ['CORE(3)', '[201,PT=(2,3)]'],
+            ['BRP(3)', 102],
+            ['C(3)', '[102,PT=(5,4)]'],
+        ]
+        prop2 = model.add_pbmsect(pid+1, mid, 'OP', options)
+        str(prop1)
+        str(prop2)
+        model.cross_reference()
+        #PBMSECT 32 OP +
+        #OUTP=101,CORE=301,CORE(1)=[101,PT=(1,2)],CORE(2)=[202,PT=(5,6)],+
+        #BRP(1)=201,CORE(3)=[201,PT=(2,3)], +
+        #BRP(3)=102,CORE(3)=[102,PT=(5,4)]
+
+        prop1.plot(model, figure_id=pid, show=False)
+        #plt.close()
+        prop2.plot(model, figure_id=pid+1, show=False)
+        #plt.close()
+        #save_load_deck(model, run_convert=False, run_remove_unused=False)
+
+    def test_pbmsect_1(self):
+        model = BDF(debug=True, log=None, mode='msc')
+        mid = 10
+        model.add_mat1(mid, 3.0e7, None, 0.3, rho=0.2)
+
+        model.add_point(111, [0.,  0.,   0.,])
+        model.add_point(112, [20., 0.,   0.,])
+        model.add_point(113, [20., 19.4, 0.,])
+        model.add_point(114, [0.,  19.4, 0.,])
+        model.add_point(125, [1.,  1.,   0.,])
+        model.add_point(126, [10., 1.,   0.,])
+        model.add_point(127, [10., 18.4, 0.,])
+        model.add_point(128, [1.,  18.4, 0.,])
+        model.add_point(132, [11., 1.,   0.,])
+        model.add_point(133, [19., 1.,   0.,])
+        model.add_point(134, [19., 18.4, 0.,])
+        model.add_point(135, [11., 18.4, 0.,])
+        #POINT   111             0.0     0.0
+        #POINT   112             20.0    0.0
+        #POINT   113             20.0    19.4
+        #POINT   114             0.0     19.4
+        #POINT   125             1.0     1.0
+        #POINT   126             10.0    1.0
+        #POINT   127             10.0    18.4
+        #POINT   128             1.0     18.4
+        #POINT   132             11.0    1.0
+        #POINT   133             19.0    1.0
+        #POINT   134             19.0    18.4
+        #POINT   135             11.0    18.4
+
+        model.add_set1(111, [111, 'THRU', 114])
+        model.add_set1(122, [128, 127, 126, 125, 128])
+        model.add_set1(133, [132, 133, 134, 135])
+        #SET1    111     111     THRU    114
+        #SET1    122     128     127     126     125     128
+        #SET1    133     132     133     134     135
+
+        options = [
+            ['OUTP', 111],
+            ['INP', 122],
+            ['INP', 133],
+        ]
+        pid = 31
+        form = 'GS'
+        prop = model.add_pbmsect(pid, mid, form, options)
+        model.cross_reference()
+        #print(prop)
+        prop.plot(model, figure_id=2, show=False)
+        plt.close()
+        #pbmsect  31     10      GS
+            #OUTP=111,inp=122,inp=133
+        #DESVAR  31      DBOXGS	15.0	0.01	60.0
+        #DVPREL1	112	pbmsect	31      W
+            #31      1.0
+
+    def test_pbmsect(self):
+        model = BDF(debug=False)
+        pid = 2
+        mid = 3
+        model.add_mat1(mid, 3.0e7, None, 0.3, rho=0.2)
+
+        #PBMSECT 32      10      OP
+            #OUTP=101,T=0.1,brp=102,brp=103,brp=104,nsm=0.015
+
+        outp_id = 10
+        ids = [1, 2]
+        model.add_point(1, [0., 0., 0.], cp=0, comment='point')
+        model.add_point(2, [1., 0., 0.], cp=0, comment='point')
+        model.add_set1(outp_id, ids, is_skin=False, comment='')
+
+        form = 'GS'
+        options = [
+            ['OUTP', outp_id],
+        ]
+        pbmsect = model.add_pbmsect(pid, mid, form, options, comment='pbmsect')
+        model.cross_reference()
+        #pbmsect.cross_reference(model)
+        pbmsect.plot(model, show=False)
+        plt.close()
+
+
+        pbmsect.validate()
+        pbmsect.write_card()
+        card = [
+            'PBMSECT 4       3       GS',
+            '        OUTP=10,INP=20',
+        ]
+        PBMSECT.add_card(card, comment='')
+
+        card = [
+            'PBMSECT 4\t3\tGS',
+            '        OUTP=10,INP=20',
+        ]
+        PBMSECT.add_card(card, comment='')
+
+        card = [
+            'PBMSECT 4       3       GS',
+            '        OUTP=10,BRP=20,T=1.0,T(11)=1.2, NSM=0.01',
+        ]
+        pbmsect = PBMSECT.add_card(card, comment='')
+        # doesn't work because missing SET=20 (from BRP=20)
+        #pbmsect.cross_reference(model)
+
+        line = 'OUTP=10,BRP=20,T=1.0,T(11)=[1.2,PT=(123,204)], NSM=0.01'
+        sections = get_beam_sections(line)
+        msg = '\nsections: %s\n' % sections
+        msg += "expected: [u'OUTP=10', u'BRP=20', u'T=1.0', u'T(11)=[1.2,PT=(123,204)', 'NSM=0.01']"
+        assert sections == ['OUTP=10', 'BRP=20', 'T=1.0', 'T(11)=[1.2,PT=(123,204)]', 'NSM=0.01'], msg
+
+        card = [
+            'PBMSECT 5       3       CP',
+            '        OUTP=10,BRP=20,T=1.0,T(11)=[1.2,PT=(123,204)], NSM=0.01',
+        ]
+        pbmsect = PBMSECT.add_card(card, comment='')
+        pbmsect.write_card()
 
 
 if __name__ == '__main__':  # pragma: no cover

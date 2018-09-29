@@ -2,9 +2,9 @@
 Installed Programs
 ==================
 
--------------------------
-List of Installed Scripts
--------------------------
+--------------------------
+List of Installed Programs
+--------------------------
 
 Various Command line utilities are installed by pyNastran:
 

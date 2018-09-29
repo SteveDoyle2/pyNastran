@@ -7,7 +7,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from math import isnan
 from itertools import cycle
 from six import integer_types
-from six.moves import range
 import numpy as np
 from numpy import zeros
 
@@ -125,7 +124,7 @@ class RealNonlinearPlateArray(OES_Object):
         headers = self.get_headers()[1:]
         #nelements = self.element.shape[0]
 
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data[:, :, 1:], items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
@@ -140,9 +139,6 @@ class RealNonlinearPlateArray(OES_Object):
         self.data_frame = self.data_frame.reset_index().set_index(['ElementID'])
         #print(self.data_frame)
 
-    #def add_new_eid(self, dt, eid, etype, fd, sx, sy, sz, txy, es, eps, ecs, ex, ey, ez, exy):
-        #self.add_sort1(dt, eid, etype, fd, sx, sy, sz, txy, es, eps, ecs, ex, ey, ez, exy)
-
     def add_new_eid_sort1(self, dt, eid, etype, fd, sx, sy, sz, txy, es, eps, ecs, ex, ey, ez, exy):
         self.element[self.ielement] = eid
         self.ielement += 1
@@ -150,7 +146,7 @@ class RealNonlinearPlateArray(OES_Object):
 
     def add_sort1(self, dt, eid, etype, fd, sx, sy, sz, txy, es, eps, ecs, ex, ey, ez, exy):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         if isnan(fd):
             fd = 0.
         if isnan(sz):
@@ -219,7 +215,7 @@ class RealNonlinearPlateArray(OES_Object):
         nelements = self.ntotal // self.nnodes // 2
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msgi = '  type=%s ntimes=%i nelements=%i nnodes_per_element=%i nlayers=%i ntotal=%i\n' % (
                 self.__class__.__name__, ntimes, nelements, nnodes, nlayers, ntotal)
             ntimes_word = 'ntimes'

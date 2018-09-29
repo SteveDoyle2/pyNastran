@@ -124,7 +124,7 @@ def cart3d_to_openfoam(cart3d_filename, inpt_filename, basepath):
     block += '};\n\n'
     block += 'mergePatchParis();\n'
 
-    assert os.path.exists(stl_filename), stl_filename
+    check_path(stl_filename, 'stl_filename')
     stl_base, ext = os.path.splitext(stl_filename)
 
     snappy += 'geometry;\n'

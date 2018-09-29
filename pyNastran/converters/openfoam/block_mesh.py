@@ -6,8 +6,6 @@ from __future__ import print_function
 from codecs import open
 from collections import defaultdict
 from itertools import count
-from six import iteritems
-from six.moves import range, zip
 
 import numpy as np
 from numpy.linalg import norm  # type: ignore
@@ -153,14 +151,14 @@ class BlockMesh(object):
         #self.log.info(boundaries)
 
         nodes = []
-        for unused_ivertex, vertex in iteritems(vertices):
+        for unused_ivertex, vertex in vertices.items():
             x, y, z = vertex.strip('() ').split()
             nodes.append([x, y, z])
 
         hexas = []
         npoints = []
         grading = []
-        for key, block in iteritems(blocks):
+        for key, block in blocks.items():
             hexa, npointsi, gradingi, blank = block.split(')')
             assert blank == '', '%r' % blank
 
@@ -187,7 +185,7 @@ class BlockMesh(object):
         iname_to_name = {}
         iname_to_type = {}
         quads = []
-        for key, boundary in iteritems(boundaries):
+        for key, boundary in boundaries.items():
             #print key, boundary.keys()
             Type = boundary['type']
             bc = bc_map[Type]
@@ -195,7 +193,7 @@ class BlockMesh(object):
             faces = boundary['faces']
             iname_to_name[iname] = key
             iname_to_type[iname] = Type
-            for unused_iface, face in iteritems(faces):
+            for unused_iface, face in faces.items():
                 quad = face.strip('() ').split()
                 quad = [int(i) for i in quad]
                 quads.append(quad)
@@ -306,13 +304,13 @@ class BlockMesh(object):
 
         stack_nodes = set(self.hexas.flatten())
         self.log.info(stack_nodes)
-        for iname, faces in iteritems(self.iname_to_quads):
+        for iname, faces in self.iname_to_quads.items():
             for face in faces:
                 stack_nodes.update(set(list(face)))
 
         #if 0:
             #print(stack_nodes, len(stack_nodes))
-            #for key, value in sorted(iteritems(new_ids_map)):
+            #for key, value in sorted(new_ids_map.items()):
                 #if key not in stack_nodes:
                     #print(' #k=%s v=%s' % (key, value))
                 #if key != value:
@@ -325,7 +323,7 @@ class BlockMesh(object):
         j = 0
         j0 = 0
         self.log.info('-------------------')
-        for key, value in sorted(iteritems(new_ids_map)):  # the dict of collapsed nodes
+        for key, value in sorted(new_ids_map.items()):  # the dict of collapsed nodes
             if key not in stack_nodes:
                 j += 1
                 continue
@@ -338,7 +336,7 @@ class BlockMesh(object):
                 new_ids_map2[i+j] = value - j0
                 j += 1
 
-        #for key, value in sorted(iteritems(new_ids_map2)):
+        #for key, value in sorted(new_ids_map2.items()):
             #self.log.info('  k=%s v=%s' % (key, value))
         new_ids_map = new_ids_map2
 
@@ -350,7 +348,7 @@ class BlockMesh(object):
         #print('nodes2 =', nodes2)
         nodes2 = []
         nodes2_written = []
-        for inode, jnode in sorted(iteritems(new_ids_map2)):
+        for inode, jnode in sorted(new_ids_map2.items()):
             if jnode not in nodes2_written:
                 node2 = nodes[inode, :]
                 nodes2.append(node2)
@@ -384,7 +382,7 @@ class BlockMesh(object):
 
         # update the faces
         iname_to_quads = {}
-        for iname, faces in iteritems(self.iname_to_quads):
+        for iname, faces in self.iname_to_quads.items():
             faces2 = []
             for face in faces:
                 face2 = []

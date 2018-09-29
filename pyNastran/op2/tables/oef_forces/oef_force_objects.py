@@ -2,7 +2,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import integer_types
-from six.moves import zip, range
 import numpy as np
 from numpy import zeros, searchsorted, allclose
 
@@ -30,7 +29,7 @@ class RealForceObject(ScalarObject):
     def __init__(self, data_code, isubcase, apply_data_code=True):
         self.element_type = None
         self.element_name = None
-        self.nonlinear_factor = None
+        self.nonlinear_factor = np.nan
         self.element = None
         self._times = None
         ScalarObject.__init__(self, data_code, isubcase, apply_data_code=apply_data_code)
@@ -112,7 +111,7 @@ class FailureIndices(RealForceObject):
     def build_dataframe(self):
         """creates a pandas dataframe"""
         headers = self.get_headers()
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=self.element, minor_axis=headers).to_frame()
@@ -125,7 +124,7 @@ class FailureIndices(RealForceObject):
 
     def add_sort1(self, dt, eid, force):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [force]
@@ -145,13 +144,13 @@ class FailureIndices(RealForceObject):
         assert self.nelements == nelements, 'nelements=%s expected=%s' % (self.nelements, nelements)
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
-            msg.append('  type=%s ntimes=%i nelements=%i\n'
-                       % (self.__class__.__name__, ntimes, nelements))
+        if self.nonlinear_factor not in (None, np.nan):  # transient
+            msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, ntimes, nelements, self.table_name))
             ntimes_word = 'ntimes'
         else:
-            msg.append('  type=%s nelements=%i\n'
-                       % (self.__class__.__name__, nelements))
+            msg.append('  type=%s nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, nelements, self.table_name))
             ntimes_word = '1'
         headers = self.get_headers()
         n = len(headers)
@@ -233,7 +232,7 @@ class RealSpringDamperForceArray(RealForceObject):
     def build_dataframe(self):
         """creates a pandas dataframe"""
         headers = self.get_headers()
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=self.element, minor_axis=headers).to_frame()
@@ -246,11 +245,17 @@ class RealSpringDamperForceArray(RealForceObject):
 
     def __eq__(self, table):
         assert self.is_sort1 == table.is_sort1
-        assert self.nonlinear_factor == table.nonlinear_factor
+        is_nan = (
+            self.nonlinear_factor is not None and
+            np.isnan(self.nonlinear_factor) and
+            np.isnan(table.nonlinear_factor)
+        )
+        if not is_nan:
+            assert self.nonlinear_factor == table.nonlinear_factor
         assert self.ntotal == table.ntotal
         assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
         assert self.approach_code == table.approach_code
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
                 self.element_name, self.element_type, self._times, table._times)
         if not np.array_equal(self.element, table.element):
@@ -293,7 +298,7 @@ class RealSpringDamperForceArray(RealForceObject):
 
     def add_sort1(self, dt, eid, force):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [force]
@@ -313,13 +318,13 @@ class RealSpringDamperForceArray(RealForceObject):
         assert self.nelements == nelements, 'nelements=%s expected=%s' % (self.nelements, nelements)
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
-            msg.append('  type=%s ntimes=%i nelements=%i\n'
-                       % (self.__class__.__name__, ntimes, nelements))
+        if self.nonlinear_factor not in (None, np.nan):  # transient
+            msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, ntimes, nelements, self.table_name))
             ntimes_word = 'ntimes'
         else:
-            msg.append('  type=%s nelements=%i\n'
-                       % (self.__class__.__name__, nelements))
+            msg.append('  type=%s nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, nelements, self.table_name))
             ntimes_word = '1'
         headers = self.get_headers()
         n = len(headers)
@@ -509,7 +514,7 @@ class RealRodForceArray(RealForceObject):
     def build_dataframe(self):
         """creates a pandas dataframe"""
         headers = self.get_headers()
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=self.element, minor_axis=headers).to_frame()
@@ -522,7 +527,7 @@ class RealRodForceArray(RealForceObject):
 
     def add_sort1(self, dt, eid, axial, torque):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [axial, torque]
@@ -543,13 +548,13 @@ class RealRodForceArray(RealForceObject):
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
-            msg.append('  type=%s ntimes=%i nelements=%i\n'
-                       % (self.__class__.__name__, ntimes, nelements))
+        if self.nonlinear_factor not in (None, np.nan):  # transient
+            msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, ntimes, nelements, self.table_name))
             ntimes_word = 'ntimes'
         else:
-            msg.append('  type=%s nelements=%i\n'
-                       % (self.__class__.__name__, nelements))
+            msg.append('  type=%s nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, nelements, self.table_name))
             ntimes_word = '1'
         headers = self.get_headers()
         n = len(headers)
@@ -616,11 +621,17 @@ class RealRodForceArray(RealForceObject):
 
     def __eq__(self, table):
         assert self.is_sort1 == table.is_sort1
-        assert self.nonlinear_factor == table.nonlinear_factor
+        is_nan = (
+            self.nonlinear_factor is not None and
+            np.isnan(self.nonlinear_factor) and
+            np.isnan(table.nonlinear_factor)
+        )
+        if not is_nan:
+            assert self.nonlinear_factor == table.nonlinear_factor
         assert self.ntotal == table.ntotal
         assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
         assert self.approach_code == table.approach_code
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
                 self.element_name, self.element_type, self._times, table._times)
         if not np.array_equal(self.element, table.element):
@@ -738,7 +749,7 @@ class RealCBeamForceArray(RealForceObject):
             self.element_node[:, 0],
             self.data[0, :, 0],
         ]
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data[:, :, 1:], items=column_values,
                                        major_axis=element_location, minor_axis=headers[1:]).to_frame()
@@ -792,7 +803,7 @@ class RealCBeamForceArray(RealForceObject):
 
     def add_sort1(self, dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.data[self.itime, self.itotal, :] = [sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq]
         self.element[self.itotal] = eid
@@ -811,11 +822,12 @@ class RealCBeamForceArray(RealForceObject):
         ntimes = self.ntimes
         msg = []
 
-        if self.nonlinear_factor is not None:  # transient
-            msg.append('  type=%s ntimes=%i nelements=%i\n'
-                       % (self.__class__.__name__, ntimes, nelements))
+        if self.nonlinear_factor not in (None, np.nan):  # transient
+            msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, ntimes, nelements, self.table_name))
         else:
-            msg.append('  type=%s nelements=%i\n' % (self.__class__.__name__, nelements))
+            msg.append('  type=%s nelements=%i; table_name=%r\n' % (
+                self.__class__.__name__, nelements, self.table_name))
         #msg.append('  eType, cid\n')
         msg.append('  data: [ntimes, nelements, 8] where 8=[%s]\n' % str(', '.join(self.get_headers())))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
@@ -850,7 +862,8 @@ class RealCBeamForceArray(RealForceObject):
             #else:
                 #self._write_sort1_as_sort2(f06_file, page_num, page_stamp, header, msg_temp)
         else:
-            assert self.is_sort1 is True, str(self)
+            print('skipping %s because its sort2' % self.__class__.__name__)
+            #assert self.is_sort1 is True, str(self)
         return page_num - 1
 
     def get_headers(self):
@@ -874,7 +887,7 @@ class RealCBeamForceArray(RealForceObject):
         #times = self._times
         ntimes = self.data.shape[0]
         for itime in range(ntimes):
-            if self.nonlinear_factor is not None:
+            if self.nonlinear_factor not in (None, np.nan):
                 dt = self._times[itime]
                 dt_line = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
                 header[1] = dt_line
@@ -975,7 +988,7 @@ class RealCShearForceArray(RealForceObject):
     def build_dataframe(self):
         """creates a pandas dataframe"""
         headers = self.get_headers()
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=self.element, minor_axis=headers).to_frame()
@@ -989,11 +1002,17 @@ class RealCShearForceArray(RealForceObject):
 
     def __eq__(self, table):
         assert self.is_sort1 == table.is_sort1
-        assert self.nonlinear_factor == table.nonlinear_factor
+        is_nan = (
+            self.nonlinear_factor is not None and
+            np.isnan(self.nonlinear_factor) and
+            np.isnan(table.nonlinear_factor)
+        )
+        if not is_nan:
+            assert self.nonlinear_factor == table.nonlinear_factor
         assert self.ntotal == table.ntotal
         assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
         assert self.approach_code == table.approach_code
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
                 self.element_name, self.element_type, self._times, table._times)
         if not np.array_equal(self.element, table.element):
@@ -1038,7 +1057,7 @@ class RealCShearForceArray(RealForceObject):
                   kick_force1, kick_force2, kick_force3, kick_force4,
                   shear12, shear23, shear34, shear41):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [
@@ -1060,13 +1079,13 @@ class RealCShearForceArray(RealForceObject):
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
-            msg.append('  type=%s ntimes=%i nelements=%i\n'
-                       % (self.__class__.__name__, ntimes, nelements))
+        if self.nonlinear_factor not in (None, np.nan):  # transient
+            msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, ntimes, nelements, self.table_name))
             ntimes_word = 'ntimes'
         else:
-            msg.append('  type=%s nelements=%i\n'
-                       % (self.__class__.__name__, nelements))
+            msg.append('  type=%s nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, nelements, self.table_name))
             ntimes_word = '1'
         headers = self.get_headers()
         n = len(headers)
@@ -1198,7 +1217,7 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
     def build_dataframe(self):
         """creates a pandas dataframe"""
         headers = self.get_headers()
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=self.element, minor_axis=headers).to_frame()
@@ -1211,7 +1230,7 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
 
     def add_sort1(self, dt, eid, axial, torque):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [axial, torque]
@@ -1230,7 +1249,7 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i\n'
                        % (self.__class__.__name__, ntimes, nelements))
             ntimes_word = 'ntimes'
@@ -1311,7 +1330,13 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
 
     def __eq__(self, table):
         assert self.is_sort1 == table.is_sort1
-        assert self.nonlinear_factor == table.nonlinear_factor
+        is_nan = (
+            self.nonlinear_factor is not None and
+            np.isnan(self.nonlinear_factor) and
+            np.isnan(table.nonlinear_factor)
+        )
+        if not is_nan:
+            assert self.nonlinear_factor == table.nonlinear_factor
         assert self.ntotal == table.ntotal
         assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
         assert self.approach_code == table.approach_code
@@ -1402,7 +1427,7 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
         """creates a pandas dataframe"""
         headers = self.get_headers()
         assert 0 not in self.element
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=self.element, minor_axis=headers).to_frame()
@@ -1452,7 +1477,7 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
 
     def add_sort1(self, dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.itotal] = eid
         self.data[self.itime, self.itotal, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
@@ -1477,7 +1502,7 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i\n'
                        % (self.__class__.__name__, ntimes, nelements))
             ntimes_word = 'ntimes'
@@ -1624,7 +1649,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
         """creates a pandas dataframe"""
         headers = self.get_headers()
         element_node = [self.element_node[:, 0], self.element_node[:, 1]]
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=element_node, minor_axis=headers).to_frame()
@@ -1671,7 +1696,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
 
     def add_sort1(self, dt, eid, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element_node[self.itotal] = [eid, nid]
         self.data[self.itime, self.itotal, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
@@ -1712,7 +1737,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
         ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i ntotal=%i nnodes/element=%i\n'
                        % (self.__class__.__name__, ntimes, nelements, ntotal, self.nnodes_per_element))
             ntimes_word = 'ntimes'
@@ -1922,7 +1947,7 @@ class RealCBarForceArray(RealForceObject):  # 34-CBAR
     def build_dataframe(self):
         """creates a pandas dataframe"""
         headers = self.get_headers()
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             # Create a 3D Panel
             #column_values = [modes, freq]
@@ -1943,7 +1968,7 @@ class RealCBarForceArray(RealForceObject):  # 34-CBAR
     def add_sort1(self, dt, eid, bending_moment_a1, bending_moment_a2,
                   bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         #[eid, bending_moment_a1, bending_moment_a2,
          #bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque] = data
         self._times[self.itime] = dt
@@ -1967,13 +1992,13 @@ class RealCBarForceArray(RealForceObject):  # 34-CBAR
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
-            msg.append('  type=%s ntimes=%i nelements=%i\n'
-                       % (self.__class__.__name__, ntimes, nelements))
+        if self.nonlinear_factor not in (None, np.nan):  # transient
+            msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, ntimes, nelements, self.table_name))
             ntimes_word = 'ntimes'
         else:
-            msg.append('  type=%s nelements=%i\n'
-                       % (self.__class__.__name__, nelements))
+            msg.append('  type=%s nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, nelements, self.table_name))
             ntimes_word = '1'
         headers = self.get_headers()
         n = len(headers)
@@ -2113,7 +2138,7 @@ class RealConeAxForceArray(RealForceObject):
     def build_dataframe(self):
         """creates a pandas dataframe"""
         headers = self.get_headers()
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=self.element, minor_axis=headers).to_frame()
@@ -2162,7 +2187,7 @@ class RealConeAxForceArray(RealForceObject):
 
     def add_sort1(self, dt, eid, hopa, bmu, bmv, tm, su, sv):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [hopa, bmu, bmv, tm, su, sv]
@@ -2181,13 +2206,13 @@ class RealConeAxForceArray(RealForceObject):
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
-            msg.append('  type=%s ntimes=%i nelements=%i\n'
-                       % (self.__class__.__name__, ntimes, nelements))
+        if self.nonlinear_factor not in (None, np.nan):  # transient
+            msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, ntimes, nelements, self.table_name))
             ntimes_word = 'ntimes'
         else:
-            msg.append('  type=%s nelements=%i\n'
-                       % (self.__class__.__name__, nelements))
+            msg.append('  type=%s nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, nelements, self.table_name))
             ntimes_word = '1'
         headers = self.get_headers()
         n = len(headers)
@@ -2317,7 +2342,7 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
             self.element,
             self.data[0, :, 0],
         ]
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data[:, :, 1:], items=column_values,
                                        major_axis=element_location, minor_axis=headers[1:]).to_frame()
@@ -2334,7 +2359,7 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
 
     def add_sort1(self, dt, eid, sd, bm1, bm2, ts1, ts2, af, trq):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
 
@@ -2356,13 +2381,13 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
-            msg.append('  type=%s ntimes=%i nelements=%i\n'
-                       % (self.__class__.__name__, ntimes, nelements))
+        if self.nonlinear_factor not in (None, np.nan):  # transient
+            msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, ntimes, nelements, self.table_name))
             ntimes_word = 'ntimes'
         else:
-            msg.append('  type=%s nelements=%i\n'
-                       % (self.__class__.__name__, nelements))
+            msg.append('  type=%s nelements=%i; table_name=%r\n'
+                       % (self.__class__.__name__, nelements, self.table_name))
             ntimes_word = '1'
         headers = self.get_headers()
         n = len(headers)
@@ -2508,7 +2533,7 @@ class RealCGapForceArray(RealForceObject):  # 38-CGAP
     def build_dataframe(self):
         """creates a pandas dataframe"""
         headers = self.get_headers()
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=self.element, minor_axis=headers).to_frame()
@@ -2554,7 +2579,7 @@ class RealCGapForceArray(RealForceObject):  # 38-CGAP
 
     def add_sort1(self, dt, eid, fx, sfy, sfz, u, v, w, sv, sw):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [fx, sfy, sfz, u, v, w, sv, sw]
@@ -2573,7 +2598,7 @@ class RealCGapForceArray(RealForceObject):  # 38-CGAP
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i\n'
                        % (self.__class__.__name__, ntimes, nelements))
             ntimes_word = 'ntimes'
@@ -2678,7 +2703,7 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
         """creates a pandas dataframe"""
         element = self.element_node[:, 0]
         headers = self.get_headers()
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             # TODO: add NodeA, NodeB
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
@@ -2697,7 +2722,7 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
                   nid_a, bending_moment_1a, bending_moment_2a, shear_1a, shear_2a, axial_a, torque_a,
                   nid_b, bending_moment_1b, bending_moment_2b, shear_1b, shear_2b, axial_b, torque_b):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
 
         self._times[self.itime] = dt
         self.element_node[self.ielement] = [eid, nid_a, nid_b]
@@ -2722,7 +2747,7 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i\n'
                        % (self.__class__.__name__, ntimes, nelements))
             ntimes_word = 'ntimes'
@@ -2934,7 +2959,7 @@ class RealSolidPressureForceArray(RealForceObject):  # 77-PENTA_PR,78-TETRA_PR
 
     def add_sort1(self, dt, eid, etype, ax, ay, az, vx, vy, vz, pressure):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [ax, ay, az, vx, vy, vz, pressure]
@@ -2953,7 +2978,7 @@ class RealSolidPressureForceArray(RealForceObject):  # 77-PENTA_PR,78-TETRA_PR
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i\n'
                        % (self.__class__.__name__, ntimes, nelements))
             ntimes_word = 'ntimes'
@@ -3056,8 +3081,8 @@ class RealSolidPressureForceArray(RealForceObject):  # 77-PENTA_PR,78-TETRA_PR
 # F:\work\pyNastran\examples\Dropbox\move_tpl\beamp11.op2
 class RealCBeamForceVUArray(RealForceObject):  # 191-VUBEAM
     """
-    ELTYPE = 191 Beam view element (VUBEAM)
-    ---------------------------------------
+    **ELTYPE = 191 Beam view element (VUBEAM)**
+
     2 PARENT I     Parent p-element identification number
     3 COORD  I     Coordinate system identification number
     4 ICORD  CHAR4 Flat/curved and so on
@@ -3148,7 +3173,7 @@ class RealCBeamForceVUArray(RealForceObject):  # 191-VUBEAM
     def build_dataframe(self):
         """creates a pandas dataframe"""
         headers = self.get_headers()
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=self.element_node[:, 0], minor_axis=headers).to_frame()
@@ -3162,11 +3187,17 @@ class RealCBeamForceVUArray(RealForceObject):  # 191-VUBEAM
 
     def __eq__(self, table):
         assert self.is_sort1 == table.is_sort1
-        assert self.nonlinear_factor == table.nonlinear_factor
+        is_nan = (
+            self.nonlinear_factor is not None and
+            np.isnan(self.nonlinear_factor) and
+            np.isnan(table.nonlinear_factor)
+        )
+        if not is_nan:
+            assert self.nonlinear_factor == table.nonlinear_factor
         assert self.ntotal == table.ntotal
         assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
         assert self.approach_code == table.approach_code
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
                 self.element_name, self.element_type, self._times, table._times)
         if not np.array_equal(self.element_node, table.element_node):
@@ -3210,7 +3241,7 @@ class RealCBeamForceVUArray(RealForceObject):  # 191-VUBEAM
     def _add_sort1(self, dt, eid, parent, coord, icord,
                    nid, xxb, fx, fy, fz, mx, my, mz):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
 
         eids = self.element_node[:, 0]
@@ -3220,7 +3251,7 @@ class RealCBeamForceVUArray(RealForceObject):  # 191-VUBEAM
         self.data[self.itime, self.ielement, :] = [xxb, fx, fy, fz, mx, my, mz]
         self.ielement += 1
 
-    #def add(self, nnodes, dt, data):
+    #def add_sort1(self, nnodes, dt, data):
         #[eid, parent, coord, icord, forces] = data
         #self.parent[eid] = parent
         #self.coord[eid] = coord
@@ -3247,7 +3278,7 @@ class RealCBeamForceVUArray(RealForceObject):  # 191-VUBEAM
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i\n'
                        % (self.__class__.__name__, ntimes, nelements))
             ntimes_word = 'ntimes'
@@ -3376,7 +3407,7 @@ class RealCBushForceArray(RealForceObject):
     def build_dataframe(self):
         """creates a pandas dataframe"""
         headers = self.get_headers()
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=self.element, minor_axis=headers).to_frame()
@@ -3390,11 +3421,17 @@ class RealCBushForceArray(RealForceObject):
 
     def __eq__(self, table):
         assert self.is_sort1 == table.is_sort1
-        assert self.nonlinear_factor == table.nonlinear_factor
+        is_nan = (
+            self.nonlinear_factor is not None and
+            np.isnan(self.nonlinear_factor) and
+            np.isnan(table.nonlinear_factor)
+        )
+        if not is_nan:
+            assert self.nonlinear_factor == table.nonlinear_factor
         assert self.ntotal == table.ntotal
         assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
         assert self.approach_code == table.approach_code
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
                 self.element_name, self.element_type, self._times, table._times)
         if not np.array_equal(self.element, table.element):
@@ -3437,7 +3474,7 @@ class RealCBushForceArray(RealForceObject):
 
     def add_sort1(self, dt, eid, fx, fy, fz, mx, my, mz):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [fx, fy, fz, mx, my, mz]
@@ -3456,7 +3493,7 @@ class RealCBushForceArray(RealForceObject):
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i\n'
                        % (self.__class__.__name__, ntimes, nelements))
             ntimes_word = 'ntimes'
@@ -3582,7 +3619,7 @@ class RealForceVU2DArray(RealForceObject):  # 189-VUQUAD, 190-VUTRIA
         return
         #headers = self.get_headers()
         #assert 0 not in self.element_node
-        #if self.nonlinear_factor is not None:
+        #if self.nonlinear_factor not in (None, np.nan):
             #column_names, column_values = self._build_dataframe_transient_header()
             #self.data_frame = pd.Panel(self.data, items=column_values,
                                        #major_axis=self.element, minor_axis=headers).to_frame()
@@ -3627,7 +3664,7 @@ class RealForceVU2DArray(RealForceObject):  # 189-VUQUAD, 190-VUTRIA
     def add_sort1(self, dt, eid, parent, coord, icord, theta,
                   vugrid, mfx, mfy, mfxy, bmx, bmy, bmxy, syz, szx):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         #print('adding %s, %s' % (eid, vugrid))
         self._times[self.itime] = dt
         self.element_node[self.itotal, :] = [eid, vugrid]
@@ -3653,7 +3690,7 @@ class RealForceVU2DArray(RealForceObject):  # 189-VUQUAD, 190-VUTRIA
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i\n'
                        % (self.__class__.__name__, ntimes, nelements))
             ntimes_word = 'ntimes'
@@ -3769,126 +3806,3 @@ class RealForceVU2DArray(RealForceObject):  # 189-VUQUAD, 190-VUTRIA
             f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
-
-
-class RealForce_VU_2D(ScalarObject):  # 190-VUTRIA # 189-VUQUAD
-    """deprecated"""
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        """deprecated"""
-        self.element_type = None
-        self.element_name = None
-        ScalarObject.__init__(self, data_code, isubcase)
-        self.parent = {}
-        self.coord = {}
-        self.icord = {}
-        self.theta = {}
-
-        self.membrane_x = {}
-        self.membrane_y = {}
-        self.membrane_xy = {}
-        self.bending_x = {}
-        self.bending_y = {}
-        self.bending_xy = {}
-        self.shear_yz = {}
-        self.shear_xz = {}
-
-        # handle SORT1 case
-        self.dt = dt
-
-    def get_stats(self, short=False):
-        """deprecated"""
-        msg = [''] + self.get_data_code()
-        nelements = len(self.coord)
-        if self.dt is not None:  # transient
-            ntimes = len(self.membrane_x)
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       % (self.__class__.__name__, ntimes, nelements))
-        else:
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        msg.append('  parent, coord, icord, theta, membrane_x, membrane_y, '
-                   'membrane_xy, bending_x, bending_y, bending_xy, '
-                   'shear_yz, shear_xz\n')
-        return msg
-
-    def add_new_transient(self, dt):
-        """deprecated"""
-        self.membrane_x[dt] = {}
-        self.membrane_y[dt] = {}
-        self.membrane_xy[dt] = {}
-        self.bending_x[dt] = {}
-        self.bending_y[dt] = {}
-        self.bending_xy[dt] = {}
-        self.shear_yz[dt] = {}
-        self.shear_xz[dt] = {}
-
-    def add(self, nnodes, dt, data):
-        """deprecated"""
-        [eid, parent, coord, icord, theta, forces] = data
-        self.parent[eid] = parent
-        self.coord[eid] = coord
-        self.icord[eid] = icord
-        self.theta[eid] = theta
-
-        self.membrane_x[eid] = {}
-        self.membrane_y[eid] = {}
-        self.membrane_xy[eid] = {}
-        self.bending_x[eid] = {}
-        self.bending_y[eid] = {}
-        self.bending_xy[eid] = {}
-        self.shear_yz[eid] = {}
-        self.shear_xz[eid] = {}
-
-        for force in forces:
-            [nid, membrane_x, membrane_y, membrane_xy, bending_x,
-             bending_y, bending_xy, shear_yz, shear_xz] = force
-            self.membrane_x[eid][nid] = membrane_x
-            self.membrane_y[eid][nid] = membrane_y
-            self.membrane_xy[eid][nid] = membrane_xy
-            self.bending_x[eid][nid] = bending_x
-            self.bending_y[eid][nid] = bending_y
-            self.bending_xy[eid][nid] = bending_xy
-            self.shear_yz[eid][nid] = shear_yz
-            self.shear_xz[eid][nid] = shear_xz
-
-    def add_sort1(self, nnodes, dt, data):
-        """unvectorized method for adding SORT1 transient data"""
-        [eid, parent, coord, icord, theta, forces] = data
-        self._fill_object(dt, eid, parent, coord, icord, theta, forces)
-
-    def add_sort2(self, nnodes, eid, data):
-        """deprecated"""
-        [dt, parent, coord, icord, theta, forces] = data
-        self._fill_object(dt, eid, parent, coord, icord, theta, forces)
-
-    def _fill_object(self, dt, eid, parent, coord, icord, theta, forces):
-        """deprecated"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
-        if dt not in self.membrane_x:
-            self.add_new_transient(dt)
-        self.parent[eid] = parent
-        self.coord[eid] = coord
-        self.icord[eid] = icord
-        self.theta[eid] = theta
-
-        self.membrane_x[dt][eid] = {}
-        self.membrane_y[dt][eid] = {}
-        self.membrane_xy[dt][eid] = {}
-        self.bending_x[dt][eid] = {}
-        self.bending_y[dt][eid] = {}
-        self.bending_xy[dt][eid] = {}
-        self.shear_yz[dt][eid] = {}
-        self.shear_xz[dt][eid] = {}
-
-        for force in forces:
-            [nid, membrane_x, membrane_y, membrane_xy, bending_x,
-             bending_y, bending_xy, shear_yz, shear_xz] = force
-            #print(eid, nid)
-            self.membrane_x[dt][eid][nid] = membrane_x
-            self.membrane_y[dt][eid][nid] = membrane_y
-            self.membrane_xy[dt][eid][nid] = membrane_xy
-            self.bending_x[dt][eid][nid] = bending_x
-            self.bending_y[dt][eid][nid] = bending_y
-            self.bending_xy[dt][eid][nid] = bending_xy
-            self.shear_yz[dt][eid][nid] = shear_yz
-            self.shear_xz[dt][eid][nid] = shear_xz

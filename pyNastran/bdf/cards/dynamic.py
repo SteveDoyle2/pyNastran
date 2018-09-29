@@ -24,11 +24,10 @@ All cards are BaseCard objects.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from math import log, exp
-from six.moves import zip, range
 import numpy as np
 from numpy import unique, hstack
 
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -1191,9 +1190,6 @@ class ROTORD(BaseCard):
             Step-size of reference rotor speed. See Remark 3. (Real ≠ 0.0)
         numstep : int
             Number of steps for reference rotor speed including RSTART.
-
-        Parameter Lists
-        ---------------
         rids : List[int]
             Identification number of rotor i.
             (Integer > 0 with RID(i+1) > RIDi; Default = i)
@@ -1214,9 +1210,6 @@ class ROTORD(BaseCard):
             ???
         brgsets : List[int]
             ???
-
-        Optional
-        --------
         refsys : str; default='ROT'
             Reference system
                 'FIX' analysis is performed in the fixed reference system.
@@ -2178,17 +2171,18 @@ class TIC(BaseCard):
         Parameters
         ----------
         sid : int
-            ???
+            Case Control IC id
         nodes : int / List[int]
             the nodes to which apply the initial conditions
         components : int / List[int]
             the DOFs to which apply the initial conditions
         u0 : float / List[float]
-            ???
+            Initial displacement.
         v0 : float / List[float]
-            ???
+            Initial velocity.
         comment : str; default=''
             a comment for the card
+
         """
         BaseCard.__init__(self)
         if comment:
@@ -2207,6 +2201,7 @@ class TIC(BaseCard):
         self.components = components
         self.u0 = u0
         self.v0 = v0
+        self.nodes_ref = None
 
     def validate(self):
         for nid in self.nodes:
@@ -2253,7 +2248,12 @@ class TIC(BaseCard):
     @property
     def node_ids(self):
         #return _node_ids(self, self.nodes, )
-        return self.nodes
+        if self.nodes_ref is None:
+            return self.nodes
+        nodes = []
+        for node in self.nodes_ref:
+            nodes.append(node.nid)
+        return nodes
 
     def add(self, tic):
         assert self.sid == tic.sid, 'sid=%s tic.sid=%s' % (self.sid, tic.sid)
@@ -2268,7 +2268,11 @@ class TIC(BaseCard):
         self.v0 += tic.v0
 
     def cross_reference(self, model):
-        pass
+        self.nodes_ref = model.Nodes(self.nodes)
+
+    def uncross_reference(self):
+        self.nodes = self.node_ids
+        self.nodes_ref = None
 
     def raw_fields(self):
         list_fields = []

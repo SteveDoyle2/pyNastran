@@ -20,10 +20,9 @@ import sys
 from struct import pack, unpack
 from math import ceil
 from collections import defaultdict
-from codecs import open as codec_open
+from codecs import open
 
-from six import iteritems, PY2
-from six.moves import zip, range
+from six import PY2
 
 import numpy as np
 
@@ -585,7 +584,7 @@ class Cart3D(Cart3dIO):
         #regions2 = np.hstack([regions, regions_upper])
 
         #loads2 = {}
-        #for key, data in iteritems(loads):
+        #for key, data in loads.items():
 
             ## flip the sign on the flipping axis terms
             #if((key in ['U', 'rhoU'] and ax2 == 0) or
@@ -704,7 +703,7 @@ class Cart3D(Cart3dIO):
                 elements[ielement, :] = [nodes_map[nid] for nid in element]
 
         loads2 = {} # 'Cp', 'Mach', 'U', etc.
-        for key, load in iteritems(loads):
+        for key, load in loads.items():
             loads2[key] = load[inodes_save]
 
         self.log.info('---finished make_half_model---')
@@ -730,7 +729,7 @@ class Cart3D(Cart3dIO):
             edge_to_eid_map[edge3].append(i)
 
         free_edges = []
-        for edge, eids in sorted(iteritems(edge_to_eid_map)):
+        for edge, eids in sorted(edge_to_eid_map.items()):
             if len(eids) != 2:
                 free_edges.append(edge)
         return np.array(free_edges, dtype='int32')
@@ -755,7 +754,7 @@ class Cart3D(Cart3dIO):
                     raise
 
         else:
-            with codec_open(_filename(infilename), 'r', encoding=self._encoding) as self.infile:
+            with open(_filename(infilename), 'r', encoding=self._encoding) as self.infile:
                 try:
                     npoints, nelements, nresults = self._read_header_ascii()
                     self.points = self._read_points_ascii(npoints)
@@ -789,7 +788,7 @@ class Cart3D(Cart3dIO):
         else:
             form = WRITE_ASCII
 
-        with codec_open(outfilename, form) as outfile:
+        with open(outfilename, form) as outfile:
             int_fmt = self._write_header(outfile, self.points, self.elements, is_loads, is_binary)
             self._write_points(outfile, self.points, is_binary, float_fmt)
             self._write_elements(outfile, self.elements, is_binary, int_fmt)

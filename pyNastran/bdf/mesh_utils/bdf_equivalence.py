@@ -9,7 +9,6 @@ defines:
                                   crash_on_collapse=False, log=None, debug=True)
 """
 from __future__ import print_function
-from six import iteritems, PY2
 
 import numpy as np
 from numpy import (array, unique, arange, searchsorted,
@@ -18,9 +17,13 @@ from numpy.linalg import norm  # type: ignore
 import scipy
 import scipy.spatial
 
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.mesh_utils.internal_utils import get_bdf_model
+
+if scipy.__version__ < '0.18.1':  # pragma: no cover
+    raise RuntimeError('scipy_version=%r and is less than 0.18.1.  '
+                       'Upgrade your scipy.' % scipy.__version__)
 
 
 def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
@@ -49,8 +52,9 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
     xref : bool
         does the model need to be cross_referenced
         (default=True; only applies to model option)
-    node_set : List[int] / (n, ) ndarray
-        the list/array of nodes to consider (not supported with renumber_nodes=True)
+    node_set : List[int] / (n, ) ndarray; default=None
+        the list/array of nodes to consider
+        (not supported with renumber_nodes=True)
     size : int; {8, 16}; default=8
         the bdf write precision
     is_double : bool; default=False
@@ -112,7 +116,7 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
 def _eq_nodes_setup(bdf_filename, unused_tol,
                     renumber_nodes=False, xref=True,
                     node_set=None, debug=True):
-    """helper function for `bdf_equivalence_nodes`"""
+    """helper function for ``bdf_equivalence_nodes``"""
     if node_set is not None:
         if renumber_nodes:
             raise NotImplementedError('node_set is not None & renumber_nodes=True')
@@ -127,9 +131,6 @@ def _eq_nodes_setup(bdf_filename, unused_tol,
 
     model = get_bdf_model(bdf_filename, xref=xref, log=None, debug=debug)
 
-    coord_ids = model.coord_ids
-    needs_get_position = True if coord_ids == [0] else False
-
     # quads / tris
     #nids_quads = []
     #eids_quads = []
@@ -138,54 +139,23 @@ def _eq_nodes_setup(bdf_filename, unused_tol,
 
     # map the node ids to the slot in the nids array
     renumber_nodes = False
-
-    inode = 0
-    nid_map = {}
     if node_set is not None:
-        if PY2:
-            all_nids = array(model.nodes.keys(), dtype='int32')
-        else:
-            all_nids = array(list(model.nodes.keys()), dtype='int32')
-
-        # B - A
-        # these are all the nodes that are requested from node_set that are missing
-        #   thus len(diff_nodes) == 0
-        diff_nodes = setdiff1d(node_set, all_nids)
-        if len(diff_nodes) != 0:
-            msg = ('The following nodes cannot be found, but are included'
-                   ' in the reduced set; nids=%s' % diff_nodes)
-            raise RuntimeError(msg)
-
-        # A & B
-        # the nodes to analyze are the union of all the nodes and the desired set
-        # which is basically the same as:
-        #   nids = unique(node_set)
-        nids = intersect1d(all_nids, node_set, assume_unique=True)  # the new values
-
-        if renumber_nodes:
-            raise NotImplementedError('node_set is not None & renumber_nodes=True')
-        else:
-            for nid in all_nids:
-                nid_map[inode] = nid
-                inode += 1
-        #nids = array([node.nid for nid, node in sorted(iteritems(model.nodes))
-                        #if nid in node_set], dtype='int32')
-
+        nids, all_nids, unused_nid_map = _eq_nodes_setup_node_set(
+            model, node_set, renumber_nodes=renumber_nodes)
     else:
-        if renumber_nodes:
-            for nid, node in sorted(iteritems(model.nodes)):
-                node.nid = inode + 1
-                nid_map[inode] = nid
-                inode += 1
-            nnodes = len(model.nodes)
-            nids = arange(1, inode + 1, dtype='int32')
-            assert nids[-1] == nnodes
-        else:
-            for nid, node in sorted(iteritems(model.nodes)):
-                nid_map[inode] = nid
-                inode += 1
-            nids = array([node.nid for nid, node in sorted(iteritems(model.nodes))], dtype='int32')
-        all_nids = nids
+        nids, all_nids, unused_nid_map = _eq_nodes_setup_node(
+            model, renumber_nodes=renumber_nodes)
+
+    nodes_xyz = _get_xyz_cid0(model, nids)
+    inew = _check_for_referenced_nodes(model, node_set, nids, all_nids, nodes_xyz)
+
+    #assert np.array_equal(nids[inew], nids_new), 'some nodes are not defined'
+    return nodes_xyz, model, nids, inew
+
+def _get_xyz_cid0(model, nids):
+    """gets xyz_cid0"""
+    coord_ids = model.coord_ids
+    needs_get_position = True if coord_ids == [0] else False
 
     if needs_get_position:
         nodes_xyz = array([model.nodes[nid].get_position()
@@ -193,7 +163,61 @@ def _eq_nodes_setup(bdf_filename, unused_tol,
     else:
         nodes_xyz = array([model.nodes[nid].xyz
                            for nid in nids], dtype='float32')
+    return nodes_xyz
 
+def _eq_nodes_setup_node_set(model, node_set, renumber_nodes=False):
+    """helper function for ``_eq_nodes_setup``"""
+    inode = 0
+    nid_map = {}
+    all_nids = array(list(model.nodes.keys()), dtype='int32')
+
+    # B - A
+    # these are all the nodes that are requested from node_set that are missing
+    #   thus len(diff_nodes) == 0
+    diff_nodes = setdiff1d(node_set, all_nids)
+    if len(diff_nodes) != 0:
+        msg = ('The following nodes cannot be found, but are included'
+               ' in the reduced set; nids=%s' % diff_nodes)
+        raise RuntimeError(msg)
+
+    # A & B
+    # the nodes to analyze are the union of all the nodes and the desired set
+    # which is basically the same as:
+    #   nids = unique(node_set)
+    nids = intersect1d(all_nids, node_set, assume_unique=True)  # the new values
+
+    if renumber_nodes:
+        raise NotImplementedError('node_set is not None & renumber_nodes=True')
+    else:
+        for nid in all_nids:
+            nid_map[inode] = nid
+            inode += 1
+    #nids = array([node.nid for nid, node in sorted(model.nodes.items())
+                    #if nid in node_set], dtype='int32')
+    return nids, all_nids, nid_map
+
+def _eq_nodes_setup_node(model, renumber_nodes=False):
+    """helper function for ``_eq_nodes_setup``"""
+    inode = 0
+    nid_map = {}
+    if renumber_nodes:
+        for nid, node in sorted(model.nodes.items()):
+            node.nid = inode + 1
+            nid_map[inode] = nid
+            inode += 1
+        nnodes = len(model.nodes)
+        nids = arange(1, inode + 1, dtype='int32')
+        assert nids[-1] == nnodes
+    else:
+        for nid, node in sorted(model.nodes.items()):
+            nid_map[inode] = nid
+            inode += 1
+        nids = array([node.nid for nid, node in sorted(model.nodes.items())], dtype='int32')
+    all_nids = nids
+    return nids, all_nids, nid_map
+
+def _check_for_referenced_nodes(model, node_set, nids, all_nids, nodes_xyz):
+    """helper function for ``_eq_nodes_setup``"""
     if node_set is not None:
         assert nodes_xyz.shape[0] == len(nids)
 
@@ -212,9 +236,9 @@ def _eq_nodes_setup(bdf_filename, unused_tol,
         # Presumably this is enough to capture all the node ids and NOT
         # spoints, but I doubt it...
         spoint_epoint_nid_set = set([])
-        for unused_eid, element in sorted(iteritems(model.elements)):
+        for unused_eid, element in sorted(model.elements.items()):
             spoint_epoint_nid_set.update(element.node_ids)
-        for unused_eid, element in sorted(iteritems(model.masses)):
+        for unused_eid, element in sorted(model.masses.items()):
             spoint_epoint_nid_set.update(element.node_ids)
 
         nids_new = spoint_epoint_nid_set - set(model.spoints) - set(model.epoints)
@@ -237,10 +261,9 @@ def _eq_nodes_setup(bdf_filename, unused_tol,
         inew = searchsorted(nids, nids_new, side='left')
         # print('nids_new =', nids_new)
     else:
-        inew = slice(None)
+        inew = None
     #assert np.array_equal(nids[inew], nids_new), 'some nodes are not defined'
-    return nodes_xyz, model, nids, inew
-
+    return inew
 
 def _eq_nodes_find_pairs(nids, slots, ieq, node_set=None):
     """helper function for `bdf_equivalence_nodes`"""
@@ -315,8 +338,8 @@ def _eq_nodes_build_tree(nodes_xyz, nids, tol,
         the spherical equivalence tolerance
     inew : int ndarray; default=None -> slice(None)
         a slice on nodes_xyz to exclude some nodes from the equivalencing
-    node_set : ???; default=None
-        ???
+    node_set : List[int] / (n, ) ndarray; default=None
+        the list/array of nodes to consider
     neq_max : int; default=4
         the number of nodes to consider for equivalencing
     msg : str; default=''
@@ -356,16 +379,9 @@ def _get_tree(nodes_xyz, msg=''):
     assert nodes_xyz.shape[0] > 0, 'nnodes=0%s' % msg
 
     # build the kdtree
-    if scipy.__version__ < '0.18.1':
-        try:
-            kdt = scipy.spatial.KDTree(nodes_xyz)
-        except RuntimeError:
-            print(nodes_xyz)
-            raise RuntimeError(nodes_xyz)
-    else:
-        try:
-            kdt = scipy.spatial.cKDTree(nodes_xyz)
-        except RuntimeError:
-            print(nodes_xyz)
-            raise RuntimeError(nodes_xyz)
+    try:
+        kdt = scipy.spatial.cKDTree(nodes_xyz)
+    except RuntimeError:
+        print(nodes_xyz)
+        raise RuntimeError(nodes_xyz)
     return kdt

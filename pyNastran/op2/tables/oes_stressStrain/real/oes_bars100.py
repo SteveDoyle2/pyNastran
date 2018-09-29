@@ -1,7 +1,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
-from six import iteritems, integer_types
+from six import integer_types
 
 import numpy as np
 from numpy import zeros, searchsorted
@@ -87,16 +87,29 @@ class RealBar10NodesArray(OES_Object):
         dtype = 'float32'
         if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
-        self._times = zeros(self.ntimes, dtype=dtype)
-        self.element = zeros(self.ntotal, dtype='int32')
+
+        _times = zeros(self.ntimes, dtype=dtype)
+        element = zeros(self.ntotal, dtype='int32')
 
         #[sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS]
-        self.data = zeros((self.ntimes, self.ntotal, 9), dtype='float32')
+        data = zeros((self.ntimes, self.ntotal, 9), dtype='float32')
+
+        if self.load_as_h5:
+            #for key, value in sorted(self.data_code.items()):
+                #print(key, value)
+            group = self._get_result_group()
+            self._times = group.create_dataset('_times', data=_times)
+            self.element = group.create_dataset('element', data=element)
+            self.data = group.create_dataset('data', data=data)
+        else:
+            self._times = _times
+            self.element = element
+            self.data = data
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
         headers = self.get_headers()
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=self.element, minor_axis=headers).to_frame()
@@ -141,11 +154,7 @@ class RealBar10NodesArray(OES_Object):
                 raise ValueError(msg)
         return True
 
-    def add_new_eid(self, eType, dt, eid, sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS):
-        self.add_new_eid_sort1(eType, dt, eid,
-                               sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS)
-
-    def add_new_eid_sort1(self, eType, dt, eid,
+    def add_new_eid_sort1(self, etype, dt, eid,
                           sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS):
         self._times[self.itime] = dt
         #print('isubcase=%s itotal=%s ieid=%s eid=%s' % (self.isubcase, self.itotal, self.ielement, eid))
@@ -170,7 +179,7 @@ class RealBar10NodesArray(OES_Object):
         nelements = self.ntotal // self.nnodes  # // 2
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i nnodes_per_element=%i ntotal=%i\n'
                        % (self.__class__.__name__, ntimes, nelements, nnodes, ntotal))
             ntimes_word = 'ntimes'
@@ -242,7 +251,7 @@ class RealBar10NodesArray(OES_Object):
             f06_file.write(page_stamp % page_num)
             page_num += 1
 
-        if self.nonlinear_factor is None:
+        if self.nonlinear_factor in (None, np.nan):
             page_num -= 1
         return page_num
 

@@ -2,6 +2,7 @@ from numpy import vstack
 from pyNastran.converters.tecplot.tecplot import Tecplot
 
 def merge_tecplot_files(tecplot_filenames, tecplot_filename_out=None, log=None):
+    """merges one or more tecplot files"""
     assert isinstance(tecplot_filenames, (list, tuple)), type(tecplot_filenames)
     assert len(tecplot_filenames) > 0, tecplot_filenames
 

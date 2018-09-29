@@ -4,7 +4,7 @@ defines:
        bdf_filename, pin_flags_filename=None, bdf_filename_out=None)
 """
 from __future__ import print_function
-from six import iteritems, string_types
+from six import string_types
 from pyNastran.bdf.bdf import read_bdf
 
 
@@ -124,6 +124,6 @@ def write_pin_flag_map(pin_flag_map, pin_flags_filename):
         }
         with open(pin_flags_filename, 'w') as pin_flags_file:
             pin_flags_file.write('# Eid(%i), flag(%i)\n')
-            for eid, pin_flag in sorted(iteritems(pin_flag_map)):
+            for eid, pin_flag in sorted(pin_flag_map.items()):
                 pin_flag2 = pin_flag_remap[pin_flag]
                 pin_flags_file.write('%s,%s\n' % (eid, pin_flag2))

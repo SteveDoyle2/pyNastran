@@ -14,13 +14,13 @@ import traceback
 import warnings
 from itertools import chain
 from typing import List, Tuple, Optional
-from six import iteritems
 import numpy as np
 warnings.simplefilter('always')
 
 np.seterr(all='raise')
 
-from pyNastran.utils import print_bad_path, integer_types
+from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.utils import check_path
 from pyNastran.bdf.errors import (
     #CrossReferenceError,
     CardParseSyntaxError, DuplicateIDsError, MissingDeckSections)
@@ -89,12 +89,11 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
     pickle_obj : bool; default=True
         tests pickling
 
-    Usage
-    -----
+    Examples
+    --------
     All control lists must be the same length.
-    You can run xref=True and xref=False with:
 
-    .. python ::
+    You can run xref=True and xref=False with::
 
         run_lots_of_files(filenames, xref=[True, False]) # valid
     """
@@ -347,7 +346,7 @@ def run_and_compare_fems(
             if not quiet:
                 print('card_count:')
                 print('-----------')
-                for card_name, card_count in sorted(iteritems(fem1.card_count)):
+                for card_name, card_count in sorted(fem1.card_count.items()):
                     print('key=%-8s value=%s' % (card_name, card_count))
             return fem1, None, None
         fem2 = run_fem2(bdf_model, out_model, xref, punch, sum_load, size, is_double, mesh_form,
@@ -527,7 +526,7 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
     """
     if crash_cards is None:
         crash_cards = []
-    assert os.path.exists(bdf_model), print_bad_path(bdf_model)
+    check_path(bdf_model, 'bdf_model')
     try:
         if '.pch' in bdf_model:
             fem1.read_bdf(bdf_model, xref=False, punch=True, encoding=encoding)
@@ -761,7 +760,7 @@ def _assert_has_spc(subcase, fem):
     """
     if 'SPC' not in subcase:
         has_ps = False
-        for nid, node in iteritems(fem.nodes):
+        for nid, node in fem.nodes.items():
             if node.ps:
                 has_ps = True
                 break
@@ -806,7 +805,7 @@ def test_get_cards_by_card_types(model):
     # we'll get the associated cards
     card_dict = model.get_cards_by_card_types(card_types,
                                               reset_type_to_slot_map=False)
-    for card_type, cards in iteritems(card_dict):
+    for card_type, cards in card_dict.items():
         for card in cards:
             msg = 'this should never crash here...card_type=%s card.type=%s' % (
                 card_type, card.type)
@@ -837,8 +836,8 @@ def compute_ints(cards1, cards2, fem1, quiet=True):
     computes the difference / ratio / inverse-ratio between
     fem1 and fem2 to verify the number of card are the same:
 
-    Example
-    -------
+    Examples
+    --------
 
     name   fem1  fem2  diff  ratio  1/ratio
     ====   ====  ====  ==== ======  =======
@@ -1018,7 +1017,7 @@ def main():
     The main function for the command line ``test_bdfv`` script.
     """
     data = get_test_bdf_data()
-    for key, value in sorted(iteritems(data)):
+    for key, value in sorted(data.items()):
         print("%-12s = %r" % (key.strip('--'), value))
 
     import time

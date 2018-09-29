@@ -2,17 +2,18 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from typing import List, Dict, Union, Optional, Any
 from six import string_types, PY2
-from six.moves import zip, range
 
 import numpy as np
 #from numpy import nan, empty, unique
 
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
-from pyNastran.utils import object_attributes, object_methods, integer_types
+from pyNastran.utils import object_attributes, object_methods
+from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer import print_card
 from pyNastran.bdf.field_writer_8 import is_same
 from pyNastran.bdf.bdf_interface.assign_type import interpret_value
-from pyNastran.bdf.utils import deprecated
+from pyNastran.bdf.bdf_interface.utils import deprecated
 
 
 if PY2:
@@ -83,9 +84,7 @@ class BaseCard(object):
         """.. seealso:: `pyNastran.utils.object_attributes(...)`"""
         if keys_to_skip is None:
             keys_to_skip = []
-
-        my_keys_to_skip = [
-        ]
+        my_keys_to_skip = []
         return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     def object_methods(self, mode='public', keys_to_skip=None):
@@ -93,9 +92,6 @@ class BaseCard(object):
         if keys_to_skip is None:
             keys_to_skip = []
         my_keys_to_skip = []
-
-        my_keys_to_skip = [
-        ]
         return object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     @property
@@ -141,12 +137,12 @@ class BaseCard(object):
         .. note::
             This is dynamic if the card length changes.
 
-        .. code-block:: python
+        update_field can be used as follows to change the z coordinate
+        of a node::
 
-          nid = 1
-          node = model.nodes[nid]
-          # ['GRID', nid, cp, x, y, z]
-          node.update_field(3, 0.1) # change the z coordinate
+          >>> nid = 1
+          >>> node = model.nodes[nid]
+          >>> node.update_field(3, 0.1)
 
         """
         try:
@@ -536,74 +532,6 @@ class Element(BaseCard):
                 raise RuntimeError(msg)
         self.nodes = nodes2
 
-    # this doesn't belong in Element as CBARs don't have faces
-    #@property
-    #def faces(self):
-        ## () -> Dict[int, List[int]]
-        #"""
-        #Gets the faces of the element
-
-        #Returns
-        #-------
-        #faces : Dict[int] = [face1, face2, ...]
-            #key = face number
-            #value = a list of nodes (integer pointers) as the values.
-
-        #Notes
-        #-----
-        #The order of the nodes are consistent with normals that point outwards
-        #The face numbering is meaningless
-
-        #.. note::  The order of the nodes are consistent with ANSYS numbering; is this current?
-        #.. warning:: higher order element ids not verified with ANSYS; is this current?
-
-        #Examples
-        #--------
-        #>>> print(element.faces)
-
-        #"""
-        #faces = {}
-        #try:
-            #nodes = self.node_ids
-        #except AttributeError:
-            #return None
-        #if self.type.startswith('CQUAD'): # CQUADx
-            ## both sides
-            #faces[1] = [nodes[0], nodes[1], nodes[2], nodes[3]]  # CQUAD8/9?
-            #faces[2] = [nodes[1], nodes[0], nodes[3], nodes[2]]
-        #elif self.type.startswith('CTRI'):  # CTRIAx
-            ## both sides
-            #faces[1] = [nodes[0], nodes[1], nodes[2]]  # CTRIA6?
-            #faces[2] = [nodes[1], nodes[0], nodes[2]]
-        #else:
-            #faces = None
-        #return faces
-
-    #def nodes2face(self, nodes):
-        #"""
-        #returns the face number that matches the list of nodes input
-
-        #Parameters
-        #----------
-        #nodes : List[node]
-            #a series of nodes
-
-        #Returns
-        #-------
-        #face_id : int
-            #the face number as an integer
-
-        #.. warning:: It's assumed you have the nodes in the proper order.
-
-        #"""
-        #assert isinstance(nodes, list), 'nodes=%s' % str(nodes)
-        #face = None
-        #for i in self.faces.keys():
-            #chck = self.faces[i]
-            #if nodes == chck:
-                #face = i
-        #return face
-
 def _format_comment(comment):
     # type: (str) -> str
     r"""Format a card comment to precede the card using
@@ -625,8 +553,10 @@ def _format_comment(comment):
     <empty string>
 
     >>> _format_comment('$ a comment within a comment looks weird')
-    $$ a comment within a comment looks weird
+    '$$ a comment within a comment looks weird'
 
+    >>> _format_comment('no trailing whitespace   ')
+    $no trailing extra whitespace
     """
     if comment.strip() == '':  # deals with a bunch of spaces
         return ''
@@ -714,7 +644,7 @@ def expand_thru(fields, set_fields=True, sort_fields=False):
             iend = int(fields[i + 1])
 
             # adding 1 to iend for the range offset
-            for j in range(istart, iend + 1):
+            for j in range(istart+1, iend + 1):
                 out.append(j)
             i += 2
         else:

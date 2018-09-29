@@ -1,3 +1,4 @@
+# pylint: disable=C0103,R0914,R0902,R0913
 """
 All bar properties are defined in this file.  This includes:
  *   PBAR
@@ -11,7 +12,6 @@ Multi-segment beams are IntegratedLineProperty objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-#import sys
 from six import integer_types, string_types
 from numpy import pi, array
 import numpy as np
@@ -26,15 +26,17 @@ from pyNastran.utils.mathematics import integrate_unit_line, integrate_positive_
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
-from pyNastran.bdf.utils import to_fields
-from pyNastran.utils import float_types
+from pyNastran.bdf.bdf_interface.utils import to_fields
+from pyNastran.utils.numpy_utils import float_types
 
 
 def Iyy_beam(b, h):
+    """gets the Iyy for a solid beam"""
     return 1 / 12. * b * h ** 3
 
 
 def I_beam(b, h):
+    """gets the Iyy, Izz, Iyz for a solid beam"""
     f = 1 / 12. * b * h
     Iyy = f * h * h  # 1/12.*b*h**3
     Izz = f * b * b  # 1/12.*h*b**3
@@ -101,10 +103,92 @@ def get_inertia_rectangular(sections):
     return (A, Ixx, Iyy, Ixy)
 
 
+def _IAreaL(prop, dim):
+    beam_type = prop.beam_type
+    if beam_type == 'ROD':
+        R = dim[0]
+        A = pi * R ** 2
+        Iyy = A * R ** 2 / 4.
+        Izz = Iyy
+        Iyz = 0.
+    elif beam_type == 'TUBE':
+        R1 = dim[0]
+        R2 = dim[1]
+        A1 = pi * R1 ** 2
+        Iyy1 = A1 * R1 ** 2 / 4.
+        A2 = pi * R2 ** 2
+        Iyy2 = A2 * R2 ** 2 / 4.
+        A = A1 - A2
+        Iyy = Iyy1 - Iyy2
+        Izz = Iyy
+        Iyz = 0.
+    elif beam_type == 'TUBE2':
+        R1 = dim[0]
+        t = dim[1]
+        R2 = R1 - t
+        A1 = pi * R1 ** 2
+        Iyy1 = A1 * R1 ** 2 / 4.
+        A2 = pi * R2 ** 2
+        Iyy2 = A2 * R2 ** 2 / 4.
+        A = A1 - A2
+        Iyy = Iyy1 - Iyy2
+        Izz = Iyy
+        Iyz = 0.
+
+    elif beam_type == 'I':
+        # |  ------------
+        # |  |    A     | d5
+        # |  ------------
+        # |     >| |<--d3
+        # |      |B|           "I" beam
+        # | d1   | |
+        # |      | |
+        # |   ----------
+        # |   |   C    |  d5
+        # |   ----------
+        sections = []
+        h1 = dim[5]  # d2
+        w1 = dim[2]
+        y1 = dim[0] / 2. - h1
+        sections.append([w1, h1, 0., y1])
+
+        h3 = dim[4]
+        w3 = dim[1]
+        #y3 = -dim[0] / 2. + h3
+        sections.append([w3, h3, 0., y1])
+
+        h2 = dim[0] - h1 - h3
+        w2 = dim[3]  # d1
+        sections.append([w2, h2, 0., 0.])
+
+        (A, Iyy, Izz, Iyz) = get_inertia_rectangular(sections)
+        assert Iyz == 0.
+
+    elif beam_type == 'BAR':
+        #: *-------*
+        #: |       |
+        #: |  BAR  |h1
+        #: |       |
+        #: *-------*
+        #:    w1
+        #: I_{xx}=\frac{bh^3}{12}
+        #: I_{yy}=\frac{hb^3}{12}
+        h1 = dim[1]
+        w1 = dim[0]
+        A = h1 * w1
+        Iyy = 1 / 12. * w1 * h1 ** 3
+        Izz = 1 / 12. * h1 * w1 ** 3
+        Iyz = 0.  #: .. todo:: is the Ixy of a bar 0 ???
+
+    else:
+        msg = 'beam_type=%s is not supported for %s class...' % (
+            beam_type, prop.type)
+        raise NotImplementedError(msg)
+    return (A, Iyy, Izz, Iyz)
+
 class LineProperty(Property):
     def __init__(self):
         self.beam_type = None
-        self.dim = None
         self.A = None
         self.i1 = None
         self.i2 = None
@@ -126,167 +210,77 @@ class LineProperty(Property):
     #def D_shear(self):
         #pass
 
-    def Rho(self):
-        return self.mid_ref.rho
-
     def Area(self):
+        """gets area"""
         return self.A
 
     def Nsm(self):
+        """gets nonstructural mass per unit length"""
         return self.nsm
 
     def J(self):
+        """gets J"""
         return self.j
 
     def I11(self):
+        """gets I11"""
         return self.i1
 
     def I22(self):
+        """gets I22"""
         return self.i2
 
+    def Rho(self):
+        """gets the material density"""
+        return self.mid_ref.rho
+
     def E(self):
+        """gets the material Young's ratio"""
         return self.mid_ref.E
 
     def G(self):
+        """gets the material Shear ratio"""
         return self.mid_ref.G
 
     def Nu(self):
+        """gets the material Poisson's ratio"""
         return self.mid_ref.nu
 
-    def IAreaL(self, dim):
-        if self.beam_type == 'ROD':
-            R = dim[0]
-            A = pi * R ** 2
-            Iyy = A * R ** 2 / 4.
-            Izz = Iyy
-            Iyz = 0.
-        elif self.beam_type == 'TUBE':
-            R1 = dim[0]
-            R2 = dim[1]
-            A1 = pi * R1 ** 2
-            Iyy1 = A1 * R1 ** 2 / 4.
-            A2 = pi * R2 ** 2
-            Iyy2 = A2 * R2 ** 2 / 4.
-            A = A1 - A2
-            Iyy = Iyy1 - Iyy2
-            Izz = Iyy
-            Iyz = 0.
-        elif self.beam_type == 'TUBE2':
-            R1 = dim[0]
-            t = dim[1]
-            R2 = R1 - t
-            A1 = pi * R1 ** 2
-            Iyy1 = A1 * R1 ** 2 / 4.
-            A2 = pi * R2 ** 2
-            Iyy2 = A2 * R2 ** 2 / 4.
-            A = A1 - A2
-            Iyy = Iyy1 - Iyy2
-            Izz = Iyy
-            Iyz = 0.
+def I1_I2_I12(prop, dim):
+    r"""
+    ::
 
-        elif self.beam_type == 'I':
-            # |  ------------
-            # |  |    A     | d5
-            # |  ------------
-            # |     >| |<--d3
-            # |      |B|           "I" beam
-            # | d1   | |
-            # |      | |
-            # |   ----------
-            # |   |   C    |  d5
-            # |   ----------
-            sections = []
-            h1 = dim[5]  # d2
-            w1 = dim[2]
-            y1 = dim[0] / 2. - h1
-            sections.append([w1, h1, 0., y1])
+      BAR
+          2
+          ^
+          |
+      *---|--*
+      |   |  |
+      |   |  |
+      |h  *-----------> 1
+      |      |
+      |   b  |
+      *------*
 
-            h3 = dim[4]
-            w3 = dim[1]
-            #y3 = -dim[0] / 2. + h3
-            sections.append([w3, h3, 0., y1])
+    .. math:: I_1 = \frac{1}{12} b h^3
 
-            h2 = dim[0] - h1 - h3
-            w2 = dim[3]  # d1
-            sections.append([w2, h2, 0., 0.])
-
-            (A, Iyy, Izz, Iyz) = get_inertia_rectangular(sections)
-            assert Iyz == 0.
-
-        elif self.beam_type == 'BAR':
-            #: *-------*
-            #: |       |
-            #: |  BAR  |h1
-            #: |       |
-            #: *-------*
-            #:    w1
-            #: I_{xx}=\frac{bh^3}{12}
-            #: I_{yy}=\frac{hb^3}{12}
-            h1 = dim[1]
-            w1 = dim[0]
-            A = h1 * w1
-            Iyy = 1 / 12. * w1 * h1 ** 3
-            Izz = 1 / 12. * h1 * w1 ** 3
-            Iyz = 0.  #: .. todo:: is the Ixy of a bar 0 ???
-
-        else:
-            msg = 'beam_type=%s is not supported for %s class...' % (
-                self.beam_type, self.type)
-            raise NotImplementedError(msg)
-        return (A, Iyy, Izz, Iyz)
-
-    def I1(self):
-        I = self.I1_I2_I12()
-        return I[0]
-
-    def I2(self):
-        I = self.I1_I2_I12()
-        return I[1]
-
-    def I12(self):
-        try:
-            I = self.I1_I2_I12()
-        except:
-            print(str(self))
-            raise
-        return I[2]
-
-    def I1_I2_I12(self):
-        r"""
-        ::
-
-          BAR
-              2
-              ^
-              |
-          *---|--*
-          |   |  |
-          |   |  |
-          |h  *-----------> 1
-          |      |
-          |   b  |
-          *------*
-
-        .. math:: I_1 = \frac{1}{12} b h^3
-
-        .. math:: I_2 = \frac{1}{12} h b^3
-        """
-        dim = self.dim
-        if self.beam_type == 'ROD':
-            R = dim[0]
-            A = pi * R ** 2
-            I1 = A * R ** 2 / 4.
-            I2 = I1
-            I12 = 0.
-        elif self.beam_type == 'BAR':
-            I1 = 1 / 12. * dim[0] * dim[1] ** 3
-            I2 = 1 / 12. * dim[1] * dim[0] ** 3
-            I12 = 0.
-        else:
-            msg = 'I1_I2_I12; beam_type=%s is not supported for %s class...' % (
-                self.beam_type, self.type)
-            raise NotImplementedError(msg)
-        return(I1, I2, I12)
+    .. math:: I_2 = \frac{1}{12} h b^3
+    """
+    if prop.beam_type == 'ROD':
+        R = dim[0]
+        A = pi * R ** 2
+        I1 = A * R ** 2 / 4.
+        I2 = I1
+        I12 = 0.
+    elif prop.beam_type == 'BAR':
+        I1 = 1 / 12. * dim[0] * dim[1] ** 3
+        I2 = 1 / 12. * dim[1] * dim[0] ** 3
+        I12 = 0.
+    else:
+        msg = 'I1_I2_I12; beam_type=%s is not supported for %s class...' % (
+            prop.beam_type, prop.type)
+        raise NotImplementedError(msg)
+    return(I1, I2, I12)
 
 def _bar_areaL(class_name, beam_type, dim, prop):
     """
@@ -1114,24 +1108,25 @@ class PBAR(LineProperty):
         self.mid_ref = None
 
     def Area(self):
-        """
-        Gets the area :math:`A` of the CBAR.
-        """
+        """Gets the area :math:`A` of the CBAR."""
         return self.A
 
     #def Nsm(self):
     #    return self.nsm
 
     #def J(self):
-    #    return self.j
+       #return self.j
 
     def I11(self):
+        """gets the section I11 moment of inertia"""
         return self.i1
 
     def I22(self):
+        """gets the section I22 moment of inertia"""
         return self.i2
 
     def I12(self):
+        """gets the section I12 moment of inertia"""
         return self.i12
 
     def raw_fields(self):
@@ -1225,7 +1220,7 @@ class PBARL(LineProperty):
             self.dim[num - 1] = value
         else:
             raise NotImplementedError('PBARL Type=%r name=%r has not been implemented' % (
-                self.Type, self.pname_fid))
+                self.Type, pname_fid))
 
     def __init__(self, pid, mid, Type, dim, group='MSCBML0', nsm=0., comment=''):
         """
@@ -1417,31 +1412,31 @@ class PBARL(LineProperty):
         nsm = self.Nsm()
         return area * rho + nsm
 
+    def I1(self):
+        """gets the section I1 moment of inertia"""
+        I = self.I1_I2_I12()
+        return I[0]
+
+    def I2(self):
+        """gets the section I2 moment of inertia"""
+        I = self.I1_I2_I12()
+        return I[1]
+
+    def I12(self):
+        """gets the section I12 moment of inertia"""
+        try:
+            I = self.I1_I2_I12()
+        except:
+            print(str(self))
+            raise
+        return I[2]
+
+    def I1_I2_I12(self):
+        """gets the section I1, I2, I12 moment of inertia"""
+        return I1_I2_I12(prop, prop.dim)
+
     def I11(self):
         return self.I1()
-        #if self.beam_type in ['ROD']:
-            #assert len(self.dim) == 1, 'dim=%r' % self.dim
-            #r = self.dim[0]
-            ##Ix = pi*r**4/4.
-            ##J = pi*r**4/2.
-            #(Ix, Iy, Ixy) = self.I1_I2_I12()
-
-        #elif self.beam_type in ['BAR']:
-            #assert len(self.dim) == 2, 'dim=%r' % self.dim
-            #b, h = self.dim
-            ##Ix = self.I11()
-            ##Iy = self.I22()
-            #(Ix, Iy, Ixy) = self.I1_I2_I12()
-            ##print
-            ##J = Ix + Iy
-        #else:
-            #msg = 'I11 for beam_type=%r dim=%r on PBARL is not supported' % (
-                #self.beam_type, self.dim)
-            #raise NotImplementedError(msg)
-        #return Ix
-
-    #def I12(self):
-        #return self.I12()
 
     def _points(self, beam_type, dim):
         if beam_type == 'BAR':  # origin ar center
@@ -1736,9 +1731,48 @@ class PBRSECT(LineProperty):
         self.nsm = 0.
         self.t = None
         self.outp = None
-        self.brp1 = None
-        for key, value in options.items():
+
+        # int : int
+        self.brps = {}
+        self.inps = {}
+
+        # int : floats
+        self.ts = {}
+        assert isinstance(options, list), options
+        for key_value in options:
+            try:
+                key, value = key_value
+            except ValueError:
+                print(key_value)
+                raise
             key = key.upper()
+
+            if key == 'NSM':
+                self.nsm = float(value)
+            elif 'INP' in key:
+                if key.startswith('INP('):
+                    assert key.endswith(')'), 'key=%r' % key
+                    key_id = int(key[4:-1])
+                    self.inps[key_id] = int(value)
+                else:
+                    self.inps[0] = int(value)
+            elif key == 'OUTP':
+                self.outp = int(value)
+
+            elif key.startswith('BRP'):
+                if key.startswith('BRP('):
+                    assert key.endswith(')'), 'key=%r' % key
+                    key_id = int(key[4:-1])
+                    self.brps[key_id] = int(value)
+                else:
+                    self.brps[0] = int(value)
+
+            elif key.startswith('T('):
+                index, out = split_arbitrary_thickness_section(key, value)
+                self.ts[index] = out
+            elif key == 'T':
+                self.ts[1] = float(value)
+
             #if key == 'NSM':
                 #self.nsm = float(value)
             #elif key == 'OUTP':
@@ -1747,11 +1781,24 @@ class PBRSECT(LineProperty):
                 #self.brp1 = int(value)
             #elif key == 'T':
                 #self.t = float(value)
-            #else:
-            raise NotImplementedError('PBRSECT.pid=%s key=%r value=%r' % (pid, key, value))
+            else:
+                raise NotImplementedError('PBRSECT.pid=%s key=%r value=%r' % (pid, key, value))
 
-        self._validate_input()
         self.mid_ref = None
+        self.brps_ref = {}
+
+    def validate(self):
+        assert self.form in ['GS', 'OP', 'CP'], 'pid=%s form=%r' % (self.pid, self.form)
+
+        #assert self.outp is not None, 'form=%s outp=%s' % (self.form, self.outp)
+        if self.form == 'GS':
+            assert len(self.inps) > 0, 'form=%s inps=%s' % (self.form, self.inps)
+            assert len(self.brps) == 0, 'form=%s brps=%s' % (self.form, self.brps)
+            assert len(self.ts) == 0, 'form=%s ts=%s' % (self.form, self.ts)
+        elif self.form in ['OP', 'CP']:
+            assert len(self.inps) == 0, 'form=%s inps=%s' % (self.form, self.inps)
+            assert len(self.brps) >= 0, 'form=%s brps=%s' % (self.form, self.brps)
+            assert len(self.ts) >= 0, 'form=%s ts=%s' % (self.form, self.ts)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1771,13 +1818,13 @@ class PBRSECT(LineProperty):
 
         bdf_card = BDFCard(to_fields([line0], 'PBMSECT'))
         unused_line0_eq = line0[16:]
-        lines_joined = ''.join(card[1:]).replace(' ', '')
+        lines_joined = ','.join(card[1:]).replace(' ', '').replace(',,', ',')
 
         if lines_joined:
-            fields = lines_joined.split(',')
-            slines = [field.split('=') for field in fields]
+            fields = get_beam_sections(lines_joined)
+            options = [field.split('=', 1) for field in fields]
             #C:\MSC.Software\MSC.Nastran\msc20051\nast\tpl\zbr3.dat
-            #slines = [
+            #options = [
                 #[u'OUTP', u'201'],
                 #[u'T', u'1.0'],
                 #[u'BRP', u'202'],
@@ -1787,18 +1834,12 @@ class PBRSECT(LineProperty):
                 #[u'PT', u'(224'],
                 #[u'205)]'],
             #]
-            try:
-                options = {key : value for (key, value) in slines}
-            except:
-                print('PBRSECT slines=%s' % slines)
-                raise
         else:
-            options = {}
+            options = []
 
         pid = integer(bdf_card, 1, 'pid')
         mid = integer(bdf_card, 2, 'mid')
         form = string_or_blank(bdf_card, 3, 'form')
-        assert form in ['GS', 'OP', 'CP'], 'pid=%s form=%r' % (pid, form)
 
         return PBRSECT(pid, mid, form, options, comment=comment)
 
@@ -1818,9 +1859,6 @@ class PBRSECT(LineProperty):
         raise NotImplementedError('not finished...')
         #return PBRSECT(pid, mid, group, beam_type, dim, nsm, comment=comment)
 
-    def _validate_input(self):
-        pass
-
     def cross_reference(self, model):
         """
         Cross links the card so referenced cards can be extracted directly
@@ -1830,12 +1868,51 @@ class PBRSECT(LineProperty):
         model : BDF()
             the BDF object
         """
-        msg = ', which is required by PBRSECT mid=%s' % self.mid
+        msg = ', which is required by PBMSECT mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
+
+        if self.outp is not None:
+            self.outp_ref = model.Set(self.outp)
+            self.outp_ref.cross_reference_set(model, 'Point', msg=msg)
+
+        if len(self.brps):
+            for key, brpi in self.brps.items():
+                brpi_ref = model.Set(brpi, msg=msg)
+                brpi_ref.cross_reference_set(model, 'Point', msg=msg)
+                self.brps_ref[key] = brpi_ref
+
+    def plot(self, model, figure_id=1, show=False):
+        """
+        Plots the beam section
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        figure_id : int; default=1
+            the figure id
+        show : bool; default=False
+            show the figure when done
+        """
+        class_name = self.__class__.__name__
+        form_map = {
+            'GS' : 'General Section',
+            'OP' : 'Open Profile',
+            'CP' : 'Closed Profile',
+        }
+        formi = ' form=%s' % form_map[self.form]
+        plot_arbitrary_section(
+            model, self,
+            self.inps, self.ts, self.brps_ref, self.nsm, self.outp_ref,
+            figure_id=figure_id,
+            title=class_name + ' pid=%s' % self.pid + formi,
+            show=show)
 
     def uncross_reference(self):
         self.mid = self.Mid()
         self.mid_ref = None
+        self.outp_ref = None
+        self.brps_ref = {}
 
     def _verify(self, xref):
         pid = self.pid
@@ -1901,9 +1978,12 @@ class PBRSECT(LineProperty):
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
-        if size == 8:
-            return self.comment + print_card_8(card)
-        return self.comment + print_card_16(card)
+        end = write_arbitrary_beam_section(self.inps, self.ts, self.brps, self.nsm, self.outp)
+        out = self.comment + print_card_8(card) + end
+        return out
+
+    def __repr__(self):
+        return self.write_card()
 
 
 class PBEAM3(LineProperty):  # not done, cleanup
@@ -1911,6 +1991,7 @@ class PBEAM3(LineProperty):  # not done, cleanup
 
     def __init__(self, pid, mid, A, iz, iy, iyz, j, nsm=0.,
                  cy=0., cz=0., dy=0., dz=0., ey=0., ez=0., fy=0., fz=0., comment=''):
+        """Creates a PBEAM3 card"""
         LineProperty.__init__(self)
         if comment:
             self.comment = comment
@@ -2075,6 +2156,153 @@ class PBEND(LineProperty):
         self.rb = rb
         self.theta_b = theta_b
         self.mid_ref = None
+
+    @classmethod
+    def add_beam_type_1(cls, pid, mid,
+                        A, i1, i2, j,
+                        rb=None, theta_b=None,
+                        c1=0., c2=0., d1=0., d2=0., e1=0., e2=0., f1=0., f2=0.,
+                        k1=None, k2=None,
+                        nsm=0., rc=0., zc=0., delta_n=0., comment=''):
+        """
+        +-------+------+-------+-----+----+----+--------+----+--------+
+        |   1   |   2  |   3   |  4  |  5 |  6 |   7    |  7 |    8   |
+        +=======+======+=======+=====+====+====+========+====+========+
+        | PBEND | PID  |  MID  | A   | I1 | I2 |   J    | RB | THETAB |
+        +-------+------+-------+-----+----+----+--------+----+--------+
+        |       |  C1  |  C2   | D1  | D2 | E1 |   E2   | F1 |   F2   |
+        +-------+------+-------+-----+----+----+--------+----+--------+
+        |       |  K1  |  K2   | NSM | RC | ZC | DELTAN |    |        |
+        +-------+------+-------+-----+----+----+--------+----+--------+
+
+        Parameters
+        ----------
+        A : float
+            cross-sectional area
+        i1, i2 : float
+            area moments of inertia for plane 1/2
+        j : float
+            torsional stiffness
+        rb : float; default=None
+            bend radius of the line of centroids
+        theta_b : float; default=None
+            arc angle of element (degrees)
+        c1, c2, d1, d2, e1, e2, f1, f2 : float; default=0.0
+            the r/z locations from the geometric centroid for stress recovery
+        k1, k2 : float; default=None
+            Shear stiffness factor K in K*A*G for plane 1 and plane 2
+        nsm : float; default=0.
+            nonstructural mass per unit length???
+        zc : float; default=None
+            Offset of the geometric centroid in a direction perpendicular to
+            the plane of points GA and GB and vector v.
+        delta_n : float; default=None
+            Radial offset of the neutral axis from the geometric centroid,
+            positive is toward the center of curvature
+        """
+        beam_type = 1
+        fsi = None
+        rm = None
+        t = None
+        p = None
+        return PBEND(pid, mid, beam_type, A, i1, i2, j,
+                     c1, c2, d1, d2, e1, e2, f1, f2, k1, k2,
+                     nsm, rc, zc, delta_n, fsi, rm, t, p, rb, theta_b, comment=comment)
+
+    @classmethod
+    def add_beam_type_2(cls, pid, mid,
+                        fsi, rm, t, p=None, rb=None, theta_b=None,
+                        nsm=0., rc=0., zc=0., comment=''):
+        """
+        +-------+------+-------+-----+----+----+--------+----+--------+
+        |   1   |   2  |   3   |  4  |  5 |  6 |   7    |  7 |    8   |
+        +=======+======+=======+=====+====+====+========+====+========+
+        | PBEND | PID  |  MID  | FSI | RM | T  |   P    | RB | THETAB |
+        +-------+------+-------+-----+----+----+--------+----+--------+
+        |       |      |       | NSM | RC | ZC |        |    |        |
+        +-------+------+-------+-----+----+----+--------+----+--------+
+
+        Parameters
+        ----------
+        fsi : int
+            Flag selecting the flexibility and stress intensification
+            factors. See Remark 3. (Integer = 1, 2, or 3)
+        rm : float
+            Mean cross-sectional radius of the curved pipe
+        t : float
+            Wall thickness of the curved pipe
+        p : float; default=None
+            Internal pressure
+        rb : float; default=None
+            bend radius of the line of centroids
+        theta_b : float; default=None
+            arc angle of element (degrees)
+        nsm : float; default=0.
+            nonstructural mass per unit length???
+        rc : float; default=None
+            Radial offset of the geometric centroid from points GA and GB.
+        zc : float; default=None
+            Offset of the geometric centroid in a direction perpendicular
+            to the plane of points GA and GB and vector v
+        """
+        beam_type = 2
+        A = None
+        i1 = None
+        i2 = None
+        j = None
+        c1 = None
+        c2 = None
+        d1 = None
+        d2 = None
+        e1 = None
+        e2 = None
+        f1 = None
+        f2 = None
+        k1 = None
+        k2 = None
+        delta_n = None
+        return PBEND(pid, mid, beam_type, A, i1, i2, j,
+                     c1, c2, d1, d2, e1, e2, f1, f2, k1, k2,
+                     nsm, rc, zc, delta_n, fsi, rm, t, p, rb, theta_b, comment=comment)
+
+    #@classmethod
+    #def add_beam_type_3(cls, pid, mid,
+                        #fsi, rm, t, p, rb, theta_b,
+                        ##sacl, alpha, nsm, rc, zc, flange, kx, ky, kz, sy, sz,
+                        #comment=''):
+        #"""
+        #+-------+------+-------+-----+----+----+--------+----+--------+
+        #|   1   |   2  |   3   |  4  |  5 |  6 |   7    |  7 |    8   |
+        #+=======+======+=======+=====+====+====+========+====+========+
+        #| PBEND | PID  |  MID  | FSI | RM | T  |   P    | RB | THETAB |
+        #+-------+------+-------+-----+----+----+--------+----+--------+
+        #|       | SACL | ALPHA | NSM | RC | ZC | FLANGE |    |        |
+        #+-------+------+-------+-----+----+----+--------+----+--------+
+        #|       |  KX  |  KY   | KZ  |    | SY |   SZ   |    |        |
+        #+-------+------+-------+-----+----+----+--------+----+--------+
+        #"""
+        #beam_type = 3
+        #A = None
+        #i1 = None
+        #i2 = None
+        #j = None
+        #c1 = None
+        #c2 = None
+        #d1 = None
+        #d2 = None
+        #e1 = None
+        #e2 = None
+        #f1 = None
+        #f2 = None
+        #k1 = None
+        #k2 = None
+        #rc = None
+        #zc = None
+        #nsm = None
+        #delta_n = None
+        #return PBEND(pid, mid, beam_type, A, i1, i2, j,
+                     #c1, c2, d1, d2, e1, e2, f1, f2, k1, k2,
+                     #nsm, rc, zc, delta_n, fsi, rm, t, p, rb, theta_b, comment=comment)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -2286,3 +2514,273 @@ class PBEND(LineProperty):
         if size == 8:
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
+
+
+def split_arbitrary_thickness_section(key, value):
+    """
+    >>> key = 'T(11)'
+    >>> value = '[1.2,PT=(123,204)]'
+    >>> index, out = split_arbitrary_thickness_section(key, value)
+    >>> index
+    11
+    >>> out
+    [1.2, [123, 204]]
+    """
+    assert key.endswith(')'), 'key=%r' % key
+    # T(3), CORE(3)
+    key_id = key[:-1].split('(', 1)[1]
+    key_id = int(key_id)
+
+    if isinstance(value, (int, float)):
+        return key_id, value
+
+    value = value.replace(' ', '')
+    if 'PT' in value:
+        bracketed_values = value.strip('[]')
+        sline = bracketed_values.split(',', 1)
+        thicknessi = float(sline[0])
+        pt_value = sline[1].split('=')
+        assert pt_value[0] == 'PT', pt_value
+        points = pt_value[1].strip('()').split(',')
+        assert len(points) == 2, pt_value
+        int_points = [int(pointi) for pointi in points]
+        out = [thicknessi, int_points]
+    else:
+        out = float(value)
+    return key_id, out
+
+
+def get_beam_sections(line):
+    """
+    Splits a PBRSECT/PBMSECT line
+
+    >>> line = 'OUTP=10,BRP=20,T=1.0,T(11)=[1.2,PT=(123,204)], NSM=0.01'
+    >>> sections = get_beam_sections(line)
+    >>> sections
+    ['OUTP=10', 'BRP=20', 'T=1.0', 'T(11)=[1.2,PT=(123,204)', 'NSM=0.01'], sections
+    """
+    line = line.replace(' ', '')
+    words = []
+    i0 = None
+    nopen_parantheses = 0
+    nopen_brackets = 0
+    i = 0
+    while i < len(line):
+        char = line[i]
+        if char == '(':
+            nopen_parantheses += 1
+        elif char == ')':
+            nopen_parantheses -= 1
+        elif char == '[':
+            nopen_brackets += 1
+        elif char == ']':
+            nopen_brackets -= 1
+
+        elif nopen_parantheses == 0 and nopen_brackets == 0 and char == ',':
+            word = line[i0:i].strip(',')
+            words.append(word)
+            i0 = i
+        i += 1
+    word = line[i0:].strip(',')
+    if word:
+        words.append(word)
+    return words
+
+def write_arbitrary_beam_section(inps, ts, brps, nsm, outp_id, core=None):
+    """writes the PBRSECT/PBMSECT card"""
+    end = ''
+    for key, dicts in [('INP', inps), ('T', ts), ('BRP', brps), ('CORE', core)]:
+        if dicts is None:
+            continue
+        # dicts = {int index : int/float value}
+        for index, value1 in sorted(dicts.items()):
+            if index == 0:
+                if isinstance(value1, list):
+                    for value1i in value1:
+                        end += '        %s=%s,\n' % (key, value1i)
+                else:
+                    end += '        %s=%s,\n' % (key, value1)
+            else:
+                if isinstance(value1, list):
+                    if len(value1) == 2:
+                        assert len(value1) == 2, value1
+                        thicknessi = value1[0]
+                        points = value1[1]
+                        end += '        %s(%s)=[%s, PT=(%s,%s)],\n' % (
+                            key, index, thicknessi, points[0], points[1])
+                    else:
+                        assert len(value1) == 1, value1
+                        end += '        %s=%s,\n' % (key, value1[0])
+                else:
+                    end += '        %s(%s)=%s,\n' % (key, index, value1)
+
+    for key, value in [('NSM', nsm), ('outp', outp_id),]:
+        if value:
+            end += '        %s=%s,\n' % (key, value)
+    if end:
+        end = end[:-2] + '\n'
+    return end
+
+def plot_arbitrary_section(model, self,
+                           inps, ts, brps, nsm, outp_ref,
+                           figure_id=1, title='', show=False):
+    """helper for PBRSECT/PBMSECT"""
+    import matplotlib.pyplot as plt
+    if ts:
+        try:
+            ts2 = {1 : ts[1]}
+        except KeyError:
+            print('ts =', ts)
+            print(self)
+            raise
+        for key, value in ts.items():
+            if key == 1:
+                ts2[key] = value
+            else:
+                thickness_value, section = value
+                p1, p2 = section
+                p1, p2 = min(p1, p2), max(p1, p2)
+                ts2[(p1, p2)] = thickness_value
+        ts = ts2
+
+    def _plot_rectangles(ax, sections, xy_dict, ts):
+        """helper method for ``plot_arbitrary_section``"""
+        for section in sections:
+            #p1, p2 = section
+            out = xy_dict[section]
+            (x1, x2, y1, y2) = out
+            dy = y2 - y1
+            dx = x2 - x1
+            length = np.sqrt(dy**2 + dx**2)
+            angle = np.arctan2(dy, dx)
+            angled = np.degrees(angle)
+
+            thickness = ts.get(section, ts[1])
+            assert isinstance(thickness, float), thickness
+
+            width = thickness
+
+            dx_width = +width / 2. * np.sin(angle)
+            dy_width = -width / 2. * np.cos(angle)
+            xy = (x1+dx_width, y1+dy_width)
+
+            rect_height = length
+            rect_width = width
+
+            #print('dxy_width = (%.2f,%.2f)' % (dx_width, dy_width))
+            #print('p1,2=(%s, %s) xy=(%.2f,%.2f) t=%s width=%s height=%s angled=%s\n' % (
+                #p1, p2, xy[0], xy[1], thickness, rect_width, rect_height, angled))
+
+            rect = plt.Rectangle(xy, rect_height, rect_width, angle=angled,
+                                 fill=True) #, alpha=1.2+0.15*i)
+            ax.add_patch(rect)
+            #break
+
+    def add_to_sections(sections, xy, points, x, y):
+        """helper method for ``plot_arbitrary_section``"""
+        for i in range(len(points)-1):
+            p1 = points[i]
+            p2 = points[i+1]
+            x1 = x[i]
+            x2 = x[i+1]
+            y1 = y[i]
+            y2 = y[i+1]
+            p1, p2 = min(p1, p2), max(p1, p2)
+            sections.add((p1, p2))
+            xy[(p1, p2)] = (x1, x2, y1, y2)
+
+    fig = plt.figure(figure_id)
+    ax = fig.add_subplot(111, aspect='equal')
+    #print('outp:\n%s' % outp_ref)
+    out_points = outp_ref.ids
+    if self.form == 'CP' and out_points[0] != out_points[-1]:
+        out_points = out_points + [out_points[0]]
+
+    #out_points_ref = outp_ref.ids_ref
+    #print('out_points =', out_points)
+    #out_xyz = np.array([point.get_position() for point in out_points_ref])
+    out_xyz = np.array([model.points[point_id].get_position()
+                        for point_id in out_points])
+    #print('out_xyz:\n%s' % out_xyz)
+    sections = set([])
+    x = out_xyz[:, 0]
+    y = out_xyz[:, 1]
+    xy = {}
+    add_to_sections(sections, xy, out_points, x, y)
+    #print('x=%s y=%s' % (x, y))
+    ax.plot(x, y, '-o', label='OUTP')
+    all_points = {point_id : (xi, yi)
+                  for point_id, xi, yi in zip(out_points, x, y)}
+    #print('out_points =', out_points)
+    #print('all_points =', all_points)
+    #plt.show()
+
+    for key, thickness in ts.items():
+        if key == 1:
+            continue
+        #print(thickness)
+        section = key
+        #print(model.points)
+        #thickness_value, section = thickness
+        out_xyz = np.array([model.points[point_id].get_position()
+                            for point_id in section])
+        x = out_xyz[:, 0]
+        y = out_xyz[:, 1]
+        #print('adding t=%s section %s' % (thickness, str(section)))
+        #print(sections)
+
+        add_to_sections(sections, xy, section, x, y)
+        #print(sections)
+
+    if brps:
+        for key, brp_set_ref in brps.items():
+            brp_points = brp_set_ref.ids
+            brp_points_ref = brp_set_ref.ids_ref
+            brp_xyz = np.array([point.get_position() for point in brp_points_ref])
+            #print('branch = %s' % brp_points)
+            x = brp_xyz[:, 0]
+            y = brp_xyz[:, 1]
+            ax.plot(x, y, '-o', label='BRP(%i)' % key)
+            add_to_sections(sections, xy, brp_points, x, y)
+
+            for point_id, xi, yi in zip(brp_points, x, y):
+                all_points[point_id] = (xi, yi)
+
+    #print('xy =', xy)
+
+    if inps:
+        #print('inps! = %s' % inps)
+        for key, inp in inps.items():
+            if isinstance(inp, int):
+                inp = [inp]
+            for inpi in inp:
+                inp_ref = model.Set(inpi)
+                #inp_ref.cross_reference_set(model, 'Point', msg='')
+                inp_points = inp_ref.ids
+                #if inp_points[0] != inp_points[-1]:
+                    #inp_points = inp_points + [inp_points[0]]
+                #print('inp_points = %s' % inp_points)
+                #inp_points_ref = inp_ref.ids_ref
+                inp_xyz = np.array([model.points[point_id].get_position()
+                                    for point_id in inp_points])
+                #inp_xyz = np.array([point.get_position() for point in inp_points_ref])
+                #print('inp_xyz:\n%s' % (inp_xyz[:, :2]))
+                x = inp_xyz[:, 0]
+                y = inp_xyz[:, 1]
+                ax.plot(x, y, '--x', label='INP')
+
+
+    if ts:
+        _plot_rectangles(ax, sections, xy, ts)
+
+    #print('all_points =', all_points)
+    for point_id, xy in sorted(all_points.items()):
+        ax.annotate(str(point_id), xy=xy)
+
+    ax.grid(True)
+    ax.set_title(title)
+    ax.set_ylabel('Y')
+    ax.set_xlabel('X')
+    ax.legend()
+    if show:
+        plt.show()

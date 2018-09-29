@@ -6,7 +6,7 @@ import os
 import sys
 import time
 from traceback import print_exc
-from six import string_types, iteritems
+from six import string_types
 
 import numpy as np
 np.set_printoptions(precision=3, threshold=20)
@@ -195,7 +195,8 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
             delete_f06=False, skip_dataframe=False,
             subcases=None, exclude=None, short_stats=False,
             compare=True, debug=False, log=None, binary_debug=False,
-            quiet=False, check_memory=False, stop_on_failure=True, dev=False, xref_safe=False):
+            quiet=False, check_memory=False, stop_on_failure=True,
+            dev=False, xref_safe=False, post=None, load_as_h5=False):
     """
     Runs an OP2
 
@@ -301,12 +302,29 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
             op2.set_as_msc()
             op2_nv.set_as_msc()
             op2_bdf.set_as_msc()
+        if post is not None:
+            op2.post = -4
+            op2_nv.post = -4
+            op2_bdf.post = -4
+        if load_as_h5:
+            # you can't open the same h5 file twice
+            op2.load_as_h5 = load_as_h5
+            #op2_nv.load_as_h5 = load_as_h5
+            #op2_bdf.load_as_h5 = load_as_h5
 
         op2_bdf.set_error_storage(nparse_errors=0, stop_on_parsing_error=True,
                                   nxref_errors=0, stop_on_xref_error=True)
     else:
         op2 = OP2(debug=debug, log=log)
-        op2_nv = OP2(debug=debug, log=log, debug_file=debug_file) # have to double write this until
+        # have to double write this until ???
+        op2_nv = OP2(debug=debug, log=log, debug_file=debug_file)
+        if post is not None:
+            op2.post = -4
+            op2_nv.post = -4
+        if load_as_h5:
+            # you can't open the same h5 file twice
+            op2.load_as_h5 = load_as_h5
+            #op2_nv.load_as_h5 = load_as_h5
         op2_bdf = None
     op2_nv.use_vector = False
 
@@ -517,7 +535,7 @@ def get_test_op2_data():
 
     msg = "Usage:\n"
     #is_release = True
-    options = '[--skip_dataframe] [-z] [-w] [-t] [-s <sub>] [-x <arg>]... [--nx] [--safe]'
+    options = '[--skip_dataframe] [-z] [-w] [-t] [-s <sub>] [-x <arg>]... [--nx] [--safe] [--post POST]'
     if is_release:
         line1 = "test_op2 [-q] [-b] [-c] [-g] [-n] [-f] %s OP2_FILENAME\n" % options
     else:
@@ -551,6 +569,7 @@ def get_test_op2_data():
     msg += "  -w, --is_sort2         Sets the F06 transient to SORT2\n"
     msg += "  -x <arg>, --exclude    Exclude specific results\n"
     msg += "  --nx                   Assume NX Nastran\n"
+    msg += "  --post POST            Set the PARAM,POST flag\n"
     msg += "  --safe                 Safe cross-references BDF (default=False)\n"
 
 
@@ -586,7 +605,7 @@ def get_test_op2_data():
 def main():
     """the interface for test_op2"""
     data = get_test_op2_data()
-    for key, value in sorted(iteritems(data)):
+    for key, value in sorted(data.items()):
         print("%-12s = %r" % (key.strip('--'), value))
 
     if os.path.exists('skippedCards.out'):
@@ -617,6 +636,7 @@ def main():
             quiet=data['--quiet'],
             is_nx=data['--nx'],
             safe=data['--safe'],
+            post=data['--post'],
         )
         prof.dump_stats('op2.profile')
 
@@ -644,6 +664,7 @@ def main():
             quiet=data['--quiet'],
             is_nx=data['--nx'],
             xref_safe=data['--safe'],
+            post=data['--post'],
         )
     print("dt = %f" % (time.time() - time0))
 

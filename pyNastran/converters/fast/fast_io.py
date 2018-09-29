@@ -177,7 +177,7 @@ class FastIO(object):
                 #icase += 1
 
                 #mapbc_print = defaultdict(list)
-                #for region, bcnum in sorted(iteritems(mapbc)):
+                #for region, bcnum in sorted(mapbc.items()):
                     #mapbc_print[bcnum].append(region)
                     #try:
                         #name = bcmap_to_bc_name[bcnum]
@@ -185,7 +185,7 @@ class FastIO(object):
                         #name = '???'
                     ##self.log.info('Region=%i BC=%s name=%r' % (region, bcnum, name))
 
-                #for bcnum, regions in sorted(iteritems(mapbc_print)):
+                #for bcnum, regions in sorted(mapbc_print.items()):
                     #try:
                         #name = bcmap_to_bc_name[bcnum]
                     #except KeyError:
@@ -196,7 +196,7 @@ class FastIO(object):
             ##==============================
             #res_id = 2
             #if len(loads):
-                #for key, load in iteritems(loads):
+                #for key, load in loads.items():
                     #cases[(res_id, icase, key, 1, 'node', '%.3f')] = load
                     #icase += 1
                 #self.scalarBar.VisibilityOn()

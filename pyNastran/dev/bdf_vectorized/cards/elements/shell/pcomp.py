@@ -1,12 +1,11 @@
 from __future__ import print_function
-from six import iteritems
-from six.moves import StringIO, zip
+from six.moves import StringIO
 from itertools import count
 
 from numpy import (array, zeros, searchsorted, where, unique,
                    hstack)
 
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 #from pyNastran.dev.bdf_vectorized.utils import slice_to_iter
 #from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.field_writer import print_card_8
@@ -457,7 +456,7 @@ class PCOMP(Property):
             self.sout = zeros((n, nplies), dtype='|S4') # YES, NO
             self.z0 = zeros(n, dtype=float_fmt)
 
-            for i, (pid, prop) in enumerate(sorted(iteritems(self.properties))):
+            for i, (pid, prop) in enumerate(sorted(self.properties.items())):
                 self.nsm[i] = prop.nsm
                 self.sb[i] = prop.sb
                 self.ft[i] = prop.ft
@@ -505,10 +504,10 @@ class PCOMP(Property):
 
     def write_card(self, bdf_file, size=8, is_double=False, property_id=None):
         if size == 8:
-            for pid, pcomp in sorted(iteritems(self.properties)):
+            for pid, pcomp in sorted(self.properties.items()):
                 bdf_file.write(pcomp.write_card(size, print_card_8))
         else:
-            for pid, pcomp in sorted(iteritems(self.properties)):
+            for pid, pcomp in sorted(self.properties.items()):
                 bdf_file.write(pcomp.write_card(size, print_card_16))
 
     def slice_by_index(self, i):

@@ -1,7 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import integer_types
-from six.moves import range, zip
 import numpy as np
 from numpy import zeros
 ints = (int, np.int32)
@@ -110,7 +109,7 @@ class RandomBeamArray(OES_Object):
         """creates a pandas dataframe"""
         headers = self.get_headers()
         element_node = [self.element_node[:, 0], self.element_node[:, 1]]
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=element_node, minor_axis=headers).to_frame()
@@ -162,9 +161,6 @@ class RandomBeamArray(OES_Object):
                 raise ValueError(msg)
         return True
 
-    def add_new_eid(self, dt, eid, grid, sd, sxc, sxd, sxe, sxf):
-        self.add_new_eid_sort1(dt, eid, grid, sd, sxc, sxd, sxe, sxf)
-
     def add_new_eid_sort1(self, dt, eid, grid, sd, sxc, sxd, sxe, sxf):
         assert isinstance(eid, ints), eid
         assert eid >= 0, eid
@@ -175,9 +171,9 @@ class RandomBeamArray(OES_Object):
         self.itotal += 1
         self.ielement += 1
 
-    def add_sort1(self, unused_dt, eid, grid, sd, sxc, sxd, sxe, sxf):
+    def add_sort1(self, dt, eid, grid, sd, sxc, sxd, sxe, sxf):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self.element_node[self.itotal, :] = [eid, grid]
         self.xxb[self.itotal] = sd
         self.data[self.itime, self.itotal, :] = [sxc, sxd, sxe, sxf]
@@ -199,7 +195,7 @@ class RandomBeamArray(OES_Object):
         nelements = self.ntotal // self.nnodes  # // 2
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i nnodes_per_element=%i ntotal=%i\n'
                        % (self.__class__.__name__, ntimes, nelements, nnodes, ntotal))
             ntimes_word = 'ntimes'
@@ -274,7 +270,7 @@ class RandomBeamArray(OES_Object):
             f06_file.write(page_stamp % page_num)
             page_num += 1
 
-        if self.nonlinear_factor is None:
+        if self.nonlinear_factor in (None, np.nan):
             page_num -= 1
         return page_num
 

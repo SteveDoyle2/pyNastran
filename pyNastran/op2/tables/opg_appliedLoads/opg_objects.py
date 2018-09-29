@@ -1,5 +1,4 @@
-from six.moves import zip
-from numpy import zeros
+import numpy as np
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
 from pyNastran.f06.f06_formatting import write_floats_13e, write_imag_floats_13e
 
@@ -24,10 +23,10 @@ class AppliedLoadsVectorArray(ScalarObject):
         """sizes the vectorized attributes of the AppliedLoadsVectorArray"""
         if self.is_built:
             return
-        self.eids = zeros(self.itotal, dtype='int32')
-        self.sources = zeros(self.itotal, dtype='|S8')
+        self.eids = np.zeros(self.itotal, dtype='int32')
+        self.sources = np.zeros(self.itotal, dtype='|S8')
         #[f1, f2, f3, m1, m2, m3]
-        self.data = zeros((self.ntimes, self.itotal, 6), dtype=self.data_type())
+        self.data = np.zeros((self.ntimes, self.itotal, 6), dtype=self.data_type())
 
     def get_stats(self, short=False):
         if not self.is_built:
@@ -44,7 +43,7 @@ class AppliedLoadsVectorArray(ScalarObject):
         #nnodes, two = self.node_gridtype.shape
         nelements = 0
         ntimes = self.data.shape[0]
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
         else:
@@ -59,7 +58,7 @@ class AppliedLoadsVectorArray(ScalarObject):
     def add_sort1(self, node_id, eid, source, v1, v2, v3, v4, v5, v6):
         """unvectorized method for adding SORT1 transient data"""
         #raise NotImplementedError('AppliedLoadsVector')
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         msg = "node_id=%s v1=%s v2=%s v3=%s" % (node_id, v1, v2, v3)
         assert 0 < node_id < 1000000000, msg
         #assert nodeID not in self.forces
@@ -86,7 +85,7 @@ class RealAppliedLoadsVectorArray(AppliedLoadsVectorArray):
 
         eids = self.eids
         for itime, dt in enumerate(self._times):
-            if self.nonlinear_factor is not None:
+            if self.nonlinear_factor not in (None, np.nan):
                 if isinstance(dt, float):
                     header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
                 else:
@@ -130,7 +129,7 @@ class ComplexAppliedLoadsVectorArray(AppliedLoadsVectorArray):
 
         eids = self.eids
         for itime, dt in enumerate(self._times):
-            if self.nonlinear_factor is not None:
+            if self.nonlinear_factor not in (None, np.nan):
                 if isinstance(dt, float):
                     header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
                 else:

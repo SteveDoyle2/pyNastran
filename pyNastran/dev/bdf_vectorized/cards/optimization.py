@@ -1,11 +1,10 @@
 # pylint: disable=C0103,R0902,R0904,R0914
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems, string_types
-from six.moves import zip, range
+from six import string_types
 import numpy as np
 
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import (BaseCard, expand_thru_by)
 from pyNastran.bdf.cards.deqatn import fortran_to_python_short
@@ -653,7 +652,7 @@ class DOPTPRM(OptConstraint):
 
     def raw_fields(self):
         list_fields = ['DOPTPRM']
-        for param, val in sorted(iteritems(self.params)):
+        for param, val in sorted(self.params.items()):
             list_fields += [param, val]
         return list_fields
 
@@ -1558,7 +1557,7 @@ class DRESP2(OptConstraint):
         params[key] = value_list
 
         #print("--DRESP2 Params--")
-        #for key, value_list in sorted(iteritems(params)):
+        #for key, value_list in sorted(params.items()):
             #print("  key=%s value_list=%s" %(key, value_list))
         return DRESP2(dresp_id, label, dequation, region, params,
                       method, c1, c2, c3, comment=comment)
@@ -1571,13 +1570,13 @@ class DRESP2(OptConstraint):
 
     def _verify(self, xref=True):
         pass
-        #for (j, name), value_list in sorted(iteritems(self.params)):
+        #for (j, name), value_list in sorted(self.params.items()):
             #print('  DRESP2 verify - key=%s values=%s' % (name,
                 #self._get_values(name, value_list)))
 
     def calculate(self, op2_model, subcase_id):
         argsi = []
-        for key, vals in sorted(iteritems(self.params)):
+        for key, vals in sorted(self.params.items()):
             j, name = key
             if name in ['DRESP1', 'DRESP2']:
                 for val in vals:
@@ -1614,7 +1613,7 @@ class DRESP2(OptConstraint):
         """
         msg = ', which is required by %s ID=%s' % (self.type, self.dresp_id)
         default_values = {}
-        for key, vals in sorted(iteritems(self.params)):
+        for key, vals in sorted(self.params.items()):
             #assert key is not None, str(self)
             try:
                 j, name = key
@@ -1726,7 +1725,7 @@ class DRESP2(OptConstraint):
             'DRESP2' : [1, 0],
         }
         list_fields = []
-        for (j, name), value_list in sorted(iteritems(self.params)):
+        for (j, name), value_list in sorted(self.params.items()):
             values_list2 = self._get_values(name, value_list)
             fields2 = [name] + values_list2
             #try:
@@ -1884,7 +1883,7 @@ class DRESP3(OptConstraint):
             'USRDATA' : [1, 0],
         }
         list_fields = []
-        for key, value_list in sorted(iteritems(self.params)):
+        for key, value_list in sorted(self.params.items()):
             value_list2 = self._get_values(key, value_list)
             fields2 = [key] + value_list2
 
@@ -1907,7 +1906,7 @@ class DRESP3(OptConstraint):
         """
         msg = ', which is required by DRESP3 ID=%s' % (self.dresp_id)
         default_values = {}
-        for name, vals in sorted(iteritems(self.params)):
+        for name, vals in sorted(self.params.items()):
             if name in ['DRESP1', 'DRESP2']:
                 for i, val in enumerate(vals):
                     self.params[name][i] = model.DResp(val, msg)

@@ -10,7 +10,7 @@ from collections import defaultdict
 import numpy as np
 from numpy.linalg import norm
 import vtk
-from pyNastran.utils import integer_types, iteritems
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.elements.beam_connectivity import (
     rod_faces, tube_faces, chan1_faces,
     bar_faces, box_faces, i_faces, t_faces, t1_faces, t2_faces,
@@ -137,7 +137,7 @@ class NastranGeometryHelper(NastranGuiAttributes):
 
         found_bar_types = set([])
         #neids = len(self.element_ids)
-        for bar_type, data in iteritems(bar_types):
+        for bar_type, data in bar_types.items():
             eids = []
             lines_bar_y = []
             lines_bar_z = []
@@ -170,7 +170,7 @@ class NastranGeometryHelper(NastranGuiAttributes):
 
             if debug:  # pragma: no cover
                 print('%s' % elem)
-                print('  bar_type =', bar_type)
+                print('  bar_type = %s' % bar_type)
             found_bar_types.add(bar_type)
 
             (nid1, nid2) = elem.node_ids
@@ -316,7 +316,7 @@ class NastranGeometryHelper(NastranGuiAttributes):
         debug = False
         if debug:  # pragma: no cover
             #np.set_printoptions(formatter={'float': '{: 0.3f}'.format})
-            for bar_type, data in sorted(iteritems(bar_types)):
+            for bar_type, data in sorted(bar_types.items()):
                 eids, lines_bar_y, lines_bar_z = data
                 if len(eids):
                     #print('barsi =', barsi)
@@ -452,6 +452,7 @@ def get_material_arrays(model, mids):
         #elif mat.type == 'MAT9':
             # Defines the material properties for linear, temperature-independent,
             #anisotropic materials for solid isoparametric elements (PSOLID)
+            #g11i = mat.G11
         elif mat.type in ['MAT11', 'MAT3D']:
             e11i = mat.e1
             e22i = mat.e2
@@ -466,7 +467,9 @@ def get_material_arrays(model, mids):
             #self.log.info('skipping\n%s' % mat)
             #continue
         else:
-            print('skipping\n%s' % mat)
+            msg = 'skipping\n%s' % mat
+            #print(msg.encode('utf16'))
+            print(msg.encode(model._encoding))
             continue
             #raise NotImplementedError(mat)
         #print('mid=%s e11=%e e22=%e' % (umid, e11i, e22i))

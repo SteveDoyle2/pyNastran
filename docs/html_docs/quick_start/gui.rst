@@ -68,7 +68,7 @@ Advantages of Patran/FEMAP
 Purpose of additional formats
 =============================
 Over time, pyNastran has also added converter and GUI support for additional
-formats.  Nastran is not just once piece of the analysis puzzle and there is
+formats.  Nastran is not the only piece of the analysis puzzle and there is
 a need for niche engineering formats.
 
 While, you could convert a Cart3d model (a simple triangulation) to another

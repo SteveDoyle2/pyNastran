@@ -1,6 +1,5 @@
 from __future__ import print_function
-from six import iteritems
-from six.moves import range
+from io import open
 from numpy import loadtxt, argsort, allclose, vstack, array, abs, where
 
 
@@ -52,19 +51,19 @@ def rpt_read():
 
 
 def main():
-    headers, results, key_map = rpt_read()
+    unused_headers, results, key_map = rpt_read()
 
-    for key, rows in iteritems(results):
+    for key, rows in results.items():
         data2 = {}
         iz = key_map['X Location']
         iozz = key_map['Z Component']
         csv_filename = 'rpt_%i.csv' % key
-        with open(csv_filename, 'wb') as csv_file:
+        with open(csv_filename, 'w') as csv_file:
             csv_file.write('#x,ozz\n')
             for row in rows:
                 z = float(row[iz])
                 ozz = float(row[iozz])
-                print("z=%s ozz=%s" % (z, ozz))
+                #print("z=%s ozz=%s" % (z, ozz))
                 csv_file.write('%g,%g\n' % (z, ozz))
 
         ix = 0

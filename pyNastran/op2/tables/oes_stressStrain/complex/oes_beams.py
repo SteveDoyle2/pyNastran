@@ -146,7 +146,7 @@ class ComplexBeamArray(OES_Object):
     def add_sort1(self, dt, eid, grid, sd,
                   exc, exd, exe, exf):
         """adss the non-vectorized data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self.element_node[self.itotal] = [eid, grid]
         self.sd[self.itotal] = sd
         self.data[self.itime, self.itotal, :] = [exc, exd, exe, exf]
@@ -169,7 +169,7 @@ class ComplexBeamArray(OES_Object):
         assert nelements, nelements2
         msg = []
 
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i\n'
                        % (self.__class__.__name__, ntimes, nelements))
         else:

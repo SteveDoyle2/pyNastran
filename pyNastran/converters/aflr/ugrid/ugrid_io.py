@@ -2,9 +2,6 @@ from __future__ import print_function
 import os
 from collections import OrderedDict
 
-from six import iteritems
-from six.moves import range
-
 from numpy import amax, amin, arange, ones, zeros, where, unique
 
 #VTK_TRIANGLE = 5
@@ -341,7 +338,7 @@ class UGRID_IO(object):
 
             int_data = ones((nelements, 8), dtype='int32') * -10.
             float_data = zeros((nelements, 2), dtype='float64')
-            for key, datai in sorted(iteritems(data)):
+            for key, datai in sorted(data.items()):
                 #self.gui.log.info(datai)
                 [name, is_visc, is_recon, is_rebuild, is_fixed, is_source,
                  is_trans, is_delete, bl_spacing, bl_thickness, nlayers] = datai

@@ -10,8 +10,6 @@ from __future__ import print_function
 import copy
 from math import sin, cos
 
-from six import iteritems
-from six.moves import range
 import numpy as np
 from numpy import array, radians, dot, zeros
 from pyNastran.utils.log import get_logger2
@@ -150,12 +148,12 @@ class Panel(object):
         return [p1, p2, p3, p4]
 
     def write_as_plot3d(self, p3d_file):
+        """writes a plot3d section"""
         X = []
         Y = []
         Z = []
-        for i in range(self.nrows):
-            #points2 = []
-            for j in range(self.ncols):
+        for j in range(self.ncols):
+            for i in range(self.nrows):
                 (x, y, z) = self.points[i][j]
                 X.append(x)
                 Y.append(y)
@@ -236,7 +234,7 @@ class LaWGS(object):
         groups[name] = [header, group]
 
         del groups['']
-        for key, header_group in sorted(iteritems(groups)):
+        for key, header_group in sorted(groups.items()):
             header, group = header_group
             #if key=='BODY':
             #if 1:
@@ -254,7 +252,7 @@ class LaWGS(object):
         regions = []
         pointI = 0
         iregion = 0
-        for (unused_name, panel) in sorted(iteritems(self.panels)):
+        for (unused_name, panel) in sorted(self.panels.items()):
             (pointsI, pointi) = panel.get_points()
             (elementsI, n) = panel.get_elements(pointI)
             points += pointsI
@@ -270,10 +268,11 @@ class LaWGS(object):
         return points, elements, regions
 
     def write_as_plot3d(self, p3dname):
-        with open(p3dname, 'wb') as p3d_file:
+        """writes a plot3d file"""
+        with open(p3dname, 'w') as p3d_file:
             p3d_file.write('%s\n' % (len(self.panels)))
-            for (unused_name, panel) in sorted(iteritems(self.panels)):
+            for (unused_name, panel) in sorted(self.panels.items()):
                 p3d_file.write('%s %s 1\n' % (panel.nrows, panel.ncols))
 
-            for (unused_name, panel) in sorted(iteritems(self.panels)):
+            for (unused_name, panel) in sorted(self.panels.items()):
                 panel.write_as_plot3d(p3d_file)

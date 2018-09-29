@@ -5,7 +5,6 @@ defines:
  - Part
 """
 from __future__ import print_function
-from six import iteritems
 import numpy as np
 
 
@@ -48,7 +47,7 @@ class Material(object):
         """prints a summary for the material"""
         msg = 'Material(\n'
         msg += '  name=%r,\n' % self.name
-        for key, value in iteritems(self.sections):
+        for key, value in self.sections.items():
             msg += '  %r : %r,\n' % (key, value)
         msg += ')\n'
         return msg
@@ -366,7 +365,7 @@ class Part(object):
         abq_file.write('*Node\n')
         for inid, node in enumerate(self.nodes):
             abq_file.write('%i,%s,%s,%s\n' % (inid, node[0], node[1], node[2]))
-        for elem_type, (eids, elems) in iteritems(self.element_types):
+        for elem_type, (eids, elems) in self.element_types.items():
             if eids is None:
                 continue
             abq_file.write('*Element,type=%s\n' % elem_type)

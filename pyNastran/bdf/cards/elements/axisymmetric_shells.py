@@ -14,12 +14,11 @@ All quads are QuadShell, ShellElement, and Element objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six.moves import range
 
 from numpy import cross
 from numpy.linalg import norm  # type: ignore
 
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import (
     set_blank_if_default, set_default_if_blank,
     print_card_8, print_field_8)
@@ -886,7 +885,7 @@ class CQUADX(AxisymmetricQuad):
             integer_or_blank(card, 11, 'n9')
         ]
         theta_mcid = integer_double_or_blank(card, 12, 'theta/mcid', 0.)
-        assert len(card) <= 12, 'len(CQUADX card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 13, 'len(CQUADX card) = %i\ncard=%s' % (len(card), card)
         return CQUADX(eid, pid, nids, theta_mcid=theta_mcid, comment=comment)
 
     def cross_reference(self, model):

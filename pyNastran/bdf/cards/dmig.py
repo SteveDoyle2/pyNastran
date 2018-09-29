@@ -2,14 +2,12 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from math import sin, cos, radians, atan2, sqrt, degrees
-from six import iteritems
-from six.moves import zip, range
 
 import numpy as np
 from numpy import array, zeros
 from scipy.sparse import coo_matrix  # type: ignore
 
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -52,6 +50,8 @@ class DTI(BaseCard):
         comment : str; default=''
             a comment for the card
         """
+        if comment:
+            self.comment = comment
         self.name = name
         self.fields = fields
 
@@ -304,9 +304,6 @@ class NastranMatrix(BaseCard):
         else:
             raise NotImplementedError('matrix_form=%s' % self.matrix_form)
         return shape
-
-    def _add_column_uaccel(self, comment=''):
-        raise NotImplementedError('UACCEL')
 
     def _add_column(self, card, comment=''):
         """adds an additional column entry to the matrix"""
@@ -955,7 +952,15 @@ class DMIG_UACCEL(BaseCard):
         ncol = integer_or_blank(card, 8, 'ncol')
         return DMIG_UACCEL(tin, ncol, load_sequences={}, comment=comment)
 
+    def _add_column_uaccel(self, comment=''):
+        raise NotImplementedError('UACCEL')
+
     def _add_column(self, card, comment=''):
+        if comment:
+            if hasattr(self, '_comment'):
+                self.comment += comment
+            else:
+                self.comment = comment
         load_seq = integer(card, 2, 'load_seq')
 
         g1 = integer(card, 5, 'nid1')
@@ -975,7 +980,7 @@ class DMIG_UACCEL(BaseCard):
         list_fields = [
             'DMI', 'UACCEL', 0, 9, self.tin, None, None, None, self.ncol
         ]
-        for lseq, ncx in sorted(iteritems(self.load_sequences)):
+        for lseq, ncx in sorted(self.load_sequences.items()):
             list_fields += [lseq, None, None]
             for ncxi in ncx:
                 list_fields += ncxi
@@ -1014,7 +1019,7 @@ class DMIG_UACCEL(BaseCard):
         msg += func(list_fields)
 
         list_fields = ['DMIG', 'UACCEL']
-        for lseq, ncx in sorted(iteritems(self.load_sequences)):
+        for lseq, ncx in sorted(self.load_sequences.items()):
             list_fields += [lseq, None, None]
             for ncxi in ncx:
                 list_fields += ncxi
@@ -1248,11 +1253,11 @@ class DMIAX(object):
         tout = integer_or_blank(card, 5, 'tout', 0)
         polar = integer_or_blank(card, 6, 'polar', 0)
         if matrix_form == 1: # square
-            ncols = integer_or_blank(card, 8, 'matrix_form=%s; ncol' % matrix_form)
+            unused_ncols = integer_or_blank(card, 8, 'matrix_form=%s; ncol' % matrix_form)
         elif matrix_form == 6: # symmetric
-            ncols = integer_or_blank(card, 8, 'matrix_form=%s; ncol' % matrix_form)
+            unused_ncols = integer_or_blank(card, 8, 'matrix_form=%s; ncol' % matrix_form)
         elif matrix_form in [2, 9]: # rectangular
-            ncols = integer(card, 8, 'matrix_form=%s; ncol' % (matrix_form))
+            unused_ncols = integer(card, 8, 'matrix_form=%s; ncol' % (matrix_form))
         else:
             # technically right, but nulling this will fix bad decks
             #self.ncols = blank(card, 8, 'matrix_form=%s; ncol' % self.matrix_form)
@@ -1599,17 +1604,17 @@ class DMI(NastranMatrix):
         if finalize:
             self.finalize()
 
-    @property
-    def form(self):
-        """gets the matrix_form"""
-        self.deprecated('form', 'matrix_form', '1.1')
-        return self.matrix_form
+    #@property
+    #def form(self):
+        #"""gets the matrix_form"""
+        #self.deprecated('form', 'matrix_form', '1.1')
+        #return self.matrix_form
 
-    @form.setter
-    def form(self, matrix_form):
-        """sets the matrix_form"""
-        self.deprecated('form', 'matrix_form', '1.1')
-        self.matrix_form = matrix_form
+    #@form.setter
+    #def form(self, matrix_form):
+        #"""sets the matrix_form"""
+        #self.deprecated('form', 'matrix_form', '1.1')
+        #self.matrix_form = matrix_form
 
     @classmethod
     def add_card(cls, card, comment=''):

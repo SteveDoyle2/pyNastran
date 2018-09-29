@@ -3,7 +3,6 @@ defines:
  - model = shift(bdf_filename, dxyz, bdf_filename_out=None)
 """
 from __future__ import print_function
-from six import iteritems
 import numpy as np
 
 from pyNastran.bdf.mesh_utils.internal_utils import get_bdf_model
@@ -17,11 +16,11 @@ def shift(bdf_filename, dxyz, bdf_filename_out=None):
     print("dxyz = %s" % dxyz)
 
     model = get_bdf_model(bdf_filename, xref=True, log=None, debug=True)
-    for unused_nid, node in iteritems(model.nodes):
+    for unused_nid, node in model.nodes.items():
         xyz = node.get_position() + dxyz
         node.set_position(model, xyz, cid=0, xref=True)
 
-    for unused_caero_id, caero in iteritems(model.caeros):
+    for unused_caero_id, caero in model.caeros.items():
         caero.shift(dxyz)
 
     if bdf_filename_out:

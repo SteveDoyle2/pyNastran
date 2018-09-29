@@ -3,7 +3,7 @@ import os
 #import re
 import sys
 import traceback
-from codecs import open as codec_open
+from codecs import open
 from six.moves import urllib
 
 import numpy as np
@@ -14,7 +14,7 @@ from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.converters.nastran.displacements import DisplacementResults
 
 
-def check_for_newer_version():
+def check_for_newer_version(version_current=None):
     """
     Checks to see if a newer version of pyNastran has been released.
     Only checks this for the GUI.
@@ -31,7 +31,8 @@ def check_for_newer_version():
        and compares that to the current version
     """
     is_newer = False
-    version_current = pyNastran.__version__
+    if version_current is None:
+        version_current = pyNastran.__version__
     target_url = 'https://raw.githubusercontent.com/SteveDoyle2/pyNastran/master/README.md'
     try:
         # it's a file like object and works just like a file
@@ -41,7 +42,8 @@ def check_for_newer_version():
     except: #  urllib2.URLError
         #print(help(urllib))
         #raise
-        return None, None, False
+        return None, None, is_newer
+
     for btye_line in data: # files are iterable
         line_lower = btye_line.lower().decode('utf-8')
         if 'has been released' in line_lower:
@@ -78,12 +80,10 @@ def check_for_newer_version():
     #print('tuple_latest_version = %s' % str(tuple_latest_version))  # (0,7,2)
     #print('tuple_current_version = %s' % str(tuple_current_version))  # (0,8,0)
 
-    #is_newer = True
     if (tuple_current_version < tuple_latest_version or
-            (is_dev and tuple_current_version <= tuple_latest_version)):
+            (is_dev and tuple_current_version == tuple_latest_version)):
         print('pyNastran %s is now availible; current=%s' % (version_latest, version_current))
         is_newer = True
-    #print('*pyNastran %s is now availible; current=%s' % (version_latest, version_current))
     return version_latest, version_current, is_newer
 
 def create_res_obj(islot, headers, header, A, fmt_dict, result_type,
@@ -173,7 +173,7 @@ def load_deflection_csv(out_filename, encoding='latin1'):
     if ext not in ['.csv', '.dat', '.txt']:
         raise NotImplementedError('extension=%r is not supported (use .dat, .txt, or .csv)' % ext)
 
-    with codec_open(_filename(out_filename), 'r', encoding=encoding) as file_obj:
+    with open(_filename(out_filename), 'r', encoding=encoding) as file_obj:
         names, fmt_dict, dtype, delimiter = _load_format_header(file_obj, ext, force_float=False)
 
         try:
@@ -224,7 +224,7 @@ def load_csv(out_filename, encoding='latin1'):
     if ext not in ['.csv', '.dat', '.txt']:
         raise NotImplementedError('extension=%r is not supported (use .dat, .txt, or .csv)' % ext)
 
-    with codec_open(_filename(out_filename), 'r', encoding=encoding) as file_obj:
+    with open(_filename(out_filename), 'r', encoding=encoding) as file_obj:
         names, fmt_dict, dtype, delimiter = _load_format_header(file_obj, ext, force_float=False)
 
         try:
@@ -378,7 +378,7 @@ def load_user_geom(fname, encoding='latin1'):
     QUAD, 3, 1, 5, 3, 4
     QUAD, 4, 1, 2, 3, 4  # this is after a blank line
     """
-    with codec_open(_filename(fname), 'r', encoding=encoding) as user_geom:
+    with open(_filename(fname), 'r', encoding=encoding) as user_geom:
         lines = user_geom.readlines()
 
     grid_ids = []

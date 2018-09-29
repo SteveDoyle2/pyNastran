@@ -20,7 +20,7 @@ class TestSprings(unittest.TestCase):
         """tests PELAS"""
         lines = ['pelas, 201, 1.e+5']
         model = BDF(debug=False)
-        card = model.process_card(lines)
+        card = model._process_card(lines)
         card = BDFCard(card)
 
         size = 8

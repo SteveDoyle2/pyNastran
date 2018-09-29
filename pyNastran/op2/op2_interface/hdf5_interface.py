@@ -15,7 +15,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 import os
 from six import b
 
-from six import iteritems, PY3, binary_type
+from six import PY3, binary_type
 import numpy as np
 import h5py
 
@@ -76,6 +76,7 @@ from pyNastran.op2.tables.oes_stressStrain.complex.oes_bend import ComplexBendSt
 from pyNastran.op2.tables.oes_stressStrain.random.oes_rods import RandomRodStressArray, RandomRodStrainArray
 from pyNastran.op2.tables.oes_stressStrain.random.oes_bars import RandomBarStressArray, RandomBarStrainArray
 from pyNastran.op2.tables.oes_stressStrain.random.oes_beams import RandomBeamStressArray, RandomBeamStrainArray
+from pyNastran.op2.tables.oes_stressStrain.random.oes_bend import RandomBendStressArray, RandomBendStrainArray
 from pyNastran.op2.tables.oes_stressStrain.random.oes_plates import RandomPlateStressArray, RandomPlateStrainArray
 from pyNastran.op2.tables.oes_stressStrain.random.oes_solids import RandomSolidStressArray, RandomSolidStrainArray
 from pyNastran.op2.tables.oes_stressStrain.random.oes_shear import RandomShearStressArray, RandomShearStrainArray
@@ -106,10 +107,12 @@ from pyNastran.op2.tables.oef_forces.oef_thermal_objects import (
     Real1DHeatFluxArray,
     #RealElementTableArray, RealHeatFluxVUArray, RealHeatFluxVUBeamArray,
     #RealHeatFluxVU3DArray,
-    HeatFlux_2D_3DArray,
+    RealHeatFlux_2D_3DArray,
 )
 #from pyNastran.op2.tables.oqg_constraintForces.oqg_thermal_gradient_and_flux import RealTemperatureGradientAndFluxArray
-from pyNastran.utils import print_bad_path
+from pyNastran.utils import check_path
+from pyNastran.op2.tables.matrix import Matrix
+
 
 def _cast(h5_result_attr):
     """converts the h5py type back into the OP2 type"""
@@ -423,7 +426,18 @@ TABLE_OBJ_MAP = {
     'modal_contribution.cbeam_strain' : (RealBeamStrainArray, ComplexBeamStrainArray, ),
 
     'cbend_stress' : (ComplexBendStressArray, ),
+    'ato.cbend_stress' : (RandomBendStressArray, ),
+    'crm.cbend_stress' : (RandomBendStressArray, ),
+    'psd.cbend_stress' : (RandomBendStressArray, ),
+    'rms.cbend_stress' : (RandomBendStressArray, ),
+    'no.cbend_stress' : (RandomBendStressArray, ),
+
     'cbend_strain' : (ComplexBendStrainArray, ),
+    'ato.cbend_strain' : (RandomBendStrainArray, ),
+    'crm.cbend_strain' : (RandomBendStrainArray, ),
+    'psd.cbend_strain' : (RandomBendStrainArray, ),
+    'rms.cbend_strain' : (RandomBendStrainArray, ),
+    'no.cbend_strain' : (RandomBendStrainArray, ),
 
     'cbeam_force' : (RealCBeamForceArray, ComplexCBeamForceArray),
     'ato.cbeam_force' : (RealCBeamForceArray, ),
@@ -844,15 +858,15 @@ TABLE_OBJ_MAP = {
     'cbeam_thermal_load' : (Real1DHeatFluxArray, ),
     'cbend_thermal_load' : (Real1DHeatFluxArray, ),
 
-    'cquad4_thermal_load' : (HeatFlux_2D_3DArray, ),
-    'cquad8_thermal_load' : (HeatFlux_2D_3DArray, ),
-    'ctria3_thermal_load' : (HeatFlux_2D_3DArray, ),
-    'ctria6_thermal_load' : (HeatFlux_2D_3DArray, ),
-    'ctriax6_thermal_load' : (HeatFlux_2D_3DArray, ),
+    'cquad4_thermal_load' : (RealHeatFlux_2D_3DArray, ),
+    'cquad8_thermal_load' : (RealHeatFlux_2D_3DArray, ),
+    'ctria3_thermal_load' : (RealHeatFlux_2D_3DArray, ),
+    'ctria6_thermal_load' : (RealHeatFlux_2D_3DArray, ),
+    'ctriax6_thermal_load' : (RealHeatFlux_2D_3DArray, ),
 
-    'ctetra_thermal_load' : (HeatFlux_2D_3DArray, ),
-    'cpenta_thermal_load' : (HeatFlux_2D_3DArray, ),
-    'chexa_thermal_load' : (HeatFlux_2D_3DArray, ),
+    'ctetra_thermal_load' : (RealHeatFlux_2D_3DArray, ),
+    'cpenta_thermal_load' : (RealHeatFlux_2D_3DArray, ),
+    'chexa_thermal_load' : (RealHeatFlux_2D_3DArray, ),
 
     'chbdye_thermal_load' :  (RealChbdyHeatFluxArray, ),
     'chbdyp_thermal_load' : (RealChbdyHeatFluxArray, ),
@@ -905,6 +919,7 @@ def _load_table(result_name, h5_result, objs, log, debug=False):# real_obj, comp
     data_names = [name.decode('utf8') for name in _cast(h5_result.get('data_names')).tolist()]
     str_data_names = [data_name + 's' for data_name in data_names]
     data_code = {
+        'load_as_h5' : _cast(h5_result.get('load_as_h5')),
         'nonlinear_factor' : nonlinear_factor,
         'sort_bits' : _cast(h5_result.get('sort_bits')).tolist(),
         'sort_method' : _cast(h5_result.get('sort_method')),
@@ -925,8 +940,10 @@ def _load_table(result_name, h5_result, objs, log, debug=False):# real_obj, comp
         'name' : data_names[0],
         'table_name' : _cast(h5_result.get('table_name')),
     }
-    for key, value in list(iteritems(data_code)):
-        if value is None:
+    for key, value in list(data_code.items()):
+        if isinstance(value, np.ndarray):
+            pass
+        elif value in (None, np.nan):
             if key in ['nonlinear_factor']:
                 pass
             elif key in ['acoustic_flag', 'stress_bits', 's_code', 'thermal']:
@@ -1010,7 +1027,7 @@ def _get_obj_class(objs, class_name, result_name, unused_is_real, log):
         print(objs)
 
         print('obj_map:')
-        for key, value in iteritems(obj_map):
+        for key, value in obj_map.items():
             print('  %s : %s' % (key, value))
 
         # if the obj_map is wrong, you probably have an issue in:
@@ -1046,20 +1063,24 @@ def export_op2_to_hdf5_file(hdf5_filename, op2_model):
 
 def export_op2_to_hdf5(hdf5_file, op2_model):
     """exports an OP2 object to an HDF5 file object"""
+    create_info_group(hdf5_file, op2_model)
+    export_matrices(hdf5_file, op2_model)
+    _export_subcases(hdf5_file, op2_model)
+
+def create_info_group(hdf5_file, op2_model):
+    """creates the info HDF5 group"""
     info_group = hdf5_file.create_group('info')
     info_group.create_dataset('pyNastran_version', data=pyNastran.__version__)
     info_group.create_dataset('nastran_format', data=op2_model._nastran_format)
     #info_group.create_dataset('is_msc', data=self.is_msc)
     #info_group.create_dataset('is_nx', data=self.is_nx)
     #info_group.create_dataset('nastran_version', data=self.is_nx)
-    _export_matrices(hdf5_file, op2_model)
-    _export_subcases(hdf5_file, op2_model)
 
-def _export_matrices(hdf5_file, op2_model):
+def export_matrices(hdf5_file, op2_model):
     """exports the matrices to HDF5"""
     if len(op2_model.matrices):
         matrix_group = hdf5_file.create_group('matrices')
-        for key, matrix in sorted(iteritems(op2_model.matrices)):
+        for key, matrix in sorted(op2_model.matrices.items()):
             matrixi_group = matrix_group.create_group(b(key))
             if hasattr(matrix, 'export_to_hdf5'):
                 matrix.export_to_hdf5(matrixi_group, op2_model.log)
@@ -1077,7 +1098,7 @@ def _export_subcases(hdf5_file, op2_model):
         #if len(result):
             #print(result)
 
-        for key, obj in iteritems(result):
+        for key, obj in result.items():
             #class_name = obj.__class__.__name__
             #print('working on %s' % class_name)
             obj.object_attributes()
@@ -1098,7 +1119,7 @@ def _export_subcases(hdf5_file, op2_model):
 
 def load_op2_from_hdf5(hdf5_filename, combine=True, log=None):
     """loads an hdf5 file into an OP2 object"""
-    assert os.path.exists(hdf5_filename), print_bad_path(hdf5_filename)
+    check_path(hdf5_filename, 'hdf5_filename')
     model = OP2(log=None)
     model.op2_filename = hdf5_filename
 
@@ -1162,17 +1183,39 @@ def load_op2_from_hdf5_file(model, h5_file, log, debug=False):
             log.warning('key = %r' % key)
             #raise NotImplementedError('  unhandled %r...' % key)
 
-def _read_h5_matrix(h5_file, unused_model, key, log):
+def _read_h5_matrix(h5_file, model, key, log):
     """reads an hdf5 matrix"""
-    log.debug('matrices:')
     h5_matrix_group = h5_file.get(key)
-    for matrix_name in h5_matrix_group.keys():
+    matrix_names = []
+    matrix_keys = h5_matrix_group.keys()
+    for matrix_name in matrix_keys:
         h5_matrix = h5_matrix_group.get(matrix_name)
         nkeys = len(h5_matrix.keys())
         if not nkeys:
             log.warning('  %s is empty...skipping' % h5_matrix)
         else:
-            log.warning('  skipping %r...' % matrix_name)
-            #raise NotImplementedError('matrix=%r' % matrix_name)
-            #for attr in h5_matrix.keys():
-                #print('    attr=%s' % attr)
+            #log.warning('  skipping %r...' % matrix_name)
+
+            #[u'col', u'data', u'form', u'is_matpool', u'name', u'row', u'shape_str']
+            name = _cast(h5_matrix.get('name'))
+            form = _cast(h5_matrix.get('form'))
+            is_matpool = _cast(h5_matrix.get('is_matpool'))
+            matrix_obj = Matrix(name, form, is_matpool=False)
+
+            #matrix = scipy.sparse.coo_matrix(
+                #(real_imag, (GCi, GCj)),
+                #shape=(mrows, ncols), dtype=dtype)
+
+            skip_keys = ['name', 'form', 'is_matpool', 'shape_str']
+            for key in h5_matrix.keys():
+                if key in skip_keys:
+                    continue
+                h5_result_attr = h5_matrix.get(key)
+                value = _cast(h5_result_attr)
+                #print('    %s = %r' % (key, value))
+                setattr(matrix_obj, key, value)
+            model.matrices[name] = matrix_obj
+            matrix_names.append(matrix_name)
+
+    if len(matrix_keys):
+        log.debug('matrices: %s' % matrix_names)

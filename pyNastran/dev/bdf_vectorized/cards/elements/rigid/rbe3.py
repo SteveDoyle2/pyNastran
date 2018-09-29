@@ -1,5 +1,4 @@
-from six import iteritems, string_types
-from six.moves import zip, range
+from six import string_types
 from itertools import count
 from numpy import array, zeros, unique, searchsorted, asarray, int64, where
 
@@ -77,7 +76,7 @@ class RBE3(object):
 
         Gmi = {}
         j = 0
-        for ii, gmi in iteritems(self.gmi):
+        for ii, gmi in self.gmi.items():
             #print(gmi)
             if ii in i:
                 Gmi[j] = gmi

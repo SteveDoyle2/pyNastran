@@ -5,7 +5,7 @@ from numpy import zeros, unique, array_equal, empty
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header, write_imag_floats_13e
 from pyNastran.op2.vector_utils import transform_force_moment, transform_force_moment_sum, sortedsum1d
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 
 try:
     import pandas as pd  # type: ignore
@@ -129,7 +129,7 @@ class RealGridPointForcesArray(ScalarObject):
             nnodes = self.data.shape[1]
             nvalues = ntimes * nnodes
             node_element = self.node_element.reshape((ntimes * nnodes, 2))
-            if self.nonlinear_factor is not None:
+            if self.nonlinear_factor not in (None, np.nan):
                 column_names, column_values = self._build_dataframe_transient_header()
                 #column_names = column_names[0]
                 #column_values = column_values[0]
@@ -170,7 +170,7 @@ class RealGridPointForcesArray(ScalarObject):
                 #print(self.data_frame)
         else:
             node_element = [self.node_element[:, 0], self.node_element[:, 1]]
-            if self.nonlinear_factor is not None:
+            if self.nonlinear_factor not in (None, np.nan):
                 column_names, column_values = self._build_dataframe_transient_header()
                 self.data_frame = pd.Panel(self.data, items=column_values, major_axis=node_element, minor_axis=headers).to_frame()
                 self.data_frame.columns.names = column_names
@@ -568,8 +568,8 @@ class RealGridPointForcesArray(ScalarObject):
         idir : int; default=0
             the axis of the coordinate system to consider
 
-        Procedure
-        ---------
+        Notes
+        -----
         1.  Clip elements based on centroid.
             Elements that are less than the ith station are kept.
         2.  Get the nodes for those elements.
@@ -578,17 +578,15 @@ class RealGridPointForcesArray(ScalarObject):
         3b. Extract the interface loads and sum them about the
             summation point.
 
-        Example
-        -------
+        Examples
+        --------
         Imagine a swept aircraft wing.  Define a coordinate system
         in the primary direction of the sweep.  Note that station 0
         doesn't have to be perfectly at the root of the wing.
 
         Create stations from this point.
 
-        TODO
-        ----
-        Not Tested...Does 3b work?  Can 3a give the right answer?
+        .. todo:: Not Tested...Does 3b work?  Can 3a give the right answer?
         """
         nstations = len(stations)
         assert coord_out.type in ['CORD2R', 'CORD1R'], coord_out.type
@@ -645,7 +643,7 @@ class RealGridPointForcesArray(ScalarObject):
         """unvectorized method for adding SORT1 transient data"""
         assert eid is not None, eid
         #print(self.code_information())
-        #assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        #assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         assert isinstance(node_id, int), node_id
         self._times[self.itime] = dt
 
@@ -677,7 +675,7 @@ class RealGridPointForcesArray(ScalarObject):
         nelements = unique(self.node_element[:, 1]).size
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msgi = '  type=%s ntimes=%i nelements=%i ntotal=%i\n' % (
                 self.__class__.__name__, ntimes, nelements, ntotal)
             if self.ntotal != min(self._ntotals):
@@ -1019,7 +1017,7 @@ class ComplexGridPointForcesArray(ScalarObject):
             #print(self.data_frame)
         else:
             node_element = [self.node_element[:, 0], self.node_element[:, 1]]
-            if self.nonlinear_factor is not None:
+            if self.nonlinear_factor not in (None, np.nan):
                 column_names, column_values = self._build_dataframe_transient_header()
                 self.data_frame = pd.Panel(self.data, items=column_values, major_axis=node_element, minor_axis=headers).to_frame()
                 self.data_frame.columns.names = column_names
@@ -1031,7 +1029,7 @@ class ComplexGridPointForcesArray(ScalarObject):
             #print(self.data_frame)
 
     def _build_dataframe(self):
-        """
+        """::
         major-axis - the axis
 
         mode              1     2   3
@@ -1142,7 +1140,7 @@ class ComplexGridPointForcesArray(ScalarObject):
     def add_sort1(self, dt, node_id, eid, ename, t1, t2, t3, r1, r2, r3):
         """unvectorized method for adding SORT1 transient data"""
         assert eid is not None, eid
-        #assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        #assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         assert isinstance(node_id, int), node_id
 
         self._times[self.itime] = dt
@@ -1170,7 +1168,7 @@ class ComplexGridPointForcesArray(ScalarObject):
         nelements = unique(self.node_element[:, 1]).size
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msgi = '  type=%s ntimes=%i nelements=%i ntotal=%i\n' % (
                 self.__class__.__name__, ntimes, nelements, ntotal)
             ntimes_word = 'ntimes'

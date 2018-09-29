@@ -1,37 +1,31 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function
+from __future__ import print_function, absolute_import
 from types import MethodType, FunctionType
 import os
 import io
 import sys
-from codecs import open as codec_open
+from codecs import open
 from itertools import count
 
 from typing import List, Union, Optional
-from six import PY2, string_types, iteritems, StringIO
-
-import numpy as np
+from six import PY2, string_types, StringIO
 
 if PY2:
-    integer_types = (int, long, np.int32, np.int64)
-    integer_string_types = (int, long, np.int32, np.int64, str, unicode)
-    integer_float_types = (int, long, np.int32, np.int64, float)
+    FileNotFoundError = IOError
+    unicode_type = unicode
 else:
-    integer_types = (int, np.int32, np.int64)
-    integer_string_types = (int, np.int32, np.int64, bytes, str)
-    integer_float_types = (int, np.int32, np.int64, float)
-float_types = (float, np.float32)
+    unicode_type = str
 
 
-if PY2:
-    def ChainMap(*keys):
-        """Python 2.7 hack to implement ChainMap"""
-        keys2 = []
-        for key in keys:
-            keys2 += list(key)
-        return keys2
-else:
-    from collections import ChainMap
+#if PY2:
+    #def ChainMap(*keys):
+        #"""Python 2.7 hack to implement ChainMap"""
+        #keys2 = []
+        #for key in keys:
+            #keys2 += list(key)
+        #return keys2
+#else:
+    #from collections import ChainMap
 
 def ipython_info():
     # type: () -> Optional[str]
@@ -48,9 +42,17 @@ def ipython_info():
 
 def is_file_obj(filename):
     """does this object behave like a file object?"""
-    return ((hasattr(filename, 'read') and hasattr(filename, 'write'))
+    if PY2:
+        return (
+            (hasattr(filename, 'read') and hasattr(filename, 'write'))
             or isinstance(filename, file)
-            or isinstance(filename, StringIO))
+            or isinstance(filename, StringIO)
+        )
+    return (
+        (hasattr(filename, 'read') and hasattr(filename, 'write'))
+        or isinstance(filename, io.IOBase)
+        or isinstance(filename, StringIO)
+    )
 
 def b(string):
     # type: (str) -> bytes
@@ -63,7 +65,7 @@ def b(string):
     #dict_out = {}
     #for adict in dict_list:
         #assert isinstance(adict, dict), adict
-        #for key, value in iteritems(adict):
+        #for key, value in adict.items():
             #if key not in dict_out:
                 #dict_out[key] = value
             #elif strict:
@@ -96,13 +98,19 @@ def is_binary_file(filename):
 
     .. warning:: this may not work for unicode."""
     assert isinstance(filename, string_types), '%r is not a valid filename' % filename
-    assert os.path.exists(filename), '%r does not exist\n%s' % (filename, print_bad_path(filename))
+    check_path(filename)
     with io.open(filename, mode='rb') as fil:
         for chunk in iter(lambda: fil.read(1024), bytes()):
             if b'\0' in chunk:  # found null byte
                 return True
     return False
 
+
+def check_path(filename, name='file'):
+    # type: (str, str) -> None
+    if not os.path.exists(filename):
+        msg = 'cannot find %s=%r\n%s' % (name, filename, print_bad_path(filename))
+        raise FileNotFoundError(msg)
 
 def print_bad_path(path):
     # type: (str) -> str

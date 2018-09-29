@@ -14,7 +14,6 @@ import sys
 from copy import deepcopy
 from codecs import open
 
-from six.moves import range
 import numpy as np
 from numpy import (zeros, array, vstack, hstack, where,
                    arctan2, arccos, sign, isnan, radians, unique)

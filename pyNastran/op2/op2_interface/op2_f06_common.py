@@ -1,11 +1,12 @@
 from __future__ import print_function
 from collections import defaultdict
-from six import iteritems, string_types, binary_type, text_type
+from six import string_types, binary_type, text_type
 from numpy import unique, int32, int64
 
 from pyNastran import is_release
 from pyNastran.f06.f06_formatting import get_key0
-from pyNastran.utils import object_attributes, integer_types
+from pyNastran.utils import object_attributes
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.base_card import deprecated
 from pyNastran.bdf.case_control_deck import CaseControlDeck
 
@@ -21,6 +22,7 @@ from pyNastran.op2.tables.grid_point_weight import GridPointWeight
 
 class Results(object):
     def __init__(self):
+        self.eqexin = None
         self.ato = AutoCorrelationObjects()
         self.psd = PowerSpectralDensityObjects()
         self.rms = RootMeansSquareObjects()
@@ -196,21 +198,8 @@ class StrengthRatio(object):
         ]
         return ['strength_ratio.' + table for table in tables]
 
-class Deprecated(object):
-    def __init__(self):
-        pass
-    #@property
-    #def iSubcases(self):
-        #self.deprecated('iSubcases', 'isubcases', '1.2')
-        #return self.isubcases
 
-    #@iSubcases.setter
-    #def iSubcases(self, isubcases):
-        #self.deprecated('iSubcases', 'isubcases', '1.2')
-        #self.isubcases = isubcases
-
-
-class OP2_F06_Common(Deprecated):
+class OP2_F06_Common(object):
     def __init__(self):
         #: a dictionary that maps an integer of the subcaseName to the
         #: subcase_id
@@ -258,13 +247,13 @@ class OP2_F06_Common(Deprecated):
         """
         Getattr, but considers sub-objects
 
-        Example 1
-        =========
-        self.eigenvectors = get_result('eigenvectors')
+        Examples
+        --------
+        **Example 1**
+        >>> self.eigenvectors = get_result('eigenvectors')
 
-        Example 2
-        =========
-        self.ato.displacements = get_result('ato.displacements')
+        **Example 1**
+        >>> self.ato.displacements = get_result('ato.displacements')
 
         """
         if '.' in result_name:
@@ -1060,7 +1049,7 @@ class OP2_F06_Common(Deprecated):
             no_data_classes = ['RealEigenvalues', 'ComplexEigenvalues', 'BucklingEigenvalues']
             for table_type in table_types:
                 table = self.get_result(table_type)
-                for isubcase, subcase in sorted(iteritems(table), key=compare):
+                for isubcase, subcase in sorted(table.items(), key=compare):
                     class_name = subcase.__class__.__name__
                     if class_name in no_data_classes:
                         msg.append('%s[%r]\n' % (table_type, isubcase))
@@ -1083,7 +1072,7 @@ class OP2_F06_Common(Deprecated):
             for table_type in table_types:
                 table = self.get_result(table_type)
                 try:
-                    for isubcase, subcase in sorted(iteritems(table), key=compare):
+                    for isubcase, subcase in sorted(table.items(), key=compare):
                         class_name = subcase.__class__.__name__
                         if hasattr(subcase, 'get_stats'):
                             try:
@@ -1106,7 +1095,7 @@ class OP2_F06_Common(Deprecated):
                     self.log.warning(table)
                     raise
 
-        for unused_name, matrix in sorted(iteritems(self.matrices)):
+        for unused_name, matrix in sorted(self.matrices.items()):
             #msg.append('matrices[%s].shape = %s\n' % (name, matrix.data.shape))
             msg.append(str(matrix) + '\n')
         try:

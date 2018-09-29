@@ -1,7 +1,7 @@
 
 |  Version  | Docs  | Status |
 | :--- 	  | :--- 	  | :--- 	  |
-|  [![PyPi Version](https://img.shields.io/pypi/v/pynastran.svg)](https://pypi.python.org/pypi/pyNastran) | [docs](http://pynastran.m4-engineering.com/1.1.0/) | [![Build Status](https://img.shields.io/travis/SteveDoyle2/pyNastran/v1.0.svg)](https://travis-ci.org/SteveDoyle2/pyNastran) [![Coverage Status](https://img.shields.io/coveralls/SteveDoyle2/pyNastran/v1.0.svg)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=v1.0) |
+|  [![PyPi Version](https://img.shields.io/pypi/v/pynastran.svg)](https://pypi.python.org/pypi/pyNastran) | [docs](http://pynastran.m4-engineering.com/1.1.0/) | [![Build Status](https://img.shields.io/travis/SteveDoyle2/pyNastran/v1.1.svg)](https://travis-ci.org/SteveDoyle2/pyNastran) [![Coverage Status](https://img.shields.io/coveralls/SteveDoyle2/pyNastran/v1.1.svg)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=v1.1) |
 |   Master | [![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=latest)](http://pynastran-git.readthedocs.io/en/latest/?badge=latest) | [![Linux Status](https://img.shields.io/travis/SteveDoyle2/pyNastran/master.svg)](https://travis-ci.org/SteveDoyle2/pyNastran) ![Coverage Status](https://coveralls.io/repos/github/SteveDoyle2/pyNastran/badge.svg?branch=master) | 
 
 
@@ -36,7 +36,7 @@
 Also, check out the:
   * [Discussion forum](http://groups.google.com/group/pynastran-discuss) (intended for questions about the latest release)
   * [Developer forum](http://groups.google.com/group/pynastran-dev) (intended for questions about the master branch)
-  * [Docs](http://pynastran-git.readthedocs.io/en/latest/?badge=latest) (the version isn't quite right, but it's close)
+  * [Docs](http://pynastran.m4-engineering.com/1.1.0/)
 
 for more detailed information.
 
@@ -61,10 +61,36 @@ Using the pyNastran GUI, you can read in Nastran models and quickly view results
 
 <!--- 
 ### pyNastran v1.2.0 has not been released (x/xx/xx)
+Programmatics
+ - xxx
+
+BDF:
+ - xxx cards supported (up from 343)
+ - 
+
+OP2:
+ - reorganization of random op2 results into op2.results.psd (or ato, no, crm, rms) to aide in finding data
+ - reorganization of op2 class to reduce number of functions in the object.  This affects any custom op2 table reading, but is simple to upgrade
+ - preliminary SORT2 support
+ - reading EQEXIN/S, GPT, GPDT, CSTM/S tables
+ - improved optimzation response reading
+ - fixed theta/mcid reading for CTRIA3/CQUAD4
+ - Imrpoved HDF5 export/import support (e.g., matrices, random results)
+ - TODO: CD transforms for cylindrical/spherical displacement, velocity, acceleration, forces.  This shouldn't be terrible.
+ - TODO: stress transforms.  This is probably a bit of work.
+ - TODO: use hdf5 instead of numpy.  This should be eay.
+
+GUI:
+ - sped up html logging 
+
+Known issues:
+ - Transient Pandas Dataframes will fail for newer versions of numpy/pandas.  If anyone knows how to use a MultiIndex,
+ - CD transforms
 This should be hidden...
 
 ### pyNastran v1.1.1 has not been released (x/xx/xx)
 This should be hidden...
+
 --->
 
 # News

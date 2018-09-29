@@ -1,6 +1,5 @@
 # coding: utf-8
 from __future__ import print_function#, unicode_literals
-from six import iteritems
 #from struct import pack
 
 from pyNastran.bdf.bdf import BDF
@@ -200,7 +199,7 @@ def export_to_vtk_filename(bdf_filename, op2_filename, vtk_filename, debug=False
 
         i = 0
         vtk_file.write('CELLS %i %i\n' % (nelements, nelements_slots))
-        for eid, elem in sorted(iteritems(bdf.elements)):
+        for eid, elem in sorted(bdf.elements.items()):
             etype = etype_map[elem.type]
             nids2 = searchsorted(nids, elem.node_ids)
 
@@ -278,7 +277,7 @@ def export_to_vtk_filename(bdf_filename, op2_filename, vtk_filename, debug=False
                 ni = len(i)
 
             names = ['T1', 'T2', 'T3', 'R1', 'R2', 'R3']
-            for isubcase, case in sorted(iteritems(cases)):
+            for isubcase, case in sorted(cases.items()):
                 if case.is_real:
                     #if i is None:
                         #data = case.data

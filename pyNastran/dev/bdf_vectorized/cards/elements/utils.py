@@ -1,5 +1,4 @@
 import numpy as np
-from six import iterkeys
 
 
 def build_groups(objs, name, is_element=False):
@@ -53,7 +52,7 @@ class NdarrayDict(dict):
     def __repr__(self):
         """writes the dictionary"""
         msg = 'NdarrayDict(\n'
-        for key in sorted(iterkeys(self)):
+        for key in sorted(self.keys()):
             value = self[key]
             msg += '%r : %r,\n' % (key, value)
         msg += ')'

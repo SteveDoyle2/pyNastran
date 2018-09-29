@@ -128,23 +128,30 @@ class SimpleLogger(object):
         self.encoding = encoding
         assert isinstance(encoding, string_types), type(encoding)
 
-    def stdout_logging(self, typ, msg):
+    def stdout_logging(self, typ, filename, lineno, msg):
         """
         Default logging function. Takes a text and outputs to stdout.
 
         Parameters
         ----------
         typ : str
-            messeage type - ['DEBUG', 'INFO', 'WARNING', 'ERROR']
+            message type - ['DEBUG', 'INFO', 'WARNING', 'ERROR']
+        filename : str
+            the active file
+        lineno : int
+            line number
         msg : str
             message to be displayed
 
         Message will have format 'typ: msg'
         """
-        # max length of 'INFO', 'DEBUG', 'WARNING', etc.
         name = '%-8s' % (typ + ':')
+        filename_n = '%s:%s' % (filename, lineno)
+        msg2 = ' %-28s %s\n' % (filename_n, msg)
+
+        # max length of 'INFO', 'DEBUG', 'WARNING', etc.
         #if not IS_TERMINAL or not typ:
-        _write(typ, name, msg, self.encoding)
+        _write(typ, name, msg2, self.encoding)
         #sys.stdout.flush()
 
     def msg_typ(self, typ, msg):
@@ -159,8 +166,7 @@ class SimpleLogger(object):
             message to be logged
         """
         n, filename = properties()
-        filename_n = '%s:%s' % (filename, n)
-        self.log_func(typ, ' %-28s %s\n' % (filename_n, msg))
+        self.log_func(typ, filename, n, msg)
         #self.log_func(typ, '   fname=%-25s lineNo=%-4s   %s\n' % (fn, n, msg))
 
     def simple_msg(self, msg, typ=None):
@@ -174,8 +180,12 @@ class SimpleLogger(object):
         typ : str
             type of a message (e.g. INFO)
         """
+        frame = sys._getframe(2)  # jump to get out of the logger code
+        lineno = frame.f_lineno
+        filename = os.path.basename(frame.f_globals['__file__'])
+
         assert msg is not None, msg
-        self.log_func(typ, msg)
+        self.log_func(typ, filename, lineno, msg)
 
     def debug(self, msg):
         """
@@ -227,7 +237,7 @@ class SimpleLogger(object):
         msg : str
             message to be logged
         """
-        if self.level in ('critical', ):
+        if self.level in ('error', 'critical', ):
             return
         assert msg is not None, msg
         self.msg_typ('ERROR', msg)

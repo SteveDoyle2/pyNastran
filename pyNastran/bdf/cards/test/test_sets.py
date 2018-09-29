@@ -17,7 +17,7 @@ class TestSets(unittest.TestCase):
     def test_set1_01(self):
         bdf = BDF(debug=False)
         lines = ['SET1,    1100,    100,     101']
-        card = bdf.process_card(lines)
+        card = bdf._process_card(lines)
         card = BDFCard(card)
 
         size = 8

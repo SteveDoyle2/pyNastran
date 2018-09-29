@@ -3,7 +3,7 @@
 Defines the Real/Complex Forces created by:
     OLOAD = ALL
 """
-
+import numpy as np
 #from pyNastran.op2.tables.opg_appliedLoads.opg_objects import (#RealAppliedLoads,  #ComplexAppliedLoads,
                                                                #RealAppliedLoadsVectorArray, ComplexAppliedLoadsVectorArray)
 from pyNastran.op2.tables.opg_appliedLoads.opg_load_vector import (
@@ -149,7 +149,7 @@ class OPG(OP2Common):
 
     def _read_opg2_3(self, data, ndata):
         """reads the SORT2 version of table 4 (the data table)"""
-        self.nonlinear_factor = None
+        self.nonlinear_factor = np.nan
         self.is_table_1 = False
         self.is_table_2 = True
         unused_three = self.parse_approach_code(data)

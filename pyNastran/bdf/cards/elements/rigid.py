@@ -16,10 +16,9 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
 from six import string_types
-from six.moves import zip, range
 import numpy as np
 
-from pyNastran.utils import integer_types, float_types
+from pyNastran.utils.numpy_utils import integer_types, float_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.cards.base_card import Element
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -1085,29 +1084,23 @@ class RBE3(RigidElement):
             element id
         refgrid : int
             dependent node
-        refc - str
+        refc : str
             dependent components for refgrid???
-
-        Independent Set
-        ---------------
-          GiJs : List[int, ..., int]
-              independent nodes
-          comps : List[str, ..., str]
-              independent components
-          weights : List[float, ..., float]
-              weights for the importance of the DOF
-
-        Dependent / UM Set
-        ------------------
-          Gmi : List[int, ..., int]; default=None -> []
-              dependent nodes
-          Cmi : List[str, ..., str]; default=None -> []
-              dependent components
-
+        GiJs : List[int, ..., int]
+            independent nodes
+        comps : List[str, ..., str]
+            independent components
+        weights : List[float, ..., float]
+            weights for the importance of the DOF
+        Gmi : List[int, ..., int]; default=None -> []
+            dependent nodes / UM Set
+        Cmi : List[str, ..., str]; default=None -> []
+            dependent components / UM Set
         alpha : float; default=0.0
             thermal expansion coefficient
         comment : str; default=''
             a comment for the card
+
         """
         RigidElement.__init__(self)
         if comment:

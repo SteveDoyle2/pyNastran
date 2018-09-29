@@ -1,11 +1,10 @@
 from __future__ import print_function
 import os
 import sys
-from six import iteritems
 
 from docopt import docopt
 import pyNastran
-from pyNastran.utils import print_bad_path
+from pyNastran.utils import check_path
 #from gui.formats import format_string
 
 FORMAT_TO_EXTENSION = {
@@ -32,6 +31,7 @@ FORMAT_TO_EXTENSION = {
     #'abaqus' : ['.inp'],
 }
 
+
 def determine_format(input_filename, allowed_formats=None):
     """
     Tries to map the input filename to an extension.
@@ -49,7 +49,7 @@ def determine_format(input_filename, allowed_formats=None):
         ]
 
     ext = os.path.splitext(input_filename)[1].lower()
-    extension_to_format = {val : key for key, value in iteritems(FORMAT_TO_EXTENSION)
+    extension_to_format = {val : key for key, value in FORMAT_TO_EXTENSION.items()
                            for val in value}
     try:
         formati = extension_to_format[ext]
@@ -134,7 +134,7 @@ def run_docopt():
     if data['--input']:
         input_filenames += [data['--input']]
     for input_filename in input_filenames:
-        assert os.path.exists(input_filename), print_bad_path(input_filename)
+        check_path(input_filename, 'input file')
 
     output_filenames = []
     if data['OUTPUT']:
@@ -142,7 +142,7 @@ def run_docopt():
     if data['--output']:
         output_filenames += data['--output']
     for output_filename in output_filenames:
-        assert os.path.exists(output_filename), print_bad_path(output_filename)
+        check_path(output_filename, 'output_filename')
     debug = not(data['--quiet'])
 
     if input_filenames and not input_format:
@@ -161,11 +161,11 @@ def run_docopt():
 
     geom_script = data['--geomscript']
     if geom_script:
-        assert os.path.exists(geom_script), print_bad_path(geom_script)
+        check_path(geom_script, name='geom_script')
 
     post_script = data['--postscript']
     if post_script:
-        assert os.path.exists(post_script), print_bad_path(post_script)
+        check_path(post_script, 'post_script')
 
     user_points = data['--user_points']
     user_geom = data['--user_geom']
@@ -175,7 +175,7 @@ def run_docopt():
         assert qt in ['pyside', 'pyqt4', 'pyqt5'], 'qt=%r' % qt
         os.environ.setdefault('QT_API', qt)
 
-    for key, value in sorted(iteritems(data)):
+    for key, value in sorted(data.items()):
         print(key, value)
     #print("shots", shots)
 

@@ -1,5 +1,4 @@
 from __future__ import print_function
-from six.moves import zip, range
 
 import numpy as np
 from numpy import zeros, float32, searchsorted, empty
@@ -11,7 +10,7 @@ from pyNastran.f06.f06_formatting import write_floats_13e, write_float_12e
 
 class ElementTableArray(ScalarObject):  # displacement style table
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        self.nonlinear_factor = None
+        self.nonlinear_factor = np.nan
         self.table_name = None
         self.approach_code = None
         self.analysis_code = None
@@ -26,11 +25,15 @@ class ElementTableArray(ScalarObject):  # displacement style table
 
     def __eq__(self, table):
         assert self.is_sort1 == table.is_sort1
-        assert self.nonlinear_factor == table.nonlinear_factor
+        is_nan = (self.nonlinear_factor is not None and
+                  np.isnan(self.nonlinear_factor) and
+                  np.isnan(table.nonlinear_factor))
+        if not is_nan:
+            assert self.nonlinear_factor == table.nonlinear_factor
         assert self.ntotal == table.ntotal
         assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
         assert self.approach_code == table.approach_code
-        if self.nonlinear_factor is not None:
+        if not is_nan:
             assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
                 self.element_name, self.element_type, self._times, table._times)
         if not np.array_equal(self.element, table.element):
@@ -115,7 +118,7 @@ class ElementTableArray(ScalarObject):  # displacement style table
             assert nminor == ntotal, 'ntotal=%s expected=%s' % (nminor, ntimes)
 
         msg.append('  isubcase = %s\n' % self.isubcase)
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
         else:
@@ -181,7 +184,7 @@ class ElementTableArray(ScalarObject):  # displacement style table
 
     def add_sort1(self, dt, eid, etype, v1, v2, v3, v4, v5, v6):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         # itotal - the node number
         # itime - the time/frequency step
 
@@ -351,7 +354,7 @@ class RealElementTableArray(ElementTableArray):  # displacement style table
             header.append('')
 
         is_sort2 = not is_sort1
-        if self.is_sort1 or self.nonlinear_factor is None:
+        if self.is_sort1 or self.nonlinear_factor in (None, np.nan):
             if is_sort2 and self.nonlinear_factor is not None:
                 page_num = self._write_sort1_as_sort2(f06_file, page_num, page_stamp, header, words)
             else:

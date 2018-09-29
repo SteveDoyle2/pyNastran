@@ -17,7 +17,7 @@ from vtk import vtkTriangle, vtkQuad, vtkHexahedron
 from pyNastran.converters.openfoam.block_mesh import BlockMesh
 from pyNastran.converters.openfoam.boundary_file import Boundary
 from pyNastran.gui.gui_objects.gui_result import GuiResult
-from pyNastran.utils import print_bad_path
+from pyNastran.utils import check_path
 from pyNastran.gui.utils.vtk.vtk_utils import (
     create_vtk_cells_of_constant_element_type, numpy_to_vtk_points)
 
@@ -131,9 +131,9 @@ class OpenFoamIO(object):
             point_filename = os.path.join(dirname, 'points')
             face_filename = os.path.join(dirname, 'faces')
             boundary_filename = os.path.join(dirname, 'boundary')
-            assert os.path.exists(face_filename), print_bad_path(face_filename)
-            assert os.path.exists(point_filename), print_bad_path(point_filename)
-            assert os.path.exists(boundary_filename), print_bad_path(boundary_filename)
+            check_path(face_filename, 'face_filename')
+            check_path(point_filename, 'point_filename')
+            check_path(boundary_filename, 'boundary_filename')
 
             hexas = None
             patches = None

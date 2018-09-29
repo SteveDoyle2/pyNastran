@@ -11,12 +11,20 @@ ECHOON  (done)
 ECHOOFF (done)
 
 ----Nodes----:
-GRID    (done)
-GRDSET  (done)
-SPOINT  (done)
+GRID    (done) ## nodes
+GRDSET  (done) ## grdset
+SPOINT  (done) ## spoints
+EPOINT  (done) ## epoints
+POINT   (done) ## points
+SEQGP   (done) ## seqgp
+
+## monitor_points
 MONPNT1 (done)
+MONPNT2 (done)
+MONPNT3 (done)
 
 ----Coordinates----:
+## coords
 CORD1R  (done)
 CORD2R  (done)
 CORD1C  (done)
@@ -27,41 +35,42 @@ CORD3G  (partial)
 
 ----Rods/Bars/Beams (Elements/Properties)----:
 # rods
-CROD    (done)
-PROD    (done)
-CONROD  (done)
+CROD    (done) ## elements
+PROD    (done) ## properties
+CONROD  (done) ## elements
 
 # tube
-CTUBE   (done)
-PTUBE   (done)
+CTUBE   (done) ## elements
+PTUBE   (done) ## properties
 
 # bars
-CBAR    (done)
-CBARAO  (done)
-BAROR   (done)
-PBAR    (done)
-PBARL   (done)
-PBRSECT  # arbitrary bar section
+CBAR    (done) ## elements
+CBARAO  (done) ## ao_element_flags
+PBAR    (done) ## properties
+PBARL   (done) ## properties
+PBRSECT (done) ## properties; arbitrary bar section
+BAROR   (done) ## beamor
 
 # beam
-CBEAM   (done)
-BEAMOR  (done)
-PBMSECT  # arbitrary beam section
-PBCOMP  (done)
+CBEAM   (done) ## elements
+BEAMOR  (done) ## beamor
+PBEAM   (done) ## properties
+PBEAML  (done) ## properties
+PBCOMP  (done) ## properties
+PBCOMP  (done) ## properties
+PBMSECT (done) ## properties;  arbitrary beam section
 
 # beam3
-CBEAM3  (done)
+CBEAM3  (done) ## elements
 PBEAM3
-PBCOMP  (done)
-PBEAM   (done)
-PBEAML  (done)
 
 # bend
-CBEND   (done)
-PBEND   (done)
+CBEND   (done) ## elements
+PBEND   (done) ## properties
 
 
 ----Plates/Shells (Elements/Properties)----:
+## elements
 CTRIA3  (done)
 CTRIA6  (done)
 CTRIAR  (done)
@@ -71,25 +80,29 @@ CQUAD4  (done)
 CQUAD8  (done)
 CQUADR  (done)
 
+## properties
 PSHELL  (done)
 PCOMP   (done)
 PCOMPG  (done)
 PLPLANE (done)
-SNORM   (done)
+
+SNORM   (done)  ## normals
 
 ----Shear (Elements/Properties)----:
-CSHEAR  (done)
-PSHEAR  (done)
+CSHEAR  (done)  ## elements
+PSHEAR  (done)  ## properties
 
 ----Springs (Elements/Properties)----:
+## elements
 CELAS1  (done)
 CELAS2  (done)
 CELAS3  (done)
 CELAS4  (done)
-PELAS   (done)
-PELAST  (done)
+PELAS   (done)  ## properties
+PELAST  (done)  ## pelast
 
 ----Bushings (Elements/Properties)----:
+## elements
 CBUSH   (done)
 CBUSH1D (done)
 CBUSH2D (done)
@@ -97,52 +110,72 @@ CBUSH2D (done)
 PBUSH   (done)
 PBUSH1D (done)
 PBUSH2D (done)
-PBUSHT  (done)
+PBUSHT  (done)  ## pbusht
 
 ----Dampers (Elements/Properties)----:
+## elements
 CDAMP1  (done)  # scalar damper
 CDAMP2  (done)
 CDAMP3  (done)
 CDAMP4  (done)
 CDAMP5  (done)
 
+## properties
 PDAMP   (done)
 PDAMP5  (done)
-PDAMPT  (done)
+PDAMPT  (done)  ## pdampt
 
-CVISC   (done) # viscous damper
-PVISC   (done)
+# viscous damper 
+CVISC   (done) ## elements
+PVISC   (done) ## properties
 
 ----Masses (Elements/Properties)----:
+## masses
 CONM1   (done)
 CONM2   (cid!=0)
-
 CMASS1  (done)
 CMASS2  (done)
 CMASS3  (done)
 CMASS4  (done)
-PMASS   (done)
+
+PMASS   (done)  ## properties_mass
+NSMADD  (done)  ## nsmadds
+
+## nsms
 NSM     (done)
 NSM1    (done)
+NSML    (done)
+NSML1   (done)
 
 ----Solids (Elements/Properties)----:
+## elements
 CTETRA  (done)
 CPENTA  (done)
 CHEXA   (done)
 CPYRAM  (done)
 
+## properties
 PSOLID  (done)
 PLSOLID (done)
-PIHEX   (done)
 PCOMPS  (done)
 
+# Nastran 95
+CIHEX1  (done) ## elements
+CIHEX2  (done) ## elements
+PIHEX   (done) ## properties
+
+
 ----Cracks (Elements/Properties)----:
+## elements
+## properties
 CRAC2D (done)
 CRAC3D (done)
 PRAC2D (done)
 PRAC3D (done)
 
 ----Other Elements/Properties----:
+## elements
+## properties
 CFAST   (done)
 PFAST   (done)
 
@@ -150,24 +183,29 @@ CGAP    (done)
 PGAP    (done)
 
 ----Rigid Elements----:
-RROD  (done)
-RTRPLT
-RBAR  (done)
-RBAR1 (done)
-RBE1  (done)
-RBE2  (done)
-RBE3  (done)
-RSPLINE
+## rigid_elements
+RBAR    (done)
+RBAR1   (done)
+RBE1    (done)
+RBE2    (done)
+RBE3    (done)
+RROD    (done)
+RSPLINE (done)
+RSSCON  (done)
 RTRPLT
 RBE2GS
 RBJOINT
 RBJSTIF
 RJOINT
+RTRPLT
 RTRPLT1
 MATRIG
 
 ----Materials----:
+## creep_materials
 CREEP (done)
+
+## materials
 MAT1  (done)
 MAT2  (done)
 MAT3  (done)
@@ -175,41 +213,54 @@ MAT8  (done)
 MAT9  (done)
 MAT10 (done)
 MAT11 (done)
+MATHG (done)
+MAT3D (done) # VABS specific material
 
 ----Hyperelastic Materials----:
+## hyperelastic_materials
 MATHP (done)
-MATHE (???)
+MATHE (done)
 
 ----Thermal Materials----:
+## thermal_materials
 MAT4  (done)
 MAT5  (done)
 
 ----Nonlinear Materials----:
-MATS1  (done)
 MATT1  (done)
 MATT2  (done)
-MATT3
+MATT3  (done)
 MATT4  (done)
 MATT5  (done)
-MATT8
-MATT9
+MATT8  (done)
+MATT9  (done)
 
 MATS1 (done)
+MATS3
+MATS8
 
 ----Constraints----:
+## spcs
 SPC     (done)
 SPC1    (done)
-SPCADD  (done)
+SPCAX   (done)
+SPCADD  (done) ## spcadds
 
-MPC     (done)
-MPCADD  (done)
+## spcoffs
+SPCOFF  (done)
+SPCOFF1 (done)
 
-SUPORT  (done)
-SUPORT1 (done)
+MPC     (done) ## mpcs
+MPCADD  (done) ## mpcadds
+
+SUPORT  (done) ## suport
+SUPORT1 (done) ## suport1
 
 ----Loads----:
-LOAD    (done)
-LSEQ    (done)
+LOAD    (done) ## load_combinations
+LSEQ    (done) ## load_combinations
+
+## loads
 SPCD    (done)
 
 FORCE   (done)
@@ -230,104 +281,123 @@ PLOADB3
 MOMENT  (done)
 MOMENT1 (done)
 MOMENT2 (done)
-
-DLOAD   (done)
 SLOAD   (done)
+LOADCYN (done)
 
-LOADCYN (???)
+## dloads
+DLOAD   (done)
+
+## dload_entries
 TLOAD1  (done)
 TLOAD2  (done)
 RLOAD1  (done)
 RLOAD2  (done)
 
+RANDPS (done) ## dload_entries
+QVECT  (done) ## dload_entries
+
 ----Acoustic----:
-ACSRCE  (done)
+ACSRCE  (done)  ## dload_entries
 
 ----Thermal Loads----:
 TEMP   (done)
 TEMPD  (done)
 TEMPD1
 
-QHBDY  (done)
-QBDY1  (done)
-QBDY2  (done)
-QBDY3  (done)
+QHBDY  (done) ## loads
+QBDY1  (done) ## loads
+QBDY2  (done) ## loads
+QBDY3  (done) ## loads
+QVOL   (done) ## loads
 
-QVOL  (done)
-VIEW   (done)
-VIEW3D (done)
+VIEW   (done) ## views
+VIEW3D (done) ## view3ds
 
 ----Thermal Elements----:
-CHBDYE (done)
-CHBDYG (done)
-CHBDYP (done)
-CONVM
+CHBDYE (done) ## elements
+CHBDYG (done) ## elements
+CHBDYP (done) ## elements
+CONVM  (done) ## bcs
 
 ----Thermal BCs----:
-CONV   (done)
-RADBC  (done)
-RADM   (not integrated)
+CONV   (done) ## bcs
+RADBC  (done) ## bcs
+RADM   (done) ## bcs
 TEMPBC
-RADCAV
-RADSET
+RADCAV (done)  ## radcavs
+RADSET (done)  ## radset
 
 ----Thermal Properties----:
-PCONV  (done)
-PCONVM (done)
-PHBDY  (done)
+PCONV  (done)  ## convection_properties
+PCONVM (done)  ## convection_properties
+PHBDY  (done)  ## phbdys
 
 ----Aero----:
-AERO    (done)
-AEROS   (done)
-GUST    (done)
-FLUTTER (done)
-FLFACT  (done)
+AERO    (done) ## aero
+AEROS   (done) ## aeros
+GUST    (done) ## gusts
+FLUTTER (done) ## flutters
+FLFACT  (done) ## flffacts
 
-AEFACT  (done)
-AELINK  (done)
-AELIST  (done)
-AEPARAM (done)
-AESTAT  (done)
-AESURF  (done)
-AESURFS (done)
+AEFACT  (done) ## aefacts
+AELINK  (done) ## aelinks
+AELIST  (done) ## aelists
+AEPARAM (done) ## aeparams
+AESTAT  (done) ## aestats
+AESURF  (done) ## aesurf
+AESURFS (done) ## aesurfs
+AECOMP  (done) ## aecomps
+AECOMPS
 
+## mkaeros
+MKAERO1 (done)
+MKAERO2 (done)
+
+## caeros
 CAERO1  (done)
 CAERO2  (done)
 CAERO3  (done)
 CAERO4  (done)
-CAERO5
+CAERO5  (done)
 
+## paeros
 PAERO1  (done)
 PAERO2  (done)
 PAERO3  (done)
 PAERO4  (done)
 PAERO5  (done)
 
+## splines
 SPLINE1 (done)
 SPLINE2 (done)
-SPLINE3 (partial)
+SPLINE3 (done)
 SPLINE4 (done)
 SPLINE5 (done)
 SPLINE6
 SPLINE7
 
-CSSCHD  (done)
-TRIM    (done)
-TRIM2   (done)
-DIVERG  (done)
+CSSCHD  (done) ## csschds
+TRIM    (done) ## trims
+TRIM2   (done) ## trims
+DIVERG  (done) ## divergs
+
+----ZONA Aero----:
 
 ----Dynamic----:
-EPOINT  (done)
-DAREA   (done)
-DPHASE  (done)
-DELAY   (done)
-NLPARM  (done)
-NLPCI   (done)
-TSTEP   (done)
-TSTEPNL (done)
-TF      (done)
+EPOINT  (done) ## epoints
+DAREA   (done) ## dareas
+DPHASE  (done) ## dphases
+DELAY   (done) ## delays
+NLPARM  (done) ## nlparms
+NLPCI   (done) ## nplcis
+TSTEP   (done) ## tsteps
+TSTEP1  (done) ## tstepnls
+TSTEPNL (done) ## tstepnls
+TF      (done) ## transfer_functions
+NSTRAT  (done) ## nxstrats
 
 ----Modal Cards----:
+## frequencies
 FREQ  (done)
 FREQ1 (done)
 FREQ2 (done)
@@ -335,109 +405,141 @@ FREQ3 (done)
 FREQ4 (done)
 FREQ5 (done)
 
+----Rotor----:
+## rotors
+ROTORG   (done)
+ROTORD   (done)
+
 ----Optimization----:
-DEQATN   (done)
-DTABLE   (done)
-DCONSTR  (done)
-DESVAR   (done)
-DDVAL    (done)
-DRESP1   (done)
+DEQATN   (done)  ## dequations
+DTABLE   (done)  ## dtable
+DCONSTR  (done)  ## dconstrs
+DESVAR   (done)  ## desvars
+DDVAL    (done)  ## ddvals
+DRESP1   (done)  ## dresps
 DRESP2   (done)
 DRESP3   (done)
+DSCREEN  (done) ## dscreen
 
-DVGRID   (done)
-DVCREL1  (done)  # element  DV
-DVCREL2  (done)
-DVPREL1  (done)  # property DV
+DVGRID   (done)  ## dvgrids
+DVCREL1  (done)  ## dvcrels; element  DV
+DVCREL2  (done) 
+DVPREL1  (done)  ## dvprels; property DV
 DVPREL2  (done)
-DVMREL1  (done)  # material DV
+DVMREL1  (done)  ## dvmrels; material DV
 DVMREL2  (done)
 
-DOPTPRM  (done)
-DLINK    (done)
-DCONADD  (done)
+DOPTPRM  (done)  ## doptprm
+DLINK    (done)  ## dlinks
+DCONADD  (done)  ## dconadds
 
 ---Tables---
-DTABLE   (done)
-TABLED1  (done)
+TABLED1  (done)  ## tables_d
 TABLED2  (done)
 TABLED3  (done)
 TABLED4  (done)
+
 TABLEHT
 TABLEH1
-TABDMP1  (done)
-TABLEM1  (done)
+
+TABLEM1  (done)  ## tables_m
 TABLEM2  (done)
 TABLEM3  (done)
 TABLEM4  (done)
 
-TABLEST  (done)
-TABLES1  (done)
-TIC      (not integrated)
+TABLEST  (done) ## tables
+TABLES1  (done) ## tables
+TABDMP1  (done) ## tables_sdamping
+
+TABRND1  (done) ## random_tables
+TABRNDG  (done) ## random_tables
+
+TIC      (done) ## tics
 
 ---Random Tables---
+## random_tables
 TABRND1  (done)
 TABRNDG  (done)
 
 ----Sets----:
-ASET   (done)
-BSET   (done)
-CSET   (done)
-QSET   (done)
-USET   (done)
+ASET   (done) ## asets
 ASET1  (done)
+
+BSET   (done) ## bsets
 BSET1  (done)
+
+CSET   (done) ## csets
 CSET1  (done)
+
+QSET   (done) ## qsets
 QSET1  (done)
+
+USET   (done) ## usets
 USET1  (done)
 
+OMIT1 (done) ## omits
+OMIT
+
+## sets
 SET1   (done)
 SET2
 SET3   (done)
 
-SEQSEP (done)
-RADSET (done)
-
-SESET   (done)
-SEBSET  (done)
-SECSET  (done)
-SEQSET  (done)
-SEUSET  (done)
-SEBSET1 (done)
-SECSET1 (done)
-SEQSET1 (done)
-SEUSET1 (done)
+RADSET (done)  ## radset
 
 ----Methods----:
-EIGB    (done)
-EIGC    (done)
-EIGP    (done)
-EIGR    (done)
-EIGRL   (done)
-MKAERO1 (done)
-MKAERO2 (done)
-
-AECOMP (done)
+EIGC    (done) ## cMethods
+EIGP    (done) ## cMethods
+EIGB    (done) ## methods
+EIGR    (done) ## methods
+EIGRL   (done) ## methods
 
 ----MATRICES----:
-DMIG        (done)
-DMIG,UACCEL (done)
-DMIJ        (done)
-DMIJI       (done)
-DMIK        (done)
-DMI         (done)
+DMIG,UACCEL (done) ## dmigs 
+DMIG  (done)       ## dmigs
+
+DMIJ  (done) ## dmijs
+DMIJI (done) ## dmijis
+DMIK  (done) ## dmiks
+DMI   (done) ## dmis
+DTI   (done) ## dti
 
 ----Contact----:
-BCTPARA (done)
-BCRPARA (done)
-BCTADD  (done)
-BCTSET  (done)
-BSURF   (done)
-BSURFS  (done)
+BCTPARA (done) ## bctpara
+BCRPARA (done) ## pbrpara
+BCTADD  (done) ## bctadd
+BCTSET  (done) ## bctsets
+BSURF   (done) ## bsurf
+BSURFS  (done) ## bsurfs
 
-----Super Elements----:
-SEQSEP  (done)
-SESUP   (done)
+----Superelements----:
+SEQSEP
+SESUP   (done)  ## se_suport
+
+# readers only; not stored
+CSUPER  (partial)
+CSUPEXT (partial)
+SEELT   (partial)
+SEEXCLD (partial)
+SELABEL (partial)
+SELOC   (partial)
+SEMPLN  (partial)
+SENQST  (partial)
+
+
+SESET   (done) ## se_sets
+
+SEBSET  (done) ## se_bsets
+SEBSET1 (done)
+
+SECSET  (done) ## se_csets
+SECSET1 (done)
+
+SEQSET  (done) ## se_qsets
+SEQSET1 (done)
+
+SEUSET  (done) ## se_usets
+SEUSET1 (done)
 
 ----Other----:
 INCLUDE (done)
@@ -446,43 +548,46 @@ PARAM   (done)
 -----------------------------------------------
 
 ----Axial Nodes----:
-RINGAX (not integrated)
-POINTAX
+RINGAX  (done) ## ringaxs
+POINTAX (done) ## ringaxs
 
 ----Axial Elements----:
+ ## elements
 CTRIAX  (done)
 CTRIAX6 (done)
 CQUADX  (done)
-RINGAX
 
 ----Axial Cone Elements/Properties----:
-CCONEAX
-PCONEAX (done)
+AXIC    (done) ## axic
+
+CCONEAX (done) ## elements
+PCONEAX (done) ## properties
 
 ----Axial Loads----:
 FORCEAX
-PLOADX1 (done)
 MOMAX
-TEMPAX
-PRESAX
+PLOADX1 (done) ## loads
+TEMPAX  (done) ## loads
+PRESAX  (done) ## loads
 
 ----Axial Constraints----:
 MPCAX
-SPCAX   (done)
+SPCAX   (done)  ## spcs
 SUPAX
 
 ----Axial Other----:
-AXIC
 OMITAX
 SECTAX
 
 ---- Plot Elements----:
-PLOTEL   (done)
+PLOTEL   (done) # plotels
 
 -----------------------------------------------
 ----Equation Geometry----:
-GMLOAD  (done)
-GMCORD  (done)
+GMLOAD  (done)  ## loads
+GMCORD  (done)  ## coords
+GMSPC   (done)  ## spcs
+CGEN    (done)  ## elements
 
 -----------------------------------------------
 
@@ -495,19 +600,13 @@ Not supported - ask for the cards you want
 MBOLTUS
 
 ----Loads----:
-QVECT
-
-RADCAV
 RADMT
-
 TEMPP1
 TEMPRB
 
 ----Nodes----:
-EGRID   (done)
+EGRID
 GRIDG
-MONPNT2
-MONPNT3
 
 ----Thermal Loads----:
 CONTRLT
@@ -517,7 +616,6 @@ BDYOR
 RADBND
 RADLST
 RADMTX
-RADSET
 
 ----Parametric Grids/Elements----:
 GENEL
@@ -565,27 +663,15 @@ MESHON
 
 PLOTG
 PLOTOPT
-
 PLOADG
-
-
 
 ----Dynamics/Nonlinear---:
 
-----Super Elements----:
-CSUPER
-CSUPEXT
+----Superelements----:
 EXTRN
-SEELT
-SEEXCLD
-SELABEL
-SELOC
-SEMPLN
-SENQST
 SEQGP
 
 ----Acoustic----:
-ACSRCE
 CHACAB
 CHACBR
 

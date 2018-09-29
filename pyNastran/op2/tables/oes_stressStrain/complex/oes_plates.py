@@ -1,6 +1,5 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six.moves import range
 
 import numpy as np
 from numpy import zeros
@@ -38,7 +37,6 @@ class ComplexTriaxStressArray(OES_Object):
 
     def build(self):
         """sizes the vectorized attributes of the ComplexPlateArray"""
-        #print('data_code = %s' % self.data_code)
         if not hasattr(self, 'subtitle'):
             self.subtitle = self.data_code['subtitle']
         if self.is_built:
@@ -93,7 +91,7 @@ class ComplexTriaxStressArray(OES_Object):
         nnodes = self.element_node.shape[0]
         #ntotal = self.ntotal
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i nnodes=%i\n'
                        % (self.__class__.__name__, ntimes, nelements, nnodes))
         else:
@@ -117,7 +115,7 @@ class ComplexTriaxStressArray(OES_Object):
         self.add_eid_sort1(dt, eid, gridc, fdr, oxx, oyy, txy)
 
     def add_eid_sort1(self, dt, eid, loc, rs, azs, As, ss):
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         #print(self.element_types2, element_type, self.element_types2.dtype)
         #print('itotal=%s dt=%s eid=%s nid=%-5s oxx=%s' % (self.itotal, dt, eid, node_id, oxx))
@@ -164,7 +162,6 @@ class ComplexPlateArray(OES_Object):
 
     def build(self):
         """sizes the vectorized attributes of the ComplexPlateArray"""
-        #print('data_code = %s' % self.data_code)
         if not hasattr(self, 'subtitle'):
             self.subtitle = self.data_code['subtitle']
         if self.is_built:
@@ -285,7 +282,7 @@ class ComplexPlateArray(OES_Object):
         self.add_eid_sort1(dt, eid, gridc, fdr, oxx, oyy, txy)
 
     def add_eid_sort1(self, dt, eid, node_id, fdr, oxx, oyy, txy):
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         #print(self.element_types2, element_type, self.element_types2.dtype)
         #print('itotal=%s dt=%s eid=%s nid=%-5s oxx=%s' % (self.itotal, dt, eid, node_id, oxx))
@@ -310,7 +307,7 @@ class ComplexPlateArray(OES_Object):
         nnodes = self.element_node.shape[0]
         #ntotal = self.ntotal
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i nnodes=%i\n'
                        % (self.__class__.__name__, ntimes, nelements, nnodes))
         else:

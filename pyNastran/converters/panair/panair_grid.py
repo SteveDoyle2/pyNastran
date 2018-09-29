@@ -7,9 +7,7 @@ import os
 from itertools import count
 from math import ceil, sin, cos, radians
 
-from six import iteritems
 from six import PY2
-from six.moves import zip, range
 
 import numpy as np
 
@@ -19,7 +17,7 @@ from pyNastran.converters.panair.panair_grid_patch import (
 from pyNastran.converters.panair.assign_type import (
     integer, double, integer_or_blank, double_or_blank, fortran_value)
 from pyNastran.utils.log import get_logger2
-from pyNastran.utils import print_bad_path
+from pyNastran.utils import check_path
 
 #from pyNastran.utils import list_print
 
@@ -118,7 +116,7 @@ class PanairGrid(object):
             npatches = len(self.patches)
             npatches = 1
             msg = '%i\n' % npatches
-            for patch_id, patch in sorted(iteritems(self.patches)):
+            for patch_id, patch in sorted(self.patches.items()):
                 #if patchID == 1:
                 print("patch_id = %s" % patch_id)
                 ni, nj = patch.xyz.shape[:2]
@@ -129,7 +127,7 @@ class PanairGrid(object):
                 break
 
             p3d_file.write(msg)
-            for patch_id, patch in sorted(iteritems(self.patches)):
+            for patch_id, patch in sorted(self.patches.items()):
                 #if patch_id == 1:
                 patch.write_plot3d(p3d_file, 1) # x
                 patch.write_plot3d(p3d_file, 2) # y
@@ -213,7 +211,7 @@ class PanairGrid(object):
 
             #panair_file.write(self.alphaSection)
             #panair_file.write(self.caseSection)
-            for unused_patch_name, patch in sorted(iteritems(self.patches)):
+            for unused_patch_name, patch in sorted(self.patches.items()):
                 panair_file.write(str(patch))
 
             panair_file.write(self.xyz_section)
@@ -308,7 +306,7 @@ class PanairGrid(object):
 
     def find_patch_by_name(self, network_name):
         names = []
-        for unused_patch_id, patch in iteritems(self.patches):
+        for unused_patch_id, patch in self.patches.items():
             #self.log.debug("patch_id=%s" % (patch_id))
             #self.log.debug("*get_patch = %s" %(get_patch))
             #self.log.debug("get_patch.network_name=%s" % (get_patch.network_name))
@@ -829,7 +827,7 @@ class PanairGrid(object):
 
     def read_panair(self, infilename):
         """reads a panair input file"""
-        assert os.path.exists(infilename), print_bad_path(infilename)
+        check_path(infilename, 'panair_input_Filename')
         self.infilename = infilename
 
         with open(self.infilename, 'r') as infile:
@@ -851,7 +849,7 @@ class PanairGrid(object):
         kt = []
         cp_norm = []
         npoints = 0
-        for unused_name, panel in sorted(iteritems(self.patches)):
+        for unused_name, panel in sorted(self.patches.items()):
             if not get_wakes:
                 if panel.is_wake():
                     continue
@@ -1044,7 +1042,7 @@ class PanairGrid(object):
         msg += '        9   1st p-o-s   0    -1.0       bodyl      12     3.4+\n'
         msg += '            bodyl      12     3.4-      1st p-o-s   0    -1.0\n'
 
-        for patch_id, patch in iteritems(self.patches):
+        for patch_id, patch in self.patches.items():
             (p1, unused_xyz1) = patch.get_edges()
             self.log.debug("p[%s] = %s" % (patch_id, p1))
         return msg

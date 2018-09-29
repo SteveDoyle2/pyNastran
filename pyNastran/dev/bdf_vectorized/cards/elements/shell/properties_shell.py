@@ -1,4 +1,3 @@
-from six import  iteritems
 from numpy import (concatenate, hstack, unique,
                    array, nan, full, where, isnan)
 
@@ -108,7 +107,7 @@ class PropertiesShell(object):
             'PCOMPG': (self.pcompg, self.pcompg.property_id),
         }
         out = array([])
-        for Type, (ptype, pids) in sorted(iteritems(TypeMap)):
+        for Type, (ptype, pids) in sorted(TypeMap.items()):
             for pid in pids:
                 if pid in property_id:
                     value = getattr(ptype, method)
@@ -132,7 +131,7 @@ class PropertiesShell(object):
         #self.model.log.debug('property_id = %s' % property_id)
         n = len(property_id)
         out = full(n, nan, dtype='float64')
-        for Type, (ptype, pids) in sorted(iteritems(TypeMap)):
+        for Type, (ptype, pids) in sorted(TypeMap.items()):
             #self.model.log.debug('Type=%s pids=%s' % (Type, pids))
             for pid in pids:
                 if pid in property_id:

@@ -80,10 +80,8 @@ class XrefMesh(BDFAttributes):
         The main BDF class defines all the parameters that are used.
         """
         BDFAttributes.__init__(self)
-        self._ixref_errors = 0
         self._nxref_errors = 100
         self._stop_on_xref_error = True
-        self._stored_xref_errors = []
 
     # def geom_check(self):
         # """
@@ -183,27 +181,27 @@ class XrefMesh(BDFAttributes):
         Links the SPCADD, SPC, SPCAX, SPCD, MPCADD, MPC, SUPORT,
         SUPORT1, SESUPORT cards.
         """
-        for spcadds in itervalues(self.spcadds):
+        for spcadds in self.spcadds.values():
             for spcadd in spcadds:
                 spcadd.cross_reference(self)
-        for spcs in itervalues(self.spcs):
+        for spcs in self.spcs.values():
             for spc in spcs:
                 spc.cross_reference(self)
-        for spcoffs in itervalues(self.spcoffs):
+        for spcoffs in self.spcoffs.values():
             for spcoff in spcoffs:
                 spcoff.cross_reference(self)
 
-        for mpcadds in itervalues(self.mpcadds):
+        for mpcadds in self.mpcadds.values():
             for mpcadd in mpcadds:
                 mpcadd.cross_reference(self)
-        for mpcs in itervalues(self.mpcs):
+        for mpcs in self.mpcs.values():
             for mpc in mpcs:
                 mpc.cross_reference(self)
 
         for suport in self.suport:
             suport.cross_reference(self)
 
-        for unused_suport1_id, suport1 in iteritems(self.suport1):
+        for unused_suport1_id, suport1 in self.suport1.items():
             suport1.cross_reference(self)
 
         for se_suport in self.se_suport:
@@ -218,10 +216,10 @@ class XrefMesh(BDFAttributes):
         """
         # CORD2x: links the rid to coordinate systems
         # CORD1x: links g1,g2,g3 to grid points
-        for coord in itervalues(self.coords):
+        for coord in self.coords.values():
             coord.cross_reference(self)
 
-        for coord in itervalues(self.coords):
+        for coord in self.coords.values():
             coord.setup()
 
     def _cross_reference_aero(self, check_caero_element_ids=False):
@@ -231,40 +229,40 @@ class XrefMesh(BDFAttributes):
           - CAEROx, PAEROx, SPLINEx, AECOMP, AELIST, AEPARAM, AESTAT, AESURF, AESURFS
         """
         self.zona.cross_reference()
-        for caero in itervalues(self.caeros):
+        for caero in self.caeros.values():
             caero.cross_reference(self)
 
-        for paero in itervalues(self.paeros):
+        for paero in self.paeros.values():
             paero.cross_reference(self)
 
-        for trim in itervalues(self.trims):
+        for trim in self.trims.values():
             trim.cross_reference(self)
 
-        for csschd in itervalues(self.csschds):
+        for csschd in self.csschds.values():
             csschd.cross_reference(self)
 
-        for spline in itervalues(self.splines):
+        for spline in self.splines.values():
             spline.cross_reference(self)
 
-        for aecomp in itervalues(self.aecomps):
+        for aecomp in self.aecomps.values():
             aecomp.cross_reference(self)
 
-        for aelist in itervalues(self.aelists):
+        for aelist in self.aelists.values():
             aelist.cross_reference(self)
 
-        for aeparam in itervalues(self.aeparams):
+        for aeparam in self.aeparams.values():
             aeparam.cross_reference(self)
 
-        #for aestat in itervalues(self.aestats):
+        #for aestat in self.aestats.values(s):
             #aestat.cross_reference(self)
 
-        for aesurf in itervalues(self.aesurf):
+        for aesurf in self.aesurf.values():
             aesurf.cross_reference(self)
 
-        for aesurfs in itervalues(self.aesurfs):
+        for aesurfs in self.aesurfs.values():
             aesurfs.cross_reference(self)
 
-        for flutter in itervalues(self.flutters):
+        for flutter in self.flutters.values():
             flutter.cross_reference(self)
 
         for monitor_point in self.monitor_points:
@@ -281,7 +279,7 @@ class XrefMesh(BDFAttributes):
                 # we don't need to check the ncaeros=1 case
                 i = 0
                 min_maxs = zeros((ncaeros, 2), dtype='int32')
-                for unused_eid, caero in sorted(iteritems(self.caeros)):
+                for unused_eid, caero in sorted(self.caeros.items()):
                     min_maxs[i, :] = caero.min_max_eid
                     i += 1
                 isort = argsort(min_maxs.ravel())
@@ -317,6 +315,14 @@ class XrefMesh(BDFAttributes):
             except:
                 self.log.error("Couldn't cross reference GRID.\n%s" % (str(node)))
                 raise
+
+        for point in self.points.values():
+            try:
+                point.cross_reference(self)
+            except:
+                self.log.error("Couldn't cross reference POINT.\n%s" % (str(point)))
+                raise
+
         # SPOINTs, EPOINTs don't need xref
 
         # GRDPNT for mass calculations
@@ -334,41 +340,32 @@ class XrefMesh(BDFAttributes):
             try:
                 elem.cross_reference(self)
             except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
-                self._ixref_errors += 1
-                var = traceback.format_exception_only(type(error), error)
-                self._stored_xref_errors.append((elem, var))
-                if self._ixref_errors > self._nxref_errors:
-                    self.pop_xref_errors()
+                self._store_xref_error(error, elem)
 
-        for elem in itervalues(self.masses):
+        for elem in self.masses.values():
             try:
                 elem.cross_reference(self)
             except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
-                self._ixref_errors += 1
-                var = traceback.format_exception_only(type(error), error)
-                self._stored_xref_errors.append((elem, var))
-                if self._ixref_errors > self._nxref_errors:
-                    self.pop_xref_errors()
+                self._store_xref_error(error, elem)
 
-        for elem in itervalues(self.rigid_elements):
+        for elem in self.rigid_elements.values():
             try:
                 elem.cross_reference(self)
             except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
-                self._ixref_errors += 1
-                var = traceback.format_exception_only(type(error), error)
-                self._stored_xref_errors.append((elem, var))
-                if self._ixref_errors > self._nxref_errors:
-                    self.pop_xref_errors()
+                self._store_xref_error(error, elem)
 
-        for elem in itervalues(self.plotels):
+        for elem in self.plotels.values():
             try:
                 elem.cross_reference(self)
             except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
-                self._ixref_errors += 1
-                var = traceback.format_exception_only(type(error), error)
-                self._stored_xref_errors.append((elem, var))
-                if self._ixref_errors > self._nxref_errors:
-                    self.pop_xref_errors()
+                self._store_xref_error(error, elem)
+
+    def _store_xref_error(self, error, card):
+        self._ixref_errors += 1
+        var = traceback.format_exception_only(type(error), error)
+        self._stored_xref_errors.append((card, var))
+        if self._ixref_errors > self._nxref_errors:
+            self.pop_xref_errors()
 
     def _cross_reference_nodes_with_elements(self):
         # type: () -> None
@@ -398,25 +395,17 @@ class XrefMesh(BDFAttributes):
         Links the mass to nodes, properties (and materials depending on
         the card).
         """
-        for mass in itervalues(self.masses):
+        for mass in self.masses.values():
             try:
                 mass.cross_reference(self)
             except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
-                self._ixref_errors += 1
-                var = traceback.format_exception_only(type(error), error)
-                self._stored_xref_errors.append((mass, var))
-                if self._ixref_errors > self._nxref_errors:
-                    self.pop_xref_errors()
+                self._store_xref_error(error, mass)
 
-        for prop in itervalues(self.properties_mass):
+        for prop in self.properties_mass.values():
             try:
                 prop.cross_reference(self)
             except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
-                self._ixref_errors += 1
-                var = traceback.format_exception_only(type(error), error)
-                self._stored_xref_errors.append((prop, var))
-                if self._ixref_errors > self._nxref_errors:
-                    self.pop_xref_errors()
+                self._store_xref_error(error, prop)
 
     def _cross_reference_properties(self):
         # type: () -> None
@@ -427,11 +416,7 @@ class XrefMesh(BDFAttributes):
             try:
                 prop.cross_reference(self)
             except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
-                self._ixref_errors += 1
-                var = traceback.format_exception_only(type(error), error)
-                self._stored_xref_errors.append((prop, var))
-                if self._ixref_errors > self._nxref_errors:
-                    self.pop_xref_errors()
+                self._store_xref_error(error, prop)
 
     def _cross_reference_materials(self):
         # type: () -> None
@@ -439,69 +424,49 @@ class XrefMesh(BDFAttributes):
         Links the materials to materials (e.g. MAT1, CREEP)
         often this is a pass statement
         """
-        for mat in itervalues(self.materials):  # MAT1
+        for mat in self.materials.values():  # MAT1
             try:
                 mat.cross_reference(self)
             except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
-                self._ixref_errors += 1
-                var = traceback.format_exception_only(type(error), error)
-                self._stored_xref_errors.append((mat, var))
-                if self._ixref_errors > self._nxref_errors:
-                    self.pop_xref_errors()
+                self._store_xref_error(error, mat)
 
-        for mat in itervalues(self.creep_materials):  # CREEP
+        for mat in self.creep_materials.values():  # CREEP
             try:
                 mat.cross_reference(self)
             except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
-                self._ixref_errors += 1
-                var = traceback.format_exception_only(type(error), error)
-                self._stored_xref_errors.append((mat, var))
-                if self._ixref_errors > self._nxref_errors:
-                    self.pop_xref_errors()
+                self._store_xref_error(error, mat)
 
         # CREEP - depends on MAT1
         data = [self.MATS1, self.MATS3, self.MATS8,
                 self.MATT1, self.MATT2, self.MATT3, self.MATT4, self.MATT5,
                 self.MATT8, self.MATT9]
         for material_deps in data:
-            for mat in itervalues(material_deps):
+            for mat in material_deps.values():
                 try:
                     mat.cross_reference(self)
                 except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
-                    self._ixref_errors += 1
-                    var = traceback.format_exception_only(type(error), error)
-                    self._stored_xref_errors.append((mat, var))
-                    if self._ixref_errors > self._nxref_errors:
-                        self.pop_xref_errors()
+                    self._store_xref_error(error, mat)
 
     def _cross_reference_loads(self):
         # type: () -> None
         """
         Links the loads to nodes, coordinate systems, and other loads.
         """
-        for (unused_lid, load_combinations) in iteritems(self.load_combinations):
+        for (unused_lid, load_combinations) in self.load_combinations.items():
             for load_combination in load_combinations:
                 try:
                     load_combination.cross_reference(self)
                 except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
-                    self._ixref_errors += 1
-                    var = traceback.format_exception_only(type(error), error)
-                    self._stored_xref_errors.append((load_combination, var))
-                    if self._ixref_errors > self._nxref_errors:
-                        self.pop_xref_errors()
+                    self._store_xref_error(error, load_combination)
 
-        for (unused_lid, loads) in iteritems(self.loads):
+        for (unused_lid, loads) in self.loads.items():
             for load in loads:
                 try:
                     load.cross_reference(self)
                 except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
-                    self._ixref_errors += 1
-                    var = traceback.format_exception_only(type(error), error)
-                    self._stored_xref_errors.append((load, var))
-                    if self._ixref_errors > self._nxref_errors:
-                        self.pop_xref_errors()
+                    self._store_xref_error(error, load)
 
-        for (unused_lid, sid) in iteritems(self.dloads):
+        for (unused_lid, sid) in self.dloads.items():
             for load in sid:
                 #self.log.debug("  dloadi load=%s" % (load))
                 try:
@@ -513,51 +478,32 @@ class XrefMesh(BDFAttributes):
                     if self._ixref_errors > self._nxref_errors:
                         self.pop_xref_errors()
 
-        for (unused_lid, sid) in iteritems(self.dload_entries):
+        for unused_lid, sid in self.dload_entries.items():
             for load in sid:
                 #self.log.debug("  dloadi load=%s" % (load))
                 try:
                     load.cross_reference(self)
                 except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
                     #raise
-                    self._ixref_errors += 1
-                    var = traceback.format_exception_only(type(error), error)
-                    self._stored_xref_errors.append((load, var))
-                    if self._ixref_errors > self._nxref_errors:
-                        self.pop_xref_errors()
+                    self._store_xref_error(error, load)
 
-        for unused_key, darea in iteritems(self.dareas):
+        for unused_key, darea in self.dareas.items():
             try:
                 darea.cross_reference(self)
             except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
-                #raise
-                self._ixref_errors += 1
-                var = traceback.format_exception_only(type(error), error)
-                self._stored_xref_errors.append((load, var))
-                if self._ixref_errors > self._nxref_errors:
-                    self.pop_xref_errors()
+                self._store_xref_error(error, darea)
 
-        for unused_key, tic in iteritems(self.tics):
+        for unused_key, tic in self.tics.items():
             try:
                 tic.cross_reference(self)
             except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
-                #raise
-                self._ixref_errors += 1
-                var = traceback.format_exception_only(type(error), error)
-                self._stored_xref_errors.append((load, var))
-                if self._ixref_errors > self._nxref_errors:
-                    self.pop_xref_errors()
+                self._store_xref_error(error, tic)
 
-        for unused_key, dphase in iteritems(self.dphases):
+        for unused_key, dphase in self.dphases.items():
             try:
                 dphase.cross_reference(self)
             except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
-                #raise
-                self._ixref_errors += 1
-                var = traceback.format_exception_only(type(error), error)
-                self._stored_xref_errors.append((dphase, var))
-                if self._ixref_errors > self._nxref_errors:
-                    self.pop_xref_errors()
+                self._store_xref_error(error, dphase)
 
     def _cross_reference_sets(self):
         # type: () -> None
@@ -572,12 +518,12 @@ class XrefMesh(BDFAttributes):
             set_obj.cross_reference(self)
         for set_obj in self.qsets:
             set_obj.cross_reference(self)
-        for unused_name, set_objs in iteritems(self.usets):
+        for unused_name, set_objs in self.usets.items():
             for set_obj in set_objs:
                 set_obj.cross_reference(self)
 
         # superelements
-        for unused_key, set_obj in iteritems(self.se_sets):
+        for unused_key, set_obj in self.se_sets.items():
             set_obj.cross_reference(self)
         for set_obj in self.se_bsets:
             set_obj.cross_reference(self)
@@ -591,22 +537,22 @@ class XrefMesh(BDFAttributes):
     def _cross_reference_optimization(self):
         # type: () -> None
         """cross references the optimization objects"""
-        for unused_key, deqatn in iteritems(self.dequations):
+        for unused_key, deqatn in self.dequations.items():
             deqatn.cross_reference(self)
-        for unused_key, dresp in iteritems(self.dresps):
+        for unused_key, dresp in self.dresps.items():
             dresp.cross_reference(self)
-        for unused_key, dconstrs in iteritems(self.dconstrs):
+        for unused_key, dconstrs in self.dconstrs.items():
             for dconstr in dconstrs:
                 dconstr.cross_reference(self)
 
-        for unused_key, dvcrel in iteritems(self.dvcrels):
+        for unused_key, dvcrel in self.dvcrels.items():
             dvcrel.cross_reference(self)
-        for unused_key, dvmrel in iteritems(self.dvmrels):
+        for unused_key, dvmrel in self.dvmrels.items():
             dvmrel.cross_reference(self)
-        for unused_key, dvprel in iteritems(self.dvprels):
+        for unused_key, dvprel in self.dvprels.items():
             dvprel.cross_reference(self)
 
-    def geom_check(self, geom_check, xref):
+    def geom_check(self, geom_check, xref):  # pragma: no cover
         # type: (bool, bool) -> None
         """
         what about xref?

@@ -4,7 +4,6 @@ very old code aster converter that was never quite working
 from __future__ import print_function
 import os
 from codecs import open
-from six import iteritems
 from pyNastran.bdf.bdf import BDF
 
 
@@ -59,7 +58,7 @@ class CodeAsterConverter(BDF):
         props = {}
         for pid in self.properties:
             props[pid] = []
-        for eid, element in iteritems(self.elements):
+        for eid, element in self.elements.items():
             pid = element.Pid()
             props[pid].append(eid)
         mats = []
@@ -74,7 +73,7 @@ class CodeAsterConverter(BDF):
 
         for mid in self.materials:
             mats[mid] = []
-        for eid, element in iteritems(self.elements):
+        for eid, element in self.elements.items():
             try:
                 mid = element.Mid()
                 mats[mid].append(eid)
@@ -90,7 +89,7 @@ class CodeAsterConverter(BDF):
         elems = {}
         #for eid,elements in self.elements:
             #elems[eid] = []
-        for eid, element in iteritems(self.elements):
+        for eid, element in self.elements.items():
             if element.type == 'CTRIA3':
                 element_type = 'TRIA3'
             elif element.type == 'CTRIA6':
@@ -128,7 +127,7 @@ class CodeAsterConverter(BDF):
 
         for mid in self.materials:
             mats[mid] = []
-        for pid, prop in iteritems(self.properties):
+        for pid, prop in self.properties.items():
             try:
                 mid = prop.Mid()
                 mats[mid].append(pid)
@@ -187,7 +186,7 @@ class CodeAsterConverter(BDF):
         mail += 'COOR_3D\n'
         form = '    %s%-' + str(self.max_nid_len) + 's %8s %8s %8s\n'
 
-        for nid, node in sorted(iteritems(self.nodes)):
+        for nid, node in sorted(self.nodes.items()):
             xyz = node.get_position()
             mail += form % (grid_word, nid, xyz[0], xyz[1], xyz[2])
         mail += 'FINSF\n\n'
@@ -206,7 +205,7 @@ class CodeAsterConverter(BDF):
 
         form_e = '    %s%-' + str(self.max_eid_len) + 's '
         form_g = '%s%-' + str(self.max_nid_len) + 's '
-        for etype, eids in sorted(iteritems(elems)):
+        for etype, eids in sorted(elems.items()):
             mail += '%s\n' % etype
             for eid in eids:
                 mail += form_e % (elem_word, eid)
@@ -228,7 +227,7 @@ class CodeAsterConverter(BDF):
             comm += ''
 
         p = []
-        for pid, prop in sorted(iteritems(self.properties)):
+        for pid, prop in sorted(self.properties.items()):
             p.append('%s_%s' % (prop.type, pid))
         p = str(p)[1:-1] # chops the [] signs
         comm += "MODEL=AFFE_MODELE(MAILLAGE=MESH,\n"
@@ -241,7 +240,7 @@ class CodeAsterConverter(BDF):
         icut = 0
         iface = 0
         istart = 0
-        for pid, prop in sorted(iteritems(self.properties)):
+        for pid, prop in sorted(self.properties.items()):
             ptype = prop.type
             if ptype == 'PBARL':
                 msg = '# BAR Type=%s pid=%s\n' % (ptype, pid)
@@ -391,7 +390,7 @@ class CodeAsterConverter(BDF):
         else:
             comm += ''
         mats = self.get_elements_by_mid()
-        for mid, material in sorted(iteritems(self.materials)):
+        for mid, material in sorted(self.materials.items()):
             #comm += 'GROUP_MA name = %s_%s\n' % (material.type, mid)
             if material.type == 'MAT1':
                 # MAT1
@@ -441,7 +440,7 @@ class CodeAsterConverter(BDF):
         comm += '                      AFFE=(\n'
 
         mat_to_props = self.get_properties_by_mid()
-        for mid, material in sorted(iteritems(self.materials)):
+        for mid, material in sorted(self.materials.items()):
             comm += '                      _F(GROUP_MA=('
             pids = mat_to_props[mid]
             #comm += "                      "
@@ -490,10 +489,10 @@ class CodeAsterConverter(BDF):
                     comm += out
 
             #loadcase.
-            #for ID, grav in sorted(iteritems(self.gravs)):
+            #for ID, grav in sorted(self.gravs.items()):
             #    comm += grav.write_code_aster(mag)
 
-        #for lid_load_type, commi in sorted(iteritems(skipped_load_ids)):
+        #for lid_load_type, commi in sorted(skipped_load_ids.items()):
             #comm += commi
 
         comm += self.breaker()
@@ -503,7 +502,7 @@ class CodeAsterConverter(BDF):
         """creates SPC constraints"""
         comm = ''
         comm += '# ca_spcs\n'
-        for subcase_id, subcase in iteritems(self.subcases):
+        for subcase_id, subcase in self.subcases.items():
             if subcase_id == 0:
                 continue
             if not subcase.has_parameter('SPC'):
@@ -522,7 +521,7 @@ class CodeAsterConverter(BDF):
         """creates MPC constraints"""
         comm = ''
         comm += '# ca_mpcs\n'
-        for subcase_id, subcase in iteritems(self.subcases):
+        for subcase_id, subcase in self.subcases.items():
             if subcase_id == 0:
                 continue
             if not 'MPC' in subcase:
@@ -646,7 +645,7 @@ def write_code_aster_load(load, model, grid_word='node'):
     #                        FZ=-500.0),)
 
     spaces = "                           "
-    for nid in sorted(nids):  # ,load in sorted(iteritems(force_loads))
+    for nid in sorted(nids):  # ,load in sorted(force_loads.items())
         msg += spaces + "_F(NOEUD='%s%s'," % (grid_word, nid)
 
         if nid in force_loads:
@@ -768,7 +767,7 @@ def main():
     ver = str(pyNastran.__version__)
     data = docopt(msg, version=ver)
 
-    for key, value in sorted(iteritems(data)):
+    for key, value in sorted(data.items()):
         print("%-12s = %r" % (key.strip('--'), value))
 
     bdf_filename = data['BDF_FILENAME']

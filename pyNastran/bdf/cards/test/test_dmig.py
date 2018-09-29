@@ -5,7 +5,7 @@ import os
 from numpy import array, array_equal, sin, cos, radians
 
 import pyNastran
-from pyNastran.bdf.bdf import BDF, BDFCard, read_bdf, DMI, DMIG
+from pyNastran.bdf.bdf import BDF, BDFCard, read_bdf, DMI, DMIG, fill_dmigs
 from pyNastran.bdf.cards.test.utils import save_load_deck
 
 PKG_PATH = pyNastran.__path__[0]
@@ -152,7 +152,7 @@ class TestDMIG(unittest.TestCase):
     def test_dmig_06(self):
         lines = ['DMIG    ENFORCE 0       1       1       0']
         model = BDF(debug=False)
-        card = model.process_card(lines)
+        card = model._process_card(lines)
         card_obj = BDFCard(card)
 
         size = 8
@@ -170,7 +170,7 @@ class TestDMIG(unittest.TestCase):
         model = BDF(debug=False)
         for card_lines in cards:
             model.add_card(card_lines, 'DMIG', is_list=False)
-        model.fill_dmigs()
+        fill_dmigs(model)
 
         a_matrix = model.dmigs['A']
         assert len(a_matrix.GCi) == 3, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
@@ -187,7 +187,7 @@ class TestDMIG(unittest.TestCase):
         model = BDF(debug=False)
         for card_lines in cards:
             model.add_card(card_lines, 'DMIG', is_list=False)
-        model.fill_dmigs()
+        fill_dmigs(model)
 
         a_matrix = model.dmigs['A']
         assert len(a_matrix.GCi) == 3, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
@@ -204,7 +204,7 @@ class TestDMIG(unittest.TestCase):
         model = BDF(debug=False)
         for card_lines in cards:
             model.add_card(card_lines, 'DMIG', is_list=False)
-        model.fill_dmigs()
+        fill_dmigs(model)
 
         a_matrix = model.dmigs['A']
         assert len(a_matrix.GCi) == 3, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
@@ -223,7 +223,7 @@ class TestDMIG(unittest.TestCase):
         model = BDF(debug=False)
         for card_lines in cards:
             model.add_card(card_lines, 'DMIG', is_list=False)
-        model.fill_dmigs()
+        fill_dmigs(model)
         a_matrix = model.dmigs['AMTRXX']
         assert len(a_matrix.GCi) == 4, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
         assert len(a_matrix.GCj) == 4, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
@@ -250,7 +250,7 @@ class TestDMIG(unittest.TestCase):
         """tests a DMI card"""
         lines = ['DMI,Q,0,6,1,0,,4,4']
         model = BDF(debug=False)
-        card = model.process_card(lines)
+        card = model._process_card(lines)
         card_obj = BDFCard(card)
 
         size = 8

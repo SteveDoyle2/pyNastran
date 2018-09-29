@@ -1,4 +1,4 @@
-# pylint: disable=R0902,R0904,R0914
+# pylint: disable=R0902,R0904,R0914,C0103,C1801,R0913
 """
 All coordinate cards are defined in this file.  This includes:
 
@@ -14,12 +14,11 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import copy
 from math import sqrt, degrees, radians, atan2, acos, sin, cos
-from six.moves import zip, range
 
 import numpy as np
 from numpy.linalg import norm  # type: ignore
 
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -28,6 +27,73 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
 
+from pyNastran.femutils.coord_transforms import (
+    xyz_to_rtz_array, xyz_to_rtp_array, # xyz to xxx transforms
+    rtz_to_xyz_array, rtp_to_xyz_array, # xxx to xyz transforms
+    #rtz_to_rtp_array, rtp_to_rtz_array, # rtp/rtz and rtz/rtp transforms
+)
+
+
+def global_to_basic_rectangular(coord, unused_xyz_global, dtype='float64'):
+    coord_transform = coord.local_to_global()
+    return coord_transform
+    #transform = array([ex, ey, ez], dtype=dtype)
+    #return tranform
+
+def _primary_axes(coord):
+    """gets the i,j,k axes from the """
+    ## TODO: not sure...needs testing
+    coord_transform = coord.transform_node_to_global()
+    ex = coord_transform[0, :]
+    ey = coord_transform[1, :]
+    ez = coord_transform[2, :]
+    return ex, ey, ez
+
+def global_to_basic_cylindrical(coord, xyz_global, dtype='float64'):
+    ex, ey, ez = _primary_axes(coord)
+    rtz = coord.transform_node_to_global(xyz_global)
+    r1_rad = radians(rtz[1])
+    er = ex * cos(r1_rad) + ey * sin(r1_rad)
+    et = ey * cos(r1_rad) - ex * sin(r1_rad)
+    transform = np.array([er, et, ez], dtype=dtype)
+    return transform
+
+def global_to_basic_spherical(coord, xyz_global, dtype='float64'):
+    ex, ey, ez = _primary_axes(coord)
+
+    rtp = coord.transform_node_to_global(xyz_global)
+    #deg_to_rad = 1. / 57.29577951
+    #cr0 = cos(rtp[0] * deg_to_rad)
+    #cr1 = cos(rtp[1] * deg_to_rad)
+    #sr0 = sin(rtp[0] * deg_to_rad)
+    #sr1 = sin(rtp[1] * deg_to_rad)
+    #
+    #er = ex * cr0 * cr1 + \
+    #     ey * sr0 * sr1 + \
+    #     ez * sr1
+    #et = ex * cr0 * cr1 - \
+    #     ey * sr0 * cr1
+    #ep = ez * cr1 - \
+    #     ex * cr0 * sr1 - \
+    #     ey * sr0 * sr1
+    theta = radians(rtp[1])
+    phi = radians(rtp[2])
+
+    sint = sin(theta)
+    cost = cos(theta)
+    sinp = sin(phi)
+    cosp = cos(phi)
+
+    er = ex * sint * cosp + \
+         ey * sint * sinp + \
+         ez * cost
+    et = ex * cost * cosp + \
+         ey * cost * sinp - \
+         ez * sint
+    ep = -ex * sinp + ey * cosp
+
+    transform = np.array([er, et, ep], dtype=dtype)
+    return transform
 
 def normalize(v):
     r"""
@@ -212,7 +278,9 @@ class Coord(BaseCard):
             self.rid_trace = copy.deepcopy(rid_ref.rid_trace)
             if rid not in self.rid_trace:
                 self.rid_trace.append(rid)
-            assert self.cid not in self.rid_trace, 'cid=%s rid_trace=%s' % (self.cid, self.rid_trace)
+            if self.cid in self.rid_trace:
+                msg = 'Circular Reference: cid=%s rid_trace=%s' % (self.cid, self.rid_trace)
+                raise RuntimeError(msg)
 
         if rid == 0:
             self.origin = copy.deepcopy(self.e1)
@@ -371,7 +439,9 @@ class Coord(BaseCard):
             self.rid_trace = copy.deepcopy(rid_ref.rid_trace)
             if rid not in self.rid_trace:
                 self.rid_trace.append(rid)
-            assert self.cid not in self.rid_trace, 'cid=%s rid_trace=%s' % (self.cid, self.rid_trace)
+            if self.cid in self.rid_trace:
+                msg = 'Circular Reference: cid=%s rid_trace=%s' % (self.cid, self.rid_trace)
+                raise RuntimeError(msg)
 
         if rid == 0:
             self.origin = copy.deepcopy(self.e1)
@@ -1119,12 +1189,15 @@ def define_coord_ijk(model, cord2_type, cid, origin, rid=0, i=None, j=None, k=No
     e3 = rcoord.transform_node_to_local(origin + i) # point on x-z plane / point on x axis
     card = [cord2_type, cid, rid] + list(e1) + list(e2) + list(e3)
 
+    origin = e1
+    zaxis = e2
+    xzplane = e3
     if cord2_type == 'CORD2R':
-        coord = CORD2R(cid, rid, origin=e1, zaxis=e2, xzplane=e3, comment='')
+        coord = CORD2R(cid, origin, zaxis, xzplane, rid=rid, comment='')
     elif cord2_type == 'CORD2C':
-        coord = CORD2C(cid, rid, origin=e1, zaxis=e2, xzplane=e3, comment='')
+        coord = CORD2C(cid, origin, zaxis, xzplane, rid=rid, comment='')
     elif cord2_type == 'CORD2S':
-        coord = CORD2S(cid, rid, origin=e1, zaxis=e2, xzplane=e3, comment='')
+        coord = CORD2S(cid, origin, zaxis, xzplane, rid=rid, comment='')
     else:
         raise NotImplementedError(card)
     if add:
@@ -1133,7 +1206,7 @@ def define_coord_ijk(model, cord2_type, cid, origin, rid=0, i=None, j=None, k=No
 
 
 class RectangularCoord(object):
-
+    """defines common methods for rectangular coordinate systems"""
     @staticmethod
     def coord_to_xyz(p):
         """
@@ -1178,9 +1251,14 @@ class RectangularCoord(object):
         """
         return p
 
+    def global_to_basic(self, xyz_global):
+        return global_to_basic_rectangular(self, xyz_global, dtype='float64')
+
 
 class CylindricalCoord(object):
     r"""
+    defines common methods for cylindrical coordinate systems
+
     .. math:: r      = \sqrt(x^2+y^2)
     .. math:: \theta = tan^{-1}\left(\frac{y}{x}\right)
     .. math:: z      = z
@@ -1243,20 +1321,14 @@ class CylindricalCoord(object):
             the point in the local coordinate system
 
         """
-        assert len(p.shape) == 2, p.shape
-        R = p[:, 0]
-        theta = np.radians(p[:, 1])
-        x = R * np.cos(theta)
-        y = R * np.sin(theta)
-        out = np.array([x, y, p[:, 2]], dtype='float64').T
-        return out
+        return rtz_to_xyz_array(p)
 
     @staticmethod
-    def coord_to_spherical(p):
-        """hasn't been tested"""
-        r, t, z = p
+    def coord_to_spherical(rtz):
+        """R-theta-z to rho-theta-phi transform"""
+        r, t, z = rtz
         rho = (r**2 + z**2)**0.5
-        theta = degrees(acos(z / rho))
+        theta = np.degrees(acos(z / rho))
         phi = t
         return np.array([rho, theta, phi], dtype='float64')
 
@@ -1294,20 +1366,20 @@ class CylindricalCoord(object):
 
         Returns
         -------
-        xyz : (3,) float ndarray
+        rtp : (3,) float ndarray
             the point in the local coordinate system
 
         """
-        assert len(p.shape) == 2, p.shape
-        x = p[:, 0]
-        y = p[:, 1]
-        theta = np.degrees(np.arctan2(y, x))
-        R = np.sqrt(x * x + y * y)
-        return np.array([R, theta, p[:, 2]], dtype='float64').T
+        return xyz_to_rtz_array(p)
+
+    def global_to_basic(self, xyz_global):
+        return global_to_basic_cylindrical(self, xyz_global, dtype='float64')
 
 
 class SphericalCoord(object):
     r"""
+    defines common methods for spherical coordinate systems
+
     .. math:: r = \rho = \sqrt(x^2+y^2+z^2)
 
     .. math:: \theta   = \cos^{-1}\left(\frac{z}{r}\right)
@@ -1354,19 +1426,7 @@ class SphericalCoord(object):
             the local XYZ point in the R, \theta, \phi coordinate system
 
         """
-        assert len(p.shape) == 2, p.shape
-        x = p[:, 0]
-        y = p[:, 1]
-        z = p[:, 2]
-        radius = np.sqrt(x * x + y * y + z * z)
-        phi = np.degrees(np.arctan2(y, x))
-
-        i = np.where(radius == 0.0)
-        if len(i):
-            theta = np.zeros(len(z), dtype=z.dtype)
-            ir = np.where(radius != 0.0)
-            theta[ir] = np.degrees(np.arccos(z[ir] / radius[ir]))
-        return np.array([radius, theta, phi], dtype='float64').T
+        return xyz_to_rtp_array(p)
 
     @staticmethod
     def coord_to_xyz(p):
@@ -1394,14 +1454,7 @@ class SphericalCoord(object):
             the R, \theta, \phi in the local coordinate system
 
         """
-        assert len(p.shape) == 2, p.shape
-        R = p[:, 0]
-        theta = np.radians(p[:, 1])
-        phi = np.radians(p[:, 2])
-        x = R * np.sin(theta) * np.cos(phi)
-        y = R * np.sin(theta) * np.sin(phi)
-        z = R * np.cos(theta)
-        return np.array([x, y, z], dtype='float64').T
+        return rtp_to_xyz_array(p)
 
     @staticmethod
     def coord_to_spherical(p):
@@ -1420,6 +1473,9 @@ class SphericalCoord(object):
         t = phi
         return np.array([r, t, z], dtype='float64')
 
+    def global_to_basic(self, xyz_global):
+        return global_to_basic_spherical(self, xyz_global, dtype='float64')
+
 
 class Cord2x(Coord):
     """
@@ -1428,7 +1484,7 @@ class Cord2x(Coord):
      - CORD2C
      - CORD2S
     """
-    def __init__(self, cid, rid=0, origin=None, zaxis=None, xzplane=None, comment=''):
+    def __init__(self, cid, origin, zaxis, xzplane, rid=0, comment=''):
         """
         This method emulates the CORD2x card.
 
@@ -1436,18 +1492,22 @@ class Cord2x(Coord):
         ----------
         cid : int
             coord id
+        origin : ndarray/None
+            the origin
+            None -> [0., 0., 0.]
+        zaxis : ndarray/None
+            a point on the z-axis
+            None -> [0., 0., 1.]
+        xzplane : ndarray/None
+            a point on the xz-plane
+            None -> [1., 0., 0.]
         rid : int; default=0
             reference coord id
-        origin : ndarray/None; default=None -> [0., 0., 0.]
-            the origin
-        zaxis : ndarray/None; default=None -> [0., 0., 1.]
-            a point on the z-axis
-        xzplane : ndarray/None; default=None -> [1., 0., 0.]
-            a point on the xz-plane
 
         .. note :: no type checking
 
         """
+        assert isinstance(rid, int), rid
         Coord.__init__(self)
         if comment:
             self.comment = comment
@@ -1472,7 +1532,8 @@ class Cord2x(Coord):
         self._finish_setup()
 
     @classmethod
-    def _add(cls, cid, rid=0, origin=None, zaxis=None, xzplane=None, comment=''):
+    def _add(cls, cid, origin, zaxis, xzplane, rid=0, comment=''):
+        assert isinstance(rid, int), rid
         cid = cid
         rid = rid
 
@@ -1490,7 +1551,7 @@ class Cord2x(Coord):
             e3 = np.array([1., 0., 0.], dtype='float64')
         else:
             e3 = np.asarray(xzplane)
-        return cls(cid, rid, e1, e2, e3, comment=comment)
+        return cls(cid, e1, e2, e3, rid, comment=comment)
         #self._finish_setup()
 
     @classmethod
@@ -1597,10 +1658,10 @@ class Cord2x(Coord):
                 jhat = np.cross(k, xzplane) # xzplane is "defining" xaxis
                 j = jhat / norm(jhat)
                 i = np.cross(j, k)
-        return cls.add_ijk(cid, rid, origin, i, j, k, comment=comment)
+        return cls.add_ijk(cid, origin, i, j, k, rid=rid, comment=comment)
 
     @classmethod
-    def add_ijk(cls, cid, rid=0, origin=None, i=None, j=None, k=None, comment=''):
+    def add_ijk(cls, cid, origin=None, i=None, j=None, k=None, rid=0, comment=''):
         """
         Create a coordinate system based on 2 or 3 perpendicular unit vectors
 
@@ -1660,7 +1721,7 @@ class Cord2x(Coord):
 
         # point on x-z plane / point on x axis
         e3 = origin + i
-        return cls(cid, rid, e1, e2, e3, comment=comment)
+        return cls(cid, e1, e2, e3, rid=rid, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -1670,7 +1731,7 @@ class Cord2x(Coord):
         e2 = np.array(data[5:8], dtype='float64')
         e3 = np.array(data[8:11], dtype='float64')
         assert len(data) == 11, 'data = %s' % (data)
-        return cls(cid, rid, e1, e2, e3, comment=comment)
+        return cls(cid, e1, e2, e3, rid=rid, comment=comment)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1695,7 +1756,7 @@ class Cord2x(Coord):
                             double_or_blank(card, 10, 'e3y', 0.0),
                             double_or_blank(card, 11, 'e3z', 0.0)],
                            dtype='float64')
-        return cls(cid, rid, origin, zaxis, xzplane, comment=comment)
+        return cls(cid, origin, zaxis, xzplane, rid=rid, comment=comment)
         #self._finish_setup()
 
     def _finish_setup(self):
@@ -1758,7 +1819,8 @@ class Cord2x(Coord):
             #self.e1 = self.rid_ref.transform_node_to_local(xyz)
             #self.e2 = self.rid_ref.transform_node_to_local(xyz + e12)
             #self.e3 = self.rid_ref.transform_node_to_local(xyz + e13)
-            raise RuntimeError('this method is very confusing...xyz is not defined...is that origin?')
+            msg = 'this method is very confusing...xyz is not defined...is that origin?'
+            raise RuntimeError(msg)
         else:
             self.rid = 0
             self.rid_ref = None
@@ -2050,9 +2112,11 @@ class Cord1x(Coord):
 
 
 class GMCORD(BaseCard):
+    """defines the GMCOORD class"""
     type = 'GMCORD'
 
     def __init__(self, cid, entity, gm_ids, comment=''):
+        """Creates a GMCOORD"""
         if comment:
             self.comment = comment
         self.cid = cid
@@ -2419,7 +2483,7 @@ class CORD2R(Cord2x, RectangularCoord):
     type = 'CORD2R'
     Type = 'R'
 
-    def __init__(self, cid, rid=0, origin=None, zaxis=None, xzplane=None, comment=''):
+    def __init__(self, cid, origin, zaxis, xzplane, rid=0, comment=''):
         """
         Creates the CORD2R card, which defines a rectangular coordinate
         system using 3 vectors.
@@ -2428,23 +2492,20 @@ class CORD2R(Cord2x, RectangularCoord):
         ----------
         cid : int
             coordinate system id
+        origin : List[float, float, float]
+            the origin of the coordinate system
+        zaxis : List[float, float, float]
+            the z-axis of the coordinate system
+        xzplane : List[float, float, float]
+            a point on the xz plane
         rid : int; default=0
             the referenced coordinate system that defines the system the
             vectors
-        origin : List[float, float, float]; default=None
-            the origin of the coordinate system
-            None : [0., 0., 0.]
-        zaxis : List[float, float, float]; default=None
-            the z-axis of the coordinate system
-            None : [0., 0., 1.]
-        xzplane : List[float, float, float]; default=None
-            a point on the xz plane
-            None : [1., 0., 0.]
         comment : str; default=''
             a comment for the card
 
         """
-        Cord2x.__init__(self, cid, rid, origin, zaxis, xzplane, comment=comment)
+        Cord2x.__init__(self, cid, origin, zaxis, xzplane, rid=rid, comment=comment)
 
     def _verify(self, xref):
         """
@@ -2483,7 +2544,7 @@ class CORD2C(Cord2x, CylindricalCoord):
     type = 'CORD2C'
     Type = 'C'
 
-    def __init__(self, cid, rid=0, origin=None, zaxis=None, xzplane=None, comment=''):
+    def __init__(self, cid, origin, zaxis, xzplane, rid=0, comment=''):
         """
         Creates the CORD2C card, which defines a cylindrical coordinate
         system using 3 vectors.
@@ -2492,23 +2553,20 @@ class CORD2C(Cord2x, CylindricalCoord):
         ----------
         cid : int
             coordinate system id
+        origin : List[float, float, float]
+            the origin of the coordinate system
+        zaxis : List[float, float, float]
+            the z-axis of the coordinate system
+        xzplane : List[float, float, float]
+            a point on the xz plane
         rid : int; default=0
             the referenced coordinate system that defines the system the
             vectors
-        origin : List[float, float, float]; default=None
-            the origin of the coordinate system
-            None : [0., 0., 0.]
-        zaxis : List[float, float, float]; default=None
-            the z-axis of the coordinate system
-            None : [0., 0., 1.]
-        xzplane : List[float, float, float]; default=None
-            a point on the xz plane
-            None : [1., 0., 0.]
         comment : str; default=''
             a comment for the card
 
         """
-        Cord2x.__init__(self, cid, rid, origin, zaxis, xzplane, comment=comment)
+        Cord2x.__init__(self, cid, origin, zaxis, xzplane, rid, comment=comment)
 
     def raw_fields(self):
         rid = set_blank_if_default(self.Rid(), 0)
@@ -2532,7 +2590,7 @@ class CORD2S(Cord2x, SphericalCoord):
     type = 'CORD2S'
     Type = 'S'
 
-    def __init__(self, cid, rid=0, origin=None, zaxis=None, xzplane=None, comment=''):
+    def __init__(self, cid, origin, zaxis, xzplane, rid=0, comment=''):
         """
         Creates the CORD2C card, which defines a spherical coordinate
         system using 3 vectors.
@@ -2541,23 +2599,20 @@ class CORD2S(Cord2x, SphericalCoord):
         ----------
         cid : int
             coordinate system id
+        origin : List[float, float, float]
+            the origin of the coordinate system
+        zaxis : List[float, float, float]
+            the z-axis of the coordinate system
+        xzplane : List[float, float, float]
+            a point on the xz plane
         rid : int; default=0
             the referenced coordinate system that defines the system the
             vectors
-        origin : List[float, float, float]; default=None
-            the origin of the coordinate system
-            None : [0., 0., 0.]
-        zaxis : List[float, float, float]; default=None
-            the z-axis of the coordinate system
-            None : [0., 0., 1.]
-        xzplane : List[float, float, float]; default=None
-            a point on the xz plane
-            None : [1., 0., 0.]
         comment : str; default=''
             a comment for the card
 
         """
-        Cord2x.__init__(self, cid, rid, origin, zaxis, xzplane, comment=comment)
+        Cord2x.__init__(self, cid, origin, zaxis, xzplane, rid, comment=comment)
 
     def raw_fields(self):
         rid = set_blank_if_default(self.Rid(), 0)
@@ -2603,8 +2658,8 @@ def create_coords_along_line(model, p1, p2, percents, cid=0, axis=1):
            the coord id
         inids : (nnodes_in_cid)
 
-    Warning
-    -------
+    Warnings
+    --------
      - requires at least 1 node
     """
     cid = max(list(model.coords.keys())) + 1
@@ -2638,8 +2693,7 @@ def create_coords_along_line(model, p1, p2, percents, cid=0, axis=1):
         #print('zaxis = %s' % zaxis)
         #print('xzplane = %s' % xzplane)
         unused_coord = model.add_cord2r(
-            cid, rid=0,
-            origin=origin, zaxis=zaxis, xzplane=xzplane, comment='')
+            cid, origin, zaxis, xzplane, rid=0, comment='')
 
         cids.append(cid)
         origins.append(origin)

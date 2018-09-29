@@ -25,11 +25,11 @@ EPOINTs/SPOINTs classes are for multiple degrees of freedom
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
-from six import string_types, PY2, iteritems
 from typing import List, Union, Optional, Any
+from six import string_types, PY2
 import numpy as np
 
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_string8_blank_if_default
 from pyNastran.bdf.field_writer_16 import set_string16_blank_if_default
 
@@ -89,7 +89,7 @@ class SEQGP(BaseCard):
             a comment for the card
         """
         ncard = len(card) - 1
-        n = ncard // 2
+        assert len(card) > 1, 'len(SEQGP) = 1; card=%s' % card
         assert ncard % 2 == 0, card
         nids = []
         seqids = []
@@ -269,7 +269,7 @@ def write_xpoints(cardtype, points, comment=''):
     msg = comment
     if isinstance(points, dict):
         point_ids = []
-        for point_id, point in sorted(iteritems(points)):
+        for point_id, point in sorted(points.items()):
             point_ids.append(point_id)
             if point.comment:
                 msg += point.comment
@@ -380,9 +380,6 @@ class XPoints(BaseCard):
             the number of degrees of freedom
         """
         return len(self.points)
-
-    def get_ndof(self):  # TODO: deprecate?
-        return self.__len__()
 
     def add_points(self, sList):
         """
@@ -726,7 +723,7 @@ class GRIDB(BaseCard):
     #: allows the get_field method and update_field methods to be used
     _field_map = {1: 'nid', 4:'phi', 6:'cd', 7:'ps', 8:'idf'}
 
-    def __init__(self, nid, phi, cd, ps, idf, comment=''):
+    def __init__(self, nid, phi, cd, ps, ringfl, comment=''):
         """
         Creates the GRIDB card
         """
@@ -741,13 +738,13 @@ class GRIDB(BaseCard):
         self.cd = cd
         #: local SPC constraint
         self.ps = ps
-        self.idf = idf
+        #: ringfl
+        self.ringfl = ringfl
 
         assert self.nid > 0, 'nid=%s' % self.nid
         assert self.phi >= 0, 'phi=%s' % self.phi
         assert self.cd >= 0, 'cd=%s' % self.cd
-        assert self.ps >= 0, 'ps=%s' % self.ps
-        assert self.idf >= 0, 'idf=%s' % self.idf
+        assert self.ringfl >= 0, 'ringfl=%s' % self.ringfl
         self.cd_ref = None
 
     @classmethod
@@ -765,8 +762,8 @@ class GRIDB(BaseCard):
         nid = integer(card, 1, 'nid')
         phi = double(card, 4, 'phi')
         cd = integer(card, 6, 'cd')
-        ps = integer(card, 7, 'ps')
-        idf = integer(card, 8, 'idf')
+        ps = components_or_blank(card, 7, 'ps', '')
+        idf = integer(card, 8, 'ringfl/idf')
         return GRIDB(nid, phi, cd, ps, idf, comment=comment)
 
     @classmethod
@@ -822,8 +819,12 @@ class GRIDB(BaseCard):
             the fields that define the card
         """
         list_fields = ['GRIDB', self.nid, None, None, self.phi, None,
-                       self.Cd(), self.ps, self.idf]
+                       self.Cd(), self.ps, self.ringfl]
         return list_fields
+
+    def get_position(self):
+        ## TODO: fixme
+        return np.array([0., 0., 0.])
 
     def repr_fields(self):
         """
@@ -837,7 +838,7 @@ class GRIDB(BaseCard):
         #phi = set_blank_if_default(self.phi, 0.0)
         cd = set_blank_if_default(self.Cd(), 0)
         ps = set_blank_if_default(self.ps, 0)
-        idf = set_blank_if_default(self.idf, 0)
+        idf = set_blank_if_default(self.ringfl, 0)
         list_fields = ['GRIDB', self.nid, None, None, self.phi, None, cd, ps,
                        idf]
         return list_fields
@@ -1188,18 +1189,6 @@ class GRID(BaseCard):
             pos_xyz = self.get_position()
             assert isinstance(pos_xyz, np.ndarray), 'pos_xyz=%r' % pos_xyz
 
-    def get_ndof(self):
-        # type: () -> int
-        """
-        Gets the number of degrees of freedom for the GRID
-
-        Returns
-        -------
-        six : int
-            the value 6
-        """
-        return 6
-
     def set_position(self, model, xyz, cid=0, xref=True):
         # type: (Any, np.ndarray, int) -> None
         """
@@ -1401,8 +1390,7 @@ class GRID(BaseCard):
         """
         if size == 8:
             return self.write_card_8()
-        else:
-            return self.write_card_16(is_double)
+        return self.write_card_16(is_double)
 
     def write_card_8(self):
         # type: () -> str
@@ -1538,8 +1526,8 @@ class POINT(BaseCard):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, nid, cp, xyz, comment=''):
-        # type: (int, int, Optional[Union[List[float], np.ndarray]], str) -> None
+    def __init__(self, nid, xyz, cp=0, comment=''):
+        # type: (int, Union[List[float], np.ndarray], int, str) -> None
         """
         Creates the POINT card
 
@@ -1547,10 +1535,10 @@ class POINT(BaseCard):
         ----------
         nid : int
             node id
-        cp : int
-            coordinate system for the xyz location
         xyz : (3, ) float ndarray; default=None -> [0., 0., 0.]
             the xyz/r-theta-z/rho-theta-phi values
+        cp : int; default=0
+            coordinate system for the xyz location
         comment : str; default=''
             a comment for the card
         """
@@ -1599,7 +1587,7 @@ class POINT(BaseCard):
             double_or_blank(card, 5, 'x3', 0.)], dtype='float64')
 
         assert len(card) <= 9, 'len(POINT card) = %i\ncard=%s' % (len(card), card)
-        return POINT(nid, cp, xyz, comment=comment)
+        return POINT(nid, xyz, cp=cp, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -1645,7 +1633,7 @@ class POINT(BaseCard):
         position : (3,) float ndarray
             the position of the POINT in the globaly coordinate system
         """
-        p = self.cp.transform_node_to_global(self.xyz)
+        p = self.cp_ref.transform_node_to_global(self.xyz)
         return p
 
     def get_position_wrt(self, model, cid):
@@ -1670,7 +1658,7 @@ class POINT(BaseCard):
             return self.xyz
 
         # converting the xyz point arbitrary->global
-        p = self.cp.transform_node_to_global(self.xyz)
+        p = self.cp_ref.transform_node_to_global(self.xyz)
 
         # a matrix global->local matrix is found
         msg = ', which is required by POINT nid=%s' % (self.nid)

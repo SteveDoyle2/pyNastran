@@ -6,7 +6,7 @@ from __future__ import print_function
 import os
 import unittest
 
-from six import iteritems, integer_types
+from six import integer_types
 import numpy as np
 
 import pyNastran
@@ -33,14 +33,14 @@ class TestOpt(unittest.TestCase):
         #bdf, op2 = run_model(bdf_filename, op2_filename,
                              #f06_has_weight=False, vectorized=True,
                              #encoding='utf-8')
-        op2 = read_op2(op2_filename, log=log, debug=True)
-
+        op2 = read_op2(op2_filename, log=log, debug=True, debug_file='temp.debug')
         subcase_ids = op2.subcase_key.keys()
         #for subcase_id in subcase_ids:
             #assert isinstance(subcase_id, integer_types), subcase_id
-            #for key, dresp in sorted(iteritems(model.dresps)):
+            #for key, dresp in sorted(model.dresps.items()):
                 #print(dresp)
                 #dresp.calculate(op2, subcase_id)
+        os.remove('temp.debug')
 
     def test_opt_2(self):
         """tests updating model based on DESVARs"""

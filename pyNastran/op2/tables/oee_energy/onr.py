@@ -1,8 +1,7 @@
 #pylint: disable=C0326,C0301
 from __future__ import print_function, unicode_literals
-from six.moves import range
 from struct import Struct
-from numpy import frombuffer, array
+import numpy as np
 
 from pyNastran.op2.tables.oee_energy.oee_objects import RealStrainEnergyArray, ComplexStrainEnergyArray
 from pyNastran.op2.op2_interface.op2_common import OP2Common
@@ -197,13 +196,12 @@ class ONR(OP2Common):
             self.data_code['element_name'] = element_name
         else:
             #print("element_name = %r" % (element_name))
-            #print(type(element_name))
             self.data_code['element_name'] = 'UnicodeDecodeError???'
             self.log.warning('data[20:28]=%r instead of data[24:32]' % data[20:28])
 
     def _read_onr2_3(self, data, ndata):
         """reads the SORT2 version of table 4 (the data table)"""
-        self.nonlinear_factor = None
+        self.nonlinear_factor = np.nan
         self.is_table_1 = False
         self.is_table_2 = True
         unused_three = self.parse_approach_code(data)
@@ -496,10 +494,10 @@ class ONR(OP2Common):
                 itotal = obj.itotal
                 itotal2 = obj.itotal + nelements * 4
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 4)
+                floats = np.frombuffer(data, dtype=self.fdtype).reshape(nelements, 4)
                 obj._times[itime] = dt
                 #if obj.itime == 0:
-                ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 4)
+                ints = np.frombuffer(data, dtype=self.idtype).reshape(nelements, 4)
                 eids = ints[:, 0] // 10
                 assert eids.min() > 0, eids.min()
                 obj.element[itime, ielement:ielement2] = eids
@@ -510,7 +508,7 @@ class ONR(OP2Common):
                 obj.ielement = ielement2
             else:
                 struct1 = Struct(self._endian + self._analysis_code_fmt + b'3f')
-                for i in range(nelements):
+                for unused_i in range(nelements):
                     edata = data[n:n+ntotal]
 
                     out = struct1.unpack(edata)
@@ -542,22 +540,22 @@ class ONR(OP2Common):
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 5).copy()
+                floats = np.frombuffer(data, dtype=self.fdtype).reshape(nelements, 5).copy()
                 obj._times[obj.itime] = dt
 
-                strings = frombuffer(data, dtype=self._uendian + 'S4').reshape(nelements, 5)
+                strings = np.frombuffer(data, dtype=self._uendian + 'S4').reshape(nelements, 5)
                 #print(strings)
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 5)
+                    ints = np.frombuffer(data, dtype=self.idtype).reshape(nelements, 5)
                     if obj.element_name == 'DMIG':
-                        s = array([(s1+s2).decode('latin1').strip()
-                                   for s1, s2 in zip(strings[:, 0], strings[:, 1])], dtype='|U8')
+                        s = np.array([(s1+s2).decode('latin1').strip()
+                                      for s1, s2 in zip(strings[:, 0], strings[:, 1])], dtype='|U8')
                         obj.element[itotal:itotal2] = s
                     else:
                         eids = ints[:, 0] // 10
                         assert eids.min() > 0, eids.min()
 
-                        s = array([s1+s2 for s1, s2 in zip(strings[:, 1], strings[:, 2])])
+                        s = np.array([s1+s2 for s1, s2 in zip(strings[:, 1], strings[:, 2])])
                         obj.element[itotal:itotal2] = eids
                         obj.element_type[obj.itime, itotal:itotal2, :] = s
 
@@ -582,7 +580,7 @@ class ONR(OP2Common):
                     word = word.strip()
                     #print "eType=%s" % (eType)
                     #print "%s" %(self.get_element_type(self.element_type)), data_in
-                    #eid = self.obj.add_new_eid(out)
+                    #eid = self.obj.add_new_eid_sort1(out)
                     if self.is_debug_file:
                         self.binary_debug.write('  eid/word=%r; %s\n' % (word, str(out)))
                     obj.add_sort1(dt, word, energy, percent, density)
@@ -604,11 +602,11 @@ class ONR(OP2Common):
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 5)
+                floats = np.frombuffer(data, dtype=self.fdtype).reshape(nelements, 5)
                 obj._times[obj.itime] = dt
 
                 #if obj.itime == 0:
-                ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 5)
+                ints = np.frombuffer(data, dtype=self.idtype).reshape(nelements, 5)
                 eids = ints[:, 0] // 10
                 assert eids.min() > 0, eids.min()
                 obj.element[itotal:itotal2] = eids
@@ -652,14 +650,14 @@ class ONR(OP2Common):
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 5)
+                floats = np.frombuffer(data, dtype=self.fdtype).reshape(nelements, 5)
                 obj._times[obj.itime] = dt
 
                 if obj.itime == 0:
-                    strings = frombuffer(data, dtype=self._uendian + 'S4').reshape(nelements, 6)
-                    s = array([s1+s2 for s1, s2 in zip(strings[:, 1], strings[:, 2])])
+                    strings = np.frombuffer(data, dtype=self._uendian + 'S4').reshape(nelements, 6)
+                    s = np.array([s1+s2 for s1, s2 in zip(strings[:, 1], strings[:, 2])])
 
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 6)
+                    ints = np.frombuffer(data, dtype=self.idtype).reshape(nelements, 6)
                     eids = ints[:, 0] // 10
                     assert eids.min() > 0, eids.min()
                     obj.element[itotal:itotal2] = eids
@@ -678,10 +676,10 @@ class ONR(OP2Common):
                     word = word.strip()
                     #print "eType=%s" % (eType)
                     #print "%s" %(self.get_element_type(self.element_type)), data_in
-                    #eid = self.obj.add_new_eid(out)
+                    #eid = self.obj.add_new_eid_sort1(out)
                     if self.is_debug_file:
                         self.binary_debug.write('  eid=%i; %s\n' % (eid, str(out)))
-                    obj.add(dt, word, energy, percent, density)
+                    obj.add_sort1(dt, word, energy, percent, density)
                     n += ntotal
         elif self.format_code in [2, 3] and self.num_wide == 4:
             """

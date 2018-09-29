@@ -1,5 +1,4 @@
 from collections import OrderedDict
-from six import iteritems
 from pyNastran.utils.log import get_logger2
 
 
@@ -189,7 +188,7 @@ class InputCntlReader(object):
                 comment = ''
         sections[name] = [name, comment, data]
 
-        for name, section in iteritems(sections):
+        for name, section in sections.items():
             name, comment, data = section
             self.log.debug('name = %r' % name)
             if comment.strip() and 1:

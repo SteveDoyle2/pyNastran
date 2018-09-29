@@ -3,8 +3,7 @@ from __future__ import print_function, unicode_literals
 import copy
 from itertools import count
 from struct import pack
-from six import text_type, binary_type, iteritems, PY3, string_types
-from six.moves import range
+from six import text_type, binary_type, PY3, string_types
 import numpy as np
 
 from pyNastran import is_release
@@ -22,7 +21,7 @@ class BaseScalarObject(Op2Codes):
         # init value
         #  None - static
         #  int/float - transient/freq/load step/eigenvalue
-        self.nonlinear_factor = None
+        self.nonlinear_factor = np.nan
         self.format_code = None
         self.sort_code = None
         self.table_code = None
@@ -66,44 +65,46 @@ class BaseScalarObject(Op2Codes):
         return not self == table
 
     def _eq_header(self, table):
-        assert self.nonlinear_factor == table.nonlinear_factor
+        is_nan = (self.nonlinear_factor is not None and
+                  np.isnan(self.nonlinear_factor) and
+                  np.isnan(table.nonlinear_factor))
+        if not is_nan:
+            assert self.nonlinear_factor == table.nonlinear_factor
         assert self.ntotal == table.ntotal
         assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (
             self.table_name, table.table_name)
         assert self.approach_code == table.approach_code
 
         if hasattr(self, 'element_name'):
-            if self.nonlinear_factor is not None:
+            if self.nonlinear_factor not in (None, np.nan) and not is_nan:
                 assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
                     self.element_name, self.element_type, self._times, table._times)
 
-        if hasattr(self, 'element'):
-            if not np.array_equal(self.element, table.element):
-                assert self.element.shape == table.element.shape, 'shape=%s element.shape=%s' % (
-                    self.element.shape, table.element.shape)
-                msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
-                msg += '%s\nEid\n' % str(self.code_information())
-                for eid1, eid2 in zip(self.element, table.element):
-                    msg += '%s, %s\n' % (eid1, eid2)
-                print(msg)
+        if hasattr(self, 'element') and not np.array_equal(self.element, table.element):
+            assert self.element.shape == table.element.shape, 'shape=%s element.shape=%s' % (
+                self.element.shape, table.element.shape)
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\nEid\n' % str(self.code_information())
+            for eid1, eid2 in zip(self.element, table.element):
+                msg += '%s, %s\n' % (eid1, eid2)
+            print(msg)
+            raise ValueError(msg)
+
+        if hasattr(self, 'element_node') and not np.array_equal(self.element_node, table.element_node):
+            if self.element_node.shape != table.element_node.shape:
+                msg = 'self.element_node.shape=%s table.element_node.shape=%s' % (
+                self.element_node.shape, table.element_node.shape)
+
+                print(self.element_node.tolist())
+                print(table.element_node.tolist())
                 raise ValueError(msg)
 
-        if hasattr(self, 'element_node'):
-            if not np.array_equal(self.element_node, table.element_node):
-                if self.element_node.shape != table.element_node.shape:
-                    msg = 'self.element_node.shape=%s table.element_node.shape=%s' % (
-                    self.element_node.shape, table.element_node.shape)
-
-                    print(self.element_node.tolist())
-                    print(table.element_node.tolist())
-                    raise ValueError(msg)
-
-                msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
-                msg += '%s\n' % str(self.code_information())
-                for i, (eid1, nid1), (eid2, nid2) in zip(count(), self.element_node, table.element_node):
-                    msg += '%s : (%s, %s), (%s, %s)\n' % (i, eid1, nid1, eid2, nid2)
-                print(msg)
-                raise ValueError(msg)
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            for i, (eid1, nid1), (eid2, nid2) in zip(count(), self.element_node, table.element_node):
+                msg += '%s : (%s, %s), (%s, %s)\n' % (i, eid1, nid1, eid2, nid2)
+            print(msg)
+            raise ValueError(msg)
 
     @property
     def class_name(self):
@@ -135,7 +136,7 @@ class BaseScalarObject(Op2Codes):
         if '_add_new_node' in state:
             del state['_add_new_node']
 
-        #for key, value in iteritems(state):
+        #for key, value in state.items():
             #if isinstance(value, (int, float, str, np.ndarray, list)) or value is None:
                 #continue
             #print(' %s = %s' % (key, value))
@@ -280,7 +281,7 @@ class BaseScalarObject(Op2Codes):
                   page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             return self._write_f06_transient(header, page_stamp, page_num=page_num, f06_file=f06_file,
                                              is_mag_phase=is_mag_phase, is_sort1=is_sort1)
         msg = 'write_f06 is not implemented in %s\n' % self.__class__.__name__
@@ -324,6 +325,15 @@ class ScalarObject(BaseScalarObject):
         # length of each time step
         self._ntotals = []
 
+        self.load_as_h5 = False
+        self.h5_file = None
+        if 'load_as_h5' in data_code:
+            self.load_as_h5 = data_code['load_as_h5']
+            del data_code['load_as_h5']
+        if 'h5_file' in data_code:
+            self.h5_file = data_code['h5_file']
+            del data_code['h5_file']
+
         self.data_code = copy.deepcopy(data_code)
 
         # if data code isn't being applied and you don't have
@@ -340,6 +350,45 @@ class ScalarObject(BaseScalarObject):
 
     #def isImaginary(self):
         #return bool(self.sort_bits[1])
+
+    def _get_result_group(self):
+        """gets the h5 result group"""
+        code = self._get_code()
+        case_name = 'Subcase=%s' % str(code) # (self.isubcase)
+        if case_name in self.h5_file:
+            subcase_group = self.h5_file[case_name]
+        else:
+            subcase_group = self.h5_file.create_group(case_name)
+        group = subcase_group.create_group(self.result_name)
+        return group
+
+    def _get_code(self):
+        code = self.isubcase
+        ogs = 0
+        if hasattr(self, 'ogs'):
+            ogs = self.ogs
+        #if self.binary_debug:
+            #self.binary_debug.write(self.code_information(include_time=True))
+
+        code = (self.isubcase, self.analysis_code, self._sort_method(), self._count, ogs,
+                self.superelement_adaptivity_index, self.pval_step)
+        #code = (self.isubcase, self.analysis_code, self._sort_method, self._count,
+                #self.superelement_adaptivity_index, self.table_name_str)
+        #print('%r' % self.subtitle)
+        #self.code = code
+        #self.log.debug('code = %s' % str(self.code))
+        return code
+
+    #@property
+    def _sort_method(self):
+        try:
+            sort_method, is_real, is_random = self._table_specs()
+        except:
+            sort_method = get_sort_method_from_table_name(self.table_name)
+        #is_sort1 = self.table_name.endswith('1')
+        #is_sort1 = self.is_sort1  # uses the sort_bits
+        assert sort_method in [1, 2], 'sort_method=%r\n%s' % (sort_method, self.code_information())
+        return sort_method
 
     @property
     def dataframe(self):
@@ -358,7 +407,7 @@ class ScalarObject(BaseScalarObject):
             msg = 'old_table_name=%r new_table_name=%r' % (
                 self.table_name, self.data_code['table_name'])
             raise RuntimeError(msg)
-        for key, value in sorted(iteritems(self.data_code)):
+        for key, value in sorted(self.data_code.items()):
             if PY3 and isinstance(value, bytes):
                 print("  key=%s value=%s; value is bytes" % (key, value))
             self.__setattr__(key, value)

@@ -1,7 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
-from six.moves import zip, range
 
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.bdf.bdf_interface.assign_type import interpret_value
@@ -58,9 +57,9 @@ def check_length(fem1, fem2, name):
 
 def compare_card_content(fem1, fem2):
     check_obj_names = [
-        'params', 'nodes', 'spoints', 'epoints', 'points',
-        'elements', 'rigid_elements', 'nsms',
-        'properties', 'materials', 'creep_materials',
+        'params', 'nodes', 'spoints', 'epoints', 'points', 'gridb',
+        'elements', 'rigid_elements', 'nsms', 'nsmadds',
+        'properties', 'properties_mass', 'materials', 'creep_materials',
         'loads', 'coords',
         'spcs', 'spcadds', 'spcoffs', 'mpcs', 'mpcadds', 'dareas', 'dphases',
         'nlparms', 'tsteps', 'tstepnls', 'dmigs', 'dequations',

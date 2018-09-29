@@ -68,17 +68,20 @@ from pyNastran.bdf.cards.dynamic import (
     DELAY, DPHASE, FREQ, FREQ1, FREQ2, FREQ3, FREQ4, FREQ5,
     TSTEP, TSTEP1, TSTEPNL, NLPARM, NLPCI, TF, ROTORG, ROTORD, TIC)
 from pyNastran.bdf.cards.loads.loads import (
-    LSEQ, SLOAD, DAREA, RANDPS, RFORCE, RFORCE1, SPCD, LOADCYN)
+    LSEQ, SLOAD, DAREA, RFORCE, RFORCE1, SPCD, LOADCYN, DEFORM)
 from pyNastran.bdf.cards.loads.dloads import ACSRCE, DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
 from pyNastran.bdf.cards.loads.static_loads import (LOAD, GRAV, ACCEL, ACCEL1, FORCE,
                                                     FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
                                                     PLOAD, PLOAD1, PLOAD2, PLOAD4, PLOADX1,
                                                     GMLOAD)
+from pyNastran.bdf.cards.loads.random_loads import (
+    RANDPS, RANDT1)
 
 from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
                                            MAT8, MAT9, MAT10, MAT11, MAT3D,
                                            MATG, MATHE, MATHP, CREEP, NXSTRAT, EQUIV)
-from pyNastran.bdf.cards.material_deps import MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATS1
+from pyNastran.bdf.cards.material_deps import (
+    MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATS1)
 
 from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
 from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs, POINT, SEQGP
@@ -112,15 +115,17 @@ from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL, 
 from pyNastran.bdf.cards.thermal.loads import (QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD,
                                                QVOL, QVECT)
 from pyNastran.bdf.cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
-                                                 PHBDY, CONV, CONVM)
-from pyNastran.bdf.cards.thermal.radiation import RADM, RADBC, RADCAV, VIEW, VIEW3D
+                                                 PHBDY, CONV, CONVM, TEMPBC)
+from pyNastran.bdf.cards.thermal.radiation import RADM, RADBC, RADCAV, RADLST, RADMTX, VIEW, VIEW3D
 from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
                                             TABLEM1, TABLEM2, TABLEM3, TABLEM4,
                                             TABLES1, TABDMP1, TABLEST, TABRND1, TABRNDG,
                                             DTABLE)
-from pyNastran.bdf.cards.contact import BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA
-from pyNastran.utils import integer_string_types
-
+from pyNastran.bdf.cards.contact import BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA, BCONP, BLSEG
+from pyNastran.utils.numpy_utils import integer_string_types
+from pyNastran.bdf.cards.superelements import (
+    CSUPER, CSUPEXT, SEBNDRY, SECONCT, SEELT, SEEXCLD, SELABEL, SELOAD,
+    SELOC, SEMPLN, SENQSET, SETREE)
 
 class AddCards(AddMethods):
     """defines the add_cardname functions that use the object inits"""
@@ -234,7 +239,7 @@ class AddCards(AddMethods):
         self._add_epoint_object(epoint)
         return epoint
 
-    def add_point(self, nid, cp, xyz, comment=''):
+    def add_point(self, nid, xyz, cp=0, comment=''):
         # type: (int, int, Any, str) -> POINT
         """
         Creates the POINT card
@@ -243,21 +248,20 @@ class AddCards(AddMethods):
         ----------
         nid : int
             node id
-        cp : int
-            coordinate system for the xyz location
         xyz : (3, ) float ndarray; default=None -> [0., 0., 0.]
             the xyz/r-theta-z/rho-theta-phi values
+        cp : int; default=0
+            coordinate system for the xyz location
         comment : str; default=''
             a comment for the card
 
         """
-        point = POINT(nid, cp, xyz, comment=comment)
+        point = POINT(nid, xyz, cp=cp, comment=comment)
         self._add_point_object(point)
         return point
 
-    def add_cord2r(self, cid, rid=0, origin=None, zaxis=None, xzplane=None,
-                   comment=''):
-        # type: (int, int, Optional[Union[List[float], np.ndarray]], Any, Any, str) -> CORD2R
+    def add_cord2r(self, cid, origin, zaxis, xzplane, rid=0, comment=''):
+        # type: (int, Optional[Union[List[float], np.ndarray]], Any, Any, int, str) -> CORD2R
         """
         Creates the CORD2R card, which defines a rectangular coordinate
         system using 3 vectors.
@@ -269,27 +273,22 @@ class AddCards(AddMethods):
         rid : int; default=0
             the referenced coordinate system that defines the system the
             vectors
-        origin : List[float, float, float]; default=None
+        origin : List[float, float, float]
             the origin of the coordinate system
-            None : [0., 0., 0.]
-        zaxis : List[float, float, float]; default=None
+        zaxis : List[float, float, float]
             the z-axis of the coordinate system
-            None : [0., 0., 1.]
-        xzplane : List[float, float, float]; default=None
+        xzplane : List[float, float, float]
             a point on the xz plane
-            None : [1., 0., 0.]
         comment : str; default=''
             a comment for the card
 
         """
-        coord = CORD2R(cid, rid=rid, origin=origin, zaxis=zaxis, xzplane=xzplane,
-                       comment=comment)
+        coord = CORD2R(cid, origin, zaxis, xzplane, rid=rid, comment=comment)
         self._add_coord_object(coord)
         return coord
 
-    def add_cord2c(self, cid, rid=0, origin=None, zaxis=None, xzplane=None,
-                   comment=''):
-        # type: (int, int, Optional[Union[List[float], np.ndarray]], Any, Any, str) -> CORD2C
+    def add_cord2c(self, cid, origin, zaxis, xzplane, rid=0, comment=''):
+        # type: (int, Optional[Union[List[float], np.ndarray]], Any, Any, int, str) -> CORD2C
         """
         Creates the CORD2C card, which defines a cylindrical coordinate
         system using 3 vectors.
@@ -301,27 +300,22 @@ class AddCards(AddMethods):
         rid : int; default=0
             the referenced coordinate system that defines the system the
             vectors
-        origin : List[float, float, float]; default=None
+        origin : List[float, float, float]
             the origin of the coordinate system
-            None : [0., 0., 0.]
-        zaxis : List[float, float, float]; default=None
+        zaxis : List[float, float, float]
             the z-axis of the coordinate system
-            None : [0., 0., 1.]
-        xzplane : List[float, float, float]; default=None
+        xzplane : List[float, float, float]
             a point on the xz plane
-            None : [1., 0., 0.]
         comment : str; default=''
             a comment for the card
 
         """
-        coord = CORD2C(cid, rid=rid, origin=origin, zaxis=zaxis, xzplane=xzplane,
-                       comment=comment)
+        coord = CORD2C(cid, origin, zaxis, xzplane, rid=rid, comment=comment)
         self._add_coord_object(coord)
         return coord
 
-    def add_cord2s(self, cid, rid=0, origin=None, zaxis=None, xzplane=None,
-                   comment=''):
-        # type: (int, int, Optional[Union[List[float], np.ndarray]], Any, Any, str) -> CORD2S
+    def add_cord2s(self, cid, origin, zaxis, xzplane, rid=0, comment=''):
+        # type: (int, Optional[Union[List[float], np.ndarray]], Any, Any, int, str) -> CORD2S
         """
         Creates the CORD2C card, which defines a spherical coordinate
         system using 3 vectors.
@@ -330,18 +324,15 @@ class AddCards(AddMethods):
         ----------
         cid : int
             coordinate system id
+        origin : List[float, float, float]
+            the origin of the coordinate system
+        zaxis : List[float, float, float]
+            the z-axis of the coordinate system
+        xzplane : List[float, float, float]
+            a point on the xz plane
         rid : int; default=0
             the referenced coordinate system that defines the system the
             vectors
-        origin : List[float, float, float]; default=None
-            the origin of the coordinate system
-            None : [0., 0., 0.]
-        zaxis : List[float, float, float]; default=None
-            the z-axis of the coordinate system
-            None : [0., 0., 1.]
-        xzplane : List[float, float, float]; default=None
-            a point on the xz plane
-            None : [1., 0., 0.]
         comment : str; default=''
             a comment for the card
 
@@ -1276,10 +1267,10 @@ class AddCards(AddMethods):
         self._add_element_object(elem)
         return elem
 
-    def add_cbush2d(self, eid, pid, nids, cid, plane, sptid, comment=''):
+    def add_cbush2d(self, eid, pid, nids, cid=0, plane='XY', sptid=None, comment=''):
         # type: (int, int, List[int], int, str, int, str) -> CBUSH2D
         """Creates a CBUSH2D card"""
-        elem = CBUSH2D(eid, pid, nids, cid, plane, sptid, comment=comment)
+        elem = CBUSH2D(eid, pid, nids, cid=cid, plane=plane, sptid=sptid, comment=comment)
         self._add_element_object(elem)
         return elem
 
@@ -1479,8 +1470,8 @@ class AddCards(AddMethods):
         comment : str; default=''
             a comment for the card
 
-        Note
-        ----
+        Notes
+        -----
         MSC only
 
         """
@@ -1643,8 +1634,8 @@ class AddCards(AddMethods):
         comment : str; default=''
             a comment for the card
 
-        Note
-        ----
+        Notes
+        -----
         offt/bit are MSC specific fields
         """
         elem = CBEAM(eid, pid, nids, x, g0, offt=offt, bit=bit,
@@ -2891,7 +2882,7 @@ class AddCards(AddMethods):
         return mat
 
     def add_matt8(self, mid, e1_table=None, e2_table=None, nu12_table=None,
-                  g12_table=None, g1z_table=None, g2z_table=None, e2z_table=None, rho_table=None,
+                  g12_table=None, g1z_table=None, g2z_table=None, rho_table=None,
                   a1_table=None, a2_table=None,
                   xt_table=None, xc_table=None, yt_table=None, yc_table=None,
                   s_table=None, ge_table=None, f12_table=None, comment=''):
@@ -3202,10 +3193,10 @@ class AddCards(AddMethods):
         self._add_dload_entry(load)
         return load
 
-    def add_rforce(self, sid, nid, cid, scale, r1, r2, r3, method=1, racc=0.,
+    def add_rforce(self, sid, nid, scale, r123, cid=0, method=1, racc=0.,
                    mb=0, idrf=0, comment=''):
         """Creates an RFORCE card"""
-        load = RFORCE(sid, nid, cid, scale, r1, r2, r3, method=method, racc=racc,
+        load = RFORCE(sid, nid, scale, r123, cid=cid, method=method, racc=racc,
                       mb=mb, idrf=idrf, comment=comment)
         self._add_load_object(load)
         return load
@@ -3227,6 +3218,7 @@ class AddCards(AddMethods):
             rectangular components of the rotation vector R that passes
             through point G
         racc : int; default=0.0
+            ???
         mb : int; default=0
             Indicates whether the CID coordinate system is defined in the main
             Bulk Data Section (MB = -1) or the partitioned superelement Bulk
@@ -3242,6 +3234,7 @@ class AddCards(AddMethods):
             Method used to compute centrifugal forces due to angular velocity.
         comment : str; default=''
             a comment for the card
+
         """
         load = RFORCE1(sid, nid, scale, group_id, cid=cid, r123=r123, racc=racc,
                        mb=mb, method=method, comment=comment)
@@ -3271,15 +3264,31 @@ class AddCards(AddMethods):
 
         """
         randps = RANDPS(sid, j, k, x=x, y=y, tid=tid, comment=comment)
-        self._add_load_object(randps)
+        self._add_dload_entry(randps)
         return randps
 
     def add_randt1(self, sid, n, t0, tmax, comment=''):
-        """RANDT1"""
-        fields = ['RANDT1', n, t0, tmax]
-        self.reject_card_lines('RANDT1', print_card_8(fields).split('\n'))
-        #randt1 = RANDT1(sid, n, t0, tmax, comment=comment)
-        #self._add_load_object(randt1)
+        """
+        Creates a RANDT1 card
+
+        Parameters
+        ----------
+        sid : int
+            random analysis set id
+            defined by RANDOM in the case control deck
+        n : int
+            ???
+        t0 : int
+            ???
+        tmax : float
+            ???
+        comment : str; default=''
+            a comment for the card
+
+        """
+        dload = RANDT1(sid, n, t0, tmax, comment=comment)
+        self._add_dload_entry(dload)
+        return dload
 
     def add_acsrce(self, sid, excite_id, rho, b, delay=0, dphase=0, power=0,
                    comment=''):
@@ -3316,7 +3325,7 @@ class AddCards(AddMethods):
         """
         load = ACSRCE(sid, excite_id, rho, b, delay=delay, dphase=dphase, power=power,
                       comment=comment)
-        self._add_load_object(load)
+        self._add_dload_entry(load)
         return load
 
     def add_loadcyn(self, sid, scale, segment_id, scales, load_ids,
@@ -3467,6 +3476,28 @@ class AddCards(AddMethods):
         self._add_load_object(load)
         return load
 
+    def add_deform(self, sid, eid, deformation, comment=''):
+        """
+        Creates an DEFORM card, which defines applied deformation on
+        a 1D elemment.  Links to the DEFORM card in the case control
+        deck.
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        eid : int
+            CTUBE/CROD/CONROD/CBAR/CBEAM element id
+        deformation : float
+            the applied deformation
+        comment : str; default=''
+            a comment for the card
+
+        """
+        load = DEFORM(sid, eid, deformation, comment=comment)
+        self._add_load_object(load)
+        return load
+
     def add_accel(self, sid, N, direction, locs, vals, cid=0, comment=''):
         """
         Creates an ACCEL card
@@ -3583,8 +3614,9 @@ class AddCards(AddMethods):
             type of load that's applied
             valid_types = {FX, FY, FZ, FXE, FYE, FZE,
                            MX, MY, MZ, MXE, MYE, MZE}
-        scale : float
-            local pressure scaling factor
+        scale : str
+            Determines scale factor for X1, X2.
+            {LE, FR, LEPR, FRPR}
         x1 / x2 : float / float
             the starting/end position for the load application
             the default for x2 is x1
@@ -3702,7 +3734,7 @@ class AddCards(AddMethods):
         self._add_load_object(load)
         return load
 
-    def add_spc(self, conid, gids, components, enforced, comment=''):
+    def add_spc(self, conid, nodes, components, enforced, comment=''):
         """
         Creates an SPC card, which defines the degree of freedoms to be
         constrained
@@ -3711,21 +3743,23 @@ class AddCards(AddMethods):
         ----------
         conid : int
             constraint id
-        gids : List[int]
+        nodes : List[int]
             GRID/SPOINT ids
         components : List[str]
             the degree of freedoms to constrain (e.g., '1', '123')
         enforced : List[float]
             the constrained value for the given node (typically 0.0)
+        comment : str; default=''
+            a comment for the card
 
         Notes
         -----
-        len(gids) == len(components) == len(enforced)
+        len(nodes) == len(components) == len(enforced)
 
         .. warning:: non-zero enforced deflection requires an SPCD as well
 
         """
-        spc = SPC(conid, gids, components, enforced, comment=comment)
+        spc = SPC(conid, nodes, components, enforced, comment=comment)
         self._add_constraint_spc_object(spc)
         return spc
 
@@ -3742,13 +3776,15 @@ class AddCards(AddMethods):
             the degree of freedoms to constrain (e.g., '1', '123')
         nodes : List[int]
             GRID/SPOINT ids
+        comment : str; default=''
+            a comment for the card
 
         """
         spc = SPC1(conid, components, nodes, comment=comment)
         self._add_constraint_spc_object(spc)
         return spc
 
-    def add_spcd(self, sid, gids, constraints, enforced, comment=''):
+    def add_spcd(self, sid, nodes, components, enforced, comment=''):
         """
         Creates an SPCD card, which defines the degree of freedoms to be
         set during enforced motion
@@ -3759,14 +3795,16 @@ class AddCards(AddMethods):
             constraint id
         nodes : List[int]
             GRID/SPOINT ids
-        constraints : List[str]
+        components : List[str]
             the degree of freedoms to constrain (e.g., '1', '123')
         enforced : List[float]
             the constrained value for the given node (typically 0.0)
+        comment : str; default=''
+            a comment for the card
 
         Notes
         -----
-        len(nodes) == len(constraints) == len(enforced)
+        len(nodes) == len(components) == len(enforced)
 
         .. warning:: Non-zero enforced deflection requires an SPC/SPC1 as well.
                      Yes, you really want to constrain the deflection to 0.0
@@ -3774,7 +3812,7 @@ class AddCards(AddMethods):
                      SPCD card.
 
         """
-        spc = SPCD(sid, gids, constraints, enforced, comment=comment)
+        spc = SPCD(sid, nodes, components, enforced, comment=comment)
         self._add_load_object(spc)
         return spc
 
@@ -3784,9 +3822,9 @@ class AddCards(AddMethods):
         self._add_constraint_spcadd_object(spcadd)
         return spcadd
 
-    def add_spcax(self, conid, rid, hid, c, d, comment=''):
+    def add_spcax(self, conid, ringax, hid, component, enforced, comment=''):
         """Creates an SPCAX card"""
-        spcax = SPCAX(conid, rid, hid, c, d, comment=comment)
+        spcax = SPCAX(conid, ringax, hid, component, enforced, comment=comment)
         self._add_constraint_spc_object(spcax)
         return spcax
 
@@ -3796,9 +3834,23 @@ class AddCards(AddMethods):
         self._add_constraint_spc_object(spc)
         return spc
 
-    def add_mpc(self, conid, gids, components, enforced, comment=''):
-        """Creates an MPC card"""
-        mpc = MPC(conid, gids, components, enforced, comment=comment)
+    def add_mpc(self, conid, nodes, components, coefficients, comment=''):
+        """
+        Creates an MPC card
+
+        Parameters
+        ----------
+        conid : int
+            Case Control MPC id
+        nodes : List[int]
+            GRID/SPOINT ids
+        components : List[str]
+            the degree of freedoms to constrain (e.g., '1', '123')
+        coefficients : List[float]
+            the scaling coefficients
+
+        """
+        mpc = MPC(conid, nodes, components, coefficients, comment=comment)
         self._add_constraint_mpc_object(mpc)
         return mpc
 
@@ -4618,8 +4670,8 @@ class AddCards(AddMethods):
         comment : str; default=''
             a comment for the card
 
-        Note
-        ----
+        Notes
+        -----
         the length of components and ids must be the same
         """
         if isinstance(components, string_types):
@@ -4650,8 +4702,8 @@ class AddCards(AddMethods):
         comment : str; default=''
             a comment for the card
 
-        Note
-        ----
+        Notes
+        -----
         the length of components and ids must be the same
         """
         if isinstance(components, string_types):
@@ -4682,8 +4734,8 @@ class AddCards(AddMethods):
         comment : str; default=''
             a comment for the card
 
-        Note
-        ----
+        Notes
+        -----
         the length of components and ids must be the same
 
         """
@@ -4989,7 +5041,7 @@ class AddCards(AddMethods):
         aestat = AESTAT(aestat_id, label, comment=comment)
         self._add_aestat_object(aestat)
 
-    def add_aelink(self, aelink_id, label, independent_labels, Cis, comment=''):
+    def add_aelink(self, aelink_id, label, independent_labels, linking_coefficents, comment=''):
         """
         Creates an AELINK card, which defines an equation linking
         AESTAT and AESURF cards
@@ -5002,13 +5054,13 @@ class AddCards(AddMethods):
             name of the dependent AESURF card
         independent_labels : List[str, ..., str]
             name for the independent variables (AESTATs)
-        Cis : List[float]
+        linking_coefficents : List[float]
             linking coefficients
         comment : str; default=''
             a comment for the card
 
         """
-        aelink = AELINK(aelink_id, label, independent_labels, Cis, comment=comment)
+        aelink = AELINK(aelink_id, label, independent_labels, linking_coefficents, comment=comment)
         self._add_aelink_object(aelink)
         return aelink
 
@@ -5514,8 +5566,8 @@ class AddCards(AddMethods):
         self._add_rigid_element_object(elem)
         return elem
 
-    def add_rbe3(self, eid, refgrid, refc, weights, comps, Gijs, Gmi=None,
-                 Cmi=None, alpha=0.0, comment=''):
+    def add_rbe3(self, eid, refgrid, refc, weights, comps, Gijs,
+                 Gmi=None, Cmi=None, alpha=0.0, comment=''):
         """
         Creates an RBE3 element
 
@@ -5533,18 +5585,18 @@ class AddCards(AddMethods):
             independent components
         weights : List[float, ..., float]
             independent weights for the importance of the DOF
-        Gmi : List[int, ..., int]
-            dependent nodes; UM Set
-        Cmi : List[str, ..., str]
-            dependent components; UM Set
+        Gmi : List[int, ..., int]; default=None -> []
+            dependent nodes / UM Set
+        Cmi : List[str, ..., str]; default=None -> []
+            dependent components / UM Set
         alpha : float; default=0.0
             thermal expansion coefficient
         comment : str; default=''
             a comment for the card
 
         """
-        elem = RBE3(eid, refgrid, refc, weights, comps, Gijs, Gmi=Gmi,
-                    Cmi=Cmi, alpha=alpha, comment=comment)
+        elem = RBE3(eid, refgrid, refc, weights, comps, Gijs,
+                    Gmi=Gmi, Cmi=Cmi, alpha=alpha, comment=comment)
         self._add_rigid_element_object(elem)
         return elem
 
@@ -6265,14 +6317,58 @@ class AddCards(AddMethods):
         self._add_bctpara_object(bctpara)
         return bctpara
 
-    def add_bcrpara(self, crid, surf='TOP', offset=None, Type='FLEX', mgp=0, comment=''):
-        """Creates a BCRPARA card"""
-        bcrpara = BCRPARA(crid, surf=surf, offset=offset, Type=Type, mgp=mgp, comment=comment)
+    def add_bcrpara(self, crid, surf='TOP', offset=None, Type='FLEX',
+                    grid_point=0, comment=''):
+        """
+        Creates a BCRPARA card
+
+        Parameters
+        ----------
+        crid : int
+            CRID Contact region ID.
+        offset : float; default=None
+            Offset distance for the contact region (Real > 0.0).
+            None : OFFSET value in BCTPARA entry
+        surf : str; default='TOP'
+            SURF Indicates the contact side. See Remark 1.  {'TOP', 'BOT'; )
+        Type : str; default='FLEX'
+            Indicates whether a contact region is a rigid surface if it
+            is used as a target region. {'RIGID', 'FLEX'}.
+            This is not supported for SOL 101.
+        grid_point : int; default=0
+            Control grid point for a target contact region with TYPE=RIGID
+            or when the rigid-target algorithm is used.  The grid point
+            may be used to control the motion of a rigid surface.
+            (Integer > 0).  This is not supported for SOL 101.
+        comment : str; default=''
+            a comment for the card
+
+        """
+        bcrpara = BCRPARA(crid, surf=surf, offset=offset, Type=Type,
+                          grid_point=grid_point, comment=comment)
         self._add_bcrpara_object(bcrpara)
         return bcrpara
 
     def add_tic(self, sid, nodes, components, u0=0., v0=0., comment=''):
-        """Creates a TIC card"""
+        """
+        Creates a TIC card
+
+        Parameters
+        ----------
+        sid : int
+            Case Control IC id
+        nodes : int / List[int]
+            the nodes to which apply the initial conditions
+        components : int / List[int]
+            the DOFs to which apply the initial conditions
+        u0 : float / List[float]
+            Initial displacement.
+        v0 : float / List[float]
+            Initial velocity.
+        comment : str; default=''
+            a comment for the card
+
+        """
         tic = TIC(sid, nodes, components, u0=u0, v0=v0, comment=comment)
         self._add_tic_object(tic)
         return tic
@@ -6396,6 +6492,22 @@ class AddCards(AddMethods):
                        threshold=threshold, maxiter=maxiter, comment=comment)
         self._add_rotor_object(rotor)
         return rotor
+
+    def add_cmfree(self, eid, s, s2, y, n):
+        fields = ['CMFREE', eid, s, s2, y, n]
+        self.reject_card_lines('CMFREE', print_card_8(fields).split('\n'))
+
+    def add_cfluid2(self, eid, ringfls, rho, b, harmonic):
+        fields = ['CFLUID2', eid] + ringfls + [rho, b, harmonic]
+        self.reject_card_lines('CFLUID2', print_card_8(fields).split('\n'))
+
+    def add_cfluid3(self, eid, ringfls, rho, b, harmonic):
+        fields = ['CFLUID3', eid] + ringfls + [rho, b, harmonic]
+        self.reject_card_lines('CFLUID3', print_card_8(fields).split('\n'))
+
+    def add_cfluid4(self, eid, ringfls, rho, b, harmonic):
+        fields = ['CFLUID4', eid] + ringfls + [rho, b, harmonic]
+        self.reject_card_lines('CFLUID4', print_card_8(fields).split('\n'))
 
     def add_rgyro(self, sid, asynci, refrot, unit, speed_low, speed_high, speed, comment=''):
         """Creates an RGYRO card"""
@@ -6841,7 +6953,7 @@ class AddCards(AddMethods):
             self._add_dti_object(dti)
         else:
             if comment:
-                self.reject_lines.append([comment])
+                self.reject_lines.append([_format_comment(comment)])
                 msg = "DTI only supports name='UNITS'; name=%r fields=%s" % (name, str(fields))
             raise NotImplementedError(msg)
             #self.reject_cards.append(card_obj)

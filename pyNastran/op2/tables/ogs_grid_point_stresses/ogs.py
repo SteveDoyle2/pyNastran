@@ -1,6 +1,5 @@
 from __future__ import print_function
 from struct import Struct
-from six.moves import range
 from numpy import frombuffer
 from pyNastran.op2.op2_interface.op2_common import OP2Common
 from pyNastran.op2.tables.ogs_grid_point_stresses.ogs_surface_stresses import (
@@ -108,8 +107,8 @@ class OGS(OP2Common):
             n = self._read_ogs1_table27(data, ndata)
         elif self.table_code == 28:
             #OGS1- grid point stresses - principal
-                assert self.table_name in [b'OGS1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
-                n = self._read_ogs1_table28(data, ndata)
+            assert self.table_name in [b'OGS1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+            n = self._read_ogs1_table28(data, ndata)
         #elif self.table_code == 35:
             # OGS - Grid point stress discontinuities (plane strain)
             #assert self.table_name in [b'OGS1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
@@ -289,6 +288,6 @@ class OGS(OP2Common):
             (ekey, nx, ny, nz, txy, pressure) = out
             nid = ekey // 10
             assert nid > 0, nid
-            self.obj.add(dt, nid, nx, ny, nz, txy, tyz, txz, pressure, ovm)
+            self.obj.add_sort1(dt, nid, nx, ny, nz, txy, tyz, txz, pressure, ovm)
             n += 24
         return n

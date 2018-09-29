@@ -16,7 +16,6 @@ All cards are Material objects.
 #pylint: disable=E1103,C0103,C0111
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-#from pyNastran.utils import integer_types
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, string)
@@ -1501,18 +1500,206 @@ class MATT8(MaterialDependenceThermal):
 
     def write_card(self, size=8, is_double=False):
         """
-        +-------+--------+--------+-------+---------+--------+--------+--------+--------+
-        |   1   |   2    |   3    |   4   |    5    |   6    |   7    |    8   |   9    |
-        +=======+========+========+=======+=========+========+========+========+========+
-        | MATT8 |  MID   | T(E1)  | T(E2) | T(Nu12) | T(G12) | T(G1z) | T(G2z) | T(RHO) |
-        +-------+--------+--------+-------+---------+--------+--------+--------+--------+
-        |       |  T(A1) | T(A2)  |       |  T(Xt)  | T(Xc)  | T(Yt)  | T(Yc)  | T(S)   |
-        +-------+--------+--------+-------+---------+--------+--------+--------+--------+
-        |       |  T(GE) | T(F12) |       |         |        |        |        |        |
-        +-------+--------+--------+-------+---------+--------+--------+--------+--------+
+        +--------+--------+--------+--------+--------+--------+--------+--------+--------+
+        |    1   |   2    |    3   |    4   |    5   |    6   |   7    |    8   |   9    |
+        +=======+=========+========+========+========+========+========+========+========+
+        | MATT9  |  MID   | T(G11) | T(G12) | T(G13) | T(G14) | T(G15) | T(G16) | T(G22) |
+        +--------+--------+--------+--------+--------+--------+--------+--------+--------+
+        |        | T(G23) | T(G24) | T(G25) | T(G26) | T(G33) | T(G34) | T(G35) | T(G36) |
+        +--------+--------+--------+--------+--------+--------+--------+--------+--------+
+        |        | T(G44) | T(G45) | T(G46) | T(G55) | T(G56) | T(G66) | T(RHO) | T(A1)  |
+        +--------+--------+--------+--------+--------+--------+--------+--------+--------+
+        |        | T(A2)  | T(A3)  | T(A4)  | T(A5)  | T(A6)  |        |  T(GE) |        |
+        +--------+--------+--------+--------+--------+--------+--------+--------+--------+
         """
         list_fields = self.raw_fields()
         return self.comment + print_card_8(list_fields)
 
+class MATT9(MaterialDependenceThermal):
+    type = 'MATT9'
 
-#MATT9
+    def __init__(self, mid,
+                 g11_table, g12_table, g13_table, g14_table, g15_table, g16_table,
+                 g22_table, g23_table, g24_table, g25_table, g26_table,
+                 g33_table, g34_table, g35_table, g36_table,
+                 g44_table, g45_table, g46_table,
+                 g55_table, g56_table,
+                 g66_table,
+                 rho_table,
+                 a1_table, a2_table, a3_table, a4_table, a5_table, a6_table,
+                 ge_table,
+                 comment=''):
+        MaterialDependenceThermal.__init__(self)
+        if comment:
+            self.comment = comment
+
+        self.mid = mid
+        self.g11_table = g11_table
+        self.g12_table = g12_table
+        self.g13_table = g13_table
+        self.g14_table = g14_table
+        self.g15_table = g15_table
+        self.g16_table = g16_table
+
+        self.g22_table = g22_table
+        self.g23_table = g23_table
+        self.g24_table = g24_table
+        self.g25_table = g25_table
+        self.g26_table = g26_table
+
+        self.g33_table = g33_table
+        self.g34_table = g34_table
+        self.g35_table = g35_table
+        self.g36_table = g36_table
+
+        self.g44_table = g44_table
+        self.g45_table = g45_table
+        self.g46_table = g46_table
+
+        self.g55_table = g55_table
+        self.g56_table = g56_table
+
+        self.g66_table = g66_table
+
+        self.rho_table = rho_table
+        self.a1_table = a1_table
+        self.a2_table = a2_table
+        self.a3_table = a3_table
+        self.a4_table = a4_table
+        self.a5_table = a5_table
+        self.a6_table = a6_table
+
+        self.ge_table = ge_table
+        self.mid_ref = None
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a MATT8 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        mid = integer(card, 1, 'mid')
+        g11_table = integer_or_blank(card, 2, 'T(G11)')
+        g12_table = integer_or_blank(card, 3, 'T(G12)')
+        g13_table = integer_or_blank(card, 4, 'T(G13)')
+        g14_table = integer_or_blank(card, 5, 'T(G14)')
+        g15_table = integer_or_blank(card, 6, 'T(G15)')
+        g16_table = integer_or_blank(card, 7, 'T(G16)')
+
+        g22_table = integer_or_blank(card, 8, 'T(G22)')
+        g23_table = integer_or_blank(card, 9, 'T(G23)')
+        g24_table = integer_or_blank(card, 10, 'T(G24)')
+        g25_table = integer_or_blank(card, 11, 'T(G25)')
+        g26_table = integer_or_blank(card, 12, 'T(G26)')
+
+        g33_table = integer_or_blank(card, 13, 'T(G33)')
+        g34_table = integer_or_blank(card, 14, 'T(G34)')
+        g35_table = integer_or_blank(card, 15, 'T(G35)')
+        g36_table = integer_or_blank(card, 16, 'T(G36)')
+
+        g44_table = integer_or_blank(card, 17, 'T(G44)')
+        g45_table = integer_or_blank(card, 18, 'T(G45)')
+        g46_table = integer_or_blank(card, 19, 'T(G46)')
+
+        g55_table = integer_or_blank(card, 20, 'T(G55)')
+        g56_table = integer_or_blank(card, 21, 'T(G56)')
+        g66_table = integer_or_blank(card, 22, 'T(G66)')
+
+        rho_table = integer_or_blank(card, 23, 'T(RHO)')
+        a1_table = integer_or_blank(card, 24, 'T(A1)')
+        a2_table = integer_or_blank(card, 25, 'T(A2)')
+        a3_table = integer_or_blank(card, 26, 'T(A3)')
+        a4_table = integer_or_blank(card, 27, 'T(A4)')
+        a5_table = integer_or_blank(card, 28, 'T(A5)')
+        a6_table = integer_or_blank(card, 29, 'T(A6)')
+
+        ge_table = integer_or_blank(card, 31, 'T(GE)')
+
+        assert len(card) <= 30, 'len(MATT9 card) = %i\ncard=%s' % (len(card), card)
+        return MATT9(mid, g11_table, g12_table, g13_table, g14_table, g15_table, g16_table,
+                     g22_table, g23_table, g24_table, g25_table, g26_table,
+                     g33_table, g34_table, g35_table, g36_table,
+                     g44_table, g45_table, g46_table,
+                     g55_table, g56_table, g66_table,
+                     rho_table,
+                     a1_table, a2_table, a3_table, a4_table, a5_table, a6_table,
+                     ge_table, comment=comment)
+
+    def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by MATT1 mid=%s' % self.mid
+        self.mid_ref = model.Material(self.mid, msg=msg)
+
+        #if self.e1_table is not None:
+            #self.e1_table_ref = model.TableM(self.e1_table)
+        #if self.e2_table is not None:
+            #self.e2_table_ref = model.TableM(self.e2_table)
+
+    def uncross_reference(self):
+        pass
+        #self.e1_table = self.E1_table()
+        #self.e2_table = self.E2_table()
+        #self.e1_table_ref = None
+        #self.e2_table_ref = None
+
+    #def E1_table(self):
+        #if self.e1_table_ref is not None:
+            #return self.e1_table_ref.tid
+        #return self.e1_table
+
+    def raw_fields(self):
+        list_fields = [
+            'MATT9', self.mid,
+            self.g11_table,
+            self.g12_table,
+            self.g13_table,
+            self.g14_table,
+            self.g15_table,
+            self.g16_table,
+
+            self.g22_table,
+            self.g23_table,
+            self.g24_table,
+            self.g25_table,
+            self.g26_table,
+
+            self.g33_table,
+            self.g34_table,
+            self.g35_table,
+            self.g36_table,
+
+            self.g44_table,
+            self.g45_table,
+            self.g46_table,
+
+            self.g55_table,
+            self.g56_table,
+            self.g66_table,
+
+            self.rho_table,
+            self.a1_table,
+            self.a2_table,
+            self.a3_table,
+            self.a4_table,
+            self.a5_table,
+            self.a6_table,
+            self.ge_table,
+        ]
+        return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        list_fields = self.raw_fields()
+        return self.comment + print_card_8(list_fields)

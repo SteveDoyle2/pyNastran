@@ -1,6 +1,3 @@
-#from six import iteritems
-from six.moves import zip
-
 from numpy import zeros, arange, searchsorted
 
 from pyNastran.bdf.field_writer_8 import print_card_8

@@ -4,8 +4,6 @@ defines:
 """
 from __future__ import print_function
 from collections import defaultdict
-from six import iteritems, iterkeys
-from six.moves import zip
 
 from numpy import array, zeros, cross
 from numpy.linalg import norm  # type: ignore
@@ -60,7 +58,7 @@ class CalculixConverter(BDF):
         is a list of element IDs
         """
         if element_ids is None:
-            element_ids = iterkeys(self.elements)
+            element_ids = self.elements.keys()
 
         props = defaultdict(list)
         for eid in element_ids:
@@ -78,7 +76,7 @@ class CalculixConverter(BDF):
 
         for mid in self.materials:
             mats[mid] = []
-        for eid, element in iteritems(self.elements):
+        for eid, element in self.elements.items():
             try:
                 mid = element.Mid()
                 mats[mid].append(eid)
@@ -92,7 +90,7 @@ class CalculixConverter(BDF):
         is a list of element IDs
         """
         if element_ids is None:
-            element_ids = iterkeys(self.elements)
+            element_ids = self.elements.keys()
 
         elems = defaultdict(list)
         for eid in element_ids:
@@ -110,7 +108,7 @@ class CalculixConverter(BDF):
 
         for mid in self.materials:
             mats[mid] = []
-        for pid, property in iteritems(self.properties):
+        for pid, property in self.properties.items():
             try:
                 mid = property.Mid()
                 mats[mid].append(pid)
@@ -146,7 +144,7 @@ class CalculixConverter(BDF):
 
         form = '%-' + str(self.max_nid_len) + 's %8s,%8s,%8s\n'
 
-        for nid, node in sorted(iteritems(self.nodes)):
+        for nid, node in sorted(self.nodes.items()):
             xyz = node.get_position()
             dat = form % (nid, xyz[0], xyz[1], xyz[2])
             fdat.write(dat)
@@ -192,9 +190,9 @@ class CalculixConverter(BDF):
         form_elements = '%-' + str(self.nelements) + 's, '
 
         elsets = []
-        for pid, eids in sorted(iteritems(pid_eids)):
+        for pid, eids in sorted(pid_eids.items()):
             elems = self.get_elements_by_type(eids)
-            for etype, eids in sorted(iteritems(elems)):
+            for etype, eids in sorted(elems.items()):
                 calculix_type = etype_map[etype]
                 elset = 'pid%i_Elements%s' % (pid, etype)
                 elsets.append(elset)
@@ -272,7 +270,7 @@ class CalculixConverter(BDF):
         *SOLID SECTION,MATERIAL=EL,ELSET=EALL
         """
         inp = '** calculix_materials\n'
-        for mid, material in sorted(iteritems(self.materials)):
+        for mid, material in sorted(self.materials.items()):
             msg = '*MATERIAL,NAME=mid%i\n' % material.mid
             if material.type == 'MAT1':
                 msg += '*ELASTIC\n%s, %s\n' % (material.E(), material.Nu())
@@ -360,7 +358,7 @@ class CalculixConverter(BDF):
             p = array(p0)
 
         load_case = self.loads[loadcase_id]
-        #for (key, load_case) in iteritems(self.loads):
+        #for (key, load_case) in self.loads.items():
             #if key != loadcase_id:
                 #continue
 
@@ -386,7 +384,7 @@ class CalculixConverter(BDF):
         i = 0
         xyz = {}
         nid_to_i_map = {}
-        for nid, node in iteritems(self.nodes):
+        for nid, node in self.nodes.items():
             nid_to_i_map[nid] = i
             xyz[nid] = node.get_position()
 
@@ -533,7 +531,7 @@ class CalculixConverter(BDF):
         return self.calculix_spcs()
 
     def calculix_spcs(self):
-        #for spc_id, spcs in iteritems(self.spcObject2):
+        #for spc_id, spcs in self.spcObject2.items():
         inp = ''
         inp += '** Calculix_SPCs\n'
         inp += self.breaker()

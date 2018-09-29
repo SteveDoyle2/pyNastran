@@ -4,11 +4,12 @@ Defines the GUI IO file for Usm3d.
 from __future__ import print_function
 import os
 from collections import defaultdict, OrderedDict
-from six import iteritems, string_types
+from six import string_types
 
 import numpy as np
 
-from pyNastran.utils import integer_float_types, object_attributes
+from pyNastran.utils import object_attributes
+from pyNastran.utils.numpy_utils import integer_float_types
 from pyNastran.converters.usm3d.usm3d_reader import Usm3d
 from pyNastran.converters.usm3d.time_accurate_results import get_n_list
 
@@ -286,7 +287,7 @@ class Usm3dIO(object):
             bc_value = np.zeros(bcs.shape, dtype='int32')
             family = np.zeros(bcs.shape, dtype='int32')
             mapbc_print = defaultdict(list)
-            for region, mapi in sorted(iteritems(mapbc)):
+            for region, mapi in sorted(mapbc.items()):
                 bcnum = mapi[0]
                 familyi = mapi[1]
                 mapbc_print[bcnum].append(region)
@@ -310,7 +311,7 @@ class Usm3dIO(object):
             icase += 2
 
 
-            for bcnum, regions in sorted(iteritems(mapbc_print)):
+            for bcnum, regions in sorted(mapbc_print.items()):
                 try:
                     name = bcmap_to_bc_name[bcnum]
                 except KeyError:
@@ -322,7 +323,7 @@ class Usm3dIO(object):
         subcasemap_id = 2
         if len(loads):
             form0 = []
-            for key, load in iteritems(loads):
+            for key, load in loads.items():
                 load_res = GuiResult(subcasemap_id, key, key, 'node', load,
                                      nlabels=None, labelsize=None, ncolors=None, colormap=colormap,
                                      data_format='%.3f', uname='GuiResult')

@@ -1,6 +1,6 @@
 from __future__ import print_function
 import numpy as np
-from numpy import array, zeros, empty
+from numpy import zeros, empty
 from pyNastran.utils.log import get_logger2
 
 
@@ -29,7 +29,7 @@ class AvusGrid(object):
         self.tet_elements = empty(shape=0)
         self.hexa_elements = empty(shape=0)
 
-    def _read_points(self, infile, zones, npoints):
+    def _read_points(self, infile, unused_zones, npoints):
         """
         npoints
         x1 y1 z1
@@ -58,7 +58,7 @@ class AvusGrid(object):
         for nface in nfaces:
             #faces = np.zeros((nface, 5), dtype='int32')
             iface = 0
-            for nfi in range(nface):
+            for unused_iface in range(nface):
                 line = infile.readline()
                 sline_ints = convert_to_int(line.split())
 
@@ -108,7 +108,7 @@ class AvusGrid(object):
         ncells = []
         mxppfs = []
         mxfpcs = []
-        for nz in zones:
+        for unused_izone in zones:
             sline = infile.readline().split()
             (npoint, nface, ncell, mxppf, mxfpc) = convert_to_int(sline)
             assert npoint > 0, npoint
@@ -134,7 +134,8 @@ class AvusGrid(object):
         with open(self.infilename, 'r') as infile:
 
             # TODO: what are mxppfs, mxfpcs???
-            (zones, npoints, nfaces, ncells, mxppfs, mxfpcs) = self._read_header(infile)
+            (zones, npoints, nfaces, unused_ncells,
+             unused_mxppfs, unused_mxfpcs) = self._read_header(infile)
             points = self._read_points(infile, zones, npoints)
             faces = self._read_faces(infile, nfaces)
 
@@ -142,7 +143,7 @@ class AvusGrid(object):
         self.tri_elements = np.asarray(faces, dtype='int32') - 1
 
     def write_avus(self, avus_filename):
-        with open(avus_filename, 'w') as avus_file:
+        with open(avus_filename, 'w') as unused_avus_file:
             pass
 
     @property

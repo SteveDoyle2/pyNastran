@@ -3,7 +3,7 @@ import struct
 import numpy as np
 
 
-model = OP2(r'\\na\shares\Structure\GAR1-STR-SA\05_FEA\HJ1_IFEM03\Output_C7\10144_Rev_E\Output\OP2\HA420_IFEM03_C7UL_CS3B_01.op2')
+model = OP2(r'example.op2')
 
 print(model._postheaderpos)
 

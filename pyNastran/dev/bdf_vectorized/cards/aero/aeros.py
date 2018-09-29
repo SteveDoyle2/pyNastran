@@ -1,5 +1,4 @@
 from __future__ import print_function
-from six.moves import range
 from numpy import zeros
 from pyNastran.dev.bdf_vectorized.cards.vectorized_card import VectorizedCard
 

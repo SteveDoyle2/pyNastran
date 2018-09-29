@@ -5,7 +5,6 @@ from __future__ import print_function
 import os
 from collections import OrderedDict
 
-from six import iteritems
 import numpy as np
 from numpy import zeros, ravel, amax, amin, arange
 
@@ -227,7 +226,7 @@ class PanairIO(object):
         # get the Cp on the nodes
         Cp_array = zeros(self.gui.nnodes, dtype='float32')
         imin = 0
-        for ipatch, Cp in sorted(iteritems(model.pressures)):
+        for ipatch, Cp in sorted(model.pressures.items()):
             Cpv = ravel(Cp)
             nCp = len(Cpv)
             try:

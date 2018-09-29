@@ -15,7 +15,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from itertools import count
 
 from pyNastran.bdf.cards.aero.dynamic_loads import Aero
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -731,15 +731,13 @@ class TRIM(BaseCard):
 
         .. warning ::  This probably gets AELINKs/AEPARMs/AESURFSs wrong.
 
-        The TRIM equality
-        -----------------
+        **The TRIM equality**
         ndelta = (naestat + naesurf + naeparm) - (
                - (ntrim + ntrim_aesurf? + naelink + nsuport_dofs + nsuport1_dofs)
         ndelta = 0
         ntrim_aesurf is not included, but it might exist...
 
-        Steps to a TRIM analysis
-        ------------------------
+        **Steps to a TRIM analysis**
         1.  Define the number of independent control surfaces (naesurf)
             Make an AESURF for each.  Dual link the AESURFs if you can
             to avoid needing an AELINK (e.g., +roll is left aileron down,
@@ -784,8 +782,7 @@ class TRIM(BaseCard):
             certain DOFs (e.g., z-motion).  Add enough to satisfy the TRIM
             equality.
 
-        Doesn't Consider
-        ----------------
+        **Doesn't Consider**
          - AELINK
          - AEPARM
          - AESURFS
@@ -846,14 +843,20 @@ class TRIM(BaseCard):
             aeparm_labels = [aeparm.label for aeparm in aeparms.values()]
             naestat = len(aestat_labels)
             ntrim = len(self.labels)
+            trim_aesurf_common = list(set(self.labels).intersection(set(aesurf_names)))
+            trim_aesurf_common.sort()
+            ntrim_aesurfs = len(trim_aesurf_common)
             naesurf = len(aesurf_names)
             naeparm = len(aeparm_labels)
+
             naelink = 0
+            aelinksi = []
             if self.sid in aelinks:
-                naelink = len(aelinks[self.sid])
-            if 0 in aelinks:
+                aelinksi = aelinks[self.sid]
+                naelink = len(aelinksi)
+            #if 0 in aelinks:
                 #  TODO: what is this...is 0 the global subcase?
-                naelink += len(aelinks[0])
+                #naelink += len(aelinks[0])
 
             ntrim_aesurf = 0
             labels = aestat_labels + aesurf_names + aeparm_labels
@@ -887,7 +890,10 @@ class TRIM(BaseCard):
                         #naestat, naesurf, naeparms, ntrim_aesurf,
                         #ntrim, naelink, nsuport_dofs, nsuport1_dofs))
 
-            ndelta = (naestat + naesurf + naeparm) - (ntrim + naelink + nsuport_dofs + nsuport1_dofs) #+ ntrim_aesurfs
+            nplus = (naestat + naesurf + naeparm)
+            nminus = ntrim + naelink + nsuport_dofs + nsuport1_dofs
+
+            ndelta = nplus - nminus + 0*2*ntrim_aesurfs
             if ndelta != 0:
                 #msg = (
                     #'(naestat + naesurf + naeparm) - (ntrim + ntrim_aesurf? + naelink + '
@@ -900,28 +906,32 @@ class TRIM(BaseCard):
                 #)
                 msg = (
                     'Invalid trim state (ndelta != 0):\n'
-                    '   (naestat + naesurf + naeparm) = (%s + %s + %s)\n'
-                    ' - (ntrim + ntrim_aesurf? + naelink + nsuport_dofs + nsuport1_dofs)'
-                    ' = (%s + %s + %s + %s + %s)\n'
+                    '   (naestat + naesurf + naeparm + 0*2*ntrim_aesurf?) = (%s + %s + %s + 0*2*%s) = %s\n'
+                    ' - (ntrim + naelink + nsuport_dofs + nsuport1_dofs) = (%s + %s + %s + %s) = %s\n'
                     '===================================================================\n'
                     '  ndelta = %s\n\n'
                     'Summary\n'
                     '-------\n'
-                    '  +naestat = %s\n'
-                    '  +naesurf = %s\n'
-                    '  +naeparm = %s\n'
-                    '  -ntrim = %s\n'
-                    '  -ntrim_aesurf = %s\n'
-                    '  -naelink = %s\n'
+                    '  +naestat = %s; %s\n'
+                    '  +naesurf = %s; %s\n'
+                    '  +naeparm = %s; %s\n'
+                    '  +0*2*ntrim_aesurf? = %s -> 0; %s\n'
+                    '  -ntrim = %s; %s\n'
+                    '  -naelink = %s; %s\n'
                     '  -nsuport_dofs = %s\n'
                     '  -nsuport1_dofs = %s\n'
                     '%s\n\n' % (
-                        naestat, naesurf, naeparm,
-                        ntrim, ntrim_aesurf, naelink, nsuport_dofs, nsuport1_dofs,
+                        naestat, naesurf, naeparm, ntrim_aesurf, nplus,
+                        ntrim, naelink, nsuport_dofs, nsuport1_dofs, nminus,
 
                         ndelta,
-                        naestat, naesurf, naeparm, ntrim, ntrim_aesurf,
-                        naelink, nsuport_dofs, nsuport1_dofs, suport_dof_msg2)
+                        naestat, aestat_labels,
+                        naesurf, aesurf_names,
+                        naeparm, aeparm_labels,
+                        2*ntrim_aesurf, trim_aesurf_common,
+                        ntrim, self.labels,
+                        naelink, aelinksi,
+                        nsuport_dofs, nsuport1_dofs, suport_dof_msg2)
                 )
                 msg += str(self)
                 raise RuntimeError(msg)

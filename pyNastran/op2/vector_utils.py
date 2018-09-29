@@ -203,16 +203,14 @@ def sortedsum1d(ids, values, axis=None):
 
     values = 1.0 * ids
     For 2D
-    Todo
-    ----
-    This could probably be more efficient
-    Doesn't support axis
+
+    .. todo::  This could probably be more efficient
+    .. todo::  Doesn't support axis
 
     """
     uids = unique(ids)
     i1 = np.searchsorted(ids, uids, side='left') # left is the default
     i2 = np.searchsorted(ids, uids, side='right')
-    print(i1, i2)
     out = np.zeros(values.shape, dtype=values.dtype)
 
     for i, i1i, i2i in zip(count(), i1, i2):
@@ -524,8 +522,7 @@ def transform_force_moment(force_in_local, moment_in_local,
     xyz2 = T_2_to_0.T @ xyz0
     xyz2 = T_2_to_0.T @ T_1_to_0 @ xyz1
 
-    Method
-    ------
+
     xyz_g = T_a2g @ xyz_a
     xyz_g = T_b2g @ xyz_b
     T_b2g @ xyz_b = T_a2g @ xyz_a

@@ -2,9 +2,9 @@
 from __future__ import print_function
 import os
 import unittest
-from codecs import open as codec_open
+from codecs import open
 
-from six import StringIO, iteritems
+from six import StringIO
 import numpy as np
 #import pyNastran
 #from pyNastran.bdf.bdf import BDF
@@ -15,80 +15,36 @@ import numpy as np
 import pyNastran
 from pyNastran.bdf.bdf import BDF, read_bdf, CORD2R
 from pyNastran.bdf.mesh_utils.bdf_equivalence import bdf_equivalence_nodes
-from pyNastran.bdf.mesh_utils.collapse_bad_quads import convert_bad_quads_to_tris
-from pyNastran.bdf.mesh_utils.delete_bad_elements import get_bad_shells
 from pyNastran.bdf.mesh_utils.export_mcids import export_mcids
 from pyNastran.bdf.mesh_utils.split_cbars_by_pin_flag import split_cbars_by_pin_flag
 from pyNastran.bdf.mesh_utils.split_elements import split_line_elements
-from pyNastran.bdf.mesh_utils.pierce_shells import pierce_shell_model, quad_intersection, triangle_intersection
-from pyNastran.bdf.mesh_utils.mirror_mesh import write_bdf_symmetric, bdf_mirror, make_symmetric_model
-from pyNastran.bdf.mesh_utils.cut_model_by_plane import cut_edge_model_by_coord, cut_face_model_by_coord, connect_face_rows
-from pyNastran.bdf.mesh_utils.mesh import create_structured_cquad4s
+from pyNastran.bdf.mesh_utils.pierce_shells import (
+    pierce_shell_model) #, quad_intersection, triangle_intersection)
+from pyNastran.bdf.mesh_utils.mirror_mesh import (
+    write_bdf_symmetric, bdf_mirror, make_symmetric_model)
+from pyNastran.bdf.mesh_utils.cut_model_by_plane import (
+    cut_edge_model_by_coord, cut_face_model_by_coord, connect_face_rows)
+from pyNastran.bdf.mesh_utils.bdf_merge import bdf_merge
 from pyNastran.utils.log import SimpleLogger
 
-# testing these imports are up to date
-from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
-from pyNastran.bdf.mesh_utils.bdf_merge import bdf_merge
-from pyNastran.bdf.mesh_utils.delete_bad_elements import delete_bad_shells
+# not tested
+from pyNastran.bdf.mesh_utils.mesh import create_structured_cquad4s
 
-pkg_path = pyNastran.__path__[0]
+PKG_PATH = pyNastran.__path__[0]
+MODEL_PATH = os.path.abspath(os.path.join(PKG_PATH, '..', 'models'))
 
 np.set_printoptions(edgeitems=3, infstr='inf',
                     linewidth=75, nanstr='nan', precision=3,
                     suppress=True, threshold=1000, formatter=None)
 
-log = SimpleLogger(level='error')
+
 class TestMeshUtils(unittest.TestCase):
-
-    def test_quad_180_01(self):
-        r"""
-        Identify a 180+ degree quad
-
-        y
-        ^         4
-        |       / |
-        |     /   |
-        |   /     |
-        | /       |
-        /         |
-        1------2  |----> x
-                \ |
-                 \|
-                  3
-        """
-        msg = (
-            'CEND\n'
-            'BEGIN BULK\n'
-            'GRID,1,,0.,0.,0.\n'
-            'GRID,2,,1.,0.,0.\n'
-            'GRID,3,,2.,-1.,0.\n'
-            'GRID,4,,2., 1.,0.\n'
-
-            'CQUAD4,100,1, 1,2,3,4\n'
-            'PSHELL,1,1,0.1\n'
-            'MAT1,1,3.0,, 0.3\n'
-            'ENDDATA'
-        )
-        bdf_filename = 'cquad4.bdf'
-        with codec_open(bdf_filename, 'w') as bdf_file:
-            bdf_file.write(msg)
-
-        model = read_bdf(bdf_filename, log=log, xref=True)
-        xyz_cid0 = model.get_xyz_in_coord(cid=0, fdtype='float32')
-        nid_map = {}
-        for i, (nid, node) in enumerate(sorted(iteritems(model.nodes))):
-            #xyz = node.get_position()
-            #xyz_cid0[i, :] = xyz
-            nid_map[nid] = i
-        eids_to_delete = get_bad_shells(model, xyz_cid0, nid_map, max_theta=180.,
-                                        max_skew=1000., max_aspect_ratio=1000.)
-        assert eids_to_delete == [100], eids_to_delete
-        os.remove(bdf_filename)
 
     def test_eq1(self):
         """
         Collapse nodes 2 and 3; consider 1-3
         """
+        log = SimpleLogger(level='error')
         msg = (
             'CEND\n'
             'BEGIN BULK\n'
@@ -107,7 +63,7 @@ class TestMeshUtils(unittest.TestCase):
         bdf_filename = 'nonunique.bdf'
         bdf_filename_out = 'unique.bdf'
 
-        with codec_open(bdf_filename, 'w') as bdf_file:
+        with open(bdf_filename, 'w') as bdf_file:
             bdf_file.write(msg)
 
         tol = 0.2
@@ -133,6 +89,7 @@ class TestMeshUtils(unittest.TestCase):
           *-------* 3
           1       20
         """
+        log = SimpleLogger(level='error')
         msg = (
             'CEND\n'
             'BEGIN BULK\n'
@@ -151,7 +108,7 @@ class TestMeshUtils(unittest.TestCase):
         bdf_filename = 'nonunique.bdf'
         bdf_filename_out = 'unique.bdf'
 
-        with codec_open(bdf_filename, 'w') as bdf_file:
+        with open(bdf_filename, 'w') as bdf_file:
             bdf_file.write(msg)
 
         tol = 0.2
@@ -165,11 +122,11 @@ class TestMeshUtils(unittest.TestCase):
         model.read_bdf(bdf_filename_out)
 
         msg = 'nnodes=%s\n' % len(model.nodes)
-        for nid, node in sorted(iteritems(model.nodes)):
+        for nid, node in sorted(model.nodes.items()):
             msg += 'nid=%s xyz=%s\n' % (nid, node.xyz)
 
         assert len(model.nodes) == 4, msg
-        # os.remove(bdf_filename)
+        #os.remove(bdf_filename)
         os.remove(bdf_filename_out)
 
         tol = 0.009
@@ -235,6 +192,7 @@ class TestMeshUtils(unittest.TestCase):
 
     def test_eq3(self):
         """node_set=None"""
+        log = SimpleLogger(level='error')
         lines = [
             '$pyNastran: version=msc',
             '$pyNastran: punch=True',
@@ -280,7 +238,7 @@ class TestMeshUtils(unittest.TestCase):
         bdf_filename = 'nonunique2.bdf'
         bdf_filename_out = 'unique2.bdf'
 
-        with codec_open(bdf_filename, 'w') as bdf_file:
+        with open(bdf_filename, 'w') as bdf_file:
             bdf_file.write('\n'.join(lines))
 
         tol = 0.01
@@ -306,6 +264,7 @@ class TestMeshUtils(unittest.TestCase):
           *-------* 3
           1       20
         """
+        log = SimpleLogger(level='error')
         msg = 'CEND\n'
         msg += 'BEGIN BULK\n'
         msg += 'GRID,1, , 0.,   0.,   0.\n'
@@ -327,7 +286,7 @@ class TestMeshUtils(unittest.TestCase):
         bdf_filename = 'nonunique.bdf'
         bdf_filename_out = 'unique.bdf'
 
-        with codec_open(bdf_filename, 'w') as bdf_file:
+        with open(bdf_filename, 'w') as bdf_file:
             bdf_file.write(msg)
 
         tol = 0.2
@@ -354,88 +313,16 @@ class TestMeshUtils(unittest.TestCase):
         os.remove(bdf_filename)
         os.remove(bdf_filename_out)
 
-    def test_fix_bad_quads(self):
-        """split high interior angle quads"""
-        msg = [
-            'SOL 101',
-            'CEND',
-            'BEGIN BULK',
-            'GRID,1,,0.,0.,0.',
-            'GRID,2,,1.,0.,0.',
-            'GRID,3,,1.,1.,0.',
-            'GRID,4,,0.,1.,0.',
-            'GRID,5,,1.,1.,0.00001',
-            'GRID,6,,0.,0.,0.00001',
-            'CQUAD4,1, 2, 1,2,3,4',
-            'CQUAD4,2, 2, 1,2,3,5',
-            'CQUAD4,3, 2, 1,6,3,5',
-        ]
-        bdf_filename = 'fix_bad_quads.bdf'
-        with open(bdf_filename, 'w') as bdf_file:
-            bdf_file.write('\n'.join(msg))
-        model = read_bdf(bdf_filename, log=log, xref=False, debug=False)
-        model.cross_reference(xref=True, xref_elements=False,
-                              xref_nodes_with_elements=False,
-                              xref_properties=False,
-                              xref_masses=False,
-                              xref_materials=False,
-                              xref_loads=False,
-                              xref_constraints=False,
-                              xref_aero=False,
-                              xref_sets=False,
-                              xref_optimization=False)
-        convert_bad_quads_to_tris(model, min_edge_length=0.01)
-        #for eid, elem in sorted(iteritems(model.elements)):
-            #print(elem)
-        assert model.card_count['CQUAD4'] == 2, model.card_count
-        assert model.card_count['CTRIA3'] == 1, model.card_count
-        os.remove(bdf_filename)
-
-    def test_renumber_01(self):
-        """renumbers a deck in a couple ways"""
-        bdf_filename = os.path.abspath(
-            os.path.join(pkg_path, '..', 'models', 'bwb', 'bwb_saero.bdf'))
-        bdf_filename_out1 = os.path.abspath(
-            os.path.join(pkg_path, '..', 'models', 'bwb', 'bwb_saero1.out'))
-        bdf_filename_out2 = os.path.abspath(
-            os.path.join(pkg_path, '..', 'models', 'bwb', 'bwb_saero2.out'))
-        bdf_filename_out3 = os.path.abspath(
-            os.path.join(pkg_path, '..', 'models', 'bwb', 'bwb_saero3.out'))
-        model = bdf_renumber(bdf_filename, bdf_filename_out1, size=8,
-                             is_double=False, starting_id_dict=None,
-                             round_ids=False, cards_to_skip=None, debug=False)
-
-        model = read_bdf(bdf_filename, log=log)
-        bdf_renumber(model, bdf_filename_out2, size=16, is_double=False,
-                     starting_id_dict={
-                         'eid' : 1000, 'pid':2000, 'mid':3000,
-                         'spc_id' : 4000,},
-                     round_ids=False, cards_to_skip=None)
-        bdf_renumber(bdf_filename, bdf_filename_out3, size=8,
-                     is_double=False, starting_id_dict=None,
-                     round_ids=True, cards_to_skip=None)
-        read_bdf(bdf_filename_out1, log=log)
-        read_bdf(bdf_filename_out2, log=log)
-        read_bdf(bdf_filename_out3, log=log)
-
     def test_merge_01(self):
         """merges multiple bdfs into a single deck"""
-        #log = SimpleLogger(level='info')
-        bdf_filename1 = os.path.abspath(os.path.join(
-            pkg_path, '..', 'models', 'bwb', 'bwb_saero.bdf'))
-        bdf_filename2 = os.path.abspath(os.path.join(
-            pkg_path, '..', 'models', 'sol_101_elements', 'static_solid_shell_bar.bdf'))
-        bdf_filename3 = os.path.abspath(os.path.join(
-            pkg_path, '..', 'models', 'solid_bending', 'solid_bending.bdf'))
-        bdf_filename4 = os.path.abspath(os.path.join(
-            pkg_path, '..', 'models', 'iSat', 'ISat_Dploy_Sm.dat'))
-
-        bdf_filename_out1 = os.path.abspath(
-            os.path.join(pkg_path, '..', 'models', 'bwb', 'BWBsaero_staticbar_8.out'))
-        bdf_filename_out2 = os.path.abspath(
-            os.path.join(pkg_path, '..', 'models', 'bwb', 'BWBsaero_static_bar_16.out'))
-        bdf_filename_out3 = os.path.abspath(
-            os.path.join(pkg_path, '..', 'models', 'bwb', 'BWBsaero_staticbar_isat.out'))
+        log = SimpleLogger(level='error')
+        bdf_filename1 = os.path.join(MODEL_PATH, 'bwb', 'bwb_saero.bdf')
+        bdf_filename2 = os.path.join(MODEL_PATH, 'sol_101_elements', 'static_solid_shell_bar.bdf')
+        bdf_filename3 = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending.bdf')
+        bdf_filename4 = os.path.join(MODEL_PATH, 'iSat', 'ISat_Dploy_Sm.dat')
+        bdf_filename_out1 = os.path.join(MODEL_PATH, 'bwb', 'BWBsaero_staticbar_8.out')
+        bdf_filename_out2 = os.path.join(MODEL_PATH, 'bwb', 'BWBsaero_static_bar_16.out')
+        bdf_filename_out3 = os.path.join(MODEL_PATH, 'bwb', 'BWBsaero_staticbar_isat.out')
 
         bdf_filenames1 = [bdf_filename1, bdf_filename2]
         bdf_filenames2 = [bdf_filename1, bdf_filename2, bdf_filename3, bdf_filename4]
@@ -455,10 +342,9 @@ class TestMeshUtils(unittest.TestCase):
 
     def test_export_mcids(self):
         """creates material coordinate systems"""
-        bdf_filename = os.path.abspath(os.path.join(
-            pkg_path, '..', 'models', 'bwb', 'bwb_saero.bdf'))
-        csv_filename = os.path.abspath(os.path.join(
-            pkg_path, '..', 'models', 'bwb', 'mcids.csv'))
+        log = SimpleLogger(level='error')
+        bdf_filename = os.path.join(MODEL_PATH, 'bwb', 'bwb_saero.bdf')
+        csv_filename = os.path.join(MODEL_PATH, 'bwb', 'mcids.csv')
         export_mcids(bdf_filename, csv_filename,
                      export_xaxis=True, export_yaxis=True,
                      iply=9, log=log, debug=False)
@@ -488,8 +374,7 @@ class TestMeshUtils(unittest.TestCase):
 
     def test_split_cbars_by_pin_flag_1(self):
         """null pin flag test"""
-        bdf_filename = os.path.abspath(
-            os.path.join(pkg_path, '..', 'models', 'sol_101_elements', 'static_solid_shell_bar.bdf'))
+        bdf_filename = os.path.join(MODEL_PATH, 'sol_101_elements', 'static_solid_shell_bar.bdf')
         split_cbars_by_pin_flag(bdf_filename, pin_flags_filename='pin_flags.csv',
                                 bdf_filename_out='pin_flags.bdf', debug=False)
         os.remove('pin_flags.csv')
@@ -643,10 +528,11 @@ class TestMeshUtils(unittest.TestCase):
         model.add_cquad4(15, pid, [1, 2, 3, 4], theta_mcid=1, zoffset=0.,
                          tflag=1, T1=0.1, T2=0.1, T3=0.1, T4=0.1,  # relative
                          comment='')
-        model.add_cord2r(1, rid=0,
-                         origin=[0., 0., 0.],
-                         zaxis=[0., 0., 1.],
-                         xzplane=[1., 0., 0.])
+
+        origin = [0., 0., 0.]
+        zaxis = [0., 0., 1.]
+        xzplane = [1., 0., 0.]
+        model.add_cord2r(1, origin, zaxis, xzplane, rid=0)
         model.add_pshell(pid, mid1=mid1, t=2.)
 
         e11 = 1.0
@@ -702,6 +588,7 @@ class TestMeshUtils(unittest.TestCase):
 
     def test_mirror(self):
         """tests bdf mirroring"""
+        log = SimpleLogger(level='error')
         pid_pshell = 10
         pid_psolid = 11
         mid1 = 100
@@ -734,16 +621,16 @@ class TestMeshUtils(unittest.TestCase):
         model.add_mat1(mid1, E, G, nu, rho=1.0)
         model.validate()
         model.cross_reference()
-        mass1, cg1, inertia1 = model.mass_properties()
+        mass1, unused_cg1, unused_inertia1 = model.mass_properties()
 
         out_filename = 'sym.bdf'
         write_bdf_symmetric(model, out_filename=out_filename, encoding=None, size=8,
-                           is_double=False,
-                           enddata=None,
-                           close=True, plane='xz') # +y/-y
+                            is_double=False,
+                            enddata=None,
+                            close=True, plane='xz') # +y/-y
         model2 = read_bdf(out_filename, log=log)
         assert len(model2.nodes) == 16, model2.nodes
-        mass2, cg2, inertia2 = model2.mass_properties()
+        mass2, cg2, unused_inertia2 = model2.mass_properties()
         #print('cg1=%s cg2=%s' % (cg1, cg2))
         assert np.allclose(mass1*2, mass2), 'mass1=%s mass2=%s' % (mass1, mass2)
         assert np.allclose(cg2[1], 0.), 'cg2=%s stats=%s' % (cg2, model2.get_bdf_stats())
@@ -752,7 +639,7 @@ class TestMeshUtils(unittest.TestCase):
     def test_mirror2(self):
         """mirrors the BDF (we care about the aero cards)"""
         log = SimpleLogger(level='warning')
-        bdf_filename = os.path.join(pkg_path, '..', 'models', 'bwb', 'bwb_saero.bdf')
+        bdf_filename = os.path.join(MODEL_PATH, 'bwb', 'bwb_saero.bdf')
         model = bdf_mirror(bdf_filename, plane='xz', log=log)[0]
         model.uncross_reference()
         model.cross_reference()
@@ -761,6 +648,7 @@ class TestMeshUtils(unittest.TestCase):
 
     def test_pierce_model(self):
         """tests pierce_shell_model"""
+        log = SimpleLogger(level='error')
         pid = 10
         mid1 = 100
         model = BDF(log=log)
@@ -827,7 +715,7 @@ class TestMeshUtils(unittest.TestCase):
         """tests pierce_shell_model"""
         model, nodal_result = _cut_shell_model_quads()
         coord = CORD2R(1, rid=0, origin=[0.5, 0., 0.], zaxis=[0.5, 0., 1], xzplane=[1.5, 0., 0.],
-                      comment='')
+                       comment='')
         model.coords[1] = coord
         tol = 2.
         #-------------------------------------------------------------------------
@@ -845,22 +733,21 @@ class TestMeshUtils(unittest.TestCase):
         """tests pierce_shell_model"""
         tol = 2.
         coord = CORD2R(1, rid=0, origin=[0.5, 0., 0.], zaxis=[0.5, 0., 1], xzplane=[1.5, 0., 0.],
-                      comment='')
+                       comment='')
         model, nodal_result = _cut_shell_model_quads()
         #-------------------------------------------------------------------------
         # triangles
         elements2 = {}
         neids = len(model.elements)
-        for eid, elem in iteritems(model.elements):
+        for eid, elem in model.elements.items():
             elem_a, elem_b = elem.split_to_ctria3(eid, eid + neids)
             elements2[elem_a.eid] = elem_a
             elements2[elem_b.eid] = elem_b
         model.elements = elements2
-        print(elements2)
         model.coords[1] = coord
         model.write_bdf('tris.bdf')
 
-        print('----------------------------')
+        #print('----------------------------')
         local_points_array, global_points_array, result_array = cut_edge_model_by_coord(
             model, coord, tol, nodal_result,
             plane_atol=1e-5, csv_filename='cut_edge_2.csv')
@@ -870,6 +757,7 @@ class TestMeshUtils(unittest.TestCase):
             model, coord, tol, nodal_result,
             plane_atol=1e-5, csv_filename='cut_face_2.csv')
         assert len(result_arrays[0]) == 8, len(result_arrays)
+        os.remove('tris.bdf')
 
 
     def test_connect_face_rows(self):
@@ -963,6 +851,7 @@ class TestMeshUtils(unittest.TestCase):
 
 def _cut_shell_model_quads():
     """helper method"""
+    log = SimpleLogger(level='error')
     pid = 10
     mid1 = 100
     model = BDF(log=log)
@@ -1005,10 +894,10 @@ def _cut_shell_model_quads():
 
     model.cross_reference()
 
-    xyz_points = [
-        [0.4, 0.6, 0.], [-1., -1, 0.],]
+    #xyz_points = [
+        #[0.4, 0.6, 0.], [-1., -1, 0.],]
 
-    tol = 2.
+    #tol = 2.
     nodal_result = np.linspace(0., 1., num=16)
     return model, nodal_result
 

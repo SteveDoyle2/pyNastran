@@ -34,8 +34,8 @@ def docopt_types(doc, argv=None, help=True, version=None, options_first=False, t
         such as e.g. "--verbose" and "<path>", and values are the
         parsed values of those elements.
 
-    Example
-    -------
+    Examples
+    --------
     >>> from docopt import docopt
     >>> doc = '''
     Usage:

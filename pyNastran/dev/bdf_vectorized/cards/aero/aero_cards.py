@@ -28,12 +28,11 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from itertools import count
 import math
 from typing import List, Any
-from six.moves import zip, range
 from six import string_types
 
 import numpy as np
 
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8, print_float_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.cards.base_card import BaseCard, expand_thru
@@ -382,8 +381,8 @@ class AELIST(BaseCard):
     |         | 1202 |      |      |      |      |      |      |      |
     +---------+------+------+------+------+------+------+------+------+
 
-    Remarks
-    -------
+    Notes
+    -----
     1. These entries are referenced by the AESURF entry.
     2. When the THRU option is used, all intermediate grid points must exist.
        The word THRU may not appear in field 3 or 9 (2 or 9 for continuations).
@@ -5954,15 +5953,15 @@ class TRIM(BaseCard):
 
         .. warning ::  This probably gets AELINKs/AEPARMs/AESURFSs wrong.
 
-        The TRIM equality
-        -----------------
+        Notes
+        -----
+        **The TRIM equality**
         ndelta = (naestat + naesurf + naeparm) - (
                - (ntrim + ntrim_aesurf? + naelink + nsuport_dofs + nsuport1_dofs)
         ndelta = 0
         ntrim_aesurf is not included, but it might exist...
 
-        Steps to a TRIM analysis
-        ------------------------
+        **Steps to a TRIM analysis**
         1.  Define the number of independent control surfaces (naesurf)
             Make an AESURF for each.  Dual link the AESURFs if you can
             to avoid needing an AELINK (e.g., +roll is left aileron down,
@@ -6007,8 +6006,7 @@ class TRIM(BaseCard):
             certain DOFs (e.g., z-motion).  Add enough to satisfy the TRIM
             equality.
 
-        Doesn't Consider
-        ----------------
+        **Doesn't Consider**
          - AELINK
          - AEPARM
          - AESURFS

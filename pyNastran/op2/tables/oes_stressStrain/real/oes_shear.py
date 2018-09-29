@@ -1,7 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import integer_types
-from six.moves import zip, range
 import numpy as np
 from numpy import zeros, allclose
 
@@ -19,10 +18,10 @@ class RealShearArray(OES_Object):
         #self.code = [self.format_code, self.sort_code, self.s_code]
         self.nelements = 0  # result specific
 
-        if is_sort1:
-            self.add_new_eid = self.add_new_eid_sort1
-        else:
-            raise NotImplementedError('SORT2')
+        #if is_sort1:
+            #self.add_new_eid = self.add_new_eid_sort1
+        #else:
+            #raise NotImplementedError('SORT2')
 
     @property
     def is_real(self):
@@ -64,16 +63,28 @@ class RealShearArray(OES_Object):
         dtype = 'float32'
         if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
-        self._times = zeros(self.ntimes, dtype=dtype)
-        self.element = zeros(self.nelements, dtype='int32')
+        _times = zeros(self.ntimes, dtype=dtype)
+        element = zeros(self.nelements, dtype='int32')
 
         # [max_shear, avg_shear, margin]
-        self.data = zeros((self.ntimes, self.ntotal, 3), dtype='float32')
+        data = zeros((self.ntimes, self.ntotal, 3), dtype='float32')
+
+        if self.load_as_h5:
+            #for key, value in sorted(self.data_code.items()):
+                #print(key, value)
+            group = self._get_result_group()
+            self._times = group.create_dataset('_times', data=_times)
+            self.element = group.create_dataset('element', data=element)
+            self.data = group.create_dataset('data', data=data)
+        else:
+            self._times = _times
+            self.element = element
+            self.data = data
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
         headers = self.get_headers()
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
@@ -116,7 +127,7 @@ class RealShearArray(OES_Object):
                 raise ValueError(msg)
         return True
 
-    def add_new_eid_sort1(self, dt, eid, max_shear, avg_shear, margin):
+    def add_sort1(self, dt, eid, max_shear, avg_shear, margin):
         """
         ELEMENT            MAX            AVG        SAFETY         ELEMENT            MAX            AVG        SAFETY
           ID.             SHEAR          SHEAR       MARGIN           ID.             SHEAR          SHEAR       MARGIN
@@ -140,7 +151,7 @@ class RealShearArray(OES_Object):
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i\n'
                        % (self.__class__.__name__, ntimes, nelements))
             ntimes_word = 'ntimes'

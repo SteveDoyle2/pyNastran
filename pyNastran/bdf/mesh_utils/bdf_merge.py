@@ -5,7 +5,7 @@ defines:
 """
 from __future__ import print_function
 from six.moves import StringIO
-from six import string_types, iteritems
+from six import string_types
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.case_control_deck import CaseControlDeck
 from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber, get_renumber_starting_ids_from_model
@@ -56,7 +56,6 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
             }
 
     Supports
-    --------
       nodes:      GRID
       coords:     CORDx
       elements:   CQUAD4, CTRIA3, CTETRA, CPENTA, CHEXA, CELASx, CBAR, CBEAM
@@ -113,7 +112,7 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
     mappers = []
     for bdf_filename in bdf_filenames[1:]:
         starting_id_dict = get_renumber_starting_ids_from_model(model)
-        #for param, val in sorted(iteritems(starting_id_dict)):
+        #for param, val in sorted(starting_id_dict.items()):
             #print('  %-3s %s' % (param, val))
 
         model.log.info('secondary=%s' % bdf_filename)
@@ -142,7 +141,7 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
             data2 = getattr(model2, data_member)
             if isinstance(data1, dict):
                 #model.log.info('  working on %s' % (data_member))
-                for key, value in iteritems(data2):
+                for key, value in data2.items():
                     if data_member in 'coords' and key == 0:
                         continue
                     if isinstance(value, list):
@@ -196,7 +195,7 @@ def _apply_scalar_cards(model, model2_renumber):
     if model.aeros is None and model2_renumber.aeros:
         model.aeros = model2_renumber.aeros
     model.mkaeros += model2_renumber.mkaeros
-    for key, param in iteritems(model2_renumber.params):
+    for key, param in model2_renumber.params.items():
         if key not in model.params:
             model.params[key] = param
 
@@ -248,10 +247,10 @@ def _assemble_mapper(mappers, mapper_0, data_members, mapper_renumber=None):
         for mapper in mappers:
             mapper_temp = {}
             for map_type in data_members:
-            #for map_type, sub_mappper in iteritems(mapper):
+            #for map_type, sub_mappper in mapper.items():
                 sub_mappper = mapper[map_type]
                 mapper_temp[map_type] = {}
-                for id_orig, id_merge in iteritems(sub_mappper):
+                for id_orig, id_merge in sub_mappper.items():
                     # map from original to renumbered
                     mapper_temp[map_type][id_orig] = mapper_renumber[map_type][id_merge]
             mappers_all.append(mapper_temp)
@@ -322,7 +321,7 @@ def _get_mapper_0(model):
     dconadd_map = _dict_key_to_key(model.dconadds)
     dconstr_map = _dict_key_to_key(model.dconstrs)
     dessub_map = dconadd_map
-    for key, value in iteritems(dconstr_map):
+    for key, value in dconstr_map.items():
         if key in dessub_map:
             raise NotImplementedError()
         dessub_map[key] = value
@@ -340,8 +339,8 @@ def _get_mapper_0(model):
         'materials' : mid_map,
         'properties' : properties_map,
         'rigid_elements': rigid_elements_map,
-        'SPC' : spc_map,
-        'MPC' : mpc_map,
+        'spcs' : spc_map,
+        'mpcs' : mpc_map,
         'METHOD' : method_map,
         'CMETHOD' : cmethod_map,
         'FLFACT' : flfact_map,
@@ -409,7 +408,7 @@ def _renumber_mapper(mapper_0, mapper_renumber):
     """
     mapper = mapper_0.copy()
     # apply any renumbering
-    for map_type, sub_mapper in iteritems(mapper):
+    for map_type, sub_mapper in mapper.items():
         for id_ in sub_mapper.keys():
             if sub_mapper[id_] == mapper_renumber[map_type][id_]:
                 continue

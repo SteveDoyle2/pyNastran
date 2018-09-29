@@ -1,5 +1,3 @@
-from six.moves import zip
-
 from numpy import array, zeros, arange, searchsorted, unique
 
 from pyNastran.dev.bdf_vectorized.cards.elements.shell.shell_element import ShellElement

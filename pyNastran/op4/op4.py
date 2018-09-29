@@ -4,10 +4,9 @@ Main OP4 class
 from __future__ import print_function
 import sys
 import os
-import io
+from codecs import open
 from struct import pack, unpack, Struct
-from six import string_types, iteritems, PY2, PY3
-from six.moves import range
+from six import string_types, PY2, PY3
 
 import numpy as np
 from numpy import array, zeros, float32, float64, complex64, complex128, ndarray
@@ -671,7 +670,7 @@ class OP4(object):
 #--------------------------------------------------------------------------
     def read_op4_binary(self, op4_filename, matrix_names=None, precision='default'):
         """matrix_names must be a list or None, but basically the same"""
-        with io.open(op4_filename, mode='rb') as op4:
+        with open(op4_filename, mode='rb') as op4:
             self.n = 0
             self._endian = self._determine_endian(op4)
 
@@ -1393,13 +1392,14 @@ class OP4(object):
             Overwrite the default precision ('single', 'double', 'default')
             Applies to all matrices
 
-        Method 1:
-        ---------
+        Examples
+        --------
+        # simple
         >>> write_op4(op4_filename, name_order=['A', 'B', 'C'],
                       precision='default', is_binary=True)
-        Method 2:
-        ---------
-        matrices = {
+
+        # another method
+        >>> matrices = {
             'A' : (formA, matrixA),
             'B' : (formB, matrixB),
         }
@@ -1732,7 +1732,7 @@ def _write_sparse_matrix_ascii(op4, name, A, form=2, is_big_mat=False,
 
     op4.write(msg)
     msg = ''
-    for j, col in iteritems(cols):
+    for j, col in cols.items():
         #print("***********")
         #print("j=%s col=%s" % (j, col))
         #col.sort()

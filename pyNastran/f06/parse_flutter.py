@@ -2,9 +2,14 @@
 SOL 145 plotter
 """
 from __future__ import print_function
-from six import iteritems
 
 import matplotlib.pyplot as plt
+try:  # pragma: no cover
+    plt.figure()
+    plt.close()
+except:  # pragma: no cover
+    plt.switch_backend('Agg')
+
 
 from pyNastran.utils.log import get_logger2
 from pyNastran.f06.flutter_response import FlutterResponse
@@ -280,7 +285,6 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None,
         value : FlutterResponse()
 
     Supports:
-    ---------
      o single subcase
      o single subcase, no subcase marker
      o multiple subcases
@@ -292,10 +296,10 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None,
          - altitude
 
     Doesn't support:
-    ----------------
      o SOL 200
      o fixing mode switching problem
      o fixing unconverged points
+
     """
     flutters = make_flutter_response(
         f06_filename, f06_units=f06_units, out_units=out_units, log=log)
@@ -313,7 +317,7 @@ def make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq,
                        nopoints,
                        show=True):
     """actually makes the flutter plots"""
-    for unused_subcase, flutter in sorted(iteritems(flutters)):
+    for unused_subcase, flutter in sorted(flutters.items()):
         if plot_vg:
             flutter.plot_vg(modes=modes,
                             show=False,

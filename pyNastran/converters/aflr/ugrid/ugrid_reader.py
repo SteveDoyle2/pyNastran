@@ -649,6 +649,7 @@ class UGRID(object):
         if nquads:
             quads = zeros((nquads, 4), dtype='int32')
 
+        print('ntris=%s nquads=%s' % (ntris, nquads))
         ntri_start = 0
         nquad_start = 0
         if ntets:
@@ -718,29 +719,39 @@ class UGRID(object):
         #
         # this could likely be much, much more efficient
 
-        if ntris:
-            #print(tris)
-            #tris = tris.sort()
-            #print(tris)
-            tri_set = set([])
-            #tris = tris.sort()
-            for tri in tris:
-                tri_set.add(tuple(tri))
-            unused_tri_array = array(list(tri_set))
+        tri_array = np.array(tris)
+        quad_array = np.array(quads)
+        if 0:
+            if ntris:
+                #print(tris)
+                #tris = tris.sort()
+                #print(tris)
+                tri_set = set([])
+                #tris = tris.sort()
+                for tri in tris:
+                    tri_set.add(tuple(tri))
+                tri_array = array(list(tri_set))
+            else:
+                tri_array = np.array([])
 
-        if nquads:
-            quads.sort()
-            unused_quad_set = set([])
-            # if tris:
-                # tris = vstack(tris)
-                # tris.sort(axis=0)
-                # tris = unique_rows(tris)
-            # if quads:
-                # quads = vstack(quads)
-                # quads.sort(axis=0)
-                # quads = unique_rows(tris)
-            raise NotImplementedError()
-        return tris, quads
+            if nquads:
+                quads.sort()
+                unused_quad_set = set([])
+                # if tris:
+                    # tris = vstack(tris)
+                    # tris.sort(axis=0)
+                    # tris = unique_rows(tris)
+                # if quads:
+                    # quads = vstack(quads)
+                    # quads.sort(axis=0)
+                    # quads = unique_rows(tris)
+                raise NotImplementedError()
+            else:
+                quad_array = np.array(quads)
+
+        #print(tris)
+        #print(quads)
+        return tris, quad_array
 
 
 def determine_dytpe_nfloat_endian_from_ugrid_filename(ugrid_filename=None):

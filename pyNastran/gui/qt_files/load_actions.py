@@ -459,7 +459,7 @@ class LoadActions(object):
         #num_ids = len(ids)
         #if num_ids != nrows:
             #A2 = {}
-            #for key, matrix in iteritems(A):
+            #for key, matrix in A.items():
                 #fmt = fmt_dict[key]
                 #assert fmt not in ['%i'], 'fmt=%r' % fmt
                 #if len(matrix.shape) == 1:

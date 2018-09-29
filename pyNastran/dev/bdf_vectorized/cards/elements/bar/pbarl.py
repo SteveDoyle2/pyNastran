@@ -1,6 +1,4 @@
 from __future__ import print_function
-from six import iteritems
-from six.moves import zip
 from itertools import count
 from numpy import array, zeros, arange, searchsorted, unique
 
@@ -271,7 +269,7 @@ class PBARL(Property):
 
         dim = {}
         j = 0
-        for ii, dimi in iteritems(self.dim):
+        for ii, dimi in self.dim.items():
             if ii in i:
                 dim[j] = dimi
                 j += 1

@@ -1,4 +1,3 @@
-from six.moves import range
 from numpy import zeros
 from pyNastran.dev.bdf_vectorized.cards.vectorized_card import VectorizedCard
 from pyNastran.dev.bdf_vectorized.bdf_interface.assign_type import integer_or_blank, double_or_blank, double

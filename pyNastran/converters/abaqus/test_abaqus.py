@@ -8,12 +8,11 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
 import sys
-from six import iteritems
 import numpy as np
 #warnings.simplefilter('always')
 
 
-from pyNastran.utils import print_bad_path, integer_types
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.converters.abaqus.abaqus import read_abaqus
 
 np.seterr(all='raise')

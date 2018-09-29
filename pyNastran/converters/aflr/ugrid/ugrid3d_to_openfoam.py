@@ -3,7 +3,6 @@ import os
 from copy import deepcopy
 from collections import defaultdict
 
-from six import iteritems
 from numpy import zeros, unique, where, argsort, searchsorted, allclose, array
 
 from pyNastran.converters.aflr.ugrid.ugrid_reader import read_ugrid
@@ -322,7 +321,7 @@ def _write_faces(ugrid, faces_filename):
             4 : 'penta6s',
         }
         ugrid.log.info("eid_keys = %s" % eid_keys)
-        for face, eids in iteritems(tri_face_to_eids):
+        for face, eids in tri_face_to_eids.items():
             if len(eids) == 1:
                 #if it's a boundary face, wer're fine, otherwise, error...
                 #print('*face=%s eids=%s' % (face, eids))

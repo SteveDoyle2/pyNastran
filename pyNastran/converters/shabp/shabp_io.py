@@ -4,7 +4,6 @@ Defines the GUI IO file for S/HABP.
 from __future__ import print_function
 from collections import OrderedDict
 
-from six import iteritems
 import numpy as np
 from numpy import zeros, cross, amax, amin
 from numpy.linalg import norm  # type: ignore
@@ -238,7 +237,7 @@ class ShabpIO(object):
         form = self.gui.form
         form.append(('Results', None, mach_results))
         mach_forms = {}
-        for case_id, Cp in sorted(iteritems(Cpd)):
+        for case_id, Cp in sorted(Cpd.items()):
             Cp = Cpd[case_id]
             #delta = deltad[case_id]
 
@@ -252,6 +251,6 @@ class ShabpIO(object):
             mach_forms[mach].append(('Cp', None, cp_form))
             #self.result_cases[(name, 'delta', 1, 'centroid', '%.3f')] = delta
 
-        for mach, mach_form in sorted(iteritems(mach_forms)):
+        for mach, mach_form in sorted(mach_forms.items()):
             mach_results.append(mach_form)
         self.gui._finish_results_io2(form, cases)

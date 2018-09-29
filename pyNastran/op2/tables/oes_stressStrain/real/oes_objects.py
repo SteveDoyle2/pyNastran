@@ -1,5 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+import numpy as np
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
 
 SORT2_TABLE_NAME_MAP = {
@@ -24,7 +25,7 @@ class OES_Object(ScalarObject):
     def __init__(self, data_code, isubcase, apply_data_code=True):
         self.element_type = None
         self.element_name = None
-        self.nonlinear_factor = None
+        self.nonlinear_factor = np.nan
         self._times = None
         ScalarObject.__init__(self, data_code, isubcase, apply_data_code=apply_data_code)
         #self.log.debug("starting OES...element_name=%-6s isubcase=%s" % (self.element_name, self.isubcase))

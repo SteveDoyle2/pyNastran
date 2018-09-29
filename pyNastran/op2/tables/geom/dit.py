@@ -1,9 +1,9 @@
+# pylint: disable=C0103
 """
 defines readers for BDF objects in the OP2 DIT/DITS table
 """
 from __future__ import print_function
 from struct import Struct, error as struct_error
-from six.moves import range
 import numpy as np
 
 from pyNastran.bdf.cards.aero.dynamic_loads import GUST
@@ -57,7 +57,7 @@ class DIT(GeomCommon):
         10 G    RS Damping
         Words 9 through 10 repeat until (-1,-1) occurs
         """
-        ndata = len(data)
+        #ndata = len(data)
         #nfields = (ndata - n) // 4
 
         datan = data[n:]
@@ -101,34 +101,16 @@ class DIT(GeomCommon):
         ndata = len(data)# - n
         assert ndata == 52, ndata
         struct_2i2f4i = Struct('2i2f4i')
-        struct_ff = Struct('ff')
-        struct_2i = self.struct_2i
+        #struct_ff = Struct('ff')
+        #struct_2i = self.struct_2i
         while ndata - n >= 32:
             edata = data[n:n + 32]
             out = struct_2i2f4i.unpack(edata)
-            (tid, table_type, lu, wg, dunno_a, dunno_b, dunno_c, dunno_d) = out
+            (tid, table_type, lu, wg, unused_dunno_a,
+             unused_dunno_b, unused_dunno_c, unused_dunno_d) = out
             if tid > 100000000:
                 tid = -(tid - 100000000)
-            #if add_codes:
-            #data_in = [tid, table_type, lu, wg]
-            #else:
-                #data_in = [tid, x, y]
-
             n += 32
-            #if 0:
-                #while 1:
-                    #(xint, yint) = struct_2i.unpack(data[n:n + 8])
-                    #(x, y) = struct_ff.unpack(data[n:n + 8])
-
-                    #n += 8
-                    #if [xint, yint] == [-1, -1]:
-                        #break
-                    #else:
-                        #data_in += [x, y]
-
-            #print('data_in =', data_in)
-            #table = cls.add_op2_data(data_in)
-            #add_method(table)
             self.add_tabrndg(tid, table_type, lu, wg, comment='')
             #nentries += 1
         #self.increase_card_count('TABRNDG', nentries)
@@ -146,7 +128,7 @@ class DIT(GeomCommon):
         """
         nentries = (len(data) - n) // 20  # 5*4
         struct_2i3f = Struct('ii3f')
-        for i in range(nentries):
+        for unused_i in range(nentries):
             edata = data[n:n + 20]
             out = struct_2i3f.unpack(edata)
             # (sid, dload, wg, x0, V) = out
@@ -174,7 +156,8 @@ class DIT(GeomCommon):
         while ndata - n >= 40:
             edata = data[n:n + 40]
             out = struct_8i2f.unpack(edata)
-            (tid, code_x, code_y, a, a, a, a, a, x, y) = out
+            (tid, code_x, code_y, unused_a, unused_b, unused_c, unused_d, unused_e,
+             x, y) = out
             if tid > 100000000:
                 tid = -(tid - 100000000)
             if add_codes:
@@ -225,7 +208,8 @@ class DIT(GeomCommon):
         while n < ndata:
             edata = data[n:n + 40]
             out = struct1.unpack(edata)
-            (tid, x1, a, a, a, a, a, a, x, y) = out
+            (tid, x1, unused_a, unused_b, unused_c, unused_d, unused_e, unused_f,
+             x, y) = out
             data_in = [tid, x1, x, y]
             n += 40
             while 1:
@@ -296,7 +280,8 @@ class DIT(GeomCommon):
         while ndata - n >= 40:
             edata = data[n:n + 40]
             out = struct1.unpack(edata)
-            (tid, x1, x2, a, a, a, a, a, x, y) = out
+            (tid, x1, x2, unused_a, unused_b, unused_c, unused_d, unused_e,
+             x, y) = out
             data_in = [tid, x1, x2, x, y]
             n += 40
             while 1:
@@ -335,7 +320,7 @@ class DIT(GeomCommon):
             while ndata - n >= 40:
                 edata = data[n:n + 40]
                 out = struct1.unpack(edata)
-                (tid, x1, x2, x3, x4, a, b, c, x, test_minus1) = out
+                (tid, x1, x2, x3, x4, unused_a, unused_b, unused_c, x, test_minus1) = out
                 data_in = [tid, x1, x2, x3, x4, x]
                 n += 36
                 if test_minus1 == -1:
@@ -375,7 +360,7 @@ class DIT(GeomCommon):
         10 G   RS Power spectral density
         Words 9 through 10 repeat until (-1,-1) occurs
         """
-        ndata = len(data)
+        #ndata = len(data)
         #nfields = (ndata - n) // 4
 
         datan = data[n:]
@@ -385,7 +370,7 @@ class DIT(GeomCommon):
         istart = 0
         nentries = 0
         for iend in iminus1_delta:
-            datai = data[n+istart*4 : n+iend*4]
+            #datai = data[n+istart*4 : n+iend*4]
             tid = ints[istart]
             codex = ints[istart + 1]
             codey = ints[istart + 2]

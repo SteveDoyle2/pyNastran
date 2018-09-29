@@ -1,5 +1,3 @@
-from six.moves import zip, range
-
 from numpy import arange, array, dot, zeros, unique, searchsorted, transpose
 from numpy.linalg import norm  # type: ignore
 

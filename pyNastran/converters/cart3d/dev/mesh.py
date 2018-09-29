@@ -1,5 +1,4 @@
 from copy import deepcopy
-from six.moves import range
 
 from numpy import zeros
 
@@ -28,7 +27,7 @@ class Cart3d_Mesher(Cart3D):
     def _get_segments(self, nodes, elements):
         segments = {}  # key=eid,
         lengths = {}
-        for eid, e in iteritems(elements):
+        for eid, e in elements.items():
             a = tuple(sorted([e[0], e[1]]))  # segments of e
             b = tuple(sorted([e[1], e[2]]))
             c = tuple(sorted([e[2], e[0]]))
@@ -55,7 +54,7 @@ class Cart3d_Mesher(Cart3D):
     def make_quads(self, nodes, elements):
         raise NotImplementedError()
         segments, lengths = self._get_segments(nodes, elements)
-        for eid, e in iteritems(elements):
+        for eid, e in elements.items():
             a = tuple(sorted([e[0], e[1]]))  # segments of e
             b = tuple(sorted([e[1], e[2]]))
             c = tuple(sorted([e[2], e[0]]))

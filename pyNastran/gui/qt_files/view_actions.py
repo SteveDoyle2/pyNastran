@@ -2,12 +2,9 @@
 from __future__ import print_function
 #import os
 
-from six import iteritems #, itervalues, string_types
-
 #import numpy as np
 import vtk
 
-#from pyNastran.utils import integer_types
 #from pyNastran.gui.gui_objects.coord_properties import CoordProperties
 
 
@@ -175,7 +172,7 @@ class ViewActions(object):
         """sets the main/toggle actors to surface"""
         if self.is_wireframe:
             self.gui.log_command('on_surface()')
-            for name, actor in iteritems(self.gui.geometry_actors):
+            for name, actor in self.gui.geometry_actors.items():
                 #if name != 'main':
                     #print('name: %s\nrep: %s' % (
                         #name, self.geometry_properties[name].representation))
@@ -191,7 +188,7 @@ class ViewActions(object):
         """sets the main/toggle actors to wirefreme"""
         if not self.is_wireframe:
             self.gui.log_command('on_wireframe()')
-            for name, actor in iteritems(self.gui.geometry_actors):
+            for name, actor in self.gui.geometry_actors.items():
                 #if name != 'main':
                     #print('name: %s\nrep: %s' % (
                         #name, self.geometry_properties[name].representation))

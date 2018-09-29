@@ -13,9 +13,8 @@ import os
 from struct import pack, unpack
 from collections import OrderedDict
 
-from six.moves import range
 import numpy as np
-from pyNastran.utils import print_bad_path
+from pyNastran.utils import check_path
 from pyNastran.utils.log import get_logger2
 
 
@@ -80,6 +79,10 @@ class Usm3d(object):
         self.tris = None
         self.tets = None
         self.bcs = None
+
+        self.header = None
+        self.loads = None
+        self.mapbc = None
         self.precision = 'double'
         self.log = get_logger2(log, debug=debug)
 
@@ -203,6 +206,7 @@ class Usm3d(object):
                     nmax = max(n, nmax)
                 except ValueError: # don't bother incrementing
                     pass
+
         # determine .flo file name
         if nmax > 0:
             flo_filename = basename + '_%s.flo' % (nmax)
@@ -276,17 +280,16 @@ class Usm3d(object):
                 (unused_n, isurf, n1, n2, n3) = line.split()
                 lbouf[i, :] = [isurf, n1, n2, n3]
             return header, lbouf
-        else:
-            tris = np.zeros((ntris, 3), dtype='int32')
-            bcs = np.zeros(ntris, dtype='int32')
 
-            for i in range(ntris):
-                (unused_n, isurf, n1, n2, n3) = lines[i+2].split()
-                tris[i] = [n1, n2, n3]
-                bcs[i] = isurf
-            tris = tris - 1
-            #self.bcs = [tris, bcs]
-            return header, tris, bcs
+        tris = np.zeros((ntris, 3), dtype='int32')
+        bcs = np.zeros(ntris, dtype='int32')
+        for i in range(ntris):
+            (unused_n, isurf, n1, n2, n3) = lines[i+2].split()
+            tris[i] = [n1, n2, n3]
+            bcs[i] = isurf
+        tris = tris - 1
+        #self.bcs = [tris, bcs]
+        return header, tris, bcs
 
     def read_cogsg(self, cogsg_filename, stop_after_header=False):
         """
@@ -299,7 +302,7 @@ class Usm3d(object):
         tet_elements : ???
            ???
         """
-        assert os.path.exists(cogsg_filename), print_bad_path(cogsg_filename)
+        check_path(cogsg_filename, 'cogsg file')
         with open(cogsg_filename, 'rb') as cogsg_file:
             # nelements * 4 * 4 + 32 ???
             dummy = cogsg_file.read(4)  # 1022848
@@ -750,7 +753,7 @@ def parse_float(svalue):
     """floats a value"""
     try:
         val = float(svalue)
-    except:
+    except TypeError:
         val = 0.0
     return val
 
@@ -758,13 +761,13 @@ def write_usm3d_volume(model, basename):
     """
     writes a *.cogsg, *.front, *.face file
     """
-    cogsg_file = basename + '.cogsg'
-    #face_file = basename + '.face'
-    #front_file = basename + '.front'
+    cogsg_filename = basename + '.cogsg'
+    #face_fileame = basename + '.face'
+    #front_fileame = basename + '.front'
 
-    write_cogsg_volume(model, cogsg_file)
-    #write_front(model, front_file)
-    #write_face(model, face_file)
+    write_cogsg_volume(model, cogsg_filename)
+    #write_front(model, front_fileame)
+    #write_face(model, face_fileame)
 
 
 #def write_front(model):
@@ -773,7 +776,7 @@ def write_usm3d_volume(model, basename):
 #def write_face(model):
     #pass
 
-def write_cogsg_volume(model, cogsg_file):
+def write_cogsg_volume(model, cogsg_fileame):
     """
     writes a *.cogsg file
     """
@@ -782,7 +785,7 @@ def write_cogsg_volume(model, cogsg_file):
     nnodes = self.nodes.shape[0]
     ntets = self.tets.shape[0]
 
-    with open(cogsg_file, 'wb') as outfile:
+    with open(cogsg_fileame, 'wb') as outfile:
         # file header
         values = [32 + ntets * 4 * 4,]
         block_size = pack('>i', *values)

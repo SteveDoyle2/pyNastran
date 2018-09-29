@@ -1,6 +1,5 @@
 from __future__ import print_function
 from itertools import count
-from six.moves import zip, range
 
 import numpy as np
 from numpy import zeros, arange, dot, cross, searchsorted, array, eye, ones

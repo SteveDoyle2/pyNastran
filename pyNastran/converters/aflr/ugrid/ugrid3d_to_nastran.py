@@ -1,6 +1,7 @@
 from __future__ import print_function
 import os
 
+from pyNastran.utils import check_path
 from pyNastran.converters.aflr.ugrid.ugrid_reader import UGRID
 
 
@@ -36,7 +37,7 @@ def ugrid3d_to_nastran(ugrid_filename, bdf_filename, include_shells=True, includ
         the ugrid model
     """
     model = UGRID(log=log, debug=False)
-    assert os.path.exists(ugrid_filename), '%r doesnt exist' % ugrid_filename
+    check_path(ugrid_filename, 'ugrid_filename')
     model.read_ugrid(ugrid_filename)
     model.write_bdf(bdf_filename, include_shells=include_shells, include_solids=include_solids,
                     convert_pyram_to_penta=convert_pyram_to_penta,

@@ -25,7 +25,7 @@ class TestSolids(unittest.TestCase):
             ',218'
         ]
         bdf = BDF(debug=False)
-        card = bdf.process_card(lines)
+        card = bdf._process_card(lines)
         card = BDFCard(card)
 
         solid = CPENTA15.add_card(card, comment='cpenta15')
@@ -84,8 +84,10 @@ class TestSolids(unittest.TestCase):
             ['GRID', 25, 0, 1., 0., 2., 0,],
             ['GRID', 26, 0, 1., 1., 2., 0,],
             ['CPENTA', 9, pid, 21, 22, 23, 24, 25, 26],
+            #['CPENTA',19, pid+1, 21, 22, 23, 24, 25, 26],
 
             # static
+            #['PIHEX', pid+1, mid],
             ['PSOLID', pid, mid, 0],
             ['MAT1', mid, 1.0, 2.0, 3.0, rho]
         ]
@@ -183,6 +185,8 @@ class TestSolids(unittest.TestCase):
 
             # Solids
             ['CHEXA', 7, pid, 11, 12, 13, 14, 15, 16, 17, 18],
+            ['CIHEX1', 17, pid+1, 11, 12, 13, 14, 15, 16, 17, 18],
+            ['CIHEX2', 18, pid+1, 11, 12, 13, 14, 15, 16, 17, 18],
             ['CTETRA', 8, pid, 11, 12, 13, 15],
 
             # Solid Nodes
@@ -196,6 +200,7 @@ class TestSolids(unittest.TestCase):
 
             # static
             ['PSOLID', pid, mid, 0],
+            ['PIHEX', pid+1, mid, 0],
             ['MAT1', mid, 1.0, 2.0, 3.0, rho],
             ['MATS1', mid, None, 'PLASTIC', 0.0, 1, 1, 100000., ],
         ]
@@ -251,6 +256,11 @@ class TestSolids(unittest.TestCase):
 
         mat = model.Material(mid)
         mat.E()
+
+        model.get_mass_breakdown(property_ids=None, stop_if_no_mass=True, detailed=False)
+        model.get_mass_breakdown(property_ids=None, stop_if_no_mass=True, detailed=True)
+        model.get_volume_breakdown(property_ids=None, stop_if_no_volume=True)
+
         save_load_deck(model)
 
     def test_solids_ctetra4(self):
@@ -271,6 +281,12 @@ class TestSolids(unittest.TestCase):
         nids = [11, 12, 13, 15]
         model.add_ctetra(eid, pid, nids, comment='ctetra')
         end_checks(model)
+
+        model.cross_reference()
+        model.get_mass_breakdown(property_ids=None, stop_if_no_mass=True, detailed=False)
+        model.get_mass_breakdown(property_ids=None, stop_if_no_mass=True, detailed=True)
+        model.get_volume_breakdown(property_ids=None, stop_if_no_volume=True)
+
         save_load_deck(model)
 
     def test_solids_ctetra4_mat9(self):
@@ -292,7 +308,13 @@ class TestSolids(unittest.TestCase):
 
         nids = [11, 12, 13, 15]
         model.add_ctetra(eid, pid, nids, comment='ctetra')
+
         end_checks(model)
+
+        model.cross_reference()
+        model.get_mass_breakdown(property_ids=None, stop_if_no_mass=True, detailed=False)
+        model.get_mass_breakdown(property_ids=None, stop_if_no_mass=True, detailed=True)
+        model.get_volume_breakdown(property_ids=None, stop_if_no_volume=True)
 
     def test_solids_ctetra10(self):
         """tests a CTETRA10"""
@@ -325,6 +347,16 @@ class TestSolids(unittest.TestCase):
         ]
         model.add_ctetra(eid, pid, nids, comment='ctetra10')
         end_checks(model)
+
+        with self.assertRaises(RuntimeError):
+            model.get_length_breakdown(property_ids=None, stop_if_no_length=True)
+        with self.assertRaises(RuntimeError):
+            model.get_area_breakdown(property_ids=None, stop_if_no_area=True)
+
+        model.get_mass_breakdown(property_ids=None, stop_if_no_mass=True, detailed=False)
+        model.get_mass_breakdown(property_ids=None, stop_if_no_mass=True, detailed=True)
+        model.get_volume_breakdown(property_ids=None, stop_if_no_volume=True)
+
         save_load_deck(model)
 
     def test_solids_cpyram5(self):

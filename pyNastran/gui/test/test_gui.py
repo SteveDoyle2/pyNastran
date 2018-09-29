@@ -24,7 +24,7 @@ from pyNastran.gui.formats import CLASS_MAP
 from pyNastran.converters.nastran.nastran_io import NastranIO
 
 from pyNastran.gui.arg_handling import determine_format
-from pyNastran.utils import print_bad_path
+from pyNastran.utils import print_bad_path, check_path
 from pyNastran.utils.dev import get_files_of_type
 from pyNastran.op2.test.op2_test import get_failed_files
 
@@ -180,10 +180,7 @@ def run_docopt(argv=None):
         failed_cases_filename = None
         input_filename = data['INPUT_FILENAME']
         output_filename = data['OUTPUT_FILENAME']
-        if not os.path.exists(input_filename):
-            msg = 'input_filename=%r does not exist\n%s' % (
-                input_filename, print_bad_path(input_filename))
-            raise RuntimeError(msg)
+        check_path(input_filename, 'input_filename')
         if not os.path.isfile(input_filename):
             msg = 'input_filename=%r is not a file' % input_filename
             raise RuntimeError(msg)

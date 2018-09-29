@@ -12,7 +12,7 @@ from codecs import open
 from copy import deepcopy
 from collections import defaultdict
 
-from six import iteritems, PY2, string_types
+from six import string_types
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdf import read_bdf
@@ -46,7 +46,7 @@ def get_element_faces(model, element_ids=None):
         if elem.type in ['CTETRA', 'CPENTA', 'CHEXA', 'CPYRAM']:
             faces = elem.faces
             #print(faces)
-            for face_id, face in iteritems(faces):
+            for face_id, face in faces.items():
                 if None in face:
                     msg = 'There is a None in the face.\n'
                     msg = 'face_id=%s face=%s\n%s' % (face_id, str(face), str(elem))
@@ -94,19 +94,19 @@ def get_solid_skin_faces(model):
         face_map[tface] = raw_face
 
     #print('eid_set:')
-    #for tface, eidset in iteritems(eid_set):
+    #for tface, eidset in eid_set.items():
         #print(tface, eidset)
 
     #print('face_set:')
-    #for tface, faceset in iteritems(face_set):
+    #for tface, faceset in face_set.items():
         #print(tface, faceset)
 
     #print('face_map:')
-    #for tface, facemap in iteritems(face_map):
+    #for tface, facemap in face_map.items():
         #print(tface, facemap)
 
     del_faces = []
-    for face, face_count in iteritems(face_set):
+    for face, face_count in face_set.items():
         if face_count == 2:
             del_faces.append(face)
 
@@ -167,7 +167,7 @@ def write_skin_solid_faces(model, skin_filename,
     nid_set_to_write = set([])
     mid_set_to_write = set([])
     if write_solids:
-        for face, eids in iteritems(eid_set):
+        for face, eids in eid_set.items():
             eid_set_to_write.update(eids)
             for eid in eids:
                 elem = model.elements[eid]
@@ -179,7 +179,7 @@ def write_skin_solid_faces(model, skin_filename,
                 mid_set_to_write.add(mid)
                 #print('added_mid (a) =', mid)
     elif write_shells:
-        for face, eids in iteritems(eid_set):
+        for face, eids in eid_set.items():
             eid_set_to_write.update(eids)
             nid_set_to_write.update(face)
             for eid in eids:
@@ -264,7 +264,7 @@ def _write_skin_solid_faces(model, skin_filename, face_map,
             node = model.nodes[nid]
             bdf_file.write(node.write_card(size=size, is_double=is_double))
 
-        for cid, coord in iteritems(model.coords):
+        for cid, coord in model.coords.items():
             if cid == 0:
                 continue
             bdf_file.write(coord.write_card(size=size, is_double=is_double))
@@ -273,7 +273,7 @@ def _write_skin_solid_faces(model, skin_filename, face_map,
             for eid in sorted(eids_to_write):
                 elem = model.elements[eid]
                 bdf_file.write(elem.write_card(size=size))
-            for pid, prop in iteritems(model.properties):
+            for pid, prop in model.properties.items():
                 bdf_file.write(prop.write_card(size=size, is_double=is_double))
             for mid in sorted(mids_to_write):
                 material = model.materials[mid]
@@ -290,7 +290,7 @@ def _write_skin_solid_faces(model, skin_filename, face_map,
                 #bdf_file.write(model.materials[mid].comment)
                 bdf_file.write(print_card_8(card))
 
-            for face, eids in iteritems(eid_set):
+            for face, eids in eid_set.items():
                 face_raw = face_map[face]
                 nface = len(face)
                 #assert len(eids) == 1, eids
@@ -329,7 +329,7 @@ def _write_skin_solid_faces(model, skin_filename, face_map,
 
                 #elem = model.elements[eid]
                 #bdf_file.write(elem.write_card(size=size))
-            #for pid, prop in iteritems(model.properties):
+            #for pid, prop in model.properties.items():
                 #bdf_file.write(prop.write_card(size=size, is_double=is_double))
         bdf_file.write('ENDDATA\n')
     #if 0:
@@ -378,7 +378,7 @@ def main():  # pragma: no cover
     if not data['--encoding']:
         data['--encoding'] = None
 
-    for key, value in sorted(iteritems(data)):
+    for key, value in sorted(data.items()):
         print("%-12s = %r" % (key.strip('--'), value))
 
     import time

@@ -4,7 +4,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
 from six import integer_types
-from six.moves import zip, range
 import numpy as np
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
@@ -99,11 +98,23 @@ class RealPlateArray(OES_Object):
         dtype = 'float32'
         if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
-        self._times = np.zeros(self.ntimes, dtype=dtype)
-        self.element_node = np.zeros((self.ntotal, 2), dtype='int32')
+
+        _times = np.zeros(self.ntimes, dtype=dtype)
+        element_node = np.zeros((self.ntotal, 2), dtype='int32')
 
         #[fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]
-        self.data = np.zeros((self.ntimes, self.ntotal, 8), dtype='float32')
+        data = np.zeros((self.ntimes, self.ntotal, 8), dtype='float32')
+        if self.load_as_h5:
+            #for key, value in sorted(self.data_code.items()):
+                #print(key, value)
+            group = self._get_result_group()
+            self._times = group.create_dataset('_times', data=_times)
+            self.element_node = group.create_dataset('element_node', data=element_node)
+            self.data = group.create_dataset('data', data=data)
+        else:
+            self._times = _times
+            self.element_node = element_node
+            self.data = data
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -117,7 +128,7 @@ class RealPlateArray(OES_Object):
         fd = np.array(fiber_distance, dtype='unicode')
         element_node = [self.element_node[:, 0], self.element_node[:, 1], fd]
 
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=element_node, minor_axis=headers).to_frame()
@@ -184,7 +195,7 @@ class RealPlateArray(OES_Object):
     def add_sort1(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle,
                   major_principal, minor_principal, ovm):
         assert eid is not None, eid
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         assert isinstance(node_id, ints), node_id
         self.element_node[self.itotal, :] = [eid, node_id]
         self.data[self.itime, self.itotal, :] = [fiber_dist, oxx, oyy, txy, angle,
@@ -207,7 +218,7 @@ class RealPlateArray(OES_Object):
         nelements = self.ntotal // self.nnodes // 2
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msgi = '  type=%s ntimes=%i nelements=%i nnodes_per_element=%i nlayers=%i ntotal=%i\n' % (
                 self.__class__.__name__, ntimes, nelements, nnodes, nlayers, ntotal)
             ntimes_word = 'ntimes'

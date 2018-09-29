@@ -1,6 +1,4 @@
 from __future__ import print_function, unicode_literals
-from six import iteritems, itervalues
-from six.moves import zip
 from numpy import (array, searchsorted, zeros, full,
                    nan, where, vstack, dot, cross, degrees, radians, arctan2,
                    cos, sin, arccos, hstack, eye, ndarray, sqrt, unique,
@@ -83,7 +81,7 @@ class Coord(VectorizedCard):
 
             if max(self.coords) > self.model.max_int:
                 size = 16
-            for cid, coord in iteritems(self.coords):
+            for cid, coord in self.coords.items():
                 if cid > 0:
                     #if cid in self._comments:
                         #bdf_file.write(self._comments[cid])
@@ -223,7 +221,7 @@ class Coord(VectorizedCard):
         self.allocate(ncards=ncoords)
         #print('coord_ids = %s' % self.coords.keys())
         #print('T = \n%s' % self.T)
-        for i, (cid, coord) in enumerate(sorted(iteritems(self.coords))):
+        for i, (cid, coord) in enumerate(sorted(self.coords.items())):
             #self.model.log.debug('i=%s cid=%s' % (i, cid))
             self.coord_id[i] = cid
             self.Type[i] = coord.Type

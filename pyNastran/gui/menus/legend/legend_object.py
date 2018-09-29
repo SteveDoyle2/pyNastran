@@ -6,7 +6,7 @@ import os
 from qtpy.QtWidgets import QMainWindow
 from pyNastran.gui.menus.legend.qt_legend import LegendPropertiesWindow
 from pyNastran.gui.menus.legend.animation import AnimationWindow
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 
 
 class LegendObject(object):

@@ -18,11 +18,10 @@ All cards are Material objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems
 import numpy as np
 from numpy import zeros, array
 
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Material, BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -31,6 +30,20 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
+#from functools import wraps
+#def unicode_check(func):
+    #@wraps(func)
+    #def wrapper(self, **kwargs):
+        #try:
+            #func(self, **kwargs)
+        #except UnicodeEncodeError:
+            #print('removing comment')
+            #comment = self.comment
+            #self.comment = ''
+            #out = func(self, **kwargs)
+            #self.comment = comment
+            #return out
+    #return wrapper
 
 class IsotropicMaterial(Material):
     """Isotropic Material Class"""
@@ -272,7 +285,7 @@ class NXSTRAT(BaseCard):
     def raw_fields(self):
         list_fields = ['NXSTRAT', self.sid]
         i = 0
-        for key, value in sorted(iteritems(self.params)):
+        for key, value in sorted(self.params.items()):
             list_fields += [key, value]
             i += 1
             if i == 3:
@@ -1430,6 +1443,26 @@ class MAT8(OrthotropicMaterial):
         8: 'rho', 9:'a1', 10:'a2', 11:'tref', 12:'Xt', 13:'Xc', 14:'Yt',
         15:'Yc', 16: 'S', 17:'ge', 18:'F12', 19:'strn',
     }
+    mp_name_map = {
+        'E1' : 'e11',
+        'E2' : 'e22',
+        'NU12' : 'nu12',
+        'G12' : 'g12',
+        'G1Z' : 'g1z',
+        'RHO' : 'rho', #6 : 'rho',
+        'A1' : 'a1',
+        'A2' : 'a2',
+        'A3' : 'a3',
+        #'TREF' : 'tref', #8 : 'tref',
+        #'E' : 'e', #3 : 'e',
+        #'G' : 'g', #4 : 'g',
+        #'NU' : 'nu', #5: 'nu',
+        #'A' : 'a', #7 : 'a',
+        #'GE' : 'ge', #9 : 'ge',
+        #'ST' : 'st', #10 : 'st',
+        #'SC' : 'sc', #11 : 'sc',
+        #'SS' : 'ss', #12 : 'ss',
+    }
 
     def __init__(self, mid, e11, e22, nu12, g12=0.0, g1z=1e8, g2z=1e8, rho=0.,
                  a1=0., a2=0., tref=0.,
@@ -2182,7 +2215,6 @@ def _mat10_get_bulk_rho_c(bulk, rho, c):
     return bulk, rho, c
 
 class MATG(Material):
-
     """
     +------+--------+--------+---------+--------+--------+---------+--------+--------+
     |   1  |   2    |   3    |    4    |   5    |   6    |    7    |    8   |   9    |
@@ -2557,6 +2589,9 @@ class MAT3D(Material):
         assert len(card) <= 17, 'len(MAT3D card) = %i\ncard=%s' % (len(card), card)
         return MAT3D(mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho, comment=comment)
 
+    def uncross_reference(self):
+        pass
+
     def _verify(self, xref):
         """
         Verifies all methods for this object work
@@ -2614,89 +2649,125 @@ class MAT3D(Material):
 
 class MATHE(HyperelasticMaterial):
     """
-    model = MOONEY (default)
-    ========================
-    +-------+-----+-----+-------+---+-----+------+
-    | MATHE | MID |     | Model | K | RHO | TEXP |
-    |  C10  | C01 |     |       |   |     |      |
-    |  C20  | C11 | C02 |       |   |     |      |
-    |  C30  | C21 | C12 |  C03  |   |     |      |
-    +-------+-----+-----+-------+---+-----+------+
+    Creates a MATHE hyperelastic material
 
-    NX version
+    ``model = MOONEY (default)``
 
-    model = OGDEN, FOAM
-    ===================
-    +-------+-------+--------+-------+-----+--------+-------+
-    | MATHE |  MID  | Model  |       |  K  |  RHO   |  TEXP |
-    |       |  MU1  | ALPHA1 | BETA1 |     |        |       |
-    |       |  MU2  | ALPHA2 | BETA2 | MU3 | ALPHA3 | BETA3 |
-    |       |  MU4  | ALPHA4 | BETA4 | MU5 | ALPHA5 | BETA5 |
-    |       |  MU6  | ALPHA6 | BETA6 | MU7 | ALPHA7 | BETA7 | # NX only line
-    |       |  MU8  | ALPHA8 | BETA8 | MU9 | ALPHA9 | BETA9 | # NX only line
-    +-------+-------+--------+-------+-----+--------+-------+
+    +-------+-------+----------+-------+-----+--------+-------+
+    |   1   |   2   |    3     |   4   |  5  |   6    |   7   |
+    +=======+=======+==========+=======+=====+========+=======+
+    | MATHE |  MID  |          | Model |  K  |  RHO   | TEXP  |
+    +-------+-------+----------+-------+-----+--------+-------+
+    |  C10  |  C01  |          |       |     |        |       |
+    +-------+-------+----------+-------+-----+--------+-------+
+    |  C20  |  C11  |   C02    |       |     |        |       |
+    +-------+-------+----------+-------+-----+--------+-------+
+    |  C30  |  C21  |   C12    |  C03  |     |        |       |
+    +-------+-------+----------+-------+-----+--------+-------+
 
-    NX version
+    ``model (NX) = OGDEN, FOAM``
 
-    model = ABOYCE
-    ==============
-    +-------+-----+-------+----+----+-----+------+
-    | MATHE | MID | Model |    | K  | RHO | TEXP |
-    |       | NKT |   N1  |    |    |     |      |
-    |       |  D1 |   D2  | D3 | D4 | D5  |      |  # MSC only line
-    +-------+-----+-------+----+----+-----+------+
+    +-------+-------+----------+-------+-----+--------+-------+
+    |   1   |   2   |    3     |   4   |  5  |   6    |   7   |
+    +=======+=======+==========+=======+=====+========+=======+
+    | MATHE |  MID  |  Model   |       |  K  |  RHO   |  TEXP |
+    +-------+-------+----------+-------+-----+--------+-------+
+    |       |  MU1  |  ALPHA1  | BETA1 |     |        |       |
+    +-------+------+-----------+-------+-----+--------+-------+
+    |       |  MU2  |  ALPHA2  | BETA2 | MU3 | ALPHA3 | BETA3 |
+    +-------+------+-----------+-------+-----+--------+-------+
+    |       |  MU4  |  ALPHA4  | BETA4 | MU5 | ALPHA5 | BETA5 |
+    +-------+------+-----------+-------+-----+--------+-------+
+    |       |  MU6  |  ALPHA6  | BETA6 | MU7 | ALPHA7 | BETA7 |
+    +-------+------+-----------+-------+-----+--------+-------+
+    |       |  MU8  |  ALPHA8  | BETA8 | MU9 | ALPHA9 | BETA9 |
+    +-------+-------+----------+-------+-----+--------+-------+
 
-    NX version
+    the last two lines are NX only lines
 
-    model = SUSSBAT
-    ===============
-    +-------+------+--------+--------+---+-----+------+
-    | MATHE | MID  | Model  |        | K | RHO | TEXP |
-    |       | TAB1 | SSTYPE | RELERR |   |     |      |
-    +-------+------+--------+--------+---+-----+------+
+    ``model (NX) = ABOYCE``
 
-    NX version
+    +-------+-------+----------+-------+-----+--------+-------+
+    |   1   |   2   |    3     |   4   |  5  |   6    |   7   |
+    +=======+=======+==========+=======+=====+========+=======+
+    | MATHE |  MID  |   Model  |       |  K  |   RHO  |  TEXP |
+    +-------+-------+----------+-------+-----+--------+-------+
+    |       |  NKT  |     N1   |       |     |        |       |
+    +-------+-------+----------+-------+-----+--------+-------+
+    |       |   D1  |     D2   |   D3  |  D4 |   D5   |       |
+    +-------+-------+----------+-------+-----+--------+-------+
 
-    model = MOONEY (default)
-    ========================
-    +-------+-----+-----+-------+------+------+------+------+----+
-    | MATHE | MID |     | Model | K    | RHO  | TEXP | TREF | GE |
-    |  C10  | C01 |  D1 |  TAB1 | TAB2 | TAB3 | TAB4 | TABD |    |
-    |  C20  | C11 | C02 |  D2   | NA   |      |      |      |    |
-    |  C30  | C21 | C12 |  C03  | D3   |      |      |      |    |
-    |  C40  | C31 | C22 |  C13  | C04  |  D4  |      |      |    |
-    |  C50  | C41 | C32 |  C23  | C14  | C05  |  D5  |      |    |
-    +-------+-----+-----+-------+------+------+------+------+----+
+    the last line is an MSC only line
 
-    MSC version
+    ``model (NX) = SUSSBAT``
 
-    model = OGDEN, FOAM
-    ===================
-    +-------+-------+--------+-------+-----+--------+-------+
-    | MATHE |  MID  | Model  |  NOT  |  K  |  RHO   |  TEXP |  # NOT is MSC only
-    |       |  MU1  | ALPHA1 | BETA1 |     |        |       |
-    |       |  MU2  | ALPHA2 | BETA2 | MU3 | ALPHA3 | BETA3 |
-    |       |  MU4  | ALPHA4 | BETA4 | MU5 | ALPHA5 | BETA5 |
-    |       |  D1   |   D2   |  D3   |  D4 |   D5   |       |  # MSC only line
-    +-------+-------+--------+-------+-----+--------+-------+
+    +-------+-------+----------+--------+-----+--------+-------+
+    |   1   |   2   |    3     |   4    |  5  |   6    |   7   |
+    +=======+=======+==========+========+=====+========+=======+
+    | MATHE |  MID  |  Model   |        |  K  |   RHO  | TEXP  |
+    +-------+-------+----------+--------+-----+--------+-------+
+    |       |  TAB1 |  SSTYPE  | RELERR |     |        |       |
+    +-------+-------+----------+--------+-----+--------+-------+
 
-    MSC version
+    ``model (NX) = MOONEY (default)``
 
-    model = ABOYCE, GENT
-    ====================
-    +-------+-----+-------+----+----+-----+------+
-    | MATHE | MID | Model |    | K  | RHO | TEXP |
-    |       | NKT | N1    |    |    |     |      |
-    |       |  D1 |   D2  | D3 | D4 | D5  |      |  # MSC only line
-    +-------+-----+-------+----+----+-----+------+
+    +-------+-------+----------+--------+------+--------+-------+------+----+
+    |   1   |   2   |    3     |   4    |  5   |   6    |   7   |  8   |  9 |
+    +=======+=======+==========+========+======+========+=======+======+====+
+    | MATHE |  MID  |          |  Model | K    |  RHO   |  TEXP | TREF | GE |
+    +-------+-------+----------+--------+------+--------+-------+------+----+
+    |  C10  |  C01  |     D1   |   TAB1 | TAB2 |  TAB3  |  TAB4 | TABD |    |
+    +-------+-------+----------+--------+------+--------+-------+------+----+
+    |  C20  |  C11  |    C02   |   D2   | NA   |        |       |      |    |
+    +-------+-------+----------+--------+------+--------+-------+------+----+
+    |  C30  |  C21  |    C12   |   C03  | D3   |        |       |      |    |
+    +-------+-------+----------+--------+------+--------+-------+------+----+
+    |  C40  |  C31  |    C22   |   C13  | C04  |   D4   |       |      |    |
+    +-------+-------+----------+--------+------+--------+-------+------+----+
+    |  C50  |  C41  |    C32   |   C23  | C14  |  C05   |   D5  |      |    |
+    +-------+-------+----------+--------+------+--------+-------+------+----+
 
-    MSC version
+    ``model (MSC) = OGDEN, FOAM``
 
-    model = GHEMi
-    =============
-    +-------+-----+-------+---+-----+------+------+----+
-    | MATHE | MID | Model | K | RHO | Texp | Tref | GE |
-    +-------+-----+-------+---+-----+------+------+----+
+    +-------+-------+----------+--------+------+--------+-------+
+    |   1   |   2   |    3     |   4    |  5   |   6    |   7   |
+    +=======+=======+==========+========+======+========+=======+
+    | MATHE |  MID  |  Model   |   NOT  |   K  |  RHO   |  TEXP |
+    +-------+-------+----------+--------+------+--------+-------+
+    |       |  MU1  |  ALPHA1  |  BETA1 |      |        |       |
+    +-------+-------+----------+--------+------+--------+-------+
+    |       |  MU2  |  ALPHA2  |  BETA2 |  MU3 | ALPHA3 | BETA3 |
+    +-------+-------+----------+--------+------+--------+-------+
+    |       |  MU4  |  ALPHA4  |  BETA4 |  MU5 | ALPHA5 | BETA5 |
+    +-------+-------+----------+--------+------+--------+-------+
+    |       |  D1   |    D2    |   D3   |   D4 |   D5   |       |
+    +-------+-------+----------+--------+------+--------+-------+
+
+    NOT is an MSC only parameter
+
+    the last line is an MSC only line
+
+    ``model (MSC) = ABOYCE, GENT``
+
+    +-------+-------+----------+--------+------+--------+-------+
+    |   1   |   2   |    3     |   4    |  5   |   6    |   7   |
+    +=======+=======+==========+========+======+========+=======+
+    | MATHE |  MID  |   Model  |        |  K   |   RHO  |  TEXP |
+    +-------+-------+----------+--------+------+--------+-------+
+    |       |  NKT  |    N1    |        |      |        |       |
+    +-------+-------+----------+--------+------+--------+-------+
+    |       |   D1  |    D2    |   D3   |  D4  |   D5   |       |
+    +-------+-------+----------+--------+------+--------+-------+
+
+    the last line is an MSC only line
+
+    ``model (MSC) = GHEMi``
+
+    +-------+-------+----------+--------+------+--------+-------+----+
+    |   1   |   2   |    3     |   4    |  5   |   6    |   7   |  8 |
+    +=======+=======+==========+========+======+========+=======+====+
+    | MATHE |  MID  |   Model  |    K   |  RHO |  Texp  |  Tref | GE |
+    +-------+-------+----------+--------+------+--------+-------+----+
 
     MSC version
     """

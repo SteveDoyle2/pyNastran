@@ -1,7 +1,7 @@
 from __future__ import print_function
 import os
 import unittest
-from pyNastran.bdf.bdf import BDF
+from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.utils.log import SimpleLogger
 from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
 #from pyNastran.utils.dev import get_files_of_type
@@ -100,7 +100,31 @@ class TestRenumber(unittest.TestCase):
         bdf_filename_check = os.path.join(dirname, 'Simple_Example_check.bdf')
         check_renumber(bdf_filename, bdf_filename_renumber, bdf_filename_check)
 
-    #def test_renumber_05(self):
+    def test_renumber_05(self):
+        """renumbers a deck in a couple ways"""
+        log = SimpleLogger(level='error')
+        bdf_filename = os.path.join(MODEL_PATH, 'bwb', 'bwb_saero.bdf')
+        bdf_filename_out1 = os.path.join(MODEL_PATH, 'bwb', 'bwb_saero1.out')
+        bdf_filename_out2 = os.path.join(MODEL_PATH, 'bwb', 'bwb_saero2.out')
+        bdf_filename_out3 = os.path.join(MODEL_PATH, 'bwb', 'bwb_saero3.out')
+        model = bdf_renumber(bdf_filename, bdf_filename_out1, size=8,
+                             is_double=False, starting_id_dict=None,
+                             round_ids=False, cards_to_skip=None, debug=False)
+
+        model = read_bdf(bdf_filename, log=log)
+        bdf_renumber(model, bdf_filename_out2, size=16, is_double=False,
+                     starting_id_dict={
+                         'eid' : 1000, 'pid':2000, 'mid':3000,
+                         'spc_id' : 4000,},
+                     round_ids=False, cards_to_skip=None)
+        bdf_renumber(bdf_filename, bdf_filename_out3, size=8,
+                     is_double=False, starting_id_dict=None,
+                     round_ids=True, cards_to_skip=None)
+        read_bdf(bdf_filename_out1, log=log)
+        read_bdf(bdf_filename_out2, log=log)
+        read_bdf(bdf_filename_out3, log=log)
+
+    #def test_renumber_06(self):
         #dirname = os.path.join(UNIT_PATH, 'obscure')
         #bdf_filenames = get_files_of_type(dirname, extension='.bdf')
         #for bdf_filename in bdf_filenames:

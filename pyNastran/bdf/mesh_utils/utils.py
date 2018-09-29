@@ -592,7 +592,6 @@ def cmd_line_filter():  # pragma: no cover
         bdf_filename_out = 'filter.bdf'
 
     import numpy as np
-    from six import iteritems
     func_map = {
         '<' : np.less,
         '>' : np.greater,
@@ -623,7 +622,7 @@ def cmd_line_filter():  # pragma: no cover
 
     eids = []
     xyz_cid0 = []
-    for eid, elem in sorted(iteritems(model.elements)):
+    for eid, elem in sorted(model.elements.items()):
         xyz = elem.Centroid()
         xyz_cid0.append(xyz)
         eids.append(eid)

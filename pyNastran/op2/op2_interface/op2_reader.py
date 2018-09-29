@@ -40,12 +40,12 @@ Defines various tables that don't fit in other sections:
     - _print_month(self, month, day, year, zero, one)
     - read_results_table(self)
 """
-from __future__ import print_function, unicode_literals
+from __future__ import print_function, unicode_literals, division
 import sys
 from copy import deepcopy
 from itertools import count
 from struct import unpack, Struct
-from six import b, iteritems
+from six import b
 import numpy as np
 import scipy  # type: ignore
 
@@ -60,14 +60,31 @@ from pyNastran.op2.tables.matrix import Matrix
     #def __init__(self, op2_reader):
         #self.op2_reader = op2_reader
 
+class SubTableReadError(Exception):
+    pass
+
 class OP2Reader(object):
     """Stores methods that aren't useful to an end user"""
     def __init__(self, op2):
+        #: should an h5_file be created
+        self.load_as_h5 = False
+        #: the h5 file object used to reduce memory usage
+        self.h5_file = None
+
         self.op2 = op2
         #self.minor_tables = MinorTables(self)
 
         self.mapped_tables = {
             b'GPL' : self.read_gpl,
+
+            # GPDT  - Grid point definition table
+            b'GPDT' : self.read_gpdt,
+
+            # BGPDT - Basic grid point definition table.
+            b'BGPDT' : self.read_bgpdt,
+            b'BGPDTS' : self.read_bgpdt,
+            b'BGPDTOLD' : self.read_bgpdt,
+
             #b'MEFF' : self.read_meff,
             b'INTMOD' : self.read_intmod,
             b'HISADD' : self.read_hisadd,
@@ -75,18 +92,23 @@ class OP2Reader(object):
             b'OMM2' : self.read_omm2,
             b'TOL' : self.read_tol,
             b'PCOMPTS' : self._read_pcompts,
-            b'MONITOR' : self._read_monitor,
-            b'AEMONPT' : self._read_aemonpt,
+            b'MONITOR' : self.read_monitor,
+            b'AEMONPT' : self.read_aemonpt,
             b'FOL' : self.read_fol,  # frequency response list
             b'FRL' : self.read_frl,  # frequency response list
             b'SDF' : self.read_sdf,
             b'IBULK' : self.read_ibulk,
             b'CDDATA' : self.read_ibulk,
             b'CMODEXT' : self._read_cmodext,
-            b'CSTM' : self.read_cstm,  # coordinate system transformation matrices
+
+            # coordinate system transformation matrices
+            b'CSTM' : self.read_cstm,
+
+            # Equivalence between external and internal grid/scalar numbers
+            b'EQEXIN' : self.read_eqexin,
+            b'EQEXINS' : self.read_eqexin,
         }
         #self.op2_skip = OP2Skip(op2)
-
     def read_nastran_version(self):
         """reads the version header"""
         #try:
@@ -108,7 +130,8 @@ class OP2Reader(object):
         if markers == [3,]:  # PARAM, POST, -1
             if self.is_debug_file:
                 self.binary_debug.write('marker = 3 -> PARAM,POST,-1?\n')
-            op2.post = -1
+            if op2.post is None:
+                op2.post = -1
             self.read_markers([3])
             data = self.read_block()   # TODO: is this the date?
             #assert len(data) == 12, len(data)
@@ -186,11 +209,47 @@ class OP2Reader(object):
         elif markers == [2,]:  # PARAM, POST, -2
             if self.is_debug_file:
                 self.binary_debug.write('marker = 2 -> PARAM,POST,-2?\n')
-            op2.post = -2
+            if op2.post is None:
+                op2.post = -2
         else:
             raise NotImplementedError(markers)
 
-    def _read_aemonpt(self):
+    def read_eqexin(self):
+        """isat_random.op2"""
+        op2 = self.op2
+        unused_table_name = self._read_table_name(rewind=False)
+        self.read_markers([-1])
+        data = self._read_record()
+        idata = unpack(self._uendian + '7i', data)
+        assert idata[0] == 101, idata
+        unused_nnodes = idata[1]
+        assert idata[2] == 0, idata
+        assert idata[3] == 0, idata
+        assert idata[4] == 0, idata
+        assert idata[5] == 0, idata
+        assert idata[6] == 0, idata
+        #print('----------------------')
+
+        self.read_markers([-2, 1, 0])
+        self.read_table_name(['EQEXIN', 'EQEXINS'])
+        #print('----------------------')
+        # ints
+        self.read_markers([-3, 1, 0])
+        data = self._read_record()
+        eqexin1 = np.frombuffer(data, dtype=op2.idtype)
+
+        self.read_markers([-4, 1, 0])
+        data = self._read_record()
+        eqexin2 = np.frombuffer(data, dtype=op2.idtype)
+
+        self.read_markers([-5, 1, 0, 0])
+        nid, dof, doftype = eqexin_to_nid_dof_doftype(eqexin1, eqexin2)
+        op2.op2_results.eqexin = EQEXIN(nid, dof, doftype)
+        #print('nid = %s' % nid.tolist()) [1,2,3,...]
+        #print('dof = %s' % dof.tolist()) [1,7,13,...]
+        #print('doftype = %s' % doftype.tolist())
+
+    def read_aemonpt(self):
         """reads the AEMONPT table"""
         #self.log.debug("table_name = %r" % op2.table_name)
         unused_table_name = self._read_table_name(rewind=False)
@@ -254,7 +313,7 @@ class OP2Reader(object):
         #self.show(200)
         #aaa
 
-    def _read_monitor(self):
+    def read_monitor(self):
         """reads the MONITOR table"""
         op2 = self.op2
         self.log.debug("table_name = %r" % op2.table_name)
@@ -454,7 +513,7 @@ class OP2Reader(object):
         floats = np.frombuffer(data, dtype='float32')
         nints = len(ints)
         assert nints % 14 == 0, 'nints=%s' % (nints)
-        ncstm = nints // 14
+        ncstm = get_table_size_from_ncolumns('CSTM', nints, 14)
         ints = ints.reshape(ncstm, 14)[:, :2]
         floats = floats.reshape(ncstm, 14)[:, 2:]
         #assert ncstm == 1, 'ncoords = %s' % ncstm
@@ -561,6 +620,8 @@ class OP2Reader(object):
         Reads the FOL table
         Frequency response frequency output list
 
+        tested by TestOP2.test_monpnt3
+
         +------+---------+-------+-----------------+
         | Word |  Name   | Type  |   Description   |
         +======+=========+=======+=================+
@@ -615,7 +676,11 @@ class OP2Reader(object):
         self._read_subtables()
 
     def read_frl(self):
-        """reads the FRL (Frequency Response List) table"""
+        """
+        reads the FRL (Frequency Response List) table
+
+        tested by TestOP2.test_op2_good_sine_01
+        """
         op2 = self.op2
         op2.table_name = self._read_table_name(rewind=False)
         self.read_markers([-1])
@@ -665,34 +730,215 @@ class OP2Reader(object):
         self.read_markers([0])
 
     def read_gpl(self):
-        """reads the GPL table (grid point list?)"""
+        """
+        reads the GPL table (grid point list?)
+
+        tested by TestOP2.test_beam_modes
+        """
+        if self.read_mode == 1:
+            read_record = self._skip_record
+        else:
+            read_record = self._read_record
+
         op2 = self.op2
         op2.table_name = self._read_table_name(rewind=False)
         self.log.debug('table_name = %r' % op2.table_name)
         if self.is_debug_file:
             self.binary_debug.write('read_geom_table - %s\n' % op2.table_name)
+
         self.read_markers([-1])
+        header_data = self._read_record()  # (102, 117, 0, 0, 0, 0, 0)
+        ints = np.frombuffer(header_data, op2.idtype)
+
+        #seid = ints[0] # ???
+        nnodes = ints[1]
+
         if self.is_debug_file:
             self.binary_debug.write('---markers = [-1]---\n')
-        unused_data = self._read_record()
+        #self.show_data(unused_data)
+        #print('--------------------')
 
-        markers = self.get_nmarkers(1, rewind=True)
+        self.read_markers([-2, 1, 0])
+        self.read_table_name(['GPL'])
+        #else ndata == 12:  # TestOP2Matrix.test_gpspc
+        #print('--------------------')
+
+        self.read_markers([-3, 1, 0])
+        unused_data = read_record() # nids 1-117
+
+        self.read_markers([-4, 1, 0])
+        data = read_record()
+        if self.read_mode == 2:
+            # nids 1-117 (column 1) with nid*1000 (column 2)
+            #
+            # External grid or scalar identification number = node_id
+            # Sequence number = 1000 * external identification number
+            unused_nid_seq = np.frombuffer(data, op2.idtype).reshape(nnodes, 2)
+        self.read_markers([-5, 1, 0, 0])
+
+    def read_table_name(self, table_names):
+        assert isinstance(table_names, list), table_names
+        data = self._read_record() # GPL
+        ndata = len(data)
+        if ndata == 8:
+            table_name_bytes, = self.op2.struct_8s.unpack(data)
+            table_name_str = table_name_bytes.decode('utf-8').strip()
+            assert table_name_str in table_names, table_name_str
+            #gpl, = op2.struct_8s.unpack(data)
+            #gpl_str = gpl.decode('utf-8').strip()
+            #assert gpl_str == 'GPL', gpl_str
+        elif ndata == 12:
+            table_name_bytes, zero = self.op2.struct_8s_i.unpack(data)
+            table_name_str = table_name_bytes.decode('utf-8').strip()
+            assert table_name_str in table_names, table_name_str
+            assert zero == 0, self.show_data(data)
+        else:
+            self.show_data(data)
+            raise SubTableReadError('cannot read table_name=%r' % table_names)
+
+    def read_gpdt(self):
+        """
+        reads the
+
+        tested by ???
+        """
+        #if self.read_mode == 1:
+            #read_record = self._skip_record
+        #else:
+        read_record = self._read_record
+
+        op2 = self.op2
+        table_name = self._read_table_name(rewind=False)
+        op2.table_name = table_name
+        self.log.debug('table_name = %r' % table_name)
         if self.is_debug_file:
-            self.binary_debug.write('---marker0 = %s---\n' % markers)
-        n = -2
-        while markers[0] != 0:
-            self.read_markers([n, 1, 0])
-            if self.is_debug_file:
-                self.binary_debug.write('---markers = [%i, 1, 0]---\n' % n)
+            self.binary_debug.write('read_gpdt - %s\n' % table_name)
 
-            markers = self.get_nmarkers(1, rewind=True)
-            if markers[0] == 0:
-                markers = self.get_nmarkers(1, rewind=False)
-                break
-            unused_data = self._read_record()
-            #self.show_data(data, 'i')
-            n -= 1
-            markers = self.get_nmarkers(1, rewind=True)
+        self.read_markers([-1])
+        header_data = self._read_record()  # (103, 117, 0, 0, 0, 0, 0)
+        ints = np.frombuffer(header_data, op2.idtype)
+
+        #seid = ints[0] # ??? is this a table number>
+        nnodes = ints[1]
+
+        if self.is_debug_file:
+            self.binary_debug.write('---markers = [-1]---\n')
+        #print('--------------------')
+
+        self.read_markers([-2, 1, 0])
+        self.read_table_name(['GPDT'])
+
+        #print('--------------------')
+
+        self.read_markers([-3, 1, 0])
+        data = read_record() # nid,cp,x,y,z,cd,ps
+
+        nvalues = len(data) // 4
+        #self.show_data(data)
+
+        ## TODO: no idea how this works...
+        if nvalues % 7 == 0:
+            nrows = get_table_size_from_ncolumns('GPDT', nvalues, 7)
+            ints = np.frombuffer(data, op2.idtype).reshape(nrows, 7).copy()
+            floats = np.frombuffer(data, op2.fdtype).reshape(nrows, 7).copy()
+        elif nvalues % 10 == 0:
+            nrows = get_table_size_from_ncolumns('GPDT', nvalues, 10)
+            ints = np.frombuffer(data, op2.idtype).reshape(nrows, 10).copy()
+            floats = np.frombuffer(data, op2.fdtype).reshape(nrows, 10).copy()
+            #print('ints:')
+            #print(ints)
+            iints = [0]
+            ifloats = [3, 5]
+            izero = [1, 2, 4, 6, 7, 8, 9]
+
+            # not conclusive, but effective...
+            assert ints[:, izero].max() == ints[:, izero].min(), 'error reading %s table' % table_name
+            #for row in ints:
+
+            #print(ints[iints, :])
+
+            #ifloats = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+            #print('floats:')
+            #print(floats)
+            #print(floats[30, ifloats])
+        else:
+            raise NotImplementedError(nvalues)
+        #iints = [0, 1, 5, 6] # [1, 2, 6, 7] - 1
+        #nid_cp_cd_ps = ints[:, iints]
+        #xyz = floats[:, 2:5]
+        #gpdt = {
+            #'nid_cp_cd_ps' : nid_cp_cd_ps,
+            #'xyz' : xyz,
+        #}
+
+        # 1. Scalar points are identified by CP=-1 and words X1 through
+        #    PS are zero.
+        # 3. or fluid grid points, CD=-1.
+        #print(nid_cp_cd_ps)
+        #print(xyz)
+        self.read_markers([-4, 1, 0, 0])
+
+    def read_bgpdt(self):
+        """
+        reads the BGPDT, BGPDTS, BGPDTOLD tables
+
+        tested by TestOP2Matrix.test_gpspc
+        """
+        #if self.read_mode == 1:
+            #read_record = self._skip_record
+        #else:
+        read_record = self._read_record
+
+        op2 = self.op2
+        table_name = self._read_table_name(rewind=False)
+        op2.table_name = table_name
+        self.log.debug('table_name = %r' % table_name)
+        if self.is_debug_file:
+            self.binary_debug.write('read_bgpdt - %s\n' % table_name)
+
+        self.read_markers([-1])
+        header_data = self._read_record()  # (105, 51, 0, 0, 0, 0, 0)
+        ints = np.frombuffer(header_data, op2.idtype)
+
+        #seid = ints[0] # ??? is this a table number>
+        unused_nnodes = ints[1]  # validated
+
+        if self.is_debug_file:
+            self.binary_debug.write('---markers = [-1]---\n')
+        #print('--------------------')
+
+        self.read_markers([-2, 1, 0])
+        self.read_table_name(['BGPDT', 'BGPDTS', 'BGPDTOLD'])
+
+        #print('--------------------')
+
+        self.read_markers([-3, 1, 0])
+        data = read_record() # cd,x,y,z
+        nvalues = len(data) // 4
+
+        nrows = get_table_size_from_ncolumns('BGPDT', nvalues, 4)
+        ints = np.frombuffer(data, op2.idtype).reshape(nrows, 4).copy()
+        floats = np.frombuffer(data, op2.fdtype).reshape(nrows, 4).copy()
+        cd = ints[:, 0]
+        xyz = floats[:, 1:]
+        #print('cd = %s' % cd.tolist())
+        #print('xyz:\n%s' % xyz)
+
+        bgpdt = {
+            'cd' : cd,
+            'xyz' : xyz,
+        }
+        self.read_markers([-4, 1, 0])
+        marker = self.get_nmarkers(1, rewind=True)[0]
+        if marker == 0:
+            self.read_markers([0])
+            return
+
+        ## TODO: why is this needed??? (it is, but dmap is not clear)
+        data = self._read_record()
+        #self.show_data(data, types='i')
+        self.read_markers([-5, 1, 0])
+        self.read_markers([0])
 
     def read_hisadd(self):
         """optimization history (SOL200) table"""
@@ -785,6 +1031,7 @@ class OP2Reader(object):
         self.read_markers([-4, 1, 0, 0])
 
     def read_ibulk(self):
+        """tested by TestOP2.test_ibulk"""
         op2 = self.op2
         op2.table_name = self._read_table_name(rewind=False)
         op2.log.debug('table_name = %r' % op2.table_name)
@@ -935,7 +1182,11 @@ class OP2Reader(object):
         self.read_markers([n, 1, 0, 0])
 
     def read_intmod(self):
-        """reads the INTMOD table"""
+        """
+        reads the INTMOD table
+
+        tested by TestNastranGUI.test_femap_rougv1_01
+        """
         op2 = self.op2
         op2.table_name = self._read_table_name(rewind=False)
         #op2.log.debug('table_name = %r' % op2.table_name)
@@ -1112,8 +1363,8 @@ class OP2Reader(object):
 
             elif response_type == 10:  # CSTRESS
                 stress_code = out[6]
-                ply = out[7]
-                pid = out[8]  # is this element id?
+                #ply = out[7]
+                #pid = out[8]  # is this element id?
                 #msg = 'CSTRESS - label=%r region=%s subcase=%s stress_code=%s ply=%s pid=%s' % (
                     #response_label, region, subcase, stress_code, ply, pid)
                 #print(msg)
@@ -1328,8 +1579,9 @@ class OP2Reader(object):
         matrix_num, ncols, mrows, form, tout, nvalues, g = unpack(self._endian + b'7i', data)
         #print('g =', g)
 
-        m = Matrix(table_name, form=form)
-        op2.matrices[table_name.decode('utf-8')] = m
+        utable_name = table_name.decode('utf-8')
+        m = Matrix(utable_name, form=form)
+        op2.matrices[utable_name] = m
 
         # matrix_num is a counter (101, 102, 103, ...)
         # 101 will be the first matrix 'A' (matrix_num=101),
@@ -1519,8 +1771,8 @@ class OP2Reader(object):
         """
         Reads a matrix in "standard" form.
 
-        See
-        ---
+        See also
+        --------
         read_matrix_mat
         """
         unused_table_name = self._read_table_name(rewind=False, stop_on_failure=True)
@@ -1558,17 +1810,21 @@ class OP2Reader(object):
 
     def read_matrix(self, table_name):
         """
-        general method for reading matrices and MATPOOL matrices
+        General method for reading matrices and MATPOOL matrices
+
+        Note
+        ----
+        Matrices are read on read_mode = 1
 
         .. todo:: Doesn't support checking matrices vs. MATPOOLs
-        .. todo:: MATPOOLs are disabled because they're not parsed properly
         """
+        read_mode_to_read_matrix = 1
         op2 = self.op2
         i = op2.f.tell()
         # if we skip on read_mode=1, we don't get debugging
         # if we just use read_mode=2, some tests fail
         #
-        if self.read_mode == 2 and not self.debug_file:
+        if self.read_mode != read_mode_to_read_matrix and not self.debug_file:
             try:
                 self._skip_matrix_mat()  # doesn't work for matpools
             except MemoryError:
@@ -1607,17 +1863,37 @@ class OP2Reader(object):
         |  9   | Pseudo identity |
         +------+-----------------+
         """
+        #print('-------------------------------------')
+
         op2 = self.op2
         table_name = self._read_table_name(rewind=False, stop_on_failure=True)
         utable_name = table_name.decode('utf-8')
+        #print(utable_name)
         self.read_markers([-1])
         data = self._read_record()
 
         self.read_markers([-2, 1, 0])
         data = self._read_record()
+        #self.show_data(data)
+        ndata = len(data)
+        if ndata == 8:
+            table_name2, = op2.struct_8s.unpack(data)
+            utable_name2 = table_name2.decode('utf-8').strip()
+            assert utable_name == utable_name2, utable_name2
 
-        self.read_markers([-3, 1, 0])
+        self.read_markers([-3, 1])
+        #if utable_name == 'DELTAK':
+            #pass
+            ##self.read_markers([1])
+            #self.show(200)
+        #else:
+        self.read_markers([0])
+
+        #self.show(36)
+
         data = self._read_record()
+        #if utable_name == 'DELTAK':
+            #self.show_data(data)
 
         #nvalues = len(data) // 4
         assert len(data) % 4 == 0, len(data) / 4.
@@ -2062,7 +2338,7 @@ class OP2Reader(object):
         return date
 
     #----------------------------------------------------------------------------------------
-    def _read_record(self, stream=False, debug=True, macro_rewind=False):
+    def _read_record(self, debug=True, macro_rewind=False):
         """
         Reads a record.
 
@@ -2075,9 +2351,9 @@ class OP2Reader(object):
         is a block.
 
         """
-        return self._read_record_ndata(stream, debug, macro_rewind)[0]
+        return self._read_record_ndata(debug, macro_rewind)[0]
 
-    def _read_record_ndata(self, stream=False, debug=True, macro_rewind=False):
+    def _read_record_ndata(self, debug=True, macro_rewind=False):
         """reads a record and the length of the record"""
         op2 = self.op2
         markers0 = self.get_nmarkers(1, rewind=False, macro_rewind=macro_rewind)
@@ -2194,15 +2470,15 @@ class OP2Reader(object):
         Reads a block following a pattern of:
             [nbytes, data, nbytes]
 
-        See
-        ---
-        read_3_blocks - reds 3 blocks
-        ??? - reads multi-blocks
-
         Returns
         -------
         data : bytes
             the data in binary
+
+        See also
+        --------
+        read_3_blocks - reds 3 blocks
+        ??? - reads multi-blocks
 
         """
         op2 = self.op2
@@ -2423,7 +2699,7 @@ class OP2Reader(object):
             markers1 = self.get_nmarkers(1, rewind=True)
         return record
 
-    def _skip_record_ndata(self, stream=False, debug=True, macro_rewind=False):
+    def _skip_record_ndata(self, debug=True, macro_rewind=False):
         """the skip version of ``_read_record_ndata``"""
         op2 = self.op2
         marker0 = self.get_marker1(rewind=False, macro_rewind=macro_rewind)
@@ -2526,41 +2802,6 @@ class OP2Reader(object):
         return None, ndata
 
     #---------------------------------------------------------------------------
-    def _stream_record(self, debug=True):
-        """
-        Creates a "for" loop that keeps giving us records until we're done.
-        """
-        op2 = self.op2
-        op2.istream = 0
-        markers0 = self.get_nmarkers(1, rewind=False)
-        if self.is_debug_file and debug:
-            self.binary_debug.write('_stream_record - marker = [4, %i, 4]\n' % markers0[0])
-        record, nrecord = self._read_block_ndata()
-        if self.is_debug_file and debug:
-            self.binary_debug.write('_stream_record - record = [%i, recordi, %i]\n' % (
-                nrecord, nrecord))
-        if(markers0[0]*4) != len(record):
-            raise FortranMarkerError('markers0=%s*4 len(record)=%s; table_name=%r' % (
-                markers0[0]*4, len(record), op2.table_name))
-        yield record
-        op2.istream += 1
-
-        markers1 = self.get_nmarkers(1, rewind=True)
-        if self.is_debug_file and debug:
-            self.binary_debug.write('_stream_record - markers1 = [4, %s, 4]\n' % str(markers1))
-
-        # handling continuation blocks
-        #nloop = 0
-        while markers1[0] > 0:
-            markers1 = self.get_nmarkers(1, rewind=False)
-            if self.is_debug_file and debug:
-                self.binary_debug.write('_stream_record - markers1 = [4, %s, 4]\n' % str(markers1))
-            record, unused_nrecordi = self._read_block_ndata()
-            yield record
-            op2.istream += 1
-            markers1 = self.get_nmarkers(1, rewind=True)
-            #nloop += 1
-    #---------------------------------------------------------------------------
     def _goto(self, n):
         """
         Jumps to position n in the file
@@ -2642,6 +2883,17 @@ class OP2Reader(object):
         op2.subtable_name = subtable_name
         self._read_subtables()
 
+    def generic_stop_table(self, data, ndata):  # pragma: no cover
+        """print table data when things get weird"""
+        strings, ints, floats = self.show_data(data)
+        msg = 'Unhandled table length error\n'
+        msg += 'table_name = %s\n' % self.op2.table_name
+        msg += 'len(data) = %i\n' % ndata
+        msg += 'strings  = %r\n' % strings
+        msg += 'ints     = %r\n' % str(ints)
+        msg += 'floats   = %r' % str(floats)
+        raise NotImplementedError(msg)
+
     def read_geom_table(self):
         """Reads a geometry table"""
         op2 = self.op2
@@ -2649,21 +2901,20 @@ class OP2Reader(object):
         if self.is_debug_file:
             self.binary_debug.write('read_geom_table - %s\n' % op2.table_name)
         self.read_markers([-1])
-        data = self._read_record()
+        data = self._read_record() # length=28
 
         self.read_markers([-2, 1, 0])
         data, ndata = self._read_record_ndata()
         if ndata == 8:
             subtable_name, = self.op2.struct_8s.unpack(data)
+        elif ndata == 28:
+            fmt = self._endian + b'8s 3i 2i'
+            subtable_name, month, day, year, zero, one = Struct(fmt).unpack(data)
+            if zero != 0 or one != 1:  # pragma: no cover
+                self.generic_stop_table(data, ndata)
+            self._set_op2_date(month, day, year)
         else:
-            strings, ints, floats = self.show_data(data)
-            msg = 'Unhandled table length error\n'
-            msg += 'table_name = %s\n' % op2.table_name
-            msg += 'len(data) = %i\n' % ndata
-            msg += 'strings  = %r\n' % strings
-            msg += 'ints     = %r\n' % str(ints)
-            msg += 'floats   = %r' % str(floats)
-            raise NotImplementedError(msg)
+            self.generic_stop_table(data, ndata)
 
         op2.subtable_name = subtable_name.rstrip()
         self._read_subtables()
@@ -2767,7 +3018,11 @@ class OP2Reader(object):
             if op2.table_name in oes_nl and hasattr(op2, 'num_wide') and op2.num_wide == 146:
                 data_code_old = deepcopy(op2.data_code)
 
-            op2.data_code = {'_encoding' : self._encoding}
+            op2.data_code = {
+                '_encoding' : self._encoding,
+                'load_as_h5' : self.load_as_h5,
+                'h5_file' : self.h5_file,
+            }
             op2.obj = None
             data, ndata = self._read_record_ndata()
             if not passer:
@@ -2778,7 +3033,7 @@ class OP2Reader(object):
                         self.binary_debug.write('except SortCodeError!\n')
                     if op2.table_name in oes_nl:
                         op2.data_code = data_code_old
-                        for key, value in iteritems(data_code_old):
+                        for key, value in data_code_old.items():
                             setattr(op2, key, value)
                         table4_parser(data, ndata)
                         return False
@@ -2972,3 +3227,30 @@ def grids_comp_array_to_index(grids1, comps1, grids2, comps2,
             jb[i] = nid_comp_to_dof_index[tuple(nid_dof)]
 
         return ja, jb, nja, njb, nj
+
+def eqexin_to_nid_dof_doftype(eqexin1, eqexin2):
+    """assemble dof table"""
+    dof = eqexin2[1::2] // 10
+    doftype = eqexin2[1::2] - 10 * dof
+    nid = eqexin2[::2]
+
+    # eqexin is in external sort, so sort it
+    i = eqexin1[1::2].argsort()
+    dof = dof[i]
+    doftype = doftype[i]
+    nid = nid[i]
+    return nid, dof, doftype
+
+def get_table_size_from_ncolumns(table_name, nvalues, ncolumns):
+    nrows = nvalues // ncolumns
+    if nvalues % ncolumns != 0:
+        msg = 'table=%s: nrows=nvalues/ncolumns=%s/%s=%s; nrows=%s must be an int' % (
+            table_name, nvalues, ncolumns, nrows, nvalues / ncolumns)
+        raise RuntimeError(msg)
+    return nrows
+
+class EQEXIN(object):
+    def __init__(self, nid, dof, doftype):
+        self.nid = nid
+        self.dof = dof
+        self.doftype = doftype

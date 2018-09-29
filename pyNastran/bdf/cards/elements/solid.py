@@ -17,7 +17,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from typing import Any
 from six import integer_types
-from six.moves import range
 import numpy as np
 from numpy import dot, cross
 from numpy.linalg import norm  # type: ignore

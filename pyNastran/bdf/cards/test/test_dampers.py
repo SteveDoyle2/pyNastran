@@ -15,7 +15,7 @@ class TestDampers(unittest.TestCase):
         """tests PDAMP"""
         lines = ['pdamp, 201, 1.e+5']
         model = BDF(debug=False)
-        card = model.process_card(lines)
+        card = model._process_card(lines)
         card = BDFCard(card)
 
         size = 8
@@ -229,6 +229,23 @@ class TestDampers(unittest.TestCase):
 
         save_load_deck(model, run_convert=True)
 
+    def test_pdamp(self):
+        """PDAMP"""
+        model = BDF()
+        eid1 = 10
+        eid2 = 20
+        eid3 = 30
+        eid4 = 40
+        b1 = 1.0
+        b2 = 2.0
+        b3 = 3.0
+        b4 = 4.0
+        nodes1 = [10, 20]
+        nodes2 = [20, 30]
+        card_lines = ['PDAMP', eid1, b1, eid2, b2, eid3, b3, eid4, b4]
+        model.add_card(card_lines, 'PDAMP', comment='', is_list=True, has_none=True)
+        model.validate()
+        model._verify_bdf()
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

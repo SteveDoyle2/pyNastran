@@ -14,8 +14,8 @@ class Module(object):
         checkables : Dict[name]=bool
             is the action checkable
 
-	Example
-	-------
+    Examples
+    --------
         tools = [
             ('load_bdf', 'Load BDF...', 'load_bdf.png', 'Ctrl+B', 'Loads a file', self.on_load_bdf),
         ]

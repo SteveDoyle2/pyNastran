@@ -9,11 +9,29 @@ from pyNastran.bdf.cards.test.utils import save_load_deck
 
 class TestElements(unittest.TestCase):
 
+    def test_plotel_01(self):
+        """tests a PLOTEL"""
+        model = BDF(debug=False)
+        eid = 9
+        nodes = [10, 11]
+        model.add_grid(10, [0., 0., 0.])
+        model.add_grid(11, [1., 0., 0.])
+        plotel = model.add_plotel(eid, nodes, comment='plotel')
+        plotel.write_card(size=8, is_double=False)
+        plotel.write_card(size=16, is_double=False)
+        plotel.write_card(size=16, is_double=True)
+        model.cross_reference()
+        model.uncross_reference()
+        model.safe_cross_reference()
+        save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
+                       run_convert=True, run_renumber=False, run_mirror=True,
+                       run_save_load=True)
+
     def test_cbush_01(self):
         """tests a CBUSH"""
         model = BDF(debug=False)
         lines = ['cbush,101,102,1,,,,,0']
-        card = model.process_card(lines)
+        card = model._process_card(lines)
         card = BDFCard(card)
 
         size = 8
@@ -27,7 +45,7 @@ class TestElements(unittest.TestCase):
         """tests a CDAMP1"""
         model = BDF(debug=False)
         lines = ['CDAMP1, 2001, 20, 1001, 1']
-        card = model.process_card(lines)
+        card = model._process_card(lines)
         card = BDFCard(card)
 
         size = 8
@@ -43,7 +61,7 @@ class TestElements(unittest.TestCase):
         """tests a CGAP/PGAP"""
         model = BDF(debug=False)
         lines = ['CGAP    899     90      21      99      0.      1.      0.      0']
-        card = model.process_card(lines)
+        card = model._process_card(lines)
         card = BDFCard(card)
 
         cgap = CGAP.add_card(card, comment='cgap')
@@ -55,7 +73,7 @@ class TestElements(unittest.TestCase):
         cgap.raw_fields()
 
         lines = ['PGAP    90                      1.E+5']
-        card = model.process_card(lines)
+        card = model._process_card(lines)
         card = BDFCard(card)
 
         pgap = PGAP.add_card(card, comment='pgap')
@@ -144,6 +162,116 @@ class TestElements(unittest.TestCase):
         model.uncross_reference()
         model.safe_cross_reference()
         model.mass_properties()
+        save_load_deck(model, run_convert=False)
+
+    def test_cbush1d(self):
+        model = BDF(debug=False)
+
+        model.add_grid(2, [0., 0., 0.])
+        model.add_grid(3, [1., 0., 0.])
+        nids = [2, 3]
+        eid = 10
+        pid = 100
+        model.add_cbush1d(eid, pid, nids, cid=None, comment='cbush1d')
+        model.add_pbush1d(pid, k=0., c=0., m=0., sa=0., se=0., optional_vars=None, comment='pbush1d')
+
+        model.pop_parse_errors()
+        model.cross_reference()
+        save_load_deck(model)
+
+    def test_cbush2d(self):
+        model = BDF(debug=False)
+
+        model.add_grid(2, [0., 0., 0.])
+        model.add_grid(3, [1., 0., 0.])
+        nids = [2, 3]
+        eid = 10
+        pid = 100
+        cbush2d = model.add_cbush2d(eid, pid, nids, cid=0, plane='XY', sptid=None, comment='cbush2d')
+        #model.add_pbush2d()
+
+        #model.pop_parse_errors()
+        #model.cross_reference()
+        #save_load_deck(model)
+
+    def test_crac2d(self):
+        model = BDF(debug=False)
+
+        model.add_grid(2, [0., 0., 0.])
+        model.add_grid(3, [1., 0., 0.])
+        model.add_grid(4, [1., 0., 0.])
+        model.add_grid(5, [1., 0., 0.])
+        model.add_grid(6, [1., 0., 0.])
+        model.add_grid(7, [1., 0., 0.])
+        model.add_grid(8, [1., 0., 0.])
+        model.add_grid(9, [1., 0., 0.])
+        model.add_grid(10, [1., 0., 0.])
+        model.add_grid(11, [1., 0., 0.])
+        model.add_grid(12, [1., 0., 0.])
+        model.add_grid(13, [1., 0., 0.])
+        model.add_grid(14, [1., 0., 0.])
+        model.add_grid(15, [1., 0., 0.])
+        model.add_grid(16, [1., 0., 0.])
+        model.add_grid(17, [1., 0., 0.])
+        model.add_grid(18, [1., 0., 0.])
+        model.add_grid(19, [1., 0., 0.])
+        nids = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 ,13, 14, 15, 16, 17, 18]
+        eid = 10
+        pid = 100
+        mid = 1000
+        thick = 20.
+        iplane = 1
+        crac2d = model.add_crac2d(eid, pid, nids, comment='crac2d')
+        prac2d = model.add_prac2d(pid, mid, thick, iplane, nsm=0., gamma=0.5, phi=180., comment='')
+
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu)
+        #model.add_pbush2d()
+
+        #model.pop_parse_errors()
+        #model.cross_reference()
+        save_load_deck(model, run_convert=False)
+
+    def test_crac3d(self):
+        model = BDF(debug=False)
+
+        model.add_grid(2, [0., 0., 0.])
+        model.add_grid(3, [1., 0., 0.])
+        model.add_grid(4, [1., 0., 0.])
+        model.add_grid(5, [1., 0., 0.])
+        model.add_grid(6, [1., 0., 0.])
+        model.add_grid(7, [1., 0., 0.])
+        model.add_grid(8, [1., 0., 0.])
+        model.add_grid(9, [1., 0., 0.])
+        model.add_grid(10, [1., 0., 0.])
+        model.add_grid(11, [1., 0., 0.])
+        model.add_grid(12, [1., 0., 0.])
+        model.add_grid(13, [1., 0., 0.])
+        model.add_grid(14, [1., 0., 0.])
+        model.add_grid(15, [1., 0., 0.])
+        model.add_grid(16, [1., 0., 0.])
+        model.add_grid(17, [1., 0., 0.])
+        model.add_grid(18, [1., 0., 0.])
+        model.add_grid(19, [1., 0., 0.])
+        nids = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 ,13, 14, 15, 16, 17, 18, 19]
+        eid = 10
+        pid = 100
+        mid = 1000
+        thick = 20.
+        iplane = 1
+        crac3d = model.add_crac3d(eid, pid, nids, comment='crac3d')
+        prac3d = model.add_prac3d(pid, mid, gamma=0.5, phi=180., comment='crac3d')
+
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu)
+        #model.add_pbush2d()
+
+        #model.pop_parse_errors()
+        #model.cross_reference()
         save_load_deck(model, run_convert=False)
 
 if __name__ == '__main__':  # pragma: no cover

@@ -4,13 +4,12 @@ Defines the GUI IO file for Cart3d.
 from __future__ import print_function
 import os
 from collections import OrderedDict
-from six import iteritems
 import collections
 
 from numpy import arange, mean, vstack, unique, where, sqrt
 import numpy as np
 
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.gui.qt_files.colors import RED_FLOAT, BLUE_FLOAT, GREEN_FLOAT, PINK_FLOAT
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.gui.utils.vtk.vtk_utils import (
@@ -101,7 +100,7 @@ class Cart3dIO(object):
 
         #if 0:
             #fraction = 1. / self.nnodes  # so you can color the nodes by ID
-            #for nid, node in sorted(iteritems(nodes)):
+            #for nid, node in sorted(nodes.items()):
                 #self.grid_result.InsertNextValue(nid * fraction)
 
         assert nodes is not None
@@ -200,7 +199,7 @@ class Cart3dIO(object):
                 if len(invalid_regions) != 0:
                     assert len(invalid_regions) == 0, invalid_regions
 
-                for bc_id, bc_values in sorted(iteritems(surfbcs)):
+                for bc_id, bc_values in sorted(surfbcs.items()):
                     rhoi, xveli, yveli, zveli, pressi = bc_values
                     i = where(regions == bc_id)[0]
                     rho[i] = rhoi
@@ -503,7 +502,7 @@ def _node_inverse_counter(model, nnodes):
     # if we have no nodes, then we have no results, so we have a sum of 0
     # so we make it 1 to prevent division by 0
     counter = np.ones(nnodes)
-    for nid, count in iteritems(node_count):
+    for nid, count in node_count.items():
         counter[nid] = count
     inv_counter = 1. / counter
     return inv_counter

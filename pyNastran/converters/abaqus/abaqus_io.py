@@ -3,7 +3,6 @@ Defines how the GUI reads Abaqus files
 """
 from __future__ import print_function
 from collections import OrderedDict
-from six import iteritems
 
 import numpy as np
 
@@ -56,7 +55,7 @@ class AbaqusIO(object):
         nnodes = 0
         nelements = 0
         all_nodes = []
-        for unused_part_name, part in iteritems(model.parts):
+        for unused_part_name, part in model.parts.items():
             unused_nids = part.nids - 1
             nodes = part.nodes
 
@@ -124,7 +123,7 @@ class AbaqusIO(object):
         points.SetData(points_array)
 
         nid_offset = -1
-        for unused_part_name, part in iteritems(model.parts):
+        for unused_part_name, part in model.parts.items():
             nnodesi = part.nodes.shape[0]
 
             n_r2d2 = 0

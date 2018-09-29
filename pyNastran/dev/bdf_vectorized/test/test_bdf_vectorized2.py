@@ -13,13 +13,12 @@ import os
 import sys
 import numpy
 import warnings
-from six import iteritems
 warnings.simplefilter('always')
 numpy.seterr(all='raise')
 #import traceback
 #import resource
 
-from pyNastran.utils import print_bad_path
+from pyNastran.utils import check_path
 from pyNastran.dev.bdf_vectorized.bdf import BDF, read_bdf #, NastranMatrix
 
 import pyNastran.dev.bdf_vectorized.test
@@ -75,12 +74,12 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
         False : doesn't crash; useful for running many tests
     crash_cards : List[str, str, ...]
         list of cards that are invalid and automatically crash the run
-    Usage
-    -----
-    All control lists must be the same length.
-    You can run xref=True and xref=False with:
 
-    .. python ::
+    Examples
+    --------
+    All control lists must be the same length.
+
+    You can run xref=True and xref=False with::
 
         run_lots_of_files(filenames, xref=[True, False]) # valid
     """
@@ -273,7 +272,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
 
 
 def run_fem1(fem1, bdf_model, mesh_form, xref, punch, sum_load, size, is_double, cid):
-    assert os.path.exists(bdf_model), print_bad_path(bdf_model)
+    check_path(bdf_model, 'bdf_model')
     try:
         if '.pch' in bdf_model:
             fem1.read_bdf(bdf_model, xref=False, punch=True)
@@ -436,7 +435,7 @@ def compute(cards1, cards2):
 def get_element_stats(fem1, fem2):
     """verifies that the various element methods work"""
     if 0:
-        for (key, loads) in sorted(iteritems(fem1.loads)):
+        for (key, loads) in sorted(fem1.loads.items()):
             for load in loads:
                 try:
                     all_loads = load.get_loads()
@@ -450,7 +449,7 @@ def get_element_stats(fem1, fem2):
 
     fem1._verify_bdf()
 
-   # for (key, e) in sorted(iteritems(fem1.elements)):
+   # for (key, e) in sorted(fem1.elements.items()):
    #     try:
    #         e._verify()
    #         #if isinstance(e, RigidElement):
@@ -477,7 +476,7 @@ def get_element_stats(fem1, fem2):
 
 
 def get_matrix_stats(fem1, fem2):
-    for (key, dmig) in sorted(iteritems(fem1.dmigs)):
+    for (key, dmig) in sorted(fem1.dmigs.items()):
         try:
             if isinstance(dmig, NastranMatrix):
                 dmig.get_matrix()
@@ -509,7 +508,7 @@ def compare_params(fem1, fem2):
 
 
 def print_points(fem1, fem2):
-    for (nid, n1) in sorted(iteritems(fem1.nodes)):
+    for (nid, n1) in sorted(fem1.nodes.items()):
         print("%s   xyz=%s  n1=%s  n2=%s" % (nid, n1.xyz, n1.Position(True),
                                              fem2.Node(nid).get_position()))
         break
@@ -562,7 +561,7 @@ def main():
     ver = str(pyNastran.__version__)
     data = docopt(msg, version=ver)
 
-    for key, value in sorted(iteritems(data)):
+    for key, value in sorted(data.items()):
         print("%-12s = %r" % (key.strip('--'), value))
 
     import time

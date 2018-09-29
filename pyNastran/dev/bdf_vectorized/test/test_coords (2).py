@@ -131,7 +131,7 @@ class TestCoords(unittest.TestCase):
 
     def test_cord1r_01(self):
         lines = ['cord1r,2,1,4,3']
-        card = bdf.process_card(lines)
+        card = bdf._process_card(lines)
         card = BDFCard(card)
 
         size = 8
@@ -148,7 +148,7 @@ class TestCoords(unittest.TestCase):
             '*                     1.              0.              1.'
         ]
         model = BDF(debug=False)
-        card = model.process_card(lines)
+        card = model._process_card(lines)
         card = BDFCard(card)
         card = CORD2C(card)
         model._add_coord_object(card)
@@ -157,7 +157,7 @@ class TestCoords(unittest.TestCase):
             'CORD2R         4       3     10.      0.      5.     10.     90.      5.',
             '             10.      0.      6.'
         ]
-        card = model.process_card(lines)
+        card = model._process_card(lines)
         card = BDFCard(card)
         card = CORD2R(card)
         model._add_coord_object(card)
@@ -308,7 +308,7 @@ class TestCoords(unittest.TestCase):
                 '*          75.7955331161               0',],
         ]
         for lines in cards:
-            card = model.process_card(lines)
+            card = model._process_card(lines)
             model.add_card(card, card[0])
         model.cross_reference()
         for nid in model.nodes:
@@ -352,7 +352,7 @@ class TestCoords(unittest.TestCase):
                 '*           -167.4951724               0',],
         ]
         for lines in cards:
-            card = model.process_card(lines)
+            card = model._process_card(lines)
             model.add_card(card, card[0])
         model.cross_reference()
         for nid in model.nodes:
@@ -396,7 +396,7 @@ class TestCoords(unittest.TestCase):
                 '*          159.097767463               0',],
         ]
         for lines in cards:
-            card = model.process_card(lines)
+            card = model._process_card(lines)
             model.add_card(card, card[0])
         model.cross_reference()
         for nid in model.nodes:
@@ -406,7 +406,7 @@ class TestCoords(unittest.TestCase):
 
     def test_cord1c_01(self):
         lines = ['cord1c,2,1,4,3']
-        card = bdf.process_card(lines)
+        card = bdf._process_card(lines)
         card = BDFCard(card)
 
         size = 8
@@ -418,7 +418,7 @@ class TestCoords(unittest.TestCase):
 
     def test_cord1s_01(self):
         lines = ['cord1s,2,1,4,3']
-        card = bdf.process_card(lines)
+        card = bdf._process_card(lines)
         card = BDFCard(card)
 
         size = 8
@@ -435,10 +435,10 @@ class TestCoords(unittest.TestCase):
             '           1.135 .089237   .9324']
 
         model = BDF(debug=False)
-        card = model.process_card(grid)
+        card = model._process_card(grid)
         model.add_card(card, card[0])
 
-        card = model.process_card(coord)
+        card = model._process_card(coord)
         model.add_card(card, card[0])
         model.cross_reference()
 

@@ -1,7 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import integer_types
-from six.moves import range, zip
 import numpy as np
 from numpy import zeros
 ints = (int, np.int32)
@@ -89,13 +88,27 @@ class RealBeamArray(OES_Object):
         dtype = 'float32'
         if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
-        self._times = zeros(self.ntimes, dtype=dtype)
-        self.element_node = zeros((self.ntotal, 2), dtype='int32')
+        _times = zeros(self.ntimes, dtype=dtype)
+        element_node = zeros((self.ntotal, 2), dtype='int32')
 
         # sxc, sxd, sxe, sxf
         # smax, smin, MSt, MSc
-        self.xxb = zeros(self.ntotal, dtype='float32')
-        self.data = zeros((self.ntimes, self.ntotal, 8), dtype='float32')
+        xxb = zeros(self.ntotal, dtype='float32')
+        data = zeros((self.ntimes, self.ntotal, 8), dtype='float32')
+
+        if self.load_as_h5:
+            #for key, value in sorted(self.data_code.items()):
+                #print(key, value)
+            group = self._get_result_group()
+            self._times = group.create_dataset('_times', data=_times)
+            self.element_node = group.create_dataset('element_node', data=element_node)
+            self.xxb = group.create_dataset('xxb', data=xxb)
+            self.data = group.create_dataset('data', data=data)
+        else:
+            self._times = _times
+            self.element_node = element_node
+            self.xxb = xxb
+            self.data = data
 
     def finalize(self):
         sd = self.data[0, :, 0].real
@@ -111,7 +124,7 @@ class RealBeamArray(OES_Object):
         """creates a pandas dataframe"""
         headers = self.get_headers()
         element_node = [self.element_node[:, 0], self.element_node[:, 1]]
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=element_node, minor_axis=headers).to_frame()
@@ -163,8 +176,8 @@ class RealBeamArray(OES_Object):
                 raise ValueError(msg)
         return True
 
-    def add_new_eid(self, dt, eid, grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc):
-        self.add_new_eid_sort1(dt, eid, grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc)
+    #def add_new_eid(self, dt, eid, grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc):
+        #self.add_new_eid_sort1(dt, eid, grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc)
 
     def add_new_eid_sort1(self, dt, eid, grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc):
         assert isinstance(eid, ints), eid
@@ -203,7 +216,7 @@ class RealBeamArray(OES_Object):
         nelements = self.ntotal // self.nnodes  # // 2
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i nnodes_per_element=%i ntotal=%i\n'
                        % (self.__class__.__name__, ntimes, nelements, nnodes, ntotal))
             ntimes_word = 'ntimes'
@@ -283,7 +296,7 @@ class RealBeamArray(OES_Object):
             f06_file.write(page_stamp % page_num)
             page_num += 1
 
-        if self.nonlinear_factor is None:
+        if self.nonlinear_factor in (None, np.nan):
             page_num -= 1
         return page_num
 
@@ -386,7 +399,7 @@ class RealNonlinearBeamArray(OES_Object):
         nelements = self.ntotal // self.nnodes  # // 2
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i nnodes_per_element=%i ntotal=%i\n'
                        % (self.__class__.__name__, ntimes, nelements, nnodes, ntotal))
             ntimes_word = 'ntimes'
@@ -417,7 +430,7 @@ class RealNonlinearBeamArray(OES_Object):
          unused_fb, long_fb, eqs_fb, te_fb, eps_fb, ecs_fb):
         assert isinstance(eid, ints), eid
         assert eid >= 0, eid
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         #(grid_a,
          #unused_ca, long_ca, eqs_ca, te_ca, eps_ca, ecs_ca,
@@ -546,7 +559,7 @@ class RealNonlinearBeamArray(OES_Object):
             f06_file.write(page_stamp % page_num)
             page_num += 1
 
-        if self.nonlinear_factor is None:
+        if self.nonlinear_factor in (None, np.nan):
             page_num -= 1
         return page_num
 

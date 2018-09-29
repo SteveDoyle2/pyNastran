@@ -5,7 +5,7 @@ defines readers for BDF objects in the OP2 GEOM2/GEOM2S table
 ### pyldint: disable=W0612,C0103,C0302,W0613,R0914,R0201
 from struct import unpack, Struct
 from six import b
-from six.moves import range
+import numpy as np
 
 from pyNastran.bdf.cards.elements.elements import CGAP, PLOTEL
 from pyNastran.bdf.cards.elements.damper import (CDAMP1, CDAMP2, CDAMP3,
@@ -791,23 +791,77 @@ class GEOM2(GeomCommon):
     def _read_cfluid2(self, data, n):
         """
         CFLUID2(8515,85,209) - the marker for Record 35
+
+        1 EID       I Element identification number
+        2 IDF1      I RINGFL point 1 identification number
+        3 IDF2      I RINGFL point 2 identification number
+        4 RHO      RS Mass density
+        5 B        RS Bulk modulus
+        6 HARMINDX  I Harmonic index
         """
-        self.log.info('skipping CFLUID2 in GEOM2')
-        return len(data)
+        s = Struct(self._endian + b'3i2fi')
+        nelements = (len(data) - n) // 24
+        for i in range(nelements):
+            edata = data[n:n + 24]  # 6*4
+            out = s.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  CFLUID2=%s\n' % str(out))
+            eid, idf1, idf2, rho, b, harmonic = out
+            self.add_cfluid2(eid, [idf1, idf2], rho, b, harmonic)
+            n += 24
+        self.card_count['CFLUID2'] = nelements
+        return n
 
     def _read_cfluid3(self, data, n):
         """
         CFLUID3(8615,86,210) - the marker for Record 36
+
+        1 EID       I Element identification number
+        2 IDF1      I RINGFL point 1 identification number
+        3 IDF2      I RINGFL point 2 identification number
+        4 IDF3      I RINGFL point 3 identification number
+        5 RHO      RS Mass density
+        6 B        RS Bulk modulus
+        7 HARMINDX  I Harmonic index
         """
-        self.log.info('skipping CFLUID3 in GEOM2')
-        return len(data)
+        s = Struct(self._endian + b'4i2fi')
+        nelements = (len(data) - n) // 28
+        for i in range(nelements):
+            edata = data[n:n + 28]  # 7*4
+            out = s.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  CFLUID3=%s\n' % str(out))
+            eid, idf1, idf2, idf3, rho, b, harmonic = out
+            self.add_cfluid3(eid, [idf1, idf2, idf3], rho, b, harmonic)
+            n += 28
+        self.card_count['CFLUID3'] = nelements
+        return n
 
     def _read_cfluid4(self, data, n):
         """
         CFLUID4(8715,87,211) - the marker for Record 37
+
+        1 EID       I Element identification number
+        2 IDF1      I RINGFL point 1 identification number
+        3 IDF2      I RINGFL point 2 identification number
+        4 IDF3      I RINGFL point 3 identification number
+        5 IDF4      I RINGFL point 4 identification number
+        6 RHO      RS Mass density
+        7 B        RS Bulk modulus
+        8 HARMINDX  I Harmonic index
         """
-        self.log.info('skipping CFLUID4 in GEOM2')
-        return len(data)
+        s = Struct(self._endian + b'5i2fi')
+        nelements = (len(data) - n) // 32
+        for i in range(nelements):
+            edata = data[n:n + 32]  # 8*4
+            out = s.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  CFLUID4=%s\n' % str(out))
+            eid, idf1, idf2, idf3, idf4, rho, b, harmonic = out
+            self.add_cfluid4(eid, [idf1, idf2, idf3, idf4], rho, b, harmonic)
+            n += 32
+        self.card_count['CFLUID4'] = nelements
+        return n
 
 # CINT
 
@@ -1030,11 +1084,25 @@ class GEOM2(GeomCommon):
     def _read_cmfree(self, data, n):
         """
         CMFREE(2508,25,0) - the marker for Record 55
+
+        1 EID  I Element identification number
+        2   S  I
+        3  S2  I
+        4   Y RS
+        5   N  I
         """
-        self.log.info('skipping CMFREE in GEOM2')
-        if self.is_debug_file:
-            self.binary_debug.write('skipping CMFREE in GEOM2\n')
-        return len(data)
+        assert n == 12, n
+        nelements = (len(data) - n) // 20
+        assert (len(data) - n) % 20 == 0
+        struct_3ifi = Struct(self._endian + b'3ifi')
+        for i in range(nelements):
+            edata = data[n:n + 20]  # 5*4
+            out = struct_3ifi.unpack(edata)
+            eid, s, s2, y, ncm = out
+            self.add_cmfree(eid, s, s2, y, ncm)
+            n += 20
+        self.card_count['CMFREE'] = nelements
+        return n
 
     def _read_conm1(self, data, n):
         """
@@ -1420,6 +1488,7 @@ class GEOM2(GeomCommon):
         s = Struct(self._endian + b'6iffii4f')
         if self.is_debug_file:
             self.binary_debug.write('ndata=%s\n' % (nelements * 44))
+
         for i in range(nelements):
             edata = data[n:n + 56]  # 14*4
             out = s.unpack(edata)
@@ -1427,14 +1496,19 @@ class GEOM2(GeomCommon):
              t1, t2, t3, t4) = out
             if self.is_debug_file:
                 self.binary_debug.write('  %s=%s\n' % (element.type, str(out)))
+
+            theta_mcid = convert_theta_to_mcid(theta)
             #print("eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s blank=%s tflag=%s t1=%s t2=%s t3=%s t4=%s" % (
                 #eid, pid, n1, n2, n3, n4, theta, zoffs, blank, tflag, t1, t2, t3, t4))
+
             data_init = [
-                eid, pid, n1, n2, n3, n4, theta, zoffs,
+                eid, pid, n1, n2, n3, n4, theta_mcid, zoffs,
                 tflag, t1, t2, t3, t4]
             elem = element.add_op2_data(data_init)
             self.add_op2_element(elem)
             n += 56
+        #if stop:
+            #raise RuntimeError('theta is too large...make the quad wrong')
         self.card_count[element.type] = nelements
         return n
 
@@ -1662,7 +1736,9 @@ class GEOM2(GeomCommon):
              blank2, tflag, t1, t2, t3) = out
             if self.is_debug_file:
                 self.binary_debug.write('  CTRIA3=%s\n' % str(out))
-            data_in = [eid, pid, n1, n2, n3, theta, zoffs, tflag, t1, t2, t3]
+
+            theta_mcid = convert_theta_to_mcid(theta)
+            data_in = [eid, pid, n1, n2, n3, theta_mcid, zoffs, tflag, t1, t2, t3]
             elem = CTRIA3.add_op2_data(data_in)
             self.add_op2_element(elem)
             n += ntotal
@@ -1837,6 +1913,7 @@ class GEOM2(GeomCommon):
 # GMBNDS
 # GMINTC
 # GMINTS
+
     def _read_plotel(self, data, n):  # 114
         struct_3i = Struct(self._endian + b'3i')
         ntotal = 12
@@ -1865,11 +1942,10 @@ class GEOM2(GeomCommon):
         (5551,49,105)    - the marker for Record 118
         """
         npoints = (len(data) - n) // 4
-        fmt = b(self._uendian + '%ii' % npoints)
-        nids = unpack(fmt, data[n:])
+        nids = np.frombuffer(data[n:], self.idtype).tolist()
         if self.is_debug_file:
-            self.binary_debug.write('SPOINT=%s\n' % str(nids))
-        spoint = SPOINTs.add_op2_data(list(nids))
+            self.binary_debug.write('SPOINT=%s\n' % nids)
+        spoint = SPOINTs.add_op2_data(nids)
         self._add_spoint_object(spoint)
         self.card_count['SPOINT'] = npoints
         return n
@@ -1905,3 +1981,18 @@ class GEOM2(GeomCommon):
     def _read_cquadx8(self, data, n):
         self.log.info('skipping CQUADX8 in GEOM2')
         return len(data)
+
+def convert_theta_to_mcid(theta):
+    """odd function..."""
+    # sort of guessed at this number...it seems reasonable-ish
+    if theta > 511.:
+        # per DMAP...you couldn't make a new record number?
+        # theta = 512. * (cid + 1)
+        # theta/512 = cid + 1
+        # cid = theta/512. - 1
+        #
+        cid_float = theta / 512. - 1
+        cid = int(cid_float)
+        assert np.allclose(cid, cid_float), 'theta=%s cid=%s cid_float=%s' % (theta, cid, cid_float)
+        theta = cid
+    return theta

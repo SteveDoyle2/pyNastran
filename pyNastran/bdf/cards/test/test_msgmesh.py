@@ -59,7 +59,7 @@ class TestMsgMesh(unittest.TestCase):
         #model2 = read_bdf(bdf_filename2, xref=False)
         #print('---------------')
         #model2.safe_cross_reference()
-        save_load_deck(model, run_convert=False)
+        save_load_deck(model, run_convert=False, run_quality=False)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

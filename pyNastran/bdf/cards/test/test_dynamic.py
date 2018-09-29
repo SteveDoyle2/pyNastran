@@ -7,7 +7,7 @@ from six.moves import StringIO
 import numpy as np
 
 import pyNastran
-from pyNastran.bdf.bdf import BDF, read_bdf, CaseControlDeck
+from pyNastran.bdf.bdf import BDF, read_bdf, CaseControlDeck, CrossReferenceError
 from pyNastran.bdf.cards.test.utils import save_load_deck
 
 root_path = pyNastran.__path__[0]
@@ -476,6 +476,139 @@ class TestDynamic(unittest.TestCase):
             #threshold=0.02, maxiter=10, comment='rotord')
         #rotord.validate()
         #save_load_deck(model)
+
+    def test_loadcyn(self):
+        """tests LOADCYN"""
+        model = BDF(debug=False, log=None, mode='msc')
+        sid = 42
+        scale = 4.
+        segment_id = 10
+        scales = [1.]
+        load_ids = [3]
+        loadcyn = model.add_loadcyn(sid, scale, segment_id, scales, load_ids, segment_type=None, comment='loadcyn')
+        loadcyn.validate()
+        model.pop_parse_errors()
+        card = loadcyn.write_card(size=8)
+        loadcyn.write_card(size=16, is_double=False)
+        loadcyn.write_card(size=16, is_double=True)
+        loadcyn.raw_fields()
+        str(loadcyn)
+        #print(model.loads)
+        model.loads = {}
+        model.add_card(card.split('\n')[1:], 'LOADCYN', comment='', is_list=False, has_none=True)
+
+        model.cross_reference()
+        model.uncross_reference()
+        model.safe_cross_reference()
+
+    def test_deform(self):
+        """tests DEFORM"""
+        model = BDF(debug=False, log=None, mode='msc')
+        sid = 42
+        eid = 10
+        deformation = 32.
+        deform = model.add_deform(sid, eid, deformation, comment='deform')
+        deform.validate()
+        model.pop_parse_errors()
+        card = deform.write_card(size=8)
+        deform.write_card(size=16, is_double=False)
+        deform.write_card(size=16, is_double=True)
+        deform.raw_fields()
+        str(deform)
+        model.loads = {}
+        model.add_card(card.split('\n')[1:], 'DEFORM', comment='', is_list=False, has_none=True)
+        model.pop_parse_errors()
+
+        with self.assertRaises(CrossReferenceError):
+            model.cross_reference()
+        with self.assertRaises(CrossReferenceError):
+            model.pop_xref_errors()
+        model.uncross_reference()
+        model.reset_errors()
+        model.safe_cross_reference()
+
+        eid = 10
+        nids = [2, 3]
+        mid = 100
+        model.add_grid(2, [0., 0., 0.])
+        model.add_grid(3, [1., 0., 0.])
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu)
+        model.add_conrod(eid, mid, nids, A=0.0, j=0.0, c=0.0, nsm=0.0, comment='')
+        model.cross_reference()
+
+    def test_rforce(self):
+        """tests RFORCE"""
+        model = BDF(debug=False, log=None, mode='msc')
+        #model._nxref_errors = 0
+        sid = 42
+        nid = 2
+        cid = 1
+        scale = 2.
+        r123 = [0., 1., 2.]
+        rforce = model.add_rforce(sid, nid, scale, r123, cid=cid, method=1, racc=0., mb=0, idrf=0, comment='rforce')
+        rforce.validate()
+        card = rforce.write_card(size=8)
+        rforce.write_card(size=16, is_double=False)
+        rforce.write_card(size=16, is_double=True)
+        rforce.raw_fields()
+        str(rforce)
+        model.loads = {}
+        model.add_card(card.split('\n')[1:], 'RFORCE', comment='', is_list=False, has_none=True)
+        model.pop_parse_errors()
+
+        with self.assertRaises(CrossReferenceError):
+            model.cross_reference()
+        with self.assertRaises(CrossReferenceError):
+            model.pop_xref_errors()
+        model.uncross_reference()
+        model.reset_errors()
+        with self.assertRaises(KeyError):
+            model.safe_cross_reference()
+        model.reset_errors()
+
+        model.add_grid(2, [0., 0., 0.])
+        model.add_cord2r(cid, [0., 0., 0.], [0., 0., 1.], [1., 0., 0.], rid=0, comment='')
+        model.cross_reference()
+
+    def test_rforce1(self):
+        """tests RFORCE1"""
+        model = BDF(debug=False, log=None, mode='msc')
+        sid = 42
+        nid = 2
+        scale = 2.
+        r123 = None
+        group_id = -4
+        cid = 1
+        rforce1 = model.add_rforce1(sid, nid, scale, group_id, cid=cid, r123=None, racc=0., mb=0, method=2, comment='rforce1')
+        rforce1.validate()
+        rforce1b = model.add_rforce1(sid, nid, scale, group_id, cid=0, r123=[1., 2., 3.], racc=0., mb=0, method=2, comment='rforce1')
+        rforce1b.validate()
+        model.pop_parse_errors()
+        card = rforce1.write_card(size=8)
+        rforce1.write_card(size=16, is_double=False)
+        rforce1.write_card(size=16, is_double=True)
+        rforce1.raw_fields()
+        str(rforce1)
+        model.loads = {}
+        model.add_card(card.split('\n')[1:], 'RFORCE1', comment='', is_list=False, has_none=True)
+        model.pop_parse_errors()
+
+        with self.assertRaises(CrossReferenceError):
+            model.cross_reference()
+        with self.assertRaises(CrossReferenceError):
+            model.pop_xref_errors()
+        model.uncross_reference()
+        model.reset_errors()
+        with self.assertRaises(KeyError):
+            model.safe_cross_reference()
+        model.reset_errors()
+
+        model.add_grid(2, [0., 0., 0.])
+        model.add_cord2r(cid, [0., 0., 0.], [0., 0., 1.], [1., 0., 0.], rid=0, comment='')
+        model.cross_reference()
 
     def _test_dynamic1(self):
         """

@@ -38,14 +38,14 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from copy import deepcopy
 from collections import defaultdict
 from typing import List, Dict, Set, Optional, Any
-from six import string_types, iteritems, iterkeys
+from six import string_types
 
 import numpy as np
 
 from pyNastran.bdf.bdf_interface.get_methods import GetMethods
-#from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
 from pyNastran.bdf.cards.optimization import get_dvprel_key
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.bdf.cards.loads.static_loads import update_pload4_vector_for_surf
 
 
 class GetCard(GetMethods):
@@ -124,7 +124,7 @@ class GetCard(GetMethods):
                 out_dict[key] = []
         if combine:
             out_list = []
-            for key, value in sorted(iteritems(out_dict)):
+            for key, value in sorted(out_dict.items()):
                 out_list += value
             return out_list
         return out_dict
@@ -132,7 +132,7 @@ class GetCard(GetMethods):
     def _reset_type_to_slot_map(self):
         """resets self._type_to_slot_map"""
         rslot_map = defaultdict(list)
-        for dict_name, card_names in iteritems(self._slot_to_type_map):
+        for dict_name, card_names in self._slot_to_type_map.items():
             #print('card_names=%s dict_name=%s' % (card_names, dict_name))
             card_name0 = card_names[0]
             if card_name0 in ['DTABLE', 'GRDSET', 'SESUP', 'DOPTPRM', 'MONPNT1', 'SUPORT',
@@ -141,7 +141,7 @@ class GetCard(GetMethods):
             else:
                 adict = getattr(self, dict_name)
                 if isinstance(adict, dict):
-                    for key, card in iteritems(adict):
+                    for key, card in adict.items():
                         if isinstance(card, list):
                             alist = card
                             for cardi in alist:
@@ -179,7 +179,7 @@ class GetCard(GetMethods):
     def reset_rslot_map(self):
         """helper method for get_rslot_map"""
         rslot_map = {}
-        for key, values in iteritems(self._slot_to_type_map):
+        for key, values in self._slot_to_type_map.items():
             for value in values:
                 rslot_map[value] = key
         self._type_to_slot_map = rslot_map
@@ -292,7 +292,7 @@ class GetCard(GetMethods):
 
             #print('card_type=%r' % card_type)
             try:
-                key = rslot_map[card_type]  # update attributes.py ~line 540
+                key = rslot_map[card_type]  # update attributes.py ~line 590
             except:
                 print(rslot_map.keys())
                 self.log.error("card_type=%r' hasn't been added to "
@@ -450,11 +450,11 @@ class GetCard(GetMethods):
             if card.type == 'MPC':
                 nids = card.node_ids
                 nid0 = nids[0]
-                #constraint0 = card.constraints[0]
-                #enforced0 = card.enforced[0]
+                #component0 = card.components[0]
+                #enforced0 = card.coefficients[0]
                 #card.constraints[1:]
-                for nid, enforced in zip(nids[1:], card.enforced[1:]):
-                    if enforced != 0.0:
+                for nid, coefficient in zip(nids[1:], card.coefficients[1:]):
+                    if coefficient != 0.0:
                         lines.append([nid0, nid])
             else:
                 msg = 'get_MPCx_node_ids doesnt support %r' % card.type
@@ -506,14 +506,14 @@ class GetCard(GetMethods):
             if card.type == 'MPC':
                 nids = card.node_ids
                 nid0 = nids[0]
-                #constraint0 = card.constraints[0]
-                #enforced0 = card.enforced[0]
+                #component0 = card.components[0]
+                #coefficient0 = card.coefficients[0]
                 #card.constraints[1:]
                 dofs = card.components
                 for dof in dofs:
                     independent_node_ids_c1[dof].append(nid0)
-                for nid, enforced in zip(nids[1:], card.enforced[1:]):
-                    if enforced != 0.0:
+                for nid, coefficient in zip(nids[1:], card.coefficients[1:]):
+                    if coefficient != 0.0:
                         for dof in dofs:
                             dependent_node_ids_c1[dof].append(nid)
             else:
@@ -662,7 +662,7 @@ class GetCard(GetMethods):
             dvprel_dict[key] = (design_region, dvprel_t_init, dvprel_t_min, dvprel_t_max)
             return design_region, dvprel_t_init, dvprel_t_min, dvprel_t_max
 
-        for dvprel_key, dvprel in iteritems(self.dvprels):
+        for dvprel_key, dvprel in self.dvprels.items():
             prop_type = dvprel.prop_type
             desvars = dvprel.dvids
             if dvprel.pid_ref is not None:
@@ -783,7 +783,6 @@ class GetCard(GetMethods):
                 the SPCD load application
 
         Considers
-        ---------
         FORCE
         PLOAD2 - CTRIA3, CQUAD4, CSHEAR
         PLOAD4 - CTRIA3, CTRIA6, CTRIAR
@@ -904,13 +903,8 @@ class GetCard(GetMethods):
                         nface = len(elem_node_ids)
 
                         if load.surf_or_line == 'SURF':
-                            if np.linalg.norm(load.nvector) != 0.0 or load.Cid() != 0:
-                                normal = load.nvector / np.linalg.norm(load.nvector)
-                                cid = load.Cid()
-                                if cid != 0:
-                                    msg = 'cid=%r on a PLOAD4 is not supported\n%s' % (
-                                        cid, str(load))
-                                    raise NotImplementedError(msg)
+                            cid = load.Cid()
+                            normal = update_pload4_vector_for_surf(load, normal, cid)
                         else:
                             msg = 'surf_or_line=%r on PLOAD4 is not supported\n%s' % (
                                 load.surf_or_line, str(load))
@@ -949,14 +943,17 @@ class GetCard(GetMethods):
                         nface = len(elem_node_ids)
 
                         if load.surf_or_line == 'SURF':
-                            if np.linalg.norm(load.nvector) != 0.0 or load.Cid() != 0:
-                                normal = load.nvector / np.linalg.norm(load.nvector)
-                                cid = load.Cid()
-                                if cid != 0:
-                                    msg = 'cid=%r on a PLOAD4 is not supported\n%s' % (
-                                        cid, str(load))
-                                    raise NotImplementedError(msg)
-                        else:
+                            cid = load.Cid()
+                            if cid is None and np.all(np.isnan(load.nvector)):
+                                # element surface normal
+                                pass
+                            else:
+                                if norm(load.nvector) != 0.0 and cid == 0:
+                                    normal = load.nvector / np.linalg.norm(load.nvector)
+                                else:
+                                    raise NotImplementedError('cid=%r nvector=%s on a PLOAD4 is not supported\n%s' % (
+                                        cid, load.nvector, str(load)))
+                        else:  # pragma: no cover
                             msg = 'surf_or_line=%r on PLOAD4 is not supported\n%s' % (
                                 load.surf_or_line, str(load))
                             self.log.debug(msg)
@@ -993,13 +990,15 @@ class GetCard(GetMethods):
                         elem_node_ids = elem.node_ids
                         if elem.type == 'CTETRA':
                             #face1 = elem.get_face(load.g1_ref.nid, load.g34_ref.nid)
-                            facn = elem.get_face_area_centroid_normal(load.g1_ref.nid, load.g34_ref.nid)
-                            face, area, centroid, normal
+                            facn = elem.get_face_area_centroid_normal(
+                                load.g1_ref.nid, load.g34_ref.nid)
+                            face, area, centroid, normal = facn
                             #assert face == face1
                             nface = 3
                         elif elem.type == 'CHEXA':
                             #face1 = elem.get_face(load.g34_ref.nid, load.g1_ref.nid)
-                            facn = elem.get_face_area_centroid_normal(load.g34_ref.nid, load.g1_ref.nid)
+                            facn = elem.get_face_area_centroid_normal(
+                                load.g34_ref.nid, load.g1_ref.nid)
                             face, area, centroid, normal = facn
                             #assert face == face1
                             nface = 4
@@ -1061,10 +1060,11 @@ class GetCard(GetMethods):
                         #m = cross(r, f)
                         #M += m
                 if eids_missing:
-                    self.log.error('missing PLOAD4 element ids=%s on:\n%s' % (eids_missing, load.rstrip()))
+                    self.log.error('missing PLOAD4 element ids=%s on:\n%s' % (
+                        eids_missing, load.rstrip()))
 
             elif load_type == 'SPCD':
-                #self.gids = [integer(card, 2, 'G1'),]
+                #self.nodes = [integer(card, 2, 'G1'),]
                 #self.constraints = [components_or_blank(card, 3, 'C1', 0)]
                 #self.enforced = [double_or_blank(card, 4, 'D1', 0.0)]
                 for nid, c1, d1 in zip(load.node_ids, load.constraints, load.enforced):
@@ -1170,7 +1170,8 @@ class GetCard(GetMethods):
                     else:
                         etypes_skipped.add(elem.type)
                 if eids_missing:
-                    self.log.error('missing PLOAD4 element ids=%s on:\n%s' % (eids_missing, load.rstrip()))
+                    self.log.error('missing PLOAD4 element ids=%s on:\n%s' % (
+                        eids_missing, load.rstrip()))
 
             elif load.type == 'PLOAD2':
                 pressure = load.pressure * scale  # there are 4 pressures, but we assume p0
@@ -1242,7 +1243,7 @@ class GetCard(GetMethods):
             assert scale == 1.0, str(load)
             if load.type == 'TEMP':
                 temps_dict = load.temperatures
-                for nid, val in iteritems(temps_dict):
+                for nid, val in temps_dict.items():
                     nidi = nid_map[nid]
                     temperatures[nidi] = val
             elif load.type in skip_loads:
@@ -1259,7 +1260,7 @@ class GetCard(GetMethods):
         independent = np.unique(lines[:, 1])
         """
         lines_rigid = []
-        for eid, elem in iteritems(self.rigid_elements):
+        for eid, elem in self.rigid_elements.items():
             if elem.type == 'RBE3':
                 if elem.Gmi != []:
                     # UM are dependent
@@ -1451,11 +1452,38 @@ class GetCard(GetMethods):
             dload_id,
             consider_dload_combinations=consider_dload_combinations,
             msg=msg)
-        dloads, scale_factors = self._reduce_dload_case(dload_case, scale=scale, msg=msg)
+        dloads, scale_factors = self._reduce_dload_case(
+            dload_case, scale=scale, skip_scale_factor0=skip_scale_factor0,
+            msg=msg)
         return dloads, scale_factors
 
-    def _reduce_dload_case(self, dload_case, scale=1., unallowed_dload_ids=None, msg=''):
-        """reduces a dload case"""
+    def _reduce_dload_case(self, dload_case, scale=1., unallowed_dload_ids=None,
+                           skip_scale_factor0=False, msg=''):
+        """
+        Reduces a dload case
+
+        Parameters
+        ----------
+        dload_case : List[???]
+            a series of DLOAD cards
+        scale : float; default=1.0
+            additional scale factor on top of the existing LOADs
+        unallowed_dload_ids : List[int]; default=None
+            helper to prevent recursion
+        skip_scale_factor0 : bool; default=False
+            Skip loads with scale factor=0.0.
+            Nastran does not do this.
+            Nastran will fail if referenced loads do not exist.
+        msg : str
+            debug message
+
+        Returns
+        -------
+        dloads : List[loads]
+            a series of dload objects
+        scale_factors : List[float]
+            the associated scale factors
+        """
         scale_factors_out = []
         dloads_out = []
         if unallowed_dload_ids is None:
@@ -1511,7 +1539,7 @@ class GetCard(GetMethods):
             print(node_ids)
             raise
         rbes = []
-        for eid, rigid_element in iteritems(self.rigid_elements):
+        for eid, rigid_element in self.rigid_elements.items():
             if rigid_element.type in ['RBE3', 'RBE2', 'RBE1', 'RBAR', 'RSPLINE', 'RROD']:
                 independent_nodes = set(rigid_element.independent_nodes)
                 dependent_nodes = set(rigid_element.dependent_nodes)
@@ -1563,7 +1591,7 @@ class GetCard(GetMethods):
                 else:
                     raise NotImplementedError(mpc)
 
-        for unused_eid, rigid_element in iteritems(self.rigid_elements):
+        for unused_eid, rigid_element in self.rigid_elements.items():
             if rigid_element.type == 'RBE2':
                 dependent_nodes = set(rigid_element.dependent_nodes)
                 components = rigid_element.cm
@@ -1670,7 +1698,7 @@ class GetCard(GetMethods):
                 map_names = [map_names]
             if not isinstance(map_names, (list, tuple)):
                 msg = 'map_names=%s must be a list or tuple; not %s' % (
-                    map_names, type( map_names))
+                    map_names, type(map_names))
                 raise TypeError(msg)
             for name in map_names:
                 if name not in allowed_maps:
@@ -1685,7 +1713,7 @@ class GetCard(GetMethods):
         nid_to_eid_map = defaultdict(set)
 
         if eids is None:
-            eids = iterkeys(self.elements)
+            eids = self.elements.keys()
 
         types_to_consider = []
         if consider_0d:
@@ -1764,13 +1792,11 @@ class GetCard(GetMethods):
         node_ids : Set[int]
             set of node IDs
 
-        For example
+        For example::
 
-        .. code-block:: python
-
-          >>> eids = [1, 2, 3]  # list of elements with pid=1
-          >>> msg = ' which are required for pid=1'
-          >>> node_ids = bdf.get_node_ids_with_elements(eids, msg=msg)
+          eids = [1, 2, 3]  # list of elements with pid=1
+          msg = ' which are required for pid=1'
+          node_ids = bdf.get_node_ids_with_elements(eids, msg=msg)
         """
         if isinstance(eids, integer_types):
             eids = [eids]
@@ -1794,7 +1820,7 @@ class GetCard(GetMethods):
         dtype : str; default='int32'
             the type of the integers
         save_element_types : bool; default=False
-            adds the etypes output
+            adds the etype_to_eids_pids_nids output
 
         Returns
         -------
@@ -1820,19 +1846,28 @@ class GetCard(GetMethods):
             nids : (neids, nnodes/element) int ndarray
                 the nodes corresponding to the element
         """
-        etypes = self.get_element_nodes_by_element_type(dtype=dtype)
+        etype_to_eids_pids_nids = self.get_elements_properties_nodes_by_element_type(dtype=dtype)
         output = {}
-        for etype, (eids, pids, nids) in iteritems(etypes):
+        for etype, (eids, pids, nids) in etype_to_eids_pids_nids.items():
             upids = np.unique(pids)
             for upid in upids:
                 ipid = np.where(pids == upid)[0]
                 output[(etype, upid)] = [eids[ipid], nids[ipid, :]]
+
         if save_element_types:
-            return output, None
+            return output, etype_to_eids_pids_nids
         else:
-            return output, etypes
+            return output, None
 
     def get_element_nodes_by_element_type(self, dtype='int32', solids=None):
+        # type: (str, bool) -> Any
+        """see ``get_elements_properties_nodes_by_element_type``"""
+        self.deprecated('get_element_nodes_by_element_type',
+                        'get_elements_properties_nodes_by_element_type', '1.2')
+        return self.get_elements_properties_nodes_by_element_type(
+            dtype=dtype, solids=solids)
+
+    def get_elements_properties_nodes_by_element_type(self, dtype='int32', solids=None):
         # type: (str, Optional[Dict[str, Any]]) -> Any
         """
         Gets a dictionary of element type to [eids, pids, node_ids]
@@ -1841,6 +1876,17 @@ class GetCard(GetMethods):
         ----------
         dtype : str; default='int32'
             the type of the integers
+        solids : dict[etype] : value
+            etype : str
+                the element type
+                should only be CTETRA, CHEXA, CPENTA, CPYRAM
+            value : varies
+                (nnodes_min, nnodes_max) : Tuple(int, int)
+                    the min/max number of nodes for the element
+                (nnodes, ) : Tuple(int, )
+                    the number of nodes
+                    useful if you only have CTETRA4s or only want CTETRA10s
+                    fails if you're wrong (and too low)
 
         Returns
         -------
@@ -1854,17 +1900,6 @@ class GetCard(GetMethods):
                 CONRODS have a pid of 0
             nids : (neids, nnodes/element) int ndarray
                 the nodes corresponding to the element
-        solids : dict[etype] : value
-            etype : str
-                the element type
-                should only be CTETRA, CHEXA, CPENTA, CPYRAM
-            value : varies
-                (nnodes_min, nnodes_max) : Tuple(int, int)
-                    the min/max number of nodes for the element
-                (nnodes, ) : Tuple(int, )
-                    the number of nodes
-                    useful if you only have CTETRA4s or only want CTETRA10s
-                    fails if you're wrong
         """
         etypes_no_pids = [
             'CELAS4', 'CDAMP4', 'CHBDYG',
@@ -1918,14 +1953,14 @@ class GetCard(GetMethods):
                     else:
                         pid = elem.Pid()
                     assert pid is not None, elem
+                    pids[i] = pid
                     nidsi = elem.node_ids
-                    #self.log.info(str(elem))
                     try:
                         nids[i, :] = nidsi
                     except TypeError:
                         #print(elem)
                         #print('nidsi =', nidsi)
-                        nidsi2 = [nid  if nid is not None else 0
+                        nidsi2 = [nid if nid is not None else 0
                                   for nid in nidsi]
                         try:
                             nids[i, :] = nidsi2
@@ -1934,7 +1969,6 @@ class GetCard(GetMethods):
                             print(nidsi)
                             print(nidsi2)
                             raise
-                pids[i] = pid
                 output[etype] = [eids, pids, nids]
             else:
                 # SOLID elements can be variable length
@@ -1948,6 +1982,7 @@ class GetCard(GetMethods):
                     elem = self.elements[eid]
                     pid = elem.Pid()
                     assert pid is not None, elem
+                    pids[i] = pid
                     nidsi = elem.node_ids
                     nnodesi = len(nidsi)
                     if nnodesi == nnodes_max:
@@ -1966,7 +2001,6 @@ class GetCard(GetMethods):
                             nids[i, :] = nidsi2
                         except:
                             raise
-                pids[i] = pid
                 if len(ieids_max):
                     etype_max = elem.type + str(nnodes_max)
                     ieids_max = np.array(ieids_max, dtype=dtype)
@@ -2009,14 +2043,14 @@ class GetCard(GetMethods):
         ]
 
         if pids is None:
-            pids = iterkeys(self.properties)
+            pids = self.properties.keys()
         elif isinstance(pids, integer_types):
             pids = [int]
         else:
             assert isinstance(pids, (list, tuple)), 'pids=%s type=%s' % (pids, type(pids))
 
         eids2 = []
-        for eid, element in sorted(iteritems(self.elements)):
+        for eid, element in sorted(self.elements.items()):
             if element.type in etypes_no_pids:
                 pid = 0
             else:
@@ -2092,17 +2126,11 @@ class GetCard(GetMethods):
                         etype, msg))
                     continue
 
-                try:
-                    eid = eids[0]
-                except:
-                    #self.log.warning('skipping etype=%s; eids=%s' % (etype, str(eids)))
-                    continue
-
+                # get the number of nodes of the first element
+                eid = eids[0]
                 element0 = self.elements[eid]
-                #if etype in ['CTETRA', 'CPENTA', 'CHEXA', 'CPYRAM']:
-                    #nnodes_array = np.zeros(neids, dtype='int32')
-                    #eids_min =
                 nnodes = len(element0.node_ids)
+
                 neids = len(eids)
                 node_ids = np.zeros((neids, nnodes), dtype=idtype)
                 if etype in etypes_none_nodes:
@@ -2142,7 +2170,7 @@ class GetCard(GetMethods):
                         print(element)
                         raise
                 etype_to_nids_map[etype] = node_ids
-            for key, value in iteritems(pid_to_eids_ieids_map):
+            for key, value in pid_to_eids_ieids_map.items():
                 pid_to_eids_ieids_map[key] = np.array(value, dtype=idtype)
         except OverflowError:
             assert idtype == 'int32', 'idtype=%r while overflowing...' % idtype
@@ -2208,7 +2236,7 @@ class GetCard(GetMethods):
             #'CHBDYG' : -108,
         #}
         elements_without_properties = ['CONROD', 'CELAS2', 'CELAS4', 'CDAMP2', 'CDAMP4', 'CHBDYG']
-        for eid, element in iteritems(self.elements):
+        for eid, element in self.elements.items():
             try:
                 pid = element.Pid()
             except AttributeError:
@@ -2243,7 +2271,7 @@ class GetCard(GetMethods):
             for nid in sorted(self.spoints):  # SPOINTs
                 nid_to_eids_map[nid] = []
 
-        for (eid, element) in iteritems(self.elements):  # load the mapper
+        for (eid, element) in self.elements.items():  # load the mapper
             try:
                 # not supported for 0-D and 1-D elements
                 nids = element.node_ids
@@ -2258,7 +2286,12 @@ class GetCard(GetMethods):
 
     def get_node_id_to_elements_map(self):
         """
-        Returns a dictionary that maps node IDs to a list of elemnents
+        Returns a dictionary that maps node IDs to a list of elements.
+
+        Returns
+        -------
+        nid_to_elements_map : Dict[nid]=List[eid]
+            node id to a list of elements
 
         .. todo:: support 0d or 1d elements
         .. todo:: support elements with missing nodes
@@ -2273,7 +2306,7 @@ class GetCard(GetMethods):
         for nid in self.epoints:
             nid_to_elements_map[nid] = []
 
-        for (unused_eid, element) in iteritems(self.elements):  # load the mapper
+        for element in self.elements.values():  # load the mapper
             try:
                 # not supported for 0-D and 1-D elements
                 nids = element.node_ids
@@ -2288,11 +2321,22 @@ class GetCard(GetMethods):
 
     def get_property_id_to_element_ids_map(self, msg=''):
         """
-        Returns a dictionary that maps a property ID to a list of elemnents
+        Returns a dictionary that maps a property ID to a list of elements.
+
+        Returns
+        -------
+        pid_to_eids_map : Dict[pid]=List[eid]
+            property id to a list of elements
+        msg : str; default=''
+            a message added to the error message
+
         """
         pid_to_eids_map = {}
         pids = self.property_ids
         for pid in pids:
+            pid_to_eids_map[pid] = []
+        for pid in self.phbdys.keys():
+            assert pid not in pid_to_eids_map, 'pid=%s is already used and must be used by PHBDY' % pid
             pid_to_eids_map[pid] = []
 
         for eid in self.element_ids:
@@ -2319,6 +2363,8 @@ class GetCard(GetMethods):
         -------
         mid_to_pids_map : dict[int] = int
             the mapping
+        msg : str; default=''
+            a message added to the error message
 
         .. code-block:: python
 
@@ -2332,7 +2378,8 @@ class GetCard(GetMethods):
                   PCOMP, which has multiple mids)
         """
         mid_to_pids_map = {}
-        for mid in self.get_material_ids():
+        mids = self.get_material_ids()
+        for mid in mids:
             mid_to_pids_map[mid] = []
 
         properties_without_materials = [
@@ -2579,9 +2626,9 @@ class GetCard(GetMethods):
                 nodes = spc.nodes
                 nnodes = len(nodes)
                 nids += nodes
-                comps += [str(spc.constraints)] * nnodes
+                comps += [str(spc.components)] * nnodes
             elif spc.type == 'SPC':
-                for nid, comp, unused_enforced in zip(spc.gids, spc.constraints, spc.enforced):
+                for nid, comp, unused_enforced in zip(spc.nodes, spc.components, spc.enforced):
                     nids.append(nid)
                     comps.append(comp)
             else:
@@ -2591,7 +2638,7 @@ class GetCard(GetMethods):
             self.log.warning("get_spcs doesn't consider:\n%s" % warnings.rstrip('\n'))
 
         if consider_nodes:
-            for nid, node in iteritems(self.nodes):
+            for nid, node in self.nodes.items():
                 if node.ps:
                     nids.append(nid)
                     comps.append(node.ps)
@@ -2624,7 +2671,7 @@ class GetCard(GetMethods):
         comps = []
         for mpc in mpcs:
             if mpc.type == 'MPC':
-                for nid, comp, unused_enforced in zip(mpc.gids, mpc.constraints, mpc.enforced):
+                for nid, comp, unused_coefficient in zip(mpc.nodes, mpc.components, mpc.coefficients):
                     nids.append(nid)
                     comps.append(comp)
             else:
@@ -2642,6 +2689,6 @@ class GetCard(GetMethods):
             mklist += mkaero.mklist()
         if mklist:
             mkarray = np.hstack([mklist])
-            new_array = [tuple(row) for row in mkarray]
+            #new_array = [tuple(row) for row in mkarray]
             #unique_pairs = np.lib.arraysetops.unique(new_array, axis=0).tolist()
         return mkarray

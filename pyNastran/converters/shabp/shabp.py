@@ -4,7 +4,6 @@ dfeines:
  - SHABP(log=None, debug=False)
 """
 from __future__ import print_function
-from six.moves import range
 from numpy import array, zeros, arange, ones, cross
 from numpy.linalg import norm  # type: ignore
 

@@ -12,7 +12,6 @@ This file defines:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems
 from warnings import warn
 
 import numpy as np
@@ -118,11 +117,10 @@ def write_bdf_symmetric(bdf_filename, out_filename=None, encoding=None,
     Doesn't equivalence nodes on the centerline.
 
     Considers
-    ---------
-    nodes : GRID
-    elements, rigid_elements, mass_elements : see ``_mirror_elements``
-    loads : see ``_mirror_loads``
-    aero cards : see ``_mirror_aero``
+     - nodes : GRID
+     - elements, rigid_elements, mass_elements : see ``_mirror_elements``
+     - loads : see ``_mirror_loads``
+     - aero cards : see ``_mirror_aero``
 
     """
     #model.write_caero_model()
@@ -145,7 +143,7 @@ def _mirror_nodes(model, plane='xz'):
     iy, plane = _plane_to_iy(plane)
     if model.nodes:
         nid_offset = max(model.node_ids)
-        for (nid, node) in sorted(iteritems(model.nodes)):
+        for (nid, node) in sorted(model.nodes.items()):
             xyz = node.get_position()
             nid2 = nid + nid_offset
             xyz2 = xyz.copy()
@@ -179,8 +177,8 @@ def _mirror_elements(model, nid_offset):
     rigid_elements : N/A
     mass_elements : N/A
 
-    Note
-    ----
+    Notes
+    -----
     Doesn't handle CBAR/CBEAM offsets
     Doesn't handle CBEAM SPOINTs
     """
@@ -212,7 +210,7 @@ def _mirror_elements(model, nid_offset):
                 print(nodes)
                 raise
 
-        for eid, element in sorted(iteritems(model.elements)):
+        for eid, element in sorted(model.elements.items()):
             etype = element.type
             if etype in ['CHBDYG', 'CHBDYE']:
                 continue
@@ -282,7 +280,7 @@ def _mirror_elements(model, nid_offset):
                     raise
 
     if model.rigid_elements:
-        for eid, rigid_element in sorted(iteritems(model.rigid_elements)):
+        for eid, rigid_element in sorted(model.rigid_elements.items()):
             if rigid_element.type == 'RBE2':
                 Gmi_node_ids = rigid_element.Gmi_node_ids
                 Gn = rigid_element.Gn()
@@ -294,7 +292,7 @@ def _mirror_elements(model, nid_offset):
                 ref_grid_id = rigid_element.ref_grid_id
                 Gn = None
             else:
-                msg = '_write_elements_symmetric: %s not implimented' % rigid_element.type
+                msg = '_write_elements_symmetric: %s not implemented' % rigid_element.type
                 warn(msg)
                 continue
                 #raise NotImplementedError(msg)
@@ -327,7 +325,7 @@ def _mirror_loads(model, nid_offset=0, eid_offset=0):
      - PLOAD4
         - no coordinate systems (assumes cid=0)
     """
-    for unused_load_id, loads in iteritems(model.loads):
+    for unused_load_id, loads in model.loads.items():
         for load in loads:
             loads_new = []
             load_type = load.type
@@ -355,19 +353,14 @@ def _mirror_aero(model, nid_offset, plane):
     """
     Mirrors the aero elements
 
-    Considers
-    ---------
-    AEROS
-     - doesn't consider sideslip
-    CAERO1
-     - doesn't consider sideslip
-     - doesn't consider lspan/lchord
-    SPLINE1
-    SET1
-
-    splines : SPLINE1 -> SET1
-    caeros : CAERO1
-    aeros
+    Considers:
+     - AEROS
+      - doesn't consider sideslip
+     - CAERO1
+      - doesn't consider sideslip
+      - doesn't consider lspan/lchord
+     - SPLINE1
+     - SET1
     """
     if model.aeros is not None:
         aeros = model.aeros
@@ -385,7 +378,7 @@ def _mirror_aero(model, nid_offset, plane):
         caero_id_offset = np.max(model.caeros[caero_id_max].box_ids.flat)
 
         caeros = []
-        for unused_caero_id, caero in iteritems(model.caeros):
+        for unused_caero_id, caero in model.caeros.items():
             if caero.type == 'CAERO1':
                 assert caero.lspan == 0, caero
                 assert caero.lchord == 0, caero
@@ -426,7 +419,7 @@ def _mirror_aero(model, nid_offset, plane):
         splines = []
         spline_sets_to_duplicate = []
         spline_max = max(model.splines)
-        for unused_spline_id, spline in iteritems(model.splines):
+        for unused_spline_id, spline in model.splines.items():
             if spline.type == 'SPLINE1':
                 #spline = SPLINE1(eid, caero, box1, box2, setg)
 
@@ -500,13 +493,13 @@ def make_symmetric_model(bdf_filename, plane='xz', zero_tol=1e-12, log=None, deb
     eids_to_remove = []
     caero_ids_to_remove = []
     zero = -zero_tol
-    for eid, elem in iteritems(model.elements):
+    for eid, elem in model.elements.items():
         xyz = elem.Centroid()
 
         if xyz[iy] < zero:
             eids_to_remove.append(eid)
 
-    for nid, node in iteritems(model.nodes):
+    for nid, node in model.nodes.items():
         xyz = node.get_position()
         if xyz[iy] < zero:
             nids_to_remove.append(nid)
@@ -517,7 +510,7 @@ def make_symmetric_model(bdf_filename, plane='xz', zero_tol=1e-12, log=None, deb
     for eid in eids_to_remove:
         del model.elements[eid]
 
-    for caero_id, caero in iteritems(model.caeros):
+    for caero_id, caero in model.caeros.items():
         if caero.type == 'CAERO1':
             p1, p2, p3, p4 = caero.get_points()
             #print(caero)
@@ -544,7 +537,7 @@ def make_symmetric_model(bdf_filename, plane='xz', zero_tol=1e-12, log=None, deb
         del model.caeros[caero_id]
 
     #print('nids_to_remove =', nids_to_remove)
-    for unused_spline_id, spline in iteritems(model.splines):
+    for unused_spline_id, spline in model.splines.items():
         caero = spline.caero
         #setg = spline.setg
         #print('caero = ', caero)
@@ -577,7 +570,7 @@ def make_symmetric_model(bdf_filename, plane='xz', zero_tol=1e-12, log=None, deb
         if aestat.label in labels_to_remove:
             del model.aestats[aestat_id]
 
-    for unused_trim_id, trim in iteritems(model.trims):
+    for unused_trim_id, trim in model.trims.items():
         labels = trim.labels
         ilabels_to_remove = [labels.index(label) for label in labels_to_remove
                              if label in labels]

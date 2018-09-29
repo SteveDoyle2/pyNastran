@@ -11,11 +11,10 @@ All dynamic loads are defined in this file.  This includes:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems, itervalues
-from six.moves import zip
+from six import itervalues
 import numpy as np
 
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, double_or_blank, integer_string_or_blank,
@@ -129,7 +128,7 @@ class ACSRCE(BaseCard):
         # TODO: excite_id = DAREA, FBALOAD, SLOAD
         sloads_ref = {}
         lseqs_ref = {}
-        for load_id, loads in iteritems(model.loads):
+        for load_id, loads in model.loads.items():
             for load in loads:
                 if load.type == 'SLOAD':
                     #if load_id not in sloads_ref:
@@ -493,7 +492,7 @@ class RLOAD1(DynamicLoad):
         #if case_control is not None:
             ##print('cc = %r' % case_control)
             ##print('asdf')
-            #for key, subcase in sorted(iteritems(model.case_control_deck.subcases)):
+            #for key, subcase in sorted(model.case_control_deck.subcases.items()):
                 #print(subcase, type(subcase))
                 #if 'LOADSET' in subcase:
                     #lseq_id = subcase['LOADSET'][0]

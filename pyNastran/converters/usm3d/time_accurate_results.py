@@ -1,7 +1,6 @@
 from __future__ import print_function
 import os
 import multiprocessing as mp
-from six import iteritems
 from numpy import savetxt, arange, zeros
 
 from pyNastran.converters.usm3d.usm3d_reader import Usm3d
@@ -146,7 +145,7 @@ def write_loads(csv_filename, loads, node_id):
     f.write('time\t')
     savetxt(f, t, delimiter='', newline=',')
     f.write('\n')
-    for node_id, Cpi in sorted(iteritems(Cp)):
+    for node_id, Cpi in sorted(Cp.items()):
         f.write("\nnode_id=%i\n" % node_id)
 
         f.write('Cp[%s],' % node_id)

@@ -1,5 +1,3 @@
-from six.moves import zip
-
 from numpy import zeros, unique
 
 #from pyNastran.bdf.field_writer_8 import set_blank_if_default

@@ -8,6 +8,7 @@ np.seterr(all='raise')
 
 
 from pyNastran.gui.testing_methods import FakeGUIMethods
+from pyNastran.converters.tetgen.tetgen_to_usm3d import tetgen_to_usm3d
 from pyNastran.converters.tetgen.tetgen import read_tetgen
 from pyNastran.converters.tetgen.tetgen_io import TetgenIO
 from pyNastran.utils.log import get_logger
@@ -26,6 +27,11 @@ class TetgenGUI(TetgenIO, FakeGUIMethods):
 
 
 class TestTetgenGUI(unittest.TestCase):
+    def test_tetgen_to_usm3d_01(self):
+        #geometry_filename = os.path.join(model_path, 'tetgen_test.1.smesh')
+        base = os.path.join(model_path, 'tetgen_test.1')
+        tetgen_to_usm3d(base)
+
 
     def test_tetgen_geometry_01(self):
         log = get_logger(level='warning')

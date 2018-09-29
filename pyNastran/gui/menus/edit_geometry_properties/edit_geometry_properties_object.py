@@ -3,7 +3,6 @@ defines:
  - EditGeometryPropertiesObject
 """
 from copy import deepcopy
-from six import iteritems
 import numpy as np
 import vtk
 from pyNastran.gui.menus.edit_geometry_properties.manage_actors import EditGeometryProperties
@@ -74,7 +73,7 @@ class EditGeometryPropertiesObject(object):
             self._edit_geometry_properties_window_shown = False
 
     def _save_geometry_properties(self, out_data):
-        for name, group in iteritems(out_data):
+        for name, group in out_data.items():
             if name in ['clicked_ok', 'clicked_cancel']:
                 continue
 
@@ -109,7 +108,7 @@ class EditGeometryPropertiesObject(object):
             # if the button is pushed while the dialog is open. This prevent the
             # case where you close the dialog and the state reverts back to
             # before you hit the button.
-            for name, prop in iteritems(geometry_properties):
+            for name, prop in geometry_properties.items():
                 self._edit_geometry_properties.out_data[name] = prop
                 if self._edit_geometry_properties.active_key == name:
                     index = self._edit_geometry_properties.table.currentIndex()
@@ -134,7 +133,7 @@ class EditGeometryPropertiesObject(object):
         """
         lines = []
         if name is None:
-            for namei, group in iteritems(out_data):
+            for namei, group in out_data.items():
                 if namei in ['clicked_ok', 'clicked_cancel']:
                     continue
                 self._update_ith_geometry_properties(namei, group, lines, render=False)

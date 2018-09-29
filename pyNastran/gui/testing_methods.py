@@ -2,22 +2,39 @@ from __future__ import print_function
 #import os
 from collections import OrderedDict
 
-from six import iteritems, integer_types
+from six import integer_types
+
+from vtk import (
+    vtkTextActor, vtkLODActor, vtkActor,
+    #GeometryProperty,
+    #GridMapper,
+    #Grid,
+    vtkArrowSource,
+    vtkGlyph3D,
+    vtkPolyDataMapper,
+)
+from pyNastran.gui.test.mock_vtk import (
+    GeometryProperty,
+    GridMapper,
+    VTKInteractor, vtkRenderer,
+)
+
+#from pyNastran.gui.test.mock_vtk_bkp import (
+    #Grid,
+    #vtkActor,
+    #vtkArrowSource,
+    #vtkGlyph3D,
+    #vtkPolyDataMapper,
+#)
+import vtk
 
 from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
 from pyNastran.gui.qt_files.scalar_bar import ScalarBar
-from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
+#from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.gui.formats import CLASS_MAP
 
-from pyNastran.bdf.cards.base_card import deprecated
+#from pyNastran.bdf.cards.base_card import deprecated
 from pyNastran.utils.log import get_logger
-
-from pyNastran.gui.test.mock_vtk import (
-    GeometryProperty, GridMapper, # Grid, vtkActor,
-    ArrowSource, Glyph3D, PolyDataMapper, VTKInteractor, vtkRenderer,
-)
-from vtk import vtkTextActor, vtkLODActor, vtkActor
-import vtk
 
 #class ScalarBar(object):
     #def VisibilityOff(self):
@@ -96,9 +113,9 @@ class FakeGUIMethods(GuiCommon):
             'main' :  vtkActor(),
         }
 
-        self.glyph_source = ArrowSource()
-        self.glyphs = Glyph3D()
-        self.glyph_mapper = PolyDataMapper()
+        self.glyph_source = vtkArrowSource()
+        self.glyphs = vtkGlyph3D()
+        self.glyph_mapper = vtkPolyDataMapper()
         self.arrow_actor = vtkLODActor()
         self.arrow_actor_centroid = vtkLODActor()
 
@@ -185,36 +202,37 @@ class FakeGUIMethods(GuiCommon):
                     key, type(value[0]), value))
             #assert len(value) == 2, 'value=%s; len=%s' % (str(value), len(value))
 
-            subcase_id = obj.subcase_id
-            case = obj.get_result(i, name)
+            unused_subcase_id = obj.subcase_id
+            unused_case = obj.get_result(i, name)
             unused_result_type = obj.get_title(i, name)
             vector_size = obj.get_vector_size(i, name)
             #location = obj.get_location(i, name)
-            methods = obj.get_methods(i)
-            data_format = obj.get_data_format(i, name)
+            unused_methods = obj.get_methods(i)
+            unused_data_format = obj.get_data_format(i, name)
             scale = obj.get_scale(i, name)
             phase = obj.get_phase(i, name)
             unused_label2 = obj.get_header(i, name)
             unused_flag = obj.is_normal_result(i, name)
             #scalar_result = obj.get_scalar(i, name)
-            nlabels, labelsize, ncolors, colormap = obj.get_nlabels_labelsize_ncolors_colormap(i, name)
+            nlabels, labelsize, ncolors, colormap = obj.get_nlabels_labelsize_ncolors_colormap(
+                i, name)
             if vector_size == 3:
-                plot_value = obj.get_plot_value(i, name) # vector
+                unused_plot_value = obj.get_plot_value(i, name) # vector
                 scale = 1.0
                 phase = 2.0
                 obj.set_scale(i, name, scale)
                 obj.set_phase(i, name, phase)
                 assert obj.deflects(i, name) in [True, False], obj.deflects(i, name)
-                xyz, deflected_xyz = obj.get_vector_result(i, name)
+                unused_xyz, unused_deflected_xyz = obj.get_vector_result(i, name)
             else:
-                scalar_result = obj.get_scalar(i, name)
+                unused_scalar_result = obj.get_scalar(i, name)
 
 
-            default_data_format = obj.get_default_data_format(i, name)
-            default_min, default_max = obj.get_default_min_max(i, name)
-            default_scale = obj.get_default_scale(i, name)
-            default_title = obj.get_default_title(i, name)
-            default_phase = obj.get_default_phase(i, name)
+            unused_default_data_format = obj.get_default_data_format(i, name)
+            default_min, unused_default_max = obj.get_default_min_max(i, name)
+            unused_default_scale = obj.get_default_scale(i, name)
+            unused_default_title = obj.get_default_title(i, name)
+            unused_default_phase = obj.get_default_phase(i, name)
             out_labels = obj.get_default_nlabels_labelsize_ncolors_colormap(i, name)
             nlabels = 4
             labelsize = 10
@@ -222,10 +240,11 @@ class FakeGUIMethods(GuiCommon):
             colormap = 'jet'
             obj.set_nlabels_labelsize_ncolors_colormap(
                 i, name, nlabels, labelsize, ncolors, colormap)
-            default_nlabels, default_labelsize, default_ncolors, default_colormap = out_labels
+            (unused_default_nlabels, unused_default_labelsize,
+             unused_default_ncolors, unused_default_colormap) = out_labels
 
             #default_max, default_min = obj.get_default_min_max(i, name)
-            min_value, max_value = obj.get_min_max(i, name)
+            unused_min_value, unused_max_value = obj.get_min_max(i, name)
 
         self.result_cases = cases
 
@@ -271,7 +290,7 @@ class FakeGUIMethods(GuiCommon):
         return 1 * self.settings.dim_max
 
     def _add_alt_actors(self, alt_grids):
-        for name, grid in iteritems(alt_grids):
+        for name, unused_grid in alt_grids.items():
             self.geometry_actors[name] = vtkActor()
 
     #test.log_error = log_error
@@ -301,4 +320,3 @@ class FakeGUIMethods(GuiCommon):
     def setFont(self, font):
         """fake QMainWindow method"""
         pass
-

@@ -18,7 +18,6 @@ defines:
  - repr_settings(settings)
 """
 from __future__ import print_function
-from six import itervalues, iteritems # PY3
 import numpy as np
 from qtpy import QtGui
 
@@ -298,13 +297,13 @@ class Settings(object):
         self.annotation_size = size
 
         # case attached annotations (typical)
-        for follower_actors in itervalues(self.parent.label_actors):
+        for follower_actors in self.parent.label_actors.values():
             for follower_actor in follower_actors:
                 follower_actor.GetTextProperty().SetFontSize(size)
                 follower_actor.Modified()
 
         # geometry property attached annotations (e.g., flaps)
-        for obj in itervalues(self.parent.geometry_properties):
+        for obj in self.parent.geometry_properties.values():
             if isinstance(obj, CoordProperties):
                 continue
             elif isinstance(obj, AltGeometry):
@@ -338,7 +337,7 @@ class Settings(object):
         dim_max = self.dim_max
         scale = coord_scale * dim_max
 
-        for unused_coord_id, axes in iteritems(self.parent.axes):
+        for unused_coord_id, axes in self.parent.axes.items():
             axes.SetTotalLength(scale, scale, scale)
         if render:
             self.parent.vtk_interactor.GetRenderWindow().Render()
@@ -348,7 +347,7 @@ class Settings(object):
         if coord_text_scale is None:
             coord_text_scale = self.coord_text_scale
 
-        for unused_coord_id, axes in iteritems(self.parent.axes):
+        for unused_coord_id, axes in self.parent.axes.items():
             texts = [
                 axes.GetXAxisCaptionActor2D(),
                 axes.GetYAxisCaptionActor2D(),
@@ -379,13 +378,13 @@ class Settings(object):
         self.annotation_color = color
 
         # case attached annotations (typical)
-        for follower_actors in itervalues(self.parent.label_actors):
+        for follower_actors in self.parent.label_actors.values():
             for follower_actor in follower_actors:
                 prop = follower_actor.GetProperty()
                 prop.SetColor(*color)
 
         # geometry property attached annotations (e.g., flaps)
-        for obj in itervalues(self.parent.geometry_properties):
+        for obj in self.parent.geometry_properties.values():
             if isinstance(obj, CoordProperties):
                 continue
             elif isinstance(obj, AltGeometry):
@@ -458,7 +457,7 @@ class Settings(object):
             RGB values as floats
         """
         self.text_color = color
-        for text_actor in itervalues(self.parent.text_actors):
+        for text_actor in self.parent.text_actors.values():
             text_actor.GetTextProperty().SetColor(color)
         if render:
             self.parent.vtk_interactor.Render()
@@ -476,7 +475,7 @@ class Settings(object):
         i = 0
         dtext_size = text_size + 1
         self.text_size = text_size
-        for text_actor in itervalues(self.parent.text_actors):
+        for text_actor in self.parent.text_actors.values():
             text_prop = text_actor.GetTextProperty()
             text_prop.SetFontSize(text_size)
 
@@ -490,7 +489,7 @@ class Settings(object):
     def update_text_size(self, magnify=1.0):
         """Internal method for updating the bottom-left text when we go to take a picture"""
         text_size = int(14 * magnify)
-        for text_actor in itervalues(self.parent.text_actors):
+        for text_actor in self.parent.text_actors.values():
             text_prop = text_actor.GetTextProperty()
             text_prop.SetFontSize(text_size)
 

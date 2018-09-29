@@ -4,8 +4,6 @@ defines:
 """
 # -*- coding: utf-8 -*-
 from __future__ import print_function, unicode_literals, absolute_import
-from six import iteritems
-
 from numpy import setdiff1d, unique, hstack
 
 from qtpy import QtGui
@@ -46,7 +44,7 @@ class GroupsModify(PyDialog):
 
         #print(data)
         keys = []
-        self.keys = [group.name for key, group in sorted(iteritems(data)) if isinstance(key, int)]
+        self.keys = [group.name for key, group in sorted(data.items()) if isinstance(key, int)]
         self.active_key = self.keys.index(group_active)
 
         group_obj = data[self.active_key]
@@ -219,7 +217,7 @@ class GroupsModify(PyDialog):
         #make the new group the default
         self.active_key = self.nrows - 1
 
-        self.keys = [group.name for key, group in sorted(iteritems(self.out_data)) if isinstance(key, int)]
+        self.keys = [group.name for key, group in sorted(self.out_data.items()) if isinstance(key, int)]
         self.recreate_table()
 
     def recreate_table(self):
@@ -245,7 +243,7 @@ class GroupsModify(PyDialog):
         #self.deleted_groups.add(self.imain)
         items = {}
         j = 0
-        for i, key in sorted(iteritems(self.out_data)):
+        for i, key in sorted(self.out_data.items()):
             if isinstance(i, int):
                 continue
             if i != self.active_key:
@@ -258,7 +256,7 @@ class GroupsModify(PyDialog):
             self.imain = max(0, self.imain - 1)
         self.active_key = max(0, self.active_key - 1)
         self.nrows -= 1
-        self.keys = [group.name for key, group in sorted(iteritems(items))]
+        self.keys = [group.name for key, group in sorted(items.items())]
 
         self.recreate_table()
 

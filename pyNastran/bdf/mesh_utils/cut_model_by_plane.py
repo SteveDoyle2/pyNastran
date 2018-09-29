@@ -11,7 +11,7 @@ defines:
 from __future__ import print_function
 from itertools import count
 
-from six import iterkeys, iteritems
+from six import iterkeys
 import numpy as np
 from pyNastran.bdf.cards.coordinate_systems import CORD2R
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -64,7 +64,7 @@ def _setup_faces(bdf_filename):
         'CTRIA3', 'CTRIAX', 'CTRIA6', 'CTRIAX6',
         'CQUAD4', 'CQUAD', 'CQUAD8', 'CQUADR', 'CQUADX', 'CQUADX8',
         'CSHEAR'])
-    for eid, elem in iteritems(model.elements):
+    for eid, elem in model.elements.items():
         if elem.type in shells:
             #if elem.type == 'CQUAD4':
                 # split to 2 faces...not done
@@ -224,10 +224,10 @@ def _p1_p2_zaxis_to_cord2r(model, p1, p2, zaxis, method='Z-Axis Projection',
     p1 = np.asarray(p1)
     p2 = np.asarray(p2)
     zaxis = np.asarray(zaxis)
-    print("coord:")
-    print('  p1 =', p1)
-    print('  p2 =', p2)
-    print('  zaxis =', zaxis)
+    #print("coord:")
+    #print('  p1 =', p1)
+    #print('  p2 =', p2)
+    #print('  zaxis =', zaxis)
 
     xyz1 = model.coords[cid_p1].transform_node_to_global(p1)
     xyz2 = model.coords[cid_p2].transform_node_to_global(p2)
@@ -752,7 +752,7 @@ def _unique_face_rows(geometry_array, results_array, nodes, skip_cleanup=True):
 
     unused_iedges, unique_geometry_array2, unique_results_array2 = connect_face_rows(
         unique_geometry_array, unique_results_array, skip_cleanup=skip_cleanup)
-    print('iedges =', unused_iedges)
+    #print('iedges =', unused_iedges)
     return unique_geometry_array2, unique_results_array2
 
 def connect_face_rows(geometry_array, results_array, skip_cleanup=True):
@@ -764,7 +764,7 @@ def connect_face_rows(geometry_array, results_array, skip_cleanup=True):
     """
     # temp
     nedges = geometry_array.shape[0]
-    print('skip_cleanup=%s' % skip_cleanup)
+    #print('skip_cleanup=%s' % skip_cleanup)
     if skip_cleanup:
         iedges = np.arange(0, nedges)
         return [iedges], [geometry_array], [results_array]
@@ -983,9 +983,9 @@ def _interpolate_face_to_bar(nodes, eid, eid_new, nid_new, mid, area, J, fbdf,
     3    e13, e23    1., 1.
     """
     #print('edge =', edge)
-    if eid == 11029:
-        print('eid=%s inid1=%s, inid2=%s, inid3=%s' % (eid, inid1, inid2, inid3))
-        print('nid1=%s, nid2=%s, nid3=%s' % (nodes[inid1], nodes[inid2], nodes[inid3]))
+    #if eid == 11029:
+        #print('eid=%s inid1=%s, inid2=%s, inid3=%s' % (eid, inid1, inid2, inid3))
+        #print('nid1=%s, nid2=%s, nid3=%s' % (nodes[inid1], nodes[inid2], nodes[inid3]))
 
     edgesi = (
         # (nid_index, xyz in local frame, xyz in global frame

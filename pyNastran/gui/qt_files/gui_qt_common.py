@@ -8,7 +8,6 @@ This file defines functions related to the result updating that are VTK specific
 from __future__ import print_function, unicode_literals
 import sys
 from copy import deepcopy
-from six import iteritems, iterkeys
 
 import numpy as np
 from numpy import full, issubdtype
@@ -16,7 +15,7 @@ from numpy.linalg import norm  # type: ignore
 import vtk
 
 import pyNastran
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.gui.gui_objects.names_storage import NamesStorage
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.gui.qt_files.gui_attributes import GuiAttributes
@@ -598,13 +597,20 @@ class GuiCommon(GuiAttributes):
 
     def cycle_results_explicit(self, case=None, explicit=True, min_value=None, max_value=None,
                                show_msg=True):
+        """
+        Forces the result to cycle regardless of whether or not the
+        icase value is the same.  You'd do this when you've just
+        loaded a model.
+
+        """
         assert case is not False, case
         #if explicit:
             #self.log_command('cycle_results(case=%r)' % case)
         found_cases = self.increment_cycle(case)
         if found_cases:
             icase = self._set_case(case, self.icase, explicit=explicit, cycle=True,
-                                   min_value=min_value, max_value=max_value, show_msg=show_msg)
+                                   min_value=min_value, max_value=max_value,
+                                   show_msg=show_msg)
             assert icase is not False, case
         else:
             icase = None
@@ -1216,7 +1222,7 @@ class GuiCommon(GuiAttributes):
 
     def _update_follower_grids(self, nodes):
         """updates grids that use the same ids as the parent model"""
-        for name, nids in iteritems(self.follower_nodes):
+        for name, nids in self.follower_nodes.items():
             grid = self.alt_grids[name]
             points = grid.GetPoints()
             for j, nid in enumerate(nids):
@@ -1226,7 +1232,7 @@ class GuiCommon(GuiAttributes):
 
     def _update_follower_grids_complex(self, nodes):
         """updates grids that use a complicated update method"""
-        for name, follower_function in iteritems(self.follower_functions):
+        for name, follower_function in self.follower_functions.items():
             grid = self.alt_grids[name]
             points = grid.GetPoints()
             follower_function(self.nid_map, grid, points, nodes)
@@ -1239,7 +1245,7 @@ class GuiCommon(GuiAttributes):
         #print('result_cases.keys() =', self.result_cases.keys())
         i = 0
         icase = None
-        for icase in sorted(iterkeys(self.result_cases)):
+        for icase in sorted(self.result_cases.keys()):
             #cases = self.result_cases[icase]
             if result_name == icase[1]:
                 unused_found_case = True

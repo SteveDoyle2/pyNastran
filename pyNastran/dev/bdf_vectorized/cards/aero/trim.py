@@ -1,4 +1,3 @@
-from six.moves import zip
 from itertools import count
 
 from pyNastran.bdf.field_writer_8 import print_card_8

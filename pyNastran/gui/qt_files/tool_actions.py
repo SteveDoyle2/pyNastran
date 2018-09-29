@@ -3,14 +3,15 @@ from __future__ import print_function
 import os
 import traceback
 
-from six import iteritems, itervalues, string_types
+from six import string_types
 
 import numpy as np
 import vtk
 
 from qtpy.compat import getsavefilename
 
-from pyNastran.utils import print_bad_path, integer_types
+from pyNastran.utils import print_bad_path, check_path
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.gui.gui_objects.coord_properties import CoordProperties
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
 from pyNastran.gui.utils.load_results import load_user_geom
@@ -214,12 +215,12 @@ class ToolActions(object):
 
     def turn_text_off(self):
         """turns all the text actors off"""
-        for text in itervalues(self.gui.text_actors):
+        for text in self.gui.text_actors.values():
             text.VisibilityOff()
 
     def turn_text_on(self):
         """turns all the text actors on"""
-        for text in itervalues(self.gui.text_actors):
+        for text in self.gui.text_actors.values():
             text.VisibilityOn()
 
     #---------------------------------------------------------------------------
@@ -338,7 +339,7 @@ class ToolActions(object):
         # multiply linewidth by magnify
         line_widths0 = {}
         point_sizes0 = {}
-        for key, geom_actor in iteritems(self.gui.geometry_actors):
+        for key, geom_actor in self.gui.geometry_actors.items():
             if isinstance(geom_actor, vtk.vtkActor):
                 prop = geom_actor.GetProperty()
                 line_width0 = prop.GetLineWidth()
@@ -368,7 +369,7 @@ class ToolActions(object):
         axes_actor.SetVisibility(True)
 
         # set linewidth back
-        for key, geom_actor in iteritems(self.gui.geometry_actors):
+        for key, geom_actor in self.gui.geometry_actors.items():
             if isinstance(geom_actor, vtk.vtkActor):
                 prop = geom_actor.GetProperty()
                 prop.SetLineWidth(line_widths0[key])
@@ -604,7 +605,7 @@ class ToolActions(object):
         """
         is_failed = True
         try:
-            assert os.path.exists(csv_points_filename), print_bad_path(csv_points_filename)
+            check_path(csv_points_filename, 'csv_points_filename')
             # read input file
             try:
                 user_points = np.loadtxt(csv_points_filename, delimiter=',')
@@ -812,9 +813,7 @@ def _remove_invalid_filename_characters(basename):
     Invalid for Linux
      / (forward slash)
 
-    TODO
-    ----
-    do a check for linux
+    .. todo:: do a check for linux
     """
     invalid_chars = ':*?<>|/\\'
     for char in invalid_chars:

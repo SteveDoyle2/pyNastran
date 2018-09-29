@@ -14,7 +14,7 @@ from six import string_types
 import numpy as np
 from numpy.linalg import norm
 
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import BaseCard, Element
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -477,17 +477,7 @@ class CBAR(LineElement):
             msg = 'G0=%s cannot be GA=%s or GB=%s' % (self.g0, self.ga, self.gb)
             raise RuntimeError(msg)
 
-        self.check_offt()
-
-    def check_offt(self):
-        """
-        B,G,O
-        Note: The character 'O' in the table replaces the obsolete character 'E'
-        """
-        msg = 'invalid offt parameter of %s...offt=%s' % (self.type, self.offt)
-        assert self.offt[0] in ['G', 'B'], msg
-        assert self.offt[1] in ['G', 'O', 'E'], msg
-        assert self.offt[2] in ['G', 'O', 'E'], msg
+        check_offt(self)
 
     @classmethod
     def add_card(cls, card, baror=None, comment=''):
@@ -577,7 +567,7 @@ class CBAR(LineElement):
         unused_pid = self.Pid()
         unused_edges = self.get_edge_ids()
         if xref:  # True
-            assert self.pid_ref.type in ['PBAR', 'PBARL'], '%s%s' % (self, self.pid_ref)
+            assert self.pid_ref.type in ['PBAR', 'PBARL', 'PBRSECT'], '%s%s' % (self, self.pid_ref)
             mid = self.Mid()
             A = self.Area()
             nsm = self.Nsm()
@@ -731,8 +721,8 @@ class CBAR(LineElement):
             g0 : List[int, None, None]
             x : List[float, float, float]
 
-        Note
-        ----
+        Notes
+        -----
         Used by CBAR and CBEAM
         """
         if self.g0 is not None:
@@ -876,6 +866,7 @@ class CBEAM3(LineElement):  # was CBAR
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
@@ -898,13 +889,14 @@ class CBEAM3(LineElement):  # was CBAR
                        double_or_blank(card, 16, 'w2c', 0.0),
                        double_or_blank(card, 17, 'w3c', 0.0)], dtype='float64')
 
-        tw = np.array([double_or_blank(card, 18, 0., 'twa'),
-                       double_or_blank(card, 19, 0., 'twb'),
-                       double_or_blank(card, 20, 0., 'twc')], dtype='float64')
+        tw = np.array([double_or_blank(card, 18, 'twa', 0.),
+                       double_or_blank(card, 19, 'twb', 0.),
+                       double_or_blank(card, 20, 'twc', 0.)], dtype='float64')
 
-        s = np.array([integer_or_blank(card, 21, 'sa'),
-                      integer_or_blank(card, 22, 'sb'),
-                      integer_or_blank(card, 23, 'sc')], dtype='int32')
+        # TODO: what are the defaults?
+        s = np.array([integer_or_blank(card, 21, 'sa', -1),
+                      integer_or_blank(card, 22, 'sb', -1),
+                      integer_or_blank(card, 23, 'sc', -1)], dtype='int32')
         assert len(card) <= 24, 'len(CBEAM3 card) = %i\ncard=%s' % (len(card), card)
         return CBEAM3(eid, pid, [ga, gb, gc], x, g0,
                       wa, wb, wc, tw, s, comment=comment)
@@ -917,6 +909,7 @@ class CBEAM3(LineElement):  # was CBAR
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by CBEAM3 eid=%s' % (self.eid)
         self.ga_ref = model.Node(self.ga, msg=msg)
@@ -986,8 +979,8 @@ class CBEAM3(LineElement):  # was CBAR
         return [self.Ga(), self.Gb(), self.Gc()]
 
     def raw_fields(self):
-        (x1, x2, x3) = self.get_x_g0_defaults()
-        (ga, gb, gc) = self.node_ids
+        x1, x2, x3 = self.get_x_g0_defaults()
+        ga, gb, gc = self.node_ids
         list_fields = ['CBEAM3', self.eid, self.Pid(), ga, gb, gc, x1, x2, x3] + \
                   list(self.wa) + list(self.wb) + list(self.wc) + list(self.tw) + list(self.s)
         return list_fields
@@ -1048,7 +1041,7 @@ class CBEND(LineElement):
 
     def __init__(self, eid, pid, nids, g0, x, geom, comment=''):
         """
-        Creates a CEND card
+        Creates a CBEND card
 
         Parameters
         ----------
@@ -1062,8 +1055,18 @@ class CBEND(LineElement):
             ???
         x : List[float, float, float]
             ???
-        geom : ???
-            ???
+        geom : int
+            1 : The center of curvature lies on the line AO (or its extension) or vector v.
+            2 : The tangent of centroid arc at end A is parallel to line AO or vector v.
+                Point O (or vector v) and the arc must be on the same side of the chord AB.
+            3 : The bend radius (RB) is specified on the PBEND entry:
+                Points A, B, and O (or vector v) define a plane parallel or coincident
+                with the plane of the element arc. Point O (or vector v) lies on the
+                opposite side of line AB from the center of the curvature.
+            4 : THETAB is specified on the PBEND entry. Points A, B, and O (or vector v)
+                define a plane parallel or coincident with the plane of the element arc.
+                Point O (or vector v) lies on the opposite side of line AB from the center
+                of curvature.
         comment : str; default=''
             a comment for the card
         """
@@ -1408,8 +1411,10 @@ def rotate_v_wa_wb(model, elem, xyz1, xyz2, node1, node2, ihat_offset, i_offset,
     xform : (3, 3) float ndarray
         a vstack of the [ihat, jhat, khat] axes
 
-    OFFT flag
-    ---------
+    Notes
+    -----
+    This section details the OFFT flag.
+
     ABC or A-B-C (an example is G-G-G or B-G-G)
     while the slots are:
      - A -> orientation; values=[G, B]
@@ -1432,7 +1437,7 @@ def rotate_v_wa_wb(model, elem, xyz1, xyz2, node1, node2, ihat_offset, i_offset,
     - orientation -> wa/wb are defined in the xform_offset (yz) frame;
                      this is likely the easiest frame for a user
     """
-    elem.check_offt()
+    check_offt(elem)
     v, cd1, cd1_ref, cd2, cd2_ref = get_bar_vector(model, elem, node1, node2, xyz1)
 
     #--------------------------------------------------------------------------
@@ -1573,3 +1578,13 @@ def get_bar_yz_transform(v, ihat, eid, xyz1, xyz2, nid1, nid2, i, Li):
               ' v=%s i=%s n%s=%s n%s=%s' % (
                   eid, Li, norm(yhat), norm(zhat), v, i, nid1, xyz1, nid2, xyz2))
     return yhat, zhat
+
+def check_offt(element):
+    """
+    B,G,O
+    Note: The character 'O' in the table replaces the obsolete character 'E'
+    """
+    msg = 'invalid offt parameter of %s...offt=%s' % (element.type, element.offt)
+    assert element.offt[0] in ['G', 'B'], msg
+    assert element.offt[1] in ['G', 'O', 'E'], msg
+    assert element.offt[2] in ['G', 'O', 'E'], msg

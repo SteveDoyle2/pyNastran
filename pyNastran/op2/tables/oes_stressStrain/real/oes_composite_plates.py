@@ -1,7 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import integer_types
-from six.moves import zip, range
 import numpy as np
 from numpy import zeros, searchsorted, unique, ravel
 
@@ -80,12 +79,24 @@ class RealCompositePlateArray(OES_Object):
         dtype = 'float32'
         if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
-        self._times = zeros(self.ntimes, dtype=dtype)
 
-        self.element_layer = zeros((self.ntotal, 2), dtype='int32')
+        _times = zeros(self.ntimes, dtype=dtype)
+        element_layer = zeros((self.ntotal, 2), dtype='int32')
 
         #[o11, o22, t12, t1z, t2z, angle, major, minor, ovm]
-        self.data = zeros((self.ntimes, self.ntotal, 9), dtype='float32')
+        data = zeros((self.ntimes, self.ntotal, 9), dtype='float32')
+
+        if self.load_as_h5:
+            #for key, value in sorted(self.data_code.items()):
+                #print(key, value)
+            group = self._get_result_group()
+            self._times = group.create_dataset('_times', data=_times)
+            self.element_layer = group.create_dataset('element_layer', data=element_layer)
+            self.data = group.create_dataset('data', data=data)
+        else:
+            self._times = _times
+            self.element_layer = element_layer
+            self.data = data
 
     def build_dataframe(self):
         """
@@ -109,7 +120,7 @@ class RealCompositePlateArray(OES_Object):
         """
         headers = self.get_headers()
         element_layer = [self.element_layer[:, 0], self.element_layer[:, 1]]
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=element_layer, minor_axis=headers).to_frame()
@@ -175,7 +186,7 @@ class RealCompositePlateArray(OES_Object):
                   major, minor, ovm):
         """unvectorized method for adding SORT1 transient data"""
         assert eid is not None
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self.element_layer[self.itotal, :] = [eid, layer]
         self.data[self.itime, self.itotal, :] = [o11, o22, t12, t1z, t2z, angle, major, minor, ovm]
         self.itotal += 1
@@ -196,7 +207,7 @@ class RealCompositePlateArray(OES_Object):
         nelements = len(unique(self.element_layer[:, 0]))
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i ntotal=%i\n'
                        % (self.__class__.__name__, ntimes, nelements, ntotal))
             ntimes_word = 'ntimes'

@@ -1,6 +1,5 @@
 from __future__ import print_function
 from collections import defaultdict
-from six import  iteritems
 from six.moves import StringIO
 from numpy import array, union1d
 from pyNastran.dev.bdf_vectorized.cards.loads.load import LOAD
@@ -62,7 +61,7 @@ class VectorizedCardDict(object):
         return self._objs[load_id]
 
     def items(self):
-        for key, value in iteritems(self._objs):
+        for key, value in self._objs.items():
             yield key, value
 
     def iteritems(self):
@@ -203,19 +202,19 @@ class Loads(object):
 
         else:
             #self.loadcase.write_card(bdf_file, size)
-            for load_id, loads in sorted(iteritems(self.load)):
+            for load_id, loads in sorted(self.load.items()):
                 for load in loads:
                     load.write_card(bdf_file, size)
 
-            for load_id, loads in sorted(iteritems(self.dload)):
+            for load_id, loads in sorted(self.dload.items()):
                 for load in loads:
                     load.write_card(bdf_file, size)
 
-            #for load_id, loads in sorted(iteritems(self.sload)):
+            #for load_id, loads in sorted(self.sload.items()):
                 #for load in loads:
                     #load.write_card(bdf_file, size)
 
-            #for load_id, loads in sorted(iteritems(self.lseq)):
+            #for load_id, loads in sorted(self.lseq.items()):
                 #for load in loads:
                     #load.write_card(bdf_file, size)
 

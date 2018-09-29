@@ -10,7 +10,6 @@ defines:
 """
 from __future__ import print_function
 from codecs import open
-from six.moves import range
 from numpy import array, zeros
 from pyNastran.utils.log import get_logger2
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -121,7 +120,7 @@ class Tetgen(object):
             iline = 1
             nelements, unused_zero = lines[iline].split() # nelements, 0
             nelements = int(nelements)
-            self.log.info('nelements = %s' % nelements)
+            self.log.debug('nelements = %s' % nelements)
 
             # facet section
             tri_list = []

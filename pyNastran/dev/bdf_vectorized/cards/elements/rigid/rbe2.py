@@ -1,6 +1,4 @@
 from __future__ import print_function
-from six import iteritems
-from six.moves import zip, range
 from itertools import count
 
 from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_double, components_or_blank)
@@ -78,7 +76,7 @@ class RBE2(object):
 
         Gmi = {}
         j = 0
-        for ii, gmi in iteritems(self.gmi):
+        for ii, gmi in self.gmi.items():
             #print(gmi)
             if ii in i:
                 Gmi[j] = gmi

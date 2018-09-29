@@ -9,9 +9,10 @@ defines:
 """
 from __future__ import print_function
 from collections import defaultdict
-from six import iteritems
+from six import string_types
 from numpy import array, allclose, unique, zeros
 from pyNastran.bdf.bdf import read_bdf
+from codecs import open
 
 from pyNastran.bdf.mesh_utils.bdf_equivalence import bdf_equivalence_nodes
 from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
@@ -35,8 +36,8 @@ def clear_out_solids(bdf_filename, bdf_filename_out=None,
 
     print('clearing out solids from %s' % bdf_filename)
     model = read_bdf(bdf_filename, xref=False)
-    #nodes2    = {nid, node for nid, node in iteritems(model.nodes)}
-    #elements2 = {eid, element for eid, element in iteritems(model.elements)
+    #nodes2    = {nid, node for nid, node in model.nodes.items()}
+    #elements2 = {eid, element for eid, element in model.elements.items()
                  #if element.type in ['CTRIA3', 'CQUAD4']}
 
     out_dict = model.get_card_ids_by_card_types(card_types=['CTRIA3', 'CQUAD4'])
@@ -58,17 +59,16 @@ def clear_out_solids(bdf_filename, bdf_filename_out=None,
     nids = set([])
     unused_elements2 = {}
     print(model.elements)
-    for eid, element in iteritems(model.elements):
+    for eid, element in model.elements.items():
         #if element.type not in ['CTRIA3', 'CQUAD4']:
             #continue
         #elements2[eid] = element
         nids.update(element.node_ids)
     nids = list(nids)
     nids.sort()
-    #print('nids = ', nids)
-    #print('eids = ', eids)
-    nodes2 = {nid : node for nid, node in iteritems(model.nodes) if nid in nids}
-    properties2 = {pid : prop for pid, prop in iteritems(model.properties) if prop.type == 'PSHELL'}
+
+    nodes2 = {nid : node for nid, node in model.nodes.items() if nid in nids}
+    properties2 = {pid : prop for pid, prop in model.properties.items() if prop.type == 'PSHELL'}
 
     model.nodes = nodes2
     #model.elements = elements2
@@ -112,9 +112,9 @@ def nastran_to_surf(bdf_filename, pid_to_element_flags, surf_filename,
 
     Parameters
     ----------
-    bdf_filename : str
-        the input BDF filename (supported)
-        a BDF model that has been cross-referenced(unsupported)
+    bdf_filename : str/BDF
+        str : the input BDF filename
+        BDF : a BDF model that has been cross-referenced
     surf_filename : str
         the output SURF filename
     pid_to_element_flags : dict[key] = value
@@ -131,6 +131,9 @@ def nastran_to_surf(bdf_filename, pid_to_element_flags, surf_filename,
         scales the mesh by scale for unit conversion
     tol : float; default=1e-16
         I hate 1e-16 values in my model
+    xref : bool; default=True
+        does the model need to be cross-referenced to calculate the
+        node positions?
 
     # these pids correspond to the BDF
     pid_to_element_flags = {
@@ -172,107 +175,57 @@ def nastran_to_surf(bdf_filename, pid_to_element_flags, surf_filename,
     if line_map is None:
         line_map = {}
 
-    if isinstance(bdf_filename, str):
+    if isinstance(bdf_filename, string_types):
         model = read_bdf(bdf_filename, xref=xref)
     else:
-        pass
+        model = bdf_filename
 
     unused_nnodes = len(model.nodes)
-    #ntris = 0
-    #nquads = 0
     nodes = []
     quads = []
     tris = []
 
-    node_flags = {}
-    node_flags_temp = {}
-
-    # assume nodes go from 1:#
-    nid0 = 1
-
-    maxnode = max(model.nodes.keys())
-    nodes = zeros((maxnode, 3), dtype='float64')
-
-    if xref:
-        for nid, node in sorted(iteritems(model.nodes)):
-            #if nid != nid0:
-                #msg = 'nodes must go from 1 to N, no gaps; nid=%s expected=%s' % (nid, nid0)
-                #raise RuntimeError(msg)
-            xyz = node.get_position()
-            nodes[nid-1] = xyz * scale
-            node_flags[nid] = []
-            node_flags_temp[nid] = []
-            nid0 += 1
-    else:
-        for nid, node in sorted(iteritems(model.nodes)):
-            #if nid != nid0:
-                #msg = 'nodes must go from 1 to N, no gaps; nid=%s expected=%s' % (nid, nid0)
-                #raise RuntimeError(msg)
-            xyz = node.xyz
-            nodes[nid-1] = xyz * scale
-            node_flags[nid] = []
-            node_flags_temp[nid] = []
-            nid0 += 1
+    maxnode, nodes, node_flags, node_flags_temp = _get_nodes(model, scale, xref)
 
     node_remaps = {}
-    if 0:
-        xyz_array = array(nodes, dtype='float64')
-        for nid, xyz in enumerate(xyz_array):
-            for nidi, xyz2 in enumerate(xyz_array[nid+1:, :]):
-                nid2 = nid + nidi + 1
-                if not allclose(nid + 1, nid2 + 1):
-                    msg = 'nid=%s nid2=%s xyz=%s' % (nid+1, nid2+1, xyz)
-                    raise RuntimeError(msg)
-                if allclose(xyz, xyz2):
-                    #print(nid, nid2, nidi)
-                    #if nid + 1 in node_remaps:
+    #if 0:
+        #xyz_array = array(nodes, dtype='float64')
+        #for nid, xyz in enumerate(xyz_array):
+            #for nidi, xyz2 in enumerate(xyz_array[nid+1:, :]):
+                #nid2 = nid + nidi + 1
+                #if not allclose(nid + 1, nid2 + 1):
+                    #msg = 'nid=%s nid2=%s xyz=%s' % (nid+1, nid2+1, xyz)
+                    #raise RuntimeError(msg)
+                #if allclose(xyz, xyz2):
+                    ##print(nid, nid2, nidi)
+                    ##if nid + 1 in node_remaps:
 
-                    node_remaps[nid2 + 1] = nid + 1
-                    print('nid=%s nid2=%s xyz=%s xyz2=%s' % (nid+1, nid2+1, xyz, xyz2))
-                assert not(allclose(xyz, xyz2)), 'nid=%s nid2=%s xyz=%s' % (nid+1, nid2+1, xyz)
-        del xyz_array
+                    #node_remaps[nid2 + 1] = nid + 1
+                    #print('nid=%s nid2=%s xyz=%s xyz2=%s' % (nid+1, nid2+1, xyz, xyz2))
+                #assert not(allclose(xyz, xyz2)), 'nid=%s nid2=%s xyz=%s' % (nid+1, nid2+1, xyz)
+        #del xyz_array
 
     pid0 = 1
-    for pid, prop in sorted(iteritems(model.properties)):
+    for pid, prop in sorted(model.properties.items()):
         if pid != pid0:
-            msg = 'properties must go from 1 to N, no gaps; pid=%s expected=%s' % (pid, pid0)
+            msg = 'properties must go from 1 to N, no gaps; pid=%s expected=%s' % (
+                pid, pid0)
             raise RuntimeError(msg)
         #assert pid in pid_to_element_flags, pid
         if prop.type in ['PSOLID']:
             continue
         if prop.type not in ['PSHELL', 'PCOMP', 'PCOMPG']:
             raise NotImplementedError(prop)
-        #pid0 += 1
+        pid0 += 1
 
-    nid_to_eid_map = defaultdict(list)
-    for eid, element in sorted(iteritems(model.elements)):
-        nids = element.node_ids
-        nids2 = []
-        for nid in nids:
-            nid_to_eid_map[nid].append(eid)
-            if nid in node_remaps:
-                nid = node_remaps[nid]
-            nids2.append(nid)
-        pid = element.Pid()
-
-        element_flag = pid_to_element_flags[pid]
-        unused_name, spacing, thickness, unused_grid_bc = element_flag
-        element_flag_node = [spacing, thickness]
-        for nid in nids:
-            node_flags_temp[nid].append(element_flag_node)
-            assert nid > 0, element
-
-        if element.type == 'CTRIA3':
-            tris.append([nids2, pid])
-        elif element.type == 'CQUAD4':
-            quads.append([nids2, pid])
-        else:
-            raise NotImplementedError(element)
-    del pid, nids
+    nid_to_eid_map = get_nid_to_eid_map(
+        model,
+        node_flags_temp, pid_to_element_flags, node_remaps,
+        tris, quads)
 
     initial_normal_spacing0 = 0
     bl_thickness0 = 0
-    for nid, node_flagsi in iteritems(node_flags_temp):
+    for nid, node_flagsi in node_flags_temp.items():
         nodes_flags_array = array(node_flagsi)  # (N, 2)
         nflags = nodes_flags_array.shape[0]
         if nflags == 0:
@@ -316,10 +269,82 @@ def nastran_to_surf(bdf_filename, pid_to_element_flags, surf_filename,
 
         assert nid > 0, nid
         node_flags[nid] = avg_node_flagsi
+
     _write_surf(surf_filename, maxnode,
                 nodes, tris, quads,
                 node_flags, initial_normal_spacing0, pid_to_element_flags, bl_thickness0,
                 renumber_pids, tol)
+
+def _get_nodes(model, scale, xref):
+    """helper method for ``nastran_to_surf``"""
+    # assume nodes go from 1:#
+    #nid0 = 1
+    node_flags = {}
+    node_flags_temp = {}
+
+    maxnode = max(model.nodes.keys())
+    nodes = zeros((maxnode, 3), dtype='float64')
+    if xref:
+        for nid, node in sorted(model.nodes.items()):
+            #if nid != nid0:
+                #msg = 'nodes must go from 1 to N, no gaps; nid=%s expected=%s' % (nid, nid0)
+                #raise RuntimeError(msg)
+            xyz = node.get_position()
+            nodes[nid-1] = xyz * scale
+            node_flags[nid] = []
+            node_flags_temp[nid] = []
+            #nid0 += 1
+    else:
+        for nid, node in sorted(model.nodes.items()):
+            #if nid != nid0:
+                #msg = 'nodes must go from 1 to N, no gaps; nid=%s expected=%s' % (nid, nid0)
+                #raise RuntimeError(msg)
+            xyz = node.xyz
+            nodes[nid-1] = xyz * scale
+            node_flags[nid] = []
+            node_flags_temp[nid] = []
+            #nid0 += 1
+    return maxnode, nodes, node_flags, node_flags_temp
+
+def get_nid_to_eid_map(model,
+                       node_flags_temp, pid_to_element_flags, node_remaps,
+                       tris, quads):
+    """helper method for ``nastran_to_surf``"""
+    nid_to_eid_map = defaultdict(list)
+    for eid, element in sorted(model.elements.items()):
+        #if element.type not in ['CQUAD4', 'CTRIA3']:
+            #continue
+        nids = element.node_ids
+        nids2 = []
+        for nid in nids:
+            nid_to_eid_map[nid].append(eid)
+            if nid in node_remaps:
+                nid = node_remaps[nid]
+            nids2.append(nid)
+        pid = element.Pid()
+
+        element_flag = pid_to_element_flags[pid]
+        unused_name, spacing, thickness, unused_grid_bc = element_flag
+        element_flag_node = [spacing, thickness]
+
+        for nid in nids:
+            try:
+                node_flags_temp[nid].append(element_flag_node)
+            except KeyError:
+                print('max_nid=%s max_temp_nid=%s' % (max(nids), max(node_flags_temp)))
+                print("nids = %s" % nids)
+                print("node_flags_temp = %s" % node_flags_temp.keys())
+                raise
+            assert nid > 0, element
+
+        if element.type == 'CTRIA3':
+            tris.append([nids2, pid])
+        elif element.type == 'CQUAD4':
+            quads.append([nids2, pid])
+        else:
+            raise NotImplementedError(element)
+    #del pid, nids
+    return nid_to_eid_map
 
 def _write_surf(surf_filename, maxnode,
                 nodes, tris, quads,
@@ -330,7 +355,7 @@ def _write_surf(surf_filename, maxnode,
     nquads = len(quads)
     assert ntris + nquads > 0, 'nelements=%s' % (ntris + nquads)
 
-    with open(surf_filename, 'wb') as surf_file:
+    with open(surf_filename, 'w', encoding='ascii') as surf_file:
         #surf_file.write('ntris nquads nnodes\n')
         surf_file.write('%i %i %i\n' % (ntris, nquads, maxnode))
 

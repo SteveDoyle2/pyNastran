@@ -78,7 +78,7 @@ class Real1DHeatFluxArray(ScalarObject):
         """creates a pandas dataframe"""
         headers = self.get_headers()
         assert 0 not in self.element
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=self.element,
@@ -134,7 +134,7 @@ class Real1DHeatFluxArray(ScalarObject):
 
     def add_sort1(self, dt, eid, etype, xgrad, ygrad, zgrad, xflux, yflux, zflux):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.element_data_type[self.ielement] = etype
@@ -154,7 +154,7 @@ class Real1DHeatFluxArray(ScalarObject):
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i\n'
                        % (self.__class__.__name__, ntimes, nelements))
             ntimes_word = 'ntimes'
@@ -272,7 +272,7 @@ class RealHeatFluxVU3DArray(ScalarObject):
             self.element_node[:, 0],
             self.element_node[:, 1],
         ]
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=element_node,
@@ -331,7 +331,7 @@ class RealHeatFluxVU3DArray(ScalarObject):
 
     def add_sort1(self, dt, eid, parent, grad_fluxes):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         #icord,
         #print([eid, parent])
@@ -356,7 +356,7 @@ class RealHeatFluxVU3DArray(ScalarObject):
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i\n'
                        % (self.__class__.__name__, ntimes, nelements))
             ntimes_word = 'ntimes'
@@ -413,367 +413,6 @@ class RealHeatFluxVU3DArray(ScalarObject):
             f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
-
-
-class HeatFlux_VU_3D(ScalarObject):
-    """146-VUPENTA, 147-VUTETRA, 148-VUPENTA"""
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        ScalarObject.__init__(self, data_code, isubcase)
-        self.parent = {}
-
-        self.grad = {}
-        self.flux = {}
-
-        # TODO if dt=None, handle SORT1 case
-        if is_sort1:
-            if dt is not None:
-                self.add = self.add_sort1
-        else:
-            assert dt is not None
-            self.add = self.add_sort2
-
-    def get_stats(self, short=False):
-        msg = self.get_data_code()
-        nelements = len(self. parent)
-        if self.nonlinear_factor is not None:  # transient
-            ntimes = len(self.grad)
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       % (self.__class__.__name__, ntimes, nelements))
-        else:
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        msg.append('  parent, grad, flux\n')
-        return msg
-
-    def add_new_transient(self, dt):
-        self.grad[dt] = {}
-        self.flux[dt] = {}
-
-    def add(self, dt, eid, parent, grad_fluxes):
-        self.parent[eid] = parent
-        #self.eType[eid]    = eType
-        self.grad[eid] = {}
-        self.flux[eid] = {}
-        for grad_flux in grad_fluxes:
-            [nid, xgrad, ygrad, zgrad, xflux, yflux, zflux] = grad_flux
-            self.grad[eid][nid] = [xgrad, ygrad, zgrad]
-            self.flux[eid][nid] = [xflux, yflux, zflux]
-
-    def add_sort1(self, dt, eid, parent, grad_fluxes):
-        """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
-        if dt not in self.grad:
-            self.add_new_transient(dt)
-        self.parent[eid] = parent
-        #self.eType[eid]    = eType
-
-        self.grad[dt][eid] = {}
-        self.flux[dt][eid] = {}
-        for grad_flux in grad_fluxes:
-            [nid, xgrad, ygrad, zgrad, xflux, yflux, zflux] = grad_flux
-            self.grad[dt][eid][nid] = [xgrad, ygrad, zgrad]
-            self.flux[dt][eid][nid] = [xflux, yflux, zflux]
-
-    def add_sort2(self, eid, dt, parent, grad_fluxes):
-        if dt not in self.flux:
-            self.add_new_transient(dt)
-        self.parent[eid] = parent
-        #self.coord[eid] = coord
-        #self.icord[eid] = icord
-        #self.theta[eid] = theta
-        #self.eType[eid] = etype
-
-        self.grad[dt][eid] = {}
-        self.flux[dt][eid] = {}
-        for grad_flux in grad_fluxes:
-            [nid, xgrad, ygrad, zgrad, xflux, yflux, zflux] = grad_flux
-            self.grad[dt][eid][nid] = [xgrad, ygrad, zgrad]
-            self.flux[dt][eid][nid] = [xflux, yflux, zflux]
-
-
-class RealHeatFluxVUArray(ScalarObject):
-    """189-VUQUAD 190-VUTRIA,191-VUBEAM"""
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        self.element_type = None
-        self.element_name = None
-        ScalarObject.__init__(self, data_code, isubcase)
-        #self.code = [self.format_code, self.sort_code, self.s_code]
-
-        #self.ntimes = 0  # or frequency/mode
-        #self.ntotal = 0
-        self.nelements = 0  # result specific
-        self.itotal = 0
-        self.ielement = 0
-
-    def _reset_indices(self):
-        self.itotal = 0
-        self.ielement = 0
-
-    def get_headers(self):
-        headers = [
-            'xgrad', 'ygrad', 'zgrad', 'xflux', 'yflux', 'zflux',
-        ]
-        return headers
-
-    def build(self):
-        """sizes the vectorized attributes of the RealHeatFluxVUArray"""
-        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
-        if self.is_built:
-            return
-
-        assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
-        assert self.nelements > 0, 'nelements=%s' % self.nelements
-        assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
-        #self.names = []
-        self.nelements //= self.ntimes
-        self.itime = 0
-        self.ielement = 0
-        self.itotal = 0
-        #self.ntimes = 0
-        #self.nelements = 0
-        self.is_built = True
-
-        #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
-        self._times = zeros(self.ntimes, dtype=dtype)
-        self.element_parent_coord_icord = zeros((self.nelements, 4), dtype='int32')
-
-        #[xgrad, ygrad, zgrad, xflux, yflux, zflux]
-        self.int_data = zeros((self.ntimes, self.ntotal, 1), dtype='int32')
-        self.data = zeros((self.ntimes, self.ntotal, 6), dtype='float32')
-
-    def _build_dataframe(self):
-        """creates a pandas dataframe"""
-        # TODO: fix me
-        headers = self.get_headers()
-        #assert 0 not in self.element
-        element_node = [
-            self.element_node[:, 0],
-            self.element_node[:, 1],
-        ]
-        if self.nonlinear_factor is not None:
-            column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values,
-                                       major_axis=element_node,
-                                       minor_axis=headers).to_frame()
-            self.data_frame.columns.names = column_names
-        else:
-            self.data_frame = pd.Panel(self.data,
-                                       major_axis=element_node,
-                                       minor_axis=headers).to_frame()
-            self.data_frame.columns.names = ['Static']
-        self.data_frame.index.names = ['ElementID', 'Node', 'Item']
-
-    def __eq__(self, table):
-        self._eq_header(table)
-        assert self.is_sort1 == table.is_sort1
-        if not np.array_equal(self.element_parent_coord_icord, table.element_parent_coord_icord):
-            assert self.element_parent_coord_icord.shape == table.element_parent_coord_icord.shape, 'element_parent_coord_icord shape=%s table.shape=%s' % (
-                self.element_parent_coord_icord.shape, table.element_parent_coord_icord.shape)
-            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
-            msg += '%s\n' % str(self.code_information())
-            msg += 'Eid, Parent, Coord, iCoord\n'
-            for (eid1, parent1, coord1, icord1), (eid2, parent2, coord2, icord2) in zip(self.element_parent_coord_icord, table.element_parent_coord_icord):
-                msg += '(%s, %s, %s, %s) (%s, %s, %s, %s)\n' % (
-                    eid1, parent1, coord1, icord1, eid2, parent2, coord2, icord2)
-            print(msg)
-            raise ValueError(msg)
-        if not np.array_equal(self.data, table.data):
-            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
-            msg += '%s\n' % str(self.code_information())
-            i = 0
-            #eids = self.element_node[:, 0]
-            #ntotal = self.data.shape[2]
-            for itime in range(self.ntimes):
-                vugrids = self.int_data[itime, :, :]
-                for j, vugrid in enumerate(vugrids):
-                    t1 = self.data[itime, j, :]
-                    t2 = table.data[itime, j, :]
-                    if not np.array_equal(t1, t2):
-                        (xgrad1, ygrad1, zgrad1, xflux1, yflux1, zflux1) = t1
-                        (xgrad2, ygrad2, zgrad2, xflux2, yflux2, zflux2) = t2
-                        msg += (
-                            '(%s, %s)   (%s, %s, %s, %s, %s, %s) (%s, %s, %s, %s, %s, %s)\n' % (
-                                j, vugrid,
-                                xgrad1, ygrad1, zgrad1, xflux1, yflux1, zflux1,
-                                xgrad2, ygrad2, zgrad2, xflux2, yflux2, zflux2,
-                            ))
-                        i += 1
-                        if i > 10:
-                            print(msg)
-                            raise ValueError(msg)
-                #print(msg)
-                if i > 0:
-                    raise ValueError(msg)
-        return True
-
-    def add_sort1(self, dt, eid, parent, coord, icord, theta, grad_fluxes):
-        """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
-        self._times[self.itime] = dt
-        #icord,
-        #print([eid, parent, coord, theta])
-        self.element_parent_coord_icord[self.ielement, :] = [eid, parent, coord, theta]
-        for grad_flux in grad_fluxes:
-            self.int_data[self.itime, self.itotal, :] = grad_flux[0]
-            self.data[self.itime, self.itotal, :] = grad_flux[1:]
-            self.itotal += 1
-        self.ielement += 1
-
-    def get_stats(self, short=False):
-        if not self.is_built:
-            return [
-                '<%s>\n' % self.__class__.__name__,
-                '  ntimes: %i\n' % self.ntimes,
-                '  ntotal: %i\n' % self.ntotal,
-            ]
-
-        nelements = self.nelements
-        ntimes = self.ntimes
-        #ntotal = self.ntotal
-
-        msg = []
-        if self.nonlinear_factor is not None:  # transient
-            msg.append('  type=%s ntimes=%i nelements=%i\n'
-                       % (self.__class__.__name__, ntimes, nelements))
-            ntimes_word = 'ntimes'
-        else:
-            msg.append('  type=%s nelements=%i\n'
-                       % (self.__class__.__name__, nelements))
-            ntimes_word = '1'
-        headers = self.get_headers()
-        n = len(headers)
-        msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (
-            ntimes_word, n, n, str(', '.join(headers))))
-        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
-        msg.append('  element type: %s\n' % self.element_type)
-        msg.append('  element name: %s\n' % self.element_name)
-        msg += self.get_data_code()
-        return msg
-
-    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
-                  page_num=1, is_mag_phase=False, is_sort1=True):
-        if header is None:
-            header = []
-        ## TODO: add the f06 header
-        msg_temp = [
-            '          T E M P E R A T U R E   G R A D I E N T S   A N D   F L U X E S   I N   T R I A N G U L A R   P - E L E M E N T S\n'
-            '                 VU-ELEMENT ID=  100005001, P-ELEMENT ID =       5, OUTPUT COORD. ID= (LOCAL), P OF EDGES =  2  2  2\n'  # TODO: wrong
-            '                       LOCAL X DIR. = PROJECTED +X DIR.,  LOCAL NORMAL = COUNTER-CLOCKWISE,  ANGLE =    0.0000\n'  # TODO: wrong
-            '\n'
-            '             VUGRID      X-GRADIENT       Y-GRADIENT       Z-GRADIENT        X-FLUX           Y-FLUX           Z-FLUX    \n'
-            #'          111005001     2.000000E+01    -4.799646E-14     0.000000E+00    -4.080000E+03     9.791279E-12     0.000000E+00\n'
-        ]
-        ntimes = self.data.shape[0]
-
-        #eids = self.element
-        for itime in range(ntimes):
-            dt = self._times[itime]  # TODO: rename this...
-            header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            f06_file.write(''.join(header + msg_temp))
-
-            # [xgrad, ygrad, zgrad, xflux, yflux, zflux]
-            #nids = self.int_data[itime, :, 0]
-            vugrids = self.int_data[itime, :, 0]
-            print(vugrids)
-            xgrad = self.data[itime, :, 0]
-            ygrad = self.data[itime, :, 1]
-            zgrad = self.data[itime, :, 2]
-            xflux = self.data[itime, :, 3]
-            yflux = self.data[itime, :, 4]
-            zflux = self.data[itime, :, 5]
-
-            for (vugrid, xgradi, ygradi, zgradi, xfluxi, yfluxi, zfluxi) in zip(
-                 vugrids, xgrad, ygrad, zgrad, xflux, yflux, zflux):
-                f06_file.write('         %10i    %-13E    %-13E    %-13E    %-13E    %-13E    %-13E\n' % (
-                    vugrid, xgradi, ygradi, zgradi, xfluxi, yfluxi, zfluxi))
-            f06_file.write(page_stamp % page_num)
-            page_num += 1
-        return page_num - 1
-
-
-class HeatFlux_VU(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        ScalarObject.__init__(self, data_code, isubcase)
-        self.parent = {}
-        self.coord = {}
-        self.icord = {}
-        self.theta = {}
-
-        self.grad = {}
-        self.flux = {}
-
-        # TODO if dt=None, handle SORT1 case
-        if is_sort1:
-            if dt is not None:
-                self.add = self.add_sort1
-        else:
-            assert dt is not None
-            self.add = self.add_sort2
-
-    def get_stats(self, short=False):
-        msg = self.get_data_code()
-        nelements = len(self. parent)
-        if self.nonlinear_factor is not None:  # transient
-            ntimes = len(self.grad)
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       % (self.__class__.__name__, ntimes, nelements))
-        else:
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        msg.append('  parent, coord, icord, theta, grad, flux\n')
-        return msg
-
-    def add_new_transient(self, dt):
-        self.grad[dt] = {}
-        self.flux[dt] = {}
-
-    def add(self, nnodes, dt, eid, parent, coord, icord, theta, grad_fluxes):
-        self.parent[eid] = parent
-        self.coord[eid] = coord
-        self.icord[eid] = icord
-        self.theta[eid] = theta
-
-        self.grad[eid] = {}
-        self.flux[eid] = {}
-        for grad_flux in grad_fluxes:
-            [nid, xgrad, ygrad, zgrad, xflux, yflux, zflux] = grad_flux
-            self.grad[eid][nid] = [xgrad, ygrad, zgrad]
-            self.flux[eid][nid] = [xflux, yflux, zflux]
-
-    def add_sort1(self, nnodes, dt, eid, parent, coord, icord, theta, grad_fluxes):
-        """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
-        if dt not in self.grad:
-            self.add_new_transient(dt)
-        self.parent[eid] = parent
-        self.coord[eid] = coord
-        self.icord[eid] = icord
-        self.theta[eid] = theta
-
-        self.grad[dt][eid] = {}
-        self.flux[dt][eid] = {}
-        for grad_flux in grad_fluxes:
-            [nid, xgrad, ygrad, zgrad, xflux, yflux, zflux] = grad_flux
-            self.grad[dt][eid][nid] = [xgrad, ygrad, zgrad]
-            self.flux[dt][eid][nid] = [xflux, yflux, zflux]
-
-    def add_sort2(self, nnodes, eid, dt, parent, coord, icord, theta, grad_fluxes):
-        if dt not in self.grad:
-            self.add_new_transient(dt)
-        self.parent[eid] = parent
-        self.coord[eid] = coord
-        self.icord[eid] = icord
-        self.theta[eid] = theta
-
-        self.grad[dt][eid] = {}
-        self.flux[dt][eid] = {}
-        for grad_flux in grad_fluxes:
-            [nid, xgrad, ygrad, zgrad, xflux, yflux, zflux] = grad_flux
-            self.grad[dt][eid][nid] = [xgrad, ygrad, zgrad]
-            self.flux[dt][eid][nid] = [xflux, yflux, zflux]
 
 
 class RealHeatFluxVUBeamArray(ScalarObject):  # 191-VUBEAM
@@ -848,7 +487,7 @@ class RealHeatFluxVUBeamArray(ScalarObject):  # 191-VUBEAM
             np.vstack([self.element_parent_coord[:, 2], self.element_parent_coord[:, 2]]).T.ravel(),
         ]
         #print(element_parent_coord)
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             # TODO: rework
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
@@ -880,6 +519,7 @@ class RealHeatFluxVUBeamArray(ScalarObject):  # 191-VUBEAM
                     eid1, parent1, coord1, eid2, parent2, coord2)
             print(msg)
             raise ValueError(msg)
+
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
@@ -911,7 +551,7 @@ class RealHeatFluxVUBeamArray(ScalarObject):  # 191-VUBEAM
 
     def add_sort1(self, dt, eid, parent, coord, icord, grad_fluxes):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element_parent_coord[self.ielement, :] = [eid, parent, coord]
         for grad_flux in grad_fluxes:
@@ -933,7 +573,7 @@ class RealHeatFluxVUBeamArray(ScalarObject):  # 191-VUBEAM
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i\n'
                        % (self.__class__.__name__, ntimes, nelements))
             ntimes_word = 'ntimes'
@@ -996,90 +636,7 @@ class RealHeatFluxVUBeamArray(ScalarObject):  # 191-VUBEAM
         return page_num - 1
 
 
-class HeatFlux_VUBEAM(ScalarObject):  # 191-VUBEAM
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        ScalarObject.__init__(self, data_code, isubcase)
-        self.parent = {}
-        self.coord = {}
-        self.icord = {}
-
-        self.grad = {}
-        self.flux = {}
-
-        # TODO if dt=None, handle SORT1 case
-        if is_sort1:
-            if dt is not None:
-                self.add = self.add_sort1
-        else:
-            assert dt is not None
-            self.add = self.add_sort2
-
-    def get_stats(self, short=False):
-        msg = self.get_data_code()
-        nelements = len(self. parent)
-        if self.nonlinear_factor is not None:  # transient
-            ntimes = len(self.grad)
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       % (self.__class__.__name__, ntimes, nelements))
-        else:
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        msg.append('  parent, coord, icord, theta, grad, flux\n')
-        return msg
-
-    def add_new_transient(self, dt):
-        self.grad[dt] = {}
-        self.flux[dt] = {}
-
-    def add(self, nnodes, dt, data):
-        [eid, parent, coord, icord, grad_fluxes] = data
-        self.parent[eid] = parent
-        self.coord[eid] = coord
-        self.icord[eid] = icord
-        #self.eType[eid]    = eType
-
-        self.grad[eid] = {}
-        self.flux[eid] = {}
-        for grad_flux in grad_fluxes:
-            [nid, xgrad, ygrad, zgrad, xflux, yflux, zflux] = grad_flux
-            self.grad[eid][nid] = [xgrad, ygrad, zgrad]
-            self.flux[eid][nid] = [xflux, yflux, zflux]
-
-    def add_sort1(self, nnodes, dt, eid, parent, coord, icord, grad_fluxes):
-        """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
-        if dt not in self.grad:
-            self.add_new_transient(dt)
-        self.parent[eid] = parent
-        self.coord[eid] = coord
-        self.icord[eid] = icord
-        #self.eType[eid]    = eType
-
-        self.grad[dt][eid] = {}
-        self.flux[dt][eid] = {}
-        for grad_flux in grad_fluxes:
-            [nid, xgrad, ygrad, zgrad, xflux, yflux, zflux] = grad_flux
-            self.grad[dt][eid][nid] = [xgrad, ygrad, zgrad]
-            self.flux[dt][eid][nid] = [xflux, yflux, zflux]
-
-    def add_sort2(self, nnodes, eid, data):
-        [dt, parent, coord, icord, grad_fluxes] = data
-        if dt not in self.grad:
-            self.add_new_transient(dt)
-        self.parent[eid] = parent
-        self.coord[eid] = coord
-        self.icord[eid] = icord
-        #self.eType[eid]    = eType
-
-        self.grad[dt][eid] = {}
-        self.flux[dt][eid] = {}
-        for grad_flux in grad_fluxes:
-            [nid, xgrad, ygrad, zgrad, xflux, yflux, zflux] = grad_flux
-            self.grad[dt][eid][nid] = [xgrad, ygrad, zgrad]
-            self.flux[dt][eid][nid] = [xflux, yflux, zflux]
-
-
-class HeatFlux_2D_3DArray(RealElementTableArray):
+class RealHeatFlux_2D_3DArray(RealElementTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealElementTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
@@ -1088,7 +645,7 @@ class HeatFlux_2D_3DArray(RealElementTableArray):
         headers = self.get_headers()
 
         #nelements = self.element.shape[0]# // 2
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=self.element,
@@ -1113,7 +670,7 @@ class HeatFlux_2D_3DArray(RealElementTableArray):
                  #' \n',
                  #'      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         #words += self.get_table_marker()
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             return self._write_f06_transient_block(words, header, page_stamp, page_num, f06_file,
                                                    is_mag_phase=is_mag_phase, is_sort1=is_sort1)
         return self._write_f06_block(words, header, page_stamp, page_num, f06_file,
@@ -1186,7 +743,7 @@ class RealConvHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
             self.element_node[:, 0],
             self.element_node[:, 1],
         ]
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=element_node,
@@ -1233,7 +790,7 @@ class RealConvHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
 
     def add_sort1(self, dt, eid, cntl_node, free_conv, free_conv_k):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element_node[self.ielement, :] = [eid, cntl_node]
         self.data[self.itime, self.ielement, :] = [free_conv, free_conv_k]
@@ -1252,7 +809,7 @@ class RealConvHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i\n'
                        % (self.__class__.__name__, ntimes, nelements))
             ntimes_word = 'ntimes'
@@ -1366,7 +923,7 @@ class RealChbdyHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         """creates a pandas dataframe"""
         headers = self.get_headers()
         assert 0 not in self.element
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
@@ -1409,7 +966,7 @@ class RealChbdyHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
 
     def add_sort1(self, dt, eid, etype, fapplied, free_conv, force_conv, frad, ftotal):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.element_type[self.ielement] = etype
@@ -1429,7 +986,7 @@ class RealChbdyHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         #ntotal = self.ntotal
 
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i\n'
                        % (self.__class__.__name__, ntimes, nelements))
             ntimes_word = 'ntimes'

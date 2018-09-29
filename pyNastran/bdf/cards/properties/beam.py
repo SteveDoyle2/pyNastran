@@ -14,13 +14,15 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
 from six import string_types
-from six.moves import zip, range
 import numpy as np
 from numpy import array, unique, argsort, allclose, ndarray
 
-from pyNastran.bdf.utils import to_fields
+from pyNastran.bdf.bdf_interface.utils import to_fields
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
-from pyNastran.bdf.cards.properties.bars import IntegratedLineProperty, LineProperty, _bar_areaL
+from pyNastran.bdf.cards.properties.bars import (
+    IntegratedLineProperty, LineProperty, _bar_areaL,
+    get_beam_sections, split_arbitrary_thickness_section, write_arbitrary_beam_section,
+    plot_arbitrary_section)
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank,
@@ -30,7 +32,7 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.cards.base_card import (
     break_word_by_trailing_parentheses_integer_ab, break_word_by_trailing_integer)
-from pyNastran.utils import integer_types, float_types
+from pyNastran.utils.numpy_utils import integer_types, float_types
 
 class PBEAM(IntegratedLineProperty):
     """
@@ -46,6 +48,7 @@ class PBEAM(IntegratedLineProperty):
 
     The next two continuations are repeated for each intermediate station as
     described in Remark 5. and SO and X/XB must be specified.
+
     +----+------+----+----+----+-----+----+-----+
     | SO | X/XB | A  | I1 | I2 | I12 | J  | NSM |
     +----+------+----+----+----+-----+----+-----+
@@ -229,24 +232,25 @@ class PBEAM(IntegratedLineProperty):
         if n2b is None:
             n2b = n1b
 
+        nxxb = len(xxb)
         if nsm is None:
-            nsm = [0.] * len(xxb)
+            nsm = [0.] * nxxb
         if c1 is None:
-            c1 = [None] * len(xxb)
+            c1 = [None] * nxxb
         if c2 is None:
-            c2 = [None] * len(xxb)
+            c2 = [None] * nxxb
         if d1 is None:
-            d1 = [None] * len(xxb)
+            d1 = [None] * nxxb
         if d2 is None:
-            d2 = [None] * len(xxb)
+            d2 = [None] * nxxb
         if e1 is None:
-            e1 = [None] * len(xxb)
+            e1 = [None] * nxxb
         if e2 is None:
-            e2 = [None] * len(xxb)
+            e2 = [None] * nxxb
         if f1 is None:
-            f1 = [None] * len(xxb)
+            f1 = [None] * nxxb
         if f2 is None:
-            f2 = [None] * len(xxb)
+            f2 = [None] * nxxb
 
         #: Property ID
         self.pid = pid
@@ -388,12 +392,17 @@ class PBEAM(IntegratedLineProperty):
         self.e2 = array(e2, dtype='float64')[ixxb]
         self.f1 = array(f1, dtype='float64')[ixxb]
         self.f2 = array(f2, dtype='float64')[ixxb]
+        self._interpolate_sections()
+        self.mid_ref = None
 
-        # now we interpolate to fix up missing data
-        # from arrays that were potentially out of order
-        # (they're sorted now)
-        #
-        # we've also already checked xxb=0.0 and xxb=1.0 for I1, I2, I12, J
+    def _interpolate_sections(self):
+        """
+        now we interpolate to fix up missing data
+        from arrays that were potentially out of order
+        (they're sorted now)
+
+        we've also already checked xxb=0.0 and xxb=1.0 for I1, I2, I12, J
+        """
         loop_vars = (
             count(), self.xxb, self.A, self.i1, self.i2, self.i12, self.j, self.nsm,
             self.c1, self.c2, self.d1, self.d2, self.e1, self.e2, self.f1, self.f2
@@ -406,7 +415,9 @@ class PBEAM(IntegratedLineProperty):
                 if i1 == 0.0:
                     self.i1[i] = self.i1[-1] + self.i1[0] * (1 - xxb)
                 if i2 == 0.0:
-                    self.i12[i] = self.i2[-1] + self.i2[0] * (1 - xxb)
+                    self.i2[i] = self.i2[-1] + self.i2[0] * (1 - xxb)
+                if i12 == 0.0:
+                    self.i12[i] = self.i12[-1] + self.i12[0] * (1 - xxb)
                 if j == 0.0:
                     self.j[i] = self.j[-1] + self.j[0] * (1 - xxb)
 
@@ -447,7 +458,6 @@ class PBEAM(IntegratedLineProperty):
                     msg += '  cwa=%s cwb=%s\n' % (self.cwa, self.cwb)
                     msg += '  i=%s xxb=%s j=%s; j[%i]=%s\n' % (i, xxbi, self.j, i, ji)
                     raise ValueError(msg)
-        self.mid_ref = None
 
     def validate(self):
         nstations = len(self.A)
@@ -852,14 +862,14 @@ class PBEAM(IntegratedLineProperty):
             raise NotImplementedError(name_str)
 
     #def Area(self):
-    #    """.. warning:: area field not supported fully on PBEAM card"""
-    #    #raise RuntimeError(self.A[0])
-    #    return self.A[0]
+       #""".. warning:: area field not supported fully on PBEAM card"""
+       ##raise RuntimeError(self.A[0])
+       #return self.A[0]
 
     #def Nsm(self):
-    #    """.. warning:: nsm field not supported fully on PBEAM card"""
-    #    #raise RuntimeError(self.nsm[0])
-    #    return self.nsm[0]
+       #""".. warning:: nsm field not supported fully on PBEAM card"""
+       ##raise RuntimeError(self.nsm[0])
+       #return self.nsm[0]
 
     def I1_I2_I12(self):
         #assert self.i1  is not None, 'I1=%r' % self.i1
@@ -1108,9 +1118,9 @@ def update_pbeam_negative_integer(pname_fid):
     elif iterm == 15:
         word = 'F2'
     else:
-        print('istation=%s iterm=%s' % (istation, iterm))
-        msg = "property_type='PBEAM' has not implemented %r (istation=%r, iterm=%r) in pname_map" % (
-            pname_fid, istation, iterm)
+        #print('istation=%s iterm=%s' % (istation, iterm))
+        msg = ("property_type='PBEAM' has not implemented %r (istation=%r, iterm=%r)"
+               " in pname_map" % (pname_fid, istation, iterm))
         raise NotImplementedError(msg)
     word = '%s(%i)' % (word, istation + 1)
     return word
@@ -1194,6 +1204,20 @@ class PBEAML(IntegratedLineProperty):
                 print('istation=%r idim=%r' % (istation, idim))
                 print(self)
                 raise
+        elif isinstance(pname_fid, str):
+            if not pname_fid[-1].isdigit():
+                param_name = pname_fid
+                idim = -1
+            else:
+                param_name, num = break_word_by_trailing_integer(pname_fid)
+                idim = int(num) - 1
+
+            if param_name == 'NSM':
+                self.nsm[idim] = value
+            else:
+                raise NotImplementedError('property_type=%r param_name=%r idim=%s '
+                                          'has not implemented %r in pname_map' % (
+                                              self.type, param_name, idim, pname_fid))
         else:
             raise NotImplementedError('property_type=%r has not implemented %r in pname_map' % (
                 self.type, pname_fid))
@@ -1355,6 +1379,7 @@ class PBEAML(IntegratedLineProperty):
             nsm.append(nsmi)
             n += 1
             i += 1
+        assert len(card) > 5, card
         return PBEAML(pid, mid, beam_type, xxb, dims, group=group,
                       so=so, nsm=nsm, comment=comment)
 
@@ -1523,16 +1548,10 @@ class PBEAML(IntegratedLineProperty):
         else:
             assert self.mid_ref.type in ['MAT1']
 
-    def _J(self):
-        j = []
-        for unused_dims in self.dim:
-            pass
-            #print("dims = ",dims)
-            #IAreaL()
-        return j
-
     def J(self):
-        #raise NotImplementedError()
+        #j = []
+        #for unused_dims in self.dim:
+            # calculate J for the station
         #Js = self._J()
         #j = integrate_positive_unit_line(self.xxb, Js)
         j = None
@@ -1598,8 +1617,6 @@ class PBMSECT(LineProperty):
         self.mid = mid
         self.form = form
 
-        assert form in ['GS', 'OP', 'CP'], 'pid=%s form=%r' % (pid, form)
-
         # integer
         self.outp = None
 
@@ -1609,10 +1626,17 @@ class PBMSECT(LineProperty):
         # int : int
         self.brps = {}
         self.inps = {}
+        self.core = {}
 
         # int : floats
         self.ts = {}
-        for key, value in options.items():
+        assert isinstance(options, list), options
+        for key_value in options:
+            try:
+                key, value = key_value
+            except ValueError:
+                print(key_value)
+                raise
             key = key.upper()
             if key == 'NSM':
                 self.nsm = float(value)
@@ -1623,7 +1647,9 @@ class PBMSECT(LineProperty):
                     key_id = int(key[4:-1])
                     self.inps[key_id] = int(value)
                 else:
-                    self.inps[0] = int(value)
+                    if 1 not in self.inps:
+                        self.inps[1] = []
+                    self.inps[1].append(int(value))
 
             elif key == 'OUTP':
                 self.outp = int(value)
@@ -1637,24 +1663,27 @@ class PBMSECT(LineProperty):
                     self.brps[0] = int(value)
 
             elif key.startswith('T('):
-                if key.startswith('T('):
-                    assert key.endswith(')'), 'key=%r' % key
-                    key_id = int(key[2:-1])
-                    self.ts[key_id] = float(value)
-                elif key == 'T':
-                    self.ts[0] = int(value)
-                else:
-                    raise NotImplementedError('PBMSECT.pid=%s key=%r value=%r' % (pid, key, value))
+                index, out = split_arbitrary_thickness_section(key, value)
+                self.ts[index] = out
             elif key == 'T':
-                self.ts[0] = float(value)
+                self.ts[1] = float(value)
+            elif key == 'CORE':
+                key = 'CORE(1)'
+                index, out = split_arbitrary_thickness_section(key, value)
+                self.core[index] = out
+            elif key.startswith(('CORE(', 'C(')):
+                index, out = split_arbitrary_thickness_section(key, value)
+                self.core[index] = out
             else:
                 raise NotImplementedError('PBMSECT.pid=%s key=%r value=%r' % (pid, key, value))
 
         assert self.outp is not None, 'options=%s' % str(options)
-        self._validate_input()
         self.mid_ref = None
         self.outp_ref = None
-        self.brp1_ref = None
+        self.brps_ref = {}
+
+    def validate(self):
+        assert self.form in ['GS', 'OP', 'CP'], 'pid=%s form=%r' % (self.pid, self.form)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1671,17 +1700,15 @@ class PBMSECT(LineProperty):
         line0 = card[0]
         if '\t' in line0:
             line0 = line0.expandtabs()
-
         bdf_card = BDFCard(to_fields([line0], 'PBMSECT'))
         #line0_eq = line0[16:]
-        lines_joined = ''.join(card[1:]).replace(' ', '')
+        lines_joined = ','.join(card[1:]).replace(' ', '').replace(',,', ',')
 
         if lines_joined:
-            fields = lines_joined.split(',')
-            slines = [field.split('=') for field in fields]
-            options = {key : value for (key, value) in slines}
+            fields = get_beam_sections(lines_joined)
+            options = [field.split('=', 1) for field in fields]
         else:
-            options = {}
+            options = []
 
         pid = integer(bdf_card, 1, 'pid')
         mid = integer(bdf_card, 2, 'mid')
@@ -1689,8 +1716,8 @@ class PBMSECT(LineProperty):
 
         return PBMSECT(pid, mid, form, options, comment=comment)
 
-    @classmethod
-    def add_op2_data(cls, data, comment=''):
+    #@classmethod
+    #def add_op2_data(cls, data, comment=''):  # pragma: no cover
         #pid = data[0]
         #mid = data[1]
         #group = data[2].strip()
@@ -1701,12 +1728,9 @@ class PBMSECT(LineProperty):
         #print("Type  = %r" % Type)
         #print("dim = ",dim)
         #print(str(self))
-        print("*PBMSECT = ", data)
-        raise NotImplementedError('PBMSECT not finished...data=%s' % str(data))
+        #print("*PBMSECT = ", data)
+        #raise NotImplementedError('PBMSECT not finished...data=%s' % str(data))
         #return PBMSECT(pid, mid, group, Type, dim, nsm, comment=comment)
-
-    def _validate_input(self):
-        pass
 
     def cross_reference(self, model):
         """
@@ -1723,9 +1747,39 @@ class PBMSECT(LineProperty):
         self.outp_ref = model.Set(self.outp)
         self.outp_ref.cross_reference_set(model, 'Point', msg=msg)
 
+        self.brps_ref = {}
         if len(self.brps):
-            self.brp1_ref = model.Set(self.brp1)
-            self.brp1_ref.cross_reference_set(model, 'Point', msg=msg)
+            for key, brpi in self.brps.items():
+                brpi_ref = model.Set(brpi, msg=msg)
+                brpi_ref.cross_reference_set(model, 'Point', msg=msg)
+                self.brps_ref[key] = brpi_ref
+
+    def plot(self, model, figure_id=1, show=False):
+        """
+        Plots the beam section
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        figure_id : int; default=1
+            the figure id
+        show : bool; default=False
+            show the figure when done
+        """
+        class_name = self.__class__.__name__
+        form_map = {
+            'GS' : 'General Section',
+            'OP' : 'Open Profile',
+            'CP' : 'Closed Profile',
+        }
+        formi = ' form=%s' % form_map[self.form]
+        plot_arbitrary_section(
+            model, self,
+            self.inps, self.ts, self.brps_ref, self.nsm, self.outp_ref,
+            figure_id=figure_id,
+            title=class_name + ' pid=%s' % self.pid + formi,
+            show=show)
 
     @property
     def outp_id(self):
@@ -1733,17 +1787,17 @@ class PBMSECT(LineProperty):
             return self.outp_ref.sid
         return self.outp
 
-    @property
-    def brp1_id(self):
-        if self.brp1_ref is not None:
-            return self.brp1_ref.sid
-        return self.brp1
+    #@property
+    #def brp1_id(self):
+        #if self.brp1_ref is not None:
+            #return self.brp1_ref.sid
+        #return self.brp1
 
     def uncross_reference(self):
         self.mid = self.Mid()
         self.mid_ref = None
         self.outp_ref = None
-        self.brp1_ref = None
+        self.brps_ref = {}
 
     def _verify(self, xref):
         pid = self.Pid()
@@ -1808,22 +1862,13 @@ class PBMSECT(LineProperty):
 
     def write_card(self, size=8, is_double=False):
         card = ['PBMSECT', self.pid, self.Mid(), self.form]
-        end = ''
-        for key, dicts in [('INP', self.inps), ('T', self.ts), ('BRP', self.brps)]:
-            # dicts = {int index : int/float value}
-            for k, v in sorted(dicts.items()):
-                if k == 0:
-                    end += '        %s=%s,\n' % (key, v)
-                else:
-                    end += '        %s(%s)=%s,\n' % (key, k, v)
-
-        for key, value in [('NSM', self.nsm), ('outp', self.outp_id),]:
-            if value:
-                end += '        %s=%s,\n' % (key, value)
-        if end:
-            end = end[:-2] + '\n'
+        end = write_arbitrary_beam_section(
+            self.inps, self.ts, self.brps, self.nsm, self.outp_id, self.core)
         out = self.comment + print_card_8(card) + end
         return out
+
+    def __repr__(self):
+        return self.write_card()
 
 
 class PBCOMP(LineProperty):
@@ -1852,7 +1897,7 @@ class PBCOMP(LineProperty):
         Creates a PBCOMP card
 
         Parameters
-        ---------
+        ----------
         pid : int
             Property ID
         mid : int
@@ -1886,6 +1931,7 @@ class PBCOMP(LineProperty):
             0 < Integer < 5
         comment : str; default=''
             a comment for the card
+
         """
         LineProperty.__init__(self)
         if comment:
@@ -1924,9 +1970,10 @@ class PBCOMP(LineProperty):
         assert isinstance(self.z, list), 'z=%r type=%s' % (self.z, type(self.z))
         assert isinstance(self.c, list), 'c=%r type=%s' % (self.c, type(self.c))
 
-        assert len(self.mids) == len(self.y), 'len(mids)=%s len(y)=%s' % (len(self.mids), len(self.y))
-        assert len(self.mids) == len(self.z), 'len(mids)=%s len(z)=%s' % (len(self.mids), len(self.z))
-        assert len(self.mids) == len(self.c), 'len(mids)=%s len(c)=%s' % (len(self.mids), len(self.c))
+        nmids = len(self.mids)
+        assert nmids == len(self.y), 'len(mids)=%s len(y)=%s' % (nmids, len(self.y))
+        assert nmids == len(self.z), 'len(mids)=%s len(z)=%s' % (nmids, len(self.z))
+        assert nmids == len(self.c), 'len(mids)=%s len(c)=%s' % (nmids, len(self.c))
         assert self.symopt in [0, 1, 2, 3, 4, 5], 'symopt=%r' % self.symopt
 
     @classmethod
@@ -1940,6 +1987,7 @@ class PBCOMP(LineProperty):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
@@ -1996,7 +2044,6 @@ class PBCOMP(LineProperty):
             z.append(zi)
             c.append(ci)
             mids.append(midi)
-        #raise NotImplementedError(data)
         return PBCOMP(pid, mid, y, z, c, mids,
                       area, i1, i2, i12, j, nsm,
                       k1, k2, m1, m2, n1, n2,

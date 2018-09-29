@@ -4,11 +4,9 @@ Defines the BDFCard class that is passed into the various Nastran cards.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from typing import List, Union, Optional
-from pyNastran.bdf.utils import deprecated
 from pyNastran.bdf.field_writer import print_card
 from pyNastran.bdf.field_writer_16 import print_field_16
 from pyNastran.bdf.cards.utils import wipe_empty_fields
-from six.moves import range
 
 
 class BDFCard(object):
@@ -42,11 +40,6 @@ class BDFCard(object):
             card = wipe_empty_fields([print_field_16(field).strip() for field in card])
         self.card = card
         self.nfields = len(self.card)
-
-    def deprecated(self, old_name, new_name, deprecated_version):
-        # type: (str, str, str) -> None
-        """deprecates methods"""
-        return deprecated(old_name, new_name, deprecated_version, levels=[0, 1, 2])
 
     def pop(self):
         # type: () -> str
@@ -119,8 +112,8 @@ class BDFCard(object):
         if defaults is None:
             defaults = []
         if j is None:
-            if self.nfields is None:
-                return [None]
+            #if self.nfields is None:
+                #return [None]
             j = self.nfields
 
         if defaults == []:
@@ -153,7 +146,4 @@ class BDFCard(object):
         """
         if i < self.nfields and self.card[i] is not None and self.card[i] is not '':
             return self.card[i]
-        else:
-            #if default is None:
-                #return u''
-            return default
+        return default

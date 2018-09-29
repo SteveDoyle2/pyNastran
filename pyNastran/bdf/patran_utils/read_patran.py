@@ -6,7 +6,7 @@ from __future__ import print_function
 import os
 from collections import defaultdict
 import numpy as np
-from pyNastran.utils import print_bad_path
+from pyNastran.utils import check_path
 
 
 def read_patran_format(patran_fmt_filename):
@@ -36,7 +36,7 @@ def read_patran_format(patran_fmt_filename):
       TYPE = END
 
     """
-    assert os.path.exists(patran_fmt_filename), print_bad_path(patran_fmt_filename)
+    check_path(patran_fmt_filename, 'patran_fmt_filename')
     with open(patran_fmt_filename, 'r') as patran_file:
         lines = patran_file.readlines()
 
@@ -68,7 +68,7 @@ def read_patran(patran_filename, fdtype='float64', idtype='int32'):
     base = os.path.splitext(patran_filename)[0]
     headers = read_patran_format(base + '.res_tmpl')
 
-    assert os.path.exists(patran_filename), print_bad_path(patran_filename)
+    check_path(patran_filename, 'patran_filename')
     with open(patran_filename, 'r') as patran_file:
         lines = patran_file.readlines()
 

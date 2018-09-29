@@ -1,5 +1,6 @@
 from __future__ import print_function
 from six import string_types
+import numpy as np
 #from struct import pack
 
 
@@ -71,7 +72,7 @@ class RealDisplacementArray(RealTableArray):
             raise NotImplementedError('table_name=%r' % self.table_name)
         #words += self.get_table_marker()
         write_words = True
-        if self.nonlinear_factor is not None:
+        if self.nonlinear_factor not in (None, np.nan):
             return self._write_f06_transient_block(words, header, page_stamp, page_num, f06_file, write_words,
                                                    is_mag_phase=is_mag_phase, is_sort1=is_sort1)
         return self._write_f06_block(words, header, page_stamp, page_num, f06_file, write_words,
@@ -103,7 +104,7 @@ class ComplexDisplacementArray(ComplexTableArray):
                  #'      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         #words += self.get_table_marker()
 
-        #if self.nonlinear_factor is not None:
+        #if self.nonlinear_factor not in (None, np.nan):
             #return self._write_f06_transient_block(words, header, page_stamp, page_num, f06_file,
                                                    #is_mag_phase=is_mag_phase, is_sort1=is_sort1)
         #return self._write_f06_block(words, header, page_stamp, page_num, f06_file,
@@ -150,7 +151,7 @@ class ComplexDisplacementArray(ComplexTableArray):
         #subtable_name = 'OUG1    '
         #self._write_table3(f, fascii, -3)
 
-        #if self.nonlinear_factor is not None:
+        #if self.nonlinear_factor not in (None, np.nan):
             #return self._write_op2_transient_block(op2_file, fascii)
         #return self._write_op2_block(op2_file, fascii)
 
@@ -172,7 +173,7 @@ class ComplexDisplacementArray(ComplexTableArray):
         #data = []
         #fmt = '2i 6f'
         #device_code = self.device_code
-        #for nodeID, translation in sorted(iteritems(self.translations)):
+        #for nodeID, translation in sorted(self.translations.items()):
             #rotation = self.rotations[nodeID]
             #grid_type = self.gridTypes[nodeID]
             #if grid_type == 'G':

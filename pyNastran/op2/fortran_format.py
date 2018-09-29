@@ -7,12 +7,10 @@ from __future__ import print_function
 import sys
 from copy import deepcopy
 from struct import unpack
-from six import iteritems
-from six.moves import range
 
-from pyNastran.utils import integer_types
-from pyNastran.op2.errors import FortranMarkerError, SortCodeError
 from pyNastran.utils import object_attributes
+from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.op2.errors import FortranMarkerError, SortCodeError
 
 # this is still a requirement, but disabling it so readthedocs works
 if sys.version_info < (2, 7, 7):
@@ -28,7 +26,6 @@ class FortranFormat(object):
         self.n = 0
         self.f = None
         self.obj = None
-        self.data_code = None
         self.table_name = None
         self.isubcase = None
         self.binary_debug = None
@@ -86,22 +83,12 @@ class FortranFormat(object):
         op2_reader = self.op2_reader
         datai = b''
         n = 0
-        is_streaming = False
         if self.read_mode == 2:
             self.ntotal = 0
 
-            if is_streaming:  # pragma: no cover
-                # we stream the record because we get it in partial blocks
-                for data in op2_reader._stream_record():
-                    data = datai + data
-                    ndata = len(data)
-                    n = table4_parser(data, ndata)
-                    assert isinstance(n, integer_types), self.table_name
-                    datai = data[n:]
-            else:
-                data, ndata = op2_reader._read_record_ndata()
-                n = table4_parser(data, ndata)
-                assert isinstance(n, integer_types), self.table_name
+            data, ndata = op2_reader._read_record_ndata()
+            n = table4_parser(data, ndata)
+            assert isinstance(n, integer_types), self.table_name
 
             self._reset_vector_counter()
 
@@ -110,29 +97,15 @@ class FortranFormat(object):
 
             #n = op2_reader._skip_record()
             #n = table4_parser(datai, 300000)
-            if is_streaming:  # pragma: no cover
-                self.ntotal = 0
-                #n = self.n
-                n = 0
-                for unused_i, data in enumerate(op2_reader._stream_record()):
-                    data = datai + data
-                    ndata = len(data)
-                    n = table4_parser(data, ndata)
-                    assert isinstance(n, integer_types), self.table_name
-                    datai = data[n:]
-                assert len(datai) == 0, len(datai)
-                #n = record_len
-                #break
+            if self.table_name in [b'R1TABRG', b'ONRGY1']:
+                data, ndata = op2_reader._read_record_ndata()
             else:
-                if self.table_name in [b'R1TABRG', b'ONRGY1']:
-                    data, ndata = op2_reader._read_record_ndata()
-                else:
-                    data, ndata = op2_reader._skip_record_ndata()
-                n = table4_parser(data, ndata)
-                if not isinstance(n, integer_types):
-                    msg = 'n is not an integer; table_name=%s n=%s table4_parser=%s' % (
-                        self.table_name, n, table4_parser)
-                    raise TypeError(msg)
+                data, ndata = op2_reader._skip_record_ndata()
+            n = table4_parser(data, ndata)
+            if not isinstance(n, integer_types):
+                msg = 'n is not an integer; table_name=%s n=%s table4_parser=%s' % (
+                    self.table_name, n, table4_parser)
+                raise TypeError(msg)
 
             #op2_reader._goto(n)
             #n = op2_reader._skip_record()

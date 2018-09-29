@@ -1,10 +1,10 @@
 from __future__ import print_function
 
-from six import iteritems, string_types, itervalues
+from six import string_types
 import numpy as np
 
 from pyNastran.dev.bdf_vectorized.bdf import BDF
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 
 
 def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
@@ -50,26 +50,21 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     ..warning :: be careful of card unsupported cards (e.g. ones not read in)
 
     Supports
-    ========
      - GRIDs
        - no superelements
      - COORDx
-
      - elements
         - CELASx/CONROD/CBAR/CBEAM/CQUAD4/CTRIA3/CTETRA/CPENTA/CHEXA
         - RBAR/RBAR1/RBE1/RBE2/RBE3/RSPLINE
-
      - properties
         - PSHELL/PCOMP/PCOMPG/PSOLID/PSHEAR/PBAR/PBARL
           PROD/PTUBE/PBEAM
      - mass
         - CMASSx/CONMx/PMASS
-
      - aero
        - FLFACT
        - SPLINEx
        - FLUTTER
-
      - partial case control
        - METHOD/CMETHOD/FREQENCY
        - LOAD/DLOAD/LSEQ/LOADSET...LOADSET/LSEQ is iffy
@@ -77,28 +72,22 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
          - nodes
          - elements
        - SPC/MPC/FLUTTER/FLFACT
-
     - constraints
        - SPC/SPCADD/SPCAX/SPCD
        - MPC/MPCADD
        - SUPORT/SUPORT1
-
     - solution control/methods
        - TSTEP/TSTEPNL
        - NLPARM
        - EIGB/EIGC/EIGRL/EIGR
-
     - sets
        - USET
-
     - other
       - tables
       - materials
       - loads/dloads
 
-
     Not Done
-    ========
      - SPOINT
      - any cards with SPOINTs
        - DMIG/DMI/DMIJ/DMIJI/DMIK/etc.
@@ -187,7 +176,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     if starting_id_dict is None:
         starting_id_dict = starting_id_dict_default
     else:
-        for key, value in iteritems(starting_id_dict_default):
+        for key, value in starting_id_dict_default.items():
             if key not in starting_id_dict:
                 starting_id_dict[key] = value
 
@@ -214,7 +203,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     tf_id = None
 
     # turn them into variables
-    for key, value in sorted(iteritems(starting_id_dict)):
+    for key, value in sorted(starting_id_dict.items()):
         #assert isinstance(key, string_types), key
         assert key in starting_id_dict_default, 'key=%r is invalid' % (key)
         if value is None:
@@ -456,7 +445,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         spcsi = []
         for spc_obj in spcs:
             #print(spc_obj)
-            #spc_ids = [spc.spc_id for spc_id, spc in iteritems(spc_obj) if spc.n]
+            #spc_ids = [spc.spc_id for spc_id, spc in spc_obj.items() if spc.n]
             spc_ids = spc_obj.keys()
             if spc_ids:
                 spcsi.append(spc_ids)
@@ -530,7 +519,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         elem.update(maps)
 
     rigid_elements2 = {}
-    for eid, elem in iteritems(model.rigid_elements):
+    for eid, elem in model.rigid_elements.values():
         eid2 = eid_map[eid]
         rigid_elements2[eid2] = eid_map[eid]
         elem.update(maps)
@@ -540,7 +529,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     for mat in materials:
         mat.update(maps)
     for spc_dict in spcs:
-        for spc_id, spc in iteritems(spc_dict):
+        for spc_id, spc in spc_dict.values():
             spc.update(maps)
 
     if model.aero is not None:
@@ -548,32 +537,32 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     if model.aeros is not None:
         model.aeros.update(maps)
 
-    for caero in itervalues(model.caeros):
+    for caero in model.caeros.values():
         caero.update(maps)
-    for spline in itervalues(model.splines):
+    for spline in model.splines.values():
         spline.update(model, maps)
-    for flutter in itervalues(model.flutters):
+    for flutter in model.flutters.values():
         flutter.update(maps)
-    for flfact in itervalues(model.flfacts):
+    for flfact in model.flfacts.values():
         flfact.update(maps)
-    for flutter in itervalues(model.flutters):
+    for flutter in model.flutters.values():
         flutter.update(maps)
 
-    for desvar in itervalues(model.desvars):
+    for desvar in model.desvars.values():
         desvar.update(maps)
-    for dconstr in itervalues(model.dconstrs):
+    for dconstr in model.dconstrsvalues():
         dconstr.update(maps)
-    for dresp in itervalues(model.dresps):
+    for dresp in model.dresps.values():
         dresp.update(maps)
-    for dconadd in itervalues(model.dconadds):
+    for dconadd in model.dconadds.values():
         dconadd.update(maps)
-    for dvgrid in itervalues(model.dvgrids):
+    for dvgrid in model.dvgrids.values():
         dvgrid.update(maps)
-    for dvcrel in itervalues(model.dvcrels):
+    for dvcrel in model.dvcrels.values():
         dvcrel.update(maps)
-    for dvmrel in itervalues(model.dvmrels):
+    for dvmrel in model.dvmrels.values():
         dvmrel.update(maps)
-    for dvprel in itervalues(model.dvprels):
+    for dvprel in model.dvprels.values():
         dvprel.update(maps)
 
     model.darea.update(maps)

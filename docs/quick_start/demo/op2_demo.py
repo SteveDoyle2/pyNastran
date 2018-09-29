@@ -129,5 +129,5 @@ else:
 
 # write the F06 with Real/Imaginary or Magnitude/Phase
 # only matters for complex results
-op2.write_f06(r'C:\Users\Steve\Desktop\isat.f06', is_mag_phase=False, make_file=True, delete_objects=True)
+op2.write_f06(r'C:\Users\Steve\Desktop\isat.f06', is_mag_phase=False, delete_objects=True)
 

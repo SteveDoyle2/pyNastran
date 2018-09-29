@@ -1,4 +1,5 @@
 # coding: utf-8
+# pylint: disable=R0914
 """
 tests aero cards
 """
@@ -15,14 +16,14 @@ from pyNastran.bdf.bdf import BDF, CORD2R, BDFCard, SET1, GRID, read_bdf
 from pyNastran.bdf.test.test_bdf import run_bdf
 from pyNastran.bdf.cards.aero.aero import (
     AEFACT, AELIST, AEPARM,
-    CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
-    PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
+    CAERO1, CAERO2, CAERO3, CAERO4, #CAERO5,
+    PAERO1, PAERO2, PAERO4, #PAERO3, PAERO5,
     AESURF, AESURFS,
     AELINK, AECOMP,
     SPLINE1, SPLINE2 #, SPLINE3, SPLINE4, SPLINE5
 )
 from pyNastran.bdf.cards.aero.dynamic_loads import AERO, FLFACT, FLUTTER, GUST, MKAERO1, MKAERO2
-from pyNastran.bdf.cards.aero.static_loads import AESTAT, AEROS, CSSCHD, TRIM, DIVERG
+from pyNastran.bdf.cards.aero.static_loads import AESTAT, AEROS, CSSCHD, TRIM, TRIM2, DIVERG
 from pyNastran.bdf.cards.test.utils import save_load_deck
 
 ROOTPATH = pyNastran.__path__[0]
@@ -54,7 +55,7 @@ class TestAero(unittest.TestCase):
     def test_aestat_1(self):
         bdf = BDF(debug=False)
         lines = ['AESTAT  502     PITCH']
-        card = bdf.process_card(lines)
+        card = bdf._process_card(lines)
         card = BDFCard(card)
 
         size = 8
@@ -187,8 +188,8 @@ class TestAero(unittest.TestCase):
         #with self.assertRaises(SyntaxError):
             #model.add_card(data, data[0], comment_good, is_list=True)
 
-        Di = [1., 2., 3.]
-        aefact = AEFACT(200, Di, comment='')
+        fractions = [1., 2., 3.]
+        aefact = AEFACT(200, fractions, comment='')
         aefact.validate()
         aefact.write_card()
         #model = BDF()
@@ -204,21 +205,21 @@ class TestAero(unittest.TestCase):
         idi = 10
         label = 'CS'
         independent_labels = ['A', 'B', 'C']
-        Cis = [1.0, 2.0]
-        aelink = AELINK(idi, label, independent_labels, Cis, comment='')
+        linking_coefficents = [1.0, 2.0]
+        aelink = AELINK(idi, label, independent_labels, linking_coefficents, comment='')
         assert aelink.aelink_id == idi
         with self.assertRaises(RuntimeError):
             aelink.validate()
         str(aelink)
         aelink.write_card()
 
-        card = ['AELINK', idi, label, independent_labels[0], Cis[0],
-                independent_labels[1], Cis[1], independent_labels[2]]
+        card = ['AELINK', idi, label, independent_labels[0], linking_coefficents[0],
+                independent_labels[1], linking_coefficents[1], independent_labels[2]]
         with self.assertRaises(AssertionError):
             model.add_card(card, 'AELINK')
 
-        card = ['AELINK', idi, label, independent_labels[0], Cis[0],
-                independent_labels[1], Cis[1]]
+        card = ['AELINK', idi, label, independent_labels[0], linking_coefficents[0],
+                independent_labels[1], linking_coefficents[1]]
         model.add_card(card, 'AELINK', comment='cat')
         #print(model.aelinks[idi])
         assert model.aelinks[idi][0].comment == '$cat\n', 'comment=%r' % str(model.aelinks[idi][0].comment)
@@ -226,8 +227,8 @@ class TestAero(unittest.TestCase):
         idi = 11
         label = 'LABEL'
         independent_labels = ['pig', 'frog', 'dog']
-        Cis = []
-        aelink2 = model.add_aelink(idi, label, independent_labels, Cis)
+        linking_coefficents = []
+        aelink2 = model.add_aelink(idi, label, independent_labels, linking_coefficents)
         with self.assertRaises(RuntimeError):
             model.validate()
         aelink2.Cis = [1.0, 2.0, 3.0]
@@ -684,10 +685,11 @@ class TestAero(unittest.TestCase):
                                   lspan=0, nchord=6, lchord=0,
                                   comment='')
         caero_body_ids = [3]
-        paero = model.add_paero1(pid, caero_body_ids=caero_body_ids, comment='')
-        model.add_cord2r(cid, rid=0,
-                         origin=None, zaxis=None, xzplane=None,
-                         comment='')
+        unused_paero = model.add_paero1(pid, caero_body_ids=caero_body_ids, comment='')
+        origin = None
+        zaxis = None
+        xzplane = None
+        model.add_cord2r(cid, origin, zaxis, xzplane, rid=0, comment='')
         velocity = 0.0
         cref = 1.0
         rho_ref = 1.225
@@ -710,7 +712,7 @@ class TestAero(unittest.TestCase):
         setg = 43
         spline2 = model.add_spline2(eid, caero, id1, id2, setg, dz=0.0, dtor=1.0, cid=1,
                                     dthx=None, dthy=None, usage='BOTH', comment='')
-        spline.validate()
+        spline2.validate()
 
         pid = 3
         caero2 = model.add_caero2(caero, pid, igid, p1, x12, cp=1, nsb=4,
@@ -936,12 +938,12 @@ class TestAero(unittest.TestCase):
         caero2f.raw_fields()
         caero2f.get_points_elements_3d()
         caero2f.get_points()
-        xyz, elems = caero2f.get_points_elements_3d()
+        unused_xyz, unused_elems = caero2f.get_points_elements_3d()
 
 
         caero2g.get_points()
         caero2g.get_points_elements_3d()
-        xyz, elems = caero2g.get_points_elements_3d()
+        unused_xyz, unused_elems = caero2g.get_points_elements_3d()
 
         model.uncross_reference()
         model.safe_cross_reference()
@@ -1002,8 +1004,10 @@ class TestAero(unittest.TestCase):
                                          0., 0., 0.,
                                          0., 0., 1.,
                                          1., 0., 0.]))
-        model.add_cord2r(cp, rid=0, origin=None, zaxis=None, xzplane=None,
-                         comment='cord2r')
+        origin = None
+        zaxis = None
+        xzplane = None
+        model.add_cord2r(cp, origin, zaxis, xzplane, rid=0, comment='cord2r')
         coord.validate()
         model.coords[cp] = coord
 
@@ -1171,7 +1175,7 @@ class TestAero(unittest.TestCase):
         points, elements = caero4b.panel_points_elements()
         del points, elements
 
-        p1, p2, p3, p4 = caero4b.get_points()
+        p1, unused_p2, unused_p3, p4 = caero4b.get_points()
 
         caero4c = CAERO4(eid, pid, p1, x12, p4, x43,
                          cp=0, nspan=0, lspan=0,
@@ -1190,6 +1194,7 @@ class TestAero(unittest.TestCase):
         bdf_filename.seek(0)
         model2 = read_bdf(bdf_filename, xref=False, punch=True, debug=False)
         model.safe_cross_reference()
+        model2.safe_cross_reference()
 
     def test_caero5_1(self):
         """checks the CAERO5/PAERO5"""
@@ -1249,12 +1254,12 @@ class TestAero(unittest.TestCase):
         paero5.ltaus = ltaus
         aefact_sid = ltaus
         Di = [0., 0.5, 1.]
-        aefact = model.add_aefact(aefact_sid, Di, comment='aefact2')
+        unused_aefact = model.add_aefact(aefact_sid, Di, comment='aefact2')
 
         #caero5.cross_reference(model)
         model.cross_reference()
-        npoints, nelements = caero5.get_npanel_points_elements()
-        points, elements = caero5.panel_points_elements()
+        unused_npoints, unused_nelements = caero5.get_npanel_points_elements()
+        unused_points, unused_elements = caero5.panel_points_elements()
         caero5.write_card()
         #caero5.raw_fields()
 
@@ -1508,12 +1513,10 @@ class TestAero(unittest.TestCase):
         model._add_aesurf_object(aesurf1)
 
         elements = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
-        aelist = AELIST(aelist_id1, elements)
-        model._add_aelist_object(aelist)
+        unused_aelist = model.add_aelist(aelist_id1, elements, comment='')
 
         elements = [11, 22, 33, 44, 55, 66, 77, 88, 99]
-        aelist = AELIST(aelist_id2, elements)
-        model._add_aelist_object(aelist)
+        unused_aelist = model.add_aelist(aelist_id2, elements, comment='')
 
         aesid += 1
         model.add_aesurf(
@@ -1611,7 +1614,7 @@ class TestAero(unittest.TestCase):
         flutter2.write_card()
 
         densities = np.linspace(0., 1.)
-        density = model.add_flfact(idensity, densities)
+        unused_density = model.add_flfact(idensity, densities)
 
         machs = np.linspace(0.7, 0.8)
         mach = FLFACT(imach, machs)
@@ -1833,8 +1836,6 @@ class TestAero(unittest.TestCase):
         sid = 100
         nroots = 21
         machs = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
-        x0 = 3.
-        V = 42.
         diverg = DIVERG(sid, nroots, machs, comment='divergence')
         diverg.validate()
         diverg.write_card()
@@ -1855,33 +1856,48 @@ class TestAero(unittest.TestCase):
         q = 100.
         labels = ['ALPHA', 'ALPHA']
         uxs = [10., 20.]
-        trim = TRIM(sid, mach, q, labels, uxs)
+        trim1 = TRIM(sid, mach, q, labels, uxs)
+        trim2 = TRIM2(sid+1, mach, q, labels, uxs)
         with self.assertRaises(RuntimeError):
-            trim.validate()
+            trim1.validate()
+        with self.assertRaises(RuntimeError):
+            trim2.validate()
 
         labels = ['ALPHA']
         uxs = [10., 20.]
-        trim = TRIM(sid, mach, q, labels, uxs)
+        trim1 = TRIM(sid, mach, q, labels, uxs)
+        trim2 = TRIM2(sid, mach, q, labels, uxs)
         with self.assertRaises(RuntimeError):
-            trim.validate()
+            trim1.validate()
+        with self.assertRaises(RuntimeError):
+            trim2.validate()
 
         labels = ['ALPHA', 'BETA']
         uxs = [10., 20.]
-        trim = TRIM(sid, mach, q, labels, uxs)
-        trim.validate()
-        trim.write_card()
+        trim1 = TRIM(sid, mach, q, labels, uxs)
+        trim1.validate()
+        trim1.write_card()
+        trim2 = TRIM2(sid, mach, q, labels, uxs)
+        trim2.validate()
+        trim2.write_card()
 
         labels = ['ALPHA']
         uxs = [10.]
-        trim = TRIM(sid, mach, q, labels, uxs, aeqr=3.0, comment='')
-        trim.validate()
-        trim.write_card()
+        trim1 = TRIM(sid, mach, q, labels, uxs, aeqr=3.0, comment='')
+        trim1.validate()
+        trim1.write_card()
+        trim2 = TRIM2(sid, mach, q, labels, uxs, aeqr=3.0, comment='')
+        trim2.validate()
+        trim2.write_card()
 
         labels = ['ALPHA', 'BETA']
         uxs = [10., 20.]
-        trim = TRIM(sid, mach, q, labels, uxs, aeqr=3.0, comment='')
-        trim.validate()
-        trim.write_card()
+        trim1 = TRIM(sid, mach, q, labels, uxs, aeqr=3.0, comment='')
+        trim1.validate()
+        trim1.write_card()
+        trim2 = TRIM(sid, mach, q, labels, uxs, aeqr=3.0, comment='')
+        trim2.validate()
+        trim2.write_card()
 
         model.add_card(['TRIM', sid, mach, q, labels[0], uxs[0]], 'TRIM', comment='$ trim')
         model.validate()
@@ -1895,8 +1911,11 @@ class TestAero(unittest.TestCase):
         q = 100.
         labels = ['NZ']
         uxs = [2.5]
-        trim = model.add_trim(sid, mach, q, labels, uxs, aeqr=0.0, comment='')
-        trim.validate()
+        trim1 = model.add_trim(sid, mach, q, labels, uxs, aeqr=0.0, comment='')
+        trim1.validate()
+
+        trim2 = model.add_trim(sid+1, mach, q, labels, uxs, aeqr=0.0, trim_type=2, comment='')
+        trim2.validate()
 
     def test_trim_03(self):
         """checks the TRIM card with a 2.5g pullup"""
@@ -1906,13 +1925,14 @@ class TestAero(unittest.TestCase):
         q = 100.
         labels = ['URDD3', 'PITCH']
         uxs = [2.5, 0.0]
-        trim1 = model.add_trim(sid, mach, q, labels, uxs, aeqr=0.0, comment='')
+        trim1a = model.add_trim(sid, mach, q, labels, uxs, aeqr=0.0, trim_type=1, comment='') # 75
+        trim2a = model.add_trim(sid+1, mach, q, labels, uxs, aeqr=0.0, trim_type=2, comment='') # 76
 
-        sid = 76
         labels = ['URDD3', 'URDD5', 'PITCH']
         uxs = [2.5, 0.0, 0.0]
         # good
-        trim2 = model.add_trim(sid, mach, q, labels, uxs, aeqr=0.0, comment='trim')
+        trim1b = model.add_trim(sid+2, mach, q, labels, uxs, aeqr=0.0, trim_type=1, comment='trim') # 77
+        trim2b = model.add_trim(sid+3, mach, q, labels, uxs, aeqr=0.0, trim_type=2, comment='trim') # 78
 
         model.add_aestat(1, 'URDD3', comment='aestat')
         model.add_aestat(2, 'URDD5', comment='aestat')
@@ -1949,10 +1969,16 @@ class TestAero(unittest.TestCase):
 
         # why doesn't this work?
         with self.assertRaises(RuntimeError):
-            trim1.verify_trim(model.suport, model.suport1, model.aestats, model.aeparams,
-                              model.aelinks, model.aesurf, xref=True)
-        trim2.verify_trim(model.suport, model.suport1, model.aestats, model.aeparams,
-                          model.aelinks, model.aesurf, xref=True)
+            trim1a.verify_trim(model.suport, model.suport1, model.aestats, model.aeparams,
+                               model.aelinks, model.aesurf, xref=True)
+        with self.assertRaises(RuntimeError):
+            trim2a.verify_trim(model.suport, model.suport1, model.aestats, model.aeparams,
+                               model.aelinks, model.aesurf, xref=True)
+
+        trim1b.verify_trim(model.suport, model.suport1, model.aestats, model.aeparams,
+                           model.aelinks, model.aesurf, xref=True)
+        trim2b.verify_trim(model.suport, model.suport1, model.aestats, model.aeparams,
+                           model.aelinks, model.aesurf, xref=True)
         model.write_bdf('trim.bdf')
         model2 = read_bdf('trim.bdf', debug=None)
         model2._verify_bdf(xref=True)
@@ -2019,29 +2045,30 @@ class TestAero(unittest.TestCase):
         label = 'ELEV'
         cid1 = 0
         alid1 = 37
-        aesurf = model.add_aesurf(aesid, label, cid1, alid1, cid2=None, alid2=None,
-                                  eff=1.0, ldw='LDW', crefc=1.0, crefs=1.0,
-                                  pllim=-np.pi/2., pulim=np.pi/2.,
-                                  hmllim=None, hmulim=None,
-                                  tqllim=None, tqulim=None, comment='aesurf')
+        unused_aesurf = model.add_aesurf(
+            aesid, label, cid1, alid1, cid2=None, alid2=None,
+            eff=1.0, ldw='LDW', crefc=1.0, crefs=1.0,
+            pllim=-np.pi/2., pulim=np.pi/2.,
+            hmllim=None, hmulim=None,
+            tqllim=None, tqulim=None, comment='aesurf')
 
-        aelist = model.add_aelist(alid1, [1, 2, 3], comment='')
+        unused_aelist = model.add_aelist(alid1, [1, 2, 3], comment='')
 
         aefact_sid = alid1
-        Di = [0., 0.5, 1.]
-        aefact_elev = model.add_aefact(aefact_sid, Di, comment='aefact')
+        fractions = [0., 0.5, 1.]
+        unused_aefact_elev = model.add_aefact(aefact_sid, fractions, comment='aefact')
 
         aefact_sid = lalpha
-        Di = [0., 5., 10.]
-        aefact_alpha = model.add_aefact(aefact_sid, Di, comment='aefact')
+        fractions = [0., 5., 10.]
+        unused_aefact_alpha = model.add_aefact(aefact_sid, fractions, comment='aefact')
 
         aefact_sid = lmach
-        Di = [0., 0.7, 0.8]
-        aefact_mach = model.add_aefact(aefact_sid, Di, comment='aefact')
+        fractions = [0., 0.7, 0.8]
+        unused_aefact_mach = model.add_aefact(aefact_sid, fractions, comment='aefact')
 
         aefact_sid = lschd
-        Di = [0., 15., 30., 45.]
-        aefact_delta = model.add_aefact(aefact_sid, Di, comment='aefact')
+        fractions = [0., 15., 30., 45.]
+        unused_aefact_delta = model.add_aefact(aefact_sid, fractions, comment='aefact')
 
         model.cross_reference()
         csshcd2.write_card()
@@ -2060,6 +2087,7 @@ class TestAero(unittest.TestCase):
 
         bdf_filename2 = StringIO()
         model.write_bdf(bdf_filename2, size=16, close=False)
+        model2.write_bdf(bdf_filename2, size=16, close=False)
 
         #-----------
         csshcd3 = CSSCHD(sid, aesid, lschd, lalpha=None, lmach=None, comment='cssch card')
@@ -2108,7 +2136,7 @@ class TestAero(unittest.TestCase):
         bdf_filename = os.path.join(MODEL_PATH, 'aero', 'bah_plane', 'bah_plane.bdf')
         folder = ''
         run_bdf(folder, bdf_filename, debug=False, xref=True, check=True,
-                punch=False, cid=None, mesh_form='combined',
+                punch=False, mesh_form='combined',
                 is_folder=False, print_stats=False,
                 encoding=None, sum_load=True, size=8,
                 is_double=False, stop=False, nastran='',
@@ -2148,10 +2176,124 @@ class TestAero(unittest.TestCase):
         rotorg.validate()
         save_load_deck(model)
 
-    def test_zona(self):
+    def test_zona_1(self):
+        """zona explicit test"""
         bdf_filename = os.path.join(MODEL_PATH, 'aero', 'f16_ma41.bdf')
         model = read_bdf(bdf_filename, xref=False, debug=False)
         model.safe_cross_reference()
+        save_load_deck(model, xref='safe',
+                       run_renumber=False, run_convert=False, run_remove_unused=False,
+                       run_save_load=False)
+        with self.assertRaises(NotImplementedError):
+            model.zona.convert_to_nastran()
+
+    def test_zona_2(self):
+        """zona explicit test"""
+        bdf_filename = os.path.join(MODEL_PATH, 'aero', 'ztran.bdf')
+        model = read_bdf(bdf_filename, xref=False, debug=True)
+        model.safe_cross_reference()
+        save_load_deck(model, xref='safe',
+                       run_renumber=False, run_convert=False, run_remove_unused=False,
+                       run_save_load=False)
+        model.zona.convert_to_nastran()
+
+    def test_zona_3(self):
+        """totally fake zona model"""
+        bdf_file = get_zona_model()
+
+        model = read_bdf(bdf_filename=bdf_file, validate=True, xref=True, punch=False,
+                         skip_cards=None, read_cards=None, encoding=None,
+                         log=None, debug=True, mode='zona')
+        #with self.assertRaises(AttributeError):
+
+        model.uncross_reference()
+        model.write_bdf('zona.bdf')
+        model.safe_cross_reference()
+        model.write_bdf('zona.bdf')
+
+        bdf_file.seek(0)
+        model.clear_attributes()
+        model2 = read_bdf('zona.bdf')
+        os.remove('zona.bdf')
+
+        model2.zona.convert_to_nastran()
+
+def get_zona_model():
+    bdf_file = StringIO()
+    bdf_file.write(
+        '$ pyNastran: version=zona\n'
+        'CEND\n'
+        'BEGIN BULK\n'
+        #'$       acsid, rcsid, cref, bref, sref, symxz, symxy\n'
+        #'AEROZ, 10,     0,     1.,   10.,  100., YES\n'
+        '$AEROZ  ACSID XZSYM FLIP FMMUNIT FMLUNIT REFC   REFB   REFS\n'
+        '$       REFX  REFY  REFZ\n'
+        'AEROZ,  0,    YES,  NO,  SLIN,   IN,      22.73,59.394,1175.8\n'
+        ',       59.53,0.0,  0.0\n'
+
+        '$       label, type, cid, PANLST, setg, actid\n'
+        'AESURFZ,FLAP,  ASYM, 1,   10,       20,   0\n'
+        #'AESURFZ,FLAP,  SYM,  1,  10,       20,   0\n'
+        'CORD2R, 1,0, 0.,0.,0., 0.,0.,1.,\n'
+        ',1.,0.,0.\n'
+        '$BODY7,ID,LABEL,IPBODY7, ACOORD, NSEG, IDMESH1\n'
+        'BODY7, 1, FUSE,        ,      2,     , 1\n'
+        'PANLST3,10, FUSE, \n'
+        '$       id,naxial,nradial, \n'
+        'SEGMESH,1, 4,     3,       \n'
+
+        # ITYPEi = 1 (Body of Revolution):
+        #    Xi, CAMi, YRi
+        # ITYPEi = 2 (Elliptical Body):
+        #    Xi, YRi, ZRi
+        # ITYPEi = 3 (Arbitrary Body):
+        #    Xi, IDYi, IDZi
+        '$       itype, x1, cam, yr1, zr1, idy1, idz1 \n'
+        ',       1,        ,  1.,  1.,    ,\n'
+        ',       2,      1.,    ,  1.,  2.,\n'
+        ',       3,      2.,    ,    ,    , 13,   14   \n'
+        ',       3,      3.,    ,    ,    , 13,   14   \n'
+
+        # y
+        'AEFACT,13, 1., 0.,  0.,-1.\n'
+        'AEFACT,14, 0., 1., -1., 0.\n'
+        '$ MKAEROZ, ID, MACH, METHOD, IDFLT\n'
+        'MKAEROZ,   101, 0.8, -1,     -1,  \n'
+        '$ TRIM, ID, MKAEROZ, Q,   LABEL1, UX1,    CGX, CGY,\n'
+        'TRIM, 100,  101,     42., ALPHA,  5., 0., 0.,  0.,\n'
+        '$CGZ, WEIGHT, Ixx, Ixy, Iyy, Ixz, Iyz, Izz\n'
+        ',0.,  1e4,    1e3, 1e3, 1e5, 1e3, 1e3, 1e4\n'
+        '$TRUE/G, NX,     NY,  NZ,  P,       Q,   R, \n'
+        ', TRUE,  FREE, NONE,  32., FREE, NONE, 42., \n'
+        '$var, value\n'
+        ',17,  1.0,\n'
+        '$\n'
+        'TRIMVAR,17,VAR\n'
+        '$\n'
+        '$trimlnk,id,sym, ?,  ?\n'
+        'TRIMLNK,10,SYM, -1, 17\n'
+        'ACOORD, 2, 0.,0.,0., 1.0,0.\n'
+        '$       ID,    MODEL, CP, PANLST, SETG, DZ, EPS\n'
+        'SPLINE1,100,        ,   ,    422, 423,\n'
+        '$,      NELEM, MELEM\n'
+        '$,      10,    10\n'
+        'PANLST3,422, FUSE, \n'
+        '$       id,naxial,nradial, \n'
+
+        #'$       ID,   MODEL, PANLST, SETG,\n'
+        #'SPLINE2,1000,      ,    422,  423,\n'
+
+        '$       ID,   MODEL, CP, PANLST, SETG,\n'
+        'SPLINE3,1200,      ,   ,    422,  423,\n'
+
+        'SET1,423,10\n'
+        'GRID,10,,0.,0.,0.\n'
+        'GRID,11,,1.,0.,0.\n'
+        'CONROD,100, 10,11, 101,1.0\n'
+        'MAT1,101,3.0e7,,0.3\n'
+    )
+    bdf_file.seek(0)
+    return bdf_file
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

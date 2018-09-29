@@ -1,17 +1,16 @@
 # coding: utf-8
-# pylint: disable=W0201,C0111
+# pylint: disable=W0201,C0111,C0301
 from __future__ import division, unicode_literals, print_function
 
 # standard library
-import sys
+#import sys
 import os.path
 import datetime
 from collections import OrderedDict
 from math import ceil
 import cgi #  html lib
 
-from six import string_types, iteritems, itervalues
-from six.moves import range
+from six import string_types
 
 import numpy as np
 
@@ -34,7 +33,8 @@ else:
     from pyNastran.gui.qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
 from pyNastran.utils.log import SimpleLogger
-from pyNastran.utils import integer_types
+from pyNastran.utils import check_path
+from pyNastran.utils.numpy_utils import integer_types
 
 from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
 from pyNastran.gui.qt_files.scalar_bar import ScalarBar
@@ -529,7 +529,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
     def _populate_menu(self, menu_items):
         """populate menus and toolbar"""
         assert isinstance(menu_items, dict), menu_items
-        for unused_menu_name, (menu, items) in iteritems(menu_items):
+        for unused_menu_name, (menu, items) in menu_items.items():
             if menu is None:
                 continue
             for i in items:
@@ -560,7 +560,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def _update_menu(self, menu_items):
         assert isinstance(menu_items, dict), menu_items
-        for unused_name, (menu, unused_items) in iteritems(menu_items):
+        for unused_name, (menu, unused_items) in menu_items.items():
             menu.clear()
         self._populate_menu(menu_items)
 
@@ -654,61 +654,73 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.actions['reswidget'].setStatusTip("Show/Hide results selection")
         return self.actions
 
-    def _logg_msg(self, typ, msg):
+    def _logg_msg(self, log_type, filename, lineno, msg):
         """
         Add message to log widget trying to choose right color for it.
 
         Parameters
         ----------
-        typ : str
+        log_type : str
             {DEBUG, INFO, ERROR, COMMAND, WARNING} or prepend 'GUI '
+        filename : str
+            the active file
+        lineno : int
+            line number
         msg : str
             message to be displayed
         """
         if not self.html_logging:
-            print(typ, msg)
+            # standard logger
+            name = '%-8s' % (log_type + ':')
+            filename_n = '%s:%s' % (filename, lineno)
+            msg2 = ' %-28s %s\n' % (filename_n, msg)
+            print(name, msg2)
             return
 
-        if 'DEBUG' in typ and not self.settings.show_debug:
+        if 'DEBUG' in log_type and not self.settings.show_debug:
             return
-        elif 'INFO' in typ and not self.settings.show_info:
+        elif 'INFO' in log_type and not self.settings.show_info:
             return
-        elif 'COMMAND' in typ and not self.settings.show_command:
+        elif 'COMMAND' in log_type and not self.settings.show_command:
             return
-        elif 'WARNING' in typ and not self.settings.show_warning:
+        elif 'WARNING' in log_type and not self.settings.show_warning:
             return
-        elif 'ERROR' in typ and not self.settings.show_error:
+        elif 'ERROR' in log_type and not self.settings.show_error:
             return
 
-        frame = sys._getframe(4)  # jump to get out of the logger code
-        lineno = frame.f_lineno
-        filename = os.path.basename(frame.f_globals['__file__'])
+        if log_type in ['GUI ERROR', 'GUI COMMAND', 'GUI DEBUG', 'GUI INFO', 'GUI WARNING']:
+            log_type = log_type[4:] # drop the GUI
 
-        if typ in ['GUI ERROR', 'GUI COMMAND', 'GUI DEBUG', 'GUI INFO', 'GUI WARNING']:
-            typ = typ[4:]
-            msg = '   fname=%-25s:%-4s   %s\n' % (filename, lineno, msg)
+        if 0:
+            msg = str_to_html(log_type, filename, lineno, msg)
+        else:
+            tim = datetime.datetime.now().strftime('[%Y-%m-%d %H:%M:%S]')
+            #print('log_type = %s' % log_type)
+            #print('filename = %s' % filename)
+            #print('lineno = %s' % lineno)
+            #print('msg = %s' % msg)
+            #assert isinstance(msg, string_types), msg
+            msg = cgi.escape(msg)
 
-        tim = datetime.datetime.now().strftime('[%Y-%m-%d %H:%M:%S]')
-        msg = cgi.escape(msg)
+            #message colors
+            dark_orange = '#EB9100'
+            colors = {
+                'COMMAND' : 'blue',
+                'ERROR' : 'Crimson',
+                'DEBUG' : dark_orange,
+                'WARNING' : 'purple',
+                'INFO' : 'green',
+            }
+            color = colors[log_type]
 
-        #message colors
-        dark_orange = '#EB9100'
-        colors = {
-            'COMMAND' : 'blue',
-            'ERROR' : 'Crimson',
-            'DEBUG' : dark_orange,
-            'WARNING' : 'purple',
-            'INFO' : 'green',
-        }
-        msg = msg.rstrip().replace('\n', '<br>')
-        msg = tim + ' ' + (typ + ': ' + msg) if typ else msg
-        if typ in colors:
-            msg = r'<font color="%s"> %s </font> <br />' % (colors[typ], msg)
+            if filename.endswith('.pyc'):
+                filename = filename[:-1]
+            html_msg = get_html_msg(color, tim, log_type, filename, lineno, msg)
 
         if self.performance_mode:
-            self._log_messages.append(msg)
+            self._log_messages.append(html_msg)
         else:
-            self._log_msg(msg)
+            self._log_msg(html_msg)
 
     def _log_msg(self, msg):
         """prints an HTML log message"""
@@ -922,7 +934,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.vtk_interactor.GetRenderWindow().Render()
         #self.load_nastran_geometry(None, None)
 
-        #for cid, axes in iteritems(self.axes):
+        #for cid, axes in self.axes.items():
             #self.rend.AddActor(axes)
         self.add_geometry()
         if nframes == 2:
@@ -992,7 +1004,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         """turn edges on/off"""
         self.is_edges = not self.is_edges
         self.edge_actor.SetVisibility(self.is_edges)
-        #self.edge_actor.GetProperty().SetColor(0, 0, 0)  # cart3d edge color isn't black...
+        # cart3d edge color isn't black...
+        #self.edge_actor.GetProperty().SetColor(0, 0, 0)
         self.edge_actor.Modified()
         #self.widget.Update()
         #self._update_camera()
@@ -1403,7 +1416,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def start_logging(self):
         if self.html_logging is True:
-            log = SimpleLogger('debug', 'utf-8', lambda x, y: self._logg_msg(x, y))
+            log = SimpleLogger(
+                'debug', 'utf-8',
+                lambda w, x, y, z: self._logg_msg(w, x, y, z))
             # logging needs synchronizing, so the messages from different
             # threads would not be interleave
             self.log_mutex = QtCore.QReadWriteLock()
@@ -1642,7 +1657,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             except_names = [except_names]
 
         # hide everything but the main grid
-        for key, actor in iteritems(self.geometry_actors):
+        for key, actor in self.geometry_actors.items():
             if key not in except_names:
                 actor.VisibilityOff()
 
@@ -1655,7 +1670,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
         ..todo :: support cids
         ..todo :: fix the coords
         """
-        for axis in itervalues(self.axes):
+        if cids is None:
+            cids = self.axes.keys()
+        for unused_key in self.axes:
+            axis = self.axes[cid]
             axis.VisibilityOff()
         self.corner_axis.EnabledOff()
 
@@ -1664,7 +1682,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
         ..todo :: support cids
         ..todo :: fix the coords
         """
-        for axis in itervalues(self.axes):
+        if cids is None:
+            cids = self.axes.keys()
+        for unused_key in self.axes:
+            axis = self.axes[cid]
             axis.VisibilityOn()
         self.corner_axis.EnabledOn()
 
@@ -1801,7 +1822,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.log_error(str(error))
             self.stop_animation()
             return is_failed
-        phases, icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, onesided, endpoint = out
+        (phases, icases_fringe, icases_disp, icases_vector,
+         isteps, scales,
+         analysis_time, onesided, unused_endpoint) = out
 
         if animate_time:
             icase_msg = '         icase_start=%s, icase_end=%s, icase_delta=%s,\n' % (
@@ -1846,7 +1869,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 icases_fringe, icases_disp, icases_vector,
                 animate_fringe, animate_vector,
                 fps)
-            return
+            is_failed = False
+            return is_failed
 
         try:
             is_failed = self.make_gif_helper(
@@ -1919,12 +1943,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def animation_update(self, icase_fringe0, icase_disp0, icase_vector0,
                          icase_fringe, icase_disp, icase_vector, scale, phase,
-                         animate_fringe, animate_vector,
+                         animate_fringe, unused_animate_vector,
                          normalized_frings_scale,
                          min_value, max_value):
         """applies the animation update callback"""
         #print('icase_fringe=%r icase_fringe0=%r' % (icase_fringe, icase_fringe0))
-        arrow_scale = None # self.glyph_scale_factor * scale
+        arrow_scale = None  # self.glyph_scale_factor * scale
         icase_vector = None
         is_legend_shown = self.scalar_bar.is_shown
         if icase_disp != icase_disp0:
@@ -1948,7 +1972,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 self.log_error('Invalid Fringe Case %i' % icase_fringe)
                 return False
 
-        is_valid = self.animation_update_fringe(icase_fringe, animate_fringe, normalized_frings_scale)
+        is_valid = self.animation_update_fringe(
+            icase_fringe, animate_fringe, normalized_frings_scale)
         if not is_valid:
             return is_valid
 
@@ -2111,7 +2136,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             for istep in isteps:
                 png_filename = fmt % istep
                 png_filenames.append(png_filename)
-                assert os.path.exists(png_filename), 'png_filename=%s' % png_filename
+                check_path(png_filename, 'png_filename')
 
         if gif_filename is not None and png_filenames:
             is_failed = write_gif(
@@ -2448,7 +2473,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.post_group(main_group)
             #self.show_elements_mask(np.arange(self.nelements))
 
-        for unused_module_name, module in iteritems(self.modules):
+        for unused_module_name, module in self.modules.items():
             module.post_load_geometry()
 
     def cell_centroid(self, cell_id):
@@ -2577,8 +2602,80 @@ class GuiCommon2(QMainWindow, GuiCommon):
         """
         #self.groups = out_data
         data = {}
-        for unused_group_id, group in sorted(iteritems(out_data)):
+        for unused_group_id, group in sorted(out_data.items()):
             if not isinstance(group, Group):
                 continue
             data[group.name] = group
         self.groups = data
+
+#message colors
+DARK_ORANGE = '#EB9100'
+
+COLORS = {
+    'COMMAND' : 'blue',
+    'ERROR' : 'Crimson',
+    'DEBUG' : DARK_ORANGE,
+    'WARNING' : 'purple',
+    'INFO' : 'green',
+}
+
+def str_to_html(log_type, filename, lineno, msg):
+    """
+    converts the message to html
+
+    Parameters
+    ----------
+    color : str
+        the HTML color
+    log_type : str
+        the message type
+    filename : str
+        the filename the message came from
+    lineno : int
+        the line number the message came from
+    message : str
+        the message
+
+    Returns
+    -------
+    html_msg : str
+        the HTML message
+    """
+    tim = datetime.datetime.now().strftime('[%Y-%m-%d %H:%M:%S]')
+    msg = cgi.escape(msg)
+
+    #message colors
+    msg = msg.rstrip().replace('\n', '<br>')
+    color = COLORS[log_type]
+    html_msg = r'<font color="%s"> %s %s : %s:%i</font> %s <br>' % (
+        color, tim, log_type, filename, lineno, msg.replace('\n', '<br>'))
+    return html_msg
+
+def get_html_msg(color, tim, log_type, filename, lineno, msg):
+    """
+    converts the message to html
+
+    Parameters
+    ----------
+    color : str
+        the HTML color
+    time : str
+        the time for the message
+    log_type : str
+        the message type
+    filename : str
+        the filename the message came from
+    lineno : int
+        the line number the message came from
+    message : str
+        the message
+
+    Returns
+    -------
+    html_msg : str
+        the HTML message
+    """
+    # log_type, filename, lineno, msg
+    html_msg = r'<font color="%s"> %s %s : %s:%i</font> %s <br>' % (
+        color, tim, log_type, filename, lineno, msg.replace('\n', '<br>'))
+    return html_msg

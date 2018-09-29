@@ -8,15 +8,22 @@ import numpy as np
 
 import pyNastran
 from pyNastran.gui.utils.load_results import (
-    load_csv, load_deflection_csv, load_user_geom, create_res_obj)
+    load_csv, load_deflection_csv, load_user_geom, create_res_obj, check_for_newer_version)
 from pyNastran.gui.menus.legend.write_gif import setup_animation, make_two_sided, make_symmetric
-from pyNastran.gui.menus.results_sidebar import get_cases_from_tree, build_pruned_tree
+from pyNastran.gui.menus.results_sidebar_utils import get_cases_from_tree, build_pruned_tree
 
 PKG_PATH = pyNastran.__path__[0]
 MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
 
 
 class GuiUtils(unittest.TestCase):
+    def test_check_version(self):
+        """tests ``check_for_newer_version``"""
+        unused_version_latest, unused_version_current, is_newer = check_for_newer_version('1.0.0')
+        assert is_newer is True, is_newer
+        check_for_newer_version()
+        assert is_newer is True, is_newer
+
     def test_gui_csv_01(self):
         """tests solid_bending.txt"""
         csv_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending.txt')

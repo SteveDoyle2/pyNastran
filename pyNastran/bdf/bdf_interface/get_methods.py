@@ -1,12 +1,11 @@
 """defines various methods to access low level BDF data"""
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from itertools import chain
 import numpy as np
 
 from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
-#from pyNastran.bdf.cards.nodes import SPOINT, EPOINT
-from pyNastran.utils import integer_types, ChainMap
-
+from pyNastran.utils.numpy_utils import integer_types
 
 class GetMethods(BDFAttributes):
     """defines various methods to access low level BDF data"""
@@ -104,8 +103,20 @@ class GetMethods(BDFAttributes):
         Returns a series of node objects given a list of IDs
         """
         nodes = []
-        for nid in nids:
-            nodes.append(self.Node(nid, msg=msg))
+        #self.axic
+        if self._is_axis_symmetric and self.axif is not None:
+            # GRIDB is only active if AXIF exists
+            for nid in nids:
+                try:
+                    gridb = self.gridb[nid]
+                except KeyError:
+                    assert isinstance(nid, integer_types), 'nid should be an integer; not %s' % type(nid)
+                    nid_list = np.unique(list(self.gridb.keys()))
+                    raise KeyError('nid=%s is not a GRIDB%s\n%s' % (nid, msg, nid_list))
+                nodes.append(gridb)
+        else:
+            for nid in nids:
+                nodes.append(self.Node(nid, msg=msg))
         return nodes
 
     def Point(self, nid, msg=''):
@@ -225,7 +236,7 @@ class GetMethods(BDFAttributes):
 
     def get_material_ids(self):
         """gets the material ids"""
-        keys = ChainMap(
+        keys = chain(
             self.materials.keys(),
             self.thermal_materials.keys(),
             self.hyperelastic_materials.keys(),
@@ -783,10 +794,10 @@ class GetMethods(BDFAttributes):
     def DMIG(self, dname, msg=''):
         """gets a DMIG"""
         try:
-            return self.dmig[dname]
+            return self.dmigs[dname]
         except KeyError:
             raise KeyError('dname=%s not found%s.  Allowed DMIGs=%s'
-                           % (dname, msg, np.unique(list(self.dmig.keys()))))
+                           % (dname, msg, np.unique(list(self.dmigs.keys()))))
 
     def DEQATN(self, equation_id, msg=''):
         """gets a DEQATN"""

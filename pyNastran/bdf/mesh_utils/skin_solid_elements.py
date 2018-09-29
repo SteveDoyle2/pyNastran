@@ -5,7 +5,7 @@ defines:
 from __future__ import print_function
 from collections import defaultdict
 from copy import deepcopy
-from six import PY2, iteritems
+from six import PY2
 from codecs import open
 
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -48,7 +48,7 @@ def write_skin_solid_faces(model, skin_filename,
     nid_set_to_write = set([])
     mid_set_to_write = set([])
     if write_solids:
-        for face, eids in iteritems(eid_set):
+        for face, eids in eid_set.items():
             eid_set_to_write.update(eids)
             for eid in eids:
                 elem = model.elements[eid]
@@ -60,7 +60,7 @@ def write_skin_solid_faces(model, skin_filename,
                 mid_set_to_write.add(mid)
                 #print('added_mid (a) =', mid)
     elif write_shells:
-        for face, eids in iteritems(eid_set):
+        for face, eids in eid_set.items():
             eid_set_to_write.update(eids)
             nid_set_to_write.update(face)
             for eid in eids:
@@ -143,19 +143,19 @@ def get_solid_skin_faces(model):
         face_map[tface] = raw_face
 
     #print('eid_set:')
-    #for tface, eidset in iteritems(eid_set):
+    #for tface, eidset in eid_set.items():
         #print(tface, eidset)
 
     #print('face_set:')
-    #for tface, faceset in iteritems(face_set):
+    #for tface, faceset in face_set.items():
         #print(tface, faceset)
 
     #print('face_map:')
-    #for tface, facemap in iteritems(face_map):
+    #for tface, facemap in face_map.items():
         #print(tface, facemap)
 
     del_faces = []
-    for face, face_count in iteritems(face_set):
+    for face, face_count in face_set.items():
         if face_count == 2:
             del_faces.append(face)
 
@@ -221,7 +221,7 @@ def _write_skin_solid_faces(model, skin_filename, face_map,
             node = model.nodes[nid]
             bdf_file.write(node.write_card(size=size, is_double=is_double))
 
-        for cid, coord in iteritems(model.coords):
+        for cid, coord in model.coords.items():
             if cid == 0:
                 continue
             bdf_file.write(coord.write_card(size=size, is_double=is_double))
@@ -230,7 +230,7 @@ def _write_skin_solid_faces(model, skin_filename, face_map,
             for eid in sorted(eids_to_write):
                 elem = model.elements[eid]
                 bdf_file.write(elem.write_card(size=size))
-            for pid, prop in iteritems(model.properties):
+            for pid, prop in model.properties.items():
                 bdf_file.write(prop.write_card(size=size, is_double=is_double))
             for mid in sorted(mids_to_write):
                 material = model.materials[mid]
@@ -255,7 +255,7 @@ def _write_skin_solid_faces(model, skin_filename, face_map,
                     msg = print_card_16(card)
                 bdf_file.write(msg)
 
-            for face, eids in iteritems(eid_set):
+            for face, eids in eid_set.items():
                 face_raw = face_map[face]
                 nface = len(face)
                 #print("eids =", eids)
@@ -268,7 +268,7 @@ def _write_skin_solid_faces(model, skin_filename, face_map,
                 #elem = next(itervalues(model.elements)) # old
                 assert len(eids) == 1, eids
                 elem = model.elements[eids[0]]
-                #pid = next(iterkeys(model.properties))
+                #pid = next(model.properties.keys())
                 pid = elem.Pid()
                 prop = model.properties[pid]
                 if prop.type in ['PSOLID']: # 'PSHELL',
@@ -303,7 +303,7 @@ def _write_skin_solid_faces(model, skin_filename, face_map,
 
                 #elem = model.elements[eid]
                 #bdf_file.write(elem.write_card(size=size))
-            #for pid, prop in iteritems(model.properties):
+            #for pid, prop in model.properties.items():
                 #bdf_file.write(prop.write_card(size=size, is_double=is_double))
         bdf_file.write('ENDDATA\n')
     #if 0:

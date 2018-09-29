@@ -374,7 +374,7 @@ class TestMaterials(unittest.TestCase):
         ]
 
         model = BDF(debug=False)
-        card = model.process_card(lines)
+        card = model._process_card(lines)
         #print(print_card_8(card))
         cardi = BDFCard(card)
         card2 = MAT8.add_card(cardi)
@@ -480,15 +480,15 @@ class TestMaterials(unittest.TestCase):
             '        9000000.3000000.      .1  .00001 .000007 .000008     50.'
         ]
         model = BDF(debug=False)
-        card = model.process_card(lines)
+        card = model._process_card(lines)
         cardi = BDFCard(card)
-        card2 = MAT11.add_card(cardi)
+        mat = MAT11.add_card(cardi)
 
-        fields = card2.raw_fields()
+        fields = mat.raw_fields()
         msg = print_card_8(fields)
         #f = StringIO.StringIO()
         size = 8
-        msg = card2.write_card(size, 'dummy')
+        msg = mat.write_card(size, 'dummy')
         #msg = f.getvalue()
         #print(msg)
 
@@ -501,6 +501,53 @@ class TestMaterials(unittest.TestCase):
             msg = '\nactual   = %r\n' % actual
             msg += 'expected =  %r' % expected
             self.assertEqual(actual, expected, msg)
+
+        mid = 10
+        e1 = 1.
+        e2 = 2.
+        e3 = 3.
+        nu12 = 12.
+        nu13 = 13.
+        nu23 = 23.
+        g12 = 112.
+        g13 = 113.
+        g23 = 123.
+        model = BDF(debug=False)
+        mat3d = model.add_mat3d(
+            mid,
+            e1, e2, e3, nu12, nu13, nu23, g12, g13, g23,
+            rho=1.0, comment='mat3d')
+        mat3d.raw_fields()
+        mat3d.write_card(size=8, is_double=False)
+        mat3d.write_card(size=16, is_double=False)
+        mat3d.write_card(size=16, is_double=True)
+        save_load_deck(model, xref='standard', punch=True,
+                       run_remove_unused=False, run_convert=True,
+                       run_renumber=True, run_mirror=True, run_save_load=True)
+        #mat = MAT11(mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23,
+                    #rho=0.0, a1=0.0, a2=0.0, a3=0.0, tref=0.0, ge=0.0, comment='')
+
+    def test_mats1(self):
+        """tests MATS1"""
+        model = BDF(debug=False)
+        mid = 10
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu)
+
+        tid = None
+        Type = 'NLELAST'
+        h = None
+        hr = None
+        yf = None
+        limit1 = None
+        limit2 = None
+        unused_mats1 = model.add_mats1(mid, tid, Type, h, hr, yf, limit1, limit2,
+                                       comment='mats1')
+        save_load_deck(model, xref='standard', punch=True, run_remove_unused=False,
+                       run_convert=True, run_renumber=True, run_mirror=True,
+                       run_save_load=True)
 
     def test_multiple_materials(self):
         """tests multiple materials"""

@@ -1,4 +1,3 @@
-from six.moves import zip, range
 from numpy import arange, zeros, searchsorted, unique
 
 from pyNastran.bdf.field_writer_8 import print_card_8

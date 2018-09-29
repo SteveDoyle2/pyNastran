@@ -1,6 +1,6 @@
 from __future__ import unicode_literals, print_function
 import os
-from codecs import open as codec_open
+from codecs import open
 import unittest
 from six import PY2, StringIO
 
@@ -101,7 +101,7 @@ class TestReadWrite(unittest.TestCase):
             model2.write_bdf(out_filename=bdf_filename_out, interspersed=True, size=8,
                              is_double=False, enddata=write_flag)
 
-            with codec_open(out_filename + '.out', 'r') as bdf_file:
+            with open(out_filename + '.out', 'r') as bdf_file:
                 data = bdf_file.read()
 
             if is_enddata:
@@ -127,7 +127,7 @@ class TestReadWrite(unittest.TestCase):
             model2.write_bdf(out_filename=out_filename, interspersed=True, size=8,
                              is_double=False, enddata=write_flag)
 
-            with codec_open(out_filename, 'r') as bdf_file:
+            with open(out_filename, 'r') as bdf_file:
                 data = bdf_file.read()
 
             msg = 'outfilename=%r expected=%r write_flag=%s card_count=%r' % (
@@ -174,17 +174,17 @@ class TestReadWrite(unittest.TestCase):
 
     def test_include_end(self):
         """tests multiple levels of includes"""
-        with codec_open('a.bdf', 'w') as bdf_file:
+        with open('a.bdf', 'w') as bdf_file:
             bdf_file.write('CEND\n')
             bdf_file.write('BEGIN BULK\n')
             bdf_file.write('GRID,1,,1.0\n')
             bdf_file.write("INCLUDE 'b.bdf'\n\n")
 
-        with codec_open('b.bdf', 'w') as bdf_file:
+        with open('b.bdf', 'w') as bdf_file:
             bdf_file.write('GRID,2,,2.0\n')
             bdf_file.write("INCLUDE 'c.bdf'\n\n")
 
-        with codec_open('c.bdf', 'w') as bdf_file:
+        with open('c.bdf', 'w') as bdf_file:
             bdf_file.write('GRID,3,,3.0\n\n')
             bdf_file.write("ENDDATA\n")
 
@@ -196,7 +196,7 @@ class TestReadWrite(unittest.TestCase):
         self.assertEqual(model.nnodes, 3, 'nnodes=%s' % model.nnodes)
 
         model = BDF(log=log, debug=False)
-        lines = model.include_zip(bdf_filename='a.bdf', encoding=None)
+        lines, ilines = model.include_zip(bdf_filename='a.bdf', encoding=None)
         assert len(lines) == 11, len(lines)
 
         os.remove('a.bdf')
@@ -206,19 +206,19 @@ class TestReadWrite(unittest.TestCase):
 
     def test_include_end_02(self):
         """tests multiple levels of includes"""
-        with codec_open('a.bdf', 'w') as bdf_file:
+        with open('a.bdf', 'w') as bdf_file:
             bdf_file.write('CEND\n')
             bdf_file.write('BEGIN BULK\n')
             bdf_file.write('GRID,1,,1.0\n')
             bdf_file.write("INCLUDE 'b.bdf'\n\n")
             bdf_file.write('GRID,4,,4.0\n')
 
-        with codec_open('b.bdf', 'w') as bdf_file:
+        with open('b.bdf', 'w') as bdf_file:
             bdf_file.write('GRID,2,,2.0\n')
             bdf_file.write("INCLUDE 'c.bdf'\n\n")
             bdf_file.write('GRID,5,,5.0\n')
 
-        with codec_open('c.bdf', 'w') as bdf_file:
+        with open('c.bdf', 'w') as bdf_file:
             bdf_file.write('GRID,3,,3.0\n\n')
 
         model = BDF(log=log, debug=False)
@@ -234,7 +234,7 @@ class TestReadWrite(unittest.TestCase):
 
     def test_include_03(self):
         """tests executive/case control includes"""
-        with codec_open('a.bdf', 'w') as bdf_file:
+        with open('a.bdf', 'w') as bdf_file:
             bdf_file.write("INCLUDE 'executive_control.inc'\n\n")
             bdf_file.write('CEND\n')
             bdf_file.write("INCLUDE 'case_control.inc'\n\n")
@@ -243,18 +243,18 @@ class TestReadWrite(unittest.TestCase):
             bdf_file.write("INCLUDE 'b.bdf'\n\n")
             bdf_file.write('GRID,4,,4.0\n')
 
-        with codec_open('executive_control.inc', 'w') as bdf_file:
+        with open('executive_control.inc', 'w') as bdf_file:
             bdf_file.write('SOL = 103\n')
 
-        with codec_open('case_control.inc', 'w') as bdf_file:
+        with open('case_control.inc', 'w') as bdf_file:
             bdf_file.write('DISP = ALL\n')
 
-        with codec_open('b.bdf', 'w') as bdf_file:
+        with open('b.bdf', 'w') as bdf_file:
             bdf_file.write('GRID,2,,2.0\n')
             bdf_file.write("INCLUDE 'c.bdf'\n\n")
             bdf_file.write('GRID,5,,5.0\n')
 
-        with codec_open('c.bdf', 'w') as bdf_file:
+        with open('c.bdf', 'w') as bdf_file:
             bdf_file.write('GRID,3,,3.0\n\n')
 
         model = BDF(log=log, debug=False)
@@ -273,12 +273,12 @@ class TestReadWrite(unittest.TestCase):
 
     def test_include_04(self):
         """tests pyNastran: punch=True with includes"""
-        with codec_open('include4.bdf', 'w') as bdf_file:
+        with open('include4.bdf', 'w') as bdf_file:
             bdf_file.write('$ pyNastran: punch=True\n')
             bdf_file.write('$ pyNastran: dumplines=True\n')
             bdf_file.write("INCLUDE 'include4b.inc'\n\n")
 
-        with codec_open('include4b.inc', 'w') as bdf_file:
+        with open('include4b.inc', 'w') as bdf_file:
             bdf_file.write('$ GRID comment\n')
             bdf_file.write('GRID,2,,2.0\n')
 
@@ -298,12 +298,12 @@ class TestReadWrite(unittest.TestCase):
         self.assertEqual(model.nnodes, 1, 'nnodes=%s' % model.nnodes)
 
     def test_include_05(self):
-        with codec_open('include5.bdf', 'w') as bdf_file:
+        with open('include5.bdf', 'w') as bdf_file:
             bdf_file.write('$ pyNastran: punch=True\n')
             bdf_file.write('$ pyNastran: dumplines=True\n')
             bdf_file.write("INCLUDE 'include5b.inc'\n\n")
 
-        with codec_open('include5b.inc', 'w') as bdf_file:
+        with open('include5b.inc', 'w') as bdf_file:
             bdf_file.write('ECHOON\n')
             bdf_file.write('$ GRID comment\n')
             bdf_file.write('GRID,2,,2.0\n')
@@ -348,13 +348,13 @@ class TestReadWrite(unittest.TestCase):
             'GRID      100000        43.91715    -29..8712984',
         ]
         bdf_filename = 'out.bdf'
-        with codec_open(bdf_filename, 'r', encoding='ascii') as bdf_file:
+        with open(bdf_filename, 'r', encoding='ascii') as bdf_file:
             lines = bdf_file.readlines()
             compare_lines(self, lines, lines_expected, has_endline=False)
 
 
     def test_include_stop(self):
-        with codec_open('a.bdf', 'w') as bdf_file:
+        with open('a.bdf', 'w') as bdf_file:
             bdf_file.write('CEND\n')
             bdf_file.write('BEGIN BULK\n')
             bdf_file.write("INCLUDE 'b.bdf'\n\n")
@@ -393,7 +393,7 @@ class TestReadWrite(unittest.TestCase):
             'RBE2    1500002215000014  123456 1000177 1000178 1000186 1000187\n',
         ]
         bdf_filename = 'xref_test.bdf'
-        with codec_open(bdf_filename, 'w') as bdf_file:
+        with open(bdf_filename, 'w') as bdf_file:
             bdf_file.writelines(lines)
         with self.assertRaises(RuntimeError):
             read_bdf(bdf_filename, validate=False, xref=False,

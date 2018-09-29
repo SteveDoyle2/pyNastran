@@ -4,7 +4,6 @@ defines:
   - make_gpwg(Mgg, reference_point, xyz_cid0, log)
 """
 from __future__ import print_function
-from six import iteritems
 import numpy as np
 
 def _lambda_1d(v1):
@@ -91,7 +90,7 @@ def make_mass_matrix(model, reference_point):
         return eids2
 
     #etypes_skipped = set([])
-    for etype, eids in iteritems(model._type_to_id_map):
+    for etype, eids in model._type_to_id_map.items():
         if etype in no_mass:
             continue
         elif etype in ['CROD', 'CONROD']:
@@ -350,12 +349,12 @@ def get_Ajj(model, xyz=None):
     """not finished"""
     if xyz is None:
         xyz = {}
-        for nid, node in iteritems(model.nodes):
+        for nid, node in model.nodes.items():
             xyz[nid] = node.get_position()
-    for caero_id, caero in iteritems(model.caeros):
+    for caero_id, caero in model.caeros.items():
         centroids = caero.get_centroids()
 
-    for spline_id, spline in iteritems(model.splines):
+    for spline_id, spline in model.splines.items():
         spline_nodes = spline.spline_nodes
 
     Ajj = None

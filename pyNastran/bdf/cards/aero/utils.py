@@ -4,7 +4,9 @@ defines:
  - points, elements = points_elements_from_quad_points(p1, p2, p3, p4, x, y, dtype='int32')
 
 """
+from __future__ import print_function
 import numpy as np
+from pyNastran.utils.numpy_utils import float_types
 
 def elements_from_quad(nx, ny, dtype='int32'):
     """
@@ -116,6 +118,109 @@ def points_elements_from_quad_points(p1, p2, p3, p4, x, y, dtype='int32'):
 
     return points, elements
 
+def create_axisymmetric_body(xstation, ystation, zstation, radii, aspect_ratio,
+                             p1):
+    """creates a CAERO2-type body by defining cone properties at various stations"""
+    #Rs = []
+    xs = []
+    ys = []
+    zs = []
+    yzs = []
+    nx_elements = len(radii) - 1
+    if isinstance(aspect_ratio, float_types):
+        # CAERO2 requires a single aspect ratio
+        # but this code is more general
+        aspect_ratio = [aspect_ratio] * len(xstation)
+
+    for xi, yi, zi, radius, aspect_ratioi in zip(xstation, ystation, zstation, radii, aspect_ratio):
+        #print('  station=%s xi=%.4f radius=%s' % (i, xi, radius))
+        yz = create_ellipse(aspect_ratioi, radius, thetas=None)
+        yzs.append(yz)
+        try:
+            y = yz[:, 0] + yi
+            z = yz[:, 1] + zi
+        except ValueError:
+            print('yz = %s' % yz)
+            print('yz.shape = %s' % str(yz.shape))
+            raise
+        ntheta = yz.shape[0]
+        x = np.ones(ntheta) * xi
+        xs.append(x)
+        ys.append(y)
+        zs.append(z)
+        #Rs.append(np.sqrt(y**2 + z**2))
+    #print('yz.shape=%s xs.shape=%s' % (str(np.array(yzs).shape), str(np.array(xs).shape)))
+    #xyz = np.hstack([yzs, xs])
+    xs = np.array(xs)
+    ys = np.array(ys)
+    zs = np.array(zs)
+    try:
+        xyz = np.vstack([
+            np.hstack(xs),
+            np.hstack(ys),
+            np.hstack(zs),
+        ]).T + p1
+    except:
+        print('xs =', xs.shape)
+        print('ys =', ys.shape)
+        print('zs =', zs.shape)
+        raise
+
+    #R = np.hstack(Rs)
+    #print('xyz.shape =', xyz.shape)
+    #print('xyz =', xyz)
+    #print('R =', R)
+
+    ny = ntheta
+    elems = elements_from_quad(nx_elements+1, ny)
+    #print('elems =\n', elems)
+    return xyz, elems
+
+def create_ellipse(aspect_ratio, radius, thetas=None):
+    r"""
+    a : major radius
+    b : minor radius
+
+    Parameters
+    ----------
+    aspect_ratio : float
+        AR = height/width
+        a = radius (theta=90)
+        b = AR*radius (theta=0)
+
+    https://en.wikipedia.org/wiki/Ellipse#Polar_form_relative_to_center
+
+    .. math::
+
+        r(\theta )={\frac {ab}{\sqrt {(b\cos \theta )^{2}+(a\sin \theta )^{2}}}}
+
+    R(theta) = a*b / ((b*cos(theta))**2 + (a*sin(theta))**2)
+
+    TODO: doesn't support the aero coordinate system
+
+    """
+    if thetas is None: # 41
+        thetas = np.radians(np.linspace(0., 360., 17)) # 4,8,12,16,... becomes 5,9,13,17,...
+    ntheta = len(thetas)
+
+    a = radius
+    b = radius * aspect_ratio
+    if a == 0.0 and b == 0.0:
+        xy = np.zeros((ntheta, 2)) # this is just R
+        return xy
+
+    #a = r
+    #b = r*2
+    #R = 2R^2 / np.sqrt(2r*cos(theta)**2 + r*sin(theta)**2)
+    #R = 2R / np.sqrt(2*cos(theta)**2 + sin(theta)**2)
+    R = a * b / np.sqrt((b*np.cos(thetas))**2 + (a*np.sin(thetas))**2)
+    x = R * np.cos(thetas)
+    y = R * np.sin(thetas)
+
+    xy = np.vstack([x, y]).T
+    assert xy.shape == (ntheta, 2), xy.shape
+    return xy
+
 
 def make_monpnt1s_from_cids(model, nids, cids, cid_to_inids,
                             delete_unused_coords=True):
@@ -138,8 +243,8 @@ def make_monpnt1s_from_cids(model, nids, cids, cid_to_inids,
     delete_unused_coords : bool; default=True
         delete coordinate systems from the model that aren't used
 
-    Note
-    ----
+    Notes
+    -----
     Doesn't write duplicate sets
     """
     nnodes_old = 0

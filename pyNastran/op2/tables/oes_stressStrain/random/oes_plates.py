@@ -1,6 +1,5 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six.moves import range
 
 import numpy as np
 from numpy import zeros
@@ -52,7 +51,6 @@ class RandomPlateArray(OES_Object):
 
     def build(self):
         """sizes the vectorized attributes of the ComplexPlateArray"""
-        #print('data_code = %s' % self.data_code)
         if not hasattr(self, 'subtitle'):
             self.subtitle = self.data_code['subtitle']
         if self.is_built:
@@ -176,7 +174,7 @@ class RandomPlateArray(OES_Object):
         #print(self.element_types2, element_type, self.element_types2.dtype)
         #print('itotal=%s dt=%s eid=%s nid=%-5s oxx=%s' % (self.itotal, dt, eid, node_id, oxx))
 
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self.data[self.itime, self.itotal] = [oxx, oyy, txy]
         self.element[self.itotal, :] = eid  # 0 is center
         self.fiber_curvature[self.itotal] = fd
@@ -196,7 +194,7 @@ class RandomPlateArray(OES_Object):
         #print(self.element_types2, element_type, self.element_types2.dtype)
         #print('itotal=%s dt=%s eid=%s nid=%-5s oxx=%s' % (self.itotal, dt, eid, node_id, oxx))
 
-        assert isinstance(eid, int) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self.data[self.itime, self.itotal] = [oxx, oyy, txy, ovm]
         self.element[self.itotal, :] = eid  # 0 is center
         self.fiber_curvature[self.itotal] = fd
@@ -221,7 +219,7 @@ class RandomPlateArray(OES_Object):
         nnodes = self.element.shape[0]
         #ntotal = self.ntotal
         msg = []
-        if self.nonlinear_factor is not None:  # transient
+        if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i nnodes=%i\n'
                        % (self.__class__.__name__, ntimes, nelements, nnodes))
         else:

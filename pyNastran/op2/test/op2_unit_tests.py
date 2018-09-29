@@ -1,7 +1,7 @@
 from __future__ import print_function
 import os
 import unittest
-from six import iteritems, PY3
+from six import PY3
 import numpy as np
 try:
     import pandas
@@ -33,6 +33,8 @@ from pyNastran.bdf.test.bdf_unit_tests import Tester
 #from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
 from pyNastran.op2.export_to_vtk import export_to_vtk_filename
 from pyNastran.op2.vector_utils import filter1d, abs_max_min_global, abs_max_min_vector
+from pyNastran.op2.tables.oug.oug_displacements import RealDisplacementArray
+from pyNastran.femutils.test.utils import is_array_close
 
 PKG_PATH = pyNastran.__path__[0]
 MODEL_PATH = os.path.abspath(os.path.join(PKG_PATH, '..', 'models'))
@@ -44,6 +46,116 @@ class TestOP2(Tester):
         #op2 = OP2()
         #op2.set_results('solidStress.oxx')
         #op2.read_op2(op2_filename, vectorized=False)
+
+    def test_cd_displacement(self):
+        log = get_logger(level='debug')
+        data_code = {
+            'device_code' : 1,
+            'analysis_code' : 1,
+            'table_code' : 1,
+            'nonlinear_factor' : None,
+            'sort_bits' : [0, 0, 0],
+            'sort_method' : 1,
+            'is_msc' : True,
+            'format_code' : 1,
+            'data_names' : [],
+            'tCode' : 1,
+            'table_name' : 'OUGV1',
+            '_encoding' : 'utf-8',
+        }
+
+        bdf_model = BDF(log=log)
+        bdf_model.add_grid(1, [0., 0., 0.], cd=0)
+        bdf_model.add_grid(2, [0., 0., 0.], cd=1)
+        bdf_model.add_grid(3, [0., 0., 0.], cp=2, cd=2)
+
+        bdf_model.add_grid(11, [1., 0., 0.], cd=0)
+        bdf_model.add_grid(12, [1., 0., 0.], cd=1)
+        bdf_model.add_grid(13, [1., 0., 0.], cp=2, cd=2)
+
+        #bdf_model.add_grid(21, [1., 0., 0.], cd=0)
+        #bdf_model.add_grid(22, [1., 0., 0.], cd=1)
+        bdf_model.add_grid(23, [1., 90., 0.], cp=2, cd=2)
+        bdf_model.add_grid(24, [0., 1., 0.], cp=0, cd=2)
+        bdf_model.add_grid(25, [-1., 0., 0.], cp=0, cd=2)
+
+        #bdf_model.add_grid(31, [1., 0., 0.], cp=3, cd=3)  # [0,1,0]
+        #bdf_model.add_grid(32, [1., 90., 0.], cp=3, cd=3) # [0,-1,0]
+
+        origin = [0., 0., 0.]
+        zaxis = [0., 0., 1.]
+        xzplane = [1., 0., 0.]
+        bdf_model.add_cord2r(1, origin, zaxis, xzplane, rid=0, comment='')
+        coord = bdf_model.add_cord2c(2, origin, zaxis, xzplane, rid=0, comment='')
+
+        origin = [0., 0., 0.]
+        zaxis = [1., 0., 0.]
+        xzplane = [0., 1., 0.]
+        bdf_model.add_cord2c(3, origin, zaxis, xzplane, rid=0, comment='')
+
+        dxyz = np.array([[
+            [1., 0., 0., 0., 0., 0.], # 1
+            [1., 0., 0., 0., 0., 0.], # 2
+            [1., 0., 0., 0., 0., 0.], # 3
+
+            [1., 0., 0., 0., 0., 0.], # 11
+            [1., 0., 0., 0., 0., 0.], # 12
+            [1., 0., 0., 0., 0., 0.], # 13
+
+            [1., 0., 0., 0., 0., 0.], # 23 - [0., 1., 0.]
+            [1., 0., 0., 0., 0., 0.], # 24 - answer=same as 23
+            [1., 0., 0., 0., 0., 0.], # 25 - [-1, 0., 0.]
+
+            #[1., 0., 0., 0., 0., 0.], # 31 - [0,1,0]
+            #[1., 0., 0., 0., 0., 0.], # 32 - [0,-1,0]
+        ]])
+        #--------------------------------------------
+        #icd_transform, icp_transform, xyz_cp, nid_cp_cd - bdf_model.get_displacement_index_xyz_cp_cd(
+            #fdtype='float64', idtype='int32', sort_ids=True)
+        nid_cp_cd, xyz_cid0, xyz_cp, icd_transform, icp_transform = bdf_model.get_xyz_in_coord_array(
+            cid=0, fdtype='float64', idtype='int32')
+
+
+        op2_model = OP2(log=log)
+
+        is_sort1 = True
+        isubcase = 1
+        dt = None
+        disp = RealDisplacementArray(data_code, is_sort1, isubcase, dt)
+        disp.data = dxyz
+        op2_model.displacements[1] = disp
+
+        op2_model.transform_displacements_to_global(
+            icd_transform, bdf_model.coords, xyz_cid0=xyz_cid0, debug=True)
+
+
+        # we're working in a 2D plane
+        icd2 = icd_transform[2]
+        dispi_cd2 = op2_model.displacements[1].data[0, icd2, :2]
+        #op2_model.log.info("dispi2:\n%s" % dispi_cd2)
+
+        dispi = op2_model.displacements[1].data[0, :, :2]
+        expected_disp = np.array([
+            [1., 0.,], # 1
+            [1., 0.,], # 2
+            [1., 0.,], # 3
+
+            [1., 0.,], # 11
+            [1., 0.,], # 12
+            [1., 0.,], # 13
+
+            [0., 1.,], # 23
+            [0., 1.,], # 24
+            [-1., 0.,], # 25
+
+            #[0., 1.,], # 31
+            #[0., -1.,], # 32
+        ])
+        assert is_array_close(dispi, expected_disp)
+        #print(is_array_close(dispi, expected_disp))
+        #print(dispi)
+
+        ## TODO: fix the thetad in the cid=3 coordinates (nid=33,34)
 
     def test_generalized_tables(self):
         """tests that set_additional_generalized_tables_to_read overwrites the GEOM1S class"""
@@ -146,9 +258,10 @@ class TestOP2(Tester):
             PKG_PATH, 'op2', 'test', 'examples', 'ibulk', 'model1_sim1-solution_1.test_op2.f06'))
         op2_filename = os.path.abspath(os.path.join(
             PKG_PATH, 'op2', 'test', 'examples', 'ibulk', 'model1_sim1-solution_1.op2'))
-        op2 = read_op2_geom(op2_filename, xref=False, debug=False)
+        op2 = read_op2_geom(op2_filename, xref=False, debug=False, debug_file='temp.debug')
         op2.write_f06(f06_filename)
         os.remove(f06_filename)
+        os.remove('temp.debug')
 
     def test_beam_modes(self):
         """tests the eigenvalue table reading"""
@@ -159,9 +272,10 @@ class TestOP2(Tester):
         op2_filename_m2 = os.path.abspath(os.path.join(
             MODEL_PATH, 'beam_modes', 'beam_modes_m2.op2'))
         op2_1 = read_op2(op2_filename_m1, debug=False)
-        op2_2 = read_op2_geom(op2_filename_m2, debug=False)
+        op2_2 = read_op2_geom(op2_filename_m2, debug=False, debug_file='temp.debug')
         op2_1.write_f06(f06_filename)
         os.remove(f06_filename)
+        os.remove('temp.debug')
 
     def test_bdf_op2_elements_01(self):
         """tests a large number of elements and results in SOL 101"""
@@ -314,6 +428,34 @@ class TestOP2(Tester):
         #op2.write_f06(f06_filename)
         #os.remove(f06_filename)
 
+    def test_bdf_op2_post_minus4(self):
+        """tests a large number of elements and results in SOL 107-complex modes"""
+        bdf_filename = os.path.join(MODEL_PATH, 'elements', 'modes_elements_post4.op2')
+        #f06_filename = os.path.join(MODEL_PATH, 'elements', 'modes_complex_elements.test_op2.f06')
+        op2_filename = os.path.join(MODEL_PATH, 'elements', 'modes_elements_post4.op2')
+        #fem1, fem2, diff_cards = self.run_bdf('', bdf_filename)
+        #diff_cards2 = list(set(diff_cards))
+        #diff_cards2.sort()
+        #assert len(diff_cards2) == 0, diff_cards2
+
+        #read_op2(op2_filename=op2_filename, combine=True, subcases=None,
+                 #exclude_results=None, include_results=None,
+                 #log=None, debug=True, debug_file=None,
+                 #build_dataframe=None,
+                 #skip_undefined_matrices=True, mode='msc',
+                 #encoding=None)
+        run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
+                write_f06=True, write_op2=False,
+                is_mag_phase=False,
+                is_sort2=False, is_nx=None, delete_f06=True,
+                subcases=None, exclude=None, short_stats=False,
+                compare=True, debug=False, binary_debug=True,
+                quiet=True, check_memory=False,
+                stop_on_failure=True, dev=False, post=-4)
+        #op2 = read_op2_geom(op2_filename, debug=False)
+        #op2.write_f06(f06_filename)
+        #os.remove(f06_filename)
+
     def test_bdf_op2_thermal_01(self):
         """checks time_thermal_elements.bdf"""
         bdf_filename = os.path.join(MODEL_PATH, 'elements', 'time_thermal_elements.bdf')
@@ -361,6 +503,25 @@ class TestOP2(Tester):
         #op2 = read_op2_geom(op2_filename, debug=False)
         #op2.write_f06(f06_filename)
         #os.remove(f06_filename)
+
+    def test_bdf_op2_thermal_03(self):
+        """checks time_thermal_elements.bdf"""
+        bdf_filename = os.path.join(MODEL_PATH, 'elements', 'time_thermal_elements.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'elements', 'time_thermal_elements.op2')
+        fem1, fem2, diff_cards = self.run_bdf('', bdf_filename)
+        diff_cards2 = list(set(diff_cards))
+        diff_cards2.sort()
+        assert len(diff_cards2) == 0, diff_cards2
+
+        run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=True,
+                write_f06=True, write_op2=False,
+                is_mag_phase=False,
+                is_sort2=False, is_nx=None, delete_f06=True,
+                subcases=None, exclude=None, short_stats=False,
+                compare=True, debug=False, binary_debug=True,
+                quiet=True, check_memory=False,
+                stop_on_failure=True, dev=False,
+                skip_dataframe=True)
 
     def test_bdf_op2_other_01(self):
         """checks ofprand1.bdf"""
@@ -429,7 +590,8 @@ class TestOP2(Tester):
         read_op2(op2_filename, debug=False)
         run_op2(op2_filename, write_bdf=write_bdf,
                 write_f06=write_f06,
-                debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
+                debug=debug, stop_on_failure=True, binary_debug=True, quiet=True,
+                load_as_h5=False)
         assert os.path.exists(debug_file), os.listdir(folder)
 
         make_geom = False
@@ -453,6 +615,7 @@ class TestOP2(Tester):
     def test_op2_solid_bending_02_geom(self):
         folder = os.path.join(MODEL_PATH, 'solid_bending')
         op2_filename = os.path.join(folder, 'solid_bending.op2')
+        hdf5_filename = os.path.join(folder, 'solid_bending.h5')
         op2, is_passed = run_op2(
             op2_filename, make_geom=True, write_bdf=False,
             write_f06=True, write_op2=False,
@@ -460,7 +623,14 @@ class TestOP2(Tester):
             subcases=None, exclude=None, short_stats=False,
             compare=True, debug=False, binary_debug=False,
             quiet=True, check_memory=False, stop_on_failure=True,
-            dev=False)
+            dev=False, skip_dataframe=False)
+        assert op2.displacements[1].data_frame is not None
+        op2.export_to_hdf5(hdf5_filename)
+        op2.print_subcase_key()
+
+        op2b = OP2(debug=False)
+        op2b.load_hdf5(hdf5_filename, combine=True)
+        op2b.print_subcase_key()
 
     def _test_op2_solid_bending_03(self):
         """tests basic op2 writing"""
@@ -663,12 +833,13 @@ class TestOP2(Tester):
         folder = os.path.join(MODEL_PATH, 'aero', 'monpnt3')
         op2_filename = os.path.join(folder, 'Monitor_Points_data_LINE5000000_10FREQs.op2')
         f06_filename = os.path.join(folder, 'Monitor_Points_data_LINE5000000_10FREQs.test_op2.f06')
-        op2 = read_op2(op2_filename, debug=False)
+        op2 = read_op2(op2_filename, debug=False, debug_file='temp.debug')
         monitor3 = op2.monitor3
         assert len(monitor3.frequencies) == 11, monitor3
         str(monitor3)
         op2.write_f06(f06_filename)
         os.remove(f06_filename)
+        os.remove('temp.debug')
 
     def test_op2_nastran_2005r3b(self):
         """Nastran2005r3 bug"""
@@ -697,7 +868,8 @@ class TestOP2(Tester):
         read_op2_geom(op2_filename, debug=False)
         op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf,
                                  write_f06=write_f06,
-                                 debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
+                                 debug=debug, stop_on_failure=True, binary_debug=True, quiet=True,
+                                 load_as_h5=False)
 
         isubcase = 1
         rod_force = op2.crod_force[isubcase]
@@ -1314,7 +1486,31 @@ class TestOP2(Tester):
         assert os.path.exists(debug_file), os.listdir(folder)
         os.remove(debug_file)
 
-    def test_op2_optistruct_01(self):
+    def _test_op2_autodesk_1(self):
+        """tests an Autodesk Nastran example"""
+        op2_filename = os.path.join(PKG_PATH, 'op2', 'test', 'examples',
+                                    'autodesk', 'aa8lzviq9.op2')
+        log = get_logger(level='warning')
+        op2, is_passed = run_op2(op2_filename, make_geom=False, write_bdf=False, write_f06=False,
+                                 log=log, stop_on_failure=True, binary_debug=True, quiet=True,
+                                 post=-4)
+
+        assert len(op2.displacements) == 1
+        assert len(op2.spc_forces) == 1
+        assert len(op2.ctetra_stress) == 1
+
+        isubcase = 1
+        ctetra_stress = op2.ctetra_stress[isubcase]
+        if IS_PANDAS:
+            ctetra_stress.build_dataframe()
+        assert ctetra_stress.nelements == 810, ctetra_stress.nelements
+        assert ctetra_stress.data.shape == (1, 810*5, 10), ctetra_stress.data.shape
+
+        assert len(op2.cpenta_stress) == 0
+        assert len(op2.chexa_stress) == 0
+        assert len(op2.grid_point_forces) == 0
+
+    def test_op2_optistruct_1(self):
         """
         Optistruct 2012 Tables : CASECC, GEOM1S, GEOM2S, GEOM3S, GEOM4S, EPTS, MPTS,
                                 OUGV1, OES1X
@@ -1469,7 +1665,7 @@ class TestOP2(Tester):
         self._verify_ids(bdf, op2, isubcase=1)
 
         msg = ''
-        for isubcase, keys in sorted(iteritems(op2.subcase_key)):
+        for isubcase, keys in sorted(op2.subcase_key.items()):
             if len(keys) != 1:
                 msg += 'isubcase=%s keys=%s len(keys) != 1\n' % (isubcase, keys)
                 if len(keys) == 0:
