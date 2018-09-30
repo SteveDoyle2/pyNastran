@@ -5,6 +5,7 @@ import os
 from io import open
 import unittest
 from six import StringIO
+from pyNastran.utils.log import get_logger
 
 from pyNastran.bdf.bdf_interface.pybdf import BDFInputPy, _show_bad_file, _lines_to_decks
 
@@ -66,7 +67,31 @@ class TestPyBDF(unittest.TestCase):
         os.remove('spike.bdf')
         os.rmdir(bdf_dir)
 
-    def test_get_lines(self):
+    def test_get_lines_1(self):
+        import numpy as np
+        punch = False
+        lines = [
+            'CEND',
+            'BEGIN BULK',
+            'GRID,1',
+            'ENDDATA',
+            'POST',
+        ]
+        ilines = np.array(
+            [[0, 1],
+             [0, 2],
+             [0, 3],
+             [0, 4],
+             [0, 5],
+             ])
+        log = get_logger(log=None, level='debug', encoding='utf-8')
+        out = _lines_to_decks(lines, ilines, punch, log,
+                        keep_enddata=False, consider_superelements=False)
+        system_lines, executive_control_lines, case_control_lines, bulk_data_lines, bulk_data_ilines = out
+        for line in bulk_data_ilines:
+            print(line)
+
+    def test_get_lines_2(self):
         with open('junk.bdf', 'w') as bdf_file:
             bdf_file.write('CEND\n')
             bdf_file.write('BEGIN BULK\n')
@@ -88,7 +113,7 @@ class TestPyBDF(unittest.TestCase):
         dumplines = True
         encoding = None
         pybdf = BDFInputPy(read_includes, dumplines, encoding, nastran_format='zona',
-                           log=None, debug=False)
+                           consider_superelements=False, log=None, debug=False)
         bulk_data_lines = pybdf.get_lines(bdf_filename, punch=False, make_ilines=True)[3]
         #(unused_system_lines,
          #unused_executive_control_lines,
@@ -113,7 +138,7 @@ class TestPyBDF(unittest.TestCase):
         dumplines = True
         encoding = None
         pybdf = BDFInputPy(read_includes, dumplines, encoding, nastran_format='zona',
-                           log=None, debug=False)
+                           consider_superelements=False, log=None, debug=False)
         bulk_data_lines = pybdf.get_lines(bdf_filename, punch=False, make_ilines=True)[3]
         #print('bulk_data_linesB =', bulk_data_lines)
 
@@ -132,7 +157,7 @@ class TestPyBDF(unittest.TestCase):
         dumplines = True
         encoding = None
         pybdf = BDFInputPy(read_includes, dumplines, encoding, nastran_format='zona',
-                           log=None, debug=False)
+                           consider_superelements=False, log=None, debug=False)
         bulk_data_lines = pybdf.get_lines(bdf_filename, punch=False, make_ilines=True)[3]
         #print('bulk_data_linesC =', bulk_data_lines)
 

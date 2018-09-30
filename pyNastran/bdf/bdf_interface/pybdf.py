@@ -28,6 +28,7 @@ EXECUTIVE_CASE_SPACES = tuple(list(FILE_MANAGEMENT) + ['SOL ', 'SET ', 'SUBCASE 
 
 
 class BDFInputPy(object):
+    """BDF reader class that only handles lines and not building cards or parsing cards"""
     def __init__(self, read_includes, dumplines, encoding, nastran_format='msc',
                  consider_superelements=True, log=None, debug=False):
         """
@@ -36,18 +37,19 @@ class BDFInputPy(object):
         read_includes : bool
             should include files be read
         dumplines : bool
-            ???
+            Writes 'pyNastran_dump.bdf' up to some failed line index
         encoding : str
-            ???
+            the character encoding (e.g., utf8, latin1, cp1252)
         nastran_format : str; default='msc'
             'zona' has a special read method
             {msc, nx, zona}
         consider_superelements : bool; default=True
             parse 'begin super=2'
         log : logger(); default=None
-            ???
+            a logger for printing INCLUDE files that are loadaed
         debug : bool; default=False
-            ???
+            used when testing; for the logger
+
         """
         self.dumplines = dumplines
         self.encoding = encoding
@@ -114,6 +116,7 @@ class BDFInputPy(object):
         return system_lines, executive_control_lines, case_control_lines, bulk_data_lines, bulk_data_ilines
 
     def _get_lines_zona(self, system_lines, bulk_data_lines, punch):
+        """load and update the lines for ZONA"""
         system_lines2 = []
         for system_line in system_lines:
             if system_line.upper().startswith('ASSIGN'):
@@ -575,7 +578,7 @@ def _clean_comment(comment):
 
 
 def _lines_to_decks(lines, ilines, punch, log, keep_enddata=True,
-                                   consider_superelements=False):
+                    consider_superelements=False):
     """
     Splits the BDF lines into:
      - system lines
@@ -611,7 +614,6 @@ def _lines_to_decks(lines, ilines, punch, log, keep_enddata=True,
         None : the old behavior
         narray : the [ifile, iline] pair for each line in the file
     """
-
     if punch:
         executive_control_lines = []
         case_control_lines = []
@@ -626,9 +628,6 @@ def _lines_to_decks(lines, ilines, punch, log, keep_enddata=True,
         (executive_control_lines, case_control_lines, bulk_data_lines,
          bulk_data_ilines, superelement_lines, auxmodel_lines) = out
 
-
-    #for line in bulk_data_lines:
-        #print(line)
 
     # break out system commands
     system_lines, executive_control_lines = _break_system_lines(executive_control_lines)
@@ -672,6 +671,7 @@ def _lines_to_decks_main(lines, ilines, keep_enddata=True, consider_superelement
     #---------------------------------------------
     current_lines = executive_control_lines
 
+    #flag_word = 'executive'
     flag = 1
     old_flags = []
     bulk_data_ilines = []
@@ -679,9 +679,8 @@ def _lines_to_decks_main(lines, ilines, keep_enddata=True, consider_superelement
         ilines = count()
 
     for i, ifile_iline, line in zip(count(), ilines, lines):
+        #print('%s %-8s %s' % (ifile_iline, flag_word, line.rstrip()))
         #print('%s %i %s' % (ifile_iline, flag, line.rstrip()))
-        #if flag == 3:
-            #print(iline, flag, len(bulk_data_lines), len(bulk_data_ilines), line.rstrip(), end='')
         if flag == 1:
             # I don't think we need to handle the comment because
             # this uses a startswith
@@ -690,7 +689,9 @@ def _lines_to_decks_main(lines, ilines, keep_enddata=True, consider_superelement
                 old_flags.append(flag)
                 assert flag == 1
                 flag = 2
+                #flag_word = 'case'
                 current_lines = case_control_lines
+            #print('executive: ', line.rstrip())
             executive_control_lines.append(line.rstrip())
 
         elif flag == 2 or flag < 0:
@@ -712,9 +713,9 @@ def _lines_to_decks_main(lines, ilines, keep_enddata=True, consider_superelement
             if '$' in line:
                 line, comment = line.split('$', 1)
                 current_lines.append('$' + comment.rstrip())
+                #print('%s: %s' % (flag_word, '$' + comment.rstrip()))
 
             uline = line.upper().strip()
-
             if uline.startswith('BEGIN'):
                 if _is_begin_bulk(uline):
                     old_flags.append(flag)
@@ -722,14 +723,20 @@ def _lines_to_decks_main(lines, ilines, keep_enddata=True, consider_superelement
 
                     # we're about to break because we found begin bulk
                     flag = 3
+
+                    #or not keep_enddata
                     is_extra_bulk = is_auxmodel or is_superelement or consider_superelements
+
                     if not is_extra_bulk:
                         #print('breaking begin bulk...')
                         bulk_data_ilines = _bulk_data_lines_extract(
-                            lines, ilines, bulk_data_lines, i, make_ilines, keep_enddata)
+                            lines, ilines, bulk_data_lines, i,
+                            make_ilines=make_ilines, keep_enddata=keep_enddata)
                         break
                     #print('setting lines to bulk---')
                     current_lines = bulk_data_lines
+                    #flag_word = 'bulk'
+                    #print('case: %s' % (line.rstrip()))
                     case_control_lines.append(line.rstrip())
                     continue
 
@@ -737,6 +744,7 @@ def _lines_to_decks_main(lines, ilines, keep_enddata=True, consider_superelement
                     super_id = _get_super_id(line, uline)
                     old_flags.append(flag)
                     flag = -super_id
+                    #flag_word = 'SUPER=%s' % super_id
                     current_lines = superelement_lines[super_id]
 
                 elif 'AUXMODEL' in uline and '=' in uline:
@@ -753,6 +761,7 @@ def _lines_to_decks_main(lines, ilines, keep_enddata=True, consider_superelement
                     msg = 'expected "BEGIN BULK" or "BEGIN SUPER=1"\nline = %s' % line
                     raise RuntimeError(msg)
 
+                #print('%s: %s' % (flag_word, line.rstrip()))
                 current_lines.append(line.rstrip())
             elif uline.startswith('AUXMODEL'):
                 # case control line
@@ -768,10 +777,10 @@ def _lines_to_decks_main(lines, ilines, keep_enddata=True, consider_superelement
                 #auxmodels_to_find.append(auxmodel_idi)
                 assert flag == 2
                 is_superelement = True
-            #print('cappend %s' % flag)
+            #print('%s: %s' % (flag_word, line.rstrip()))
             current_lines.append(line.rstrip())
         elif flag == 3:
-            assert is_auxmodel is True or is_superelement is True or consider_superelements #, is_auxmodel
+            assert is_auxmodel is True or is_superelement is True or consider_superelements
 
             # we have to handle the comment because we could incorrectly
             # flag the model as flipping to the BULK data section if we

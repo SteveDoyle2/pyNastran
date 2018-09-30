@@ -102,19 +102,19 @@ class TestReadWrite(unittest.TestCase):
         model.write_bdfs(out_filenames, encoding=None,
                          size=8, is_double=False,
                          enddata=None, close=True, relative_dirname='')
-        read_bdf('out_test_include2.bdf')
+        #read_bdf('out_test_include2.bdf')
 
         model.write_bdfs(out_filenames, encoding=None,
                          size=8, is_double=False,
                          enddata=None, close=True, relative_dirname=None)
-        read_bdf('out_test_include2.bdf')
+        #read_bdf('out_test_include2.bdf')
 
         out_filenames2 = {abs_path : filename2}
         model.write_bdfs(out_filenames2, encoding=None,
                          size=8, is_double=False,
                          enddata=None, close=True)
-        read_bdf('out_test_include2.bdf')
-        os.remove('out_test_include2.bdf')
+        #read_bdf('out_test_include2.bdf')
+        #os.remove('out_test_include2.bdf')
 
     def test_enddata_1(self):
         """There is an ENDDATA is in the baseline BDF, so None -> ENDDATA"""
