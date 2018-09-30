@@ -102,6 +102,10 @@ class SEELT(BaseCard):
         assert len(card) <= 9, 'len(SEELT card) = %i\ncard=%s' % (len(card), card)
         return SEELT(seid, ids, comment=comment)
 
+    def raw_fields(self):
+        list_fields = ['SEELT', self.seid] + self.ids
+        return list_fields
+
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment + print_card_8(card)
@@ -539,7 +543,7 @@ class SECONCT(BaseCard):
             101 THRU 110 201 THRU 210
     """
     type = 'SECONCT'
-    def __init__(self, set_id, n, comment=''):
+    def __init__(self, seid_a, seid_b, tol, loc, nodes_a, nodes_b, comment=''):
         """
         Parameters
         ----------
@@ -564,17 +568,48 @@ class SECONCT(BaseCard):
         #BaseCard.__init__()
         if comment:
             self.comment = comment
-        self.set_id = set_id
-        self.n = n
-        print(self)
+        self.seid_a = seid_a
+        self.seid_b = seid_b
+        self.tol = tol
+        self.loc = loc
+        self.nodes_a = nodes_a
+        self.nodes_b = nodes_b
 
     @classmethod
     def add_card(cls, card, comment=''):
-        raise NotImplementedError('SECONCT')
-        set_id = integer_or_string(card, 1, 'set_id')
-        n = integer_or_blank(card, 2, 'n', 0)
-        assert len(card) <= 3, 'len(SECONCT card) = %i\ncard=%s' % (len(card), card)
-        return SECONCT(set_id, n, comment=comment)
+        seid_a = integer(card, 1, 'seid_a')
+        seid_b = integer(card, 2, 'seid_b')
+        tol = double_or_blank(card, 3, 'tol', 1e-5)
+        loc = string_or_blank(card, 4, 'loc', 'YES')
+        fields = card[9:]
+        if len(fields) < 2:
+            assert len(card) >= 9, 'len(SECONCT card) = %i\ncard=%s' % (len(card), card)
+
+        assert len(fields) % 2 == 0, 'card=%s\nfields=%s' % (card, fields)
+        nodes_a = []
+        nodes_b = []
+        if 'THRU' in fields:
+            raise NotImplementedError('SECONCT THRU')
+
+        inode = 1
+        for ifield in range(0, len(fields), 2):
+            node_a = integer_or_blank(card, 9+ifield, 'node_a%i' % inode)
+            node_b = integer_or_blank(card, 9+ifield+1, 'node_b%i' % inode)
+            if node_a is None and node_b is None:
+                continue
+            assert node_a is not None, fields
+            assert node_b is not None, fields
+            nodes_a.append(node_a)
+            nodes_b.append(node_b)
+            inode += 1
+        return SECONCT(seid_a, seid_b, tol, loc, nodes_a, nodes_b, comment=comment)
+
+    def raw_fields(self):
+        list_fields = ['SECONCT', self.seid_a, self.seid_b, self.tol, self.loc,
+                       None, None, None, None,]
+        for (nid_a, nid_b) in zip(self.nodes_a, self.nodes_b):
+            list_fields += [nid_a, nid_b]
+        return list_fields
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()

@@ -217,6 +217,24 @@ class RANDT1(RandomLoad):
         assert len(card) <= 5, 'len(RANDT1 card) = %i\ncard=%s' % (len(card), card)
         return RANDT1(sid, n, t0, tmax, comment=comment)
 
+    def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        pass
+
+    def safe_cross_reference(self, model, xref_errors):
+        pass
+
+    def uncross_reference(self):
+        pass
+
     def get_loads(self):
         return [self]
 

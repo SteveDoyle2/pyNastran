@@ -185,9 +185,9 @@ class AddMethods(BDFAttributes):
         key = sempln.seid
         self.sempln[key] = sempln
 
-    def _add_secontct_object(self, secontct):
-        key = secontct.seid
-        self.secontct[key] = secontct
+    def _add_seconct_object(self, seconct):
+        key = (seconct.seid_a, seconct.seid_b)
+        self.seconct[key] = seconct
     def _add_selabel_object(self, selabel):
         key = selabel.seid
         self.selabel[key] = selabel
@@ -385,7 +385,7 @@ class AddMethods(BDFAttributes):
 
     def _add_bconp_object(self, bconp):
         """adds an BCONP object"""
-        key = bconp.sid
+        key = bconp.contact_id
         self.bconp[key] = bconp
         self._type_to_id_map[bconp.type].append(key)
 

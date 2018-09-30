@@ -1730,8 +1730,8 @@ def get_element_stats(fem1, unused_fem2, quiet=False):
         print('cg   = %s' % cg1)
         print('Ixx=%s, Iyy=%s, Izz=%s \nIxy=%s, Ixz=%s, Iyz=%s' % tuple(inertia1))
     assert np.allclose(mass1, mass2), 'mass1=%s mass2=%s' % (mass1, mass2)
-    assert np.allclose(cg1, cg2), 'mass=%s cg1=%s cg2=%s' % (mass1, cg1, cg2)
-    assert np.allclose(inertia1, inertia2), 'mass=%s cg=%s inertia1=%s inertia2=%s' % (mass1, cg1, inertia1, inertia2)
+    assert np.allclose(cg1, cg2), 'mass=%s\ncg1=%s cg2=%s' % (mass1, cg1, cg2)
+    assert np.allclose(inertia1, inertia2, atol=1e-5), 'mass=%s cg=%s\ninertia1=%s\ninertia2=%s\ndinertia=%s' % (mass1, cg1, inertia1, inertia2, inertia1-inertia2)
 
     for nsm_id in chain(fem1.nsms, fem1.nsmadds):
         mass, unused_cg, unused_inertia = fem1.mass_properties_nsm(
@@ -1746,7 +1746,7 @@ def get_element_stats(fem1, unused_fem2, quiet=False):
     mass2, cg2, inertia2 = fem1.mass_properties_nsm(reference_point=reference_point, sym_axis=None)
     assert np.allclose(mass1, mass2), 'reference_point=[10., 10., 10.]; mass1=%s mass2=%s' % (mass1, mass2)
     assert np.allclose(cg1, cg2), 'reference_point=[10., 10., 10.]; mass=%s cg1=%s cg2=%s' % (mass1, cg1, cg2)
-    assert np.allclose(inertia1, inertia2), 'reference_point=[10., 10., 10.]; mass=%s cg=%s inertia1=%s inertia2=%s' % (mass1, cg1, inertia1, inertia2)
+    assert np.allclose(inertia1, inertia2, atol=1e-5), 'reference_point=[10., 10., 10.]; mass=%s cg=%s inertia1=%s inertia2=%s' % (mass1, cg1, inertia1, inertia2)
 
 
 def get_matrix_stats(fem1, unused_fem2):

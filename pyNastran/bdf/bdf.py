@@ -147,7 +147,8 @@ from pyNastran.bdf.cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, 
 from pyNastran.bdf.cards.thermal.radiation import RADM, RADBC, RADCAV, RADLST, RADMTX, VIEW, VIEW3D
 from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
                                             TABLEM1, TABLEM2, TABLEM3, TABLEM4,
-                                            TABLES1, TABDMP1, TABLEST, TABRND1, TABRNDG,
+                                            TABLES1, TABDMP1, TABLEST, TABLEHT, TABLEH1,
+                                            TABRND1, TABRNDG,
                                             DTABLE)
 from pyNastran.bdf.cards.contact import BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA, BCONP, BLSEG
 from pyNastran.bdf.case_control_deck import CaseControlDeck
@@ -619,7 +620,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
             #------------------------------------------------------------------
             ## tables
-            #'TABLEHT',
             'TABLED1', 'TABLED2', 'TABLED3', 'TABLED4',  # dynamic tables - freq/time loads
             'TABLEM1', 'TABLEM2', 'TABLEM3', 'TABLEM4',  # material tables - temperature
 
@@ -628,7 +628,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'TABLEST',
             # material tables - stress (MATS1, CREEP, MATHP)
             'TABLES1',
-
 
             ## modal damping table - tables_sdamping
             'TABDMP1',
@@ -663,7 +662,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
             'TEMPBC',
             #'RADMT',
-            'RADLST', 'RADMTX', 'RADBND',
+            'RADLST', 'RADMTX', #'RADBND',
             #'TEMPP1',
             #'TEMPRB',
             'CONVM',
@@ -1720,7 +1719,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'SEELT' : (SEELT, self._add_seelt_object),
             'SELOC' : (SELOC, self._add_seloc_object),
             'SEMPLN' : (SEMPLN, self._add_sempln_object),
-            'SECONCT' : (SECONCT, self._add_secontct_object),
+            'SECONCT' : (SECONCT, self._add_seconct_object),
             'SELABEL' : (SELABEL, self._add_selabel_object),
             'SEEXCLD' : (SEEXCLD, self._add_seexcld_object),
             'CSUPER' : (CSUPER, self._add_csuper_object),
@@ -1776,8 +1775,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             #'GUST2' : (Crash, None),
 
             #'RADBND' : (Crash, None),
-            'TABLEHT' : (Crash, None),
-            'TABLEH1' : (Crash, None),
 
 
             # nodes
@@ -2113,6 +2110,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             # tables
             'TABLES1' : (TABLES1, self._add_table_object),
             'TABLEST' : (TABLEST, self._add_table_object),
+            'TABLEHT' : (TABLEHT, self._add_table_object),
+            'TABLEH1' : (TABLEH1, self._add_table_object),
 
             # dynamic tables
             'TABLED1' : (TABLED1, self._add_tabled_object),
@@ -4209,6 +4208,16 @@ def _check_for_spaces(card_name, card_lines, comment):
                 'Did you mean to call read_bdf(punch=False) instead of '
                 'read_bdf(punch=True)?\n%s' % (
                     card_name, card_lines))
+            raise RuntimeError(msg)
+        elif card_name == 'BEGIN BU':
+            uline = card_lines[0].upper()
+            if 'SUPER' in uline:
+                msg = (
+                    'Misindentified Superelement section.  Use:\n'
+                    '$ pyNastran: is_superelements=True\n')
+            else:
+                msg = 'Is there a second BEGIN BULK in your deck?\n'
+            msg += '%s' % card_lines
             raise RuntimeError(msg)
         else:
             msg = (

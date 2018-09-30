@@ -1288,6 +1288,172 @@ class TABLEST(Table):
         return self.raw_fields()
 
 
+class TABLEH1(Table):
+    """
+    +---------+------+-------+-------+--------+-----+-------+------+------+
+    |    1    |   2  |   3   |   4   |    5   |  6  |   7   |  8   |   9  |
+    +=========+======+=======+=======+========+=====+=======+======+======+
+    | TABLEH1 |  TID |       |       |        |     |       |      |      |
+    +---------+------+-------+-------+--------+-----+-------+------+------+
+    |         |  x1  |  y1   |   x2  |   y2   | x3  |  y3   | etc. | ENDT |
+    +---------+------+-------+-------+--------+-----+-------+------+------+
+    | TABLEH1 |  32  |       |       |        |     |       |      |      |
+    +---------+------+-------+-------+--------+-----+-------+------+------+
+    |         |  0.0 |  0.0  |  0.01 |  1000. | 0.2 | 1500. | ENDT |      |
+    +---------+------+-------+-------+--------+-----+-------+------+------+
+    """
+    type = 'TABLEH1'
+
+    def __init__(self, tid, x, y, comment=''):
+        """
+        Adds a TABLES1 card, which defines a stress dependent material
+
+        Parameters
+        ----------
+        tid : int
+            Table ID
+        x, y : List[float]
+            table values
+        comment : str; default=''
+            a comment for the card
+
+        """
+        Table.__init__(self)
+        if comment:
+            self.comment = comment
+        self.tid = tid
+        self.x = np.asarray(x, dtype='float64')
+        self.y = np.asarray(y, dtype='float64')
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a TABLEH1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        table_id = integer(card, 1, 'tid')
+        x, y = read_table(card, table_id, 'TABLEH1')
+        return TABLEH1(table_id, x, y, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        """
+        Adds a TABLEH1 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+
+        """
+        table_id = data[0]
+        xy = data[1:]
+        xy = np.array(xy, dtype='float64')
+        xy = xy.reshape(xy.size // 2, 2)
+        x = xy[:, 0]
+        y = xy[:, 1]
+        return TABLEH1(table_id, x, y, Type=1, comment=comment)
+
+    def raw_fields(self):
+        xy = []
+        for xi, yi in zip(self.x, self.y):
+            xy.extend([xi, yi])
+        list_fields = ['TABLEH1', self.tid, self.Type, None, None, None,
+                       None, None, None] + xy + ['ENDT']
+        return list_fields
+
+    def repr_fields(self):
+        xy = []
+        for xi, yi in zip(self.x, self.y):
+            xy.extend([xi, yi])
+
+        list_fields = ['TABLEH1', self.tid, None, None, None, None,
+                       None, None, None] + xy + ['ENDT']
+        return list_fields
+
+class TABLEHT(Table):
+    """
+    +---------+-------+-------+-------+--------+------+------+------+------+
+    |    1    |   2   |   3   |   4   |    5   |  6  |   7   |  8   |   9  |
+    +=========+=======+=======+=======+========+=====+=======+======+======+
+    | TABLEHT |  TID  |       |       |        |      |      |      |      |
+    +---------+-------+-------+-------+--------+------+------+------+------+
+    |         |   x1  |  tid1 |   x2  |  tid2  |  x3  | tid3 | etc. | ENDT |
+    +---------+-------+-------+-------+--------+------+------+------+------+
+    | TABLEHT |   32  |       |       |        |      |      |      |      |
+    +---------+-------+-------+-------+--------+------+------+------+------+
+    |         |  1.   |   10  |  5.   |   11   | ENDT |      |      |      |
+    +---------+-------+-------+-------+--------+------+------+------+------+
+    """
+    type = 'TABLEHT'
+
+    def __init__(self, tid, x, y, comment=''):
+        Table.__init__(self)
+        if comment:
+            self.comment = comment
+        self.tid = tid
+        self.x = np.asarray(x, dtype='float64')
+        self.y = np.asarray(y, dtype='int32')
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a TABLEHT card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        table_id = integer(card, 1, 'tid')
+        x, y = read_table_float_int(card, table_id, 'TABLEHT')
+        return TABLEHT(table_id, x, y, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        """
+        Adds a TABLEHT card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+
+        """
+        table_id = data[0]
+        xy = data[1:]
+        xy = np.array(xy, dtype='float64')
+        xy = xy.reshape(xy.size // 2, 2)
+        x = xy[:, 0]
+        y = xy[:, 1]
+        return TABLEHT(table_id, x, y, comment=comment)
+
+    def raw_fields(self):
+        xy = []
+        for xi, yi in zip(self.x, self.y):
+            xy.extend([xi, yi])
+        list_fields = ['TABLEHT', self.tid, None, None, None, None,
+                       None, None, None] + xy + ['ENDT']
+        return list_fields
+
+    def repr_fields(self):
+        return self.raw_fields()
+
+
 class RandomTable(Table):
     type = 'TABLE??'
 
@@ -1466,6 +1632,27 @@ def read_table(card, table_id, table_type):
             break
         xi = double_or_string(card, n, 'x' + str(i + 1))
         yi = double_or_string(card, n + 1, 'y' + str(i + 1))
+        if xi == 'SKIP' or yi == 'SKIP':
+            continue
+        xy.append([xi, yi])
+    string(card, nfields, 'ENDT')
+    x, y = make_xy(table_id, table_type, xy)
+    return x, y
+
+def read_table_float_int(card, table_id, table_type):
+    """common method for reading tables that handles SKIP"""
+    nfields = len(card) - 1
+    nterms = (nfields - 9) // 2
+    if nterms < 0:
+        raise SyntaxError('%r card is too short' % table_type)
+
+    xy = []
+    for i in range(nterms):
+        n = 9 + i * 2
+        if card.field(n) == 'ENDT':
+            break
+        xi = double_or_string(card, n, 'x' + str(i + 1))
+        yi = integer_or_string(card, n + 1, 'y' + str(i + 1))
         if xi == 'SKIP' or yi == 'SKIP':
             continue
         xy.append([xi, yi])

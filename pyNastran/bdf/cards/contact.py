@@ -56,9 +56,9 @@ class BLSEG(BaseCard):
             i += 1
         return BLSEG(line_id, nodes, comment=comment)
 
-    #def raw_fields(self):
-        #fields = ['BSURF', self.sid]
-        #return fields + list(self.eids)
+    def raw_fields(self):
+        list_fields = ['BLSEG', self.line_id] + self.nodes
+        return list_fields
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
@@ -113,9 +113,11 @@ class BCONP(BaseCard):
         cid = integer_or_blank(card, 8, 'cid', 0)
         return BCONP(contact_id, slave, master, sfac, fric_id, ptype, cid, comment=comment)
 
-    #def raw_fields(self):
-        #fields = ['BSURF', self.sid]
-        #return fields + list(self.eids)
+    def raw_fields(self):
+        list_fields = [
+            'BCONP', self.contact_id, self.slave, self.master, None, self.sfac,
+            self.fric_id, self.ptype, self.cid]
+        return list_fields
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()

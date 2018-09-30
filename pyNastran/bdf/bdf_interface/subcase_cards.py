@@ -980,26 +980,29 @@ class EXTSEOUT(CaseControlCard):
     @classmethod
     def add_from_case_control(cls, line):
         """add method used by the CaseControl class"""
-        assert line.startswith('EXTSEOUT('), line
-        assert line.endswith(')'), line
-        data = line[9:-1].split(',')
-        #print('data EXTSEOUT =', data)
         data_list = []
-        for key_value in data:
-            key_value = key_value.strip()
-            if '=' in key_value:
-                key, value = key_value.split('=')
-                key = cls._update_key(key)
-                value = value.strip()
+        if '(' not in line:
+            assert line == 'EXTSEOUT', line
+        else:
+            assert line.startswith('EXTSEOUT('), line
+            assert line.endswith(')'), line
+            data = line[9:-1].split(',')
+            #print('data EXTSEOUT =', data)
+            for key_value in data:
+                key_value = key_value.strip()
+                if '=' in key_value:
+                    key, value = key_value.split('=')
+                    key = cls._update_key(key)
+                    value = value.strip()
 
-                data_list.append((key, value))
-            else:
-                key = cls._update_key(key_value)
-                data_list.append((key, None))
+                    data_list.append((key, value))
+                else:
+                    key = cls._update_key(key_value)
+                    data_list.append((key, None))
 
-            if key not in cls.allowed_keys:
-                msg = 'EXTSEOUT: key=%r allowed_keys=[%s]' % (key, ', '.join(cls.allowed_keys))
-                raise KeyError(msg)
+                if key not in cls.allowed_keys:
+                    msg = 'EXTSEOUT: key=%r allowed_keys=[%s]' % (key, ', '.join(cls.allowed_keys))
+                    raise KeyError(msg)
         return EXTSEOUT(data_list)
 
     @staticmethod

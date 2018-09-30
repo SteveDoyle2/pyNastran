@@ -600,7 +600,8 @@ class WriteMesh(BDFAttributes):
         # type: (Any, int, bool) -> None
         """Writes the contact cards sorted by ID"""
         is_contact = (self.bcrparas or self.bctadds or self.bctparas
-                      or self.bctsets or self.bsurf or self.bsurfs)
+                      or self.bctsets or self.bsurf or self.bsurfs
+                      or self.bconp or self.blseg)
         if is_contact:
             bdf_file.write('$CONTACT\n')
             for (unused_id, bcrpara) in sorted(self.bcrparas.items()):
@@ -616,6 +617,10 @@ class WriteMesh(BDFAttributes):
                 bdf_file.write(bsurfi.write_card(size, is_double))
             for (unused_id, bsurfsi) in sorted(self.bsurfs.items()):
                 bdf_file.write(bsurfsi.write_card(size, is_double))
+            for (unused_id, bconp) in sorted(self.bconp.items()):
+                bdf_file.write(bconp.write_card(size, is_double))
+            for (unused_id, blseg) in sorted(self.blseg.items()):
+                bdf_file.write(blseg.write_card(size, is_double))
 
     def _write_coords(self, bdf_file, size=8, is_double=False, is_long_ids=None):
         # type: (Any, int, bool) -> None
@@ -964,7 +969,8 @@ class WriteMesh(BDFAttributes):
         # type: (Any, int, bool) -> None
         """Writes the properties in a sorted order"""
         size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
-        if self.properties:
+        is_properties = self.properties or self.pelast or self.pdampt or self.pbusht
+        if is_properties:
             bdf_file.write('$PROPERTIES\n')
             prop_groups = (self.properties, self.pelast, self.pdampt, self.pbusht)
             if is_long_ids:
@@ -1004,7 +1010,6 @@ class WriteMesh(BDFAttributes):
 
         if self.reject_lines:
             bdf_file.write('$REJECT_LINES\n')
-
             for reject_lines in self.reject_lines:
                 if isinstance(reject_lines, (list, tuple)):
                     for reject in reject_lines:
@@ -1101,6 +1106,11 @@ class WriteMesh(BDFAttributes):
             bdf_file.write(csuper.write_card(size, is_double))
         for unused_seid, csupext in sorted(self.csupext.items()):
             bdf_file.write(csupext.write_card(size, is_double))
+
+        for unused_seid, sebulk in sorted(self.sebulk.items()):
+            bdf_file.write(sebulk.write_card(size, is_double))
+        for unused_seid, seconct in sorted(self.seconct.items()):
+            bdf_file.write(seconct.write_card(size, is_double))
 
         for unused_seid, sebndry in sorted(self.sebndry.items()):
             bdf_file.write(sebndry.write_card(size, is_double))

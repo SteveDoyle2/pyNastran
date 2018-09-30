@@ -592,7 +592,7 @@ class BDFAttributes(object):
         self.sebndry = {}
         self.seloc = {}
         self.sempln = {}
-        self.secontct = {}
+        self.seconct = {}
         self.selabel = {}
         self.seexcld = {}
         self.seelt = {}
@@ -705,7 +705,7 @@ class BDFAttributes(object):
             'sebndry' : ['SEBNDRY'],
             'seloc' : ['SELOC'],
             'sempln' : ['SEMPLN'],
-            'secontct' : ['SECONTCT'],
+            'seconct' : ['SECONCT'],
             'selabel' : ['SELABEL'],
             'seexcld' : ['SEEXCLD'],
             'seelt' : ['SEELT'],
@@ -750,7 +750,7 @@ class BDFAttributes(object):
             'caeros' : ['CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5', 'CAERO7', 'BODY7'],
             'paeros' : ['PAERO1', 'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5', 'SEGMESH'],
             'monitor_points' : ['MONPNT1', 'MONPNT2', 'MONPNT3'],
-            'splines' : ['SPLINE1', 'SPLINE2', 'SPLINE4', 'SPLINE5',],
+            'splines' : ['SPLINE1', 'SPLINE2', 'SPLINE4', 'SPLINE5', 'SPLINE6', 'SPLINE7'],
             'panlsts' : ['PANLST1', 'PANLST2', 'PANLST3',],
             'csschds' : ['CSSCHD',],
             #'SPLINE3', 'SPLINE6', 'SPLINE7',
@@ -769,7 +769,7 @@ class BDFAttributes(object):
             'convection_properties' : ['PCONV', 'PCONVM'],
 
             # stores thermal boundary conditions
-            'bcs' : ['CONV', 'RADBC', 'RADM', 'TEMPBC'],
+            'bcs' : ['CONV', 'CONVM', 'RADBC', 'RADM', 'TEMPBC'],
 
 
             # dynamic cards
@@ -834,7 +834,7 @@ class BDFAttributes(object):
             # SEBSEP
 
             'tables' : [
-                'TABLEHT', 'TABRNDG',
+                'TABLEH1', 'TABLEHT',
                 'TABLES1', 'TABLEST',
                 ],
             'tables_d' : ['TABLED1', 'TABLED2', 'TABLED3', 'TABLED4', 'TABLED5'],

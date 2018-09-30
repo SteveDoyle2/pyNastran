@@ -310,7 +310,8 @@ class WriteMeshs(WriteMesh):
         # type: (Any, int, bool) -> None
         """Writes the contact cards sorted by ID"""
         is_contact = (self.bcrparas or self.bctadds or self.bctparas
-                      or self.bctsets or self.bsurf or self.bsurfs)
+                      or self.bctsets or self.bsurf or self.bsurfs
+                      or self.bconp or self.blseg)
         if is_contact:
             write_bdfs_dict(bdf_files, self.bcrparas, size, is_double, is_long_ids)
             write_bdfs_dict(bdf_files, self.bctadds, size, is_double, is_long_ids)
@@ -318,6 +319,9 @@ class WriteMeshs(WriteMesh):
             write_bdfs_dict(bdf_files, self.bctsets, size, is_double, is_long_ids)
             write_bdfs_dict(bdf_files, self.bsurf, size, is_double, is_long_ids)
             write_bdfs_dict(bdf_files, self.bsurfs, size, is_double, is_long_ids)
+
+            write_bdfs_dict(bdf_files, self.bconp, size, is_double, is_long_ids)
+            write_bdfs_dict(bdf_files, self.blseg, size, is_double, is_long_ids)
 
     def _write_coords_file(self, bdf_files, size=8, is_double=False, is_long_ids=None):
         # type: (Any, int, bool) -> None
@@ -601,7 +605,10 @@ class WriteMeshs(WriteMesh):
 
         write_bdfs_dict(bdf_files, self.csuper, size, is_double, is_long_ids)
         write_bdfs_dict(bdf_files, self.csupext, size, is_double, is_long_ids)
+
         write_bdfs_dict(bdf_files, self.sebndry, size, is_double, is_long_ids)
+        write_bdfs_dict(bdf_files, self.sebulk, size, is_double, is_long_ids)
+        write_bdfs_dict(bdf_files, self.seconct, size, is_double, is_long_ids)
         write_bdfs_dict(bdf_files, self.seelt, size, is_double, is_long_ids)
         write_bdfs_dict(bdf_files, self.seexcld, size, is_double, is_long_ids)
         write_bdfs_dict(bdf_files, self.seloc, size, is_double, is_long_ids)
