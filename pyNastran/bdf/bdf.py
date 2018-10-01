@@ -150,7 +150,8 @@ from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
                                             TABLES1, TABDMP1, TABLEST, TABLEHT, TABLEH1,
                                             TABRND1, TABRNDG,
                                             DTABLE)
-from pyNastran.bdf.cards.contact import BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA, BCONP, BLSEG
+from pyNastran.bdf.cards.contact import (
+    BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA, BCONP, BLSEG)
 from pyNastran.bdf.case_control_deck import CaseControlDeck
 from pyNastran.bdf.bdf_methods import BDFMethods
 from pyNastran.bdf.bdf_interface.get_card import GetCard
@@ -790,6 +791,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         self.case_control_deck = CaseControlDeck(self.case_control_lines, log=self.log)
         self.log.debug('done loading!')
+        for model in self.superelement_models.values():
+            model.log = self.log
 
     def replace_cards(self, replace_model):
         """
@@ -1021,7 +1024,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                          consider_superelements=self.is_superelements,
                          log=self.log, debug=self.debug)
         out = obj.get_lines(bdf_filename, punch=self.punch, make_ilines=True)
-        system_lines, executive_control_lines, case_control_lines, bulk_data_lines, bulk_data_ilines = out
+        system_lines, executive_control_lines, case_control_lines, bulk_data_lines, bulk_data_ilines, superelement_lines = out
         self._set_pybdf_attributes(obj, save_file_structure)
 
         self.system_command_lines = system_lines
@@ -1035,6 +1038,42 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         self.case_control_deck.solmap_to_value = self._solmap_to_value
         self.case_control_deck.rsolmap_to_str = self.rsolmap_to_str
 
+        self._parse_all_cards(bulk_data_lines, bulk_data_ilines)
+        if superelement_lines:
+            for superelement_id, superelement_line in sorted(superelement_lines.items()):
+                assert isinstance(superelement_line, list), superelement_line
+
+                # hack to get rid of extra 'BEGIN SUPER=2' lines
+                iminus = 0
+                for line in superelement_line:
+                    uline = line.upper()
+                    if not uline.startswith('BEGIN '):
+                        break
+                    iminus += 1
+
+                nlines = len(superelement_line) - iminus
+                model = BDF()
+                model.log = self.log
+                model.punch = True
+                #model.nastran_format = ''
+                superelement_ilines = np.zeros((nlines, 2), dtype='int32')  ## TODO: calculate this
+                model._parse_all_cards(superelement_line[iminus:], superelement_ilines)
+                self.superelement_models[superelement_id] = model
+
+
+        self.pop_parse_errors()
+        fill_dmigs(self)
+
+        if validate:
+            self.validate()
+
+        self.cross_reference(xref=xref)
+        self._xref = xref
+
+        self.log.debug('---finished BDF.read_bdf of %s---' % self.bdf_filename)
+
+    def _parse_all_cards(self, bulk_data_lines, bulk_data_ilines):
+        """creates and loads all the cards the bulk data section"""
         cards_list = []
         cards_dict = {}
         if self._is_cards_dict:
@@ -1065,17 +1104,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 for value in values:
                     del dict_values[value]
             # TODO: redo get_card_ids_by_card_types & card_count
-
-        self.pop_parse_errors()
-        fill_dmigs(self)
-
-        if validate:
-            self.validate()
-
-        self.cross_reference(xref=xref)
-        self._xref = xref
-
-        self.log.debug('---finished BDF.read_bdf of %s---' % self.bdf_filename)
 
     def _read_bdf_helper(self, bdf_filename, encoding, punch, read_includes):
         """creates the file loading if bdf_filename is None"""
@@ -1414,7 +1442,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             #print('end_add %s' % card_lines)
 
             # old dictionary version
-            cards_dict[old_card_name].append([backup_comment + full_comment, card_lines, ifile_iline])
+            cards_dict[old_card_name].append(
+                [backup_comment + full_comment, card_lines, ifile_iline])
 
             # new list version
             #cards.append([old_card_name, backup_comment + full_comment, card_lines])
@@ -2363,8 +2392,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             loads.append(DEFORM.add_card(card_obj, 2, comment=comment))
         if card_obj.field(6):
             loads.append(DEFORM.add_card(card_obj, 3, comment=comment))
-        for load in loads:
-            self._add_load_object(load)
+        for loadi in loads:
+            self._add_load_object(loadi)
         return loads
 
     def _prepare_tempbc(self, unused_card, card_obj, comment=''):
@@ -2586,6 +2615,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             coords.append(CORD1R.add_card(card_obj, icard=1, comment=comment))
         for coord in coords:
             self._add_coord_object(coord)
+        return coords
 
     def _prepare_cord1c(self, unused_card, card_obj, comment=''):
         """adds a CORD1C"""
@@ -2594,6 +2624,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             coords.append(CORD1C.add_card(card_obj, icard=1, comment=comment))
         for coord in coords:
             self._add_coord_object(coord)
+        return coords
 
     def _prepare_cord1s(self, unused_card, card_obj, comment=''):
         """adds a CORD1S"""
@@ -2602,6 +2633,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             coords.append(CORD1S.add_card(card_obj, icard=1, comment=comment))
         for coord in coords:
             self._add_coord_object(coord)
+        return coords
 
     def add_card_ifile(self, ifile, card_lines, card_name,
                        comment='', is_list=True, has_none=True):
@@ -3776,8 +3808,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
                     _check_replicated_cards(replicated_cards)
                     for replicated_card in replicated_cards:
-                        self.add_card_ifile(ifile, replicated_card, replicated_card[0], comment=comment,
-                                            is_list=True, has_none=True)
+                        self.add_card_ifile(ifile, replicated_card, replicated_card[0],
+                                            comment=comment, is_list=True, has_none=True)
                     continue
 
                 if self.is_reject(card_name):  # pragma: no cover
@@ -3963,7 +3995,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                          nastran_format=self.nastran_format,
                          log=self.log, debug=self.debug)
         out = obj.get_lines(bdf_filename, punch=self.punch, make_ilines=True)
-        system_lines, executive_control_lines, case_control_lines, bulk_data_lines, bulk_data_ilines = out
+        system_lines, executive_control_lines, case_control_lines, bulk_data_lines, bulk_data_ilines, superelement_lines = out
         self._set_pybdf_attributes(obj, save_file_structure=False)
 
         self.system_command_lines = system_lines
