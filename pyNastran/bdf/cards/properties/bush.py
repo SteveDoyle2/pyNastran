@@ -4,7 +4,7 @@ All bush properties are defined in this file.  This includes:
  *   PBUSH
  *   PBUSH1D
  *   PBUSH2D (not implemented)
- *   PBUSHT (not implemented)
+ *   PBUSHT
 
 All bush properties are BushingProperty and Property objects.
 """
@@ -134,6 +134,7 @@ class PBUSH(BushingProperty):
             This is an MSC only parameter.
         comment : str; default=''
             a comment for the card
+
         """
         BushingProperty.__init__(self)
         if comment:
@@ -199,6 +200,7 @@ class PBUSH(BushingProperty):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         k_fields = []
         b_fields = []
@@ -268,6 +270,7 @@ class PBUSH(BushingProperty):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         (pid, k1, k2, k3, k4, k5, k6, b1, b2, b3, b4, b5, b6,
          g1, g2, g3, g4, g5, g6, sa, st, ea, et) = data
@@ -365,6 +368,7 @@ class PBUSH1D(BushingProperty):
                 SHOCKA, SPRING, DAMPER, GENER
             values : ???
                 ???
+
         """
         BushingProperty.__init__(self)
         if comment:
@@ -483,6 +487,7 @@ class PBUSH1D(BushingProperty):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         pid = integer(card, 1, 'pid')
         k = double_or_blank(card, 2, 'k', 0.0)
@@ -725,12 +730,17 @@ class PBUSH2D(BushingProperty):
         -------
         msg : str
             the string representation of the card
+
         """
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
+def _append_nones(list_obj, nrequired):
+    """this function has side effects"""
+    n_none = nrequired - len(list_obj)
+    list_obj.extend([None] * n_none)
 
 class PBUSHT(BushingProperty):
     type = 'PBUSHT'
@@ -748,6 +758,12 @@ class PBUSHT(BushingProperty):
         if comment:
             self.comment = comment
         self.pid = pid
+
+        _append_nones(k_tables, 6)
+        _append_nones(b_tables, 6)
+        _append_nones(ge_tables, 6)
+        _append_nones(kn_tables, 6)
+
         self.k_tables = k_tables
         self.b_tables = b_tables
         self.ge_tables = ge_tables
@@ -764,6 +780,7 @@ class PBUSHT(BushingProperty):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         k_tables = []
         b_tables = []

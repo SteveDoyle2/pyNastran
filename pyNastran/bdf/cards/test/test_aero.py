@@ -1061,7 +1061,8 @@ class TestAero(unittest.TestCase):
         caero3b.get_points()
         caero3b.panel_points_elements()
 
-        save_load_deck(model, run_convert=False, run_renumber=False)
+        model.get_bdf_stats()
+        save_load_deck(model, run_convert=False, run_mirror=False) # , run_renumber=False
 
 
     def test_paero3(self):
@@ -2146,6 +2147,7 @@ class TestAero(unittest.TestCase):
                 crash_cards=None, pickle_obj=True)
 
     def test_rotord(self):
+        """tests the ROTORD"""
         model = BDF(debug=False)
 
         sid = 42

@@ -19,7 +19,7 @@ defines various methods to access high level BDF data:
    - get_node_ids_with_elements(self, eids, msg='')
    - get_elements_nodes_by_property_type(self, dtype='int32',
                                          save_element_types=False)
-   - get_element_nodes_by_element_type(self, dtype='int32', solids=None)
+   - get_elements_properties_nodes_by_element_type(self, dtype='int32', solids=None)
    - get_element_ids_list_with_pids(self, pids=None)
    - get_pid_to_node_ids_and_elements_array(self, pids=None, etypes=None, idtype='int32')
    - get_element_ids_dict_with_pids(self, pids=None, stop_if_no_eids=True)

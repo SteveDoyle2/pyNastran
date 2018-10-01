@@ -21,3 +21,7 @@ class UnsupportedCard(NotImplementedError):
 class DisabledCardError(RuntimeError):
     """lets bdf_test.py flag cards as auto-crashing and then skipping the deck (e.g., CGEN)"""
     pass
+
+class SuperelementFlagError(RuntimeError):
+    pass
+

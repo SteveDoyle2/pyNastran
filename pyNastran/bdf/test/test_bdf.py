@@ -222,7 +222,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
             quiet=False, dumplines=False, dictsort=False, run_extract_bodies=False,
             save_file_structure=False,
             nerrors=0, dev=False, crash_cards=None, safe_xref=False, pickle_obj=False,
-            stop_on_failure=True):
+            stop_on_failure=True, log=None):
     """
     Runs a single BDF
 
@@ -232,8 +232,10 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         the folder where the bdf_filename is
     bdf_filename : str
         the bdf file to analyze
-    debug : bool, optional
-        run with debug logging (default=False)
+    debug : bool / None, default=False
+        True : run with debug logging
+        False : run with info logging
+        None : run with warning logging
     xref : bool / str, optional
         True : cross reference the model
         False  : don't cross reference the model
@@ -312,6 +314,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         save_file_structure=save_file_structure,
         pickle_obj=pickle_obj,
         stop_on_failure=stop_on_failure,
+        log=log,
     )
     return fem1, fem2, diff_cards
 
@@ -325,12 +328,11 @@ def run_and_compare_fems(
         quiet=False, dumplines=False, dictsort=False,
         nerrors=0, dev=False, crash_cards=None,
         safe_xref=True, run_extract_bodies=False, pickle_obj=False,
-        stop_on_failure=True,
+        stop_on_failure=True, log=None,
     ):
     """runs two fem models and compares them"""
     assert os.path.exists(bdf_model), '%r doesnt exist' % bdf_model
-
-    fem1 = BDF(debug=debug, log=None)
+    fem1 = BDF(debug=debug, log=log)
     fem1.dumplines = dumplines
 
     fem1.set_error_storage(nparse_errors=nerrors, stop_on_parsing_error=True,
@@ -377,7 +379,7 @@ def run_and_compare_fems(
                         safe_xref=safe_xref,
                         encoding=encoding, debug=debug, quiet=quiet,
                         ierror=ierror, nerrors=nerrors,
-                        stop_on_failure=stop_on_failure)
+                        stop_on_failure=stop_on_failure, log=log)
 
         diff_cards = compare(fem1, fem2, xref=xref, check=check,
                              print_stats=print_stats, quiet=quiet)
@@ -730,7 +732,7 @@ def run_fem2(bdf_model, out_model, xref, punch,
              sum_load, size, is_double, mesh_form,
              safe_xref=False,
              encoding=None, debug=False, quiet=False,
-             stop_on_failure=True, ierror=0, nerrors=100):
+             stop_on_failure=True, ierror=0, nerrors=100, log=None):
     """
     Reads/writes the BDF to verify nothing has been lost
 
@@ -761,7 +763,7 @@ def run_fem2(bdf_model, out_model, xref, punch,
     assert os.path.exists(bdf_model), bdf_model
     assert os.path.exists(out_model), out_model
 
-    fem2 = BDF(debug=debug, log=None)
+    fem2 = BDF(debug=debug, log=log)
     if not quiet:
         fem2.log.info('starting fem2')
     sys.stdout.flush()

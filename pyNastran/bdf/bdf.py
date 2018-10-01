@@ -51,9 +51,12 @@ from pyNastran.bdf.cards.msgmesh import CGEN
 from pyNastran.bdf.cards.elements.springs import CELAS1, CELAS2, CELAS3, CELAS4
 from pyNastran.bdf.cards.properties.springs import PELAS, PELAST
 
-from pyNastran.bdf.cards.elements.solid import (CIHEX1, CIHEX2,
-                                                CTETRA4, CPYRAM5, CPENTA6, CHEXA8,
-                                                CTETRA10, CPYRAM13, CPENTA15, CHEXA20)
+from pyNastran.bdf.cards.elements.solid import (
+    #CTETRA, CPYRAM, CPENTA, CHEXA,
+    CIHEX1, CIHEX2,
+    CTETRA4, CPYRAM5, CPENTA6, CHEXA8,
+    CTETRA10, CPYRAM13, CPENTA15, CHEXA20,
+)
 from pyNastran.bdf.cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE, RSSCON
 
 from pyNastran.bdf.cards.axisymmetric.axisymmetric import (
@@ -75,7 +78,7 @@ from pyNastran.bdf.cards.elements.rods import CROD, CONROD, CTUBE
 from pyNastran.bdf.cards.elements.bars import CBAR, BAROR, CBARAO, CBEAM3, CBEND
 from pyNastran.bdf.cards.elements.beam import CBEAM, BEAMOR
 from pyNastran.bdf.cards.properties.rods import PROD, PTUBE
-from pyNastran.bdf.cards.properties.bars import PBAR, PBARL, PBRSECT, PBEND
+from pyNastran.bdf.cards.properties.bars import PBAR, PBARL, PBRSECT, PBEND, PBEAM3
 from pyNastran.bdf.cards.properties.beam import PBEAM, PBEAML, PBCOMP, PBMSECT
 # CMASS5
 from pyNastran.bdf.cards.elements.mass import CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4
@@ -103,8 +106,8 @@ from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
                                            MAT8, MAT9, MAT10, MAT11, MAT3D,
                                            MATG, MATHE, MATHP, CREEP, EQUIV,
                                            NXSTRAT)
-from pyNastran.bdf.cards.material_deps import (MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9,
-                                               MATS1)
+from pyNastran.bdf.cards.material_deps import (
+    MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATS1)
 
 from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
 from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs, POINT, SEQGP, GRIDB
@@ -124,15 +127,15 @@ from pyNastran.bdf.cards.optimization import (
     DVPREL1, DVPREL2,
     DVGRID, DSCREEN)
 from pyNastran.bdf.cards.superelements import (
-    SEBNDRY, SELABEL, SELOAD, SELOC, SEBULK, SEELT,
-    SETREE, SEMPLN, SEEXCLD, SENQSET, SECONCT,
+    SEBNDRY, SEBULK, SECONCT, SEELT, SEEXCLD,
+    SELABEL, SELOAD, SELOC, SEMPLN, SENQSET, SETREE,
     CSUPER, CSUPEXT,
 )
-
 from pyNastran.bdf.cards.bdf_sets import (
     ASET, BSET, CSET, QSET, USET,
     ASET1, BSET1, CSET1, QSET1, USET1,
-    SET1, SET3, #RADSET,
+    OMIT1,
+    SET1, SET3,
     SEBSET, SECSET, SEQSET, # SEUSET
     SEBSET1, SECSET1, SEQSET1, # SEUSET1
     SESET, #SEQSEP
@@ -163,7 +166,8 @@ from pyNastran.bdf.bdf_interface.verify_validate import verify_bdf, validate_bdf
 from pyNastran.bdf.bdf_interface.stats import get_bdf_stats
 
 from pyNastran.bdf.errors import (CrossReferenceError, DuplicateIDsError,
-                                  CardParseSyntaxError, UnsupportedCard, DisabledCardError)
+                                  CardParseSyntaxError, UnsupportedCard, DisabledCardError,
+                                  SuperelementFlagError)
 from pyNastran.bdf.bdf_interface.pybdf import (
     BDFInputPy, _clean_comment, _clean_comment_bulk, EXECUTIVE_CASE_SPACES)
 
@@ -1038,7 +1042,17 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         self.case_control_deck.solmap_to_value = self._solmap_to_value
         self.case_control_deck.rsolmap_to_str = self.rsolmap_to_str
 
-        self._parse_all_cards(bulk_data_lines, bulk_data_ilines)
+        try:
+            self._parse_all_cards(bulk_data_lines, bulk_data_ilines)
+        except SuperelementFlagError:
+            self.log.error('Attempting to use is_superelements=True.')
+            self.is_superelements = True
+            self.read_bdf(bdf_filename=bdf_filename, validate=validate, xref=xref, punch=punch,
+                          read_includes=read_includes, save_file_structure=save_file_structure,
+                          encoding=encoding)
+            return
+
+
         if superelement_lines:
             for superelement_id, superelement_line in sorted(superelement_lines.items()):
                 assert isinstance(superelement_line, list), superelement_line
@@ -2300,7 +2314,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             raise RuntimeError(msg)
 
         if card_name not in self.card_count:
-            _check_for_spaces(card_name, card_lines, comment)
+            _check_for_spaces(card_name, card_lines, comment, self.log)
             self.log.info('    rejecting card_name = %s' % card_name)
 
         self.increase_card_count(card_name)
@@ -2310,7 +2324,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         """common method to not write duplicate reject card names"""
         if card_name not in self.card_count:
             #if ' ' in card_name:
-                #_check_for_spaces(card_name, card_lines, comment)
+                #_check_for_spaces(card_name, card_lines, comment, self.log)
             self.log.info('    rejecting card_name = %s' % card_name)
 
     def _prepare_cbar(self, unused_card, card_obj, comment=''):
@@ -4232,7 +4246,7 @@ def _prep_comment(comment):
              #for comment in comment.rstrip().split('\n')]
     #print('sline = ', sline)
 
-def _check_for_spaces(card_name, card_lines, comment):
+def _check_for_spaces(card_name, card_lines, comment, log):
     if ' ' in card_name:
         if card_name.startswith(EXECUTIVE_CASE_SPACES):  # TODO verify upper
             msg = (
@@ -4241,7 +4255,7 @@ def _check_for_spaces(card_name, card_lines, comment):
                 'read_bdf(punch=True)?\n%s' % (
                     card_name, card_lines))
             raise RuntimeError(msg)
-        elif card_name == 'BEGIN BU':
+        elif card_name.startswith('BEGIN '):
             uline = card_lines[0].upper()
             if 'SUPER' in uline:
                 msg = (
@@ -4250,7 +4264,8 @@ def _check_for_spaces(card_name, card_lines, comment):
             else:
                 msg = 'Is there a second BEGIN BULK in your deck?\n'
             msg += '%s' % card_lines
-            raise RuntimeError(msg)
+            log.error(msg)
+            raise SuperelementFlagError(msg)
         else:
             msg = (
                 'No spaces allowed in card name %r.\n'

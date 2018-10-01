@@ -229,6 +229,41 @@ class TestDampers(unittest.TestCase):
 
         save_load_deck(model, run_convert=True)
 
+    def test_pbusht(self):
+        """tests CBUSH, PBUSH, PBUSHT"""
+        model = BDF(debug=True, log=None, mode='msc')
+        model.add_grid(10, [0., 0., 0.])
+        model.add_grid(11, [0., 0., 0.])
+
+        eid = 8
+        pid = 8
+        k = [1.0]
+        b = [2.0]
+        ge = [0.01]
+        nids = [10, 11]
+        x = [1., 0., 0.]
+        g0 = None
+        cbush = model.add_cbush(eid, pid, nids, x, g0, cid=None, s=0.5,
+                                ocid=-1, si=None, comment='cbush')
+        pbush = model.add_pbush(pid, k, b, ge, rcv=None, mass=None,
+                                comment='pbush')
+
+        k_tables = [2]
+        b_tables = [2]
+        ge_tables = [2]
+        kn_tables = [2]
+        pbusht = model.add_pbusht(pid, k_tables, b_tables, ge_tables, kn_tables,
+                                  comment='')
+        pbusht.raw_fields()
+        model.validate()
+        model._verify_bdf()
+        model.cross_reference()
+        model._verify_bdf()
+        save_load_deck(model, xref='standard', punch=True,
+                       run_remove_unused=True, run_convert=True, run_renumber=True, run_mirror=True,
+                       run_save_load=True, run_quality=True, write_saves=True)
+
+
     def test_pdamp(self):
         """PDAMP"""
         model = BDF()

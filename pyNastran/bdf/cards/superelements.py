@@ -17,8 +17,9 @@ All superelements are defined in this file.  This includes:
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.base_card import (
-    BaseCard, expand_thru, _node_ids
+    BaseCard, expand_thru #, _node_ids
 )
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -85,32 +86,77 @@ class SEELT(BaseCard):
     SEELT SEID EID1 EID2 EID3 EID4 EID5 EID6 EID7
     """
     type = 'SEELT'
-    def __init__(self, seid, ids, comment=''):
+    def __init__(self, seid, eids, comment=''):
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
 
         self.seid = seid
         #:  Identifiers of grids points. (Integer > 0)
-        self.ids = expand_thru(ids)
-        self.ids_ref = None
+        self.eids = expand_thru(eids)
+        self.eids_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
         seid = integer(card, 1, 'seid')
-        ids = []
+        eids = []
         i = 1
         nfields = len(card)
         for ifield in range(2, nfields):
-            idi = integer_string_or_blank(card, ifield, 'ID%i' % i)
-            if idi:
+            eid = integer_string_or_blank(card, ifield, 'eid_%i' % i)
+            if eid:
                 i += 1
-                ids.append(idi)
+                eids.append(eid)
         assert len(card) <= 9, 'len(SEELT card) = %i\ncard=%s' % (len(card), card)
-        return SEELT(seid, ids, comment=comment)
+        return SEELT(seid, eids, comment=comment)
+
+    def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        msg = ', which is required by SEELT seid=%s' % (self.seid)
+        eids_ref = self._xref_elements_plotels(model, self.eids, msg=msg)
+        self.eids_ref = eids_ref
+
+    def _xref_elements_plotels(self, model, eids, msg=''):
+        eids_ref = []
+        missing_eids = []
+        for eid in eids:
+            if eid in model.elements:
+                elem = model.elements[eid]
+            elif eid in model.plotels:
+                elem = model.plotels[eid]
+            else:
+                missing_eids.append(eid)
+                continue
+            eids_ref.append(elem)
+        if missing_eids:
+            raise KeyError('eids=%s not found%s' % (missing_eids, msg))
+        return eids_ref
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        return self.cross_reference(model)
+
+    def uncross_reference(self):
+        self.eids_ref = None
 
     def raw_fields(self):
-        list_fields = ['SEELT', self.seid] + self.ids
+        list_fields = ['SEELT', self.seid] + self.eids
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -275,6 +321,33 @@ class SELABEL(BaseCard):
                          for ifield in range(2, len(card))])
         return SELABEL(seid, label, comment=comment)
 
+    def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        pass
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        pass
+
+    def uncross_reference(self):
+        pass
+
     def raw_fields(self):
         return [self.write_card()]
 
@@ -303,32 +376,71 @@ class SELOC(BaseCard):
 
     """
     type = 'SELOC'
-    def __init__(self, seid, ids, comment=''):
+    def __init__(self, seid, nodes_seid, nodes0, comment=''):
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
 
         self.seid = seid
         #:  Identifiers of grids points. (Integer > 0)
-        self.ids = expand_thru(ids)
-        self.ids_ref = None
+        self.nodes_0 = expand_thru(nodes0)
+        self.nodes_seid = expand_thru(nodes_seid)
+        self.nodes_0_ref = None
+        self.nodes_seid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
         seid = integer(card, 1, 'seid')
-        ids = []
+        nodes0 = []
+        nodes_seid = []
         i = 1
-        nfields = len(card)
-        for ifield in range(2, nfields):
-            idi = integer(card, ifield, 'ID%i' % i)
-            if idi:
-                i += 1
-                ids.append(idi)
+        fields = card[9:]
+        nfields = len(fields)
+        assert nfields % 2 == 0, fields
+        for ifield in [2, 3, 4]:
+            nid_a = integer(card, ifield, 'nid_%i' % i)
+            nodes_seid.append(nid_a)
+        for ifield in [5, 6, 7]:
+            nid_b = integer(card, ifield, 'nid_%i' % i)
+            nodes0.append(nid_b)
+
         assert len(card) <= 8, 'len(SELOC card) = %i\ncard=%s' % (len(card), card)
-        return SELOC(seid, ids, comment=comment)
+        return SELOC(seid, nodes_seid, nodes0, comment=comment)
+
+    def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        msg = ', which is required by SELOC seid=%s' % (self.seid)
+        self.nodes_seid_ref = model.superelement_nodes(self.seid, self.nodes_seid, msg=msg)
+        self.nodes_0_ref = model.Nodes(self.nodes_0, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        msg = ', which is required by SELOC seid=%s' % (self.seid)
+        self.nodes_seid_ref = model.superelement_nodes(self.seid, self.nodes_seid, msg=msg)
+        self.nodes_0_ref = model.Nodes(self.nodes_0, msg=msg)
+
+    def uncross_reference(self):
+        self.nodes_0_ref = None
+        self.nodes_seid_ref = None
 
     def raw_fields(self):
-        list_fields = ['SELOC', self.seid] + list(self.ids)
+        list_fields = ['SELOC', self.seid] + list(self.nodes_seid) + list(self.nodes_0)
 
         return list_fields
     def write_card(self, size=8, is_double=False):
@@ -352,31 +464,70 @@ class SETREE(BaseCard):
     +--------+-------+-------+-------+-------+-------+-------+-------+-------+
     """
     type = 'SETREE'
-    def __init__(self, seid, ids, comment=''):
+    def __init__(self, seid, superelements, comment=''):
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
         self.seid = seid
         #:  Identifiers of grids points. (Integer > 0)
-        self.ids = expand_thru(ids)
-        self.ids_ref = None
+        self.superelements = expand_thru(superelements)
+        self.superelements_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
         seid = integer(card, 1, 'seid')
-        ids = []
+        superelements = []
         i = 1
         nfields = len(card)
         for ifield in range(2, nfields):
-            idi = integer_string_or_blank(card, ifield, 'ID%i' % i)
-            if idi:
+            superelement = integer_string_or_blank(card, ifield, 'ID%i' % i)
+            if superelement:
                 i += 1
-                ids.append(idi)
+                superelements.append(superelement)
         assert len(card) >= 3, 'len(SETREE card) = %i\ncard=%s' % (len(card), card)
-        return SETREE(seid, ids, comment=comment)
+        return SETREE(seid, superelements, comment=comment)
+
+    def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        msg = ', which is required by SETREE seid=%s' % self.seid
+        missing_superelements = []
+        superelements_ref = []
+        for super_id in self.superelements:
+            if super_id in model.superelement_models:
+                superelement = model.superelement_models[super_id]
+            else:
+                missing_superelements.append(super_id)
+                continue
+            superelements_ref.append(superelement)
+        if missing_superelements:
+            raise KeyError('cannot find superelements=%s%s' % (missing_superelements, msg))
+        self.superelements_ref = superelements_ref
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        self.cross_reference(model)
+
+    def uncross_reference(self):
+        pass
 
     def raw_fields(self):
-        list_fields = ['SETREE', self.seid] + list(self.ids)
+        list_fields = ['SETREE', self.seid] + list(self.superelements)
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -449,7 +600,7 @@ class CSUPER(BaseCard):
             the BDF object
 
         """
-        msg = ', which is required by CSUPEER seid=%s' % self.seid
+        msg = ', which is required by CSUPER seid=%s' % self.seid
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
 
     def uncross_reference(self):
@@ -458,13 +609,7 @@ class CSUPER(BaseCard):
 
     @property
     def node_ids(self):
-        nids = self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=False)
-        return nids
-
-    def _node_ids(self, nodes=None, allow_empty_nodes=False, msg=''):
-        # type: (Optional[List[Any]], bool, str) -> List[int]
-        """returns nodeIDs for repr functions"""
-        return _node_ids(self, nodes=nodes, allow_empty_nodes=allow_empty_nodes, msg=msg)
+        return _node_ids(self, self.nodes, self.nodes_ref, allow_empty_nodes=False, msg='')
 
     def raw_fields(self):
         list_fields = ['CSUPER', self.seid, self.psid] + self.node_ids
@@ -544,13 +689,7 @@ class CSUPEXT(BaseCard):
 
     @property
     def node_ids(self):
-        nids = self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=False)
-        return nids
-
-    def _node_ids(self, nodes=None, allow_empty_nodes=False, msg=''):
-        # type: (Optional[List[Any]], bool, str) -> List[int]
-        """returns nodeIDs for repr functions"""
-        return _node_ids(self, nodes=nodes, allow_empty_nodes=allow_empty_nodes, msg=msg)
+        return _node_ids(self, self.nodes, self.nodes_ref, allow_empty_nodes=False, msg='')
 
     def raw_fields(self):
         list_fields = ['CSUPEXT', self.seid] + self.node_ids
@@ -629,6 +768,33 @@ class SEBULK(BaseCard):
         return SEBULK(seid, Type, rseid, method=method, tol=tol,
                       loc=loc, unitno=unitno, comment=comment)
 
+    def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        pass
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        pass
+
+    def uncross_reference(self):
+        pass
+
     def raw_fields(self):
         list_fields = ['SEBULK', self.seid, self.Type, self.rseid, self.method, self.tol,
                        self.loc, self.unitno]
@@ -698,6 +864,8 @@ class SECONCT(BaseCard):
         self.loc = loc
         self.nodes_a = nodes_a
         self.nodes_b = nodes_b
+        self.nodes_a_ref = None
+        self.nodes_b_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -711,7 +879,7 @@ class SECONCT(BaseCard):
 
         assert len(fields) % 2 == 0, 'card=%s\nfields=%s' % (card, fields)
         if 'THRU' in fields:
-            raise NotImplemented(fields)
+            raise NotImplementedError(fields)
             #start_a = integer(card, 9, 'start_a')
             #thru_a = string(card, 10, 'thru_a')
             #end_a = integer(card, 11, 'end_a')
@@ -739,6 +907,48 @@ class SECONCT(BaseCard):
                 nodes_b.append(node_b)
                 inode += 1
         return SECONCT(seid_a, seid_b, tol, loc, nodes_a, nodes_b, comment=comment)
+
+    def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        msg = ', which is required by SECONCT seid_a=%s seid_b=%s' % (self.seid_a, self.seid_b)
+        self.nodes_a_ref = model.superelement_nodes(self.seid_a, self.nodes_a, msg=msg)
+        self.nodes_b_ref = model.superelement_nodes(self.seid_b, self.nodes_b, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        msg = ', which is required by SECONCT seid_a=%s seid_b=%s' % (self.seid_a, self.seid_b)
+        self.nodes_a_ref = model.superelement_nodes(self.seid_a, self.nodes_a, msg=msg)
+        self.nodes_b_ref = model.superelement_nodes(self.seid_b, self.nodes_b, msg=msg)
+
+    def uncross_reference(self):
+        self.nodes_a = self.node_ids_a
+        self.nodes_b = self.node_ids_b
+        self.nodes_a_ref = None
+        self.nodes_b_ref = None
+
+    @property
+    def node_ids_a(self):
+        return _node_ids(self, self.nodes_a, self.nodes_a_ref, allow_empty_nodes=False, msg='')
+
+    @property
+    def node_ids_b(self):
+        return _node_ids(self, self.nodes_b, self.nodes_b_ref, allow_empty_nodes=False, msg='')
 
     def raw_fields(self):
         list_fields = ['SECONCT', self.seid_a, self.seid_b, self.tol, self.loc,
@@ -794,3 +1004,47 @@ class SENQSET(BaseCard):
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment + print_card_8(card)
+
+def _node_ids(card, nodes, nodes_ref, allow_empty_nodes=False, msg=''):
+    if nodes_ref is None:
+        #nodes = card.nodes
+        assert nodes is not None, card.__dict__
+        return nodes
+
+    try:
+        if allow_empty_nodes:
+            nodes2 = []
+            for node in nodes_ref:
+                if node == 0 or node is None:
+                    nodes2.append(None)
+                elif isinstance(node, integer_types):
+                    nodes2.append(node)
+                else:
+                    nodes2.append(node.nid)
+            assert nodes2 is not None, str(card)
+            return nodes2
+        else:
+            try:
+                node_ids = []
+                for node in nodes_ref:
+                    if isinstance(node, integer_types):
+                        node_ids.append(node)
+                    else:
+                        node_ids.append(node.nid)
+
+                #if isinstance(nodes[0], integer_types):
+                    #node_ids = [node for node in nodes]
+                #else:
+                    #node_ids = [node.nid for node in nodes]
+            except:
+                print('type=%s nodes=%s allow_empty_nodes=%s\nmsg=%s' % (
+                    card.type, nodes, allow_empty_nodes, msg))
+                raise
+            assert 0 not in node_ids, 'node_ids = %s' % node_ids
+            assert node_ids is not None, str(card)
+            return node_ids
+    except:
+        print('type=%s nodes=%s allow_empty_nodes=%s\nmsg=%s' % (
+            card.type, nodes, allow_empty_nodes, msg))
+        raise
+    raise RuntimeError('huh...')

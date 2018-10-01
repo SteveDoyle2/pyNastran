@@ -263,6 +263,8 @@ def _convert_properties(model, xyz_scale, mass_scale, weight_scale):
         # TODO: NX-verify
         'PPLANE',
     )
+
+    # we don't need to convert PBUSHT, PELAST, PDAMPT
     for prop in model.properties.values():
         prop_type = prop.type
         if prop_type in skip_properties:

@@ -572,19 +572,91 @@ class XrefMesh(BDFAttributes):
         for unused_seid, csupext in self.csupext.items():
             csupext.cross_reference(self)
 
+        for unused_seid, sebulk in self.sebulk.items():
+            sebulk.cross_reference(self)
+        for unused_seid, sebndry in self.sebndry.items():
+            sebndry.cross_reference(self)
+        for unused_seid, seconct in self.seconct.items():
+            seconct.cross_reference(self)
+        for unused_seid, seelt in self.seelt.items():
+            seelt.cross_reference(self)
+        for unused_seid, seexcld in self.seexcld.items():
+            seexcld.cross_reference(self)
+        for unused_seid, selabel in self.selabel.items():
+            selabel.cross_reference(self)
+        for unused_seid, seloc in self.seloc.items():
+            seloc.cross_reference(self)
+        for unused_seid, seload in self.seload.items():
+            seload.cross_reference(self)
+        for unused_seid, sempln in self.sempln.items():
+            sempln.cross_reference(self)
+        for unused_seid, setree in self.setree.items():
+            setree.cross_reference(self)
+
+        #'senqset',
+        #'se_sets', 'se_usets',
+
     def _safe_cross_reference_superelements(self):
+        xref_errors = {}
         for unused_seid, csuper in self.csuper.items():
-            csuper.cross_reference(self)
+            csuper.safe_cross_reference(self, xref_errors)
         for unused_seid, csupext in self.csupext.items():
-            csupext.cross_reference(self)
+            csupext.safe_cross_reference(self, xref_errors)
+
+        for unused_seid, sebulk in self.sebulk.items():
+            sebulk.safe_cross_reference(self, xref_errors)
+        for unused_seid, sebndry in self.sebndry.items():
+            sebndry.safe_cross_reference(self, xref_errors)
+        for unused_seid, seconct in self.seconct.items():
+            seconct.safe_cross_reference(self, xref_errors)
+        for unused_seid, seelt in self.seelt.items():
+            seelt.safe_cross_reference(self, xref_errors)
+        for unused_seid, seexcld in self.seexcld.items():
+            seexcld.safe_cross_reference(self, xref_errors)
+        for unused_seid, selabel in self.selabel.items():
+            selabel.safe_cross_reference(self, xref_errors)
+        for unused_seid, seloc in self.seloc.items():
+            seloc.safe_cross_reference(self, xref_errors)
+        for unused_seid, seload in self.seload.items():
+            seload.safe_cross_reference(self, xref_errors)
+        for unused_seid, sempln in self.sempln.items():
+            sempln.safe_cross_reference(self, xref_errors)
+        for unused_seid, setree in self.setree.items():
+            setree.safe_cross_reference(self, xref_errors)
 
     def _uncross_reference_superelements(self):
         """cross references the superelement objects"""
-        xref_errors = {}
         for unused_seid, csuper in self.csuper.items():
-            csuper.uncross_reference(self, xref_errors)
+            csuper.uncross_reference()
         for unused_seid, csupext in self.csupext.items():
-            csupext.uncross_reference(self, xref_errors)
+            csupext.uncross_reference()
+
+        for unused_seid, sebulk in self.sebulk.items():
+            sebulk.uncross_reference()
+        for unused_seid, sebndry in self.sebndry.items():
+            sebndry.uncross_reference()
+        for unused_seid, seconct in self.seconct.items():
+            seconct.uncross_reference()
+        for unused_seid, seelt in self.seelt.items():
+            seelt.uncross_reference()
+        for unused_seid, seexcld in self.seexcld.items():
+            seexcld.uncross_reference()
+        for unused_seid, selabel in self.selabel.items():
+            selabel.uncross_reference()
+        for unused_seid, seloc in self.seloc.items():
+            seloc.uncross_reference()
+        for unused_seid, seload in self.seload.items():
+            seload.uncross_reference()
+        for unused_seid, sempln in self.sempln.items():
+            sempln.uncross_reference()
+        for unused_seid, setree in self.setree.items():
+            setree.uncross_reference()
+
+    def superelement_nodes(self, seid, nodes, msg=''):
+        if seid == 0:
+            return self.Nodes(nodes, msg=msg)
+        superelement = self.superelement_models[seid]
+        return superelement.Nodes(nodes, msg=msg)
 
     def geom_check(self, geom_check, xref):  # pragma: no cover
         # type: (bool, bool) -> None

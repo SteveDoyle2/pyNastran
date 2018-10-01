@@ -32,6 +32,7 @@ from pyNastran.bdf.cards.elements.solid import (
 from pyNastran.bdf.cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE, RSSCON
 
 from pyNastran.bdf.cards.axisymmetric.axisymmetric import (
+    AXIF, RINGFL,
     AXIC, RINGAX, POINTAX, CCONEAX, PCONEAX, PRESAX, TEMPAX,)
 from pyNastran.bdf.cards.elements.axisymmetric_shells import (
     CTRAX3, CTRAX6, CTRIAX, CTRIAX6, CQUADX, CQUADX4, CQUADX8)
@@ -68,25 +69,25 @@ from pyNastran.bdf.cards.dynamic import (
     DELAY, DPHASE, FREQ, FREQ1, FREQ2, FREQ3, FREQ4, FREQ5,
     TSTEP, TSTEP1, TSTEPNL, NLPARM, NLPCI, TF, ROTORG, ROTORD, TIC)
 from pyNastran.bdf.cards.loads.loads import (
-    LSEQ, SLOAD, DAREA, RFORCE, RFORCE1, SPCD, LOADCYN, DEFORM)
+    LSEQ, SLOAD, DAREA, RFORCE, RFORCE1, SPCD, DEFORM, LOADCYN)
 from pyNastran.bdf.cards.loads.dloads import ACSRCE, DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
 from pyNastran.bdf.cards.loads.static_loads import (LOAD, GRAV, ACCEL, ACCEL1, FORCE,
                                                     FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
                                                     PLOAD, PLOAD1, PLOAD2, PLOAD4, PLOADX1,
                                                     GMLOAD)
-from pyNastran.bdf.cards.loads.random_loads import (
-    RANDPS, RANDT1)
+from pyNastran.bdf.cards.loads.random_loads import RANDPS, RANDT1
 
 from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
                                            MAT8, MAT9, MAT10, MAT11, MAT3D,
-                                           MATG, MATHE, MATHP, CREEP, NXSTRAT, EQUIV)
+                                           MATG, MATHE, MATHP, CREEP, EQUIV,
+                                           NXSTRAT)
 from pyNastran.bdf.cards.material_deps import (
     MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATS1)
 
 from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
-from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs, POINT, SEQGP
+from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs, POINT, SEQGP, GRIDB
 from pyNastran.bdf.cards.aero.aero import (
-    AECOMP, AEFACT, AELINK, AELIST, AEPARM, AESURF, AESURFS,
+    AECOMP, AECOMPL, AEFACT, AELINK, AELIST, AEPARM, AESURF, AESURFS,
     CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
     PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
     MONPNT1, MONPNT2, MONPNT3,
@@ -100,11 +101,16 @@ from pyNastran.bdf.cards.optimization import (
     DVMREL1, DVMREL2,
     DVPREL1, DVPREL2,
     DVGRID, DSCREEN)
+from pyNastran.bdf.cards.superelements import (
+    SEBNDRY, SEBULK, SECONCT, SEELT, SEEXCLD,
+    SELABEL, SELOAD, SELOC, SEMPLN, SENQSET, SETREE,
+    CSUPER, CSUPEXT,
+)
 from pyNastran.bdf.cards.bdf_sets import (
     ASET, BSET, CSET, QSET, USET,
     ASET1, BSET1, CSET1, QSET1, USET1,
     OMIT1,
-    SET1, SET3, #RADSET,
+    SET1, SET3,
     SEBSET, SECSET, SEQSET, # SEUSET
     SEBSET1, SECSET1, SEQSET1, # SEUSET1
     SESET, #SEQSEP,
@@ -119,13 +125,12 @@ from pyNastran.bdf.cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, 
 from pyNastran.bdf.cards.thermal.radiation import RADM, RADBC, RADCAV, RADLST, RADMTX, VIEW, VIEW3D
 from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
                                             TABLEM1, TABLEM2, TABLEM3, TABLEM4,
-                                            TABLES1, TABDMP1, TABLEST, TABRND1, TABRNDG,
+                                            TABLES1, TABDMP1, TABLEST, TABLEHT, TABLEH1,
+                                            TABRND1, TABRNDG,
                                             DTABLE)
-from pyNastran.bdf.cards.contact import BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA, BCONP, BLSEG
+from pyNastran.bdf.cards.contact import (
+    BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA, BCONP, BLSEG)
 from pyNastran.utils.numpy_utils import integer_string_types
-from pyNastran.bdf.cards.superelements import (
-    CSUPER, CSUPEXT, SEBNDRY, SECONCT, SEELT, SEEXCLD, SELABEL, SELOAD,
-    SELOC, SEMPLN, SENQSET, SETREE)
 
 class AddCards(AddMethods):
     """defines the add_cardname functions that use the object inits"""
@@ -1295,7 +1300,7 @@ class AddCards(AddMethods):
         """Creates a PBUSHT card"""
         prop = PBUSHT(pid, k_tables, b_tables, ge_tables, kn_tables,
                       comment=comment)
-        self._add_property_object(prop)
+        self._add_pbusht_object(prop)
         return prop
 
     def add_pelast(self, pid, tkid=0, tgeid=0, tknid=0, comment=''):
@@ -2892,6 +2897,26 @@ class AddCards(AddMethods):
                     rho_table=rho_table, a1_table=a1_table, a2_table=a2_table,
                     xt_table=xt_table, xc_table=xc_table, yt_table=yt_table, yc_table=yc_table,
                     s_table=s_table, ge_table=ge_table, f12_table=f12_table, comment=comment)
+        self._add_material_dependence_object(mat)
+        return mat
+    def add_matt9(self, mid,
+                  g11_table, g12_table, g13_table, g14_table, g15_table, g16_table,
+                  g22_table, g23_table, g24_table, g25_table, g26_table,
+                  g33_table, g34_table, g35_table, g36_table,
+                  g44_table, g45_table, g46_table,
+                  g55_table, g56_table,
+                  g66_table, rho_table,
+                  a1_table, a2_table, a3_table, a4_table, a5_table, a6_table,
+                  ge_table, comment=''):
+        mat = MATT9(mid,
+                    g11_table, g12_table, g13_table, g14_table, g15_table, g16_table,
+                    g22_table, g23_table, g24_table, g25_table, g26_table,
+                    g33_table, g34_table, g35_table, g36_table,
+                    g44_table, g45_table, g46_table,
+                    g55_table, g56_table,
+                    g66_table, rho_table,
+                    a1_table, a2_table, a3_table, a4_table, a5_table, a6_table,
+                    ge_table, comment=comment)
         self._add_material_dependence_object(mat)
         return mat
 
@@ -6953,7 +6978,7 @@ class AddCards(AddMethods):
             self._add_dti_object(dti)
         else:
             if comment:
-                self.reject_lines.append([_format_comment(comment)])
+                #self.reject_lines.append([_format_comment(comment)])
                 msg = "DTI only supports name='UNITS'; name=%r fields=%s" % (name, str(fields))
             raise NotImplementedError(msg)
             #self.reject_cards.append(card_obj)
@@ -7101,3 +7126,61 @@ class AddCards(AddMethods):
                     eidl, eidh, t_abcd=t_abcd, direction=direction, comment=comment)
         self._add_element_object(elem)
         return elem
+
+    #---------------------------------------------------------------------
+    # superelements.py
+
+    def add_sebndry(self, seid_a, seid_b, ids, comment=''):
+        sebndry = SEBNDRY(seid_a, seid_b, ids, comment=comment)
+        self._add_sebndry_object(sebndry)
+        return sebndry
+    def add_sebulk(self, seid, Type, rseid, method='AUTO', tol=1e-5, loc='YES', unitno=None, comment=''):
+        sebulk = SEBULK(seid, Type, rseid,
+                        method=method, tol=tol, loc=loc,
+                        unitno=unitno, comment=comment)
+        self._add_sebulk_object(sebulk)
+        return sebulk
+    def add_seconct(self, seid_a, seid_b, tol, loc, nodes_a, nodes_b, comment=''):
+        seconct = SECONCT(seid_a, seid_b, tol, loc, nodes_a, nodes_b, comment=comment)
+        self._add_seconct_object(seconct)
+        return seconct
+    def add_seelt(self, seid, ids, comment=''):
+        seelt = SEELT(seid, ids, comment=comment)
+        self._add_seelt_object(seelt)
+        return seelt
+    def add_seexcld(self, seid_a, seid_b, nodes, comment=''):
+        seexcld = SEEXCLD(seid_a, seid_b, nodes, comment=comment)
+        self._add_seexcld_object(seexcld)
+        return seexcld
+    def add_selabel(self, seid, label, comment=''):
+        selabel = SELABEL(seid, label, comment=comment)
+        self._add_selabel_object(selabel)
+        return selabel
+    def add_seloc(self, seid, ids, comment=''):
+        seloc = SELOC(seid, ids, comment=comment)
+        self._add_seloc_object(seloc)
+        return seloc
+    def add_seload(self, lid_s0, seid, lid_se, comment=''):
+        seload = SELOAD(lid_s0, seid, lid_se, comment=comment)
+        self._add_seload_object(seload)
+        return seload
+    def add_sempln(self, seid, p1, p2, p3, comment=''):
+        sempln = SEMPLN(seid, p1, p2, p3, comment=comment)
+        self._add_sempln_object(sempln)
+        return sempln
+    def add_setree(self, seid, ids, comment=''):
+        setree = SETREE(seid, ids, comment=comment)
+        self._add_setree_object(setree)
+        return setree
+    def add_csuper(self, seid, psid, nodes, comment=''):
+        csuper = CSUPER(seid, psid, nodes, comment=comment)
+        self._add_csuper_object(csuper)
+        return csuper
+    def add_csupext(self, seid, nodes, comment=''):
+        csupext = CSUPEXT(seid, nodes, comment=comment)
+        self._add_csupext_object(csupext)
+        return csupext
+    def add_senqset(self, set_id, n, comment=''):
+        senqset = SENQSET(set_id, n, comment=comment)
+        self._add_senqset_object(senqset)
+        return senqset

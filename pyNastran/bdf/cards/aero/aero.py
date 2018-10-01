@@ -2537,6 +2537,7 @@ class CAERO3(BaseCard):
             self.list_c1 = self.List_c1()
         if self.list_c2 != self.List_c2():
             self.list_c2 = self.List_c2()
+
         self.pid_ref = None
         self.cp_ref = None
         self.ascid_ref = None
@@ -2641,19 +2642,19 @@ class CAERO3(BaseCard):
         return self.pid
 
     def List_w(self):
-        if self.list_w is None or isinstance(self.list_w, integer_types):
-            return self.list_w
-        return self.list_w.sid
+        if self.list_w_ref is not None:
+            return self.list_w_ref.sid
+        return self.list_w
 
     def List_c1(self):
-        if self.list_c1 is None or isinstance(self.list_c1, integer_types):
-            return self.list_c1
-        return self.list_c1.sid
+        if self.list_c1_ref is not None:
+            return self.list_c1_ref.sid
+        return self.list_c1
 
     def List_c2(self):
-        if self.list_c2 is None or isinstance(self.list_c2, integer_types):
-            return self.list_c2
-        return self.list_c2.sid
+        if self.list_c2_ref is not None:
+            return self.list_c2_ref.sid
+        return self.list_c2
 
     def raw_fields(self):
         """

@@ -1089,14 +1089,19 @@ def _get_auxmodel_id(line, uline):
 def _get_super_id(line, uline):
     if '=' in uline:
         sline = uline.split('=')
+        super_id_str = sline[1]
+        assert len(sline) == 2, sline
     else:
         sline = uline.split()
+        super_id_str = sline[2]
+        assert len(sline) == 3, sline
 
     try:
-        super_id = int(sline[1])
+        super_id = int(super_id_str)
     except (IndexError, ValueError):
         msg = 'expected "BEGIN SUPER=1"\nline = %s' % line
         raise SyntaxError(msg)
+
     if super_id < 0:
         raise SyntaxError('super_id=%i must be greater than 0; line=%s' % (
             super_id, line))
