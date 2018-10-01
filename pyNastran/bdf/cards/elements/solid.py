@@ -208,6 +208,7 @@ class CHEXA8(SolidElement):
             property id (PSOLID, PLSOLID)
         nids : List[int]
             node ids; n=8
+
         """
         SolidElement.__init__(self)
         if comment:
@@ -230,6 +231,7 @@ class CHEXA8(SolidElement):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
@@ -257,6 +259,7 @@ class CHEXA8(SolidElement):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         eid = data[0]
         pid = data[1]
@@ -272,6 +275,7 @@ class CHEXA8(SolidElement):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by CHEXA eid=%s' % self.eid
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)

@@ -913,6 +913,12 @@ class CaseControlDeck(object):
 
     def __repr__(self):
         # type: () -> str
+        return self.write()
+
+    def write(self, write_begin_bulk=None):
+        # type: () -> str
+        if write_begin_bulk is None:
+            write_begin_bulk = self.write_begin_bulk
         msg = ''
         subcase0 = self.subcases[0]
         for subcase_id, subcase in sorted(self.subcases.items()):
@@ -923,7 +929,7 @@ class CaseControlDeck(object):
         if self.output_lines:
             msg += '\n'.join(self.output_lines) + '\n'
         msg += '\n'.join(self.reject_lines)
-        if self.write_begin_bulk:
+        if write_begin_bulk:
             msg += ' '.join(self.begin_bulk) + '\n'
         return msg
 

@@ -176,7 +176,7 @@ class AddMethods(BDFAttributes):
         key = sebulk.seid
         self.sebulk[key] = sebulk
     def _add_sebndry_object(self, sebndry):
-        key = sebndry.seid
+        key = (sebndry.seid_a, sebndry.seid_b)
         self.sebndry[key] = sebndry
     def _add_seloc_object(self, seloc):
         key = seloc.seid
@@ -192,7 +192,7 @@ class AddMethods(BDFAttributes):
         key = selabel.seid
         self.selabel[key] = selabel
     def _add_seexcld_object(self, seexcld):
-        key = seexcld.seid
+        key = (seexcld.seid_a, seexcld.seid_b)
         self.seexcld[key] = seexcld
 
     def _add_seelt_object(self, seelt):

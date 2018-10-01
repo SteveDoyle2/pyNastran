@@ -1,4 +1,4 @@
-def get_bdf_stats(model, return_type='string'):
+def get_bdf_stats(model, return_type='string', word=''):
     # type: (str) -> Union[str, List[str]]
     """
     Print statistics for the BDF
@@ -9,6 +9,8 @@ def get_bdf_stats(model, return_type='string'):
         the output type ('list', 'string')
             'list' : list of strings
             'string' : single, joined string
+    word : str; default=''
+        model flag
 
     Returns
     -------
@@ -99,7 +101,7 @@ def get_bdf_stats(model, return_type='string'):
     #unsupported_types = ignored_types.union(ignored_types2)
     #all_params = object_attributes(model, keys_to_skip=unsupported_types)
 
-    msg = ['---BDF Statistics---']
+    msg = ['---BDF Statistics%s---' % word]
     # sol
     msg.append('SOL %s\n' % model.sol)
     msg.extend(_get_bdf_stats_loads(model))
@@ -230,6 +232,10 @@ def get_bdf_stats(model, return_type='string'):
             if name not in model.cards_to_read:
                 msg.append('  %-8s %s' % (name + ':', counter))
     msg.append('')
+
+    for super_id, superelement in model.superelement_models.items():
+        msg += get_bdf_stats(superelement, return_type='list', word=' (Superelement %i)' % super_id)
+
     if return_type == 'string':
         return '\n'.join(msg)
     return msg

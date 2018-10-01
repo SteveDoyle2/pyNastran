@@ -1280,8 +1280,9 @@ class PBARL(LineProperty):
 
     def validate(self):
         if self.Type not in self.valid_types:
+            keys = list(self.valid_types.keys())
             msg = ('Invalid PBARL Type, Type=%s '
-                   'valid_types=%s' % (self.Type, self.valid_types.keys()))
+                   'valid_types=%s' % (self.Type, ', '.join(sorted(keys))))
             raise ValueError(msg)
 
         ndim = self.valid_types[self.Type]
@@ -1320,8 +1321,12 @@ class PBARL(LineProperty):
         group = string_or_blank(card, 3, 'group', 'MSCBML0')
         Type = string(card, 4, 'Type')
 
-        ndim = cls.valid_types[Type]
-
+        try:
+            ndim = cls.valid_types[Type]
+        except KeyError:
+            keys = list(self.valid_types.keys())
+            raise KeyError('%r is not a valid PBARL type\nallowed_types={%s}' % (
+                Type, ', '.join(sorted(keys))))
         dim = []
         for i in range(ndim):
             dimi = double(card, 9 + i, 'ndim=%s; dim%i' % (ndim, i + 1))

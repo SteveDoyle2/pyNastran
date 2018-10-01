@@ -95,7 +95,7 @@ class XrefMesh(BDFAttributes):
                         xref=True,
                         xref_nodes=True,
                         xref_elements=True,
-                        xref_nodes_with_elements=True,
+                        xref_nodes_with_elements=False,
                         xref_properties=True,
                         xref_masses=True,
                         xref_materials=True,
@@ -103,8 +103,9 @@ class XrefMesh(BDFAttributes):
                         xref_constraints=True,
                         xref_aero=True,
                         xref_sets=True,
-                        xref_optimization=True):
-        # type: (bool, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool) -> None
+                        xref_optimization=True,
+                        word=''):
+        # type: (bool, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool, str) -> None
         """
         Links up all the cards to the cards they reference
 
@@ -130,6 +131,8 @@ class XrefMesh(BDFAttributes):
             set cross referencing of CAERO/SPLINEs
         xref_sets : bool; default=True
             set cross referencing of SETx
+        word : str; default=''
+            model flag
 
         To only cross-reference nodes:
 
@@ -146,7 +149,7 @@ class XrefMesh(BDFAttributes):
         """
         if not xref:
             return
-        self.log.debug("Cross Referencing...")
+        self.log.debug("Cross Referencing%s..." % word)
         if xref_nodes:
             self._cross_reference_nodes()
             self._cross_reference_coordinates()
@@ -172,8 +175,19 @@ class XrefMesh(BDFAttributes):
             self._cross_reference_optimization()
         if xref_nodes_with_elements:
             self._cross_reference_nodes_with_elements()
+        self._cross_reference_superelements()
         #self.case_control_deck.cross_reference(self)
         self.pop_xref_errors()
+
+        for super_id, superelement in sorted(self.superelement_models.items()):
+            superelement.cross_reference(
+                xref=xref, xref_nodes=xref_nodes, xref_elements=xref_elements,
+                xref_nodes_with_elements=xref_nodes_with_elements,
+                xref_properties=xref_properties, xref_masses=xref_masses,
+                xref_materials=xref_materials, xref_loads=xref_loads,
+                xref_constraints=xref_constraints, xref_aero=xref_aero,
+                xref_sets=xref_sets, xref_optimization=xref_optimization,
+                word=' (Superelement %i)' % super_id)
 
     def _cross_reference_constraints(self):
         # type: () -> None
@@ -551,6 +565,26 @@ class XrefMesh(BDFAttributes):
             dvmrel.cross_reference(self)
         for unused_key, dvprel in self.dvprels.items():
             dvprel.cross_reference(self)
+
+    def _cross_reference_superelements(self):
+        for unused_seid, csuper in self.csuper.items():
+            csuper.cross_reference(self)
+        for unused_seid, csupext in self.csupext.items():
+            csupext.cross_reference(self)
+
+    def _safe_cross_reference_superelements(self):
+        for unused_seid, csuper in self.csuper.items():
+            csuper.cross_reference(self)
+        for unused_seid, csupext in self.csupext.items():
+            csupext.cross_reference(self)
+
+    def _uncross_reference_superelements(self):
+        """cross references the superelement objects"""
+        xref_errors = {}
+        for unused_seid, csuper in self.csuper.items():
+            csuper.uncross_reference(self, xref_errors)
+        for unused_seid, csupext in self.csupext.items():
+            csupext.uncross_reference(self, xref_errors)
 
     def geom_check(self, geom_check, xref):  # pragma: no cover
         # type: (bool, bool) -> None

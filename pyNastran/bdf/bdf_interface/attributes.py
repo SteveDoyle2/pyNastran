@@ -176,6 +176,9 @@ class BDFAttributes(object):
         #: list of case control deck lines
         self.case_control_lines = []  # type: List[str]
 
+        # dictionary of BDFs
+        self.superelement_models = {}
+
         self._auto_reject = False
         self._solmap_to_value = {
             'NONLIN': 101,  # 66 -> 101 per Reference 1

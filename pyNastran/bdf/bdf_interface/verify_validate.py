@@ -50,6 +50,9 @@ def verify_bdf(model, xref):
     _verify_dict(model.tics, xref)
     model.zona.verify(xref)
 
+    for unused_super_id, superelement in model.superelement_models.items():
+        verify_bdf(superelement, xref)
+
 def _verify_dict(dict_obj, xref):
     """helper for ``verify_bdf``"""
     for unused_key, card in sorted(dict_obj.items()):
@@ -342,3 +345,6 @@ def validate_bdf(model):
         dscreen.validate()
     _validate_dict_list(model.dvgrids)
     model.zona.validate()
+
+    for unused_super_id, superelement in model.superelement_models.items():
+        validate_bdf(superelement)

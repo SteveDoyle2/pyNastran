@@ -484,7 +484,7 @@ class Element(BaseCard):
     def _node_ids(self, nodes=None, allow_empty_nodes=False, msg=''):
         # type: (Optional[List[Any]], bool, str) -> List[int]
         """returns nodeIDs for repr functions"""
-        return _node_ids(self, nodes, allow_empty_nodes, msg)
+        return _node_ids(self, nodes=nodes, allow_empty_nodes=allow_empty_nodes, msg=msg)
 
     def prepare_node_ids(self, nids, allow_empty_nodes=False):
         # type: (List[int], bool) -> None

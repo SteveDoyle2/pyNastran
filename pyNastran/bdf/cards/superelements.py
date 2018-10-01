@@ -18,7 +18,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
 from pyNastran.bdf.cards.base_card import (
-    BaseCard, expand_thru
+    BaseCard, expand_thru, _node_ids
 )
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -32,22 +32,29 @@ class SEBNDRY(BaseCard):
     """
     Superelement Boundary-Point Definition
 
-    Defines a list of grid points in a partitioned superelement for the automatic boundary
-    search between a specified superelement or between all other superelements in the
-    model.
+    Defines a list of grid points in a partitioned superelement for the
+    automatic boundary search between a specified superelement or between all
+    other superelements in the model.
 
-    SEBNDRY SEIDA SEIDB GIDA1 GIDA2 GIDA3 GIDA4 GIDA5 GIDA6
-            GIDA7 GIDA8 -etc.-
-    SEBNDRY 400  4  10 20 30 40
-    SEBNDRY 400 ALL 10 20 30 THRU 40
+    +---------+-------+-------+-------+-------+-------+-------+-------+-------+
+    |    1    |   2   |   3   |   4   |   5   |   6   |   7   |   8   |   9   |
+    +=========+=======+=======+=======+=======+=======+=======+=======+=======+
+    | SEBNDRY | SEIDA | SEIDB | GIDA1 | GIDA2 | GIDA3 | GIDA4 | GIDA5 | GIDA6 |
+    +---------+-------+-------+-------+-------+-------+-------+-------+-------+
+    |         | GIDA7 | GIDA8 |  etc. |       |       |       |       |       |
+    +---------+-------+-------+-------+-------+-------+-------+-------+-------+
+    | SEBNDRY |  400  |   4   |   10  |   20  |   30  |   40  |       |       |
+    +---------+-------+-------+-------+-------+-------+-------+-------+-------+
+    | SEBNDRY |  400  |  ALL  |   10  |   20  |   30  |  THRU |   40  |       |
+    +---------+-------+-------+-------+-------+-------+-------+-------+-------+
     """
     type = 'SEBNDRY'
-    def __init__(self, seida, seidb, ids, comment=''):
-        #BaseCard.__init__()
+    def __init__(self, seid_a, seid_b, ids, comment=''):
+        BaseCard.__init__(self)
         if comment:
             self.comment = comment
-        self.seida = seida
-        self.seidb = seidb
+        self.seid_a = seid_a
+        self.seid_b = seid_b
 
         #:  Identifiers of grids points. (Integer > 0)
         self.ids = expand_thru(ids)
@@ -79,7 +86,7 @@ class SEELT(BaseCard):
     """
     type = 'SEELT'
     def __init__(self, seid, ids, comment=''):
-        #BaseCard.__init__()
+        BaseCard.__init__(self)
         if comment:
             self.comment = comment
 
@@ -123,7 +130,7 @@ class SELOAD(BaseCard):
     """
     type = 'SELOC'
     def __init__(self, lid_s0, seid, lid_se, comment=''):
-        #BaseCard.__init__()
+        BaseCard.__init__(self)
         if comment:
             self.comment = comment
         self.lid_s0 = lid_s0
@@ -151,39 +158,48 @@ class SEEXCLD(BaseCard):
     Defines grids that will be excluded during the attachment of a
     partitioned superelement.
 
-    SEEXCLD SEIDA SEIDB GIDA1 GIDA2 GIDA3 GIDA4 GIDA5 GIDA6
-            GIDA7 GIDA8 -etc.-
+    +---------+-------+-------+-------+-------+-------+-------+-------+-------+
+    |    1    |   2   |   3   |   4   |   5   |   6   |   7   |   8   |   9   |
+    +=========+=======+=======+=======+=======+=======+=======+=======+=======+
+    | SEEXCLD | SEIDA | SEIDB | GIDA1 | GIDA2 | GIDA3 | GIDA4 | GIDA5 | GIDA6 |
+    +---------+-------+-------+-------+-------+-------+-------+-------+-------+
+    |         | GIDA7 | GIDA8 |  etc. |       |       |       |       |       |
+    +---------+-------+-------+-------+-------+-------+-------+-------+-------+
     """
-    def __init__(self, seida, seidb, ids, comment=''):
-        #BaseCard.__init__()
+    def __init__(self, seid_a, seid_b, nodes, comment=''):
+        BaseCard.__init__(self)
         if comment:
             self.comment = comment
-        self.seida = seida
-        self.seidb = seidb
+        self.seid_a = seid_a
+        self.seid_b = seid_b
 
         #:  Identifiers of grids points. (Integer > 0)
-        self.ids = expand_thru(ids)
-        self.ids_ref = None
-        print(self)
+        self.nodes = expand_thru(nodes)
+        self.nodes_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
         seid_a = integer(card, 1, 'seid_a')
         seid_b = integer_string_or_blank(card, 2, 'seid_b')
-        ids = []
+        nodes = []
         i = 1
         nfields = len(card)
         for ifield in range(3, nfields):
-            idi = integer_string_or_blank(card, ifield, 'ID%i' % i)
-            if idi:
+            nid = integer_string_or_blank(card, ifield, 'nid_%i' % i)
+            if nid:
                 i += 1
-                ids.append(idi)
+                nodes.append(nid)
         assert len(card) >= 3, 'len(SEEXCLD card) = %i\ncard=%s' % (len(card), card)
-        return SEEXCLD(seid_a, seid_b, ids, comment=comment)
+        return SEEXCLD(seid_a, seid_b, nodes, comment=comment)
+
+    def raw_fields(self):
+        list_fields = ['SEEXCLD', self.seid_a, self.seid_b, ] + self.nodes
+        return list_fields
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment + print_card_8(card)
+
 
 class SEMPLN(BaseCard):
     """
@@ -200,7 +216,7 @@ class SEMPLN(BaseCard):
     """
     type = 'SEMPLN'
     def __init__(self, seid, p1, p2, p3, comment=''):
-        #BaseCard.__init__()
+        BaseCard.__init__(self)
         if comment:
             self.comment = comment
         self.seid = seid
@@ -234,31 +250,40 @@ class SELABEL(BaseCard):
 
     Defines a label or name to be printed in the superelement output headings.
 
-    SELABEL SEID LABEL
-    SELABEL  10  LEFT REAR FENDER, MODEL XYZ2000
+    +---------+------+---------------------------------+
+    |    1    |   2  |                3                |
+    +=========+======+=================================+
+    | SELABEL | SEID | LABEL                           |
+    +---------+------+---------------------------------+
+    | SELABEL |  10  | LEFT REAR FENDER, MODEL XYZ2000 |
+    +---------+------+---------------------------------+
     """
     type = 'SELABEL'
     def __init__(self, seid, label, comment=''):
-        #BaseCard.__init__()
+        BaseCard.__init__(self)
         if comment:
             self.comment = comment
 
         self.seid = seid
         #:  Identifiers of grids points. (Integer > 0)
         self.label = label
-        print(self)
 
     @classmethod
     def add_card(cls, card, comment=''):
         seid = integer(card, 1, 'seid')
-        label = [exact_string_or_blank(card, ifield, 'label', '        ')
-                 for ifield in range(2, len(card))]
-        print('label =', label)
+        label = ''.join([exact_string_or_blank(card, ifield, 'label', '        ')
+                         for ifield in range(2, len(card))])
         return SELABEL(seid, label, comment=comment)
 
+    def raw_fields(self):
+        return [self.write_card()]
+
+    def repr_fields(self):
+        return self.raw_fields()
+
     def write_card(self, size=8, is_double=False):
-        card = self.repr_fields()
-        return self.comment + print_card_8(card)
+        card = 'SELABEL %-8s%s\n' % (self.seid, self.label)
+        return self.comment + card
 
 
 class SELOC(BaseCard):
@@ -279,7 +304,7 @@ class SELOC(BaseCard):
     """
     type = 'SELOC'
     def __init__(self, seid, ids, comment=''):
-        #BaseCard.__init__()
+        BaseCard.__init__(self)
         if comment:
             self.comment = comment
 
@@ -328,7 +353,7 @@ class SETREE(BaseCard):
     """
     type = 'SETREE'
     def __init__(self, seid, ids, comment=''):
-        #BaseCard.__init__()
+        BaseCard.__init__(self)
         if comment:
             self.comment = comment
         self.seid = seid
@@ -366,38 +391,83 @@ class CSUPER(BaseCard):
     superelements or superelements from an external source. These are all known as
     secondary superelements.
 
+    +--------+------+------+------+-----+-----+-----=-----+-----+
+    |    1   |   2  |   3  |   4  |  5  |  6  |  7  |  8  |  9  |
+    +========+======+======+======+=====+=====+=====+=====+=====+
     | CSUPER | SSlD | PSID |  GP1 | GP2 | GP3 | GP4 | GP5 | GP6 |
+    +--------+------+------+------+-----+-----+-----=-----+-----+
     |        |  GP7 |  GP8 | etc. |     |     |     |     |     |
+    +--------+------+------+------+-----+-----+-----=-----+-----+
     """
     type = 'CSUPER'
-    def __init__(self, seid, psid, ids, comment=''):
-        #BaseCard.__init__()
+    def __init__(self, seid, psid, nodes, comment=''):
+        BaseCard.__init__(self)
         if comment:
             self.comment = comment
 
         self.seid = seid
         self.psid = psid
         #:  Identifiers of grids points. (Integer > 0)
-        self.ids = expand_thru(ids)
-        self.ids_ref = None
+        self.nodes = expand_thru(nodes)
+        self.nodes_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
         seid = integer(card, 1, 'seid')
         psid = integer(card, 2, 'psid')
-        ids = []
+        nodes = []
         i = 1
         nfields = len(card)
         for ifield in range(3, nfields):
-            idi = integer_string_or_blank(card, ifield, 'ID%i' % i)
-            if idi:
+            nid = integer_string_or_blank(card, ifield, 'nid_%i' % i)
+            if nid:
                 i += 1
-                ids.append(idi)
+                nodes.append(nid)
         assert len(card) >= 3, 'len(CSUPER card) = %i\ncard=%s' % (len(card), card)
-        return CSUPER(seid, psid, ids, comment=comment)
+        return CSUPER(seid, psid, nodes, comment=comment)
+
+    def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        msg = ', which is required by CSUPER seid=%s' % self.seid
+        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        msg = ', which is required by CSUPEER seid=%s' % self.seid
+        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+
+    def uncross_reference(self):
+        self.nodes = self.node_ids
+        self.nodes_ref = None
+
+    @property
+    def node_ids(self):
+        nids = self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=False)
+        return nids
+
+    def _node_ids(self, nodes=None, allow_empty_nodes=False, msg=''):
+        # type: (Optional[List[Any]], bool, str) -> List[int]
+        """returns nodeIDs for repr functions"""
+        return _node_ids(self, nodes=nodes, allow_empty_nodes=allow_empty_nodes, msg=msg)
 
     def raw_fields(self):
-        list_fields = ['CSUPER', self.seid, self.psid] + self.ids
+        list_fields = ['CSUPER', self.seid, self.psid] + self.node_ids
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -411,36 +481,79 @@ class CSUPEXT(BaseCard):
 
     Assigns exterior points to a superelement.
 
+    +---------+------+-----+-----+-----+-----+-----+-----+-----+
+    |    1    |   2  |  3  |  4  |  5  |  6  |  7  |  8  |  9  |
+    +=========+======+=====+=====+=====+=====+=====+=====+=====+
     | CSUPEXT | SEID | GP1 | GP2 | GP3 | GP4 | GP5 | GP6 | GP7 |
+    +---------+------+-----+-----+-----+-----+-----+-----+-----+
     """
     type = 'CSUPEXT'
-    def __init__(self, seid, ids, comment=''):
-        #BaseCard.__init__()
+    def __init__(self, seid, nodes, comment=''):
+        BaseCard.__init__(self)
         if comment:
             self.comment = comment
 
         self.seid = seid
         #:  Identifiers of grids points. (Integer > 0)
-        self.ids = expand_thru(ids)
-        self.ids_ref = None
-        print(self)
+        self.nodes = expand_thru(nodes)
+        self.nodes_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
         seid = integer(card, 1, 'seid')
-        ids = []
+        nodes = []
         i = 1
         nfields = len(card)
         for ifield in range(2, nfields):
-            idi = integer_string_or_blank(card, ifield, 'ID%i' % i)
-            if idi:
+            nid = integer_string_or_blank(card, ifield, 'node_%i' % i)
+            if nid:
                 i += 1
-                ids.append(idi)
+                nodes.append(nid)
         assert len(card) <= 9, 'len(CSUPEXT card) = %i\ncard=%s' % (len(card), card)
-        return CSUPEXT(seid, ids, comment=comment)
+        return CSUPEXT(seid, nodes, comment=comment)
+
+    def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        msg = ', which is required by CSUPEXT eid=%s' % self.seid
+        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        msg = ', which is required by CSUPEXT eid=%s' % self.seid
+        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+
+    def uncross_reference(self):
+        self.nodes = self.node_ids
+        self.nodes_ref = None
+
+    @property
+    def node_ids(self):
+        nids = self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=False)
+        return nids
+
+    def _node_ids(self, nodes=None, allow_empty_nodes=False, msg=''):
+        # type: (Optional[List[Any]], bool, str) -> List[int]
+        """returns nodeIDs for repr functions"""
+        return _node_ids(self, nodes=nodes, allow_empty_nodes=allow_empty_nodes, msg=msg)
 
     def raw_fields(self):
-        list_fields = ['CSUPEXT', self.seid] + self.ids
+        list_fields = ['CSUPEXT', self.seid] + self.node_ids
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -492,7 +605,7 @@ class SEBULK(BaseCard):
             meaningful only when TYPE='EXTOP2').
 
         """
-        #BaseCard.__init__()
+        BaseCard.__init__(self)
         if comment:
             self.comment = comment
         self.seid = seid
@@ -533,14 +646,25 @@ class SECONCT(BaseCard):
     Explicitly defines grid and scalar point connection procedures for a
     partitioned superelement.
 
-    SECONCT SEIDA SEIDB TOL LOC
-            GIDA1 GIDB1 GIDA2 GIDB2 GIDA3 GIDB3 -etc.-
-    SECONCT 10 20 1.0E-4 YES
-            1001  4001              2222  4444
-    SECONCT SEIDA SEIDB TOL LOC
-            GIDA1 THRU GIDA2 GIDB1 THRU GIDB2
-    SECONCT 10  20
-            101 THRU 110 201 THRU 210
+    +---------+-------+-------+--------+-------+-------+-------+------+------+
+    |    1    |   2   |   3   |    4   |   5   |   6   |   7   |   8  |   9  |
+    +=========+=======+=======+========+=======+=======+=======+======+======+
+    | SECONCT | SEIDA | SEIDB |   TOL  |  LOC  |       |       |      |      |
+    +---------+-------+-------+--------+-------+-------+-------+------+------+
+    |         | GIDA1 | GIDB1 |  GIDA2 | GIDB2 | GIDA3 | GIDB3 | etc. | etc. |
+    +---------+-------+-------+--------+-------+-------+-------+------+------+
+    | SECONCT |   10  |   20  | 1.0E-4 |  YES  |       |       |      |      |
+    +---------+-------+-------+--------+-------+-------+-------+------+------+
+    |         |  1001 |  4001 |        |       |  2222 |  4444 |      |      |
+    +---------+-------+-------+--------+-------+-------+-------+------+------+
+    | SECONCT | SEIDA | SEIDB |   TOL  |  LOC  |       |       |      |      |
+    +---------+-------+-------+--------+-------+-------+-------+------+------+
+    |         | GIDA1 | THRU  |  GIDA2 | GIDB1 |  THRU | GIDB2 |      |      |
+    +---------+-------+-------+--------+-------+-------+-------+------+------+
+    | SECONCT |  10   |   20  |        |       |       |       |      |      |
+    +---------+-------+-------+--------+-------+-------+-------+------+------+
+    |         |  101  |  THRU |   110  |  201  |  THRU |  210  |      |      |
+    +---------+-------+-------+--------+-------+-------+-------+------+------+
     """
     type = 'SECONCT'
     def __init__(self, seid_a, seid_b, tol, loc, nodes_a, nodes_b, comment=''):
@@ -565,7 +689,7 @@ class SECONCT(BaseCard):
             which will be connected to GIDAi.
 
         """
-        #BaseCard.__init__()
+        BaseCard.__init__(self)
         if comment:
             self.comment = comment
         self.seid_a = seid_a
@@ -586,22 +710,34 @@ class SECONCT(BaseCard):
             assert len(card) >= 9, 'len(SECONCT card) = %i\ncard=%s' % (len(card), card)
 
         assert len(fields) % 2 == 0, 'card=%s\nfields=%s' % (card, fields)
-        nodes_a = []
-        nodes_b = []
         if 'THRU' in fields:
-            raise NotImplementedError('SECONCT THRU')
+            raise NotImplemented(fields)
+            #start_a = integer(card, 9, 'start_a')
+            #thru_a = string(card, 10, 'thru_a')
+            #end_a = integer(card, 11, 'end_a')
 
-        inode = 1
-        for ifield in range(0, len(fields), 2):
-            node_a = integer_or_blank(card, 9+ifield, 'node_a%i' % inode)
-            node_b = integer_or_blank(card, 9+ifield+1, 'node_b%i' % inode)
-            if node_a is None and node_b is None:
-                continue
-            assert node_a is not None, fields
-            assert node_b is not None, fields
-            nodes_a.append(node_a)
-            nodes_b.append(node_b)
-            inode += 1
+            #start_b = integer(card, 12, 'start_b')
+            #thru_b = string(card, 13, 'thru_b')
+            #end_b = integer(card, 14, 'end_b')
+            #assert thru_a == 'THRU', thru_a
+            #assert thru_b == 'THRU', thru_b
+            #nodes_a = list(range(start_a+1, end_a+1))
+            #nodes_b = list(range(start_b+1, end_b+1))
+            #print(nodes_a)
+        else:
+            nodes_a = []
+            nodes_b = []
+            inode = 1
+            for ifield in range(0, len(fields), 2):
+                node_a = integer_or_blank(card, 9+ifield, 'node_a%i' % inode)
+                node_b = integer_or_blank(card, 9+ifield+1, 'node_b%i' % inode)
+                if node_a is None and node_b is None:
+                    continue
+                assert node_a is not None, fields
+                assert node_b is not None, fields
+                nodes_a.append(node_a)
+                nodes_b.append(node_b)
+                inode += 1
         return SECONCT(seid_a, seid_b, tol, loc, nodes_a, nodes_b, comment=comment)
 
     def raw_fields(self):
@@ -638,7 +774,7 @@ class SENQSET(BaseCard):
             Number of internally generated scalar points for dynamic
             reduction generalized coordinates (Integer > 0).
         """
-        #BaseCard.__init__()
+        BaseCard.__init__(self)
         if comment:
             self.comment = comment
         self.set_id = set_id

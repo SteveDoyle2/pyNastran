@@ -104,7 +104,7 @@ class BDFInputPy(object):
         out = _lines_to_decks(all_lines, ilines, punch, self.log,
                               keep_enddata=True,
                               consider_superelements=self.consider_superelements)
-        system_lines, executive_control_lines, case_control_lines, bulk_data_lines, bulk_data_ilines = out
+        system_lines, executive_control_lines, case_control_lines, bulk_data_lines, bulk_data_ilines, superelement_lines = out
         if self.nastran_format in ['msc', 'nx']:
             pass
         elif self.nastran_format == 'zona':
@@ -113,7 +113,7 @@ class BDFInputPy(object):
         else:
             msg = 'nastran_format=%r and must be msc, nx, or zona' % self.nastran_format
             raise NotImplementedError(msg)
-        return system_lines, executive_control_lines, case_control_lines, bulk_data_lines, bulk_data_ilines
+        return system_lines, executive_control_lines, case_control_lines, bulk_data_lines, bulk_data_ilines, superelement_lines
 
     def _get_lines_zona(self, system_lines, bulk_data_lines, punch):
         """load and update the lines for ZONA"""
@@ -137,7 +137,7 @@ class BDFInputPy(object):
                     _out = _lines_to_decks(_all_lines, _ilines, punch, self.log,
                                            keep_enddata=False,
                                            consider_superelements=self.consider_superelements)
-                    _system_lines, _executive_control_lines, _case_control_lines, bulk_data_lines2, _bulk_data_ilines2 = _out
+                    _system_lines, _executive_control_lines, _case_control_lines, bulk_data_lines2, _bulk_data_ilines2, _superelement_lines = _out
                     bulk_data_lines = bulk_data_lines2 + bulk_data_lines
                     continue
                 elif header_upper.startswith('ASSIGN MATRIX'):
@@ -634,7 +634,6 @@ def _lines_to_decks(lines, ilines, punch, log, keep_enddata=True,
 
     for super_id, _lines in superelement_lines.items():
         # cqrsee101b2.bdf
-        log.warning('skipping superelement=%i' % super_id)
         assert len(_lines) > 0, 'superelement %i lines=[]' % (super_id)
 
     for auxmodel_id, _lines in auxmodel_lines.items():
@@ -651,7 +650,7 @@ def _lines_to_decks(lines, ilines, punch, log, keep_enddata=True,
                                if _clean_comment(line) is not None]
     case_control_lines = [_clean_comment(line) for line in case_control_lines
                           if _clean_comment(line) is not None]
-    return system_lines, executive_control_lines, case_control_lines, bulk_data_lines, bulk_data_ilines
+    return system_lines, executive_control_lines, case_control_lines, bulk_data_lines, bulk_data_ilines, superelement_lines
 
 def _lines_to_decks_main(lines, ilines, keep_enddata=True, consider_superelements=False):
     make_ilines = ilines is not None
@@ -841,7 +840,7 @@ def _lines_to_decks_main(lines, ilines, keep_enddata=True, consider_superelement
     out = (
         executive_control_lines, case_control_lines,
         bulk_data_lines, bulk_data_ilines,
-        superelement_lines, auxmodel_lines
+        superelement_lines, auxmodel_lines,
     )
     return out
 

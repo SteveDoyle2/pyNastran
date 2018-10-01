@@ -16,9 +16,9 @@ class UnXrefMesh(SafeXrefMesh):
         """
         SafeXrefMesh.__init__(self)
 
-    def uncross_reference(self):
+    def uncross_reference(self, word=''):
         """uncross references the model"""
-        self.log.debug("Uncross Referencing...")
+        self.log.debug("Uncross Referencing%s...")
         self._uncross_reference_nodes()
         self._uncross_reference_coords()
         self._uncross_reference_elements()
@@ -30,6 +30,10 @@ class UnXrefMesh(SafeXrefMesh):
         self._uncross_reference_loads()
         self._uncross_reference_sets()
         self._uncross_reference_optimization()
+        self._uncross_reference_superelements()
+
+        for super_id, superelement in sorted(self.superelement_models.items()):
+            superelement.uncross_reference(word=' (Superelement %i)' % super_id)
 
     def _uncross_reference_nodes(self):
         # type: () -> None
@@ -68,7 +72,7 @@ class UnXrefMesh(SafeXrefMesh):
     def _uncross_reference_properties(self):
         # type: () -> None
         """uncross references the property objects"""
-        for prop in itervalues(self.properties):
+        for prop in self.properties.values():
             try:
                 prop.uncross_reference()
             #except TypeError:

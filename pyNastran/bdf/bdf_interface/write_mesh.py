@@ -9,7 +9,7 @@ import sys
 import io
 from typing import List, Dict, Union, Optional, Tuple, Any, cast
 from codecs import open
-from six import string_types, iteritems, PY2, StringIO
+from six import string_types, iteritems, PY2, PY3, StringIO
 
 from pyNastran.bdf.bdf_interface.utils import print_filename
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -60,17 +60,16 @@ class WriteMesh(BDFAttributes):
             out_filename = save_file_dialog(title, wildcard_wx, wildcard_qt)
             assert out_filename is not None, out_filename
 
+        has_read_write = hasattr(out_filename, 'read') and hasattr(out_filename, 'write')
         if PY2:
-            if not (hasattr(out_filename, 'read') and hasattr(out_filename, 'write')
-                   ) or isinstance(out_filename, (file, StringIO)):
+            if has_read_write or isinstance(out_filename, (file, StringIO)):
                 return out_filename
             elif not isinstance(out_filename, string_types):
                 msg = 'out_filename=%r must be a string; type=%s' % (
                     out_filename, type(out_filename))
                 raise TypeError(msg)
         else:
-            if not(hasattr(out_filename, 'read') and hasattr(out_filename, 'write')
-                  ) or isinstance(out_filename, io.IOBase):
+            if has_read_write or isinstance(out_filename, io.IOBase):
                 return out_filename
             elif not isinstance(out_filename, string_types):
                 msg = 'out_filename=%r must be a string; type=%s' % (
@@ -178,7 +177,7 @@ class WriteMesh(BDFAttributes):
 
     def write_bdf(self, out_filename=None, encoding=None,
                   size=8, is_double=False,
-                  interspersed=False, enddata=None, close=True):
+                  interspersed=False, enddata=None, write_header=True, close=True):
         # type: (Optional[Union[str, StringIO]], Optional[str], int, bool, bool, Optional[bool], bool) -> None
         """
         Writes the BDF.
@@ -207,6 +206,8 @@ class WriteMesh(BDFAttributes):
         enddata : bool; default=None
             bool - enable/disable writing ENDDATA
             None - depends on input BDF
+        write_header : bool; default=True
+            flag for writing the pyNastran header
         close : bool; default=True
             should the output file be closed
         """
@@ -231,15 +232,31 @@ class WriteMesh(BDFAttributes):
         #self.write_caero_model()
         out_filename = self._output_helper(out_filename,
                                            interspersed, size, is_double)
-        self.log.debug('---starting BDF.write_bdf of %s---' % out_filename)
         encoding = self.get_encoding(encoding)
         #assert encoding.lower() in ['ascii', 'latin1', 'utf8'], encoding
 
-        if hasattr(out_filename, 'read') and hasattr(out_filename, 'write'):
+        has_read_write = hasattr(out_filename, 'read') and hasattr(out_filename, 'write')
+        if has_read_write:
             bdf_file = out_filename
+            #if (PY2 and isinstance(out_filename, (file, StringIO)) or
+                #PY3 and isinstance(out_filename, io.IOBase)):
+                #pass
         else:
+            self.log.debug('---starting BDF.write_bdf of %s---' % out_filename)
             bdf_file = open(out_filename, 'w', encoding=encoding)
-        self._write_header(bdf_file, encoding)
+        self._write_header(bdf_file, encoding, write_header=write_header)
+
+
+        if self.superelement_models:
+            bdf_file.write('$' + '*'*80+'\n')
+            for superelement_id, superelement in sorted(self.superelement_models.items()):
+                bdf_file.write('BEGIN SUPER=%s\n' % superelement_id)
+                superelement.write_bdf(out_filename=bdf_file, encoding=encoding,
+                                       size=size, is_double=is_double,
+                                       interspersed=interspersed, enddata=False, write_header=False, close=False)
+                bdf_file.write('$' + '*'*80+'\n')
+            bdf_file.write('BEGIN BULK\n')
+
         self._write_params(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_nodes(bdf_file, size, is_double, is_long_ids=is_long_ids)
 
@@ -260,7 +277,7 @@ class WriteMesh(BDFAttributes):
         if close:
             bdf_file.close()
 
-    def _write_header(self, bdf_file, encoding):
+    def _write_header(self, bdf_file, encoding, write_header=True):
         # type: (Any, bool) -> None
         """
         Writes the executive and case control decks.
@@ -272,7 +289,7 @@ class WriteMesh(BDFAttributes):
             else:
                 self.punch = True
 
-        if self.nastran_format:
+        if self.nastran_format and write_header:
             bdf_file.write('$pyNastran: version=%s\n' % self.nastran_format)
             bdf_file.write('$pyNastran: punch=%s\n' % self.punch)
             bdf_file.write('$pyNastran: encoding=%s\n' % encoding)
@@ -313,8 +330,11 @@ class WriteMesh(BDFAttributes):
         """
         if self.case_control_deck:
             msg = '$CASE CONTROL DECK\n'
-            msg += str(self.case_control_deck)
-            assert 'BEGIN BULK' in msg, msg
+            if self.superelement_models:
+                msg += self.case_control_deck.write(write_begin_bulk=False)
+            else:
+                msg += str(self.case_control_deck)
+                assert 'BEGIN BULK' in msg, msg
             bdf_file.write(''.join(msg))
 
     def _write_elements(self, bdf_file, size=8, is_double=False, is_long_ids=None):
@@ -1119,6 +1139,8 @@ class WriteMesh(BDFAttributes):
         for unused_seid, seexcld in sorted(self.seexcld.items()):
             bdf_file.write(seexcld.write_card(size, is_double))
 
+        for unused_seid, selabel in sorted(self.selabel.items()):
+            bdf_file.write(selabel.write_card(size, is_double))
         for unused_seid, seloc in sorted(self.seloc.items()):
             bdf_file.write(seloc.write_card(size, is_double))
         for unused_seid, seload in sorted(self.seload.items()):
