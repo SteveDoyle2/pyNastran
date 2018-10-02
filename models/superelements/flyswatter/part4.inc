@@ -1,0 +1,20 @@
+CQUAD4	16	1	27	28	32	31
+CQUAD4	17	1	31	32	42	41
+$
+$		cp	a	b	c	cd	ps	seid
+GRDSET							6
+$
+$ boundary grids
+$
+GRID	27		2.8	4.4	0.
+GRID	28		3.6	4.4	0.
+GRID	41		2.8	6.	0.
+GRID	42		3.6	6.	0.
+$
+GRID	31		2.8	5.2	0.
+GRID	32		3.6	5.2	0.
+$
+MAT1,1,30.+6,,.3,.283
+PARAM,WTMASS,.00259
+PARAM,AUTOSPC,YES
+PSHELL,1,1,.05,1,,1

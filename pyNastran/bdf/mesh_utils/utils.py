@@ -11,7 +11,7 @@ defines:
 from __future__ import print_function
 import os
 import sys
-from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
+from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber, superelement_renumber
 from pyNastran.bdf.mesh_utils.bdf_merge import bdf_merge
 from pyNastran.bdf.mesh_utils.export_mcids import export_mcids
 from pyNastran.bdf.mesh_utils.pierce_shells import pierce_shell_model
@@ -220,7 +220,7 @@ def cmd_line_renumber():  # pragma: no cover
     import pyNastran
     msg = (
         "Usage:\n"
-        "  bdf renumber IN_BDF_FILENAME [-o OUT_BDF_FILENAME]\n"
+        "  bdf renumber IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--superelement]\n"
         '  bdf renumber -h | --help\n'
         '  bdf renumber -v | --version\n'
         '\n'
@@ -231,7 +231,8 @@ def cmd_line_renumber():  # pragma: no cover
         '\n'
 
         'Options:\n'
-        "  -o OUT, --output  OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n\n"
+        '  -o OUT, --output  OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n'
+        '--superelement                        calls superelement_renumber\n\n'
 
         'Info:\n'
         '  -h, --help      show this help message and exit\n'
@@ -256,9 +257,14 @@ def cmd_line_renumber():  # pragma: no cover
         #'AEFACT', 'CAERO1', 'CAERO2', 'SPLINE1', 'SPLINE2',
         #'AERO', 'AEROS', 'PAERO1', 'PAERO2', 'MKAERO1']
     cards_to_skip = []
-    bdf_renumber(bdf_filename, bdf_filename_out, size=size, is_double=False,
-                 starting_id_dict=None, round_ids=False,
-                 cards_to_skip=cards_to_skip)
+    if data['--superelement']:
+        superelement_renumber(bdf_filename, bdf_filename_out, size=size, is_double=False,
+                              starting_id_dict=None, #round_ids=False,
+                              cards_to_skip=cards_to_skip)
+    else:
+        bdf_renumber(bdf_filename, bdf_filename_out, size=size, is_double=False,
+                     starting_id_dict=None, round_ids=False,
+                     cards_to_skip=cards_to_skip)
 
 def cmd_line_mirror():  # pragma: no cover
     """command line interface to write_bdf_symmetric"""

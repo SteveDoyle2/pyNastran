@@ -625,6 +625,21 @@ class TestBDF(Tester):
         #fem1.write_bdfs(bdf_filenames)
         #os.remove('cat.bdf')
 
+    def test_bdf_superelement_5(self):
+        """checks flyswatter.bdf"""
+        from pyNastran.bdf.mesh_utils.bdf_renumber import superelement_renumber
+        bdf_filename = os.path.join(MODEL_PATH, 'superelements', 'flyswatter', 'flyswatter.bdf')
+        bdf_filename_out = os.path.join(MODEL_PATH, 'superelements', 'flyswatter', 'flyswatter.re.bdf')
+        #log = get_logger(log=None, level='error', encoding='utf-8')
+
+        fem1 = read_bdf(bdf_filename, validate=True, xref=True, punch=False,
+                        save_file_structure=False, skip_cards=None, read_cards=None,
+                        encoding=None, log=None, debug=True, mode='msc')
+
+        superelement_renumber(
+            fem1, bdf_filename_out=bdf_filename_out,
+            starting_id_dict=None)
+
     def test_bdf_other_1(self):
         """checks axisymmetric model"""
         bdf_filename = os.path.join(MODEL_PATH, 'other', 'd07d2.bdf')

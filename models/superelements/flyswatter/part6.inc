@@ -1,0 +1,30 @@
+$
+$ part6.dat
+$
+CQUAD4	10	1	14	15	25	24
+CQUAD4	11	1	15	16	26	25
+CQUAD4	12	1	16	17	27	26
+CQUAD4	13	1	17	18	28	27
+$
+$		cp	a	b	c	cd	ps	seid
+GRDSET							6
+$
+$ boundary grids
+$
+GRID	27		2.8	4.4	0.
+GRID	28		3.6	4.4	0.
+GRID	14		.4	3.6	0.
+GRID	24		.4	4.4	0.
+$
+GRID	15		1.2	3.6	0.
+GRID	16		2.	3.6	0.
+GRID	17		2.8	3.6	0.
+GRID	18		3.6	3.6	0.
+$
+GRID	25		1.2	4.4	0.
+GRID	26		2.	4.4	0.
+$
+MAT1,1,30.+6,,.3,.283
+PARAM,WTMASS,.00259
+PARAM,AUTOSPC,YES
+PSHELL,1,1,.05,1,,1

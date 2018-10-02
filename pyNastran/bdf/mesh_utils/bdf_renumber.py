@@ -14,7 +14,6 @@ from pyNastran.bdf.bdf import BDF
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.utils.mathematics import roundup
 
-
 def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
                  starting_id_dict=None, round_ids=False, cards_to_skip=None,
                  log=None, debug=False):
@@ -51,6 +50,24 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         There are edge cases (e.g. FLUTTER analysis) where things can
         break due to uncross-referenced cards.  You need to disable
         entire classes of cards in that case (e.g. all aero cards).
+
+    Returns
+    -------
+    model : BDF()
+        a renumbered BDF object corresponding to bdf_filename_out
+    mapper : Dict[bdf_attribute] : old_id_to_new_id_dict
+        List of mapper dictionaries of original ids to merged
+        bdf_attribute : str
+            a BDF attribute (e.g., 'nodes', 'elements')
+        old_id_to_new_id_dict : dict[id_old] : id_new
+            a sub dictionary that is used to map the node/element/etc. ids
+        mapper = {
+            'elements' : eid_map,
+            'nodes' : nid_map,
+            'coords' : cid_map,
+            ...
+        }
+
 
     .. todo:: bdf_model option for bdf_filename hasn't been tested
     .. todo:: add support for subsets (e.g. renumber only a subset of nodes/elements)
@@ -308,8 +325,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     properties_mass_map = {}
     eid_map = {}
     rigid_elements_map = {}
-    nsm_map = {}
-    mid_map = {}
+    #nsm_map = {}
     cid_map = {}
     mpc_map = {}
     spc_map = {}
@@ -326,45 +342,10 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     #suport_map = {}
     suport1_map = {}
 
-    if isinstance(bdf_filename, BDF):
-        model = bdf_filename
-    else:
-        model = BDF(log=log, debug=debug)
-        model.disable_cards(cards_to_skip)
-        model.read_bdf(bdf_filename)
+    model = _get_bdf_model(bdf_filename, cards_to_skip=cards_to_skip, log=log, debug=debug)
 
-    nid_map, reverse_nid_map = _create_nid_maps(model, starting_id_dict, nid)
-
-    all_materials = (
-        model.materials,
-        model.creep_materials,
-        model.thermal_materials,
-        model.hyperelastic_materials,
-        model.MATT1,
-        model.MATT2,
-        model.MATT3,
-        model.MATT4,
-        model.MATT5,
-        #model.MATT6,
-        #model.MATT7,
-        model.MATT8,
-        model.MATT9,
-        model.MATS1,
-        model.MATS3,
-        model.MATS8,
-    )
-
-    if mid is not None:
-        mids = []
-        for materials in all_materials:
-            mids += materials.keys()
-        mids = np.unique(mids)
-        mids.sort()
-        nmaterials = len(mids)
-
-        for i in range(nmaterials):
-            midi = mids[i]
-            mid_map[midi] = mid + i
+    nid_map, unused_reverse_nid_map = _create_nid_maps(model, starting_id_dict, nid)
+    mid_map, all_materials = _create_mid_map(model, mid)
 
     _update_nodes(
         model, starting_id_dict, nid,
@@ -634,6 +615,12 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     #print('****dessub_map', dessub_map)
     #print('****dresp_map', dresp_map)
     _update_case_control(model, mapper)
+
+    _write_bdf(model, bdf_filename_out, size=size, is_double=is_double)
+    return model, mapper
+
+def _write_bdf(model, bdf_filename_out, size=8, is_double=False):
+    """helper method"""
     if bdf_filename_out is not None:
         close = True
         if PY2 and isinstance(bdf_filename_out, (file, StringIO)):
@@ -642,7 +629,6 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
             close = False
         model.write_bdf(bdf_filename_out, size=size, is_double=is_double,
                         interspersed=False, close=close)
-    return model, mapper
 
 def get_renumber_starting_ids_from_model(model):
     """
@@ -677,6 +663,145 @@ def get_renumber_starting_ids_from_model(model):
                          for caero in model.caeros.values()) + 1 if model.caeros else 1,
     }
     return starting_id_dict
+
+def get_starting_ids_dict_from_mapper(model, mapper, old_mapper=None, starting_id_dict=None):
+    if old_mapper is None:
+        old_mapper = {}
+    if starting_id_dict is None:
+        starting_id_dict = {}
+
+    starting_id_dict2 = {}
+    missed_keys = []
+    name_map = {
+        'nodes' : 'nid',
+        'elements' : 'eid',
+        'properties' : 'pid',
+        'materials' : 'mid',
+        'coords' : 'cid',
+        'TFL' : 'tf_id',
+        'FREQUENCY' : 'freq_id',
+        'splines' : 'spline_id',
+        'METHOD' : 'method_id',
+        'CMETHOD' : 'cmethod_id',
+        'caeros' : 'caero_id',
+        'TSTEP' : 'tstep_id',
+        'TSTEPNL' : 'tstepnl_id',
+        'FLFACT' : 'flfact_id',
+        'FMETHOD' : 'flutter_id',
+        'spcs' : 'spc_id',
+        'mpcs' : 'mpc_id',
+        'LOAD' : 'load_id',
+        'DLOAD' : 'dload_id',
+        'SUPORT' : 'suport_id',
+        'SUPORT1' : 'suport1_id',
+        'sets' : 'set_id',
+
+        # other valid names in starting_id_dict
+        #'table_id' : 1,
+    }
+    for key, old_new_map in mapper.items():
+        if key in name_map:
+            key2 = name_map[key]
+            if not old_new_map:
+                continue
+            #print("%s map = %s" % (key, old_new_map))
+            nold_mapper = 0
+            if key2 in old_mapper:
+                nold_mapper = len(old_mapper[key2].keys())
+
+            offset = 1
+            #if key2 in starting_id_dict:
+                #offset = max(old_new_map.keys())
+                #offset = starting_id_dict[key2] + nold_mapper
+                #offset = 1
+
+            #if key2 == 'nid':
+                #print("  nid_offset = %s" % offset)
+                #print("  nid map = %s" % old_new_map)
+            starting_id_dict2[key2] = max(old_new_map.values()) + 1 #offset
+        else:
+            if len(old_new_map):
+                missed_keys.append(key)
+    if missed_keys:
+        model.log.warning('bdf_renumber: missed_keys = %s' % missed_keys)
+    return starting_id_dict2
+
+
+def superelement_renumber(bdf_filename, bdf_filename_out=None, size=8, is_double=False,
+                          starting_id_dict=None, cards_to_skip=None,
+                          log=None, debug=False):
+    """
+    Renumbers a superelement
+
+    Parameters
+    ----------
+    bdf_filename : str / BDF
+        str : a bdf_filename (string; supported)
+        BDF : a BDF model that has been cross referenced and is
+        fully valid (an equivalenced deck is not valid)
+    bdf_filename_out : str / None
+        str : a bdf_filename to write
+        None : don't write the BDF
+    size : int; {8, 16}; default=8
+        the bdf write precision
+    is_double : bool; default=False
+        the field precision to write
+    starting_id_dict : dict, None (default=None)
+        None : renumber everything starting from 1
+        dict : {key : starting_id}
+            key : str
+                the key (e.g. eid, nid, cid, ...)
+            starting_id : int, None
+                int : the value to start from
+                None : don't renumber this key
+    cards_to_skip : List[str]; (default=None -> don't skip any cards)
+        There are edge cases (e.g. FLUTTER analysis) where things can
+        break due to uncross-referenced cards.  You need to disable
+        entire classes of cards in that case (e.g. all aero cards).
+
+    Returns
+    -------
+    model : BDF()
+        a renumbered BDF object corresponding to bdf_filename_out
+    """
+    if starting_id_dict is None:
+        starting_id_dict = {
+            'cid' : 1,
+            'nid' : 1,
+            'eid' : 1,
+            'pid' : 1,
+            'mid' : 1,
+        }
+
+    model = _get_bdf_model(bdf_filename, cards_to_skip=cards_to_skip, log=log, debug=debug)
+
+    _bdf_filename_out = None
+    _model, mapper = bdf_renumber(
+        model, _bdf_filename_out,
+        size=8, is_double=False, starting_id_dict=starting_id_dict, round_ids=False,
+        cards_to_skip=None, log=None, debug=False)
+
+    starting_id_dict_new = get_starting_ids_dict_from_mapper(model, mapper)
+    mapper_short = {key : value for key, value in mapper.items() if len(value)}
+    #print('mapper_short =', mapper_short)
+    old_mapper = mapper
+
+    for super_id, superelement in sorted(model.superelement_models.items()):
+        _smodel, superelement_mapper = bdf_renumber(
+            superelement, _bdf_filename_out,
+            size=8, is_double=False, starting_id_dict=starting_id_dict_new, round_ids=False,
+            cards_to_skip=None, log=None, debug=False)
+
+        mapper2 = {key : value for key, value in superelement_mapper.items() if len(value)}
+        starting_id_dict_new = get_starting_ids_dict_from_mapper(
+            model, superelement_mapper, old_mapper, starting_id_dict_new)
+        old_mapper = superelement_mapper
+
+    if bdf_filename_out is not None:
+        model.write_bdf(bdf_filename_out)
+
+    _write_bdf(model, bdf_filename_out, size=size, is_double=is_double)
+    return model #, mapper
 
 def _create_nid_maps(model, starting_id_dict, nid):
     """builds the nid_maps"""
@@ -725,6 +850,51 @@ def _create_nid_maps(model, starting_id_dict, nid):
             nid_map[nid] = nid
         reverse_nid_map = nid_map
     return nid_map, reverse_nid_map
+
+def _create_mid_map(model, mid):
+    """builds the mid_map"""
+    mid_map = {}
+    all_materials = (
+        model.materials,
+        model.creep_materials,
+        model.thermal_materials,
+        model.hyperelastic_materials,
+        model.MATT1,
+        model.MATT2,
+        model.MATT3,
+        model.MATT4,
+        model.MATT5,
+        #model.MATT6,
+        #model.MATT7,
+        model.MATT8,
+        model.MATT9,
+        model.MATS1,
+        model.MATS3,
+        model.MATS8,
+    )
+
+    if mid is not None:
+        mids = []
+        for materials in all_materials:
+            mids += materials.keys()
+        mids = np.unique(mids)
+        mids.sort()
+        nmaterials = len(mids)
+
+        for i in range(nmaterials):
+            midi = mids[i]
+            mid_map[midi] = mid + i
+    return mid_map, all_materials
+
+def _get_bdf_model(bdf_filename, cards_to_skip=None, log=None, debug=False):
+    """helper method"""
+    if isinstance(bdf_filename, BDF):
+        model = bdf_filename
+    else:
+        model = BDF(log=log, debug=debug)
+        model.disable_cards(cards_to_skip)
+        model.read_bdf(bdf_filename)
+    return model
 
 def _update_nodes(model, starting_id_dict, nid, nid_map):
     """updates the nodes"""
