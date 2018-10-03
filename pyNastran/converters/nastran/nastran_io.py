@@ -401,11 +401,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         Used by ``load_nastran_geometry_unvectorized``
         """
-        #import time
-        #time0 = time.time()
-
-        # t=.578
-        #print("get_displacement_index_xyz_cp_cd")
         models = {0 : model}
         models.update(model.superelement_models)
 
@@ -415,16 +410,18 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         nid_map = {}
         nid_map2 = {}
         inode = 0
-        for super_id, model in sorted(models.items()):
-            out = model.get_displacement_index_xyz_cp_cd(
+        for super_id, modeli in sorted(models.items()):
+            out = modeli.get_displacement_index_xyz_cp_cd(
                 fdtype=fdtype, idtype='int32', sort_ids=True)
             icd_transformi, icp_transformi, xyz_cpi, nid_cp_cdi = out
             icd_transform[super_id] = icd_transformi
 
             #print("transform_xyzcp_to_xyz_cid")
-            xyz_cid0i = model.transform_xyzcp_to_xyz_cid(
+            xyz_cid0i = modeli.transform_xyzcp_to_xyz_cid(
                 xyz_cpi, nid_cp_cdi[:, 0], icp_transformi, cid=cid,
                 in_place=False)
+
+            xyz_cid0i = self._transform_xyz_cid0_by_seloc(model, super_id, xyz_cid0i)
 
             #print('model.spoints =', model.spoints)
             #import json
@@ -452,7 +449,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 for i, nid in enumerate(nid_cp_cdi[:, 0]):
                     nid_mapi[nid] = i + inode
             inode += nid_cp_cdi.shape[0]
-            self._add_nastran_spoints_to_grid(model.spoints, nid_mapi)
+            self._add_nastran_spoints_to_grid(modeli.spoints, nid_mapi)
 
             nid_map2.update(nid_mapi)
             nid_map[super_id] = nid_mapi
@@ -474,7 +471,39 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         xyz_cid0_out = np.vstack(xyz_cid0_full)
         nid_cp_cd_out = np.vstack(nid_cp_cd_full)
         return xyz_cid0_out, nid_cp_cd_out
-        #print('dt_nastran_xyz =', time.time() - time0)
+
+    def _transform_xyz_cid0_by_seloc(self, model, super_id, xyz_cid0):
+        """helper for ``get_xyz_in_coord``"""
+        if super_id in model.seloc:
+            seloc = model.seloc[super_id]
+            global_coord_ref = seloc.nodes_0_ref
+            seid_coord_ref = seloc.nodes_seid_ref
+            p123_0 = np.array([node.get_position() for node in global_coord_ref])
+            p123_seid = np.array([node.get_position() for node in seid_coord_ref])
+            #print('global_coord_ref:\n%s' % global_coord_ref)
+            #print('seid_coord_ref:\n%s' % seid_coord_ref)
+            #print('p123_seid:\n%s' % p123_seid)
+            #print('p123_0:\n%s' % p123_0)
+            cid = max(model.coords)
+            coord_seid = model.add_cord2r(cid+1, p123_seid[0, :], p123_seid[1, :], p123_seid[2, :])
+            coord_0 = model.add_cord2r(cid+2, p123_0[0, :], p123_0[1, :], p123_0[2, :])
+            coord_0.setup()
+            coord_seid.setup()
+            #print('beta_seid:\n%s' % coord_seid.beta())
+            #print('beta0:\n%s' % coord_0.beta())
+
+            #print(coord_seid.get_stats())
+            # TODO: coord xform:
+            #   xform = coord0.T * coord_seid
+            #   xform = coord_seid.T * coord0
+            xform = np.dot(coord_0.beta().T, coord_seid.beta())
+            dorigin = p123_0[0, :] - p123_seid[0, :] # at least, I'm sure on this...
+            del model.coords[cid + 1]
+            del model.coords[cid + 2]
+
+            # TODO: not 100% on this xform
+            xyz_cid0 = xyz_cid0i.dot(xform) + dorigin
+        return xyz_cid0
 
     def get_xyz_in_coord_vectorized(self, model, cid=0, fdtype='float32'):
         """
@@ -482,11 +511,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         Used by ``load_nastran_geometry_vectorized``
         """
-        #import time
-        #time0 = time.time()
-
-        # t=.578
-        #print("get_displacement_index_xyz_cp_cd")
         xyz_cid0 = None
         nid_cp_cd = None
         if self.gui.nnodes > 0:
@@ -511,7 +535,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 nid_map[nid] = i
 
             self._add_nastran_spoints_to_grid(model.spoints, nid_map)
-        #print('dt_nastran_xyz =', time.time() - time0)
         return xyz_cid0, nid_cp_cd
 
     def _get_model_unvectorized(self, bdf_filename, xref_loads=True):
@@ -2886,7 +2909,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         nspoints = len(spoint_ids)
         name = 'SPoints'
         if nspoints == 0:
-            model.log.warning('0 spoints added for %r' % name)
+            self.log.warning('0 spoints added for %r' % name)
             return
         self.gui.create_alternate_vtk_grid(
             name, color=BLUE_FLOAT, line_width=1, opacity=1.,
@@ -2902,11 +2925,11 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             try:
                 unused_i = nid_map[spointi]
             except KeyError:
-                model.log.warning('spointi=%s does not exist' % spointi)
+                self.log.warning('spointi=%s does not exist' % spointi)
                 continue
 
             if spointi not in spoints:
-                model.log.warning('spointi=%s doesnt exist' % spointi)
+                self.log.warning('spointi=%s doesnt exist' % spointi)
                 continue
             # point = self.grid.GetPoint(i)
             # points.InsertPoint(j, *point)

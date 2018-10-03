@@ -699,6 +699,7 @@ def get_starting_ids_dict_from_mapper(model, mapper, old_mapper=None, starting_i
         # other valid names in starting_id_dict
         #'table_id' : 1,
     }
+    #print('------------------------------------')
     for key, old_new_map in mapper.items():
         if key in name_map:
             key2 = name_map[key]
@@ -1105,7 +1106,6 @@ def _update_case_control(model, mapper):
     global_subcase = case_control.subcases[0]
     for isubcase, subcase in sorted(case_control.subcases.items()):
         #print('-----------------------')
-        #print(subcase)
         for key, values in sorted(subcase.params.items()):
             mapper_key = key
             if key in case_control_card_to_pynastran_key:

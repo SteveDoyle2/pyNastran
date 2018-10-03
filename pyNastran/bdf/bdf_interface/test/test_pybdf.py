@@ -87,7 +87,7 @@ class TestPyBDF(unittest.TestCase):
         log = get_logger(log=None, level='debug', encoding='utf-8')
         out = _lines_to_decks(lines, ilines, punch, log,
                         keep_enddata=False, consider_superelements=False)
-        system_lines, executive_control_lines, case_control_lines, bulk_data_lines, bulk_data_ilines, superelement_lines = out
+        system_lines, executive_control_lines, case_control_lines, bulk_data_lines, bulk_data_ilines, superelement_lines, superelement_ilines = out
         for line in bulk_data_ilines:
             print(line)
 

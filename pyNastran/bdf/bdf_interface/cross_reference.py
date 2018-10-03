@@ -652,6 +652,23 @@ class XrefMesh(BDFAttributes):
         for unused_seid, setree in self.setree.items():
             setree.uncross_reference()
 
+    def get_point_grids(self, nodes, msg=''):
+        """gets GRID, POINT cards"""
+        nodes_ref = []
+        missing_nids = []
+        for nid in nodes:
+            if nid in self.nodes:
+                node = self.nodes[nid]
+            elif nid in self.points:
+                node = self.points[nid]
+            else:
+                missing_nids.append(nid)
+                continue
+            nodes_ref.append(node)
+        if missing_nids:
+            raise KeyError('missing GRID/POINT nids=%s%s' % (missing_nids, msg))
+        return nodes_ref
+
     def superelement_nodes(self, seid, nodes, msg=''):
         if seid == 0:
             return self.Nodes(nodes, msg=msg)

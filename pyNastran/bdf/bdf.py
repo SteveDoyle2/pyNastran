@@ -1028,7 +1028,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                          consider_superelements=self.is_superelements,
                          log=self.log, debug=self.debug)
         out = obj.get_lines(bdf_filename, punch=self.punch, make_ilines=True)
-        system_lines, executive_control_lines, case_control_lines, bulk_data_lines, bulk_data_ilines, superelement_lines = out
+        system_lines, executive_control_lines, case_control_lines, bulk_data_lines, bulk_data_ilines, superelement_lines, superelement_ilines = out
         self._set_pybdf_attributes(obj, save_file_structure)
 
         self.system_command_lines = system_lines
@@ -1067,6 +1067,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
                 nlines = len(superelement_line) - iminus
                 model = BDF()
+                model.active_filenames = self.active_filenames
                 model.log = self.log
                 model.punch = True
                 #model.nastran_format = ''
@@ -2660,7 +2661,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         self._add_card_helper_ifile(ifile, card_obj, card_name, card_name, comment)
         return card_obj
 
-    def add_card(self, card_lines, card_name, comment='', is_list=True, has_none=True):
+    def add_card(self, card_lines, card_name, comment='', ifile=None, is_list=True, has_none=True):
         """
         Adds a card object to the BDF object.
 
@@ -2731,7 +2732,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         card_obj, unused_card = self.create_card_object(
             card_lines, card_name,
             is_list=is_list, has_none=has_none)
-        self._add_card_helper(card_obj, card_name, card_name, comment)
+        self._add_card_helper(card_obj, card_name, card_name, ifile, comment)
         return card_obj
 
     def add_card_fields(self, card_lines, card_name, comment='', has_none=True):
@@ -2942,7 +2943,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             else:
                 print(print_card_16(card_obj).rstrip())
 
-    def _add_card_helper(self, card_obj, card, card_name, comment=''):
+    def _add_card_helper(self, card_obj, card, card_name, ifile, comment=''):
         # type: (BDFCard, List[str], str, str) -> None
         """
         Adds a card object to the BDF object.
@@ -2981,6 +2982,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 raise
                 #raise TypeError(msg)
             except (SyntaxError, AssertionError, KeyError, ValueError) as exception:
+                print('problem adding %s' % card_obj)
+                #msg = 'problem adding card from %s' % self.active_filenames[ifile]
                 #raise
                 # WARNING: Don't catch RuntimeErrors or a massive memory leak can occur
                 #tpl/cc451.bdf
@@ -3804,8 +3807,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                     self.increase_card_count(card_name)
                     self.reject_lines.append([_format_comment(comment)] + card_lines)
             else:
-                for comment, card_lines, unused_ifile_iline in cards:
-                    self.add_card(card_lines, card_name, comment=comment,
+                for comment, card_lines, (ifile, unused_iline) in cards:
+                    self.add_card(card_lines, card_name, comment=comment, ifile=ifile,
                                   is_list=False, has_none=False)
 
     def _parse_cards_list(self, cards_list):
@@ -3839,7 +3842,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         else:
             for icard, card in enumerate(cards_list):
-                card_name, comment, card_lines, unused_ifile_iline = card
+                card_name, comment, card_lines, (ifile, unused_iline) = card
                 #print(unused_ifile_iline, card_lines[0])
                 if card_name is None:
                     msg = 'card_name = %r\n' % card_name
@@ -3861,7 +3864,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 if self.is_reject(card_name):
                     self.reject_card_lines(card_name, card_lines, comment)
                 else:
-                    self.add_card(card_lines, card_name, comment=comment,
+                    self.add_card(card_lines, card_name, comment=comment, ifile=ifile,
                                   is_list=False, has_none=False)
 
     #def _is_case_control_deck(self, line):
@@ -4012,7 +4015,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                          nastran_format=self.nastran_format,
                          log=self.log, debug=self.debug)
         out = obj.get_lines(bdf_filename, punch=self.punch, make_ilines=True)
-        system_lines, executive_control_lines, case_control_lines, bulk_data_lines, bulk_data_ilines, superelement_lines = out
+        system_lines, executive_control_lines, case_control_lines, bulk_data_lines, bulk_data_ilines, superelement_lines, superelement_ilines = out
         self._set_pybdf_attributes(obj, save_file_structure=False)
 
         self.system_command_lines = system_lines

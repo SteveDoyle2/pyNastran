@@ -156,7 +156,7 @@ class SEELT(BaseCard):
         self.eids_ref = None
 
     def raw_fields(self):
-        list_fields = ['SEELT', self.seid] + self.eids
+        list_fields = ['SEELT', self.seid] + self.eids  ## TODO: xref
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -239,7 +239,7 @@ class SEEXCLD(BaseCard):
         return SEEXCLD(seid_a, seid_b, nodes, comment=comment)
 
     def raw_fields(self):
-        list_fields = ['SEEXCLD', self.seid_a, self.seid_b, ] + self.nodes
+        list_fields = ['SEEXCLD', self.seid_a, self.seid_b, ] + self.node_ids
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -278,12 +278,11 @@ class SEMPLN(BaseCard):
         p2 = integer(card, 4, 'p2')
         p3 = integer(card, 5, 'p3')
         assert plane == 'PLANE', plane
-
         assert len(card) <= 6, 'len(SEMPLN card) = %i\ncard=%s' % (len(card), card)
         return SEMPLN(seid, p1, p2, p3, comment=comment)
 
     def raw_fields(self):
-        list_fields = ['SEMPLN', self.seid, 'PLANE', self.p1, self.p2, self.p3]
+        list_fields = ['SEMPLN', self.seid, 'PLANE', self.p1, self.p2, self.p3] ## TODO: xref
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -383,8 +382,8 @@ class SELOC(BaseCard):
 
         self.seid = seid
         #:  Identifiers of grids points. (Integer > 0)
-        self.nodes_0 = expand_thru(nodes0)
-        self.nodes_seid = expand_thru(nodes_seid)
+        self.nodes_0 = expand_thru(nodes0, set_fields=False, sort_fields=False)
+        self.nodes_seid = expand_thru(nodes_seid, set_fields=False, sort_fields=False)
         self.nodes_0_ref = None
         self.nodes_seid_ref = None
 
@@ -418,8 +417,18 @@ class SELOC(BaseCard):
 
         """
         msg = ', which is required by SELOC seid=%s' % (self.seid)
+
+        #PA1-PA3 Three GRID entries in the PART that are to be used to move the PART. After moving,
+        #these points will be coincident with PB1-PB3.
+        #
+        # Three GRID entries
         self.nodes_seid_ref = model.superelement_nodes(self.seid, self.nodes_seid, msg=msg)
-        self.nodes_0_ref = model.Nodes(self.nodes_0, msg=msg)
+
+        #PB1-PB3 Three points (either GRID or POINT entries) defined in the Main Bulk Data Section
+        #that define where the PART should be.
+        #
+        # either GRID or POINT entries
+        self.nodes_0_ref = model.get_point_grids(self.nodes_0, msg=msg)
 
     def safe_cross_reference(self, model, xref_errors):
         """
@@ -433,16 +442,26 @@ class SELOC(BaseCard):
         """
         msg = ', which is required by SELOC seid=%s' % (self.seid)
         self.nodes_seid_ref = model.superelement_nodes(self.seid, self.nodes_seid, msg=msg)
-        self.nodes_0_ref = model.Nodes(self.nodes_0, msg=msg)
+        self.nodes_0_ref = model.get_point_grids(self.nodes_0, msg=msg)
+
+    @property
+    def nodes_seid_ids(self):
+        return _node_ids(self, self.nodes_seid, self.nodes_seid_ref, allow_empty_nodes=False, msg='')
+
+    @property
+    def nodes_0_ids(self):
+        return _node_ids(self, self.nodes_0, self.nodes_0_ref, allow_empty_nodes=False, msg='')
 
     def uncross_reference(self):
+        self.nodes_seid = self.nodes_seid_ids
+        self.nodes_0 = self.nodes_0_ids
         self.nodes_0_ref = None
         self.nodes_seid_ref = None
 
     def raw_fields(self):
-        list_fields = ['SELOC', self.seid] + list(self.nodes_seid) + list(self.nodes_0)
-
+        list_fields = ['SELOC', self.seid] + list(self.nodes_seid_ids) + list(self.nodes_0_ids)
         return list_fields
+
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment + print_card_8(card)
@@ -953,7 +972,7 @@ class SECONCT(BaseCard):
     def raw_fields(self):
         list_fields = ['SECONCT', self.seid_a, self.seid_b, self.tol, self.loc,
                        None, None, None, None,]
-        for (nid_a, nid_b) in zip(self.nodes_a, self.nodes_b):
+        for (nid_a, nid_b) in zip(self.node_ids_a, self.node_ids_b):
             list_fields += [nid_a, nid_b]
         return list_fields
 

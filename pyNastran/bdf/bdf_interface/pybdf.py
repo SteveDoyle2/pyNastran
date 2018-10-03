@@ -104,7 +104,10 @@ class BDFInputPy(object):
         out = _lines_to_decks(all_lines, ilines, punch, self.log,
                               keep_enddata=True,
                               consider_superelements=self.consider_superelements)
-        system_lines, executive_control_lines, case_control_lines, bulk_data_lines, bulk_data_ilines, superelement_lines = out
+        (
+            system_lines, executive_control_lines, case_control_lines,
+            bulk_data_lines, bulk_data_ilines,
+            superelement_lines, superelement_ilines) = out
         if self.nastran_format in ['msc', 'nx']:
             pass
         elif self.nastran_format == 'zona':
@@ -113,7 +116,9 @@ class BDFInputPy(object):
         else:
             msg = 'nastran_format=%r and must be msc, nx, or zona' % self.nastran_format
             raise NotImplementedError(msg)
-        return system_lines, executive_control_lines, case_control_lines, bulk_data_lines, bulk_data_ilines, superelement_lines
+        return (system_lines, executive_control_lines, case_control_lines,
+                bulk_data_lines, bulk_data_ilines,
+                superelement_lines, superelement_ilines)
 
     def _get_lines_zona(self, system_lines, bulk_data_lines, punch):
         """load and update the lines for ZONA"""
@@ -137,7 +142,11 @@ class BDFInputPy(object):
                     _out = _lines_to_decks(_all_lines, _ilines, punch, self.log,
                                            keep_enddata=False,
                                            consider_superelements=self.consider_superelements)
-                    _system_lines, _executive_control_lines, _case_control_lines, bulk_data_lines2, _bulk_data_ilines2, _superelement_lines = _out
+                    (
+                        _system_lines, _executive_control_lines, _case_control_lines,
+                        bulk_data_lines2, _bulk_data_ilines2,
+                        _superelement_lines, _superelement_ilines,
+                    ) = _out
                     bulk_data_lines = bulk_data_lines2 + bulk_data_lines
                     continue
                 elif header_upper.startswith('ASSIGN MATRIX'):
@@ -615,18 +624,26 @@ def _lines_to_decks(lines, ilines, punch, log, keep_enddata=True,
         narray : the [ifile, iline] pair for each line in the file
     """
     if punch:
+        system_lines = []
         executive_control_lines = []
         case_control_lines = []
         bulk_data_lines = lines
         bulk_data_ilines = ilines
         superelement_lines = {}
-        auxmodel_lines = {}
-    else:
-        #print(ilines)
-        out = _lines_to_decks_main(lines, ilines, keep_enddata=keep_enddata,
-                                   consider_superelements=consider_superelements)
-        (executive_control_lines, case_control_lines, bulk_data_lines,
-         bulk_data_ilines, superelement_lines, auxmodel_lines) = out
+        superelement_ilines = {}
+        #auxmodel_lines = {}
+        return (
+            system_lines, executive_control_lines, case_control_lines,
+            bulk_data_lines, bulk_data_ilines,
+            superelement_lines, superelement_ilines)
+
+    # typical deck
+    out = _lines_to_decks_main(lines, ilines, keep_enddata=keep_enddata,
+                               consider_superelements=consider_superelements)
+    (executive_control_lines, case_control_lines,
+     bulk_data_lines, bulk_data_ilines,
+     superelement_lines, superelement_ilines,
+     auxmodel_lines) = out
 
 
     # break out system commands
@@ -635,6 +652,7 @@ def _lines_to_decks(lines, ilines, punch, log, keep_enddata=True,
     for super_id, _lines in superelement_lines.items():
         # cqrsee101b2.bdf
         assert len(_lines) > 0, 'superelement %i lines=[]' % (super_id)
+        #assert len(_lines) == len(superelement_ilines[super_id]), 'superelement %i ilines is the wrong length' % (super_id)
 
     for auxmodel_id, _lines in auxmodel_lines.items():
         # C:\MSC.Software\MSC.Nastran2005r3\msc20055\nast\tpl\motion21.dat
@@ -650,7 +668,10 @@ def _lines_to_decks(lines, ilines, punch, log, keep_enddata=True,
                                if _clean_comment(line) is not None]
     case_control_lines = [_clean_comment(line) for line in case_control_lines
                           if _clean_comment(line) is not None]
-    return system_lines, executive_control_lines, case_control_lines, bulk_data_lines, bulk_data_ilines, superelement_lines
+    return (
+        system_lines, executive_control_lines, case_control_lines,
+        bulk_data_lines, bulk_data_ilines,
+        superelement_lines, superelement_ilines)
 
 def _lines_to_decks_main(lines, ilines, keep_enddata=True, consider_superelements=False):
     make_ilines = ilines is not None
@@ -658,8 +679,8 @@ def _lines_to_decks_main(lines, ilines, keep_enddata=True, consider_superelement
     executive_control_lines = []
     case_control_lines = []
     bulk_data_lines = []
-    bulk_data_ilines = None
     superelement_lines = defaultdict(list)
+    superelement_ilines = defaultdict(list)
     auxmodel_lines = defaultdict(list)
     auxmodels_found = set([])
     auxmodels_to_find = []
@@ -722,6 +743,7 @@ def _lines_to_decks_main(lines, ilines, keep_enddata=True, consider_superelement
 
                     # we're about to break because we found begin bulk
                     flag = 3
+                    current_ilines = bulk_data_ilines
 
                     #or not keep_enddata
                     is_extra_bulk = is_auxmodel or is_superelement or consider_superelements
@@ -745,13 +767,15 @@ def _lines_to_decks_main(lines, ilines, keep_enddata=True, consider_superelement
                     flag = -super_id
                     #flag_word = 'SUPER=%s' % super_id
                     current_lines = superelement_lines[super_id]
+                    current_ilines = superelement_ilines[super_id]
 
                 elif 'AUXMODEL' in uline and '=' in uline:
                     out = _read_bulk_for_auxmodel(
-                        ifile_iline, line, flag, bulk_data_lines, current_lines,
+                        ifile_iline, line, flag, bulk_data_lines,
+                        current_lines, current_ilines,
                         old_flags,
                         is_auxmodel, auxmodel_lines, auxmodels_to_find, auxmodels_found,
-                        superelement_lines,
+                        superelement_lines, superelement_ilines,
                         is_auxmodel_active, auxmodel_id, bulk_data_ilines)
                     is_broken, auxmodel_id, is_auxmodel_active, flag, current_lines = out
                     if is_broken:
@@ -787,13 +811,16 @@ def _lines_to_decks_main(lines, ilines, keep_enddata=True, consider_superelement
             if '$' in line:
                 line, comment = line.split('$', 1)
                 current_lines.append('$' + comment.rstrip())
-                bulk_data_ilines.append(ifile_iline)
+                assert bulk_data_ilines == current_ilines
+                current_ilines.append(ifile_iline)
+                #bulk_data_ilines.append(ifile_iline)
 
             out = _read_bulk_for_auxmodel(
-                ifile_iline, line, flag, bulk_data_lines, current_lines,
+                ifile_iline, line, flag, bulk_data_lines,
+                current_lines, current_ilines,
                 old_flags,
                 is_auxmodel, auxmodel_lines, auxmodels_to_find, auxmodels_found,
-                superelement_lines,
+                superelement_lines, superelement_ilines,
                 is_auxmodel_active, auxmodel_id, bulk_data_ilines)
             is_broken, auxmodel_id, is_auxmodel_active, flag, current_lines = out
             if is_broken:
@@ -803,29 +830,6 @@ def _lines_to_decks_main(lines, ilines, keep_enddata=True, consider_superelement
             raise RuntimeError(line)
 
     _check_valid_deck(flag, old_flags)
-
-    #---------------------------------------------------------------
-    #if len(superelement_lines) == 0 and len(auxmodel_lines) == 0:
-        #if keep_enddata:
-            #for line in lines[iline:]:
-                #bulk_data_lines.append(line.rstrip())
-            ##bulk_data_lines = [line.rstrip() for line in lines[iline:]]
-        #else:
-            #for line in lines[iline:]:
-                #if line.upper().startswith('ENDDATA'):
-                    #continue
-                #bulk_data_lines.append(line.rstrip())
-                #bulk_data_ilines.append(ifile_iline)
-
-    #if len(superelement_lines) == 0 and len(auxmodel_lines) == 0:
-        #pass
-    #elif is_auxmodel_active:
-        #for line in lines[iline:]:
-            #auxmodel_lines[auxmodel_id].append(line.rstrip())
-    #else:
-        #msg = 'len(superelements)=%s len(auxmodel)=%s' % (
-            #len(superelement_lines), len(auxmodel_lines))
-        #raise RuntimeError(msg)
 
     assert len(bulk_data_lines) > 0, bulk_data_lines
     #print('nbulk=%s nilines=%s' % (len(bulk_data_lines), len(bulk_data_ilines)), bulk_data_ilines.shape)
@@ -840,7 +844,8 @@ def _lines_to_decks_main(lines, ilines, keep_enddata=True, consider_superelement
     out = (
         executive_control_lines, case_control_lines,
         bulk_data_lines, bulk_data_ilines,
-        superelement_lines, auxmodel_lines,
+        superelement_lines, superelement_ilines,
+        auxmodel_lines,
     )
     return out
 
@@ -873,10 +878,11 @@ def _is_begin_bulk(uline):
     """is this a 'BEGIN BULK', but not 'BEGIN BULK SUPER=2', or 'BEGIN BULK AUXMODEL=2'"""
     return 'BULK' in uline and 'AUXMODEL' not in uline and 'SUPER' not in uline
 
-def _read_bulk_for_auxmodel(ifile_iline, line, flag, bulk_data_lines, current_lines,
+def _read_bulk_for_auxmodel(ifile_iline, line, flag, bulk_data_lines,
+                            current_lines, current_ilines,
                             old_flags,
                             unused_is_auxmodel, auxmodel_lines, auxmodels_to_find, auxmodels_found,
-                            superelement_lines,
+                            superelement_lines, superelement_ilines,
                             is_auxmodel_active, auxmodel_id, bulk_data_ilines):
     """
     Reads a BEGIN BULK section searching for 'BEGIN AUXMODEL=1' and BEGIN SUPER=1'
@@ -901,6 +907,7 @@ def _read_bulk_for_auxmodel(ifile_iline, line, flag, bulk_data_lines, current_li
             old_flags.append(flag)
             flag = -auxmodel_id
             current_lines = auxmodel_lines[auxmodel_id]
+            current_ilines = []
             auxmodels_found.add(auxmodel_id)
             if len(auxmodels_found) == len(auxmodels_to_find):
                 #print('broken...final', len(bulk_data_lines), len(bulk_data_ilines))
@@ -911,41 +918,46 @@ def _read_bulk_for_auxmodel(ifile_iline, line, flag, bulk_data_lines, current_li
             old_flags.append(flag)
             flag = -super_id
             current_lines = superelement_lines[super_id]
+            current_ilines = superelement_ilines[super_id]
         else:
             msg = 'expected "BEGIN AUXMODEL=1" or "BEGIN SUPER=1"\nline = %s' % line
             raise RuntimeError(msg)
     rline = line.rstrip()
     if rline:
-        if flag == 3:
-            bulk_data_ilines.append(ifile_iline)
+        #if flag == 3:
+            #bulk_data_ilines.append(ifile_iline)
         current_lines.append(rline)
+        current_ilines.append(ifile_iline)
 
     return is_broken, auxmodel_id, is_auxmodel_active, flag, current_lines
 
 def _break_system_lines(executive_control_lines):
     """
-    Extracts the Nastran system lines
+    Extracts the Nastran system lines.
+    System lines may be interspersed with executive lines.
 
     Per NX Nastran 10:
 
-    ACQUIRE  Selects NDDL schema and NX Nastran Delivery Database.
-    ASSIGN   Assigns physical files to DBset members or special FORTRAN files.
-    CONNECT  Groups geometry data by evaluator and database.
-    DBCLEAN  Deletes selected database version(s) and/or projects.
-    DBDICT   Prints the database directory in user-defined format.
-    DBDIR    Prints the database directory.
-    DBFIX    Identifies and optionally corrects errors found in the database.
-    DBLOAD   Loads a database previously unloaded by DBUNLOAD.
-    DBLOCATE Obtains data blocks and parameters from databases.
-    DBSETDEL Deletes DBsets.
-    DBUNLOAD Unloads a database for compression, transfer, or archival storage.
-    DBUPDATE Specifies the time between updates of the database directory.
-    ENDJOB   Terminates a job upon completion of FMS statements.
-    EXPAND   Concatenates additional DBset members to an existing DBset.
-    INCLUDE  Inserts an external file in the input file.
-    INIT     Creates a temporary or permanent DBset.
-    NASTRAN  Specifies values for system cells.
-    PROJ     Defines the current or default project identifier.
+    Header    Description
+    ======    ===========
+    ACQUIRE   Selects NDDL schema and NX Nastran Delivery Database.
+    ASSIGN    Assigns physical files to DBset members or special FORTRAN files.
+    CONNECT   Groups geometry data by evaluator and database.
+    DBCLEAN   Deletes selected database version(s) and/or projects.
+    DBDICT    Prints the database directory in user-defined format.
+    DBDIR     Prints the database directory.
+    DBFIX     Identifies and optionally corrects errors found in the database.
+    DBLOAD    Loads a database previously unloaded by DBUNLOAD.
+    DBLOCATE  Obtains data blocks and parameters from databases.
+    DBSETDEL  Deletes DBsets.
+    DBUNLOAD  Unloads a database for compression, transfer, or archival storage.
+    DBUPDATE  Specifies the time between updates of the database directory.
+    ENDJOB    Terminates a job upon completion of FMS statements.
+    EXPAND    Concatenates additional DBset members to an existing DBset.
+    INCLUDE   Inserts an external file in the input file.
+    INIT      Creates a temporary or permanent DBset.
+    NASTRAN   Specifies values for system cells.
+    PROJ      Defines the current or default project identifier.
 
     F:\\Program Files\\Siemens\\NXNastran\\nxn10p1\\nxn10p1\\nast\\tpl\\mdb01.dat
     """
@@ -1071,6 +1083,13 @@ def _show_bad_file(self, bdf_filename, encoding, nlines_previous=10):
             lines.append(line)
 
 def _get_auxmodel_id(line, uline):
+    """
+    parses the superelement header::
+
+        BEGIN AUXMODEL=2
+        BEGIN BULK AUXMODEL=2
+        BEGIN BULK AUXMODEL = 2
+    """
     #if '=' in uline:
     sline = uline.split('=')
     #else:
@@ -1087,6 +1106,14 @@ def _get_auxmodel_id(line, uline):
     return auxmodel_id
 
 def _get_super_id(line, uline):
+    """
+    parses the superelement header::
+
+        BEGIN SUPER=2
+        BEGIN BULK SUPER=2
+        BEGIN BULK SUPER = 2
+        BEGIN BULK SUPER 2
+    """
     if '=' in uline:
         sline = uline.split('=')
         super_id_str = sline[1]
