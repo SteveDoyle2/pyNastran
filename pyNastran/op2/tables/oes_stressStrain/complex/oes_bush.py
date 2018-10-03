@@ -4,10 +4,6 @@ from six import integer_types
 import numpy as np
 from numpy import zeros, searchsorted, allclose
 
-try:
-    import pandas as pd  # type: ignore
-except ImportError:
-    pass
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
@@ -64,6 +60,7 @@ class ComplexCBushArray(OES_Object):
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
+        import pandas as pd
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
         self.data_frame = pd.Panel(self.data, items=column_values,

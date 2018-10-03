@@ -59,6 +59,7 @@ class GridPointStressesArray(ScalarObject):
 
     #def build_dataframe(self):
         #"""creates a pandas dataframe"""
+        #import pandas as pd
         #headers = self.get_headers()
         #element_node = [self.element_node[:, 0], self.element_node[:, 1]]
         #if self.nonlinear_factor not in (None, np.nan):

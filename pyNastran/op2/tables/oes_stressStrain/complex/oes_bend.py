@@ -2,10 +2,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import cycle
 import numpy as np
-try:
-    import pandas as pd  # type: ignore
-except ImportError:
-    pass
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
@@ -89,6 +85,7 @@ class ComplexBendArray(OES_Object):
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
+        import pandas as pd
         print(self.data_code)
         headers = self.headers
         column_names, column_values = self._build_dataframe_transient_header()

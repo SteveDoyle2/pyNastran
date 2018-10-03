@@ -3044,7 +3044,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         """
         return get_bdf_stats(self, return_type=return_type)
 
-    def get_displacement_index_xyz_cp_cd(self, fdtype='float64', idtype='int32',
+    def get_displacement_index_xyz_cp_cd(self, include_seid=False,
+                                         fdtype='float64', idtype='int32',
                                          sort_ids=True):
         # type: (str, str, bool) -> Any
         """
@@ -3054,6 +3055,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         Parameters
         ----------
+        include_seid : bool; default=False
+            include the superelement id
         fdtype : str; default='float64'
             the type of xyz_cp
         idtype : str; default='int32'

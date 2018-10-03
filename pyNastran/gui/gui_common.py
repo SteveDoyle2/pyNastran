@@ -93,7 +93,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             GuiCommon.__init__(self, **kwds)
         elif qt_version == 'pyqt5':
             super(GuiCommon2, self).__init__(**kwds)
-        elif qt_version == 'pyside':
+        elif qt_version in ['pyside', 'pyside2']:
             #super(GuiCommon2, self).__init__(**kwds) # fails
 
             # fails
@@ -361,6 +361,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
                 ('website', 'Open pyNastran Website...', '', None, 'Open the pyNastran website', self.open_website),
                 ('docs', 'Open pyNastran Docs Website...', '', None, 'Open the pyNastran documentation website', self.open_docs),
+                ('report_issue', 'Report a Bug/Feature Request...', '', None, 'Open the pyNastran issue tracker', self.open_issue),
                 ('discussion_forum', 'Discussion Forum Website...', '', None, 'Open the discussion forum to ask questions', self.open_discussion_forum),
                 ('about', 'About pyNastran GUI...', 'tabout.png', 'CTRL+H', 'About pyNastran GUI and help on shortcuts', self.about_dialog),
 
@@ -494,7 +495,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             menu_items['file'] = (self.menu_file, menu_file)
             menu_items['view'] = (self.menu_view, menu_view)
             menu_items['main'] = (self.menu_window, menu_window)
-            menu_items['help'] = (self.menu_help, ('website', 'docs', 'discussion_forum', 'about',))
+            menu_items['help'] = (self.menu_help, ('website', 'docs', 'report_issue', 'discussion_forum', 'about',))
             menu_items['scripts'] = (self.menu_scripts, scripts)
             menu_items['toolbar'] = (self.toolbar, toolbar_tools)
             menu_items['hidden'] = (self.menu_hidden, hidden_tools)

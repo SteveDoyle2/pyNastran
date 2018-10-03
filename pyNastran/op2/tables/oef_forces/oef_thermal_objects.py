@@ -8,10 +8,6 @@ from pyNastran.f06.f06_formatting import (
     write_float_13e, write_floats_13e, _eigenvalue_header)
 from pyNastran.op2.result_objects.element_table_object import RealElementTableArray
 import numpy as np
-try:
-    import pandas as pd  # type: ignore
-except ImportError:
-    pass
 
 
 class Real1DHeatFluxArray(ScalarObject):
@@ -76,6 +72,7 @@ class Real1DHeatFluxArray(ScalarObject):
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
+        import pandas as pd
         headers = self.get_headers()
         assert 0 not in self.element
         if self.nonlinear_factor not in (None, np.nan):
@@ -265,6 +262,7 @@ class RealHeatFluxVU3DArray(ScalarObject):
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
+        import pandas as pd
         # TODO: fix me
         headers = self.get_headers()
         #assert 0 not in self.element
@@ -473,6 +471,7 @@ class RealHeatFluxVUBeamArray(ScalarObject):  # 191-VUBEAM
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
+        import pandas as pd
         headers = self.get_headers()
         #assert 0 not in self.element
         element_node = [
@@ -642,6 +641,7 @@ class RealHeatFlux_2D_3DArray(RealElementTableArray):
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
+        import pandas as pd
         headers = self.get_headers()
 
         #nelements = self.element.shape[0]# // 2
@@ -736,6 +736,7 @@ class RealConvHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
+        import pandas as pd
         # TODO: fix me
         headers = self.get_headers()
         #assert 0 not in self.element
@@ -921,6 +922,7 @@ class RealChbdyHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
+        import pandas as pd
         headers = self.get_headers()
         assert 0 not in self.element
         if self.nonlinear_factor not in (None, np.nan):

@@ -7,11 +7,6 @@ from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header, w
 from pyNastran.op2.vector_utils import transform_force_moment, transform_force_moment_sum, sortedsum1d
 from pyNastran.utils.numpy_utils import integer_types
 
-try:
-    import pandas as pd  # type: ignore
-except ImportError:
-    pass
-
 
 class RealGridPointForcesArray(ScalarObject):
     """
@@ -122,6 +117,7 @@ class RealGridPointForcesArray(ScalarObject):
         minor_axis / headers = [T1, T2, T3, R1, R2, R3]
         name = mode
         """
+        import pandas as pd
         headers = self.get_headers()
         #name = self.name
         if self.is_unique:
@@ -1000,6 +996,7 @@ class ComplexGridPointForcesArray(ScalarObject):
         minor_axis / headers = [T1, T2, T3, R1, R2, R3]
         name = mode
         """
+        import pandas as pd
         headers = self.get_headers()
         #name = self.name
         if self.is_unique:

@@ -406,41 +406,75 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         # t=.578
         #print("get_displacement_index_xyz_cp_cd")
-        out = model.get_displacement_index_xyz_cp_cd(
-            fdtype=fdtype, idtype='int32', sort_ids=True)
-        icd_transform, icp_transform, xyz_cp, nid_cp_cd = out
-        self.i_transform = icd_transform
+        models = {0 : model}
+        models.update(model.superelement_models)
 
-        #print("transform_xyzcp_to_xyz_cid")
-        xyz_cid0 = model.transform_xyzcp_to_xyz_cid(
-            xyz_cp, nid_cp_cd[:, 0], icp_transform, cid=cid,
-            in_place=False)
+        xyz_cid0 = {}
+        nid_cp_cd = {}
+        icd_transform = {}
+        nid_map = {}
+        nid_map2 = {}
+        inode = 0
+        for super_id, model in sorted(models.items()):
+            out = model.get_displacement_index_xyz_cp_cd(
+                fdtype=fdtype, idtype='int32', sort_ids=True)
+            icd_transformi, icp_transformi, xyz_cpi, nid_cp_cdi = out
+            icd_transform[super_id] = icd_transformi
 
-        #print('model.spoints =', model.spoints)
-        #import json
-        #for spoint_id, spoint in model.spoints.items():
-            #if spoint.comment: # or spoint._comment?
-                #print('SPOINT comment=%r _comment=%r' % (spoint.comment, spoint._comment))
-                #comment_lower = spoint.comment.lower()
-                #print('comment_lower = %r' % comment_lower)
-                ## pyNastran: SPOINT={'id':10, 'xyz':[10.,10.,10.]}
-                #if 'pynastran' in comment_lower and 'spoint' in comment_lower:
-                    #dict_str = comment_lower.split('=')[1].rstrip().replace("'", '"').replace('}', ',}').replace(',,}', ',}')
-                    #print('dict_str = %r' % dict_str)
-                    #dicti = json.loads(dict_str)
-                    #print(dicti)
-        #for epoint_id, epoint in model.epoints.items():
-            #if epoints.comment:
-                #print('EPOINT comment=%r _comment=%r' % (spoint.comment, spoint._comment))
-        #sys.stdout.flush()
+            #print("transform_xyzcp_to_xyz_cid")
+            xyz_cid0i = model.transform_xyzcp_to_xyz_cid(
+                xyz_cpi, nid_cp_cdi[:, 0], icp_transformi, cid=cid,
+                in_place=False)
 
-        nid_map = self.gui.nid_map
-        for i, nid in enumerate(nid_cp_cd[:, 0]):
-            nid_map[nid] = i
+            #print('model.spoints =', model.spoints)
+            #import json
+            #for spoint_id, spoint in model.spoints.items():
+                #if spoint.comment: # or spoint._comment?
+                    #print('SPOINT comment=%r _comment=%r' % (spoint.comment, spoint._comment))
+                    #comment_lower = spoint.comment.lower()
+                    #print('comment_lower = %r' % comment_lower)
+                    ## pyNastran: SPOINT={'id':10, 'xyz':[10.,10.,10.]}
+                    #if 'pynastran' in comment_lower and 'spoint' in comment_lower:
+                        #dict_str = comment_lower.split('=')[1].rstrip().replace("'", '"').replace('}', ',}').replace(',,}', ',}')
+                        #print('dict_str = %r' % dict_str)
+                        #dicti = json.loads(dict_str)
+                        #print(dicti)
+            #for epoint_id, epoint in model.epoints.items():
+                #if epoints.comment:
+                    #print('EPOINT comment=%r _comment=%r' % (spoint.comment, spoint._comment))
+            #sys.stdout.flush()
 
-        self._add_nastran_spoints_to_grid(model)
+            nid_mapi = self.gui.nid_map
+            if inode == 0:
+                for i, nid in enumerate(nid_cp_cdi[:, 0]):
+                    nid_mapi[nid] = i
+            else:
+                for i, nid in enumerate(nid_cp_cdi[:, 0]):
+                    nid_mapi[nid] = i + inode
+            inode += nid_cp_cdi.shape[0]
+            self._add_nastran_spoints_to_grid(model.spoints, nid_mapi)
+
+            nid_map2.update(nid_mapi)
+            nid_map[super_id] = nid_mapi
+            nid_cp_cd[super_id] = nid_cp_cdi
+            xyz_cid0[super_id] = xyz_cid0i
+
+        if len(xyz_cid0) == 1:
+            self.icd_transform = icd_transform[0]
+            return xyz_cid0[0], nid_cp_cd[0]
+
+        # superelements
+        self.icd_transform = icd_transform
+        xyz_cid0_full = []
+        nid_cp_cd_full = []
+        for super_id, xyz_cid0i in sorted(xyz_cid0.items()):
+            xyz_cid0_full.append(xyz_cid0[super_id])
+            nid_cp_cd_full.append(nid_cp_cd[super_id])
+
+        xyz_cid0_out = np.vstack(xyz_cid0_full)
+        nid_cp_cd_out = np.vstack(nid_cp_cd_full)
+        return xyz_cid0_out, nid_cp_cd_out
         #print('dt_nastran_xyz =', time.time() - time0)
-        return xyz_cid0, nid_cp_cd
 
     def get_xyz_in_coord_vectorized(self, model, cid=0, fdtype='float32'):
         """
@@ -456,10 +490,13 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         xyz_cid0 = None
         nid_cp_cd = None
         if self.gui.nnodes > 0:
+            #xyz_cid0 = {}
+            #nid_cp_cd = {}
+
             out = model.get_displacement_index_xyz_cp_cd(
                 fdtype=fdtype, idtype='int32')
             icd_transform, icp_transform, xyz_cp, nid_cp_cd = out
-            self.i_transform = icd_transform
+            self.icd_transform = icd_transform
 
             #print("transform_xyzcp_to_xyz_cid")
             #model.nodes.cp = nid_cp_cd[:, 1]
@@ -473,7 +510,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             for i, nid in enumerate(nid_cp_cd[:, 0]):
                 nid_map[nid] = i
 
-            self._add_nastran_spoints_to_grid(model)
+            self._add_nastran_spoints_to_grid(model.spoints, nid_map)
         #print('dt_nastran_xyz =', time.time() - time0)
         return xyz_cid0, nid_cp_cd
 
@@ -542,7 +579,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         """
         self.gui.eid_maps[name] = {}
         self.gui.nid_maps[name] = {}
-        self.i_transform = {}
+        self.icd_transform = {}
         #self.transforms = {}
         #print('bdf_filename=%r' % bdf_filename)
         #key = self.case_keys[self.icase]
@@ -1630,6 +1667,13 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         ngridb = len(model.gridb)
         ncaero_cards = len(model.caeros)
 
+        for superelement in model.superelement_models.values():
+            nnodes += len(superelement.nodes)
+            nspoints += len(superelement.spoints)
+            nepoints += len(superelement.epoints)
+            ngridb += len(superelement.gridb)
+            ncaero_cards += len(superelement.caeros)
+
         ngui_nodes = nnodes + nspoints + nepoints + ngridb
         if ngui_nodes + ncaero_cards == 0:
             msg = 'nnodes + nspoints + nepoints = 0\n'
@@ -1640,6 +1684,12 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         nmasses = len(model.masses)
         nplotels = len(model.plotels)
         nrigid = len(model.rigid_elements)
+        for superelement in model.superelement_models.values():
+            nelements += len(superelement.elements)
+            nmasses += len(superelement.masses)
+            nplotels += len(superelement.plotels)
+            nrigid += len(superelement.rigid_elements)
+
         #nmpc = len(model.mpcs)  # really should only be allowed if we have it in a subcase
         if nelements + nmasses + ncaero_cards + nplotels + nrigid == 0:
             msg = 'nelements + nmasses + ncaero_cards + nplotels + nrigid = 0\n'
@@ -1789,6 +1839,32 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         #------------------------------------------------------------
         #print('dependent_nodes =', self.dependents_nodes)
+        icase = self._set_subcases_unvectorized(model, form, cases, icase, xref_nodes, xref_loads)
+
+        name = 'main_copy'
+        self.gui.duplicate_alternate_vtk_grid(
+            name, 'main', color=(0., 0., 0.), line_width=5,
+            opacity=0.1, is_visible=False)
+
+        #------------------------------------------------------------
+        # add alternate actors
+        self.gui._add_alt_actors(self.gui.alt_grids)
+
+        # set default representation
+        self._set_caero_representation(has_control_surface)
+
+        for grid_name in geometry_names:
+            if grid_name in self.gui.geometry_actors:
+                self.gui.geometry_actors[grid_name].Modified()
+
+        #self.grid_mapper.SetResolveCoincidentTopologyToPolygonOffset()
+        if plot:
+            self.gui._finish_results_io2([form], cases, reset_labels=reset_labels)
+        else:
+            self.gui._set_results([form], cases)
+
+    def _set_subcases_unvectorized(self, model, form, cases, icase, xref_nodes, xref_loads):
+        """helper for ``load_nastran_geometry_unvectorized``"""
         form0 = form[2]
         assert icase is not None
         nsubcases = len(model.subcases)
@@ -1835,28 +1911,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
             if len(formii):
                 form0.append(formi)
-
-        name = 'main_copy'
-        self.gui.duplicate_alternate_vtk_grid(
-            name, 'main', color=(0., 0., 0.), line_width=5,
-            opacity=0.1, is_visible=False)
-
-        #------------------------------------------------------------
-        # add alternate actors
-        self.gui._add_alt_actors(self.gui.alt_grids)
-
-        # set default representation
-        self._set_caero_representation(has_control_surface)
-
-        for grid_name in geometry_names:
-            if grid_name in self.gui.geometry_actors:
-                self.gui.geometry_actors[grid_name].Modified()
-
-        #self.grid_mapper.SetResolveCoincidentTopologyToPolygonOffset()
-        if plot:
-            self.gui._finish_results_io2([form], cases, reset_labels=reset_labels)
-        else:
-            self.gui._set_results([form], cases)
+        return icase
 
     def _create_caero_actors(self, ncaeros, ncaeros_sub, ncaeros_cs, has_control_surface):
         """
@@ -2821,11 +2876,11 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             out_msg = store_warning(model.log, store_msg, stored_msg)
         return out_msg
 
-    def _add_nastran_spoints_to_grid(self, model):
+    def _add_nastran_spoints_to_grid(self, spoints, nid_map):
         """used to create SPOINTs"""
-        if not model.spoints:
+        if not spoints:
             return
-        spoint_ids = list(model.spoints.keys())
+        spoint_ids = list(spoints.keys())
         assert isinstance(spoint_ids, list), type(spoint_ids)
 
         nspoints = len(spoint_ids)
@@ -2842,7 +2897,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         points.SetNumberOfPoints(nspoints)
 
         j = 0
-        nid_map = self.gui.nid_map
         alt_grid = self.gui.alt_grids[name]
         for spointi in sorted(spoint_ids):
             try:
@@ -2851,7 +2905,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 model.log.warning('spointi=%s does not exist' % spointi)
                 continue
 
-            if spointi not in model.spoints:
+            if spointi not in spoints:
                 model.log.warning('spointi=%s doesnt exist' % spointi)
                 continue
             # point = self.grid.GetPoint(i)
@@ -3124,7 +3178,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 cell_type = cell_type_quad4 #9
                 inids = np.searchsorted(all_nids, nids)
                 p1, p2, p3, p4 = xyz_cid0[inids, :]
-                out = quad_quality(p1, p2, p3, p4)
+                out = quad_quality(elem, p1, p2, p3, p4)
                 (areai, taper_ratioi, area_ratioi, max_skew, aspect_ratio,
                  min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
                 normali = np.cross(p1 - p3, p2 - p4)
@@ -3172,7 +3226,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     inids = np.searchsorted(all_nids, nids)
                     p1, p2, p3, p4 = xyz_cid0[inids[:4], :]
                     nnodes = 8
-                out = quad_quality(p1, p2, p3, p4)
+                out = quad_quality(elem, p1, p2, p3, p4)
                 (areai, taper_ratioi, area_ratioi, max_skew, aspect_ratio,
                  min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
                 normali = np.cross(p1 - p3, p2 - p4)
@@ -3189,7 +3243,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 cell_type = cell_type_quad4 #9
                 inids = np.searchsorted(all_nids, nids)
                 p1, p2, p3, p4 = xyz_cid0[inids, :]
-                out = quad_quality(p1, p2, p3, p4)
+                out = quad_quality(elem, p1, p2, p3, p4)
                 (areai, taper_ratioi, area_ratioi, max_skew, aspect_ratio,
                  min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
                 normali = np.cross(p1 - p3, p2 - p4)
@@ -4107,7 +4161,16 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         # pid = pids_dict[eid]
         pids_dict = {}
+
         nelements = len(model.elements)
+        #eid_map = self.gui.eid_map
+        elements = model.elements
+
+        for superelement in model.superelement_models.values():
+            nelements += len(superelement.elements)
+            elements.update(superelement.elements)
+            #eid_map.update(superelement.eid_map)
+
         pids = np.zeros(nelements, 'int32')
         material_coord = np.zeros(nelements, 'int32')
         min_interior_angle = np.zeros(nelements, 'float32')
@@ -4213,7 +4276,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #print("map_elements...")
         eid_to_nid_map = self.eid_to_nid_map
         eid_map = self.gui.eid_map
-        for (eid, element) in sorted(iteritems(model.elements)):
+        for (eid, element) in sorted(iteritems(elements)):
             eid_map[eid] = i
             if i % 5000 == 0 and i > 0:
                 print('  map_elements = %i' % i)
@@ -4352,7 +4415,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 p2 = xyz_cid0[n2, :]
                 p3 = xyz_cid0[n3, :]
                 p4 = xyz_cid0[n4, :]
-                out = quad_quality(p1, p2, p3, p4)
+                out = quad_quality(element, p1, p2, p3, p4)
                 (areai, taper_ratioi, area_ratioi, max_skew, aspect_ratio,
                  min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
 
@@ -4380,7 +4443,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 p2 = xyz_cid0[n2, :]
                 p3 = xyz_cid0[n3, :]
                 p4 = xyz_cid0[n4, :]
-                out = quad_quality(p1, p2, p3, p4)
+                out = quad_quality(element, p1, p2, p3, p4)
                 (areai, taper_ratioi, area_ratioi, max_skew, aspect_ratio,
                  min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
                 if None not in node_ids:
@@ -4396,6 +4459,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 elem.GetPointIds().SetId(2, n3)
                 elem.GetPointIds().SetId(3, n4)
                 grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+
             elif isinstance(element, (CQUAD, CQUADX)):
                 # CQUAD, CQUADX are 9 noded quads
                 material_coord[i] = _get_shell_material_coord_int(element)
@@ -4412,7 +4476,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 p2 = xyz_cid0[n2, :]
                 p3 = xyz_cid0[n3, :]
                 p4 = xyz_cid0[n4, :]
-                out = quad_quality(p1, p2, p3, p4)
+                out = quad_quality(element, p1, p2, p3, p4)
                 (areai, taper_ratioi, area_ratioi, max_skew, aspect_ratio,
                  min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
                 if None not in node_ids:
@@ -4428,8 +4492,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 elem.GetPointIds().SetId(1, n2)
                 elem.GetPointIds().SetId(2, n3)
                 elem.GetPointIds().SetId(3, n4)
-
                 grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+
             elif isinstance(element, CTETRA4):
                 elem = vtkTetra()
                 node_ids = element.node_ids
@@ -4445,6 +4509,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 #elem_nid_map = {nid:nid_map[nid] for nid in node_ids[:4]}
                 min_thetai, max_thetai, dideal_thetai, min_edge_lengthi = get_min_max_theta(
                     _ctetra_faces, node_ids[:4], nid_map, xyz_cid0)
+
             elif isinstance(element, CTETRA10):
                 node_ids = element.node_ids
                 pid = element.Pid()
@@ -4469,6 +4534,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
                 min_thetai, max_thetai, dideal_thetai, min_edge_lengthi = get_min_max_theta(
                     _ctetra_faces, node_ids[:4], nid_map, xyz_cid0)
+
             elif isinstance(element, CPENTA6):
                 elem = vtkWedge()
                 node_ids = element.node_ids
@@ -4515,6 +4581,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
                 min_thetai, max_thetai, dideal_thetai, min_edge_lengthi = get_min_max_theta(
                     _cpenta_faces, node_ids[:6], nid_map, xyz_cid0)
+
             elif isinstance(element, (CHEXA8, CIHEX1)):
                 node_ids = element.node_ids
                 pid = element.Pid()
@@ -4533,6 +4600,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 grid.InsertNextCell(12, elem.GetPointIds())
                 min_thetai, max_thetai, dideal_thetai, min_edge_lengthi = get_min_max_theta(
                     _chexa_faces, node_ids[:8], nid_map, xyz_cid0)
+
             elif isinstance(element, (CHEXA20, CIHEX2)):
                 node_ids = element.node_ids
                 pid = element.Pid()
@@ -4756,7 +4824,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     p2 = xyz_cid0[n2, :]
                     p3 = xyz_cid0[n3, :]
                     p4 = xyz_cid0[n4, :]
-                    out = quad_quality(p1, p2, p3, p4)
+                    out = quad_quality(element, p1, p2, p3, p4)
                     (areai, taper_ratioi, area_ratioi, max_skew, aspect_ratio,
                      min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
                     if element.surface_type == 'AREA4' or None in node_ids:
@@ -4841,7 +4909,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     p2 = xyz_cid0[n2, :]
                     p3 = xyz_cid0[n3, :]
                     p4 = xyz_cid0[n4, :]
-                    out = quad_quality(p1, p2, p3, p4)
+                    out = quad_quality(element, p1, p2, p3, p4)
                     (areai, taper_ratioi, area_ratioi, max_skew, aspect_ratio,
                      min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
 
@@ -5414,11 +5482,15 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             is_pshell = True
 
         pids_pcomp = model.get_card_ids_by_card_types(['PCOMP', 'PCOMPG'], combine=True)
+        properties = model.properties
+        for superelement in model.superelement_models.values():
+            properties.update(superelement.properties)
+
         if pids_pcomp:
             npliesi = 0
             pcomp_nplies = 0
             for pid in pids_pcomp:
-                prop = model.properties[pid]
+                prop = properties[pid]
                 pcomp_nplies = max(pcomp_nplies, prop.nplies + 1)
             npliesi = max(npliesi, pcomp_nplies)
 
@@ -5438,7 +5510,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             elif pid < 0:
                 continue
 
-            prop = model.properties[pid]
+            prop = properties[pid]
             #try:
             if prop.type in prop_types_with_mid:
                 # simple types
@@ -5953,13 +6025,13 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         # tansform displacements into global coordinates
         try:
-            i_transform = self.i_transform
+            icd_transform = self.icd_transform
             #transforms = self.transforms
         except AttributeError:
             self.log.error('Skipping displacment transformation')
         else:
             model.transform_displacements_to_global(
-                i_transform, self.model.coords, xyz_cid0=self.xyz_cid0)
+                icd_transform, self.model.coords, xyz_cid0=self.xyz_cid0)
 
         #if 0:
             #cases = OrderedDict()

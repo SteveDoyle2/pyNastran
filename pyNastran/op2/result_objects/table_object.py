@@ -32,10 +32,6 @@ from numpy import allclose, asarray, vstack, swapaxes, hstack
 
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
 from pyNastran.f06.f06_formatting import write_floats_13e, write_imag_floats_13e, write_float_12e
-try:
-    import pandas as pd
-except ImportError:
-    pass
 
 
 SORT2_TABLE_NAME_MAP = {
@@ -340,6 +336,7 @@ class TableArray(ScalarObject):  # displacement style table
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
+        import pandas as pd
         headers = self.get_headers()
         #headers = [0, 1, 2, 3, 4, 5]
         node_gridtype = [self.node_gridtype[:, 0], self.gridtype_str]

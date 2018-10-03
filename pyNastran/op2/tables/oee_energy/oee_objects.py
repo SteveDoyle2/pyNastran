@@ -5,10 +5,6 @@ import numpy as np
 
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
 from pyNastran.f06.f06_formatting import _eigenvalue_header, write_float_13e
-try:
-    import pandas as pd  # type: ignore
-except ImportError:
-    pass
 
 SORT2_TABLE_NAME_MAP = {
     'ONRGY2' : 'ONRGY1',
@@ -131,6 +127,7 @@ class RealStrainEnergyArray(ScalarObject):
         minor_axis / headers = [ese, %, sed]
         name = mode
         """
+        import pandas as pd
         #print(''.join(self.get_stats()))
         #print(self.element)
         #print(self.data)
@@ -549,6 +546,7 @@ class ComplexStrainEnergyArray(ScalarObject):
         #minor_axis / headers = [ese, %, sed]
         #name = mode
         #"""
+        #import pandas as pd
         #headers = self.get_headers()
         #ntimes = self.element.shape[0]
         #nelements = self.element.shape[1]

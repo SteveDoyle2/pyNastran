@@ -113,6 +113,7 @@ class HyperelasticQuadArray(OES_Object):
 
     #def build_dataframe(self):
         #"""creates a pandas dataframe"""
+        #import pandas as pd
         #headers = self.get_headers()
 
         #nelements = self.element_node.shape[0] // 2

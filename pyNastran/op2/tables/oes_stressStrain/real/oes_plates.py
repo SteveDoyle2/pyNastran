@@ -8,10 +8,6 @@ import numpy as np
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
-try:
-    import pandas as pd  # type: ignore
-except ImportError:
-    pass
 
 ints = (int, np.int32)
 
@@ -118,6 +114,7 @@ class RealPlateArray(OES_Object):
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
+        import pandas as pd
         headers = self.get_headers()
 
         nelements = self.element_node.shape[0] // 2

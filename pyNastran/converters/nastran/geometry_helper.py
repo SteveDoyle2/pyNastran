@@ -78,7 +78,7 @@ class NastranGuiAttributes(object):
         self.isubcase_name_map = None
         self.has_caero = False
         self.dependents_nodes = set([])
-        self.i_transform = {}
+        self.icd_transform = {}
 
 
 class NastranGeometryHelper(NastranGuiAttributes):
@@ -426,6 +426,9 @@ def get_material_arrays(model, mids):
     has_mat8 = False
     #has_mat10 = False
     has_mat11 = False
+    materials = model.materials
+    for superelement in model.superelement_models.values():
+        materials.update(superelement.materials)
     for umid in np.unique(mids):
         if umid == 0:
             continue
@@ -434,11 +437,11 @@ def get_material_arrays(model, mids):
         bulki = 0.
         speed_of_soundi = 0.
         try:
-            mat = model.materials[umid]
+            mat = materials[umid]
         except KeyError:
             print("can't find mid=%s" % umid)
             print('  mids = %s' % mids)
-            print('  mids = %s' % model.materials.keys())
+            print('  mids = %s' % materials.keys())
             continue
             #raise
         if mat.type == 'MAT1':
@@ -510,7 +513,7 @@ def tri_quality(p1, p2, p3):
     length32 = np.linalg.norm(v32)
     length13 = np.linalg.norm(v13)
     min_edge_length = min(length21, length32, length13)
-    areai = 0.5 * np.linalg.norm(np.cross(v21, v13))
+    area = 0.5 * np.linalg.norm(np.cross(v21, v13))
 
     ne31 = np.linalg.norm(e31)
     ne21 = np.linalg.norm(e21)
@@ -529,15 +532,26 @@ def tri_quality(p1, p2, p3):
         cos_skew4, cos_skew5, cos_skew6], -1., 1.))).min()
     lengths = np.linalg.norm([v21, v32, v13], axis=1)
     #assert len(lengths) == 3, lengths
-    aspect_ratio = lengths.max() / lengths.min()
+    length_min = lengths.min()
+    if length_min == 0.0:
+        aspect_ratio = np.nan
+        # assume length_min = length21 = nan, so:
+        #   cos_theta1 = nan
+        #   thetas = [nan, b, c]
+        #   min_theta = max_theta = dideal_theta = nan
+        min_theta = np.nan
+        max_theta = np.nan
+        dideal_theta = np.nan
+    else:
+        aspect_ratio = lengths.max() / length_min
 
-    cos_theta1 = np.dot(v21, -v13) / (length21 * length13)
-    cos_theta2 = np.dot(v32, -v21) / (length32 * length21)
-    cos_theta3 = np.dot(v13, -v32) / (length13 * length32)
-    thetas = np.arccos(np.clip([cos_theta1, cos_theta2, cos_theta3], -1., 1.))
-    min_thetai = thetas.min()
-    max_thetai = thetas.max()
-    dideal_thetai = max(max_thetai - PIOVER3, PIOVER3 - min_thetai)
+        cos_theta1 = np.dot(v21, -v13) / (length21 * length13)
+        cos_theta2 = np.dot(v32, -v21) / (length32 * length21)
+        cos_theta3 = np.dot(v13, -v32) / (length13 * length32)
+        thetas = np.arccos(np.clip([cos_theta1, cos_theta2, cos_theta3], -1., 1.))
+        min_theta = thetas.min()
+        max_theta = thetas.max()
+        dideal_theta = max(max_theta - PIOVER3, PIOVER3 - min_theta)
 
     #theta_deg = np.degrees(np.arccos(max_cos_theta))
     #if theta_deg < 60.:
@@ -549,10 +563,10 @@ def tri_quality(p1, p2, p3):
         #print('theta3=%s' % np.degrees(np.arccos(cos_theta3)))
         #print('max_theta=%s' % theta_deg)
         #asdf
-    return areai, max_skew, aspect_ratio, min_thetai, max_thetai, dideal_thetai, min_edge_length
+    return area, max_skew, aspect_ratio, min_theta, max_theta, dideal_theta, min_edge_length
 
 
-def quad_quality(p1, p2, p3, p4):
+def quad_quality(element, p1, p2, p3, p4):
     """gets the quality metrics for a quad"""
     v21 = p2 - p1
     v32 = p3 - p2
@@ -573,7 +587,7 @@ def quad_quality(p1, p2, p3, p4):
     v31 = p3 - p1
     v42 = p4 - p2
     normal = np.cross(v31, v42)
-    areai = 0.5 * np.linalg.norm(normal)
+    area = 0.5 * np.linalg.norm(normal)
 
     # still kind of in development
     #
@@ -589,17 +603,28 @@ def quad_quality(p1, p2, p3, p4):
     # for:
     #   area=1; area1=0.5 -> area_ratioi1=2.0; area_ratio=2.0
     #   area=1; area1=2.0 -> area_ratioi2=2.0; area_ratio=2.0
-    area_ratioi1 = areai / min(areas)
-    area_ratioi2 = max(areas) / areai
-    area_ratioi = max(area_ratioi1, area_ratioi2)
+    min_area = min(areas)
+    if min_area == 0.:
+        print('nan min area; area=%g areas=%s:\n%s' % (area, areas, element))
+        #nodes = element.nodes
+        #print('  n_%i = %s' % (nodes[0], p1))
+        #print('  n_%i = %s' % (nodes[1], p2))
+        #print('  n_%i = %s' % (nodes[2], p3))
+        #print('  n_%i = %s' % (nodes[3], p4))
+        area_ratio = np.nan
+        #raise RuntimeError('bad quad...')
+    else:
+        area_ratioi1 = area / min_area
+        area_ratioi2 = max(areas) / area
+        area_ratio = max(area_ratioi1, area_ratioi2)
 
-    area1 = 0.5 * np.linalg.norm(np.cross(-v14, v21)) # v41 x v21
+    area1 = 0.5 * areas[0] # v41 x v21
     area2 = 0.5 * np.linalg.norm(np.cross(-v21, v32)) # v12 x v32
     area3 = 0.5 * np.linalg.norm(np.cross(v43, v32)) # v43 x v32
     area4 = 0.5 * np.linalg.norm(np.cross(v14, -v43)) # v14 x v34
     aavg = (area1 + area2 + area3 + area4) / 4.
-    taper_ratioi = (abs(area1 - aavg) + abs(area2 - aavg) +
-                    abs(area3 - aavg) + abs(area4 - aavg)) / aavg
+    taper_ratio = (abs(area1 - aavg) + abs(area2 - aavg) +
+                   abs(area3 - aavg) + abs(area4 - aavg)) / aavg
 
     #    e3
     # 4-------3
@@ -629,7 +654,7 @@ def quad_quality(p1, p2, p3, p4):
     # dot the local normal with the normal vector
     # then take the norm of that to determine the angle relative to the normal
     # then take the sign of that to see if we're pointing roughly towards the normal
-
+    #
     # np.sign(np.linalg.norm(np.dot(
     # a x b = ab sin(theta)
     # a x b / ab = sin(theta)
@@ -643,9 +668,9 @@ def quad_quality(p1, p2, p3, p4):
 
     theta = n * np.arccos(np.clip(
         [cos_theta1, cos_theta2, cos_theta3, cos_theta4], -1., 1.)) + theta_additional
-    min_thetai = theta.min()
-    max_thetai = theta.max()
-    dideal_thetai = max(max_thetai - PIOVER2, PIOVER2 - min_thetai)
+    min_theta = theta.min()
+    max_theta = theta.max()
+    dideal_theta = max(max_theta - PIOVER2, PIOVER2 - min_theta)
     #print('theta_max = ', theta_max)
 
     #if 0:
@@ -660,8 +685,8 @@ def quad_quality(p1, p2, p3, p4):
         #n2b = np.cross(v42, -v21) # v42 x v12
         #warp2 = np.dot(n2a, n2b) / (np.linalg.norm(n2a) * np.linalg.norm(n2b))
         #max_warp = max(np.arccos(warp1), np.arccos(warp2))
-    out = (areai, taper_ratioi, area_ratioi, max_skew, aspect_ratio,
-           min_thetai, max_thetai, dideal_thetai, min_edge_length)
+    out = (area, taper_ratio, area_ratio, max_skew, aspect_ratio,
+           min_theta, max_theta, dideal_theta, min_edge_length)
     return out
 
 def get_min_max_theta(faces, all_node_ids, nid_map, xyz_cid0):

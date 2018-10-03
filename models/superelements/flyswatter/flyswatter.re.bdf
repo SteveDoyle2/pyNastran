@@ -1,0 +1,359 @@
+$pyNastran: version=msc
+$pyNastran: punch=False
+$pyNastran: encoding=ascii
+$pyNastran: nnodes=4
+$pyNastran: nelements=1
+$EXECUTIVE CONTROL DECK
+$
+$ file - se1s101p.dat
+$
+$ all 7 s.e. brought in using begin super
+$ duplicate boundary grid ids
+$ each s.e. contains its own property description
+$
+SOL 101
+CEND
+$CASE CONTROL DECK
+DISPLACEMENT = ALL
+PARAM,WTMASS,.00259
+SUBTITLE = S.E. STATICS - RUN 1 - MULTIPLE LOADS
+TITLE = S.E. SAMPLE PROBLEM 1
+SUBCASE 101
+    LABEL = PRESSURE LOAD
+    $LOAD = 1
+SUBCASE 201
+    LABEL = 2# NORMAL LOADS
+    $LOAD = 2
+SUBCASE 301
+    LABEL = OPPOSING LOADS
+    $LOAD = 3
+$********************************************************************************
+BEGIN SUPER=1
+$PARAMS
+PARAM    AUTOSPC     YES
+PARAM     WTMASS  .00259
+$NODES
+GRDSET                                                         6
+GRID           5            -5.2      6.      0.
+GRID           6            -4.4      6.      0.
+$ boundary grids
+GRID           7            -3.6      6.      0.
+GRID           8            -2.8      6.      0.
+GRID           9             -2.      6.      0.
+GRID          10            -1.2      6.      0.
+GRID          11            -5.2     6.8      0.
+GRID          12            -4.4     6.8      0.
+GRID          13            -3.6     6.8      0.
+GRID          14            -2.8     6.8      0.
+GRID          15             -2.     6.8      0.
+GRID          16            -1.2     6.8      0.
+GRID          17            -5.2     7.6      0.
+GRID          18            -4.4     7.6      0.
+GRID          19            -3.6     7.6      0.
+GRID          20            -2.8     7.6      0.
+GRID          21             -2.     7.6      0.
+GRID          22            -1.2     7.6      0.
+GRID          23            -5.2     8.4      0.
+GRID          24            -4.4     8.4      0.
+GRID          25            -3.6     8.4      0.
+GRID          26            -2.8     8.4      0.
+GRID          27             -2.     8.4      0.
+GRID          28            -1.2     8.4      0.
+GRID          29            -5.2     9.2      0.
+GRID          30            -4.4     9.2      0.
+GRID          31            -3.6     9.2      0.
+GRID          32            -2.8     9.2      0.
+GRID          33             -2.     9.2      0.
+GRID          34            -1.2     9.2      0.
+GRID          35            -5.2     10.      0.
+GRID          36            -4.4     10.      0.
+GRID          37            -3.6     10.      0.
+GRID          38            -2.8     10.      0.
+GRID          39             -2.     10.      0.
+GRID          40            -1.2     10.      0.
+$ELEMENTS
+$ INCLUDE processed:  c:\nasa\m4\formats\git\pynastran\models\superelements\flyswatter\part1.inc
+CQUAD4         2       2       5       6      12      11
+CQUAD4         3       2       6       7      13      12
+CQUAD4         4       2       7       8      14      13
+CQUAD4         5       2       8       9      15      14
+CQUAD4         6       2       9      10      16      15
+CQUAD4         7       2      11      12      18      17
+CQUAD4         8       2      12      13      19      18
+CQUAD4         9       2      13      14      20      19
+CQUAD4        10       2      14      15      21      20
+CQUAD4        11       2      15      16      22      21
+CQUAD4        12       2      17      18      24      23
+CQUAD4        13       2      18      19      25      24
+CQUAD4        14       2      19      20      26      25
+CQUAD4        15       2      20      21      27      26
+CQUAD4        16       2      21      22      28      27
+CQUAD4        17       2      23      24      30      29
+CQUAD4        18       2      24      25      31      30
+CQUAD4        19       2      25      26      32      31
+CQUAD4        20       2      26      27      33      32
+CQUAD4        21       2      27      28      34      33
+CQUAD4        22       2      29      30      36      35
+CQUAD4        23       2      30      31      37      36
+CQUAD4        24       2      31      32      38      37
+CQUAD4        25       2      32      33      39      38
+CQUAD4        26       2      33      34      40      39
+$PROPERTIES
+$------------------------------------------------
+PSHELL         2       2     .05       2               2
+$MATERIALS
+MAT1           2    3.+7              .3    .283
+$LOADS
+$ INCLUDE processed:  c:\nasa\m4\formats\git\pynastran\models\superelements\flyswatter\load_part1.inc
+$ file - loadprt1.dat
+$ loads on s.e. 1
+$ LOAD CASE 1 - PRESSURE LOAD
+$PLOAD2         1     -1.      18    THRU      42
+$ LOAD CASE 2 - 2 POINT LOADS AT CORNERS
+FORCE          2      35              2.      0.      0.      1.
+$ LOAD CASE 3 - OPPOSING POINT LOADS AT CORNERS
+FORCE          3      35              2.      0.      0.      1.
+$********************************************************************************
+BEGIN SUPER=2
+$PARAMS
+PARAM    AUTOSPC     YES
+PARAM     WTMASS  .00259
+$NODES
+GRDSET                                                         6
+GRID          41             1.2      6.      0.
+GRID          42              2.      6.      0.
+$ boundary grids
+GRID          43             2.8      6.      0.
+GRID          44             3.6      6.      0.
+GRID          45             4.4      6.      0.
+GRID          46             5.2      6.      0.
+GRID          47             1.2     6.8      0.
+GRID          48              2.     6.8      0.
+GRID          49             2.8     6.8      0.
+GRID          50             3.6     6.8      0.
+GRID          51             4.4     6.8      0.
+GRID          52             5.2     6.8      0.
+GRID          53             1.2     7.6      0.
+GRID          54              2.     7.6      0.
+GRID          55             2.8     7.6      0.
+GRID          56             3.6     7.6      0.
+GRID          57             4.4     7.6      0.
+GRID          58             5.2     7.6      0.
+GRID          59             1.2     8.4      0.
+GRID          60              2.     8.4      0.
+GRID          61             2.8     8.4      0.
+GRID          62             3.6     8.4      0.
+GRID          63             4.4     8.4      0.
+GRID          64             5.2     8.4      0.
+GRID          65             1.2     9.2      0.
+GRID          66              2.     9.2      0.
+GRID          67             2.8     9.2      0.
+GRID          68             3.6     9.2      0.
+GRID          69             4.4     9.2      0.
+GRID          70             5.2     9.2      0.
+GRID          71             1.2     10.      0.
+GRID          72              2.     10.      0.
+GRID          73             2.8     10.      0.
+GRID          74             3.6     10.      0.
+GRID          75             4.4     10.      0.
+GRID          76             5.2     10.      0.
+$ELEMENTS
+$ INCLUDE processed:  c:\nasa\m4\formats\git\pynastran\models\superelements\flyswatter\part2.inc
+$ part2.dat
+CQUAD4        27       3      41      42      48      47
+CQUAD4        28       3      42      43      49      48
+CQUAD4        29       3      43      44      50      49
+CQUAD4        30       3      44      45      51      50
+CQUAD4        31       3      45      46      52      51
+CQUAD4        32       3      47      48      54      53
+CQUAD4        33       3      48      49      55      54
+CQUAD4        34       3      49      50      56      55
+CQUAD4        35       3      50      51      57      56
+CQUAD4        36       3      51      52      58      57
+CQUAD4        37       3      53      54      60      59
+CQUAD4        38       3      54      55      61      60
+CQUAD4        39       3      55      56      62      61
+CQUAD4        40       3      56      57      63      62
+CQUAD4        41       3      57      58      64      63
+CQUAD4        42       3      59      60      66      65
+CQUAD4        43       3      60      61      67      66
+CQUAD4        44       3      61      62      68      67
+CQUAD4        45       3      62      63      69      68
+CQUAD4        46       3      63      64      70      69
+CQUAD4        47       3      65      66      72      71
+CQUAD4        48       3      66      67      73      72
+CQUAD4        49       3      67      68      74      73
+CQUAD4        50       3      68      69      75      74
+CQUAD4        51       3      69      70      76      75
+$PROPERTIES
+$------------------------------------------------
+PSHELL         3       3     .05       3               3
+$MATERIALS
+MAT1           3    3.+7              .3    .283
+$LOADS
+$ INCLUDE processed:  c:\nasa\m4\formats\git\pynastran\models\superelements\flyswatter\load_part2.inc
+$ file - loadprt2.dat
+$ loads on s.e. 2
+$ LOAD CASE 1 - PRESSURE LOAD
+$PLOAD2         4     -1.      43    THRU      67
+$ LOAD CASE 2 - 2 POINT LOADS AT CORNERS
+FORCE          5      76              2.      0.      0.      1.
+$ LOAD CASE 3 - OPPOSING POINT LOADS AT CORNERS
+FORCE          6      76              2.      0.      0.     -1.
+$********************************************************************************
+BEGIN SUPER=3
+$PARAMS
+PARAM    AUTOSPC     YES
+PARAM     WTMASS  .00259
+$NODES
+GRDSET                                                         6
+$ boundary grids
+GRID          77            -3.6     4.4      0.
+GRID          78            -2.8     4.4      0.
+GRID          79            -3.6     5.2      0.
+GRID          80            -2.8     5.2      0.
+GRID          81            -3.6      6.      0.
+GRID          82            -2.8      6.      0.
+$ELEMENTS
+$ INCLUDE processed:  c:\nasa\m4\formats\git\pynastran\models\superelements\flyswatter\part3.inc
+$ part3.dat
+CQUAD4        52       4      77      78      80      79
+CQUAD4        53       4      79      80      82      81
+$PROPERTIES
+$------------------------------------------------
+PSHELL         4       4     .05       4               4
+$MATERIALS
+MAT1           4    3.+7              .3    .283
+$********************************************************************************
+BEGIN SUPER=4
+$PARAMS
+PARAM    AUTOSPC     YES
+PARAM     WTMASS  .00259
+$NODES
+GRDSET                                                         6
+$ boundary grids
+GRID          83             2.8     4.4      0.
+GRID          84             3.6     4.4      0.
+GRID          85             2.8     5.2      0.
+GRID          86             3.6     5.2      0.
+GRID          87             2.8      6.      0.
+GRID          88             3.6      6.      0.
+$ELEMENTS
+$ INCLUDE processed:  c:\nasa\m4\formats\git\pynastran\models\superelements\flyswatter\part4.inc
+CQUAD4        54       5      83      84      86      85
+CQUAD4        55       5      85      86      88      87
+$PROPERTIES
+$------------------------------------------------
+PSHELL         5       5     .05       5               5
+$MATERIALS
+MAT1           5    3.+7              .3    .283
+$********************************************************************************
+BEGIN SUPER=5
+$PARAMS
+PARAM    AUTOSPC     YES
+PARAM     WTMASS  .00259
+$NODES
+GRDSET                                                         6
+GRID          89            -3.6     3.6      0.
+GRID          90            -2.8     3.6      0.
+GRID          91             -2.     3.6      0.
+GRID          92            -1.2     3.6      0.
+GRID          93             -.4     3.6      0.
+$ boundary grids
+GRID          94            -3.6     4.4      0.
+GRID          95            -2.8     4.4      0.
+GRID          96             -2.     4.4      0.
+GRID          97            -1.2     4.4      0.
+GRID          98             -.4     4.4      0.
+$ELEMENTS
+$ INCLUDE processed:  c:\nasa\m4\formats\git\pynastran\models\superelements\flyswatter\part5.inc
+$ part5.dat
+CQUAD4        56       6      89      90      95      94
+CQUAD4        57       6      90      91      96      95
+CQUAD4        58       6      91      92      97      96
+CQUAD4        59       6      92      93      98      97
+$PROPERTIES
+$------------------------------------------------
+PSHELL         6       6     .05       6               6
+$MATERIALS
+MAT1           6    3.+7              .3    .283
+$********************************************************************************
+BEGIN SUPER=6
+$PARAMS
+PARAM    AUTOSPC     YES
+PARAM     WTMASS  .00259
+$NODES
+GRDSET                                                         6
+GRID          99              .4     3.6      0.
+GRID         100             1.2     3.6      0.
+GRID         101              2.     3.6      0.
+GRID         102             2.8     3.6      0.
+GRID         103             3.6     3.6      0.
+GRID         104              .4     4.4      0.
+GRID         105             1.2     4.4      0.
+GRID         106              2.     4.4      0.
+$ boundary grids
+GRID         107             2.8     4.4      0.
+GRID         108             3.6     4.4      0.
+$ELEMENTS
+$ INCLUDE processed:  c:\nasa\m4\formats\git\pynastran\models\superelements\flyswatter\part6.inc
+$ part6.dat
+CQUAD4        60       7      99     100     105     104
+CQUAD4        61       7     100     101     106     105
+CQUAD4        62       7     101     102     107     106
+CQUAD4        63       7     102     103     108     107
+$PROPERTIES
+$------------------------------------------------
+PSHELL         7       7     .05       7               7
+$MATERIALS
+MAT1           7    3.+7              .3    .283
+$********************************************************************************
+BEGIN SUPER=7
+$PARAMS
+PARAM    AUTOSPC     YES
+PARAM     WTMASS  .00259
+$NODES
+GRDSET                                                         6
+$	nid	cp	x	y	z	cd	ps
+GRID         109             -.4      0.      0.          123456        
+GRID         110              .4      0.      0.          123456        
+GRID         111             -.4      .9      0.
+GRID         112              .4      .9      0.
+GRID         113             -.4     1.8      0.
+GRID         114              .4     1.8      0.
+GRID         115             -.4     2.7      0.
+GRID         116              .4     2.7      0.
+$ boundary grids
+GRID         117             -.4     3.6      0.
+GRID         118              .4     3.6      0.
+$ELEMENTS
+$ INCLUDE processed:  c:\nasa\m4\formats\git\pynastran\models\superelements\flyswatter\part7.inc
+$ part7.dat
+CQUAD4        64       8     109     110     112     111
+CQUAD4        65       8     111     112     114     113
+CQUAD4        66       8     113     114     116     115
+CQUAD4        67       8     115     116     118     117
+$PROPERTIES
+PSHELL         8       8     .05       8               8
+$MATERIALS
+MAT1           8    3.+7              .3    .283
+$********************************************************************************
+BEGIN BULK
+$PARAMS
+PARAM       POST      -1
+PARAM     WTMASS .002588
+$NODES
+GRDSET                                                         6
+GRID           1             -.4     3.6      0.
+GRID           2              .4     3.6      0.
+GRID           3             -.4     4.4      0.
+GRID           4              .4     4.4      0.
+$ELEMENTS
+$$ main bulk data section
+$ INCLUDE processed:  c:\nasa\m4\formats\git\pynastran\models\superelements\flyswatter\part0.inc
+CQUAD4         1       1       1       2       4       3
+$PROPERTIES
+PSHELL         1       1     .05       1               1
+$MATERIALS
+MAT1           1    3.+7              .3    .283
+ENDDATA

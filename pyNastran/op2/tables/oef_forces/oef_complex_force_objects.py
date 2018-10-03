@@ -4,10 +4,6 @@ from itertools import cycle
 from six import integer_types
 import numpy as np
 from numpy import zeros, searchsorted, allclose
-try:
-    import pandas as pd  # type: ignore
-except ImportError:
-    pass
 
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
 from pyNastran.f06.f06_formatting import write_imag_floats_13e, write_float_12e # get_key0,
@@ -79,6 +75,7 @@ class ComplexRodForceArray(ScalarObject):
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
+        import pandas as pd
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
         self.data_frame = pd.Panel(self.data, items=column_values,
@@ -306,6 +303,7 @@ class ComplexCShearForceArray(ScalarObject):
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
+        import pandas as pd
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
         self.data_frame = pd.Panel(self.data, items=column_values,
@@ -561,6 +559,7 @@ class ComplexSpringDamperForceArray(ScalarObject):
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
+        import pandas as pd
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
         self.data_frame = pd.Panel(self.data, items=column_values,
@@ -987,6 +986,7 @@ class ComplexPlateForceArray(ScalarObject):
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
+        import pandas as pd
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
         self.data_frame = pd.Panel(self.data, items=column_values,
@@ -1219,6 +1219,7 @@ class ComplexPlate2ForceArray(ScalarObject):
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
+        import pandas as pd
         headers = self.get_headers()
         assert 0 not in self.element
         #print(self.element_node)
@@ -1484,6 +1485,7 @@ class ComplexCBarForceArray(ScalarObject):
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
+        import pandas as pd
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
         self.data_frame = pd.Panel(self.data, items=column_values,
@@ -1756,6 +1758,7 @@ class ComplexCBeamForceArray(ScalarObject):
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
+        import pandas as pd
         headers = self.get_headers()[1:]
         column_names, column_values = self._build_dataframe_transient_header()
         element_location = [
@@ -2022,6 +2025,7 @@ class ComplexCBendForceArray(ScalarObject):  # 69-CBEND
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
+        import pandas as pd
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
         element = self.element_node[:, 0]
@@ -2280,6 +2284,7 @@ class ComplexSolidPressureForceArray(ScalarObject):
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
+        import pandas as pd
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
         self.data_frame = pd.Panel(self.data, items=column_values,
@@ -2510,6 +2515,7 @@ class ComplexCBushForceArray(ScalarObject):
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
+        import pandas as pd
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
         self.data_frame = pd.Panel(self.data, items=column_values,
@@ -2813,6 +2819,7 @@ class ComplexCBeamForceVUArray(ScalarObject):  # 191-VUBEAM
 
     #def build_dataframe(self):
         #"""creates a pandas dataframe"""
+        #import pandas as pd
         #headers = self.get_headers()
 
         #nelements = self.element_node.shape[0] // 2

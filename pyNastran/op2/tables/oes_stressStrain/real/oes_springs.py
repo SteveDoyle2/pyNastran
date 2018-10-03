@@ -8,10 +8,7 @@ from numpy import zeros, array_equal
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object, SORT2_TABLE_NAME_MAP)
 from pyNastran.f06.f06_formatting import write_floats_13e, write_float_13e, _eigenvalue_header
-try:
-    import pandas as pd  # type: ignore
-except ImportError:
-    pass
+
 
 class RealSpringArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -82,6 +79,7 @@ class RealSpringArray(OES_Object):
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
+        import pandas as pd
         headers = self.get_headers()
         if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()

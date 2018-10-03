@@ -9,11 +9,6 @@ import numpy as np
 from numpy import zeros, where, searchsorted
 from numpy.linalg import eigh  # type: ignore
 
-try:
-    import pandas as pd  # type: ignore
-except ImportError:
-    pass
-
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 
@@ -85,6 +80,7 @@ class RandomSolidArray(OES_Object):
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
+        import pandas as pd
         headers = self.get_headers()
         # TODO: cid?
         element_node = [self.element_node[:, 0], self.element_node[:, 1]]

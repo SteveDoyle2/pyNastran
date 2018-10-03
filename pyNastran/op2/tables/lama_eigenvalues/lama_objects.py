@@ -5,10 +5,6 @@ import numpy as np
 
 from pyNastran.op2.result_objects.op2_objects import BaseScalarObject
 from pyNastran.f06.f06_formatting import write_floats_13e
-try:
-    import pandas as pd  # type: ignore
-except ImportError:
-    pass
 
 
 class RealEigenvalues(BaseScalarObject):
@@ -68,6 +64,7 @@ class RealEigenvalues(BaseScalarObject):
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
+        import pandas as pd
         headers = self.get_headers()
         #cycle = sqrt(abs(eigenvalue)) / (2. * pi)
         data = np.vstack([self.eigenvalues, self.radians, self.cycles,
@@ -188,6 +185,7 @@ class ComplexEigenvalues(BaseScalarObject):
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
+        import pandas as pd
         headers = self.get_headers()
 
         cdata = self.eigenvalues
@@ -293,6 +291,7 @@ class BucklingEigenvalues(BaseScalarObject):
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
+        import pandas as pd
         headers = self.get_headers()
         nmodes = len(self.eigenvalues)
 

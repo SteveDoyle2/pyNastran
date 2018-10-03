@@ -5,10 +5,6 @@ from six import integer_types
 import numpy as np
 from numpy import zeros, searchsorted, allclose
 
-try:
-    import pandas as pd  # type: ignore
-except ImportError:
-    pass
 
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
 from pyNastran.f06.f06_formatting import (
@@ -110,6 +106,7 @@ class FailureIndices(RealForceObject):
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
+        import pandas as pd
         headers = self.get_headers()
         if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
@@ -231,6 +228,7 @@ class RealSpringDamperForceArray(RealForceObject):
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
+        import pandas as pd
         headers = self.get_headers()
         if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
@@ -513,6 +511,7 @@ class RealRodForceArray(RealForceObject):
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
+        import pandas as pd
         headers = self.get_headers()
         if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
@@ -744,6 +743,7 @@ class RealCBeamForceArray(RealForceObject):
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
+        import pandas as pd
         headers = self.get_headers()
         element_location = [
             self.element_node[:, 0],
@@ -987,6 +987,7 @@ class RealCShearForceArray(RealForceObject):
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
+        import pandas as pd
         headers = self.get_headers()
         if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
@@ -1216,6 +1217,7 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
+        import pandas as pd
         headers = self.get_headers()
         if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
@@ -1425,6 +1427,7 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
+        import pandas as pd
         headers = self.get_headers()
         assert 0 not in self.element
         if self.nonlinear_factor not in (None, np.nan):
@@ -1647,6 +1650,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
+        import pandas as pd
         headers = self.get_headers()
         element_node = [self.element_node[:, 0], self.element_node[:, 1]]
         if self.nonlinear_factor not in (None, np.nan):
@@ -1946,6 +1950,7 @@ class RealCBarForceArray(RealForceObject):  # 34-CBAR
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
+        import pandas as pd
         headers = self.get_headers()
         if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
@@ -2137,6 +2142,7 @@ class RealConeAxForceArray(RealForceObject):
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
+        import pandas as pd
         headers = self.get_headers()
         if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
@@ -2337,6 +2343,7 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
+        import pandas as pd
         headers = self.get_headers()
         element_location = [
             self.element,
@@ -2532,6 +2539,7 @@ class RealCGapForceArray(RealForceObject):  # 38-CGAP
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
+        import pandas as pd
         headers = self.get_headers()
         if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
@@ -2701,6 +2709,7 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
+        import pandas as pd
         element = self.element_node[:, 0]
         headers = self.get_headers()
         if self.nonlinear_factor not in (None, np.nan):
@@ -3172,6 +3181,7 @@ class RealCBeamForceVUArray(RealForceObject):  # 191-VUBEAM
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
+        import pandas as pd
         headers = self.get_headers()
         if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
@@ -3406,6 +3416,7 @@ class RealCBushForceArray(RealForceObject):
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
+        import pandas as pd
         headers = self.get_headers()
         if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
@@ -3617,6 +3628,7 @@ class RealForceVU2DArray(RealForceObject):  # 189-VUQUAD, 190-VUTRIA
     def build_dataframe(self):
         """creates a pandas dataframe"""
         return
+        #import pandas as pd
         #headers = self.get_headers()
         #assert 0 not in self.element_node
         #if self.nonlinear_factor not in (None, np.nan):

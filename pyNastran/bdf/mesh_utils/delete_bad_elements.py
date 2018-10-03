@@ -354,7 +354,7 @@ def element_quality(model, nids=None, xyz_cid0=None, nid_map=None):
                 max_skew_angle, max_aspect_ratio,
                 area_ratio, taper_ratio, min_edge_length
         values : The result is ``np.nan`` if element type does not define
-                 the parameter.  For example, CELAS1 doesn't have an 
+                 the parameter.  For example, CELAS1 doesn't have an
                  aspect ratio.
 
     Notes
@@ -500,7 +500,7 @@ def element_quality(model, nids=None, xyz_cid0=None, nid_map=None):
             nids = elem.nodes
             inids = np.searchsorted(all_nids, nids)
             p1, p2, p3, p4 = xyz_cid0[inids, :]
-            out = quad_quality(p1, p2, p3, p4)
+            out = quad_quality(elem, p1, p2, p3, p4)
             (areai, taper_ratioi, area_ratioi, max_skew, aspect_ratio,
              min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
 
@@ -526,7 +526,7 @@ def element_quality(model, nids=None, xyz_cid0=None, nid_map=None):
             else:
                 inids = np.searchsorted(all_nids, nids)
                 p1, p2, p3, p4 = xyz_cid0[inids[:4], :]
-            out = quad_quality(p1, p2, p3, p4)
+            out = quad_quality(elem, p1, p2, p3, p4)
             (areai, taper_ratioi, area_ratioi, max_skew, aspect_ratio,
              min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
             #normali = np.cross(p1 - p3, p2 - p4)
@@ -535,7 +535,7 @@ def element_quality(model, nids=None, xyz_cid0=None, nid_map=None):
             nids = elem.nodes
             inids = np.searchsorted(all_nids, nids)
             p1, p2, p3, p4 = xyz_cid0[inids, :]
-            out = quad_quality(p1, p2, p3, p4)
+            out = quad_quality(elem, p1, p2, p3, p4)
             (areai, taper_ratioi, area_ratioi, max_skew, aspect_ratio,
              min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
 

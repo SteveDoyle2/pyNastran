@@ -172,7 +172,7 @@ def run_docopt():
 
     if data['--qt'] is not None:
         qt = data['--qt'].lower()
-        assert qt in ['pyside', 'pyqt4', 'pyqt5'], 'qt=%r' % qt
+        assert qt in ['pyside', 'pyqt4', 'pyqt5', 'pyside2'], 'qt=%r' % qt
         os.environ.setdefault('QT_API', qt)
 
     for key, value in sorted(data.items()):

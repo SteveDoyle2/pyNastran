@@ -6,10 +6,6 @@ from six import integer_types
 import numpy as np
 ints = (int, np.int32)
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-try:
-    import pandas as pd  # type: ignore
-except ImportError:
-    pass
 
 
 class RealCPLSTRNPlateArray(OES_Object):

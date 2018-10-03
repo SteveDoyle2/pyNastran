@@ -4,10 +4,6 @@ from six import integer_types
 import numpy as np
 from numpy import zeros, searchsorted, unique, ravel
 
-try:
-    import pandas as pd  # type: ignore
-except ImportError:
-    pass
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
@@ -106,6 +102,7 @@ class RandomCompositePlateArray(OES_Object):
         minor_axis / headers = [T1, T2, T3, R1, R2, R3]
         name = mode
         """
+        import pandas as pd
         headers = self.get_headers()
         element_layer = [self.element_layer[:, 0], self.element_layer[:, 1]]
         if self.nonlinear_factor not in (None, np.nan):

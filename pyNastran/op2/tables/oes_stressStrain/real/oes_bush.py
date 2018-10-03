@@ -7,10 +7,6 @@ ints = (int, np.int32)
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
-try:
-    import pandas as pd  # type: ignore
-except ImportError:
-    pass
 
 
 class RealBushArray(OES_Object):
@@ -97,6 +93,7 @@ class RealBushArray(OES_Object):
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
+        import pandas as pd
         headers = self.get_headers()
         if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()

@@ -116,7 +116,7 @@ class MainWindow(GuiCommon2, NastranIO):
         #fmt_order=fmt_order, inputs=inputs,
         #html_logging=html_logging,
 
-        if qt_version in ['pyqt4', 'pyqt5', 'pyside']:
+        if qt_version in ['pyqt4', 'pyqt5', 'pyside', 'pyside2']:
             NastranIO.__init__(self)
         else:
             raise NotImplementedError('qt_version=%r is not supported' % qt_version)
@@ -203,6 +203,12 @@ class MainWindow(GuiCommon2, NastranIO):
         """loads the pyNastran docs website"""
         import webbrowser
         url = pyNastran.__docs__
+        webbrowser.open(url)
+
+    def open_issue(self):
+        """loads the pyNastran issue tracker"""
+        import webbrowser
+        url = pyNastran.__issue__
         webbrowser.open(url)
 
     def open_discussion_forum(self):
