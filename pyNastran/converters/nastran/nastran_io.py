@@ -395,7 +395,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 del name
         return skip_reading
 
-    def get_xyz_in_coord(self, model, cid=0, fdtype='float32'):
+    def get_xyz_in_coord(self, model, cid=0, fdtype='float32', check_mirror=True):
         """
         Creates the grid points efficiently
 
@@ -403,12 +403,12 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         """
         models = {0 : model}
         models.update(model.superelement_models)
+        nmodels = len(models)
 
         xyz_cid0 = {}
         nid_cp_cd = {}
         icd_transform = {}
         nid_map = {}
-        nid_map2 = {}
         inode = 0
         for super_id, modeli in sorted(models.items()):
             out = modeli.get_displacement_index_xyz_cp_cd(
@@ -416,7 +416,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             icd_transformi, icp_transformi, xyz_cpi, nid_cp_cdi = out
             icd_transform[super_id] = icd_transformi
 
-            #print("transform_xyzcp_to_xyz_cid")
             xyz_cid0i = modeli.transform_xyzcp_to_xyz_cid(
                 xyz_cpi, nid_cp_cdi[:, 0], icp_transformi, cid=cid,
                 in_place=False)
@@ -441,22 +440,14 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     #print('EPOINT comment=%r _comment=%r' % (spoint.comment, spoint._comment))
             #sys.stdout.flush()
 
-            nid_mapi = self.gui.nid_map
-            if inode == 0:
-                for i, nid in enumerate(nid_cp_cdi[:, 0]):
-                    nid_mapi[nid] = i
-            else:
-                for i, nid in enumerate(nid_cp_cdi[:, 0]):
-                    nid_mapi[nid] = i + inode
-            inode += nid_cp_cdi.shape[0]
-            self._add_nastran_spoints_to_grid(modeli.spoints, nid_mapi)
-
-            nid_map2.update(nid_mapi)
-            nid_map[super_id] = nid_mapi
+            #------------------------------
             nid_cp_cd[super_id] = nid_cp_cdi
             xyz_cid0[super_id] = xyz_cid0i
 
         if len(xyz_cid0) == 1:
+            make_nid_map(self.gui.nid_map, nid_cp_cdi[:, 0])
+            self._add_nastran_spoints_to_grid(modeli.spoints, nid_mapi)
+
             self.icd_transform = icd_transform[0]
             return xyz_cid0[0], nid_cp_cd[0]
 
@@ -470,6 +461,90 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         xyz_cid0_out = np.vstack(xyz_cid0_full)
         nid_cp_cd_out = np.vstack(nid_cp_cd_full)
+
+        all_nids = nid_cp_cd_out[:, 0]
+        unids = np.unique(all_nids)
+
+        if not len(all_nids) == len(unids):
+            if model.sebulk and check_mirror:
+                from pyNastran.bdf.mesh_utils.bdf_renumber import superelement_renumber
+                bdf_filename_out = 'spike.bdf'
+                _model = superelement_renumber(
+                    model, bdf_filename_out=bdf_filename_out,
+                    size=8, is_double=False, starting_id_dict=None,
+                    cards_to_skip=None, log=None, debug=False)
+
+                _model2 = BDF(debug=None, log=self.log, mode='msc')
+                _model2.read_bdf(bdf_filename=bdf_filename_out,
+                                 validate=False, xref=False, punch=False, read_includes=True,
+                                 save_file_structure=False, encoding=model._encoding)
+                model.uncross_reference()
+                model.nodes = _model2.nodes
+                model.elements = _model2.elements
+                model.properties = _model2.properties
+                model.materials = _model2.materials
+                model.loads = _model2.loads
+                model.seloc = _model2.seloc
+                model.superelement_models = _model2.superelement_models
+                model.write_bdf('spike2.bdf')
+                xref_nodes = True
+                xref_loads = True
+                model.safe_cross_reference(
+                    xref=True,
+                    xref_nodes=xref_nodes,
+                    xref_elements=True,
+                    xref_nodes_with_elements=False,
+                    xref_properties=True,
+                    xref_masses=True,
+                    xref_materials=False,
+                    xref_loads=xref_loads,
+                    xref_constraints=False,
+                    xref_optimization=False,
+                    xref_aero=True,
+                    xref_sets=False,
+                    create_superelement_geometry=False,
+                )
+                # from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber, get_starting_ids_dict_from_mapper
+                #starting_id_dict = { # todo: hardcoded
+                    #'nid' : unids.max(),
+                    #'eid' : 100000,
+                    #'cid' : 100000,
+                    #'pid' : 100000,
+                #}
+                #for seid, sebulk in sorted(model.sebulk.items()):
+                    #if sebulk.Type == 'MIRROR':
+                        #print('renumbering mirror seid=%s -> %s' % (sebulk.rseid, seid))
+                        #superelement = model.superelement_models[seid]
+                        #bdf_filename_out = 'super_%i.bdf' % seid
+                        #_model, mapper = bdf_renumber(
+                            #superelement, bdf_filename_out, size=8, is_double=False,
+                            #starting_id_dict=starting_id_dict, round_ids=False,
+                            #cards_to_skip=None, log=self.log, debug=False)
+                        #starting_id_dict = get_starting_ids_dict_from_mapper(
+                            #_model, mapper)
+                        #superelement2 = BDF(debug=True, log=self.log, mode='msc')
+                        #superelement2.read_bdf(bdf_filename_out)
+                        #model.superelement_models[seid] = superelement2
+                        ##os.remove(bdf_filename_out)
+                    #else:  # pragma: no cover
+                        #raise NotImplementedError(sebulk)
+                #model.write_bdf('spike.bdf')
+                return self.get_xyz_in_coord(model, cid=0, fdtype=fdtype, check_mirror=False)
+
+            msg = ('superelement nodes are not unique; use superelement_renumber\n'
+                   'renumbering; duplicate nids=\n%s' % nonunique_ints(all_nids))
+            raise NotImplementedError(msg)
+
+        if not is_monotonic(all_nids):
+            #msg = ('superelement nodes are not monotonic; use superelement_renumber\n'
+                   #'renumbering; nids=\n%s' % all_nids)
+            #self.log.warning(msg)
+
+            isort = np.argsort(all_nids)
+            xyz_cid0_out = xyz_cid0_out[isort, :]
+            nid_cp_cd_out = nid_cp_cd_out[isort, :]
+
+        make_nid_map(self.gui.nid_map, nid_cp_cd_out[:, 0])
         return xyz_cid0_out, nid_cp_cd_out
 
     def _transform_xyz_cid0_by_seloc(self, model, super_id, xyz_cid0):
@@ -502,7 +577,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             del model.coords[cid + 2]
 
             # TODO: not 100% on this xform
-            xyz_cid0 = xyz_cid0i.dot(xform) + dorigin
+            xyz_cid0 = xyz_cid0.dot(xform) + dorigin
         return xyz_cid0
 
     def get_xyz_in_coord_vectorized(self, model, cid=0, fdtype='float32'):
@@ -577,6 +652,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             xref_optimization=False,
             xref_aero=True,
             xref_sets=False,
+            create_superelement_geometry=True,
         )
         return model, xref_nodes
 
@@ -893,8 +969,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                         for iply in range(prop.nplies):
                             mids[ipid, iply+1] = prop.Mid(iply)
                             thickness[ipid, iply+1] = prop.Thickness(iply)
-                    #else:
-                        #self.log.error('nplies\n%s' % str(prop))
+                    else:
+                        self.log.error('skipping\n%s' % str(prop))
                     iupid += 1
 
             if len(model.conrod):
@@ -3095,7 +3171,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             (0, 6, 5, 4), # (1, 7, 6, 5),
         )
 
-        nelements = len(model.elements)
+        elements, nelements = _get_elements_nelements_unvectorized(model)
         xyz_cid0 = self.xyz_cid0
         pids_array = np.zeros(nelements, dtype='int32')
         eids_array = np.zeros(nelements, dtype='int32')
@@ -3155,7 +3231,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         skipped_etypes = set([])
         all_nids = nid_cp_cd[:, 0]
         ieid = 0
-        for eid, elem in sorted(iteritems(model.elements)):
+        for eid, elem in sorted(iteritems(elements)):
             if ieid % 5000 == 0 and ieid > 0:
                 print('  map_elements = %i' % ieid)
             etype = elem.type
@@ -4185,14 +4261,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         # pid = pids_dict[eid]
         pids_dict = {}
 
-        nelements = len(model.elements)
-        #eid_map = self.gui.eid_map
-        elements = model.elements
-
-        for superelement in model.superelement_models.values():
-            nelements += len(superelement.elements)
-            elements.update(superelement.elements)
-            #eid_map.update(superelement.eid_map)
+        elements, nelements = _get_elements_nelements_unvectorized(model)
 
         pids = np.zeros(nelements, 'int32')
         material_coord = np.zeros(nelements, 'int32')
@@ -4433,7 +4502,14 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
                 eid_to_nid_map[eid] = node_ids
 
-                n1, n2, n3, n4 = [nid_map[nid] for nid in node_ids]
+                try:
+                    n1, n2, n3, n4 = [nid_map[nid] for nid in node_ids]
+                except KeyError:  # pragma: no cover
+                    print("node_ids =", node_ids)
+                    print(str(element))
+                    #print('nid_map = %s' % nid_map)
+                    raise
+                    #continue
                 p1 = xyz_cid0[n1, :]
                 p2 = xyz_cid0[n2, :]
                 p3 = xyz_cid0[n3, :]
@@ -4460,8 +4536,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 self.eid_to_nid_map[eid] = node_ids[:4]
 
                 n1, n2, n3, n4 = [nid_map[nid] for nid in node_ids[:4]]
-                print('node_ids = ', node_ids)
-                print(xyz_cid0)
                 p1 = xyz_cid0[n1, :]
                 p2 = xyz_cid0[n2, :]
                 p3 = xyz_cid0[n3, :]
@@ -4797,12 +4871,15 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 eid_to_nid_map[eid] = node_ids
                 elem = vtk.vtkLine()
                 try:
-                    elem.GetPointIds().SetId(0, nid_map[node_ids[0]])
-                    elem.GetPointIds().SetId(1, nid_map[node_ids[1]])
-                except KeyError:
+                    n1, n2 = [nid_map[nid] for nid in node_ids]
+                except KeyError:  # pragma: no cover
                     print("node_ids =", node_ids)
                     print(str(element))
-                    continue
+                    print('nid_map = %s' % nid_map)
+                    raise
+                point_ids = elem.GetPointIds()
+                point_ids.SetId(0, n1)
+                point_ids.SetId(1, n2)
                 grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
             elif etype == 'CBEND':
@@ -5484,7 +5561,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             return icase, upids, pcomp, pshell, (is_pshell, is_pcomp)
 
         prop_types_with_mid = [
-            'PSOLID', 'PSHEAR',
+            'PSOLID',
             'PROD', 'PTUBE', 'PBAR', 'PBARL', 'PBEAM', 'PBEAML',
             'PBEND',
         ]
@@ -5540,6 +5617,11 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 i = np.where(pids == pid)[0]
                 mid = prop.mid_ref.mid
                 mids[i, 0] = mid
+            elif prop.type == 'PSHEAR':
+                i = np.where(pids == pid)[0]
+                mid = prop.mid_ref.mid
+                mids[i, 0] = mid
+                thickness[i, 0] = prop.Thickness()
             elif prop.type == 'PSHELL':
                 i = np.where(pids == pid)[0]
                 mid1 = prop.Mid1()
@@ -6435,3 +6517,31 @@ def store_warning(log, store_msg, msg):
     else:
         log.warning(msg)
     return out_msg
+
+
+def is_monotonic(int_array):
+    """is the array monotonic?"""
+    return np.all(int_array[1:] >= int_array[:-1])
+
+def nonunique_ints(int_array):
+    """what are the duplicated values?"""
+    counts = np.bincount(int_array)
+    nonunique = np.where(counts > 1)[0]
+    return nonunique
+
+def make_nid_map(nid_map, nids):
+    """make the node map"""
+    for i, nid in enumerate(nids):
+        nid_map[nid] = i
+    return nid_map
+
+def _get_elements_nelements_unvectorized(model):
+    nelements = len(model.elements)
+    #eid_map = self.gui.eid_map
+    elements = model.elements
+
+    for superelement in model.superelement_models.values():
+        nelements += len(superelement.elements)
+        elements.update(superelement.elements)
+        #eid_map.update(superelement.eid_map)
+    return elements, nelements

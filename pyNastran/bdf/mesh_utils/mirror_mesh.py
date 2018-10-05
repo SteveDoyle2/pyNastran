@@ -34,6 +34,18 @@ def get_model(bdf_filename, log=None, debug=True):
                          debug=debug, mode='msc')
     return model
 
+def bdf_mirror_plane(bdf_filename, plane, mirror_model=None, log=None, debug=True, use_nid_offset=True):
+    """mirrors a model about an arbitrary plane"""
+    model = get_model(bdf_filename, log=log, debug=debug)
+    if mirror_model is None:
+        mirror_model = BDF(debug=debug, log=log, mode='msc')
+
+    nid_offset, plane = _mirror_nodes_plane(model, mirror_model, plane, use_nid_offset=use_nid_offset)
+    eid_offset = _mirror_elements(model, mirror_model, nid_offset)
+    #_mirror_loads(model, nid_offset, eid_offset)
+    return model, mirror_model, nid_offset, eid_offset
+
+
 def bdf_mirror(bdf_filename, plane='xz', log=None, debug=True):
     """
     Mirrors the model about the symmetry plane
@@ -60,8 +72,9 @@ def bdf_mirror(bdf_filename, plane='xz', log=None, debug=True):
 
     """
     model = get_model(bdf_filename, log=log, debug=debug)
+    mirror_model = model
     nid_offset, plane = _mirror_nodes(model, plane=plane)
-    eid_offset = _mirror_elements(model, nid_offset)
+    eid_offset = _mirror_elements(model, mirror_model, nid_offset)
     _mirror_loads(model, nid_offset, eid_offset)
     _mirror_aero(model, nid_offset, plane=plane)
     return model, nid_offset, eid_offset
@@ -151,6 +164,58 @@ def _mirror_nodes(model, plane='xz'):
             model.add_grid(nid2, xyz2, cp=0, cd=node.cd, ps=node.ps, seid=node.seid)
     return nid_offset, plane
 
+def _mirror_nodes_plane(model, mirror_model, plane, use_nid_offset=True):
+    """
+    Mirrors the GRIDs
+
+    .. warning:: doesn't consider coordinate systems;
+                  it could, but you'd need 20 new coordinate systems
+    .. warning:: doesn't mirror SPOINTs, EPOINTs
+
+    https://mathinsight.org/distance_point_plane
+    """
+    nid_offset = 0
+
+    if model.nodes:
+        all_nodes, xyz_cid0 = model.get_xyz_in_coord_no_xref(cid=0, fdtype='float64', sort_ids=True)
+        cid = max(model.coords) + 1
+        cord2r = model.add_cord2r(cid, plane[0, :], plane[1, :], plane[2, :])
+        del model.coords[cid]
+
+        origin = cord2r.origin
+        normal = cord2r.beta()[2, :]
+        vector = xyz_cid0 - origin
+        assert xyz_cid0.shape == vector.shape, 'xyz_cid0.shape=%s; vector.shape=%s' % (xyz_cid0.shape, vector.shape)
+        v_dot_n = vector * normal[np.newaxis, :]
+        assert v_dot_n.shape == vector.shape, 'v_dot_n.shape=%s; vector.shape=%s' % (v_dot_n.shape, vector.shape)
+        distance = np.linalg.norm(v_dot_n, axis=0)
+        assert v_dot_n.shape[0] == len(distance), 'v_dot_n.shape=%s; distance.shape=%s' % (v_dot_n.shape, distance.shape)
+
+        max_distance = distance.max()
+        imax = np.where(distance == max_distance)[0][0]
+        distance0 = distance[imax]
+        xyz0 = xyz_cid0[imax, :] + distance0 * normal
+        xyz_m = xyz_cid0[imax, :] - distance0 * normal
+        v0_dot_n = xyz0 * normal
+        distance_plus = np.linalg.norm(v0_dot_n)
+        print(normal, origin)
+        print(xyz_cid0[imax, :], xyz0, xyz_m, distance0, distance_temp, end='')
+
+        if distance_plus > 1.1*distance0:
+            xyz_cid0_2 = xyz_cid0 - 2 * distance * normal[np.newaxis, :]
+            print(' minus')
+        else:
+            xyz_cid0_2 = xyz_cid0 + 2 * distance * normal[np.newaxis, :]
+            print(' plus')
+
+        if use_nid_offset:
+            nid_offset = max(all_nodes)
+        for nid, xyz2 in zip(all_nodes, xyz_cid0_2):
+            node = model.nodes[nid]
+            nid2 = nid + nid_offset
+            mirror_model.add_grid(nid2, xyz2, cp=0, cd=node.cd, ps=node.ps, seid=node.seid)
+    return nid_offset, plane
+
 def _plane_to_iy(plane):
     """gets the index fo the mirror plane"""
     plane = plane.strip().lower()
@@ -164,7 +229,7 @@ def _plane_to_iy(plane):
         raise NotImplementedError("plane=%r and must be 'yz', 'xz', or 'xy'." % plane)
     return iy, plane
 
-def _mirror_elements(model, nid_offset):
+def _mirror_elements(model, mirror_model, nid_offset, use_eid_offset=True):
     """
     Mirrors the elements
 
@@ -184,11 +249,13 @@ def _mirror_elements(model, nid_offset):
     """
     eid_max_elements = 0
     eid_max_rigid = 0
-    if model.elements:
-        eid_max_elements = max(model.elements.keys())
-    if model.rigid_elements:
-        eid_max_rigid = max(model.rigid_elements.keys())
+    if use_eid_offset:
+        if model.elements:
+            eid_max_elements = max(model.elements.keys())
+        if model.rigid_elements:
+            eid_max_rigid = max(model.rigid_elements.keys())
     eid_offset = max(eid_max_elements, eid_max_rigid)
+
     if model.elements:
         shells = set([
             'CTRIA3', 'CQUAD4', 'CTRIA6', 'CQUAD8', 'CQUAD',
@@ -227,8 +294,8 @@ def _mirror_elements(model, nid_offset):
             eid_mirror = eid + eid_offset
             fields = element.repr_fields()
             fields[1] = eid_mirror
-            model.add_card(fields, etype)
-            element2 = model.elements[eid_mirror]
+            mirror_model.add_card(fields, etype)
+            element2 = mirror_model.elements[eid_mirror]
 
             if etype in shells:
                 nodes = [node_id + nid_offset for node_id in nodes]
@@ -307,10 +374,10 @@ def _mirror_elements(model, nid_offset):
 
             eid_mirror = eid + eid_offset
             if rigid_element.type == 'RBE2':
-                rigid_element2 = model.add_rbe2(eid_mirror, Gn_mirror, rigid_element.cm,
-                                                Gmi_node_ids_mirror)
+                rigid_element2 = mirror_model.add_rbe2(eid_mirror, Gn_mirror, rigid_element.cm,
+                                                       Gmi_node_ids_mirror)
             elif rigid_element.type == 'RBE3':
-                rigid_element2 = model.add_rbe3(
+                rigid_element2 = mirror_model.add_rbe3(
                     eid_mirror, ref_grid_id_mirror, rigid_element.refc, rigid_element.weights,
                     rigid_element.comps, Gijs_mirror
                 )

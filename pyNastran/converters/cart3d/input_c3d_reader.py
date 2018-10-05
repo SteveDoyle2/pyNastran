@@ -51,10 +51,10 @@ class InputC3dReader(object):
                 packs[pack_key].append(pack_values)
 
         for key, values in sorted(packs.items()):
-            self.log.debug(key)
+            self.log.debug(str(key))
             for value in values:
                 self.log.debug('    %s' % value)
-        self.log.debug(packs[1])
+        self.log.debug(str(packs[1]))
         unused_geometry_filename = packs[1][0]
         xyz_size = [float(val) for val in packs[2][1]]
         xyz_dim = [int(val) for val in packs[3][0]]
@@ -69,7 +69,7 @@ class InputC3dReader(object):
         x = linspace(0., 1., num=xdim)
         y = linspace(0., 1., num=ydim)
         z = linspace(0., 1., num=zdim)
-        self.log.debug(x)
+        self.log.debug(str(x))
 
         # organized in x, y, z planes order
         planes = (
@@ -97,7 +97,7 @@ class InputC3dReader(object):
             p2 = array(p2, dtype='float32')
             p3 = array(p3, dtype='float32')
             p4 = array(p4, dtype='float32')
-            self.log.debug(plane[:1])
+            self.log.debug(str(plane[:1]))
 
             pointsi, elementsi = points_elements_from_quad_points(p1, p2, p3, p4, xi, yi)
             points.append(pointsi)

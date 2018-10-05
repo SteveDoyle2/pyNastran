@@ -163,7 +163,7 @@ class PreferencesWindow(PyDialog):
         self.coord_scale_button = QPushButton("Default")
 
         self.coord_scale_edit = QDoubleSpinBox(self)
-        self.coord_scale_edit.setRange(0.1, 100.)
+        self.coord_scale_edit.setRange(0.1, 1000.)
         self.coord_scale_edit.setDecimals(3)
         self.coord_scale_edit.setSingleStep(2.5)
         self.coord_scale_edit.setValue(self._coord_scale)
@@ -172,7 +172,7 @@ class PreferencesWindow(PyDialog):
         self.coord_text_scale_button = QPushButton("Default")
 
         self.coord_text_scale_edit = QDoubleSpinBox(self)
-        self.coord_text_scale_edit.setRange(0.1, 200.)
+        self.coord_text_scale_edit.setRange(0.1, 2000.)
         self.coord_text_scale_edit.setDecimals(3)
         self.coord_text_scale_edit.setSingleStep(2.5)
         self.coord_text_scale_edit.setValue(self._coord_text_scale)

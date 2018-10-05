@@ -43,6 +43,7 @@ class SafeXrefMesh(XrefMesh):
                              xref_aero=True,
                              xref_sets=True,
                              xref_optimization=True,
+                             create_superelement_geometry=False,
                              debug=True,
                              word=''):
         """
@@ -80,7 +81,7 @@ class SafeXrefMesh(XrefMesh):
             self._cross_reference_optimization()
         if xref_nodes_with_elements:
             self._cross_reference_nodes_with_elements()
-        self._safe_cross_reference_superelements()
+        self._safe_cross_reference_superelements(create_superelement_geometry)
 
         self.pop_xref_errors()
         for super_id, superelement in sorted(self.superelement_models.items()):
@@ -92,7 +93,6 @@ class SafeXrefMesh(XrefMesh):
                 xref_constraints=xref_constraints, xref_aero=xref_aero,
                 xref_sets=xref_sets, xref_optimization=xref_optimization,
                 word=' (Superelement %i)' % super_id)
-
 
     def _safe_cross_reference_constraints(self):
         # type: () -> None

@@ -2802,7 +2802,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         if sort_ids:
             isort = np.argsort(all_nodes)
             xyz_cid0 = xyz_cid0[isort, :]
-        return xyz_cid0
+        return all_nodes, xyz_cid0
 
     def _get_npoints_nids_allnids(self):
         """helper method for get_xyz_in_coord"""

@@ -664,12 +664,7 @@ def get_renumber_starting_ids_from_model(model):
     }
     return starting_id_dict
 
-def get_starting_ids_dict_from_mapper(model, mapper, old_mapper=None, starting_id_dict=None):
-    if old_mapper is None:
-        old_mapper = {}
-    if starting_id_dict is None:
-        starting_id_dict = {}
-
+def get_starting_ids_dict_from_mapper(model, mapper):
     starting_id_dict2 = {}
     missed_keys = []
     name_map = {
@@ -706,11 +701,11 @@ def get_starting_ids_dict_from_mapper(model, mapper, old_mapper=None, starting_i
             if not old_new_map:
                 continue
             #print("%s map = %s" % (key, old_new_map))
-            nold_mapper = 0
-            if key2 in old_mapper:
-                nold_mapper = len(old_mapper[key2].keys())
+            #nold_mapper = 0
+            #if key2 in old_mapper:
+                #nold_mapper = len(old_mapper[key2].keys())
 
-            offset = 1
+            #offset = 1
             #if key2 in starting_id_dict:
                 #offset = max(old_new_map.keys())
                 #offset = starting_id_dict[key2] + nold_mapper
@@ -783,20 +778,18 @@ def superelement_renumber(bdf_filename, bdf_filename_out=None, size=8, is_double
         cards_to_skip=None, log=None, debug=False)
 
     starting_id_dict_new = get_starting_ids_dict_from_mapper(model, mapper)
-    mapper_short = {key : value for key, value in mapper.items() if len(value)}
+    #mapper_short = {key : value for key, value in mapper.items() if len(value)}
     #print('mapper_short =', mapper_short)
-    old_mapper = mapper
 
-    for super_id, superelement in sorted(model.superelement_models.items()):
+    for unused_super_id, superelement in sorted(model.superelement_models.items()):
         _smodel, superelement_mapper = bdf_renumber(
             superelement, _bdf_filename_out,
             size=8, is_double=False, starting_id_dict=starting_id_dict_new, round_ids=False,
             cards_to_skip=None, log=None, debug=False)
 
-        mapper2 = {key : value for key, value in superelement_mapper.items() if len(value)}
+        #mapper2 = {key : value for key, value in superelement_mapper.items() if len(value)}
         starting_id_dict_new = get_starting_ids_dict_from_mapper(
-            model, superelement_mapper, old_mapper, starting_id_dict_new)
-        old_mapper = superelement_mapper
+            model, superelement_mapper)
 
     if bdf_filename_out is not None:
         model.write_bdf(bdf_filename_out)

@@ -220,19 +220,20 @@ def cmd_line_renumber():  # pragma: no cover
     import pyNastran
     msg = (
         "Usage:\n"
-        "  bdf renumber IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--superelement]\n"
+        '  bdf renumber IN_BDF_FILENAME OUT_BDF_FILENAME [--superelement] [--size SIZE]\n'
+        '  bdf renumber IN_BDF_FILENAME                  [--superelement] [--size SIZE]\n'
         '  bdf renumber -h | --help\n'
         '  bdf renumber -v | --version\n'
         '\n'
 
-        "Positional Arguments:\n"
-        "  IN_BDF_FILENAME    path to input BDF/DAT/NAS file\n"
-       #"  OUT_BDF_FILENAME   path to output BDF/DAT/NAS file\n"
+        'Positional Arguments:\n'
+        '  IN_BDF_FILENAME    path to input BDF/DAT/NAS file\n'
+        '  OUT_BDF_FILENAME   path to output BDF/DAT/NAS file\n'
         '\n'
 
         'Options:\n'
-        '  -o OUT, --output  OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n'
-        '--superelement                        calls superelement_renumber\n\n'
+        '--superelement  calls superelement_renumber\n'
+        '--size SIZE     set the field size (default=16)\n\n'
 
         'Info:\n'
         '  -h, --help      show this help message and exit\n'
@@ -247,11 +248,14 @@ def cmd_line_renumber():  # pragma: no cover
     #}
     data = docopt(msg, version=ver)
     print(data)
-    size = 16
     bdf_filename = data['IN_BDF_FILENAME']
-    bdf_filename_out = data['--output']
+    bdf_filename_out = data['OUT_BDF_FILENAME']
     if bdf_filename_out is None:
         bdf_filename_out = 'renumber.bdf'
+
+    size = 16
+    if data['--size']:
+        size = int(data['--size'])
 
     #cards_to_skip = [
         #'AEFACT', 'CAERO1', 'CAERO2', 'SPLINE1', 'SPLINE2',
@@ -730,7 +734,7 @@ def cmd_line():  # pragma: no cover
         'Usage:\n'
         '  bdf merge                       (IN_BDF_FILENAMES)... [-o OUT_BDF_FILENAME]\n'
         '  bdf equivalence                 IN_BDF_FILENAME EQ_TOL\n'
-        '  bdf renumber                    IN_BDF_FILENAME [-o OUT_BDF_FILENAME]\n'
+        '  bdf renumber                    IN_BDF_FILENAME [OUT_BDF_FILENAME] [--superelement] [--size SIZE]\n'
         '  bdf mirror                      IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--plane PLANE] [--tol TOL]\n'
         '  bdf export_mcids                IN_BDF_FILENAME [-o OUT_CSV_FILENAME] [--no_x] [--no_y]\n'
         '  bdf transform                   IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--shift XYZ]\n'

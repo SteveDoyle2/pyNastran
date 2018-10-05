@@ -68,7 +68,7 @@ import traceback
 from typing import List, Dict, Any
 from six import iteritems, itervalues
 
-from numpy import zeros, argsort, arange, array_equal
+from numpy import zeros, argsort, arange, array_equal, array
 from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
 
 class XrefMesh(BDFAttributes):
@@ -596,15 +596,23 @@ class XrefMesh(BDFAttributes):
         #'senqset',
         #'se_sets', 'se_usets',
 
-    def _safe_cross_reference_superelements(self):
+    def _safe_cross_reference_superelements(self, create_superelement_geometry=False):
         xref_errors = {}
+        for unused_seid, sempln in sorted(self.sempln.items()):
+            sempln.safe_cross_reference(self, xref_errors)
         for unused_seid, csuper in self.csuper.items():
             csuper.safe_cross_reference(self, xref_errors)
         for unused_seid, csupext in self.csupext.items():
             csupext.safe_cross_reference(self, xref_errors)
 
-        for unused_seid, sebulk in self.sebulk.items():
-            sebulk.safe_cross_reference(self, xref_errors)
+        if self.sebulk and create_superelement_geometry:
+            for seid, sebulk in self.sebulk.items():
+                rseid = sebulk.rseid
+                sebulk.safe_cross_reference(self, xref_errors)
+                mirror_model = self._create_superelement_from_sebulk(sebulk, seid, rseid)
+                self.superelement_models[seid] = mirror_model
+                #mirror_model.write_bdf('super_%i.bdf' % unused_seid)
+
         for unused_seid, sebndry in self.sebndry.items():
             sebndry.safe_cross_reference(self, xref_errors)
         for unused_seid, seconct in self.seconct.items():
@@ -619,10 +627,27 @@ class XrefMesh(BDFAttributes):
             seloc.safe_cross_reference(self, xref_errors)
         for unused_seid, seload in self.seload.items():
             seload.safe_cross_reference(self, xref_errors)
-        for unused_seid, sempln in self.sempln.items():
-            sempln.safe_cross_reference(self, xref_errors)
         for unused_seid, setree in self.setree.items():
             setree.safe_cross_reference(self, xref_errors)
+
+    def _create_superelement_from_sebulk(self, sebulk, seid, rseid):
+        """helper for sebulk"""
+        #C:\MSC.Software\MSC.Nastran\msc20051\nast\tpl\see103q4.dat
+        ref_model = self.superelement_models[rseid]
+        if sebulk.Type == 'MIRROR':
+            from pyNastran.bdf.mesh_utils.mirror_mesh import bdf_mirror_plane
+            #print('creating superelement %s from %s' % (seid, rseid))
+            sempln = self.sempln[seid]
+            plane = array([node.get_position() for node in sempln.nodes_ref])
+
+            ref_model, mirror_model, unused_nid_offset, unused_eid_offset = bdf_mirror_plane(
+                ref_model, plane, mirror_model=None, log=None, debug=True, use_nid_offset=False)
+            mirror_model.properties = ref_model.properties
+            mirror_model.materials = ref_model.materials
+            new_model = mirror_model
+        else:  # pragma: no cover
+            raise NotImplementedError(sebulk)
+        return new_model
 
     def _uncross_reference_superelements(self):
         """cross references the superelement objects"""
@@ -672,7 +697,11 @@ class XrefMesh(BDFAttributes):
     def superelement_nodes(self, seid, nodes, msg=''):
         if seid == 0:
             return self.Nodes(nodes, msg=msg)
-        superelement = self.superelement_models[seid]
+        try:
+            superelement = self.superelement_models[seid]
+        except KeyError:
+            keys = list(self.superelement_models.keys())
+            raise KeyError('cant find superelement=%i%s; seids=%s' % (seid, msg, keys))
         return superelement.Nodes(nodes, msg=msg)
 
     def geom_check(self, geom_check, xref):  # pragma: no cover

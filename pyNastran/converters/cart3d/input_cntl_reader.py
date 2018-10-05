@@ -98,9 +98,9 @@ class InputCntlReader(object):
     def get_boundary_conditions(self):
         section = self.sections['Boundary_Conditions']
         name, comment, table = section
-        self.log.debug(table)
+        self.log.debug(str(table))
         self.log.debug('-------')
-        self.log.debug(table[0])
+        self.log.debug(str(table[0]))
         self.log.debug('-------*********')
         xline = table[0][0]
         self.log.debug(xline)

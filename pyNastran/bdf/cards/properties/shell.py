@@ -1604,6 +1604,9 @@ class PSHEAR(ShellProperty):
         self.mid = self.Mid()
         self.mid_ref = None
 
+    def Thickness(self):
+        return self.t
+
     def Rho(self):
         return self.mid_ref.Rho()
 

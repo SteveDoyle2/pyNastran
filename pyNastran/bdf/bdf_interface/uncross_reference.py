@@ -18,7 +18,7 @@ class UnXrefMesh(SafeXrefMesh):
 
     def uncross_reference(self, word=''):
         """uncross references the model"""
-        self.log.debug("Uncross Referencing%s...")
+        self.log.debug("Uncross Referencing%s..." % word)
         self._uncross_reference_nodes()
         self._uncross_reference_coords()
         self._uncross_reference_elements()

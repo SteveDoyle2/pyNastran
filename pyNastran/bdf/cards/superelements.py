@@ -266,9 +266,8 @@ class SEMPLN(BaseCard):
         if comment:
             self.comment = comment
         self.seid = seid
-        self.p1 = p1
-        self.p2 = p2
-        self.p3 = p3
+        self.nodes = [p1, p2, p3]
+        self.nodes_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -281,8 +280,42 @@ class SEMPLN(BaseCard):
         assert len(card) <= 6, 'len(SEMPLN card) = %i\ncard=%s' % (len(card), card)
         return SEMPLN(seid, p1, p2, p3, comment=comment)
 
+    def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        msg = ', which is required by SEMPLN seid=%s' % self.seid
+        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        msg = ', which is required by SEMPLN seid=%s' % self.seid
+        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+
+    def uncross_reference(self):
+        self.nodes = self.node_ids
+        self.nodes_ref = None
+
+    @property
+    def node_ids(self):
+        return _node_ids(self, self.nodes, self.nodes_ref, allow_empty_nodes=False, msg='')
+
     def raw_fields(self):
-        list_fields = ['SEMPLN', self.seid, 'PLANE', self.p1, self.p2, self.p3] ## TODO: xref
+        list_fields = ['SEMPLN', self.seid, 'PLANE'] + self.node_ids
         return list_fields
 
     def write_card(self, size=8, is_double=False):
