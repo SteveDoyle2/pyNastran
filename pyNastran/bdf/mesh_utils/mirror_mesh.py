@@ -166,7 +166,7 @@ def _mirror_nodes(model, plane='xz'):
 
 def _mirror_nodes_plane(model, mirror_model, plane, use_nid_offset=True):
     """
-    Mirrors the GRIDs
+    Mirrors the GRIDs about an arbitrary plane
 
     .. warning:: doesn't consider coordinate systems;
                   it could, but you'd need 20 new coordinate systems
@@ -179,34 +179,45 @@ def _mirror_nodes_plane(model, mirror_model, plane, use_nid_offset=True):
     if model.nodes:
         all_nodes, xyz_cid0 = model.get_xyz_in_coord_no_xref(cid=0, fdtype='float64', sort_ids=True)
         cid = max(model.coords) + 1
-        cord2r = model.add_cord2r(cid, plane[0, :], plane[1, :], plane[2, :])
-        del model.coords[cid]
+        origin = plane[0, :]
 
-        origin = cord2r.origin
-        normal = cord2r.beta()[2, :]
+        # just a triangle's normal vector
+        n1 = plane[0, :]
+        n2 = plane[1, :]
+        n3 = plane[2, :]
+        normal = np.cross(n2 - n1, n3 - n1)
+        normal /= np.linalg.norm(normal)
+
+        #cord2r = model.add_cord2r(cid, plane[0, :], plane[1, :], plane[2, :])
+        #del model.coords[cid]
+        #print(cord2r)
+
+        #origin = cord2r.origin
+        #normal = cord2r.beta()[2, :]
+        #print('normal =', normal)
         vector = xyz_cid0 - origin
         assert xyz_cid0.shape == vector.shape, 'xyz_cid0.shape=%s; vector.shape=%s' % (xyz_cid0.shape, vector.shape)
         v_dot_n = vector * normal[np.newaxis, :]
         assert v_dot_n.shape == vector.shape, 'v_dot_n.shape=%s; vector.shape=%s' % (v_dot_n.shape, vector.shape)
-        distance = np.linalg.norm(v_dot_n, axis=0)
+        distance = np.linalg.norm(v_dot_n, axis=1)
         assert v_dot_n.shape[0] == len(distance), 'v_dot_n.shape=%s; distance.shape=%s' % (v_dot_n.shape, distance.shape)
 
+        # we're some distance from the plane, but we don't know the
+        # direction, so we take the max distance from the plane and
+        # project it in the +normal direction and then check that
+        # distance in comparison to the known distance
+        #
         max_distance = distance.max()
         imax = np.where(distance == max_distance)[0][0]
         distance0 = distance[imax]
         xyz0 = xyz_cid0[imax, :] + distance0 * normal
-        xyz_m = xyz_cid0[imax, :] - distance0 * normal
         v0_dot_n = xyz0 * normal
         distance_plus = np.linalg.norm(v0_dot_n)
-        print(normal, origin)
-        print(xyz_cid0[imax, :], xyz0, xyz_m, distance0, distance_temp, end='')
 
         if distance_plus > 1.1*distance0:
-            xyz_cid0_2 = xyz_cid0 - 2 * distance * normal[np.newaxis, :]
-            print(' minus')
+            xyz_cid0_2 = xyz_cid0 - 2 * distance[:, np.newaxis] * normal[np.newaxis, :]
         else:
-            xyz_cid0_2 = xyz_cid0 + 2 * distance * normal[np.newaxis, :]
-            print(' plus')
+            xyz_cid0_2 = xyz_cid0 + 2 * distance[:, np.newaxis] * normal[np.newaxis, :]
 
         if use_nid_offset:
             nid_offset = max(all_nodes)

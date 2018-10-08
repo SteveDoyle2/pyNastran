@@ -21,7 +21,7 @@ from pyNastran.bdf.mesh_utils.split_elements import split_line_elements
 from pyNastran.bdf.mesh_utils.pierce_shells import (
     pierce_shell_model) #, quad_intersection, triangle_intersection)
 from pyNastran.bdf.mesh_utils.mirror_mesh import (
-    write_bdf_symmetric, bdf_mirror, make_symmetric_model)
+    write_bdf_symmetric, bdf_mirror, make_symmetric_model, bdf_mirror_plane)
 from pyNastran.bdf.mesh_utils.cut_model_by_plane import (
     cut_edge_model_by_coord, cut_face_model_by_coord, connect_face_rows)
 from pyNastran.bdf.mesh_utils.bdf_merge import bdf_merge
@@ -622,6 +622,22 @@ class TestMeshUtils(unittest.TestCase):
         model.validate()
         model.cross_reference()
         mass1, unused_cg1, unused_inertia1 = model.mass_properties()
+
+        # mirror_model=None -> new model
+        #
+        # just a cord2r
+        #   y+ right
+        plane = np.array([
+            [0., 0., 0.],
+            [0., 0., 1.],
+            [1., 0., 0.],
+        ])
+        model, mirror_model, nid_offset, eid_offset = bdf_mirror_plane(
+            model, plane, mirror_model=None, log=None, debug=True,
+            use_nid_offset=False)
+        for nid, node in sorted(mirror_model.nodes.items()):
+            print(nid, node.xyz)
+
 
         out_filename = 'sym.bdf'
         write_bdf_symmetric(model, out_filename=out_filename, encoding=None, size=8,

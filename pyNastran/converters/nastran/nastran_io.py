@@ -420,7 +420,11 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 xyz_cpi, nid_cp_cdi[:, 0], icp_transformi, cid=cid,
                 in_place=False)
 
-            xyz_cid0i = self._transform_xyz_cid0_by_seloc(model, super_id, xyz_cid0i)
+            #if super_id in model.seloc:
+                # TODO: when should seloc get applied?
+                #       during superelement creation or now?
+                #seloc = model.seloc[super_id]
+                #xyz_cid0i = seloc.transform(model, xyz_cid0i)
 
             #print('model.spoints =', model.spoints)
             #import json
@@ -547,39 +551,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         make_nid_map(self.gui.nid_map, nid_cp_cd_out[:, 0])
         return xyz_cid0_out, nid_cp_cd_out
 
-    def _transform_xyz_cid0_by_seloc(self, model, super_id, xyz_cid0):
-        """helper for ``get_xyz_in_coord``"""
-        if super_id in model.seloc:
-            seloc = model.seloc[super_id]
-            global_coord_ref = seloc.nodes_0_ref
-            seid_coord_ref = seloc.nodes_seid_ref
-            p123_0 = np.array([node.get_position() for node in global_coord_ref])
-            p123_seid = np.array([node.get_position() for node in seid_coord_ref])
-            #print('global_coord_ref:\n%s' % global_coord_ref)
-            #print('seid_coord_ref:\n%s' % seid_coord_ref)
-            #print('p123_seid:\n%s' % p123_seid)
-            #print('p123_0:\n%s' % p123_0)
-            cid = max(model.coords)
-            coord_seid = model.add_cord2r(cid+1, p123_seid[0, :], p123_seid[1, :], p123_seid[2, :])
-            coord_0 = model.add_cord2r(cid+2, p123_0[0, :], p123_0[1, :], p123_0[2, :])
-            coord_0.setup()
-            coord_seid.setup()
-            #print('beta_seid:\n%s' % coord_seid.beta())
-            #print('beta0:\n%s' % coord_0.beta())
-
-            #print(coord_seid.get_stats())
-            # TODO: coord xform:
-            #   xform = coord0.T * coord_seid
-            #   xform = coord_seid.T * coord0
-            xform = np.dot(coord_0.beta().T, coord_seid.beta())
-            dorigin = p123_0[0, :] - p123_seid[0, :] # at least, I'm sure on this...
-            del model.coords[cid + 1]
-            del model.coords[cid + 2]
-
-            # TODO: not 100% on this xform
-            xyz_cid0 = xyz_cid0.dot(xform) + dorigin
-        return xyz_cid0
-
     def get_xyz_in_coord_vectorized(self, model, cid=0, fdtype='float32'):
         """
         Creates the grid points efficiently
@@ -699,7 +670,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #load_geom = True
         if isinstance(bdf_filename, str) and bdf_filename.lower().endswith(('.bdf', '.dat', '.pch',)): # '.op2'
             if IS_TESTING or self.gui.is_testing_flag:
-                self.load_nastran_geometry_vectorized(bdf_filename, plot=plot)
+                #self.load_nastran_geometry_vectorized(bdf_filename, plot=plot)
                 self.load_nastran_geometry_unvectorized(bdf_filename, plot=plot)
             else:
                 self.load_nastran_geometry_unvectorized(bdf_filename, plot=plot)
@@ -3171,7 +3142,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             (0, 6, 5, 4), # (1, 7, 6, 5),
         )
 
-        elements, nelements = _get_elements_nelements_unvectorized(model)
+        elements, nelements, superelements = _get_elements_nelements_unvectorized(model)
         xyz_cid0 = self.xyz_cid0
         pids_array = np.zeros(nelements, dtype='int32')
         eids_array = np.zeros(nelements, dtype='int32')
@@ -4003,14 +3974,14 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         """
         grid = self.gui.grid
 
-        if IS_TESTING:
+        if IS_TESTING and 0:
             self._map_elements3(nid_map, model, j, dim_max,
                                 nid_cp_cd, xref_loads=xref_loads)
         #return self._map_elements3(nid_map, model, j, dim_max,
                                    #nid_cp_cd, plot=plot, xref_loads=xref_loads)
 
         out = self._map_elements1(model, xyz_cid0, nid_cp_cd, dim_max, nid_map, j)
-        (nid_to_pid_map, xyz_cid0, pids, nelements, material_coord,
+        (nid_to_pid_map, xyz_cid0, superelements, pids, nelements, material_coord,
          area, min_interior_angle, max_interior_angle, max_aspect_ratio,
          max_skew_angle, taper_ratio, dideal_theta,
          area_ratio, min_edge_length, max_warp_angle) = out
@@ -4066,6 +4037,13 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             icase += 1
             self.element_ids = eids
 
+        if superelements is not None:
+            nid_res = GuiResult(0, header='SuperelementID', title='SuperelementID',
+                                location='centroid', scalar=superelements)
+            cases[icase] = (nid_res, (0, 'SuperelementID'))
+            form0.append(('SuperelementID', icase, []))
+            icase += 1
+
         # subcase_id, resultType, vector_size, location, dataFormat
         if len(model.properties) and nelements:
             icase, upids, pcomp, pshell, is_pshell_pcomp = self._build_properties(
@@ -4074,7 +4052,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                                           cases, form0, icase)
 
             try:
-                icase = self._build_optimization(model, pids, upids, nelements, cases, form0, icase)
+                icase = self._build_optimization(model, pids, upids, nelements,
+                                                 cases, form0, icase)
             except:
                 if IS_TESTING or self.is_testing_flag:
                     raise
@@ -4261,7 +4240,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         # pid = pids_dict[eid]
         pids_dict = {}
 
-        elements, nelements = _get_elements_nelements_unvectorized(model)
+        elements, nelements, superelements = _get_elements_nelements_unvectorized(model)
 
         pids = np.zeros(nelements, 'int32')
         material_coord = np.zeros(nelements, 'int32')
@@ -5077,7 +5056,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         pids = pids[:nelements]
 
         out = (
-            nid_to_pid_map, xyz_cid0, pids, nelements, material_coord,
+            nid_to_pid_map, xyz_cid0, superelements, pids, nelements, material_coord,
             area, min_interior_angle, max_interior_angle, max_aspect_ratio,
             max_skew_angle, taper_ratio, dideal_theta,
             area_ratio, min_edge_length, max_warp_angle,
@@ -6539,9 +6518,18 @@ def _get_elements_nelements_unvectorized(model):
     nelements = len(model.elements)
     #eid_map = self.gui.eid_map
     elements = model.elements
-
-    for superelement in model.superelement_models.values():
-        nelements += len(superelement.elements)
-        elements.update(superelement.elements)
-        #eid_map.update(superelement.eid_map)
-    return elements, nelements
+    superelements = None
+    if model.superelement_models:
+        superelements = []
+        if nelements:
+            superelements.append(np.zeros(nelements, dtype='int32'))
+        for super_id, superelement in sorted(model.superelement_models.items()):
+            nelements2 = len(superelement.elements)
+            if nelements2:
+                superelements.append(np.ones(nelements2, dtype='int32') * super_id)
+            nelements += nelements2
+            elements.update(superelement.elements)
+            #eid_map.update(superelement.eid_map)
+        superelements = np.hstack(superelements)
+        assert len(superelements) == nelements, 'len(superelements)=%s nelements=%s' % (len(superelements), nelements)
+    return elements, nelements, superelements

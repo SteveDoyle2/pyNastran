@@ -598,37 +598,63 @@ class XrefMesh(BDFAttributes):
 
     def _safe_cross_reference_superelements(self, create_superelement_geometry=False):
         xref_errors = {}
-        for unused_seid, sempln in sorted(self.sempln.items()):
-            sempln.safe_cross_reference(self, xref_errors)
-        for unused_seid, csuper in self.csuper.items():
-            csuper.safe_cross_reference(self, xref_errors)
-        for unused_seid, csupext in self.csupext.items():
-            csupext.safe_cross_reference(self, xref_errors)
+        seloc_missing = []
+        for seid, seloc in self.seloc.items():
+            if seid in self.superelement_models:
+                superelement = self.superelement_models[seid]
+                seloc.safe_cross_reference(self, xref_errors)
+                #seloc.transform(self)
+            else:
+                seloc_missing.append(seid)
 
-        if self.sebulk and create_superelement_geometry:
-            for seid, sebulk in self.sebulk.items():
-                rseid = sebulk.rseid
-                sebulk.safe_cross_reference(self, xref_errors)
-                mirror_model = self._create_superelement_from_sebulk(sebulk, seid, rseid)
-                self.superelement_models[seid] = mirror_model
-                #mirror_model.write_bdf('super_%i.bdf' % unused_seid)
+        try:
+            for unused_seid, sempln in sorted(self.sempln.items()):
+                sempln.safe_cross_reference(self, xref_errors)
+            for unused_seid, csuper in self.csuper.items():
+                csuper.safe_cross_reference(self, xref_errors)
+            for unused_seid, csupext in self.csupext.items():
+                csupext.safe_cross_reference(self, xref_errors)
 
-        for unused_seid, sebndry in self.sebndry.items():
-            sebndry.safe_cross_reference(self, xref_errors)
-        for unused_seid, seconct in self.seconct.items():
-            seconct.safe_cross_reference(self, xref_errors)
-        for unused_seid, seelt in self.seelt.items():
-            seelt.safe_cross_reference(self, xref_errors)
-        for unused_seid, seexcld in self.seexcld.items():
-            seexcld.safe_cross_reference(self, xref_errors)
-        for unused_seid, selabel in self.selabel.items():
-            selabel.safe_cross_reference(self, xref_errors)
-        for unused_seid, seloc in self.seloc.items():
-            seloc.safe_cross_reference(self, xref_errors)
-        for unused_seid, seload in self.seload.items():
-            seload.safe_cross_reference(self, xref_errors)
-        for unused_seid, setree in self.setree.items():
-            setree.safe_cross_reference(self, xref_errors)
+            if self.sebulk and create_superelement_geometry:
+                print('sebulk...')
+                import os
+                # we have to create the superelement in order to transform it...
+                for seid, sebulk in self.sebulk.items():
+                    super_filename = 'super_%i.bdf' % seid
+                    if os.path.exists(super_filename):
+                        os.remove(super_filename)
+                    print(sebulk)
+                    rseid = sebulk.rseid
+                    sebulk.safe_cross_reference(self, xref_errors)
+                    mirror_model = self._create_superelement_from_sebulk(sebulk, seid, rseid)
+                    if mirror_model is None:
+                        continue
+                    print('made superelement %i' % seid)
+                    self.superelement_models[seid] = mirror_model
+                    mirror_model.write_bdf(super_filename)
+            for unused_seid, sebndry in self.sebndry.items():
+                sebndry.safe_cross_reference(self, xref_errors)
+            for unused_seid, seconct in self.seconct.items():
+                seconct.safe_cross_reference(self, xref_errors)
+            for unused_seid, seelt in self.seelt.items():
+                seelt.safe_cross_reference(self, xref_errors)
+            for unused_seid, seexcld in self.seexcld.items():
+                seexcld.safe_cross_reference(self, xref_errors)
+            for unused_seid, selabel in self.selabel.items():
+                selabel.safe_cross_reference(self, xref_errors)
+            for seid in seloc_missing:
+                seloc = self.seloc[seid]
+                seloc.safe_cross_reference(self, xref_errors)
+            for unused_seid, seload in self.seload.items():
+                seload.safe_cross_reference(self, xref_errors)
+            for unused_seid, setree in self.setree.items():
+                setree.safe_cross_reference(self, xref_errors)
+        except KeyError:
+            if not create_superelement_geometry:
+                raise
+            self.write_bdf('superelement_xref.bdf')
+            self.log.error('check superelement_xref.bdf')
+            raise
 
     def _create_superelement_from_sebulk(self, sebulk, seid, rseid):
         """helper for sebulk"""
@@ -640,11 +666,27 @@ class XrefMesh(BDFAttributes):
             sempln = self.sempln[seid]
             plane = array([node.get_position() for node in sempln.nodes_ref])
 
+            # What about seloc on the primary and sempln+seloc on the secondary?
+            #  - move the primary
+            #  - then apply the mirror to make the secondary
+            #  - then move the secondary
+            #
+            # Or what about sempln+seloc on the tertiary?
+            #
+            # this is fine for the secondary
+            if rseid in self.seloc:
+                # I think this is wrong...
+                seloc = self.seloc[rseid]
+                plane = seloc.transform(self, plane)
+
             ref_model, mirror_model, unused_nid_offset, unused_eid_offset = bdf_mirror_plane(
                 ref_model, plane, mirror_model=None, log=None, debug=True, use_nid_offset=False)
             mirror_model.properties = ref_model.properties
             mirror_model.materials = ref_model.materials
             new_model = mirror_model
+        elif sebulk.Type in ['MANUAL', 'PRIMARY', 'COLLCTR', 'EXTERNAL']:
+            self.log.info('skipping:\n%s' % sebulk)
+            new_model = None
         else:  # pragma: no cover
             raise NotImplementedError(sebulk)
         return new_model

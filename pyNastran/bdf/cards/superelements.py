@@ -17,6 +17,8 @@ All superelements are defined in this file.  This includes:
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
+import numpy as np
+
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.base_card import (
     BaseCard, expand_thru #, _node_ids
@@ -484,6 +486,40 @@ class SELOC(BaseCard):
     @property
     def nodes_0_ids(self):
         return _node_ids(self, self.nodes_0, self.nodes_0_ref, allow_empty_nodes=False, msg='')
+
+    def transform(self, model, xyz_cid0):
+        #if self.nodes_0_ref is None:
+            #self.cross_reference(model)
+
+        global_coord_ref = self.nodes_0_ref
+        seid_coord_ref = self.nodes_seid_ref
+        p123_0 = np.array([node.get_position() for node in global_coord_ref])
+        p123_seid = np.array([node.get_position() for node in seid_coord_ref])
+        #print('global_coord_ref:\n%s' % global_coord_ref)
+        #print('seid_coord_ref:\n%s' % seid_coord_ref)
+        #print('p123_seid:\n%s' % p123_seid)
+        #print('p123_0:\n%s' % p123_0)
+        cid = max(model.coords)
+        coord_seid = model.add_cord2r(cid+1, p123_seid[0, :], p123_seid[1, :], p123_seid[2, :])
+        coord_0 = model.add_cord2r(cid+2, p123_0[0, :], p123_0[1, :], p123_0[2, :])
+        coord_0.setup()
+        coord_seid.setup()
+        #print('beta_seid:\n%s' % coord_seid.beta())
+        #print('beta0:\n%s' % coord_0.beta())
+
+        #print(coord_seid.get_stats())
+        # TODO: coord xform:
+        #   xform = coord0.T * coord_seid
+        #   xform = coord_seid.T * coord0
+        xform = np.dot(coord_0.beta().T, coord_seid.beta())
+        #print('xform%i:\n%s' % (self.seid, xform))
+        dorigin = p123_0[0, :] - p123_seid[0, :] # at least, I'm sure on this...
+        del model.coords[cid + 1]
+        del model.coords[cid + 2]
+
+        # TODO: not 100% on this xform
+        xyz_cid0 = xyz_cid0.dot(xform.T) + dorigin
+        return xyz_cid0
 
     def uncross_reference(self):
         self.nodes_seid = self.nodes_seid_ids
