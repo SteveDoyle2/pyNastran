@@ -674,7 +674,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 try:
                     self.load_nastran_geometry_vectorized(bdf_filename, plot=plot)
                 except NoSuperelements as e:
-                    self.log.error('\n' + traceback.format_exc(e))
+                    self.log.error('\n' + traceback.format_exc())
                 self.load_nastran_geometry_unvectorized(bdf_filename, plot=plot)
             else:
                 self.load_nastran_geometry_unvectorized(bdf_filename, plot=plot)
