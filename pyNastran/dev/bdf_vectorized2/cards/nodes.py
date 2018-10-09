@@ -1,6 +1,8 @@
 from __future__ import print_function
 from collections import defaultdict
 import numpy as np
+
+from pyNastran.femutils.utils import duplicates
 from pyNastran.bdf.bdf import GRID
 
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -368,7 +370,18 @@ class GRIDv(object):
                 self.cd = np.array(self._cd, dtype='int32')
                 self.ps = np.array(self._ps, dtype='|U8')
                 self.seid = np.array(self._seid, dtype='int32')
-            assert len(self.nid) == len(np.unique(self.nid))
+
+            unid = np.unique(self.nid)
+            if len(self.nid) != len(unid):
+                duplicate_nodes = duplicates(self.nid)
+                msg = ('there are duplicate nodes\n'
+                       'nid =%s; n=%s\n'
+                       'unid=%s; n=%s\n'
+                       'duplicates=%s' % (
+                    self.nid, len(self.nid),
+                    unid, len(unid),
+                    duplicate_nodes))
+                raise RuntimeError(msg)
 
             isort = np.argsort(self.nid)
             self.nid = self.nid[isort]

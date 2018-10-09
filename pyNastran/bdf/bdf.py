@@ -1045,6 +1045,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         try:
             self._parse_all_cards(bulk_data_lines, bulk_data_ilines)
         except SuperelementFlagError:
+            self.clear_attributes()
             self.log.error('Attempting to use is_superelements=True.')
             self.is_superelements = True
             self.read_bdf(bdf_filename=bdf_filename, validate=validate, xref=xref, punch=punch,
@@ -1052,29 +1053,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                           encoding=encoding)
             return
 
-
         if superelement_lines:
-            for superelement_id, superelement_line in sorted(superelement_lines.items()):
-                assert isinstance(superelement_line, list), superelement_line
-
-                # hack to get rid of extra 'BEGIN SUPER=2' lines
-                iminus = 0
-                for line in superelement_line:
-                    uline = line.upper()
-                    if not uline.startswith('BEGIN '):
-                        break
-                    iminus += 1
-
-                nlines = len(superelement_line) - iminus
-                model = BDF()
-                model.active_filenames = self.active_filenames
-                model.log = self.log
-                model.punch = True
-                #model.nastran_format = ''
-                superelement_ilines = np.zeros((nlines, 2), dtype='int32')  ## TODO: calculate this
-                model._parse_all_cards(superelement_line[iminus:], superelement_ilines)
-                self.superelement_models[superelement_id] = model
-
+            self._add_superelements(superelement_lines, superelement_ilines)
 
         self.pop_parse_errors()
         fill_dmigs(self)
@@ -1086,6 +1066,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         self._xref = xref
 
         self.log.debug('---finished BDF.read_bdf of %s---' % self.bdf_filename)
+
+    def _add_superelements(self, superelement_lines, superelement_ilines):  # pragma: no cover
+        self.log.warning('_add_superelements should be overwritten')
 
     def _parse_all_cards(self, bulk_data_lines, bulk_data_ilines):
         """creates and loads all the cards the bulk data section"""
@@ -4241,6 +4224,28 @@ class BDF(BDF_):
         newone = type(self)()
         newone.__dict__.update(self.__dict__)
         return newone
+
+    def _add_superelements(self, superelement_lines, superelement_ilines):
+        for superelement_id, superelement_line in sorted(superelement_lines.items()):
+            assert isinstance(superelement_line, list), superelement_line
+
+            # hack to get rid of extra 'BEGIN SUPER=2' lines
+            iminus = 0
+            for line in superelement_line:
+                uline = line.upper()
+                if not uline.startswith('BEGIN '):
+                    break
+                iminus += 1
+
+            nlines = len(superelement_line) - iminus
+            model = BDF()
+            model.active_filenames = self.active_filenames
+            model.log = self.log
+            model.punch = True
+            #model.nastran_format = ''
+            superelement_ilines = np.zeros((nlines, 2), dtype='int32')  ## TODO: calculate this
+            model._parse_all_cards(superelement_line[iminus:], superelement_ilines)
+            self.superelement_models[superelement_id] = model
 
 
 def _prep_comment(comment):

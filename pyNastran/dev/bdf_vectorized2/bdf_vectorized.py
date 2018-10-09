@@ -1,4 +1,5 @@
 from __future__ import print_function
+import numpy as np
 
 from pyNastran.bdf.bdf import BDF_, LOAD
 #from pyNastran.bdf.bdf import BDF as BDF_, LOAD
@@ -147,6 +148,132 @@ class BDF(BDF_):
         self.loads = Loads(model)
 
         self._update_card_parser()
+
+    def clear_attributes(self):
+        # type: () -> None
+        """removes the attributes from the model"""
+        self.log.info('clearing vectorized BDF model')
+        #self.__init_attributes()
+        model = self
+        #self.superelement_models = {}
+        self.grid = GRIDv(model)
+        self.nodes = Nodes(model)
+
+        self.celas1 = CELAS1(model)
+        self.celas2 = CELAS2(model)
+        self.celas3 = CELAS3(model)
+        self.celas4 = CELAS4(model)
+        self.springs = Springs(model)
+
+        self.cdamp1 = CDAMP1(model)
+        self.cdamp2 = CDAMP2(model)
+        self.cdamp3 = CDAMP3(model)
+        self.cdamp4 = CDAMP4(model)
+        #self.cdamp5 = CDAMP5(model)    # TODO: temp
+        self.cvisc = CVISCv(model)    # this is in dampers right now
+        self.plotel = PLOTELv(model)  # this is in dampers right now
+        self.dampers = Dampers(model)
+
+        self.cbush = CBUSHv(model)
+        self.bushes = Bushes(model)
+
+        #self.conm1 = CONM1v(model)
+        self.conm2 = CONM2v(model)
+        #self.cmass1 = CMASS1v(model)
+        #self.cmass2 = CMASS2v(model)
+        #self.cmass3 = CMASS3v(model)
+        #self.cmass4 = CMASS4v(model)
+        self.masses2 = Masses(model)
+
+        self.crod = CRODv(model)
+        self.conrod = CONRODv(model)
+        self.ctube = CTUBEv(model)
+        self.rods = Rods(model)
+
+        self.cbar = CBARv(model)
+        self.bars = Bars(model)
+
+        self.cbeam = CBEAMv(model)
+        self.beams = Beams(model)
+
+        self.ctria3 = CTRIA3v(model)
+        self.cquad4 = CQUAD4v(model)
+        self.ctria6 = CTRIA6v(model)
+        self.cquad8 = CQUAD8v(model)
+        self.cquad = CQUADv(model)
+        self.cquadr = CQUADRv(model)
+        self.ctriar = CTRIARv(model)
+
+        self.shells = Shells(model)
+        #self.pshell = PSHELLv(model)  # TODO: temp
+
+        self.cshear = CSHEARv(model)
+        self.shears = Shears(model)
+
+        #self.ctriax = CTRIA3v(model)   # TODO: temp
+        #self.cquadx = CTRIA3v(model)   # TODO: temp
+        #self.ctriax6 = CTRIA3v(model)  # TODO: temp
+        #self.cquadx8 = CTRIA3v(model)  # TODO: temp
+
+        self.ctetra4 = CTETRA4v(model)
+        self.ctetra10 = CTETRA10v(model)
+        self.chexa8 = CHEXA8v(model)
+        self.chexa20 = CHEXA20v(model)
+        self.cpenta6 = CPENTA6v(model)
+        self.cpenta15 = CPENTA15v(model)
+        self.cpyram5 = CPYRAM5v(model)
+        self.cpyram13 = CPYRAM13v(model)
+        self.solids = Solids(model)
+
+        self.elements2 = Elements(model)  # TODO: change this name
+
+
+        self.sload = SLOADv(model)
+        self.grav = GRAVv(model)
+        self.force = FORCEv(model)
+        self.force1 = FORCE1v(model)
+        self.force2 = FORCE2v(model)
+        self.pload = PLOADv(model)
+        self.pload1 = PLOAD1v(model)
+        self.pload2 = PLOAD2v(model)
+        self.pload4 = PLOAD4v(model)
+
+        self.moment = MOMENTv(model)
+        self.moment1 = MOMENT1v(model)
+        self.moment2 = MOMENT2v(model)
+
+        self.spcd = SPCDv(model)
+        self.temp = TEMPv(model)
+        self.tempd = TEMPDv(model)
+
+        self.load_combinations = {}
+        #def lseqi():
+            #return LSEQv(model)
+        #self.lseqs = defaultdict(lseqi)
+        self.lseq = LSEQv(model)
+        self.loads = Loads(model)
+
+    def _add_superelements(self, superelement_lines, superelement_ilines):
+        for superelement_id, superelement_line in sorted(superelement_lines.items()):
+            assert isinstance(superelement_line, list), superelement_line
+
+            # hack to get rid of extra 'BEGIN SUPER=2' lines
+            iminus = 0
+            for line in superelement_line:
+                uline = line.upper()
+                if not uline.startswith('BEGIN '):
+                    break
+                iminus += 1
+
+            nlines = len(superelement_line) - iminus
+            model = BDF()
+            model.active_filenames = self.active_filenames
+            model.log = self.log
+            model.punch = True
+            #model.nastran_format = ''
+            superelement_ilines = np.zeros((nlines, 2), dtype='int32')  ## TODO: calculate this
+            model._parse_all_cards(superelement_line[iminus:], superelement_ilines)
+            self.superelement_models[superelement_id] = model
 
     def uncross_reference(self):
         pass

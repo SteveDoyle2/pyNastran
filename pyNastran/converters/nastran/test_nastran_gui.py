@@ -577,12 +577,18 @@ class TestNastranGUI(unittest.TestCase):
         test.load_nastran_geometry(op2_filename)
         test.load_nastran_results(op2_filename)
 
-    def test_gui_superelement(self):
+    def test_gui_superelement_1(self):
         """tests flyswatter"""
         bdf_filename = os.path.join(MODEL_PATH, 'superelements', 'flyswatter', 'flyswatter_renumber.bdf')
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
         #test.load_nastran_results(op2_filename)
+
+    def test_gui_superelement_2(self):
+        """tests superelement mirror/shift/renumber"""
+        bdf_filename = os.path.join(MODEL_PATH, 'superelements', 'see103q4.bdf')
+        test = NastranGUI()
+        test.load_nastran_geometry(bdf_filename)
 
     def test_gui_dvprel(self):
         """tests dvprel"""

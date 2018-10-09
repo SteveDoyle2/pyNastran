@@ -9,7 +9,7 @@ from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.converters.avl.avl import read_avl
 
 
-class AVL_IO(object):  # pragma: no cover
+class AVL_IO(object):
     def __init__(self, gui):
         self.gui = gui
 
@@ -22,7 +22,7 @@ class AVL_IO(object):  # pragma: no cover
         return data
 
     def load_avl_geometry(self, avl_filename,
-                          name='main', plot=True):  # pragma: no cover
+                          name='main', plot=True):
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]
 
@@ -38,9 +38,10 @@ class AVL_IO(object):  # pragma: no cover
 
         nxyz_nodes = nodes.shape[0]
         nquad_elements = elements.shape[0]
-        #nline_elements = line_elements.shape[0]
         nline_elements = 0
-        #assert nline_elements > 0, nline_elements
+        if line_elements:
+            nline_elements = line_elements.shape[0]
+            assert nline_elements > 0, nline_elements
 
         nnodes = nxyz_nodes
         nelements = nquad_elements + nline_elements
@@ -66,7 +67,8 @@ class AVL_IO(object):  # pragma: no cover
         for i in range(nxyz_nodes):
             points.InsertPoint(nid, nodes[i, :])
             nid += 1
-        log.info('nnodes=%s nquad_elements=%s nline_elements=%s' % (nxyz_nodes, nquad_elements, nline_elements))
+        log.info('nnodes=%s nquad_elements=%s nline_elements=%s' % (
+            nxyz_nodes, nquad_elements, nline_elements))
 
         #elements -= 1
         for eid in range(nquad_elements):
@@ -79,16 +81,13 @@ class AVL_IO(object):  # pragma: no cover
             point_ids.SetId(3, node_ids[3])
             grid.InsertNextCell(elem.GetCellType(), point_ids)
 
-        #print('line_elements:')
-        #print(line_elements)
-        #for eid in range(nline_elements):
-            #elem = vtkLine()
-            #node_ids = line_elements[eid, :]
-            ##print('node_ids =', node_ids)
-            #point_ids = elem.GetPointIds()
-            #point_ids.SetId(0, node_ids[0])
-            #point_ids.SetId(1, node_ids[1])
-            #grid.InsertNextCell(elem.GetCellType(), point_ids)
+        for eid in range(nline_elements):
+            elem = vtkLine()
+            node_ids = line_elements[eid, :]
+            point_ids = elem.GetPointIds()
+            point_ids.SetId(0, node_ids[0])
+            point_ids.SetId(1, node_ids[1])
+            grid.InsertNextCell(elem.GetCellType(), point_ids)
 
         grid.SetPoints(points)
         grid.Modified()
@@ -105,7 +104,8 @@ class AVL_IO(object):  # pragma: no cover
         cases = OrderedDict()
         ID = 1
 
-        form, cases, node_ids, element_ids = self._fill_avl_case(cases, ID, nnodes, nelements, surfaces)
+        form, cases, node_ids, element_ids = self._fill_avl_case(
+            cases, ID, nnodes, nelements, surfaces)
         self.gui.node_ids = node_ids
         self.gui.element_ids = element_ids
         self.gui._finish_results_io2(form, cases)
@@ -118,7 +118,7 @@ class AVL_IO(object):  # pragma: no cover
 
 
     def _fill_avl_case(self, cases, ID, nnodes, nelements, surfaces):
-        results_form = []
+        #results_form = []
         geometry_form = [
             ('NodeID', 0, []),
             ('ElementID', 1, []),

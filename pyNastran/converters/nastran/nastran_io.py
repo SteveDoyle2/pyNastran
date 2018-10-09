@@ -84,7 +84,7 @@ from pyNastran.gui.utils.vtk.vtk_utils import (
     get_numpy_idtype_for_vtk, numpy_to_vtk_points,
     create_vtk_cells_of_constant_element_type,
     numpy_to_vtk, numpy_to_vtkIdTypeArray)
-from pyNastran.gui.errors import NoGeometry
+from pyNastran.gui.errors import NoGeometry, NoSuperelements
 from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult
 from pyNastran.converters.nastran.geometry_helper import (
     NastranGeometryHelper, tri_quality, quad_quality, get_min_max_theta,
@@ -671,7 +671,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #load_geom = True
         if isinstance(bdf_filename, str) and bdf_filename.lower().endswith(('.bdf', '.dat', '.pch',)): # '.op2'
             if IS_TESTING or self.gui.is_testing_flag:
-                self.load_nastran_geometry_vectorized(bdf_filename, plot=plot)
+                try:
+                    self.load_nastran_geometry_vectorized(bdf_filename, plot=plot)
+                except NoSuperelements as e:
+                    self.log.error('\n' + traceback.format_exc(e))
                 self.load_nastran_geometry_unvectorized(bdf_filename, plot=plot)
             else:
                 self.load_nastran_geometry_unvectorized(bdf_filename, plot=plot)
@@ -727,6 +730,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             #return
 
         #nmpc = len(model.mpcs)  # really should only be allowed if we have it in a subcase
+        if len(model.superelement_models):
+            raise NoSuperelements('superelements are not supported in vectorized BDF')
+
         if nelements + nmasses + ncaero_cards + nplotels + nrigid == 0:
             msg = 'nelements + nmasses + ncaero_cards + nplotels + nrigid = 0\n'
             msg += 'card_count = %r' % str(model.card_count)

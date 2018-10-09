@@ -45,6 +45,11 @@ def unique2d(a):
     #uniq = unique(data.view(data.dtype.descr * data.shape[1]))
     #return uniq.view(data.dtype).reshape(-1, data.shape[1])
 
+def duplicates(ids):
+    """finds the duplicate ids"""
+    counts = np.bincount(ids)
+    return np.where(counts > 1)[0]
+
 def unique_rows(A, return_index=False, return_inverse=False):
     """
     Similar to MATLAB's unique(A, 'rows'), this returns B, I, J
