@@ -449,7 +449,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             xyz_cid0[super_id] = xyz_cid0i
 
         if len(xyz_cid0) == 1:
-            make_nid_map(self.gui.nid_map, nid_cp_cdi[:, 0])
+            nid_mapi = self.gui.nid_map
+            make_nid_map(nid_mapi, nid_cp_cdi[:, 0])
             self._add_nastran_spoints_to_grid(modeli.spoints, nid_mapi)
 
             self.icd_transform = icd_transform[0]
@@ -670,7 +671,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #load_geom = True
         if isinstance(bdf_filename, str) and bdf_filename.lower().endswith(('.bdf', '.dat', '.pch',)): # '.op2'
             if IS_TESTING or self.gui.is_testing_flag:
-                #self.load_nastran_geometry_vectorized(bdf_filename, plot=plot)
+                self.load_nastran_geometry_vectorized(bdf_filename, plot=plot)
                 self.load_nastran_geometry_unvectorized(bdf_filename, plot=plot)
             else:
                 self.load_nastran_geometry_unvectorized(bdf_filename, plot=plot)
@@ -3974,7 +3975,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         """
         grid = self.gui.grid
 
-        if IS_TESTING and 0:
+        if IS_TESTING:
             self._map_elements3(nid_map, model, j, dim_max,
                                 nid_cp_cd, xref_loads=xref_loads)
         #return self._map_elements3(nid_map, model, j, dim_max,

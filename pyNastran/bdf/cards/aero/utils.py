@@ -127,10 +127,18 @@ def create_axisymmetric_body(xstation, ystation, zstation, radii, aspect_ratio,
     zs = []
     yzs = []
     nx_elements = len(radii) - 1
+    nx_stations = len(xstation)
+
     if isinstance(aspect_ratio, float_types):
         # CAERO2 requires a single aspect ratio
         # but this code is more general
-        aspect_ratio = [aspect_ratio] * len(xstation)
+        aspect_ratio = [aspect_ratio] * nx_stations
+
+    if isinstance(ystation, float_types):
+        ystation = [ystation] * nx_stations
+
+    if isinstance(zstation, float_types):
+        zstation = [zstation] * nx_stations
 
     for xi, yi, zi, radius, aspect_ratioi in zip(xstation, ystation, zstation, radii, aspect_ratio):
         #print('  station=%s xi=%.4f radius=%s' % (i, xi, radius))

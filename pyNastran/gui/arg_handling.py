@@ -23,6 +23,7 @@ FORMAT_TO_EXTENSION = {
     'tetgen' : ['.smesh', '.ele'],
     'obj' : ['.obj'],
     'fast' : ['.fgrid'],
+    'avl' : ['.avl'],
     #'abaqus' : []
 
     # no duplicate extensions are allowed; use the explicit --format option
@@ -46,6 +47,7 @@ def determine_format(input_filename, allowed_formats=None):
             'surf', 'lawgs', 'degen_geom', 'shabp', 'avus', 'fast', 'abaqus',
             'usm3d', 'bedge', 'su2', 'tetgen', 'obj',
             'openfoam_hex', 'openfoam_shell', 'openfoam_faces',
+            'avl',
         ]
 
     ext = os.path.splitext(input_filename)[1].lower()
@@ -154,7 +156,7 @@ def run_docopt():
         #'plot3d',
         'surf', 'lawgs', 'degen_geom', 'shabp', 'avus', 'fast', 'abaqus',
         'usm3d', 'bedge', 'su2', 'tetgen',
-        'openfoam_hex', 'openfoam_shell', 'openfoam_faces', 'obj',
+        'openfoam_hex', 'openfoam_shell', 'openfoam_faces', 'obj', 'avl',
         None,
     ]
     assert input_format in allowed_formats, 'format=%r is not supported' % input_format

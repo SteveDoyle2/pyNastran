@@ -107,6 +107,7 @@ class MainWindow(GuiCommon2, NastranIO):
             'tecplot',  # results
             'tetgen',
             'usm3d',  # results
+            'avl',
         ]
         #GuiCommon2.__init__(self, fmt_order, html_logging, inputs, parent)
         kwds['inputs'] = inputs

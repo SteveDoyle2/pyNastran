@@ -67,6 +67,12 @@ try:
 except ImportError:  # pragma: no cover
     pass
 
+try:
+    from pyNastran.converters.avl.avl_io import AVL_IO
+    CLASS_MAP['avl'] = AVL_IO
+except ImportError:  # pragma: no cover
+    raise
+
 
 from pyNastran.converters.nastran.nastran_io import NastranIO
 #CLASS_MAP['nastran'] = NastranIO

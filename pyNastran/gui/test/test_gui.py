@@ -45,6 +45,7 @@ FORMAT_TO_EXTENSION = {
     'su2' : ['.su2'],
     'tetgen' : ['.smesh', '.ele'],
     'avus' : ['.grd'],
+    'avl' : ['.avl'],
 
     # no duplicates are allowed
     #'panair' : ['.inp'],

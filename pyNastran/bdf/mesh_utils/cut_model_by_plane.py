@@ -18,7 +18,7 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.mesh_utils.internal_utils import get_bdf_model
 NUMPY_VERSION = np.lib.NumpyVersion(np.__version__)
 if NUMPY_VERSION < '1.13.0':
-    raise RuntimeError('numpy version=%s required>=1.13.0' % NUMPY_VERSION)
+    raise RuntimeError('numpy version=%s required>=1.13.0' % np.__version__)
 
 
 #def cut_edge_model_by_axes(bdf_filename, view_up, p1, p2, tol,
