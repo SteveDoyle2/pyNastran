@@ -18,7 +18,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
 import numpy as np
-
+from six import text_type
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.base_card import (
     BaseCard, expand_thru #, _node_ids
@@ -345,8 +345,10 @@ class SELABEL(BaseCard):
             self.comment = comment
 
         self.seid = seid
-        #:  Identifiers of grids points. (Integer > 0)
         self.label = label
+
+    def validate(self):
+        assert isinstance(self.label, text_type), self.label
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -397,20 +399,36 @@ class SELOC(BaseCard):
     """
     Partitioned Superelement Location
 
-    Defines a partitioned superelement relocation by listing three noncolinear points in
+    Defines a partitioned superelement relocation by listing three non-colinear points in
     the superelement and three corresponding points not belonging to the superelement.
 
-    +-------+------+-----+-----+-----+------+-----+----+
-    |   1   |   2  |  3  |  4  |  5  |   6  |  7  |  8 |
-    +=======+======+=====+=====+=====+======+=====+====+
-    | SELOC | SEID | PA1 | PA2 | PA3 |  PB1 | PB2 | PB |
-    +-------+------+-----+-----+-----+------+-----+----+
-    | SELOC | 110  | 10  | 100 | 111 | 1010 | 112 | 30 |
-    +-------+------+-----+-----+-----+------+-----+----+
+    +-------+------+-----+-----+-----+------+-----+-----+
+    |   1   |   2  |  3  |  4  |  5  |   6  |  7  |  8  |
+    +=======+======+=====+=====+=====+======+=====+=====+
+    | SELOC | SEID | PA1 | PA2 | PA3 |  PB1 | PB2 | PB3 |
+    +-------+------+-----+-----+-----+------+-----+-----+
+    | SELOC | 110  | 10  | 100 | 111 | 1010 | 112 | 30  |
+    +-------+------+-----+-----+-----+------+-----+-----+
 
     """
     type = 'SELOC'
     def __init__(self, seid, nodes_seid, nodes0, comment=''):
+        """
+        Creates an SELOC card, which transforms the superelement SEID
+        from PA to PB.  Basically, define two CORD1Rs.
+
+        Parameters
+        ----------
+        seid : int
+            the superelement to transform
+        nodes_seid : List[int, int, int]
+            the nodes in the superelement than define the resulting coordinate system
+        nodes0 : List[int, int, int]
+            the nodes in the superelement than define the starting coordinate system
+        comment : str; default=''
+            a comment for the card
+
+        """
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
@@ -805,7 +823,7 @@ class SEBULK(BaseCard):
 
     """
     type = 'SEBULK'
-    def __init__(self, seid, Type, rseid,
+    def __init__(self, seid, superelement_type, rseid,
                  method='AUTO', tol=1e-5, loc='YES', unitno=None,
                  comment=''):
         """
@@ -836,7 +854,7 @@ class SEBULK(BaseCard):
         if comment:
             self.comment = comment
         self.seid = seid
-        self.Type = Type
+        self.superelement_type = superelement_type
         self.rseid = rseid
         self.method = method
         self.tol = tol
@@ -846,15 +864,20 @@ class SEBULK(BaseCard):
     @classmethod
     def add_card(cls, card, comment=''):
         seid = integer(card, 1, 'seid')
-        Type = string(card, 2, 'Type')
+        superelement_type = string(card, 2, 'superelement_type')
         rseid = integer_or_blank(card, 3, 'rseid', 0)
         method = string_or_blank(card, 4, 'method', 'AUTO')
         tol = double_or_blank(card, 5, 'tol', 1e-5)
         loc = string_or_blank(card, 6, 'loc', 'YES')
         unitno = integer_or_blank(card, 7, 'seid')
         assert len(card) <= 8, 'len(SEBULK card) = %i\ncard=%s' % (len(card), card)
-        return SEBULK(seid, Type, rseid, method=method, tol=tol,
+        return SEBULK(seid, superelement_type, rseid, method=method, tol=tol,
                       loc=loc, unitno=unitno, comment=comment)
+
+    def validate(self):
+        assert self.superelement_type in ['PRIMARY', 'REPEAT', 'MIRROR', 'COLLCTR', 'EXTERNAL', 'EXTOP2'], self.superelement_type
+        assert self.loc in ['YES', 'NO'], self.loc
+        assert self.method in ['AUTO', 'MANUAL'], self.method
 
     def cross_reference(self, model):
         """
@@ -884,7 +907,7 @@ class SEBULK(BaseCard):
         pass
 
     def raw_fields(self):
-        list_fields = ['SEBULK', self.seid, self.Type, self.rseid, self.method, self.tol,
+        list_fields = ['SEBULK', self.seid, self.superelement_type, self.rseid, self.method, self.tol,
                        self.loc, self.unitno]
         return list_fields
 

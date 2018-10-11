@@ -15,6 +15,8 @@ import numpy as np  # type: ignore
 from numpy import unique, cross, dot, array  # type: ignore
 
 from pyNastran.bdf.cards.collpase_card import collapse_colon_packs
+from pyNastran.bdf.bdf_interface.utils import deprecated
+from pyNastran.utils.numpy_utils import integer_types
 
 
 def parse_patran_syntax(node_sets, pound=None):
@@ -361,7 +363,7 @@ def parse_patran_syntax_dict_map(node_sets, type_map, msg=''):
     return dict_out
 
 
-def Position(xyz, cid, model, is_cid_int=True):
+def Position(xyz, cid, model, is_cid_int=None):
     """
     Gets the point in the global XYZ coordinate system.
 
@@ -373,6 +375,8 @@ def Position(xyz, cid, model, is_cid_int=True):
         the coordinate ID for xyz
     model : BDF()
         the BDF model object
+    is_cid_int : bool
+        is cid/cid_new an integer or a Coord object (deprecated)
 
     Returns
     -------
@@ -380,15 +384,16 @@ def Position(xyz, cid, model, is_cid_int=True):
         the position of the GRID in an arbitrary coordinate system
 
     """
-    if is_cid_int:
-        cp_ref = model.Coord(cid)
-    else:
-        cp_ref = cid
+    if is_cid_int is not None:  # pragma: no cover
+        deprecated('Position(xyz, cid, model, is_cid_int=%s)' % is_cid_int,
+                   'Position(xyz, cid, model)', '1.2',
+                   levels=[-1])
+
+    cp_ref = _coord(model, cid)
     xyz2 = cp_ref.transform_node_to_global(xyz)
     return xyz2
 
-
-def TransformLoadWRT(F, M, cid, cid_new, model, is_cid_int=True):
+def TransformLoadWRT(F, M, cid, cid_new, model, is_cid_int=None):
     """
     Transforms a force/moment from an arbitrary coordinate system to another
     coordinate system.
@@ -406,7 +411,7 @@ def TransformLoadWRT(F, M, cid, cid_new, model, is_cid_int=True):
     model : BDF()
         the BDF model object
     is_cid_int : bool
-        is cid/cid_new an integer or a Coord object
+        is cid/cid_new an integer or a Coord object (deprecated)
 
     Returns
     -------
@@ -416,17 +421,18 @@ def TransformLoadWRT(F, M, cid, cid_new, model, is_cid_int=True):
         the force in an arbitrary coordinate system
 
     """
+    if is_cid_int is not None:  # pragma: no cover
+        deprecated('TransformLoadWRT(F, M, cid, cid_new, model, is_cid_int=%s)' % is_cid_int,
+                   'TransformLoadWRT(F, M, cid, cid_new, model)', '1.2',
+                   levels=[-1])
+
     if cid == cid_new: # same coordinate system
         return F, M
 
     # find the vector r for doing:
     #     M = r x F
-    if is_cid_int:
-        cp_ref = model.Coord(cid)
-        coord_to_ref = model.Coord(cid_new)
-    else:
-        cp_ref = cid
-        coord_to_ref = cid_new
+    cp_ref = _coord(model, cid)
+    coord_to_ref = _coord(model, cid_new)
     r = cp_ref.origin - coord_to_ref.origin
 
     # change R-theta-z to xyz
@@ -457,7 +463,7 @@ def TransformLoadWRT(F, M, cid, cid_new, model, is_cid_int=True):
     return Fxyz_local_2, Mxyz_local_2
 
 
-def PositionWRT(xyz, cid, cid_new, model, is_cid_int=True):
+def PositionWRT(xyz, cid, cid_new, model, is_cid_int=None):
     """
     Gets the location of the GRID which started in some arbitrary system and
     returns it in the desired coordinate system
@@ -473,7 +479,7 @@ def PositionWRT(xyz, cid, cid_new, model, is_cid_int=True):
     model : BDF()
         the BDF model object
     is_cid_int : bool
-        is cid/cid_new an integer or a Coord object
+        is cid/cid_new an integer or a Coord object (deprecated)
 
     Returns
     -------
@@ -481,15 +487,16 @@ def PositionWRT(xyz, cid, cid_new, model, is_cid_int=True):
         the position of the GRID in an arbitrary coordinate system
 
     """
+    if is_cid_int is not None:  # pragma: no cover
+        deprecated('PositionWRT(xyz, cid, cid_new, model, is_cid_int=%s)' % is_cid_int,
+                   'PositionWRT(xyz, cid, cid_new, model)', '1.2',
+                   levels=[-1])
+
     if cid == cid_new: # same coordinate system
         return xyz
 
-    if is_cid_int:
-        cp_ref = model.Coord(cid)
-        coord_to_ref = model.Coord(cid_new)
-    else:
-        cp_ref = cid
-        coord_to_ref = cid_new
+    cp_ref = _coord(model, cid)
+    coord_to_ref = _coord(model, cid_new)
 
     if 0:  # pragma: no cover
         # pGlobal = pLocal1 * beta1 + porigin1
@@ -567,3 +574,11 @@ def split_eids_along_nids(model, eids, nids):
                 nodes.append(nidi)
             assert len(np.unique(nodes)) == len(nodes), 'nodes=%s' % nodes
         elem.nodes = nodes
+
+def _coord(model, cid):
+    """helper method"""
+    if isinstance(cid, integer_types):
+        cp_ref = model.Coord(cid)
+    else:
+        cp_ref = cid
+    return cp_ref

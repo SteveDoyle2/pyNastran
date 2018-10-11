@@ -16,7 +16,7 @@ from pyNastran.bdf.cards.coordinate_systems import (
     CORD2R, CORD2C, #CORD2S,
     CORD3G)
 from pyNastran.bdf.bdf import BDF, BDFCard
-from pyNastran.bdf.utils import TransformLoadWRT
+from pyNastran.bdf.utils import Position, PositionWRT, TransformLoadWRT
 from pyNastran.bdf.cards.aero.utils import make_monpnt1s_from_cids
 from pyNastran.bdf.cards.test.utils import save_load_deck
 from pyNastran.dev.bdf_vectorized2.bdf_vectorized import BDF as BDFv
@@ -346,10 +346,11 @@ class TestCoords(unittest.TestCase):
             [30., 40., 50.],
         ], dtype='float64')
         for nid in model.nodes:
+            node = model.Node(nid)
             a = array([30., 40., 50.])
-            b = model.Node(nid).get_position()
+            b = node.get_position()
             self.assertTrue(allclose(array([30., 40., 50.]),
-                                     model.Node(nid).get_position()), str(a - b))
+                                     node.get_position()), str(a - b))
 
         xyz_cid0 = model.get_xyz_in_coord(cid=0, fdtype='float64')
         array_equal(xyz_cid0_actual, xyz_cid0)
@@ -494,10 +495,11 @@ class TestCoords(unittest.TestCase):
             [30., 40., 50.],
         ], dtype='float64')
         for nid in model.nodes:
+            node = model.Node(nid)
             a = array([30., 40., 50.])
-            b = model.Node(nid).get_position()
+            b = node.get_position()
             self.assertTrue(allclose(array([30., 40., 50.]),
-                                     model.Node(nid).get_position()), str(a - b))
+                                     node.get_position()), str(a - b))
         xyz_cid0 = model.get_xyz_in_coord(cid=0, fdtype='float64')
         assert np.allclose(xyz_cid0_actual, xyz_cid0), '%s' % (xyz_cid0_actual - xyz_cid0)
 
@@ -618,8 +620,18 @@ class TestCoords(unittest.TestCase):
         #print(coord.i, coord.j, coord.k)
 
         node = model.Node(20143)
-        #print(node.Position(debug=False))
+        xyzp1 = Position(node.xyz, node.cp, model)
+        xyzp2 = Position(node.xyz, node.cp_ref, model)
         xyz = node.get_position()
+        assert np.array_equal(xyz, xyzp1)
+        assert np.array_equal(xyz, xyzp2)
+
+        xyz_wrt_p1 = PositionWRT(node.xyz, node.cp, 0, model)
+        xyz_wrt_p2 = PositionWRT(node.xyz, node.cp_ref, 0, model)
+        xyz_wrt = node.get_position_wrt(model, 0)
+        assert np.array_equal(xyz, xyz_wrt_p1)
+        assert np.array_equal(xyz, xyz_wrt_p2)
+        assert np.array_equal(xyz, xyz_wrt)
 
         # by running it through Patran...
         #GRID     20143          1.1067  .207647 -.068531
@@ -668,7 +680,7 @@ class TestCoords(unittest.TestCase):
         model = None
 
         fxyz_local, mxyz_local = TransformLoadWRT(fxyz, mxyz, cid0, cid_new,
-                                                  model, is_cid_int=False)
+                                                  model)
 
         r = array([Lx, Ly, Lz])
         F = array([0., -Fy, 0.])
@@ -698,7 +710,7 @@ class TestCoords(unittest.TestCase):
         model = None
 
         fxyz_local, mxyz_local = TransformLoadWRT(fxyz, mxyz, cid0, cid_new,
-                                                  model, is_cid_int=False)
+                                                  model)
         r = array([Lx, Ly, Lz])
         F = array([0., -Fy, 0.])
         M = cross(r, F)
@@ -926,6 +938,7 @@ def get_nodes(grids, grids_expected, coords):
         the expected grids
         grid : List[nid, cp, x, y, z]
             the GRID fields
+
     """
     model = BDF(debug=False)
 

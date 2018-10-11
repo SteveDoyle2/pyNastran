@@ -3030,8 +3030,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         """
         return get_bdf_stats(self, return_type=return_type)
 
-    def get_displacement_index_xyz_cp_cd(self, include_seid=False,
-                                         fdtype='float64', idtype='int32',
+    def get_displacement_index_xyz_cp_cd(self, fdtype='float64', idtype='int32',
                                          sort_ids=True):
         # type: (str, str, bool) -> Any
         """
@@ -3041,8 +3040,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         Parameters
         ----------
-        include_seid : bool; default=False
-            include the superelement id
         fdtype : str; default='float64'
             the type of xyz_cp
         idtype : str; default='int32'
@@ -4246,6 +4243,7 @@ class BDF(BDF_):
             superelement_ilines = np.zeros((nlines, 2), dtype='int32')  ## TODO: calculate this
             model._parse_all_cards(superelement_line[iminus:], superelement_ilines)
             self.superelement_models[superelement_id] = model
+            self.initial_superelement_models.append(superelement_id)
 
 
 def _prep_comment(comment):

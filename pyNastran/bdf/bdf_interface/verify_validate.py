@@ -1,7 +1,12 @@
+"""
+defines:
+ - verify_bdf(model, xref)
+ - validate_bdf(model)
+"""
 from __future__ import print_function
 import sys
 import traceback
-from six import iteritems
+from six import iteritems, reraise
 
 def verify_bdf(model, xref):
     #for key, card in sorted(model.params.items()):
@@ -72,217 +77,159 @@ def _verify_dict_list(dict_list, xref):
                 print(str(card))
                 raise
 
+def _print_card(card):
+    """helper for ``_validate_msg``"""
+    try:
+        return card.write_card(size=8)
+    except RuntimeError:
+        return ''
+
+def _validate_msg(card_obj):
+    """helper for ``_validate_traceback``"""
+    msg = traceback.format_exc()
+    try:
+        msg += ('\n' + card_obj.get_stats() + '\n' + _print_card(card_obj)).rstrip()
+    except KeyError:
+        msg += '\n' + card_obj.get_stats().rstrip()
+    return msg
+
+def _validate_traceback(model, obj, unused_error, ifailed, nmax_failed):
+    """helper method for ``validate_bdf`` to write a traceback"""
+    exc_type, exc_value, exc_traceback = sys.exc_info()
+    #exc_type, exc_value, exc_traceback = sys.exc_info()
+    # format_tb(exc_traceback)  # works; ugly
+    # format_exc(e) # works; short
+    #traceback.format_stack()
+    #print('validate_dict_list')
+    #print('traceback.format_stack()[:-1] = \n', ''.join(traceback.format_stack()[:-1]))
+    #model.log.info('info2')
+    #model.log.error('error2')
+    #msg = (
+        #'\nTraceback (most recent call last):\n' +
+        #''.join(traceback.format_stack()) +
+        ##''.join(traceback.format_tb(exc_traceback)) + #'\n' +
+        #'%s: %s\n' % (exc_type.__name__, exc_value) +
+        #obj.get_stats() +
+        #'----------------------------------------------------------------\n')
+    #model.log.error(msg)
+    model.log.error(_validate_msg(obj))
+    ifailed += 1
+    if ifailed > nmax_failed:
+        # PY3: raise error from None
+        reraise(exc_type, exc_value, exc_traceback)
+    return ifailed, exc_type, exc_value, exc_traceback
+
 def validate_bdf(model):
-    def _print_card(card):
-        """helper for ``validate_bdf``"""
-        try:
-            return card.write_card(size=8)
-        except RuntimeError:
-            return ''
-
-    def _validate_dict_list(objects_dict):
-        """helper method for validate_bdf"""
-        ifailed = 0
-        nmax_failed = 0
-        assert isinstance(objects_dict, dict), type(objects_dict)
-        for unused_key, objects in sorted(objects_dict.items()):
-            assert isinstance(objects, list), type(objects)
-            for obj in objects:
-                #print('obj.get_stats =', obj.get_stats())
-                #print(obj.rstrip())
-                try:
-                    obj.validate()
-                except(ValueError, AssertionError, RuntimeError, IndexError) as error:
-                    #exc_type, exc_value, exc_traceback = sys.exc_info()
-                    # format_tb(exc_traceback)  # works; ugly
-                    # format_exc(e) # works; short
-                    #traceback.format_stack()
-                    #print('validate_dict_list')
-                    #print('traceback.format_stack()[:-1] = \n', ''.join(traceback.format_stack()[:-1]))
-                    #model.log.info('info2')
-                    #model.log.error('error2')
-                    #msg = (
-                        #'\nTraceback (most recent call last):\n' +
-                        #''.join(traceback.format_stack()) +
-                        ##''.join(traceback.format_tb(exc_traceback)) + #'\n' +
-                        #'%s: %s\n' % (exc_type.__name__, exc_value) +
-                        #obj.get_stats() +
-                        #'----------------------------------------------------------------\n')
-                    #model.log.error(msg)
-                    model.log.error(('\n' + obj.get_stats() + '\n' + _print_card(obj)).rstrip())
-                    ifailed += 1
-                    if ifailed > nmax_failed:
-                        raise
-            if ifailed:
-                raise
-
-    def _validate_dict(objects):
-        # type : (dict) -> None
-        """helper method for validate_bdf"""
-        assert isinstance(objects, dict), type(objects)
-        ifailed = 0
-        nmax_failed = 0
-        for unused_id, obj in sorted(objects.items()):
-            try:
-                obj.validate()
-            except(ValueError, AssertionError, RuntimeError, IndexError) as error:
-                #exc_type, exc_value, exc_traceback = sys.exc_info()
-                # format_tb(exc_traceback)  # works; ugly
-                # format_exc(e) # works; short
-                #traceback.format_stack()
-                #msg = (
-                    #'\nTraceback (most recent call last):\n' +
-                    #''.join(traceback.format_stack()[:-1])
-                #)
-                #write_error(msg)
-                #write_error(''.join(traceback.format_tb(exc_traceback)) + '\n')
-                #model.log.error('\n' + obj.rstrip())
-                #write_error('----------------------------------------------------------------\n')
-                model.log.error(('\n' + obj.get_stats() + '\n' + _print_card(obj)).rstrip())
-                _print_card(obj)
-                ifailed += 1
-                if ifailed > nmax_failed:
-                    raise
-        if ifailed:
-            raise
-
-    def _validate_list(objects):
-        # type : (List) -> None
-        """helper method for validate_bdf"""
-        ifailed = 0
-        nmax_failed = 0
-        assert isinstance(objects, list), type(objects)
-        for obj in objects:
-            try:
-                obj.validate()
-            except(ValueError, AssertionError, RuntimeError) as error:
-                #exc_type, exc_value, exc_traceback = sys.exc_info()
-                # format_tb(exc_traceback)  # works; ugly
-                # format_exc(e) # works; short
-                #traceback.format_stack()
-                #model.log.error(
-                    #'\nTraceback (most recent call last):\n' +
-                    #''.join(traceback.format_stack()[:-1]) +
-                    #''.join(traceback.format_tb(exc_traceback)) + '\n' +
-                    #'\n' + obj.rstrip() +
-                    #'----------------------------------------------------------------\n')
-                model.log.error(('\n' + obj.get_stats() + '\n' + _print_card(obj)).rstrip())
-                ifailed += 1
-                if ifailed > nmax_failed:
-                    raise
-        if ifailed:
-            raise
-
-    _validate_dict(model.nodes)
-    _validate_dict(model.points)
-    _validate_dict(model.coords)
-    _validate_dict(model.elements)
-    _validate_dict(model.properties)
-    _validate_dict(model.rigid_elements)
-    _validate_dict(model.plotels)
-    _validate_dict(model.masses)
-    _validate_dict(model.properties_mass)
+    _validate_dict(model, model.nodes)
+    _validate_dict(model, model.points)
+    _validate_dict(model, model.coords)
+    _validate_dict(model, model.elements)
+    _validate_dict(model, model.properties)
+    _validate_dict(model, model.rigid_elements)
+    _validate_dict(model, model.plotels)
+    _validate_dict(model, model.masses)
+    _validate_dict(model, model.properties_mass)
     #------------------------------------------------
-    _validate_dict(model.materials)
-    _validate_dict(model.thermal_materials)
-    _validate_dict(model.MATS1)
-    _validate_dict(model.MATS3)
-    _validate_dict(model.MATS8)
-    _validate_dict(model.MATT1)
-    _validate_dict(model.MATT2)
-    _validate_dict(model.MATT3)
-    _validate_dict(model.MATT4)
-    _validate_dict(model.MATT5)
-    _validate_dict(model.MATT8)
-    _validate_dict(model.MATT9)
-    _validate_dict(model.creep_materials)
-    _validate_dict(model.hyperelastic_materials)
+    _validate_dict(model, model.materials)
+    _validate_dict(model, model.thermal_materials)
+    _validate_dict(model, model.MATS1)
+    _validate_dict(model, model.MATS3)
+    _validate_dict(model, model.MATS8)
+    _validate_dict(model, model.MATT1)
+    _validate_dict(model, model.MATT2)
+    _validate_dict(model, model.MATT3)
+    _validate_dict(model, model.MATT4)
+    _validate_dict(model, model.MATT5)
+    _validate_dict(model, model.MATT8)
+    _validate_dict(model, model.MATT9)
+    _validate_dict(model, model.creep_materials)
+    _validate_dict(model, model.hyperelastic_materials)
 
     #------------------------------------------------
-    _validate_dict_list(model.load_combinations)
-    _validate_dict_list(model.loads)
-    _validate_dict_list(model.dloads)
-    _validate_dict_list(model.dloads)
+    _validate_dict_list(model, model.load_combinations)
+    _validate_dict_list(model, model.loads)
+    _validate_dict_list(model, model.dloads)
+    _validate_dict_list(model, model.dloads)
 
     #------------------------------------------------
-    _validate_dict(model.nlpcis)
-    _validate_dict(model.nlparms)
-    _validate_dict(model.rotors)
-    _validate_dict(model.tsteps)
-    _validate_dict(model.tstepnls)
-    _validate_dict_list(model.transfer_functions)
-    _validate_dict(model.delays)
+    _validate_dict(model, model.nlpcis)
+    _validate_dict(model, model.nlparms)
+    _validate_dict(model, model.rotors)
+    _validate_dict(model, model.tsteps)
+    _validate_dict(model, model.tstepnls)
+    _validate_dict_list(model, model.transfer_functions)
+    _validate_dict(model, model.delays)
 
     #------------------------------------------------
     if model.aeros is not None:
         model.aeros.validate()
-    _validate_dict(model.caeros)
-    _validate_dict(model.paeros)
-    _validate_dict(model.splines)
-    _validate_dict(model.aecomps)
-    _validate_dict(model.aefacts)
-    #_validate_dict(model.panlists)
+    _validate_dict(model, model.caeros)
+    _validate_dict(model, model.paeros)
+    _validate_dict(model, model.splines)
+    _validate_dict(model, model.aecomps)
+    _validate_dict(model, model.aefacts)
+    #_validate_dict(model, model.panlists)
 
-    _validate_dict_list(model.aelinks)
+    _validate_dict_list(model, model.aelinks)
 
-    _validate_dict(model.aeparams)
-    _validate_dict(model.aesurf)
-    _validate_dict(model.aesurfs)
-    _validate_dict(model.aestats)
-    _validate_dict(model.trims)
+    _validate_dict(model, model.aeparams)
+    _validate_dict(model, model.aesurf)
+    _validate_dict(model, model.aesurfs)
+    _validate_dict(model, model.aestats)
+    _validate_dict(model, model.trims)
 
-    _validate_dict(model.divergs)
-    _validate_dict(model.csschds)
-    _validate_list(model.mkaeros)
-    _validate_list(model.monitor_points)
+    _validate_dict(model, model.divergs)
+    _validate_dict(model, model.csschds)
+    _validate_list(model, model.mkaeros)
+    _validate_list(model, model.monitor_points)
 
     #------------------------------------------------
     if model.aero is not None:
         model.aero.validate()
 
-    _validate_dict(model.flfacts)
-    _validate_dict(model.flutters)
-    _validate_dict(model.gusts)
+    _validate_dict(model, model.flfacts)
+    _validate_dict(model, model.flutters)
+    _validate_dict(model, model.gusts)
 
     #------------------------------------------------
-    _validate_dict_list(model.bcs)
-    _validate_dict(model.phbdys)
-    _validate_dict(model.convection_properties)
-    _validate_dict(model.tempds)
+    _validate_dict_list(model, model.bcs)
+    _validate_dict(model, model.phbdys)
+    _validate_dict(model, model.convection_properties)
+    _validate_dict(model, model.tempds)
     #------------------------------------------------
-    _validate_dict(model.bcrparas)
-    _validate_dict(model.bctadds)
-    _validate_dict(model.bctparas)
-    _validate_dict(model.bctsets)
-    _validate_dict(model.bsurf)
-    _validate_dict(model.bsurfs)
-
-    #------------------------------------------------
-    _validate_dict(model.suport1)
-    _validate_list(model.suport)
-    _validate_list(model.se_suport)
-
-    _validate_dict_list(model.spcadds)
-    _validate_dict_list(model.spcs)
-    _validate_dict_list(model.mpcadds)
-    _validate_dict_list(model.mpcs)
-    _validate_dict_list(model.spcoffs)
+    _validate_dict(model, model.bcrparas)
+    _validate_dict(model, model.bctadds)
+    _validate_dict(model, model.bctparas)
+    _validate_dict(model, model.bctsets)
+    _validate_dict(model, model.bsurf)
+    _validate_dict(model, model.bsurfs)
 
     #------------------------------------------------
-    _validate_dict(model.dareas)
-    _validate_dict(model.dphases)
+    _validate_dict(model, model.suport1)
+    _validate_list(model, model.suport)
+    _validate_list(model, model.se_suport)
 
-    _validate_dict(model.pbusht)
-    _validate_dict(model.pdampt)
-    _validate_dict(model.pelast)
+    _validate_dict_list(model, model.spcadds)
+    _validate_dict_list(model, model.spcs)
+    _validate_dict_list(model, model.mpcadds)
+    _validate_dict_list(model, model.mpcs)
+    _validate_dict_list(model, model.spcoffs)
 
-    _validate_dict_list(model.frequencies)
     #------------------------------------------------
-    _validate_dict(model.dmis)
-    _validate_dict(model.dmigs)
-    _validate_dict(model.dmijs)
-    _validate_dict(model.dmijis)
-    _validate_dict(model.dmiks)
+    _validate_dict(model, model.dareas)
+    _validate_dict(model, model.dphases)
+
+    _validate_dict(model, model.pbusht)
+    _validate_dict(model, model.pdampt)
+    _validate_dict(model, model.pelast)
+
+    _validate_dict_list(model, model.frequencies)
+    #------------------------------------------------
+    _validate_dict(model, model.dmis)
+    _validate_dict(model, model.dmigs)
+    _validate_dict(model, model.dmijs)
+    _validate_dict(model, model.dmijis)
+    _validate_dict(model, model.dmiks)
     #------------------------------------------------
     #model.asets = []
     #model.bsets = []
@@ -297,54 +244,103 @@ def validate_bdf(model):
     #model.se_usets = {}
     #model.se_sets = {}
 
-    _validate_dict(model.sets)
-    _validate_dict_list(model.usets)
+    _validate_dict(model, model.sets)
+    _validate_dict_list(model, model.usets)
 
-    _validate_list(model.asets)
-    _validate_list(model.omits)
-    _validate_list(model.bsets)
-    _validate_list(model.csets)
-    _validate_list(model.qsets)
+    _validate_list(model, model.asets)
+    _validate_list(model, model.omits)
+    _validate_list(model, model.bsets)
+    _validate_list(model, model.csets)
+    _validate_list(model, model.qsets)
 
-    _validate_dict(model.se_sets)
-    _validate_dict(model.se_usets)
+    _validate_dict(model, model.se_sets)
+    _validate_dict(model, model.se_usets)
 
-    _validate_list(model.se_bsets)
-    _validate_list(model.se_csets)
-    _validate_list(model.se_qsets)
+    _validate_list(model, model.se_bsets)
+    _validate_list(model, model.se_csets)
+    _validate_list(model, model.se_qsets)
     #------------------------------------------------
-    _validate_dict(model.tables)
-    _validate_dict(model.tables_d)
-    _validate_dict(model.tables_m)
-    _validate_dict(model.random_tables)
-    _validate_dict(model.tables_sdamping)
-    _validate_dict(model.sets)
+    _validate_dict(model, model.tables)
+    _validate_dict(model, model.tables_d)
+    _validate_dict(model, model.tables_m)
+    _validate_dict(model, model.random_tables)
+    _validate_dict(model, model.tables_sdamping)
+    _validate_dict(model, model.sets)
 
     #------------------------------------------------
-    _validate_dict(model.methods)
-    _validate_dict(model.cMethods)
+    _validate_dict(model, model.methods)
+    _validate_dict(model, model.cMethods)
     #------------------------------------------------
-    _validate_dict(model.dconadds)
-    _validate_dict_list(model.dconstrs)
+    _validate_dict(model, model.dconadds)
+    _validate_dict_list(model, model.dconstrs)
 
-    _validate_dict(model.desvars)
-    _validate_dict(model.ddvals)
-    _validate_dict(model.dlinks)
-    _validate_dict(model.dresps)
+    _validate_dict(model, model.desvars)
+    _validate_dict(model, model.ddvals)
+    _validate_dict(model, model.dlinks)
+    _validate_dict(model, model.dresps)
 
     if model.dtable is not None:
         model.dtable.validate()
     if model.doptprm is not None:
         model.doptprm.validate()
 
-    _validate_dict(model.dequations)
-    _validate_dict(model.dvprels)
-    _validate_dict(model.dvmrels)
-    _validate_dict(model.dvcrels)
+    _validate_dict(model, model.dequations)
+    _validate_dict(model, model.dvprels)
+    _validate_dict(model, model.dvmrels)
+    _validate_dict(model, model.dvcrels)
     for unused_key, dscreen in sorted(model.dscreen.items()):
         dscreen.validate()
-    _validate_dict_list(model.dvgrids)
+    _validate_dict_list(model, model.dvgrids)
     model.zona.validate()
 
     for unused_super_id, superelement in model.superelement_models.items():
         validate_bdf(superelement)
+
+def _validate_dict_list(model, objects_dict):
+    """helper method for validate_bdf"""
+    ifailed = 0
+    nmax_failed = 0
+    assert isinstance(objects_dict, dict), type(objects_dict)
+    for unused_key, objects in sorted(objects_dict.items()):
+        assert isinstance(objects, list), type(objects)
+        for obj in objects:
+            #print('obj.get_stats =', obj.get_stats())
+            #print(obj.rstrip())
+            try:
+                obj.validate()
+            except(ValueError, AssertionError, RuntimeError, IndexError) as error:
+                ifailed, exc_type, exc_value, exc_traceback = _validate_traceback(
+                    model, obj, error, ifailed, nmax_failed)
+
+        if ifailed:
+            reraise(exc_type, exc_value, exc_traceback)
+
+def _validate_dict(model, objects):
+    # type : (dict) -> None
+    """helper method for validate_bdf"""
+    assert isinstance(objects, dict), type(objects)
+    ifailed = 0
+    nmax_failed = 0
+    for unused_id, obj in sorted(objects.items()):
+        try:
+            obj.validate()
+        except(ValueError, AssertionError, RuntimeError, IndexError) as error:
+            ifailed, exc_type, exc_value, exc_traceback = _validate_traceback(
+                model, obj, error, ifailed, nmax_failed)
+    if ifailed:
+        reraise(exc_type, exc_value, exc_traceback)
+
+def _validate_list(model, objects):
+    # type : (List) -> None
+    """helper method for validate_bdf"""
+    ifailed = 0
+    nmax_failed = 0
+    assert isinstance(objects, list), type(objects)
+    for obj in objects:
+        try:
+            obj.validate()
+        except(ValueError, AssertionError, RuntimeError) as error:
+            ifailed, exc_type, exc_value, exc_traceback = _validate_traceback(
+                model, obj, error, ifailed, nmax_failed)
+    if ifailed:
+        reraise(exc_type, exc_value, exc_traceback)

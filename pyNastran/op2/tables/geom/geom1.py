@@ -65,14 +65,14 @@ class GEOM1(GeomCommon):
             (6401,  64, 402): ['GMCORD',  self._read_gmcord],  # record 16
             # 17 - GRID  (above)
             (1527, 15, 466): ['SEBNDRY', self._read_fake],  # record 18
-            (1427, 14, 465): ['SEBULK',  self._read_fake],  # record 19
+            (1427, 14, 465): ['SEBULK',  self._read_sebulk],  # record 19 - superelements/see103q4.op2
             (427,   4, 453): ['SECONCT', self._read_fake],  # record 20
 
             (7902, 79, 302): ['SEELT',   self._read_fake],  # record 21
             (527,  72, 454): ['SEEXCLD', self._read_fake],  # record 22
-            (1027, 10, 459): ['SELABEL', self._read_fake],  # record 23
-            (827,   8, 457): ['SELOC',   self._read_fake],  # record 24
-            (927,   9, 458): ['SEMPLN',  self._read_fake],  # record 25
+            (1027, 10, 459): ['SELABEL', self._read_selabel],  # record 23 - superelements/see103q4.op2
+            (827,   8, 457): ['SELOC',   self._read_seloc],  # record 24 - superelements/see103q4.op2
+            (927,   9, 458): ['SEMPLN',  self._read_sempln],  # record 25 - superelements/see103q4.op2
             (1327, 13, 464): ['SENQSET', self._read_fake],  # record 26
             # 27 - SEQGP (above)
             (5401, 54, 305): ['SEQSEP',  self._read_fake],  # record 28
@@ -364,3 +364,135 @@ class GEOM1(GeomCommon):
     def _read_gmcord(self, data, n):
         self.log.info('skipping GMCORD in GEOM1')
         return len(data)
+
+    def _read_sebulk(self, data, n):
+        """
+        Record 18 -- SEBULK(1427,14,465)
+
+        Word Name Type Description
+        1 SEID    I Superelement identification number
+        2 TYPE    I Superelement type
+        3 RSEID   I Reference superelement identification number
+        4 METHOD  I Boundary point search method: 1=automatic or 2=manual
+        5 TOL    RS Location tolerance
+        6 LOC     I Coincident location check option: yes=1 or no=2
+        7 MEDIA   I Media format of boundary data of external SE
+        8 UNIT    I FORTRAN unit number of OP2 and OP4 input of external SE
+        """
+        structi = Struct(self._endian + b'4if3i')
+        nentries = (len(data) - n) // 32 # 4*8
+        for i in range(nentries):
+            edata = data[n:n + 32]  # 4*8
+            out = structi.unpack(edata)
+            (seid, superelement_type, rseid, method, tol, loc, media, unit) = out
+            if superelement_type == 6:
+                superelement_type = 'MIRROR'
+            if loc == 1:
+                loc = 'YES'
+            elif loc == 2:
+                loc = 'NO'
+
+            if method == 1:
+                method = 'AUTO'
+            elif method == 2:
+                method = 'MANUAL'
+
+            if self.is_debug_file:
+                self.binary_debug.write('  SEBULK=%s\n' % str(out))
+            #media,
+            sebulk = self.add_sebulk(seid, superelement_type, rseid, method=method, tol=tol, loc=loc, unitno=unit)
+            sebulk.validate()
+            n += 32
+        self.increase_card_count('SEBULK', nentries)
+        return n
+
+    def _read_seloc(self, data, n):
+        """
+        Record 23 -- SELOC(827,8,457)
+
+        Word Name Type Description
+        1 SEID I Superelement identification number
+        2 GA1  I Grid point 1 identification number in SEID
+        3 GA2  I Grid point 2 identification number in SEID
+        4 GA3  I Grid point 3 identification number in SEID
+        5 GB1  I Grid point 1 identification number in the main Bulk Data
+        6 GB2  I Grid point 2 identification number in the main Bulk Data
+        7 GB3  I Grid point 3 identification number in the main Bulk Data
+        """
+        structi = Struct(self._endian + b'7i')
+        nentries = (len(data) - n) // 28 # 4*7
+        for i in range(nentries):
+            edata = data[n:n + 28]
+            out = structi.unpack(edata)
+            (seid, ga1, ga2, ga3, gb1, gb2, gb3) = out
+            if self.is_debug_file:
+                self.binary_debug.write('  SELOC=%s\n' % str(out))
+            self.add_seloc(seid, [ga1, ga2, ga3], [gb1, gb2, gb3])
+            n += 28
+        self.increase_card_count('SELOC', nentries)
+        return n
+
+    def _read_sempln(self, data, n):
+        """
+        Record 24 -- SEMPLN(927,9,458)
+
+        1 SEID     I Superelement identification number
+        2 MIRRTYPE I Mirror type
+
+        MIRRTYPE=1 Plane
+        3 G1       I    Grid point 1 identification number in the main Bulk Data
+        4 G2       I    Grid point 2 identification number in the main Bulk Data
+        5 G3       I    Grid point 3 identification number in the main Bulk Data
+        6 UNDEF(2) none Not Defined
+
+        MIRRTYPE=2 Normal
+        3 G    I Grid point identification number in the main Bulk Data
+        4 CID  I Coordinate system identification number
+        5 N1  RS Normal component in direction 1 of CID
+        6 N2  RS Normal component in direction 2 of CID
+        7 N3  RS Normal component in direction 3 of CID
+        """
+        struct2i = Struct(self._endian + b'2i') # 8
+        struct5i = Struct(self._endian + b'5i') # 20
+        struct2i_3f = Struct(self._endian + b'2i3f') # 20
+
+        nentries = (len(data) - n) // 28 # 4*7
+        for i in range(nentries):
+            edata1 = data[n:n + 8]  # 4*2
+            edata2 = data[n+8:n + 28]  # 4*7
+            out = struct2i.unpack(edata1)
+            (seid, mirror_type) = out
+            if mirror_type == 1:
+                g1, g2, g3, unused_junk1, unused_junk2 = struct5i.unpack(edata2)
+                self.add_sempln(seid, g1, g2, g3)
+            else:
+                raise NotImplementedError(mirror_type)
+            if self.is_debug_file:
+                self.binary_debug.write('  SEMPLN=%s\n' % str(out))
+            n += 28
+        self.increase_card_count('SEMPLN', nentries)
+        return n
+
+    def _read_selabel(self, data, n):
+        """
+        Record 22 -- SELABEL(1027,10,459)
+
+        Word Name Type Description
+        1 SEID I Superelement identification number
+        2 LABEL(14) CHAR4 Label associated with superelement SEID
+        """
+        structi = Struct(self._endian + b'i14s') # 18
+        structi = Struct(self._endian + b'i56s') # 60
+        nentries = (len(data) - n) // 60 # 4+18
+        for i in range(nentries):
+            edata = data[n:n + 60]
+            out = structi.unpack(edata)
+            (seid, label) = out
+            label = label.decode(self._encoding).rstrip()
+            if self.is_debug_file:
+                self.binary_debug.write('  SELABEL=%s\n' % str(out))
+            selabel = self.add_selabel(seid, label)
+            selabel.validate()
+            n += 60
+        self.increase_card_count('SELABEL', nentries)
+        return n

@@ -1018,19 +1018,26 @@ class CTRIA6(TriShell):
         nids = data[2:8]
         theta_mcid = data[8]
         zoffset = data[9]
-        T1 = data[10]
-        T2 = data[11]
-        T3 = data[12]
+        t1 = data[10]
+        t2 = data[11]
+        t3 = data[12]
+        assert isinstance(t1, float), data
+        assert isinstance(t2, float), data
+        assert isinstance(t3, float), data
+
+        if t1 == -1.:
+            t1 = None
+        if t2 == -1.:
+            t2 = None
+        if t3 == -1.:
+            t3 = None
         tflag = data[13]
-        assert isinstance(T1, float), data
-        assert isinstance(T2, float), data
-        assert isinstance(T3, float), data
         assert isinstance(tflag, integer_types), data
         #prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(nids) == 6, 'error on CTRIA6'
         assert tflag in [0, 1], data
         return CTRIA6(eid, pid, nids, theta_mcid, zoffset,
-                      tflag, T1, T2, T3, comment=comment)
+                      tflag, t1, t2, t3, comment=comment)
 
     def cross_reference(self, model):
         """

@@ -1749,7 +1749,29 @@ class GEOM2(GeomCommon):
 # CTRIAFD - 95
 
     def _read_ctria6(self, data, n):
-        """common method for reading CTRIA6"""
+        """
+        common method for reading CTRIA6
+
+        CTRIA6(4801,48,327) # MSC 2005 - GEOM201
+        Word Name Type Description
+        1  EID    I Element identification number
+        2  PID    I Property identification number
+        3  G(6)   I Grid point identification numbers of connection points
+        9 THETA  RS Material property orientation angle or coordinate system identification number
+        10 ZOFFS RS Offset from the surface of grid points reference plane
+        11 T(3)  RS Membrane thickness of element at grid points
+
+        Record 90 -- CTRIA6(4801,48,327) # MSC 2005 - GEOM2
+        CTRIA6(4801,48,327)
+        Word Name Type Description
+        1 EID     I Element identification number
+        2 PID     I Property identification number
+        3 G(6)    I Grid point identification numbers of connection points
+        9 THETA  RS Material property orientation angle or coordinate system identification number
+        10 ZOFFS RS Offset from the surface of grid points reference plane
+        11 T(3)  RS Membrane thickness of element at grid points
+        14 TFLAG  I Relative thickness flag
+        """
         n = self._read_split_card(data, n,
                                   self._read_ctria6_current, self._read_ctria6_v2001,
                                   'CTRIA6', self.add_op2_element)
@@ -1758,9 +1780,20 @@ class GEOM2(GeomCommon):
     def _read_ctria6_current(self, data, n):
         """
         CTRIA6(4801,48,327) - the marker for Record 96
+
+        Record 90 -- CTRIA6(4801,48,327) # MSC 2005 - GEOM2
+        Word Name Type Description
+        1 EID     I Element identification number
+        2 PID     I Property identification number
+        3 G(6)    I Grid point identification numbers of connection points
+        9 THETA  RS Material property orientation angle or coordinate system identification number
+        10 ZOFFS RS Offset from the surface of grid points reference plane
+        11 T(3)  RS Membrane thickness of element at grid points
+        14 TFLAG  I Relative thickness flag
         """
         s = Struct(self._endian + b'8i 5f i')
         nelements = (len(data) - n) // 56  # 14*4
+        assert (len(data) - n) % 56 == 0
         elements = []
         for i in range(nelements):
             edata = data[n:n + 56]
@@ -1784,6 +1817,7 @@ class GEOM2(GeomCommon):
         """
         s = Struct(self._endian + b'8i 5f')
         nelements = (len(data) - n) // 52  # 13*4
+        assert (len(data) - n) % 52 == 0
         elements = []
         for i in range(nelements):
             edata = data[n:n + 52]

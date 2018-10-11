@@ -435,7 +435,8 @@ def deprecated(old_name, new_name, deprecated_version, levels=None):
         the version the method was first deprecated in
     levels : List[int]
         the deprecation levels to show
-        [1, 2, 3] shows 3 levels up from this function
+        [1, 2, 3] shows 3 levels up from this function (good for classes)
+        None : ???
 
     TODO: turn this into a decorator?
 

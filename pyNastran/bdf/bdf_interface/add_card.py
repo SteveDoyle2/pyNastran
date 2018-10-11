@@ -7134,52 +7134,81 @@ class AddCards(AddMethods):
         sebndry = SEBNDRY(seid_a, seid_b, ids, comment=comment)
         self._add_sebndry_object(sebndry)
         return sebndry
-    def add_sebulk(self, seid, Type, rseid, method='AUTO', tol=1e-5, loc='YES', unitno=None, comment=''):
-        sebulk = SEBULK(seid, Type, rseid,
+
+    def add_sebulk(self, seid, superelement_type, rseid,
+                   method='AUTO', tol=1e-5, loc='YES', unitno=None, comment=''):
+        sebulk = SEBULK(seid, superelement_type, rseid,
                         method=method, tol=tol, loc=loc,
                         unitno=unitno, comment=comment)
         self._add_sebulk_object(sebulk)
         return sebulk
+
     def add_seconct(self, seid_a, seid_b, tol, loc, nodes_a, nodes_b, comment=''):
         seconct = SECONCT(seid_a, seid_b, tol, loc, nodes_a, nodes_b, comment=comment)
         self._add_seconct_object(seconct)
         return seconct
+
     def add_seelt(self, seid, ids, comment=''):
         seelt = SEELT(seid, ids, comment=comment)
         self._add_seelt_object(seelt)
         return seelt
+
     def add_seexcld(self, seid_a, seid_b, nodes, comment=''):
         seexcld = SEEXCLD(seid_a, seid_b, nodes, comment=comment)
         self._add_seexcld_object(seexcld)
         return seexcld
+
     def add_selabel(self, seid, label, comment=''):
         selabel = SELABEL(seid, label, comment=comment)
         self._add_selabel_object(selabel)
         return selabel
-    def add_seloc(self, seid, ids, comment=''):
-        seloc = SELOC(seid, ids, comment=comment)
+
+    def add_seloc(self, seid, nodes_seid, nodes0, comment=''):
+        """
+        Creates an SELOC card, which transforms the superelement SEID
+        from PA to PB.  Basically, define two CORD1Rs.
+
+        Parameters
+        ----------
+        seid : int
+            the superelement to transform
+        nodes_seid : List[int, int, int]
+            the nodes in the superelement than define the resulting coordinate system
+        nodes0 : List[int, int, int]
+            the nodes in the superelement than define the starting coordinate system
+        comment : str; default=''
+            a comment for the card
+
+        """
+        seloc = SELOC(seid, nodes_seid, nodes0, comment=comment)
         self._add_seloc_object(seloc)
         return seloc
+
     def add_seload(self, lid_s0, seid, lid_se, comment=''):
         seload = SELOAD(lid_s0, seid, lid_se, comment=comment)
         self._add_seload_object(seload)
         return seload
+
     def add_sempln(self, seid, p1, p2, p3, comment=''):
         sempln = SEMPLN(seid, p1, p2, p3, comment=comment)
         self._add_sempln_object(sempln)
         return sempln
+
     def add_setree(self, seid, ids, comment=''):
         setree = SETREE(seid, ids, comment=comment)
         self._add_setree_object(setree)
         return setree
+
     def add_csuper(self, seid, psid, nodes, comment=''):
         csuper = CSUPER(seid, psid, nodes, comment=comment)
         self._add_csuper_object(csuper)
         return csuper
+
     def add_csupext(self, seid, nodes, comment=''):
         csupext = CSUPEXT(seid, nodes, comment=comment)
         self._add_csupext_object(csupext)
         return csupext
+
     def add_senqset(self, set_id, n, comment=''):
         senqset = SENQSET(set_id, n, comment=comment)
         self._add_senqset_object(senqset)

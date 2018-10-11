@@ -50,6 +50,10 @@ def duplicates(ids):
     counts = np.bincount(ids)
     return np.where(counts > 1)[0]
 
+def is_monotonic(int_array):
+    """is the array monotonic?"""
+    return np.all(int_array[1:] >= int_array[:-1])
+
 def unique_rows(A, return_index=False, return_inverse=False):
     """
     Similar to MATLAB's unique(A, 'rows'), this returns B, I, J

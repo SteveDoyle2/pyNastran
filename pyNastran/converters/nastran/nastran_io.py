@@ -10,6 +10,7 @@ from collections import defaultdict, OrderedDict
 import traceback
 from six import iteritems, StringIO, string_types
 from pyNastran.op2.result_objects.stress_object import StressObject
+from pyNastran.femutils.utils import duplicates, is_monotonic
 
 SIDE_MAP = {}
 SIDE_MAP['CHEXA'] = {
@@ -403,13 +404,13 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         """
         models = {0 : model}
         models.update(model.superelement_models)
-        nmodels = len(models)
+        #nmodels = len(models)
 
         xyz_cid0 = {}
         nid_cp_cd = {}
         icd_transform = {}
         nid_map = {}
-        inode = 0
+        #inode = 0
         for super_id, modeli in sorted(models.items()):
             out = modeli.get_displacement_index_xyz_cp_cd(
                 fdtype=fdtype, idtype='int32', sort_ids=True)
@@ -420,11 +421,14 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 xyz_cpi, nid_cp_cdi[:, 0], icp_transformi, cid=cid,
                 in_place=False)
 
-            #if super_id in model.seloc:
+            if super_id in model.seloc and super_id: # in model.initial_superelement_models and 0:
                 # TODO: when should seloc get applied?
                 #       during superelement creation or now?
-                #seloc = model.seloc[super_id]
-                #xyz_cid0i = seloc.transform(model, xyz_cid0i)
+                #       I'm going with superelement creation...
+                #       I think we need to update the node locations for the superelements
+                #       that exist before mirroring
+                seloc = model.seloc[super_id]
+                xyz_cid0i = seloc.transform(model, xyz_cid0i)
 
             #print('model.spoints =', model.spoints)
             #import json
@@ -435,7 +439,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     #print('comment_lower = %r' % comment_lower)
                     ## pyNastran: SPOINT={'id':10, 'xyz':[10.,10.,10.]}
                     #if 'pynastran' in comment_lower and 'spoint' in comment_lower:
-                        #dict_str = comment_lower.split('=')[1].rstrip().replace("'", '"').replace('}', ',}').replace(',,}', ',}')
+                        #dict_str = jsonify(comment_lower)
                         #print('dict_str = %r' % dict_str)
                         #dicti = json.loads(dict_str)
                         #print(dicti)
@@ -451,7 +455,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         if len(xyz_cid0) == 1:
             nid_mapi = self.gui.nid_map
             make_nid_map(nid_mapi, nid_cp_cdi[:, 0])
-            self._add_nastran_spoints_to_grid(modeli.spoints, nid_mapi)
+            self._add_nastran_spoints_to_grid(model.spoints, nid_mapi)
 
             self.icd_transform = icd_transform[0]
             return xyz_cid0[0], nid_cp_cd[0]
@@ -509,7 +513,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     xref_sets=False,
                     create_superelement_geometry=False,
                 )
-                # from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber, get_starting_ids_dict_from_mapper
+                #from pyNastran.bdf.mesh_utils.bdf_renumber import (
+                    #bdf_renumber, get_starting_ids_dict_from_mapper)
                 #starting_id_dict = { # todo: hardcoded
                     #'nid' : unids.max(),
                     #'eid' : 100000,
@@ -537,14 +542,13 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 return self.get_xyz_in_coord(model, cid=0, fdtype=fdtype, check_mirror=False)
 
             msg = ('superelement nodes are not unique; use superelement_renumber\n'
-                   'renumbering; duplicate nids=\n%s' % nonunique_ints(all_nids))
+                   'renumbering; duplicate nids=\n%s' % duplicates(all_nids))
             raise NotImplementedError(msg)
 
         if not is_monotonic(all_nids):
             #msg = ('superelement nodes are not monotonic; use superelement_renumber\n'
                    #'renumbering; nids=\n%s' % all_nids)
             #self.log.warning(msg)
-
             isort = np.argsort(all_nids)
             xyz_cid0_out = xyz_cid0_out[isort, :]
             nid_cp_cd_out = nid_cp_cd_out[isort, :]
@@ -673,7 +677,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             if IS_TESTING or self.gui.is_testing_flag:
                 try:
                     self.load_nastran_geometry_vectorized(bdf_filename, plot=plot)
-                except NoSuperelements as e:
+                except NoSuperelements:
                     self.log.error('\n' + traceback.format_exc())
                 self.load_nastran_geometry_unvectorized(bdf_filename, plot=plot)
             else:
@@ -1868,38 +1872,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             xyz_cid0, nid_cp_cd, self.gui.nid_map, model, j, dim_max,
             plot=plot, xref_loads=xref_loads)
 
-        # fill grids
-        zfighting_offset0 = 0.001
-        zfighting_offset = zfighting_offset0
-        self._create_splines(model, box_id_to_caero_element_map, caero_points)
-        if 'caero' in self.gui.alt_grids:
-            self.set_caero_grid(ncaeros_points, model, j=0)
-            self.set_caero_subpanel_grid(ncaero_sub_points, model, j=0)
-            if has_control_surface:
-                cs_name = 'caero_control_surfaces'
-                self.set_caero_control_surface_grid(
-                    cs_name, cs_box_ids[cs_name],
-                    box_id_to_caero_element_map, caero_points,
-                    zfighting_offset=zfighting_offset)
-                zfighting_offset += zfighting_offset0
-
-                # sort the control surfaces
-                labels_to_aesurfs = {aesurf.label: aesurf for aesurf in model.aesurf.values()}
-                if len(labels_to_aesurfs) != len(model.aesurf):
-                    msg = (
-                        'Expected same number of label->aesurf as aid->aesurf\n'
-                        'labels_to_aesurfs = %r\n'
-                        'model.aesurf = %r\n' % (labels_to_aesurfs, model.aesurf))
-                    raise RuntimeError(msg)
-
-                for unused_label, aesurf in sorted(labels_to_aesurfs.items()):
-                    reset_labels = False
-                    cs_name = '%s_control_surface' % aesurf.label
-                    self.set_caero_control_surface_grid(
-                        cs_name, cs_box_ids[cs_name],
-                        box_id_to_caero_element_map, caero_points, note=aesurf.label,
-                        zfighting_offset=zfighting_offset)
-                    zfighting_offset += zfighting_offset0
+        self._create_aero(model, box_id_to_caero_element_map, cs_box_ids,
+                          caero_points, ncaeros_points, ncaero_sub_points,
+                          has_control_surface)
 
         if nconm2 > 0 and xref_nodes:
             self._set_conm_grid(nconm2, model)
@@ -1939,6 +1914,41 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             self.gui._finish_results_io2([form], cases, reset_labels=reset_labels)
         else:
             self.gui._set_results([form], cases)
+
+    def _create_aero(self, model, box_id_to_caero_element_map, cs_box_ids,
+                     caero_points, ncaeros_points, ncaero_sub_points, has_control_surface):
+        # fill grids
+        zfighting_offset0 = 0.001
+        zfighting_offset = zfighting_offset0
+        self._create_splines(model, box_id_to_caero_element_map, caero_points)
+        if 'caero' in self.gui.alt_grids:
+            self.set_caero_grid(ncaeros_points, model, j=0)
+            self.set_caero_subpanel_grid(ncaero_sub_points, model, j=0)
+            if has_control_surface:
+                cs_name = 'caero_control_surfaces'
+                self.set_caero_control_surface_grid(
+                    cs_name, cs_box_ids[cs_name],
+                    box_id_to_caero_element_map, caero_points,
+                    zfighting_offset=zfighting_offset)
+                zfighting_offset += zfighting_offset0
+
+                # sort the control surfaces
+                labels_to_aesurfs = {aesurf.label: aesurf for aesurf in model.aesurf.values()}
+                if len(labels_to_aesurfs) != len(model.aesurf):
+                    msg = (
+                        'Expected same number of label->aesurf as aid->aesurf\n'
+                        'labels_to_aesurfs = %r\n'
+                        'model.aesurf = %r\n' % (labels_to_aesurfs, model.aesurf))
+                    raise RuntimeError(msg)
+
+                for unused_label, aesurf in sorted(labels_to_aesurfs.items()):
+                    reset_labels = False
+                    cs_name = '%s_control_surface' % aesurf.label
+                    self.set_caero_control_surface_grid(
+                        cs_name, cs_box_ids[cs_name],
+                        box_id_to_caero_element_map, caero_points, note=aesurf.label,
+                        zfighting_offset=zfighting_offset)
+                    zfighting_offset += zfighting_offset0
 
     def _set_subcases_unvectorized(self, model, form, cases, icase, xref_nodes, xref_loads):
         """helper for ``load_nastran_geometry_unvectorized``"""
@@ -6505,16 +6515,6 @@ def store_warning(log, store_msg, msg):
     return out_msg
 
 
-def is_monotonic(int_array):
-    """is the array monotonic?"""
-    return np.all(int_array[1:] >= int_array[:-1])
-
-def nonunique_ints(int_array):
-    """what are the duplicated values?"""
-    counts = np.bincount(int_array)
-    nonunique = np.where(counts > 1)[0]
-    return nonunique
-
 def make_nid_map(nid_map, nids):
     """make the node map"""
     for i, nid in enumerate(nids):
@@ -6540,3 +6540,9 @@ def _get_elements_nelements_unvectorized(model):
         superelements = np.hstack(superelements)
         assert len(superelements) == nelements, 'len(superelements)=%s nelements=%s' % (len(superelements), nelements)
     return elements, nelements, superelements
+
+def jsonify(comment_lower):
+    """pyNastran: SPOINT={'id':10, 'xyz':[10.,10.,10.]}"""
+    sline = comment_lower.split('=')
+    rhs = sline[1].rstrip()
+    return rhs.replace("'", '"').replace('}', ',}').replace(',,}', ',}')

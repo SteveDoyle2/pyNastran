@@ -20,6 +20,9 @@ For example, with cross referencing...
   3
 
   >>> node.cid
+  3
+
+  >>> node.cid_ref
   CORD2S, 3, 1, 0., 0., 0., 0., 0., 1.,
           1., 0., 0.
   # get the position in the global frame
@@ -27,7 +30,7 @@ For example, with cross referencing...
   [4., 5., 6.]
 
   # get the position with respect to another frame
-  >>> node.PositionWRT(model, cid=2)
+  >>> node.get_position_wrt(model, cid=2)
   [4., 5., 6.]
 
 
@@ -52,8 +55,11 @@ Without cross referencing...
   >>> node.cid
   3
 
+  >>> node.cid_ref
+  None
+
   # get the position in the global frame
-  >>> node.Position()
+  >>> node.get_position()
   Error!
 
 Cross-referencing allows you to easily jump across cards and also helps
@@ -567,6 +573,7 @@ class XrefMesh(BDFAttributes):
             dvprel.cross_reference(self)
 
     def _cross_reference_superelements(self):
+        """cross references the superelement objects"""
         for unused_seid, csuper in self.csuper.items():
             csuper.cross_reference(self)
         for unused_seid, csupext in self.csupext.items():
@@ -616,20 +623,20 @@ class XrefMesh(BDFAttributes):
                 csupext.safe_cross_reference(self, xref_errors)
 
             if self.sebulk and create_superelement_geometry:
-                print('sebulk...')
+                #print('sebulk...')
                 import os
                 # we have to create the superelement in order to transform it...
                 for seid, sebulk in self.sebulk.items():
                     super_filename = 'super_%i.bdf' % seid
                     if os.path.exists(super_filename):
                         os.remove(super_filename)
-                    print(sebulk)
+                    #print(sebulk)
                     rseid = sebulk.rseid
                     sebulk.safe_cross_reference(self, xref_errors)
                     mirror_model = self._create_superelement_from_sebulk(sebulk, seid, rseid)
                     if mirror_model is None:
                         continue
-                    print('made superelement %i' % seid)
+                    self.log.debug('made superelement %i' % seid)
                     self.superelement_models[seid] = mirror_model
                     mirror_model.write_bdf(super_filename)
             for unused_seid, sebndry in self.sebndry.items():
@@ -660,7 +667,7 @@ class XrefMesh(BDFAttributes):
         """helper for sebulk"""
         #C:\MSC.Software\MSC.Nastran\msc20051\nast\tpl\see103q4.dat
         ref_model = self.superelement_models[rseid]
-        if sebulk.Type == 'MIRROR':
+        if sebulk.superelement_type == 'MIRROR':
             from pyNastran.bdf.mesh_utils.mirror_mesh import bdf_mirror_plane
             #print('creating superelement %s from %s' % (seid, rseid))
             sempln = self.sempln[seid]

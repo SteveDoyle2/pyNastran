@@ -178,6 +178,7 @@ class BDFAttributes(object):
 
         # dictionary of BDFs
         self.superelement_models = {}
+        self.initial_superelement_models = []  # the keys before superelement mirroring
 
         self._auto_reject = False
         self._solmap_to_value = {

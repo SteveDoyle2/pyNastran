@@ -62,6 +62,7 @@ $  PLOT  STATIC  SET 1
   FIND SCALE ORIGIN 1 SET 1
   PLOT  STATIC  SET 1
 BEGIN BULK
+param,post,-1
 param	usetprt	0
 SELABEL	1	Fuselage
 SELABEL	2	Main Wing Panel

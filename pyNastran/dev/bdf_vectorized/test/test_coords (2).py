@@ -502,7 +502,7 @@ class TestCoords(unittest.TestCase):
         model = None
 
         Fxyz_local, Mxyz_local = TransformLoadWRT(Fxyz, Mxyz, cid0, cid_new,
-                                                  model, is_cid_int=False)
+                                                  model)
 
         r = array([Lx, Ly, Lz])
         F = array([0., -Fy, 0.])
@@ -528,7 +528,7 @@ class TestCoords(unittest.TestCase):
         model = None
 
         Fxyz_local, Mxyz_local = TransformLoadWRT(Fxyz, Mxyz, cid0, cid_new,
-                                                  model, is_cid_int=False)
+                                                  model)
         r = array([Lx, Ly, Lz])
         F = array([0., -Fy, 0.])
         M = cross(r, F)
