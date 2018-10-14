@@ -71,7 +71,7 @@ def run_docopt():
     qt = ''
     if not pyNastran.is_pynastrangui_exe:
         test = ' [--test]'
-        qt = ' [--qt QT]'
+        qt = ' [--qt QT] [--plugin]'
 
     msg += "  pyNastranGUI [-f FORMAT] INPUT [-o OUTPUT]\n"
     msg += '               [-g GSCRIPT] [-p PSCRIPT]\n'
@@ -114,6 +114,7 @@ def run_docopt():
     if not pyNastran.is_pynastrangui_exe:
         msg += "  --test         temporary dev mode (default=False)\n"
         msg += "  --qt QT        sets the qt version (default=QT_API)\n"
+        msg += "  --plugin       disables the format check\n"
     msg += "  --noupdate     disables the update check\n"
     msg += "  --log LOG      disables HTML logging; prints to the screen\n"
     msg += '\n'
@@ -150,16 +151,21 @@ def run_docopt():
     if input_filenames and not input_format:
         input_format = determine_format(input_filenames[0])
 
-    # None is for custom geometry
-    allowed_formats = [
-        'nastran', 'stl', 'cart3d', 'tecplot', 'ugrid', 'ugrid3d', 'panair',
-        #'plot3d',
-        'surf', 'lawgs', 'degen_geom', 'shabp', 'avus', 'fast', 'abaqus',
-        'usm3d', 'bedge', 'su2', 'tetgen',
-        'openfoam_hex', 'openfoam_shell', 'openfoam_faces', 'obj', 'avl',
-        None,
-    ]
-    assert input_format in allowed_formats, 'format=%r is not supported' % input_format
+    plugin = False
+    if '--plugin' in data:
+        plugin = True
+
+    if not plugin:
+        # None is for custom geometry
+        allowed_formats = [
+            'nastran', 'stl', 'cart3d', 'tecplot', 'ugrid', 'ugrid3d', 'panair',
+            #'plot3d',
+            'surf', 'lawgs', 'degen_geom', 'shabp', 'avus', 'fast', 'abaqus',
+            'usm3d', 'bedge', 'su2', 'tetgen',
+            'openfoam_hex', 'openfoam_shell', 'openfoam_faces', 'obj', 'avl',
+            None,
+        ]
+        assert input_format in allowed_formats, 'format=%r is not supported' % input_format
 
     geom_script = data['--geomscript']
     if geom_script:

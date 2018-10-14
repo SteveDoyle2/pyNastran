@@ -48,6 +48,8 @@ class GuiAttributes(object):
         inputs = kwds['inputs']
         res_widget = kwds['res_widget']
         self.dev = False
+        self.log = None # it hasn't been initialized yet
+        self.log_widget = None
         self._log_messages = []
         self._performance_mode = False
         #self.performance_mode = True

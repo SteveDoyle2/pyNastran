@@ -348,7 +348,8 @@ class AVL(object):
             sections = surface['sections']
 
 
-            airfoil_sections = get_airfoil_sections_from_sections(sections)
+            span_stations, airfoil_sections = get_airfoils_from_sections(sections)
+
 
             #for iairfoil, is_afile in enumerate(surface['is_afile']):
                 #pass
@@ -379,6 +380,8 @@ class AVL(object):
 
             nsections = len(sections)
             for i in range(nsections-1):
+                end = i == nsections - 1
+
                 section0 = sections[i]
                 #if 'afile' in section0:
                     #del section0['afile']
@@ -404,15 +407,23 @@ class AVL(object):
                 #Sspace      =  controls the spanwise spacing of the vortices      [ optional ]
 
                 #section = [chord, ainc]
-                #section = [chord, nspan, span_spacing]
                 #section = [chord, ainc, nspan, span_spacing]
                 chord0 = section0['section'][0]
                 chord1 = section1['section'][0]
+
                 #print('chords =', chord0, chord1)
                 #print('xyz_scale =', xyz_scale)
                 #incidence = section[1]
                 p2 = p1 + np.array([chord0, 0., 0.])
                 p3 = p4 + np.array([chord1, 0., 0.])
+
+                alpha0 = section0['section'][1]
+                alpha1 = section1['section'][1]
+
+                interpolated_stations = interp_stations(
+                    y, nspan,
+                    airfoil_sections[i], chord0, alpha0, p1,
+                    airfoil_sections[i+1], chord1, alpha1, p4, end=end)
 
                 #loft_sections.append(chord0*airfoil_sections[i])
                 #loft_sections.append(chord1*airfoil_sections[i+1])
@@ -480,6 +491,79 @@ class AVL(object):
         surfaces = np.hstack(surfaces)
         assert len(surfaces) == quad_elements.shape[0]
         return nodes, quad_elements, line_elements, surfaces
+
+def interp_stations(y, nspan,
+                    airfoil_section0, chord0, alpha0, xyz_le0,
+                    airfoil_section1, chord1, alpha1, xyz_le1, end=True):
+    """
+    x is t/c (so x)
+    y is t/c (so z)
+    """
+    import matplotlib.pyplot as plt
+    y = np.array([0., 0.5, 1.0])
+    # first we scale and rotate the section
+    xy0 = airfoil_section0 * chord0
+    x0 = xy0[:, 0]
+    y0 = xy0[:, 1]
+
+    plt.figure(2)
+    plt.grid(True)
+    plt.plot(x0, y0, 'r')
+    x0_rotated = xyz_le0[0] + x0 * np.cos(alpha0) - y0 * np.sin(alpha0)
+    y0_rotated = xyz_le0[2] + x0 * np.sin(alpha0) + y0 * np.cos(alpha0)
+    #xy0_rotated = np.vstack([x0_rotated, y0_rotated])
+
+    xy1 = airfoil_section1 * chord1
+    x1 = xy1[:, 0]
+    y1 = xy1[:, 1]
+    plt.plot(x1, y1, 'b-')
+    x1_rotated = xyz_le1[0] + x1 * np.cos(alpha1) - y1 * np.sin(alpha1)
+    y1_rotated = xyz_le1[2] + x1 * np.sin(alpha1) + y1 * np.cos(alpha1)
+
+    plt.figure(4)
+    plt.plot(x0_rotated, y0_rotated)
+    plt.plot(x1_rotated, y1_rotated)
+    plt.grid(True)
+
+    x0_rotated = xyz_le0[0] + x0
+    y0_rotated = xyz_le0[2] + y0
+
+    x1_rotated = xyz_le1[0] + x1
+    y1_rotated = xyz_le1[2] + y1
+    #xy1_rotated = np.vstack([x1_rotated, y1_rotated])
+
+    end = True
+    if not end:
+        y = y[:-1]
+
+    #print(y.shape) # 3
+    #print(x0_rotated.shape)  #
+    #y2 = y[np.newaxis, :] + 1
+    #print(y2)
+    # use linear interpolation to calculate the interpolated stations
+
+    #x_final = y[:, np.newaxis] * x0_rotated * (1.-y[:, np.newaxis]) * x1_rotated
+    #y_final = y[:, np.newaxis] * y0_rotated * (1.-y[:, np.newaxis]) * y1_rotated
+    #print(x_final.shape)
+    x_final = []
+    y_final = []
+    plt.figure(5)
+    plt.grid(True)
+    for yi in y:
+        x_finali = yi * x0_rotated + (1.-yi) * x1_rotated
+        y_finali = yi * y0_rotated + (1.-yi) * y1_rotated
+        plt.plot(x_finali, y_finali)
+        x_final.append(x_finali)
+        y_final.append(y_finali)
+    x_final = np.array(x_final)
+    y_final = np.array(y_final)
+
+    # (nspan, nchord, 2) -> (2, nsan, )
+    # (3, 11, 2) -> (2, 3, 11)
+    interpolated_stations = np.dstack([x_final, y_final])#.swapaxes(0, 1).swapaxes(0, 2)
+    print(x_final.shape)
+    #print(xy_final.shape)
+    return interpolated_stations
 
 def save_wing_elements(isurface, point, element,
                        xyz_scale, dxyz,
@@ -553,6 +637,7 @@ def get_naca_4_series(naca='2412'):
     p=located at 40%
     t=max thickness=12%
     """
+    print('airfoil =', naca)
     t = int(naca[2:]) / 100.
     m = int(naca[0]) / 100.
     p = int(naca[1]) / 10.
@@ -566,7 +651,7 @@ def get_naca_4_series(naca='2412'):
         xb = np.linspace(p, 1., num=6, endpoint=True, retstep=False, dtype=None)
         x = np.hstack([xa, xb])
     else:
-        x = np.linspace(0., 1., num=10, endpoint=True, retstep=False, dtype=None)
+        x = np.linspace(0., 1., num=100, endpoint=True, retstep=False, dtype=None)
         xa = x
         xb = np.array([])
     #print('x = ', x)
@@ -604,6 +689,10 @@ def get_naca_4_series(naca='2412'):
     #print('x_lower =', x_lower[1:])
     #print('xtotal =', xtotal)
     xy = np.vstack([xtotal, ytotal]).T
+    import matplotlib.pyplot as plt
+    fig = plt.figure(1)
+    plt.plot(xtotal, ytotal)
+    plt.grid(True)
     #print(xy)
     return xy
 
@@ -751,9 +840,10 @@ def get_fuselage(dirname, isurface, surface, xyz_scale, dxyz, yduplicate,
 
     return ipoint
 
-def get_airfoil_sections_from_sections(sections):
+def get_airfoils_from_sections(sections):
     airfoil_sections = []
     is_airfoil_defined = False
+    span_stations = np.arange(len(sections))
     for section in sections:
         if 'is_afile' in section:
             is_afile = section['is_afile']
@@ -769,14 +859,14 @@ def get_airfoil_sections_from_sections(sections):
             naca = section['naca']
             xy = get_naca_4_series(naca=naca)
         airfoil_sections.append(xy)
-    return airfoil_sections
+    return span_stations, airfoil_sections
 
 def is_header(line, name):
     """only the first 4 chancters are read, but we're going to ensure all the letters are correct"""
     return line.startswith(name[:4]) and line == name[:len(line)]
 
 def simplify_surface(surface):
-    """gets rid of extraneous data from the surface that makes it hard to print"""
+    """gets rid of extraneous data from the surface that makes it hard to read"""
     surface2 = copy.deepcopy(surface)
 
     if 'translate' in surface and np.allclose(surface['translate'], [0., 0., 0.]):

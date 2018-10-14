@@ -64,7 +64,13 @@ class AltGeometry(object):
             'toggle' : None,
         }
         if display is None:
-            display = representation_map[representation]
+            try:
+                display = representation_map[representation]
+            except KeyError:
+                valid_keys = list(representation_map.keys())
+                valid_keys.sort()
+                raise RuntimeError('%r is not a valid representation\nvalid=[%s]' % (
+                    representation, ', '.join(valid_keys)))
 
         if line_width is None:
             line_width = 1

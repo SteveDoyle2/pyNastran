@@ -718,7 +718,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 filename = filename[:-1]
             html_msg = get_html_msg(color, tim, log_type, filename, lineno, msg)
 
-        if self.performance_mode:
+        if self.performance_mode or self.log_widget is None:
             self._log_messages.append(html_msg)
         else:
             self._log_msg(html_msg)
@@ -1416,6 +1416,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.rend.AddActor(self.scalarBar)
 
     def start_logging(self):
+        if self.log is not None:
+            return
         if self.html_logging is True:
             log = SimpleLogger(
                 'debug', 'utf-8',

@@ -998,7 +998,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #self.gui.grid_mapper.SetResolveCoincidentTopologyToPolygonOffset()
         if 0:
             if plot:
-                #self.log.info(cases.keys())
                 self.gui._finish_results_io2([form], cases, reset_labels=reset_labels)
             else:
                 self.gui._set_results([form], cases)
