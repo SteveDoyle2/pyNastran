@@ -19,7 +19,7 @@ from pyNastran.gui.qt_version import qt_version
 from qtpy import QtCore, QtGui #, API
 from qtpy.QtWidgets import (
     QMessageBox, QWidget,
-    QMainWindow, QDockWidget, QFrame, QHBoxLayout, QAction)
+    QMainWindow, QDockWidget, QFrame, QHBoxLayout, QAction, QToolBar, QMenu, QToolButton)
 
 import vtk
 
@@ -306,6 +306,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 'rotation_center' : False,
                 'measure_distance' : False,
                 'probe_result' : False,
+                'highlight_cell' : False,
+                'highlight_node' : False,
                 'area_pick' : False,
                 'zoom' : False,
             }
@@ -391,6 +393,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 ('rotation_center', 'Set the rotation center', 'trotation_center.png', 'f', 'Pick a node for the rotation center', self.mouse_actions.on_rotation_center),
 
                 ('measure_distance', 'Measure Distance', 'measure_distance.png', None, 'Measure the distance between two nodes', self.mouse_actions.on_measure_distance),
+                ('highlight_cell', 'Highlight Cell', '', None, 'Highlight a single cell', self.mouse_actions.on_highlight_cell),
+                ('highlight_node', 'Highlight Node', '', None, 'Highlight a single node', self.mouse_actions.on_highlight_node),
                 ('probe_result', 'Probe', 'tprobe.png', None, 'Probe the displayed result', self.mouse_actions.on_probe_result),
                 ('quick_probe_result', 'Quick Probe', '', 'p', 'Probe the displayed result', self.mouse_actions.on_quick_probe_result),
                 ('zoom', 'Zoom', 'zoom.png', None, 'Zoom In', self.mouse_actions.on_zoom),
@@ -483,7 +487,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
                          'left_view', 'right_view',
                          'magnify', 'shrink', 'zoom',
                          'rotate_clockwise', 'rotate_cclockwise',
-                         'rotation_center', 'measure_distance', 'probe_result', 'area_pick',
+                         'rotation_center', 'measure_distance', 'probe_result',
+                         #'highlight_cell', 'highlight_node',
+                         'area_pick',
 
                          'wireframe', 'surface', 'edges']
         toolbar_tools += ['camera_reset', 'view', 'screenshot', '', 'exit']
@@ -530,29 +536,31 @@ class GuiCommon2(QMainWindow, GuiCommon):
     def _populate_menu(self, menu_items):
         """populate menus and toolbar"""
         assert isinstance(menu_items, dict), menu_items
+
+        actions = self.actions
         for unused_menu_name, (menu, items) in menu_items.items():
             if menu is None:
                 continue
-            for i in items:
-                if not i:
+
+            for item in items:
+                if not item:
                     menu.addSeparator()
                 else:
-                    if isinstance(i, list):
-                        sub_menu_name = i[0]
-                        sub_menu = menu.addMenu(sub_menu_name)
-                        for ii_count, ii in enumerate(i[1:]):
-                            if not isinstance(ii, string_types):
-                                raise RuntimeError('what is this...action ii() = %r' % ii())
-                            action = self.actions[ii]
-                            if ii_count > 0:
-                                action.setChecked(False)
-                            sub_menu.addAction(action)
+                    if isinstance(item, list):
+                        sub_menu_name = item[0]
+
+                        if isinstance(menu, QToolBar):
+                            populate_sub_qtoolbar(menu, item, actions)
+                        elif isinstance(menu, QMenu):
+                            populate_sub_qmenu(menu, item, actions)
+                        else:
+                            raise TypeError(menu)
                         continue
-                    elif not isinstance(i, string_types):
-                        raise RuntimeError('what is this...action i() = %r' % i())
+                    elif not isinstance(item, string_types):
+                        raise RuntimeError('what is this...action item() = %r' % item())
 
                     try:
-                        action = self.actions[i] #if isinstance(i, string_types) else i()
+                        action = self.actions[item] #if isinstance(item, string_types) else item()
                     except:
                         print(self.actions.keys())
                         raise
@@ -2682,3 +2690,41 @@ def get_html_msg(color, tim, log_type, filename, lineno, msg):
     html_msg = r'<font color="%s"> %s %s : %s:%i</font> %s <br>' % (
         color, tim, log_type, filename, lineno, msg.replace('\n', '<br>'))
     return html_msg
+
+def populate_sub_qmenu(menu, items, actions):
+    sub_menu_name = items[0]
+    sub_menu = menu.addMenu(sub_menu_name)
+    for ii_count, ii in enumerate(items[1:]):
+        if not isinstance(ii, string_types):
+            raise RuntimeError('what is this...action ii() = %r' % ii())
+        action = actions[ii]
+        if ii_count > 0:
+            action.setChecked(False)
+        sub_menu.addAction(action)
+
+def populate_sub_qtoolbar(toolbar, items, actions):
+    """
+    refs
+    https://www.walletfox.com/course/customqtoolbutton.php
+    https://stackoverflow.com/questions/9076332/qt-pyqt-how-do-i-create-a-drop-down-widget-such-as-a-qlabel-qtextbrowser-etc
+    """
+    sub_menu_name = items[0]
+    action0 = actions[sub_menu_name]
+
+    drop_down_menu = QMenu()
+
+    custom_button = QToolButton()
+    custom_button.setPopupMode(QToolButton.InstantPopup)
+    custom_button.setMenu(drop_down_menu)
+    custom_button.setDefaultAction(action0)
+
+    toolbar.addWidget(custom_button)
+
+    for ii_count, itemi in enumerate(items[1:]):
+        if not isinstance(itemi, string_types):
+            raise RuntimeError('what is this...action ii() = %r' % itemi())
+        action = actions[itemi]
+        # temp
+        #if ii_count > 0:
+            #action.setChecked(False)
+        drop_down_menu.addAction(action)  # thrown in the trash?

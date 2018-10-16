@@ -40,6 +40,9 @@ class PreferencesObject(object):
             'text_size' : settings.text_size,
             'text_color' : settings.text_color,
 
+            'highlight_color' : settings.highlight_color,
+            'highlight_opacity' : settings.highlight_opacity,
+
             'picker_size' : self.gui.element_picker_size,
             'dim_max' : settings.dim_max,
             'coord_scale' : settings.coord_scale,

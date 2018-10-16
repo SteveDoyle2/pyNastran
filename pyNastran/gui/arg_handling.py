@@ -73,13 +73,13 @@ def run_docopt():
         test = ' [--test]'
         qt = ' [--qt QT] [--plugin]'
 
-    msg += "  pyNastranGUI [-f FORMAT] INPUT [-o OUTPUT]\n"
+    msg += "  pyNastranGUI INPUT [-f FORMAT] [-o OUTPUT]\n"
     msg += '               [-g GSCRIPT] [-p PSCRIPT]\n'
     msg += '               [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]\n'
     msg += '               [-q] [--groups] [--noupdate] [--log LOG]%s%s\n' % (test, qt)
 
     # You don't need to throw a -o flag
-    msg += "  pyNastranGUI [-f FORMAT] INPUT OUTPUT [-o OUTPUT]\n"
+    msg += "  pyNastranGUI INPUT OUTPUT [-f FORMAT] [-o OUTPUT]\n"
     msg += '               [-g GSCRIPT] [-p PSCRIPT]\n'
     msg += '               [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]\n'
     msg += '               [-q] [--groups] [--noupdate] [--log LOG]%s%s\n' % (test, qt)
@@ -148,7 +148,7 @@ def run_docopt():
         check_path(output_filename, 'output_filename')
     debug = not(data['--quiet'])
 
-    if input_filenames and not input_format:
+    if input_filenames and input_format is None:
         input_format = determine_format(input_filenames[0])
 
     plugin = False

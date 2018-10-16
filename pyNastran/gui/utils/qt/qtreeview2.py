@@ -248,7 +248,8 @@ class RightClickTreeView(QTreeView2):
        - Apply Results to Vector
        - Delete Case
     """
-    def __init__(self, parent, data, choices, include_clear=True, include_delete=True):
+    def __init__(self, parent, data, choices, include_clear=True, include_delete=True,
+                 include_results=True):
         QTreeView2.__init__(self, parent, data, choices)
         #
         # TODO: create a menu that only has clear/normals/fringe/delete
@@ -260,14 +261,15 @@ class RightClickTreeView(QTreeView2):
             self.clear = self.right_click_menu.addAction("Clear Results...")
             self.clear.triggered.connect(self.on_clear_results)
 
-        self.fringe = self.right_click_menu.addAction("Apply Results to Fringe...")
-        self.fringe.triggered.connect(self.on_fringe)
+        if include_results:
+            self.fringe = self.right_click_menu.addAction("Apply Results to Fringe...")
+            self.fringe.triggered.connect(self.on_fringe)
 
-        self.disp = self.right_click_menu.addAction("Apply Results to Displacement...")
-        self.vector = self.right_click_menu.addAction("Apply Results to Vector...")
+            self.disp = self.right_click_menu.addAction("Apply Results to Displacement...")
+            self.vector = self.right_click_menu.addAction("Apply Results to Vector...")
 
-        self.disp.triggered.connect(self.on_disp)
-        self.vector.triggered.connect(self.on_vector)
+            self.disp.triggered.connect(self.on_disp)
+            self.vector.triggered.connect(self.on_vector)
 
         if include_delete:
             self.delete = self.right_click_menu.addAction("Delete...")

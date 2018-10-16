@@ -3,7 +3,7 @@ from pyNastran.gui.plugins.module import Module
 class AutoWireframe(Module):
     def __init__(self, gui):
         Module.__init__(self, gui)
-        self._create_menu_items = self.gui.create_menu_items
+        self._create_menu_items = self.gui._create_menu_items
         self.gui.create_menu_items = self._create_menu_items
 
     #def get_tools_checkables(self):

@@ -99,12 +99,15 @@ class AreaPickStyle(vtk.vtkInteractorStyleRubberBandZoom):  # works
                 else:
                     self._pick_depth_ids(xmin, ymin, xmax, ymax)
             self.parent.vtk_interactor.Render()
+            #self.cleanup_callback()
+
         self.picker_points = []
 
     def _pick_visible_ids(self, xmin, ymin, xmax, ymax):
         """
         Does an area pick of all the visible ids inside the box
         """
+        #vtk.vtkSelectVisiblePoints()
         #vcs = vtk.vtkVisibleCellSelector()
         area_picker = vtk.vtkRenderedAreaPicker()
         area_picker.AreaPick(xmin, ymin, xmax, ymax, self.parent.rend)
@@ -131,6 +134,7 @@ class AreaPickStyle(vtk.vtkInteractorStyleRubberBandZoom):  # works
         idsname = "Ids"
         ids = vtk.vtkIdFilter()
         if isinstance(grid, vtk.vtkUnstructuredGrid):
+            # this is typically what's called in the gui
             ids.SetInputData(grid)
         elif isinstance(grid, vtk.vtkPolyData):  # pragma: no cover
             # this doesn't work...
@@ -138,6 +142,7 @@ class AreaPickStyle(vtk.vtkInteractorStyleRubberBandZoom):  # works
             ids.SetPointIds(grid.GetPointData())
         else:
             raise NotImplementedError(ids)
+
         #self.is_eids = False
 
         ids.CellIdsOn()
@@ -152,17 +157,32 @@ class AreaPickStyle(vtk.vtkInteractorStyleRubberBandZoom):  # works
 
         if 1:
             selected_frustum = vtk.vtkExtractSelectedFrustum()
+            #selected_frustum.ShowBoundsOn()
+            #selected_frustum.SetInsideOut(1)
             selected_frustum.SetFrustum(frustum)
-            selected_frustum.PreserveTopologyOff() #  don't make an unstructured grid
+            # PreserveTopologyOn: return an insidedness array
+            # PreserveTopologyOff: return a ugrid
+            selected_frustum.PreserveTopologyOff()
+            #selected_frustum.PreserveTopologyOn()
             selected_frustum.SetInputConnection(ids.GetOutputPort())  # was grid?
             selected_frustum.Update()
-
             ugrid = selected_frustum.GetOutput()
+
+            # we make a second frustum to remove extra points
+            selected_frustum_flipped = vtk.vtkExtractSelectedFrustum()
+            selected_frustum_flipped.SetInsideOut(1)
+            selected_frustum_flipped.SetFrustum(frustum)
+            selected_frustum_flipped.PreserveTopologyOff()
+            selected_frustum_flipped.SetInputConnection(ids.GetOutputPort())  # was grid?
+            selected_frustum_flipped.Update()
+
+            ugrid_flipped = selected_frustum_flipped.GetOutput()
+            #print(ugrid)
         else:  # pragma: no cover
             extract_points = vtk.vtkExtractPoints()
-            selection_node =vtk.vtkSelectionNode()
+            selection_node = vtk.vtkSelectionNode()
             selection = vtk.vtkSelection()
-            selection_node.SetContainingCellsOn()
+            #selection_node.SetContainingCellsOn()
             selection_node.Initialize()
             selection_node.SetFieldType(vtkSelectionNode.POINT)
             selection_node.SetContentType(vtkSelectionNode.INDICES)
@@ -193,14 +213,40 @@ class AreaPickStyle(vtk.vtkInteractorStyleRubberBandZoom):  # works
             if points is not None:
                 ids = points.GetArray('Ids')
                 if ids is not None:
+                    # all points associated with the correctly selected cells are returned
+                    # but we get extra points for the cells that are inside and out
                     point_ids = vtk_to_numpy(ids)
                     nids = self.parent.get_node_ids(self.name, point_ids)
+
+                    # these are the points outside the box/frustum (and also include the bad point)
+                    points_flipped = ugrid_flipped.GetPointData()
+                    ids_flipped = points_flipped.GetArray('Ids')
+                    point_ids_flipped = vtk_to_numpy(ids_flipped)
+                    nids_flipped = self.parent.get_node_ids(self.name, point_ids_flipped)
+                    #nids = self.parent.gui.get_reverse_node_ids(self.name, point_ids_flipped)
+
+                    # setA - setB
+                    nids = np.setdiff1d(nids, nids_flipped, assume_unique=True)
+
+        actor = self.parent.create_highlighted_actor(ugrid, representation='wire')
+        self.actor = actor
 
         if self.callback is not None:
             self.callback(eids, nids, self.name)
 
         self.area_pick_button.setChecked(False)
-        self.parent.setup_mouse_buttons(mode='default')
+
+        # TODO: it would be nice if you could do a rotation without
+        #       destroying the highlighted actor
+        self.cleanup_observer = self.parent.setup_mouse_buttons(
+            mode='default', left_button_down_cleanup=self.cleanup_callback)
+
+    def cleanup_callback(self, obj, event):
+        """this is the cleanup step to remove the highlighted actor"""
+        self.parent.rend.RemoveActor(self.actor)
+        #self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
+        self.parent.vtk_interactor.RemoveObserver(self.cleanup_observer)
+        cleanup_observer = None
 
     def right_button_press_event(self, obj, event):
         """cancels the button"""

@@ -67,6 +67,7 @@ class PreferencesWindow(PyDialog):
         self._coord_text_scale = data['coord_text_scale'] * 100.
         self._magnify = data['magnify']
         self._text_size = data['text_size']
+        self._highlight_opacity = data['highlight_opacity']
 
         self.annotation_color_float, self.annotation_color_int = _check_color(
             data['annotation_color'])
@@ -76,6 +77,8 @@ class PreferencesWindow(PyDialog):
             data['background_color2'])
         self.text_color_float, self.text_color_int = _check_color(
             data['text_color'])
+        self.highlight_color_float, self.highlight_color_int = _check_color(
+            data['highlight_color'])
 
         self.setWindowTitle('Preferences')
         self.create_widgets()
@@ -111,6 +114,20 @@ class PreferencesWindow(PyDialog):
         # Text Color
         self.text_color_label = QLabel("Text Color:")
         self.text_color_edit = QPushButtonColor(self.text_color_int)
+
+        #-----------------------------------------------------------------------
+        # Highlight Color
+        self.highlight_opacity_label = QLabel("Highlight Opacity:")
+        self.highlight_opacity_edit = QDoubleSpinBox(self)
+        self.highlight_opacity_edit.setValue(self._highlight_opacity)
+        self.highlight_opacity_edit.setRange(0.1, 1.0)
+        self.highlight_opacity_edit.setDecimals(1)
+        self.highlight_opacity_edit.setSingleStep(0.1)
+        self.highlight_opacity_button = QPushButton("Default")
+
+        # Text Color
+        self.highlight_color_label = QLabel("Highlight Color:")
+        self.highlight_color_edit = QPushButtonColor(self.highlight_color_int)
 
         #-----------------------------------------------------------------------
         # Background Color
@@ -271,6 +288,14 @@ class PreferencesWindow(PyDialog):
         grid.addWidget(self.background_color_edit, irow, 1)
         irow += 1
 
+        grid.addWidget(self.highlight_color_label, irow, 0)
+        grid.addWidget(self.highlight_color_edit, irow, 1)
+        irow += 1
+
+        grid.addWidget(self.highlight_opacity_label, irow, 0)
+        grid.addWidget(self.highlight_opacity_edit, irow, 1)
+        irow += 1
+
         grid.addWidget(self.text_color_label, irow, 0)
         grid.addWidget(self.text_color_edit, irow, 1)
         irow += 1
@@ -350,6 +375,9 @@ class PreferencesWindow(PyDialog):
         self.background_color_edit.clicked.connect(self.on_background_color)
         self.background_color2_edit.clicked.connect(self.on_background_color2)
         self.gradient_scale_checkbox.clicked.connect(self.on_gradient_scale)
+
+        self.highlight_color_edit.clicked.connect(self.on_highlight_color)
+        self.highlight_opacity_edit.valueChanged.connect(self.on_highlight_opacity)
 
         self.text_color_edit.clicked.connect(self.on_text_color)
         self.text_size_edit.valueChanged.connect(self.on_text_size)
@@ -445,6 +473,25 @@ class PreferencesWindow(PyDialog):
         if passed:
             self.background_color2_int = rgb_color_ints
             self.background_color2_float = rgb_color_floats
+
+    def on_highlight_color(self):
+        """ Choose a highlight color"""
+        title = "Choose a highlight color"
+        rgb_color_ints = self.highlight_color_int
+        color_edit = self.highlight_color_edit
+        func_name = 'set_highlight_color'
+        passed, rgb_color_ints, rgb_color_floats = self._background_color(
+            title, color_edit, rgb_color_ints, func_name)
+        if passed:
+            self.highlight_color_int = rgb_color_ints
+            self.highlight_color_float = rgb_color_floats
+
+    def on_highlight_opacity(self, value=None):
+        if value is None:
+            value = self.highlight_opacity_edit.value()
+        self._highlight_opacity = value
+        if self.win_parent is not None:
+            self.win_parent.settings.set_highlight_opacity(value)
 
     def _background_color(self, title, color_edit, rgb_color_ints, func_name):
         """helper method for ``on_background_color`` and ``on_background_color2``"""

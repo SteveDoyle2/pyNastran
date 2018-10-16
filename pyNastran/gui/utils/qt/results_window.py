@@ -11,7 +11,7 @@ class ResultsWindow(QWidget):
     results case.  It does not have an apply button.
     """
     def __init__(self, parent, name, data, choices,
-                 include_clear=True, include_delete=True):
+                 include_clear=True, include_delete=True, include_results=True):
         QWidget.__init__(self)
         self.name = name
         self.data = data
@@ -19,7 +19,8 @@ class ResultsWindow(QWidget):
         self.parent = parent
         self.treeView = RightClickTreeView(
             self, self.data, choices,
-            include_clear=include_clear, include_delete=include_delete)
+            include_clear=include_clear, include_delete=include_delete,
+            include_results=include_results)
         self.treeView.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
         self.model = QtGui.QStandardItemModel()

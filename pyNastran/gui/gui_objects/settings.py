@@ -28,7 +28,8 @@ from pyNastran.gui.gui_objects.utils import get_setting
 BLACK = (0.0, 0.0, 0.0)
 WHITE = (1., 1., 1.)
 GREY = (119/255., 136/255., 153/255.)
-
+ORANGE = (229/255., 92/255., 0.)
+HIGHLIGHT_OPACITY = 0.9
 
 class Settings(object):
     """storage class for various settings"""
@@ -166,6 +167,13 @@ class Settings(object):
         self._set_setting(settings, setting_keys, ['colormap'],
                           'jet')
 
+        self._set_setting(settings, setting_keys, ['highlight_color'],
+                          ORANGE, auto_type=float)
+        self._set_setting(settings, setting_keys, ['highlight_opacity'],
+                          HIGHLIGHT_OPACITY, auto_type=float)
+        #self._set_setting(settings, setting_keys, ['highlight_style'],
+                          #HIGHLIGHT_OPACITY, auto_type=float)
+
         # general gui sizing
         screen_shape = self._set_setting(settings, setting_keys, ['screen_shape'],
                                          screen_shape_default, save=False, auto_type=int)
@@ -226,6 +234,9 @@ class Settings(object):
         settings.setValue('background_color2', self.background_color2)
         settings.setValue('annotation_color', self.annotation_color)
         settings.setValue('text_color', self.text_color)
+
+        settings.setValue('highlight_color', self.highlight_color)
+        settings.setValue('highlight_opacity', self.highlight_opacity)
 
         settings.setValue('show_info', self.show_info)
         settings.setValue('show_debug', self.show_debug)
@@ -444,6 +455,31 @@ class Settings(object):
             self.parent.vtk_interactor.Render()
         self.parent.log_command('settings.set_background_color2(%s, %s, %s)' % color)
 
+    def set_highlight_color(self, color):
+        """
+        Set the highlight color
+
+        Parameters
+        ----------
+        color : (float, float, float)
+            RGB values as floats
+        """
+        self.highlight_color = color
+        self.parent.log_command('settings.set_highlight_color(%s, %s, %s)' % color)
+
+    def set_highlight_opacity(self, opacity):
+        """
+        Set the highlight opacity
+
+        Parameters
+        ----------
+        opacity : float
+            0.0 : invisible
+            1.0 : solid
+        """
+        self.highlight_opacity = opacity
+        self.parent.log_command('settings.set_highlight_opacity(%s)' % opacity)
+
     #---------------------------------------------------------------------------
     # TEXT ACTORS - used for lower left notes
 
@@ -498,7 +534,13 @@ class Settings(object):
         self.magnify = magnify
 
     def __repr__(self):
-        return '<Settings>'
+        msg = (
+            '<Settings>\n'
+            '  highlight_color=%s\n'
+            '  highlight_opacity=%s\n'
+            '' % (self.highlight_color, self.highlight_opacity,)
+        )
+        return msg
 
 
 def isfloat(value):

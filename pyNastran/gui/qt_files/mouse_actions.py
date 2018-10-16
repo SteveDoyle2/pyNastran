@@ -1,5 +1,5 @@
 from __future__ import print_function
-from six import string_types
+from six import string_types, integer_types
 import numpy as np
 import vtk
 
@@ -22,12 +22,15 @@ class MouseActions(object):
         self._measure_distance_pick_points = []
         self.revert = None
         self.style = None
+        self.cleanup_observer = None
+        self.left_button_down_cleanup = None
+        self._depress_when_done = []
 
     def setup_mouse_buttons(self, mode=None, revert=False,
                             left_button_down=None, left_button_up=None,
                             right_button_down=None,
                             end_pick=None,
-                            style=None, force=False):
+                            style=None, force=False, left_button_down_cleanup=None):
         """
         Remaps the mouse buttons temporarily
 
@@ -52,6 +55,7 @@ class MouseActions(object):
         """
         assert isinstance(mode, string_types), mode
         assert revert in [True, False], revert
+
         #print('setup_mouse_buttons mode=%r _camera_mode=%r' % (mode, self._camera_mode))
         if mode == self._camera_mode and not force:
             #print('auto return from set mouse mode')
@@ -87,7 +91,7 @@ class MouseActions(object):
 
             self.vtk_interactor.RemoveObservers('EndPickEvent')
             self.vtk_interactor.AddObserver('EndPickEvent', left_button_down)
-        elif mode == 'probe_result':
+        elif mode in ['probe_result', 'highlight_cell', 'highlight_node']:
             # hackish b/c the default setting is so bad
             self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
             self.vtk_interactor.AddObserver('LeftButtonPressEvent', left_button_down)
@@ -96,6 +100,7 @@ class MouseActions(object):
             self.vtk_interactor.AddObserver('EndPickEvent', left_button_down)
             #self.vtk_interactor.AddObserver('LeftButtonPressEvent', func, 1) # on press down
             #self.vtk_interactor.AddObserver('LeftButtonPressEvent', func, -1) # on button up
+
         elif mode == 'zoom':
             assert style is not None, style
             self.vtk_interactor.SetInteractorStyle(style)
@@ -149,14 +154,45 @@ class MouseActions(object):
             #pass
         else:
             raise NotImplementedError('camera_mode = %r' % self._camera_mode)
+
+        if left_button_down_cleanup:
+            self.left_button_down_cleanup = left_button_down_cleanup
+            self.cleanup_observer = self.vtk_interactor.AddObserver(
+                'LeftButtonPressEvent', left_button_down_cleanup)
+        #if left_button_up_cleanup:
+            #self.left_button_down_cleanup = left_button_down_cleanup
+            #self.cleanup_observer = self.vtk_interactor.AddObserver(
+                #'LeftButtonPressEvent', left_button_down_cleanup)
+
         self.revert = revert
+        return self.cleanup_observer
+
+    def cleanup(self):
+        """
+        this cleanup gets called when the user immediately goes from an
+        area pick into another area pick without left clicking.
+        """
+        self.left_button_down_cleanup(None, None)
+        self.vtk_interactor.RemoveObserver(self.cleanup_observer)
+        self.cleanup_observer = None
 
     def revert_pressed(self, active_name):
+        if self.cleanup_observer is not None:
+            self.cleanup()
+
         if active_name != 'probe_result':
             probe_button = self.actions['probe_result']
             is_checked = probe_button.isChecked()
             if is_checked:  # revert probe_result
                 probe_button.setChecked(False)
+                self.setup_mouse_buttons(mode='default')
+                return
+
+        if active_name != 'highlight_cell':
+            highlight_cell = self.actions['highlight_cell']
+            is_checked = highlight_cell.isChecked()
+            if is_checked:  # revert highlight_cell
+                highlight_cell.setChecked(False)
                 self.setup_mouse_buttons(mode='default')
                 return
 
@@ -193,6 +229,32 @@ class MouseActions(object):
         #self._simulate_key_press('t') # change mouse style to trackball
         self.style = TrackballStyleCamera(self.vtk_interactor, self)
         self.vtk_interactor.SetInteractorStyle(self.style)
+
+    def on_highlight_node(self):
+        """highlights a single node (when it's added)"""
+        self.highlight_style = 'node'
+        self.revert_pressed('highlight_node')
+        is_checked = self.actions['highlight_node'].isChecked()
+        if not is_checked:
+            # revert probe_result
+            self.setup_mouse_buttons(mode='default')
+            return
+        self._depress_when_done = ['highlight_node']
+        self.setup_mouse_buttons('highlight_node', left_button_down=self._highlight_picker,
+                                 revert=True)
+
+    def on_highlight_cell(self):
+        """highlights a single cell"""
+        self.highlight_style = 'centroid'
+        self.revert_pressed('highlight_cell')
+        is_checked = self.actions['highlight_cell'].isChecked()
+        if not is_checked:
+            # revert probe_result
+            self.setup_mouse_buttons(mode='default')
+            return
+        self._depress_when_done = ['highlight_cell']
+        self.setup_mouse_buttons('highlight_cell', left_button_down=self._highlight_picker,
+                                 revert=True)
 
     def on_probe_result(self):
         self.revert_pressed('probe_result')
@@ -349,6 +411,148 @@ class MouseActions(object):
                 measure_distance_button = self.actions['measure_distance']
                 measure_distance_button.setChecked(False)
                 self.setup_mouse_buttons(mode='default')
+
+    def _highlight_picker_node(self, cell_id, grid, node_xyz):
+        """won't handle multiple cell_ids/node_xyz"""
+        cell = grid.GetCell(cell_id)
+        nnodes = cell.GetNumberOfPoints()
+        points = cell.GetPoints()
+
+        point0 = points.GetPoint(0)
+        dist_min = vtk.vtkMath.Distance2BetweenPoints(point0, node_xyz)
+
+        imin = 0
+        point_min = point0
+        for ipoint in range(1, nnodes):
+            #point = array(points.GetPoint(ipoint), dtype='float32')
+            #dist = norm(point - node_xyz)
+            point = points.GetPoint(ipoint)
+            dist = vtk.vtkMath.Distance2BetweenPoints(point, node_xyz)
+            if dist < dist_min:
+                dist_min = dist
+                imin = ipoint
+                point_min = point
+        node_id = cell.GetPointId(imin)
+
+        ids = vtk.vtkIdTypeArray()
+        ids.SetNumberOfComponents(1)
+        ids.InsertNextValue(node_id)
+
+        selection_node = vtk.vtkSelectionNode()
+        #selection_node.SetContainingCellsOn()
+        #selection_node.Initialize()
+        selection_node.SetFieldType(vtk.vtkSelectionNode.POINT)
+        selection_node.SetContentType(vtk.vtkSelectionNode.INDICES)
+        selection_node.SetSelectionList(ids)
+        actor = self._highlight_picker_by_selection_node(
+            grid, selection_node, representation='points')
+        return actor
+
+    def _highlight_picker_cell(self, cell_ids, grid):
+        """won't handle multiple cell_ids/node_xyz"""
+        if isinstance(cell_ids, integer_types):
+            cell_ids = [cell_ids]
+        ids = vtk.vtkIdTypeArray()
+        ids.SetNumberOfComponents(1)
+        for cell_id in cell_ids:
+            ids.InsertNextValue(cell_id)
+
+        selection_node = vtk.vtkSelectionNode()
+        selection_node.SetFieldType(vtk.vtkSelectionNode.CELL)
+        selection_node.SetContentType(vtk.vtkSelectionNode.INDICES)
+        selection_node.SetSelectionList(ids)
+        actor = self._highlight_picker_by_selection_node(
+            grid, selection_node, representation='surface')
+        return actor
+
+    def _highlight_picker_by_selection_node(self, grid, selection_node,
+                                            representation='surface'):
+        selection = vtk.vtkSelection()
+        selection.AddNode(selection_node)
+
+        extract_selection = vtk.vtkExtractSelection()
+        extract_selection.SetInputData(0, grid)
+        extract_selection.SetInputData(1, selection)
+        extract_selection.Update()
+
+        ugrid = extract_selection.GetOutput()
+        return self.create_highlighted_actor(ugrid, representation=representation)
+
+        #-----------------------------------------------
+
+    def create_highlighted_actor(self, ugrid, representation='wire'):
+        """creates a highlighted actor given a vtkUnstructuredGrid"""
+        actor = vtk.vtkLODActor()
+        mapper = vtk.vtkDataSetMapper()
+        mapper.SetInputData(ugrid)
+        # don't use a single color; makes setting prop values work
+        mapper.ScalarVisibilityOff()
+        actor.SetMapper(mapper)
+
+        settings = self.gui.settings
+        prop = actor.GetProperty()
+        prop.SetColor(settings.highlight_color)
+        prop.SetOpacity(settings.highlight_opacity)
+        if representation == 'surface':
+            pass
+        elif representation == 'points':
+            prop.SetRepresentationToPoints()
+            prop.SetPointSize(10.)
+        elif representation == 'wire':
+            prop.SetRepresentationToWireframe()
+            prop.SetLineWidth(5.)
+        else:
+            raise NotImplementedError(representation)
+
+        self.rend.AddActor(actor)
+        return actor
+
+    def _highlight_picker(self, unused_obj, unused_event):
+        """
+        pick a point/cell and highlight it
+        """
+        picker = self.cell_picker
+        pixel_x, pixel_y = self.vtk_interactor.GetEventPosition()
+        picker.Pick(pixel_x, pixel_y, 0, self.rend)
+
+        cell_id = picker.GetCellId()
+        #print('_probe_picker', cell_id)
+
+        if cell_id < 0:
+            pass
+        else:
+            #icase = self.gui.icase_fringe
+            #if icase is None:
+                #return
+
+            world_position = picker.GetPickPosition()
+
+            grid = self.gui.grid_selected
+            if self.highlight_style == 'centroid':
+                actor = self._highlight_picker_cell(cell_id, grid)
+            elif self.highlight_style == 'node':
+                actor = self._highlight_picker_node(cell_id, grid, world_position)
+            else:
+                raise RuntimeError('invalid highlight_style=%r' % self.highlight_style)
+            self.actor = actor
+            self.vtk_interactor.Render()
+        if self.revert:
+            self.cleanup_observer = self.setup_mouse_buttons(
+                mode='default', left_button_down_cleanup=self._highlight_cleanup_callback)
+            self.depress_buttons()
+
+    def _highlight_cleanup_callback(self, obj, event):
+        """this is the cleanup step to remove the highlighted actor"""
+        if hasattr(self, 'actor'):
+            self.rend.RemoveActor(self.actor)
+        #self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
+        self.vtk_interactor.RemoveObserver(self.cleanup_observer)
+        cleanup_observer = None
+
+    def depress_buttons(self):
+        """buttons may still be clicked after reverting, unpress them"""
+        for button_name in self._depress_when_done:
+            self.actions[button_name].setChecked(False)
 
     def _probe_picker(self, unused_obj, unused_event):
         """pick a point and apply the label based on the current displayed result"""

@@ -975,6 +975,7 @@ class GuiAttributes(object):
 
     @start_stop_performance_mode
     def load_batch_inputs(self, inputs):
+        print('load_batch_inputs', inputs)
         geom_script = inputs['geomscript']
         if geom_script is not None:
             self.on_run_script(geom_script)
@@ -1011,6 +1012,7 @@ class GuiAttributes(object):
 
         #unused_is_geom_results = input_filename == results_filename and len(input_filenames) == 1
         unused_is_geom_results = False
+        is_failed = False
         for i, input_filename in enumerate(input_filenames):
             if i == 0:
                 name = 'main'
@@ -1477,6 +1479,15 @@ class GuiAttributes(object):
         if ids is None:
             return self.node_ids
         return self.node_ids[ids]
+
+    def get_reverse_node_ids(self, name=None, ids=None):
+        """wrapper around node_ids"""
+        if ids is None:
+            return np.array([])
+        # include all but the indicies sepecified
+        include_ids = np.ones(self.node_ids.shape, dtype=self.node_ids.dtype)
+        include_ids[ids] = 0
+        return self.node_ids[include_ids]
 
     #------------------------------
     # these are overwritten
