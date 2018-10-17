@@ -7,7 +7,7 @@ from __future__ import division, unicode_literals, print_function
 # we're intentionally putting this here to validate the imports
 # before doing lots of work
 from pyNastran.gui.arg_handling import get_inputs
-get_inputs()
+#get_inputs()
 
 import sys
 import ctypes
@@ -105,6 +105,156 @@ def cmd_line():
     #inputs['app'] = app
     MainWindow(inputs)
     app.exec_()
+
+def cmd_line2():  # pragma: no cover
+    """Simple program that greets NAME for a total of COUNT times."""
+    import argparse
+
+    #msg = "Usage:\n"
+
+    # INPUT format may be explicitly or implicitly defined with or
+    # without an output file
+    #test = ' [--test]'
+    #qt = ' [--qt QT] [--plugin]'
+
+    #msg += "  pyNastranGUI INPUT [-f FORMAT] [-o OUTPUT]\n"
+    #msg += '               [-g GSCRIPT] [-p PSCRIPT]\n'
+    #msg += '               [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]\n'
+    #msg += '               [-q] [--groups] [--noupdate] [--log LOG]%s%s\n' % (test, qt)
+
+    # You don't need to throw a -o flag
+    #msg += "  pyNastranGUI INPUT OUTPUT [-f FORMAT] [-o OUTPUT]\n"
+    #msg += '               [-g GSCRIPT] [-p PSCRIPT]\n'
+    #msg += '               [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]\n'
+    #msg += '               [-q] [--groups] [--noupdate] [--log LOG]%s%s\n' % (test, qt)
+
+    dev = ''
+    dev_list = []
+    if not pyNastran.is_pynastrangui_exe:
+        #dev = ' [--noupdate] [--test] [--qt Qt] [--plugin]'
+        dev_list = ['--noupdate', '--test', '--qt', '--plugin']
+        dev = ''.join([' [%s]' % devi for devi in dev_list])
+
+    # no input/output files
+    # can you ever have an OUTPUT, but no INPUT?
+    usage = "  pyNastranGUI INPUT [-f FORMAT] [-o OUTPUT]\n"
+    usage += '               [-g GSCRIPT] [-p PSCRIPT]\n'
+    usage += '               [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]\n'
+    usage += '               [-q] [--groups] [--noupdate] [--log LOG]%s\n' % (dev)
+
+    #parent_parser.add_argument('-g', '--geomscript', type=str, help='path to geometry script file (runs before load geometry)', action='append')
+    #parent_parser.add_argument('-p', '--postscript', type=str, help='path to post script file (runs after load geometry)', action='append')
+    #parent_parser.add_argument('-u', '--points_fname', type=str, help='an (nrows, 3) comma/tab/space separated list of points')
+    #parent_parser.add_argument('--user_geom', type=str, help='add user specified geometry (repeatable)')
+
+    # You don't need to throw a -o flag
+    usage += "  pyNastranGUI INPUT OUTPUT [-f FORMAT] [-o OUTPUT]\n"
+    usage += '               [-g GSCRIPT] [-p PSCRIPT]\n'
+    usage += '               [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]\n'
+    usage += '               [-q] [--groups] [--log LOG]%s\n' % (dev)
+
+    # no input/output files
+    # can you ever have an OUTPUT, but no INPUT?
+    usage += "  pyNastranGUI [-f FORMAT] [-i INPUT] [-o OUTPUT...]\n"
+    usage += '               [-g GSCRIPT] [-p PSCRIPT]\n'
+    usage += '               [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]\n'
+    usage += '               [-q] [--groups] [--log LOG]%s\n' % (dev)
+    #usage += '  pyNastranGUI -h | --help\n'
+    usage += '  pyNastranGUI -v | --version\n'
+
+    #msg += "\n"
+    #parser = argparse.ArgumentParser(
+        #prog=None, usage=None, description=None, epilog=None,
+        #version=None, parents=[], formatter_class=HelpFormatter,
+        #prefix_chars='-', fromfile_prefix_chars=None, argument_default=None,
+        #conflict_handler='error', add_help=True)
+
+    #usage = '[options]'
+    text = (
+        'Examples\n'
+        '--------\n'
+        '  pyNastranGUI\n'
+        '  pyNastranGUI fem.bdf\n'
+        '  pyNastranGUI fem.bdf fem.op2\n'
+        '  pyNastranGUI --format nastran fem.dat fem.op2 -o fem2.op2\n'
+    )
+    import textwrap
+    parent_parser = argparse.ArgumentParser(
+        #prog = 'pyNastranGUI',
+        #usage = usage,
+        #description='A foo that bars',
+        epilog="And that's how you'd foo a bar",
+        #formatter_class=argparse.RawDescriptionHelpFormatter,
+        #description=textwrap.dedent(text),
+        #version=pyNastran.__version__,
+        #add_help=False,
+    )
+    subparsers = parent_parser.add_subparsers()
+    parser = subparsers.add_parser('')
+    parser_i = subparsers.add_parser('INPUT')
+    parser_io = subparsers.add_parser('INPUT, OUTPUT')
+    # positional arguments
+    parser_i.add_argument('INPUT', help='path to input file', type=str)
+    parser_io.add_argument('INPUT', help='path to input file', type=str)
+    parser_io.add_argument('OUTPUT', help='path to output file', type=str)
+
+    parent_parser.add_argument('-i', '--input', help='path to input file')
+    parent_parser.add_argument('-o', '--output', help='path to output file')
+    #parent_parser.add_argument('--user_geom', type=str, help='log msg')
+
+    # double args
+    parent_parser.add_argument('-f', '--format', type=str,
+                               help='format type (avus, bedge, cart3d, lawgs, nastran, '
+                               'openfoam_hex, openfoam_shell, openfoam_faces, panair, '
+                               'stl, surf, tetgen, usm3d, ugrid, ugrid3d, #plot3d)', action='append')
+    parent_parser.add_argument('-g', '--geomscript', type=str, help='path to geometry script file (runs before load geometry)', action='append')
+    parent_parser.add_argument('-p', '--postscript', type=str, help='path to post script file (runs after load geometry)', action='append')
+    parent_parser.add_argument('-u', '--points_fname', type=str, help='an (nrows, 3) comma/tab/space separated list of points')
+    parent_parser.add_argument('--user_geom', type=str, help='add user specified geometry (repeatable)')
+    parent_parser.add_argument('--log', type=str, help='{debug, info, warning, error} msg')
+
+    # no arguments
+    if dev:
+        parent_parser.add_argument('--qt', type=str, help='{pyqt4, pyqt5, pyside, pyside2} msg')
+        parent_parser.add_argument('--test', help='test msg', action='store_true')
+        parent_parser.add_argument('--noupdate', help='noupdate msg', action='store_true')
+    parent_parser.add_argument('--groups', help='enables groups', action='store_true')
+    parent_parser.add_argument('--plugin', help='plugin msg', action='store_true')
+
+    parent_parser.add_argument('-q', '--quiet', help='prints debug messages (default=True)', action='store_true')
+    #parent_parser.add_argument('-h', '--help', help='show this help message and exits', action='store_true')
+    parent_parser.add_argument('-v', '--version', action='version',
+                               version=pyNastran.__version__)
+
+    #foo_parser = argparse.ArgumentParser(parents=[parent_parser])
+    #foo_parser.parse_args(['INPUT', '--format', '--output',
+                           #'--geomscript', '--postscript', '--points_fname', '--user_geom',
+                           #'--quiet', '--groups', '--no_update', '--log' '--help'] + dev_list)
+
+    #msg += "  pyNastranGUI INPUT [-f FORMAT] [-o OUTPUT]\n"
+    #msg += '               [-g GSCRIPT] [-p PSCRIPT]\n'
+    #msg += '               [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]\n'
+    #msg += '               [-q] [--groups] [--noupdate] [--log LOG]%s%s\n' % (test, qt)
+    #parser_no_output = p
+
+    #parser = argparse.ArgumentParser(
+        #description='A foo that bars',
+        #epilog="And that's how you'd foo a bar",
+        #version=pyNastran.__version__,
+    #)
+    #parser.add_argument("square", help="display a square of a given number",
+                        #type=int)
+    #parser.add_argument('-v', '--version', action='version',
+                        #version='%%(prog)s %s' % pyNastran.__version__)
+    #parser.add_argument("-w", "--verbosity", type=int, choices=[0, 1, 2],
+                        #help="increase output verbosity")
+    print('a')
+    args = parent_parser.parse_args()
+    print('b')
+    print(args)
+    import sys
+    sys.exit()
+
 
 if __name__ == '__main__':
     cmd_line()

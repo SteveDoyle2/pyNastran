@@ -121,7 +121,7 @@ def run_docopt():
 
     msg += "Info:\n"
     msg += "  -q, --quiet    prints debug messages (default=True)\n"
-    msg += "  -h, --help     show this help message and exit\n"
+    msg += "  -h, --help     show this help message and exits\n"
     msg += "  -v, --version  show program's version number and exit\n"
 
 
