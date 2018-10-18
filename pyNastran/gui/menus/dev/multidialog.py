@@ -32,7 +32,7 @@ class Window(QtGui.QWidget):
             sfilter = str(dialog.selectedFilter())
             print(sfilter)
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     import signal
     signal.signal(signal.SIGINT, signal.SIG_DFL)
 

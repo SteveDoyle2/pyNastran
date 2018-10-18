@@ -104,10 +104,12 @@ class PanairIO(object):
         #self._set_results([form], cases)
 
     def clear_panair(self):
+        asdf
         del self.elements
 
     def _fill_panair_geometry_case(self, cases, ID, nodes, elements, regions,
                                    kt, cp_norm, loads):
+        print('setting elemetns')
         self.elements = elements
         nnids = nodes.shape[0]
         neids = elements.shape[0]
@@ -237,26 +239,26 @@ class PanairIO(object):
                 pass
             imin += nCp
 
-        Cp_array2 = (Cp_array[self.elements[:, 0]] +
-                     Cp_array[self.elements[:, 1]] +
-                     Cp_array[self.elements[:, 2]] +
-                     Cp_array[self.elements[:, 3]]) / 4.
+        #Cp_array2 = (Cp_array[self.elements[:, 0]] +
+                     #Cp_array[self.elements[:, 1]] +
+                     #Cp_array[self.elements[:, 2]] +
+                     #Cp_array[self.elements[:, 3]]) / 4.
 
         icase = len(self.gui.result_cases)
 
         form = self.gui.get_form()
         results_form = [
             ('Cp Nodal', icase, []),
-            ('Cp Centroidal', icase + 1, [],),
+            #('Cp Centroidal', icase + 1, [],),
         ]
         form.append(('Results', None, results_form))
 
         ID = 1
         Cpn_res = GuiResult(ID, 'Cp Nodal', 'Cp', 'node', Cp_array,
                             data_format='%.3f', uname='Cp_nodal')
-        Cpc_res = GuiResult(ID, 'Cp Centroidal', 'Cp', 'centroid', Cp_array2,
-                            data_format='%.3f', uname='Cp_centroidal')
+        #Cpc_res = GuiResult(ID, 'Cp Centroidal', 'Cp', 'centroid', Cp_array2,
+                            #data_format='%.3f', uname='Cp_centroidal')
         cases[icase] = (Cpn_res, (0, 'Cp_nodal'))
-        cases[icase + 1] = (Cpc_res, (0, 'Cp_centroidal'))
+        #cases[icase + 1] = (Cpc_res, (0, 'Cp_centroidal'))
 
         self.gui._finish_results_io2(form, cases)

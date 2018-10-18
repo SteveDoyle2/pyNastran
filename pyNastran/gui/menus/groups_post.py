@@ -359,7 +359,7 @@ class GroupsPostView(QDialog):
 def on_post_group(data):
     print('hi')
 
-def main():
+def main():  # pragma: no cover
     # kills the program when you hit Cntl+C from the command line
     # doesn't save the current state as presumably there's been an error
     import signal
