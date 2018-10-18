@@ -10,7 +10,7 @@ from collections import defaultdict, OrderedDict
 import traceback
 from six import iteritems, StringIO, string_types
 from pyNastran.op2.result_objects.stress_object import StressObject
-from pyNastran.femutils.utils import duplicates, is_monotonic
+from pyNastran.femutils.utils import duplicates, is_monotonic, underflow_norm
 
 SIDE_MAP = {}
 SIDE_MAP['CHEXA'] = {
@@ -3738,7 +3738,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             #form0.append(('Theta', icase, []))
             #icase += 1
 
-        normal_mag = np.linalg.norm(normals, axis=1)
+        normal_mag = underflow_norm(normals, axis=1)
         assert len(normal_mag) == nelements
         normals /= normal_mag.reshape(nelements, 1)
         i_not_nan = np.isnan(normal_mag)
