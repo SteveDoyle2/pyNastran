@@ -420,10 +420,11 @@ class AVL(object):
                 alpha0 = section0['section'][1]
                 alpha1 = section1['section'][1]
 
-                interpolated_stations = interp_stations(
-                    y, nspan,
-                    airfoil_sections[i], chord0, alpha0, p1,
-                    airfoil_sections[i+1], chord1, alpha1, p4, end=end)
+                if airfoil_sections[i] is not None:
+                    interpolated_stations = interp_stations(
+                        y, nspan,
+                        airfoil_sections[i], chord0, alpha0, p1,
+                        airfoil_sections[i+1], chord1, alpha1, p4, end=end)
 
                 #loft_sections.append(chord0*airfoil_sections[i])
                 #loft_sections.append(chord1*airfoil_sections[i+1])
