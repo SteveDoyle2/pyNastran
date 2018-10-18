@@ -73,8 +73,7 @@ class AGPS(object):
 
         # time to parse the patches
         for ipatch, patch in enumerate(patches):
-            if self.debug:  # pragma: no cover
-                print('ipatch=%s' % ipatch)
+            self.log.debug('ipatch=%s' % ipatch)
 
             nrows = len(patch)
             ncols = len(patch[0])
@@ -88,7 +87,5 @@ class AGPS(object):
                     Cp[icol, inode] = cpi
 
             self.pressures[ipatch] = Cp
-            if self.debug:  # pragma: no cover
-                print('')
         #for ipatch, Cp in sorted(self.pressures.items()):
             #print(Cp)

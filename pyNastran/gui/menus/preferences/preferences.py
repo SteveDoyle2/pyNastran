@@ -665,7 +665,7 @@ def _check_color(color_float):
     color_int = [int(colori * 255) for colori in color_float]
     return color_float, color_int
 
-def main():
+def main():  # pragma: no cover
     # kills the program when you hit Cntl+C from the command line
     # doesn't save the current state as presumably there's been an error
     import signal
@@ -705,5 +705,5 @@ def main():
     # Enter the main loop
     app.exec_()
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()

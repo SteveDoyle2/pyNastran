@@ -16,7 +16,9 @@ from __future__ import print_function, division
 import numpy as np
 import vtk
 from vtk.util.numpy_support import vtk_to_numpy
-from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
+from pyNastran.gui.utils.vtk.vtk_utils import (
+    create_unstructured_point_grid, numpy_to_vtk_points)
+from vtk.util import numpy_support
 
 
 #class AreaPickStyle(vtk.vtkInteractorStyleRubberBandPick):
@@ -208,7 +210,8 @@ class AreaPickStyle(vtk.vtkInteractorStyleRubberBandZoom):  # works
 
         nids = None
         if self.is_nids:
-            ugrid, nids = self.get_inside_point_ids(ugrid, ugrid_flipped)
+            ugrid_points, nids = self.get_inside_point_ids(ugrid, ugrid_flipped)
+            ugrid = ugrid_points
 
         actor = self.parent.create_highlighted_actor(ugrid, representation=self.representation)
         self.actor = actor
@@ -270,7 +273,6 @@ class AreaPickStyle(vtk.vtkInteractorStyleRubberBandZoom):  # works
         point_ids = vtk_to_numpy(ids)
         nids = self.parent.get_node_ids(self.name, point_ids)
 
-
         # these are the points outside the box/frustum (and also include the bad point)
         points_flipped = ugrid_flipped.GetPointData()
         ids_flipped = points_flipped.GetArray('Ids')
@@ -280,7 +282,6 @@ class AreaPickStyle(vtk.vtkInteractorStyleRubberBandZoom):  # works
 
         # setA - setB
         nids2 = np.setdiff1d(nids, nids_flipped, assume_unique=True)
-        inids = np.searchsorted(nids, nids2)
 
         #narrays = points.GetNumberOfArrays()
         #for iarray in range(narrays):
@@ -288,24 +289,24 @@ class AreaPickStyle(vtk.vtkInteractorStyleRubberBandZoom):  # works
             #print('iarray=%s name=%r' % (iarray, name))
 
         #------------------
-        # we need to filter the nodes that were filtered by the numpy setdiff1d
-        # so we don't show extra points
-        #
-        # TODO: it's not ready though...something is wrong...probably inids
-        if self.representation == 'points' and 0:
+        if self.representation == 'points':
+            # we need to filter the nodes that were filtered by the
+            # numpy setdiff1d, so we don't show extra points
             pointsu = ugrid.GetPoints()
             output_data = ugrid.GetPoints().GetData()
-            from vtk.util import numpy_support
             points_array = numpy_support.vtk_to_numpy(output_data)  # yeah!
 
-            print('points_array:\n%s' % points_array)
+            isort_nids = np.argsort(nids)
+            nids = nids[isort_nids]
+            inids = np.searchsorted(nids, nids2)
 
-            points2 = numpy_to_vtk_points(points_array[inids, :])
+            points_array_sorted = points_array[isort_nids, :]
+            point_array2 = points_array_sorted[inids, :]
+            points2 = numpy_to_vtk_points(point_array2)
 
-            ugrid.SetPoints(points2)
-            ugrid.Modified()
+            npoints = len(nids2)
+            ugrid = create_unstructured_point_grid(points2, npoints)
         nids = nids2
-
         return ugrid, nids
 
     def right_button_press_event(self, obj, event):

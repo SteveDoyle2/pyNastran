@@ -33,7 +33,7 @@ class CuttingPlaneWindow(PyDialog):
     |    Apply OK Cancel     |
     +------------------------+
     """
-    def __init__(self, data, win_parent=None):
+    def __init__(self, data, win_parent=None, show_tol=True):
         """
         Saves the data members from data and
         performs type checks
@@ -59,14 +59,14 @@ class CuttingPlaneWindow(PyDialog):
         self._zaxis_method = 0  # Global Z
 
         self.setWindowTitle('Cutting Plane')
-        self.create_widgets()
+        self.create_widgets(show_tol)
         self.create_layout()
         self.set_connections()
         self.on_font(self._default_font_size)
         #self.on_gradient_scale()
         #self.show()
 
-    def create_widgets(self):
+    def create_widgets(self, show_tol):
         """creates the display window"""
         # CORD2R
         #self.origin_label = QLabel("Origin:")
@@ -132,6 +132,11 @@ class CuttingPlaneWindow(PyDialog):
 
         self.ytol_edit = QLineEdit('10.0')
         self.zero_tol_edit = QLineEdit('1e-5')
+        if not show_tol:
+            self.ytol_label.setVisible(False)
+            self.zero_tol_label.setVisible(False)
+            self.ytol_edit.setVisible(False)
+            self.zero_tol_edit.setVisible(False)
 
         self.p2_label = QLabel("P2:")
 

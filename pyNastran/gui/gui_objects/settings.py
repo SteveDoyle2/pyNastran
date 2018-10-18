@@ -52,6 +52,8 @@ class Settings(object):
 
         self.text_size = 14
         self.text_color = BLACK
+        self.highlight_color = ORANGE
+        self.highlight_opacity = 0.9
 
         self.show_info = True
         self.show_debug = True
@@ -534,12 +536,12 @@ class Settings(object):
         self.magnify = magnify
 
     def __repr__(self):
-        msg = (
-            '<Settings>\n'
-            '  highlight_color=%s\n'
-            '  highlight_opacity=%s\n'
-            '' % (self.highlight_color, self.highlight_opacity,)
-        )
+        msg = '<Settings>\n'
+        for key in object_attributes(self, mode='public', keys_to_skip=None):
+            value = getattr(self, key)
+            if isinstance(value, tuple):
+                value = str(value)
+            msg += '  %r = %r\n' % (key, value)
         return msg
 
 

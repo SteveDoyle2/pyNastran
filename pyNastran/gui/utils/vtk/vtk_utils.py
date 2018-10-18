@@ -197,6 +197,20 @@ def create_vtk_cells_of_constant_element_types(grid, elements_list,
 
     grid.SetCells(vtk_cell_types, vtk_cell_offsets, vtk_cells)
 
+def create_unstructured_point_grid(points, npoints):
+    """creates a point grid"""
+    ugrid = vtk.vtkUnstructuredGrid()
+    ugrid.SetPoints(points)
+
+    cell_type_vertex = vtk.vtkVertex().GetCellType()
+    etypes = [cell_type_vertex]
+    elements = [np.arange(npoints, dtype='int32').reshape(npoints, 1)]
+    create_vtk_cells_of_constant_element_types(ugrid, elements, etypes)
+    ugrid.SetPoints(points)
+    ugrid.Modified()
+    return ugrid
+
+
 def numpy_to_vtk(num_array, deep=0, array_type=None):
     """Converts a contiguous real numpy Array to a VTK array object.
 
