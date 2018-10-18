@@ -309,6 +309,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 'highlight_cell' : False,
                 'highlight_node' : False,
                 'area_pick' : False,
+                'highlight' : False,
                 'zoom' : False,
             }
 
@@ -405,6 +406,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
                 # picking
                 ('area_pick', 'Area Pick', 'tarea_pick.png', None, 'Get a list of nodes/elements', self.mouse_actions.on_area_pick),
+                ('highlight', 'Highlight', 'thighlight.png', None, 'Highlight a list of nodes/elements', self.mouse_actions.on_highlight),
             ]
 
         if 'nastran' in self.fmts:
@@ -420,18 +422,37 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #print('qkey_event =', qkey_event.key())
         super(GuiCommon2, self).keyPressEvent(qkey_event)
 
-    def _create_menu_items(self, actions=None, create_menu_bar=True):
+    def _create_menu_bar(self, menu_bar_order=None):
+        self.menu_bar_oder = menu_bar_order
+        if menu_bar_order is None:
+            menu_bar_order = ['menu_file', 'menu_view', 'menu_window', 'menu_help']
+
+        for key in menu_bar_order:
+            print('key =', str(key))
+            if key == 'menu_file':
+                self.menu_file = self.menubar.addMenu('&File')
+            elif key == 'menu_view':
+                self.menu_view = self.menubar.addMenu('&View')
+            elif key == 'menu_window':
+                self.menu_window = self.menubar.addMenu('&Window')
+            elif key == 'menu_help':
+                self.menu_help = self.menubar.addMenu('&Help')
+            elif isinstance(key, tuple):
+                attr_name, name = key
+                submenu = self.menubar.addMenu(name)
+                setattr(self, attr_name, submenu)
+            else:
+                raise NotImplementedError(key)
+        # always last
+        self.menu_hidden = self.menubar.addMenu('&Hidden')
+        self.menu_hidden.menuAction().setVisible(False)
+
+    def _create_menu_items(self, actions=None, create_menu_bar=True, menu_bar_order=None):
         if actions is None:
             actions = self.actions
 
         if create_menu_bar:
-            self.menu_file = self.menubar.addMenu('&File')
-            self.menu_view = self.menubar.addMenu('&View')
-            self.menu_window = self.menubar.addMenu('&Window')
-            self.menu_help = self.menubar.addMenu('&Help')
-
-            self.menu_hidden = self.menubar.addMenu('&Hidden')
-            self.menu_hidden.menuAction().setVisible(False)
+            self._create_menu_bar(menu_bar_order=menu_bar_order)
 
         if self._script_path is not None and os.path.exists(self._script_path):
             scripts = [script for script in os.listdir(self._script_path) if '.py' in script]
@@ -465,6 +486,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if self.is_groups:
             menu_view += ['modify_groups', 'create_groups_by_property_id',
                           'create_groups_by_visible_result']
+
         menu_view += [
             '', 'clipping', #'axis',
             'edges', 'edges_black',]
@@ -494,7 +516,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                          'wireframe', 'surface', 'edges']
         toolbar_tools += ['camera_reset', 'view', 'screenshot', '', 'exit']
         hidden_tools = ('cycle_results', 'rcycle_results',
-                        'font_size_increase', 'font_size_decrease')
+                        'font_size_increase', 'font_size_decrease', 'highlight')
 
         menu_items = OrderedDict()
         if create_menu_bar:
@@ -523,6 +545,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.menubar = self.menuBar()
 
         actions = self._prepare_actions(self._icon_path, self.tools, self.checkables)
+        action_names = list(self.actions.keys())
+        action_names.sort()
+
+        #print("self.actions =", action_names)
+        #for plugin in self.plugins:
+
         menu_items = self._create_menu_items(actions)
         self._populate_menu(menu_items)
 

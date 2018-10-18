@@ -22,15 +22,14 @@ class RotationCenterStyle(vtk.vtkInteractorStyleTrackballCamera):
         #print('_rotation_center_cell_picker', cell_id)
 
         if cell_id < 0:
-            pass
-        else:
-            camera = self.parent.rend.GetActiveCamera()
-            world_position = picker.GetPickPosition()
-            focal_point = self.parent._get_closest_node_xyz(cell_id, world_position)
+            return
+        camera = self.parent.rend.GetActiveCamera()
+        world_position = picker.GetPickPosition()
+        focal_point = self.parent._get_closest_node_xyz(cell_id, world_position)
 
-            self.parent.set_focal_point(focal_point)
-            self.parent.setup_mouse_buttons(mode='default')
-            self.rotation_center_button.setChecked(False)
+        self.parent.set_focal_point(focal_point)
+        self.parent.setup_mouse_buttons(mode='default')
+        self.rotation_center_button.setChecked(False)
 
     def right_button_press_event(self, obj, event):
         """cancels the probe button"""

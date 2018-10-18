@@ -5,6 +5,7 @@ import vtk
 
 from pyNastran.bdf.utils import write_patran_syntax_dict
 
+from pyNastran.gui.styles.highlight_style import HighlightStyle
 from pyNastran.gui.styles.area_pick_style import AreaPickStyle
 from pyNastran.gui.styles.zoom_style import ZoomStyle
 #from pyNastran.gui.styles.probe_style import ProbeResultStyle
@@ -40,13 +41,18 @@ class MouseActions(object):
             lets you know what kind of mapping this is
         revert : bool; default=False
             does the button revert when it's finished
-
-        left_button_down : function (default=None)
-            the callback function (None -> depends on the mode)
-        left_button_up : function (default=None)
-            the callback function (None -> depends on the mode)
-        right_button_down : function (default=None)
-            the callback function (None -> depends on the mode)
+        left_button_down : function; default=None
+            the callback function
+            None: depends on the mode
+        left_button_up : function; default=None
+            the callback function
+            None: depends on the mode
+        right_button_down : function; default=None
+            the callback function
+            None: depends on the mode
+        left_button_down_cleanup :  function; default=None
+            the callback function
+            None: depends on the mode
         style : vtkInteractorStyle (default=None)
             a custom vtkInteractorStyle
             None -> keep the same style, but overwrite the left mouse button
@@ -232,6 +238,9 @@ class MouseActions(object):
 
     def on_highlight_node(self):
         """highlights a single node (when it's added)"""
+        #self.on_highlight(is_eids=True, is_nids=True, representation='surface',
+                          #name=None, callback=None, force=True)
+
         self.highlight_style = 'node'
         self.revert_pressed('highlight_node')
         is_checked = self.actions['highlight_node'].isChecked()
@@ -245,6 +254,8 @@ class MouseActions(object):
 
     def on_highlight_cell(self):
         """highlights a single cell"""
+        #self.on_highlight(is_eids=True, is_nids=True, representation='surface',
+                          #name=None, callback=None, force=True)
         self.highlight_style = 'centroid'
         self.revert_pressed('highlight_cell')
         is_checked = self.actions['highlight_cell'].isChecked()
@@ -284,12 +295,14 @@ class MouseActions(object):
         if msg:
             self.gui.log_info('\n%s' % msg.lstrip())
 
-    def on_area_pick(self, is_eids=True, is_nids=True, name=None, callback=None, force=False):
-        """creates a Rubber Band Zoom"""
+    def on_area_pick(self, is_eids=True, is_nids=True, representation='wire',
+                     name=None, callback=None, force=False):
+        """Creates a box picker"""
         if name is None:
             name = self.gui.name
         print('name = %s' % name)
         self.revert_pressed('area_pick')
+
         is_checked = self.actions['area_pick'].isChecked()
         if not is_checked:
             # revert area_pick
@@ -303,9 +316,29 @@ class MouseActions(object):
         if callback is None:
             callback = self.on_area_pick_callback
         style = AreaPickStyle(parent=self, is_eids=is_eids, is_nids=is_nids,
+                              representation=representation,
                               name=name, callback=callback)
         self.setup_mouse_buttons(mode='style', revert=True,
                                  style=style) #, style_name='area_pick'
+
+    def on_highlight(self, is_eids=True, is_nids=True, representation='wire',
+                     name=None, callback=None, force=False):
+        """Selects a single point/cell"""
+        if name is None:
+            name = self.gui.name
+        self.revert_pressed('highlight')
+
+        is_checked = self.actions['highlight'].isChecked()
+        if not is_checked:
+            # revert probe_result
+            self.setup_mouse_buttons(mode='default')
+            if not force:
+                return
+        style = HighlightStyle(parent=self, is_eids=is_eids, is_nids=is_nids,
+                               representation=representation,
+                               name=name, callback=callback)
+        self.setup_mouse_buttons(mode='style', revert=True,
+                                 style=style)
 
     def on_area_pick_not_square(self):
         self.revert_pressed('area_pick')
@@ -502,7 +535,8 @@ class MouseActions(object):
             prop.SetRepresentationToWireframe()
             prop.SetLineWidth(5.)
         else:
-            raise NotImplementedError(representation)
+            raise NotImplementedError('representation=%r and must be [surface, points, wire]' % (
+                representation))
 
         self.rend.AddActor(actor)
         return actor
@@ -536,6 +570,7 @@ class MouseActions(object):
                 raise RuntimeError('invalid highlight_style=%r' % self.highlight_style)
             self.actor = actor
             self.vtk_interactor.Render()
+
         if self.revert:
             self.cleanup_observer = self.setup_mouse_buttons(
                 mode='default', left_button_down_cleanup=self._highlight_cleanup_callback)

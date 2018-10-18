@@ -189,14 +189,9 @@ def cmd_line2():  # pragma: no cover
         #version=pyNastran.__version__,
         #add_help=False,
     )
-    subparsers = parent_parser.add_subparsers()
-    parser = subparsers.add_parser('')
-    parser_i = subparsers.add_parser('INPUT')
-    parser_io = subparsers.add_parser('INPUT, OUTPUT')
     # positional arguments
-    parser_i.add_argument('INPUT', help='path to input file', type=str)
-    parser_io.add_argument('INPUT', help='path to input file', type=str)
-    parser_io.add_argument('OUTPUT', help='path to output file', type=str)
+    parent_parser.add_argument('INPUT', nargs='?', help='path to input file', type=str)
+    parent_parser.add_argument('OUTPUT', nargs='?', help='path to output file', type=str)
 
     parent_parser.add_argument('-i', '--input', help='path to input file')
     parent_parser.add_argument('-o', '--output', help='path to output file')
@@ -249,7 +244,21 @@ def cmd_line2():  # pragma: no cover
     #parser.add_argument("-w", "--verbosity", type=int, choices=[0, 1, 2],
                         #help="increase output verbosity")
     print('a')
+
+    mymsg = 'replacing argparse message'
+    #def print_help(self, file=None):
+        #if file is None:
+            #file = _sys.stdout
+        #self._print_message(self.format_help(), file)
+
+    def _print_message(message, file=None):
+        if message:
+            if file is None:
+                file = _sys.stderr
+            file.write(mymsg)
+    parent_parser._print_message = _print_message
     args = parent_parser.parse_args()
+
     print('b')
     print(args)
     import sys

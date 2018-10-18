@@ -88,6 +88,8 @@ class GuiAttributes(object):
             self.is_testing_flag = inputs['test']
         else:
             self.is_testing_flag = False
+
+        # just initializing the variable
         self.is_groups = False
         self._logo = None
         self._script_path = None
