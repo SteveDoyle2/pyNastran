@@ -1,3 +1,4 @@
+"""tests the pyNastranGUI PANAIR (A502) interface"""
 import os
 import unittest
 
@@ -7,7 +8,7 @@ from pyNastran.converters.panair.panair_io import PanairIO
 from pyNastran.utils.log import get_logger
 
 PKG_PATH = pyNastran.__path__[0]
-MODEL_PATH = os.path.join(PKG_PATH, 'converters', 'panair', 'M100')
+MODEL_PATH = os.path.join(PKG_PATH, 'converters', 'panair')
 
 
 class PanairGUI(FakeGUIMethods):
@@ -20,8 +21,9 @@ class PanairGUI(FakeGUIMethods):
 class TestPanairGUI(unittest.TestCase):
 
     def test_m100_geometry(self):
+        """simple panair geometry test"""
         log = get_logger(level='warning')
-        geometry_filename = os.path.join(MODEL_PATH, 'M100.inp')
+        geometry_filename = os.path.join(MODEL_PATH, 'M100', 'M100.inp')
         #agps_filename = os.path.join(MODEL_PATH, 'agps')
         #out_filename = os.path.join(MODEL_PATH, 'panair.out')
 
@@ -31,10 +33,23 @@ class TestPanairGUI(unittest.TestCase):
         test.on_load_geometry(geometry_filename, geometry_format='panair', raise_error=True)
 
     def test_m100_results(self):
+        """contains one AGPS results"""
         log = get_logger(level='warning')
-        geometry_filename = os.path.join(MODEL_PATH, 'M100.inp')
-        agps_filename = os.path.join(MODEL_PATH, 'agps')
-        out_filename = os.path.join(MODEL_PATH, 'panair.out')
+        geometry_filename = os.path.join(MODEL_PATH, 'M100', 'M100.inp')
+        agps_filename = os.path.join(MODEL_PATH, 'M100', 'agps')
+        #out_filename = os.path.join(MODEL_PATH, 'M100', 'panair.out')
+
+        test = PanairGUI()
+        test.log = log
+        test.model.load_panair_geometry(geometry_filename)
+        test.model.load_panair_results(agps_filename)
+
+    def test_naca0012_results(self):
+        """contains multiple AGPS results"""
+        log = get_logger(level='warning')
+        geometry_filename = os.path.join(MODEL_PATH, 'naca0012', 'naca0012_ar9.inp')
+        agps_filename = os.path.join(MODEL_PATH, 'naca0012', 'agps_0012')
+        #out_filename = os.path.join(MODEL_PATH, 'naca0012', 'panair.out')
 
         test = PanairGUI()
         test.log = log

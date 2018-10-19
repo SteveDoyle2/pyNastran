@@ -11,6 +11,13 @@ from qtpy.QtWidgets import QDialog
 from pyNastran.bdf.utils import (
     parse_patran_syntax, parse_patran_syntax_dict)
 
+def make_font(font_size, is_bold=False):
+    """creates a QFont"""
+    font = QFont()
+    font.setPointSize(font_size)
+    if is_bold:
+        font.setBold(is_bold)
+    return font
 
 class PyDialog(QDialog):
     """
@@ -35,8 +42,7 @@ class PyDialog(QDialog):
         if self.font_size == font_size:
             return
         self.font_size = font_size
-        font = QFont()
-        font.setPointSize(font_size)
+        font = make_font(font_size, is_bold=False)
         self.setFont(font)
 
     def closeEvent(self, event):

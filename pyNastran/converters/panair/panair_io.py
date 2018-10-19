@@ -41,9 +41,11 @@ class PanairIO(object):
         self.gui.model_type = model.model_type
         model.read_panair(panair_filename)
 
-        nodes, elements, regions, kt, cp_norm = model.get_points_elements_regions()
-        #for nid, node in enumerate(nodes):
-            #print "node[%s] = %s" % (nid, str(node))
+        # get_wakes=True shows explicit wakes
+        #
+        # TODO: bad for results
+        nodes, elements, regions, kt, cp_norm = model.get_points_elements_regions(
+            get_wakes=False)   
 
         self.gui.nnodes = len(nodes)
         self.gui.nelements = len(elements)
@@ -219,11 +221,8 @@ class PanairIO(object):
 
     def load_panair_results(self, panair_filename):
         cases = self.gui.result_cases
-        if os.path.basename(panair_filename) == 'agps':
-            model = AGPS(log=self.gui.log, debug=self.gui.debug)
-            model.read_agps(panair_filename)
-        else:
-            raise RuntimeError('only files named "agps" files are supported')
+        model = AGPS(log=self.gui.log, debug=self.gui.debug)
+        model.read_agps(panair_filename)
 
         # get the Cp on the nodes
         Cp_array = zeros(self.gui.nnodes, dtype='float32')
