@@ -5,6 +5,7 @@ import unittest
 import pyNastran
 from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.converters.panair.panair_io import PanairIO
+from pyNastran.converters.panair.panair_out import read_panair_out
 from pyNastran.utils.log import get_logger
 
 PKG_PATH = pyNastran.__path__[0]
@@ -37,7 +38,8 @@ class TestPanairGUI(unittest.TestCase):
         log = get_logger(level='warning')
         geometry_filename = os.path.join(MODEL_PATH, 'M100', 'M100.inp')
         agps_filename = os.path.join(MODEL_PATH, 'M100', 'agps')
-        #out_filename = os.path.join(MODEL_PATH, 'M100', 'panair.out')
+        out_filename = os.path.join(MODEL_PATH, 'M100', 'panair.out')
+        read_panair_out(out_filename)
 
         test = PanairGUI()
         test.log = log

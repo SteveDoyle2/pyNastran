@@ -301,7 +301,7 @@ class Subcase(object):
                 self.add('FORCE', 'ALL', options, 'STRESS-type')
             else:
                 self._write_op2_error_msg(log, self.log, msg, data_code)
-        elif table_name == 'OQMG1':
+        elif table_name in ['OQMG1', 'OQMG2']:
             if table_code in [3, 39]:
                 self.add('MPCFORCES', 'ALL', options, 'STRESS-type')
             else:
@@ -322,7 +322,7 @@ class Subcase(object):
                 self.add('STRESS', 'ALL', options, 'STRESS-type')
             else:
                 self._write_op2_error_msg(log, self.log, msg, data_code)
-        elif table_name in ['OES2', 'OES2C']:
+        elif table_name in ['OES2', 'OES2C', 'OESVM2', ]:
             options.append('SORT2')
             if table_code == 5:
                 self.add('STRESS', 'ALL', options, 'STRESS-type')

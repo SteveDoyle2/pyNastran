@@ -1290,6 +1290,7 @@ def main(): # pragma: no cover
     # Enter the main loop
     app.exec_()
 
+
 def set_combo_box_text(combo_box, value):
     if qt_version == 'pyside':
         items = [combo_box.itemText(i) for i in range(combo_box.count())]

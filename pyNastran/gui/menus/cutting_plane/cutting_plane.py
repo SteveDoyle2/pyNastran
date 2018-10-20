@@ -130,9 +130,13 @@ class CuttingPlaneWindow(PyDialog):
         self.zaxis_y_edit = QLineEdit('')
         self.zaxis_z_edit = QLineEdit('')
 
-        self.ytol_edit = QLineEdit('10.0')
-        self.zero_tol_edit = QLineEdit('1e-5')
         if not show_tol:
+            self.ytol_label = QLabel('Y Tolerance:')
+            self.zero_tol_label = QLabel('Zero Tolerance:')
+
+            self.ytol_edit = QLineEdit('10.0')
+            self.zero_tol_edit = QLineEdit('1e-5')
+
             self.ytol_label.setVisible(False)
             self.zero_tol_label.setVisible(False)
             self.ytol_edit.setVisible(False)
@@ -167,8 +171,6 @@ class CuttingPlaneWindow(PyDialog):
         self.x_label = QLabel('X')
         self.y_label = QLabel('Y')
         self.z_label = QLabel('Z')
-        self.ytol_label = QLabel('Y Tolerance:')
-        self.zero_tol_label = QLabel('Zero Tolerance:')
 
         self.location_label.setAlignment(Qt.AlignCenter)
         self.cid_label.setAlignment(Qt.AlignCenter)
@@ -313,7 +315,7 @@ class CuttingPlaneWindow(PyDialog):
             p3_label_text = 'XZ Plane:'
         else:
             p1_label_text = 'Origin/P1:'
-            p2_label_text = 'P1:'
+            p2_label_text = 'P2:'
             p3_label_text = 'Z-Axis:'
 
         self.p1_label.setText(p1_label_text)

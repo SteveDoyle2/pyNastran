@@ -428,7 +428,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
             menu_bar_order = ['menu_file', 'menu_view', 'menu_window', 'menu_help']
 
         for key in menu_bar_order:
-            print('key =', str(key))
             if key == 'menu_file':
                 self.menu_file = self.menubar.addMenu('&File')
             elif key == 'menu_view':

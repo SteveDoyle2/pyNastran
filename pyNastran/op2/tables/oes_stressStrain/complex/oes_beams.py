@@ -20,11 +20,11 @@ class ComplexBeamArray(OES_Object):
         self.nelements = 0  # result specific
         #self.cid = {}  # gridGauss
 
-        if is_sort1:
-            #sort1
-            pass
-        else:
-            raise NotImplementedError('SORT2')
+        #if is_sort1:
+            ##sort1
+            #pass
+        #else:
+            #raise NotImplementedError('SORT2')
 
     def _reset_indices(self):
         self.itotal = 0

@@ -192,7 +192,7 @@ class F06Writer(OP2_F06_Common):
         self.subcase_key = defaultdict(list)
         self.end_options = {}
 
-        self._results = ResultSet(self.get_all_results())
+        self._results = ResultSet(self.get_all_results(), self.log)
 
     def get_all_results(self):
         all_results = ['stress', 'strain', 'element_forces', 'constraint_forces'] + self.get_table_types()

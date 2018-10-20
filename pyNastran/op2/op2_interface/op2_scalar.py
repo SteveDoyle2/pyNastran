@@ -227,7 +227,7 @@ NX_RESULT_TABLES = [
     # OESVM1C - OES Table of composite element stresses
     #           for frequency response analysis that includes von Mises stress
     #           output in SORT1 format.
-    b'OESVM1', b'OSTRVM1',
+    b'OESVM1', b'OESVM2', b'OSTRVM1', b'OSTRVM2',
     b'OESVM1C', b'OSTRVM1C',
 
     b'OESPSD2C', b'OSTPSD2C',
@@ -297,7 +297,7 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     # spc forces - gset - sort 1
     b'OQG1', b'OQGV1',
     # mpc forces - gset - sort 1
-    b'OQMG1',
+    b'OQMG1', b'OQMG2',
     # ??? forces
     b'OQP1',
 
@@ -768,6 +768,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OSTRVM1' : [self._read_oes1_3, self._read_ostr1_4],   # isat_random
             b'OSTRVM1C' : [self._read_oes1_3, self._read_ostr1_4],  # isat_random
 
+            b'OESVM2' : [self._read_oes2_3, self._read_oes2_4],    # big random
             b'OES2C' : [self._read_oes2_3, self._read_oes2_4],
             b'OSTR2' : [self._read_oes2_3, self._read_ostr2_4], # TODO: disable
             b'OSTR2C' : [self._read_oes2_3, self._read_ostr2_4],
@@ -897,7 +898,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OQMRMS1' : [self._read_oqg1_3, self._read_oqg_mpc_rms],
             b'OQMNO1'  : [self._read_oqg1_3, self._read_oqg_mpc_no],
 
-            #b'OQMG2'   : [self._read_oqg1_3, self._read_oqg_mpc_forces],
+            b'OQMG2'   : [self._read_oqg2_3, self._read_oqg_mpc_forces], # big random
             b'OQMATO2' : [self._read_oqg2_3, self._read_oqg_mpc_ato],
             b'OQMCRM2' : [self._read_oqg2_3, self._read_oqg_mpc_crm],
             b'OQMPSD2' : [self._read_oqg2_3, self._read_oqg_mpc_psd],

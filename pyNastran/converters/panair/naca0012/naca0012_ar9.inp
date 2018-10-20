@@ -29,7 +29,6 @@ $velocity correction
        0.0
 $networks
        5.0
-
 $points for network #  1
        1.0
        1.0
@@ -1603,5 +1602,5 @@ $points for network #  4
 $trailing wakes
 1.
 18.         1.
-net1        1.         1.00      .0                                      wingwk
+net1        1.         100.      .0                                      wingwk
 $end of input data

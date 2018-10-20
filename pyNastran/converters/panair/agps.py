@@ -78,7 +78,12 @@ class AGPS(object):
             nrows = len(patch)
             ncols = len(patch[0])
             XYZ = np.zeros((nrows, ncols, 3), dtype='float32')
-            Cp = np.zeros((nrows, ncols), dtype='float32')
+
+            cps = []
+            node0 = patch[0][0].split()
+            cp0 = node0[4:]
+            ncp = len(cp0)
+            cp = np.zeros((ncp, nrows, ncols), dtype='float32')
             for icol, col in enumerate(patch):
                 for inode, node in enumerate(col):
                     sline = node.strip().split()
@@ -86,14 +91,14 @@ class AGPS(object):
                     # dropping the counter with [1:]
                     # counter, xi, yi, zi, cp1, cp2, cp3, cp4
                     xyz = sline[1:4]
-                    cp = sline[4:]
+                    cpi = sline[4:]
                     assert len(xyz) == 3, 'sline=%s xyz=%s' % (sline, xyz)
-                    assert len(cp) == 3, 'sline=%s cp=%s' % (sline, cp)
+                    assert 1 <= len(cp) <= 3, 'sline=%s cpi=%s' % (sline, cpi)
                     XYZ[icol, inode, :] = xyz # xi, yi, zi
 
                     # we don't support multiple Cps, but you can hack it...
-                    Cp[icol, inode] = cp[0]
+                    cp[:, icol, inode] = cpi
 
-            self.pressures[ipatch] = Cp
+            self.pressures[ipatch] = cp
         #for ipatch, Cp in sorted(self.pressures.items()):
             #print(Cp)
