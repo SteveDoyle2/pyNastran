@@ -1039,4 +1039,27 @@ $PRINT
 0.        0.        0.        0.        0.        0. 
 0.        0.        1.        0.        0.     
 $TREFFTZ
+$sectional properties
+=numgrp
+1.
+*network selection for sectional properties
+=numnet
+1.
+=netdat
+2.
+*cut and reference printout for sectional properties
+=optcrd   optmrp    iprtnf    iprtpp    isecpr    ixyzop
+1.        1.        0.
+=numcut
+4.
+=xc       yc        zc        xcn       ycn       zxn
+2.        0.        0.        0.        .923      .383
+=chrd     refrac
+          .25
+2.        0.        0.        0.        .383      .923
+          .25
+2.        0.        0.        0.        -.383     .923
+          .25
+2.        0.        0.        0.        -.923     .383
+          .25
 $end of a502 inputs

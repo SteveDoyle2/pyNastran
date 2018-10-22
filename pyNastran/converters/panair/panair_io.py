@@ -50,7 +50,7 @@ class PanairIO(object):
         #
         # TODO: bad for results...what about just not adding it to the patches/bcs?
         nodes, elements, regions, kt, cp_norm = model.get_points_elements_regions(
-            get_wakes=False)
+            get_wakes=True)
 
         self.gui.nnodes = len(nodes)
         self.gui.nelements = len(elements)
@@ -108,43 +108,14 @@ class PanairIO(object):
     def _fill_panair_geometry_case(self, cases, ID, nodes, elements, regions,
                                    kt, cp_norm, loads):
         self.elements = elements
-        colormap = self.colormap
+        colormap = 'jet' # self.colormap
         nnids = nodes.shape[0]
         neids = elements.shape[0]
         nids = arange(0., nnids, dtype='int32') + 1
         eids = arange(0., neids, dtype='int32') + 1
 
-        icase = 0
-        location_form = [
-            ('Normal', icase + 4, []),
-            ('normal_x', icase + 5, []),
-            ('normal_y', icase + 6, []),
-            ('normal_z', icase + 7, []),
-
-            ('centroid_x', icase + 8, []),
-            ('centroid_y', icase + 9, []),
-            ('centroid_z', icase + 10, []),
-
-            ('node_x', icase + 11, []),
-            ('node_y', icase + 12, []),
-            ('node_z', icase + 13, []),
-        ]
-
-        geometry_form = [
-            ('Patch', icase, []),
-            ('ElementID', icase + 1, []),
-            ('NodeID', icase + 2, []),
-            ('Area', icase + 3, []),
-            ('Location', None, location_form),
-            ('Kt', icase + 13, []),
-            ('CpNorm', icase + 14, []),
-        ]
-        form = [
-            ('Geometry', None, geometry_form),
-        ]
-
         # centroidal
-        nelements = len(elements)
+        #nelements = len(elements)
         #print('nelements = ', nelements)
         #print('nnodes = ', nodes.shape)
 
@@ -193,22 +164,6 @@ class PanairIO(object):
         cp_res = GuiResult(ID, 'CpNorm', 'CpNorm', 'centroid', cp_norm,
                            data_format=None, colormap=colormap, uname='CpNorm')
 
-        cases[icase] = (region_res, (itime, 'Region'))
-        cases[icase + 1] = (eid_res, (itime, 'ElementID'))
-        cases[icase + 2] = (nid_res, (itime, 'NodeID'))
-        cases[icase + 3] = (area_res, (itime, 'Area'))
-
-        cases[icase + 4] = (nxyz_res, (itime, 'Normal'))
-        cases[icase + 5] = (nx_res, (itime, 'NormalX'))
-        cases[icase + 6] = (ny_res, (itime, 'NormalY'))
-        cases[icase + 7] = (nz_res, (itime, 'NormalZ'))
-        cases[icase + 8] = (cenx_res, (itime, 'CentroidX'))
-        cases[icase + 9] = (ceny_res, (itime, 'CentroidY'))
-        cases[icase + 10] = (cenz_res, (itime, 'CentroidZ'))
-
-        cases[icase + 14] = (kt_res, (itime, 'Kt'))
-        cases[icase + 15] = (cp_res, (itime, 'CpNorm'))
-
         # nodal
         cenx_res = GuiResult(ID, 'node_x', 'NodeX', 'node', nodes[:, 0],
                              data_format='%.2f', colormap=colormap, uname='node_x')
@@ -216,14 +171,63 @@ class PanairIO(object):
                              data_format='%.2f', colormap=colormap, uname='node_y')
         cenz_res = GuiResult(ID, 'node_z', 'NodeZ', 'node', nodes[:, 2],
                              data_format='%.2f', colormap=colormap, uname='node_z')
+
+        icase = 0
+        location_form = [
+            ('Normal', icase + 4, []),
+            ('normal_x', icase + 5, []),
+            ('normal_y', icase + 6, []),
+            ('normal_z', icase + 7, []),
+
+            ('centroid_x', icase + 8, []),
+            ('centroid_y', icase + 9, []),
+            ('centroid_z', icase + 10, []),
+
+            ('node_x', icase + 11, []),
+            ('node_y', icase + 12, []),
+            ('node_z', icase + 13, []),
+        ]
+
+        geometry_form = [
+            ('Patch', icase, []),
+            ('ElementID', icase + 1, []),
+            ('NodeID', icase + 2, []),
+            ('Area', icase + 3, []),
+            ('Location', None, location_form),
+            ('Kt', icase + 14, []),
+            ('CpNorm', icase + 15, []),
+        ]
+        form = [
+            ('Geometry', None, geometry_form),
+        ]
+
+        cases[icase] = (region_res, (itime, 'Patch'))
+        cases[icase + 1] = (eid_res, (itime, 'ElementID'))
+        cases[icase + 2] = (nid_res, (itime, 'NodeID'))
+        cases[icase + 3] = (area_res, (itime, 'Area'))
+
+        # location_form
+        cases[icase + 4] = (nxyz_res, (itime, 'Normal'))
+        cases[icase + 5] = (nx_res, (itime, 'NormalX'))
+        cases[icase + 6] = (ny_res, (itime, 'NormalY'))
+        cases[icase + 7] = (nz_res, (itime, 'NormalZ'))
+        #---
+        cases[icase + 8] = (cenx_res, (itime, 'CentroidX'))
+        cases[icase + 9] = (ceny_res, (itime, 'CentroidY'))
+        cases[icase + 10] = (cenz_res, (itime, 'CentroidZ'))
+        #---
         cases[icase + 11] = (cenx_res, (itime, 'node_x'))
         cases[icase + 12] = (ceny_res, (itime, 'node_y'))
         cases[icase + 13] = (cenz_res, (itime, 'node_z'))
 
+        cases[icase + 14] = (kt_res, (itime, 'Kt'))
+        cases[icase + 15] = (cp_res, (itime, 'CpNorm'))
+
         return form, cases, nids, eids
 
     def load_panair_results(self, panair_filename):
-        colormap = self.colormap
+        #colormap = self.colormap
+        colormap = 'jet'
         cases = self.gui.result_cases
         model = AGPS(log=self.gui.log, debug=self.gui.debug)
         model.read_agps(panair_filename)
@@ -285,59 +289,90 @@ class PanairIO(object):
 
         dirname = os.path.dirname(panair_filename)
         panair_out_filename = os.path.join(dirname, 'panair.out')
+        ft13_filename = os.path.join(dirname, 'ft13')
+
         if os.path.exists(panair_out_filename):
-            out = read_panair_out(panair_out_filename)
-
-            out_form = []
-            for isolution, networks in sorted(out.networks.items()):
-                if networks == {}:
-                    continue
-                print('isolution = ', isolution, geom_model.alphas)
-                alpha = geom_model.alphas[isolution-1]
-                beta = geom_model.betas[isolution-1]
-                case_name = 'alpha=%s' % alpha
-                if not is_beta0:
-                    case_name += ' beta=%s' %  beta
-
-                for iheader, title in enumerate(out.headers):
-                    header = '%s - %s' % (title, case_name)
-                    if title in ['x', 'y', 'z']:
-                        if isolution > 1:
-                            continue
-                        header = title
-                        #break
-
-                    icell = 0
-                    icell0 = 0
-                    data_array = np.zeros(nelements, dtype='float32')
-                    for inetwork, network in sorted(networks.items()):
-                        datai = network.data[:, iheader]
-
-                        patch = geom_model.patches[inetwork-1]
-                        nrows = patch.nrows
-                        ncols = patch.ncols
-                        #print(patch)
-                        #print(patch.inetwork, patch.network_name)
-                        #print(len(datai), nrows, ncols, (nrows-1)*(ncols-1))
-                        datai2 = datai.reshape(ncols-1, nrows-1)
-                        npatch_cells = len(datai)
-                        icell += npatch_cells
-                        data_array[icell0:icell] = datai2.ravel()
-                        icell0 += npatch_cells
-
-                    out_form += [
-                        (header, icase, []),
-                        #('Cp Centroidal', icase + 1, [],),
-                    ]
-                    Cpn_res = GuiResult(ID, header, title, 'centroid', data_array,
-                                        data_format='%.3f', colormap=colormap, uname=header)
-                    #Cpc_res = GuiResult(ID, 'Cp Centroidal', 'Cp', 'centroid', Cp_array2,
-                                        #data_format='%.3f', uname='Cp_centroidal')
-                    cases[icase] = (Cpn_res, (0, header))
-                    icase += 1
-
+            out = read_panair_out(panair_out_filename, log=self.gui.log)
+            alphas = geom_model.alphas
+            betas = geom_model.betas
+            icase, out_form = add_networks(out.networks, out.headers, is_beta0,
+                                           ID, icase, cases, geom_model, nelements, colormap=colormap)
             form.append(('Out: Mach=%s' % mach, None, out_form))
+
+            if os.path.exists(ft13_filename):
+                out.read_ft13(ft13_filename)
+                icase, ft13_form = add_networks(out.networks_ft13, out.headers_ft13, is_beta0,
+                                                ID, icase, cases, geom_model, nelements, colormap=colormap)
+                form.append(('Ft13: Mach=%s' % mach, None, ft13_form))
 
 
         #cases[icase + 1] = (Cpc_res, (0, 'Cp_centroidal'))
         self.gui._finish_results_io2(form, cases)
+
+def add_networks(out_networks, out_headers, is_beta0,
+                 ID, icase, cases, geom_model, nelements, colormap='jet'):
+    out_form = []
+    nsolutions = len(out_networks)
+    for isolution, networks in sorted(out_networks.items()):
+        if networks == {}:
+            continue
+        #print('isolution = ', isolution, geom_model.alphas)
+        alpha = geom_model.alphas[isolution-1]
+        beta = geom_model.betas[isolution-1]
+        case_name = 'alpha=%s' % alpha
+        if not is_beta0:
+            case_name += ' beta=%s' %  beta
+
+        out_form2 = []
+        for iheader, title in enumerate(out_headers):
+            #print(iheader, title)
+            #header = '%s - %s' % (title, case_name)
+            header = title
+            if title in ['x', 'y', 'z']:
+                if isolution > 1:
+                    continue
+                header = title
+                #break
+
+            icell = 0
+            icell0 = 0
+            data_array = np.full(nelements, np.nan, dtype='float32')
+            for inetwork, network in sorted(networks.items()):
+                #print(network)
+                if nsolutions == 1 and len(network.data) == 1:
+                    datai = network.data[:, iheader]
+                else:
+                    datai = network.data[:, iheader]
+
+                patch = geom_model.patches[inetwork-1]
+                nrows = patch.nrows
+                ncols = patch.ncols
+                #print(patch)
+                #print(inetwork, patch.inetwork, patch.network_name)
+                #print(len(datai), datai.shape, nrows, ncols, nrows*ncols, (nrows-1)*(ncols-1))
+                datai2 = datai.reshape(ncols-1, nrows-1)
+                npatch_cells = len(datai)
+                icell += npatch_cells
+                data_array[icell0:icell] = datai2.ravel()
+                icell0 += npatch_cells
+
+            if header in ['x', 'y', 'z']:
+                out_form += [
+                    (header, icase, []),
+                    #('Cp Centroidal', icase + 1, [],),
+                ]
+            else:
+                out_form2 += [
+                    (header, icase, []),
+                    #('Cp Centroidal', icase + 1, [],),
+                ]
+
+            Cpn_res = GuiResult(ID, header, title, 'centroid', data_array,
+                                data_format='%.3f', colormap=colormap, uname=header)
+            #Cpc_res = GuiResult(ID, 'Cp Centroidal', 'Cp', 'centroid', Cp_array2,
+                                #data_format='%.3f', uname='Cp_centroidal')
+            cases[icase] = (Cpn_res, (0, header))
+            icase += 1
+        out_formi = (case_name, None, out_form2)
+        out_form.append(out_formi)
+    return icase, out_form

@@ -194,12 +194,11 @@ class PanairGrid(object):
     def write_panair(self, out_filename):
         """writes the panair file"""
         self.update_cases()
-        if PY2:
-            wb = 'wb'
-        else:
-            wb = 'w'
-
-        with open(out_filename, wb) as panair_file:
+        #if PY2:
+            #wb = 'wb'
+        #else:
+            #wb = 'w'
+        with open(out_filename, 'w') as panair_file:
             panair_file.write(self.title_section)
             panair_file.write(self.write_data_check())
             panair_file.write(self.symmetry_section)
