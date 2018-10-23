@@ -1314,7 +1314,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.update_all(render=render)
 
     def _update_ids_mask(self, ids_to_show, flip_flag=True, show_flag=True, render=True):
-        print('flip_flag=%s show_flag=%s' % (flip_flag, show_flag))
+        #print('flip_flag=%s show_flag=%s' % (flip_flag, show_flag))
 
         ids = numpy_to_vtk_idtype(ids_to_show)
         ids.Modified()

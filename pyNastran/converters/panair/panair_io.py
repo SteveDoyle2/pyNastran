@@ -29,7 +29,7 @@ class PanairIO(object):
         data = ('Panair',
                 'Panair (*.inp)', self.load_panair_geometry,
                 #'Panair (*.agps);;Panair (*.out)',  self.load_panair_results)
-                'Panair (*agps)', self.load_panair_results)
+                'Panair (*agps);;All files (*)', self.load_panair_results)
         return data
 
     def load_panair_geometry(self, panair_filename, name='main', plot=True):
