@@ -34,7 +34,6 @@ class PanairIO(object):
 
     def load_panair_geometry(self, panair_filename, name='main', plot=True):
         self.gui.nid_map = {}
-
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]
 
@@ -90,7 +89,6 @@ class PanairIO(object):
         cases = OrderedDict()
         ID = 1
 
-        #print "nElements = ", nElements
         loads = []
         form, cases, node_ids, element_ids = self._fill_panair_geometry_case(
             cases, ID, nodes, elements, regions, kt, cp_norm, loads)
@@ -324,6 +322,7 @@ def add_networks(out_networks, out_headers, is_beta0,
             case_name += ' beta=%s' %  beta
 
         out_form2 = []
+        #print('----------')
         for iheader, title in enumerate(out_headers):
             #print(iheader, title)
             #header = '%s - %s' % (title, case_name)
@@ -337,19 +336,22 @@ def add_networks(out_networks, out_headers, is_beta0,
             icell = 0
             icell0 = 0
             data_array = np.full(nelements, np.nan, dtype='float32')
+            #print('----------')
+            #print('***keys =', networks.keys())
             for inetwork, network in sorted(networks.items()):
-                #print(network)
-                if nsolutions == 1 and len(network.data) == 1:
-                    datai = network.data[:, iheader]
-                else:
-                    datai = network.data[:, iheader]
-
                 patch = geom_model.patches[inetwork-1]
+
+                if patch.is_wake():  # wakes don't have results
+                    continue
+
+                datai = network.data[:, iheader]
                 nrows = patch.nrows
                 ncols = patch.ncols
-                #print(patch)
+
+                #print(patch.get_header())
                 #print(inetwork, patch.inetwork, patch.network_name)
                 #print(len(datai), datai.shape, nrows, ncols, nrows*ncols, (nrows-1)*(ncols-1))
+
                 datai2 = datai.reshape(ncols-1, nrows-1)
                 npatch_cells = len(datai)
                 icell += npatch_cells

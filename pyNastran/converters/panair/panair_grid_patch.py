@@ -29,7 +29,7 @@ class PanairPatch(object):
 
     def is_wake(self):
         self.log.debug('is_wake %s %s' % (self.network_name, self.kt))
-        if self.kt in [18]:
+        if self.kt in [18, 20]:
             return True
         return False
 
@@ -312,6 +312,14 @@ class PanairPatch(object):
         #self.z = transpose(self.z)
         #self.x[0:n][:] = self.x[-n:-1][:] # something like this...
 
+    def get_header(self):
+        header = '$points - surface panels\n'
+        header += '%-10s%-10s\n' % ('1.', self.cp_norm)  # nNetworks is 1
+        header += '%-10s\n' % print_float(self.kt)
+        header += '%-10s%-10s%50s%-10s\n' % (
+            print_float(self.nrows), print_float(self.ncols), '', self.network_name)
+        return header
+
     def __repr__(self):
         """
         $points - body to wing wakes
@@ -323,15 +331,9 @@ class PanairPatch(object):
         4.        2.                                                          awbw
         """
         #x = self.write_as_plot3d()
-
         #self.log.debug("*******")
-        header = '$points - surface panels\n'
         points = ''
-
-        header += '%-10s%-10s\n' % ('1.', self.cp_norm)  # nNetworks is 1
-        header += '%-10s\n' % print_float(self.kt)
-        header += '%-10s%-10s%50s%-10s\n' % (
-            print_float(self.nrows), print_float(self.ncols), '', self.network_name)
+        header = self.get_header()
 
         #nfull_lines = nm // 2
         #npartial_lines = nm % 2

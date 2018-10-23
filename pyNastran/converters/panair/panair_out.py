@@ -76,10 +76,12 @@ class PanairOut(object):
 
         inetwork = 0
         jcounter = 0
+        all_networks = {}
         networks = {}
         data = []
         datai = []
         #print(iline, nlines)
+        isolution = 1
         while iline < nlines:
             line = lines[iline].rstrip()
             if not line:
@@ -107,7 +109,7 @@ class PanairOut(object):
                     #print('datai =', len(datai), datai)
                     data.append(datai)
                 if len(data) < 4:
-                    print(data)
+                    self.log.info(data)
                 inetwork += 1
                 if len(data):
                     assert len(data) > 0, data
@@ -119,6 +121,15 @@ class PanairOut(object):
             assert 'lmachu' not in line, line
             #print(iline, jcounter, line)
             iline += 1
+            if 'mach number =' in line:
+                iline += 2
+                all_networks[isolution] = networks
+                inetwork = 0
+                networks = {}
+                assert len(datai) == 0, datai
+                assert len(data) == 0
+                continue
+
             sline = line.split()
             if sline[0] == 'network':
                 continue
@@ -131,11 +142,14 @@ class PanairOut(object):
                     line[77:88], line[88:99], line[99:110], line[110:121], line[121:132], #line[132:143],
                 ]
             else:
+                sline0 = line[:11].strip()
                 sline2 = [
                     line[:11],
                     line[11:22], line[22:33], line[33:44], line[44:55], line[55:66], line[66:77],
                     line[77:88], line[88:99], line[99:110], line[110:121], line[121:132], #line[132:143],
                 ]
+                assert ' ' not in sline0, sline2
+            assert ' ' not in sline2[0].strip(), sline2
             #print(sline)
             #assert len(sline) == len(sline2), sline2
             datai += sline2
@@ -148,7 +162,7 @@ class PanairOut(object):
                 datai = []
                 jcounter = 0
         #print(networks.keys())
-        self.networks_ft13 = {1 : networks}
+        self.networks_ft13 = all_networks
         return networks
 
     def read_panair_out(self, panair_out_filename='panair.out'):
@@ -170,7 +184,7 @@ class PanairOut(object):
             isolution += 1
         self.log.debug('done with panair.out')
 
-        for isolution, networks in self.networks.items():
+        for isolution, networks in sorted(self.networks.items()):
             self.log.debug('out: isolution=%s' % isolution)
             for inetwork, network in networks.items():
                 network.to_numpy()
@@ -212,14 +226,14 @@ class PanairOut(object):
 
         #print('reading network---')
         #print(line)
-        self.log.info('while force/moment')
+        #self.log.info('while force/moment')
         while 'force / moment data for network' not in line:
             line = lines[iline].rstrip()
             if 'simultaneous solution number' in line:
                 return iline
             #print(line)
             if 'force / moment data for network' in line:
-                self.log.info('  while network')
+                #self.log.info('  while network')
                 while '1    network id:' not in line and 'simultaneous solution number' not in line and iline < nlines:
                     iline += 1
                     line = lines[iline].rstrip()
@@ -232,7 +246,7 @@ class PanairOut(object):
                 if line.startswith('1    network id:'):
                     inetwork += 1
                     if inetwork not in networks:
-                        self.log.info('***inetwork=%s' % inetwork)
+                        #self.log.info('***inetwork=%s' % inetwork)
                         network = Network(line)
                         networks[inetwork] = network
 
