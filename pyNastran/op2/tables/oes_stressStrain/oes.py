@@ -1617,8 +1617,8 @@ class OES(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                if is_vectorized:  # pragma: no cover
-                    self.log.info('vectorize CELASx real')
+                if is_vectorized and self.use_vector:  # pragma: no cover
+                    self.log.info('vectorize CELASx real SORT%s' % self.sort_method)
                 struct1 = Struct(self._endian + self._analysis_code_fmt + b'f')
                 for i in range(nelements):
                     edata = data[n:n+ntotal]
@@ -1672,8 +1672,8 @@ class OES(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                if is_vectorized:  # pragma: no cover
-                    self.log.info('vectorize CELASx imag')
+                if is_vectorized and self.use_vector:  # pragma: no cover
+                    self.log.info('vectorize CELASx imag SORT%s' % self.sort_method)
                 struct1 = Struct(self._endian + self._analysis_code_fmt + b'2f')
                 for i in range(nelements):
                     edata = data[n:n + ntotal]
@@ -1766,8 +1766,8 @@ class OES(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                if is_vectorized:  # pragma: no cover
-                    self.log.info('vectorize CROD real')
+                if is_vectorized and self.use_vector:  # pragma: no cover
+                    self.log.info('vectorize CROD real SORT%s' % self.sort_method)
                 if self.is_debug_file:
                     self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
                     self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
@@ -1812,8 +1812,8 @@ class OES(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                if is_vectorized:  # pragma: no cover
-                    self.log.info('vectorize CROD imag')
+                if is_vectorized and self.use_vector:  # pragma: no cover
+                    self.log.info('vectorize CROD imag SORT%s' % self.sort_method)
                 struct1 = Struct(self._endian + self._analysis_code_fmt + b'4f')
                 for unused_i in range(nelements):
                     edata = data[n:n + ntotal]
@@ -1851,8 +1851,8 @@ class OES(OP2Common):
 
             obj = self.obj
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                if is_vectorized:  # pragma: no cover
-                    self.log.info('vectorize CROD random')
+                if is_vectorized and self.use_vector:  # pragma: no cover
+                    self.log.info('vectorize CROD random SORT%s' % self.sort_method)
                 n = nelements * 4 * self.num_wide
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
@@ -1931,8 +1931,8 @@ class OES(OP2Common):
             if self.use_vector and is_vectorized and 0:
                 raise NotImplementedError('CBEAM-2-real not vectorized')
             else:
-                if is_vectorized:  # pragma: no cover
-                    self.log.info('vectorize CBEAM real')
+                if is_vectorized and self.use_vector:  # pragma: no cover
+                    self.log.info('vectorize CBEAM real SORT%s' % self.sort_method)
                 n1 = 44
                 n2 = 40
                 s1 = Struct(self._endian + self._analysis_code_fmt + b'i9f')
@@ -2011,8 +2011,8 @@ class OES(OP2Common):
                 obj.itotal = itotal2
                 #obj.ielement = ielement2
             else:
-                if is_vectorized:  # pragma: no cover
-                    self.log.info('vectorize CBEAM imag')
+                if is_vectorized and self.use_vector:  # pragma: no cover
+                    self.log.info('vectorize CBEAM imag SORT%s' % self.sort_method)
                 itotal = obj.itotal
                 n1 = 44
                 n2 = 40
@@ -2097,8 +2097,8 @@ class OES(OP2Common):
             if self.use_vector and is_vectorized and 0:
                 raise NotImplementedError('CBEAM-2-random not vectorized')
             else:
-                if is_vectorized:  # pragma: no cover
-                    self.log.info('vectorize CBEAM random')
+                if is_vectorized and self.use_vector:  # pragma: no cover
+                    self.log.info('vectorize CBEAM random SORT%s' % self.sort_method)
                 n1 = 28
                 n2 = 24 # 6*4
                 s1 = Struct(self._endian + self._analysis_code_fmt + b'i5f')
@@ -2177,8 +2177,8 @@ class OES(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                if is_vectorized:  # pragma: no cover
-                    self.log.info('vectorize CSHEAR real')
+                if is_vectorized and self.use_vector:  # pragma: no cover
+                    self.log.info('vectorize CSHEAR real SORT%s' % self.sort_method)
                 struct1 = Struct(self._endian + self._analysis_code_fmt + b'3f')
                 for unused_i in range(nelements):
                     edata = data[n:n + ntotal]
@@ -2217,8 +2217,8 @@ class OES(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                if is_vectorized:  # pragma: no cover
-                    self.log.info('vectorize CSHEAR imag')
+                if is_vectorized and self.use_vector:  # pragma: no cover
+                    self.log.info('vectorize CSHEAR imag SORT%s' % self.sort_method)
                 struct1 = Struct(self._endian + self._analysis_code_fmt + b'4f')
                 for unused_i in range(nelements):
                     edata = data[n:n + ntotal]
@@ -2263,8 +2263,8 @@ class OES(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                if is_vectorized:  # pragma: no cover
-                    self.log.info('vectorize CSHEAR random')
+                if is_vectorized and self.use_vector:  # pragma: no cover
+                    self.log.info('vectorize CSHEAR random SORT%s' % self.sort_method)
                 struct1 = Struct(self._endian + self._analysis_code_fmt + b'2f')
                 for unused_i in range(nelements):
                     edata = data[n:n + ntotal]
@@ -2344,8 +2344,8 @@ class OES(OP2Common):
                 obj.itotal = ielement2
                 obj.ielement = ielement2
             else:
-                if is_vectorized:  # pragma: no cover
-                    self.log.info('vectorize CBAR real')
+                if is_vectorized and self.use_vector:  # pragma: no cover
+                    self.log.info('vectorize CBAR real SORT%s' % self.sort_method)
                 struct1 = Struct(self._endian + self._analysis_code_fmt + b'15f')
                 for i in range(nelements):
                     edata = data[n:n+ntotal]
@@ -2402,8 +2402,8 @@ class OES(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                if is_vectorized:  # pragma: no cover
-                    self.log.info('vectorize CBAR imag')
+                if is_vectorized and self.use_vector:  # pragma: no cover
+                    self.log.info('vectorize CBAR imag SORT%s' % self.sort_method)
                 struct1 = Struct(self._endian + self._analysis_code_fmt + b'18f')
                 for i in range(nelements):
                     edata = data[n:n+ntotal]
@@ -2499,8 +2499,8 @@ class OES(OP2Common):
                 obj.itotal = ielement2
                 obj.ielement = ielement2
             else:
-                if is_vectorized:  # pragma: no cover
-                    self.log.info('vectorize CBAR random')
+                if is_vectorized and self.use_vector:  # pragma: no cover
+                    self.log.info('vectorize CBAR random SORT%s' % self.sort_method)
                 #print(self.code_information())
                 #print('self._analysis_code_fmt =', self._analysis_code_fmt)
                 struct1 = Struct(self._endian + self._analysis_code_fmt + b'9f')
@@ -2671,8 +2671,8 @@ class OES(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = itotali
             else:
-                if is_vectorized:  # pragma: no cover
-                    self.log.info('vectorize CSolid real')
+                if is_vectorized and self.use_vector:  # pragma: no cover
+                    self.log.info('vectorize CSolid real SORT%s' % self.sort_method)
                 struct1 = Struct(self._endian + self._analysis_code_fmt + b'i4si')
                 struct2 = Struct(self._endian + b'i20f')
                 if self.is_debug_file:
@@ -2779,8 +2779,8 @@ class OES(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                if is_vectorized:  # pragma: no cover
-                    self.log.info('vectorize CSolid imag')
+                if is_vectorized and self.use_vector:  # pragma: no cover
+                    self.log.info('vectorize CSolid imag SORT%s' % self.sort_method)
                 s1 = Struct(self._endian + b'2i4si')
                 s2 = Struct(self._endian + b'i12f')
                 for unused_i in range(nelements):
@@ -2899,8 +2899,8 @@ class OES(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = itotali
             else:
-                if is_vectorized:  # pragma: no cover
-                    self.log.info('vectorize CSolid random')
+                if is_vectorized and self.use_vector:  # pragma: no cover
+                    self.log.info('vectorize CSolid random SORT%s' % self.sort_method)
                 struct1 = Struct(self._endian + self._analysis_code_fmt + b'i4si')
                 struct2 = Struct(self._endian + b'i6f')
                 if self.is_debug_file and 0:
@@ -3158,8 +3158,8 @@ class OES(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                if is_vectorized:  # pragma: no cover
-                    self.log.info('vectorize CQUAD4-33 real')
+                if is_vectorized and self.use_vector:  # pragma: no cover
+                    self.log.info('vectorize CQUAD4-33 real SORT%s' % self.sort_method)
                 struct1 = Struct(self._endian + self._analysis_code_fmt + b'16f')
                 cen = 0 # CEN/4
                 for unused_i in range(nelements):
@@ -3225,8 +3225,8 @@ class OES(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                if is_vectorized:  # pragma: no cover
-                    self.log.info('vectorize CQUAD4-33 imag')
+                if is_vectorized and self.use_vector:  # pragma: no cover
+                    self.log.info('vectorize CQUAD4-33 imag SORT%s' % self.sort_method)
                 s1 = Struct(self._endian + self._analysis_code_fmt + b'14f')
                 s2 = Struct(self._endian + b'i14f')
 
@@ -3342,8 +3342,8 @@ class OES(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                if is_vectorized:  # pragma: no cover
-                    self.log.info('vectorize CQUAD4-33 random')
+                if is_vectorized and self.use_vector:  # pragma: no cover
+                    self.log.info('vectorize CQUAD4-33 random SORT%s' % self.sort_method)
                 struct1 = Struct(self._endian + self._analysis_code_fmt + b'8f')
                 #cen = 0 # CEN/4
                 for i in range(nelements):
@@ -3517,8 +3517,8 @@ class OES(OP2Common):
                 obj.itotal += nlayers
                 n = nbytes
             else:
-                if is_vectorized:  # pragma: no cover
-                    self.log.info('vectorize CTRIA3 real')
+                if is_vectorized and self.use_vector:  # pragma: no cover
+                    self.log.info('vectorize CTRIA3 real SORT%s' % self.sort_method)
                 cen = 0 # 'CEN/3'
                 struct1 = Struct(self._endian + self._analysis_code_fmt + b'16f')
                 for unused_i in range(nelements):
@@ -3581,8 +3581,8 @@ class OES(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                if is_vectorized:  # pragma: no cover
-                    self.log.info('vectorize CTRIA3 imag')
+                if is_vectorized and self.use_vector:  # pragma: no cover
+                    self.log.info('vectorize CTRIA3 imag SORT%s' % self.sort_method)
                 struct1 = Struct(self._endian + self._analysis_code_fmt + b'14f')
                 cen = 0 # CEN/3
                 for i in range(nelements):
@@ -3688,8 +3688,8 @@ class OES(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                if is_vectorized:  # pragma: no cover
-                    self.log.info('vectorize CTRIA3 random')
+                if is_vectorized and self.use_vector:  # pragma: no cover
+                    self.log.info('vectorize CTRIA3 random SORT%s' % self.sort_method)
                 struct1 = Struct(self._endian + self._analysis_code_fmt + b'10f')
                 #cen = 0 # CEN/4
                 for i in range(nelements):
@@ -3767,8 +3767,8 @@ class OES(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                if is_vectorized:  # pragma: no cover
-                    self.log.info('vectorize CTRIA3 random2')
+                if is_vectorized and self.use_vector:  # pragma: no cover
+                    self.log.info('vectorize CTRIA3 random2 SORT%s' % self.sort_method)
                 struct1 = Struct(self._endian + self._analysis_code_fmt + b'8f')
                 cen = 0 # CEN/4
                 for i in range(nelements):
@@ -3929,8 +3929,8 @@ class OES(OP2Common):
                 #[fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]
                 obj.data[obj.itime, istart:iend, :] = results
             else:
-                if is_vectorized:  # pragma: no cover
-                    self.log.info('vectorize CQUAD4-144/CQUAD8... real')
+                if is_vectorized and self.use_vector:  # pragma: no cover
+                    self.log.info('vectorize CQUAD4-144/CQUAD8... real SORT%s' % self.sort_method)
                 n = 0
                 center_format = self._endian + self._analysis_code_fmt + b'4si16f'
                 node_format = self._endian + b'i16f'
@@ -4033,8 +4033,8 @@ class OES(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                if is_vectorized:  # pragma: no cover
-                    self.log.info('vectorize CQUAD4-144/CQUAD8... imag')
+                if is_vectorized and self.use_vector:  # pragma: no cover
+                    self.log.info('vectorize CQUAD4-144/CQUAD8... imag SORT%s' % self.sort_method)
                 grid_center = 0
                 s1 = self.struct_2i  # 2
                 s2 = Struct(self._endian + b'i14f') # 15
@@ -4163,8 +4163,8 @@ class OES(OP2Common):
                 #[fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]
                 obj.data[obj.itime, istart:iend, :] = results
             else:
-                if is_vectorized:  # pragma: no cover
-                    self.log.info('vectorize CQUAD4-144/CQUAD8... random')
+                if is_vectorized and self.use_vector:  # pragma: no cover
+                    self.log.info('vectorize CQUAD4-144/CQUAD8... random SORT%s' % self.sort_method)
                 n = 0
                 #numwide_random = 2 + 9 * nnodes_all
                 center_format = self._endian + self._analysis_code_fmt + b'4s i8f'
@@ -4319,8 +4319,8 @@ class OES(OP2Common):
                 obj.ielement = ielement2
                 obj.itotal = ielement2
             else:
-                if is_vectorized:  # pragma: no cover
-                    self.log.info('vectorize CTRIA3/CQUAD4_NL real')
+                if is_vectorized and self.use_vector:  # pragma: no cover
+                    self.log.info('vectorize CTRIA3/CQUAD4_NL real SORT%s' % self.sort_method)
                 struct1 = Struct(self._endian + self._analysis_code_fmt + b'12f')  # 1+12=13
                 for unused_i in range(nelements):
                     edata = data[n:n + ntotal]
@@ -4397,8 +4397,8 @@ class OES(OP2Common):
                 obj.ielement = ielement2
                 obj.itotal = itotal2
             else:
-                if is_vectorized:  # pragma: no cover
-                    self.log.info('vectorize CTRIA3/CQUAD4_NL imag')
+                if is_vectorized and self.use_vector:  # pragma: no cover
+                    self.log.info('vectorize CTRIA3/CQUAD4_NL imag SORT%s' % self.sort_method)
                 etype = self.element_type
                 struct1 = Struct(self._endian + self._analysis_code_fmt + b'24f') # 1+24=25
                 for i in range(nelements):
@@ -4510,8 +4510,8 @@ class OES(OP2Common):
                 #[o1, o2, t12, t1z, t2z, angle, major, minor, ovm]
                 obj.data[obj.itime, istart:iend, :] = floats[:, 2:].copy()
             else:
-                if is_vectorized:  # pragma: no cover
-                    self.log.info('vectorize COMP_SHELL real')
+                if is_vectorized and self.use_vector:  # pragma: no cover
+                    self.log.info('vectorize COMP_SHELL real SORT%s' % self.sort_method)
                 eid_old = 0
                 struct1 = Struct(self._endian + self._analysis_code_fmt + b'i9f') # 11
                 for unused_i in range(nelements):
@@ -4617,8 +4617,8 @@ class OES(OP2Common):
                 n += ntotal
         elif self.format_code in [2, 3] and self.num_wide == 13 and self.table_name in ['OESVM1C', 'OSTRVM1C']:
             is_vectorized = False
-            if is_vectorized:  # pragma: no cover
-                self.log.info('vectorize COMP_SHELL random')
+            if is_vectorized and self.use_vector:  # pragma: no cover
+                self.log.info('vectorize COMP_SHELL random SORT%s' % self.sort_method)
             # OESCP - STRAINS IN LAYERED COMPOSITE ELEMENTS (QUAD4)
             ntotal = 52
             nelements = ndata // ntotal
