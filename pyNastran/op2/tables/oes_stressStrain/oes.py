@@ -4616,6 +4616,7 @@ class OES(OP2Common):
                 #obj.add_new_eid_sort1(dt, eid, theory, lamid, fp, fm, fb, fmax, fflag)
                 n += ntotal
         elif self.format_code in [2, 3] and self.num_wide == 13 and self.table_name in ['OESVM1C', 'OSTRVM1C']:
+            is_vectorized = False
             if is_vectorized:  # pragma: no cover
                 self.log.info('vectorize COMP_SHELL random')
             # OESCP - STRAINS IN LAYERED COMPOSITE ELEMENTS (QUAD4)
