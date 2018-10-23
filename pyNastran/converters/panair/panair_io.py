@@ -283,6 +283,7 @@ class PanairIO(object):
 
 
         form = self.gui.get_form()
+        assert len(results_form) > 0, results_form
         form.append(('Results: Mach=%s' % mach, None, results_form))
 
         dirname = os.path.dirname(panair_filename)
@@ -295,12 +296,14 @@ class PanairIO(object):
             betas = geom_model.betas
             icase, out_form = add_networks(out.networks, out.headers, is_beta0,
                                            ID, icase, cases, geom_model, nelements, colormap=colormap)
+            assert len(out_form) > 0, out_form
             form.append(('Out: Mach=%s' % mach, None, out_form))
 
             if os.path.exists(ft13_filename):
                 out.read_ft13(ft13_filename)
                 icase, ft13_form = add_networks(out.networks_ft13, out.headers_ft13, is_beta0,
                                                 ID, icase, cases, geom_model, nelements, colormap=colormap)
+                assert len(ft13_form) > 0, ft13_form
                 form.append(('Ft13: Mach=%s' % mach, None, ft13_form))
 
 
@@ -313,8 +316,9 @@ def add_networks(out_networks, out_headers, is_beta0,
     nsolutions = len(out_networks)
     for isolution, networks in sorted(out_networks.items()):
         if networks == {}:
+            self.log.info('skipping isolution=%s' % (isolution))
             continue
-        #print('isolution = ', isolution, geom_model.alphas)
+        print('isolution = ', isolution, geom_model.alphas)
         alpha = geom_model.alphas[isolution-1]
         beta = geom_model.betas[isolution-1]
         case_name = 'alpha=%s' % alpha
@@ -324,7 +328,6 @@ def add_networks(out_networks, out_headers, is_beta0,
         out_form2 = []
         #print('----------')
         for iheader, title in enumerate(out_headers):
-            #print(iheader, title)
             #header = '%s - %s' % (title, case_name)
             header = title
             if title in ['x', 'y', 'z']:
@@ -333,6 +336,7 @@ def add_networks(out_networks, out_headers, is_beta0,
                 header = title
                 #break
 
+            #print('%i %r' % (iheader, title))
             icell = 0
             icell0 = 0
             data_array = np.full(nelements, np.nan, dtype='float32')

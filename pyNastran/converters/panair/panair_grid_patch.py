@@ -28,7 +28,7 @@ class PanairPatch(object):
         self.ncols = xyz.shape[1]
 
     def is_wake(self):
-        self.log.debug('is_wake %s %s' % (self.network_name, self.kt))
+        #self.log.debug('is_wake %s %s' % (self.network_name, self.kt))
         if self.kt in [18, 20]:
             return True
         return False

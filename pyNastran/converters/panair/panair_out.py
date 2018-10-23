@@ -76,12 +76,12 @@ class PanairOut(object):
 
         inetwork = 0
         jcounter = 0
-        all_networks = {}
         networks = {}
         data = []
         datai = []
         #print(iline, nlines)
         isolution = 1
+        all_networks = {isolution : networks}
         while iline < nlines:
             line = lines[iline].rstrip()
             if not line:
@@ -109,7 +109,7 @@ class PanairOut(object):
                     #print('datai =', len(datai), datai)
                     data.append(datai)
                 if len(data) < 4:
-                    self.log.info(data)
+                    self.log.info(str(data))
                 inetwork += 1
                 if len(data):
                     assert len(data) > 0, data
@@ -123,9 +123,10 @@ class PanairOut(object):
             iline += 1
             if 'mach number =' in line:
                 iline += 2
-                all_networks[isolution] = networks
+                isolution += 1
                 inetwork = 0
                 networks = {}
+                all_networks[isolution] = networks
                 assert len(datai) == 0, datai
                 assert len(data) == 0
                 continue
@@ -161,9 +162,10 @@ class PanairOut(object):
                 assert len(datai) == len(self.headers_ft13)
                 datai = []
                 jcounter = 0
-        #print(networks.keys())
+        self.log.debug('all_networks=%s' % str(all_networks.keys()))
+        self.log.debug('  networks=%s' % str(networks.keys()))
         self.networks_ft13 = all_networks
-        return networks
+        return all_networks
 
     def read_panair_out(self, panair_out_filename='panair.out'):
         with open(panair_out_filename, 'r') as out_file:
