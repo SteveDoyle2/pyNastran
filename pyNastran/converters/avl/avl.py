@@ -897,7 +897,7 @@ def simplify_surface(surface):
     surface2['sections'] = sections
     return surface2
 
-def main():
+def main():  # pragma: no cover
     avl_filename = sys.argv[1]
     model = read_avl(avl_filename)
     model.get_nodes_elements()

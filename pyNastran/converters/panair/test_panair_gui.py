@@ -49,9 +49,9 @@ class TestPanairGUI(unittest.TestCase):
     def test_naca0012_results(self):
         """contains multiple AGPS results"""
         log = get_logger(level='warning')
-        geometry_filename = os.path.join(MODEL_PATH, 'naca0012', 'naca0012_ar9.inp')
-        agps_filename = os.path.join(MODEL_PATH, 'naca0012', 'agps_0012')
-        #out_filename = os.path.join(MODEL_PATH, 'naca0012', 'panair.out')
+        geometry_filename = os.path.join(MODEL_PATH, 'naca0012', 'multi', 'naca0012_ar9.inp')
+        agps_filename = os.path.join(MODEL_PATH, 'naca0012', 'multi', 'agps_0012')
+        out_filename = os.path.join(MODEL_PATH, 'naca0012', 'multi', 'panair.out')
 
         test = PanairGUI()
         test.log = log

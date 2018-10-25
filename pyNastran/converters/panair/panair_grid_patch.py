@@ -115,87 +115,8 @@ class PanairPatch(object):
     def npoints(self):
         return self.nrows * self.ncols
 
-    def get_panel_points(self, ipanel):
-        r = ipanel % (self.nrows - 1)
-        c = ipanel // (self.nrows - 1)
-
-        #print "r=%s c=%s" % (r, c)
-        p1 = self.get_point(r, c)
-        p2 = self.get_point(r, c + 1)
-        p3 = self.get_point(r + 1, c + 1)
-        p4 = self.get_point(r + 1, c)
-        return (p1, p2, p3, p4)
-
-    def get_panel_point_ids(self, ipanel):
-        r = ipanel % (self.nrows - 1)
-        c = ipanel // (self.nrows - 1)
-
-        #print "r=%s c=%s" % (r, c)
-        p1 = self.get_point_id(r, c)
-        p2 = self.get_point_id(r, c + 1)
-        p3 = self.get_point_id(r + 1, c + 1)
-        p4 = self.get_point_id(r + 1, c)
-        return (p1, p2, p3, p4)
-
-    def get_subpanel_properties(self, ipanel):
-        (p1, p2, p3, p4) = self.get_panel_points(ipanel)
-        p5 = 0.5 * (p1 + p2)
-        p6 = 0.5 * (p2 + p3)
-        p7 = 0.5 * (p3 + p4)
-        p8 = 0.5 * (p4 + p1)
-        p9 = 0.25 * (p1 + p2 + p3 + p4)  # centroid
-
-        p10 = 0.5 * (p5 + p6)
-        p11 = 0.5 * (p6 + p7)
-        p12 = 0.5 * (p7 + p8)
-        p13 = 0.5 * (p8 + p5)
-        N1 = np.cross(p10 - p12, p11 - p13)
-        n1 = N1 / np.linalg.norm(N1)
-
-        N2 = np.cross(p5 - p7, p6 - p8)
-        n2 = N2 / np.linalg.norm(N2)
-        return p9, n1, n2
-
-    def get_panel_properties(self, ipanel):
-        (p1, p2, p3, p4) = self.get_panel_points(ipanel)
-        a = p1 - p3
-        b = p2 - p4
-        centroid = 0.25 * (p1 + p2 + p3 + p4)
-
-        N = np.cross(a, b)
-        norm_n = np.linalg.norm(N)
-        n = N / norm_n  # normal vector
-        area = 0.5 * norm_n  # area
-
-        u = (p1 + p2 - p3 - p4) / 2.  # longitudinal
-        p = (-p1 + p2 + p3 - p4) / 2.  # transverse
-
-        u = 0.5 * (a + b)  # longitudinal vector in local coordinates
-        p = 0.5 * (-a + b)  # transverse vector in local coordinates
-        o = np.cross(n, u)  # normal to both vectors in local coordinates
-
-        diameter = np.linalg.norm(a - b)
-        return (area, n, centroid, diameter, u, p, o)
-
-    def get_panel_area_normal(self, ipanel):
-        (p1, p2, p3, p4) = self.get_panel_points(ipanel)
-        normal = np.cross(p1 - p3, p2 - p4)
-        normi = np.linalg.norm(normal)
-        normal /= normi  # normal vector
-
-        area = 0.5 * normi
-        return (area, normal)
-
-    def get_panel_area(self, ipanel):
-        (p1, p2, p3, p4) = self.get_panel_points(ipanel)
-        area = 0.5 * np.linalg.norm(np.cross(p1 - p3, p2 - p4))
-        return area
-
     def get_point(self, row, col):
         return self.xyz[row, col]
-
-    def get_point_id(self, row, col):
-        return col * self.nrows + row
 
     def get_ipoint(self, ipoint):
         irow = ipoint // self.ncols
