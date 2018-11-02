@@ -177,14 +177,18 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     @property
     def scalarBar(self):
+        raise RuntimeError('scalarBar has been removed; use scalar_bar_actor')
+        return self.scalar_bar.scalar_bar
+
+    @property
+    def scalar_bar_actor(self):
+        """gets the scalar bar actor"""
         return self.scalar_bar.scalar_bar
 
     @property
     def color_function(self):
+        """gets the scalar bar's color function"""
         return self.scalar_bar.color_function
-
-    #def get_color_function(self):
-        #return self.scalar_bar.color_function
 
     @property
     def logo(self):
@@ -1448,7 +1452,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         scalar_range = self.grid_selected.GetScalarRange()
         self.grid_mapper.SetScalarRange(scalar_range)
         self.grid_mapper.SetLookupTable(self.color_function)
-        self.rend.AddActor(self.scalarBar)
+        self.rend.AddActor(self.scalar_bar_actor)
 
     def start_logging(self):
         if self.log is not None:

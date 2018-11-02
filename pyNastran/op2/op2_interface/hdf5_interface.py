@@ -1019,7 +1019,8 @@ def _get_obj_class(objs, class_name, result_name, unused_is_real, log):
     #obj_map = {obj.__class__.__name__ : obj for obj in objs if obj is not None}
 
     # does what the two previous lines should do...
-    obj_map = {str(obj).split("'")[1].split('.')[-1] : obj for obj in objs if obj is not None}
+    obj_map = {str(obj).split("'")[1].split('.')[-1] : obj
+               for obj in objs if obj is not None}
     try:
         obj_class = obj_map[class_name]
     except KeyError:

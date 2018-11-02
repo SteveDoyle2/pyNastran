@@ -30,7 +30,7 @@ class ResultSet(object):
 
     """
     def __init__(self, allowed_results, log):
-        self.log = log
+        #self.log = log
         # the full set of allowable results
         self.allowed = set(allowed_results)
 
@@ -45,7 +45,7 @@ class ResultSet(object):
             #print(self.allowed)
             raise RuntimeError("result=%r is invalid; the name changed or it's a typo" % result)
         if result in self.saved:
-            self.log.debug('    %s is being read' % result)
+            #self.log.debug('    %s is being read' % result)
             return True
         #self.log.debug('    %s was skipped' % result)
         return False

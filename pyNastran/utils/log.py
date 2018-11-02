@@ -145,12 +145,11 @@ class SimpleLogger(object):
 
         Message will have format 'typ: msg'
         """
+        # max length of 'INFO', 'DEBUG', 'WARNING', etc.
         name = '%-8s' % (typ + ':')
         filename_n = '%s:%s' % (filename, lineno)
         msg2 = ' %-28s %s\n' % (filename_n, msg)
 
-        # max length of 'INFO', 'DEBUG', 'WARNING', etc.
-        #if not IS_TERMINAL or not typ:
         _write(typ, name, msg2, self.encoding)
         #sys.stdout.flush()
 

@@ -4,11 +4,14 @@ SOL 145 plotter
 from __future__ import print_function
 
 import matplotlib.pyplot as plt
-try:  # pragma: no cover
-    plt.figure()
-    plt.close()
-except:  # pragma: no cover
-    plt.switch_backend('Agg')
+
+# if you're on linux and you don't have a bacend, add this...
+# we'd add it here, but it breaks PySide/PySide2's QApplication...
+#try:  # pragma: no cover
+    #plt.figure()
+    #plt.close()
+#except:  # pragma: no cover
+    #plt.switch_backend('Agg')
 
 
 from pyNastran.utils.log import get_logger2
