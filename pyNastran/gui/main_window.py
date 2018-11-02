@@ -19,7 +19,7 @@ from qtpy import QtCore
 from qtpy.QtWidgets import QMessageBox, qApp
 
 # 3rd party
-import vtk
+import vtk  # if this crashes, make sure you ran setup.py
 
 import pyNastran
 from pyNastran.gui.utils.version import check_for_newer_version

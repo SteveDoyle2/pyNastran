@@ -400,7 +400,8 @@ class OP2(OP2_Scalar):
         state = self.__dict__.copy()
         # Remove the unpicklable entries.
         del state['log']
-        del state['_results'].log
+        if hasattr(self._results, 'log'):
+            del state['_results'].log
         #if hasattr(self, '_card_parser_b'):
             #del state['_card_parser_b']
         #if hasattr(self, '_card_parser_prepare'):
