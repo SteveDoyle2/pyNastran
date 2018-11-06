@@ -4,9 +4,10 @@ defines:
 """
 from __future__ import print_function
 
+from pyNastran.gui.qt_version import qt_version
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QFont
-from qtpy.QtWidgets import QDialog
+from qtpy.QtWidgets import QDialog, QComboBox
 
 from pyNastran.bdf.utils import (
     parse_patran_syntax, parse_patran_syntax_dict)
@@ -200,3 +201,23 @@ def check_format_str(text):
     except TypeError:
         pass
     return text, is_valid
+
+
+def make_combo_box(items, initial_value):
+    assert initial_value in items, 'initial_value=%r items=%s' % (initial_value, items)
+    combo_box = QComboBox()
+    combo_box.addItems(items)
+    set_combo_box_text(combo_box, initial_value)
+
+    if initial_value not in items:
+        msg = 'initial_value=%r is not supported in %s' % (initial_value, items)
+        raise RuntimeError(msg)
+    return combo_box
+
+def set_combo_box_text(combo_box, value):
+    if qt_version == 'pyside':
+        items = [combo_box.itemText(i) for i in range(combo_box.count())]
+        j = items.index(value)
+        combo_box.setCurrentIndex(j)
+    else:
+        combo_box.setCurrentText(value)

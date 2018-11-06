@@ -12,8 +12,10 @@ from itertools import count
 from six import string_types
 import numpy as np
 
-from pyNastran.bdf.cards.aero.dynamic_loads import Aero
+from pyNastran.utils import object_attributes, object_methods
 from pyNastran.utils.numpy_utils import integer_types
+
+from pyNastran.bdf.cards.aero.dynamic_loads import Aero
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -29,6 +31,7 @@ from pyNastran.bdf.cards.aero.utils import (
     elements_from_quad, points_elements_from_quad_points, create_ellipse)
 from pyNastran.bdf.cards.coordinate_systems import Coord
 
+
 class ZONA(object):
     def __init__(self, model):
         self.model = model
@@ -42,6 +45,11 @@ class ZONA(object):
         #: store PAFOIL7/PAFOIL8
         self.pafoil = {}
 
+    @classmethod
+    def __init_from_self__(cls, model):
+        """helper method for dict_to_h5py"""
+        return cls(model)
+
     def clear(self):
         """clears out the ZONA object"""
         self.panlsts = {}
@@ -50,6 +58,69 @@ class ZONA(object):
         self.trimlnk = {}
         self.pafoil = {}
         #self.aeroz = {}
+
+    def object_attributes(self, mode='public', keys_to_skip=None):
+        # type: (str, Optional[List[str]]) -> List[str]
+        """
+        List the names of attributes of a class as strings. Returns public
+        attributes as default.
+
+        Parameters
+        ----------
+        mode : str
+            defines what kind of attributes will be listed
+            * 'public' - names that do not begin with underscore
+            * 'private' - names that begin with single underscore
+            * 'both' - private and public
+            * 'all' - all attributes that are defined for the object
+        keys_to_skip : List[str]; default=None -> []
+            names to not consider to avoid deprecation warnings
+
+        Returns
+        -------
+        attribute_names : List[str]
+            sorted list of the names of attributes of a given type or None
+            if the mode is wrong
+        """
+        if keys_to_skip is None:
+            keys_to_skip = []
+
+        my_keys_to_skip = [
+            'log', 'model',
+        ]
+        return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
+
+    def object_methods(self, mode='public', keys_to_skip=None):
+        # type: (str, Optional[List[str]]) -> List[str]
+        """
+        List the names of methods of a class as strings. Returns public methods
+        as default.
+
+        Parameters
+        ----------
+        obj : instance
+            the object for checking
+        mode : str
+            defines what kind of methods will be listed
+            * "public" - names that do not begin with underscore
+            * "private" - names that begin with single underscore
+            * "both" - private and public
+            * "all" - all methods that are defined for the object
+        keys_to_skip : List[str]; default=None -> []
+            names to not consider to avoid deprecation warnings
+
+        Returns
+        -------
+        method : List[str]
+            sorted list of the names of methods of a given type
+            or None if the mode is wrong
+        """
+        if keys_to_skip is None:
+            keys_to_skip = []
+        my_keys_to_skip = []  # type: List[str]
+
+        my_keys_to_skip = ['log',]
+        return object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     def verify(self, xref):
         if self.model.nastran_format != 'zona':

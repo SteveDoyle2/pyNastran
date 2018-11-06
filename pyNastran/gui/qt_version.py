@@ -15,7 +15,7 @@ elif qt_version == 'pyside2':
     qt_int = 5
     from qtpy import PYSIDE_VERSION as PYQT_VERSION
 else:
-    raise ImportError('PyQt4, PyQt5, or PySide is required; API=%r' % qt_version)
+    raise ImportError('PyQt4, PyQt5, PySide, or PySide2 is required; API=%r' % qt_version)
 
 if qt_version not in ['pyqt4', 'pyqt5', 'pyside', 'pyside2']:
     raise ImportError('PyQt4, PyQt5, PySide, or PySide2 is required; API=%r' % qt_version)

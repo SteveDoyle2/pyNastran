@@ -86,6 +86,7 @@ from pyNastran.bdf.cards.material_deps import (
 
 from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
 from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs, POINT, SEQGP, GRIDB
+
 from pyNastran.bdf.cards.aero.aero import (
     AECOMP, AECOMPL, AEFACT, AELINK, AELIST, AEPARM, AESURF, AESURFS,
     CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
@@ -94,6 +95,11 @@ from pyNastran.bdf.cards.aero.aero import (
     SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5)
 from pyNastran.bdf.cards.aero.static_loads import AESTAT, AEROS, CSSCHD, TRIM, TRIM2, DIVERG
 from pyNastran.bdf.cards.aero.dynamic_loads import AERO, FLFACT, FLUTTER, GUST, MKAERO1, MKAERO2
+from pyNastran.bdf.cards.aero.zona import (
+    #ACOORD, AEROZ, AESURFZ, BODY7, CAERO7, MKAEROZ, PAFOIL7, PANLST1, PANLST3,
+    #SEGMESH, SPLINE1_ZONA, SPLINE2_ZONA, SPLINE3_ZONA, TRIMLNK, TRIMVAR, TRIM_ZONA,
+    ZONA)
+
 from pyNastran.bdf.cards.optimization import (
     DCONADD, DCONSTR, DESVAR, DDVAL, DOPTPRM, DLINK,
     DRESP1, DRESP2, DRESP3,
@@ -132,10 +138,545 @@ from pyNastran.bdf.cards.contact import (
     BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA, BCONP, BLSEG)
 from pyNastran.utils.numpy_utils import integer_string_types
 
+CARD_MAP = {
+    #'=' : Crash, None),
+
+    'SETREE' : SETREE,
+    'SENQSET' : SENQSET,
+    'SEBULK' : SEBULK,
+    'SEBNDRY' : SEBNDRY,
+    'SEELT' : SEELT,
+    'SELOC' : SELOC,
+    'SEMPLN' : SEMPLN,
+    'SECONCT' : SECONCT,
+    'SELABEL' : SELABEL,
+    'SEEXCLD' : SEEXCLD,
+    'CSUPER' : CSUPER,
+    'CSUPEXT' : CSUPEXT,
+    'SELOAD' : SELOAD,
+
+    #'ACMODL' : Crash, None),
+    #'CHACAB' : Crash, None),
+    #'PACABS' : Crash, None),
+    #'PANEL' : Crash, None),
+
+    'BCONP' : BCONP,
+    'BLSEG' : BLSEG,
+    #'BFRIC' : Crash, None),
+
+    #'BGADD', 'BGSET', 'BOLT', 'BOLTFOR'
+    #'BGADD' : Crash, None),
+    #'BGSET' : Crash, None),
+    #'BOLT' : Crash, None),
+    #'BOLTFOR' : Crash, None),
+
+    #'CBEAR', 'PBEAR', 'ROTORB',
+    #'CBEAR' : Crash, None),
+    #'PBEAR' : Crash, None),
+    #'ROTORB' : Crash, None),
+
+    #'SWLDPRM' : Crash, None),
+
+    #'CWELD' : Crash, None),
+    #'PWELD' : Crash, None),
+    #'PWSEAM' : Crash, None),
+    #'CWSEAM' : Crash, None),
+    #'CSEAM' : Crash, None),
+    #'PSEAM' : Crash, None),
+
+    #'DVSHAP' : Crash, None),
+    #'BNDGRID' : Crash, None),
+
+    #'CYSYM' : Crash, None),
+    #'CYJOIN' : Crash, None),
+    #'MODTRAK' : Crash, None),
+    #'TEMPP1' : Crash, None),
+    #'TEMPRB' : Crash, None),
+    #'DSCONS' : Crash, None),
+    #'DVAR' : Crash, None),
+    #'DVSET' : Crash, None),
+    #'DYNRED' : Crash, None),
+    #'BNDFIX' : Crash, None),
+    #'BNDFIX1' : Crash, None),
+
+    #'AEFORCE' : Crash, None),
+    #'UXVEC' : Crash, None),
+    #'GUST2' : Crash, None),
+
+    #'RADBND' : RADBND,
+
+
+    # nodes
+    'GRDSET' : GRDSET,
+    'GRID' : GRID,
+    'SPOINT' : SPOINTs,
+    'EPOINT' : EPOINTs,
+    'RINGAX' : RINGAX,
+    'POINTAX' : POINTAX,
+    'POINT' : POINT,
+    'SEQGP' : SEQGP,
+    'GRIDB' : GRIDB,
+
+    'PARAM' : PARAM,
+
+    'CORD1R' : CORD1R,
+    'CORD1C' : CORD1C,
+    'CORD1S' : CORD1S,
+    'CORD2R' : CORD2R,
+    'CORD2C' : CORD2C,
+    'CORD2S' : CORD2S,
+
+    # msgmesh
+    'GMCORD' : GMCORD,
+    'CGEN' : CGEN,
+
+    'PLOTEL' : PLOTEL,
+    'RINGFL' : RINGFL,
+    'TEMPAX' : TEMPAX,
+    'TEMPD' : TEMPD,
+
+    'CONROD' : CONROD,
+    'CROD' : CROD,
+    'PROD' : PROD,
+    'CTUBE' : CTUBE,
+    'PTUBE' : PTUBE,
+
+    'CBAR' : CBAR,
+    #'BAROR' : BAROR,
+    'CBARAO' : CBARAO,
+    'PBAR' : PBAR,
+    'PBARL' : PBARL,
+    'PBRSECT' : PBRSECT,
+
+    'CBEAM' : CBEAM,
+    #'BEAMOR' : BEAMOR,
+    'PBEAM' : PBEAM,
+    'PBEAML' : PBEAML,
+    'PBCOMP' : PBCOMP,
+    'PBMSECT' : PBMSECT,
+
+    'CBEAM3' : CBEAM3,
+    'PBEAM3' : PBEAM3,
+
+    'CBEND' : CBEND,
+    'PBEND' : PBEND,
+
+    'CTRIA3' : CTRIA3,
+    'CQUAD4' : CQUAD4,
+    'CQUAD' : CQUAD,
+    'CQUAD8' : CQUAD8,
+    'CQUADX' : CQUADX,
+    'CQUADX4' : CQUADX4,
+    'CQUADX8' : CQUADX8,
+    'CQUADR' : CQUADR,
+    'CTRIA6' : CTRIA6,
+    'CTRIAR' : CTRIAR,
+    'CTRAX3' : CTRAX3,
+    'CTRAX6' : CTRAX6,
+    'CTRIAX' : CTRIAX,
+    'CTRIAX6' : CTRIAX6,
+    'SNORM' : SNORM,
+    'PCOMP' : PCOMP,
+    'PCOMPG' : PCOMPG,
+    'PSHELL' : PSHELL,
+    'PLPLANE' : PLPLANE,
+
+    'CPLSTN3' : CPLSTN3,
+    'CPLSTN4' : CPLSTN4,
+    'CPLSTN6' : CPLSTN6,
+    'CPLSTN8' : CPLSTN8,
+    'CPLSTS3' : CPLSTS3,
+    #'CPLSTS4' : CPLSTS4,
+    #'CPLSTS6' : CPLSTS6,
+    #'CPLSTS8' : CPLSTS8,
+    'PPLANE' : PPLANE,
+
+    'CSHEAR' : CSHEAR,
+    'PSHEAR' : PSHEAR,
+
+    'CIHEX1' : CIHEX1,
+    'CIHEX2' : CIHEX2,
+    'PIHEX' : PIHEX,
+    'PSOLID' : PSOLID,
+    'PLSOLID' : PLSOLID,
+    'PCOMPS' : PCOMPS,
+
+    'CTETRA4' : CTETRA4,
+    'CPENTA6' : CPENTA6,
+    'CPYRAM5' : CPYRAM5,
+    'CHEXA8' : CHEXA8,
+    'CTETRA10' : CTETRA10,
+    'CPENTA15' : CPENTA15,
+    'CPYRAM13' : CPYRAM13,
+    'CHEXA20' : CHEXA20,
+
+    'CELAS1' : CELAS1,
+    'CELAS2' : CELAS2,
+    'CELAS3' : CELAS3,
+    'CELAS4' : CELAS4,
+    'CVISC' : CVISC,
+    'PVISC' : PVISC,
+    'PELAS' : PELAS,
+    'PELAST' : PELAST,
+
+    'CDAMP1' : CDAMP1,
+    'CDAMP2' : CDAMP2,
+    'CDAMP3' : CDAMP3,
+    'CDAMP4' : CDAMP4,
+    'PDAMP' : PDAMP,
+    'CDAMP5' : CDAMP5,
+    'PDAMP5' : PDAMP5,
+
+    'CFAST' : CFAST,
+    'PFAST' : PFAST,
+
+    'CGAP' : CGAP,
+    'PGAP' : PGAP,
+
+    'CBUSH' : CBUSH,
+    'CBUSH1D' : CBUSH1D,
+    'CBUSH2D' : CBUSH2D,
+    'PBUSH' : PBUSH,
+    'PBUSH1D' : PBUSH1D,
+
+    'CRAC2D' : CRAC2D,
+    'PRAC2D' : PRAC2D,
+
+    'CRAC3D' : CRAC3D,
+    'PRAC3D' : PRAC3D,
+
+    'PDAMPT' : PDAMPT,
+    'PBUSHT' : PBUSHT,
+
+    'CCONEAX' : CCONEAX,
+    'PCONEAX' : PCONEAX,
+    'AXIC' : AXIC,
+    'AXIF' : AXIF,
+
+    'RBAR' : RBAR,
+    'RBAR1' : RBAR1,
+    'RBE1' : RBE1,
+    'RBE2' : RBE2,
+    'RBE3' : RBE3,
+    'RROD' : RROD,
+    'RSPLINE' : RSPLINE,
+    'RSSCON' : RSSCON,
+
+
+    ## there is no MAT6 or MAT7
+    'MAT1' : MAT1,
+    'MAT2' : MAT2,
+    'MAT3' : MAT3,
+    'MAT8' : MAT8,
+    'MAT9' : MAT9,
+    'MAT10' : MAT10,
+    'MAT11' : MAT11,
+    'MAT3D' : MAT3D,
+    'EQUIV' : EQUIV,
+    'MATG' : MATG,
+
+    'MATHE' : MATHE,
+    'MATHP' : MATHP,
+    'MAT4' : MAT4,
+    'MAT5' : MAT5,
+
+    'MATS1' : MATS1,
+    #'MATS3' : MATS3,
+    #'MATS8' : MATS8,
+    'MATT1' : MATT1,
+    'MATT2' : MATT2,
+    'MATT3' : MATT3,
+    'MATT4' : MATT4,
+    'MATT5' : MATT5,
+    'MATT8' : MATT8,
+    'MATT9' : MATT9,
+    'NXSTRAT' : NXSTRAT,
+
+    'CREEP' : CREEP,
+
+    'NSMADD' : NSMADD,
+    'NSM' : NSM,
+    'NSM1' : NSM1,
+    'NSML' : NSML,
+    'NSML1' : NSML1,
+
+    'CONM1' : CONM1,
+    'CONM2' : CONM2,
+    'PMASS' : PMASS,
+    'CMASS1' : CMASS1,
+    'CMASS2' : CMASS2,
+    'CMASS3' : CMASS3,
+    'CMASS4' : CMASS4,
+    # CMASS4 - added later because documentation is wrong
+
+    'MPC' : MPC,
+    'MPCADD' : MPCADD,
+
+    'SPC' : SPC,
+    'SPC1' : SPC1,
+    'SPCOFF' : SPCOFF,
+    'SPCOFF1' : SPCOFF1,
+    'SPCAX' : SPCAX,
+    'SPCADD' : SPCADD,
+    'GMSPC' : GMSPC,
+
+    'SESUP' : SESUP,
+    'SUPORT' : SUPORT,
+    'SUPORT1' : SUPORT1,
+
+    'FORCE' : FORCE,
+    'FORCE1' : FORCE1,
+    'FORCE2' : FORCE2,
+    'MOMENT' : MOMENT,
+    'MOMENT1' : MOMENT1,
+    'MOMENT2' : MOMENT2,
+
+    'LSEQ' : LSEQ,
+    'LOAD' : LOAD,
+    'LOADCYN' : LOADCYN,
+
+    'GRAV' : GRAV,
+    'ACCEL' : ACCEL,
+    'ACCEL1' : ACCEL1,
+    'PLOAD' : PLOAD,
+    'PLOAD1' : PLOAD1,
+    'PLOAD2' : PLOAD2,
+    'PLOAD4' : PLOAD4,
+    'PLOADX1' : PLOADX1,
+    'RFORCE' : RFORCE,
+    'RFORCE1' : RFORCE1,
+    'SLOAD' : SLOAD,
+    'GMLOAD' : GMLOAD,
+    'SPCD' : SPCD,
+    'QVOL' : QVOL,
+    'PRESAX' : PRESAX,
+    'DEFORM' : DEFORM,
+
+    'DLOAD' : DLOAD,
+
+    'ACSRCE' : ACSRCE,
+    'TLOAD1' : TLOAD1,
+    'TLOAD2' : TLOAD2,
+    'RLOAD1' : RLOAD1,
+    'RLOAD2' : RLOAD2,
+    'RANDPS' : RANDPS,
+    'RANDT1' : RANDT1,
+    'QVECT' : QVECT,
+    'TEMPBC' : TEMPBC,
+
+    'FREQ' : FREQ,
+    'FREQ1' : FREQ1,
+    'FREQ2' : FREQ2,
+    'FREQ3' : FREQ3,
+    'FREQ4' : FREQ4,
+    'FREQ5' : FREQ5,
+
+    'DOPTPRM' : DOPTPRM,
+    'DEQATN' : DEQATN,
+    'DESVAR' : DESVAR,
+    'BCTSET' : BCTSET,
+
+    'TEMP' : TEMP,
+    'QBDY1' : QBDY1,
+    'QBDY2' : QBDY2,
+    'QBDY3' : QBDY3,
+    'QHBDY' : QHBDY,
+    'PHBDY' : PHBDY,
+
+    'CHBDYE' : CHBDYE,
+    'CHBDYG' : CHBDYG,
+    'CHBDYP' : CHBDYP,
+    'CONV' : CONV,
+    'PCONV' : PCONV,
+    'CONVM' : CONVM,
+    'PCONVM' : PCONVM,
+
+    'VIEW' : VIEW,
+    'VIEW3D' : VIEW3D,
+
+    # aero
+    'AECOMP' : AECOMP,
+    'AECOMPL' : AECOMPL,
+    'AEFACT' : AEFACT,
+    'AELINK' : AELINK,
+    'AELIST' : AELIST,
+    'AEPARM' : AEPARM,
+    'AESTAT' : AESTAT,
+    'AESURF' : AESURF,
+    'AESURFS' : AESURFS,
+
+    'CAERO1' : CAERO1,
+    'CAERO2' : CAERO2,
+    'CAERO3' : CAERO3,
+    'CAERO4' : CAERO4,
+    'CAERO5' : CAERO5,
+
+    'PAERO1' : PAERO1,
+    'PAERO2' : PAERO2,
+    'PAERO3' : PAERO3,
+    'PAERO4' : PAERO4,
+    'PAERO5' : PAERO5,
+
+    'SPLINE1' : SPLINE1,
+    'SPLINE2' : SPLINE2,
+    'SPLINE3' : SPLINE3,
+    'SPLINE4' : SPLINE4,
+    'SPLINE5' : SPLINE5,
+
+    # SOL 144
+    'AEROS' : AEROS,
+    'TRIM' : TRIM,
+    'TRIM2' : TRIM2,
+    'DIVERG' : DIVERG,
+
+    # SOL 145
+    'AERO' : AERO,
+    'FLUTTER' : FLUTTER,
+    'FLFACT' : FLFACT,
+    'MKAERO1' : MKAERO1,
+    'MKAERO2' : MKAERO2,
+
+    'GUST' : GUST,
+    'CSSCHD' : CSSCHD,
+    'MONPNT1' : MONPNT1,
+    'MONPNT2' : MONPNT2,
+    'MONPNT3' : MONPNT3,
+
+    'NLPARM' : NLPARM,
+    'NLPCI' : NLPCI,
+    'TSTEP' : TSTEP,
+    'TSTEP1' : TSTEP1,
+    'TSTEPNL' : TSTEPNL,
+
+    'TF' : TF,
+    'TIC' : TIC,
+
+    'DCONADD' : DCONADD,
+    'DCONSTR' : DCONSTR,
+    'DDVAL' : DDVAL,
+    'DLINK' : DLINK,
+    'DSCREEN' : DSCREEN,
+
+    'DTABLE' : DTABLE,
+    'DRESP1' : DRESP1,
+    'DRESP2' : DRESP2,
+    'DRESP3' : DRESP3,
+    'DVCREL1' : DVCREL1,
+    'DVCREL2' : DVCREL2,
+    'DVPREL1' : DVPREL1,
+    'DVPREL2' : DVPREL2,
+    'DVMREL1' : DVMREL1,
+    'DVMREL2' : DVMREL2,
+    'DVGRID' : DVGRID,
+
+    # tables
+    'TABLES1' : TABLES1,
+    'TABLEST' : TABLEST,
+    'TABLEHT' : TABLEHT,
+    'TABLEH1' : TABLEH1,
+
+    # dynamic tables
+    'TABLED1' : TABLED1,
+    'TABLED2' : TABLED2,
+    'TABLED3' : TABLED3,
+    'TABLED4' : TABLED4,
+
+    # material tables
+    'TABLEM1' : TABLEM1,
+    'TABLEM2' : TABLEM2,
+    'TABLEM3' : TABLEM3,
+    'TABLEM4' : TABLEM4,
+
+    # other tables
+    'TABDMP1' : TABDMP1,
+    'TABRND1' : TABRND1,
+    'TABRNDG' : TABRNDG,
+
+    'EIGB' : EIGB,
+    'EIGR' : EIGR,
+    'EIGRL' : EIGRL,
+    'EIGC' : EIGC,
+    'EIGP' : EIGP,
+
+    'DMI' : DMI,
+    'DMIK' : DMIK,
+    'DMIG' : DMIG,
+    'DMIJI' : DMIJI,
+    'DMIJ' : DMIJ,
+    'DTI' : DTI,
+    'DMIG_UACCEL' : DMIG_UACCEL,
+
+    'BCRPARA' : BCRPARA,
+    'BCTADD' : BCTADD,
+    'BCTPARA' : BCTPARA,
+    'BSURF' : BSURF,
+    'BSURFS' : BSURFS,
+
+    'RADCAV' : RADCAV,
+    'RADLST' : RADLST,
+    'RADMTX' : RADMTX,
+    #'RADMT' : RADMT,
+    'RADBC' : RADBC,
+    'RADM' : RADM,
+
+    'ASET' : ASET,
+    'ASET1' : ASET1,
+
+    'BSET' : BSET,
+    'BSET1' : BSET1,
+
+    'CSET' : CSET,
+    'CSET1' : CSET1,
+
+    'QSET' : QSET,
+    'QSET1' : QSET1,
+
+    'USET' : USET,
+    'USET1' : USET1,
+
+    'SET1' : SET1,
+    'SET3' : SET3,
+
+    #'OMIT' : OMIT,
+    'OMIT1' : OMIT1,
+
+    # radset
+    'RADSET' : RADSET,
+
+    'SESET' : SESET,
+
+    'SEBSET' : SEBSET,
+    'SEBSET1' : SEBSET1,
+
+    'SECSET' : SECSET,
+    'SECSET1' : SECSET1,
+
+    'SEQSET' : SEQSET,
+    'SEQSET1' : SEQSET1,
+
+    #'SESUP' : SESUP,
+
+    #'SEUSET' : SEUSET,
+    #'SEUSET1' : SEUSET1,
+
+    # BCTSET
+    'ROTORG' : ROTORG,
+    'ROTORD' : ROTORD,
+
+    'DAREA' : DAREA,
+    'DPHASE' : DPHASE,
+    'DELAY' : DELAY,
+    'ZONA' : ZONA,
+}
+
 class AddCards(AddMethods):
     """defines the add_cardname functions that use the object inits"""
     def __init__(self):
         AddMethods.__init__(self)
+
+    def get_custom_types(self):
+        """helper method for ``dict_to_h5py``"""
+        return CARD_MAP
 
     def add_grid(self, nid, xyz, cp=0, cd=0, ps='', seid=0, comment=''):
         # type: (int, Union[None, List[float], np.ndarray], int, int, str, int, str) -> None

@@ -14,8 +14,7 @@ from qtpy.QtWidgets import (
     QCheckBox, QGroupBox, QComboBox, QFileDialog)
 from qtpy.compat import getexistingdirectory
 
-from pyNastran.gui.qt_version import qt_version
-from pyNastran.gui.utils.qt.pydialog import PyDialog, check_int, check_float
+from pyNastran.gui.utils.qt.pydialog import PyDialog, check_int, check_float, set_combo_box_text
 from pyNastran.gui.utils.qt.dialogs import open_file_dialog
 from pyNastran.gui.menus.results_sidebar import ResultsWindow
 from pyNastran.gui.menus.results_sidebar_utils import (
@@ -1290,14 +1289,6 @@ def main(): # pragma: no cover
     # Enter the main loop
     app.exec_()
 
-
-def set_combo_box_text(combo_box, value):
-    if qt_version == 'pyside':
-        items = [combo_box.itemText(i) for i in range(combo_box.count())]
-        j = items.index(value)
-        combo_box.setCurrentIndex(j)
-    else:
-        combo_box.setCurrentText(value)
 
 if __name__ == "__main__": # pragma: no cover
     main()

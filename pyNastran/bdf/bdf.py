@@ -729,6 +729,13 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             del state['_card_parser_prepare']
         return state
 
+    def get_h5attrs(self):
+        """helper method for dict_to_h5py"""
+        attrs = self.object_attributes(mode='both', keys_to_skip=None)
+        #attrs.remove('_card_parser')
+        #attrs.remove('log')
+        return attrs
+
     def saves(self, unxref=True):
         """Saves a pickled string"""
         if unxref:

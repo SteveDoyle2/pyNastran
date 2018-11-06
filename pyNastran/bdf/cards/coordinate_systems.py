@@ -858,6 +858,10 @@ class Coord(BaseCard):
         xyz_local = self.xyz_to_coord(xyz_coord)
         return xyz_local
 
+    def __properties__(self):
+        """the list of @property attributes"""
+        return ['global_to_local', 'local_to_global']
+
     @property
     def global_to_local(self):
         r"""
@@ -1530,6 +1534,15 @@ class Cord2x(Coord):
 
         self.rid_ref = None
         self._finish_setup()
+
+    @classmethod
+    def init_from_empty(cls):
+        cid = None
+        e1 = None
+        e2 = None
+        e3 = None
+        rid = 0
+        return cls(cid, e1, e2, e3, rid, comment='')
 
     @classmethod
     def _add(cls, cid, origin, zaxis, xzplane, rid=0, comment=''):
