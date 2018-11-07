@@ -125,8 +125,8 @@ class SU2_IO(object):
             grid.Update()
 
         # loadSTLResults - regions/loads
-        self.gui.scalarBar.VisibilityOff()
-        self.gui.scalarBar.Modified()
+        self.gui.scalar_bar_actor.VisibilityOff()
+        self.gui.scalar_bar_actor.Modified()
 
         cases = OrderedDict()
         self.gui.isubcase_name_map = {}

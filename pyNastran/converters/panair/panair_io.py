@@ -82,8 +82,8 @@ class PanairIO(object):
 
         # loadPanairResults - regions/loads
         if plot:
-            self.gui.scalarBar.VisibilityOn()
-            self.gui.scalarBar.Modified()
+            self.gui.scalar_bar_actor.VisibilityOn()
+            self.gui.scalar_bar_actor.Modified()
 
         self.gui.isubcase_name_map = {1: ['Panair', '']}
         cases = OrderedDict()

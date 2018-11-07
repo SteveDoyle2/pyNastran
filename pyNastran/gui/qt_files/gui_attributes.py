@@ -494,8 +494,8 @@ class GuiAttributes(object):
                         self.log.warning(msg)
 
             skip_reading = False
-        #self.scalarBar.VisibilityOff()
-        self.scalarBar.Modified()
+        #self.scalar_bar_actor.VisibilityOff()
+        self.scalar_bar_actor.Modified()
         return skip_reading
 
     #---------------------------------------------------------------------------

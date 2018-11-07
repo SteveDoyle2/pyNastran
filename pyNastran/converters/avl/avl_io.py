@@ -96,8 +96,8 @@ class AVL_IO(object):
         #self.log_info("updated grid")
 
         # load results - regions/loads
-        self.gui.scalarBar.VisibilityOn()
-        self.gui.scalarBar.Modified()
+        self.gui.scalar_bar_actor.VisibilityOn()
+        self.gui.scalar_bar_actor.Modified()
 
         note = ''
         self.gui.isubcase_name_map = {1: ['AVL%s' % note, '']}

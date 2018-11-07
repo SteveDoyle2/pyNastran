@@ -112,8 +112,8 @@ class SurfIO(object):
         #self.log_info("updated grid")
 
         # loadSurfResults - regions/loads
-        self.gui.scalarBar.VisibilityOn()
-        self.gui.scalarBar.Modified()
+        self.gui.scalar_bar_actor.VisibilityOn()
+        self.gui.scalar_bar_actor.Modified()
 
         self.gui.isubcase_name_map = {1: ['AFLR Surface', '']}
         cases = OrderedDict()

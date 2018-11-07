@@ -262,8 +262,8 @@ class AbaqusIO(object):
             grid.Update()
 
         # loadCart3dResults - regions/loads
-        self.gui.scalarBar.VisibilityOn()
-        self.gui.scalarBar.Modified()
+        self.gui.scalar_bar_actor.VisibilityOn()
+        self.gui.scalar_bar_actor.Modified()
 
         note = ''
         self.gui.isubcase_name_map = {1: ['Abaqus%s' % note, '']}

@@ -214,7 +214,7 @@ class Usm3dIO(object):
         self.gui.element_ids = element_ids
 
         # regions/loads
-        self.gui.scalarBar.Modified()
+        self.gui.scalar_bar_actor.Modified()
 
         cases = OrderedDict()
         form = []
@@ -251,7 +251,7 @@ class Usm3dIO(object):
     def _fill_usm3d_case(self, cases, form,
                          bcs, mapbc, bcmap_to_bc_name, loads, is_geometry=True):
         """actually fills the sidebar"""
-        self.gui.scalarBar.VisibilityOff()
+        self.gui.scalar_bar_actor.VisibilityOff()
         colormap = self.gui.settings.colormap
 
         subcasemap_id = 1
@@ -318,7 +318,7 @@ class Usm3dIO(object):
                     name = '???'
                 self.gui.log.info('BC=%s Regions=%s name=%r' % (bcnum, regions, name))
 
-            self.gui.scalarBar.VisibilityOn()
+            self.gui.scalar_bar_actor.VisibilityOn()
 
         subcasemap_id = 2
         if len(loads):
@@ -334,5 +334,5 @@ class Usm3dIO(object):
 
             if form0:
                 form.append(('Results', None, form0))
-        self.gui.scalarBar.VisibilityOn()
+        self.gui.scalar_bar_actor.VisibilityOn()
         return form, cases

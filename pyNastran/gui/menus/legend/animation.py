@@ -14,7 +14,9 @@ from qtpy.QtWidgets import (
     QCheckBox, QGroupBox, QComboBox, QFileDialog)
 from qtpy.compat import getexistingdirectory
 
-from pyNastran.gui.utils.qt.pydialog import PyDialog, check_int, check_float, set_combo_box_text
+from pyNastran.gui.utils.qt.pydialog import (
+    PyDialog, check_int, check_float, check_name_str,
+    set_combo_box_text)
 from pyNastran.gui.utils.qt.dialogs import open_file_dialog
 from pyNastran.gui.menus.results_sidebar import ResultsWindow
 from pyNastran.gui.menus.results_sidebar_utils import (
@@ -1169,31 +1171,14 @@ class AnimationWindow(PyDialog):
         else:
             magnify, flag6 = check_int(self.resolution_edit)
             output_dir, flag7 = self.check_path(self.browse_folder_edit)
-            gifbase, flag8 = self.check_name(self.gif_edit)
+            gifbase, flag8 = check_name_str(self.gif_edit)
             passed = all([flag0, flag1, flag2, flag3, flag4, flag5, flag6, flag7, flag8])
         return passed, (icase_fringe, icase_disp, icase_vector, scale, time, fps, animate_in_gui,
                         magnify, output_dir, gifbase, min_value, max_value)
 
-    @staticmethod
-    def check_name(cell):
-        """verifies that the data is string-able"""
-        cell_value = cell.text()
-        try:
-            text = str(cell_value).strip()
-        except UnicodeEncodeError:
-            cell.setStyleSheet("QLineEdit{background: red;}")
-            return None, False
-
-        if len(text):
-            cell.setStyleSheet("QLineEdit{background: white;}")
-            return text, True
-        else:
-            cell.setStyleSheet("QLineEdit{background: red;}")
-            return None, False
-
     def check_path(self, cell):
         """verifies that the path exists"""
-        text, passed = self.check_name(cell)
+        text, passed = check_name_str(cell)
         if not passed:
             return None, False
 

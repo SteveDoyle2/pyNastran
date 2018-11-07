@@ -245,6 +245,8 @@ def object_attributes(obj, mode='public', keys_to_skip=None):
         sorted list of the names of attributes of a given type or None
         if the mode is wrong
     """
+    #if hasattr(obj, '__properties__'):
+        #keys_to_skip += obj.__properties__()
     return __object_attr(
         obj, mode, keys_to_skip,
         lambda x: not isinstance(x, (MethodType, FunctionType))

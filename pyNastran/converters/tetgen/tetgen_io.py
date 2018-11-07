@@ -84,8 +84,8 @@ class TetgenIO(object):
             grid.Update()
 
         # loadTetgenResults - regions/loads
-        self.gui.scalarBar.VisibilityOff()
-        self.gui.scalarBar.Modified()
+        self.gui.scalar_bar_actor.VisibilityOff()
+        self.gui.scalar_bar_actor.Modified()
 
 
         form, cases, node_ids, element_ids = self._fill_tetgen_case(nnodes, nelements)

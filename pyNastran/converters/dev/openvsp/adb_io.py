@@ -25,7 +25,7 @@ class ADB_IO(object):  # pragma: no cover
         self.gui.eid_map = {}
         self.gui.nid_map = {}
         if adb_filename is None:
-            self.gui.scalarBar.VisibilityOff()
+            self.gui.scalar_bar_actor.VisibilityOff()
             skip_reading = True
         else:
             self.gui.turn_text_off()
@@ -43,8 +43,8 @@ class ADB_IO(object):  # pragma: no cover
 
             #print(dir(self))
             skip_reading = False
-        #self.scalarBar.VisibilityOff()
-        self.gui.scalarBar.Modified()
+        #self.scalar_bar_actor.VisibilityOff()
+        self.gui.scalar_bar_actor.Modified()
         return skip_reading
 
     def load_vsp_aero_geometry(self, adb_filename,
@@ -141,8 +141,8 @@ class ADB_IO(object):  # pragma: no cover
         #self.log_info("updated grid")
 
         # load results - regions/loads
-        self.gui.scalarBar.VisibilityOn()
-        self.gui.scalarBar.Modified()
+        self.gui.scalar_bar_actor.VisibilityOn()
+        self.gui.scalar_bar_actor.Modified()
 
         mach = model.machs[0]
         alpha = model.alphas[0]

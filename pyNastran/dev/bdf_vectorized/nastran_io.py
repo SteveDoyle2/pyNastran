@@ -62,8 +62,8 @@ class NastranIO(NastranIO_xref):
             if hasattr(self, i):
                 del i
 
-        self.scalarBar.VisibilityOff()
-        self.scalarBar.Modified()
+        self.scalar_bar_actor.VisibilityOff()
+        self.scalar_bar_actor.Modified()
 
         fname_base, ext = os.path.splitext(bdf_filename)
         punch = False
@@ -823,8 +823,8 @@ class NastranIO(NastranIO_xref):
 
         self.cycle_results_explicit()  # start at ncase=0
         if self.ncases:
-            self.scalarBar.VisibilityOn()
-            self.scalarBar.Modified()
+            self.scalar_bar_actor.VisibilityOn()
+            self.scalar_bar_actor.Modified()
 
     def _plot_pressures(self, model, cases):
         """
@@ -938,8 +938,8 @@ class NastranIO(NastranIO_xref):
         """
         Loads the Nastran results into the GUI
         """
-        self.scalarBar.VisibilityOn()
-        self.scalarBar.Modified()
+        self.scalar_bar_actor.VisibilityOn()
+        self.scalar_bar_actor.Modified()
 
         print('trying to read...%s' % op2_filename)
         if '.op2' in op2_filename:  # TODO: do this based on lower & file extension

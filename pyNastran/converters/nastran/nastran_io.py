@@ -377,7 +377,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         skip_reading = False
         if bdf_filename is None or bdf_filename is '':
             #self.grid = vtk.vtkUnstructuredGrid()
-            #self.scalarBar.VisibilityOff()
+            #self.scalar_bar_actor.VisibilityOff()
             skip_reading = True
             return skip_reading
         else:
@@ -701,8 +701,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #self.isubcase_name_map[None] = ['a', 'b']
         reset_labels = True
         if plot:
-            self.gui.scalarBar.VisibilityOff()
-            self.gui.scalarBar.Modified()
+            self.gui.scalar_bar_actor.VisibilityOff()
+            self.gui.scalar_bar_actor.Modified()
 
         model = self._get_model_vectorized(bdf_filename)
 
@@ -1735,8 +1735,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         """
         reset_labels = True
         if plot:
-            self.gui.scalarBar.VisibilityOff()
-            self.gui.scalarBar.Modified()
+            self.gui.scalar_bar_actor.VisibilityOff()
+            self.gui.scalar_bar_actor.Modified()
 
         xref_loads = True # should be True
         model, xref_nodes = self._get_model_unvectorized(bdf_filename, xref_loads=xref_loads)
@@ -6030,8 +6030,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         """
         Loads the Nastran results into the GUI
         """
-        self.scalarBar.VisibilityOn()
-        self.scalarBar.Modified()
+        self.scalar_bar_actor.VisibilityOn()
+        self.scalar_bar_actor.Modified()
 
         if isinstance(results_filename, string_types):
             print("trying to read...%s" % results_filename)

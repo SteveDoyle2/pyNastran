@@ -74,8 +74,8 @@ class LaWGS_IO(object):
             grid.Update()
 
         # loadCart3dResults - regions/loads
-        #self.scalarBar.VisibilityOn()
-        #self.scalarBar.Modified()
+        #self.scalar_bar_actor.VisibilityOn()
+        #self.scalar_bar_actor.Modified()
 
         self.gui.isubcase_name_map = {1: ['LaWGS', '']}
         cases = OrderedDict()

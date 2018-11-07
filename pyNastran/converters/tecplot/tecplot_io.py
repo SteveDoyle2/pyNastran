@@ -54,8 +54,8 @@ class TecplotIO(object):
 
 
         # loadTecplotResults - regions/loads
-        self.gui.scalarBar.VisibilityOn()
-        self.gui.scalarBar.Modified()
+        self.gui.scalar_bar_actor.VisibilityOn()
+        self.gui.scalar_bar_actor.Modified()
 
         loads = []
         assert loads is not None

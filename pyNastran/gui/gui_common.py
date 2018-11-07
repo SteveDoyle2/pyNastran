@@ -2472,8 +2472,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.reset_labels(reset_minus1=reset_labels)
         self.cycle_results_explicit()  # start at nCase=0
         if self.ncases:
-            self.scalarBar.VisibilityOn()
-            self.scalarBar.Modified()
+            self.scalar_bar_actor.VisibilityOn()
+            self.scalar_bar_actor.Modified()
 
         #data = [
         #    ('A', []),

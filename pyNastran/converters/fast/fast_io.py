@@ -109,7 +109,7 @@ class FastIO(object):
             grid.Update()
 
         # regions/loads
-        self.gui.scalarBar.Modified()
+        self.gui.scalar_bar_actor.Modified()
 
         cases = OrderedDict()
         #cases = self.result_cases
@@ -142,7 +142,7 @@ class FastIO(object):
     def _fill_fast_case(self, form, cases, model,
                         nnodes, nelements, dimension_flag,
                         results=False):
-        self.gui.scalarBar.VisibilityOff()
+        self.gui.scalar_bar_actor.VisibilityOff()
 
         icase = 0
         geometry_form = [
@@ -191,7 +191,7 @@ class FastIO(object):
                     #except KeyError:
                         #name = '???'
                     #self.log.info('BC=%s Regions=%s name=%r' % (bcnum, regions, name))
-                #self.scalarBar.VisibilityOn()
+                #self.scalar_bar_actor.VisibilityOn()
 
             ##==============================
             #res_id = 2
@@ -199,7 +199,7 @@ class FastIO(object):
                 #for key, load in loads.items():
                     #cases[(res_id, icase, key, 1, 'node', '%.3f')] = load
                     #icase += 1
-                #self.scalarBar.VisibilityOn()
+                #self.scalar_bar_actor.VisibilityOn()
 
         form.append(('Geometry', None, geometry_form))
         return cases, nids, eids

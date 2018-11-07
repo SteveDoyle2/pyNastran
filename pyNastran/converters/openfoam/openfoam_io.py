@@ -52,7 +52,7 @@ class OpenFoamIO(object):
         #self.eid_map = {}
         #self.nid_map = {}
         #if filename is None:
-            #self.scalarBar.VisibilityOff()
+            #self.scalar_bar_actor.VisibilityOff()
             #skip_reading = True
         #else:
             ##self.TurnTextOff()
@@ -67,7 +67,7 @@ class OpenFoamIO(object):
             #except:
                 #print("cant delete geo")
             #skip_reading = False
-        #self.scalarBar.Modified()
+        #self.scalar_bar_actor.Modified()
         #return skip_reading
 
     def load_openfoam_hex_geometry(self, openfoam_filename, name='main', plot=True, **kwargs):
@@ -269,8 +269,8 @@ class OpenFoamIO(object):
         if hasattr(grid, 'Update'):  # pragma: no cover
             grid.Update()
 
-        self.gui.scalarBar.VisibilityOn()
-        self.gui.scalarBar.Modified()
+        self.gui.scalar_bar_actor.VisibilityOn()
+        self.gui.scalar_bar_actor.Modified()
 
         self.gui.isubcase_name_map = {0: ['OpenFoam BlockMeshDict', '']}
         cases = OrderedDict()

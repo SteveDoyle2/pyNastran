@@ -28,7 +28,7 @@ class AvusIO(object):
         self.gui.eid_map = {}
         self.gui.nid_map = {}
         if filename is None:
-            self.gui.scalarBar.VisibilityOff()
+            self.gui.scalar_bar_actor.VisibilityOff()
             skip_reading = True
         else:
             self.gui.turn_text_off()
@@ -46,8 +46,8 @@ class AvusIO(object):
 
             #print(dir(self))
             skip_reading = False
-        #self.scalarBar.VisibilityOff()
-        self.gui.scalarBar.Modified()
+        #self.scalar_bar_actor.VisibilityOff()
+        self.gui.scalar_bar_actor.Modified()
         return skip_reading
 
     def load_avus_geometry(self, avus_filename, name='main', plot=True):
@@ -72,8 +72,8 @@ class AvusIO(object):
 
 
         # loadAvusResults - regions/loads
-        self.gui.scalarBar.VisibilityOn()
-        self.gui.scalarBar.Modified()
+        self.gui.scalar_bar_actor.VisibilityOn()
+        self.gui.scalar_bar_actor.Modified()
 
         loads = []
         assert loads is not None

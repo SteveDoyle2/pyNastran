@@ -14,7 +14,8 @@ from qtpy.QtWidgets import (
 from pyNastran.utils.numpy_utils import float_types
 from pyNastran.gui.utils.colormaps import colormap_keys
 from pyNastran.gui.utils.qt.pydialog import (
-    PyDialog, check_float, check_format, check_positive_int_or_blank)
+    PyDialog, check_float, check_format, check_name_str,
+    check_positive_int_or_blank)
 from pyNastran.gui.qt_version import qt_int as qt_version
 
 ANIMATE_TOOLTIP_OFF = 'This must be a displacement-like result to animate'
@@ -673,7 +674,7 @@ class LegendPropertiesWindow(PyDialog):
 
     def on_animate(self):
         """opens the animation window"""
-        name, flag0 = check_name(self.name_edit)
+        name, flag0 = check_name_str(self.name_edit)
         if not flag0:
             return
 
@@ -789,7 +790,7 @@ class LegendPropertiesWindow(PyDialog):
         self.show_radio.setChecked(is_shown)
         self.hide_radio.setChecked(not is_shown)
         #if self.is_gui:
-            #self.win_parent.scalarBar.SetVisibility(is_shown)
+            #self.win_parent.scalar_bar_actor.SetVisibility(is_shown)
 
     def on_validate(self):
         """checks to see if the ``on_apply`` method can be called"""
@@ -797,7 +798,7 @@ class LegendPropertiesWindow(PyDialog):
         flag_name = True
         name_value = ''
         if show_name:
-            name_value, flag_name = check_name(self.name_edit)
+            name_value, flag_name = check_name_str(self.name_edit)
 
         flag_fringe = True
         min_value = max_value = format_value = nlabels = ncolors = labelsize = colormap = None
@@ -882,21 +883,6 @@ def set_cell_to_blank_if_value_is_none(cell_edit, value):
         cell_edit.setText(str(value))
     cell_edit.setStyleSheet("QLineEdit{background: white;}")
     return value
-
-def check_name(cell):
-    """verifies that the name/title is a string and is not empty"""
-    cell_value = cell.text()
-    try:
-        text = str(cell_value).strip()
-    except UnicodeEncodeError:
-        cell.setStyleSheet("QLineEdit{background: red;}")
-        return None, False
-
-    if text:
-        cell.setStyleSheet("QLineEdit{background: white;}")
-        return text, True
-    cell.setStyleSheet("QLineEdit{background: red;}")
-    return None, False
 
 #def check_colormap(cell):
     #text = str(cell.text()).strip()

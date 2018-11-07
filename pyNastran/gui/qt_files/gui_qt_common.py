@@ -113,7 +113,7 @@ class GuiCommon(GuiAttributes):
             self.log_warning('cycle_results(result_name=%r); ncases=%i' % (
                 case, ncases))
             if self.ncases == 0:
-                self.scalarBar.SetVisibility(False)
+                self.scalar_bar_actor.SetVisibility(False)
             return
         case = self.cycle_results_explicit(case, explicit=False, show_msg=show_msg)
         assert case is not False, case
@@ -1288,7 +1288,7 @@ class GuiCommon(GuiAttributes):
             # key = self.case_keys[self.icase]
             # location = self.get_case_location(key)
             self.log_error('No results found.')
-            self.scalarBar.SetVisibility(False)
+            self.scalar_bar_actor.SetVisibility(False)
             found_cases = False
         #print("next icase=%s key=%s" % (self.icase, key))
         return found_cases
