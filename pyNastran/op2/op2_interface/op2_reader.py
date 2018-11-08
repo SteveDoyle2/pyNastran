@@ -852,7 +852,9 @@ class OP2Reader(object):
             izero = [1, 2, 4, 6, 7, 8, 9]
 
             # not conclusive, but effective...
-            assert ints[:, izero].max() == ints[:, izero].min(), 'error reading %s table' % table_name
+            is_all_zero = ints[:, izero].max() == ints[:, izero].min()
+            if not is_all_zero:
+                self.log.warning('error reading %s table with is_all_zero != 0' % table_name)
             #for row in ints:
 
             #print(ints[iints, :])
@@ -2419,7 +2421,14 @@ class OP2Reader(object):
 
     #------------------------------------------------------------------
     def _read_table_name(self, rewind=False, stop_on_failure=True):
-        """Reads the next OP2 table name (e.g. OUG1, OES1X1)"""
+        """
+        Reads the next OP2 table name (e.g. OUG1, OES1X1)
+
+        Returns
+        -------
+        table_name : bytes
+            the table name
+        """
         op2 = self.op2
         table_name = None
         data = None
@@ -2870,6 +2879,9 @@ class OP2Reader(object):
             print(msg)
             subtable_name, = op2.struct_8s.unpack(data[:8])
             print('subtable_name = %r' % subtable_name.strip())
+        elif ndata == 24 and op2.table_name == b'ICASE':
+            subtable_name = 'CASE CONTROL SECTION'
+            #strings = 'CASE CONTROL SECTION\xff\xff\xff\xff'
         else:
             strings, ints, floats = self.show_data(data)
             msg = 'len(data) = %i\n' % ndata

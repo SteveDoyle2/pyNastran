@@ -223,6 +223,10 @@ GEOM_TABLES = [
 ]
 
 NX_RESULT_TABLES = [
+    # GEOM table
+    b'ICASE',
+
+    #-----------------------
     # OESVM1  - OES Table of           element stresses
     # OESVM1C - OES Table of composite element stresses
     #           for frequency response analysis that includes von Mises stress
@@ -1290,7 +1294,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self.is_debug_file, self.binary_debug = create_binary_debug(
             self.op2_filename, self.debug_file, self.log)
 
-    def read_op2(self, op2_filename=None, combine=False, load_as_h5=None, h5_file=None):
+    def read_op2(self, op2_filename=None, combine=False, load_as_h5=False, h5_file=None):
         """
         Starts the OP2 file reading
 
@@ -1303,9 +1307,12 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             False : objects are (isubcase, subtitle) based;
                     will be used for superelements regardless of the option
         load_as_h5 : default=None
-            None : don't setup the h5_file
-            True/False : loads the op2 as an h5 file to save memory
-                         stores the result.element/data attributes in h5 format
+            False : don't setup the h5_file
+            True : loads the op2 as an h5 file to save memory
+                   stores the result.element/data attributes in h5 format
+        h5_file : h5File; default=None
+            None : ???
+            h5File : ???
 
         +--------------+-----------------------+
         | op2_filename | Description           |

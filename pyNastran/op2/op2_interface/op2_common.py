@@ -1387,6 +1387,8 @@ class OP2Common(Op2Codes, F06Writer):
         self.data_code['table_name'] = self.table_name.decode(self.encoding)
         self.data_code['result_name'] = result_name
         self.data_code['_count'] = self._count
+        if 'h5_file' in self.data_code:
+            del self.data_code['h5_file']
         assert self.log is not None
 
         code = self._get_code()
@@ -1403,7 +1405,12 @@ class OP2Common(Op2Codes, F06Writer):
                         msg += '%s\n' % str(self.obj)
                         msg += '\nIf this isnt correct, check if the data code was applied on the object'
                         raise MultipleSolutionNotImplementedError(msg)
-                self.obj.update_data_code(copy.deepcopy(self.data_code))
+                try:
+                    data_codei = copy.deepcopy(self.data_code)
+                except:
+                    print("self.data_code =", self.data_code)
+                    raise
+                self.obj.update_data_code(data_codei)
             else:
                 class_obj.is_cid = is_cid
                 is_sort1 = self.is_sort1  # uses the sort_bits
