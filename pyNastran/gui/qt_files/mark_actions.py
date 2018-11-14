@@ -8,6 +8,7 @@ import numpy as np
 import vtk
 
 from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points, create_unstructured_point_grid
 
 
 class MarkActions(object):
@@ -243,6 +244,110 @@ class MarkActions(object):
             #VTK_QUADRATIC_PYRAMID = 27
             raise NotImplementedError(msg)
         return res_name, result_values, xyz
+
+    def highlight_nodes_elements(self, nids=None, eids=None,
+                                 representation='wire',
+                                 model_name=None,
+                                 #callback=self.on_focus_callback,
+                                 force=True):
+        """
+        Highlights a series of nodes/elements
+
+        Parameters
+        ----------
+        nids / eids : int, List[int]
+            the nodes/elements to highlight
+        representation : str; default='wire'
+            representation for elements
+            allowed = {'wire', 'surface'}
+        model_name : str, List[str]
+            the name of the actor to highlight the nodes for
+
+        """
+        actors = []
+        if eids and representation in ['wire', 'surface']:
+            actor = highlight_elements(self, eids, model_name=model_name)
+            actors.append(actor)
+        if nids and representation in ['points']:
+            actor = highlight_nodes(self, nids, model_name=model_name)
+            actors.append(actor)
+        return actors
+
+    def highlight_nodes(self, nids, model_name=''):
+        """
+        Highlights a series of nodes
+
+        Parameters
+        ----------
+        nids : int, List[int]
+            the nodes to apply a message to
+        model_name : str, List[str]
+            the name of the actor to highlight the nodes for
+
+        """
+        npoints = len(nids)
+        all_nids = self.gui.get_node_ids(model_name=model_name, ids=None)
+        all_xyz = self.gui.get_xyz_cid0(model_name=model_name)
+        i = np.searchsorted(all_nids, nids)
+        xyz = all_xyz[i, :]
+
+        #ugrid = vtk.vtkUnstrucuturedGrid()
+        points = numpy_to_vtk_points(xyz, points=None, dtype='<f', deep=1)
+        ugrid = create_unstructured_point_grid(points, npoints)
+        actor = self.gui.mouse_actions.create_highlighted_actor(ugrid, representation='points')
+        self.gui.vtk_interactor.Render()
+        return actor
+
+    def highlight_elements(self, eids, model_name=''):
+        """
+        Highlights a series of elements
+
+        Parameters
+        ----------
+        eids : int, List[int]
+            the elements to apply a message to
+        model_name : str, List[str]
+            the name of the actor to highlight the elements for
+
+        """
+        raise NotImplementedError('need to define active_ugrid')
+        grid = active_ugrid
+        all_eids = self.gui.get_element_ids(model_name=model_name, ids=None)
+        cell_ids = np.searchsorted(all_eids, eids)
+
+        ids = vtk.vtkIdTypeArray()
+        ids.SetNumberOfComponents(1)
+        for cell_id in cell_ids:
+            ids.InsertNextValue(cell_id)
+
+        selection_node = vtk.vtkSelectionNode()
+        selection_node.SetFieldType(vtk.vtkSelectionNode.CELL)
+        selection_node.SetContentType(vtk.vtkSelectionNode.INDICES)
+        selection_node.SetSelectionList(ids)
+
+        actor = self._highlight_picker_by_selection_node(
+            grid, selection_node, representation='surface')
+        return actor
+
+    def _highlight_picker_by_selection_node(self, grid, selection_node,
+                                            representation='surface'):
+        """
+        helper method for:
+            - _highlight_picker_cell
+            #- _highlight_picker_node
+        """
+        selection = vtk.vtkSelection()
+        selection.AddNode(selection_node)
+
+        extract_selection = vtk.vtkExtractSelection()
+        extract_selection.SetInputData(0, grid)
+        extract_selection.SetInputData(1, selection)
+        extract_selection.Update()
+
+        ugrid = extract_selection.GetOutput()
+        actor = self.gui.mouse_actions.create_highlighted_actor(
+            ugrid, representation=representation)
+        return actor
 
     def mark_nodes(self, nids, icase, text):
         """

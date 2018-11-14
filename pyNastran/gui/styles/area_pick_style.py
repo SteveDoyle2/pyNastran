@@ -127,7 +127,6 @@ class AreaPickStyle(vtk.vtkInteractorStyleRubberBandZoom):  # works
 
         area_picker.AreaPick(xmin, ymin, xmax, ymax, self.parent.rend)
         frustum = area_picker.GetFrustum() # vtkPlanes
-        #frustum = create_box_frustum(xmin, ymin, xmax, ymax, self.parent.rend)
 
         grid = self.parent.get_grid(self.name)
 
@@ -314,64 +313,3 @@ class AreaPickStyle(vtk.vtkInteractorStyleRubberBandZoom):  # works
         self.area_pick_button.setChecked(False)
         self.parent.setup_mouse_buttons(mode='default')
         self.parent.vtk_interactor.Render()
-
-def create_box_frustum(x0_, y0_, x1_, y1_, renderer):  # pragma: no cover
-
-    if x0_ < x1_:
-        x0 = x0_
-        x1 = x1_
-    else:
-        x0 = x1_
-        x1 = x0_
-
-    if y0_ < y1_:
-        y0 = y0_
-        y1 = y1_
-    else:
-        y0 = y1_
-        y1 = y0_
-
-    if x0 == x1:
-        x1 += 1.
-
-    if y0 == y1:
-        y1 += 1.
-
-    verts = []
-
-    renderer.SetDisplayPoint(x0, y0, 0)
-    renderer.DisplayToWorld()
-    verts.extend(renderer.GetWorldPoint()[:4])
-
-    renderer.SetDisplayPoint(x0, y0, 1)
-    renderer.DisplayToWorld()
-    verts.extend(renderer.GetWorldPoint()[:4])
-
-    renderer.SetDisplayPoint(x0, y1, 0)
-    renderer.DisplayToWorld()
-    verts.extend(renderer.GetWorldPoint()[:4])
-
-    renderer.SetDisplayPoint(x0, y1, 1)
-    renderer.DisplayToWorld()
-    verts.extend(renderer.GetWorldPoint()[:4])
-
-    renderer.SetDisplayPoint(x1, y0, 0)
-    renderer.DisplayToWorld()
-    verts.extend(renderer.GetWorldPoint()[:4])
-
-    renderer.SetDisplayPoint(x1, y0, 1)
-    renderer.DisplayToWorld()
-    verts.extend(renderer.GetWorldPoint()[:4])
-
-    renderer.SetDisplayPoint(x1, y1, 0)
-    renderer.DisplayToWorld()
-    verts.extend(renderer.GetWorldPoint()[:4])
-
-    renderer.SetDisplayPoint(x1, y1, 1)
-    renderer.DisplayToWorld()
-    verts.extend(renderer.GetWorldPoint()[:4])
-
-    extract_selected_frustum = vtk.vtkExtractSelectedFrustum()
-    extract_selected_frustum.CreateFrustum(verts)
-
-    return extract_selected_frustum.GetFrustum()

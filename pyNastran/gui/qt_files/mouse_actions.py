@@ -321,9 +321,25 @@ class MouseActions(object):
         self.setup_mouse_buttons(mode='style', revert=True,
                                  style=style) #, style_name='area_pick'
 
+
     def on_highlight(self, is_eids=True, is_nids=True, representation='wire',
                      name=None, callback=None, force=False):
-        """Selects a single point/cell"""
+        """
+        Selects a single point/cell
+
+        Parameters
+        ----------
+        is_eids/is_nids : bool; default=True
+            should elements/nodes be highlighted
+        representation : str; default='wire'
+            allowed = {'wire', 'points', 'surface'}
+        name : str; default=None
+            the name of the actor
+        callback : function
+            fill up a QLineEdit or some other custom action
+        force : bool; default=False
+            handles gui interaction; don't mess with this
+        """
         if name is None:
             name = self.gui.name
         self.revert_pressed('highlight')
@@ -796,10 +812,10 @@ class MouseActions(object):
         """helper method for trackball camera"""
         self.gui.view_actions.on_pan_down(event)
 
-    def get_node_ids(self, name, ids=None):
+    def get_node_ids(self, model_name, ids=None):
         """wrapper around node_ids"""
-        return self.gui.get_node_ids(name, ids)
+        return self.gui.get_node_ids(model_name, ids)
 
-    def get_element_ids(self, name, ids=None):
+    def get_element_ids(self, model_name, ids=None):
         """wrapper around node_ids"""
-        return self.gui.get_element_ids(name, ids)
+        return self.gui.get_element_ids(model_name, ids)

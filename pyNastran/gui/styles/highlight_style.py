@@ -26,7 +26,21 @@ class HighlightStyle(vtk.vtkInteractorStyleTrackballCamera):  # works
     """Highlights nodes & elements"""
     def __init__(self, parent=None, is_eids=True, is_nids=True, representation='wire',
                  name=None, callback=None):
-        """creates the HighlightStyle instance"""
+        """
+        Creates the HighlightStyle instance
+
+        Parameters
+        ----------
+        is_eids/is_nids : bool; default=True
+            should elements/nodes be highlighted
+        representation : str; default='wire'
+            allowed = {'wire', 'points', 'surface'}
+        name : str; default=None
+            the name of the actor
+        callback : function
+            fill up a QLineEdit or some other custom action
+
+        """
         self.AddObserver("LeftButtonPressEvent", self._left_button_press_event)
         #self.AddObserver("LeftButtonReleaseEvent", self._left_button_release_event)
         #self.AddObserver("RightButtonPressEvent", self.right_button_press_event)

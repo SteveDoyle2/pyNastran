@@ -10,7 +10,7 @@ import os
 PLUGIN_DIR = os.path.dirname(__file__)
 plugin_name_to_path = [
     #('auto_wireframe', os.path.join(PLUGIN_DIR, 'auto_wireframe.py'), 'AutoWireframe'),
-    #('rfs_viewer',     os.path.join(PLUGIN_DIR, 'rfs', 'rfs_viewer.py'), 'RFSViewer'),
+    #('rfs_viewer', os.path.join(PLUGIN_DIR, 'rfs', 'rfs_viewer.py'), 'RFSViewer'),
     #'aero_panels'
 ]
 

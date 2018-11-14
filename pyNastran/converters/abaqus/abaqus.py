@@ -481,10 +481,10 @@ class Abaqus(object):
         element_types = {}
 
         while not line0.startswith('*end assembly') and iline < nlines:
-            #print('line0 assembly =', line0)
+            self.log.debug('line0 assembly = %s' % line0)
 
             word = line0.strip('*').lower()
-            #self.log.info('assembly: %s' % word)
+            self.log.info('assembly: %s' % word)
             if '*instance' in line0:
                 # TODO: skips header parsing
                 iline += 1
@@ -522,7 +522,7 @@ class Abaqus(object):
                 line0 = lines[iline].strip().lower()
                 unused_set_ids, iline, line0 = read_set(lines, iline, line0, params_map)
             elif word == 'node':
-                #self.log.debug('  skipping assembly *node')
+                self.log.debug('  skipping assembly *node')
                 node_output = []
                 iline += 1
                 line0 = lines[iline].strip().lower()
@@ -709,10 +709,12 @@ class Abaqus(object):
         allowed_element_types = [
             'r2d2', 'conn2d2',
             'cpe3', 'cpe4', 'cpe4r', 'coh2d4', 'c3d10h', 'cohax4',
-            'cax3', 'cax4r', 'cps4r', 'mass', 'rotaryi']
-        if len(sline) != 1:
+            'cax3', 'cax4r', 'cps4r', 'mass', 'rotaryi', 't2d2']
+        if len(sline) < 1:
             raise RuntimeError("looking for element_type (e.g., '*Element, type=R2D2')\n"
-                               "line0=%r\nsline=%s" % (line0, sline))
+                               "line0=%r\nsline=%s; allowed:\n[%s]" % (
+                                   line0, sline, ', '.join(allowed_element_types)))
+
         etype_sline = sline[0]
         assert 'type' in etype_sline, etype_sline
         etype = etype_sline.split('=')[1]
@@ -725,6 +727,7 @@ class Abaqus(object):
 
         #iline += 1
         line0 = lines[iline].strip().lower()
+        self.log.debug('    line0 = %r' % line0)
 
         elements = []
         while not line0.startswith('*'):
@@ -732,7 +735,7 @@ class Abaqus(object):
             elements.append(line0.split(','))
             iline += 1
             line0 = lines[iline].strip().lower()
-        #print('elements =', elements)
+        self.log.debug('elements = %s' % elements)
         return line0, iline, etype, elements
 
     def read_step(self, lines, iline, line0, istep):

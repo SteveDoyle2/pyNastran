@@ -2285,9 +2285,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             for card_name in reject_cards:
                 if card_name in self._card_parser:
                     del self._card_parser[card_name]
-                self._card_parser_prepare[card_name] = self.reject_card_obj2
+                self._card_parser_prepare[card_name] = self._reject_card_obj2
 
-    def reject_card_obj2(self, unused_card_name, card_obj):
+    def _reject_card_obj2(self, unused_card_name, card_obj):
         """rejects a card object"""
         self.reject_cards.append(card_obj)
 
@@ -3616,7 +3616,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         card_obj = BDFCard(card, has_none=False)
         return card_obj
 
-    def expand_replication(self, card_name, icard, cards_list, card_lines_new, dig=True):
+    def _expand_replication(self, card_name, icard, cards_list, card_lines_new, dig=True):
         """replication helper"""
         #dig_str = '  ' if dig is False else ''
         #print(dig_str, '-----------************---------')
@@ -3652,8 +3652,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         if old_card[0] == '=':
             #print(dig_str, 'A!!!')
             assert dig is True, dig
-            cards2 = self.expand_replication(card_name, icard-1, cards_list, card_lines_old,
-                                             dig=False)
+            cards2 = self._expand_replication(
+                card_name, icard-1, cards_list, card_lines_old, dig=False)
             assert len(cards2) == 1, 'cards2=%s; ncards=%s' % (cards2, len(cards2))
             #print(dig_str, 'cards_equal =', cards2)
             old_card_fields = cards2[0]
@@ -3705,7 +3705,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 # just append the remaining fields
                 card.extend(old_card[ifield:])
                 #print(dig_str, ' %i : extending %s' % (ifield, old_card[ifield:]))
-                #print(dig_str, ' break expand_replication...')
+                #print(dig_str, ' break _expand_replication...')
                 break
             elif '=' in field:
                 # =4
@@ -3783,6 +3783,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             self._parse_cards_list(cards_list)
 
     def _parse_cards_dict(self, cards_dict):
+        """parses the cards that are in dictionary format"""
         if self.save_file_structure:
             raise NotImplementedError('save_file_structure=True is not supported\n%s' % (
                 list(cards_dict.keys())))
@@ -3799,6 +3800,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                                   is_list=False, has_none=False)
 
     def _parse_cards_list(self, cards_list):
+        """parses the cards that are in list format"""
         save_file_structure = self.save_file_structure
         if save_file_structure:
             for icard, card in enumerate(cards_list):
@@ -3810,7 +3812,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
                 if '=' in card_name:
                     #print(card)
-                    replicated_cards = self.expand_replication(
+                    replicated_cards = self._expand_replication(
                         card_name, icard, cards_list, card_lines)
 
                     _check_replicated_cards(replicated_cards)
@@ -3838,7 +3840,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
                 if '=' in card_name:
                     #print(card)
-                    replicated_cards = self.expand_replication(
+                    replicated_cards = self._expand_replication(
                         card_name, icard, cards_list, card_lines)
 
                     _check_replicated_cards(replicated_cards)
@@ -3917,6 +3919,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
             # key/value are lowercase
             if key == 'version':
+                assert value.lower() in ['msc', 'nx', 'zona'], 'version=%r is not supported' % value
                 self.nastran_format = value
             elif key == 'encoding':
                 self._encoding = value

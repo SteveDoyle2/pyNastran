@@ -995,7 +995,7 @@ class GuiAttributes(object):
         if input_filenames is not None:
             for input_filename in input_filenames:
                 if not os.path.exists(input_filename):
-                    msg = '%s does not exist\n%s' % (
+                    msg = 'input filename: %s does not exist\n%s' % (
                         input_filename, print_bad_path(input_filename))
                     self.log.error(msg)
                     if self.html_logging:
@@ -1470,19 +1470,23 @@ class GuiAttributes(object):
         return self.vtk_interactor.GetRenderWindow()
 
     #------------------------------
-    def get_element_ids(self, name=None, ids=None):
+    def get_xyz_cid0(self, model_name=None):
+        xyz = self.xyz_cid0
+        return xyz
+
+    def get_element_ids(self, model_name=None, ids=None):
         """wrapper around element_ids"""
         if ids is None:
             return self.element_ids
         return self.element_ids[ids]
 
-    def get_node_ids(self, name=None, ids=None):
+    def get_node_ids(self, model_name=None, ids=None):
         """wrapper around node_ids"""
         if ids is None:
             return self.node_ids
         return self.node_ids[ids]
 
-    def get_reverse_node_ids(self, name=None, ids=None):
+    def get_reverse_node_ids(self, model_name=None, ids=None):
         """wrapper around node_ids"""
         if ids is None:
             return np.array([])

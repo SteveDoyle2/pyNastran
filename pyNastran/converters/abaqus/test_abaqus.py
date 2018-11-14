@@ -11,14 +11,14 @@ import sys
 import numpy as np
 #warnings.simplefilter('always')
 
-
+import pyNastran
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.converters.abaqus.abaqus import read_abaqus
 
 np.seterr(all='raise')
 
 
-def run_abaqus(abaqus_filename):
+def run_abaqus(abaqus_filename, debug=False):
     """
     Runs a single abaqus deck
 
@@ -26,9 +26,8 @@ def run_abaqus(abaqus_filename):
     ----------
     abaqus_filename : str
        the abaqus filename to read
-    """
 
-    debug = False
+    """
     fem1 = read_abaqus(abaqus_filename, debug=debug, log=None)
 
 
@@ -39,13 +38,16 @@ def main():
     encoding = sys.getdefaultencoding()
     from docopt import docopt
     msg = "Usage:\n"
-    msg += "  test_abaqus ABAQUS_FILENAME\n"
+    msg += "  test_abaqus ABAQUS_FILENAME [-d]\n"
     msg += '  test_abaqus -h | --help\n'
     msg += '  test_abaqus -v | --version\n'
     msg += '\n'
 
     msg += "Positional Arguments:\n"
     msg += "  ABAQUS_FILENAME   path to Abaqus INP file\n"
+    msg += '\n'
+    msg += "Options:\n"
+    msg += "  -d, --debug  debug mode\n"
     msg += '\n'
 
     #msg += 'Options:\n'
@@ -68,6 +70,7 @@ def main():
     time0 = time.time()
     run_abaqus(
         data['ABAQUS_FILENAME'],
+        debug=data['--debug'],
     )
     print("total time:  %.2f sec" % (time.time() - time0))
 

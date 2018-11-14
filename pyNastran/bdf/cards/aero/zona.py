@@ -164,6 +164,7 @@ class ZONA(object):
         card_parser['CAERO7'] = (CAERO7, self.model._add_caero_object)
         card_parser['AEROZ'] = (AEROZ, self.model._add_aeros_object)
         card_parser['AESURFZ'] = (AESURFZ, self._add_aesurfz_object)
+        card_parser['FLUTTER'] = (FLUTTER_ZONA, self.model._add_flutter_object)
         card_parser['SPLINE1'] = (SPLINE1_ZONA, self.model._add_spline_object)
         card_parser['SPLINE2'] = (SPLINE2_ZONA, self.model._add_spline_object)
         card_parser['SPLINE3'] = (SPLINE3_ZONA, self.model._add_spline_object)
@@ -179,7 +180,7 @@ class ZONA(object):
         cards = [
             'CAERO7', 'AEROZ', 'AESURFZ', 'PANLST1', 'PANLST3', 'PAFOIL7',
             'SEGMESH', 'BODY7', 'ACOORD', 'MKAEROZ',
-            'TRIMVAR', 'TRIMLNK']
+            'TRIMVAR', 'TRIMLNK', 'FLUTTER']
         self.model.cards_to_read.update(set(cards))
 
     def _add_panlst_object(self, panlst):
@@ -3441,6 +3442,162 @@ class TRIMVAR(BaseCard):
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment + print_card_8(card)
+
+
+class FLUTTER_ZONA(Spline):
+    """
+    Defines data needed to perform flutter, ASE, or a transient response analysis.
+
+    +---------+-----+--------+------+------+-------+-------+-------------+------+
+    |    1    |  2  |   3    |  4   |  5   |   6   |   7   |      8      |  9   |
+    +=========+=====+========+======+======+=======+=======+=============+======+
+    | FLUTTER | SID | METHOD | DENS | MACH | RFREQ | IMETH | NVALUE/OMAX | EPS  |
+    +---------+-----+--------+------+------+-------+-------+-------------+------+
+    | FLUTTER | 19  |   K    | 119  | 219  | 319   |   S   |      5      | 1.-4 |
+    +---------+-----+--------+------+------+-------+-------+-------------+------+
+
+    +---------+-------+-------+-------+-------+--------+-------+---------+--------+
+    |    1    |   2   |   3   |   4   |   5   |    6   |   7   |    8    |    9   |
+    +=========+=======+=======+=======+=======+========+=======+=========+========+
+    | FLUTTER | SETID |  SYM  |  FIX  | NMODE | TABDMP | MLIST | CONMLST | NKSTEP |
+    +---------+-------+-------+-------+-------+--------+-------+---------+--------+
+    | FLUTTER |  100  | SYMM3 |   1   |   0   |  30    |  100  |    0    |   50   |
+    +---------+-------+-------+-------+-------+--------+-------+---------+--------+
+    """
+    type = 'FLUTTER_ZONA'
+
+    def __init__(self, sid, sym, fix, nmode, tabdmp, mlist, conmlst, nkstep=25, comment=''):
+        """
+        Creates a FLUTTER card, which is required for a flutter (SOL 145)
+        analysis.
+
+        Parameters
+        ----------
+        sid : int
+            Unique set identification number. (Integer > 0)
+        sym : str
+           Character string up to 8 characters with no embedded blanks.
+           The first 4 characters can be either 'SYMM' (or 'SYM'), 'ANTI',
+           or 'ASYM' that defines the boundary condition of the structural
+           finite element model as well as the unsteady aerodynamics, where:
+            - SYMM Symmetric boundary condition.
+            - ANTI Antisymmetric boundary condition.
+            - ASYM Asymmetric boundary condition.
+          The last 4 characters are used to specify the interpolation scheme
+          for the generalized aerodynamic matrices. They can be either:
+           - blank for a cubic spline
+           - L for a linear interpolation.
+             (such as SYM = 'SYMML', 'ANTIL', or 'ASYML')
+           - P for a second-order-polynomial interpolation.
+             (such as SYM = 'SYMMP', 'ANTIP', or 'ASYMP')
+           - integer for a hybrid cubic spline and linear interpolation scheme.
+             (such as SYM = 'SYMM1', 'SYMM2', 'ANTI3', etc.)
+           - (Default = SYMML)
+        fix : int
+           Identification number of a FIXHATM, FIXMATM, FIXMACH, or FIXMDEN
+           bulk data card. (Integer > 0)
+        nmode : int
+            Number of structural modes used in the flutter analysis. (Integer >= 0)
+        tabdmp : int
+            Identification number of a TABDMP1 bulk data card specifying modal damping as
+           a function of natural frequency. (Integer ≥ 0)
+        mlist : int
+            Identification number of a SET1 or SETADD bulk data card
+            specifying a list of normal modes to be omitted from the
+            flutter analysis. (Integer >= 0)
+        conmlst : int
+            Identification number of a CONMLST bulk data card specifying
+            a list of identification numbers of the CONM1 bulk data cards
+            for mass perturbation. (Integer >= 0) (See Remark 8)
+        nkstep : int; default=25
+            Number of reduced frequency steps for the reduced-frequency-sweep
+            technique of the g-Method flutter solution. (Integer >= 0)
+
+        """
+        # https://www.zonatech.com/Documentation/ZAERO_9.2_Users_3rd_Ed.pdf
+        Spline.__init__(self)
+        if comment:
+            self.comment = comment
+
+        self.sid = sid
+        self.sym = sym
+        self.fix = fix
+        self.nmode = nmode
+        self.tabdmp = tabdmp
+        self.mlist = mlist
+        self.conmlst = conmlst
+        self.nkstep = nkstep
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a FLUTTER card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        sid = integer(card, 1, 'sid')
+        sym = string(card, 2, 'sym')
+        fix = integer(card, 3, 'fix')
+        nmode = integer(card, 4, 'nmode')
+        tabdmp = integer(card, 5, 'tabdmp')
+        mlist = integer(card, 6, 'mlist')
+        conmlst = integer(card, 7, 'conmlst')
+        nkstep = integer_or_blank(card, 8, 'nkstep', 25)
+        assert len(card) <= 9, 'len(FLUTTER card) = %i\ncard=%s' % (len(card), card)
+        return FLUTTER_ZONA(sid, sym, fix, nmode, tabdmp, mlist, conmlst, nkstep,
+                            comment=comment)
+
+    def cross_reference(self, model):
+        return
+        msg = ', which is required by SPLINE1 eid=%s' % self.eid
+        self.setg_ref = model.Set(self.setg, msg=msg)
+        self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
+
+        self.panlst_ref = model.zona.panlsts[self.panlst]
+        self.panlst_ref.cross_reference(model)
+        self.aero_element_ids = self.panlst_ref.aero_element_ids
+
+    def safe_cross_reference(self, model, xref_errors=None):
+        return
+        msg = ', which is required by SPLINE1 eid=%s' % self.eid
+        try:
+            self.setg_ref = model.Set(self.setg, msg=msg)
+            self.setg_ref.safe_cross_reference(model, 'Node', msg=msg)
+        except KeyError:
+            model.log.warning('failed to find SETx set_id=%s%s; allowed_sets=%s' % (
+                self.setg, msg, np.unique(list(model.sets.keys()))))
+
+        try:
+            self.panlst_ref = model.zona.panlsts[self.panlst]
+            self.panlst_ref.safe_cross_reference(model, xref_errors)
+            self.aero_element_ids = self.panlst_ref.aero_element_ids
+        except KeyError:
+            pass
+
+    def uncross_reference(self):
+        return
+        #self.panlst_ref = None
+        #self.setg_ref = None
+
+    def convert_to_nastran(self, model):
+        raise NotImplementedError()
+
+    def raw_fields(self):
+        asdf
+        list_fields = ['FLUTTER', self.sid, self.sym, self.fix, self.nmode,
+                       self.tabdmp, self.mlist, self.conmlst, self.nkstep]
+        return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
+
 
 class SPLINE1_ZONA(Spline):
     """

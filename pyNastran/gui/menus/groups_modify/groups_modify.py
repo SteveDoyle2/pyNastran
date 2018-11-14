@@ -21,19 +21,18 @@ from pyNastran.gui.menus.groups_modify.groups import Group, _get_collapsed_text
 
 class GroupsModify(PyDialog):
     """
-    +--------------------------+
-    |     Groups : Modify      |
-    +--------------------------+
-    |                          |
-    |  Name        xxx Default |
-    |  Coords      xxx Default |
-    |  Elements    xxx Default |
-    |  Color       xxx Default |
-    |  Add         xxx Add     |
-    |  Remove      xxx Remove  |
-    |                          |
-    |      Set  OK Cancel      |
-    +--------------------------+
+    +-------------------------------+
+    |     Groups : Modify           |
+    +-------------------------------+
+    |                               |
+    |  Name        xxx Default      |
+    |  Nodes       xxx Default Show |
+    |  Color       xxx Default      |
+    |  Add         xxx Add     Show |
+    |  Remove      xxx Remove  Show |
+    |                               |
+    |      Set  OK Cancel           |
+    +-------------------------------+
     """
     def __init__(self, data, win_parent=None, group_active='main'):
         super(GroupsModify, self).__init__(data, win_parent)
@@ -71,52 +70,61 @@ class GroupsModify(PyDialog):
     def create_widgets(self):
         """creates the menu objects"""
         # Name
-        self.name = QLabel("Name:")
-        self.name_set = QPushButton("Set")
+        self.name_label = QLabel('Name:')
+        self.name_set = QPushButton('Set')
         self.name_edit = QLineEdit(str(self._default_name).strip())
-        self.name_button = QPushButton("Default")
+        self.name_button = QPushButton('Default')
 
         # elements
-        self.elements = QLabel("Element IDs:")
+        self.elements_label = QLabel('Element IDs:')
         self.elements_edit = QLineEdit(str(self._default_elements).strip())
-        self.elements_button = QPushButton("Default")
+        self.elements_button = QPushButton('Default')
+        self.elements_highlight_button = QPushButton('Show')
 
         # add
-        self.add = QLabel("Add Elements:")
-        self.add_edit = QElementEdit(self, str(''))
-        self.add_button = QPushButton("Add")
+        self.add_label = QLabel('Add Elements:')
+        self.add_edit = QElementEdit(self, str(''), pick_style='area')
+        self.add_button = QPushButton('Add')
+        self.add_highlight_button = QPushButton('Show')
 
         # remove
-        self.remove = QLabel("Remove Elements:")
-        self.remove_edit = QElementEdit(self, str(''))
-        self.remove_button = QPushButton("Remove")
+        self.remove = QLabel('Remove Elements:')
+        self.remove_edit = QElementEdit(self, str(''), pick_style='area')
+        self.remove_button = QPushButton('Remove')
+        self.remove_highlight_button = QPushButton('Show')
 
         # applies a unique implicitly
         self.eids = parse_patran_syntax(str(self._default_elements), pound=self.elements_pound)
 
         # closing
-        #self.apply_button = QPushButton("Apply")
-        self.ok_button = QPushButton("Close")
-        #self.cancel_button = QPushButton("Cancel")
+        #self.apply_button = QPushButton('Apply')
+        self.ok_button = QPushButton('Close')
+        #self.cancel_button = QPushButton('Cancel')
 
-        self.set_as_main_button = QPushButton("Set As Main")
+        self.set_as_main_button = QPushButton('Set As Main')
         self.create_group_button = QPushButton('Create New Group')
         self.delete_group_button = QPushButton('Delete Group')
 
-        self.name.setEnabled(False)
+        self.name_label.setEnabled(False)
         self.name_set.setEnabled(False)
         self.name_edit.setEnabled(False)
         self.name_button.setEnabled(False)
-        self.elements.setEnabled(False)
+
+        self.elements_label.setEnabled(False)
         self.elements_button.setEnabled(False)
         self.elements_edit.setEnabled(False)
-        self.add.setEnabled(False)
+        self.elements_highlight_button.setEnabled(False)
+
+        self.add_label.setEnabled(False)
         self.add_button.setEnabled(False)
         self.add_edit.setEnabled(False)
-        self.remove.setEnabled(False)
+        self.add_highlight_button.setEnabled(False)
+
+        self.remove_label.setEnabled(False)
         self.remove_button.setEnabled(False)
         self.remove_edit.setEnabled(False)
-        self.delete_group_button.setEnabled(False)
+        self.remove_highlight_button.setEnabled(False)
+
         #self.apply_button.setEnabled(False)
         #self.ok_button.setEnabled(False)
 
@@ -124,23 +132,25 @@ class GroupsModify(PyDialog):
     def create_layout(self):
         """displays the menu objects"""
         grid = QGridLayout()
-        grid.addWidget(self.name, 0, 0)
+        grid.addWidget(self.name_label, 0, 0)
         grid.addWidget(self.name_edit, 0, 1)
         grid.addWidget(self.name_set, 0, 2)
         grid.addWidget(self.name_button, 0, 3)
 
-        grid.addWidget(self.elements, 2, 0)
+        grid.addWidget(self.elements_label, 2, 0)
         grid.addWidget(self.elements_edit, 2, 1)
         grid.addWidget(self.elements_button, 2, 2)
+        grid.addWidget(self.elements_highlight_button, 2, 3)
 
-        grid.addWidget(self.add, 4, 0)
+        grid.addWidget(self.add_label, 4, 0)
         grid.addWidget(self.add_edit, 4, 1)
         grid.addWidget(self.add_button, 4, 2)
+        grid.addWidget(self.add_highlight_button, 4, 3)
 
-        grid.addWidget(self.remove, 5, 0)
+        grid.addWidget(self.remove_label, 5, 0)
         grid.addWidget(self.remove_edit, 5, 1)
         grid.addWidget(self.remove_button, 5, 2)
-
+        grid.addWidget(self.remove_highlight_button, 5, 3)
 
         ok_cancel_box = QHBoxLayout()
         #ok_cancel_box.addWidget(self.apply_button)
@@ -178,9 +188,14 @@ class GroupsModify(PyDialog):
         self.name_set.clicked.connect(self.on_set_name)
         self.name_button.clicked.connect(self.on_default_name)
         self.elements_button.clicked.connect(self.on_default_elements)
+        self.elements_highlight_button.clicked.connect(self.on_highlight_elements)
 
         self.add_button.clicked.connect(self.on_add)
+        self.add_highlight_button.clicked.connect(self.on_highlight_add)
+
         self.remove_button.clicked.connect(self.on_remove)
+        self.remove_highlight_button.clicked.connect(self.on_highlight_remove)
+
         self.table.itemClicked.connect(self.on_update_active_key)
         self.ok_button.clicked.connect(self.on_ok)
 
@@ -294,6 +309,36 @@ class GroupsModify(PyDialog):
     def closeEvent(self, event):
         self.out_data['close'] = True
         event.accept()
+
+    def on_highlight(self, nids):
+        """highlights the nodes"""
+        gui = self.win_parent
+        if self.gui is not None:
+            representation = 'points'
+            gui.mouse_actions.on_highlight(is_eids=False, is_nids=True,
+                                           representation=representation,
+                                           name=self.name,
+                                           #callback=self.on_focus_callback,
+                                           force=True)
+    def on_highlight_elements(self):
+        """highlights the active elements"""
+        self.on_highlight(self.eids)
+
+    def on_highlight_add(self):
+        """highlights the elements to add"""
+        eids, is_valid = check_patran_syntax(self.add_edit, pound=self.elements_pound)
+        if not is_valid:
+            #self.add_edit.setStyleSheet("QLineEdit{background: red;}")
+            return
+        self.on_highlight(eids)
+
+    def on_highlight_remove(self):
+        """highlights the elements to remove"""
+        eids, is_valid = check_patran_syntax(self.remove_edit)
+        if not is_valid:
+            #self.remove_edit.setStyleSheet("QLineEdit{background: red;}")
+            return
+        self.on_highlight(eids)
 
     def on_add(self):
         eids, is_valid = check_patran_syntax(self.add_edit, pound=self.elements_pound)
@@ -428,17 +473,17 @@ class GroupsModify(PyDialog):
 
         self.set_as_main_button.setEnabled(True)
         if name in ['main', 'anti-main']:
-            self.name.setEnabled(False)
+            self.name_label.setEnabled(False)
             self.name_set.setEnabled(False)
             self.name_edit.setEnabled(False)
             self.name_button.setEnabled(False)
-            self.elements.setEnabled(False)
+            self.elements_label.setEnabled(False)
             self.elements_button.setEnabled(False)
             self.elements_edit.setEnabled(False)
             self.add.setEnabled(False)
             self.add_button.setEnabled(False)
             self.add_edit.setEnabled(False)
-            self.remove.setEnabled(False)
+            self.remove_label.setEnabled(False)
             self.remove_button.setEnabled(False)
             self.remove_edit.setEnabled(False)
             self.delete_group_button.setEnabled(False)
@@ -447,19 +492,24 @@ class GroupsModify(PyDialog):
             #self.apply_button.setEnabled(False)
             #self.ok_button.setEnabled(False)
         else:
-            self.name.setEnabled(True)
+            self.name_label.setEnabled(True)
             self.name_set.setEnabled(True)
             self.name_edit.setEnabled(True)
             self.name_button.setEnabled(True)
-            self.elements.setEnabled(True)
+            self.elements_label.setEnabled(True)
             self.elements_button.setEnabled(True)
+            self.elements_highlight_button.setEnabled(True)
 
-            self.add.setEnabled(True)
+            self.add_label.setEnabled(True)
             self.add_button.setEnabled(True)
             self.add_edit.setEnabled(True)
-            self.remove.setEnabled(True)
+            self.add_highlight_button.setEnabled(True)
+
+            self.remove_label.setEnabled(True)
             self.remove_button.setEnabled(True)
             self.remove_edit.setEnabled(True)
+            self.remove_highlight_button.setEnabled(True)
+
             self.delete_group_button.setEnabled(True)
             #self.apply_button.setEnabled(True)
             #self.ok_button.setEnabled(True)
