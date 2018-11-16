@@ -95,6 +95,9 @@ class QElementEdit(QNodeElementEdit):
         """the callback method for ``on_focus``"""
         if eids is None:
             return
+        if len(eids) == 1:
+            self.setText(str(eids[0]))
+            return
         eids_str = write_patran_syntax_dict({'' : eids})
         self.setText(eids_str)
         #if self.tab_to_next:
@@ -114,6 +117,9 @@ class QNodeEdit(QNodeElementEdit):
     def on_focus_callback(self, eids, nids, name):
         """the callback method for ``on_focus``"""
         if nids is None:
+            return
+        if len(nids) == 1:
+            self.setText(str(nids[0]))
             return
         nids_str = write_patran_syntax_dict({'' : nids})
         self.setText(nids_str)

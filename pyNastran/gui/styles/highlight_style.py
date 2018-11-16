@@ -79,7 +79,7 @@ class HighlightStyle(vtk.vtkInteractorStyleTrackballCamera):  # works
 
         world_position = picker.GetPickPosition()
 
-        grid = self.parent.gui.grid_selected
+        grid = self.parent.get_grid_selected(self.name)
         cell_ids = [cell_id]
         point_ids = []
         if self.is_eids: # highlight_style = 'centroid
@@ -95,7 +95,7 @@ class HighlightStyle(vtk.vtkInteractorStyleTrackballCamera):  # works
         self.parent.vtk_interactor.Render()
 
         if self.callback is not None:
-            eids, nids = map_cell_point_to_model(self.parent.gui, cell_ids, point_ids, name=None)
+            eids, nids = map_cell_point_to_model(self.parent.gui, cell_ids, point_ids, name=self.name)
             self.callback(eids, nids, self.name)
 
         self.highlight_button.setChecked(False)
@@ -189,9 +189,9 @@ def map_cell_point_to_model(gui, cell_ids, point_ids, name=None):
     nids = []
     if cell_ids:
         cell_array = np.asarray(cell_ids, dtype='int32')
-        eids = gui.element_ids[cell_array]
+        eids = gui.get_element_ids(name, cell_array)
 
     if point_ids:
         point_array = np.asarray(point_ids, dtype='int32')
-        nids = gui.node_ids[point_array]
+        nids = gui.get_node_ids(name, point_array)
     return eids, nids

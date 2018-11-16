@@ -309,7 +309,7 @@ class MouseActions(object):
             if not force:
                 return
 
-        self.gui.log_info('on_area_pick')
+        #self.gui.log_info('on_area_pick')
         self._picker_points = []
 
         if callback is None:
@@ -773,6 +773,9 @@ class MouseActions(object):
 
     def get_grid(self, name):
         return self.grid
+
+    def get_grid_selected(self, name):
+        return self.grid_selected
 
     @property
     def grid(self):

@@ -85,7 +85,7 @@ class WriteMesh(BDFAttributes):
 
         assert isinstance(interspersed, bool)
         fname = print_filename(out_filename)
-        self.log.debug("***writing %s" % fname)
+        #self.log.debug("***writing %s" % fname)
         return out_filename
 
     def write_caero_model(self, caero_bdf_filename='caero.bdf', is_subpanel_model=True):
