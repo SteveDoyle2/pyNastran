@@ -300,7 +300,6 @@ class MouseActions(object):
         """Creates a box picker"""
         if name is None:
             name = self.gui.name
-        print('name = %s' % name)
         self.revert_pressed('area_pick')
 
         is_checked = self.actions['area_pick'].isChecked()

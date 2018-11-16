@@ -1,12 +1,16 @@
 """
 defines some half-implemented functions with significant restrictions
- - find_closest_nodes(...)
- - create_spar_cap(...)
- - split_model_by_material_id(...)
- - extract_surface_patches(...)
- - get_joints(...)
- - cut_model(...)
- - get_free_edges(...)
+ - nodes, elements = create_spar_cap(
+       model, eids, nids, width,
+       nelements=1, symmetric=True, xyz_cid0=None,
+       vector1=None, vector2=None, idir=None, eid_start=1)
+ - split_model_by_material_id(bdf_filename, bdf_filename_base,
+                              encoding=None, size=8, is_double=False)
+ - model, groups = extract_surface_patches(bdf_filename, starting_eids,
+                                           theta_tols=40.)
+ - joint_nids = get_joints(model, pid_sets)
+ - cut_model(model, axis='-y')
+ - get_free_edges(bdf_filename, eids=None, maps=None)
 """
 from __future__ import print_function
 from collections import defaultdict

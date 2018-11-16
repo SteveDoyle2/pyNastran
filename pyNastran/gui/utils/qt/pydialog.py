@@ -130,6 +130,25 @@ def check_int(cell):
         #cell.setStyleSheet("QLineEdit{background: red;}")
         #return None, False
 
+def check_save_path(cell):
+    """verifies that the path is savable..."""
+    text, passed = check_name_str(cell)
+    if not passed:
+        return None, False
+    return text, passed
+
+def check_path(cell):
+    """verifies that the path exists"""
+    text, passed = check_name_str(cell)
+    if not passed:
+        return None, False
+
+    if os.path.exists(text):
+        cell.setStyleSheet("QLineEdit{background: white;}")
+        return text, True
+    else:
+        cell.setStyleSheet("QLineEdit{background: red;}")
+        return None, False
 
 def check_float(cell):
     """

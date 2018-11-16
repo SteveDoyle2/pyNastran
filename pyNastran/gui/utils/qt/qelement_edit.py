@@ -63,6 +63,8 @@ class QNodeElementEdit(QLineEdit):
     def on_focus(self):
         """called when the QNodeElementEdit is activated"""
         gui = self.win_parent.win_parent
+        if gui is None:
+            return
         if self.pick_style == 'area':
             gui.mouse_actions.on_area_pick(is_eids=self.is_eids, is_nids=self.is_nids,
                                            representation=self.representation,
