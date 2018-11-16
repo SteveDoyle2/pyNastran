@@ -10,7 +10,6 @@ defines some half-implemented functions with significant restrictions
                                            theta_tols=40.)
  - joint_nids = get_joints(model, pid_sets)
  - cut_model(model, axis='-y')
- - get_free_edges(bdf_filename, eids=None, maps=None)
 """
 from __future__ import print_function
 from collections import defaultdict
@@ -201,43 +200,6 @@ def _write_nodes(self, outfile, size, is_double):
             if nid not in self.remove_nodes:
                 msg.append(node.write_card(size, is_double))
         outfile.write(''.join(msg))
-
-
-def get_free_edges(bdf_filename, eids=None, maps=None):
-    """
-    assumes no solids/bars
-
-    Parameters
-    ----------
-    bdf_filename : str, BDF()
-        a BDF object or filename
-    maps : List[...] (default=None -> calculate)
-        the output from _get_maps(eids, map_names=None,
-                                  consider_0d=False, consider_0d_rigid=False,
-                                  consider_1d=False, consider_2d=True, consider_3d=False)
-
-    Returns
-    -------
-    free_edges : List[(int nid1, int nid2), ...]
-        the free edges
-    """
-    if isinstance(bdf_filename, string_types):
-        model = BDF(debug=False)
-        model.read_bdf(bdf_filename)
-    else:
-        model = bdf_filename
-
-    free_edges = []
-    if maps is None:
-        maps = model._get_maps(eids, map_names='edge_to_eid_map',
-                               consider_0d=False, consider_0d_rigid=False,
-                               consider_1d=False, consider_2d=True, consider_3d=False)
-    edge_to_eid_map = maps['edge_to_eid_map']
-    for edge, eids in edge_to_eid_map.items():
-        if len(eids) == 2:
-            continue
-        free_edges.append(edge)
-    return free_edges
 
 
 def get_joints(model, pid_sets):
