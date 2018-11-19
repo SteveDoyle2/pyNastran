@@ -56,7 +56,7 @@ class Matrix(object):
         self.row_nid = None
         self.row_dof = None
         if not isinstance(name, unicode_type):
-            raise TypeError('name=%r must be a string' % name)
+            raise TypeError('name=%r must be a string; type=%s' % (name, type(name)))
 
     @property
     def shape_str(self):

@@ -259,6 +259,7 @@ class GEOM1(GeomCommon):
                 if ps == 0:
                     ps = ''
                 node = GRID(nid, np.array([x1, x2, x3]), cp, cd, ps, seid)
+                self._type_to_id_map['GRID'].append(nid)
                 self.nodes[nid] = node
                 #if nid in self.nodes:
                     #self.reject_lines.append(str(node))

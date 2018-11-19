@@ -1126,6 +1126,13 @@ class TABLES1(Table):
     """
     type = 'TABLES1'
 
+    @classmethod
+    def _init_from_empty(cls):
+        tid = 1
+        x = [0., 1.]
+        y = [0., 1.]
+        return TABLES1(tid, x, y, Type=1, comment='')
+
     def __init__(self, tid, x, y, Type=1, comment=''):
         """
         Adds a TABLES1 card, which defines a stress dependent material

@@ -97,6 +97,18 @@ class MATS1(MaterialDependence):
         self.tid_ref = None
         self.mid_ref = None
 
+    @classmethod
+    def _init_from_empty(cls):
+        mid = 1
+        tid = 1
+        Type = None
+        h = None
+        hr = None
+        yf = None
+        limit1 = None
+        limit2 = None
+        return MATS1(mid, tid, Type, h, hr, yf, limit1, limit2, comment='')
+
     def validate(self):
         if self.Type not in ['NLELAST', 'PLASTIC']:
             raise ValueError('MATS1 Type must be [NLELAST, PLASTIC]; Type=%r' % self.Type)

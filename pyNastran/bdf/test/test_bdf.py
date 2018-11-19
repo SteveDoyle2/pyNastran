@@ -218,6 +218,7 @@ def memory_usage_psutil():
 def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=False,
             mesh_form='separate', is_folder=False, print_stats=False,
             encoding=None, sum_load=True, size=8, is_double=False,
+            hdf5=False,
             stop=False, nastran='', post=-1, dynamic_vars=None,
             quiet=False, dumplines=False, dictsort=False, run_extract_bodies=False,
             save_file_structure=False,
@@ -305,7 +306,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         punch=punch, mesh_form=mesh_form,
         print_stats=print_stats, encoding=encoding,
         sum_load=sum_load, size=size, is_double=is_double,
-        stop=stop, nastran=nastran, post=post,
+        stop=stop, nastran=nastran, post=post, hdf5=hdf5,
         dynamic_vars=dynamic_vars,
         quiet=quiet, dumplines=dumplines, dictsort=dictsort,
         nerrors=nerrors, dev=dev, crash_cards=crash_cards,
@@ -324,7 +325,8 @@ def run_and_compare_fems(
         print_stats=False, encoding=None,
         sum_load=True, size=8, is_double=False,
         save_file_structure=False,
-        stop=False, nastran='', post=-1, dynamic_vars=None,
+        stop=False, nastran='', post=-1, hdf5=False,
+        dynamic_vars=None,
         quiet=False, dumplines=False, dictsort=False,
         nerrors=0, dev=False, crash_cards=None,
         safe_xref=True, run_extract_bodies=False, pickle_obj=False,
@@ -360,6 +362,7 @@ def run_and_compare_fems(
                         size, is_double,
                         run_extract_bodies=run_extract_bodies,
                         save_file_structure=save_file_structure,
+                        hdf5=hdf5,
                         encoding=encoding, crash_cards=crash_cards, safe_xref=safe_xref,
                         pickle_obj=pickle_obj, stop=stop)
         is_mesh_opt = any([card_name in fem1.card_count for card_name in mesh_opt_cards])
@@ -519,7 +522,7 @@ def run_nastran(bdf_model, nastran, post=-1, size=8, is_double=False):
         print(op2.get_op2_stats())
 
 def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size, is_double,
-             run_extract_bodies=False, save_file_structure=False,
+             run_extract_bodies=False, save_file_structure=False, hdf5=False,
              encoding=None, crash_cards=None, safe_xref=True,
              pickle_obj=False, stop=False):
     """
@@ -601,9 +604,9 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
                 fem1.get_rigid_elements_with_node_ids(common_node_ids)
 
                 for spc_id in set(list(fem1.spcadds.keys()) + list(fem1.spcs.keys())):
-                    fem1.get_reduced_spcs(spc_id)
+                    fem1.get_reduced_spcs(spc_id, consider_spcadd=True)
                 for mpc_id in set(list(fem1.mpcadds.keys()) + list(fem1.mpcs.keys())):
-                    fem1.get_reduced_mpcs(mpc_id)
+                    fem1.get_reduced_mpcs(mpc_id, consider_mpcadd=True)
 
                 fem1.get_dependent_nid_to_components()
                 fem1._get_maps(eids=None, map_names=None,
@@ -640,6 +643,13 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
     #out_model = bdf_model + '_out'
     #if cid is not None and xref:
         #fem1.resolve_grids(cid=cid)
+
+    if hdf5:
+        hdf5_filename = out_model + '.h5'
+        fem1.export_to_hdf5_filename(hdf5_filename)
+        fem1a = BDF()
+        fem1a.load_hdf5_filename(hdf5_filename)
+        #sys.exit('hdf5')
 
     if mesh_form is None:
         pass
@@ -1838,7 +1848,7 @@ def get_test_bdf_data():
     encoding = sys.getdefaultencoding()
 
     from pyNastran.utils.docopt_types import docopt_types
-    options = '[-e E] [--encoding ENCODE] [-q] [-D] [-i] [--crash C] [-k] [-f] '
+    options = '[-e E] [--encoding ENCODE] [-q] [-D] [-i] [--crash C] [-k] [-f] [--hdf5] '
     msg = (
         "Usage:\n"
         '  test_bdf [-x | --safe] [-p] [-c] [-L]      %sBDF_FILENAME\n' % options +
@@ -1882,6 +1892,7 @@ def get_test_bdf_data():
         '  -f, --profile    Profiles the code (default=False)\n'
         '  -s, --stop       Stop after first read/write (default=False)\n'
         '  -k, --pickle     Pickles the data objects (default=False)\n'
+        '  --hdf5           Save/load the BDF in HDF5 format\n'
         '\n'
         'Info:\n'
         '  -h, --help     show this help message and exit\n'
@@ -1957,6 +1968,7 @@ def main():
             run_extract_bodies=False,
             pickle_obj=data['--pickle'],
             safe_xref=data['--safe'],
+            hdf5=data['--hdf5'],
             print_stats=True,
             stop_on_failure=False,
         )
@@ -2001,6 +2013,7 @@ def main():
             run_extract_bodies=False,
             pickle_obj=data['--pickle'],
             safe_xref=data['--safe'],
+            hdf5=data['--hdf5'],
             print_stats=True,
             stop_on_failure=False,
         )

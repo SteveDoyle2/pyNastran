@@ -90,6 +90,72 @@ class CBEAM(LineElement):
                         n, value, self.type)
                     raise KeyError(msg)
 
+    @classmethod
+    def export_to_hdf5_vectorized(cls, h5_file, model, eids):
+        """exports the elements in a vectorized way"""
+        #comments = []
+        pids = []
+        nodes = []
+        x = []
+        g0 = []
+        offt = []
+        bit = []
+        pa = []
+        pb = []
+        wa = []
+        wb = []
+        sa = []
+        sb = []
+
+        #self.ga = nids[0]
+        #self.gb = nids[1]
+        #self.x = x
+        #self.g0 = g0
+        #self.offt = offt
+        #self.bit = bit
+        #self.pa = pa
+        #self.pb = pb
+        #self.wa = wa
+        #self.wb = wb
+        #self.sa = sa
+        #self.sb = sb
+        for eid in eids:
+            element = model.elements[eid]
+            #comments.append(element.comment)
+            pids.append(element.pid)
+            nodes.append(element.nodes)
+            if element.g0 is None:
+                x.append(element.x)
+                g0.append(-1)
+            else:
+                x.append(element.x)
+                g0.append(element.g0)
+
+            pa.append(element.pa)
+            pb.append(element.pb)
+            sa.append(element.sa)
+            sb.append(element.sb)
+            wa.append(element.wa)
+            wb.append(element.wb)
+        #h5_file.create_dataset('_comment', data=comments)
+        h5_file.create_dataset('eid', data=eids)
+        h5_file.create_dataset('nodes', data=nodes)
+        h5_file.create_dataset('pid', data=pids)
+        #print('x =', x)
+        #print('g0 =', g0)
+        h5_file.create_dataset('x', data=x)
+        h5_file.create_dataset('g0', data=g0)
+
+        h5_file.create_dataset('pa', data=pa)
+        h5_file.create_dataset('pb', data=pb)
+
+        h5_file.create_dataset('sa', data=sa)
+        h5_file.create_dataset('sb', data=sb)
+
+        h5_file.create_dataset('wa', data=wa)
+        h5_file.create_dataset('wb', data=wb)
+
+
     def __init__(self, eid, pid, nids, x, g0, offt='GGG', bit=None,
                  pa=0, pb=0, wa=None, wb=None, sa=0, sb=0, comment=''):
         """

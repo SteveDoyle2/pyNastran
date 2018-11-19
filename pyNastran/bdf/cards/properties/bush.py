@@ -184,6 +184,14 @@ class PBUSH(BushingProperty):
         if mass:
             self.vars.append('M')
 
+    @classmethod
+    def _init_from_empty(cls):
+        pid = 1
+        k = [1.]
+        b = [1.]
+        ge = [1.]
+        return PBUSH(pid, k, b, ge, rcv=None, mass=None, comment='')
+
     def validate(self):
         assert isinstance(self.Ki, list), 'PBUSH: pid=%i type(Ki)=%s Ki=%s' % (self.pid, type(self.Ki), self.Ki)
         assert isinstance(self.Bi, list), 'PBUSH: pid=%i type(Bi)=%s Bi=%s' % (self.pid, type(self.Bi), self.Bi)

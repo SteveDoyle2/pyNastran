@@ -20,14 +20,13 @@ Limitations:
   but hopefully you aren’t using it.
 """
 from __future__ import print_function
-import os
-from types import MethodType, FunctionType
+#from types import MethodType, FunctionType
 from six import PY2 #, PY3 #, binary_type
 
 import h5py
 import numpy as np
 
-from pyNastran.utils import print_bad_path, object_attributes, check_path
+from pyNastran.utils import object_attributes, check_path
 from pyNastran.utils.numpy_utils import integer_types, float_types
 from pyNastran.utils.log import get_logger2
 
@@ -43,24 +42,6 @@ else:
 
 
 #---------------------------------------------------------------------------------------------
-def cast(h5_file, key, value, nlevels):
-    # value
-    #print('%s****castingA' % (nlevels*'  '))
-    #print(key, value)
-    value2 = _cast(h5_file.get(key))
-    #print('%s****%s' % (nlevels*'  ', value2))
-    #print('%s  %r : %s %s' % (nlevels*'  ', key, value2, type(value2)))
-    return value2
-
-def _cast(h5_result_attr):
-    """converts the h5py type back into the actual type"""
-    if h5_result_attr is None:
-        return None
-
-    if len(h5_result_attr.shape) == 0:
-        return np.array(h5_result_attr).tolist()
-        #raise NotImplementedError(h5_result_attr.dtype)
-    return np.array(h5_result_attr)
 
 def export_obj_to_hdf5(hdf5_filename, obj, user_custom_types=None, log=None, debug=False):
     """exports an object to an HDF5 file"""
@@ -122,6 +103,8 @@ class HDF5Exporter(object):
                 # an attribute is not required, but may exist
                 continue
             value = getattr(obj, attr)
+            #if not isinstance(value, (dict, list)):
+            print('%sattr %s %s' % ((nlevels+1)*' ', attr, type(value)))
             self._add_dataset(sub_group, attr, value, user_custom_types, nlevels+1)
 
     def _add_dataset(self, hdf5_file, key, value, user_custom_types, nlevels):
@@ -136,11 +119,15 @@ class HDF5Exporter(object):
         if isinstance(key, (integer_types, float_types)):
             raise TypeError('key=%r; key must be a string, not %s\nvalue:\n%r' % (key, type(key), value))
 
-        custom_types_list = user_custom_types + ['BDF', 'StandardScaler']
+        custom_types_list = user_custom_types + ['BDF', 'OP2', 'OP2Geom', 'StandardScaler']
         class_name = value.__class__.__name__
 
         if isinstance(value, dict):
-            sub_group = hdf5_file.create_group(key)
+            try:
+                sub_group = hdf5_file.create_group(key)
+            except:
+                print('key = %s; type=%s' % (key, type(key)))
+                raise
             sub_group.attrs['type'] = 'dict'
             self._create_dict_group(sub_group, value, user_custom_types, nlevels+1)
 
@@ -157,7 +144,11 @@ class HDF5Exporter(object):
             self._add_list_tuple(hdf5_file, key, value, 'list')
         elif isinstance(value, set):
             self._add_list_tuple(hdf5_file, key, value, 'set')
-
+        elif hasattr(value, 'export_to_hdf5_file'):
+            print('export_to_hdf5_file', key)
+            sub_group = hdf5_file.create_group(key)
+            sub_group.attrs['type'] = value.__class__.__name__
+            value.export_to_hdf5_file(sub_group, exporter=self)
         elif hasattr(value, 'get_h5attrs'):
             h5attrs = value.get_h5attrs()
             sub_group = hdf5_file.create_group(key)
@@ -177,8 +168,12 @@ class HDF5Exporter(object):
         else:
             print('string_types =', string_types)
             print('value =', value)
-            msg = 'Type=%r is not in custom_types=%s and does not have get_h5attrs(self)' % (
-                class_name, custom_types_list)
+            msg = (
+                'key=%r Type=%r is not in custom_types=%s and does not have:\n'
+                ' - export_to_hdf5_file(h5_file)\n'
+                ' - object_attributes()\n'
+                ' - get_h5attrs(self)' % (
+                key, class_name, custom_types_list))
             raise TypeError(msg)
             #raise TypeError(type(value))
 
@@ -199,102 +194,147 @@ class HDF5Exporter(object):
             for i, valuei in enumerate(value):
                 sub_group.create_dataset(str(i), data=valuei)
 
-def load_obj_from_hdf5(hdf5_filename, custom_types=None, log=None, debug=False):
-    """loads an hdf5 file into an object"""
+def load_obj_from_hdf5(hdf5_filename, custom_types_dict=None, log=None, debug=False):
+    """
+    loads an hdf5 file into an object
+
+    Parameters
+    ----------
+    hdf5_filename : str
+       the h5 filename to load
+    custom_types_dict : dict[key] : function()
+        the custom mapper
+    """
     check_path(hdf5_filename, 'hdf5_filename')
     log = get_logger2(log=log, debug=debug, encoding='utf-8')
     log.info('hdf5_filename = %r' % hdf5_filename)
 
     model = {}
     with h5py.File(hdf5_filename, 'r') as h5_file:
-        load_obj_from_hdf5_file(model, h5_file, custom_types=custom_types, log=log, debug=debug)
+        load_obj_from_hdf5_file(model, h5_file, custom_types_dict=custom_types_dict, log=log, debug=debug)
     return model
 
-def load_obj_from_hdf5_file(model, h5_file, log=None, custom_types=None, debug=False):
+def load_obj_from_hdf5_file(model, h5_file, log=None, custom_types_dict=None, debug=False):
     """loads an h5 file object into an dict object"""
-    importer = HDF5Importer(h5_file, custom_types=custom_types, log=log, debug=debug)
+    importer = HDF5Importer(h5_file, custom_types_dict=custom_types_dict, log=log, debug=debug)
     importer.load(model, h5_file)
 
 
 
 class HDF5Importer(object):
-    def __init__(self, h5_file, custom_types=None, log=None, debug=False):
+    def __init__(self, h5_file, custom_types_dict=None, log=None, debug=False):
         self.log = get_logger2(log=log, debug=debug, encoding='utf-8')
-        if custom_types is None:
-            custom_types = {}
-        self.custom_types = custom_types
+        if custom_types_dict is None:
+            custom_types_dict = {}
+        self.custom_types_dict = custom_types_dict
         self.h5_file = h5_file
 
     def load(self, model, h5_file, self_obj=None):
         for key in h5_file.keys():
-            self._load_value(model, h5_file, key, self.custom_types, self_obj, nlevels=1)
+            self._load_value(model, h5_file, key, self.custom_types_dict, self_obj, nlevels=1)
 
-    def _load_value(self, model, h5_file, key, custom_types, self_obj, nlevels):
+    def _load_value(self, model, h5_file, key, custom_types_dict, self_obj, nlevels):
         value = h5_file.get(key)
         keys = None
-        if hasattr(value, 'attrs'):
-            # group
-            attrs = value.attrs
-            keys = list(attrs.keys())
-            if keys:
-                #print('%s%s %s %s' % ((nlevels)*'  ', key, value, keys))
-                Type = None
-                if 'type' in keys:
-                    Type = value.attrs['type']
-                    #print('%sType=%s' % ((nlevels)*'  ', Type))
-                    keys.remove('type')
-
-                key_type = None
-                if 'key_type' in keys:
-                    self.log.warning('not handling key_type for %s' % value)
-                    key_type = value.attrs['key_type']
-                    #print('%sType=%s' % ((nlevels)*'  ', key_type))
-                    keys.remove('key_type')
-                    return
-
-                if keys:
-                    raise NotImplementedError(keys)
-
-                if Type == 'dict':
-                    self._load_dict(model, h5_file, key, value, custom_types, self_obj,
-                                    nlevels+1, print_dict=False)
-                elif Type == 'None':
-                    model[key] = None
-
-                elif Type == 'list':
-                    _list = self._load_mixed_tuple_list(h5_file, key, value, custom_types, self_obj, nlevels+1)
-                    model[key] = _list
-                elif Type == 'tuple':
-                    _list = self._load_mixed_tuple_list(h5_file, key, value, custom_types, self_obj, nlevels+1)
-                    model[key] = tuple(_list)
-                elif Type == 'set':
-                    _list = self._load_mixed_tuple_list(h5_file, key, value, custom_types, self_obj, nlevels+1)
-                    model[key] = set(_list)
-
-                elif Type in custom_types:
-                    obj = self._load_custom_type(h5_file, Type, key, value, custom_types,
-                                                 self_obj, nlevels)
-                    model[key] = obj
-                else:
-                    print('%s%s %s %s' % ((nlevels)*'  ', key, value, keys))
-                    custom_type_keys = list(custom_types.keys())
-                    custom_type_keys.sort()
-                    raise TypeError('Type=%r is not in custom_types=%s' % (Type, custom_type_keys))
-                    #print("%stype_cast Type=%s" % ((nlevels)*'  ', Type))
-                    #value2 = cast(h5_file, key, value, nlevels)
-                    #model[key] = value2
-            else:
-                #print('%s%s %s' % ((nlevels)*'  ', key, value))
-                #print("%sno_keys_cast" % ((nlevels)*'  '))
-                value2 = cast(h5_file, key, value, nlevels)
-                model[key] = value2
-        else:
+        if not hasattr(value, 'attrs'):
             #print('%s%s %s' % ((nlevels)*'  ', key, value))
             #print("%sno_attrs_cast" % ((nlevels)*'  '))
-            value2 = cast(h5_file, key, value, nlevels)
+            value2 = self.cast(h5_file, key, value, nlevels)
             model[key] = value2
+            return
 
-    def _load_mixed_tuple_list(self, h5_file, key, value, custom_types, self_obj, nlevels):
+        # group
+        attrs = value.attrs
+        keys = list(attrs.keys())
+        if not keys:
+            #print('%s%s %s' % ((nlevels)*'  ', key, value))
+            #print("%sno_keys_cast" % ((nlevels)*'  '))
+            value2 = self.cast(h5_file, key, value, nlevels)
+            model[key] = value2
+            return
+
+        # keys exist
+        #print('%s%s %s %s' % ((nlevels)*'  ', key, value, keys))
+        Type = None
+        if 'type' in keys:
+            Type = value.attrs['type']
+            #print('%sType=%s' % ((nlevels)*'  ', Type))
+            keys.remove('type')
+
+        key_type = None
+        if 'key_type' in keys:
+            self.log.warning('not handling key_type for %s' % value)
+            key_type = value.attrs['key_type']
+            #print('%sType=%s' % ((nlevels)*'  ', key_type))
+            keys.remove('key_type')
+            return
+
+        function = None
+        if 'function' in keys:
+            function = value.attrs['function']
+            keys.remove('function')
+
+        if keys:
+            raise NotImplementedError(keys)
+
+
+        if function is not None:
+            _function_data = getattr(self_obj, function)(self, model, h5_file, key, value)
+            model[key] = _function_data
+            return
+
+        if Type == 'dict':
+            self._load_dict(model, h5_file, key, value, custom_types_dict, self_obj,
+                            nlevels+1, print_dict=False)
+        elif Type == 'None':
+            model[key] = None
+
+        elif Type == 'list':
+            _list = self._load_mixed_tuple_list(h5_file, key, value, custom_types_dict, self_obj, nlevels+1)
+            model[key] = _list
+        elif Type == 'tuple':
+            _list = self._load_mixed_tuple_list(h5_file, key, value, custom_types_dict, self_obj, nlevels+1)
+            model[key] = tuple(_list)
+        elif Type == 'set':
+            _list = self._load_mixed_tuple_list(h5_file, key, value, custom_types_dict, self_obj, nlevels+1)
+            model[key] = set(_list)
+
+        elif Type in custom_types_dict:
+            try:
+                obj = self._load_custom_type(h5_file, Type, key, value, custom_types_dict,
+                                             self_obj, nlevels)
+            except:
+                msg = ('Cannot load custom type: %s.  Try setting:\n'
+                       ' - load_hdf5_file\n'
+                       ' - function\n' % (Type))
+                self.log.error(msg)
+                raise
+            model[key] = obj
+        else:
+            print('%s%s %s %s' % ((nlevels)*'  ', key, value, keys))
+            custom_type_keys = list(custom_types_dict.keys())
+            custom_type_keys.sort()
+            raise TypeError('Type=%r is not in custom_types_dict=%s' % (Type, custom_type_keys))
+            #print("%stype_cast Type=%s" % ((nlevels)*'  ', Type))
+            #value2 = self.cast(h5_file, key, value, nlevels)
+            #model[key] = value2
+
+    @classmethod
+    def cast(cls, h5_file, key, value, nlevels):
+        """casts a value"""
+        # value
+        #print('%s****castingA' % (nlevels*'  '))
+        #print(key, value)
+        try:
+            value2 = _cast(h5_file.get(key))
+        except AttributeError:
+            print(key)
+            raise
+        #print('%s****%s' % (nlevels*'  ', value2))
+        #print('%s  %r : %s %s' % (nlevels*'  ', key, value2, type(value2)))
+        return value2
+
+    def _load_mixed_tuple_list(self, h5_file, key, value, custom_types_dict, self_obj, nlevels):
         """
         Lists/tuples are stored as lists if the data doesn't contain unicode.
         Otherwise, they're stored like dictionaries, with string indices that are
@@ -303,15 +343,15 @@ class HDF5Importer(object):
         keys = value.keys()
         is_unicode_list = '0' in keys
         if is_unicode_list:
-            mylist = self._load_unicode_list(h5_file, key, value, custom_types, self_obj, nlevels)
+            mylist = self._load_unicode_list(h5_file, key, value, custom_types_dict, self_obj, nlevels)
         else:
             temp_dict = {}
             sub_h5 = value
-            self._load_value(temp_dict, sub_h5, 'value', custom_types, self_obj, nlevels+2)
+            self._load_value(temp_dict, sub_h5, 'value', custom_types_dict, self_obj, nlevels+2)
             mylist = temp_dict['value']
         return mylist
 
-    def _load_unicode_list(self, h5_file, key, value, custom_types, self_obj, nlevels):
+    def _load_unicode_list(self, h5_file, key, value, custom_types_dict, self_obj, nlevels):
         """
         We have a dictionary like:
         data = {
@@ -323,7 +363,7 @@ class HDF5Importer(object):
         """
         temp_dict = {}
         sub_h5 = value
-        self._load_dict(temp_dict, h5_file, key, value, custom_types, self_obj, nlevels, print_dict=False)
+        self._load_dict(temp_dict, h5_file, key, value, custom_types_dict, self_obj, nlevels, print_dict=False)
 
         mydict = temp_dict[key]
         nvalues = len(mydict)
@@ -337,7 +377,7 @@ class HDF5Importer(object):
         """
         The following custom methods can/should be defined in a class:
          - init_from_empty()
-         - __init_from_self__(parent)
+         - _init_from_self(parent)
          - get_custom_types()
 
         """
@@ -345,21 +385,27 @@ class HDF5Importer(object):
         #print('******Type=%r' % Type)
         if hasattr(class_instance, 'init_from_empty'):
             obj = class_instance.init_from_empty()
-        elif hasattr(class_instance, '__init_from_self__'):
+        elif hasattr(class_instance, '_init_from_self'):
             #print('self_obj', self_obj)
-            obj = class_instance.__init_from_self__(self_obj)
+            obj = class_instance._init_from_self(self_obj)
         else:
             try:
                 obj = class_instance()
             except:
-                self.log.error('%s cannot load with 0 arguements' % Type)
+                self.log.error('%s cannot load with 0 arguments' % Type)
                 raise
 
         temp_dict = {}
         local_custom_types = custom_types
+        if hasattr(obj, 'load_hdf5_file'):
+            keys = list(value.keys())
+            obj.load_hdf5_file(value)
+            return obj
+
         if hasattr(obj, 'get_custom_types'):
             local_custom_types = obj.get_custom_types()
-
+            #print('local_custom_types =', local_custom_types)
+        print(key, value)
         self._load_dict(temp_dict, h5_file, key, value, local_custom_types,
                         obj, nlevels+1, print_dict=False)
         #print('!!!!!!', temp_dict)
@@ -382,3 +428,14 @@ class HDF5Importer(object):
         if print_dict:
             print('%s%s' % (nlevels*'  ', str(new_dict)))
         model[key] = new_dict
+
+
+def _cast(h5_result_attr):
+    """converts the h5py type back into the actual type"""
+    if h5_result_attr is None:
+        return None
+
+    if len(h5_result_attr.shape) == 0:
+        return np.array(h5_result_attr).tolist()
+        #raise NotImplementedError(h5_result_attr.dtype)
+    return np.array(h5_result_attr)

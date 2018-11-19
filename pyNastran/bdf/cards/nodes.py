@@ -979,6 +979,32 @@ class GRID(BaseCard):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
+    @classmethod
+    def export_to_hdf5_vectorized(cls, h5_file, model, nids):
+        """exports the nodes in a vectorized way"""
+        comments = []
+        cp = []
+        xyz = []
+        cd = []
+        ps = []
+        seid = []
+        for nid in nids:
+            node = model.nodes[nid]
+            #comments.append(element.comment)
+            xyz.append(node.xyz)
+            cp.append(node.cp)
+            cd.append(node.cd)
+            psi = 0 if node.ps == '' else (int(node.ps))
+            ps.append(psi)
+            seid.append(node.seid)
+        #h5_file.create_dataset('_comment', data=comments)
+        h5_file.create_dataset('nid', data=nids)
+        h5_file.create_dataset('xyz', data=xyz)
+        h5_file.create_dataset('cp', data=cp)
+        h5_file.create_dataset('cd', data=cd)
+        h5_file.create_dataset('ps', data=ps)
+        h5_file.create_dataset('seid', data=seid)
+
     def __init__(self, nid, xyz, cp=0, cd=0, ps='', seid=0, comment=''):
         # type: (int, Union[None, List[float], np.ndarray], int, int, str, int, str) -> None
         """

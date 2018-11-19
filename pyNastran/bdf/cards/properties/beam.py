@@ -159,6 +159,26 @@ class PBEAM(IntegratedLineProperty):
                 pname_fid, type(pname_fid))
             raise NotImplementedError(msg)
 
+    @classmethod
+    def _init_from_empty(cls):
+        pid = 1
+        mid = 1
+        xxb = [0.]
+        so = ['YES']
+        area  = [0.]
+        i1 = [0.]
+        i2 = [0.]
+        i12 = [0.]
+        j = [0.]
+        return PBEAM(pid, mid, xxb, so, area, i1, i2, i12, j, nsm=None,
+                     c1=None, c2=None, d1=None, d2=None,
+                     e1=None, e2=None, f1=None, f2=None,
+                     k1=1., k2=1., s1=0., s2=0.,
+                     nsia=0., nsib=None, cwa=0., cwb=None,
+                     m1a=0., m2a=None, m1b=0., m2b=None,
+                     n1a=0., n2a=None, n1b=0., n2b=None,
+                     comment='')
+
     def __init__(self, pid, mid, xxb, so, area, i1, i2, i12, j, nsm=None,
                  c1=None, c2=None, d1=None, d2=None,
                  e1=None, e2=None, f1=None, f2=None,

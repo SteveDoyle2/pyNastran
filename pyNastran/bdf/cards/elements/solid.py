@@ -91,13 +91,37 @@ def area_centroid(n1, n2, n3, n4):
     return area, centroid
 
 
+nnodes_map = {
+    'CTETRA' : (4, 10),
+    'CPENTA' : (6, 15),
+    'CPYRAM' : (5, 13),
+    'CHEXA' : (8, 20),
+}
 class SolidElement(Element):
     _field_map = {1: 'nid', 2:'pid'}
+    _properties = ['faces']
 
     def __init__(self):
         Element.__init__(self)
         self.nodes_ref = None
         self.pid_ref = None
+
+    @classmethod
+    def export_to_hdf5_vectorized(cls, h5_file, model, eids):
+        """exports the elements in a vectorized way"""
+        nnodes = nnodes_map[cls.type]
+        comments = []
+        pids = []
+        nodes = []
+        for eid in eids:
+            element = model.elements[eid]
+            #comments.append(element.comment)
+            pids.append(element.pid)
+            nodes.append(element.nodes)
+        #h5_file.create_dataset('_comment', data=comments)
+        h5_file.create_dataset('eid', data=eids)
+        h5_file.create_dataset('pid', data=pids)
+        h5_file.create_dataset('nodes', data=nodes)
 
     def _update_field_helper(self, n, value):
         if n - 3 < len(self.nodes):

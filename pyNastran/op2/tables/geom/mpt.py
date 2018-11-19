@@ -109,6 +109,7 @@ class MPT(GeomCommon):
         ntotal = 68  # 17*4
         s = Struct(self._endian + b'i15fi')
         nmaterials = (len(data) - n) // ntotal
+        nbig_materials = 0
         for i in range(nmaterials):
             edata = data[n:n+68]
             out = s.unpack(edata)
@@ -122,9 +123,13 @@ class MPT(GeomCommon):
             if 0 < mid <= 1e8:  # just a checker for out of range materials
                 self.add_op2_material(mat)
             else:
+                nbig_materials += 1
                 self.big_materials[mid] = mat
             n += ntotal
-        self.card_count['MAT2'] = nmaterials
+
+        ncards = nmaterials - nbig_materials
+        if ncards:
+            self.card_count['MAT2'] = ncards
         return n
 
     def _read_mat3(self, data, n):

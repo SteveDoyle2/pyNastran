@@ -1294,6 +1294,7 @@ class CAERO1(BaseCard):
         1: 'sid', 2:'pid', 3:'cp', 4:'nspan', 5:'nchord',
         6:'lspan', 7:'lchord', 8:'igroup', 12:'x12', 16:'x43',
     }
+    _properties = ['_field_map', 'shape', 'xy', 'min_max_eid', 'npanels']
     def _get_field_helper(self, n):
         """
         Gets complicated parameters on the CAERO1 card
@@ -3773,6 +3774,7 @@ class PAERO1(BaseCard):
     """
     type = 'PAERO1'
     _field_map = {1: 'pid'}
+    _properties = ['_field_map']
 
     def _get_field_helper(self, n):
         """
@@ -3940,6 +3942,7 @@ class PAERO2(BaseCard):
         1: 'pid', 2:'orient', 3:'width', 4:'AR', 5:'lrsb', 6:'lrib',
         #7: 'lth1', 8:'lth2',
     }
+    _properties = ['_field_map', 'lth1', 'lth2', ]
 
     def _get_field_helper(self, n):
         """

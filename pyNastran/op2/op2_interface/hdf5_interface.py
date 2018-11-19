@@ -1054,15 +1054,15 @@ def _get_obj_class(objs, class_name, result_name, unused_is_real, log):
             #obj_class = complex_obj
     return obj_class
 
-def export_op2_to_hdf5_file(hdf5_filename, op2_model):
+def export_op2_to_hdf5_filename(hdf5_filename, op2_model):
     """exports an OP2 object to an HDF5 file"""
     #no_sort2_classes = ['RealEigenvalues', 'ComplexEigenvalues', 'BucklingEigenvalues']
 
     with h5py.File(hdf5_filename, 'w') as hdf5_file:
         op2_model.log.info('starting export_op2_to_hdf5_file of %r' % hdf5_filename)
-        export_op2_to_hdf5(hdf5_file, op2_model)
+        export_op2_to_hdf5_file(hdf5_file, op2_model)
 
-def export_op2_to_hdf5(hdf5_file, op2_model):
+def export_op2_to_hdf5_file(hdf5_file, op2_model):
     """exports an OP2 object to an HDF5 file object"""
     create_info_group(hdf5_file, op2_model)
     export_matrices(hdf5_file, op2_model)
@@ -1182,7 +1182,7 @@ def load_op2_from_hdf5_file(model, h5_file, log, debug=False):
             _read_h5_matrix(h5_file, model, key, log)
         else:
             log.warning('key = %r' % key)
-            #raise NotImplementedError('  unhandled %r...' % key)
+            raise NotImplementedError('  unhandled %r...' % key)
 
 def _read_h5_matrix(h5_file, model, key, log):
     """reads an hdf5 matrix"""

@@ -707,7 +707,16 @@ class OP2(OP2_Scalar):
                     raise
 
     def load_hdf5(self, hdf5_filename, combine=True):
-        """loads an h5 file into an OP2 object"""
+        """
+        Loads an h5 file into an OP2 object
+
+        Parameters
+        ----------
+        hdf5_filename : str
+            the path to the an hdf5 file
+        combine : bool; default=True
+            runs the combine routine
+        """
         check_path(hdf5_filename, 'hdf5_filename')
         from pyNastran.op2.op2_interface.hdf5_interface import load_op2_from_hdf5_file
         import h5py
@@ -719,17 +728,54 @@ class OP2(OP2_Scalar):
             load_op2_from_hdf5_file(self, h5_file, self.log, debug=debug)
         self.combine_results(combine=combine)
 
+    def load_hdf5_file(self, h5_file, combine=True):
+        """
+        Loads an h5 file object into an OP2 object
+
+        Parameters
+        ----------
+        h5_file : H5File()
+            an h5py file object
+        combine : bool; default=True
+            runs the combine routine
+        """
+        from pyNastran.op2.op2_interface.hdf5_interface import load_op2_from_hdf5_file
+        #self.op2_filename = hdf5_filename
+
+        #self.log.info('hdf5_op2_filename = %r' % hdf5_filename)
+        debug = False
+        #with h5py.File(hdf5_filename, 'r') as h5_file:
+        load_op2_from_hdf5_file(self, h5_file, self.log, debug=debug)
+        self.combine_results(combine=combine)
+
     def export_to_hdf5(self, hdf5_filename):
         """
         Converts the OP2 objects into hdf5 object
 
         TODO: doesn't support:
-          - matrices
+          - BucklingEigenvalues
+
+        """
+        from pyNastran.op2.op2_interface.hdf5_interface import export_op2_to_hdf5_filename
+        export_op2_to_hdf5_filename(hdf5_filename, self)
+
+    def export_to_hdf5_file(self, hdf5_file, exporter=None):
+        """
+        Converts the OP2 objects into hdf5 object
+
+        Parameters
+        ----------
+        hdf5_file : H5File()
+            an h5py object
+        exporter : HDF5Exporter; default=None
+            unused
+
+        TODO: doesn't support:
           - BucklingEigenvalues
 
         """
         from pyNastran.op2.op2_interface.hdf5_interface import export_op2_to_hdf5_file
-        export_op2_to_hdf5_file(hdf5_filename, self)
+        export_op2_to_hdf5_file(hdf5_file, self)
 
     def combine_results(self, combine=True):
         """

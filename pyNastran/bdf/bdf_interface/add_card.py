@@ -676,7 +676,12 @@ class AddCards(AddMethods):
 
     def get_custom_types(self):
         """helper method for ``dict_to_h5py``"""
-        return CARD_MAP
+        #return CARD_MAP
+        import copy
+        from pyNastran.bdf.case_control_deck import CaseControlDeck
+        custom_types = copy.deepcopy(CARD_MAP)
+        custom_types['CaseControlDeck'] = CaseControlDeck
+        return custom_types
 
     def add_grid(self, nid, xyz, cp=0, cd=0, ps='', seid=0, comment=''):
         # type: (int, Union[None, List[float], np.ndarray], int, int, str, int, str) -> None

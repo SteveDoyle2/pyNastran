@@ -311,3 +311,24 @@ class OP2Geom(BDF, OP2GeomCommon):
                 #break
             #i += 1
         return state
+
+    def export_to_hdf5_file(self, hdf5_file, exporter=None):
+        """
+        Converts the OP2 objects into hdf5 object
+
+        Parameters
+        ----------
+        hdf5_file : H5File()
+            an h5py object
+        exporter : HDF5Exporter; default=None
+            unused
+
+        TODO: doesn't support:
+          - BucklingEigenvalues
+
+        """
+        from pyNastran.op2.op2_interface.hdf5_interface import export_op2_to_hdf5_file
+
+        op2_model = self
+        OP2GeomCommon.export_to_hdf5_file(self, hdf5_file)
+        BDF.export_to_hdf5_file(self, hdf5_file)

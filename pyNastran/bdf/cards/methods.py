@@ -834,6 +834,12 @@ class EIGRL(Method):
     """
     type = 'EIGRL'
 
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        return EIGRL(sid, v1=None, v2=None, nd=None, msglvl=0, maxset=None,
+                     shfscl=None, norm=None, options=None, values=None, comment='')
+
     def __init__(self, sid, v1=None, v2=None, nd=None, msglvl=0, maxset=None, shfscl=None,
                  norm=None, options=None, values=None, comment=''):
         """

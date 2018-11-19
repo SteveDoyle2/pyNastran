@@ -449,6 +449,7 @@ class CTRIA3(TriShell):
         'T2' : 'T2',
         'T3' : 'T3',
     }
+    _properties = ['cp_name_map', '_field_map']
 
     def _update_field_helper(self, n, value):
         # (int, Any) -> None
@@ -460,6 +461,41 @@ class CTRIA3(TriShell):
             self.nodes[2] = value
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
+
+    @classmethod
+    def export_to_hdf5_vectorized(cls, h5_file, model, eids):
+        """exports the elements in a vectorized way"""
+        #comments = []
+        pids = []
+        nodes = []
+        mcids = []
+        thetas = []
+        zoffsets = []
+        #t123 = []
+        for eid in eids:
+            element = model.elements[eid]
+            #comments.append(element.comment)
+            pids.append(element.pid)
+            nodes.append(element.nodes)
+            if isinstance(element.theta_mcid, int):
+                mcid = self.theta_mcid
+                theta = 0.
+            else:
+                assert isinstance(element.theta_mcid, float), type(element.theta_mcid)
+                mcid = -1
+                theta = element.theta_mcid
+            mcids.append(mcid)
+            thetas.append(theta)
+            zoffsets.append(element.zoffset)
+            #t123.append([element.T1, element.T2, element.T3])
+        #h5_file.create_dataset('_comment', data=comments)
+        h5_file.create_dataset('eid', data=eids)
+        h5_file.create_dataset('pid', data=pids)
+        h5_file.create_dataset('nodes', data=nodes)
+        h5_file.create_dataset('mcid', data=mcids)
+        h5_file.create_dataset('theta', data=thetas)
+        h5_file.create_dataset('zoffset', data=zoffsets)
+        #self.tflag = tflag
 
     def __init__(self, eid, pid, nids, zoffset=0., theta_mcid=0.0,
                  tflag=0, T1=None, T2=None, T3=None, comment=''):
@@ -1942,6 +1978,7 @@ class CQUAD4(QuadShell):
     }
     _field_map = {1: 'eid', 2:'pid', 7:'theta_mcid', 8:'zoffset',
                   10:'tflag', 11:'T1', 12:'T2', 13:'T3'}
+    _properties = ['cp_name_map', '_field_map']
 
     def _update_field_helper(self, n, value):
         if n == 3:
@@ -1954,6 +1991,41 @@ class CQUAD4(QuadShell):
             self.nodes[3] = value
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
+
+    @classmethod
+    def export_to_hdf5_vectorized(cls, h5_file, model, eids):
+        """exports the elements in a vectorized way"""
+        #comments = []
+        pids = []
+        nodes = []
+        mcids = []
+        thetas = []
+        zoffsets = []
+        #t1234 = []
+        for eid in eids:
+            element = model.elements[eid]
+            #comments.append(element.comment)
+            pids.append(element.pid)
+            nodes.append(element.nodes)
+            if isinstance(element.theta_mcid, int):
+                mcid = element.theta_mcid
+                theta = 0.
+            else:
+                assert isinstance(element.theta_mcid, float), type(element.theta_mcid)
+                mcid = -1
+                theta = element.theta_mcid
+            mcids.append(mcid)
+            thetas.append(theta)
+            zoffsets.append(element.zoffset)
+            #t1234.append([element.T1, element.T2, element.T3, element.T4])
+        #h5_file.create_dataset('_comment', data=comments)
+        h5_file.create_dataset('eid', data=eids)
+        h5_file.create_dataset('pid', data=pids)
+        h5_file.create_dataset('nodes', data=nodes)
+        h5_file.create_dataset('mcid', data=mcids)
+        h5_file.create_dataset('theta', data=thetas)
+        h5_file.create_dataset('zoffset', data=zoffsets)
+        #self.tflag = tflag
 
     def __init__(self, eid, pid, nids, theta_mcid=0.0, zoffset=0.,
                  tflag=0, T1=None, T2=None, T3=None, T4=None, comment=''):

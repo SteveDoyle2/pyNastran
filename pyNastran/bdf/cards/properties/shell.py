@@ -582,6 +582,7 @@ class PCOMP(CompositeShellProperty):
         1: 'pid', 2: 'z0', 3:'nsm', 4:'sb', 5:'ft', 6:'tref',
         7: 'ge', 8:'lam',
     }
+    _properties = ['_field_map', 'plies', 'nplies', 'material_ids']
     def update_by_pname_fid(self, pname_fid, value):
         if isinstance(pname_fid, int):
             self._update_field_helper(pname_fid, value)
@@ -642,6 +643,15 @@ class PCOMP(CompositeShellProperty):
 
         # ply = [mid, t, theta, sout]
         ply[slot] = value
+
+    @classmethod
+    def _init_from_empty(cls):
+        pid = 1
+        mids = [1]
+        thicknesses = [1.]
+        return PCOMP(pid, mids, thicknesses,
+                     thetas=None, souts=None, nsm=0., sb=0., ft=None,
+                     tref=0., ge=0., lam=None, z0=None, comment='')
 
     def __init__(self, pid,
                  mids, thicknesses, thetas=None, souts=None,
@@ -977,6 +987,7 @@ class PCOMPG(CompositeShellProperty):
         1: 'pid', 2: 'z0', 3:'nsm', 4:'sb', 5:'ft', 6:'tref',
         7: 'ge', 8:'lam',
     }
+    _properties = ['_field_map', 'plies', 'nplies', 'material_ids']
 
     def _update_field_helper(self, n, value):
         nnew = n - 9
@@ -1762,6 +1773,37 @@ class PSHELL(ShellProperty):
         self.mid2_ref = None
         self.mid3_ref = None
         self.mid4_ref = None
+
+    @classmethod
+    def export_to_hdf5_vectorized(cls, h5_file, model, pids):
+        """exports the properties in a vectorized way"""
+        comments = []
+        mids = []
+        z = []
+        t = []
+        twelveIt3 = []
+        tst = []
+        nsm = []
+        assert len(pids) > 0, pids
+        for pid in pids:
+            prop = model.properties[pid]
+            #comments.append(prop.comment)
+            midsi = [0 if mid is None else mid for mid in
+                     [prop.mid1, prop.mid2, prop.mid3, prop.mid4]]
+            mids.append(list(midsi))
+            z.append([prop.z1, prop.z2])
+            t.append(prop.t)
+            twelveIt3.append(prop.twelveIt3)
+            tst.append(prop.tst)
+            nsm.append(prop.nsm)
+        #h5_file.create_dataset('_comment', data=comments)
+        h5_file.create_dataset('pid', data=pids)
+        h5_file.create_dataset('mids', data=mids)
+        h5_file.create_dataset('z', data=z)
+        h5_file.create_dataset('t', data=t)
+        h5_file.create_dataset('twelveIt3', data=twelveIt3)
+        h5_file.create_dataset('tst', data=tst)
+        h5_file.create_dataset('nsm', data=nsm)
 
     @classmethod
     def add_card(cls, card, comment=''):

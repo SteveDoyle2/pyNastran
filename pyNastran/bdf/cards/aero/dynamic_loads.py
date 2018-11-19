@@ -476,6 +476,7 @@ class FLUTTER(BaseCard):
         1: 'sid', 2:'method', 3:'density', 4:'mach', 5:'reduced_freq_velocity', 6:'imethod',
         8:'epsilon',
     }
+    _properties = ['_field_map', 'headers', ]
     def _get_field_helper(self, n):
         """
         Gets complicated parameters on the FLUTTER card

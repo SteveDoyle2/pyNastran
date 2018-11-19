@@ -56,6 +56,22 @@ class CROD(RodElement):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
+    @classmethod
+    def export_to_hdf5_vectorized(cls, h5_file, model, eids):
+        """exports the elements in a vectorized way"""
+        #comments = []
+        pids = []
+        nodes = []
+        for eid in eids:
+            element = model.elements[eid]
+            #comments.append(element.comment)
+            pids.append(element.pid)
+            nodes.append(element.nodes)
+        #h5_file.create_dataset('_comment', data=comments)
+        h5_file.create_dataset('eid', data=eids)
+        h5_file.create_dataset('pid', data=pids)
+        h5_file.create_dataset('nodes', data=nodes)
+
     def __init__(self, eid, pid, nids, comment=''):
         """
         Creates a CROD card
@@ -486,6 +502,34 @@ class CONROD(RodElement):
             self.nodes[1] = value
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
+
+    @classmethod
+    def export_to_hdf5_vectorized(cls, h5_file, model, eids):
+        """exports the elements in a vectorized way"""
+        #comments = []
+        nodes = []
+        mids = []
+        A = []
+        J = []
+        c = []
+        nsm = []
+        for eid in eids:
+            element = model.elements[eid]
+            #comments.append(element.comment)
+            mids.append(element.mid)
+            nodes.append(element.nodes)
+            A.append(element.A)
+            J.append(element.j)
+            c.append(element.c)
+            nsm.append(element.nsm)
+        #h5_file.create_dataset('_comment', data=comments)
+        h5_file.create_dataset('eid', data=eids)
+        h5_file.create_dataset('nodes', data=nodes)
+        h5_file.create_dataset('mid', data=mids)
+        h5_file.create_dataset('A', data=A)
+        h5_file.create_dataset('J', data=J)
+        h5_file.create_dataset('c', data=c)
+        h5_file.create_dataset('nsm', data=nsm)
 
     def __init__(self, eid, mid, nids, A=0.0, j=0.0, c=0.0, nsm=0.0, comment=''):
         """

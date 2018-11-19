@@ -46,7 +46,7 @@ class ZONA(object):
         self.pafoil = {}
 
     @classmethod
-    def __init_from_self__(cls, model):
+    def _init_from_self(cls, model):
         """helper method for dict_to_h5py"""
         return cls(model)
 

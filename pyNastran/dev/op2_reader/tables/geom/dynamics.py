@@ -491,7 +491,7 @@ class DYNAMICS(GeomCommon):
                 raise NotImplementedError(nums)
 
             if self.is_debug_file:
-                self.binary_debug.write('  EGIRL=%s\n' % str(out))
+                self.binary_debug.write('  EIGRL=%s\n' % str(out))
             options = []
             values = []
             eigrl = self.add_eigrl(sid, v1=v1, v2=v2, nd=nd, msglvl=msglvl,
@@ -503,7 +503,7 @@ class DYNAMICS(GeomCommon):
             else:
                 n += nbytes + nums * 4
             nentries += 1
-        self.increase_card_count('EGIRL', nentries)
+        self.increase_card_count('EIGRL', nentries)
         return n
 
     def _read_epoint(self, data, n):

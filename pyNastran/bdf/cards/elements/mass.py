@@ -1064,6 +1064,38 @@ class CONM2(PointMassElement):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
+    @classmethod
+    def export_to_hdf5_vectorized(cls, h5_file, model, eids):
+        """exports the elements in a vectorized way"""
+        comments = []
+        nid = []
+        cid = []
+        mass = []
+        X = []
+        I = []
+        for eid in eids:
+            element = model.masses[eid]
+            #comments.append(element.comment)
+            nid.append(element.nid)
+            cid.append(element.cid)
+            mass.append(element.mass)
+            X.append(element.X)
+            I.append(element.I)
+        #h5_file.create_dataset('_comment', data=comments)
+        h5_file.create_dataset('eid', data=eids)
+        h5_file.create_dataset('nid', data=nid)
+        h5_file.create_dataset('cid', data=cid)
+        h5_file.create_dataset('X', data=X)
+        h5_file.create_dataset('I', data=I)
+        h5_file.create_dataset('mass', data=mass)
+
+        #self.eid = eid
+        #self.nid = nid
+        #self.cid = cid
+        #self.mass = mass
+        #self.X = np.asarray(X)
+        #self.I = np.asarray(I)
+
     def __init__(self, eid, nid, mass, cid=0, X=None, I=None, comment=''):
         """
         Creates a CONM2 card
