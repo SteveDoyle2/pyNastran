@@ -111,8 +111,8 @@ class BDFInputPy(object):
         if self.nastran_format in ['msc', 'nx']:
             pass
         elif self.nastran_format == 'zona':
-            bulk_data_lines, system_lines = self._get_lines_zona(
-                system_lines, bulk_data_lines, punch)
+            bulk_data_lines, bulk_data_ilines, system_lines = self._get_lines_zona(
+                system_lines, bulk_data_lines, bulk_data_ilines, punch)
         else:
             msg = 'nastran_format=%r and must be msc, nx, or zona' % self.nastran_format
             raise NotImplementedError(msg)
@@ -120,7 +120,7 @@ class BDFInputPy(object):
                 bulk_data_lines, bulk_data_ilines,
                 superelement_lines, superelement_ilines)
 
-    def _get_lines_zona(self, system_lines, bulk_data_lines, punch):
+    def _get_lines_zona(self, system_lines, bulk_data_lines, bulk_data_ilines, punch):
         """load and update the lines for ZONA"""
         system_lines2 = []
         for system_line in system_lines:
@@ -137,17 +137,21 @@ class BDFInputPy(object):
                     assert filename.endswith('.bdf'), filename
 
                     _main_lines = self.get_main_lines(filename)
+                    make_ilines = bulk_data_ilines is not None
                     _all_lines, _ilines = self.lines_to_deck_lines(
-                        _main_lines, make_ilines=False)
+                        _main_lines, make_ilines=make_ilines)
                     _out = _lines_to_decks(_all_lines, _ilines, punch, self.log,
                                            keep_enddata=False,
                                            consider_superelements=self.consider_superelements)
                     (
                         _system_lines, _executive_control_lines, _case_control_lines,
-                        bulk_data_lines2, _bulk_data_ilines2,
+                        bulk_data_lines2, bulk_data_ilines2,
                         _superelement_lines, _superelement_ilines,
                     ) = _out
                     bulk_data_lines = bulk_data_lines2 + bulk_data_lines
+                    #print("bulk_data_ilines2 =", bulk_data_ilines2, bulk_data_ilines2.shape)
+                    #print("bulk_data_ilines =", bulk_data_ilines, bulk_data_ilines.shape)
+                    bulk_data_ilines = np.vstack([bulk_data_ilines2, bulk_data_ilines])
                     continue
                 elif header_upper.startswith('ASSIGN MATRIX'):
                     pass
@@ -157,7 +161,7 @@ class BDFInputPy(object):
                     raise NotImplementedError(system_line)
             system_lines2.append(system_line)
         system_lines = system_lines
-        return bulk_data_lines, system_lines
+        return bulk_data_lines, bulk_data_ilines, system_lines
 
     def get_main_lines(self, bdf_filename):
         # type: (Union[str, StringIO]) -> List[str]
