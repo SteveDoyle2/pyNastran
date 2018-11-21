@@ -93,32 +93,22 @@ class CBEAM(LineElement):
     @classmethod
     def export_to_hdf5_vectorized(cls, h5_file, model, eids):
         """exports the elements in a vectorized way"""
+        encoding = model._encoding
         #comments = []
         pids = []
         nodes = []
+
         x = []
         g0 = []
         offt = []
         bit = []
+
         pa = []
         pb = []
         wa = []
         wb = []
         sa = []
         sb = []
-
-        #self.ga = nids[0]
-        #self.gb = nids[1]
-        #self.x = x
-        #self.g0 = g0
-        #self.offt = offt
-        #self.bit = bit
-        #self.pa = pa
-        #self.pb = pb
-        #self.wa = wa
-        #self.wb = wb
-        #self.sa = sa
-        #self.sb = sb
         for eid in eids:
             element = model.elements[eid]
             #comments.append(element.comment)
@@ -130,6 +120,8 @@ class CBEAM(LineElement):
             else:
                 x.append(element.x)
                 g0.append(element.g0)
+            offt.append(element.offt.encode(encoding))
+
 
             pa.append(element.pa)
             pb.append(element.pb)
@@ -145,6 +137,7 @@ class CBEAM(LineElement):
         #print('g0 =', g0)
         h5_file.create_dataset('x', data=x)
         h5_file.create_dataset('g0', data=g0)
+        h5_file.create_dataset('offt', data=offt)
 
         h5_file.create_dataset('pa', data=pa)
         h5_file.create_dataset('pb', data=pb)

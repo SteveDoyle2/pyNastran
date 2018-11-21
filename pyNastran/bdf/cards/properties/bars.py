@@ -1266,6 +1266,14 @@ class PBARL(LineProperty):
             raise NotImplementedError('PBARL Type=%r name=%r has not been implemented' % (
                 self.Type, pname_fid))
 
+    @classmethod
+    def _init_from_empty(cls):
+        pid = 1
+        mid = 1
+        Type = 'ROD'
+        dim = [1.]
+        return PBARL(pid, mid, Type, dim, group='MSCBML0', nsm=0., comment='')
+
     def __init__(self, pid, mid, Type, dim, group='MSCBML0', nsm=0., comment=''):
         """
         Creates a PBARL card, which defines A, I1, I2, I12, and J using

@@ -274,6 +274,10 @@ class AESTAT(BaseCard):
     _field_map = {
         1: 'id', 2:'label',
     }
+    @classmethod
+    def _init_from_empty(cls):
+        return AESTAT(1, 'name', comment='')
+
     def __init__(self, aestat_id, label, comment=''):
         """
         Creates an AESTAT card, which is a variable to be used in a TRIM analysis
@@ -667,6 +671,15 @@ class TRIM(BaseCard):
             if i == 1:
                 ni += 1
         raise KeyError('Field %r=%r is an invalid TRIM entry.' % (n, value))
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        mach = 0.6
+        q = 300.
+        labels = ['ALPHA']
+        uxs = [1.0]
+        return TRIM(sid, mach, q, labels, uxs, aeqr=1.0, comment='')
 
     def __init__(self, sid, mach, q, labels, uxs, aeqr=1.0, comment=''):
         """

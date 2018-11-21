@@ -866,6 +866,12 @@ class SET1(Set):
     """
     type = 'SET1'
 
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        ids = [1]
+        return SET1(sid, ids, is_skin=False, comment='')
+
     def __init__(self, sid, ids, is_skin=False, comment=''):
         """
         Creates a SET1 card, which defines a list of structural grid

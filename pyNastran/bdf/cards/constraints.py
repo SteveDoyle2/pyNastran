@@ -65,6 +65,14 @@ class SUPORT1(Constraint):
     +---------+-----+-----+----+-----+----+-----+----+
     """
     type = 'SUPORT1'
+    _properties = ['node_ids']
+
+    @classmethod
+    def _init_from_empty(cls):
+        conid = 1
+        nodes = [1]
+        Cs = ['123']
+        return SUPORT1(conid, nodes, Cs, comment='')
 
     def __init__(self, conid, nodes, Cs, comment=''):
         """
@@ -640,6 +648,7 @@ class SPC(Constraint):
      +-----+-----+----+----+------+----+----+----+
     """
     type = 'SPC'
+    _properties = ['constraints', 'gids_ref', 'gids']
     def __init__(self, conid, nodes, components, enforced, comment=''):
         """
         Creates an SPC card, which defines the degree of freedoms to be
@@ -1011,6 +1020,7 @@ class SPC1(Constraint):
       +------+-----+-------+----+------+----+
     """
     type = 'SPC1'
+    _properties = ['node_ids'] # 'constraints',
 
     def __init__(self, conid, components, nodes, comment=''):
         """
@@ -1086,15 +1096,15 @@ class SPC1(Constraint):
             assert nid > 0, data
         return SPC1(conid, components, nodes, comment=comment)
 
-    @property
-    def constraints(self):
-        self.deprecated('constraints', 'components', '1.2')
-        return self.components
+    #@property
+    #def constraints(self):
+        #self.deprecated('constraints', 'components', '1.2')
+        #return self.components
 
-    @constraints.setter
-    def constraints(self, constraints):
-        self.deprecated('constraints', 'components', '1.2')
-        self.components = constraints
+    #@constraints.setter
+    #def constraints(self, constraints):
+        #self.deprecated('constraints', 'components', '1.2')
+        #self.components = constraints
 
     @property
     def node_ids(self):

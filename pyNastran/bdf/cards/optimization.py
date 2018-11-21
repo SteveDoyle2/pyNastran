@@ -659,6 +659,16 @@ class DESVAR(OptConstraint):
     | DESVAR | OID | LABEL | XINIT | XLB | XUB | DELXV | DDVAL |
     +--------+-----+-------+-------+-----+-----+-------+-------+
     """
+    _properties = ['value']
+
+    @classmethod
+    def _init_from_empty(cls):
+        desvar_id = 1
+        label = 'name'
+        xinit = 0.5
+        return DESVAR(desvar_id, label, xinit,
+                      xlb=-1e20, xub=1e20, delx=None, ddval=None, comment='')
+
     def __init__(self, desvar_id, label, xinit, xlb=-1e20, xub=1e20,
                  delx=None, ddval=None, comment=''):
         """
@@ -3786,6 +3796,21 @@ class DVPREL1(DVXREL1):
     ]
     allowed_masses = ['CONM2', 'CMASS2', 'CMASS4']
     allowed_properties_mass = ['PMASS']
+    _properties = ['desvar_ids', 'allowed_properties', 'allowed_elements',
+                   'allowed_masses', 'allowed_properties_mass']
+
+    @classmethod
+    def _init_from_empty(cls):
+        oid = 1
+        prop_type = 'PSHELL'
+        pid = 1
+        pname_fid = 'T'
+        dvids = [1]
+        coeffs = [1.]
+        return DVPREL1(oid, prop_type, pid, pname_fid, dvids, coeffs,
+                       p_min=None, p_max=1e20, c0=0.0,
+                       validate=False)
+
     def __init__(self, oid, prop_type, pid, pname_fid, dvids, coeffs,
                  p_min=None, p_max=1e20, c0=0.0, validate=False, comment=''):
         """

@@ -586,6 +586,10 @@ class AELIST(BaseCard):
     """
     type = 'AELIST'
 
+    @classmethod
+    def _init_from_empty(cls):
+        return AELIST(1, [1], comment='')
+
     def __init__(self, sid, elements, comment=''):
         """
         Creates an AELIST card, which defines the aero boxes for
@@ -800,6 +804,17 @@ class AESURF(BaseCard):
         7:'eff', 8:'ldw', 9:'crefc', 10:'crefs', 11:'pllim', 12:'pulim',
         13:'hmllim', 14:'hmulim', 15:'tqllim', '16':'tqulim',
     }
+
+    @classmethod
+    def _init_from_empty(cls):
+        aesid = 1
+        label = 'name'
+        cid1 = 1
+        alid1 = 1
+        return AESURF(aesid, label, cid1, alid1,
+                      cid2=None, alid2=None, eff=1.0, ldw='LDW',
+                      crefc=1.0, crefs=1.0, pllim=-np.pi/2., pulim=np.pi/2.,
+                      hmllim=None, hmulim=None, tqllim=None, tqulim=None, comment='')
 
     def __init__(self, aesid, label, cid1, alid1, cid2=None, alid2=None, eff=1.0, ldw='LDW',
                  crefc=1.0, crefs=1.0, pllim=-np.pi/2., pulim=np.pi/2.,
@@ -1350,6 +1365,18 @@ class CAERO1(BaseCard):
             self.p4[2] = value
         else:
             raise KeyError('Field %r=%r is an invalid CAERO1 entry.' % (n, value))
+
+    @classmethod
+    def _init_from_empty(cls):
+        eid = 1
+        pid = 1
+        igroup = 1
+        p1 = [0., 0., 0.]
+        x12 = 1.
+        p4 = [0., 10., 0.]
+        x43 = 0.5
+        return CAERO1(eid, pid, igroup, p1, x12, p4, x43,
+                      cp=0, nspan=0, lspan=0, nchord=0, lchord=0, comment='')
 
     def __init__(self, eid, pid, igroup, p1, x12, p4, x43,
                  cp=0, nspan=0, lspan=0, nchord=0, lchord=0, comment=''):
@@ -3844,6 +3871,11 @@ class PAERO1(BaseCard):
         self.deprecated('Bi', 'caero_body_ids', '1.2')
         self.caero_body_ids = Bi
 
+    @classmethod
+    def _init_from_empty(cls):
+        pid = 1
+        return PAERO1(pid, caero_body_ids=None, comment='')
+
     def __init__(self, pid, caero_body_ids=None, comment=''):
         """
         Creates a PAERO1 card, which defines associated bodies for the
@@ -4533,6 +4565,18 @@ class SPLINE1(Spline):
         1: 'eid', 2:'caero', 3:'box1', 4:'box2', 5:'setg', 6:'dz',
         7: 'method', 8:'usage', 9:'nelements', 10:'melements',
     }
+    _properties = ['aero_element_ids']
+
+    @classmethod
+    def _init_from_empty(cls):
+        eid = 1
+        caero = 1
+        box1 = 1
+        box2 = 2
+        setg = 3
+        return SPLINE1(eid, caero, box1, box2, setg,
+                       dz=0., method='IPS', usage='BOTH',
+                       nelements=10, melements=10, comment='')
 
     def __init__(self, eid, caero, box1, box2, setg, dz=0., method='IPS',
                  usage='BOTH', nelements=10, melements=10, comment=''):

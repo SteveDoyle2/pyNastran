@@ -1242,6 +1242,16 @@ class PBEAML(IntegratedLineProperty):
             raise NotImplementedError('property_type=%r has not implemented %r in pname_map' % (
                 self.type, pname_fid))
 
+    @classmethod
+    def _init_from_empty(cls):
+        pid = 1
+        mid = 1
+        beam_type = 'ROD'
+        xxb = [1.]
+        dims = [[1.]]
+        return PBEAML(pid, mid, beam_type, xxb, dims,
+                      so=None, nsm=None, group='MSCBML0', comment='')
+
     def __init__(self, pid, mid, beam_type, xxb, dims, so=None, nsm=None,
                  group='MSCBML0', comment=''):
         """
