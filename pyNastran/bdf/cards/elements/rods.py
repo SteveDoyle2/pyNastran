@@ -292,6 +292,22 @@ class CTUBE(RodElement):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
+    @classmethod
+    def export_to_hdf5_vectorized(cls, h5_file, model, eids):
+        """exports the elements in a vectorized way"""
+        #comments = []
+        pids = []
+        nodes = []
+        for eid in eids:
+            element = model.elements[eid]
+            #comments.append(element.comment)
+            pids.append(element.pid)
+            nodes.append(element.nodes)
+        #h5_file.create_dataset('_comment', data=comments)
+        h5_file.create_dataset('eid', data=eids)
+        h5_file.create_dataset('pid', data=pids)
+        h5_file.create_dataset('nodes', data=nodes)
+
     def __init__(self, eid, pid, nids, comment=''):
         """
         Creates a CTUBE card

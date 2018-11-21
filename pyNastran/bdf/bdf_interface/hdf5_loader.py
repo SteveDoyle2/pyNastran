@@ -1,3 +1,4 @@
+"""Defines various helper functions for loading a HDF5 BDF file"""
 from __future__ import print_function
 import numpy as np
 from pyNastran.utils.dict_to_h5py import _cast
@@ -95,14 +96,14 @@ def hdf5_load_coords(model, coords_group):
             #model.add_cord1c(cid, g1, g2, g3, comment='')
             #model.add_cord1s(cid, g1, g2, g3, comment='')
 
-def hdf5_load_tables(model, group):
+def hdf5_load_tables(unused_model, group):
     for card_type in group.keys():
         sub_group = group[card_type]
         #if card_type == 'TABLES1':
             #pass
         load_cards_from_keys_values('tables/%s' % card_type, sub_group)
 
-def hdf5_load_methods(model, group):
+def hdf5_load_methods(unused_model, group):
     for card_type in group.keys():
         sub_group = group[card_type]
         #if card_type == 'TABLES1':
@@ -166,8 +167,9 @@ def hdf5_load_materials(model, group):
             rho = _cast(sub_group['rho'])
             tref = _cast(sub_group['tref'])
             ge = _cast(sub_group['ge'])
-            for midi, exi, ethi, ezi, nuxthi, nuzxi, nuthzi, rhoi, gzxi, axi, athi, azi, trefi, gei in zip(
-                    mid, ex, eth, ez, nuxth, nuzx, nuthz, rho, gxz, ax, ath, az, tref, ge):
+            for (midi, exi, ethi, ezi, nuxthi, nuzxi, nuthzi,
+                 rhoi, gzxi, axi, athi, azi, trefi, gei) in zip(
+                     mid, ex, eth, ez, nuxth, nuzx, nuthz, rho, gxz, ax, ath, az, tref, ge):
                 model.add_mat3(midi, exi, ethi, ezi, nuxthi, nuthzi, nuzxi, rho=rhoi,
                                gzx=gzxi, ax=axi, ath=athi, az=azi, tref=trefi, ge=gei, comment='')
 
@@ -198,7 +200,7 @@ def hdf5_load_materials(model, group):
                             #rho=0.0, a1=0.0, a2=0.0, a3=0.0, tref=0.0, ge=0.0, comment='')
             load_cards_from_keys_values('materials/%s' % card_type, sub_group)
 
-def hdf5_load_generic(model, group, name):
+def hdf5_load_generic(unused_model, group, name):
     for card_type in group.keys():
         sub_group = group[card_type]
         #if card_type == 'TABLES1':
@@ -224,14 +226,55 @@ def hdf5_load_properties(model, properties_group):
                 model.add_pshell(pid, mid1=mid1, t=ti, mid2=mid2, twelveIt3=twelveIt3i,
                                  mid3=mid3, tst=tsti, nsm=nsmi, z1=z1, z2=z2, mid4=mid4,
                                  comment='')
+        elif card_type == 'PROD':
+            pid = _cast(properties['pid'])
+            mid = _cast(properties['mid'])
+            A = _cast(properties['A'])
+            j = _cast(properties['J'])
+            c = _cast(properties['c'])
+            nsm = _cast(properties['nsm'])
+            for pidi, midi, Ai, ji, ci, nsmi in zip(
+                    pid, mid, A, j, c, nsm):
+                model.add_prod(pidi, midi, Ai, j=ji, c=ci, nsm=nsm, comment='')
+
+        elif card_type == 'PTUBE':
+            pid = _cast(properties['pid'])
+            mid = _cast(properties['mid'])
+            OD = _cast(properties['OD'])
+            t = _cast(properties['t'])
+            nsm = _cast(properties['nsm'])
+            for pidi, midi, (OD1, OD2), ti, nsmi in zip(
+                    pid, mid, OD, t, nsm):
+                model.add_ptube(pid, mid, OD1, t=ti, nsm=nsmi, OD2=OD2, comment='')
+
+        elif card_type == 'PBAR':
+            pid = _cast(properties['pid'])
+            mid = _cast(properties['mid'])
+            A = _cast(properties['A'])
+            J = _cast(properties['J'])
+            I = _cast(properties['I'])
+
+            c = _cast(properties['c'])
+            d = _cast(properties['d'])
+            e = _cast(properties['e'])
+            f = _cast(properties['f'])
+            k = _cast(properties['k'])
+
+            nsm = _cast(properties['nsm'])
+            for (pidi, midi, Ai, Ji, (i1, i2, i12),
+                 (c1, c2), (d1, d2), (e1, e2), (f1, f2), (k1, k2), nsmi) in zip(
+                     pid, mid, A, J, I,
+                     c, d, e, f, k, nsm):
+                model.add_pbar(pidi, midi, A=Ai, i1=i1, i2=i2, i12=i12, j=Ji, nsm=nsmi,
+                               c1=c1, c2=c2, d1=d1, d2=d2, e1=e1, e2=e2,
+                               f1=f1, f2=f2, k1=k1, k2=k2, comment='')
+
         else:
             load_cards_from_keys_values('properties/%s' % card_type, properties)
             #model.add_pshear(pid, mid, t, nsm=0., f1=0., f2=0., comment='')
             #model.add_psolid(pid, mid, cordm=0, integ=None, stress=None,
                              #isop=None, fctn='SMECH', comment='')
-            #model.add_ptube(pid, mid, OD1, t=None, nsm=0., OD2=None, comment='')
             #model.add_pvisc(pid, ce, cr, comment='')
-            #model.add_prod(pid, mid, A, j=0., c=0., nsm=0., comment='')
             #model.add_pelas(pid, k, ge=0., s=0., comment='')
             #model.add_pdamp(pid, b, comment='')
             #model.add_pcomp(pid, mids, thicknesses, thetas=None, souts=None, nsm=0., sb=0.,

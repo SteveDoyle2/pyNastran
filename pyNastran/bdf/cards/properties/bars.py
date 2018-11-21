@@ -906,6 +906,50 @@ class PBAR(LineProperty):
         20 : 'i12', 'I12' : 'i12',
     }
 
+    @classmethod
+    def export_to_hdf5_vectorized(cls, h5_file, model, pids):
+        """exports the properties in a vectorized way"""
+        #comments = []
+        mids = []
+        A = []
+        J = []
+        I = []
+
+        c = []
+        d = []
+        e = []
+        f = []
+        k = []
+
+        nsm = []
+        for pid in pids:
+            prop = model.properties[pid]
+            #comments.append(prop.comment)
+            mids.append(prop.mid)
+            A.append(prop.A)
+            I.append([prop.i1, prop.i2, prop.i12])
+            J.append(prop.j)
+
+            c.append([prop.c1, prop.c2])
+            d.append([prop.d1, prop.d2])
+            e.append([prop.e1, prop.e2])
+            f.append([prop.f1, prop.f2])
+            k.append([prop.k1, prop.k2])
+            nsm.append(prop.nsm)
+        #h5_file.create_dataset('_comment', data=comments)
+        h5_file.create_dataset('pid', data=pids)
+        h5_file.create_dataset('mid', data=mids)
+        h5_file.create_dataset('A', data=A)
+        h5_file.create_dataset('J', data=J)
+        h5_file.create_dataset('I', data=I)
+        h5_file.create_dataset('c', data=c)
+        h5_file.create_dataset('d', data=d)
+        h5_file.create_dataset('e', data=e)
+        h5_file.create_dataset('f', data=f)
+        h5_file.create_dataset('k', data=k)
+        h5_file.create_dataset('nsm', data=nsm)
+        #h5_file.create_dataset('_comment', data=comments)
+
     def __init__(self, pid, mid, A=0., i1=0., i2=0., i12=0., j=0., nsm=0.,
                  c1=0., c2=0., d1=0., d2=0., e1=0., e2=0., f1=0., f2=0.,
                  k1=1.e8, k2=1.e8, comment=''):
@@ -1324,7 +1368,7 @@ class PBARL(LineProperty):
         try:
             ndim = cls.valid_types[Type]
         except KeyError:
-            keys = list(self.valid_types.keys())
+            keys = list(cls.valid_types.keys())
             raise KeyError('%r is not a valid PBARL type\nallowed_types={%s}' % (
                 Type, ', '.join(sorted(keys))))
         dim = []
@@ -1436,9 +1480,9 @@ class PBARL(LineProperty):
             raise
         return I[2]
 
-    def I1_I2_I12(self):
-        """gets the section I1, I2, I12 moment of inertia"""
-        return I1_I2_I12(prop, prop.dim)
+    #def I1_I2_I12(self):
+        #"""gets the section I1, I2, I12 moment of inertia"""
+        #return I1_I2_I12(prop, prop.dim)
 
     def I11(self):
         return self.I1()

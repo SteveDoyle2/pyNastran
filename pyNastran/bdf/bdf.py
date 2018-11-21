@@ -4278,7 +4278,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                                       is_list=True, has_none=True)
                     continue
 
-
                 if self.is_reject(card_name):
                     self.reject_card_lines(card_name, card_lines, comment)
                 else:

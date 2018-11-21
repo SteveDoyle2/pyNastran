@@ -37,6 +37,32 @@ class PROD(Property):
         6 : 'C', 'C' : 'c',
     }
 
+    @classmethod
+    def export_to_hdf5_vectorized(cls, h5_file, model, pids):
+        """exports the properties in a vectorized way"""
+        #comments = []
+        mids = []
+        A = []
+        J = []
+        c = []
+        nsm = []
+        for pid in pids:
+            prop = model.properties[pid]
+            #comments.append(prop.comment)
+            mids.append(prop.mid)
+            A.append(prop.A)
+            J.append(prop.j)
+            c.append(prop.c)
+            nsm.append(prop.nsm)
+        #h5_file.create_dataset('_comment', data=comments)
+        h5_file.create_dataset('pid', data=pids)
+        h5_file.create_dataset('mid', data=mids)
+        h5_file.create_dataset('A', data=A)
+        h5_file.create_dataset('J', data=J)
+        h5_file.create_dataset('c', data=c)
+        h5_file.create_dataset('nsm', data=nsm)
+        #h5_file.create_dataset('_comment', data=comments)
+
     def __init__(self, pid, mid, A, j=0., c=0., nsm=0., comment=''):
         """
         Creates a PROD card
@@ -230,6 +256,29 @@ class PTUBE(Property):
         5 : 't', 'T' : 't',
         7 : 'OD2', 'OD2' : 'OD2',
     }
+
+    @classmethod
+    def export_to_hdf5_vectorized(cls, h5_file, model, pids):
+        """exports the properties in a vectorized way"""
+        #comments = []
+        mids = []
+        OD = []
+        t = []
+        nsm = []
+        for pid in pids:
+            prop = model.properties[pid]
+            #comments.append(prop.comment)
+            mids.append(prop.mid)
+            OD.append([prop.OD1, prop.OD2])
+            t.append(prop.t)
+            nsm.append(prop.nsm)
+        #h5_file.create_dataset('_comment', data=comments)
+        h5_file.create_dataset('pid', data=pids)
+        h5_file.create_dataset('mid', data=mids)
+        h5_file.create_dataset('OD', data=OD)
+        h5_file.create_dataset('t', data=t)
+        h5_file.create_dataset('nsm', data=nsm)
+        #h5_file.create_dataset('_comment', data=comments)
 
     def __init__(self, pid, mid, OD1, t=None, nsm=0., OD2=None, comment=''):
         """
