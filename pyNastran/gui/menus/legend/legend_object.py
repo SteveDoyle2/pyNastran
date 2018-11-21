@@ -87,7 +87,7 @@ class LegendObject(object):
             'icase_fringe' : self.gui.icase_fringe,  # int for normals
             'icase_disp' : self.gui.icase_disp,
             'icase_vector' : self.gui.icase_vector,
-            'name' : result_type,
+            'title' : result_type,
             'min_value' : min_value,
             'max_value' : max_value,
 
@@ -163,7 +163,7 @@ class LegendObject(object):
             'icase_fringe' : self.gui.icase_fringe,
             'icase_disp' : self.gui.icase_disp,
             'icase_vector' : self.gui.icase_vector,
-            'name' : result_type,
+            'title' : result_type,
             'time' : 2,
             'frames/sec' : 30,
             'resolution' : 1,
@@ -216,13 +216,46 @@ class LegendObject(object):
 
         Parameters
         ----------
-        use_fringe_internal : bool; default=Falsee
+        icase_fringe : int, None
+            int : the active case being shown on the fringe (color plot)
+            None : no color
+        icase_disp : int, None
+            int : the active displacement case
+            None : no displacement
+        icase_vector : int, None
+            int : the active vector case
+            None : no vectors
+        title : str
+            the title of the plot
+        min_value / max_value : float, None
+            float : the min/max value of the legend
+            None : icase_fringe is None
+        data_format : str
+            a string formatter (e.g., %.4f)
+        scale : float, None
+            the scaling for the displacement/vector
+            None : icase_disp is None
+        phase : float, None
+            the phase angle for the displacement/vector
+            None : icase_disp is None
+        arrow_scale : float, None
+            the scaling for the vector
+            None : icase_vector is None
+        nlabels : int
+            the number of legend labels
+        labelsize : int
+            the legend text size
+        ncolors : int
+            the number of colors on the legend
+        colormap : str
+            the selected colormap for the fringe
+        use_fringe_internal : bool; default=False
             True : use the internal fringe parameters
             False : use the values that were passed in
-        use_disp_internal : bool; default=Falsee
+        use_disp_internal : bool; default=False
             True : use the internal of scale and phase
             False : use the values that were passed in
-        use_vector_internal : bool; default=Falsee
+        use_vector_internal : bool; default=False
             True : use the internal of arrow_scale
             False : use the values that were passed in
         external_call : bool; default=True
@@ -311,7 +344,7 @@ class LegendObject(object):
         return self.gui.settings
 
     def _apply_legend(self, data):
-        title = data['name']
+        title = data['title']
         min_value = data['min_value']
         max_value = data['max_value']
         scale = data['scale']

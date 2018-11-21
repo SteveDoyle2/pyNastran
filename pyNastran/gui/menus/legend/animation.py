@@ -84,7 +84,7 @@ class AnimationWindow(PyDialog):
         self._icase_disp = data['icase_disp']
         self._icase_vector = data['icase_vector']
 
-        self._default_name = data['name']
+        self._default_title = data['title']
         self._default_time = data['time']
         self._default_fps = data['frames/sec']
         self._default_resolution = data['resolution']
@@ -100,7 +100,7 @@ class AnimationWindow(PyDialog):
         self._default_phase = data['default_phase']
 
         self._default_dirname = data['dirname']
-        self._default_gif_name = os.path.join(self._default_dirname, data['name'] + '.gif')
+        self._default_gif_name = os.path.join(self._default_dirname, data['title'] + '.gif')
 
         self.animation_types = [
             'Animate Scale',
@@ -317,7 +317,7 @@ class AnimationWindow(PyDialog):
         self.gif_edit = QLineEdit(str(self._default_name + '.gif'))
         self.gif_button = QPushButton('Default')
         self.gif_edit.setToolTip('Name of the gif')
-        self.gif_button.setToolTip('Sets the name of the gif to %s.gif' % self._default_name)
+        self.gif_button.setToolTip('Sets the name of the gif to %s.gif' % self._default_title)
 
         # scale / phase
         if 1: # pragma: no cover
@@ -479,7 +479,7 @@ class AnimationWindow(PyDialog):
         self.resolution_button.clicked.connect(self.on_default_resolution)
         self.browse_folder_button.clicked.connect(self.on_browse_folder)
         self.csv_profile_browse_button.clicked.connect(self.on_browse_csv)
-        self.gif_button.clicked.connect(self.on_default_name)
+        self.gif_button.clicked.connect(self.on_default_title)
 
         self.step_button.clicked.connect(self.on_step)
         self.wipe_button.clicked.connect(self.on_wipe)
@@ -754,16 +754,17 @@ class AnimationWindow(PyDialog):
             return
         self.csv_profile_browse_button.setText(dirname)
 
-    def on_default_name(self):
+    def on_default_title(self):
         """sets the default gif name"""
-        self.gif_edit.setText(self._default_name + '.gif')
+        self.gif_edit.setText(self._default_title + '.gif')
 
     def on_default_scale(self):
         """sets the default displacement scale factor"""
         if self.is_gui:
             icase_disp = self.icase_disp_edit.value()
-            unused_scale, unused_phase, default_scale, unused_default_phase = self.gui.legend_obj.get_legend_disp(
+            out = self.gui.legend_obj.get_legend_disp(
                 icase_disp)
+            unused_scale, unused_phase, default_scale, unused_default_phase = out
         else:
             default_scale = self._default_scale
         self.scale_edit.setText(str(default_scale))
@@ -773,7 +774,8 @@ class AnimationWindow(PyDialog):
         """sets the default arrow scale factor"""
         if self.is_gui:
             icase_vector = self.icase_vector_edit.value()
-            unused_arrow_scale, default_arrow_scale = self.gui.legend_obj.get_legend_vector(icase_vector)
+            out = self.gui.legend_obj.get_legend_vector(icase_vector)
+            unused_arrow_scale, default_arrow_scale = out
         else:
             default_arrow_scale = self._default_arrow_scale
         self.arrow_scale_edit.setText(str(default_arrow_scale))
@@ -1212,7 +1214,7 @@ def main(): # pragma: no cover
         'icase_disp' : 2,
         'icase_vector' : 3,
 
-        'name' : 'cat',
+        'title' : 'cat',
         'time' : 2,
         'frames/sec' : 30,
         'resolution' : 1,

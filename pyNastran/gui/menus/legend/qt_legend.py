@@ -48,7 +48,7 @@ class LegendPropertiesWindow(PyDialog):
     +-----------------------+
     """
 
-    def __init__(self, data, win_parent=None):
+    def __init__(self, data, win_parent=None, show_animation_button=True):
         PyDialog.__init__(self, data, win_parent)
         self.is_gui = win_parent is not None
 
@@ -70,7 +70,7 @@ class LegendPropertiesWindow(PyDialog):
         #print('*icase_fringe=%s icase_disp=%s icase_vector=%s' % (
             #self._default_icase_fringe, self._default_icase_disp, self._default_icase_vector))
 
-        self._default_name = data['name']
+        self._default_title = data['title']
         self._default_min = data['min_value']
         self._default_max = data['max_value']
 
@@ -112,7 +112,7 @@ class LegendPropertiesWindow(PyDialog):
         self._update_defaults_to_blank()
 
         self.setWindowTitle('Legend Properties')
-        self.create_widgets()
+        self.create_widgets(show_animation_button=show_animation_button)
         self.create_layout()
         self.set_connections()
         self.set_font_size(data['font_size'])
@@ -137,7 +137,7 @@ class LegendPropertiesWindow(PyDialog):
         if self._nlabels is None:
             self._nlabels = ''
 
-    def update_legend(self, icase_fringe, icase_disp, icase_vector, name,
+    def update_legend(self, icase_fringe, icase_disp, icase_vector, title,
                       min_value, max_value, data_format,
                       nlabels, labelsize, ncolors, colormap, is_fringe,
                       scale, phase,
@@ -199,7 +199,7 @@ class LegendPropertiesWindow(PyDialog):
             self._icase_fringe = icase_fringe
             self._default_icase_fringe = icase_fringe
 
-            self._default_name = default_title
+            self._default_title = default_title
             self._default_min = default_min_value
             self._default_max = default_max_value
             self._default_format = default_data_format
@@ -261,14 +261,14 @@ class LegendPropertiesWindow(PyDialog):
 
         #-----------------------------------------------------------------------
         if update_fringe:
-            #self.on_default_name()
+            #self.on_default_title()
             #self.on_default_min()
             #self.on_default_max()
             #self.on_default_format()
             #self.on_default_scale()
             # reset defaults
-            self.name_edit.setText(name)
-            self.name_edit.setStyleSheet("QLineEdit{background: white;}")
+            self.title_edit.setText(title)
+            self.title_edit.setStyleSheet("QLineEdit{background: white;}")
 
             self.min_edit.setText(str(min_value))
             self.min_edit.setStyleSheet("QLineEdit{background: white;}")
@@ -336,10 +336,10 @@ class LegendPropertiesWindow(PyDialog):
         if not is_fringe:
             enable = False
 
-        show_name = self._icase_fringe is not None
-        self.name_label.setVisible(show_name)
-        self.name_edit.setVisible(show_name)
-        self.name_button.setVisible(show_name)
+        show_title = self._icase_fringe is not None
+        self.title_label.setVisible(show_title)
+        self.title_edit.setVisible(show_title)
+        self.title_button.setVisible(show_title)
 
         self.max_label.setVisible(enable)
         self.min_label.setVisible(enable)
@@ -374,12 +374,12 @@ class LegendPropertiesWindow(PyDialog):
         self.colormap_edit.setVisible(enable)
         self.colormap_button.setVisible(enable)
 
-    def create_widgets(self):
+    def create_widgets(self, show_animation_button=True):
         """creates the menu objects"""
-        # Name
-        self.name_label = QLabel("Title:")
-        self.name_edit = QLineEdit(str(self._default_name))
-        self.name_button = QPushButton("Default")
+        # title
+        self.title_label = QLabel("Title:")
+        self.title_edit = QLineEdit(str(self._default_title))
+        self.title_button = QPushButton("Default")
 
         # Min
         self.min_label = QLabel("Min:")
@@ -488,9 +488,9 @@ class LegendPropertiesWindow(PyDialog):
         # --------------------------------------------------------------
 
         if self._icase_fringe is None:
-            self.name_label.setVisible(False)
-            self.name_edit.setVisible(False)
-            self.name_button.setVisible(False)
+            self.title_label.setVisible(False)
+            self.title_edit.setVisible(False)
+            self.title_button.setVisible(False)
 
         if not self._is_fringe:
             self.max_label.hide()
@@ -525,6 +525,7 @@ class LegendPropertiesWindow(PyDialog):
             self.colormap_button.hide()
 
         self.animate_button = QPushButton('Create Animation')
+        self.animate_button.setVisible(show_animation_button)
         #self.advanced_button = QPushButton('Advanced')
 
         if self._default_icase_disp is None: # or self._default_icase_vector is None:
@@ -542,9 +543,9 @@ class LegendPropertiesWindow(PyDialog):
     def create_layout(self):
         """displays the menu objects"""
         grid = QGridLayout()
-        grid.addWidget(self.name_label, 0, 0)
-        grid.addWidget(self.name_edit, 0, 1)
-        grid.addWidget(self.name_button, 0, 2)
+        grid.addWidget(self.title_label, 0, 0)
+        grid.addWidget(self.title_edit, 0, 1)
+        grid.addWidget(self.title_button, 0, 2)
 
         grid.addWidget(self.min_label, 1, 0)
         grid.addWidget(self.min_edit, 1, 1)
@@ -619,7 +620,7 @@ class LegendPropertiesWindow(PyDialog):
 
     def set_connections(self):
         """creates the actions for the buttons"""
-        self.name_button.clicked.connect(self.on_default_name)
+        self.title_button.clicked.connect(self.on_default_title)
         self.min_button.clicked.connect(self.on_default_min)
         self.max_button.clicked.connect(self.on_default_max)
         self.format_button.clicked.connect(self.on_default_format)
@@ -662,7 +663,7 @@ class LegendPropertiesWindow(PyDialog):
         font = QFont()
         font.setPointSize(font_size)
         self.setFont(font)
-        self.name_edit.setFont(font)
+        self.title_edit.setFont(font)
         self.min_edit.setFont(font)
         self.max_edit.setFont(font)
         self.format_edit.setFont(font)
@@ -674,7 +675,7 @@ class LegendPropertiesWindow(PyDialog):
 
     def on_animate(self):
         """opens the animation window"""
-        name, flag0 = check_name_str(self.name_edit)
+        title, flag0 = check_title(self.title_edit)
         if not flag0:
             return
 
@@ -687,7 +688,7 @@ class LegendPropertiesWindow(PyDialog):
             'icase_fringe' : self._icase_fringe,
             'icase_disp' : self._icase_disp,
             'icase_vector' : self._icase_vector,
-            'name' : name,
+            'title' : title,
             'time' : 2,
             'frames/sec' : 30,
             'resolution' : 1,
@@ -705,13 +706,13 @@ class LegendPropertiesWindow(PyDialog):
             'clicked_ok' : False,
             'close' : False,
         }
-        self.win_parent.legend_obj.set_animation_window(data)
+        self.win_parent.set_animation_window(data)
 
-    def on_default_name(self):
-        """action when user clicks 'Default' for name"""
-        name = str(self._default_name)
-        self.name_edit.setText(name)
-        self.name_edit.setStyleSheet("QLineEdit{background: white;}")
+    def on_default_title(self):
+        """action when user clicks 'Default' for title"""
+        title = str(self._default_title)
+        self.title_edit.setText(title)
+        self.title_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def on_default_min(self):
         """action when user clicks 'Default' for min value"""
@@ -794,11 +795,11 @@ class LegendPropertiesWindow(PyDialog):
 
     def on_validate(self):
         """checks to see if the ``on_apply`` method can be called"""
-        show_name = self._icase_fringe is not None
-        flag_name = True
-        name_value = ''
-        if show_name:
-            name_value, flag_name = check_name_str(self.name_edit)
+        show_title = self._icase_fringe is not None
+        flag_title = True
+        title_value = ''
+        if show_title:
+            title_value, flag_title = check_name_str(self.title_edit)
 
         flag_fringe = True
         min_value = max_value = format_value = nlabels = ncolors = labelsize = colormap = None
@@ -827,8 +828,8 @@ class LegendPropertiesWindow(PyDialog):
         if self._icase_vector is not None:
             arrow_scale, flag_vector = check_float(self.arrow_scale_edit)
 
-        if all([flag_name, flag_fringe, flag_disp, flag_vector]):
-            self.out_data['name'] = name_value
+        if all([flag_title, flag_fringe, flag_disp, flag_vector]):
+            self.out_data['title'] = title_value
             self.out_data['min_value'] = min_value
             self.out_data['max_value'] = max_value
             self.out_data['format'] = format_value
@@ -849,7 +850,7 @@ class LegendPropertiesWindow(PyDialog):
             self.out_data['clicked_ok'] = True
             self.out_data['close'] = True
             #print('self.out_data = ', self.out_data)
-            #print("name = %r" % self.name_edit.text())
+            #print("title = %r" % self.title_edit.text())
             #print("min = %r" % self.min_edit.text())
             #print("max = %r" % self.max_edit.text())
             #print("format = %r" % self.format_edit.text())
@@ -914,7 +915,7 @@ def main(): # pragma: no cover
         'is_fringe': True,  # False=normals or no fringe
 
         'font_size' : 8,
-        'name' : 'asdf',
+        'title' : 'asdf',
         'min_value' : 0.,
         'max_value' : 10,
         'scale' : 1e-12,
