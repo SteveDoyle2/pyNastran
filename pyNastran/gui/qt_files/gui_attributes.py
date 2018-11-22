@@ -23,6 +23,7 @@ from pyNastran.gui.qt_files.load_actions import LoadActions
 from pyNastran.gui.qt_files.mark_actions import MarkActions
 
 from pyNastran.gui.menus.legend.legend_object import LegendObject
+from pyNastran.gui.menus.highlight.highlight_object import HighlightObject
 from pyNastran.gui.menus.preferences.preferences_object import PreferencesObject
 from pyNastran.gui.menus.cutting_plane.cutting_plane_object import CuttingPlaneObject
 from pyNastran.gui.menus.clipping.clipping_object import ClippingObject
@@ -66,6 +67,7 @@ class GuiAttributes(object):
 
         self.legend_obj = LegendObject(self)
         self.edit_geometry_properties_obj = EditGeometryPropertiesObject(self)
+        self.highlight_obj = HighlightObject(self)
         self.preferences_obj = PreferencesObject(self)
         self.cutting_plane_obj = CuttingPlaneObject(self)
         self.clipping_obj = ClippingObject(self)

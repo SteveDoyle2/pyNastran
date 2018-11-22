@@ -398,7 +398,7 @@ class MAT1(IsotropicMaterial):
         self.mcsid = mcsid
 
     @classmethod
-    def export_to_hdf5_vectorized(cls, h5_file, model, mids):
+    def export_to_hdf5(cls, h5_file, model, mids):
         """exports the materials in a vectorized way"""
         comments = []
         e = []
@@ -801,7 +801,7 @@ class MAT2(AnisotropicMaterial):
         self.mcsid = mcsid
 
     @classmethod
-    def export_to_hdf5_vectorized(cls, h5_file, model, mids):
+    def export_to_hdf5(cls, h5_file, model, mids):
         """exports the materials in a vectorized way"""
         comments = []
         G = []
@@ -1074,7 +1074,7 @@ class MAT3(OrthotropicMaterial):
         self.matt3_ref = None
 
     @classmethod
-    def export_to_hdf5_vectorized(cls, h5_file, model, mids):
+    def export_to_hdf5(cls, h5_file, model, mids):
         """exports the elements in a vectorized way"""
         comments = []
         ex = []
@@ -1669,7 +1669,7 @@ class MAT8(OrthotropicMaterial):
         self.matt8_ref = None
 
     @classmethod
-    def export_to_hdf5_vectorized(cls, h5_file, model, mids):
+    def export_to_hdf5(cls, h5_file, model, mids):
         """exports the materials in a vectorized way"""
         comments = []
         e11 = []
@@ -2044,7 +2044,7 @@ class MAT9(AnisotropicMaterial):
         assert len(self.A) == 6, A
 
     @classmethod
-    def export_to_hdf5_vectorized(cls, h5_file, model, mids):
+    def export_to_hdf5(cls, h5_file, model, mids):
         """exports the elements in a vectorized way"""
         comments = []
         G = []

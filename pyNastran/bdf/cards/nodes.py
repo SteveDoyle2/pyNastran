@@ -163,12 +163,28 @@ class SEQGP(BaseCard):
 
 class XPoint(BaseCard):
     """common class for EPOINT/SPOINT"""
+
+    @classmethod
+    def _init_from_empty(cls):
+        nid = 1
+        return cls(nid, comment='')
+
     def __init__(self, nid, comment):
         #Node.__init__(self)
         if comment:
             self.comment = comment
         self.nid = nid
         assert isinstance(nid, integer_types), nid
+
+    @classmethod
+    def export_to_hdf5(cls, h5_file, model, nids):
+        """exports the nodes in a vectorized way"""
+        #comments = []
+        #for nid in nids:
+            #node = model.nodes[nid]
+            #comments.append(element.comment)
+        #h5_file.create_dataset('_comment', data=comments)
+        h5_file.create_dataset('nid', data=nids)
 
     @property
     def type(self):
@@ -326,6 +342,11 @@ class XPoints(BaseCard):
     def type(self):
         """dummy method for EPOINTs/SPOINTs classes"""
         raise NotImplementedError('This method should be overwritten by the parent class')
+
+    @classmethod
+    def _init_from_empty(cls):
+        ids = [1]
+        return cls(ids, comment='')
 
     def __init__(self, ids, comment=''):
         #Node.__init__(self)
@@ -980,7 +1001,7 @@ class GRID(BaseCard):
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     @classmethod
-    def export_to_hdf5_vectorized(cls, h5_file, model, nids):
+    def export_to_hdf5(cls, h5_file, model, nids):
         """exports the nodes in a vectorized way"""
         comments = []
         cp = []

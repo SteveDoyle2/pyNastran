@@ -1050,6 +1050,21 @@ class DMIG(NastranMatrix):
     +------+------+----+-----+-----+------+-------+----+------+
     """
     type = 'DMIG'
+    _properties = ['is_real', 'is_complex', 'is_polar', 'matrix_type', 'shape', 'tin_dtype', 'tout_dtype']
+
+    @classmethod
+    def _init_from_empty(cls):
+        name = 'name'
+        ifo = 1
+        tin = 1
+        tout = 1
+        polar = 0
+        ncols = 1
+        GCj = []
+        GCi = []
+        Real = []
+        return DMIG(name, ifo, tin, tout, polar, ncols, GCj, GCi, Real,
+                    Complex=None, comment='', finalize=True)
 
     def __init__(self, name, ifo, tin, tout, polar, ncols,
                  GCj, GCi, Real, Complex=None, comment='', finalize=True):
@@ -1562,6 +1577,20 @@ class DMI(NastranMatrix):
     +------+-------+------+------+---------+----------+-----------+-----------+------+
     """
     type = 'DMI'
+    _properties = ['shape', 'ifo', 'is_real', 'is_complex', 'is_polar', 'matrix_type', 'tin_dtype', 'tout_dtype']
+
+    @classmethod
+    def _init_from_empty(cls):
+        name = 'name'
+        matrix_form = 8
+        tin = 1
+        tout = 1
+        nrows = 5
+        ncols = 5
+        GCj = []
+        GCi = []
+        Real = []
+        return DMI(name, matrix_form, tin, tout, nrows, ncols, GCj, GCi, Real, Complex=None, comment='', finalize=False)
 
     def __init__(self, name, matrix_form, tin, tout, nrows, ncols,
                  GCj, GCi, Real, Complex=None, comment='', finalize=True):

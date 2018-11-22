@@ -1,19 +1,22 @@
 """Defines various helper functions for loading a HDF5 BDF file"""
 from __future__ import print_function
+from collections import defaultdict
 from six import string_types
 import numpy as np
-from pyNastran.utils.dict_to_h5py import _cast
+from pyNastran.utils.dict_to_h5py import _add_list_tuple, _cast, integer_types, float_types, string_types
 from pyNastran.bdf.bdf_interface.add_card import CARD_MAP
 from pyNastran.utils import object_attributes
 
 # dict[key] : [value1, value2, ...]
 dict_int_list_obj_attrs = [
-    'spcs', 'mpcs',
-    'loads',
+    'spcs', 'spcadds',
+    'mpcs', 'mpcadds',
+    'loads', 'load_combinations',
+    'dloads', 'dload_entries',
    #'usets',
-   'load_combinations',
-   'spcadds',
-   'mpcadds', 'nsmadds',
+   'nsms', 'nsmadds',
+   #'dconstrs',
+   'frequencies',
 ]
 
 # dict[key] : value
@@ -34,22 +37,23 @@ dict_int_obj_attrs = [
     'MATS1', 'MATS3', 'MATS8', 'MATT1', 'MATT2', 'MATT3', 'MATT4', 'MATT5', 'MATT8', 'MATT9',
 
     # TODO: don't work
-    #'rigid_elements',
     #'reject_count',
+    #'dresps',
 
+    'rigid_elements',
     'aecomps', 'aefacts', 'aelinks', 'aelists', 'aeparams',
     'aestats', 'aesurf', 'aesurfs', 'ao_element_flags', 'bconp', 'bcrparas', 'bcs', 'bctadds',
-    'bctparas', 'bctsets', 'blseg', 'bsurf', 'bsurfs', 'cMethods', 'caeros',
+    'bctparas', 'bctsets', 'blseg', 'bsurf', 'bsurfs', 'cMethods',
     'convection_properties',
     'csuper', 'csupext', 'dareas',
-    'dconadds', 'dconstrs', 'ddvals', 'delays', 'dequations', 'desvars', 'divergs', 'dlinks',
-    'dload_entries', 'dloads', 'dmigs', 'dmijis', 'dmijs', 'dmiks', 'dmis', 'dphases', 'dresps',
+    'dconadds', 'ddvals', 'delays', 'dequations', 'desvars', 'divergs', 'dlinks',
+    'dmigs', 'dmijis', 'dmijs', 'dmiks', 'dmis', 'dphases',
     'dscreen', 'dti', 'dvcrels', 'dvgrids', 'dvmrels', 'dvprels',
     'epoints', 'flfacts',
-    'frequencies', 'gridb',
-    'hyperelastic_materials',
+    'gridb',
     'nlparms', 'nlpcis',
-    'normals', 'nsms', 'nxstrats', 'paeros',
+    'normals',
+    'nxstrats', 'paeros',
     'pbusht', 'pdampt', 'pelast', 'phbdys', 'plotels', 'points',
     'properties_mass',
     'radcavs', 'radmtx', 'random_tables',
@@ -58,7 +62,7 @@ dict_int_obj_attrs = [
     'se_sets', 'se_usets', 'sebndry', 'sebulk', 'seconct', 'seelt',
     'seexcld', 'selabel', 'seload', 'seloc', 'sempln', 'senqset', 'setree', 'sets',
     'spcoffs',
-    'splines', 'spoints',
+    'spoints',
     'suport1',
     'tables_d', 'tables_m', 'tables_sdamping', 'tempds', 'thermal_materials',
     'tics', 'transfer_functions',
@@ -66,19 +70,81 @@ dict_int_obj_attrs = [
     'view3ds', 'views',
 ]
 
+scalar_obj_keys = [
+    # required
+    'aero', 'aeros', 'axic', 'axif', 'baror', 'beamor',
+    'doptprm', 'dtable',  'grdset', 'radset', 'seqgp',
+    #'case_control_deck',
+    #'zona',
+]
+
+scalar_keys = [
+    # basic types
+    'bdf_filename',
+    '_auto_reject', '_encoding', '_iparse_errors', '_is_axis_symmetric', '_is_cards_dict',
+    '_is_dynamic_syntax', '_is_long_ids', '_ixref_errors', '_nastran_format', '_nparse_errors',
+    '_nxref_errors', '_sol', '_stop_on_duplicate_error', '_stop_on_parsing_error',
+    '_stop_on_xref_error',
+    #'_unique_bulk_data_cards',
+    #'cards_to_read',
+    '_xref', 'active_filename',
+    'dumplines', 'echo', 'force_echo_off', 'include_dir',
+    #'is_bdf_vectorized',
+    #'is_long_ids',
+    'is_msc', 'is_nx', 'punch',
+    'read_includes', 'save_file_structure', 'sol', 'sol_iline', 'nastran_format',
+    'is_superelements', 'is_zona', 'sol_method', 'debug',
+
+    # not sure
+    #'nid_cp_cd', 'xyz_cid0',
+
+    # removed
+    #'ncaeros', 'ncoords', 'nnodes', 'nelements', 'nproperties', 'nmaterials',
+    #'point_ids', 'wtmass', 'log',
+]
+
+list_keys = [
+    # required
+    'active_filenames', 'executive_control_lines', 'case_control_lines', #'initial_superelement_models',
+    'reject_cards', #'reject_lines',
+
+    # maybe...
+    #'_duplicate_coords', '_duplicate_elements', '_duplicate_masses', '_duplicate_materials',
+    #'_duplicate_nodes', '_duplicate_properties', '_duplicate_thermal_materials', '_stored_parse_errors',
+    #'_stored_xref_errors',
+    #'system_command_lines', 'units', 'xyz_limits',
+
+    # removed
+    #'coord_ids', 'element_ids', 'material_ids', 'node_ids', 'property_ids', 'caero_ids',
+    #'special_cards',
+]
+
+list_obj_keys = [
+    # required
+    'asets', 'bsets', 'csets', 'omits', 'qsets',
+    'mkaeros',
+    'monitor_points',
+    'suport',
+    'se_bsets', 'se_csets', 'se_qsets', 'se_suport',
+]
+
+dict_attrs = [
+    # required
+    'params',
+
+    # removed
+    #'_solmap_to_value',
+    #'card_count',
+    #'_card_parser',
+    #'_card_parser_prepare',
+    #'_slot_to_type_map',
+    #'_type_to_id_map',
+    #'_type_to_slot_map',
+]
+
 def export_to_hdf5_file(hdf5_file, model, exporter=None):
     attrs = object_attributes(model, mode='both', keys_to_skip=None)
 
-    dict_attrs = [
-        '_card_parser',
-        '_card_parser_prepare',
-        '_slot_to_type_map',
-        '_solmap_to_value',
-        '_type_to_id_map',
-        '_type_to_slot_map',
-        'card_count',
-        'params',
-    ]
     #print(model._slot_to_type_map['elements'])
     #print('card_count =', self.card_count)
 
@@ -89,22 +155,25 @@ def export_to_hdf5_file(hdf5_file, model, exporter=None):
         nids = model._type_to_id_map['GRID']
         if len(nids) == 0:
             assert len(model.nodes) == 0, len(model.nodes)
-        CARD_MAP['GRID'].export_to_hdf5_vectorized(grid_group, model, nids)
+        CARD_MAP['GRID'].export_to_hdf5(grid_group, model, nids)
 
     _hdf5_export_group(hdf5_file, model, 'coords')
     _hdf5_export_elements(hdf5_file, model)
 
+    # explicit groups
+    #
+    # these are broken down by card type
+    # they came from dict_int_obj_attrs
     groups_to_export = [
         'properties', 'masses',
 
         # materials
-        'materials', 'creep_materials', 'thermal_materials',
+        'materials', 'thermal_materials', 'creep_materials', 'hyperelastic_materials',
         #'MATS1',
         #'MATT1', 'MATT2', 'MATT3', 'MATT4', 'MATT5', 'MATT8', 'MATT9',
 
-
         # aero
-        'flutters', 'trims', 'csschds', 'gusts',
+        'caeros', 'splines', 'flutters', 'trims', 'csschds', 'gusts',
 
         # other
         'methods', 'tables',
@@ -113,23 +182,94 @@ def export_to_hdf5_file(hdf5_file, model, exporter=None):
         _hdf5_export_group(hdf5_file, model, group_name)
 
 
-    #sub_group = ''
-    #for etype in etypes:
-        #if etype not in self._type_to_id_map:
-            #continue
-        #print("etype =", etype)
-        #CARD_MAP[etype].export_to_hdf5_vectorized(h5_file, self, eids)
-
     dict_int_attrs = [
+        # required
         '_dmig_temp',
         'include_filenames',
-        'nid_map',
         'rsolmap_to_str',
-        'subcases',
         'superelement_models',
         'values_to_skip',
+
+        # removed
+        #'nid_map',
+        #'subcases',
     ]
 
+    _export_dict_int_obj_attrs(model, hdf5_file)
+    _export_dict_int_list_obj_attrs(model, hdf5_file)
+
+    #for key in scalar_obj_keys:
+        #value = getattr(model, key)
+        #hdf5_file.create_dataset(key, value)
+
+    scalars_keys_to_analyze = []
+    for key in scalar_keys:
+        if hasattr(model, key):
+            scalars_keys_to_analyze.append(key)
+
+    if scalars_keys_to_analyze:
+        scalar_group = hdf5_file.create_group('minor_attributes')
+        for key in scalars_keys_to_analyze:
+            value = getattr(model, key)
+
+            if value is None:
+                print('None: %s %s' % (key, value))
+            #elif isinstance(value, bool):
+                #print('bool: %s %s' % (key, value))
+            elif isinstance(value, (integer_types, float_types, string_types, np.ndarray)):
+                try:
+                    scalar_group.create_dataset(key, data=value)
+                except TypeError:
+                    print('key=%r value=%s type=%s' % (key, str(value), type(value)))
+                    raise
+            #elif isinstance(value, set):
+                #_add_list_tuple(hdf5_file, key, value, 'set', model.log)
+            else:
+                print(key, value)
+                scalar_group.create_dataset(key, data=value)
+
+    if model.params:
+        skip_attrs = ['comment', '_field_map']
+        group = hdf5_file.create_group('params')
+        for key, param in model.params.items():
+            _h5_export_class(group, model, key, param, skip_attrs, debug=False)
+
+
+
+    skip_attrs = ['comment', '_field_map']
+    for key in scalar_obj_keys:
+        value = getattr(model, key)
+        if value is None:
+            print('None: %s %s' % (key, value))
+        else:
+            _h5_export_class(hdf5_file, model, key, value, skip_attrs, debug=False)
+
+    _export_list_keys(model, hdf5_file, list_keys)
+    _export_list_obj_keys(model, hdf5_file, list_obj_keys)
+
+    encoding = model._encoding
+    cards_to_read = [key.encode(encoding) for key in model.cards_to_read]
+    cards_to_read = list(cards_to_read)
+    cards_to_read.sort()
+    hdf5_file.create_dataset('cards_to_read', data=cards_to_read)
+    #dict_keys2 = []
+    #list_keys2 = []
+    #other_keys2 = []
+    #for key in attrs:
+        #value = getattr(model, key)
+        #if isinstance(value, dict):
+            #dict_keys2.append(key)
+        #elif isinstance(value, list):
+            #list_keys2.append(key)
+        #else:
+            #other_keys2.append(key)
+
+    #print('dict_keys2 = %s' % (set(dict_keys) - set(dict_keys2)))
+    #print('list_keys2 = %s' % (set(list_keys) - set(list_keys2)))
+    #print('other_keys2 = %s' % (set(other_keys) - set(other_keys2)))
+    #asd
+
+def _export_dict_int_obj_attrs(model, hdf5_file):
     cards = set(list(CARD_MAP.keys()))
     for attr in dict_int_obj_attrs:
         dict_obj = getattr(model, attr)
@@ -144,6 +284,7 @@ def export_to_hdf5_file(hdf5_file, model, exporter=None):
             raise
         _hdf5_export_object_dict(group, model, attr, dict_obj, dict_obj.keys())
 
+def _export_dict_int_list_obj_attrs(model, hdf5_file):
     for attr in dict_int_list_obj_attrs:
         dict_obj = getattr(model, attr) # spcs
         if not len(dict_obj):
@@ -159,59 +300,80 @@ def export_to_hdf5_file(hdf5_file, model, exporter=None):
         keys = list(dict_obj.keys())
         keys.sort()
         group.create_dataset('keys', data=keys)
-
         for spc_id, spcs in sorted(dict_obj.items()):
-            indices = list(range(len(spcs)))
-            subgroup = group.create_group(str(spc_id))
-            _hdf5_export_object_dict(subgroup, model, attr, spcs, indices)
+            id_group = group.create_group(str(spc_id))
 
-    list_keys = [
-        '_duplicate_coords', '_duplicate_elements', '_duplicate_masses', '_duplicate_materials',
-        '_duplicate_nodes', '_duplicate_properties', '_duplicate_thermal_materials', '_stored_parse_errors',
-        '_stored_xref_errors', 'active_filenames', 'asets', 'bsets', 'case_control_lines',
-        'csets', 'executive_control_lines', 'initial_superelement_models',
-        #'coord_ids', 'element_ids', 'material_ids', 'node_ids', 'property_ids', 'caero_ids',
-        'mkaeros', 'monitor_points', 'omits', 'qsets',
-        'reject_cards', 'reject_lines', 'se_bsets', 'se_csets', 'se_qsets', 'se_suport', 'special_cards',
-        'suport', 'system_command_lines', 'units', 'xyz_limits'
-    ]
-    other_keys = [
-        '_auto_reject', '_encoding', '_iparse_errors', '_is_axis_symmetric', '_is_cards_dict',
-        '_is_dynamic_syntax', '_is_long_ids', '_ixref_errors', '_nastran_format', '_nparse_errors',
-        '_nxref_errors', '_sol', '_stop_on_duplicate_error', '_stop_on_parsing_error',
-        '_stop_on_xref_error', '_unique_bulk_data_cards', '_xref', 'active_filename',
-        'aero', 'aeros', 'axic', 'axif', 'baror', 'bdf_filename', 'beamor', 'cards_to_read',
-        'case_control_deck', 'debug', 'doptprm', 'dtable', 'dumplines', 'echo', 'force_echo_off',
-        'grdset', 'include_dir', 'is_bdf_vectorized', 'is_long_ids', 'is_msc', 'is_nx',
-        'is_superelements', 'is_zona', 'log', 'nastran_format',
-        #'ncaeros', 'ncoords', 'nnodes', 'nelements', 'nproperties',
-        'nid_cp_cd', 'nmaterials', 'point_ids', 'punch', 'radset',
-        'read_includes', 'save_file_structure', 'seqgp', 'sol', 'sol_iline',
-        'sol_method', 'wtmass', 'xyz_cid0', 'zona',
-    ]
+            card_types = defaultdict(list)
+            for spc in spcs:
+                card_types[spc.type].append(spc)
+            for card_type, spcs in card_types.items():
+                card_group = id_group.create_group(card_type)
 
-    dict_keys2 = []
-    list_keys2 = []
-    other_keys2 = []
-    for key in attrs:
-        value = getattr(model, key)
-        if isinstance(value, dict):
-            dict_keys2.append(key)
-        elif isinstance(value, list):
-            list_keys2.append(key)
+                class_obj = spcs[0]
+                if hasattr(class_obj, 'export_to_hdf5'):
+                    class_obj.export_to_hdf5(card_group, model, spcs)
+                else:
+                    indices = list(range(len(spcs)))
+                    _hdf5_export_object_dict(card_group, model, '%s/id=%s/%s' % (attr, spc_id, card_type), spcs, indices)
+
+def _export_list_keys(model, hdf5_file, list_keys):
+    for attr in list_keys:
+        #print('list_key: %s' % attr)
+        list_obj = getattr(model, attr) # active_filenames
+        if not len(list_obj):
+            continue
+        model.log.info(attr)
+
+        #try:
+            #group = hdf5_file.create_group(attr) # 'active_filenames'
+        #except ValueError:
+            #model.log.error('cant create %r' % attr)
+            #raise
+
+        if isinstance(list_obj, list):
+            Type = 'list'
+        elif isinstance(list_obj, tuple):
+            Type = 'tuple'
         else:
-            other_keys2.append(key)
+            raise NotImplementedError(type(list_obj))
+        #indices = list(range(len(list_keys)))
+        #group.create_dataset('keys', data=keys)
+        try:
+            _add_list_tuple(hdf5_file, attr, list_obj, Type, model.log)
+        except TypeError:
+            print(list_obj)
+            raise
+        #_hdf5_export_object_dict(group, model, attr, list_obj, indices)
 
-    #print('dict_keys2 = %s' % (set(dict_keys) - set(dict_keys2)))
-    print('list_keys2 = %s' % (set(list_keys) - set(list_keys2)))
-    print('other_keys2 = %s' % (set(other_keys) - set(other_keys2)))
+def _export_list_obj_keys(model, hdf5_file, list_obj_keys):
+    for attr in list_obj_keys:
+        #print('list_key: %s' % attr)
+        list_obj = getattr(model, attr) # active_filenames
+        if not len(list_obj):
+            continue
+        model.log.info(attr)
 
-    user_custom_types = [
-        'Interpolated_AIC',
-        'CubicInterpolator',
-        'LinearInterpolator',
-    ]
-    #asd
+        try:
+            group = hdf5_file.create_group(attr) # 'active_filenames'
+        except ValueError:
+            model.log.error('cant create %r' % attr)
+            raise
+
+        #if isinstance(list_obj, list):
+            #Type = 'list'
+        #elif isinstance(list_obj, tuple):
+            #Type = 'tuple'
+        #else:
+            #raise NotImplementedError(type(list_obj))
+
+        indices = list(range(len(list_obj)))
+        #group.create_dataset('keys', data=indices)
+        #try:
+            #_add_list_tuple(hdf5_file, attr, list_obj, Type, model.log)
+        #except TypeError:
+            #print(list_obj)
+            #raise
+        _hdf5_export_object_dict(group, model, attr, list_obj, indices)
 
 
 def _h5_export_class(sub_group, model, key, value, skip_attrs, debug=True):
@@ -222,22 +384,28 @@ def _h5_export_class(sub_group, model, key, value, skip_attrs, debug=True):
     if hasattr(value, 'get_h5attrs'):
         getattrs
     elif hasattr(value, 'object_attributes'):
-        h5attrs = value.object_attributes(mode='both')
+        keys_to_skip = []
+        if hasattr(value, '_properties'):
+            keys_to_skip = value._properties
+        h5attrs = value.object_attributes(mode='both', keys_to_skip=keys_to_skip)
+        if hasattr(value, '_properties'):
+            h5attrs.remove('_properties')
         #sub_group = hdf5_file.create_group(key)
     else:
         raise NotImplementedError(value)
 
-    if hasattr(value, '_properties'):
-        if debug:
-            print(h5attrs)
-        for prop in value._properties:
-            try:
-                h5attrs.remove(prop)
-            except:
-                print('cant remove %s' % prop)
-                print(value)
-                raise
-        h5attrs.remove('_properties')
+    #if hasattr(value, '_properties'):
+        #print(value.type, value._properties)
+        #if debug:
+            #print(h5attrs)
+        #for prop in value._properties:
+            #try:
+                #h5attrs.remove(prop)
+            #except:
+                #print('cant remove %s' % prop)
+                #print(value)
+                #raise
+        #h5attrs.remove('_properties')
 
     if debug:
         print(value)
@@ -264,6 +432,9 @@ def _h5_export_class(sub_group, model, key, value, skip_attrs, debug=True):
         else:
             try:
                 class_group.create_dataset(h5attr, data=class_value)
+            except ValueError:
+                print(h5attr, class_group)
+                raise
             except TypeError:
                 # contains unicode
                 class_group.attrs['type'] = 'list'
@@ -317,7 +488,7 @@ def _hdf5_export_elements(hdf5_file, model):
         def save_solids(etype, slot_name):
             element_group = elements_group.create_group(etype)
             eids = model._type_to_id_map[etype]
-            CARD_MAP[slot_name].export_to_hdf5_vectorized(element_group, model, eids)
+            CARD_MAP[slot_name].export_to_hdf5(element_group, model, eids)
 
         solids = [
             ('CTETRA', 'CTETRA4'),
@@ -335,8 +506,8 @@ def _hdf5_export_elements(hdf5_file, model):
             eids = model._type_to_id_map[card_type]
             class_obj = CARD_MAP[card_type]
 
-            if hasattr(class_obj, 'export_to_hdf5_vectorized'):
-                class_obj.export_to_hdf5_vectorized(element_group, model, eids)
+            if hasattr(class_obj, 'export_to_hdf5'):
+                class_obj.export_to_hdf5(element_group, model, eids)
             else:
                 _hdf5_export_object_dict(element_group, model, card_type, model.elements, eids)
 
@@ -371,8 +542,9 @@ def _hdf5_export_group(hdf5_file, model, group_name, debug=False):
                 print(ids)
             assert len(ids) > 0, '%s : %s' % (card_type, ids)
             class_obj = CARD_MAP[card_type]
-            if hasattr(class_obj, 'export_to_hdf5_vectorized'):
-                class_obj.export_to_hdf5_vectorized(sub_group, model, ids)
+            #print(class_obj)
+            if hasattr(class_obj, 'export_to_hdf5'):
+                class_obj.export_to_hdf5(sub_group, model, ids)
             else:
                 _hdf5_export_object_dict(sub_group, model, card_type, data_dict, ids)
 
@@ -393,7 +565,7 @@ def _hdf5_export_object_dict(group, model, name, obj_dict, keys):
         i += 1
 
     #group.attrs['type'] = class_name
-    print('%s keys = %s' % (name, keys))
+    #print('%s keys = %s' % (name, keys))
     group.create_dataset('keys', data=keys)
 
 # exporter
@@ -410,12 +582,17 @@ def load_hdf5_file(h5_file, model):
         'methods' : hdf5_load_methods,
         'masses' : hdf5_load_masses,
         'materials' : hdf5_load_materials,
+        'spcs' : hdf5_load_spcs,
+        'mpcs' : hdf5_load_mpcs,
+        'loads' : hdf5_load_loads,
     }
     generic_mapper = {
         'flutters' : hdf5_load_generic,
         'trims' : hdf5_load_generic,
         'csschds' : hdf5_load_generic,
         'gusts' : hdf5_load_generic,
+        'caeros' : hdf5_load_generic,
+        'splines' : hdf5_load_generic,
 
         #'MATS1' : hdf5_load_generic,
         #'MATT1' : hdf5_load_generic,
@@ -448,8 +625,44 @@ def load_hdf5_file(h5_file, model):
             func(model, group, key)
         elif key in dict_int_obj_attrs:
             load_cards_from_keys_values(key, group)
+        elif key in ['info', 'matrices'] or key.startswith('Subcase'): # op2
+            continue
+        elif key in ['cards_to_read']: # handled separaaately
+            continue
+        elif key == 'params':
+            keys = list(group.keys())
+            _load_cards_from_keys_values('params', group, keys)
+        elif key == 'minor_attributes':
+            keys_attrs = group.keys()
+            for keyi in keys_attrs:
+                sub_group = group[keyi]
+                value = _cast(sub_group)
+                try:
+                    setattr(model, keyi, value)
+                except AttributeError:
+                    model.log.warning('cant set minor_attributes/%s as %s' % (keyi, value))
+                    raise
+
+        #elif key in scalar_keys:
+            #value = _cast(group)
+            #try:
+                #setattr(model, key, value)
+            #except AttributeError:
+                #model.log.warning('cant set %r as %s' % (key, value))
+                #raise
+
+        #elif key in list_keys:
+            #value = _cast(group)
+            #try:
+                #setattr(model, key, value)
+            #except AttributeError:
+                #model.log.warning('cant set %r as %s' % (key, value))
+                #raise
         else:
             model.log.warning('skipping hdf5 load for %s' % key)
+
+    cards_to_read = _cast(h5_file['cards_to_read'])
+    model.cards_to_read = set(cards_to_read)
 
 def hdf5_load_coords(model, coords_group):
     """loads the coords from an HDF5 file"""
@@ -569,15 +782,52 @@ def hdf5_load_materials(model, group):
                 model.add_mat3(midi, exi, ethi, ezi, nuxthi, nuthzi, nuzxi, rho=rhoi,
                                gzx=gzxi, ax=axi, ath=athi, az=azi, tref=trefi, ge=gei, comment='')
 
-        #elif card_type == 'MAT8':
-            #model.add_mat8(mid, e11, e22, nu12, g12=0.0, g1z=1e8, g2z=1e8, rho=0.,
-                           #a1=0., a2=0., tref=0., Xt=0., Xc=None, Yt=0., Yc=None,
-                           #S=0., ge=0., F12=0., strn=0., comment='')
-        #elif card_type == 'MAT9':
-            #model.add_mat9(mid, G11=0., G12=0., G13=0., G14=0., G15=0., G16=0.,
-                           #G22=0., G23=0., G24=0., G25=0., G26=0., G33=0., G34=0., G35=0., G36=0.,
-                           #G44=0., G45=0., G46=0., G55=0., G56=0., G66=0.,
-                           #rho=0., A=None, tref=0., ge=0., comment='')
+        elif card_type == 'MAT8':
+            mid = _cast(sub_group['mid'])
+            e11 = _cast(sub_group['E11'])
+            e22 = _cast(sub_group['E22'])
+            nu12 = _cast(sub_group['Nu12'])
+            g12 = _cast(sub_group['G12'])
+            g1z = _cast(sub_group['G1z'])
+            g2z = _cast(sub_group['G2z'])
+
+            a1 = _cast(sub_group['A1'])
+            a2 = _cast(sub_group['A2'])
+            tref = _cast(sub_group['tref'])
+            ge = _cast(sub_group['ge'])
+            rho = _cast(sub_group['rho'])
+
+            xt = _cast(sub_group['Xt'])
+            xc = _cast(sub_group['Xc'])
+            yt = _cast(sub_group['Yt'])
+            yc = _cast(sub_group['Yc'])
+            s = _cast(sub_group['S'])
+
+            f12 = _cast(sub_group['F12'])
+            strn = _cast(sub_group['strn'])
+            for (midi, e11i, e22i, nu12i, g12i, g1zi, g2zi, rhoi, a1i, a2i, trefi,
+                 xti, xci, yti, yci, si, gei, f12i, strni) in zip(
+                     mid, e11, e22, nu12, g12, g1z, g2z, rho, a1, a2, tref, xt, xc, yt, yc, s, ge, f12, strn):
+                model.add_mat8(midi, e11i, e22i, nu12i, g12=g12i, g1z=g1zi, g2z=g2zi, rho=rhoi,
+                               a1=a1i, a2=a2i, tref=trefi, Xt=xti, Xc=xci, Yt=yti, Yc=yci,
+                               S=si, ge=gei, F12=f12i, strn=strni, comment='')
+        elif card_type == 'MAT9':
+            mid = _cast(sub_group['mid'])
+            a = _cast(sub_group['A'])
+            tref = _cast(sub_group['tref'])
+            ge = _cast(sub_group['ge'])
+            rho = _cast(sub_group['rho'])
+            for midi, ai, trefi, gei, rhoi in zip(mid, a, tref, ge, rho):
+                model.add_mat9(
+                    midi,
+                    G11=0., G12=0., G13=0., G14=0., G15=0., G16=0.,
+                    G22=0., G23=0., G24=0., G25=0., G26=0.,
+                    G33=0., G34=0., G35=0., G36=0.,
+                    G44=0., G45=0., G46=0.,
+                    G55=0., G56=0.,
+                    G66=0.,
+                    rho=rhoi, A=ai, tref=trefi, ge=gei, comment='')
+
         elif card_type in ['MAT8', 'MAT9']:
             model.log.warning('skipping materials/%s because its vectorized '
                               'and needs a loader' % card_type)
@@ -596,6 +846,56 @@ def hdf5_load_materials(model, group):
                             #rho=0.0, a1=0.0, a2=0.0, a3=0.0, tref=0.0, ge=0.0, comment='')
             load_cards_from_keys_values('materials/%s' % card_type, sub_group)
 
+def hdf5_load_spcs(model, group):
+    keys = list(group.keys())
+    keys.remove('keys')
+    spc_ids = _cast(group['keys'])
+    for spc_id in keys:
+        cards_group = group[spc_id]
+        for card_type in cards_group.keys():
+            sub_group = cards_group[card_type]
+            #if card_type == 'MAT1':
+                #mid = _cast(sub_group['mid'])
+            #else:
+            load_cards_from_keys_values('spcs/%s/%s' % (spc_id, card_type), sub_group)
+
+def hdf5_load_mpcs(model, group):
+    keys = list(group.keys())
+    keys.remove('keys')
+    spc_ids = _cast(group['keys'])
+    for spc_id in keys:
+        cards_group = group[spc_id]
+        for card_type in cards_group.keys():
+            sub_group = cards_group[card_type]
+            #if card_type == 'MAT1':
+                #mid = _cast(sub_group['mid'])
+            #else:
+            load_cards_from_keys_values('spcs/%s/%s' % (spc_id, card_type), sub_group)
+
+def hdf5_load_loads(model, group):
+    keys = list(group.keys())
+    keys.remove('keys')
+    spc_ids = _cast(group['keys'])
+    for spc_id in keys:
+        cards_group = group[spc_id]
+        for card_type in cards_group.keys():
+            sub_group = cards_group[card_type]
+            if card_type in ['FORCE', 'MOMENT']:
+                if card_type == 'FORCE':
+                    func = model.add_force
+                else:
+                    func = model.add_moment
+                sid = _cast(sub_group['sid'])
+                node = _cast(sub_group['node'])
+                cid = _cast(sub_group['cid'])
+                mag = _cast(sub_group['mag'])
+                xyz = _cast(sub_group['xyz'])
+                for (sidi, nodei, magi, xyzi, cidi) in zip(sid, node, mag, xyz, cid):
+                    func(sidi, nodei, magi, xyzi, cid=cidi, comment='')
+            else:
+                #model.add_force1(sid, node, mag, g1, g2, comment='')
+                load_cards_from_keys_values('spcs/%s/%s' % (spc_id, card_type), sub_group)
+
 def hdf5_load_generic(unused_model, group, name):
     for card_type in group.keys():
         sub_group = group[card_type]
@@ -610,18 +910,31 @@ def hdf5_load_properties(model, properties_group):
     for card_type in properties_group.keys():
         properties = properties_group[card_type]
         if card_type == 'PSHELL':
-            pids = _cast(properties['pid'])
+            pid = _cast(properties['pid'])
             mids = _cast(properties['mids'])
             z = _cast(properties['z'])
             t = _cast(properties['t'])
             twelveIt3 = _cast(properties['twelveIt3'])
             tst = _cast(properties['tst'])
             nsm = _cast(properties['nsm'])
-            for pid, (mid1, mid2, mid3, mid4), (z1, z2), ti, twelveIt3i, tsti, nsmi in zip(
-                    pids, mids, z, t, twelveIt3, tst, nsm):
-                model.add_pshell(pid, mid1=mid1, t=ti, mid2=mid2, twelveIt3=twelveIt3i,
+            for pidi, (mid1, mid2, mid3, mid4), (z1, z2), ti, twelveIt3i, tsti, nsmi in zip(
+                    pid, mids, z, t, twelveIt3, tst, nsm):
+                model.add_pshell(pidi, mid1=mid1, t=ti, mid2=mid2, twelveIt3=twelveIt3i,
                                  mid3=mid3, tst=tsti, nsm=nsmi, z1=z1, z2=z2, mid4=mid4,
                                  comment='')
+        elif card_type == 'PSOLID':
+            pid = _cast(properties['pid'])
+            mid = _cast(properties['mid'])
+            cordm = _cast(properties['cordm'])
+            integ = _cast(properties['integ'])
+            isop = _cast(properties['isop'])
+            stress = _cast(properties['stress'])
+            fctn = _cast(properties['fctn'])
+            for pidi, midi, cordmi, integi, stressi, isopi, fctni in zip(
+                    pid, mid, cordm, integ, stress, isop, fctn):
+                model.add_psolid(pidi, midi, cordm=cordmi, integ=integi, stress=stressi,
+                                 isop=isopi, fctn=fctni, comment='')
+
         elif card_type == 'PROD':
             pid = _cast(properties['pid'])
             mid = _cast(properties['mid'])
@@ -661,6 +974,10 @@ def hdf5_load_properties(model, properties_group):
                  (c1, c2), (d1, d2), (e1, e2), (f1, f2), (k1, k2), nsmi) in zip(
                      pid, mid, A, J, I,
                      c, d, e, f, k, nsm):
+                if k1 == np.nan:
+                    k1 = None
+                if k2 == np.nan:
+                    k2 = None
                 model.add_pbar(pidi, midi, A=Ai, i1=i1, i2=i2, i12=i12, j=Ji, nsm=nsmi,
                                c1=c1, c2=c2, d1=d1, d2=d2, e1=e1, e2=e2,
                                f1=f1, f2=f2, k1=k1, k2=k2, comment='')
@@ -668,8 +985,6 @@ def hdf5_load_properties(model, properties_group):
         else:
             load_cards_from_keys_values('properties/%s' % card_type, properties)
             #model.add_pshear(pid, mid, t, nsm=0., f1=0., f2=0., comment='')
-            #model.add_psolid(pid, mid, cordm=0, integ=None, stress=None,
-                             #isop=None, fctn='SMECH', comment='')
             #model.add_pvisc(pid, ce, cr, comment='')
             #model.add_pelas(pid, k, ge=0., s=0., comment='')
             #model.add_pdamp(pid, b, comment='')
@@ -688,6 +1003,9 @@ def load_cards_from_keys_values(name, properties):
         print(properties)
         raise
     values = properties['values']
+    _load_cards_from_keys_values(name, values, keys)
+
+def _load_cards_from_keys_values(name, values, keys):
     for key, keyi in zip(keys, values.keys()):
         value = values[keyi]
         keys_to_read = list(value.keys())
@@ -700,6 +1018,7 @@ def load_cards_from_keys_values(name, properties):
                 class_instance = class_obj()
             except TypeError:
                 print('error loading %r' % card_type)
+                print(class_obj)
                 raise
 
         _properties = []

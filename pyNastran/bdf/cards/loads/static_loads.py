@@ -742,6 +742,32 @@ class ACCEL1(BaseCard):
 
 class Load0(BaseCard):
     """common class for FORCE, MOMENT"""
+
+    @classmethod
+    def export_to_hdf5(cls, h5_file, model, loads):
+        """exports the loads in a vectorized way"""
+        #encoding = model._encoding
+        #comments = []
+        sid = []
+        node = []
+        cid = []
+        mag = []
+        xyz = []
+        for load in loads:
+            #comments.append(loads.comment)
+            sid.append(load.sid)
+            node.append(load.node)
+            cid.append(load.cid)
+            mag.append(load.mag)
+            xyz.append(load.xyz)
+
+        #h5_file.create_dataset('_comment', data=comments)
+        h5_file.create_dataset('sid', data=sid)
+        h5_file.create_dataset('node', data=node)
+        h5_file.create_dataset('cid', data=cid)
+        h5_file.create_dataset('mag', data=mag)
+        h5_file.create_dataset('xyz', data=xyz)
+
     def __init__(self, sid, node, mag, xyz, cid=0, comment=''):
         """
         Creates a FORCE/MOMENT card
@@ -2276,6 +2302,18 @@ class PLOAD4(Load):
     .. warning:: NX does not support SORL and LDIR, MSC does
     """
     type = 'PLOAD4'
+    _properties = ['node_ids', 'element_ids']
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        eids = [1]
+        pressures = [1.]
+        g1 = None
+        g34 = None
+        return PLOAD4(sid, eids, pressures, g1, g34,
+                      cid=0,
+                      surf_or_line='SURF')
 
     def __init__(self, sid, eids, pressures, g1, g34,
                  cid=0, nvector=None, surf_or_line='SURF',

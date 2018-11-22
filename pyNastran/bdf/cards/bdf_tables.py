@@ -726,6 +726,14 @@ class TABLED5(Table):
 
 class TABDMP1(Table):
     type = 'TABDMP1'
+
+    @classmethod
+    def _init_from_empty(cls):
+        tid = 1
+        x = [0., 1.]
+        y = [0., 1.]
+        return TABDMP1(tid, x, y, Type='G', comment='')
+
     def __init__(self, tid, x, y, Type='G', comment=''):
         Table.__init__(self)
         if comment:

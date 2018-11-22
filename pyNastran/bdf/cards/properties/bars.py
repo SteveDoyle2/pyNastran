@@ -907,7 +907,7 @@ class PBAR(LineProperty):
     }
 
     @classmethod
-    def export_to_hdf5_vectorized(cls, h5_file, model, pids):
+    def export_to_hdf5(cls, h5_file, model, pids):
         """exports the properties in a vectorized way"""
         #comments = []
         mids = []
@@ -934,7 +934,18 @@ class PBAR(LineProperty):
             d.append([prop.d1, prop.d2])
             e.append([prop.e1, prop.e2])
             f.append([prop.f1, prop.f2])
-            k.append([prop.k1, prop.k2])
+
+            ki = []
+            if prop.k1 is None:
+                ki.append(np.nan)
+            else:
+                ki.append(prop.k1)
+            if prop.k2 is None:
+                ki.append(np.nan)
+            else:
+                ki.append(prop.k2)
+
+            k.append(ki)
             nsm.append(prop.nsm)
         #h5_file.create_dataset('_comment', data=comments)
         h5_file.create_dataset('pid', data=pids)

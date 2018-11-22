@@ -223,6 +223,17 @@ class RBAR(RigidElement):
     +------+-----+----+----+--------+-----+-----+-----+-------+
     """
     type = 'RBAR'
+    _properties = ['dependent_nodes', 'independent_nodes']
+
+    @classmethod
+    def _init_from_empty(cls):
+        eid = 1
+        nids = [1, 2]
+        cna = '123'
+        cnb = '456'
+        cma = None
+        cmb = None
+        return RBAR(eid, nids, cna, cnb, cma, cmb, alpha=0., comment='')
 
     def __init__(self, eid, nids, cna, cnb, cma, cmb, alpha=0., comment=''):
         """
@@ -783,6 +794,15 @@ class RBE2(RigidElement):
     """
     type = 'RBE2'
     _field_map = {1: 'eid', 2:'gn', 3:'cm'}
+    _properties = ['Gmi_node_ids', 'dependent_nodes', 'independent_nodes']
+
+    @classmethod
+    def _init_from_empty(cls):
+        eid = 1
+        gn = 1
+        cm = '123'
+        Gmi = [2, 3]
+        return RBE2(eid, gn, cm, Gmi, alpha=0.0, comment='')
 
     def _update_field_helper(self, n, value):
         """
@@ -1072,6 +1092,19 @@ class RBE3(RigidElement):
     +------+---------+---------+---------+------+--------+--------+------+--------+
     """
     type = 'RBE3'
+    _properties = ['wt_cg_groups', 'ref_grid_id', 'Gijs_node_ids',
+                   'dependent_nodes', 'independent_nodes']
+
+    @classmethod
+    def _init_from_empty(cls):
+        eid = 1
+        refgrid = 1
+        refc = '123'
+        weights = [1.]
+        comps = ['1']
+        Gijs = [2]
+        return RBE3(eid, refgrid, refc, weights, comps, Gijs,
+                    Gmi=None, Cmi=None, alpha=0.0, comment='')
 
     def __init__(self, eid, refgrid, refc, weights, comps, Gijs,
                  Gmi=None, Cmi=None, alpha=0.0, comment=''):

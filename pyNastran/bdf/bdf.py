@@ -176,7 +176,7 @@ def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
              save_file_structure=False,
              skip_cards=None, read_cards=None,
              encoding=None, log=None, debug=True, mode='msc'):
-    # type: (Union[str, None], bool, bool, bool, Union[List[str], None], Union[str, None], Union[SimpleLogger, None], Optional[bool], str) -> BDF
+    # type: (Optional[str], bool, bool, bool, Optional[List[str]], Optional[str], Optional[SimpleLogger], Optional[bool], str) -> BDF
     """
     Creates the BDF object
 

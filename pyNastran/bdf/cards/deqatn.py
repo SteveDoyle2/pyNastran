@@ -193,6 +193,12 @@ class DEQATN(BaseCard):  # needs work...
         self.func_str = ''
 
     @classmethod
+    def _init_from_empty(cls):
+        equation_id = 1
+        eqs = []
+        return DEQATN(equation_id, eqs, comment='')
+
+    @classmethod
     def add_card(cls, card, comment=''):
         """
         Adds a DEQATN card from ``BDF.add_card(...)``

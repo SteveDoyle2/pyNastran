@@ -91,7 +91,7 @@ class CBEAM(LineElement):
                     raise KeyError(msg)
 
     @classmethod
-    def export_to_hdf5_vectorized(cls, h5_file, model, eids):
+    def export_to_hdf5(cls, h5_file, model, eids):
         """exports the elements in a vectorized way"""
         encoding = model._encoding
         #comments = []

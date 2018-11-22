@@ -1536,7 +1536,7 @@ class Cord2x(Coord):
         self._finish_setup()
 
     @classmethod
-    def export_to_hdf5_vectorized(cls, h5_file, model, cids):
+    def export_to_hdf5(cls, h5_file, model, cids):
         """exports the coords in a vectorized way"""
         comments = []
         rid = []
@@ -1917,7 +1917,7 @@ class Cord1x(Coord):
     rid = 0  # used only for transform to global
 
     @classmethod
-    def export_to_hdf5_vectorized(cls, h5_file, model, cids):
+    def export_to_hdf5(cls, h5_file, model, cids):
         """exports the coords in a vectorized way"""
         comments = []
         nodes = []

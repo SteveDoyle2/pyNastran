@@ -675,7 +675,7 @@ class LegendPropertiesWindow(PyDialog):
 
     def on_animate(self):
         """opens the animation window"""
-        title, flag0 = check_title(self.title_edit)
+        title, flag0 = check_name_str(self.title_edit)
         if not flag0:
             return
 
@@ -706,7 +706,7 @@ class LegendPropertiesWindow(PyDialog):
             'clicked_ok' : False,
             'close' : False,
         }
-        self.win_parent.set_animation_window(data)
+        self.win_parent.legend_obj.set_animation_window(data)
 
     def on_default_title(self):
         """action when user clicks 'Default' for title"""

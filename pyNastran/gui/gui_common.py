@@ -411,6 +411,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 # picking
                 ('area_pick', 'Area Pick', 'tarea_pick.png', None, 'Get a list of nodes/elements', self.mouse_actions.on_area_pick),
                 ('highlight', 'Highlight', 'thighlight.png', None, 'Highlight a list of nodes/elements', self.mouse_actions.on_highlight),
+                ('highlight_nodes_elements', 'Highlight', 'thighlight.png', None, 'Highlight a list of nodes/elements', self.highlight_obj.set_highlight_menu),
             ]
 
         if 'nastran' in self.fmts:
@@ -514,7 +515,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                          'rotate_clockwise', 'rotate_cclockwise',
                          'rotation_center', 'measure_distance', 'probe_result',
                          #'highlight_cell', 'highlight_node',
-                         'area_pick',
+                         'area_pick', 'highlight_nodes_elements',
 
                          'wireframe', 'surface', 'edges']
         toolbar_tools += ['camera_reset', 'view', 'screenshot', '', 'exit']
@@ -1088,6 +1089,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         edge_actor.SetVisibility(self.is_edges)
         self.rend.AddActor(edge_actor)
 
+    #---------------------------------------------------------------------
     def post_group_by_name(self, name):
         """posts a group with a specific name"""
         group = self.groups[name]

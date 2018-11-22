@@ -391,7 +391,7 @@ class CBAR(LineElement):
                     raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     @classmethod
-    def export_to_hdf5_vectorized(cls, h5_file, model, eids):
+    def export_to_hdf5(cls, h5_file, model, eids):
         """exports the elements in a vectorized way"""
         #comments = []
         pids = []

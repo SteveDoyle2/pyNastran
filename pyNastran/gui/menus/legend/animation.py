@@ -314,7 +314,7 @@ class AnimationWindow(PyDialog):
         self.browse_folder_edit.setToolTip('Location to save the png/gif files')
 
         self.gif_label = QLabel("Gif Filename:")
-        self.gif_edit = QLineEdit(str(self._default_name + '.gif'))
+        self.gif_edit = QLineEdit(str(self._default_title + '.gif'))
         self.gif_button = QPushButton('Default')
         self.gif_edit.setToolTip('Name of the gif')
         self.gif_button.setToolTip('Sets the name of the gif to %s.gif' % self._default_title)

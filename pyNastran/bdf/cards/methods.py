@@ -672,6 +672,12 @@ class EIGR(Method):
         'INV', 'SINV', 'GIV', 'MGIV', 'HOU', 'MHOU', 'AGIV' # obsolete
     ]
 
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        return EIGR(sid, method='LAN', f1=None, f2=None, ne=None, nd=None,
+                    norm='MASS', G=None, C=None, comment='')
+
     def __init__(self, sid, method='LAN', f1=None, f2=None, ne=None, nd=None,
                  norm='MASS', G=None, C=None, comment=''):
         """

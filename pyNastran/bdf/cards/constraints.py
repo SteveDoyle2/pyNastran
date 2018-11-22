@@ -378,6 +378,16 @@ class MPC(Constraint):
     +-----+-----+----+----+-----+----+----+----+-----+
     """
     type = 'MPC'
+    #'constraints', 'enforced', 'gids_ref', 'gids'
+    _properties = ['node_ids', ]
+
+    @classmethod
+    def _init_from_empty(cls):
+        conid = 1
+        nodes = [1]
+        components = ['1']
+        coefficients = [1.]
+        return MPC(conid, nodes, components, coefficients)
 
     def __init__(self, conid, nodes, components, coefficients, comment=''):
         """
@@ -415,13 +425,15 @@ class MPC(Constraint):
 
     def object_attributes(self, mode='public', keys_to_skip=None):
         """.. seealso:: `pyNastran.utils.object_attributes(...)`"""
+        if keys_to_skip is None:
+            keys_to_skip = []
         my_keys_to_skip = ['gids_ref', 'gids', 'constraints', 'enforced']
-        return Constraint.object_attributes(mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
+        return super(Constraint, self).object_attributes(mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     def object_methods(self, mode='public', keys_to_skip=None):
         """.. seealso:: `pyNastran.utils.object_methods(...)`"""
         my_keys_to_skip = ['gids_ref', 'gids', 'constraints', 'enforced']
-        return Constraint.object_methods(mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
+        return super(Constraint, self).object_methods(mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     def validate(self):
         assert isinstance(self.nodes, list), type(self.nodes)
@@ -520,7 +532,6 @@ class MPC(Constraint):
     def enforced(self, enforced):
         self.deprecated('enforced', 'coefficients', '1.2')
         self.coefficients = enforced
-
 
     @property
     def gids_ref(self):
@@ -1022,6 +1033,13 @@ class SPC1(Constraint):
     type = 'SPC1'
     _properties = ['node_ids'] # 'constraints',
 
+    @classmethod
+    def _init_from_empty(cls):
+        conid = 1
+        components = '1'
+        nodes = [1]
+        return SPC1(conid, components, nodes, comment='')
+
     def __init__(self, conid, components, nodes, comment=''):
         """
         Creates an SPC1 card, which defines the degree of freedoms to be
@@ -1096,15 +1114,15 @@ class SPC1(Constraint):
             assert nid > 0, data
         return SPC1(conid, components, nodes, comment=comment)
 
-    #@property
-    #def constraints(self):
-        #self.deprecated('constraints', 'components', '1.2')
-        #return self.components
+    @property
+    def constraints(self):
+        self.deprecated('constraints', 'components', '1.2')
+        return self.components
 
-    #@constraints.setter
-    #def constraints(self, constraints):
-        #self.deprecated('constraints', 'components', '1.2')
-        #self.components = constraints
+    @constraints.setter
+    def constraints(self, constraints):
+        self.deprecated('constraints', 'components', '1.2')
+        self.components = constraints
 
     @property
     def node_ids(self):

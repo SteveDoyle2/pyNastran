@@ -1775,7 +1775,7 @@ class PSHELL(ShellProperty):
         self.mid4_ref = None
 
     @classmethod
-    def export_to_hdf5_vectorized(cls, h5_file, model, pids):
+    def export_to_hdf5(cls, h5_file, model, pids):
         """exports the properties in a vectorized way"""
         comments = []
         mids = []

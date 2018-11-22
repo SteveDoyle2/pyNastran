@@ -695,6 +695,26 @@ class PLOTEL(BaseCard):
     _field_map = {
         1: 'eid', 3:'g1', 4:'g2',
     }
+    _properties = ['node_ids']
+
+    @classmethod
+    def _init_from_empty(cls):
+        eid = 1
+        nodes = [1, 2]
+        return PLOTEL(eid, nodes, comment='')
+
+    @classmethod
+    def export_to_hdf5(cls, h5_file, model, eids):
+        """exports the elements in a vectorized way"""
+        #comments = []
+        nodes = []
+        for eid in eids:
+            element = model.elements[eid]
+            #comments.append(element.comment)
+            nodes.append(element.nodes)
+        #h5_file.create_dataset('_comment', data=comments)
+        h5_file.create_dataset('eid', data=eids)
+        h5_file.create_dataset('nodes', data=nodes)
 
     def __init__(self, eid, nodes, comment=''):
         """

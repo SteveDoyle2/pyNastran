@@ -485,6 +485,15 @@ class DAREA(BaseCard):
     +-------+-----+----+----+-----+----+----+------+
     """
     type = 'DAREA'
+    _properties = ['node_ids']
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        nodes = [1]
+        components = [1]
+        scales = [1.]
+        return DAREA(sid, nodes, components, scales, comment='')
 
     def __init__(self, sid, nodes, components, scales, comment=''):
         """
@@ -519,7 +528,7 @@ class DAREA(BaseCard):
 
         assert isinstance(components, list), 'components=%r' % components
         for component in components:
-            assert 0 <= component <= 6, component
+            assert 0 <= component <= 6, 'component=%r' % component
         self.scales = scales
         self.nodes_ref = None
 

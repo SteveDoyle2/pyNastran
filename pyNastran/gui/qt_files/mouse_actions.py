@@ -530,30 +530,7 @@ class MouseActions(object):
 
     def create_highlighted_actor(self, ugrid, representation='wire'):
         """creates a highlighted actor given a vtkUnstructuredGrid"""
-        actor = vtk.vtkLODActor()
-        mapper = vtk.vtkDataSetMapper()
-        mapper.SetInputData(ugrid)
-        # don't use a single color; makes setting prop values work
-        mapper.ScalarVisibilityOff()
-        actor.SetMapper(mapper)
-
-        settings = self.gui.settings
-        prop = actor.GetProperty()
-        prop.SetColor(settings.highlight_color)
-        prop.SetOpacity(settings.highlight_opacity)
-        if representation == 'surface':
-            pass
-        elif representation == 'points':
-            prop.SetRepresentationToPoints()
-            prop.SetPointSize(10.)
-        elif representation == 'wire':
-            prop.SetRepresentationToWireframe()
-            prop.SetLineWidth(5.)
-        else:
-            raise NotImplementedError('representation=%r and must be [surface, points, wire]' % (
-                representation))
-
-        self.rend.AddActor(actor)
+        actor = create_highlighted_actor(self.gui, ugrid, representation='wire')
         return actor
 
     def _highlight_picker(self, unused_obj, unused_event):
@@ -821,3 +798,32 @@ class MouseActions(object):
     def get_element_ids(self, model_name, ids=None):
         """wrapper around node_ids"""
         return self.gui.get_element_ids(model_name, ids)
+
+
+def create_highlighted_actor(gui, ugrid, representation='wire'):
+    """creates a highlighted actor given a vtkUnstructuredGrid"""
+    actor = vtk.vtkLODActor()
+    mapper = vtk.vtkDataSetMapper()
+    mapper.SetInputData(ugrid)
+    # don't use a single color; makes setting prop values work
+    mapper.ScalarVisibilityOff()
+    actor.SetMapper(mapper)
+
+    settings = gui.settings
+    prop = actor.GetProperty()
+    prop.SetColor(settings.highlight_color)
+    prop.SetOpacity(settings.highlight_opacity)
+    if representation == 'surface':
+        pass
+    elif representation == 'points':
+        prop.SetRepresentationToPoints()
+        prop.SetPointSize(10.)
+    elif representation == 'wire':
+        prop.SetRepresentationToWireframe()
+        prop.SetLineWidth(5.)
+    else:
+        raise NotImplementedError('representation=%r and must be [surface, points, wire]' % (
+            representation))
+
+    gui.rend.AddActor(actor)
+    return actor

@@ -63,6 +63,7 @@ class HDF5Exporter(object):
             user_custom_types = []
         self.user_custom_types = user_custom_types
         self.hdf5_file = hdf5_file
+        self.log = log
 
     def _create_dict_group(self, hdf5_file, mydict, user_custom_types, nlevels):
         """creates the info HDF5 group"""
@@ -184,15 +185,30 @@ class HDF5Exporter(object):
 
         lists/tuples with numpy unicode are special
         """
-        sub_group = hdf5_file.create_group(key)
+        _add_list_tuple(hdf5_file, key, value, Type, self.log)
+
+def _add_list_tuple(hdf5_file, key, value, Type, log):
+    """
+    tuples are indistinguishable from lists as a dataset,
+    so we'll store it as a numpy array, list it, and then tuple it back
+
+    lists/tuples with numpy unicode are special
+    """
+    sub_group = hdf5_file.create_group(key)
+    sub_group.attrs['type'] = Type
+    try:
+        sub_group.create_dataset('value', data=value)
+    except TypeError:
+        # contains unicode
         sub_group.attrs['type'] = Type
-        try:
-            sub_group.create_dataset('value', data=value)
-        except TypeError:
-            # contains unicode
-            sub_group.attrs['type'] = Type
-            for i, valuei in enumerate(value):
+        for i, valuei in enumerate(value):
+            try:
                 sub_group.create_dataset(str(i), data=valuei)
+            except TypeError:
+                log.error('key=%r Type=%r' % (key, Type))
+                print('value = %s' % str(value))
+                print('value[%i] = %s' % (i, str(valuei)))
+                raise
 
 def load_obj_from_hdf5(hdf5_filename, custom_types_dict=None, log=None, debug=False):
     """

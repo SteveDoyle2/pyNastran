@@ -65,6 +65,13 @@ class AECOMP(BaseCard):
     type = 'AECOMP'
     allowed_list_types = ['SET1', 'AELIST', 'CAERO']
 
+    @classmethod
+    def _init_from_empty(cls):
+        name = 'name'
+        list_type = 'CAERO'
+        lists = [1]
+        return AECOMP(name, list_type, lists, comment='')
+
     def __init__(self, name, list_type, lists, comment=''):
         # type: (str, List[str], Union[int, List[int]], str) -> None
         """
@@ -324,6 +331,12 @@ class AEFACT(BaseCard):
 
     """
     type = 'AEFACT'
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        fractions = [0., 1.,]
+        return AEFACT(sid, fractions, comment='')
 
     def __init__(self, sid, fractions, comment=''):
         """
@@ -4805,6 +4818,17 @@ class SPLINE2(Spline):
         1: 'eid', 2:'caero', 3:'id1', 4:'id2', 5:'setg', 6:'dz',
         7: 'dtor', 8:'cid', 9:'dthx', 10:'dthy',
     }
+    _properties = ['aero_element_ids']
+
+    @classmethod
+    def _init_from_empty(cls):
+        eid = 1
+        caero = 1
+        box1 = 1
+        box2 = 2
+        setg = 1
+        return SPLINE2(eid, caero, box1, box2, setg,
+                       dz=0.0, dtor=1.0, cid=0, dthx=0., dthy=0., usage='BOTH', comment='')
 
     def __init__(self, eid, caero, box1, box2, setg, dz=0.0, dtor=1.0, cid=0,
                  dthx=0., dthy=0., usage='BOTH', comment=''):
@@ -5480,6 +5504,18 @@ class SPLINE5(Spline):
         7: 'dtor', 8:'cid', 9:'thx', 10:'thy', 12:'usage',
         13 : 'meth', 15 : 'ftype', 16 : 'rcore',
     }
+
+    @classmethod
+    def _init_from_empty(cls):
+        eid = 1
+        caero = 1
+        aelist = 1
+        setg = 1
+        thx = 1.
+        thy = 1.
+        return SPLINE5(eid, caero, aelist, setg, thx, thy,
+                       dz=0., dtor=1.0, cid=0, usage='BOTH', method='BEAM',
+                       ftype='WF2', rcore=None, comment='')
 
     def __init__(self, eid, caero, aelist, setg, thx, thy, dz=0., dtor=1.0, cid=0,
                  usage='BOTH', method='BEAM', ftype='WF2', rcore=None, comment=''):

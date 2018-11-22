@@ -26,6 +26,12 @@ class PARAM(BaseCard):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
+    @classmethod
+    def _init_from_empty(cls):
+        key = 'POST'
+        values = -1
+        return PARAM(key, values, comment='')
+
     def __init__(self, key, values, comment=''):
         """
         Creates a PARAM card

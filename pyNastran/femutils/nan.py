@@ -10,7 +10,7 @@ import numpy as np
 
 def isfinite(_array):
     """are any of the values finite?"""
-    return np.any(np.isfinite(_array))
+    return _array is not None and np.any(np.isfinite(_array))
 
 def isfinite_and_greater_than(_array, value):
     """are any of the values finite and greater than some value?"""

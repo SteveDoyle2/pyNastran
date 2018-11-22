@@ -1654,6 +1654,14 @@ class TSTEP(BaseCard):
     """
     type = 'TSTEP'
 
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1.
+        N = 4
+        DT = 1.
+        NO = None
+        return TSTEP(sid, N, DT, NO, comment='')
+
     def __init__(self, sid, N, DT, NO, comment=''):
         """
         Creates a TSTEP card

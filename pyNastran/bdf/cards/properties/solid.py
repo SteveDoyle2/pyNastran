@@ -407,14 +407,16 @@ class PSOLID(SolidProperty):
         self.mid_ref = None
 
     @classmethod
-    def _export_to_hdf5_vectorized(cls, h5_file, model, pids):
+    def export_to_hdf5(cls, h5_file, model, pids):
         """exports the properties in a vectorized way"""
+        encoding = model._encoding
         comments = []
         mid = []
         cordm = []
         integ = []
         stress = []
-        #fctn = []
+        isop = []
+        fctn = []
         assert len(pids) > 0, pids
         for pid in pids:
             prop = model.properties[pid]
@@ -426,8 +428,17 @@ class PSOLID(SolidProperty):
             else:
                 integ.append(prop.integ)
 
-            stress.append(prop.stress)
-            #fctn.append(prop.fctn)
+            if prop.stress is None:
+                stress.append(-1)
+            else:
+                stress.append(prop.stress)
+
+            if prop.isop is None:
+                isop.append(-1)
+            else:
+                isop.append(prop.isop)
+
+            fctn.append(prop.fctn.encode(encoding))
         #fctn = np.array(fctn, dtype='<8U')
         #h5_file.create_dataset('_comment', data=comments)
         h5_file.create_dataset('pid', data=pids)
@@ -435,7 +446,8 @@ class PSOLID(SolidProperty):
         h5_file.create_dataset('cordm', data=cordm)
         h5_file.create_dataset('integ', data=integ)
         h5_file.create_dataset('stress', data=stress)
-        #h5_file.create_dataset('fctn', data=fctn)
+        h5_file.create_dataset('isop', data=isop)
+        h5_file.create_dataset('fctn', data=fctn)
 
     @classmethod
     def add_card(cls, card, comment=''):

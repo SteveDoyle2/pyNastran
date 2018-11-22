@@ -106,6 +106,13 @@ class AERO(Aero):
         6:'symXY',
     }
 
+    @classmethod
+    def _init_from_empty(cls):
+        velocity = 1.
+        cref = 1.
+        rho_ref = 1.
+        return AERO(velocity, cref, rho_ref, acsid=0, sym_xz=0, sym_xy=0, comment='')
+
     def __init__(self, velocity, cref, rho_ref, acsid=0, sym_xz=0, sym_xy=0, comment=''):
         """
         Creates an AERO card
@@ -324,6 +331,12 @@ class FLFACT(BaseCard):
     """
     type = 'FLFACT'
 
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1.
+        factors = [1.]
+        return FLFACT(sid, factors, comment='')
+
     def __init__(self, sid, factors, comment=''):
         """
         Creates an FLFACT card, which defines factors used for flutter
@@ -477,6 +490,17 @@ class FLUTTER(BaseCard):
         8:'epsilon',
     }
     _properties = ['_field_map', 'headers', ]
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        method = 'PKNL'
+        density = 1
+        mach = 1
+        reduced_freq_velocity = 1
+        return FLUTTER(sid, method, density, mach, reduced_freq_velocity,
+                       imethod='L', nvalue=None, omax=None, epsilon=1.0e-3, comment='')
+
     def _get_field_helper(self, n):
         """
         Gets complicated parameters on the FLUTTER card
@@ -830,6 +854,14 @@ class GUST(BaseCard):
     _field_map = {
         1: 'sid', 2:'dload', 3:'wg', 4:'x0', 5:'V',
     }
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        dload = 1
+        wg = 1.
+        x0 = 0.
+        return GUST(sid, dload, wg, x0, V=None, comment='')
 
     def __init__(self, sid, dload, wg, x0, V=None, comment=''):
         """
