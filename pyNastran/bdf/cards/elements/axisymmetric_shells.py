@@ -428,6 +428,39 @@ class CTRIAX(AxisymmetricTri):
     Theta/Mcid is MSC only!
     """
     type = 'CTRIAX'
+
+    @classmethod
+    def export_to_hdf5(cls, h5_file, model, eids):
+        """exports the elements in a vectorized way"""
+        #comments = []
+        pids = []
+        nodes = []
+        mcids = []
+        thetas = []
+        for eid in eids:
+            element = model.elements[eid]
+            #comments.append(element.comment)
+            pids.append(element.pid)
+            nids = list(nid  if nid is not None else 0
+                        for nid in element.nodes)
+            nodes.append(nids)
+            print(element.nodes)
+            if isinstance(element.theta_mcid, int):
+                mcid = self.theta_mcid
+                theta = 0.
+            else:
+                assert isinstance(element.theta_mcid, float), type(element.theta_mcid)
+                mcid = -1
+                theta = element.theta_mcid
+            mcids.append(mcid)
+            thetas.append(theta)
+        #h5_file.create_dataset('_comment', data=comments)
+        h5_file.create_dataset('eid', data=eids)
+        h5_file.create_dataset('pid', data=pids)
+        h5_file.create_dataset('nodes', data=nodes)
+        h5_file.create_dataset('mcid', data=mcids)
+        h5_file.create_dataset('theta', data=thetas)
+
     def __init__(self, eid, pid, nids, theta_mcid=0., comment=''):
         AxisymmetricTri.__init__(self)
         if comment:
@@ -599,6 +632,27 @@ class CTRIAX6(TriShell):
     """
     type = 'CTRIAX6'
     pid = -53 # uses element type from OP2
+
+    @classmethod
+    def export_to_hdf5(cls, h5_file, model, eids):
+        """exports the elements in a vectorized way"""
+        #comments = []
+        pids = []
+        nodes = []
+        thetas = []
+        for eid in eids:
+            element = model.elements[eid]
+            #comments.append(element.comment)
+            pids.append(element.pid)
+            nodes.append(element.nodes)
+            theta = element.theta_mcid
+            thetas.append(theta)
+        #h5_file.create_dataset('_comment', data=comments)
+        h5_file.create_dataset('eid', data=eids)
+        h5_file.create_dataset('pid', data=pids)
+        h5_file.create_dataset('nodes', data=nodes)
+        h5_file.create_dataset('theta', data=thetas)
+
     def __init__(self, eid, mid, nids, theta=0., comment=''):
         TriShell.__init__(self)
         if comment:
@@ -847,6 +901,36 @@ class CQUADX(AxisymmetricQuad):
     Theta/Mcid is MSC only!
     """
     type = 'CQUADX'
+
+    @classmethod
+    def export_to_hdf5(cls, h5_file, model, eids):
+        """exports the elements in a vectorized way"""
+        #comments = []
+        pids = []
+        nodes = []
+        mcids = []
+        thetas = []
+        for eid in eids:
+            element = model.elements[eid]
+            #comments.append(element.comment)
+            pids.append(element.pid)
+            nodes.append(element.nodes)
+            if isinstance(element.theta_mcid, int):
+                mcid = self.theta_mcid
+                theta = 0.
+            else:
+                assert isinstance(element.theta_mcid, float), type(element.theta_mcid)
+                mcid = -1
+                theta = element.theta_mcid
+            mcids.append(mcid)
+            thetas.append(theta)
+        #h5_file.create_dataset('_comment', data=comments)
+        h5_file.create_dataset('eid', data=eids)
+        h5_file.create_dataset('pid', data=pids)
+        h5_file.create_dataset('nodes', data=nodes)
+        h5_file.create_dataset('mcid', data=mcids)
+        h5_file.create_dataset('theta', data=thetas)
+
     def __init__(self, eid, pid, nids, theta_mcid=0., comment=''):
         AxisymmetricQuad.__init__(self)
         if comment:

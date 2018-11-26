@@ -545,6 +545,13 @@ class PMASS(Property):
         # 1-based
         3 : 'mass',
     }
+    _properties = ['node_ids']
+
+    @classmethod
+    def _init_from_empty(cls):
+        pid = 1
+        mass = 1.
+        return PMASS(pid, mass, comment='')
 
     def __init__(self, pid, mass, comment=''):
         """

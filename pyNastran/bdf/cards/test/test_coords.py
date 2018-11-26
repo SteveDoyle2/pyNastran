@@ -952,7 +952,7 @@ def get_nodes(grids, grids_expected, coords):
         #coord_obj = model.Coord(cid)
 
     model.cross_reference()
-    save_load_deck(model, run_remove_unused=False, run_convert=False)
+    save_load_deck(model, run_remove_unused=False, run_convert=False, run_save_load_hdf5=True)
 
     for (i, grid) in enumerate(grids_expected):
         (nid, cid, x, y, z) = grid

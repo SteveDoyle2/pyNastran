@@ -48,6 +48,15 @@ class DELAY(BaseCard):
     +-------+-----+-----------+-----+--------+------+-----+--------+
     """
     type = 'DELAY'
+    _properties = ['node_id1', 'node_ids']
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        nodes = [1]
+        components = [1]
+        delays = [1.]
+        return DELAY(sid, nodes, components, delays, comment='')
 
     def __init__(self, sid, nodes, components, delays, comment=''):
         """
@@ -196,6 +205,15 @@ class DPHASE(BaseCard):
     +--------+-----+-----------+-----+------+------+-----+-----+
     """
     type = 'DPHASE'
+    _properties = ['node_id1', 'node_ids']
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        nodes = [1]
+        components = [1]
+        phase_leads = [1.]
+        return DPHASE(sid, nodes, components, phase_leads, comment='')
 
     def __init__(self, sid, nodes, components, phase_leads, comment=''):
         """
@@ -819,6 +837,16 @@ class NLPARM(BaseCard):
     +--------+--------+------+------+---------+-------+---------+---------+--------+
     """
     type = 'NLPARM'
+    _properties = ['nlparm_id']
+
+    @classmethod
+    def _init_from_empty(cls):
+        nlparm_id = 1
+        return NLPARM(nlparm_id, ninc=None, dt=0.0, kmethod='AUTO', kstep=5,
+                      max_iter=25, conv='PW', int_out='NO', eps_u=0.01,
+                      eps_p=0.01, eps_w=0.01, max_div=3, max_qn=None,
+                      max_ls=4, fstress=0.2, ls_tol=0.5, max_bisect=5,
+                      max_r=20., rtol_b=20., comment='')
 
     def __init__(self, nlparm_id, ninc=None, dt=0.0, kmethod='AUTO', kstep=5,
                  max_iter=25, conv='PW', int_out='NO',
@@ -1066,6 +1094,13 @@ class NLPARM(BaseCard):
 
 class NLPCI(BaseCard):
     type = 'NLPCI'
+    _properties = ['nlpci_id']
+
+    @classmethod
+    def _init_from_empty(cls):
+        nlpci_id = 1
+        return NLPCI(nlpci_id, Type='CRIS', minalr=0.25, maxalr=4.,
+                     scale=0., desiter=12, mxinc=20, comment='')
 
     def __init__(self, nlpci_id, Type='CRIS', minalr=0.25, maxalr=4.,
                  scale=0., desiter=12, mxinc=20, comment=''):

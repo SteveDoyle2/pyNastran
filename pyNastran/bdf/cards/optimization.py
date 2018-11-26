@@ -803,6 +803,12 @@ class DDVAL(OptConstraint):
     """
     type = 'DDVAL'
 
+    @classmethod
+    def _init_from_empty(cls):
+        oid = 1
+        ddvals = [1, 2]
+        return DDVAL(oid, ddvals, comment='')
+
     def __init__(self, oid, ddvals, comment=''):
         OptConstraint.__init__(self)
         if comment:
@@ -994,6 +1000,16 @@ class DLINK(OptConstraint):
     +-------+------+-------+--------+-------+------+----+------+----+
     """
     type = 'DLINK'
+
+    @classmethod
+    def _init_from_empty(cls):
+        oid = 1
+        dependent_desvar = 1
+
+        independent_desvars = [2, 3]
+        coeffs = [1., 2.]
+        return DLINK(oid, dependent_desvar, independent_desvars, coeffs,
+                     c0=0., cmult=1., comment='')
 
     def __init__(self, oid, dependent_desvar,
                  independent_desvars, coeffs, c0=0., cmult=1., comment=''):

@@ -829,7 +829,7 @@ class Load0(BaseCard):
         self.mag = mag
         self.xyz = np.asarray(xyz, dtype='float64')
         assert self.xyz.size == 3, self.xyz.shape
-        assert isinstance(self.cid, int), self.cid
+        assert isinstance(self.cid, integer_types), self.cid
         self.node_ref = None
         self.cid_ref = None
 
@@ -2846,6 +2846,15 @@ class PLOADX1(BaseCard):
     +---------+-----+-----+----+----+----+----+-------+
     """
     type = 'PLOADX1'
+    _properties = ['node_ids', 'nodes']
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        eid = 1
+        pa = 1.
+        nids = [1, 2]
+        return PLOADX1(sid, eid, pa, nids, pb=None, theta=0., comment='')
 
     def __init__(self, sid, eid, pa, nids, pb=None, theta=0., comment=''):
         """

@@ -109,6 +109,7 @@ class CBEAM(LineElement):
         wb = []
         sa = []
         sb = []
+        nan = np.full(3, np.nan)
         for eid in eids:
             element = model.elements[eid]
             #comments.append(element.comment)
@@ -118,7 +119,7 @@ class CBEAM(LineElement):
                 x.append(element.x)
                 g0.append(-1)
             else:
-                x.append(element.x)
+                x.append(nan)
                 g0.append(element.g0)
             offt.append(element.offt.encode(encoding))
 

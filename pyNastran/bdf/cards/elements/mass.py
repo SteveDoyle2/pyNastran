@@ -64,6 +64,14 @@ class CMASS1(PointMassElement):
     _field_map = {
         1: 'eid', 2:'pid', 3:'g1', 4:'c1', 5:'g2', 6:'c2',
     }
+    _properties = ['node_ids']
+
+    @classmethod
+    def _init_from_empty(cls):
+        eid = 1
+        pid = 1
+        nids = [1, 2]
+        return CMASS1(eid, pid, nids, c1=0, c2=0, comment='')
 
     def __init__(self, eid, pid, nids, c1=0, c2=0, comment=''):
         # type: (int, int, [int, int], int, int, str) -> CMASS1
@@ -267,6 +275,14 @@ class CMASS2(PointMassElement):
     cp_name_map = {
         'M' : 'mass',
     }
+    _properties = ['node_ids']
+
+    @classmethod
+    def _init_from_empty(cls):
+        eid = 1
+        mass = 1.
+        nids = [1, 2]
+        return CMASS2(eid, mass, nids, c1=0, c2=0, comment='')
 
     def __init__(self, eid, mass, nids, c1, c2, comment=''):
         """
@@ -476,6 +492,13 @@ class CMASS3(PointMassElement):
         1: 'eid', 2:'pid', 3:'s1', 4:'s2',
     }
 
+    @classmethod
+    def _init_from_empty(cls):
+        eid = 1
+        pid = 1
+        nids = [1, 2]
+        return CMASS3(eid, pid, nids, comment='')
+
     def __init__(self, eid, pid, nids, comment=''):
         """
         Creates a CMASS3 card
@@ -601,6 +624,13 @@ class CMASS4(PointMassElement):
     _field_map = {
         1: 'eid', 2:'mass', 3:'s1', 4:'s2',
     }
+
+    @classmethod
+    def _init_from_empty(cls):
+        eid = 1
+        mass = 1.
+        nids = [1, 2]
+        return CMASS4(eid, pid, nids, comment='')
 
     def __init__(self, eid, mass, nids, comment=''):
         """

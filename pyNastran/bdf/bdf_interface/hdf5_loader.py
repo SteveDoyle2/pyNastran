@@ -2,7 +2,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from collections import defaultdict
-from six import string_types, StringIO
+from six import string_types, StringIO, text_type
 import numpy as np
 from pyNastran.utils.dict_to_h5py import _add_list_tuple, _cast, integer_types, float_types, string_types
 from pyNastran.bdf.bdf_interface.add_card import CARD_MAP
@@ -346,7 +346,7 @@ def _export_list_keys(model, hdf5_file, list_keys):
         #group.create_dataset('keys', data=keys)
         try:
             _add_list_tuple(hdf5_file, attr, list_obj, Type, model.log)
-        except TypeError:
+        except TypeError:  # pragma: no cover
             print(list_obj)
             raise
         #_hdf5_export_object_dict(group, model, attr, list_obj, indices)
@@ -361,7 +361,7 @@ def _export_list_obj_keys(model, hdf5_file, list_obj_keys):
 
         try:
             group = hdf5_file.create_group(attr) # 'active_filenames'
-        except ValueError:
+        except ValueError:  # pragma: no cover
             model.log.error('cant create %r' % attr)
             raise
 
@@ -438,7 +438,7 @@ def _h5_export_class(sub_group, model, key, value, skip_attrs, debug=True):
         else:
             try:
                 class_group.create_dataset(h5attr, data=class_value)
-            except ValueError:
+            except ValueError:  # pragma: no cover
                 print(h5attr, class_group)
                 raise
             except TypeError:
@@ -446,7 +446,7 @@ def _h5_export_class(sub_group, model, key, value, skip_attrs, debug=True):
                 class_group.attrs['type'] = 'list'
                 param_group = class_group.create_group(h5attr)
                 for i, valuei in enumerate(class_value):
-                    if isinstance(valuei, unicode):
+                    if isinstance(valuei, text_type):
                         param_group.create_dataset(str(i), data=valuei.encode('ascii'))
                     else:
                         param_group.create_dataset(str(i), data=valuei)
@@ -485,7 +485,7 @@ def _hdf5_export_elements(hdf5_file, model):
         #CBEAM
         #CPENTA, CHEXA
         if card_name in etypes:
-            model.log.info(card_name)
+            model.log.debug(card_name)
             etypes_actual.append(card_name)
             continue
 
@@ -564,7 +564,7 @@ def _hdf5_export_object_dict(group, model, name, obj_dict, keys):
         value = obj_dict[key]
         try:
             _h5_export_class(sub_group, model, key, value, skip_attrs, debug=False)
-        except:
+        except:  # pragma: no cover
             # for debugging
             sub_group2 = group.create_group('values2')
             _h5_export_class(sub_group2, model, key, value, skip_attrs, debug=True)
@@ -628,10 +628,10 @@ def load_hdf5_file(h5_file, model):
 
         elif key in mapper:
             func = mapper[key]
-            func(model, group)
+            func(model, group, encoding)
         elif key in generic_mapper:
             func = generic_mapper[key]
-            func(model, group, key)
+            func(model, group, key, encoding)
         elif key in dict_int_obj_attrs:
             load_cards_from_keys_values(key, group)
         elif key in ['info', 'matrices'] or key.startswith('Subcase'): # op2
@@ -648,7 +648,7 @@ def load_hdf5_file(h5_file, model):
                 value = _cast(sub_group)
                 try:
                     setattr(model, keyi, value)
-                except AttributeError:
+                except AttributeError:  # pragma: no cover
                     model.log.warning('cant set minor_attributes/%s as %s' % (keyi, value))
                     raise
 
@@ -715,21 +715,21 @@ def hdf5_load_coords(model, coords_group):
             #model.add_cord1c(cid, g1, g2, g3, comment='')
             #model.add_cord1s(cid, g1, g2, g3, comment='')
 
-def hdf5_load_tables(unused_model, group):
+def hdf5_load_tables(unused_model, group, encoding):
     for card_type in group.keys():
         sub_group = group[card_type]
         #if card_type == 'TABLES1':
             #pass
         load_cards_from_keys_values('tables/%s' % card_type, sub_group)
 
-def hdf5_load_methods(unused_model, group):
+def hdf5_load_methods(unused_model, group, encoding):
     for card_type in group.keys():
         sub_group = group[card_type]
         #if card_type == 'TABLES1':
             #pass
         load_cards_from_keys_values('methods/%s' % card_type, sub_group)
 
-def hdf5_load_masses(model, group):
+def hdf5_load_masses(model, group, encoding):
     for card_type in group.keys():
         sub_group = group[card_type]
         if card_type == 'CONM2':
@@ -747,7 +747,7 @@ def hdf5_load_masses(model, group):
             load_cards_from_keys_values('masses/%s' % card_type, sub_group)
 
 
-def hdf5_load_materials(model, group):
+def hdf5_load_materials(model, group, encoding):
     for card_type in group.keys():
         sub_group = group[card_type]
         if card_type == 'MAT1':
@@ -822,6 +822,7 @@ def hdf5_load_materials(model, group):
                                a1=a1i, a2=a2i, tref=trefi, Xt=xti, Xc=xci, Yt=yti, Yc=yci,
                                S=si, ge=gei, F12=f12i, strn=strni, comment='')
         elif card_type == 'MAT9':
+            ## TODO: add G
             mid = _cast(sub_group['mid'])
             a = _cast(sub_group['A'])
             tref = _cast(sub_group['tref'])
@@ -856,7 +857,7 @@ def hdf5_load_materials(model, group):
                             #rho=0.0, a1=0.0, a2=0.0, a3=0.0, tref=0.0, ge=0.0, comment='')
             load_cards_from_keys_values('materials/%s' % card_type, sub_group)
 
-def hdf5_load_spcs(model, group):
+def hdf5_load_spcs(model, group, encoding):
     keys = list(group.keys())
     keys.remove('keys')
     spc_ids = _cast(group['keys'])
@@ -869,7 +870,7 @@ def hdf5_load_spcs(model, group):
             #else:
             load_cards_from_keys_values('spcs/%s/%s' % (spc_id, card_type), sub_group)
 
-def hdf5_load_mpcs(model, group):
+def hdf5_load_mpcs(model, group, encoding):
     keys = list(group.keys())
     keys.remove('keys')
     spc_ids = _cast(group['keys'])
@@ -882,7 +883,7 @@ def hdf5_load_mpcs(model, group):
             #else:
             load_cards_from_keys_values('spcs/%s/%s' % (spc_id, card_type), sub_group)
 
-def hdf5_load_loads(model, group):
+def hdf5_load_loads(model, group, encoding):
     keys = list(group.keys())
     keys.remove('keys')
     spc_ids = _cast(group['keys'])
@@ -906,7 +907,7 @@ def hdf5_load_loads(model, group):
                 #model.add_force1(sid, node, mag, g1, g2, comment='')
                 load_cards_from_keys_values('spcs/%s/%s' % (spc_id, card_type), sub_group)
 
-def hdf5_load_load_combinations(model, group):
+def hdf5_load_load_combinations(model, group, encoding):
     keys = list(group.keys())
     keys.remove('keys')
     spc_ids = _cast(group['keys'])
@@ -919,7 +920,7 @@ def hdf5_load_load_combinations(model, group):
             #else:
             load_cards_from_keys_values('spcs/%s/%s' % (spc_id, card_type), sub_group)
 
-def hdf5_load_generic(unused_model, group, name):
+def hdf5_load_generic(unused_model, group, name, encoding):
     for card_type in group.keys():
         sub_group = group[card_type]
         #if card_type == 'TABLES1':
@@ -928,7 +929,7 @@ def hdf5_load_generic(unused_model, group, name):
 
 
 
-def hdf5_load_properties(model, properties_group):
+def hdf5_load_properties(model, properties_group, encoding):
     """loads the properties from an HDF5 file"""
     for card_type in properties_group.keys():
         properties = properties_group[card_type]
@@ -945,7 +946,8 @@ def hdf5_load_properties(model, properties_group):
                 model.add_pshell(pidi, mid1=mid1, t=ti, mid2=mid2, twelveIt3=twelveIt3i,
                                  mid3=mid3, tst=tsti, nsm=nsmi, z1=z1, z2=z2, mid4=mid4,
                                  comment='')
-        elif card_type == 'PSOLID':
+        elif card_type in ['PSOLID', 'PIHEX']:
+            func = model.add_psolid if card_type == 'PSOLID' else model.add_pihex
             pid = _cast(properties['pid'])
             mid = _cast(properties['mid'])
             cordm = _cast(properties['cordm'])
@@ -955,8 +957,8 @@ def hdf5_load_properties(model, properties_group):
             fctn = _cast(properties['fctn'])
             for pidi, midi, cordmi, integi, stressi, isopi, fctni in zip(
                     pid, mid, cordm, integ, stress, isop, fctn):
-                model.add_psolid(pidi, midi, cordm=cordmi, integ=integi, stress=stressi,
-                                 isop=isopi, fctn=fctni, comment='')
+                func(pidi, midi, cordm=cordmi, integ=integi, stress=stressi,
+                     isop=isopi, fctn=fctni, comment='')
 
         elif card_type == 'PROD':
             pid = _cast(properties['pid'])
@@ -1021,7 +1023,7 @@ def hdf5_load_properties(model, properties_group):
 def load_cards_from_keys_values(name, properties):
     try:
         keys = _cast(properties['keys'])
-    except KeyError:
+    except KeyError:  # pragma: no cover
         print('name =', name)
         print(properties)
         raise
@@ -1039,7 +1041,7 @@ def _load_cards_from_keys_values(name, values, keys):
         else:
             try:
                 class_instance = class_obj()
-            except TypeError:
+            except TypeError:  # pragma: no cover
                 print('error loading %r' % card_type)
                 print(class_obj)
                 raise
@@ -1066,7 +1068,7 @@ def _load_cards_from_keys_values(name, values, keys):
 
 
 
-def hdf5_load_elements(model, elements_group):
+def hdf5_load_elements(model, elements_group, encoding):
     """loads the elements from an HDF5 file"""
     for card_type in elements_group.keys():
         elements = elements_group[card_type]
@@ -1135,7 +1137,7 @@ def hdf5_load_elements(model, elements_group):
                     g0i = None
                 if xi[0] == np.nan:
                     xi = [None, None, None]
-                model.add_cbar(eid, pid, nids, xi, g0i, offt=offti,
+                model.add_cbar(eid, pid, nids, xi, g0i, offt=offti.decode(encoding),
                                pa=pai, pb=pbi, wa=wai, wb=wbi, comment='')
 
         elif card_type == 'CBEAM':
@@ -1158,7 +1160,7 @@ def hdf5_load_elements(model, elements_group):
                     g0i = None
                 if xi[0] == np.nan:
                     xi = [None, None, None]
-                model.add_cbeam(eid, pid, nids, xi, g0i, offt=offti, bit=None,
+                model.add_cbeam(eid, pid, nids, xi, g0i, offt=offti.decode(encoding), bit=None,
                                 pa=pai, pb=pbi, wa=wai, wb=wbi, sa=sai, sb=sbi, comment='')
 
         elif card_type == 'CBUSH':
@@ -1224,6 +1226,19 @@ def hdf5_load_elements(model, elements_group):
             nodes = _cast(elements['nodes']).tolist()
             for eid, pid, nids, mcid, theta, zoffset in zip(eids, pids, nodes):
                 model.add_cshear(eid, pid, nids, comment='')
+
+        elif card_type == 'CTRIAX':
+            eids = _cast(elements['eid'])
+            pids = _cast(elements['pid'])
+            thetas = _cast(elements['theta'])
+            mcids = _cast(elements['mcid'])
+            nodes = _cast(elements['nodes']).tolist()
+            for eid, pid, nids, mcid, theta in zip(eids, pids, nodes, mcids, thetas):
+                if mcid == -1:
+                    theta_mcid = theta
+                else:
+                    theta_mcid = mcid
+                model.add_ctriax(eid, pid, nids, theta_mcid=theta_mcid, comment='')
         else:
             load_cards_from_keys_values('elements/%s' % card_type, elements)
             #model.add_celas1(eid, pid, nids, c1=0, c2=0, comment='')
@@ -1257,6 +1272,5 @@ def hdf5_load_elements(model, elements_group):
                              #tflag=0, T1=None, T2=None, T3=None, comment='')
             #model.add_ctriar(eid, pid, nids, theta_mcid=0.0, zoffset=0.0,
                              #tflag=0, T1=None, T2=None, T3=None, comment='')
-            #model.add_ctriax(eid, pid, nids, theta_mcid=0., comment='')
             #model.add_ctriax6(eid, mid, nids, theta=0., comment='')
             print(card_type)

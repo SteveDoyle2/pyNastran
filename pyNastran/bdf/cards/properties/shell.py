@@ -1309,6 +1309,12 @@ class PLPLANE(ShellProperty):
     type = 'PLPLANE'
     _field_map = {1: 'pid', 2:'mid', 6:'cid', 7:'str'}
 
+    @classmethod
+    def _init_from_empty(cls):
+        pid = 1
+        mid = 1
+        return PLPLANE(pid, mid, cid=0, stress_strain_output_location='GRID', comment='')
+
     def __init__(self, pid, mid, cid=0, stress_strain_output_location='GRID', comment=''):
         """
         Creates a PLPLANE card, which defines the properties of a fully
@@ -1426,6 +1432,12 @@ class PLPLANE(ShellProperty):
 class PPLANE(ShellProperty):
     type = 'PPLANE'
     _field_map = {1: 'pid', 2:'mid', 3:'t', 4:'nsm', 5:'formulation_option'}
+
+    @classmethod
+    def _init_from_empty(cls):
+        pid = 1
+        mid = 1
+        return PPLANE(pid, mid, t=0., nsm=0., formulation_option=0, comment='')
 
     def __init__(self, pid, mid, t=0., nsm=0., formulation_option=0, comment=''):
         """NX specific card"""

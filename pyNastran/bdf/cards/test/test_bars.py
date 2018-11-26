@@ -167,7 +167,7 @@ class TestBars(unittest.TestCase):
         G = None
         nu = 0.3
         model.add_mat1(mid, E, G, nu)
-        save_load_deck(model)
+        save_load_deck(model, run_save_load_hdf5=True)
 
     def test_cbar_g0(self):
         """modification of test_cbeam_01"""
@@ -193,7 +193,7 @@ class TestBars(unittest.TestCase):
         model.add_grid(30, [0., 1., 0.])
         model.cross_reference()
 
-        save_load_deck(model)
+        save_load_deck(model, run_save_load_hdf5=True)
 
     def test_pbarl_1(self):
         """tests the PBARL"""
@@ -266,7 +266,7 @@ class TestBars(unittest.TestCase):
         x = [0.2, 0.4, 0.6, 0.8]
         model.add_cbarao(eid, scale, x, comment='cbarao')
         model.add_card(['CBARAO', eid+1, 'RF', 6, 0.1, 0.2], 'CBARAO')
-        save_load_deck(model, run_quality=False)
+        save_load_deck(model, run_quality=False, run_save_load_hdf5=True)
 
     def test_bar_mass_1(self):
         """tests CBAR/PBAR mass"""
@@ -545,7 +545,7 @@ class TestBars(unittest.TestCase):
         #print(force1, force2)
         assert np.allclose(force1, force2), force1
         assert np.allclose(moment1, moment2), moment1
-        save_load_deck(model, xref='standard', punch=True)
+        save_load_deck(model, xref='standard', punch=True, run_save_load_hdf5=True)
 
     def test_baror(self):
         """tests a BAROR"""

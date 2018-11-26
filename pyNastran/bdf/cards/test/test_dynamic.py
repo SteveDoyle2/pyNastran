@@ -432,14 +432,14 @@ class TestDynamic(unittest.TestCase):
         model.cross_reference()
         model.pop_xref_errors()
 
-        save_load_deck(model, run_convert=False)
+        save_load_deck(model, run_convert=False, run_save_load_hdf5=True)
 
     def test_nlparm(self):
         """tests NLPARM"""
         model = BDF(debug=False)
         nlparm_id = 42
         model.add_nlparm(nlparm_id, comment='nlparm')
-        save_load_deck(model)
+        save_load_deck(model, run_save_load_hdf5=True)
 
     def test_nlpci(self):
         """tests NLPCI"""
@@ -450,7 +450,7 @@ class TestDynamic(unittest.TestCase):
                                 comment='nlpci')
         nlpci.raw_fields()
         #print(nlpci)
-        save_load_deck(model)
+        save_load_deck(model, run_save_load_hdf5=True)
 
     #def test_rotord(self):
         #"""tests ROTORD"""

@@ -1627,6 +1627,15 @@ class RSSCON(RigidElement):
     | RSSCON |  116 | INTC |  2  |  1  |  3  |     |     |     |
     +--------+------+------+-----+-----+-----+-----+-----+-----+
     """
+
+    @classmethod
+    def _init_from_empty(cls):
+        eid = 1
+        rigid_type = 'GRID'
+        return RSSCON(eid, rigid_type,
+                      shell_eid=None, solid_eid=None, a_solid_grids=None,
+                      b_solid_grids=None, shell_grids=None, comment='')
+
     def __init__(self, eid, rigid_type,
                  shell_eid=None, solid_eid=None,
                  a_solid_grids=None, b_solid_grids=None, shell_grids=None,

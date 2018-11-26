@@ -643,6 +643,14 @@ class SPCD(Load):
     """
     type = 'SPCD'
 
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        nodes = [1]
+        components = ['1']
+        enforced = 1.
+        return SPCD(sid, nodes, components, enforced, comment='')
+
     def __init__(self, sid, nodes, components, enforced, comment=''):
         """
         Creates an SPCD card, which defines the degree of freedoms to be
@@ -794,6 +802,13 @@ class DEFORM(Load):
     """
     type = 'DEFORM'
 
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        eid = 1
+        deformation = 1.
+        return DEFORM(sid, eid, deformation, comment='')
+
     def __init__(self, sid, eid, deformation, comment=''):
         """
         Creates an DEFORM card, which defines applied deformation on
@@ -912,6 +927,14 @@ class SLOAD(Load):
     displacement coordinate system (see the CD field on the GRID entry).
     """
     type = 'SLOAD'
+    _properties = ['node_ids']
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        nodes = [1]
+        mags = [1.]
+        return SLOAD(sid, nodes, mags, comment='')
 
     def __init__(self, sid, nodes, mags, comment=''):
         """
@@ -1048,6 +1071,15 @@ class SLOAD(Load):
 
 class RFORCE(Load):
     type = 'RFORCE'
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        nid = 1
+        scale = 1.
+        r123 = [1., 0., 1.]
+        return RFORCE(sid, nid, scale, r123,
+                      cid=0, method=1, racc=0., mb=0, idrf=0, comment='')
 
     def __init__(self, sid, nid, scale, r123, cid=0, method=1, racc=0.,
                  mb=0, idrf=0, comment=''):
@@ -1240,6 +1272,15 @@ class RFORCE1(Load):
     +---------+------+----+---------+---+----+----+----+--------+
     """
     type = 'RFORCE1'
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        nid = 1
+        scale = 1.
+        group_id = 1
+        return RFORCE1(sid, nid, scale, group_id,
+                       cid=0, r123=None, racc=0., mb=0, method=2, comment='')
 
     def __init__(self, sid, nid, scale, group_id,
                  cid=0, r123=None, racc=0., mb=0, method=2, comment=''):

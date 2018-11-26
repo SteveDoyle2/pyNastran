@@ -51,7 +51,7 @@ class TestMassElements(unittest.TestCase):
         model.add_grid(nid, [0., 0., 0.])
         model.validate()
         model.cross_reference()
-        model = save_load_deck(model, run_convert=False)
+        model = save_load_deck(model, run_convert=False, run_save_load_hdf5=True)
         pids_to_mass, mass_type_to_mass = model.get_mass_breakdown(property_ids=None)
         assert len(pids_to_mass) == 0, pids_to_mass
         assert mass_type_to_mass['CONM2'] == 42., mass_type_to_mass
@@ -119,7 +119,7 @@ class TestMassElements(unittest.TestCase):
         cmass2.write_card(size=8)
         pmass.write_card(size=8)
         ddval.write_card(size=8)
-        save_load_deck(model, run_convert=False)
+        save_load_deck(model, run_convert=False, run_save_load_hdf5=True)
 
     def test_mass_3_4(self):
         """tests a CMASS3, PMASS, CMASS4"""
@@ -203,7 +203,7 @@ class TestMassElements(unittest.TestCase):
 
         model.cross_reference()
         model._verify_bdf()
-        save_load_deck(model)
+        save_load_deck(model, run_save_load_hdf5=True)
 
     def test_nsm(self):
         """tests the NSM card"""
@@ -221,7 +221,7 @@ class TestMassElements(unittest.TestCase):
         model.add_cquad4(2, pid, [1, 2, 3, 4]) # A=1.0
         model.add_pshell(pid, mid, t=0.1)
         model.add_mat1(mid, 3.0e7, None, 0.3)
-        save_load_deck(model, run_convert=False)
+        save_load_deck(model, run_convert=False, run_save_load_hdf5=True)
 
     def test_nsm1(self):
         """tests the NSM1 card"""
@@ -240,7 +240,7 @@ class TestMassElements(unittest.TestCase):
         model.add_cquad4(2, pid, [1, 2, 3, 4]) # A=1.0
         model.add_pshell(pid, mid, t=0.1)
         model.add_mat1(mid, 3.0e7, None, 0.3)
-        save_load_deck(model, run_convert=False)
+        save_load_deck(model, run_convert=False, run_save_load_hdf5=True)
 
 
 if __name__ == '__main__':  # pragma: no cover

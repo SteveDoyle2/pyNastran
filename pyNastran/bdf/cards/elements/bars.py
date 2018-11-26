@@ -221,6 +221,14 @@ class CBARAO(BaseCard):
     | CBARAO | 1065 |  FR   |  4   | 0.2 |  0.2   |     |    |    |
     +--------+------+-------+------+-----+--------+-----+----+----+
     """
+
+    @classmethod
+    def _init_from_empty(cls):
+        eid = 1
+        scale = 'FR'
+        x = [0.5]
+        return CBARAO(eid, scale, x, comment='')
+
     def __init__(self, eid, scale, x, comment=''):
         """
         Creates a CBARAO card, which defines additional output locations
@@ -404,6 +412,7 @@ class CBAR(LineElement):
         pb = []
         wa = []
         wb = []
+        nan = np.full(3, np.nan)
         encoding = model._encoding
         for eid in eids:
             element = model.elements[eid]
@@ -414,7 +423,7 @@ class CBAR(LineElement):
                 x.append(element.x)
                 g0.append(-1)
             else:
-                x.append(element.x)
+                x.append(nan)
                 g0.append(element.g0)
 
             offt.append(element.offt.encode(encoding))

@@ -223,7 +223,7 @@ class TestRigid(unittest.TestCase):
         dependent_nid_to_components = check_rbe(rsscon)
         assert dependent_nid_to_components == {}, dependent_nid_to_components
 
-        save_load_deck(model, punch=True)
+        save_load_deck(model, punch=True, run_save_load_hdf5=True)
 
 
 

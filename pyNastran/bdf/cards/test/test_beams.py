@@ -1028,7 +1028,7 @@ class TestBeams(unittest.TestCase):
         assert pbeam_a1.MassPerLength() == 21.0, pbeam_a1.MassPerLength()
         assert pbeam_a2.MassPerLength() == 21.0, pbeam_a2.MassPerLength()
 
-        save_load_deck(model)
+        save_load_deck(model, run_save_load_hdf5=True)
 
     def test_pbeaml_nsm(self):
         """tests the PBEAML with non structural mass"""
@@ -1070,7 +1070,7 @@ class TestBeams(unittest.TestCase):
         mat1.rho = 10.0
         assert pbeaml.MassPerLength() == 21.0, pbeaml.MassPerLength()
         assert pbeaml2.MassPerLength() == 21.0, pbeaml2.MassPerLength()
-        save_load_deck(model)
+        save_load_deck(model, run_save_load_hdf5=True)
 
     def test_pbeam_opt(self):
         """tests a PBEAM with DVPREL1"""
@@ -1134,7 +1134,7 @@ class TestBeams(unittest.TestCase):
                        c0=0., cmult=1., comment='')
         model.cross_reference()
         model.update_model_by_desvars()
-        save_load_deck(model)
+        save_load_deck(model, run_save_load_hdf5=True)
 
     def test_pbcomp(self):
         """tests a PBCOMP"""
