@@ -47,6 +47,13 @@ class RROD(RigidElement):
     +------+-----+----+----+-----+-----+-------+
     """
     type = 'RROD'
+    _properties = ['dependent_nodes', 'independent_nodes']
+
+    @classmethod
+    def _init_from_empty(cls):
+        eid = 1
+        nids = [1, 2]
+        return RROD(eid, nids, cma=None, cmb=None, alpha=0.0, comment='')
 
     def __init__(self, eid, nids, cma=None, cmb=None, alpha=0.0, comment=''):
         """

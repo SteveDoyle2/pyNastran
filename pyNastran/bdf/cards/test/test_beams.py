@@ -12,6 +12,8 @@ from itertools import count
 import numpy as np
 from numpy import array, allclose
 
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 from pyNastran.bdf.bdf import BDF, BDFCard, PBEAM, PBEND, PBMSECT, PBRSECT

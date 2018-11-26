@@ -705,6 +705,13 @@ class AEPARM(BaseCard):
         1: 'id', 2:'label', 3:'units'
     }
 
+    @classmethod
+    def _init_from_empty(cls):
+        aeparm_id = 1
+        label = 'name'
+        units = ''
+        return AEPARM(aeparm_id, label, units, comment='')
+
     def __init__(self, aeparm_id, label, units, comment=''):
         """
         Creates an AEPARM card, which defines a new trim variable.
@@ -1131,6 +1138,14 @@ class AESURFS(BaseCard):  # not integrated
     +---------+------+-------+---+-------+---+-------+
     """
     type = 'AESURFS'
+
+    @classmethod
+    def _init_from_empty(cls):
+        aesid = 1
+        label = 'name'
+        list1 = 1
+        list2 = 2
+        return AESURFS(aesid, label, list1, list2, comment='')
 
     def __init__(self, aesid, label, list1, list2, comment=''):
         """
@@ -2029,6 +2044,8 @@ class CAERO2(BaseCard):
         1: 'sid', 2:'pid', 3:'cp', 4:'nsb', 5:'lsb',
         6:'nint', 7:'lint', 8:'igroup', 12:'x12',
     }
+    _properties = ['nboxes']
+
     def _get_field_helper(self, n):
         """
         Gets complicated parameters on the CAERO2 card
@@ -2073,6 +2090,15 @@ class CAERO2(BaseCard):
             self.p1[2] = value
         else:
             raise KeyError('Field %r=%r is an invalid CAERO2 entry.' % (n, value))
+
+    @classmethod
+    def _init_from_empty(cls):
+        eid = 1
+        pid = 1
+        igroup = 1
+        p1 = [0., 0., 0.]
+        x12 = 10.
+        return CAERO2(eid, pid, igroup, p1, x12, cp=0, nsb=0, nint=0, lsb=0, lint=0, comment='')
 
     def __init__(self, eid, pid, igroup, p1, x12,
                  cp=0, nsb=0, nint=0, lsb=0, lint=0, comment=''):
@@ -2426,6 +2452,19 @@ class CAERO2(BaseCard):
 
 class CAERO3(BaseCard):
     type = 'CAERO3'
+
+    @classmethod
+    def _init_from_empty(cls):
+        eid = 1
+        pid = 1
+        list_w = 1
+        p1 = [0., 0., 0.]
+        p4 = [0., 10., 0.]
+        x12 = 10.
+        x43 = 10.
+        return CAERO3(eid, pid, list_w, p1, x12, p4, x43,
+                      cp=0, list_c1=None, list_c2=None, comment='')
+
     def __init__(self, eid, pid, list_w,
                  p1, x12, p4, x43,
                  cp=0, list_c1=None, list_c2=None,
@@ -3065,6 +3104,20 @@ class CAERO5(BaseCard):
     +--------+------+------+-----+-------+-------+-------+--------+-------+
     """
     type = 'CAERO5'
+
+    @classmethod
+    def _init_from_empty(cls):
+        eid = 1
+        pid = 1
+        ncontrol_surfaces = 1
+        p1 = [0., 0., 0.]
+        p4 = [0., 10., 0.]
+        x12 = 1.
+        x43 = 0.5
+        nspan = 5
+        return CAERO5(eid, pid, p1, x12, p4, x43,
+                      cp=0, nspan=nspan, lspan=0, ntheory=0, nthick=0, comment='')
+
     def __init__(self, eid, pid, p1, x12, p4, x43,
                  cp=0, nspan=0, lspan=0, ntheory=0, nthick=0,
                  comment=''):
@@ -3337,6 +3390,14 @@ class CAERO5(BaseCard):
 
 class PAERO5(BaseCard):
     type = 'PAERO5'
+    _properties = ['ltaus_id', 'lxis_id']
+
+    @classmethod
+    def _init_from_empty(cls):
+        pid = 1
+        caoci = [0., 0., 0.]
+        return PAERO5(pid, caoci, nalpha=0, lalpha=0, nxis=0, lxis=0, ntaus=0, ltaus=0, comment='')
+
     def __init__(self, pid, caoci,
                  nalpha=0, lalpha=0,
                  nxis=0, lxis=0,
@@ -4033,6 +4094,16 @@ class PAERO2(BaseCard):
         else:
             self.thn[spot] = value
 
+    @classmethod
+    def _init_from_empty(cls):
+        pid = 1
+        width = 10.
+        AR = 1.
+        thi = 42
+        thn = 43
+        orient = 'ZY'
+        return PAERO2(pid, orient, width, AR, thi, thn, lrsb=None, lrib=None, lth=None, comment='')
+
     def __init__(self, pid, orient, width, AR,
                  thi, thn, lrsb=None, lrib=None, lth=None,
                  comment=''):
@@ -4250,6 +4321,7 @@ class PAERO3(BaseCard):
     _field_map = {
         1: 'pid', 2:'orient', 3:'width', 4:'AR',
     }
+    _properties = ['npoints']
 
     def _get_field_helper(self, n):
         """
@@ -4298,6 +4370,15 @@ class PAERO3(BaseCard):
             self.x[spot] = value
         else:
             self.y[spot] = value
+
+    @classmethod
+    def _init_from_empty(cls):
+        pid = 1
+        nbox = 1
+        ncontrol_surfaces = 1
+        x = [0., 0., 0.]
+        y = [0., 10., 0.]
+        return PAERO3(pid, nbox, ncontrol_surfaces, x, y, comment='')
 
     def __init__(self, pid, nbox, ncontrol_surfaces, x, y, comment=''):
         """
@@ -5048,6 +5129,18 @@ class SPLINE3(Spline):
         #5:'g1', 6:'c1',
         #9:G2,C2,A2...
 
+    @classmethod
+    def _init_from_empty(cls):
+        eid = 1
+        caero = 1
+        box_id = 1
+        components = 1
+        nodes = [2, 3]
+        displacement_components = [2, 3]
+        coeffs = [2., 3.]
+        return SPLINE3(eid, caero, box_id, components, nodes, displacement_components, coeffs,
+                       usage='BOTH')
+
     def __init__(self, eid, caero, box_id, components,
                  nodes, displacement_components, coeffs,
                  usage='BOTH', comment=''):
@@ -5075,7 +5168,6 @@ class SPLINE3(Spline):
            3-transverse displacement
            5-pitch angle
            6-relative control angle for CAERO4/5; yaw angle for CAERO2
-
         nodes : List[int]
            Grid point identification number of the independent grid point.
         displacement_components :  : List[int]
@@ -5270,6 +5362,20 @@ class SPLINE4(Spline):
         1: 'eid', 2:'caero', 3:'aelist', 5:'setg', 6:'dz',
         7: 'method', 8:'usage', 9:'nelements', 10:'melements',
     }
+
+    @classmethod
+    def _init_from_empty(cls):
+        eid = 1
+        caero = 1
+        aelist = 1
+        setg = 1
+        dz = 1.
+        method = 'IPS'
+        usage = 'BOTH'
+        nelements = 1
+        melements = 1
+        return SPLINE4(eid, caero, aelist, setg, dz, method, usage, nelements, melements,
+                       comment='')
 
     def __init__(self, eid, caero, aelist, setg, dz, method, usage,
                  nelements, melements, comment=''):

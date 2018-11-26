@@ -1,7 +1,7 @@
 """Defines various helper functions for loading a HDF5 BDF file"""
 from __future__ import print_function
 from collections import defaultdict
-from six import string_types
+from six import string_types, StringIO
 import numpy as np
 from pyNastran.utils.dict_to_h5py import _add_list_tuple, _cast, integer_types, float_types, string_types
 from pyNastran.bdf.bdf_interface.add_card import CARD_MAP
@@ -224,6 +224,8 @@ def export_to_hdf5_file(hdf5_file, model, exporter=None):
                     raise
             #elif isinstance(value, set):
                 #_add_list_tuple(hdf5_file, key, value, 'set', model.log)
+            elif isinstance(value, StringIO):
+                pass
             else:
                 print(key, value)
                 scalar_group.create_dataset(key, data=value)
@@ -240,7 +242,8 @@ def export_to_hdf5_file(hdf5_file, model, exporter=None):
     for key in scalar_obj_keys:
         value = getattr(model, key)
         if value is None:
-            print('None: %s %s' % (key, value))
+            #print('None: %s %s' % (key, value))
+            pass
         else:
             _h5_export_class(hdf5_file, model, key, value, skip_attrs, debug=False)
 
@@ -566,6 +569,7 @@ def _hdf5_export_object_dict(group, model, name, obj_dict, keys):
 
     #group.attrs['type'] = class_name
     #print('%s keys = %s' % (name, keys))
+    keys = list(keys)
     group.create_dataset('keys', data=keys)
 
 # exporter
@@ -585,6 +589,7 @@ def load_hdf5_file(h5_file, model):
         'spcs' : hdf5_load_spcs,
         'mpcs' : hdf5_load_mpcs,
         'loads' : hdf5_load_loads,
+        'load_combinations' : hdf5_load_load_combinations,
     }
     generic_mapper = {
         'flutters' : hdf5_load_generic,
@@ -896,6 +901,19 @@ def hdf5_load_loads(model, group):
                 #model.add_force1(sid, node, mag, g1, g2, comment='')
                 load_cards_from_keys_values('spcs/%s/%s' % (spc_id, card_type), sub_group)
 
+def hdf5_load_load_combinations(model, group):
+    keys = list(group.keys())
+    keys.remove('keys')
+    spc_ids = _cast(group['keys'])
+    for spc_id in keys:
+        cards_group = group[spc_id]
+        for card_type in cards_group.keys():
+            sub_group = cards_group[card_type]
+            #if card_type == 'MAT1':
+                #mid = _cast(sub_group['mid'])
+            #else:
+            load_cards_from_keys_values('spcs/%s/%s' % (spc_id, card_type), sub_group)
+
 def hdf5_load_generic(unused_model, group, name):
     for card_type in group.keys():
         sub_group = group[card_type]
@@ -954,7 +972,7 @@ def hdf5_load_properties(model, properties_group):
             nsm = _cast(properties['nsm'])
             for pidi, midi, (OD1, OD2), ti, nsmi in zip(
                     pid, mid, OD, t, nsm):
-                model.add_ptube(pid, mid, OD1, t=ti, nsm=nsmi, OD2=OD2, comment='')
+                model.add_ptube(pidi, midi, OD1, t=ti, nsm=nsmi, OD2=OD2, comment='')
 
         elif card_type == 'PBAR':
             pid = _cast(properties['pid'])
@@ -1059,6 +1077,12 @@ def hdf5_load_elements(model, elements_group):
             nodes = _cast(elements['nodes']).tolist()
             for eid, pid, nids in zip(eids, pids, nodes):
                 model.add_chexa(eid, pid, nids, comment='')
+        elif card_type == 'CPYRAM':
+            eids = _cast(elements['eid'])
+            pids = _cast(elements['pid'])
+            nodes = _cast(elements['nodes']).tolist()
+            for eid, pid, nids in zip(eids, pids, nodes):
+                model.add_cpyram(eid, pid, nids, comment='')
         elif card_type == 'CHEXA':
             eids = _cast(elements['eid'])
             pids = _cast(elements['pid'])

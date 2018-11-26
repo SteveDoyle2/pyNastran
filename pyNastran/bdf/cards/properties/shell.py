@@ -1015,6 +1015,16 @@ class PCOMPG(CompositeShellProperty):
             plies.append((mid, t, theta, sout, global_ply_id))
         return plies
 
+    @classmethod
+    def _init_from_empty(cls):
+        pid = 1
+        global_ply_ids = [1]
+        mids = [1]
+        thicknesses = [1.]
+        return PCOMPG(pid, global_ply_ids, mids, thicknesses,
+                      thetas=None, souts=None, nsm=0.0, sb=0.0, ft=None,
+                      tref=0.0, ge=0.0, lam=None, z0=None, comment='')
+
     def __init__(self, pid, global_ply_ids, mids, thicknesses, thetas=None, souts=None,
                  nsm=0.0, sb=0.0, ft=None, tref=0.0, ge=0.0, lam=None, z0=None, comment=''):
         """

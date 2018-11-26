@@ -659,7 +659,16 @@ class SPC(Constraint):
      +-----+-----+----+----+------+----+----+----+
     """
     type = 'SPC'
-    _properties = ['constraints', 'gids_ref', 'gids']
+    _properties = ['node_ids', 'constraints', 'gids_ref', 'gids']
+
+    @classmethod
+    def _init_from_empty(cls):
+        conid = 1
+        nodes = [1, 2]
+        components = ['123', '456']
+        enforced = [0., 0.]
+        return SPC(conid, nodes, components, enforced, comment='')
+
     def __init__(self, conid, nodes, components, enforced, comment=''):
         """
         Creates an SPC card, which defines the degree of freedoms to be

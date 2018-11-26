@@ -185,7 +185,14 @@ class TABLED1(Table):
 
     """
     type = 'TABLED1'
-    #def __init__(self, tid, xaxis, yaxis, xy, comment=''):
+
+    @classmethod
+    def _init_from_empty(cls):
+        tid = 1
+        x = [0., 1.]
+        y = [0., 1.]
+        return TABLED1(tid, x, y, xaxis='LINEAR', yaxis='LINEAR', extrap=0, comment='')
+
     def __init__(self, tid, x, y, xaxis='LINEAR', yaxis='LINEAR', extrap=0, comment=''):
         """
         Creates a TABLED1, which is a dynamic load card that is applied
@@ -327,6 +334,15 @@ class TABLED2(Table):
     table.
     """
     type = 'TABLED2'
+
+    @classmethod
+    def _init_from_empty(cls):
+        tid = 1
+        x1 = 1.
+        x = [0., 1.]
+        y = [0., 1.]
+        return TABLED2(tid, x1, x, y, extrap=0, comment='')
+
     def __init__(self, tid, x1, x, y, extrap=0, comment=''):
         """
         Parameters
@@ -442,6 +458,15 @@ class TABLED3(Table):
     table.
     """
     type = 'TABLED3'
+
+    @classmethod
+    def _init_from_empty(cls):
+        tid = 1
+        x1 = 1.
+        x = [0., 1.]
+        y = [0., 1.]
+        return TABLED2(tid, x1, x, y, extrap=0, comment='')
+
     def __init__(self, tid, x1, x2, x, y, extrap=0, comment=''):
         """
         Parameters
@@ -533,6 +558,17 @@ class TABLED4(Table):
 
     """
     type = 'TABLED4'
+
+    @classmethod
+    def _init_from_empty(cls):
+        tid = 1
+        x1 = 1.
+        x2 = 1.
+        x3 = 1.
+        x4 = 1.
+        a = [1., 2.]
+        return TABLED4(tid, x1, x2, x3, x4, a, comment='')
+
     def __init__(self, tid, x1, x2, x3, x4, a, comment=''):
         Table.__init__(self)
         if comment:

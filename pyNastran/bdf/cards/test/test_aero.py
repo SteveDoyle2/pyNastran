@@ -128,7 +128,7 @@ class TestAero(unittest.TestCase):
         aecomp1.write_card()
 
         model.validate()
-        save_load_deck(model)
+        save_load_deck(model, run_save_load_hdf5=True)
 
         #-----------
         aecomp2 = AECOMP(name, list_type, aelist_ids, comment='cssch card')
@@ -314,7 +314,7 @@ class TestAero(unittest.TestCase):
         model.add_grid(3, [0., 0., 0.])
 
         model.validate()
-        save_load_deck(model)
+        save_load_deck(model, run_save_load_hdf5=True)
 
     def test_aero_1(self):
         """checks the AERO card"""
@@ -738,7 +738,7 @@ class TestAero(unittest.TestCase):
         model.cross_reference(model)
         caero1.panel_points_elements()
         caero2.get_points_elements_3d()
-        save_load_deck(model)
+        save_load_deck(model, run_save_load_hdf5=True)
 
 
     def test_spline2(self):
@@ -1062,7 +1062,7 @@ class TestAero(unittest.TestCase):
         caero3b.panel_points_elements()
 
         model.get_bdf_stats()
-        save_load_deck(model, run_convert=False, run_mirror=False) # , run_renumber=False
+        save_load_deck(model, run_convert=False, run_mirror=False, run_save_load_hdf5=True) # , run_renumber=False
 
 
     def test_paero3(self):
@@ -1276,7 +1276,7 @@ class TestAero(unittest.TestCase):
 
         read_bdf(bdf_filename, xref=False, punch=True, debug=False)
         model.safe_cross_reference()
-        save_load_deck(model, run_convert=False, run_renumber=False)
+        save_load_deck(model, run_convert=False, run_renumber=False, run_save_load_hdf5=True)
 
 
         #caero5.raw_fields()
@@ -1344,7 +1344,7 @@ class TestAero(unittest.TestCase):
         model.cross_reference()
         spline3.write_card()
         spline3.raw_fields()
-        save_load_deck(model, run_renumber=False)
+        save_load_deck(model, run_renumber=False, run_save_load_hdf5=True)
         spline3b.eid = 1000
 
         spline3b.nodes.append(42)
@@ -1414,7 +1414,7 @@ class TestAero(unittest.TestCase):
         model.pop_parse_errors()
         model.pop_xref_errors()
         model.validate()
-        save_load_deck(model)
+        save_load_deck(model, run_save_load_hdf5=True)
 
     def test_spline5(self):
         """checks the SPLINE5 card"""
@@ -1467,7 +1467,7 @@ class TestAero(unittest.TestCase):
         model.cross_reference()
         model.uncross_reference()
         model.safe_cross_reference()
-        save_load_deck(model)
+        save_load_deck(model, run_save_load_hdf5=True)
 
     def test_aesurf_1(self):
         """checks the AESURF/AELIST cards"""
@@ -1557,7 +1557,7 @@ class TestAero(unittest.TestCase):
         model.cross_reference()
         model.uncross_reference()
         model.safe_cross_reference()
-        save_load_deck(model)
+        save_load_deck(model, run_save_load_hdf5=True)
 
     def test_flfact(self):
         """checks the FLFACT card"""
@@ -1843,7 +1843,7 @@ class TestAero(unittest.TestCase):
 
         diverg = model.add_card(['DIVERG', sid, nroots] + machs, 'DIVERG', comment='divergence')
         model.validate()
-        save_load_deck(model)
+        save_load_deck(model, run_save_load_hdf5=True)
         #diverg.validate()
         #diverg.write_card()
 
@@ -2007,7 +2007,7 @@ class TestAero(unittest.TestCase):
         gust2 = GUST.add_card(BDFCard(['GUST', sid, dload, wg, x0, V]), comment='gust load')
         gust2.validate()
         gust2.write_card()
-        save_load_deck(model)
+        save_load_deck(model, run_save_load_hdf5=True)
 
 
     def test_csschd(self):
@@ -2081,7 +2081,7 @@ class TestAero(unittest.TestCase):
         model.safe_cross_reference()
 
         model.validate()
-        save_load_deck(model)
+        save_load_deck(model, run_save_load_hdf5=True)
 
         bdf_filename.seek(0)
         model2 = read_bdf(bdf_filename, punch=True, debug=False)
@@ -2130,7 +2130,7 @@ class TestAero(unittest.TestCase):
         model._verify_bdf(xref=True)
         model.uncross_reference()
 
-        save_load_deck(model)
+        save_load_deck(model, run_save_load_hdf5=True)
 
     def test_bah_plane_bdf(self):
         """tests the bah_plane"""
@@ -2176,7 +2176,7 @@ class TestAero(unittest.TestCase):
             sid, nids, comment='rotorg'
         )
         rotorg.validate()
-        save_load_deck(model)
+        save_load_deck(model, run_save_load_hdf5=True)
 
     def test_zona_1(self):
         """zona explicit test"""
@@ -2185,7 +2185,7 @@ class TestAero(unittest.TestCase):
         model.safe_cross_reference()
         save_load_deck(model, xref='safe',
                        run_renumber=False, run_convert=False, run_remove_unused=False,
-                       run_save_load=False)
+                       run_save_load=False, run_save_load_hdf5=False)
         with self.assertRaises(NotImplementedError):
             model.zona.convert_to_nastran()
 
@@ -2196,7 +2196,7 @@ class TestAero(unittest.TestCase):
         model.safe_cross_reference()
         save_load_deck(model, xref='safe',
                        run_renumber=False, run_convert=False, run_remove_unused=False,
-                       run_save_load=False)
+                       run_save_load=False, run_save_load_hdf5=False)
         model.zona.convert_to_nastran()
 
     def test_zona_3(self):

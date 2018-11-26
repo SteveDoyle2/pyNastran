@@ -538,6 +538,14 @@ class DIVERG(BaseCard):
 
     """
     type = 'DIVERG'
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        nroots = 10
+        machs = [0.5, 0.75]
+        return DIVERG(sid, nroots, machs, comment='')
+
     def __init__(self, sid, nroots, machs, comment=''):
         """
         Creates an DIVERG card, which is used in divergence

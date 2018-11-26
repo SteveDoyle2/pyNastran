@@ -1511,7 +1511,7 @@ class Cord2x(Coord):
         .. note :: no type checking
 
         """
-        assert isinstance(rid, int), rid
+        assert isinstance(rid, integer_types), 'rid=%r type=%s' % (rid, type(rid))
         Coord.__init__(self)
         if comment:
             self.comment = comment

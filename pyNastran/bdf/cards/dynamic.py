@@ -1172,6 +1172,26 @@ class ROTORD(BaseCard):
     +--------+--------+--------+----------+---------+--------+--------+----------+----------+
     """
     type = 'ROTORD'
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        rstart = 1
+        rstep = 1
+        numstep = 1
+        rids = [1]
+        rsets = [1]
+        rspeeds = [1]
+        rcords = [1]
+        w3s = [1]
+        w4s = [1]
+        rforces = [1]
+        brgsets = [1]
+        return ROTORD(sid, rstart, rstep, numstep, rids, rsets, rspeeds, rcords, w3s, w4s, rforces,
+                      brgsets, refsys='ROT', cmout=0.0, runit='RPM', funit='RPM', zstein='NO',
+                      orbeps=1.e-6, roprt=0, sync=1, etype=1, eorder=1.0, threshold=0.02,
+                      maxiter=10, comment='')
+
     def __init__(self, sid, rstart, rstep, numstep,
                  rids, rsets, rspeeds, rcords, w3s, w4s, rforces, brgsets,
                  refsys='ROT', cmout=0.0, runit='RPM', funit='RPM',
@@ -1413,6 +1433,13 @@ class ROTORG(BaseCard):
     +--------+--------+------+------+-----+----+----+----+----+
     """
     type = 'ROTORG'
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        nids = [2, 3]
+        return ROTORG(sid, nids, comment='')
+
     def __init__(self, sid, nids, comment=''):
         if comment:
             self.comment = comment
