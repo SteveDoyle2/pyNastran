@@ -152,7 +152,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         """
         gets the Nastran wildcard loader used in the file load menu
         """
-        geom_methods_bdf = 'Nastran Geometry - BDF (*.bdf; *.dat; *.nas; *.ecd; *.op2; *.pch)'
+        geom_methods_bdf = 'Nastran Geometry - BDF (*.bdf; *.dat; *.nas; *.ecd; *.op2; *.pch; *.obj)'
         geom_methods_pch = 'Nastran Geometry - Punch (*.bdf; *.dat; *.nas; *.ecd; *.pch)'
         combined_methods_op2 = 'Nastran Geometry + Results - OP2 (*.op2)'
 
@@ -593,7 +593,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
     def _get_model_unvectorized(self, bdf_filename, xref_loads=True):
         """Loads the BDF/OP2 geometry"""
         ext = '.bdf'
-        if isinstance(bdf_filename, str):
+        if isinstance(bdf_filename, string_types):
             ext = os.path.splitext(bdf_filename)[1].lower()
 
         punch = False
@@ -606,6 +606,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                             debug_file=None)
             model.clear_results()
             model.read_op2(op2_filename=bdf_filename)
+        elif ext == '.obj':
+            model = BDF(log=self.gui.log, debug=True)
+            model.load(obj_filename=bdf_filename)
         else:  # read the bdf/punch
             model = BDF(log=self.gui.log, debug=True)
             model.read_bdf(bdf_filename,

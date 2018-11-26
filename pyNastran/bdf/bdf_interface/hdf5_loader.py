@@ -674,7 +674,7 @@ def load_hdf5_file(h5_file, model):
     cards_to_read = [key.decode(encoding) for key in cards_to_read]
     model.cards_to_read = set(list(cards_to_read))
 
-def hdf5_load_coords(model, coords_group):
+def hdf5_load_coords(model, coords_group, encoding):
     """loads the coords from an HDF5 file"""
     for card_type in coords_group.keys():
         coords = coords_group[card_type]

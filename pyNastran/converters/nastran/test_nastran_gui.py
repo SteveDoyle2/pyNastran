@@ -8,7 +8,7 @@ import vtk
 
 from pyNastran.bdf.cards.test.test_aero import get_zona_model
 from pyNastran.gui.testing_methods import FakeGUIMethods
-from pyNastran.converters.nastran.nastran_io import NastranIO
+from pyNastran.converters.nastran.nastran_io import NastranIO, BDF
 import pyNastran
 #from pyNastran.utils.log import get_logger2
 
@@ -23,6 +23,16 @@ MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
 
 
 class TestNastranGUI(unittest.TestCase):
+
+    def test_solid_shell_bar_obj(self):
+        bdf_filename = os.path.join(MODEL_PATH, 'sol_101_elements', 'static_solid_shell_bar.bdf')
+        obj_filename = os.path.join(MODEL_PATH, 'sol_101_elements', 'static_solid_shell_bar.obj')
+        model = BDF()
+        model.read_bdf(bdf_filename)
+        model.save(obj_filename, unxref=True)
+
+        test = NastranGUI()
+        test.load_nastran_geometry(obj_filename)
 
     def test_solid_shell_bar_01(self):
         bdf_filename = os.path.join(MODEL_PATH, 'sol_101_elements', 'static_solid_shell_bar.bdf')
