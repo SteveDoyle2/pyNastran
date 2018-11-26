@@ -1110,6 +1110,13 @@ class SET3(Set):
     type = 'SET3'
     valid_descs = ['GRID', 'POINT', 'ELEMENT', 'PROP', 'RBEIN', 'RBEEX']
 
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        desc = 'ELEM'
+        ids = [1]
+        return SET3(sid, desc, ids, comment='')
+
     def __init__(self, sid, desc, ids, comment=''):
         Set.__init__(self)
         if comment:

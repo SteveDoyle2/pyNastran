@@ -1079,6 +1079,7 @@ class CBEND(LineElement):
     _field_map = {
         1: 'eid', 2:'pid', 3:'ga', 4:'gb', 8:'geom',
     }
+    _properties = ['node_ids']
 
     def _update_field_helper(self, n, value):
         if self.g0 is not None:
@@ -1095,6 +1096,16 @@ class CBEND(LineElement):
                 self.x[2] = value
             else:
                 raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
+
+    @classmethod
+    def _init_from_empty(cls):
+        eid = 1
+        pid = 1
+        nids = [1, 2]
+        g0 = [4]
+        x = None
+        geom = 1
+        return CBEND(eid, pid, nids, g0, x, geom, comment='')
 
     def __init__(self, eid, pid, nids, g0, x, geom, comment=''):
         """

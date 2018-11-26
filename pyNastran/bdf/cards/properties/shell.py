@@ -1537,6 +1537,13 @@ class PSHEAR(ShellProperty):
         4 : 't', 'T' : 't',
     }
 
+    @classmethod
+    def _init_from_empty(cls):
+        pid = 1
+        mid = 1
+        t = 0.1
+        return PSHEAR(pid, mid, t, nsm=0., f1=0., f2=0., comment='')
+
     def __init__(self, pid, mid, t, nsm=0., f1=0., f2=0., comment=''):
         """
         Creates a PSHEAR card

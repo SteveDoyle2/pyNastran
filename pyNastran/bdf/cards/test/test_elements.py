@@ -25,7 +25,7 @@ class TestElements(unittest.TestCase):
         model.safe_cross_reference()
         save_load_deck(model, xref='standard', punch=True,
                        run_renumber=False,
-                       run_save_load=True)
+                       run_save_load=True, run_save_load_hdf5=True)
 
     def test_cbush_01(self):
         """tests a CBUSH"""
@@ -162,7 +162,7 @@ class TestElements(unittest.TestCase):
         model.uncross_reference()
         model.safe_cross_reference()
         model.mass_properties()
-        save_load_deck(model, run_convert=False)
+        save_load_deck(model, run_convert=False, run_save_load_hdf5=True)
 
     def test_cbush1d(self):
         model = BDF(debug=False)
@@ -177,7 +177,7 @@ class TestElements(unittest.TestCase):
 
         model.pop_parse_errors()
         model.cross_reference()
-        save_load_deck(model)
+        save_load_deck(model, run_save_load_hdf5=True)
 
     def test_cbush2d(self):
         model = BDF(debug=False)
@@ -232,7 +232,7 @@ class TestElements(unittest.TestCase):
 
         #model.pop_parse_errors()
         #model.cross_reference()
-        save_load_deck(model, run_convert=False)
+        save_load_deck(model, run_convert=False, run_save_load_hdf5=True)
 
     def test_crac3d(self):
         model = BDF(debug=False)
@@ -272,7 +272,7 @@ class TestElements(unittest.TestCase):
 
         #model.pop_parse_errors()
         #model.cross_reference()
-        save_load_deck(model, run_convert=False)
+        save_load_deck(model, run_convert=False, run_save_load_hdf5=True)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

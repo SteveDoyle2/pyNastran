@@ -45,6 +45,12 @@ class PLSOLID(SolidProperty):
         1: 'pid', 2:'mid', 3:'str',
     }
 
+    @classmethod
+    def _init_from_empty(cls):
+        pid = 1
+        mid = 1
+        return PLSOLID(pid, mid, stress_strain='GRID', ge=0., comment='')
+
     def __init__(self, pid, mid, stress_strain='GRID', ge=0., comment=''):
         """
         Creates a PLSOLID card

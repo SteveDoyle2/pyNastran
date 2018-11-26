@@ -1919,6 +1919,19 @@ class PBCOMP(LineProperty):
     """
     type = 'PBCOMP'
 
+    @classmethod
+    def _init_from_empty(cls):
+        pid = 1
+        mid = 1
+        y = [1.]
+        z = [1.]
+        c = [1.]
+        mids = [1]
+        return PBCOMP(pid, mid, y, z, c, mids,
+                      area=0.0, i1=0.0, i2=0.0, i12=0.0, j=0.0, nsm=0.0,
+                      k1=1.0, k2=1.0, m1=0.0, m2=0.0, n1=0.0, n2=0.0,
+                      symopt=0, comment='')
+
     def __init__(self, pid, mid, y, z, c, mids,
                  area=0.0, i1=0.0, i2=0.0, i12=0.0, j=0.0, nsm=0.0,
                  k1=1.0, k2=1.0, m1=0.0, m2=0.0, n1=0.0, n2=0.0,

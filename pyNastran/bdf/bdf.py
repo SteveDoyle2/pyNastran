@@ -1945,7 +1945,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'PCOMPG' : (PCOMPG, self._add_property_object),
             'PSHELL' : (PSHELL, self._add_property_object),
             'PLPLANE' : (PLPLANE, self._add_property_object),
-
             'CPLSTN3' : (CPLSTN3, self._add_element_object),
             'CPLSTN4' : (CPLSTN4, self._add_element_object),
             'CPLSTN6' : (CPLSTN6, self._add_element_object),

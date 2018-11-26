@@ -48,6 +48,16 @@ class PFAST(Property):
         'MASS' : 'mass',
     }
 
+    @classmethod
+    def _init_from_empty(cls):
+        pid = 1
+        d = 0.1
+        kt1 = 1.
+        kt2 = 2.
+        kt3 = 3.
+        return PFAST(pid, d, kt1, kt2, kt3,
+                     mcid=-1, mflag=0, kr1=0., kr2=0., kr3=0., mass=0., ge=0., comment='')
+
     def __init__(self, pid, d, kt1, kt2, kt3, mcid=-1, mflag=0,
                  kr1=0., kr2=0., kr3=0., mass=0., ge=0., comment=''):
         """
@@ -429,6 +439,14 @@ class PRAC2D(CrackProperty):
         1: 'pid', 2:'mid', 3:'thick', 4:'iPlane', 5:'nsm', 6:'gamma', 7:'phi',
     }
 
+    @classmethod
+    def _init_from_empty(cls):
+        pid = 1
+        mid = 1
+        thick = 0.1
+        iplane = 1
+        return PRAC2D(pid, mid, thick, iplane, nsm=0., gamma=0.5, phi=180., comment='')
+
     def __init__(self, pid, mid, thick, iplane, nsm=0., gamma=0.5, phi=180.,
                  comment=''):
         CrackProperty.__init__(self)
@@ -525,6 +543,12 @@ class PRAC3D(CrackProperty):
     _field_map = {
         1: 'pid', 2:'mid', 3:'gamma', 4:'phi',
     }
+
+    @classmethod
+    def _init_from_empty(cls):
+        pid = 1
+        mid = 1
+        return PRAC3D(pid, mid, gamma=0.5, phi=180., comment='')
 
     def __init__(self, pid, mid, gamma=0.5, phi=180., comment=''):
         CrackProperty.__init__(self)

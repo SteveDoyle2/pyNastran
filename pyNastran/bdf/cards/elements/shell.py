@@ -478,7 +478,7 @@ class CTRIA3(TriShell):
             pids.append(element.pid)
             nodes.append(element.nodes)
             if isinstance(element.theta_mcid, int):
-                mcid = self.theta_mcid
+                mcid = element.theta_mcid
                 theta = 0.
             else:
                 assert isinstance(element.theta_mcid, float), type(element.theta_mcid)
@@ -801,6 +801,25 @@ class CPLSTN3(TriShell):
         self.prepare_node_ids(nids)
         assert len(self.nodes) == 3
 
+    @classmethod
+    def export_to_hdf5(cls, h5_file, model, eids):
+        """exports the elements in a vectorized way"""
+        #comments = []
+        pids = []
+        nodes = []
+        thetas = []
+        for eid in eids:
+            element = model.elements[eid]
+            #comments.append(element.comment)
+            pids.append(element.pid)
+            nodes.append(element.nodes)
+            thetas.append(element.theta)
+        #h5_file.create_dataset('_comment', data=comments)
+        h5_file.create_dataset('eid', data=eids)
+        h5_file.create_dataset('pid', data=pids)
+        h5_file.create_dataset('nodes', data=nodes)
+        h5_file.create_dataset('theta', data=thetas)
+
     def validate(self):
         assert len(set(self.nodes)) == 3, 'nodes=%s; n=%s\n%s' % (self.nodes, len(set(self.nodes)), str(self))
 
@@ -992,6 +1011,41 @@ class CTRIA6(TriShell):
         self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(nids) == 6, 'error on CTRIA6'
         self.theta_mcid_ref = None  # type: Optional[Any]
+
+    @classmethod
+    def export_to_hdf5(cls, h5_file, model, eids):
+        """exports the elements in a vectorized way"""
+        #comments = []
+        pids = []
+        nodes = []
+        mcids = []
+        thetas = []
+        zoffsets = []
+        #t123 = []
+        for eid in eids:
+            element = model.elements[eid]
+            #comments.append(element.comment)
+            pids.append(element.pid)
+            nodes.append(element.nodes)
+            if isinstance(element.theta_mcid, int):
+                mcid = element.theta_mcid
+                theta = 0.
+            else:
+                assert isinstance(element.theta_mcid, float), type(element.theta_mcid)
+                mcid = -1
+                theta = element.theta_mcid
+            mcids.append(mcid)
+            thetas.append(theta)
+            zoffsets.append(element.zoffset)
+            #t123.append([element.T1, element.T2, element.T3])
+        #h5_file.create_dataset('_comment', data=comments)
+        h5_file.create_dataset('eid', data=eids)
+        h5_file.create_dataset('pid', data=pids)
+        h5_file.create_dataset('nodes', data=nodes)
+        h5_file.create_dataset('mcid', data=mcids)
+        h5_file.create_dataset('theta', data=thetas)
+        h5_file.create_dataset('zoffset', data=zoffsets)
+        #self.tflag = tflag
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1300,6 +1354,41 @@ class CTRIAR(TriShell):
         self.nodes = nids
         assert len(self.nodes) == 3
         self.theta_mcid_ref = None  # type: Optional[Any]
+
+    @classmethod
+    def export_to_hdf5(cls, h5_file, model, eids):
+        """exports the elements in a vectorized way"""
+        #comments = []
+        pids = []
+        nodes = []
+        mcids = []
+        thetas = []
+        zoffsets = []
+        #t123 = []
+        for eid in eids:
+            element = model.elements[eid]
+            #comments.append(element.comment)
+            pids.append(element.pid)
+            nodes.append(element.nodes)
+            if isinstance(element.theta_mcid, int):
+                mcid = element.theta_mcid
+                theta = 0.
+            else:
+                assert isinstance(element.theta_mcid, float), type(element.theta_mcid)
+                mcid = -1
+                theta = element.theta_mcid
+            mcids.append(mcid)
+            thetas.append(theta)
+            zoffsets.append(element.zoffset)
+            #t123.append([element.T1, element.T2, element.T3])
+        #h5_file.create_dataset('_comment', data=comments)
+        h5_file.create_dataset('eid', data=eids)
+        h5_file.create_dataset('pid', data=pids)
+        h5_file.create_dataset('nodes', data=nodes)
+        h5_file.create_dataset('mcid', data=mcids)
+        h5_file.create_dataset('theta', data=thetas)
+        h5_file.create_dataset('zoffset', data=zoffsets)
+        #self.tflag = tflag
 
     def validate(self):
         self.validate_node_ids(allow_empty_nodes=False)
@@ -1734,6 +1823,22 @@ class CSHEAR(QuadShell):
         self.pid = pid
         self.prepare_node_ids(nids)
         assert len(self.nodes) == 4
+
+    @classmethod
+    def export_to_hdf5(cls, h5_file, model, eids):
+        """exports the elements in a vectorized way"""
+        #comments = []
+        pids = []
+        nodes = []
+        for eid in eids:
+            element = model.elements[eid]
+            #comments.append(element.comment)
+            pids.append(element.pid)
+            nodes.append(element.nodes)
+        #h5_file.create_dataset('_comment', data=comments)
+        h5_file.create_dataset('eid', data=eids)
+        h5_file.create_dataset('pid', data=pids)
+        h5_file.create_dataset('nodes', data=nodes)
 
     def validate(self):
         assert len(set(self.nodes)) == 4, 'nodes=%s\n%s' % (self.nodes, str(self))
@@ -2615,6 +2720,25 @@ class CPLSTN4(QuadShell):
         self.prepare_node_ids(nids)
         self.theta = theta
 
+    @classmethod
+    def export_to_hdf5(cls, h5_file, model, eids):
+        """exports the elements in a vectorized way"""
+        #comments = []
+        pids = []
+        nodes = []
+        thetas = []
+        for eid in eids:
+            element = model.elements[eid]
+            #comments.append(element.comment)
+            pids.append(element.pid)
+            nodes.append(element.nodes)
+            thetas.append(element.theta)
+        #h5_file.create_dataset('_comment', data=comments)
+        h5_file.create_dataset('eid', data=eids)
+        h5_file.create_dataset('pid', data=pids)
+        h5_file.create_dataset('nodes', data=nodes)
+        h5_file.create_dataset('theta', data=thetas)
+
     def validate(self):
         assert len(set(self.nodes)) == 4, 'nodes=%s\n%s' % (self.nodes, str(self))
 
@@ -2746,6 +2870,25 @@ class CPLSTN6(TriShell):
         assert len(nids) == 6, 'error on CPLSTN6'
 
     @classmethod
+    def export_to_hdf5(cls, h5_file, model, eids):
+        """exports the elements in a vectorized way"""
+        #comments = []
+        pids = []
+        nodes = []
+        thetas = []
+        for eid in eids:
+            element = model.elements[eid]
+            #comments.append(element.comment)
+            pids.append(element.pid)
+            nodes.append(element.nodes)
+            thetas.append(element.theta)
+        #h5_file.create_dataset('_comment', data=comments)
+        h5_file.create_dataset('eid', data=eids)
+        h5_file.create_dataset('pid', data=pids)
+        h5_file.create_dataset('nodes', data=nodes)
+        h5_file.create_dataset('theta', data=thetas)
+
+    @classmethod
     def add_card(cls, card, comment=''):
         """
         Adds a CPLSTN6 card from ``BDF.add_card(...)``
@@ -2776,6 +2919,79 @@ class CPLSTN6(TriShell):
         else:
             theta = 0.0
         return CPLSTN6(eid, pid, nids, theta=theta, comment=comment)
+
+    def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CPLSTN8 eid=%s' % self.eid
+        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
+        self.pid_ref = model.Property(self.Pid(), msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by CPLSTN8 eid=%s' % self.eid
+        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
+
+    def uncross_reference(self):
+        self.nodes = self.node_ids
+        self.pid = self.Pid()
+        self.nodes_ref = None
+        self.pid_ref = None
+
+    @property
+    def node_ids(self):
+        return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True)
+
+    def raw_fields(self):
+        list_fields = ['CPLSTN6', self.eid, self.Pid()] + self.node_ids + [
+            self.theta]
+        return list_fields
+
+    def repr_fields(self):
+        theta = set_blank_if_default(self.theta, 0.0)
+        list_fields = (['CPLSTN6', self.eid, self.Pid()] + self.node_ids + [
+            theta])
+        return list_fields
+
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        if size == 8: # to last node
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
+
+@classmethod
+def export_to_hdf5(cls, h5_file, model, eids):
+    """exports the elements in a vectorized way"""
+    #comments = []
+    pids = []
+    nodes = []
+    thetas = []
+    for eid in eids:
+        element = model.elements[eid]
+        #comments.append(element.comment)
+        pids.append(element.pid)
+        nodes.append(element.nodes)
+        thetas.append(element.theta)
+    #h5_file.create_dataset('_comment', data=comments)
+    h5_file.create_dataset('eid', data=eids)
+    h5_file.create_dataset('pid', data=pids)
+    h5_file.create_dataset('nodes', data=nodes)
+    h5_file.create_dataset('theta', data=thetas)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -2956,6 +3172,25 @@ class CPLSTN8(QuadShell):
         self.theta = theta
         self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(self.nodes) == 8
+
+    @classmethod
+    def export_to_hdf5(cls, h5_file, model, eids):
+        """exports the elements in a vectorized way"""
+        #comments = []
+        pids = []
+        nodes = []
+        thetas = []
+        for eid in eids:
+            element = model.elements[eid]
+            #comments.append(element.comment)
+            pids.append(element.pid)
+            nodes.append(element.nodes)
+            thetas.append(element.theta)
+        #h5_file.create_dataset('_comment', data=comments)
+        h5_file.create_dataset('eid', data=eids)
+        h5_file.create_dataset('pid', data=pids)
+        h5_file.create_dataset('nodes', data=nodes)
+        h5_file.create_dataset('theta', data=thetas)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -3211,6 +3446,41 @@ class CQUADR(QuadShell):
         self.prepare_node_ids(nids)
         assert len(self.nodes) == 4, 'CQUADR'
         self.theta_mcid_ref = None  # type: Optional[Any]
+
+    @classmethod
+    def export_to_hdf5(cls, h5_file, model, eids):
+        """exports the elements in a vectorized way"""
+        #comments = []
+        pids = []
+        nodes = []
+        mcids = []
+        thetas = []
+        zoffsets = []
+        #t1234 = []
+        for eid in eids:
+            element = model.elements[eid]
+            #comments.append(element.comment)
+            pids.append(element.pid)
+            nodes.append(element.nodes)
+            if isinstance(element.theta_mcid, int):
+                mcid = element.theta_mcid
+                theta = 0.
+            else:
+                assert isinstance(element.theta_mcid, float), type(element.theta_mcid)
+                mcid = -1
+                theta = element.theta_mcid
+            mcids.append(mcid)
+            thetas.append(theta)
+            zoffsets.append(element.zoffset)
+            #t1234.append([element.T1, element.T2, element.T3, element.T4])
+        #h5_file.create_dataset('_comment', data=comments)
+        h5_file.create_dataset('eid', data=eids)
+        h5_file.create_dataset('pid', data=pids)
+        h5_file.create_dataset('nodes', data=nodes)
+        h5_file.create_dataset('mcid', data=mcids)
+        h5_file.create_dataset('theta', data=thetas)
+        h5_file.create_dataset('zoffset', data=zoffsets)
+        #self.tflag = tflag
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -3659,6 +3929,35 @@ class CQUAD(QuadShell):
         self.theta_mcid_ref = None  # type: Optional[Any]
 
     @classmethod
+    def export_to_hdf5(cls, h5_file, model, eids):
+        """exports the elements in a vectorized way"""
+        #comments = []
+        pids = []
+        nodes = []
+        mcids = []
+        thetas = []
+        for eid in eids:
+            element = model.elements[eid]
+            #comments.append(element.comment)
+            pids.append(element.pid)
+            nodes.append(element.nodes)
+            if isinstance(element.theta_mcid, int):
+                mcid = element.theta_mcid
+                theta = 0.
+            else:
+                assert isinstance(element.theta_mcid, float), type(element.theta_mcid)
+                mcid = -1
+                theta = element.theta_mcid
+            mcids.append(mcid)
+            thetas.append(theta)
+        #h5_file.create_dataset('_comment', data=comments)
+        h5_file.create_dataset('eid', data=eids)
+        h5_file.create_dataset('pid', data=pids)
+        h5_file.create_dataset('nodes', data=nodes)
+        h5_file.create_dataset('mcid', data=mcids)
+        h5_file.create_dataset('theta', data=thetas)
+
+    @classmethod
     def add_card(cls, card, comment=''):
         """
         Adds a CQUAD card from ``BDF.add_card(...)``
@@ -3856,6 +4155,41 @@ class CQUAD8(QuadShell):
         self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(self.nodes) == 8
         self.theta_mcid_ref = None  # type: Optional[Any]
+
+    @classmethod
+    def export_to_hdf5(cls, h5_file, model, eids):
+        """exports the elements in a vectorized way"""
+        #comments = []
+        pids = []
+        nodes = []
+        mcids = []
+        thetas = []
+        zoffsets = []
+        #t1234 = []
+        for eid in eids:
+            element = model.elements[eid]
+            #comments.append(element.comment)
+            pids.append(element.pid)
+            nodes.append(element.nodes)
+            if isinstance(element.theta_mcid, int):
+                mcid = element.theta_mcid
+                theta = 0.
+            else:
+                assert isinstance(element.theta_mcid, float), type(element.theta_mcid)
+                mcid = -1
+                theta = element.theta_mcid
+            mcids.append(mcid)
+            thetas.append(theta)
+            zoffsets.append(element.zoffset)
+            #t1234.append([element.T1, element.T2, element.T3, element.T4])
+        #h5_file.create_dataset('_comment', data=comments)
+        h5_file.create_dataset('eid', data=eids)
+        h5_file.create_dataset('pid', data=pids)
+        h5_file.create_dataset('nodes', data=nodes)
+        h5_file.create_dataset('mcid', data=mcids)
+        h5_file.create_dataset('theta', data=thetas)
+        h5_file.create_dataset('zoffset', data=zoffsets)
+        #self.tflag = tflag
 
     @classmethod
     def add_card(cls, card, comment=''):

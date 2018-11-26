@@ -99,6 +99,25 @@ class CELAS1(SpringElement):
         self.pid_ref = None
 
     @classmethod
+    def export_to_hdf5(cls, h5_file, model, eids):
+        """exports the elements in a vectorized way"""
+        #comments = []
+        pids = []
+        nodes = []
+        components = []
+        for eid in eids:
+            element = model.elements[eid]
+            #comments.append(element.comment)
+            pids.append(element.pid)
+            nodes.append(element.nodes)
+            components.append([element.c1, element.c2])
+        #h5_file.create_dataset('_comment', data=comments)
+        h5_file.create_dataset('eid', data=eids)
+        h5_file.create_dataset('pid', data=pids)
+        h5_file.create_dataset('nodes', data=nodes)
+        h5_file.create_dataset('components', data=components)
+
+    @classmethod
     def add_card(cls, card, comment=''):
         """
         Adds a CELAS1 card from ``BDF.add_card(...)``
@@ -281,6 +300,31 @@ class CELAS2(SpringElement):
         self.pid_ref = None
 
     @classmethod
+    def export_to_hdf5(cls, h5_file, model, eids):
+        """exports the elements in a vectorized way"""
+        #comments = []
+        k = []
+        ge = []
+        s = []
+        nodes = []
+        components = []
+        for eid in eids:
+            element = model.elements[eid]
+            #comments.append(element.comment)
+            k.append(element.k)
+            ge.append(element.ge)
+            s.append(element.s)
+            nodes.append(element.nodes)
+            components.append([element.c1, element.c2])
+        #h5_file.create_dataset('_comment', data=comments)
+        h5_file.create_dataset('eid', data=eids)
+        h5_file.create_dataset('K', data=k)
+        h5_file.create_dataset('ge', data=ge)
+        h5_file.create_dataset('s', data=s)
+        h5_file.create_dataset('nodes', data=nodes)
+        h5_file.create_dataset('components', data=components)
+
+    @classmethod
     def add_card(cls, card, comment=''):
         """
         Adds a CELAS2 card from ``BDF.add_card(...)``
@@ -452,6 +496,23 @@ class CELAS3(SpringElement):
         self.pid_ref = None
 
     @classmethod
+    def export_to_hdf5(cls, h5_file, model, eids):
+        """exports the elements in a vectorized way"""
+        #comments = []
+        pids = []
+        nodes = []
+        components = []
+        for eid in eids:
+            element = model.elements[eid]
+            #comments.append(element.comment)
+            pids.append(element.pid)
+            nodes.append(element.nodes)
+        #h5_file.create_dataset('_comment', data=comments)
+        h5_file.create_dataset('eid', data=eids)
+        h5_file.create_dataset('pid', data=pids)
+        h5_file.create_dataset('nodes', data=nodes)
+
+    @classmethod
     def add_card(cls, card, comment=''):
         """
         Adds a CELAS3 card from ``BDF.add_card(...)``
@@ -607,6 +668,22 @@ class CELAS4(SpringElement):
         #self.nodes = nodes
         self.prepare_node_ids(nodes, allow_empty_nodes=True)
         self.nodes_ref = None
+
+    @classmethod
+    def export_to_hdf5(cls, h5_file, model, eids):
+        """exports the elements in a vectorized way"""
+        #comments = []
+        k = []
+        nodes = []
+        for eid in eids:
+            element = model.elements[eid]
+            #comments.append(element.comment)
+            k.append(element.k)
+            nodes.append(element.nodes)
+        #h5_file.create_dataset('_comment', data=comments)
+        h5_file.create_dataset('eid', data=eids)
+        h5_file.create_dataset('K', data=k)
+        h5_file.create_dataset('nodes', data=nodes)
 
     def validate(self):
         if self.nodes[0] is not None and self.nodes[1] is not None:

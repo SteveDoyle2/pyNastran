@@ -2189,6 +2189,17 @@ class PBEND(LineProperty):
     """
     type = 'PBEND'
 
+    @classmethod
+    def _init_from_empty(cls):
+        pid = 1
+        mid = 1
+        fsi = 1
+        rm = 0.1
+        t = 0.01
+        return cls.add_beam_type_2(pid, mid,
+                                   fsi, rm, t, p=None, rb=None, theta_b=None,
+                                   nsm=0., rc=0., zc=0., comment='')
+
     def __init__(self, pid, mid, beam_type, A, i1, i2, j,
                  c1, c2, d1, d2, e1, e2, f1, f2, k1, k2,
                  nsm, rc, zc, delta_n, fsi, rm, t, p,

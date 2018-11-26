@@ -121,7 +121,13 @@ class CBEAM(LineElement):
             else:
                 x.append(nan)
                 g0.append(element.g0)
-            offt.append(element.offt.encode(encoding))
+
+            if element.bit is not None:
+                bit.append(element.bit)
+                offt.append('')
+            else:
+                bit.append(np.nan)
+                offt.append(element.offt.encode(encoding))
 
 
             pa.append(element.pa)
@@ -139,6 +145,7 @@ class CBEAM(LineElement):
         h5_file.create_dataset('x', data=x)
         h5_file.create_dataset('g0', data=g0)
         h5_file.create_dataset('offt', data=offt)
+        h5_file.create_dataset('bit', data=bit)
 
         h5_file.create_dataset('pa', data=pa)
         h5_file.create_dataset('pb', data=pb)

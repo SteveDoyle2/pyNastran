@@ -1141,12 +1141,12 @@ def hdf5_load_elements(model, elements_group, encoding):
                                pa=pai, pb=pbi, wa=wai, wb=wbi, comment='')
 
         elif card_type == 'CBEAM':
-            # TODO: support BIT
             eids = _cast(elements['eid'])
             pids = _cast(elements['pid'])
             nodes = _cast(elements['nodes']).tolist()
             g0 = _cast(elements['g0'])
             x = _cast(elements['x'])
+            bit = _cast(elements['bit'])
             offt = _cast(elements['offt'])
             sa = _cast(elements['sa'])
             sb = _cast(elements['sb'])
@@ -1154,14 +1154,48 @@ def hdf5_load_elements(model, elements_group, encoding):
             wb = _cast(elements['wb'])
             pa = _cast(elements['pa'])
             pb = _cast(elements['pb'])
-            for eid, pid, nids, xi, g0i, offti, pai, pbi, wai, wbi, sai, sbi in zip(
-                    eids, pids, nodes, x, g0, offt, pa, pb, wa, wb, sa, sb):
+            for eid, pid, nids, xi, g0i, offti, biti, pai, pbi, wai, wbi, sai, sbi in zip(
+                    eids, pids, nodes, x, g0, offt, bit, pa, pb, wa, wb, sa, sb):
                 if g0i == -1:
                     g0i = None
                 if xi[0] == np.nan:
                     xi = [None, None, None]
-                model.add_cbeam(eid, pid, nids, xi, g0i, offt=offti.decode(encoding), bit=None,
+                if biti == np.nan:
+                    offti = offti.decode(encoding)
+                else:
+                    offti = None
+                model.add_cbeam(eid, pid, nids, xi, g0i, offt=offti, bit=biti,
                                 pa=pai, pb=pbi, wa=wai, wb=wbi, sa=sai, sb=sbi, comment='')
+
+        elif card_type == 'CELAS1':
+            eids = _cast(elements['eid'])
+            pids = _cast(elements['pid'])
+            nodes = _cast(elements['nodes']).tolist()
+            components = _cast(elements['components'])
+            for eid, pid, nids, (c1, c2) in zip(eids, pids, nodes, components):
+                model.add_celas1(eid, pid, nids, c1=c1, c2=c2, comment='')
+        elif card_type == 'CELAS2':
+            eids = _cast(elements['eid'])
+            k = _cast(elements['K'])
+            ge = _cast(elements['ge'])
+            s = _cast(elements['s'])
+            nodes = _cast(elements['nodes']).tolist()
+            components = _cast(elements['components'])
+            for eid, ki, nids, (c1, c2), gei, si in zip(eids, k, nodes, components, ge, s):
+                model.add_celas2(eid, ki, nids, c1=c1, c2=c2, ge=gei, s=si, comment='')
+        elif card_type == 'CELAS3':
+            eids = _cast(elements['eid'])
+            pids = _cast(elements['pid'])
+            nodes = _cast(elements['nodes']).tolist()
+            for eid, pid, nids in zip(eids, pids, nodes):
+                model.add_celas3(eid, pid, nids, comment='')
+        elif card_type == 'CELAS4':
+            eids = _cast(elements['eid'])
+            k = _cast(elements['K'])
+            nodes = _cast(elements['nodes']).tolist()
+            for eid, ki, nids in zip(eids, k, nodes):
+                model.add_celas4(eid, ki, nids, comment='')
+
 
         elif card_type == 'CBUSH':
             eids = _cast(elements['eid'])
@@ -1186,8 +1220,19 @@ def hdf5_load_elements(model, elements_group, encoding):
                     si2 = [None, None, None]
                 model.add_cbush(eid, pid, nids, x, g0, cid=cidi, s=s2, ocid=ocidi, si=si2,
                                 comment='')
+        elif card_type == 'CBUSH1D':
+            eids = _cast(elements['eid'])
+            pids = _cast(elements['pid'])
+            nodes = _cast(elements['nodes']).tolist()
+            cid = _cast(elements['cid'])
+            for eid, pid, nids, cidi in zip(eids, pids, nodes, cid):
+                if cidi == -1:
+                    cidi = None
+                model.add_cbush1d(eid, pid, nids, cid=cidi, comment='')
 
-        elif card_type == 'CTRIA3':
+
+        elif card_type in ['CTRIA3', 'CTRIAR']:
+            func = model.add_ctria3 if card_type == 'CTRIA3' else model.add_ctriar
             # TODO: doesn't support tflag
             eids = _cast(elements['eid'])
             pids = _cast(elements['pid'])
@@ -1203,7 +1248,8 @@ def hdf5_load_elements(model, elements_group, encoding):
                     theta_mcid = mcid
                 model.add_ctria3(eid, pid, nids, zoffset=zoffset, theta_mcid=theta_mcid,
                                  tflag=0, T1=None, T2=None, T3=None, comment='')
-        elif card_type == 'CQUAD4':
+        elif card_type in ['CQUAD4', 'CQUADR']:
+            func = model.add_cquad4 if card_type == 'CQUAD4' else model.add_cquadr
             # TODO: doesn't support tflag
             eids = _cast(elements['eid'])
             pids = _cast(elements['pid'])
@@ -1217,14 +1263,61 @@ def hdf5_load_elements(model, elements_group, encoding):
                     theta_mcid = theta
                 else:
                     theta_mcid = mcid
-                model.add_cquad4(eid, pid, nids, zoffset=zoffset, theta_mcid=theta_mcid,
+                func(eid, pid, nids, zoffset=zoffset, theta_mcid=theta_mcid,
+                     tflag=0, T1=None, T2=None, T3=None, T4=None, comment='')
+
+        elif card_type == 'CTRIA6':
+            # TODO: doesn't support tflag
+            eids = _cast(elements['eid'])
+            pids = _cast(elements['pid'])
+            thetas = _cast(elements['theta'])
+            mcids = _cast(elements['mcid'])
+            zoffsets = _cast(elements['zoffset'])
+            nodes = _cast(elements['nodes']).tolist()
+            for eid, pid, nids, mcid, theta, zoffset in zip(
+                    eids, pids, nodes, mcids, thetas, zoffsets):
+                if mcid == -1:
+                    theta_mcid = theta
+                else:
+                    theta_mcid = mcid
+                model.add_ctria6(eid, pid, nids, zoffset=zoffset, theta_mcid=theta_mcid,
+                                 tflag=0, T1=None, T2=None, T3=None, comment='')
+        elif card_type == 'CQUAD8':
+            # TODO: doesn't support tflag
+            eids = _cast(elements['eid'])
+            pids = _cast(elements['pid'])
+            thetas = _cast(elements['theta'])
+            mcids = _cast(elements['mcid'])
+            zoffsets = _cast(elements['zoffset'])
+            nodes = _cast(elements['nodes']).tolist()
+            for eid, pid, nids, mcid, theta, zoffset in zip(
+                    eids, pids, nodes, mcids, thetas, zoffsets):
+                if mcid == -1:
+                    theta_mcid = theta
+                else:
+                    theta_mcid = mcid
+                model.add_cquad8(eid, pid, nids, zoffset=zoffset, theta_mcid=theta_mcid,
                                  tflag=0, T1=None, T2=None, T3=None, T4=None, comment='')
+
+        elif card_type == 'CQUAD':
+            # TODO: doesn't support tflag
+            eids = _cast(elements['eid'])
+            pids = _cast(elements['pid'])
+            thetas = _cast(elements['theta'])
+            mcids = _cast(elements['mcid'])
+            nodes = _cast(elements['nodes']).tolist()
+            for eid, pid, nids, mcid, theta in zip(eids, pids, nodes, mcids, thetas):
+                if mcid == -1:
+                    theta_mcid = theta
+                else:
+                    theta_mcid = mcid
+                model.add_cquad(eid, pid, nids, theta_mcid=theta_mcid, comment='')
 
         elif card_type == 'CSHEAR':
             eids = _cast(elements['eid'])
             pids = _cast(elements['pid'])
             nodes = _cast(elements['nodes']).tolist()
-            for eid, pid, nids, mcid, theta, zoffset in zip(eids, pids, nodes):
+            for eid, pid, nids in zip(eids, pids, nodes):
                 model.add_cshear(eid, pid, nids, comment='')
 
         elif card_type == 'CTRIAX':
@@ -1239,9 +1332,63 @@ def hdf5_load_elements(model, elements_group, encoding):
                 else:
                     theta_mcid = mcid
                 model.add_ctriax(eid, pid, nids, theta_mcid=theta_mcid, comment='')
+        elif card_type == 'CTRAX3':
+            eids = _cast(elements['eid'])
+            pids = _cast(elements['pid'])
+            thetas = _cast(elements['theta'])
+            nodes = _cast(elements['nodes']).tolist()
+            for eid, pid, nids, theta in zip(eids, pids, nodes, thetas):
+                model.add_ctrax3(eid, pid, nids, theta=theta, comment='')
+        elif card_type == 'CTRAX6':
+            eids = _cast(elements['eid'])
+            pids = _cast(elements['pid'])
+            thetas = _cast(elements['theta'])
+            nodes = _cast(elements['nodes']).tolist()
+            for eid, pid, nids, theta in zip(eids, pids, nodes, thetas):
+                model.add_ctrax6(eid, pid, nids, theta=theta, comment='')
+        elif card_type == 'CTRIAX6':
+            eids = _cast(elements['eid'])
+            mids = _cast(elements['mid'])
+            thetas = _cast(elements['theta'])
+            nodes = _cast(elements['nodes']).tolist()
+            for eid, mid, nids, theta in zip(eids, mids, nodes, thetas):
+                model.add_ctriax6(eid, mid, nids, theta=theta, comment='')
+
+        elif card_type == 'CQUADX4':
+            eids = _cast(elements['eid'])
+            pids = _cast(elements['pid'])
+            thetas = _cast(elements['theta'])
+            nodes = _cast(elements['nodes']).tolist()
+            for eid, pid, nids, theta in zip(eids, pids, nodes, thetas):
+                model.add_cquadx4(eid, pid, nids, theta=theta, comment='')
+        elif card_type == 'CQUADX8':
+            eids = _cast(elements['eid'])
+            pids = _cast(elements['pid'])
+            thetas = _cast(elements['theta'])
+            nodes = _cast(elements['nodes']).tolist()
+            for eid, pid, nids, theta in zip(eids, pids, nodes, thetas):
+                model.add_cquadx8(eid, pid, nids, theta=theta, comment='')
+
+        elif card_type in ['CPLSTN3', 'CPLSTN4']:
+            func = model.add_cplstn3 if card_type == 'CPLSTN3' else model.add_cplstn4
+
+            eids = _cast(elements['eid'])
+            pids = _cast(elements['pid'])
+            thetas = _cast(elements['theta'])
+            nodes = _cast(elements['nodes']).tolist()
+            for eid, pid, nids, theta in zip(eids, pids, nodes, thetas):
+                func(eid, pid, nids, theta=theta, comment='')
+        elif card_type in ['CPLSTN6', 'CPLSTN8']:
+            func = model.add_cplstn6 if card_type == 'CPLSTN6' else model.add_cplstn8
+
+            eids = _cast(elements['eid'])
+            pids = _cast(elements['pid'])
+            thetas = _cast(elements['theta'])
+            nodes = _cast(elements['nodes']).tolist()
+            for eid, pid, nids, theta in zip(eids, pids, nodes, thetas):
+                func(eid, pid, nids, theta=theta, comment='')
         else:
             load_cards_from_keys_values('elements/%s' % card_type, elements)
-            #model.add_celas1(eid, pid, nids, c1=0, c2=0, comment='')
             #model.add_celas2(eid, k, nids, c1=0, c2=0, ge=0., s=0., comment='')
             #model.add_celas3(eid, pid, nids, comment='')
             #model.add_celas4(eid, k, nids, comment='')
@@ -1250,7 +1397,6 @@ def hdf5_load_elements(model, elements_group, encoding):
             #model.add_cdamp3(eid, pid, nids, comment='')
             #model.add_cdamp4(eid, b, nids, comment='')
             #model.add_cvisc(eid, pid, nids, comment='')
-            #model.add_cbush1d(eid, pid, nids, cid=None, comment='')
             #model.add_cbush2d(eid, pid, nids, cid=0, plane='XY', sptid=None, comment='')
             #model.add_cdamp5(eid, pid, nids, comment='')
             #model.add_cfast(eid, pid, Type, ida, idb, gs=None, ga=None, gb=None,
@@ -1260,17 +1406,5 @@ def hdf5_load_elements(model, elements_group, encoding):
             #model.add_cmass2(eid, mass, nids, c1, c2, comment='')
             #model.add_cmass3(eid, pid, nids, comment='')
             #model.add_cmass4(eid, mass, nids, comment='')
-            #model.add_cquad8(eid, pid, nids, theta_mcid=0., zoffset=0.,
-                             #tflag=0, T1=None, T2=None, T3=None, T4=None, comment='')
-            #model.add_cquad(eid, pid, nids, theta_mcid=0., comment='')
-            #model.add_cquadr(eid, pid, nids, theta_mcid=0.0, zoffset=0.,
-                             #tflag=0, T1=None, T2=None, T3=None, T4=None, comment='')
             #model.add_cquadx(eid, pid, nids, theta_mcid=0., comment='')
-            #model.add_cquadx4(eid, pid, nids, theta=0., comment='')
-            #model.add_cquadx8(eid, pid, nids, theta=0., comment='')
-            #model.add_ctria6(eid, pid, nids, theta_mcid=0., zoffset=0.,
-                             #tflag=0, T1=None, T2=None, T3=None, comment='')
-            #model.add_ctriar(eid, pid, nids, theta_mcid=0.0, zoffset=0.0,
-                             #tflag=0, T1=None, T2=None, T3=None, comment='')
-            #model.add_ctriax6(eid, mid, nids, theta=0., comment='')
             print(card_type)

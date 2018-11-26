@@ -122,7 +122,7 @@ class TestRods(unittest.TestCase):
         A = pi * (OD1**2) / 4.
         mass_expected = 2.0 * (rho * A + nsm)
         assert np.allclose(mass, mass_expected), mass
-        save_load_deck(model)
+        save_load_deck(model, run_save_load_hdf5=True)
 
     def test_conrod_01(self):
         eid = 10

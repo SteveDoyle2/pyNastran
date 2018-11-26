@@ -30,6 +30,16 @@ class CFAST(Element):
     cp_name_map = {
     }
 
+    @classmethod
+    def _init_from_empty(cls):
+        eid = 1
+        pid = 1
+        Type = 'Type'
+        ida = 1
+        idb = 2
+        return CFAST(eid, pid, Type, ida, idb,
+                     gs=None, ga=None, gb=None, xs=None, ys=None, zs=None, comment='')
+
     def __init__(self, eid, pid, Type, ida, idb, gs=None, ga=None, gb=None,
                  xs=None, ys=None, zs=None, comment=''):
         Element.__init__(self)
@@ -508,6 +518,13 @@ class CRAC2D(CrackElement):
     }
     ## todo:: not done
 
+    @classmethod
+    def _init_from_empty(cls):
+        eid = 1
+        pid = 1
+        nids = [1]
+        return CRAC2D(eid, pid, nids, comment='')
+
     def __init__(self, eid, pid, nids, comment=''):
         CrackElement.__init__(self)
         if comment:
@@ -601,6 +618,13 @@ class CRAC3D(CrackElement):
         1: 'eid', 2:'pid',
     }
     ## todo:: not done
+
+    @classmethod
+    def _init_from_empty(cls):
+        eid = 1
+        pid = 1
+        nids = [1]
+        return CRAC3D(eid, pid, nids, comment='')
 
     def __init__(self, eid, pid, nids, comment=''):
         CrackElement.__init__(self)

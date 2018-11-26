@@ -128,6 +128,27 @@ class CTRAX3(AxisymmetricTri):
         self.nodes = nids
         assert len(nids) == 3, 'error on CTRAX3'
 
+    @classmethod
+    def export_to_hdf5(cls, h5_file, model, eids):
+        """exports the elements in a vectorized way"""
+        #comments = []
+        pids = []
+        nodes = []
+        thetas = []
+        for eid in eids:
+            element = model.elements[eid]
+            #comments.append(element.comment)
+            pids.append(element.pid)
+            #nids = list(nid  if nid is not None else 0
+                        #for nid in element.nodes)
+            nodes.append(element.nodes)
+            thetas.append(element.theta)
+        #h5_file.create_dataset('_comment', data=comments)
+        h5_file.create_dataset('eid', data=eids)
+        h5_file.create_dataset('pid', data=pids)
+        h5_file.create_dataset('nodes', data=nodes)
+        h5_file.create_dataset('theta', data=thetas)
+
     def validate(self):
         self.validate_node_ids(allow_empty_nodes=True)
 
@@ -283,6 +304,27 @@ class CTRAX6(AxisymmetricTri):
         self.theta = theta
         self.nodes = nids
         assert len(nids) == 6, 'error on CTRAX6'
+
+    @classmethod
+    def export_to_hdf5(cls, h5_file, model, eids):
+        """exports the elements in a vectorized way"""
+        #comments = []
+        pids = []
+        nodes = []
+        thetas = []
+        for eid in eids:
+            element = model.elements[eid]
+            #comments.append(element.comment)
+            pids.append(element.pid)
+            #nids = list(nid  if nid is not None else 0
+                        #for nid in element.nodes)
+            nodes.append(element.nodes)
+            thetas.append(element.theta)
+        #h5_file.create_dataset('_comment', data=comments)
+        h5_file.create_dataset('eid', data=eids)
+        h5_file.create_dataset('pid', data=pids)
+        h5_file.create_dataset('nodes', data=nodes)
+        h5_file.create_dataset('theta', data=thetas)
 
     def validate(self):
         self.validate_node_ids(allow_empty_nodes=True)
@@ -444,9 +486,8 @@ class CTRIAX(AxisymmetricTri):
             nids = list(nid  if nid is not None else 0
                         for nid in element.nodes)
             nodes.append(nids)
-            print(element.nodes)
             if isinstance(element.theta_mcid, int):
-                mcid = self.theta_mcid
+                mcid = element.theta_mcid
                 theta = 0.
             else:
                 assert isinstance(element.theta_mcid, float), type(element.theta_mcid)
@@ -637,19 +678,18 @@ class CTRIAX6(TriShell):
     def export_to_hdf5(cls, h5_file, model, eids):
         """exports the elements in a vectorized way"""
         #comments = []
-        pids = []
+        mids = []
         nodes = []
         thetas = []
         for eid in eids:
             element = model.elements[eid]
             #comments.append(element.comment)
-            pids.append(element.pid)
+            mids.append(element.mid)
             nodes.append(element.nodes)
-            theta = element.theta_mcid
-            thetas.append(theta)
+            thetas.append(element.theta)
         #h5_file.create_dataset('_comment', data=comments)
         h5_file.create_dataset('eid', data=eids)
-        h5_file.create_dataset('pid', data=pids)
+        h5_file.create_dataset('mid', data=mids)
         h5_file.create_dataset('nodes', data=nodes)
         h5_file.create_dataset('theta', data=thetas)
 
@@ -916,7 +956,7 @@ class CQUADX(AxisymmetricQuad):
             pids.append(element.pid)
             nodes.append(element.nodes)
             if isinstance(element.theta_mcid, int):
-                mcid = self.theta_mcid
+                mcid = element.theta_mcid
                 theta = 0.
             else:
                 assert isinstance(element.theta_mcid, float), type(element.theta_mcid)
@@ -1087,6 +1127,25 @@ class CQUADX4(AxisymmetricQuad):
         assert len(self.nodes) == 4
 
     @classmethod
+    def export_to_hdf5(cls, h5_file, model, eids):
+        """exports the elements in a vectorized way"""
+        #comments = []
+        pids = []
+        nodes = []
+        thetas = []
+        for eid in eids:
+            element = model.elements[eid]
+            #comments.append(element.comment)
+            pids.append(element.pid)
+            nodes.append(element.nodes)
+            thetas.append(element.theta)
+        #h5_file.create_dataset('_comment', data=comments)
+        h5_file.create_dataset('eid', data=eids)
+        h5_file.create_dataset('pid', data=pids)
+        h5_file.create_dataset('nodes', data=nodes)
+        h5_file.create_dataset('theta', data=thetas)
+
+    @classmethod
     def add_card(cls, card, comment=''):
         """
         Adds a CQUADX4 card from ``BDF.add_card(...)``
@@ -1210,6 +1269,25 @@ class CQUADX8(AxisymmetricQuad):
         self.theta = theta
         self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(self.nodes) == 8
+
+    @classmethod
+    def export_to_hdf5(cls, h5_file, model, eids):
+        """exports the elements in a vectorized way"""
+        #comments = []
+        pids = []
+        nodes = []
+        thetas = []
+        for eid in eids:
+            element = model.elements[eid]
+            #comments.append(element.comment)
+            pids.append(element.pid)
+            nodes.append(element.nodes)
+            thetas.append(element.theta)
+        #h5_file.create_dataset('_comment', data=comments)
+        h5_file.create_dataset('eid', data=eids)
+        h5_file.create_dataset('pid', data=pids)
+        h5_file.create_dataset('nodes', data=nodes)
+        h5_file.create_dataset('theta', data=thetas)
 
     @classmethod
     def add_card(cls, card, comment=''):

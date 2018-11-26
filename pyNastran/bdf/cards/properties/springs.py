@@ -43,6 +43,12 @@ class PELAS(SpringProperty):
         'GE1' : 'ge',
     }
 
+    @classmethod
+    def _init_from_empty(cls):
+        pid = 1
+        k = 1.
+        return PELAS(pid, k, ge=0., s=0., comment='')
+
     def __init__(self, pid, k, ge=0., s=0., comment=''):
         """
         Creates a PELAS card
@@ -166,6 +172,11 @@ class PELAST(SpringProperty):
     pname_fid_map = {
     'TKID' : 'tknid',
     }
+
+    @classmethod
+    def _init_from_empty(cls):
+        pid = 1
+        return PELAST(pid, tkid=0, tgeid=0, tknid=0, comment='')
 
     def __init__(self, pid, tkid=0, tgeid=0, tknid=0, comment=''):
         """

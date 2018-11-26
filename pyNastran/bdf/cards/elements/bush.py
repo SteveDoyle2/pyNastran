@@ -447,6 +447,26 @@ class CBUSH1D(BushElement):
         self.pid_ref = None
 
     @classmethod
+    def export_to_hdf5(cls, h5_file, model, eids):
+        """exports the elements in a vectorized way"""
+        #comments = []
+        pids = []
+        nodes = []
+        cid = []
+        for eid in eids:
+            element = model.elements[eid]
+            #comments.append(element.comment)
+            pids.append(element.pid)
+            nodes.append(element.nodes)
+            cid.append(element.cid if element.cid is not None else -1)
+        #h5_file.create_dataset('_comment', data=comments)
+        #print('cid =', cid)
+        h5_file.create_dataset('eid', data=eids)
+        h5_file.create_dataset('nodes', data=nodes)
+        h5_file.create_dataset('pid', data=pids)
+        h5_file.create_dataset('cid', data=cid)
+
+    @classmethod
     def add_card(cls, card, comment=''):
         """
         Adds a CBUSH1D card from ``BDF.add_card(...)``
