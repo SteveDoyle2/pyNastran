@@ -133,9 +133,15 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         self.nid_release_map = {}
         self.stress = {}
         self.strain = {}
-        self.is_element_quality = True
-        self.is_properties = True
+        #self.is_element_quality = True
+        #self.is_properties = True
 
+    @property
+    def is_element_quality(self):
+        return self.gui.settings.nastran_is_element_quality
+    @property
+    def is_properties(self):
+        return self.gui.settings.nastran_is_properties
     @property
     def gui(self):
         return self

@@ -11,13 +11,14 @@ The preferences menu handles:
 from __future__ import print_function
 from math import log10, ceil
 
+import PySide
 from qtpy import QtGui
 from qtpy.QtWidgets import (
     QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
     QSpinBox, QDoubleSpinBox, QColorDialog, QLineEdit, QCheckBox, QComboBox)
 import vtk
 
-from pyNastran.gui.utils.qt.pydialog import PyDialog
+from pyNastran.gui.utils.qt.pydialog import PyDialog, make_font
 from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
 from pyNastran.gui.menus.menu_utils import eval_float_from_string
 
@@ -79,6 +80,9 @@ class PreferencesWindow(PyDialog):
             data['text_color'])
         self.highlight_color_float, self.highlight_color_int = _check_color(
             data['highlight_color'])
+
+        self._nastran_is_element_quality = data['nastran_is_element_quality']
+        self._nastran_is_properties = data['nastran_is_properties']
 
         self.setWindowTitle('Preferences')
         self.create_widgets()
@@ -205,6 +209,12 @@ class PreferencesWindow(PyDialog):
         self.magnify_edit.setMinimum(1)
         self.magnify_edit.setMaximum(10)
         self.magnify_edit.setValue(self._magnify)
+
+        #-----------------------------------------------------------------------
+        self.nastran_is_element_quality_checkbox = QCheckBox('Element Quality')
+        self.nastran_is_properties_checkbox = QCheckBox('Properties')
+        self.nastran_is_element_quality_checkbox.setChecked(self._nastran_is_element_quality)
+        self.nastran_is_properties_checkbox.setChecked(self._nastran_is_properties)
 
         #-----------------------------------------------------------------------
         # closing
@@ -347,6 +357,25 @@ class PreferencesWindow(PyDialog):
         grid.addWidget(self.picker_size_edit, irow, 1)
         irow += 1
 
+
+        hbox = QHBoxLayout()
+        hbox.addWidget(self.nastran_is_element_quality_checkbox)
+        hbox.addWidget(self.nastran_is_properties_checkbox)
+
+        #bold_font = make_font(self._default_font_size, is_bold=True)
+        vbox_nastran = QVBoxLayout()
+        self.nastran_label = QLabel('Nastran:')
+        #nastran_label.setFont(bold_font)
+        vbox_nastran.addWidget(self.nastran_label)
+        vbox_nastran.addLayout(hbox)
+
+        #grid.addWidget(self.nastran_is_element_quality_checkbox, irow, 0)
+        #grid.addWidget(self.nastran_is_properties_checkbox, irow, 1)
+        #irow += 1
+
+        #self.nastran_is_element_quality_checkbox.setChecked(self._nastran_is_element_quality)
+        #self.nastran_is_properties_checkbox.setChecked(self._nastran_is_properties)
+
         #self.create_legend_widgets()
         #grid2 = self.create_legend_layout()
         ok_cancel_box = QHBoxLayout()
@@ -356,6 +385,7 @@ class PreferencesWindow(PyDialog):
 
         vbox = QVBoxLayout()
         vbox.addLayout(grid)
+        vbox.addLayout(vbox_nastran)
         #vbox.addStretch()
         #vbox.addLayout(grid2)
         vbox.addStretch()
@@ -401,10 +431,27 @@ class PreferencesWindow(PyDialog):
         self.clipping_min_button.clicked.connect(self.on_default_clipping_min)
         self.clipping_max_button.clicked.connect(self.on_default_clipping_max)
 
+        #------------------------------------
+        # format-specific
+        self.nastran_is_element_quality_checkbox.clicked.connect(self.on_nastran_is_element_quality)
+        self.nastran_is_properties_checkbox.clicked.connect(self.on_nastran_is_properties)
+        #------------------------------------
+
         self.apply_button.clicked.connect(self.on_apply)
         self.ok_button.clicked.connect(self.on_ok)
         self.cancel_button.clicked.connect(self.on_cancel)
         # closeEvent
+
+    def on_nastran_is_element_quality(self):
+        """set the nastran element quality preferences"""
+        is_checked = self.nastran_is_element_quality_checkbox.isChecked()
+        if self.win_parent is not None:
+            self.win_parent.settings.nastran_is_element_quality = is_checked
+    def on_nastran_is_properties(self):
+        """set the nastran properties preferences"""
+        is_checked = self.nastran_is_properties_checkbox.isChecked()
+        if self.win_parent is not None:
+            self.win_parent.settings.nastran_is_properties = is_checked
 
     def on_font(self, value=None):
         """update the font for the current window"""
@@ -413,6 +460,8 @@ class PreferencesWindow(PyDialog):
         font = QtGui.QFont()
         font.setPointSize(value)
         self.setFont(font)
+        bold_font = make_font(value, is_bold=True)
+        self.nastran_label.setFont(bold_font)
 
     def on_annotation_size(self, value=None):
         """update the annotation size"""
@@ -690,12 +739,18 @@ def main():  # pragma: no cover
         'text_size' : 12,
         'text_color' : (0., 1., 0.), # green
 
+        'highlight_color' : (1., 1., 0.), # yellow
+        'highlight_opacity' : 0.8,
+
         'annotation_color' : (1., 0., 0.), # red
         'annotation_size' : 11,
         'picker_size' : 10.,
 
         'min_clip' : 0.,
         'max_clip' : 10,
+
+        'nastran_is_element_quality' : True,
+        'nastran_is_properties' : True,
 
         'dim_max' : 502.,
 

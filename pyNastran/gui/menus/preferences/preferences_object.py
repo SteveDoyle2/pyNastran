@@ -53,6 +53,9 @@ class PreferencesObject(object):
             'min_clip' : min_clip,
             'max_clip' : max_clip,
 
+            'nastran_is_element_quality' : settings.nastran_is_element_quality,
+            'nastran_is_properties' : settings.nastran_is_properties,
+
             'clicked_ok' : False,
             'close' : False,
         }

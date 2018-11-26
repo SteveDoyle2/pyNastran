@@ -77,6 +77,9 @@ class Settings(object):
         self.dim_max = 1.0
         #self.annotation_scale = 1.0
 
+        self.nastran_is_element_quality = True
+        self.nastran_is_properties = True
+
     def reset_settings(self):
         """helper method for ``setup_gui``"""
         # rgb tuple
@@ -111,6 +114,9 @@ class Settings(object):
         # not stored
         self.dim_max = 1.0
         #self.annotation_scale = 1.0
+
+        self.nastran_is_element_quality = True
+        self.nastran_is_properties = True
 
     def load(self, settings):
         """helper method for ``setup_gui``"""
@@ -191,6 +197,11 @@ class Settings(object):
         except (TypeError, AttributeError):
             pass
 
+        self._set_setting(settings, setting_keys, ['nastran_is_element_quality'],
+                          self.nastran_is_element_quality, True, auto_type=bool)
+        self._set_setting(settings, setting_keys, ['nastran_is_properties'],
+                          self.nastran_is_properties, True, auto_type=bool)
+
         #w = screen_shape.width()
         #h = screen_shape.height()
         #try:
@@ -257,6 +268,11 @@ class Settings(object):
 
         # str
         settings.setValue('colormap', self.colormap)
+
+        # format-specific
+        settings.setValue('nastran_is_element_quality', self.nastran_is_element_quality)
+        settings.setValue('nastran_is_properties', self.nastran_is_properties)
+
 
         #screen_shape = QtGui.QDesktopWidget().screenGeometry()
         main_window = self.parent.window()
