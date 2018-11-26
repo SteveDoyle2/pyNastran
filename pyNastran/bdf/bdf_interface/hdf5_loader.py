@@ -1,5 +1,6 @@
 """Defines various helper functions for loading a HDF5 BDF file"""
-from __future__ import print_function
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
 from collections import defaultdict
 from six import string_types, StringIO
 import numpy as np
@@ -209,6 +210,8 @@ def export_to_hdf5_file(hdf5_file, model, exporter=None):
 
     if scalars_keys_to_analyze:
         scalar_group = hdf5_file.create_group('minor_attributes')
+        encoding = model.get_encoding()
+        scalar_group.create_dataset('encoding', data=encoding)
         for key in scalars_keys_to_analyze:
             value = getattr(model, key)
 
@@ -250,8 +253,8 @@ def export_to_hdf5_file(hdf5_file, model, exporter=None):
     _export_list_keys(model, hdf5_file, list_keys)
     _export_list_obj_keys(model, hdf5_file, list_obj_keys)
 
-    encoding = model._encoding
-    cards_to_read = [key.encode(encoding) for key in model.cards_to_read]
+    encoding = model.get_encoding()
+    cards_to_read = [key.encode(encoding) for key in list(model.cards_to_read)]
     cards_to_read = list(cards_to_read)
     cards_to_read.sort()
     hdf5_file.create_dataset('cards_to_read', data=cards_to_read)
@@ -576,6 +579,7 @@ def _hdf5_export_object_dict(group, model, name, obj_dict, keys):
 #-------------------------------------------------------------------------------------
 # importer
 def load_hdf5_file(h5_file, model):
+    encoding = _cast(h5_file['minor_attributes']['encoding'])
     keys = h5_file.keys()
 
     mapper = {
@@ -667,7 +671,8 @@ def load_hdf5_file(h5_file, model):
             model.log.warning('skipping hdf5 load for %s' % key)
 
     cards_to_read = _cast(h5_file['cards_to_read'])
-    model.cards_to_read = set(cards_to_read)
+    cards_to_read = [key.decode(encoding) for key in cards_to_read]
+    model.cards_to_read = set(list(cards_to_read))
 
 def hdf5_load_coords(model, coords_group):
     """loads the coords from an HDF5 file"""

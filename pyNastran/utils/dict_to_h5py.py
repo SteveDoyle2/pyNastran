@@ -19,7 +19,8 @@ Limitations:
   but point to different locations.  There is some support for this,
   but hopefully you aren’t using it.
 """
-from __future__ import print_function
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
 #from types import MethodType, FunctionType
 from six import PY2 #, PY3 #, binary_type
 
@@ -120,7 +121,7 @@ class HDF5Exporter(object):
         if isinstance(key, (integer_types, float_types)):
             raise TypeError('key=%r; key must be a string, not %s\nvalue:\n%r' % (key, type(key), value))
 
-        custom_types_list = user_custom_types + ['BDF', 'OP2', 'OP2Geom', 'StandardScaler']
+        custom_types_list = user_custom_types + ['BDF', 'OP2', 'OP2Geom', 'StandardScaler', 'lil_matrix']
         class_name = value.__class__.__name__
 
         if isinstance(value, dict):
@@ -160,7 +161,16 @@ class HDF5Exporter(object):
             sub_group = hdf5_file.create_group(key)
             sub_group.attrs['type'] = value.__class__.__name__
             self._add_attrs(sub_group, value, h5attrs, user_custom_types, nlevels+1)
-
+        elif class_name == 'lil_matrix':
+            h5attrs = ['dtype', 'shape', 'ndim', 'nnz'] # 'data', 'rows'
+            sub_group = hdf5_file.create_group(key)
+            sub_group.attrs['type'] = value.__class__.__name__
+            self._add_attrs(sub_group, value, h5attrs, user_custom_types, nlevels+1)
+        elif class_name == 'dtype':
+            h5attrs = ['dtype']
+            sub_group = hdf5_file.create_group(key)
+            sub_group.attrs['type'] = value.__class__.__name__
+            self._add_attrs(sub_group, value, h5attrs, user_custom_types, nlevels+1)
         elif class_name in custom_types_list:
             attrs = object_attributes(value, mode='both', keys_to_skip=None)
             sub_group = hdf5_file.create_group(key)
@@ -399,8 +409,8 @@ class HDF5Importer(object):
         """
         class_instance = custom_types[Type]
         #print('******Type=%r' % Type)
-        if hasattr(class_instance, 'init_from_empty'):
-            obj = class_instance.init_from_empty()
+        if hasattr(class_instance, '_init_from_empty'):
+            obj = class_instance._init_from_empty()
         elif hasattr(class_instance, '_init_from_self'):
             #print('self_obj', self_obj)
             obj = class_instance._init_from_self(self_obj)
