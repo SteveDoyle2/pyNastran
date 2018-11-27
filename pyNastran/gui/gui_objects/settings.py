@@ -79,6 +79,10 @@ class Settings(object):
 
         self.nastran_is_element_quality = True
         self.nastran_is_properties = True
+        self.nastran_is_3d_bars = True
+        self.nastran_is_3d_bars_update = True
+        self.nastran_create_coords = True
+        self.nastran_is_bar_axes = True
 
     def reset_settings(self):
         """helper method for ``setup_gui``"""
@@ -117,6 +121,10 @@ class Settings(object):
 
         self.nastran_is_element_quality = True
         self.nastran_is_properties = True
+        self.nastran_is_3d_bars = True
+        self.nastran_is_3d_bars_update = True
+        self.nastran_create_coords = True
+        self.nastran_is_bar_axes = True
 
     def load(self, settings):
         """helper method for ``setup_gui``"""
@@ -201,6 +209,14 @@ class Settings(object):
                           self.nastran_is_element_quality, True, auto_type=bool)
         self._set_setting(settings, setting_keys, ['nastran_is_properties'],
                           self.nastran_is_properties, True, auto_type=bool)
+        self._set_setting(settings, setting_keys, ['nastran_is_3d_bars'],
+                          self.nastran_is_3d_bars, True, auto_type=bool)
+        self._set_setting(settings, setting_keys, ['nastran_is_3d_bars_update'],
+                          self.nastran_is_3d_bars_update, True, auto_type=bool)
+        self._set_setting(settings, setting_keys, ['nastran_create_coords'],
+                          self.nastran_create_coords, True, auto_type=bool)
+        self._set_setting(settings, setting_keys, ['nastran_is_bar_axes'],
+                          self.nastran_is_bar_axes, True, auto_type=bool)
 
         #w = screen_shape.width()
         #h = screen_shape.height()
@@ -272,6 +288,10 @@ class Settings(object):
         # format-specific
         settings.setValue('nastran_is_element_quality', self.nastran_is_element_quality)
         settings.setValue('nastran_is_properties', self.nastran_is_properties)
+        settings.setValue('nastran_is_3d_bars', self.nastran_is_3d_bars)
+        settings.setValue('nastran_is_3d_bars_update', self.nastran_is_3d_bars_update)
+        settings.setValue('nastran_create_coords', self.nastran_create_coords)
+        settings.setValue('nastran_is_bar_axes', self.nastran_is_bar_axes)
 
 
         #screen_shape = QtGui.QDesktopWidget().screenGeometry()

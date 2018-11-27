@@ -266,9 +266,17 @@ class SafeXrefMesh(XrefMesh):
             for key, eids_pids in sorted(xref_errors.items()):
                 eids = [eid_pid[0] for eid_pid in eids_pids]
                 eids.sort()
-                pids = np.unique([eid_pid[1] for eid_pid in eids_pids]).tolist()
+                pids = [eid_pid[1] for eid_pid in eids_pids]
+                try:
+                    upids = np.unique(pids).tolist()
+                except TypeError:
+                    print(msg)
+                    print('key = %s' % key)
+                    print(' - %s' % eids)
+                    print(' - %s' % pids)
+                    raise
                 msg += 'missing %r for %s = %s\n' % (key, elements_word, eids)
-                msg += '%s = %s\n' % (key, pids)
+                msg += '%s = %s\n' % (key, upids)
             self.log.warning(msg.rstrip())
 
     def _safe_cross_reference_loads(self):

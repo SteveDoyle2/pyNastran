@@ -608,9 +608,9 @@ class ToolActions(object):
             check_path(csv_points_filename, 'csv_points_filename')
             # read input file
             try:
-                user_points = np.loadtxt(csv_points_filename, delimiter=',')
+                user_points = np.loadtxt(csv_points_filename, comments='#', delimiter=',')
             except ValueError:
-                user_points = loadtxt_nice(csv_points_filename, delimiter=',')
+                user_points = loadtxt_nice(csv_points_filename, comments='#', delimiter=',')
                 # can't handle leading spaces?
                 #raise
         except ValueError as error:

@@ -1141,6 +1141,9 @@ class OP2(OP2_Scalar):
                 continue
             #print('-----------')
             for subcase, result in disp_like_dict.items():
+                if result.table_name in ['BOUGV1', 'BOPHIG', 'TOUGV1']:
+                    continue
+                self.log.debug("transforming %s" % result.table_name)
                 transform_displacement_to_global(subcase, result, icd_transform, coords, xyz_cid0,
                                                  self.log, debug=debug)
 

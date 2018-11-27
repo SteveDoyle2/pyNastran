@@ -12,7 +12,7 @@ import sys
 from io import open
 from itertools import count
 
-from six import StringIO
+from six import StringIO, string_types
 import numpy as np
 from numpy.lib._iotools import _is_string_like
 from numpy.compat import asstr, asunicode#, is_pathlib_path, asunicode
@@ -33,7 +33,7 @@ from pyNastran.utils import is_file_obj, _filename
 
 __all__ = ['loadtxt_nice', 'savetxt_nice']
 
-def loadtxt_nice(filename, delimiter=None, skiprows=0, comment='#', dtype=np.float64,
+def loadtxt_nice(filename, delimiter=None, skiprows=0, comments='#', dtype=np.float64,
                  converters=None, usecols=None, unpack=False,
                  ndmin=0,):
     """
@@ -52,7 +52,7 @@ def loadtxt_nice(filename, delimiter=None, skiprows=0, comment='#', dtype=np.flo
         the field splitter (e.g. comma or tab)
     skiprows : int; default=1
         the number of rows to skip
-    comment : str, default='#'
+    comments : str, default='#'
         the comment line
     dtype : numpy.dtype; default=None (float)
         allows for alternate casting
@@ -95,7 +95,7 @@ def loadtxt_nice(filename, delimiter=None, skiprows=0, comment='#', dtype=np.flo
     ]
     if dtype in complex_dtypes:
         return np.loadtxt(
-            filename, dtype=dtype, comments=comment, delimiter=delimiter,
+            filename, dtype=dtype, comments=comments, delimiter=delimiter,
             converters=converters,
             skiprows=skiprows, usecols=usecols,
             unpack=unpack, ndmin=ndmin,
@@ -116,7 +116,7 @@ def loadtxt_nice(filename, delimiter=None, skiprows=0, comment='#', dtype=np.flo
     if isinstance(filename, StringIO):
         lines = filename.getvalue().split('\n')[skiprows:]
         filename = None
-    elif isinstance(filename, str):
+    elif isinstance(filename, string_types):
         with open(_filename(filename), 'r') as file_obj:
             if skiprows:
                 lines = file_obj.readlines()[skiprows:]
@@ -126,20 +126,20 @@ def loadtxt_nice(filename, delimiter=None, skiprows=0, comment='#', dtype=np.flo
         lines = filename.readlines()[skiprows:]
         filename = filename.name
     else:  # pragma: no cover
-        raise TypeError('filename=%s is not a file-like object' % filename)
+        raise TypeError('filename=%s is not a file-like object; type=%s' % (filename, type(filename)))
 
     if usecols:
         for usecol in usecols:
             assert isinstance(usecol, int), 'usecol=%s usecols=%s' % (usecol, usecols)
         assert len(np.unique(usecols)), 'usecols=%s must be unique' % (usecols)
         for line in lines:
-            if line.startswith(comment):
+            if line.startswith(comments):
                 continue
             sline = line.strip(delimiter).split(delimiter)
             data.append([sline[i] for i in usecols])
     else:
         for line in lines:
-            if line.startswith(comment):
+            if line.startswith(comments):
                 continue
             sline = line.strip(delimiter).split(delimiter)
             data.append(sline)
@@ -159,7 +159,7 @@ def loadtxt_nice(filename, delimiter=None, skiprows=0, comment='#', dtype=np.flo
     if dtype in allowed_float_dtypes:
         X = np.array(data, dtype=dtype)
     #elif dtype in complex_dtypes:
-        #return np.loadtxt(fname, dtype=dtype, comments=comment, delimiter=delimiter,
+        #return np.loadtxt(fname, dtype=dtype, comments=comments, delimiter=delimiter,
                           #converters=converters,
                           #skiprows=skiprows, usecols=usecols,
                           #unpack=unpack, ndmin=ndmin,

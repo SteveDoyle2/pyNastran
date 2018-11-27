@@ -83,6 +83,10 @@ class PreferencesWindow(PyDialog):
 
         self._nastran_is_element_quality = data['nastran_is_element_quality']
         self._nastran_is_properties = data['nastran_is_properties']
+        self._nastran_is_3d_bars = data['nastran_is_3d_bars']
+        self._nastran_is_3d_bars_update = data['nastran_is_3d_bars_update']
+        self._nastran_is_bar_axes = data['nastran_is_bar_axes']
+        self._nastran_create_coords = data['nastran_create_coords']
 
         self.setWindowTitle('Preferences')
         self.create_widgets()
@@ -213,8 +217,21 @@ class PreferencesWindow(PyDialog):
         #-----------------------------------------------------------------------
         self.nastran_is_element_quality_checkbox = QCheckBox('Element Quality')
         self.nastran_is_properties_checkbox = QCheckBox('Properties')
+        self.nastran_is_3d_bars_checkbox = QCheckBox('3D Bars')
+        self.nastran_is_3d_bars_update_checkbox = QCheckBox('Update 3D Bars')
+        self.nastran_create_coords_checkbox = QCheckBox('Coords')
+        self.nastran_is_bar_axes_checkbox = QCheckBox('Bar Axes')
+        self.nastran_is_3d_bars_checkbox.setDisabled(True)
+        self.nastran_is_3d_bars_update_checkbox.setDisabled(True)
+        #self.nastran_is_bar_axes_checkbox.setDisabled(True)
+
         self.nastran_is_element_quality_checkbox.setChecked(self._nastran_is_element_quality)
         self.nastran_is_properties_checkbox.setChecked(self._nastran_is_properties)
+        self.nastran_is_3d_bars_checkbox.setChecked(self._nastran_is_3d_bars)
+        #self.nastran_is_3d_bars_update_checkbox.setChecked(self._nastran_is_3d_bars_update)
+        self.nastran_is_3d_bars_update_checkbox.setChecked(False)
+        self.nastran_is_bar_axes_checkbox.setChecked(self._nastran_is_bar_axes)
+        self.nastran_create_coords_checkbox.setChecked(self._nastran_create_coords)
 
         #-----------------------------------------------------------------------
         # closing
@@ -357,24 +374,29 @@ class PreferencesWindow(PyDialog):
         grid.addWidget(self.picker_size_edit, irow, 1)
         irow += 1
 
+        #--------------------------------------------------
+        grid_nastran = QGridLayout()
+        irow = 0
 
-        hbox = QHBoxLayout()
-        hbox.addWidget(self.nastran_is_element_quality_checkbox)
-        hbox.addWidget(self.nastran_is_properties_checkbox)
+        grid_nastran.addWidget(self.nastran_create_coords_checkbox, irow, 0)
+        irow += 1
+
+        grid_nastran.addWidget(self.nastran_is_element_quality_checkbox, irow, 0)
+        grid_nastran.addWidget(self.nastran_is_properties_checkbox, irow, 1)
+        irow += 1
+
+        grid_nastran.addWidget(self.nastran_is_bar_axes_checkbox, irow, 0)
+        irow += 1
+
+        grid_nastran.addWidget(self.nastran_is_3d_bars_checkbox, irow, 0)
+        grid_nastran.addWidget(self.nastran_is_3d_bars_update_checkbox, irow, 1)
+        irow += 1
 
         #bold_font = make_font(self._default_font_size, is_bold=True)
         vbox_nastran = QVBoxLayout()
         self.nastran_label = QLabel('Nastran:')
-        #nastran_label.setFont(bold_font)
         vbox_nastran.addWidget(self.nastran_label)
-        vbox_nastran.addLayout(hbox)
-
-        #grid.addWidget(self.nastran_is_element_quality_checkbox, irow, 0)
-        #grid.addWidget(self.nastran_is_properties_checkbox, irow, 1)
-        #irow += 1
-
-        #self.nastran_is_element_quality_checkbox.setChecked(self._nastran_is_element_quality)
-        #self.nastran_is_properties_checkbox.setChecked(self._nastran_is_properties)
+        vbox_nastran.addLayout(grid_nastran)
 
         #self.create_legend_widgets()
         #grid2 = self.create_legend_layout()
@@ -435,6 +457,10 @@ class PreferencesWindow(PyDialog):
         # format-specific
         self.nastran_is_element_quality_checkbox.clicked.connect(self.on_nastran_is_element_quality)
         self.nastran_is_properties_checkbox.clicked.connect(self.on_nastran_is_properties)
+        self.nastran_is_3d_bars_checkbox.clicked.connect(self.on_nastran_is_3d_bars)
+        self.nastran_is_3d_bars_update_checkbox.clicked.connect(self.on_nastran_is_3d_bars)
+        self.nastran_is_bar_axes_checkbox.clicked.connect(self.on_nastran_is_bar_axes)
+        self.nastran_create_coords_checkbox.clicked.connect(self.on_nastran_create_coords)
         #------------------------------------
 
         self.apply_button.clicked.connect(self.on_apply)
@@ -452,6 +478,26 @@ class PreferencesWindow(PyDialog):
         is_checked = self.nastran_is_properties_checkbox.isChecked()
         if self.win_parent is not None:
             self.win_parent.settings.nastran_is_properties = is_checked
+    def on_nastran_is_3d_bars(self):
+        """set the nastran properties preferences"""
+        is_checked = self.nastran_is_3d_bars_checkbox.isChecked()
+        if self.win_parent is not None:
+            self.win_parent.settings.nastran_is_3d_bars = is_checked
+    def on_nastran_is_3d_bars_update(self):
+        """set the nastran properties preferences"""
+        is_checked = self.nastran_is_3d_bars_update_checkbox.isChecked()
+        if self.win_parent is not None:
+            self.win_parent.settings.nastran_is_3d_bars_update = is_checked
+    def on_nastran_is_bar_axes(self):
+        """set the nastran properties preferences"""
+        is_checked = self.nastran_is_bar_axes_checkbox.isChecked()
+        if self.win_parent is not None:
+            self.win_parent.settings.nastran_is_bar_axes = is_checked
+    def on_nastran_create_coords(self):
+        """set the nastran properties preferences"""
+        is_checked = self.nastran_create_coords_checkbox.isChecked()
+        if self.win_parent is not None:
+            self.win_parent.settings.nastran_create_coords = is_checked
 
     def on_font(self, value=None):
         """update the font for the current window"""
@@ -751,6 +797,10 @@ def main():  # pragma: no cover
 
         'nastran_is_element_quality' : True,
         'nastran_is_properties' : True,
+        'nastran_is_3d_bars' : True,
+        'nastran_is_3d_bars_update' : True,
+        'nastran_is_bar_axes' : True,
+        'nastran_create_coords' : True,
 
         'dim_max' : 502.,
 

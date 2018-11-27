@@ -55,6 +55,10 @@ class PreferencesObject(object):
 
             'nastran_is_element_quality' : settings.nastran_is_element_quality,
             'nastran_is_properties' : settings.nastran_is_properties,
+            'nastran_is_bar_axes' : settings.nastran_is_bar_axes,
+            'nastran_is_3d_bars' : settings.nastran_is_3d_bars,
+            'nastran_is_3d_bars_update' : settings.nastran_is_3d_bars_update,
+            'nastran_create_coords' : settings.nastran_create_coords,
 
             'clicked_ok' : False,
             'close' : False,
