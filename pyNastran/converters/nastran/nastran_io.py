@@ -135,6 +135,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         self.strain = {}
         #self.is_element_quality = True
         #self.is_properties = True
+        self.make_spc_mpc_supports = True
 
     @property
     def is_element_quality(self):
@@ -371,6 +372,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             'S' : 'Rtp',
         }
         self.gui.create_global_axes(dim_max)
+        if not self.gui.settings.nastran_create_coords:
+            return
         for cid, coord in sorted(model.coords.items()):
             if cid in [0, -1]:
                 continue
@@ -1890,12 +1893,11 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             self._set_conm_grid(nconm2, model)
 
 
-        make_spc_mpc_supports = True
         geometry_names = []
-        if make_spc_mpc_supports and xref_nodes:
+        if self.make_spc_mpc_supports and xref_nodes:
             geometry_names = self.set_spc_mpc_suport_grid(model, nid_to_pid_map)
 
-        if xref_nodes:
+        if xref_nodes and self.gui.settings.nastran_is_bar_axes:
             icase = self._fill_bar_yz(dim_max, model, icase, cases, form)
         assert icase is not None
 
@@ -2641,11 +2643,14 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         spc_ids_used = set()
         mpc_ids_used = set()
         suport1_ids_used = set()
+
+        spc_to_subcase = defaultdict(list)
+        mpc_to_subcase = defaultdict(list)
+        suport1_to_subcase = defaultdict(list)
         for subcase_id, subcase in sorted(model.subcases.items()):
             if 'SPC' in subcase:
                 spc_id = subcase.get_parameter('SPC')[0]
-                if spc_id is not None and spc_id not in spc_ids_used:
-                    spc_ids_used.add(spc_id)
+                if spc_id is not None:
                     nspcs = model.card_count['SPC'] if 'SPC' in model.card_count else 0
                     nspc1s = model.card_count['SPC1'] if 'SPC1' in model.card_count else 0
                     nspcds = model.card_count['SPCD'] if 'SPCD' in model.card_count else 0
@@ -2653,36 +2658,93 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     ## TODO: this line seems too loose...
                     ## TODO: why aren't SPCDs included?
                     if nspcs + nspc1s + nspcds:
-                        spc_names += self._fill_spc(spc_id, model, nid_to_pid_map)
+                        spc_to_subcase[spc_id].append(subcase_id)
 
-            # rigid body elements and MPCs
             if 'MPC' in subcase:
                 mpc_id = subcase.get_parameter('MPC')[0]
-                if mpc_id is not None and mpc_id not in mpc_ids_used:
-                    mpc_ids_used.add(mpc_id)
+                if mpc_id is not None:
 
                     ## TODO: this line seems too loose
                     nmpcs = model.card_count['MPC'] if 'MPC' in model.card_count else 0
                     if nmpcs:
-                        lines = model.get_MPCx_node_ids(mpc_id, stop_on_failure=False)
-                        lines2 = list(lines) + rigid_lines
-                        mpc_names += self._fill_dependent_independent(
-                            mpc_id, model, lines2)
+                        mpc_to_subcase[mpc_id].append(subcase_id)
 
-            # SUPORTs are node/dofs that deconstrained to allow rigid body motion
-            # SUPORT1s are subcase-specific SUPORT cards
-            if 'SUPORT1' in subcase.params:  ## TODO: should this be SUPORT?
-                suport_id = subcase.get_parameter('SUPORT1')[0]
+        from itertools import chain
 
-                # TODO: is this line correct???
-                if 'SUPORT' in model.card_count or 'SUPORT1' in model.card_count:
+        for spc_id in chain(model.spcs, model.spcadds):
+            spc_name = 'SPC=%i' % (spc_id)
+            if spc_id in mpc_to_subcase:
+                subcases = spc_to_subcase[spc_id]
+                spc_name += ': Subcases='
+                spc_name += ', '.join(str(subcase_id) for subcase_id in subcases)
+            spc_names += self._fill_spc(spc_id, spc_name, model, nid_to_pid_map)
 
-                    # TODO: this "if block" seems unnecessary
-                    if suport_id is not None and suport_id not in suport1_ids_used:
-                        # SUPORT1 / SUPORT
-                        suport1_ids_used.add(suport_id)
-                        suport_name = self._fill_suport(suport_id, subcase_id, model)
-                        suport_names.append(suport_name)
+        for mpc_id in chain(model.mpcs, model.mpcadds):
+            depname = 'MPC=%i_dependent' % mpc_id
+            indname = 'MPC=%i_independent' % mpc_id
+            linename = 'MPC=%i_lines' % mpc_id
+            if mpc_id in mpc_to_subcase:
+                subcases = mpc_to_subcase[mpc_id]
+                mpc_name = ': Subcases='
+                mpc_name += ', '.join(str(subcase_id) for subcase_id in subcases)
+                depname += mpc_name
+                indname += mpc_name
+                linename += mpc_name
+
+            lines = model.get_MPCx_node_ids(mpc_id, stop_on_failure=False)
+            lines2 = list(lines)
+            mpc_names += self._fill_dependent_independent(
+                mpc_id, model, lines2,
+                depname, indname, linename)
+
+        if 0:  # pragma: no cover
+            for subcase_id, subcase in sorted(model.subcases.items()):
+                if 'SPC' in subcase:
+                    spc_id = subcase.get_parameter('SPC')[0]
+                    if spc_id is not None and spc_id not in spc_ids_used:
+                        spc_ids_used.add(spc_id)
+                        nspcs = model.card_count['SPC'] if 'SPC' in model.card_count else 0
+                        nspc1s = model.card_count['SPC1'] if 'SPC1' in model.card_count else 0
+                        nspcds = model.card_count['SPCD'] if 'SPCD' in model.card_count else 0
+
+                        ## TODO: this line seems too loose...
+                        ## TODO: why aren't SPCDs included?
+                        if nspcs + nspc1s + nspcds:
+                            spc_name = 'spc_id=%i' % spc_id
+                            spc_names += self._fill_spc(spc_id, spc_name, model, nid_to_pid_map)
+
+                # rigid body elements and MPCs
+                if 'MPC' in subcase:
+                    mpc_id = subcase.get_parameter('MPC')[0]
+                    if mpc_id is not None and mpc_id not in mpc_ids_used:
+                        mpc_ids_used.add(mpc_id)
+
+                        ## TODO: this line seems too loose
+                        nmpcs = model.card_count['MPC'] if 'MPC' in model.card_count else 0
+                        if nmpcs:
+                            lines = model.get_MPCx_node_ids(mpc_id, stop_on_failure=False)
+                            lines2 = list(lines)
+                            depname = 'mpc_id=%i_dependent' % mpc_id
+                            indname = 'mpc_id=%i_independent' % mpc_id
+                            linename = 'mpc_id=%i_lines' % mpc_id
+                            mpc_names += self._fill_dependent_independent(
+                                mpc_id, model, lines2,
+                                depname, indname, linename)
+
+                # SUPORTs are node/dofs that deconstrained to allow rigid body motion
+                # SUPORT1s are subcase-specific SUPORT cards
+                if 'SUPORT1' in subcase.params:  ## TODO: should this be SUPORT?
+                    suport_id = subcase.get_parameter('SUPORT1')[0]
+
+                    # TODO: is this line correct???
+                    if 'SUPORT' in model.card_count or 'SUPORT1' in model.card_count:
+
+                        # TODO: this "if block" seems unnecessary
+                        if suport_id is not None and suport_id not in suport1_ids_used:
+                            # SUPORT1 / SUPORT
+                            suport1_ids_used.add(suport_id)
+                            suport_name = self._fill_suport(suport_id, subcase_id, model)
+                            suport_names.append(suport_name)
 
         # create a SUPORT actor if there are no SUPORT1s
         # otherwise, we already included it in suport_id=suport_id
@@ -2697,18 +2759,21 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 grid_name, color=RED_FLOAT, opacity=1.0, point_size=4,
                 representation='point', is_visible=True)
 
-        if len(mpc_names) == 0 and len(rigid_lines):
+        if len(rigid_lines):
             # handle RBEs without MPCs
             mpc_id = 0
+            depname = 'rigid_dependent'
+            indname = 'rigid_independent'
+            linename = 'rigid_lines'
             mpc_names += self._fill_dependent_independent(
-                mpc_id, model, rigid_lines)
+                mpc_id, model, rigid_lines,
+                depname, indname, linename)
 
         geometry_names = spc_names + mpc_names + suport_names
         return geometry_names
 
-    def _fill_spc(self, spc_id, model, nid_to_pid_map):
+    def _fill_spc(self, spc_id, spc_name, model, nid_to_pid_map):
         """creates the spc secondary actors"""
-        spc_name = 'spc_id=%i' % spc_id
         spc_names = [spc_name]
         self.gui.create_alternate_vtk_grid(
             spc_name, color=PURPLE_FLOAT, line_width=5, opacity=1.,
@@ -2800,7 +2865,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         bar_form = ('CBAR / CBEAM', None, [])
         #print('geo_form =', geo_form)
         #bar_types2 = {}
-        for bar_type, data in sorted(iteritems(bar_types)):
+        for bar_type, data in sorted(bar_types.items()):
             eids, lines_bar_y, lines_bar_z = data
             if len(eids):
                 if debug: # pragma: no cover
@@ -2870,19 +2935,12 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         create_vtk_cells_of_constant_element_type(grid, elements, etype)
         grid.SetPoints(points)
 
-    def _fill_dependent_independent(self, mpc_id, model, lines):
+    def _fill_dependent_independent(self, mpc_id, model, lines,
+                                    depname, indname, linename):
         """creates the mpc actors"""
         if not lines:
             return []
 
-        if mpc_id == 0:
-            depname = 'rigid_dependent'
-            indname = 'rigid_independent'
-            linename = 'rigid_lines'
-        else:
-            depname = 'mpc_id=%i_dependent' % mpc_id
-            indname = 'mpc_id=%i_independent' % mpc_id
-            linename = 'mpc_id=%i_lines' % mpc_id
         self.gui.create_alternate_vtk_grid(
             depname, color=GREEN_FLOAT, line_width=5, opacity=1.,
             point_size=5, representation='point', is_visible=False)

@@ -241,7 +241,6 @@ class LoadActions(object):
             load_function = None
 
             for fmt in self.gui.fmts:
-                print(fmt)
                 fmt_name, _major_name, _geowild, _geofunc, _reswild, _resfunc = fmt
                 if geometry_format == fmt_name:
                     wildcard = _reswild

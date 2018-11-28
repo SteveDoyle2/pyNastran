@@ -420,7 +420,7 @@ def DisplaySurface(st):
     :return The vtkRenderWindowInteractor.
     """
     surface = st.upper()
-    if  (not(surface in SURFACE_TYPE) ):
+    if  not(surface in SURFACE_TYPE):
         print(st, "is not a surface.")
         iren = vtk.vtkRenderWindowInteractor()
         return iren

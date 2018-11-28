@@ -421,7 +421,7 @@ def load_user_geom(fname, encoding='latin1'):
                 assert len(sline) == 6, sline
                 quads.append(sline[1:])
             else:
-                print(sline)
+                self.log.warning(sline)
 
     grid_ids = np.array(grid_ids, dtype='int32')
     xyz = np.array(xyz, dtype='float32')

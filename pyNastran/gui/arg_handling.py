@@ -219,7 +219,7 @@ def get_inputs(print_inputs=False, argv=None):
     test = False
 
     if sys.version_info < (2, 7, 7):
-        print("requires Python 2.6+ to use command line arguments...")
+        print("requires Python 2.7.7+...")
     else:
         if len(argv) > 1:
             if 0:

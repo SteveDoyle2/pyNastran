@@ -57,7 +57,7 @@ def main():
 
     numberOfContourLines = contour_stripper.GetOutput().GetNumberOfLines()
 
-    print("There are ", numberOfContourLines, " contours lines.")
+    print("There are %s contours lines." % numberOfContourLines)
 
     points = contour_stripper.GetOutput().GetPoints()
     cells = contour_stripper.GetOutput().GetLines()
@@ -80,7 +80,7 @@ def main():
     #     npoints++)
     #numberOfPoints = vtk.vtkIdType()
     #nstart = cells.InitTraversal()
-    print('npoints = ', npoints)
+    print('npoints = %s' % npoints)
     #print('nstart=%s' % nstart)
     include_labels = False
     if include_labels:

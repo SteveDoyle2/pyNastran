@@ -576,5 +576,5 @@ def _qt_key_to_key_sym(key):
 
 
 if __name__ == "__main__":
-    print(PyQtImpl)
+    #print(PyQtImpl)
     QVTKRenderWidgetConeExample()
