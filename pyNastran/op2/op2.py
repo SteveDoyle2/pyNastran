@@ -759,8 +759,8 @@ class OP2(OP2_Scalar):
           - BucklingEigenvalues
 
         """
-        from pyNastran.op2.op2_interface.hdf5_interface import export_op2_to_hdf5_file
-        export_op2_to_hdf5_file(hdf5_filename, self)
+        from pyNastran.op2.op2_interface.hdf5_interface import export_op2_to_hdf5_filename
+        export_op2_to_hdf5_filename(hdf5_filename, self)
 
     def export_to_hdf5(self, hdf5_filename):
         """

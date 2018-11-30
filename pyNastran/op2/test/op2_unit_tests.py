@@ -625,7 +625,7 @@ class TestOP2(Tester):
             quiet=True, check_memory=False, stop_on_failure=True,
             dev=False, skip_dataframe=False)
         assert op2.displacements[1].data_frame is not None
-        op2.export_to_hdf5(hdf5_filename)
+        op2.export_to_hdf5_filename(hdf5_filename)
         op2.print_subcase_key()
 
         op2b = OP2(debug=False)

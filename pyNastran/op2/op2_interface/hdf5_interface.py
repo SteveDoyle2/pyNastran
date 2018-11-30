@@ -1064,6 +1064,7 @@ def export_op2_to_hdf5_filename(hdf5_filename, op2_model):
 
 def export_op2_to_hdf5_file(hdf5_file, op2_model):
     """exports an OP2 object to an HDF5 file object"""
+    assert not isinstance(hdf5_file, str), hdf5_file
     create_info_group(hdf5_file, op2_model)
     export_matrices(hdf5_file, op2_model)
     _export_subcases(hdf5_file, op2_model)
@@ -1119,6 +1120,9 @@ def _export_subcases(hdf5_file, op2_model):
             obj.export_to_hdf5(result_group, op2_model.log)
 
 def load_op2_from_hdf5(hdf5_filename, combine=True, log=None):
+    return load_op2_from_hdf5_filename(hdf5_filename, combine=combine, log=log)
+
+def load_op2_from_hdf5_filename(hdf5_filename, combine=True, log=None):
     """loads an hdf5 file into an OP2 object"""
     check_path(hdf5_filename, 'hdf5_filename')
     model = OP2(log=None)
