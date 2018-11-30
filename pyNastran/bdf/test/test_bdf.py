@@ -160,7 +160,7 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
                     nerrors=0,
                     post=post, sum_load=sum_load, dev=dev,
                     crash_cards=crash_cards,
-                    run_extract_bodies=False, pickle_obj=pickle_obj)
+                    run_extract_bodies=False, pickle_obj=pickle_obj, hdf5=True)
                 del fem1
                 del fem2
             diff_cards += diff_cards

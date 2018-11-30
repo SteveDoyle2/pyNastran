@@ -373,6 +373,13 @@ class CSSCHD(Aero):
         1: 'sid', 2:'aesid', 3:'lalpha', 4:'lmach', 5:'lschd',
     }
 
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        aesid = 0
+        lschd = 2
+        return CSSCHD(sid, aesid, lschd, lalpha=None, lmach=None, comment='')
+
     def __init__(self, sid, aesid, lschd, lalpha=None, lmach=None, comment=''):
         """
         Creates an CSSCHD card, which defines a specified control surface
@@ -1073,6 +1080,16 @@ class TRIM2(TRIM):
     _field_map = {
         1: 'sid', 2:'mach', 3:'q', 8:'aeqr',
     }
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        mach = 0.6
+        q = 300.
+        labels = ['ALPHA']
+        uxs = [1.0]
+        return TRIM2(sid, mach, q, labels, uxs, aeqr=1.0, comment='')
+
     def __init__(self, sid, mach, q, labels, uxs, aeqr=1.0, comment=''):
         TRIM.__init__(self, sid, mach, q, labels, uxs, aeqr=1.0, comment='')
 

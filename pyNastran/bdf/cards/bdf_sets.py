@@ -1274,6 +1274,12 @@ class SESET(SetSuper):
     """
     type = 'SESET'
 
+    @classmethod
+    def _init_from_empty(cls):
+        seid = 1
+        ids = [1, 2]
+        return SESET(seid, ids, comment='')
+
     def __init__(self, seid, ids, comment=''):
         SetSuper.__init__(self)
         if comment:
@@ -1474,6 +1480,11 @@ class RADSET(ABQSet1):
     +--------+----------+----------+----------+----------+----------+----------+----------+----------+
     """
     type = 'RADSET'
+
+    @classmethod
+    def _init_from_empty(cls):
+        cavities = [1, 2]
+        return RADSET(cavities, comment='')
 
     def __init__(self, cavities, comment=''):
         """

@@ -173,6 +173,7 @@ TABLE_OBJ_MAP = {
     'RADCONS.eigenvectors' : (RealEigenvectorArray, ),
     'RADEATC.eigenvectors' : (RealEigenvectorArray, ),
     'RADEFFM.eigenvectors' : (RealEigenvectorArray, ),
+    'ROUGV1.eigenvectors' : (RealEigenvectorArray, ),
 
     'force_vectors' : (RealForceVectorArray, ),
 

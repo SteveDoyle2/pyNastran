@@ -657,6 +657,14 @@ class CSUPER(BaseCard):
     +--------+------+------+------+-----+-----+-----=-----+-----+
     """
     type = 'CSUPER'
+
+    @classmethod
+    def _init_from_empty(cls):
+        seid = 1
+        psid = 1
+        nodes = [1, 2]
+        return CSUPER(seid, psid, nodes, comment='')
+
     def __init__(self, seid, psid, nodes, comment=''):
         BaseCard.__init__(self)
         if comment:
@@ -739,6 +747,13 @@ class CSUPEXT(BaseCard):
     +---------+------+-----+-----+-----+-----+-----+-----+-----+
     """
     type = 'CSUPEXT'
+
+    @classmethod
+    def _init_from_empty(cls):
+        seid = 1
+        nodes = [1]
+        return CSUPEXT(seid, nodes, comment='')
+
     def __init__(self, seid, nodes, comment=''):
         BaseCard.__init__(self)
         if comment:
@@ -823,6 +838,15 @@ class SEBULK(BaseCard):
 
     """
     type = 'SEBULK'
+
+    @classmethod
+    def _init_from_empty(cls):
+        seid = 1
+        superelement_type = 'MIRROR'
+        rseid = 42
+        return SEBULK(seid, superelement_type, rseid,
+                      method='AUTO', tol=1e-5, loc='YES', unitno=None, comment='')
+
     def __init__(self, seid, superelement_type, rseid,
                  method='AUTO', tol=1e-5, loc='YES', unitno=None,
                  comment=''):

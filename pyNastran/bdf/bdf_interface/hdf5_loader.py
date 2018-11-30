@@ -123,7 +123,7 @@ list_keys = [
 ]
 
 list_obj_keys = [
-    # required
+    # TODO: required
     'asets', 'bsets', 'csets', 'omits', 'qsets',
     'mkaeros',
     'monitor_points',
@@ -240,7 +240,7 @@ def export_to_hdf5_file(hdf5_file, model, exporter=None):
         for key, param in model.params.items():
             _h5_export_class(group, model, key, param, skip_attrs, debug=False)
 
-    for key in ['case_control_lines', 'executive_control_lines', 'system_command_lines']:
+    for key in ['case_control_lines', 'executive_control_lines', 'system_command_lines', 'active_filenames']:
         list_str = getattr(model, key)
         if not len(list_str):
             continue
@@ -634,6 +634,7 @@ def load_hdf5_file(h5_file, model):
 
         'nsms' : hdf5_load_nsms,
         'nsmadds' : hdf5_load_nsmadds,
+        'frequencies' : hdf5_load_frequencies,
     }
     generic_mapper = {
         'flutters' : hdf5_load_generic,
@@ -789,20 +790,30 @@ def hdf5_load_methods(unused_model, group, encoding):
 
 def hdf5_load_masses(model, group, encoding):
     for card_type in group.keys():
-        sub_group = group[card_type]
+        masses = group[card_type]
         if card_type == 'CONM2':
-            eid = _cast(sub_group['eid'])
-            nid = _cast(sub_group['nid'])
-            cid = _cast(sub_group['cid'])
-            X = _cast(sub_group['X'])
-            I = _cast(sub_group['I'])
-            mass = _cast(sub_group['mass'])
+            eid = _cast(masses['eid'])
+            nid = _cast(masses['nid'])
+            cid = _cast(masses['cid'])
+            X = _cast(masses['X'])
+            I = _cast(masses['I'])
+            mass = _cast(masses['mass'])
             for eidi, nidi, cidi, Xi, Ii, massi in zip(eid, nid, cid, X, I, mass):
                 model.add_conm2(eidi, nidi, massi, cid=cidi, X=Xi, I=Ii, comment='')
+        elif card_type == 'CMASS2':
+            eids = _cast(masses['eid'])
+            mass = _cast(masses['mass'])
+            nodes = _cast(masses['nodes']).tolist()
+            components = _cast(masses['components'])
+            for eid, massi, nids, (c1, c2) in zip(eids, mass, nodes, components):
+                model.add_cmass2(eid, massi, nids, c1, c2, comment='')
 
         else:
+            #model.add_cmass1(eid, pid, nids, c1=0, c2=0, comment='')
+            #model.add_cmass3(eid, pid, nids, comment='')
+            #model.add_cmass4(eid, mass, nids, comment='')
             #model.add_conm1(eid, nid, mass_matrix, cid=0, comment='')
-            load_cards_from_keys_values('masses/%s' % card_type, sub_group)
+            load_cards_from_keys_values('masses/%s' % card_type, masses)
 
 
 def hdf5_load_materials(model, group, encoding):
@@ -1047,6 +1058,19 @@ def hdf5_load_nsmadds(model, group, encoding):
                 #mid = _cast(sub_group['mid'])
             #else:
             load_cards_from_keys_values('nsmadds/%s/%s' % (nsm_id, card_type), sub_group)
+
+def hdf5_load_frequencies(model, group, encoding):
+    keys = list(group.keys())
+    keys.remove('keys')
+    #spc_ids = _cast(group['keys'])
+    for freq_id in keys:
+        cards_group = group[freq_id]
+        for card_type in cards_group.keys():
+            sub_group = cards_group[card_type]
+            #if card_type == 'FREQ':
+                #mid = _cast(sub_group['mid'])
+            #else:
+            load_cards_from_keys_values('frequencies/%s/%s' % (freq_id, card_type), sub_group)
 
 def hdf5_load_dload_entries(model, group, encoding):
     keys = list(group.keys())

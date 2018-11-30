@@ -109,7 +109,7 @@ class CELAS1(SpringElement):
             element = model.elements[eid]
             #comments.append(element.comment)
             pids.append(element.pid)
-            nodes.append(element.nodes)
+            nodes.append([nid if nid is not None else 0 for nid in element.nodes])
             components.append([element.c1, element.c2])
         #h5_file.create_dataset('_comment', data=comments)
         h5_file.create_dataset('eid', data=eids)
@@ -679,7 +679,7 @@ class CELAS4(SpringElement):
             element = model.elements[eid]
             #comments.append(element.comment)
             k.append(element.k)
-            nodes.append(element.nodes)
+            nodes.append([nid if nid is not None else 0 for nid in element.nodes])
         #h5_file.create_dataset('_comment', data=comments)
         h5_file.create_dataset('eid', data=eids)
         h5_file.create_dataset('K', data=k)

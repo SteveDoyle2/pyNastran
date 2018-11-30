@@ -313,6 +313,25 @@ class CMASS2(PointMassElement):
         assert len(self.nodes) == 2, self.nodes
 
     @classmethod
+    def export_to_hdf5(cls, h5_file, model, eids):
+        """exports the masses in a vectorized way"""
+        #comments = []
+        mass = []
+        nodes = []
+        components = []
+        for eid in eids:
+            element = model.masses[eid]
+            #comments.append(element.comment)
+            mass.append(element.mass)
+            nodes.append([nid if nid is not None else 0 for nid in element.nodes])
+            components.append([comp if comp is not None else 0 for comp in [element.c1, element.c2]])
+        #h5_file.create_dataset('_comment', data=comments)
+        h5_file.create_dataset('eid', data=eids)
+        h5_file.create_dataset('mass', data=mass)
+        h5_file.create_dataset('nodes', data=nodes)
+        h5_file.create_dataset('components', data=components)
+
+    @classmethod
     def add_card(cls, card, comment=''):
         """
         Adds a CMASS2 card from ``BDF.add_card(...)``

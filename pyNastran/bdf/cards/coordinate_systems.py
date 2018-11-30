@@ -2163,6 +2163,13 @@ class GMCORD(BaseCard):
     """defines the GMCOORD class"""
     type = 'GMCORD'
 
+    @classmethod
+    def _init_from_empty(cls):
+        cid = 1
+        entity = 2
+        gm_ids = [34]
+        return GMCORD(cid, entity, gm_ids, comment='')
+
     def __init__(self, cid, entity, gm_ids, comment=''):
         """Creates a GMCOORD"""
         if comment:

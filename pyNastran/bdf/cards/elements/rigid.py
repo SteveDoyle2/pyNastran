@@ -591,6 +591,16 @@ class RBE1(RigidElement):  # maybe not done, needs testing
     +------+-----+-----+-----+-------+-----+-----+-----+
     """
     type = 'RBE1'
+    _properties = ['Gmi_node_ids', 'Gni_node_ids', 'dependent_nodes', 'independent_nodes']
+
+    @classmethod
+    def _init_from_empty(cls):
+        eid = 1
+        Gni = [2]
+        Cni = ['2']
+        Gmi = [3]
+        Cmi = ['4']
+        return RBE1(eid, Gni, Cni, Gmi, Cmi, alpha=0., comment='')
 
     def __init__(self, eid, Gni, Cni, Gmi, Cmi, alpha=0., comment=''):
         """

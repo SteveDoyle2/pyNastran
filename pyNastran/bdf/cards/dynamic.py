@@ -448,6 +448,13 @@ class FREQ1(BaseCard):
     """
     type = 'FREQ1'
 
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        f1 = 1.
+        df = 10.
+        return FREQ1(sid, f1, df, ndf=1, comment='')
+
     def __init__(self, sid, f1, df, ndf=1, comment=''):
         """
         Creates a FREQ1 card
@@ -523,6 +530,13 @@ class FREQ2(BaseCard):
     """
     type = 'FREQ2'
 
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        f1 = 1.
+        f2 = 2.
+        return FREQ2(sid, f1, f2, nf=1, comment='')
+
     def __init__(self, sid, f1, f2, nf=1, comment=''):
         """
         Creates a FREQ2 card
@@ -596,6 +610,12 @@ class FREQ3(FREQ):
     +-------+-----+------+-------+--------+-----+---------+
     """
     type = 'FREQ3'
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        f1 = 1.
+        return FREQ3(sid, f1, f2=None, freq_type='LINEAR', nef=10, cluster=1.0, comment='')
 
     def __init__(self, sid, f1, f2=None, freq_type='LINEAR', nef=10, cluster=1.0, comment=''):
         """
@@ -683,6 +703,11 @@ class FREQ4(FREQ):
     """
     type = 'FREQ4'
 
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        return FREQ4(sid, f1=0., f2=1e20, fspread=0.1, nfm=3, comment='')
+
     def __init__(self, sid, f1=0., f2=1e20, fspread=0.1, nfm=3, comment=''):
         """
         Creates a FREQ4 card
@@ -760,6 +785,12 @@ class FREQ5(FREQ):
     +-------+------+------+--------+------+-----+-----+-----+------+
     """
     type = 'FREQ5'
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        fractions = [0.1, 0.2, 0.3]
+        return FREQ5(sid, fractions, f1=0., f2=1e20, comment='')
 
     def __init__(self, sid, fractions, f1=0., f2=1e20, comment=''):
         """
@@ -1937,6 +1968,18 @@ class TSTEPNL(BaseCard):
     allowed_methods = ['AUTO', 'ITER', 'ADAPT', 'SEMI', 'FNT', 'PFNT', # MSC
                        'TSTEP'] # NX
 
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        ndt = 10
+        dt = 0.1
+        no = 2
+        return TSTEPNL(sid, ndt, dt, no, method='ADAPT', kstep=None,
+                       max_iter=10, conv='PW', eps_u=1.e-2, eps_p=1.e-3,
+                       eps_w=1.e-6, max_div=2, max_qn=10, max_ls=2, fstress=0.2,
+                       max_bisect=5, adjust=5, mstep=None, rb=0.6, max_r=32.,
+                       utol=0.1, rtol_b=20., min_iter=None, comment='')
+
     def __init__(self, sid, ndt, dt, no, method='ADAPT', kstep=None,
                  max_iter=10, conv='PW', eps_u=1.e-2, eps_p=1.e-3,
                  eps_w=1.e-6, max_div=2, max_qn=10, max_ls=2,
@@ -2233,6 +2276,13 @@ class TIC(BaseCard):
     entry may not be used for heat transfer analysis.
     """
     type = 'TIC'
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        nodes = [1, 2]
+        components = [1, 2]
+        return TIC(sid, nodes, components, u0=0., v0=0., comment='')
 
     def __init__(self, sid, nodes, components, u0=0., v0=0., comment=''):
         """

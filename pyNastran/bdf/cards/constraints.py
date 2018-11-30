@@ -355,6 +355,12 @@ class SUPORT(Constraint):
 class SESUP(SUPORT):
     type = 'SESUP'
 
+    @classmethod
+    def _init_from_empty(cls):
+        nodes= [1, 2]
+        Cs = ['1', '2']
+        return SESUP(nodes, Cs, comment='')
+
     def __init__(self, nodes, Cs, comment=''):
         SUPORT.__init__(self, nodes, Cs, comment='')
 
@@ -865,6 +871,14 @@ class SPC(Constraint):
 class GMSPC(Constraint):
     type = 'GMSPC'
 
+    @classmethod
+    def _init_from_empty(cls):
+        conid = 1
+        component = 2
+        entity = 3
+        entity_id = 4
+        return GMSPC(conid, component, entity, entity_id, comment='')
+
     def __init__(self, conid, component, entity, entity_id, comment=''):
         Constraint.__init__(self)
         if comment:
@@ -1193,6 +1207,12 @@ class SPCOFF(Constraint):
     """
     type = 'SPCOFF'
 
+    @classmethod
+    def _init_from_empty(cls):
+        nodes= [1, 2]
+        Cs = ['1', '2']
+        return SPCOFF(nodes, Cs, comment='')
+
     def __init__(self, nodes, components, comment=''):
         Constraint.__init__(self)
         if comment:
@@ -1330,6 +1350,12 @@ class SPCOFF(Constraint):
 class SPCOFF1(Constraint):
     type = 'SPCOFF1'
 
+    @classmethod
+    def _init_from_empty(cls):
+        components = '1'
+        nodes= [1, 2]
+        return SPCOFF1(components, nodes, comment='')
+
     def __init__(self, components, nodes, comment=''):
         Constraint.__init__(self)
         if comment:
@@ -1462,6 +1488,7 @@ class SPCADD(ConstraintAdd):
     +--------+----+----+-----+
     """
     type = 'SPCADD'
+    _properties = ['ids']
 
     @classmethod
     def _init_from_empty(cls):
@@ -1587,6 +1614,7 @@ class MPCADD(ConstraintAdd):
     +--------+----+----+-----+
     """
     type = 'MPCADD'
+    _properties = ['ids']
 
     @classmethod
     def _init_from_empty(cls):

@@ -1022,11 +1022,17 @@ class CTRIA6(TriShell):
         thetas = []
         zoffsets = []
         #t123 = []
-        for eid in eids:
+
+        element0 = model.elements[eids[0]]
+        neids = len(eids)
+        nnodes = 6
+        nodes = np.zeros((neids, nnodes), dtype='int32')
+
+        for i, eid in enumerate(eids):
             element = model.elements[eid]
             #comments.append(element.comment)
             pids.append(element.pid)
-            nodes.append(element.nodes)
+            nodes[i, :] = [nid if nid is not None else 0 for nid in element.nodes]
             if isinstance(element.theta_mcid, int):
                 mcid = element.theta_mcid
                 theta = 0.
@@ -3953,11 +3959,13 @@ class CQUAD(QuadShell):
         nodes = []
         mcids = []
         thetas = []
-        for eid in eids:
+        neids = len(eids)
+        nodes = np.zeros((neids, 9), dtype='int32')
+        for i, eid in enumerate(eids):
             element = model.elements[eid]
             #comments.append(element.comment)
             pids.append(element.pid)
-            nodes.append(element.nodes)
+            nodes[i, :] = [nid if nid is not None else 0 for nid in element.nodes]
             if isinstance(element.theta_mcid, int):
                 mcid = element.theta_mcid
                 theta = 0.
@@ -4183,11 +4191,13 @@ class CQUAD8(QuadShell):
         thetas = []
         zoffsets = []
         #t1234 = []
-        for eid in eids:
+        neids = len(eids)
+        nodes = np.zeros((neids, 8), dtype='int32')
+        for i, eid in enumerate(eids):
             element = model.elements[eid]
             #comments.append(element.comment)
             pids.append(element.pid)
-            nodes.append(element.nodes)
+            nodes[i, :] = [nid if nid is not None else 0 for nid in element.nodes]
             if isinstance(element.theta_mcid, int):
                 mcid = element.theta_mcid
                 theta = 0.
@@ -4445,9 +4455,16 @@ class SNORM(BaseCard):
     +--------+-------+-------+----+-----+----+
     """
     type = 'SNORM'
+
+    @classmethod
+    def _init_from_empty(cls):
+        nid = 1
+        normal = [0.1, 0.4, 0.3]
+        return SNORM(nid, normal, cid=0, comment='')
+
     def __init__(self, nid, normal, cid=0, comment=''):
         """
-        Creates a CTRIAR card
+        Creates an SNORM card
 
         Parameters
         ----------

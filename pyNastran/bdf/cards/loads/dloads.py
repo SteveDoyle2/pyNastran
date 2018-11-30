@@ -301,6 +301,14 @@ class DLOAD(LoadCombination):
     """
     type = 'DLOAD'
 
+    @classmethod
+    def _init_from_empty(cls):
+        eid = 1
+        scale = 1.
+        scale_factors = [1., 2.]
+        load_ids = [1, 2]
+        return DLOAD(sid, scale, scale_factors, load_ids, comment='')
+
     def __init__(self, sid, scale, scale_factors, load_ids, comment=''):
         """
         Creates a DLOAD card
@@ -395,6 +403,13 @@ class RLOAD1(DynamicLoad):
     NX allows DELAY and DPHASE to be floats
     """
     type = 'RLOAD1'
+    _properties = ['delay_id']
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        excite_id = 1
+        return RLOAD1(sid, excite_id, delay=0, dphase=0, tc=0, td=0, Type='LOAD', comment='')
 
     def __init__(self, sid, excite_id, delay=0, dphase=0, tc=0, td=0, Type='LOAD', comment=''):
         """
@@ -674,6 +689,13 @@ class RLOAD2(DynamicLoad):
     NX allows DELAY and DPHASE to be floats
     """
     type = 'RLOAD2'
+    _properties = ['delay_id']
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        excite_id = 1
+        return RLOAD2(sid, excite_id, delay=0, dphase=0, tb=0, tp=0, Type='LOAD', comment='')
 
     # P(f) = {A} * B(f) * e^(i*phi(f), + theta - 2*pi*f*tau)
     def __init__(self, sid, excite_id, delay=0, dphase=0, tb=0, tp=0, Type='LOAD', comment=''):
@@ -958,6 +980,14 @@ class TLOAD1(DynamicLoad):
     NX 11
     """
     type = 'TLOAD1'
+    _properties = ['delay_id']
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        excite_id = 1
+        tid = 1
+        return TLOAD1(sid, excite_id, tid, delay=0, Type='LOAD', us0=0.0, vs0=0.0, comment='')
 
     def __init__(self, sid, excite_id, tid, delay=0, Type='LOAD',
                  us0=0.0, vs0=0.0, comment=''):
@@ -1201,6 +1231,14 @@ class TLOAD2(DynamicLoad):
     NX 11
     """
     type = 'TLOAD2'
+    _properties = ['delay_id']
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        excite_id = 1
+        return TLOAD2(sid, excite_id, delay=0, Type='LOAD', T1=0., T2=None,
+                      frequency=0., phase=0., c=0., b=0., us0=0., vs0=0., comment='')
 
     def __init__(self, sid, excite_id, delay=0, Type='LOAD', T1=0., T2=None,
                  frequency=0., phase=0., c=0., b=0., us0=0., vs0=0., comment=''):

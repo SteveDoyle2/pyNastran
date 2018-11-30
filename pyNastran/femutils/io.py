@@ -1,7 +1,7 @@
 """
 Numpy io functions are defined in this file.
 This includes:
- - loadtxt_nice(filename, delimiter=None, skiprows=0, comment='#', dtype=np.float64,
+ - loadtxt_nice(filename, delimiter=None, skiprows=0, comments='#', dtype=np.float64,
                 converters=None, usecols=None, unpack=False,
                 ndmin=0,)
  - savetxt_nice(fname, X, fmt='%.18e', delimiter=' ', newline='\n', header='',

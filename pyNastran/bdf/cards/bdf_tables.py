@@ -81,6 +81,12 @@ class Table(BaseCard):
 
 class DTABLE(BaseCard):
     type = 'DTABLE'
+
+    @classmethod
+    def _init_from_empty(cls):
+        default_values = {'CAT' : 1}
+        return DTABLE(default_values, comment='')
+
     def __init__(self, default_values, comment=''):
         """
         Creates a DTABLE card
@@ -1391,6 +1397,13 @@ class TABLEH1(Table):
     +---------+------+-------+-------+--------+-----+-------+------+------+
     """
     type = 'TABLEH1'
+
+    @classmethod
+    def _init_from_empty(cls):
+        tid = 1
+        x = [0., 1.]
+        y = [0., 1.]
+        return TABLEH1(tid, x, y, comment='')
 
     def __init__(self, tid, x, y, comment=''):
         """

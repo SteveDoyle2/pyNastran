@@ -53,6 +53,12 @@ class SEQGP(BaseCard):
     """defines the SEQGP class"""
     type = 'SEQGP'
 
+    @classmethod
+    def _init_from_empty(cls):
+        nids = 1
+        superelement = 2
+        return SEQGP(nids, seqids, comment='')
+
     def __init__(self, nids, seqids, comment=''):
         """
         Creates the SEQGP card
@@ -540,6 +546,14 @@ class GRDSET(BaseCard):
 
     #: allows the get_field method and update_field methods to be used
     _field_map = {2:'cp', 6:'cd', 7:'ps', 8:'seid'}
+
+    @classmethod
+    def _init_from_empty(cls):
+        cp = 0
+        cd = 1
+        ps = '34'
+        seid = 0
+        return GRDSET(cp, cd, ps, seid, comment='')
 
     def __init__(self, cp, cd, ps, seid, comment=''):
         """
@@ -1572,6 +1586,12 @@ class POINT(BaseCard):
             self.xyz[2] = value
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
+
+    @classmethod
+    def _init_from_empty(cls):
+        nid = 1
+        xyz = [1., 2., 3.]
+        return POINT(nid, xyz, cp=0, comment='')
 
     def __init__(self, nid, xyz, cp=0, comment=''):
         # type: (int, Union[List[float], np.ndarray], int, str) -> None

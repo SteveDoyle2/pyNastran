@@ -202,19 +202,23 @@ class CBUSH(BushElement):
             if element.cid is None:
                 cid.append(-1)
                 g0i = element.g0
+                #print(g0i, element.x)
                 if g0i is not None:
-                    assert x[0] is None
+                    assert element.x[0] is None
                     x.append(nan)
                     g0.append(g0i)
                 else:
-                    assert element.x[0] is not None, element.get_stats()
-                    x.append(element.x)
+                    #assert element.x[0] is not None, element.get_stats()
+                    if element.x[0] is None:
+                        x.append(nan)
+                    else:
+                        x.append(element.x)
                     g0.append(-1)
             else:
                 cid.append(element.cid)
                 g0i = element.g0
                 if g0i is not None:
-                    assert x[0] is None
+                    assert element.x[0] is None
                     x.append(nan)
                     g0.append(g0i)
                 else:

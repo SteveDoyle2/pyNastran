@@ -41,6 +41,13 @@ class RANDPS(RandomLoad):
     """
     type = 'RANDPS'
 
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        j = 2
+        k = 3
+        return RANDPS(sid, j, k, x=0., y=0., tid=0, comment='')
+
     def __init__(self, sid, j, k, x=0., y=0., tid=0, comment=''):
         """
         Creates a RANDPS card
@@ -162,6 +169,14 @@ class RANDPS(RandomLoad):
 
 class RANDT1(RandomLoad):
     type = 'RANDT1'
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        n = 10
+        t0 = 1
+        tmax = 1.
+        return RANDT1(sid, n, t0, tmax, comment='')
 
     def __init__(self, sid, n, t0, tmax, comment=''):
         """

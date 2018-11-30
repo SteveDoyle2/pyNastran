@@ -258,6 +258,13 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
     """
     type = 'LSEQ'
 
+    @classmethod
+    def _init_from_empty(cls):
+        eid = 1
+        excite_id = 2
+        lid = 3
+        return LSEQ(sid, excite_id, lid, tid=None, comment='')
+
     def __init__(self, sid, excite_id, lid, tid=None, comment=''):
         """
         Creates a LSEQ card
@@ -642,6 +649,7 @@ class SPCD(Load):
      +------+-----+-----+-----+------+----+----+----+
     """
     type = 'SPCD'
+    _properties = ['node_ids']
 
     @classmethod
     def _init_from_empty(cls):
@@ -1071,6 +1079,7 @@ class SLOAD(Load):
 
 class RFORCE(Load):
     type = 'RFORCE'
+    _properties = ['node_id']
 
     @classmethod
     def _init_from_empty(cls):

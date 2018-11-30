@@ -2452,6 +2452,7 @@ class CAERO2(BaseCard):
 
 class CAERO3(BaseCard):
     type = 'CAERO3'
+    _properties = ['shape']
 
     @classmethod
     def _init_from_empty(cls):
@@ -2786,6 +2787,18 @@ class CAERO4(BaseCard):
     +--------+-----+-----+----+-------+--------+--------+--------+------+
     """
     type = 'CAERO4'
+    _properties = ['shape']
+
+    @classmethod
+    def _init_from_empty(cls):
+        eid = 1
+        pid = 1
+        p1 = [0., 0., 0.]
+        p4 = [0., 10., 0.]
+        x12 = 10.
+        x43 = 10.
+        return CAERO4(eid, pid, p1, x12, p4, x43, cp=0, nspan=0, lspan=0, comment='')
+
     def __init__(self, eid, pid, p1, x12, p4, x43,
                  cp=0, nspan=0, lspan=0, comment=''):
         """
@@ -5605,6 +5618,7 @@ class SPLINE5(Spline):
 
     """
     type = 'SPLINE5'
+    _properties = ['aero_element_ids']
     _field_map = {
         1: 'eid', 2:'caero', 3:'aelist', 5:'setg', 6:'dz',
         7: 'dtor', 8:'cid', 9:'thx', 10:'thy', 12:'usage',
