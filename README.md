@@ -60,28 +60,47 @@ Using the pyNastran GUI, you can read in Nastran models and quickly view results
 <!--- [Download pyNastran v0.8] (https://github.com/SteveDoyle2/pyNastran/releases)  --->
 
 <!--- 
-### pyNastran v1.2.0 has not been released (x/xx/xx)
-Programmatics
- - xxx
+### pyNastran v1.2.0 has not been released (x/xx/2019)
+
+I keep saying to myself there's not much to add, but I keep surprising myself.  Beyond HDF5
+support in the BDF, I'm a huge fan of the new ability to keep track of which include file a
+card came from and write it as a separate file.  
+
+The OP2 reader also now supports SORT2 along with much improved random results reading.
+If you're using 60+ GB OP2s, you also might have had issues with RAM usage in the past.
+With the new ability to dump the OP2 directly to HDF5, this should not be an issue.
+
+Finally, Python 2.7 is end of life.  Numpy, scipy, and matplotlib have all dropped Python 2.7 support.  It's time for pyNastran to as well.  The OP2 reader is 30% faster in Python 3.5+ than Python 2.7, so it's not all bad!
+
+Programmatics:
+ - This is the last Python 2.7 release.
+ - Supports Python 2.7, 3.5-3.7
+ - GUI is compatible with PyQt4/PyQt5 as well as PySide/PySide2
 
 BDF:
  - xxx cards supported (up from 343)
- - 
+ - support for writing to separate BDFs
+ - HDF5 import/export
 
 OP2:
+ - HDF5 support for OP2Geom
  - reorganization of random op2 results into op2.results.psd (or ato, no, crm, rms) to aide in finding data
  - reorganization of op2 class to reduce number of functions in the object.  This affects any custom op2 table reading, but is simple to upgrade
- - preliminary SORT2 support
+ - SORT2 support
  - reading EQEXIN/S, GPT, GPDT, CSTM/S tables
  - improved optimzation response reading
  - fixed theta/mcid reading for CTRIA3/CQUAD4
  - Imrpoved HDF5 export/import support (e.g., matrices, random results)
+ - fixed CD transformation bug for BOUGV1 and BOPHIG1 tables
  - TODO: CD transforms for cylindrical/spherical displacement, velocity, acceleration, forces.  This shouldn't be terrible.
  - TODO: stress transforms.  This is probably a bit of work.
- - TODO: use hdf5 instead of numpy.  This should be eay.
-
+ - Can optionally save directly to HDF5 instead of numpy.
+ 
 GUI:
- - sped up html logging 
+ - sped up HTML logging
+ - options for Nastran in preferences menu to speed up loading/limit memory usage
+ - visualization when pickling nodes/elements
+ - TODO: highlight menu
 
 Known issues:
  - Transient Pandas Dataframes will fail for newer versions of numpy/pandas.  If anyone knows how to use a MultiIndex,
@@ -119,6 +138,7 @@ issues as PyQt is GPL.
 
 Programmatics
  - Dropping Python 3.4 support
+ - Supports Python 2.7, 3.5-3.6
  - dropping VTK 5/6 suppoprt for the GUI
 
 BDF:
@@ -170,6 +190,7 @@ However, you may distribute an unmodified binary.
  - Programmatics:
    - Dropping Python 3.3 support
    - Adding Python 3.6 support
+   - Supports Python 2.7, 3.4-3.6
 
  - [OP2](http://pynastran-git.readthedocs.io/en/latest/quick_start/op2_demo.html)
    - preliminary random results (ATO/CRM/PSD/RMS/NO)

@@ -732,10 +732,10 @@ class GetMethods(BDFAttributes):
     def CMethod(self, sid, msg=''):
         """gets a METHOD (EIGC)"""
         try:
-            return self.cmethods[sid]
+            return self.cMethods[sid]
         except KeyError:
             raise KeyError('sid=%s not found%s.  Allowed CMETHODs=%s'
-                           % (sid, msg, np.unique(list(self.cmethods.keys()))))
+                           % (sid, msg, np.unique(list(self.cMethods.keys()))))
 
     #--------------------
     # TABLE CARDS
