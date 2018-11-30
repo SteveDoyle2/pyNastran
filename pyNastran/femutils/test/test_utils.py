@@ -388,11 +388,11 @@ class TestFemIO(unittest.TestCase):
                      header='', footer='', comments='# ')
 
         with self.assertRaises(ValueError):
-            loadtxt_nice(csv_filename, delimiter=' ', skiprows=0, comment='#',
+            loadtxt_nice(csv_filename, delimiter=' ', skiprows=0, comments='#',
                          dtype=np.float64, converters=None,
                          usecols=None, unpack=False, ndmin=0)
 
-        A2 = loadtxt_nice(csv_filename, delimiter=',', skiprows=0, comment='#',
+        A2 = loadtxt_nice(csv_filename, delimiter=',', skiprows=0, comments='#',
                           dtype=np.float64, converters=None,
                           usecols=None, unpack=False, ndmin=0)
         assert np.array_equal(A, A2), 'expected:\n%s\nactual:\n%s' % (A, A2)
@@ -403,7 +403,7 @@ class TestFemIO(unittest.TestCase):
         savetxt_nice(csv_filename, B, fmt='%.18e', delimiter=',', newline='\n',
                      header='', footer='', comments='# ')
         with self.assertRaises(ValueError):  ## TODO: mistake
-            B2 = loadtxt_nice(csv_filename, delimiter=',', skiprows=0, comment='#',
+            B2 = loadtxt_nice(csv_filename, delimiter=',', skiprows=0, comments='#',
                               dtype=np.float64, converters=None,
                               usecols=None, unpack=False, ndmin=0)
             #assert np.array_equal(B, B2), 'expected:\n%s\nactual:\n%s' % (B, B2)
@@ -417,12 +417,12 @@ class TestFemIO(unittest.TestCase):
 
         if PY2:
             with self.assertRaises(IOError):
-                B2 = loadtxt_nice('missing.txt', delimiter=',', skiprows=0, comment='#',
+                B2 = loadtxt_nice('missing.txt', delimiter=',', skiprows=0, comments='#',
                                   dtype=np.float64, converters=None,
                                   usecols=None, unpack=False, ndmin=0)
         else:
             with self.assertRaises(FileNotFoundError):
-                B2 = loadtxt_nice('missing.txt', delimiter=',', skiprows=0, comment='#',
+                B2 = loadtxt_nice('missing.txt', delimiter=',', skiprows=0, comments='#',
                                   dtype=np.float64, converters=None,
                                   usecols=None, unpack=False, ndmin=0)
 

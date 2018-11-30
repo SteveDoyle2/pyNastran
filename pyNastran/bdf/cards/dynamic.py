@@ -48,7 +48,7 @@ class DELAY(BaseCard):
     +-------+-----+-----------+-----+--------+------+-----+--------+
     """
     type = 'DELAY'
-    _properties = ['node_id1', 'node_ids']
+    _properties = ['node_id1', 'node_id2', 'node_ids']
 
     @classmethod
     def _init_from_empty(cls):
@@ -358,6 +358,12 @@ class FREQ(BaseCard):
     +------+-----+-----+-----+------+-----+-----+-----+-----+
     """
     type = 'FREQ'
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        freqs = [1., 2., 3.]
+        return FREQ(sid, freqs, comment='')
 
     def __init__(self, sid, freqs, comment=''):
         """
@@ -1645,6 +1651,21 @@ class TF(BaseCard):
 
     """
     type = 'TF'
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        nid0 = 2
+        c = '3'
+        b0 = 1.
+        b1 = 2.
+        b2 = 3.
+        nids = [2, 3]
+        components = ['4', '5']
+        a = []
+        f2 = 2.
+        return TF(sid, nid0, c, b0, b1, b2, nids, components, a, comment='')
+
     def __init__(self, sid, nid0, c, b0, b1, b2, nids, components, a, comment=''):
         if comment:
             self.comment = comment
@@ -1749,7 +1770,7 @@ class TSTEP(BaseCard):
 
     @classmethod
     def _init_from_empty(cls):
-        sid = 1.
+        sid = 1
         N = 4
         DT = 1.
         NO = None
@@ -1873,6 +1894,14 @@ class TSTEP1(BaseCard):
     +--------+------+-------+-------+-------+-----+-----+-----+-----+
     """
     type = 'TSTEP1'
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        ninc = 4
+        tend = 1.
+        nout = None
+        return TSTEP1(sid, tend, ninc, nout, comment='')
 
     def __init__(self, sid, tend, ninc, nout, comment=''):
         """
@@ -2276,6 +2305,7 @@ class TIC(BaseCard):
     entry may not be used for heat transfer analysis.
     """
     type = 'TIC'
+    _properties = ['node_ids']
 
     @classmethod
     def _init_from_empty(cls):

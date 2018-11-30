@@ -361,7 +361,7 @@ def validate_dvprel(prop_type, pname_fid, validate):
         _check_dvprel_options(pname_fid, prop_type, options)
 
     elif prop_type == 'PBMSECT':
-        options = ['T', 'W', 'H', 'T(2)']
+        options = ['T', 'W', 'H', 'T(1)', 'T(2)', 'T(3)', 'T(4)']
         _check_dvprel_options(pname_fid, prop_type, options)
 
     elif prop_type == 'PBEND':
@@ -5129,6 +5129,8 @@ def get_dvprel_key(dvprel, prop=None):
             msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
     elif prop_type == 'PBMSECT': # 3
         if var_to_change in ['T', 'W', 'H']:
+            pass
+        elif var_to_change.startswith('T(') and var_to_change.endswith(')'): #  T(2)
             pass
         else:  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)

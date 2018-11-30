@@ -85,9 +85,20 @@ class SEBNDRY(BaseCard):
 
 class SEELT(BaseCard):
     """
-    SEELT SEID EID1 EID2 EID3 EID4 EID5 EID6 EID7
+    +-------+------+------+------+------+------+------+------+------+
+    |   1   |   2  |   3  |   4  |   5  |   6  |   7  |   8  |   9  |
+    +=======+======+======+======+======+======+======+======+======+
+    | SEELT | SEID | EID1 | EID2 | EID3 | EID4 | EID5 | EID6 | EID7 |
+    +-------+------+------+------+------+------+------+------+------+
     """
     type = 'SEELT'
+
+    @classmethod
+    def _init_from_empty(cls):
+        seid = 10
+        eids = [1, 2, 3]
+        return SEELT(seid, eids, comment='')
+
     def __init__(self, seid, eids, comment=''):
         BaseCard.__init__(self)
         if comment:
@@ -173,10 +184,22 @@ class SELOAD(BaseCard):
     Maps loads from an external superelement to a specified load set for
     the residual structure.
 
-    SELOAD LIDS0 SEID LIDSE
-    SELOAD 10010 100   10
+    +--------+-------+------+-------+
+    |    1   |   2   |   3  |   4   |
+    +========+=======+======+=======+
+    | SELOAD | LIDS0 | SEID | LIDSE |
+    +--------+-------+------+-------+
+    | SELOAD | 10010 | 100  |  10   |
+    +--------+-------+------+-------+
     """
     type = 'SELOC'
+
+    @classmethod
+    def _init_from_empty(cls):
+        seid = 1
+        label = 'LEFT REAR FENDER'
+        return SEEXCLD(seid, label, comment='')
+
     def __init__(self, lid_s0, seid, lid_se, comment=''):
         BaseCard.__init__(self)
         if comment:
@@ -214,6 +237,14 @@ class SEEXCLD(BaseCard):
     |         | GIDA7 | GIDA8 |  etc. |       |       |       |       |       |
     +---------+-------+-------+-------+-------+-------+-------+-------+-------+
     """
+
+    @classmethod
+    def _init_from_empty(cls):
+        seid_a = 1
+        seid_b = 2
+        nodes = [10, 20, 30]
+        return SEEXCLD(seid_a, seid_b, nodes, comment='')
+
     def __init__(self, seid_a, seid_b, nodes, comment=''):
         BaseCard.__init__(self)
         if comment:
@@ -263,6 +294,15 @@ class SEMPLN(BaseCard):
     +--------+------+-------+----+----+------+
     """
     type = 'SEMPLN'
+
+    @classmethod
+    def _init_from_empty(cls):
+        seid = 1
+        p1 = 2
+        p2 = 3
+        p3 = 4
+        return SEMPLN(seid, p1, p2, p3, comment='')
+
     def __init__(self, seid, p1, p2, p3, comment=''):
         BaseCard.__init__(self)
         if comment:
@@ -339,6 +379,13 @@ class SELABEL(BaseCard):
     +---------+------+---------------------------------+
     """
     type = 'SELABEL'
+
+    @classmethod
+    def _init_from_empty(cls):
+        seid = 1
+        label = 'LEFT REAR FENDER'
+        return SEEXCLD(seid, label, comment='')
+
     def __init__(self, seid, label, comment=''):
         BaseCard.__init__(self)
         if comment:
@@ -412,6 +459,15 @@ class SELOC(BaseCard):
 
     """
     type = 'SELOC'
+    _properties = ['nodes_0_ids', 'nodes_seid_ids']
+
+    @classmethod
+    def _init_from_empty(cls):
+        seid = 1
+        nodes_seid = [1, 2, 3]
+        nodes0 = 42
+        return SELOC(seid, nodes_seid, nodes0, comment='')
+
     def __init__(self, seid, nodes_seid, nodes0, comment=''):
         """
         Creates an SELOC card, which transforms the superelement SEID
@@ -570,6 +626,13 @@ class SETREE(BaseCard):
     +--------+-------+-------+-------+-------+-------+-------+-------+-------+
     """
     type = 'SETREE'
+
+    @classmethod
+    def _init_from_empty(cls):
+        seid = 10
+        superelements = [1, 2, 3]
+        return SETREE(seid, superelements, comment='')
+
     def __init__(self, seid, superelements, comment=''):
         BaseCard.__init__(self)
         if comment:
@@ -968,6 +1031,17 @@ class SECONCT(BaseCard):
     +---------+-------+-------+--------+-------+-------+-------+------+------+
     """
     type = 'SECONCT'
+
+    @classmethod
+    def _init_from_empty(cls):
+        seid_a = 1
+        seid_b = 2
+        tol = 0.1
+        loc = 'YES'
+        nodes_a = [10, 20, 30]
+        nodes_b = [11, 21, 31]
+        return SECONCT(seid_a, seid_b, tol, loc, nodes_a, nodes_b, comment='')
+
     def __init__(self, seid_a, seid_b, tol, loc, nodes_a, nodes_b, comment=''):
         """
         Parameters
@@ -1104,10 +1178,22 @@ class SENQSET(BaseCard):
     Defines number of internally generated scalar points for superelement dynamic
     reduction.
 
-    SENQSET SEID N
-    SENQSET 110 45
+    +---------+------+----+
+    |    1    |   2  | 3  |
+    +---------+------+----+
+    | SENQSET | SEID | N  |
+    +---------+------+----+
+    | SENQSET | 110  | 45 |
+    +---------+------+----+
     """
-    type = 'CSUPER'
+    type = 'SENQSET'
+
+    @classmethod
+    def _init_from_empty(cls):
+        set_id = 1
+        n = 45
+        return SENQSET(set_id, n, comment='')
+
     def __init__(self, set_id, n, comment=''):
         """
         Parameters

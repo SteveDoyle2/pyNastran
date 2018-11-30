@@ -1785,6 +1785,14 @@ class PBRSECT(LineProperty):
     """
     type = 'PBRSECT'
 
+    @classmethod
+    def _init_from_empty(cls):
+        pid = 1
+        mid = 2
+        form = 'FORM'
+        options = [('OUTP', 10)]
+        return PBRSECT(pid, mid, form, options, comment='')
+
     def __init__(self, pid, mid, form, options, comment=''):
         LineProperty.__init__(self)
         if comment:

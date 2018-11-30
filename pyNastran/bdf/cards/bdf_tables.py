@@ -1497,6 +1497,13 @@ class TABLEHT(Table):
     """
     type = 'TABLEHT'
 
+    @classmethod
+    def _init_from_empty(cls):
+        tid = 1
+        x = [0., 1.]
+        y = [0., 1.]
+        return TABLEHT(tid, x, y, comment='')
+
     def __init__(self, tid, x, y, comment=''):
         Table.__init__(self)
         if comment:
@@ -1564,6 +1571,13 @@ class RandomTable(Table):
 
 class TABRND1(RandomTable):
     type = 'TABRND1'
+
+    @classmethod
+    def _init_from_empty(cls):
+        tid = 1
+        x = [0., 1.]
+        y = [0., 1.]
+        return TABRND1(tid, x, y, xaxis='LINEAR', yaxis='LINEAR', comment='')
 
     def __init__(self, tid, x, y, xaxis='LINEAR', yaxis='LINEAR', comment=''):
         RandomTable.__init__(self)

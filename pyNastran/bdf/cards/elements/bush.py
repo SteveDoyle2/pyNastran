@@ -166,6 +166,9 @@ class CBUSH(BushElement):
             #: if OCID > 0.
         if si is None:
             si = [None, None, None]
+        if x is None:
+            x = [None, None, None]
+
         self.eid = eid
         self.pid = pid
         self.nodes = nids

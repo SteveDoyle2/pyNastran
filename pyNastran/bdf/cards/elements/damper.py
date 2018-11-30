@@ -281,6 +281,25 @@ class CDAMP2(LineDamper):
         self.pid_ref = None
 
     @classmethod
+    def export_to_hdf5(cls, h5_file, model, eids):
+        """exports the elements in a vectorized way"""
+        #comments = []
+        b = []
+        nodes = []
+        components = []
+        for eid in eids:
+            element = model.elements[eid]
+            #comments.append(element.comment)
+            b.append(element.b)
+            nodes.append([nid if nid is not None else 0 for nid in element.nodes])
+            components.append([element.c1, element.c2])
+        #h5_file.create_dataset('_comment', data=comments)
+        h5_file.create_dataset('eid', data=eids)
+        h5_file.create_dataset('B', data=b)
+        h5_file.create_dataset('nodes', data=nodes)
+        h5_file.create_dataset('components', data=components)
+
+    @classmethod
     def add_card(cls, card, comment=''):
         """
         Adds a CDAMP2 card from ``BDF.add_card(...)``

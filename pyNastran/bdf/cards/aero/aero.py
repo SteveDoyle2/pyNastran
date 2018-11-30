@@ -2452,7 +2452,7 @@ class CAERO2(BaseCard):
 
 class CAERO3(BaseCard):
     type = 'CAERO3'
-    _properties = ['shape']
+    _properties = ['shape', 'xy']
 
     @classmethod
     def _init_from_empty(cls):
@@ -2787,7 +2787,7 @@ class CAERO4(BaseCard):
     +--------+-----+-----+----+-------+--------+--------+--------+------+
     """
     type = 'CAERO4'
-    _properties = ['shape']
+    _properties = ['shape', 'xy']
 
     @classmethod
     def _init_from_empty(cls):
@@ -4561,6 +4561,15 @@ class PAERO4(BaseCard):
             #self.x[spot] = value
         #else:
             #self.y[spot] = value
+
+    @classmethod
+    def _init_from_empty(cls):
+        pid = 1
+        docs = [1, 2]
+        caocs = [1, 2]
+        gapocs = [1, 2]
+        return PAERO4(pid, docs, caocs, gapocs,
+                      cla=0, lcla=0, circ=0, lcirc=0, comment='')
 
     def __init__(self, pid, docs, caocs, gapocs,
                  cla=0, lcla=0, circ=0, lcirc=0, comment=''):

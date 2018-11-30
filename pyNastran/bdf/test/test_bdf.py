@@ -647,7 +647,7 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
     if hdf5:
         hdf5_filename = out_model + '.h5'
         fem1.export_to_hdf5_filename(hdf5_filename)
-        fem1a = BDF()
+        fem1a = BDF(log=fem1.log)
         fem1a.load_hdf5_filename(hdf5_filename)
         #sys.exit('hdf5')
 

@@ -56,7 +56,7 @@ class SEQGP(BaseCard):
     @classmethod
     def _init_from_empty(cls):
         nids = 1
-        superelement = 2
+        seqids = [2, 3]
         return SEQGP(nids, seqids, comment='')
 
     def __init__(self, nids, seqids, comment=''):

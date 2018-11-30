@@ -1377,6 +1377,21 @@ class DMIJ(NastranMatrix):
 
     """
     type = 'DMIJ'
+    _properties = ['shape', 'ifo', 'is_real', 'is_complex', 'is_polar', 'matrix_type', 'tin_dtype', 'tout_dtype']
+
+    @classmethod
+    def _init_from_empty(cls):
+        name = 'name'
+        ifo = 1
+        tin = 1
+        tout = 1
+        polar = 0
+        ncols = 1
+        GCj = []
+        GCi = []
+        Real = []
+        return DMIJ(name, ifo, tin, tout, polar, ncols, GCj, GCi, Real,
+                    Complex=None, comment='', finalize=True)
 
     def __init__(self, name, matrix_form, tin, tout, polar, ncols,
                  GCj, GCi, Real, Complex=None, comment='',

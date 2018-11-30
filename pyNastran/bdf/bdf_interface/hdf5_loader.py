@@ -2,7 +2,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from collections import defaultdict
-from six import string_types, StringIO, text_type
+from six import string_types, StringIO, text_type, binary_type
 import numpy as np
 from pyNastran.utils.dict_to_h5py import _add_list_tuple, _cast, integer_types, float_types, string_types
 from pyNastran.bdf.bdf_interface.add_card import CARD_MAP
@@ -147,6 +147,7 @@ dict_attrs = [
 
 def export_to_hdf5_file(hdf5_file, model, exporter=None):
     attrs = object_attributes(model, mode='both', keys_to_skip=None)
+    encoding = model.get_encoding()
 
     if 'GRID' in model.card_count:
         model.log.debug('exporting nodes to hdf5')
@@ -157,8 +158,8 @@ def export_to_hdf5_file(hdf5_file, model, exporter=None):
             assert len(model.nodes) == 0, len(model.nodes)
         CARD_MAP['GRID'].export_to_hdf5(grid_group, model, nids)
 
-    _hdf5_export_group(hdf5_file, model, 'coords')
-    _hdf5_export_elements(hdf5_file, model)
+    _hdf5_export_group(hdf5_file, model, 'coords', encoding, debug=False)
+    _hdf5_export_elements(hdf5_file, model, encoding)
 
     # explicit groups
     #
@@ -179,7 +180,7 @@ def export_to_hdf5_file(hdf5_file, model, exporter=None):
         'methods', 'tables',
     ]
     for group_name in groups_to_export:
-        _hdf5_export_group(hdf5_file, model, group_name)
+        _hdf5_export_group(hdf5_file, model, group_name, encoding)
 
 
     dict_int_attrs = [
@@ -195,8 +196,8 @@ def export_to_hdf5_file(hdf5_file, model, exporter=None):
         #'subcases',
     ]
 
-    _export_dict_int_obj_attrs(model, hdf5_file)
-    _export_dict_int_list_obj_attrs(model, hdf5_file)
+    _export_dict_int_obj_attrs(model, hdf5_file, encoding)
+    _export_dict_int_list_obj_attrs(model, hdf5_file, encoding)
 
     #for key in scalar_obj_keys:
         #value = getattr(model, key)
@@ -223,7 +224,7 @@ def export_to_hdf5_file(hdf5_file, model, exporter=None):
             elif isinstance(value, (integer_types, float_types, string_types, np.ndarray)):
                 try:
                     scalar_group.create_dataset(key, data=value)
-                except TypeError:
+                except TypeError:  # pragma: no cover
                     print('key=%r value=%s type=%s' % (key, str(value), type(value)))
                     raise
             #elif isinstance(value, set):
@@ -231,7 +232,7 @@ def export_to_hdf5_file(hdf5_file, model, exporter=None):
             elif isinstance(value, StringIO):
                 pass
             else:
-                print(key, value)
+                #print(key, value)
                 scalar_group.create_dataset(key, data=value)
 
     if model.params:
@@ -250,7 +251,7 @@ def export_to_hdf5_file(hdf5_file, model, exporter=None):
     if len(model.reject_lines):
         #print('reject_lines', model.reject_lines)
         for i, list_str in enumerate(model.reject_lines):
-            print(list_str, type(list_str))
+            #print(list_str, type(list_str))
             list_bytes = [line.encode(encoding) for line in list_str]
             scalar_group.create_dataset(str(i), data=list_bytes)
 
@@ -264,9 +265,8 @@ def export_to_hdf5_file(hdf5_file, model, exporter=None):
             _h5_export_class(hdf5_file, model, key, value, skip_attrs, debug=False)
 
     _export_list_keys(model, hdf5_file, list_keys)
-    _export_list_obj_keys(model, hdf5_file, list_obj_keys)
+    _export_list_obj_keys(model, hdf5_file, list_obj_keys, encoding)
 
-    encoding = model.get_encoding()
     cards_to_read = [key.encode(encoding) for key in list(model.cards_to_read)]
     cards_to_read = list(cards_to_read)
     cards_to_read.sort()
@@ -288,7 +288,7 @@ def export_to_hdf5_file(hdf5_file, model, exporter=None):
     #print('other_keys2 = %s' % (set(other_keys) - set(other_keys2)))
     #asd
 
-def _export_dict_int_obj_attrs(model, hdf5_file):
+def _export_dict_int_obj_attrs(model, hdf5_file, encoding):
     cards = set(list(CARD_MAP.keys()))
     for attr in dict_int_obj_attrs:
         dict_obj = getattr(model, attr)
@@ -298,12 +298,12 @@ def _export_dict_int_obj_attrs(model, hdf5_file):
         #model.log.info(attr)
         try:
             group = hdf5_file.create_group(attr) # 'gusts'
-        except ValueError:
+        except ValueError:  # pragma: no cover
             model.log.error('cant create %r' % attr)
             raise
-        _hdf5_export_object_dict(group, model, attr, dict_obj, dict_obj.keys())
+        _hdf5_export_object_dict(group, model, attr, dict_obj, dict_obj.keys(), encoding)
 
-def _export_dict_int_list_obj_attrs(model, hdf5_file):
+def _export_dict_int_list_obj_attrs(model, hdf5_file, encoding):
     for attr in dict_int_list_obj_attrs:
         dict_obj = getattr(model, attr) # spcs
         if not len(dict_obj):
@@ -312,7 +312,7 @@ def _export_dict_int_list_obj_attrs(model, hdf5_file):
         #model.log.info(attr)
         try:
             group = hdf5_file.create_group(attr) # 'spcs'
-        except ValueError:
+        except ValueError:  # pragma: no cover
             model.log.error('cant create %r' % attr)
             raise
 
@@ -333,7 +333,9 @@ def _export_dict_int_list_obj_attrs(model, hdf5_file):
                     class_obj.export_to_hdf5(card_group, model, spcs)
                 else:
                     indices = list(range(len(spcs)))
-                    _hdf5_export_object_dict(card_group, model, '%s/id=%s/%s' % (attr, spc_id, card_type), spcs, indices)
+                    _hdf5_export_object_dict(card_group, model,
+                                             '%s/id=%s/%s' % (attr, spc_id, card_type),
+                                             spcs, indices, encoding)
 
 def _export_list_keys(model, hdf5_file, list_keys):
     for attr in list_keys:
@@ -373,10 +375,10 @@ def _export_list_keys(model, hdf5_file, list_keys):
                 #_add_list_tuple(group, str(keyi), valuei, Type, model.log)
         else:
             raise NotImplementedError(type(list_obj[0]))
-        #_hdf5_export_object_dict(group, model, attr, list_obj, indices)
+        #_hdf5_export_object_dict(group, model, attr, list_obj, indices, encoding)
 
 
-def _export_list_obj_keys(model, hdf5_file, list_obj_keys):
+def _export_list_obj_keys(model, hdf5_file, list_obj_keys, encoding):
     for attr in list_obj_keys:
         #print('list_key: %s' % attr)
         list_obj = getattr(model, attr) # active_filenames
@@ -404,7 +406,7 @@ def _export_list_obj_keys(model, hdf5_file, list_obj_keys):
         #except TypeError:
             #print(list_obj)
             #raise
-        _hdf5_export_object_dict(group, model, attr, list_obj, indices)
+        _hdf5_export_object_dict(group, model, attr, list_obj, indices, encoding)
 
 
 def _h5_export_class(sub_group, model, key, value, skip_attrs, debug=True):
@@ -412,7 +414,7 @@ def _h5_export_class(sub_group, model, key, value, skip_attrs, debug=True):
     class_group = sub_group.create_group(str(key))
     try:
         class_group.attrs['type'] = value.type
-    except:
+    except:  # pragma: no cover
         model.log.error('ERROR: key=%s value=%s' % (key, value))
         raise
 
@@ -443,7 +445,7 @@ def _h5_export_class(sub_group, model, key, value, skip_attrs, debug=True):
         #h5attrs.remove('_properties')
 
     if debug:
-        print(value)
+        model.log.debug(value)
     for h5attr in h5attrs:
         if '_ref' in h5attr or h5attr in skip_attrs:
             continue
@@ -453,7 +455,7 @@ def _h5_export_class(sub_group, model, key, value, skip_attrs, debug=True):
 
         is_none = False
         if debug:
-            print(key, h5attr, class_value)
+            model.log.info('%s %s %s' % (key, h5attr, class_value))
         if isinstance(class_value, list):
             if len(class_value) == 0: # empty list
                 continue
@@ -499,7 +501,7 @@ def _h5_export_class(sub_group, model, key, value, skip_attrs, debug=True):
         #msg = 'key=%s type=%s value=%s=' % (key, value.type, value)
         #print(msg)
 
-def _hdf5_export_elements(hdf5_file, model):
+def _hdf5_export_elements(hdf5_file, model, encoding):
     """
     exports the elements to an hdf5_file
 
@@ -544,21 +546,22 @@ def _hdf5_export_elements(hdf5_file, model):
             if hasattr(class_obj, 'export_to_hdf5'):
                 class_obj.export_to_hdf5(element_group, model, eids)
             else:
-                _hdf5_export_object_dict(element_group, model, card_type, model.elements, eids)
+                _hdf5_export_object_dict(element_group, model, card_type,
+                                         model.elements, eids, encoding)
 
-def _hdf5_export_group(hdf5_file, model, group_name, debug=False):
+def _hdf5_export_group(hdf5_file, model, group_name, encoding, debug=False):
     """
     exports the properties to an hdf5_file
     """
     data_dict = getattr(model, group_name) # self.properties
     if debug:
-        print(group_name, data_dict)
+        model.log.debug('%s %s' % (group_name, data_dict))
 
     types_actual = []
     types = model._slot_to_type_map[group_name]
     if debug:
-        print('card_count =', model.card_count)
-        print('types =', types)
+        model.log.debug('card_count = %s' % model.card_count)
+        model.log.debug('types = %s' % types)
     for card_name in model.card_count:
         #PSHELL
         if card_name in types:
@@ -581,16 +584,24 @@ def _hdf5_export_group(hdf5_file, model, group_name, debug=False):
             if hasattr(class_obj, 'export_to_hdf5'):
                 class_obj.export_to_hdf5(sub_group, model, ids)
             else:
-                _hdf5_export_object_dict(sub_group, model, card_type, data_dict, ids)
+                _hdf5_export_object_dict(sub_group, model, card_type, data_dict, ids, encoding)
 
-def _hdf5_export_object_dict(group, model, name, obj_dict, keys):
+def _hdf5_export_object_dict(group, model, name, obj_dict, keys, encoding):
     i = 0
     sub_group = group.create_group('values')
     assert isinstance(name, string_types), 'name=%s; type=%s' % (name, type(name))
 
     skip_attrs = ['comment', '_field_map']
+
+    keys_write = list(keys)
+    if isinstance(keys_write[0], text_type):
+        keys_write = list([key.encode(encoding) if isinstance(key, text_type) else key for key in list(keys_write)])
+
     for key in keys:
         value = obj_dict[key]
+        #if isinstance(value, text_type):
+            #value = value.encode(encoding)
+
         try:
             _h5_export_class(sub_group, model, key, value, skip_attrs, debug=False)
         except:  # pragma: no cover
@@ -601,8 +612,13 @@ def _hdf5_export_object_dict(group, model, name, obj_dict, keys):
 
     #group.attrs['type'] = class_name
     #print('%s keys = %s' % (name, keys))
-    keys = list(keys)
-    group.create_dataset('keys', data=keys)
+    try:
+        group.create_dataset('keys', data=keys_write)
+    except TypeError:  # pragma: no cover
+        print('name =', name)
+        print('encoding =', encoding)
+        print('keys =', keys)
+        raise
 
 # exporter
 #-------------------------------------------------------------------------------------
@@ -627,6 +643,7 @@ def load_hdf5_file(h5_file, model):
 
         'loads' : hdf5_load_loads,
         'load_combinations' : hdf5_load_load_combinations,
+        'dloads' : hdf5_load_dloads,
         'dload_entries' : hdf5_load_dload_entries,
         'bcs' : hdf5_load_bcs,
         'transfer_functions' : hdf5_load_transfer_functions,
@@ -694,16 +711,31 @@ def load_hdf5_file(h5_file, model):
                 except AttributeError:  # pragma: no cover
                     model.log.warning('cant set minor_attributes/%s as %s' % (keyi, value))
                     raise
+
         elif key in ['case_control_lines', 'executive_control_lines', 'system_command_lines']:
-            lst = []
-            for key in group.keys():
-                value = _cast(group[key])
-                assert isinstance(value, text_type), type(value)
-                lst.append(value)
-            #list_bytes = [line.encode(encoding) for line in list_str]
+            lst = _load_indexed_list_str(model, key, group, encoding)
             setattr(model, key, lst)
+
+        elif key in ['active_filenames']:
+            if 'value' not in group:
+                lst = _load_indexed_list_str(model, key, group, encoding)
+                continue
+
+            lst = _cast(group['value']).tolist()
+            #else:
+            #except KeyError:  # pragma: no cover
+                #print('group', group)
+                #print('group.keys()', list(group.keys()))
+                #raise
+
+            if isinstance(lst[0], text_type):
+                pass
+            else:
+                lst = [line.encode(encoding) for line in lst]
+            setattr(model, key, lst)
+
         elif key == 'reject_lines':
-            print(group)
+            #print(group)
             lst = []
             ddd
             for key in group.keys():
@@ -712,11 +744,29 @@ def load_hdf5_file(h5_file, model):
                 #assert isinstance(value, text_type), type(value)
                 #lst.append(value)
 
+        elif key in list_obj_keys:
+            #model.log.info('key = %s' % key)
+            #model.log.info('group = %s' % group)
+            #model.log.info('group.keys() = %s' % list(group.keys()))
+            keys = _cast(group['keys'])
+            values = group['values']
+            lst = [None] * len(keys)
+            for key in values.keys():
+                ikey = int(key)
+                class_obj_hdf5 = values[key]
+                card_type = _cast(class_obj_hdf5['type'])
+                class_instance = _load_from_class(class_obj_hdf5, card_type)
+                lst[ikey] = class_instance
+            #model.log.info('keys = %s' % keys)
+            #model.log.info('values = %s' % values)
+            #model.log.info('values.keys() = %s' % values.keys())
+
         elif key in scalar_obj_keys:
             keys = list(group.keys())
             keys.remove('type')
             card_type = _cast(group['type'])
-            _load_from_class(group, card_type)
+            class_instance = _load_from_class(group, card_type)
+            setattr(model, key, class_instance)
         #elif key in scalar_keys:
             #value = _cast(group)
             #try:
@@ -738,6 +788,28 @@ def load_hdf5_file(h5_file, model):
     cards_to_read = _cast(h5_file['cards_to_read'])
     cards_to_read = [key.decode(encoding) for key in cards_to_read]
     model.cards_to_read = set(list(cards_to_read))
+
+def _load_indexed_list_str(model, key, group, encoding):
+    lst = []
+    for key in group.keys():
+        value = _cast(group[key])
+        lst.append(value)
+
+    #try:
+        #value0 = value[0]
+    #except IndexError:  # pragma: no cover
+        #print('key =', key)
+        #print('value = %r' % value)
+        #print('group =', group)
+        #print('group.keys() =', list(group.keys()))
+        #raise
+
+    if isinstance(value, text_type):
+        pass
+    else:
+        lst = [line.encode(encoding) for line in lst]
+        assert isinstance(lst[0], text_type), type(lst[0])
+    return lst
 
 def hdf5_load_coords(model, coords_group, encoding):
     """loads the coords from an HDF5 file"""
@@ -1072,6 +1144,19 @@ def hdf5_load_frequencies(model, group, encoding):
             #else:
             load_cards_from_keys_values('frequencies/%s/%s' % (freq_id, card_type), sub_group)
 
+def hdf5_load_dloads(model, group, encoding):
+    keys = list(group.keys())
+    keys.remove('keys')
+    #dload_ids = _cast(group['keys'])
+    for dload_id in keys:
+        cards_group = group[dload_id]
+        for card_type in cards_group.keys():
+            sub_group = cards_group[card_type]
+            #if card_type == 'DLOAD':
+                #mid = _cast(sub_group['mid'])
+            #else:
+            load_cards_from_keys_values('dloads/%s/%s' % (dload_id, card_type), sub_group)
+
 def hdf5_load_dload_entries(model, group, encoding):
     keys = list(group.keys())
     keys.remove('keys')
@@ -1080,7 +1165,7 @@ def hdf5_load_dload_entries(model, group, encoding):
         cards_group = group[dload_id]
         for card_type in cards_group.keys():
             sub_group = cards_group[card_type]
-            #if card_type == 'MAT1':
+            #if card_type == 'TLOAD1':
                 #mid = _cast(sub_group['mid'])
             #else:
             load_cards_from_keys_values('dload_entries/%s/%s' % (dload_id, card_type), sub_group)
@@ -1147,6 +1232,13 @@ def hdf5_load_properties(model, properties_group, encoding):
             nsm = _cast(properties['nsm'])
             for pidi, (mid1, mid2, mid3, mid4), (z1, z2), ti, twelveIt3i, tsti, nsmi in zip(
                     pid, mids, z, t, twelveIt3, tst, nsm):
+                if np.isnan(ti):
+                    ti = None
+                    raise RuntimeError('Differential shell thickness is not supported')
+                if np.isnan(z1):
+                    z1 = None
+                if np.isnan(z2):
+                    z2 = None
                 model.add_pshell(pidi, mid1=mid1, t=ti, mid2=mid2, twelveIt3=twelveIt3i,
                                  mid3=mid3, tst=tsti, nsm=nsmi, z1=z1, z2=z2, mid4=mid4,
                                  comment='')
@@ -1228,9 +1320,14 @@ def load_cards_from_keys_values(name, properties):
     try:
         keys = _cast(properties['keys'])
     except KeyError:  # pragma: no cover
-        print('name =', name)
+        print('name = %s' % name)
         print(properties)
         raise
+    #except TypeError:  # pragma: no cover
+        #print('name = %s' % name)
+        #print(properties)
+        #print(properties['keys'])
+        #raise
     values = properties['values']
     _load_cards_from_keys_values(name, values, keys)
 
@@ -1264,7 +1361,7 @@ def _load_cards_from_keys_values(name, values, keys):
 
             try:
                 setattr(class_instance, key_to_cast, valuei)
-            except AttributeError:
+            except AttributeError:  # pragma: no cover
                 print('error loading %r' % card_type)
                 print(_properties)
                 print(key, key_to_cast, valuei)
@@ -1297,11 +1394,12 @@ def _load_from_class(value, card_type):
 
         try:
             setattr(class_instance, key_to_cast, valuei)
-        except AttributeError:
+        except AttributeError:  # pragma: no cover
             print('error loading %r' % card_type)
             print(_properties)
             print(key_to_cast, valuei)
             raise
+    return class_instance
 
 
 def hdf5_load_elements(model, elements_group, encoding):
@@ -1420,6 +1518,14 @@ def hdf5_load_elements(model, elements_group, encoding):
             components = _cast(elements['components'])
             for eid, ki, nids, (c1, c2), gei, si in zip(eids, k, nodes, components, ge, s):
                 model.add_celas2(eid, ki, nids, c1=c1, c2=c2, ge=gei, s=si, comment='')
+        elif card_type == 'CDAMP2':
+            eids = _cast(elements['eid'])
+            b = _cast(elements['B'])
+            nodes = _cast(elements['nodes']).tolist()
+            components = _cast(elements['components'])
+            for eid, bi, nids, (c1, c2) in zip(eids, b, nodes, components):
+                model.add_cdamp2(eid, bi, nids, c1=c1, c2=c2, comment='')
+
         elif card_type in ['CELAS3', 'CDAMP3', 'CDAMP5', 'CVISC']:
             if card_type == 'CELAS3':
                 func = model.add_celas3
@@ -1673,7 +1779,6 @@ def hdf5_load_elements(model, elements_group, encoding):
                 func(eid, pid, nids, theta=theta, comment='')
         else:
             load_cards_from_keys_values('elements/%s' % card_type, elements)
-            #model.add_cdamp2(eid, b, nids, c1=0, c2=0, comment='')
             #model.add_cdamp4(eid, b, nids, comment='')
             #model.add_cbush2d(eid, pid, nids, cid=0, plane='XY', sptid=None, comment='')
             #model.add_cfast(eid, pid, Type, ida, idb, gs=None, ga=None, gb=None,

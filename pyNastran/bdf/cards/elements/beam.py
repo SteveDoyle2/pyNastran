@@ -124,7 +124,7 @@ class CBEAM(LineElement):
 
             if element.bit is not None:
                 bit.append(element.bit)
-                offt.append('')
+                offt.append(b'')
             else:
                 bit.append(np.nan)
                 offt.append(element.offt.encode(encoding))

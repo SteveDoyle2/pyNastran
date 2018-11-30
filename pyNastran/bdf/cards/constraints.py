@@ -1488,7 +1488,7 @@ class SPCADD(ConstraintAdd):
     +--------+----+----+-----+
     """
     type = 'SPCADD'
-    _properties = ['ids']
+    _properties = ['ids', 'spc_ids']
 
     @classmethod
     def _init_from_empty(cls):
@@ -1614,7 +1614,7 @@ class MPCADD(ConstraintAdd):
     +--------+----+----+-----+
     """
     type = 'MPCADD'
-    _properties = ['ids']
+    _properties = ['ids', 'mpc_ids']
 
     @classmethod
     def _init_from_empty(cls):

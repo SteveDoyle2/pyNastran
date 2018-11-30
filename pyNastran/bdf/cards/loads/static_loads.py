@@ -1517,7 +1517,7 @@ class FORCE2(Load2):
     +--------+-----+---+---+----+----+----+----+
     """
     type = 'FORCE2'
-    _properties = ['scaled_vector']
+    _properties = ['scaled_vector', 'node_id', 'node_ids']
     def __init__(self, sid, node, mag, g1, g2, g3, g4, comment=''):
         Load2.__init__(self, sid, node, mag, g1, g2, g3, g4, comment)
 
@@ -1662,7 +1662,7 @@ class MOMENT2(Load2):
     +---------+-----+---+---+----+----+----+----+
     """
     type = 'MOMENT2'
-    _properties = ['scaled_vector']
+    _properties = ['scaled_vector', 'node_id', 'node_ids']
     def __init__(self, sid, node, mag, g1, g2, g3, g4, comment=''):
         Load2.__init__(self, sid, node, mag, g1, g2, g3, g4, comment)
 

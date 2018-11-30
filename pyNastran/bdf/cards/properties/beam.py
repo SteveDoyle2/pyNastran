@@ -1635,6 +1635,15 @@ class PBMSECT(LineProperty):
     not done
     """
     type = 'PBMSECT'
+    _properties = ['outp_id']
+
+    @classmethod
+    def _init_from_empty(cls):
+        pid = 1
+        mid = 2
+        form = 'FORM'
+        options = [('OUTP', 10)]
+        return PBMSECT(pid, mid, form, options, comment='')
 
     def __init__(self, pid, mid, form, options, comment=''):
         LineProperty.__init__(self)

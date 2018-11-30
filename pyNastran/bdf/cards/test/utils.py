@@ -18,7 +18,7 @@ except ImportError:
 def save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
                    run_convert=True, run_renumber=True, run_mirror=True,
                    run_save_load=True, run_quality=True, write_saves=True,
-                   run_save_load_hdf5=False):
+                   run_save_load_hdf5=True):
     """writes, re-reads, saves an obj, loads an obj, and returns the deck"""
     model.validate()
     model.pop_parse_errors()
@@ -63,7 +63,7 @@ def save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
 
     if run_save_load_hdf5 and IS_H5PY:
         model2.export_to_hdf5_filename('test.h5')
-        model4 = BDF()
+        model4 = BDF(log=model2.log)
         model4.load_hdf5_filename('test.h5')
 
     cross_reference(model3, xref)

@@ -303,7 +303,7 @@ class DLOAD(LoadCombination):
 
     @classmethod
     def _init_from_empty(cls):
-        eid = 1
+        sid = 1
         scale = 1.
         scale_factors = [1., 2.]
         load_ids = [1, 2]
@@ -403,7 +403,7 @@ class RLOAD1(DynamicLoad):
     NX allows DELAY and DPHASE to be floats
     """
     type = 'RLOAD1'
-    _properties = ['delay_id']
+    _properties = ['delay_id', 'dphase_id']
 
     @classmethod
     def _init_from_empty(cls):
@@ -689,7 +689,7 @@ class RLOAD2(DynamicLoad):
     NX allows DELAY and DPHASE to be floats
     """
     type = 'RLOAD2'
-    _properties = ['delay_id']
+    _properties = ['delay_id', 'dphase_id']
 
     @classmethod
     def _init_from_empty(cls):

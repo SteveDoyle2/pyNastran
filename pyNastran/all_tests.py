@@ -8,6 +8,8 @@ elif qt_version == 'pyqt5':
     import PyQt5
 elif qt_version == 'pyside':
     import PySide
+elif qt_version == 'pyside2':
+    import PySide2
 else:
     raise NotImplementedError(qt_version)
 

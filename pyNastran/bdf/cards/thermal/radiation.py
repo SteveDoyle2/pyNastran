@@ -246,6 +246,12 @@ class VIEW(BaseCard):
     """
     type = 'VIEW'
 
+    @classmethod
+    def _init_from_empty(cls):
+        iview = 2
+        icavity = 2
+        return VIEW(iview, icavity, shade='BOTH', nbeta=1, ngamma=1, dislin=0.0, comment='')
+
     def __init__(self, iview, icavity, shade='BOTH', nbeta=1, ngamma=1,
                  dislin=0.0, comment=''):
         """
@@ -349,6 +355,12 @@ class VIEW3D(BaseCard):
     +--------+---------+------+------+------+------+--------+------+--------+
     """
     type = 'VIEW3D'
+
+    @classmethod
+    def _init_from_empty(cls):
+        iview = 2
+        return VIEW3D(icavity, gitb=4, gips=4, cier=4, error_tol=0.1,
+                      zero_tol=1e-10, warp_tol=0.01, rad_check=3, comment='')
 
     def __init__(self, icavity, gitb=4, gips=4, cier=4,
                  error_tol=0.1, zero_tol=1e-10, warp_tol=0.01,
@@ -660,6 +672,13 @@ class RADMTX(ThermalBC):
     +--------+---------+--------+--------+--------+--------+--------+--------+--------+
     """
     type = 'RADMTX'
+
+    @classmethod
+    def _init_from_empty(cls):
+        iview = 1
+        index = 2
+        exchange_factors = [1., 2.]
+        return RADMTX(icavity, index, exchange_factors, comment='')
 
     def __init__(self, icavity, index, exchange_factors, comment=''):
         ThermalBC.__init__(self)

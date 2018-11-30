@@ -334,7 +334,7 @@ class FLFACT(BaseCard):
 
     @classmethod
     def _init_from_empty(cls):
-        sid = 1.
+        sid = 1
         factors = [1.]
         return FLFACT(sid, factors, comment='')
 
@@ -975,6 +975,12 @@ class MKAERO1(BaseCard):
     """
     type = 'MKAERO1'
 
+    @classmethod
+    def _init_from_empty(cls):
+        machs = [1.]
+        reduced_freqs = [1.]
+        return MKAERO1(machs, reduced_freqs, comment='')
+
     def __init__(self, machs, reduced_freqs, comment=''):
         """
         Creates an MKAERO1 card, which defines a set of mach and
@@ -1120,6 +1126,12 @@ class MKAERO2(BaseCard):
     +---------+----+----+----+----+----+----+----+----+
     """
     type = 'MKAERO2'
+
+    @classmethod
+    def _init_from_empty(cls):
+        machs = [1.]
+        reduced_freqs = [1.]
+        return MKAERO2(reduced_freqs, comment='')
 
     def __init__(self, machs, reduced_freqs, comment=''):
         """

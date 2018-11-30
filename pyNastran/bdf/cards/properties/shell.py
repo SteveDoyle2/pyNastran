@@ -1808,26 +1808,30 @@ class PSHELL(ShellProperty):
         """exports the properties in a vectorized way"""
         comments = []
         mids = []
-        z = []
-        t = []
+        npids = len(pids)
+        assert npids > 0, pids
+
+        z = np.full((npids, 2), np.nan, dtype=None, order='C')
+        t = np.full(npids, np.nan, dtype=None, order='C')
         twelveIt3 = []
         tst = []
         nsm = []
-        assert len(pids) > 0, pids
-        for pid in pids:
+        for i, pid in enumerate(pids):
             prop = model.properties[pid]
             #comments.append(prop.comment)
             midsi = [0 if mid is None else mid for mid in
                      [prop.mid1, prop.mid2, prop.mid3, prop.mid4]]
             mids.append(list(midsi))
-            z.append([prop.z1, prop.z2])
-            t.append(prop.t)
+            z[i, :] = [prop.z1, prop.z2]
+            t[i] = prop.t
             twelveIt3.append(prop.twelveIt3)
             tst.append(prop.tst)
             nsm.append(prop.nsm)
         #h5_file.create_dataset('_comment', data=comments)
         h5_file.create_dataset('pid', data=pids)
         h5_file.create_dataset('mids', data=mids)
+        #print('z =', z)
+        #print('t =', t)
         h5_file.create_dataset('z', data=z)
         h5_file.create_dataset('t', data=t)
         h5_file.create_dataset('twelveIt3', data=twelveIt3)

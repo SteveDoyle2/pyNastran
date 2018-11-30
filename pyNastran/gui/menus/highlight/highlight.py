@@ -6,7 +6,7 @@ The highlight menu handles:
 from __future__ import print_function
 from math import log10, ceil
 
-#import PySide
+#import PySide  # for local testing
 from qtpy import QtGui
 from qtpy.QtWidgets import (
     QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,

@@ -260,7 +260,7 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
 
     @classmethod
     def _init_from_empty(cls):
-        eid = 1
+        sid = 1
         excite_id = 2
         lid = 3
         return LSEQ(sid, excite_id, lid, tid=None, comment='')
@@ -405,6 +405,15 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
 
 class LOADCYN(Load):
     type = 'LOADCYN'
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        scale = 1.
+        segment_id = 2
+        scales = [1., 2.]
+        load_ids = [10, 20]
+        return LOADCYN(sid, scale, segment_id, scales, load_ids, segment_type=None, comment='')
 
     def __init__(self, sid, scale, segment_id, scales, load_ids, segment_type=None, comment=''):
         if comment:
