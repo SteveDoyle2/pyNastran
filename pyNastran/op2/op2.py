@@ -119,6 +119,9 @@ def read_op2(op2_filename=None, combine=True, subcases=None,
 
 #class OP2(OP2_Scalar, OP2Writer):
 class OP2(OP2_Scalar):
+    _properties = ['is_real', 'is_complex', 'is_random',
+                   '_sort_method', 'is_sort1', 'is_sort2',
+                   'matrix_tables', 'table_name_str']
 
     def __init__(self,
                  debug=True, log=None,
@@ -748,6 +751,17 @@ class OP2(OP2_Scalar):
         load_op2_from_hdf5_file(self, h5_file, self.log, debug=debug)
         self.combine_results(combine=combine)
 
+    def export_to_hdf5_filename(self, hdf5_filename):
+        """
+        Converts the OP2 objects into hdf5 object
+
+        TODO: doesn't support:
+          - BucklingEigenvalues
+
+        """
+        from pyNastran.op2.op2_interface.hdf5_interface import export_op2_to_hdf5_file
+        export_op2_to_hdf5_file(hdf5_filename, self)
+
     def export_to_hdf5(self, hdf5_filename):
         """
         Converts the OP2 objects into hdf5 object
@@ -756,8 +770,8 @@ class OP2(OP2_Scalar):
           - BucklingEigenvalues
 
         """
-        from pyNastran.op2.op2_interface.hdf5_interface import export_op2_to_hdf5_filename
-        export_op2_to_hdf5_filename(hdf5_filename, self)
+        self.deprecated('export_to_hdf5', 'export_to_hdf5_filename', '1.2')
+        return self.export_to_hdf5_filename(hdf5_filename)
 
     def export_to_hdf5_file(self, hdf5_file, exporter=None):
         """

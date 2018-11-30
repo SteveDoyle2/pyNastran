@@ -64,6 +64,8 @@ class TestMethods(unittest.TestCase):
         m2 = 3
         eigp = model.add_eigp(sid, alpha1, omega1, m1, alpha2, omega2, m2, comment='eigp')
         eigp.raw_fields()
+
+        eigp2 = model.CMethod(sid)
         model.validate()
         save_load_deck(model)
 

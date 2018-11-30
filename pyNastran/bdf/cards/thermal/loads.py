@@ -38,6 +38,16 @@ class QVOL(ThermalLoad):
     +------+------+------+---------+------+------+------+------+------+
     """
     type = 'QVOL'
+    _properties = ['element_ids']
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        flag = 'LINE'
+        qvol = 1.0
+        control_point = 10
+        elements = [1, 2]
+        return QVOL(sid, qvol, control_point, elements, comment='')
 
     def __init__(self, sid, qvol, control_point, elements, comment=''):
         ThermalLoad.__init__(self)
@@ -163,6 +173,16 @@ class QVECT(ThermalLoad):
     +-------+------+------+-------+-----+---------+---------+---------+---------+
     """
     type = 'QVECT'
+    _properties = ['element_ids']
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        q0 = 1.0
+        eids = [1, 2]
+        return QVECT(sid, q0, eids, t_source=None, ce=0,
+                     vector_tableds=None, control_id=0, comment='')
+
     def __init__(self, sid, q0, eids, t_source=None,
                  ce=0, vector_tableds=None, control_id=0, comment=''):
         """
@@ -313,6 +333,14 @@ class QBDY1(ThermalLoad):
     Defines a uniform heat flux into CHBDYj elements.
     """
     type = 'QBDY1'
+    _properties = ['element_ids']
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        qflux = 1.0
+        eids = [1, 2]
+        return QBDY1(sid, qflux, eids, comment='')
 
     def __init__(self, sid, qflux, eids, comment=''):
         ThermalLoad.__init__(self)
@@ -431,6 +459,13 @@ class QBDY2(ThermalLoad):  # not tested
     """
     type = 'QBDY2'
 
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        eids = [1]
+        qflux = [1.0]
+        return QBDY2(sid, qflux, eids, comment='')
+
     def __init__(self, sid, eid, qfluxs, comment=''):
         ThermalLoad.__init__(self)
         if comment:
@@ -544,6 +579,15 @@ class QBDY3(ThermalLoad):
     Defines a uniform heat flux load for a boundary surface.
     """
     type = 'QBDY3'
+    _properties = ['element_ids']
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        q0 = 1.0
+        cntrlnd = 10
+        eids = [1, 2]
+        return QBDY3(sid, q0, cntrlnd, eids, comment='')
 
     def __init__(self, sid, q0, cntrlnd, eids, comment=''):
         """
@@ -696,6 +740,14 @@ class QHBDY(ThermalLoad):
         'AREA8' : (5, 8), # 5-8
     }
 
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        flag = 'LINE'
+        q0 = 1.0
+        grids = [1, 2]
+        return QHBDY(sid, flag, q0, grids, af=None, comment='')
+
     def __init__(self, sid, flag, q0, grids, af=None, comment=''):
         """
         Creates a QHBDY card
@@ -838,6 +890,12 @@ class TEMP(ThermalLoad):
     """
     type = 'TEMP'
 
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        temperatures = {1 : 1.0}
+        return TEMP(sid, temperatures, comment='')
+
     def __init__(self, sid, temperatures, comment=''):
         """
         Creates a TEMP card
@@ -973,6 +1031,16 @@ class TEMPP1(BaseCard):
     +--------+------+------+------+--------+------+------+------+
     """
     type = 'TEMPP1'
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        eid = 1
+        tbar = 2.0
+        tprime = 1.0
+        t_stress = 10.
+        return TEMPP1(sid, eid, tbar, tprime, t_stress, comment='')
+
     def __init__(self, sid, eid, tbar, tprime, t_stress, comment=''):
         self.comment = comment
         self.sid = sid
@@ -1017,6 +1085,12 @@ class TEMPD(BaseCard):
     +-------+------+----+------+----+------+----+------+----+
     """
     type = 'TEMPD'
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        temperatures = {1 : 1.0}
+        return TEMPD(sid, temperatures, comment='')
 
     def __init__(self, sid, temperature, comment=''):
         """

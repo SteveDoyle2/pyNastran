@@ -27,6 +27,13 @@ class RADM(ThermalBC):
     """
     type = 'RADM'
 
+    @classmethod
+    def _init_from_empty(cls):
+        radmid = 2
+        absorb = 2.0
+        emissivity = 1.0
+        return RADM(radmid, absorb, emissivity, comment='')
+
     def __init__(self, radmid, absorb, emissivity, comment=''):
         ThermalBC.__init__(self)
         if comment:
@@ -115,6 +122,14 @@ class RADBC(ThermalBC):
     conditions
     """
     type = 'RADBC'
+
+    @classmethod
+    def _init_from_empty(cls):
+        nodamb = 1
+        famb = 1.0
+        cntrlnd = 10
+        eids = [1, 2]
+        return RADBC(nodamb, famb, cntrlnd, eids, comment='')
 
     def __init__(self, nodamb, famb, cntrlnd, eids, comment=''):
         ThermalBC.__init__(self)
@@ -455,6 +470,13 @@ class RADCAV(ThermalBC):
     """
     type = 'RADCAV'
 
+    @classmethod
+    def _init_from_empty(cls):
+        icavity = 2
+        sets = [1, 2, 3]
+        return RADCAV(icavity, sets, ele_amb=None, shadow='YES', scale=0.0,
+                      prtpch=None, nefci=None, rmax=0.1, ncomp=32, comment='')
+
     def __init__(self, icavity, sets, ele_amb=None,
                  shadow='YES', scale=0.0, prtpch=None,
                  nefci=None, rmax=0.1, ncomp=32, comment=''):
@@ -560,6 +582,12 @@ class RADLST(ThermalBC):
     +--------+---------+--------+------+-------+--------+-------+------+--------+
     """
     type = 'RADCAV'
+
+    @classmethod
+    def _init_from_empty(cls):
+        icavity = 2
+        eids = [1, 2, 3]
+        return RADLST(icavity, eids, matrix_type=1, comment='')
 
     def __init__(self, icavity, eids, matrix_type=1, comment=''):
         ThermalBC.__init__(self)

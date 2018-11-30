@@ -35,7 +35,7 @@ from pyNastran.bdf.cards.base_card import Element, BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double_or_blank, integer_double_or_blank, blank)
 from pyNastran.bdf.field_writer_8 import print_card_8, print_field_8
-from pyNastran.bdf.field_writer_16 import print_card_16
+from pyNastran.bdf.field_writer_16 import print_card_16, print_field_16
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 
 __all__ = ['CTRIA3', 'CTRIA6', 'CSHEAR',
@@ -2678,11 +2678,28 @@ class CQUAD4(QuadShell):
 
             row2_data = [theta_mcid, zoffset,
                          tflag, T1, T2, T3, T4]
-            row2 = [print_field_8(field) for field in row2_data]
-            data = [self.eid, self.Pid()] + nodes + row2
-            msg = ('CQUAD4  %8i%8i%8i%8i%8i%8i%8s%8s\n'
-                   '                %8s%8s%8s%8s%8s\n' % tuple(data))
-            return self.comment + msg.rstrip() + '\n'
+            if size == 8:
+                row2 = [print_field_8(field) for field in row2_data]
+                data = [self.eid, self.Pid()] + nodes + row2
+                msg = ('CQUAD4  %8i%8i%8i%8i%8i%8i%8s%8s\n'
+                       '                %8s%8s%8s%8s%8s\n' % tuple(data))
+            else:
+                row2 = [print_field_16(field) for field in row2_data]
+                is_stripped = [field.strip() == '' for field in row2]
+                if all(is_stripped[2:]): # tflag, t1234 are blank
+                    data = [self.eid, self.Pid()] + nodes + row2[:2]
+                    msg = ('CQUAD4* %16i%16i%16i%16i\n'
+                           '*       %16i%16i%16s%16s\n'
+                           % tuple(data))
+                else:
+                    data = [self.eid, self.Pid()] + nodes + row2
+                    msg = ('CQUAD4* %16i%16i%16i%16i\n'
+                           '*       %16i%16i%16s%16s\n'
+                           '*                     %16s%16s%16s\n'
+                           '*       %16s%16s\n'
+                           % tuple(data))
+                    return self.comment + msg.rstrip('*\n ') + '\n'
+            return self.comment + msg
 
 
 class CPLSTN4(QuadShell):

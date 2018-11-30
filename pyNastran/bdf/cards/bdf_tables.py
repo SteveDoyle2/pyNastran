@@ -465,7 +465,7 @@ class TABLED3(Table):
         x1 = 1.
         x = [0., 1.]
         y = [0., 1.]
-        return TABLED2(tid, x1, x, y, extrap=0, comment='')
+        return TABLED3(tid, x1, x, y, extrap=0, comment='')
 
     def __init__(self, tid, x1, x2, x, y, extrap=0, comment=''):
         """
@@ -850,6 +850,13 @@ class TABLEM1(Table):
     +---------+------+-------+-------+--------+-----+-----+------+------+
     """
     type = 'TABLEM1'
+    @classmethod
+    def _init_from_empty(cls):
+        tid = 1
+        x = [0., 1.]
+        y = [0., 1.]
+        return TABLEM1(tid, x, y, xaxis='LINEAR', yaxis='LINEAR', comment='')
+
     def __init__(self, tid, x, y, xaxis='LINEAR', yaxis='LINEAR', comment=''):
         Table.__init__(self)
         if comment:
@@ -926,6 +933,15 @@ class TABLEM2(Table):
 
     """
     type = 'TABLEM2'
+
+    @classmethod
+    def _init_from_empty(cls):
+        tid = 1
+        x1 = 1.
+        x = [0., 1.]
+        y = [0., 1.]
+        return TABLEM2(tid, x1, x, y, extrap=0, comment='')
+
     def __init__(self, tid, x1, x, y, extrap=0, comment=''):
         Table.__init__(self)
         if comment:
@@ -1001,6 +1017,16 @@ class TABLEM3(Table):
 
     """
     type = 'TABLEM3'
+
+    @classmethod
+    def _init_from_empty(cls):
+        tid = 1
+        x1 = 1.
+        x2 = 2.
+        x = [0., 1.]
+        y = [0., 1.]
+        return TABLEM3(tid, x1, x2, x, y, extrap=0, comment='')
+
     def __init__(self, tid, x1, x2, x, y, extrap=0, comment=''):
         Table.__init__(self)
         if comment:
@@ -1078,6 +1104,17 @@ class TABLEM4(Table):
     +---------+------+---------+--------+-----+--------+------+------+
     """
     type = 'TABLEM4'
+
+    @classmethod
+    def _init_from_empty(cls):
+        tid = 1
+        x1 = 1.
+        x2 = 1.
+        x3 = 1.
+        x4 = 2.
+        a = [1., 2.]
+        return TABLEM4(tid, x1, x2, x3, x4, a, comment='')
+
     def __init__(self, tid, x1, x2, x3, x4, a, comment=''):
         Table.__init__(self)
         if comment:

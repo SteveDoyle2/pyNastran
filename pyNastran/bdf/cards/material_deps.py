@@ -263,6 +263,13 @@ class MATT1(MaterialDependenceThermal):
     """
     type = 'MATT1'
 
+    @classmethod
+    def _init_from_empty(cls):
+        mid = 1
+        return MATT1(mid, e_table=None, g_table=None, nu_table=None, rho_table=None,
+                     a_table=None, ge_table=None, st_table=None,
+                     sc_table=None, ss_table=None, comment='')
+
     def __init__(self, mid, e_table=None, g_table=None, nu_table=None,
                  rho_table=None, a_table=None, ge_table=None, st_table=None,
                  sc_table=None, ss_table=None, comment=''):
@@ -509,6 +516,14 @@ class MATT2(MaterialDependenceThermal):
     """
     type = 'MATT2'
 
+    @classmethod
+    def _init_from_empty(cls):
+        mid = 1
+        return MATT2(mid, g11_table=None, g12_table=None, g13_table=None, g22_table=None,
+                     g23_table=None, g33_table=None, rho_table=None,
+                     a1_table=None, a2_table=None, a3_table=None, ge_table=None,
+                     st_table=None, sc_table=None, ss_table=None, comment='')
+
     def __init__(self, mid, g11_table=None, g12_table=None, g13_table=None,
                  g22_table=None, g23_table=None, g33_table=None, rho_table=None,
                  a1_table=None, a2_table=None, a3_table=None,
@@ -705,6 +720,13 @@ class MATT3(MaterialDependenceThermal):
     +--------+-------+-------+--------+-------+----------+----------+---------+--------+
     """
     type = 'MATT3'
+
+    @classmethod
+    def _init_from_empty(cls):
+        mid = 1
+        return MATT3(mid, ex_table=None, eth_table=None, ez_table=None, nuth_table=None,
+                     nuxz_table=None, rho_table=None, gzx_table=None,
+                     ax_table=None, ath_table=None, az_table=None, ge_table=None, comment='')
 
     def __init__(self, mid, ex_table=None, eth_table=None, ez_table=None,
                  nuth_table=None, nuxz_table=None, rho_table=None,
@@ -917,6 +939,12 @@ class MATT4(MaterialDependenceThermal):
     """
     type = 'MATT4'
 
+    @classmethod
+    def _init_from_empty(cls):
+        mid = 1
+        return MATT4(mid, k_table=None, cp_table=None, h_table=None,
+                     mu_table=None, hgen_table=None, comment='')
+
     def __init__(self, mid, k_table=None, cp_table=None, h_table=None,
                  mu_table=None, hgen_table=None, comment=''):
         MaterialDependenceThermal.__init__(self)
@@ -1068,6 +1096,12 @@ class MATT5(MaterialDependenceThermal):
     +-------+---------+---------+--------+--------+--------+--------+--------+-------+
     """
     type = 'MATT5'
+
+    @classmethod
+    def _init_from_empty(cls):
+        mid = 1
+        return MATT5(mid, kxx_table=None, kxy_table=None, kxz_table=None, kyy_table=None,
+                     kyz_table=None, kzz_table=None, cp_table=None, hgen_table=None, comment='')
 
     def __init__(self, mid, kxx_table=None, kxy_table=None, kxz_table=None,
                  kyy_table=None, kyz_table=None, kzz_table=None,
@@ -1257,6 +1291,15 @@ class MATT8(MaterialDependenceThermal):
     +-------+--------+--------+-------+---------+--------+--------+--------+--------+
     """
     type = 'MATT8'
+
+    @classmethod
+    def _init_from_empty(cls):
+        mid = 1
+        return MATT8(mid, e1_table=None, e2_table=None, nu12_table=None, g12_table=None,
+                     g1z_table=None, g2z_table=None, rho_table=None,
+                     a1_table=None, a2_table=None, xt_table=None, xc_table=None,
+                     yt_table=None, yc_table=None, s_table=None, ge_table=None,
+                     f12_table=None, comment='')
 
     def __init__(self, mid, e1_table=None, e2_table=None, nu12_table=None,
                  g12_table=None, g1z_table=None, g2z_table=None, rho_table=None,
@@ -1530,16 +1573,31 @@ class MATT8(MaterialDependenceThermal):
 class MATT9(MaterialDependenceThermal):
     type = 'MATT9'
 
+    @classmethod
+    def _init_from_empty(cls):
+        mid = 1
+        return MATT9(mid, g11_table=None, g12_table=None, g13_table=None, g14_table=None,
+                     g15_table=None, g16_table=None, g22_table=None, g23_table=None,
+                     g24_table=None, g25_table=None, g26_table=None, g33_table=None,
+                     g34_table=None, g35_table=None, g36_table=None, g44_table=None,
+                     g45_table=None, g46_table=None, g55_table=None, g56_table=None,
+                     g66_table=None, rho_table=None,
+                     a1_table=None, a2_table=None, a3_table=None,
+                     a4_table=None, a5_table=None, a6_table=None, ge_table=None, comment='')
+
     def __init__(self, mid,
-                 g11_table, g12_table, g13_table, g14_table, g15_table, g16_table,
-                 g22_table, g23_table, g24_table, g25_table, g26_table,
-                 g33_table, g34_table, g35_table, g36_table,
-                 g44_table, g45_table, g46_table,
-                 g55_table, g56_table,
-                 g66_table,
-                 rho_table,
-                 a1_table, a2_table, a3_table, a4_table, a5_table, a6_table,
-                 ge_table,
+                 g11_table=None, g12_table=None, g13_table=None, g14_table=None,
+                 g15_table=None, g16_table=None,
+                 g22_table=None, g23_table=None, g24_table=None,
+                 g25_table=None, g26_table=None,
+                 g33_table=None, g34_table=None, g35_table=None, g36_table=None,
+                 g44_table=None, g45_table=None, g46_table=None,
+                 g55_table=None, g56_table=None,
+                 g66_table=None,
+                 rho_table=None,
+                 a1_table=None, a2_table=None, a3_table=None,
+                 a4_table=None, a5_table=None, a6_table=None,
+                 ge_table=None,
                  comment=''):
         MaterialDependenceThermal.__init__(self)
         if comment:

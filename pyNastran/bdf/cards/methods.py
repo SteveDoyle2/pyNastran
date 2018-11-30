@@ -38,6 +38,20 @@ class EIGB(Method):
     """
     type = 'EIGB'
 
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        method = 'INV'
+        G = 1
+        C = 1
+        norm = 'MAX'
+        L1 = 1.0
+        L2 = 2.0
+        nep = 10
+        ndp = 20
+        ndn = 30
+        return EIGB(sid, method, L1, L2, nep, ndp, ndn, norm, G, C, comment='')
+
     def __init__(self, sid, method, L1, L2, nep, ndp, ndn, norm, G, C, comment=''):
         Method.__init__(self)
         if comment:
@@ -166,6 +180,20 @@ class EIGC(Method):
     +------+---------+---------+---------+---------+---------+---------+-----+
     """
     type = 'EIGC'
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        method = 1
+        grid = 1
+        component = 1
+        epsilon = 0.1
+        neigenvalues = 10
+        return EIGC(sid, method, grid, component, epsilon, neigenvalues,
+                    norm='MAX', mblkszs=None, iblkszs=None, ksteps=None,
+                    NJIs=None, alphaAjs=None, omegaAjs=None, alphaBjs=None,
+                    omegaBjs=None, LJs=None, NEJs=None, NDJs=None,
+                    shift_r1=None, shift_i1=None, isrr_flag=None, nd1=None, comment='')
 
     def __init__(self, sid, method, grid, component, epsilon, neigenvalues,
                  norm='MAX', # common
@@ -597,6 +625,17 @@ class EIGP(Method):
 
     """
     type = 'EIGP'
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        alpha1 = 1.
+        omega1 = 1.
+        m1 = 1.
+        alpha2 = 1.
+        omega2 = 1.
+        m2 = 1.
+        return EIGP(sid, alpha1, omega1, m1, alpha2, omega2, m2, comment='')
 
     def __init__(self, sid, alpha1, omega1, m1, alpha2, omega2, m2, comment=''):
         Method.__init__(self)

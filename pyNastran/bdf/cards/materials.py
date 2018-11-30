@@ -77,6 +77,26 @@ class HyperelasticMaterial(Material):
 class CREEP(Material):
     type = 'CREEP'
 
+    @classmethod
+    def _init_from_empty(cls):
+        mid = 1
+        T0 = 42.
+        exp = 1.
+        form = 'cat'
+        tidkp = 42
+        tidcp = 43
+        tidcs = 44
+        thresh = 6.
+        Type = 7
+        a = 8.
+        b = 9.
+        c = 10.
+        d = 11.
+        e = 12.
+        f = 13.
+        g = 14.
+        return CREEP(mid, T0, exp, form, tidkp, tidcp, tidcs, thresh, Type, a, b, c, d, e, f, g, comment='')
+
     def __init__(self, mid, T0, exp, form, tidkp, tidcp, tidcs, thresh, Type,
                  a, b, c, d, e, f, g, comment=''):
         Material.__init__(self)
@@ -241,6 +261,12 @@ class NXSTRAT(BaseCard):
     +---------+---------+--------+--------+--------+--------+--------+--------+
     """
     type = 'NXSTRAT'
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        params = {'AUTO' : 1}
+        return NXSTRAT(sid, params, comment='')
+
     def __init__(self, sid, params, comment=''):
         if comment:
             self.comment = comment
@@ -818,27 +844,36 @@ class MAT2(AnisotropicMaterial):
             material = model.materials[mid]
             #comments.append(element.comment)
             Gi = [
-                [self.G11, self.G12, self.G13],
-                [self.G12, self.G22, self.G23],
-                [self.G13, self.G23, self.G33],
+                material.G11, material.G22, material.G33,
+                material.G12, material.G13, material.G23,
             ]
             G.append(Gi)
             rho.append(material.rho)
-            a.append([material.a1, material.a2, material.a3])
+
+            ai = [ai if ai is not None else np.nan
+                  for ai in [material.a1, material.a2, material.a3]]
+            a.append(ai)
             tref.append(material.tref)
             ge.append(material.ge)
 
             St.append(material.St)
             Sc.append(material.Sc)
             Ss.append(material.Ss)
-            mcsid.append(material.mcsid)
+            if material.mcsid is None:
+                mcsid.append(-1)
+            else:
+                mcsid.append(material.mcsid)
         #h5_file.create_dataset('_comment', data=comments)
-        h5_file.create_dataset('mid', data=mids)
+        St = [value if value is not None else np.nan for value in St]
+        Sc = [value if value is not None else np.nan for value in Sc]
+        Ss = [value if value is not None else np.nan for value in Ss]
 
+        h5_file.create_dataset('mid', data=mids)
         h5_file.create_dataset('G', data=G)
         h5_file.create_dataset('A', data=a)
         h5_file.create_dataset('rho', data=rho)
         h5_file.create_dataset('tref', data=tref)
+        h5_file.create_dataset('ge', data=ge)
 
         h5_file.create_dataset('St', data=St)
         h5_file.create_dataset('Sc', data=Sc)
@@ -1112,6 +1147,7 @@ class MAT3(OrthotropicMaterial):
             rho.append(material.rho)
             tref.append(material.tref)
             ge.append(material.ge)
+        gzx = [value if value is not None else np.nan for value in gzx]
         #h5_file.create_dataset('_comment', data=comments)
         h5_file.create_dataset('mid', data=mids)
 
@@ -1282,6 +1318,13 @@ class MAT4(ThermalMaterial):
         8:'ref_enthalpy', 9:'tch', 10:'tdelta', 11:'qlat',
     }
 
+    @classmethod
+    def _init_from_empty(cls):
+        mid = 1
+        k = 100.
+        return MAT4(mid, k, cp=0.0, rho=1.0, H=None, mu=None, hgen=1.0,
+                    ref_enthalpy=None, tch=None, tdelta=None, qlat=None, comment='')
+
     def __init__(self, mid, k, cp=0.0, rho=1.0, H=None, mu=None,
                  hgen=1.0, ref_enthalpy=None, tch=None, tdelta=None, qlat=None, comment=''):
         ThermalMaterial.__init__(self)
@@ -1419,6 +1462,12 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
     _field_map = {
         1: 'mid', 2:'kxx', 3:'kxy', 4:'kxz', 5: 'kyy', 6:'kyz', 7:'kzz',
     }
+
+    @classmethod
+    def _init_from_empty(cls):
+        mid = 1
+        return MAT5(mid, kxx=0., kxy=0., kxz=0., kyy=0., kyz=0., kzz=0.,
+                    cp=0., rho=1., hgen=1., comment='')
 
     def __init__(self, mid, kxx=0., kxy=0., kxz=0., kyy=0., kyz=0., kzz=0.,
                  cp=0., rho=1., hgen=1., comment=''):
@@ -2638,6 +2687,22 @@ class MAT11(Material):
         #'SS' : 'ss', #12 : 'ss',
     }
     _properties = ['_field_map', 'mp_name_map']
+
+    @classmethod
+    def _init_from_empty(cls):
+        mid = 1
+        e1 = 1.
+        e2 = 2.
+        e3 = 3.
+        nu12 = 0.3
+        nu13 = 0.2
+        nu23 = 0.25
+        g12 = 10.
+        g13 = 20.
+        g23 = 30.
+        return MAT11(mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23,
+                     rho=0.0, a1=0.0, a2=0.0, a3=0.0, tref=0.0, ge=0.0, comment='')
+
     def __init__(self, mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho=0.0,
                  a1=0.0, a2=0.0, a3=0.0, tref=0.0, ge=0.0, comment=''):
         Material.__init__(self)
@@ -2808,6 +2873,20 @@ class MAT3D(Material):
     This is a VABS specific card that is almost identical to the MAT11.
     """
     type = 'MAT3D'
+
+    @classmethod
+    def _init_from_empty(cls):
+        mid = 1
+        e1 = 1.
+        e2 = 2.
+        e3 = 3.
+        nu12 = 0.3
+        nu13 = 0.2
+        nu23 = 0.25
+        g12 = 10.
+        g13 = 20.
+        g23 = 30.
+        return MAT3D(mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho=0.0, comment='')
 
     def __init__(self, mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho=0.0,
                  comment=''):

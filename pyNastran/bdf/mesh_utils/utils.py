@@ -71,7 +71,7 @@ def cmd_line_equivalence():  # pragma: no cover
 
         "Positional Arguments:\n"
         "  IN_BDF_FILENAME   path to input BDF/DAT/NAS file\n"
-        "  EQ_TOL            the spherical equivalence tolerance\n\n"
+        "  EQ_TOL            the spherical equivalence tolerance\n"
         #"  OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n"
         '\n'
 
@@ -288,9 +288,9 @@ def cmd_line_mirror():  # pragma: no cover
         '\n'
 
         'Options:\n'
-        "  -o OUT, --output  OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n\n"
-        "  --plane PLANE                       the symmetry plane (xz, yz, xy)\n\n"
-        '  --tol   TOL                         the spherical equivalence tolerance\n'
+        "  -o OUT, --output  OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n"
+        "  --plane PLANE                       the symmetry plane (xz, yz, xy); default=xz\n"
+        '  --tol   TOL                         the spherical equivalence tolerance; default=1e-6\n'
         '  --noeq                              disable equivalencing\n'
         "\n" #  (default=0.000001)
 
@@ -313,7 +313,9 @@ def cmd_line_mirror():  # pragma: no cover
     if data['--noeq'] is not None:
         tol = -1.
 
-    plane = data['--plane']
+    plane = 'xz'
+    if data['--plane'] is not None:
+        plane = data['--plane']
 
     print(data)
     size = 16

@@ -251,6 +251,10 @@ class OP2GeomCommon(OP2, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, EDT, EDOM, DIT, D
 
 class OP2Geom(BDF, OP2GeomCommon):
     """creates an interface for the OP2 and BDF classes"""
+    _properties = ['is_bdf_vectorized', 'nid_map', 'wtmass',
+                   'is_real', 'is_complex', 'is_random',
+                   '_sort_method', 'is_sort1', 'is_sort2',
+                   'matrix_tables', 'table_name_str']
     def __init__(self, make_geom=True,
                  debug=False, log=None, debug_file=None, mode='msc'):
         """

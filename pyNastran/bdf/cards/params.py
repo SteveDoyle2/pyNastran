@@ -11,6 +11,10 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
 
+SMALL_FIELD_PARAMS = [
+    'ACOUT', 'ACOWEAK', 'ACSYM', 'ADJMETH', 'AESMAXIT', 'AESMETH', 'ADSTAT',
+    'COUPMASS', 'LMODES', 'MAXLINES', 'POST', 'POSTEXT', 'PRTMAXIM']
+
 class PARAM(BaseCard):
     type = 'PARAM'
     _field_map = {1: 'key'}
@@ -246,7 +250,6 @@ class PARAM(BaseCard):
 
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
-        if size == 8:
-            return self.comment + print_card_8(card)  # works
+        if size == 8 or self.key in SMALL_FIELD_PARAMS:
+            return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
-

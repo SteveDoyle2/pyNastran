@@ -18,6 +18,7 @@ dict_int_list_obj_attrs = [
    'nsms', 'nsmadds',
    #'dconstrs',
    'frequencies',
+   'bcs',
 ]
 
 # dict[key] : value
@@ -43,7 +44,7 @@ dict_int_obj_attrs = [
 
     'rigid_elements',
     'aecomps', 'aefacts', 'aelinks', 'aelists', 'aeparams',
-    'aestats', 'aesurf', 'aesurfs', 'ao_element_flags', 'bconp', 'bcrparas', 'bcs', 'bctadds',
+    'aestats', 'aesurf', 'aesurfs', 'ao_element_flags', 'bconp', 'bcrparas', 'bctadds',
     'bctparas', 'bctsets', 'blseg', 'bsurf', 'bsurfs', 'cMethods',
     'convection_properties',
     'csuper', 'csupext', 'dareas',
@@ -65,7 +66,7 @@ dict_int_obj_attrs = [
     'spcoffs',
     'spoints',
     'suport1',
-    'tables_d', 'tables_m', 'tables_sdamping', 'tempds', 'thermal_materials',
+    'tables_d', 'tables_m', 'tables_sdamping', 'tempds',
     'tics', 'transfer_functions',
     'tstepnls', 'tsteps',
     'view3ds', 'views',
@@ -216,7 +217,9 @@ def export_to_hdf5_file(hdf5_file, model, exporter=None):
             value = getattr(model, key)
 
             if value is None:
-                print('None: %s %s' % (key, value))
+                continue
+                #print('None: %s %s' % (key, value))
+
             #elif isinstance(value, bool):
                 #print('bool: %s %s' % (key, value))
             elif isinstance(value, (integer_types, float_types, string_types, np.ndarray)):
@@ -239,6 +242,12 @@ def export_to_hdf5_file(hdf5_file, model, exporter=None):
         for key, param in model.params.items():
             _h5_export_class(group, model, key, param, skip_attrs, debug=False)
 
+    for key in ['case_control_lines', 'executive_control_lines']:
+        list_str = getattr(model, key)
+        if not len(list_str):
+            continue
+        list_bytes = [line.encode(encoding) for line in list_str]
+        scalar_group.create_dataset(key, data=list_bytes)
 
 
     skip_attrs = ['comment', '_field_map']
@@ -282,7 +291,7 @@ def _export_dict_int_obj_attrs(model, hdf5_file):
         if not len(dict_obj):
             continue
 
-        model.log.info(attr)
+        #model.log.info(attr)
         try:
             group = hdf5_file.create_group(attr) # 'gusts'
         except ValueError:
@@ -328,7 +337,7 @@ def _export_list_keys(model, hdf5_file, list_keys):
         list_obj = getattr(model, attr) # active_filenames
         if not len(list_obj):
             continue
-        model.log.info(attr)
+        #model.log.info(attr)
 
         #try:
             #group = hdf5_file.create_group(attr) # 'active_filenames'
@@ -385,7 +394,11 @@ def _export_list_obj_keys(model, hdf5_file, list_obj_keys):
 def _h5_export_class(sub_group, model, key, value, skip_attrs, debug=True):
     #sub_groupi = sub_group.create_group('values')
     class_group = sub_group.create_group(str(key))
-    class_group.attrs['type'] = value.type
+    try:
+        class_group.attrs['type'] = value.type
+    except:
+        model.log.error('ERROR: key=%s value=%s' % (key, value))
+        raise
 
     if hasattr(value, 'get_h5attrs'):
         getattrs
@@ -434,7 +447,7 @@ def _h5_export_class(sub_group, model, key, value, skip_attrs, debug=True):
                     break
 
         if is_none:
-            print('skipping: ', key, h5attr, class_value)
+            print('skipping %s attribute: ' % value.type, key, h5attr, class_value)
         else:
             try:
                 class_group.create_dataset(h5attr, data=class_value)
@@ -594,6 +607,8 @@ def load_hdf5_file(h5_file, model):
         'mpcs' : hdf5_load_mpcs,
         'loads' : hdf5_load_loads,
         'load_combinations' : hdf5_load_load_combinations,
+        'dload_entries' : hdf5_load_dload_entries,
+        'bcs' : hdf5_load_bcs,
     }
     generic_mapper = {
         'flutters' : hdf5_load_generic,
@@ -602,7 +617,8 @@ def load_hdf5_file(h5_file, model):
         'gusts' : hdf5_load_generic,
         'caeros' : hdf5_load_generic,
         'splines' : hdf5_load_generic,
-
+        'thermal_materials' : hdf5_load_generic,
+        'creep_materials' : hdf5_load_generic,
         #'MATS1' : hdf5_load_generic,
         #'MATT1' : hdf5_load_generic,
         #'MATT2' : hdf5_load_generic,
@@ -651,6 +667,15 @@ def load_hdf5_file(h5_file, model):
                 except AttributeError:  # pragma: no cover
                     model.log.warning('cant set minor_attributes/%s as %s' % (keyi, value))
                     raise
+        elif key in ['case_control_lines', 'executive_control_lines']:
+            lst = []
+            for key in group.keys():
+                value = _cast(group[key])
+                #print(value, type(value))
+                assert isinstance(value, text_type), type(value)
+                lst.append(value)
+            #list_bytes = [line.encode(encoding) for line in list_str]
+            setattr(model, key, lst)
 
         #elif key in scalar_keys:
             #value = _cast(group)
@@ -768,6 +793,27 @@ def hdf5_load_materials(model, group, encoding):
                 model.add_mat1(midi, Ei, Gi, nui, rho=rhoi, a=ai, tref=trefi,
                                ge=gei, St=Sti, Sc=Sci, Ss=Ssi, mcsid=mcsidi, comment='')
 
+        elif card_type == 'MAT2':
+            mid = _cast(sub_group['mid'])
+            G = _cast(sub_group['G'])
+            rho = _cast(sub_group['rho'])
+            a = _cast(sub_group['A'])
+            tref = _cast(sub_group['tref'])
+            ge = _cast(sub_group['ge'])
+            St = _cast(sub_group['St'])
+            Sc = _cast(sub_group['Sc'])
+            Ss = _cast(sub_group['Ss'])
+            mcsid = _cast(sub_group['mcsid'])
+
+            for (midi, (G11, G22, G33, G12, G13, G23), rhoi, (a1i, a2i, a3i),
+                 trefi, gei, Sti, Sci, Ssi, mcsidi) in zip(
+                    mid, G, rho, a, tref, ge, St, Sc, Ss, mcsid):
+                if mcsidi == -1:
+                    mcsidi = None
+                model.add_mat2(midi, G11, G12, G13, G22, G23, G33, rho=rhoi,
+                               a1=a1i, a2=a2i, a3=a3i, tref=trefi, ge=gei,
+                               St=Sti, Sc=Sci, Ss=Ssi, mcsid=mcsidi, comment='')
+
         elif card_type == 'MAT3':
             mid = _cast(sub_group['mid'])
             ex = _cast(sub_group['Ex'])
@@ -843,9 +889,6 @@ def hdf5_load_materials(model, group, encoding):
             model.log.warning('skipping materials/%s because its vectorized '
                               'and needs a loader' % card_type)
         else:
-            #model.add_mat2(mid, G11, G12, G13, G22, G23, G33, rho=0.,
-                           #a1=None, a2=None, a3=None, tref=0., ge=0.,
-                           #St=None, Sc=None, Ss=None, mcsid=None, comment='')
             #model.add_mat4(mid, k, cp=0.0, rho=1.0, H=None, mu=None, hgen=1.0,
                            #ref_enthalpy=None, tch=None, tdelta=None, qlat=None, comment='')
             #model.add_mat5(mid, kxx=0., kxy=0., kxz=0., kyy=0., kyz=0., kzz=0.,
@@ -910,15 +953,41 @@ def hdf5_load_loads(model, group, encoding):
 def hdf5_load_load_combinations(model, group, encoding):
     keys = list(group.keys())
     keys.remove('keys')
-    spc_ids = _cast(group['keys'])
-    for spc_id in keys:
-        cards_group = group[spc_id]
+    #spc_ids = _cast(group['keys'])
+    for load_id in keys:
+        cards_group = group[load_id]
         for card_type in cards_group.keys():
             sub_group = cards_group[card_type]
             #if card_type == 'MAT1':
                 #mid = _cast(sub_group['mid'])
             #else:
-            load_cards_from_keys_values('spcs/%s/%s' % (spc_id, card_type), sub_group)
+            load_cards_from_keys_values('spcs/%s/%s' % (load_id, card_type), sub_group)
+
+def hdf5_load_dload_entries(model, group, encoding):
+    keys = list(group.keys())
+    keys.remove('keys')
+    #dload_ids = _cast(group['keys'])
+    for dload_id in keys:
+        cards_group = group[dload_id]
+        for card_type in cards_group.keys():
+            sub_group = cards_group[card_type]
+            #if card_type == 'MAT1':
+                #mid = _cast(sub_group['mid'])
+            #else:
+            load_cards_from_keys_values('dload_entries/%s/%s' % (dload_id, card_type), sub_group)
+
+def hdf5_load_bcs(model, group, encoding):
+    keys = list(group.keys())
+    keys.remove('keys')
+    #dload_ids = _cast(group['keys'])
+    for bc_id in keys:
+        cards_group = group[bc_id]
+        for card_type in cards_group.keys():
+            sub_group = cards_group[card_type]
+            #if card_type == 'MAT1':
+                #mid = _cast(sub_group['mid'])
+            #else:
+            load_cards_from_keys_values('bcs/%s/%s' % (bc_id, card_type), sub_group)
 
 def hdf5_load_generic(unused_model, group, name, encoding):
     for card_type in group.keys():
@@ -1407,4 +1476,4 @@ def hdf5_load_elements(model, elements_group, encoding):
             #model.add_cmass3(eid, pid, nids, comment='')
             #model.add_cmass4(eid, mass, nids, comment='')
             #model.add_cquadx(eid, pid, nids, theta_mcid=0., comment='')
-            print(card_type)
+            model.log.debug(card_type)
