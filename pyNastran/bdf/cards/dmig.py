@@ -37,6 +37,15 @@ class DTI(BaseCard):
     NX
     """
     type = 'DTI'
+    #_properties = ['shape', 'ifo', 'is_real', 'is_complex', 'is_polar', 'matrix_type', 'tin_dtype', 'tout_dtype']
+
+    @classmethod
+    def _init_from_empty(cls):
+        name = 'name'
+        fields = []
+        return DTI(name, fields, comment='')
+
+
     def __init__(self, name, fields, comment=''):
         """
         Creates a DTI card
@@ -1434,6 +1443,21 @@ class DMIJI(NastranMatrix):
 
     """
     type = 'DMIJI'
+    _properties = ['shape', 'ifo', 'is_real', 'is_complex', 'is_polar', 'matrix_type', 'tin_dtype', 'tout_dtype']
+
+    @classmethod
+    def _init_from_empty(cls):
+        name = 'name'
+        ifo = 1
+        tin = 1
+        tout = 1
+        polar = 0
+        ncols = 1
+        GCj = []
+        GCi = []
+        Real = []
+        return DMIJI(name, ifo, tin, tout, polar, ncols, GCj, GCi, Real,
+                     Complex=None, comment='', finalize=True)
 
     def __init__(self, name, ifo, tin, tout, polar, ncols,
                  GCj, GCi, Real, Complex=None, comment='', finalize=True):
@@ -1512,6 +1536,21 @@ class DMIK(NastranMatrix):
     +------+-------+----+-----+-----+------+-------+----+------+
     """
     type = 'DMIK'
+    _properties = ['shape', 'ifo', 'is_real', 'is_complex', 'is_polar', 'matrix_type', 'tin_dtype', 'tout_dtype']
+
+    @classmethod
+    def _init_from_empty(cls):
+        name = 'name'
+        ifo = 1
+        tin = 1
+        tout = 1
+        polar = 0
+        ncols = 1
+        GCj = []
+        GCi = []
+        Real = []
+        return DMIK(name, ifo, tin, tout, polar, ncols, GCj, GCi, Real,
+                    Complex=None, comment='', finalize=True)
 
     def __init__(self, name, ifo, tin, tout, polar, ncols,
                  GCj, GCi, Real, Complex=None, comment='', finalize=True):

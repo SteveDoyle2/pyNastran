@@ -101,6 +101,7 @@ class AERO(Aero):
     +------+-------+----------+------+--------+-------+-------+
     """
     type = 'AERO'
+    _properties = ['is_anti_symmetric_xy', 'is_anti_symmetric_xz', 'is_symmetric_xy', 'is_symmetric_xz']
     _field_map = {
         1: 'acsid', 2:'velocity', 3:'cRef', 4:'rhoRef', 5:'symXZ',
         6:'symXY',

@@ -1462,6 +1462,13 @@ class SPCADD(ConstraintAdd):
     +--------+----+----+-----+
     """
     type = 'SPCADD'
+
+    @classmethod
+    def _init_from_empty(cls):
+        conid = 1
+        sets = [1, 2]
+        return SPCADD(conid, sets, comment='')
+
     def __init__(self, conid, sets, comment=''):
         ConstraintAdd.__init__(self)
         if comment:
@@ -1580,6 +1587,12 @@ class MPCADD(ConstraintAdd):
     +--------+----+----+-----+
     """
     type = 'MPCADD'
+
+    @classmethod
+    def _init_from_empty(cls):
+        conid = 1
+        sets = [1, 2]
+        return MPCADD(conid, sets, comment='')
 
     def __init__(self, conid, sets, comment=''):
         ConstraintAdd.__init__(self)

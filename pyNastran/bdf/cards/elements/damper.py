@@ -413,6 +413,23 @@ class CDAMP3(LineDamper):
         self.nodes_ref = None
 
     @classmethod
+    def export_to_hdf5(cls, h5_file, model, eids):
+        """exports the elements in a vectorized way"""
+        #comments = []
+        pids = []
+        nodes = []
+        components = []
+        for eid in eids:
+            element = model.elements[eid]
+            #comments.append(element.comment)
+            pids.append(element.pid)
+            nodes.append(element.nodes)
+        #h5_file.create_dataset('_comment', data=comments)
+        h5_file.create_dataset('eid', data=eids)
+        h5_file.create_dataset('pid', data=pids)
+        h5_file.create_dataset('nodes', data=nodes)
+
+    @classmethod
     def add_card(cls, card, comment=''):
         """
         Adds a CDAMP3 card from ``BDF.add_card(...)``
@@ -551,6 +568,22 @@ class CDAMP4(LineDamper):
         self.nodes_ref = None
 
     @classmethod
+    def export_to_hdf5(cls, h5_file, model, eids):
+        """exports the elements in a vectorized way"""
+        #comments = []
+        b = []
+        nodes = []
+        for eid in eids:
+            element = model.elements[eid]
+            #comments.append(element.comment)
+            b.append(element.b)
+            nodes.append(element.nodes)
+        #h5_file.create_dataset('_comment', data=comments)
+        h5_file.create_dataset('eid', data=eids)
+        h5_file.create_dataset('B', data=b)
+        h5_file.create_dataset('nodes', data=nodes)
+
+    @classmethod
     def add_card(cls, card, icard=0, comment=''):
         ioffset = icard * 4
         eid = integer(card, 1 + ioffset, 'eid')
@@ -682,6 +715,23 @@ class CDAMP5(LineDamper):
         assert len(self.nodes) == 2
         self.nodes_ref = None
         self.pid_ref = None
+
+    @classmethod
+    def export_to_hdf5(cls, h5_file, model, eids):
+        """exports the elements in a vectorized way"""
+        #comments = []
+        pids = []
+        nodes = []
+        components = []
+        for eid in eids:
+            element = model.elements[eid]
+            #comments.append(element.comment)
+            pids.append(element.pid)
+            nodes.append(element.nodes)
+        #h5_file.create_dataset('_comment', data=comments)
+        h5_file.create_dataset('eid', data=eids)
+        h5_file.create_dataset('pid', data=pids)
+        h5_file.create_dataset('nodes', data=nodes)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -829,6 +879,23 @@ class CVISC(LineDamper):
         assert len(self.nodes) == 2
         self.nodes_ref = None
         self.pid_ref = None
+
+    @classmethod
+    def export_to_hdf5(cls, h5_file, model, eids):
+        """exports the elements in a vectorized way"""
+        #comments = []
+        pids = []
+        nodes = []
+        components = []
+        for eid in eids:
+            element = model.elements[eid]
+            #comments.append(element.comment)
+            pids.append(element.pid)
+            nodes.append(element.nodes)
+        #h5_file.create_dataset('_comment', data=comments)
+        h5_file.create_dataset('eid', data=eids)
+        h5_file.create_dataset('pid', data=pids)
+        h5_file.create_dataset('nodes', data=nodes)
 
     @classmethod
     def add_card(cls, card, comment=''):

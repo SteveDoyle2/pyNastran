@@ -954,7 +954,9 @@ class CQUADX(AxisymmetricQuad):
             element = model.elements[eid]
             #comments.append(element.comment)
             pids.append(element.pid)
-            nodes.append(element.nodes)
+            nodesi = [node if node is not None else 0
+                      for node in element.nodes]
+            nodes.append(nodesi)
             if isinstance(element.theta_mcid, int):
                 mcid = element.theta_mcid
                 theta = 0.

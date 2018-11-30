@@ -249,6 +249,12 @@ class PGAP(Property):
         'KA' : 'ka',
     }
 
+    @classmethod
+    def _init_from_empty(cls):
+        pid = 1
+        return PGAP(pid, u0=0., f0=0., ka=1.e8, kb=None, mu1=0.,
+                    kt=None, mu2=None, tmax=0., mar=100., trmin=0.001, comment='')
+
     def __init__(self, pid, u0=0., f0=0., ka=1.e8, kb=None, mu1=0.,
                  kt=None, mu2=None, tmax=0., mar=100., trmin=0.001,
                  comment=''):

@@ -14,11 +14,12 @@ dict_int_list_obj_attrs = [
     'mpcs', 'mpcadds',
     'loads', 'load_combinations',
     'dloads', 'dload_entries',
-   #'usets',
-   'nsms', 'nsmadds',
-   #'dconstrs',
-   'frequencies',
-   'bcs',
+    #'usets',
+    'nsms', 'nsmadds',
+    #'dconstrs',
+    'frequencies',
+    'bcs',
+    'dvgrids',
 ]
 
 # dict[key] : value
@@ -50,7 +51,7 @@ dict_int_obj_attrs = [
     'csuper', 'csupext', 'dareas',
     'dconadds', 'ddvals', 'delays', 'dequations', 'desvars', 'divergs', 'dlinks',
     'dmigs', 'dmijis', 'dmijs', 'dmiks', 'dmis', 'dphases',
-    'dscreen', 'dti', 'dvcrels', 'dvgrids', 'dvmrels', 'dvprels',
+    'dscreen', 'dti', 'dvcrels', 'dvmrels', 'dvprels',
     'epoints', 'flfacts',
     'gridb',
     'nlparms', 'nlpcis',
@@ -75,7 +76,7 @@ dict_int_obj_attrs = [
 scalar_obj_keys = [
     # required
     'aero', 'aeros', 'axic', 'axif', 'baror', 'beamor',
-    'doptprm', 'dtable',  'grdset', 'radset', 'seqgp',
+    'doptprm', 'dtable', 'grdset', 'radset', 'seqgp',
     #'case_control_deck',
     #'zona',
 ]
@@ -108,13 +109,13 @@ scalar_keys = [
 list_keys = [
     # required
     'active_filenames', 'executive_control_lines', 'case_control_lines', #'initial_superelement_models',
-    'reject_cards', #'reject_lines',
+    #'reject_cards',
 
     # maybe...
     #'_duplicate_coords', '_duplicate_elements', '_duplicate_masses', '_duplicate_materials',
     #'_duplicate_nodes', '_duplicate_properties', '_duplicate_thermal_materials', '_stored_parse_errors',
     #'_stored_xref_errors',
-    #'system_command_lines', 'units', 'xyz_limits',
+    'system_command_lines', #'units', 'xyz_limits',
 
     # removed
     #'coord_ids', 'element_ids', 'material_ids', 'node_ids', 'property_ids', 'caero_ids',
@@ -146,9 +147,6 @@ dict_attrs = [
 
 def export_to_hdf5_file(hdf5_file, model, exporter=None):
     attrs = object_attributes(model, mode='both', keys_to_skip=None)
-
-    #print(model._slot_to_type_map['elements'])
-    #print('card_count =', self.card_count)
 
     if 'GRID' in model.card_count:
         model.log.debug('exporting nodes to hdf5')
@@ -242,13 +240,19 @@ def export_to_hdf5_file(hdf5_file, model, exporter=None):
         for key, param in model.params.items():
             _h5_export_class(group, model, key, param, skip_attrs, debug=False)
 
-    for key in ['case_control_lines', 'executive_control_lines']:
+    for key in ['case_control_lines', 'executive_control_lines', 'system_command_lines']:
         list_str = getattr(model, key)
         if not len(list_str):
             continue
         list_bytes = [line.encode(encoding) for line in list_str]
         scalar_group.create_dataset(key, data=list_bytes)
 
+    if len(model.reject_lines):
+        #print('reject_lines', model.reject_lines)
+        for i, list_str in enumerate(model.reject_lines):
+            print(list_str, type(list_str))
+            list_bytes = [line.encode(encoding) for line in list_str]
+            scalar_group.create_dataset(str(i), data=list_bytes)
 
     skip_attrs = ['comment', '_field_map']
     for key in scalar_obj_keys:
@@ -305,7 +309,7 @@ def _export_dict_int_list_obj_attrs(model, hdf5_file):
         if not len(dict_obj):
             continue
 
-        model.log.info(attr)
+        #model.log.info(attr)
         try:
             group = hdf5_file.create_group(attr) # 'spcs'
         except ValueError:
@@ -353,12 +357,24 @@ def _export_list_keys(model, hdf5_file, list_keys):
             raise NotImplementedError(type(list_obj))
         #indices = list(range(len(list_keys)))
         #group.create_dataset('keys', data=keys)
-        try:
-            _add_list_tuple(hdf5_file, attr, list_obj, Type, model.log)
-        except TypeError:  # pragma: no cover
-            print(list_obj)
-            raise
+
+        if isinstance(list_obj[0], (int, float, string_types)):
+            try:
+                _add_list_tuple(hdf5_file, attr, list_obj, Type, model.log)
+            except TypeError:  # pragma: no cover
+                print(list_obj)
+                raise
+        #elif isinstance(list_obj[0], list):
+            #group = hdf5_file.create_group(attr)
+            #group.attrs['type'] = Type
+            #for keyi, valuei in enumerate(list_obj):
+                ##sub_group = hdf5_file.create_group(str(keyi))
+                ##group
+                #_add_list_tuple(group, str(keyi), valuei, Type, model.log)
+        else:
+            raise NotImplementedError(type(list_obj[0]))
         #_hdf5_export_object_dict(group, model, attr, list_obj, indices)
+
 
 def _export_list_obj_keys(model, hdf5_file, list_obj_keys):
     for attr in list_obj_keys:
@@ -400,9 +416,9 @@ def _h5_export_class(sub_group, model, key, value, skip_attrs, debug=True):
         model.log.error('ERROR: key=%s value=%s' % (key, value))
         raise
 
-    if hasattr(value, 'get_h5attrs'):
-        getattrs
-    elif hasattr(value, 'object_attributes'):
+    #if hasattr(value, 'get_h5attrs'):
+        #getattrs
+    if hasattr(value, 'object_attributes'):
         keys_to_skip = []
         if hasattr(value, '_properties'):
             keys_to_skip = value._properties
@@ -447,7 +463,7 @@ def _h5_export_class(sub_group, model, key, value, skip_attrs, debug=True):
                     break
 
         if is_none:
-            print('skipping %s attribute: ' % value.type, key, h5attr, class_value)
+            model.log.warning('skipping %s attribute: %s %s %s' % (value.type, key, h5attr, class_value))
         else:
             try:
                 class_group.create_dataset(h5attr, data=class_value)
@@ -498,7 +514,7 @@ def _hdf5_export_elements(hdf5_file, model):
         #CBEAM
         #CPENTA, CHEXA
         if card_name in etypes:
-            model.log.debug(card_name)
+            #model.log.debug(card_name)
             etypes_actual.append(card_name)
             continue
 
@@ -603,12 +619,20 @@ def load_hdf5_file(h5_file, model):
         'methods' : hdf5_load_methods,
         'masses' : hdf5_load_masses,
         'materials' : hdf5_load_materials,
+
         'spcs' : hdf5_load_spcs,
+        'spcadds' : hdf5_load_spcadds,
         'mpcs' : hdf5_load_mpcs,
+        'mpcadds' : hdf5_load_mpcadds,
+
         'loads' : hdf5_load_loads,
         'load_combinations' : hdf5_load_load_combinations,
         'dload_entries' : hdf5_load_dload_entries,
         'bcs' : hdf5_load_bcs,
+        'dvgrids': hdf5_load_dvgrids,
+
+        'nsms' : hdf5_load_nsms,
+        'nsmadds' : hdf5_load_nsmadds,
     }
     generic_mapper = {
         'flutters' : hdf5_load_generic,
@@ -619,6 +643,7 @@ def load_hdf5_file(h5_file, model):
         'splines' : hdf5_load_generic,
         'thermal_materials' : hdf5_load_generic,
         'creep_materials' : hdf5_load_generic,
+        'hyperelastic_materials' : hdf5_load_generic,
         #'MATS1' : hdf5_load_generic,
         #'MATT1' : hdf5_load_generic,
         #'MATT2' : hdf5_load_generic,
@@ -667,16 +692,29 @@ def load_hdf5_file(h5_file, model):
                 except AttributeError:  # pragma: no cover
                     model.log.warning('cant set minor_attributes/%s as %s' % (keyi, value))
                     raise
-        elif key in ['case_control_lines', 'executive_control_lines']:
+        elif key in ['case_control_lines', 'executive_control_lines', 'system_command_lines']:
             lst = []
             for key in group.keys():
                 value = _cast(group[key])
-                #print(value, type(value))
                 assert isinstance(value, text_type), type(value)
                 lst.append(value)
             #list_bytes = [line.encode(encoding) for line in list_str]
             setattr(model, key, lst)
+        elif key == 'reject_lines':
+            print(group)
+            lst = []
+            ddd
+            for key in group.keys():
+                value = _cast(group[key])
+                print('value', value)
+                #assert isinstance(value, text_type), type(value)
+                #lst.append(value)
 
+        elif key in scalar_obj_keys:
+            keys = list(group.keys())
+            keys.remove('type')
+            card_type = _cast(group['type'])
+            _load_from_class(group, card_type)
         #elif key in scalar_keys:
             #value = _cast(group)
             #try:
@@ -733,12 +771,6 @@ def hdf5_load_coords(model, coords_group, encoding):
                 func(cid, n1, n2, n3, comment='')
         else:
             load_cards_from_keys_values('coords/%s' % card_type, coords)
-            #model.add_cord2r(cid, origin, zaxis, xzplane, rid=0, comment='')
-            #model.add_cord2c(cid, origin, zaxis, xzplane, rid=0, comment='')
-            #model.add_cord2s(cid, origin, zaxis, xzplane, rid=0, comment='')
-
-            #model.add_cord1c(cid, g1, g2, g3, comment='')
-            #model.add_cord1s(cid, g1, g2, g3, comment='')
 
 def hdf5_load_tables(unused_model, group, encoding):
     for card_type in group.keys():
@@ -750,7 +782,7 @@ def hdf5_load_tables(unused_model, group, encoding):
 def hdf5_load_methods(unused_model, group, encoding):
     for card_type in group.keys():
         sub_group = group[card_type]
-        #if card_type == 'TABLES1':
+        #if card_type == 'EIGRL':
             #pass
         load_cards_from_keys_values('methods/%s' % card_type, sub_group)
 
@@ -807,7 +839,7 @@ def hdf5_load_materials(model, group, encoding):
 
             for (midi, (G11, G22, G33, G12, G13, G23), rhoi, (a1i, a2i, a3i),
                  trefi, gei, Sti, Sci, Ssi, mcsidi) in zip(
-                    mid, G, rho, a, tref, ge, St, Sc, Ss, mcsid):
+                     mid, G, rho, a, tref, ge, St, Sc, Ss, mcsid):
                 if mcsidi == -1:
                     mcsidi = None
                 model.add_mat2(midi, G11, G12, G13, G22, G23, G33, rho=rhoi,
@@ -903,35 +935,61 @@ def hdf5_load_materials(model, group, encoding):
 def hdf5_load_spcs(model, group, encoding):
     keys = list(group.keys())
     keys.remove('keys')
-    spc_ids = _cast(group['keys'])
+    #spc_ids = _cast(group['keys'])
     for spc_id in keys:
         cards_group = group[spc_id]
         for card_type in cards_group.keys():
             sub_group = cards_group[card_type]
-            #if card_type == 'MAT1':
+            #if card_type == 'SPC1':
                 #mid = _cast(sub_group['mid'])
             #else:
             load_cards_from_keys_values('spcs/%s/%s' % (spc_id, card_type), sub_group)
 
-def hdf5_load_mpcs(model, group, encoding):
+def hdf5_load_spcadds(model, group, encoding):
     keys = list(group.keys())
     keys.remove('keys')
-    spc_ids = _cast(group['keys'])
+    #spc_ids = _cast(group['keys'])
     for spc_id in keys:
         cards_group = group[spc_id]
         for card_type in cards_group.keys():
             sub_group = cards_group[card_type]
-            #if card_type == 'MAT1':
+            #if card_type == 'SPC1':
                 #mid = _cast(sub_group['mid'])
             #else:
-            load_cards_from_keys_values('spcs/%s/%s' % (spc_id, card_type), sub_group)
+            load_cards_from_keys_values('spcadds/%s/%s' % (spc_id, card_type), sub_group)
+
+def hdf5_load_mpcs(model, group, encoding):
+    keys = list(group.keys())
+    keys.remove('keys')
+    #mpc_ids = _cast(group['keys'])
+    for mpc_id in keys:
+        cards_group = group[mpc_id]
+        for card_type in cards_group.keys():
+            sub_group = cards_group[card_type]
+            #if card_type == 'MPC':
+                #mid = _cast(sub_group['mid'])
+            #else:
+            load_cards_from_keys_values('mpcs/%s/%s' % (mpc_id, card_type), sub_group)
+
+def hdf5_load_mpcadds(model, group, encoding):
+    keys = list(group.keys())
+    keys.remove('keys')
+    #spc_ids = _cast(group['keys'])
+    for mpc_id in keys:
+        cards_group = group[mpc_id]
+        for card_type in cards_group.keys():
+            sub_group = cards_group[card_type]
+            #if card_type == 'MPCADD':
+                #mid = _cast(sub_group['mid'])
+            #else:
+            load_cards_from_keys_values('mpcadds/%s/%s' % (mpc_id, card_type), sub_group)
 
 def hdf5_load_loads(model, group, encoding):
     keys = list(group.keys())
     keys.remove('keys')
     spc_ids = _cast(group['keys'])
-    for spc_id in keys:
-        cards_group = group[spc_id]
+    for load_id in keys:
+        cards_group = group[load_id]
         for card_type in cards_group.keys():
             sub_group = cards_group[card_type]
             if card_type in ['FORCE', 'MOMENT']:
@@ -948,7 +1006,7 @@ def hdf5_load_loads(model, group, encoding):
                     func(sidi, nodei, magi, xyzi, cid=cidi, comment='')
             else:
                 #model.add_force1(sid, node, mag, g1, g2, comment='')
-                load_cards_from_keys_values('spcs/%s/%s' % (spc_id, card_type), sub_group)
+                load_cards_from_keys_values('loads/%s/%s' % (load_id, card_type), sub_group)
 
 def hdf5_load_load_combinations(model, group, encoding):
     keys = list(group.keys())
@@ -958,10 +1016,36 @@ def hdf5_load_load_combinations(model, group, encoding):
         cards_group = group[load_id]
         for card_type in cards_group.keys():
             sub_group = cards_group[card_type]
-            #if card_type == 'MAT1':
+            #if card_type == 'LOAD':
                 #mid = _cast(sub_group['mid'])
             #else:
-            load_cards_from_keys_values('spcs/%s/%s' % (load_id, card_type), sub_group)
+            load_cards_from_keys_values('load_combinations/%s/%s' % (load_id, card_type), sub_group)
+
+def hdf5_load_nsms(model, group, encoding):
+    keys = list(group.keys())
+    keys.remove('keys')
+    #spc_ids = _cast(group['keys'])
+    for nsm_id in keys:
+        cards_group = group[nsm_id]
+        for card_type in cards_group.keys():
+            sub_group = cards_group[card_type]
+            #if card_type == 'NSM':
+                #mid = _cast(sub_group['mid'])
+            #else:
+            load_cards_from_keys_values('nsms/%s/%s' % (nsm_id, card_type), sub_group)
+
+def hdf5_load_nsmadds(model, group, encoding):
+    keys = list(group.keys())
+    keys.remove('keys')
+    #spc_ids = _cast(group['keys'])
+    for nsm_id in keys:
+        cards_group = group[nsm_id]
+        for card_type in cards_group.keys():
+            sub_group = cards_group[card_type]
+            #if card_type == 'NSMADD':
+                #mid = _cast(sub_group['mid'])
+            #else:
+            load_cards_from_keys_values('nsmadds/%s/%s' % (nsm_id, card_type), sub_group)
 
 def hdf5_load_dload_entries(model, group, encoding):
     keys = list(group.keys())
@@ -988,6 +1072,19 @@ def hdf5_load_bcs(model, group, encoding):
                 #mid = _cast(sub_group['mid'])
             #else:
             load_cards_from_keys_values('bcs/%s/%s' % (bc_id, card_type), sub_group)
+
+def hdf5_load_dvgrids(model, group, encoding):
+    keys = list(group.keys())
+    keys.remove('keys')
+    #dload_ids = _cast(group['keys'])
+    for opt_id in keys:
+        cards_group = group[opt_id]
+        for card_type in cards_group.keys():
+            sub_group = cards_group[card_type]
+            #if card_type == 'MAT1':
+                #mid = _cast(sub_group['mid'])
+            #else:
+            load_cards_from_keys_values('dvgrids/%s/%s' % (opt_id, card_type), sub_group)
 
 def hdf5_load_generic(unused_model, group, name, encoding):
     for card_type in group.keys():
@@ -1135,6 +1232,38 @@ def _load_cards_from_keys_values(name, values, keys):
                 print(key, key_to_cast, valuei)
                 raise
 
+def _load_from_class(value, card_type):
+    keys_to_read = list(value.keys())
+    class_obj = CARD_MAP[card_type]
+    if hasattr(class_obj, '_init_from_empty'):
+        class_instance = class_obj._init_from_empty()
+    else:
+        try:
+            class_instance = class_obj()
+        except TypeError:  # pragma: no cover
+            print('error loading %r' % card_type)
+            print(class_obj)
+            raise
+
+    _properties = []
+    if hasattr(class_obj, '_properties'):
+        _properties = class_obj._properties
+
+    for key_to_cast in keys_to_read:
+        if key_to_cast in _properties:
+            continue
+        try:
+            valuei = _cast(value[key_to_cast])
+        except AttributeError:
+            valuei = None
+
+        try:
+            setattr(class_instance, key_to_cast, valuei)
+        except AttributeError:
+            print('error loading %r' % card_type)
+            print(_properties)
+            print(key_to_cast, valuei)
+            raise
 
 
 def hdf5_load_elements(model, elements_group, encoding):
@@ -1236,13 +1365,14 @@ def hdf5_load_elements(model, elements_group, encoding):
                 model.add_cbeam(eid, pid, nids, xi, g0i, offt=offti, bit=biti,
                                 pa=pai, pb=pbi, wa=wai, wb=wbi, sa=sai, sb=sbi, comment='')
 
-        elif card_type == 'CELAS1':
+        elif card_type in ['CELAS1', 'CDAMP1']:
+            func = model.add_celas1 if card_type == 'CELAS1' else model.add_cdamp1
             eids = _cast(elements['eid'])
             pids = _cast(elements['pid'])
             nodes = _cast(elements['nodes']).tolist()
             components = _cast(elements['components'])
             for eid, pid, nids, (c1, c2) in zip(eids, pids, nodes, components):
-                model.add_celas1(eid, pid, nids, c1=c1, c2=c2, comment='')
+                func(eid, pid, nids, c1=c1, c2=c2, comment='')
         elif card_type == 'CELAS2':
             eids = _cast(elements['eid'])
             k = _cast(elements['K'])
@@ -1252,7 +1382,17 @@ def hdf5_load_elements(model, elements_group, encoding):
             components = _cast(elements['components'])
             for eid, ki, nids, (c1, c2), gei, si in zip(eids, k, nodes, components, ge, s):
                 model.add_celas2(eid, ki, nids, c1=c1, c2=c2, ge=gei, s=si, comment='')
-        elif card_type == 'CELAS3':
+        elif card_type in ['CELAS3', 'CDAMP3', 'CDAMP5', 'CVISC']:
+            if card_type == 'CELAS3':
+                func = model.add_celas3
+            elif card_type == 'CDAMP3':
+                func = model.add_cdamp3
+            elif card_type == 'CDAMP5':
+                func = model.add_cdamp5
+            elif card_type == 'CVISC':
+                func = model.add_cvisc
+            else:
+                raise NotImplementedError(card_type)
             eids = _cast(elements['eid'])
             pids = _cast(elements['pid'])
             nodes = _cast(elements['nodes']).tolist()
@@ -1264,6 +1404,12 @@ def hdf5_load_elements(model, elements_group, encoding):
             nodes = _cast(elements['nodes']).tolist()
             for eid, ki, nids in zip(eids, k, nodes):
                 model.add_celas4(eid, ki, nids, comment='')
+        elif card_type == 'CDAMP4':
+            eids = _cast(elements['eid'])
+            b = _cast(elements['B'])
+            nodes = _cast(elements['nodes']).tolist()
+            for eid, bi, nids in zip(eids, b, nodes):
+                model.add_cdamp4(eid, bi, nids, comment='')
 
 
         elif card_type == 'CBUSH':
@@ -1289,6 +1435,24 @@ def hdf5_load_elements(model, elements_group, encoding):
                     si2 = [None, None, None]
                 model.add_cbush(eid, pid, nids, x, g0, cid=cidi, s=s2, ocid=ocidi, si=si2,
                                 comment='')
+
+        elif card_type == 'CGAP':
+            eids = _cast(elements['eid'])
+            pids = _cast(elements['pid'])
+            nodes = _cast(elements['nodes']).tolist()
+            g0 = _cast(elements['g0'])
+            x = _cast(elements['x'])
+            cid = _cast(elements['cid'])
+            for eid, pid, nids, xi, g0i, cidi in zip(
+                    eids, pids, nodes, x, g0, cid):
+                if g0i == -1:
+                    g0i = None
+                if xi[0] == np.nan:
+                    xi = [None, None, None]
+                if cidi == -1:
+                    cidi = None
+                model.add_cgap(eid, pid, nids, xi, g0i, cid=cidi, comment='')
+
         elif card_type == 'CBUSH1D':
             eids = _cast(elements['eid'])
             pids = _cast(elements['pid'])
@@ -1298,7 +1462,6 @@ def hdf5_load_elements(model, elements_group, encoding):
                 if cidi == -1:
                     cidi = None
                 model.add_cbush1d(eid, pid, nids, cid=cidi, comment='')
-
 
         elif card_type in ['CTRIA3', 'CTRIAR']:
             func = model.add_ctria3 if card_type == 'CTRIA3' else model.add_ctriar
@@ -1369,7 +1532,6 @@ def hdf5_load_elements(model, elements_group, encoding):
                                  tflag=0, T1=None, T2=None, T3=None, T4=None, comment='')
 
         elif card_type == 'CQUAD':
-            # TODO: doesn't support tflag
             eids = _cast(elements['eid'])
             pids = _cast(elements['pid'])
             thetas = _cast(elements['theta'])
@@ -1423,6 +1585,21 @@ def hdf5_load_elements(model, elements_group, encoding):
             for eid, mid, nids, theta in zip(eids, mids, nodes, thetas):
                 model.add_ctriax6(eid, mid, nids, theta=theta, comment='')
 
+        elif card_type == 'CQUADX':
+            eids = _cast(elements['eid'])
+            pids = _cast(elements['pid'])
+            thetas = _cast(elements['theta'])
+            mcids = _cast(elements['mcid'])
+            nodes = _cast(elements['nodes']).tolist()
+            for eid, pid, nids, theta, mcid in zip(eids, pids, nodes, thetas, mcids):
+                if mcid == -1:
+                    theta_mcid = theta
+                else:
+                    theta_mcid = mcid
+                nids = [None if nid == 0 else nid
+                        for nid in nids]
+                model.add_cquadx(eid, pid, nids, theta_mcid=theta_mcid, comment='')
+
         elif card_type == 'CQUADX4':
             eids = _cast(elements['eid'])
             pids = _cast(elements['pid'])
@@ -1458,22 +1635,13 @@ def hdf5_load_elements(model, elements_group, encoding):
                 func(eid, pid, nids, theta=theta, comment='')
         else:
             load_cards_from_keys_values('elements/%s' % card_type, elements)
-            #model.add_celas2(eid, k, nids, c1=0, c2=0, ge=0., s=0., comment='')
-            #model.add_celas3(eid, pid, nids, comment='')
-            #model.add_celas4(eid, k, nids, comment='')
-            #model.add_cdamp1(eid, pid, nids, c1=0, c2=0, comment='')
             #model.add_cdamp2(eid, b, nids, c1=0, c2=0, comment='')
-            #model.add_cdamp3(eid, pid, nids, comment='')
             #model.add_cdamp4(eid, b, nids, comment='')
-            #model.add_cvisc(eid, pid, nids, comment='')
             #model.add_cbush2d(eid, pid, nids, cid=0, plane='XY', sptid=None, comment='')
-            #model.add_cdamp5(eid, pid, nids, comment='')
             #model.add_cfast(eid, pid, Type, ida, idb, gs=None, ga=None, gb=None,
                             #xs=None, ys=None, zs=None, comment='')
-            #model.add_cgap(eid, pid, nids, x, g0, cid=None, comment='')
             #model.add_cmass1(eid, pid, nids, c1=0, c2=0, comment='')
             #model.add_cmass2(eid, mass, nids, c1, c2, comment='')
             #model.add_cmass3(eid, pid, nids, comment='')
             #model.add_cmass4(eid, mass, nids, comment='')
-            #model.add_cquadx(eid, pid, nids, theta_mcid=0., comment='')
-            model.log.debug(card_type)
+            #model.log.debug(card_type)

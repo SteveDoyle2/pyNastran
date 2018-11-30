@@ -26,6 +26,11 @@ from pyNastran.bdf.field_writer_double import print_card_double
 
 class AXIC(BaseCard):
     type = 'AXIC'
+    @classmethod
+    def _init_from_empty(cls):
+        nharmonics = 1
+        return AXIC(nharmonics, comment='')
+
     def __init__(self, nharmonics, comment=''):
         if comment:
             self.comment = comment
@@ -63,6 +68,18 @@ class AXIF(BaseCard):
          N1  N2 N3   N4  N5   -etc.-
     """
     type = 'AXIF'
+
+    @classmethod
+    def _init_from_empty(cls):
+        cid = 1
+        g = 1.
+        drho = 1.
+        db = 1.
+        no_sym = 'YES'
+        f = 'NONE'
+        n = 1
+        return AXIF(cid, g, drho, db, no_sym, f, n, comment='')
+
     def __init__(self, cid, g, drho, db, no_sym, f, n, comment=''):
         """
         cid : int
@@ -148,6 +165,14 @@ class POINTAX(BaseCard):
     +---------+----+-----+------+
     """
     type = 'POINTAX'
+
+    @classmethod
+    def _init_from_empty(cls):
+        nid = 1
+        ringax = 1
+        phi = 60.
+        return POINTAX(nid, ringax, phi, comment='')
+
     def __init__(self, nid, ringax, phi, comment=''):
         """
         Creates a POINTAX card
@@ -204,6 +229,13 @@ class RINGFL(BaseCard):
 
     #: allows the get_field method and update_field methods to be used
     #_field_map = {1: 'mid', 3:'R', 4:'z', 7:'ps'}
+
+    @classmethod
+    def _init_from_empty(cls):
+        ringfl = 1
+        xa = 1.
+        xb = 2.
+        return RINGFL(ringfl, xa, xb, comment='')
 
     def __init__(self, ringfl, xa, xb, comment=''):  # this card has missing fields
         # type: (int, float, float, Optional[str], str) -> None
@@ -302,6 +334,13 @@ class RINGAX(BaseCard):
 
     #: allows the get_field method and update_field methods to be used
     _field_map = {1: 'mid', 3:'R', 4:'z', 7:'ps'}
+
+    @classmethod
+    def _init_from_empty(cls):
+        nid = 1
+        R = 1.
+        z = 1.
+        return RINGAX(nid, R, z, ps=None, comment='')
 
     def __init__(self, nid, R, z, ps=None, comment=''):  # this card has missing fields
         # type: (int, float, float, Optional[str], str) -> None
@@ -410,6 +449,13 @@ class CCONEAX(Element):
     _field_map = {
         1: 'eid', 2:'pid',
     }
+
+    @classmethod
+    def _init_from_empty(cls):
+        eid = 1
+        pid = 1
+        rings = [1]
+        return CCONEAX(eid, pid, rings, comment='')
 
     def _update_field_helper(self, n, value):
         if n == 3:
@@ -524,6 +570,13 @@ class PCONEAX(Property):
         1: 'pid', 2:'mid1', 3:'t1', 4:'mid2', 5:'i', 6:'mid3', 7:'t2',
         8: 'nsm', 9:'z1', 10:'z2',
     }
+    @classmethod
+    def _init_from_empty(cls):
+        pid = 1
+        mid1 = 1
+        return PCONEAX(pid, mid1, t1=None, mid2=0, i=None, mid3=None, t2=None,
+                       nsm=None, z1=None, z2=None, phi=None, comment='')
+
     def _update_field_helper(self, n, value):
         if n <= 0:
             msg = 'Field %r=%r is an invalid %s entry.' % (n, value, self.type)
@@ -713,6 +766,15 @@ class PRESAX(BaseCard):
     +--------+-----+------+------+------+------+------+
     """
     type = 'PRESAX'
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        pressure = 1.
+        rid1 = 1
+        rid2 = 2
+        return PRESAX(sid, pressure, rid1, rid2, phi1=0., phi2=360., comment='')
+
     def __init__(self, sid, pressure, rid1, rid2, phi1=0., phi2=360., comment=''):
         if comment:
             self.comment = comment
@@ -771,6 +833,14 @@ class TEMPAX(ThermalLoad):
     +--------+-----+------+-------+-------+-----+-------+------+----+
     """
     type = 'TEMPAX'
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        ring = 1.
+        phi = 1.
+        temperature = 1.
+        return TEMPAX(sid, ring, phi, temperature, comment='')
 
     def __init__(self, sid, ring, phi, temperature, comment=''):
         """

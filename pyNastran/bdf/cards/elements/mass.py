@@ -758,6 +758,7 @@ class CONM1(PointMassElement):
     _field_map = {
         1: 'eid', 2:'nid', 3:'cid',
     }
+    _properties = ['node_ids']
     def _update_field_helper(self, n, value):
         m = self.mass_matrix
         if n == 4:
@@ -822,6 +823,12 @@ class CONM1(PointMassElement):
             raise NotImplementedError('element_type=%r has not implemented %r in cp_name_map' % (
                 self.type, name))
 
+    @classmethod
+    def _init_from_empty(cls):
+        eid = 1
+        nid = 1
+        mass_matrix = np.zeros((6, 6))
+        return CONM1(eid, nid, mass_matrix, cid=0, comment='')
     def __init__(self, eid, nid, mass_matrix, cid=0, comment=''):
         """
         Creates a CONM1 card

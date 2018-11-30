@@ -50,6 +50,13 @@ class PDAMP(DamperProperty):
         3 : 'b',
         'B1' : 'b',
     }
+
+    @classmethod
+    def _init_from_empty(cls):
+        pid = 1
+        b = 1.
+        return PDAMP(pid, b, comment='')
+
     def __init__(self, pid, b, comment=''):
         DamperProperty.__init__(self)
         if comment:
@@ -125,6 +132,13 @@ class PDAMP5(DamperProperty):
     _field_map = {
         1: 'pid', 2:'mid', 3:'b',
     }
+
+    @classmethod
+    def _init_from_empty(cls):
+        pid = 1
+        mid = 2
+        b = 1.
+        return PDAMP5(pid, mid, b, comment='')
 
     def __init__(self, pid, mid, b, comment=''):
         """
@@ -334,6 +348,13 @@ class PVISC(DamperProperty):
     pname_fid_map = {
         'CE1' : 'ce',
     }
+
+    @classmethod
+    def _init_from_empty(cls):
+        pid = 1
+        ce = 1.
+        cr = 1.
+        return PVISC(pid, ce, cr, comment='')
 
     def __init__(self, pid, ce, cr, comment=''):
         """

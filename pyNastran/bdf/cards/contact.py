@@ -31,6 +31,13 @@ class BLSEG(BaseCard):
     +-------+----+----+------+----+----+-----+----+----+
     """
     type = 'BLSEG'
+
+    @classmethod
+    def _init_from_empty(cls):
+        line_id = 1
+        nodes = [1]
+        return BLSEG(line_id, nodes, comment='')
+
     def __init__(self, line_id, nodes, comment=''):
         if comment:
             self.comment = comment
@@ -87,6 +94,17 @@ class BCONP(BaseCard):
 
     """
     type = 'BCONP'
+    @classmethod
+    def _init_from_empty(cls):
+        contact_id = 1
+        slave = 2
+        master = 3
+        sfac = 4
+        fric_id = 5
+        ptype = 'cat'
+        cid = 0
+        return BCONP(contact_id, slave, master, sfac, fric_id, ptype, cid, comment='')
+
     def __init__(self, contact_id, slave, master, sfac, fric_id, ptype, cid, comment=''):
         if comment:
             self.comment = comment
@@ -164,6 +182,13 @@ class BSURF(BaseCard):
     +-------+------+------+-------+-------+--------+------+------+------+
     """
     type = 'BSURF'
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        eids = [1]
+        return BSURF(sid, eids, comment='')
+
     def __init__(self, sid, eids, comment=''):
         if comment:
             self.comment = comment
@@ -252,6 +277,16 @@ class BSURFS(BaseCard):
 
     """
     type = 'BSURFS'
+
+    @classmethod
+    def _init_from_empty(cls):
+        bsurfs_id = 1
+        eids = [1]
+        g1s = [1]
+        g2s = [1]
+        g3s = [1]
+        return BSURFS(bsurfs_id, eids, g1s, g2s, g3s, comment='')
+
     def __init__(self, bsurfs_id, eids, g1s, g2s, g3s, comment=''):
         if comment:
             self.comment = comment
@@ -330,6 +365,17 @@ class BCTSET(BaseCard):
     +--------+-------+------+-------+-------+-------+-------+
     """
     type = 'BCTSET'
+
+    @classmethod
+    def _init_from_empty(cls):
+        csid = 1
+        sids = [1]
+        tids = [1]
+        frictions = [0.01]
+        min_distances = [0.1]
+        max_distances = [1.]
+        return BCTSET(csid, sids, tids, frictions, min_distances, max_distances, comment='', sol=101)
+
     def __init__(self, csid, sids, tids, frictions, min_distances, max_distances,
                  comment='', sol=101):
         if comment:
@@ -403,6 +449,12 @@ class BCRPARA(BaseCard):
     +---------+------+------+--------+------+-----+---+---+---+----+
     """
     type = 'BCRPARA'
+
+    @classmethod
+    def _init_from_empty(cls):
+        crid = 1
+        return BCRPARA(crid, offset=None, surf='TOP', Type='FLEX', grid_point=0, comment='')
+
     def __init__(self, crid, offset=None, surf='TOP', Type='FLEX', grid_point=0,
                  comment=''):
         """
@@ -504,6 +556,13 @@ class BCTPARA(BaseCard):
     +---------+--------+--------+--------+--------+--------+---------+--------+
     """
     type = 'BCTPARA'
+
+    @classmethod
+    def _init_from_empty(cls):
+        csid = 1
+        params = {'CSTIFF' : 1}
+        return BCTPARA(csid, params, comment='')
+
     def __init__(self, csid, params, comment=''):
         """
         Creates a BCTPARA card
@@ -639,6 +698,13 @@ class BCTADD(BaseCard):
        BCTADD entry.
     """
     type = 'BCTADD'
+
+    @classmethod
+    def _init_from_empty(cls):
+        csid = 1
+        contact_sets = [1, 2]
+        return BCTADD(csid, contact_sets, comment='')
+
     def __init__(self, csid, contact_sets, comment=''):
         if comment:
             self.comment = comment

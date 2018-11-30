@@ -12,6 +12,7 @@ All ungrouped elements are Element objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.base_card import Element, BaseCard, break_word_by_trailing_integer
@@ -23,6 +24,7 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 
 class CFAST(Element):
     type = 'CFAST'
+    _properties = ['node_ids']
     _field_map = {
         1: 'eid', 2:'pid', 3:'Type', 4:'ida', 5:'idb', 6:'gs', 7:'ga', 8:'gb',
         9:'xs', 10:'ys', 11:'zs',
@@ -255,7 +257,6 @@ class CGAP(Element):
             raise NotImplementedError('element_type=%r has not implemented %r in cp_name_map' % (
                 self.type, cp_name))
 
-
     def __init__(self, eid, pid, nids, x, g0, cid=None, comment=''):
         """
         Creates a CGAP card
@@ -297,6 +298,55 @@ class CGAP(Element):
         self.gb_ref = None
         self.cid_ref = None
         self.pid_ref = None
+
+    @classmethod
+    def export_to_hdf5(cls, h5_file, model, eids):
+        """exports the elements in a vectorized way"""
+        #comments = []
+        pids = []
+        nodes = []
+        x = []
+        g0 = []
+        cid = []
+        nan = np.full(3, np.nan)
+        for eid in eids:
+            element = model.elements[eid]
+            #comments.append(element.comment)
+            pids.append(element.pid)
+            nodes.append(element.nodes)
+
+            if element.cid is None:
+                cid.append(-1)
+                g0i = element.g0
+                if g0i is not None:
+                    assert x[0] is None
+                    x.append(nan)
+                    g0.append(g0i)
+                else:
+                    assert element.x[0] is not None, element.get_stats()
+                    x.append(element.x)
+                    g0.append(-1)
+            else:
+                cid.append(element.cid)
+                g0i = element.g0
+                if g0i is not None:
+                    assert x[0] is None
+                    x.append(nan)
+                    g0.append(g0i)
+                else:
+                    assert element.x[0] is None, element.get_stats()
+                    x.append(nan)
+                    g0.append(-1)
+        #h5_file.create_dataset('_comment', data=comments)
+        h5_file.create_dataset('eid', data=eids)
+        h5_file.create_dataset('nodes', data=nodes)
+        h5_file.create_dataset('pid', data=pids)
+        #print('x =', x)
+        #print('g0 =', g0)
+        #print('cid =', cid)
+        h5_file.create_dataset('x', data=x)
+        h5_file.create_dataset('g0', data=g0)
+        h5_file.create_dataset('cid', data=cid)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -513,6 +563,7 @@ class CrackElement(Element):
 
 class CRAC2D(CrackElement):
     type = 'CRAC2D'
+    _properties = ['node_ids']
     _field_map = {
         1: 'eid', 2:'pid',
     }
@@ -614,6 +665,7 @@ class CRAC2D(CrackElement):
 
 class CRAC3D(CrackElement):
     type = 'CRAC3D'
+    _properties = ['node_ids']
     _field_map = {
         1: 'eid', 2:'pid',
     }

@@ -757,6 +757,16 @@ def _append_nones(list_obj, nrequired):
 
 class PBUSHT(BushingProperty):
     type = 'PBUSHT'
+
+    @classmethod
+    def _init_from_empty(cls):
+        pid = 1
+        k_tables = []
+        b_tables = []
+        ge_tables = []
+        kn_tables = []
+        return PBUSHT(pid, k_tables, b_tables, ge_tables, kn_tables, comment='')
+
     def update_by_pname_fid(self, name, value):
         if name == 'TGEID1':
             self.ge_tables[0] = value

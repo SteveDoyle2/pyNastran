@@ -927,6 +927,12 @@ class DOPTPRM(OptConstraint):
         'UPDFAC1' : 2.0,
         'UPDFAC2' : 0.5,
         }
+
+    @classmethod
+    def _init_from_empty(cls):
+        params = {'TCHECK' : -1}
+        return DOPTPRM(params, comment='')
+
     def __init__(self, params, comment=''):
         """
         Design Optimization Parameters
@@ -2695,6 +2701,11 @@ class DCONADD(OptConstraint):
 class DSCREEN(OptConstraint):
     type = 'DSCREEN'
 
+    @classmethod
+    def _init_from_empty(cls):
+        rtype = 'cat'
+        return DSCREEN(rtype, trs=-0.5, nstr=20, comment='')
+
     def __init__(self, rtype, trs=-0.5, nstr=20, comment=''):
         """
         Creates a DSCREEN object
@@ -2764,6 +2775,18 @@ class DSCREEN(OptConstraint):
 
 class DVCREL1(DVXREL1):  # similar to DVMREL1
     type = 'DVCREL1'
+    _properties = ['desvar_ids']
+
+    @classmethod
+    def _init_from_empty(cls):
+        oid = 1
+        element_type = 'CONM2'
+        eid = 2
+        cp_name = 'X1'
+        dvids = 42
+        coeffs = 1.0
+        return DVCREL1(oid, element_type, eid, cp_name, dvids, coeffs,
+                       cp_min=None, cp_max=1e20, c0=0., validate=False, comment='')
 
     def __init__(self, oid, element_type, eid, cp_name, dvids, coeffs,
                  cp_min=None, cp_max=1e20, c0=0., validate=False, comment=''):
@@ -3278,6 +3301,18 @@ class DVMREL1(DVXREL1):
     +---------+-------+-------+-------+--------+-------+-------+--------+
     """
     type = 'DVMREL1'
+    _properties = ['desvar_ids']
+
+    @classmethod
+    def _init_from_empty(cls):
+        oid = 1
+        mat_type = 'MAT1'
+        mid = 2
+        mp_name = 'E'
+        dvids = 42
+        coeffs = 1.0
+        return DVMREL1(oid, mat_type, mid, mp_name, dvids, coeffs,
+                       mp_min=None, mp_max=1e20, c0=0., validate=False, comment='')
 
     def __init__(self, oid, mat_type, mid, mp_name, dvids, coeffs,
                  mp_min=None, mp_max=1e20, c0=0., validate=False, comment=''):
@@ -3495,6 +3530,20 @@ class DVMREL2(DVXREL2):
     type = 'DVMREL2'
 
     allowed_materials = ['MAT1', 'MAT2']
+    _properties = ['desvar_ids']
+
+    @classmethod
+    def _init_from_empty(cls):
+        oid = 1
+        mat_type = 'MAT1'
+        mid = 2
+        mp_name = 'E'
+        dvids = []
+        labels = []
+        deqation = 42
+        return DVMREL2(oid, mat_type, mid, mp_name, deqation, dvids, labels,
+                       mp_min=None, mp_max=1e20, validate=False, comment='')
+
     def __init__(self, oid, mat_type, mid, mp_name, deqation, dvids, labels,
                  mp_min=None, mp_max=1e20, validate=False, comment=''):
         """
@@ -4116,6 +4165,19 @@ class DVPREL2(DVXREL2):
     ]
     allowed_masses = ['CONM2', 'CMASS2', 'CMASS4']
     allowed_properties_mass = ['PMASS']
+    _properties = ['desvar_ids']
+
+    @classmethod
+    def _init_from_empty(cls):
+        oid = 1
+        prop_type = 'PSHELL'
+        pid = 2
+        pname_fid = 'T'
+        deqation = 42
+        return DVPREL2(oid, prop_type, pid, pname_fid, deqation,
+                       dvids=None, labels=None, p_min=None,
+                       p_max=1e20, validate=False, comment='')
+
     def __init__(self, oid, prop_type, pid, pname_fid, deqation,
                  dvids=None, labels=None, p_min=None, p_max=1e20,
                  validate=False, comment=''):
@@ -4443,6 +4505,15 @@ class DVGRID(BaseCard):
     +--------+------+-----+-----+-------+----+----+----+
     """
     type = 'DVGRID'
+    _properties = ['desvar_id', 'node_id', 'coord_id']
+
+    @classmethod
+    def _init_from_empty(cls):
+        dvid = 1
+        nid = 2
+        dxyz = [1., 2., 3.]
+        return DVGRID(dvid, nid, dxyz, cid=0, coeff=1.0, comment='')
+
     def __init__(self, dvid, nid, dxyz, cid=0, coeff=1.0, comment=''):
         """
         Creates a DVGRID card

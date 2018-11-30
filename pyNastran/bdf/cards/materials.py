@@ -2324,6 +2324,15 @@ class MAT10(Material):
         1: 'mid', 2:'bulk', 3:'rho', 4:'c', 5:'ge', 6:'gamma',
     }
 
+    @classmethod
+    def _init_from_empty(cls):
+        mid = 1
+        bulk = 10.
+        c = 20.
+        return MAT10(mid, bulk=bulk, rho=None, c=c, ge=0.0, gamma=None,
+                     table_bulk=None, table_rho=None, table_ge=None,
+                     table_gamma=None, comment='')
+
     def __init__(self, mid, bulk=None, rho=None, c=None, ge=0.0, gamma=None,
                  table_bulk=None, table_rho=None, table_ge=None, table_gamma=None,
                  comment=''):
@@ -3330,6 +3339,15 @@ class MATHE(HyperelasticMaterial):
 
 class MATHP(HyperelasticMaterial):
     type = 'MATHP'
+
+    @classmethod
+    def _init_from_empty(cls):
+        mid = 1
+        return MATHP(mid, a10=0., a01=0., d1=None, rho=0., av=0., tref=0., ge=0.,
+                     na=1, nd=1, a20=0., a11=0., a02=0., d2=0., a30=0., a21=0., a12=0., a03=0.,
+                     d3=0., a40=0., a31=0., a22=0., a13=0., a04=0., d4=0., a50=0., a41=0.,
+                     a32=0., a23=0., a14=0., a05=0., d5=0.,
+                     tab1=None, tab2=None, tab3=None, tab4=None, tabd=None, comment='')
 
     def __init__(self, mid, a10=0., a01=0., d1=None, rho=0., av=0., tref=0., ge=0., na=1, nd=1,
                  a20=0., a11=0., a02=0., d2=0.,

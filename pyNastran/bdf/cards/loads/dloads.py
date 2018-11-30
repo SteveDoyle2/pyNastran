@@ -42,6 +42,15 @@ class ACSRCE(BaseCard):
     """
     type = 'ACSRCE'
 
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        excite_id = 2
+        rho = 3.
+        b = 5.
+        return ACSRCE(sid, excite_id, rho, b,
+                      delay=0, dphase=0, power=0, comment='')
+
     def __init__(self, sid, excite_id, rho, b,
                  delay=0, dphase=0, power=0, comment=''):
         """

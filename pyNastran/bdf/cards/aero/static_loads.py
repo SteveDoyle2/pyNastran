@@ -41,6 +41,14 @@ class AEROS(Aero):
         1: 'acsid', 2:'rcsid', 3:'cRef', 4:'bRef', 5:'Sref',
         6:'symXZ', 7:'symXY',
     }
+    _properties = ['is_anti_symmetric_xy', 'is_anti_symmetric_xz', 'is_symmetric_xy', 'is_symmetric_xz']
+
+    @classmethod
+    def _init_from_empty(cls):
+        cref = 1.
+        bref = 1.
+        sref = 1.
+        return AEROS(cref, bref, sref, acsid=0, rcsid=0, sym_xz=0, sym_xy=0, comment='')
 
     def __init__(self, cref, bref, sref, acsid=0, rcsid=0, sym_xz=0, sym_xy=0, comment=''):
         """

@@ -529,6 +529,7 @@ class CHBDYP(ThermalElement):
     +--------+---------+---------+------+--------+--------+----+----+----+
     """
     type = 'CHBDYP'
+    _properties = ['node_ids']
 
     @classmethod
     def _init_from_empty(cls):

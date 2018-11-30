@@ -275,6 +275,15 @@ class NSM1(NSM1x):
     +------+-----+------+-------+-----+----+----+----+----+
     """
     type = 'NSM1'
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        nsm_type = 'PSHELL'
+        pid_eid = 42
+        value = 1.
+        return NSM1(sid, nsm_type, value, pid_eid, comment='')
+
     def __init__(self, sid, nsm_type, value, pid_eid, comment=''):
         """See ``NSM1x``"""
         assert isinstance(value, float), 'NSM1; value=%r and must be a float' % (value)
@@ -292,6 +301,16 @@ class NSM(NSMx):
     +-----+-----+------+----+-------+----+-------+----+-------+
     """
     type = 'NSM'
+    _properties = ['ids']
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        nsm_type = 'PSHELL'
+        pid_eid = 42
+        value = 1.
+        return NSM(sid, nsm_type, pid_eid, value, comment='')
+
     def __init__(self, sid, nsm_type, pid_eid, value, comment=''):
         """See ``NSMx``"""
         NSMx.__init__(self, sid, nsm_type, pid_eid, value, comment='')
@@ -308,6 +327,16 @@ class NSML(NSMx):
     +------+-----+------+----+-------+----+-------+----+-------+
     """
     type = 'NSML'
+    _properties = ['ids']
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        nsm_type = 'PSHELL'
+        pid_eid = 42
+        value = 1.
+        return NSML(sid, nsm_type, pid_eid, value, comment='')
+
     def __init__(self, sid, nsm_type, pid_eid, value, comment=''):
         """
         Creates an NSML card, which defines lumped non-structural mass
@@ -370,6 +399,15 @@ class NSML1(NSM1x):
     +-------+-------+---------+-------+-------+------+-------+------+------+
     """
     type = 'NSML1'
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        nsm_type = 'PSHELL'
+        ids = [1, 2]
+        value = 1.
+        return NSML1(sid, nsm_type, value, ids, comment='')
+
     def __init__(self, sid, nsm_type, value, ids, comment=''):
         """
         Creates an NSML card, which defines lumped non-structural mass
@@ -407,6 +445,13 @@ class NSMADD(BaseCard):
     +--------+----+----+-----+
     """
     type = 'NSMADD'
+    _properties = ['nsm_ids']
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        sets = [1, 2]
+        return NSMADD(sid, sets, comment='')
 
     def __init__(self, sid, sets, comment=''):
         """
