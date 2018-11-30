@@ -18,7 +18,7 @@ dict_int_list_obj_attrs = [
     'nsms', 'nsmadds',
     #'dconstrs',
     'frequencies',
-    'bcs',
+    'bcs', 'transfer_functions',
     'dvgrids',
 ]
 
@@ -68,7 +68,7 @@ dict_int_obj_attrs = [
     'spoints',
     'suport1',
     'tables_d', 'tables_m', 'tables_sdamping', 'tempds',
-    'tics', 'transfer_functions',
+    'tics',
     'tstepnls', 'tsteps',
     'view3ds', 'views',
 ]
@@ -629,6 +629,7 @@ def load_hdf5_file(h5_file, model):
         'load_combinations' : hdf5_load_load_combinations,
         'dload_entries' : hdf5_load_dload_entries,
         'bcs' : hdf5_load_bcs,
+        'transfer_functions' : hdf5_load_transfer_functions,
         'dvgrids': hdf5_load_dvgrids,
 
         'nsms' : hdf5_load_nsms,
@@ -1072,6 +1073,19 @@ def hdf5_load_bcs(model, group, encoding):
                 #mid = _cast(sub_group['mid'])
             #else:
             load_cards_from_keys_values('bcs/%s/%s' % (bc_id, card_type), sub_group)
+
+def hdf5_load_transfer_functions(model, group, encoding):
+    keys = list(group.keys())
+    keys.remove('keys')
+    #dload_ids = _cast(group['keys'])
+    for bc_id in keys:
+        cards_group = group[bc_id]
+        for card_type in cards_group.keys():
+            sub_group = cards_group[card_type]
+            #if card_type == 'MAT1':
+                #mid = _cast(sub_group['mid'])
+            #else:
+            load_cards_from_keys_values('transfer_functions/%s/%s' % (bc_id, card_type), sub_group)
 
 def hdf5_load_dvgrids(model, group, encoding):
     keys = list(group.keys())

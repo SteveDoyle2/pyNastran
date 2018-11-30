@@ -1184,9 +1184,9 @@ def load_op2_from_hdf5_file(model, h5_file, log, debug=False):
             pass
         elif key == 'matrices':
             _read_h5_matrix(h5_file, model, key, log)
-        else:
-            log.warning('key = %r' % key)
-            raise NotImplementedError('  unhandled %r...' % key)
+        #else:
+            #log.warning('key = %r' % key)
+            #raise NotImplementedError('  unhandled %r...' % key)
 
 def _read_h5_matrix(h5_file, model, key, log):
     """reads an hdf5 matrix"""
