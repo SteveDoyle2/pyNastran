@@ -205,7 +205,7 @@ class DPHASE(BaseCard):
     +--------+-----+-----------+-----+------+------+-----+-----+
     """
     type = 'DPHASE'
-    _properties = ['node_id1', 'node_ids']
+    _properties = ['node_id1', 'node_id2', 'node_ids']
 
     @classmethod
     def _init_from_empty(cls):

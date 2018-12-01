@@ -3574,6 +3574,18 @@ class MONPNT1(BaseCard):
     +---------+---------+------+-----+-----+-------+------+----+----+
     """
     type = 'MONPNT1'
+
+    @classmethod
+    def _init_from_empty(cls):
+        aeparm_id = 1
+        label = 'name'
+        name = 'WING'
+        label = 'Wing Integrated Load to Butline'
+        axes = '6'
+        aecomp_name = 'FLAP'
+        xyz = [0., 1., 2.]
+        return MONPNT1(name, label, axes, aecomp_name, xyz, cp=0, cd=None, comment='')
+
     def __init__(self, name, label, axes, aecomp_name, xyz, cp=0, cd=None, comment=''):
         """
         Creates a MONPNT1 card
@@ -5380,6 +5392,7 @@ class SPLINE4(Spline):
     +---------+-------+-------+--------+-----+------+----+------+-------+
     """
     type = 'SPLINE4'
+    _properties = ['aero_element_ids']
     _field_map = {
         1: 'eid', 2:'caero', 3:'aelist', 5:'setg', 6:'dz',
         7: 'method', 8:'usage', 9:'nelements', 10:'melements',

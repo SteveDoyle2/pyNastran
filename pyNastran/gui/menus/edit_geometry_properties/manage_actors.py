@@ -38,9 +38,18 @@ class SingleChoiceQTableView(QTableView):
         self.setSelectionMode(QAbstractItemView.SingleSelection)
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
 
+    def get_data(self):
+        return self.model().items
+
     def update_data(self, data):  # not needed?
-        #items = self.getModel()
-        self.model().change_data(data)
+        #items = self.getModel() # just the data...
+        #self.model().change_data(data) # doesn't work...
+        items = self.model().items
+        header_labels = self.model().header_labels
+
+        parent = self.parent2
+        table_model = Model(data, header_labels, parent=parent)
+        self.setModel(table_model)
 
     def getModel(self):  # not needed?
         model = self.model() #tableView.model()

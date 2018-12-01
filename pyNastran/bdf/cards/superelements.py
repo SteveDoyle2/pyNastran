@@ -294,6 +294,7 @@ class SEMPLN(BaseCard):
     +--------+------+-------+----+----+------+
     """
     type = 'SEMPLN'
+    _properties = ['node_ids']
 
     @classmethod
     def _init_from_empty(cls):
@@ -810,6 +811,7 @@ class CSUPEXT(BaseCard):
     +---------+------+-----+-----+-----+-----+-----+-----+-----+
     """
     type = 'CSUPEXT'
+    _properties = ['node_ids']
 
     @classmethod
     def _init_from_empty(cls):
@@ -1031,6 +1033,7 @@ class SECONCT(BaseCard):
     +---------+-------+-------+--------+-------+-------+-------+------+------+
     """
     type = 'SECONCT'
+    _properties = ['node_ids_a', 'node_ids_b']
 
     @classmethod
     def _init_from_empty(cls):

@@ -1922,7 +1922,7 @@ class Cord1x(Coord):
         comments = []
         nodes = []
         for cid in cids:
-            coord = model.coords[eid]
+            coord = model.coords[cid]
             #comments.append(coord.comment)
             nodes.append([coord.g1, coord.g2, coord.g3])
         #h5_file.create_dataset('_comment', data=comments)

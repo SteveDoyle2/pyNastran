@@ -372,6 +372,7 @@ class CSSCHD(Aero):
     _field_map = {
         1: 'sid', 2:'aesid', 3:'lalpha', 4:'lmach', 5:'lschd',
     }
+    _properties = ['is_anti_symmetric_xy', 'is_anti_symmetric_xz', 'is_symmetric_xy', 'is_symmetric_xz'] ## TODO: remove these
 
     @classmethod
     def _init_from_empty(cls):

@@ -1665,6 +1665,14 @@ class TABRNDG(RandomTable):
     """
     type = 'TABRNDG'
 
+    @classmethod
+    def _init_from_empty(cls):
+        tid = 1
+        Type = 1
+        LU = 1.
+        WG = 1.
+        return TABRNDG(tid, Type, LU, WG, comment='')
+
     def __init__(self, tid, Type, LU, WG, comment=''):
         """
         Creates a TABRNDG card
