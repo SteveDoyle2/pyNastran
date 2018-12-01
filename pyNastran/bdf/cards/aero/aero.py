@@ -3577,8 +3577,6 @@ class MONPNT1(BaseCard):
 
     @classmethod
     def _init_from_empty(cls):
-        aeparm_id = 1
-        label = 'name'
         name = 'WING'
         label = 'Wing Integrated Load to Butline'
         axes = '6'
@@ -3720,6 +3718,17 @@ class MONPNT1(BaseCard):
 class MONPNT2(BaseCard):
     """MSC Nastran specific card"""
     type = 'MONPNT2'
+
+    @classmethod
+    def _init_from_empty(cls):
+        name = 'WING'
+        label = 'Wing Integrated Load to Butline'
+        table = 'MYTABLE'
+        Type = 'CAT'
+        nddl_item = 42
+        eid = 2
+        return MONPNT2(name, label, table, Type, nddl_item, eid, comment='')
+
     def __init__(self, name, label, table, Type, nddl_item, eid, comment=''):
         BaseCard.__init__(self)
         if comment:
@@ -3778,6 +3787,18 @@ class MONPNT2(BaseCard):
 class MONPNT3(BaseCard):
     """MSC Nastran specific card"""
     type = 'MONPNT3'
+
+    @classmethod
+    def _init_from_empty(cls):
+        name = 'WING'
+        label = 'Wing Integrated Load to Butline'
+        axes = '6'
+        grid_set = 10
+        elem_set = 11
+        xyz = [0., 1., 2.]
+        return MONPNT3(name, label, axes, grid_set, elem_set, xyz,
+                       cp=0, cd=None, xflag=None, comment='')
+
     def __init__(self, name, label, axes, grid_set, elem_set, xyz,
                  cp=0, cd=None, xflag=None, comment=''):
         BaseCard.__init__(self)

@@ -1240,6 +1240,7 @@ class PBARL(LineProperty):
     +-------+------+------+-------+------+------+------+------+------+
     """
     type = 'PBARL'
+    _properties = ['Type', 'valid_types']
     valid_types = {
         "ROD": 1,
         "TUBE": 2,

@@ -3126,6 +3126,22 @@ class MATHE(HyperelasticMaterial):
     """
     type = 'MATHE'
 
+    @classmethod
+    def _init_from_empty(cls):
+        mid = 1
+        model = 'OGDEN'
+        bulk = 3.
+        rho = 4.
+        texp = 5.
+        mus = [6.]
+        alphas = [7.]
+        betas = [8.]
+        mooney = []
+        sussbat = []
+        aboyce = []
+        return MATHE(mid, model, bulk, rho, texp, mus, alphas, betas,
+                     mooney, sussbat, aboyce, comment='')
+
     def __init__(self, mid, model, bulk, rho, texp,
                  mus, alphas, betas, mooney, sussbat, aboyce, comment=''):
         HyperelasticMaterial.__init__(self)

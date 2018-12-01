@@ -198,7 +198,7 @@ class SELOAD(BaseCard):
     def _init_from_empty(cls):
         seid = 1
         label = 'LEFT REAR FENDER'
-        return SEEXCLD(seid, label, comment='')
+        return SELOAD(seid, label, comment='')
 
     def __init__(self, lid_s0, seid, lid_se, comment=''):
         BaseCard.__init__(self)
@@ -385,7 +385,7 @@ class SELABEL(BaseCard):
     def _init_from_empty(cls):
         seid = 1
         label = 'LEFT REAR FENDER'
-        return SEEXCLD(seid, label, comment='')
+        return SELABEL(seid, label, comment='')
 
     def __init__(self, seid, label, comment=''):
         BaseCard.__init__(self)
@@ -721,6 +721,7 @@ class CSUPER(BaseCard):
     +--------+------+------+------+-----+-----+-----=-----+-----+
     """
     type = 'CSUPER'
+    _properties = ['node_ids']
 
     @classmethod
     def _init_from_empty(cls):

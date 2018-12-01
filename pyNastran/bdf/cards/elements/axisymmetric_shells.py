@@ -15,7 +15,7 @@ All quads are QuadShell, ShellElement, and Element objects.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
-from numpy import cross
+import numpy as np
 from numpy.linalg import norm  # type: ignore
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -678,14 +678,15 @@ class CTRIAX6(TriShell):
     def export_to_hdf5(cls, h5_file, model, eids):
         """exports the elements in a vectorized way"""
         #comments = []
+        neids = len(eids)
         mids = []
-        nodes = []
+        nodes = np.zeros((neids, 6), dtype='int32')
         thetas = []
-        for eid in eids:
+        for i, eid in enumerate(eids):
             element = model.elements[eid]
             #comments.append(element.comment)
             mids.append(element.mid)
-            nodes.append(element.nodes)
+            nodes[i, :] = [eid if eid is not None else 0 for eid in element.nodes]
             thetas.append(element.theta)
         #h5_file.create_dataset('_comment', data=comments)
         h5_file.create_dataset('eid', data=eids)

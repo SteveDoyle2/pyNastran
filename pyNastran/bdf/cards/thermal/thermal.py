@@ -1537,12 +1537,14 @@ class CONV(ThermalBC):
 
 class TEMPBC(ThermalBC):
     type = 'TEMPBC'
+    _properties = ['eid']
 
     @classmethod
     def _init_from_empty(cls):
         sid = 1
         Type = 1
         nodes = [1, 2]
+        temps = [10., 20.]
         return TEMPBC(sid, Type, nodes, temps, comment='')
 
     def __init__(self, sid, Type, nodes, temps, comment=''):

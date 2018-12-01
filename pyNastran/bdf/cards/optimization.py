@@ -357,7 +357,7 @@ def validate_dvprel(prop_type, pname_fid, validate):
         _check_dvprel_options(pname_fid, prop_type, options)
 
     elif prop_type == 'PBRSECT':
-        options = ['T', 'W']
+        options = ['T', 'W', 'H']
         _check_dvprel_options(pname_fid, prop_type, options)
 
     elif prop_type == 'PBMSECT':
@@ -3022,8 +3022,22 @@ class DVCREL2(DVXREL2):
         'CQUAD4', 'CTRIA3', 'CBAR', 'CBEAM', 'CELAS1', 'CBUSH',
         'CDAMP2',
     ]
+    _properties = ['desvar_ids']
     #allowed_masses = ['CONM2', 'CMASS2', 'CMASS4']
     #allowed_properties_mass = ['PMASS']
+
+    @classmethod
+    def _init_from_empty(cls):
+        oid = 1
+        element_type = 'CONM2'
+        eid = 2
+        cp_name = 'X1'
+        deqation = 42
+        dvids = []
+        labels = []
+        return DVCREL2(oid, element_type, eid, cp_name, deqation, dvids, labels,
+                       cp_min=None, cp_max=1e20, validate=False, comment='')
+
     def __init__(self, oid, element_type, eid, cp_name, deqation, dvids, labels,
                  cp_min=None, cp_max=1e20, validate=False, comment=''):
         DVXREL2.__init__(self, oid, dvids, labels, deqation, comment)
@@ -5123,7 +5137,7 @@ def get_dvprel_key(dvprel, prop=None):
             msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
 
     elif prop_type == 'PBRSECT': # 3
-        if var_to_change in ['T', 'W']:
+        if var_to_change in ['T', 'W', 'H']:
             pass
         else:  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)

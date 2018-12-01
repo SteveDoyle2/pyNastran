@@ -173,6 +173,18 @@ class PCOMPS(SolidProperty):
         #6:'isop', 7:'fctn',
     }
 
+    @classmethod
+    def _init_from_empty(cls):
+        pid = 1
+        global_ply_ids = [1, 2]
+        mids = [10, 20]
+        thicknesses = [0.1, 0.2]
+        thetas = [30., 60.]
+        return PCOMPS(pid, global_ply_ids, mids, thicknesses, thetas,
+                      cordm=0, psdir=13, sb=None, nb=None, tref=0.0,
+                      ge=0.0, failure_theories=None,
+                      interlaminar_failure_theories=None, souts=None, comment='')
+
     def __init__(self, pid, global_ply_ids, mids, thicknesses, thetas,
                  cordm=0, psdir=13, sb=None, nb=None, tref=0.0, ge=0.0,
                  failure_theories=None, interlaminar_failure_theories=None,

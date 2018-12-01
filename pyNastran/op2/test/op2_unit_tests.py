@@ -629,7 +629,7 @@ class TestOP2(Tester):
         op2.print_subcase_key()
 
         op2b = OP2(debug=False)
-        op2b.load_hdf5(hdf5_filename, combine=True)
+        op2b.load_hdf5_filename(hdf5_filename, combine=True)
         op2b.print_subcase_key()
 
     def _test_op2_solid_bending_03(self):

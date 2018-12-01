@@ -1465,7 +1465,8 @@ class RBE3(RigidElement):
 class RSPLINE(RigidElement):
     type = 'RSPLINE'
     """
-    Defines multipoint constraints for the interpolation of displacements at grid points.
+    Defines multipoint constraints for the interpolation of displacements
+    at grid points.
 
     +---------+-----+-----+----+----+--------+----+----+----+
     |    1    |  2  |  3  |  4 |  5 |    6   |  7 |  8 |  9 |
@@ -1475,6 +1476,15 @@ class RSPLINE(RigidElement):
     |         |  C4 |  G5 | C5 | G6 | -etc.- |    |    |    |
     +---------+-----+-----+----+----+--------+----+----+----+
     """
+    @classmethod
+    def _init_from_empty(cls):
+        eid = 1
+        independent_nid = 2
+        dependent_nids = [3, 4]
+        dependent_components = ['4', '5']
+        return RSPLINE(eid, independent_nid, dependent_nids, dependent_components,
+                       diameter_ratio=0.1, comment='')
+
     def __init__(self, eid, independent_nid, dependent_nids, dependent_components,
                  diameter_ratio=0.1, comment=''):
         """

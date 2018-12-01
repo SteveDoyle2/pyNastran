@@ -278,6 +278,13 @@ class ASET(ABCQSet):
     +------+-----+----+-----+------+-----+----+-----+----+
     """
     type = 'ASET'
+    _properties = ['node_ids']
+
+    @classmethod
+    def _init_from_empty(cls):
+        ids = [1, 2]
+        components = ['123', '456']
+        return ASET(ids, components, comment='')
 
     def __init__(self, ids, components, comment=''):
         """
@@ -313,6 +320,13 @@ class BSET(ABCQSet):
     +------+-----+----+-----+------+-----+----+-----+----+
     """
     type = 'BSET'
+    _properties = ['node_ids']
+
+    @classmethod
+    def _init_from_empty(cls):
+        ids = [1, 2]
+        components = ['123', '456']
+        return BSET(ids, components, comment='')
 
     def __init__(self, ids, components, comment=''):
         """
@@ -350,6 +364,13 @@ class CSET(ABCQSet):
     +------+-----+----+-----+------+-----+----+-----+----+
     """
     type = 'CSET'
+    _properties = ['node_ids']
+
+    @classmethod
+    def _init_from_empty(cls):
+        ids = [1, 2]
+        components = ['123', '456']
+        return CSET(ids, components, comment='')
 
     def __init__(self, ids, components, comment=''):
         """
@@ -386,6 +407,13 @@ class QSET(ABCQSet):
     +------+-----+----+-----+------+-----+----+-----+----+
     """
     type = 'QSET'
+    _properties = ['node_ids']
+
+    @classmethod
+    def _init_from_empty(cls):
+        ids = [1, 2]
+        components = ['123', '456']
+        return QSET(ids, components, comment='')
 
     def __init__(self, ids, components, comment=''):
         """
@@ -623,6 +651,13 @@ class ASET1(ABQSet1):
     +-------+-----+-----+------+-----+-----+-----+-----+-----+
     """
     type = 'ASET1'
+    _properties = ['node_ids']
+
+    @classmethod
+    def _init_from_empty(cls):
+        ids = [1, 2]
+        components = '123'
+        return ASET1(ids, components, comment='')
 
     def __init__(self, ids, components, comment=''):
         """
@@ -657,6 +692,12 @@ class OMIT1(ABQSet1):
     +-------+-----+-----+------+-----+-----+-----+-----+-----+
     """
     type = 'OMIT1'
+
+    @classmethod
+    def _init_from_empty(cls):
+        ids = [1, 2]
+        components = '123'
+        return OMIT1(ids, components, comment='')
 
     def __init__(self, ids, components, comment=''):
         """
@@ -693,6 +734,13 @@ class BSET1(ABQSet1):
     +-------+-----+-----+------+-----+-----+-----+-----+-----+
     """
     type = 'BSET1'
+    _properties = ['node_ids']
+
+    @classmethod
+    def _init_from_empty(cls):
+        ids = [1, 2]
+        components = '123'
+        return BSET1(ids, components, comment='')
 
     def __init__(self, ids, components, comment=''):
         """
@@ -732,6 +780,13 @@ class CSET1(Set):
     +-------+-----+-----+------+-----+-----+-----+-----+-----+
     """
     type = 'CSET1'
+    _properties = ['node_ids']
+
+    @classmethod
+    def _init_from_empty(cls):
+        ids = [1, 2]
+        components = '123'
+        return CSET1(ids, components, comment='')
 
     def __init__(self, ids, components, comment=''):
         """
@@ -823,6 +878,13 @@ class QSET1(ABQSet1):
     dynamic reduction or component mode synthesis.
     """
     type = 'QSET1'
+    _properties = ['node_ids']
+
+    @classmethod
+    def _init_from_empty(cls):
+        ids = [1, 2]
+        components = '123'
+        return QSET1(ids, components, comment='')
 
     def __init__(self, ids, components, comment=''):
         """
@@ -1352,6 +1414,14 @@ class SEBSET(SuperABCQSet):
     +--------+------+-----+------+-----+----+-----+----+
     """
     type = 'SEBSET'
+    _properties = ['node_ids']
+
+    @classmethod
+    def _init_from_empty(cls):
+        seid = 1
+        ids = [1, 2]
+        components = ['123', '456']
+        return SEBSET(seid, ids, components, comment='')
 
     def __init__(self, seid, ids, components, comment=''):
         SuperABCQSet.__init__(self, seid, ids, components, comment)
@@ -1373,6 +1443,14 @@ class SEBSET1(SuperABQSet1):
     +----------+------+-----+------+------+-----+-----+-----+-----+
     """
     type = 'SEBSET1'
+    _properties = ['node_ids']
+
+    @classmethod
+    def _init_from_empty(cls):
+        seid = 1
+        ids = [1, 2]
+        components = '123'
+        return SEBSET1(seid, ids, components, comment='')
 
     def __init__(self, seid, ids, components, comment=''):
         SuperABQSet1.__init__(self, seid, ids, components, comment)
@@ -1380,6 +1458,14 @@ class SEBSET1(SuperABQSet1):
 
 class SECSET(SuperABCQSet):
     type = 'SECSET'
+    _properties = ['node_ids']
+
+    @classmethod
+    def _init_from_empty(cls):
+        seid = 1
+        ids = [1, 2]
+        components = ['123', '456']
+        return SECSET(seid, ids, components, comment='')
 
     def __init__(self, seid, ids, components, comment=''):
         SuperABCQSet.__init__(self, seid, ids, components, comment)
@@ -1399,6 +1485,14 @@ class SECSET1(SuperABQSet1):
     +----------+------+-----+------+------+-----+-----+-----+-----+
     """
     type = 'SECSET1'
+    _properties = ['node_ids']
+
+    @classmethod
+    def _init_from_empty(cls):
+        seid = 1
+        ids = [1, 2]
+        components = '123'
+        return SECSET1(seid, ids, components, comment='')
 
     def __init__(self, seid, ids, components, comment=''):
         SuperABQSet1.__init__(self, seid, ids, components, comment)
@@ -1406,12 +1500,28 @@ class SECSET1(SuperABQSet1):
 
 class SEQSET(SuperABCQSet):
     type = 'SEQSET'
+    _properties = ['node_ids']
+
+    @classmethod
+    def _init_from_empty(cls):
+        seid = 1
+        ids = [1, 2]
+        components = ['123', '456']
+        return SEQSET(seid, ids, components, comment='')
 
     def __init__(self, seid, ids, components, comment=''):
         SuperABCQSet.__init__(self, seid, ids, components, comment)
 
 class SEQSET1(SuperABQSet1):
     type = 'SEQSET1'
+    _properties = ['node_ids']
+
+    @classmethod
+    def _init_from_empty(cls):
+        seid = 1
+        ids = [1, 2]
+        components = '123'
+        return SEQSET1(seid, ids, components, comment='')
 
     def __init__(self, seid, ids, components, comment=''):
         SuperABQSet1.__init__(self, seid, ids, components, comment)
@@ -1567,6 +1677,15 @@ class USET(Set):
     +------+-------+-----+------+-----+----+-----+----+
     """
     type = 'USET'
+    _properties = ['node_ids']
+
+    @classmethod
+    def _init_from_empty(cls):
+        name = 'SNAME'
+        ids = [1, 2]
+        components = ['123', '456']
+        return QSET(ids, components, comment='')
+
     def __init__(self, name, ids, components, comment=''):
         """
         Creates a USET card, which defines a degrees-of-freedom set.
@@ -1692,6 +1811,14 @@ class USET1(ABQSet1):
     +-------+-------+-----+------+------+-----+-----+-----+-----+
     """
     type = 'USET1'
+    _properties = ['node_ids']
+
+    @classmethod
+    def _init_from_empty(cls):
+        name = 'SNAME'
+        ids = [1, 2]
+        components = '123'
+        return USET1(name, ids, components, comment='')
 
     def __init__(self, name, ids, components, comment=''):
         """
@@ -1704,7 +1831,7 @@ class USET1(ABQSet1):
             followed by the set name.)
         ids : List[int]
             the GRID/SPOINT ids
-        components : List[str]
+        components : str
             the degree of freedoms (e.g., '1', '123')
         comment : str; default=''
             a comment for the card

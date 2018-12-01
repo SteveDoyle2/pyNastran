@@ -244,6 +244,12 @@ class PDAMPT(DamperProperty):
         #'B1' : 'b',
     }
 
+    @classmethod
+    def _init_from_empty(cls):
+        pid = 1
+        tbid = 2
+        return PDAMPT(pid, tbid, comment='')
+
     def __init__(self, pid, tbid, comment=''):
         DamperProperty.__init__(self)
         if comment:

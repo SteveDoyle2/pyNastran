@@ -159,7 +159,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         """
         gets the Nastran wildcard loader used in the file load menu
         """
-        geom_methods_bdf = 'Nastran Geometry - BDF (*.bdf; *.dat; *.nas; *.ecd; *.op2; *.pch; *.obj)'
+        bdf_h5 = ''
+        if IS_H5PY:
+            bdf_h5 = '*.h5; '
+        geom_methods_bdf = 'Nastran Geometry - BDF (*.bdf; *.dat; *.nas; *.ecd; *.op2; *.pch; %s*.obj)' % bdf_h5
         geom_methods_pch = 'Nastran Geometry - Punch (*.bdf; *.dat; *.nas; *.ecd; *.pch)'
         combined_methods_op2 = 'Nastran Geometry + Results - OP2 (*.op2)'
 
@@ -615,6 +618,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                             debug_file=None)
             model.clear_results()
             model.read_op2(op2_filename=bdf_filename)
+        elif ext == '.h5' and IS_H5PY:
+            model = BDF(log=self.gui.log, debug=True)
+            model.load_hdf5_filename(bdf_filename)
+            model.validate()
         elif ext == '.obj':
             model = BDF(log=self.gui.log, debug=True)
             model.load(obj_filename=bdf_filename)
@@ -6783,7 +6790,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             elif ext == '.h5' and IS_H5PY:
                 model = OP2(log=self.log, debug=True)
                 hdf5_filename = results_filename
-                model.load_hdf5(hdf5_filename, combine=False)
+                model.load_hdf5_filename(hdf5_filename, combine=False)
             #elif ext == '.pch':
                 #raise NotImplementedError('*.pch is not implemented; filename=%r' % op2_filename)
             #elif ext == '.f06':

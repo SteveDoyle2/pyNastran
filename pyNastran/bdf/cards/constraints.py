@@ -223,6 +223,13 @@ class SUPORT(Constraint):
     +---------+-----+-----+-----+-----+-----+-----+-----+----+
     """
     type = 'SUPORT'
+    _properties = ['node_ids']
+
+    @classmethod
+    def _init_from_empty(cls):
+        nodes = [1, 2]
+        components = ['123', '456']
+        return SUPORT(nodes, components, comment='')
 
     def __init__(self, nodes, Cs, comment=''):
         """
@@ -947,6 +954,15 @@ class SPCAX(Constraint):
     +-------+-----+-----+-----+----+-----+
     """
     type = 'SPCAX'
+
+    @classmethod
+    def _init_from_empty(cls):
+        conid = 1
+        ringax = 2
+        hid = 3
+        component = 4
+        enforced = 0.
+        return SPCAX(conid, ringax, hid, component, enforced, comment='')
 
     def __init__(self, conid, ringax, hid, component, enforced, comment=''):
         """

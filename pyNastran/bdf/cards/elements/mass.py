@@ -647,7 +647,7 @@ class CMASS4(PointMassElement):
     @classmethod
     def _init_from_empty(cls):
         eid = 1
-        mass = 1.
+        pid = 1
         nids = [1, 2]
         return CMASS4(eid, pid, nids, comment='')
 

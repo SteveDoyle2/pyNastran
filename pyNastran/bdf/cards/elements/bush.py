@@ -464,7 +464,7 @@ class CBUSH1D(BushElement):
             element = model.elements[eid]
             #comments.append(element.comment)
             pids.append(element.pid)
-            nodes.append(element.nodes)
+            nodes.append([nid if nid is not None else 0 for nid in element.nodes])
             cid.append(element.cid if element.cid is not None else -1)
         #h5_file.create_dataset('_comment', data=comments)
         #print('cid =', cid)

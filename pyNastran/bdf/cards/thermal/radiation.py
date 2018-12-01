@@ -358,7 +358,7 @@ class VIEW3D(BaseCard):
 
     @classmethod
     def _init_from_empty(cls):
-        iview = 2
+        icavity = 2
         return VIEW3D(icavity, gitb=4, gips=4, cier=4, error_tol=0.1,
                       zero_tol=1e-10, warp_tol=0.01, rad_check=3, comment='')
 
