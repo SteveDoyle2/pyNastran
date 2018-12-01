@@ -14,6 +14,7 @@ import traceback
 import warnings
 from itertools import chain
 from typing import List, Tuple, Optional
+from six import StringIO
 import numpy as np
 #warnings.simplefilter('always')
 warnings.simplefilter('default')
@@ -649,6 +650,11 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
         fem1.export_to_hdf5_filename(hdf5_filename)
         fem1a = BDF(log=fem1.log)
         fem1a.load_hdf5_filename(hdf5_filename)
+        fem1a.validate()
+        bdf_stream = StringIO()
+        fem1a.write_bdf(bdf_stream, encoding=None, size=8,
+                        is_double=False, interspersed=False,
+                        enddata=None, write_header=True, close=True)
         #sys.exit('hdf5')
 
     if mesh_form is None:

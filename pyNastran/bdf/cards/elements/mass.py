@@ -640,6 +640,7 @@ class CMASS4(PointMassElement):
     +--------+-----+-----+----+----+
     """
     type = 'CMASS4'
+    _properties = ['node_ids']
     _field_map = {
         1: 'eid', 2:'mass', 3:'s1', 4:'s2',
     }

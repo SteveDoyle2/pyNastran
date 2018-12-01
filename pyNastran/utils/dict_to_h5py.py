@@ -204,7 +204,12 @@ def _add_list_tuple(hdf5_file, key, value, Type, log):
 
     lists/tuples with numpy unicode are special
     """
-    sub_group = hdf5_file.create_group(key)
+    try:
+        sub_group = hdf5_file.create_group(key)
+    except ValueError:  # pragma: no cover
+        print('key=%s is duplicated' % key)
+        print('value = ', value)
+        raise
     sub_group.attrs['type'] = Type
     try:
         sub_group.create_dataset('value', data=value)

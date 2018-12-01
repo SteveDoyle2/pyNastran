@@ -24,7 +24,7 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 
 class CFAST(Element):
     type = 'CFAST'
-    _properties = ['node_ids']
+    _properties = ['node_ids', 'nodes']
     _field_map = {
         1: 'eid', 2:'pid', 3:'Type', 4:'ida', 5:'idb', 6:'gs', 7:'ga', 8:'gb',
         9:'xs', 10:'ys', 11:'zs',

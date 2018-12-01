@@ -522,7 +522,7 @@ class Element(BaseCard):
         for nid in nodes:
             if isinstance(nid, integer_types):
                 nodes2.append(nid)
-            elif nid is None and allow_empty_nodes:
+            elif nid is None and allow_empty_nodes or np.isnan(nid):
                 nodes2.append(None)
             else:  # string???
                 #nodes.append(int(nid))

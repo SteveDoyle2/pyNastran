@@ -65,6 +65,10 @@ def save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
         model2.export_to_hdf5_filename('test.h5')
         model4 = BDF(log=model2.log)
         model4.load_hdf5_filename('test.h5')
+        model4.validate()
+        bdf_stream = StringIO()
+        model4.write_bdf(bdf_stream, encoding=None, size=8, is_double=False,
+                         interspersed=False, enddata=None, write_header=True, close=True)
 
     cross_reference(model3, xref)
     if run_renumber:

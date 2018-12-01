@@ -46,7 +46,7 @@ dict_int_obj_attrs = [
     #'reject_count',
     #'dresps',
 
-    'aecomps', 'aefacts', 'aelinks', 'aelists', 'aeparams',
+    'aecomps', 'aefacts', 'aelists', 'aeparams',
     'aestats', 'aesurf', 'aesurfs', 'ao_element_flags', 'bconp', 'bcrparas', 'bctadds',
     'bctparas', 'bctsets', 'blseg', 'bsurf', 'bsurfs', 'cMethods',
     'convection_properties',
@@ -109,8 +109,12 @@ scalar_keys = [
 ]
 
 LIST_KEYS = [
+    # handled in minor_attributes???
+    #'active_filenames', 'executive_control_lines', 'case_control_lines',
+    #'system_command_lines',
+
+
     # required
-    'active_filenames', 'executive_control_lines', 'case_control_lines',
     #'initial_superelement_models',
     #'reject_cards',
 
@@ -119,7 +123,7 @@ LIST_KEYS = [
     '_duplicate_nodes', '_duplicate_properties',
     '_duplicate_thermal_materials', '_stored_parse_errors',
     #'_stored_xref_errors',
-    'system_command_lines', #'units', 'xyz_limits',
+    #'units', 'xyz_limits',
 
     # removed
     #'coord_ids', 'element_ids', 'material_ids', 'node_ids', 'property_ids', 'caero_ids',
@@ -150,6 +154,17 @@ dict_attrs = [
 ]
 
 def export_to_hdf5_file(hdf5_file, model, exporter=None):
+    """
+    Converts the BDF objects into hdf5 object
+
+    Parameters
+    ----------
+    hdf5_file : H5File()
+        an h5py object
+    exporter : HDF5Exporter; default=None
+        unused
+
+    """
     attrs = object_attributes(model, mode='both', keys_to_skip=None)
     encoding = model.get_encoding()
 
@@ -216,8 +231,9 @@ def export_to_hdf5_file(hdf5_file, model, exporter=None):
         scalar_group = hdf5_file.create_group('minor_attributes')
         encoding = model.get_encoding()
         scalar_group.create_dataset('encoding', data=encoding)
-        for key in scalars_keys_to_analyze:
+        for key in sorted(scalars_keys_to_analyze):
             value = getattr(model, key)
+            #model.log.debug('  minor %s' % key)
 
             if value is None:
                 continue
@@ -238,6 +254,7 @@ def export_to_hdf5_file(hdf5_file, model, exporter=None):
             else:
                 #print(key, value)
                 scalar_group.create_dataset(key, data=value)
+        #del scalar_group
 
     if model.params:
         skip_attrs = ['comment', '_field_map']
@@ -247,10 +264,12 @@ def export_to_hdf5_file(hdf5_file, model, exporter=None):
 
     for key in ['case_control_lines', 'executive_control_lines',
                 'system_command_lines', 'active_filenames']:
+        # these are exported to the minor_attributes group
         list_str = getattr(model, key)
         if not len(list_str):
             continue
         list_bytes = [line.encode(encoding) for line in list_str]
+        #print(scalar_group)
         scalar_group.create_dataset(key, data=list_bytes)
 
     if len(model.reject_lines):
@@ -420,6 +439,8 @@ def _h5_export_class(sub_group, model, key, value, skip_attrs, debug=True):
     try:
         class_group.attrs['type'] = value.type
     except:  # pragma: no cover
+        print('key = %r' % key)
+        print('value', value)
         model.log.error('ERROR: key=%s value=%s' % (key, value))
         raise
 
@@ -483,7 +504,7 @@ def _h5_export_class(sub_group, model, key, value, skip_attrs, debug=True):
         if all(is_nones):
             model.log.warning('skipping %s attribute: %s %s %s' % (
                 value.type, key, h5attr, class_value))
-        elif all([not is_nonei for is_nonei in is_nones]):
+        elif all([not is_nonei for is_nonei in is_nones]): # no Nones
             # no Nones
             try:
                 class_group.create_dataset(h5attr, data=class_value)
@@ -502,9 +523,20 @@ def _h5_export_class(sub_group, model, key, value, skip_attrs, debug=True):
                 #if isinstance(class_value, list):
                     #print('type(value[0] =', class_value, type(class_value[0]))
                     #raise
-        else: #if is_none:
-            model.log.warning('skipping mixed %s attribute: %s %s %s' % (
-                value.type, key, h5attr, class_value))
+        else:
+            # mixed Nones and values
+            class_group.attrs['type'] = 'list'
+            param_group = class_group.create_group(h5attr)
+            for i, valuei in enumerate(class_value):
+                if isinstance(valuei, text_type):
+                    param_group.create_dataset(str(i), data=valuei.encode('ascii'))
+                elif valuei is None:
+                    param_group.create_dataset(str(i), data=np.nan)
+                else:
+                    param_group.create_dataset(str(i), data=valuei)
+
+            #raise RuntimeError('mixed %s attribute: %s %s %s' % (
+                #value.type, key, h5attr, class_value))
 
     #assert isinstance(key, int), 'key=%s value=%s' % (key, value)
 
@@ -627,6 +659,7 @@ def _hdf5_export_object_dict(group, model, name, obj_dict, keys, encoding):
         try:
             _h5_export_class(sub_group, model, key, value, skip_attrs, debug=False)
         except:  # pragma: no cover
+            raise
             # for debugging
             sub_group2 = group.create_group('values2')
             _h5_export_class(sub_group2, model, key, value, skip_attrs, debug=True)
@@ -646,6 +679,17 @@ def _hdf5_export_object_dict(group, model, name, obj_dict, keys, encoding):
 #-------------------------------------------------------------------------------------
 # importer
 def load_hdf5_file(h5_file, model):
+    """
+    Loads an h5 file object into an OP2 object
+
+    Parameters
+    ----------
+    h5_file : H5File()
+        an h5py file object
+    model : BDF()
+        the BDF file to put the data into
+
+    """
     encoding = _cast(h5_file['minor_attributes']['encoding'])
     keys = h5_file.keys()
 
@@ -674,6 +718,7 @@ def load_hdf5_file(h5_file, model):
         'nsms' : hdf5_load_nsms,
         'nsmadds' : hdf5_load_nsmadds,
         'frequencies' : hdf5_load_frequencies,
+        'aelinks' : hdf5_load_aelinks,
     }
     generic_mapper = {
         'rigid_elements' : hdf5_load_generic,
@@ -697,6 +742,7 @@ def load_hdf5_file(h5_file, model):
         #'MATT9' : hdf5_load_generic,
     }
     for key in keys:
+        #model.log.debug('key = %s' % key)
         group = h5_file[key]
         if key == 'nodes':
             grids = group['GRID']
@@ -732,6 +778,17 @@ def load_hdf5_file(h5_file, model):
             keys_attrs = group.keys()
             for keyi in keys_attrs:
                 sub_group = group[keyi]
+                if keyi in ['case_control_lines', 'executive_control_lines',
+                            'system_command_lines', 'active_filenames']:
+                    lst = _cast(sub_group).tolist()
+                    if isinstance(value, text_type):
+                        pass
+                    else:
+                        lst = [line.decode(encoding) for line in lst]
+                        assert isinstance(lst[0], text_type), type(lst[0])
+                    setattr(model, keyi, lst)
+                    continue
+                #model.log.debug('  minor %s' % keyi)
                 value = _cast(sub_group)
                 try:
                     setattr(model, keyi, value)
@@ -739,9 +796,11 @@ def load_hdf5_file(h5_file, model):
                     model.log.warning('cant set minor_attributes/%s as %s' % (keyi, value))
                     raise
 
-        elif key in ['case_control_lines', 'executive_control_lines', 'system_command_lines']:
-            lst = _load_indexed_list_str(model, key, group, encoding)
-            setattr(model, key, lst)
+        #elif key in ['case_control_lines', 'executive_control_lines', 'system_command_lines']:
+            #lst = _load_indexed_list_str(model, keyi, sub_group, encoding)
+            #print('***************')
+            #print('---executive_control_lines_load1 = %s-----' % type(model.executive_control_lines))
+            #print('---executive_control_lines_load2 = %s-----' % type(model.executive_control_lines))
 
         elif key in ['active_filenames']:
             if 'value' not in group:
@@ -878,6 +937,7 @@ def hdf5_load_coords(model, coords_group, unused_encoding):
             _put_keys_values_into_dict(model, 'coords', keys, values)
 
 def hdf5_load_tables(model, group, unused_encoding):
+    """loads the tables"""
     for card_type in group.keys():
         sub_group = group[card_type]
         #if card_type == 'TABLES1':
@@ -888,6 +948,7 @@ def hdf5_load_tables(model, group, unused_encoding):
         _put_keys_values_into_dict(model, 'tables', keys, values)
 
 def hdf5_load_methods(model, group, unused_encoding):
+    """loads the methods"""
     for card_type in group.keys():
         sub_group = group[card_type]
         #if card_type == 'EIGRL':
@@ -898,6 +959,7 @@ def hdf5_load_methods(model, group, unused_encoding):
         _put_keys_values_into_dict(model, 'methods', keys, values)
 
 def hdf5_load_masses(model, group, unused_encoding):
+    """loads the masses"""
     for card_type in group.keys():
         masses = group[card_type]
         if card_type == 'CONM2':
@@ -929,6 +991,7 @@ def hdf5_load_masses(model, group, unused_encoding):
 
 
 def hdf5_load_materials(model, group, unused_encoding):
+    """loads the materials"""
     for card_type in group.keys():
         sub_group = group[card_type]
         if card_type == 'MAT1':
@@ -1061,6 +1124,7 @@ def hdf5_load_materials(model, group, unused_encoding):
             _put_keys_values_into_dict(model, 'materials', keys, values)
 
 def hdf5_load_spcs(model, group, unused_encoding):
+    """loads the spcs"""
     keys = list(group.keys())
     keys.remove('keys')
     #spc_ids = _cast(group['keys'])
@@ -1077,6 +1141,7 @@ def hdf5_load_spcs(model, group, unused_encoding):
             _put_keys_values_into_dict_list(model, 'spcs', spc_id, lkeys, values)
 
 def hdf5_load_spcadds(model, group, unused_encoding):
+    """loads the spcadds"""
     keys = list(group.keys())
     keys.remove('keys')
     #spc_ids = _cast(group['keys'])
@@ -1093,6 +1158,7 @@ def hdf5_load_spcadds(model, group, unused_encoding):
             _put_keys_values_into_dict_list(model, 'spcadds', spc_id, lkeys, values)
 
 def hdf5_load_mpcs(model, group, unused_encoding):
+    """loads the mpcs"""
     keys = list(group.keys())
     keys.remove('keys')
     #mpc_ids = _cast(group['keys'])
@@ -1109,6 +1175,7 @@ def hdf5_load_mpcs(model, group, unused_encoding):
             _put_keys_values_into_dict_list(model, 'mpcs', mpc_id, lkeys, values)
 
 def hdf5_load_mpcadds(model, group, unused_encoding):
+    """loads the mpcadds"""
     keys = list(group.keys())
     keys.remove('keys')
     #spc_ids = _cast(group['keys'])
@@ -1125,6 +1192,7 @@ def hdf5_load_mpcadds(model, group, unused_encoding):
             _put_keys_values_into_dict_list(model, 'mpcadds', mpc_id, lkeys, values)
 
 def hdf5_load_loads(model, group, unused_encoding):
+    """loads the loads"""
     keys = list(group.keys())
     keys.remove('keys')
     #spc_ids = _cast(group['keys'])
@@ -1152,6 +1220,7 @@ def hdf5_load_loads(model, group, unused_encoding):
                 _put_keys_values_into_dict_list(model, 'loads', load_id, lkeys, values)
 
 def hdf5_load_load_combinations(model, group, unused_encoding):
+    """loads the load_combinations"""
     keys = list(group.keys())
     keys.remove('keys')
     #spc_ids = _cast(group['keys'])
@@ -1168,6 +1237,7 @@ def hdf5_load_load_combinations(model, group, unused_encoding):
             _put_keys_values_into_dict_list(model, 'load_combinations', load_id, lkeys, values)
 
 def hdf5_load_nsms(model, group, unused_encoding):
+    """loads the nsms"""
     keys = list(group.keys())
     keys.remove('keys')
     #spc_ids = _cast(group['keys'])
@@ -1183,6 +1253,7 @@ def hdf5_load_nsms(model, group, unused_encoding):
             _put_keys_values_into_dict_list(model, 'nsms', nsm_id, keys, values)
 
 def hdf5_load_nsmadds(model, group, unused_encoding):
+    """loads the nsmadds"""
     keys = list(group.keys())
     keys.remove('keys')
     #spc_ids = _cast(group['keys'])
@@ -1194,10 +1265,11 @@ def hdf5_load_nsmadds(model, group, unused_encoding):
                 #mid = _cast(sub_group['mid'])
             #else:
             lkeys, values = load_cards_from_keys_values('nsmadds/%s/%s' % (nsm_id, card_type),
-                                                       sub_group, model.log)
+                                                        sub_group, model.log)
             _put_keys_values_into_dict_list(model, 'nsmadds', nsm_id, lkeys, values)
 
 def hdf5_load_frequencies(model, group, unused_encoding):
+    """loads the frequencies"""
     keys = list(group.keys())
     keys.remove('keys')
     #spc_ids = _cast(group['keys'])
@@ -1213,7 +1285,25 @@ def hdf5_load_frequencies(model, group, unused_encoding):
                 sub_group, model.log)
             _put_keys_values_into_dict_list(model, 'frequencies', freq_id, fkeys, values)
 
+def hdf5_load_aelinks(model, group, unused_encoding):
+    """loads the aelinks"""
+    keys = list(group.keys())
+    keys.remove('keys')
+    #spc_ids = _cast(group['keys'])
+    for aelink_id in keys:
+        cards_group = group[aelink_id]
+        for card_type in cards_group.keys():
+            sub_group = cards_group[card_type]
+            #if card_type == 'FREQ':
+                #mid = _cast(sub_group['mid'])
+            #else:
+            fkeys, values = load_cards_from_keys_values(
+                'aelinks/%s/%s' % (aelink_id, card_type),
+                sub_group, model.log)
+            _put_keys_values_into_dict_list(model, 'aelinks', aelink_id, fkeys, values)
+
 def hdf5_load_dloads(model, group, unused_encoding):
+    """loads the dloads"""
     keys = list(group.keys())
     keys.remove('keys')
     #dload_ids = _cast(group['keys'])
@@ -1230,6 +1320,7 @@ def hdf5_load_dloads(model, group, unused_encoding):
             _put_keys_values_into_dict_list(model, 'dloads', dload_id, lkeys, values)
 
 def hdf5_load_dload_entries(model, group, unused_encoding):
+    """loads the dload_entries"""
     keys = list(group.keys())
     keys.remove('keys')
     #dload_ids = _cast(group['keys'])
@@ -1246,6 +1337,7 @@ def hdf5_load_dload_entries(model, group, unused_encoding):
             _put_keys_values_into_dict_list(model, 'dload_entries', dload_id, lkeys, values)
 
 def hdf5_load_bcs(model, group, unused_encoding):
+    """loads the bcs"""
     keys = list(group.keys())
     keys.remove('keys')
     #dload_ids = _cast(group['keys'])
@@ -1262,6 +1354,7 @@ def hdf5_load_bcs(model, group, unused_encoding):
             _put_keys_values_into_dict_list(model, 'bcs', bc_id, lkeys, values)
 
 def hdf5_load_transfer_functions(model, group, unused_encoding):
+    """loads the transfer_functions"""
     keys = list(group.keys())
     keys.remove('keys')
     #dload_ids = _cast(group['keys'])
@@ -1278,6 +1371,7 @@ def hdf5_load_transfer_functions(model, group, unused_encoding):
             _put_keys_values_into_dict_list(model, 'transfer_functions', tf_id, lkeys, values)
 
 def hdf5_load_dvgrids(model, group, unused_encoding):
+    """loads the dvgrids"""
     keys = list(group.keys())
     keys.remove('keys')
     #dload_ids = _cast(group['keys'])
