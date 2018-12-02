@@ -74,7 +74,6 @@ def find_coplanar_triangles(bdf_filename, eids):
         else:
             aset.add(new_row)
         #print('aset =', aset)
-    print(nids2)
     return model, eids_to_remove
 
 #def main():

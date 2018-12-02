@@ -1,6 +1,7 @@
 # pylint: disable=R0902,R0904,R0914,C0111
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
@@ -58,8 +59,8 @@ class CHBDYE(ThermalElement):
     +--------+-----+------+------+--------+--------+---------+---------+
     """
     type = 'CHBDYE'
-
-    hexMap = {
+    _properties = ['hex_map', 'pent_map', 'tet_map', 'side_maps']
+    hex_map = {
         1: [4, 3, 2, 1],
         2: [1, 2, 6, 5],
         3: [2, 3, 7, 6],
@@ -68,7 +69,7 @@ class CHBDYE(ThermalElement):
         6: [5, 6, 7, 8],
     }
 
-    pentMap = {
+    pent_map = {
         1: [3, 2, 1],
         2: [1, 2, 5, 4],
         3: [2, 3, 6, 5],
@@ -76,7 +77,7 @@ class CHBDYE(ThermalElement):
         5: [4, 5, 6],
     }
 
-    tetMap = {
+    tet_map = {
         1: [1, 3, 2],
         2: [1, 2, 4],
         3: [2, 3, 4],
@@ -84,9 +85,9 @@ class CHBDYE(ThermalElement):
     }
 
     side_maps = {
-        'CHEXA': hexMap,
-        'CPENTA': pentMap,
-        'CTETRA': tetMap,
+        'CHEXA': hex_map,
+        'CPENTA': pent_map,
+        'CTETRA': tet_map,
         'CTRIA3': [1, 2, 3],
         'CQUAD4': [1, 2, 3, 4],
     }
@@ -542,6 +543,13 @@ class CHBDYP(ThermalElement):
                       iview_front=0, ivew_back=0,
                       rad_mid_front=0, rad_mid_back=0,
                       e1=None, e2=None, e3=None, comment='')
+
+    def _finalize_hdf5(self):
+        """hdf5 helper function"""
+        if isinstance(self.nodes, np.ndarray):
+            self.nodes = self.nodes.tolist()
+        self.nodes = [None if np.isnan(nid) else nid
+                      for nid in self.nodes]
 
     def __init__(self, eid, pid, surface_type, g1, g2, g0=0, gmid=None, ce=0,
                  iview_front=0, ivew_back=0,

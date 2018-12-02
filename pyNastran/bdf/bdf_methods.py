@@ -884,7 +884,7 @@ class BDFMethods(BDFAttributes):
         # Relates one design variable to one or more other design variables.
         for dlink_id, dlink in self.dlinks.items():
             value = dlink.c0
-            desvar = dlink.dependent_desvar #get_stats()
+            desvar = dlink.dependent_desvar
             desvar_ref = self.desvars[desvar]
             for coeff, desvar_idi in zip(dlink.coeffs, dlink.IDv):
                 valuei = desvar_values[desvar_idi]

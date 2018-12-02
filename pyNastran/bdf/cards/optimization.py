@@ -933,6 +933,12 @@ class DOPTPRM(OptConstraint):
         params = {'TCHECK' : -1}
         return DOPTPRM(params, comment='')
 
+    def _finalize_hdf5(self):
+        """hdf5 helper function"""
+        keys, values = self.params
+        self.params = {key : value if not np.isnan(value) else None
+                       for key, value in zip(keys, values)}
+
     def __init__(self, params, comment=''):
         """
         Design Optimization Parameters
@@ -973,7 +979,7 @@ class DOPTPRM(OptConstraint):
                 continue
             if param in cls.defaults:
                 default_value = cls.defaults[param]
-            val = integer_double_or_blank(card, i + 2, '%s_value' % param, default_value)
+            val = integer_double_string_or_blank(card, i + 2, '%s_value' % param, default_value)
             params[param] = val
         return DOPTPRM(params, comment=comment)
 

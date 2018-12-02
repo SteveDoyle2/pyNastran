@@ -37,6 +37,7 @@ The superelement sets start with SE:
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import string_types
+import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types, integer_string_types
 from pyNastran.bdf.cards.base_card import (
@@ -55,8 +56,6 @@ class Set(BaseCard):
     """Generic Class all SETx cards inherit from"""
 
     def __init__(self):
-        #:  Unique identification number. (Integer > 0)
-        self.sid = None
         #:  list of IDs in the SETx
         self.ids = []
 
@@ -64,13 +63,6 @@ class Set(BaseCard):
         """eliminates duplicate IDs from self.IDs and sorts self.IDs"""
         self.ids = list(set(self.ids))
         self.ids.sort()
-
-    #def cleanIDs(self):
-        #self.clean_ids()
-
-    #def SetIDs(self):
-        #"""gets the IDs of the SETx"""
-        #return collapse_thru(self.ids)
 
     def repr_fields(self):
         list_fields = self.raw_fields()
@@ -110,6 +102,14 @@ class ABCQSet(Set):
     +------+-----+----+-----+------+-----+----+-----+----+
     """
     type = 'ABCQSet'
+
+    def _finalize_hdf5(self):
+        """hdf5 helper function"""
+        if isinstance(self.ids, np.ndarray):
+            self.ids = self.ids.tolist()
+        if isinstance(self.components, np.ndarray):
+            self.components = self.components.tolist()
+
     def __init__(self, ids, components, comment=''):
         Set.__init__(self)
         if comment:
@@ -195,6 +195,14 @@ class SuperABCQSet(Set):
     +--------+------+-----+----+-----+------+-----+-----+-----+
     """
     type = 'SuperABCQSet'
+
+    def _finalize_hdf5(self):
+        """hdf5 helper function"""
+        if isinstance(self.ids, np.ndarray):
+            self.ids = self.ids.tolist()
+        if isinstance(self.components, np.ndarray):
+            self.components = self.components.tolist()
+
     def __init__(self, seid, ids, components, comment=''):
         Set.__init__(self)
         if comment:
@@ -451,6 +459,12 @@ class ABQSet1(Set):
     +-------+-----+-----+------+-----+-----+-----+-----+-----+
     """
     type = 'ABQSet1'
+
+    def _finalize_hdf5(self):
+        """hdf5 helper function"""
+        if isinstance(self.ids, np.ndarray):
+            self.ids = self.ids.tolist()
+
     def __init__(self, ids, components, comment=''):
         Set.__init__(self)
         if comment:
@@ -554,6 +568,11 @@ class SuperABQSet1(Set):
     +----------+------+-----+------+------+-----+-----+-----+-----+
     """
     type = 'SuperABQSet1'
+    def _finalize_hdf5(self):
+        """hdf5 helper function"""
+        if isinstance(self.ids, np.ndarray):
+            self.ids = self.ids.tolist()
+
     def __init__(self, seid, ids, components, comment=''):
         Set.__init__(self)
         if comment:
@@ -1595,6 +1614,11 @@ class RADSET(ABQSet1):
     def _init_from_empty(cls):
         cavities = [1, 2]
         return RADSET(cavities, comment='')
+
+    def _finalize_hdf5(self):
+        """hdf5 helper function"""
+        if isinstance(self.cavities, np.ndarray):
+            self.cavities = self.cavities.tolist()
 
     def __init__(self, cavities, comment=''):
         """

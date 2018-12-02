@@ -357,6 +357,7 @@ class PBUSH1D(BushingProperty):
     +---------+--------+-------+--------+--------+-------+-------+-------+
     """
     type = 'PBUSH1D'
+    _properties = ['pname_fid_map']
     pname_fid_map = {
         'K' : 'k',
         'C' : 'c',
@@ -397,18 +398,18 @@ class PBUSH1D(BushingProperty):
         self.se = se
 
         # SPRING parameters
-        #self.spring_type = None
-        #self.spring_idt = None
-        #self.spring_idc = None
-        #self.spring_idtdu = None
-        #self.spring_idcdu = None
+        self.spring_type = None
+        self.spring_idt = None
+        self.spring_idc = None
+        self.spring_idtdu = None
+        self.spring_idcdu = None
 
         # DAMPER parameters
-        #self.damper_type = None
-        #self.damper_idt = None
-        #self.damper_idc = None
-        #self.damper_idtdv = None
-        #self.damper_idcdv = None
+        self.damper_type = None
+        self.damper_idt = None
+        self.damper_idc = None
+        self.damper_idtdv = None
+        self.damper_idcdv = None
 
         # GENER parameters
         #self.gener_idt = None
@@ -419,17 +420,17 @@ class PBUSH1D(BushingProperty):
         #self.gener_idcdv = None
 
         # SHOCK parameters
-        #self.shockType = None
-        #self.shockCVT = None
-        #self.shockCVC = None
-        #self.shockExpVT = None
-        #self.shockExpVC = None
-        #self.shockIDTS = None
+        self.shock_type = None
+        self.shock_cvt = None
+        self.shock_cvc = None
+        self.shock_exp_vt = None
+        self.shock_exp_vc = None
+        self.shock_idts = None
 
-        #self.shockIDETS = None
-        #self.shockIDECS = None
-        #self.shockIDETSD = None
-        #self.shockIDECSD = None
+        self.shock_idets = None
+        self.shock_idecs = None
+        self.shock_idetsd = None
+        self.shock_idecsd = None
         if optional_vars:
             for key, values in optional_vars.items():
                 if key == 'SHOCKA':

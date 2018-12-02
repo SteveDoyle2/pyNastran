@@ -495,7 +495,7 @@ class Element(BaseCard):
         # type: (bool) -> None
         if allow_empty_nodes:
             # only put valid nodes in here
-            nids2 = [nid for nid in self.nodes ]
+            nids2 = [nid for nid in self.nodes]
             if len(nids2) == 0:
                 msg = '%s requires at least one node id be specified; node_ids=%s' % (
                     self.type, nids2)

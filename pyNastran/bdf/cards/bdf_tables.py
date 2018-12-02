@@ -87,6 +87,12 @@ class DTABLE(BaseCard):
         default_values = {'CAT' : 1}
         return DTABLE(default_values, comment='')
 
+    def _finalize_hdf5(self):
+        """hdf5 helper function"""
+        keys, values = self.default_values
+        self.default_values = {key : value if not np.isnan(value) else None
+                       for key, value in zip(keys, values)}
+
     def __init__(self, default_values, comment=''):
         """
         Creates a DTABLE card

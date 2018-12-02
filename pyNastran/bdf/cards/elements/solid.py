@@ -131,19 +131,18 @@ class SolidElement(Element):
         nnodes = nnodes_high_map[nnodes0]
         nnodes_low = nnodes_low_map[nnodes0]
 
-        nodes = np.zeros((neids, nnodes))
+        nodes = np.zeros((neids, nnodes), dtype='int32')
         for i, eid in enumerate(eids):
             element = model.elements[eid]
             #comments.append(element.comment)
             pids.append(element.pid)
-            nodes[i, :len(element.nodes)] = element.nodes
+            nodes[i, :len(element.nodes)] = [nid if nid is not None else 0 for nid in element.nodes]
         #h5_file.create_dataset('_comment', data=comments)
         h5_file.create_dataset('eid', data=eids)
         h5_file.create_dataset('pid', data=pids)
 
-        nodes = np.array(nodes, dtype='int32')
         if nodes[:, nnodes_low:].max() == 0:
-            nodes = nodes[:, nnodes_low:]
+            nodes = nodes[:, :nnodes_low]
         h5_file.create_dataset('nodes', data=nodes)
 
     def _update_field_helper(self, n, value):

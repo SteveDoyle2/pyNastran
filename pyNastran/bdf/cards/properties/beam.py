@@ -1342,9 +1342,13 @@ class PBEAML(IntegratedLineProperty):
         uxxb = np.unique(self.xxb)
         if len(self.xxb) != len(uxxb):
             raise ValueError('xxb=%s unique(xxb)=%s' % (self.xxb, uxxb))
-        self.dim = np.asarray(self.dim)
-        self.xxb = np.asarray(self.xxb)
-        self.nsm = np.asarray(self.nsm)
+
+    def _finalize_hdf5(self):
+        """hdf5 helper function"""
+        if isinstance(self.dim, list):
+            self.dim = np.asarray(self.dim)
+            self.xxb = np.asarray(self.xxb)
+            self.nsm = np.asarray(self.nsm)
 
     @classmethod
     def add_card(cls, card, comment=''):

@@ -196,9 +196,10 @@ class SELOAD(BaseCard):
 
     @classmethod
     def _init_from_empty(cls):
-        seid = 1
-        label = 'LEFT REAR FENDER'
-        return SELOAD(seid, label, comment='')
+        lid_s0 = 1
+        seid = 2
+        lid_se = 3
+        return SELOAD(lid_s0, seid, lid_se, comment='')
 
     def __init__(self, lid_s0, seid, lid_se, comment=''):
         BaseCard.__init__(self)
@@ -556,7 +557,8 @@ class SELOC(BaseCard):
 
     @property
     def nodes_seid_ids(self):
-        return _node_ids(self, self.nodes_seid, self.nodes_seid_ref, allow_empty_nodes=False, msg='')
+        return _node_ids(self, self.nodes_seid, self.nodes_seid_ref,
+                         allow_empty_nodes=False, msg='')
 
     @property
     def nodes_0_ids(self):
@@ -997,8 +999,9 @@ class SEBULK(BaseCard):
         pass
 
     def raw_fields(self):
-        list_fields = ['SEBULK', self.seid, self.superelement_type, self.rseid, self.method, self.tol,
-                       self.loc, self.unitno]
+        list_fields = [
+            'SEBULK', self.seid, self.superelement_type, self.rseid, self.method, self.tol,
+            self.loc, self.unitno]
         return list_fields
 
     def write_card(self, size=8, is_double=False):

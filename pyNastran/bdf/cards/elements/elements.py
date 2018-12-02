@@ -580,6 +580,13 @@ class CRAC2D(CrackElement):
         nids = [1]
         return CRAC2D(eid, pid, nids, comment='')
 
+    def _finalize_hdf5(self):
+        """hdf5 helper function"""
+        if isinstance(self.nodes, np.ndarray):
+            self.nodes = self.nodes.tolist()
+        self.nodes = [None if np.isnan(nid) else nid
+                      for nid in self.nodes]
+
     def __init__(self, eid, pid, nids, comment=''):
         CrackElement.__init__(self)
         if comment:
@@ -681,6 +688,13 @@ class CRAC3D(CrackElement):
         pid = 1
         nids = [1]
         return CRAC3D(eid, pid, nids, comment='')
+
+    def _finalize_hdf5(self):
+        """hdf5 helper function"""
+        if isinstance(self.nodes, np.ndarray):
+            self.nodes = self.nodes.tolist()
+        self.nodes = [None if np.isnan(nid) else nid
+                      for nid in self.nodes]
 
     def __init__(self, eid, pid, nids, comment=''):
         CrackElement.__init__(self)

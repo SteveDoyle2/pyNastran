@@ -896,6 +896,26 @@ class TEMP(ThermalLoad):
         temperatures = {1 : 1.0}
         return TEMP(sid, temperatures, comment='')
 
+    @classmethod
+    def export_to_hdf5(cls, h5_file, model, loads):
+        """exports the loads in a vectorized way"""
+        #encoding = model._encoding
+        #comments = []
+        sid = loads[0].sid
+        #h5_file.create_dataset('sid', data=sid)
+        for i, load in enumerate(loads):
+            sub_group = h5_file.create_group(str(i))
+            #comments.append(loads.comment)
+
+            node = []
+            temp = []
+            for nid, tempi in load.temperatures.items():
+                node.append(nid)
+                temp.append(tempi)
+            sub_group.create_dataset('node', data=node)
+            sub_group.create_dataset('temperature', data=temp)
+        #h5_file.create_dataset('_comment', data=comments)
+
     def __init__(self, sid, temperatures, comment=''):
         """
         Creates a TEMP card

@@ -318,6 +318,17 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
         op2 = OP2(debug=debug, log=log)
         # have to double write this until ???
         op2_nv = OP2(debug=debug, log=log, debug_file=debug_file)
+
+        if is_nx is None:
+            pass
+        elif is_nx:
+            print('set as nx')
+            op2.set_as_nx()
+            op2_nv.set_as_nx()
+        else:
+            op2.set_as_msc()
+            op2_nv.set_as_msc()
+
         if post is not None:
             op2.post = -4
             op2_nv.post = -4

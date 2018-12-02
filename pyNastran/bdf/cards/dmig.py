@@ -45,6 +45,10 @@ class DTI(BaseCard):
         fields = []
         return DTI(name, fields, comment='')
 
+    def _finalize_hdf5(self):
+        """hdf5 helper function"""
+        keys, values = self.fields
+        self.fields = {key : value for key, value in zip(keys, values)}
 
     def __init__(self, name, fields, comment=''):
         """
@@ -118,6 +122,10 @@ class NastranMatrix(BaseCard):
     """
     Base class for the DMIG, DMIJ, DMIJI, DMIK matrices
     """
+    def _finalize_hdf5(self):
+        """hdf5 helper function"""
+        self.finalize()
+
     def __init__(self, name, matrix_form, tin, tout, polar, ncols,
                  GCj, GCi, Real, Complex=None, comment='', finalize=True):
         """

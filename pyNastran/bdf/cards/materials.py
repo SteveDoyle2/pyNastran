@@ -267,6 +267,11 @@ class NXSTRAT(BaseCard):
         params = {'AUTO' : 1}
         return NXSTRAT(sid, params, comment='')
 
+    def _finalize_hdf5(self):
+        """hdf5 helper function"""
+        keys, values = self.params
+        self.params = {key : value for key, value in zip(keys, values)}
+
     def __init__(self, sid, params, comment=''):
         if comment:
             self.comment = comment

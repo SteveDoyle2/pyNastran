@@ -4145,10 +4145,15 @@ class PAERO2(BaseCard):
         pid = 1
         width = 10.
         AR = 1.
-        thi = 42
-        thn = 43
+        thi = [None]
+        thn = [None]
         orient = 'ZY'
         return PAERO2(pid, orient, width, AR, thi, thn, lrsb=None, lrib=None, lth=None, comment='')
+
+    #def _finalize_hdf5(self):
+        #"""hdf5 helper function"""
+        #pass
+        #print(self.get_stats())
 
     def __init__(self, pid, orient, width, AR,
                  thi, thn, lrsb=None, lrib=None, lth=None,

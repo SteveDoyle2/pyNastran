@@ -1464,6 +1464,7 @@ class RBE3(RigidElement):
 
 class RSPLINE(RigidElement):
     type = 'RSPLINE'
+    _properties = ['dependent_nodes', 'independent_nodes']
     """
     Defines multipoint constraints for the interpolation of displacements
     at grid points.

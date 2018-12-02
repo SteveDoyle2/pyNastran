@@ -654,7 +654,7 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
         bdf_stream = StringIO()
         fem1a.write_bdf(bdf_stream, encoding=None, size=8,
                         is_double=False, interspersed=False,
-                        enddata=None, write_header=True, close=True)
+                        enddata=None, write_header=True, close=True) # hdf5
         #sys.exit('hdf5')
 
     if mesh_form is None:

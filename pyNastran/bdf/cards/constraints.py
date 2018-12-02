@@ -716,11 +716,15 @@ class SPC(Constraint):
     def object_attributes(self, mode='public', keys_to_skip=None):
         """.. seealso:: `pyNastran.utils.object_attributes(...)`"""
         my_keys_to_skip = ['gids_ref', 'gids']
+        if keys_to_skip is None:
+            keys_to_skip = []
         return Constraint.object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     def object_methods(self, mode='public', keys_to_skip=None):
         """.. seealso:: `pyNastran.utils.object_methods(...)`"""
         my_keys_to_skip = ['gids_ref', 'gids']
+        if keys_to_skip is None:
+            keys_to_skip = []
         return Constraint.object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     def validate(self):
