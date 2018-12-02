@@ -51,7 +51,7 @@ dict_int_obj_attrs = [
     'bctparas', 'bctsets', 'blseg', 'bsurf', 'bsurfs', 'cMethods',
     'convection_properties',
     'csuper', 'csupext', 'dareas',
-    'dconadds', 'ddvals', 'delays', 'dequations', 'desvars', 'divergs', 'dlinks',
+    'dconadds', 'ddvals', 'delays', 'dequations', 'divergs', 'dlinks',
     'dmigs', 'dmijis', 'dmijs', 'dmiks', 'dmis', 'dphases',
     'dscreen', 'dti', 'dvcrels', 'dvmrels', 'dvprels',
     'epoints', 'flfacts',
@@ -197,7 +197,7 @@ def export_to_hdf5_file(hdf5_file, model, exporter=None):
         'caeros', 'splines', 'flutters', 'trims', 'csschds', 'gusts',
 
         # other
-        'methods', 'tables',
+        'methods', 'tables', 'desvars',
     ]
     for group_name in groups_to_export:
         _hdf5_export_group(hdf5_file, model, group_name, encoding)
@@ -717,8 +717,8 @@ def _hdf5_export_object_dict(group, model, name, obj_dict, keys, encoding):
         except:  # pragma: no cover
             raise
             # for debugging
-            sub_group2 = group.create_group('values2')
-            _h5_export_class(sub_group2, model, key, value, skip_attrs, encoding, debug=True)
+            #sub_group2 = group.create_group('values2')
+            #_h5_export_class(sub_group2, model, key, value, skip_attrs, encoding, debug=True)
         i += 1
 
     #group.attrs['type'] = class_name
@@ -775,6 +775,7 @@ def load_hdf5_file(h5_file, model):
         'nsmadds' : hdf5_load_nsmadds,
         'frequencies' : hdf5_load_frequencies,
         'aelinks' : hdf5_load_aelinks,
+        'desvars' : hdf5_load_desvars,
     }
     generic_mapper = {
         'rigid_elements' : hdf5_load_generic,
@@ -906,6 +907,7 @@ def load_hdf5_file(h5_file, model):
                 #raise
         else:
             model.log.warning('skipping hdf5 load for %s' % key)
+            raise RuntimeError('skipping hdf5 load for %s' % key)
 
     cards_to_read = _cast(h5_file['cards_to_read'])
     cards_to_read = [key.decode(encoding) for key in cards_to_read]
@@ -1475,6 +1477,27 @@ def hdf5_load_dvgrids(model, group, encoding):
                 sub_group, encoding, model.log)
             _put_keys_values_into_dict_list(model, 'dvgrids', iopt_id, lkeys, values)
 
+def hdf5_load_desvars(model, group, encoding):
+    """loads the desvars"""
+    for card_type in group.keys():
+        sub_group = group[card_type]
+        if card_type == 'DESVAR':
+            desvar = _cast(sub_group['desvar'])
+            label = _cast(sub_group['label']).tolist()
+            xinit = _cast(sub_group['xinit'])
+            xlb = _cast(sub_group['xlb'])
+            xub = _cast(sub_group['xub'])
+            delx = _cast(sub_group['delx'])
+            ddval = _cast(sub_group['ddval'])
+            for desvari, labeli, xiniti, xlbi, xubi, delxi, ddvali in zip(
+                desvar, label, xinit, xlb, xub, delx, ddval):
+                labeli = labeli.decode(encoding)
+                assert isinstance(labeli, text_type), labeli
+                model.add_desvar(desvari, labeli, xiniti, xlb=xlbi, xub=xubi,
+                   delx=delxi, ddval=ddvali, comment='')
+        else:  # pragma: no cover
+            raise RuntimeError('card_type=%s in hdf5_load_desvars')
+
 def hdf5_load_generic(model, group, name, encoding):
     for card_type in group.keys():
         sub_group = group[card_type]
@@ -1979,6 +2002,7 @@ def hdf5_load_elements(model, elements_group, encoding):
             si = _cast(elements['si']).tolist()
             for eid, pid, nids, xi, g0i, cidi, s2, ocidi, si2 in zip(
                     eids, pids, nodes, x, g0, cid, s, ocid, si):
+                nids = list([nid if nid != 0 else None for nid in nids])
                 if g0i == -1:
                     g0i = None
                 #if xi[0] == np.nan:
@@ -1988,7 +2012,7 @@ def hdf5_load_elements(model, elements_group, encoding):
 
                 if si2[0] == np.nan:
                     si2 = [None, None, None]
-                elem = model.add_cbush(eid, pid, nids, x, g0, cid=cidi, s=s2, ocid=ocidi, si=si2,
+                elem = model.add_cbush(eid, pid, nids, xi, g0i, cid=cidi, s=s2, ocid=ocidi, si=si2,
                                        comment='')
                 write_card(elem)
 
@@ -2001,6 +2025,7 @@ def hdf5_load_elements(model, elements_group, encoding):
             cid = _cast(elements['cid'])
             for eid, pid, nids, xi, g0i, cidi in zip(
                     eids, pids, nodes, x, g0, cid):
+                nids = list([nid if nid != 0 else None for nid in nids])
                 if g0i == -1:
                     g0i = None
                 #if xi[0] == np.nan:

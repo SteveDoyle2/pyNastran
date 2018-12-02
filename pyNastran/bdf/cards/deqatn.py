@@ -154,6 +154,7 @@ class DEQATN(BaseCard):  # needs work...
     +--------+--------------------------------------------+
     """
     type = 'DEQATN'
+    _properties = ['dtable']
 
     def __init__(self, equation_id, eqs, comment=''):
         """

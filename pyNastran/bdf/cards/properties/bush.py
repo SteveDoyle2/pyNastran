@@ -56,6 +56,12 @@ class PBUSH(BushingProperty):
     _field_map = {
         1: 'pid',
     }
+    pname_map = {
+        -2 : 'K1', -3 : 'K2', -4 : 'K3', -5 : 'K4', -6 : 'K5', -7 : 'K6',
+        -8 : 'B1', -9 : 'B2', -10 : 'B3', -11 : 'B4', -12 : 'B5', -13 : 'B6',
+        -14 : 'GE1', -15 : 'GE2', -16 : 'GE3', -17 : 'GE4', -18 : 'GE5', -19 : 'GE6',
+        -20 : 'SA', -21 : 'ST', -22 : 'EA', -23 : 'ET',
+    }
     def update_by_pname_fid(self, name, value):
         if name == 'B1':
             self.Bi[0] = value
@@ -97,6 +103,9 @@ class PBUSH(BushingProperty):
             self.GEi[5] = value
         #elif name == 'M':
             #self.mass
+        elif isinstance(name, int) and name in self.pname_map:
+            name2 = self.pname_map[name]
+            self.update_by_pname_fid(name2, value)
         else:
             raise NotImplementedError('property_type=%r has not implemented %r in pname_map' % (
                 self.type, name))

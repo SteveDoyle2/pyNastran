@@ -661,13 +661,43 @@ class DESVAR(OptConstraint):
     """
     _properties = ['value']
 
+    #@classmethod
+    #def _init_from_empty(cls):
+        #desvar_id = 1
+        #label = 'name'
+        #xinit = 0.5
+        #return DESVAR(desvar_id, label, xinit,
+                      #xlb=-1e20, xub=1e20, delx=None, ddval=None, comment='')
+
     @classmethod
-    def _init_from_empty(cls):
-        desvar_id = 1
-        label = 'name'
-        xinit = 0.5
-        return DESVAR(desvar_id, label, xinit,
-                      xlb=-1e20, xub=1e20, delx=None, ddval=None, comment='')
+    def export_to_hdf5(cls, h5_file, model, desvar_ids):
+        """exports the elements in a vectorized way"""
+        #comments = []
+        encoding = model.get_encoding()
+        ndesvars = len(desvar_ids)
+        label = []
+        xinit = []
+        xlb = []
+        xub = []
+        delx = np.full(ndesvars, np.nan)
+        ddval = np.full(ndesvars, np.nan)
+        for i, desvar_id in enumerate(desvar_ids):
+            desvar = model.desvars[desvar_id]
+            #comments.append(element.comment)
+            label.append(desvar.label.encode(encoding))
+            xinit.append(desvar.xinit)
+            xlb.append(desvar.xlb)
+            xub.append(desvar.xub)
+            delx[i] = desvar.delx
+            ddval[i] = desvar.ddval
+        #h5_file.create_dataset('_comment', data=comments)
+        h5_file.create_dataset('desvar', data=desvar_ids)
+        h5_file.create_dataset('label', data=label)
+        h5_file.create_dataset('xinit', data=xinit)
+        h5_file.create_dataset('xlb', data=xlb)
+        h5_file.create_dataset('xub', data=xub)
+        h5_file.create_dataset('delx', data=delx)
+        h5_file.create_dataset('ddval', data=ddval)
 
     def __init__(self, desvar_id, label, xinit, xlb=-1e20, xub=1e20,
                  delx=None, ddval=None, comment=''):
@@ -5082,7 +5112,17 @@ def get_dvprel_key(dvprel, prop=None):
             msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
 
     elif prop_type == 'PBUSH':
-        if var_to_change in ['K1', 'K2', 'K3', 'K4', 'K5', 'K6',
+        pbush_var_map = {
+            -2 : 'K1', -3 : 'K2', -4 : 'K3', -5 : 'K4', -6 : 'K5', -7 : 'K6',
+            -8 : 'B1', -9 : 'B2', -10 : 'B3', -11 : 'B4', -12 : 'B5', -13 : 'B6',
+            -14 : 'GE1', -15 : 'GE2', -16 : 'GE3', -17 : 'GE4', -18 : 'GE5', -19 : 'GE6',
+            -20 : 'SA', -21 : 'ST', -22 : 'EA', -23 : 'ET',
+        }
+        #data_in = (pid, k1, k2, k3, k4, k5, k6, b1, b2, b3, b4, b5, b6,
+                   #g1, g2, g3, g4, g5, g6, sa, st, ea, et)
+        if isinstance(var_to_change, int) and var_to_change < 0: # and (var_to_change <= -23 <= var_to_change < 1):
+            var_to_change = pbush_var_map[var_to_change]
+        elif var_to_change in ['K1', 'K2', 'K3', 'K4', 'K5', 'K6',
                              'B1', 'B2', 'B3', 'B4', 'B5', 'B6',
                              'M1', 'M2', 'M3', 'M4', 'M5', 'M6',
                              'GE1', 'GE3', 'GE4', 'GE5', 'GE6',]:

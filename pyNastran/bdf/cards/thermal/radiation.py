@@ -51,9 +51,9 @@ class RADM(ThermalBC):
     def validate(self):
         assert self.radmid > 0, str(self)
         if self.absorb is not None:
-            assert 0. <= self.absorb <= 1.0, str(self)
-        for emissivityi in self.emissivity:
-            assert 0. <= emissivityi <= 1.0, str(self)
+            assert 0. <= self.absorb <= 1.0, 'absorb=%s\n%s' % (self.absorb, str(self))
+        for i, emissivityi in enumerate(self.emissivity):
+            assert 0. <= emissivityi <= 1.0, 'emissivity[%i]=%s\n%s' % (i, emissivityi, str(self))
 
     @classmethod
     def add_card(cls, card, comment=''):

@@ -338,7 +338,11 @@ class CGAP(Element):
                     x.append(nan)
                     g0.append(g0i)
                 else:
-                    assert element.x[0] is None, element.get_stats()
+                    if element.x[0] is None:
+                        x.append(nan)
+                    else:
+                        x.append(element.x)
+                    #assert element.x[0] is None, element.get_stats()
                     x.append(nan)
                     g0.append(-1)
         #h5_file.create_dataset('_comment', data=comments)

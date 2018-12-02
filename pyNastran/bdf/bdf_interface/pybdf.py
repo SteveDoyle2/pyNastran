@@ -1124,8 +1124,12 @@ def _get_super_id(line, uline):
         assert len(sline) == 2, sline
     else:
         sline = uline.split()
-        super_id_str = sline[2]
-        assert len(sline) == 3, sline
+        assert len(sline) in [3, 4], sline
+        if len(sline) == 3:
+            # BEGIN SUPER 2
+            super_id_str = sline[2]
+        elif len(sline) == 4:
+            super_id_str = sline[3]
 
     try:
         super_id = int(super_id_str)

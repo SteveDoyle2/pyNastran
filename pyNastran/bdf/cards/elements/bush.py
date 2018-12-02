@@ -200,7 +200,7 @@ class CBUSH(BushElement):
             element = model.elements[eid]
             #comments.append(element.comment)
             pids.append(element.pid)
-            nodes.append(element.nodes)
+            nodes.append([nid if nid is not None else 0 for nid in element.nodes])
 
             if element.cid is None:
                 cid.append(-1)
