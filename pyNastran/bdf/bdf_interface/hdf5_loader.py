@@ -1306,6 +1306,8 @@ def hdf5_load_loads(model, group, encoding):
                 lkeys, values = load_cards_from_keys_values(
                     'loads/%s/%s' % (load_id, card_type),
                     sub_group, encoding, model.log)
+                #for value in values:
+                    #print(value)
                 _put_keys_values_into_dict_list(model, 'loads', iload_id, lkeys, values)
 
 def hdf5_load_load_combinations(model, group, encoding):
@@ -1324,6 +1326,8 @@ def hdf5_load_load_combinations(model, group, encoding):
             lkeys, values = load_cards_from_keys_values(
                 'load_combinations/%s/%s' % (load_id, card_type),
                 sub_group, encoding, model.log)
+            #for value in values:
+                #print(value)
             _put_keys_values_into_dict_list(model, 'load_combinations', iload_id, lkeys, values)
 
 def hdf5_load_nsms(model, group, encoding):
@@ -1668,6 +1672,7 @@ def _put_keys_values_into_list(model, name, keys, values):
 def _put_keys_values_into_dict_list(model, name, idi, keys, values):
     """add someting like an SPC into a dictionary that has a list"""
     for value in values:
+        #print(value)
         write_card(value)
 
     slot = getattr(model, name)

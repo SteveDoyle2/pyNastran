@@ -10,6 +10,8 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.utils import object_attributes
 
 from pyNastran.bdf.bdf_interface.utils import deprecated
+
+from pyNastran.bdf.bdf_interface.subcase_cards import CLASS_MAP
 from pyNastran.bdf.bdf_interface.subcase_utils import (
     write_stress_type, write_set, expand_thru_case_control)
 
@@ -88,19 +90,20 @@ class Subcase(object):
             elif key == 'params':
                 #print(group)
                 #print(group.keys())
-                for key in group.keys():
-                    value, options, param_type = self._load_hdf5_param(group, key, encoding)
+                for group_key in group.keys():
+                    #self.log.debug('%s %s' % (group_key, key))
+                    value, options, param_type = self._load_hdf5_param(group, group_key, encoding)
 
-                    #print(key, (value, options, param_type))
+                    #self.log.debug('%s (%s, %s, %s)' % (key, value, options, param_type))
                     if isinstance(options, list):
                         options = [
                             option.decode(encoding) if isinstance(option, binary_type) else option
                             for option in options]
 
-                    self.params[key] = (value, options, param_type)
+                    self.params[group_key] = (value, options, param_type)
+                    str(self)
             else:  # pragma: no cover
-                self.log.warning('skipping Subcase/%s' % key)
-                raise RuntimeError('skipping Subcase/%s' % key)
+                raise RuntimeError('failed exporting Subcase/%s' % key)
 
     def _load_hdf5_param(self, group, key, encoding):
         from pyNastran.utils.dict_to_h5py import _cast
@@ -111,7 +114,6 @@ class Subcase(object):
         #print('subgroup.keys() =', sub_group.keys())
 
         if key == 'blank':
-            keys.remove('blank')
             key = ''
 
         if 'options' in sub_group:
@@ -127,8 +129,10 @@ class Subcase(object):
         else:
             options = None
 
-        param_type = _cast(sub_group['param_type'])
-        keys.remove('param_type')
+        param_type = None
+        if 'param_type' in sub_group:
+            param_type = _cast(sub_group['param_type'])
+            keys.remove('param_type')
 
         #print('param_type ', param_type)
         value = None
@@ -147,9 +151,17 @@ class Subcase(object):
             sub_groupi = sub_group['object']
 
             Type = sub_groupi.attrs['type']
-            options2 = _cast(sub_groupi['options']).tolist()
-            value = _cast(sub_groupi['value'])
-            #print('sub_keys =', sub_groupi, sub_groupi.keys())
+
+            use_data = True
+            if 'options' in sub_groupi:
+                options2 = _cast(sub_groupi['options']).tolist()
+                value = _cast(sub_groupi['value'])
+                #print('sub_keys =', sub_groupi, sub_groupi.keys())
+
+                options_str = [
+                    option.decode(encoding) if isinstance(option, binary_type) else option
+                    for option in options2]
+                use_data = False
 
             data_group = sub_groupi['data']
             keys2 = _cast(data_group['keys']).tolist()
@@ -162,24 +174,33 @@ class Subcase(object):
             values_str = [
                 valuei.decode(encoding) if isinstance(valuei, binary_type) else valuei
                 for valuei in values2]
-            options_str = [
-                option.decode(encoding) if isinstance(option, binary_type) else option
-                for option in options2]
 
             #print('keys2 =', keys2)
             #print('values2 =', values2)
             #print('options2 =', options2)
-            from pyNastran.bdf.bdf_interface.subcase_cards import CLASS_MAP
-            class_obj = CLASS_MAP[Type](key, value, options_str)
-            #print(class_obj)
+
+            if use_data:
+                #print('keys2 =', keys2)
+                #print('values2 =', values2)
+                data = []
+                for key, value in zip(keys2, values2):
+                    data.append((key, value))
+                class_obj = CLASS_MAP[Type](data)
+                assert options is None, options
+            else:
+                class_obj = CLASS_MAP[Type](key, value, options_str)
+                options = options_str
             value = class_obj
-            options = options_str
+
+            #print(class_obj)
             #class_obj.load_hdf5_file(hdf5_file, encoding)
 
         if len(keys) > 0:
             #keyi = _cast(sub_group['key'])
             #print('keyi = %r' % keyi)
             raise RuntimeError('keys = %s' % keys)
+
+        #print(value, options, param_type)
         return value, options, param_type
 
     def export_to_hdf5(self, hdf5_file, encoding):
@@ -204,7 +225,7 @@ class Subcase(object):
                 keys_bytes = [key.encode(encoding) for key in keys]
                 #params_group.create_dataset('keys', data=keys_bytes)
                 for key, (value, options, param_type) in self.params.items():
-                    #print('  %-14s: %-8r %r %r %s' % (key, value, options, param_type, type(value)))
+                    #print('  %-14s: %-8r %r %r' % (key, value, options, param_type))
                     if key == '':
                         sub_group = params_group.create_group('blank')
                         sub_group.create_dataset('value', data=value)
@@ -228,7 +249,9 @@ class Subcase(object):
                                 print('value = %r' % value)
                                 raise NotImplementedError(value)
 
-                    sub_group.create_dataset('param_type', data=param_type)
+                    if param_type is not None:
+                        sub_group.create_dataset('param_type', data=param_type)
+
                     if options is not None:
                         if isinstance(options, list):
                             options_bytes = [

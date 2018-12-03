@@ -219,6 +219,13 @@ class SELOAD(BaseCard):
         assert len(card) <= 4, 'len(SELOAD card) = %i\ncard=%s' % (len(card), card)
         return SELOAD(lid_s0, seid, lid_se, comment=comment)
 
+    def cross_reference(self, model):
+        pass
+
+    def raw_fields(self):
+        list_fields = ['SELOAD', self.lid_s0, self.seid, self.lid_se]
+        return list_fields
+
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment + print_card_8(card)

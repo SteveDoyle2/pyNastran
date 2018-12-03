@@ -773,6 +773,7 @@ class CaseControlDeck(object):
             else:
                 key = 'TEMPERATURE(BOTH)'
                 options = []
+                param_type = 'STRESS-type'
             value = int(value)
 
         elif line_upper.startswith('RIGID'):

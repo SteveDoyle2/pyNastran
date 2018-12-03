@@ -1018,6 +1018,28 @@ class EXTSEOUT(CaseControlCard):
         super(EXTSEOUT, self).__init__()
         self.data = data
 
+    def export_to_hdf5(self, hdf5_file, encoding):
+        if isinstance(self.data, list):
+            data_group = hdf5_file.create_group('data')
+            keys = []
+            values = []
+            for (key, value) in self.data:
+                keys.append(key)
+                values.append(value)
+            #print('keys = ', keys)
+            #print('values = ', values)
+            keys_bytes = [
+                key.encode(encoding) if isinstance(key, text_type) else key
+                for key in keys]
+            values_bytes = [
+                value.encode(encoding) if isinstance(value, text_type) else value
+                for value in values]
+            data_group.create_dataset('keys', data=keys_bytes)
+            data_group.create_dataset('values', data=values_bytes)
+            #hdf5_file.create_dataset('data', data=data_bytes)
+        else:
+            raise NotImplementedError(self.data)
+
     @classmethod
     def add_from_case_control(cls, line):
         """add method used by the CaseControl class"""
@@ -1287,4 +1309,9 @@ CHECK_CARD_NAMES = tuple([card.short_name for card in CHECK_CARDS])  # type: Tup
 
 CLASS_MAP = {
     'GROUNDCHECK' : GROUNDCHECK,
+    'EXTSEOUT' : EXTSEOUT,
+    'WEIGHTCHECK' : WEIGHTCHECK,
+    'MODCON' : MODCON,
+    'SET' : SET,
+    'SETMC' : SETMC,
 }

@@ -475,10 +475,11 @@ def deprecated(old_name, new_name, deprecated_version, levels=None):
             break
         msg += '  %-25s:%-4s %s\n' % (filename, str(line_no) + ';', line.strip())
 
+    user_name = os.getlogin()
     if ver_tuple > dep_ver_tuple: # or 'id' in msg:
         # fail
         raise NotImplementedError(msg)
-    else:
+    elif user_name not in ['sdoyle', 'travis']:
         warnings.warn(msg, DeprecationWarning)
 
 

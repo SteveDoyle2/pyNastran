@@ -2688,7 +2688,8 @@ class CQUAD4(QuadShell):
                 row2 = [print_field_8(field) for field in row2_data]
                 data = [self.eid, self.Pid()] + nodes + row2
                 msg = ('CQUAD4  %8i%8i%8i%8i%8i%8i%8s%8s\n'
-                       '                %8s%8s%8s%8s%8s\n' % tuple(data))
+                       '                %8s%8s%8s%8s%8s' % tuple(data))
+                return self.comment + msg.rstrip('\n ') + '\n'
             else:
                 row2 = [print_field_16(field) for field in row2_data]
                 is_stripped = [field.strip() == '' for field in row2]

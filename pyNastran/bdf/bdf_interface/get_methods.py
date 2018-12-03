@@ -315,7 +315,7 @@ class GetMethods(BDFAttributes):
         msg : str
             additional message to print when failing
         """
-        assert isinstance(sid, integer_types), 'sid=%s is not an integer\n' % sid
+        assert isinstance(sid, integer_types), 'sid=%s is not an integer; type=%s\n' % (sid, type(sid))
         if consider_load_combinations and sid in self.load_combinations:
             load = self.load_combinations[sid]
         elif sid in self.loads:

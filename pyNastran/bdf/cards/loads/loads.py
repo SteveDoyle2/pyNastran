@@ -347,11 +347,13 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
 
         """
         msg = ', which is required by LSEQ=%s' % (self.sid)
-        self.lid_ref = model.Load(self.lid, consider_load_combinations=True, msg=msg)
+        if self.lid is not None:
+            self.lid_ref = model.Load(self.lid, consider_load_combinations=True, msg=msg)
         #self.excite_id = model.Node(self.excite_id, msg=msg)
         if self.tid:
             # TODO: temperature set, not a table?
-            self.tid_ref = model.Table(self.tid, msg=msg)
+            self.tid_ref = model.Load(self.tid, consider_load_combinations=True, msg=msg)
+            #self.tid_ref = model.Table(self.tid, msg=msg)
 
     def safe_cross_reference(self, model, xref_errors):
         return self.cross_reference(model)
@@ -386,9 +388,14 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
             #return self.excite_id
         #return self.excite_id.nid
 
+    #def Tid(self):
+        #if self.tid_ref is not None:
+            #return self.tid_ref.tid
+        #return self.tid
+
     def Tid(self):
         if self.tid_ref is not None:
-            return self.tid_ref.tid
+            return self.LoadID(self.tid_ref)
         return self.tid
 
     def raw_fields(self):
