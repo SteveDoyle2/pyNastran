@@ -7,6 +7,8 @@ from six import string_types, PY2, PY3
 from numpy import ndarray
 
 from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.utils import object_attributes
+
 from pyNastran.bdf.bdf_interface.utils import deprecated
 from pyNastran.bdf.bdf_interface.subcase_utils import (
     write_stress_type, write_set, expand_thru_case_control)
@@ -72,6 +74,86 @@ class Subcase(object):
         self.sol = None
         self.log = None
         #print("\n***adding subcase %s***" % self.id)
+
+    def load_hdf5_file(self, hdf5_file, encoding):
+        from pyNastran.utils.dict_to_h5py import _cast
+
+        keys = list(hdf5_file.keys())
+        for key in keys:
+            #print(key)
+            group = hdf5_file[key]
+            if key in ['id']: # scalars
+                value = _cast(group)
+                setattr(self, key, value)
+            elif key == 'params':
+                #print(group)
+                #print(group.keys())
+                for key in group.keys():
+                    #print(type(key), key)
+                    sub_group = group[key]
+                    #print(sub_group)
+                    #print(sub_group.keys())
+
+                    value = _cast(sub_group['value'])
+                    options = _cast(sub_group['options']).tolist()
+                    param_type = _cast(sub_group['param_type'])
+                    #print(key, (value, options, param_type))
+                    self.params[key] = (value, options, param_type)
+            else:  # pragma: no cover
+                self.log.warning('skipping Subcase/%s' % key)
+                raise RuntimeError('skipping Subcase/%s' % key)
+
+    def export_to_hdf5(self, hdf5_file, encoding):
+        keys_to_skip = ['log', 'solCodeMap', 'allowed_param_types']
+        h5attrs = object_attributes(self, mode='both', keys_to_skip=keys_to_skip)
+        #print('Subcase %i' % self.id)
+        for h5attr in h5attrs:
+            value = getattr(self, h5attr)
+            if h5attr in ['id']: # scalars
+                # simple export
+                hdf5_file.create_dataset(h5attr, data=value)
+            elif h5attr in ['sol']: # scalars/None
+                if value is None:
+                    continue
+                hdf5_file.create_dataset(h5attr, data=value)
+            elif h5attr in ['params']:
+                if len(value) == 0:
+                    continue
+                keys = list(self.params.keys())
+                params_group = hdf5_file.create_group('params')
+                #print('keys =', keys)
+                keys_bytes = [key.encode(encoding) for key in keys]
+                #params_group.create_dataset('keys', data=keys_bytes)
+                for key, (value, options, param_type) in self.params.items():
+                    #print('  %-14s: %s %s %s' % (key, value, options, param_type))
+                    options_bytes = [option.encode(encoding) for option in options]
+
+                    sub_group = params_group.create_group(key)
+                    sub_group.create_dataset('value', data=value)
+                    sub_group.create_dataset('options', data=options_bytes)
+                    sub_group.create_dataset('param_type', data=param_type)
+                    #hdf5_file.create_dataset(h5attr, data=value)
+
+            #if h5attr in ['_begin_count', 'debug', 'write_begin_bulk']: # scalars
+                ## do nothing on purpose
+                #hdf5_file.create_dataset(h5attr, data=value)
+            #elif h5attr in ['reject_lines', 'begin_bulk', 'lines', 'output_lines']: # lists of strings
+                #if len(value) == 0:
+                    #continue
+                #value_bytes = [line.encode(encoding) for line in value]
+                ##print(value_bytes)
+                #hdf5_file.create_dataset(h5attr, data=value_bytes)
+            #elif h5attr == 'subcases':
+                #keys = list(self.subcases.keys())
+                #subcase_group = hdf5_file.create_group('subcases')
+                #subcase_group.create_dataset('keys', data=keys)
+                #for key, subcase in self.subcases.items():
+                    #sub_group = subcase_group.create_group(str(key))
+                    #subcase.export_to_hdf5(subcase_group, encoding)
+            else:  # pragma: no cover
+                print(key, value)
+                raise RuntimeError('cant export to hdf5 Subcase/%s' % h5attr)
+
 
     def __deepcopy__(self, memo):
         """
@@ -377,7 +459,7 @@ class Subcase(object):
         elif log_error is not None:
             log_error.error(msg)
             log_error.error(data_code)
-        else:
+        else:  # pragma: no cover
             # log_error is None
             print('Error calling subcase.add_op2_data...')
             print(msg)
@@ -858,7 +940,7 @@ class Subcase(object):
                           #"param_type=%r" % (key, value, options, param_type))
                     msg += self.print_param(key, param)
                     nparams += 1
-                assert nparams > 0, 'No subcase paramters are defined for isubcase=%s...' % self.id
+                assert nparams > 0, 'No subcase parameters are defined for isubcase=%s...' % self.id
 
         return msg
 
@@ -939,7 +1021,7 @@ class Subcase(object):
             msg += self.print_param(key, param)
             nparams += 1
         if self.id > 0:
-            assert nparams > 0, 'No subcase paramters are defined for isubcase=%s...' % self.id
+            assert nparams > 0, 'No subcase parameters are defined for isubcase=%s...' % self.id
         return msg
 
 def update_param_name(param_name):

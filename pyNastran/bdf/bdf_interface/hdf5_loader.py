@@ -9,7 +9,9 @@ import h5py
 from pyNastran.utils.dict_to_h5py import (
     _add_list_tuple, _cast, integer_types, float_types, string_types)
 from pyNastran.bdf.bdf_interface.add_card import CARD_MAP
+from pyNastran.bdf.case_control_deck import CaseControlDeck
 from pyNastran.utils import object_attributes
+
 
 # dict[key] : [value1, value2, ...]
 dict_int_list_obj_attrs = [
@@ -80,7 +82,7 @@ scalar_obj_keys = [
     'aero', 'aeros', 'axic', 'axif', 'baror', 'beamor',
     'doptprm',
     'dtable', 'grdset', 'radset', 'seqgp',
-    #'case_control_deck',
+    'case_control_deck',
     #'zona',
 ]
 
@@ -458,6 +460,9 @@ def _h5_export_class(sub_group, model, key, value, skip_attrs, encoding, debug=T
         if hasattr(value, '_properties'):
             h5attrs.remove('_properties')
         #sub_group = hdf5_file.create_group(key)
+    elif hasattr(value, 'export_to_hdf5'):
+        value.export_to_hdf5(class_group, encoding)
+        return
     else:
         raise NotImplementedError(value)
 
@@ -590,7 +595,7 @@ def _export_list(h5_group, attr, name, values, encoding):
     if len(types) == 1:
         try:
             h5_group.create_dataset(name, data=values2)
-        except TypeError:
+        except TypeError:  # pragma: no cover
             print(attr, name, values2)
             raise
     else:
@@ -602,7 +607,7 @@ def _export_list(h5_group, attr, name, values, encoding):
             else:
                 try:
                     sub_group.create_dataset(str(i), data=value)
-                except TypeError:
+                except TypeError:  # pragma: no cover
                     print(attr, name, values2, i)
                     raise
 
@@ -679,13 +684,13 @@ def _hdf5_export_group(hdf5_file, model, group_name, encoding, debug=False):
 
     if types_actual:
         model.log.debug('exporting %s to hdf5' % group_name)
-        if debug:
+        if debug:  # pragma: no cover
             print('types_actual =', types_actual)
         group = hdf5_file.create_group(group_name)
         for card_type in types_actual:
             sub_group = group.create_group(card_type)
             ids = model._type_to_id_map[card_type]
-            if debug:
+            if debug:  # pragma: no cover
                 print(ids)
             assert len(ids) > 0, '%s : %s' % (card_type, ids)
             class_obj = CARD_MAP[card_type]
@@ -882,6 +887,12 @@ def load_hdf5_file(h5_file, model):
             #model.log.info('keys = %s' % keys)
             #model.log.info('values = %s' % values)
             #model.log.info('values.keys() = %s' % values.keys())
+
+        elif key in 'case_control_deck':
+            lines = []
+            model.case_control_deck = CaseControlDeck(lines, log=model.log)
+            model.case_control_deck.load_hdf5_file(group, encoding)
+            str(model.case_control_deck)
 
         elif key in scalar_obj_keys:
             keys = list(group.keys())
@@ -1761,7 +1772,7 @@ def _get_casted_value(value, key_to_cast, encoding):
                     valueii = _cast(slot_h5)
                 elif isinstance(slot_h5, h5py._hl.group.Group):
                     valueii = _load_indexed_list(h5_key, slot_h5, encoding)
-                else:
+                else:  # pragma: no cover
                     print(key_to_cast, h5_key)
                     print(slot_h5, type(slot_h5))
                     raise NotImplementedError()
@@ -2239,6 +2250,6 @@ def write_card(elem):  # pragma: no cover
     """verifies that the card was built correctly near where the card was made"""
     try:
         elem.write_card()
-    except:
+    except:  # pragma: no cover
         print(elem.get_stats())
         raise

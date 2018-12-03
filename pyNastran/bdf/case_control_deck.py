@@ -35,13 +35,14 @@ from pyNastran.bdf.bdf_interface.subcase_cards import (
     #CHECK_CARD_DICT, CHECK_CARD_NAMES,
     split_by_mixed_commas_parentheses,
 )
-
+from pyNastran.utils import object_attributes
 from pyNastran.utils.log import get_logger
 
 class CaseControlDeck(object):
     """
     CaseControlDeck parsing and extraction class
     """
+    type = 'CaseControlDeck'
 
     def __getstate__(self):
         # Copy the object's state from self.__dict__ which contains
@@ -115,6 +116,77 @@ class CaseControlDeck(object):
         except:
             self.log.error('Invalid Case Control Deck:\n' + '\n'.join(self.lines))
             raise
+
+    def load_hdf5_file(self, hdf5_file, encoding):
+        from pyNastran.utils.dict_to_h5py import _cast
+
+        keys = list(hdf5_file.keys())
+        for key in keys:
+            if key in ['_begin_count', 'debug', 'write_begin_bulk']: # scalars
+                value = _cast(hdf5_file[key])
+                setattr(self, key, value)
+            elif key in ['reject_lines', 'begin_bulk', 'lines', 'output_lines']: # lists of strings
+                value_bytes = _cast(hdf5_file[key]).tolist()
+                value_str = [line.decode(encoding) for line in value_bytes]
+            elif key == 'subcases':
+                subcase_group = hdf5_file[key]
+                keys = list(subcase_group.keys())
+                keys.remove('keys')
+                subcases = {}
+                for key in keys:
+                    sub_group = subcase_group[key]
+                    ikey = int(key)
+                    subcase = Subcase(id=ikey)
+                    subcase.log = self.log
+                    subcase.load_hdf5_file(sub_group, encoding)
+                    subcases[ikey] = subcase
+                    str(subcase)
+                self.subcases = subcases
+                #print(value_bytes)
+            else:  # pragma: no cover
+                self.log.warning('skipping CaseControlDeck/%s' % key)
+                raise RuntimeError('error loading hdf5 CaseControlDeck/%s' % key)
+
+    def export_to_hdf5(self, hdf5_file, encoding):
+        keys_to_skip = ['type', 'log', 'sol_200_map', 'rsolmap_to_str', 'solmap_to_value']
+
+        # scalars----
+        #_begin_count
+        #debug
+        #write_begin_bulk
+
+        # lines----
+        #begin_bulk
+        #lines
+        #output_lines
+        #reject_lines
+
+        # subcases-----
+        #subcases
+
+        h5attrs = object_attributes(self, mode='both', keys_to_skip=keys_to_skip)
+        for h5attr in h5attrs:
+            value = getattr(self, h5attr)
+            if h5attr in ['_begin_count', 'debug', 'write_begin_bulk']: # scalars
+                # simple export
+                hdf5_file.create_dataset(h5attr, data=value)
+            elif h5attr in ['reject_lines', 'begin_bulk', 'lines', 'output_lines']: # lists of strings
+                if len(value) == 0:
+                    continue
+                value_bytes = [line.encode(encoding) for line in value]
+                #print(value_bytes)
+                hdf5_file.create_dataset(h5attr, data=value_bytes)
+            elif h5attr == 'subcases':
+                keys = list(self.subcases.keys())
+                subcase_group = hdf5_file.create_group('subcases')
+                subcase_group.create_dataset('keys', data=keys)
+                for key, subcase in self.subcases.items():
+                    #print('***key =', key)
+                    sub_group = subcase_group.create_group(str(key))
+                    subcase.export_to_hdf5(sub_group, encoding)
+            else:
+                self.log.warning('skipping CaseControlDeck/%s' % h5attr)
+                raise RuntimeError('error exporting hdf5 CaseControlDeck/%s' % h5attr)
 
     def suppress_output(self):
         """
