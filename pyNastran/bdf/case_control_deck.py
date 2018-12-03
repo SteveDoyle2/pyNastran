@@ -864,7 +864,6 @@ class CaseControlDeck(object):
                 options = str_options.split(',')
             param_type = 'STRESS-type'
             key = key.upper()
-            #print('options =', options)
 
         elif line_upper.startswith('BEGIN'):  # begin bulk
             try:

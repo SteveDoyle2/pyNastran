@@ -1794,6 +1794,11 @@ class PBRSECT(LineProperty):
         options = [('OUTP', 10)]
         return PBRSECT(pid, mid, form, options, comment='')
 
+    def _finalize_hdf5(self):
+        self.brps = {key : value for key, value in zip(*self.brps)}
+        self.ts = {key : value for key, value in zip(*self.ts)}
+        self.inps = {key : value for key, value in zip(*self.inps)}
+
     def __init__(self, pid, mid, form, options, comment=''):
         LineProperty.__init__(self)
         if comment:

@@ -1653,6 +1653,12 @@ class PBMSECT(LineProperty):
         options = [('OUTP', 10)]
         return PBMSECT(pid, mid, form, options, comment='')
 
+    def _finalize_hdf5(self):
+        self.brps = {key : value for key, value in zip(*self.brps)}
+        self.ts = {key : value for key, value in zip(*self.ts)}
+        self.inps = {key : value for key, value in zip(*self.inps)}
+        self.core = {key : value for key, value in zip(*self.core)}
+
     def __init__(self, pid, mid, form, options, comment=''):
         LineProperty.__init__(self)
         if comment:

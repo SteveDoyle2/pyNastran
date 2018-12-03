@@ -1,6 +1,6 @@
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
 from typing import List, Dict, Tuple, Union, Any
-from six import string_types
+from six import string_types, text_type
 from pyNastran.bdf.bdf_interface.subcase_utils import write_set
 
 class CaseControlCard(object):
@@ -558,6 +558,48 @@ class CheckCard(CaseControlCard):
     allowed_strings = [] # type: List[str]
     duplicate_names = {} # type: Dict[Any, Any]
     allow_ints = False
+
+    def export_to_hdf5(self, hdf5_file, encoding):
+        #print(hdf5_file)
+        #print('values* =', self.value)
+        #print('options* =', self.options)
+        if isinstance(self.options, list):
+            options_bytes = [
+                option.encode(encoding) if isinstance(option, text_type) else option
+                for option in self.options]
+            #print('optins =', options_bytes)
+            hdf5_file.create_dataset('options', data=options_bytes)
+        else:
+            raise NotImplementedError(self.options)
+        #else:
+            #sub_group.create_dataset('options', data=self.options)
+
+        if isinstance(self.data, list):
+            data_group = hdf5_file.create_group('data')
+            keys = []
+            values = []
+            for (key, value) in self.data:
+                keys.append(key)
+                values.append(value)
+            #print('keys = ', keys)
+            #print('values = ', values)
+            keys_bytes = [
+                key.encode(encoding) if isinstance(key, text_type) else key
+                for key in keys]
+            values_bytes = [
+                value.encode(encoding) if isinstance(value, text_type) else value
+                for value in values]
+            data_group.create_dataset('keys', data=keys_bytes)
+            data_group.create_dataset('values', data=values_bytes)
+            #hdf5_file.create_dataset('data', data=data_bytes)
+        else:
+            raise NotImplementedError(self.data)
+
+        hdf5_file.create_dataset('key', data=self.key)
+        hdf5_file.create_dataset('value', data=self.value)
+        #hdf5_file.create_dataset('options', data=self.options)
+        #hdf5_file.create_dataset('data', data=self.data)
+
     def __init__(self, key, value, options):
         """
         Creates a card of the form:
@@ -573,7 +615,6 @@ class CheckCard(CaseControlCard):
             the response value
         """
         super(CheckCard, self).__init__()
-
         self.key = key
         self.options = options
         self.data = []
@@ -1243,3 +1284,7 @@ CHECK_CARD_DICT = {card.type : card for card in CHECK_CARDS} # type: Dict[str, s
 CHECK_CARD_NAMES = tuple([card.short_name for card in CHECK_CARDS])  # type: Tuple[str]
 
 #-------------------------------------------------------------------------------
+
+CLASS_MAP = {
+    'GROUNDCHECK' : GROUNDCHECK,
+}
