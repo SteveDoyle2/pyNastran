@@ -1481,6 +1481,17 @@ def _read_spcadd_mpcadd(model, card_name, datai):
     1 SID I Set identification number
     2 S   I Set identification number
     Word 2 repeats until End of Record
+
+    Parameters
+    ----------
+    model : OP2Geom()
+        the model to store the data in
+    card_name : str
+        SPCADD or MPCADD
+    datai : (n, ) int ndarray
+        the data array; cannot be a List[int]
+        [2  1 10 -1]
+        [3  1 -1]
     """
     if model.is_debug_file:
         model.binary_debug.write('  %s - %s' % (card_name, str(datai)))

@@ -220,7 +220,8 @@ class OP2Reader(object):
             raise NotImplementedError(markers)
         if mode is None:
             self.log.warning("No mode was set, assuming 'msc'")
-            self.op2.set_mode('msc')
+            mode = 'msc'
+        self.op2.set_mode(mode)
         self.op2.set_table_type()
 
     def read_eqexin(self):

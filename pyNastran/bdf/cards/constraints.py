@@ -1554,7 +1554,7 @@ class SPCADD(ConstraintAdd):
 
         """
         conid = data[0]
-        sets = list(data[1:-1])
+        sets = data.tolist()
         return SPCADD(conid, sets, comment=comment)
 
     @property
@@ -1681,7 +1681,7 @@ class MPCADD(ConstraintAdd):
 
         """
         conid = data[0]
-        sets = list(data[1:-1])
+        sets = data.tolist()
         return MPCADD(conid, sets, comment=comment)
 
     @property

@@ -154,7 +154,7 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
         return [(node_ids[0], node_ids[1])]
 
 
-class BAROR(object):
+class BAROR(BaseCard):
     """
     +-------+---+-----+---+---+-------+-----+-------+------+
     |   1   | 2 |  3  | 4 | 5 |   6   |  7  |   8   |  9   |
@@ -165,7 +165,17 @@ class BAROR(object):
     +-------+---+-----+---+---+-------+-----+-------+------+
     """
     type = 'BAROR'
+
+    @classmethod
+    def _init_from_empty(cls):
+        pid = 1
+        is_g0 = True
+        g0 = 1
+        x = None
+        return BAROR(pid, is_g0, g0, x, offt='GGG', comment='')
+
     def __init__(self, pid, is_g0, g0, x, offt='GGG', comment=''):
+        BaseCard.__init__(self)
         if comment:
             self.comment = comment
         self.n = 0
@@ -199,6 +209,19 @@ class BAROR(object):
             raise NotImplementedError('the integer form of offt is not supported; offt=%s' % offt)
         assert len(card) <= 9, 'len(BAROR card) = %i\ncard=%s' % (len(card), card)
         return BAROR(pid, is_g0, g0, x, offt=offt, comment=comment)
+
+    def raw_fields(self):
+        """
+        Gets the fields of the card in their full form
+        """
+        list_fields = ['BAROR', None, None] + self.x.tolist() + [self.offt]
+        return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 class CBARAO(BaseCard):
     type = 'CBARAO'

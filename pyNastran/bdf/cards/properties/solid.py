@@ -454,8 +454,11 @@ class PSOLID(SolidProperty):
 
             if prop.isop is None:
                 isop.append(b'')
+            elif prop.isop == 0:
+                isop.append(b'REDUCED')
+            elif prop.isop == 1:
+                isop.append(b'FULL')
             else:
-                # 'REDUCED'
                 isop.append(prop.isop.encode(encoding))
 
             # 'SMECH'
@@ -512,6 +515,31 @@ class PSOLID(SolidProperty):
         stress = data[4]
         isop = data[5]
         fctn = data[6].decode('latin1')
+
+        #integ : int; default=None
+        #None-varies depending on element type
+        #0, 'BUBBLE'
+        #1, 'GAUSS'
+        #2, 'TWO'
+        #3, 'THREE'
+        #REDUCED
+        #FULL
+
+        # stress : int, string, or blank
+        #    blank/GRID
+        #    1-GAUSS
+
+        if stress == 0:
+            stress = ''
+        else:
+            raise NotImplementedError('stress=%i and must be [0]' % stress)
+
+        if isop == 0:
+            isop = 'REDUCED'
+        elif isop == 1:
+            isop = 'FULL'
+        else:
+            raise NotImplementedError('isop=%i and must be [0, 1]' % isop)
 
         if fctn == 'SMEC':
             fctn = 'SMECH'

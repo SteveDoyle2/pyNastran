@@ -1149,8 +1149,8 @@ def hdf5_load_masses(model, group, encoding):
             mass = _cast(masses['mass'])
             nodes = _cast(masses['nodes']).tolist()
             components = _cast(masses['components'])
-            for eid, massi, nids, (c1, c2) in zip(eid, mass, nodes, components):
-                model.add_cmass2(eid, massi, nids, c1, c2, comment='')
+            for eidi, massi, nids, (c1, c2) in zip(eid, mass, nodes, components):
+                model.add_cmass2(eidi, massi, nids, c1, c2, comment='')
 
         else:
             #model.add_cmass1(eid, pid, nids, c1=0, c2=0, comment='')
@@ -1397,7 +1397,8 @@ def hdf5_load_loads(model, group, encoding):
                 for (sidi, nodei, magi, xyzi, cidi) in zip(sid, node, mag, xyz, cid):
                     func(sidi, nodei, magi, xyzi, cid=cidi, comment='')
             elif card_type == 'TEMP':  # this has a weird dictionary structure
-                for index in sub_group.keys():
+                sid = sub_group.keys()
+                for index in sid:
                     cardi = sub_group[index]
                     nodes = _cast(cardi['node']).tolist()
                     temp = _cast(cardi['temperature']).tolist()

@@ -50,8 +50,8 @@ from pyNastran.bdf.cards.elements.damper import (CVISC, CDAMP1, CDAMP2, CDAMP3, 
                                                  CDAMP5)
 from pyNastran.bdf.cards.properties.damper import PVISC, PDAMP, PDAMP5, PDAMPT
 from pyNastran.bdf.cards.elements.rods import CROD, CONROD, CTUBE
-from pyNastran.bdf.cards.elements.bars import CBAR, CBARAO, CBEAM3, CBEND#, BAROR
-from pyNastran.bdf.cards.elements.beam import CBEAM#, BEAMOR
+from pyNastran.bdf.cards.elements.bars import CBAR, CBARAO, CBEAM3, CBEND, BAROR
+from pyNastran.bdf.cards.elements.beam import CBEAM, BEAMOR
 from pyNastran.bdf.cards.properties.rods import PROD, PTUBE
 from pyNastran.bdf.cards.properties.bars import PBAR, PBARL, PBRSECT, PBEND, PBEAM3
 from pyNastran.bdf.cards.properties.beam import PBEAM, PBEAML, PBCOMP, PBMSECT
@@ -242,14 +242,14 @@ CARD_MAP = {
     'PTUBE' : PTUBE,
 
     'CBAR' : CBAR,
-    #'BAROR' : BAROR,
+    'BAROR' : BAROR,
     'CBARAO' : CBARAO,
     'PBAR' : PBAR,
     'PBARL' : PBARL,
     'PBRSECT' : PBRSECT,
 
     'CBEAM' : CBEAM,
-    #'BEAMOR' : BEAMOR,
+    'BEAMOR' : BEAMOR,
     'PBEAM' : PBEAM,
     'PBEAML' : PBEAML,
     'PBCOMP' : PBCOMP,

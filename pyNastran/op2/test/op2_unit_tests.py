@@ -36,6 +36,8 @@ from pyNastran.op2.vector_utils import filter1d, abs_max_min_global, abs_max_min
 from pyNastran.op2.tables.oug.oug_displacements import RealDisplacementArray
 from pyNastran.femutils.test.utils import is_array_close
 
+from pyNastran.op2.tables.geom.geom4 import _read_spcadd_mpcadd
+
 PKG_PATH = pyNastran.__path__[0]
 MODEL_PATH = os.path.abspath(os.path.join(PKG_PATH, '..', 'models'))
 
@@ -1887,6 +1889,26 @@ class TestOP2(Tester):
         op2_filename = os.path.join(MODEL_PATH, 'ogs', 'ogs.op2')
         #bdf_filename = os.path.join(folder, 'rms_tri_oesrmx1.bdf')
         op2 = read_op2_geom(op2_filename, xref=False, debug=False)
+
+    def test_spcadd(self):
+        """tests loading SPCADD/MPCADDs"""
+        model = BDF()
+        card_name = 'SPCADD'
+        model.is_debug_file = False
+        datai  = np.array([2, 1, 10, -1], dtype='int32')
+        _read_spcadd_mpcadd(model, 'SPCADD', datai)
+
+        datai  = np.array([3, 1, -1], dtype='int32')
+        _read_spcadd_mpcadd(model, 'SPCADD', datai)
+
+
+        datai  = np.array([4, 1, 10, -1], dtype='int32')
+        _read_spcadd_mpcadd(model, 'MPCADD', datai)
+
+        datai  = np.array([5, 1, -1], dtype='int32')
+        _read_spcadd_mpcadd(model, 'MPCADD', datai)
+        assert len(model.spcadds) == 2, model.spcadds
+        assert len(model.mpcadds) == 2, model.mpcadds
 
 if __name__ == '__main__':  # pragma: no cover
     ON_RTD = os.environ.get('READTHEDOCS', None) == 'True'
