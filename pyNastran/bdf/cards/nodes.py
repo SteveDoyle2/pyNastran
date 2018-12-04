@@ -183,7 +183,7 @@ class XPoint(BaseCard):
         assert isinstance(nid, integer_types), nid
 
     @classmethod
-    def export_to_hdf5(cls, h5_file, model, nids):
+    def _export_to_hdf5(cls, h5_file, model, nids):
         """exports the nodes in a vectorized way"""
         #comments = []
         #for nid in nids:

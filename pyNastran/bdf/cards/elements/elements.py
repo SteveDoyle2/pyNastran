@@ -802,12 +802,13 @@ class PLOTEL(BaseCard):
         return PLOTEL(eid, nodes, comment='')
 
     @classmethod
-    def export_to_hdf5(cls, h5_file, model, eids):
+    def export_to_hdf5(cls, h5_file, model, encoding):
         """exports the elements in a vectorized way"""
         #comments = []
         nodes = []
+        eids = list(model.plotels.keys())
         for eid in eids:
-            element = model.elements[eid]
+            element = model.plotels[eid]
             #comments.append(element.comment)
             nodes.append(element.nodes)
         #h5_file.create_dataset('_comment', data=comments)
