@@ -302,6 +302,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
             op2.set_as_msc()
             op2_nv.set_as_msc()
             op2_bdf.set_as_msc()
+
         if post is not None:
             op2.post = -4
             op2_nv.post = -4

@@ -108,7 +108,7 @@ class OP2Common(Op2Codes, F06Writer):
         #]
 
         # sets the element mapper
-        self.get_element_type(33)
+        #self.get_element_type(33)
 
     def _device_code_(self):
         """

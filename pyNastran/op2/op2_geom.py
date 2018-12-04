@@ -100,7 +100,7 @@ def read_op2_geom(op2_filename=None, combine=True, subcases=None,
 class OP2GeomCommon(OP2, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, EDT, EDOM, DIT, DYNAMICS):
     """interface for the OP2Geom class for to loading subclasses"""
     def __init__(self, make_geom=True,
-                 debug=False, log=None, debug_file=None, mode='msc'):
+                 debug=False, log=None, debug_file=None, mode=None):
         """
         Initializes the OP2 object
 
@@ -115,7 +115,7 @@ class OP2GeomCommon(OP2, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, EDT, EDOM, DIT, D
             (.. seealso:: import logging)
         debug_file : default=None -> no debug
             sets the filename that will be written to
-        mode : str; default='msc'
+        mode : str; default=None -> 'msc'
             {msc, nx}
 
         """
@@ -131,7 +131,7 @@ class OP2GeomCommon(OP2, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, EDT, EDOM, DIT, D
         DIT.__init__(self)
         DYNAMICS.__init__(self)
 
-        OP2.__init__(self, debug, log=log, debug_file=debug_file, mode=mode)
+        OP2.__init__(self, debug=debug, log=log, debug_file=debug_file, mode=mode)
         self.make_geom = True
 
         # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_boltsold11b.op2

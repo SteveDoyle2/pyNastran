@@ -548,6 +548,12 @@ class GEOM4(GeomCommon):
          6,  13,  2, 11, 12, 14, 15, 111, 112, 113, 114, 115, -1, 0.0
          0,  9,  30,  2, 28, 29, 31, 32,  128, 129, 130, 131, 132, -1, 0.0,
          10, 25,  2, 23, 24, 26, 27, 123, 124, 125, 126, 127, -1, 0.0)
+
+        idata = [
+            10101, 10101, 123456, 1, 2, -1,
+            10102, 10102, 123456, 3, 4, -1,
+            10103, 10103, 123456, 5, -1,
+        ]
         """
         idata = np.frombuffer(data[n:], self.idtype).copy()
         iminus1 = np.where(idata == -1)[0]
@@ -560,9 +566,10 @@ class GEOM4(GeomCommon):
             i = np.hstack([[0], iminus1[:-1]+2])
             fdata = np.frombuffer(data[n:], self.fdtype).copy()
             j = np.hstack([iminus1[:-1]+1, len(idata)-1])
+        #print('is_alpha=%s' % is_alpha)
         #print('i=%s' % i)
         #print('j=%s' % j)
-        #print('idata=%s' % idata)
+        #print('idata=%s' % idata.tolist())
         #print(fdata, len(fdata))
         nelements = len(j)
         if is_alpha:
@@ -585,7 +592,11 @@ class GEOM4(GeomCommon):
             for ii, jj in zip(i, j):
                 #eid, gn, cm, gm1, gm2 = idata[ii:ii + 5]
                 eid, gn, cm = idata[ii:ii + 3]
-                gm = idata[ii+3:jj-1].tolist()
+                gm = idata[ii+3:jj].tolist()
+                if -1 in gm:
+                    gm = gm[:-1]
+                assert -1 not in gm, 'eid=%s gn=%s cm=%s gm=%s' % (eid, gn, cm, gm)
+                #print('eid=%s gn=%s cm=%s gm=%s' % (eid, gn, cm, gm))
 
                 out = (eid, gn, cm, gm, alpha)
                 if self.is_debug_file:

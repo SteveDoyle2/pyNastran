@@ -109,7 +109,7 @@ class OP2Reader(object):
             b'EQEXINS' : self.read_eqexin,
         }
         #self.op2_skip = OP2Skip(op2)
-    def read_nastran_version(self):
+    def read_nastran_version(self, mode):
         """reads the version header"""
         #try:
         op2 = self.op2
@@ -144,10 +144,12 @@ class OP2Reader(object):
             elif b'IMAT v' in data:
                 imat_version = data[6:11].encode('utf8')
                 macro_version = 'IMAT %s' % imat_version
+                mode = 'msc'
             else:
                 version_ints = Struct(self._endian + b'7i').unpack(data)
                 if version_ints == (1, 2, 3, 4, 5, 6, 7):
                     macro_version = 'MSFC'
+                    mode = 'msc'
                 else:
                     self.show_data(data)
                     raise NotImplementedError(data)
@@ -160,35 +162,38 @@ class OP2Reader(object):
             if self.is_debug_file:
                 self.binary_debug.write('%r\n' % data)
             version = data.strip()
+            version_str = version.decode(self._encoding)
+            #print('version = %r' % version_str)
 
             if macro_version == 'nastran':
                 if version.startswith(b'NX'):
-                    op2.set_as_nx()
-                    op2.set_table_type()
+                    mode = 'nx'
                 elif version.startswith(b'MODEP'):
                     # TODO: why is this separate?
                     # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_ac11103.op2
-                    op2.set_as_nx()
-                    op2.set_table_type()
+                    #print('found NX table?...')
+                    self.log.warning('Assuming NX Nastran')
+                    mode = 'nx'
                 elif version.startswith(b'AEROFREQ'):
                     # TODO: why is this separate?
                     # C:\Users\Steve\Dropbox\pyNastran_examples\move_tpl\loadf.op2
-                    op2.set_as_msc()
-                    op2.set_table_type()
+                    #print('found MSC table?...')
+                    self.log.warning('Assuming MSC Nastran')
+                    mode = 'msc'
                 elif version.startswith(b'AEROTRAN'):
                     # TODO: why is this separate?
                     # C:\Users\Steve\Dropbox\pyNastran_examples\move_tpl\loadf.op2
-                    op2.set_as_msc()
-                    op2.set_table_type()
-                elif version in [b'XXXXXXXX', b'V2005R3B']:
-                    op2.set_as_msc()
-                    op2.set_table_type()
+                    self.log.warning('Assuming MSC Nastran')
+                    mode = 'msc'
+                elif version in [b'V2005R3B']:
+                    mode = 'msc'
+                elif version in [b'XXXXXXXX']:
+                    self.log.warning('Assuming MSC Nastran')
+                    mode = 'msc'
                 elif version == b'OS12.210':
-                    op2.set_as_optistruct()
-                    op2.set_table_type()
+                    mode = 'optistruct'
                 elif version == b'OS11XXXX':
-                    op2.set_as_radioss()
-                    op2.set_table_type()
+                    mode = 'radioss'
                 #elif data[:20] == b'XXXXXXXX20141   0   ':
                     #self.set_as_msc()
                     #self.set_table_type()
@@ -213,6 +218,10 @@ class OP2Reader(object):
                 op2.post = -2
         else:
             raise NotImplementedError(markers)
+        if mode is None:
+            self.log.warning("No mode was set, assuming 'msc'")
+            self.op2.set_mode('msc')
+        self.op2.set_table_type()
 
     def read_eqexin(self):
         """isat_random.op2"""

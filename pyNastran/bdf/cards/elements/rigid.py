@@ -922,6 +922,7 @@ class RBE2(RigidElement):
         #print("eid=%s gn=%s cm=%s Gmi=%s alpha=%s"
               #% (self.eid, self.gn, self.cm, self.Gmi, self.alpha))
         #raise NotImplementedError('RBE2 data...')
+        assert len(Gmi) > 0, Gmi
         return RBE2(eid, gn, cm, Gmi, alpha, comment=comment)
 
     def update(self, maps):

@@ -52,7 +52,7 @@ if PY2:
 def read_op2(op2_filename=None, combine=True, subcases=None,
              exclude_results=None, include_results=None,
              log=None, debug=True, debug_file=None, build_dataframe=None,
-             skip_undefined_matrices=True, mode='msc', encoding=None):
+             skip_undefined_matrices=True, mode=None, encoding=None):
     """
     Creates the OP2 object without calling the OP2 class.
 
@@ -78,7 +78,7 @@ def read_op2(op2_filename=None, combine=True, subcases=None,
     log : Log()
         a logging object to write debug messages to
         (.. seealso:: import logging)
-    mode : str; default='msc'
+    mode : str; default=None -> 'msc'
         the version of the Nastran you're using
         {nx, msc, optistruct}
     debug_file : str; default=None (No debug)
@@ -125,7 +125,7 @@ class OP2(OP2_Scalar):
 
     def __init__(self,
                  debug=True, log=None,
-                 debug_file=None, mode='msc'):
+                 debug_file=None, mode=None):
         """
         Initializes the OP2 object
 
@@ -138,12 +138,14 @@ class OP2(OP2_Scalar):
          (.. seealso:: import logging)
         debug_file : str; default=None (No debug)
             sets the filename that will be written to
-        mode : str; default='msc'
+        mode : str; default=None -> 'msc'
             {msc, nx}
 
         """
         self.encoding = None
-        self.set_mode(mode)
+        self.mode = mode
+        if mode is not None:
+            self.set_mode(mode)
         make_geom = False
         assert make_geom is False, make_geom
         OP2_Scalar.__init__(self, debug=debug, log=log, debug_file=debug_file)
@@ -365,8 +367,12 @@ class OP2(OP2_Scalar):
             self.set_as_msc()
         elif mode.lower() == 'nx':
             self.set_as_nx()
+        elif mode.lower() == 'radioss':
+            self.set_as_radioss()
+        elif mode.lower() == 'optistruct':
+            self.set_as_optistruct()
         else:
-            raise RuntimeError("mode=%r and must be 'msc' or 'nx'")
+            raise RuntimeError("mode=%r and must be in [msc, nx, radioss, optistruct]")
 
     def include_exclude_results(self, exclude_results=None, include_results=None):
         """
@@ -564,6 +570,7 @@ class OP2(OP2_Scalar):
             the unicode encoding (default=None; system default)
 
         """
+        mode = self.mode
         if build_dataframe is None:
             build_dataframe = False
             if ipython_info():
@@ -584,10 +591,11 @@ class OP2(OP2_Scalar):
         load_as_h5 = False
         if hasattr(self, 'load_as_h5'):
             load_as_h5 = self.load_as_h5
+
         try:
             # get GUI object names, build objects, but don't read data
             OP2_Scalar.read_op2(self, op2_filename=op2_filename,
-                                load_as_h5=load_as_h5)
+                                load_as_h5=load_as_h5, mode=mode)
 
             # TODO: stuff to figure out objects
             # TODO: stuff to show gui of table names
@@ -596,7 +604,7 @@ class OP2(OP2_Scalar):
             self._close_op2 = True
             self.log.debug('-------- reading op2 with read_mode=2 (array filling) --------')
             _create_hdf5_info(self.op2_reader.h5_file, self)
-            OP2_Scalar.read_op2(self, op2_filename=self.op2_filename)
+            OP2_Scalar.read_op2(self, op2_filename=self.op2_filename, mode=mode)
         except FileNotFoundError:
             raise
         except:
