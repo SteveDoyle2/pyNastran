@@ -147,7 +147,7 @@ class CaseControlDeck(object):
                 self.log.warning('skipping CaseControlDeck/%s' % key)
                 raise RuntimeError('error loading hdf5 CaseControlDeck/%s' % key)
 
-    def export_to_hdf5(self, hdf5_file, encoding):
+    def export_to_hdf5(self, hdf5_file, model, encoding):
         keys_to_skip = ['type', 'log', 'sol_200_map', 'rsolmap_to_str', 'solmap_to_value']
 
         # scalars----

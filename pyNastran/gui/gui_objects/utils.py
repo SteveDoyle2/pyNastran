@@ -19,7 +19,7 @@ def get_setting(settings, setting_keys, setting_names, default, auto_type=None):
     else:
         try:
             value = settings.value(pull_name, default)
-        except (TypeError, ValueError):
+        except (TypeError, ValueError, RuntimeError):
             #print('couldnt load %s; using default' % pull_name)
             value = default
 
