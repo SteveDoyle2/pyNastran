@@ -5182,6 +5182,7 @@ class SPLINE3(Spline):
     +---------+------+-------+-------+------+----+----+-----+-------+
     """
     type = 'SPLINE3'
+    _properties = ['node_ids']
     _field_map = {
         1: 'eid', 2:'caero', 3:'box_id',
         7: 'a1', 8:'usage',

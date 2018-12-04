@@ -447,15 +447,18 @@ class PSOLID(SolidProperty):
                 integ.append(prop.integ)
 
             if prop.stress is None:
-                stress.append(-1)
+                stress.append(b'')
             else:
-                stress.append(prop.stress)
+                # 'GRID'
+                stress.append(prop.stress.encode(encoding))
 
             if prop.isop is None:
-                isop.append(-1)
+                isop.append(b'')
             else:
-                isop.append(prop.isop)
+                # 'REDUCED'
+                isop.append(prop.isop.encode(encoding))
 
+            # 'SMECH'
             fctn.append(prop.fctn.encode(encoding))
         #fctn = np.array(fctn, dtype='<8U')
         #h5_file.create_dataset('_comment', data=comments)

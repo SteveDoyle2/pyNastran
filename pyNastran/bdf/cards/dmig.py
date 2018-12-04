@@ -1409,6 +1409,10 @@ class DMIJ(NastranMatrix):
         return DMIJ(name, ifo, tin, tout, polar, ncols, GCj, GCi, Real,
                     Complex=None, comment='', finalize=True)
 
+    @classmethod
+    def export_to_hdf5(cls, h5_file, model, encoding):
+        _export_dmig_to_hdf5(h5_file, model, model.dmigs, encoding)
+
     def __init__(self, name, matrix_form, tin, tout, polar, ncols,
                  GCj, GCi, Real, Complex=None, comment='',
                  finalize=True):
@@ -1669,6 +1673,10 @@ class DMI(NastranMatrix):
         GCi = []
         Real = []
         return DMI(name, matrix_form, tin, tout, nrows, ncols, GCj, GCi, Real, Complex=None, comment='', finalize=False)
+
+    @classmethod
+    def export_to_hdf5(cls, h5_file, model, encoding):
+        _export_dmig_to_hdf5(h5_file, model, model.dmigs, encoding)
 
     def __init__(self, name, matrix_form, tin, tout, nrows, ncols,
                  GCj, GCi, Real, Complex=None, comment='', finalize=True):
@@ -2015,7 +2023,7 @@ class DMI(NastranMatrix):
         return self.write_card(size=8, is_double=False)
 
 def _export_dmig_to_hdf5(h5_file, model, dict_obj, encoding):
-    """export dmigs, dmijs, dmijis, dmiks, dmis'
+    """export dmigs, dmijs, dmijis, dmiks, dmis"""
     for name, dmig in dict_obj.items():
         dmig_group = h5_file.create_group(name)
         dmig_group.create_dataset('tin', data=dmig.tin)

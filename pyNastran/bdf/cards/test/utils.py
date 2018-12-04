@@ -69,6 +69,13 @@ def save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
         bdf_stream = StringIO()
         model4.write_bdf(bdf_stream, encoding=None, size=8, is_double=False,
                          interspersed=False, enddata=None, write_header=True, close=True)
+        for key, value in model2.card_count.items():
+            if key == 'ENDDATA':
+                continue
+            if key not in model4.card_count:
+                msg = 'key=%r was not loaded to hdf5\nexpected=%s\nactual=%s' % (
+                    key, model2.card_count, model4.card_count)
+                raise RuntimeError(msg)
 
     cross_reference(model3, xref)
     if run_renumber:

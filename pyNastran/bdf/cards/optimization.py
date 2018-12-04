@@ -542,6 +542,28 @@ class DCONSTR(OptConstraint):
         self.dresp_id_ref = None
 
     @classmethod
+    def export_to_hdf5(cls, hdf5_file, dconstrs, encoding):
+        oid = []
+        dresp_id = []
+        lid = []
+        uid = []
+        lowfq = []
+        highfq = []
+        for dconstr in dconstrs:
+            oid.append(dconstr.oid)
+            dresp_id.append(dconstr.dresp_id)
+            lid.append(dconstr.lid)
+            uid.append(dconstr.uid)
+            lowfq.append(dconstr.lowfq)
+            highfq.append(dconstr.highfq)
+        hdf5_file.create_dataset('oid', data=oid)
+        hdf5_file.create_dataset('dresp_id', data=dresp_id)
+        hdf5_file.create_dataset('lid', data=lid)
+        hdf5_file.create_dataset('uid', data=uid)
+        hdf5_file.create_dataset('lowfq', data=lowfq)
+        hdf5_file.create_dataset('highfq', data=highfq)
+
+    @classmethod
     def add_card(cls, card, comment=''):
         """
         Adds a DCONSTR card from ``BDF.add_card(...)``
@@ -2658,6 +2680,13 @@ class DCONADD(OptConstraint):
         self.oid = oid
         self.dconstrs = dconstrs
         self.dconstrs_ref = None
+
+    @classmethod
+    def export_to_hdf5(cls, hdf5_file, dconadds, encoding):
+        for i, dconadd in enumerate(dconadds):
+            dconadd_group = hdf5_file.create_group(str(i))
+            dconadd_group.create_dataset('oid', data=dconadd.oid)
+            dconadd_group.create_dataset('dconstrs', data=dconadd.dconstrs)
 
     @classmethod
     def add_card(cls, card, comment=''):

@@ -6518,7 +6518,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
                 region_res = GuiResult(
                     0, header='DV Region', title='DV Region',
-                    location='centroid', scalar=design_region)
+                    location='centroid', scalar=design_region, mask_value=0)
                 t_init_res = GuiResult(
                     0, header='DVPREL Init - %s' % key, title='DVPREL Init - %s' % key,
                     location='centroid', scalar=dvprel_init)
