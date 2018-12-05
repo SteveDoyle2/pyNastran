@@ -259,13 +259,16 @@ def _mirror_elements(model, mirror_model, nid_offset, use_eid_offset=True):
     Doesn't handle CBEAM SPOINTs
     """
     eid_max_elements = 0
+    eid_max_masses = 0
     eid_max_rigid = 0
     if use_eid_offset:
         if model.elements:
             eid_max_elements = max(model.elements.keys())
+        if model.elements:
+            eid_max_masses = max(model.masses.keys())
         if model.rigid_elements:
             eid_max_rigid = max(model.rigid_elements.keys())
-    eid_offset = max(eid_max_elements, eid_max_rigid)
+    eid_offset = max(eid_max_elements, eid_max_masses, eid_max_rigid)
 
     if model.elements:
         shells = set([
@@ -357,6 +360,23 @@ def _mirror_elements(model, mirror_model, nid_offset, use_eid_offset=True):
                     print(element.get_stats())
                     raise
 
+    if model.masses:
+        for eid, element in sorted(model.masses.items()):
+            eid_mirror = eid + eid_offset
+
+            #print(element.get_stats())
+            if element.type == 'CONM2':
+                old_nid = element.nid
+                new_nid = old_nid + nid_offset
+                mass = element.mass
+                cid = element.cid
+                X = element.X
+                I = element.I
+                mirror_model.add_conm2(eid_mirror, new_nid, mass, cid=cid, X=X, I=I, comment='')
+            else:
+                #print(element.get_stats())
+                mirror_model.log.warning('skipping mass element:\n%s' % str(element))
+
     if model.rigid_elements:
         for eid, rigid_element in sorted(model.rigid_elements.items()):
             if rigid_element.type == 'RBE2':
@@ -392,6 +412,8 @@ def _mirror_elements(model, mirror_model, nid_offset, use_eid_offset=True):
                     eid_mirror, ref_grid_id_mirror, rigid_element.refc, rigid_element.weights,
                     rigid_element.comps, Gijs_mirror
                 )
+            else:
+                mirror_model.log.warning('skipping:\n%s' % str(rigid_element))
 
     return eid_offset
 
