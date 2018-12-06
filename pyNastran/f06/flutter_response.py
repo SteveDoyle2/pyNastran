@@ -643,6 +643,8 @@ class FlutterResponse(object):
         legend_items = ['Mode %i' % mode for mode in modes]
         ix, xlabel = self._plot_type_to_ix_xlabel(plot_type)
 
+        if xlim is None:
+            xlim = [None, None]
         # these are the required damping levels to plot
         damping_ratios = [0., 0.01, 0.02, 0.05, 0.1, 0.15]
 
@@ -675,7 +677,7 @@ class FlutterResponse(object):
                 else:  # pragma: no cover
                     raise RuntimeError('xlim min/max are unclear')
 
-                if len(jvel) == 0:
+                if jvel is None or len(jvel) == 0:
                     continue
 
                 if jvel is None:

@@ -2,11 +2,11 @@ import os
 import unittest
 import matplotlib.pyplot as plt
 
-try:  # pragma: no cover
-    plt.figure()
-    plt.close()
-except:  # pragma: no cover
-    plt.switch_backend('Agg')
+#try:  # pragma: no cover
+    #plt.figure()
+    #plt.close()
+#except:  # pragma: no cover
+plt.switch_backend('Agg')
 
 import pyNastran
 from pyNastran.utils.log import get_logger2
