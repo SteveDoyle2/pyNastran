@@ -659,13 +659,14 @@ class FlutterResponse(object):
                 freq = self.results[imode, :, self.ifreq].ravel()
 
                 # consider flutter to be at 0, -0.01, ... damping ratio (so we have a damping margin)
-                idamp = np.where(damping > -damping_ratio)[0]
+                inot_nan = np.isfinite(damping)
+                idamp = np.where(damping[inot_nan] > -damping_ratio)[0]
 
                 if len(idamp) == 0:
                     continue
 
                 # limit the plot based on the xlimits
-                veli = vel[idamp]
+                veli = vel[inot_nan][idamp]
                 if xlim_min is None and xlim_max is None:
                     jvel = None
                 elif xlim_min is not None and xlim_max is not None:
@@ -683,15 +684,15 @@ class FlutterResponse(object):
                 if jvel is None:
                     # no xlimits
                     idampi = idamp[0]
-                    veli = vel[idampi]
-                    dampi = damping[idampi]
-                    freqi = freq[idampi]
+                    veli = vel[inot_nan][idampi]
+                    dampi = damping[inot_nan][idampi]
+                    freqi = freq[inot_nan][idampi]
                 else:
                     # xlimits
                     jveli = jvel[0]
-                    veli = vel[idamp][jveli]
-                    dampi = damping[idamp][jveli]
-                    freqi = freq[idamp][jveli]
+                    veli = vel[inot_nan][idamp][jveli]
+                    dampi = damping[inot_nan][idamp][jveli]
+                    freqi = freq[inot_nan][idamp][jveli]
                 print(mode, veli, dampi, freqi)
 
             print('')
