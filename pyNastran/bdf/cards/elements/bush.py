@@ -225,8 +225,12 @@ class CBUSH(BushElement):
                     x.append(nan)
                     g0.append(g0i)
                 else:
-                    assert element.x[0] is None, element.get_stats()
-                    x.append(nan)
+                    if element.x[0] is None:
+                        x.append(nan)
+                    else:
+                        x.append(element.x)
+                    #assert element.x[0] is None, element.get_stats()
+                    #x.append(nan)
                     g0.append(-1)
 
             s.append(element.s)

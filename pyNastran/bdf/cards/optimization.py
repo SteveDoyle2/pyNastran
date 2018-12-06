@@ -361,7 +361,7 @@ def validate_dvprel(prop_type, pname_fid, validate):
         _check_dvprel_options(pname_fid, prop_type, options)
 
     elif prop_type == 'PBMSECT':
-        options = ['T', 'W', 'H', 'T(1)', 'T(2)', 'T(3)', 'T(4)']
+        options = ['T', 'W', 'H', 'T(1)', 'T(2)', 'T(3)', 'T(4)', 'T(5)', 'T(6)', 'T(7)']
         _check_dvprel_options(pname_fid, prop_type, options)
 
     elif prop_type == 'PBEND':
@@ -1526,6 +1526,20 @@ class DRESP1(OptConstraint):
     """
     type = 'DRESP1'
 
+    #@classmethod
+    #def _init_from_empty(cls):
+        #dresp_id = 103
+        #label = 'resp1'
+        #response_type = 'STRESS'
+        #property_type = 'PSHELL'
+        #pid = 3
+        #atta = 9 # von mises upper surface stress
+        #region = None
+        #attb = None
+        #atti = [pid]
+        #return DRESP1(dresp_id, label, response_type, property_type,
+                      #region, atta, attb, atti, comment='', validate=False)
+
     def __init__(self, dresp_id, label, response_type, property_type, region,
                  atta, attb, atti, comment='', validate=False):
         """
@@ -1554,7 +1568,7 @@ class DRESP1(OptConstraint):
 
             Must be {ELEM, PBAR, PSHELL, PCOMP, PANEL, etc.)
             PTYPE = RANDPS ID when RTYPE=PSDDISP, PSDVELO, or PSDACCL.
-        region : str
+        region : int
             Region identifier for constraint screening
         atta : int / float / str / blank
             Response attribute
@@ -1652,6 +1666,11 @@ class DRESP1(OptConstraint):
 
         self.atta_ref = None
         self.atti_ref = None
+
+    @classmethod
+    def export_to_hdf5(cls, h5_file, model, encoding):
+        """exports the dresps in a vectorized way"""
+        _export_dresps_to_hdf5(h5_file, model, encoding)
 
     def object_attributes(self, mode='public', keys_to_skip=None):
         """.. seealso:: `pyNastran.utils.object_attributes(...)`"""
@@ -2027,7 +2046,7 @@ class DRESP2(OptConstraint):
             Name of the response
         dequation : int
             DEQATN id
-        region : str
+        region : int
             Region identifier for constraint screening
         params : dict[(index, card_type)] = values
             the storage table for the response function
@@ -2080,6 +2099,11 @@ class DRESP2(OptConstraint):
             #atta, attb, atti = validate_dresp1(
                 #property_type, response_type, atta, attb, atti)
 
+    @classmethod
+    def export_to_hdf5(cls, h5_file, model, encoding):
+        """exports the dresps in a vectorized way"""
+        _export_dresps_to_hdf5(h5_file, model, encoding)
+
     def _validate(self):
         assert isinstance(self.params, dict), self.params
 
@@ -2088,7 +2112,7 @@ class DRESP2(OptConstraint):
             assert len(key) == 2, 'key=%s' % str(key)
             iorder, name = key
             assert isinstance(iorder, int), 'iorder=%s key=%s' % (iorder, str(key))
-            assert isinstance(name, str), 'name=%r key=%s' % (name, str(key))
+            assert isinstance(name, string_types), 'name=%r key=%s' % (name, str(key))
             if name == 'DNODE':
                 assert len(values) == 2, 'name=%r must be a tuple of length 2 (nids, components); values=%s' % (name, values)
                 nids, components = values
@@ -2462,6 +2486,11 @@ class DRESP3(OptConstraint):
         self.params_ref = None
         self.dtable_ref = {}
 
+    @classmethod
+    def export_to_hdf5(cls, h5_file, model, encoding):
+        """exports the dresps in a vectorized way"""
+        _export_dresps_to_hdf5(h5_file, model, encoding)
+
     def _validate(self):
         assert isinstance(self.params, dict), self.params
         assert isinstance(self.group, str), 'group=%r' % self.group
@@ -2472,7 +2501,7 @@ class DRESP3(OptConstraint):
             assert len(key) == 2, 'key=%s' % str(key)
             iorder, name = key
             assert isinstance(iorder, int), 'iorder=%s key=%s' % (iorder, str(key))
-            assert isinstance(name, str), 'name=%r key=%s' % (name, str(key))
+            assert isinstance(name, string_types), 'name=%r key=%s' % (name, str(key))
             if name == 'DNODE':
                 assert len(values) == 2, 'name=%r must be a tuple of length 2 (nids, components); values=%s' % (name, values)
                 nids, components = values
@@ -2672,6 +2701,12 @@ class DCONADD(OptConstraint):
     +---------+------+------+-----+-----+-----+-----+-----+-----+
     """
     type = 'DCONADD'
+
+    @classmethod
+    def _init_from_empty(cls):
+        oid = 1
+        dconstrs = [1]
+        return DCONADD(oid, dconstrs, comment='')
 
     def __init__(self, oid, dconstrs, comment=''):
         OptConstraint.__init__(self)
@@ -5228,3 +5263,185 @@ def get_dvprel_key(dvprel, prop=None):
         msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
     key = '%s %s' % (prop_type, var_to_change)
     return key, msg
+
+def _export_dresps_to_hdf5(h5_file, model, encoding):
+    """exports dresps"""
+    dresp1s = []
+    dresp2s = []
+    dresp3s = []
+    for key, dresp in model.dresps.items():
+        # key : int
+        if dresp.type == 'DRESP1':
+            dresp1s.append(dresp)
+        elif dresp.type == 'DRESP2':
+            dresp2s.append(dresp)
+        elif dresp.type == 'DRESP3':
+            dresp3s.append(dresp)
+        else:
+            print(key)
+            print(dresp.get_stats())
+            raise NotImplementedError(dresp.type)
+
+    ndresp1s = len(dresp1s)
+    if ndresp1s:
+        dresp_group = h5_file.create_group('DRESP1')
+
+        dresp_id = []
+        atta = []
+        attb = []
+        label = []
+        region = []
+        response_type = []
+        property_type = []
+        for i, dresp in enumerate(dresp1s):
+            #print(dresp.get_stats())
+            dresp_id.append(dresp.dresp_id)
+
+            if dresp.atta is None:
+                attai = ''
+            elif isinstance(dresp.atta, int):
+                attai = str(dresp.atta)
+            elif isinstance(dresp.atta, float):
+                attai = '.12e' % dresp.atta
+            elif isinstance(dresp.atta, string_types):
+                attai = dresp.atta
+            else:
+                raise TypeError(type(dresp.atta))
+            atta.append(attai.encode(encoding))  # int, float, str, blank
+
+            if dresp.attb is None:
+                attb.append(-1)
+            else:
+                attb.append(dresp.attb)
+
+            label.append(dresp.label.encode(encoding))
+            response_type.append(dresp.response_type.encode(encoding))
+
+            if dresp.region is None:
+                region.append(-1)
+            else:
+                region.append(dresp.region)
+                #region.append(dresp.region.encode(encoding))
+
+            if dresp.property_type is None:
+                property_type.append(b'')
+            else:
+                property_type.append(dresp.property_type.encode(encoding))
+
+            #atta   : 1
+            #attb   : None
+            #atti   : [2]
+            #dresp_id : 10
+            #label  : 'DISPL'
+            #property_type : None
+            #region : None
+            #response_type : 'DISP'
+            dresp_groupi = dresp_group.create_group(str(i))
+            if isinstance(dresp.atti[0], string_types): # ALL
+                model.log.debug('str atti = %s' % dresp.atti)
+                dresp_groupi.create_dataset('atti', data=dresp.atti[0].encode(encoding))  # int
+            else:
+                model.log.debug('atti = %s' % dresp.atti)
+                dresp_groupi.create_dataset('atti', data=dresp.atti)  # int
+        #print('atta', atta)
+        #print('attb', attb)
+
+        attb = np.array(attb, dtype='int32')
+        dresp_group.create_dataset('dresp_id', data=dresp_id)
+        dresp_group.create_dataset('atta', data=atta)
+        dresp_group.create_dataset('attb', data=attb)
+        dresp_group.create_dataset('label', data=label)
+        dresp_group.create_dataset('region', data=region)
+        dresp_group.create_dataset('response_type', data=response_type)
+        dresp_group.create_dataset('property_type', data=property_type)
+
+    ndresp2s = len(dresp2s)
+    if ndresp2s:
+        #c1     : 1.0
+        #c2     : 0.005
+        #c3     : 10.0
+        #comment : u''
+        #dequation : 1
+        #dequation_str : None
+        #dresp_id : 1
+        #label  : 'VOLUME'
+        #method : u'MIN'
+        #params : {(0, u'DESVAR'): [1, 2, 3]}
+        #region : None
+        c123 = np.full((ndresp2s, 3), np.nan)
+        dresp_id = np.full(ndresp2s, -1, dtype='int32')
+        dequation = np.full(ndresp2s, -1, dtype='int32')
+        dequation_str = []
+        label = []
+        method = []
+        region = []
+
+        dresp_group = h5_file.create_group('DRESP2')
+
+        for i, dresp in enumerate(dresp2s):
+            #del dresp.
+            dresp.params_ref = None
+            model.log.debug('\n' + dresp.get_stats())
+            #{(0, 'DRESP1'): [10501, 10502, 10503]}
+
+
+            param_keys = [None] * len(dresp.params)
+            #print(dresp_group)
+
+            model.log.debug('  DRESP2 params %s %s' % (i, dresp.params))
+            #print('i = %i' % i)
+            dresp_groupi = dresp_group.create_group(str(i))
+            for (j, param_key), values in dresp.params.items():
+                #print('  DRESP2', (i, j), param_key, values)
+                param_keys[j] = param_key.encode(encoding)
+                dresp_groupj = dresp_groupi.create_group(str(j))
+                values2 = [val.encode(encoding) if isinstance(val, string_types) else val
+                           for val in values]
+                dresp_groupj.create_dataset('values', data=values2)
+            dresp_groupi.create_dataset('param_keys', data=param_keys)
+            #print('param_keys =', param_keys)
+            #print('keys', list(dresp_group.keys()))
+
+            dequation[i] = dresp.dequation
+            dresp_id[i] = dresp.dresp_id
+            c123[i, :] = [dresp.c1, dresp.c2, dresp.c3]
+            method.append(dresp.method.encode(encoding))
+            label.append(dresp.label.encode(encoding))
+
+            if dresp.region is None:
+                region.append(-1)
+            else:
+                region.append(dresp.region)
+                #region.append(dresp.region.encode(encoding))
+
+            if dresp.dequation_str is None:
+                dequation_str.append(b'')
+            else:
+                dequation_str.append(dresp.dequation_str)
+
+            #dresp_id[i] = dresp.dresp_id
+            #dresp_id[i] = dresp.dresp_id
+
+        #print('dresp_id =', dresp_id)
+        print('region =', region)
+        dresp_group.create_dataset('dresp_id', data=dresp_id)
+        dresp_group.create_dataset('c123', data=c123)
+        dresp_group.create_dataset('dequation', data=dequation)
+        dresp_group.create_dataset('dequation_str', data=dequation_str)
+        dresp_group.create_dataset('label', data=label)
+        dresp_group.create_dataset('method', data=method)
+        dresp_group.create_dataset('region', data=region)
+        #c1     : 1.0
+        #c2     : 0.005
+        #c3     : 10.0
+        #comment : u''
+        #dequation : 1
+        #dequation_str : None
+        #dresp_id : 1
+        #label  : 'VOLUME'
+        #method : u'MIN'
+
+
+    ndresp3s = len(dresp3s)
+    if ndresp3s:
+        model.log.warning('skipping DRESP3')

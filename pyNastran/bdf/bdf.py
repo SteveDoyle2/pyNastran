@@ -2374,7 +2374,15 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         if card_name not in self.card_count:
             _check_for_spaces(card_name, card_lines, comment, self.log)
-            self.log.info('    rejecting card_name = %s' % card_name)
+            if card_name == '\ufeff':
+                self.log.warning('    rejecting card_name = %r' % card_name)
+                self.log.warning('    comment:\n')
+                print(comment)
+                self.log.warning('    lines:\n')
+                for line in card_lines:
+                    print(line)
+            else:
+                self.log.info('    rejecting card_name = %r' % card_name)
 
         self.increase_card_count(card_name)
         self.reject_lines.append([_format_comment(comment)] + card_lines)

@@ -1,5 +1,5 @@
 from __future__ import print_function
-
+import PySide
 
 def cmd_line_plot_flutter():  # pragma: no cover
     import os
@@ -9,8 +9,8 @@ def cmd_line_plot_flutter():  # pragma: no cover
     from pyNastran.f06.parse_flutter import plot_flutter_f06
     msg = (
         'Usage:\n'
-        '  f06 plot_145 F06_FILENAME [--noline] [--modes MODES] [--subcases SUB] [--xlim FREQ] [--ylimdamp DAMP] '
-        '[--eas|--tas] [--kfreq] [--rootlocus] [--in_units IN][--out_units OUT] [--nopoints]\n'
+        '  f06 plot_145 F06_FILENAME [--noline] [--modes MODES] [--subcases SUB] [--xlim XLIM] [--ylimdamp DAMP] [--ylimfreq FREQ]'
+        '[--eas|--tas] [--kfreq] [--rootlocus] [--in_units IN][--out_units OUT] [--nopoints] [--export]\n'
         '  f06 plot_145 -h | --help\n'
         '  f06 plot_145 -v | --version\n'
         '\n'
@@ -42,9 +42,11 @@ def cmd_line_plot_flutter():  # pragma: no cover
         'Options:\n'
         '  --modes MODES    the modes to plot (e.g. 1:10,20:22)\n'
         '  --subcases SUB   the subcases to plot (e.g. 1,3); unused\n'
-        '  --xlim FREQ      the frequency limits (unused)\n'
+        '  --xlim XLIM      the velocity limits (default=no limit)\n'
+        '  --ylimfreq FREQ  the damping limits (default=no limit)\n'
         '  --ylimdamp DAMP  the damping limits (default=-0.3:0.3)\n'
         "  --nopoints       don't plot the points\n"
+        "  --export         export a zona file\n"
         '\n'
         'Info:\n'
         '  -h, --help      show this help message and exit\n'''
@@ -63,10 +65,20 @@ def cmd_line_plot_flutter():  # pragma: no cover
         base = os.path.splitext(f06_filename)[0]
         f06_filename = base + '.f06'
 
+    export = data['--export']
     modes = split_int_colon(data['--modes'])
+
+    xlim_freq = [None, None]
+    if data['--xlim']:
+        xlim = split_float_colons(data['--xlim'])
+
     ylim_damping = [-.3, .3]
     if data['--ylimdamp']:
         ylim_damping = split_float_colons(data['--ylimdamp'])
+
+    ylim_freq = [None, None]
+    if data['--ylimfreq']:
+        ylim_freq = split_float_colons(data['--ylimfreq'])
 
     in_units = 'si'
     if data['--in_units']:
@@ -86,14 +98,16 @@ def cmd_line_plot_flutter():  # pragma: no cover
     plot_root_locus = data['--rootlocus']
 
     nopoints = data['--nopoints']
-    print('modes = %s' % modes)
     plot_flutter_f06(f06_filename, modes=modes,
                      plot_type=plot_type,
                      f06_units=in_units,
                      out_units=out_units,
                      plot_root_locus=plot_root_locus, plot_vg_vf=True, plot_vg=False,
                      plot_kfreq_damping=plot_kfreq_damping,
-                     ylim_damping=ylim_damping, nopoints=nopoints)
+                     xlim=xlim,
+                     ylim_damping=ylim_damping, ylim_freq=ylim_freq,
+                     nopoints=nopoints,
+                     export=export)
 
 def split_float_colons(string_values):
     """
@@ -123,7 +137,7 @@ def split_float_colons(string_values):
         values = None # all values
     return values
 
-def split_int_colon(modes):
+def split_int_colon(modes, nmax=1000):
     """
     Uses numpy-ish syntax to parse a set of integers.  Values are inclusive.
     Blanks are interpreted as 0.
@@ -148,7 +162,7 @@ def split_int_colon(modes):
                     istart = int(smode[0])
                     if smode[1] == '':
                         iend = None
-                        modes2 = slice(istart, None)
+                        modes2 = slice(istart, nmax)
                         assert len(smodes) == 1, smodes
                     else:
                         iend = int(smode[1])
@@ -168,8 +182,9 @@ def split_int_colon(modes):
         #modes = np.array(modes2, dtype='int32') - 1
         modes = modes2
 
-    if None not in modes:
-        modes.sort()
+    #print('modes =', list(modes))
+    #if None not in modes:
+        #modes.sort()
     return modes
 
 def cmd_line():  # pragma: no cover
@@ -177,7 +192,7 @@ def cmd_line():  # pragma: no cover
     msg = (
         'Usage:\n'
         '  f06 plot_145 F06_FILENAME [--noline] [--modes MODES] [--subcases SUB] [--xlim FREQ] [--ylimdamp DAMP] '
-        '[--eas|--tas] [--kfreq] [--rootlocus]\n'
+        '[--eas|--tas] [--kfreq] [--rootlocus] [--export]\n'
         '\n'
         '  f06 plot_145 -h | --help\n'
         '  f06 -v | --version\n'

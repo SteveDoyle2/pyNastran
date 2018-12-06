@@ -106,6 +106,7 @@ class Subcase(object):
                 raise RuntimeError('failed exporting Subcase/%s' % key)
 
     def _load_hdf5_param(self, group, key, encoding):
+        import h5py
         from pyNastran.utils.dict_to_h5py import _cast
         #print('-----------------------------------------')
         #print(type(key), key)
@@ -165,7 +166,16 @@ class Subcase(object):
 
             data_group = sub_groupi['data']
             keys2 = _cast(data_group['keys']).tolist()
-            values2 = _cast(data_group['values']).tolist()
+
+            h5_values = data_group['values']
+            if isinstance(h5_values, h5py._hl.group.Group):
+                values2 = [None] * len(keys2)
+                for ih5 in h5_values.keys():
+                    ih5_int = int(ih5)
+                    h5_value = _cast(h5_values[ih5])
+                    values2[ih5_int] = h5_value
+            else:
+                values2 = _cast(h5_values).tolist()
             #print('data_keys =', data_group, data_group.keys())
 
             keys_str = [

@@ -243,7 +243,7 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None,
                      plot_vg=False, plot_vg_vf=False, plot_root_locus=False,
                      plot_kfreq_damping=False, show=True,
                      xlim=None, ylim_damping=None, ylim_freq=None, nopoints=False,
-                     log=None):
+                     export=False, log=None):
     """
     Plots a flutter (SOL 145) deck
 
@@ -311,14 +311,14 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None,
                        plot_type,
                        plot_vg, plot_vg_vf, plot_root_locus, plot_kfreq_damping,
                        nopoints,
-                       show=show)
+                       export=export, show=show)
     return flutters
 
 def make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq,
                        plot_type,
                        plot_vg, plot_vg_vf, plot_root_locus, plot_kfreq_damping,
                        nopoints,
-                       show=True):
+                       legend=True, export=False, show=True):
     """actually makes the flutter plots"""
     for unused_subcase, flutter in sorted(flutters.items()):
         if plot_vg:
@@ -331,7 +331,7 @@ def make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq,
                                show=False,
                                xlim=xlim,
                                ylim_damping=ylim_damping, ylim_freq=ylim_freq,
-                               nopoints=nopoints)
+                               nopoints=nopoints, legend=legend)
         if plot_root_locus:
             flutter.plot_root_locus(modes=modes, show=False)
         if plot_kfreq_damping:
@@ -339,6 +339,8 @@ def make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq,
                                        ylim_damping=ylim_damping,
                                        ylim_kfreq=None,
                                        show=False)
+        if export:
+            flutter.export_to_zona('zona.f06', modes=modes, xlim=xlim, plot_type=plot_type)
     if show:
         plt.show()
 

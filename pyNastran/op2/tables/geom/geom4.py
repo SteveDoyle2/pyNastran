@@ -1497,7 +1497,7 @@ def _read_spcadd_mpcadd(model, card_name, datai):
         model.binary_debug.write('  %s - %s' % (card_name, str(datai)))
     iend = np.where(datai == -1)[0]
     if len(datai) == 3:
-        dataii = datai
+        dataii = datai[:-1]
         if card_name == 'MPCADD':
             constraint = MPCADD.add_op2_data(dataii)
             model._add_constraint_mpcadd_object(constraint)

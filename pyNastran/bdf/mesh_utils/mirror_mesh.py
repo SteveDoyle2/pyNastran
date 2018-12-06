@@ -236,7 +236,7 @@ def _plane_to_iy(plane):
         iy = 1
     elif plane == 'xy':
         iy = 2
-    else:
+    else:  # pragma: no cover
         raise NotImplementedError("plane=%r and must be 'yz', 'xz', or 'xy'." % plane)
     return iy, plane
 
@@ -250,8 +250,12 @@ def _mirror_elements(model, mirror_model, nid_offset, use_eid_offset=True):
        2d : CTRIA3, CQUAD4, CTRIA6, CQUAD8, CQUAD, CTRIAR, CQUADR
        3d : ???
        missing : CVISC, CTRIAX, CTRIAX6, CQUADX, CQUADX8, CCONEAX
-    rigid_elements : N/A
-    mass_elements : N/A
+    rigid_elements:
+       loaded: RBE2, RBE3
+       missing: RBAR, RBAR1
+    mass_elements:
+       loaded: CONM2
+       missing CONM1, CMASS1, CMASS2, CMASS3, CMASS4
 
     Notes
     -----
@@ -264,7 +268,7 @@ def _mirror_elements(model, mirror_model, nid_offset, use_eid_offset=True):
     if use_eid_offset:
         if model.elements:
             eid_max_elements = max(model.elements.keys())
-        if model.elements:
+        if model.masses:
             eid_max_masses = max(model.masses.keys())
         if model.rigid_elements:
             eid_max_rigid = max(model.rigid_elements.keys())
@@ -356,7 +360,7 @@ def _mirror_elements(model, mirror_model, nid_offset, use_eid_offset=True):
             else:
                 try:
                     element2.nodes = nodes
-                except AttributeError:
+                except AttributeError:  # pragma: no cover
                     print(element.get_stats())
                     raise
 
@@ -373,7 +377,7 @@ def _mirror_elements(model, mirror_model, nid_offset, use_eid_offset=True):
                 X = element.X
                 I = element.I
                 mirror_model.add_conm2(eid_mirror, new_nid, mass, cid=cid, X=X, I=I, comment='')
-            else:
+            else:  # pragma: no cover
                 #print(element.get_stats())
                 mirror_model.log.warning('skipping mass element:\n%s' % str(element))
 
@@ -412,7 +416,7 @@ def _mirror_elements(model, mirror_model, nid_offset, use_eid_offset=True):
                     eid_mirror, ref_grid_id_mirror, rigid_element.refc, rigid_element.weights,
                     rigid_element.comps, Gijs_mirror
                 )
-            else:
+            else:  # pragma: no cover
                 mirror_model.log.warning('skipping:\n%s' % str(rigid_element))
 
     return eid_offset
@@ -444,7 +448,7 @@ def _mirror_loads(model, nid_offset=0, eid_offset=0):
                     surf_or_line=load.surf_or_line,
                     line_load_dir=load.line_load_dir, comment='')
                 loads_new.append(load)
-            else:
+            else:  # pragma: no cover
                 model.log.warning('skipping:\n%s' % load.rstrip())
         if loads_new:
             loads += loads_new
@@ -503,7 +507,7 @@ def _mirror_aero(model, nid_offset, plane):
                 caero_new.flip_normal()
                 caeros.append(caero_new)
                 #print(caero)
-            else:
+            else:  # pragma: no cover
                 model.log.error('skipping (only support CAERO1):\n%s' % caero.rstrip())
 
         for caero in caeros:
@@ -538,7 +542,7 @@ def _mirror_aero(model, nid_offset, plane):
                                      nelements=nelements, melements=melements, comment='')
                 splines.append(spline_new)
                 spline_sets_to_duplicate.append(spline.setg)
-            else:
+            else:  # pragma: no cover
                 model.log.error('skipping (only support SPLINE1):\n%s' % spline.rstrip())
 
         #print("spline_sets_to_duplicate =", spline_sets_to_duplicate)
@@ -553,7 +557,7 @@ def _mirror_aero(model, nid_offset, plane):
                 is_skin = set_card.is_skin
                 set_card = SET1(sid, ids, is_skin=is_skin, comment='')
                 sets_to_add.append(set_card)
-            else:
+            else:  # pragma: no cover
                 model.log.error('skipping (only support SET1):\n%s' % set_card.rstrip())
 
         for spline in splines:
@@ -630,7 +634,7 @@ def make_symmetric_model(bdf_filename, plane='xz', zero_tol=1e-12, log=None, deb
             if p1[iy] <= zero and p2[iy] <= zero:
                 #print('p1=%s p4=%s' % (p1, p4))
                 caero_ids_to_remove.append(caero_id)
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(caero)
 
     for caero_id in caero_ids_to_remove:

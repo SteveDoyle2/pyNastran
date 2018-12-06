@@ -568,6 +568,7 @@ def cmd_line_filter():  # pragma: no cover
     import pyNastran
     msg = (
         'Usage:\n'
+        '  bdf filter IN_BDF_FILENAME [-o OUT_CAERO_BDF_FILENAME]\n'
         '  bdf filter IN_BDF_FILENAME [-o OUT_CAERO_BDF_FILENAME] [--x YSIGN_X] [--y YSIGN_Y] [--z YSIGN_Z]\n'
         '  bdf filter -h | --help\n'
         '  bdf filter -v | --version\n'
@@ -578,7 +579,7 @@ def cmd_line_filter():  # pragma: no cover
         '\n'
 
         'Options:\n'
-        ' -o OUT, --output  OUT_BDF_FILENAME         path to output BDF file\n'
+        ' -o OUT, --output  OUT_BDF_FILENAME         path to output BDF file (default=filter.bdf)\n'
         " --x YSIGN_X                                a string (e.g., '< 0.')\n"
         " --y YSIGN_Y                                a string (e.g., '< 0.')\n"
         " --z YSIGN_Z                                a string (e.g., '< 0.')\n"
@@ -587,6 +588,12 @@ def cmd_line_filter():  # pragma: no cover
         'Info:\n'
         '  -h, --help      show this help message and exit\n'
         "  -v, --version   show program's version number and exit\n"
+        '\n'
+        'Examples\n'
+        '1. remove unused cards:\n'
+        '   >>> bdf filter fem.bdf'
+        '2. remove GRID points and associated cards with y value < 0:\n'
+        "   >>> bdf filter fem.bdf --y '< 0.'"
     )
     if len(sys.argv) == 1:
         sys.exit(msg)
@@ -671,11 +678,11 @@ def cmd_line_filter():  # pragma: no cover
             model._type_to_id_map[etype].remove(eid)
             del model.elements[eid]
 
-        #update_nodes(model, nid_cp_cd, xyz_cid0)
-        # unxref'd model
-        remove_unused(model, remove_nids=True, remove_cids=True,
-                      remove_pids=True, remove_mids=True)
-        model.write_bdf(bdf_filename_out)
+    #update_nodes(model, nid_cp_cd, xyz_cid0)
+    # unxref'd model
+    remove_unused(model, remove_nids=True, remove_cids=True,
+                  remove_pids=True, remove_mids=True)
+    model.write_bdf(bdf_filename_out)
 
 def _union(xval, iunion, ix):
     """helper method for ``filter``"""

@@ -867,6 +867,14 @@ class BEAMOR(BaseCard):
         self.offt = offt
 
     @classmethod
+    def _init_from_empty(cls):
+        pid = 1
+        is_g0 = True
+        g0 = 1
+        x = None
+        return BEAMOR(pid, is_g0, g0, x, offt='GGG', comment='')
+
+    @classmethod
     def add_card(cls, card, comment=''):
         pid = integer_or_blank(card, 2, 'pid')
 
@@ -893,3 +901,9 @@ class BEAMOR(BaseCard):
 
     def raw_fields(self):
         return ['BEAMOR', None, self.pid, None, None] + list(self.x) + [self.offt]
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)

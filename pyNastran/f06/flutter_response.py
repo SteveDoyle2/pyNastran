@@ -638,6 +638,62 @@ class FlutterResponse(object):
         if clear:
             plt.clear()
 
+    def export_to_zona(self, zona_filename, modes=None, xlim=None, plot_type='tas'):
+        modes, imodes = _get_modes_imodes(self.modes, modes)
+        legend_items = ['Mode %i' % mode for mode in modes]
+        ix, xlabel = self._plot_type_to_ix_xlabel(plot_type)
+
+        # these are the required damping levels to plot
+        damping_ratios = [0., 0.01, 0.02, 0.05, 0.1, 0.15]
+
+        for damping_ratio in damping_ratios:
+            print('mode, V, damp, freq: (damping ratio=%s' % damping_ratio)
+
+            xlim_min = xlim[0]
+            xlim_max = xlim[1]
+            for i, imode, mode in zip(count(), imodes, modes):
+                vel = self.results[imode, :, ix].ravel()
+                damping = self.results[imode, :, self.idamping].ravel()
+                freq = self.results[imode, :, self.ifreq].ravel()
+
+                # consider flutter to be at 0, -0.01, ... damping ratio (so we have a damping margin)
+                idamp = np.where(damping > -damping_ratio)[0]
+
+                if len(idamp) == 0:
+                    continue
+
+                # limit the plot based on the xlimits
+                veli = vel[idamp]
+                if xlim_min is None and xlim_max is None:
+                    jvel = None
+                elif xlim_min is not None and xlim_max is not None:
+                    jvel = np.where((xlim_min <= veli) & (veli <= xlim_max))[0]
+                elif xlim_min is not None:
+                    jvel = np.where(xlim_min <= veli)[0]
+                elif xlim_max is not None:
+                    jvel = np.where(veli <= xlim_max)[0]
+                else:  # pragma: no cover
+                    raise RuntimeError('xlim min/max are unclear')
+
+                if len(jvel) == 0:
+                    continue
+
+                if jvel is None:
+                    # no xlimits
+                    idampi = idamp[0]
+                    veli = vel[idampi]
+                    dampi = damping[idampi]
+                    freqi = freq[idampi]
+                else:
+                    # xlimits
+                    jveli = jvel[0]
+                    veli = vel[idamp][jveli]
+                    dampi = damping[idamp][jveli]
+                    freqi = freq[idamp][jveli]
+                print(mode, veli, dampi, freqi)
+
+            print('')
+
     def _plot_type_to_ix_xlabel(self, plot_type):
         """helper method for ``plot_vg_vf``"""
         plot_type = plot_type.lower()
@@ -743,6 +799,8 @@ def _get_modes_imodes(all_modes, modes):
             stop = len(all_modes) + 1
         stop = modes.stop
         step = modes.step
+        if step is None:
+            step = 1
         modes = np.unique(range(start, stop, step))
     elif len(modes) == 0:
         raise RuntimeError('modes = %s' % modes)

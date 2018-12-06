@@ -172,23 +172,23 @@ class OP2Reader(object):
                     # TODO: why is this separate?
                     # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_ac11103.op2
                     #print('found NX table?...')
-                    self.log.warning('Assuming NX Nastran')
+                    #self.log.warning('Assuming NX Nastran')
                     mode = 'nx'
                 elif version.startswith(b'AEROFREQ'):
                     # TODO: why is this separate?
                     # C:\Users\Steve\Dropbox\pyNastran_examples\move_tpl\loadf.op2
                     #print('found MSC table?...')
-                    self.log.warning('Assuming MSC Nastran')
+                    #self.log.warning('Assuming MSC Nastran')
                     mode = 'msc'
                 elif version.startswith(b'AEROTRAN'):
                     # TODO: why is this separate?
                     # C:\Users\Steve\Dropbox\pyNastran_examples\move_tpl\loadf.op2
-                    self.log.warning('Assuming MSC Nastran')
+                    #self.log.warning('Assuming MSC Nastran')
                     mode = 'msc'
                 elif version in [b'V2005R3B']:
                     mode = 'msc'
                 elif version in [b'XXXXXXXX']:
-                    self.log.warning('Assuming MSC Nastran')
+                    #self.log.warning('Assuming MSC Nastran')
                     mode = 'msc'
                 elif version == b'OS12.210':
                     mode = 'optistruct'

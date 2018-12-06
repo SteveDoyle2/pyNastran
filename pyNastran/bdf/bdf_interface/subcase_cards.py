@@ -1035,7 +1035,15 @@ class EXTSEOUT(CaseControlCard):
                 value.encode(encoding) if isinstance(value, text_type) else value
                 for value in values]
             data_group.create_dataset('keys', data=keys_bytes)
-            data_group.create_dataset('values', data=values_bytes)
+
+            if None in values_bytes:
+                value_group = data_group.create_group('values')
+                for i, value in enumerate(values):
+                    if value is None:
+                        continue
+                    value_group.create_dataset(str(i), data=value)
+            else:
+                data_group.create_dataset('values', data=values_bytes)
             #hdf5_file.create_dataset('data', data=data_bytes)
         else:
             raise NotImplementedError(self.data)

@@ -730,6 +730,7 @@ class QHBDY(ThermalLoad):
     Defines a uniform heat flux into a set of grid points.
     """
     type = 'QHBDY'
+    _properties = ['flag_to_nnodes']
     flag_to_nnodes = {
         'POINT' : (1, 1),
         'LINE' : (2, 2),

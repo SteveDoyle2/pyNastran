@@ -15,6 +15,7 @@ from six import StringIO
 import numpy as np
 from pyNastran.utils import print_bad_path, _filename
 from pyNastran.utils.log import get_logger2
+from pyNastran.bdf.bdf_interface.utils import _parse_pynastran_header
 from pyNastran.bdf.bdf_interface.include_file import get_include_filename
 from pyNastran.bdf.errors import MissingDeckSections
 
@@ -64,6 +65,40 @@ class BDFInputPy(object):
         self.consider_superelements = consider_superelements
         self.debug = debug
         self.log = get_logger2(log, debug)
+
+    def _check_pynastran_encoding(self, bdf_filename, encoding):
+        """updates the $pyNastran: key=value variables"""
+        line = '$pyNastran: punch=False'
+        #line_temp = u'é à è ê'.encode('utf8').decode('ascii')
+
+
+
+        with open(bdf_filename, 'rb') as bdf_file:
+            line = bdf_file.readline()
+            line_str = line.decode('ascii')
+            while '$' in line_str:
+                #if not line.startswith('$'):
+                    #break
+
+                key, value = _parse_pynastran_header(line_str)
+                if not key:
+                    break
+
+                skip_keys = [
+                    'version', 'punch', 'nnodes', 'nelements', 'dumplines',
+                    'is_superelements', 'skip_cards', 'units']
+
+                # key/value are lowercase
+                if key == 'encoding':
+                    encoding = value
+                    break
+                elif key in skip_keys or 'skip ' in key:
+                    pass
+                else:
+                    raise NotImplementedError(key)
+                line = bdf_file.readline()
+                line_str = line.decode('ascii')
+        return encoding
 
     def get_lines(self, bdf_filename, punch=False, make_ilines=True):
         # type: (Union[str, StringIO], bool) -> List[str]
@@ -281,18 +316,45 @@ class BDFInputPy(object):
             raise
             #raise IOError(msg)
 
+        read_again = False
         with self._open_file(bdf_filename2, basename=False) as bdf_file:
             #print('bdf_file.name = %s' % bdf_file.name)
             try:
                 lines2 = bdf_file.readlines()
             except UnicodeDecodeError:
-                msg = (
-                    'Invalid Encoding: encoding=%r.  Fix it by:\n'
-                    '  1.  try a different encoding (e.g., latin1, cp1252, utf8)\n'
-                    "  2.  call read_bdf(...) with `encoding`'\n"
-                    "  3.  Add '$ pyNastran : encoding=latin1"
-                    ' (or other encoding) to the top of the main file\n' % self.encoding)
-                raise RuntimeError(msg)
+                #try:
+                bdf_file.seek(0)
+                try:
+                    encoding2 = self._check_pynastran_encoding(bdf_filename2, encoding=self.encoding)
+                except UnicodeDecodeError:
+                    encoding2 = self.encoding
+
+                #print('***encoding=%s encoding2=%s' % (self.encoding, encoding2))
+                if self.encoding != encoding2:
+                    read_again = True
+                else:
+                    msg = (
+                        'Invalid Encoding: encoding=%r.  Fix it by:\n'
+                        '  1.  try a different encoding (e.g., latin1, cp1252, utf8)\n'
+                        "  2.  call read_bdf(...) with `encoding`'\n"
+                        "  3.  Add '$ pyNastran : encoding=latin1"
+                        ' (or other encoding) to the top of the main/INCLUDE file\n' % self.encoding)
+                    raise RuntimeError(msg)
+
+        if read_again:
+            self.active_filenames.pop()
+            with self._open_file(bdf_filename2, basename=False, encoding=encoding2) as bdf_file:
+                #print('bdf_file.name = %s' % bdf_file.name)
+                try:
+                    lines2 = bdf_file.readlines()
+                except UnicodeDecodeError:
+                    msg = (
+                        'Incorrect Encoding: encoding=%r.  Fix it by:\n'
+                        '  1.  try a different encoding (e.g., latin1, cp1252, utf8)\n'
+                        "  2.  call read_bdf(...) with `encoding`'\n"
+                        "  3.  Add '$ pyNastran : encoding=latin1"
+                        ' (or other encoding) to the top of the main/INCLUDE file\n' % encoding2)
+                    raise RuntimeError(msg)
 
         #print('lines2 = %s' % lines2)
 
@@ -473,7 +535,7 @@ class BDFInputPy(object):
             print(msg)
             raise IOError(msg)
 
-    def _open_file(self, bdf_filename, basename=False, check=True):
+    def _open_file(self, bdf_filename, basename=False, check=True, encoding=None):
         """
         Opens a new bdf_filename with the proper encoding and include directory
 
@@ -486,6 +548,8 @@ class BDFInputPy(object):
         check : bool; default=True
             you can disable the checks
         """
+        if encoding is None:
+            encoding = self.encoding
         if basename:
             bdf_filename_inc = os.path.join(self.include_dir, os.path.basename(bdf_filename))
         else:
@@ -498,7 +562,8 @@ class BDFInputPy(object):
         self.active_filenames.append(bdf_filename_inc)
 
         #print('ENCODING - _open_file=%r' % self.encoding)
-        bdf_file = open(_filename(bdf_filename_inc), 'r', encoding=self.encoding)
+        #self._check_pynastran_header(lines)
+        bdf_file = open(_filename(bdf_filename_inc), 'r', encoding=encoding)
         return bdf_file
 
     def _validate_open_file(self, bdf_filename, bdf_filename_inc, check=True):

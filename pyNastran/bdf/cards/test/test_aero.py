@@ -1698,6 +1698,33 @@ class TestAero(unittest.TestCase):
         with self.assertRaises(ValueError):
             flutter.validate()
 
+    def test_flutter_3(self):
+        """tests the flutter sweeps"""
+        alts = np.linspace(-10000., 50000.)[::-1]
+
+        model = BDF()
+        sid = 70
+        method = 'PKNL'
+        density = 71
+        mach = 72
+        reduced_freq_velocity = 73
+        flutter = model.add_flutter(sid, method, density, mach, reduced_freq_velocity)
+        flutter.make_flfacts_alt_sweep(model, 0.7, alts, eas_limit=1000.0, alt_units=u'ft',
+                                       velocity_units=u'in/s', density_units=u'slinch/in^3',
+                                       eas_units=u'ft/s')
+
+        sid = 80
+        density = 81
+        mach = 82
+        reduced_freq_velocity = 83
+        flutter = model.add_flutter(sid, method, density, mach, reduced_freq_velocity)
+        alt = 10000.
+        machs = np.arange(0.1, 0.8)
+        flutter.make_flfacts_mach_sweep(model, alt, machs, eas_limit=1000., alt_units='m',
+                                        velocity_units='m/s',
+                                        density_units='kg/m^3',
+                                        eas_units='m/s')
+
     def test_mkaero1(self):
         """checks the MKAERO1 card"""
         machs = [0.5, 0.75]

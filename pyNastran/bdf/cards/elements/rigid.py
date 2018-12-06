@@ -841,6 +841,24 @@ class RBE2(RigidElement):
         return value
 
     def __init__(self, eid, gn, cm, Gmi, alpha=0.0, comment=''):
+        """
+        Creates an RBE2 element
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        gn : int
+           Identification number of grid point to which all six independent
+           degrees-of-freedom for the element are assigned.
+        cm : str
+            Component numbers of the dependent degrees-of-freedom in the
+            global coordinate system at grid points GMi.
+        Gmi : List[int]
+            dependent nodes
+        alpha : float; default=0.0
+            ???
+        """
         RigidElement.__init__(self)
         if comment:
             self.comment = comment

@@ -78,6 +78,13 @@ class SEBNDRY(BaseCard):
         assert len(card) >= 3, 'len(SEBNDRY card) = %i\ncard=%s' % (len(card), card)
         return SEBNDRY(seid_a, seid_b, ids, comment=comment)
 
+    def cross_reference(self, model):
+        pass
+
+    def raw_fields(self):
+        list_fields = ['SEBNDRY', self.seid_a, self.seid_b] + self.ids
+        return list_fields
+
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment + print_card_8(card)
@@ -245,6 +252,8 @@ class SEEXCLD(BaseCard):
     |         | GIDA7 | GIDA8 |  etc. |       |       |       |       |       |
     +---------+-------+-------+-------+-------+-------+-------+-------+-------+
     """
+    type = 'SEEXCLD'
+    _properties = ['node_ids']
 
     @classmethod
     def _init_from_empty(cls):
@@ -278,6 +287,13 @@ class SEEXCLD(BaseCard):
                 nodes.append(nid)
         assert len(card) >= 3, 'len(SEEXCLD card) = %i\ncard=%s' % (len(card), card)
         return SEEXCLD(seid_a, seid_b, nodes, comment=comment)
+
+    def cross_reference(self, model):
+        pass
+
+    @property
+    def node_ids(self):
+        return self.nodes
 
     def raw_fields(self):
         list_fields = ['SEEXCLD', self.seid_a, self.seid_b, ] + self.node_ids

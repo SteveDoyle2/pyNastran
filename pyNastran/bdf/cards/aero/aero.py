@@ -231,26 +231,37 @@ class AECOMP(BaseCard):
         return self.comment + print_card_8(card)
 
 class AECOMPL(BaseCard):
+    """
+    +---------+--------+--------+--------+---------+--------+--------+--------+--------+
+    |    1    |    2   |    3   |    4   |    5    |    6   |    7   |    8   |    9   |
+    +=========+========+========+========+=========+========+========+========+========+
+    | AECOMPL |  NAME  | LABEL1 | LABEL2 | LABEL3  | LABEL4 | LABEL5 | LABEL6 | LABEL7 |
+    +---------+--------+--------+--------+---------+--------+--------+--------+--------+
+    |         | LABEL8 |  etc.  |        |         |        |        |        |        |
+    +---------+--------+--------+--------+---------+--------+--------+--------+--------+
+    | AECOMPL |  HORIZ |  STAB  |  ELEV  | BALANCE |        |        |        |        |
+    +---------+--------+--------+--------+---------+--------+--------+--------+--------+
+    """
     type = 'AECOMPL'
 
-    def __init__(self, name, list_type, lists, comment=''):
-        # type: (str, List[str], Union[int, List[int]], str) -> None
+    @classmethod
+    def _init_from_empty(cls):
+        name = 'HORIZ'
+        labels = 'ELEV'
+        return AECOMPL(name, labels, comment='')
+
+    def __init__(self, name, labels, comment=''):
+        # type: (str, List[str]) -> None
         """
-        Creates an AECOMP card
+        Creates an AECOMPL card
 
         Parameters
         ----------
         name : str
             the name of the component
-        list_type : str
-            One of CAERO, AELIST or CMPID for aerodynamic components and
-            SET1 for structural components. Aerodynamic components are
-            defined on the aerodynamic ks-set mesh while the structural
-            components are defined on the g-set mesh.
-        lists : List[int, int, ...]; int
-            The identification number of either SET1, AELIST or CAEROi
-            entries that define the set of grid points that comprise
-            the component
+        labels : List[str, str, ...]; str
+            A string of 8 characters referring to the names of other components
+            defined by either AECOMP or other AECOMPL entries.
         comment : str; default=''
             a comment for the card
 
@@ -258,21 +269,20 @@ class AECOMPL(BaseCard):
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
-        if isinstance(lists, integer_types):
-            lists = [lists]
-        elif not isinstance(lists, (list, tuple)):
-            raise TypeError('AECOMP; type(lists)=%s and must be a list/tuple' % type(lists))
+        if isinstance(labels, string_types):
+            labels = [labels]
+        elif not isinstance(labels, (list, tuple)):
+            raise TypeError('AECOMPL; type(labels)=%s and must be a list/tuple' % type(labels))
 
         self.name = name
-        self.list_type = list_type
-        self.lists = lists
-        self.lists_ref = None
+        self.labels = labels
+        #self.labels_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
         # type: (Any, str) -> AECOMP
         """
-        Adds an AECOMP card from ``BDF.add_card(...)``
+        Adds an AECOMPL card from ``BDF.add_card(...)``
 
         Parameters
         ----------
@@ -282,20 +292,21 @@ class AECOMPL(BaseCard):
             a comment for the card
 
         """
-        aecompl
         name = string(card, 1, 'name')
-        list_type = string(card, 2, 'list_type')
+        labels = []
         j = 1
-        lists = []
-        for i in range(3, len(card)):
-            list_i = integer(card, i, '%s_%i' % (list_type, j))
-            lists.append(list_i)
+        for i in range(2, len(card)):
+            label = string(card, i, 'label_%i' % j)
+            labels.append(label)
             j += 1
-        return AECOMPL(name, list_type, lists, comment=comment)
+        return AECOMPL(name, labels, comment=comment)
 
-    #def raw_fields(self):
-        #list_fields = ['AECOMP', self.name, self.list_type] + self.get_lists()
-        #return list_fields
+    def cross_reference(self, model):
+        pass
+
+    def raw_fields(self):
+        list_fields = ['AECOMPL', self.name] + self.labels
+        return list_fields
 
     def write_card(self, size=8, is_double=False):
         # (int, bool) -> str

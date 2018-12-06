@@ -442,14 +442,30 @@ class PSOLID(SolidProperty):
             mid.append(prop.mid)
             cordm.append(prop.cordm)
             if prop.integ is None:
-                integ.append(-1)
+                integ.append(b'')
+            elif prop.integ == 0:
+                integ.append(b'BUBBLE')
+            elif prop.integ == 1:
+                integ.append(b'GAUSS')
+            elif prop.integ == 2:
+                integ.append(b'TWO')
+            elif prop.integ == 3:
+                integ.append(b'THREE')
             else:
-                integ.append(prop.integ)
+                #0, 'BUBBLE'
+                #1, 'GAUSS'
+                #2, 'TWO'
+                #3, 'THREE'
+                #REDUCED
+                #FULL
+                integ.append(prop.integ.encode(encoding))
 
             if prop.stress is None:
                 stress.append(b'')
+            elif prop.stress == 1:
+                stress.append(b'GAUSS')
             else:
-                # 'GRID'
+                # None/GRID, 1-GAUSS
                 stress.append(prop.stress.encode(encoding))
 
             if prop.isop is None:

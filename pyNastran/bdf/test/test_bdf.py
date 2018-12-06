@@ -658,10 +658,15 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
         for key, value in fem1.card_count.items():
             if key == 'ENDDATA':
                 continue
+            hdf5_msg = ''
             if key not in fem1a.card_count:
-                msg = 'key=%r was not loaded to hdf5\nexpected=%s\nactual=%s' % (
-                    key, fem1.card_count, fem1a.card_count)
-                raise RuntimeError(msg)
+                hdf5_msg += 'key=%r was not loaded to hdf5\n' % key
+
+            if hdf5_msg:
+                hdf5_msg += 'expected=%s\nactual=%s' % (
+                                    fem1.card_count, fem1a.card_count)
+                #raise RuntimeError(hdf5_msg)
+                self.log.error(hdf5_msg)
         #sys.exit('hdf5')
 
     if mesh_form is None:

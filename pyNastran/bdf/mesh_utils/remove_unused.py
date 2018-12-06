@@ -712,24 +712,29 @@ def _remove(model,
     if remove_nids and nids_to_remove:
         for nid in nids_to_remove:
             del model.nodes[nid]
+        nids_to_remove.sort()
         model.log.debug('removed nodes %s' % nids_to_remove)
 
     if remove_cids and cids_to_remove:
         for cid in cids_to_remove:
             del model.coords[cid]
+        cids_to_remove.sort()
         model.log.debug('removing coords %s' % cids_to_remove)
 
     if remove_pids and pids_to_remove:
         for pid in pids_mass_to_remove:
             del model.properties_mass[pid]
+        pids_mass_to_remove.sort()
         model.log.debug('removing properties_mass %s' % pids_mass_to_remove)
 
         for pid in pids_to_remove:
             del model.properties[pid]
+        pids_to_remove.sort()
         model.log.debug('removing properties %s' % pids_to_remove)
 
     if remove_mids and mids_to_remove:
         for mid in mids_to_remove:
             del model.materials[mid]
+        mids_to_remove.sort()
         model.log.debug('removing materials %s' % mids_to_remove)
     return model

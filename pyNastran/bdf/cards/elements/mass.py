@@ -714,12 +714,12 @@ class CMASS4(PointMassElement):
         return [self.S1(), self.S2()]
 
     def S1(self):
-        if self.nodes_ref is not None:
+        if self.nodes_ref is not None and self.nodes_ref[0] is not None:
             return self.nodes_ref[0].nid
         return self.nodes[0]
 
     def S2(self):
-        if self.nodes_ref is not None:
+        if self.nodes_ref is not None and self.nodes_ref[1] is not None:
             return self.nodes_ref[1].nid
         return self.nodes[1]
 
