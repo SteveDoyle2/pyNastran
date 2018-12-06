@@ -1,5 +1,5 @@
 from __future__ import print_function
-import PySide
+#import PySide
 
 def cmd_line_plot_flutter():  # pragma: no cover
     import os
