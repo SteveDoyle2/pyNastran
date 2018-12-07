@@ -846,7 +846,7 @@ class CONM1(PointMassElement):
         mass_matrix = np.zeros((6, 6))
         return CONM1(eid, nid, mass_matrix, cid=0, comment='')
 
-    def _finalize_hdf5(self):
+    def _finalize_hdf5(self, encoding):
         """hdf5 helper function"""
         self.mass_matrix = np.asarray(self.mass_matrix)
 

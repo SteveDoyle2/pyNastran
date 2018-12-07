@@ -584,7 +584,7 @@ class CRAC2D(CrackElement):
         nids = [1]
         return CRAC2D(eid, pid, nids, comment='')
 
-    def _finalize_hdf5(self):
+    def _finalize_hdf5(self, encoding):
         """hdf5 helper function"""
         if isinstance(self.nodes, np.ndarray):
             self.nodes = self.nodes.tolist()
@@ -693,7 +693,7 @@ class CRAC3D(CrackElement):
         nids = [1]
         return CRAC3D(eid, pid, nids, comment='')
 
-    def _finalize_hdf5(self):
+    def _finalize_hdf5(self, encoding):
         """hdf5 helper function"""
         if isinstance(self.nodes, np.ndarray):
             self.nodes = self.nodes.tolist()

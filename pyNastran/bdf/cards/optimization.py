@@ -985,7 +985,7 @@ class DOPTPRM(OptConstraint):
         params = {'TCHECK' : -1}
         return DOPTPRM(params, comment='')
 
-    def _finalize_hdf5(self):
+    def _finalize_hdf5(self, encoding):
         """hdf5 helper function"""
         keys, values = self.params
         self.params = {key : value if not np.isnan(value) else None
@@ -2044,8 +2044,9 @@ class DRESP2(OptConstraint):
             response id
         label : str
             Name of the response
-        dequation : int
-            DEQATN id
+        dequation : int / str
+            int : DEQATN id
+            str : an equation
         region : int
             Region identifier for constraint screening
         params : dict[(index, card_type)] = values
@@ -2077,6 +2078,7 @@ class DRESP2(OptConstraint):
         }
 
         """
+        print('DRESP2 init: ', params)
         OptConstraint.__init__(self)
         if comment:
             self.comment = comment
@@ -5297,22 +5299,32 @@ def _export_dresps_to_hdf5(h5_file, model, encoding):
             #print(dresp.get_stats())
             dresp_id.append(dresp.dresp_id)
 
+            # super hackish, we'll just write everything as a string
             if dresp.atta is None:
                 attai = ''
             elif isinstance(dresp.atta, int):
                 attai = str(dresp.atta)
             elif isinstance(dresp.atta, float):
-                attai = '.12e' % dresp.atta
+                attai = '%.12e' % dresp.atta
             elif isinstance(dresp.atta, string_types):
                 attai = dresp.atta
             else:
                 raise TypeError(type(dresp.atta))
             atta.append(attai.encode(encoding))  # int, float, str, blank
 
+            # super hackish, we'll just write everything as a string
             if dresp.attb is None:
-                attb.append(-1)
+                attbi = ''
+            elif isinstance(dresp.attb, int):
+                attbi = str(dresp.attb)
+            elif isinstance(dresp.attb, float):
+                attbi = '%.12e' % dresp.attb
+            elif isinstance(dresp.attb, string_types):
+                attbi = dresp.attb
             else:
-                attb.append(dresp.attb)
+                raise TypeError(type(dresp.attb))
+            attb.append(attbi.encode(encoding))  # int, float, str, blank
+
 
             label.append(dresp.label.encode(encoding))
             response_type.append(dresp.response_type.encode(encoding))
@@ -5323,10 +5335,14 @@ def _export_dresps_to_hdf5(h5_file, model, encoding):
                 region.append(dresp.region)
                 #region.append(dresp.region.encode(encoding))
 
+            #print('property_type', dresp.property_type)
             if dresp.property_type is None:
-                property_type.append(b'')
+                property_typei = ''
+            elif isinstance(dresp.atta, int):
+                property_typei = str(dresp.property_type)
             else:
-                property_type.append(dresp.property_type.encode(encoding))
+                property_typei = dresp.property_type
+            property_type.append(property_typei.encode(encoding))
 
             #atta   : 1
             #attb   : None
@@ -5337,16 +5353,19 @@ def _export_dresps_to_hdf5(h5_file, model, encoding):
             #region : None
             #response_type : 'DISP'
             dresp_groupi = dresp_group.create_group(str(i))
-            if isinstance(dresp.atti[0], string_types): # ALL
-                model.log.debug('str atti = %s' % dresp.atti)
-                dresp_groupi.create_dataset('atti', data=dresp.atti[0].encode(encoding))  # int
-            else:
-                model.log.debug('atti = %s' % dresp.atti)
-                dresp_groupi.create_dataset('atti', data=dresp.atti)  # int
+            if len(dresp.atti) > 0:
+                if isinstance(dresp.atti[0], string_types): # ALL
+                    model.log.debug('str atti = %s' % dresp.atti)
+                    values_bytes = [
+                        attii.encode(encoding) if isinstance(attii, string_types) else attii
+                        for attii in dresp.atti]
+                    dresp_groupi.create_dataset('atti', data=values_bytes)  # int
+                else:
+                    model.log.debug('atti = %s' % dresp.atti)
+                    dresp_groupi.create_dataset('atti', data=dresp.atti)  # int
         #print('atta', atta)
         #print('attb', attb)
 
-        attb = np.array(attb, dtype='int32')
         dresp_group.create_dataset('dresp_id', data=dresp_id)
         dresp_group.create_dataset('atta', data=atta)
         dresp_group.create_dataset('attb', data=attb)
@@ -5371,6 +5390,7 @@ def _export_dresps_to_hdf5(h5_file, model, encoding):
         c123 = np.full((ndresp2s, 3), np.nan)
         dresp_id = np.full(ndresp2s, -1, dtype='int32')
         dequation = np.full(ndresp2s, -1, dtype='int32')
+        func = []
         dequation_str = []
         label = []
         method = []
@@ -5379,11 +5399,10 @@ def _export_dresps_to_hdf5(h5_file, model, encoding):
         dresp_group = h5_file.create_group('DRESP2')
 
         for i, dresp in enumerate(dresp2s):
-            #del dresp.
-            dresp.params_ref = None
             model.log.debug('\n' + dresp.get_stats())
-            #{(0, 'DRESP1'): [10501, 10502, 10503]}
 
+            # DRESP2 params: {(0, u'DRESP1'): [1], (0, u'DTABLE'): [u'L1'], (0, u'DESVAR'): [1]}
+            # DRESP2 params: {(0, 'DRESP1'): [10501, 10502, 10503]}
 
             param_keys = [None] * len(dresp.params)
             #print(dresp_group)
@@ -5402,7 +5421,6 @@ def _export_dresps_to_hdf5(h5_file, model, encoding):
             #print('param_keys =', param_keys)
             #print('keys', list(dresp_group.keys()))
 
-            dequation[i] = dresp.dequation
             dresp_id[i] = dresp.dresp_id
             c123[i, :] = [dresp.c1, dresp.c2, dresp.c3]
             method.append(dresp.method.encode(encoding))
@@ -5414,6 +5432,13 @@ def _export_dresps_to_hdf5(h5_file, model, encoding):
                 region.append(dresp.region)
                 #region.append(dresp.region.encode(encoding))
 
+            if isinstance(dresp.dequation, int):
+                dequation[i] = dresp.dequation
+                func.append(b'')
+            else:
+                func.append(dresp.dequation.encode(encoding))
+
+            assert dresp.dequation_str is None, dresp.get_stats()
             if dresp.dequation_str is None:
                 dequation_str.append(b'')
             else:
@@ -5423,24 +5448,15 @@ def _export_dresps_to_hdf5(h5_file, model, encoding):
             #dresp_id[i] = dresp.dresp_id
 
         #print('dresp_id =', dresp_id)
-        print('region =', region)
+        #print('region =', region)
         dresp_group.create_dataset('dresp_id', data=dresp_id)
         dresp_group.create_dataset('c123', data=c123)
         dresp_group.create_dataset('dequation', data=dequation)
+        dresp_group.create_dataset('func', data=func)
         dresp_group.create_dataset('dequation_str', data=dequation_str)
         dresp_group.create_dataset('label', data=label)
         dresp_group.create_dataset('method', data=method)
         dresp_group.create_dataset('region', data=region)
-        #c1     : 1.0
-        #c2     : 0.005
-        #c3     : 10.0
-        #comment : u''
-        #dequation : 1
-        #dequation_str : None
-        #dresp_id : 1
-        #label  : 'VOLUME'
-        #method : u'MIN'
-
 
     ndresp3s = len(dresp3s)
     if ndresp3s:

@@ -544,7 +544,7 @@ class CHBDYP(ThermalElement):
                       rad_mid_front=0, rad_mid_back=0,
                       e1=None, e2=None, e3=None, comment='')
 
-    def _finalize_hdf5(self):
+    def _finalize_hdf5(self, encoding):
         """hdf5 helper function"""
         if isinstance(self.nodes, np.ndarray):
             self.nodes = self.nodes.tolist()

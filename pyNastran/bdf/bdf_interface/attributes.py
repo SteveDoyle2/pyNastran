@@ -1034,3 +1034,12 @@ class BDFAttributes(object):
             param = self.params['WTMASS']
             wtmass = param.values[0]
         return wtmass
+
+    def set_param(self, key, values):
+        """sets a param card; creates it if necessary"""
+        if isinstance(value, (int, float, str)):
+            values = [values]
+        key = key.upper()
+        if key in self.params:
+            param = self.params[key]
+            param.update_values(self, *values)

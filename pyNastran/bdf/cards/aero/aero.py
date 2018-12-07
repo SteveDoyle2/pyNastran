@@ -230,6 +230,7 @@ class AECOMP(BaseCard):
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
+
 class AECOMPL(BaseCard):
     """
     +---------+--------+--------+--------+---------+--------+--------+--------+--------+
@@ -302,6 +303,12 @@ class AECOMPL(BaseCard):
         return AECOMPL(name, labels, comment=comment)
 
     def cross_reference(self, model):
+        pass
+
+    def safe_cross_reference(self, model):
+        pass
+
+    def uncross_reference(self):
         pass
 
     def raw_fields(self):
@@ -447,6 +454,14 @@ class AELINK(BaseCard):
     +--------+-------+-------+--------+------+-------+----+-------+----+
     """
     type = 'AELINK'
+
+    @classmethod
+    def _init_from_empty(cls):
+        aelink_id = 1
+        label = 'ELEV'
+        independent_labels = ['ELEV1', 'ELEV2']
+        linking_coefficents = [1., 2.]
+        return AELINK(aelink_id, label, independent_labels, linking_coefficents, comment='')
 
     def __init__(self, aelink_id, label, independent_labels, linking_coefficents,
                  comment=''):
@@ -4161,7 +4176,7 @@ class PAERO2(BaseCard):
         orient = 'ZY'
         return PAERO2(pid, orient, width, AR, thi, thn, lrsb=None, lrib=None, lth=None, comment='')
 
-    #def _finalize_hdf5(self):
+    #def _finalize_hdf5(self, encoding):
         #"""hdf5 helper function"""
         #pass
         #print(self.get_stats())

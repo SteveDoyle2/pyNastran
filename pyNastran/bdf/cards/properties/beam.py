@@ -1343,7 +1343,7 @@ class PBEAML(IntegratedLineProperty):
         if len(self.xxb) != len(uxxb):
             raise ValueError('xxb=%s unique(xxb)=%s' % (self.xxb, uxxb))
 
-    def _finalize_hdf5(self):
+    def _finalize_hdf5(self, encoding):
         """hdf5 helper function"""
         if isinstance(self.dim, list):
             self.dim = np.asarray(self.dim)
@@ -1653,7 +1653,7 @@ class PBMSECT(LineProperty):
         options = [('OUTP', 10)]
         return PBMSECT(pid, mid, form, options, comment='')
 
-    def _finalize_hdf5(self):
+    def _finalize_hdf5(self, encoding):
         self.brps = {key : value for key, value in zip(*self.brps)}
         self.ts = {key : value for key, value in zip(*self.ts)}
         self.inps = {key : value for key, value in zip(*self.inps)}

@@ -68,7 +68,7 @@ def cmd_line_plot_flutter():  # pragma: no cover
     export = data['--export']
     modes = split_int_colon(data['--modes'])
 
-    xlim_freq = [None, None]
+    xlim = [None, None]
     if data['--xlim']:
         xlim = split_float_colons(data['--xlim'])
 

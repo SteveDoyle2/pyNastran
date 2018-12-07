@@ -45,9 +45,12 @@ class DTI(BaseCard):
         fields = []
         return DTI(name, fields, comment='')
 
-    def _finalize_hdf5(self):
+    def _finalize_hdf5(self, encoding):
         """hdf5 helper function"""
         keys, values = self.fields
+        values = [valuei.decode(encoding) if isinstance(valuei, bytes) else (
+            None if np.isnan(valuei) else valuei)
+                  for valuei in values]
         self.fields = {key : value for key, value in zip(keys, values)}
 
     def __init__(self, name, fields, comment=''):
@@ -122,7 +125,7 @@ class NastranMatrix(BaseCard):
     """
     Base class for the DMIG, DMIJ, DMIJI, DMIK matrices
     """
-    def _finalize_hdf5(self):
+    def _finalize_hdf5(self, encoding):
         """hdf5 helper function"""
         self.finalize()
 
@@ -1411,7 +1414,7 @@ class DMIJ(NastranMatrix):
 
     @classmethod
     def export_to_hdf5(cls, h5_file, model, encoding):
-        _export_dmig_to_hdf5(h5_file, model, model.dmigs, encoding)
+        _export_dmig_to_hdf5(h5_file, model, model.dmijs, encoding)
 
     def __init__(self, name, matrix_form, tin, tout, polar, ncols,
                  GCj, GCi, Real, Complex=None, comment='',
@@ -1676,7 +1679,7 @@ class DMI(NastranMatrix):
 
     @classmethod
     def export_to_hdf5(cls, h5_file, model, encoding):
-        _export_dmig_to_hdf5(h5_file, model, model.dmigs, encoding)
+        _export_dmig_to_hdf5(h5_file, model, model.dmis, encoding)
 
     def __init__(self, name, matrix_form, tin, tout, nrows, ncols,
                  GCj, GCi, Real, Complex=None, comment='', finalize=True):
@@ -2054,9 +2057,13 @@ def _export_dmig_to_hdf5(h5_file, model, dict_obj, encoding):
                 lseq_group.create_dataset('dofs', data=dofs)
                 lseq_group.create_dataset('values', data=values)
         else:
+            if hasattr(dmig, 'nrows') and dmig.nrows is not None:
+                dmig_group.create_dataset('nrows', data=dmig.nrows)
             if dmig.ncols is not None:
                 dmig_group.create_dataset('ncols', data=dmig.ncols)
-            dmig_group.create_dataset('polar', data=dmig.polar)
+            if hasattr(dmig, 'polar'):
+                dmig_group.create_dataset('polar', data=dmig.polar)
+
             dmig_group.create_dataset('matrix_form', data=dmig.matrix_form)
             dmig_group.create_dataset('tin_dtype', data=dmig.tin_dtype)
             dmig_group.create_dataset('tout_dtype', data=dmig.tout_dtype)

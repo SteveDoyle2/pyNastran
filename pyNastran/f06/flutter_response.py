@@ -316,7 +316,7 @@ class FlutterResponse(object):
             show the plot
         clear : bool; default=False
             clear the plot
-        legend : bool; default=False
+        legend : bool; default=True
             show the legend
         kwargs : dict; default=None
            key : various matplotlib parameters
@@ -397,6 +397,7 @@ class FlutterResponse(object):
             plt.savefig(png_filename)
         if clear:
             plt.clear()
+        return axes
 
     def _plot_x_y2(self, ix, iy1, iy2, xlabel, ylabel1, ylabel2, scatter, modes=None,
                    fig=None, axes1=None, axes2=None,
@@ -554,7 +555,7 @@ class FlutterResponse(object):
 
     def plot_vg_vf(self, fig=None, damp_axes=None, freq_axes=None, modes=None, show=None,
                    plot_type='tas',
-                   png_filename=None, clear=False, legend=None,
+                   png_filename=None, clear=False, legend=True,
                    xlim=None, ylim_damping=None, ylim_freq=None, nopoints=False):
         """
         Make a V-g and V-f plot
@@ -563,6 +564,8 @@ class FlutterResponse(object):
         ----------
         modes : List[int] / int ndarray; (default=None -> all)
             the modes; typically 1 to N
+        legend : bool; default=True
+            should the legend be shown
         """
         #self.fix()
         if fig is None:
@@ -600,6 +603,7 @@ class FlutterResponse(object):
         damp_axes.set_xlabel(xlabel)
         freq_axes.set_xlabel(xlabel)
         damp_axes.set_ylabel('Damping')
+        freq_axes.set_ybound(lower=0.)
 
         damp_axes.grid(True)
         if xlim is not None:

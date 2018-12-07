@@ -1794,7 +1794,7 @@ class PBRSECT(LineProperty):
         options = [('OUTP', 10)]
         return PBRSECT(pid, mid, form, options, comment='')
 
-    def _finalize_hdf5(self):
+    def _finalize_hdf5(self, encoding):
         self.brps = {key : value for key, value in zip(*self.brps)}
         self.ts = {key : value for key, value in zip(*self.ts)}
         self.inps = {key : value for key, value in zip(*self.inps)}

@@ -103,7 +103,7 @@ class ABCQSet(Set):
     """
     type = 'ABCQSet'
 
-    def _finalize_hdf5(self):
+    def _finalize_hdf5(self, encoding):
         """hdf5 helper function"""
         if isinstance(self.ids, np.ndarray):
             self.ids = self.ids.tolist()
@@ -196,7 +196,7 @@ class SuperABCQSet(Set):
     """
     type = 'SuperABCQSet'
 
-    def _finalize_hdf5(self):
+    def _finalize_hdf5(self, encoding):
         """hdf5 helper function"""
         if isinstance(self.ids, np.ndarray):
             self.ids = self.ids.tolist()
@@ -460,7 +460,7 @@ class ABQSet1(Set):
     """
     type = 'ABQSet1'
 
-    def _finalize_hdf5(self):
+    def _finalize_hdf5(self, encoding):
         """hdf5 helper function"""
         if isinstance(self.ids, np.ndarray):
             self.ids = self.ids.tolist()
@@ -568,7 +568,7 @@ class SuperABQSet1(Set):
     +----------+------+-----+------+------+-----+-----+-----+-----+
     """
     type = 'SuperABQSet1'
-    def _finalize_hdf5(self):
+    def _finalize_hdf5(self, encoding):
         """hdf5 helper function"""
         if isinstance(self.ids, np.ndarray):
             self.ids = self.ids.tolist()
@@ -1615,7 +1615,7 @@ class RADSET(ABQSet1):
         cavities = [1, 2]
         return RADSET(cavities, comment='')
 
-    def _finalize_hdf5(self):
+    def _finalize_hdf5(self, encoding):
         """hdf5 helper function"""
         if isinstance(self.cavities, np.ndarray):
             self.cavities = self.cavities.tolist()

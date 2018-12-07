@@ -563,7 +563,7 @@ class BCTPARA(BaseCard):
         params = {'CSTIFF' : 1}
         return BCTPARA(csid, params, comment='')
 
-    def _finalize_hdf5(self):
+    def _finalize_hdf5(self, encoding):
         """hdf5 helper function"""
         keys, values = self.params
         self.params = {key : value for key, value in zip(keys, values)}
