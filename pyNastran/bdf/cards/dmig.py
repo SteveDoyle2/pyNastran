@@ -3,6 +3,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from math import sin, cos, radians, atan2, sqrt, degrees
 
+from six import binary_type
+
 import numpy as np
 from numpy import array, zeros
 from scipy.sparse import coo_matrix  # type: ignore
@@ -51,10 +53,12 @@ class DTI(BaseCard):
 
         # nan != nan
         values = [value if value == value else None for value in values]
+        values_str = [value.decode(encoding) if isinstance(value, binary_type) else value
+                      for value in values]
         #values = [valuei.decode(encoding) if isinstance(valuei, bytes) else (
         #    None if np.isnan(valuei) else valuei)
         #          for valuei in values]
-        self.fields = {key : value for key, value in zip(keys, values)}
+        self.fields = {key : value for key, value in zip(keys, values_str)}
 
     def __init__(self, name, fields, comment=''):
         """
