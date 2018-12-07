@@ -272,8 +272,9 @@ class SafeXrefMesh(XrefMesh):
                 except TypeError:
                     print(msg)
                     print('key = %s' % key)
-                    print(' - %s' % eids)
-                    print(' - %s' % pids)
+                    print(' - keys   = %s' % eids)
+                    print(' - values = %s' % pids)
+                    print("Make sure you don't have Nones in the values")
                     raise
                 msg += 'missing %r for %s = %s\n' % (key, elements_word, eids)
                 msg += '%s = %s\n' % (key, upids)

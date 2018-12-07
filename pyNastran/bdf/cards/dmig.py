@@ -48,9 +48,12 @@ class DTI(BaseCard):
     def _finalize_hdf5(self, encoding):
         """hdf5 helper function"""
         keys, values = self.fields
-        values = [valuei.decode(encoding) if isinstance(valuei, bytes) else (
-            None if np.isnan(valuei) else valuei)
-                  for valuei in values]
+
+        # nan != nan
+        values = [value if value == value else None for value in values]
+        #values = [valuei.decode(encoding) if isinstance(valuei, bytes) else (
+        #    None if np.isnan(valuei) else valuei)
+        #          for valuei in values]
         self.fields = {key : value for key, value in zip(keys, values)}
 
     def __init__(self, name, fields, comment=''):

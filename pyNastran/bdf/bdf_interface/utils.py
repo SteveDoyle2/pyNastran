@@ -5,9 +5,10 @@ Defines various utilities for BDF parsing including:
 from __future__ import print_function, unicode_literals
 import os
 import sys
-from collections import defaultdict
+import getpass
 import inspect
 import warnings
+from collections import defaultdict
 from typing import List, Union, Dict, Tuple, Optional
 
 from six import StringIO, string_types
@@ -475,7 +476,7 @@ def deprecated(old_name, new_name, deprecated_version, levels=None):
             break
         msg += '  %-25s:%-4s %s\n' % (filename, str(line_no) + ';', line.strip())
 
-    user_name = os.getlogin()
+    user_name = getpass.getuser()
     if ver_tuple > dep_ver_tuple: # or 'id' in msg:
         # fail
         raise NotImplementedError(msg)

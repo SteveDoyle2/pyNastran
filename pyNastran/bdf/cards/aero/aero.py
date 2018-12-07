@@ -1055,7 +1055,8 @@ class AESURF(BaseCard):
         if self.alid2:
             self.alid2_ref = model.safe_aelist(self.alid2, self.aesid, xref_errors, msg=msg)
 
-        self.tqllim_ref = model.safe_tabled(self.tqllim, self.aesid, xref_errors, msg=msg)
+        if self.tqllim is not None:
+            self.tqllim_ref = model.safe_tabled(self.tqllim, self.aesid, xref_errors, msg=msg)
         if self.tqulim is not None:
             self.tqulim_ref = model.safe_tabled(self.tqulim, self.aesid, xref_errors, msg=msg)
 
