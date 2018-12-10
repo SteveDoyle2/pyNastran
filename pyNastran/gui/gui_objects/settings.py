@@ -24,12 +24,15 @@ from qtpy import QtGui
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.gui.gui_objects.coord_properties import CoordProperties
 from pyNastran.gui.gui_objects.utils import get_setting
+from pyNastran.utils import object_attributes
 
 BLACK = (0.0, 0.0, 0.0)
 WHITE = (1., 1., 1.)
 GREY = (119/255., 136/255., 153/255.)
 ORANGE = (229/255., 92/255., 0.)
 HIGHLIGHT_OPACITY = 0.9
+HIGHLIGHT_POINT_SIZE = 10.
+HIGHLIGHT_LINE_THICKNESS = 5.
 
 class Settings(object):
     """storage class for various settings"""
@@ -53,7 +56,9 @@ class Settings(object):
         self.text_size = 14
         self.text_color = BLACK
         self.highlight_color = ORANGE
-        self.highlight_opacity = 0.9
+        self.highlight_opacity = HIGHLIGHT_OPACITY
+        self.highlight_point_size = HIGHLIGHT_POINT_SIZE
+        self.highlight_line_thickness = HIGHLIGHT_LINE_THICKNESS
 
         self.show_info = True
         self.show_debug = True
@@ -91,8 +96,16 @@ class Settings(object):
         self.background_color = GREY
         self.background_color2 = GREY
 
+        self.annotation_size = 18
         self.annotation_color = BLACK
+
+        self.text_size = 14
         self.text_color = BLACK
+
+        self.highlight_color = ORANGE
+        self.highlight_opacity = HIGHLIGHT_OPACITY
+        self.highlight_point_size = HIGHLIGHT_POINT_SIZE
+        self.highlight_line_thickness = HIGHLIGHT_LINE_THICKNESS
 
         self.show_info = True
         self.show_debug = True
@@ -101,8 +114,6 @@ class Settings(object):
         self.show_error = True
 
         # int
-        self.text_size = 14
-        self.annotation_size = 18
         self.font_size = 8
         self.magnify = 5
 
@@ -143,11 +154,16 @@ class Settings(object):
         self._set_setting(settings, setting_keys, ['font_size'], self.font_size, auto_type=int)
 
         # the info/debug/gui/command preferences
-        self._set_setting(settings, setting_keys, ['show_info'], self.show_info, True, auto_type=bool)
-        self._set_setting(settings, setting_keys, ['show_debug'], self.show_debug, True, auto_type=bool)
-        self._set_setting(settings, setting_keys, ['show_command'], self.show_command, True, auto_type=bool)
-        self._set_setting(settings, setting_keys, ['show_warning'], self.show_warning, True, auto_type=bool)
-        self._set_setting(settings, setting_keys, ['show_error'], self.show_error, True, auto_type=bool)
+        self._set_setting(settings, setting_keys, ['show_info'], self.show_info,
+                          True, auto_type=bool)
+        self._set_setting(settings, setting_keys, ['show_debug'], self.show_debug,
+                          True, auto_type=bool)
+        self._set_setting(settings, setting_keys, ['show_command'], self.show_command,
+                          True, auto_type=bool)
+        self._set_setting(settings, setting_keys, ['show_warning'], self.show_warning,
+                          True, auto_type=bool)
+        self._set_setting(settings, setting_keys, ['show_error'], self.show_error,
+                          True, auto_type=bool)
 
         # the vtk panel background color
         self._set_setting(settings, setting_keys, ['use_gradient_background'],
@@ -179,16 +195,22 @@ class Settings(object):
                           BLACK, auto_type=float)
         self._set_setting(settings, setting_keys, ['text_size'], 14, auto_type=int)
 
-        # default colormap for legend
-        self._set_setting(settings, setting_keys, ['colormap'],
-                          'jet')
-
+        # highlight
         self._set_setting(settings, setting_keys, ['highlight_color'],
                           ORANGE, auto_type=float)
         self._set_setting(settings, setting_keys, ['highlight_opacity'],
                           HIGHLIGHT_OPACITY, auto_type=float)
+        self._set_setting(settings, setting_keys, ['highlight_point_size'],
+                          HIGHLIGHT_POINT_SIZE, auto_type=float)
+        self._set_setting(settings, setting_keys, ['highlight_line_thickness'],
+                          HIGHLIGHT_LINE_THICKNESS, auto_type=float)
         #self._set_setting(settings, setting_keys, ['highlight_style'],
                           #HIGHLIGHT_OPACITY, auto_type=float)
+
+        # default colormap for legend
+        self._set_setting(settings, setting_keys, ['colormap'],
+                          'jet')
+
 
         # general gui sizing
         screen_shape = self._set_setting(settings, setting_keys, ['screen_shape'],

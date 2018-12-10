@@ -163,6 +163,10 @@ def map_cell_point_to_model(gui, cell_ids, point_ids, model_name=None):
 def create_vtk_selection_node_by_cell_ids(cell_ids):
     if isinstance(cell_ids, integer_types):
         cell_ids = [cell_ids]
+    else:
+        for cell_id in cell_ids:
+            assert isinstance(cell_id, integer_types), type(cell_id)
+
     ids = vtk.vtkIdTypeArray()
     ids.SetNumberOfComponents(1)
     for cell_id in cell_ids:
@@ -177,6 +181,10 @@ def create_vtk_selection_node_by_cell_ids(cell_ids):
 def create_vtk_selection_node_by_point_ids(point_ids):
     if isinstance(point_ids, integer_types):
         point_ids = [point_ids]
+    else:
+        for point_id in point_ids:
+            assert isinstance(point_id, integer_types), type(point_id)
+
     ids = vtk.vtkIdTypeArray()
     ids.SetNumberOfComponents(1)
     for point_id in point_ids:

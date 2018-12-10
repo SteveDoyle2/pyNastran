@@ -469,6 +469,7 @@ class FlutterResponse(object):
             plt.clear()
 
     def plot_kfreq_damping(self, modes=None,
+                           plot_type='tas',
                            fig=None, damp_axes=None, freq_axes=None,
                            xlim=None,
                            show=True, clear=False, legend=True,
@@ -482,9 +483,8 @@ class FlutterResponse(object):
         See ``plot_root_locus`` for arguments
         """
         ylabel1 = 'Damping'
-        ylabel2 = 'KFreq'
+        ylabel2 = 'KFreq [rad]'
 
-        plot_type = 'eas'
         ix, xlabel = self._plot_type_to_ix_xlabel(plot_type)
         iy1 = self.idamping
         iy2 = self.ikfreq
@@ -509,7 +509,7 @@ class FlutterResponse(object):
 
         See ``plot_root_locus`` for arguments
         """
-        xlabel = 'KFreq'
+        xlabel = 'KFreq [rad]'
         ylabel1 = 'Damping'
         ylabel2 = 'Frequency'
         ix = self.ikfreq
@@ -718,7 +718,7 @@ class FlutterResponse(object):
             xlabel = 'Altitude [%s]' % alt_units
         elif plot_type == 'kfreq':
             ix = self.ikfreq
-            xlabel = 'Reduced Frequency'
+            xlabel = 'Reduced Frequency [rad]'
         elif plot_type == 'rho':
             ix = self.idensity
             density_units = self.out_units['density']
@@ -728,7 +728,7 @@ class FlutterResponse(object):
             xlabel = 'Frequency [Hz]'
         elif plot_type in ['1/kfreq', 'ikfreq']:
             ix = self.ikfreq_inv
-            xlabel = '1/KFreq'
+            xlabel = '1/KFreq [1/rad]'
         elif plot_type == 'eigr':
             ix = self.ieigr
             xlabel = 'Eigenvalue (Real)'

@@ -530,7 +530,7 @@ class MouseActions(object):
 
     def create_highlighted_actor(self, ugrid, representation='wire'):
         """creates a highlighted actor given a vtkUnstructuredGrid"""
-        actor = create_highlighted_actor(self.gui, ugrid, representation='wire')
+        actor = create_highlighted_actor(self.gui, ugrid, representation=representation)
         return actor
 
     def _highlight_picker(self, unused_obj, unused_event):
@@ -817,10 +817,10 @@ def create_highlighted_actor(gui, ugrid, representation='wire'):
         pass
     elif representation == 'points':
         prop.SetRepresentationToPoints()
-        prop.SetPointSize(10.)
+        prop.SetPointSize(settings.highlight_point_size)
     elif representation == 'wire':
         prop.SetRepresentationToWireframe()
-        prop.SetLineWidth(5.)
+        prop.SetLineWidth(settings.highlight_line_thickness)
     else:
         raise NotImplementedError('representation=%r and must be [surface, points, wire]' % (
             representation))

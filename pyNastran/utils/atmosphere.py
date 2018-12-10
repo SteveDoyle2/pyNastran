@@ -144,7 +144,7 @@ def get_alt_for_q_with_constant_mach(q, mach, pressure_units='psf', alt_units='f
     mach : float
         the mach to hold constant
     pressure_units : str; default='psf'
-        the pressure units; psf, psi, Pa
+        the pressure units; psf, psi, Pa, kPa, MPa
     alt_units : str; default='ft'
         the altitude units; ft, kft, m
     nmax : int; default=20
@@ -170,7 +170,7 @@ def get_alt_for_pressure(pressure, pressure_units='psf', alt_units='ft', nmax=20
     pressure : float
         the pressure lb/ft^2 (SI=Pa)
     pressure_units : str; default='psf'
-        the pressure units; psf, psi, Pa
+        the pressure units; psf, psi, Pa, kPa, MPa
     alt_units : str; default='ft'
         the altitude units; ft, kft, m
     nmax : int; default=20
@@ -329,8 +329,12 @@ def _pressure_factor(pressure_units_in, pressure_units_out):
         factor *= 144
     elif pressure_units_in == 'Pa':
         factor /= 47.880172
+    elif pressure_units_in == 'kPa':
+        factor *= 20.88543815038
+    elif pressure_units_in == 'MPa':
+        factor *= 20885.43815038
     else:
-        msg = 'pressure_units_in=%r is not valid; use [psf, psi, Pa]' % pressure_units_in
+        msg = 'pressure_units_in=%r is not valid; use [psf, psi, Pa, kPa, MPa]' % pressure_units_in
         raise RuntimeError(msg)
 
     if pressure_units_out == 'psf':
@@ -339,8 +343,12 @@ def _pressure_factor(pressure_units_in, pressure_units_out):
         factor /= 144
     elif pressure_units_out == 'Pa':
         factor *= 47.880172
+    elif pressure_units_in == 'kPa':
+        factor /= 20.88543815038
+    elif pressure_units_in == 'MPa':
+        factor /= 20885.43815038
     else:
-        msg = 'pressure_units_out=%r is not valid; use [psf, psi, Pa]' % pressure_units_out
+        msg = 'pressure_units_out=%r is not valid; use [psf, psi, Pa, kPa, MPa]' % pressure_units_out
         raise RuntimeError(msg)
     return factor
 
@@ -442,7 +450,7 @@ def atm_pressure(alt, alt_units='ft', pressure_units='psf'):
     alt_units : str; default='ft'
         the altitude units; ft, kft, m
     pressure_units : str; default='psf'
-        the pressure units; psf, psi, Pa
+        the pressure units; psf, psi, Pa, kPa, MPa
 
     Returns
     -------
@@ -491,7 +499,7 @@ def atm_dynamic_pressure(alt, mach, alt_units='ft', pressure_units='psf'):
     alt_units : str; default='ft'
         the altitude units; ft, kft, m
     pressure_units : str; default='psf'
-        the pressure units; psf, psi, Pa
+        the pressure units; psf, psi, Pa, kPa, MPa
 
     Returns
     -------
@@ -739,6 +747,8 @@ def atm_dynamic_viscosity_mu(alt, alt_units='ft', visc_units='(lbf*s)/ft^2'):
     z = alt * _altitude_factor(alt_units, 'ft')
     T = atm_temperature(z)
     mu = sutherland_viscoscity(T)  # (lbf*s)/ft^2
+
+    # same units as pressure, except multiplied by seconds
     if visc_units == '(lbf*s)/ft^2':
         factor = 1.
     elif visc_units in ['(N*s)/m^2', 'Pa*s']:

@@ -1618,7 +1618,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             if PY3:
                 if not isinstance(_key, bytes):
                     failed_keys.append(_key)
-            if self.is_nx:
+            if hasattr(self, 'is_nx') and self.is_nx:
                 NX_RESULT_TABLES.append(_key)
             else:
                 MSC_RESULT_TABLES.append(_key)
