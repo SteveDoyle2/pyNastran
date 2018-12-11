@@ -2,7 +2,7 @@
 SOL 145 plotter
 """
 from __future__ import print_function
-
+#import PySide
 import matplotlib.pyplot as plt
 
 # if you're on linux and you don't have a bacend, add this...
@@ -336,6 +336,7 @@ def make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq,
             flutter.plot_root_locus(modes=modes, show=False)
         if plot_kfreq_damping:
             flutter.plot_kfreq_damping(modes=modes,
+                                       plot_type=plot_type,
                                        ylim_damping=ylim_damping,
                                        ylim_kfreq=None,
                                        show=False)

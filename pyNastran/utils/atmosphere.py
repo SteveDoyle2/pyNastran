@@ -932,6 +932,13 @@ def _limit_eas(rho, machs, velocity, eas_limit=1000.,
         velocity = velocity[i]
 
     if len(rho) == 0:
+        #print('machs min: %.0f max: %.0f' % (machs.min(), machs.max()))
+        #print('vel min: %.0f max: %.0f in/s' % (velocity.min(), velocity.max()))
+        #print('EAS min: %.0f max: %.0f in/s' % (eas.min(), eas.max()))
         raise RuntimeError('EAS limit is too struct and has removed all the conditions.\n'
-                           'Increase eas_limit or change the mach/altude range.')
+                           'Increase eas_limit or change the mach/altude range\n'
+                           '  EAS: min=%.3f max=%.3f limit=%s %s' % (
+                               eas.min() / kvel,
+                               eas.max() / kvel,
+                               eas_limit, eas_units))
     return rho, machs, velocity

@@ -920,7 +920,6 @@ class PBAR(LineProperty):
         e = []
         f = []
         k = []
-
         nsm = []
         for pid in pids:
             prop = model.properties[pid]
@@ -1114,9 +1113,10 @@ class PBAR(LineProperty):
             k1 = None
         if k2 == 0.:
             k2 = None
-        return PBAR(pid, mid, A, i1, i2, i12, j, nsm,
-                    c1, c2, d1, d2, e1, e2,
-                    f1, f2, k1, k2, comment=comment)
+
+        return PBAR(pid, mid, A=A, i1=i1, i2=i2, i12=i12, j=j, nsm=nsm,
+                    c1=c1, c2=c2, d1=d1, d2=d2, e1=e1, e2=e2,
+                    f1=f1, f2=f2, k1=k1, k2=k2, comment=comment)
 
     def _verify(self, xref):
         pid = self.pid

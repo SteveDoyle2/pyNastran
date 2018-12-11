@@ -1132,7 +1132,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'BGPDTOLD' : [self._table_passer, self._table_passer],
 
             b'PVT' : [self._table_passer, self._table_passer], # PVT - Parameter Variable Table
-            b'PVT0' : [self._table_passer, self._table_passer],  # user parameter value table
+            b'PVT0' : [self._read_pvto_3, self._read_pvto_4],  # user parameter value table
             b'DESTAB' : [self._table_passer, self._table_passer],
             b'TOLD' : [self._table_passer, self._table_passer],
             b'CASECC' : [self._table_passer, self._table_passer],  # case control deck
@@ -1264,6 +1264,85 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 table_mapper[key] = value
             #table_mapper.update(table_mapper2)
         return table_mapper
+
+    def _read_pvto_3(self, data, ndata):
+        """unused"""
+        raise RuntimeError(self.read_mode)
+
+    def _read_pvto_4(self, data, ndata):
+        """reads PARAM cards"""
+        if self.read_mode == 1:
+            return ndata
+
+        iloc = self.f.tell()
+        try:
+            ndata2 = self._read_pvto_4_helper(data, ndata)
+        except Exception as e:
+            self.log.error(str(e))
+            raise  # only for testing
+            self.f.seek(iloc)
+            ndata2 = ndata
+        return ndata2
+
+    def _read_pvto_4_helper(self, data, ndata):
+        """reads PARAM cards"""
+        nvalues = ndata // 4
+        assert ndata % 4 == 0, ndata
+
+        from struct import Struct
+        structs8 = Struct(b'8s')
+        struct2s8 = Struct(b'4s8s')
+        struct2i = Struct(b'ii')
+        struct2f = Struct(b'ff')
+        i = 0
+
+        # TODO: these are weird...
+        #   RPOSTS1, MAXRATI
+        int_words_1 = [
+            b'POST', b'OPPHIPA', b'OPPHIPB', b'GRDPNT', b'RPOSTS1', b'BAILOUT',
+            b'COUPMASS', b'CURV', b'INREL', b'MAXRATI', b'OG',
+            b'S1AM', b'S1M', b'DDRMM', b'MAXIT', b'PLTMSG', b'LGDISP', b'NLDISP',
+            b'OUNIT2M']
+        float_words_1 = [
+            b'K6ROT', b'WTMASS', b'SNORM', b'PATVER', b'MAXRATIO', b'EPSHT',
+            b'SIGMA', b'TABS']
+        str_words_1 = [
+            b'POSTEXT', b'PRTMAXIM', b'AUTOSPC', b'OGEOM', b'PRGPST',
+            b'RESVEC', b'RESVINER', b'ALTRED', b'OGPS', b'OIBULK', b'OMACHPR',
+            b'UNITSYS', b'F56', b'OUGCORD', b'OGEM']
+        #print('---------------------------')
+        while i < nvalues:
+            #print('*i=%s nvalues=%s' % (i, nvalues))
+            word = data[i*4:(i+2)*4].rstrip()
+            #print('word=%r' % word)
+            #word = s8.unpack(word)[0]#.decode(self._encoding)
+
+            if word in int_words_1:
+                slot = data[(i+2)*4:(i+4)*4]
+                value = struct2i.unpack(slot)[1]
+                i += 4
+                #print(word, value)
+                continue
+            elif word in float_words_1:
+                slot = data[(i+2)*4:(i+4)*4]
+                value = struct2f.unpack(slot)[1]
+                #print(word, value)
+                i += 4
+                continue
+            elif word in str_words_1:
+                #print('--------')
+                #self.show_data(data[i*4:])
+                i += 3
+                slot = data[i*4:(i+2)*4]
+                value = structs8.unpack(slot)[0]
+                #print(word, value.rstrip())
+                i += 2
+                continue
+            else:
+                #self.show_data(data[i*4:])
+                self.show_data(data[i*4:(i+4)*4])
+                raise NotImplementedError('%r is not a supported PARAM' % word)
+        return nvalues
 
     def _not_available(self, data, ndata):
         """testing function"""

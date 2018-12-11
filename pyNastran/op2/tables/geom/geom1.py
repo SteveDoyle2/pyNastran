@@ -310,31 +310,35 @@ class GEOM1(GeomCommon):
         self.increase_card_count('POINT', nentries)
         return n
 
-    def _read_cmass2(self, data, n):
-        struct_i4fi = Struct(self._endian + b'if4i')
-        nentries = (len(data) - n) // 24
-        for i in range(nentries):
-            edata = data[n:n + 24]  # 6*4
-            out = struct_i4fi.unpack(edata)
-            # (eid, mass, g1, g2, c1, c2) = out
-            if self.is_debug_file:
-                self.binary_debug.write('  CMASS2=%s\n' % str(out))
-            element = CMASS2.add_op2_data(out)
-            self.add_op2_element(element)
-            n += 24
-        self.increase_card_count('CMASS2', nentries)
-        return n
+    #def _read_cmass2(self, data, n):
+        #struct_i4fi = Struct(self._endian + b'if4i')
+        #nentries = (len(data) - n) // 24
+        #for i in range(nentries):
+            #edata = data[n:n + 24]  # 6*4
+            #out = struct_i4fi.unpack(edata)
+            ## (eid, mass, g1, g2, c1, c2) = out
+            #if self.is_debug_file:
+                #self.binary_debug.write('  CMASS2=%s\n' % str(out))
+            #self.log.debug('  CMASS2=%s\n' % str(out))
+            #element = CMASS2.add_op2_data(out)
+            #print(element)
+            #self.add_op2_mass(element)
+            #n += 24
+        #print(self.elements)
+        #self.increase_card_count('CMASS2', nentries)
+        #return n
         #return len(data)
 
     def _read_cvisc(self, data, n):
+        """CVISC(3901,39,50) - the marker for Record 105"""
         struct_4i = Struct(self._endian + b'4i')
         nentries = (len(data) - n) // 16
         for i in range(nentries):
             edata = data[n:n + 16]  # 4*4
             out = struct_4i.unpack(edata)
-            # (eid, pid, n1, n2) = out
             if self.is_debug_file:
                 self.binary_debug.write('  CVISC=%s\n' % str(out))
+            # (eid, pid, n1, n2) = out
             element = CVISC.add_op2_data(out)
             self.add_op2_element(element)
             n += 16

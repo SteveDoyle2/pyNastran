@@ -845,19 +845,21 @@ class FLUTTER(BaseCard):
     def _get_raw_nvalue_omax(self):
         if self.method in ['K', 'KE']:
             #assert self.imethod in ['L', 'S'], 'imethod = %s' % self.imethod
-            return(self.imethod, self.nvalue)
+            return self.imethod, self.nvalue
         elif self.method in ['PKS', 'PKNLS']:
-            return(self.imethod, self.omax)
-        return(self.imethod, self.nvalue)
+            return self.imethod, self.omax
+        # PK, PKNL
+        return self.imethod, self.nvalue
 
     def _get_repr_nvalue_omax(self):
         if self.method in ['K', 'KE']:
             imethod = set_blank_if_default(self.imethod, 'L')
             #assert self.imethod in ['L', 'S'], 'imethod = %s' % self.imethods
-            return (imethod, self.nvalue)
+            return imethod, self.nvalue
         elif self.method in ['PKS', 'PKNLS']:
-            return(self.imethod, self.omax)
-        return(self.imethod, self.nvalue)
+            return self.imethod, self.omax
+        # PK, PKNL
+        return self.imethod, self.nvalue
 
     def raw_fields(self):
         """

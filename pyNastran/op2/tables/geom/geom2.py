@@ -1909,8 +1909,8 @@ class GEOM2(GeomCommon):
             if self.is_debug_file:
                 self.binary_debug.write('  CVISC=%s\n' % str(out))
             #(eid, pid, n1, n2) = out
-            elem = CVISC.add_op2_data(out)
-            self.add_op2_element(elem)
+            element = CVISC.add_op2_data(out)
+            self.add_op2_element(element)
             n += 16
         self.card_count['CVISC'] = nelements
         return n
