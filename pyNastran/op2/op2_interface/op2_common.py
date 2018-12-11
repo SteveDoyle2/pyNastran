@@ -868,7 +868,8 @@ class OP2Common(Op2Codes, F06Writer):
                     if abs_max != 0:
                         msg += 'itime=%s icol=%s max=%s min=%s\n' % (
                             obj.itime, icol, floats[:, icol].max(), floats[:, icol].min())
-                raise ValueError(msg.rstrip())
+                self.log.warning(msg.rstrip())
+                #raise ValueError(msg.rstrip())
             obj.itotal = itotal2
         else:
             dt = np.nan

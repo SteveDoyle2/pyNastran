@@ -961,8 +961,8 @@ def _load_table(result_name, h5_result, objs, log, debug=False):# real_obj, comp
     if obj_class is None:
         log.warning('  unhandled result_name=%r class_name=%r...' % (
             result_name, class_name))
-        #raise NotImplementedError('  unhandled result_name=%r class_name=%r...' % (
-            #result_name, class_name))
+        raise NotImplementedError('  unhandled result_name=%r class_name=%r...' % (
+            result_name, class_name))
         return None
 
     obj = obj_class(data_code, is_sort1, isubcase, dt)

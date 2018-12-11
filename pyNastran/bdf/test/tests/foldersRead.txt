@@ -21,9 +21,13 @@ F:\Program Files\Siemens\NXNastran\nxn10p1\nxn10p1\nast\tpl
 # desktop2
 
 # MSC 2005
-C:\Users\sdoyle\Dropbox\pyNastran_examples
-C:\Users\sdoyle\Desktop\move
-C:\Users\sdoyle\Dropbox\move_tpl
+#C:\Users\sdoyle\Dropbox\pyNastran_examples
+#C:\Users\sdoyle\Desktop\move
+#C:\Users\sdoyle\Dropbox\move_tpl
+C:\NASA\m4\formats\git\examples\pyNastran_examples
+C:\NASA\m4\formats\git\examples\move
+C:\NASA\m4\formats\git\examples\move_tpl
+
 C:\MSC.Software\MSC.Nastran\msc20051\nast\nast
 C:\MSC.Software\MSC.Nastran\msc20051\nast\demo
 C:\MSC.Software\MSC.Nastran\msc20051\nast\doc
