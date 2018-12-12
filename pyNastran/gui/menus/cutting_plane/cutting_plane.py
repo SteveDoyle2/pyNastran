@@ -9,16 +9,26 @@ The preferences menu handles:
  - Clipping Max
 """
 from __future__ import print_function
+import os
 
+import PySide
 from qtpy.QtCore import Qt
 from qtpy import QtGui
 from qtpy.QtWidgets import (
     QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
     QColorDialog, QLineEdit, QCheckBox, QComboBox)
 
-from pyNastran.gui.utils.qt.pydialog import PyDialog, check_float
+from pyNastran.gui.utils.qt.pydialog import PyDialog
 from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
+from pyNastran.gui.utils.qt.dialogs import open_file_dialog
+from pyNastran.gui.utils.qt.checks.qlineedit import (
+    check_save_path, #check_path,
+    #check_int, check_positive_int_or_blank,
+    check_float,# check_float_ranged,
+    #check_name_str, check_name_length, check_format, check_format_str,
+)
 
+wildcard_csv = 'Comma Separated Value - CSV (*.csv)'
 
 class CuttingPlaneWindow(PyDialog):
     """
@@ -130,13 +140,13 @@ class CuttingPlaneWindow(PyDialog):
         self.zaxis_y_edit = QLineEdit('')
         self.zaxis_z_edit = QLineEdit('')
 
+        self.ytol_label = QLabel('Y Tolerance:')
+        self.zero_tol_label = QLabel('Zero Tolerance:')
+
+        self.ytol_edit = QLineEdit('10.0')
+        self.zero_tol_edit = QLineEdit('1e-5')
+
         if not show_tol:
-            self.ytol_label = QLabel('Y Tolerance:')
-            self.zero_tol_label = QLabel('Zero Tolerance:')
-
-            self.ytol_edit = QLineEdit('10.0')
-            self.zero_tol_edit = QLineEdit('1e-5')
-
             self.ytol_label.setVisible(False)
             self.zero_tol_label.setVisible(False)
             self.ytol_edit.setVisible(False)
@@ -196,6 +206,22 @@ class CuttingPlaneWindow(PyDialog):
         grid2.addWidget(self.method_pulldown, irow, 1)
         irow += 1
         self._add_grid_layout(grid2, irow, is_cord2r=False)
+
+        self.export_checkbox = QCheckBox()
+        self.csv_label = QLabel('CSV Filename:')
+        self.csv_edit = QLineEdit()
+        self.csv_button = QPushButton('Browse...')
+        self.export_checkbox.clicked.connect(self.on_export_checkbox)
+        self.csv_button.clicked.connect(self.on_browse_csv)
+        self.csv_label.setEnabled(False)
+        self.csv_edit.setEnabled(False)
+        self.csv_button.setEnabled(False)
+
+        hbox = QHBoxLayout()
+        hbox.addWidget(self.export_checkbox)
+        hbox.addWidget(self.csv_label)
+        hbox.addWidget(self.csv_edit)
+        hbox.addWidget(self.csv_button)
         #----------------------------------------------
 
         ok_cancel_box = QHBoxLayout()
@@ -218,6 +244,7 @@ class CuttingPlaneWindow(PyDialog):
         vbox.addLayout(grid)
         #vbox.addStretch()
         #vbox.addLayout(grid2)
+        vbox.addLayout(hbox)
         vbox.addStretch()
 
         #-----------------------
@@ -225,6 +252,25 @@ class CuttingPlaneWindow(PyDialog):
         self.on_method(0)
         self.on_zaxis_method(0)
         self.setLayout(vbox)
+
+    #def on_browse_csv(self):
+        #csv_filename = 'Cp.csv'
+
+    def on_export_checkbox(self):
+        is_checked = self.export_checkbox.isChecked()
+        self.csv_label.setEnabled(is_checked)
+        self.csv_edit.setEnabled(is_checked)
+        self.csv_button.setEnabled(is_checked)
+
+    def on_browse_csv(self):
+        """opens a file dialog"""
+        default_filename = os.getcwd()
+        csv_filename, wildcard = open_file_dialog(
+            self, 'Select the filename for Export',
+            default_filename, wildcard_csv)
+        if not csv_filename:
+            return
+        self.csv_edit.setText(csv_filename)
 
     def _add_grid_layout(self, grid, irow, is_cord2r=True):
         j = -1
@@ -465,9 +511,15 @@ class CuttingPlaneWindow(PyDialog):
         ytol, flag10 = check_float(self.ytol_edit)
         zero_tol, flag11 = check_float(self.zero_tol_edit)
 
+        csv_filename = None
+        flag12 = True
+        if self.export_checkbox.isChecked():
+            csv_filename, flag12 = check_save_path(self.csv_edit)
+
+
         flags = [flag0, flag1, flag2, flag3, flag4, flag5,
                  flag6, flag7, flag8,
-                 flag9, flag10, flag11]
+                 flag9, flag10, flag11, flag12]
         if all(flags):
             self.out_data['method'] = method
             self.out_data['p1'] = [p1_cid, p1]
@@ -477,6 +529,7 @@ class CuttingPlaneWindow(PyDialog):
             self.out_data['zero_tol'] = zero_tol
             self.out_data['plane_color'] = self.plane_color_float
             self.out_data['plane_opacity'] = 0.6
+            self.out_data['csv_filename'] = csv_filename
             self.out_data['clicked_ok'] = True
             return True
         return False
@@ -532,7 +585,7 @@ def main():
         'name' : 'main',
 
     }
-    main_window = CuttingPlaneWindow(data)
+    main_window = CuttingPlaneWindow(data, show_tol=True)
     main_window.show()
     # Enter the main loop
     app.exec_()

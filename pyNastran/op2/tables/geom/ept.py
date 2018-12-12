@@ -354,6 +354,7 @@ class EPT(GeomCommon):
         #nentries = (len(data) - n) // ntotal
         #print(self.show_ndata(80))
         ndata = len(data)
+
         while ndata - n > ntotal:
             edata = data[n:n+28]
             n += 28
@@ -384,7 +385,7 @@ class EPT(GeomCommon):
             prop = PBARL.add_op2_data(data_in)  # last value is nsm
             pid = prop.pid
             if pid in self.properties:
-                self.log.debug("removing:\n%s" % self.properties[pid])
+                #self.log.debug("removing:\n%s" % self.properties[pid])
                 self._type_to_id_map['PBAR'].remove(pid)
                 del self.properties[pid]
             self._add_op2_property(prop)
@@ -393,7 +394,7 @@ class EPT(GeomCommon):
             #print(self.show_data(data[n-8:-100]))
             n += 4  # TODO: not entirely sure why this is here...
 
-        if len(self._type_to_id_map['PBAR']) == 0:
+        if len(self._type_to_id_map['PBAR']) == 0 and 'PBAR' in self.card_count:
             del self._type_to_id_map['PBAR']
             del self.card_count['PBAR']
         self.increase_card_count('PBARL')
@@ -1415,13 +1416,20 @@ class EPT(GeomCommon):
                 self.binary_debug.write('  PSHELL=%s\n' % str(out))
             prop = PSHELL.add_op2_data(out)
 
+            if pid in self.properties:
+                # this is a fake PSHELL
+                propi = self.properties[pid]
+                assert propi.type in ['PCOMP'], propi.get_stats()
+                nproperties -= 1
+                continue
+
             if max(pid, mid1, mid2, mid3, mid4) > 1e8:
-                #print("PSHELL = ",out)
                 self.big_properties[pid] = prop
             else:
                 self._add_op2_property(prop)
             n += ntotal
-        self.card_count['PSHELL'] = nproperties
+        if nproperties:
+            self.card_count['PSHELL'] = nproperties
         return n
 
     def _read_psolid(self, data, n):
