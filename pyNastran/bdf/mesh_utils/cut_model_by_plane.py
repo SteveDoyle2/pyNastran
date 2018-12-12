@@ -434,7 +434,8 @@ def get_close_faces(faces, face_eids, unused_nids_close):
         #close_face_eids.append(eid)
     #return close_faces, close_face_eids
 
-def slice_edges(xyz_cid0, xyz_cid, edges, nodal_result, plane_atol=1e-5):
+def slice_edges(xyz_cid0, xyz_cid, edges, nodal_result, plane_atol=1e-5,
+                plane_bdf_filename=None):
     """
     Slices the shell elements
 
@@ -450,11 +451,25 @@ def slice_edges(xyz_cid0, xyz_cid, edges, nodal_result, plane_atol=1e-5):
         the result to cut the model with
     plane_atol : float; default=1e-5
         the tolerance for a line that's located on the y=0 local plane
+
+    Returns
+    -------
+    local_points_array : (N, 3) float ndarray
+        the xyz points in the cutting plane coordinate system
+    global_points_array : (N, 3) float ndarray
+        the xyz points in the global xyz coordinate system
+    result_array : (N, 7) float ndarray
+        inid, x, y, z, xg, yg, zg, result
+    TODO: split result_array, so we don't have mixed int/float/complex
+          results being all casted to the highest data type
     """
     plane_bdf_filename = 'plane_edge.bdf'
+    #fbdf = None
+    #if plane_bdf_filename:
     fbdf = open(plane_bdf_filename, 'w')
     fbdf.write('$pyNastran: punch=True\n')
     fbdf.write('MAT1,1,3.0e7,,0.3\n')
+
     cid = 0
     local_points = []
     global_points = []
@@ -493,10 +508,11 @@ def slice_edges(xyz_cid0, xyz_cid, edges, nodal_result, plane_atol=1e-5):
             out_grid2 = ['GRID', nid_new + 1, cid, ] + list(xyz2_local)
             conrod = ['CONROD', eid_new, nid_new, nid_new + 1, mid, area, J]
             conm2 = ['CONM2', eid_new+1, nid_new, 0, 100.]
-            fbdf.write(print_card_8(out_grid1))
-            fbdf.write(print_card_8(out_grid2))
-            fbdf.write(print_card_8(conrod))
-            fbdf.write(print_card_8(conm2))
+            if plane_bdf_filename:
+                fbdf.write(print_card_8(out_grid1))
+                fbdf.write(print_card_8(out_grid2))
+                fbdf.write(print_card_8(conrod))
+                fbdf.write(print_card_8(conm2))
 
             local_points.append(xyz1_local)
             local_points.append(xyz2_local)
@@ -531,8 +547,50 @@ def slice_edges(xyz_cid0, xyz_cid, edges, nodal_result, plane_atol=1e-5):
                 nodal_result,
                 local_points, global_points, result)
         assert len(local_points) == len(result)
-        fbdf.write('$------\n')
-    fbdf.close()
+        if plane_bdf_filename:
+            fbdf.write('$------\n')
+
+    if plane_bdf_filename:
+        fbdf.close()
+
+    if 0:  # pragma: no cover
+        plane_bdf_filename = 'plane_edge2.bdf'
+        if plane_bdf_filename:
+            cid = 0
+            nid_new = 1
+            eid_new = 1
+            mid = 1
+            area = 1.0
+            J = 1.0
+
+            ipoint = 0
+            with open(plane_bdf_filename, 'w') as fbdf:
+                fbdf.write('$pyNastran: punch=True\n')
+                fbdf.write('MAT1,1,3.0e7,,0.3\n')
+
+                while ipoint < len(local_points):
+                    xyz1_local = local_points[ipoint]
+                    #resulti = result[ipoint]
+                    print(xyz1_local)
+                    nid = xyz1_local[0]
+                    if nid == 0:
+                        ipoint += 1
+                        continue
+
+                    xyz2_local = local_points[ipoint+1]
+                    out_grid1 = ['GRID', nid_new, cid, ] + list(xyz1_local)
+                    out_grid2 = ['GRID', nid_new + 1, cid, ] + list(xyz2_local)
+                    conrod = ['CONROD', eid_new, nid_new, nid_new + 1, mid, area, J]
+                    conm2 = ['CONM2', eid_new+1, nid_new, 0, 100.]
+                    fbdf.write(print_card_8(out_grid1))
+                    fbdf.write(print_card_8(out_grid2))
+                    fbdf.write(print_card_8(conrod))
+                    fbdf.write(print_card_8(conm2))
+                    fbdf.write('$------\n')
+                    ipoint += 2
+                    nid_new += 2
+                    eid_new += 1
+
     local_points_array = np.array(local_points)
     global_points_array = np.array(global_points)
     result_array = np.array(result)
@@ -577,15 +635,19 @@ def _interpolate_bar_to_node(eid_new, nid_new, mid, area, J, fbdf,
     #print('    xyz1_local=%s xyz2_local=%s' % (xyz1_local, xyz2_local))
     #print('    avg_local=%s' % avg_local)
     #print('    avg_global=%s' % avg_global)
+
+    #if fbdf is not None:
     out_grid1 = ['GRID', nid_new, None, ] + list(xyz1_local)
     out_grid2 = ['GRID', nid_new+1, None, ] + list(xyz2_local)
     conrod = ['CONROD', eid_new, nid_new, nid_new + 1, mid, area, J]
     #conm2 = ['CONM2', eid_new, nid_new, 0, 100.]
 
+    #fbdf.write('$ interpolated\n')
     fbdf.write(print_card_8(out_grid1))
     fbdf.write(print_card_8(out_grid2))
     fbdf.write(print_card_8(conrod))
     #fbdf.write(print_card_8(conm2))
+
     local_points.append(avg_local)
     global_points.append(avg_global)
 

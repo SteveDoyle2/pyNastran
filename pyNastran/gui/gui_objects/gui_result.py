@@ -9,6 +9,7 @@ import numpy as np
 REAL_TYPES = ['<i4', '<i8', '<f4', '<f8',
               '|i1', # this is a boolean
               '>i4', '>i8', '>f4', '>f8']
+#COMPLEX_TYPES = ['<c8']
 INT_TYPES = ['<i4', '<i8', '|i1',
              '>i4', '>i8']
 
@@ -358,6 +359,8 @@ class GuiResult(GuiResultCommon):
 
     #------------
     # getters
+    #def export_to_hdf5_file(self, hdf5_file, exporter):
+        #asd
     def get_data_type(self, i, name):
         #print('Aname=%r data_type=%s fmt=%s' % (self.title, self.data_type, self.data_format))
         return self.data_type
@@ -489,5 +492,7 @@ class GuiResult(GuiResultCommon):
 
     def __repr__(self):
         msg = 'GuiResult\n'
+        msg += '    title=%r\n' % self.title
+        msg += '    data_type=%r\n' % self.data_type
         msg += '    uname=%r\n' % self.uname
         return msg
