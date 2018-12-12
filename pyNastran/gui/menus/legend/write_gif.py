@@ -592,8 +592,11 @@ def write_gif(gif_filename, png_filenames, time=2.0,
             images.append(imageio.imread(png_filename))
         if nrepeat is True:
             nrepeat = 0
-        imageio.mimsave(gif_filename, images, duration=duration,
-                        loop=nrepeat)
+        try:
+            imageio.mimsave(gif_filename, images, duration=duration,
+                            loop=nrepeat)
+        except IOError:  # file is open
+            raise IOError('%s is likely open' % gif_filename)
 
     if delete_images:
         for png_filename in png_filenames:

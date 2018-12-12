@@ -310,7 +310,7 @@ class AnimationWindow(PyDialog):
 
         self.browse_folder_label = QLabel('Output Directory:')
         self.browse_folder_edit = QLineEdit(str(self._default_dirname))
-        self.browse_folder_button = QPushButton('Browse')
+        self.browse_folder_button = QPushButton('Browse...')
         self.browse_folder_edit.setToolTip('Location to save the png/gif files')
 
         self.gif_label = QLabel("Gif Filename:")

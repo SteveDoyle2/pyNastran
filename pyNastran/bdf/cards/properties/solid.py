@@ -408,19 +408,40 @@ class PSOLID(SolidProperty):
         # 1-GAUSS
         # 2-TWO
         # 3-THREE
+        if integ == 0:
+            integ = 'BUBBLE'
+        elif integ == 1:
+            integ = 'GUASS'
+        elif integ == 2:
+            integ = 'TWO'
+        elif integ == 3:
+            integ = 'THREE'
+
         self.integ = integ
 
         # blank/GRID
         # 1-GAUSS
+        if stress == 0:
+            stress = 'GRID'
+        elif stress == 1:
+            stress = 'GUASS'
         self.stress = stress
 
         # note that None is supposed to vary depending on element type
         # 0-REDUCED
         # 1-FULL
+        if isop == 0:
+            isop = 'REDUCED'
+        elif isop == 1:
+            isop = 'FULL'
         self.isop = isop
 
         # PFLUID
         # SMECH
+        if fctn == 'SMEC':
+            fctn = 'SMECH'
+        elif fctn == 'PFLU':
+            fctn = 'PFLUID'
         self.fctn = fctn
         self.mid_ref = None
 
@@ -544,18 +565,19 @@ class PSOLID(SolidProperty):
         # stress : int, string, or blank
         #    blank/GRID
         #    1-GAUSS
-
         if stress == 0:
-            stress = ''
+            stress = 'GRID'
+        elif stress == 1:
+            stress = 'GAUSS'
         else:
-            raise NotImplementedError('stress=%i and must be [0]' % stress)
+            raise NotImplementedError('stress=%s and must be [0, 1]' % stress)
 
         if isop == 0:
             isop = 'REDUCED'
         elif isop == 1:
             isop = 'FULL'
         else:
-            raise NotImplementedError('isop=%i and must be [0, 1]' % isop)
+            raise NotImplementedError('isop=%s and must be [0, 1]' % isop)
 
         if fctn == 'SMEC':
             fctn = 'SMECH'

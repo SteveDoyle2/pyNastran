@@ -58,6 +58,7 @@ from pyNastran import is_release
 from pyNastran.f06.errors import FatalError
 from pyNastran.op2.tables.grid_point_weight import GridPointWeight
 from pyNastran.op2.op2_interface.op2_reader import OP2Reader
+from pyNastran.bdf.cards.params import PARAM
 
 #============================
 
@@ -1322,26 +1323,26 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 value = struct2i.unpack(slot)[1]
                 i += 4
                 #print(word, value)
-                continue
             elif word in float_words_1:
                 slot = data[(i+2)*4:(i+4)*4]
                 value = struct2f.unpack(slot)[1]
                 #print(word, value)
                 i += 4
-                continue
             elif word in str_words_1:
                 #print('--------')
                 #self.show_data(data[i*4:])
                 i += 3
                 slot = data[i*4:(i+2)*4]
-                value = structs8.unpack(slot)[0]
+                value = structs8.unpack(slot)[0].decode('latin1').rstrip()
                 #print(word, value.rstrip())
                 i += 2
-                continue
             else:
                 #self.show_data(data[i*4:])
                 self.show_data(data[i*4:(i+4)*4])
                 raise NotImplementedError('%r is not a supported PARAM' % word)
+
+            key = word.decode('latin1')
+            self.params[key] = PARAM(key, [value], comment='')
         return nvalues
 
     def _not_available(self, data, ndata):

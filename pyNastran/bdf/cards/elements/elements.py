@@ -319,7 +319,7 @@ class CGAP(Element):
                 cid.append(-1)
                 g0i = element.g0
                 if g0i is not None:
-                    assert x[0] is None
+                    assert element.x[0] is None
                     x.append(nan)
                     g0.append(g0i)
                 else:

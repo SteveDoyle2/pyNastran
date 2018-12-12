@@ -10,10 +10,23 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
+INT_WORDS_1 = [
+    b'POST', b'OPPHIPA', b'OPPHIPB', b'GRDPNT', b'RPOSTS1', b'BAILOUT',
+    b'COUPMASS', b'CURV', b'INREL', b'MAXRATI', b'OG',
+    b'S1AM', b'S1M', b'DDRMM', b'MAXIT', b'PLTMSG', b'LGDISP', b'NLDISP',
+    b'OUNIT2M']
+#float_words_1 = [
+    #b'K6ROT', b'WTMASS', b'SNORM', b'PATVER', b'MAXRATIO', b'EPSHT',
+    #b'SIGMA', b'TABS']
+STR_WORDS_1 = [
+    'POSTEXT', 'PRTMAXIM', 'AUTOSPC', 'OGEOM', 'PRGPST',
+    'RESVEC', 'RESVINER', 'ALTRED', 'OGPS', 'OIBULK', 'OMACHPR',
+    'UNITSYS', 'F56', 'OUGCORD', 'OGEM']
+INT_STR_WORDS_1 = INT_WORDS_1 + STR_WORDS_1
 
 SMALL_FIELD_PARAMS = [
     'ACOUT', 'ACOWEAK', 'ACSYM', 'ADJMETH', 'AESMAXIT', 'AESMETH', 'ADSTAT',
-    'COUPMASS', 'LMODES', 'MAXLINES', 'POST', 'POSTEXT', 'PRTMAXIM']
+    'LMODES', 'MAXLINES'] #+ INT_WORDS_1 + STR_WORDS_1
 
 class PARAM(BaseCard):
     type = 'PARAM'
@@ -250,6 +263,10 @@ class PARAM(BaseCard):
 
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
+        if self.key in INT_STR_WORDS_1:
+            return '%sPARAM   %8s%8s\n' % (
+                self.comment, self.key, self.values[0])
+
         if size == 8 or self.key in SMALL_FIELD_PARAMS:
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)

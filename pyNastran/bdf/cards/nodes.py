@@ -1672,7 +1672,7 @@ class POINT(BaseCard):
         nid = data[0] # type: int
         cp = data[1] # type: int
         xyz = np.array(data[2:5]) # type: np.ndarray
-        return POINT(nid, cp, xyz, comment=comment)
+        return POINT(nid, xyz, cp=cp, comment=comment)
 
     def set_position(self, model, xyz, cid=0):
         # type: (Any, np.ndarray, int) -> None

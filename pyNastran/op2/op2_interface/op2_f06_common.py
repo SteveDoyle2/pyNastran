@@ -209,6 +209,7 @@ class OP2_F06_Common(object):
         self.case_control_deck = CaseControlDeck([], log=self.log)
         self.labels = {}
         self.expected_times = {}
+        self.params = {}
 
         self.make_geom = False
 

@@ -8,6 +8,7 @@ SORT1_TABLES = [b'OSTRMS1C', b'OSTNO1C', b'OES1X', b'OSTR1X',
                 b'OES1C', b'OSTR1C']
 SORT2_TABLES = [b'OUGPSD2', b'OUGATO2', b'OESCP',
                 b'OES2C', b'OSTR2C']
+NO_SORT_METHOD = [b'QHHA']
 
 def get_sort_method_from_table_name(table_name):
     """helper method"""
@@ -15,13 +16,18 @@ def get_sort_method_from_table_name(table_name):
         sort_method = 1
     elif table_name in SORT2_TABLES:
         sort_method = 2
+    elif table_name in NO_SORT_METHOD:
+        table_name_str = table_name.decode('utf8')
+        table_num = table_name_str[-1]
+        sort_method = -1
+        #raise ValueError('%r is not a table' % table_name_str)
     else:
         table_name_str = table_name.decode('utf8')
         table_num = table_name_str[-1]
         try:
             sort_method = int(table_num)
         except ValueError:
-            print('table_name=%r' % table_name_str)
+            print('error determining sort_method: table_name=%r' % table_name_str)
             raise
     return sort_method
 
