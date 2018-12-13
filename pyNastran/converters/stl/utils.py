@@ -36,7 +36,7 @@ def merge_stl_files(stl_filenames, stl_out_filename=None, remove_bad_elements=Fa
         model = STL()
         model.read_stl(stl_filenames[0])
         if remove_bad_elements:
-            model.remove_elements_with_bad_normals(model.elements, nodes=model.nodes)
+            model.remove_elements_with_bad_normals()
         if stl_out_filename is not None:
             model.write_stl(stl_out_filename, is_binary=is_binary)
         return model
@@ -57,7 +57,7 @@ def merge_stl_files(stl_filenames, stl_out_filename=None, remove_bad_elements=Fa
     model.elements = vstack(elements)
 
     if remove_bad_elements:
-        model.remove_elements_with_bad_normals(model.elements, nodes=model.nodes)
+        model.remove_elements_with_bad_normals()
 
     if stl_out_filename is not None:
         model.write_stl(stl_out_filename, is_binary=is_binary, float_fmt=float_fmt)

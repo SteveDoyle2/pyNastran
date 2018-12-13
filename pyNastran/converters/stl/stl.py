@@ -8,11 +8,11 @@ import numpy as np
 import scipy
 
 
-from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.utils import is_binary_file
 from pyNastran.utils.log import get_logger2
 
-def read_stl(stl_filename, remove_elements_with_bad_normals=False, log=None, debug=False):
+def read_stl(stl_filename, remove_elements_with_bad_normals=False,
+             log=None, debug=False):
     """
 
     Reads an STL file
@@ -32,7 +32,7 @@ def read_stl(stl_filename, remove_elements_with_bad_normals=False, log=None, deb
     model = STL(log=log, debug=debug)
     model.read_stl(stl_filename)
     if remove_elements_with_bad_normals:
-        model.remove_elements_with_bad_normals(model.elements)
+        model.remove_elements_with_bad_normals()
     return model
 
 
@@ -147,7 +147,12 @@ class STL(object):
             n = np.cross(avector, bvector)
             del avector, bvector
             if normalize_normal_vectors:
-                n /= np.linalg.norm(n, axis=1)[:, np.newaxis]
+                normals_norm = np.linalg.norm(n, axis=1)
+                inotnan = np.where(normals_norm != 0.)[0]
+                inan = np.where(normals_norm == 0.)[0]
+
+                n[inan, :] = np.nan
+                n[inotnan, :] /= normals_norm[inotnan, np.newaxis]
 
             s = Struct('12fH')
             for eid, unused_element in enumerate(elements):
@@ -222,12 +227,11 @@ class STL(object):
         self.nodes = nodes
 
 
-    def _get_normals_data(self, elements, nodes=None):
+    def _get_normals_data(self, elements):
         """
         This is intended as a submethod to help handle the problem of bad normals
         """
-        if nodes is None:
-            nodes = self.nodes
+        nodes = self.nodes
         self.log.debug("get_normals...elements.shape %s" % str(elements.shape))
         p1 = nodes[elements[:, 0]]
         p2 = nodes[elements[:, 1]]
@@ -239,8 +243,10 @@ class STL(object):
         inan = np.where(normals_norm == 0)[0]
         return v123, normals_norm, inan
 
-    def remove_elements_with_bad_normals(self, elements, nodes=None):
-        v123, normals_norm, inan = self._get_normals_data(elements, nodes=nodes)
+    def remove_elements_with_bad_normals(self):
+        """removes dot and line elements"""
+        elements = self.elements
+        v123, normals_norm, inan = self._get_normals_data(elements)
         if len(inan):
             inotnan = np.where(normals_norm != 0)[0]
             self.elements = elements[inotnan, :]
@@ -255,8 +261,7 @@ class STL(object):
         return normals
 
     def get_area(self, elements, stop_on_failure=True):
-        unused_v123, normals_norm, inan = self._get_normals_data(
-            elements, nodes=self.nodes)
+        unused_v123, normals_norm, inan = self._get_normals_data(elements)
 
         if stop_on_failure:
             msg = 'Failed Elements: %s\n' % inan
@@ -268,7 +273,7 @@ class STL(object):
                 raise RuntimeError(msg)
         return 0.5 * normals_norm
 
-    def get_normals(self, elements, nodes=None, stop_on_failure=True):
+    def get_normals(self, elements, stop_on_failure=True):
         """
         Parameters
         ----------
@@ -280,9 +285,8 @@ class STL(object):
             True:  crash if there are coincident points
             False: delete elements
         """
-        if nodes is None:
-            nodes = self.nodes
-        v123, normals_norm, inan = self._get_normals_data(elements, nodes=nodes)
+        nodes = self.nodes
+        v123, normals_norm, inan = self._get_normals_data(elements)
 
         if stop_on_failure:
             msg = 'Failed Elements: %s\n' % inan
@@ -303,10 +307,10 @@ class STL(object):
             normals[:, 2] /= normals_norm
         else:
             inotnan = np.where(normals_norm != 0.)[0]
-            inan = np.where(normals_norm == 0.)[0]
+            #inan = np.where(normals_norm == 0.)[0]
             if len(inan):
-                normals_norm[inan] = np.array([1., 0., 0.])
-                #normals_norm[inan] = 1.
+                #normals_norm[inan] = np.array([1., 0., 0.])
+                normals_norm[inan] = 1.
                 #normals_norm[inan, [1,2]] = 0.
             #elements = elements[inotnan, :]
             #normals_norm = normals_norm[inotnan]
@@ -372,9 +376,9 @@ class STL(object):
             the normals
         """
         elements = self.elements
+        nodes = self.nodes
         if normals is None:
-            nodes = self.nodes
-            normals = self.get_normals(elements, nodes=self.nodes)
+            normals = self.get_normals(elements)
 
         if nid_to_eid is None:
             nid_to_eid = defaultdict(list)
@@ -444,18 +448,17 @@ class STL(object):
          endfacet
         end solid
         """
-        nodes = self.nodes
-        elements = self.elements
         self.log.info("---write_stl_ascii...%r---" % out_filename)
-        msg = ''
         noormal_format = ' facet normal %s %s %s\n' % (float_fmt, float_fmt, float_fmt)
         vertex_format = '     vertex %s %s %s\n' % (float_fmt, float_fmt, float_fmt)
-        msg += 'solid %s\n' % solid_name
+        msg = 'solid %s\n' % solid_name
+
+        normals = self.get_normals(self.elements, stop_on_failure=stop_on_failure)
+
+        nodes = self.nodes
+        elements = self.elements
         with open(out_filename, 'w') as out:
             out.write(msg)
-
-            unused_nelements = elements.shape[0]
-            normals = self.get_normals(elements, stop_on_failure=stop_on_failure)
             for element, normal in zip(elements, normals):
                 try:
                     p1, p2, p3 = nodes[element]

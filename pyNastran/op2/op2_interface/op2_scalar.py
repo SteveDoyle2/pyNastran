@@ -1310,7 +1310,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         str_words_1 = [
             b'POSTEXT', b'PRTMAXIM', b'AUTOSPC', b'OGEOM', b'PRGPST',
             b'RESVEC', b'RESVINER', b'ALTRED', b'OGPS', b'OIBULK', b'OMACHPR',
-            b'UNITSYS', b'F56', b'OUGCORD', b'OGEM',
+            b'UNITSYS', b'F56', b'OUGCORD', b'OGEM', b'EXTSEOUT',
 
             # TODO: remove these as they're in the matrix test and are user
             #       defined PARAMs

@@ -17,21 +17,21 @@ from pyNastran.op2.tables.geom.geom_common import GeomCommon
 class GEOM1(GeomCommon):
     """defines methods for reading op2 nodes/coords"""
 
-    def _add_node_object(self, node, allow_overwrites=False):
-        """GRDSET creates duplicate nodes...what about duplicate nodes?"""
-        key = node.nid
-        assert key > 0, 'nid=%s node=%s' % (key, node)
-        if key in self.nodes:
-            fields1 = self.nodes[key].raw_fields()
-            fields2 = node.raw_fields()
-            #grid, nid, cp, x1, x2, x3, cd, ps, seid
-            for i, (v1, v2) in enumerate(zip(fields1, fields2)):
-                if v1 != v2:
-                    self.log.info('i=%s v1=%r v2=%r fields1=%s\nfields2=%s' % (
-                        i, v1, v2, fields1, fields2))
-        else:
-            self._type_to_id_map[node.type].append(key)
-        self.nodes[key] = node
+    #def _add_node_object(self, node, allow_overwrites=False):
+        #"""GRDSET creates duplicate nodes...what about duplicate nodes?"""
+        #key = node.nid
+        #assert key > 0, 'nid=%s node=%s' % (key, node)
+        #if key in self.nodes:
+            #fields1 = self.nodes[key].raw_fields()
+            #fields2 = node.raw_fields()
+            ##grid, nid, cp, x1, x2, x3, cd, ps, seid
+            #for i, (v1, v2) in enumerate(zip(fields1, fields2)):
+                #if v1 != v2:
+                    #self.log.info('i=%s v1=%r v2=%r fields1=%s\nfields2=%s' % (
+                        #i, v1, v2, fields1, fields2))
+        #else:
+            #self._type_to_id_map[node.type].append(key)
+        #self.nodes[key] = node
 
     def _read_geom1_4(self, data, ndata):
         return self._read_geom_4(self._geom1_map, data, ndata)

@@ -11,22 +11,23 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
 INT_WORDS_1 = [
-    b'POST', b'OPPHIPA', b'OPPHIPB', b'GRDPNT', b'RPOSTS1', b'BAILOUT',
-    b'COUPMASS', b'CURV', b'INREL', b'MAXRATI', b'OG',
-    b'S1AM', b'S1M', b'DDRMM', b'MAXIT', b'PLTMSG', b'LGDISP', b'NLDISP',
-    b'OUNIT2M']
+    'POST', 'OPPHIPA', 'OPPHIPB', 'GRDPNT', 'RPOSTS1', 'BAILOUT',
+    'COUPMASS', 'CURV', 'INREL', 'MAXRATI', 'OG',
+    'S1AM', 'S1M', 'DDRMM', 'MAXIT', 'PLTMSG', 'LGDISP', 'NLDISP',
+    'OUNIT2M', 'RESCOMP', 'PDRMSG', 'LMODES', 'USETPRT',]
 #float_words_1 = [
     #b'K6ROT', b'WTMASS', b'SNORM', b'PATVER', b'MAXRATIO', b'EPSHT',
     #b'SIGMA', b'TABS']
 STR_WORDS_1 = [
     'POSTEXT', 'PRTMAXIM', 'AUTOSPC', 'OGEOM', 'PRGPST',
     'RESVEC', 'RESVINER', 'ALTRED', 'OGPS', 'OIBULK', 'OMACHPR',
-    'UNITSYS', 'F56', 'OUGCORD', 'OGEM']
+    'UNITSYS', 'F56', 'OUGCORD', 'OGEM', 'EXTSEOUT',]
 INT_STR_WORDS_1 = INT_WORDS_1 + STR_WORDS_1
 
 SMALL_FIELD_PARAMS = [
     'ACOUT', 'ACOWEAK', 'ACSYM', 'ADJMETH', 'AESMAXIT', 'AESMETH', 'ADSTAT',
-    'LMODES', 'MAXLINES'] #+ INT_WORDS_1 + STR_WORDS_1
+    'MAXLINES'] #+ INT_WORDS_1 + STR_WORDS_1
+
 
 class PARAM(BaseCard):
     type = 'PARAM'
@@ -143,24 +144,6 @@ class PARAM(BaseCard):
             assert len(card) <= 3, 'len(PARAM card)=%i card=%r' % (len(card), card)
         else:
             assert len(card) <= 4, 'len(PARAM card)=%i card=%r' % (len(card), card)
-        return PARAM(key, values, comment=comment)
-
-    @classmethod
-    def add_op2_data(cls, data, comment=''):
-        """
-        Creates a PARAM card.
-
-        Parameters
-        ----------
-        data : List[int/float/str]; default=None
-            list of PARAM entries not including 'PARAM';
-            intended to be used by OP2 Reader
-        comment : str; default=''
-            optional string
-        """
-        card = BDFCard(['PARAM'] + data)
-        key = data[0]
-        values = data[1:]
         return PARAM(key, values, comment=comment)
 
     def update_values(self, value1=None, value2=None):
