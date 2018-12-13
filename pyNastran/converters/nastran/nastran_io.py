@@ -973,7 +973,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                             mids[ipid, iply+1] = prop.Mid(iply)
                             thickness[ipid, iply+1] = prop.Thickness(iply)
                     else:
-                        self.log.error('skipping\n%s' % str(prop))
+                        self.log.error('skipping setting mids\n%s' % str(prop))
                     iupid += 1
 
             if len(model.conrod):

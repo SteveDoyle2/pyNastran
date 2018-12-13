@@ -344,6 +344,9 @@ class OP2(OP2_Scalar):
             self.log.warning('type(a)=%s type(b)=%s' % (aname, bname))
             return False
 
+        if aname == 'PARAM': # TODO: update this
+            return True
+
         # does this ever hit?
         if not any(word in aname for word in ['Array', 'Eigenvalues']):
             msg = '%s is not an Array ... assume equal' % aname
@@ -682,6 +685,10 @@ class OP2(OP2_Scalar):
                     #continue
 
         for result_type in result_types:
+            if result_type == 'params':
+                #self.log.debug('skipping %s' % result_type)
+                continue
+
             result = self.get_result(result_type)
             for obj in result.values():
                 class_name = obj.__class__.__name__
@@ -943,7 +950,7 @@ class OP2(OP2_Scalar):
 
         subcase_key2 = {}
         for result_type in result_types:
-            if result_type == 'eigenvalues':
+            if result_type in ['eigenvalues', 'params']:
                 continue
             result = self.get_result(result_type)
             case_keys = list(result.keys())
@@ -988,8 +995,8 @@ class OP2(OP2_Scalar):
                 continue
             for key in result_type_dict:
                 if isinstance(key, string_types):
-                    if table_type not in ['eigenvalues']:
-                        print(table_type)
+                    if table_type not in ['eigenvalues', 'params']:
+                        self.log.warning('table_type = %s' % table_type)
                     continue
                 if key not in keys:
                     keys.append(key)

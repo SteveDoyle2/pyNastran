@@ -814,6 +814,9 @@ class OP2_F06_Common(object):
         ]
 
         table_types += [
+            # PVT0
+            'params',
+
             # LAMA
             'eigenvalues',
 
@@ -1062,6 +1065,8 @@ class OP2_F06_Common(object):
                         #msg.append('%s[%s]; %s; %s; [%s]\n' % (
                         #table_type, isubcase, class_name, shape, headers_str))
                         msg.append('%s[%s]\n' % (table_type, isubcase))
+                    elif table_type == 'params':
+                        msgi = str(subcase)
                     elif hasattr(subcase, 'get_stats'):
                         msgi = '%s[%s] # unvectorized\n' % (table_type, isubcase)
                         msg.append(msgi)

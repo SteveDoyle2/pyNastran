@@ -1298,19 +1298,24 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         i = 0
 
         # TODO: these are weird...
-        #   RPOSTS1, MAXRATI
+        #   RPOSTS1, MAXRATI, RESCOMP, PDRMSG
         int_words_1 = [
             b'POST', b'OPPHIPA', b'OPPHIPB', b'GRDPNT', b'RPOSTS1', b'BAILOUT',
             b'COUPMASS', b'CURV', b'INREL', b'MAXRATI', b'OG',
             b'S1AM', b'S1M', b'DDRMM', b'MAXIT', b'PLTMSG', b'LGDISP', b'NLDISP',
-            b'OUNIT2M']
+            b'OUNIT2M', b'RESCOMP', b'PDRMSG', b'LMODES', b'USETPRT']
         float_words_1 = [
             b'K6ROT', b'WTMASS', b'SNORM', b'PATVER', b'MAXRATIO', b'EPSHT',
             b'SIGMA', b'TABS']
         str_words_1 = [
             b'POSTEXT', b'PRTMAXIM', b'AUTOSPC', b'OGEOM', b'PRGPST',
             b'RESVEC', b'RESVINER', b'ALTRED', b'OGPS', b'OIBULK', b'OMACHPR',
-            b'UNITSYS', b'F56', b'OUGCORD', b'OGEM']
+            b'UNITSYS', b'F56', b'OUGCORD', b'OGEM',
+
+            # TODO: remove these as they're in the matrix test and are user
+            #       defined PARAMs
+            # TODO: add an option for custom PARAMs
+            b'MREDUC', b'OUTDRM', b'OUTFORM', b'REDMETH', ]
         #print('---------------------------')
         while i < nvalues:
             #print('*i=%s nvalues=%s' % (i, nvalues))

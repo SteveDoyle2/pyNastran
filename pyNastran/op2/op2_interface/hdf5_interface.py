@@ -1097,6 +1097,9 @@ def _export_subcases(hdf5_file, op2_model):
     subcase_groups = {}
     result_types = op2_model.get_table_types()
     for result_type in result_types:
+        if result_type == 'params':
+            op2_model.log.debug('skipping %s' % result_type)
+            continue
         result = op2_model.get_result(result_type)
         #if len(result):
             #print(result)

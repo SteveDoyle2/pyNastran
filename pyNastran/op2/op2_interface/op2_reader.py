@@ -888,7 +888,36 @@ class OP2Reader(object):
         # 3. or fluid grid points, CD=-1.
         #print(nid_cp_cd_ps)
         #print(xyz)
-        self.read_markers([-4, 1, 0, 0])
+
+
+        isubtable = -4
+        markers = self.get_nmarkers(1, rewind=True)
+
+        if markers[0] != isubtable:
+            self.read_markers([markers[0], 1, 0, 0])
+            self.show(200)
+            self.log.error('unexpected GPDT marker marker=%s; expected=%s' % (markers[0], isubtable))
+            #markers = self.get_nmarkers(1, rewind=False)
+            return
+
+        self.read_markers([isubtable, 1, 0])
+        markers = self.get_nmarkers(1, rewind=True)
+        while markers[0] != 0:
+            #markers = self.get_nmarkers(1, rewind=True)
+            #self.log.debug('GPDT record; markers=%s' % str(markers))
+            if self.read_mode == 1:
+                self._skip_record()
+            else:
+                #self.log.debug('unexpected GPDT record; markers=%s' % str(markers))
+                data = self._read_record()
+                #print('read_mode=%s freqs=%s' % (self.read_mode, freqs.tolist()))
+
+            markers = self.get_nmarkers(1, rewind=True)
+            self.read_markers([isubtable, 1, 0])
+            markers = self.get_nmarkers(1, rewind=True)
+            isubtable -= 1
+        del isubtable
+        self.read_markers([0])
 
     def read_bgpdt(self):
         """
@@ -2295,10 +2324,12 @@ class OP2Reader(object):
         """
         op2 = self.op2
         for i, marker in enumerate(markers):
+            self.log.debug('markers[%i] = %s' % (i, marker))
             data = self.read_block()
             imarker, = op2.struct_i.unpack(data)
             if marker != imarker:
                 import os
+                #self.show_data(data)
                 msg = 'marker=%r imarker=%r; markers=%s; i=%s; table_name=%r; iloc=%s/%s' % (
                     marker, imarker, markers, i, op2.table_name,
                     op2.f.tell(), os.path.getsize(op2.op2_filename))
@@ -2995,7 +3026,30 @@ class OP2Reader(object):
             self._read_subtable_3_4(table3_parser, table4_parser, passer)
             #force_table4 = self._read_subtable_3_4(table3_parser, table4_parser, passer)
             op2.isubtable -= 1
-            self.read_markers([op2.isubtable, 1, 0])
+
+            iloc = op2.f.tell()
+            try:
+                self.read_markers([op2.isubtable, 1, 0])
+                self.log.debug('markers=%s' % [op2.isubtable, 1, 0])
+            except FortranMarkerError:
+                self.log.error('isubtable=%s' % op2.isubtable)
+                op2.f.seek(iloc)
+                op2.n = iloc
+
+                self.show(4*3*3, types='i')
+                self.show(500)
+
+                marker0 = self.get_nmarkers(1, rewind=True)[0]
+                #print('marker0 =', marker0)
+                if marker0 < op2.isubtable:
+                    raise RuntimeError('marker0 < isubtable; marker0=%s isubtable=%s' % (
+                        marker0, op2.isubtable))
+                    #self.read_markers([marker0, 1, 0])
+                    ##self.log.debug('markers=%s' % [marker0, 1, 0])
+                    #self.show(200)
+                    #break
+                raise
+
             markers = self.get_nmarkers(1, rewind=True)
         if self.is_debug_file:
             self.binary_debug.write('breaking on marker=%r\n' % str(markers))
@@ -3076,6 +3130,18 @@ class OP2Reader(object):
                 #del n
 
     def show(self, n, types='ifs', endian=None):  # pragma: no cover
+        """
+        shows the next N bytes
+
+        Parameters
+        ----------
+        n : int
+            the number of bytes to show
+        types : str; default='ifs'
+            the data types to show
+        endian : str; default=None -> active endian
+            the data endian
+        """
         op2 = self.op2
         assert op2.n == op2.f.tell()
         nints = n // 4
