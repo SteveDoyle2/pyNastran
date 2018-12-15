@@ -556,7 +556,8 @@ class FlutterResponse(object):
     def plot_vg_vf(self, fig=None, damp_axes=None, freq_axes=None, modes=None, show=None,
                    plot_type='tas',
                    png_filename=None, clear=False, legend=True,
-                   xlim=None, ylim_damping=None, ylim_freq=None, nopoints=False):
+                   xlim=None, ylim_damping=None, ylim_freq=None,
+                   nopoints=False, noline=False):
         """
         Make a V-g and V-f plot
 
@@ -592,11 +593,19 @@ class FlutterResponse(object):
             #iplot = np.where(freq != np.nan)
             #damp_axes.plot(vel[iplot], damping[iplot], symbols[i], label='Mode %i' % mode)
             #freq_axes.plot(vel[iplot], freq[iplot], symbols[i])
-            if symbols and not nopoints:
+            showline = not noline
+            showpoints = not nopoints
+            if symbols and showline and showpoints:
                 symbol = symbols[i]
                 damp_axes.plot(vel, damping, symbol, label='Mode %i' % mode)
                 freq_axes.plot(vel, freq, symbol)
+            elif symbols and showpoints:
+                # show line, no points
+                symbol = symbols[i].replace('-', '')
+                damp_axes.plot(vel, damping, symbol, label='Mode %i' % mode)
+                freq_axes.plot(vel, freq, symbol)
             else:
+                # show line
                 damp_axes.plot(vel, damping, label='Mode %i' % mode)
                 freq_axes.plot(vel, freq)
 
@@ -642,15 +651,18 @@ class FlutterResponse(object):
         if clear:
             plt.clear()
 
-    def export_to_zona(self, zona_filename, modes=None, xlim=None, plot_type='tas'):
+    def export_to_zona(self, zona_filename, modes=None, xlim=None, plot_type='tas',
+                       damping_ratios=None):
+        if damping_ratios is None:
+            damping_ratios = [0., 0.01, 0.02, 0.05, 0.1, 0.15]
+        if xlim is None:
+            xlim = [None, None]
+
         modes, imodes = _get_modes_imodes(self.modes, modes)
         legend_items = ['Mode %i' % mode for mode in modes]
         ix, xlabel = self._plot_type_to_ix_xlabel(plot_type)
 
-        if xlim is None:
-            xlim = [None, None]
         # these are the required damping levels to plot
-        damping_ratios = [0., 0.01, 0.02, 0.05, 0.1, 0.15]
 
         for damping_ratio in damping_ratios:
             print('mode, V, damp, freq: (damping ratio=%s' % damping_ratio)

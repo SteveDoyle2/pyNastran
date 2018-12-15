@@ -297,7 +297,7 @@ class ElementalTableResults(NastranTable):
                  scales, data_formats=None,
                  nlabels=None, labelsize=None, ncolors=None, colormap='jet',
                  set_max_min=False, uname='NastranGeometry'):
-        """this is a nodal result"""
+        """this is a centroidal result"""
         linked_scale_factor = False
         location = 'centroid'
         NastranTable.__init__(

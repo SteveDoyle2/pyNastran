@@ -46,6 +46,7 @@ def cmd_line_plot_flutter():  # pragma: no cover
         '  --ylimfreq FREQ  the damping limits (default=no limit)\n'
         '  --ylimdamp DAMP  the damping limits (default=-0.3:0.3)\n'
         "  --nopoints       don't plot the points\n"
+        "  --noline       don't plot the lines\n"
         "  --export         export a zona file\n"
         '\n'
         'Info:\n'
@@ -98,6 +99,7 @@ def cmd_line_plot_flutter():  # pragma: no cover
     plot_root_locus = data['--rootlocus']
 
     nopoints = data['--nopoints']
+    noline = data['--noline']
     plot_flutter_f06(f06_filename, modes=modes,
                      plot_type=plot_type,
                      f06_units=in_units,
@@ -107,6 +109,7 @@ def cmd_line_plot_flutter():  # pragma: no cover
                      xlim=xlim,
                      ylim_damping=ylim_damping, ylim_freq=ylim_freq,
                      nopoints=nopoints,
+                     noline=noline,
                      export=export)
 
 def split_float_colons(string_values):

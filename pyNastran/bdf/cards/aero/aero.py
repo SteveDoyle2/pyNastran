@@ -1698,7 +1698,10 @@ class CAERO1(BaseCard):
         msg = ', which is required by CAERO1 eid=%s' % self.eid
         self.pid_ref = model.PAero(self.pid, msg=msg)
         self.cp_ref = model.Coord(self.cp, msg=msg)
-        self.ascid_ref = model.Acsid(msg=msg)
+        if model.sol in [144, 145, 146, 200]:
+            self.ascid_ref = model.Acsid(msg=msg)
+        else:
+            self.ascid_ref = model.safe_acsid(msg=msg)
 
         if self.nchord == 0:
             assert isinstance(self.lchord, integer_types), self.lchord

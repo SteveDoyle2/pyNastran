@@ -81,7 +81,7 @@ def nastran_to_stl(bdf_filename, stl_filename, is_binary=False, log=None, stop_o
             i1, i2, i3 = nodeid_to_i_map[n1], nodeid_to_i_map[n2], nodeid_to_i_map[n3]
             elements.append([i1, i2, i3])
         else:
-            print(element.type)
+            model.log.warning('skipping %s' % element.type)
     elements = np.array(elements, dtype='int32')
     stl = STL(log=model.log)
     stl.nodes = nodes

@@ -190,7 +190,9 @@ def make_flutter_response(f06_filename, f06_units=None, out_units=None, log=None
                     sline and
                     'PAGE' not in sline and
                     'INFORMATION' not in sline and
-                    'EIGENVALUE' not in sline)
+                    'EIGENVALUE' not in sline and
+                    'USER' not in sline
+                )
                 if is_line:
                     #print('sline = %s' % sline)
                     lines.append(sline)
@@ -242,7 +244,8 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None,
                      plot_type='tas', modes=None,
                      plot_vg=False, plot_vg_vf=False, plot_root_locus=False,
                      plot_kfreq_damping=False, show=True,
-                     xlim=None, ylim_damping=None, ylim_freq=None, nopoints=False,
+                     xlim=None, ylim_damping=None, ylim_freq=None,
+                     nopoints=False, noline=False,
                      export=False, log=None):
     """
     Plots a flutter (SOL 145) deck
@@ -279,6 +282,8 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None,
         ylimits for the V-f plots
     nopoints : bool; default=False
         suppress the points
+    noline : bool; default=False
+        suppress the lines
 
     Returns
     -------
@@ -310,14 +315,14 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None,
     make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq,
                        plot_type,
                        plot_vg, plot_vg_vf, plot_root_locus, plot_kfreq_damping,
-                       nopoints,
+                       nopoints, noline,
                        export=export, show=show)
     return flutters
 
 def make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq,
                        plot_type,
                        plot_vg, plot_vg_vf, plot_root_locus, plot_kfreq_damping,
-                       nopoints,
+                       nopoints, noline,
                        legend=True, export=False, show=True):
     """actually makes the flutter plots"""
     for unused_subcase, flutter in sorted(flutters.items()):
@@ -331,7 +336,8 @@ def make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq,
                                show=False,
                                xlim=xlim,
                                ylim_damping=ylim_damping, ylim_freq=ylim_freq,
-                               nopoints=nopoints, legend=legend)
+                               nopoints=nopoints, noline=noline,
+                               legend=legend)
         if plot_root_locus:
             flutter.plot_root_locus(modes=modes, show=False)
         if plot_kfreq_damping:

@@ -80,7 +80,7 @@ class STL(object):
             should the vectors be normalized
         """
         self.log.info("---writing STL...%r---" % stl_out_filename)
-        assert len(self.nodes) > 0
+        self._validate()
         solid_name = 'dummy_name'
         if is_binary:
             self.write_binary_stl(stl_out_filename,
@@ -125,6 +125,7 @@ class STL(object):
         normalize_normal_vectors : bool; default=False
             should the vectors be normalized
         """
+        self._validate()
         with open(stl_filename, 'wb') as infile:
             if hasattr(self, 'header'):
                 self.header.ljust(80, '\0')
@@ -400,6 +401,7 @@ class STL(object):
         return normals_at_nodes
 
     def equivalence_nodes(self, tol=1e-5):
+        """equivalences the nodes of the model and updates the elements"""
         nnodes = self.nodes.shape[0]
 
         # build the kdtree
@@ -433,6 +435,10 @@ class STL(object):
                 ireplace = np.where(self.elements == r)
                 self.elements[ireplace] = r_new_nid
 
+    def _validate(self):
+        assert len(self.nodes) > 0, 'No nodes were found in the model'
+        assert len(self.elements) > 0, 'No nodes were found in the model'
+
     def write_stl_ascii(self, out_filename, solid_name, float_fmt='%.6f',
                         normalize_normal_vectors=False, stop_on_failure=True):
         """
@@ -449,6 +455,7 @@ class STL(object):
         end solid
         """
         self.log.info("---write_stl_ascii...%r---" % out_filename)
+        self._validate()
         noormal_format = ' facet normal %s %s %s\n' % (float_fmt, float_fmt, float_fmt)
         vertex_format = '     vertex %s %s %s\n' % (float_fmt, float_fmt, float_fmt)
         msg = 'solid %s\n' % solid_name

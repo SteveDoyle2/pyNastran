@@ -38,7 +38,7 @@ class NastranGuiAttributes(object):
         # new options, no way to access them through the gui
         # they control results generation
         self.make_xyz = False
-        self.make_offset_normals_dim = False
+        self.make_offset_normals_dim = True # creates normals, which is required for loads
         self.make_nnodes_result = False  # make_offset_normals_dim must be True for this to work
         self.make_released_dofs1 = False
         self.make_released_dofs2 = False

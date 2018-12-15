@@ -20,7 +20,7 @@ from qtpy.QtWidgets import (
 
 from pyNastran.gui.utils.qt.pydialog import PyDialog
 from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
-from pyNastran.gui.utils.qt.dialogs import open_file_dialog
+from pyNastran.gui.utils.qt.dialogs import save_file_dialog
 from pyNastran.gui.utils.qt.checks.qlineedit import (
     check_save_path, #check_path,
     #check_int, check_positive_int_or_blank,
@@ -264,10 +264,10 @@ class CuttingPlaneWindow(PyDialog):
 
     def on_browse_csv(self):
         """opens a file dialog"""
-        default_filename = os.getcwd()
-        csv_filename, wildcard = open_file_dialog(
-            self, 'Select the filename for Export',
-            default_filename, wildcard_csv)
+        default_dirname = os.getcwd()
+        csv_filename, wildcard = save_file_dialog(
+            self, 'Select the Cutting Plane file name for Export',
+            default_dirname, wildcard_csv)
         if not csv_filename:
             return
         self.csv_edit.setText(csv_filename)

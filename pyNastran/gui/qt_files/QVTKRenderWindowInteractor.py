@@ -43,30 +43,6 @@ import vtk
 from pyNastran.gui.qt_version import qt_int, qt_version
 
 print('qt_version = %r' % qt_version)
-# Check whether a specific PyQt implementation was chosen
-#try:
-    #import vtk.qt
-    #PyQtImpl = vtk.qt.PyQtImpl
-#except ImportError:
-    #pass
-
-#PyQtImpl = None
-#if PyQtImpl is None:
-    ## Autodetect the PyQt implementation to use
-    #try:
-        #import PyQt5
-        #PyQtImpl = "PyQt5"
-        #bbb
-    #except ImportError:
-        #try:
-            #import PyQt4
-            #PyQtImpl = "PyQt4"
-        #except ImportError:
-            #try:
-                #import PySide
-                #PyQtImpl = "PySide"
-            #except ImportError:
-                #raise ImportError("Cannot load either PyQt or PySide")
 
 if qt_version == "pyqt5":
     from PyQt5.QtWidgets import QWidget, QSizePolicy, QApplication

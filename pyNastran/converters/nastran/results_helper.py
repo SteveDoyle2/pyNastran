@@ -1012,7 +1012,22 @@ def print_empty_elements(model, element_ids, is_element_on, log_error):
 
 
 def _get_t123_tnorm(case, nids, nnodes, t123_offset=0):
-    """helper method for _fill_op2_oug_oqg"""
+    """
+    helper method for _fill_op2_oug_oqg
+
+    Parameters
+    ----------
+    case : DisplacementArray, ForceArray, etc.
+        the OP2 result object???
+    nids : (nnodes,) int ndarray
+        the nodes in the model???
+    nnodes : int
+        the number of nodes in the model???
+    t123_offset : int; default=0
+        0 : translations / forces
+        3 : rotations / moments
+
+    """
     assert case.is_sort1, case.is_sort1
 
     itime0 = 0

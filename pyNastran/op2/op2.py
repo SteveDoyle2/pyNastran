@@ -648,6 +648,8 @@ class OP2(OP2_Scalar):
         """internal method"""
         result_types = self.get_table_types()
         for result_type in result_types:
+            if result_type in ['params']:
+                continue
             result = self.get_result(result_type)
             for obj in result.values():
                 if hasattr(obj, 'finalize'):
