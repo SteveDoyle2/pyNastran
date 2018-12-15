@@ -2324,7 +2324,7 @@ class OP2Reader(object):
         """
         op2 = self.op2
         for i, marker in enumerate(markers):
-            self.log.debug('markers[%i] = %s' % (i, marker))
+            #self.log.debug('markers[%i] = %s' % (i, marker))
             data = self.read_block()
             imarker, = op2.struct_i.unpack(data)
             if marker != imarker:
@@ -3030,7 +3030,7 @@ class OP2Reader(object):
             iloc = op2.f.tell()
             try:
                 self.read_markers([op2.isubtable, 1, 0])
-                self.log.debug('markers=%s' % [op2.isubtable, 1, 0])
+                #self.log.debug('markers=%s' % [op2.isubtable, 1, 0])
             except FortranMarkerError:
                 self.log.error('isubtable=%s' % op2.isubtable)
                 op2.f.seek(iloc)

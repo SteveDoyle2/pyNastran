@@ -12,16 +12,6 @@ from six import iteritems, StringIO, string_types
 from pyNastran.op2.result_objects.stress_object import StressObject
 from pyNastran.femutils.utils import duplicates, is_monotonic, underflow_norm
 
-SIDE_MAP = {}
-SIDE_MAP['CHEXA'] = {
-    1 : [4, 3, 2, 1],
-    2 : [1, 2, 6, 5],
-    3 : [2, 3, 7, 6],
-    4 : [3, 4, 8, 7],
-    5 : [4, 1, 5, 8],
-    6 : [5, 6, 7, 8],
-}
-
 #VTK_TRIANGLE = 5
 #VTK_QUADRATIC_TRIANGLE = 22
 
@@ -114,6 +104,16 @@ from pyNastran.gui.qt_files.colors import (
 #RED = (1., 0., 0.)
 #YELLOW = (1., 1., 0.)
 #PURPLE = (1., 0., 1.)
+
+SIDE_MAP = {}
+SIDE_MAP['CHEXA'] = {
+    1 : [4, 3, 2, 1],
+    2 : [1, 2, 6, 5],
+    3 : [2, 3, 7, 6],
+    4 : [3, 4, 8, 7],
+    5 : [4, 1, 5, 8],
+    6 : [5, 6, 7, 8],
+}
 
 NO_THETA = [
     'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
@@ -231,7 +231,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         #self.gui.actions['about'].Disable()
         menu_items = {}
-        menu_items['nastran_toolbar'] = (self.gui.nastran_toolbar, ('caero', 'caero_subpanels', 'conm2'))
+        menu_items['nastran_toolbar'] = (self.gui.nastran_toolbar,
+                                         ('caero', 'caero_subpanels', 'conm2'))
         #menu_items = [
             #(self.menu_help2, ('about_nastran',)),
             #(self.gui.nastran_toolbar, ('caero', 'caero_subpanels', 'conm2'))
@@ -2050,21 +2051,22 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         has_control_surface : bool
             is there a control surface
         """
-        if 'caero_control_surfaces' in self.gui.geometry_actors:
+        geometry_actors = self.gui.geometry_actors
+        if 'caero_control_surfaces' in geometry_actors:
             self.geometry_properties['caero_control_surfaces'].opacity = 0.5
 
-            if 'caero' not in self.gui.geometry_actors:
+            if 'caero' not in geometry_actors:
                 return
-            self.gui.geometry_actors['caero'].Modified()
-            self.gui.geometry_actors['caero_subpanels'].Modified()
+            geometry_actors['caero'].Modified()
+            geometry_actors['caero_subpanels'].Modified()
             if has_control_surface:
-                self.gui.geometry_actors['caero_control_surfaces'].Modified()
-            if hasattr(self.gui.geometry_actors['caero'], 'Update'):
-                self.gui.geometry_actors['caero'].Update()
-            if hasattr(self.gui.geometry_actors['caero_subpanels'], 'Update'):
-                self.gui.geometry_actors['caero_subpanels'].Update()
-            if has_control_surface and hasattr(self.gui.geometry_actors['caero_subpanels'], 'Update'):
-                self.gui.geometry_actors['caero_control_surfaces'].Update()
+                geometry_actors['caero_control_surfaces'].Modified()
+            if hasattr(geometry_actors['caero'], 'Update'):
+                geometry_actors['caero'].Update()
+            if hasattr(geometry_actors['caero_subpanels'], 'Update'):
+                geometry_actors['caero_subpanels'].Update()
+            if has_control_surface and hasattr(geometry_actors['caero_subpanels'], 'Update'):
+                geometry_actors['caero_control_surfaces'].Update()
 
     def _create_splines(self, model, box_id_to_caero_element_map, caero_points):
         """
@@ -2942,7 +2944,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         create_vtk_cells_of_constant_element_type(grid, elements, etype)
         grid.SetPoints(points)
 
-    def _fill_dependent_independent(self, mpc_id, model, lines,
+    def _fill_dependent_independent(self, unused_mpc_id, model, lines,
                                     depname, indname, linename):
         """creates the mpc actors"""
         if not lines:
@@ -3234,7 +3236,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             (0, 6, 5, 4), # (1, 7, 6, 5),
         )
 
-        elements, nelements, superelements = _get_elements_nelements_unvectorized(model)
+        elements, nelements, unused_superelements = _get_elements_nelements_unvectorized(model)
         xyz_cid0 = self.xyz_cid0
         pids_array = np.zeros(nelements, dtype='int32')
         eids_array = np.zeros(nelements, dtype='int32')
@@ -4370,9 +4372,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                         nid_to_pid_map[nid].append(pid)
 
                 n1, n2, n3 = [nid_map[nid] for nid in node_ids]
-                p1 = xyz_cid0[n1, :]
-                p2 = xyz_cid0[n2, :]
-                p3 = xyz_cid0[n3, :]
+                #p1 = xyz_cid0[n1, :]
+                #p2 = xyz_cid0[n2, :]
+                #p3 = xyz_cid0[n3, :]
 
                 elem.GetPointIds().SetId(0, n1)
                 elem.GetPointIds().SetId(1, n2)
@@ -4397,9 +4399,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     elem = vtkTriangle()
 
                 n1, n2, n3 = [nid_map[nid] for nid in node_ids[:3]]
-                p1 = xyz_cid0[n1, :]
-                p2 = xyz_cid0[n2, :]
-                p3 = xyz_cid0[n3, :]
+                #p1 = xyz_cid0[n1, :]
+                #p2 = xyz_cid0[n2, :]
+                #p3 = xyz_cid0[n3, :]
                 elem.GetPointIds().SetId(0, n1)
                 elem.GetPointIds().SetId(1, n2)
                 elem.GetPointIds().SetId(2, n3)
@@ -4434,9 +4436,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 n1 = nid_map[node_ids[0]]
                 n2 = nid_map[node_ids[2]]
                 n3 = nid_map[node_ids[4]]
-                p1 = xyz_cid0[n1, :]
-                p2 = xyz_cid0[n2, :]
-                p3 = xyz_cid0[n3, :]
+                #p1 = xyz_cid0[n1, :]
+                #p2 = xyz_cid0[n2, :]
+                #p3 = xyz_cid0[n3, :]
                 elem.GetPointIds().SetId(0, n1)
                 elem.GetPointIds().SetId(1, n2)
                 elem.GetPointIds().SetId(2, n3)
@@ -4463,10 +4465,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     #print('nid_map = %s' % nid_map)
                     raise
                     #continue
-                p1 = xyz_cid0[n1, :]
-                p2 = xyz_cid0[n2, :]
-                p3 = xyz_cid0[n3, :]
-                p4 = xyz_cid0[n4, :]
+                #p1 = xyz_cid0[n1, :]
+                #p2 = xyz_cid0[n2, :]
+                #p3 = xyz_cid0[n3, :]
+                #p4 = xyz_cid0[n4, :]
 
                 elem = vtkQuad()
                 elem.GetPointIds().SetId(0, n1)
@@ -4486,10 +4488,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 self.eid_to_nid_map[eid] = node_ids[:4]
 
                 n1, n2, n3, n4 = [nid_map[nid] for nid in node_ids[:4]]
-                p1 = xyz_cid0[n1, :]
-                p2 = xyz_cid0[n2, :]
-                p3 = xyz_cid0[n3, :]
-                p4 = xyz_cid0[n4, :]
+                #p1 = xyz_cid0[n1, :]
+                #p2 = xyz_cid0[n2, :]
+                #p3 = xyz_cid0[n3, :]
+                #p4 = xyz_cid0[n4, :]
                 if None not in node_ids:
                     elem = vtkQuadraticQuad()
                     elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
@@ -4516,10 +4518,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 self.eid_to_nid_map[eid] = node_ids[:4]
 
                 n1, n2, n3, n4 = [nid_map[nid] for nid in node_ids[:4]]
-                p1 = xyz_cid0[n1, :]
-                p2 = xyz_cid0[n2, :]
-                p3 = xyz_cid0[n3, :]
-                p4 = xyz_cid0[n4, :]
+                #p1 = xyz_cid0[n1, :]
+                #p2 = xyz_cid0[n2, :]
+                #p3 = xyz_cid0[n3, :]
+                #p4 = xyz_cid0[n4, :]
                 if None not in node_ids:
                     elem = vtk.vtkBiQuadraticQuad()
                     elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
@@ -4776,14 +4778,14 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             elif etype in ('CBAR', 'CBEAM', 'CROD', 'CONROD', 'CTUBE'):
                 if etype == 'CONROD':
                     pid = 0
-                    areai = element.Area()
+                    #areai = element.Area()
                 else:
                     pid = element.Pid()
-                    try:
-                        areai = element.pid_ref.Area()
-                    except:
-                        print(element)
-                        raise
+                    #try:
+                        #areai = element.pid_ref.Area()
+                    #except:
+                        #print(element)
+                        #raise
 
                 node_ids = element.node_ids
                 for nid in node_ids:
@@ -4791,8 +4793,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
                 # 2 points
                 n1, n2 = np.searchsorted(nids, element.nodes)
-                xyz1 = xyz_cid0[n1, :]
-                xyz2 = xyz_cid0[n2, :]
+                #xyz1 = xyz_cid0[n1, :]
+                #xyz2 = xyz_cid0[n2, :]
                 eid_to_nid_map[eid] = node_ids
                 elem = vtk.vtkLine()
                 try:
@@ -4815,8 +4817,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
                 # 2 points
                 n1, n2 = np.searchsorted(nids, element.nodes)
-                xyz1 = xyz_cid0[n1, :]
-                xyz2 = xyz_cid0[n2, :]
+                #xyz1 = xyz_cid0[n1, :]
+                #xyz2 = xyz_cid0[n2, :]
                 eid_to_nid_map[eid] = node_ids
 
                 g0 = element.g0 #_vector
@@ -4843,10 +4845,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     eid_to_nid_map[eid] = node_ids[:4]
 
                     n1, n2, n3, n4 = [nid_map[nid] for nid in node_ids[:4]]
-                    p1 = xyz_cid0[n1, :]
-                    p2 = xyz_cid0[n2, :]
-                    p3 = xyz_cid0[n3, :]
-                    p4 = xyz_cid0[n4, :]
+                    #p1 = xyz_cid0[n1, :]
+                    #p2 = xyz_cid0[n2, :]
+                    #p3 = xyz_cid0[n3, :]
+                    #p4 = xyz_cid0[n4, :]
                     if element.surface_type == 'AREA4' or None in node_ids:
                         elem = vtkQuad()
                     else:
@@ -4872,9 +4874,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                         elem.GetPointIds().SetId(5, nid_map[node_ids[5]])
 
                     n1, n2, n3 = [nid_map[nid] for nid in node_ids[:3]]
-                    p1 = xyz_cid0[n1, :]
-                    p2 = xyz_cid0[n2, :]
-                    p3 = xyz_cid0[n3, :]
+                    #p1 = xyz_cid0[n1, :]
+                    #p2 = xyz_cid0[n2, :]
+                    #p3 = xyz_cid0[n3, :]
                     elem.GetPointIds().SetId(0, n1)
                     elem.GetPointIds().SetId(1, n2)
                     elem.GetPointIds().SetId(2, n3)
@@ -4909,9 +4911,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
                 if len(side_inids) == 3:
                     n1, n2, n3 = [nid_map[nid] for nid in node_ids[:3]]
-                    p1 = xyz_cid0[n1, :]
-                    p2 = xyz_cid0[n2, :]
-                    p3 = xyz_cid0[n3, :]
+                    #p1 = xyz_cid0[n1, :]
+                    #p2 = xyz_cid0[n2, :]
+                    #p3 = xyz_cid0[n3, :]
 
                     elem = vtkTriangle()
                     elem.GetPointIds().SetId(0, n1)
@@ -4919,10 +4921,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     elem.GetPointIds().SetId(2, n3)
                 elif len(side_inids) == 4:
                     n1, n2, n3, n4 = [nid_map[nid] for nid in node_ids[:4]]
-                    p1 = xyz_cid0[n1, :]
-                    p2 = xyz_cid0[n2, :]
-                    p3 = xyz_cid0[n3, :]
-                    p4 = xyz_cid0[n4, :]
+                    #p1 = xyz_cid0[n1, :]
+                    #p2 = xyz_cid0[n2, :]
+                    #p3 = xyz_cid0[n3, :]
+                    #p4 = xyz_cid0[n4, :]
 
                     elem = vtkQuad()
                     elem.GetPointIds().SetId(0, n1)
@@ -6470,8 +6472,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                             #is_isotropic_map = e11 == e22
                             is_isotropic[e11 == e22] = 1
 
-                        iso_res = GuiResult(0, header='IsIsotropic?', title='IsIsotropic?',
-                                            location='centroid', scalar=is_isotropic, data_format='%i')
+                        iso_res = GuiResult(
+                            0, header='IsIsotropic?', title='IsIsotropic?',
+                            location='centroid', scalar=is_isotropic, data_format='%i')
                         cases[icase] = (iso_res, (0, 'Is Isotropic?'))
                         form_layer.append(('Is Isotropic?', icase, []))
                         icase += 1
@@ -6616,6 +6619,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 normals=self.normals, nid_map=self.nid_map,)
             is_loads, is_temperatures, temperature_data, load_data = out
 
+            self.log.info('subcase_id=%s is_loads=%s is_temperatures=%s' % (
+                subcase_id, is_loads, is_temperatures))
             if is_loads:
                 centroidal_pressures, forces, spcd = load_data
                 if np.abs(centroidal_pressures).max():
@@ -7242,8 +7247,9 @@ def build_offset_normals_dims(model, eid_map, nelements):
     zoffset = np.full(nelements, np.nan, dtype='float32')
     element_dim = np.full(nelements, -1, dtype='int32')
     nnodes_array = np.full(nelements, np.nan, dtype='int32')
+    log = model.log
 
-    eid_map = self.gui.eid_map
+    #eid_map = self.gui.eid_map
     assert eid_map is not None
     for eid, element in sorted(model.elements.items()):
         etype = element.type
@@ -7263,7 +7269,7 @@ def build_offset_normals_dims(model, eid_map, nelements):
                 msg = 'eid=%i normal=nan...setting to [2, 2, 2]\n'
                 msg += '%s' % (element)
                 msg += 'nodes = %s' % str(element.nodes)
-                self.log.error(msg)
+                log.error(msg)
                 normali = np.ones(3) * 2.
                 #raise
 
@@ -7358,7 +7364,7 @@ def build_offset_normals_dims(model, eid_map, nelements):
             if element.type in ['CPLSTN3', 'CPLSTN4', 'CPLSTN6', 'CPLSTN8']:
                 element_dim[ieid] = element_dimi
                 nnodes_array[ieid] = nnodesi
-                self.log.debug('continue...element.type=%r' % element.type)
+                log.debug('continue...element.type=%r' % element.type)
                 continue
 
             offset[ieid] = z0
@@ -7367,35 +7373,35 @@ def build_offset_normals_dims(model, eid_map, nelements):
             zoffset[ieid] = z0 * normali[2]
 
         elif etype == 'CTETRA':
-            ieid = self.eid_map[eid]
+            ieid = eid_map[eid]
             element_dimi = 3
             nnodesi = 4
         elif etype == 'CPENTA':
-            ieid = self.eid_map[eid]
+            ieid = eid_map[eid]
             element_dimi = 3
             nnodesi = 6
         elif etype == 'CPYRAM':
-            ieid = self.eid_map[eid]
+            ieid = eid_map[eid]
             element_dimi = 3
             nnodesi = 5
         elif etype in ['CHEXA', 'CIHEX1', 'CIHEX2']:
-            ieid = self.eid_map[eid]
+            ieid = eid_map[eid]
             element_dimi = 3
             nnodesi = 8
 
         elif etype in ['CROD', 'CONROD', 'CBEND', 'CBAR', 'CBEAM', 'CGAP', 'CTUBE']:
-            ieid = self.eid_map[eid]
+            ieid = eid_map[eid]
             element_dimi = 1
             nnodesi = 2
         elif etype in ['CBUSH', 'CBUSH1D', 'CBUSH2D',
                        'CFAST', 'CVISC',
                        'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
                        'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5']:
-            ieid = self.eid_map[eid]
+            ieid = eid_map[eid]
             element_dimi = 0
             nnodesi = 2
         elif etype == 'CHBDYG':
-            ieid = self.eid_map[eid]
+            ieid = eid_map[eid]
             if element.surface_type == 'AREA3':
                 nnodesi = 3
                 element_dimi = 2
@@ -7419,7 +7425,7 @@ def build_offset_normals_dims(model, eid_map, nelements):
             continue
         else:
             try:
-                ieid = self.eid_map[eid]
+                ieid = eid_map[eid]
             except KeyError:
                 print('didnt add element to eid_map')
                 print(model.elements[eid])
