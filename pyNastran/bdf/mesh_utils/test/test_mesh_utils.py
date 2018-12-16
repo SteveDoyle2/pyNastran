@@ -13,7 +13,7 @@ import numpy as np
 #test_path = os.path.join(root_path, 'bdf', 'test', 'unit')
 
 import pyNastran
-from pyNastran.bdf.bdf import BDF, read_bdf, CORD2R
+from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.mesh_utils.bdf_equivalence import bdf_equivalence_nodes
 from pyNastran.bdf.mesh_utils.export_mcids import export_mcids
 from pyNastran.bdf.mesh_utils.split_cbars_by_pin_flag import split_cbars_by_pin_flag
@@ -22,8 +22,6 @@ from pyNastran.bdf.mesh_utils.pierce_shells import (
     pierce_shell_model) #, quad_intersection, triangle_intersection)
 from pyNastran.bdf.mesh_utils.mirror_mesh import (
     write_bdf_symmetric, bdf_mirror, make_symmetric_model, bdf_mirror_plane)
-from pyNastran.bdf.mesh_utils.cut_model_by_plane import (
-    cut_edge_model_by_coord, cut_face_model_by_coord, connect_face_rows)
 from pyNastran.bdf.mesh_utils.bdf_merge import bdf_merge
 from pyNastran.utils.log import SimpleLogger
 
@@ -39,6 +37,18 @@ np.set_printoptions(edgeitems=3, infstr='inf',
 
 
 class TestMeshUtils(unittest.TestCase):
+
+    def test_structured_cquads(self):
+        """tests create_structured_cquad4s"""
+        pid = 42
+        p1 = [0., 0., 0.]
+        p2 = [1., 0., 0.]
+        p3 = [1., 1., 0.]
+        p4 = [0., 1., 0.]
+        model = BDF()
+        nx = 10
+        ny = 20
+        create_structured_cquad4s(model, pid, p1, p2, p3, p4, nx, ny, nid=1, eid=1, theta_mcid=0.)
 
     def test_eq1(self):
         """
@@ -635,8 +645,8 @@ class TestMeshUtils(unittest.TestCase):
         model, mirror_model, nid_offset, eid_offset = bdf_mirror_plane(
             model, plane, mirror_model=None, log=None, debug=True,
             use_nid_offset=False)
-        for nid, node in sorted(mirror_model.nodes.items()):
-            print(nid, node.xyz)
+        #for nid, node in sorted(mirror_model.nodes.items()):
+            #print(nid, node.xyz)
 
 
         out_filename = 'sym.bdf'
@@ -726,196 +736,6 @@ class TestMeshUtils(unittest.TestCase):
                 #print(i, j, p,
                       #triangle_intersection(p, v, p0, p1, p2),
                       #quad_intersection(p, v, p0, p1, p3, p2))
-
-    def test_cut_shell_model_1(self):
-        """tests pierce_shell_model"""
-        model, nodal_result = _cut_shell_model_quads()
-        coord = CORD2R(1, rid=0, origin=[0.5, 0., 0.], zaxis=[0.5, 0., 1], xzplane=[1.5, 0., 0.],
-                       comment='')
-        model.coords[1] = coord
-        tol = 2.
-        #-------------------------------------------------------------------------
-        local_points_array, global_points_array, result_array = cut_edge_model_by_coord(
-            model, coord, tol, nodal_result,
-            plane_atol=1e-5)
-        assert len(result_array) == 16, len(result_array)
-
-        geometry_array, result_array = cut_face_model_by_coord(
-            model, coord, tol, nodal_result,
-            plane_atol=1e-5)
-        assert result_array is None, len(result_array) # no quad support
-
-    def test_cut_shell_model_2(self):
-        """tests pierce_shell_model"""
-        tol = 2.
-        coord = CORD2R(1, rid=0, origin=[0.5, 0., 0.], zaxis=[0.5, 0., 1], xzplane=[1.5, 0., 0.],
-                       comment='')
-        model, nodal_result = _cut_shell_model_quads()
-        #-------------------------------------------------------------------------
-        # triangles
-        elements2 = {}
-        neids = len(model.elements)
-        for eid, elem in model.elements.items():
-            elem_a, elem_b = elem.split_to_ctria3(eid, eid + neids)
-            elements2[elem_a.eid] = elem_a
-            elements2[elem_b.eid] = elem_b
-        model.elements = elements2
-        model.coords[1] = coord
-        model.write_bdf('tris.bdf')
-
-        #print('----------------------------')
-        local_points_array, global_points_array, result_array = cut_edge_model_by_coord(
-            model, coord, tol, nodal_result,
-            plane_atol=1e-5, csv_filename='cut_edge_2.csv')
-        assert len(result_array) == 20, len(result_array)
-
-        geometry_arrays, result_arrays = cut_face_model_by_coord(
-            model, coord, tol, nodal_result,
-            plane_atol=1e-5, csv_filename='cut_face_2.csv')
-        assert len(result_arrays[0]) == 8, len(result_arrays)
-        os.remove('tris.bdf')
-
-
-    def test_connect_face_rows(self):
-        # in order
-        geometry_array = np.array([
-            [1, 1, 2],
-            [2, 2, 3],
-            [3, 3, 4],
-            [4, 4, 5],
-            [5, 5, 6],
-        ])
-        nedges = geometry_array.shape[0]
-        results_array = np.arange(0, nedges)
-        #print(results_array)
-        iedges, geometry_arrays2, results_arrays2 = connect_face_rows(
-            geometry_array, results_array, skip_cleanup=False)
-        assert np.array_equal(iedges, [[0, 1, 2, 3, 4]]), 'iedges=%s' % iedges
-        #-----------------------------------------------------------------------
-
-        # out of order
-        geometry_array = np.array([
-            [1, 1, 2], # 0
-            [2, 4, 5], # 3
-            [3, 5, 6], # 4
-            [4, 3, 4], # 2
-            [5, 2, 3], # 1
-        ])
-        nedges = geometry_array.shape[0]
-        results_array = np.arange(0, nedges)
-        iedges, geometry_arrays2, results_arrays2 = connect_face_rows(
-            geometry_array, results_array, skip_cleanup=False)
-        assert np.array_equal(iedges, [[0, 4, 3, 1, 2]]), 'iedges=%s' % iedges
-        #print(geometry_array2)
-
-        #-----------------------------------------------------------------------
-
-        # in order, two blocks
-        #print('*****************')
-        geometry_array = np.array([
-            # block 1
-            [1, 1, 2],
-            [2, 2, 3],
-            [3, 3, 4],
-
-            # block 2
-            [10, 10, 20],
-            [20, 20, 30],
-            [30, 30, 40],
-        ])
-        nedges = geometry_array.shape[0]
-        results_array = np.arange(0, nedges)
-        #print(results_array)
-        iedges, geometry_array2, results_array2 = connect_face_rows(
-            geometry_array, results_array, skip_cleanup=False)
-        assert np.array_equal(iedges, [[0, 1, 2], [3, 4, 5]]), 'iedges=%s' % iedges
-
-    def test_connect_face_rows_ring_1(self):
-        # in order, one ring
-        geometry_array = np.array([
-            [1, 1, 2],
-            [2, 2, 3],
-            [3, 3, 4],
-            [4, 1, 4],
-        ])
-        nedges = geometry_array.shape[0]
-        results_array = np.arange(0, nedges)
-        #print(results_array)
-        iedges, geometry_array2, results_array2 = connect_face_rows(
-            geometry_array, results_array, skip_cleanup=False)
-        assert np.array_equal(iedges, [[0, 1, 2, 3, 0]]), 'iedges=%s' % iedges
-
-    def test_connect_face_rows_ring_2(self):
-        # in order, two rings
-        geometry_array = np.array([
-            [1, 1, 2],
-            [2, 2, 3],
-            [3, 3, 4],
-            [4, 1, 4],
-
-            [10, 10, 20],
-            [20, 20, 30],
-            [30, 30, 40],
-            [40, 10, 40],
-        ])
-        nedges = geometry_array.shape[0]
-        results_array = np.arange(0, nedges)
-        #print(results_array)
-        iedges, geometry_array2, results_array2 = connect_face_rows(
-            geometry_array, results_array, skip_cleanup=False)
-        assert np.array_equal(iedges, [[0, 1, 2, 3, 0], [4, 5, 6, 7, 4]]), 'iedges=%s' % iedges
-
-def _cut_shell_model_quads():
-    """helper method"""
-    log = SimpleLogger(level='error')
-    pid = 10
-    mid1 = 100
-    model = BDF(log=log)
-
-    # intersects (min)
-    model.add_grid(1, [0., 0., 0.])
-    model.add_grid(2, [1., 0., 0.])
-    model.add_grid(3, [1., 1., 0.])
-    model.add_grid(4, [0., 1., 0.])
-    model.add_cquad4(1, pid, [1, 2, 3, 4])
-
-    # intersects (max)
-    model.add_grid(5, [0., 0., 1.])
-    model.add_grid(6, [1., 0., 1.])
-    model.add_grid(7, [1., 1., 1.])
-    model.add_grid(8, [0., 1., 1.])
-    model.add_cquad4(2, pid, [5, 6, 7, 8])
-
-    # intersects (mid)
-    model.add_grid(9, [0., 0., 0.5])
-    model.add_grid(10, [1., 0., 0.5])
-    model.add_grid(11, [1., 1., 0.5])
-    model.add_grid(12, [0., 1., 0.5])
-    model.add_cquad4(3, pid, [9, 10, 11, 12])
-
-    # doesn't intersect
-    model.add_grid(13, [10., 0., 0.])
-    model.add_grid(14, [11., 0., 0.])
-    model.add_grid(15, [11., 1., 0.])
-    model.add_grid(16, [10., 1., 0.])
-    model.add_cquad4(4, pid, [13, 14, 15, 16])
-
-    model.add_pshell(pid, mid1=mid1, t=2.)
-
-    E = 1.0
-    G = None
-    nu = 0.3
-    model.add_mat1(mid1, E, G, nu, rho=1.0)
-    model.validate()
-
-    model.cross_reference()
-
-    #xyz_points = [
-        #[0.4, 0.6, 0.], [-1., -1, 0.],]
-
-    #tol = 2.
-    nodal_result = np.linspace(0., 1., num=16)
-    return model, nodal_result
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

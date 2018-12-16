@@ -3,31 +3,25 @@ from pyNastran.bdf.cards.aero.utils import (
     points_elements_from_quad_points, create_axisymmetric_body)
 
 def create_structured_cquad4s(model, pid,
-                              p1, p2, p3, p4, nx, ny, nid=1, eid=1):
+                              p1, p2, p3, p4, nx, ny, nid=1, eid=1, theta_mcid=0.):
     """
     Parameters
     ----------
-    p1 : (3, ) float ndarray
-        leading edge root
-    p2 : (3, ) float ndarray
-        trailing edge root
-    p3 : (3, ) float ndarray
-        trailing edge tip
-    p4 : (3, ) float ndarray
-        leading edge tip
-    nx / ny : int
-        nx : points in the chordwise direction in percentage of the chord
-        ny : points in the spanwise direction in percentage of the span
+    p1 / p2 / p3 / p4 : (3, ) float ndarray
+        points defining the quad
+    nx : int
+        points in the p1-p2 direction
+    ny : int
+        points in the p1-p4 direction
     nid / eid : int
         node / element id offset
 
     Returns
     -------
-    points (nchord, nspan) float ndarray; might be backwards???
-        the points
-    elements (nquads, 4) int ndarray
-        series of quad elements
-        nquads = (nchord-1) * (nspan-1)
+    nid : int
+        ???
+    eid : int
+        ???
     """
     nid0 = nid
     x = np.linspace(0., 1., nx + 1)
@@ -38,7 +32,7 @@ def create_structured_cquad4s(model, pid,
         nid += 1
 
     for node_ids in elements + nid0:
-        model.add_cquad4(eid, pid, node_ids)
+        model.add_cquad4(eid, pid, node_ids, theta_mcid=theta_mcid)
         eid += 1
     return nid, eid
 
