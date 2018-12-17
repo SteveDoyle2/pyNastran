@@ -182,6 +182,8 @@ def print_float_8(value):
             field = "%8.2f" % value   # -1000 >x>-10000
         elif value > -100000.:
             field = "%8.1f" % value   # -10000>x>-100000
+        elif value <= -999999.5:
+            field = print_scientific_8(value)
         else:
             field = "%8.1f" % value
             try:

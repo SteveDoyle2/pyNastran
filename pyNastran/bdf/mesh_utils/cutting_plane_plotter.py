@@ -65,7 +65,7 @@ def cut_and_plot_model(title, p1, p2, zaxis,
                                  local_points_array, global_points_array, result_array,
                                  csv_filename=csv_filename, invert_yaxis=invert_yaxis,
                                  show=show)
-    else:
+    elif cut_type == 'face':
         csv_filename_face = None
         if csv_filename:
             csv_filename_face = csv_filename + '_face.csv'
@@ -78,7 +78,8 @@ def cut_and_plot_model(title, p1, p2, zaxis,
                                  geometry_arrays, results_arrays,
                                  csv_filename=csv_filename, invert_yaxis=invert_yaxis,
                                  show=show)
-        #print("p1=%s p2=%s zaxis=%s" % (p1, p2, zaxis))
+    else:  # pragma: no cover
+        raise NotImplementedError('cut_type=%r' % cut_type)
 
 
 def plot_cutting_plane_faces(title, p1, p2, zaxis,
@@ -126,9 +127,9 @@ def plot_cutting_plane_faces(title, p1, p2, zaxis,
 
     header = (
         #'# cut 1\n'
-        '# p1: %s\n'
-        '# p2: %s\n'
-        '# zaxis manual: %s\n'
+        'p1: %s\n'
+        'p2: %s\n'
+        'zaxis manual: %s\n'
         'x, y, z, %s\n' % (str(p1), str(p2), str(zaxis), title)
     )
     #for body in bodies:
@@ -190,7 +191,6 @@ def plot_cutting_plane_edges(title, p1, p2, zaxis,
         if show:
             plt.show()
         return
-    #csv_filename = '%s.csv' % title
 
     #for body in bodies:
     #with open(csv_filename, 'w') as csv_file:
@@ -227,10 +227,7 @@ def plot_cutting_plane_edges(title, p1, p2, zaxis,
         if ncp > 1:
             nd_msg = ' (each component)'
 
-        result_array2[:, -1] = result_array[:, -1]
-        #result_array2[:, :3] = result_array[:, :3]
-        #for i in range(ncp):
-            #result_array2[:, 3 + i] = cp.real
+        result_array2[:, -ncp] = result_array[:, -ncp]
         header = (
             'cut 1\n'
             'p1: %s\n'
@@ -239,9 +236,7 @@ def plot_cutting_plane_edges(title, p1, p2, zaxis,
             'x, y, z, x_local, y_local, z_local, %s%s\n' % (
                 str(p1), str(p2), str(zaxis), title, nd_msg)
         )
-    result_array = result_array2
-
-    np.savetxt(csv_filename, result_array, delimiter=',', header=header, comments='# ',
+    np.savetxt(csv_filename, result_array2, delimiter=',', header=header, comments='# ',
                encoding=None)
     if show:
         plt.show()
