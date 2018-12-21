@@ -10,7 +10,7 @@ def cmd_line_plot_flutter():  # pragma: no cover
     msg = (
         'Usage:\n'
         '  f06 plot_145 F06_FILENAME [--noline] [--modes MODES] [--subcases SUB] [--xlim XLIM] [--ylimdamp DAMP] [--ylimfreq FREQ]'
-        '[--eas|--tas] [--kfreq] [--rootlocus] [--in_units IN][--out_units OUT] [--nopoints] [--export]\n'
+        '[--eas|--tas] [--kfreq] [--rootlocus] [--in_units IN][--out_units OUT] [--nopoints] [--export] [--f06]\n'
         '  f06 plot_145 -h | --help\n'
         '  f06 plot_145 -v | --version\n'
         '\n'
@@ -46,8 +46,9 @@ def cmd_line_plot_flutter():  # pragma: no cover
         '  --ylimfreq FREQ  the damping limits (default=no limit)\n'
         '  --ylimdamp DAMP  the damping limits (default=-0.3:0.3)\n'
         "  --nopoints       don't plot the points\n"
-        "  --noline       don't plot the lines\n"
+        "  --noline         don't plot the lines\n"
         "  --export         export a zona file\n"
+        "  --f06            export an F06 file (temporary)\n"
         '\n'
         'Info:\n'
         '  -h, --help      show this help message and exit\n'''
@@ -66,7 +67,7 @@ def cmd_line_plot_flutter():  # pragma: no cover
         base = os.path.splitext(f06_filename)[0]
         f06_filename = base + '.f06'
 
-    export = data['--export']
+    export_zona = data['--export']
     modes = split_int_colon(data['--modes'])
 
     xlim = [None, None]
@@ -100,6 +101,7 @@ def cmd_line_plot_flutter():  # pragma: no cover
 
     nopoints = data['--nopoints']
     noline = data['--noline']
+    export_f06 = data['--f06']
     plot_flutter_f06(f06_filename, modes=modes,
                      plot_type=plot_type,
                      f06_units=in_units,
@@ -110,7 +112,8 @@ def cmd_line_plot_flutter():  # pragma: no cover
                      ylim_damping=ylim_damping, ylim_freq=ylim_freq,
                      nopoints=nopoints,
                      noline=noline,
-                     export=export)
+                     export_zona=export_zona,
+                     export_f06=export_f06,)
 
 def split_float_colons(string_values):
     """

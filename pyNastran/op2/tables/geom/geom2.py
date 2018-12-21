@@ -25,8 +25,11 @@ from pyNastran.bdf.cards.elements.solid import (CTETRA4, CPYRAM5, CPENTA6, CHEXA
                                                 CTETRA10, CPYRAM13, CPENTA15, CHEXA20,)
 from pyNastran.bdf.cards.thermal.thermal import CHBDYG, CONV, CHBDYP, CHBDYE, CONVM
 from pyNastran.bdf.cards.nodes import SPOINTs
-from pyNastran.op2.tables.geom.geom_common import GeomCommon
 from pyNastran.bdf.cards.elements.bush import CBUSH
+
+from pyNastran.op2.errors import MixedVersionCard
+from pyNastran.op2.tables.geom.geom_common import GeomCommon
+
 
 class GEOM2(GeomCommon):
     """defines methods for reading op2 elements"""
@@ -1170,12 +1173,12 @@ class GEOM2(GeomCommon):
         if self.is_nx:
             try:
                 n, elements = self._read_conv_nx(data, n)
-            except AssertionError:
+            except (AssertionError, MixedVersionCard):
                 n, elements = self._read_conv_msc(data, n0)
         else:
             try:
                 n, elements = self._read_conv_msc(data, n)
-            except AssertionError:
+            except (AssertionError, MixedVersionCard):
                 n, elements = self._read_conv_nx(data, n0)
 
         nelements = len(elements)
@@ -1210,13 +1213,13 @@ class GEOM2(GeomCommon):
         if self.is_nx:
             try:
                 n, elements = nx_read(data, n)
-            except AssertionError:
+            except (AssertionError, MixedVersionCard):
                 #raise
                 n, elements = msc_read(data, n0)
         else:
             try:
                 n, elements = msc_read(data, n)
-            except AssertionError:
+            except (AssertionError, MixedVersionCard):
                 #raise
                 n, elements = nx_read(data, n0)
 

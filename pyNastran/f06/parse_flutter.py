@@ -2,6 +2,7 @@
 SOL 145 plotter
 """
 from __future__ import print_function
+import os
 #import PySide
 import matplotlib.pyplot as plt
 
@@ -246,7 +247,7 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None,
                      plot_kfreq_damping=False, show=True,
                      xlim=None, ylim_damping=None, ylim_freq=None,
                      nopoints=False, noline=False,
-                     export=False, log=None):
+                     export_zona=False, export_f06=False, log=None):
     """
     Plots a flutter (SOL 145) deck
 
@@ -316,15 +317,16 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None,
                        plot_type,
                        plot_vg, plot_vg_vf, plot_root_locus, plot_kfreq_damping,
                        nopoints, noline,
-                       export=export, show=show)
+                       export_zona=export_zona, export_f06=export_f06, show=show)
     return flutters
 
 def make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq,
                        plot_type,
                        plot_vg, plot_vg_vf, plot_root_locus, plot_kfreq_damping,
                        nopoints, noline,
-                       legend=True, export=False, show=True):
+                       legend=True, export_zona=False, export_f06=False, show=True):
     """actually makes the flutter plots"""
+    f06_filename = 'nastran.f06'
     for unused_subcase, flutter in sorted(flutters.items()):
         if plot_vg:
             flutter.plot_vg(modes=modes,
@@ -345,9 +347,12 @@ def make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq,
                                        plot_type=plot_type,
                                        ylim_damping=ylim_damping,
                                        ylim_kfreq=None,
+                                       nopoints=nopoints, noline=noline,
                                        show=False)
-        if export:
+        if export_zona:
             flutter.export_to_zona('zona.f06', modes=modes, xlim=xlim, plot_type=plot_type)
+        if export_f06:
+            flutter.export_to_f06(f06_filename, modes=modes)
     if show:
         plt.show()
 

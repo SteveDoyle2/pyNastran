@@ -11,3 +11,6 @@ class DeviceCodeError(SyntaxError):
 
 class MultipleSolutionNotImplementedError(NotImplementedError):
     pass
+
+class MixedVersionCard(RuntimeError):
+    pass

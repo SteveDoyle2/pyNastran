@@ -47,7 +47,7 @@ class FlutterResponse(object):
                 f06_units = {'velocity' : 'in/s'}
                 The velocity units are the units for the FLFACT card in the BDF
             PKNL method:
-                f06_units = {'velocity' : 'in/s', 'density' : 'slug/in^3'}
+                f06_units = {'velocity' : 'in/s', 'density' : 'slinch/in^3'}
                 The velocity/density units are the units for the FLFACT card in the BDF
 
         out_units dict[str] = str (default=None -> no units conversion)
@@ -98,7 +98,7 @@ class FlutterResponse(object):
         self.ikfreq = 0
         self.ikfreq_inv = 1
 
-        results = np.asarray(results, dtype='float64')
+        results = _asarray(results)
         if self.method == 'PK':
             self.ivelocity = 2
             self.idamping = 3
@@ -402,6 +402,7 @@ class FlutterResponse(object):
     def _plot_x_y2(self, ix, iy1, iy2, xlabel, ylabel1, ylabel2, scatter, modes=None,
                    fig=None, axes1=None, axes2=None,
                    xlim=None, ylim1=None, ylim2=None,
+                   nopoints=False, noline=False,
                    show=True, clear=False, legend=True,
                    png_filename=None,
                    **kwargs):
@@ -426,8 +427,22 @@ class FlutterResponse(object):
             axes2.set_ylim(ylim2)
         symbols = self.symbols
 
+        if nopoints: # and noline is False:
+            scatter = False
+
+        showline = not noline
+        showpoints = not nopoints
+
         for i, imode, mode in zip(count(), imodes, modes):
             symbol = symbols[i]
+            if nopoints:
+                # ro-  ->  r-
+                #
+                # doesn't support dashed (--) lines
+                symbol = symbol[:-2] + symbol[-1:] # symbol[-2:-1]
+            if noline:
+                symbol = symbol.replace('-', '')
+
             freq = self.results[imode, :, self.ifreq].ravel()
             xs = self.results[imode, :, ix].ravel()
             y1s = self.results[imode, :, iy1].ravel()
@@ -476,6 +491,7 @@ class FlutterResponse(object):
                            png_filename=None,
                            ylim_damping=None,
                            ylim_kfreq=None,
+                           nopoints=False, noline=False,
                            **kwargs):
         """
         Plots a kfreq vs. damping curve
@@ -492,6 +508,7 @@ class FlutterResponse(object):
         self._plot_x_y2(ix, iy1, iy2, xlabel, ylabel1, ylabel2, scatter,
                         modes=modes, fig=fig, axes1=damp_axes, axes2=freq_axes,
                         xlim=xlim, ylim1=ylim_damping, ylim2=ylim_kfreq,
+                        nopoints=nopoints, noline=noline,
                         show=show,
                         clear=clear,
                         legend=legend,
@@ -650,6 +667,72 @@ class FlutterResponse(object):
             plt.savefig(png_filename)
         if clear:
             plt.clear()
+
+    def export_to_eas(self, eas_filename, modes=None):
+        """
+        *.VEAS
+
+        ' DAMPING & FREQUENCY X-Y PLOT FILE OF PLTVG SETID=     714 FOR FLUTTER/ASE ID=     714 NMODE=   12'
+        'EQUIVALENT V   G,MODE--1   G,MODE--2   G,MODE--3   G,MODE--4   G,MODE--5   G,MODE--6   G,MODE--7   G,MODE--8   G,MODE--9   G,MODE-10   G,MODE-11   G,MODE-12EQUIVALENT V WHZ,MODE--1 WHZ,MODE--2 WHZ,MODE--3 WHZ,MODE--4 WHZ,MODE--5 WHZ,MODE--6 WHZ,MODE--7 WHZ,MODE--8 WHZ,MODE--9 WHZ,MODE-10 WHZ,MODE-11 WHZ,MODE-12'
+        '  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  1.4277E+01  7.7705E+01  8.8016E+01  2.2346E+02  2.4656E+02  3.2366E+02  4.5518E+02  4.9613E+02  6.7245E+02  7.3197E+02  8.0646E+02  0.0000E+00'
+        '  4.9374E-01 -1.6398E-03 -5.4768E-04 -2.3136E-04 -3.5776E-04 -6.2358E-05 -3.0348E-04 -7.7492E-05 -2.0301E-05 -1.7733E-04 -9.2383E-05 -1.2849E-05 -2.8854E-05  4.9374E-01  1.4272E+01  7.7726E+01  8.8010E+01  2.2347E+02  2.4655E+02  3.2364E+02  4.5516E+02  4.9612E+02  6.7245E+02  7.3195E+02  8.0646E+02  0.0000E+00'
+        """
+        nmodes = self.results.shape[0]
+
+        damping_modes = []
+        omega_modes = []
+        for imode in range(1, nmodes+1):
+            if imode < 10:
+                gmode = '   G,MODE--%i' % imode
+                wmode = ' WHZ,MODE--%i' % imode
+            elif imode < 100:
+                gmode = '   G,MODE-%2i' % imode
+                wmode = ' WHZ,MODE-%2i' % imode
+            else:
+                gmode = '   G,MODE%3i' % imode
+                wmode = ' WHZ,MODE%3i' % imode
+            damping_modes.append(gmode)
+            omega_modes.append(wmode)
+
+        headers = ['EQUIVALENT V'] + damping_modes + ['EQUIVALENT V'] + omega_modes
+        with open(eas_filename, 'w') as eas_file:
+            eas_file.write(' DAMPING & FREQUENCY X-Y PLOT FILE OF PLTVG SETID=       1 FOR FLUTTER/ASE ID=       1 NMODE=  %3i\n' % nmodes)
+            eas_file.write(''.join(headers) + '\n')
+            nspeeds = self.results.shape[1]
+            for i in range(nspeeds):
+                damping = self.results[:, i, self.idamping]
+                eas = self.results[0, i, self.ieas]
+                omega = self.results[:, i, self.ifreq] # in Hz (what WHZ means)
+
+                values = [eas] + damping.tolist() + [eas] + omega.tolist()
+                str_values = (' %11.4E' % value for value in values)
+                eas_file.write(''.join(str_values) + '\n')
+
+    def export_to_f06(self, f06_filename, modes=None, page_stamp=None, page_num=1):
+        # nmodes, vel, res
+        nmodes = self.results.shape[0]
+        with open(f06_filename, 'w') as f06_file:
+            for imode in range(nmodes):
+                #'      MACH 0.0                                                                                                                      '
+                f06_file.write('0                                                                                                            SUBCASE %i\n' % self.subcase)
+                f06_file.write('0                                                       FLUTTER  SUMMARY\n')
+                f06_file.write('                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = ASYMMETRIC\n')
+                f06_file.write('       POINT = %4i     METHOD = %s\n' % (imode + 1, self.method))
+                f06_file.write('\n')
+                f06_file.write('\n')
+
+                f06_file.write('    KFREQ          1./KFREQ       DENSITY     MACH NO.      VELOCITY       DAMPING     FREQUENCY      COMPLEX   EIGENVALUE\n')
+                for res in self.results[imode, :, :9]:
+                    #print(res)
+                    kfreq, kfreqi, rho, mach, vel, damp, freq, eigr, eigi = res
+                    #                 kfreq      ikfreq  rho      mach     vel    damp   freq    eigr       eigi
+                    f06_file.write(' %8.4f      %12.5E  %12.5E  %12.5E  %12.5E  %12.5E  %12.5E  %12.5E  %12.5E\n' % (
+                        kfreq, kfreqi, rho, mach, vel, damp, freq, eigr, eigi,
+                    ))
+                #'1                                                                          DECEMBER  14, 2018  MSC.NASTRAN  6/17/05   PAGE    12\n'
+                f06_file.write(page_stamp % page_num)
+                page_num += 1
+        return page_num
 
     def export_to_zona(self, zona_filename, modes=None, xlim=None, plot_type='tas',
                        damping_ratios=None):
@@ -834,3 +917,42 @@ def _get_modes_imodes(all_modes, modes):
         raise RuntimeError('No modes to plot...')
     imodes = np.searchsorted(all_modes, modes)
     return modes, imodes
+
+def _asarray(results):
+    """casts the results array"""
+    try:
+        results = np.asarray(results, dtype='float64')
+    except:
+        results2 = []
+        for mode_result in results:
+            mode_result2 = []
+            for row in mode_result:
+                #print(row)
+                row2 = []
+                for i, row_entry in enumerate(row):
+                    if i == 0 and '****' in row_entry:
+                        row_entry2 = np.nan
+                        fix_kfreq = True
+                    elif i == 1 and 'INF' in row_entry:
+                        row_entry2 = np.inf
+                    else:
+                        row_entry2 = float(row_entry)
+                    row2.append(row_entry2)
+                mode_result2.append(row2)
+            results2.append(mode_result2)
+        results = np.array(results2, dtype='float64')
+
+        if fix_kfreq:
+            #inan = np.isnan(results[:, :, :])
+            #kfreq_inv = results[:, :, 1]
+            #print('kfreq.shape', kfreq_inv.shape)
+            #print('inan.shape', inan.shape)
+            #results[inan] = 1 / kfreq_inv[inan]
+            nmodes = results.shape[0]
+            for imode in range(nmodes):
+                inan = np.isnan(results[imode, :, 0])
+                if len(inan) == 0:
+                    continue
+                #print(inan)
+                results[imode, inan, 0] = 1. / results[imode, inan, 1]
+    return results

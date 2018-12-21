@@ -449,7 +449,7 @@ def compare(value_in):
     val = interpret_value(field)
     if val != 0:
         p = (val - value_in) / val
-        if p > 0.01:
+        if p > 0.01:  # pragma: no cover
             raise ValueError('val=%s value_in=%s' % (val, value_in))
 
 if __name__ == "__main__":  # pragma: no cover

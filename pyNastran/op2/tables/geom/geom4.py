@@ -12,8 +12,9 @@ from pyNastran.bdf.cards.bdf_sets import (
     ASET, ASET1, BSET, BSET1, CSET, CSET1, QSET, QSET1, USET, USET1, SEQSET1,
     OMIT1, # SEQSET
 )
-from pyNastran.bdf.cards.loads.loads import SPCD
+from pyNastran.op2.errors import MixedVersionCard
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
+from pyNastran.bdf.cards.loads.loads import SPCD
 from pyNastran.bdf.cards.constraints import (
     SUPORT1, SUPORT,
     SPC, SPC1, SPCADD, SPCOFF, SPCOFF1,
@@ -460,7 +461,8 @@ class GEOM4(GeomCommon):
         s = Struct(self._endian + b'7if')
         ntotal = 32
         nelements = (len(data) - n) // ntotal
-        assert (len(data) - n) % ntotal == 0
+        if not (len(data) - n) % ntotal == 0:
+            raise MixedVersionCard('failed reading as MSC')
         elems = []
         for i in range(nelements):
             edata = data[n:n + ntotal]  # 8*4

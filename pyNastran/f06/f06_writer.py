@@ -18,7 +18,7 @@ import pyNastran
 from pyNastran.op2.op2_interface.op2_f06_common import OP2_F06_Common
 from pyNastran.op2.op2_interface.result_set import ResultSet
 
-def make_stamp(title, today=None):
+def make_stamp(title, today=None, build=None):
     if title is None:
         title = ''
 
@@ -36,8 +36,9 @@ def make_stamp(title, today=None):
     str_today = str_today  #.strip()
 
     #release_date = '02/08/12'  # pyNastran.__releaseDate__
-    release_date = ''
-    build = 'pyNastran v%s %s' % (pyNastran.__version__, release_date)
+    if build is None:
+        release_date = ''
+        build = 'pyNastran v%s %s' % (pyNastran.__version__, release_date)
     out = '1    %-67s   %-19s %-22s PAGE %%5i\n' % (title.strip(), str_today, build)
     return out
 

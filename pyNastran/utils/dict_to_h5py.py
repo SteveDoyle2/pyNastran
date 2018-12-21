@@ -136,7 +136,7 @@ class HDF5Exporter(object):
         elif isinstance(value, (integer_types, float_types, string_types, np.ndarray)):
             try:
                 hdf5_file.create_dataset(key, data=value)
-            except TypeError:
+            except (TypeError, RuntimeError):
                 print('key=%r value=%s type=%s' % (key, str(value), type(value)))
                 raise
 
