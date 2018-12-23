@@ -4,8 +4,10 @@ import sys
 from setuptools import setup, find_packages
 
 PY2 = False
+PY3 = True
 if sys.version_info < (3, 0):
     PY2 = True
+    PY3 = False
 
 imajor, minor1, minor2 = sys.version_info[:3]
 if sys.version_info < (2, 7, 7):  # 2.7.15 used
