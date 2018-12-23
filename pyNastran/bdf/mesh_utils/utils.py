@@ -389,6 +389,68 @@ def cmd_line_merge():  # pragma: no cover
     bdf_merge(bdf_filenames, bdf_filename_out, renumber=True,
               encoding=None, size=size, is_double=False, cards_to_skip=cards_to_skip)
 
+def cmd_line_convert():  # pragma: no cover
+    """command line interface to bdf_merge"""
+    from docopt import docopt
+    import pyNastran
+    msg = (
+        "Usage:\n"
+        '  bdf convert IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--in_units IN_UNITS] [--out_units OUT_UNITS]\n'
+        '  bdf convert -h | --help\n'
+        '  bdf convert -v | --version\n'
+        '\n'
+
+        'Options:\n'
+        '  -o OUT, --output  OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n\n'
+        '  --in_units  IN_UNITS                length,mass\n\n'
+        '  --out_units  OUT_UNITS              length,mass\n\n'
+
+        'Info:\n'
+        '  -h, --help      show this help message and exit\n'
+        "  -v, --version   show program's version number and exit\n"
+    )
+    if len(sys.argv) == 1:
+        sys.exit(msg)
+
+    ver = str(pyNastran.__version__)
+    #type_defaults = {
+    #    '--nerrors' : [int, 100],
+    #}
+    data = docopt(msg, version=ver)
+    print(data)
+    size = 16
+    bdf_filename = data['IN_BDF_FILENAME']
+    bdf_filename_out = data['--output']
+    if bdf_filename_out is None:
+        #bdf_filename_out = 'merged.bdf'
+        bdf_filename_out = bdf_filename + '.convert.bdf'
+
+    in_units = data['IN_UNITS']
+    if in_units is None:
+        in_units = 'm,kg'
+
+    out_units = data['OUT_UNITS']
+    if out_units is None:
+        out_units = 'm,kg'
+
+    length_in, mass_in = in_units.split(',')
+    length_out, mass_out = out_units.split(',')
+    units_to = [length_out, mass_out, 's']
+    units = [length_in, mass_in, 's']
+    #cards_to_skip = [
+        #'AEFACT', 'CAERO1', 'CAERO2', 'SPLINE1', 'SPLINE2',
+        #'AERO', 'AEROS', 'PAERO1', 'PAERO2', 'MKAERO1']
+    from pyNastran.bdf.bdf import read_bdf
+    from pyNastran.bdf.mesh_utils.convert import convert
+    model = read_bdf(bdf_filename, validate=True, xref=True,
+                     punch=False, save_file_structure=False,
+                     skip_cards=None, read_cards=None,
+                     encoding=None, log=None, debug=True, mode='msc')
+    convert(model, units_to, units=units)
+    for prop in model.properties.values():
+        prop.comment = ''
+    model.write_bdf(bdf_filename_out)
+
 
 def cmd_line_export_mcids():  # pragma: no cover
     """command line interface to export_mcids"""
@@ -745,6 +807,7 @@ def cmd_line():  # pragma: no cover
         '  bdf equivalence                 IN_BDF_FILENAME EQ_TOL\n'
         '  bdf renumber                    IN_BDF_FILENAME [OUT_BDF_FILENAME] [--superelement] [--size SIZE]\n'
         '  bdf mirror                      IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--plane PLANE] [--tol TOL]\n'
+        '  bdf convert                     ???\n'
         '  bdf export_mcids                IN_BDF_FILENAME [-o OUT_CSV_FILENAME] [--no_x] [--no_y]\n'
         '  bdf transform                   IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--shift XYZ]\n'
         '  bdf export_caero_mesh           IN_BDF_FILENAME [-o OUT_BDF_FILENAME]\n'
@@ -762,6 +825,7 @@ def cmd_line():  # pragma: no cover
         '  bdf equivalence        -h | --help\n'
         '  bdf renumber           -h | --help\n'
         '  bdf mirror             -h | --help\n'
+        '  bdf convert            -h | --help\n'
         '  bdf export_mcids       -h | --help\n'
         '  bdf transform          -h | --help\n'
         '  bdf filter             -h | --help\n'
@@ -792,6 +856,8 @@ def cmd_line():  # pragma: no cover
         cmd_line_renumber()
     elif sys.argv[1] == 'mirror':
         cmd_line_mirror()
+    elif sys.argv[1] == 'convert':
+        cmd_line_convert()
     elif sys.argv[1] == 'export_mcids':
         cmd_line_export_mcids()
     elif sys.argv[1] == 'split_cbars_by_pin_flags':

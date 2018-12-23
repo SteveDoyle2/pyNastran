@@ -286,7 +286,7 @@ class EditGeometryProperties(PyDialog):
         self.representation_label = QLabel('Representation:')
         self.checkbox_wire = QCheckBox('Wireframe')
         self.checkbox_surf = QCheckBox('Surface/Solid')
-        print("representation = %s" % self.representation)
+        #print('representation = %s' % self.representation)
         #self.check_point = QCheckBox()
 
         self.use_slider = True

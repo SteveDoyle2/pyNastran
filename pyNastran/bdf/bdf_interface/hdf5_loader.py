@@ -413,7 +413,7 @@ def _export_dict_int_list_obj_attrs(model, hdf5_file, encoding):
         if not len(dict_obj):
             continue
 
-        model.log.info('exporting %s' % attr)
+        model.log.debug('exporting %s' % attr)
         try:
             group = hdf5_file.create_group(attr) # 'spcs'
         except ValueError:  # pragma: no cover
@@ -736,7 +736,6 @@ def _hdf5_export_elements(hdf5_file, model, encoding):
         def save_solids(etype, slot_name):
             element_group = elements_group.create_group(etype)
             eids = model._type_to_id_map[etype]
-            model.log.debug('export 666')
             CARD_MAP[slot_name].export_to_hdf5(element_group, model, eids)
 
         solids = [
