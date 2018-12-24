@@ -25,7 +25,7 @@ NO_MASS = set([
     'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4', #'CLEAS5',
     'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
     'CBUSH', 'CBUSH1D', 'CBUSH2D', 'CVISC', 'CGAP', # is this right?
-    'CFAST',
+    'CFAST', 'GENEL',
     'CRAC2D', 'CRAC3D',
 
     'CSSCHD', 'CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5',
@@ -248,6 +248,8 @@ def _mass_properties(model, elements, masses, reference_point, is_cg):
                 m = element.Mass()
                 #print('eid=%s type=%s mass=%s'  %(element.eid, element.type, m))
             except:
+                if element.type in no_mass:
+                    continue
                 # PLPLANE
                 if element.pid_ref.type == 'PSHELL':
                     model.log.warning('p=%s reference_point=%s type(reference_point)=%s' % (

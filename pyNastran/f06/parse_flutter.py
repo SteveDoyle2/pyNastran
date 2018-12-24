@@ -324,9 +324,12 @@ def make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq,
                        plot_type,
                        plot_vg, plot_vg_vf, plot_root_locus, plot_kfreq_damping,
                        nopoints, noline,
-                       legend=True, export_zona=False, export_f06=False, show=True):
+                       legend=True, export_zona=False, exporrt_veas=False, export_f06=False,
+                       show=True):
     """actually makes the flutter plots"""
     f06_filename = 'nastran.f06'
+    veas_filename = 'nastran.veas'
+    zona_filename = 'zona.f06'
     for unused_subcase, flutter in sorted(flutters.items()):
         if plot_vg:
             flutter.plot_vg(modes=modes,
@@ -350,7 +353,9 @@ def make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq,
                                        nopoints=nopoints, noline=noline,
                                        show=False)
         if export_zona:
-            flutter.export_to_zona('zona.f06', modes=modes, xlim=xlim, plot_type=plot_type)
+            flutter.export_to_zona(zona_filename, modes=modes, xlim=xlim, plot_type=plot_type)
+        if export_veas:
+            flutter.export_to_veas(veas_filename, modes=modes)
         if export_f06:
             flutter.export_to_f06(f06_filename, modes=modes)
     if show:

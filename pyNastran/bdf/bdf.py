@@ -43,7 +43,7 @@ from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.bdf.bdf_interface.assign_type import (integer,
                                                      integer_or_string, string)
 
-from pyNastran.bdf.cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D, PLOTEL
+from pyNastran.bdf.cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D, PLOTEL, GENEL
 from pyNastran.bdf.cards.properties.properties import PFAST, PGAP, PRAC2D, PRAC3D
 from pyNastran.bdf.cards.properties.solid import PLSOLID, PSOLID, PIHEX, PCOMPS
 from pyNastran.bdf.cards.msgmesh import CGEN
@@ -441,6 +441,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'CIHEX1', 'CIHEX2',
             'CSHEAR', 'CVISC', 'CRAC2D', 'CRAC3D',
             'CGAP',
+            'GENEL',
 
             ## rigid_elements
             'RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3', 'RROD', 'RSPLINE', 'RSSCON',
@@ -1992,6 +1993,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
             'CRAC3D' : (CRAC3D, self._add_element_object),
             'PRAC3D' : (PRAC3D, self._add_property_object),
+
+            'GENEL' : (GENEL, self._add_element_object),
+
 
             'PDAMPT' : (PDAMPT, self._add_pdampt_object),
             'PBUSHT' : (PBUSHT, self._add_pbusht_object),

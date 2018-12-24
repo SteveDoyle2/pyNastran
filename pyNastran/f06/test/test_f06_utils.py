@@ -58,7 +58,9 @@ class TestF06Utils(unittest.TestCase):
         plot_flutter_f06(f06_filename,
                          plot_vg=True, plot_vg_vf=True, plot_root_locus=True,
                          plot_kfreq_damping=True,
-                         export=True,
+                         export_zona=True,
+                         export_veas=True,
+                         export_f06=True,
                          show=False, log=log)
 
 if __name__ == '__main__':  # pragma: no cover

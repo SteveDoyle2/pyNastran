@@ -350,7 +350,8 @@ def _export_scalar_group(hdf5_file, model, encoding):
         reject_group = scalar_group.create_group('reject_cards')
         for i, reject_card in enumerate(model.reject_cards):
             fields = reject_card.fields()
-            list_bytes = [field.encode(encoding) for field in fields]
+            list_bytes = [field.encode(encoding) if field is not None else b''
+                          for field in fields]
             reject_group.create_dataset(str(i), data=list_bytes)
 
 def _export_minor_attributes(hdf5_file, model, encoding):

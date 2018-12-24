@@ -1,5 +1,6 @@
 """tests b-list elements"""
 import unittest
+import numpy as np
 
 from pyNastran.bdf.bdf import BDF, BDFCard
 from pyNastran.bdf.bdf import CGAP, PGAP, CDAMP1, CBUSH, CFAST
@@ -273,6 +274,53 @@ class TestElements(unittest.TestCase):
         #model.pop_parse_errors()
         #model.cross_reference()
         save_load_deck(model, run_convert=False, run_save_load_hdf5=True)
+
+    def test_genel(self):
+        """tests a GENEL element"""
+        model = BDF()
+        eid = 1
+        ul = np.array([
+            [1, 1],
+            [13, 4],
+            [42, 0],
+            [24, 0],
+        ], dtype='int32')
+        ud = np.array([
+            [6, 2],
+            [33, 0],
+        ], dtype='int32')
+
+        #+-------+------+-----+------+------+------+------+-------+------+
+        #| GENEL |  629 |     |  1   |  1   |  13  |  4   |   42  |   0  |
+        #|       |  24  |  2  |      |      |      |      |       |      |
+        #|       |  UD  |     |  6   |  2   |  33  |  0 e  |       |      |
+        #|       |  Z   | 1.0 | 2.0  | 3.0  | 4.0  | 5.0  |  6.0  | 7.0  |
+        #|       |  8.0 | 9.0 | 10.0 |      |      |      |       |      |
+        #|       |  S   | 1.5 | 2.5  | 3.5  | 4.5  | 5.5  |  6.5  | 7.5  |
+        #|       |  8.5 |     |      |      |      |      |       |      |
+        #+-------+------+-----+------+------+------+------+-------+------+
+        z = np.array([1., 2., 3., 4., 5., 6., 7., 8., 9., 10.])
+        s = np.array([1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5])
+        k = z
+        model.add_genel_flexibility(eid, ul, ud, z, s)
+
+        elem = model.add_genel_stiffness(10, ul, ud, z, k)
+        str(elem)
+        elem.eid = 11
+        fields = elem.raw_fields()
+
+        elem = model.add_card(fields, 'GENEL', comment='card', is_list=True, has_none=True)
+        elemi = model.elements[11]
+        str(elemi)
+        #print('\n'+str(elem))
+
+        elem = model.add_genel_stiffness(20, ul, ud, k)
+        elem.eid = 21
+        str(elem)
+        fields = elem.raw_fields()
+        elem = model.add_card(fields, 'GENEL', comment='card', is_list=True, has_none=True)
+        elemi = model.elements[21]
+        str(elemi)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

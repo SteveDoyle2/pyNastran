@@ -668,7 +668,7 @@ class FlutterResponse(object):
         if clear:
             plt.clear()
 
-    def export_to_eas(self, eas_filename, modes=None):
+    def export_to_veas(self, veas_filename, modes=None):
         """
         *.VEAS
 
@@ -695,9 +695,9 @@ class FlutterResponse(object):
             omega_modes.append(wmode)
 
         headers = ['EQUIVALENT V'] + damping_modes + ['EQUIVALENT V'] + omega_modes
-        with open(eas_filename, 'w') as eas_file:
-            eas_file.write(' DAMPING & FREQUENCY X-Y PLOT FILE OF PLTVG SETID=       1 FOR FLUTTER/ASE ID=       1 NMODE=  %3i\n' % nmodes)
-            eas_file.write(''.join(headers) + '\n')
+        with open(veas_filename, 'w') as veas_file:
+            veas_file.write(' DAMPING & FREQUENCY X-Y PLOT FILE OF PLTVG SETID=       1 FOR FLUTTER/ASE ID=       1 NMODE=  %3i\n' % nmodes)
+            veas_file.write(''.join(headers) + '\n')
             nspeeds = self.results.shape[1]
             for i in range(nspeeds):
                 damping = self.results[:, i, self.idamping]
@@ -706,7 +706,7 @@ class FlutterResponse(object):
 
                 values = [eas] + damping.tolist() + [eas] + omega.tolist()
                 str_values = (' %11.4E' % value for value in values)
-                eas_file.write(''.join(str_values) + '\n')
+                veas_file.write(''.join(str_values) + '\n')
 
     def export_to_f06(self, f06_filename, modes=None, page_stamp=None, page_num=1):
         # nmodes, vel, res
@@ -736,6 +736,11 @@ class FlutterResponse(object):
 
     def export_to_zona(self, zona_filename, modes=None, xlim=None, plot_type='tas',
                        damping_ratios=None):
+        """
+        Writes a custom ZONA flutter file
+
+        TODO: not done
+        """
         if damping_ratios is None:
             damping_ratios = [0., 0.01, 0.02, 0.05, 0.1, 0.15]
         if xlim is None:

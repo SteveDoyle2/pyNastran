@@ -1902,7 +1902,7 @@ class GetCard(GetMethods):
                 the nodes corresponding to the element
         """
         etypes_no_pids = [
-            'CELAS4', 'CDAMP4', 'CHBDYG',
+            'CELAS4', 'CDAMP4', 'CHBDYG', 'GENEL',
         ]
 
         etypes = [
@@ -2039,7 +2039,7 @@ class GetCard(GetMethods):
           eids_list = model.get_element_ids_list_with_pids(pids)
         """
         etypes_no_pids = [
-            'CELAS4', 'CDAMP4', 'CHBDYG',
+            'CELAS4', 'CDAMP4', 'CHBDYG', 'GENEL',
         ]
 
         if pids is None:
@@ -2099,7 +2099,7 @@ class GetCard(GetMethods):
         pid_to_eids_ieids_map = defaultdict(list)
 
         etypes_no_pids = [
-            'CELAS4', 'CDAMP4', 'CHBDYG',
+            'CELAS4', 'CDAMP4', 'CHBDYG', 'GENEL',
         ]
         etypes_none_nodes = [
             'CELAS1', 'CELAS2', 'CELAS4',
@@ -2235,7 +2235,8 @@ class GetCard(GetMethods):
             #'CDAMP4' : -23,
             #'CHBDYG' : -108,
         #}
-        elements_without_properties = ['CONROD', 'CELAS2', 'CELAS4', 'CDAMP2', 'CDAMP4', 'CHBDYG']
+        elements_without_properties = [
+            'CONROD', 'CELAS2', 'CELAS4', 'CDAMP2', 'CDAMP4', 'CHBDYG', 'GENEL']
         for eid, element in self.elements.items():
             try:
                 pid = element.Pid()
@@ -2339,10 +2340,12 @@ class GetCard(GetMethods):
             assert pid not in pid_to_eids_map, 'pid=%s is already used and must be used by PHBDY' % pid
             pid_to_eids_map[pid] = []
 
+        elements_without_properties = [
+            'CONROD', 'CONM2', 'CELAS2', 'CELAS4', 'CDAMP2', 'CDAMP4', 'GENEL']
         for eid in self.element_ids:
             element = self.Element(eid)
             element_type = element.type
-            if element_type in ['CONROD', 'CONM2', 'CELAS2', 'CELAS4', 'CDAMP2', 'CDAMP4']:
+            if element_type in elements_without_properties:
                 continue
             if hasattr(element, 'pid'):
                 pid = element.Pid()

@@ -637,7 +637,7 @@ class BDFAttributes(object):
                 'CBUSH', 'CBUSH1D', 'CBUSH2D',
 
                 'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
-                'CFAST',
+                'CFAST', 'GENEL',
 
                 'CBAR', 'CROD', 'CTUBE', 'CBEAM', 'CBEAM3', 'CONROD', 'CBEND',
                 'CTRIA3', 'CTRIA6', 'CTRIAR',

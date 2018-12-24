@@ -15,7 +15,7 @@ import numpy as np
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdf_interface.add_methods import AddMethods
 
-from pyNastran.bdf.cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D, PLOTEL
+from pyNastran.bdf.cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D, PLOTEL, GENEL
 from pyNastran.bdf.cards.properties.properties import PFAST, PGAP, PRAC2D, PRAC3D
 from pyNastran.bdf.cards.properties.solid import PLSOLID, PSOLID, PIHEX, PCOMPS
 from pyNastran.bdf.cards.msgmesh import CGEN
@@ -347,6 +347,9 @@ CARD_MAP = {
 
     'PDAMPT' : PDAMPT,
     'PBUSHT' : PBUSHT,
+
+    'GENEL' : GENEL,
+    #--------------------------------------
 
     'CCONEAX' : CCONEAX,
     'PCONEAX' : PCONEAX,
@@ -3058,6 +3061,16 @@ class AddCards(AddMethods):
         prop = PRAC3D(pid, mid, gamma=gamma, phi=phi, comment=comment)
         self._add_property_object(prop)
         return prop
+
+    def add_genel_stiffness(self, eid, ul, ud, k, s=None):
+        """creates a GENEL card using the stiffness approach"""
+        assert k is not None
+        return GENEL(eid, ul, ud, k, None, s)
+
+    def add_genel_flexibility(self, eid, ul, ud, z, s=None):
+        """creates a GENEL card using the flexiblity approach"""
+        assert z is not None
+        return GENEL(eid, ul, ud, None, z, s)
 
     def add_axic(self, nharmonics, comment=''):
         """Creates a AXIC card"""
