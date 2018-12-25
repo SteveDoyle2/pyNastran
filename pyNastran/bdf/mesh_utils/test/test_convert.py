@@ -127,11 +127,42 @@ class TestConvert(unittest.TestCase):
         os.remove(bdf_filename_out)
         os.remove(bdf_filename_out2)
 
+    def test_convert_null(self):
+        """null conversions"""
+        pairs = [
+            ['m', 'kg', 's'],
+            ['mm', 'kg', 's'],
+            ['mm', 'g', 's'],
+            ['mm', 'Mg', 's'],
+            ['ft', 'lbm', 's'],
+            ['in', 'lbm', 's'],
+        ]
+        for pair in pairs:
+            xyz_scale, mass_scale, time_scale, weight_scale, gravity_scale = get_scale_factors(
+                pair, pair, log)
+            assert xyz_scale == 1., xyz_scale
+            assert mass_scale == 1., mass_scale
+            assert time_scale == 1., time_scale
+            assert weight_scale == 1., weight_scale
+            assert gravity_scale == 1., gravity_scale
+
+        invalid_pairs = [
+            ['cm', 'kg', 's'],
+        ]
+        pair0 = ['m', 'kg', 's']
+        for pair in invalid_pairs:
+            with self.assertRaises(NotImplementedError):
+                xyz_scale, mass_scale, time_scale, weight_scale, gravity_scale = get_scale_factors(
+                    pair, pair0, log)
+            with self.assertRaises(NotImplementedError):
+                xyz_scale, mass_scale, time_scale, weight_scale, gravity_scale = get_scale_factors(
+                    pair0, pair, log)
+
     def test_convert_units(self):
         """tests various conversions"""
         # from -> to
         xyz_scale, mass_scale, time_scale, weight_scale, gravity_scale = get_scale_factors(
-            ['in', 'lbm', 's'], ['ft', 'lbm', 's'])
+            ['in', 'lbm', 's'], ['ft', 'lbm', 's'], log)
         assert xyz_scale == 1./12.
         assert mass_scale == 1.
         assert time_scale == 1.
@@ -142,7 +173,7 @@ class TestConvert(unittest.TestCase):
         assert allclose(wtmass/gravity_scale, wtmass_expected), 'wtmass=%s wtmass_expected=%s' % (wtmass, wtmass_expected)
 
         xyz_scale, mass_scale, time_scale, weight_scale, gravity_scale = get_scale_factors(
-            ['mm', 'Mg', 's'], ['m', 'kg', 's'])
+            ['mm', 'Mg', 's'], ['m', 'kg', 's'], log)
         assert xyz_scale == 1./1000.
         assert mass_scale == 1000.
         assert time_scale == 1.
@@ -150,7 +181,7 @@ class TestConvert(unittest.TestCase):
         assert gravity_scale == 1.
 
         xyz_scale, mass_scale, time_scale, weight_scale, gravity_scale = get_scale_factors(
-            ['ft', 'lbm', 's'], ['m', 'kg', 's'])
+            ['ft', 'lbm', 's'], ['m', 'kg', 's'], log)
         assert xyz_scale == 0.3048
         assert mass_scale == 0.45359237, mass_scale
         assert time_scale == 1.
@@ -159,6 +190,18 @@ class TestConvert(unittest.TestCase):
         wtmass = 1. / (32.2)
         wtmass_expected = 1.
         assert allclose(wtmass/gravity_scale, wtmass_expected), 'wtmass=%s wtmass_expected=%s' % (wtmass/gravity_scale, wtmass_expected)
+
+        # not 100%
+        xyz_scale, mass_scale, time_scale, weight_scale, gravity_scale = get_scale_factors(
+            ['in', 'slinch', 's'], ['in', 'slug', 's'], log)
+        assert xyz_scale == 1.
+        assert mass_scale == 12., mass_scale
+        assert time_scale == 1.
+        assert weight_scale == 12., weight_scale
+        assert gravity_scale == 1., gravity_scale
+        wtmass = 1.
+        wtmass_expected = 1.
+        assert allclose(wtmass/gravity_scale, wtmass_expected), 'wtmass=%s wtmass_expected=%s' % (wtmass, wtmass_expected)
 
     def test_convert_01(self):
         """converts the CONM2s units"""

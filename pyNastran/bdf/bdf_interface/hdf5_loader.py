@@ -1078,7 +1078,14 @@ def _load_minor_attributes(key, group, model, encoding):
                 comment = value[0].decode(encoding)
                 card_lines = value[1:]
                 card_lines = [line.decode(encoding) for line in card_lines]
-                card_name = card_lines[0].split(',', 1)[0].split('\t', 1)[0][:8].rstrip().upper().rstrip('*')
+                try:
+                    line0 = card_lines[0]
+                except IndexError:
+                    # C:\Program Files\Siemens\NX 12.0\NXNASTRAN\nxn12\nast\del\gentim1.dat
+                    print(value)
+                    print(card_lines)
+                    raise
+                card_name = line0.split(',', 1)[0].split('\t', 1)[0][:8].rstrip().upper().rstrip('*')
                 assert isinstance(comment, text_type), type(comment)
 
                 ## TODO: swap out
