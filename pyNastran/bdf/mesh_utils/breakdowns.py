@@ -49,7 +49,8 @@ def get_length_breakdown(model, property_ids=None, stop_if_no_length=True):
     bar_properties = ['PBAR', 'PBARL', 'PBEAM', 'PBEAML',
                       'PROD', 'PTUBE', 'PBRSECT', 'PBMSECT', 'PBCOMP']
     pid_eids = model.get_element_ids_dict_with_pids(
-        property_ids, msg=' which is required by get_length_breakdown')
+        property_ids, stop_if_no_eids=stop_if_no_length,
+        msg=' which is required by get_length_breakdown')
     pids_to_length = {}
     for pid, eids in pid_eids.items():
         prop = model.properties[pid]
@@ -125,7 +126,8 @@ def get_area_breakdown(model, property_ids=None, stop_if_no_area=True, sum_bar_a
     ]
 
     pid_eids = model.get_element_ids_dict_with_pids(
-        property_ids, msg=' which is required by get_area_breakdown')
+        property_ids, stop_if_no_eids=stop_if_no_area,
+        msg=' which is required by get_area_breakdown')
     pids_to_area = {}
     for pid, eids in pid_eids.items():
         prop = model.properties[pid]
@@ -188,7 +190,8 @@ def get_volume_breakdown(model, property_ids=None, stop_if_no_volume=True):
     #'PIHEX',
     """
     pid_eids = model.get_element_ids_dict_with_pids(
-        property_ids, msg=' which is required by get_area_breakdown')
+        property_ids, stop_if_no_eids=stop_if_no_volume,
+        msg=' which is required by get_volume_breakdown')
 
     no_volume = [
         'PLPLANE', 'PPLANE', 'PELAS',
@@ -300,7 +303,8 @@ def get_mass_breakdown(model, property_ids=None, stop_if_no_mass=True, detailed=
     #'PCOMPS',
     """
     pid_eids = model.get_element_ids_dict_with_pids(
-        property_ids, stop_if_no_eids=False, msg=' which is required by get_area_breakdown')
+        property_ids, stop_if_no_eids=stop_if_no_mass,
+        msg=' which is required by get_mass_breakdown')
 
     mass_type_to_mass = {}
     pids_to_mass = {}
