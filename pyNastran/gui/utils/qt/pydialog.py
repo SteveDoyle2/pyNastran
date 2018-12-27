@@ -85,7 +85,21 @@ def check_patran_syntax_dict(cell, pound=None):
         return None, False
 
 def make_combo_box(items, initial_value):
-    """makes a QComboBox, sets the items, and sets an initial value"""
+    """
+    Makes a QComboBox, sets the items, and sets an initial value.
+
+    Parameters
+    ----------
+    items : List[str]
+        the values of the combo box
+    initial_value : str
+        the value to set the combo box to
+
+    Returns
+    -------
+    combo_box : QComboBox
+        the pulldown
+    """
     assert initial_value in items, 'initial_value=%r items=%s' % (initial_value, items)
     combo_box = QComboBox()
     combo_box.addItems(items)

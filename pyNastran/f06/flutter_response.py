@@ -709,6 +709,8 @@ class FlutterResponse(object):
                 veas_file.write(''.join(str_values) + '\n')
 
     def export_to_f06(self, f06_filename, modes=None, page_stamp=None, page_num=1):
+        if page_stamp is None:
+            page_stamp = 'PAGE %i'
         # nmodes, vel, res
         nmodes = self.results.shape[0]
         with open(f06_filename, 'w') as f06_file:
@@ -751,10 +753,9 @@ class FlutterResponse(object):
         ix, xlabel = self._plot_type_to_ix_xlabel(plot_type)
 
         # these are the required damping levels to plot
-
+        msg = ''
         for damping_ratio in damping_ratios:
-            print('mode, V, damp, freq: (damping ratio=%s' % damping_ratio)
-
+            msgi = ''
             xlim_min = xlim[0]
             xlim_max = xlim[1]
             for i, imode, mode in zip(count(), imodes, modes):
@@ -797,9 +798,12 @@ class FlutterResponse(object):
                     veli = vel[inot_nan][idamp][jveli]
                     dampi = damping[inot_nan][idamp][jveli]
                     freqi = freq[inot_nan][idamp][jveli]
-                print(mode, veli, dampi, freqi)
-
-            print('')
+                msgi += '%s %s %s %s\n' % (mode, veli, dampi, freqi)
+            if msgi:
+                msg += 'mode, V, damp, freq: (damping ratio=%s)\n%s\n' % (damping_ratio, msgi)
+        if msg:
+            print(msg)
+        return msg
 
     def _plot_type_to_ix_xlabel(self, plot_type):
         """helper method for ``plot_vg_vf``"""
