@@ -318,7 +318,7 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None,
                        plot_type,
                        plot_vg, plot_vg_vf, plot_root_locus, plot_kfreq_damping,
                        nopoints, noline,
-                       export_zona=export_zona, exporrt_veas=exporrt_veas, export_f06=export_f06,
+                       export_zona=export_zona, export_veas=export_veas, export_f06=export_f06,
                        show=show)
     return flutters
 
@@ -326,7 +326,7 @@ def make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq,
                        plot_type,
                        plot_vg, plot_vg_vf, plot_root_locus, plot_kfreq_damping,
                        nopoints, noline,
-                       legend=True, export_zona=False, exporrt_veas=False, export_f06=False,
+                       legend=True, export_zona=False, export_veas=False, export_f06=False,
                        show=True):
     """actually makes the flutter plots"""
     f06_filename = 'nastran.f06'
