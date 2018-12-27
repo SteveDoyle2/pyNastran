@@ -16,10 +16,11 @@ from qtpy.QtCore import Qt
 from qtpy import QtGui
 from qtpy.QtWidgets import (
     QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
-    QColorDialog, QLineEdit, QCheckBox, QComboBox)
+    QColorDialog, QLineEdit, QCheckBox, QComboBox, QSpinBox)
 
 from pyNastran.gui.utils.qt.pydialog import PyDialog, make_combo_box
 from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
+from pyNastran.gui.utils.qt.qelement_edit import QElementEdit, QNodeEdit
 from pyNastran.gui.utils.qt.dialogs import save_file_dialog
 from pyNastran.gui.utils.qt.checks.qlineedit import (
     check_save_path, #check_path,
@@ -86,6 +87,7 @@ class ShearMomentTorqueWindow(PyDialog):
         # Z-Axis Projection
         self.p1_label = QLabel("Origin/P1:")
         self.p2_label = QLabel("P2:")
+        self.p3_label = QLabel("End/P3:")
         self.zaxis_label = QLabel("Z Axis:")
 
         self.method_pulldown = QComboBox()
@@ -99,6 +101,7 @@ class ShearMomentTorqueWindow(PyDialog):
         self.cid_label = QLabel("Coordinate System:")
         self.p1_cid_pulldown = QComboBox()
         self.p2_cid_pulldown = QComboBox()
+        self.p3_cid_pulldown = QComboBox()
         self.zaxis_cid_pulldown = QComboBox()
 
         cid_global_str = '0/Global'
@@ -110,22 +113,26 @@ class ShearMomentTorqueWindow(PyDialog):
             #print('cid_str = %r' % cid_str)
             self.p1_cid_pulldown.addItem(cid_str)
             self.p2_cid_pulldown.addItem(cid_str)
+            self.p3_cid_pulldown.addItem(cid_str)
             self.zaxis_cid_pulldown.addItem(cid_str)
 
         self.p1_cid_pulldown.setCurrentIndex(0)
         self.p2_cid_pulldown.setCurrentIndex(0)
+        self.p3_cid_pulldown.setCurrentIndex(0)
         self.zaxis_cid_pulldown.setCurrentIndex(0)
         if len(self.cids) == 1:
             self.p1_cid_pulldown.setEnabled(False)
             self.p2_cid_pulldown.setEnabled(False)
+            self.p3_cid_pulldown.setEnabled(False)
             self.zaxis_cid_pulldown.setEnabled(False)
 
         #self.p1_cid_pulldown.setItemText(0, cid_str)
         #self.p2_cid_pulldown.setItemText(0, cid_str)
         #self.zaxis_cid_pulldown.setItemText(0, cid_str)
 
-        self.p1_cid_pulldown.setToolTip('Defines the coordinate system for the Point P1')
-        self.p2_cid_pulldown.setToolTip('Defines the coordinate system for the Point P2')
+        self.p1_cid_pulldown.setToolTip('Defines the coordinate system for Point P1')
+        self.p2_cid_pulldown.setToolTip('Defines the coordinate system for Point P2')
+        self.p3_cid_pulldown.setToolTip('Defines the coordinate system for Point P3')
         self.zaxis_cid_pulldown.setToolTip('Defines the coordinate system for the Z Axis')
 
         self.p1_x_edit = QLineEdit('')
@@ -135,6 +142,10 @@ class ShearMomentTorqueWindow(PyDialog):
         self.p2_x_edit = QLineEdit('')
         self.p2_y_edit = QLineEdit('')
         self.p2_z_edit = QLineEdit('')
+
+        self.p3_x_edit = QLineEdit('')
+        self.p3_y_edit = QLineEdit('')
+        self.p3_z_edit = QLineEdit('')
 
         self.zaxis_x_edit = QLineEdit('')
         self.zaxis_y_edit = QLineEdit('')
@@ -164,19 +175,49 @@ class ShearMomentTorqueWindow(PyDialog):
 
         #-----------------------------------------------------------------------
         self.load_case_label = QLabel('Load Case:')
-        load_cases = [1, 2]
-        load_case = 1
+        load_cases = ['1', '2']
+        load_case = '1'
         self.load_case_pulldown = make_combo_box(load_cases, load_case)
 
         self.time_label = QLabel('Time:')
-        times = [0., 0.5, 1. , 1.5, 2.]
-        time = 0.0
+        times = ['0.', '0.5', '1.' , '1.5', '2.']
+        time = '0.'
         self.times_pulldown = make_combo_box(times, time)
+
+        name = 'main'
+        self.node_label = QLabel('Nodes:')
+        #self.node_element_edit =
+        self.node_edit = QNodeEdit(self.win_parent, name, parent=self.gui,
+                                   pick_style='area', tab_to_next=False)
+
+        self.element_label = QLabel('Elements:')
+        self.element_edit = QElementEdit(self.win_parent, name, parent=self.gui,
+                                         pick_style='area', tab_to_next=False)
+        #self.p1_smt_label = QLabel('Point 1 (SMT):')
+        #self.p2_smt_label = QLabel('Point 2 (SMT):')
+
+        self.node_element_label = QLabel('Nodes/Elements:')
+        self.node_element_edit = QLineEdit()
+        self.node_element_edit.setReadOnly(True)
+
+        self.nplanes_label = QLabel('Num Planes:')
+        self.nplanes_spinner = QSpinBox()
+        self.nplanes_spinner.setMinimum(2)
+        self.nplanes_spinner.setMaximum(100)
+        self.nplanes_spinner.setValue(20)
+        #-----------------------------------------------------------------------
+        self.add_button = QPushButton('Add')
+        self.remove_button = QPushButton('Remove')
         #-----------------------------------------------------------------------
         # closing
-        self.apply_button = QPushButton("Apply")
-        self.ok_button = QPushButton("OK")
-        self.cancel_button = QPushButton("Cancel")
+        self.apply_button = QPushButton('Apply')
+        self.cancel_button = QPushButton('Cancel')
+
+    @property
+    def gui(self):
+        if self.win_parent is None:
+            return None
+        return self.win_parent.parent.gui
 
     def create_layout(self):
         grid = QGridLayout()
@@ -185,8 +226,9 @@ class ShearMomentTorqueWindow(PyDialog):
 
         self.location_label = QLabel('Location:')
         self.zaxis_method_label = QLabel('Z-Axis Method:')
-        self.method_projected_label1 = QLabel('Projected')
+        self.method_projected_label1 = QLabel('Exact')
         self.method_projected_label2 = QLabel('Projected')
+        self.method_projected_label3 = QLabel('Exact')
         self.cid_label = QLabel('Coordinate System:')
         self.x_label = QLabel('X')
         self.y_label = QLabel('Y')
@@ -199,6 +241,7 @@ class ShearMomentTorqueWindow(PyDialog):
 
         self.method_projected_label1.setAlignment(Qt.AlignCenter)
         self.method_projected_label2.setAlignment(Qt.AlignCenter)
+        self.method_projected_label3.setAlignment(Qt.AlignCenter)
 
         self.x_label.setAlignment(Qt.AlignCenter)
         self.y_label.setAlignment(Qt.AlignCenter)
@@ -217,6 +260,12 @@ class ShearMomentTorqueWindow(PyDialog):
         irow += 1
         self._add_grid_layout(grid2, irow, is_cord2r=False)
 
+        #----------------------------------------------
+        #grid_smt.addWidget(self.p1_smt_label, irow, 0)
+        #irow += 1
+        #grid_smt.addWidget(self.p2_smt_label, irow, 0)
+        #irow += 1
+
         self.export_checkbox = QCheckBox()
         self.csv_label = QLabel('CSV Filename:')
         self.csv_edit = QLineEdit()
@@ -227,16 +276,20 @@ class ShearMomentTorqueWindow(PyDialog):
         self.csv_edit.setEnabled(False)
         self.csv_button.setEnabled(False)
 
-        hbox = QHBoxLayout()
-        hbox.addWidget(self.export_checkbox)
-        hbox.addWidget(self.csv_label)
-        hbox.addWidget(self.csv_edit)
-        hbox.addWidget(self.csv_button)
+        hbox_csv = QHBoxLayout()
+        hbox_csv.addWidget(self.export_checkbox)
+        hbox_csv.addWidget(self.csv_label)
+        hbox_csv.addWidget(self.csv_edit)
+        hbox_csv.addWidget(self.csv_button)
         #----------------------------------------------
+
+        add_remove_box = QHBoxLayout()
+        add_remove_box.addWidget(self.add_button)
+        add_remove_box.addWidget(self.remove_button)
+
 
         ok_cancel_box = QHBoxLayout()
         ok_cancel_box.addWidget(self.apply_button)
-        ok_cancel_box.addWidget(self.ok_button)
         ok_cancel_box.addWidget(self.cancel_button)
 
         vbox = QVBoxLayout()
@@ -253,11 +306,11 @@ class ShearMomentTorqueWindow(PyDialog):
 
         vbox.addLayout(grid)
         #vbox.addStretch()
-        #vbox.addLayout(grid2)
-        vbox.addLayout(hbox)
+        vbox.addLayout(hbox_csv)
         vbox.addStretch()
 
         #-----------------------
+        vbox.addLayout(add_remove_box)
         vbox.addLayout(ok_cancel_box)
         self.on_method(0)
         self.on_zaxis_method(0)
@@ -294,38 +347,40 @@ class ShearMomentTorqueWindow(PyDialog):
         grid.addWidget(self.z_label, irow, j+5)
         irow += 1
 
-        j = -1
-        grid.addWidget(self.p1_label, irow, 0)
-        if is_cord2r:
-            grid.addWidget(self.method_projected_label1, irow, 1)
-            j = 0
-        grid.addWidget(self.p1_cid_pulldown, irow, j+2)
-        grid.addWidget(self.p1_x_edit, irow, j+3)
-        grid.addWidget(self.p1_y_edit, irow, j+4)
-        grid.addWidget(self.p1_z_edit, irow, j+5)
-        irow += 1
+        irow, j = add_row(irow, j, grid,
+                          self.p1_label, self.method_projected_label1,
+                          self.p1_cid_pulldown,
+                          self.p1_x_edit, self.p1_y_edit, self.p1_z_edit,
+                          is_cord2r)
 
-        j = -1
-        grid.addWidget(self.p2_label, irow, 0)
-        if is_cord2r:
-            grid.addWidget(self.method_projected_label2, irow, 1)
-            j = 0
-        grid.addWidget(self.p2_cid_pulldown, irow, j+2)
-        grid.addWidget(self.p2_x_edit, irow, j+3)
-        grid.addWidget(self.p2_y_edit, irow, j+4)
-        grid.addWidget(self.p2_z_edit, irow, j+5)
-        irow += 1
+        irow, j = add_row(irow, j, grid,
+                          self.p2_label, self.method_projected_label2,
+                          self.p2_cid_pulldown,
+                          self.p2_x_edit, self.p2_y_edit, self.p2_z_edit,
+                          is_cord2r)
 
-        j = -1
-        grid.addWidget(self.zaxis_label, irow, 0)
-        if is_cord2r:
-            grid.addWidget(self.zaxis_method_pulldown, irow, 1)
-            j = 0
-        grid.addWidget(self.zaxis_cid_pulldown, irow, j+2)
-        grid.addWidget(self.zaxis_x_edit, irow, j+3)
-        grid.addWidget(self.zaxis_y_edit, irow, j+4)
-        grid.addWidget(self.zaxis_z_edit, irow, j+5)
-        irow += 1
+        irow, j = add_row(irow, j, grid,
+                          self.p3_label, self.method_projected_label3,
+                          self.p3_cid_pulldown,
+                          self.p3_x_edit, self.p3_y_edit, self.p3_z_edit,
+                          is_cord2r)
+
+        irow, j = add_row(irow, j, grid,
+                          self.zaxis_label, self.zaxis_method_pulldown,
+                          self.zaxis_cid_pulldown,
+                          self.zaxis_x_edit, self.zaxis_y_edit, self.zaxis_z_edit,
+                          is_cord2r)
+
+        #j = -1
+        #grid.addWidget(self.zaxis_label, irow, 0)
+        #if is_cord2r:
+            #grid.addWidget(self.zaxis_method_pulldown, irow, 1)
+            #j = 0
+        #grid.addWidget(self.zaxis_cid_pulldown, irow, j+2)
+        #grid.addWidget(self.zaxis_x_edit, irow, j+3)
+        #grid.addWidget(self.zaxis_y_edit, irow, j+4)
+        #grid.addWidget(self.zaxis_z_edit, irow, j+5)
+        #irow += 1
 
         #-----------------------------------------
         #spacer_item = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
@@ -341,6 +396,36 @@ class ShearMomentTorqueWindow(PyDialog):
         grid.addWidget(self.plane_color_label, irow, 0)
         grid.addWidget(self.plane_color_edit, irow, 1)
         irow += 1
+        #----------------------------------------------
+        grid.addWidget(self.load_case_label, irow, 0)
+        grid.addWidget(self.load_case_pulldown, irow, 1)
+        irow += 1
+
+        grid.addWidget(self.time_label, irow, 0)
+        grid.addWidget(self.times_pulldown, irow, 1)
+        irow += 1
+
+        grid.addWidget(self.node_label, irow, 0)
+        grid.addWidget(self.node_edit, irow, 1)
+        irow += 1
+
+        grid.addWidget(self.element_label, irow, 0)
+        grid.addWidget(self.element_edit, irow, 1)
+        irow += 1
+
+        grid.addWidget(self.node_element_label, irow, 0)
+        grid.addWidget(self.node_element_edit, irow, 1)
+        irow += 1
+
+        grid.addWidget(self.nplanes_label, irow, 0)
+        grid.addWidget(self.nplanes_spinner, irow, 1)
+        irow += 1
+
+        #grid_smt.addWidget(self.p1_smt_label, irow, 0)
+        #irow += 1
+        #grid_smt.addWidget(self.p2_smt_label, irow, 0)
+        #irow += 1
+        #----------------------------------------------
 
         #grid.addWidget(self.corner_coord_label, irow, 0)
         #grid.addWidget(self.corner_coord_checkbox, irow, 1)
@@ -352,7 +437,6 @@ class ShearMomentTorqueWindow(PyDialog):
         self.plane_color_edit.clicked.connect(self.on_plane_color)
 
         self.apply_button.clicked.connect(self.on_apply)
-        self.ok_button.clicked.connect(self.on_ok)
         self.cancel_button.clicked.connect(self.on_cancel)
         # closeEvent
         return
@@ -368,15 +452,17 @@ class ShearMomentTorqueWindow(PyDialog):
         if is_cord2r:
             p1_label_text = 'Origin:'
             p2_label_text = 'Z Axis:'
-            p3_label_text = 'XZ Plane:'
+            zaxis_label_text = 'XZ Plane:'
         else:
             p1_label_text = 'Origin/P1:'
             p2_label_text = 'P2:'
-            p3_label_text = 'Z-Axis:'
+            zaxis_label_text = 'Z-Axis:'
+        p3_label_text = 'End/P3:'
 
         self.p1_label.setText(p1_label_text)
         self.p2_label.setText(p2_label_text)
-        self.zaxis_label.setText(p3_label_text)
+        self.p3_label.setText(p3_label_text)
+        self.zaxis_label.setText(zaxis_label_text)
 
         if is_cord2r:
             self._zaxis_method = self.zaxis_method_pulldown.currentIndex()
@@ -394,6 +480,7 @@ class ShearMomentTorqueWindow(PyDialog):
         #self.cid_label.setVisible(not is_cord2r)
         self.method_projected_label1.setVisible(not is_cord2r)
         self.method_projected_label2.setVisible(not is_cord2r)
+        self.method_projected_label3.setVisible(not is_cord2r)
         self.location_method_label.setVisible(not is_cord2r)
         self.zaxis_method_pulldown.setVisible(not is_cord2r)
 
@@ -476,32 +563,39 @@ class ShearMomentTorqueWindow(PyDialog):
     def on_validate(self):
         p1_cidi = self.p1_cid_pulldown.currentText()
         p2_cidi = self.p2_cid_pulldown.currentText()
+        p3_cidi = self.p3_cid_pulldown.currentText()
         zaxis_cidi = self.zaxis_cid_pulldown.currentText()
         p1_cid = int(p1_cidi) if 'Global' not in p1_cidi else 0
         p2_cid = int(p2_cidi) if 'Global' not in p2_cidi else 0
+        p3_cid = int(p3_cidi) if 'Global' not in p3_cidi else 0
         zaxis_cid = int(zaxis_cidi) if 'Global' not in zaxis_cidi else 0
         #print('p1_cidi=%r p2_cidi=%r p3_cidi=%r' % (p1_cidi, p2_cidi, zaxis_cidi))
         #print('p2_cid=%r p2_cid=%r p3_cidi=%r' % (p2_cid, p2_cid, zaxis_cid))
 
-        p1_x, flag0 = check_float(self.p1_x_edit)
-        p1_y, flag1 = check_float(self.p1_y_edit)
-        p1_z, flag2 = check_float(self.p1_z_edit)
+        p1_x, flag1 = check_float(self.p1_x_edit)
+        p1_y, flag2 = check_float(self.p1_y_edit)
+        p1_z, flag3 = check_float(self.p1_z_edit)
 
-        p2_x, flag3 = check_float(self.p2_x_edit)
-        p2_y, flag4 = check_float(self.p2_y_edit)
-        p2_z, flag5 = check_float(self.p2_z_edit)
+        p2_x, flag4 = check_float(self.p2_x_edit)
+        p2_y, flag5 = check_float(self.p2_y_edit)
+        p2_z, flag6 = check_float(self.p2_z_edit)
+
+        p3_x, flag7 = check_float(self.p3_x_edit)
+        p3_y, flag8 = check_float(self.p3_y_edit)
+        p3_z, flag9 = check_float(self.p3_z_edit)
         p1 = [p1_x, p1_y, p1_z]
         p2 = [p2_x, p2_y, p2_z]
+        p3 = [p3_x, p3_y, p3_z]
 
         zaxis_method = str(self.zaxis_method_pulldown.currentText())
-        flag6, flag7, flag8 = True, True, True
+        flag10, flag11, flag12 = True, True, True
         if zaxis_method == 'Global Z':
             zaxis = [0., 0., 1.]
             zaxis_cid = 0
         elif zaxis_method == 'Manual':
-            zaxis_x, flag6 = check_float(self.zaxis_x_edit)
-            zaxis_y, flag7 = check_float(self.zaxis_y_edit)
-            zaxis_z, flag8 = check_float(self.zaxis_z_edit)
+            zaxis_x, flag10 = check_float(self.zaxis_x_edit)
+            zaxis_y, flag11 = check_float(self.zaxis_y_edit)
+            zaxis_z, flag12 = check_float(self.zaxis_z_edit)
             zaxis = [zaxis_x, zaxis_y, zaxis_z]
         elif zaxis_method == 'Camera Normal':
             if self.win_parent is not None:
@@ -516,24 +610,25 @@ class ShearMomentTorqueWindow(PyDialog):
 
         method = self.method_pulldown.currentText()
         assert method in self.methods, 'method=%r' % method
-        flag9 = True
+        flag13 = True
 
-        ytol, flag10 = check_float(self.ytol_edit)
-        zero_tol, flag11 = check_float(self.zero_tol_edit)
+        ytol, flag14 = check_float(self.ytol_edit)
+        zero_tol, flag15 = check_float(self.zero_tol_edit)
 
         csv_filename = None
-        flag12 = True
+        flag16 = True
         if self.export_checkbox.isChecked():
-            csv_filename, flag12 = check_save_path(self.csv_edit)
+            csv_filename, flag16 = check_save_path(self.csv_edit)
 
 
-        flags = [flag0, flag1, flag2, flag3, flag4, flag5,
-                 flag6, flag7, flag8,
-                 flag9, flag10, flag11, flag12]
+        flags = [flag1, flag2, flag3, flag4, flag5, flag6, flag7, flag8, flag9,
+                 flag10, flag11, flag12,
+                 flag13, flag14, flag15, flag16]
         if all(flags):
             self.out_data['method'] = method
             self.out_data['p1'] = [p1_cid, p1]
             self.out_data['p2'] = [p2_cid, p2]
+            self.out_data['p3'] = [p2_cid, p3]
             self.out_data['zaxis'] = [zaxis_method, zaxis_cid, zaxis]
             self.out_data['ytol'] = ytol
             self.out_data['zero_tol'] = zero_tol
@@ -546,20 +641,30 @@ class ShearMomentTorqueWindow(PyDialog):
 
     def on_apply(self, force=False):
         passed = self.on_validate()
-
         if (passed or force) and self.win_parent is not None:
             self.win_parent.make_cutting_plane_from_data(self.out_data)
         return passed
 
-    def on_ok(self):
-        passed = self.on_apply()
-        if passed:
-            self.close()
-            #self.destroy()
-
     def on_cancel(self):
         self.out_data['close'] = True
         self.close()
+
+def add_row(irow, j, grid,
+            p1_label, method_projected_label1,
+            p1_cid_pulldown, p1_x_edit, p1_y_edit, p1_z_edit,
+            is_cord2r):
+    j = -1
+    grid.addWidget(p1_label, irow, 0)
+    if is_cord2r:
+        grid.addWidget(method_projected_label1, irow, 1)
+        j = 0
+    grid.addWidget(p1_cid_pulldown, irow, j+2)
+    grid.addWidget(p1_x_edit, irow, j+3)
+    grid.addWidget(p1_y_edit, irow, j+4)
+    grid.addWidget(p1_z_edit, irow, j+5)
+    irow += 1
+    return irow, j
+
 
 def _check_color(color_float):
     assert len(color_float) == 3, color_float

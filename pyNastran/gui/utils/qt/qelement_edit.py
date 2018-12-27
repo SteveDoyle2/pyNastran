@@ -62,7 +62,10 @@ class QNodeElementEdit(QLineEdit):
 
     def on_focus(self):
         """called when the QNodeElementEdit is activated"""
-        gui = self.win_parent.win_parent
+        win_parent = self.win_parent
+        if win_parent is None:
+            return
+        gui = win_parent.win_parent
         if gui is None:
             return
         if self.pick_style == 'area':
@@ -85,6 +88,26 @@ class QElementEdit(QNodeElementEdit):
     """creates a QLineEdit that can pick element ids"""
     def __init__(self, win_parent, name, parent=None, pick_style='area', tab_to_next=False,
                  *args, **kwargs):
+        """
+        An element picker
+
+        Parameters
+        ----------
+        win_parent : QDialog
+            set this to self
+        name : str
+            the name of the model
+        parent : the gui
+            this is the gui, it could be win_parent.parent, win_parent.parent.gui, etc.
+        #representation : str; default='wire'
+            #the way that the highlighted actor should be displayed
+            #{wire, points, surface}
+        pick_style : str; default='area'
+            the style of the picker
+            {area, single}
+        tab_to_next : bool; default=False
+            ???
+        """
         self.tab_to_next = tab_to_next
         super(QElementEdit, self).__init__(win_parent, name, parent=parent,
                                            is_eids=True, is_nids=False,
@@ -108,6 +131,23 @@ class QNodeEdit(QNodeElementEdit):
     """creates a QLineEdit that can pick node ids"""
     def __init__(self, win_parent, name, parent=None, pick_style='area', tab_to_next=False,
                  *args, **kwargs):
+        """
+        A node picker
+
+        Parameters
+        ----------
+        win_parent : QDialog
+            set this to self
+        name : str
+            the name of the model
+        parent : the gui
+            this is the gui, it could be win_parent.parent, win_parent.parent.gui, etc.
+        pick_style : str; default='area'
+            the style of the picker
+            {area, single}
+        tab_to_next : bool; default=False
+            ???
+        """
         self.tab_to_next = tab_to_next
         super(QNodeEdit, self).__init__(win_parent, name, parent=parent,
                                         is_eids=False, is_nids=True,

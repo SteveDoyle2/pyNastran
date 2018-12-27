@@ -2208,7 +2208,7 @@ class TestAero(unittest.TestCase):
     def test_zona_1(self):
         """zona explicit test"""
         bdf_filename = os.path.join(MODEL_PATH, 'aero', 'f16_ma41.bdf')
-        model = read_bdf(bdf_filename, xref=False, debug=False)
+        model = read_bdf(bdf_filename, xref=False, debug=None)
         model.safe_cross_reference()
         save_load_deck(model, xref='safe',
                        run_renumber=False, run_convert=False, run_remove_unused=False,
@@ -2219,7 +2219,7 @@ class TestAero(unittest.TestCase):
     def test_zona_2(self):
         """zona explicit test"""
         bdf_filename = os.path.join(MODEL_PATH, 'aero', 'ztran.bdf')
-        model = read_bdf(bdf_filename, xref=False, debug=True)
+        model = read_bdf(bdf_filename, xref=False, debug=None)
         model.safe_cross_reference()
         save_load_deck(model, xref='safe',
                        run_renumber=False, run_convert=False, run_remove_unused=False,
@@ -2232,7 +2232,7 @@ class TestAero(unittest.TestCase):
 
         model = read_bdf(bdf_filename=bdf_file, validate=True, xref=True, punch=False,
                          skip_cards=None, read_cards=None, encoding=None,
-                         log=None, debug=True, mode='zona')
+                         log=None, debug=None, mode='zona')
         #with self.assertRaises(AttributeError):
 
         model.uncross_reference()

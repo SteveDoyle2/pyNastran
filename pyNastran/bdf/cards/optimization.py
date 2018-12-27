@@ -1987,6 +1987,7 @@ class DRESP2(OptConstraint):
           - DVMRELx values
           - DVPRELx values
           - DESVAR values
+          - DNODE values
         Then, an equation (DEQATN) is used to formulate an output response.
 
         Parameters
@@ -2029,7 +2030,7 @@ class DRESP2(OptConstraint):
         }
 
         """
-        print('DRESP2 init: ', params)
+        #print('DRESP2 init: ', params)
         OptConstraint.__init__(self)
         if comment:
             self.comment = comment
@@ -4662,8 +4663,6 @@ class DVGRID(BaseCard):
         self.dvid_ref = model.desvars[self.dvid]
         self.nid_ref = model.Node(self.nid)
         self.cid_ref = model.Coord(self.cid)
-        #self.dconstrs = [model.dconstrs[oid] for oid in self.dconstr_ids]
-        #self.dconstrs_ref = [model.dconstrs[oid] for oid in self.dconstr_ids]
 
     @property
     def node_id(self):
@@ -4690,8 +4689,6 @@ class DVGRID(BaseCard):
         self.nid_ref = None
         self.cid_ref = None
         self.dvid_ref = None
-        #self.dconstrs = self.dconstr_ids
-        #del self.dconstrs_ref
 
     def raw_fields(self):
         list_fields = [

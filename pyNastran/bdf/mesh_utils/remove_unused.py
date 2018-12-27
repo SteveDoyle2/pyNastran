@@ -174,7 +174,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
                 elem = model.elements[eid]
                 nids_used.update(elem.node_ids)
                 pids_used.add(elem.Pid())
-        elif card_type in ['CELAS4', 'CDAMP4']:
+        elif card_type in ['CELAS4', 'CDAMP4', 'GENEL']:
             for eid in ids:
                 elem = model.elements[eid]
                 nids_used.update(elem.node_ids)

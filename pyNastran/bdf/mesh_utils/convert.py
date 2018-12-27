@@ -149,6 +149,7 @@ def _convert_elements(model, xyz_scale, mass_scale, weight_scale):
     #nsm_scale = mass_scale
     nsm_bar_scale = mass_scale / xyz_scale
     stiffness_scale = force_scale / xyz_scale
+    flexibility_scale = 1. / stiffness_scale
     damping_scale = force_scale / velocity_scale
 
     # these don't have any properties
@@ -241,6 +242,12 @@ def _convert_elements(model, xyz_scale, mass_scale, weight_scale):
                 #elem.x = [x*xyz_scale for x in elem.x]
                 elem.wa *= xyz_scale
                 elem.wb *= xyz_scale
+        elif elem_type == 'GENEL':
+            # I'm pretty sure [S] this is unitless
+            if elem.k is not None:
+                elem.k *= stiffness_scale
+            if elem.z is not None:
+                elem.z *= flexibility_scale
         else:
             raise NotImplementedError('type=%r; elem:\n%s' % (elem.type, elem))
 

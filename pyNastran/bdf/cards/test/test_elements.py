@@ -277,8 +277,15 @@ class TestElements(unittest.TestCase):
 
     def test_genel(self):
         """tests a GENEL element"""
-        model = BDF()
+        model = BDF(debug=None)
         eid = 1
+
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(13, [0., 0., 0.])
+        model.add_grid(42, [0., 0., 0.])
+        model.add_grid(24, [0., 0., 0.])
+        model.add_grid(6, [0., 0., 0.])
+        model.add_grid(33, [0., 0., 0.])
         ul = np.array([
             [1, 1],
             [13, 4],
@@ -321,6 +328,11 @@ class TestElements(unittest.TestCase):
         elem = model.add_card(fields, 'GENEL', comment='card', is_list=True, has_none=True)
         elemi = model.elements[21]
         str(elemi)
+
+        save_load_deck(model, xref='standard', punch=True,
+                       run_remove_unused=True, run_convert=True, run_renumber=True,
+                       run_mirror=False, run_save_load=True, run_quality=True,
+                       write_saves=True, run_save_load_hdf5=True)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

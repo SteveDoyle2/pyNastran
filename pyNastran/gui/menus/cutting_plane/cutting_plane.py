@@ -27,8 +27,7 @@ from pyNastran.gui.utils.qt.checks.qlineedit import (
     check_float,# check_float_ranged,
     #check_name_str, check_name_length, check_format, check_format_str,
 )
-
-wildcard_csv = 'Comma Separated Value - CSV (*.csv)'
+from pyNastran.gui.utils.wildcards import wildcard_csv
 
 class CuttingPlaneWindow(PyDialog):
     """
