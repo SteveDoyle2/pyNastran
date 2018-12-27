@@ -303,7 +303,7 @@ def get_mass_breakdown(model, property_ids=None, stop_if_no_mass=True, detailed=
     #'PCOMPS',
     """
     pid_eids = model.get_element_ids_dict_with_pids(
-        property_ids, stop_if_no_eids=stop_if_no_mass,
+        property_ids, stop_if_no_eids=False,
         msg=' which is required by get_mass_breakdown')
 
     mass_type_to_mass = {}

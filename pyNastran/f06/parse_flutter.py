@@ -247,7 +247,8 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None,
                      plot_kfreq_damping=False, show=True,
                      xlim=None, ylim_damping=None, ylim_freq=None,
                      nopoints=False, noline=False,
-                     export_zona=False, export_f06=False, log=None):
+                     export_zona=False, export_veas=False, export_f06=False,
+                     log=None):
     """
     Plots a flutter (SOL 145) deck
 
@@ -317,7 +318,8 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None,
                        plot_type,
                        plot_vg, plot_vg_vf, plot_root_locus, plot_kfreq_damping,
                        nopoints, noline,
-                       export_zona=export_zona, export_f06=export_f06, show=show)
+                       export_zona=export_zona, exporrt_veas=exporrt_veas, export_f06=export_f06,
+                       show=show)
     return flutters
 
 def make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq,

@@ -17,8 +17,8 @@ def convert(model, units_to, units=None):
        cross references the model (default=True)
     units_to : List[str]
         [length, mass, time]
-        length = {in, ft, m, mm}
-        mass = {g, kg, Mg, lbm, slinch}
+        length = {in, ft, m, cm, mm}
+        mass = {g, kg, Mg, lbm, slug, slinch}
         time = {s}
 
     units : list
@@ -871,9 +871,9 @@ def _convert_dconstr(model, dconstr, pressure_scale):
         dconstr.uid *= scale
 
         # low end of frequency range (Hz)
-        self.lowfq = scale
+        dconstr.lowfq = scale
         # high end of frequency range (Hz)
-        self.highfq = scale
+        dconstr.highfq = scale
     else:
         raise NotImplementedError(dconstr)
 
@@ -1053,52 +1053,86 @@ def get_scale_factors(units_from, units_to, log):
 
 
 def convert_length(length_from, length_to):
-    """determines the length scale factor"""
+    """
+    Determines the length scale factor
+
+    We crate a gravity_scale_length for any non-standard unit (ft, m)
+    """
     xyz_scale = 1.0
-    gravity_scale = 1.0
+    gravity_scale_length = 1.0
 
     #if length_from != length_to:
     if length_from == 'in':
         xyz_scale *= 0.0254
-        gravity_scale /= 12.
+        gravity_scale_length /= 12.
     elif length_from == 'ft':
         xyz_scale *= 0.3048
         # ft/s^2 are the base units for english
 
     elif length_from == 'm':
         #xyz_scale = 1.0
-        #gravity_scale = 1.0
+        #gravity_scale_length = 1.0
         # m/s^2 are the base units for SI
         pass
-    #elif length_from == 'cm':
-        #xyz_scale *= 100.0
+    elif length_from == 'cm':
+        xyz_scale *= 100.
+        gravity_scale_length /= 100.
     elif length_from == 'mm':
         xyz_scale /= 1000.
-        gravity_scale /= 1000.
+        gravity_scale_length /= 1000.
     else:
-        raise NotImplementedError('length from unit=%r; expected=[in, ft, m, mm]' % length_from)
+        raise NotImplementedError('length from unit=%r; expected=[in, ft, m, cm, mm]' % length_from)
 
     if length_to == 'in':
         xyz_scale /= 0.0254
-        gravity_scale *= 12.
+        gravity_scale_length *= 12.
     elif length_to == 'ft':
         xyz_scale /= 0.3048
     elif length_to == 'm':
         #xyz_scale /= 1.0
         pass
-    #elif length_to == 'cm':
-        #xyz_scale /= 100.0
+    elif length_to == 'cm':
+        xyz_scale /= 100.
+        gravity_scale_length *= 100.
     elif length_to == 'mm':
         xyz_scale *= 1000.
-        gravity_scale *= 1000.
+        gravity_scale_length *= 1000.
     else:
-        raise NotImplementedError('length to unit=%r; expected=[in, ft, m, mm]' % length_to)
-    return xyz_scale, gravity_scale
+        raise NotImplementedError('length to unit=%r; expected=[in, ft, m, cm, mm]' % length_to)
+    return xyz_scale, gravity_scale_length
 
 
 def convert_mass(mass_from, mass_to, log):
     """
     determines the mass, weight, gravity scale factor
+
+    We apply a gravity_scale_mass for any unit not {kg, slug}.
+    Then we convert to N.
+
+    So for SI, if we have kg, we have a base unit, and the length is assumed
+    to be m, so we have a consistent system and gravity_scale_mass is 1.0.
+
+    For lbm:
+       F = m*a
+       1 lbf = 1 lbm * 1 ft/s^2
+       32 lbf = 1 slug * 32 ft/s^2
+       gscale = 1/g
+       F = gscale * m * a
+       1 lbf = gscale * 1 lbm * 32 ft/s^2
+       --> gscale = 1/32
+
+    For slug:
+       F = gscale * m * a
+       32 lbf = gscale * 1 slug * 32 ft/s^2
+       --> gscale = 1
+
+    For slinch:
+       F = gscale * m * a
+       386 lbf = gscale * 1 slinch * 12*32 in/s^2
+       1 slinch = 12 slug
+       12 in = 1 ft
+       386 lbf = gscale * 12 slug * 32 ft/s^2
+       --> gscale = 1
 
     TODO: slinch/slug not validated
     """
@@ -1106,18 +1140,22 @@ def convert_mass(mass_from, mass_to, log):
     weight_scale = 1.0
 
     # gravity scale is only required if you have a force-based system
-    gravity_scale = 1.0
+    gravity_scale_mass = 1.0
 
     #gravity_english = 9.80665 / .3048 #= 32.174; exact
-    gravity_english_ft = 32.2
+    gravity_english_ft = 32.174
     gravity_english_in = gravity_english_ft * 12. #32.2 * 12.
 
     slug_to_kg = 14.5939
-    slinch_to_kg = 12. * slug_to_kg
+    slinch_to_kg = 12. * slug_to_kg  # 1 slinch = 12 slug
 
     slinch_to_lbf = gravity_english_in
     slug_to_lbf = gravity_english_ft
     lbf_to_newton = 4.4482216152605
+    lbm_to_kg = 0.45359237
+
+    slug_to_newton = slug_to_lbf * lbf_to_newton
+    slinch_to_newton = slinch_to_lbf * lbf_to_newton
 
     #if mass_from == mass_to:
         #return mass_scale, weight_scale, gravity_scale
@@ -1125,27 +1163,29 @@ def convert_mass(mass_from, mass_to, log):
     # convert to kg
     if mass_from == 'kg':
         pass
-    elif mass_from == 'Mg': # mega-gram
+    elif mass_from == 'Mg': # mega-gram / ton
         mass_scale *= 1000.
-        gravity_scale *= 1000.
+        gravity_scale_mass *= 1000.
     elif mass_from == 'g':
         mass_scale *= 1./1000.
-        gravity_scale *= 1/1000.
+        gravity_scale_mass *= 1/1000.
     elif mass_from == 'lbm':
-        mass_scale *= 0.45359237
+        mass_scale *= lbm_to_kg
         weight_scale *= lbf_to_newton
-        gravity_scale /= gravity_english_ft # ft/s^2 to m/s^2
+        gravity_scale_mass /= gravity_english_ft # ft/s^2 to m/s^2
     elif mass_from == 'slug':
         mass_scale *= slug_to_kg
-        weight_scale *= (slug_to_lbf * gravity_english_ft)
+        # assume lbf
+        weight_scale *= lbf_to_newton #* gravity_english_ft)
         #log.warning("not scaling force/weight")
         #weight_scale *= lbf_to_newton
-        #gravity_scale /= gravity_english_in # in/s^2 to m/s^2
+        #gravity_scale_mass /= gravity_english_in # in/s^2 to m/s^2
     elif mass_from == 'slinch':
         mass_scale *= slinch_to_kg
-        weight_scale *= (slinch_to_lbf * gravity_english_ft)
+        weight_scale *= lbf_to_newton
+        #weight_scale *= (slinch_to_lbf * gravity_english_ft)
         #log.warning("not scaling force/weight")
-        #gravity_scale /= gravity_english_in # in/s^2 to m/s^2
+        #gravity_scale_mass /= gravity_english_in # in/s^2 to m/s^2
 
     else:
         raise NotImplementedError('mass from unit=%r; expected=[g, kg, Mg, lbm, slug, slinch]' % mass_from)
@@ -1155,25 +1195,29 @@ def convert_mass(mass_from, mass_to, log):
         pass
     elif mass_to == 'Mg': # mega-gram # what about weight_scale???
         mass_scale /= 1000.
-        gravity_scale /= 1000.
+        gravity_scale_mass /= 1000.
     elif mass_to == 'g': # what about weight_scale???
         mass_scale *= 1000.
-        gravity_scale *= 1000.
+        gravity_scale_mass *= 1000.
         #weight_scale *= 1000.
     elif mass_to == 'lbm':
-        mass_scale /= 0.45359237
+        mass_scale /= lbm_to_kg
         weight_scale /= lbf_to_newton
-        gravity_scale *= gravity_english_ft
+        gravity_scale_mass *= gravity_english_ft
     elif mass_to == 'slug':
         mass_scale /= slug_to_kg
-        weight_scale /= (slug_to_lbf * gravity_english_ft)
-        #gravity_scale *= gravity_english_in # in/s^2 to m/s^2
+        #weight_scale /= (slug_to_lbf * gravity_english_ft)
+        weight_scale /= lbf_to_newton
+        #gravity_scale_mass *= gravity_english_in # in/s^2 to m/s^2
     elif mass_to == 'slinch':
         mass_scale /= slinch_to_kg
-        weight_scale /= (slinch_to_lbf * gravity_english_ft)
+        #weight_scale /= (slinch_to_lbf * gravity_english_ft)
+        weight_scale /= lbf_to_newton
     #elif mass_to == 'slinch':
         #mass_scale /= 175.126836
-        #gravity_scale *= gravity_english_in # in/s^2 to m/s^2
+        #gravity_scale_mass *= gravity_english_in # in/s^2 to m/s^2
     else:
         raise NotImplementedError('mass to unit=%r; expected=[g, kg, Mg, lbm, slug, slinch]' % mass_to)
-    return mass_scale, weight_scale, gravity_scale
+
+    #print("weight_scale = ", mass_from, mass_to, weight_scale)
+    return mass_scale, weight_scale, gravity_scale_mass
