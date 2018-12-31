@@ -223,7 +223,7 @@ class PanairIO(object):
         return form, cases, nids, eids
 
     def load_panair_results(self, panair_filename):
-        model_name = name
+        model_name = 'main'
         #colormap = self.colormap
         colormap = 'jet'
         cases = self.gui.result_cases

@@ -29,14 +29,16 @@ class NastranGuiResults(NastranGuiAttributes):
         super(NastranGuiResults, self).__init__()
 
 
-    def _fill_grid_point_forces(self, cases, model, key, icase, form_dict):
+    def _fill_grid_point_forces(self, cases, model, key, icase,
+                                form_dict, header_dict, keys_map):
         if key not in model.grid_point_forces:
             print('return icase...')
             return icase
         grid_point_forces = model.grid_point_forces[key]
-        if not grid_point_forces.is_real:
-            raise RuntimeError(grid_point_forces.is_real)
-            #return icase
+        case = grid_point_forces
+        if not case.is_real:
+            #raise RuntimeError(grid_point_forces.is_real)
+            return icase
 
         subcase_id = key[0]
         title = 'GridPointForces'
@@ -48,6 +50,13 @@ class NastranGuiResults(NastranGuiAttributes):
         cases[icase] = (nastran_res, (itime, 'GridPointForces'))  # do I keep this???
         formii = ('GridPointForces', icase, [])
         form_dict[(key, itime)].append(formii)
+
+        dt = case._times[itime]
+        header = _get_nastran_header(case, dt, itime)
+        header_dict[(key, itime)] = header
+        keys_map[key] = (case.subtitle, case.label,
+                         case.superelement_adaptivity_index, case.pval_step)
+
         icase += 1
         return icase
 

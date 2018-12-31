@@ -6974,7 +6974,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             icase = self._fill_op2_oug_oqg(cases, model, key, icase,
                                            disp_dict, header_dict, keys_map)
 
-            icase = self._fill_grid_point_forces(cases, model, key, icase, disp_dict)
+            icase = self._fill_grid_point_forces(cases, model, key, icase,
+                                                 disp_dict, header_dict, keys_map)
             ncases = icase - ncases_old
             #print('ncases=%s icase=%s' % (ncases, icase))
             #assert ncases > 0, ncases
