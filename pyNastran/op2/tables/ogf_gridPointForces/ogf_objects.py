@@ -4,7 +4,8 @@ import numpy as np
 from numpy import zeros, unique, array_equal, empty
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header, write_imag_floats_13e
-from pyNastran.op2.vector_utils import transform_force_moment, transform_force_moment_sum, sortedsum1d
+from pyNastran.op2.vector_utils import (
+    transform_force_moment, transform_force_moment_sum, sortedsum1d)
 from pyNastran.utils.numpy_utils import integer_types
 
 
@@ -168,11 +169,15 @@ class RealGridPointForcesArray(ScalarObject):
             node_element = [self.node_element[:, 0], self.node_element[:, 1]]
             if self.nonlinear_factor not in (None, np.nan):
                 column_names, column_values = self._build_dataframe_transient_header()
-                self.data_frame = pd.Panel(self.data, items=column_values, major_axis=node_element, minor_axis=headers).to_frame()
+                self.data_frame = pd.Panel(
+                    self.data, items=column_values,
+                    major_axis=node_element, minor_axis=headers).to_frame()
                 self.data_frame.columns.names = column_names
                 self.data_frame.index.names = ['NodeID', 'ElementID', 'Item']
             else:
-                self.data_frame = pd.Panel(self.data, major_axis=node_element, minor_axis=headers).to_frame()
+                self.data_frame = pd.Panel(
+                    self.data,
+                    major_axis=node_element, minor_axis=headers).to_frame()
                 self.data_frame.columns.names = ['Static']
                 self.data_frame.index.names = ['NodeID', 'ElementID', 'Item']
             #print(self.data_frame)
@@ -437,6 +442,8 @@ class RealGridPointForcesArray(ScalarObject):
             summation_point = np.asarray(summation_point)
         #assert coord_in.Type == 'R', 'Only rectangular coordinate systems are supported; coord_in=\n%s' % str(coord_in)
         #assert coord_out.Type == 'R', 'Only rectangular coordinate systems are supported; coord_out=\n%s' % str(coord_out)
+        assert eids is not None, eids
+        assert nids is not None, nids
         eids = np.asarray(eids)
         nids = np.asarray(nids)
         eids.sort()
@@ -529,38 +536,36 @@ class RealGridPointForcesArray(ScalarObject):
 
     def shear_moment_diagram(self, xyz_cid0, eids, nids, icd_transform,
                              element_centroids_cid0,
-                             coord, coords, nid_cd, stations, coord_out,
+                             coords, nid_cd, stations, coord_out,
                              idir=0, itime=0, debug=False, logger=None):
         """
         Computes a series of forces/moments at various stations along a structure.
 
         Parameters
         ----------
-        eids : (nelements, ) int ndarray
-            an array of element ids to consider
-        nids_eids : (nnodes, ) int ndarray
-            an array of node ids corresponding to eids
-        #nids_xyz : (nnodes, ) int ndarray
-        #    an array of node ids corresponding to xyz_cid0
         xyz_cid0 : (nnodes, 3) float ndarray
             all the nodes in the model xyz position in the global frame
+        eids : (nelements, ) int ndarray
+            an array of element ids to consider
+        nids : (nnodes, ) int ndarray
+            an array of node ids corresponding to xyz_cid0
+        icd_transform : dict[cd] = (Mi, ) int ndarray
+            the mapping for nid_cd
         element_centroids_cid0 : (nelements, 3) float ndarray
-            an array of element centroids
-        coord_out : CORD2R()
-            the output coordinate system
+            an array of element centroids corresponding to eids
         coords : dict[int] = CORDx
             all the coordinate systems
             key : int
             value : CORDx
         nid_cd : (M, 2) int ndarray
             the (BDF.point_ids, cd) array
-        icd_transform : dict[cd] = (Mi, ) int ndarray
-            the mapping for nid_cd
         stations : (nstations, ) float ndarray
             the station to sum forces/moments about
             be careful of picking exactly on symmetry planes/boundaries
             of elements or nodes
             this list should be sorted (negative to positive)
+        coord_out : CORD2R()
+            the output coordinate system
         idir : int; default=0
             the axis of the coordinate system to consider
 
@@ -587,8 +592,8 @@ class RealGridPointForcesArray(ScalarObject):
         nstations = len(stations)
         assert coord_out.type in ['CORD2R', 'CORD1R'], coord_out.type
         beta = coord_out.beta()
-        element_centroids_coord = np.dot(beta, element_centroids_cid0)  # TODO: verify
-        xyz_coord = np.dot(beta, xyz_cid0)  # TODO: verify
+        element_centroids_coord = element_centroids_cid0.dot(beta)
+        xyz_coord = xyz_cid0.dot(beta)
         x_centroid = element_centroids_coord[:, idir]
         x_coord = xyz_coord[:, idir]
 
@@ -605,9 +610,12 @@ class RealGridPointForcesArray(ScalarObject):
             # one side of the cutting plane, we can take all the
             # nodes within some tolerance of the station direction and
             # find the free nodes
-            i = np.where(x_centroid <= station)
-            j = np.where(x_coord >= station)
-
+            i = np.where(x_centroid <= station)[0]
+            j = np.where(x_coord >= station)[0]
+            if len(i) == 0:
+                break
+            if len(j) == 0:
+                break
             # summation point creation
             offset = np.zeros(3, dtype='float64')
             offset[idir] = station
@@ -736,7 +744,8 @@ class RealGridPointForcesArray(ScalarObject):
                     itime, nid, eid, ename.strip(), t1i, t2i, t3i, r1i, r2i, r3i))
         return
 
-    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         msg = self._get_f06_msg()
@@ -1016,11 +1025,15 @@ class ComplexGridPointForcesArray(ScalarObject):
             node_element = [self.node_element[:, 0], self.node_element[:, 1]]
             if self.nonlinear_factor not in (None, np.nan):
                 column_names, column_values = self._build_dataframe_transient_header()
-                self.data_frame = pd.Panel(self.data, items=column_values, major_axis=node_element, minor_axis=headers).to_frame()
+                self.data_frame = pd.Panel(
+                    self.data, items=column_values,
+                    major_axis=node_element, minor_axis=headers).to_frame()
                 self.data_frame.columns.names = column_names
                 self.data_frame.index.names = ['NodeID', 'ElementID', 'Item']
             else:
-                self.data_frame = pd.Panel(self.data, major_axis=node_element, minor_axis=headers).to_frame()
+                self.data_frame = pd.Panel(
+                    self.data,
+                    major_axis=node_element, minor_axis=headers).to_frame()
                 self.data_frame.columns.names = ['Static']
                 self.data_frame.index.names = ['NodeID', 'ElementID', 'Item']
             #print(self.data_frame)
@@ -1051,7 +1064,8 @@ class ComplexGridPointForcesArray(ScalarObject):
             nnodes = self.data.shape[1]
             node_element_temp = self.node_element.reshape((ntimes * nnodes, 2))
             node_element = [node_element_temp[:, 0], node_element_temp[:, 1]]
-            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=node_element, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(self.data, items=column_values,
+                                       major_axis=node_element, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
             self.data_frame.index.names = ['NodeID', 'ElementID', 'Item']
         else:
@@ -1059,7 +1073,8 @@ class ComplexGridPointForcesArray(ScalarObject):
             #print('column_names =', column_names)
             #for name, values in zip(column_names, column_values):
                 #print('  %s = %s' % (name, values))
-            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=node_element, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(self.data, items=column_values,
+                                       major_axis=node_element, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
             self.data_frame.index.names = ['NodeID', 'ElementID', 'Item']
 

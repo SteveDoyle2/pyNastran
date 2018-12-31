@@ -25,7 +25,7 @@ class SU2_IO(object):
         return data
 
     def load_su2_geometry(self, su2_filename, name='main', plot=True):
-        #print("load_su2_geometry...")
+        model_name = name
         skip_reading = self.gui._remove_old_geometry(su2_filename)
         if skip_reading:
             return
@@ -121,8 +121,6 @@ class SU2_IO(object):
 
         grid.SetPoints(points)
         grid.Modified()
-        if hasattr(grid, 'Update'):  # pragma: no cover
-            grid.Update()
 
         # loadSTLResults - regions/loads
         self.gui.scalar_bar_actor.VisibilityOff()
@@ -135,7 +133,7 @@ class SU2_IO(object):
         form, cases, node_ids, element_ids = self._fill_su2_case(cases, ID, nelements, nnodes)
         self.gui.node_ids = node_ids
         self.gui.element_ids = element_ids
-        self.gui._finish_results_io2(form, cases)
+        self.gui._finish_results_io2(model_name, form, cases)
 
     def _fill_su2_case(self, cases, ID, nelements, nnodes):
         """adds the sidebar results"""

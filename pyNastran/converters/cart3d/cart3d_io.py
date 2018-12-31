@@ -79,6 +79,7 @@ class Cart3dIO(object):
             should the model be generated or should we wait until
             after the results are loaded
         """
+        model_name = name
         skip_reading = self._remove_old_cart3d_geometry(cart3d_filename)
         if skip_reading:
             return
@@ -124,8 +125,6 @@ class Cart3dIO(object):
 
         grid.SetPoints(points)
         grid.Modified()
-        if hasattr(grid, 'Update'):  # pragma: no cover
-            grid.Update()
         self._create_cart3d_free_edges(model, nodes, elements)
 
 
@@ -153,7 +152,7 @@ class Cart3dIO(object):
 
         self.gui.node_ids = node_ids
         self.gui.element_ids = element_ids
-        self.gui._finish_results_io2(form, cases)
+        self.gui._finish_results_io2(model_name, form, cases)
 
     def _create_box(self, cart3d_filename, ID, form, cases, icase, regions):
         """creates the bounding box for boundary conditions"""

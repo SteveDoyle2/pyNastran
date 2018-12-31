@@ -18,6 +18,7 @@ from pyNastran.op2.result_objects.stress_object import (
     get_rod_stress_strain,
     get_bar_stress_strain, get_bar100_stress_strain, get_beam_stress_strain,
     get_plate_stress_strain, get_solid_stress_strain)
+from pyNastran.gui.gui_objects.gui_result import GridPointForceResult
 
 
 class NastranGuiResults(NastranGuiAttributes):
@@ -27,10 +28,28 @@ class NastranGuiResults(NastranGuiAttributes):
     def __init__(self):
         super(NastranGuiResults, self).__init__()
 
-    def _fill_gpforces(self, model):
-        """unused"""
-        pass
-        #[model.grid_point_forces, 'GridPointForces'],
+
+    def _fill_grid_point_forces(self, cases, model, key, icase, form_dict):
+        if key not in model.grid_point_forces:
+            print('return icase...')
+            return icase
+        grid_point_forces = model.grid_point_forces[key]
+        if not grid_point_forces.is_real:
+            raise RuntimeError(grid_point_forces.is_real)
+            #return icase
+
+        subcase_id = key[0]
+        title = 'GridPointForces'
+        header = 'Grid Point Forces'
+        nastran_res = GridPointForceResult(subcase_id, header, title, grid_point_forces)
+
+        itime = 0
+
+        cases[icase] = (nastran_res, (itime, 'GridPointForces'))  # do I keep this???
+        formii = ('GridPointForces', icase, [])
+        form_dict[(key, itime)].append(formii)
+        icase += 1
+        return icase
 
     def _fill_op2_oug_oqg(self, cases, model, key, icase,
                           form_dict, header_dict, keys_map):

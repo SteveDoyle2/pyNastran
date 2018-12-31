@@ -171,7 +171,7 @@ class FakeGUIMethods(GuiCommon):
     def update_menu_bar(self):
         pass
 
-    def _finish_results_io2(self, form, cases, reset_labels=True):
+    def _finish_results_io2(self, model_name, form, cases, reset_labels=True):
         """
         This is not quite the same as the main one.
         It's more or less just _set_results

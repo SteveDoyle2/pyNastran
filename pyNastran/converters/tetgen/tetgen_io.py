@@ -24,6 +24,7 @@ class TetgenIO(object):
         return data
 
     def load_tetgen_geometry(self, smesh_filename, name='main', plot=True):
+        model_name = name
         skip_reading = self.gui._remove_old_geometry(smesh_filename)
         if skip_reading:
             return
@@ -80,8 +81,6 @@ class TetgenIO(object):
 
         grid.SetPoints(points)
         grid.Modified()
-        if hasattr(grid, 'Update'):  # pragma: no cover
-            grid.Update()
 
         # loadTetgenResults - regions/loads
         self.gui.scalar_bar_actor.VisibilityOff()
@@ -91,7 +90,7 @@ class TetgenIO(object):
         form, cases, node_ids, element_ids = self._fill_tetgen_case(nnodes, nelements)
         self.gui.node_ids = node_ids
         self.gui.element_ids = element_ids
-        self.gui._finish_results_io2(form, cases, reset_labels=True)
+        self.gui._finish_results_io2(model_name, form, cases, reset_labels=True)
 
     def _fill_tetgen_case(self, nnodes, nelements):
         subcase_id = 0

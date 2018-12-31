@@ -193,7 +193,7 @@ def validate_dvprel(prop_type, pname_fid, validate):
         elif pname_fid == 7:
             pname_fid = 'J'
         #options = [4, 5, 6, 7, 12, 13, 14, 15, 16, 17, 18, 19, 'A', 'I1', 'J']
-        options = [12, 13, 14, 15, 16, 17, 18, 19, 'A', 'I1', 'I2', 'J']
+        options = [12, 13, 14, 15, 16, 17, 18, 19, 'A', 'I1', 'I2', 'I12', 'J']
         _check_dvprel_options(pname_fid, prop_type, options)
 
     elif prop_type == 'PBARL':
@@ -214,15 +214,15 @@ def validate_dvprel(prop_type, pname_fid, validate):
     #elif prop_type == 'CBEAM':
         #assert pname_fid in ['X1', 'X2', 'X3', 'W1A', 'W2A', 'W3A', 'W1B', 'W2B', 'W3B'], msg
     elif prop_type == 'PBEAM':
-        options1 = [
-            'I1', 'I2', 'A', 'J',
+        options_station_a = [
+            'I1', 'I2', 'A', 'I12', 'J',
             'C1', 'C2', 'D1', 'D2', 'E1', 'E2', 'F1', 'F2',
             #-8, -9, -10, -14, -15, -16, -17, -18, -19, -20, -21,
             #-168, -169, -170, -174, -175, -176, -177, -178, -179,
             #-180, -181,
         ]
         options = [
-            'I1', 'I2', 'A', 'J',
+            'I1', 'I2', 'A', 'I12', 'J',
             'I1(A)', 'I1(B)', 'I2(B)',
             'C1', 'C2', 'D1', 'D2', 'E1', 'E2', 'F1', 'F2',
             #-8, -9, -10, -14, -15, -16, -17, -18, -19, -20, -21,
@@ -233,12 +233,14 @@ def validate_dvprel(prop_type, pname_fid, validate):
             pname_fid = update_pbeam_negative_integer(pname_fid)
 
         if isinstance(pname_fid, string_types):
-            if pname_fid in options1:
+            if pname_fid in options_station_a:
                 word = pname_fid
                 num = 'A'
+                pname_fid = '%s(%s)' % (pname_fid, num)
             else:
                 word, num = break_word_by_trailing_parentheses_integer_ab(
                     pname_fid)
+
         _check_dvprel_options(word, prop_type, options)
 
     elif prop_type == 'PBEAML':
@@ -5017,12 +5019,13 @@ def get_dvprel_key(dvprel, prop=None):
 
     elif prop_type == 'PBEAM':
         if isinstance(var_to_change, string_types):
-            if var_to_change in ['A', 'I1', 'I2', 'I1(B)', 'J', 'I2(B)']:
+            if var_to_change in ['A', 'I1', 'I2', 'I1(B)', 'J', 'I2(B)',
+                                 'A(A)',]:
                 pass
             else:
                 word, num = break_word_by_trailing_parentheses_integer_ab(
                     var_to_change)
-                var_to_change = '%s(%i)' % (word, num)
+                var_to_change = '%s(%s)' % (word, num)  # A(A), A(1), A(10)
 
         elif isinstance(var_to_change, int):  # pragma: no cover
             if var_to_change < 0:

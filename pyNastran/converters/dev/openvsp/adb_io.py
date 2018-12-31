@@ -49,6 +49,7 @@ class ADB_IO(object):  # pragma: no cover
 
     def load_vsp_aero_geometry(self, adb_filename,
                                name='main', plot=True):  # pragma: no cover
+        model_name = name
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]
 
@@ -136,8 +137,6 @@ class ADB_IO(object):  # pragma: no cover
 
         grid.SetPoints(points)
         grid.Modified()
-        if hasattr(grid, 'Update'):  # pragma: no cover
-            grid.Update()
         #self.log_info("updated grid")
 
         # load results - regions/loads
@@ -153,7 +152,7 @@ class ADB_IO(object):  # pragma: no cover
         ID = 1
 
         form, cases = self._fill_adb_case(cases, ID, model, plot_wakes)
-        self.gui._finish_results_io2(form, cases)
+        self.gui._finish_results_io2(model_name, form, cases)
 
     #def clear_adb(self):
         #pass

@@ -30,6 +30,8 @@ from pyNastran.gui.menus.clipping.clipping_object import ClippingObject
 from pyNastran.gui.menus.camera.camera_object import CameraObject
 from pyNastran.gui.menus.edit_geometry_properties.edit_geometry_properties_object import (
     EditGeometryPropertiesObject)
+from pyNastran.gui.menus.cutting_plane.cutting_plane_object import CuttingPlaneObject
+from pyNastran.gui.menus.cutting_plane.shear_moment_torque_object import ShearMomentTorqueObject
 
 from pyNastran.gui.utils.vtk.vtk_utils import (
     numpy_to_vtk_points, create_vtk_cells_of_constant_element_type)
@@ -66,12 +68,13 @@ class GuiAttributes(object):
         self.mark_actions = MarkActions(self)
 
         self.legend_obj = LegendObject(self)
-        self.edit_geometry_properties_obj = EditGeometryPropertiesObject(self)
+        self.camera_obj = CameraObject(self)
+        self.clipping_obj = ClippingObject(self)
         self.highlight_obj = HighlightObject(self)
         self.preferences_obj = PreferencesObject(self)
         self.cutting_plane_obj = CuttingPlaneObject(self)
-        self.clipping_obj = ClippingObject(self)
-        self.camera_obj = CameraObject(self)
+        self.shear_moment_torque_obj = ShearMomentTorqueObject(self)
+        self.edit_geometry_properties_obj = EditGeometryPropertiesObject(self)
 
         self.glyph_scale_factor = 1.0
         self.html_logging = False
@@ -81,6 +84,7 @@ class GuiAttributes(object):
         # for a Nastran ElementID/PropertyID, this is 'element'
         self.result_location = None
 
+        self.obj_names = []
         self.case_keys = []
         self.res_widget = res_widget
         self._show_flag = True
@@ -362,7 +366,7 @@ class GuiAttributes(object):
         self.eid_maps[self.name] = eid_map
 
     #-------------------------------------------------------------------
-    def set_quad_grid(self, name, nodes, elements, color, line_width=5, opacity=1.):
+    def set_quad_grid(self, name, nodes, elements, color, line_width=5, opacity=1., add=True):
         """
         Makes a CQUAD4 grid
         """
@@ -387,10 +391,11 @@ class GuiAttributes(object):
         etype = 9  # vtk.vtkQuad().GetCellType()
         create_vtk_cells_of_constant_element_type(grid, elements, etype)
 
-        self._add_alt_actors({name : self.alt_grids[name]})
+        if add:
+            self._add_alt_actors({name : self.alt_grids[name]})
 
-        #if name in self.geometry_actors:
-        self.geometry_actors[name].Modified()
+            #if name in self.geometry_actors:
+            self.geometry_actors[name].Modified()
 
     def _add_alt_actors(self, grids_dict, names_to_ignore=None):
         if names_to_ignore is None:
@@ -1089,12 +1094,15 @@ class GuiAttributes(object):
 
         self.legend_obj.set_font_size(font_size)
         self.camera_obj.set_font_size(font_size)
-        self.edit_geometry_properties_obj.set_font_size(font_size)
+        self.highlight_obj.set_font_size(font_size)
         self.clipping_obj.set_font_size(font_size)
         if self._modify_groups_window_shown:
             self._modify_groups_window.set_font_size(font_size)
         self.preferences_obj.set_font_size(font_size)
         self.cutting_plane_obj.set_font_size(font_size)
+        self.shear_moment_torque_obj.set_font_size(font_size)
+        self.edit_geometry_properties_obj.set_font_size(font_size)
+
 
         #self.menu_scripts.setFont(font)
         self.log_command('settings.on_set_font_size(%s)' % font_size)

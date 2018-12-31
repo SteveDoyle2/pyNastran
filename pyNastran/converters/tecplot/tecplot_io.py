@@ -29,6 +29,7 @@ class TecplotIO(object):
         return data
 
     def load_tecplot_geometry(self, tecplot_filename, name='main', plot=True):
+        model_name = name
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]
 
@@ -71,7 +72,7 @@ class TecplotIO(object):
         form, cases, node_ids, element_ids = self._fill_tecplot_case(cases, ID, model, is_surface)
         self.gui.node_ids = node_ids
         self.gui.element_ids = element_ids
-        self.gui._finish_results_io2(form, cases)
+        self.gui._finish_results_io2(model_name, form, cases)
 
         #if 0:
             # http://www.vtk.org/Wiki/VTK/Examples/Cxx/Filtering/AppendFilter
@@ -174,8 +175,6 @@ class TecplotIO(object):
 
         grid.SetPoints(points)
         grid.Modified()
-        if hasattr(grid, 'Update'):  # pragma: no cover
-            grid.Update()
         return is_surface
 
     def _create_tecplot_shells(self, is_quads, quads, is_tris, tris):

@@ -16,6 +16,8 @@ import vtk
 
 import pyNastran
 from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.bdf.cards.aero.utils import points_elements_from_quad_points
+
 from pyNastran.gui.gui_objects.names_storage import NamesStorage
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.gui.qt_files.gui_attributes import GuiAttributes
@@ -1448,6 +1450,59 @@ class GuiCommon(GuiAttributes):
 
         if follower_nodes is not None:
             self.follower_nodes[name] = follower_nodes
+
+    def _create_plane_source_from_points(self, p1, p2, i, k, dim_max):
+        """
+        This is used by the cutting plane tool.
+
+           4+------+3
+            |      |
+            p1     p2
+            |      |
+           1+------+2
+        """
+        shift = 1.1
+        dshift = (shift - 1) / 2.
+        half_shift = 0.5 + dshift
+        delta = half_shift * dim_max
+        #dim_xy = shift * dim_max
+
+        #n1 = 1 - dim_max * (dshift * i + half_shift * k)
+        #n2 = n1 + shift * dim_max * i
+        #n3 = n2 + shift * dim_max * k
+        #n4 = n1 + shift * dim_max * k
+        pcenter = (p1 + p2) / 2
+        n1 = pcenter - delta * i - delta * k
+        n2 = pcenter + delta * i - delta * k
+        n3 = pcenter + delta * i + delta * k
+        n4 = pcenter - delta * i + delta * k
+
+        x = np.linspace(0., 1., num=10)
+        y = x
+        if 'plane' in self.alt_grids:
+            plane_actor = self.plane_actor
+            #alt_grid =
+            #plane_source = vtk.vtkPlaneSource()
+            #self.rend.AddActor(plane_actor)
+            #self.plane_actor = plane_actor
+        else:
+            alt_grid = vtk.vtkUnstructuredGrid()
+            self.alt_grids['plane'] = alt_grid
+
+            mapper = vtk.vtkDataSetMapper()
+            mapper.SetInputData(alt_grid)
+            plane_actor = vtk.vtkActor()
+            plane_actor.SetMapper(mapper)
+
+            #plane_source = self.plane_source
+            #plane_actor = self.plane_actor
+            self.plane_actor = plane_actor
+            self.rend.AddActor(plane_actor)
+
+        nodes, elements = points_elements_from_quad_points(n1, n2, n3, n4, x, y)
+        color = None
+        self.set_quad_grid('plane', nodes, elements, color, line_width=1, opacity=1., add=False)
+        return plane_actor
 
     def _make_contour_filter(self):  # pragma: no cover
         """trying to make model lines...doesn't work"""

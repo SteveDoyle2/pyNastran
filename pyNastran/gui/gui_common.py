@@ -565,11 +565,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.actions['show_error'].setChecked(self.settings.show_error)
 
 
-    def _populate_menu(self, menu_items):
+    def _populate_menu(self, menu_items, actions=None):
         """populate menus and toolbar"""
         assert isinstance(menu_items, dict), menu_items
 
-        actions = self.actions
+        if actions is None:
+            actions = self.actions
         for unused_menu_name, (menu, items) in menu_items.items():
             if menu is None:
                 continue
@@ -656,12 +657,27 @@ class GuiCommon2(QMainWindow, GuiCommon):
         Prepare actions that will  be used in application in a way
         that's independent of the  menus & toolbar
         """
+        self._prepare_actions_helper(icon_path, tools, self.actions,
+                                     checkables=checkables)
+
+        self.actions['toolbar'] = self.toolbar.toggleViewAction()
+        self.actions['toolbar'].setStatusTip("Show/Hide application toolbar")
+
+        self.actions['reswidget'] = self.res_dock.toggleViewAction()
+        self.actions['reswidget'].setStatusTip("Show/Hide results selection")
+        return self.actions
+
+    def _prepare_actions_helper(self, icon_path, tools, actions, checkables=None):
+        """
+        Prepare actions that will  be used in application in a way
+        that's independent of the  menus & toolbar
+        """
         if checkables is None:
             checkables = []
 
         for tool in tools:
             (name, txt, icon, shortcut, tip, func) = tool
-            if name in self.actions:
+            if name in actions:
                 self.log_error('trying to create a duplicate action %r' % name)
                 continue
 
@@ -675,25 +691,18 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
             if name in checkables:
                 is_checked = checkables[name]
-                self.actions[name] = QAction(ico, txt, self, checkable=True)
-                self.actions[name].setChecked(is_checked)
+                actions[name] = QAction(ico, txt, self, checkable=True)
+                actions[name].setChecked(is_checked)
             else:
-                self.actions[name] = QAction(ico, txt, self)
+                actions[name] = QAction(ico, txt, self)
 
             if shortcut:
-                self.actions[name].setShortcut(shortcut)
+                actions[name].setShortcut(shortcut)
                 #actions[name].setShortcutContext(QtCore.Qt.WidgetShortcut)
             if tip:
-                self.actions[name].setStatusTip(tip)
+                actions[name].setStatusTip(tip)
             if func:
-                self.actions[name].triggered.connect(func)
-
-        self.actions['toolbar'] = self.toolbar.toggleViewAction()
-        self.actions['toolbar'].setStatusTip("Show/Hide application toolbar")
-
-        self.actions['reswidget'] = self.res_dock.toggleViewAction()
-        self.actions['reswidget'].setStatusTip("Show/Hide results selection")
-        return self.actions
+                actions[name].triggered.connect(func)
 
     def _logg_msg(self, log_type, filename, lineno, msg):
         """
@@ -2405,12 +2414,14 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.icase_fringe = None
         self.set_form(form)
 
-    def _finish_results_io2(self, form, cases, reset_labels=True):
+    def _finish_results_io2(self, model_name, form, cases, reset_labels=True):
         """
         Adds results to the Sidebar
 
         Parameters
         ----------
+        model_name : str
+            the name of the model
         form : List[pairs]
             There are two types of pairs
             header_pair : (str, None, List[pair])

@@ -22,6 +22,7 @@ class LaWGS_IO(object):
         return data
 
     def load_lawgs_geometry(self, lawgs_filename, name='main', plot=True):
+        model_name = name
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]
         self.gui.eid_maps[name] = {}
@@ -70,8 +71,6 @@ class LaWGS_IO(object):
 
         grid.SetPoints(points)
         grid.Modified()
-        if hasattr(grid, 'Update'):  # pragma: no cover
-            grid.Update()
 
         # loadCart3dResults - regions/loads
         #self.scalar_bar_actor.VisibilityOn()
@@ -86,7 +85,7 @@ class LaWGS_IO(object):
             cases, ID, nodes, elements, regions)
         self.gui.node_ids = node_ids
         self.gui.element_ids = element_ids
-        self.gui._finish_results_io2(form, cases)
+        self.gui._finish_results_io2(model_name, form, cases)
 
     def _fill_lawgs_case(self, cases, ID, nodes, elements, regions):
         eids = arange(1, len(elements) + 1, dtype='int32')

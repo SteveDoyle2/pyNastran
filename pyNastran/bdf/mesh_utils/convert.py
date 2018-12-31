@@ -232,16 +232,18 @@ def _convert_elements(model, xyz_scale, mass_scale, weight_scale):
 
         elif elem_type == 'CBAR':
             if elem.x is not None:
+                pass
                 # vector
                 #elem.x = [x*xyz_scale for x in elem.x]
-                elem.wa *= xyz_scale
-                elem.wb *= xyz_scale
+            elem.wa *= xyz_scale
+            elem.wb *= xyz_scale
         elif elem_type == 'CBEAM':
             if elem.x is not None:
+                pass
                 # vector
                 #elem.x = [x*xyz_scale for x in elem.x]
-                elem.wa *= xyz_scale
-                elem.wb *= xyz_scale
+            elem.wa *= xyz_scale
+            elem.wb *= xyz_scale
         elif elem_type == 'GENEL':
             # I'm pretty sure [S] this is unitless
             if elem.k is not None:
@@ -831,7 +833,7 @@ def _convert_optimization(model, xyz_scale, mass_scale, weight_scale):
     for unused_key, dvmrel in model.dvmrels.items():
         raise NotImplementedError(dvmrel)
 
-    for key, dvprel in model.dvprels.items():
+    for unused_key, dvprel in model.dvprels.items():
         if dvprel.type == 'DVPREL1':
             scale = _convert_dvprel1(dvprel, xyz_scale, mass_scale, weight_scale)
             desvars = dvprel.dvids_ref
@@ -904,6 +906,7 @@ def _convert_dvprel1(dvprel, xyz_scale, mass_scale, weight_scale):
     force_scale = weight_scale
     velocity_scale = xyz_scale / time_scale
     #pressure_scale = weight_scale / xyz_scale ** 2
+    stress_scale = weight_scale / xyz_scale ** 2
     stiffness_scale = force_scale / xyz_scale
     damping_scale = force_scale / velocity_scale
 
@@ -917,20 +920,22 @@ def _convert_dvprel1(dvprel, xyz_scale, mass_scale, weight_scale):
             scale = xyz_scale
         elif var_to_change in [6, 8]: # 12I/t^3, ts/t
             scale = 1.
-        else:
-            raise NotImplementedError(dvprel)
+        else:  # pragma: no cover
+            raise NotImplementedError('cannot convert %r\n%s' % (var_to_change, dvprel))
     elif prop_type == 'PCOMP':
-        if var_to_change.startswith('THETA'):
+        if var_to_change.startswith('THETA') or var_to_change == 'GE':
             return scale
-        if var_to_change.startswith('T'):
+        elif var_to_change.startswith('T') or var_to_change == 'Z0':
             scale = xyz_scale
-        else:
-            raise NotImplementedError(dvprel)
+        elif var_to_change == 'SB': # Allowable shear stress of the bonding material
+            scale = stress_scale
+        else:  # pragma: no cover
+            raise NotImplementedError('cannot convert %r\n%s' % (var_to_change, dvprel))
     elif prop_type == 'PBARL':
         if var_to_change.startswith('DIM'):
             scale = xyz_scale
-        else:
-            raise NotImplementedError(dvprel)
+        else:  # pragma: no cover
+            raise NotImplementedError('cannot convert %r\n%s' % (var_to_change, dvprel))
     elif prop_type == 'PBEAM':
         if isinstance(prop_type, string_types):
             word, unused_num = break_word_by_trailing_parentheses_integer_ab(
@@ -949,25 +954,25 @@ def _convert_dvprel1(dvprel, xyz_scale, mass_scale, weight_scale):
     elif prop_type == 'PBEAML':
         if var_to_change.startswith('DIM'):
             scale = xyz_scale
-        else:
-            raise NotImplementedError(dvprel)
+        else:  # pragma: no cover
+            raise NotImplementedError('cannot convert %r\n%s' % (var_to_change, dvprel))
     elif prop_type == 'PSHEAR':
         if var_to_change == 'T':
             scale = xyz_scale
-        else:
-            raise NotImplementedError(dvprel)
+        else:  # pragma: no cover
+            raise NotImplementedError('cannot convert %r\n%s' % (var_to_change, dvprel))
     elif prop_type == 'PBUSH':
         if var_to_change in ['K1', 'K2', 'K3', 'K4', 'K5', 'K6']:
             scale = stiffness_scale
         elif var_to_change in ['B1', 'B2', 'B3', 'B4', 'B5', 'B6']:
             scale = damping_scale
-        else:
-            raise NotImplementedError(dvprel)
+        else:  # pragma: no cover
+            raise NotImplementedError('cannot convert %r\n%s' % (var_to_change, dvprel))
     elif prop_type == 'PGAP':
         if var_to_change in ['KA', 'KB', 'KT']:
             scale = stiffness_scale
-        else:
-            raise NotImplementedError(dvprel)
+        else:  # pragma: no cover
+            raise NotImplementedError('cannot convert %r\n%s' % (var_to_change, dvprel))
         ##: initial gap opening
         #prop.u0 *= xyz_scale
         ##: preload
@@ -980,25 +985,45 @@ def _convert_dvprel1(dvprel, xyz_scale, mass_scale, weight_scale):
             scale = damping_scale
         elif var_to_change in ['M']:
             scale = mass_scale
-        else:
-            raise NotImplementedError(dvprel)
+        else:  # pragma: no cover
+            raise NotImplementedError('cannot convert %r\n%s' % (var_to_change, dvprel))
 
     elif prop_type == 'PVISC':
         if var_to_change in ['CE1']:
             scale = force_scale / velocity_scale
-        else:
-            raise NotImplementedError(dvprel)
+        else:  # pragma: no cover
+            raise NotImplementedError('cannot convert %r\n%s' % (var_to_change, dvprel))
 
         #prop.ce *= force_scale / velocity_scale
         #prop.cr *= moment_scale / velocity_scale
     elif prop_type == 'PDAMP':
         if var_to_change in ['B1']:
             scale = force_scale / velocity_scale
-        else:
-            raise NotImplementedError(dvprel)
-
-    else:
-        raise NotImplementedError(dvprel)
+        else:  # pragma: no cover
+            raise NotImplementedError('cannot convert %r\n%s' % (var_to_change, dvprel))
+    elif prop_type == 'PBAR':
+        if var_to_change == 'A':
+            scale = area_scale
+        elif var_to_change in ['I1', 'I2', 'I12', 'J']:
+            scale = inertia_scale
+        else:  # pragma: no cover
+            raise NotImplementedError('cannot convert %r\n%s' % (var_to_change, dvprel))
+    elif prop_type == 'PROD':
+        if var_to_change == 'A':
+            scale = area_scale
+        elif var_to_change == 'J':
+            scale = inertia_scale
+        else:  # pragma: no cover
+            raise NotImplementedError('cannot convert %r\n%s' % (var_to_change, dvprel))
+    elif prop_type == 'PTUBE':
+        if var_to_change in ['OD', 'T']:
+            scale = xyz_scale
+        #elif var_to_change == 'J':
+            #scale = inertia_scale
+        else:  # pragma: no cover
+            raise NotImplementedError('cannot convert %r\n%s' % (var_to_change, dvprel))
+    else:  # pragma: no cover
+        raise NotImplementedError('cannot convert %r\n%s' % (prop_type, dvprel))
     return scale
 
 def scale_desvars(desvars, scale):
@@ -1151,18 +1176,18 @@ def convert_mass(mass_from, mass_to, log):
 
     #gravity_english = 9.80665 / .3048 #= 32.174; exact
     gravity_english_ft = 32.174
-    gravity_english_in = gravity_english_ft * 12. #32.2 * 12.
+    #gravity_english_in = gravity_english_ft * 12. #32.2 * 12.
 
     slug_to_kg = 14.5939
     slinch_to_kg = 12. * slug_to_kg  # 1 slinch = 12 slug
 
-    slinch_to_lbf = gravity_english_in
-    slug_to_lbf = gravity_english_ft
+    #slinch_to_lbf = gravity_english_in
+    #slug_to_lbf = gravity_english_ft
     lbf_to_newton = 4.4482216152605
     lbm_to_kg = 0.45359237
 
-    slug_to_newton = slug_to_lbf * lbf_to_newton
-    slinch_to_newton = slinch_to_lbf * lbf_to_newton
+    #slug_to_newton = slug_to_lbf * lbf_to_newton
+    #slinch_to_newton = slinch_to_lbf * lbf_to_newton
 
     #if mass_from == mass_to:
         #return mass_scale, weight_scale, gravity_scale
@@ -1195,7 +1220,8 @@ def convert_mass(mass_from, mass_to, log):
         #gravity_scale_mass /= gravity_english_in # in/s^2 to m/s^2
 
     else:
-        raise NotImplementedError('mass from unit=%r; expected=[g, kg, Mg, lbm, slug, slinch]' % mass_from)
+        raise NotImplementedError('mass from unit=%r; '
+                                  'expected=[g, kg, Mg, lbm, slug, slinch]' % mass_from)
 
     # convert from kg
     if mass_to == 'kg':
@@ -1224,7 +1250,8 @@ def convert_mass(mass_from, mass_to, log):
         #mass_scale /= 175.126836
         #gravity_scale_mass *= gravity_english_in # in/s^2 to m/s^2
     else:
-        raise NotImplementedError('mass to unit=%r; expected=[g, kg, Mg, lbm, slug, slinch]' % mass_to)
+        raise NotImplementedError('mass to unit=%r; '
+                                  'expected=[g, kg, Mg, lbm, slug, slinch]' % mass_to)
 
     #print("weight_scale = ", mass_from, mass_to, weight_scale)
     return mass_scale, weight_scale, gravity_scale_mass

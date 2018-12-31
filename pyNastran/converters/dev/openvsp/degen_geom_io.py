@@ -26,6 +26,7 @@ class DegenGeomIO(object):
 
     def load_degen_geom_geometry(self, csv_filename,
                                  name='main', plot=True):# pragma: no cover
+        model_name = name
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]
 
@@ -92,9 +93,6 @@ class DegenGeomIO(object):
 
         grid.SetPoints(points)
         grid.Modified()
-        if hasattr(grid, 'Update'):  # pragma: no cover
-            grid.Update()
-        #self.log_info("updated grid")
 
         # load results - regions/loads
         self.gui.scalar_bar_actor.VisibilityOn()
@@ -112,7 +110,7 @@ class DegenGeomIO(object):
         form, cases, node_ids, element_ids = _fill_degen_geom_case(cases, ID, model, nnodes, nelements)
         self.gui.node_ids = node_ids
         self.gui.element_ids = element_ids
-        self.gui._finish_results_io2(form, cases)
+        self.gui._finish_results_io2(model_name, form, cases)
 
     #def clear_adb(self):
         #pass

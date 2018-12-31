@@ -123,6 +123,7 @@ class Usm3dIO(object):
                                  is_geometry=False)
 
     def load_usm3d_geometry(self, cogsg_filename, name='main', plot=True):
+        model_name = name
         skip_reading = self.gui._remove_old_geometry(cogsg_filename)
         if skip_reading:
             return
@@ -207,8 +208,6 @@ class Usm3dIO(object):
 
         grid.SetPoints(points)
         grid.Modified()
-        if hasattr(grid, 'Update'):  # pragma: no cover
-            grid.Update()
 
         self.gui.node_ids = node_ids
         self.gui.element_ids = element_ids
@@ -221,7 +220,7 @@ class Usm3dIO(object):
         form, cases = self._fill_usm3d_results(cases, form,
                                                bcs, mapbc, bcmap_to_bc_name, loads,
                                                is_geometry=True)
-        self.gui._finish_results_io2(form, cases)
+        self.gui._finish_results_io2(model_name, form, cases)
 
     def clear_usm3d(self):
         """dummy function"""

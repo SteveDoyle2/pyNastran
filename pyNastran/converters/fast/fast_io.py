@@ -24,6 +24,7 @@ class FastIO(object):
         return data
 
     def load_fast_geometry(self, fgrid_filename, name='main', plot=True):
+        model_name = name
         skip_reading = self.gui._remove_old_geometry(fgrid_filename)
         if skip_reading:
             return
@@ -105,8 +106,6 @@ class FastIO(object):
 
         grid.SetPoints(points)
         grid.Modified()
-        if hasattr(grid, 'Update'):  # pragma: no cover
-            grid.Update()
 
         # regions/loads
         self.gui.scalar_bar_actor.Modified()
@@ -120,7 +119,7 @@ class FastIO(object):
             results=True)
         self.gui.node_ids = node_ids
         self.gui.element_ids = element_ids
-        self.gui._finish_results_io2(form, cases)
+        self.gui._finish_results_io2(model_name, form, cases)
 
     def clear_fast(self):
         pass

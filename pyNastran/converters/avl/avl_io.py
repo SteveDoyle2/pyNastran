@@ -23,6 +23,7 @@ class AVL_IO(object):
 
     def load_avl_geometry(self, avl_filename,
                           name='main', plot=True):
+        model_name = name
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]
 
@@ -91,9 +92,6 @@ class AVL_IO(object):
 
         grid.SetPoints(points)
         grid.Modified()
-        if hasattr(grid, 'Update'):  # pragma: no cover
-            grid.Update()
-        #self.log_info("updated grid")
 
         # load results - regions/loads
         self.gui.scalar_bar_actor.VisibilityOn()
@@ -108,7 +106,7 @@ class AVL_IO(object):
             cases, ID, nnodes, nelements, surfaces)
         self.gui.node_ids = node_ids
         self.gui.element_ids = element_ids
-        self.gui._finish_results_io2(form, cases)
+        self.gui._finish_results_io2(model_name, form, cases)
 
     #def clear_adb(self):
         #pass

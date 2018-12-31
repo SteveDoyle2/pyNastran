@@ -115,10 +115,72 @@ class NullResult(GuiResultCommon):
         msg = '<NormalResult>'
         return msg
 
+class GridPointForceResult(GuiResultCommon):
+    def __init__(self, subcase_id, header, title, gpforce_array, uname='GridPointForceResult'):
+        """
+        Parameters
+        ----------
+        subcase_id : int
+            the flag that points to self.subcases for a message
+        header : str
+            the sidebar word
+        title : str
+            the legend title
+        uname : str
+            some unique name for ...
+        """
+        GuiResultCommon.__init__(self)
+
+        self.subcase_id = subcase_id
+        self.title = title
+        self.header = header
+        #self.scale = scale
+        #self.location = location
+        self.location = 'node'
+        self.subcase_id = subcase_id
+        self.uname = uname
+        super(GridPointForceResult, self).__init__()
+        self.gpforce_array = gpforce_array
+
+    def get_scalar(self, i, name):
+        return None
+
+    def get_result(self, i, name):
+        return None
+    def get_title(self, i, name):
+        return self.title
+    def get_header(self, i, name):
+        return self.header
+    def get_methods(self, i):
+        return None
+    def get_data_format(self, i, name):
+        return None
+    def get_nlabels_labelsize_ncolors_colormap(self, i, name):
+        return None, None, None, None
+    def get_default_data_format(self, i, name):
+        return None
+    def get_default_min_max(self, i, name):
+        return None, None
+    def get_default_title(self, i, name):
+        return self.title
+    def get_default_nlabels_labelsize_ncolors_colormap(self, i, name):
+        return None, None, None, None
+    def set_nlabels_labelsize_ncolors_colormap(self, i, name, nlabels, labelsize, ncolors, colormap):
+        return
+    def get_min_max(self, i, name):
+        return None, None
+
+    #def get_default_min_max(self, i, name):
+        #return None, None
+
+    def __repr__(self):
+        msg = '<GridPointForceResult>'
+        return msg
+
 class NormalResult(GuiResultCommon):
     def __init__(self, subcase_id, header, title,
                  nlabels=2, labelsize=5, ncolors=2, colormap='jet',
-                 data_format='%.1f', uname='GuiResult'):
+                 data_format='%.1f', uname='NormalResult'):
         """
         subcase_id : int
             the flag that points to self.subcases for a message
@@ -155,6 +217,7 @@ class NormalResult(GuiResultCommon):
         self.max_value = 1.
         self.min_default = -1.
         self.max_default = 1.
+        self.uname = uname
 
     def get_data_type(self, i, name):
         #print('Aname=%r data_type=%s fmt=%s' % (self.title, self.data_type, self.data_format))

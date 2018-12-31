@@ -33,6 +33,7 @@ class PanairIO(object):
         return data
 
     def load_panair_geometry(self, panair_filename, name='main', plot=True):
+        model_name = name
         self.gui.nid_map = {}
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]
@@ -77,8 +78,6 @@ class PanairIO(object):
 
         grid.SetPoints(points)
         grid.Modified()
-        if hasattr(grid, 'Update'):
-            grid.Update()
 
         # loadPanairResults - regions/loads
         if plot:
@@ -96,7 +95,7 @@ class PanairIO(object):
         self.gui.element_ids = element_ids
 
         #if plot:
-        self.gui._finish_results_io2(form, cases)
+        self.gui._finish_results_io2(model_name, form, cases)
         #else:
         #self._set_results([form], cases)
 
@@ -224,6 +223,7 @@ class PanairIO(object):
         return form, cases, nids, eids
 
     def load_panair_results(self, panair_filename):
+        model_name = name
         #colormap = self.colormap
         colormap = 'jet'
         cases = self.gui.result_cases
@@ -308,7 +308,7 @@ class PanairIO(object):
 
 
         #cases[icase + 1] = (Cpc_res, (0, 'Cp_centroidal'))
-        self.gui._finish_results_io2(form, cases)
+        self.gui._finish_results_io2(model_name, form, cases)
 
 def add_networks(out_networks, out_headers, is_beta0,
                  ID, icase, cases, geom_model, nelements, colormap='jet'):

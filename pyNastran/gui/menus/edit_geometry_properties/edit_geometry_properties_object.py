@@ -335,8 +335,5 @@ class EditGeometryPropertiesObject(object):
             #print(unused_point, node)
             points.SetPoint(2 * i + 1, *node)
 
-        if hasattr(grid, 'Update'):
-            #print('update....')
-            grid.Update()
         grid.Modified()
         #print('update2...')

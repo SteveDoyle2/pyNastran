@@ -26,6 +26,7 @@ class ShabpIO(object):
         return data
 
     def load_shabp_geometry(self, shabp_filename, name='main', plot=True):
+        model_name = name
         self.gui.eid_maps[name] = {}
         self.gui.nid_maps[name] = {}
 
@@ -76,8 +77,6 @@ class ShabpIO(object):
 
         grid.SetPoints(points)
         grid.Modified()
-        if hasattr(grid, 'Update'):  # pragma: no cover
-            grid.Update()
 
         # loadShabpResults - regions/loads
         self.gui.scalar_bar_actor.VisibilityOn()
@@ -97,7 +96,7 @@ class ShabpIO(object):
         element_ids = np.arange(1, nelements + 1, dtype='int32')
         self.gui.node_ids = node_ids
         self.gui.element_ids = element_ids
-        self.gui._finish_results_io2(form, cases)
+        self.gui._finish_results_io2(model_name, form, cases)
 
     def clear_shabp(self):
         del seguient.elements
@@ -229,6 +228,7 @@ class ShabpIO(object):
         return form, cases
 
     def load_shabp_results(self, shabp_filename):
+        model_name = 'main'
         Cpd, deltad = self.model.read_shabp_out(shabp_filename)
 
         cases = self.gui.result_cases
@@ -253,4 +253,4 @@ class ShabpIO(object):
 
         for mach, mach_form in sorted(mach_forms.items()):
             mach_results.append(mach_form)
-        self.gui._finish_results_io2(form, cases)
+        self.gui._finish_results_io2(model_name, form, cases)

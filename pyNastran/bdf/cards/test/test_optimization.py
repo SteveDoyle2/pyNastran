@@ -662,6 +662,241 @@ class TestOpt(unittest.TestCase):
         model.cross_reference()
         save_load_deck(model)
 
+    def test_rod_dvprel(self):
+        """tests CROD and DVPREL1"""
+        model = BDF(debug=True, log=None, mode='msc')
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+
+        mid = 10
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu)
+        #---------------------------------------------
+        eid = 2
+        pid = 2
+        nids = [1, 2]
+        model.add_crod(eid, pid, nids, comment='')
+        model.add_conrod(eid+1, mid, nids, A=0.0, j=0.0, c=0.0, nsm=0.0, comment='')
+
+        A = 2.0
+        model.add_prod(pid, mid, A, j=0., c=0., nsm=0., comment='')
+
+        OD1 = 1.
+        t = 0.1
+        model.add_ctube(eid+2, pid+1, nids, comment='')
+        model.add_ptube(pid+1, mid, OD1, t=None, nsm=0., OD2=None, comment='')
+
+        dvprels = [
+            #oid, pid, prop_type, pname_fid
+            (1, pid, 'PROD', 'A'),
+            (2, pid, 'PROD', 'J'),
+            #-----------
+            (3, pid+1, 'PTUBE', 'OD'),
+            (4, pid+1, 'PTUBE', 'T'),
+        ]
+        coeffs = [1.0]
+        xinit = 1.0
+        for dvprel_data in dvprels:
+            oid, pid, prop_type, pname_fid = dvprel_data
+            dvids = [oid]
+            desvar_id = oid
+
+            dim_label = pname_fid
+            prop_label = prop_type
+            #if pname_fid.startswith('DIM'):
+                #dim_label = 'D%s' % pname_fid[-1]
+            #if prop_type == 'PBEAML':
+                #prop_label = 'PBML'
+            #elif prop_type == 'PBEAM':
+                #prop_label = 'PBM'
+            label = '%s%s%s' % (prop_label, dim_label, pid)
+
+            model.add_desvar(desvar_id, label, xinit,
+                             xlb=-1e20, xub=1e20, delx=None, ddval=None, comment='')
+            model.add_dvprel1(oid, prop_type, pid, pname_fid, dvids, coeffs,
+                              p_min=None, p_max=1e20, c0=0.0, validate=True, comment='')
+
+        model.cross_reference()
+        save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
+                       run_convert=True, run_renumber=True, run_mirror=True,
+                       run_save_load=True, run_quality=True,
+                       write_saves=True, run_save_load_hdf5=True)
+
+    def test_cbar_dvprel(self):
+        """tests CBAR and DVPREL1"""
+        model = BDF(debug=True, log=None, mode='msc')
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [0., 0., 1.])
+
+        mid = 10
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu)
+        #---------------------------------------------
+        eid = 2
+        pid = 2
+        nids = [1, 2]
+        x = None
+        g0 = 3
+        wa = [0., 0., 0.1]
+        wb = [0., 0., 0.1]
+        model.add_cbar(eid, pid, nids, x, g0, offt='GGG', pa=0, pb=0, wa=wa, wb=wb, comment='')
+        model.add_cbar(eid+1, pid+1, nids, x, g0, offt='GGG', pa=0, pb=0, wa=wa, wb=wb, comment='')
+
+        model.add_cbeam(eid+2, pid+2, nids, x, g0, offt='GGG', bit=None, pa=0, pb=0,
+                        wa=wa, wb=wb, sa=0, sb=0, comment='')
+        model.add_cbeam(eid+3, pid+3, nids, x, g0, offt='GGG', bit=None, pa=0, pb=0,
+                        wa=wa, wb=wb, sa=0, sb=0, comment='')
+
+        model.add_pbar(pid, mid, A=0., i1=0., i2=0., i12=0., j=0., nsm=0.,
+                       c1=0., c2=0., d1=0., d2=0., e1=0., e2=0., f1=0., f2=0.,
+                       k1=1.e8, k2=1.e8, comment='')
+        Type = 'BAR'
+        dim = [0.1, 0.2]
+        model.add_pbarl(pid+1, mid, Type, dim, group='MSCBML0', nsm=0., comment='')
+
+        #---------------------
+        xxb = [0.]
+        so = ['YES']
+        area = [1.0]
+        i1 = [1.]
+        i2 = [2.]
+        i12 = [0.4]
+        j = [0.3]
+        nsm = [0.]
+        model.add_pbeam(pid+2, mid, xxb, so, area, i1, i2, i12, j, nsm,
+                        c1=None, c2=None, d1=None, d2=None, e1=None, e2=None, f1=None, f2=None,
+                        k1=1., k2=1., s1=0., s2=0., nsia=0., nsib=None, cwa=0., cwb=None,
+                        m1a=0., m2a=None, m1b=0., m2b=None, n1a=0., n2a=None, n1b=0., n2b=None,
+                        comment='')
+        beam_type = 'BAR'
+        dims = [dim]
+        model.add_pbeaml(pid+3, mid, beam_type, xxb, dims, so=None, nsm=None, group='MSCBML0', comment='')
+
+        dvprels = [
+            #oid, pid, prop_type, pname_fid
+            (1, pid, 'PBAR', 'A'),
+            (2, pid, 'PBAR', 'J'),
+            (3, pid, 'PBAR', 'I1'),
+            (4, pid, 'PBAR', 'I2'),
+            (5, pid, 'PBAR', 'I12'),
+            (6, pid+1, 'PBARL', 'DIM1'),
+            (7, pid+1, 'PBARL', 'DIM2'),
+            #-----------
+            (8, pid+2, 'PBEAM', 'A'),
+            (9, pid+2, 'PBEAM', 'J'),
+            (10, pid+2, 'PBEAM', 'I1'),
+            (11, pid+2, 'PBEAM', 'I2'),
+            (12, pid+2, 'PBEAM', 'I12'),
+            (13, pid+2, 'PBEAM', 'J'),
+            (14, pid+3, 'PBEAML', 'DIM1'),
+            (15, pid+3, 'PBEAML', 'DIM2'),
+        ]
+        coeffs = [1.0]
+        xinit = 1.0
+        for dvprel_data in dvprels:
+            oid, pid, prop_type, pname_fid = dvprel_data
+            dvids = [oid]
+            desvar_id = oid
+
+            dim_label = pname_fid
+            prop_label = prop_type
+            if pname_fid.startswith('DIM'):
+                dim_label = 'D%s' % pname_fid[-1]
+            if prop_type == 'PBEAML':
+                prop_label = 'PBML'
+            elif prop_type == 'PBEAM':
+                prop_label = 'PBM'
+            label = '%s%s%s' % (prop_label, dim_label, pid)
+
+            model.add_desvar(desvar_id, label, xinit,
+                             xlb=-1e20, xub=1e20, delx=None, ddval=None, comment='')
+            model.add_dvprel1(oid, prop_type, pid, pname_fid, dvids, coeffs,
+                              p_min=None, p_max=1e20, c0=0.0, validate=True, comment='')
+
+        model.cross_reference()
+        save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
+                       run_convert=True, run_renumber=True, run_mirror=True,
+                       run_save_load=True, run_quality=True,
+                       write_saves=True, run_save_load_hdf5=True)
+
+    def test_shell_dvprel(self):
+        """tests CBAR and DVPREL1"""
+        model = BDF(debug=True, log=None, mode='msc')
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+
+        mid = 10
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu)
+        #---------------------------------------------
+        eid = 2
+        pid = 2
+        nids = [1, 2, 3, 4]
+        model.add_cquad4(eid, pid, nids, theta_mcid=0.0, zoffset=0., tflag=0,
+                         T1=None, T2=None, T3=None, T4=None, comment='')
+        nids = [1, 2, 3]
+        model.add_ctria3(eid+1, pid+1, nids, zoffset=0., theta_mcid=0.0, tflag=0,
+                         T1=None, T2=None, T3=None, comment='')
+
+        model.add_pshell(pid, mid1=mid, t=0.1, mid2=mid, twelveIt3=1.0, mid3=mid,
+                         tst=0.833333, nsm=0.0, z1=None, z2=None, mid4=None, comment='')
+
+        mids = [mid] * 3
+        thicknesses = [0.1] * 3
+        model.add_pcomp(pid+1, mids, thicknesses, thetas=None, souts=None,
+                        nsm=0., sb=0., ft=None, tref=0., ge=0., lam=None, z0=None, comment='')
+        #---------------------
+        dvprels = [
+            #oid, pid, prop_type, pname_fid
+            (1, pid, 'PSHELL', 'T'),
+
+            (2, pid+1, 'PCOMP', 'T1'),
+            (3, pid+1, 'PCOMP', 'T2'),
+            (4, pid+1, 'PCOMP', 'T3'),
+
+            (5, pid+1, 'PCOMP', 'THETA1'),
+            (6, pid+1, 'PCOMP', 'THETA2'),
+            (7, pid+1, 'PCOMP', 'THETA3'),
+            (8, pid+1, 'PCOMP', 'SB'),
+            (9, pid+1, 'PCOMP', 'GE'),
+            (10, pid+1, 'PCOMP', 'Z0'),
+        ]
+        coeffs = [1.0]
+        xinit = 1.0
+        for dvprel_data in dvprels:
+            oid, pid, prop_type, pname_fid = dvprel_data
+            dvids = [oid]
+            desvar_id = oid
+
+            dim_label = pname_fid
+            prop_label = prop_type
+            if pname_fid.startswith('THETA'):
+                dim_label = 'TH%s' % pname_fid[-1]
+            if prop_type == 'PCOMP':
+                prop_label = 'COMP'
+            #elif prop_type == 'PBEAM':
+                #prop_label = 'PBM'
+            label = '%s%s%s' % (prop_label, dim_label, pid)
+
+            model.add_desvar(desvar_id, label, xinit,
+                             xlb=-1e20, xub=1e20, delx=None, ddval=None, comment='')
+            model.add_dvprel1(oid, prop_type, pid, pname_fid, dvids, coeffs,
+                              p_min=None, p_max=1e20, c0=0.0, validate=True, comment='')
+
+        model.cross_reference()
+        save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
+                       run_convert=True, run_renumber=True, run_mirror=True,
+                       run_save_load=True, run_quality=True,
+                       write_saves=True, run_save_load_hdf5=True)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

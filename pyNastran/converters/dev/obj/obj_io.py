@@ -70,6 +70,7 @@ class ObjIO(object):
             should the model be generated or should we wait until
             after the results are loaded
         """
+        model_name = name
         skip_reading = self._remove_old_obj_geometry(obj_filename)
         if skip_reading:
             return
@@ -125,12 +126,8 @@ class ObjIO(object):
                 elem.GetPointIds().SetId(2, element[2])
                 elem.GetPointIds().SetId(3, element[3])
                 grid.InsertNextCell(quad_etype, elem.GetPointIds())
-
         grid.SetPoints(points)
         grid.Modified()
-        if hasattr(grid, 'Update'):  # pragma: no cover
-            grid.Update()
-
 
         self.gui.scalar_bar_actor.VisibilityOn()
         self.gui.scalar_bar_actor.Modified()
@@ -142,7 +139,7 @@ class ObjIO(object):
             cases, ID, nodes, nelements, model)
         self.gui.node_ids = node_ids
         self.gui.element_ids = element_ids
-        self.gui._finish_results_io2(form, cases)
+        self.gui._finish_results_io2(model_name, form, cases)
 
     def clear_obj(self):
         pass

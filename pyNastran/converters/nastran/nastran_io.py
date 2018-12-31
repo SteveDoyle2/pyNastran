@@ -200,6 +200,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         """
         hides the Nastran toolbar when loading another format
         """
+        self.nastran_tools_menu.setVisiblnastran_tools_menue(False)
+
         #self.menu_help.menuAction().setVisible(True)
         #self.menu_help2.menuAction().setVisible(False)
         self.nastran_toolbar.setVisible(False)
@@ -218,9 +220,13 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #self.gui.menu_help2 = self.gui.menubar.addMenu('&HelpMenuNew')
         #self.gui.menu_help.menuAction().setVisible(False)
         if hasattr(self, 'nastran_toolbar'):
+            self.nastran_tools_menu.setVisible(True)
             self.gui.nastran_toolbar.setVisible(True)
             self.gui.actions['nastran'].setVisible(True)
         else:
+            #self.menubar.addMenu('&File')
+            self.create_nastran_tools_menu(self.gui)
+
             self.gui.nastran_toolbar = self.addToolBar('Nastran Toolbar')
             self.gui.nastran_toolbar.setObjectName('nastran_toolbar')
             #self.gui.nastran_toolbar.setStatusTip("Show/Hide nastran toolbar")
@@ -241,6 +247,27 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             #(self.menu_help2, ('load_geometry', 'load_results', 'script', '', 'exit')),
 
         return tools, menu_items
+
+    def on_create_coord(self):
+        pass
+
+    def create_nastran_tools_menu(self, gui):
+        nastran_tools_menu = gui.menubar.addMenu('Tools')
+        gui.nastran_tools_menu = nastran_tools_menu
+
+        tools = [
+            #('script', 'Run Python Script...', 'python48.png', None, 'Runs pyNastranGUI in batch mode', self.on_run_script),
+            ('shear_moment_torque', 'Shear, Moment, Torque...', 'python48.png', None,
+             'Creates a Shear, Moment, Torque Plot', self.shear_moment_torque_obj.set_shear_moment_torque_menu),
+            ('create_coord', 'Create Coordinate System...', 'coord.png', None, 'Creates a Coordinate System', self.on_create_coord),
+        ]
+        items = ('shear_moment_torque', 'create_coord')
+        menu_items = {
+            'nastran_tools' : (nastran_tools_menu, items),
+        }
+        icon_path = ''
+        gui._prepare_actions_helper(icon_path, tools, self.actions, checkables=None)
+        gui._populate_menu(menu_items, actions=self.actions)
 
     def toggle_caero_panels(self):
         """
@@ -720,6 +747,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             should the model be generated or should we wait until
             after the results are loaded
         """
+        model_name = 'main'
         #self.isubcase_name_map[None] = ['a', 'b']
         reset_labels = True
         if plot:
@@ -1020,7 +1048,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #self.gui.grid_mapper.SetResolveCoincidentTopologyToPolygonOffset()
         if 0:
             if plot:
-                self.gui._finish_results_io2([form], cases, reset_labels=reset_labels)
+                self.gui._finish_results_io2(model_name, [form], cases, reset_labels=reset_labels)
             else:
                 self.gui._set_results([form], cases)
 
@@ -1755,6 +1783,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             should the model be generated or should we wait until
             after the results are loaded
         """
+        model_name = 'main'
         reset_labels = True
         if plot:
             self.gui.scalar_bar_actor.VisibilityOff()
@@ -1931,7 +1960,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         #self.grid_mapper.SetResolveCoincidentTopologyToPolygonOffset()
         if plot:
-            self.gui._finish_results_io2([form], cases, reset_labels=reset_labels)
+            self.gui._finish_results_io2(model_name, [form], cases, reset_labels=reset_labels)
         else:
             self.gui._set_results([form], cases)
 
@@ -4037,8 +4066,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         self.set_glyph_scale_factor(np.nanmean(min_edge_length) * 2.5)  # was 1.5
 
         grid.Modified()
-        if hasattr(grid, 'Update'):  # pragma: no cover
-            grid.Update()
         #----------------------------------------------------------
         # finishing up parameters
         self.node_ids = all_nids
@@ -4088,9 +4115,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         #self.grid_mapper.SetResolveCoincidentTopologyToPolygonOffset()
         grid.Modified()
-        if hasattr(grid, 'Update'):  # pragma: no cover
-            grid.Update()
-        #self.gui.log_info("updated grid")
 
         cases = OrderedDict()
 
@@ -6723,6 +6747,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         """
         Loads the Nastran results into the GUI
         """
+        model_name = 'main'
         self.scalar_bar_actor.VisibilityOn()
         self.scalar_bar_actor.Modified()
 
@@ -6868,7 +6893,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                                 # in iteritems(model.isubcase_name_map)}
 
         form = self._fill_op2_output(results_filename, cases, model, form, icase)
-        self._finish_results_io2(form, cases)
+        self._finish_results_io2(model_name, form, cases)
 
         #name = 'spike'
         #eids = np.arange(10, 40)
@@ -6948,6 +6973,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             ncases_old = icase
             icase = self._fill_op2_oug_oqg(cases, model, key, icase,
                                            disp_dict, header_dict, keys_map)
+
+            icase = self._fill_grid_point_forces(cases, model, key, icase, disp_dict)
             ncases = icase - ncases_old
             #print('ncases=%s icase=%s' % (ncases, icase))
             #assert ncases > 0, ncases
@@ -6958,7 +6985,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 for itime, unused_dt in enumerate(times):
                     new_key = (key, itime)
                     key_itime.append(new_key)
-
 
             for itime, unused_dt in enumerate(times):
                 ncases_old = icase

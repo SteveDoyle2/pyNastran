@@ -62,6 +62,7 @@ class UGRID_IO(object):
             should the model be generated or should we wait until
             after the results are loaded
         """
+        model_name = name
         #skip_reading = self.remove_old_openfoam_geometry(openfoam_filename)
         #if skip_reading:
         #    return
@@ -168,8 +169,6 @@ class UGRID_IO(object):
         self.gui.nelements = nelements
         grid.SetPoints(points)
         grid.Modified()
-        if hasattr(grid, 'Update'):  # pragma: no cover
-            grid.Update()
 
         # loadCart3dResults - regions/loads
         self.gui.scalar_bar_actor.VisibilityOn()
@@ -189,7 +188,7 @@ class UGRID_IO(object):
         self.gui.node_ids = node_ids
         self.gui.element_ids = element_ids
         if plot:
-            self.gui._finish_results_io2(form, cases)
+            self.gui._finish_results_io2(model_name, form, cases)
 
     def _add_ugrid_nodes_to_grid(self, name, diff_node_ids, nodes):
         """

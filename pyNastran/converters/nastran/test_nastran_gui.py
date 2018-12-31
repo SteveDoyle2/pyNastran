@@ -4,6 +4,8 @@ from copy import deepcopy
 import unittest
 
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
 import vtk
 
 from pyNastran.bdf.cards.test.test_aero import get_zona_model
@@ -43,6 +45,24 @@ class TestNastranGUI(unittest.TestCase):
         test.load_nastran_results(op2_filename)
         test.cycle_results()
         test.on_rcycle_results()
+
+        p1 = [0., 0., 0.]
+        p3 = [1., 0., 0.]
+
+        p2 = [0., 1., 0.]
+        zaxis = [0., 0., 1.]
+        #print('test.result_cases', test.result_cases)
+        #gpforce = test.model.grid_point_forces[1]
+        case, (unused_i, unused_name) = test.result_cases[58]
+        gpforce = case.gpforce_array
+        model_name = 'main'
+        test.shear_moment_torque_obj.plot_shear_moment_torque(
+            model_name, gpforce,
+            p1, p2, p3, zaxis,
+            method='Z-Axis Projection',
+            cid_p1=0, cid_p2=0, cid_p3=0, cid_zaxis=0,
+            nplanes=20, plane_color=None, plane_opacity=0.5,
+            csv_filename=None, show=False)
 
     def test_solid_shell_bar_02(self):
         bdf_filename = os.path.join(MODEL_PATH, 'sol_101_elements', 'mode_solid_shell_bar.bdf')

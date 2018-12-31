@@ -30,6 +30,7 @@ class AbaqusIO(object):
 
     def load_abaqus_geometry(self, abaqus_filename, name='main', plot=True):
         """loads abaqus input files into the gui"""
+        model_name = name
         skip_reading = self.gui._remove_old_geometry(abaqus_filename)
         if skip_reading:
             return
@@ -258,8 +259,6 @@ class AbaqusIO(object):
 
         grid.SetPoints(points)
         grid.Modified()
-        if hasattr(grid, 'Update'):  # pragma: no cover
-            grid.Update()
 
         # loadCart3dResults - regions/loads
         self.gui.scalar_bar_actor.VisibilityOn()
@@ -275,7 +274,7 @@ class AbaqusIO(object):
 
         self.gui.node_ids = node_ids
         self.gui.element_ids = element_ids
-        self.gui._finish_results_io2(form, cases)
+        self.gui._finish_results_io2(model_name, form, cases)
 
     def clear_abaqus(self):
         """does nothing"""

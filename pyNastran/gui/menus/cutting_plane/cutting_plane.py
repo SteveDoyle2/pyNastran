@@ -482,29 +482,14 @@ class CuttingPlaneWindow(PyDialog):
         p1 = [p1_x, p1_y, p1_z]
         p2 = [p2_x, p2_y, p2_z]
 
-        zaxis_method = str(self.zaxis_method_pulldown.currentText())
-        flag6, flag7, flag8 = True, True, True
-        if zaxis_method == 'Global Z':
-            zaxis = [0., 0., 1.]
-            zaxis_cid = 0
-        elif zaxis_method == 'Manual':
-            zaxis_x, flag6 = check_float(self.zaxis_x_edit)
-            zaxis_y, flag7 = check_float(self.zaxis_y_edit)
-            zaxis_z, flag8 = check_float(self.zaxis_z_edit)
-            zaxis = [zaxis_x, zaxis_y, zaxis_z]
-        elif zaxis_method == 'Camera Normal':
-            if self.win_parent is not None:
-                camera = self.win_parent.GetCamera()
-                zaxis = camera.GetViewPlaneNormal()
-            else:
-                zaxis = [1., 1., 1.]
-            zaxis_cid = 0
-        else:
-            raise NotImplementedError(zaxis_method)
+        flag6, flag7, flag8, zaxis_cid, zaxis = get_zaxis(
+            self.win_parent, # for camera
+            self.zaxis_method_pulldown,
+            self.zaxis_x_edit, self.zaxis_y_edit, self.zaxis_z_edit)
         #print('zaxis =', zaxis)
 
         method = self.method_pulldown.currentText()
-        assert method in self.methods, 'method=%r' % method
+        assert method in self.methods, 'method=%r' % method_check_color
         flag9 = True
 
         ytol, flag10 = check_float(self.ytol_edit)
@@ -523,7 +508,7 @@ class CuttingPlaneWindow(PyDialog):
             self.out_data['method'] = method
             self.out_data['p1'] = [p1_cid, p1]
             self.out_data['p2'] = [p2_cid, p2]
-            self.out_data['zaxis'] = [zaxis_method, zaxis_cid, zaxis]
+            self.out_data['zaxis'] = [zaxis_cid, zaxis]
             self.out_data['ytol'] = ytol
             self.out_data['zero_tol'] = zero_tol
             self.out_data['plane_color'] = self.plane_color_float
@@ -549,6 +534,29 @@ class CuttingPlaneWindow(PyDialog):
     def on_cancel(self):
         self.out_data['close'] = True
         self.close()
+
+
+def get_zaxis(win_parent, zaxis_method_pulldown, zaxis_x_edit, zaxis_y_edit, zaxis_z_edit):
+    zaxis_method = str(zaxis_method_pulldown.currentText())
+    flag1, flag2, flag3 = True, True, True
+    if zaxis_method == 'Global Z':
+        zaxis = [0., 0., 1.]
+        zaxis_cid = 0
+    elif zaxis_method == 'Manual':
+        zaxis_x, flag1 = check_float(zaxis_x_edit)
+        zaxis_y, flag2 = check_float(zaxis_y_edit)
+        zaxis_z, flag3 = check_float(zaxis_z_edit)
+        zaxis = [zaxis_x, zaxis_y, zaxis_z]
+    elif zaxis_method == 'Camera Normal':
+        if win_parent is not None:
+            camera = win_parent.GetCamera()
+            zaxis = camera.GetViewPlaneNormal()
+        else:
+            zaxis = [1., 1., 1.]
+        zaxis_cid = 0
+    else:
+        raise NotImplementedError(zaxis_method)
+    return flag1, flag2, flag3, zaxis_cid, zaxis
 
 def _check_color(color_float):
     assert len(color_float) == 3, color_float

@@ -80,6 +80,7 @@ class OpenFoamIO(object):
         self.load_openfoam_geometry(openfoam_filename, 'faces')
 
     def load_openfoam_geometry(self, openfoam_filename, mesh_3d, name='main', plot=True, **kwargs):
+        model_name = name
         #key = self.caseKeys[self.iCase]
         #case = self.resultCases[key]
 
@@ -266,8 +267,6 @@ class OpenFoamIO(object):
         self.gui.nelements = nelements
         grid.SetPoints(points)
         grid.Modified()
-        if hasattr(grid, 'Update'):  # pragma: no cover
-            grid.Update()
 
         self.gui.scalar_bar_actor.VisibilityOn()
         self.gui.scalar_bar_actor.Modified()
@@ -299,7 +298,7 @@ class OpenFoamIO(object):
         self.gui.node_ids = node_ids
         self.gui.element_ids = element_ids
         if plot:
-            self.gui._finish_results_io2(form, cases, reset_labels=reset_labels)
+            self.gui._finish_results_io2(model_name, form, cases, reset_labels=reset_labels)
         else:
             self.gui._set_results(form, cases)
 

@@ -749,8 +749,6 @@ class ToolActions(object):
             alt_geometry_actor.VisibilityOff()
 
         #print('current_actors = ', self.geometry_actors.keys())
-        if hasattr(grid, 'Update'):
-            grid.Update()
         alt_geometry_actor.Modified()
 
     #---------------------------------------------------------------------------
