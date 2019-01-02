@@ -284,6 +284,14 @@ class GuiAttributes(object):
 
     #-------------------------------------------------------------------
     # geom
+    def clear_actor(self, actor_name):
+        if actor_name in self.gui.alt_grids:
+            del self.alt_grids[actor_name]
+        if actor_name in self.geometry_actors:
+            actor = self.geometry_actors[actor_name]
+            self.rend.RemoveActor(actor)
+            del self.geometry_actors[actor_name]
+
     @property
     def grid(self):
         """gets the active grid"""
@@ -366,16 +374,43 @@ class GuiAttributes(object):
         self.eid_maps[self.name] = eid_map
 
     #-------------------------------------------------------------------
-    def set_quad_grid(self, name, nodes, elements, color, line_width=5, opacity=1., add=True):
+    def set_point_grid(self, name, nodes, elements, color,
+                       point_size=5, opacity=1., add=True):
+        """
+        Makes a POINT grid
+        """
+        self.create_alternate_vtk_grid(name, color=color, point_size=point_size,
+                                       opacity=opacity, representation='point')
+
+        nnodes = nodes.shape[0]
+        if nnodes == 0:
+            return
+
+        assert isinstance(nodes, np.ndarray), type(nodes)
+
+        points = numpy_to_vtk_points(nodes)
+        grid = self.alt_grids[name]
+        grid.SetPoints(points)
+
+        etype = 9  # vtk.vtkQuad().GetCellType()
+        create_vtk_cells_of_constant_element_type(grid, elements, etype)
+
+        if add:
+            self._add_alt_actors({name : self.alt_grids[name]})
+
+            #if name in self.geometry_actors:
+            self.geometry_actors[name].Modified()
+
+    def set_quad_grid(self, name, nodes, elements, color,
+                      line_width=5, opacity=1., representation='wire', add=True):
         """
         Makes a CQUAD4 grid
         """
         self.create_alternate_vtk_grid(name, color=color, line_width=line_width,
-                                       opacity=opacity, representation='wire')
+                                       opacity=opacity, representation=representation)
 
         nnodes = nodes.shape[0]
         nquads = elements.shape[0]
-        #print(nodes)
         if nnodes == 0:
             return
         if nquads == 0:
@@ -395,7 +430,7 @@ class GuiAttributes(object):
             self._add_alt_actors({name : self.alt_grids[name]})
 
             #if name in self.geometry_actors:
-            self.geometry_actors[name].Modified()
+        self.geometry_actors[name].Modified()
 
     def _add_alt_actors(self, grids_dict, names_to_ignore=None):
         if names_to_ignore is None:
@@ -411,7 +446,6 @@ class GuiAttributes(object):
         #print('names_old2 =', names_old)
         #print('names =', names)
         for name in names:
-            #print('adding %s' % name)
             grid = grids_dict[name]
             self.tool_actions._add_alt_geometry(grid, name)
 

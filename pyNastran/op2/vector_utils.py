@@ -30,8 +30,7 @@ from struct import calcsize
 from itertools import count
 
 import numpy as np
-from numpy import dot, arccos, sqrt, pi
-from numpy import cos, unique, cross
+from numpy import arccos, sqrt, pi, in1d, cos, unique, cross
 
 def filter1d(a, b=None, zero_tol=0.001):
     """
@@ -378,6 +377,10 @@ def abs_max_min_vector(values):
 
 
 def abs_max_min(values, global_abs_max=True):
+    """
+    Gets the maximum value of x and -x.
+    This is used for getting the max/min principal stress.
+    """
     if global_abs_max:
         return abs_max_min_global(values)
     return abs_max_min_vector(values)
@@ -411,7 +414,7 @@ def principal_3d(o11, o22, o33, o12, o23, o13):
 
 def transform_force(force_in_local,
                     coord_out, coords,
-                    nid_cd, icd_transform):
+                    nid_cd, unused_icd_transform):
     """
     Transforms force/moment from global to local and returns all the forces.
 
@@ -447,7 +450,7 @@ def transform_force(force_in_local,
     """
     force_out = np.zeros(force_in_local.shape, dtype=force_in_local.dtype)
 
-    nids = nid_cd[:, 0]
+    #nids = nid_cd[:, 0]
     cds = nid_cd[:, 1]
     ucds = unique(cds)
 
@@ -456,7 +459,7 @@ def transform_force(force_in_local,
 
     for cd in ucds:
         i = np.where(cds == cd)[0]
-        nidsi = nids[i]
+        #nidsi = nids[i]
         analysis_coord = coords[cd]
         cd_T = analysis_coord.beta()
 
@@ -510,7 +513,8 @@ def transform_force_moment(force_in_local, moment_in_local,
     force_out : (n, 3) float ndarray
         the ith float components in the coord_out coordinate frame
     moment_out : (n, 3) float ndarray
-        the ith moment components about the summation point in the coord_out coordinate frame
+        the ith moment components about the summation point in the
+        coord_out coordinate frame
 
     .. todo:: doesn't seem to handle cylindrical/spherical systems
 
@@ -521,7 +525,6 @@ def transform_force_moment(force_in_local, moment_in_local,
 
     xyz2 = T_2_to_0.T @ xyz0
     xyz2 = T_2_to_0.T @ T_1_to_0 @ xyz1
-
 
     xyz_g = T_a2g @ xyz_a
     xyz_g = T_b2g @ xyz_b
@@ -577,7 +580,6 @@ def transform_force_moment(force_in_local, moment_in_local,
         if debug:
             #logger.debug('analysis_coord =\n%s' % analysis_coord)
             logger.debug('beta_cd =\n%s' % beta_cd)
-
             logger.debug('i = %s' % i)
             logger.debug('force_in_local = %s' % force_in_local)
             logger.debug('force_in_local.sum() = %s' % force_in_local_sum)
@@ -591,7 +593,6 @@ def transform_force_moment(force_in_local, moment_in_local,
             force_in_locali = analysis_coord.coord_to_xyz_array(force_in_locali)
             moment_in_locali = analysis_coord.coord_to_xyz_array(moment_in_locali)
 
-
             if debug:
                 logger.debug('i = %s' % i)
                 logger.debug('nids = %s' % nidsi)
@@ -600,8 +601,8 @@ def transform_force_moment(force_in_local, moment_in_local,
         # rotate the forces/moments into a coordinate system coincident
         # with the local frame and with the same primary directions
         # as the global frame
-        force_in_globali = dot(force_in_locali, beta_cd)
-        moment_in_globali = dot(moment_in_locali, beta_cd)
+        force_in_globali = force_in_locali.dot(beta_cd)
+        moment_in_globali = moment_in_locali.dot(beta_cd)
 
         # rotate the forces and moments into a coordinate system coincident
         # with the output frame and with the same primary directions
@@ -610,8 +611,8 @@ def transform_force_moment(force_in_local, moment_in_local,
         #if 0 and np.array_equal(beta_out, eye):
             #force_outi = force_in_globali
             #moment_outi = moment_in_globali
-        force_outi = dot(force_in_globali, beta_out)
-        moment_outi = dot(moment_in_globali, beta_out)
+        force_outi = force_in_globali.dot(beta_out)
+        moment_outi = moment_in_globali.dot(beta_out)
 
         if debug:
             #if show_local:
@@ -634,7 +635,7 @@ def transform_force_moment(force_in_local, moment_in_local,
             delta = xyz_cid0[i, :] - summation_point_cid0[np.newaxis, :]
             rxf = cross(delta, force_in_globali)
 
-            rxf_in_cid = dot(rxf, beta_out)
+            rxf_in_cid = rxf.dot(beta_out)
             if debug:
                 logger.debug('delta_moment = %s' % delta)
                 #logger.debug('rxf = %s' % rxf.T)

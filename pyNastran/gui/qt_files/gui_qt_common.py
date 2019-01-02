@@ -1451,9 +1451,10 @@ class GuiCommon(GuiAttributes):
         if follower_nodes is not None:
             self.follower_nodes[name] = follower_nodes
 
-    def _create_plane_source_from_points(self, p1, p2, i, k, dim_max):
+    def _create_plane_actor_from_points(self, p1, p2, i, k, dim_max,
+                                        actor_name='plane'):
         """
-        This is used by the cutting plane tool.
+        This is used by the cutting plane tool and the shear/moment/torque tool.
 
            4+------+3
             |      |
@@ -1479,15 +1480,17 @@ class GuiCommon(GuiAttributes):
 
         x = np.linspace(0., 1., num=10)
         y = x
-        if 'plane' in self.alt_grids:
+        if actor_name in self.alt_grids:
             plane_actor = self.plane_actor
+            add = False
             #alt_grid =
             #plane_source = vtk.vtkPlaneSource()
             #self.rend.AddActor(plane_actor)
             #self.plane_actor = plane_actor
         else:
+            add = True
             alt_grid = vtk.vtkUnstructuredGrid()
-            self.alt_grids['plane'] = alt_grid
+            self.alt_grids[actor_name] = alt_grid
 
             mapper = vtk.vtkDataSetMapper()
             mapper.SetInputData(alt_grid)
@@ -1500,9 +1503,47 @@ class GuiCommon(GuiAttributes):
             self.rend.AddActor(plane_actor)
 
         nodes, elements = points_elements_from_quad_points(n1, n2, n3, n4, x, y)
-        color = None
-        self.set_quad_grid('plane', nodes, elements, color, line_width=1, opacity=1., add=False)
+        color = RED
+        self.set_quad_grid(actor_name, nodes, elements, color,
+                           line_width=1, opacity=1., representation='surface',
+                           add=add)
+        #plane_actor.Modified()
         return plane_actor
+
+    def _create_point_actor_from_points(self, points, point_size=8,
+                                        actor_name='plane_poinnts'):  # pragma: no cover
+        """
+        This is used by the shear/moment/torque tool.
+
+            p1------p2
+        """
+        points = np.asarray(points)
+
+        if actor_name in self.alt_grids:
+            point_actor = self.point_actor
+            #alt_grid =
+            #plane_source = vtk.vtkPlaneSource()
+            #self.rend.AddActor(point_actor)
+            #self.point_actor = point_actor
+        else:
+            alt_grid = vtk.vtkUnstructuredGrid()
+            self.alt_grids[actor_name] = alt_grid
+
+            mapper = vtk.vtkDataSetMapper()
+            mapper.SetInputData(alt_grid)
+            point_actor = vtk.vtkActor()
+            point_actor.SetMapper(mapper)
+
+            #plane_source = self.plane_source
+            #point_actor = self.point_actor
+            self.point_actor = point_actor
+            self.rend.AddActor(point_actor)
+
+        nodes, elements = points_elements_from_quad_points(n1, n2, n3, n4, x, y)
+        color = RED
+        self.set_quad_grid(actor_name, nodes, elements, color,
+                           line_width=1, opacity=1., add=False)
+        return point_actor
 
     def _make_contour_filter(self):  # pragma: no cover
         """trying to make model lines...doesn't work"""

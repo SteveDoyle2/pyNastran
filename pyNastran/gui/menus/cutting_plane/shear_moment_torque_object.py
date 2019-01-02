@@ -51,6 +51,9 @@ class ShearMomentTorqueObject(object):
 
         icase = self.gui.icase
         (obj, (unused_i, unused_name)) = self.gui.result_cases[icase]
+        if not hasattr(obj, 'gpforce_array'):
+            self.log.error('Select a Grid Point Forces ressult.')
+            return
         gpforce = obj.gpforce_array
         data = {
             'font_size' : settings.font_size,
@@ -75,6 +78,9 @@ class ShearMomentTorqueObject(object):
             #if not self._smte_window._updated_preference:
             #    settings.on_set_font_size(data['font_size'])
             del self._smt_window
+            if hasattr(self.gui, 'plane_actor'):
+                del self.gui.plane_actor
+            self.gui.clear_actor('smt_plane')
             self._smt_window_shown = False
         else:
             self._smt_window.activateWindow()
@@ -164,77 +170,94 @@ class ShearMomentTorqueObject(object):
         except:
             log.error('The coordinate system is invalid; check your cutting plane.')
             return
-        #print(coord)
         origin = coord.origin
         beta = coord.beta().T
 
         cid = ''
-        coord_type = 'xyz'
         self.gui.create_coordinate_system(
             cid, dim_max, label='%s' % cid, origin=origin,
-            matrix_3x3=beta, coord_type=coord_type)
+            matrix_3x3=beta, coord_type='xyz')
 
-        plane_actor = self.gui._create_plane_source_from_points(xyz1, xyz2, i, k, dim_max)
+        plane_actor = self.gui._create_plane_actor_from_points(
+            xyz1, xyz2, i, k, dim_max,
+            actor_name='smt_plane')
+        props = self.gui.geometry_properties['smt_plane']
+        props.set_color(plane_color)
+        props.opacity = plane_opacity
         prop = plane_actor.GetProperty()
         prop.SetColor(*plane_color)
         prop.SetOpacity(plane_opacity) # 0=transparent, 1=solid
+        plane_actor.VisibilityOn()
 
-        #self.model_frame.rend.Render()
-        coord_out = coord
+        if 0:
+            point_actor = self.gui.create_point_actor_from_points(
+                [xyz1, xyz3], point_size=8, actor_name='smt_points')
+            prop = point_actor.GetProperty()
+            prop.SetColor(*plane_color)
+            prop.SetOpacity(plane_opacity) # 0=transparent, 1=solid
+            point_actor.VisibilityOn()
+        self.gui.rend.Render()
+        self.gui.Render()
 
         eids, element_centroids_cid0 = get_element_centriods(model)
         force_sum, moment_sum = gpforce.shear_moment_diagram(
             xyz_cid0, eids, nids, icd_transform,
             element_centroids_cid0,
-            model.coords, nid_cd, stations, coord_out,
-            idir=0, itime=0, debug=False, logger=model.log)
+            model.coords, nid_cd, stations, coord,
+            idir=0, itime=0, debug=False, logger=log)
+        plot_smt(x, force_sum, moment_sum, show=show)
+        return force_sum, moment_sum
 
-        import matplotlib.pyplot as plt
-        #f, ax = plt.subplots()
-        fig = plt.figure(1)
-        ax = fig.subplots()
-        ax.plot(x, force_sum[:, 0])
-        ax.set_xlabel('X')
-        ax.set_ylabel('Axial')
-        ax.grid(True)
 
-        fig = plt.figure(2)
-        ax = fig.subplots()
-        ax.plot(x, force_sum[:, 1])
-        ax.set_xlabel('X')
-        ax.set_ylabel('Shear Y')
-        ax.grid(True)
+def plot_smt(x, force_sum, moment_sum, show=True):
+    """plots the shear, moment, torque plots"""
+    import matplotlib.pyplot as plt
+    plt.close()
+    #f, ax = plt.subplots()
+    fig = plt.figure(1)
+    ax = fig.subplots()
+    ax.plot(x, force_sum[:, 0], '-*')
+    ax.set_xlabel('X')
+    ax.set_ylabel('Axial')
+    ax.grid(True)
 
-        fig = plt.figure(3)
-        ax = fig.subplots()
-        ax.plot(x, force_sum[:, 2])
-        ax.set_xlabel('X')
-        ax.set_ylabel('Shear Z')
-        ax.grid(True)
+    fig = plt.figure(2)
+    ax = fig.subplots()
+    ax.plot(x, force_sum[:, 1], '-*')
+    ax.set_xlabel('X')
+    ax.set_ylabel('Shear Y')
+    ax.grid(True)
 
-        fig = plt.figure(4)
-        ax = fig.subplots()
-        ax.plot(x, moment_sum[:, 0])
-        ax.set_xlabel('X')
-        ax.set_ylabel('Torque')
-        ax.grid(True)
+    fig = plt.figure(3)
+    ax = fig.subplots()
+    ax.plot(x, force_sum[:, 2], '-*')
+    ax.set_xlabel('X')
+    ax.set_ylabel('Shear Z')
+    ax.grid(True)
 
-        fig = plt.figure(5)
-        ax = fig.subplots()
-        ax.plot(x, moment_sum[:, 1])
-        ax.set_xlabel('X')
-        ax.set_ylabel('Moment Y')
-        ax.grid(True)
+    fig = plt.figure(4)
+    ax = fig.subplots()
+    ax.plot(x, moment_sum[:, 0], '-*')
+    ax.set_xlabel('X')
+    ax.set_ylabel('Torque')
+    ax.grid(True)
 
-        fig = plt.figure(6)
-        ax = fig.subplots()
-        ax.plot(x, moment_sum[:, 2])
-        ax.set_xlabel('X')
-        ax.set_ylabel('Moment Z')
-        ax.grid(True)
+    fig = plt.figure(5)
+    ax = fig.subplots()
+    ax.plot(x, moment_sum[:, 1], '-*')
+    ax.set_xlabel('X')
+    ax.set_ylabel('Moment Y')
+    ax.grid(True)
 
-        if show:
-            plt.show()
+    fig = plt.figure(6)
+    ax = fig.subplots()
+    ax.plot(x, moment_sum[:, 2], '-*')
+    ax.set_xlabel('X')
+    ax.set_ylabel('Moment Z')
+    ax.grid(True)
+
+    if show:
+        plt.show()
 
 
 def get_element_centriods(model):

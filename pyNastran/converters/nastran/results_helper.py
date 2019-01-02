@@ -41,14 +41,14 @@ class NastranGuiResults(NastranGuiAttributes):
             return icase
 
         subcase_id = key[0]
-        title = 'GridPointForces'
+        title = 'Grid Point Forces'
         header = 'Grid Point Forces'
         nastran_res = GridPointForceResult(subcase_id, header, title, grid_point_forces)
 
         itime = 0
 
-        cases[icase] = (nastran_res, (itime, 'GridPointForces'))  # do I keep this???
-        formii = ('GridPointForces', icase, [])
+        cases[icase] = (nastran_res, (itime, 'Grid Point Forces'))
+        formii = ('Grid Point Forces', icase, [])
         form_dict[(key, itime)].append(formii)
 
         dt = case._times[itime]

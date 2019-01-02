@@ -1,9 +1,9 @@
 from __future__ import print_function
-#from six import integer_types
 import numpy as np
 from numpy import zeros, unique, array_equal, empty
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
-from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header, write_imag_floats_13e
+from pyNastran.f06.f06_formatting import (
+    write_floats_13e, _eigenvalue_header, write_imag_floats_13e)
 from pyNastran.op2.vector_utils import (
     transform_force_moment, transform_force_moment_sum, sortedsum1d)
 from pyNastran.utils.numpy_utils import integer_types
@@ -63,7 +63,8 @@ class RealGridPointForcesArray(ScalarObject):
         #assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
         #if self.ntotal != max(self._ntotals) or self.ntotal != min(self._ntotals):
-            #raise ValueError('RealGridPointForcesArray: ntotal=%s _ntotals=%s' % (self.ntotal, self._ntotals))
+            #raise ValueError('RealGridPointForcesArray: ntotal=%s _ntotals=%s' % (
+                #self.ntotal, self._ntotals))
 
         self.is_unique = False
         if self.ntotal != min(self._ntotals) or 1:
@@ -296,11 +297,12 @@ class RealGridPointForcesArray(ScalarObject):
                                coord_out, coords, nid_cd, icd_transform,
                                itime=0, debug=True, logger=None):
         """
-        Extracts Patran-style freebody loads
+        Extracts Patran-style freebody loads.  Freebody loads are the
+        extternal loads.
 
         Parameters
         ----------
-        panel_eids : (Ne, ) int ndarray
+        eids : (Nelements, ) int ndarray
             all the elements to consider
         coord_out : CORD2R()
             the output coordinate system
@@ -308,9 +310,9 @@ class RealGridPointForcesArray(ScalarObject):
             all the coordinate systems
             key : int
             value : CORDx
-        nid_cd : (M, 2) int ndarray
+        nid_cd : (Nnodes, 2) int ndarray
             the (BDF.point_ids, cd) array
-        icd_transform : dict[cd] = (Mi, ) int ndarray
+        icd_transform : dict[cd] = (Nondesi, ) int ndarray
             the mapping for nid_cd
         summation_point : (3, ) float ndarray
             the summation point in output??? coordinate system
@@ -323,10 +325,11 @@ class RealGridPointForcesArray(ScalarObject):
 
         Returns
         -------
-        force_out : (n, 3) float ndarray
+        force_out : (Nnodes, 3) float ndarray
             the ith float components in the coord_out coordinate frame
-        moment_out : (n, 3) float ndarray
-            the ith moment components about the summation point in the coord_out coordinate frame
+        moment_out : (Nnodes, 3) float ndarray
+            the ith moment components about the summation point in the
+            coord_out coordinate frame
 
         .. todo:: doesn't seem to handle cylindrical/spherical systems
         .. warning:: not done
@@ -385,13 +388,14 @@ class RealGridPointForcesArray(ScalarObject):
                                 consider_rxf=True,
                                 itime=0, debug=True, logger=None):
         """
-        Extracts Patran-style interface loads
+        Extracts Patran-style interface loads.  Interface loads are the
+        internal loads at a cut.
 
         Parameters
         ----------
-        nids : (Nn, ) int ndarray
+        nids : (Nnodes, ) int ndarray
             all the nodes to consider; must be sorted
-        eids : (Ne, ) int ndarray
+        eids : (Nelements, ) int ndarray
             all the elements to consider; must be sorted
         coord_out : CORD2R()
             the output coordinate system
@@ -399,9 +403,9 @@ class RealGridPointForcesArray(ScalarObject):
             all the coordinate systems
             key : int
             value : CORDx
-        nid_cd : (M, 2) int ndarray
+        nid_cd : (Nnodes, 2) int ndarray
             the (BDF.point_ids, cd) array
-        icd_transform : dict[cd] = (Mi, ) int ndarray
+        icd_transform : dict[cd] = (Nnodesi, ) int ndarray
             the mapping for nid_cd
         xyz_cid0 : (nnodes + nspoints + nepoints, 3) ndarray
             the grid locations in coordinate system 0
@@ -419,20 +423,22 @@ class RealGridPointForcesArray(ScalarObject):
 
         Returns
         -------
-        force_out : (n, 3) float ndarray
+        force_out : (Nnodes, 3) float ndarray
             the ith float components in the coord_out coordinate frame
-        moment_out : (n, 3) float ndarray
-            the ith moment components about the summation point in the coord_out coordinate frame
+        moment_out : (Nnodes, 3) float ndarray
+            the ith moment components about the summation point in the
+            coord_out coordinate frame
         force_out_sum : (3, ) float ndarray
             the sum of forces in the coord_out coordinate frame
         moment_out_sum : (3, ) float ndarray
-            the sum of moments about the summation point in the coord_out coordinate frame
+            the sum of moments about the summation point in the
+            coord_out coordinate frame
 
         .. todo:: doesn't seem to handle cylindrical/spherical systems
         .. todo:: Add support for:
                   2D output style:
-                    - This would allow for shell problems to have loads applied
-                      in the plane of the shells
+                    - This would allow for shell problems to have loads
+                      applied in the plane of the shells
                     - This would require normals
                   1D output style:
                     - Make loads in the direction of the element
@@ -513,7 +519,7 @@ class RealGridPointForcesArray(ScalarObject):
         ]
         {r} = [F]^-1 {M}
 
-        When the determinant of [F] is nonzero:
+        When the determinant of [F] is nonzero (2D):
            Life is easy
 
         When the determinant of [F] is zero:
@@ -526,11 +532,15 @@ class RealGridPointForcesArray(ScalarObject):
         where one of the eigenvalues is 0? (the trivial case)
         and
 
-
         However, [F] is singular, so let rx=0:
         Mx = ry*Fz - rz*Fy
         My = rz*Fx
         Mz = -ry*Fx
+        let Fx=0, so ry, rz != 0, but My=Mz=0
+        -> ry = rz*Fy/Fz
+        let rz = 1
+        -> ry = Fy/Fz
+        <0, Fy/Fz, 1>
         """
         raise NotImplementedError()
 
@@ -539,25 +549,26 @@ class RealGridPointForcesArray(ScalarObject):
                              coords, nid_cd, stations, coord_out,
                              idir=0, itime=0, debug=False, logger=None):
         """
-        Computes a series of forces/moments at various stations along a structure.
+        Computes a series of forces/moments at various stations along a
+        structure.
 
         Parameters
         ----------
-        xyz_cid0 : (nnodes, 3) float ndarray
+        xyz_cid0 : (Nnodes, 3) float ndarray
             all the nodes in the model xyz position in the global frame
-        eids : (nelements, ) int ndarray
+        eids : (Nelements, ) int ndarray
             an array of element ids to consider
-        nids : (nnodes, ) int ndarray
+        nids : (Nnodes, ) int ndarray
             an array of node ids corresponding to xyz_cid0
-        icd_transform : dict[cd] = (Mi, ) int ndarray
+        icd_transform : dict[cd] = (Nnodesi, ) int ndarray
             the mapping for nid_cd
-        element_centroids_cid0 : (nelements, 3) float ndarray
+        element_centroids_cid0 : (Nelements, 3) float ndarray
             an array of element centroids corresponding to eids
         coords : dict[int] = CORDx
             all the coordinate systems
             key : int
             value : CORDx
-        nid_cd : (M, 2) int ndarray
+        nid_cd : (Nnodes, 2) int ndarray
             the (BDF.point_ids, cd) array
         stations : (nstations, ) float ndarray
             the station to sum forces/moments about
@@ -568,6 +579,7 @@ class RealGridPointForcesArray(ScalarObject):
             the output coordinate system
         idir : int; default=0
             the axis of the coordinate system to consider
+            as the axial direction
 
         Notes
         -----
@@ -612,10 +624,13 @@ class RealGridPointForcesArray(ScalarObject):
             # find the free nodes
             i = np.where(x_centroid <= station)[0]
             j = np.where(x_coord >= station)[0]
+
+            # we'd break if we knew the user was traveling in the
+            # "correct" direction, but we don't
             if len(i) == 0:
-                break
+                continue
             if len(j) == 0:
-                break
+                continue
             # summation point creation
             offset = np.zeros(3, dtype='float64')
             offset[idir] = station
@@ -637,8 +652,11 @@ class RealGridPointForcesArray(ScalarObject):
                 forcei, momenti, force_sumi, moment_sumi = self.extract_interface_loads(
                     eids[i], nids[j],
                     coord_out, coords, nid_cd, icd_transform,
-                    xyz_cid0, summation_point, itime=itime, debug=debug, logger=logger)
-
+                    xyz_cid0, summation_point, itime=itime, debug=debug,
+                    logger=logger)
+                logger.info('neids=%s nnodes=%s force=%s moment=%s' % (
+                    len(i), len(j), force_sumi, moment_sumi
+                ))
                 force_sum[istation, :] = force_sumi
                 moment_sum[istation, :] = moment_sumi
         return force_sum, moment_sum
@@ -696,8 +714,8 @@ class RealGridPointForcesArray(ScalarObject):
         n = len(headers)
 
         #element_names = [name.strip() for name in unique(self.element_names)]
-        msg.append('  data: [%s, ntotal, %i] where %i=[%s]\n' % (ntimes_word, n, n,
-                                                                 ', '.join(headers)))
+        msg.append('  data: [%s, ntotal, %i] where %i=[%s]\n' % (
+            ntimes_word, n, n, ', '.join(headers)))
         msg.append('  data.shape=%s\n' % str(self.data.shape))
         msg.append('  element type: %s\n' % self.element_name)
         msg += self.get_data_code()
@@ -757,7 +775,8 @@ class RealGridPointForcesArray(ScalarObject):
                 header = _eigenvalue_header(self, header, itime, ntimes, dt)
                 f06_file.write(''.join(header + msg))
 
-                #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
+                #print("self.data.shape=%s itime=%s ieids=%s" % (
+                    #str(self.data.shape), itime, str(ieids)))
                 #[t1, t2, t3, r1, r2, r3]
                 t1 = self.data[itime, :, 0]
                 t2 = self.data[itime, :, 1]
@@ -809,7 +828,8 @@ class RealGridPointForcesArray(ScalarObject):
                 header = _eigenvalue_header(self, header, itime, ntimes, dt)
                 f06_file.write(''.join(header + msg))
 
-                #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
+                #print("self.data.shape=%s itime=%s ieids=%s" % (
+                    #str(self.data.shape), itime, str(ieids)))
 
                 #[t1, t2, t3, r1, r2, r3]
                 t1 = self.data[itime, :, 0]
@@ -848,7 +868,8 @@ class RealGridPointForcesArray(ScalarObject):
         header = _eigenvalue_header(self, header, itime, ntimes, dt)
         f06_file.write(''.join(header + msg))
 
-        #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
+        #print("self.data.shape=%s itime=%s ieids=%s" % (
+            #str(self.data.shape), itime, str(ieids)))
         #[t1, t2, t3, r1, r2, r3]
         t1 = self.data[itime, i, 0]
         t2 = self.data[itime, i, 1]
@@ -943,7 +964,8 @@ class ComplexGridPointForcesArray(ScalarObject):
 
     def build(self):
         """sizes the vectorized attributes of the ComplexGridPointForcesArray"""
-        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
+        #print('ntimes=%s nelements=%s ntotal=%s' % (
+            #self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
         #self.ntotal += 5  # TODO: remove
@@ -971,7 +993,8 @@ class ComplexGridPointForcesArray(ScalarObject):
         self.is_built = True
 
         #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
-            #self.element_names, self.element_type, nnodes_per_element, self.ntimes, self.nelements, self.ntotal))
+            #self.element_names, self.element_type, nnodes_per_element,
+            #self.ntimes, self.nelements, self.ntotal))
         dtype = 'float32'
         if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
@@ -1064,8 +1087,9 @@ class ComplexGridPointForcesArray(ScalarObject):
             nnodes = self.data.shape[1]
             node_element_temp = self.node_element.reshape((ntimes * nnodes, 2))
             node_element = [node_element_temp[:, 0], node_element_temp[:, 1]]
-            self.data_frame = pd.Panel(self.data, items=column_values,
-                                       major_axis=node_element, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(
+                self.data, items=column_values,
+                major_axis=node_element, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
             self.data_frame.index.names = ['NodeID', 'ElementID', 'Item']
         else:
@@ -1073,8 +1097,9 @@ class ComplexGridPointForcesArray(ScalarObject):
             #print('column_names =', column_names)
             #for name, values in zip(column_names, column_values):
                 #print('  %s = %s' % (name, values))
-            self.data_frame = pd.Panel(self.data, items=column_values,
-                                       major_axis=node_element, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(
+                self.data, items=column_values,
+                major_axis=node_element, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
             self.data_frame.index.names = ['NodeID', 'ElementID', 'Item']
 
@@ -1193,8 +1218,8 @@ class ComplexGridPointForcesArray(ScalarObject):
         n = len(headers)
 
         #element_names = [name.strip() for name in unique(self.element_names)]
-        msg.append('  data: [%s, ntotal, %i] where %i=[%s]\n' % (ntimes_word, n, n,
-                                                                 ', '.join(headers)))
+        msg.append('  data: [%s, ntotal, %i] where %i=[%s]\n' % (
+            ntimes_word, n, n, ', '.join(headers)))
         msg.append('  node_element.shape=%s\n' % str(self.node_element.shape).replace('L', ''))
         msg.append('  element_names.shape=%s\n' % str(self.element_names.shape).replace('L', ''))
         msg.append('  data.shape=%s\n' % str(self.data.shape).replace('L', ''))
@@ -1223,7 +1248,8 @@ class ComplexGridPointForcesArray(ScalarObject):
                 header = _eigenvalue_header(self, header, itime, ntimes, dt)
                 f06_file.write(''.join(header + msg))
 
-                #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
+                #print("self.data.shape=%s itime=%s ieids=%s" % (
+                    #str(self.data.shape), itime, str(ieids)))
 
                 #[t1, t2, t3, r1, r2, r3]
                 t1 = self.data[itime, :, 0]
@@ -1271,7 +1297,8 @@ class ComplexGridPointForcesArray(ScalarObject):
                 header = _eigenvalue_header(self, header, itime, ntimes, dt)
                 f06_file.write(''.join(header + msg))
 
-                #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
+                #print("self.data.shape=%s itime=%s ieids=%s" % (
+                    #str(self.data.shape), itime, str(ieids)))
 
                 #[t1, t2, t3, r1, r2, r3]
                 t1 = self.data[itime, :, 0]
@@ -1314,7 +1341,8 @@ class ComplexGridPointForcesArray(ScalarObject):
                     header = _eigenvalue_header(self, header, itime, ntimes, dt)
                     f06_file.write(''.join(header + msg))
 
-                    #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
+                    #print("self.data.shape=%s itime=%s ieids=%s" % (
+                        #str(self.data.shape), itime, str(ieids)))
 
                     #[t1, t2, t3, r1, r2, r3]
                     t1 = self.data[itime, :, 0]

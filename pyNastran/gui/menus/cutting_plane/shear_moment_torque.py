@@ -34,16 +34,16 @@ from pyNastran.gui.utils.wildcards import wildcard_csv
 
 class ShearMomentTorqueWindow(PyDialog):
     """
-    +--------------------+
-    | CuttingPlaneWindow |
-    +------------------------+
-    | Origin/P1   cid  x y z |
-    | P2          cid  x y z |
-    | z-axis      cid  x y z |
-    | tol         cid  x y z |
-    |                        |
-    |    Apply OK Cancel     |
-    +------------------------+
+    +-------------------------+
+    | ShearMomentTorqueWindow |
+    +-------------------------+
+    | Origin      cid  x y z  |
+    | P2          cid  x y z  |
+    | z-axis      cid  x y z  |
+    | tol         cid  x y z  |
+    |                         |
+    |    Apply OK Cancel      |
+    +-------------------------+
     """
     def __init__(self, data, win_parent=None):
         """
@@ -135,8 +135,8 @@ class ShearMomentTorqueWindow(PyDialog):
         #self.xz_plane_label = QLabel("XZ Plane:")
 
         # Z-Axis Projection
-        self.p1_label = QLabel("Origin/P1:")
-        self.p3_label = QLabel("End/P3:")
+        self.p1_label = QLabel("Origin:")
+        self.p3_label = QLabel("End:")
         self.p2_label = QLabel("XZ Plane:")
         self.zaxis_label = QLabel("Z Axis:")
 
@@ -226,7 +226,8 @@ class ShearMomentTorqueWindow(PyDialog):
             times = ['0.', '0.5', '1.' , '1.5', '2.']
             time = '0.'
         else:
-            raise NotImplementedError(gpforce)
+            times = [str(time) for time in self.gpforce._times]
+            time = times[0]
         self.times_pulldown = make_combo_box(times, time)
         self.time_label.setEnabled(False)
         self.times_pulldown.setEnabled(False)
@@ -246,7 +247,7 @@ class ShearMomentTorqueWindow(PyDialog):
         self.nplanes_label = QLabel('Num Planes:')
         self.nplanes_spinner = QSpinBox()
         self.nplanes_spinner.setMinimum(2)
-        self.nplanes_spinner.setMaximum(100)
+        self.nplanes_spinner.setMaximum(500)
         self.nplanes_spinner.setValue(20)
 
         #-----------------------------------------------------------------------
@@ -594,10 +595,11 @@ class ShearMomentTorqueWindow(PyDialog):
             return True
         return False
 
-    def on_apply(self, force=False):
+    def on_apply(self):
         passed = self.on_validate()
-        if (passed or force) and self.win_parent is not None:
-            self.win_parent.make_smt_from_data(self.out_data)
+        if passed and self.win_parent is not None:
+            self.win_parent.shear_moment_torque_obj.make_smt_from_data(self.out_data, show=True)
+            #self.win_parent.make_smt_from_data(self.out_data)
         return passed
 
     def on_cancel(self):
