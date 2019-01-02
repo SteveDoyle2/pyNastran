@@ -950,6 +950,11 @@ class BDFAttributes(object):
         """gets the GRID, SPOINT, EPOINT ids"""
         return set(self.node_ids) | set(list(self.spoints.keys())) | set(list(self.epoints.keys()))
 
+    @property
+    def npoints(self):
+        """gets the number of GRID, SPOINT, EPOINT ids"""
+        return len(self.point_ids)
+
     #--------------------
     # Elements CARDS
 

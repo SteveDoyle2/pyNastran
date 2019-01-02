@@ -32,7 +32,6 @@ class NastranGuiResults(NastranGuiAttributes):
     def _fill_grid_point_forces(self, cases, model, key, icase,
                                 form_dict, header_dict, keys_map):
         if key not in model.grid_point_forces:
-            print('return icase...')
             return icase
         grid_point_forces = model.grid_point_forces[key]
         case = grid_point_forces

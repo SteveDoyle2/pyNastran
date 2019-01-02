@@ -152,6 +152,7 @@ class Cart3dIO(object):
 
         self.gui.node_ids = node_ids
         self.gui.element_ids = element_ids
+        build_map_centroidal_result(model)
         self.gui._finish_results_io2(model_name, form, cases)
 
     def _create_box(self, cart3d_filename, ID, form, cases, icase, regions):
@@ -532,3 +533,40 @@ def _fill_cart3d_results(cases, form, icase, ID, loads, unused_model, unused_mac
     if len(results_form):
         form.append(('Results', None, results_form))
     return form, cases, icase
+
+def build_map_centroidal_result(model):
+    """
+    Sets up map_centroidal_result.  Used for:
+     - cutting plane
+     - nodal Cp
+    """
+    if hasattr(model, 'map_centroidal_result'):
+        return
+    mapped_node_ids = []
+    nnodes = model.nnodes
+
+    elem_ravel = model.elements.flatten()
+    node_count_ids, node_count = np.unique(elem_ravel, return_counts=True)
+    #print('node_count_ids =', node_count_ids)
+    #print('node_count =', node_count)
+
+    # tehre are some nodes that are used 118 times...
+    # this can be at a converging tip
+    #ibig = np.where(node_count > 7)
+    #print(node_count_ids[ibig])
+    #print(node_count[ibig])
+
+    #print(str(node_count.tolist()).replace('L', ''))
+
+    # calculate inv_node_count
+    inv_node_count = 1. / node_count
+
+    # build the centroidal mapper
+    def map_centroidal_result(centroidal_data):
+        """maps centroidal data onto nodal data"""
+        nodal_data = np.zeros(nnodes, dtype=centroidal_data.dtype)
+        for datai, node_ids in zip(centroidal_data, model.elements):
+            for nid in node_ids:
+                nodal_data[nid] += datai
+        return nodal_data * inv_node_count
+    model.map_centroidal_result = map_centroidal_result

@@ -1,3 +1,7 @@
+"""
+defines:
+ - CuttingPlaneObject
+"""
 from __future__ import print_function
 import numpy as np
 
@@ -32,7 +36,7 @@ class CuttingPlaneObject(object):
             #self.log_error('No model has been loaded.')
             #return
 
-        camera = self.gui.GetCamera()
+        #camera = self.gui.GetCamera()
         #min_clip, max_clip = camera.GetClippingRange()
         settings = self.gui.settings
         model_name = self.gui.name
@@ -116,7 +120,6 @@ class CuttingPlaneObject(object):
             out = model.get_displacement_index_xyz_cp_cd()
             unused_icd_transform, icp_transform, xyz_cp, nid_cp_cd = out
             nids = nid_cp_cd[:, 0]
-            nid_cd = nid_cp_cd[:, [0, 2]]
             xyz_cid0 = model.transform_xyzcp_to_xyz_cid(
                 xyz_cp, nids, icp_transform,
                 cid=0)
@@ -165,10 +168,8 @@ class CuttingPlaneObject(object):
             matrix_3x3=beta, coord_type='xyz')
 
         nnodes = xyz_cid0.shape[0]
-        #nodal_result = np.linspace(0., 1., num=nnodes)
 
         #case = self.result_cases[self.icase_aero]
-        #res_scalars, location = model.aero_raw_plot_result()
         (obj, (i, name)) = self.gui.result_cases[self.gui.icase_fringe]
         res_scalars = obj.get_scalar(i, name)
         location = obj.get_location(i, name)
@@ -176,8 +177,8 @@ class CuttingPlaneObject(object):
         if res_scalars is None:
             if plane_actor is not None:
                 plane_actor.VisibilityOn()
-                #print(self.model_frame.plane_actor)
-                #print(dir(self.model_frame.plane_actor))
+                #print(self.gui.plane_actor)
+                #print(dir(self.gui.plane_actor))
                 #plane_actor.VisibilityOff()
             log.error('No result is selected.')
             return

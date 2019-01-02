@@ -72,6 +72,16 @@ class TestNastranGUI(unittest.TestCase):
             plane_color=None, plane_opacity=0.5,
             csv_filename=None, show=False)
 
+        test.icase_fringe = 0
+        test.cutting_plane_obj.make_cutting_plane(
+            model_name,
+            p1, p2, zaxis,
+            method='Z-Axis Projection',
+            cid_p1=0, cid_p2=0, cid_zaxis=0,
+            ytol=1., plane_atol=1e-5,
+            plane_color=None, plane_opacity=0.5,
+            csv_filename=None, show=False)
+
     def test_solid_shell_bar_02(self):
         bdf_filename = os.path.join(MODEL_PATH, 'sol_101_elements', 'mode_solid_shell_bar.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'sol_101_elements', 'mode_solid_shell_bar.op2')

@@ -1918,8 +1918,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #-----------------------------------------------------------------------
 
         j = 0
+        nid_map = self.gui.nid_map
         nid_to_pid_map, icase, cases, form = self.map_elements(
-            xyz_cid0, nid_cp_cd, self.gui.nid_map, model, j, dim_max,
+            xyz_cid0, nid_cp_cd, nid_map, model, j, dim_max,
             plot=plot, xref_loads=xref_loads)
 
         self._create_aero(model, box_id_to_caero_element_map, cs_box_ids,
@@ -1959,6 +1960,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 self.gui.geometry_actors[grid_name].Modified()
 
         #self.grid_mapper.SetResolveCoincidentTopologyToPolygonOffset()
+        build_map_centroidal_result(model, nid_map)
         if plot:
             self.gui._finish_results_io2(model_name, [form], cases, reset_labels=reset_labels)
         else:
@@ -6008,16 +6010,16 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                                     location='centroid', scalar=element_dim, mask_value=-1)
             cases[icase] = (eid_dim_res, (0, 'ElementDim'))
 
-        is_shell = normals is not None and np.abs(normals).max() > 0.
+        #is_shell = normals is not None and np.abs(normals).max() > 0.  # NaN -> 2.0
+        is_shell = normals is not None and isfinite(normals)  # using NaNs
 
         # we have to add the 2nd/3rd lines to make sure bars are getting into this check
-
         is_solid = (
             isfinite_and_nonzero(min_interior_angle) and
             isfinite_and_nonzero(max_interior_angle)
         )
 
-        print('is_shell=%s is_solid=%s' % (is_shell, is_solid))
+        #print('is_shell=%s is_solid=%s' % (is_shell, is_solid))
         if is_shell:
             if self.make_offset_normals_dim:
                 nx_res = GuiResult(
@@ -7267,7 +7269,7 @@ def jsonify(comment_lower):
     return rhs.replace("'", '"').replace('}', ',}').replace(',,}', ',}')
 
 def build_offset_normals_dims(model, eid_map, nelements):
-    normals = np.zeros((nelements, 3), dtype='float32')
+    normals = np.full((nelements, 3), np.nan, dtype='float32')
     offset = np.full(nelements, np.nan, dtype='float32')
     xoffset = np.full(nelements, np.nan, dtype='float32')
     yoffset = np.full(nelements, np.nan, dtype='float32')
@@ -7293,11 +7295,11 @@ def build_offset_normals_dims(model, eid_map, nelements):
                 raise AttributeError(msg)
             except RuntimeError:
                 # this happens when you have a degenerate tri
-                msg = 'eid=%i normal=nan...setting to [2, 2, 2]\n'
+                msg = 'eid=%i normal=NaN...\n'
                 msg += '%s' % (element)
                 msg += 'nodes = %s' % str(element.nodes)
                 log.error(msg)
-                normali = np.ones(3) * 2.
+                normali = np.ones(3) * np.nan
                 #raise
 
             prop = element.pid_ref
@@ -7466,3 +7468,99 @@ def build_offset_normals_dims(model, eid_map, nelements):
         #ielement += 1
 
     return normals, offset, xoffset, yoffset, zoffset, element_dim, nnodes_array
+
+def build_map_centroidal_result(model, nid_map):
+    """
+    Sets up map_centroidal_result.  Used for:
+     - cutting plane
+     - nodal stress/strain
+    """
+    try:
+        # test_gui_superelement_1
+        _build_map_centroidal_result(model, nid_map)
+    except Exception as error:
+        model.log.error('Cannot run build_map_centroidal_result')
+        model.log.error(str(error))
+
+def _build_map_centroidal_result(model, nid_map):
+    """
+    Sets up map_centroidal_result.  Used for:
+     - cutting plane
+     - nodal stress/strain
+    """
+    if hasattr(model, 'map_centroidal_result'):
+        return
+    mapped_node_ids = []
+    nnodes = model.npoints
+    node_count = np.zeros(nnodes, dtype='float32')
+
+    eids = []
+    etypes_all_nodes = set([
+        'CBEAM', 'CBAR', 'CROD', 'CONROD', 'CTUBE', 'CBEND',
+        'CTRIA3', 'CQUAD4', 'CQUADR', 'CTRIAR', 'CSHEAR',
+        'CGAP',  'CFAST', 'CVISC', 'CBUSH', 'CBUSH1D', 'CBUSH2D'])
+
+    nnodes_map = {
+        'CTRIA6' : (3, 6),
+        'CQUAD8' : (4, 8),
+        'CHEXA' : (8, 20),
+        'CTETRA' : (4, 10),
+        'CPENTA' : (6, 15),
+        'CPYRAM' : (5, 13),
+        'CQUADX' : (4, 9),
+        'CTRIAX' : (3, 6),
+        'CQUADX8' : (4, 8),
+        'CTRIAX6' : (3, 6),
+    }
+    #['CTRIA6', 'CQUAD8', 'CHEXA', 'CTETRA', 'CPENTA', 'CPYRAM', 'CQUADX', 'CTRIAX']
+    etypes_mixed_nodes = set(list(nnodes_map.keys()))
+
+    for eid, elem in sorted(model.elements.items()):
+        if elem.type in etypes_all_nodes:
+            try:
+                node_ids = [nid_map[nid] for nid in elem.nodes]
+            except KeyError:  # pragma: no cover
+                print(elem)
+                raise
+        elif elem.type in etypes_mixed_nodes:
+            node_ids = [nid_map[nid] if nid is not None else 0
+                        for nid in elem.nodes]
+            nnodes_min, nnodes_max = nnodes_map[elem.type]
+            nnodesi = len(node_ids)
+            if nnodesi == nnodes_min:
+                pass
+            elif 0 in node_ids:
+                node_ids = node_ids[:nnodes_min]
+                assert len(node_ids) == nnodes_min, 'nnodes=%s min=%s\n%s' % (len(node_ids), nnodes_min, elem)
+            else:
+                assert nnodesi == nnodes_max, 'nnodes=%s max=%s\n%s' % (nnodesi, nnodes_max, elem)
+        elif elem.type in ['CELAS1', 'CELAS2', 'CELAS3', 'CELAS4', 'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4']:
+            node_ids = [nid_map[nid] for nid in elem.nodes
+                        if nid is not None]
+        elif elem.type in ['CHBDYP', 'CHBDYG']:
+            node_ids = [nid_map[nid] for nid in elem.nodes
+                        if nid not in [0, None]]
+        else:
+            raise NotImplementedError(elem)
+        #print(elem.nodes, node_ids)
+        mapped_node_ids.append(node_ids)
+        eids.append(eid)
+
+        # these are indicies
+        for node_id in node_ids:
+            node_count[node_id] += 1
+
+    # calculate inv_node_count
+    izero = np.where(node_count == 0)
+    node_count[izero] = 1.
+    inv_node_count = 1. / node_count
+
+    # build the centroidal mapper
+    def map_centroidal_result(centroidal_data):
+        """maps centroidal data onto nodal data"""
+        nodal_data = np.zeros(nnodes, dtype=centroidal_data.dtype)
+        for unused_eid, datai, node_ids in zip(eids, centroidal_data, mapped_node_ids):
+            for nid in node_ids:
+                nodal_data[nid] += datai
+        return nodal_data * inv_node_count
+    model.map_centroidal_result = map_centroidal_result
