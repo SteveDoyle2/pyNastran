@@ -144,7 +144,7 @@ class H5NastranBDF(H5NastranBase):
         for card in _cards:
             bdf.cards_to_read.add(card)
             
-        del bdf.rejects[:]
+        del bdf.reject_lines[:]
 
         self.nastran.input.to_bdf(bdf)
 
