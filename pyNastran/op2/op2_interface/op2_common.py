@@ -547,9 +547,11 @@ class OP2Common(Op2Codes, F06Writer):
             #raise KeyError('table_name=%s keys=%s' % (self.table_name_str, str(keys)))
             return n
         if self.is_debug_file:
-            self.binary_debug.write('  found keys=%s -> name=%-6s - %s\n' % (str(keys), name, self.table_name))
+            self.binary_debug.write('  found keys=%s -> name=%-6s - %s\n' % (
+                str(keys), name, self.table_name))
         if self.debug:
-            self.log.debug("  found keys=(%5s,%4s,%4s) name=%-6s - %s" % (keys[0], keys[1], keys[2], name, self.table_name))
+            self.log.debug("  found keys=(%5s,%4s,%4s) name=%-6s - %s" % (
+                keys[0], keys[1], keys[2], name, self.table_name))
         self.card_name = name
         n = func(data, n)  # gets all the grid/mat cards
         assert n is not None, name
@@ -607,12 +609,15 @@ class OP2Common(Op2Codes, F06Writer):
         if is_sort1:
             #self.log.debug('   sort1; table_name=%r' % self.table_name)
             if self.nonlinear_factor in (None, np.nan):
-                n = self._read_real_table_static(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
+                n = self._read_real_table_static(
+                    data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
             else:
-                n = self._read_real_table_sort1(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
+                n = self._read_real_table_sort1(
+                    data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
         else:
             #self.log.debug('   sort2; table_name=%r' % self.table_name)
-            n = self._read_real_table_sort2(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
+            n = self._read_real_table_sort2(
+                data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
         assert n is not None
         return n
 
@@ -637,9 +642,11 @@ class OP2Common(Op2Codes, F06Writer):
         #self._fix_format_code(format_code=1)
         self.log.debug('   sort1; table_name=%r' % self.table_name)
         if self.nonlinear_factor in (None, np.nan):
-            n = self._read_real_table_static(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
+            n = self._read_real_table_static(
+                data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
         else:
-            n = self._read_real_table_sort1(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
+            n = self._read_real_table_sort1(
+                data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
         assert n is not None
         return n
 
@@ -664,11 +671,14 @@ class OP2Common(Op2Codes, F06Writer):
             self._fix_format_code(format_code=1)
             if self.is_sort1:
                 if self.nonlinear_factor in (None, np.nan):
-                    n = self._read_real_table_static(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
+                    n = self._read_real_table_static(
+                        data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
                 else:
-                    n = self._read_real_table_sort1(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
+                    n = self._read_real_table_sort1(
+                        data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
             else:
-                n = self._read_real_table_sort2(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
+                n = self._read_real_table_sort2(
+                    data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
                 #n = ndata
                 #msg = self.code_information()
                 #n = self._not_implemented_or_skip(data, ndata, msg)
@@ -683,14 +693,18 @@ class OP2Common(Op2Codes, F06Writer):
                 return ndata
             if self.is_sort1:
                 if self.is_magnitude_phase():
-                    n = self._read_complex_table_sort1_mag(data, is_vectorized, nnodes, result_name, node_elem)
+                    n = self._read_complex_table_sort1_mag(
+                        data, is_vectorized, nnodes, result_name, node_elem)
                 else:
-                    n = self._read_complex_table_sort1_imag(data, is_vectorized, nnodes, result_name, node_elem)
+                    n = self._read_complex_table_sort1_imag(
+                        data, is_vectorized, nnodes, result_name, node_elem)
             else:
                 if self.is_magnitude_phase():
-                    n = self._read_complex_table_sort2_mag(data, is_vectorized, nnodes, result_name, node_elem)
+                    n = self._read_complex_table_sort2_mag(
+                        data, is_vectorized, nnodes, result_name, node_elem)
                 else:
-                    n = self._read_complex_table_sort2_imag(data, is_vectorized, nnodes, result_name, node_elem)
+                    n = self._read_complex_table_sort2_imag(
+                        data, is_vectorized, nnodes, result_name, node_elem)
                 #msg = self.code_information()
                 #n = self._not_implemented_or_skip(data, ndata, msg)
         else:
@@ -759,11 +773,14 @@ class OP2Common(Op2Codes, F06Writer):
             self._fix_format_code(format_code=1)
             if self.is_sort1:
                 if self.nonlinear_factor in (None, np.nan):
-                    n = self._read_real_scalar_table_static(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
+                    n = self._read_real_scalar_table_static(
+                        data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
                 else:
-                    n = self._read_real_scalar_table_sort1(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
+                    n = self._read_real_scalar_table_sort1(
+                        data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
             else:
-                n = self._read_real_scalar_table_sort2(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
+                n = self._read_real_scalar_table_sort2(
+                    data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
                 #n = ndata
                 #msg = self.code_information()
                 #n = self._not_implemented_or_skip(data, ndata, msg)
@@ -893,7 +910,8 @@ class OP2Common(Op2Codes, F06Writer):
               DISP(PLOT,SORT1,REAL) = ALL
 
         """
-        #print('result_name=%s use_vector=%s is_vectorized=%s' % (result_name, self.use_vector, is_vectorized))
+        #print('result_name=%s use_vector=%s is_vectorized=%s' % (
+            #result_name, self.use_vector, is_vectorized))
         if self.is_debug_file:
             self.binary_debug.write('  _read_real_scalar_table_sort1\n')
         #assert flag in ['node', 'elem'], flag
@@ -1035,7 +1053,8 @@ class OP2Common(Op2Codes, F06Writer):
               DISP(PLOT,SORT1,REAL) = ALL
 
         """
-        #print('result_name=%s use_vector=%s is_vectorized=%s' % (result_name, self.use_vector, is_vectorized))
+        #print('result_name=%s use_vector=%s is_vectorized=%s' % (
+            #result_name, self.use_vector, is_vectorized))
         if self.is_debug_file:
             self.binary_debug.write('  _read_real_table_sort1\n')
         #assert flag in ['node', 'elem'], flag
@@ -1399,10 +1418,12 @@ class OP2Common(Op2Codes, F06Writer):
                 self.obj = storage_obj[code]
                 if self.nonlinear_factor not in (None, np.nan):
                     if self.obj.nonlinear_factor in (None, np.nan):
-                        msg = 'The object is flipping from a static (e.g. preload)\n'
-                        msg += 'result to a transient/frequency based results\n'
-                        msg += '%s -> %s\n' % (self.obj.nonlinear_factor, self.nonlinear_factor)
-                        msg += 'code = (subcase=%s, analysis_code=%s, sort=%s, count=%s, ogs=%s, superelement_adaptivity_index=%r pval_step=%r)\n' % tuple(code)
+                        msg = (
+                            'The object is flipping from a static (e.g. preload)\n'
+                            'result to a transient/frequency based results\n'
+                            '%s -> %s\n' % (self.obj.nonlinear_factor, self.nonlinear_factor))
+                        msg += ('code = (subcase=%s, analysis_code=%s, sort=%s, count=%s, '
+                                'ogs=%s, superelement_adaptivity_index=%r pval_step=%r)\n' % tuple(code))
                         msg += '%s\n' % str(self.obj)
                         msg += '\nIf this isnt correct, check if the data code was applied on the object'
                         raise MultipleSolutionNotImplementedError(msg)
@@ -1425,7 +1446,13 @@ class OP2Common(Op2Codes, F06Writer):
                 storage_obj[code] = self.obj
 
     def _get_code(self):
-        code = self.isubcase
+        """
+        The code is a the way you access something like self.displacements.
+        Ideally, it's just the subcase id, but for things like optimization, it
+        gets more complicated.  So we make it in the complicated way and simplify
+        it later if we can.
+
+        """
         ogs = 0
         if hasattr(self, 'ogs'):
             ogs = self.ogs

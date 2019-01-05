@@ -370,8 +370,6 @@ class OP2(OP2_Scalar):
             self.set_as_msc()
         elif mode.lower() == 'nx':
             self.set_as_nx()
-        elif mode.lower() == 'radioss':
-            self.set_as_radioss()
         elif mode.lower() == 'optistruct':
             self.set_as_optistruct()
         else:

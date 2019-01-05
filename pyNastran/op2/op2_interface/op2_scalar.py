@@ -22,7 +22,6 @@ Defines the sub-OP2 class.  This should never be called outisde of the OP2 class
    - modal_effective_weight
    - set_as_msc()
    - set_as_optistruct()
-   - set_as_radioss()
 
    **Private Methods**
    - _get_table_mapper()
@@ -628,29 +627,19 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self.is_nx = True
         self.is_msc = False
         self.is_optistruct = False
-        self.is_radioss = False
         self._nastran_format = 'nx'
 
     def set_as_msc(self):
         self.is_nx = False
         self.is_msc = True
         self.is_optistruct = False
-        self.is_radioss = False
         self._nastran_format = 'msc'
 
     def set_as_optistruct(self):
         self.is_nx = False
         self.is_msc = False
         self.is_optistruct = True
-        self.is_radioss = False
         self._nastran_format = 'optistruct'
-
-    def set_as_radioss(self):
-        self.is_nx = False
-        self.is_msc = False
-        self.is_optistruct = False
-        self.is_radioss = True
-        self._nastran_format = 'radioss'
 
     def __init__(self, debug=False, log=None, debug_file=None):
         """

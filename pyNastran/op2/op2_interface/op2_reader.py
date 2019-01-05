@@ -190,10 +190,9 @@ class OP2Reader(object):
                 elif version in [b'XXXXXXXX']:
                     #self.log.warning('Assuming MSC Nastran')
                     mode = 'msc'
-                elif version == b'OS12.210':
+                elif version in [b'OS11XXXX', b'OS12.210', b'OS2017.2']:
+                    # should this be called optistruct or radioss?
                     mode = 'optistruct'
-                elif version == b'OS11XXXX':
-                    mode = 'radioss'
                 #elif data[:20] == b'XXXXXXXX20141   0   ':
                     #self.set_as_msc()
                     #self.set_table_type()

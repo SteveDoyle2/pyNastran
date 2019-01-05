@@ -115,18 +115,20 @@ class OGS(OP2Common):
             #n = self._read_ogs1_table35(data, ndata)
         else:
             msg = self.code_information()
-            n = self._not_implemented_or_skip(data, ndata, msg)
+            raise RuntimeError(self.code_information())
+            #n = self._not_implemented_or_skip(data, ndata, msg)
         del self.ogs
         return n
 
     def _read_ogs1_table28(self, data, ndata):
-        if self.num_wide == 15:
-            pass
-        else:
-            raise NotImplementedError(self.num_wide)
+        if self.num_wide == 15 and 0:
+            #pass
+        #else:
+            raise RuntimeError(self.code_information())
         return ndata
 
     def _read_ogs1_table26(self, data, ndata):
+        """reads grid point stresses"""
         result_name = 'grid_point_stresses'
         if self.num_wide == 11:  # real/random
             n = self._read_ogs1_table26_numwide11(data, ndata)
@@ -214,9 +216,9 @@ class OGS(OP2Common):
     def _read_ogs1_table27_numwide9(self, data, ndata):
         """volume stresses"""
         result_name = 'grid_point_volume_stresses'
-        obj_vector_real = GridPointStressesVolumeArray
         if self._results.is_not_saved(result_name):
             return ndata
+        obj_vector_real = GridPointStressesVolumeArray
         self._results._found_result(result_name)
         slot = getattr(self, result_name)
         n = 0
