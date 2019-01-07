@@ -10,7 +10,8 @@ from numpy import frombuffer, radians, sin, cos, ones, dtype as npdtype
 from pyNastran import is_release
 from pyNastran.f06.f06_writer import F06Writer
 from pyNastran.op2.op2_helper import polar_to_real_imag
-from pyNastran.op2.op2_interface.utils import get_superelement_adaptivity_index, update_label2
+from pyNastran.op2.op2_interface.utils import (
+    build_obj, get_superelement_adaptivity_index, update_label2)
 from pyNastran.op2.op2_interface.op2_codes import (
     Op2Codes, get_scode_word, get_sort_method_from_table_name)
 
@@ -1419,9 +1420,10 @@ class OP2Common(Op2Codes, F06Writer):
                 if self.nonlinear_factor not in (None, np.nan):
                     if self.obj.nonlinear_factor in (None, np.nan):
                         msg = (
-                            'The object is flipping from a static (e.g. preload)\n'
-                            'result to a transient/frequency based results\n'
-                            '%s -> %s\n' % (self.obj.nonlinear_factor, self.nonlinear_factor))
+                            'The %s object is flipping from a \n'
+                            'static (e.g. preload) result to a transient/frequency based results\n'
+                            '%s -> %s\n' % (
+                                result_name, self.obj.nonlinear_factor, self.nonlinear_factor))
                         msg += ('code = (subcase=%s, analysis_code=%s, sort=%s, count=%s, '
                                 'ogs=%s, superelement_adaptivity_index=%r pval_step=%r)\n' % tuple(code))
                         msg += '%s\n' % str(self.obj)
@@ -1437,6 +1439,14 @@ class OP2Common(Op2Codes, F06Writer):
                 class_obj.is_cid = is_cid
                 is_sort1 = self.is_sort1  # uses the sort_bits
 
+                #self.load_as_h5 = data_code['load_as_h5']
+                #del data_code['load_as_h5']
+            ##if 'h5_file' in data_code:
+                #self.h5_file = data_code['h5_file']
+                #del data_code['h5_file']
+
+                if self.data_code['load_as_h5']:
+                    self.data_code['h5_file'] = self.op2_reader.h5_file
                 self.obj = class_obj(self.data_code, is_sort1, self.isubcase, self.nonlinear_factor)
             storage_obj[code] = self.obj
         else:
@@ -1890,7 +1900,7 @@ class OP2Common(Op2Codes, F06Writer):
                 self.code = self._get_code()
                 self.obj = slot[self.code]
                 #self.obj.update_data_code(self.data_code)
-                self.obj.build()
+                build_obj(self.obj)
         else:  # not vectorized
             self.result_names.add(result_name)
             if self.read_mode == 1:
@@ -1916,7 +1926,7 @@ class OP2Common(Op2Codes, F06Writer):
             self.code = self._get_code()
             self.obj = slot[self.code]
             #self.obj.update_data_code(self.data_code)
-            self.obj.build()
+            build_obj(self.obj)
         else:
             auto_return = True
         return auto_return
@@ -1995,7 +2005,7 @@ class OP2Common(Op2Codes, F06Writer):
                     raise TypeError(msg)
 
                 #obj.update_data_code(self.data_code)
-                self.obj.build()
+                build_obj(self.obj)
 
             else:  # not vectorized
                 auto_return = True

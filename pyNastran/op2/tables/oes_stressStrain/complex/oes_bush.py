@@ -36,9 +36,6 @@ class ComplexCBushArray(OES_Object):
 
     def build(self):
         """sizes the vectorized attributes of the ComplexCBushArray"""
-        if self.is_built:
-            return
-
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal

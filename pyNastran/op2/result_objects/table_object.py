@@ -264,10 +264,6 @@ class TableArray(ScalarObject):  # displacement style table
         """sizes the vectorized attributes of the TableArray"""
         #print('_nnodes=%s ntimes=%s sort1?=%s ntotal=%s -> _nnodes=%s' % (self._nnodes, self.ntimes, self.is_sort1,
                                                                           #self.ntotal, self._nnodes // self.ntimes))
-        if self.is_built:
-            #print("resetting...")
-            #self.itotal = 0
-            return
 
         # we have a SORT1 data array that will be (ntimes, nnodes, 6)
         # we start by sizing the total number of entries (_nnodes = ntimes * nnodes)

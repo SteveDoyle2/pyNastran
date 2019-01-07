@@ -355,6 +355,7 @@ class ScalarObject(BaseScalarObject):
         """gets the h5 result group"""
         code = self._get_code()
         case_name = 'Subcase=%s' % str(code) # (self.isubcase)
+        print('self.h5_file =', self.h5_file)
         if case_name in self.h5_file:
             subcase_group = self.h5_file[case_name]
         else:

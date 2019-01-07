@@ -635,6 +635,7 @@ class OP2_F06_Common(object):
         #: OGS1 - grid point stresses
         self.grid_point_stresses = {}       # tCode=26
         self.grid_point_volume_stresses = {}  # tCode=27
+        self.grid_point_stress_discontinuities = {}  # tCode=35
 
         #: OPG - summation of loads for each element
         self.load_vectors = {}       # tCode=2  thermal=0
@@ -924,6 +925,7 @@ class OP2_F06_Common(object):
             # OGS1 - grid point stresses
             'grid_point_stresses', # tCode=26
             'grid_point_volume_stresses',  # tCode=27
+            'grid_point_stress_discontinuities',  # tCode=35,
 
             # OEE - strain energy density
             #'strain_energy',  # tCode=18

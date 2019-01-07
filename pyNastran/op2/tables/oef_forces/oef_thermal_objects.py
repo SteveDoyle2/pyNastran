@@ -234,9 +234,6 @@ class RealHeatFluxVU3DArray(ScalarObject):
     def build(self):
         """sizes the vectorized attributes of the RealHeatFluxVU3DArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
-        if self.is_built:
-            return
-
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
@@ -257,31 +254,31 @@ class RealHeatFluxVU3DArray(ScalarObject):
         self.element_parent = zeros((self.nelements, 2), dtype='int32')
 
         #[xgrad, ygrad, zgrad, xflux, yflux, zflux]
-        self.vugrid = zeros((self.ntimes, self.ntotal, 1), dtype='int32')
+        self.vugrid = zeros((self.ntimes, self.ntotal), dtype='int32')
         self.data = zeros((self.ntimes, self.ntotal, 6), dtype='float32')
 
-    def build_dataframe(self):
+    def _build_dataframe(self):
         """creates a pandas dataframe"""
         import pandas as pd
         # TODO: fix me
         headers = self.get_headers()
         #assert 0 not in self.element
-        element_node = [
-            self.element_node[:, 0],
-            self.element_node[:, 1],
+        element_parent = [
+            self.element_parent[:, 0],
+            self.element_parent[:, 1],
         ]
         if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
-                                       major_axis=element_node,
+                                       major_axis=element_parent,
                                        minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
         else:
             self.data_frame = pd.Panel(self.data,
-                                       major_axis=element_node,
+                                       major_axis=element_parent,
                                        minor_axis=headers).to_frame()
             self.data_frame.columns.names = ['Static']
-        self.data_frame.index.names = ['ElementID', 'Node', 'Item']
+        self.data_frame.index.names = ['ElementID', 'Parent', 'Item']
 
     def __eq__(self, table):
         self._eq_header(table)
@@ -329,6 +326,7 @@ class RealHeatFluxVU3DArray(ScalarObject):
 
     def add_sort1(self, dt, eid, parent, grad_fluxes):
         """unvectorized method for adding SORT1 transient data"""
+        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         #icord,
@@ -336,7 +334,7 @@ class RealHeatFluxVU3DArray(ScalarObject):
         self.element_parent[self.ielement, :] = [eid, parent]
         for grad_flux in grad_fluxes:
             #print(self.itime, self.itotal, grad_flux)
-            self.vugrid[self.itime, self.itotal, :] = grad_flux[0]
+            self.vugrid[self.itime, self.itotal] = grad_flux[0]
             self.data[self.itime, self.itotal, :] = grad_flux[1:]
             self.itotal += 1
         self.ielement += 1
@@ -443,9 +441,6 @@ class RealHeatFluxVUBeamArray(ScalarObject):  # 191-VUBEAM
     def build(self):
         """sizes the vectorized attributes of the RealHeatFluxVUBeamArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
-        if self.is_built:
-            return
-
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
@@ -709,9 +704,6 @@ class RealConvHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
     def build(self):
         """sizes the vectorized attributes of the RealConvHeatFluxArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
-        if self.is_built:
-            return
-
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal

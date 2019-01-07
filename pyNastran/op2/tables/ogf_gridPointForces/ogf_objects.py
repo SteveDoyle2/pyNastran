@@ -56,9 +56,6 @@ class RealGridPointForcesArray(ScalarObject):
         """sizes the vectorized attributes of the RealGridPointForcesArray"""
         #print("self.ielement = %s" % self.ielement)
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
-        if self.is_built:
-            return
-
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
         #assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
@@ -966,8 +963,6 @@ class ComplexGridPointForcesArray(ScalarObject):
         """sizes the vectorized attributes of the ComplexGridPointForcesArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (
             #self.ntimes, self.nelements, self.ntotal))
-        if self.is_built:
-            return
         #self.ntotal += 5  # TODO: remove
         #print("self.ntotal = %s" % self.ntotal)
         #print("self.itotal = %s" % self.itotal)

@@ -3,6 +3,14 @@ from itertools import count
 import numpy as np
 
 
+def build_obj(obj):
+    """
+    there are some cases in build objects that set things that aren't consistent,
+    so this exists to combine those
+    """
+    if not obj.is_built:
+        obj.build()
+
 def apply_mag_phase(floats, is_magnitude_phase, isave1, isave2):
     """converts mag/phase data to real/imag"""
     if is_magnitude_phase:

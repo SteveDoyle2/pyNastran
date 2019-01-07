@@ -21,8 +21,6 @@ class AppliedLoadsVectorArray(ScalarObject):
 
     def build(self):
         """sizes the vectorized attributes of the AppliedLoadsVectorArray"""
-        if self.is_built:
-            return
         self.eids = np.zeros(self.itotal, dtype='int32')
         self.sources = np.zeros(self.itotal, dtype='|S8')
         #[f1, f2, f3, m1, m2, m3]

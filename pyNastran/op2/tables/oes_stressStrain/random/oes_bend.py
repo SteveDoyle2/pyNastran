@@ -55,8 +55,6 @@ class RandomBendArray(OES_Object):
         """sizes the vectorized attributes of the RealBeamArray"""
         #print("self.ielement =", self.ielement)
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
-        if self.is_built:
-            return
         nnodes = 1
 
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes

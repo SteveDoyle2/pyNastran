@@ -32,7 +32,7 @@ from pyNastran import is_release
 from pyNastran.op2.op2 import OP2, FatalError
 #SortCodeError, DeviceCodeError, FortranMarkerError
 
-from pyNastran.op2.op2_geom import OP2Geom
+from pyNastran.op2.op2_geom import OP2Geom, DuplicateIDsError
 
 
 # we need to check the memory usage
@@ -493,6 +493,11 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
         #is_passed = True
     #except FortranMarkerError:  # this block should be commented
         #is_passed = True
+
+    except DuplicateIDsError:
+        if not dev:
+            raise
+        is_passed = True
 
     except SystemExit:
         #print_exc(file=sys.stdout)

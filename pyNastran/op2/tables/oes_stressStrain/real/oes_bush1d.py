@@ -54,8 +54,6 @@ class RealBush1DStressArray(OES_Object):
 
     def build(self):
         """sizes the vectorized attributes of the RealBush1DStressArray"""
-        if self.is_built:
-            return
         #print("self.ielement =", self.ielement)
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
 

@@ -149,10 +149,6 @@ class ElementTableArray(ScalarObject):  # displacement style table
         #print('_nelements=%s ntimes=%s sort1?=%s ntotal=%s -> _nelements=%s' % (
             #self._nelements, self.ntimes, self.is_sort1,
             #self.ntotal, self._nelements // self.ntimes))
-        if self.is_built:
-            #print("resetting...")
-            #self.itotal = 0
-            return
 
         self.nelements //= self.ntimes
         self.itime = 0

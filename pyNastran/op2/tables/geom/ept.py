@@ -103,7 +103,7 @@ class EPT(GeomCommon):
     def _add_op2_property(self, prop):
         #if prop.pid > 100000000:
             #raise RuntimeError('bad parsing; pid > 100000000...%s' % str(prop))
-        self._add_property_object(prop, allow_overwrites=True)
+        self._add_property_object(prop, allow_overwrites=False)
         #print(str(prop)[:-1])
 
     def _add_pconv(self, prop):

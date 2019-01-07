@@ -192,9 +192,6 @@ class RealSpringDamperForceArray(RealForceObject):
 
     def build(self):
         """sizes the vectorized attributes of the RealSpringDamperForceArray"""
-        if self.is_built:
-            return
-
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
         assert self.nelements > 0, 'nelements=%s' % self.nelements
@@ -476,9 +473,6 @@ class RealRodForceArray(RealForceObject):
 
     def build(self):
         """sizes the vectorized attributes of the RealRodForceArray"""
-        if self.is_built:
-            return
-
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
@@ -957,9 +951,6 @@ class RealCShearForceArray(RealForceObject):
     def build(self):
         """sizes the vectorized attributes of the RealCShearForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
-        if self.is_built:
-            return
-
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
@@ -1620,9 +1611,6 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
     def build(self):
         """sizes the vectorized attributes of the RealPlateBilinearForceArray"""
          #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
-        if self.is_built:
-            return
-
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
@@ -1923,9 +1911,6 @@ class RealCBarForceArray(RealForceObject):  # 34-CBAR
     def build(self):
         """sizes the vectorized attributes of the RealCBarForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
-        if self.is_built:
-            return
-
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
@@ -2306,9 +2291,6 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
     def build(self):
         """sizes the vectorized attributes of the RealCBar100ForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
-        if self.is_built:
-            return
-
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
@@ -2680,9 +2662,6 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
 
     def build(self):
         """sizes the vectorized attributes of the RealBendForceArray"""
-        if self.is_built:
-            return
-
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
@@ -3153,9 +3132,6 @@ class RealCBeamForceVUArray(RealForceObject):  # 191-VUBEAM
     def build(self):
         """sizes the vectorized attributes of the RealCBeamForceVUArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
-        if self.is_built:
-            return
-
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
@@ -3600,14 +3576,11 @@ class RealForceVU2DArray(RealForceObject):  # 189-VUQUAD, 190-VUTRIA
     def build(self):
         """sizes the vectorized attributes of the RealForceVU2DArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
-        if self.is_built:
-            return
-
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
         #self.names = []
-        #self.nelements //= self.ntimes
+        self.nelements //= self.ntimes
         self.itime = 0
         self.ielement = 0
         self.itotal = 0

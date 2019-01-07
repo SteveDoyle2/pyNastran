@@ -950,7 +950,7 @@ class OEF(OP2Common):
         if self.format_code == 1 and self.num_wide == 27:  # real
             result_name = 'thermalLoad_VU' + postfix
             if self._results.is_not_saved(result_name):
-                return ndata
+                return ndata, None, None
             self._results._found_result(result_name)
             slot = self.get_result(result_name)
 
@@ -971,7 +971,7 @@ class OEF(OP2Common):
                 nelements, result_name, slot, RealHeatFlux_2D_3DArray)
             if auto_return:
                 self._data_factor = nnodes
-                return nelements * self.num_wide * 4
+                return nelements * self.num_wide * 4, None, None
 
             obj = self.obj
             if self.use_vector and is_vectorized and self.sort_method == 1:
@@ -1017,16 +1017,20 @@ class OEF(OP2Common):
                     (eid_device, parent, coord, icord, theta, unused_null) = out
                     eid, dt = get_eid_dt_from_eid_device(
                         eid_device, self.nonlinear_factor, self.sort_method)
-                    data_in = [eid, parent, coord, icord, theta]
                     #self.log.debug('RealHeatFluxVUArray = %s' % data_in)
                     grad_fluxes = []
                     for unused_j in range(nnodes):
                         edata = data[n:n+28]  # 7*4
                         n += 28
                         out = s2.unpack(edata)
-                        grad_fluxes.append(out)
-                    data_in.append(grad_fluxes)
-                    obj.add_sort1(dt, eid, parent, coord, icord, theta, grad_fluxes)
+                        #grad_fluxes.append(out)
+                        dunno, v1, v2, v3, v4, v5, v6 = out
+                        # dt, eid, etype, v1, v2, v3, v4, v5, v6
+                        #obj.add_sort1(dt, eid, parent, v1, v2, v3, v4, v5, v6)
+                        obj.add_sort1(dt, eid, parent, coord, icord, theta, v1, v2, v3, v4, v5, v6)
+                    #data_in.append(grad_fluxes)
+                    #print(obj)
+                    #obj.add_sort1(dt, eid, parent, coord, icord, theta, grad_fluxes)
         else:
             msg = self.code_information()
             return self._not_implemented_or_skip(data, ndata, msg), None, None
@@ -1087,24 +1091,25 @@ class OEF(OP2Common):
                 eids = ints[:, 0] // 10
                 parent = ints[:, 1]
                 assert eids.min() > 0, eids.min()
-                obj.element_parent[ielement:ielement2] = eids
-                obj.element_parent[ielement:ielement2] = parent
+                obj.element_parent[ielement:ielement2, 0] = eids
+                obj.element_parent[ielement:ielement2, 1] = parent
 
                 #[vugrid, xgrad, ygrad, zgrad, xflux, yflux, zflux]
-                obj.vugrid[obj.itime, itotal:itotal2, :] = ints2[:, 0]
-                obj.data[obj.itime, itotal:itotal2, :] = floats2[:, 3:].copy()
+                obj.vugrid[obj.itime, itotal:itotal2] = ints2[:, 0]
+                obj.data[obj.itime, itotal:itotal2, :] = floats2[:, 1:].copy()
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
                 s1 = self.struct_2i
                 s2 = Struct(self._endian + self._analysis_code_fmt + b'6f')
-                grad_fluxes = []
                 for unused_i in range(nelements):
                     out = s1.unpack(data[n:n+8])
                     n += 8
                     (eid_device, parent) = out
                     eid, dt = get_eid_dt_from_eid_device(
                         eid_device, self.nonlinear_factor, self.sort_method)
+
+                    grad_fluxes = []
                     for unused_j in range(nnodes):
                         out = s2.unpack(data[n:n+28])
                         grad_fluxes.append(out)
@@ -1123,7 +1128,7 @@ class OEF(OP2Common):
 
         result_name = 'vu_beam_thermal_load' + postfix
         if self._results.is_not_saved(result_name):
-            return ndata
+            return ndata, None, None
         self._results._found_result(result_name)
         slot = self.get_result(result_name)
         if self.format_code == 1 and self.num_wide == numwide_real:  # real
@@ -1134,7 +1139,7 @@ class OEF(OP2Common):
                 nelements, result_name, slot, RealHeatFluxVUBeamArray)
             if auto_return:
                 self._data_factor = nnodes
-                return nelements * self.num_wide * 4
+                return nelements * self.num_wide * 4, None, None
 
             obj = self.obj
             if self.use_vector and is_vectorized and self.sort_method == 1:
@@ -3358,13 +3363,14 @@ class OEF(OP2Common):
             #ntotal = (6 + nnodes * 13) * 4 # 6+n*13
             ntotal = 24 + 52 * nnodes
             nelements = ndata // ntotal
+            nlayers = nelements * nnodes
             #result_name = 'force_VU_2D'
             self._results._found_result(result_name)
 
-
             auto_return, is_vectorized = self._create_oes_object4(
-                nelements, result_name, slot, RealForceVU2DArray)
+                nlayers, result_name, slot, RealForceVU2DArray)
             if auto_return:
+                self._data_factor = nnodes  # number of "layers" for an element
                 return nelements * self.num_wide * 4, None, None
 
             obj = self.obj
@@ -3404,9 +3410,9 @@ class OEF(OP2Common):
 
                     eid, dt = get_eid_dt_from_eid_device(
                         eid_device, self.nonlinear_factor, self.sort_method)
-                    data_in = [eid, parent, coord, icord, theta]
 
-                    forces = []
+                    #vugrids = []
+                    #forces = []
                     for unused_j in range(nnodes):
                         edata = data[n:n+52]  # 13*4
                         n += 52
@@ -3418,166 +3424,25 @@ class OEF(OP2Common):
                         out2 = (vugrid, mfx, mfy, mfxy, bmx, bmy, bmxy, syz, szx)
                         obj.add_sort1(dt, eid, parent, coord, icord, theta,
                                       vugrid, mfx, mfy, mfxy, bmx, bmy, bmxy, syz, szx)
-                        forces.append(out2)
-                    data_in.append(forces)
+                        #vugrids.append(vugrid)
+                        #forces.append(out2)
                     #data_in = [vugrid,mfx,mfy,mfxy,a,b,c,bmx,bmy,bmxy,syz,szx,d]
-                    #obj.add_sort1(dt, data_in)
+                    #obj.add_sort1(dt, eid, parent, coord, icord, theta, vugrids, forces)
 
         elif self.format_code in [2, 3] and self.num_wide == numwide_imag:  # imag
-            #if 0:
-                #if self.element_type == 64: # CQUAD8
-                    #result_name = 'cquad8_force'
-                    ##gridC = 'CEN/8'
-                #elif self.element_type == 70:  # CTRIAR
-                    #result_name = 'ctriar_force'
-                    ##gridC = 'CEN/3'
-                #elif self.element_type == 75:  # CTRIA6
-                    #result_name = 'ctria6_force'
-                    ##gridC = 'CEN/6'
-                #elif self.element_type == 82: # CQUADR
-                    #result_name = 'cquadr_force'
-                    ##gridC = 'CEN/4'
-                #elif self.element_type == 144: # CQUAD4-bilinear
-                    ## there's no nead to separate this with centroidal strain
-                    ## because you can only have one in a given OP2
-                    #result_name = 'cquad4_force'
-                    ##gridC = 'CEN/4'
-                #else:
-                #raise RuntimeError(self.code_information())
-
-                #if self._results.is_not_saved(result_name):
-                    #return ndata, None, None
-                #self._results._found_result(result_name)
-
-                #ntotal = numwide_imag #6 + 25 * nnodes; nnodes=[3, 4]
-                #nelements = ndata // ntotal
-                #nlayers = nelements * nnodes
-                ##nlayers = 2 * nelements * nnodes_all  # 2 layers per node
-
-                #auto_return, is_vectorized = self._create_oes_object4(
-                    #nlayers, result_name, slot, obj_vector_real)
-                #if auto_return:
-                    #self._data_factor = nnodes  # TODO: why is this 10?
-                    #return nelements * self.num_wide * 4, None, None
-
-                #obj = self.obj
-                ##print('dt=%s, itime=%s' % (obj.itime, dt))
-                #is_vectorized = False
-                #if self.use_vector and is_vectorized and self.sort_method == 1:
-                    ## self.itime = 0
-                    ## self.ielement = 0
-                    ## self.itotal = 0
-                    ##self.ntimes = 0
-                    ##self.nelements = 0
-                    #n = nelements * self.num_wide * 4
-
-                    #istart = obj.itotal
-                    #iend = istart + nlayers
-                    #obj._times[obj.itime] = dt
-
-                    #if obj.itime == 0:
-                        #ints = frombuffer(data, dtype=self.idtype).reshape(nelements, numwide_real)
-                        #ints1 = ints[:, 2:].reshape(nlayers//2, 17)[:, 0].reshape(nelements, nnodes_all).copy()
-                        #ints1[:, 0] = 0.
-                        #nids = ints1.ravel()
-
-                        #eids = ints[:, 0] // 10
-                        #eids2 = array([eids] * (nnodes * 2), dtype='int32').T.ravel()
-                        ##nids2 = array([nids, nids], dtype='int32').T.ravel()
-                        ##eids2 = vstack([eids] * (nnodes_all * 2)).T.ravel()
-                        #nids2 = vstack([nids, nids]).T.ravel()
-                        ##eids2 = repeat(eids, 2 * nnodes_all)
-                        ## nids2 = repeat(nids, 2)
-                        #obj.element_node[istart:iend, 0] = eids2
-                        #obj.element_node[istart:iend, 1] = nids2
-                        ##assert obj.element_node[:iend, 0].min() > 0, eids2
-                        #if obj.nonlinear_factor is not None:
-                            #float_mask = np.arange(nelements * numwide_real, dtype=np.int32).reshape(nelements, numwide_real)
-                            #float_mask1 = float_mask[:, 2:].reshape(nlayers // 2, 17)[:, 1:].reshape(nlayers, 8)
-                            #obj.float_mask = float_mask1
-
-                    #if obj.nonlinear_factor is not None:
-                        #results = frombuffer(data, dtype=self.fdtype)[obj.float_mask].copy()
-                    #else:
-                        #floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, numwide_real)
-                        #floats1 = floats[:, 2:].reshape(nlayers // 2, 17)
-                        #results = floats1[:, 1:].reshape(nlayers, 8).copy()
-
-                    ##[fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]
-                    #obj.data[obj.itime, istart:iend, :] = results
-                #else:
-                    ##if self.is_debug_file:
-                        ##self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
-
-                    #n = 0
-                    #s1 = Struct(self._endian + b'iii4sii')
-                    #s2 = Struct(self._endian + b'i3f3i5fi3f3i5fi')
-                    #nelements = ndata // ntotal
-                    #for unused_i in range(nelements):
-                        #edata = data[n:n+24]  # 6*4
-                        #n += 24
-
-                        #out = s1.unpack(edata)
-                        #if self.is_debug_file:
-                            #self.binary_debug.write('OEF_Force_%s-%s - %s\n' % (
-                                #etype, self.element_type, str(out)))
-                        #(eid_device, parent, coord, icord, theta, _) = out
-
-                        #eid, dt = get_eid_dt_from_eid_device(
-                            #eid_device, self.nonlinear_factor, self.sort_method)
-                        #data_in = [eid, parent, coord, icord, theta]
-
-                        #forces = []
-                        #for unused_j in range(nnodes):
-                            #edata = data[n:n+100]  # 13*4
-                            #n += 100
-                            #out = s2.unpack(edata)
-                            #if self.is_debug_file:
-                                #self.binary_debug.write('OEF_Force_%s-%s - %s\n' % (
-                                    #etype, self.element_type, str(out)))
-                            #[vugrid,
-                             #mfxr, mfyr, mfxyr, unused_ai1, unused_bi1, unused_ci1,
-                             #bmxr, bmyr, bmxyr, syzr, szxr, unused_di1,
-                             #mfxi, mfyi, mfxyi, unused_ai2, unused_bi2, unused_ci2,
-                             #bmxi, bmyi, bmxyi, syzi, szxi, unused_di2] = out
-
-                            #if is_magnitude_phase:
-                                #mfx = polar_to_real_imag(mfxr, mfxi)
-                                #mfy = polar_to_real_imag(mfyr, mfyi)
-                                #mfxy = polar_to_real_imag(mfxyr, mfxyi)
-                                #bmx = polar_to_real_imag(bmxr, bmxi)
-                                #bmy = polar_to_real_imag(bmyr, bmyi)
-                                #bmxy = polar_to_real_imag(bmxyr, bmxyi)
-                                #syz = polar_to_real_imag(syzr, syzi)
-                                #szx = polar_to_real_imag(szxr, szxi)
-                            #else:
-                                #mfx = complex(mfxr, mfxi)
-                                #mfy = complex(mfyr, mfyi)
-                                #mfxy = complex(mfxyr, mfxyi)
-                                #bmx = complex(bmxr, bmxi)
-                                #bmy = complex(bmyr, bmyi)
-                                #bmxy = complex(bmxyr, bmxyi)
-                                #syz = complex(syzr, syzi)
-                                #szx = complex(szxr, szxi)
-                            #out2 = [vugrid, mfx, mfy, mfxy, bmx, bmy, bmxy, syz, szx]
-                            #forces.append(out2)
-
-                        #data_in.append(forces)
-                        ##data_in = [vugrid,mfxr,mfyr,mfxyr,bmxr,bmyr,bmxyr,syzr,szxr,
-                                         ##mfxi,mfyi,mfxyi,bmxi,bmyi,bmxyi,syzi,szxi]
-                        #obj.add_sort1(nnodes, dt, data_in)
-            #else:
             if self._results.is_not_saved(result_name):
                 return ndata, None, None
             self._results._found_result(result_name)
 
             ntotal = numwide_imag #6 + 25 * nnodes; nnodes=[3, 4]
             nelements = ndata // ntotal
-            #nlayers = 2 * nelements * nnodes_all  # 2 layers per node
+            assert ndata % ntotal == 0
 
+            nlayers = nelements * nnodes
             auto_return, is_vectorized = self._create_oes_object4(
-                nelements, result_name, slot, ComplexForceVU_2DArray)
+                nlayers, result_name, slot, ComplexForceVU_2DArray)
             if auto_return:
+                self._data_factor = nnodes  # number of "layers" for an element
                 return nelements * self.num_wide * 4, None, None
 
             obj = self.obj
@@ -3602,8 +3467,8 @@ class OEF(OP2Common):
 
                     eid, dt = get_eid_dt_from_eid_device(
                         eid_device, self.nonlinear_factor, self.sort_method)
-                    data_in = [eid, parent, coord, icord, theta]
 
+                    vugrids = []
                     forces = []
                     for unused_j in range(nnodes):
                         edata = data[n:n+100]  # 13*4
@@ -3635,13 +3500,13 @@ class OEF(OP2Common):
                             bmxy = complex(bmxyr, bmxyi)
                             syz = complex(syzr, syzi)
                             szx = complex(szxr, szxi)
-                        out2 = [vugrid, mfx, mfy, mfxy, bmx, bmy, bmxy, syz, szx]
-                        forces.append(out2)
+                        vugrids.append(vugrid)
+                        forcei = [mfx, mfy, mfxy, bmx, bmy, bmxy, syz, szx]
+                        forces.append(forcei)
 
-                    data_in.append(forces)
                     #data_in = [vugrid,mfxr,mfyr,mfxyr,bmxr,bmyr,bmxyr,syzr,szxr,
                                      #mfxi,mfyi,mfxyi,bmxi,bmyi,bmxyi,syzi,szxi]
-                    obj.add_sort1(nnodes, dt, *data_in)
+                    obj.add_sort1(nnodes, dt, eid, parent, coord, icord, theta, vugrids, forces)
         else:
             msg = self.code_information()
             return self._not_implemented_or_skip(data, ndata, msg), None, None

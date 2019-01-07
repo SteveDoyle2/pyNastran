@@ -51,8 +51,6 @@ class ComplexShearArray(OES_Object):
             self.subtitle = self.data_code['subtitle']
         #print('ntimes=%s nelements=%s ntotal=%s subtitle=%s' % (
             #self.ntimes, self.nelements, self.ntotal, self.subtitle))
-        if self.is_built:
-            return
         nnodes = 1
 
         #self.names = []

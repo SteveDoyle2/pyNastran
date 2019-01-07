@@ -48,9 +48,6 @@ class ComplexRodForceArray(ScalarObject):
     def build(self):
         """sizes the vectorized attributes of the ComplexRodForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
-        if self.is_built:
-            return
-
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
@@ -274,8 +271,6 @@ class ComplexCShearForceArray(ScalarObject):
     def build(self):
         """sizes the vectorized attributes of the ComplexCShearForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
-        if self.is_built:
-            return
 
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
         assert self.nelements > 0, 'nelements=%s' % self.nelements
@@ -532,9 +527,6 @@ class ComplexSpringDamperForceArray(ScalarObject):
     def build(self):
         """sizes the vectorized attributes of the ComplexSpringDamperForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
-        if self.is_built:
-            return
-
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
@@ -758,9 +750,6 @@ class ComplexViscForceArray(ScalarObject):
     def build(self):
         """sizes the vectorized attributes of the ComplexViscForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
-        if self.is_built:
-            return
-
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
@@ -959,9 +948,6 @@ class ComplexPlateForceArray(ScalarObject):
     def build(self):
         """sizes the vectorized attributes of the ComplexPlateForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
-        if self.is_built:
-            return
-
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
@@ -1718,8 +1704,6 @@ class ComplexCBeamForceArray(ScalarObject):
         """sizes the vectorized attributes of the ComplexCBeamForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s subtitle=%s' % (
             #self.ntimes, self.nelements, self.ntotal, self.subtitle))
-        if self.is_built:
-            return
         nnodes = 11
 
         #self.names = []
@@ -1997,9 +1981,6 @@ class ComplexCBendForceArray(ScalarObject):  # 69-CBEND
     def build(self):
         """sizes the vectorized attributes of the ComplexCBendForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
-        if self.is_built:
-            return
-
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
@@ -2782,9 +2763,6 @@ class ComplexCBeamForceVUArray(ScalarObject):  # 191-VUBEAM
         """sizes the vectorized attributes of the ComplexCBendForceVUArray"""
         #print("self.ielement = %s" % self.ielement)
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
-        if self.is_built:
-            return
-
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
@@ -3054,6 +3032,7 @@ class ComplexForceVU_2DArray(ScalarObject):  # 189-VUQUAD,190-VUTRIA
         #self.ntimes = 0  # or frequency/mode
         #self.ntotal = 0
         self.nelements = 0  # result specific
+        self.ntimes = 0
 
         # TODO if dt=None, handle SORT1 case
         self.dt = dt
@@ -3063,6 +3042,10 @@ class ComplexForceVU_2DArray(ScalarObject):  # 189-VUQUAD,190-VUTRIA
         #else:
             #assert dt is not None
             #self.add = self.add_sort2
+
+    def _reset_indices(self):
+        self.itotal = 0
+        self.ielement = 0
 
     def get_stats(self, short=False):
         if not self.is_built:
@@ -3098,15 +3081,14 @@ class ComplexForceVU_2DArray(ScalarObject):  # 189-VUQUAD,190-VUTRIA
 
     def build(self):
         """sizes the vectorized attributes of the ComplexCShearForceArray"""
-        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
-        if self.is_built:
-            return
-
+        #print('%s ntimes=%s nelements=%s ntotal=%s' % (
+            #self.element_type, self.ntimes, self.nelements, self.ntotal))
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
         #self.names = []
         self.nelements //= self.ntimes
+        self.ntotal = self.nelements
         self.itime = 0
         self.ielement = 0
         self.itotal = 0
@@ -3119,11 +3101,11 @@ class ComplexForceVU_2DArray(ScalarObject):  # 189-VUQUAD,190-VUTRIA
         if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
-        self.element = zeros(self.nelements, dtype='int32')
+        self.element_node = zeros((self.nelements, 2), dtype='int32')
 
         #[membrane_x, membrane_y, membrane_xy, bending_x, bending_y, bending_xy,
         # shear_yz, shear_xz]
-        self.data = zeros((self.ntimes, self.ntotal, 8), dtype='complex64')
+        self.data = zeros((self.ntimes, self.nelements, 8), dtype='complex64')
 
     def get_headers(self):
         headers = [
@@ -3132,7 +3114,7 @@ class ComplexForceVU_2DArray(ScalarObject):  # 189-VUQUAD,190-VUTRIA
             'shear_yz', 'shear_xz']
         return headers
 
-    def add_sort1(self, nnodes, dt, eid, parent, coord, icord, theta, forces):
+    def add_sort1(self, nnodes, dt, eid, parent, coord, icord, theta, vugrids, forces):
         """unvectorized method for adding SORT1 transient data"""
         assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
@@ -3141,9 +3123,10 @@ class ComplexForceVU_2DArray(ScalarObject):  # 189-VUQUAD,190-VUTRIA
         #self.coord[eid] = coord
         #self.icord[eid] = icord
         #self.theta[eid] = theta
-        self.element[self.ielement] = eid
-        self.data[self.itime, self.ielement, :] = forces
-
+        for vugrid, force in zip(vugrids, forces):
+            self.element_node[self.ielement, :] = [eid, vugrid]
+            self.data[self.itime, self.ielement, :] = force
+            self.ielement += 1
 #'                  C O M P L E X   F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )'
 #'                                                          (REAL/IMAGINARY)'
 #' '

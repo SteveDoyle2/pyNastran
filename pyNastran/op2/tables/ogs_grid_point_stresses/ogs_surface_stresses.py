@@ -228,8 +228,6 @@ class GridPointStressesVolumeArray(ScalarObject):
 
     def build(self):
         """sizes the vectorized attributes of the GridPointStressesArray"""
-        if self.is_built:
-            return
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         #print('self.IDs', self.data)
         #print('building...')

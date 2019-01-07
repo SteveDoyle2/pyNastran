@@ -268,7 +268,7 @@ class GEOM2(GeomCommon):
             for nid in elem.nodes:
                 if nid == -1:
                     assert nid > 0, elem
-        self._add_element_object(elem, allow_overwrites=True)
+        self._add_element_object(elem, allow_overwrites=False)
         #print(str(elem)[:-1])
 
 # 1-AEROQ4 (???)

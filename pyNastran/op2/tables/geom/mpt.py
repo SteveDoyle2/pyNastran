@@ -63,7 +63,7 @@ class MPT(GeomCommon):
     def add_op2_material(self, mat):
         #if mat.mid > 100000000:
             #raise RuntimeError('bad parsing...')
-        self._add_structural_material_object(mat, allow_overwrites=True)
+        self._add_structural_material_object(mat, allow_overwrites=False)
         #print(str(mat)[:-1])
 
     def _read_creep(self, data, n):
@@ -80,7 +80,7 @@ class MPT(GeomCommon):
             if self.is_debug_file:
                 self.binary_debug.write('  CREEP=%s\n' % str(out))
             mat = CREEP.add_op2_data(out)
-            self._add_creep_material_object(mat, allow_overwrites=True)
+            self._add_creep_material_object(mat, allow_overwrites=False)
             n += 64
         self.card_count['CREEP'] = nmaterials
         return n
@@ -161,7 +161,7 @@ class MPT(GeomCommon):
             out = s.unpack(data[n:n+44])
             (mid, k, cp, rho, h, mu, hgen, refenth, tch, tdelta, qlat) = out
             mat = MAT4.add_op2_data(out)
-            self._add_thermal_material_object(mat, allow_overwrites=True)
+            self._add_thermal_material_object(mat, allow_overwrites=False)
             n += 44
         self.card_count['MAT4'] = nmaterials
         return n
@@ -178,7 +178,7 @@ class MPT(GeomCommon):
             if self.is_debug_file:
                 self.binary_debug.write('  MAT5=%s\n' % str(out))
             mat = MAT5.add_op2_data(out)
-            self._add_thermal_material_object(mat, allow_overwrites=True)
+            self._add_thermal_material_object(mat, allow_overwrites=False)
             n += 40
         self.card_count['MAT5'] = nmaterials
         return n
@@ -401,7 +401,7 @@ class MPT(GeomCommon):
             if self.is_debug_file:
                 self.binary_debug.write('  MATS1=%s\n' % str(out))
             mat = MATS1.add_op2_data(data_in)
-            self._add_material_dependence_object(mat, allow_overwrites=True)
+            self._add_material_dependence_object(mat, allow_overwrites=False)
         self.card_count['MATS1'] = nmaterials
         return n
 

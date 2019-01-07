@@ -35,8 +35,6 @@ class ComplexTriaxStressArray(OES_Object):
         """sizes the vectorized attributes of the ComplexPlateArray"""
         if not hasattr(self, 'subtitle'):
             self.subtitle = self.data_code['subtitle']
-        if self.is_built:
-            return
         nnodes = self.get_nnodes()
 
         #self.names = []
@@ -160,8 +158,6 @@ class ComplexPlateArray(OES_Object):
         """sizes the vectorized attributes of the ComplexPlateArray"""
         if not hasattr(self, 'subtitle'):
             self.subtitle = self.data_code['subtitle']
-        if self.is_built:
-            return
         nnodes = self.get_nnodes()
 
         #self.names = []

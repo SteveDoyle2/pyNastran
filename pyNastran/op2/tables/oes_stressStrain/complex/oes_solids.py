@@ -77,9 +77,8 @@ class ComplexSolidArray(OES_Object):
 
     def build(self):
         """sizes the vectorized attributes of the ComplexSolidArray"""
-        #print('ntimes=%s nelements=%s ntotal=%s subtitle=%s' % (self.ntimes, self.nelements, self.ntotal, self.subtitle))
-        if self.is_built:
-            return
+        #print('ntimes=%s nelements=%s ntotal=%s subtitle=%s' % (
+            #self.ntimes, self.nelements, self.ntotal, self.subtitle))
         nnodes = self.get_nnodes()
 
         #self.names = []

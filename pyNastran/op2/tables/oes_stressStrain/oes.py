@@ -24,7 +24,7 @@ from numpy import fromstring, frombuffer, radians, sin, cos, vstack, repeat, arr
 import numpy as np
 
 from pyNastran.op2.op2_interface.op2_common import OP2Common
-from pyNastran.op2.op2_interface.utils import apply_mag_phase
+from pyNastran.op2.op2_interface.utils import apply_mag_phase, build_obj
 from pyNastran.op2.op2_helper import polar_to_real_imag
 
 from pyNastran.op2.tables.utils import get_eid_dt_from_eid_device
@@ -1505,7 +1505,7 @@ class OES(OP2Common):
                     self.log.error(msg)
                     raise
                 #self.obj.update_data_code(self.data_code)
-                self.obj.build()
+                build_obj(self.obj)
 
             else:  # not vectorized
                 auto_return = True
@@ -1544,7 +1544,7 @@ class OES(OP2Common):
                     self.log.error(msg)
                     raise
                 #self.obj.update_data_code(self.data_code)
-                self.obj.build()
+                build_obj(self.obj)
 
             else:  # not vectorized
                 auto_return = True
@@ -5815,24 +5815,23 @@ class OES(OP2Common):
         """
         139-QUAD4FD
         """
-        #if self.read_mode == 1:
-            #return ndata
+        #if self.is_stress:
+        result_name = prefix + 'hyperelastic_cquad4_strain' + postfix
+        if self._results.is_not_saved(result_name):
+            return ndata, None, None
+
         if self.format_code == 1 and self.num_wide == 30:
-            if self.is_stress:
-                obj_vector_real = HyperelasticQuadArray
-                result_name = prefix + 'hyperelastic_cquad4_strain' + postfix
-                self.create_transient_object(
-                    result_name, self.hyperelastic_cquad4_strain, obj_vector_real)
-            else:
-                msg = 'HyperelasticQuadArray???'
-                return self._not_implemented_or_skip(data, ndata, msg)
+            obj_vector_real = HyperelasticQuadArray
 
             self._results._found_result(result_name)
             slot = self.get_result(result_name)
+            self.create_transient_object(result_name, slot, obj_vector_real)
 
             ntotal = 120  # 36+28*3
             nelements = ndata // ntotal
 
+            #print(self.code_information())
+            #print(self.table_name_str)
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_vector_real)
             if auto_return:

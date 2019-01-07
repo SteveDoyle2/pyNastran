@@ -3093,6 +3093,8 @@ class OP2Reader(object):
             if op2.table_name in oes_nl and hasattr(op2, 'num_wide') and op2.num_wide == 146:
                 data_code_old = deepcopy(op2.data_code)
 
+            if self.load_as_h5:
+                assert self.h5_file is not None, self.h5_file
             op2.data_code = {
                 '_encoding' : self._encoding,
                 'load_as_h5' : self.load_as_h5,

@@ -109,10 +109,10 @@ class OGS(OP2Common):
             #OGS1- grid point stresses - principal
             assert self.table_name in [b'OGS1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
             n = self._read_ogs1_table28(data, ndata)
-        #elif self.table_code == 35:
+        elif self.table_code == 35:
             # OGS - Grid point stress discontinuities (plane strain)
-            #assert self.table_name in [b'OGS1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
-            #n = self._read_ogs1_table35(data, ndata)
+            assert self.table_name in [b'OGS1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+            n = self._read_ogs1_table35(data, ndata)
         else:
             msg = self.code_information()
             raise RuntimeError(self.code_information())
@@ -218,6 +218,7 @@ class OGS(OP2Common):
         result_name = 'grid_point_volume_stresses'
         if self._results.is_not_saved(result_name):
             return ndata
+
         obj_vector_real = GridPointStressesVolumeArray
         self._results._found_result(result_name)
         slot = getattr(self, result_name)
@@ -271,25 +272,39 @@ class OGS(OP2Common):
 
     def _read_ogs1_table35(self, data, ndata):
         """grid point stress discontinuities (plane stress/strain)"""
-        result_name = 'grid_point_stresses'
+        result_name = 'grid_point_stress_discontinuities'
+        if self._results.is_not_saved(result_name):
+            return ndata
+        self._results._found_result(result_name)
+        slot = getattr(self, result_name)
+        n = 0
+
         if self.num_wide == 6:
-            #self.create_transient_object(self.gridPointStresses, GridPointStresses)
-            n = self._read_ogs1_table35_numwide6(data, ndata)
+            obj_vector_real = GridPointStressesVolumeArray
+
+            #result_name, is_random = self._apply_oes_ato_crm_psd_rms_no(result_name)
+            ntotal = 6 * 4
+            nelements = ndata // ntotal
+            assert ndata % (nelements * 24) == 0, ndata % (nelements * 24)
+            auto_return, is_vectorized = self._create_oes_object4(
+                nelements, result_name, slot, obj_vector_real)
+            if auto_return:
+                return nelements * self.num_wide * 4
+
+            obj = self.obj
+            dt = self.nonlinear_factor
+
+            if self.use_vector and is_vectorized and 0:
+                s = Struct(self._endian + b'i5f')
+                nelements = ndata // 24  # 6*4
+                for i in range(nelements):
+                    out = s.unpack(data[n:n+24])
+                    (ekey, nx, ny, nz, txy, pressure) = out
+                    nid = ekey // 10
+                    assert nid > 0, nid
+                    self.obj.add_sort1(dt, nid, nx, ny, nz, txy, tyz, txz, pressure, ovm)
+                    n += 24
         else:
             msg = 'only num_wide=11 is allowed  num_wide=%s' % self.num_wide
             raise RuntimeError(msg)
-        return n
-
-    def _read_ogs1_table35_numwide6(self, data, ndata):
-        """grid point stress discontinuities (plane stress/strain)"""
-        s = Struct(self._endian + b'i5f')
-        n = 0
-        nelements = ndata // 24  # 6*4
-        for i in range(nelements):
-            out = s.unpack(data[n:n+24])
-            (ekey, nx, ny, nz, txy, pressure) = out
-            nid = ekey // 10
-            assert nid > 0, nid
-            self.obj.add_sort1(dt, nid, nx, ny, nz, txy, tyz, txz, pressure, ovm)
-            n += 24
         return n

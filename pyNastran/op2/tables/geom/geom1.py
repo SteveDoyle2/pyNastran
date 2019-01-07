@@ -155,7 +155,7 @@ class GEOM1(GeomCommon):
             assert one == 1, one
             data_in = [cid, g1, g2, g3]
             coord = CORD1S.add_op2_data(data_in)
-            self._add_coord_object(coord, allow_overwrites=True)
+            self._add_coord_object(coord, allow_overwrites=False)
             n += 24
         self.increase_card_count('CORD1S', nentries)
         return n
@@ -176,7 +176,7 @@ class GEOM1(GeomCommon):
             coord = CORD2C.add_op2_data(data_in)
             if self.is_debug_file:
                 self.binary_debug.write('  CORD2C=%s\n' % str(out))
-            self._add_coord_object(coord, allow_overwrites=True)
+            self._add_coord_object(coord, allow_overwrites=False)
             n += 52
         self.increase_card_count('CORD2C', nentries)
         return n
@@ -199,7 +199,7 @@ class GEOM1(GeomCommon):
             if self.is_debug_file:
                 self.binary_debug.write('  CORD2R=%s\n' % data_in)
             coord = CORD2R.add_op2_data(data_in)
-            self._add_coord_object(coord, allow_overwrites=True)
+            self._add_coord_object(coord, allow_overwrites=False)
             n += 52
         self.increase_card_count('CORD2R', nentries)
         return n
@@ -218,7 +218,7 @@ class GEOM1(GeomCommon):
             if self.is_debug_file:
                 self.binary_debug.write('  CORD2S=%s\n' % str(out))
             coord = CORD2S.add_op2_data(data_in)
-            self._add_coord_object(coord, allow_overwrites=True)
+            self._add_coord_object(coord, allow_overwrites=False)
             n += 52
         self.increase_card_count('CORD2S', nentries)
         return n
@@ -237,7 +237,7 @@ class GEOM1(GeomCommon):
             coord = CORD3G.add_op2_data(out)
             if self.is_debug_file:
                 self.binary_debug.write('  CORD3G=%s\n' % str(out))
-            self._add_coord_object(coord, allow_overwrites=True)
+            self._add_coord_object(coord, allow_overwrites=False)
             n += 16
         self.increase_card_count('CORD3G', nentries)
         return n
