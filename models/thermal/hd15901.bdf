@@ -219,7 +219,7 @@ $
 $*******
 $       END OF BULK DATA DECK
 $
-CELAS2  300     1.+5    100     1
+CELAS2  301     1.+5    100     1
 CHBDYP  60      300     LINE                    1       5
                                                         1.
 CHBDYG  200             AREA4                   2000

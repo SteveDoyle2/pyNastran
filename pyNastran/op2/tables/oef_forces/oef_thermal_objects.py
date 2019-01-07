@@ -330,8 +330,13 @@ class RealHeatFluxVU3DArray(ScalarObject):
         assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         #icord,
-        #print([eid, parent])
         self.element_parent[self.ielement, :] = [eid, parent]
+        #try:
+            #self.element_parent[self.ielement, :] = [eid, parent]
+            #print([self.ielement, eid, parent])
+        #except:
+            #print(['*', self.ielement, eid, parent])
+
         for grad_flux in grad_fluxes:
             #print(self.itime, self.itotal, grad_flux)
             self.vugrid[self.itime, self.itotal] = grad_flux[0]

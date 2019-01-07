@@ -121,6 +121,7 @@ NO_THETA = [
     'CBAR', 'CBEAM', 'CBEAM3',
     'CBUSH', 'CBUSH1D', 'CBUSH2D', 'CVISC',
     'CONROD', 'CROD', 'PLOTEL',
+    'CHBDYP',
 ]
 
 IS_TESTING = 'test' in sys.argv[0]
@@ -4759,7 +4760,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                         nid_to_pid_map[nid].append(pid)
 
                 if node_ids[0] is None and  node_ids[0] is None: # CELAS2
-                    print('removing CELASx eid=%i -> no node %s' % (eid, node_ids[0]))
+                    self.log.warning('removing CELASx eid=%i -> no node %s' % (eid, node_ids[0]))
                     del self.eid_map[eid]
                     continue
                 if None in node_ids:  # used to be 0...
@@ -4772,7 +4773,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     nid = node_ids[slot]
                     if nid not in nid_map:
                         # SPOINT
-                        print('removing CELASx eid=%i -> SPOINT %i' % (eid, nid))
+                        self.log.warning('removing CELASx eid=%i -> SPOINT %i' % (eid, nid))
                         continue
 
                     #c = nid_map[nid]
@@ -4909,7 +4910,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
                 else:
                     #print('removing\n%s' % (element))
-                    print('removing eid=%s; %s' % (eid, element.type))
+                    self.log.warning('removing eid=%s; %s' % (eid, element.type))
                     del self.eid_map[eid]
                     self.gui.log_info("skipping %s" % element.type)
                     continue
@@ -4922,8 +4923,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 try:
                     mapped_inids = SIDE_MAP[element_solid.type][side]
                 except KeyError:  # pragma: no cover
-                    print('removing\n%s' % (element))
-                    print('removing eid=%s; %s' % (eid, element.type))
+                    self.log.warning('removing\n%s' % (element))
+                    self.log.warning('removing eid=%s; %s' % (eid, element.type))
                     del self.eid_map[eid]
                     self.gui.log_info("skipping %s" % element.type)
                     continue
@@ -4966,8 +4967,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     raise NotImplementedError(msg)
                 grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             else:
-                print('removing\n%s' % (element))
-                print('removing eid=%s; %s' % (eid, element.type))
+                self.log.warning('removing\n%s' % (element))
+                self.log.warning('removing eid=%s; %s' % (eid, element.type))
                 del self.eid_map[eid]
                 self.gui.log_info("skipping %s" % element.type)
                 continue
@@ -5686,7 +5687,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                         nid_to_pid_map[nid].append(pid)
 
                 if node_ids[0] is None and  node_ids[0] is None: # CELAS2
-                    print('removing CELASx eid=%i -> no node %s' % (eid, node_ids[0]))
+                    self.log.warning('removing CELASx eid=%i -> no node %s' % (eid, node_ids[0]))
                     del self.eid_map[eid]
                     continue
                 if None in node_ids:  # used to be 0...
@@ -5699,7 +5700,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     nid = node_ids[slot]
                     if nid not in nid_map:
                         # SPOINT
-                        print('removing CELASx eid=%i -> SPOINT %i' % (eid, nid))
+                        self.log.warning('removing CELASx eid=%i -> SPOINT %i' % (eid, nid))
                         continue
 
                     #c = nid_map[nid]
@@ -5847,12 +5848,35 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
                 else:
                     #print('removing\n%s' % (element))
-                    print('removing eid=%s; %s' % (eid, element.type))
+                    self.log.warning('removing eid=%s; %s' % (eid, element.type))
                     del self.eid_map[eid]
                     self.gui.log_info("skipping %s" % element.type)
                     continue
-            #elif etype == 'CBYDYP':
+            elif etype == 'CHBDYP':
+                #|    1   |    2    |    3    |   4  |    5   |    6   |  7 |  8 |  9 |
+                #| CHBDYP |   EID   |   PID   | TYPE | IVIEWF | IVIEWB | G1 | G2 | G0 |
+                #|        | RADMIDF | RADMIDB | GMID |   CE   |   E1   | E2 | E3 |    |
+                pid = 0 # element.pid
+                node_ids = element.node_ids
+                if element.Type == 'LINE':
+                    n1, n2 = [nid_map[nid] for nid in node_ids[:2]]
+                    p1 = xyz_cid0[n1, :]
+                    p2 = xyz_cid0[n2, :]
+                    elem = vtk.vtkLine()
+                    elem.GetPointIds().SetId(0, n1)
+                    elem.GetPointIds().SetId(1, n2)
+                else:
+                    msg = 'element_solid:\n%s' % (str(element_solid))
+                    msg += 'mapped_inids = %s\n' % mapped_inids
+                    msg += 'side_inids = %s\n' % side_inids
+                    msg += 'nodes = %s\n' % nodes
+                    #msg += 'side_nodes = %s\n' % side_nodes
+                    raise NotImplementedError(msg)
+                grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+
             elif etype == 'CHBDYE':
+                #|   1    |  2  |   3  |  4   |   5    |    6   |    7    |    8    |
+                #| CHBDYE | EID | EID2 | SIDE | IVIEWF | IVIEWB | RADMIDF | RADMIDB |
                 eid_solid = element.eid2
                 side = element.side
                 element_solid = model.elements[eid_solid]
@@ -5860,8 +5884,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 try:
                     mapped_inids = SIDE_MAP[element_solid.type][side]
                 except KeyError:  # pragma: no cover
-                    print('removing\n%s' % (element))
-                    print('removing eid=%s; %s' % (eid, element.type))
+                    self.log.warning('removing\n%s' % (element))
+                    self.log.warning('removing eid=%s; %s' % (eid, element.type))
                     del self.eid_map[eid]
                     self.gui.log_info("skipping %s" % element.type)
                     continue
@@ -5873,6 +5897,13 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 node_ids = [nodes[inid] for inid in side_inids]
                 #inids = np.searchsorted(all_nids, node_ids)
 
+                #if len(side_inids) == 2:
+                    #n1, n2 = [nid_map[nid] for nid in node_ids[:2]]
+                    #p1 = xyz_cid0[n1, :]
+                    #p2 = xyz_cid0[n2, :]
+                    #elem = vtk.vtkLine()
+                    #elem.GetPointIds().SetId(0, n1)
+                    #elem.GetPointIds().SetId(1, n2)
                 if len(side_inids) == 3:
                     n1, n2, n3 = [nid_map[nid] for nid in node_ids[:3]]
                     p1 = xyz_cid0[n1, :]
@@ -5910,8 +5941,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     raise NotImplementedError(msg)
                 grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             else:
-                print('removing\n%s' % (element))
-                print('removing eid=%s; %s' % (eid, element.type))
+                self.log.warning('removing\n%s' % (element))
+                self.log.warning('removing eid=%s; %s' % (eid, element.type))
                 del self.eid_map[eid]
                 self.gui.log_info("skipping %s" % element.type)
                 continue

@@ -11,6 +11,7 @@ import vtk
 from pyNastran.bdf.cards.test.test_aero import get_zona_model
 from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.converters.nastran.nastran_io import NastranIO, BDF
+from pyNastran.bdf.errors import DuplicateIDsError
 import pyNastran
 #from pyNastran.utils.log import get_logger2
 
@@ -611,10 +612,12 @@ class TestNastranGUI(unittest.TestCase):
 
     def test_gui_thermal_02(self):
         """tests thermal"""
-        #bdf_filename = os.path.join(MODEL_PATH, 'thermal', 'hd15901.bdf')
+        bdf_filename = os.path.join(MODEL_PATH, 'thermal', 'hd15901.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'thermal', 'hd15901.op2')
         test = NastranGUI()
-        test.load_nastran_geometry(op2_filename)
+        with self.assertRaises(DuplicateIDsError):
+            test.load_nastran_geometry(op2_filename)
+        test.load_nastran_geometry(bdf_filename)
         test.load_nastran_results(op2_filename)
 
     def test_gui_thermal_03(self):

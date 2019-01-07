@@ -561,6 +561,7 @@ class EPT(GeomCommon):
         iend = iminus1
 
         struct1 = Struct(self._endian + b'2i8s8s')
+        nproperties = len(istart)
         for i, (istarti, iendi) in enumerate(zip(istart, iend)):
             idata = data[n+istarti*4 : n+(istarti+6)*4]
             pid, mid, group, beam_type = struct1.unpack(idata)
@@ -574,9 +575,15 @@ class EPT(GeomCommon):
             #self.log.debug('pid=%i mid=%i group=%s beam_type=%s' % (pid, mid, group, beam_type))
             data_in = [pid, mid, group, beam_type, fvalues]
             prop = PBEAML.add_op2_data(data_in)
+            if pid in self.properties:
+                # this is a fake PSHELL
+                propi = self.properties[pid]
+                assert propi.type in ['PBEAM'], propi.get_stats()
+                nproperties -= 1
+                continue
             self._add_op2_property(prop)
-        nproperties = len(istart)
-        self.card_count['PBEAML'] = nproperties
+        if nproperties:
+            self.card_count['PBEAML'] = nproperties
         return len(data)
 
     def _read_pbend(self, data, n):
@@ -1419,6 +1426,9 @@ class EPT(GeomCommon):
             if pid in self.properties:
                 # this is a fake PSHELL
                 propi = self.properties[pid]
+                if prop == propi:
+                    nproperties -= 1
+                    continue
                 assert propi.type in ['PCOMP'], propi.get_stats()
                 nproperties -= 1
                 continue
