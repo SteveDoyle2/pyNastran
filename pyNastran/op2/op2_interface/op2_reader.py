@@ -153,7 +153,7 @@ class OP2Reader(object):
                 else:
                     self.show_data(data)
                     raise NotImplementedError(data)
-                #self.show_data(data)
+
             if self.is_debug_file:
                 self.binary_debug.write('%r\n' % data)
             #print('macro_version = %r' % macro_version)
@@ -190,7 +190,8 @@ class OP2Reader(object):
                 elif version in [b'XXXXXXXX']:
                     #self.log.warning('Assuming MSC Nastran')
                     mode = 'msc'
-                elif version in [b'OS11XXXX', b'OS12.210', b'OS2017.2']:
+                elif version in [b'OS11XXXX', b'OS12.210',
+                                 b'OS2017.1', b'OS2017.2', b'OS2018.1']:
                     # should this be called optistruct or radioss?
                     mode = 'optistruct'
                 #elif data[:20] == b'XXXXXXXX20141   0   ':
@@ -281,7 +282,7 @@ class OP2Reader(object):
         #print('record 2')
         self.read_markers([-2, 1, 0])
         data = self._read_record()
-        #if self.read_mode == 2:
+
         word, = unpack(self._endian + b'8s', data)
         assert word == b'AECFMON ', word
         #self.show_data(data)

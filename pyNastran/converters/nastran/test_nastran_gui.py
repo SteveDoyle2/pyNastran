@@ -321,6 +321,15 @@ class TestNastranGUI(unittest.TestCase):
         test.load_nastran_geometry(op2_filename)
         test.load_nastran_results(op2_filename)
 
+        #test = NastranGUI()
+        test.settings.nastran_create_coords = False
+        test.settings.nastran_is_bar_axes = False
+        test.settings.nastran_is_3d_bars = False
+        test.settings.nastran_is_3d_bars_update = False
+        test.settings.nastran_is_element_quality = False
+        test.settings.nastran_is_properties = False
+        test.load_nastran_geometry(op2_filename)
+
     def test_gui_elements_03(self):
         """tests a large number of elements and results in SOL 103-modes"""
         #bdf_filename = os.path.join(MODEL_PATH, 'elements', 'modes_elements.bdf')

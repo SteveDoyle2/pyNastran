@@ -278,6 +278,7 @@ class OGS(OP2Common):
         self._results._found_result(result_name)
         slot = getattr(self, result_name)
         n = 0
+        #aaa
 
         if self.num_wide == 6:
             obj_vector_real = GridPointStressesVolumeArray
