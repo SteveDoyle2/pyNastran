@@ -226,6 +226,10 @@ class GridPointStressesVolumeArray(ScalarObject):
         self.itotal = 0
         self.ielement = 0
 
+    @property
+    def is_real(self):
+        return True
+
     def build(self):
         """sizes the vectorized attributes of the GridPointStressesArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))

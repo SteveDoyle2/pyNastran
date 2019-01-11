@@ -818,6 +818,9 @@ class OP2(OP2_Scalar):
               (1, 2, 1, 0, 'SUPERELEMENT 10', '') : result2,
               (1, 2, 1, 0, 'SUPERELEMENT 20', '') : result3,
               (2, 2, 1, 0, 'SUPERELEMENT 0', '') : result4,
+
+        code = (isubcase, analysis_code, sort_method, count, ogs,
+                superelement_adaptivity_index, pval_step)
           }
         and convert it to:
 
