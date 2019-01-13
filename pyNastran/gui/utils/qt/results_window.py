@@ -40,6 +40,7 @@ class ResultsWindow(QWidget):
         try:
             self.addItems(self.model, data)
         except:
+            raise
             raise RuntimeError('cannot add data=\n%s' % data)
             #if isinstance(data, string_types):
                 #self.addItems(self.model, data)
@@ -70,7 +71,11 @@ class ResultsWindow(QWidget):
                 #print('element = %r' % str(element))
                 if not len(element) == 3:
                     print('element = %r' % str(element))
-                text, i, children = element
+                try:
+                    text, i, children = element
+                except ValueError:
+                    print('failed element = ', element)
+                    raise
                 nchildren = len(children)
                 #print('text=%r' % text)
                 item = QtGui.QStandardItem(text)
@@ -98,6 +103,7 @@ class ResultsWindow(QWidget):
             print()
             print('elements =', elements)
             print('element =', element)
+            print('len(element) =', len(element))
             print('len(elements)=%s' % len(elements))
             for elem in elements:
                 print('  e = %s' % str(elem))

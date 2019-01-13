@@ -410,10 +410,74 @@ class NastranGuiResults(NastranGuiAttributes):
             'ctria6_composite_strain',
 
             # OGS1 - grid point stresses
-            'grid_point_stresses',        # tCode=26
+            'grid_point_surface_stresses',        # tCode=26
             'grid_point_volume_stresses',  # tCode=27
         ]
         return table_types
+
+    def _fill_op2_time_gpstress(self, cases, model,
+                                key, icase, itime,
+                                form_dict, header_dict, keys_map):
+        """
+        Creates the time accurate grid point stress objects for the pyNastranGUI
+        """
+        #print(key, icase, itime)
+        if key in model.grid_point_stresses_volume_direct:
+            case = model.grid_point_stresses_volume_direct[key]
+
+            #print(''.join(case.get_stats()))
+            if case.is_complex:
+                return icase
+
+            dt = case._times[itime]
+            header = _get_nastran_header(case, dt, itime)
+            header_dict[(key, itime)] = header
+
+            # volume direct
+            #['ox', 'oy', 'oz', 'txy', 'tyz', 'txz', 'pressure', 'ovm']
+            nids = self.node_ids
+            nnodes = len(nids)
+            ox = np.full(nnodes, np.nan, dtype='float32')
+            oy = np.full(nnodes, np.nan, dtype='float32')
+            oz = np.full(nnodes, np.nan, dtype='float32')
+            txy = np.full(nnodes, np.nan, dtype='float32')
+            tyz = np.full(nnodes, np.nan, dtype='float32')
+            txz = np.full(nnodes, np.nan, dtype='float32')
+            ovm = np.full(nnodes, np.nan, dtype='float32')
+
+            keys_map[key] = (case.subtitle, case.label,
+                             case.superelement_adaptivity_index, case.pval_step)
+            subcase_id = key[0]
+
+            nids2 = case.node
+            i = np.searchsorted(nids, nids2)
+            if len(i) != len(np.unique(i)):
+                msg = 'irod=%s is not unique\n' % str(i)
+                #print('eids = %s\n' % str(list(eids)))
+                #print('eidsi = %s\n' % str(list(eidsi)))
+                raise RuntimeError(msg)
+            ox[i] = case.data[itime, :, 0]
+            oy[i] = case.data[itime, :, 1]
+            oz[i] = case.data[itime, :, 2]
+            txy[i] = case.data[itime, :, 3]
+            tyz[i] = case.data[itime, :, 4]
+            txz[i] = case.data[itime, :, 5]
+            ovm[i] = case.data[itime, :, 7]
+
+            headers = ['oxx', 'oyy', 'ozz', 'txy', 'tyz', 'txz', 'ovm']
+            form = [('Volume Direct', None, [])]
+            formi = form[0][2]
+            form_dict[(key, itime)] = form
+
+            for header, resi in zip(headers, (ox, oy, oz, txy, tyz, txz, ovm)):
+                ese_res = GuiResult(subcase_id, header=header,
+                                    title=header, data_format='%.3e',
+                                    location='node', scalar=resi)
+                cases[icase] = (ese_res, (subcase_id, header))
+                formi.append((header, icase, []))
+                icase += 1
+
+        return icase
 
     def _fill_op2_time_centroidal_strain_energy(self, cases, model,
                                                 key, icase, itime,

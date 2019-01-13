@@ -6981,6 +6981,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         strain_dict = defaultdict(list)
         force_dict = defaultdict(list)
         strain_energy_dict = defaultdict(list)
+        gpstress_dict = defaultdict(list)
 
         header_dict = {}
         keys_map = {}
@@ -7041,6 +7042,12 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 icase = self._fill_op2_time_centroidal_strain_energy(
                     cases, model, key, icase, itime,
                     strain_energy_dict, header_dict, keys_map)
+
+                # strain energy
+                icase = self._fill_op2_time_gpstress(
+                    cases, model, key, icase, itime,
+                    gpstress_dict, header_dict, keys_map)
+
                 ncases = icase - ncases_old
                 new_key = (key, itime)
                 if ncases and new_key not in key_itime:
@@ -7073,7 +7080,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #  count, ogs, superelement_adaptivity_index, pval_step) = key
         subcase_id_old = key0[0]
         count_old = key0[3]
-        unused_ogs_old = key0[4]
+        ogs_old = key0[4]
         subtitle_old = key0[5]
         subtitle_old, label_old, superelement_adaptivity_index_old, unused_pval_step_old = keys_map[key0]
         del label_old
@@ -7089,6 +7096,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             #print('key =', key)
             subcase_id = key[0]
             count = key[3]
+            ogs = key[4]
+            #print('*ogs =', ogs)
             #subtitle = key[4]
             try:
                 subtitle, unused_label, superelement_adaptivity_index, unused_pval_step = keys_map[key]
@@ -7098,10 +7107,13 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 superelement_adaptivity_index = '?'
                 raise
 
-            if subcase_id != subcase_id_old or subtitle != subtitle_old:
+            #print('key =', key)
+            if subcase_id != subcase_id_old or subtitle != subtitle_old or ogs != ogs_old:
                 count_str = '' if count == 0 else ' ; opt_count=%s' % count_old
-                subcase_str = 'Subcase %s; %s%s%s' % (
-                    subcase_id_old, subtitle_old, superelement_adaptivity_index, count_str)
+                ogs_str = '' if ogs == 0 else '; OGS=%s' % ogs_old
+                subcase_str = 'Subcase %s; %s%s%s%s' % (
+                    subcase_id_old, subtitle_old, superelement_adaptivity_index, count_str, ogs_str)
+                print(subcase_str)
                 res = (
                     subcase_str.rstrip('; '),
                     None,
@@ -7112,16 +7124,22 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 subcase_id_old = subcase_id
                 subtitle_old = subtitle
                 count_old = count
+                ogs_old = ogs
 
 
             try:
                 header = header_dict[(key, itime)]
             except KeyError:
-                msg = 'keys =\n'
+                msg = 'Missing (key, itime) in header_dict\n'
+                msg += '  key=%s\n' % str(key)
+                msg += '  itime=%s\n' % itime
+                msg += 'Possible (key, itme):\n'
                 for keyi in header_dict:
                     msg += '  %s\n' % str(keyi)
-                print(msg.rstrip())
-                print('expected = (%s, %r)\n' % (str(key), itime))
+                #print(msg.rstrip())
+                #print('expected = (%s, %r)\n' % (str(key), itime))
+                self.log.error(msg.rstrip())
+                #self.log.error('expected = (%s, %r)\n' % (str(key), itime))
                 continue
                 #raise KeyError(msg)
             try:
@@ -7138,6 +7156,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             strain_formi = strain_dict[(key, itime)]
             force_formi = force_dict[(key, itime)]
             strain_energy_formi = strain_energy_dict[(key, itime)]
+            gpstress_formi = gpstress_dict[(key, itime)]
             if disp_formi:
                 form_outi += disp_formi
                 #form_outi.append(('Disp', None, disp_formi))
@@ -7153,15 +7172,21 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             if strain_energy_formi:
                 form_outi.append(('Strain Energy', None, strain_energy_formi))
                 is_results = True
+            if gpstress_formi:
+                form_outi.append(('Grid Point Stresses', None, gpstress_formi))
+                is_results = True
 
             if form_outi:
                 is_results = True
                 form_resultsi_subcase.append(form_out)
                 #break
 
+        #print("subcase_id = ", subcase_id)
         if subcase_id:
             count_str = '' if count == 0 else ' ; opt_count=%s' % count_old
-            subcase_str = 'Subcase %s; %s%s' % (subcase_id, subtitle, count_str)
+            ogs_str = '' if ogs == 0 else '; OGS=%s' % ogs_old
+            subcase_str = 'Subcase %s; %s%s%s' % (subcase_id, subtitle, count_str, ogs_str)
+            print('*', subcase_str)
             res = (
                 subcase_str.strip('; '),
                 None,

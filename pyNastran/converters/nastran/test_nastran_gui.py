@@ -155,7 +155,7 @@ class TestNastranGUI(unittest.TestCase):
 
     def test_solid_bending(self):
         bdf_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending.op2')
+        op2_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending_ogs.op2')
 
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)

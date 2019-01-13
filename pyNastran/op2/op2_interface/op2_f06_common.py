@@ -633,8 +633,9 @@ class OP2_F06_Common(object):
         self.grid_point_forces = {}  # tCode=19
 
         #: OGS1 - grid point stresses
-        self.grid_point_stresses = {}       # tCode=26
-        self.grid_point_volume_stresses = {}  # tCode=27
+        self.grid_point_surface_stresses = {}       # tCode=26
+        self.grid_point_stresses_volume_direct = {}  # tCode=27
+        self.grid_point_stresses_volume_principal = {} # tCode=28
         self.grid_point_stress_discontinuities = {}  # tCode=35
 
         #: OPG - summation of loads for each element
@@ -923,8 +924,9 @@ class OP2_F06_Common(object):
             'ctria3_composite_strain', 'ctria6_composite_strain', 'ctriar_composite_strain',
 
             # OGS1 - grid point stresses
-            'grid_point_stresses', # tCode=26
-            'grid_point_volume_stresses',  # tCode=27
+            'grid_point_surface_stresses', # tCode=26
+            'grid_point_stresses_volume_direct',  # tCode=27 # volume direct
+            'grid_point_stresses_volume_principal', # tCode =28
             'grid_point_stress_discontinuities',  # tCode=35,
 
             # OEE - strain energy density

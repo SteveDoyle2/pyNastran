@@ -133,7 +133,7 @@ class MainWindow(GuiCommon2, NastranIO):
         self._load_plugins()
         self.setup_gui()
         self.setup_post(inputs)
-        self._check_for_latest_version(inputs['no_update'])
+        self._check_for_latest_version()
 
     def _load_plugins(self):
         """loads the plugins from pyNastran/gui/plugins.py"""

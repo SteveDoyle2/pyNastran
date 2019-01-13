@@ -83,7 +83,8 @@ from pyNastran.op2.tables.oes_stressStrain.random.oes_shear import RandomShearSt
 from pyNastran.op2.tables.oes_stressStrain.random.oes_composite_plates import RandomCompositePlateStressArray, RandomCompositePlateStrainArray
 
 
-from pyNastran.op2.tables.ogs_grid_point_stresses.ogs_surface_stresses import GridPointStressesArray, GridPointStressesVolumeArray
+from pyNastran.op2.tables.ogs_grid_point_stresses.ogs_surface_stresses import (
+    GridPointSurfaceStressesArray, GridPointStressesVolumeDirectArray, GridPointStressesVolumePrincipalArray)
 
 
 from pyNastran.op2.tables.oee_energy.oee_objects import RealStrainEnergyArray, ComplexStrainEnergyArray
@@ -848,8 +849,9 @@ TABLE_OBJ_MAP = {
     'chexa_pressure_force' : (RealSolidPressureForceArray, ComplexSolidPressureForceArray,),
     'cbeam_force_vu' : (RealCBeamForceVUArray, ComplexCBeamForceVUArray),
 
-    'grid_point_stresses' : (GridPointStressesArray, ),
-    'grid_point_volume_stresses' : (GridPointStressesVolumeArray, ),
+    'grid_point_surface_stresses' : (GridPointSurfaceStressesArray, ),
+    'grid_point_stresses_volume_direct' : (GridPointStressesVolumeDirectArray, ),
+    'grid_point_stresses_volume_principal' : (GridPointStressesVolumePrincipalArray, ),
 
     'crod_thermal_load' :  (Real1DHeatFluxArray, ),
     'ctube_thermal_load' :  (Real1DHeatFluxArray, ),
