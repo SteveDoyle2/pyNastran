@@ -1299,7 +1299,7 @@ class OP2Common(Op2Codes, F06Writer):
             pass
         else:
             n = 0
-            s = Struct(self._endian + self._analysis_code_fmt + 'i12f')
+            s = Struct(self._endian + self._analysis_code_fmt + b'i12f')
             binary_debug_fmt = '  %s=%s %%s\n' % (flag, flag_type)
             for unused_inode in range(nnodes):
                 edata = data[n:n+56]
@@ -1338,7 +1338,7 @@ class OP2Common(Op2Codes, F06Writer):
         else:
             n = 0
             #ntotal = 56  # 14 * 4
-            s = Struct(self._endian + self._analysis_code_fmt + 'i12f')
+            s = Struct(self._endian + self._analysis_code_fmt + b'i12f')
             assert self.obj is not None
             assert nnodes > 0
             #assert ndata % ntotal == 0
