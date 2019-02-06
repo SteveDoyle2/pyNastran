@@ -33,6 +33,7 @@ from pyNastran.op2.op2 import OP2, FatalError
 #SortCodeError, DeviceCodeError, FortranMarkerError
 
 from pyNastran.op2.op2_geom import OP2Geom, DuplicateIDsError
+#is_release = False
 
 
 # we need to check the memory usage
@@ -46,7 +47,6 @@ try:  # pragma: no cover
         comp = wmi.WMI()
 
         """Functions for getting memory usage of Windows processes."""
-
         __all__ = ['get_current_process', 'get_memory_info', 'get_memory_usage']
 
         import ctypes
@@ -111,6 +111,8 @@ try:  # pragma: no cover
         import resource
         windows_flag = False
         is_linux = True
+    else:
+        raise NotImplementedError('os.name=%r and must be nt, posix, mac' % os.name)
 except:
     is_memory = False
 
@@ -347,13 +349,16 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
     op2.remove_results(exclude)
     op2_nv.remove_results(exclude)
 
-    if is_memory and check_memory:  # pragma: no cover
-        if is_linux: # linux
-            kb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-        else: # windows
-            kb = get_memory_usage() / 1024
-        mb = kb / 1024.
-        print("Memory usage start: %s (KB); %.2f (MB)" % (kb, mb))
+    if check_memory:
+        if is_memory:  # pragma: no cover
+            if is_linux: # linux
+                kb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+            else: # windows
+                kb = get_memory_usage() / 1024
+            mb = kb / 1024.
+            print("Memory usage start: %s (KB); %.2f (MB)" % (kb, mb))
+        else:
+            raise RuntimeError('wmi (for Windows) or resource (for Linux/Mac) cannot be found')
 
     try:
         #op2.read_bdf(op2.bdf_filename, includeDir=None, xref=False)
@@ -552,7 +557,7 @@ def get_test_op2_data():
 
     msg = "Usage:\n"
     #is_release = True
-    options = '[--skip_dataframe] [-z] [-w] [-t] [-s <sub>] [-x <arg>]... [--nx] [--safe] [--post POST] [--load_hdf5]'
+    options = '[--skip_dataframe] [-z] [-w] [-t] [-s <sub>] [-x <arg>]... [--nx] [--safe] [--post POST] [--load_hdf5] [--memory]'
     if is_release:
         line1 = "test_op2 [-q] [-b] [-c] [-g] [-n] [-f] %s OP2_FILENAME\n" % options
     else:
@@ -596,6 +601,7 @@ def get_test_op2_data():
         msg += "Developer:\n"
         msg += "  -o, --write_op2   Writes the op2 to fem.test_op2.op2\n"
         msg += '  -p, --profile     Profiles the code (default=False)\n'
+        msg += '  --memory          Run the memory profiler (default=False)\n'
 
     msg += "\n"
     msg += "Info:\n"
@@ -656,6 +662,7 @@ def main():
             is_nx=data['--nx'],
             safe=data['--safe'],
             post=data['--post'],
+            check_memory=data['--memory'],
         )
         prof.dump_stats('op2.profile')
 
@@ -685,6 +692,7 @@ def main():
             is_nx=data['--nx'],
             xref_safe=data['--safe'],
             post=data['--post'],
+            check_memory=data['--memory'],
         )
     print("dt = %f" % (time.time() - time0))
 
