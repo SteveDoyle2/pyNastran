@@ -27,7 +27,7 @@ class GeomCommon(object):
     def __init__(self):
         self.card_count = {}
         self.is_debug_file = False
-        self._endian = ''
+        self._endian = b''
         self.struct_i = Struct('i')
         self.struct_2i = Struct('2i')
         self.binary_debug = SuppressFileIO()

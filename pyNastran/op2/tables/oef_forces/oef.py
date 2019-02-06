@@ -32,6 +32,7 @@ from pyNastran.op2.tables.oef_forces.oef_thermal_objects import (
 
     RealHeatFluxVUBeamArray,
     RealHeatFluxVU3DArray,
+    RealHeatFluxVUShellArray,
 )
 from pyNastran.op2.tables.oef_forces.oef_force_objects import (
     RealRodForceArray, RealViscForceArray,
@@ -968,7 +969,7 @@ class OEF(OP2Common):
             assert ntotal == numwide * 4
             nelements = ndata // ntotal
             auto_return, is_vectorized = self._create_oes_object4(
-                nelements, result_name, slot, RealHeatFlux_2D_3DArray)
+                nelements, result_name, slot, RealHeatFluxVUShellArray)
             if auto_return:
                 self._data_factor = nnodes
                 return nelements * self.num_wide * 4, None, None
@@ -991,6 +992,7 @@ class OEF(OP2Common):
                     # icord - 4s
                     theta = ints[:, 4]
                     assert eids.min() > 0, eids.min()
+                    obj.element[ielement:ielement2] = eids
                     obj.element_parent_coord_icord[ielement:ielement2, 0] = eids
                     obj.element_parent_coord_icord[ielement:ielement2, 1] = parent
                     obj.element_parent_coord_icord[ielement:ielement2, 2] = coord
@@ -1002,7 +1004,7 @@ class OEF(OP2Common):
 
                 #[vugrid]
                 #[xgrad, ygrad, zgrad, xflux, yflux, zflux]
-                obj.int_data[obj.itime, itotal:itotal2, 0] = ints2[:, 0]
+                #obj.int_data[obj.itime, itotal:itotal2, 0] = ints2[:, 0]
                 obj.data[obj.itime, itotal:itotal2, :] = floats2[:, 1:].copy()
                 obj.itotal = itotal2
                 obj.ielement = ielement2
@@ -1017,20 +1019,16 @@ class OEF(OP2Common):
                     (eid_device, parent, coord, icord, theta, unused_null) = out
                     eid, dt = get_eid_dt_from_eid_device(
                         eid_device, self.nonlinear_factor, self.sort_method)
-                    #self.log.debug('RealHeatFluxVUArray = %s' % data_in)
-                    grad_fluxes = []
+                    #self.log.debug('RealHeatFluxVUArray = %s' % str(out))
+
                     for unused_j in range(nnodes):
                         edata = data[n:n+28]  # 7*4
                         n += 28
                         out = s2.unpack(edata)
-                        #grad_fluxes.append(out)
-                        dunno, v1, v2, v3, v4, v5, v6 = out
-                        # dt, eid, etype, v1, v2, v3, v4, v5, v6
-                        #obj.add_sort1(dt, eid, parent, v1, v2, v3, v4, v5, v6)
-                        obj.add_sort1(dt, eid, parent, coord, icord, theta, v1, v2, v3, v4, v5, v6)
-                    #data_in.append(grad_fluxes)
-                    #print(obj)
-                    #obj.add_sort1(dt, eid, parent, coord, icord, theta, grad_fluxes)
+                        #print(out)
+                        vugrid, xgrad, ygrad, zgrad, xflux, yflux, zflux = out
+                        obj.add_sort1(dt, eid, parent, coord, icord, theta,
+                                      xgrad, ygrad, zgrad, xflux, yflux, zflux)
         else:
             msg = self.code_information()
             return self._not_implemented_or_skip(data, ndata, msg), None, None

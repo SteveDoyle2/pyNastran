@@ -410,7 +410,7 @@ class OP2(OP2_Scalar):
         state = self.__dict__.copy()
         # Remove the unpicklable entries.
         del state['log']
-        if hasattr(self._results, 'log'):
+        if hasattr(self, 'results') and hasattr(self._results, 'log'):
             del state['_results'].log
         #if hasattr(self, '_card_parser_b'):
             #del state['_card_parser_b']
@@ -444,8 +444,10 @@ class OP2(OP2_Scalar):
         """Saves a pickleable object"""
         #del self.log
         #del self._card_parser, self._card_parser_prepare
-        del self.generalized_tables
-        del self.op2_reader
+        if hasattr(self, 'generalized_tables'):
+            del self.generalized_tables
+        if hasattr(self, 'op2_reader'):
+            del self.op2_reader
 
         #print(object_attributes(self, mode="all", keys_to_skip=[]))
         with open(obj_filename, 'wb') as obj_file:

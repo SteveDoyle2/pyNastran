@@ -1405,7 +1405,8 @@ class OP2Common(Op2Codes, F06Writer):
 
         #self.log.debug('self.table_name=%s isubcase=%s subtitle=%r' % (
             #self.table_name, self.isubcase, self.subtitle.strip()))
-        self.data_code['table_name'] = self.table_name.decode(self.encoding)
+        table_name = self.table_name.decode(self.encoding)
+        self.data_code['table_name'] = table_name
         self.data_code['result_name'] = result_name
         self.data_code['_count'] = self._count
         if 'h5_file' in self.data_code:
@@ -1434,6 +1435,8 @@ class OP2Common(Op2Codes, F06Writer):
                 except:
                     print("self.data_code =", self.data_code)
                     raise
+                assert 'table_name' in data_codei
+                assert data_codei['table_name'] is not None, data_codei
                 self.obj.update_data_code(data_codei)
             else:
                 class_obj.is_cid = is_cid
@@ -1447,13 +1450,17 @@ class OP2Common(Op2Codes, F06Writer):
 
                 if self.data_code['load_as_h5']:
                     self.data_code['h5_file'] = self.op2_reader.h5_file
+                #if self.data_code['table_name'] not in ['OUGV1']:
+                    #print(self.data_code)
                 self.obj = class_obj(self.data_code, is_sort1, self.isubcase, self.nonlinear_factor)
             storage_obj[code] = self.obj
+            #assert self.obj.table_name is not None
         else:
             if code in storage_obj:
                 self.obj = storage_obj[code]
             else:
                 storage_obj[code] = self.obj
+        assert self.obj.table_name is not None
 
     def _get_code(self):
         """
@@ -1986,6 +1993,7 @@ class OP2Common(Op2Codes, F06Writer):
                 self.result_names.add(result_name)
                 #print('self.obj =', self.obj)
                 self.obj.nelements += nelements
+                assert self.obj.table_name is not None
                 auto_return = True
             elif self.read_mode == 2:
                 self.code = self._get_code()
@@ -2001,7 +2009,9 @@ class OP2Common(Op2Codes, F06Writer):
                     self.log.error(msg)
                     raise
                 if not self.obj.table_name == self.table_name.decode('utf-8'):
-                    msg = 'obj.table_name=%s table_name=%s' % (self.obj.table_name, self.table_name)
+                    print(self.obj)
+                    msg = 'obj.table_name=%s table_name=%s; this shouldnt happen for read_mode=2' %  (
+                        self.obj.table_name, self.table_name)
                     raise TypeError(msg)
 
                 #obj.update_data_code(self.data_code)

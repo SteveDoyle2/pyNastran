@@ -335,7 +335,7 @@ class ScalarObject(BaseScalarObject):
             del data_code['h5_file']
 
         self.data_code = copy.deepcopy(data_code)
-
+        #self.table_name = self.data_code['table_name']
         # if data code isn't being applied and you don't have
         # parameters that were in data_code (e.g.
         # self.element_name/self.element_type), you need to define

@@ -246,6 +246,8 @@ class FortranFormat(object):
 
         if hasattr(self, 'data_code'):
             del self.data_code
+        if hasattr(self, 'mode'):
+            del self.mode
 
         for word in del_words:
             if hasattr(self, word):

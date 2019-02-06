@@ -11,7 +11,7 @@ from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 
 class HyperelasticQuadArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
+        OES_Object.__init__(self, data_code, isubcase, apply_data_code=True)
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
         #self.ntimes = 0  # or frequency/mode
@@ -75,7 +75,10 @@ class HyperelasticQuadArray(OES_Object):
         #elif self.element_type == 75:  # CTRIA6
             #nnodes_per_element = 4
         #else:
-        raise NotImplementedError('name=%r type=%s' % (self.element_name, self.element_type))
+        if self.element_type == 139: # QUAD4FD
+            nnodes_per_element = 4
+        else:
+            raise NotImplementedError('name=%r type=%s' % (self.element_name, self.element_type))
 
         #print('nnodes_per_element[%s, %s] = %s' % (self.isubcase, self.element_type, nnodes_per_element))
         #self.nnodes = nnodes_per_element
@@ -94,7 +97,7 @@ class HyperelasticQuadArray(OES_Object):
         if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
         self._times = np.zeros(self.ntimes, dtype=dtype)
-        #self.element_node = np.zeros((self.ntotal, 2), dtype='int32')
+        self.element_node = np.zeros((self.ntotal, 2), dtype='int32')
 
         #self.Type[eid] = Type
         #self.oxx[dt] = {eid: [oxx]}
@@ -170,7 +173,7 @@ class HyperelasticQuadArray(OES_Object):
         #self._add_new_eid_sort1(dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
 
 
-    def _add_new_eid_sort1(self, dt, eid, Type, oxx, oyy, txy, angle, majorP, minorP):
+    def _add_new_eid_sort1(self, dt, eid, eype, node_id, oxx, oyy, txy, angle, majorP, minorP):
         assert isinstance(eid, ints), eid
         assert isinstance(node_id, ints), node_id
         self._times[self.itime] = dt
@@ -191,7 +194,7 @@ class HyperelasticQuadArray(OES_Object):
     #def _add_new_node_sort1(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
         #self._add_sort1(dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
 
-    def _add_sort1(self, dt, eid, ID, oxx, oyy, txy, angle, majorP, minorP):
+    def _add_sort1(self, dt, eid, etype, node_id, oxx, oyy, txy, angle, majorP, minorP):
         assert eid is not None, eid
         assert isinstance(node_id, ints), node_id
         self.element_node[self.itotal, :] = [eid, node_id]
@@ -208,10 +211,10 @@ class HyperelasticQuadArray(OES_Object):
 
         nelements = self.nelements
         ntimes = self.ntimes
-        nnodes = self.nnodes
+        nnodes = 4
         ntotal = self.ntotal
         nlayers = 2
-        nelements = self.ntotal // self.nnodes // 2
+        nelements = self.ntotal // nnodes
 
         msg = []
         if self.nonlinear_factor not in (None, np.nan):  # transient

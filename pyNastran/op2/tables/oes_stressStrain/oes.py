@@ -5825,7 +5825,7 @@ class OES(OP2Common):
 
             self._results._found_result(result_name)
             slot = self.get_result(result_name)
-            self.create_transient_object(result_name, slot, obj_vector_real)
+            #self.create_transient_object(result_name, slot, obj_vector_real)
 
             ntotal = 120  # 36+28*3
             nelements = ndata // ntotal
@@ -5834,8 +5834,11 @@ class OES(OP2Common):
             #print(self.table_name_str)
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_vector_real)
+
             if auto_return:
-                return ndata, None, None
+                self._data_factor = 4  # number of "layers" for an element
+                return nelements * self.num_wide * 4, None, None
+                #return ndata, None, None
 
             #if self.is_debug_file:
                 #self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
@@ -5853,21 +5856,27 @@ class OES(OP2Common):
                 n = nelements * self.num_wide * 4
 
                 istart = obj.itotal
-                iend = istart + nelements
+                iend = istart + nelements*4
                 obj._times[obj.itime] = dt
 
                 #if obj.itime == 0:
+                # 30 = 2 + 28 = 2 + 7*4
                 ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 30).copy()
-                ints2 = ints[:, 2:].reshape(nelements * 7, 7)
+                #strs = frombuffer(data, dtype=self.sdtype)
+                ints2 = ints[:, 2:].reshape(nelements * 4, 7)
 
                 #strings = frombuffer(data, dtype=???)
                 eids = ints[:, 0] // 10
-                unused_nids = ints2[:, 0]
-                obj.element[istart:iend] = eids
+                nids = ints2[:, 0]
+
+                eids2 = np.vstack([eids, eids, eids, eids]).T.ravel()
+                obj.element_node[istart:iend, 0] = eids2
+                obj.element_node[istart:iend, 1] = nids
+                #obj.element[istart:iend] = eids
 
                 # dropping off eid and the string word (some kind of Type)
                 floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 30)[:, 2:].copy()
-                floats2 = floats.reshape(nelements * 7, 7)
+                floats2 = floats.reshape(nelements * 4, 7)
                 #[oxx, oyy, txy, angle, majorp, minorp]
                 obj.data[obj.itime, istart:iend, :] = floats2[:, 1:]
             else:
@@ -5881,11 +5890,11 @@ class OES(OP2Common):
                     if self.is_debug_file:
                         self.binary_debug.write('CQUAD4FD-139A- %s\n' % (str(out)))
 
-                    (eid_device, Type, unused_id, sx, sy, sxy, angle, smj, smi) = out
+                    (eid_device, etype, nid, sx, sy, sxy, angle, smj, smi) = out
                     eid, dt = get_eid_dt_from_eid_device(
                         eid_device, self.nonlinear_factor, self.sort_method)
 
-                    obj._add_new_eid_sort1(dt, [eid, Type, sx, sy, sxy, angle, smj, smi])
+                    obj._add_new_eid_sort1(dt, eid, etype, nid, sx, sy, sxy, angle, smj, smi)
                     n += 36
 
                     for unused_i in range(3):  # TODO: why is this not 4?
@@ -5893,8 +5902,8 @@ class OES(OP2Common):
                         out = s2.unpack(edata)
                         if self.is_debug_file:
                             self.binary_debug.write('               %s\n' % (str(out)))
-                        (unused_id, sx, sy, sxy, angle, smj, smi) = out
-                        obj._add_sort1(dt, eid, out)
+                        (nid, sx, sy, sxy, angle, smj, smi) = out
+                        obj._add_sort1(dt, eid, etype, nid, sx, sy, sxy, angle, smj, smi)
                         n += 28
         else:
             msg = 'numwide=%s element_num=%s etype=%s' % (

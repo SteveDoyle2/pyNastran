@@ -1044,3 +1044,195 @@ class RealChbdyHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
             f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
+
+class RealHeatFluxVUShellArray(ScalarObject):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        self.nonlinear_factor = np.nan
+        self.table_name = None
+        self.approach_code = None
+        self.analysis_code = None
+        ScalarObject.__init__(self, data_code, isubcase, apply_data_code=True)  # no double inheritance
+        self.is_sort1
+        #self.dt = dt
+        #self.code = [self.format_code, self.sort_code, self.s_code]
+
+        #self.ntimes = 0  # or frequency/mode
+        self.ntotal = 0
+        self.nelements = 0  # result specific
+
+    @property
+    def is_real(self):
+        return True
+
+    @property
+    def is_complex(self):
+        return False
+
+    def data_type(self):
+        return 'float32'
+
+    def get_stats(self):
+        if not self.is_built:
+            return [
+                '<%s>\n' % self.__class__.__name__,
+                '  ntimes: %i\n' % self.ntimes,
+                '  ntotal: %i\n' % self.ntotal,
+            ]
+        #ngrids = len(self.gridTypes)
+        msg = []
+
+        ntimesi, ntotal = self.data.shape[:2]
+        ntimes = len(self._times)
+        nelements = self.element.shape[0]
+
+        nmajor = self.ntimes
+        nminor = self.ntotal
+        if self.is_sort1:
+            assert nmajor == ntimes, 'ntimes=%s expected=%s' % (nmajor, ntimes)
+            assert nminor == ntotal, 'ntotal=%s expected=%s' % (nminor, nelements)
+        else:
+            assert nmajor == nelements, 'nelements=%s expected=%s' % (nmajor, nelements)
+            assert nminor == ntotal, 'ntotal=%s expected=%s' % (nminor, ntimes)
+
+        msg.append('  isubcase = %s\n' % self.isubcase)
+        if self.nonlinear_factor not in (None, np.nan):  # transient
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            msg.append('  type=%s nelements=%s\n'
+                       % (self.__class__.__name__, nelements))
+        headers = ', '.join(self._get_headers())
+        #msg.append('  data: [%s] shape=%s dtype=%s\n'
+                   #% (headers, [int(i) for i in self.data.shape], self.data.dtype))
+        msg.append('  data: [%s] shape=%s dtype=%s\n'
+                   % (headers,
+                      [int(i) for i in self.data.shape], self.data.dtype))
+        msg += self.get_data_code()
+        return msg
+
+    @property
+    def headers(self):
+        return ['xgrad', 'ygrad', 'zgrad', 'xflux', 'yflux', 'zflux']
+
+    def _get_headers(self):
+        return self.headers
+
+    def _reset_indices(self):
+        self.itotal = 0
+        self.ielement = 0
+
+    def build(self):
+        """sizes the vectorized attributes of the ElementTableArray"""
+        #print('nelements=%s ntimes=%s sort1?=%s ntotal=%s -> _nelements=%s' % (
+            #self.nelements, self.ntimes, self.is_sort1,
+            #self.ntotal, self.nelements))
+
+        self.nelements //= self.ntimes
+        self.itime = 0
+        self.itotal = 0
+        self.is_built = True
+
+        if self.is_sort1:
+            ntimes = self.ntimes
+            nelements = self.ntotal
+            nx = ntimes
+            ny = self.ntotal
+            #print("ntimes=%s nelements=%s" % (ntimes, nelements))
+        if self.is_sort2:
+            #unused_ntotal = self.ntotal
+            nelements = self.ntimes
+            ntimes = self.ntotal
+            nx = nelements
+            ny = ntimes
+            #print("ntotal=%s nelements=%s ntimes=%s" % (ntotal, nelements, ntimes))
+
+        self._times = zeros(ntimes, dtype=self._times_dtype)
+        #self.types = array(self.nelements, dtype='|S1')
+
+        self.element = zeros(nelements, dtype='int32')
+        self.element_parent_coord_icord =  zeros((nelements, 4), dtype='int32')
+        #self.element_data_type = empty(nelements, dtype='|U8')
+
+        #[xgrad, ygrad, zgrad, xflux, yflux, zflux]
+        self.data = zeros((nx, ny, 6), self.data_type())
+
+    def __eq__(self, table):
+        assert self.is_sort1 == table.is_sort1
+        is_nan = (self.nonlinear_factor is not None and
+                  np.isnan(self.nonlinear_factor) and
+                  np.isnan(table.nonlinear_factor))
+        if not is_nan:
+            assert self.nonlinear_factor == table.nonlinear_factor
+        assert self.ntotal == table.ntotal
+        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
+        assert self.approach_code == table.approach_code
+        if not is_nan:
+            assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
+                self.element_name, self.element_type, self._times, table._times)
+
+        if not np.array_equal(self.element, table.element):
+            assert self.element.shape == table.element.shape, 'shape=%s table.shape=%s' % (self.element.shape, table.element.shape)
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            msg += 'eid:'
+            for (eid, eid2) in zip(self.element, table.element):
+                msg += '%s, %s\n' % (eid, eid2)
+            print(msg)
+            raise ValueError(msg)
+
+        if not np.array_equal(self.element_parent_coord_icord, table.element_parent_coord_icord):
+            assert self.element_parent_coord_icord.shape == table.element_parent_coord_icord.shape, 'shape=%s table.shape=%s' % (self.element.shape, table.element.shape)
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            msg += 'element_parent_coord_icord:'
+            for (epci1, epci2) in zip(self.element_parent_coord_icord, table.element_parent_coord_icord):
+                msg += '%s, %s\n' % (epci1, epci2)
+            print(msg)
+            raise ValueError(msg)
+
+        if not np.array_equal(self.data, table.data):
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            ntimes = self.data.shape[0]
+
+            i = 0
+            if self.is_sort1:
+                for itime in range(ntimes):
+                    for ieid, eid in enumerate(self.element):
+                        t1 = self.data[itime, ieid, :]
+                        t2 = table.data[itime, ieid, :]
+                        (tx1, ty1, tz1, rx1, ry1, rz1) = t1
+                        (tx2, ty2, tz2, rx2, ry2, rz2) = t2
+                        if not allclose(t1, t2):
+                        #if not np.array_equal(t1, t2):
+                            msg += '%s\n  (%s, %s, %s, %s, %s, %s)\n  (%s, %s, %s, %s, %s, %s)\n' % (
+                                eid,
+                                tx1, ty1, tz1, rx1, ry1, rz1,
+                                tx2, ty2, tz2, rx2, ry2, rz2)
+                            i += 1
+                        if i > 10:
+                            print(msg)
+                            raise ValueError(msg)
+            else:
+                raise NotImplementedError(self.is_sort2)
+            if i > 0:
+                print(msg)
+                raise ValueError(msg)
+        return True
+
+    def add_sort1(self, dt, eid,  parent, coord, icord, theta,
+                  xgrad, ygrad, zgrad, xflux, yflux, zflux):
+        """unvectorized method for adding SORT1 transient data"""
+        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        # itotal - the node number
+        # itime - the time/frequency step
+
+        # the times/freqs
+        self._times[self.itime] = dt
+        self.element[self.itotal] = eid
+        #print(eid, parent, coord, icord)
+        # icord is a string?
+        self.element_parent_coord_icord[self.itotal] = [eid, parent, coord, 0]
+        #self.element_data_type[self.itotal] = etype
+        self.data[self.itime, self.itotal, :] = [xgrad, ygrad, zgrad, xflux, yflux, zflux]
+        self.itotal += 1

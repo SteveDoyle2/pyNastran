@@ -1021,6 +1021,15 @@ class Op2Codes(object):
         else:
             msg += "  ID            = %-3s\n" % self.ID
 
+        dt_names = [
+            'dt', 'mode', 'eign', 'cycle', 'mode2',
+            'freq', 'lsdvmn', 'eigr', 'eigi', 'lftsfq']
+        for name in dt_names:
+            if hasattr(self, name):
+                dvalue = getattr(self, name)
+                msg += "  %-6s        = %s\n" % (name, dvalue)
+
+
         if self.is_msc:
             msg += '  MSC Nastran\n'
         else:

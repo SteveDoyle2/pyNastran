@@ -260,7 +260,8 @@ class OP2_F06_Common(object):
         if '.' in result_name:
             sline = result_name.split('.')
             if len(sline) != 2:
-                raise RuntimeError('result_name=%r has too many dots; only 2 are allowed' % result_name)
+                raise RuntimeError('result_name=%r has too many dots; '
+                                   'only 2 are allowed' % result_name)
 
             obj_name, result_name = result_name.split('.')
 
@@ -270,6 +271,22 @@ class OP2_F06_Common(object):
         else:
             storage_obj = getattr(self, result_name)
             return storage_obj
+
+    def del_result(self, result_name):
+        """
+        delattr, but considers sub-objects
+        """
+        if '.' in result_name:
+            sline = result_name.split('.')
+            if len(sline) != 2:
+                raise RuntimeError('result_name=%r has too many dots; '
+                                   'only 2 are allowed' % result_name)
+            obj_name, result_name = result_name.split('.')
+
+            storage_obj = getattr(self.op2_results, obj_name)
+            delattr(storage_obj, result_name)
+        else:
+            delattr(self, result_name)
 
     def deprecated(self, old_name, new_name, deprecated_version):
         """allows for simple OP2 vectorization"""
@@ -738,6 +755,21 @@ class OP2_F06_Common(object):
                 pass
         #print('res_length =', res_length)
         return res_length
+
+    def remove_empty_results(self):
+        table_names = self.get_table_types() + ['grid_point_weight', 'oload_resultant']
+        for table_name in table_names:
+            obj = self.get_result(table_name)
+            if obj is None:
+                obj = self.del_result(table_name)
+            elif isinstance(obj, dict):
+                if len(obj) == 0:
+                    obj = self.del_result(table_name)
+                    #delattr(self, table_name)
+                else:
+                    print('saving %s dict' % table_name)
+            else:
+                print('saving %s' % table_name)
 
     def get_table_types(self):
         """Gets the names of the results."""

@@ -60,7 +60,7 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_triax import RealTriaxStress
 
 from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear_rod import RealNonlinearRodArray
 from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import RealNonlinearPlateArray
-#from pyNastran.op2.tables.oes_stressStrain.oes_hyperelastic import HyperelasticQuadArray
+from pyNastran.op2.tables.oes_stressStrain.oes_hyperelastic import HyperelasticQuadArray
 
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bars import ComplexBarStressArray, ComplexBarStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_beams import ComplexBeamStressArray, ComplexBeamStrainArray
@@ -844,6 +844,8 @@ TABLE_OBJ_MAP = {
     'nonlinear_cquad4_stress' : (RealNonlinearPlateArray, ),
     'nonlinear_ctria3_stress' : (RealNonlinearPlateArray, ),
 
+    'hyperelastic_cquad4_strain' : (HyperelasticQuadArray, ),
+
     'ctetra_pressure_force' : (RealSolidPressureForceArray, ComplexSolidPressureForceArray,),
     'cpenta_pressure_force' : (RealSolidPressureForceArray, ComplexSolidPressureForceArray,),
     'chexa_pressure_force' : (RealSolidPressureForceArray, ComplexSolidPressureForceArray,),
@@ -1090,8 +1092,9 @@ def export_matrices(hdf5_file, op2_model):
             if hasattr(matrix, 'export_to_hdf5'):
                 matrix.export_to_hdf5(matrixi_group, op2_model.log)
             else:
-                op2_model.log.warning('HDF5: key=%r type=%s cannot be exported' % (key, str(type(matrix))))
-                #raise NotImplementedError()
+                hmsg = 'HDF5: key=%r type=%s cannot be exported' % (key, str(type(matrix)))
+                op2_model.log.warning(msg)
+                raise NotImplementedError(msg)
                 continue
 
 def _export_subcases(hdf5_file, op2_model):
@@ -1184,7 +1187,7 @@ def load_op2_from_hdf5_file(model, h5_file, log, debug=False):
                     #log.debug('  loaded %r' % result_name)
                 else:
                     log.warning('  unhandled %r...' % result_name)
-                    #raise NotImplementedError('  unhandled %r...' % result_name)
+                    raise NotImplementedError('  unhandled %r...' % result_name)
             #print(h5_subcase.keys())
         elif key == 'info':
             pass
