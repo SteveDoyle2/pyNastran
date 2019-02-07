@@ -1482,35 +1482,43 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             del self.binary_debug
             del self.f
             self._cleanup_data_members()
-            words = [
-                'isubcase', 'int3', '_table4_count', 'nonlinear_factor',
-                'is_start_of_subtable', 'superelement_adaptivity_index',
-                'thermal_bits', 'is_vectorized', 'pval_step', #'_frequencies',
-                '_analysis_code_fmt', 'isubtable', '_data_factor', 'sort_method',
-                'acoustic_flag', 'approach_code', 'format_code_original',
-                'element_name', 'sort_bits', 'code', 'n', 'use_vector', 'ask',
-                'stress_bits', 'expected_times', 'table_code',
-                #'read_mode',
-                'words', 'device_code', 'table_name', '_count', 'additional_matrices',
-                # 350
-                'data_names', '_close_op2',
-                'op2_reader',
-                # 74
-                'generalized_tables',
-                # 124
-                'is_table_1', 'is_table_2', 'ntotal', 'element_mapper',
-                'is_debug_file', 'debug_file',
-                '_results',
-                # 140
-                #---------------------------------------------------------
-                # dont remove...
-                # result_names, op2_results
-
-            ]
-            for word in words:
-                if hasattr(self, word):
-                    delattr(self, word)
+            self._cleanup_words()
             #self.op2_reader.h5_file.close()
+
+    def _cleanup_words(self):
+        """
+        Remove internal parameters that are not useful and just clutter
+        the object attributes.
+        """
+        words = [
+            'isubcase', 'int3', '_table4_count', 'nonlinear_factor',
+            'is_start_of_subtable', 'superelement_adaptivity_index',
+            'thermal_bits', 'is_vectorized', 'pval_step', #'_frequencies',
+            '_analysis_code_fmt', 'isubtable', '_data_factor', 'sort_method',
+            'acoustic_flag', 'approach_code', 'format_code_original',
+            'element_name', 'sort_bits', 'code', 'n', 'use_vector', 'ask',
+            'stress_bits', 'expected_times', 'table_code', 'sort_code',
+            'is_all_subcases', 'num_wide', '_table_mapper',
+            #'read_mode',
+            'words', 'device_code', 'table_name', '_count', 'additional_matrices',
+            # 350
+            'data_names', '_close_op2',
+            'op2_reader',
+            # 74
+            'generalized_tables',
+            # 124
+            'is_table_1', 'is_table_2', 'ntotal', 'element_mapper',
+            'is_debug_file', 'debug_file',
+            '_results',
+            # 140
+            #---------------------------------------------------------
+            # dont remove...
+            # result_names, op2_results
+
+        ]
+        for word in words:
+            if hasattr(self, word):
+                delattr(self, word)
 
     def _setup_op2(self):
         """
