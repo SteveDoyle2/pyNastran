@@ -21,6 +21,7 @@ Defines:
 """
 import re
 from copy import deepcopy
+from six import string_types
 
 class ResultSet(object):
     """
@@ -41,6 +42,7 @@ class ResultSet(object):
         self.saved = deepcopy(self.allowed)
 
     def is_saved(self, result):
+        """checks to see if a result is saved"""
         if result not in self.allowed:
             #print(self.allowed)
             raise RuntimeError("result=%r is invalid; the name changed or it's a typo" % result)
@@ -51,17 +53,36 @@ class ResultSet(object):
         return False
 
     def is_not_saved(self, result):
+        """checks to see if a result is saved"""
         return not self.is_saved(result)
 
     def clear(self):
+        """clears all the results"""
         self.saved.clear()
 
-    def add(self, result):
-        self.saved.add(result)
+    def add(self, results):
+        """addds a list/str of results"""
+        all_matched_results = self._get_matched_results(results)
+        for result in all_matched_results:
+            if result not in self.saved:
+                self.saved.add(result)
 
     def remove(self, results):
+        """removes a list/str of results"""
+        all_matched_results = self._get_matched_results(results)
+        for result in all_matched_results:
+            if result in self.saved:
+                self.saved.remove(result)
+        #disable_set = set(results)
+        #self.saved.difference(disable_set)
+
+    def _get_matched_results(self, results):
+        """handles expansion of regexs"""
+        if isinstance(results, string_types):
+            results = [results]
         all_matched_results = []
         for result in results:
+            # tack on a word boundary if we have a * at the beginning of the regex
             resulti = '\w' + result if result.startswith('*') else result
             regex = re.compile(resulti)
             matched_results = list(filter(regex.match, self.allowed))
@@ -73,12 +94,7 @@ class ResultSet(object):
                 raise RuntimeError('%r is not a valid result to remove\n%s' % (
                                    result, self))
             all_matched_results.extend(matched_results)
-
-        for result in all_matched_results:
-            if result in self.saved:
-                self.saved.remove(result)
-        #disable_set = set(results)
-        #self.saved.difference(disable_set)
+        return all_matched_results
 
     def _found_result(self, result):
         if result not in self.allowed:
@@ -94,6 +110,7 @@ class ResultSet(object):
         #pass
 
     def __repr__(self):
+        """defines the repr"""
         msg = 'ResultSet:\n'
         msg += ' results:\n'
         for result in sorted(self.allowed):

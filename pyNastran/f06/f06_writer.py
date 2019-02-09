@@ -236,8 +236,6 @@ class F06Writer(OP2_F06_Common):
             self._results.add(result)
 
     def set_results(self, results):
-        if isinstance(results, string_types):
-            results = [results]
         self.clear_results()
         self.add_results(results)
 

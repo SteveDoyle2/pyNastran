@@ -439,8 +439,8 @@ class RealSolidArray(OES_Object):
         #print('ntotal=%s' % (ntotal))
         #assert ntotal == 193, ntotal
 
-        struct1 = Struct(self._endian + b'ii4si')
-        struct2 = Struct(self._endian + b'i20f')
+        struct1 = Struct(endian + b'ii4si')
+        struct2 = Struct(endian + b'i20f')
 
         cen = b'GRID'
         for itime in range(self.ntimes):

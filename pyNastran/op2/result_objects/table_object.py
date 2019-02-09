@@ -556,6 +556,7 @@ class RealTableArray(TableArray):
         op2_file.write(pack(fmt, *data))
 
     def write_op2(self, op2_file, fascii, itable, date, is_mag_phase=False, endian='>'):
+        assert endian == b'<', endian
         import inspect
         assert self.table_name in ['OUGV1', 'OQMG1', 'OQG1'], self.table_name
 
@@ -564,10 +565,14 @@ class RealTableArray(TableArray):
         fascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
 
         if itable == -1:
-            self._write_table_header(f, fascii, date)
+            self._write_table_header(op2_file, fascii, date)
             itable = -3
 
-        if isinstance(self.nonlinear_factor, float):
+        if np.isnan(self.nonlinear_factor):
+            op2_format = endian + b'2i6f'
+        elif isinstance(self.nonlinear_factor, float):
+            print(self.code_information())
+            print('nolinear_factor', self.nonlinear_factor)
             op2_format = endian + b'%sif' % (7 * self.ntimes)
             raise NotImplementedError()
         else:
@@ -625,13 +630,14 @@ class RealTableArray(TableArray):
             itable -= 2
             header = [4 * ntotal,]
             op2_file.write(pack(b'i', *header))
-            fascii.write('footer = %s' % header)
+            fascii.write('footer = %s\n' % header)
         header = [
             4, itable, 4,
             4, 1, 4,
             4, 0, 4,
         ]
         op2_file.write(pack(b'%ii' % len(header), *header))
+        fascii.write('footer2 = %s\n' % header)
         return itable
 
 
