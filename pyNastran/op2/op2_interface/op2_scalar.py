@@ -1500,7 +1500,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             'stress_bits', 'expected_times', 'table_code', 'sort_code',
             'is_all_subcases', 'num_wide', '_table_mapper', 'label',
             'apply_symmetry',
-            #'read_mode',
             'words', 'device_code', 'table_name', '_count', 'additional_matrices',
             # 350
             'data_names', '_close_op2',
@@ -1514,7 +1513,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             # 140
             #---------------------------------------------------------
             # dont remove...
-            # make_geom, title,
+            # make_geom, title, read_mode
             # result_names, op2_results
 
         ]

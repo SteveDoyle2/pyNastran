@@ -82,7 +82,7 @@ class OP2Writer(OP2_F06_Common):
             obj = self
         if isinstance(op2_outname, str):
             fop2 = open(op2_outname, 'wb')
-            fop2_ascii = open(op2_outname + '.txt', 'wb')
+            fop2_ascii = open(op2_outname + '.txt', 'w')
             print('op2 out = %r' % op2_outname)
         else:
             assert isinstance(op2_outname, file), 'type(op2_outname)= %s' % op2_outname
