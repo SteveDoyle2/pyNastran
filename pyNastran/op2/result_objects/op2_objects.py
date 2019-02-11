@@ -603,7 +603,7 @@ class ScalarObject(BaseScalarObject):
         table1_fmt = b'<9i'
         table1 = [
             28,
-            1, 2, 3, 4, 5, 6, 7,
+            102, 0, 0, 0, 512, 0, 0,
             28,
         ]
         fascii.write('%s header1b = %s\n' % (self.table_name, table1))
@@ -625,7 +625,9 @@ class ScalarObject(BaseScalarObject):
         try:
             subtable_name = self.subtable_name
         except AttributeError:
-            print('attrs =', self.object_attributes())
+            #print('attrs =', self.object_attributes())
+            #raise
+            pass
 
         self.subtable_name = b'OUG1    '
         table2 = [

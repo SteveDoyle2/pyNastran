@@ -27,7 +27,7 @@ def write_table_header(f, fascii, table_name):
     table0_format = '<4i 8s i'
     st = Struct(table0_format)
     f.write(st.pack(*table0))
-    fascii.write('OUG header0 = %s\n' % table0)
+    fascii.write('%s header0 = %s\n' % (table_name, table0))
 
 def export_to_hdf5(self, group, log):
     """exports the object to HDF5 format"""

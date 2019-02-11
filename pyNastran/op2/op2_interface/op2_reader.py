@@ -3023,7 +3023,11 @@ class OP2Reader(object):
             op2.is_start_of_subtable = True
             if self.is_debug_file:
                 self.binary_debug.write('***isubtable = %i\n' % op2.isubtable)
-            self._read_subtable_3_4(table3_parser, table4_parser, passer)
+            try:
+                self._read_subtable_3_4(table3_parser, table4_parser, passer)
+            except:  # pragma: no cover
+                print('failed reading %s isubtable=%s' % (op2.table_name, op2.isubtable))
+                raise
             #force_table4 = self._read_subtable_3_4(table3_parser, table4_parser, passer)
             op2.isubtable -= 1
 

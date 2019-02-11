@@ -590,7 +590,7 @@ class RealTableArray(TableArray):
         nnodes_device = self.node_gridtype[:, 0] * 10 + self.device_code
 
         #(2+6) => (node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i)
-        ntotal = self.ntimes * nnodes * (2 + 6)
+        ntotal = nnodes * (2 + 6)
 
         #print('shape = %s' % str(self.data.shape))
         assert nnodes > 1, nnodes

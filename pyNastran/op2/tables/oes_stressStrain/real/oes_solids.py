@@ -422,11 +422,14 @@ class RealSolidArray(OES_Object):
         # table 4 info
         #ntimes = self.data.shape[0]
         nnodes = self.data.shape[1]
-        nelements = len(eids2)
+        nelements = len(np.unique(eids2))
 
         # 21 = 1 node, 3 principal, 6 components, 9 vectors, 2 p/ovm
         #ntotal = ((nnodes * 21) + 1) + (nelements * 4)
-        ntotal = 4 + 21 * nnodes_expected
+        nnodes_expected = 4
+        ntotali = 4 + 21 * nnodes_expected
+        ntotali = self.num_wide
+        ntotal = ntotali * nelements
 
         #print('shape = %s' % str(self.data.shape))
         assert nnodes > 1, nnodes
@@ -439,10 +442,15 @@ class RealSolidArray(OES_Object):
         #print('ntotal=%s' % (ntotal))
         #assert ntotal == 193, ntotal
 
+        if np.isnan(self.nonlinear_factor):
+            op2_format = endian + b'2i6f'
+        else:
+            raise NotImplementedError(self.nonlinear_factor)
         struct1 = Struct(endian + b'ii4si')
         struct2 = Struct(endian + b'i20f')
 
         cen = b'GRID'
+        op2_ascii.write('nelements=%i\n' % nelements)
         for itime in range(self.ntimes):
             self._write_table_3(op2, op2_ascii, itable, itime)
 
