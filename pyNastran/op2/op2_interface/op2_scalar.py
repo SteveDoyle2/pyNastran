@@ -1498,7 +1498,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             'acoustic_flag', 'approach_code', 'format_code_original',
             'element_name', 'sort_bits', 'code', 'n', 'use_vector', 'ask',
             'stress_bits', 'expected_times', 'table_code', 'sort_code',
-            'is_all_subcases', 'num_wide', '_table_mapper', 'title', 'label',
+            'is_all_subcases', 'num_wide', '_table_mapper', 'label',
             'apply_symmetry',
             #'read_mode',
             'words', 'device_code', 'table_name', '_count', 'additional_matrices',
@@ -1510,10 +1510,11 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             # 124
             'is_table_1', 'is_table_2', 'ntotal', 'element_mapper',
             'is_debug_file', 'debug_file',
-            '_results', 'skip_undefined_matrices', 'make_geom',
+            '_results', 'skip_undefined_matrices',
             # 140
             #---------------------------------------------------------
             # dont remove...
+            # make_geom, title,
             # result_names, op2_results
 
         ]
