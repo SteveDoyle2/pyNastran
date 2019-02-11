@@ -357,9 +357,9 @@ class RealSolidArray(OES_Object):
         num_wide = self.num_wide
         acoustic_flag = 0
         thermal = 0
-        title = b'%-128s' % self.title
-        subtitle = b'%-128s' % self.subtitle
-        label = b'%-128s' % self.label
+        title = b'%-128s' % self.title.encode('ascii')
+        subtitle = b'%-128s' % self.subtitle.encode('ascii')
+        label = b'%-128s' % self.label.encode('ascii')
         ftable3 = b'50i 128s 128s 128s'
         oCode = 0
         if self.analysis_code == 1:
@@ -375,7 +375,7 @@ class RealSolidArray(OES_Object):
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, thermal, thermal, 0,
-            title.encode('ascii'), subtitle.encode('ascii'), label.encode('ascii'),
+            title, subtitle, label,
         ]
 
         n = 0
@@ -386,7 +386,7 @@ class RealSolidArray(OES_Object):
                 n += len(v)
         assert n == 584, n
         data = [584] + table3 + [584]
-        fmt = 'i' + ftable3 + 'i'
+        fmt = b'i' + ftable3 + b'i'
         #print(fmt)
         #print(data)
         #f.write(pack(fascii, '%s header 3c' % self.table_name, fmt, data))

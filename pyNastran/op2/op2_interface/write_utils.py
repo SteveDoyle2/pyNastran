@@ -1,7 +1,7 @@
 """
 Defines methods for the op2 writer
 """
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
 from struct import Struct, pack
 import numpy as np
 import scipy.sparse as sp
@@ -20,7 +20,7 @@ def _write_markers(f, fascii, markers):
 def write_table_header(f, fascii, table_name):
     table0 = [
         4, 2, 4,
-        8, bytes(table_name), 8,
+        8, table_name.encode('ascii'), 8,
         #4, 0, 4,
     ]
     assert len(table_name) == 8, table_name

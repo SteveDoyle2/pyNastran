@@ -116,9 +116,9 @@ def write_ept(op2, op2_ascii, obj, endian=b'<'):
                     raise NotImplementedError('isop=%s and must be [0, 1]' % prop.isop)
 
                 if prop.fctn == 'SMECH':
-                    fctn = 'SMEC'
+                    fctn = b'SMEC'
                 elif prop.fctn == 'PFLUID':
-                    fctn = 'PFLU'
+                    fctn = b'PFLU'
                 else:
                     raise NotImplementedError('PSOLID; fctn=%r' % prop.fctn)
 
