@@ -77,6 +77,7 @@ class OP2Writer(OP2_F06_Common):
         """
         assert op2_outname != 'ctria3.op2'
         print('writing %s' % op2_outname)
+        struct_3i = Struct(endian + '3i')
 
         if obj is None:
             obj = self
@@ -102,7 +103,7 @@ class OP2Writer(OP2_F06_Common):
         #elif markers == [2,]:  # PARAM, POST, -2
         if post == -1:
         #_write_markers(op2, op2_ascii, [3, 0, 7])
-            fop2.write(pack('3i', *[4, 3, 4,]))
+            fop2.write(struct_3i.pack(*[4, 3, 4,]))
             tape_code = b'NASTRAN FORT TAPE ID CODE - '
             fop2.write(pack('7i 28s i', *[4, 1, 4,
                                           4, 7, 4,
@@ -141,8 +142,8 @@ class OP2Writer(OP2_F06_Common):
             #print('%-18s SUBCASE=%i' % (result.__class__.__name__, isubcase))
             if hasattr(result, 'write_op2'):
                 result.write_op2(fop2, fop2_ascii, endian=endian)
-                if delete_objects:
-                    del result
+                #if delete_objects:
+                    #del result
             else:
                 print("*op2 - %s not written" % result.__class__.__name__)
                 write_op2
@@ -155,8 +156,8 @@ class OP2Writer(OP2_F06_Common):
             if hasattr(result, 'write_op2'):
                 print('%-18s SUBCASE=%i' % (result.__class__.__name__, isubcase))
                 result.write_op2(fop2, fop2_ascii, is_mag_phase=is_mag_phase, endian=endian)
-                if delete_objects:
-                    del result
+                #if delete_objects:
+                    #del result
             else:
                 print("*op2 - %s not written" % result.__class__.__name__)
                 write_op2
@@ -325,14 +326,18 @@ class OP2Writer(OP2_F06_Common):
         # TODO: this may need to be reworked such that all of subcase 1
         #is printed before subcase 2
         for res_category_name, res_category in res_categories:
-            print("res_category_name = %s" % res_category_name)
-            for res_type in res_category:
+            for ires_type, res_type in enumerate(res_category):
                 res_keys = isubcases
                 itable = -1
+                print_msg = True
+
                 for res_key in res_keys:
                     isubcase = res_key
                     case_count = 0
                     if isubcase in res_type:
+                        if print_msg:
+                            print("res_category_name = %s" % res_category_name)
+                            print_msg = False
                         case_count += 1
                         #(subtitle, label) = obj.isubcase_name_map[isubcase]
                         result = res_type[isubcase]
@@ -341,20 +346,30 @@ class OP2Writer(OP2_F06_Common):
                             element_name = ' - ' + result.element_name
                         if hasattr(result, 'write_op2'):
                             print(' %s - isubcase=%i%s' % (result.__class__.__name__, isubcase, element_name))
-                            result.write_op2(fop2, fop2_ascii, itable, obj.date, is_mag_phase=False, endian=endian)
-                            break
+                            itable = result.write_op2(fop2, fop2_ascii, itable, obj.date, is_mag_phase=False, endian=endian)
                         else:
                             print("  *op2 - %s not written" % result.__class__.__name__)
-                        footer = [4, 0, 4]
-                        fop2.write(pack(b'3i', *footer))
-                        itable -= 1
+                            continue
+
+                        header = [
+                            4, itable, 4,
+                            4, 1, 4,
+                            4, 0, 4,
+                        ]
+                        assert itable is not None, '%s itable is None' % result.__class__.__name__
+                        fop2.write(pack(b'9i', *header))
+                        fop2_ascii.write('footer2 = %s\n' % header)
+
+                        #footer = [4, 0, 4]
+                        #fop2.write(struct_3i.pack(*footer))
+                        #itable -= 1
 
                         #footer = [4, itable, 4]
                         #op2.write(pack(b'3i', *footer))
                         #footer = [4, 0, 4]
                         #op2.write(pack(b'3i', *footer))
-                        footer = [4, itable, 4]
-                        fop2.write(pack(b'3i', *footer))
+                        #footer = [4, itable, 4]
+                        #fop2.write(struct_3i.pack(*footer))
                         #footer = [4, 0, 4]
                         #op2.write(pack(b'3i', *footer))
 
@@ -363,13 +378,14 @@ class OP2Writer(OP2_F06_Common):
                     #op2.write(pack(b'3i', *footer))
                     #break
 
-        # close off the results
-        footer = [4, 0, 4]
-        fop2.write(pack(b'3i', *footer))
-        fop2_ascii.write('close_a = %s\n' % footer)
+            # close off the result
+            footer = [4, 0, 4]
+            fop2.write(struct_3i.pack(*footer))
+            fop2_ascii.write('close_a = %s\n' % footer)
 
+        # close off the op2
         footer = [4, 0, 4]
-        fop2.write(pack(b'3i', *footer))
+        fop2.write(struct_3i.pack(*footer))
         fop2_ascii.write('close_b = %s\n' % footer)
         fop2.close()
         fop2_ascii.close()

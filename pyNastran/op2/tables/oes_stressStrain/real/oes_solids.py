@@ -522,12 +522,14 @@ class RealSolidArray(OES_Object):
             header = [4 * ntotal,]
             op2.write(pack('i', *header))
             op2_ascii.write('footer = %s' % header)
-        header = [
-            4, itable, 4,
-            4, 1, 4,
-            4, 0, 4,
-        ]
-        op2.write(pack('%ii' % len(header), *header))
+
+        return itable
+        #header = [
+            #4, itable, 4,
+            #4, 1, 4,
+            #4, 0, 4,
+        #]
+        #op2.write(pack('%ii' % len(header), *header))
 
 
 class RealSolidStressArray(RealSolidArray, StressObject):

@@ -58,11 +58,11 @@ def write_geom1(op2, op2_ascii, obj):
         #nvalues = nnodes * 8
         #nbytes = nvalues * 4
         bytes_per_id = 32
-        assert nnodes == 72, nnodes
+        #assert nnodes == 72, nnodes
         nfields = 8 # nid, cp, x, y, z, cd, ps, seid
         nvalues = nfields * nnodes + 3 # 3 comes from the keys
         nbytes = nvalues * 4
-        assert nbytes == 2316, nbytes
+        #assert nbytes == 2316, nbytes
         #op2.write(pack('6i', *[4, 0, 4, 4, 1, 4]))
         op2.write(pack('3i', *[4, nvalues, 4]))
         op2.write(pack('i', nbytes)) #values, nbtyes))
@@ -124,23 +124,25 @@ def init_table(table_name):
     ]
     return data
 
-def close_geom_table(op2, op2_ascii, itable):
-    data = [
-        4, -4, 4,
-        4, 1, 4,
-        4, 0, 4]
-    op2.write(pack('9i', *data))
-    op2_ascii.write(str(data) + '\n')
+def close_geom_table(op2, op2_ascii, itable, include_last=True):
+    if include_last:
+        data = [
+            4, itable, 4,
+            4, 1, 4,
+            4, 0, 4]
+        op2.write(pack('9i', *data))
+        op2_ascii.write(str(data) + '\n')
 
     data = [
         4, 3, 4,
         12, 1, 2, 3, 12]
     op2.write(pack('3i 5i', *data))
     op2_ascii.write(str(data) + '\n')
+    itable -= 1
     #-------------------------------------
 
     data = [
-        4, -5, 4,
+        4, itable, 4,
         4, 1, 4,
         4, 0, 4]
     op2.write(pack('9i', *data))
@@ -152,3 +154,4 @@ def close_geom_table(op2, op2_ascii, itable):
     ]
     op2.write(pack('3i', *data))
     op2_ascii.write(str(data) + '\n')
+    itable -= 1

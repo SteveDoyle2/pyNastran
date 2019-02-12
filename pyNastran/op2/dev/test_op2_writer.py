@@ -47,8 +47,9 @@ class TestOP2Writer(unittest.TestCase):
         model = os.path.splitext(op2_filename)[0]
         #debug_file = model + '.debug.out'
 
-        op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug, include_results='stress')
-        #op2 = read_op2(op2_filename, debug_file=op2_filename_debug, include_results=['displacements', 'stress'])
+        op2 = read_op2(op2_filename, debug_file=op2_filename_debug,
+                       #include_results=['displacements', 'stress']
+                       )
 
         op2w = OP2Writer(op2)
         op2w.write_op2(op2_filename_out, obj=op2, is_mag_phase=False,
@@ -56,6 +57,45 @@ class TestOP2Writer(unittest.TestCase):
         op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out)
         #op2b = read_op2(op2_filename_out, debug_file=op2_filename_debug_out)
 
+    def _test_write_3(self):
+        """tests basic op2 writing"""
+        folder = os.path.join(MODEL_PATH, 'sol_101_elements')
+        op2_filename = os.path.join(folder, 'static_solid_shell_bar.op2')
+        op2_filename_debug = os.path.join(folder, 'static_solid_shell_bar.debug.out')
+        op2_filename_out = os.path.join(folder, 'static_solid_shell_bar_out.op2')
+        op2_filename_debug_out = os.path.join(folder, 'static_solid_shell_bar_out.debug.out')
+        #debug_file = 'solid_bending.debug.out'
+        model = os.path.splitext(op2_filename)[0]
+        #debug_file = model + '.debug.out'
+
+        op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug, include_results='displacements')
+        #op2 = read_op2(op2_filename, debug_file=op2_filename_debug, include_results='displacements')
+
+        op2w = OP2Writer(op2)
+        op2w.write_op2(op2_filename_out, obj=op2, is_mag_phase=False,
+                       delete_objects=True)
+        op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out)
+        #op2b = read_op2(op2_filename_out, debug_file=op2_filename_debug_out)
+
+    def test_write_4(self):
+        """tests basic op2 writing"""
+        folder = os.path.join(MODEL_PATH, 'sol_101_elements')
+        op2_filename = os.path.join(folder, 'static_solid_shell_bar.op2')
+        op2_filename_debug = os.path.join(folder, 'static_solid_shell_bar.debug.out')
+        op2_filename_out = os.path.join(folder, 'static_solid_shell_bar_out.op2')
+        op2_filename_debug_out = os.path.join(folder, 'static_solid_shell_bar_out.debug.out')
+        #debug_file = 'solid_bending.debug.out'
+        model = os.path.splitext(op2_filename)[0]
+        #debug_file = model + '.debug.out'
+
+        op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug, include_results='displacements')
+        #op2 = read_op2(op2_filename, debug_file=op2_filename_debug, include_results='displacements')
+
+        op2w = OP2Writer(op2)
+        op2w.write_op2(op2_filename_out, obj=op2, is_mag_phase=False,
+                       delete_objects=True)
+        op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out)
+        #op2b = read_op2(op2_filename_out, debug_file=op2_filename_debug_out)
 
 if __name__ == '__main__':
     unittest.main()

@@ -631,13 +631,13 @@ class RealTableArray(TableArray):
             header = [4 * ntotal,]
             op2_file.write(pack(b'i', *header))
             fascii.write('footer = %s\n' % header)
-        header = [
-            4, itable, 4,
-            4, 1, 4,
-            4, 0, 4,
-        ]
-        op2_file.write(pack(b'%ii' % len(header), *header))
-        fascii.write('footer2 = %s\n' % header)
+        #header = [
+            #4, itable, 4,
+            #4, 1, 4,
+            #4, 0, 4,
+        #]
+        #op2_file.write(pack(b'%ii' % len(header), *header))
+        #fascii.write('footer2 = %s\n' % header)
         return itable
 
 
