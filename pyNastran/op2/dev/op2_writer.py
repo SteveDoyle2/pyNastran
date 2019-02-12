@@ -326,6 +326,7 @@ class OP2Writer(OP2_F06_Common):
         # TODO: this may need to be reworked such that all of subcase 1
         #is printed before subcase 2
         for res_category_name, res_category in res_categories:
+            case_count = 0
             for ires_type, res_type in enumerate(res_category):
                 res_keys = isubcases
                 itable = -1
@@ -333,12 +334,10 @@ class OP2Writer(OP2_F06_Common):
 
                 for res_key in res_keys:
                     isubcase = res_key
-                    case_count = 0
                     if isubcase in res_type:
                         if print_msg:
                             print("res_category_name = %s" % res_category_name)
                             print_msg = False
-                        case_count += 1
                         #(subtitle, label) = obj.isubcase_name_map[isubcase]
                         result = res_type[isubcase]
                         element_name = ''
@@ -351,6 +350,7 @@ class OP2Writer(OP2_F06_Common):
                             print("  *op2 - %s not written" % result.__class__.__name__)
                             continue
 
+                        case_count += 1
                         header = [
                             4, itable, 4,
                             4, 1, 4,
@@ -360,28 +360,12 @@ class OP2Writer(OP2_F06_Common):
                         fop2.write(pack(b'9i', *header))
                         fop2_ascii.write('footer2 = %s\n' % header)
 
-                        #footer = [4, 0, 4]
-                        #fop2.write(struct_3i.pack(*footer))
-                        #itable -= 1
-
-                        #footer = [4, itable, 4]
-                        #op2.write(pack(b'3i', *footer))
-                        #footer = [4, 0, 4]
-                        #op2.write(pack(b'3i', *footer))
-                        #footer = [4, itable, 4]
-                        #fop2.write(struct_3i.pack(*footer))
-                        #footer = [4, 0, 4]
-                        #op2.write(pack(b'3i', *footer))
-
-                #if case_count:
-                    #footer = [4, 0, 4]
-                    #op2.write(pack(b'3i', *footer))
-                    #break
-
-            # close off the result
-            footer = [4, 0, 4]
-            fop2.write(struct_3i.pack(*footer))
-            fop2_ascii.write('close_a = %s\n' % footer)
+            if case_count:
+                print('res_category_name=%s case_count=%s'  % (res_category_name, case_count))
+                # close off the result
+                footer = [4, 0, 4]
+                fop2.write(struct_3i.pack(*footer))
+                fop2_ascii.write('close_a = %s\n' % footer)
 
         # close off the op2
         footer = [4, 0, 4]
