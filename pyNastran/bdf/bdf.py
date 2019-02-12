@@ -2979,13 +2979,13 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             try:
                 obj = add_card_function(card, card_obj, comment=comment)
             except (SyntaxError, AssertionError, KeyError, ValueError) as exception:
-                raise
-                #self._iparse_errors += 1
-                #self.log.error(card_obj)
-                #var = traceback.format_exception_only(type(exception), exception)
-                #self._stored_parse_errors.append((card, var))
-                #if self._iparse_errors > self._nparse_errors:
-                    #self.pop_parse_errors()
+                #raise
+                self._iparse_errors += 1
+                self.log.error(card_obj)
+                var = traceback.format_exception_only(type(exception), exception)
+                self._stored_parse_errors.append((card, var))
+                if self._iparse_errors > self._nparse_errors:
+                    self.pop_parse_errors()
 
             if obj is None:
                 print(add_card_function)

@@ -2260,7 +2260,7 @@ class CQUAD4(QuadShell):
             T3 = 1.0
         if T4 == -1.0:
             T4 = 1.0
-        assert tflag in [0, 1], data
+        assert tflag in [0, 1], 'data=%s tflag=%s' % (data, tflag)
         return CQUAD4(eid, pid, nids, theta_mcid, zoffset,
                       tflag, T1, T2, T3, T4, comment=comment)
 
