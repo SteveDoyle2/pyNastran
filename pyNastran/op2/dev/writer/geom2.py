@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 from struct import pack, Struct
 
-from .geom1 import close_geom_table
+from .geom1 import write_geom_header, close_geom_table
 
 def write_geom2(op2, op2_ascii, obj, endian=b'<'):
     if not hasattr(obj, 'elements'):
@@ -11,49 +11,7 @@ def write_geom2(op2, op2_ascii, obj, endian=b'<'):
     nelements = len(obj.elements)
     if nelements == 0:
         return
-    data = [
-        4, 2, 4,
-        #4, 2,4,
-        8, b'GEOM2   ', 8,
-        4, -1, 4,
-        #4, 1, 4,
-        #4, 0, 4,
-    ]
-    op2.write(pack('4i 8s i 3i', *data))
-    op2_ascii.write(str(data) + '\n')
-
-    data = [
-        4, 7, 4,
-        28, 1, 2, 3, 4, 5, 6, 7, 28,
-    ]
-    op2.write(pack('3i 9i', *data))
-    op2_ascii.write(str(data) + '\n')
-
-    #-------------------------------------
-    data = [
-        4, -2, 4,
-        4, 1, 4,
-        4, 0, 4]
-    op2.write(pack('9i', *data))
-    op2_ascii.write(str(data) + '\n')
-
-    data = [
-        #4, 0, 4,
-        4, 2, 4,
-        8, 1, 2, 8,
-    ]
-    op2.write(pack('3i 4i', *data))
-    op2_ascii.write(str(data) + '\n')
-    #data = [8, 1, 2, 8]
-    #op2.write(pack('4i', *data))
-    #-------------------------------------
-
-    data = [
-        4, -3, 4,
-        4, 1, 4,
-        4, 0, 4]
-    op2.write(pack('9i', *data))
-    op2_ascii.write(str(data) + '\n')
+    write_geom_header(b'GEOM2', op2, op2_ascii)
     itable = -3
 
     etypes = [

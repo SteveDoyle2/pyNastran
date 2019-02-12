@@ -9,49 +9,7 @@ def write_geom1(op2, op2_ascii, obj):
     ncoords = len(obj.coords)
     if not(nnodes or ncoords):
         return
-    data = [
-        4, 2, 4,
-        #4, 2,4,
-        8, b'GEOM1   ', 8,
-        4, -1, 4,
-        #4, 1, 4,
-        #4, 0, 4,
-    ]
-    op2.write(pack('4i 8s i 3i', *data))
-    op2_ascii.write(str(data) + '\n')
-
-    data = [
-        4, 7, 4,
-        28, 1, 2, 3, 4, 5, 6, 7, 28,
-    ]
-    op2.write(pack('3i 9i', *data))
-    op2_ascii.write(str(data) + '\n')
-
-    #-------------------------------------
-    data = [
-        4, -2, 4,
-        4, 1, 4,
-        4, 0, 4]
-    op2.write(pack('9i', *data))
-    op2_ascii.write(str(data) + '\n')
-
-    data = [
-        #4, 0, 4,
-        4, 2, 4,
-        8, 1, 2, 8,
-    ]
-    op2.write(pack('3i 4i', *data))
-    op2_ascii.write(str(data) + '\n')
-    #data = [8, 1, 2, 8]
-    #op2.write(pack('4i', *data))
-    #-------------------------------------
-
-    data = [
-        4, -3, 4,
-        4, 1, 4,
-        4, 0, 4]
-    op2.write(pack('9i', *data))
-    op2_ascii.write(str(data) + '\n')
+    write_geom_header(b'GEOM1', op2, op2_ascii)
     itable = -3
 
     if nnodes:
@@ -123,6 +81,47 @@ def init_table(table_name):
         #4, 0, 4,
     ]
     return data
+
+def write_geom_header(table_name, op2, op2_ascii, endian=b'<'):
+    op2_ascii.write('----------\n')
+    data = init_table(table_name)
+    op2.write(pack('4i 8s i 3i', *data))
+    op2_ascii.write(str(data) + '\n')
+
+    data = [
+        4, 7, 4,
+        28, 1, 2, 3, 4, 5, 6, 7, 28,
+    ]
+    struct_3i = Struct(endian + b'3i')
+    op2.write(pack('3i 9i', *data))
+    op2_ascii.write(str(data) + '\n')
+
+    #-------------------------------------
+    data = [
+        4, -2, 4,
+        4, 1, 4,
+        4, 0, 4]
+    op2.write(pack('9i', *data))
+    op2_ascii.write(str(data) + '\n')
+
+    data = [
+        #4, 0, 4,
+        4, 2, 4,
+        8, 1, 2, 8,
+    ]
+    op2.write(pack('3i 4i', *data))
+    op2_ascii.write(str(data) + '\n')
+    #data = [8, 1, 2, 8]
+    #op2.write(pack('4i', *data))
+    #-------------------------------------
+
+    data = [
+        4, -3, 4,
+        4, 1, 4,
+        4, 0, 4]
+    op2.write(pack('9i', *data))
+    op2_ascii.write(str(data) + '\n')
+
 
 def close_geom_table(op2, op2_ascii, itable, include_last=True):
     if include_last:

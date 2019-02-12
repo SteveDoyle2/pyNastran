@@ -333,12 +333,22 @@ class RealSolidArray(OES_Object):
         call_frame = inspect.getouterframes(frame, 2)
         op2_ascii.write('%s.write_table_3: %s\n' % (self.__class__.__name__, call_frame[1][3]))
 
-        op2.write(pack('12i', *[
-            4, itable, 4,
-            4, 1, 4,
-            4, 0, 4,
-            4, 146, 4,
-        ]))
+        if itable == -3:
+            #print('*writing itable=%s' % itable)
+            op2.write(pack('12i', *[
+                4, itable, 4,
+                4, 1, 4,
+                4, 0, 4,
+                4, 146, 4,
+            ]))
+        else:
+            #print('***writing itable=%s' % itable)
+            op2.write(pack('3i', *[
+                #4, itable, 4,
+                #4, 1, 4,
+                #4, 0, 4,
+                4, 146, 4,
+            ]))
         approach_code = self.approach_code
         table_code = self.table_code
         isubcase = self.isubcase
@@ -402,6 +412,7 @@ class RealSolidArray(OES_Object):
         op2_ascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
 
         if itable == -1:
+            #print('***************', itable)
             self._write_table_header(op2, op2_ascii, date)
             itable = -3
 
@@ -426,7 +437,8 @@ class RealSolidArray(OES_Object):
 
         # 21 = 1 node, 3 principal, 6 components, 9 vectors, 2 p/ovm
         #ntotal = ((nnodes * 21) + 1) + (nelements * 4)
-        nnodes_expected = 4
+
+        nnodes_expected = self.nnodes_per_element
         ntotali = 4 + 21 * nnodes_expected
         ntotali = self.num_wide
         ntotal = ntotali * nelements
@@ -455,7 +467,9 @@ class RealSolidArray(OES_Object):
             self._write_table_3(op2, op2_ascii, itable, itime)
 
             # record 4
-            header = [4, -4, 4,
+            #print('stress itable = %s' % itable)
+            itable -= 1
+            header = [4, itable, 4,
                       4, 1, 4,
                       4, 0, 4,
                       4, ntotal, 4,
@@ -518,10 +532,10 @@ class RealSolidArray(OES_Object):
                 op2.write(struct2.pack(*data))
                 i += 1
 
-            itable -= 2
+            itable -= 1
             header = [4 * ntotal,]
             op2.write(pack('i', *header))
-            op2_ascii.write('footer = %s' % header)
+            op2_ascii.write('footer = %s\n' % header)
 
         return itable
         #header = [

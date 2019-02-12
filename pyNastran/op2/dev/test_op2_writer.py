@@ -88,7 +88,10 @@ class TestOP2Writer(unittest.TestCase):
         model = os.path.splitext(op2_filename)[0]
         #debug_file = model + '.debug.out'
 
-        op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug, include_results='displacements')
+        op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug,
+                            #include_results='displacements',
+                            include_results='stress',
+                            )
         #op2 = read_op2(op2_filename, debug_file=op2_filename_debug, include_results='displacements')
 
         op2w = OP2Writer(op2)

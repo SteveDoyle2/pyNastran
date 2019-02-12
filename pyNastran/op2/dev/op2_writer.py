@@ -322,43 +322,20 @@ class OP2Writer(OP2_F06_Common):
             ('other', other)
         ]
         res_outs = {}
+        self._write_categories(obj, res_categories, isubcases,
+                               fop2, fop2_ascii,
+                               struct_3i, endian)
 
+    def _write_categories(self, obj, res_categories, isubcases,
+                          fop2, fop2_ascii,
+                          struct_3i, endian=b'<'):
         # TODO: this may need to be reworked such that all of subcase 1
         #is printed before subcase 2
         for res_category_name, res_category in res_categories:
-            case_count = 0
-            for ires_type, res_type in enumerate(res_category):
-                res_keys = isubcases
-                itable = -1
-                print_msg = True
-
-                for res_key in res_keys:
-                    isubcase = res_key
-                    if isubcase in res_type:
-                        if print_msg:
-                            print("res_category_name = %s" % res_category_name)
-                            print_msg = False
-                        #(subtitle, label) = obj.isubcase_name_map[isubcase]
-                        result = res_type[isubcase]
-                        element_name = ''
-                        if hasattr(result, 'element_name'):
-                            element_name = ' - ' + result.element_name
-                        if hasattr(result, 'write_op2'):
-                            print(' %s - isubcase=%i%s' % (result.__class__.__name__, isubcase, element_name))
-                            itable = result.write_op2(fop2, fop2_ascii, itable, obj.date, is_mag_phase=False, endian=endian)
-                        else:
-                            print("  *op2 - %s not written" % result.__class__.__name__)
-                            continue
-
-                        case_count += 1
-                        header = [
-                            4, itable, 4,
-                            4, 1, 4,
-                            4, 0, 4,
-                        ]
-                        assert itable is not None, '%s itable is None' % result.__class__.__name__
-                        fop2.write(pack(b'9i', *header))
-                        fop2_ascii.write('footer2 = %s\n' % header)
+            case_count = self._write_category(
+                obj, res_category_name, res_category, isubcases,
+                fop2, fop2_ascii,
+                struct_3i, endian=b'<')
 
             if case_count:
                 print('res_category_name=%s case_count=%s'  % (res_category_name, case_count))
@@ -373,3 +350,44 @@ class OP2Writer(OP2_F06_Common):
         fop2_ascii.write('close_b = %s\n' % footer)
         fop2.close()
         fop2_ascii.close()
+
+    def _write_category(self, obj, res_category_name, res_category, isubcases,
+                        fop2, fop2_ascii,
+                        struct_3i, endian=b'<'):
+        case_count = 0
+        itable = -1
+        print_msg = True
+        for ires_type, res_type in enumerate(res_category):
+            res_keys = isubcases
+            for res_key in res_keys:
+                isubcase = res_key
+                if isubcase in res_type:
+                    if print_msg:
+                        print("res_category_name = %s" % res_category_name)
+                        print_msg = False
+                    #(subtitle, label) = obj.isubcase_name_map[isubcase]
+                    result = res_type[isubcase]
+                    element_name = ''
+                    if hasattr(result, 'element_name'):
+                        element_name = ' - ' + result.element_name
+
+                    if hasattr(result, 'write_op2'):
+                        print(' %s - isubcase=%i%s' % (result.__class__.__name__, isubcase, element_name))
+                        itable = result.write_op2(fop2, fop2_ascii, itable, obj.date, is_mag_phase=False, endian=endian)
+                    else:
+                        #print("  *op2 - %s not written" % result.__class__.__name__)
+                        continue
+
+                    case_count += 1
+                    header = [
+                        4, itable, 4,
+                        4, 1, 4,
+                        4, 0, 4,
+                    ]
+                    print('writing itable=%s' % itable)
+                    assert itable is not None, '%s itable is None' % result.__class__.__name__
+                    fop2.write(pack(b'9i', *header))
+                    fop2_ascii.write('footer2 = %s\n' % header)
+                    #print('bailing...')
+                    #return case_count
+        return case_count

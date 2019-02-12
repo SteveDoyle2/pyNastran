@@ -618,7 +618,6 @@ class ScalarObject(BaseScalarObject):
             4, 7, 4,
         ]
         fascii.write('%s header2a = %s\n' % (self.table_name, data))
-        print('data =', data, len(data))
         op2_file.write(pack(b'<12i', *data))
 
         month, day, year = date
