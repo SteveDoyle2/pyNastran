@@ -379,6 +379,7 @@ class RealScalarTableArray(ScalarTableArray):  # temperature style table
         op2_file.write(pack(fmt, *data))
 
     def write_op2(self, op2_file, fascii, itable, date, is_mag_phase=False, endian='>'):
+        """writes an OP2"""
         import inspect
         assert self.table_name in ['OUGV1', 'OQMG1', 'OQG1'], self.table_name
 

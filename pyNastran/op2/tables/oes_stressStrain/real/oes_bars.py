@@ -266,6 +266,108 @@ class RealBarArray(OES_Object):
             page_num -= 1
         return page_num
 
+    def write_op2(self, op2, op2_ascii, itable, date, is_mag_phase=False, endian='>'):
+        """writes an OP2"""
+        import inspect
+        from struct import Struct, pack
+        frame = inspect.currentframe()
+        call_frame = inspect.getouterframes(frame, 2)
+        op2_ascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
+
+        if itable == -1:
+            self._write_table_header(op2, op2_ascii, date)
+            itable = -3
+
+        #if isinstance(self.nonlinear_factor, float):
+            #op2_format = '%sif' % (7 * self.ntimes)
+            #raise NotImplementedError()
+        #else:
+            #op2_format = 'i21f'
+        #s = Struct(op2_format)
+
+        eids = self.element
+        eids_device = eids * 10 + self.device_code
+
+        # table 4 info
+        #ntimes = self.data.shape[0]
+        #nnodes = self.data.shape[1]
+        nelements = self.data.shape[1]
+
+        # 21 = 1 node, 3 principal, 6 components, 9 vectors, 2 p/ovm
+        #ntotal = ((nnodes * 21) + 1) + (nelements * 4)
+
+        ntotali = self.num_wide
+        ntotal = ntotali * nelements
+
+        #print('shape = %s' % str(self.data.shape))
+        assert self.ntimes == 1, self.ntimes
+
+        op2_ascii.write('  ntimes = %s\n' % self.ntimes)
+
+        #fmt = '%2i %6f'
+        #print('ntotal=%s' % (ntotal))
+        #assert ntotal == 193, ntotal
+
+        if np.isnan(self.nonlinear_factor):
+            struct1 = Struct(endian + b'i 15f')
+        else:
+            raise NotImplementedError(self.nonlinear_factor)
+
+        op2_ascii.write('nelements=%i\n' % nelements)
+        for itime in range(self.ntimes):
+            self._write_table_3(op2, op2_ascii, itable, itime)
+
+            # record 4
+            #print('stress itable = %s' % itable)
+            itable -= 1
+            header = [4, itable, 4,
+                      4, 1, 4,
+                      4, 0, 4,
+                      4, ntotal, 4,
+                      4 * ntotal]
+            op2.write(pack('%ii' % len(header), *header))
+            op2_ascii.write('r4 [4, 0, 4]\n')
+            op2_ascii.write('r4 [4, %s, 4]\n' % (itable - 1))
+            op2_ascii.write('r4 [4, %i, 4]\n' % (4 * ntotal))
+
+            s1a = self.data[itime, :, 0]
+            s2a = self.data[itime, :, 1]
+            s3a = self.data[itime, :, 2]
+            s4a = self.data[itime, :, 3]
+
+            axial = self.data[itime, :, 4]
+            smaxa = self.data[itime, :, 5]
+            smina = self.data[itime, :, 6]
+            MSt = self.data[itime, :, 7]
+
+            s1b = self.data[itime, :, 8]
+            s2b = self.data[itime, :, 9]
+            s3b = self.data[itime, :, 10]
+            s4b = self.data[itime, :, 11]
+
+            smaxb = self.data[itime, :, 12]
+            sminb = self.data[itime, :, 13]
+            MSc = self.data[itime, :, 14]
+
+            for (eid_device,
+                 s1ai, s2ai, s3ai, s4ai, axiali, smaxai, sminai, MSti,
+                 s1bi, s2bi, s3bi, s4bi,         smaxbi, sminbi, MSci) in zip(
+                eids_device,
+                s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
+                s1b, s2b, s3b, s4b,        smaxb, sminb, MSc):
+
+                data = [eid_device,
+                        s1ai, s2ai, s3ai, s4ai, axiali, smaxai, sminai, MSti,
+                        s1bi, s2bi, s3bi, s4bi,         smaxbi, sminbi, MSci]
+                op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, str(data)))
+                op2.write(struct1.pack(*data))
+
+            itable -= 1
+            header = [4 * ntotal,]
+            op2.write(pack('i', *header))
+            op2_ascii.write('footer = %s\n' % header)
+        return itable
+
 
 class RealBarStressArray(RealBarArray, StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):

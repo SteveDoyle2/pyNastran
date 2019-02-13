@@ -237,6 +237,7 @@ class RealRodArray(OES_Object):
         return page_num - 1
 
     def write_op2(self, op2, op2_ascii, itable, date, is_mag_phase=False, endian='>'):
+        """writes an OP2"""
         import inspect
         from struct import Struct, pack
         frame = inspect.currentframe()

@@ -745,6 +745,7 @@ class RealRodForceArray(RealForceObject):
         return True
 
     def write_op2(self, op2, op2_ascii, itable, date, is_mag_phase=False, endian='>'):
+        """writes an OP2"""
         import inspect
         from struct import Struct, pack
         frame = inspect.currentframe()
@@ -1751,6 +1752,105 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
             page_num += 1
         return page_num - 1
 
+    def write_op2(self, op2, op2_ascii, itable, date, is_mag_phase=False, endian='>'):
+        import inspect
+        from struct import Struct, pack
+        frame = inspect.currentframe()
+        call_frame = inspect.getouterframes(frame, 2)
+        op2_ascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
+
+        if itable == -1:
+            self._write_table_header(op2, op2_ascii, date)
+            itable = -3
+
+        if 'CTRIA3' in self.element_name:
+            nnodes = 3
+        elif 'CQUAD4' in self.element_name:
+            nnodes = 4
+        else:  # pragma: no cover
+            raise NotImplementedError(self.code_information())
+
+        #print("nnodes_all =", nnodes_all)
+        cen_word_ascii = 'CEN/%i' % nnodes
+        cen_word = b'CEN/%i' % nnodes
+
+        eids = self.element
+        cen_word = 'CEN/%i' % nnodes
+
+        #msg.append('  element_node.shape = %s\n' % str(self.element_node.shape).replace('L', ''))
+        #msg.append('  data.shape=%s\n' % str(self.data.shape).replace('L', ''))
+
+        eids = self.element
+        eids_device = eids * 10 + self.device_code
+
+        nelements = len(eids)
+        #print('nelements =', nelements)
+        # 21 = 1 node, 3 principal, 6 components, 9 vectors, 2 p/ovm
+        #ntotal = ((nnodes * 21) + 1) + (nelements * 4)
+
+        ntotali = self.num_wide
+        ntotal = ntotali * nelements
+
+        #print('shape = %s' % str(self.data.shape))
+        assert nnodes > 1, nnodes
+        assert self.ntimes == 1, self.ntimes
+
+        device_code = self.device_code
+        op2_ascii.write('  ntimes = %s\n' % self.ntimes)
+
+        #fmt = '%2i %6f'
+        #print('ntotal=%s' % (ntotal))
+        #assert ntotal == 193, ntotal
+
+        #[fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]
+
+        if np.isnan(self.nonlinear_factor):
+            structi = Struct(endian + b'i 8f')
+        else:
+            raise NotImplementedError(self.nonlinear_factor)
+
+        op2_ascii.write('nelements=%i\n' % nelements)
+        for itime in range(self.ntimes):
+            self._write_table_3(op2, op2_ascii, itable, itime)
+
+            # record 4
+            #print('stress itable = %s' % itable)
+            itable -= 1
+            header = [4, itable, 4,
+                      4, 1, 4,
+                      4, 0, 4,
+                      4, ntotal, 4,
+                      4 * ntotal]
+            op2.write(pack('%ii' % len(header), *header))
+            op2_ascii.write('r4 [4, 0, 4]\n')
+            op2_ascii.write('r4 [4, %s, 4]\n' % (itable - 1))
+            op2_ascii.write('r4 [4, %i, 4]\n' % (4 * ntotal))
+
+            mx = self.data[itime, :, 0]
+            my = self.data[itime, :, 1]
+            mxy = self.data[itime, :, 2]
+            bmx = self.data[itime, :, 3]
+            bmy = self.data[itime, :, 4]
+            bmxy = self.data[itime, :, 5]
+            tx = self.data[itime, :, 6]
+            ty = self.data[itime, :, 7]
+
+            nwide = 0
+            for eid_device, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi in zip(eids_device, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
+                data = [eid_device, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi]
+                #[mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi] = write_floats_13e(
+                #    [mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi])
+                op2.write(structi.pack(*data))
+                op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, str(data[1:])))
+                nwide += len(data)
+
+            assert nwide == ntotal, "nwide=%s ntotal=%s" % (nwide, ntotal)
+            itable -= 1
+            header = [4 * ntotal,]
+            op2.write(pack('i', *header))
+            op2_ascii.write('footer = %s\n' % header)
+        return itable
+
 
 class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -2037,6 +2137,131 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
             page_num += 1
         return page_num - 1
 
+    def write_op2(self, op2, op2_ascii, itable, date, is_mag_phase=False, endian='>'):
+        import inspect
+        from struct import Struct, pack
+        frame = inspect.currentframe()
+        call_frame = inspect.getouterframes(frame, 2)
+        op2_ascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
+
+        if itable == -1:
+            self._write_table_header(op2, op2_ascii, date)
+            itable = -3
+
+        (unused_elem_name, nnodes, unused_msg_temp) = self.get_f06_header(is_mag_phase)
+
+        # write the f06
+        ntimes = self.data.shape[0]
+
+        eids = self.element_node[:, 0]
+        nids = self.element_node[:, 1]
+        if self.element_type  in [64, 82, 144]: # CQUAD8, CQUADR, CQUAD4
+            cyci = [0, 1, 2, 3, 4]
+            #cyc = cycle([0, 1, 2, 3, 4])  # TODO: this is totally broken...
+            nnodes_per_eid = 5
+        elif self.element_type  in [70, 75]: # CTRIAR, CTRIA6
+            cyci = [0, 1, 2, 3]
+            #cyc = cycle([0, 1, 2, 3])  # TODO: this is totally broken...
+            nnodes_per_eid = 4
+        else:
+            raise NotImplementedError(self.element_type)
+
+        # TODO: this shouldn't be neccessary
+        cyc = cyci * (len(eids) // nnodes_per_eid)
+        assert len(eids) % nnodes_per_eid == 0
+
+        #print("nnodes_all =", nnodes_all)
+        cen_word_ascii = 'CEN/%i' % nnodes
+        cen_word = b'CEN/'
+
+        #msg.append('  element_node.shape = %s\n' % str(self.element_node.shape).replace('L', ''))
+        #msg.append('  data.shape=%s\n' % str(self.data.shape).replace('L', ''))
+
+        eids = self.element_node[:, 0]
+        nids = self.element_node[:, 1]
+        eids_device = eids * 10 + self.device_code
+
+        nelements = len(np.unique(eids))
+        #print('nelements =', nelements)
+        # 21 = 1 node, 3 principal, 6 components, 9 vectors, 2 p/ovm
+        #ntotal = ((nnodes * 21) + 1) + (nelements * 4)
+
+        ntotali = self.num_wide
+        ntotal = ntotali * nelements
+
+        #print('shape = %s' % str(self.data.shape))
+        assert nnodes > 1, nnodes
+        assert self.ntimes == 1, self.ntimes
+
+        device_code = self.device_code
+        op2_ascii.write('  ntimes = %s\n' % self.ntimes)
+
+        #fmt = '%2i %6f'
+        #print('ntotal=%s' % (ntotal))
+        #assert ntotal == 193, ntotal
+
+        #[fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]
+
+        if np.isnan(self.nonlinear_factor):
+            struct1 = Struct(endian + b'i4s i 8f')
+            struct2 = Struct(endian + b'i 8f')
+        else:
+            raise NotImplementedError(self.nonlinear_factor)
+
+        op2_ascii.write('nelements=%i\n' % nelements)
+        for itime in range(self.ntimes):
+            self._write_table_3(op2, op2_ascii, itable, itime)
+
+            # record 4
+            #print('stress itable = %s' % itable)
+            itable -= 1
+            header = [4, itable, 4,
+                      4, 1, 4,
+                      4, 0, 4,
+                      4, ntotal, 4,
+                      4 * ntotal]
+            op2.write(pack('%ii' % len(header), *header))
+            op2_ascii.write('r4 [4, 0, 4]\n')
+            op2_ascii.write('r4 [4, %s, 4]\n' % (itable - 1))
+            op2_ascii.write('r4 [4, %i, 4]\n' % (4 * ntotal))
+
+            mx = self.data[itime, :, 0]
+            my = self.data[itime, :, 1]
+            mxy = self.data[itime, :, 2]
+            bmx = self.data[itime, :, 3]
+            bmy = self.data[itime, :, 4]
+            bmxy = self.data[itime, :, 5]
+            tx = self.data[itime, :, 6]
+            ty = self.data[itime, :, 7]
+
+            nwide = 0
+            for i, eid, eid_device, nid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi in zip(cyc, eids, eids_device, nids, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
+                #[mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi] = write_floats_13e(
+                #    [mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi])
+
+                if i == 0:
+                    data = [eid_device, cen_word, nnodes, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi]
+                    op2.write(struct1.pack(*data))
+                    op2_ascii.write(
+                        '0  %8i    %s %-13s %-13s %-13s %-13s %-13s %-13s %-13s %s\n' % (
+                            eid, cen_word, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi))
+                else:
+                    data = [nid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi]
+                    op2.write(struct2.pack(*data))
+                    op2_ascii.write(
+                        '            %8i %-13s %-13s %-13s %-13s %-13s %-13s %-13s %s\n' % (
+                            nid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi))
+
+                op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, str(data)))
+                nwide += len(data)
+
+            assert nwide == ntotal, "nwide=%s ntotal=%s" % (nwide, ntotal)
+            itable -= 1
+            header = [4 * ntotal,]
+            op2.write(pack('i', *header))
+            op2_ascii.write('footer = %s\n' % header)
+        return itable
+
 
 class RealCBarForceArray(RealForceObject):  # 34-CBAR
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -2231,6 +2456,91 @@ class RealCBarForceArray(RealForceObject):  # 34-CBAR
                 if i > 0:
                     raise ValueError(msg)
         return True
+
+    def write_op2(self, op2, op2_ascii, itable, date, is_mag_phase=False, endian='>'):
+        """writes an OP2"""
+        import inspect
+        from struct import Struct, pack
+        frame = inspect.currentframe()
+        call_frame = inspect.getouterframes(frame, 2)
+        op2_ascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
+
+        if itable == -1:
+            self._write_table_header(op2, op2_ascii, date)
+            itable = -3
+
+        #if isinstance(self.nonlinear_factor, float):
+            #op2_format = '%sif' % (7 * self.ntimes)
+            #raise NotImplementedError()
+        #else:
+            #op2_format = 'i21f'
+        #s = Struct(op2_format)
+
+        eids = self.element
+        eids_device = eids * 10 + self.device_code
+
+        # table 4 info
+        #ntimes = self.data.shape[0]
+        #nnodes = self.data.shape[1]
+        nelements = self.data.shape[1]
+
+        # 21 = 1 node, 3 principal, 6 components, 9 vectors, 2 p/ovm
+        #ntotal = ((nnodes * 21) + 1) + (nelements * 4)
+
+        ntotali = self.num_wide
+        ntotal = ntotali * nelements
+
+        #print('shape = %s' % str(self.data.shape))
+        assert self.ntimes == 1, self.ntimes
+
+        op2_ascii.write('  ntimes = %s\n' % self.ntimes)
+
+        #fmt = '%2i %6f'
+        #print('ntotal=%s' % (ntotal))
+        #assert ntotal == 193, ntotal
+
+        if np.isnan(self.nonlinear_factor):
+            struct1 = Struct(endian + b'i 8f')
+        else:
+            raise NotImplementedError(self.nonlinear_factor)
+
+        op2_ascii.write('nelements=%i\n' % nelements)
+        for itime in range(self.ntimes):
+            self._write_table_3(op2, op2_ascii, itable, itime)
+
+            # record 4
+            #print('stress itable = %s' % itable)
+            itable -= 1
+            header = [4, itable, 4,
+                      4, 1, 4,
+                      4, 0, 4,
+                      4, ntotal, 4,
+                      4 * ntotal]
+            op2.write(pack('%ii' % len(header), *header))
+            op2_ascii.write('r4 [4, 0, 4]\n')
+            op2_ascii.write('r4 [4, %s, 4]\n' % (itable - 1))
+            op2_ascii.write('r4 [4, %i, 4]\n' % (4 * ntotal))
+
+            bm1a = self.data[itime, :, 0]
+            bm2a = self.data[itime, :, 1]
+            bm1b = self.data[itime, :, 2]
+            bm2b = self.data[itime, :, 3]
+            ts1 = self.data[itime, :, 4]
+            ts2 = self.data[itime, :, 5]
+            af = self.data[itime, :, 6]
+            trq = self.data[itime, :, 7]
+            for eid_device, bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi in zip(
+                    eids_device, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq):
+
+                data = [eid_device, bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi]
+                op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, str(data)))
+                op2.write(struct1.pack(*data))
+
+            itable -= 1
+            header = [4 * ntotal,]
+            op2.write(pack('i', *header))
+            op2_ascii.write('footer = %s\n' % header)
+        return itable
 
 
 class RealConeAxForceArray(RealForceObject):

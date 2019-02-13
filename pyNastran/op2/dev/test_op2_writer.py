@@ -91,9 +91,12 @@ class TestOP2Writer(unittest.TestCase):
         #debug_file = model + '.debug.out'
 
         exclude_results = [
-            'grid_point_forces', 'cbar_*', 'cbeam_*',
+            'grid_point_forces',
+            #'cbar_*',
+            'cbeam_*',
             #'crod_force',
-            'cquad4_force', 'ctria3_force',
+            #'cquad4_force',
+            #'ctria3_force',
             #'cquad4_composite_stress', 'ctria3_composite_stress',
             #'cquad4_composite_strain', 'ctria3_composite_strain',
         ]
@@ -110,7 +113,7 @@ class TestOP2Writer(unittest.TestCase):
         op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out)
         #op2b = read_op2(op2_filename_out, debug_file=op2_filename_debug_out)
         op2.assert_op2_equal(op2b,
-                             skip_results=['params', 'ctria3_force',],
+                             skip_results=['params', ],
                              stop_on_failure=True, debug=False)
 
 if __name__ == '__main__':
