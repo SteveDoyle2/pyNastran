@@ -362,7 +362,7 @@ class RealPlateArray(OES_Object):
         eids = self.element_node[:, 0]
         nids = self.element_node[:, 1]
 
-        eids_device = self.device_code * 10 + eids
+        eids_device = eids * 10 + self.device_code
 
         nelements = len(np.unique(eids))
         #print('nelements =', nelements)
@@ -419,8 +419,8 @@ class RealPlateArray(OES_Object):
             ovm = self.data[itime, :, 7]
 
             nwide = 0
-            for (i, eid, nid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi) in zip(
-                 count(), eids_device, nids, fiber_dist, oxx, oyy, txy, angle, major_principal, minor_principal, ovm):
+            for (i, eid_device, eid, nid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi) in zip(
+                 count(), eids_device, eids, nids, fiber_dist, oxx, oyy, txy, angle, major_principal, minor_principal, ovm):
                 #[fdi, oxxi, oyyi, txyi, major, minor, ovmi] = write_floats_13e(
                     #[fdi, oxxi, oyyi, txyi, major, minor, ovmi])
                 ilayer = i % 2
@@ -428,7 +428,7 @@ class RealPlateArray(OES_Object):
                 if self.element_type in [33, 74]:  # CQUAD4, CTRIA3
                     if ilayer == 0:
                         #print([eid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi])
-                        data = [eid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi]
+                        data = [eid_device, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi]
                         op2.write(pack('i8f', *data))
                         op2_ascii.write('eid=%s ilayer=0 data=%s' % (eid, str(data[1:])))
 
@@ -436,13 +436,13 @@ class RealPlateArray(OES_Object):
                         data = [fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi]
                         op2.write(pack('8f', *data))
                         op2_ascii.write('eid=%s ilayer=1 data=%s' % (eid, str(data[1:])))
-                    #print('eid=%-2s ilayer=%s data=%s' % (eid, ilayer, str(data[1:])))
+                    #print('eid=%-2s ilayer=%s data=%s' % (eid_device, ilayer, str(data[1:])))
 
                 elif self.element_type in [64, 70, 75, 82, 144]:  # CQUAD8, CTRIAR, CTRIA6, CQUADR, CQUAD4
                     # bilinear
                     if nid == 0 and ilayer == 0:  # CEN
                         #print()
-                        data = [eid, cen_word, nid,
+                        data = [eid_device, cen_word, nid,
                                 fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi]
                         op2.write(pack('i 4s i 8f', *data))
                         op2_ascii.write('0  %8i %8s  %-13s  %-13s %-13s %-13s   %8.4f  %-13s %-13s %s\n' % (

@@ -558,7 +558,7 @@ class RealTableArray(TableArray):
     def write_op2(self, op2_file, fascii, itable, date, is_mag_phase=False, endian='>'):
         assert endian == b'<', endian
         import inspect
-        assert self.table_name in ['OUGV1', 'OQMG1', 'OQG1'], self.table_name
+        assert self.table_name in ['OUGV1', 'OQMG1', 'OQG1', 'OPG1'], self.table_name
 
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)

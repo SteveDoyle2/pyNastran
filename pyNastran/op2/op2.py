@@ -232,12 +232,16 @@ class OP2(OP2_Scalar):
             raise
         return is_equal
 
-    def assert_op2_equal(self, op2_model, stop_on_failure=True, debug=False):
+    def assert_op2_equal(self, op2_model, skip_results=None, stop_on_failure=True, debug=False):
         """
         Diffs the current op2 model vs. another op2 model.
 
         Parameters
         ----------
+        op2_model : OP2()
+            the model to compare to
+        skip_results : List[str]; default=None -> []
+            results that shouldn't be compred
         stop_on_failure : bool; default=True
             True : Crashes if they're not equal
             False : Go to the next object
@@ -255,6 +259,11 @@ class OP2(OP2_Scalar):
         NotImplementedError : this is a sign of an unsupported object
 
         """
+        if skip_results is None:
+            skip_results = set([])
+        else:
+            skip_results = set(skip_results)
+
         if not self.read_mode == op2_model.read_mode:
             self.log.warning('self.read_mode=%s op2_model.read_mode=%s ... assume True' % (
                 self.read_mode, op2_model.read_mode))
@@ -262,6 +271,8 @@ class OP2(OP2_Scalar):
 
         table_types = self.get_table_types()
         for table_type in table_types:
+            if table_type in skip_results:
+                continue
             # model.displacements
             adict = self.get_result(table_type)
             bdict = op2_model.get_result(table_type)

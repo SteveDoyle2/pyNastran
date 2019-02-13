@@ -300,6 +300,7 @@ class OP2Writer(OP2_F06_Common):
             #obj.grid_point_stresses,
             #obj.grid_point_volume_stresses,
         ]
+        opg = [obj.load_vectors]
         ogp = [obj.grid_point_forces]
         other = [
             #obj.forceVectors,
@@ -313,10 +314,11 @@ class OP2Writer(OP2_F06_Common):
             ('OUG', oug),
             ('OQG_SPC', oqg_spc),
             ('OQG_MPC', oqg_mpc),
+            ('OPG1', opg),
             ('OEF', oef),
             ('OES1X', oes1x1),
             ('OES1C', oes1c),
-            #('OSTR', strain),
+            ('OSTR', strain),
             ('OGS', ogs),
             ('OGP', ogp),
             ('other', other)
