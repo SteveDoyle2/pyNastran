@@ -255,8 +255,6 @@ class OP2Writer(OP2_F06_Common):
             # plates
             obj.ctria3_strain, obj.cquad4_strain,
             obj.cshear_strain,
-            obj.cquad4_composite_strain, obj.cquad8_composite_strain, obj.cquadr_composite_strain,
-            obj.ctria3_composite_strain, obj.ctria6_composite_strain, obj.ctriar_composite_strain,
 
             #obj.nonlinearPlateStrain,
             #obj.ctriax_strain, obj.hyperelasticPlateStress,
@@ -285,6 +283,10 @@ class OP2Writer(OP2_F06_Common):
 
             # bush
             obj.cbush_strain,
+        ]
+        ostr1c = [
+            obj.cquad4_composite_strain, obj.cquad8_composite_strain, obj.cquadr_composite_strain,
+            obj.ctria3_composite_strain, obj.ctria6_composite_strain, obj.ctriar_composite_strain,
         ]
 
         oug = [
@@ -319,6 +321,7 @@ class OP2Writer(OP2_F06_Common):
             ('OES1X', oes1x1),
             ('OES1C', oes1c),
             ('OSTR', strain),
+            ('OSTR1C', ostr1c),
             ('OGS', ogs),
             ('OGP', ogp),
             ('other', other)
@@ -378,7 +381,7 @@ class OP2Writer(OP2_F06_Common):
                             #obj.log.warning("  *op2 - %s (%s) not written" % (
                                 #result.__class__.__name__, result.element_name))
                             #continue
-                        print(' %s - isubcase=%i%s' % (result.__class__.__name__, isubcase, element_name))
+                        #print(' %s - isubcase=%i%s' % (result.__class__.__name__, isubcase, element_name))
                         itable = result.write_op2(fop2, fop2_ascii, itable, obj.date, is_mag_phase=False, endian=endian)
                     else:
                         obj.log.warning("  *op2 - %s not written" % result.__class__.__name__)
@@ -390,7 +393,7 @@ class OP2Writer(OP2_F06_Common):
                         4, 1, 4,
                         4, 0, 4,
                     ]
-                    print('writing itable=%s' % itable)
+                    #print('writing itable=%s' % itable)
                     assert itable is not None, '%s itable is None' % result.__class__.__name__
                     fop2.write(pack(b'9i', *header))
                     fop2_ascii.write('footer2 = %s\n' % header)

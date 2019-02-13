@@ -332,6 +332,110 @@ class RealCompositePlateArray(OES_Object):
             page_num += 1
         return page_num - 1
 
+    def write_op2(self, op2, op2_ascii, itable, date, is_mag_phase=False, endian='>'):
+        import inspect
+        from struct import Struct, pack
+        frame = inspect.currentframe()
+        call_frame = inspect.getouterframes(frame, 2)
+        op2_ascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
+
+        if itable == -1:
+            self._write_table_header(op2, op2_ascii, date)
+            itable = -3
+
+        #print("nnodes_all =", nnodes_all)
+        #msg.append('  element_node.shape = %s\n' % str(self.element_node.shape).replace('L', ''))
+        #msg.append('  data.shape=%s\n' % str(self.data.shape).replace('L', ''))
+
+        eids = self.element_layer[:, 0]
+        layers = self.element_layer[:, 1]
+        eids_device = eids * 10 + self.device_code
+
+        nelements = len(np.unique(eids))
+        #print('nelements =', nelements)
+        # 21 = 1 node, 3 principal, 6 components, 9 vectors, 2 p/ovm
+        #ntotal = ((nnodes * 21) + 1) + (nelements * 4)
+
+        ntotali = self.num_wide
+        nlayers = self.data.shape[1]
+        ntotal = ntotali * nlayers
+
+        #print('shape = %s' % str(self.data.shape))
+        assert self.ntimes == 1, self.ntimes
+
+        device_code = self.device_code
+        op2_ascii.write('  ntimes = %s\n' % self.ntimes)
+
+        #fmt = '%2i %6f'
+        #print('ntotal=%s' % (ntotal))
+        #assert ntotal == 193, ntotal
+
+        #[fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]
+        op2_ascii.write('  #elementi = [eid_device, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,\n')
+        op2_ascii.write('  #                        fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,]\n')
+
+        if np.isnan(self.nonlinear_factor):
+            struct1 = Struct(endian + b'i16f')
+        else:
+            raise NotImplementedError(self.nonlinear_factor)
+
+        op2_ascii.write('nelements=%i\n' % nelements)
+
+        ntimes = self.data.shape[0]
+
+        nwide = 0
+        for itime in range(ntimes):
+            self._write_table_3(op2, op2_ascii, itable, itime)
+
+            # record 4
+            #print('stress itable = %s' % itable)
+            itable -= 1
+            header = [4, itable, 4,
+                      4, 1, 4,
+                      4, 0, 4,
+                      4, ntotal, 4,
+                      4 * ntotal]
+            op2.write(pack('%ii' % len(header), *header))
+            op2_ascii.write('r4 [4, 0, 4]\n')
+            op2_ascii.write('r4 [4, %s, 4]\n' % (itable - 1))
+            op2_ascii.write('r4 [4, %i, 4]\n' % (4 * ntotal))
+
+            #dt = self._times[itime]
+            #header = _eigenvalue_header(self, header, itime, ntimes, dt)
+            #f06_file.write(''.join(header + msg))
+
+            #[o11, o22, t12, t1z, t2z, angle, major, minor, ovm]
+            o11 = self.data[itime, :, 0]
+            o22 = self.data[itime, :, 1]
+            t12 = self.data[itime, :, 2]
+            t1z = self.data[itime, :, 3]
+            t2z = self.data[itime, :, 4]
+            angle = self.data[itime, :, 5]
+            major = self.data[itime, :, 6]
+            minor = self.data[itime, :, 7]
+            ovm = self.data[itime, :, 8]
+
+            for eid_device, eid, layer, o11i, o22i, t12i, t1zi, t2zi, anglei, majori, minori, ovmi in zip(
+                eids_device, eids, layers, o11, o22, t12, t1z, t2z, angle, major, minor, ovm):
+
+                data = [eid_device, layer, o11i, o22i, t12i, t1zi, t2zi, anglei, majori, minori, ovmi]
+                op2.write(pack('2i 9f', *data))
+
+                [o11i, o22i, t12i, t1zi, t2zi, majori, minori, ovmi] = write_floats_12e([
+                 o11i, o22i, t12i, t1zi, t2zi, majori, minori, ovmi])
+                op2_ascii.write('0 %8s %4s  %12s %12s %12s   %12s %12s  %6.2F %12s %12s %s\n'
+                                % (eid, layer, o11i, o22i, t12i, t1zi, t2zi, anglei, majori, minori, ovmi))
+
+                nwide += len(data)
+
+            assert nwide == ntotal, "nwide=%s ntotal=%s" % (nwide, ntotal)
+            itable -= 1
+            header = [4 * ntotal,]
+            op2.write(pack('i', *header))
+            op2_ascii.write('footer = %s\n' % header)
+
+        return itable
+
 
 class RealCompositePlateStressArray(RealCompositePlateArray, StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):

@@ -471,7 +471,6 @@ class RealPlateArray(OES_Object):
             header = [4 * ntotal,]
             op2.write(pack('i', *header))
             op2_ascii.write('footer = %s\n' % header)
-
         return itable
 
 

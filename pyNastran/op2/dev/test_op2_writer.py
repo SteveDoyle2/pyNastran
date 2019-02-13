@@ -92,9 +92,11 @@ class TestOP2Writer(unittest.TestCase):
 
         exclude_results = [
             'grid_point_forces', 'cbar_*', 'cbeam_*',
-            'crod_force', 'cquad4_force', 'ctria3_force',
-            'cquad4_composite_stress', 'ctria3_composite_stress',
-            'cquad4_composite_strain', 'ctria3_composite_strain']
+            #'crod_force',
+            'cquad4_force', 'ctria3_force',
+            #'cquad4_composite_stress', 'ctria3_composite_stress',
+            #'cquad4_composite_strain', 'ctria3_composite_strain',
+        ]
         op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug,
                             exclude_results=exclude_results,
                             #include_results='displacements',
