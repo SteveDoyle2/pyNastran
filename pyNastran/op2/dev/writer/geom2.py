@@ -97,7 +97,7 @@ def write_geom2(op2, op2_ascii, obj, endian=b'<'):
                 theta = 0.0
                 data = [eid, pid] + nids + [theta, elem.zoffset, 0, elem.tflag, elem.T1, elem.T2, elem.T3, elem.T4]
                 assert elem.tflag in [0, 1], elem.get_stats()
-                print('  eid=%s pid=%s nids=%s data=%s\n' % (eid, pid, str(nids), data[6:]))
+                #print('  CQUAD4 eid=%s pid=%s nids=%s data=%s\n' % (eid, pid, str(nids), data[6:]))
                 op2_ascii.write('  eid=%s pid=%s nids=%s\n' % (eid, pid, str(nids)))
                 op2.write(spack.pack(*data))
         elif name == 'CTRIA3':

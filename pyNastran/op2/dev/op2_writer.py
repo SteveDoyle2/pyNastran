@@ -316,7 +316,7 @@ class OP2Writer(OP2_F06_Common):
             ('OEF', oef),
             ('OES1X', oes1x1),
             ('OES1C', oes1c),
-            ('OSTR', strain),
+            #('OSTR', strain),
             ('OGS', ogs),
             ('OGP', ogp),
             ('other', other)
@@ -372,10 +372,14 @@ class OP2Writer(OP2_F06_Common):
                         element_name = ' - ' + result.element_name
 
                     if hasattr(result, 'write_op2'):
+                        #if hasattr(result, 'is_bilinear') and result.is_bilinear():
+                            #obj.log.warning("  *op2 - %s (%s) not written" % (
+                                #result.__class__.__name__, result.element_name))
+                            #continue
                         print(' %s - isubcase=%i%s' % (result.__class__.__name__, isubcase, element_name))
                         itable = result.write_op2(fop2, fop2_ascii, itable, obj.date, is_mag_phase=False, endian=endian)
                     else:
-                        #print("  *op2 - %s not written" % result.__class__.__name__)
+                        obj.log.warning("  *op2 - %s not written" % result.__class__.__name__)
                         continue
 
                     case_count += 1

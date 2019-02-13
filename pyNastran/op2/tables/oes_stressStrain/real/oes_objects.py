@@ -1,5 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import string_types
 import numpy as np
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
 
@@ -75,6 +76,87 @@ class OES_Object(ScalarObject):
     @property
     def is_stress(self):
         raise NotImplementedError('overwrite this')
+
+    def _write_table_3(self, op2, op2_ascii, itable=-3, itime=0):
+        import inspect
+        from struct import pack
+        frame = inspect.currentframe()
+        call_frame = inspect.getouterframes(frame, 2)
+        op2_ascii.write('%s.write_table_3: %s\n' % (self.__class__.__name__, call_frame[1][3]))
+
+        if itable == -3:
+            #print('*writing itable=%s' % itable)
+            op2.write(pack('12i', *[
+                4, itable, 4,
+                4, 1, 4,
+                4, 0, 4,
+                4, 146, 4,
+            ]))
+        else:
+            #print('***writing itable=%s' % itable)
+            op2.write(pack('3i', *[
+                #4, itable, 4,
+                #4, 1, 4,
+                #4, 0, 4,
+                4, 146, 4,
+            ]))
+        approach_code = self.approach_code
+        table_code = self.table_code
+        isubcase = self.isubcase
+        element_type = self.element_type
+        #[
+            #'aCode', 'tCode', 'element_type', 'isubcase',
+            #'???', '???', '???', 'load_set'
+            #'format_code', 'num_wide', 's_code', '???',
+            #'???', '???', '???', '???',
+            #'???', '???', '???', '???',
+            #'???', '???', '???', '???',
+            #'???', 'Title', 'subtitle', 'label']
+        #random_code = self.random_code
+        format_code = self.format_code
+        s_code = self.s_code
+        num_wide = self.num_wide
+        acoustic_flag = 0
+        thermal = 0
+        title = b'%-128s' % self.title.encode('ascii')
+        subtitle = b'%-128s' % self.subtitle.encode('ascii')
+        label = b'%-128s' % self.label.encode('ascii')
+        ftable3 = b'50i 128s 128s 128s'
+        oCode = 0
+        if self.analysis_code == 1:
+            lsdvmn = self.lsdvmn
+        else:
+            raise NotImplementedError(self.analysis_code)
+
+        table3 = [
+            approach_code, table_code, element_type, isubcase, lsdvmn,
+            0, 0, self.load_set, format_code, num_wide,
+            s_code, acoustic_flag, 0, 0, 0,
+            0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, thermal, thermal, 0,
+            title, subtitle, label,
+        ]
+
+        n = 0
+        for v in table3:
+            if isinstance(v, (int, float)):
+                n += 4
+            elif isinstance(v, string_types):
+                n += len(v)
+            else:
+                print('write_table_3', v)
+                n += len(v)
+        assert n == 584, n
+        data = [584] + table3 + [584]
+        fmt = b'i' + ftable3 + b'i'
+        #print(fmt)
+        #print(data)
+        #f.write(pack(fascii, '%s header 3c' % self.table_name, fmt, data))
+        op2_ascii.write('%s header 3c = %s\n' % (self.table_name, data))
+        op2.write(pack(fmt, *data))
+
 
 class StressObject(OES_Object):
     def __init__(self, data_code, isubcase):

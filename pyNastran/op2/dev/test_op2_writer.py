@@ -90,7 +90,7 @@ class TestOP2Writer(unittest.TestCase):
 
         op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug,
                             #include_results='displacements',
-                            include_results='stress',
+                            #include_results='stress',
                             )
         #op2 = read_op2(op2_filename, debug_file=op2_filename_debug, include_results='displacements')
 
