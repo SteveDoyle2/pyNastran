@@ -2211,6 +2211,10 @@ class OEF(OP2Common):
             msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
             return self._not_implemented_or_skip(data, ndata, msg)
         #result_name, is_random = self._apply_oef_ato_crm_psd_rms_no(result_name)
+
+        if self._results.is_not_saved(result_name):
+            return ndata, None, None
+        self._results._found_result(result_name)
         slot = self.get_result(result_name)
 
         assert self._data_factor == 1, self._data_factor

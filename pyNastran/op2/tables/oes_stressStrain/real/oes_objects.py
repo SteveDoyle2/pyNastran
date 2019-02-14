@@ -3,6 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import string_types
 import numpy as np
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
+from pyNastran.op2.op2_interface.write_utils import set_table3_field
 
 SORT2_TABLE_NAME_MAP = {
     'OES2' : 'OES1',
@@ -123,14 +124,25 @@ class OES_Object(ScalarObject):
         label = b'%-128s' % self.label.encode('ascii')
         ftable3 = b'50i 128s 128s 128s'
         oCode = 0
+
+        ftable3 = b'i' * 50 + b'128s 128s 128s'
+        field6 = 0
+        field7 = 0
         if self.analysis_code == 1:
-            lsdvmn = self.lsdvmn
+            field5 = self.lsdvmns[itime]
+        elif self.analysis_code == 2:
+            field5 = self.modes[itime]
+            field6 = self.eigns[itime]
+            field7 = self.cycles[itime]
+            ftable3 = set_table3_field(ftable3, 6, b'f') # field 6
+        #elif self.analysis_code == 3:
+            #field5 = self.freqs[itime]
         else:
             raise NotImplementedError(self.analysis_code)
 
         table3 = [
-            approach_code, table_code, element_type, isubcase, lsdvmn,
-            0, 0, self.load_set, format_code, num_wide,
+            approach_code, table_code, element_type, isubcase, field5,
+            field6, field7, self.load_set, format_code, num_wide,
             s_code, acoustic_flag, 0, 0, 0,
             0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,

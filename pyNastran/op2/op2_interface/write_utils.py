@@ -6,6 +6,11 @@ from struct import Struct, pack
 import numpy as np
 import scipy.sparse as sp
 
+def set_table3_field(str_fields, ifield, value):
+    """
+    ifield is 1 based
+    """
+    return str_fields[:ifield-1] + value + str_fields[ifield:]
 
 def _write_markers(f, fascii, markers):
     out = []

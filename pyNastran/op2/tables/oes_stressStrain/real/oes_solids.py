@@ -328,6 +328,7 @@ class RealSolidArray(OES_Object):
         return page_num - 1
 
     def write_op2(self, op2, op2_ascii, itable, date, is_mag_phase=False, endian='>'):
+        """writes an OP2"""
         import inspect
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
@@ -367,7 +368,7 @@ class RealSolidArray(OES_Object):
 
         #print('shape = %s' % str(self.data.shape))
         assert nnodes > 1, nnodes
-        assert self.ntimes == 1, self.ntimes
+        #assert self.ntimes == 1, self.ntimes
 
         device_code = self.device_code
         op2_ascii.write('  ntimes = %s\n' % self.ntimes)
@@ -376,12 +377,12 @@ class RealSolidArray(OES_Object):
         #print('ntotal=%s' % (ntotal))
         #assert ntotal == 193, ntotal
 
-        if np.isnan(self.nonlinear_factor):
-            op2_format = endian + b'2i6f'
+        if self.is_sort1:
+            #op2_format = endian + b'2i6f'
+            struct1 = Struct(endian + b'ii4si')
+            struct2 = Struct(endian + b'i20f')
         else:
-            raise NotImplementedError(self.nonlinear_factor)
-        struct1 = Struct(endian + b'ii4si')
-        struct2 = Struct(endian + b'i20f')
+            raise NotImplementedError('SORT2')
 
         cen = b'GRID'
         op2_ascii.write('nelements=%i\n' % nelements)

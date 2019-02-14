@@ -336,6 +336,7 @@ class RealPlateArray(OES_Object):
         return nnodes, is_bilinear
 
     def write_op2(self, op2, op2_ascii, itable, date, is_mag_phase=False, endian='>'):
+        """writes an OP2"""
         import inspect
         from struct import Struct, pack
         frame = inspect.currentframe()
@@ -374,7 +375,7 @@ class RealPlateArray(OES_Object):
 
         #print('shape = %s' % str(self.data.shape))
         assert nnodes > 1, nnodes
-        assert self.ntimes == 1, self.ntimes
+        #assert self.ntimes == 1, self.ntimes
 
         device_code = self.device_code
         op2_ascii.write('  ntimes = %s\n' % self.ntimes)
@@ -387,10 +388,10 @@ class RealPlateArray(OES_Object):
         op2_ascii.write('  #elementi = [eid_device, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,\n')
         op2_ascii.write('  #                        fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,]\n')
 
-        if np.isnan(self.nonlinear_factor):
+        if self.is_sort1:
             struct1 = Struct(endian + b'i16f')
         else:
-            raise NotImplementedError(self.nonlinear_factor)
+            raise NotImplementedError('SORT2')
 
         op2_ascii.write('nelements=%i\n' % nelements)
         for itime in range(self.ntimes):

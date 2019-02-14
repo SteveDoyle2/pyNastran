@@ -269,7 +269,7 @@ class RealRodArray(OES_Object):
         ntotal = ntotali * nelements
 
         #print('shape = %s' % str(self.data.shape))
-        assert self.ntimes == 1, self.ntimes
+        #assert self.ntimes == 1, self.ntimes
 
         device_code = self.device_code
         op2_ascii.write('  ntimes = %s\n' % self.ntimes)
@@ -280,10 +280,10 @@ class RealRodArray(OES_Object):
         #print('ntotal=%s' % (ntotal))
         #assert ntotal == 193, ntotal
 
-        if np.isnan(self.nonlinear_factor):
+        if self.is_sort1:
             struct1 = Struct(endian + b'i4f')
         else:
-            raise NotImplementedError(self.nonlinear_factor)
+            raise NotImplementedError('SORT2')
 
         op2_ascii.write('nelements=%i\n' % nelements)
         for itime in range(self.ntimes):

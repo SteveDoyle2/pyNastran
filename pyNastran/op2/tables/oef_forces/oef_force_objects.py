@@ -12,6 +12,8 @@ from pyNastran.f06.f06_formatting import (
     write_float_13e, write_float_12e,
     _eigenvalue_header,
 )
+from pyNastran.op2.op2_interface.write_utils import set_table3_field
+
 
 SORT2_TABLE_NAME_MAP = {
     'OEF2' : 'OEF1',
@@ -118,15 +120,25 @@ class RealForceObject(ScalarObject):
         oCode = 0
         load_set = 0
         #print(self.code_information())
+
+        ftable3 = b'i' * 50 + b'128s 128s 128s'
+        field6 = 0
+        field7 = 0
         if self.analysis_code == 1:
-            #lsdvmn = self.lsdvmn
-            lsdvmn = 0
+            field5 = self.loadIDs[itime]
+        elif self.analysis_code == 2:
+            field5 = self.modes[itime]
+            field6 = self.eigns[itime]
+            field7 = self.cycles[itime]
+            ftable3 = set_table3_field(ftable3, 6, b'f') # field 6
+        #elif self.analysis_code == 3:
+            #field5 = self.freqs[itime]
         else:
             raise NotImplementedError(self.analysis_code)
 
         table3 = [
-            approach_code, table_code, element_type, isubcase, lsdvmn,
-            0, 0, load_set, format_code, num_wide,
+            approach_code, table_code, element_type, isubcase, field5,
+            field6, field7, load_set, format_code, num_wide,
             s_code, acoustic_flag, 0, 0, 0,
             0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -777,7 +789,7 @@ class RealRodForceArray(RealForceObject):
         ntotal = ntotali * nelements
 
         #print('shape = %s' % str(self.data.shape))
-        assert self.ntimes == 1, self.ntimes
+        #assert self.ntimes == 1, self.ntimes
 
         device_code = self.device_code
         op2_ascii.write('  ntimes = %s\n' % self.ntimes)
@@ -788,10 +800,10 @@ class RealRodForceArray(RealForceObject):
         #print('ntotal=%s' % (ntotal))
         #assert ntotal == 193, ntotal
 
-        if np.isnan(self.nonlinear_factor):
+        if self.is_sort1:
             struct1 = Struct(endian + b'i2f')
         else:
-            raise NotImplementedError(self.nonlinear_factor)
+            raise NotImplementedError('SORT2')
 
         op2_ascii.write('nelements=%i\n' % nelements)
         for itime in range(self.ntimes):
@@ -1753,6 +1765,7 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
         return page_num - 1
 
     def write_op2(self, op2, op2_ascii, itable, date, is_mag_phase=False, endian='>'):
+        """writes an OP2"""
         import inspect
         from struct import Struct, pack
         frame = inspect.currentframe()
@@ -1793,7 +1806,7 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
 
         #print('shape = %s' % str(self.data.shape))
         assert nnodes > 1, nnodes
-        assert self.ntimes == 1, self.ntimes
+        #assert self.ntimes == 1, self.ntimes
 
         device_code = self.device_code
         op2_ascii.write('  ntimes = %s\n' % self.ntimes)
@@ -1804,10 +1817,10 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
 
         #[fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]
 
-        if np.isnan(self.nonlinear_factor):
+        if self.is_sort1:
             structi = Struct(endian + b'i 8f')
         else:
-            raise NotImplementedError(self.nonlinear_factor)
+            raise NotImplementedError('SORT2')
 
         op2_ascii.write('nelements=%i\n' % nelements)
         for itime in range(self.ntimes):
@@ -2138,6 +2151,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
         return page_num - 1
 
     def write_op2(self, op2, op2_ascii, itable, date, is_mag_phase=False, endian='>'):
+        """writes an OP2"""
         import inspect
         from struct import Struct, pack
         frame = inspect.currentframe()
@@ -2191,7 +2205,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
 
         #print('shape = %s' % str(self.data.shape))
         assert nnodes > 1, nnodes
-        assert self.ntimes == 1, self.ntimes
+        #assert self.ntimes == 1, self.ntimes
 
         device_code = self.device_code
         op2_ascii.write('  ntimes = %s\n' % self.ntimes)
@@ -2202,11 +2216,11 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
 
         #[fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]
 
-        if np.isnan(self.nonlinear_factor):
+        if self.is_sort1:
             struct1 = Struct(endian + b'i4s i 8f')
             struct2 = Struct(endian + b'i 8f')
         else:
-            raise NotImplementedError(self.nonlinear_factor)
+            raise NotImplementedError('SORT2')
 
         op2_ascii.write('nelements=%i\n' % nelements)
         for itime in range(self.ntimes):
@@ -2491,7 +2505,7 @@ class RealCBarForceArray(RealForceObject):  # 34-CBAR
         ntotal = ntotali * nelements
 
         #print('shape = %s' % str(self.data.shape))
-        assert self.ntimes == 1, self.ntimes
+        #assert self.ntimes == 1, self.ntimes
 
         op2_ascii.write('  ntimes = %s\n' % self.ntimes)
 
@@ -2499,10 +2513,10 @@ class RealCBarForceArray(RealForceObject):  # 34-CBAR
         #print('ntotal=%s' % (ntotal))
         #assert ntotal == 193, ntotal
 
-        if np.isnan(self.nonlinear_factor):
+        if self.is_sort1:
             struct1 = Struct(endian + b'i 8f')
         else:
-            raise NotImplementedError(self.nonlinear_factor)
+            raise NotImplementedError('SORT2')
 
         op2_ascii.write('nelements=%i\n' % nelements)
         for itime in range(self.ntimes):

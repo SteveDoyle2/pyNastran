@@ -112,6 +112,7 @@ class RealBeamArray(OES_Object):
         #self.element = self.element[i]
         self.element_node = self.element_node[i, :]
         self.data = self.data[:, i, :]
+        self.xxb = self.xxb[i]
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -253,6 +254,8 @@ class RealBeamArray(OES_Object):
         eids = self.element_node[:, 0]
         nids = self.element_node[:, 1]
         xxbs = self.xxb
+        assert len(eids) == len(nids)
+        assert len(eids) == len(xxbs)
         #print('CBEAM ntimes=%s ntotal=%s' % (ntimes, ntotal))
         for itime in range(ntimes):
             dt = self._times[itime]
@@ -267,6 +270,7 @@ class RealBeamArray(OES_Object):
             smins = self.data[itime, :, 5]
             smts = self.data[itime, :, 6]
             smcs = self.data[itime, :, 7]
+            assert len(eids) == len(sxcs)
 
             eid_old = None
             xxb_old = None
@@ -293,6 +297,137 @@ class RealBeamArray(OES_Object):
         if self.nonlinear_factor in (None, np.nan):
             page_num -= 1
         return page_num
+
+    def write_op2(self, op2, op2_ascii, itable, date, is_mag_phase=False, endian='>'):
+        """writes an OP2"""
+        import inspect
+        from struct import Struct, pack
+        frame = inspect.currentframe()
+        call_frame = inspect.getouterframes(frame, 2)
+        op2_ascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
+
+        if itable == -1:
+            self._write_table_header(op2, op2_ascii, date)
+            itable = -3
+
+        #if isinstance(self.nonlinear_factor, float):
+            #op2_format = '%sif' % (7 * self.ntimes)
+            #raise NotImplementedError()
+        #else:
+            #op2_format = 'i21f'
+        #s = Struct(op2_format)
+
+        eids = self.element_node[:, 0]
+        nids = self.element_node[:, 1]
+        xxbs = self.xxb
+        print(xxbs)
+
+        eids_device = eids * 10 + self.device_code
+        ueids = np.unique(eids)
+        ieid = np.searchsorted(eids, ueids)
+        # table 4 info
+        #ntimes = self.data.shape[0]
+        #nnodes = self.data.shape[1]
+        nelements = len(ueids)
+
+        # 21 = 1 node, 3 principal, 6 components, 9 vectors, 2 p/ovm
+        #ntotal = ((nnodes * 21) + 1) + (nelements * 4)
+
+        ntotali = self.num_wide
+        print('ntotali =', ntotali)
+        print('nelements =', nelements)
+        ntotal = ntotali * nelements
+
+        #print('shape = %s' % str(self.data.shape))
+        #assert self.ntimes == 1, self.ntimes
+
+        op2_ascii.write('  ntimes = %s\n' % self.ntimes)
+
+        #fmt = '%2i %6f'
+        #print('ntotal=%s' % (ntotal))
+        #assert ntotal == 193, ntotal
+
+        if self.is_sort1:
+            struct1 = Struct(endian + b'2i 9f')
+            struct2 = Struct(endian + b'i 9f')
+        else:
+            raise NotImplementedError('SORT2')
+
+        op2_ascii.write('nelements=%i\n' % nelements)
+        for itime in range(self.ntimes):
+            self._write_table_3(op2, op2_ascii, itable, itime)
+
+            # record 4
+            #print('stress itable = %s' % itable)
+            itable -= 1
+            header = [4, itable, 4,
+                      4, 1, 4,
+                      4, 0, 4,
+                      4, ntotal, 4,
+                      4 * ntotal]
+            op2.write(pack('%ii' % len(header), *header))
+            op2_ascii.write('r4 [4, 0, 4]\n')
+            op2_ascii.write('r4 [4, %s, 4]\n' % (itable - 1))
+            op2_ascii.write('r4 [4, %i, 4]\n' % (4 * ntotal))
+
+            sxcs = self.data[itime, :, 0]
+            sxds = self.data[itime, :, 1]
+            sxes = self.data[itime, :, 2]
+            sxfs = self.data[itime, :, 3]
+            smaxs = self.data[itime, :, 4]
+            smins = self.data[itime, :, 5]
+            smts = self.data[itime, :, 6]
+            smcs = self.data[itime, :, 7]
+
+            eid_old = None
+            xxb_old = None
+            icount = 0
+            from itertools import count
+            nwide = 0
+            ielement = 0
+            #print('------------')
+            #print(self.element_node.shape, self.data.shape)
+            for (i, xxb, sxc, sxd, sxe, sxf, smax, smin, smt, smc) in zip(
+                count(), xxbs, sxcs, sxds, sxes, sxfs, smaxs, smins, smts, smcs):
+
+                if icount == 0:
+                    eid_device = eids_device[ielement]
+                    nid = nids[ielement]
+                    data = [eid_device, nid, xxb, sxc, sxd, sxe, sxf, smax, smin, smt, smc] # 11
+                    op2.write(struct1.pack(*data))
+                    ielement += 1
+                    icount = 1
+                elif xxb == 1.0:
+                    # 11 total nodes, with 1, 11 getting an nid; the other 9 being
+                    # xxb sections
+                    data = [0, 0., 0., 0., 0., 0., 0., 0., 0., 0.]
+                    #print('***adding %s\n' % (10-icount))
+                    for i in range(10 - icount):
+                        op2.write(struct2.pack(*data))
+                        nwide += len(data)
+
+                    eid_device2 = eids_device[ielement]
+                    assert eid_device == eid_device2
+                    nid = nids[ielement]
+                    data = [nid, xxb, sxc, sxd, sxe, sxf, smax, smin, smt, smc] # 11
+                    op2.write(struct2.pack(*data))
+                    ielement += 1
+                    icount = 0
+                else:
+                    data = [0, xxb, sxc, sxd, sxe, sxf, smax, smin, smt, smc]  # 10
+                    op2.write(struct2.pack(*data))
+                    icount += 1
+
+                op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, str(data)))
+                nwide += len(data)
+
+            assert ntotal == nwide, 'ntotal=%s nwide=%s' % (ntotal, nwide)
+
+            itable -= 1
+            header = [4 * ntotal,]
+            op2.write(pack('i', *header))
+            op2_ascii.write('footer = %s\n' % header)
+        return itable
 
 
 class RealNonlinearBeamArray(OES_Object):

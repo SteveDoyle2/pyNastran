@@ -32,7 +32,7 @@ from numpy import allclose, asarray, vstack, swapaxes, hstack
 
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
 from pyNastran.f06.f06_formatting import write_floats_13e, write_imag_floats_13e, write_float_12e
-
+from pyNastran.op2.op2_interface.write_utils import set_table3_field
 
 SORT2_TABLE_NAME_MAP = {
     'OUGATO2' : 'OUGATO1',
@@ -523,16 +523,26 @@ class RealTableArray(TableArray):
         title = b'%-128s' % self.title.encode('ascii')
         subtitle = b'%-128s' % self.subtitle.encode('ascii')
         label = b'%-128s' % self.label.encode('ascii')
-        ftable3 = b'50i 128s 128s 128s'
         oCode = 0
+
+        ftable3 = b'i' * 50 + b'128s 128s 128s'
+        field6 = 0
+        field7 = 0
         if self.analysis_code == 1:
-            lsdvmn = self.lsdvmn
+            field5 = self.lsdvmns[itime]
+        elif self.analysis_code == 2:
+            field5 = self.modes[itime]
+            field6 = self.eigns[itime]
+            field7 = self.mode_cycles[itime]
+            ftable3 = set_table3_field(ftable3, 6, b'f') # field 6
+        #elif self.analysis_code == 3:
+            #field5 = self.freqs[itime]
         else:
             raise NotImplementedError(self.analysis_code)
 
         table3 = [
-            approach_code, table_code, 0, isubcase, lsdvmn,
-            0, 0, random_code, format_code, num_wide,
+            approach_code, table_code, 0, isubcase, field5,
+            field6, field7, random_code, format_code, num_wide,
             oCode, acoustic_flag, 0, 0, 0,
             0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -569,15 +579,11 @@ class RealTableArray(TableArray):
             self._write_table_header(op2_file, fascii, date)
             itable = -3
 
-        if np.isnan(self.nonlinear_factor):
+        #print('nonlinear_factor =', self.nonlinear_factor)
+        if self.is_sort1:
             op2_format = endian + b'2i6f'
-        elif isinstance(self.nonlinear_factor, float):
-            print(self.code_information())
-            print('nolinear_factor', self.nonlinear_factor)
-            op2_format = endian + b'%sif' % (7 * self.ntimes)
-            raise NotImplementedError()
         else:
-            op2_format = endian + b'2i6f' * self.ntimes
+            raise NotImplementedError('SORT2')
         s = Struct(op2_format)
 
         unused_node = self.node_gridtype[:, 0]

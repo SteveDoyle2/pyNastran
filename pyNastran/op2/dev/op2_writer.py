@@ -151,11 +151,13 @@ class OP2Writer(OP2_F06_Common):
         # then eigenvectors
         # has a special header
         for isubcase, result in sorted(obj.eigenvectors.items()):
-            (subtitle, label) = obj.isubcase_name_map[isubcase]
+            #(subtitle, label) = obj.isubcase_name_map[isubcase]
 
+            itable = -1
             if hasattr(result, 'write_op2'):
                 print('%-18s SUBCASE=%i' % (result.__class__.__name__, isubcase))
-                result.write_op2(fop2, fop2_ascii, is_mag_phase=is_mag_phase, endian=endian)
+                result.write_op2(fop2, fop2_ascii, itable, obj.date,
+                                 is_mag_phase=is_mag_phase, endian=endian)
                 #if delete_objects:
                     #del result
             else:

@@ -514,7 +514,7 @@ class EPT(GeomCommon):
                         '    i=%-2s' % i + ' so=%s xxb=%.1f a=%g i1=%g i2=%g i12=%g j=%g nsm=%g '
                         'c=[%s,%s] d=[%s,%s] e=[%s,%s] f=[%s,%s]' % (tuple(pack2))
                     )
-                    self.log.debug(msg)
+                    self.binary_debug.write(msg)
             edata = data[n:n+64]
             if len(edata) != 64:
                 endpack = []
@@ -528,8 +528,9 @@ class EPT(GeomCommon):
             (k1, k2, s1, s2, nsia, nsib, cwa, cwb, # 8
              m1a, m2a, m1b, m2b, n1a, n2a, n1b, n2b) = endpack # 8 -> 16
             if self.is_debug_file:
-                self.log.debug('    k=[%s,%s] s=[%s,%s] nsi=[%s,%s] cw=[%s,%s] '
-                               'ma=[%s,%s] mb=[%s,%s] na=[%s,%s] nb=[%s,%s]' % (tuple(endpack)))
+                self.binary_debug.write('    k=[%s,%s] s=[%s,%s] nsi=[%s,%s] cw=[%s,%s] '
+                                        'ma=[%s,%s] mb=[%s,%s] na=[%s,%s] nb=[%s,%s]' % (
+                                            tuple(endpack)))
             data_in.append(endpack)
 
             if pid in self.properties:
@@ -905,7 +906,7 @@ class EPT(GeomCommon):
             out = s1.unpack(data[n:n+32])
             (pid, nlayers, z0, nsm, sb, ft, Tref, ge) = out
             if self.binary_debug:
-                self.log.debug('PCOMP pid=%s nlayers=%s z0=%s nsm=%s sb=%s ft=%s Tref=%s ge=%s' % tuple(out))
+                self.binary_debug.write('PCOMP pid=%s nlayers=%s z0=%s nsm=%s sb=%s ft=%s Tref=%s ge=%s' % tuple(out))
             assert isinstance(nlayers, int), out
             n += 32
 
