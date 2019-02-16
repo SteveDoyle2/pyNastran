@@ -450,13 +450,16 @@ class ONR(OP2Common):
             raise NotImplementedError('element_name=%r' % (
                 self.data_code['element_name']))
         prefix, postfix = self.get_onr_prefix_postfix()
-        result_name2 = prefix + result_name + postfix
+        result_name = prefix + result_name + postfix
         #result_name = 'strain_energy'
 
-        auto_return = False
-        self._results._found_result(result_name2)
+        if self._results.is_not_saved(result_name):
+            return ndata
+        self._results._found_result(result_name)
 
-        slot = self.get_result(result_name2)
+        slot = self.get_result(result_name)
+
+        #auto_return = False
         if self.is_debug_file:
             self.binary_debug.write('cvalares = %s\n' % self.cvalres)
         if self.format_code in [1, 2] and self.num_wide == 4:
@@ -573,7 +576,7 @@ class ONR(OP2Common):
                 obj.ielement = ielement2
             else:
                 s = Struct(self._endian + b'8s3f')
-                for i in range(nnodes):
+                for unused_i in range(nnodes):
                     edata = data[n:n+20]
                     out = s.unpack(edata)
                     (word, energy, percent, density) = out

@@ -78,29 +78,37 @@ class OES_Object(ScalarObject):
     def is_stress(self):
         raise NotImplementedError('overwrite this')
 
-    def _write_table_3(self, op2, op2_ascii, itable=-3, itime=0):
+    def _write_table_3(self, op2, op2_ascii, new_result, itable, itime): #, itable=-3, itime=0):
         import inspect
         from struct import pack
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
         op2_ascii.write('%s.write_table_3: %s\n' % (self.__class__.__name__, call_frame[1][3]))
 
-        if itable == -3:
-            #print('*writing itable=%s' % itable)
-            op2.write(pack('12i', *[
+        #if itable == -3:
+        #print('*writing itable=%s' % itable)
+        if new_result and itable != -3:
+            header = [
+                4, 146, 4,
+            ]
+        else:
+            header = [
                 4, itable, 4,
                 4, 1, 4,
                 4, 0, 4,
                 4, 146, 4,
-            ]))
-        else:
+            ]
+        op2.write(pack(b'%ii' % len(header), *header))
+        op2_ascii.write('table_3_header = %s\n' % header)
+        #op2.write(pack('12i', *header))
+        #else:
             #print('***writing itable=%s' % itable)
-            op2.write(pack('3i', *[
-                #4, itable, 4,
-                #4, 1, 4,
-                #4, 0, 4,
-                4, 146, 4,
-            ]))
+            #op2.write(pack('3i', *[
+                ##4, itable, 4,
+                ##4, 1, 4,
+                ##4, 0, 4,
+                #4, 146, 4,
+            #]))
         approach_code = self.approach_code
         table_code = self.table_code
         isubcase = self.isubcase

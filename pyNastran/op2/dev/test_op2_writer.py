@@ -105,6 +105,7 @@ class TestOP2Writer(unittest.TestCase):
                             exclude_results=exclude_results,
                             #include_results='displacements',
                             #include_results='stress',
+                            #include_results=['crod_force', 'cbar_force'],
                             )
         #op2 = read_op2(op2_filename, debug_file=op2_filename_debug, include_results='displacements')
 
@@ -130,6 +131,8 @@ class TestOP2Writer(unittest.TestCase):
 
         exclude_results = [
             'cbeam_force',
+            #'stress',
+            #'strain',
             #'grid_point_forces',
             #'cbar_*',
             #'cbeam_*',
@@ -140,9 +143,12 @@ class TestOP2Writer(unittest.TestCase):
             #'cquad4_composite_strain', 'ctria3_composite_strain',
         ]
         op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug,
-                            #exclude_results=exclude_results,
-                            #include_results='displacements',
-                            include_results='crod_stress',
+                            exclude_results=exclude_results,
+                            #include_results='eigenvectors',
+                            #include_results=['crod_stress', 'cbar_stress'],
+                            #include_results=['crod_force', 'cbar_force'],
+                            #include_results='element_forces',
+                            #include_results='stress',
                             )
         #op2 = read_op2(op2_filename, debug_file=op2_filename_debug, include_results='displacements')
 

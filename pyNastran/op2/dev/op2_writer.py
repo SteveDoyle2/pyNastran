@@ -122,10 +122,10 @@ class OP2Writer(OP2_F06_Common):
         else:
             raise RuntimeError('post = %r; use -1 or -2' % post)
 
-        write_geom1(fop2, fop2_ascii, obj)
-        write_geom2(fop2, fop2_ascii, obj)
-        write_ept(fop2, fop2_ascii, obj)
-        write_mpt(fop2, fop2_ascii, obj)
+        #write_geom1(fop2, fop2_ascii, obj)
+        #write_geom2(fop2, fop2_ascii, obj)
+        #write_ept(fop2, fop2_ascii, obj)
+        #write_mpt(fop2, fop2_ascii, obj)
         if obj.grid_point_weight.reference_point is not None:
             if hasattr(result, 'write_op2'):
                 print("grid_point_weight")
@@ -150,19 +150,20 @@ class OP2Writer(OP2_F06_Common):
 
         # then eigenvectors
         # has a special header
-        for isubcase, result in sorted(obj.eigenvectors.items()):
-            #(subtitle, label) = obj.isubcase_name_map[isubcase]
+        if 0:
+            for isubcase, result in sorted(obj.eigenvectors.items()):
+                #(subtitle, label) = obj.isubcase_name_map[isubcase]
 
-            itable = -1
-            if hasattr(result, 'write_op2'):
-                print('%-18s SUBCASE=%i' % (result.__class__.__name__, isubcase))
-                result.write_op2(fop2, fop2_ascii, itable, obj.date,
-                                 is_mag_phase=is_mag_phase, endian=endian)
-                #if delete_objects:
-                    #del result
-            else:
-                print("*op2 - %s not written" % result.__class__.__name__)
-                write_op2
+                itable = -1
+                if hasattr(result, 'write_op2'):
+                    print('%-18s SUBCASE=%i' % (result.__class__.__name__, isubcase))
+                    result.write_op2(fop2, fop2_ascii, itable, obj.date,
+                                     is_mag_phase=is_mag_phase, endian=endian)
+                    #if delete_objects:
+                        #del result
+                else:
+                    print("*op2 - %s not written" % result.__class__.__name__)
+                    write_op2
 
         # finally, we writte all the other tables
         # nastran puts the tables in order of the Case Control deck,
@@ -254,17 +255,8 @@ class OP2Writer(OP2_F06_Common):
             # springs,
             obj.celas1_strain, obj.celas2_strain, obj.celas3_strain, obj.celas4_strain,
 
-            # plates
-            obj.ctria3_strain, obj.cquad4_strain,
-            obj.cshear_strain,
-
             #obj.nonlinearPlateStrain,
             #obj.ctriax_strain, obj.hyperelasticPlateStress,
-
-            # solids
-            obj.ctetra_strain,
-            obj.cpenta_strain,
-            obj.chexa_strain,
 
             # rods
             #obj.nonlinearRodStrain,  # non-vectorized
@@ -350,6 +342,7 @@ class OP2Writer(OP2_F06_Common):
                 footer = [4, 0, 4]
                 fop2.write(struct_3i.pack(*footer))
                 fop2_ascii.write('close_a = %s\n' % footer)
+                fop2_ascii.write('---------------\n')
 
         # close off the op2
         footer = [4, 0, 4]
@@ -373,6 +366,7 @@ class OP2Writer(OP2_F06_Common):
                         print("res_category_name = %s" % res_category_name)
                         print_msg = False
                     #(subtitle, label) = obj.isubcase_name_map[isubcase]
+                    new_result = True
                     result = res_type[isubcase]
                     element_name = ''
                     if hasattr(result, 'element_name'):
@@ -384,7 +378,8 @@ class OP2Writer(OP2_F06_Common):
                                 #result.__class__.__name__, result.element_name))
                             #continue
                         #print(' %s - isubcase=%i%s' % (result.__class__.__name__, isubcase, element_name))
-                        itable = result.write_op2(fop2, fop2_ascii, itable, obj.date, is_mag_phase=False, endian=endian)
+                        itable = result.write_op2(fop2, fop2_ascii, itable, new_result,
+                                                  obj.date, is_mag_phase=False, endian=endian)
                     else:
                         obj.log.warning("  *op2 - %s not written" % result.__class__.__name__)
                         continue
@@ -399,6 +394,7 @@ class OP2Writer(OP2_F06_Common):
                     assert itable is not None, '%s itable is None' % result.__class__.__name__
                     fop2.write(pack(b'9i', *header))
                     fop2_ascii.write('footer2 = %s\n' % header)
+                    new_result = False
                     #print('bailing...')
                     #return case_count
         return case_count

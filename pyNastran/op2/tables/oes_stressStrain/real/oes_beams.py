@@ -298,7 +298,8 @@ class RealBeamArray(OES_Object):
             page_num -= 1
         return page_num
 
-    def write_op2(self, op2, op2_ascii, itable, date, is_mag_phase=False, endian='>'):
+    def write_op2(self, op2, op2_ascii, itable, new_result,
+                  date, is_mag_phase=False, endian='>'):
         """writes an OP2"""
         import inspect
         from struct import Struct, pack
@@ -320,7 +321,7 @@ class RealBeamArray(OES_Object):
         eids = self.element_node[:, 0]
         nids = self.element_node[:, 1]
         xxbs = self.xxb
-        print(xxbs)
+        #print(xxbs)
 
         eids_device = eids * 10 + self.device_code
         ueids = np.unique(eids)
@@ -334,8 +335,6 @@ class RealBeamArray(OES_Object):
         #ntotal = ((nnodes * 21) + 1) + (nelements * 4)
 
         ntotali = self.num_wide
-        print('ntotali =', ntotali)
-        print('nelements =', nelements)
         ntotal = ntotali * nelements
 
         #print('shape = %s' % str(self.data.shape))
@@ -355,7 +354,7 @@ class RealBeamArray(OES_Object):
 
         op2_ascii.write('nelements=%i\n' % nelements)
         for itime in range(self.ntimes):
-            self._write_table_3(op2, op2_ascii, itable, itime)
+            self._write_table_3(op2, op2_ascii, new_result, itable, itime)
 
             # record 4
             #print('stress itable = %s' % itable)
@@ -427,6 +426,7 @@ class RealBeamArray(OES_Object):
             header = [4 * ntotal,]
             op2.write(pack('i', *header))
             op2_ascii.write('footer = %s\n' % header)
+            new_result = False
         return itable
 
 

@@ -236,7 +236,8 @@ class RealRodArray(OES_Object):
             page_num += 1
         return page_num - 1
 
-    def write_op2(self, op2, op2_ascii, itable, date, is_mag_phase=False, endian='>'):
+    def write_op2(self, op2, op2_ascii, itable, new_result, date,
+                  is_mag_phase=False, endian='>'):
         """writes an OP2"""
         import inspect
         from struct import Struct, pack
@@ -286,12 +287,15 @@ class RealRodArray(OES_Object):
             raise NotImplementedError('SORT2')
 
         op2_ascii.write('nelements=%i\n' % nelements)
+
         for itime in range(self.ntimes):
-            self._write_table_3(op2, op2_ascii, itable, itime)
+            #print('3, %s' % itable)
+            self._write_table_3(op2, op2_ascii, new_result, itable, itime)
 
             # record 4
             #print('stress itable = %s' % itable)
             itable -= 1
+            #print('4, %s' % itable)
             header = [4, itable, 4,
                       4, 1, 4,
                       4, 0, 4,
@@ -307,7 +311,6 @@ class RealRodArray(OES_Object):
             torsion = self.data[itime, :, 2]
             SMt = self.data[itime, :, 3]
 
-            #print('eids3', eids3)
             for eid, axiali, SMai, torsioni, SMti in zip(eids_device, axial, SMa, torsion, SMt):
                 data = [eid, axiali, SMai, torsioni, SMti]
                 op2_ascii.write('  eid=%s axial=%s SMa=%s torsion=%s SMt=%s\n' % tuple(data))
@@ -317,6 +320,7 @@ class RealRodArray(OES_Object):
             header = [4 * ntotal,]
             op2.write(pack('i', *header))
             op2_ascii.write('footer = %s\n' % header)
+            new_result = False
 
         return itable
 

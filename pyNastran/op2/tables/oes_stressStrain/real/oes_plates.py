@@ -335,7 +335,8 @@ class RealPlateArray(OES_Object):
             raise NotImplementedError('name=%s type=%s' % (self.element_name, self.element_type))
         return nnodes, is_bilinear
 
-    def write_op2(self, op2, op2_ascii, itable, date, is_mag_phase=False, endian='>'):
+    def write_op2(self, op2, op2_ascii, itable, new_result,
+                  date, is_mag_phase=False, endian='>'):
         """writes an OP2"""
         import inspect
         from struct import Struct, pack
@@ -395,7 +396,7 @@ class RealPlateArray(OES_Object):
 
         op2_ascii.write('nelements=%i\n' % nelements)
         for itime in range(self.ntimes):
-            self._write_table_3(op2, op2_ascii, itable, itime)
+            self._write_table_3(op2, op2_ascii, new_result, itable, itime)
 
             # record 4
             #print('stress itable = %s' % itable)
@@ -472,6 +473,7 @@ class RealPlateArray(OES_Object):
             header = [4 * ntotal,]
             op2.write(pack('i', *header))
             op2_ascii.write('footer = %s\n' % header)
+            new_result = False
         return itable
 
 

@@ -408,6 +408,7 @@ class OEF(OP2Common):
             return self._not_implemented_or_skip(data, ndata, msg)
         self._write_debug_bits()
         assert self.num_wide != 146, self.code_information()
+        #print('OEF-%s' % self.element_name)
 
     def _read_oef2_3(self, data, unused_ndata):
         """Table 3 parser for OEF2 table"""
