@@ -482,25 +482,6 @@ class TableArray(ScalarObject):  # displacement style table
         self.itotal += 1
         #self.itime += 1
 
-
-class RealTableArray(TableArray):
-    """
-    displacement style table
-    """
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        TableArray.__init__(self, data_code, is_sort1, isubcase, dt)
-
-    @property
-    def is_real(self):
-        return True
-
-    @property
-    def is_complex(self):
-        return False
-
-    def data_type(self):
-        return 'float32'
-
     def _write_table_3(self, op2_file, fascii, new_result, itable=-3, itime=0):
         import inspect
         frame = inspect.currentframe()
@@ -549,8 +530,15 @@ class RealTableArray(TableArray):
             field6 = self.eigns[itime]
             field7 = self.mode_cycles[itime]
             ftable3 = set_table3_field(ftable3, 6, b'f') # field 6
-        #elif self.analysis_code == 3:
-            #field5 = self.freqs[itime]
+        elif self.analysis_code == 5:
+            field5 = self.freqs[itime]
+            ftable3 = set_table3_field(ftable3, 5, b'f') # field 5
+        elif self.analysis_code == 6:
+            if hasattr(self, 'dts'):
+                field5 = self.dts[itime]
+            else:
+                field5 = self.times[itime]
+            ftable3 = set_table3_field(ftable3, 5, b'f') # field 5
         else:
             raise NotImplementedError(self.analysis_code)
 
@@ -578,6 +566,25 @@ class RealTableArray(TableArray):
         #op2_file.write(pack(fascii, '%s header 3c' % self.table_name, fmt, data))
         fascii.write('%s header 3c = %s\n' % (self.table_name, data))
         op2_file.write(pack(fmt, *data))
+
+
+class RealTableArray(TableArray):
+    """
+    displacement style table
+    """
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        TableArray.__init__(self, data_code, is_sort1, isubcase, dt)
+
+    @property
+    def is_real(self):
+        return True
+
+    @property
+    def is_complex(self):
+        return False
+
+    def data_type(self):
+        return 'float32'
 
     def write_op2(self, op2_file, fascii, itable, new_result,
                   date, is_mag_phase=False, endian='>'):
@@ -663,7 +670,6 @@ class RealTableArray(TableArray):
             #op2_file.write(pack(b'%ii' % len(header), *header))
             #fascii.write('footer2 = %s\n' % header)
         return itable
-
 
     def write_csv(self, csv_file, is_mag_phase=False):
         name = str(self.__class__.__name__)
@@ -1026,6 +1032,93 @@ class ComplexTableArray(TableArray):
             f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num
+
+    def write_op2(self, op2_file, fascii, itable, new_result,
+                  date, is_mag_phase=False, endian='>'):
+        """writes an OP2"""
+        assert endian == b'<', endian
+        import inspect
+        assert self.table_name in ['OUGV1', 'OQMG1', 'OQG1', 'OPG1'], self.table_name
+
+        frame = inspect.currentframe()
+        call_frame = inspect.getouterframes(frame, 2)
+        fascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
+
+        if itable == -1:
+            self._write_table_header(op2_file, fascii, date)
+            itable = -3
+
+        #print('nonlinear_factor =', self.nonlinear_factor)
+        if self.is_sort1:
+            op2_format = endian + b'2i 12f'
+        else:
+            raise NotImplementedError('SORT2')
+        s = Struct(op2_format)
+
+        unused_node = self.node_gridtype[:, 0]
+        gridtype = self.node_gridtype[:, 1]
+        #format_table4_1 = Struct(self._endian + b'15i')
+        #format_table4_2 = Struct(self._endian + b'3i')
+
+        # table 4 info
+        #ntimes = self.data.shape[0]
+        nnodes = self.data.shape[1]
+        nnodes_device = self.node_gridtype[:, 0] * 10 + self.device_code
+
+        #(2+6) => (node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i)
+        ntotal = nnodes * (2 + 12)
+
+        #print('shape = %s' % str(self.data.shape))
+        assert nnodes > 1, nnodes
+        assert ntotal > 1, ntotal
+
+        unused_device_code = self.device_code
+        fascii.write('  ntimes = %s\n' % self.ntimes)
+
+        #fmt = '%2i %6f'
+        #print('ntotal=%s' % (ntotal))
+        for itime in range(self.ntimes):
+            self._write_table_3(op2_file, fascii, new_result, itable, itime)
+
+            # record 4
+            itable -= 1
+            header = [4, itable, 4,
+                      4, 1, 4,
+                      4, 0, 4,
+                      4, ntotal, 4,
+                      4*ntotal]
+            op2_file.write(pack(b'%ii' % len(header), *header))
+            fascii.write('r4 [4, 0, 4]\n')
+            fascii.write('r4 [4, %s, 4]\n' % (itable))
+            fascii.write('r4 [4, %i, 4]\n' % (4*ntotal))
+
+            t1 = self.data[itime, :, 0]
+            t2 = self.data[itime, :, 1]
+            t3 = self.data[itime, :, 2]
+            r1 = self.data[itime, :, 3]
+            r2 = self.data[itime, :, 4]
+            r3 = self.data[itime, :, 5]
+
+            for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in zip(nnodes_device, gridtype, t1, t2, t3, r1, r2, r3):
+                data = [node_id, gridtypei,
+                        t1i.real, t2i.real, t3i.real, r1i.real, r2i.real, r3i.real,
+                        t1i.imag, t2i.imag, t3i.imag, r1i.imag, r2i.imag, r3i.imag]
+                fascii.write('  nid, grid_type, dx, dy, dz, rx, ry, rz = %s\n' % data)
+                op2_file.write(s.pack(*data))
+
+            itable -= 1
+            header = [4 * ntotal,]
+            op2_file.write(pack(b'i', *header))
+            fascii.write('footer = %s\n' % header)
+            new_result = False
+            #header = [
+                #4, itable, 4,
+                #4, 1, 4,
+                #4, 0, 4,
+            #]
+            #op2_file.write(pack(b'%ii' % len(header), *header))
+            #fascii.write('footer2 = %s\n' % header)
+        return itable
 
     #def write_sort2_as_sort2(self, f06_file, page_num, page_stamp, header, words, is_mag_phase):
         #node = self.node_gridtype[:, 0]

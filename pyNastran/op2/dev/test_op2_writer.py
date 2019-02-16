@@ -161,5 +161,91 @@ class TestOP2Writer(unittest.TestCase):
                              skip_results=['params', ],
                              stop_on_failure=True, debug=False)
 
+    def test_write_6(self):
+        """tests basic op2 writing"""
+        folder = os.path.join(MODEL_PATH, 'sol_101_elements')
+        op2_filename = os.path.join(folder, 'transient_solid_shell_bar.op2')
+        op2_filename_debug = os.path.join(folder, 'transient_solid_shell_bar.debug.out')
+        op2_filename_out = os.path.join(folder, 'transient_solid_shell_bar_out.op2')
+        op2_filename_debug_out = os.path.join(folder, 'transient_solid_shell_bar_out.debug.out')
+        #debug_file = 'solid_bending.debug.out'
+        model = os.path.splitext(op2_filename)[0]
+        #debug_file = model + '.debug.out'
+
+        exclude_results = [
+            'cbeam_force',
+            #'stress',
+            #'strain',
+            #'grid_point_forces',
+            #'cbar_*',
+            #'cbeam_*',
+            #'crod_force',
+            #'cquad4_force',
+            #'ctria3_force',
+            #'cquad4_composite_stress', 'ctria3_composite_stress',
+            #'cquad4_composite_strain', 'ctria3_composite_strain',
+        ]
+        op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug,
+                            exclude_results=exclude_results,
+                            #include_results='eigenvectors',
+                            #include_results=['crod_stress', 'cbar_stress'],
+                            #include_results=['crod_force', 'cbar_force'],
+                            #include_results='element_forces',
+                            #include_results='stress',
+                            )
+        #op2 = read_op2(op2_filename, debug_file=op2_filename_debug, include_results='displacements')
+
+        op2w = OP2Writer(op2)
+        op2w.write_op2(op2_filename_out, obj=op2, is_mag_phase=False,
+                       delete_objects=True)
+        op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out)
+        #op2b = read_op2(op2_filename_out, debug_file=op2_filename_debug_out)
+        op2.assert_op2_equal(op2b,
+                             skip_results=['params', ],
+                             stop_on_failure=True, debug=False)
+
+    def test_write_7(self):
+        """tests basic op2 writing"""
+        folder = os.path.join(MODEL_PATH, 'sol_101_elements')
+        op2_filename = os.path.join(folder, 'freq_solid_shell_bar.op2')
+        op2_filename_debug = os.path.join(folder, 'freq_solid_shell_bar.debug.out')
+        op2_filename_out = os.path.join(folder, 'freq_solid_shell_bar_out.op2')
+        op2_filename_debug_out = os.path.join(folder, 'freq_solid_shell_bar_out.debug.out')
+        #debug_file = 'solid_bending.debug.out'
+        model = os.path.splitext(op2_filename)[0]
+        #debug_file = model + '.debug.out'
+
+        exclude_results = [
+            'cbeam_force',
+            #'stress',
+            #'strain',
+            #'grid_point_forces',
+            #'cbar_*',
+            #'cbeam_*',
+            #'crod_force',
+            #'cquad4_force',
+            #'ctria3_force',
+            #'cquad4_composite_stress', 'ctria3_composite_stress',
+            #'cquad4_composite_strain', 'ctria3_composite_strain',
+        ]
+        op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug,
+                            exclude_results=exclude_results,
+                            #include_results='eigenvectors',
+                            #include_results=['crod_stress', 'cbar_stress'],
+                            #include_results=['crod_force', 'cbar_force'],
+                            #include_results='element_forces',
+                            #include_results='stress',
+                            )
+        #op2 = read_op2(op2_filename, debug_file=op2_filename_debug, include_results='displacements')
+
+        op2w = OP2Writer(op2)
+        op2w.write_op2(op2_filename_out, obj=op2, is_mag_phase=False,
+                       delete_objects=True)
+        op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out)
+        #op2b = read_op2(op2_filename_out, debug_file=op2_filename_debug_out)
+        op2.assert_op2_equal(op2b,
+                             skip_results=['params', ],
+                             stop_on_failure=True, debug=False)
+
 if __name__ == '__main__':
     unittest.main()

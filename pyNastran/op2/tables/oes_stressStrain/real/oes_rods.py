@@ -321,7 +321,6 @@ class RealRodArray(OES_Object):
             op2.write(pack('i', *header))
             op2_ascii.write('footer = %s\n' % header)
             new_result = False
-
         return itable
 
 

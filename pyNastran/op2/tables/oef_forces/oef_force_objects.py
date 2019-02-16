@@ -23,7 +23,8 @@ SORT2_TABLE_NAME_MAP = {
     'OEFRMS2' : 'OEFRMS1',
     'OEFNO2' : 'OEFNO1',
 }
-class RealForceObject(ScalarObject):
+
+class ForceObject(ScalarObject):
     def __init__(self, data_code, isubcase, apply_data_code=True):
         self.element_type = None
         self.element_name = None
@@ -44,14 +45,6 @@ class RealForceObject(ScalarObject):
         self.sort_bits[1] = 0 # sort1
         self.sort_method = 1
         assert self.is_sort1 is True, self.is_sort1
-
-    @property
-    def is_real(self):
-        return True
-
-    @property
-    def is_complex(self):
-        return False
 
     def _reset_indices(self):
         self.itotal = 0
@@ -129,8 +122,12 @@ class RealForceObject(ScalarObject):
             field6 = self.eigns[itime]
             field7 = self.cycles[itime]
             ftable3 = set_table3_field(ftable3, 6, b'f') # field 6
-        #elif self.analysis_code == 3:
-            #field5 = self.freqs[itime]
+        elif self.analysis_code == 5:
+            field5 = self.freqs[itime]
+            ftable3 = set_table3_field(ftable3, 5, b'f') # field 5
+        elif self.analysis_code == 6:
+            field5 = self.times[itime]
+            ftable3 = set_table3_field(ftable3, 5, b'f') # field 5
         else:
             raise NotImplementedError(self.analysis_code)
 
@@ -162,6 +159,19 @@ class RealForceObject(ScalarObject):
         #f.write(pack(fascii, '%s header 3c' % self.table_name, fmt, data))
         op2_ascii.write('%s header 3c = %s\n' % (self.table_name, data))
         op2.write(pack(fmt, *data))
+
+
+class RealForceObject(ForceObject):
+    def __init__(self, data_code, isubcase, apply_data_code=True):
+        ForceObject.__init__(self, data_code, isubcase, apply_data_code=apply_data_code)
+
+    @property
+    def is_real(self):
+        return True
+
+    @property
+    def is_complex(self):
+        return False
 
 
 class FailureIndices(RealForceObject):

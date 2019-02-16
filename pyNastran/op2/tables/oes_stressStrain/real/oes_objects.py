@@ -145,6 +145,12 @@ class OES_Object(ScalarObject):
             ftable3 = set_table3_field(ftable3, 6, b'f') # field 6
         #elif self.analysis_code == 3:
             #field5 = self.freqs[itime]
+        elif self.analysis_code == 5:
+            field5 = self.freqs[itime]
+            ftable3 = set_table3_field(ftable3, 5, b'f') # field 5
+        elif self.analysis_code == 6:
+            field5 = self.dts[itime]
+            ftable3 = set_table3_field(ftable3, 5, b'f') # field 5
         else:
             raise NotImplementedError(self.analysis_code)
 

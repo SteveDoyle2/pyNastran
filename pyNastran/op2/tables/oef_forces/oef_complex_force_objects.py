@@ -6,14 +6,29 @@ import numpy as np
 from numpy import zeros, searchsorted, allclose
 
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
+from pyNastran.op2.tables.oef_forces.oef_force_objects import ForceObject
 from pyNastran.f06.f06_formatting import write_imag_floats_13e, write_float_12e # get_key0,
 from pyNastran.f06.f06_formatting import _eigenvalue_header
 
-class ComplexRodForceArray(ScalarObject):
+
+class ComplexForceObject(ForceObject):
+    def __init__(self, data_code, isubcase, apply_data_code=True):
+        ForceObject.__init__(self, data_code, isubcase, apply_data_code=apply_data_code)
+
+    @property
+    def is_real(self):
+        return False
+
+    @property
+    def is_complex(self):
+        return True
+
+
+class ComplexRodForceArray(ComplexForceObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         self.element_type = None
         self.element_name = None
-        ScalarObject.__init__(self, data_code, isubcase)
+        ComplexForceObject.__init__(self, data_code, isubcase)
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
         #self.ntimes = 0  # or frequency/mode
@@ -32,14 +47,6 @@ class ComplexRodForceArray(ScalarObject):
     def get_headers(self):
         headers = ['axial_force', 'torque']
         return headers
-
-    @property
-    def is_real(self):
-        return False
-
-    @property
-    def is_complex(self):
-        return True
 
     #def get_headers(self):
         #headers = ['axial', 'torque']
@@ -226,6 +233,74 @@ class ComplexRodForceArray(ScalarObject):
             f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
+
+    def write_op2(self, op2, op2_ascii, itable, new_result, date,
+                  is_mag_phase=False, endian='>'):
+        """writes an OP2"""
+        import inspect
+        from struct import Struct, pack
+        frame = inspect.currentframe()
+        call_frame = inspect.getouterframes(frame, 2)
+        op2_ascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
+
+        if itable == -1:
+            self._write_table_header(op2, op2_ascii, date)
+            itable = -3
+
+        eids = self.element
+
+        # table 4 info
+        #ntimes = self.data.shape[0]
+        #nnodes = self.data.shape[1]
+        nelements = self.data.shape[1]
+
+        # 21 = 1 node, 3 principal, 6 components, 9 vectors, 2 p/ovm
+        #ntotal = ((nnodes * 21) + 1) + (nelements * 4)
+
+        ntotali = self.num_wide
+        ntotal = ntotali * nelements
+
+        device_code = self.device_code
+        op2_ascii.write('  ntimes = %s\n' % self.ntimes)
+
+        eids_device = self.element *  10 + self.device_code
+
+        if self.is_sort1:
+            struct1 = Struct(endian + b'i4f')
+        else:
+            raise NotImplementedError('SORT2')
+
+        op2_ascii.write('nelements=%i\n' % nelements)
+
+        for itime in range(self.ntimes):
+            self._write_table_3(op2, op2_ascii, new_result, itable, itime)
+
+            # record 4
+            itable -= 1
+            header = [4, itable, 4,
+                      4, 1, 4,
+                      4, 0, 4,
+                      4, ntotal, 4,
+                      4 * ntotal]
+            op2.write(pack('%ii' % len(header), *header))
+            op2_ascii.write('r4 [4, 0, 4]\n')
+            op2_ascii.write('r4 [4, %s, 4]\n' % (itable - 1))
+            op2_ascii.write('r4 [4, %i, 4]\n' % (4 * ntotal))
+
+            axial = self.data[itime, :, 0]
+            torsion = self.data[itime, :, 1]
+
+            for eid_device, axiali, torsioni in zip(eids_device, axial, torsion):
+                data = [eid_device, axiali.real, torsioni.real, axiali.imag, torsioni.imag]
+                op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, tuple(data)))
+                op2.write(struct1.pack(*data))
+
+            itable -= 1
+            header = [4 * ntotal,]
+            op2.write(pack('i', *header))
+            op2_ascii.write('footer = %s\n' % header)
+            new_result = False
+        return itable
 
 
 class ComplexCShearForceArray(ScalarObject):

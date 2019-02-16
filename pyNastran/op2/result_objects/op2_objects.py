@@ -69,7 +69,7 @@ class BaseScalarObject(Op2Codes):
                   np.isnan(self.nonlinear_factor) and
                   np.isnan(table.nonlinear_factor))
         if not is_nan:
-            assert self.nonlinear_factor == table.nonlinear_factor
+            assert self.nonlinear_factor == table.nonlinear_factor, 'nonlinear_factor=%s table.nonlinear_factor=%s' % (self.nonlinear_factor, table.nonlinear_factor)
         assert self.ntotal == table.ntotal
         assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (
             self.table_name, table.table_name)

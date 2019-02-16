@@ -10,7 +10,117 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.op2_interface.write_utils import set_table3_field
 
 
-class RealGridPointForcesArray(ScalarObject):
+class GridPointForcesObject(ScalarObject):
+    def __init__(self, data_code, is_sort1, isubcase):
+        ScalarObject.__init__(self, data_code, isubcase, apply_data_code=True)
+        #self.code = [self.format_code, self.sort_code, self.s_code]
+
+        #self.ntimes = 0  # or frequency/mode
+        self.ntotal = 0
+        self.itotal = 0
+
+    def _write_table_3(self, op2, op2_ascii, new_result, itable, itime): #, itable=-3, itime=0):
+        import inspect
+        from six import string_types
+        from struct import pack
+        frame = inspect.currentframe()
+        call_frame = inspect.getouterframes(frame, 2)
+        op2_ascii.write('%s.write_table_3: %s\n' % (self.__class__.__name__, call_frame[1][3]))
+
+        if new_result and itable != -3:
+            header = [
+                4, 146, 4,
+            ]
+        else:
+            header = [
+                4, itable, 4,
+                4, 1, 4,
+                4, 0, 4,
+                4, 146, 4,
+            ]
+        op2.write(pack(b'%ii' % len(header), *header))
+        op2_ascii.write('table_3_header = %s\n' % header)
+
+        approach_code = self.approach_code
+        table_code = self.table_code
+        isubcase = self.isubcase
+        element_type = 0 #self.element_type
+        #[
+            #'aCode', 'tCode', 'element_type', 'isubcase',
+            #'???', '???', '???', 'load_set'
+            #'format_code', 'num_wide', 's_code', '???',
+            #'???', '???', '???', '???',
+            #'???', '???', '???', '???',
+            #'???', '???', '???', '???',
+            #'???', 'Title', 'subtitle', 'label']
+        #random_code = self.random_code
+        format_code = self.format_code
+        s_code = 0 # self.s_code
+        num_wide = self.num_wide
+        acoustic_flag = 0
+        thermal = 0
+        title = b'%-128s' % self.title.encode('ascii')
+        subtitle = b'%-128s' % self.subtitle.encode('ascii')
+        label = b'%-128s' % self.label.encode('ascii')
+        oCode = 0
+        load_set = 0
+        #print(self.code_information())
+
+        ftable3 = b'i' * 50 + b'128s 128s 128s'
+        field6 = 0
+        field7 = 0
+        if self.analysis_code == 1:
+            field5 = self.lsdvmns[itime]
+        elif self.analysis_code == 2:
+            ## mode number
+            ## mode or cycle .. todo:: confused on the type - F1???
+            #self.mode2 = self.add_data_parameter(data, 'mode2', b'i', 7, False)
+            #self.cycle = self.add_data_parameter(data, 'cycle', b'f', 7, False)
+
+            field5 = self.modes[itime]
+            field6 = self.eigns[itime]
+            field7 = self.cycles[itime]
+            ftable3 = set_table3_field(ftable3, 6, b'f') # field 6
+        elif self.analysis_code == 5:
+            field5 = self.freqs[itime]
+            ftable3 = set_table3_field(ftable3, 5, b'f') # field 5
+        elif self.analysis_code == 6:
+            field5 = self.times[itime]
+            ftable3 = set_table3_field(ftable3, 5, b'f') # field 5
+        else:
+            raise NotImplementedError(self.analysis_code)
+
+        table3 = [
+            approach_code, table_code, element_type, isubcase, field5,
+            field6, field7, load_set, format_code, num_wide,
+            s_code, acoustic_flag, 0, 0, 0,
+            0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, thermal, thermal, 0,
+            title, subtitle, label,
+        ]
+
+        n = 0
+        for v in table3:
+            if isinstance(v, (int, float)):
+                n += 4
+            elif isinstance(v, string_types):
+                n += len(v)
+            else:
+                print('write_table_3', v)
+                n += len(v)
+        assert n == 584, n
+        data = [584] + table3 + [584]
+        fmt = b'i' + ftable3 + b'i'
+        #print(fmt)
+        #print(data)
+        #f.write(pack(fascii, '%s header 3c' % self.table_name, fmt, data))
+        op2_ascii.write('%s header 3c = %s\n' % (self.table_name, data))
+        op2.write(pack(fmt, *data))
+
+
+class RealGridPointForcesArray(GridPointForcesObject):
     """
                                        G R I D   P O I N T   F O R C E   B A L A N C E
        POINT-ID  ELEMENT-ID   SOURCE        T1       T2    T3            R1   R2   R3
@@ -20,7 +130,7 @@ class RealGridPointForcesArray(ScalarObject):
 
     """
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        ScalarObject.__init__(self, data_code, isubcase, apply_data_code=True)
+        GridPointForcesObject.__init__(self, data_code, is_sort1, isubcase)
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
         #self.ntimes = 0  # or frequency/mode
@@ -991,7 +1101,7 @@ class RealGridPointForcesArray(ScalarObject):
             eids = self.node_element[itime, :, 1]
             enames = self.element_names[itime, :]
 
-            nids_device = nids *  10 + self.device_code
+            nids_device = nids * 10 + self.device_code
             assert nids.min() > 0, nids.min()
             nnodes = len(nids)
 
@@ -1034,111 +1144,11 @@ class RealGridPointForcesArray(ScalarObject):
             new_result = False
         return itable
 
-    def _write_table_3(self, op2, op2_ascii, new_result, itable, itime): #, itable=-3, itime=0):
-        import inspect
-        from six import string_types
-        from struct import pack
-        frame = inspect.currentframe()
-        call_frame = inspect.getouterframes(frame, 2)
-        op2_ascii.write('%s.write_table_3: %s\n' % (self.__class__.__name__, call_frame[1][3]))
 
-        if new_result and itable != -3:
-            header = [
-                4, 146, 4,
-            ]
-        else:
-            header = [
-                4, itable, 4,
-                4, 1, 4,
-                4, 0, 4,
-                4, 146, 4,
-            ]
-        op2.write(pack(b'%ii' % len(header), *header))
-        op2_ascii.write('table_3_header = %s\n' % header)
-
-        approach_code = self.approach_code
-        table_code = self.table_code
-        isubcase = self.isubcase
-        element_type = 0 #self.element_type
-        #[
-            #'aCode', 'tCode', 'element_type', 'isubcase',
-            #'???', '???', '???', 'load_set'
-            #'format_code', 'num_wide', 's_code', '???',
-            #'???', '???', '???', '???',
-            #'???', '???', '???', '???',
-            #'???', '???', '???', '???',
-            #'???', 'Title', 'subtitle', 'label']
-        #random_code = self.random_code
-        format_code = self.format_code
-        s_code = 0 # self.s_code
-        num_wide = self.num_wide
-        acoustic_flag = 0
-        thermal = 0
-        title = b'%-128s' % self.title.encode('ascii')
-        subtitle = b'%-128s' % self.subtitle.encode('ascii')
-        label = b'%-128s' % self.label.encode('ascii')
-        oCode = 0
-        load_set = 0
-        #print(self.code_information())
-
-        ftable3 = b'i' * 50 + b'128s 128s 128s'
-        field6 = 0
-        field7 = 0
-        if self.analysis_code == 1:
-            field5 = self.lsdvmns[itime]
-        elif self.analysis_code == 2:
-            ## mode number
-            ## mode or cycle .. todo:: confused on the type - F1???
-            #self.mode2 = self.add_data_parameter(data, 'mode2', b'i', 7, False)
-            #self.cycle = self.add_data_parameter(data, 'cycle', b'f', 7, False)
-
-            field5 = self.modes[itime]
-            field6 = self.eigns[itime]
-            field7 = self.cycles[itime]
-            ftable3 = set_table3_field(ftable3, 6, b'f') # field 6
-        #elif self.analysis_code == 3:
-            #field5 = self.freqs[itime]
-        else:
-            raise NotImplementedError(self.analysis_code)
-
-        table3 = [
-            approach_code, table_code, element_type, isubcase, field5,
-            field6, field7, load_set, format_code, num_wide,
-            s_code, acoustic_flag, 0, 0, 0,
-            0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, thermal, thermal, 0,
-            title, subtitle, label,
-        ]
-
-        n = 0
-        for v in table3:
-            if isinstance(v, (int, float)):
-                n += 4
-            elif isinstance(v, string_types):
-                n += len(v)
-            else:
-                print('write_table_3', v)
-                n += len(v)
-        assert n == 584, n
-        data = [584] + table3 + [584]
-        fmt = b'i' + ftable3 + b'i'
-        #print(fmt)
-        #print(data)
-        #f.write(pack(fascii, '%s header 3c' % self.table_name, fmt, data))
-        op2_ascii.write('%s header 3c = %s\n' % (self.table_name, data))
-        op2.write(pack(fmt, *data))
-
-
-class ComplexGridPointForcesArray(ScalarObject):
+class ComplexGridPointForcesArray(GridPointForcesObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        ScalarObject.__init__(self, data_code, isubcase, apply_data_code=True)
+        GridPointForcesObject.__init__(self, data_code, is_sort1, isubcase)
         #self.code = [self.format_code, self.sort_code, self.s_code]
-
-        #self.ntimes = 0  # or frequency/mode
-        self.ntotal = 0
-        self.itotal = 0
 
         # do the element_names/node_element vectors change with the time step
         self.is_unique = False
@@ -1606,3 +1616,103 @@ class ComplexGridPointForcesArray(ScalarObject):
     def get_headers(self):
         headers = ['f1', 'f2', 'f3', 'm1', 'm2', 'm3']
         return headers
+
+    def write_op2(self, op2, op2_ascii, itable, new_result,
+                  date, is_mag_phase=False, endian='>'):
+        """writes an OP2"""
+        import inspect
+        from struct import Struct, pack
+        frame = inspect.currentframe()
+        call_frame = inspect.getouterframes(frame, 2)
+        op2_ascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
+
+        if itable == -1:
+            self._write_table_header(op2, op2_ascii, date)
+            itable = -3
+
+        # table 4 info
+        #ntimes = self.data.shape[0]
+        #nnodes = self.data.shape[1]
+
+        # 21 = 1 node, 3 principal, 6 components, 9 vectors, 2 p/ovm
+        #ntotal = ((nnodes * 21) + 1) + (nelements * 4)
+
+        ntotali = self.num_wide
+
+        #print('shape = %s' % str(self.data.shape))
+
+        device_code = self.device_code
+        op2_ascii.write('  ntimes = %s\n' % self.ntimes)
+
+        #fmt = '%2i %6f'
+        #print('ntotal=%s' % (ntotal))
+
+        if self.is_sort1:
+            struct1 = Struct(endian + b'2i 8s 12f')
+        else:
+            raise NotImplementedError('SORT2')
+
+        for itime in range(self.ntimes):
+            self._write_table_3(op2, op2_ascii, new_result, itable, itime)
+
+            # record 4
+            itable -= 1
+
+            nids_all = self.node_element[itime, :, 0]
+            inids = np.where(nids_all > 0)[0]
+            nids = nids_all[inids]
+            eids = self.node_element[itime, inids, 1]
+            enames = self.element_names[itime, inids]
+
+            t1 = self.data[itime, inids, 0]
+            t2 = self.data[itime, inids, 1]
+            t3 = self.data[itime, inids, 2]
+            r1 = self.data[itime, inids, 3]
+            r2 = self.data[itime, inids, 4]
+            r3 = self.data[itime, inids, 5]
+
+            nids_device = nids * 10 + self.device_code
+            assert nids.min() > 0, nids.min()
+            nnodes = len(nids)
+
+            ntotal = ntotali * nnodes
+            header = [4, itable, 4,
+                      4, 1, 4,
+                      4, 0, 4,
+                      4, ntotal, 4,
+                      4 * ntotal]
+            op2.write(pack('%ii' % len(header), *header))
+            op2_ascii.write('r4 [4, 0, 4]\n')
+            op2_ascii.write('r4 [4, %s, 4]\n' % (itable - 1))
+            op2_ascii.write('r4 [4, %i, 4]\n' % (4 * ntotal))
+
+            zero = ' '
+            ntotal = self._ntotals[itime]
+            #print(self._ntotals)
+            assert len(eids) == len(nids)
+            assert len(enames) == len(nids), 'enames=%s nnids=%s' % (len(enames), len(nids))
+            assert len(t1) == len(nids)
+            assert len(t2) == len(nids)
+            assert len(t3) == len(nids)
+            assert len(r1) == len(nids)
+            assert len(r2) == len(nids)
+            assert len(nids) <= ntotal, 'len(nids)=%s ntotal=%s' % (len(nids), ntotal)
+
+            for (i, nid, eid, ename, t1i, t2i, t3i, r1i, r2i, r3i) in zip(
+                 range(ntotal), nids_device, eids, enames, t1, t2, t3, r1, r2, r3):
+
+                #print(nid, eid, ename, t1i)
+                data = [nid, eid, ename.encode('ascii'),
+                        t1i.real, t2i.real, t3i.real, r1i.real, r2i.real, r3i.real,
+                        t1i.imag, t2i.imag, t3i.imag, r1i.imag, r2i.imag, r3i.imag]
+                #print('  nid=%s eid=%s data=%s' % (nid, eid, str(data[2:])))
+                op2_ascii.write('  nid=%-3s eid=%-3s data=%s\n' % (nid, eid, str(data[2:])))
+                op2.write(struct1.pack(*data))
+                assert len(data) + 1 == self.num_wide
+
+            itable -= 1
+            header = [4 * ntotal,]
+            op2.write(pack('i', *header))
+            op2_ascii.write('footer = %s\n' % header)
+            new_result = False
+        return itable
