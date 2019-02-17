@@ -2331,12 +2331,14 @@ class OEF(OP2Common):
         return n, nelements, ntotal
 
     def _oef_shells_nodal(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
+        """
+        64-CQUAD8
+        70-CTRIAR
+        75-CTRIA6
+        82-CQUADR
+        144-CQUAD4-bilinear
+        """
         n = 0
-        # 64-CQUAD8
-        # 70-CTRIAR
-        # 75-CTRIA6
-        # 82-CQUADR
-        # 144-CQUAD4-bilinear
         if self.element_type == 64:
             result_name = prefix + 'cquad8_force' + postfix
         elif self.element_type == 70:

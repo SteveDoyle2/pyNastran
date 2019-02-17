@@ -992,11 +992,11 @@ class ComplexViscForceArray(ScalarObject):
         return page_num - 1
 
 
-class ComplexPlateForceArray(ScalarObject):
+class ComplexPlateForceArray(ComplexForceObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         self.element_type = None
         self.element_name = None
-        ScalarObject.__init__(self, data_code, isubcase)
+        ComplexForceObject.__init__(self, data_code, isubcase)
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
         #self.ntimes = 0  # or frequency/mode
@@ -1007,10 +1007,6 @@ class ComplexPlateForceArray(ScalarObject):
             pass
         else:
             raise NotImplementedError('SORT2')
-
-    def _reset_indices(self):
-        self.itotal = 0
-        self.ielement = 0
 
     def get_headers(self):
         headers = ['mx', 'my', 'mxy', 'bmx', 'bmy', 'bmxy', 'tx', 'ty']
@@ -1219,12 +1215,100 @@ class ComplexPlateForceArray(ScalarObject):
             page_num += 1
         return page_num - 1
 
+    def write_op2(self, op2, op2_ascii, itable, new_result,
+                  date, is_mag_phase=False, endian='>'):
+        """writes an OP2"""
+        import inspect
+        from struct import Struct, pack
+        frame = inspect.currentframe()
+        call_frame = inspect.getouterframes(frame, 2)
+        op2_ascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
 
-class ComplexPlate2ForceArray(ScalarObject):
+        if itable == -1:
+            self._write_table_header(op2, op2_ascii, date)
+            itable = -3
+
+        #if isinstance(self.nonlinear_factor, float):
+            #op2_format = '%sif' % (7 * self.ntimes)
+            #raise NotImplementedError()
+        #else:
+            #op2_format = 'i21f'
+        #s = Struct(op2_format)
+
+        eids = self.element
+        eids_device = eids * 10 + self.device_code
+
+        # table 4 info
+        #ntimes = self.data.shape[0]
+        #nnodes = self.data.shape[1]
+        nelements = self.data.shape[1]
+
+        # 21 = 1 node, 3 principal, 6 components, 9 vectors, 2 p/ovm
+        #ntotal = ((nnodes * 21) + 1) + (nelements * 4)
+
+        ntotali = self.num_wide
+        ntotal = ntotali * nelements
+
+        #print('shape = %s' % str(self.data.shape))
+        #assert self.ntimes == 1, self.ntimes
+
+        op2_ascii.write('  ntimes = %s\n' % self.ntimes)
+
+        #fmt = '%2i %6f'
+        #print('ntotal=%s' % (ntotal))
+        #assert ntotal == 193, ntotal
+
+        if self.is_sort1:
+            struct1 = Struct(endian + b'i 16f')
+        else:
+            raise NotImplementedError('SORT2')
+
+        op2_ascii.write('%s-nelements=%i\n' % (self.element_name, nelements))
+        for itime in range(self.ntimes):
+            self._write_table_3(op2, op2_ascii, new_result, itable, itime)
+
+            # record 4
+            #print('stress itable = %s' % itable)
+            itable -= 1
+            header = [4, itable, 4,
+                      4, 1, 4,
+                      4, 0, 4,
+                      4, ntotal, 4,
+                      4 * ntotal]
+            op2.write(pack('%ii' % len(header), *header))
+            op2_ascii.write('r4 [4, 0, 4]\n')
+            op2_ascii.write('r4 [4, %s, 4]\n' % (itable))
+            op2_ascii.write('r4 [4, %i, 4]\n' % (4 * ntotal))
+
+            mx = self.data[itime, :, 0]
+            my = self.data[itime, :, 1]
+            mxy = self.data[itime, :, 2]
+            bmx = self.data[itime, :, 3]
+            bmy = self.data[itime, :, 4]
+            bmxy = self.data[itime, :, 5]
+            tx = self.data[itime, :, 6]
+            ty = self.data[itime, :, 7]
+
+            for eid_device, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi in zip(eids_device, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
+                data = [eid_device,
+                        mxi.real, myi.real, mxyi.real, bmxi.real, bmyi.real, bmxyi.real, txi.real, tyi.real,
+                        mxi.imag, myi.imag, mxyi.imag, bmxi.imag, bmyi.imag, bmxyi.imag, txi.imag, tyi.imag]
+                op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, str(data)))
+                op2.write(struct1.pack(*data))
+
+            itable -= 1
+            header = [4 * ntotal,]
+            op2.write(pack('i', *header))
+            op2_ascii.write('footer = %s\n' % header)
+            new_result = False
+        return itable
+
+
+class ComplexPlate2ForceArray(ComplexForceObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         self.element_type = None
         self.element_name = None
-        ScalarObject.__init__(self, data_code, isubcase)
+        ComplexForceObject.__init__(self, data_code, isubcase)
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
         #self.ntimes = 0  # or frequency/mode
@@ -1235,10 +1319,6 @@ class ComplexPlate2ForceArray(ScalarObject):
             pass
         else:
             raise NotImplementedError('SORT2')
-
-    def _reset_indices(self):
-        self.itotal = 0
-        self.ielement = 0
 
     def get_headers(self):
         headers = ['mx', 'my', 'mxy', 'bmx', 'bmy', 'bmxy', 'tx', 'ty']
@@ -1468,17 +1548,120 @@ class ComplexPlate2ForceArray(ScalarObject):
             page_num += 1
         return page_num - 1
 
+    def write_op2(self, op2, op2_ascii, itable, new_result,
+                  date, is_mag_phase=False, endian='>'):
+        """writes an OP2"""
+        import inspect
+        from struct import Struct, pack
+        frame = inspect.currentframe()
+        call_frame = inspect.getouterframes(frame, 2)
+        op2_ascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
 
-class ComplexCBarForceArray(ScalarObject):
-    def get_headers(self):
-        headers = ['bending_moment_1a', 'bending_moment_2a',
-                   'bending_moment_1b', 'bending_moment_2b',
-                   'shear1', 'shear2', 'axial', 'torque', ]
-        return headers
+        if itable == -1:
+            self._write_table_header(op2, op2_ascii, date)
+            itable = -3
 
+        #if isinstance(self.nonlinear_factor, float):
+            #op2_format = '%sif' % (7 * self.ntimes)
+            #raise NotImplementedError()
+        #else:
+            #op2_format = 'i21f'
+        #s = Struct(op2_format)
+
+        #eids = self.element
+        eids_device = self.element * 10 + self.device_code
+        eids = self.element_node[:, 0]
+        nids = self.element_node[:, 1]
+
+        # table 4 info
+        #ntimes = self.data.shape[0]
+        #nnodes = self.data.shape[1]
+        nelements = len(self.element)
+
+        # 21 = 1 node, 3 principal, 6 components, 9 vectors, 2 p/ovm
+        #ntotal = ((nnodes * 21) + 1) + (nelements * 4)
+
+        ntotali = self.num_wide
+
+        nnodes_all = 5
+        numwide_imag = 2 + nnodes_all * 17
+        assert ntotali == numwide_imag
+
+        ntotal = ntotali * nelements
+
+        #print('shape = %s' % str(self.data.shape))
+        #assert self.ntimes == 1, self.ntimes
+
+        op2_ascii.write('  ntimes = %s\n' % self.ntimes)
+
+        #fmt = '%2i %6f'
+        #print('ntotal=%s' % (ntotal))
+        #assert ntotal == 193, ntotal
+
+        if self.is_sort1:
+            struct1 = Struct(endian + b'i 4s i 16f')
+            struct2 = Struct(endian + b'i 16f')
+        else:
+            raise NotImplementedError('SORT2')
+
+        op2_ascii.write('%s-nelements=%i\n' % (self.element_name, nelements))
+        for itime in range(self.ntimes):
+            self._write_table_3(op2, op2_ascii, new_result, itable, itime)
+
+            # record 4
+            #print('stress itable = %s' % itable)
+            itable -= 1
+            header = [4, itable, 4,
+                      4, 1, 4,
+                      4, 0, 4,
+                      4, ntotal, 4,
+                      4 * ntotal]
+            op2.write(pack('%ii' % len(header), *header))
+            op2_ascii.write('r4 [4, 0, 4]\n')
+            op2_ascii.write('r4 [4, %s, 4]\n' % (itable))
+            op2_ascii.write('r4 [4, %i, 4]\n' % (4 * ntotal))
+
+            mx = self.data[itime, :, 0]
+            my = self.data[itime, :, 1]
+            mxy = self.data[itime, :, 2]
+            bmx = self.data[itime, :, 3]
+            bmy = self.data[itime, :, 4]
+            bmxy = self.data[itime, :, 5]
+            tx = self.data[itime, :, 6]
+            ty = self.data[itime, :, 7]
+
+            nwide = 0
+            ielement = -1
+            for eid, nid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi in zip(eids, nids, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
+                if nid == 0:
+                    ielement += 1
+                    eid_device = eids_device[ielement]
+                    data = [eid_device, b'CEN/', nid,
+                            mxi.real, myi.real, mxyi.real, bmxi.real, bmyi.real, bmxyi.real, txi.real, tyi.real,
+                            mxi.imag, myi.imag, mxyi.imag, bmxi.imag, bmyi.imag, bmxyi.imag, txi.imag, tyi.imag]
+                    op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, str(data)))
+                    op2.write(struct1.pack(*data))
+                else:
+                    data = [nid,
+                            mxi.real, myi.real, mxyi.real, bmxi.real, bmyi.real, bmxyi.real, txi.real, tyi.real,
+                            mxi.imag, myi.imag, mxyi.imag, bmxi.imag, bmyi.imag, bmxyi.imag, txi.imag, tyi.imag]
+                    op2_ascii.write('    data=%s\n' % (str(data)))
+                    op2.write(struct2.pack(*data))
+                nwide += len(data)
+            assert nwide == ntotal, 'nwide=%s ntotal=%s' % (nwide, ntotal)
+            itable -= 1
+            header = [4 * ntotal,]
+            op2.write(pack('i', *header))
+            op2_ascii.write('footer = %s\n' % header)
+            new_result = False
+        return itable
+
+
+class ComplexCBarForceArray(ComplexForceObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        #ForceObject.__init__(self, data_code, isubcase)
-        ScalarObject.__init__(self, data_code, isubcase)
+        self.element_type = None
+        self.element_name = None
+        ComplexForceObject.__init__(self, data_code, isubcase)
 
         self.result_flag = 0
         #self.code = [self.format_code, self.sort_code, self.s_code]
@@ -1487,7 +1670,7 @@ class ComplexCBarForceArray(ScalarObject):
         #self.ntotal = 0
         self.itime = 0
         self.nelements = 0  # result specific
-        self.element_type = 'CBAR'
+        #self.element_type = 'CBAR'
         #self.cid = {}  # gridGauss
 
         if is_sort1:
@@ -1496,17 +1679,11 @@ class ComplexCBarForceArray(ScalarObject):
         else:
             raise NotImplementedError('SORT2')
 
-    def _reset_indices(self):
-        self.itotal = 0
-        self.ielement = 0
-
-    @property
-    def is_real(self):
-        return False
-
-    @property
-    def is_complex(self):
-        return True
+    def get_headers(self):
+        headers = ['bending_moment_1a', 'bending_moment_2a',
+                   'bending_moment_1b', 'bending_moment_2b',
+                   'shear1', 'shear2', 'axial', 'torque', ]
+        return headers
 
     def build(self):
         """sizes the vectorized attributes of the ComplexCBarForceArray"""
@@ -1735,6 +1912,97 @@ class ComplexCBarForceArray(ScalarObject):
             f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num
+
+    def write_op2(self, op2, op2_ascii, itable, new_result,
+                  date, is_mag_phase=False, endian='>'):
+        """writes an OP2"""
+        import inspect
+        from struct import Struct, pack
+        frame = inspect.currentframe()
+        call_frame = inspect.getouterframes(frame, 2)
+        op2_ascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
+
+        if itable == -1:
+            self._write_table_header(op2, op2_ascii, date)
+            itable = -3
+
+        #if isinstance(self.nonlinear_factor, float):
+            #op2_format = '%sif' % (7 * self.ntimes)
+            #raise NotImplementedError()
+        #else:
+            #op2_format = 'i21f'
+        #s = Struct(op2_format)
+
+        eids = self.element
+        eids_device = eids * 10 + self.device_code
+
+        # table 4 info
+        #ntimes = self.data.shape[0]
+        #nnodes = self.data.shape[1]
+        nelements = self.data.shape[1]
+
+        # 21 = 1 node, 3 principal, 6 components, 9 vectors, 2 p/ovm
+        #ntotal = ((nnodes * 21) + 1) + (nelements * 4)
+
+        ntotali = self.num_wide
+        ntotal = ntotali * nelements
+
+        #print('shape = %s' % str(self.data.shape))
+        #assert self.ntimes == 1, self.ntimes
+
+        op2_ascii.write('  ntimes = %s\n' % self.ntimes)
+
+        #fmt = '%2i %6f'
+        #print('ntotal=%s' % (ntotal))
+        #assert ntotal == 193, ntotal
+
+        if self.is_sort1:
+            struct1 = Struct(endian + b'i 16f')
+        else:
+            raise NotImplementedError('SORT2')
+
+        op2_ascii.write('%s-nelements=%i\n' % (self.element_name, nelements))
+        for itime in range(self.ntimes):
+            self._write_table_3(op2, op2_ascii, new_result, itable, itime)
+
+            # record 4
+            #print('stress itable = %s' % itable)
+            itable -= 1
+            header = [4, itable, 4,
+                      4, 1, 4,
+                      4, 0, 4,
+                      4, ntotal, 4,
+                      4 * ntotal]
+            op2.write(pack('%ii' % len(header), *header))
+            op2_ascii.write('r4 [4, 0, 4]\n')
+            op2_ascii.write('r4 [4, %s, 4]\n' % (itable))
+            op2_ascii.write('r4 [4, %i, 4]\n' % (4 * ntotal))
+
+            #bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq
+            bm1a = self.data[itime, :, 0]
+            bm2a = self.data[itime, :, 1]
+            bm1b = self.data[itime, :, 2]
+            bm2b = self.data[itime, :, 3]
+            ts1 = self.data[itime, :, 4]
+            ts2 = self.data[itime, :, 5]
+            af = self.data[itime, :, 6]
+            trq = self.data[itime, :, 7]
+
+            for eid_device, bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi in zip(eids_device, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq):
+
+                data = [eid_device,
+                        bm1a.real, bm2a.real, bm1b.real, bm2b.real, ts1.real, ts2.real, af.real, trq.real,
+                        bm1a.imag, bm2a.imag, bm1b.imag, bm2b.imag, ts1.imag, ts2.imag, af.imag, trq.imag]
+                op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, str(data)))
+                op2.write(struct1.pack(*data))
+
+            itable -= 1
+            header = [4 * ntotal,]
+            op2.write(pack('i', *header))
+            op2_ascii.write('footer = %s\n' % header)
+            new_result = False
+        return itable
+
 
 class ComplexCBeamForceArray(ComplexForceObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -2113,7 +2381,7 @@ class ComplexCBeamForceArray(ComplexForceObject):
                     ielement += 1
                     icount = 0
                 else:
-                    raise RuntimeError('CBEAM op2 writer')
+                    raise RuntimeError('CBEAM OEF op2 writer')
                     #data = [0, xxb, sxc, sxd, sxe, sxf, smax, smin, smt, smc]  # 10
                     #op2.write(struct2.pack(*data))
                     #icount += 1

@@ -123,11 +123,11 @@ class OP2Writer(OP2_F06_Common):
         else:
             raise RuntimeError('post = %r; use -1 or -2' % post)
 
-        #write_geom1(fop2, fop2_ascii, obj)
-        #write_geom2(fop2, fop2_ascii, obj)
-        #write_geom3(fop2, fop2_ascii, obj)
-        #write_ept(fop2, fop2_ascii, obj)
-        #write_mpt(fop2, fop2_ascii, obj)
+        write_geom1(fop2, fop2_ascii, obj)
+        write_geom2(fop2, fop2_ascii, obj)
+        write_geom3(fop2, fop2_ascii, obj)
+        write_ept(fop2, fop2_ascii, obj)
+        write_mpt(fop2, fop2_ascii, obj)
         if obj.grid_point_weight.reference_point is not None:
             if hasattr(result, 'write_op2'):
                 print("grid_point_weight")
@@ -150,23 +150,6 @@ class OP2Writer(OP2_F06_Common):
                 print("*op2 - %s not written" % result.__class__.__name__)
                 write_op2
 
-        # then eigenvectors
-        # has a special header
-        if 0:
-            for isubcase, result in sorted(obj.eigenvectors.items()):
-                #(subtitle, label) = obj.isubcase_name_map[isubcase]
-
-                itable = -1
-                if hasattr(result, 'write_op2'):
-                    print('%-18s SUBCASE=%i' % (result.__class__.__name__, isubcase))
-                    result.write_op2(fop2, fop2_ascii, itable, obj.date,
-                                     is_mag_phase=is_mag_phase, endian=endian)
-                    #if delete_objects:
-                        #del result
-                else:
-                    print("*op2 - %s not written" % result.__class__.__name__)
-                    write_op2
-
         # finally, we writte all the other tables
         # nastran puts the tables in order of the Case Control deck,
         # but we're lazy so we just hardcode the order
@@ -187,7 +170,6 @@ class OP2Writer(OP2_F06_Common):
             obj.cbar_force,
 
             # beam
-            #obj.cbeam_forces,
             #obj.cbar100_forces,
             #obj.cbend_forces,
             obj.cbeam_force,
@@ -248,7 +230,6 @@ class OP2Writer(OP2_F06_Common):
             #obj.nonlinearPlateStress,
             obj.ctriax_stress, #obj.hyperelasticPlateStrain,
         ]
-        #stress = oes1x1 + oes1c
 
         strain = [
             # bars/beams

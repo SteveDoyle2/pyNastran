@@ -268,6 +268,98 @@ class ComplexBarArray(OES_Object):
             page_num += 1
         return page_num
 
+    def write_op2(self, op2, op2_ascii, itable, new_result,
+                  date, is_mag_phase=False, endian='>'):
+        """writes an OP2"""
+        import inspect
+        from struct import Struct, pack
+        frame = inspect.currentframe()
+        call_frame = inspect.getouterframes(frame, 2)
+        op2_ascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
+
+        if itable == -1:
+            self._write_table_header(op2, op2_ascii, date)
+            itable = -3
+
+        #if isinstance(self.nonlinear_factor, float):
+            #op2_format = '%sif' % (7 * self.ntimes)
+            #raise NotImplementedError()
+        #else:
+            #op2_format = 'i21f'
+        #s = Struct(op2_format)
+
+        eids = self.element
+        eids_device = eids * 10 + self.device_code
+
+        # table 4 info
+        #ntimes = self.data.shape[0]
+        #nnodes = self.data.shape[1]
+        nelements = self.data.shape[1]
+
+        # 21 = 1 node, 3 principal, 6 components, 9 vectors, 2 p/ovm
+        #ntotal = ((nnodes * 21) + 1) + (nelements * 4)
+
+        ntotali = self.num_wide
+        ntotal = ntotali * nelements
+
+        #print('shape = %s' % str(self.data.shape))
+        #assert self.ntimes == 1, self.ntimes
+
+        op2_ascii.write('  ntimes = %s\n' % self.ntimes)
+
+        #fmt = '%2i %6f'
+        #print('ntotal=%s' % (ntotal))
+        #assert ntotal == 193, ntotal
+
+        if self.is_sort1:
+            struct1 = Struct(endian + b'i 18f')
+        else:
+            raise NotImplementedError('SORT2')
+
+        op2_ascii.write('%s-nelements=%i\n' % (self.element_name, nelements))
+        for itime in range(self.ntimes):
+            self._write_table_3(op2, op2_ascii, new_result, itable, itime)
+
+            # record 4
+            #print('stress itable = %s' % itable)
+            itable -= 1
+            header = [4, itable, 4,
+                      4, 1, 4,
+                      4, 0, 4,
+                      4, ntotal, 4,
+                      4 * ntotal]
+            op2.write(pack('%ii' % len(header), *header))
+            op2_ascii.write('r4 [4, 0, 4]\n')
+            op2_ascii.write('r4 [4, %s, 4]\n' % (itable))
+            op2_ascii.write('r4 [4, %i, 4]\n' % (4 * ntotal))
+
+            sa1 = self.data[itime, :, 0]
+            sa2 = self.data[itime, :, 1]
+            sa3 = self.data[itime, :, 2]
+            sa4 = self.data[itime, :, 3]
+            axial = self.data[itime, :, 4]
+            sb1 = self.data[itime, :, 5]
+            sb2 = self.data[itime, :, 6]
+            sb3 = self.data[itime, :, 7]
+            sb4 = self.data[itime, :, 8]
+            #[sa1, sa2, sa3, sa4, axial, sb1, sb2, sb3, sb4]
+
+            eids = self.element
+            for eid_device, s1ai, s2ai, s3ai, s4ai, axiali, s2ai, s2bi, s2ci, s2di in zip(eids_device, sa1, sa2, sa3, sa4, axial, sb1, sb2, sb3, sb4):
+
+                data = [eid_device,
+                        s1ai.real, s2ai.real, s3ai.real, s4ai.real, axiali.real, s2ai.real, s2bi.real, s2ci.real, s2di.real,
+                        s1ai.imag, s2ai.imag, s3ai.imag, s4ai.imag, axiali.imag, s2ai.imag, s2bi.imag, s2ci.imag, s2di.imag]
+                op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, str(data)))
+                op2.write(struct1.pack(*data))
+
+            itable -= 1
+            header = [4 * ntotal,]
+            op2.write(pack('i', *header))
+            op2_ascii.write('footer = %s\n' % header)
+            new_result = False
+        return itable
+
 class ComplexBarStressArray(ComplexBarArray, StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexBarArray.__init__(self, data_code, is_sort1, isubcase, dt)
