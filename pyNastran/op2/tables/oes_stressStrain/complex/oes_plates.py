@@ -408,6 +408,186 @@ class ComplexPlateArray(OES_Object):
                     '', '', fdr, oxxr, oxxi, oyyr, oyyi, txyr, txyi))
             ilayer0 = not ilayer0
 
+    def write_op2(self, op2, op2_ascii, itable, new_result,
+                  date, is_mag_phase=False, endian='>'):
+        """writes an OP2"""
+        import inspect
+        from struct import Struct, pack
+        frame = inspect.currentframe()
+        call_frame = inspect.getouterframes(frame, 2)
+        op2_ascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
+
+        if itable == -1:
+            self._write_table_header(op2, op2_ascii, date)
+            itable = -3
+
+        nnodes = self.get_nnodes()
+        #print("nnodes =", self.element_name, nnodes)
+        cen_word_ascii = 'CEN/%i' % nnodes
+        cen_word = b'CEN/%i' % nnodes
+
+        #msg.append('  element_node.shape = %s\n' % str(self.element_node.shape).replace('L', ''))
+        #msg.append('  data.shape=%s\n' % str(self.data.shape).replace('L', ''))
+
+        eids = self.element_node[:, 0]
+        nids = self.element_node[:, 1]
+
+        eids_device = eids * 10 + self.device_code
+
+        nelements = len(np.unique(eids))
+        #print('nelements =', nelements)
+        # 21 = 1 node, 3 principal, 6 components, 9 vectors, 2 p/ovm
+        #ntotal = ((nnodes * 21) + 1) + (nelements * 4)
+
+        ntotali = self.num_wide
+        ntotal = ntotali * nelements
+
+        #print('shape = %s' % str(self.data.shape))
+        #assert nnodes > 1, nnodes
+        #assert self.ntimes == 1, self.ntimes
+
+        #device_code = self.device_code
+        op2_ascii.write('  ntimes = %s\n' % self.ntimes)
+
+        #fmt = '%2i %6f'
+        #print('ntotal=%s' % (ntotal))
+        #assert ntotal == 193, ntotal
+
+        #[fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]
+        op2_ascii.write('  #elementi = [eid_device, node, fds, oxx, oyy, txy...\n')
+
+        if self.is_sort1:
+            struct1 = Struct(b'i 4s i 7f')
+            struct2 = Struct(b'i 7f')
+            struct3 = Struct(b'7f')
+        else:
+            raise NotImplementedError('SORT2')
+
+        op2_ascii.write('nelements=%i\n' % nelements)
+        if nnodes == 1: # CTRIA3 centroid
+            itable = self._write_op2_ctria3(
+                op2, op2_ascii, new_result, itable,
+                ntotal, eids_device)
+            return itable
+        for itime in range(self.ntimes):
+            self._write_table_3(op2, op2_ascii, new_result, itable, itime)
+
+            # record 4
+            itable -= 1
+            header = [4, itable, 4,
+                      4, 1, 4,
+                      4, 0, 4,
+                      4, ntotal, 4,
+                      4 * ntotal]
+            op2.write(pack('%ii' % len(header), *header))
+            op2_ascii.write('r4 [4, 0, 4]\n')
+            op2_ascii.write('r4 [4, %s, 4]\n' % (itable))
+            op2_ascii.write('r4 [4, %i, 4]\n' % (4 * ntotal))
+
+            fds = self.fiber_curvature
+            oxx = self.data[itime, :, 0]
+            oyy = self.data[itime, :, 1]
+            txy = self.data[itime, :, 2]
+
+            eids = self.element_node[:, 0]
+            nodes = self.element_node[:, 1]
+
+            ilayer0 = True
+            nwide = 0
+
+            for eid_device, eid, node, fd, doxx, doyy, dtxy in zip(eids_device, eids, nodes, fds, oxx, oyy, txy):
+                ilyaer0 = True
+                if node == 0 and ilayer0:
+                    data = [eid_device, b'CEN/', node, fd,
+                            doxx.real, doxx.imag, doyy.real, doyy.imag, dtxy.real, dtxy.imag]
+                    op2.write(struct1.pack(*data))
+                    op2_ascii.write('eid=%s node=%s data=%s' % (eid, node, str(data[2:])))
+                    #f06_file.write('0  %8i %8s  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s / %s\n' % (
+                        #eid, cen, fdr, oxxr, oxxi, oyyr, oyyi, txyr, txyi))
+                elif ilayer0:    # TODO: assuming 2 layers?
+                    data = [node, fd,
+                            doxx.real, doxx.imag, doyy.real, doyy.imag, dtxy.real, dtxy.imag]
+                    op2.write(struct2.pack(*data))
+                    op2_ascii.write('  node=%s data=%s' % (node, str(data[2:])))
+                    #f06_file.write('   %8s %8i  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s / %s\n' % (
+                        #'', node, fdr, oxxr, oxxi, oyyr, oyyi, txyr, txyi))
+                else:
+                    data = [fd,
+                            doxx.real, doxx.imag, doyy.real, doyy.imag, dtxy.real, dtxy.imag]
+                    op2.write(struct3.pack(*data))
+                    op2_ascii.write('    data=%s' % (str(data[2:])))
+                    #f06_file.write('   %8s %8s  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s / %s\n\n' % (
+                        #'', '', fdr, oxxr, oxxi, oyyr, oyyi, txyr, txyi))
+                ilayer0 = not ilayer0
+
+                nwide += len(data)
+
+            assert nwide == ntotal, "nwide=%s ntotal=%s" % (nwide, ntotal)
+            itable -= 1
+            header = [4 * ntotal,]
+            op2.write(pack('i', *header))
+            op2_ascii.write('footer = %s\n' % header)
+            new_result = False
+        return itable
+
+    def _write_op2_ctria3(self, op2, op2_ascii, new_result, itable,
+                          ntotal, eids_device):
+        from struct import Struct, pack
+        struct1 = Struct(b'i 7f')
+        struct2 = Struct(b'7f')
+        for itime in range(self.ntimes):
+            self._write_table_3(op2, op2_ascii, new_result, itable, itime)
+            # record 4
+            itable -= 1
+            header = [4, itable, 4,
+                      4, 1, 4,
+                      4, 0, 4,
+                      4, ntotal, 4,
+                      4 * ntotal]
+            op2.write(pack('%ii' % len(header), *header))
+            op2_ascii.write('r4 [4, 0, 4]\n')
+            op2_ascii.write('r4 [4, %s, 4]\n' % (itable))
+            op2_ascii.write('r4 [4, %i, 4]\n' % (4 * ntotal))
+
+            fds = self.fiber_curvature
+            oxx = self.data[itime, :, 0]
+            oyy = self.data[itime, :, 1]
+            txy = self.data[itime, :, 2]
+
+            eids = self.element_node[:, 0]
+            #nodes = self.element_node[:, 1]
+
+            ilayer0 = True
+            nwide = 0
+
+            for eid_device, eid, fd, doxx, doyy, dtxy in zip(eids_device, eids, fds, oxx, oyy, txy):
+                ilyaer0 = True
+                if ilayer0:
+                    data = [eid_device, fd,
+                            doxx.real, doxx.imag, doyy.real, doyy.imag, dtxy.real, dtxy.imag]
+                    op2.write(struct1.pack(*data))
+                    #op2_ascii.write('eid=%s node=%s data=%s' % (eid, node, str(data[2:])))
+                    op2_ascii.write('0  %6i   %-13s     %-13s / %-13s     %-13s / %-13s     %-13s / %s\n' % (
+                        eid, fd, doxx.real, doxx.imag, doyy.real, doyy.imag, dtxy.real, dtxy.imag))
+                else:
+                    data = [fd,
+                            doxx.real, doxx.imag, doyy.real, doyy.imag, dtxy.real, dtxy.imag]
+                    op2.write(struct2.pack(*data))
+                    #op2_ascii.write('    data=%s' % (str(data[2:])))
+                    op2_ascii.write('   %6s   %-13s     %-13s / %-13s     %-13s / %-13s     %-13s / %s\n' % (
+                        '', fd, doxx.real, doxx.imag, doyy.real, doyy.imag, dtxy.real, dtxy.imag))
+                ilayer0 = not ilayer0
+
+                nwide += len(data)
+
+            assert nwide == ntotal, "nwide=%s ntotal=%s" % (nwide, ntotal)
+            itable -= 1
+            header = [4 * ntotal,]
+            op2.write(pack('i', *header))
+            op2_ascii.write('footer = %s\n' % header)
+            new_result = False
+        return itable
+
 def _get_plate_msg(self, is_mag_phase=True, is_sort1=True):
     #if self.is_von_mises:
         #von_mises = 'VON MISES'

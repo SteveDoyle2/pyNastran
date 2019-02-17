@@ -12,6 +12,7 @@ from pyNastran.op2.op2_interface.op2_f06_common import OP2_F06_Common
 from pyNastran.op2.op2_interface.write_utils import _write_markers
 from .writer.geom1 import write_geom1
 from .writer.geom2 import write_geom2
+from .writer.geom3 import write_geom3
 from .writer.ept import write_ept
 from .writer.mpt import write_mpt
 
@@ -76,7 +77,7 @@ class OP2Writer(OP2_F06_Common):
             to reduce memory (default=True)
         """
         assert op2_outname != 'ctria3.op2'
-        print('writing %s' % op2_outname)
+        #print('writing %s' % op2_outname)
         struct_3i = Struct(endian + '3i')
 
         if obj is None:
@@ -84,7 +85,7 @@ class OP2Writer(OP2_F06_Common):
         if isinstance(op2_outname, str):
             fop2 = open(op2_outname, 'wb')
             fop2_ascii = open(op2_outname + '.txt', 'w')
-            print('op2 out = %r' % op2_outname)
+            #print('op2 out = %r' % op2_outname)
         else:
             assert isinstance(op2_outname, file), 'type(op2_outname)= %s' % op2_outname
             fop2 = op2_outname
@@ -124,6 +125,7 @@ class OP2Writer(OP2_F06_Common):
 
         #write_geom1(fop2, fop2_ascii, obj)
         #write_geom2(fop2, fop2_ascii, obj)
+        #write_geom3(fop2, fop2_ascii, obj)
         #write_ept(fop2, fop2_ascii, obj)
         #write_mpt(fop2, fop2_ascii, obj)
         if obj.grid_point_weight.reference_point is not None:
@@ -337,7 +339,7 @@ class OP2Writer(OP2_F06_Common):
                 struct_3i, endian=b'<')
 
             if case_count:
-                print('res_category_name=%s case_count=%s'  % (res_category_name, case_count))
+                #print('res_category_name=%s case_count=%s'  % (res_category_name, case_count))
                 # close off the result
                 footer = [4, 0, 4]
                 fop2.write(struct_3i.pack(*footer))
@@ -363,7 +365,7 @@ class OP2Writer(OP2_F06_Common):
                 isubcase = res_key
                 if isubcase in res_type:
                     if print_msg:
-                        print("res_category_name = %s" % res_category_name)
+                        #print("res_category_name = %s" % res_category_name)
                         print_msg = False
                     #(subtitle, label) = obj.isubcase_name_map[isubcase]
                     new_result = True
