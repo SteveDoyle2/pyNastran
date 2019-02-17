@@ -328,7 +328,7 @@ class RealBarArray(OES_Object):
                       4 * ntotal]
             op2.write(pack('%ii' % len(header), *header))
             op2_ascii.write('r4 [4, 0, 4]\n')
-            op2_ascii.write('r4 [4, %s, 4]\n' % (itable - 1))
+            op2_ascii.write('r4 [4, %s, 4]\n' % (itable))
             op2_ascii.write('r4 [4, %i, 4]\n' % (4 * ntotal))
 
             s1a = self.data[itime, :, 0]

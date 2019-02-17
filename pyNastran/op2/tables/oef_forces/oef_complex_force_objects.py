@@ -40,10 +40,6 @@ class ComplexRodForceArray(ComplexForceObject):
         else:
             raise NotImplementedError('SORT2')
 
-    def _reset_indices(self):
-        self.itotal = 0
-        self.ielement = 0
-
     def get_headers(self):
         headers = ['axial_force', 'torque']
         return headers
@@ -284,7 +280,7 @@ class ComplexRodForceArray(ComplexForceObject):
                       4 * ntotal]
             op2.write(pack('%ii' % len(header), *header))
             op2_ascii.write('r4 [4, 0, 4]\n')
-            op2_ascii.write('r4 [4, %s, 4]\n' % (itable - 1))
+            op2_ascii.write('r4 [4, %s, 4]\n' % (itable))
             op2_ascii.write('r4 [4, %i, 4]\n' % (4 * ntotal))
 
             axial = self.data[itime, :, 0]
@@ -1740,22 +1736,16 @@ class ComplexCBarForceArray(ScalarObject):
             page_num += 1
         return page_num
 
-
-class ComplexCBeamForceArray(ScalarObject):
-    def get_headers(self):
-        headers = [
-            'sd', 'bending_moment1', 'bending_moment2', 'shear1', 'shear2',
-            'axial_force', 'total_torque', 'warping_torque', ]
-        return headers
-
+class ComplexCBeamForceArray(ComplexForceObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        #ForceObject.__init__(self, data_code, isubcase)
-        ScalarObject.__init__(self, data_code, isubcase)
+        self.element_type = None
+        self.element_name = None
+        ComplexForceObject.__init__(self, data_code, isubcase)
 
         self.result_flag = 0
         self.itime = 0
         self.nelements = 0  # result specific
-        self.element_type = 'CBEAM'
+        #self.element_type = 'CBEAM'
 
         if is_sort1:
             #sort1
@@ -1763,17 +1753,11 @@ class ComplexCBeamForceArray(ScalarObject):
         else:
             raise NotImplementedError('SORT2')
 
-    def _reset_indices(self):
-        self.itotal = 0
-        self.ielement = 0
-
-    @property
-    def is_real(self):
-        return False
-
-    @property
-    def is_complex(self):
-        return True
+    def get_headers(self):
+        headers = [
+            'sd', 'bending_moment1', 'bending_moment2', 'shear1', 'shear2',
+            'axial_force', 'total_torque', 'warping_torque', ]
+        return headers
 
     def build(self):
         """sizes the vectorized attributes of the ComplexCBeamForceArray"""
@@ -2024,6 +2008,127 @@ class ComplexCBeamForceArray(ScalarObject):
             f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num
+
+    def write_op2(self, op2, op2_ascii, itable, new_result,
+                  date, is_mag_phase=False, endian='>'):
+        """writes an OP2"""
+        import inspect
+        from struct import Struct, pack
+        frame = inspect.currentframe()
+        call_frame = inspect.getouterframes(frame, 2)
+        op2_ascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
+
+        if itable == -1:
+            self._write_table_header(op2, op2_ascii, date)
+            itable = -3
+
+        eids = self.element_node[:, 0]
+        nids = self.element_node[:, 1]
+        long_form = False
+        if nids.min() == 0:
+            long_form = True
+
+        eids_device = eids * 10 + self.device_code
+        ueids = np.unique(eids)
+        ieid = np.searchsorted(eids, ueids)
+        # table 4 info
+        #ntimes = self.data.shape[0]
+        #nnodes = self.data.shape[1]
+        nelements = len(ueids)
+
+        # 21 = 1 node, 3 principal, 6 components, 9 vectors, 2 p/ovm
+        #ntotal = ((nnodes * 21) + 1) + (nelements * 4)
+
+        ntotali = self.num_wide
+        ntotal = ntotali * nelements
+
+        op2_ascii.write('  ntimes = %s\n' % self.ntimes)
+
+        #print('ntotal=%s' % (ntotal))
+        #assert ntotal == 193, ntotal
+
+        if self.is_sort1:
+            struct1 = Struct(endian + b'2i 15f')
+            struct2 = Struct(endian + b'i 15f')
+        else:
+            raise NotImplementedError('SORT2')
+
+        op2_ascii.write('nelements=%i\n' % nelements)
+        for itime in range(self.ntimes):
+            self._write_table_3(op2, op2_ascii, new_result, itable, itime)
+
+            # record 4
+            itable -= 1
+            header = [4, itable, 4,
+                      4, 1, 4,
+                      4, 0, 4,
+                      4, ntotal, 4,
+                      4 * ntotal]
+            op2.write(pack('%ii' % len(header), *header))
+            op2_ascii.write('r4 [4, 0, 4]\n')
+            op2_ascii.write('r4 [4, %s, 4]\n' % (itable))
+            op2_ascii.write('r4 [4, %i, 4]\n' % (4 * ntotal))
+
+            sd = self.data[itime, :, 0]
+            bm1 = self.data[itime, :, 1]
+            bm2 = self.data[itime, :, 2]
+            ts1 = self.data[itime, :, 3]
+            ts2 = self.data[itime, :, 4]
+            af = self.data[itime, :, 5]
+            ttrq = self.data[itime, :, 6]
+            wtrq = self.data[itime, :, 7]
+
+            icount = 0
+            nwide = 0
+            ielement = 0
+            assert len(eids) == len(sd)
+            for eid, sdi, bm1i, bm2i, ts1i, ts2i, afi, ttrqi, wtrqi in zip(eids, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq):
+                if icount == 0:
+                    eid_device = eids_device[ielement]
+                    nid = nids[ielement]
+                    data = [eid_device, nid, sdi.real,
+                            bm1i.real, bm2i.real, ts1i.real, ts2i.real, afi.real, ttrqi.real, wtrqi.real,
+                            bm1i.imag, bm2i.imag, ts1i.imag, ts2i.imag, afi.imag, ttrqi.imag, wtrqi.imag] # 17
+                    op2.write(struct1.pack(*data))
+                    ielement += 1
+                    icount = 1
+                elif nid > 0 and icount > 0:
+                    # 11 total nodes, with 1, 11 getting an nid; the other 9 being
+                    # xxb sections
+                    data = [0, 0.,
+                            0., 0., 0., 0., 0., 0., 0.,
+                            0., 0., 0., 0., 0., 0., 0.]
+                    #print('***adding %s\n' % (10-icount))
+                    for i in range(10 - icount):
+                        op2.write(struct2.pack(*data))
+                        nwide += len(data)
+
+                    eid_device2 = eids_device[ielement]
+                    assert eid_device == eid_device2
+                    nid = nids[ielement]
+                    data = [nid, sdi.real,
+                            bm1i.real, bm2i.real, ts1i.real, ts2i.real, afi.real, ttrqi.real, wtrqi.real,
+                            bm1i.imag, bm2i.imag, ts1i.imag, ts2i.imag, afi.imag, ttrqi.imag, wtrqi.imag] # 16
+                    op2.write(struct2.pack(*data))
+                    ielement += 1
+                    icount = 0
+                else:
+                    raise RuntimeError('CBEAM op2 writer')
+                    #data = [0, xxb, sxc, sxd, sxe, sxf, smax, smin, smt, smc]  # 10
+                    #op2.write(struct2.pack(*data))
+                    #icount += 1
+
+                op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, str(data)))
+                nwide += len(data)
+
+            assert ntotal == nwide, 'ntotal=%s nwide=%s' % (ntotal, nwide)
+
+            itable -= 1
+            header = [4 * ntotal,]
+            op2.write(pack('i', *header))
+            op2_ascii.write('footer = %s\n' % header)
+            new_result = False
+        return itable
 
 
 class ComplexCBendForceArray(ScalarObject):  # 69-CBEND

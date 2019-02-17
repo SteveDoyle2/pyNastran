@@ -91,7 +91,7 @@ class TestOP2Writer(unittest.TestCase):
         #debug_file = model + '.debug.out'
 
         exclude_results = [
-            'cbeam_force',
+            #'cbeam_force',
             #'grid_point_forces',
             #'cbar_*',
             #'cbeam_*',
@@ -130,7 +130,7 @@ class TestOP2Writer(unittest.TestCase):
         #debug_file = model + '.debug.out'
 
         exclude_results = [
-            'cbeam_force',
+            #'cbeam_force',
             '*_strain_energy',
             #'stress',
             #'strain',
@@ -174,7 +174,7 @@ class TestOP2Writer(unittest.TestCase):
         #debug_file = model + '.debug.out'
 
         exclude_results = [
-            'cbeam_force',
+            #'cbeam_force',
             #'stress',
             #'strain',
             #'grid_point_forces',
@@ -217,7 +217,7 @@ class TestOP2Writer(unittest.TestCase):
         #debug_file = model + '.debug.out'
 
         exclude_results = [
-            'cbeam_force',
+            #'cbeam_force',
             'cbeam_stress',
             'cbeam_strain',
             'cbar_stress',
