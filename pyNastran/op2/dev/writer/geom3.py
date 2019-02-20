@@ -30,7 +30,7 @@ def write_geom3(op2, op2_ascii, obj, endian=b'<'):
             nfields = 7
             spack = Struct(b'3i 4f')
             nbytes = write_header(load_type, nfields, nloads, key, op2, op2_ascii)
-            for load in sorted(loads):
+            for load in loads:
                 data = [load.sid, load.node_id, load.Cid(), load.mag] + list(load.xyz)
                 op2_ascii.write('  FORCE data=%s\n' % str(data))
                 op2.write(spack.pack(*data))
@@ -40,7 +40,7 @@ def write_geom3(op2, op2_ascii, obj, endian=b'<'):
             #(sid, cid, a, n1, n2, n3, mb) = out
             spack = Struct(b'ii4fi')
             nbytes = write_header(load_type, nfields, nloads, key, op2, op2_ascii)
-            for load in sorted(loads):
+            for load in loads:
                 data = [load.sid, load.Cid(), load.scale] + list(load.N) + [load.mb]
                 op2_ascii.write('  GRAV data=%s\n' % str(data))
                 op2.write(spack.pack(*data))

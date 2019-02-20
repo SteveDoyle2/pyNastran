@@ -110,6 +110,7 @@ def write_ept(op2, op2_ascii, obj, endian=b'<'):
                 prop = obj.properties[pid]
                 data = [pid, prop.mid1, prop.t, prop.mid2, prop.twelveIt3, prop.mid3,
                         prop.tst, prop.nsm, prop.z1, prop.z2, prop.mid4]
+                print(data)
                 op2_ascii.write('  pid=%s mid=%s data=%s\n' % (pid, prop.mid1, data[2:]))
                 op2.write(spack.pack(*data))
         elif name == 'PROD':

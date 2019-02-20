@@ -80,13 +80,19 @@ class GridPointForcesObject(ScalarObject):
             field5 = self.modes[itime]
             field6 = self.eigns[itime]
             field7 = self.cycles[itime]
+            assert isinstance(field6, float), type(field6)
+            assert isinstance(field7, float), type(field7)
             ftable3 = set_table3_field(ftable3, 6, b'f') # field 6
+            ftable3 = set_table3_field(ftable3, 7, b'f') # field 7
         elif self.analysis_code == 5:
             field5 = self.freqs[itime]
             ftable3 = set_table3_field(ftable3, 5, b'f') # field 5
         elif self.analysis_code == 6:
             field5 = self.times[itime]
             ftable3 = set_table3_field(ftable3, 5, b'f') # field 5
+        elif self.analysis_code == 10:  # nonlinear statics
+            field5 = self.lftsfqs[itime]
+            ftable3 = set_table3_field(ftable3, 5, b'f') # field 5; load step
         else:
             raise NotImplementedError(self.analysis_code)
 
@@ -108,7 +114,7 @@ class GridPointForcesObject(ScalarObject):
             elif isinstance(v, string_types):
                 n += len(v)
             else:
-                print('write_table_3', v)
+                #print('write_table_3', v)
                 n += len(v)
         assert n == 584, n
         data = [584] + table3 + [584]

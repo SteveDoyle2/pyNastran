@@ -123,13 +123,23 @@ class ForceObject(ScalarObject):
             field5 = self.modes[itime]
             field6 = self.eigns[itime]
             field7 = self.cycles[itime]
+            assert isinstance(field6, float), type(field6)
+            assert isinstance(field7, float), type(field7)
             ftable3 = set_table3_field(ftable3, 6, b'f') # field 6
+            ftable3 = set_table3_field(ftable3, 7, b'f') # field 7
         elif self.analysis_code == 5:
             field5 = self.freqs[itime]
             ftable3 = set_table3_field(ftable3, 5, b'f') # field 5
         elif self.analysis_code == 6:
             field5 = self.times[itime]
             ftable3 = set_table3_field(ftable3, 5, b'f') # field 5
+        elif self.analysis_code == 7:  # pre-buckling
+            field5 = self.loadIDs[itime] # load set number
+        elif self.analysis_code == 10:  # nonlinear statics
+            field5 = self.load_steps[itime]
+            ftable3 = set_table3_field(ftable3, 5, b'f') # field 5; load step
+        elif self.analysis_code == 11:  # old geometric nonlinear statics
+            field5 = self.loadIDs[itime] # load set number
         else:
             raise NotImplementedError(self.analysis_code)
 
@@ -152,7 +162,7 @@ class ForceObject(ScalarObject):
                 #print(len(v), v)
                 n += len(v)
             else:
-                print('write_table_3', v)
+                #print('write_table_3', v)
                 n += len(v)
         assert n == 584, n
         data = [584] + table3 + [584]
@@ -488,6 +498,78 @@ class RealSpringDamperForceArray(RealForceObject):
             page_num += 1
         return page_num - 1
 
+    def write_op2(self, op2, op2_ascii, itable, new_result,
+                  date, is_mag_phase=False, endian='>'):
+        """writes an OP2"""
+        import inspect
+        from struct import Struct, pack
+        frame = inspect.currentframe()
+        call_frame = inspect.getouterframes(frame, 2)
+        op2_ascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
+
+        if itable == -1:
+            self._write_table_header(op2, op2_ascii, date)
+            itable = -3
+
+        eids = self.element
+
+        # table 4 info
+        #ntimes = self.data.shape[0]
+        #nnodes = self.data.shape[1]
+        nelements = self.data.shape[1]
+
+        # 21 = 1 node, 3 principal, 6 components, 9 vectors, 2 p/ovm
+        #ntotal = ((nnodes * 21) + 1) + (nelements * 4)
+
+        ntotali = self.num_wide
+        ntotal = ntotali * nelements
+
+        #print('shape = %s' % str(self.data.shape))
+        #assert self.ntimes == 1, self.ntimes
+
+        device_code = self.device_code
+        op2_ascii.write('  ntimes = %s\n' % self.ntimes)
+
+        eids_device = self.element *  10 + self.device_code
+
+        #print('ntotal=%s' % (ntotal))
+        #assert ntotal == 193, ntotal
+
+        if self.is_sort1:
+            struct1 = Struct(endian + b'if')
+        else:
+            raise NotImplementedError('SORT2')
+
+        op2_ascii.write('%s-nelements=%i\n' % (self.element_name, nelements))
+        for itime in range(self.ntimes):
+            self._write_table_3(op2, op2_ascii, new_result, itable, itime)
+
+            # record 4
+            itable -= 1
+            header = [4, itable, 4,
+                      4, 1, 4,
+                      4, 0, 4,
+                      4, ntotal, 4,
+                      4 * ntotal]
+            op2.write(pack('%ii' % len(header), *header))
+            op2_ascii.write('r4 [4, 0, 4]\n')
+            op2_ascii.write('r4 [4, %s, 4]\n' % (itable))
+            op2_ascii.write('r4 [4, %i, 4]\n' % (4 * ntotal))
+
+            force = self.data[itime, :, 0]
+
+            for eid, forcei in zip(eids_device, force):
+                data = [eid, forcei]
+                op2_ascii.write('  eid=%s force=%s\n' % tuple(data))
+                op2.write(struct1.pack(*data))
+
+            itable -= 1
+            header = [4 * ntotal,]
+            op2.write(pack('i', *header))
+            op2_ascii.write('footer = %s\n' % header)
+            new_result = False
+        return itable
+
 
 class RealSpringForceArray(RealSpringDamperForceArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -515,6 +597,7 @@ class RealSpringForceArray(RealSpringDamperForceArray):
             '        ID.                              ID.                              ID.                              ID.\n'
         ]
         return msg
+
 
 class RealDamperForceArray(RealSpringDamperForceArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -845,7 +928,6 @@ class RealRodForceArray(RealForceObject):
             op2.write(pack('i', *header))
             op2_ascii.write('footer = %s\n' % header)
             new_result = False
-
         return itable
 
 

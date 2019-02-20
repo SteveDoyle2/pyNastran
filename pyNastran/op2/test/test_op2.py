@@ -144,6 +144,7 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
     assert make_geom in [True, False]
     assert write_bdf in [True, False]
     assert write_f06 in [True, False]
+    assert write_op2 in [True, False]
     if binary_debug in [True, False]:
         binary_debug = [binary_debug]
 
@@ -424,6 +425,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
             op2a = OP2(debug_file='debug.out')
             op2a.use_vector = False
             op2a.read_op2(op2_filename2)
+            os.remove(op2_filename2)
             #read_op2(op2_filename2)
             if delete_f06:
                 try:

@@ -97,15 +97,14 @@ def get_all_files(folders_file, file_type):
 
 def run(regenerate=True, make_geom=False, write_bdf=False, skip_dataframe=False,
         xref_safe=False,
-        save_cases=True, debug=False, write_f06=True, compare=True, short_stats=False,
-        export_hdf5=True):
+        save_cases=True, debug=False, write_f06=True, write_op2=False,
+        compare=True, short_stats=False, export_hdf5=True):
     # works
     files = get_files_of_type('tests', '.op2')
 
     folders_file = os.path.join(PKG_PATH, 'bdf', 'test', 'tests', 'foldersRead.txt')
 
     isubcases = []
-    write_op2 = False
     binary_debug = [True, False]  # catch any errors
     quiet = True
 
@@ -127,6 +126,7 @@ def run(regenerate=True, make_geom=False, write_bdf=False, skip_dataframe=False,
     assert len(files2) > 0, files2
     files = list(set(files2))
     files.sort()
+    files = [filename for filename in files if '.test_op2.' not in filename]
 
     skip_files = []
     #skip_files = ['nltrot99.op2', 'rot12901.op2', 'plan20s.op2'] # giant
@@ -146,8 +146,9 @@ def run(regenerate=True, make_geom=False, write_bdf=False, skip_dataframe=False,
     failed_files = run_lots_of_files(files, make_geom=make_geom, write_bdf=write_bdf,
                                      xref_safe=xref_safe,
                                      write_f06=write_f06, delete_f06=delete_f06,
+                                     write_op2=write_op2,
                                      skip_dataframe=skip_dataframe,
-                                     write_op2=write_op2, export_hdf5=export_hdf5,
+                                     export_hdf5=export_hdf5,
                                      debug=debug,
                                      skip_files=skip_files, stop_on_failure=stop_on_failure,
                                      nstart=nstart, nstop=nstop, binary_debug=binary_debug,
@@ -185,7 +186,7 @@ def main():
 
     msg = "Usage:\n"
     #is_release = False
-    msg += "op2_test [-r] [-s] [-c] [-u] [-t] [-g] [-n] [-f] [-h] [-d] [-b] [--safe] [--skip_dataframe]\n"
+    msg += "op2_test [-r] [-s] [-c] [-u] [-t] [-g] [-n] [-f] [-o] [-h] [-d] [-b] [--safe] [--skip_dataframe]\n"
     msg += "  op2_test -h | --help\n"
     msg += "  op2_test -v | --version\n"
     msg += "\n"
@@ -203,7 +204,8 @@ def main():
     # n is for NAS
     msg += "  -n, --write_bdf        Writes the bdf to fem.test_op2.bdf (default=False)\n"
     msg += "  -f, --write_f06        Writes the f06 to fem.test_op2.f06\n"
-    msg += "  -h, --write_hdf5       Writes the f06 to fem.test_op2.h5\n"
+    msg += "  -o, --write_op2        Writes the op2 to fem.test_op2.op2\n"
+    msg += "  -h, --write_hdf5       Writes the hdf5 to fem.test_op2.h5\n"
     msg += "  --skip_dataframe       Disables pandas dataframe building; [default: False]\n"
     msg += "  -s, --save_cases       Disables saving of the cases (default=False)\n"
     msg += "  --safe                 Safe cross-references BDF (default=False)\n"
@@ -221,6 +223,7 @@ def main():
     make_geom = data['--geometry']
     write_bdf = data['--write_bdf']
     write_f06 = data['--write_f06']
+    write_op2 = data['--write_op2']
     export_hdf5 = data['--write_hdf5']
     save_cases = not data['--save_cases']
     short_stats = data['--short_stats']
@@ -229,8 +232,8 @@ def main():
     xref_safe = data['--safe']
     run(regenerate=regenerate, make_geom=make_geom, write_bdf=write_bdf,
         xref_safe=xref_safe,
-        save_cases=save_cases, write_f06=write_f06, export_hdf5=export_hdf5,
-        short_stats=short_stats,
+        save_cases=save_cases, write_f06=write_f06, write_op2=write_op2,
+        export_hdf5=export_hdf5, short_stats=short_stats,
         skip_dataframe=skip_dataframe, compare=compare, debug=debug)
 
 if __name__ == '__main__':

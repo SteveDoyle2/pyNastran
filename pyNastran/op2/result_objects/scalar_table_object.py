@@ -324,17 +324,26 @@ class RealScalarTableArray(ScalarTableArray):  # temperature style table
     def data_type(self):
         return 'float32'
 
-    def _write_table_3(self, op2_file, fascii, itable=-3, itime=0):
+    def _write_table_3(self, op2_file, fascii, new_result, itable=-3, itime=0):
         import inspect
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
         fascii.write('%s.write_table_3: %s\n' % (self.__class__.__name__, call_frame[1][3]))
 
-        op2_file.write(pack('12i', *[4, itable, 4,
-                                     4, 1, 4,
-                                     4, 0, 4,
-                                     4, 146, 4,
-                                    ]))
+        if new_result and itable != -3:
+            header = [
+                4, 146, 4,
+            ]
+        else:
+            header = [
+                4, itable, 4,
+                4, 1, 4,
+                4, 0, 4,
+                4, 146, 4,
+            ]
+        op2_file.write(pack(b'%ii' % len(header), *header))
+        fascii.write('table_3_header = %s\n' % header)
+
         approach_code = self.approach_code
         table_code = self.table_code
         isubcase = self.isubcase

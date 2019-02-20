@@ -451,6 +451,156 @@ def cmd_line_convert():  # pragma: no cover
         prop.comment = ''
     model.write_bdf(bdf_filename_out)
 
+def cmd_line_scale():
+    import argparse
+    import textwrap
+    import pyNastran
+    parent_parser = argparse.ArgumentParser(
+        #prog = 'pyNastranGUI',
+        #usage = usage,
+        #description='A foo that bars',
+        epilog="And that's how you'd foo a bar",
+        #formatter_class=argparse.RawDescriptionHelpFormatter,
+        #description=textwrap.dedent(text),
+        #version=pyNastran.__version__,
+        #add_help=False,
+    )
+    # positional arguments
+    parent_parser.add_argument('scale', type=str)
+    parent_parser.add_argument('INPUT', help='path to output BDF/DAT/NAS file', type=str)
+    parent_parser.add_argument('OUTPUT', nargs='?', help='path to output file', type=str)
+
+    #'  --l  LENGTH_SF                    length scale factor\n'
+    #'  --m  MASS_SF                      mass scale factor\n'
+    #'  --f  FORCE_SF                     force scale factor\n'
+    #'  --p  PRESSURE_SF                  pressure scale factor\n'
+    #'  --t  TIME_SF                      time scale factor\n'
+    #'  --v  VEL_SF                       velocity scale factor\n'
+
+    parent_parser.add_argument('-l', '--length', help='length scale factor')
+    parent_parser.add_argument('-m', '--mass', help='mass scale factor')
+    parent_parser.add_argument('-f', '--force', help='force scale factor')
+    parent_parser.add_argument('-p', '--pressure', help='pressure scale factor')
+    parent_parser.add_argument('-t', '--time', help='time scale factor')
+    parent_parser.add_argument('-V', '--velocity', help='velocity scale factor')
+    #parent_parser.add_argument('--user_geom', type=str, help='log msg')
+
+
+    #parent_parser.add_argument('-q', '--quiet', help='prints debug messages (default=True)', action='store_true')
+    #parent_parser.add_argument('-h', '--help', help='show this help message and exits', action='store_true')
+    parent_parser.add_argument('-v', '--version', action='version',
+                               version=pyNastran.__version__)
+    args = parent_parser.parse_args()
+    print(args)
+
+    scales = []
+    terms = []
+    bdf_filename = args.INPUT
+    bdf_filename_out = args.OUTPUT
+    if bdf_filename_out is None:
+        bdf_filename_out = bdf_filename + '.scale.bdf'
+
+    #assert bdf_filename_out is not None
+    if args.mass:
+        scale = float(args.mass)
+        scales.append(scale)
+        terms.append('M')
+    if args.length:
+        scale = float(args.length)
+        scales.append(scale)
+        terms.append('L')
+    if args.time:
+        scale = float(args.time)
+        scales.append(scale)
+        terms.append('T')
+    if args.force:
+        scale = float(args.force)
+        scales.append(scale)
+        terms.append('F')
+    if args.pressure:
+        scale = float(args.pressure)
+        scales.append(scale)
+        terms.append('P')
+    if args.velocity:
+        scale = float(args.velocity)
+        scales.append(scale)
+        terms.append('V')
+
+    from pyNastran.bdf.mesh_utils.convert import scale_by_terms
+    scale_by_terms(bdf_filename, terms, scales, bdf_filename_out=bdf_filename_out)
+
+def cmd_line_scale2():  # pragma: no cover
+    """command line interface to bdf_merge"""
+    from docopt import docopt
+
+    import pyNastran
+    msg = (
+        "Usage:\n"
+        '  bdf scale IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--lsf LENGTH_SF] '
+        '[--msf MASS_SF] [--fsf FORCE_SF] [--psf PRESSURE_SF] [--tsf TIME_SF] [--vsf VEL_SF]\n'
+        '  bdf scale -h | --help\n'
+        '  bdf scale -v | --version\n'
+        '\n'
+
+        'Positional Arguments:\n'
+        '  IN_BDF_FILENAME  path to output BDF/DAT/NAS file\n'
+        '\n'
+
+        'Options:\n'
+        '  IN_BDF_FILENAME  path to output BDF/DAT/NAS file\n'
+        '  -o OUT, --output  OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n'
+        '  --l  LENGTH_SF                    length scale factor\n'
+        '  --m  MASS_SF                      mass scale factor\n'
+        '  --f  FORCE_SF                     force scale factor\n'
+        '  --p  PRESSURE_SF                  pressure scale factor\n'
+        '  --t  TIME_SF                      time scale factor\n'
+        '  --v  VEL_SF                       velocity scale factor\n'
+        '\n'
+
+        'Info:\n'
+        '  -h, --help      show this help message and exit\n'
+        "  -v, --version   show program's version number and exit\n"
+    )
+    if len(sys.argv) == 1:
+        sys.exit(msg)
+
+    ver = str(pyNastran.__version__)
+    data = docopt(msg, version=ver)
+    print(data)
+    size = 16
+    bdf_filename = data['IN_BDF_FILENAME']
+    bdf_filename_out = data['--output']
+    if bdf_filename_out is None:
+        bdf_filename_out = bdf_filename + '.scale.bdf'
+
+    terms = []
+    scales = []
+    print(data)
+    if data['MASS_SF']:
+        scale = data['MASS_SF']
+        scales.append(scale)
+        terms.append('M')
+    if data['LENGTH_SF']:
+        scale = data['LENGTH_SF']
+        scales.append(scale)
+        terms.append('L')
+    if data['TIME_SF']:
+        scale = data['TIME_SF']
+        scales.append(scale)
+        terms.append('T')
+    if data['FORCE_SF']:
+        scale = data['FORCE_SF']
+        scales.append(scale)
+        terms.append('F')
+    if data['PRESSURE_SF']:
+        scale = data['PRESSURE_SF']
+        scales.append(scale)
+        terms.append('P')
+    if data['VEL_SF']:
+        scale = data['VEL_SF']
+        scales.append(scale)
+        terms.append('V')
+
 
 def cmd_line_export_mcids():  # pragma: no cover
     """command line interface to export_mcids"""
@@ -807,7 +957,8 @@ def cmd_line():  # pragma: no cover
         '  bdf equivalence                 IN_BDF_FILENAME EQ_TOL\n'
         '  bdf renumber                    IN_BDF_FILENAME [OUT_BDF_FILENAME] [--superelement] [--size SIZE]\n'
         '  bdf mirror                      IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--plane PLANE] [--tol TOL]\n'
-        '  bdf convert                     ???\n'
+        '  bdf convert                     bdf convert IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--in_units IN_UNITS] [--out_units OUT_UNITS]\n'
+        '  bdf scale                       bdf scale IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--lsf LENGTH_SF] [--msf MASS_SF] [--fsf FORCE_SF] [--psf PRESSURE_SF] [--tsf TIME_SF] [--vsf VEL_SF]\n'
         '  bdf export_mcids                IN_BDF_FILENAME [-o OUT_CSV_FILENAME] [--no_x] [--no_y]\n'
         '  bdf transform                   IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--shift XYZ]\n'
         '  bdf export_caero_mesh           IN_BDF_FILENAME [-o OUT_BDF_FILENAME]\n'
@@ -826,6 +977,7 @@ def cmd_line():  # pragma: no cover
         '  bdf renumber           -h | --help\n'
         '  bdf mirror             -h | --help\n'
         '  bdf convert            -h | --help\n'
+        '  bdf scale              -h | --help\n'
         '  bdf export_mcids       -h | --help\n'
         '  bdf transform          -h | --help\n'
         '  bdf filter             -h | --help\n'
@@ -858,6 +1010,8 @@ def cmd_line():  # pragma: no cover
         cmd_line_mirror()
     elif sys.argv[1] == 'convert':
         cmd_line_convert()
+    elif sys.argv[1] == 'scale':
+        cmd_line_scale()
     elif sys.argv[1] == 'export_mcids':
         cmd_line_export_mcids()
     elif sys.argv[1] == 'split_cbars_by_pin_flags':

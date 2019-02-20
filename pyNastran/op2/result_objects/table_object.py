@@ -529,7 +529,10 @@ class TableArray(ScalarObject):  # displacement style table
             field5 = self.modes[itime]
             field6 = self.eigns[itime]
             field7 = self.mode_cycles[itime]
+            assert isinstance(field6, float), type(field6)
+            assert isinstance(field7, float), type(field7)
             ftable3 = set_table3_field(ftable3, 6, b'f') # field 6
+            ftable3 = set_table3_field(ftable3, 7, b'f') # field 7
         elif self.analysis_code == 5:
             field5 = self.freqs[itime]
             ftable3 = set_table3_field(ftable3, 5, b'f') # field 5
@@ -539,6 +542,23 @@ class TableArray(ScalarObject):  # displacement style table
             else:
                 field5 = self.times[itime]
             ftable3 = set_table3_field(ftable3, 5, b'f') # field 5
+        elif self.analysis_code == 7:  # pre-buckling
+            field5 = self.lsdvmns[itime] # load set number
+        elif self.analysis_code == 8:  # post-buckling
+            field5 = self.lsdvmns[itime] # load set number
+            field6 = self.eigns[itime]
+            ftable3 = set_table3_field(ftable3, 6, b'f') # field 6
+        elif self.analysis_code == 9:  # complex eigenvalues
+            field5 = self.modes[itime]
+            field6 = self.eigns[itime]
+            field7 = self.eigis[itime]
+            ftable3 = set_table3_field(ftable3, 6, b'f') # field 6
+            ftable3 = set_table3_field(ftable3, 7, b'f') # field 7
+        elif self.analysis_code == 10:  # nonlinear statics
+            field5 = self.lftsfqs[itime]
+            ftable3 = set_table3_field(ftable3, 5, b'f') # field 5; load step
+        elif self.analysis_code == 11:  # old geometric nonlinear statics
+            field5 = self.lsdvmns[itime] # load set number
         else:
             raise NotImplementedError(self.analysis_code)
 
@@ -562,9 +582,14 @@ class TableArray(ScalarObject):  # displacement style table
         assert n == 584, n
         data = [584] + table3 + [584]
         fmt = b'i' + ftable3 + b'i'
-        #print(fmt)
+
         #op2_file.write(pack(fascii, '%s header 3c' % self.table_name, fmt, data))
         fascii.write('%s header 3c = %s\n' % (self.table_name, data))
+
+        #j = 7
+        #print(ftable3[:j])
+        #print(table3[:j])
+        #pack(ftable3[:j], *table3[:j])
         op2_file.write(pack(fmt, *data))
 
 
@@ -622,7 +647,7 @@ class RealTableArray(TableArray):
         ntotal = nnodes * (2 + 6)
 
         #print('shape = %s' % str(self.data.shape))
-        assert nnodes > 1, nnodes
+        #assert nnodes > 1, nnodes
         assert ntotal > 1, ntotal
 
         unused_device_code = self.device_code
@@ -1069,7 +1094,7 @@ class ComplexTableArray(TableArray):
         ntotal = nnodes * (2 + 12)
 
         #print('shape = %s' % str(self.data.shape))
-        assert nnodes > 1, nnodes
+        assert nnodes >= 1, nnodes
         assert ntotal > 1, ntotal
 
         unused_device_code = self.device_code

@@ -6,8 +6,6 @@ from .geom1 import write_geom_header, close_geom_table
 def write_mpt(op2, op2_ascii, obj, endian=b'<'):
     if not hasattr(obj, 'materials'):
         return
-    #if not hasattr(obj, 'nodes'):
-        #return
     nmaterials = len(obj.materials)
     if nmaterials == 0:
         return
@@ -28,6 +26,26 @@ def write_mpt(op2, op2_ascii, obj, endian=b'<'):
             nfields = 12
             spack = Struct(endian + b'i10fi')
             # mid, E, G, nu, rho, A, tref, ge, St, Sc, Ss, mcsid
+        elif name == 'MAT2':
+            key = (203, 2, 78)
+            nfields = 17
+            spack = Struct(endian + b'i15fi')
+            #(mid, g1, g2, g3, g4, g5, g6, rho, aj1, aj2, aj3,
+             #tref, ge, St, Sc, Ss, mcsid) = out
+        elif name == 'MAT3':
+            key = (1403, 14, 122)
+            nfields = 16
+            spack = Struct(endian + b'i8fi5fi')
+        elif name == 'MAT8':
+            key = (2503, 25, 288)
+            nfields = 19
+            spack = Struct(endian + b'i18f')
+            #(mid, E1, E2, nu12, G12, G1z, G2z, rho, a1, a2,
+            # tref, Xt, Xc, Yt, Yc, S, ge, f12, strn) = out
+        elif name == 'MAT9':
+            key = (2603,26,300)
+            nfields = 35
+            spack = Struct(endian + b'i 30f 4i')
         else:  # pragma: no cover
             raise NotImplementedError(name)
 
@@ -42,12 +60,72 @@ def write_mpt(op2, op2_ascii, obj, endian=b'<'):
         if name == 'MAT1':
             for mid in sorted(mids):
                 mat = obj.materials[mid]
-                #print(mat.get_stats())
                 #mid, E, G, nu, rho, A, tref, ge, St, Sc, Ss, mcsid
                 data = [mid, mat.e, mat.g, mat.nu, mat.rho, mat.a, mat.tref,
                         mat.ge, mat.St, mat.Sc, mat.Ss, mat.mcsid]
 
                 #print(data)
+                op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
+                op2.write(spack.pack(*data))
+        elif name == 'MAT2':
+            for mid in sorted(mids):
+                mat = obj.materials[mid]
+                #print(mat.get_stats())
+                #(mid, g1, g2, g3, g4, g5, g6, rho, aj1, aj2, aj3,
+                 #tref, ge, St, Sc, Ss, mcsid) = out
+                data = [mid, mat.G11, mat.G12, mat.G13, mat.G22, mat.G23, mat.G33,
+                        mat.rho, mat.a1, mat.a2, mat.a3, mat.tref,
+                        mat.ge, mat.St, mat.Sc, mat.Ss, mat.mcsid]
+
+                #print(data)
+                op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
+                op2.write(spack.pack(*data))
+        elif name == 'MAT3':
+            for mid in sorted(mids):
+                mat = obj.materials[mid]
+                #(mid, ex, eth, ez, nuxth, nuthz, nuzx, rho, gzx,
+                 #blank, ax, ath, az, tref, ge, blank) = out
+
+                data = [
+                    mid,
+                    mat.ex, mat.eth, mat.ez, mat.nuxth, mat.nuthz, mat.nuzx,
+                    mat.rho, mat.gzx, 0, mat.ax, mat.ath, mat.az, mat.tref,
+                    mat.ge, 0]
+
+                #print(data)
+                op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
+                op2.write(spack.pack(*data))
+
+        elif name == 'MAT8':
+            for mid in sorted(mids):
+                mat = obj.materials[mid]
+                data = [mid, mat.e11, mat.e22, mat.nu12, mat.g12, mat.g1z, mat.g2z,
+                        mat.rho, mat.a1, mat.a2, mat.tref,
+                        mat.Xt, mat.Xc, mat.Yt, mat.Yc, mat.S,
+                        mat.ge, mat.F12, mat.strn]
+
+                print('MAT8', data)
+                op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
+                op2.write(spack.pack(*data))
+        elif name == 'MAT9':
+            for mid in sorted(mids):
+                mat = obj.materials[mid]
+                #(mid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
+                 #g11, g12, g13, g14, g15, g16, g17, g18, g19, g20, g21,
+                 #rho, a1, a2, a3, a4, a5, a6, tref, ge,
+                 #blank1, blank2, blank3, blank4) = out
+                data = [
+                    mid,
+                    mat.G11, mat.G12, mat.G13, mat.G14, mat.G15, mat.G16,
+                    mat.G22, mat.G23, mat.G24, mat.G25, mat.G26,
+                    mat.G33, mat.G34, mat.G35, mat.G36,
+                    mat.G44, mat.G45, mat.G46,
+                    mat.G55, mat.G56, mat.G66,
+                    mat.rho, mat.A, mat.tref, mat.ge,
+                    0, 0, 0, 0,
+                ]
+
+                print('MAT9', data)
                 op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
                 op2.write(spack.pack(*data))
         else:  # pragma: no cover

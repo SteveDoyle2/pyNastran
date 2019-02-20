@@ -411,7 +411,7 @@ class PSOLID(SolidProperty):
         if integ == 0:
             integ = 'BUBBLE'
         elif integ == 1:
-            integ = 'GUASS'
+            integ = 'GAUSS'
         elif integ == 2:
             integ = 'TWO'
         elif integ == 3:
@@ -424,7 +424,7 @@ class PSOLID(SolidProperty):
         if stress == 0:
             stress = 'GRID'
         elif stress == 1:
-            stress = 'GUASS'
+            stress = 'GAUSS'
         self.stress = stress
 
         # note that None is supposed to vary depending on element type

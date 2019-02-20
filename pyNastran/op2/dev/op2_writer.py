@@ -10,6 +10,7 @@ from struct import pack, Struct
 import pyNastran
 from pyNastran.op2.op2_interface.op2_f06_common import OP2_F06_Common
 from pyNastran.op2.op2_interface.write_utils import _write_markers
+from pyNastran.op2.errors import FatalError
 from .writer.geom1 import write_geom1
 from .writer.geom2 import write_geom2
 from .writer.geom3 import write_geom3
@@ -76,9 +77,8 @@ class OP2Writer(OP2_F06_Common):
             should objects be deleted after they're written
             to reduce memory (default=True)
         """
-        assert op2_outname != 'ctria3.op2'
         #print('writing %s' % op2_outname)
-        struct_3i = Struct(endian + '3i')
+        struct_3i = Struct(endian + b'3i')
 
         if obj is None:
             obj = self
@@ -313,6 +313,7 @@ class OP2Writer(OP2_F06_Common):
                           struct_3i, endian=b'<'):
         # TODO: this may need to be reworked such that all of subcase 1
         #is printed before subcase 2
+        total_case_count = 0
         for res_category_name, res_category in res_categories:
             case_count = self._write_category(
                 obj, res_category_name, res_category, isubcases,
@@ -326,7 +327,10 @@ class OP2Writer(OP2_F06_Common):
                 fop2.write(struct_3i.pack(*footer))
                 fop2_ascii.write('close_a = %s\n' % footer)
                 fop2_ascii.write('---------------\n')
+                total_case_count += case_count
 
+        if total_case_count == 0:
+            raise FatalError('total_case_count = 0')
         # close off the op2
         footer = [4, 0, 4]
         fop2.write(struct_3i.pack(*footer))
@@ -360,12 +364,17 @@ class OP2Writer(OP2_F06_Common):
                             #obj.log.warning("  *op2 - %s (%s) not written" % (
                                 #result.__class__.__name__, result.element_name))
                             #continue
-                        #print(' %s - isubcase=%i%s' % (result.__class__.__name__, isubcase, element_name))
-                        itable = result.write_op2(fop2, fop2_ascii, itable, new_result,
-                                                  obj.date, is_mag_phase=False, endian=endian)
+                        try:
+                            #print(' %s - isubcase=%i%s' % (result.__class__.__name__, isubcase, element_name))
+                            itable = result.write_op2(fop2, fop2_ascii, itable, new_result,
+                                                      obj.date, is_mag_phase=False, endian=endian)
+                        except:
+                            print(' %s - isubcase=%i%s' % (result.__class__.__name__, isubcase, element_name))
+                            raise
                     else:
-                        obj.log.warning("  *op2 - %s not written" % result.__class__.__name__)
-                        continue
+                        raise NotImplementedError("  *op2 - %s not written" % result.__class__.__name__)
+                        #obj.log.warning("  *op2 - %s not written" % result.__class__.__name__)
+                        #continue
 
                     case_count += 1
                     header = [

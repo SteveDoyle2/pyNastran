@@ -37,6 +37,102 @@ def convert(model, units_to, units=None):
     xyz_scale, mass_scale, time_scale, weight_scale, gravity_scale = get_scale_factors(
         units, units_to, model.log)
 
+    scale_model(model, xyz_scale, mass_scale, time_scale, weight_scale, gravity_scale)
+
+def scale_by_terms(bdf_filename, terms, scales, bdf_filename_out=None):
+    """
+    Scales a BDF based on factors for 3 of the 6 independent terms
+
+    Parameters
+    ----------
+    bdf_filename : str / BDF()
+        a BDF filename
+    terms : List[str]; length=3
+        the names {M, L, T, F, P, V}
+        mass, length, time, force, pressure, velocity
+    scales : List[float]; length=3
+        the scaling factors
+    bdf_filename_out : str; default=None
+        a BDF filename to write
+
+    Returns
+    -------
+    model : BDF()
+       the scaled BDF
+    """
+    mass_scale, xyz_scale, time_scale = _setup_scale_by_terms(scales, terms)
+
+    #-------------------------------------------------
+    weight_scale = mass_scale * xyz_scale / time_scale ** 2
+    gravity_scale = xyz_scale / time_scale ** 2
+
+    #cards_to_skip = [
+        #'AEFACT', 'CAERO1', 'CAERO2', 'SPLINE1', 'SPLINE2',
+        #'AERO', 'AEROS', 'PAERO1', 'PAERO2', 'MKAERO1']
+    from pyNastran.bdf.bdf import read_bdf
+    model = read_bdf(bdf_filename, validate=True, xref=True,
+                     punch=False, save_file_structure=False,
+                     skip_cards=None, read_cards=None,
+                     encoding=None, log=None, debug=True, mode='msc')
+    #from pyNastran.bdf.mesh_utils.convert import convert
+    scale_model(model, xyz_scale, mass_scale, time_scale, weight_scale, gravity_scale)
+    for prop in model.properties.values():
+        prop.comment = ''
+    if bdf_filename_out is None:
+        model.write_bdf(bdf_filename_out)
+    return model
+
+def _setup_scale_by_terms(scales, terms):
+    """determines the mass, length, time scaling factors"""
+    term_to_mlt_map = {
+        #      M   L   T
+        'M' : [1., 0., 0.],
+        'L' : [0., 1., 0.],
+        'T' : [0., 0., 1.],
+
+        'F' : [1.,  1., -2.],
+        'P' : [1., -1., -2.],
+        'V' : [0.,  1., -1.],
+    }
+    assert len(terms) == 3, terms
+    A = np.zeros((3, 3), dtype='float64')
+    for i, term in enumerate(terms):
+        mlt = term_to_mlt_map[term]
+        #print(term, mlt)
+        A[:, i] = mlt
+
+    MLT = ['mass', 'length', 'time']
+    for mlt, Ai in zip(MLT, A):
+        if np.allclose(np.abs(Ai).max(), 0.):
+            raise RuntimeError('%s is not solvable from [%s]' %  (mlt, ', '.join(terms)))
+
+    detA = np.linalg.det(A)
+    if detA == 0.0:
+        raise RuntimeError('the equations are not independent '
+                           '(e.g., length, time, and velocity) '
+                           'and cannot determine mass legnth and time')
+    M = np.linalg.solve(A, [1., 0., 0.])
+    L = np.linalg.solve(A, [0., 1., 0.])
+    T = np.linalg.solve(A, [0., 0., 1.])
+    print('MLT:')
+    mass_scale = _scale_term('M', M, terms, scales)
+    xyz_scale = _scale_term('L', L, terms, scales)
+    time_scale = _scale_term('T', T, terms, scales)
+    return mass_scale, xyz_scale, time_scale
+
+def _scale_term(name, coeffs, terms, scales):
+    msg = '%s = ' % name
+    value = 1.0
+    for coeff, term, scale in zip(coeffs, terms, scales):
+        if abs(coeff) > 0:
+            msg += '%s^%s * ' % (term, coeff)
+            value *= scale ** coeff
+    msg = msg.strip('* ')
+    print(msg)
+    return value
+
+def scale_model(model, xyz_scale, mass_scale, time_scale, weight_scale, gravity_scale):
+    """Performs the model scaling"""
     model.log.debug('xyz_scale = %s' % xyz_scale)
     model.log.debug('mass_scale = %s' % mass_scale)
     model.log.debug('time_scale = %s' % time_scale)
@@ -95,7 +191,11 @@ def _set_wtmass(model, gravity_scale):
     model.log.debug('wtmass = %s' % weight_mass)
 
 def _convert_nodes(model, xyz_scale):
-    """converts the nodes"""
+    """
+    Converts the nodes
+
+    Supports: GRID
+    """
     for node in model.nodes.values():
         if node.cp == 0:
             node.xyz *= xyz_scale
@@ -106,7 +206,11 @@ def _convert_nodes(model, xyz_scale):
             node.xyz[0] *= xyz_scale
 
 def _convert_coordinates(model, xyz_scale):
-    """converts the coordinate systems"""
+    """
+    Converts the coordinate systems
+
+    Supports: CORD1x, CORD2x
+    """
     for cid, coord in model.coords.items():
         if cid == 0:
             continue
@@ -139,7 +243,21 @@ def _convert_coordinates(model, xyz_scale):
             #raise NotImplementedError(coord)
 
 def _convert_elements(model, xyz_scale, mass_scale, weight_scale):
-    """converts the elements"""
+    """
+    Converts the elements
+
+    Supports:  CTRIA3, CTRIA6, CTRIAR,  CQUAD4, CQUAD8, CQUADR,
+               CELAS2, CELAS4, CDAMP2, CDAMP4,
+               CONROD, CROD, CBAR, CBEAM, GENEL, CONM2, CMASS1, CMASS4
+
+    Skips : CELAS1, CELAS3, CDAMP3, CDAMP5, CCONEAX,
+            CROD, CTUBE, CVISC, CBUSH1D, CBUSH,
+            CQUAD, CSHEAR, CTRIAX, CTRIAX6,
+            CTETRA, CPENTA, CHEXA, CPYRAM,
+            CTRAX3, CTRAX6, CPLSTN3, CPLSTN6, CPLSTN4', CPLSTN8, CQUADX4, CQUADX8
+    *intentionally
+
+    """
     time_scale = 1.
     force_scale = weight_scale
     area_scale = xyz_scale ** 2
@@ -268,7 +386,16 @@ def _convert_elements(model, xyz_scale, mass_scale, weight_scale):
             raise NotImplementedError(elem)
 
 def _convert_properties(model, xyz_scale, mass_scale, weight_scale):
-    """converts the properties"""
+    """
+    Converts the properties
+
+    Supports:  PELAS, PDAMP, PDAMP5, PVISC, PROD, PBAR, PBARL, PBEAM, PBEAML,
+               PSHELL, PSHEAR, PCOMP, PCOMPG, PELAS, PTUBE, PBUSH,
+               PCONEAX, PGAP,
+    Skips : PSOLID, PLSOLID, PLPLANE, PIHEX
+
+    Skips are unscaled (intentionally)
+    """
     time_scale = 1.
     force_scale = weight_scale
     moment_scale = force_scale * xyz_scale
@@ -476,7 +603,11 @@ def _convert_properties(model, xyz_scale, mass_scale, weight_scale):
             raise NotImplementedError(prop_type)
 
 def _convert_materials(model, xyz_scale, mass_scale, weight_scale):
-    """converts the materials"""
+    """
+    Converts the materials
+
+    Supports: MAT1, MAT2, MAT3, MAT8, MAT9, MAT10, MAT11
+    """
     density_scale = mass_scale / xyz_scale ** 3
     stress_scale = mass_scale / xyz_scale ** 2
     temp_scale = 1.
@@ -610,7 +741,12 @@ def _convert_materials(model, xyz_scale, mass_scale, weight_scale):
             raise NotImplementedError(mat)
 
 def _convert_constraints(model, xyz_scale):
-    """converts the spc/mpcs"""
+    """
+    Converts the spc/mpcs
+
+    Supports: SPC1, SPC, SPCAX
+    Implicitly supports: MPC, MPCADD, SPCADD
+    """
     for unused_spc_id, spcs in model.spcs.items():
         for spc in spcs:
             if spc.type in ['SPCADD', 'SPC1']:
@@ -623,7 +759,15 @@ def _convert_constraints(model, xyz_scale):
                 raise NotImplementedError(spc)
 
 def _convert_loads(model, xyz_scale, weight_scale):
-    """converts the loads"""
+    """
+    Converts the loads
+
+    Supports:
+     - dloads: RLOAD1
+     - loads:  FORCE, FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2
+               GRAV, ACCEL1, PLOAD, PLOAD1, PLOAD2, PLOAD4, RANDPS
+     - combinations: DLOAD, LOAD
+    """
     time_scale = 1.
     frequency_scale = 1. / time_scale
     force_scale = weight_scale
@@ -719,6 +863,9 @@ def _convert_aero(model, xyz_scale, time_scale, weight_scale):
     """
     Converts the aero cards
       - CAEROx, PAEROx, SPLINEx, AECOMP, AELIST, AEPARAM, AESTAT, AESURF, AESURFS
+
+    Supports: AERO, AEROS, CAERO1, CAERO2, TRIM*, MONPNT1, FLUTTER FLFACT-rho
+    *probably not done
     """
     if not(model.aecomps or model.aefacts or model.aeparams or model.aelinks or
            model.aelists or model.aestats or model.aesurf or model.aesurfs or
@@ -782,17 +929,29 @@ def _convert_aero(model, xyz_scale, time_scale, weight_scale):
     for monitor in model.monitor_points:
         if hasattr(monitor, 'xyz'):
             monitor.xyz *= xyz_scale
-    # update only the FLFACTs corresponding to density
-    flfact_ids = set([])
+
+    # update only the FLFACTs corresponding to density/velocity (not kferq)
+    flfact_rho_ids = set([])
+    flfact_velocity_ids = set([])
     for flutter in model.flutters.values():
-        flfact = flutter.density
-        flfact_ids.add(flfact.sid)
-    for flfact_id in flfact_ids: # density
+        flfact = flutter.density_ref
+        flfact_rho_ids.add(flfact.sid)
+        if 'velocity' in flutter.headers: # we skip kfreq
+            flfact = flutter.reduced_freq_velocity_ref
+            flfact_velocity_ids.add(flfact.sid)
+    for flfact_id in flfact_rho_ids: # density
         flfact = model.flfacts[flfact_id]
         flfact.factors *= density_scale
+    for flfact_id in flfact_velocity_ids: # velocity
+        flfact = model.flfacts[flfact_id]
+        flfact.factors *= velocity_scale
 
 def _convert_optimization(model, xyz_scale, mass_scale, weight_scale):
-    """converts the optimization objects"""
+    """
+    Converts the optimization objects
+
+    Limited Support: DESVAR, DCONSTR, DVCREL1, DVPREL1
+    """
     #time_scale = 1.
     #area_scale = xyz_scale ** 2
     #inertia_scale = xyz_scale ** 4
@@ -811,6 +970,7 @@ def _convert_optimization(model, xyz_scale, mass_scale, weight_scale):
         #desvar.xub *= scale
         #desvar.delx *= scale
         #raise NotImplementedError(desvar)
+
 
     for unused_key, dconstrs in model.dconstrs.items():
         for dconstr in dconstrs:
