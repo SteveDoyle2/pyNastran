@@ -13,7 +13,7 @@ from pyNastran.bdf.cards.elements.mass import CONM2
 
 import pyNastran
 from pyNastran.bdf.bdf import BDF, read_bdf, CaseControlDeck, PARAM
-from pyNastran.bdf.mesh_utils.convert import convert, get_scale_factors
+from pyNastran.bdf.mesh_utils.convert import convert, get_scale_factors, scale_by_terms
 from pyNastran.utils.log import SimpleLogger
 
 pkg_path = pyNastran.__path__[0]
@@ -44,6 +44,11 @@ class TestConvert(unittest.TestCase):
         model.write_bdf(bdf_filename_out2)
         os.remove(bdf_filename_out)
         os.remove(bdf_filename_out2)
+
+        terms = ['F', 'P', 'V']
+        scales = [1.1, 0.9, 0.8]
+        scale_by_terms(bdf_filename, terms, scales, bdf_filename_out=bdf_filename_out)
+        os.remove(bdf_filename_out)
 
     def test_convert_isat(self):
         """converts a isat model"""

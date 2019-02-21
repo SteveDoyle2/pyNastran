@@ -1,3 +1,4 @@
+# encoding: utf-8
 """
 defines:
  - convert(model, units_to, units=None)
@@ -64,7 +65,8 @@ def scale_by_terms(bdf_filename, terms, scales, bdf_filename_out=None):
 
     #-------------------------------------------------
     weight_scale = mass_scale * xyz_scale / time_scale ** 2
-    gravity_scale = xyz_scale / time_scale ** 2
+    #gravity_scale = xyz_scale / time_scale ** 2
+    gravity_scale = 1.0
 
     #cards_to_skip = [
         #'AEFACT', 'CAERO1', 'CAERO2', 'SPLINE1', 'SPLINE2',
@@ -76,9 +78,8 @@ def scale_by_terms(bdf_filename, terms, scales, bdf_filename_out=None):
                      encoding=None, log=None, debug=True, mode='msc')
     #from pyNastran.bdf.mesh_utils.convert import convert
     scale_model(model, xyz_scale, mass_scale, time_scale, weight_scale, gravity_scale)
-    for prop in model.properties.values():
-        prop.comment = ''
-    if bdf_filename_out is None:
+
+    if bdf_filename_out is not None:
         model.write_bdf(bdf_filename_out)
     return model
 
@@ -90,9 +91,9 @@ def _setup_scale_by_terms(scales, terms):
         'L' : [0., 1., 0.],
         'T' : [0., 0., 1.],
 
-        'F' : [1.,  1., -2.],
+        'F' : [1., 1., -2.],
         'P' : [1., -1., -2.],
-        'V' : [0.,  1., -1.],
+        'V' : [0., 1., -1.],
     }
     assert len(terms) == 3, terms
     A = np.zeros((3, 3), dtype='float64')
@@ -131,27 +132,39 @@ def _scale_term(name, coeffs, terms, scales):
     print(msg)
     return value
 
-def scale_model(model, xyz_scale, mass_scale, time_scale, weight_scale, gravity_scale):
+def scale_model(model, xyz_scale, mass_scale, time_scale, weight_scale, gravity_scale,
+                convert_nodes=True, convert_elements=True,
+                convert_properties=True, convert_materials=True,
+                convert_aero=True, convert_constraints=True,
+                convert_loads=True, convert_optimization=True):
     """Performs the model scaling"""
     model.log.debug('xyz_scale = %s' % xyz_scale)
     model.log.debug('mass_scale = %s' % mass_scale)
     model.log.debug('time_scale = %s' % time_scale)
     model.log.debug('weight_scale = %s' % weight_scale)
     model.log.debug('gravity_scale = %s' % gravity_scale)
-    #_set_wtmass(model, gravity_scale)
+    _set_wtmass(model, gravity_scale)
 
-    _convert_nodes(model, xyz_scale)
-    _convert_coordinates(model, xyz_scale)
+    if convert_nodes:
+        _convert_nodes(model, xyz_scale)
+        _convert_coordinates(model, xyz_scale)
 
-    _convert_elements(model, xyz_scale, mass_scale, weight_scale)
-    _convert_properties(model, xyz_scale, mass_scale, weight_scale)
-    _convert_materials(model, xyz_scale, mass_scale, weight_scale)
+    if convert_elements:
+        _convert_elements(model, xyz_scale, mass_scale, weight_scale)
+    if convert_properties:
+        _convert_properties(model, xyz_scale, mass_scale, weight_scale)
+    if convert_materials:
+        _convert_materials(model, xyz_scale, mass_scale, weight_scale)
 
-    _convert_aero(model, xyz_scale, time_scale, weight_scale)
-    _convert_constraints(model, xyz_scale)
-    _convert_loads(model, xyz_scale, weight_scale)
+    if convert_aero:
+        _convert_aero(model, xyz_scale, time_scale, weight_scale)
+    if convert_constraints:
+        _convert_constraints(model, xyz_scale)
+    if convert_loads:
+        _convert_loads(model, xyz_scale, weight_scale)
     #_convert_sets(model)
-    _convert_optimization(model, xyz_scale, mass_scale, weight_scale)
+    if convert_optimization:
+        _convert_optimization(model, xyz_scale, mass_scale, weight_scale)
 
 
 def _set_wtmass(model, gravity_scale):
@@ -247,14 +260,15 @@ def _convert_elements(model, xyz_scale, mass_scale, weight_scale):
     Converts the elements
 
     Supports:  CTRIA3, CTRIA6, CTRIAR,  CQUAD4, CQUAD8, CQUADR,
-               CELAS2, CELAS4, CDAMP2, CDAMP4,
-               CONROD, CROD, CBAR, CBEAM, GENEL, CONM2, CMASS1, CMASS4
+               CELAS2, CELAS4, CDAMP2, CDAMP4, CBUSH,
+               CONROD, CBAR, CBEAM, GENEL, CONM2, CMASS4
 
     Skips : CELAS1, CELAS3, CDAMP3, CDAMP5, CCONEAX,
-            CROD, CTUBE, CVISC, CBUSH1D, CBUSH,
+            CROD, CTUBE, CVISC, CBUSH1D,
             CQUAD, CSHEAR, CTRIAX, CTRIAX6,
             CTETRA, CPENTA, CHEXA, CPYRAM,
-            CTRAX3, CTRAX6, CPLSTN3, CPLSTN6, CPLSTN4', CPLSTN8, CQUADX4, CQUADX8
+            CMASS1, CMASS3,
+    NX Skips: CTRAX3, CTRAX6, CPLSTN3, CPLSTN6, CPLSTN4', CPLSTN8, CQUADX4, CQUADX8
     *intentionally
 
     """
@@ -272,23 +286,25 @@ def _convert_elements(model, xyz_scale, mass_scale, weight_scale):
 
     # these don't have any properties
     skip_elements = [
+        # nothing to convert (verified)
         'CCONEAX',
-        'CELAS1', 'CELAS3', 'CDAMP3', 'CDAMP5', 'CVISC', 'CBUSH1D',
+        'CELAS1', 'CELAS3',
+        'CDAMP1', 'CDAMP3', 'CDAMP5',
+        'CVISC', 'CBUSH1D',
         'CROD', 'CTUBE',
-        'CBUSH',
-        'CQUAD', 'CSHEAR', 'CTRIAX', 'CTRIAX6',
+        'CSHEAR', 'CQUAD', 'CQUADX', 'CTRIAX', 'CTRIAX6',
         'CTETRA', 'CPENTA', 'CHEXA', 'CPYRAM',
+        'CRAC2D', 'CRAC3D',
 
         # TODO: NX-verify
         'CTRAX3', 'CTRAX6',
         'CPLSTN3', 'CPLSTN6', 'CPLSTN4', 'CPLSTN8',
         'CQUADX4', 'CQUADX8',
     ]
-    #skip_elements = ['CELAS2', 'CELAS4']
+    skip_masses = ['CMASS1', 'CMASS3']
 
     tri_shells = ['CTRIA3', 'CTRIA6', 'CTRIAR']
-    quad_shells = [
-        'CQUAD4', 'CQUAD8', 'CQUADR']
+    quad_shells = ['CQUAD4', 'CQUAD8', 'CQUADR']
     spring_elements = ['CELAS2', 'CELAS4']
     damper_elements = ['CDAMP2', 'CDAMP4']
 
@@ -337,31 +353,30 @@ def _convert_elements(model, xyz_scale, mass_scale, weight_scale):
                     elem.T4 *= xyz_scale
             # nsm
             #elem.nsm *= nsm_scale
-        elif elem_type in ['CQUADX']:
-            pass
 
         elif elem_type == 'CONROD':
             elem.A *= area_scale # area
             elem.nsm *= nsm_bar_scale
         elif elem_type == 'CGAP':
-            if elem.x is not None:
-                # vector
+            if elem.x is not None:  # vector
                 elem.x = [x*xyz_scale for x in elem.x]
 
         elif elem_type == 'CBAR':
-            if elem.x is not None:
-                pass
-                # vector
-                #elem.x = [x*xyz_scale for x in elem.x]
+            if elem.x is not None:  # vector
+                elem.x = [x*xyz_scale for x in elem.x]
             elem.wa *= xyz_scale
             elem.wb *= xyz_scale
         elif elem_type == 'CBEAM':
-            if elem.x is not None:
-                pass
-                # vector
-                #elem.x = [x*xyz_scale for x in elem.x]
+            if elem.x is not None:  # vector
+                elem.x = [x*xyz_scale for x in elem.x]
             elem.wa *= xyz_scale
             elem.wb *= xyz_scale
+        elif elem_type == 'CBUSH':
+            if elem.x[0] is not None:  # vector
+                elem.x = [x*xyz_scale for x in elem.x]
+            if elem.si[0] is not None:  # vector
+                elem.si = [sii*xyz_scale for sii in elem.si]
+
         elif elem_type == 'GENEL':
             # I'm pretty sure [S] this is unitless
             if elem.k is not None:
@@ -373,13 +388,13 @@ def _convert_elements(model, xyz_scale, mass_scale, weight_scale):
 
     for elem in model.masses.values():
         elem_type = elem.type
+        if elem_type in skip_masses:
+            continue
         if elem_type == 'CONM2':
             elem.mass *= mass_scale
             elem.X *= xyz_scale
             # I = m * r^2
             elem.I = [moi * mass_moi_scale for moi in elem.I]
-        elif elem.type == 'CMASS1':
-            pass
         elif elem.type == 'CMASS4':
             elem.mass *= mass_scale
         else:
@@ -758,15 +773,33 @@ def _convert_constraints(model, xyz_scale):
             else:
                 raise NotImplementedError(spc)
 
+def _get_dload_scale(dload, xyz_scale, velocity_scale, accel_scale, force_scale):
+    """
+    LOAD asssumes force
+    """
+    if dload.Type == 'LOAD':
+        scale = force_scale
+    elif dload.Type == 'DISP':
+        scale = xyz_scale
+    elif dload.Type == 'VELO':
+        scale = velocity_scale
+    elif dload.Type == 'ACCE':
+        scale = accel_scale
+    else:
+        raise RuntimeError(dload)
+    return scale
+
 def _convert_loads(model, xyz_scale, weight_scale):
     """
     Converts the loads
 
     Supports:
-     - dloads: RLOAD1
+     - dloads: RLOAD1*, TLOAD1*
      - loads:  FORCE, FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2
                GRAV, ACCEL1, PLOAD, PLOAD1, PLOAD2, PLOAD4, RANDPS
      - combinations: DLOAD, LOAD
+
+    * probably not done
     """
     time_scale = 1.
     frequency_scale = 1. / time_scale
@@ -787,6 +820,7 @@ def _convert_loads(model, xyz_scale, weight_scale):
     for dloads in model.dloads.values():
         assert isinstance(dloads, str), dloads  # TEMP
 
+    tabled_scales = set([])
     for dloads in model.dload_entries.values():
         for dload in dloads:
             if dload.type == 'RLOAD1':
@@ -796,18 +830,50 @@ def _convert_loads(model, xyz_scale, weight_scale):
                 #self.tc = tc
                 #self.td = td
                 # { P(f) }  = {A} [ C(f) + iD(f)] * e^{  i {\theta - 2 pi f tau } }
-                if dload.Type == 'LOAD':
-                    scale = force_scale  # moment_scale???
-                elif dload.Type == 'DISP':
-                    scale = xyz_scale
-                elif dload.Type == 'VELO':
-                    scale = velocity_scale
-                elif dload.Type == 'ACCE':
-                    scale = accel_scale
-                else:
-                    raise RuntimeError(dload)
+                scale = _get_dload_scale(dload, xyz_scale, velocity_scale,
+                                         accel_scale, force_scale)
+
+                #delay : int/float; default=None
+                    #the delay; if it's 0/blank there is no delay
+                    #float : delay in units of time
+                    #int : delay id
+                #dphase : int/float; default=None
+                    #the dphase; if it's 0/blank there is no phase lag
+                    #float : delay in units of time
+                    #int : delay id
+                #tc : int/float; default=0
+                    #TABLEDi id that defines C(f) for all degrees of freedom in
+                    #EXCITEID entry
+                #td : int/float; default=0
+                    #TABLEDi id that defines D(f) for all degrees of freedom in
+                    #EXCITEID entry
+                if isinstance(dload.delay, float):
+                    dload.delay *= time_scale
+                #{P(f)}  = {A} [ C(f)+iD(f)] e^{i {theta - 2*pi*f*tau} }
+                if dload.tc > 0:
+                    tabled_scales.add((dload.tc, scale))
+                if dload.td > 0:
+                    tabled_scales.add((dload.td, scale))
+
+                #darea = model.dareas[dload.excite_id]
+                #print(darea.get_stats())
+            elif dload.type == 'TLOAD1':
+                if isinstance(dload.delay, float):
+                    dload.delay *= time_scale
+                dload.us0 *= xyz_scale
+                dload.vs0 *= velocity_scale
+                # {P(t)} = {A} ⋅F(t – τ)
+
+                #darea = model.dareas[dload.excite_id]
+                #print(darea.get_stats())
+                scale = _get_dload_scale(dload, xyz_scale, velocity_scale,
+                                         accel_scale, force_scale)
+                tabled_scales.add((dload.tid, scale))
             else:
                 raise NotImplementedError(dload)
+    for tid, scale in tabled_scales:
+        tabled = model.TableD(tid)
+        tabled.y *= scale
 
     for loads in model.loads.values():
         assert isinstance(loads, list), loads
@@ -862,21 +928,29 @@ def _convert_loads(model, xyz_scale, weight_scale):
 def _convert_aero(model, xyz_scale, time_scale, weight_scale):
     """
     Converts the aero cards
-      - CAEROx, PAEROx, SPLINEx, AECOMP, AELIST, AEPARAM, AESTAT, AESURF, AESURFS
+      - CAEROx, PAEROx, SPLINEx, AECOMP, AELIST, AEPARAM, AESURF
 
-    Supports: AERO, AEROS, CAERO1, CAERO2, TRIM*, MONPNT1, FLUTTER FLFACT-rho
+    Supports: AERO, AEROS, CAERO1, CAERO2, TRIM*, MONPNT1, FLUTTER FLFACT-rho/vel
+              GUST, AESURF, PAERO2
+    Skips: PAERO1, AESTAT, AESURFS, AECOMP, AELIST
+    Doesn't support:CAERO3-5, PAERO3-5, SPLINEx, AEPARAM,  AELINK, AEPRESS, AEFORCE,
     *probably not done
     """
     if not(model.aecomps or model.aefacts or model.aeparams or model.aelinks or
            model.aelists or model.aestats or model.aesurf or model.aesurfs or
            model.caeros or model.paeros or model.monitor_points or model.splines or
-           model.aeros or model.trims or model.divergs):
+           model.aeros or model.trims or model.divergs or model.gusts):
         return
 
     area_scale = xyz_scale ** 2
     velocity_scale = xyz_scale / time_scale
+    acceleration_scale = xyz_scale / time_scale ** 2
+    moment_scale = weight_scale * xyz_scale
     pressure_scale = weight_scale / xyz_scale ** 2
     density_scale = weight_scale / xyz_scale ** 3
+
+    angular_acceleration_scale = 1 / time_scale ** 2  # rad/s^2
+    angular_velocity_scale = 1 / time_scale  # rad/s
 
     model.log.debug('--Aero Scales--')
     model.log.debug('area_scale = %s' % area_scale)
@@ -908,10 +982,42 @@ def _convert_aero(model, xyz_scale, time_scale, weight_scale):
             caero.x12 *= xyz_scale
         else:
             raise NotImplementedError('\n' + str(caero))
-    #for paero in model.paeros.values():
-        #paero.cross_reference(model)
+
+    half_width_aefacts = set([])
+    for paero in model.paeros.values():
+        if paero.type in ['PAERO1']:
+            continue
+        if paero.type == 'PAERO2':
+            #: Reference half-width of body and the width of the constant width
+            #: interference tube. (Real > 0.0)
+            paero.width *= xyz_scale
+
+            if paero.lrsb is not None:  # half-widths of slender body
+                half_width_aefacts.add(paero.lrsb)
+            if paero.lrib is not None:  # hafl-widths of interference elements
+                half_width_aefacts.add(paero.lrib)
+            #self.lrsb_ref = None
+            #self.lrib_ref = None
+    for aefact_id in half_width_aefacts:
+        aefact = model.aefacts[aefact_id]
+        aefact.fractions *= xyz_scale
+
     for trim in model.trims.values():
         trim.q *= pressure_scale
+        uxs2 = []
+        for label, ux in zip(trim.labels, trim.uxs):
+            if label in ['URDD1', 'URDD2', 'URDD3']:
+                ux *= acceleration_scale
+            elif label in ['URDD4', 'URDD5', 'URDD6']:
+                ux *= angular_acceleration_scale
+            elif label in ['PITCH', 'ROLL', 'YAW']:
+                ux *= angular_velocity_scale
+            uxs2.append(ux)
+        trim.uxs = uxs2
+
+    for gust in model.gusts.values():
+        gust.x0 *= xyz_scale
+        gust.V *= velocity_scale
     #for spline in model.splines.values():
         #spline.convert(model)
     #for aecomp in model.aecomps.values():
@@ -922,8 +1028,22 @@ def _convert_aero(model, xyz_scale, time_scale, weight_scale):
         #aeparam.cross_reference(model)
     #for aestat in model.aestats.values():
         #aestat.cross_reference(model)
-    #for aesurf in model.aesurf.values():
-        #aesurf.cross_reference(model)
+
+    if 'Q' in model.params:
+        model.params['Q'].value *= pressure_scale
+
+    q_scale_tables = set([])
+    for aesurf in model.aesurf.values():
+        if aesurf.hmllim is not None:
+            aesurf.hmllim *= moment_scale
+        if aesurf.hmulim is not None:
+            aesurf.hmulim *= moment_scale
+
+        if aesurf.tqllim is not None:
+            q_scale_tables.add(aesurf.tqllim)
+        if aesurf.tqulim is not None:
+            q_scale_tables.add(aesurf.tqulim)
+
     #for aesurfs in model.aesurfs.values():
         #aesurfs.cross_reference(model)
     for monitor in model.monitor_points:
@@ -982,13 +1102,13 @@ def _convert_optimization(model, xyz_scale, mass_scale, weight_scale):
             scale = _convert_dvcrel1(dvcrel, xyz_scale)
             desvars = dvcrel.dvids_ref
             assert len(desvars) == 1, len(desvars)
-            scale_desvars(desvars, scale)
+            _convert_desvars(desvars, scale)
         else:
             raise NotImplementedError(dvcrel)
 
         desvars = dvcrel.dvids_ref
         assert len(desvars) == 1, len(desvars)
-        scale_desvars(desvars, scale)
+        _convert_desvars(desvars, scale)
 
     for unused_key, dvmrel in model.dvmrels.items():
         raise NotImplementedError(dvmrel)
@@ -998,7 +1118,7 @@ def _convert_optimization(model, xyz_scale, mass_scale, weight_scale):
             scale = _convert_dvprel1(dvprel, xyz_scale, mass_scale, weight_scale)
             desvars = dvprel.dvids_ref
             assert len(desvars) == 1, len(desvars)
-            scale_desvars(desvars, scale)
+            _convert_desvars(desvars, scale)
         else:
             raise NotImplementedError(dvprel)
         if dvprel.p_max != 1e20:
@@ -1186,7 +1306,7 @@ def _convert_dvprel1(dvprel, xyz_scale, mass_scale, weight_scale):
         raise NotImplementedError('cannot convert %r\n%s' % (prop_type, dvprel))
     return scale
 
-def scale_desvars(desvars, scale):
+def _convert_desvars(desvars, scale):
     """scales the DVPREL/DVCREL/DVMREL DESVAR values"""
     for desvar in desvars:
         desvar.xinit *= scale
