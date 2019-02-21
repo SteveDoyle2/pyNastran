@@ -227,6 +227,7 @@ def _convert_coordinates(model, xyz_scale):
     for cid, coord in model.coords.items():
         if cid == 0:
             continue
+
         if coord.rid == 0:
             if np.abs(coord.e1).sum() == 0.:
                 assert np.abs(coord.origin).sum() == 0., coord.origin
@@ -235,15 +236,15 @@ def _convert_coordinates(model, xyz_scale):
                 coord.e1 *= xyz_scale
                 coord.e2 *= xyz_scale
                 coord.e3 *= xyz_scale
-        elif coord.rid.type in ['CORD1R', 'CORD2R']:
+        elif coord.rid_ref.type in ['CORD1R', 'CORD2R']:
             coord.origin *= xyz_scale
             coord.e1 *= xyz_scale
             coord.e2 *= xyz_scale
             coord.e3 *= xyz_scale
-        elif coord.rid.type in ['CORD1C', 'CORD1S', 'CORD2C', 'CORD2S']:
+        elif coord.rid_ref.type in ['CORD1C', 'CORD1S', 'CORD2C', 'CORD2S']:
             coord.origin[0] *= xyz_scale
             coord.e1 *= xyz_scale
-            raise NotImplementedError(coord)
+            #raise NotImplementedError(coord)
         else:
             raise NotImplementedError(coord)
             #coord.e1 *= xyz_scale
@@ -276,7 +277,7 @@ def _convert_elements(model, xyz_scale, mass_scale, weight_scale):
     force_scale = weight_scale
     area_scale = xyz_scale ** 2
     velocity_scale = xyz_scale / time_scale
-    moi_scale = xyz_scale ** 4
+    area_moi_scale = xyz_scale ** 4
     mass_moi_scale = mass_scale * xyz_scale ** 2
     #nsm_scale = mass_scale
     nsm_bar_scale = mass_scale / xyz_scale
@@ -285,7 +286,7 @@ def _convert_elements(model, xyz_scale, mass_scale, weight_scale):
     damping_scale = force_scale / velocity_scale
 
     # these don't have any properties
-    skip_elements = [
+    skip_elements = set([
         # nothing to convert (verified)
         'CCONEAX',
         'CELAS1', 'CELAS3',
@@ -300,17 +301,17 @@ def _convert_elements(model, xyz_scale, mass_scale, weight_scale):
         'CTRAX3', 'CTRAX6',
         'CPLSTN3', 'CPLSTN6', 'CPLSTN4', 'CPLSTN8',
         'CQUADX4', 'CQUADX8',
-    ]
-    skip_masses = ['CMASS1', 'CMASS3']
+    ])
+    skip_masses = set(['CMASS1', 'CMASS3'])
 
-    tri_shells = ['CTRIA3', 'CTRIA6', 'CTRIAR']
-    quad_shells = ['CQUAD4', 'CQUAD8', 'CQUADR']
-    spring_elements = ['CELAS2', 'CELAS4']
-    damper_elements = ['CDAMP2', 'CDAMP4']
+    tri_shells = set(['CTRIA3', 'CTRIA6', 'CTRIAR'])
+    quad_shells = set(['CQUAD4', 'CQUAD8', 'CQUADR'])
+    spring_elements = set(['CELAS2', 'CELAS4'])
+    damper_elements = set(['CDAMP2', 'CDAMP4'])
 
     model.log.debug('--Element Scales--')
-    model.log.debug('nsm_bar_scale = %g' % nsm_bar_scale)
-    model.log.debug('moi_scale = %g' % moi_scale)
+    model.log.debug('nsm_bar_scale (L) = %g' % nsm_bar_scale)
+    model.log.debug('area_moi_scale = %g' % area_moi_scale)
     model.log.debug('area_scale = %g' % area_scale)
     model.log.debug('stiffness_scale = %g\n' % stiffness_scale)
     model.log.debug('damping_scale = %g\n' % damping_scale)
@@ -415,7 +416,7 @@ def _convert_properties(model, xyz_scale, mass_scale, weight_scale):
     force_scale = weight_scale
     moment_scale = force_scale * xyz_scale
     area_scale = xyz_scale ** 2
-    moi_scale = xyz_scale ** 4
+    area_moi_scale = xyz_scale ** 4
     velocity_scale = xyz_scale / time_scale
 
     # there are multiple nsm scales (CONM2, bar, plate)
@@ -426,18 +427,18 @@ def _convert_properties(model, xyz_scale, mass_scale, weight_scale):
     stress_scale = force_scale / xyz_scale ** 2
 
     model.log.debug('--Property Scales--')
-    model.log.debug('nsm_bar_scale = %g' % nsm_bar_scale)
-    model.log.debug('nsm_plate_scale = %g' % nsm_plate_scale)
+    model.log.debug('nsm_bar_scale (1/L) = %g' % nsm_bar_scale)
+    model.log.debug('nsm_plate_scale (1/L^2) = %g' % nsm_plate_scale)
     model.log.debug('stiffness_scale = %g' % stiffness_scale)
     model.log.debug('damping_scale = %g' % damping_scale)
     model.log.debug('stress_scale = %g\n' % stress_scale)
 
-    skip_properties = (
+    skip_properties = set([
         'PSOLID', 'PLSOLID', 'PLPLANE', 'PIHEX',
 
         # TODO: NX-verify
         'PPLANE',
-    )
+    ])
 
     # we don't need to convert PBUSHT, PELAST, PDAMPT
     for prop in model.properties.values():
@@ -454,15 +455,15 @@ def _convert_properties(model, xyz_scale, mass_scale, weight_scale):
 
         elif prop_type == 'PROD':
             prop.A *= area_scale
-            prop.j *= moi_scale
+            prop.j *= area_moi_scale
             #prop.c ???
 
         elif prop_type == 'PBAR':
             prop.A *= area_scale
-            prop.i1 *= moi_scale
-            prop.i2 *= moi_scale
-            prop.i12 *= moi_scale
-            prop.j *= moi_scale
+            prop.i1 *= area_moi_scale
+            prop.i2 *= area_moi_scale
+            prop.i12 *= area_moi_scale
+            prop.j *= area_moi_scale
             prop.nsm *= nsm_bar_scale
             prop.c1 *= xyz_scale
             prop.c2 *= xyz_scale
@@ -479,10 +480,10 @@ def _convert_properties(model, xyz_scale, mass_scale, weight_scale):
 
         elif prop_type == 'PBEAM':
             prop.A *= area_scale
-            prop.i1 *= moi_scale
-            prop.i2 *= moi_scale
-            prop.i12 *= moi_scale
-            prop.j *= moi_scale
+            prop.i1 *= area_moi_scale
+            prop.i2 *= area_moi_scale
+            prop.i12 *= area_moi_scale
+            prop.j *= area_moi_scale
             prop.nsm *= nsm_bar_scale
             prop.c1 *= xyz_scale
             prop.c2 *= xyz_scale
@@ -571,7 +572,7 @@ def _convert_properties(model, xyz_scale, mass_scale, weight_scale):
             if prop.t1 is not None:
                 prop.t1 *= xyz_scale
             if prop.i is not None:
-                prop.i *= moi_scale / xyz_scale
+                prop.i *= area_moi_scale / xyz_scale
             if prop.t2 is not None:
                 prop.t2 *= xyz_scale
             prop.nsm *= nsm_plate_scale
@@ -589,8 +590,6 @@ def _convert_properties(model, xyz_scale, mass_scale, weight_scale):
         #elif prop.type == 'PFAST':
             #pass
         #elif prop.type == 'PDAMP':
-            #pass
-        #elif prop.type == 'PTUBE':
             #pass
         #elif prop.type == 'PELAST':
             #pass
@@ -623,13 +622,15 @@ def _convert_materials(model, xyz_scale, mass_scale, weight_scale):
 
     Supports: MAT1, MAT2, MAT3, MAT8, MAT9, MAT10, MAT11
     """
+    force_scale = weight_scale
+    stress_scale = force_scale / xyz_scale ** 2
+
     density_scale = mass_scale / xyz_scale ** 3
-    stress_scale = mass_scale / xyz_scale ** 2
     temp_scale = 1.
     a_scale = 1. / temp_scale # thermal expansion
 
     model.log.debug('--Material Scales--')
-    model.log.debug('density_scale = %g' % density_scale)
+    model.log.debug('density_scale (L^3)= %g' % density_scale)
     model.log.debug('stress_scale = %g\n' % stress_scale)
 
     for mat in model.materials.values():
@@ -971,6 +972,7 @@ def _convert_aero(model, xyz_scale, time_scale, weight_scale):
         model.aeros.bref *= xyz_scale
         model.aeros.sref *= area_scale
 
+    xyz_aefacts = set([])
     for caero in model.caeros.values():
         if caero.type == 'CAERO1':
             caero.p1 *= xyz_scale
@@ -980,10 +982,19 @@ def _convert_aero(model, xyz_scale, time_scale, weight_scale):
         elif caero.type == 'CAERO2':
             caero.p1 *= xyz_scale
             caero.x12 *= xyz_scale
+            #: ID of an AEFACT Bulk Data entry for slender body division
+            #: points; used only if NSB is zero or blank. (Integer >= 0)
+            if caero.lsb > 0:
+                xyz_aefacts.add(caero.lsb)
+
+            #: ID of an AEFACT data entry containing a list of division
+            #: points for interference elements; used only if NINT is zero
+            #: or blank. (Integer > 0)
+            if caero.lint > 0:
+                xyz_aefacts.add(caero.lint)
         else:
             raise NotImplementedError('\n' + str(caero))
 
-    half_width_aefacts = set([])
     for paero in model.paeros.values():
         if paero.type in ['PAERO1']:
             continue
@@ -993,12 +1004,12 @@ def _convert_aero(model, xyz_scale, time_scale, weight_scale):
             paero.width *= xyz_scale
 
             if paero.lrsb is not None:  # half-widths of slender body
-                half_width_aefacts.add(paero.lrsb)
+                xyz_aefacts.add(paero.lrsb)
             if paero.lrib is not None:  # hafl-widths of interference elements
-                half_width_aefacts.add(paero.lrib)
+                xyz_aefacts.add(paero.lrib)
             #self.lrsb_ref = None
             #self.lrib_ref = None
-    for aefact_id in half_width_aefacts:
+    for aefact_id in xyz_aefacts:
         aefact = model.aefacts[aefact_id]
         aefact.fractions *= xyz_scale
 

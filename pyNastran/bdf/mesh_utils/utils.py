@@ -498,7 +498,8 @@ def cmd_line_scale():
     bdf_filename = args.INPUT
     bdf_filename_out = args.OUTPUT
     if bdf_filename_out is None:
-        bdf_filename_out = bdf_filename + '.scale.bdf'
+        bdf_filename_base, ext = os.path.splitext(bdf_filename)
+        bdf_filename_out = '%s.scaled%s' % (bdf_filename_base, ext)
 
     #assert bdf_filename_out is not None
     if args.mass:
