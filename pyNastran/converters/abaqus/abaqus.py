@@ -226,10 +226,10 @@ class Abaqus(object):
 
         self.log.debug('nassembly = %s' % nassembly)
         for part_name, part in sorted(self.parts.items()):
-            self.log.info(part)
+            self.log.info(str(part))
             part.check_materials(self.materials)
         for unused_mat_name, mat in sorted(self.materials.items()):
-            self.log.debug(mat)
+            self.log.debug(str(mat))
 
     def _read_star_block(self, lines, iline, line0, debug=False):
         """
@@ -439,6 +439,13 @@ class Abaqus(object):
                     iline += 1
                     line0 = lines[iline].strip().lower()
                 print(line0)
+            elif word.lower().startswith('hyperelastic, mooney-rivlin'):
+                key = 'hyperelastic, mooney-rivlin'
+                while '*' not in line0:
+                    sline = line0.split(',')
+                    iline += 1
+                    line0 = lines[iline].strip().lower()
+                print(line0)
             else:
                 msg = print_data(lines, iline, word, 'is this an unallowed word for *Material?\n')
                 raise NotImplementedError(msg)
@@ -556,7 +563,7 @@ class Abaqus(object):
 
         iline += 1
         line0 = lines[iline].strip().lower()
-        assert line0 == '*node', line0
+        assert line0.startswith('*node'), line0
 
 
         #iline += 1
@@ -709,7 +716,7 @@ class Abaqus(object):
         allowed_element_types = [
             'r2d2', 'conn2d2',
             'cpe3', 'cpe4', 'cpe4r', 'coh2d4', 'c3d10h', 'cohax4',
-            'cax3', 'cax4r', 'cps4r', 'mass', 'rotaryi', 't2d2']
+            'cax3', 'cax4r', 'cps4r', 'mass', 'rotaryi', 't2d2', 'c3d8r']
         if len(sline) < 1:
             raise RuntimeError("looking for element_type (e.g., '*Element, type=R2D2')\n"
                                "line0=%r\nsline=%s; allowed:\n[%s]" % (

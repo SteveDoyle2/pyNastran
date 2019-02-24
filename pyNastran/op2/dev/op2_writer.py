@@ -126,8 +126,11 @@ class OP2Writer(OP2_F06_Common):
         write_geom1(fop2, fop2_ascii, obj)
         write_geom2(fop2, fop2_ascii, obj)
         write_geom3(fop2, fop2_ascii, obj)
+        #write_geom4(fop2, fop2_ascii, obj)
         write_ept(fop2, fop2_ascii, obj)
         write_mpt(fop2, fop2_ascii, obj)
+        #write_dit(fop2, fop2_ascii, obj)
+        #write_dynamic(fop2, fop2_ascii, obj)
         if obj.grid_point_weight.reference_point is not None:
             if hasattr(result, 'write_op2'):
                 print("grid_point_weight")
@@ -140,7 +143,7 @@ class OP2Writer(OP2_F06_Common):
 
         # eigenvalues are written first
         for ikey, result in sorted(obj.eigenvalues.items()):
-            header
+            found_eigenvalues
             #print('%-18s SUBCASE=%i' % (result.__class__.__name__, isubcase))
             if hasattr(result, 'write_op2'):
                 result.write_op2(fop2, fop2_ascii, endian=endian)
@@ -184,21 +187,47 @@ class OP2Writer(OP2_F06_Common):
             obj.cdamp2_force,
             obj.cdamp3_force,
             obj.cdamp4_force,
-
-            #obj.plateForces,   # centroidal elements
-            #obj.plateForces2,  # bilinear elements
+            obj.cgap_force,
 
             obj.conrod_force,
             obj.cquad4_force,
             obj.cquad8_force,
+            obj.cquadr_force,
             obj.crod_force,
             obj.cshear_force,
             obj.ctria3_force,
             obj.ctria6_force,
+            obj.ctriar_force,
             obj.ctube_force,
+            obj.cvisc_force,
 
-            # other
-            #obj.cgap_force, #obj.solidPressureForces,
+            # thermal
+            obj.conrod_thermal_load,
+            obj.cbar_thermal_load,
+            obj.cbeam_thermal_load,
+            obj.chbdye_thermal_load,
+            obj.chbdyg_thermal_load,
+            obj.chbdyp_thermal_load,
+            obj.conv_thermal_load,
+            obj.chexa_thermal_load,
+            obj.cpenta_thermal_load,
+            obj.ctetra_thermal_load,
+            obj.cquad4_thermal_load,
+            obj.cquad8_thermal_load,
+
+            obj.conrod_thermal_load_flux,
+            obj.cbar_thermal_load_flux,
+            obj.cbeam_thermal_load_flux,
+            obj.chbdye_thermal_load_flux,
+            obj.chbdyg_thermal_load_flux,
+            obj.chbdyp_thermal_load_flux,
+            obj.chexa_thermal_load_flux,
+            obj.cpenta_thermal_load_flux,
+            obj.ctetra_thermal_load_flux,
+            obj.cquad4_thermal_load_flux,
+            obj.cquad8_thermal_load_flux,
+
+            #obj.solidPressureForces,
         ]
 
         oes1x1 = [
@@ -278,6 +307,37 @@ class OP2Writer(OP2_F06_Common):
         ogs = [
             #obj.grid_point_stresses,
             #obj.grid_point_volume_stresses,
+        ]
+        onr = [
+            self.cbeam_strain_energy,
+            self.cbend_strain_energy,
+            self.cbush_strain_energy,
+            self.cbar_strain_energy,
+            self.cdum8_strain_energy,
+            self.celas1_strain_energy,
+            self.celas2_strain_energy,
+            self.celas3_strain_energy,
+            self.celas4_strain_energy,
+
+            self.cgap_strain_energy,
+            self.chexa_strain_energy,
+            self.conm2_strain_energy,
+            self.conrod_strain_energy,
+            self.cpenta_strain_energy,
+            self.cpyram_strain_energy,
+            self.cquad4_strain_energy,
+            self.cquad8_strain_energy,
+            self.cquadr_strain_energy,
+            self.cquadx_strain_energy,
+            self.crod_strain_energy,
+            self.cshear_strain_energy,
+            self.ctetra_strain_energy,
+            self.ctria3_strain_energy,
+            self.ctria6_strain_energy,
+            self.ctriar_strain_energy,
+            self.ctriax6_strain_energy,
+            self.ctriax_strain_energy,
+            self.ctube_strain_energy,
         ]
         opg = [obj.load_vectors]
         ogp = [obj.grid_point_forces]

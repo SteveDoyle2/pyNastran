@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 from struct import pack, Struct
 
 from .geom1 import write_geom_header, close_geom_table
@@ -51,78 +51,11 @@ def write_ept(op2, op2_ascii, obj, endian=b'<'):
         op2.write(struct_3i.pack(*key))
         op2_ascii.write('%s %s\n' % (name, str(key)))
 
-        if name == 'PSOLID':
-            #pid = data[0]
-            #mid = data[1]
-            #cordm = data[2]
-            #integ = data[3]
-            #stress = data[4]
-            #isop = data[5]
-            #fctn = data[6].decode('latin1')
-            for pid in sorted(pids):
-                prop = obj.properties[pid]
-                mid = prop.mid
-                cordm = prop.cordm
-                #print(prop.get_stats())
-
-                ## stress : int, string, or blank
-                ##    blank/GRID
-                ##    1-GAUSS
-                if prop.stress == 'GRID':
-                    stress = 0
-                elif prop.stress == 'GAUSS':
-                    stress = 1
-                else:
-                    raise NotImplementedError('prop.stress=%s and must be [0, 1]' % prop.stress)
-
-                if prop.integ == 'BUBBLE':
-                    integ = 0
-                elif prop.integ == 'GAUSS':
-                    integ = 1
-                elif prop.integ == 'TWO':
-                    integ = 2
-                elif prop.integ == 'THREE':
-                    integ = 3
-                else:
-                    raise NotImplementedError('prop.stress=%s and must be [0, 1, 2, 3]' % prop.integ)
-
-                if prop.isop == 'REDUCED':
-                    isop = 0
-                elif prop.isop == 'FULL':
-                    isop = 1
-                else:
-                    raise NotImplementedError('isop=%s and must be [0, 1]' % prop.isop)
-
-                if prop.fctn == 'SMECH':
-                    fctn = b'SMEC'
-                elif prop.fctn == 'PFLUID':
-                    fctn = b'PFLU'
-                else:
-                    raise NotImplementedError('PSOLID; fctn=%r' % prop.fctn)
-
-
-                data = [pid, mid, cordm, integ, stress, isop, fctn]
-                op2_ascii.write('  pid=%s mid=%s data=%s\n' % (pid, mid, data[2:]))
-                op2.write(spack.pack(*data))
-        elif name == 'PSHELL':
-            for pid in sorted(pids):
-                #(pid, mid1, t, mid2, bk, mid3, ts, nsm, z1, z2, mid4) = out
-                prop = obj.properties[pid]
-                data = [pid, prop.mid1, prop.t, prop.mid2, prop.twelveIt3, prop.mid3,
-                        prop.tst, prop.nsm, prop.z1, prop.z2, prop.mid4]
-                print(data)
-                op2_ascii.write('  pid=%s mid=%s data=%s\n' % (pid, prop.mid1, data[2:]))
-                op2.write(spack.pack(*data))
-        elif name == 'PROD':
-            for pid in sorted(pids):
-                #(pid, mid, a, j, c, nsm) = out
-                prop = obj.properties[pid]
-                #print(prop.get_stats())
-                data = [pid, prop.mid, prop.A, prop.j, prop.c, prop.nsm]
-                op2_ascii.write('  pid=%s mid=%s data=%s\n' % (pid, prop.mid, data[2:]))
-                op2.write(spack.pack(*data))
-        else:  # pragma: no cover
-            raise NotImplementedError(name)
+        try:
+            write_card(op2, op2_ascii, obj, name, pids, spack)
+        except:
+            obj.log.error('failed EPT-%s' % name)
+            raise
         op2.write(pack('i', nbytes))
         itable -= 1
 
@@ -137,6 +70,81 @@ def write_ept(op2, op2_ascii, obj, endian=b'<'):
     #print('itable', itable)
     close_geom_table(op2, op2_ascii, itable, include_last=False)
     #-------------------------------------
+
+def write_card(op2, op2_ascii, obj, name, pids, spack):
+    if name == 'PSOLID':
+        #pid = data[0]
+        #mid = data[1]
+        #cordm = data[2]
+        #integ = data[3]
+        #stress = data[4]
+        #isop = data[5]
+        #fctn = data[6].decode('latin1')
+        for pid in sorted(pids):
+            prop = obj.properties[pid]
+            mid = prop.mid
+            cordm = prop.cordm
+
+            ## stress : int, string, or blank
+            ##    blank/GRID
+            ##    1-GAUSS
+            if prop.stress == 'GRID':
+                stress = 0
+            elif prop.stress == 'GAUSS':
+                stress = 1
+            else:
+                raise NotImplementedError('prop.stress=%s and must be [0, 1]' % prop.stress)
+
+            if prop.integ == 'BUBBLE':
+                integ = 0
+            elif prop.integ == 'GAUSS':
+                integ = 1
+            elif prop.integ == 'TWO':
+                integ = 2
+            elif prop.integ == 'THREE':
+                integ = 3
+            else:
+                raise NotImplementedError('prop.stress=%s and must be [0, 1, 2, 3]' % prop.integ)
+
+            if prop.isop == 'REDUCED':
+                isop = 0
+            elif prop.isop == 'FULL':
+                isop = 1
+            else:
+                raise NotImplementedError('isop=%s and must be [0, 1]' % prop.isop)
+
+            if prop.fctn == 'SMECH':
+                fctn = b'SMEC'
+            elif prop.fctn == 'PFLUID':
+                fctn = b'PFLU'
+            else:
+                raise NotImplementedError('PSOLID; fctn=%r' % prop.fctn)
+
+            data = [pid, mid, cordm, integ, stress, isop, fctn]
+            op2_ascii.write('  pid=%s mid=%s data=%s\n' % (pid, mid, data[2:]))
+            op2.write(spack.pack(*data))
+    elif name == 'PSHELL':
+        for pid in sorted(pids):
+            #(pid, mid1, t, mid2, bk, mid3, ts, nsm, z1, z2, mid4) = out
+            prop = obj.properties[pid]
+            mid2 = prop.mid2 if prop.mid2 is not None else 0
+            data = [pid, prop.mid1, prop.t, mid2, prop.twelveIt3, prop.mid3,
+                    prop.tst, prop.nsm, prop.z1, prop.z2, prop.mid4]
+            #print(data)
+            #print(prop.mid1, mid2, prop.mid3, prop.mid4)
+
+            op2_ascii.write('  pid=%s mid=%s data=%s\n' % (pid, prop.mid1, data[2:]))
+            op2.write(spack.pack(*data))
+    elif name == 'PROD':
+        for pid in sorted(pids):
+            #(pid, mid, a, j, c, nsm) = out
+            prop = obj.properties[pid]
+            #print(prop.get_stats())
+            data = [pid, prop.mid, prop.A, prop.j, prop.c, prop.nsm]
+            op2_ascii.write('  pid=%s mid=%s data=%s\n' % (pid, prop.mid, data[2:]))
+            op2.write(spack.pack(*data))
+    else:  # pragma: no cover
+        raise NotImplementedError(name)
 
 def write_pcomp(name, pids, itable, op2, op2_ascii, obj, endian=b'<'):
     key = (2706, 27, 287)
@@ -181,11 +189,12 @@ def write_pcomp(name, pids, itable, op2, op2_ascii, obj, endian=b'<'):
             ft = 4
         else:
             raise RuntimeError('unsupported ft.  pid=%s ft=%r.'
-                               '\nPCOMP = %s' % (pid, prop.ft, data))
+                               '\nPCOMP = %s' % (pid, prop.ft, prop))
 
         #is_symmetric = True
         symmetric_factor = 1
-        data = [pid, symmetric_factor * prop.nplies, prop.z0, prop.nsm, prop.sb, ft, prop.tref, prop.ge]
+        data = [pid, symmetric_factor * prop.nplies, prop.z0,
+                prop.nsm, prop.sb, ft, prop.tref, prop.ge]
         op2.write(s1.pack(*data))
         op2_ascii.write(str(data) + '\n')
 

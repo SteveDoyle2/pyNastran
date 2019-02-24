@@ -57,6 +57,7 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_bush import RealBushStressAr
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bush1d import RealBush1DStressArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_gap import NonlinearGapStressArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_triax import RealTriaxStressArray #, RealTriaxStrainArray
+from pyNastran.op2.tables.oes_stressStrain.real.oes_bend import RealBendStressArray, RealBendStrainArray
 
 from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear_rod import RealNonlinearRodArray
 from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import RealNonlinearPlateArray
@@ -104,7 +105,7 @@ from pyNastran.op2.tables.oef_forces.oef_complex_force_objects import (
     ComplexViscForceArray,
 )
 from pyNastran.op2.tables.oef_forces.oef_thermal_objects import (
-    RealChbdyHeatFluxArray, # RealConvHeatFluxArray,
+    RealChbdyHeatFluxArray, RealConvHeatFluxArray,
     Real1DHeatFluxArray,
     #RealElementTableArray, RealHeatFluxVUArray, RealHeatFluxVUBeamArray,
     #RealHeatFluxVU3DArray,
@@ -427,14 +428,14 @@ TABLE_OBJ_MAP = {
     'no.cbeam_strain' : (RandomBeamStrainArray, ),
     'modal_contribution.cbeam_strain' : (RealBeamStrainArray, ComplexBeamStrainArray, ),
 
-    'cbend_stress' : (ComplexBendStressArray, ),
+    'cbend_stress' : (RealBendStressArray, ComplexBendStressArray, ),
     'ato.cbend_stress' : (RandomBendStressArray, ),
     'crm.cbend_stress' : (RandomBendStressArray, ),
     'psd.cbend_stress' : (RandomBendStressArray, ),
     'rms.cbend_stress' : (RandomBendStressArray, ),
     'no.cbend_stress' : (RandomBendStressArray, ),
 
-    'cbend_strain' : (ComplexBendStrainArray, ),
+    'cbend_strain' : (RealBendStrainArray, ComplexBendStrainArray, ),
     'ato.cbend_strain' : (RandomBendStrainArray, ),
     'crm.cbend_strain' : (RandomBendStrainArray, ),
     'psd.cbend_strain' : (RandomBendStrainArray, ),
@@ -883,6 +884,7 @@ TABLE_OBJ_MAP = {
     'temperatures' : (RealTemperatureArray, ),
     'thermal_gradient_and_flux' : (RealTemperatureGradientAndFluxArray, ),
     'thermal_load_vectors' : (RealTemperatureVectorArray, ),
+    'conv_thermal_load' : (RealConvHeatFluxArray,),
 }
 
 TABLE_OBJ_KEYS = list(TABLE_OBJ_MAP.keys())

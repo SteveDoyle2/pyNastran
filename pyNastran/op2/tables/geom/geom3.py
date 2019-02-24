@@ -363,7 +363,7 @@ class GEOM3(GeomCommon):
 
     def _read_pload1(self, data, n):
         """
-        PLOAD1(????) - the marker for Record 17
+        PLOAD1(6909, 69, 198) - the marker for Record 17
         """
         ntotal = 32  # 8*4
         s = Struct(self._endian + b'4i4f')
@@ -662,7 +662,7 @@ class GEOM3(GeomCommon):
             load = QVOL.add_op2_data(out)
             self._add_load_object(load)
             n += ntotal
-        self.card_count['TEMPP1'] = nentries
+        self.card_count['QVOL'] = nentries
         return n
 
     def _read_rforce(self, data, n):
@@ -714,7 +714,7 @@ class GEOM3(GeomCommon):
             out = struc.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  TEMPP1=%s\n' % str(out))
-            #(sid, nid, scale_factor) = out
+            #sid, eid, t, tprime, ts1, ts2 = data
             load = TEMPP1.add_op2_data(out)
             self._add_load_object(load)
             n += ntotal

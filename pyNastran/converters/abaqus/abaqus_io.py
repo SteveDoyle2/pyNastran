@@ -7,7 +7,7 @@ from collections import OrderedDict
 import numpy as np
 
 import vtk
-from vtk import vtkLine, vtkTriangle, vtkQuad, vtkTetra
+from vtk import vtkLine, vtkTriangle, vtkQuad, vtkTetra, vtkHexahedron
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk
 
 from pyNastran.gui.gui_objects.gui_result import GuiResult
@@ -52,6 +52,7 @@ class AbaqusIO(object):
         n_cohax4 = 0
         n_cax3 = 0
         n_cax4r = 0
+        n_c3d8r = 0
 
         nnodes = 0
         nelements = 0
@@ -81,11 +82,13 @@ class AbaqusIO(object):
 
             if part.c3d10h is not None:
                 n_c3d10h += part.c3d10h.shape[0]
+            if part.c3d8r is not None:
+                n_c3d8r += part.c3d8r.shape[0]
 
             all_nodes.append(nodes)
         nelements += (
             n_r2d2 + n_cpe3 + n_cpe4 + n_cpe4r +
-            n_coh2d4 + n_c3d10h + n_cohax4 + n_cax3 + n_cax4r
+            n_coh2d4 + n_c3d10h + n_cohax4 + n_cax3 + n_cax4r + n_c3d8r
         )
         assert nelements > 0, nelements
         #nodes = model.nodes
@@ -132,11 +135,15 @@ class AbaqusIO(object):
             n_cpe4 = 0
             n_cpe4r = 0
             n_coh2d4 = 0
-            n_c3d10h = 0
 
             n_cohax4 = 0
             n_cax3 = 0
             n_cax4r = 0
+
+            # solids
+            n_c3d8r = 0
+            n_c3d10h = 0
+
             if part.r2d2 is not None:
                 n_r2d2 += part.r2d2.shape[0]
             if part.cpe3 is not None:
@@ -158,6 +165,9 @@ class AbaqusIO(object):
             # solids
             if part.c3d10h is not None:
                 n_c3d10h += part.c3d10h.shape[0]
+            if part.c3d8r is not None:
+                n_c3d8r += part.c3d8r.shape[0]
+
 
             if n_r2d2:
                 eids = part.r2d2[:, 0]
@@ -255,6 +265,21 @@ class AbaqusIO(object):
                     elem.GetPointIds().SetId(2, node_ids[2])
                     elem.GetPointIds().SetId(3, node_ids[3])
                     grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+            if n_c3d8r:
+                eids = part.c3d8r[:, 0]
+                node_ids = part.c3d8r[:, 1:] + nid_offset
+                for unused_eid, node_ids in zip(eids, node_ids):
+                    elem = vtkHexahedron()
+                    elem.GetPointIds().SetId(0, node_ids[0])
+                    elem.GetPointIds().SetId(1, node_ids[1])
+                    elem.GetPointIds().SetId(2, node_ids[2])
+                    elem.GetPointIds().SetId(3, node_ids[3])
+                    elem.GetPointIds().SetId(4, node_ids[4])
+                    elem.GetPointIds().SetId(5, node_ids[5])
+                    elem.GetPointIds().SetId(6, node_ids[6])
+                    elem.GetPointIds().SetId(7, node_ids[7])
+                    grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+
             nid_offset += nnodesi
 
         grid.SetPoints(points)
@@ -269,7 +294,8 @@ class AbaqusIO(object):
         #form = []
         cases = OrderedDict()
         ID = 1
-        form, cases, unused_icase, node_ids, element_ids = self._fill_abaqus_case(cases, ID, nodes, nelements, model)
+        form, cases, unused_icase, node_ids, element_ids = self._fill_abaqus_case(
+            cases, ID, nodes, nelements, model)
         #self._fill_cart3d_results(cases, form, icase, ID, model)
 
         self.gui.node_ids = node_ids

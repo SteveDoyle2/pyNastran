@@ -15,11 +15,17 @@ def write_mpt(op2, op2_ascii, obj, endian=b'<'):
     mtypes = [
         'MAT1', 'MAT2', 'MAT3', 'MAT4', 'MAT5', 'MAT8', 'MAT9'
     ]
-    out = obj.get_card_ids_by_card_types(mtypes)
+    #out = obj.get_card_ids_by_card_types(mtypes)
+    from collections import defaultdict
+    out = defaultdict(list)
+    for mid, mat in obj.materials.items():
+        if mat.type in mtypes:
+            out[mat.type].append(mat.mid)
+
     for name, mids in out.items():
         nmaterials = len(mids)
-        if nmaterials == 0:
-            continue
+        #if nmaterials == 0:
+            #continue
 
         if name == 'MAT1':
             key = (103, 1, 77)
@@ -36,6 +42,10 @@ def write_mpt(op2, op2_ascii, obj, endian=b'<'):
             key = (1403, 14, 122)
             nfields = 16
             spack = Struct(endian + b'i8fi5fi')
+        elif name == 'MAT4':
+            key = (2103, 21, 234)
+            nfields = 11
+            spack = Struct(endian + b'i10f')
         elif name == 'MAT8':
             key = (2503, 25, 288)
             nfields = 19
@@ -43,7 +53,7 @@ def write_mpt(op2, op2_ascii, obj, endian=b'<'):
             #(mid, E1, E2, nu12, G12, G1z, G2z, rho, a1, a2,
             # tref, Xt, Xc, Yt, Yc, S, ge, f12, strn) = out
         elif name == 'MAT9':
-            key = (2603,26,300)
+            key = (2603, 26, 300)
             nfields = 35
             spack = Struct(endian + b'i 30f 4i')
         else:  # pragma: no cover
@@ -95,6 +105,19 @@ def write_mpt(op2, op2_ascii, obj, endian=b'<'):
                 #print(data)
                 op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
                 op2.write(spack.pack(*data))
+        elif name == 'MAT4':
+            for mid in sorted(mids):
+                mat = obj.materials[mid]
+                #(mid, k, cp, rho, h, mu, hgen, refenth, tch, tdelta, qlat) = out
+                print(mat)
+                data = [
+                    mid,
+                    mat.k, mat.cp, mat.rho, mat.H, mat.mu, mat.hgen,
+                    mat.ref_enthalpy, mat.tch, mat.tdelta, mat.qlat,
+                ]
+                #print(data)
+                op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
+                op2.write(spack.pack(*data))
 
         elif name == 'MAT8':
             for mid in sorted(mids):
@@ -121,11 +144,13 @@ def write_mpt(op2, op2_ascii, obj, endian=b'<'):
                     mat.G33, mat.G34, mat.G35, mat.G36,
                     mat.G44, mat.G45, mat.G46,
                     mat.G55, mat.G56, mat.G66,
-                    mat.rho, mat.A, mat.tref, mat.ge,
+                    mat.rho] + mat.A + [mat.tref, mat.ge,
                     0, 0, 0, 0,
                 ]
+                #assert len(mat.A) == 6, mat.A
+                assert len(data) == nfields
 
-                print('MAT9', data)
+                print('MAT9', data, len(data))
                 op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
                 op2.write(spack.pack(*data))
         else:  # pragma: no cover

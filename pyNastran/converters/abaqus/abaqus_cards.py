@@ -18,7 +18,10 @@ class SolidSection(object):
         line0 = data_lines[0]
         assert len(line0) == 1., data_lines
 
-        self.thickness = float(line0[0])
+        try:
+            self.thickness = float(line0[0])
+        except ValueError:
+            self.thickness = 0.
 
         for line in data_lines:
             log.info('solid - %r' % line)
@@ -123,6 +126,7 @@ class Part(object):
 
         # solids
         self.c3d10h = None
+        self.c3d8r = None
         #-----------------------------------
         # eids
         self.r2d2_eids = None
@@ -136,6 +140,7 @@ class Part(object):
 
         # rigid elements
         self.c3d10h_eids = None
+        self.c3d8r_eids = None
         self._store_elements(element_types)
 
     def _store_elements(self, element_types):
@@ -203,6 +208,12 @@ class Part(object):
             self.c3d10h = np.array(elements, dtype='int32')
             self.c3d10h_eids = self.c3d10h[:, 0]
             assert self.c3d10h.shape[1] == 11, self.c3d10h.shape
+        if 'c3d8r' in element_types:
+            elements = element_types['c3d8r']
+            self.c3d8r = np.array(elements, dtype='int32')
+            self.c3d8r_eids = self.c3d8r[:, 0]
+            assert self.c3d8r.shape[1] == 9, self.c3d8r.shape
+
 
     def element(self, eid):
         """gets a specific element of the part"""

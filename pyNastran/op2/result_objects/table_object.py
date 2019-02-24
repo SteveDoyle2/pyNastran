@@ -336,14 +336,10 @@ class TableArray(ScalarObject):  # displacement style table
         headers = self.get_headers()
         #headers = [0, 1, 2, 3, 4, 5]
         node_gridtype = [self.node_gridtype[:, 0], self.gridtype_str]
-        #node_gridtype = self.node_gridtype
         ugridtype_str = unique(self.gridtype_str)
 
         if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
-            #print('data.shape = %s' % str(self.data.shape))
-            #print('column_values = %s' % column_values)
-            #print('node_gridtype.shape = %s' % str(node_gridtype.shape))
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=node_gridtype, minor_axis=headers).to_frame()  # to_xarray()
             #print(self.data_frame)
@@ -546,13 +542,15 @@ class TableArray(ScalarObject):  # displacement style table
             field5 = self.lsdvmns[itime] # load set number
         elif self.analysis_code == 8:  # post-buckling
             field5 = self.lsdvmns[itime] # load set number
-            field6 = self.eigns[itime]
+            if hasattr(self, 'eigns'):
+                field6 = self.eigns[itime]
             ftable3 = set_table3_field(ftable3, 6, b'f') # field 6
         elif self.analysis_code == 9:  # complex eigenvalues
             field5 = self.modes[itime]
-            field6 = self.eigns[itime]
+            if hasattr(self, 'eigns'):
+                field6 = self.eigns[itime]
+                ftable3 = set_table3_field(ftable3, 6, b'f') # field 6
             field7 = self.eigis[itime]
-            ftable3 = set_table3_field(ftable3, 6, b'f') # field 6
             ftable3 = set_table3_field(ftable3, 7, b'f') # field 7
         elif self.analysis_code == 10:  # nonlinear statics
             field5 = self.lftsfqs[itime]
@@ -614,7 +612,6 @@ class RealTableArray(TableArray):
     def write_op2(self, op2_file, fascii, itable, new_result,
                   date, is_mag_phase=False, endian='>'):
         """writes an OP2"""
-        assert endian == b'<', endian
         import inspect
         assert self.table_name in ['OUGV1', 'OQMG1', 'OQG1', 'OPG1'], self.table_name
 
@@ -687,13 +684,6 @@ class RealTableArray(TableArray):
             op2_file.write(pack(b'i', *header))
             fascii.write('footer = %s\n' % header)
             new_result = False
-            #header = [
-                #4, itable, 4,
-                #4, 1, 4,
-                #4, 0, 4,
-            #]
-            #op2_file.write(pack(b'%ii' % len(header), *header))
-            #fascii.write('footer2 = %s\n' % header)
         return itable
 
     def write_csv(self, csv_file, is_mag_phase=False):

@@ -2056,13 +2056,14 @@ class ComplexCBarForceArray(ComplexForceObject):
             ts2 = self.data[itime, :, 5]
             af = self.data[itime, :, 6]
             trq = self.data[itime, :, 7]
+            assert len(eids_device) == len(bm1a.real)
 
             for eid_device, bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi in zip(
                 eids_device, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq):
 
                 data = [eid_device,
-                        bm1a.real, bm2a.real, bm1b.real, bm2b.real, ts1.real, ts2.real, af.real, trq.real,
-                        bm1a.imag, bm2a.imag, bm1b.imag, bm2b.imag, ts1.imag, ts2.imag, af.imag, trq.imag]
+                        bm1ai.real, bm2ai.real, bm1bi.real, bm2bi.real, ts1i.real, ts2i.real, afi.real, trqi.real,
+                        bm1ai.imag, bm2ai.imag, bm1bi.imag, bm2bi.imag, ts1i.imag, ts2i.imag, afi.imag, trqi.imag]
                 op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, str(data)))
                 op2.write(struct1.pack(*data))
 
@@ -2442,7 +2443,8 @@ class ComplexCBeamForceArray(ComplexForceObject):
                         nwide += len(data)
 
                     eid_device2 = eids_device[ielement]
-                    assert eid_device == eid_device2
+                    #print(eids_device)
+                    assert eid_device == eid_device2, 'eid_device=%s eid_device2=%s' % (eid_device, eid_device2)
                     nid = nids[ielement]
                     data = [nid, sdi.real,
                             bm1i.real, bm2i.real, ts1i.real, ts2i.real, afi.real, ttrqi.real, wtrqi.real,

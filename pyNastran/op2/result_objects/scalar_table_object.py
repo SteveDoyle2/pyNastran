@@ -13,6 +13,7 @@ from numpy import allclose, asarray, vstack
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
 from pyNastran.op2.result_objects.table_object import append_sort1_sort2
 from pyNastran.f06.f06_formatting import write_floats_13e, write_float_12e
+from pyNastran.op2.op2_interface.write_utils import set_table3_field
 
 
 SORT2_TABLE_NAME_MAP = {
@@ -44,6 +45,8 @@ class ScalarTableArray(ScalarObject):  # displacement style table
             assert self.node_gridtype.shape == table.node_gridtype.shape, 'shape=%s table.shape=%s' % (self.node_gridtype.shape, table.node_gridtype.shape)
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
+            msg += 'nid_gridtype:\n'
+            msg += 'gridtype.shape=%s table.gridtype.shape=%s\n' % (str(self.node_gridtype.shape), str(table.node_gridtype.shape))
             for (nid, grid_type), (nid2, grid_type2) in zip(self.node_gridtype, table.node_gridtype):
                 msg += '(%s, %s)    (%s, %s)\n' % (nid, grid_type, nid2, grid_type2)
             print(msg)
@@ -352,19 +355,56 @@ class RealScalarTableArray(ScalarTableArray):  # temperature style table
         num_wide = self.num_wide
         acoustic_flag = 0
         thermal = 0
-        title = b'%-128s' % bytes(self.title)
-        subtitle = b'%-128s' % bytes(self.subtitle)
-        label = b'%-128s' % bytes(self.label)
-        ftable3 = b'50i 128s 128s 128s'
+        title = b'%-128s' % self.title.encode('ascii')
+        subtitle = b'%-128s' % self.subtitle.encode('ascii')
+        label = b'%-128s' % self.label.encode('ascii')
+        ftable3 = b'i' * 50 + b'128s 128s 128s'
         oCode = 0
+
+        field6 = 0
+        field7 = 0
         if self.analysis_code == 1:
-            lsdvmn = self.lsdvmn
+            field5 = self.lsdvmns[itime]
+        #elif self.analysis_code == 2:
+            #field5 = self.modes[itime]
+            #field6 = self.eigns[itime]
+            #field7 = self.mode_cycles[itime]
+            #assert isinstance(field6, float), type(field6)
+            #assert isinstance(field7, float), type(field7)
+            #ftable3 = set_table3_field(ftable3, 6, b'f') # field 6
+            #ftable3 = set_table3_field(ftable3, 7, b'f') # field 7
+        #elif self.analysis_code == 5:
+            #field5 = self.freqs[itime]
+            #ftable3 = set_table3_field(ftable3, 5, b'f') # field 5
+        elif self.analysis_code == 6:
+            if hasattr(self, 'dts'):
+                field5 = self.dts[itime]
+            else:
+                field5 = self.times[itime]
+            ftable3 = set_table3_field(ftable3, 5, b'f') # field 5
+        #elif self.analysis_code == 7:  # pre-buckling
+            #field5 = self.lsdvmns[itime] # load set number
+        #elif self.analysis_code == 8:  # post-buckling
+            #field5 = self.lsdvmns[itime] # load set number
+            #field6 = self.eigns[itime]
+            #ftable3 = set_table3_field(ftable3, 6, b'f') # field 6
+        #elif self.analysis_code == 9:  # complex eigenvalues
+            #field5 = self.modes[itime]
+            #field6 = self.eigns[itime]
+            #field7 = self.eigis[itime]
+            #ftable3 = set_table3_field(ftable3, 6, b'f') # field 6
+            #ftable3 = set_table3_field(ftable3, 7, b'f') # field 7
+        elif self.analysis_code == 10:  # nonlinear statics
+            field5 = self.lftsfqs[itime]
+            ftable3 = set_table3_field(ftable3, 5, b'f') # field 5; load step
+        #elif self.analysis_code == 11:  # old geometric nonlinear statics
+            #field5 = self.lsdvmns[itime] # load set number
         else:
             raise NotImplementedError(self.analysis_code)
 
         table3 = [
-            approach_code, table_code, 0, isubcase, lsdvmn,
-            0, 0, random_code, format_code, num_wide,
+            approach_code, table_code, 0, isubcase, field5,
+            field6, field7, random_code, format_code, num_wide,
             oCode, acoustic_flag, 0, 0, 0,
             0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -381,16 +421,17 @@ class RealScalarTableArray(ScalarTableArray):  # temperature style table
                 n += len(v)
         assert n == 584, n
         data = [584] + table3 + [584]
-        fmt = 'i' + ftable3 + 'i'
+        fmt = b'i' + ftable3 + b'i'
         #print(fmt)
         #op2_file.write(pack(fascii, '%s header 3c' % self.table_name, fmt, data))
         fascii.write('%s header 3c = %s\n' % (self.table_name, data))
         op2_file.write(pack(fmt, *data))
 
-    def write_op2(self, op2_file, fascii, itable, date, is_mag_phase=False, endian='>'):
+    def write_op2(self, op2_file, fascii, itable, new_result,
+                  date, is_mag_phase=False, endian='>'):
         """writes an OP2"""
         import inspect
-        assert self.table_name in ['OUGV1', 'OQMG1', 'OQG1'], self.table_name
+        assert self.table_name in ['OPG1', 'OUGV1', 'TOUGV1'], self.table_name  # 'OUGV1', 'OQMG1', 'OQG1'
 
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
@@ -400,12 +441,10 @@ class RealScalarTableArray(ScalarTableArray):  # temperature style table
             self._write_table_header(op2_file, fascii, date)
             itable = -3
 
-        if isinstance(self.nonlinear_factor, float):
-            op2_format = endian + b'%sif' % (7 * self.ntimes)
-            raise NotImplementedError()
+        if self.is_sort1:
+            s = Struct(endian + b'2i6f')
         else:
-            op2_format = endian + b'2i6f' * self.ntimes
-        s = Struct(op2_format)
+            raise NotImplementedError('SORT2')
 
         unused_node = self.node_gridtype[:, 0]
         gridtype = self.node_gridtype[:, 1]
@@ -418,7 +457,7 @@ class RealScalarTableArray(ScalarTableArray):  # temperature style table
         nnodes_device = self.node_gridtype[:, 0] * 10 + self.device_code
 
         #(2+6) => (node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i)
-        ntotal = self.ntimes * nnodes * (2 + 6)
+        ntotal = nnodes * (2 + 6)
 
         #print('shape = %s' % str(self.data.shape))
         assert nnodes > 1, nnodes
@@ -430,17 +469,18 @@ class RealScalarTableArray(ScalarTableArray):  # temperature style table
         #fmt = '%2i %6f'
         #print('ntotal=%s' % (ntotal))
         for itime in range(self.ntimes):
-            self._write_table_3(op2_file, fascii, itable, itime)
+            self._write_table_3(op2_file, fascii, new_result, itable, itime)
 
             # record 4
-            header = [4, -4, 4,
+            itable -= 1
+            header = [4, itable, 4,
                       4, 1, 4,
                       4, 0, 4,
                       4, ntotal, 4,
                       4*ntotal]
             op2_file.write(pack(b'%ii' % len(header), *header))
             fascii.write('r4 [4, 0, 4]\n')
-            fascii.write('r4 [4, %s, 4]\n' % (itable-1))
+            fascii.write('r4 [4, %s, 4]\n' % (itable))
             fascii.write('r4 [4, %i, 4]\n' % (4*ntotal))
 
             t1 = self.data[itime, :, 0]
@@ -449,16 +489,11 @@ class RealScalarTableArray(ScalarTableArray):  # temperature style table
                 fascii.write('  nid, grid_type, dx, dy, dz, rx, ry, rz = %s\n' % data)
                 op2_file.write(s.pack(*data))
 
-            itable -= 2
+            itable -= 1
             header = [4 * ntotal,]
             op2_file.write(pack(b'i', *header))
-            fascii.write('footer = %s' % header)
-        header = [
-            4, itable, 4,
-            4, 1, 4,
-            4, 0, 4,
-        ]
-        op2_file.write(pack(b'%ii' % len(header), *header))
+            fascii.write('footer = %s\n' % header)
+            new_result = False
         return itable
 
     #def spike():

@@ -1085,6 +1085,11 @@ class TEMPP1(BaseCard):
         sid, eid, t, tprime, ts1, ts2 = data
         return TEMPP1(sid, eid, t, tprime, [ts1, ts2], comment=comment)
 
+    def raw_fields(self):
+        """Writes the TEMP card"""
+        list_fields = ['TEMPP1', self.sid, self.eid, self.tbar] + self.t_stress
+        return list_fields
+
     def write_card(self, size=8, is_double=False):
         list_fields = ['TEMPP1', self.sid, self.eid, self.tbar] + self.t_stress
         return print_card_8(list_fields)
