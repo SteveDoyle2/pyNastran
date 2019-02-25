@@ -4,7 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 #import sys
 #import copy
 from datetime import date
-#from collections import defaultdict
+from collections import defaultdict
 from struct import pack, Struct
 
 import pyNastran
@@ -112,10 +112,10 @@ class OP2Writer(OP2_F06_Common):
 
             nastran_version = b'NX8.5   ' if obj.is_nx else b'XXXXXXXX'
             fop2.write(pack(b'4i 8s i', *[4, 2, 4,
-                                         #4, 2, 4,
-                                         #4, 1, 4,
-                                         #4, 8, 4,
-                                         8, nastran_version, 8]))
+                                          #4, 2, 4,
+                                          #4, 1, 4,
+                                          #4, 8, 4,
+                                          8, nastran_version, 8]))
             fop2.write(pack(b'6i', *[4, -1, 4,
                                      4, 0, 4,]))
         elif post == -2:
@@ -132,7 +132,7 @@ class OP2Writer(OP2_F06_Common):
         #write_dit(fop2, fop2_ascii, obj)
         #write_dynamic(fop2, fop2_ascii, obj)
         if obj.grid_point_weight.reference_point is not None:
-            if hasattr(result, 'write_op2'):
+            if hasattr(obj.grid_point_weight, 'write_op2'):
                 print("grid_point_weight")
                 obj.grid_point_weight.write_op2(fop2, endian=endian)
             else:
@@ -166,7 +166,10 @@ class OP2Writer(OP2_F06_Common):
             ##self.show(100)
             #data = self._read_record()
 
+        #self._write1(obj, fop2, fop2_ascii, struct_3i, endian)
+        self._write2(obj, fop2, fop2_ascii, struct_3i, endian)
 
+    def _write1(self, obj, fop2, fop2_ascii, struct_3i, endian):
         oef = [
             # OEF - forces
             # alphabetical order...
@@ -309,35 +312,35 @@ class OP2Writer(OP2_F06_Common):
             #obj.grid_point_volume_stresses,
         ]
         onr = [
-            self.cbeam_strain_energy,
-            self.cbend_strain_energy,
-            self.cbush_strain_energy,
-            self.cbar_strain_energy,
-            self.cdum8_strain_energy,
-            self.celas1_strain_energy,
-            self.celas2_strain_energy,
-            self.celas3_strain_energy,
-            self.celas4_strain_energy,
+            obj.cbeam_strain_energy,
+            obj.cbend_strain_energy,
+            obj.cbush_strain_energy,
+            obj.cbar_strain_energy,
+            obj.cdum8_strain_energy,
+            obj.celas1_strain_energy,
+            obj.celas2_strain_energy,
+            obj.celas3_strain_energy,
+            obj.celas4_strain_energy,
 
-            self.cgap_strain_energy,
-            self.chexa_strain_energy,
-            self.conm2_strain_energy,
-            self.conrod_strain_energy,
-            self.cpenta_strain_energy,
-            self.cpyram_strain_energy,
-            self.cquad4_strain_energy,
-            self.cquad8_strain_energy,
-            self.cquadr_strain_energy,
-            self.cquadx_strain_energy,
-            self.crod_strain_energy,
-            self.cshear_strain_energy,
-            self.ctetra_strain_energy,
-            self.ctria3_strain_energy,
-            self.ctria6_strain_energy,
-            self.ctriar_strain_energy,
-            self.ctriax6_strain_energy,
-            self.ctriax_strain_energy,
-            self.ctube_strain_energy,
+            obj.cgap_strain_energy,
+            obj.chexa_strain_energy,
+            obj.conm2_strain_energy,
+            obj.conrod_strain_energy,
+            obj.cpenta_strain_energy,
+            obj.cpyram_strain_energy,
+            obj.cquad4_strain_energy,
+            obj.cquad8_strain_energy,
+            obj.cquadr_strain_energy,
+            obj.cquadx_strain_energy,
+            obj.crod_strain_energy,
+            obj.cshear_strain_energy,
+            obj.ctetra_strain_energy,
+            obj.ctria3_strain_energy,
+            obj.ctria6_strain_energy,
+            obj.ctriar_strain_energy,
+            obj.ctriax6_strain_energy,
+            obj.ctriax_strain_energy,
+            obj.ctube_strain_energy,
         ]
         opg = [obj.load_vectors]
         ogp = [obj.grid_point_forces]
@@ -363,10 +366,119 @@ class OP2Writer(OP2_F06_Common):
             ('OGP', ogp),
             ('other', other)
         ]
-        res_outs = {}
         self._write_categories(obj, res_categories, isubcases,
                                fop2, fop2_ascii,
                                struct_3i, endian)
+
+    def _write2(self, obj, fop2, fop2_ascii, struct_3i, endian):
+        res_categories2 = defaultdict(list)
+        table_order = [
+            'OUGV1',
+            'BOUGV1',
+            'OUPV1',
+            'OAGATO1',
+
+            'OQG1',
+            'OQMG1',
+            'OQP1',
+
+            'OPGV1', 'OPG1', 'OPNL1',
+
+            'DOEF1', 'HOEF1',
+            'OEF1', 'OEF1X',
+            'OEFATO1',
+
+            'OESNLXD', 'OESNLXR', 'OESNL1X',
+            'OES1', 'OES1X', 'OES1X1',
+            'OES1C',
+            'OESCP',
+            'OESPSD1',
+            'OESPSD2',
+
+            'OESTRCP',
+            'OSTR1C',
+            'OSTR1X',
+
+            'OGPFB1',
+            'ONRGY1',
+            'OGS1',
+        ]
+        for table_type in obj.get_table_types():
+            res_dict = obj.get_result(table_type)
+            for key, res in res_dict.items():
+                if hasattr(res, 'table_name'): # params
+                    res_categories2[res.table_name_str].append(res)
+
+        for table_name, results in sorted(res_categories2.items()):
+            assert table_name in table_order, table_name
+
+        total_case_count = 0
+        #for table_name, results in sorted(res_categories2.items()):
+        for table_name in table_order:
+            if table_name not in res_categories2:
+                continue
+            results = res_categories2[table_name]
+            itable = -1
+            case_count = 0
+            for result in results:
+                element_name = ''
+                new_result = True
+                if hasattr(result, 'element_name'):
+                    element_name = ' - ' + result.element_name
+
+                if hasattr(result, 'write_op2'):
+                    #if hasattr(result, 'is_bilinear') and result.is_bilinear():
+                        #obj.log.warning("  *op2 - %s (%s) not written" % (
+                            #result.__class__.__name__, result.element_name))
+                        #continue
+                    isubcase = result.isubcase
+                    try:
+                        #print(' %-6s - %s - isubcase=%i%s; itable=%s %s' % (
+                            #table_name, result.__class__.__name__,
+                            #isubcase, element_name, itable, new_result))
+                        itable = result.write_op2(fop2, fop2_ascii, itable, new_result,
+                                                  obj.date, is_mag_phase=False, endian=endian)
+                    except:
+                        print(' %s - isubcase=%i%s' % (result.__class__.__name__,
+                                                       isubcase, element_name))
+                        raise
+                else:
+                    raise NotImplementedError("  *op2 - %s not written" % result.__class__.__name__)
+                    #obj.log.warning("  *op2 - %s not written" % result.__class__.__name__)
+                    #continue
+
+                case_count += 1
+                header = [
+                    4, itable, 4,
+                    4, 1, 4,
+                    4, 0, 4,
+                ]
+                #print('writing itable=%s' % itable)
+                assert itable is not None, '%s itable is None' % result.__class__.__name__
+                fop2.write(pack(b'9i', *header))
+                fop2_ascii.write('footer2 = %s\n' % header)
+                new_result = False
+
+            assert case_count > 0, case_count
+            if case_count:
+                #print(result.table_name, itable)
+                #print('res_category_name=%s case_count=%s'  % (res_category_name, case_count))
+                # close off the result
+                footer = [4, 0, 4]
+                fop2.write(struct_3i.pack(*footer))
+                fop2_ascii.write('close_a = %s\n' % footer)
+                fop2_ascii.write('---------------\n')
+                total_case_count += case_count
+            total_case_count += case_count
+
+        if total_case_count == 0:
+            raise FatalError('total_case_count = 0')
+        # close off the op2
+        footer = [4, 0, 4]
+        fop2.write(struct_3i.pack(*footer))
+        fop2_ascii.write('close_b = %s\n' % footer)
+        fop2.close()
+        fop2_ascii.close()
 
     def _write_categories(self, obj, res_categories, isubcases,
                           fop2, fop2_ascii,
@@ -449,4 +561,5 @@ class OP2Writer(OP2_F06_Common):
                     new_result = False
                     #print('bailing...')
                     #return case_count
+        #print(result.table_name, itable)
         return case_count

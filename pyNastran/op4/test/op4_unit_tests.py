@@ -15,8 +15,7 @@ OP4_PATH = pyNastran.op4.test.__path__[0]
 
 class TestOP4(unittest.TestCase):
     """runs various OP4 tests"""
-    @staticmethod
-    def test_op4_binary():
+    def test_op4_binary(self):
         fnames = [
             'mat_b_dn.op4',
             'mat_b_s1.op4',
@@ -34,8 +33,7 @@ class TestOP4(unittest.TestCase):
                     pass
                     #print(matrix)
 
-    @staticmethod
-    def test_op4_ascii():
+    def test_op4_ascii(self):
         fnames = [
             'mat_t_dn.op4',
             'mat_t_s1.op4',
@@ -156,8 +154,7 @@ class TestOP4(unittest.TestCase):
         # now the inputs are valid, so this works
         matrices2 = op4.read_op4(op4_filename, precision='default')
 
-    @staticmethod
-    def test_file_obj_ascii():
+    def test_file_obj_ascii(self):
         """tests ascii writing"""
         op4 = OP4(debug=False)
         form1 = 1
@@ -289,6 +286,21 @@ class TestOP4(unittest.TestCase):
 
         os.remove('ascii.op4')
         os.remove('binary.op4')
+
+    def test_op4_plate(self):
+        """tests sparse binary example"""
+        op4_filename = os.path.join(OP4_PATH, 'testplate_kgg.op4')
+        matrices = read_op4(op4_filename=op4_filename,
+                       matrix_names=None, precision='default', debug=False, log=None)
+        Kgg = matrices['KGG'][1].todense()
+
+        op4_filename = os.path.join(OP4_PATH, 'mytestplate_kgg_ascii.op4')
+        matrices = read_op4(op4_filename=op4_filename,
+                       matrix_names=None, precision='default', debug=False, log=None)
+        Kgga = matrices['KGG'][1].todense()
+        assert np.allclose(Kgg, Kgga)
+        #for line in Kgg:
+            #print(line)
 
 def get_matrices():
     """creates dummy matrices"""

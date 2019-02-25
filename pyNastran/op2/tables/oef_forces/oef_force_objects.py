@@ -73,6 +73,7 @@ class ForceObject(ScalarObject):
         call_frame = inspect.getouterframes(frame, 2)
         op2_ascii.write('%s.write_table_3: %s\n' % (self.__class__.__name__, call_frame[1][3]))
 
+        #print('new_result=%s itable=%s' % (new_result, itable))
         if new_result and itable != -3:
             header = [
                 4, 146, 4,
@@ -135,6 +136,13 @@ class ForceObject(ScalarObject):
             ftable3 = set_table3_field(ftable3, 5, b'f') # field 5
         elif self.analysis_code == 7:  # pre-buckling
             field5 = self.loadIDs[itime] # load set number
+        elif self.analysis_code == 9:  # complex eigenvalues
+            field5 = self.modes[itime]
+            #if hasattr(self, 'eigns'):
+            field6 = self.eigns[itime]
+            ftable3 = set_table3_field(ftable3, 6, b'f') # field 6
+            field7 = self.eigis[itime]
+            ftable3 = set_table3_field(ftable3, 7, b'f') # field 7
         elif self.analysis_code == 10:  # nonlinear statics
             field5 = self.load_steps[itime]
             ftable3 = set_table3_field(ftable3, 5, b'f') # field 5; load step

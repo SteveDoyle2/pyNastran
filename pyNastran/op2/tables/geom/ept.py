@@ -445,9 +445,17 @@ class EPT(GeomCommon):
 
             data_in = [data1, data2]
             prop = PBCOMP.add_op2_data(data_in)
+            pid = data1[0]
+            if pid in self.properties:
+                self._type_to_id_map['PBEAM'].remove(pid)
+                del self.properties[pid]
+
             self._add_op2_property(prop)
             nproperties += 1
         assert nproperties > 0, 'PBCOMP nproperties=%s' % (nproperties)
+        if len(self._type_to_id_map['PBEAM']) == 0 and 'PBEAM' in self.card_count:
+            del self._type_to_id_map['PBEAM']
+            del self.card_count['PBEAM']
         self.card_count['PBCOMP'] = nproperties
         return n
 
@@ -460,11 +468,12 @@ class EPT(GeomCommon):
         struct2 = Struct(self._endian + b'16f')
         struct3 = Struct(self._endian + b'16f')
         ntotal = 1072  # 44+12*84+20
-        nproperties = (len(data) - n) // ntotal
+        #nproperties = (len(data) - n) // ntotal
         #assert nproperties > 0, 'ndata-n=%s n=%s datai\n%s' % (len(data)-n, n, self.show_data(data[n:100+n]))
         ndata = len(data)
         #self.show_data(data[12:], 'if')
         #assert ndata % ntotal == 0, 'ndata-n=%s n=%s ndata%%ntotal=%s' % (len(data)-n, n, ndata % ntotal)
+        nproperties = 0
         while n < ndata:
         #while 1: #for i in range(nproperties):
             edata = data[n:n+20]
@@ -537,8 +546,10 @@ class EPT(GeomCommon):
                 if self.properties[pid].type == 'PBCOMP':
                     continue
             prop = PBEAM.add_op2_data(data_in)
+            nproperties += 1
             self._add_op2_property(prop)
-        self.card_count['PBEAM'] = nproperties
+        if nproperties:
+            self.card_count['PBEAM'] = nproperties
         return n
 
     def _read_pbeaml(self, data, n):

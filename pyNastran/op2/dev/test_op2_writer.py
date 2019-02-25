@@ -105,7 +105,7 @@ class TestOP2Writer(unittest.TestCase):
                             exclude_results=exclude_results,
                             #include_results='displacements',
                             #include_results='stress',
-                            #include_results=['crod_force', 'cbar_force'],
+                            include_results=['crod_force', 'cbar_force'],
                             )
         #op2 = read_op2(op2_filename, debug_file=op2_filename_debug, include_results='displacements')
 

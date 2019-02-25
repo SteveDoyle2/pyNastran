@@ -195,13 +195,21 @@ class ScalarTableArray(ScalarObject):  # displacement style table
         self._nnodes = nnodes
         self.ntotal = ntotal
 
-        self._times = zeros(ntimes, dtype=float_fmt)
+        _times = zeros(ntimes, dtype=float_fmt)
         #self.types = array(self.nelements, dtype='|S1')
-
-        self.node_gridtype = zeros((nnodes, 2), dtype='int32')
+        node_gridtype = zeros((nnodes, 2), dtype='int32')
 
         #[t1]
-        self.data = zeros((nx, ny, 1), self.data_type())
+        data = zeros((nx, ny, 1), self.data_type())
+        if self.load_as_h5:
+            group = self._get_result_group()
+            self._times = group.create_dataset('_times', data=_times)
+            self.node_gridtype = group.create_dataset('node_gridtype', data=node_gridtype)
+            self.data = group.create_dataset('data', data=data)
+        else:
+            self._times = _times
+            self.node_gridtype = node_gridtype
+            self.data = data
 
     def build_dataframe(self):
         """creates a pandas dataframe"""

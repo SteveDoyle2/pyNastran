@@ -317,8 +317,6 @@ class TableArray(ScalarObject):  # displacement style table
         #[t1, t2, t3, r1, r2, r3]
         data = zeros((nx, ny, 6), self.data_type())
         if self.load_as_h5:
-            #for key, value in sorted(self.data_code.items()):
-                #print(key, value)
             group = self._get_result_group()
             self._times = group.create_dataset('_times', data=_times)
             self.node_gridtype = group.create_dataset('node_gridtype', data=node_gridtype)
@@ -613,7 +611,7 @@ class RealTableArray(TableArray):
                   date, is_mag_phase=False, endian='>'):
         """writes an OP2"""
         import inspect
-        assert self.table_name in ['OUGV1', 'OQMG1', 'OQG1', 'OPG1'], self.table_name
+        assert self.table_name in ['OUGV1', 'BOUGV1', 'OUPV1', 'OQP1', 'OQMG1', 'OQG1', 'OPG1', 'OPNL1'], self.table_name
 
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
