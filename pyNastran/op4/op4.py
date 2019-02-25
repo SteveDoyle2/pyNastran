@@ -691,9 +691,10 @@ class OP4(object):
                 #print(print_matrix(matrix))
                 if name is not None:
                     if matrix_names is None or name in matrix_names:  # save the matrix
+                        name = name.decode('ascii')
                         matrices[name] = (form, matrix)
 
-                #print "not op4.closed = ",not op4.closed,form,name
+                #print("not op4.closed = ",not op4.closed,form,name)
                 # if not op4.closed or form is not None:
                 #     data = op4.read(4)
                 #     self.n += 4
