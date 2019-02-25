@@ -110,7 +110,7 @@ class OP4(object):
         self._endian = ''
         self.debug = debug
         #assert debug == True, debug
-        self.log = get_logger2(log, debug
+        self.log = get_logger2(log, debug)
         self._new = False
 
     def read_op4(self, op4_filename=None, matrix_names=None, precision='default'):

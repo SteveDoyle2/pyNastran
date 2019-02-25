@@ -291,12 +291,12 @@ class TestOP4(unittest.TestCase):
         """tests sparse binary example"""
         op4_filename = os.path.join(OP4_PATH, 'testplate_kgg.op4')
         matrices = read_op4(op4_filename=op4_filename,
-                       matrix_names=None, precision='default', debug=False, log=None)
+                            matrix_names=None, precision='default', debug=False, log=None)
         Kgg = matrices['KGG'][1].todense()
 
-        op4_filename = os.path.join(OP4_PATH, 'mytestplate_kgg_ascii.op4')
+        op4_filename = os.path.join(OP4_PATH, 'testplate_kgg_ascii.op4')
         matrices = read_op4(op4_filename=op4_filename,
-                       matrix_names=None, precision='default', debug=False, log=None)
+                            matrix_names=None, precision='default', debug=False, log=None)
         Kgga = matrices['KGG'][1].todense()
         assert np.allclose(Kgg, Kgga)
         #for line in Kgg:
