@@ -301,10 +301,27 @@ class OPG(OP2Common):
                 b'OPGNO1' : 'no.',
                 b'OPGNO2' : 'no.',
             }
+            postfixs = {
+                b'OPG1' : '',
+                b'OPG2' : '',
+                b'OPGV1' : '_v',
+                b'OCRPG' : '',
+                b'OPGPSD1' : '',
+                b'OPGPSD2' : '',
+                b'OPGATO1' : '',
+                b'OPGATO2' : '',
+                b'OPGCRM1' : '',
+                b'OPGCRM2' : '',
+                b'OPGRMS1' : '',
+                b'OPGRMS2' : '',
+                b'OPGNO1' : '',
+                b'OPGNO2' : '',
+            }
             keys = list(prefixs.keys())
             prefix = prefixs[self.table_name]
+            postfix = postfixs[self.table_name]
             assert self.table_name in keys, 'tables=%s table_name=%s table_code=%s' % (keys, self.table_name, self.table_code)
-            n = self._read_load_vector(data, ndata, prefix=prefix)
+            n = self._read_load_vector(data, ndata, prefix=prefix, postfix=postfix)
         elif self.table_code == 12:  # ???
             n = self._read_force_vector(data, ndata)
         elif self.table_code == 502:  # load vector

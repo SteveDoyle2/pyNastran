@@ -54,7 +54,7 @@ from pyNastran.op2.errors import FortranMarkerError, SortCodeError
 from pyNastran.op2.tables.design_response import (
     WeightResponse, StressResponse, StrainResponse, ForceResponse,
     FlutterResponse, Convergence)
-from pyNastran.op2.tables.matrix import Matrix
+from pyNastran.op2.tables.matrix import Matrix, MatrixDict
 
 #class MinorTables(object):
     #def __init__(self, op2_reader):
@@ -100,6 +100,26 @@ class OP2Reader(object):
             b'IBULK' : self.read_ibulk,
             b'CDDATA' : self.read_ibulk,
             b'CMODEXT' : self._read_cmodext,
+
+            # element matrices
+            #b'KELM' : self._read_element_matrix,
+            #b'MELM' : self._read_element_matrix,
+            #b'BELM' : self._read_element_matrix,
+            #b'KELMP' : self._read_element_matrix,
+            #b'MELMP' : self._read_element_matrix,
+
+            # element dictionaries
+            #b'KDICT' : self._read_dict,
+            #b'MDICT' : self._read_dict,
+            #b'BDICT' : self._read_dict,
+            #b'KDICTP' : self._read_dict,
+            #b'MDICTP' : self._read_dict,
+            #b'KDICTDS' : self._read_dict,
+            #b'KDICTX' : self._read_dict,
+            #b'XDICT' : self._read_dict,
+            #b'XDICTB' : self._read_dict,
+            #b'XDICTDS' : self._read_dict,
+            #b'XDICTX' : self._read_dict,
 
             # coordinate system transformation matrices
             b'CSTM' : self.read_cstm,
@@ -392,6 +412,116 @@ class OP2Reader(object):
         #print('-----------------------')
         #print('end')
         #self.show(200)
+
+    def _read_element_matrix(self):
+        """testing the KELM"""
+        op2 = self.op2
+        #raise NotImplementedError(op2.table_name)
+        #if self.read_mode == 2:
+            #table_name = self._read_table_name(rewind=True)
+            #self._skip_table(table_name, warn=False)
+            #return
+        op2.table_name = self._read_table_name(rewind=False)
+        self.read_markers([-1])
+        data = self._read_record()
+        # (102, 15, 300, 2, 2, 600, 3160)
+        #self.show_data(data)
+
+        self.read_markers([-2, 1, 0])
+        data = self._read_record()
+        name, a, b = unpack(b'8s 2i', data)
+        name = name.decode('ascii').strip()
+        print('name=%r a=%s b=%s' % (name, a, b))
+        #self.show_data(data)
+
+        self.read_markers([-3])
+        self.read_markers([1, 1, 2])
+
+        #self.show(400)
+        data_out, ndata = self._read_block_ndata()
+        print('-3...', len(data))
+        self.show_data(data_out)
+
+        #data = self._read_record()
+        self.show(200)
+
+        #self.read_markers([-3, 1, 0])
+
+        aaa
+
+        #aaa
+        #op2.table_name = self._read_table_name(rewind=False)
+
+    def _read_dict(self):
+        """testing the KDICT"""
+        op2 = self.op2
+        if self.read_mode == 1:
+            table_name = self._read_table_name(rewind=True)
+            self._skip_table(table_name, warn=False)
+            return
+        op2.table_name = self._read_table_name(rewind=False)
+        #self.log.debug('table_name = %r' % op2.table_name)
+        self.read_markers([-1])
+        data = self._read_record()
+        #self.show_data(data)
+
+        ints = unpack(self._endian + b'7i', data)
+        print('date?  = (?, month, day, ?, ?, ?) =', ints)
+
+        self.read_markers([-2, 1, 0])
+        data = self._read_record()
+        name, = unpack(self._endian + b'8s', data)
+        name = name.decode('ascii').strip()
+        print('name = %r' % name)
+
+        self.read_markers([-3, 1, 0])
+        data = self._read_record()
+        #self.show_data(data[:200], types='if')
+        n0 = 0
+        ndata = len(data)
+
+        matdict = MatrixDict(name)
+
+        eltype, numwids, numgrid, dof_per_grid, form = unpack(self._endian + b'5i', data[:20])
+        n0 += 20
+        print('etype', eltype)
+        print('numwids', numwids)
+        print('numgrid', numgrid)
+        print('dof_per_grid', dof_per_grid)
+        print('form', form)
+        xforms = []
+        sils = []
+        while n0 < ndata:
+            #print("--------")
+            #print('n0=%s ndata=%s' % (n0, ndata))
+            eid, nactive_grid, ge, address1, address2 = unpack(self._endian + b'2i f 2i', data[n0:n0+20])
+            n0 += 20
+            #print('eid', eid)
+            #print('nactive_grid', nactive_grid)
+            #print('ge', ge)
+            #print('address1', address1)
+            #print('address2', address2)
+            if form in [3, 4, 5, 6]:
+                nbytes = numgrid * 4
+                sil = unpack('%ii' % numgrid, data[n0:n0+nbytes])
+                n0 += nbytes
+                #print('sil =', sil)
+                assert min(sil) >= 0, sil
+                assert max(sil) < 100000000, sil
+                sils.append(sil)
+            else:
+                raise NotImplementedError(form)
+            if form in [4]:
+                xform = unpack(b'9d', data[n0:n0+36*2])
+                xforms.append(xform)
+                n0 += 36*2
+                #print('xform =', xform, len(xform))
+            #self.show_data(data[:n0+80], types='if')
+        if len(xforms) == 0:
+            xforms = None
+        matdict.add(eltype, numwids, numgrid, dof_per_grid, form, sils, xform=xforms)
+        self.read_markers([-4, 1, 0, 0])
+        self.op2.matdicts[name] = matdict
 
     def _read_cmodext(self):
         r"""
@@ -2337,14 +2467,14 @@ class OP2Reader(object):
             if self.is_debug_file:
                 self.binary_debug.write('  read_markers -> [4, %i, 4]\n' % marker)
 
-    def _skip_table(self, table_name):
+    def _skip_table(self, table_name, warn=True):
         """bypasses the next table as quickly as possible"""
         if table_name in ['DIT', 'DITS']:  # tables
             self._read_dit()
         elif table_name in ['PCOMPTS']:
             self._read_pcompts()
         else:
-            self._skip_table_helper()
+            self._skip_table_helper(warn=warn)
 
     def _print_month(self, month, day, year, zero, one):
         """
@@ -2689,7 +2819,7 @@ class OP2Reader(object):
     #def log(self):
         #return self.op2.log
 
-    def _skip_table_helper(self):
+    def _skip_table_helper(self, warn=True):
         """
         Skips the majority of geometry/result tables as they follow a very standard format.
         Other tables don't follow this format.
@@ -2699,7 +2829,8 @@ class OP2Reader(object):
         op2.table_name = self._read_table_name(rewind=False)
         if self.is_debug_file:
             self.binary_debug.write('skipping table...%r\n' % op2.table_name)
-        self.log.warning('    skipping table_helper = %s' % op2.table_name)
+        if warn:
+            self.log.warning('    skipping table_helper = %s' % op2.table_name)
 
         self.read_markers([-1])
         unused_data = self._skip_record()

@@ -354,12 +354,16 @@ class OQG(OP2Common):
 
         if self.thermal == 0:
             self._setup_op2_subcase('SPCFORCES')
-
-            result_name = 'spc_forces'
-            storage_obj = self.spc_forces
+            if self.table_name in [b'OQG1']:
+                result_name = 'spc_forces'
+            elif self.table_name in [b'OQGV1']:
+                result_name = 'spc_forces_v'
+            else:
+                raise NotImplementedError(self.table_name_str)
             if self._results.is_not_saved(result_name):
                 return ndata
             self._results._found_result(result_name)
+            storage_obj = getattr(self, result_name)
             n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
                                             RealSPCForcesArray, ComplexSPCForcesArray,
                                             'node', random_code=self.random_code)

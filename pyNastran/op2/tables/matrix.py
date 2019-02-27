@@ -150,3 +150,24 @@ class Matrix(object):
             header, shape, class_name, dtype, self.shape_str)
         return msg
 
+
+class MatrixDict(object):
+    """storage object for KDICT, MDICT, BDICT, etc."""
+    def __init__(self, name):
+        self.name = name
+        self.element_types = []
+        self.numwides = []
+        self.numgrids = []
+        self.dof_per_grids = []
+        self.forms = []
+        self.sils = []
+        self.xforms = []
+
+    def add(self, eltype, numwids, numgrid, dof_per_grid, form, sil, xform=None):
+        self.element_types.append(eltype)
+        self.numwides.append(numwids)
+        self.numgrids.append(numgrid)
+        self.dof_per_grids.append(dof_per_grid)
+        self.forms.append(form)
+        self.sils.append(sil)
+        self.xforms.append(xform)

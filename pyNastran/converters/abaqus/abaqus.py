@@ -113,6 +113,7 @@ class Abaqus(object):
                 elif word.startswith('part'):
                     iline, line0, part_name, part = self.read_part(lines, iline, line0, word)
                     self.parts[part_name] = part
+                    #print('part_name', part_name)
                     if self.debug:
                         self.log.debug('-------------------------------------')
                 elif 'section controls' in word:

@@ -1051,7 +1051,7 @@ class ComplexTableArray(TableArray):
         """writes an OP2"""
         assert endian == b'<', endian
         import inspect
-        assert self.table_name in ['OUGV1', 'OQMG1', 'OQG1', 'OPG1'], self.table_name
+        assert self.table_name in ['OUGV1', 'BOUGV1', 'OQMG1', 'OQG1', 'OPG1'], self.table_name
 
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)

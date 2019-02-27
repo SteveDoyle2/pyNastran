@@ -156,6 +156,7 @@ TABLE_OBJ_MAP = {
     'acceleration_scaled_response_spectra_SRSS' : (RealAccelerationArray, ComplexAccelerationArray),
 
     'spc_forces' : (RealSPCForcesArray, ComplexSPCForcesArray),
+    'spc_forces_v' : (RealSPCForcesArray, ComplexSPCForcesArray),
     'no.spc_forces' : (RealSPCForcesArray, ComplexSPCForcesArray),
     'ato.spc_forces' : (RealSPCForcesArray, ComplexSPCForcesArray),
     'crm.spc_forces' : (RealSPCForcesArray, ComplexSPCForcesArray),
@@ -180,6 +181,7 @@ TABLE_OBJ_MAP = {
     'force_vectors' : (RealForceVectorArray, ),
 
     'load_vectors' : (RealLoadVectorArray, ComplexLoadVectorArray),
+    'load_vectors_v' : (RealLoadVectorArray, ComplexLoadVectorArray),
     'no.load_vectors' : (RealLoadVectorArray, ),
     'ato.load_vectors' : (RealLoadVectorArray, ),
     'crm.load_vectors' : (RealLoadVectorArray, ),

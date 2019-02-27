@@ -636,7 +636,8 @@ class OP2_F06_Common(object):
         self.nonlinear_cgap_stress = {}
 
         # OQG - spc/mpc forces
-        self.spc_forces = {}  # tCode=3?
+        self.spc_forces = {}  # OQG1, tCode=3?
+        self.spc_forces_v = {} # OQGV1
         self.spc_forces_scaled_response_spectra_NRL = {}
 
         self.mpc_forces = {}  # tCode=39
@@ -656,7 +657,8 @@ class OP2_F06_Common(object):
         self.grid_point_stress_discontinuities = {}  # tCode=35
 
         #: OPG - summation of loads for each element
-        self.load_vectors = {}       # tCode=2  thermal=0
+        self.load_vectors = {}       # OPG1; tCode=2  thermal=0
+        self.load_vectors_v = {}     # OPGV!
         self.thermal_load_vectors = {}  # tCode=2  thermal=1
         self.applied_loads = {}       # tCode=19 thermal=0
         self.force_vectors = {}       # tCode=12 thermal=0
@@ -784,7 +786,7 @@ class OP2_F06_Common(object):
             'accelerations',
 
             # OQG - spc/mpc forces
-            'spc_forces', 'spc_forces_scaled_response_spectra_NRL',
+            'spc_forces', 'spc_forces_v', 'spc_forces_scaled_response_spectra_NRL',
             'mpc_forces', 'mpc_forces_RAQCONS', 'mpc_forces_RAQEATC',
             'thermal_gradient_and_flux',
 
@@ -792,7 +794,7 @@ class OP2_F06_Common(object):
             'grid_point_forces',
 
             # OPG - summation of loads for each element '
-            'load_vectors',
+            'load_vectors', 'load_vectors_v',
             'thermal_load_vectors',
             'applied_loads',
             'force_vectors',
@@ -1012,8 +1014,9 @@ class OP2_F06_Common(object):
         """testing method...don't use"""
         skipped_attributes = [
             'card_count', 'data_code', 'element_mapper', 'isubcase_name_map',
-            'labels', 'subtitles', 'additional_matrices', 'matrices', 'subcase_key',
-            'end_options', 'expected_times', 'generalized_tables', 'op2_reader']
+            'labels', 'subtitles', 'additional_matrices', 'matrices', 'matdicts',
+            'subcase_key', 'end_options', 'expected_times', 'generalized_tables',
+            'op2_reader']
 
         table_types = self.get_table_types()
         tables = object_attributes(self, 'public')

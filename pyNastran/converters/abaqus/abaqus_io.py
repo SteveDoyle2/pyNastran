@@ -127,8 +127,10 @@ class AbaqusIO(object):
         points.SetData(points_array)
 
         nid_offset = -1
+        nids = []
         for unused_part_name, part in model.parts.items():
             nnodesi = part.nodes.shape[0]
+            nids.append(part.nids)
 
             n_r2d2 = 0
             n_cpe3 = 0
@@ -281,7 +283,7 @@ class AbaqusIO(object):
                     grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
             nid_offset += nnodesi
-
+        nids = np.hstack(nids)
         grid.SetPoints(points)
         grid.Modified()
 
@@ -295,7 +297,7 @@ class AbaqusIO(object):
         cases = OrderedDict()
         ID = 1
         form, cases, unused_icase, node_ids, element_ids = self._fill_abaqus_case(
-            cases, ID, nodes, nelements, model)
+            cases, ID, nids, nodes, nelements, model)
         #self._fill_cart3d_results(cases, form, icase, ID, model)
 
         self.gui.node_ids = node_ids
@@ -310,14 +312,15 @@ class AbaqusIO(object):
         """does nothing"""
         raise NotImplementedError()
 
-    def _fill_abaqus_case(self, cases, ID, nodes, nelements, unused_model):
+    def _fill_abaqus_case(self, cases, ID, node_ids, nodes, nelements, unused_model):
         """creates the result objects for abaqus"""
         #return [], {}, 0
         #nelements = elements.shape[0]
         nnodes = nodes.shape[0]
 
         element_ids = np.arange(1, nelements + 1)
-        node_ids = np.arange(1, nnodes + 1)
+        #print(nodes)
+        #node_ids = np.arange(1, nnodes + 1)
         #cnormals = model.get_normals(shift_nodes=False)
         #cnnodes = cnormals.shape[0]
         #assert cnnodes == nelements, len(cnnodes)
