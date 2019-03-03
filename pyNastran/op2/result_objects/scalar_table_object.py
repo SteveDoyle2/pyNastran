@@ -362,7 +362,7 @@ class RealScalarTableArray(ScalarTableArray):  # temperature style table
         format_code = 1
         num_wide = self.num_wide
         acoustic_flag = 0
-        thermal = 0
+        thermal = self.thermal
         title = b'%-128s' % self.title.encode('ascii')
         subtitle = b'%-128s' % self.subtitle.encode('ascii')
         label = b'%-128s' % self.label.encode('ascii')
@@ -415,11 +415,14 @@ class RealScalarTableArray(ScalarTableArray):  # temperature style table
             field6, field7, random_code, format_code, num_wide,
             oCode, acoustic_flag, 0, 0, 0,
             0, 0, 0, 0, 0,
+            0, 0, thermal, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, thermal, thermal, 0,
+            0, 0, 0, 0,
             title, subtitle, label,
         ]
+        #self.num_wide = self.add_data_parameter(data, 'num_wide', b'i', 10, False) # 9
+        #self.thermal = self.add_data_parameter(data, 'thermal', b'i', 23, False)
+        assert table3[22] == thermal
 
         n = 0
         for v in table3:

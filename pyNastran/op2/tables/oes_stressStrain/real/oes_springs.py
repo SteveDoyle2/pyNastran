@@ -254,7 +254,7 @@ class RealSpringArray(OES_Object):
         device_code = self.device_code
         op2_ascii.write('  ntimes = %s\n' % self.ntimes)
 
-        eids_device = self.element *  10 + self.device_code
+        eids_device = self.element * 10 + self.device_code
 
         #print('ntotal=%s' % (ntotal))
         #assert ntotal == 193, ntotal

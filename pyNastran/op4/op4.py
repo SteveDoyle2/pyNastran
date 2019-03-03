@@ -287,8 +287,8 @@ class OP4(object):
         rows = array(rows, dtype='int32') - 1
         cols = array(cols, dtype='int32') - 1
         A = coo_matrix((entries, (rows, cols)), shape=(nrows, ncols), dtype=dtype)
-        #print("type = %s %s" % (type(A),type(A.todense())))
-        #A = A.todense()
+        #print("type = %s %s" % (type(A),type(A.toarray())))
+        #A = A.toarray()
         return A, iline
 
     def _read_real_sparse_ascii_new(self, op4, iline, nrows, ncols, line_size, line,
@@ -374,8 +374,8 @@ class OP4(object):
         rows = array(rows, dtype='int32') - 1
         cols = array(cols, dtype='int32') - 1
         A = coo_matrix((entries, (rows, cols)), shape=(nrows, ncols), dtype=dtype)
-        #print("type = %s %s" % (type(A),type(A.todense())))
-        #A = A.todense()
+        #print("type = %s %s" % (type(A),type(A.toarray())))
+        #A = A.toarray()
         return A, iline
 
     def _read_real_dense_ascii(self, op4, iline, nrows, ncols, line_size, line, dtype, is_big_mat):
@@ -813,7 +813,7 @@ class OP4(object):
             raise TypeError("Type=%s" % Type)
 
         #try:
-            #print_matrix(A.todense())
+            #print_matrix(A.toarray())
         #except:
             #pass
 

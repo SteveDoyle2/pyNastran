@@ -45,10 +45,34 @@ class TestOP2Matrix(unittest.TestCase):
         model = read_op2_geom(op2_filename, debug=False)
 
         kelm = model.matrices['KELM']
-        assert kelm.data.shape == (300, 21), kelm.data.shape
-
         kdict = model.matdicts['KDICT']
+        assert kelm.data.shape == (300, 21), kelm.data.shape
         assert (kdict.element_types) == [34, 2, 67, 68, 33, 1, 39, 74], kdict.element_types
+        ngrids = [len(np.where(sil[0, :] > 0)[0]) for sil in kdict.sils]
+
+        #print(kelm.data)
+        #print('ndata =', len(kelm.data.data), 300*21)
+        eids = np.hstack(kdict.eids)
+        ndofs = [len(eids)*numgrid*dof_per_grid for eids, numgrid, dof_per_grid in zip(kdict.eids, ngrids, kdict.dof_per_grids)]
+        ndof = np.cumsum(ndofs)
+
+        sil = np.hstack([sil.ravel() for sil in kdict.sils])
+        usil = np.unique(sil)
+
+        address = np.vstack(kdict.address)
+        #print(kelm.data.__dict__.keys())
+        #print(kelm)
+        #print('ngrids =', ngrids)
+        #print('numgrids =', kdict.numgrids)
+        #print('ndofs =', ndofs)
+        #print('ndof csum =', ndof)
+        #print('eids =', eids, len(eids))
+        #print('sil =', sil, len(sil))
+        #print('address:\n', address)
+        #print("usil =", usil, len(usil))
+        #for sil, ndofci, ndofi, dof_per_grid, numgrid in zip(kdict.sils, ndof, ndofs, kdict.dof_per_grids, kdict.numgrids):
+            #print(sil, 'neids=%s cdof=%s ndof=%s dof/grid=%s ngrid=%s' % (sil.shape[0], ndofci, ndofi, dof_per_grid, numgrid))
+        #print(kdict)
 
     def test_op2_dmi_01(self):
         """tests DMI matrix style"""
@@ -107,7 +131,7 @@ class TestOP2Matrix(unittest.TestCase):
 
         for matrix_name, expected in zip(matrix_names, expecteds):
             assert matrix_name in op2.matrices, matrix_name
-            actual = op2.matrices[matrix_name].data.todense()
+            actual = op2.matrices[matrix_name].data.toarray()
             compare_dmi_matrix_from_bdf_to_op2(model, op2, expected, actual, matrix_name)
 
     def test_op2_dmi_02(self):
@@ -164,7 +188,7 @@ class TestOP2Matrix(unittest.TestCase):
 
         for matrix_name, expected in zip(matrix_names, expecteds):
             assert matrix_name in op2.matrices, matrix_name
-            actual = op2.matrices[matrix_name].data.todense()
+            actual = op2.matrices[matrix_name].data.toarray()
             compare_dmi_matrix_from_bdf_to_op2(model, op2, expected, actual, matrix_name)
 
 def compare_dmi_matrix_from_bdf_to_op2(bdf_model, op2_model, expected, actual, matrix_name):

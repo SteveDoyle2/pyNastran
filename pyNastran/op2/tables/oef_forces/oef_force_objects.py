@@ -156,11 +156,12 @@ class ForceObject(ScalarObject):
             field6, field7, load_set, format_code, num_wide,
             s_code, acoustic_flag, 0, 0, 0,
             0, 0, 0, 0, 0,
+            0, 0, thermal, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, thermal, thermal, 0,
+            0, 0, 0, 0,
             title, subtitle, label,
         ]
+        assert table3[22] == thermal
 
         n = 0
         for v in table3:
@@ -538,7 +539,7 @@ class RealSpringDamperForceArray(RealForceObject):
         device_code = self.device_code
         op2_ascii.write('  ntimes = %s\n' % self.ntimes)
 
-        eids_device = self.element *  10 + self.device_code
+        eids_device = self.element * 10 + self.device_code
 
         #print('ntotal=%s' % (ntotal))
         #assert ntotal == 193, ntotal
@@ -894,7 +895,7 @@ class RealRodForceArray(RealForceObject):
         device_code = self.device_code
         op2_ascii.write('  ntimes = %s\n' % self.ntimes)
 
-        eids_device = self.element *  10 + self.device_code
+        eids_device = self.element * 10 + self.device_code
 
         #fmt = '%2i %6f'
         #print('ntotal=%s' % (ntotal))

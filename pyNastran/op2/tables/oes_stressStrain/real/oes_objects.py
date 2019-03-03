@@ -182,11 +182,12 @@ class OES_Object(ScalarObject):
             field6, field7, self.load_set, format_code, num_wide,
             s_code, acoustic_flag, 0, 0, 0,
             0, 0, 0, 0, 0,
+            0, 0, thermal, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, thermal, thermal, 0,
+            0, 0, 0, 0,
             title, subtitle, label,
         ]
+        assert table3[22] == thermal
 
         n = 0
         for v in table3:

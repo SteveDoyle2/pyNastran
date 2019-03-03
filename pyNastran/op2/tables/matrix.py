@@ -5,12 +5,12 @@ from scipy.sparse import coo_matrix  # type: ignore
 import numpy as np
 from pyNastran.op2.op2_interface.write_utils import export_to_hdf5
 from pyNastran.utils import object_attributes, object_methods, unicode_type
-
+from pyNastran.op2.op2_interface.op2_codes import MSC_ELEMENTS
 
 
 class Matrix(object):
     """
-    Defines a Matrix object
+    Defines a Matrix object that's stored in op2.matrices
 
     Attributes
     ----------
@@ -159,18 +159,46 @@ class MatrixDict(object):
         self.numwides = []
         self.numgrids = []
         self.dof_per_grids = []
+
+        self.eids = []
+        self.ge = []
+        self.address = []
         self.forms = []
         self.sils = []
         self.xforms = []
 
-    def add(self, eltype, numwids, numgrid, dof_per_grid, form, sil, xform=None):
+    def add(self, eltype, numwids, numgrid, dof_per_grid, form,
+            eids, ge, address, sil, xform=None):
+        """Sets the next set of the KDICT"""
         self.element_types.append(eltype)
         self.numwides.append(numwids)
         self.numgrids.append(numgrid)
         self.dof_per_grids.append(dof_per_grid)
         self.forms.append(form)
+
+        self.eids.append(eids)
+        self.ge.append(ge)
+        self.address.append(address)
         self.sils.append(sil)
         self.xforms.append(xform)
 
+    #@property
+    #def nodes(self):
+        #return [sil // 10 for sil in self.sils]
+
+    #@property
+    #def dofs(self):
+        #return [sil % 10 for sil in self.sils]
+
+    @property
+    def nelements(self):
+        return sum([len(eids) for eids in self.eids])
+
+    @property
+    def element_names(self):
+        return [MSC_ELEMENTS[etype] for etype in self.element_types]
+
     def __repr__(self):
-        return 'MatrixDict(name=%r, element_types=%s)' % (self.name, self.element_types)
+        msg = 'MatrixDict(name=%r, nelements=%s element_types=%s, element_names=[%s])' % (
+            self.name, self.nelements, self.element_types, ', '.join(self.element_names))
+        return msg

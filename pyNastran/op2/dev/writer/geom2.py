@@ -8,8 +8,9 @@ def write_geom2(op2, op2_ascii, obj, endian=b'<'):
         return
     #if not hasattr(obj, 'nodes'):
         #return
+    nspoints = len(obj.spoints)
     nelements = len(obj.elements)
-    if nelements == 0:
+    if nelements == 0 and nspoints == 0:
         return
     write_geom_header(b'GEOM2', op2, op2_ascii)
     itable = -3
@@ -22,6 +23,10 @@ def write_geom2(op2, op2_ascii, obj, endian=b'<'):
         'CTETRA', 'CHEXA', 'CPENTA',
     ]
     out = obj.get_card_ids_by_card_types(etypes)
+    if nspoints:
+        print(obj.spoints)
+        out['SPOINT'] = obj.spoints
+        aaa
     for name, eids in out.items():
         nelements = len(eids)
         if nelements == 0:
@@ -94,6 +99,10 @@ def write_geom2(op2, op2_ascii, obj, endian=b'<'):
             spack = Struct(endian + b'ifii')
             key = (501, 5, 72)
             nfields = 4
+        elif name == 'SPOINT':
+            spack = None
+            key = (5551, 49, 105)
+            nfields = 1
         else:  # pragma: no cover
             raise NotImplementedError(name)
 
@@ -275,5 +284,10 @@ def write_card(name, eids, spack, obj, op2, op2_ascii):
             print(data)
             op2_ascii.write('  eid=%s nids=[%s, %s]\n' % (eid, n1, n2))
             op2.write(spack.pack(*data))
+    elif name == 'SPOINT':
+        nids = eids
+        nids.sort()
+        spack = Struct('%ii' % len(nids))
+        spack.pack(*nids)
     else:  # pragma: no cover
         raise NotImplementedError(name)

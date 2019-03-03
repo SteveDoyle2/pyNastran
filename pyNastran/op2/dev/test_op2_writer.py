@@ -90,23 +90,7 @@ class TestOP2Writer(unittest.TestCase):
         model = os.path.splitext(op2_filename)[0]
         #debug_file = model + '.debug.out'
 
-        exclude_results = [
-            #'cbeam_force',
-            #'grid_point_forces',
-            #'cbar_*',
-            #'cbeam_*',
-            #'crod_force',
-            #'cquad4_force',
-            #'ctria3_force',
-            #'cquad4_composite_stress', 'ctria3_composite_stress',
-            #'cquad4_composite_strain', 'ctria3_composite_strain',
-        ]
-        op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug,
-                            exclude_results=exclude_results,
-                            #include_results='displacements',
-                            #include_results='stress',
-                            include_results=['crod_force', 'cbar_force'],
-                            )
+        op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug)
         #op2 = read_op2(op2_filename, debug_file=op2_filename_debug, include_results='displacements')
 
         op2w = OP2Writer(op2)
@@ -130,18 +114,7 @@ class TestOP2Writer(unittest.TestCase):
         #debug_file = model + '.debug.out'
 
         exclude_results = [
-            #'cbeam_force',
             '*_strain_energy',
-            #'stress',
-            #'strain',
-            #'grid_point_forces',
-            #'cbar_*',
-            #'cbeam_*',
-            #'crod_force',
-            #'cquad4_force',
-            #'ctria3_force',
-            #'cquad4_composite_stress', 'ctria3_composite_stress',
-            #'cquad4_composite_strain', 'ctria3_composite_strain',
         ]
         op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug,
                             exclude_results=exclude_results,
@@ -173,27 +146,7 @@ class TestOP2Writer(unittest.TestCase):
         model = os.path.splitext(op2_filename)[0]
         #debug_file = model + '.debug.out'
 
-        exclude_results = [
-            #'cbeam_force',
-            #'stress',
-            #'strain',
-            #'grid_point_forces',
-            #'cbar_*',
-            #'cbeam_*',
-            #'crod_force',
-            #'cquad4_force',
-            #'ctria3_force',
-            #'cquad4_composite_stress', 'ctria3_composite_stress',
-            #'cquad4_composite_strain', 'ctria3_composite_strain',
-        ]
-        op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug,
-                            exclude_results=exclude_results,
-                            #include_results='eigenvectors',
-                            #include_results=['crod_stress', 'cbar_stress'],
-                            #include_results=['crod_force', 'cbar_force'],
-                            #include_results='element_forces',
-                            #include_results='stress',
-                            )
+        op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug)
         #op2 = read_op2(op2_filename, debug_file=op2_filename_debug, include_results='displacements')
 
         op2w = OP2Writer(op2)
@@ -216,34 +169,7 @@ class TestOP2Writer(unittest.TestCase):
         model = os.path.splitext(op2_filename)[0]
         #debug_file = model + '.debug.out'
 
-        exclude_results = [
-            #'cbeam_force',
-            #'cbeam_stress',
-            #'cbeam_strain',
-            #'cbar_stress',
-            #'cbar_strain',
-            #'cbar_force',
-            #'cquad4_force',
-            #'ctria3_force',
-            #'stress',
-            #'strain',
-            #'grid_point_forces',
-            #'cbar_*',
-            #'cbeam_*',
-            #'crod_force',
-            #'cquad4_force',
-            #'ctria3_force',
-            #'cquad4_composite_stress', 'ctria3_composite_stress',
-            #'cquad4_composite_strain', 'ctria3_composite_strain',
-        ]
-        op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug,
-                            exclude_results=exclude_results,
-                            #include_results='eigenvectors',
-                            #include_results=['crod_stress', 'cbar_stress'],
-                            #include_results=['crod_force', 'cbar_force'],
-                            #include_results='element_forces',
-                            #include_results='stress',
-                            )
+        op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug)
         #op2 = read_op2(op2_filename, debug_file=op2_filename_debug, include_results='displacements')
 
         op2w = OP2Writer(op2)
@@ -254,6 +180,113 @@ class TestOP2Writer(unittest.TestCase):
         op2.assert_op2_equal(op2b,
                              skip_results=['params', ],
                              stop_on_failure=True, debug=False)
+
+    def test_thermal_1(self):
+        """tests basic op2 thermal writing"""
+        folder = os.path.join(MODEL_PATH, 'elements')
+        op2_filename = os.path.join(folder, 'time_thermal_elements.op2')
+        op2_filename_debug = os.path.join(folder, 'time_thermal_elements.debug.out')
+        op2_filename_out = os.path.join(folder, 'time_thermal_elements_out.op2')
+        op2_filename_debug_out = os.path.join(folder, 'time_thermal_elements.debug.out')
+        #debug_file = 'solid_bending.debug.out'
+        model = os.path.splitext(op2_filename)[0]
+        #debug_file = model + '.debug.out'
+
+        exclude_results = [
+            'chbdye_thermal_load',
+            'chexa_thermal_load',
+        ]
+        op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug,
+                            exclude_results=exclude_results,
+                            #include_results='eigenvectors',
+                            #include_results=['crod_stress', 'cbar_stress'],
+                            #include_results=['crod_force', 'cbar_force'],
+                            #include_results='element_forces',
+                            #include_results='stress',
+                            )
+        #op2 = read_op2(op2_filename, debug_file=op2_filename_debug, include_results='displacements')
+        op2w = OP2Writer(op2)
+        op2w.write_op2(op2_filename_out, obj=op2, is_mag_phase=False,
+                       delete_objects=True)
+        op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out)
+        #op2b = read_op2(op2_filename_out, debug_file=op2_filename_debug_out)
+        op2.assert_op2_equal(op2b,
+                             skip_results=['params', ],
+                             stop_on_failure=True, debug=False)
+
+    def test_thermal_2(self):
+        """tests basic op2 thermal writing"""
+        folder = os.path.join(MODEL_PATH, 'other')
+        op2_filename = os.path.join(folder, 'hd15306.op2')
+        op2_filename_debug = os.path.join(folder, 'hd15306.debug.out')
+        op2_filename_out = os.path.join(folder, 'hd15306_out.op2')
+        op2_filename_debug_out = os.path.join(folder, 'hd15306.debug.out')
+        #debug_file = 'solid_bending.debug.out'
+        model = os.path.splitext(op2_filename)[0]
+        #debug_file = model + '.debug.out'
+
+        exclude_results = [
+            'chbdyg_thermal_load',
+            'crod_thermal_load',
+            'cquad4_thermal_load',
+            #'chbdye_thermal_load',
+            #'chexa_thermal_load',
+        ]
+        op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug,
+                            exclude_results=exclude_results,
+                            #include_results='eigenvectors',
+                            #include_results=['crod_stress', 'cbar_stress'],
+                            #include_results=['crod_force', 'cbar_force'],
+                            #include_results='element_forces',
+                            #include_results='stress',
+                            )
+        print(op2.get_op2_stats(short=True))
+        #op2 = read_op2(op2_filename, debug_file=op2_filename_debug, include_results='displacements')
+        op2w = OP2Writer(op2)
+        op2w.write_op2(op2_filename_out, obj=op2, is_mag_phase=False,
+                       delete_objects=True)
+        op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out)
+        #op2b = read_op2(op2_filename_out, debug_file=op2_filename_debug_out)
+        op2.assert_op2_equal(op2b,
+                             skip_results=['params', ],
+                             stop_on_failure=True, debug=False)
+
+    #def test_thermal_3(self):
+        #"""tests basic op2 thermal writing"""
+        #folder = os.path.join(MODEL_PATH, 'other')
+        #op2_filename = os.path.join(folder, 'ofprand1.op2')
+        #op2_filename_debug = os.path.join(folder, 'ofprand1.debug.out')
+        #op2_filename_out = os.path.join(folder, 'ofprand1_out.op2')
+        #op2_filename_debug_out = os.path.join(folder, 'ofprand1.debug.out')
+        ##debug_file = 'solid_bending.debug.out'
+        #model = os.path.splitext(op2_filename)[0]
+        ##debug_file = model + '.debug.out'
+
+        #exclude_results = [
+            ##'chbdyg_thermal_load',
+            ##'crod_thermal_load',
+            ##'cquad4_thermal_load',
+            ##'chbdye_thermal_load',
+            ##'chexa_thermal_load',
+        #]
+        #op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug,
+                            #exclude_results=exclude_results,
+                            ##include_results='eigenvectors',
+                            ##include_results=['crod_stress', 'cbar_stress'],
+                            ##include_results=['crod_force', 'cbar_force'],
+                            ##include_results='element_forces',
+                            ##include_results='stress',
+                            #)
+        #print(op2.get_op2_stats(short=True))
+        ##op2 = read_op2(op2_filename, debug_file=op2_filename_debug, include_results='displacements')
+        #op2w = OP2Writer(op2)
+        #op2w.write_op2(op2_filename_out, obj=op2, is_mag_phase=False,
+                       #delete_objects=True)
+        #op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out)
+        ##op2b = read_op2(op2_filename_out, debug_file=op2_filename_debug_out)
+        #op2.assert_op2_equal(op2b,
+                             #skip_results=['params', ],
+                             #stop_on_failure=True, debug=False)
 
 if __name__ == '__main__':
     unittest.main()

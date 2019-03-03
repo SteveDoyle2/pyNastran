@@ -417,13 +417,13 @@ class OUG(OP2Common):
             msg = 'displacements; table_name=%s' % self.table_name
             raise NotImplementedError(msg)
 
+        if self._results.is_not_saved(result_name):
+            return ndata
+        self._results._found_result(result_name)
         storage_obj = self.get_result(result_name)
         if self.thermal == 0:
             #result_name = 'displacements'
             #storage_obj = self.displacements
-            if self._results.is_not_saved(result_name):
-                return ndata
-            self._results._found_result(result_name)
             assert self.table_name in [b'BOUGV1', b'ROUGV1', b'ROUGV2', b'OUGV1', b'OUGV2', b'OUG1', b'OCRUG'], self.table_name
             n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
                                             RealDisplacementArray, ComplexDisplacementArray,
@@ -432,9 +432,6 @@ class OUG(OP2Common):
         elif self.thermal == 1:
             #result_name = 'temperatures'
             #storage_obj = self.temperatures
-            if self._results.is_not_saved(result_name):
-                return ndata
-            self._results._found_result(result_name)
             assert self.table_name in [b'OUGV1', b'OUGV2', b'TOUGV1', b'TOUGV2'], self.table_name
             n = self._read_scalar_table_vectorized(data, ndata, result_name, storage_obj,
                                                    RealTemperatureArray, None,
@@ -443,9 +440,6 @@ class OUG(OP2Common):
         elif self.thermal == 2:
             #result_name = 'displacement_scaled_response_spectra_ABS'
             #storage_obj = self.displacement_scaled_response_spectra_ABS
-            if self._results.is_not_saved(result_name):
-                return ndata
-            self._results._found_result(result_name)
             assert self.table_name in [b'OUPV1'], self.table_name
             n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
                                             RealDisplacementArray, ComplexDisplacementArray,
@@ -454,9 +448,6 @@ class OUG(OP2Common):
             # F:\work\pyNastran\examples\Dropbox\move_tpl\ms103.op2
             #result_name = 'displacement_scaled_response_spectra_SRSS'
             #storage_obj = self.displacement_scaled_response_spectra_SRSS
-            if self._results.is_not_saved(result_name):
-                return ndata
-            self._results._found_result(result_name)
             assert self.table_name in [b'OUPV1'], self.table_name
             n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
                                             RealDisplacementArray, ComplexDisplacementArray,
@@ -464,9 +455,6 @@ class OUG(OP2Common):
         elif self.thermal == 8:  # 4 ?
             #result_name = 'displacement_scaled_response_spectra_NRL'
             #storage_obj = self.displacement_scaled_response_spectra_NRL
-            if self._results.is_not_saved(result_name):
-                return ndata
-            self._results._found_result(result_name)
             assert self.table_name in [b'OUPV1'], self.table_name
             n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
                                             RealDisplacementArray, ComplexDisplacementArray,
@@ -503,20 +491,17 @@ class OUG(OP2Common):
 
         #result_name = 'velocities'
         #storage_obj = self.velocities
+        if self._results.is_not_saved(result_name):
+            return ndata
+        self._results._found_result(result_name)
         storage_obj = self.get_result(result_name)
         if self.thermal == 0:
             #result_name = 'velocities'
             #storage_obj = self.velocities
-            if self._results.is_not_saved(result_name):
-                return ndata
-            self._results._found_result(result_name)
             n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
                                             RealVelocityArray, ComplexVelocityArray,
                                             'node', random_code=self.random_code)
         elif self.thermal == 1:
-            if self._results.is_not_saved(result_name):
-                return ndata
-            self._results._found_result(result_name)
             n = self._read_scalar_table_vectorized(data, ndata, result_name, storage_obj,
                                                    RealThermalVelocityVectorArray, None,
                                                    'node', random_code=self.random_code)
@@ -524,9 +509,6 @@ class OUG(OP2Common):
         elif self.thermal == 2:
             #result_name = 'velocity_scaled_response_spectra_ABS'
             #storage_obj = self.velocity_scaled_response_spectra_ABS
-            if self._results.is_not_saved(result_name):
-                return ndata
-            self._results._found_result(result_name)
             n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
                                             RealVelocityArray, ComplexVelocityArray,
                                             'node', random_code=self.random_code)
@@ -633,11 +615,11 @@ class OUG(OP2Common):
             raise NotImplementedError(msg)
         assert self.thermal == 0, self.code_information()
 
+        if self._results.is_not_saved(result_name):
+            return ndata
+        self._results._found_result(result_name)
         storage_obj = self.get_result(result_name)
         if self.thermal == 0:
-            if self._results.is_not_saved(result_name):
-                return ndata
-            self._results._found_result(result_name)
             n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
                                             RealEigenvectorArray, ComplexEigenvectorArray,
                                             'node', random_code=self.random_code)

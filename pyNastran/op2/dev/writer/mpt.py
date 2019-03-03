@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+from __future__ import print_function, absolute_import
 from struct import pack, Struct
 
 from .geom1 import write_geom_header, close_geom_table
@@ -6,7 +6,7 @@ from .geom1 import write_geom_header, close_geom_table
 def write_mpt(op2, op2_ascii, obj, endian=b'<'):
     if not hasattr(obj, 'materials'):
         return
-    nmaterials = len(obj.materials)
+    nmaterials = len(obj.materials) + len(obj.thermal_materials)
     if nmaterials == 0:
         return
     write_geom_header(b'MPT', op2, op2_ascii, endian=endian)
@@ -21,8 +21,11 @@ def write_mpt(op2, op2_ascii, obj, endian=b'<'):
     for mid, mat in obj.materials.items():
         if mat.type in mtypes:
             out[mat.type].append(mat.mid)
+    for mid, mat in obj.thermal_materials.items():
+        if mat.type in mtypes:
+            out[mat.type].append(mat.mid)
 
-    for name, mids in out.items():
+    for name, mids in sorted(out.items()):
         nmaterials = len(mids)
         #if nmaterials == 0:
             #continue
@@ -107,14 +110,14 @@ def write_mpt(op2, op2_ascii, obj, endian=b'<'):
                 op2.write(spack.pack(*data))
         elif name == 'MAT4':
             for mid in sorted(mids):
-                mat = obj.materials[mid]
+                mat = obj.thermal_materials[mid]
                 #(mid, k, cp, rho, h, mu, hgen, refenth, tch, tdelta, qlat) = out
-                print(mat)
                 data = [
                     mid,
                     mat.k, mat.cp, mat.rho, mat.H, mat.mu, mat.hgen,
                     mat.ref_enthalpy, mat.tch, mat.tdelta, mat.qlat,
                 ]
+                print('MAT4 -', data)
                 #print(data)
                 op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
                 op2.write(spack.pack(*data))
@@ -127,7 +130,7 @@ def write_mpt(op2, op2_ascii, obj, endian=b'<'):
                         mat.Xt, mat.Xc, mat.Yt, mat.Yc, mat.S,
                         mat.ge, mat.F12, mat.strn]
 
-                print('MAT8', data)
+                print('MAT8 -', data)
                 op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
                 op2.write(spack.pack(*data))
         elif name == 'MAT9':
@@ -150,7 +153,7 @@ def write_mpt(op2, op2_ascii, obj, endian=b'<'):
                 #assert len(mat.A) == 6, mat.A
                 assert len(data) == nfields
 
-                print('MAT9', data, len(data))
+                print('MAT9 -', data, len(data))
                 op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
                 op2.write(spack.pack(*data))
         else:  # pragma: no cover

@@ -63,6 +63,13 @@ from pyNastran.op2.tables.matrix import Matrix, MatrixDict
 class SubTableReadError(Exception):
     pass
 
+DENSE_MATRICES = [
+    b'KELM',
+    b'MELM',
+    b'BELM',
+    b'KELMP',
+    b'MELMP',
+]
 class OP2Reader(object):
     """Stores methods that aren't useful to an end user"""
     def __init__(self, op2):
@@ -413,45 +420,6 @@ class OP2Reader(object):
         #print('end')
         #self.show(200)
 
-    def _read_element_matrix(self):
-        """testing the KELM"""
-        op2 = self.op2
-        #raise NotImplementedError(op2.table_name)
-        #if self.read_mode == 2:
-            #table_name = self._read_table_name(rewind=True)
-            #self._skip_table(table_name, warn=False)
-            #return
-        op2.table_name = self._read_table_name(rewind=False)
-        self.read_markers([-1])
-        data = self._read_record()
-        # (102, 15, 300, 2, 2, 600, 3160)
-        #self.show_data(data)
-
-        self.read_markers([-2, 1, 0])
-        data = self._read_record()
-        name, a, b = unpack(b'8s 2i', data)
-        name = name.decode('ascii').strip()
-        print('name=%r a=%s b=%s' % (name, a, b))
-        #self.show_data(data)
-
-        self.read_markers([-3])
-        self.read_markers([1, 1, 2])
-
-        #self.show(400)
-        data_out, ndata = self._read_block_ndata()
-        print('-3...', len(data))
-        self.show_data(data_out)
-
-        #data = self._read_record()
-        self.show(200)
-
-        #self.read_markers([-3, 1, 0])
-
-        aaa
-
-        #aaa
-        #op2.table_name = self._read_table_name(rewind=False)
-
     def _read_dict(self):
         """testing the KDICT"""
         op2 = self.op2
@@ -493,12 +461,18 @@ class OP2Reader(object):
             #print('numgrid', numgrid)
             #print('dof_per_grid', dof_per_grid)
             #print('form', form)
+            eids = []
+            ge = []
+            address = []
             xforms = []
             sils = []
             while n0 < ndata:
                 #print("--------")
                 #print('n0=%s ndata=%s' % (n0, ndata))
-                eid, nactive_grid, ge, address1, address2 = unpack(self._endian + b'2i f 2i', data[n0:n0+20])
+                eid, nactive_grid, gei, address1, address2 = unpack(self._endian + b'2i f 2i', data[n0:n0+20])
+                eids.append(eid)
+                ge.append(gei)
+                address.append([address1, address2])
                 n0 += 20
                 #print('eid', eid)
                 #print('nactive_grid', nactive_grid)
@@ -517,7 +491,7 @@ class OP2Reader(object):
                     raise NotImplementedError(form)
                 if form in [4]:
                     xform = unpack(b'9d', data[n0:n0+36*2])
-                    xform_array = np.array(xform, dtype='float64').reshape(3,3)
+                    xform_array = np.array(xform, dtype='float64').reshape(3, 3)
                     #print(xform_array)
                     xforms.append(xform_array)
                     n0 += 36*2
@@ -525,9 +499,14 @@ class OP2Reader(object):
                 #self.show_data(data[:n0+80], types='if')
             if len(xforms) == 0:
                 xforms = None
-            sils = np.array(sils)
+            eids = np.array(eids, dtype='int32')
+            ge = np.array(ge, dtype='float32')
+            address = np.array(address, dtype='int32')
+            sils = np.array(sils, dtype='int32')
+            #print('eids, address:\n', eids, '\n', address)
             #print('sils (etype=%s):\n%s' % (eltype, sils))
-            matdict.add(eltype, numwids, numgrid, dof_per_grid, form, sils, xform=xforms)
+            matdict.add(eltype, numwids, numgrid, dof_per_grid, form,
+                        eids, ge, address, sils, xform=xforms)
             #-------------------------------------------------------------------
             self.read_markers([itable, 1, 0])
             itable -= 1
@@ -1037,7 +1016,8 @@ class OP2Reader(object):
         if markers[0] != isubtable:
             self.read_markers([markers[0], 1, 0, 0])
             self.show(200)
-            self.log.error('unexpected GPDT marker marker=%s; expected=%s' % (markers[0], isubtable))
+            self.log.error('unexpected GPDT marker marker=%s; expected=%s' % (
+                markers[0], isubtable))
             #markers = self.get_nmarkers(1, rewind=False)
             return
 
@@ -1881,6 +1861,8 @@ class OP2Reader(object):
                 assert nvalues == 0, nvalues
 
                 matrix = self._cast_matrix_mat(GCi, GCj, mrows, ncols, reals, tout, dtype)
+                if table_name in DENSE_MATRICES:
+                    matrix = matrix.toarray()
                 m.data = matrix
                 if matrix is not None:
                     op2.matrices[table_name.decode('utf-8')] = m
@@ -2168,7 +2150,7 @@ class OP2Reader(object):
         reals = []
         imags = []
         for col_nidi, col_dofi, istarti, istopi in zip(
-            col_nids_short, col_dofs_short, istart + 2, istop):
+                col_nids_short, col_dofs_short, istart + 2, istop):
 
             ## TODO: preallocate arrays
             imag = None

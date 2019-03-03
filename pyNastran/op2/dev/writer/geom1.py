@@ -7,7 +7,8 @@ def write_geom1(op2, op2_ascii, obj):
         return
     nnodes = len(obj.nodes)
     ncoords = len(obj.coords)
-    if not(nnodes or ncoords):
+    ngeom1 = nnodes or ncoords
+    if not ngeom1:
         return
     write_geom_header(b'GEOM1', op2, op2_ascii)
     itable = -3
@@ -15,23 +16,14 @@ def write_geom1(op2, op2_ascii, obj):
     if nnodes:
         #nvalues = nnodes * 8
         #nbytes = nvalues * 4
-        bytes_per_id = 32
         #assert nnodes == 72, nnodes
         nfields = 8 # nid, cp, x, y, z, cd, ps, seid
         nvalues = nfields * nnodes + 3 # 3 comes from the keys
-        nbytes = nvalues * 4
         #assert nbytes == 2316, nbytes
         #op2.write(pack('6i', *[4, 0, 4, 4, 1, 4]))
-        op2.write(pack('3i', *[4, nvalues, 4]))
-        op2.write(pack('i', nbytes)) #values, nbtyes))
 
-        #op2.write(pack('3i', *[4, 0, 4]))
-        #op2_ascii.write(str([4, 0, 4])) #values, nbtyes))
-
-        #(4501,  45,  1): ['GRID',   self._read_grid],
         key = (4501, 45, 1)
-        op2.write(pack('3i', *key))
-        op2_ascii.write(str(key) + '\n')
+        nbytes = write_block(op2, op2_ascii, nvalues, key)
 
         spack = Struct('ii 3f 3i')
         for nid, node in sorted(obj.nodes.items()):
@@ -53,11 +45,6 @@ def write_geom1(op2, op2_ascii, obj):
             op2_ascii.write('  nid=%s cp=%s xyz=(%s, %s, %s) cd=%s ps=%s seid=%s\n' % tuple(data))
         op2.write(pack('i', nbytes))
         itable -= 1
-
-        #-------------------------------------
-        itable = -4
-        close_geom_table(op2, op2_ascii, itable)
-
         #-------------------------------------
 
     if ncoords:
@@ -70,6 +57,17 @@ def write_geom1(op2, op2_ascii, obj):
         #(14301,143,651): ['CORD3G', self._read_cord3g],
         pass
     #_write_markers(op2, op2_ascii, [2, 4])
+    #-------------------------------------
+    itable = -4
+    close_geom_table(op2, op2_ascii, itable)
+
+def write_block(op2, op2_ascii, nvalues, key):
+    nbytes = nvalues * 4
+    op2.write(pack('3i', *[4, nvalues, 4]))
+    op2.write(pack('i', nbytes)) #values, nbtyes))
+    op2.write(pack('3i', *key))
+    op2_ascii.write(str(key) + '\n')
+    return nbytes
 
 def init_table(table_name):
     data = [

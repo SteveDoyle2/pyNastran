@@ -96,7 +96,7 @@ class TestOP2Matrix(unittest.TestCase):
 
         for matrix_name, expected in zip(matrix_names, expecteds):
             assert matrix_name in op2.matrices, matrix_name
-            actual = op2.matrices[matrix_name].data.todense()
+            actual = op2.matrices[matrix_name].data.toarray()
             compare_dmi_matrix_from_bdf_to_op2(model, op2, expected, actual, matrix_name)
 
     def test_op2_dmi_02(self):
@@ -154,7 +154,7 @@ class TestOP2Matrix(unittest.TestCase):
 
         for matrix_name, expected in zip(matrix_names, expecteds):
             assert matrix_name in op2.matrices, matrix_name
-            actual = op2.matrices[matrix_name].data.todense()
+            actual = op2.matrices[matrix_name].data.toarray()
             compare_dmi_matrix_from_bdf_to_op2(model, op2, expected, actual, matrix_name)
 
 def compare_dmi_matrix_from_bdf_to_op2(bdf_model, op2_model, expected, actual, matrix_name):

@@ -216,7 +216,7 @@ class ComplexRodArray(OES_Object):
         device_code = self.device_code
         op2_ascii.write('  ntimes = %s\n' % self.ntimes)
 
-        eids_device = self.element *  10 + self.device_code
+        eids_device = self.element * 10 + self.device_code
 
         if self.is_sort1:
             struct1 = Struct(endian + b'i4f')

@@ -29,7 +29,7 @@ class TestOP4(unittest.TestCase):
                     pass
                     #print(matrix)
                 else:
-                    #print(matrix.todense())
+                    #print(matrix.toarray())
                     pass
                     #print(matrix)
 
@@ -49,7 +49,7 @@ class TestOP4(unittest.TestCase):
                     pass
                 else:
                     pass
-                    #print(matrix.todense())
+                    #print(matrix.toarray())
                     #print(matrix)
 
     def test_eye10(self):
@@ -292,12 +292,12 @@ class TestOP4(unittest.TestCase):
         op4_filename = os.path.join(OP4_PATH, 'testplate_kgg.op4')
         matrices = read_op4(op4_filename=op4_filename,
                             matrix_names=None, precision='default', debug=False, log=None)
-        Kgg = matrices['KGG'][1].todense()
+        Kgg = matrices['KGG'][1].toarray()
 
         op4_filename = os.path.join(OP4_PATH, 'testplate_kgg_ascii.op4')
         matrices = read_op4(op4_filename=op4_filename,
                             matrix_names=None, precision='default', debug=False, log=None)
-        Kgga = matrices['KGG'][1].todense()
+        Kgga = matrices['KGG'][1].toarray()
         assert np.allclose(Kgg, Kgga)
         #for line in Kgg:
             #print(line)
