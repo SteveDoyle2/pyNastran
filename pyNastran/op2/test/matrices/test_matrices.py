@@ -10,6 +10,7 @@ from pyNastran.bdf.bdf import read_bdf
 from pyNastran.op2.op2 import OP2
 from pyNastran.op2.op2_geom import read_op2_geom, FatalError
 PKG_PATH = pyNastran.__path__[0]
+MODEL_PATH = os.path.abspath(os.path.join(PKG_PATH, '..', 'models'))
 
 
 class TestOP2Matrix(unittest.TestCase):
@@ -38,11 +39,21 @@ class TestOP2Matrix(unittest.TestCase):
         uexpt = model.matrices['UEXPT']
         assert uexpt.data.shape == (276, 24), uexpt.data.shape
 
+    def test_kelm_kdict(self):
+        """Tests reading KELM and KDICT"""
+        op2_filename = os.path.join(MODEL_PATH, 'sol_101_elements', 'static_solid_shell_bar_kelm.op2')
+        model = read_op2_geom(op2_filename, debug=False)
+
+        kelm = model.matrices['KELM']
+        assert kelm.data.shape == (300, 21), kelm.data.shape
+
+        kdict = model.matdicts['KDICT']
+        assert (kdict.element_types) == [34, 2, 67, 68, 33, 1, 39, 74], kdict.element_types
+
     def test_op2_dmi_01(self):
         """tests DMI matrix style"""
-        folder = os.path.abspath(os.path.join(PKG_PATH, '..', 'models'))
-        bdf_filename = os.path.join(folder, 'matrix', 'matrix.dat')
-        op2_filename = os.path.join(folder, 'matrix', 'mymatrix.op2')
+        bdf_filename = os.path.join(MODEL_PATH, 'matrix', 'matrix.dat')
+        op2_filename = os.path.join(MODEL_PATH, 'matrix', 'mymatrix.op2')
         matrices = {
             'A' : True,
             'B' : False,
@@ -101,9 +112,8 @@ class TestOP2Matrix(unittest.TestCase):
 
     def test_op2_dmi_02(self):
         """tests DMI matrix style"""
-        folder = os.path.abspath(os.path.join(PKG_PATH, '..', 'models'))
-        bdf_filename = os.path.join(folder, 'matrix', 'matrix.dat')
-        op2_filename = os.path.join(folder, 'matrix', 'mymatrix.op2')
+        bdf_filename = os.path.join(MODEL_PATH, 'matrix', 'matrix.dat')
+        op2_filename = os.path.join(MODEL_PATH, 'matrix', 'mymatrix.op2')
         matrices = {
             'A' : True,
             'B' : False,

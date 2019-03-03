@@ -109,17 +109,17 @@ class OP2Reader(object):
             #b'MELMP' : self._read_element_matrix,
 
             # element dictionaries
-            #b'KDICT' : self._read_dict,
-            #b'MDICT' : self._read_dict,
-            #b'BDICT' : self._read_dict,
-            #b'KDICTP' : self._read_dict,
-            #b'MDICTP' : self._read_dict,
-            #b'KDICTDS' : self._read_dict,
-            #b'KDICTX' : self._read_dict,
-            #b'XDICT' : self._read_dict,
-            #b'XDICTB' : self._read_dict,
-            #b'XDICTDS' : self._read_dict,
-            #b'XDICTX' : self._read_dict,
+            b'KDICT' : self._read_dict,
+            b'MDICT' : self._read_dict,
+            b'BDICT' : self._read_dict,
+            b'KDICTP' : self._read_dict,
+            b'MDICTP' : self._read_dict,
+            b'KDICTDS' : self._read_dict,
+            b'KDICTX' : self._read_dict,
+            b'XDICT' : self._read_dict,
+            b'XDICTB' : self._read_dict,
+            b'XDICTDS' : self._read_dict,
+            b'XDICTX' : self._read_dict,
 
             # coordinate system transformation matrices
             b'CSTM' : self.read_cstm,
@@ -466,61 +466,72 @@ class OP2Reader(object):
         #self.show_data(data)
 
         ints = unpack(self._endian + b'7i', data)
-        print('date?  = (?, month, day, ?, ?, ?) =', ints)
+        #print('date?  = (?, month, day, ?, ?, ?) =', ints)
 
         self.read_markers([-2, 1, 0])
         data = self._read_record()
         name, = unpack(self._endian + b'8s', data)
         name = name.decode('ascii').strip()
-        print('name = %r' % name)
+        #print('name = %r' % name)
 
         self.read_markers([-3, 1, 0])
-        data = self._read_record()
-        #self.show_data(data[:200], types='if')
-        n0 = 0
-        ndata = len(data)
-
         matdict = MatrixDict(name)
+        itable = -4
+        while 1:
+            markers = self.get_nmarkers(1, rewind=True)
+            if markers == [0]:
+                break
+            #-------------------------------------------------------------------
+            data = self._read_record()
+            n0 = 0
+            ndata = len(data)
 
-        eltype, numwids, numgrid, dof_per_grid, form = unpack(self._endian + b'5i', data[:20])
-        n0 += 20
-        print('etype', eltype)
-        print('numwids', numwids)
-        print('numgrid', numgrid)
-        print('dof_per_grid', dof_per_grid)
-        print('form', form)
-        xforms = []
-        sils = []
-        while n0 < ndata:
-            #print("--------")
-            #print('n0=%s ndata=%s' % (n0, ndata))
-            eid, nactive_grid, ge, address1, address2 = unpack(self._endian + b'2i f 2i', data[n0:n0+20])
+            eltype, numwids, numgrid, dof_per_grid, form = unpack(self._endian + b'5i', data[:20])
             n0 += 20
-            #print('eid', eid)
-            #print('nactive_grid', nactive_grid)
-            #print('ge', ge)
-            #print('address1', address1)
-            #print('address2', address2)
-            if form in [3, 4, 5, 6]:
-                nbytes = numgrid * 4
-                sil = unpack('%ii' % numgrid, data[n0:n0+nbytes])
-                n0 += nbytes
-                #print('sil =', sil)
-                assert min(sil) >= 0, sil
-                assert max(sil) < 100000000, sil
-                sils.append(sil)
-            else:
-                raise NotImplementedError(form)
-            if form in [4]:
-                xform = unpack(b'9d', data[n0:n0+36*2])
-                xforms.append(xform)
-                n0 += 36*2
-                #print('xform =', xform, len(xform))
-            #self.show_data(data[:n0+80], types='if')
-        if len(xforms) == 0:
-            xforms = None
-        matdict.add(eltype, numwids, numgrid, dof_per_grid, form, sils, xform=xforms)
-        self.read_markers([-4, 1, 0, 0])
+            #print('etype', eltype)
+            #print('numwids', numwids)
+            #print('numgrid', numgrid)
+            #print('dof_per_grid', dof_per_grid)
+            #print('form', form)
+            xforms = []
+            sils = []
+            while n0 < ndata:
+                #print("--------")
+                #print('n0=%s ndata=%s' % (n0, ndata))
+                eid, nactive_grid, ge, address1, address2 = unpack(self._endian + b'2i f 2i', data[n0:n0+20])
+                n0 += 20
+                #print('eid', eid)
+                #print('nactive_grid', nactive_grid)
+                #print('ge', ge)
+                #print('address1', address1)
+                #print('address2', address2)
+                if form in [3, 4, 5, 6]:
+                    nbytes = numgrid * 4
+                    sil = unpack('%ii' % numgrid, data[n0:n0+nbytes])
+                    n0 += nbytes
+                    #print('sil =', sil)
+                    assert min(sil) >= 0, sil
+                    assert max(sil) < 100000000, sil
+                    sils.append(sil)
+                else:
+                    raise NotImplementedError(form)
+                if form in [4]:
+                    xform = unpack(b'9d', data[n0:n0+36*2])
+                    xform_array = np.array(xform, dtype='float64').reshape(3,3)
+                    #print(xform_array)
+                    xforms.append(xform_array)
+                    n0 += 36*2
+                    #print('xform =', xform, len(xform))
+                #self.show_data(data[:n0+80], types='if')
+            if len(xforms) == 0:
+                xforms = None
+            sils = np.array(sils)
+            #print('sils (etype=%s):\n%s' % (eltype, sils))
+            matdict.add(eltype, numwids, numgrid, dof_per_grid, form, sils, xform=xforms)
+            #-------------------------------------------------------------------
+            self.read_markers([itable, 1, 0])
+            itable -= 1
+        self.read_markers([0])
         self.op2.matdicts[name] = matdict
 
     def _read_cmodext(self):

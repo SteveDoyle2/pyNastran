@@ -152,7 +152,7 @@ class Matrix(object):
 
 
 class MatrixDict(object):
-    """storage object for KDICT, MDICT, BDICT, etc."""
+    """storage object for KDICT, MDICT, BDICT, etc. is op2.matdicts"""
     def __init__(self, name):
         self.name = name
         self.element_types = []
@@ -171,3 +171,6 @@ class MatrixDict(object):
         self.forms.append(form)
         self.sils.append(sil)
         self.xforms.append(xform)
+
+    def __repr__(self):
+        return 'MatrixDict(name=%r, element_types=%s)' % (self.name, self.element_types)

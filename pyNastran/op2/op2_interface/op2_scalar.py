@@ -1292,7 +1292,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'POST', b'OPPHIPA', b'OPPHIPB', b'GRDPNT', b'RPOSTS1', b'BAILOUT',
             b'COUPMASS', b'CURV', b'INREL', b'MAXRATI', b'OG',
             b'S1AM', b'S1M', b'DDRMM', b'MAXIT', b'PLTMSG', b'LGDISP', b'NLDISP',
-            b'OUNIT2M', b'RESCOMP', b'PDRMSG', b'LMODES', b'USETPRT']
+            b'OUNIT2K', b'OUNIT2M', b'RESCOMP', b'PDRMSG', b'LMODES', b'USETPRT']
         float_words_1 = [
             b'K6ROT', b'WTMASS', b'SNORM', b'PATVER', b'MAXRATIO', b'EPSHT',
             b'SIGMA', b'TABS']

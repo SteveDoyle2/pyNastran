@@ -164,8 +164,8 @@ class Abaqus(object):
                 elif word.startswith('initial conditions'):
                     data_lines, iline, line0 = self._read_star_block(lines, iline, line0)
                     for line in data_lines:
-                        print(line)
-                    print('line_end_of_IC =', line0)
+                        self.log.debug(line)
+                    self.log.debug('line_end_of_IC = %s' % line0)
                 elif word.startswith('surface interaction'):
                     unused_key = 'surface interaction'
                     unused_data = []
@@ -439,14 +439,14 @@ class Abaqus(object):
                     sline = line0.split(',')
                     iline += 1
                     line0 = lines[iline].strip().lower()
-                print(line0)
+                self.log.debug(line0)
             elif word.lower().startswith('hyperelastic, mooney-rivlin'):
                 key = 'hyperelastic, mooney-rivlin'
                 while '*' not in line0:
                     sline = line0.split(',')
                     iline += 1
                     line0 = lines[iline].strip().lower()
-                print(line0)
+                self.log.debug(line0)
             else:
                 msg = print_data(lines, iline, word, 'is this an unallowed word for *Material?\n')
                 raise NotImplementedError(msg)
@@ -884,8 +884,8 @@ class Abaqus(object):
         #self.heading = None
         #self.preprint = None
         with open(abqaqus_filename_out, 'w') as abq_file:
-            print("  nparts = %s" % len(self.parts))
-            print("  nmaterials = %s" % len(self.materials))
+            self.log.debug("  nparts = %s" % len(self.parts))
+            self.log.debug("  nmaterials = %s" % len(self.materials))
             for unused_part_name, part in self.parts.items():
                 part.write(abq_file)
             for unused_mat_name, mat in self.materials.items():

@@ -4,6 +4,7 @@ from collections import OrderedDict
 
 from six import integer_types
 
+from pyNastran.gui.qt_version import qt_version
 from vtk import (
     vtkTextActor, vtkLODActor, vtkActor,
     #GeometryProperty,

@@ -356,8 +356,10 @@ class OQG(OP2Common):
             self._setup_op2_subcase('SPCFORCES')
             if self.table_name in [b'OQG1']:
                 result_name = 'spc_forces'
+            #elif self.table_name in [b'OQGV1']:
+                #result_name = 'spc_forces_v'
             elif self.table_name in [b'OQGV1']:
-                result_name = 'spc_forces_v'
+                result_name = 'spc_forces'
             else:
                 raise NotImplementedError(self.table_name_str)
             if self._results.is_not_saved(result_name):

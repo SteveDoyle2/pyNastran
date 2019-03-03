@@ -304,7 +304,8 @@ class OPG(OP2Common):
             postfixs = {
                 b'OPG1' : '',
                 b'OPG2' : '',
-                b'OPGV1' : '_v',
+                #b'OPGV1' : '_v',
+                b'OPGV1' : '',
                 b'OCRPG' : '',
                 b'OPGPSD1' : '',
                 b'OPGPSD2' : '',

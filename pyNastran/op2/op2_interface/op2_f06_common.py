@@ -1156,6 +1156,10 @@ class OP2_F06_Common(object):
         for unused_name, matrix in sorted(self.matrices.items()):
             #msg.append('matrices[%s].shape = %s\n' % (name, matrix.data.shape))
             msg.append(str(matrix) + '\n')
+
+        for unused_name, matrix_dict in sorted(self.matdicts.items()):
+            #msg.append('matrices[%s].shape = %s\n' % (name, matrix.data.shape))
+            msg.append(str(matrix_dict) + '\n')
         try:
             return ''.join(msg)
         except TypeError:

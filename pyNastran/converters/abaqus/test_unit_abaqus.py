@@ -2,9 +2,11 @@ from __future__ import print_function
 import os
 import unittest
 
+import pyNastran
 from pyNastran.converters.abaqus.abaqus import read_abaqus
 from pyNastran.utils.log import get_logger
-PWD = os.path.dirname(__file__)
+PKG_PATH = pyNastran.__path__[0]
+MODEL_PATH = os.path.join(PKG_PATH, 'converters', 'abaqus', 'models')
 
 class TestAbaqus(unittest.TestCase):
     def test_abaqus_1(self):
@@ -13,9 +15,16 @@ class TestAbaqus(unittest.TestCase):
         log = get_logger(level='warning', encoding='utf-8')
         read_abaqus(lines, log=log, debug=False)
 
-        abaqus_filename = os.path.join(PWD, 'abaqus.inp')
+        abaqus_filename = os.path.join(MODEL_PATH, 'abaqus.inp')
         with open(abaqus_filename, 'w') as abaqus_file:
             abaqus_file.writelines('\n'.join(lines))
+
+    def test_abaqus_2(self):
+        """two hex blocks with duplicate node ids"""
+        abaqus_filename = os.path.join(MODEL_PATH, 'single_block.inp')
+        log = get_logger(level='error', encoding='utf-8')
+
+        read_abaqus(abaqus_filename, log=log, debug=False)
 
 def make_model():
     """makes a test model"""
