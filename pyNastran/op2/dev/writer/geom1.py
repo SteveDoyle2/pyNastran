@@ -1,3 +1,4 @@
+from collections import defaultdict
 from struct import pack, Struct
 
 def write_geom1(op2, op2_ascii, obj):
@@ -45,21 +46,83 @@ def write_geom1(op2, op2_ascii, obj):
             op2_ascii.write('  nid=%s cp=%s xyz=(%s, %s, %s) cd=%s ps=%s seid=%s\n' % tuple(data))
         op2.write(pack('i', nbytes))
         itable -= 1
+        data = [
+            4, itable, 4,
+            4, 1, 4,
+            4, 0, 4]
+        op2.write(pack('9i', *data))
+        op2_ascii.write(str(data) + '\n')
         #-------------------------------------
 
     if ncoords:
-        #(1701,  17,  6): ['CORD1C', self._read_cord1c],
-        #(1801,  18,  5): ['CORD1R', self._read_cord1r],
-        #(1901,  19,  7): ['CORD1S', self._read_cord1s],
-        #(2001,  20,  9): ['CORD2C', self._read_cord2c],
-        #(2101,  21,  8): ['CORD2R', self._read_cord2r],
-        #(2201,  22, 10): ['CORD2S', self._read_cord2s],
-        #(14301,143,651): ['CORD3G', self._read_cord3g],
-        pass
+        out = defaultdict(list)
+        for cid, coord in obj.coords.items():
+            out[coord.type].append(cid)
+
+        coord_type_key_map = {
+            'CORD1C' : (1701, 17, 6),
+            'CORD1R' : (1801, 18, 5),
+            'CORD1S' : (1901, 19, 7),
+            'CORD2C' : (2001, 20, 9),
+            'CORD2R' : (2101, 21, 8),
+            'CORD2S' : (2201, 22, 10),
+            'CORD3G' : (14301, 143, 651),
+        }
+        for coord_type, cids in sorted(out.items()):
+            key = coord_type_key_map[coord_type]
+            ncards = len(cids)
+            if '2' in coord_type:
+                coord_int = 2
+            elif '1' in coord_type:
+                coord_int = 1
+            else:
+                raise NotImplementedError(coord_type)
+
+            if coord_type[-1] == 'R':
+                coord_rcs_int = 1
+            elif coord_type[-1] == 'C':
+                coord_rcs_int = 2
+            elif coord_type[-1] == 'S':
+                coord_rcs_int = 3
+            else:
+                raise NotImplementedError(coord_type)
+            if coord_type in ['CORD2R', 'CORD2C', 'CORD2S']:
+                nvalues = 13 * ncards + 3
+                spack = Struct(b'4i 9f')
+
+                nbytes = write_block(op2, op2_ascii, nvalues, key)
+
+                for cid in sorted(cids):
+                    coord = obj.coords[cid]
+                    data = ([cid, coord_rcs_int, coord_int, coord.Rid(), ] +
+                            list(coord.e1) + list(coord.e2) + list(coord.e3))
+                    op2.write(spack.pack(*data))
+                    op2_ascii.write(' cid=%s data=%s' % (cid, str(data[1:])))
+            elif coord_type in ['CORD1R', 'CORD1C', 'CORD1S']:
+                nvalues = 6 * ncards + 3
+                spack = Struct(b'6i')
+
+                nbytes = write_block(op2, op2_ascii, nvalues, key)
+
+                for cid in sorted(cids):
+                    coord = obj.coords[cid]
+                    data = [cid, coord_rcs_int, coord_int, coord.G1(), coord.G2(), coord.G3()]
+                    op2.write(spack.pack(*data))
+                    op2_ascii.write(' cid=%s data=%s' % (cid, str(data[1:])))
+            else:
+                raise NotImplementedError(coord_type)
+            op2.write(pack('i', nbytes))
+            itable -= 1
+            data = [
+                4, itable, 4,
+                4, 1, 4,
+                4, 0, 4]
+            op2.write(pack('9i', *data))
+            op2_ascii.write(str(data) + '\n')
+
     #_write_markers(op2, op2_ascii, [2, 4])
     #-------------------------------------
-    itable = -4
-    close_geom_table(op2, op2_ascii, itable)
+    close_geom_table(op2, op2_ascii, itable, include_last=False)
 
 def write_block(op2, op2_ascii, nvalues, key):
     nbytes = nvalues * 4

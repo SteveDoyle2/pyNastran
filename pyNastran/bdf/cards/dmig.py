@@ -732,7 +732,7 @@ def _fill_sparse_matrix(self, nrows, ncols):
                                shape=(nrows, ncols), dtype=dtype)
     #sparse_matrix = coo_matrix( (data,(self.GCi,self.GCj)),shape=(i,j)) # old
     #sparse_matrix = coo_matrix( (data,(self.GCi,self.GCj)),shape=(nrows,ncols))
-    #print(sparse_matrix.todense())
+    #print(sparse_matrix.toarray())
     #print(sparse_matrix)
     return sparse_matrix
 

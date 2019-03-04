@@ -397,6 +397,9 @@ class MPT(GeomCommon):
             edata = data[n:n+44]
             out = s.unpack(edata)
             (mid, tid, Type, h, yf, hr, limit1, limit2, a, bmat, c) = out
+            assert a == 0, a
+            assert bmat == 0, bmat
+            assert c == 0, c
             data_in = [mid, tid, Type, h, yf, hr, limit1, limit2]
             if self.is_debug_file:
                 self.binary_debug.write('  MATS1=%s\n' % str(out))

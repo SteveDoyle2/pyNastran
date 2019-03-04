@@ -295,6 +295,7 @@ class MATT1(MaterialDependenceThermal):
             sc_table = None
         if ss_table == 0:
             ss_table = None
+
         self.e_table = e_table
         self.g_table = g_table
         self.nu_table = nu_table

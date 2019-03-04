@@ -174,24 +174,44 @@ class OP2Writer(OP2_F06_Common):
             'OUGV1',
             'BOUGV1',
             'OUPV1',
-            'OAGATO1',
+            'TOUGV1',
+            'OAGATO1', 'OAGCRM1', 'OAGNO1', 'OAGPSD1', 'OAGRMS1',
+            'OAGATO2', 'OAGCRM2', 'OAGNO2', 'OAGPSD2', 'OAGRMS2',
 
             'OQG1',
-            'OQMG1',
+            'OQGV1',
             'OQP1',
-
+            'OQMG1',
             'OPGV1', 'OPG1', 'OPNL1',
+            'OUGATO1', 'OUGCRM1', 'OUGNO1', 'OUGPSD1', 'OUGRMS1',
+            'OUGATO2', 'OUGCRM2', 'OUGNO2', 'OUGPSD2', 'OUGRMS2',
+
+            'OVGATO1', 'OVGCRM1', 'OVGNO1', 'OVGPSD1', 'OVGRMS1',
+            'OVGATO2', 'OVGCRM2', 'OVGNO2', 'OVGPSD2', 'OVGRMS2',
+
+            'OQGATO1', 'OQGCRM1', 'OQGNO1', 'OQGPSD1', 'OQGRMS1',
+            'OQGATO2', 'OQGCRM2', 'OQGNO2', 'OQGPSD2', 'OQGRMS2',
+
+            'OQMATO1', 'OQMCRM1', 'OQMNO1', 'OQMPSD1', 'OQMRMS1',
+            'OQMATO2', 'OQMCRM2', 'OQMNO2', 'OQMPSD2', 'OQMRMS2',
+
+            'OPGATO1', 'OPGCRM1', 'OPGNO1', 'OPGPSD1', 'OPGRMS1',
+            'OPGATO2', 'OPGCRM2', 'OPGNO2', 'OPGPSD2', 'OPGRMS2',
 
             'DOEF1', 'HOEF1',
             'OEF1', 'OEF1X',
-            'OEFATO1',
+            'OEFATO1', 'OEFCRM1', 'OEFNO1', 'OEFPSD1', 'OEFRMS1',
+            'OEFATO2', 'OEFCRM2', 'OEFNO2', 'OEFPSD2', 'OEFRMS2',
 
             'OESNLXD', 'OESNLXR', 'OESNL1X',
             'OES1', 'OES1X', 'OES1X1',
             'OES1C',
             'OESCP',
-            'OESPSD1',
-            'OESPSD2',
+            'OESATO1', 'OESCRM1', 'OESNO1', 'OESPSD1', 'OESRMS1',
+            'OESATO2', 'OESCRM2', 'OESNO2', 'OESPSD2', 'OESRMS2',
+
+            'OSTRATO1', 'OSTRCRM1', 'OSTRNO1', 'OSTRPSD1', 'OSTRRMS1',
+            'OSTRATO2', 'OSTRCRM2', 'OSTRNO2', 'OSTRPSD2', 'OSTRRMS2',
 
             'OESTRCP',
             'OSTR1C',

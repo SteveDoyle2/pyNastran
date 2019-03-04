@@ -233,7 +233,7 @@ class TestOP2Writer(unittest.TestCase):
             #'chexa_thermal_load',
         ]
         op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug,
-                            exclude_results=exclude_results,
+                            exclude_results=exclude_results, debug=True,
                             #include_results='eigenvectors',
                             #include_results=['crod_stress', 'cbar_stress'],
                             #include_results=['crod_force', 'cbar_force'],

@@ -34,6 +34,8 @@ from pyNastran.op2.result_objects.op2_objects import ScalarObject
 from pyNastran.f06.f06_formatting import write_floats_13e, write_imag_floats_13e, write_float_12e
 from pyNastran.op2.op2_interface.write_utils import set_table3_field
 
+float_types = (float, np.float32)
+
 SORT2_TABLE_NAME_MAP = {
     'OUGATO2' : 'OUGATO1',
     'OUGCRM2' : 'OUGCRM1',
@@ -517,24 +519,38 @@ class TableArray(ScalarObject):  # displacement style table
         ftable3 = b'i' * 50 + b'128s 128s 128s'
         field6 = 0
         field7 = 0
+
+        if isinstance(acoustic_flag, float_types):
+            ftable3 = set_table3_field(ftable3, 12, b'f') # field 11
+
+        #print(self.get_stats())
         if self.analysis_code == 1:
+            #if hasattr(self, 'lsdvmns'):
             field5 = self.lsdvmns[itime]
+            #else:
+                #field5 = self.dts[itime]
+                #assert isinstance(field5, float_types), type(field5)
+                #ftable3 = set_table3_field(ftable3, 5, b'f') # field 5
+
         elif self.analysis_code == 2:
             field5 = self.modes[itime]
             field6 = self.eigns[itime]
             field7 = self.mode_cycles[itime]
-            assert isinstance(field6, float), type(field6)
-            assert isinstance(field7, float), type(field7)
+            assert isinstance(field6, float_types), type(field6)
+            assert isinstance(field7, float_types), type(field7)
             ftable3 = set_table3_field(ftable3, 6, b'f') # field 6
             ftable3 = set_table3_field(ftable3, 7, b'f') # field 7
         elif self.analysis_code == 5:
             field5 = self.freqs[itime]
+            assert isinstance(field5, float_types), type(field5)
             ftable3 = set_table3_field(ftable3, 5, b'f') # field 5
         elif self.analysis_code == 6:
             if hasattr(self, 'dts'):
                 field5 = self.dts[itime]
+                #assert isinstance(field5, float), type(field5)
             else:
                 field5 = self.times[itime]
+                #assert isinstance(field5, float), type(field5)
             ftable3 = set_table3_field(ftable3, 5, b'f') # field 5
         elif self.analysis_code == 7:  # pre-buckling
             field5 = self.lsdvmns[itime] # load set number
@@ -542,6 +558,9 @@ class TableArray(ScalarObject):  # displacement style table
             field5 = self.lsdvmns[itime] # load set number
             if hasattr(self, 'eigns'):
                 field6 = self.eigns[itime]
+            elif hasattr(self, 'eigrs'):
+                field6 = self.eigrs[itime]
+            assert isinstance(field6, float_types), type(field6)
             ftable3 = set_table3_field(ftable3, 6, b'f') # field 6
         elif self.analysis_code == 9:  # complex eigenvalues
             field5 = self.modes[itime]
@@ -571,11 +590,16 @@ class TableArray(ScalarObject):  # displacement style table
         assert table3[22] == thermal
 
         n = 0
-        for v in table3:
-            if isinstance(v, (int, float)):
+        from itertools import count
+        for i, val, ftable3i in zip(count(), table3, ftable3.decode('ascii')):
+            if isinstance(val, int):
                 n += 4
+                assert ftable3i == 'i', 'analysis_code=%s i=%s val=%s type=%s' % (self.analysis_code, i, val, ftable3i)
+            elif isinstance(val, float_types):
+                n += 4
+                assert ftable3i == 'f', 'analysis_code=%s i=%s val=%s type=%s' % (self.analysis_code, i, val, ftable3i)
             else:
-                n += len(v)
+                n += len(val)
         assert n == 584, n
         data = [584] + table3 + [584]
         fmt = b'i' + ftable3 + b'i'
@@ -612,7 +636,14 @@ class RealTableArray(TableArray):
                   date, is_mag_phase=False, endian='>'):
         """writes an OP2"""
         import inspect
-        assert self.table_name in ['OUGV1', 'BOUGV1', 'OUPV1', 'OQP1', 'OQMG1', 'OQG1', 'OPG1', 'OPNL1'], self.table_name
+        allowed_tables = [
+            'OUGV1', 'BOUGV1', 'OUPV1',
+            'OQP1', 'OQMG1', 'OQG1', 'OQGV1', 'OPNL1',
+            'OPG1', 'OPGV1',
+            'OAGATO1', 'OAGCRM1', 'OAGNO1', 'OAGPSD1', 'OAGRMS1',
+            'OQGPSD1',
+        ]
+        assert self.table_name in allowed_tables, self.table_name
 
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
@@ -1052,7 +1083,12 @@ class ComplexTableArray(TableArray):
         """writes an OP2"""
         assert endian == b'<', endian
         import inspect
-        assert self.table_name in ['OUGV1', 'BOUGV1', 'OQMG1', 'OQG1', 'OPG1'], self.table_name
+        allowed_tables = [
+            'OUGV1', 'BOUGV1',
+            'OQG1', 'OQMG1',
+            'OPG1',
+        ]
+        assert self.table_name in allowed_tables, self.table_name
 
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)

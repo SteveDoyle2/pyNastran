@@ -24,10 +24,9 @@ def write_geom2(op2, op2_ascii, obj, endian=b'<'):
     ]
     out = obj.get_card_ids_by_card_types(etypes)
     if nspoints:
-        print(obj.spoints)
-        out['SPOINT'] = obj.spoints
-        aaa
-    for name, eids in out.items():
+        out['SPOINT'] = list(obj.spoints.keys())
+
+    for name, eids in sorted(out.items()):
         nelements = len(eids)
         if nelements == 0:
             continue
@@ -288,6 +287,7 @@ def write_card(name, eids, spack, obj, op2, op2_ascii):
         nids = eids
         nids.sort()
         spack = Struct('%ii' % len(nids))
-        spack.pack(*nids)
+        op2_ascii.write('  spoints%s\n' % str(nids))
+        op2.write(spack.pack(*nids))
     else:  # pragma: no cover
         raise NotImplementedError(name)
