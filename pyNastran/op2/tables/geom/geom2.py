@@ -397,7 +397,6 @@ class GEOM2(GeomCommon):
         """
         nelements = (len(data) - n) // 72
         s1 = Struct(self._endian + b'6i3f3i6f')
-        s2 = Struct(self._endian + b'6i3f3i6f')
         s3 = Struct(self._endian + b'12i6f')
         for i in range(nelements):
             edata = data[n:n + 72]  # 18*4
@@ -407,8 +406,8 @@ class GEOM2(GeomCommon):
             f = fe & 3
             if f == 0:  # basic cid
                 out = s1.unpack(edata)
-                (eid, pid, ga, gb, sa, sb, x1, x2, x3, fe, pa,
-                 pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
+                (eid, pid, ga, gb, sa, sb, x1, x2, x3, fe,
+                 pa, pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
                 #self.log.info('CBEAM: eid=%s fe=%s f=%s; basic cid' % (eid, fe, f))
 
                 data_in = [[eid, pid, ga, gb, sa, sb, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b],
@@ -416,15 +415,15 @@ class GEOM2(GeomCommon):
             elif f == 1:  # global cid
                 # CBEAM    89616   5       384720  384521  0.      0.     -1.
                 out = s2.unpack(edata)
-                (eid, pid, ga, gb, sa, sb, x1, x2, x3, fe, pa,
-                 pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
+                (eid, pid, ga, gb, sa, sb, x1, x2, x3, fe,
+                 pa, pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
                 #self.log.info('CBEAM: eid=%s fe=%s f=%s; global cid' % (eid, fe, f))
                 data_in = [[eid, pid, ga, gb, sa, sb, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b],
                            [f, x1, x2, x3]]
             elif f == 2:  # grid option
                 out = s3.unpack(edata)
-                (eid, pid, ga, gb, sa, sb, g0, xxa, xxb, fe, pa,
-                 pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
+                (eid, pid, ga, gb, sa, sb, g0, xxa, xxb, fe,
+                 pa, pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
                 #self.log.info('CBEAM: eid=%s fe=%s f=%s; grid option (g0=%s xxa=%s xxb=%s)' % (eid, fe, f, g0, xxa, xxb))
                 if g0 <= 0 or g0 >= 100000000 or xxa != 0 or xxb != 0:
                     # Nastran set this wrong...MasterModelTaxi
@@ -433,7 +432,7 @@ class GEOM2(GeomCommon):
 
 
                     f = 1
-                    out = s2.unpack(edata)
+                    out = s1.unpack(edata)
                     (eid, pid, ga, gb, sa, sb, x1, x2, x3, fe, pa,
                      pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
                     #self.log.info('CBEAM: eid=%s fe=%s f=%s; global cid' % (eid, fe, f))
@@ -1552,6 +1551,7 @@ class GEOM2(GeomCommon):
             (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, t1, t2,
              t3, t4, theta, zoffs, tflag) = out
             #self.log.info('cquad8 tflag = %s' % tflag)
+            assert isinstance(tflag, int), tflag
             assert tflag in [-1, 0, 1], tflag
             #print("eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s tflag=%s t1=%s t2=%s t3=%s t4=%s" %
                   #(eid, pid, n1, n2, n3, n4, theta, zoffs, tflag, t1, t2, t3, t4))
@@ -1867,6 +1867,7 @@ class GEOM2(GeomCommon):
         return len(data)
 
     def _read_ctriax6(self, data, n):  # 101
+        """(6108, 61, 107)"""
         ntotal = 44  # 11*4
         nentries = (len(data) - n) // ntotal
         struc = Struct(self._endian + b'8i f ii')

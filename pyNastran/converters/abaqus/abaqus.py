@@ -447,6 +447,16 @@ class Abaqus(object):
                     iline += 1
                     line0 = lines[iline].strip().lower()
                 self.log.debug(line0)
+            elif word.lower().startswith('expansion'):
+                #*Expansion, zero=20.
+                #80.,
+                key = 'expansion'
+                while '*' not in line0:
+                    sline = line0.split(',')
+                    iline += 1
+                    line0 = lines[iline].strip().lower()
+                #iline += 1
+                self.log.debug(line0)
             else:
                 msg = print_data(lines, iline, word, 'is this an unallowed word for *Material?\n')
                 raise NotImplementedError(msg)

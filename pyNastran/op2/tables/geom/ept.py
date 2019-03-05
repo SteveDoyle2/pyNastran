@@ -467,7 +467,7 @@ class EPT(GeomCommon):
         struct1 = Struct(self._endian + b'4if')
         struct2 = Struct(self._endian + b'16f')
         struct3 = Struct(self._endian + b'16f')
-        ntotal = 1072  # 44+12*84+20
+        ntotal = 768 # 4*(5+16*12)
         #nproperties = (len(data) - n) // ntotal
         #assert nproperties > 0, 'ndata-n=%s n=%s datai\n%s' % (len(data)-n, n, self.show_data(data[n:100+n]))
         ndata = len(data)

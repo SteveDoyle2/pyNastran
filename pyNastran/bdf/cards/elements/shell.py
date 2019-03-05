@@ -4280,6 +4280,8 @@ class CQUAD8(QuadShell):
         #6401, 6402, 6405, 6403, 0, 0, 6404, 0,
         #-1.0, -1.0, -1.0, -1.0,
         #0.0, 0)
+        #(eid, pid, n1, n2, n3, n4, n5, n6, n7, n8,
+         #t1, t2, t3, t4, theta, zoffs, tflag) = out
         eid = data[0]
         pid = data[1]
         nids = data[2:10]
@@ -4288,11 +4290,12 @@ class CQUAD8(QuadShell):
         T3 = data[12]
         T4 = data[13]
         theta_mcid = data[14]
-        zoffset = data[14]
-        tflag = data[15]
-        assert tflag in [0, 1], data
-        return CQUAD8(eid, pid, nids, theta_mcid, zoffset,
-                      tflag, T1, T2, T3, T4, comment=comment)
+        zoffset = data[15]
+        tflag = data[16]
+        #assert isinstance(tflag, int), tflag  # None for v2001; int for post-2001
+        assert tflag in [0, 1], 'tflag=%s data=%s' % (tflag ,data)
+        return CQUAD8(eid, pid, nids, theta_mcid=theta_mcid, zoffset=zoffset,
+                      tflag=tflag, T1=T1, T2=T2, T3=T3, T4=T4, comment=comment)
 
     def cross_reference(self, model):
         """

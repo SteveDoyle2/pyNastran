@@ -295,6 +295,6 @@ def write_mpt(op2, op2_ascii, obj, endian=b'<'):
 
     #-------------------------------------
     #print('itable', itable)
-    close_geom_table(op2, op2_ascii, itable, include_last=False)
+    close_geom_table(op2, op2_ascii, itable)
     #-------------------------------------
 

@@ -27,7 +27,7 @@ def write_geom1(op2, op2_ascii, obj):
         nbytes = write_block(op2, op2_ascii, nvalues, key)
 
         spack = Struct('ii 3f 3i')
-        for nid, node in sorted(obj.nodes.items()):
+        for unused_nid, node in sorted(obj.nodes.items()):
             xyz = node.xyz
             ps = node.ps
             if ps == '':
@@ -40,7 +40,6 @@ def write_geom1(op2, op2_ascii, obj):
                 seidi = 0
             else:
                 seidi = int(seid)
-            nid = node.nid
             data = [node.nid, node.Cp(), xyz[0], xyz[1], xyz[2], node.Cd(), psi, seidi]
             op2.write(spack.pack(*data))
             op2_ascii.write('  nid=%s cp=%s xyz=(%s, %s, %s) cd=%s ps=%s seid=%s\n' % tuple(data))
@@ -75,7 +74,7 @@ def write_geom1(op2, op2_ascii, obj):
                 coord_int = 2
             elif '1' in coord_type:
                 coord_int = 1
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError(coord_type)
 
             if coord_type[-1] == 'R':
@@ -84,12 +83,11 @@ def write_geom1(op2, op2_ascii, obj):
                 coord_rcs_int = 2
             elif coord_type[-1] == 'S':
                 coord_rcs_int = 3
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError(coord_type)
             if coord_type in ['CORD2R', 'CORD2C', 'CORD2S']:
                 nvalues = 13 * ncards + 3
                 spack = Struct(b'4i 9f')
-
                 nbytes = write_block(op2, op2_ascii, nvalues, key)
 
                 for cid in sorted(cids):
@@ -101,7 +99,6 @@ def write_geom1(op2, op2_ascii, obj):
             elif coord_type in ['CORD1R', 'CORD1C', 'CORD1S']:
                 nvalues = 6 * ncards + 3
                 spack = Struct(b'6i')
-
                 nbytes = write_block(op2, op2_ascii, nvalues, key)
 
                 for cid in sorted(cids):
@@ -122,7 +119,7 @@ def write_geom1(op2, op2_ascii, obj):
 
     #_write_markers(op2, op2_ascii, [2, 4])
     #-------------------------------------
-    close_geom_table(op2, op2_ascii, itable, include_last=False)
+    close_geom_table(op2, op2_ascii, itable)
 
 def write_block(op2, op2_ascii, nvalues, key):
     nbytes = nvalues * 4
@@ -153,7 +150,7 @@ def write_geom_header(table_name, op2, op2_ascii, endian=b'<'):
         4, 7, 4,
         28, 1, 2, 3, 4, 5, 6, 7, 28,
     ]
-    struct_3i = Struct(endian + b'3i')
+    #struct_3i = Struct(endian + b'3i')
     op2.write(pack('3i 9i', *data))
     op2_ascii.write(str(data) + '\n')
 
@@ -184,15 +181,7 @@ def write_geom_header(table_name, op2, op2_ascii, endian=b'<'):
     op2_ascii.write(str(data) + '\n')
 
 
-def close_geom_table(op2, op2_ascii, itable, include_last=True):
-    if include_last:
-        data = [
-            4, itable, 4,
-            4, 1, 4,
-            4, 0, 4]
-        op2.write(pack('9i', *data))
-        op2_ascii.write(str(data) + '\n')
-
+def close_geom_table(op2, op2_ascii, itable):
     data = [
         4, 3, 4,
         12, 1, 2, 3, 12]
@@ -215,3 +204,22 @@ def close_geom_table(op2, op2_ascii, itable, include_last=True):
     op2.write(pack('3i', *data))
     op2_ascii.write(str(data) + '\n')
     itable -= 1
+
+def fill_defaultdict(typed_dict, direct_dict=None):  # pragma: no cover
+    if not isinstance(typed_dict, tuple):
+        typed_dict = (typed_dict, )
+
+    out = defaultdict(list)
+    for dicti in typed_dict:
+        for idi, obj in dicti.items():
+            out[obj.type].append(idi)
+    if direct_dict:
+        if not isinstance(direct_dict, tuple):
+            direct_dict = (direct_dict, )
+        for dicti in direct_dict:
+            values = list(dicti.keys())
+            value0 = values[0]
+            obj0 = dicti[value0]
+            out[obj0.type] = values
+    return out
+

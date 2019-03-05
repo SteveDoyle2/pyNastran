@@ -16,16 +16,55 @@ def write_ept(op2, op2_ascii, obj, endian=b'<'):
 
     itable = -3
 
-    ptypes = [
-        'PSOLID', 'PSHELL', 'PCOMP', 'PROD',
+    #ptypes = [
+        #'PSOLID', 'PSHELL', 'PCOMP', 'PROD',
+    #]
+    #out = obj.get_card_ids_by_card_types(ptypes)
+    from collections import defaultdict
+    out = defaultdict(list)
+    for pid, prop in obj.properties.items():
+        out[prop.type].append(pid)
+
+    skip_properties = [
+        'PBEND', 'PBUSH', 'PBUSH1D', 'PGAP', 'PSHEAR', 'PLPLANE',
+        'PMASS', 'PTUBE', 'PLSOLID', 'PBCOMP',
+
     ]
-    out = obj.get_card_ids_by_card_types(ptypes)
     for name, pids in out.items():
         nproperties = len(pids)
         if nproperties == 0:
             continue
+        elif name in skip_properties:
+            obj.log.warning('skipping EPT-%s' % name)
+            continue
 
-        if name == 'PSOLID':
+        if name == 'PBARL':
+            key = (9102, 91, 52)
+            continue
+        elif name == 'PCOMP':
+            itable = write_pcomp(name, pids, itable, op2, op2_ascii, obj, endian=endian)
+            continue
+        elif name == 'PELAS':
+            key = (302, 3, 46)
+            nfields = 4
+            spack = Struct(endian + b'i3f')
+        elif name == 'PDAMP':
+            key = (202, 2, 45)
+            nfields = 2
+            spack = Struct(endian + b'if')
+        elif name == 'PVISC':
+            key = (1802, 18, 31)
+            nfields = 3
+            spack = Struct(endian + b'i2f')
+        elif name == 'PBAR':
+            key = (52, 20, 181)
+            nfields = 19
+            spack = Struct(endian + b'2i17f')
+        elif name == 'PBEAM':
+            key = (5402, 54, 262)
+            nfields = 197 # 5+16*12
+            spack = None
+        elif name == 'PSOLID':
             key = (2402, 24, 281)
             nfields = 7
             spack = Struct(endian + b'6i4s')
@@ -33,9 +72,6 @@ def write_ept(op2, op2_ascii, obj, endian=b'<'):
             key = (2302, 23, 283)
             nfields = 11
             spack = Struct(endian + b'iififi4fi')
-        elif name == 'PCOMP':
-            itable = write_pcomp(name, pids, itable, op2, op2_ascii, obj, endian=endian)
-            continue
         elif name == 'PROD':
             key = (902, 9, 29)
             nfields = 6
@@ -52,7 +88,7 @@ def write_ept(op2, op2_ascii, obj, endian=b'<'):
         op2_ascii.write('%s %s\n' % (name, str(key)))
 
         try:
-            write_card(op2, op2_ascii, obj, name, pids, spack)
+            write_card(op2, op2_ascii, obj, name, pids, spack, endian)
         except:
             obj.log.error('failed EPT-%s' % name)
             raise
@@ -68,11 +104,139 @@ def write_ept(op2, op2_ascii, obj, endian=b'<'):
 
     #-------------------------------------
     #print('itable', itable)
-    close_geom_table(op2, op2_ascii, itable, include_last=False)
+    close_geom_table(op2, op2_ascii, itable)
     #-------------------------------------
 
-def write_card(op2, op2_ascii, obj, name, pids, spack):
-    if name == 'PSOLID':
+def write_card(op2, op2_ascii, obj, name, pids, spack, endian):
+    if name == 'PELAS':
+        for pid in sorted(pids):
+            prop = obj.properties[pid]
+            #(pid, k, ge, s) = out
+            data = [pid, prop.k, prop.ge, prop.s]
+            op2.write(spack.pack(*data))
+    elif name == 'PDAMP':
+        for pid in sorted(pids):
+            prop = obj.properties[pid]
+            #(pid, b) = out
+            data = [pid, prop.b]
+            op2.write(spack.pack(*data))
+    elif name == 'PVISC':
+        for pid in sorted(pids):
+            prop = obj.properties[pid]
+            #(pid, ce, cr) = out
+            data = [pid, prop.ce, prop.cr]
+            op2.write(spack.pack(*data))
+    elif name == 'PBAR':
+        for pid in sorted(pids):
+            prop = obj.properties[pid]
+            #(pid, mid, a, I1, I2, J, nsm, fe, c1, c2, d1, d2,
+             #e1, e2, f1, f2, k1, k2, I12) = out
+            fe = 0
+            k1 = prop.k1 if prop.k1 is not None else 0
+            k2 = prop.k2 if prop.k2 is not None else 0
+            data = [
+                pid, prop.mid, prop.A, prop.i1, prop.i2, prop.j, prop.nsm,
+                fe, prop.c1, prop.c2, prop.d1, prop.d2, prop.e1, prop.e2,
+                prop.f1, prop.f2, k1, k2, prop.i12]
+            assert None not in data, data
+            op2.write(spack.pack(*data))
+    elif name == 'PBEAM':  # probably wrong stations
+        struct1 = Struct(endian + b'4if')
+        struct2 = Struct(endian + b'16f')
+        struct3 = Struct(endian + b'16f')
+        for pid in sorted(pids):
+            nfieldsi = 0
+            prop = obj.properties[pid]
+            nsegments = len(prop.xxb)
+            if nsegments == 2:
+                ccf = 1 # True
+            elif nsegments > 2:
+                ccf = 0 # False
+            else:
+                raise NotImplementedError(nsegments)
+
+            #(pid, mid, nsegments, ccf, x) = data_in
+            x = 0.
+            data = [pid, prop.mid, nsegments, ccf, x]
+            nfieldsi += len(data)
+            op2.write(struct1.pack(*data))
+
+            nzero_segments = nsegments - 1
+            j = 0
+            for i in range(11):
+                if i > nzero_segments:
+                    data = [0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
+                            0., 0., 0., 0., 0., 0.]
+                else:
+                    #(soi, xxb, a, i1, i2, i12, j, nsm, c1, c2,
+                     #d1, d2, e1, e2, f1, f2) = pack
+                    xxb = prop.xxb[j]
+                    so_str = prop.so[j]
+                    a = prop.A[j]
+                    i1 = prop.i1[j]
+                    i2 = prop.i2[j]
+                    i12 = prop.i12[j]
+                    nsm = prop.nsm[j]
+                    c1 = prop.c1[j]
+                    c2 = prop.c2[j]
+                    d1 = prop.d1[j]
+                    d2 = prop.d2[j]
+                    e1 = prop.e1[j]
+                    e2 = prop.e2[j]
+                    f1 = prop.f1[j]
+                    f2 = prop.f2[j]
+
+                    if so_str == 'NO':
+                        soi = 0.0
+                    elif so_str == 'YES':
+                        soi = 1.0
+                    else:
+                        try:
+                            soi = float(so_str)
+                        except ValueError:  # pragma: no cover
+                            print(prop.get_stats())
+                            raise NotImplementedError('SO=%s SO%s=%r' % (prop.so, j, so_str))
+                    j += 1
+                    data = [
+                        soi, xxb, a, i1, i2, i12, j, nsm, c1, c2,
+                        d1, d2, e1, e2, f1, f2]
+                    #so_str = str(soi)
+                assert None not in data, data
+                nfieldsi += len(data)
+                op2.write(struct2.pack(*data))
+
+            #self.log.info('PBEAM pid=%s mid=%s nsegments=%s ccf=%s x=%s' % tuple(data_in))
+
+            # Constant cross-section flag: 1=yes and 0=no
+            # what is 2?
+            #if ccf not in [0, 1, 2]:
+                #msg = ('  PBEAM pid=%s mid=%s nsegments=%s ccf=%s x=%s; '
+                       #'ccf must be in [0, 1, 2]\n' % tuple(data_in))
+                #raise ValueError(msg)
+
+            #(k1, k2, s1, s2, nsia, nsib, cwa, cwb, # 8
+             #m1a, m2a, m1b, m2b, n1a, n2a, n1b, n2b) = endpack # 8 -> 16
+            data = [
+                prop.k1, prop.k2, prop.s1, prop.s2,
+                prop.nsia, prop.nsib,
+                prop.cwa, prop.cwb,
+                prop.m1a, prop.m2a, prop.m1b, prop.m2b,
+                prop.n1a, prop.n2a, prop.n1b, prop.n2b,
+            ]
+            #k1 / k2 : float; default=1.
+            #s1 / s2 : float; default=0.
+            #nsia / nsia : float; default=0. / nsia
+            #cwa / cwb : float; default=0. / cwa
+            #m1a / m2a : float; default=0. / m1a
+            #m1b / m2b : float; default=0. / m1b
+            #n1a / n2a : float; default=0. / n1a
+            #n1b / n2b : float; default=0. / n1b
+            assert None not in data, data
+            nfieldsi += len(data)
+            op2.write(struct3.pack(*data))
+            assert nfieldsi == 197, nfieldsi
+
+    elif name == 'PSOLID':
         #pid = data[0]
         #mid = data[1]
         #cordm = data[2]
@@ -145,6 +309,13 @@ def write_card(op2, op2_ascii, obj, name, pids, spack):
             op2.write(spack.pack(*data))
     else:  # pragma: no cover
         raise NotImplementedError(name)
+
+
+def write_pbarl(name, pids, itable, op2, op2_ascii, obj, endian=b'<'):
+    nproperties = len(pids)
+    for pid in sorted(pids):
+        prop = obj.properties[pid]
+    return itable
 
 def write_pcomp(name, pids, itable, op2, op2_ascii, obj, endian=b'<'):
     key = (2706, 27, 287)
