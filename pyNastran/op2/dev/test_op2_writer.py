@@ -27,14 +27,13 @@ class TestOP2Writer(unittest.TestCase):
         model = os.path.splitext(op2_filename)[0]
         #debug_file = model + '.debug.out'
 
-        op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug, include_results='displacements')
-        #op2 = read_op2(op2_filename, debug_file=op2_filename_debug, include_results='displacements')
+        op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug,
+                            include_results='displacements')
 
         op2w = OP2Writer(op2)
         op2w.write_op2(op2_filename_out, obj=op2, is_mag_phase=False,
                        delete_objects=True)
         op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out)
-        #op2b = read_op2(op2_filename_out, debug_file=op2_filename_debug_out)
         assert op2 == op2b
 
     def test_write_2(self):
@@ -56,7 +55,6 @@ class TestOP2Writer(unittest.TestCase):
         op2w.write_op2(op2_filename_out, obj=op2, is_mag_phase=False,
                        delete_objects=True)
         op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out)
-        #op2b = read_op2(op2_filename_out, debug_file=op2_filename_debug_out)
         assert op2 == op2b
 
     def _test_write_3(self):
@@ -70,14 +68,14 @@ class TestOP2Writer(unittest.TestCase):
         model = os.path.splitext(op2_filename)[0]
         #debug_file = model + '.debug.out'
 
-        op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug, include_results='displacements')
-        #op2 = read_op2(op2_filename, debug_file=op2_filename_debug, include_results='displacements')
+        op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug,
+                            #include_results='displacements'
+                            )
 
         op2w = OP2Writer(op2)
         op2w.write_op2(op2_filename_out, obj=op2, is_mag_phase=False,
                        delete_objects=True)
         op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out)
-        #op2b = read_op2(op2_filename_out, debug_file=op2_filename_debug_out)
 
     def test_write_4(self):
         """tests basic op2 writing"""
@@ -91,13 +89,11 @@ class TestOP2Writer(unittest.TestCase):
         #debug_file = model + '.debug.out'
 
         op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug)
-        #op2 = read_op2(op2_filename, debug_file=op2_filename_debug, include_results='displacements')
 
         op2w = OP2Writer(op2)
         op2w.write_op2(op2_filename_out, obj=op2, is_mag_phase=False,
                        delete_objects=True)
         op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out)
-        #op2b = read_op2(op2_filename_out, debug_file=op2_filename_debug_out)
         op2.assert_op2_equal(op2b,
                              skip_results=['params', ],
                              stop_on_failure=True, debug=False)
@@ -124,13 +120,11 @@ class TestOP2Writer(unittest.TestCase):
                             #include_results='element_forces',
                             #include_results='stress',
                             )
-        #op2 = read_op2(op2_filename, debug_file=op2_filename_debug, include_results='displacements')
 
         op2w = OP2Writer(op2)
         op2w.write_op2(op2_filename_out, obj=op2, is_mag_phase=False,
                        delete_objects=True)
         op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out)
-        #op2b = read_op2(op2_filename_out, debug_file=op2_filename_debug_out)
         op2.assert_op2_equal(op2b,
                              skip_results=['params', ],
                              stop_on_failure=True, debug=False)
@@ -147,13 +141,11 @@ class TestOP2Writer(unittest.TestCase):
         #debug_file = model + '.debug.out'
 
         op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug)
-        #op2 = read_op2(op2_filename, debug_file=op2_filename_debug, include_results='displacements')
 
         op2w = OP2Writer(op2)
         op2w.write_op2(op2_filename_out, obj=op2, is_mag_phase=False,
                        delete_objects=True)
         op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out)
-        #op2b = read_op2(op2_filename_out, debug_file=op2_filename_debug_out)
         op2.assert_op2_equal(op2b,
                              skip_results=['params', ],
                              stop_on_failure=True, debug=False)
@@ -170,13 +162,11 @@ class TestOP2Writer(unittest.TestCase):
         #debug_file = model + '.debug.out'
 
         op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug)
-        #op2 = read_op2(op2_filename, debug_file=op2_filename_debug, include_results='displacements')
 
         op2w = OP2Writer(op2)
         op2w.write_op2(op2_filename_out, obj=op2, is_mag_phase=False,
                        delete_objects=True)
         op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out)
-        #op2b = read_op2(op2_filename_out, debug_file=op2_filename_debug_out)
         op2.assert_op2_equal(op2b,
                              skip_results=['params', ],
                              stop_on_failure=True, debug=False)
@@ -204,12 +194,10 @@ class TestOP2Writer(unittest.TestCase):
                             #include_results='element_forces',
                             #include_results='stress',
                             )
-        #op2 = read_op2(op2_filename, debug_file=op2_filename_debug, include_results='displacements')
         op2w = OP2Writer(op2)
         op2w.write_op2(op2_filename_out, obj=op2, is_mag_phase=False,
                        delete_objects=True)
         op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out)
-        #op2b = read_op2(op2_filename_out, debug_file=op2_filename_debug_out)
         op2.assert_op2_equal(op2b,
                              skip_results=['params', ],
                              stop_on_failure=True, debug=False)
@@ -241,12 +229,10 @@ class TestOP2Writer(unittest.TestCase):
                             #include_results='stress',
                             )
         print(op2.get_op2_stats(short=True))
-        #op2 = read_op2(op2_filename, debug_file=op2_filename_debug, include_results='displacements')
         op2w = OP2Writer(op2)
         op2w.write_op2(op2_filename_out, obj=op2, is_mag_phase=False,
                        delete_objects=True)
         op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out)
-        #op2b = read_op2(op2_filename_out, debug_file=op2_filename_debug_out)
         op2.assert_op2_equal(op2b,
                              skip_results=['params', ],
                              stop_on_failure=True, debug=False)
@@ -278,7 +264,6 @@ class TestOP2Writer(unittest.TestCase):
                             ##include_results='stress',
                             #)
         #print(op2.get_op2_stats(short=True))
-        ##op2 = read_op2(op2_filename, debug_file=op2_filename_debug, include_results='displacements')
         #op2w = OP2Writer(op2)
         #op2w.write_op2(op2_filename_out, obj=op2, is_mag_phase=False,
                        #delete_objects=True)

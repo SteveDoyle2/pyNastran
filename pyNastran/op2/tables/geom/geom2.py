@@ -1953,6 +1953,7 @@ class GEOM2(GeomCommon):
 # GMINTS
 
     def _read_plotel(self, data, n):  # 114
+        """(5201, 52, 11)"""
         struct_3i = Struct(self._endian + b'3i')
         ntotal = 12
         nelements = (len(data) - n) // ntotal

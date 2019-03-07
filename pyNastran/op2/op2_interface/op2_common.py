@@ -11,7 +11,8 @@ from pyNastran import is_release
 from pyNastran.f06.f06_writer import F06Writer
 from pyNastran.op2.op2_helper import polar_to_real_imag
 from pyNastran.op2.op2_interface.utils import (
-    build_obj, get_superelement_adaptivity_index, update_label2)
+    build_obj, get_superelement_adaptivity_index, update_subtitle_with_adaptivity_index,
+    update_label2)
 from pyNastran.op2.op2_interface.op2_codes import (
     Op2Codes, get_scode_word, get_sort_method_from_table_name)
 
@@ -283,6 +284,7 @@ class OP2Common(Op2Codes, F06Writer):
         title, subtitle, label = unpack(self._endian + b'128s128s128s', data[200:])
         self.title = title.decode(self.encoding).strip()
         subtitle = subtitle.decode(self.encoding)
+        subtitle_original = subtitle.strip()
 
         label = label.decode(self.encoding).strip()
         nlabel = 65
@@ -300,32 +302,6 @@ class OP2Common(Op2Codes, F06Writer):
         self.label = label
         self.pval_step = label2
 
-        #split_label = label.split()
-        #if len(split_label) == 2:
-            #word, value1 = split_label
-            #assert word == 'SUPERELEMENT', 'split_label=%s' % split_label
-            #subtitle = '%s; SUPERELEMENT %s' % (subtitle, value1)
-            #value1 = int(value1)
-
-            #if superelement_adaptivity_index:
-                #superelement_adaptivity_index = '%s; SUPERELEMENT %s' % (
-                    #superelement_adaptivity_index, value1)
-            #else:
-                #superelement_adaptivity_index = 'SUPERELEMENT %ss' % value1
-        #elif len(split_label) == 4:
-            #word, value1, comma, value2 = split_label
-            #assert word == 'SUPERELEMENT', 'split_label=%s' % split_label
-            #value1 = int(value1)
-            #value2 = int(value2)
-
-            #if superelement_adaptivity_index:
-                #superelement_adaptivity_index = '%s; SUPERELEMENT %s,%s' % (
-                    #superelement_adaptivity_index, value1, value2)
-            #else:
-                #superelement_adaptivity_index = 'SUPERELEMENT %s,%s' % (value1, value2)
-        #else:
-            #raise RuntimeError(split_label)
-
 
         nsubtitle_break = 67
         adpativity_index = subtitle[nsubtitle_break:99].strip()
@@ -337,24 +313,8 @@ class OP2Common(Op2Codes, F06Writer):
 
         assert len(subtitle) <= 67, 'len=%s subtitle=%r' % (len(subtitle), subtitle)
         superelement_adaptivity_index = get_superelement_adaptivity_index(subtitle, superelement)
-
-        if adpativity_index:
-            assert 'ADAPTIVITY INDEX=' in adpativity_index
-            # F:\work\pyNastran\examples\Dropbox\move_tpl\pet1018.op2
-            #'ADAPTIVITY INDEX=      1'
-            split_adpativity_index = adpativity_index.split()
-            assert len(split_adpativity_index) == 3, split_adpativity_index
-            word1, word2, adpativity_index_value = split_adpativity_index
-            assert word1 == 'ADAPTIVITY', 'split_adpativity_index=%s' % split_adpativity_index
-            assert word2 == 'INDEX=', 'split_adpativity_index=%s' % split_adpativity_index
-
-            adpativity_index_value = int(adpativity_index_value)
-            subtitle = '%s; ADAPTIVITY_INDEX=%s' % (subtitle, adpativity_index_value)
-            if superelement_adaptivity_index:
-                superelement_adaptivity_index = '%s; ADAPTIVITY_INDEX=%s' % (
-                    superelement_adaptivity_index, adpativity_index_value)
-            else:
-                superelement_adaptivity_index = 'ADAPTIVITY_INDEX=%s' % adpativity_index_value
+        subtitle, superelement_adaptivity_index = update_subtitle_with_adaptivity_index(
+            subtitle, superelement_adaptivity_index, adpativity_index)
 
         self.subtitle = subtitle
         self.superelement_adaptivity_index = superelement_adaptivity_index
@@ -362,6 +322,7 @@ class OP2Common(Op2Codes, F06Writer):
 
         #: the subtitle of the subcase
         self.data_code['subtitle'] = self.subtitle
+        self.data_code['subtitle_original'] = subtitle_original
 
         # the sub-key
         self.data_code['pval_step'] = self.pval_step

@@ -69,7 +69,7 @@ class LAMA(OP2Common):
         nmodes = ndata // ntotal
         n = 0
         #assert self.isubcase != 0, self.isubcase
-        clama = ComplexEigenvalues(self.title, nmodes)
+        clama = ComplexEigenvalues(self.title, self.table_name, nmodes)
         self.eigenvalues[self.title] = clama
         #self.eigenvalues[self.isubcase] = lama
         structi = Struct(self._endian + b'ii4f')
@@ -98,7 +98,7 @@ class LAMA(OP2Common):
         nmodes = ndata // ntotal
         n = 0
         #assert self.isubcase != 0, self.isubcase
-        blama = BucklingEigenvalues(self.title, nmodes)
+        blama = BucklingEigenvalues(self.title, self.table_name, nmodes)
         self.eigenvalues[self.title] = blama
         #self.eigenvalues[self.isubcase] = lama
         structi = Struct(self._endian + b'ii5f')
@@ -161,7 +161,7 @@ class LAMA(OP2Common):
         n = 0
         ntotal = 28
         #assert self.isubcase != 0, self.isubcase
-        lama = RealEigenvalues(self.title, nmodes=nmodes)
+        lama = RealEigenvalues(self.title, self.table_name, nmodes=nmodes)
         self.eigenvalues[self.title] = lama
         structi = Struct(self._endian + b'ii5f')
         for i in range(nmodes):

@@ -11,8 +11,14 @@ def write_geom3(op2, op2_ascii, obj, endian=b'<'):
     for unused_load_id, loads in obj.loads.items():
         for load in loads:
             loads_by_type[load.type].append(load)
+    for unused_load_id, loads in obj.load_combinations.items():
+        for load in loads:
+            loads_by_type[load.type].append(load)
+    for unused_load_id, load in obj.tempds.items():
+        loads_by_type[load.type].append(load)
 
     # return if no supported cards are found
+    cards_to_skip = ['LOAD']
     supported_cards = [
         'FORCE', 'FORCE1', 'FORCE2', 'MOMENT', 'MOMENT1', 'MOMENT2',
         'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4', 'PLOADX1',
@@ -20,18 +26,28 @@ def write_geom3(op2, op2_ascii, obj, endian=b'<'):
         #'ACCEL', 'ACCEL1',
         'TEMP', 'TEMPP1', 'QBDY1', 'QBDY2', 'QBDY3', 'QVOL',
     ]
+    is_loads = False
     for load_type in sorted(loads_by_type.keys()):
         if load_type in supported_cards:
+            is_loads = True
             break
+        elif load_type in cards_to_skip:
+            continue
         obj.log.warning('skipping GEOM3-%s' % load_type)
     #else:
         #return
 
+    if not is_loads:
+        return
     write_geom_header(b'GEOM3', op2, op2_ascii)
     itable = -3
     for load_type, loads in sorted(loads_by_type.items()):
         if load_type in ['SPCD']: # not a GEOM3 load
             continue
+        elif load_type in cards_to_skip:
+            obj.log.warning('skipping GEOM3-%s' % load_type)
+            continue
+
         #elif load_type not in supported_cards:
             #continue
 

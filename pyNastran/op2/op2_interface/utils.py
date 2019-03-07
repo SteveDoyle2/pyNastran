@@ -59,6 +59,48 @@ def get_superelement_adaptivity_index(subtitle, superelement):
             raise RuntimeError(split_superelement)
     return superelement_adaptivity_index
 
+def update_subtitle_with_adaptivity_index(subtitle, superelement_adaptivity_index,
+                                          adpativity_index):
+    """
+    Parameters
+    ----------
+    subtitle : str
+        the subtitle
+    superelement_adaptivity_index : str
+        the superelement marker
+    adpativity_index : str
+        the mesh adaptivity index
+        'ADAPTIVITY INDEX=      1'
+    Returns
+    -------
+    subtitle : str
+        the new subtitle
+        title + 'SUPERELEMENT 0'
+        title + 'SUPERELEMENT 0, 1'
+        title + 'ADAPTIVITY_INDEX=1'
+    """
+    if adpativity_index:
+        print('adpativity_index = %r' % adpativity_index.strip())
+        assert 'ADAPTIVITY INDEX=' in adpativity_index
+        # F:\work\pyNastran\examples\Dropbox\move_tpl\pet1018.op2
+        #'ADAPTIVITY INDEX=      1'
+        split_adpativity_index = adpativity_index.split()
+        assert len(split_adpativity_index) == 3, split_adpativity_index
+        word1, word2, adpativity_index_value = split_adpativity_index
+        assert word1 == 'ADAPTIVITY', 'split_adpativity_index=%s' % split_adpativity_index
+        assert word2 == 'INDEX=', 'split_adpativity_index=%s' % split_adpativity_index
+
+        adpativity_index_value = int(adpativity_index_value)
+        subtitle2 = '%s; ADAPTIVITY_INDEX=%s' % (subtitle, adpativity_index_value)
+        if superelement_adaptivity_index:
+            superelement_adaptivity_index = '%s; ADAPTIVITY_INDEX=%s' % (
+                superelement_adaptivity_index, adpativity_index_value)
+        else:
+            superelement_adaptivity_index = 'ADAPTIVITY_INDEX=%s' % adpativity_index_value
+    else:
+        subtitle2 = subtitle
+    return subtitle2, superelement_adaptivity_index
+
 def update_label2(label2, isubcase):
     """strips off SUBCASE from the label2 to simplfify the output keys (e.g., displacements)"""
     # strip off any comments

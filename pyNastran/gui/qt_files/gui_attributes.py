@@ -13,6 +13,7 @@ import vtk
 from qtpy import QtGui
 from qtpy.QtWidgets import QMainWindow
 
+import pyNastran
 from pyNastran.gui.gui_objects.settings import Settings
 
 from pyNastran.gui.qt_files.tool_actions import ToolActions
@@ -39,7 +40,7 @@ from pyNastran.gui.utils.vtk.vtk_utils import (
 from pyNastran.bdf.cards.base_card import deprecated
 from pyNastran.utils import print_bad_path
 IS_TESTING = 'test' in sys.argv[0]
-
+IS_OFFICIAL_RELEASE = 'dev' not in pyNastran.__version__
 
 class GuiAttributes(object):
     """All methods in this class must not require VTK"""
@@ -890,7 +891,6 @@ class GuiAttributes(object):
 
     def build_fmts(self, fmt_order, stop_on_failure=False):
         """populates the formats that will be supported"""
-        stop_on_failure = True
         fmts = []
         for fmt in fmt_order:
             geom_results_funcs = 'get_%s_wildcard_geometry_results_functions' % fmt
@@ -904,7 +904,11 @@ class GuiAttributes(object):
                 msg = 'get_%s_wildcard_geometry_results_functions does not exist' % fmt
                 if stop_on_failure:
                     raise RuntimeError(msg)
-                self.log_error(msg)
+                if not IS_OFFICIAL_RELEASE:
+                    if self.log is None:
+                        print('***', msg)
+                    else:
+                        self.log_error(msg)
             _add_fmt(fmts, fmt, geom_results_funcs, data)
 
         if len(fmts) == 0:

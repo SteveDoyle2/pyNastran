@@ -512,7 +512,7 @@ class TableArray(ScalarObject):  # displacement style table
         acoustic_flag = self.acoustic_flag if hasattr(self, 'acoustic_flag') else 0
         thermal = self.thermal
         title = b'%-128s' % self.title.encode('ascii')
-        subtitle = b'%-128s' % self.subtitle.encode('ascii')
+        subtitle = b'%-128s' % self.subtitle.encode('ascii')  # missing superelement_adaptivity_index
         label = b'%-128s' % self.label.encode('ascii')
         oCode = 0
 
@@ -560,6 +560,8 @@ class TableArray(ScalarObject):  # displacement style table
                 field6 = self.eigns[itime]
             elif hasattr(self, 'eigrs'):
                 field6 = self.eigrs[itime]
+            else:  # pragma: no cover
+                raise NotImplementedError('cant find eigns or eigrs on analysis_code=8')
             assert isinstance(field6, float_types), type(field6)
             ftable3 = set_table3_field(ftable3, 6, b'f') # field 6
         elif self.analysis_code == 9:  # complex eigenvalues
@@ -637,11 +639,12 @@ class RealTableArray(TableArray):
         """writes an OP2"""
         import inspect
         allowed_tables = [
-            'OUGV1', 'BOUGV1', 'OUPV1',
+            'OUGV1', 'BOUGV1', 'BOPHIG', 'OUPV1',
             'OQP1', 'OQMG1', 'OQG1', 'OQGV1', 'OPNL1',
             'OPG1', 'OPGV1',
             'OAGATO1', 'OAGCRM1', 'OAGNO1', 'OAGPSD1', 'OAGRMS1',
             'OQGPSD1',
+            'OCRPG', 'OCRUG',
         ]
         assert self.table_name in allowed_tables, self.table_name
 

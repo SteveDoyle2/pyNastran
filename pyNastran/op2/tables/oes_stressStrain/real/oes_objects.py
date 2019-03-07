@@ -160,12 +160,24 @@ class OES_Object(ScalarObject):
         elif self.analysis_code == 8:  # post-buckling
             field5 = self.lsdvmns[itime] # load set number
             #if hasattr(self, 'eigns'):
-            field6 = self.eigns[itime]
+            if hasattr(self, 'eigens'):
+                field6 = self.eigns[itime]
+            #elif hasattr(self, 'eigrs'):
+                #field6 = self.eigrs[itime]
+            else:  # pragma: no cover
+                print(self.get_stats())
+                raise NotImplementedError('cant find eigns or eigrs on analysis_code=8')
             ftable3 = set_table3_field(ftable3, 6, b'f') # field 6
         elif self.analysis_code == 9:  # complex eigenvalues
             field5 = self.modes[itime]
-            #if hasattr(self, 'eigns'):
-            field6 = self.eigns[itime]
+            if hasattr(self, 'eigns'):
+                field6 = self.eigns[itime]
+            elif hasattr(self, 'eigrs'):
+                field6 = self.eigrs[itime]
+            else:  # pragma: no cover
+                print(self.get_stats())
+                raise NotImplementedError('cant find eigns or eigrs on analysis_code=9')
+
             ftable3 = set_table3_field(ftable3, 6, b'f') # field 6
             field7 = self.eigis[itime]
             ftable3 = set_table3_field(ftable3, 7, b'f') # field 7

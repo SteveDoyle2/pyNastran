@@ -27,15 +27,15 @@ else:
 
     revision = get_git_revision_short_hash()
     __version__ = '1.2.0+%s' % revision
-    __releaseDate__ = '2018/6/xx'
-    __releaseDate2__ = 'JUNE xx, 2018'
+    __releaseDate__ = '2019/6/xx'
+    __releaseDate2__ = 'JUNE xx, 2019'
 
 __author__  = 'Steven Doyle, Michael Redmond, Saullo Castro, hurlei, Paul Blelloch, Nikita Kalutsky'
 __email__ = 'mesheb82@gmail.com'
 __desc__ = 'Nastran BDF/F06/OP2/OP4 File reader/editor/writer/viewer'
 __longdesc__ = __desc__
 __license__ = 'BSD-3'
-__copyright__ = 'Copyright %s; 2011-2018' % __license__
+__copyright__ = 'Copyright %s; 2011-2019' % __license__
 __pyside_copyright__ = 'Copyright LGPLv3 - pySide'
 __pyqt_copyright__ = 'Copyright GPLv3 - PyQt'
 __website__ = 'https://github.com/SteveDoyle2/pyNastran'

@@ -1,9 +1,12 @@
 from __future__ import print_function
 from math import sqrt
+from struct import pack
+from six  import string_types
 
 import numpy as np
 
 from pyNastran.op2.result_objects.op2_objects import BaseScalarObject
+from pyNastran.op2.op2_interface.write_utils import set_table3_field, write_table_header
 from pyNastran.f06.f06_formatting import write_floats_13e
 
 
@@ -12,10 +15,11 @@ class RealEigenvalues(BaseScalarObject):
     cycle = sqrt(abs(eigenvalue)) / (2. * pi)
     radians = sqrt(abs(eigenvalue))
     """
-    def __init__(self, title, nmodes=0):
+    def __init__(self, title, table_name, nmodes=0):
         #self.modeNumber = []
         BaseScalarObject.__init__(self)
         self.title = title
+        self.table_name = table_name
         self.mode = np.zeros(nmodes, dtype='int32')
         self.extraction_order = np.zeros(nmodes, dtype='int32')
         self.eigenvalues = np.zeros(nmodes, dtype='float32')
@@ -105,6 +109,255 @@ class RealEigenvalues(BaseScalarObject):
         f06_file.write(''.join(msg))
         return page_num
 
+    def write_op2(self, op2, op2_ascii, itable, new_result, date,
+                  is_mag_phase=False, endian='>'):
+        """writes an OP2"""
+        import inspect
+        from struct import Struct, pack
+        frame = inspect.currentframe()
+        call_frame = inspect.getouterframes(frame, 2)
+        op2_ascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
+
+        if itable == -1:
+            self._write_table_header(op2, op2_ascii, date)
+            itable = -3
+
+        #if isinstance(self.nonlinear_factor, float):
+            #op2_format = '%sif' % (7 * self.ntimes)
+            #raise NotImplementedError()
+        #else:
+            #op2_format = 'i21f'
+        #s = Struct(op2_format)
+
+        # table 4 info
+        #ntimes = self.data.shape[0]
+        #nnodes = self.data.shape[1]
+
+        # 21 = 1 node, 3 principal, 6 components, 9 vectors, 2 p/ovm
+        #ntotal = ((nnodes * 21) + 1) + (nelements * 4)
+
+        #ntotali = self.num_wide
+        #ntotal = ntotali * nelements
+
+        #print('shape = %s' % str(self.data.shape))
+        #assert self.ntimes == 1, self.ntimes
+
+        #fmt = '%2i %6f'
+        #print('ntotal=%s' % (ntotal))
+        #assert ntotal == 193, ntotal
+        nmodes = len(self.mode)
+        ntotal = nmodes * 7
+
+        structi = Struct(endian + b'ii5f')
+
+        self._write_table_3(op2, op2_ascii, new_result, itable, 0)
+
+        # record 4
+        #print('stress itable = %s' % itable)
+        itable -= 1
+        #print('4, %s' % itable)
+        header = [4, itable, 4,
+                  4, 1, 4,
+                  4, 0, 4,
+                  4, ntotal, 4,
+                  4 * ntotal]
+        op2.write(pack('%ii' % len(header), *header))
+        op2_ascii.write('r4 [4, 0, 4]\n')
+        op2_ascii.write('r4 [4, %s, 4]\n' % (itable))
+        op2_ascii.write('r4 [4, %i, 4]\n' % (4 * ntotal))
+
+        for (imode, mode_num) in enumerate(self.mode):
+            extract_order = self.extraction_order[imode]
+            eigenvalue = self.eigenvalues[imode]
+            #cycle = sqrt(abs(eigenvalue)) / (2. * pi)
+
+            omega = self.radians[imode]
+            freq = self.cycles[imode]
+            gen_mass = self.generalized_mass[imode]
+            gen_stiffness = self.generalized_stiffness[imode]
+            #(mode_num, extract_order, eigenvalue, radian, cycle, gen_mass, gen_stiffness) = data
+            data = [mode_num, extract_order, eigenvalue, omega, freq, gen_mass, gen_stiffness]
+
+            [eigen, omega, freq, gen_mass, gen_stiffness] = write_floats_13e(
+                [eigenvalue, omega, freq, gen_mass, gen_stiffness])
+            op2_ascii.write(' %8s  %8s       %-13s       %-13s       %-13s       %-13s       %s\n' % (
+                mode_num, extract_order, eigen, omega, freq, gen_mass, gen_stiffness))
+
+            op2.write(structi.pack(*data))
+
+        itable -= 1
+        header = [4 * ntotal,]
+        op2.write(pack('i', *header))
+        op2_ascii.write('footer = %s\n' % header)
+        return itable
+
+    def _write_table_3(self, op2, op2_ascii, new_result, itable, itime): #itable=-3, itime=0):
+        import inspect
+        from struct import pack
+        frame = inspect.currentframe()
+        call_frame = inspect.getouterframes(frame, 2)
+        op2_ascii.write('%s.write_table_3: %s\n' % (self.__class__.__name__, call_frame[1][3]))
+
+        #print('new_result=%s itable=%s' % (new_result, itable))
+        if new_result and itable != -3:
+            header = [
+                4, 146, 4,
+            ]
+        else:
+            header = [
+                4, itable, 4,
+                4, 1, 4,
+                4, 0, 4,
+                4, 146, 4,
+            ]
+        op2.write(pack(b'%ii' % len(header), *header))
+        op2_ascii.write('table_3_header = %s\n' % header)
+
+        #approach_code = self.approach_code
+        approach_code = 0
+        #table_code = self.table_code
+        table_code = 0
+        #isubcase = self.isubcase
+        #element_type = self.element_type
+        #assert isinstance(self.element_type, int), self.element_type
+        #[
+            #'aCode', 'tCode', 'element_type', 'isubcase',
+            #'???', '???', '???', 'load_set'
+            #'format_code', 'num_wide', 's_code', '???',
+            #'???', '???', '???', '???',
+            #'???', '???', '???', '???',
+            #'???', '???', '???', '???',
+            #'???', 'Title', 'subtitle', 'label']
+        #random_code = self.random_code
+        format_code = self.format_code
+        s_code = 0 # self.s_code
+        #num_wide = self.num_wide
+        num_wide = 7
+        acoustic_flag = 0
+        thermal = 0
+        title = b'%-128s' % self.title.encode('ascii')
+        subtitle = b' '*128
+        label = b' '*128
+        assert len(title) == 128
+        assert len(subtitle) == 128
+        assert len(label) == 128
+        #subtitle = b'%-128s' % self.subtitle.encode('ascii')
+        #label = b'%-128s' % self.label.encode('ascii')
+        ftable3 = b'50i 128s 128s 128s'
+        oCode = 0
+        load_set = 0
+        #print(self.code_information())
+
+        print(title, len(title))
+        ftable3 = b'i' * 50 + b'128s 128s 128s'
+        field6 = 0
+        field7 = 0
+
+        #self.seven = self.add_data_parameter(data, 'seven', b'i', 10, False)  # seven
+        #self.residual_flag = self.add_data_parameter(data, 'residual_flag', b'i', 11, False)
+        #self.fluid_flag = self.add_data_parameter(data, 'fluid_flag', b'i', 12, False)
+
+        #seven = 1
+        fluid_flag = 1
+        residual_flag = 1
+        table3 = [
+            approach_code, table_code, 0, 0, 0,
+            0, 0, 0, 0, num_wide,
+            residual_flag, fluid_flag, 0, 0, 0,
+            0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0,
+            title, subtitle, label,
+        ]
+        assert len(table3) == 53, len(table3)
+        assert table3[12-1] == fluid_flag, fluid_flag
+        assert table3[11-1] == residual_flag, residual_flag
+
+        n = 0
+        for i, v in enumerate(table3):
+            if isinstance(v, (int, float)):
+                n += 4
+            elif isinstance(v, string_types):
+                #print(len(v), v)
+                n += len(v)
+            else:
+                print('write_table_3', i, v)
+                n += len(v)
+        assert n == 584, n
+        data = [584] + table3 + [584]
+        fmt = b'i' + ftable3 + b'i'
+        #print(fmt)
+        #print(data)
+        #f.write(pack(fascii, '%s header 3c' % self.table_name, fmt, data))
+        op2_ascii.write('%s header 3c = %s\n' % (self.table_name, data))
+        op2.write(pack(fmt, *data))
+
+    def _write_table_header(self, op2_file, fascii, date):
+        table_name = '%-8s' % self.table_name # 'BOUGV1  '
+        fascii.write('%s._write_table_header\n' % table_name)
+        #get_nmarkers- [4, 0, 4]
+        #marker = [4, 2, 4]
+        #table_header = [8, 'BOUGV1  ', 8]
+        write_table_header(op2_file, fascii, table_name)
+
+
+        #read_markers -> [4, -1, 4]
+        #get_nmarkers- [4, 0, 4]
+        #read_record - marker = [4, 7, 4]
+        #read_record - record = [28, recordi, 28]
+
+        #write_markers(op2_file, fascii, '  %s header1a' % self.table_name, [-1, 0, 7])
+        data_a = [4, -1, 4,]
+        #data_a = []
+        #data_b = [4, -1, 4,]
+        data_c = [4, 7, 4,]
+        data = data_a + data_c
+        blank = ' ' * len(self.table_name)
+        fascii.write('%s header1a_i = %s\n' % (self.table_name, data_a))
+        #fascii.write('%s            = %s\n' % (blank, data_b))
+        fascii.write('%s            = %s\n' % (blank, data_c))
+        op2_file.write(pack('<6i', *data))
+
+        table1_fmt = b'<9i'
+        table1 = [
+            28,
+            102, 0, 0, 0, 512, 0, 0,
+            28,
+        ]
+        fascii.write('%s header1b = %s\n' % (self.table_name, table1))
+        op2_file.write(pack(table1_fmt, *table1))
+
+        #recordi = [subtable_name, month, day, year, 0, 1]
+
+        data = [
+            4, -2, 4,
+            4, 1, 4,
+            4, 0, 4,
+            4, 7, 4,
+        ]
+        fascii.write('%s header2a = %s\n' % (self.table_name, data))
+        op2_file.write(pack(b'<12i', *data))
+
+        month, day, year = date
+        try:
+            subtable_name = self.subtable_name
+        except AttributeError:
+            #print('attrs =', self.object_attributes())
+            #raise
+            pass
+
+        self.subtable_name = b'OUG1    '
+        table2 = [
+            28,  # 4i -> 13i
+            # subtable,todays date 3/6/2014, 0, 1  ( year=year-2000)
+            b'%-8s' % self.subtable_name, month, day, year - 2000, 0, 1,
+            28,
+            ]
+        table2_format = 'i8s6i'
+        fascii.write('%s header2b = %s\n' % (self.table_name, table2))
+        op2_file.write(pack(table2_format, *table2))
+
     def __repr__(self):
         if self.data_frame is not None:
             return str(self.data_frame)
@@ -131,10 +384,11 @@ class ComplexEigenvalues(BaseScalarObject):
     radians = eigi
     damping = atan2(eigi, eigr) * 2
     """
-    def __init__(self, title, nmodes):
+    def __init__(self, title, table_name, nmodes):
         BaseScalarObject.__init__(self)
         #self.rootNumber = []
         self.title = title
+        self.table_name = table_name
         #self.extraction_order = {}
         #self.eigenvalues = {}
         #self.cycles = {}
@@ -241,9 +495,10 @@ class ComplexEigenvalues(BaseScalarObject):
 
 
 class BucklingEigenvalues(BaseScalarObject):
-    def __init__(self, title, nmodes=0):
+    def __init__(self, title, table_name, nmodes=0):
         BaseScalarObject.__init__(self)
         self.title = title
+        self.table_name = table_name
         self.mode = np.zeros(nmodes, dtype='int32')
         self.extraction_order = np.zeros(nmodes, dtype='int32')
         self.eigenvalues = np.zeros(nmodes, dtype='float32')

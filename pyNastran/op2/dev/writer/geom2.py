@@ -3,6 +3,7 @@ from collections import defaultdict
 from struct import pack, Struct
 
 from .geom1 import write_geom_header, close_geom_table
+integer_types = int
 
 def write_geom2(op2, op2_ascii, obj, endian=b'<'):
     if not hasattr(obj, 'elements'):
@@ -10,8 +11,9 @@ def write_geom2(op2, op2_ascii, obj, endian=b'<'):
     #if not hasattr(obj, 'nodes'):
         #return
     nspoints = len(obj.spoints)
+    nplotels = len(obj.plotels)
     nelements = len(obj.elements)
-    if nelements == 0 and nspoints == 0:
+    if nelements == 0 and nplotels == 0 and nspoints == 0:
         return
     write_geom_header(b'GEOM2', op2, op2_ascii)
     itable = -3
@@ -31,6 +33,8 @@ def write_geom2(op2, op2_ascii, obj, endian=b'<'):
         out[element.type].append(eid)
     if nspoints:
         out['SPOINT'] = list(obj.spoints.keys())
+    if nplotels:
+        out['PLOTEL'] = list(obj.plotels.keys())
 
     for name, eids in sorted(out.items()):
         nelements = len(eids)
@@ -60,6 +64,10 @@ def write_geom2(op2, op2_ascii, obj, endian=b'<'):
             nfields = nnodes + 2
             spack = Struct(endian + b'%ii' % (nfields))
 
+        elif name == 'PLOTEL':
+            key = (5201, 52, 11)
+            spack = Struct(endian + b'3i')
+            nfields = 3
         elif name == 'CTUBE':
             key = (3701, 37, 49)
             spack = Struct(endian + b'4i')
@@ -210,6 +218,7 @@ def write_geom2(op2, op2_ascii, obj, endian=b'<'):
     #-------------------------------------
 
 def write_card(name, eids, spack, obj, op2, op2_ascii, endian):
+    op2_ascii.write('GEOM2-%s\n' % name)
     if name in ['CTETRA', 'CHEXA', 'CPENTA']:
         if name == 'CTETRA':
             nnodes = 10
@@ -217,6 +226,8 @@ def write_card(name, eids, spack, obj, op2, op2_ascii, endian):
             nnodes = 20
         elif name == 'CPENTA':
             nnodes = 15
+        else:  # pragma: no cover
+            raise NotImplementedError(name)
 
         for eid in sorted(eids):
             elem = obj.elements[eid]
@@ -232,6 +243,14 @@ def write_card(name, eids, spack, obj, op2, op2_ascii, endian):
                 data = [eid, pid] + nids
             #print(name, data)
             op2_ascii.write('  eid=%s pid=%s nids=%s\n' % (eid, pid, str(nids)))
+            op2.write(spack.pack(*data))
+    elif name == 'PLOTEL':
+        for eid in sorted(eids):
+            elem = obj.plotels[eid]
+            nids = elem.node_ids
+            #(eid, n1, n2) = out
+            data = [eid] + nids
+            op2_ascii.write('  eid=%s nids=%s\n' % (eid, str(nids)))
             op2.write(spack.pack(*data))
     elif name == 'CBUSH':
         spacki = Struct(endian + b'4i iii i ifi3f')
@@ -293,15 +312,17 @@ def write_card(name, eids, spack, obj, op2, op2_ascii, endian):
             if cid is None:
                 cid = -1
 
-            if elem.x is not None:
+            if elem.x[0] is not None:
                 f = 1
                 x1, x2, x3 = elem.x
                 data = [eid, pid, ga, gb, x1, x2, x3, f, cid]
+                print('CGAP x; x=%s data=%s' % (elem.x, data))
                 op2.write(structf.pack(*data))
             else:
                 f = 2
                 g0 = elem.g0
                 data = [eid, pid, ga, gb, g0, 0, 0, f, cid]
+                print('CGAP g0; x=%s data=%s' % (g0, data))
                 op2.write(structi.pack(*data))
 
     elif name == 'CBAR':
@@ -329,7 +350,7 @@ def write_card(name, eids, spack, obj, op2, op2_ascii, endian):
                     eid, pid, ga, gb, x1, x2, x3, fe, pa, pb,
                     w1a, w2a, w3a, w1b, w2b, w3b, ]
                 assert None not in data, 'CBAR-1; data=%s' % (data)
-                print('CBAR data1 =', data)
+                #print('CBAR data1 =', data)
                 op2.write(s1.pack(*data))
             else:
                 fe = 2
@@ -340,7 +361,7 @@ def write_card(name, eids, spack, obj, op2, op2_ascii, endian):
                     eid, pid, ga, gb, g0, 0, 0, fe, pa, pb,
                     w1a, w2a, w3a, w1b, w2b, w3b]
                 assert None not in data, 'CBAR-1; data=%s' % (data)
-                print('CBAR data1 =', data)
+                print('CBAR data2 =', data)
                 op2.write(s3.pack(*data))
 
             #if f == 0:
@@ -407,10 +428,13 @@ def write_card(name, eids, spack, obj, op2, op2_ascii, endian):
             #print(elem.get_stats())
             #(eid, pid, n1, n2, n3, n4, theta, zoffs, blank, tflag,
              #t1, t2, t3, t4) = out
-            theta = 0.0
+            theta = get_theta_from_theta_mcid(elem.theta_mcid)
+            tflag = elem.tflag
+            #if tflag is None:
+                #tflag =
             data = [eid, pid] + nids + [theta, elem.zoffset, 0,
-                                        elem.tflag, elem.T1, elem.T2, elem.T3, elem.T4]
-            assert elem.tflag in [0, 1], elem.get_stats()
+                                        tflag, elem.T1, elem.T2, elem.T3, elem.T4]
+            assert tflag in [0, 1], elem.get_stats()
             #print('  CQUAD4 eid=%s pid=%s nids=%s data=%s\n' % (eid, pid, str(nids), data[6:]))
             op2_ascii.write('  eid=%s pid=%s nids=%s\n' % (eid, pid, str(nids)))
             op2.write(spack.pack(*data))
@@ -425,13 +449,14 @@ def write_card(name, eids, spack, obj, op2, op2_ascii, endian):
               #t3, t4, theta, zoffs, tflag) = out # current
             #(eid, pid, n1, n2, n3, n4, n5, n6, n7, n8,
             #t1, t2, t3, t4, theta, zoffs) = out  # cquad8; 2001
-            theta = 0.0
+            theta = get_theta_from_theta_mcid(elem.theta_mcid)
+            tflag = elem.tflag if elem.tflag is not None else 0
             #t1 = elem.T1 if elem.T1 is not None else -1.
             #t2 = elem.T2 if elem.T2 is not None else -1.
             #t3 = elem.T3 if elem.T3 is not None else -1.
             #t4 = elem.T4 if elem.T4 is not None else -1.
             data = [eid, pid] + nids + [elem.T1, elem.T2, elem.T3, elem.T4,
-                                        theta, elem.zoffset, elem.tflag]
+                                        theta, elem.zoffset, tflag]
             assert None not in data, '%s data=%s' % (name, data)
             assert isinstance(elem.tflag, int), elem.get_stats()
             assert elem.tflag in [-1, 0, 1], elem.get_stats()
@@ -446,7 +471,7 @@ def write_card(name, eids, spack, obj, op2, op2_ascii, endian):
             pid = elem.pid
             #print(elem.get_stats())
             #(eid, pid, n1, n2, n3, n4, n5, n6, theta, zoffs, t1, t2, t3, tflag) = out
-            theta = 0.0
+            theta = get_theta_from_theta_mcid(elem.theta_mcid)
             t1 = elem.T1 if elem.T1 is not None else -1.
             t2 = elem.T2 if elem.T2 is not None else -1.
             t3 = elem.T3 if elem.T3 is not None else -1.
@@ -489,7 +514,7 @@ def write_card(name, eids, spack, obj, op2, op2_ascii, endian):
             nids = elem.node_ids
             pid = elem.pid
             #print(elem.get_stats())
-            theta = 0.0
+            theta = get_theta_from_theta_mcid(elem.theta_mcid)
             #eid, pid, n1, n2, n3, theta_mcid, zoffs, blank1, blank2, tflag, t1, t2, t3
             data = [eid, pid] + nids + [theta, elem.zoffset, 0, 0,
                                         elem.tflag, elem.T1, elem.T2, elem.T3]
@@ -536,7 +561,7 @@ def write_card(name, eids, spack, obj, op2, op2_ascii, endian):
                 n2 = 0
             c2 = elem.c2 if elem.c2 is not None else 0
             data = [eid, elem.k, n1, n2, elem.c1, c2, elem.ge, elem.s]
-            print('CELAS2', data)
+            #print('CELAS2', data)
             op2_ascii.write('  eid=%s nids=[%s, %s]\n' % (eid, n1, n2))
             op2.write(spack.pack(*data))
     elif name in ['CELAS3', 'CDAMP3', 'CDAMP5']:
@@ -546,6 +571,8 @@ def write_card(name, eids, spack, obj, op2, op2_ascii, endian):
             pid = elem.pid
             if n1 is None:
                 n1 = 0
+            if n2 is None:
+                n2 = 0
             #(eid, pid, s1, s2) = out
             data = [eid, pid, n1, n2]
             print(name, data)
@@ -598,3 +625,11 @@ def write_card(name, eids, spack, obj, op2, op2_ascii, endian):
         op2.write(spack.pack(*nids))
     else:  # pragma: no cover
         raise NotImplementedError(name)
+
+def get_theta_from_theta_mcid(theta_mcid):
+    """the theta/mcid field is stored in a strange way"""
+    if isinstance(theta_mcid, integer_types):
+        theta = 512. * (theta_mcid + 1)
+    else:
+        theta = theta_mcid
+    return theta

@@ -1,4 +1,5 @@
 from __future__ import absolute_import, print_function
+from collections import defaultdict
 from struct import pack, Struct
 
 from .geom1 import write_geom_header, close_geom_table
@@ -6,6 +7,13 @@ from .geom1 import write_geom_header, close_geom_table
 def write_ept(op2, op2_ascii, obj, endian=b'<'):
     if not hasattr(obj, 'properties'):
         return
+
+    out = defaultdict(list)
+    for pid, phbdy in obj.phbdys.items():
+        out[phbdy.type].append(pid)
+    for pid, pelast in obj.pelast.items():
+        out[pelast.type].append(pid)
+
     #if not hasattr(obj, 'nodes'):
         #return
     nproperties = len(obj.properties)
@@ -20,14 +28,15 @@ def write_ept(op2, op2_ascii, obj, endian=b'<'):
         #'PSOLID', 'PSHELL', 'PCOMP', 'PROD',
     #]
     #out = obj.get_card_ids_by_card_types(ptypes)
-    from collections import defaultdict
-    out = defaultdict(list)
     for pid, prop in obj.properties.items():
         out[prop.type].append(pid)
 
     skip_properties = [
-        'PBEND', 'PBUSH', 'PBUSH1D', 'PGAP', 'PSHEAR', 'PLPLANE',
-        'PMASS', 'PTUBE', 'PLSOLID', 'PBCOMP',
+        'PBEND', 'PBUSH', 'PBUSH1D',
+        'PMASS', 'PBCOMP',
+
+        # thermal
+        'PHBDY',
 
     ]
     for name, pids in out.items():
@@ -56,6 +65,18 @@ def write_ept(op2, op2_ascii, obj, endian=b'<'):
             key = (1802, 18, 31)
             nfields = 3
             spack = Struct(endian + b'i2f')
+        elif name == 'PROD':
+            key = (902, 9, 29)
+            nfields = 6
+            spack = Struct(endian + b'2i4f')
+        elif name == 'PTUBE':
+            key = (1602, 16, 30)
+            nfields = 5
+            spack = Struct(endian + b'2i3f')
+        elif name == 'PGAP':
+            key = (3201, 32, 55)
+            nfields = 11
+            spack = Struct(endian + b'i10f')
         elif name == 'PBAR':
             key = (52, 20, 181)
             nfields = 19
@@ -64,18 +85,34 @@ def write_ept(op2, op2_ascii, obj, endian=b'<'):
             key = (5402, 54, 262)
             nfields = 197 # 5+16*12
             spack = None
-        elif name == 'PSOLID':
-            key = (2402, 24, 281)
-            nfields = 7
-            spack = Struct(endian + b'6i4s')
+        elif name == 'PSHEAR':
+            key = (1002, 10, 42)
+            nfields = 6
+            spack = Struct(endian + b'2i4f')
         elif name == 'PSHELL':
             key = (2302, 23, 283)
             nfields = 11
             spack = Struct(endian + b'iififi4fi')
-        elif name == 'PROD':
-            key = (902, 9, 29)
-            nfields = 6
-            spack = Struct(endian + b'2i4f')
+        elif name == 'PLPLANE':
+            key = (4606, 46, 375)
+            nfields = 11
+            spack = Struct(endian + b'3i 4s f 6i')
+        elif name == 'PSOLID':
+            key = (2402, 24, 281)
+            nfields = 7
+            spack = Struct(endian + b'6i4s')
+        elif name == 'PLSOLID':
+            key = (4706, 47, 376)
+            nfields = 7
+            spack = Struct(endian + b'2i 4s 4i')
+        elif name == 'PMASS':
+            key = (402, 4, 44)
+            nfields = 2
+            spack = Struct(endian + b'if')
+        elif name == 'PELAST':
+            key = (1302, 13, 34)
+            nfields = 4
+            spack = Struct(endian + b'4i')
         else:  # pragma: no cover
             raise NotImplementedError(name)
 
@@ -108,6 +145,7 @@ def write_ept(op2, op2_ascii, obj, endian=b'<'):
     #-------------------------------------
 
 def write_card(op2, op2_ascii, obj, name, pids, spack, endian):
+    op2_ascii.write('EPT-%s\n' % name)
     if name == 'PELAS':
         for pid in sorted(pids):
             prop = obj.properties[pid]
@@ -126,6 +164,28 @@ def write_card(op2, op2_ascii, obj, name, pids, spack, endian):
             #(pid, ce, cr) = out
             data = [pid, prop.ce, prop.cr]
             op2.write(spack.pack(*data))
+    elif name == 'PTUBE':
+        #.. todo:: OD2 only exists for heat transfer...
+        #          how do i know if there's heat transfer?
+        #          I could store all the tubes and add them later,
+        #          but what about themal/non-thermal subcases?
+        #.. warning:: assuming OD2 is not written (only done for thermal)
+        for pid in sorted(pids):
+            prop = obj.properties[pid]
+            #(pid, mid, OD, t, nsm) = out
+            data = [pid, prop.mid, prop.OD1, prop.t, prop.nsm]
+            op2.write(spack.pack(*data))
+
+    elif name == 'PGAP':
+        for pid in sorted(pids):
+            prop = obj.properties[pid]
+            #(pid,u0,f0,ka,kb,kt,mu1,mu2,tmax,mar,trmin) = out
+            data = [pid, prop.u0, prop.f0, prop.ka, prop.kb, prop.kt,
+                    prop.mu1, prop.mu2, prop.tmax, prop.mar, prop.trmin]
+            assert None not in data, data
+            op2_ascii.write('  pid=%s data=%s' % (pid, data[1:]))
+            op2.write(spack.pack(*data))
+
     elif name == 'PBAR':
         for pid in sorted(pids):
             prop = obj.properties[pid]
@@ -287,6 +347,13 @@ def write_card(op2, op2_ascii, obj, name, pids, spack, endian):
             data = [pid, mid, cordm, integ, stress, isop, fctn]
             op2_ascii.write('  pid=%s mid=%s data=%s\n' % (pid, mid, data[2:]))
             op2.write(spack.pack(*data))
+    elif name == 'PSHEAR':
+        for pid in sorted(pids):
+            prop = obj.properties[pid]
+            #(pid, mid, t, nsm, f1, f2) = out
+            data = [pid, prop.mid, prop.t, prop.nsm, prop.f1, prop.f2]
+            op2_ascii.write('  pid=%s mid=%s data=%s\n' % (pid, prop.mid, data[2:]))
+            op2.write(spack.pack(*data))
     elif name == 'PSHELL':
         for pid in sorted(pids):
             #(pid, mid1, t, mid2, bk, mid3, ts, nsm, z1, z2, mid4) = out
@@ -294,18 +361,85 @@ def write_card(op2, op2_ascii, obj, name, pids, spack, endian):
             mid2 = prop.mid2 if prop.mid2 is not None else 0
             data = [pid, prop.mid1, prop.t, mid2, prop.twelveIt3, prop.mid3,
                     prop.tst, prop.nsm, prop.z1, prop.z2, prop.mid4]
-            #print(data)
+            #print('PSHELL', data)
             #print(prop.mid1, mid2, prop.mid3, prop.mid4)
 
             op2_ascii.write('  pid=%s mid=%s data=%s\n' % (pid, prop.mid1, data[2:]))
             op2.write(spack.pack(*data))
+    elif name == 'PLPLANE':
+        #NX 10
+        #1 PID     I Property identification number
+        #2 MID     I Material identification number
+        #3 CID     I Coordinate system identification number
+        #4 STR CHAR4 Location of stress and strain output
+        #5 T      RS Default membrane thickness for Ti on the connection entry
+        #6 CSOPT  I  Reserved for coordinate system definition of plane
+        #7 UNDEF(5) None
+
+        #MSC 2016
+        #PID       I Property identification number
+        #2 MID     I Material identification number
+        #3 CID     I Coordinate system identification number
+        #4 STR CHAR4 Location of stress and strain output
+        #5 UNDEF(7 ) none Not used
+
+        #.. warning:: CSOPT ad T are not supported
+        for pid in sorted(pids):
+            prop = obj.properties[pid]
+            location = prop.stress_strain_output_location.encode('latin1')
+
+            # MSC
+            data = [pid, prop.mid, prop.cid, location,
+                    0, 0, #prop.t, prop.csopt, # unsupported NX
+                    0, 0, 0, 0, 0]
+            print(name, data)
+            op2_ascii.write('  pid=%s mid=%s data=%s\n' % (pid, prop.mid, data[2:]))
+            op2.write(spack.pack(*data))
     elif name == 'PROD':
         for pid in sorted(pids):
-            #(pid, mid, a, j, c, nsm) = out
             prop = obj.properties[pid]
-            #print(prop.get_stats())
+            #(pid, mid, a, j, c, nsm) = out
             data = [pid, prop.mid, prop.A, prop.j, prop.c, prop.nsm]
             op2_ascii.write('  pid=%s mid=%s data=%s\n' % (pid, prop.mid, data[2:]))
+            op2.write(spack.pack(*data))
+    elif name == 'PLSOLID':
+        #MSC 2016
+        #1 PID I Property identification number
+        #2 MID I Material identification number
+        #3 STR CHAR4 Location of stress and strain output
+        #4 UNDEF(4 ) none Not used
+
+        #NX 10
+        #1 PID I Property identification number
+        #2 MID I Material identification number
+        #3 STR CHAR4 Location of stress and strain output
+        #4 CSOPT I Reserved for coordinate system definition of plane
+        #5 UNDEF(3) None
+
+        #.. warning:: CSOPT is not supported
+
+        for pid in sorted(pids):
+            prop = obj.properties[pid]
+            location = prop.stress_strain.encode('latin1')
+
+            # MSC
+            #pid, mid, location, csopt, null_a, null_b, null_c = out
+            csopt = 0
+            data = [pid, prop.mid, location, csopt, 0, 0, 0]
+            print(name, data)
+            op2_ascii.write('  pid=%s mid=%s data=%s\n' % (pid, prop.mid, data[2:]))
+            op2.write(spack.pack(*data))
+    elif name == 'PMASS':
+        for pid in sorted(pids):
+            prop = obj.properties[pid]
+            data = [pid, prop.mass]
+            op2_ascii.write('  pid=%s mass=%s\n' % (pid, prop.mass))
+            op2.write(spack.pack(*data))
+    elif name == 'PELAST':
+        for pid in sorted(pids):
+            prop = obj.pelast[pid]
+            data = [pid, prop.tkid, prop.tgeid, prop.tknid]
+            op2_ascii.write('  pid=%s tables=%s\n' % (pid, data[1:]))
             op2.write(spack.pack(*data))
     else:  # pragma: no cover
         raise NotImplementedError(name)
@@ -318,6 +452,7 @@ def write_pbarl(name, pids, itable, op2, op2_ascii, obj, endian=b'<'):
     return itable
 
 def write_pcomp(name, pids, itable, op2, op2_ascii, obj, endian=b'<'):
+    """writes the PCOMP"""
     key = (2706, 27, 287)
 
     nproperties = len(pids)
@@ -381,16 +516,6 @@ def write_pcomp(name, pids, itable, op2, op2_ascii, obj, endian=b'<'):
             op2.write(s2.pack(*data2))
             op2_ascii.write(str(data2) + '\n')
 
-
-    #for ilayer in range(nlayers):
-        #(mid, t, theta, sout) = s2.unpack(data[n:n+16])
-        #mids.append(mid)
-        #T.append(t)
-        #thetas.append(theta)
-        #souts.append(sout)
-        #n += 16
-
-    #(mid, t, theta, sout) = s2.unpack(data[n:n+16])
 
     #data_in = [
         #pid, z0, nsm, sb, ft, Tref, ge,

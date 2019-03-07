@@ -14,6 +14,7 @@ from pyNastran.op2.errors import FatalError
 from .writer.geom1 import write_geom1
 from .writer.geom2 import write_geom2
 from .writer.geom3 import write_geom3
+from .writer.geom4 import write_geom4
 from .writer.ept import write_ept
 from .writer.mpt import write_mpt
 
@@ -126,7 +127,7 @@ class OP2Writer(OP2_F06_Common):
         write_geom1(fop2, fop2_ascii, obj)
         write_geom2(fop2, fop2_ascii, obj)
         write_geom3(fop2, fop2_ascii, obj)
-        #write_geom4(fop2, fop2_ascii, obj)
+        write_geom4(fop2, fop2_ascii, obj)
         write_ept(fop2, fop2_ascii, obj)
         write_mpt(fop2, fop2_ascii, obj)
         #write_dit(fop2, fop2_ascii, obj)
@@ -141,19 +142,7 @@ class OP2Writer(OP2_F06_Common):
 
         #is_mag_phase = False
 
-        # eigenvalues are written first
-        for ikey, result in sorted(obj.eigenvalues.items()):
-            found_eigenvalues
-            #print('%-18s SUBCASE=%i' % (result.__class__.__name__, isubcase))
-            if hasattr(result, 'write_op2'):
-                result.write_op2(fop2, fop2_ascii, endian=endian)
-                #if delete_objects:
-                    #del result
-            else:
-                print("*op2 - %s not written" % result.__class__.__name__)
-                write_op2
-
-        # finally, we writte all the other tables
+        # we writte all the other tables
         # nastran puts the tables in order of the Case Control deck,
         # but we're lazy so we just hardcode the order
 
@@ -172,7 +161,7 @@ class OP2Writer(OP2_F06_Common):
         res_categories2 = defaultdict(list)
         table_order = [
             'OUGV1',
-            'BOUGV1',
+            'BOUGV1', 'BOPHIG',
             'OUPV1',
             'TOUGV1',
             'OAGATO1', 'OAGCRM1', 'OAGNO1', 'OAGPSD1', 'OAGRMS1',
@@ -207,6 +196,7 @@ class OP2Writer(OP2_F06_Common):
             'OES1', 'OES1X', 'OES1X1',
             'OES1C',
             'OESCP',
+            'OCRPG', 'OCRUG',
             'OESATO1', 'OESCRM1', 'OESNO1', 'OESPSD1', 'OESRMS1',
             'OESATO2', 'OESCRM2', 'OESNO2', 'OESPSD2', 'OESRMS2',
 
@@ -224,15 +214,18 @@ class OP2Writer(OP2_F06_Common):
         for table_type in obj.get_table_types():
             res_dict = obj.get_result(table_type)
             for key, res in res_dict.items():
-                if hasattr(res, 'table_name'): # params
+                if hasattr(res, 'table_name_str'): # params
                     res_categories2[res.table_name_str].append(res)
 
         for table_name, results in sorted(res_categories2.items()):
             assert table_name in table_order, table_name
 
         total_case_count = 0
-        #for table_name, results in sorted(res_categories2.items()):
-        for table_name in table_order:
+        pretables = ['LAMA', 'BLAMA']
+        for title, eigenvalue in obj.eigenvalues.items():
+            res_categories2[res.table_name].append(eigenvalue)
+
+        for table_name in pretables + table_order:
             if table_name not in res_categories2:
                 continue
             results = res_categories2[table_name]
@@ -249,15 +242,17 @@ class OP2Writer(OP2_F06_Common):
                         #obj.log.warning("  *op2 - %s (%s) not written" % (
                             #result.__class__.__name__, result.element_name))
                         #continue
-                    isubcase = result.isubcase
+                    isubcase = ''
+                    if hasattr(result, 'isubcase'): # no for eigenvalues
+                        isubcase = result.isubcase
                     try:
-                        #print(' %-6s - %s - isubcase=%i%s; itable=%s %s' % (
+                        #print(' %-6s - %s - isubcase=%s%s; itable=%s %s' % (
                             #table_name, result.__class__.__name__,
                             #isubcase, element_name, itable, new_result))
                         itable = result.write_op2(fop2, fop2_ascii, itable, new_result,
                                                   obj.date, is_mag_phase=False, endian=endian)
                     except:
-                        print(' %s - isubcase=%i%s' % (result.__class__.__name__,
+                        print(' %s - isubcase=%s%s' % (result.__class__.__name__,
                                                        isubcase, element_name))
                         raise
                 else:

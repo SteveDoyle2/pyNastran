@@ -894,14 +894,15 @@ TABLE_OBJ_KEYS = list(TABLE_OBJ_MAP.keys())
 def _load_eigenvalue(h5_result, log):
     """Loads a RealEigenvalue"""
     class_name = _cast(h5_result.get('class_name'))
+    table_name = '???'
     title = ''
     nmodes = _cast(h5_result.get('nmodes'))
     if class_name == 'RealEigenvalues':
-        obj = RealEigenvalues(title, nmodes=nmodes)
+        obj = RealEigenvalues(title, table_name, nmodes=nmodes)
     elif class_name == 'ComplexEigenvalues':
-        obj = ComplexEigenvalues(title, nmodes)
+        obj = ComplexEigenvalues(title, table_name, nmodes)
     elif class_name == 'BucklingEigenvalues':
-        obj = BucklingEigenvalues(title, nmodes=nmodes)
+        obj = BucklingEigenvalues(title, table_name, nmodes=nmodes)
     else:
         log.warning('  %r is not supported...skipping' % class_name)
         return None
@@ -913,7 +914,10 @@ def _load_eigenvalue(h5_result, log):
             continue
         else:
             datai = _cast(h5_result.get(key))
-            assert not isinstance(datai, binary_type), key
+            if key == 'table_name':
+                datai = datai.encode('latin1')
+            else:
+                assert not isinstance(datai, binary_type), key
             setattr(obj, key, datai)
     return obj
 

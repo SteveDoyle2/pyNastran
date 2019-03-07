@@ -132,14 +132,36 @@ class ForceObject(ScalarObject):
             field5 = self.freqs[itime]
             ftable3 = set_table3_field(ftable3, 5, b'f') # field 5
         elif self.analysis_code == 6:
-            field5 = self.times[itime]
+            if hasattr(self, 'times'):
+                field5 = self.times[itime]
+            #elif hasattr(self, 'dts'):
+                #field5 = self.times[itime]
+            else:  # pragma: no cover
+                print(self.get_stats())
+                raise NotImplementedError('cant find times or dts on analysis_code=8')
             ftable3 = set_table3_field(ftable3, 5, b'f') # field 5
         elif self.analysis_code == 7:  # pre-buckling
             field5 = self.loadIDs[itime] # load set number
+        elif self.analysis_code == 8:  # post-buckling
+            field5 = self.lsdvmns[itime] # load set number
+            if hasattr(self, 'eigns'):
+                field6 = self.eigns[itime]
+            elif hasattr(self, 'eigrs'):
+                field6 = self.eigrs[itime]
+            else:  # pragma: no cover
+                print(self.get_stats())
+                raise NotImplementedError('cant find eigns or eigrs on analysis_code=8')
+            assert isinstance(field6, float_types), type(field6)
+            ftable3 = set_table3_field(ftable3, 6, b'f') # field 6
         elif self.analysis_code == 9:  # complex eigenvalues
             field5 = self.modes[itime]
-            #if hasattr(self, 'eigns'):
-            field6 = self.eigns[itime]
+            if hasattr(self, 'eigns'):
+                field6 = self.eigns[itime]
+            elif hasattr(self, 'eigrs'):
+                field6 = self.eigrs[itime]
+            else:  # pragma: no cover
+                print(self.get_stats())
+                raise NotImplementedError('cant find eigns or eigrs on analysis_code=8')
             ftable3 = set_table3_field(ftable3, 6, b'f') # field 6
             field7 = self.eigis[itime]
             ftable3 = set_table3_field(ftable3, 7, b'f') # field 7

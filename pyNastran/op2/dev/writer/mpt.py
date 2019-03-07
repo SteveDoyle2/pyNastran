@@ -8,7 +8,6 @@ def write_mpt(op2, op2_ascii, obj, endian=b'<'):
     if not hasattr(obj, 'materials'):
         return
     nmaterials = len(obj.materials) + len(obj.thermal_materials)
-
     mtypes = [
         'MATS1', 'MATS3', 'MATS8',
         'MATT1', 'MATT2', 'MATT3', 'MATT4', 'MATT5', 'MATT8', 'MATT9',
@@ -19,12 +18,15 @@ def write_mpt(op2, op2_ascii, obj, endian=b'<'):
         if len(mat_dict) == 0:
             continue
         out[mtype] = list(mat_dict.keys())
+    if len(obj.nlparms):
+        out['NLPARM'] = obj.nlparms.keys()
 
     if nmaterials == 0 and len(out) == 0:
         return
     write_geom_header(b'MPT', op2, op2_ascii, endian=endian)
     itable = -3
 
+    materials_to_skip = ['NLPARM']
     #mtypes = [
         #'MAT1', 'MAT2', 'MAT3', 'MAT4', 'MAT5', 'MAT8', 'MAT9',
     #]
@@ -40,6 +42,10 @@ def write_mpt(op2, op2_ascii, obj, endian=b'<'):
     for name, mids in sorted(out.items()):
         #print('MPT', name, mids)
         nmaterials = len(mids)
+        if name in materials_to_skip:
+            obj.log.warning('skipping MPT-%s' % name)
+            continue
+
         #if nmaterials == 0:
             #continue
 
@@ -92,6 +98,10 @@ def write_mpt(op2, op2_ascii, obj, endian=b'<'):
             key = (2303, 23, 237)
             nfields = 7
             spack = Struct(endian + b'7i')
+        elif name == 'MATT5':
+            key = (2403, 24, 238)
+            nfields = 10
+            spack = Struct(endian + b'10i')
         else:  # pragma: no cover
             raise NotImplementedError(name)
 
@@ -157,11 +167,10 @@ def write_mpt(op2, op2_ascii, obj, endian=b'<'):
         elif name == 'MAT5':
             for mid in sorted(mids):
                 mat = obj.thermal_materials[mid]
-                #(mid, k, cp, rho, h, mu, hgen, refenth, tch, tdelta, qlat) = out
-                (mid, k1, k2, k3, k4, k5, k6, cp, rho, hgen) = out
+                #(mid, k1, k2, k3, k4, k5, k6, cp, rho, hgen) = out
                 data = [
                     mid,
-                    mat.kxx, mat.kxy, mat.xz, mat.kyy, mat.kyz, mat.kzz,
+                    mat.kxx, mat.kxy, mat.kxz, mat.kyy, mat.kyz, mat.kzz, # 6
                     mat.cp, mat.rho, mat.hgen,
                 ]
                 #print('MAT5 -', data)
@@ -281,6 +290,28 @@ def write_mpt(op2, op2_ascii, obj, endian=b'<'):
                 assert len(data) == nfields
                 op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
                 op2.write(spack.pack(*data))
+        elif name == 'MATT5':
+            for mid in sorted(mids):
+                mat = obj.MATT5[mid]
+                kxx_table = mat.kxx_table if mat.kxx_table is not None else 0
+                kxy_table = mat.kxy_table if mat.kxy_table is not None else 0
+                kxz_table = mat.kxz_table if mat.kxz_table is not None else 0
+                kyy_table = mat.kyy_table if mat.kyy_table is not None else 0
+                kyz_table = mat.kyz_table if mat.kyz_table is not None else 0
+                kzz_table = mat.kzz_table if mat.kzz_table is not None else 0
+
+                cp_table = mat.cp_table if mat.cp_table is not None else 0
+                #h_table = mat.h_table if mat.h_table is not None else 0
+                #mu_table = mat.mu_table if mat.mu_table is not None else 0
+                hgen_table = mat.hgen_table if mat.hgen_table is not None else 0
+
+                #(mid, tk1, tk2, tk3, tk4, tk5, tk6, tcp, null, thgen) = out
+                data = [mid, kxx_table, kxy_table, kxz_table, kyy_table, kyy_table, kzz_table,
+                        cp_table, 0, hgen_table]
+                assert None not in data, 'MATT4 %s' % data
+                assert len(data) == nfields
+                op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
+                op2.write(spack.pack(*data))
 
         else:  # pragma: no cover
             raise NotImplementedError(name)
@@ -297,4 +328,3 @@ def write_mpt(op2, op2_ascii, obj, endian=b'<'):
     #print('itable', itable)
     close_geom_table(op2, op2_ascii, itable)
     #-------------------------------------
-
