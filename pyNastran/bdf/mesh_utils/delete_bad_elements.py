@@ -19,6 +19,8 @@ SIDE_MAP['CHEXA'] = {
     5 : [4, 1, 5, 8],
     6 : [5, 6, 7, 8],
 }
+PIOVER2 = np.pi / 2.
+PIOVER3 = np.pi / 3.
 
 
 def delete_bad_shells(model,

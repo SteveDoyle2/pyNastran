@@ -21,8 +21,6 @@ from pyNastran.bdf.cards.elements.bars import rotate_v_wa_wb
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points, numpy_to_vtk
 
 
-PIOVER2 = np.pi / 2.
-PIOVER3 = np.pi / 3.
 from pyNastran.gui.qt_files.colors import BLUE_FLOAT
 BEAM_GEOM_TYPES = [
     'BAR', 'BOX', 'BOX1', 'CHAN', 'CHAN1', 'CHAN2', 'CROSS', 'DBOX',

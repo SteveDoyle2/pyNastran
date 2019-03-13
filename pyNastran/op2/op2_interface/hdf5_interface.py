@@ -15,7 +15,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 import os
 from six import b
 
-from six import PY3, binary_type
+from six import PY3, binary_type, string_types
 import numpy as np
 import h5py
 
@@ -908,13 +908,15 @@ def _load_eigenvalue(h5_result, log):
         return None
 
     assert obj.class_name == class_name, 'class_name=%r selected; should be %r' % (obj.class_name, class_name)
-    keys_to_skip = ['class_name', 'is_complex', 'is_real']
+    keys_to_skip = ['class_name', 'is_complex', 'is_real', 'table_name_str']
     for key in h5_result.keys():
         if key in keys_to_skip:
             continue
         else:
             datai = _cast(h5_result.get(key))
-            if key == 'table_name':
+            if isinstance(datai, binary_type):
+                pass
+            elif isinstance(datai, string_types):
                 datai = datai.encode('latin1')
             else:
                 assert not isinstance(datai, binary_type), key
