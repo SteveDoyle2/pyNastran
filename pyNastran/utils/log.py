@@ -5,7 +5,6 @@ defines a colorama log
 from __future__ import print_function, unicode_literals
 import sys
 import platform
-from cpylog import SimpleLogger, get_logger, get_logger2
 
 
 def make_log():
