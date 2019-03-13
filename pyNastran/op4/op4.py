@@ -732,7 +732,7 @@ class OP4(object):
         if record_length == 16:
             a, icol, irow, nwords = unpack(self._endian + '4i', data)
             if self.debug:
-                self.log.info("a=%s icol=%s irow=%s nwords=%s a/4-3=%s" % (a, icol, irow, nwords, a//4-3))
+                self.log.info("a=%s icol=%s irow=%s nwords=%s" % (a, icol, irow, nwords))
         else:
             raise NotImplementedError('record_length=%s' % record_length)
         return (a, icol, irow, nwords)

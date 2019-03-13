@@ -1,5 +1,4 @@
 import numpy as np
-#from numpy import angle, float32
 from pyNastran.utils import object_attributes
 
 

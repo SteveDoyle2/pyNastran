@@ -4,7 +4,9 @@ Defines the Abaqus class
 from __future__ import print_function
 import numpy as np
 from pyNastran.utils.log import get_logger2
-from pyNastran.converters.abaqus.abaqus_cards import Material, Part, SolidSection
+from pyNastran.converters.abaqus.abaqus_cards import (
+    Assembly, Material, Part, SolidSection)
+
 
 def read_abaqus(abaqus_inp_filename, log=None, debug=False):
     """reads an abaqus model"""
@@ -48,7 +50,7 @@ class Abaqus(object):
         self.boundaries = {}
         self.materials = {}
         self.amplitudes = {}
-        self.assembly = {}
+        self.assembly = None
         self.initial_conditions = {}
         self.steps = {}
         self.heading = None
@@ -107,7 +109,8 @@ class Abaqus(object):
                 elif word.startswith('assembly'):
                     if nassembly != 0:
                         raise RuntimeError('only one assembly can be defined...')
-                    iline, line0 = self.read_assembly(lines, iline, line0, word)
+                    iline, line0, assembly = self.read_assembly(lines, iline, line0, word)
+                    self.assembly = assembly
                     nassembly += 1
 
                 elif word.startswith('part'):
@@ -497,6 +500,8 @@ class Abaqus(object):
         nlines = len(lines)
         line0 = lines[iline].strip().lower()
         element_types = {}
+        node_sets = {}
+        element_sets = {}
 
         while not line0.startswith('*end assembly') and iline < nlines:
             self.log.debug('line0 assembly = %s' % line0)
@@ -528,17 +533,19 @@ class Abaqus(object):
             elif word.startswith('nset'):
                 # TODO: skips header parsing
                 params_map = get_param_map(iline, word, required_keys=['instance'])
-                unused_name = params_map['nset']
+                set_name = params_map['nset']
                 iline += 1
                 line0 = lines[iline].strip().lower()
-                unused_set_ids, iline, line0 = read_set(lines, iline, line0, params_map)
+                set_ids, iline, line0 = read_set(lines, iline, line0, params_map)
+                node_sets[set_name] = set_ids
             elif word.startswith('elset'):
                 # TODO: skips header parsing
                 params_map = get_param_map(iline, word, required_keys=['instance'])
-                unused_name = params_map['elset']
+                set_name = params_map['elset']
                 iline += 1
                 line0 = lines[iline].strip().lower()
-                unused_set_ids, iline, line0 = read_set(lines, iline, line0, params_map)
+                set_ids, iline, line0 = read_set(lines, iline, line0, params_map)
+                element_sets[set_name] = set_ids
             elif word == 'node':
                 self.log.debug('  skipping assembly *node')
                 node_output = []
@@ -559,7 +566,9 @@ class Abaqus(object):
                 #print('line_end =', line0)
             else:
                 raise NotImplementedError('\nword=%r\nline=%r' % (word, line0))
-        return iline, line0
+
+        assembly = Assembly(element_types, node_sets, element_sets)
+        return iline, line0, assembly
 
     def read_part(self, lines, iline, line0, word):
         """reads a Part object"""
@@ -570,7 +579,7 @@ class Abaqus(object):
         assert 'name' in name_slot, name_slot
         part_name = name_slot.split('=', 1)[1]
         self.log.debug('part_name = %r' % part_name)
-        self.part_name = part_name
+        #self.part_name = part_name
 
         iline += 1
         line0 = lines[iline].strip().lower()
@@ -584,6 +593,8 @@ class Abaqus(object):
         #line0 = lines[iline].strip().lower()
         #print('line0 * = ', line0)
         element_types = {}
+        node_sets = {}
+        element_sets = {}
         #print('resetting nids...')
         nids = []
         nodes = []
@@ -633,17 +644,19 @@ class Abaqus(object):
 
             elif '*nset' in line0:
                 params_map = get_param_map(iline, word, required_keys=['name', 'part'])
-                unused_name = params_map['name']
+                set_name = params_map['name']
                 line0 = lines[iline].strip().lower()
-                unused_set_ids, iline, line0 = read_set(lines, iline, line0, params_map)
+                set_ids, iline, line0 = read_set(lines, iline, line0, params_map)
+                node_sets[set_name] = set_ids
 
             elif '*elset' in line0:
                 # TODO: skips header parsing
                 #iline += 1
                 params_map = get_param_map(iline, word, required_keys=['name', 'part'])
-                unused_name = params_map['name']
+                set_name = params_map['name']
                 line0 = lines[iline].strip().lower()
-                unused_set_ids, iline, line0 = read_set(lines, iline, line0, params_map)
+                set_ids, iline, line0 = read_set(lines, iline, line0, params_map)
+                element_sets[set_name] = set_ids
 
             elif '*surface' in line0:
                 # TODO: skips header parsing
@@ -707,14 +720,13 @@ class Abaqus(object):
 
             #print(line0)
             #qqq
-        node_sets = []
-        element_sets = []
+        #node_sets = []
+        #element_sets = []
 
         if self.debug:
             self.log.debug('part_name = %r' % part_name)
         part = Part(part_name, nids, nodes, element_types, node_sets, element_sets,
                     solid_sections, self.log)
-        self.part_name = None
         return iline, line0, part_name, part
 
     def _read_elements(self, lines, line0, iline):
@@ -722,7 +734,6 @@ class Abaqus(object):
         '*element, type=mass, elset=topc_inertia-2_mass_'
         """
         #print('------------------')
-        #print('%s: %s' % (self.part_name, line0))
         sline = line0.split(',')[1:]
         allowed_element_types = [
             'r2d2', 'conn2d2',
@@ -888,7 +899,7 @@ class Abaqus(object):
         #self.boundaries = {}
         #self.materials = {}
         #self.amplitudes = {}
-        #self.assembly = {}
+        #self.assembly = None
         #self.initial_conditions = {}
         #self.steps = {}
         #self.heading = None
@@ -896,8 +907,14 @@ class Abaqus(object):
         with open(abqaqus_filename_out, 'w') as abq_file:
             self.log.debug("  nparts = %s" % len(self.parts))
             self.log.debug("  nmaterials = %s" % len(self.materials))
+            if self.assembly is not None:
+                self.assembly.write(abq_file)
             for unused_part_name, part in self.parts.items():
                 part.write(abq_file)
+            for unused_part_name, initial_conditions in self.initial_conditions.items():
+                initial_conditions.write(abq_file)
+            for unused_part_name, amplitude in self.amplitudes.items():
+                amplitude.write(abq_file)
             for unused_mat_name, mat in self.materials.items():
                 mat.write(abq_file)
 

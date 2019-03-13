@@ -14,7 +14,6 @@ elif 'PyQt4' in sys.modules:
 elif 'PySide' in sys.modules:
     qt_version = 'pyside'
 else:
-    print('using default API')
     found_gui = False
     try:
         import PySide

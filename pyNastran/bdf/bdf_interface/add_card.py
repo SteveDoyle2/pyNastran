@@ -4743,8 +4743,6 @@ class AddCards(AddMethods):
             a comment for the card
 
         """
-        #paero = PAERO2(pid, orient, width, AR, thi, thn,
-                       #lrsb, lrib, lth1, lth2, comment=comment)
         paero = PAERO2(pid, orient, width, AR, thi, thn, lrsb=lrsb, lrib=lrib,
                        lth=lth, comment=comment)
         self._add_paero_object(paero)

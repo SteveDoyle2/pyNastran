@@ -13,7 +13,9 @@ class TestAbaqus(unittest.TestCase):
         """simple test"""
         lines = make_model()
         log = get_logger(level='warning', encoding='utf-8')
-        read_abaqus(lines, log=log, debug=False)
+        model = read_abaqus(lines, log=log, debug=False)
+        model.write('spike.inp')
+        os.remove('spike.inp')
 
         abaqus_filename = os.path.join(MODEL_PATH, 'abaqus.inp')
         with open(abaqus_filename, 'w') as abaqus_file:
@@ -24,7 +26,9 @@ class TestAbaqus(unittest.TestCase):
         abaqus_filename = os.path.join(MODEL_PATH, 'single_block.inp')
         log = get_logger(level='error', encoding='utf-8')
 
-        read_abaqus(abaqus_filename, log=log, debug=False)
+        model = read_abaqus(abaqus_filename, log=log, debug=False)
+        model.write('spike.inp')
+        os.remove('spike.inp')
 
 def make_model():
     """makes a test model"""

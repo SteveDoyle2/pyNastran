@@ -55,6 +55,17 @@ class Material(object):
         msg += ')\n'
         return msg
 
+    def write(self, abq_file):
+        abq_file.write('** skipping Material %s\n' % self.name)
+
+class Assembly(object):
+    def __init__(self, element_types, node_sets, element_sets):
+        self.element_types = element_types
+        self.node_sets = node_sets,
+        self.element_sets = element_sets
+    def write(self, abq_file):
+        abq_file.write('** skipping Assembly\n')
+
 class Part(object):
     """a Part object is a series of nodes & elements (of various types)"""
     def __init__(self, name, nids, nodes, element_types, node_sets, element_sets,
@@ -373,9 +384,11 @@ class Part(object):
         #name, nids, nodes, element_types, node_sets, element_sets,
          #                solid_sections, log
         abq_file.write('*Part,name=%r\n' % self.name)
+
         abq_file.write('*Node\n')
         for inid, node in enumerate(self.nodes):
             abq_file.write('%i,%s,%s,%s\n' % (inid, node[0], node[1], node[2]))
+
         for elem_type, (eids, elems) in self.element_types.items():
             if eids is None:
                 continue

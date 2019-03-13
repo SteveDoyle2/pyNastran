@@ -57,7 +57,6 @@ class DIT(GeomCommon):
         10 G    RS Damping
         Words 9 through 10 repeat until (-1,-1) occurs
         """
-        #ndata = len(data)
         #nfields = (ndata - n) // 4
 
         datan = data[n:]
@@ -360,7 +359,6 @@ class DIT(GeomCommon):
         10 G   RS Power spectral density
         Words 9 through 10 repeat until (-1,-1) occurs
         """
-        #ndata = len(data)
         #nfields = (ndata - n) // 4
 
         datan = data[n:]

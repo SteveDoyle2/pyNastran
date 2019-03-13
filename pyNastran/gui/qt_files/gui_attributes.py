@@ -60,6 +60,7 @@ class GuiAttributes(object):
 
         # totally broken for solids
         self.make_contour_filter = False
+
         self.settings = Settings(self)
         self.tool_actions = ToolActions(self)
         self.view_actions = ViewActions(self)

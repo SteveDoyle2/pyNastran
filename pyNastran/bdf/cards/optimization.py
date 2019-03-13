@@ -2032,7 +2032,6 @@ class DRESP2(OptConstraint):
         }
 
         """
-        #print('DRESP2 init: ', params)
         OptConstraint.__init__(self)
         if comment:
             self.comment = comment
