@@ -70,6 +70,8 @@ from pyNastran.bdf.cards.elements.solid import (
     CHEXA8, CHEXA20, CIHEX1, CIHEX2,
     CPYRAM5, CPYRAM13,
 )
+from pyNastran.bdf.mesh_utils.delete_bad_elements import (
+    tri_quality, quad_quality, get_min_max_theta)
 
 from pyNastran.gui.utils.vtk.vtk_utils import (
     get_numpy_idtype_for_vtk, numpy_to_vtk_points,
@@ -78,8 +80,7 @@ from pyNastran.gui.utils.vtk.vtk_utils import (
 from pyNastran.gui.errors import NoGeometry, NoSuperelements
 from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult
 from pyNastran.converters.nastran.geometry_helper import (
-    NastranGeometryHelper, tri_quality, quad_quality, get_min_max_theta,
-    get_material_arrays, get_suport_node_ids)
+    NastranGeometryHelper, get_material_arrays, get_suport_node_ids)
 from pyNastran.converters.nastran.results_helper import NastranGuiResults, _get_times
 from pyNastran.converters.nastran.displacements import (
     ForceTableResults, ElementalTableResults)

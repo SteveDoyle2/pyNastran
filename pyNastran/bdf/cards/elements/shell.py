@@ -4293,7 +4293,9 @@ class CQUAD8(QuadShell):
         zoffset = data[15]
         tflag = data[16]
         #assert isinstance(tflag, int), tflag  # None for v2001; int for post-2001
-        assert tflag in [0, 1], 'tflag=%s data=%s' % (tflag ,data)
+        if tflag is None: # TODO: temporary
+            tflag = 0
+        assert tflag in [0, 1], 'tflag=%s data=%s' % (tflag, data)
         return CQUAD8(eid, pid, nids, theta_mcid=theta_mcid, zoffset=zoffset,
                       tflag=tflag, T1=T1, T2=T2, T3=T3, T4=T4, comment=comment)
 
