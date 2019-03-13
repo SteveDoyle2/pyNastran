@@ -12,7 +12,7 @@ from math import sin, cos
 
 import numpy as np
 from numpy import array, radians, dot, zeros
-from pyNastran.utils.log import get_logger2
+from cpylog import get_logger2
 
 class Panel(object):
     """

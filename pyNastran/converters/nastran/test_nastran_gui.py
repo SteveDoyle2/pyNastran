@@ -13,7 +13,7 @@ from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.converters.nastran.nastran_io import NastranIO, BDF
 from pyNastran.bdf.errors import DuplicateIDsError
 import pyNastran
-#from pyNastran.utils.log import get_logger2
+#from cpylog import get_logger2
 
 class NastranGUI(NastranIO, FakeGUIMethods):
     def __init__(self, inputs=None):

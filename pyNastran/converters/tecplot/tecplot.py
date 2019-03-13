@@ -13,10 +13,10 @@ from six import string_types
 from numpy import (
     array, vstack, hstack, where, unique, zeros, loadtxt, savetxt, intersect1d, in1d)
 #import numpy as np
+from cpylog import get_logger2
 
 from pyNastran.utils import is_binary_file
 #from pyNastran.utils.numpy_utils import unique_rows
-from pyNastran.utils.log import get_logger2
 
 
 def read_tecplot(tecplot_filename, use_cols=None, dtype=None, log=None, debug=False):

@@ -1,12 +1,12 @@
 import os
 import unittest
+from cpylog import get_logger
 
 from pyNastran.bdf.bdf import read_bdf
 from pyNastran.converters.tecplot.tecplot import read_tecplot
 from pyNastran.converters.tecplot.tecplot_to_nastran import tecplot_to_nastran_filename
 from pyNastran.converters.nastran.nastran_to_tecplot import (
     nastran_to_tecplot, nastran_to_tecplot_filename)
-from pyNastran.utils.log import get_logger
 import pyNastran
 
 PKG_PATH = pyNastran.__path__[0]

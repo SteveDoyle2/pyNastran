@@ -4,12 +4,12 @@ import warnings
 import unittest
 
 import numpy as np
+from cpylog import get_logger
 
 import pyNastran
 from pyNastran.converters.aflr.aflr2.aflr2 import read_bedge
 from pyNastran.converters.aflr.aflr2.bedge_io import BEdge_IO
 from pyNastran.gui.testing_methods import FakeGUIMethods
-from pyNastran.utils.log import get_logger
 
 warnings.simplefilter('always')
 np.seterr(all='raise')

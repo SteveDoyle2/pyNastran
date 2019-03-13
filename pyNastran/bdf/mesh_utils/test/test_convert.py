@@ -4,6 +4,8 @@ import unittest
 
 import numpy as np
 from numpy import allclose
+from cpylog import SimpleLogger
+
 #import pyNastran
 #from pyNastran.bdf.bdf import BDF
 
@@ -14,7 +16,6 @@ from pyNastran.bdf.cards.elements.mass import CONM2
 import pyNastran
 from pyNastran.bdf.bdf import BDF, read_bdf, CaseControlDeck, PARAM
 from pyNastran.bdf.mesh_utils.convert import convert, get_scale_factors, scale_by_terms
-from pyNastran.utils.log import SimpleLogger
 
 pkg_path = pyNastran.__path__[0]
 

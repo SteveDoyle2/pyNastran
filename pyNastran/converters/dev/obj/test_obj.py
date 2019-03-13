@@ -1,12 +1,12 @@
 import os
 import unittest
+from cpylog import get_logger
 
 import pyNastran
 from pyNastran.gui.testing_methods import FakeGUIMethods
 #from pyNastran.bdf.bdf import BDF
 from pyNastran.converters.dev.obj.obj_io import ObjIO
 from pyNastran.converters.dev.obj.obj import OBJ
-from pyNastran.utils.log import get_logger
 
 
 PKG_PATH = pyNastran.__path__[0]

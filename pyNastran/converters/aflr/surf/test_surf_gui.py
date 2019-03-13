@@ -5,6 +5,7 @@ Defines:
 from __future__ import print_function
 import os
 import unittest
+from cpylog import get_logger
 
 import pyNastran
 from pyNastran.bdf.mesh_utils.remove_unused import remove_unused
@@ -13,7 +14,6 @@ from pyNastran.bdf.mesh_utils.remove_cards import remap_cards, delete_elements, 
 from pyNastran.converters.nastran.nastran_to_surf import nastran_to_surf, read_bdf
 from pyNastran.converters.aflr.surf.surf_io import SurfIO
 from pyNastran.gui.testing_methods import FakeGUIMethods
-from pyNastran.utils.log import get_logger
 
 PKG_PATH = pyNastran.__path__[0]
 model_path = os.path.join(PKG_PATH, 'converters', 'tecplot', 'models')

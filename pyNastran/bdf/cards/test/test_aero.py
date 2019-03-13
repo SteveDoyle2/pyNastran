@@ -9,9 +9,9 @@ from collections import defaultdict
 import unittest
 from six import StringIO
 import numpy as np
+from cpylog import SimpleLogger
 
 import pyNastran
-from pyNastran.utils.log import SimpleLogger
 from pyNastran.bdf.bdf import BDF, CORD2R, BDFCard, SET1, GRID, read_bdf
 from pyNastran.bdf.test.test_bdf import run_bdf
 from pyNastran.bdf.cards.aero.aero import (

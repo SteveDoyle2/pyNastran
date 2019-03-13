@@ -2,9 +2,9 @@ from __future__ import print_function
 import os
 import unittest
 import numpy as np
+from cpylog import get_logger
 
 import pyNastran
-from pyNastran.utils.log import get_logger
 from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.op2 import read_op2
 from pyNastran.op2.data_in_material_coord import (

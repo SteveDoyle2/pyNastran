@@ -3,7 +3,7 @@ Defines the Abaqus class
 """
 from __future__ import print_function
 import numpy as np
-from pyNastran.utils.log import get_logger2
+from cpylog import get_logger2
 from pyNastran.converters.abaqus.abaqus_cards import (
     Assembly, Material, Part, SolidSection)
 

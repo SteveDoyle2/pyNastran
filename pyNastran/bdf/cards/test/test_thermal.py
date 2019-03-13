@@ -5,7 +5,7 @@ from six import StringIO
 from pyNastran.bdf.bdf import read_bdf, BDF, CHBDYG, CaseControlDeck
 from pyNastran.bdf.cards.test.utils import save_load_deck
 from pyNastran.bdf.mesh_utils.mirror_mesh import write_bdf_symmetric
-from pyNastran.utils.log import SimpleLogger
+from cpylog import SimpleLogger
 
 class TestThermal(unittest.TestCase):
     def test_thermal_1(self):

@@ -7,13 +7,13 @@ Defines:
 from __future__ import print_function
 import os
 import unittest
+from cpylog import get_logger
 
 import pyNastran
 from pyNastran.converters.aflr.ugrid.ugrid_io import UGRID_IO
 from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.converters.nastran.nastran_to_ugrid import nastran_to_ugrid
 from pyNastran.bdf.mesh_utils.free_faces import write_skin_solid_faces
-from pyNastran.utils.log import get_logger
 
 PKG_PATH = pyNastran.__path__[0]
 UGRID_PATH = os.path.join(PKG_PATH, 'converters', 'aflr', 'ugrid', 'models')

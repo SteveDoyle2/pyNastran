@@ -3,7 +3,7 @@ import unittest
 
 from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.converters.shabp.shabp_io import ShabpIO
-from pyNastran.utils.log import get_logger
+from cpylog import get_logger
 import pyNastran
 
 PKG_PATH = pyNastran.__path__[0]

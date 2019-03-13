@@ -11,11 +11,11 @@ from codecs import open
 import numpy as np
 from numpy import zeros, unique, array
 from numpy import arange, hstack, setdiff1d, union1d
+from cpylog import get_logger
 
 #from pyNastran.bdf.field_writer_double import print_card_double
 #from pyNastran.bdf.field_writer_16 import print_card_16
 #from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.utils.log import get_logger
 
 from pyNastran.bdf.field_writer_8 import print_float_8
 from pyNastran.bdf.field_writer_16 import print_float_16

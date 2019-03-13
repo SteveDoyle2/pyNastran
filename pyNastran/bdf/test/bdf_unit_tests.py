@@ -4,6 +4,7 @@ import os
 import unittest
 from numpy import allclose, array
 from six import StringIO
+from cpylog import get_logger
 
 import pyNastran
 from pyNastran.utils import object_attributes, object_methods
@@ -11,7 +12,6 @@ from pyNastran.bdf.cards.collpase_card import collapse_thru_by
 from pyNastran.bdf.bdf import BDF, read_bdf, CrossReferenceError
 from pyNastran.bdf.write_path import write_include, _split_path
 from pyNastran.bdf.test.test_bdf import run_bdf, run_all_files_in_folder, compare
-from pyNastran.utils.log import get_logger
 
 PKG_PATH = pyNastran.__path__[0]
 TEST_PATH = os.path.join(PKG_PATH, 'bdf', 'test')

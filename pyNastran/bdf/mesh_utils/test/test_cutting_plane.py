@@ -7,7 +7,7 @@ import numpy as np
 
 import pyNastran
 from pyNastran.bdf.bdf import read_bdf, BDF, CORD2R
-from pyNastran.utils.log import SimpleLogger
+from cpylog import SimpleLogger
 
 from pyNastran.bdf.mesh_utils.cut_model_by_plane import (
     cut_edge_model_by_coord, cut_face_model_by_coord, connect_face_rows)

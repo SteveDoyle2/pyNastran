@@ -2,7 +2,7 @@ from __future__ import print_function
 from collections import defaultdict
 from numpy import array, linspace, vstack
 from pyNastran.bdf.cards.aero.utils import points_elements_from_quad_points
-from pyNastran.utils.log import get_logger2
+from cpylog import get_logger2
 
 
 def read_input_c3d(input_c3d_filename, log=None, debug=False, stack=True):

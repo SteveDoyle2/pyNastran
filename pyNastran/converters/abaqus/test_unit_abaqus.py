@@ -1,10 +1,10 @@
 from __future__ import print_function
 import os
 import unittest
+from cpylog import get_logger
 
 import pyNastran
 from pyNastran.converters.abaqus.abaqus import read_abaqus
-from pyNastran.utils.log import get_logger
 PKG_PATH = pyNastran.__path__[0]
 MODEL_PATH = os.path.join(PKG_PATH, 'converters', 'abaqus', 'models')
 

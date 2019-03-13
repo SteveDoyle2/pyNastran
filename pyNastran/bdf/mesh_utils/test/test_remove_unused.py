@@ -10,7 +10,7 @@ from pyNastran.bdf.mesh_utils.remove_unused import remove_unused
 import pyNastran
 from pyNastran.bdf.bdf import BDF, read_bdf, CaseControlDeck, PARAM
 from pyNastran.bdf.mesh_utils.convert import convert, get_scale_factors
-from pyNastran.utils.log import SimpleLogger
+from cpylog import SimpleLogger
 
 pkg_path = pyNastran.__path__[0]
 

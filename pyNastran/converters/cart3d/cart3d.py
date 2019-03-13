@@ -23,11 +23,10 @@ from collections import defaultdict
 from codecs import open
 
 from six import PY2
-
 import numpy as np
+from cpylog import get_logger2
 
 from pyNastran.utils import is_binary_file, _filename, b
-from pyNastran.utils.log import get_logger2
 
 if PY2:
     string_type = unicode

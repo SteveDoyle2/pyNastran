@@ -4,12 +4,12 @@ import unittest
 import warnings
 
 import numpy as np
+from cpylog import get_logger
 
 import pyNastran
 from pyNastran.converters.stl.stl import read_stl
 from pyNastran.converters.stl.stl_to_nastran import stl_to_nastran, stl_to_nastran_filename
 from pyNastran.converters.stl.stl_to_cart3d import stl_to_cart3d
-from pyNastran.utils.log import get_logger
 
 warnings.simplefilter('always')
 np.seterr(all='raise')

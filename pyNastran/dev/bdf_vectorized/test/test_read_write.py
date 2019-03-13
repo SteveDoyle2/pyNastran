@@ -2,12 +2,12 @@
 from __future__ import print_function, unicode_literals
 import os
 import unittest
+#from cpylog import SimpleLogger
 
 import pyNastran
 from pyNastran.bdf.test.test_bdf import run_and_compare_fems
 from pyNastran.dev.bdf_vectorized.bdf import read_bdf as read_bdfv
 from pyNastran.bdf.bdf import read_bdf
-#from pyNastran.utils.log import SimpleLogger
 #from pyNastran.dev.bdf_vectorized.solver.solver import Solver
 
 pkg_path = pyNastran.__path__[0]

@@ -26,10 +26,10 @@ from six import PY2 #, PY3 #, binary_type
 
 import h5py
 import numpy as np
+from cpylog import get_logger2
 
 from pyNastran.utils import object_attributes, check_path
 from pyNastran.utils.numpy_utils import integer_types, float_types
-from pyNastran.utils.log import get_logger2
 
 if PY2:
     FileNotFoundError = IOError

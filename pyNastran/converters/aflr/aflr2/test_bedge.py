@@ -4,11 +4,11 @@ import warnings
 import unittest
 
 import numpy as np
+from cpylog import get_logger
 
 import pyNastran
 from pyNastran.converters.aflr.aflr2.aflr2 import read_bedge, export_to_bedge
 from pyNastran.converters.aflr.ugrid.ugrid2d_reader import UGRID2D_Reader
-from pyNastran.utils.log import get_logger
 
 PKG_PATH = pyNastran.__path__[0]
 TEST_PATH = os.path.join(PKG_PATH, 'converters', 'aflr', 'aflr2')

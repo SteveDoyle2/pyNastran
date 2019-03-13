@@ -1,12 +1,12 @@
 """tests the pyNastranGUI PANAIR (A502) interface"""
 import os
 import unittest
+from cpylog import get_logger
 
 import pyNastran
 from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.converters.panair.panair_io import PanairIO
 from pyNastran.converters.panair.panair_out import read_panair_out
-from pyNastran.utils.log import get_logger
 
 PKG_PATH = pyNastran.__path__[0]
 MODEL_PATH = os.path.join(PKG_PATH, 'converters', 'panair')

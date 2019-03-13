@@ -1,12 +1,12 @@
 import os
 import unittest
+from cpylog import get_logger
 
 import pyNastran
 from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.converters.openfoam.block_mesh import read_block_mesh, mirror_block_mesh
 from pyNastran.converters.openfoam.face_file import FaceFile
 from pyNastran.converters.openfoam.openfoam_io import OpenFoamIO
-from pyNastran.utils.log import get_logger
 from pyNastran.utils import check_path
 
 PKG_PATH = pyNastran.__path__[0]

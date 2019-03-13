@@ -4,9 +4,9 @@ tests aero cards
 """
 from __future__ import print_function
 import unittest
+#from cpylog import SimpleLogger
 
 import pyNastran
-#from pyNastran.utils.log import SimpleLogger
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.test.test_bdf import run_bdf
 from pyNastran.bdf.cards.test.utils import save_load_deck

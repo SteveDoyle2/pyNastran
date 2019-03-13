@@ -20,9 +20,9 @@ from six import string_types, iteritems, StringIO
 from six.moves.cPickle import load, dump, dumps  # type: ignore
 
 import numpy as np  # type: ignore
+from cpylog import get_logger2
 
 from pyNastran.utils import object_attributes, check_path
-from pyNastran.utils.log import get_logger2
 from pyNastran.bdf.utils import parse_patran_syntax
 from pyNastran.bdf.bdf_interface.utils import (
     _parse_pynastran_header, to_fields, parse_executive_control_deck,

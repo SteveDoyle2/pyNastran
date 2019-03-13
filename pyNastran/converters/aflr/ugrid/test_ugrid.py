@@ -5,6 +5,7 @@ from __future__ import print_function
 import os
 import unittest
 import numpy as np
+from cpylog import get_logger
 
 import pyNastran
 from pyNastran.bdf.bdf import read_bdf
@@ -13,7 +14,6 @@ from pyNastran.converters.nastran.nastran_to_ugrid3d import merge_ugrid3d_and_bd
 from pyNastran.converters.aflr.ugrid.ugrid3d_to_nastran import ugrid3d_to_nastran
 from pyNastran.converters.aflr.ugrid.ugrid3d_to_tecplot import (
     ugrid_to_tecplot, ugrid3d_to_tecplot_filename, read_ugrid)
-from pyNastran.utils.log import get_logger
 
 PKG_PATH = pyNastran.__path__[0]
 UGRID_PATH = os.path.join(PKG_PATH, 'converters', 'aflr', 'ugrid', 'models')

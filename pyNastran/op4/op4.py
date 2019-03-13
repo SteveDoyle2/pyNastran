@@ -11,10 +11,10 @@ from six import string_types, PY2, PY3
 import numpy as np
 from numpy import array, zeros, float32, float64, complex64, complex128, ndarray
 from scipy.sparse import coo_matrix  # type: ignore
+from cpylog import get_logger2
 
 from pyNastran.utils import is_binary_file as file_is_binary
 from pyNastran.utils.mathematics import print_matrix #, print_annotated_matrix
-from pyNastran.utils.log import get_logger2
 
 
 def read_op4(op4_filename=None, matrix_names=None, precision='default',

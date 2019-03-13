@@ -25,7 +25,7 @@ class STL_GUI(FakeGUIMethods):
 class STL_GUITest(unittest.TestCase):
 
     def test_stl_geometry(self):
-        from pyNastran.utils.log import get_logger
+        from cpylog import get_logger
         log = get_logger(level='warning')
         geometry_filename = os.path.join(MODEL_PATH, 'sphere.stl')
 

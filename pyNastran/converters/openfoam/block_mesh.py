@@ -12,7 +12,7 @@ from numpy.linalg import norm  # type: ignore
 
 from pyNastran.converters.openfoam.openfoam_parser import FoamFile, convert_to_dict #, write_dict
 from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.utils.log import get_logger2
+from cpylog import get_logger2
 
 
 def read_block_mesh(block_mesh_dict_filename, log=None, debug=False):

@@ -15,7 +15,7 @@ from collections import OrderedDict
 
 import numpy as np
 from pyNastran.utils import check_path
-from pyNastran.utils.log import get_logger2
+from cpylog import get_logger2
 
 
 def read_usm3d(basename, log=None, debug=None):

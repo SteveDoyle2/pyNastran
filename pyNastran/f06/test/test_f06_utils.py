@@ -1,5 +1,6 @@
 import os
 import unittest
+from cpylog import get_logger2
 import matplotlib.pyplot as plt
 
 #try:  # pragma: no cover
@@ -9,7 +10,6 @@ import matplotlib.pyplot as plt
 plt.switch_backend('Agg')
 
 import pyNastran
-from pyNastran.utils.log import get_logger2
 from pyNastran.f06.utils import split_float_colons, split_int_colon
 from pyNastran.f06.parse_flutter import plot_flutter_f06
 

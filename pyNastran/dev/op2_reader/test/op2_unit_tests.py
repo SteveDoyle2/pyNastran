@@ -3,6 +3,7 @@ import os
 import unittest
 from six import PY3
 import numpy as np
+from cpylog import get_logger
 try:
     import pandas
     IS_PANDAS = True
@@ -19,7 +20,6 @@ if IS_PANDAS and (np.lib.NumpyVersion(np.__version__) < '1.13.0'):
     IS_TRANSIENT_PANDAS = True
 
 import pyNastran
-from pyNastran.utils.log import get_logger
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.op2 import OP2, FatalError, read_op2

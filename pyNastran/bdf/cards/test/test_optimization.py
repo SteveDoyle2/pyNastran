@@ -8,12 +8,12 @@ import unittest
 
 from six import integer_types
 import numpy as np
+from cpylog import get_logger
 
 import pyNastran
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.op2.op2 import read_op2
 from pyNastran.bdf.cards.test.utils import save_load_deck
-from pyNastran.utils.log import get_logger
 from pyNastran.bdf.cards.optimization import break_word_by_trailing_integer
 
 model_path = os.path.join(pyNastran.__path__[0], '..', 'models')

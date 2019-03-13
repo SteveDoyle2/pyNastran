@@ -11,7 +11,7 @@ defines:
 from __future__ import print_function
 from codecs import open
 from numpy import array, zeros
-from pyNastran.utils.log import get_logger2
+from cpylog import get_logger2
 from pyNastran.bdf.field_writer_8 import print_card_8
 
 

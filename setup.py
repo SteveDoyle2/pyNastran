@@ -105,6 +105,16 @@ except ImportError:
 
 
 try:
+    import cpylog
+    sver = [int(val) for val in cpylog.__version__.split('-')[0].split('.')]
+    if sver != [1, 0, 2]:
+        print("cpylog.__version__ = %r != '1.0.2'" % cpylog.__version__)
+        py_packages.append('cpylog == 1.0.2')
+except ImportError:
+    py_packages.append('cpylog == 1.0.2')  # 1.0.2 used
+
+
+try:
     import docopt
     sver = [int(val) for val in docopt.__version__.split('-')[0].split('.')]
     if sver != [0, 6, 2]:
@@ -139,6 +149,7 @@ if PY2:
     try:
         import pathlib2
     except ImportError:
+    # PY2
         py_packages.append('pathlib2 >= 2.3.0')  # 2.3.2 used
 
     try:
@@ -206,7 +217,6 @@ setup(
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: BSD License',
         'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         ], # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers

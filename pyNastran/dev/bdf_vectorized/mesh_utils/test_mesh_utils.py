@@ -9,6 +9,7 @@ import unittest
 from codecs import open
 
 import numpy as np
+from cpylog import SimpleLogger
 #import pyNastran
 
 #root_path = pyNastran.__path__[0]
@@ -18,7 +19,6 @@ import pyNastran
 from pyNastran.dev.bdf_vectorized.bdf import read_bdf
 from pyNastran.dev.bdf_vectorized.mesh_utils.bdf_renumber import bdf_renumber
 from pyNastran.dev.bdf_vectorized.mesh_utils.delete_bad_elements import get_bad_shells
-from pyNastran.utils.log import SimpleLogger
 
 pkg_path = pyNastran.__path__[0]
 

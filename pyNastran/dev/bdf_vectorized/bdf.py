@@ -18,9 +18,9 @@ from six import string_types, iteritems
 from six.moves.cPickle import load, dump
 
 import numpy as np
+from cpylog import get_logger2
 
 from pyNastran.utils import object_attributes, check_path, _filename
-from pyNastran.utils.log import get_logger2
 from pyNastran.bdf.bdf_interface.include_file import get_include_filename
 from pyNastran.bdf.utils import (
     _parse_pynastran_header, to_fields, parse_executive_control_deck, parse_patran_syntax)

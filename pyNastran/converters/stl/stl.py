@@ -9,7 +9,7 @@ import scipy
 
 
 from pyNastran.utils import is_binary_file
-from pyNastran.utils.log import get_logger2
+from cpylog import get_logger2
 
 def read_stl(stl_filename, remove_elements_with_bad_normals=False,
              log=None, debug=False):

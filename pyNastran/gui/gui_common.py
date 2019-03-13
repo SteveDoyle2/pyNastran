@@ -11,8 +11,8 @@ from math import ceil
 import cgi #  html lib
 
 from six import string_types
-
 import numpy as np
+from cpylog import SimpleLogger
 
 from pyNastran.gui.qt_version import qt_version
 
@@ -32,7 +32,6 @@ else:
     #from vtk.qt5.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
     from pyNastran.gui.qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
-from pyNastran.utils.log import SimpleLogger
 from pyNastran.utils import check_path
 from pyNastran.utils.numpy_utils import integer_types
 

@@ -1,5 +1,6 @@
 import os
 import unittest
+from cpylog import get_logger
 
 import pyNastran
 from pyNastran.gui.testing_methods import FakeGUIMethods
@@ -9,7 +10,6 @@ from pyNastran.converters.cart3d.cart3d_io import Cart3dIO
 #from pyNastran.converters.cart3d.cart3d import Cart3D
 #from pyNastran.converters.nastran.nastran_to_cart3d import (
     #nastran_to_cart3d, nastran_to_cart3d_filename)
-from pyNastran.utils.log import get_logger
 
 PKG_PATH = pyNastran.__path__[0]
 test_path = os.path.join(PKG_PATH, 'converters', 'dev', 'avus')

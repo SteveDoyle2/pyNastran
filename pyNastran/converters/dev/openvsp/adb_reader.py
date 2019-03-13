@@ -1,7 +1,7 @@
 from __future__ import print_function
 from struct import unpack
 from numpy import degrees, array, zeros, vstack, where
-from pyNastran.utils.log import get_logger2
+from cpylog import get_logger2
 
 
 class ADB_Reader(object):

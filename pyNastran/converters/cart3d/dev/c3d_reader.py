@@ -2,9 +2,9 @@ from __future__ import print_function
 from struct import unpack, Struct
 
 from numpy import zeros
+from cpylog import get_logger2
 
 #from pyNastran.utils import is_binary_file
-from pyNastran.utils.log import get_logger2
 
 
 class C3D_Reader(object):

@@ -5,6 +5,7 @@ import unittest
 from codecs import open
 
 import numpy as np
+from cpylog import SimpleLogger
 
 #root_path = pyNastran.__path__[0]
 #test_path = os.path.join(root_path, 'bdf', 'test', 'unit')
@@ -13,7 +14,6 @@ import pyNastran
 from pyNastran.bdf.bdf import read_bdf
 from pyNastran.bdf.mesh_utils.collapse_bad_quads import convert_bad_quads_to_tris
 from pyNastran.bdf.mesh_utils.delete_bad_elements import delete_bad_shells, get_bad_shells
-from pyNastran.utils.log import SimpleLogger
 
 PKG_PATH = pyNastran.__path__[0]
 MODEL_PATH = os.path.abspath(os.path.join(PKG_PATH, '..', 'models'))

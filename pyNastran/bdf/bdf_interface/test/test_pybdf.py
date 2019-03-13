@@ -5,7 +5,7 @@ import os
 from io import open
 import unittest
 from six import StringIO
-from pyNastran.utils.log import get_logger
+from cpylog import get_logger
 
 from pyNastran.bdf.bdf_interface.pybdf import BDFInputPy, _show_bad_file, _lines_to_decks
 

@@ -3,6 +3,7 @@ from __future__ import print_function
 from collections import OrderedDict
 
 from six import integer_types
+from cpylog import get_logger
 
 from pyNastran.gui.qt_version import qt_version
 from vtk import (
@@ -35,7 +36,6 @@ from pyNastran.gui.qt_files.scalar_bar import ScalarBar
 from pyNastran.gui.formats import CLASS_MAP
 
 #from pyNastran.bdf.cards.base_card import deprecated
-from pyNastran.utils.log import get_logger
 
 #class ScalarBar(object):
     #def VisibilityOff(self):

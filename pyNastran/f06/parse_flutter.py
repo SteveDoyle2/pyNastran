@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
     #plt.switch_backend('Agg')
 
 
-from pyNastran.utils.log import get_logger2
+from cpylog import get_logger2
 from pyNastran.f06.flutter_response import FlutterResponse
 
 

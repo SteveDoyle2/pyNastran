@@ -1,6 +1,7 @@
 """tests the Nastran converters"""
 import os
 import unittest
+from cpylog import get_logger
 
 import pyNastran
 from pyNastran.bdf.bdf import read_bdf
@@ -13,8 +14,6 @@ from pyNastran.converters.nastran.nastran_to_ugrid import nastran_to_ugrid
 from pyNastran.converters.aflr.ugrid.ugrid_reader import read_ugrid
 
 import pyNastran.converters.nastran.nastran_to_ugrid3d
-
-from pyNastran.utils.log import get_logger
 
 PKG_PATH = pyNastran.__path__[0]
 MODEL_PATH = os.path.join(PKG_PATH, '../', 'models')

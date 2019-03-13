@@ -77,7 +77,7 @@ from pyNastran.op2.tables.ogpwg import OGPWG
 from pyNastran.op2.fortran_format import FortranFormat
 
 from pyNastran.utils import is_binary_file
-from pyNastran.utils.log import get_logger
+from cpylog import get_logger
 
 """
 ftp://161.24.15.247/Nastran2011/seminar/SEC04-DMAP_MODULES.pdf

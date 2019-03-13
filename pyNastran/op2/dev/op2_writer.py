@@ -60,7 +60,7 @@ class OP2Writer(OP2_F06_Common):
         return make_stamp(title, today)
 
     def write_op2(self, op2_outname, obj=None, is_mag_phase=False,
-                  delete_objects=True, post=-1, endian=b'<'):
+                  post=-1, endian=b'<'):
         """
         Writes an OP2 file based on the data we have stored in the object
 
@@ -73,10 +73,7 @@ class OP2Writer(OP2_F06_Common):
         is_mag_phase : bool; default=False
             should complex data be written using Magnitude/Phase
             instead of Real/Imaginary (default=False; Real/Imag)
-           Real objects don't use this parameter.
-        delete_objects : bool; default=True
-            should objects be deleted after they're written
-            to reduce memory (default=True)
+            Real objects don't use this parameter.
         """
         #print('writing %s' % op2_outname)
         struct_3i = Struct(endian + b'3i')
@@ -90,7 +87,7 @@ class OP2Writer(OP2_F06_Common):
         else:
             assert isinstance(op2_outname, file), 'type(op2_outname)= %s' % op2_outname
             fop2 = op2_outname
-            op2_outname = op2.name
+            op2_outname = op2_outname.name
             print('op2_outname =', op2_outname)
 
         #op2_ascii.write('writing [3, 7, 0] header\n')
@@ -213,7 +210,7 @@ class OP2Writer(OP2_F06_Common):
         ]
         for table_type in obj.get_table_types():
             res_dict = obj.get_result(table_type)
-            for key, res in res_dict.items():
+            for unused_key, res in res_dict.items():
                 if hasattr(res, 'table_name_str'): # params
                     res_categories2[res.table_name_str].append(res)
 
@@ -222,8 +219,8 @@ class OP2Writer(OP2_F06_Common):
 
         total_case_count = 0
         pretables = ['LAMA', 'BLAMA']
-        for title, eigenvalue in obj.eigenvalues.items():
-            res_categories2[res.table_name].append(eigenvalue)
+        for unused_title, eigenvalue in obj.eigenvalues.items():
+            res_categories2[eigenvalue.table_name].append(eigenvalue)
 
         for table_name in pretables + table_order:
             if table_name not in res_categories2:
@@ -292,87 +289,3 @@ class OP2Writer(OP2_F06_Common):
         fop2_ascii.write('close_b = %s\n' % footer)
         fop2.close()
         fop2_ascii.close()
-
-    def _write_categories(self, obj, res_categories, isubcases,
-                          fop2, fop2_ascii,
-                          struct_3i, endian=b'<'):
-        # TODO: this may need to be reworked such that all of subcase 1
-        #is printed before subcase 2
-        total_case_count = 0
-        for res_category_name, res_category in res_categories:
-            case_count = self._write_category(
-                obj, res_category_name, res_category, isubcases,
-                fop2, fop2_ascii,
-                struct_3i, endian=b'<')
-
-            if case_count:
-                #print('res_category_name=%s case_count=%s'  % (res_category_name, case_count))
-                # close off the result
-                footer = [4, 0, 4]
-                fop2.write(struct_3i.pack(*footer))
-                fop2_ascii.write('close_a = %s\n' % footer)
-                fop2_ascii.write('---------------\n')
-                total_case_count += case_count
-
-        if total_case_count == 0:
-            raise FatalError('total_case_count = 0')
-        # close off the op2
-        footer = [4, 0, 4]
-        fop2.write(struct_3i.pack(*footer))
-        fop2_ascii.write('close_b = %s\n' % footer)
-        fop2.close()
-        fop2_ascii.close()
-
-    def _write_category(self, obj, res_category_name, res_category, isubcases,
-                        fop2, fop2_ascii,
-                        struct_3i, endian=b'<'):
-        case_count = 0
-        itable = -1
-        print_msg = True
-        for ires_type, res_type in enumerate(res_category):
-            res_keys = isubcases
-            for res_key in res_keys:
-                isubcase = res_key
-                if isubcase in res_type:
-                    if print_msg:
-                        #print("res_category_name = %s" % res_category_name)
-                        print_msg = False
-                    #(subtitle, label) = obj.isubcase_name_map[isubcase]
-                    new_result = True
-                    result = res_type[isubcase]
-                    element_name = ''
-                    if hasattr(result, 'element_name'):
-                        element_name = ' - ' + result.element_name
-
-                    if hasattr(result, 'write_op2'):
-                        #if hasattr(result, 'is_bilinear') and result.is_bilinear():
-                            #obj.log.warning("  *op2 - %s (%s) not written" % (
-                                #result.__class__.__name__, result.element_name))
-                            #continue
-                        try:
-                            #print(' %s - isubcase=%i%s' % (result.__class__.__name__, isubcase, element_name))
-                            itable = result.write_op2(fop2, fop2_ascii, itable, new_result,
-                                                      obj.date, is_mag_phase=False, endian=endian)
-                        except:
-                            print(' %s - isubcase=%i%s' % (result.__class__.__name__, isubcase, element_name))
-                            raise
-                    else:
-                        raise NotImplementedError("  *op2 - %s not written" % result.__class__.__name__)
-                        #obj.log.warning("  *op2 - %s not written" % result.__class__.__name__)
-                        #continue
-
-                    case_count += 1
-                    header = [
-                        4, itable, 4,
-                        4, 1, 4,
-                        4, 0, 4,
-                    ]
-                    #print('writing itable=%s' % itable)
-                    assert itable is not None, '%s itable is None' % result.__class__.__name__
-                    fop2.write(pack(b'9i', *header))
-                    fop2_ascii.write('footer2 = %s\n' % header)
-                    new_result = False
-                    #print('bailing...')
-                    #return case_count
-        #print(result.table_name, itable)
-        return case_count

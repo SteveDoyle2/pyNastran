@@ -1,9 +1,8 @@
 import unittest
 import os
+from cpylog import get_logger
 
 import pyNastran
-from pyNastran.utils.log import get_logger
-
 #from pyNastran.bdf.bdf import BDF
 #from pyNastran.op2.op2 import OP2, FatalError, read_op2
 #from pyNastran.op2.op2_interface.op2_common import get_scode_word

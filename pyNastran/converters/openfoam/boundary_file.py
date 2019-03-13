@@ -9,10 +9,10 @@ from codecs import open
 from collections import OrderedDict
 
 import numpy as np
+from cpylog import get_logger2
 
 from pyNastran.converters.openfoam.points_file import PointFile
 from pyNastran.converters.openfoam.face_file import FaceFile
-from pyNastran.utils.log import get_logger2
 from pyNastran.utils import check_path
 
 

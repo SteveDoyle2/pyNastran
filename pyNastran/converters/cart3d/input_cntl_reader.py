@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from pyNastran.utils.log import get_logger2
+from cpylog import get_logger2
 
 
 def read_input_cntl(input_cntl_filename, log=None, debug=False):

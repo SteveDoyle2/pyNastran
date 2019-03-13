@@ -1,6 +1,6 @@
 """reads the panair.out file"""
-from pyNastran.utils.log import get_logger2
 import numpy as np
+from cpylog import get_logger2
 
 def read_panair_out(panair_out_filename='panair.out', log=None, debug=False):
     """reads the panair.out file"""

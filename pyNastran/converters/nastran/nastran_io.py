@@ -29,6 +29,7 @@ from pyNastran.femutils.utils import duplicates, is_monotonic, underflow_norm
 
 import numpy as np
 from numpy.linalg import norm  # type: ignore
+from cpylog import properties as log_properties
 
 #: makes vtk work on certain builds of vtk
 #: we have to call this before vtk; you can't just try-except it
@@ -53,7 +54,6 @@ from vtk import (vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
 
 #from pyNastran import is_release
 from pyNastran.utils.numpy_utils import integer_types
-from pyNastran.utils.log import properties as log_properties
 from pyNastran.utils.numpy_utils import isfinite_and_nonzero, isfinite_and_greater_than, isfinite
 from pyNastran.bdf.bdf import (BDF,
                                CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,

@@ -13,8 +13,8 @@ from typing import List, Dict, Optional, Union, Set, Any, cast
 from six import StringIO
 
 import numpy as np
+from cpylog import get_logger2
 from pyNastran.utils import print_bad_path, _filename
-from pyNastran.utils.log import get_logger2
 from pyNastran.bdf.bdf_interface.utils import _parse_pynastran_header
 from pyNastran.bdf.bdf_interface.include_file import get_include_filename
 from pyNastran.bdf.errors import MissingDeckSections

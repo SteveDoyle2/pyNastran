@@ -1,7 +1,7 @@
 from __future__ import print_function
 import numpy as np
+from cpylog import get_logger2
 from pyNastran.utils import check_path
-from pyNastran.utils.log import get_logger2
 
 
 def read_fgrid(fgrid_filename, unused_dimension_flag, log=None, debug=False):

@@ -3,6 +3,7 @@ import unittest
 import warnings
 
 import numpy as np
+from cpylog import get_logger
 warnings.simplefilter('always')
 np.seterr(all='raise')
 
@@ -11,7 +12,6 @@ from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.converters.tetgen.tetgen_to_usm3d import tetgen_to_usm3d
 from pyNastran.converters.tetgen.tetgen import read_tetgen
 from pyNastran.converters.tetgen.tetgen_io import TetgenIO
-from pyNastran.utils.log import get_logger
 import pyNastran
 
 PKG_PATH = pyNastran.__path__[0]

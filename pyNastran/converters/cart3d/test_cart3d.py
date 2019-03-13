@@ -12,7 +12,7 @@ from pyNastran.converters.cart3d.cart3d_to_tecplot import cart3d_to_tecplot
 from pyNastran.converters.cart3d.input_c3d_reader import read_input_c3d
 import pyNastran.converters.cart3d.input_cntl_reader
 
-from pyNastran.utils.log import get_logger
+from cpylog import get_logger
 
 PKG_PATH = pyNastran.__path__[0]
 TEST_PATH = os.path.join(PKG_PATH, 'converters', 'cart3d', 'models')

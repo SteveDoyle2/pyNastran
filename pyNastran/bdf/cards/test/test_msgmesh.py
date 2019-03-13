@@ -2,7 +2,7 @@ import unittest
 from six import StringIO
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.cards.test.utils import save_load_deck
-from pyNastran.utils.log import SimpleLogger
+from cpylog import SimpleLogger
 
 class TestMsgMesh(unittest.TestCase):
     def test_msgmesh_1(self):

@@ -13,7 +13,7 @@ from six import PY2
 from docopt import docopt
 
 import pyNastran
-from pyNastran.utils.log import get_logger
+from cpylog import get_logger
 
 from pyNastran.gui.errors import NoGeometry
 from pyNastran.bdf.errors import (CrossReferenceError, CardParseSyntaxError,

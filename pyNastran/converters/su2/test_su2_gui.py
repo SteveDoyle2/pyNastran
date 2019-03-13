@@ -3,7 +3,7 @@ import warnings
 import unittest
 
 import numpy as np
-from pyNastran.utils.log import get_logger
+from cpylog import get_logger
 warnings.simplefilter('always')
 np.seterr(all='raise')
 

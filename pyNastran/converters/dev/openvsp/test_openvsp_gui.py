@@ -7,7 +7,7 @@ import numpy as np
 from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.converters.dev.openvsp.adb_io import ADB_IO
 from pyNastran.converters.dev.openvsp.degen_geom_io import DegenGeomIO
-from pyNastran.utils.log import get_logger
+from cpylog import get_logger
 import pyNastran
 
 warnings.simplefilter('always')

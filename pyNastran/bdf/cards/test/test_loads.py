@@ -6,6 +6,7 @@ import os
 import unittest
 import numpy as np
 from numpy import array, allclose, array_equal, set_printoptions
+from cpylog import get_logger
 set_printoptions(suppress=True, precision=3)
 
 import pyNastran
@@ -16,7 +17,6 @@ from pyNastran.bdf.cards.test.utils import save_load_deck
 #from pyNastran.bdf.errors import DuplicateIDsError
 
 from pyNastran.op2.op2 import OP2
-from pyNastran.utils.log import get_logger
 
 bdf = BDF(debug=False)
 test_path = pyNastran.__path__[0]

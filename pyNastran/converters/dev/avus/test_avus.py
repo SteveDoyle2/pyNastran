@@ -2,10 +2,10 @@
 from __future__ import print_function
 import os
 import unittest
+from cpylog import get_logger
 
 import pyNastran
 from pyNastran.converters.dev.avus.avus_grid import AvusGrid, read_avus
-from pyNastran.utils.log import get_logger
 
 PKG_PATH = pyNastran.__path__[0]
 test_path = os.path.join(PKG_PATH, 'converters', 'dev', 'avus')

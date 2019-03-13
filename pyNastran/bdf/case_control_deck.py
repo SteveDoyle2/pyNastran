@@ -36,7 +36,7 @@ from pyNastran.bdf.bdf_interface.subcase_cards import (
     split_by_mixed_commas_parentheses,
 )
 from pyNastran.utils import object_attributes
-from pyNastran.utils.log import get_logger
+from cpylog import get_logger
 
 class CaseControlDeck(object):
     """

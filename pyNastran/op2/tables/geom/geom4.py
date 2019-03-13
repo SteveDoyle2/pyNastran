@@ -339,29 +339,6 @@ class GEOM4(GeomCommon):
         """MPC(4901,49,420017) - Record 16"""
         self.log.info('skipping MPC? in GEOM4')
         return len(data)
-        #ndata = len(data)
-        #nfields = (ndata - n) // 4
-        #datan = data[n:]
-        #ints = unpack(b(self._uendian + '%ii' % nfields), datan)
-        #floats = unpack(b(self._uendian + '%if' % nfields), datan)
-
-        #self.show_data(data[12:100], 'ifs')
-        #i = 0
-        #nentries = 0
-        #while i < nfields:
-            #sid, grid, comp, comp2 = ints[i:i+4]
-            #if (sid, grid, comp, comp2) == (-1, -1, -1, -1):
-                #print('--------------')
-                #i += 4
-                #continue
-            ##comp2 = floats[i+3]
-            #coeff = floats[i+4]
-            #print(sid, grid, comp, comp2)
-            #print(coeff)
-            #i += 5
-            #nentries += 1
-        #self.increase_card_count('MPC', nentries)
-        #return len(dat)
 
     def _read_mpc(self, data, n):
         """MPC(4901,49,17) - Record 16"""

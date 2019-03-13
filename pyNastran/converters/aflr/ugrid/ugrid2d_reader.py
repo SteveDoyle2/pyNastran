@@ -3,7 +3,7 @@ Defines the following classes:
     - UGRID2D_Reader
 """
 from numpy import array
-from pyNastran.utils.log import get_logger2
+from cpylog import get_logger2
 
 
 class UGRID2D_Reader(object):

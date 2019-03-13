@@ -4,9 +4,9 @@ import sys
 import copy
 
 import numpy as np
+from cpylog import get_logger2
 from pyNastran.bdf.cards.aero.utils import (
     points_elements_from_quad_points, create_axisymmetric_body)
-from pyNastran.utils.log import get_logger2
 
 AVL_KEYWORDS_LONG = [
     'SURFACE', 'COMPONENT', 'YDUPLICATE', 'BODY', 'ANGLE', 'BFILE',

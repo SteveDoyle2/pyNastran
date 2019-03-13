@@ -23,7 +23,7 @@ from pyNastran.bdf.mesh_utils.pierce_shells import (
 from pyNastran.bdf.mesh_utils.mirror_mesh import (
     write_bdf_symmetric, bdf_mirror, make_symmetric_model, bdf_mirror_plane)
 from pyNastran.bdf.mesh_utils.bdf_merge import bdf_merge
-from pyNastran.utils.log import SimpleLogger
+from cpylog import SimpleLogger
 
 # not tested
 from pyNastran.bdf.mesh_utils.mesh import create_structured_cquad4s

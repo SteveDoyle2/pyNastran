@@ -6,15 +6,16 @@ from setuptools import setup, find_packages
 PY2 = False
 if sys.version_info < (3, 0):
     PY2 = True
-if sys.version_info < (2, 7, 7):  # 2.7.13 used
-    imajor, minor1, minor2 = sys.version_info[:3]
+
+imajor, minor1, minor2 = sys.version_info[:3]
+if sys.version_info < (2, 7, 7):  # 2.7.15 used
     # makes sure we don't get the following bug:
     #   Issue #19099: The struct module now supports Unicode format strings.
-    sys.exit('Upgrade your Python to >= 2.7.7; version=(%s.%s.%s)' % (imajor, minor1, minor2))
+    sys.exit('Upgrade your Python to >= 2.7.7 or 3.5+; version=(%s.%s.%s)' % (imajor, minor1, minor2))
 
 import pyNastran
-packages = find_packages()+['gui/icons/*.*']
-#print "packages = ",packages
+packages = find_packages() + ['gui/icons/*.*']
+#print("packages = %s" % packages)
 #sys.exit()
 
 py2_packages = []
@@ -25,27 +26,27 @@ try:
     ver = np.lib.NumpyVersion(np.__version__)
     if ver < '1.11.0':
         print("np.__version__ = %r < '1.11.0'" % np.__version__)
-        py_packages.append('numpy >= 1.11.0,<1.13.0')
+        py_packages.append('numpy >= 1.11.0')
 except ImportError:
-    py_packages.append('numpy >= 1.11.0,<1.13.0')
+    py_packages.append('numpy >= 1.11.0')
 
 try:
     import scipy
     ver = scipy.version.short_version
-    if ver < '0.18.1':
-        print("scipy.version.short_version = %r < '0.18.1'" % scipy.version.short_version)
-        py_packages.append('scipy >= 0.17.0')
+    if ver < '1.0.0':
+        print("scipy.version.short_version = %r < '1.0.0'" % scipy.version.short_version)
+        py_packages.append('scipy >= 1.0.0')
 except ImportError:
-    py_packages.append('scipy >= 0.18.1')  # 0.18.1 used
+    py_packages.append('scipy >= 1.0.0')  # 1.1.0 used
 
 try:
     import six
     sver = [int(val) for val in six.__version__.split('-')[0].split('.')]
-    if sver < [1, 10, 0]:
-        print("six.__version__ = %r < '1.10.0'" % six.__version__)
-        py_packages.append('six >= 1.10.0')
+    if sver < [1, 11, 0]:
+        print("six.__version__ = %r < '1.11.0'" % six.__version__)
+        py_packages.append('six >= 1.11.0')
 except ImportError:
-    py_packages.append('six >= 1.10.0')  # 1.10.0 used
+    py_packages.append('six >= 1.11.0')  # 1.12.0 used
 
 
 #try:
@@ -56,6 +57,16 @@ except ImportError:
 #        py_packages.append('matplotlib >= 1.5.1')
 #except ImportError:
 #    py_packages.append('matplotlib >= 1.5.1')
+
+
+try:
+    import cpylog
+    sver = [int(val) for val in cpylog.__version__.split('-')[0].split('.')]
+    if sver != [1, 0, 2]:
+        print("cpylog.__version__ = %r != '1.0.2'" % cpylog.__version__)
+        py_packages.append('cpylog == 1.0.2')
+except ImportError:
+    py_packages.append('cpylog == 1.0.2')  # 1.0.2 used
 
 
 try:
@@ -72,23 +83,25 @@ except ImportError:
 try:
     import typing
 except ImportError:
-    py_packages.append('typing >= 3.6.1')  # 3.6.1 used
+    # PY2
+    py_packages.append('typing >= 3.6.4')  # 3.6.6 used
 
 
 if PY2:
     try:
         import pathlib2
     except ImportError:
-        py_packages.append('pathlib2 >= 2.2.0')  # 2.2.0 used
+    # PY2
+        py_packages.append('pathlib2 >= 2.3.0')  # 2.3.2 used
 
     try:
         import scandir
         sver = [int(val) for val in scandir.__version__.split('-')[0].split('.')]
-        if sver < [1, 4, 0]:
-            print("scandir.__version__ = %r < '1.4.0'" % scandir.__version__)
-            py_packages.append('scandir >= 1.4.0')
+        if sver < [1, 7, 0]:
+            print("scandir.__version__ = %r < '1.7.0'" % scandir.__version__)
+            py_packages.append('scandir >= 1.7.0')
     except ImportError:
-        py_packages.append('scandir >= 1.4.0')  # 1.4.0 used
+        py_packages.append('scandir >= 1.7.0')  # 1.9.0 used
 
 #py_packages = [
 #    'numpy >= 1.9.2',
@@ -133,7 +146,6 @@ setup(
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: BSD License',
         'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         ], # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers

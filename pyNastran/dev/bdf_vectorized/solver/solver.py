@@ -17,6 +17,7 @@ from numpy import (array, zeros, ones, arange,
 from numpy.linalg import solve, eigh, eig  # type: ignore
 
 from scipy.sparse import dok_matrix  # type: ignore
+from cpylog import get_logger2
 
 # pyNastran
 from pyNastran.bdf.bdf_interface.dev.matrices import make_gpwg
@@ -28,7 +29,6 @@ from pyNastran.utils.mathematics import print_matrix, print_annotated_matrix
 from pyNastran.dev.bdf_vectorized.bdf import BDF #, SPC, SPC1
 #from pyNastran.f06.f06_writer import F06Writer
 from pyNastran.op2.op2 import OP2
-from pyNastran.utils.log import get_logger2
 
 # Tables
 #from pyNastran.op2.tables.opg_appliedLoads.opg_objects import (

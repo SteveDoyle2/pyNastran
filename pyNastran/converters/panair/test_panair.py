@@ -2,10 +2,10 @@ from __future__ import print_function
 import os
 import unittest
 from numpy import array_equal, allclose
+from cpylog import get_logger
 
 import pyNastran
 from pyNastran.converters.panair.panair_grid import PanairGrid
-from pyNastran.utils.log import get_logger
 
 PKG_PATH = pyNastran.__path__[0]
 TEST_PATH = os.path.join(PKG_PATH, 'converters', 'panair')

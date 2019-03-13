@@ -11,7 +11,7 @@ from pyNastran.op2.op2 import OP2
 from pyNastran.op2.op2_geom import read_op2_geom
 
 from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
-from pyNastran.utils.log import SimpleLogger
+from cpylog import SimpleLogger
 
 test_path = pyNastran.__path__[0]
 model_path = os.path.abspath(os.path.join(test_path, '..', 'models'))

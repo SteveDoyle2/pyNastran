@@ -1,6 +1,6 @@
 from __future__ import print_function
 from numpy import zeros
-from pyNastran.utils.log import get_logger2
+from cpylog import get_logger2
 
 
 class Plot3d(object):  # pragma: no cover

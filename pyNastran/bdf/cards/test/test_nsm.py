@@ -3,9 +3,9 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
 import unittest
+from cpylog import SimpleLogger
 
 from pyNastran.bdf.bdf import BDF
-from pyNastran.utils.log import SimpleLogger
 from pyNastran.bdf.cards.test.utils import save_load_deck
 from pyNastran.bdf.mesh_utils.mass_properties import mass_properties_nsm
 import pyNastran

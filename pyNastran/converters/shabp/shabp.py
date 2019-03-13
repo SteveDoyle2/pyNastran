@@ -6,10 +6,10 @@ dfeines:
 from __future__ import print_function
 from numpy import array, zeros, arange, ones, cross
 from numpy.linalg import norm  # type: ignore
+from cpylog import get_logger2
 
 from pyNastran.converters.shabp.shabp_results import ShabpOut
 #from pyNastran.converters.shabp.parse_trailer import parse_trailer
-from pyNastran.utils.log import get_logger2
 
 def read_shabp(shabp_filename, log=None, debug=False):
     """reads an S/HABP file"""

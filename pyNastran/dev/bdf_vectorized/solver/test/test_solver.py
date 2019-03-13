@@ -2,9 +2,9 @@
 from __future__ import print_function, unicode_literals
 import os
 import unittest
+from cpylog import SimpleLogger
 
 import pyNastran
-from pyNastran.utils.log import SimpleLogger
 from pyNastran.dev.bdf_vectorized.solver.solver import Solver
 
 pkg_path = pyNastran.__path__[0]

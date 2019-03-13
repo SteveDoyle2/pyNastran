@@ -2,7 +2,7 @@
 import os
 import unittest
 
-from pyNastran.utils.log import make_log, SimpleLogger, get_logger, get_logger2
+from cpylog import make_log, SimpleLogger, get_logger, get_logger2
 
 class TestLog(unittest.TestCase):
     def test_simple_logger(self):

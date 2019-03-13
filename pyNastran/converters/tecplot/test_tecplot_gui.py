@@ -1,8 +1,8 @@
 import os
 import unittest
+from cpylog import get_logger
 
 import pyNastran
-from pyNastran.utils.log import get_logger
 from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.converters.tecplot.tecplot_io import TecplotIO
 from pyNastran.converters.aflr.ugrid.ugrid3d_to_tecplot import (

@@ -8,7 +8,7 @@ from codecs import open
 
 import numpy as np
 
-from pyNastran.utils.log import get_logger2
+from cpylog import get_logger2
 
 
 class FaceFile(object):
