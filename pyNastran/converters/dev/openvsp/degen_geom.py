@@ -3,8 +3,226 @@ from copy import deepcopy
 from collections import defaultdict
 
 import numpy as np
+from cpylog import get_logger2
+
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.converters.panair.panair_grid import PanairGrid, PanairPatch
+
+
+def read_degen_geom(degen_geom_csv, log=None, debug=False):
+    """reads a degenerate geometry *.csv file"""
+    model = DegenGeom(log=log, debug=debug)
+    model.read_degen_geom(degen_geom_csv)
+    return model
+
+
+class DegenGeom(object):
+    def __init__(self, log=None, debug=False):
+        self.log = get_logger2(log=log, debug=debug, encoding='utf-8')
+        self.debug = debug
+        self.components = defaultdict(list)
+
+    def read_degen_geom(self, degen_geom_csv):
+        """reads a degenerate geometry *.csv file"""
+        with open(degen_geom_csv, 'r') as degen_geom_file:
+            lines = degen_geom_file.readlines()
+
+        degen_geom_file = open(degen_geom_csv, 'r')
+
+        iline = 3
+        line = lines[iline]
+        ncomponents = int(line)
+        self.log.info('ncomponents=%s' % ncomponents)
+
+        # blank line
+        iline += 1
+
+        for icomp in range(ncomponents):
+             #LIFTING_SURFACE,WingGeom,0
+            sline = lines[iline+1].strip().split(',')
+            iline += 1
+            surface_type = sline[0]
+            self.log.info('surface_type=%r' % surface_type)
+
+            if surface_type == 'LIFTING_SURFACE':
+                lifting_surface, name, dunno_zero = sline
+                if int(dunno_zero) not in [0, 1]:
+                    raise RuntimeError('unexpected line %s; should be 0 or 1 '
+                                       'for the 3rd value:\n%s' % (iline, sline))
+
+                self.log.info('lifting_surface name=%r' % name)
+                (iline, nelements, normals, area, lifting_surface_xyz,
+                 lifting_surface_nx, lifting_surface_ny) = read_surface_node(
+                     degen_geom_file, lines, iline, self.log)
+
+                self.log.debug('iline=%s' % iline)
+
+                iline = read_surface_face(
+                    degen_geom_file, lines, iline, nelements, self.log,
+                    normals, area)
+
+                iline = read_plate(degen_geom_file, lines, iline, self.log)
+                iline = read_stick_node(degen_geom_file, lines, iline, self.log)
+                iline = read_stick_face(degen_geom_file, lines, iline, self.log)
+
+                # DegenGeom Type
+                # POINT
+                #(vol, volWet, area, areaWet,
+                 #Ishellxx, Ishellyy, Ishellzz, Ishellxy, Ishellxz, Ishellyz,
+                 #Isolidxx, Isolidyy, Isolidzz, Isolidxy, Isolidxz, Isolidyz,
+                 #cgShellx, cgShelly, cgShellz, cgSolidx, cgSolidy, cgSolidz)
+                iline += 1
+
+                line = lines[iline+1]
+                point = line.strip()
+                iline += 1
+                assert point == 'POINT', point
+                iline += 1
+
+                line = lines[iline+1]
+                cg_line = line.split()
+                assert len(cg_line) == 22, len(cg_line)
+                sline2 = lines[iline].strip().split(',')
+                assert len(sline2) == 22, len(sline2)
+                iline += 1
+
+                component = Geom(name, lifting_surface_xyz,
+                                 lifting_surface_nx, lifting_surface_ny)
+            elif surface_type == 'BODY':
+                lifting_surface, name = sline
+
+                # DegenGeom Type,nXsecs, nPnts/Xsec
+                #iline += 1
+
+                #SURFACE_NODE,21,17
+                #iline += 1
+                #print(line)
+
+                (iline, nelements, normals, area, lifting_surface_xyz,
+                 lifting_surface_nx, lifting_surface_ny) = read_surface_node(
+                     degen_geom_file, lines, iline, self.log)
+
+                iline = read_surface_face(
+                    degen_geom_file, lines, iline, nelements, self.log,
+                    normals, area)
+                iline = read_plate(degen_geom_file, lines, iline, self.log)
+                iline = read_plate(degen_geom_file, lines, iline, self.log)
+
+                iline = read_stick_node(degen_geom_file, lines, iline, self.log)
+                iline = read_stick_face(degen_geom_file, lines, iline, self.log)
+
+                #iline = read_stick_node(degen_geom_file, lines, iline, self.log)
+                #iline = read_stick_face(degen_geom_file, lines, iline, self.log)
+
+                #print('**', line)
+                component = Geom(name, lifting_surface_xyz,
+                                 lifting_surface_nx, lifting_surface_ny)
+
+            else:
+                raise RuntimeError(sline)
+            self.components[name].append(component)
+            iline += 1
+
+    def write_bdf(self, bdf_filename):
+        bdf_file = open(bdf_filename, 'wb')
+        bdf_file.write('$pyNastran: VERSION=NX\n')
+        bdf_file.write('CEND\n')
+        bdf_file.write('BEGIN BULK\n')
+
+        nid = 1
+        eid = 1
+        pid = 1
+
+        mid = 1
+        t = 0.1
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        card = ['MAT1', mid, E, G, nu]
+        bdf_file.write(print_card_8(card))
+        for name, comps in sorted(self.components.items()):
+            bdf_file.write('$ name = %r\n' % name)
+            for comp in comps:
+                card = ['PSHELL', pid, mid, t]
+                bdf_file.write(print_card_8(card))
+                nid, eid, pid = comp.write_bdf_file_obj(bdf_file, nid, eid, pid)
+                pid += 1
+
+    def write_panair(self, panair_filename, panair_case_filename):  # pragma: no cover
+        pan = PanairGrid()
+        pan.mach = 0.5
+        pan.is_end = True
+        pan.ncases = 2
+        pan.alphas = [0., 5.]
+
+        i = 0
+        pan.nNetworks = 1
+        kt = 1
+        cp_norm = 1
+        for name, comps in sorted(self.components.items()):
+            #panair_file.write('$ name = %r\n' % name)
+            for comp in comps:
+                print(comp)
+                namei = name + str(i)
+                # lifting_surface_xyz, lifting_surface_nx, lifting_surface_ny
+                x = deepcopy(comp.xyz[:, 0])
+                y = deepcopy(comp.xyz[:, 1])
+                z = deepcopy(comp.xyz[:, 2])
+                x = x.reshape((comp.nx, comp.ny))
+                y = y.reshape((comp.nx, comp.ny))
+                z = z.reshape((comp.nx, comp.ny))
+
+                xyz = np.dstack([x, y, z])
+                assert xyz.shape[2] == 3
+                patch = PanairPatch(pan.nNetworks, namei, kt, cp_norm, xyz, self.log)
+                pan.patches[i] = patch
+                pan.nNetworks += 1
+                i += 1
+
+                if 'wing' in name.lower():  # make a wing cap
+                    namei = 'cap%i' % i
+                    #assert comp.lifting_surface_nx == 6, comp.lifting_surface_nx
+                    assert comp.ny == 33, comp.ny
+                    #print(x.shape)
+                    xend = deepcopy(x[-1, :])
+                    print(xend)
+                    yend = deepcopy(y[-1, :])
+                    zend = deepcopy(z[-1, :])
+                    imid = comp.ny // 2
+                    x = np.zeros((imid+1, 2), dtype='float32')
+                    y = np.zeros((imid+1, 2), dtype='float32')
+                    z = np.zeros((imid+1, 2), dtype='float32')
+                    #print(imid, xend[imid], xend.min())
+                    xflip = list(xend[0:imid+1])
+                    yflip = list(yend[0:imid+1])
+                    zflip = list(zend[0:imid+1])
+                    x[:, 0] = xflip[::-1]
+                    y[:, 0] = yflip[::-1]
+                    z[:, 0] = zflip[::-1]
+                    x[:, 1] = xend[imid:]
+                    y[:, 1] = yend[imid:]
+                    z[:, 1] = zend[imid:]
+                    #print(x)
+
+                    #x = xend[0:imid:-1].extend(x[imid:])
+                    #y = yend[0:imid:-1].extend(y[imid:])
+                    #z = zend[0:imid:-1].extend(z[imid:])
+                    #print(x)
+                    x = x.reshape((2, imid+1))
+                    y = y.reshape((2, imid+1))
+                    z = z.reshape((2, imid+1))
+
+                    #print(xend)
+                    xyz = np.dstack([x, y, z])
+                    assert xyz.shape[2] == 3
+                    patch = PanairPatch(pan.nNetworks, namei, kt, cp_norm,
+                                        xyz, self.log)
+                    pan.patches[i] = patch
+                    pan.nNetworks += 1
+                    i += 1
+                #i += 1
+        pan.write_panair(panair_filename)
+        #self.nNetworks = i
 
 
 class Geom(object):
@@ -66,226 +284,9 @@ class Geom(object):
         return elements
 
     def __repr__(self):
-        msg = ('Geom(name=%s, lifting_surface_xyz, '
-               'lifting_surface_nx, lifting_surface_ny)' % (self.name))
+        msg = 'Geom(name=%s, xyz, nx=%i, ny=%i)' % (self.name, self.nx, self.ny)
         return msg
 
-
-class DegenGeom(object):
-    def __init__(self, log=None, debug=False):
-        self.log = log
-        self.debug = debug
-        self.components = defaultdict(list)
-
-    def write_bdf(self, bdf_filename):
-        bdf_file = open(bdf_filename, 'wb')
-        bdf_file.write('$pyNastran: VERSION=NX\n')
-        bdf_file.write('CEND\n')
-        bdf_file.write('BEGIN BULK\n')
-
-        nid = 1
-        eid = 1
-        pid = 1
-
-        mid = 1
-        t = 0.1
-        E = 3.0e7
-        G = None
-        nu = 0.3
-        card = ['MAT1', mid, E, G, nu]
-        bdf_file.write(print_card_8(card))
-        for name, comps in sorted(self.components.items()):
-            bdf_file.write('$ name = %r\n' % name)
-            for comp in comps:
-                card = ['PSHELL', pid, mid, t]
-                bdf_file.write(print_card_8(card))
-                nid, eid, pid = comp.write_bdf_file_obj(bdf_file, nid, eid, pid)
-                pid += 1
-
-    def write_panair(self, panair_filename, panair_case_filename):  # pragma: no cover
-        pan = PanairGrid()
-        pan.mach = 0.5
-        pan.is_end = True
-        pan.ncases = 2
-        pan.alphas = [0., 5.]
-
-
-        i = 0
-        pan.nNetworks = 1
-        kt = 1
-        cp_norm = 1
-        for name, comps in sorted(self.components.items()):
-            #panair_file.write('$ name = %r\n' % name)
-            for comp in comps:
-                namei = name + str(i)
-                x = deepcopy(comp.lifting_surface_xyz[:, 0])
-                y = deepcopy(comp.lifting_surface_xyz[:, 1])
-                z = deepcopy(comp.lifting_surface_xyz[:, 2])
-                x = x.reshape((comp.lifting_surface_nx, comp.lifting_surface_ny))
-                y = y.reshape((comp.lifting_surface_nx, comp.lifting_surface_ny))
-                z = z.reshape((comp.lifting_surface_nx, comp.lifting_surface_ny))
-
-                xyz = np.dstack([x, y, z])
-                assert xyz.shape[2] == 3
-                patch = PanairPatch(pan.nNetworks, namei, kt, cp_norm, xyz, self.log)
-                pan.patches[i] = patch
-                pan.nNetworks += 1
-                i += 1
-
-                if 'wing' in name.lower():  # make a wing cap
-                    namei = 'cap%i' % i
-                    #assert comp.lifting_surface_nx == 6, comp.lifting_surface_nx
-                    assert comp.lifting_surface_ny == 33, comp.lifting_surface_ny
-                    #print(x.shape)
-                    xend = deepcopy(x[-1, :])
-                    print(xend)
-                    yend = deepcopy(y[-1, :])
-                    zend = deepcopy(z[-1, :])
-                    imid = comp.lifting_surface_ny // 2
-                    x = np.zeros((imid+1, 2), dtype='float32')
-                    y = np.zeros((imid+1, 2), dtype='float32')
-                    z = np.zeros((imid+1, 2), dtype='float32')
-                    print(imid, xend[imid], xend.min())
-                    xflip = list(xend[0:imid+1])
-                    yflip = list(yend[0:imid+1])
-                    zflip = list(zend[0:imid+1])
-                    x[:, 0] = xflip[::-1]
-                    y[:, 0] = yflip[::-1]
-                    z[:, 0] = zflip[::-1]
-                    x[:, 1] = xend[imid:]
-                    y[:, 1] = yend[imid:]
-                    z[:, 1] = zend[imid:]
-                    print(x)
-
-                    #x = xend[0:imid:-1].extend(x[imid:])
-                    #y = yend[0:imid:-1].extend(y[imid:])
-                    #z = zend[0:imid:-1].extend(z[imid:])
-                    #print(x)
-                    x = x.reshape((2, imid+1))
-                    y = y.reshape((2, imid+1))
-                    z = z.reshape((2, imid+1))
-
-                    #print(xend)
-                    xyz = np.dstack([x, y, z])
-                    assert xyz.shape[2] == 3
-                    patch = PanairPatch(pan.nNetworks, namei, kt, cp_norm,
-                                        xyz, self.log)
-                    pan.patches[i] = patch
-                    pan.nNetworks += 1
-                    i += 1
-                #i += 1
-        pan.write_panair(panair_filename)
-        #self.nNetworks = i
-
-    def read_degen_geom(self, degen_geom_csv):
-        with open(degen_geom_csv, 'r') as degen_geom_file:
-            lines = degen_geom_file.readlines()
-
-        degen_geom_file = open(degen_geom_csv, 'r')
-        for i in range(4):
-            line = degen_geom_file.readline()
-
-        iline = 3
-        line = lines[iline]
-
-        ncomponents = int(line)
-        self.log.info('ncomponents=%s' % ncomponents)
-        degen_geom_file.readline()
-        iline += 1
-
-        for icomp in range(ncomponents):
-            sline = degen_geom_file.readline().strip().split(',')
-            iline += 1
-
-            sline2 = lines[iline].strip().split(',')
-            assert sline == sline2, 'iline=%s \nsline1=%s \nsline2=%s' % (iline, sline, sline2)
-            surface_type = sline[0]
-            self.log.info('surface_type=%r' % surface_type)
-
-            if surface_type == 'LIFTING_SURFACE':
-                lifting_surface, name, dunno_zero = sline
-                if int(dunno_zero) not in [0, 1]:
-                    raise RuntimeError('unexpected line %s; should be 0 or 1 '
-                                       'for the 3rd value:\n%s' % (iline, sline))
-
-                self.log.info('lifting_surface name=%r' % name)
-                (iline, nelements, normals, area, lifting_surface_xyz,
-                 lifting_surface_nx, lifting_surface_ny) = read_surface_node(
-                     degen_geom_file, lines, iline, self.log)
-
-                self.log.debug('iline=%s' % iline)
-
-                iline = read_surface_face(
-                    degen_geom_file, lines, iline, nelements, self.log,
-                    normals, area)
-
-                iline = read_plate(degen_geom_file, lines, iline, self.log)
-                iline = read_stick_node(degen_geom_file, lines, iline, self.log)
-                iline = read_stick_face(degen_geom_file, lines, iline, self.log)
-
-                # DegenGeom Type
-                # POINT
-                #(vol, volWet, area, areaWet,
-                 #Ishellxx, Ishellyy, Ishellzz, Ishellxy, Ishellxz, Ishellyz,
-                 #Isolidxx, Isolidyy, Isolidzz, Isolidxy, Isolidxz, Isolidyz,
-                 #cgShellx, cgShelly, cgShellz, cgSolidx, cgSolidy, cgSolidz)
-                degen_geom_file.readline()
-                iline += 1
-
-                point = degen_geom_file.readline().strip()
-                iline += 1
-                assert point == 'POINT', point
-
-                degen_geom_file.readline()
-                iline += 1
-
-                cg_line = degen_geom_file.readline().split()
-                assert len(cg_line) == 22, len(cg_line)
-                sline2 = lines[iline].strip().split(',')
-                assert len(sline2) == 22, len(sline2)
-                iline += 1
-
-                degen_geom_file.readline()
-                iline += 1
-                component = Geom(name, lifting_surface_xyz,
-                                 lifting_surface_nx, lifting_surface_ny)
-            elif surface_type == 'BODY':
-                lifting_surface, name = sline
-
-                # DegenGeom Type,nXsecs, nPnts/Xsec
-                #line = degen_geom_file.readline()
-                #iline += 1
-
-                #SURFACE_NODE,21,17
-                #line = degen_geom_file.readline()
-                #iline += 1
-                #print(line)
-
-                (iline, nelements, normals, area, lifting_surface_xyz,
-                 lifting_surface_nx, lifting_surface_ny) = read_surface_node(
-                     degen_geom_file, lines, iline, self.log)
-
-                iline = read_surface_face(
-                    degen_geom_file, lines, iline, nelements, self.log,
-                    normals, area)
-                iline = read_plate(degen_geom_file, lines, iline, self.log)
-                iline = read_plate(degen_geom_file, lines, iline, self.log)
-
-                iline = read_stick_node(degen_geom_file, lines, iline, self.log)
-                iline = read_stick_face(degen_geom_file, lines, iline, self.log)
-
-                #iline = read_stick_node(degen_geom_file, lines, iline, self.log)
-                #iline = read_stick_face(degen_geom_file, lines, iline, self.log)
-
-                line = degen_geom_file.readline()
-                iline += 1
-                #print('**', line)
-                component = Geom(name, lifting_surface_xyz,
-                                 lifting_surface_nx, lifting_surface_ny)
-
-            else:
-                raise RuntimeError(sline)
-            self.components[name].append(component)
 
 def read_surface_node(degen_geom_file, lines, iline, log):
     """
@@ -294,11 +295,13 @@ def read_surface_node(degen_geom_file, lines, iline, log):
     # nnodes -> 6*33=198
     # nelements -> 160
     """
-    line = degen_geom_file.readline()
-    #print(line)
+    line = lines[iline+1]
     iline += 1
 
-    line = degen_geom_file.readline().strip()
+    line = lines[iline+1]
+    #line = lines[iline]
+    #assert line1 == iline
+    line = line.strip()
     iline += 1
 
     sline = line.split(',')
@@ -315,14 +318,11 @@ def read_surface_node(degen_geom_file, lines, iline, log):
     area = np.zeros(nelements, dtype='float64')
 
     # x, y, z, u, v
-    degen_geom_file.readline()
     iline += 1
     for ipoint in range(npoints):
-        sline = degen_geom_file.readline().strip().split(',')
         iline += 1
+        sline = lines[iline].strip().split(',')
         x, y, z, u, v = sline
-        sline2 = lines[iline].strip().split(',')
-        assert sline == sline2, 'iline=%s \nsline1=%s \nsline2=%s' % (iline, sline, sline2)
         #log.debug('%s: %s' % (iline, sline2))
         lifting_surface_xyz[ipoint, :] = [x, y, z]
     iline += 1
@@ -331,18 +331,21 @@ def read_surface_node(degen_geom_file, lines, iline, log):
 def read_surface_face(degen_geom_file, lines, iline, nelements, log,
                       normals, area):
     """SURFACE_FACE,5,32"""
-    sline = degen_geom_file.readline().strip().split(',')
+    line = lines[iline]
+    sline = line.strip().split(',')
     surface_node, nx, ny = sline
     assert surface_node == 'SURFACE_FACE', 'surface_node=%s, nx+%s, ny=%s' % (surface_node, nx, ny)
     sline2 = lines[iline].strip().split(',')
     assert sline == sline2, 'iline=%s \nsline1=%s \nsline2=%s' % (iline, sline, sline2)
 
-    line = degen_geom_file.readline() # nx,ny,nz,area
+    # nx,ny,nz,area
+    line = lines[iline]
     iline += 1
     log.debug(line)
+
     for ielem in range(nelements):
-        line = degen_geom_file.readline()
         iline += 1
+        line = lines[iline]
         nx, ny, nz, areai = line.split(',')
         normals[ielem, :] = [nx, ny, nz]
         area[ielem] = areai
@@ -358,29 +361,22 @@ def read_plate(degen_geom_file, lines, iline, log):
     TODO: the plate is very unclear...it's 6 lines with 3 normals on each line
           but 6*17?
     """
-    degen_geom_file.readline()
     iline += 1
 
-    sline = degen_geom_file.readline().strip().split(',')
-    sline2 = lines[iline].strip().split(',')
-    assert sline == sline2, 'iline=%s \nsline1=%s \nsline2=%s' % (iline, sline, sline2)
+    sline = lines[iline].strip().split(',')
     plate, nx, ny = sline
 
     iline += 1
     nx = int(nx)
     ny = int(ny)
     nxy = nx * ny
-    degen_geom_file.readline()
     iline += 1
     for i in range(nx):
-        degen_geom_file.readline()
         iline += 1
 
     # x,y,z,zCamber,t,nCamberx,nCambery,nCamberz,u,wTop,wBot
-    line = degen_geom_file.readline()
     iline += 1
     for i in range(nxy):
-        degen_geom_file.readline()
         iline += 1
     return iline
 
@@ -398,17 +394,14 @@ def read_stick_node(degen_geom_file, lines, iline, log):
      it00, it01, it02, it03, it10, it11, it12, it13,
      it20, it21, it22, it23, it30, it31, it32, it33)
     """
-    degen_geom_file.readline()
     iline += 1
-    stick_node, nx = degen_geom_file.readline().split(',')
+    line = lines[iline]
+    stick_node, nx = line.split(',')
     iline += 1
     assert stick_node == 'STICK_NODE', stick_node
     nx = int(nx)
-    degen_geom_file.readline()
     iline += 1
-    for i in range(nx):
-        degen_geom_file.readline()
-        iline += 1
+    iline += nx
     return iline
 
 def read_stick_face(degen_geom_file, lines, iline, log):
@@ -417,33 +410,26 @@ def read_stick_face(degen_geom_file, lines, iline, log):
     STICK_FACE, 5
     sweeple,sweepte,areaTop,areaBot
     """
-    degen_geom_file.readline()
     iline += 1
 
-    sline = degen_geom_file.readline().strip().split(',')
-    sline2 = lines[iline].strip().split(',')
-    assert sline == sline2, 'iline=%s \nsline1=%s \nsline2=%s' % (iline, sline, sline2)
+    sline = lines[iline].strip().split(',')
     stick_face, nx = sline
     iline += 1
 
     assert stick_face == 'STICK_FACE', stick_face
     nx = int(nx)
-    degen_geom_file.readline()
-    for i in range(nx):
-        degen_geom_file.readline()
-        iline += 1
+    iline += nx
     return iline
 
 def main():  # pragma: no cover
     degen_geom_csv = 'model_DegenGeom.csv'
-    d = DegenGeom()
-    d.read_degen_geom(degen_geom_csv)
-    d.write_bdf('model.bdf')
+    model = DegenGeom()
+    model.read_degen_geom(degen_geom_csv)
+    model.write_bdf('model.bdf')
 
     panair_filename = 'panair.inp'
     panair_case_filename = 'model_DegenGeom.vspaero'
-    d.write_panair(panair_filename, panair_case_filename)
-
+    model.write_panair(panair_filename, panair_case_filename)
 
 if __name__ == '__main__':  # pragma: no cover
     main()

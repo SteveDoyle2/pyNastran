@@ -80,7 +80,7 @@ def update_subtitle_with_adaptivity_index(subtitle, superelement_adaptivity_inde
         title + 'ADAPTIVITY_INDEX=1'
     """
     if adpativity_index:
-        print('adpativity_index = %r' % adpativity_index.strip())
+        #print('adpativity_index = %r' % adpativity_index.strip())
         assert 'ADAPTIVITY INDEX=' in adpativity_index
         # F:\work\pyNastran\examples\Dropbox\move_tpl\pet1018.op2
         #'ADAPTIVITY INDEX=      1'
