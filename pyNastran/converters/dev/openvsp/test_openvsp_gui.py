@@ -48,6 +48,8 @@ class TestOpenVSP_GUI(unittest.TestCase):
         #panair_filename = 'panair.inp'
         panair_case_filename = 'model_DegenGeom.vspaero'
         model.write_panair(panair_filename, panair_case_filename)
+        os.remove(bdf_filename)
+        os.remove(panair_filename)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

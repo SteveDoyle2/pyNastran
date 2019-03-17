@@ -4,7 +4,7 @@ Defines the GUI IO file for OBJ.
 from __future__ import print_function
 from collections import OrderedDict
 
-from numpy import arange
+import numpy as np
 import vtk
 
 from pyNastran.gui.gui_objects.gui_result import GuiResult
@@ -109,16 +109,18 @@ class ObjIO(object):
         #self.create_vtk_cells_of_constant_element_type(grid, elements, etype)
         quad_etype = 9 # vtk.vtkQuad().GetCellType()
 
-        tris = model.tri_faces
-        quads = model.quad_faces
-        if len(tris):
+        all_tris = [tri_faces for tri_faces in model.tri_faces.values()]
+        all_quads = [quad_faces for quad_faces in model.quad_faces.values()]
+        if len(all_tris):
+            tris = np.vstack(all_tris)
             for eid, element in enumerate(tris):
                 elem = vtk.vtkTriangle()
                 elem.GetPointIds().SetId(0, element[0])
                 elem.GetPointIds().SetId(1, element[1])
                 elem.GetPointIds().SetId(2, element[2])
                 grid.InsertNextCell(tri_etype, elem.GetPointIds())
-        if len(quads):
+        if len(all_quads):
+            quads = np.vstack(all_quads)
             for eid, element in enumerate(quads):
                 elem = vtk.vtkQuad()
                 elem.GetPointIds().SetId(0, element[0])
@@ -147,8 +149,8 @@ class ObjIO(object):
     def _fill_obj_geometry_objects(self, cases, ID, nodes, nelements, model):
         nnodes = nodes.shape[0]
 
-        eids = arange(1, nelements + 1)
-        nids = arange(1, nnodes + 1)
+        eids = np.arange(1, nelements + 1)
+        nids = np.arange(1, nnodes + 1)
 
         subcase_id = 0
         nid_res = GuiResult(subcase_id, 'NodeID', 'NodeID', 'node', nids)

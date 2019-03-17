@@ -17,16 +17,30 @@ def read_obj(obj_filename, log=None, debug=False):
 class OBJ(object):
     def __init__(self, log=None, debug=False):
         self.nodes = []
-        self.lines = []
-        self.tri_faces = []
-        self.quad_faces = []
+        self.lines = {}
+        self.tri_faces = {}
+        self.quad_faces = {}
 
     @property
     def nnodes(self):
         return self.nodes.shape[0]
     @property
     def nelements(self):
-        return self.tri_faces.shape[0] + self.quad_faces.shape[0]
+        nelements = 0
+        for tri_faces in self.tri_faces.values():
+            nelements += tri_faces.shape[0]
+        for quad_faces in self.quad_faces.values():
+            nelements += quad_faces.shape[0]
+        return nelements
+    @property
+    def names(self):
+        names_set = set(
+            list(self.lines.keys()) +
+            list(self.tri_faces.keys()) +
+            list(self.quad_faces.keys())
+        )
+        names = list(names_set)
+        return names
 
     def read_obj(self, obj_filename):
         """
@@ -36,6 +50,7 @@ class OBJ(object):
         l 1 2
         l 2 3
         """
+        names = []
         nodes = []
         lines = []
         tri_faces = []
@@ -49,7 +64,6 @@ class OBJ(object):
                 continue
 
             sline = line.split()
-            #print(sline)
             entry_type = sline[0]
             if entry_type == 'v':  # vertex
                 nodes.append(sline[1:])
@@ -67,6 +81,16 @@ class OBJ(object):
             elif entry_type == 'mtllib': # material library path (str)
                 continue
             elif entry_type == 'g': #  group_name (str)
+                if len(sline) == 1:
+                    name = None
+                    continue
+                name = sline[1]
+                assert len(sline) == 2, sline
+                self._add_group(name, lines, tri_faces, quad_faces)
+                lines = []
+                tri_faces = []
+                quad_faces = []
+                names.append(name)
                 continue
             elif entry_type == 'usemtl': #  defines the material name (str)
                 continue
@@ -80,16 +104,21 @@ class OBJ(object):
                 continue
             else:
                 raise NotImplementedError('line = %r' % line)
-        self.nodes = array(nodes, dtype='float64')
 
+        self.nodes = array(nodes, dtype='float64')
+        #assert len(lines) == 0
+        #assert len(tri_faces) == 0
+        #assert len(quad_faces) == 0
+
+    def _add_group(self, name, lines, tri_faces, quad_faces):
         # make it 0-based instead of 1 based
         if len(lines):
-            self.lines = array(lines, dtype='int32') - 1
+            self.lines[name] = array(lines, dtype='int32') - 1
             #self.make_elements_from_lines()
         if len(tri_faces):
-            self.tri_faces = array(tri_faces, dtype='int32') - 1
+            self.tri_faces[name] = array(tri_faces, dtype='int32') - 1
         if len(quad_faces):
-            self.quad_faces = array(quad_faces, dtype='int32') - 1
+            self.quad_faces[name] = array(quad_faces, dtype='int32') - 1
 
     def make_elements_from_lines(self):
         #print(self.nodes.shape)
@@ -123,19 +152,26 @@ class OBJ(object):
         quad_face_fmt = 'f %%%s %%%s %%%s %%%s\n'  % (int_fmt, int_fmt, int_fmt, int_fmt)
         #print(node_fmt)
 
+        names = self.names
         with open(obj_filename, 'w') as obj_file:
             for node in self.nodes:
                 obj_file.write(node_fmt % tuple(node))
-            if len(self.lines):
-                for line in self.lines + 1:
-                    obj_file.write(line_fmt % tuple(line))
 
-            if len(self.tri_faces):
-                for face in self.tri_faces + 1:
-                    obj_file.write(tri_face_fmt % tuple(face))
-            if len(self.quad_faces):
-                for face in self.quad_faces + 1:
-                    obj_file.write(quad_face_fmt % tuple(face))
+            for name in names:
+                obj_file.write('g %s\n' % name)
+                if name in self.lines:
+                    lines = self.lines[name]
+                    for line in lines + 1:
+                        obj_file.write(line_fmt % tuple(line))
+
+                if name in self.tri_faces:
+                    tri_faces = self.tri_faces[name]
+                    for face in tri_faces + 1:
+                        obj_file.write(tri_face_fmt % tuple(face))
+                if name in self.quad_faces:
+                    quad_faces = self.quad_faces[name]
+                    for face in quad_faces + 1:
+                        obj_file.write(quad_face_fmt % tuple(face))
 
 
 def unique_rows(data, return_inverse=False):
