@@ -27,8 +27,6 @@ class DegenGeom(object):
         with open(degen_geom_csv, 'r') as degen_geom_file:
             lines = degen_geom_file.readlines()
 
-        degen_geom_file = open(degen_geom_csv, 'r')
-
         iline = 3
         line = lines[iline]
         ncomponents = int(line)
@@ -124,11 +122,6 @@ class DegenGeom(object):
             iline += 1
 
     def write_bdf(self, bdf_filename):
-        bdf_file = open(bdf_filename, 'wb')
-        bdf_file.write('$pyNastran: VERSION=NX\n')
-        bdf_file.write('CEND\n')
-        bdf_file.write('BEGIN BULK\n')
-
         nid = 1
         eid = 1
         pid = 1
@@ -138,15 +131,20 @@ class DegenGeom(object):
         E = 3.0e7
         G = None
         nu = 0.3
-        card = ['MAT1', mid, E, G, nu]
-        bdf_file.write(print_card_8(card))
-        for name, comps in sorted(self.components.items()):
-            bdf_file.write('$ name = %r\n' % name)
-            for comp in comps:
-                card = ['PSHELL', pid, mid, t]
-                bdf_file.write(print_card_8(card))
-                nid, eid, pid = comp.write_bdf_file_obj(bdf_file, nid, eid, pid)
-                pid += 1
+        with open(bdf_filename, 'w') as bdf_file:
+            bdf_file.write('$pyNastran: VERSION=NX\n')
+            bdf_file.write('CEND\n')
+            bdf_file.write('BEGIN BULK\n')
+
+            card = ['MAT1', mid, E, G, nu]
+            bdf_file.write(print_card_8(card))
+            for name, comps in sorted(self.components.items()):
+                bdf_file.write('$ name = %r\n' % name)
+                for comp in comps:
+                    card = ['PSHELL', pid, mid, t]
+                    bdf_file.write(print_card_8(card))
+                    nid, eid, pid = comp.write_bdf_file_obj(bdf_file, nid, eid, pid)
+                    pid += 1
 
     def write_panair(self, panair_filename, panair_case_filename):  # pragma: no cover
         pan = PanairGrid()
@@ -162,7 +160,7 @@ class DegenGeom(object):
         for name, comps in sorted(self.components.items()):
             #panair_file.write('$ name = %r\n' % name)
             for comp in comps:
-                print(comp)
+                str(comp)
                 namei = name + str(i)
                 # lifting_surface_xyz, lifting_surface_nx, lifting_surface_ny
                 x = deepcopy(comp.xyz[:, 0])
@@ -185,7 +183,7 @@ class DegenGeom(object):
                     assert comp.ny == 33, comp.ny
                     #print(x.shape)
                     xend = deepcopy(x[-1, :])
-                    print(xend)
+                    #print(xend)
                     yend = deepcopy(y[-1, :])
                     zend = deepcopy(z[-1, :])
                     imid = comp.ny // 2
