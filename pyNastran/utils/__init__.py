@@ -108,7 +108,12 @@ def is_binary_file(filename):
 
 def check_path(filename, name='file'):
     # type: (str, str) -> None
-    if not os.path.exists(filename):
+    try:
+        exists = os.path.exists(filename)
+    except TypeError:
+        msg = 'cannot find %s=%r\n' % (name, filename)
+        raise TypeError(msg)
+    if not exists:
         msg = 'cannot find %s=%r\n%s' % (name, filename, print_bad_path(filename))
         raise FileNotFoundError(msg)
 

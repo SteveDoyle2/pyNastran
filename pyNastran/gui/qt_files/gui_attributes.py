@@ -1041,8 +1041,8 @@ class GuiAttributes(object):
             plot = False
 
         #print('input_filename =', input_filename)
-        print(formats)
-        print(input_filenames)
+        #print(formats)
+        #print(input_filenames)
         assert len(formats) == len(input_filenames)
         if input_filenames is not None:
             for form, input_filename in zip(formats, input_filenames):
@@ -1074,6 +1074,7 @@ class GuiAttributes(object):
                 name = 'main'
             else:
                 name = input_filename
+            self.name = name
             #form = inputs['format'].lower()
             #if is_geom_results:
             #    is_failed = self.on_load_geometry_and_results(

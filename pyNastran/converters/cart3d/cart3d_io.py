@@ -254,7 +254,8 @@ class Cart3dIO(object):
                                              log=self.gui.log, debug=self.gui.debug)
 
             color = RED_FLOAT
-            self.gui.set_quad_grid('box', nodes, elements, color, line_width=1, opacity=1.)
+            box_name = 'box' if self.gui.name == 'main' else 'box - ' + self.gui.name
+            self.gui.set_quad_grid(box_name, nodes, elements, color, line_width=1, opacity=1.)
 
             #-------------------------------------------------------------------
             # put in multiple groups
