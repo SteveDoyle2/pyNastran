@@ -2,11 +2,16 @@ from __future__ import print_function
 import os
 import sys
 
+from six import string_types
 from docopt import docopt
 import pyNastran
 from pyNastran.utils import check_path
 #from gui.formats import format_string
 
+if sys.version_info < (2, 7, 7):  # pragma: no cover
+    sys.exit("requires Python 2.7.7+...")
+
+SUPPORT_MULTIMODEL = False
 FORMAT_TO_EXTENSION = {
     'nastran' : ['.bdf', '.ecd', '.nas', '.op2', '.pch'],
     'stl' : ['.stl'],
@@ -66,8 +71,12 @@ def determine_format(input_filename, allowed_formats=None):
 def get_inputs(print_inputs=False, argv=None):
     """Gets the inputs for pyNastranGUI using docopt."""
     if argv is None:
-        argv = sys.argv
+        argv = sys.argv[1:]  # same as argparse
         #print('get_inputs; argv was None -> %s' % argv)
+    else:
+        # drop the pyNastranGUI; same as argparse
+        argv = argv[1:]
+
     input_format = None
     input_filename = None
     output_filename = None
@@ -81,15 +90,12 @@ def get_inputs(print_inputs=False, argv=None):
     log = None
     test = False
 
-    if sys.version_info < (2, 7, 7):
-        print("requires Python 2.7.7+...")
-    else:
-        if len(argv) > 1:
-            argdict = run_argparse()
-            if print_inputs:
-                for key, value in sorted(argdict.items()):
-                    print(key, value)
-            return argdict
+    if len(argv) >= 1:
+        argdict = run_argparse(argv)
+        if print_inputs:
+            for key, value in sorted(argdict.items()):
+                print(key, value)
+        return argdict
 
     inputs = {
         'format' : input_format,
@@ -106,7 +112,7 @@ def get_inputs(print_inputs=False, argv=None):
     }
     return inputs
 
-def run_argparse():
+def run_argparse(argv):
     """Gets the inputs for pyNastranGUI using argparse."""
     import argparse
     #msg = "Usage:\n"
@@ -137,10 +143,10 @@ def run_argparse():
     # no input/output files
     # can you ever have an OUTPUT, but no INPUT?
     usage = "Usage:\n"
-    usage += "  pyNastranGUI INPUT [-f FORMAT] [-o OUTPUT]\n"
-    usage += '               [-g GSCRIPT] [-p PSCRIPT]\n'
-    usage += '               [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]\n'
-    usage += '               [-q] [--groups] [--noupdate] [--log LOG]%s\n' % (dev)
+    usage += "  pyNastranGUI INPUT [-f FORMAT] [-o OUTPUT] [options]\n"
+    #usage += '               [-g GSCRIPT] [-p PSCRIPT]\n'
+    #usage += '               [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]\n'
+    #usage += '               [-q] [--groups] [--noupdate] [--log LOG]%s\n' % (dev)
 
     #parent_parser.add_argument('-g', '--geomscript', type=str, help='path to geometry script file (runs before load geometry)', action='append')
     #parent_parser.add_argument('-p', '--postscript', type=str, help='path to post script file (runs after load geometry)', action='append')
@@ -148,20 +154,25 @@ def run_argparse():
     #parent_parser.add_argument('--user_geom', type=str, help='add user specified geometry (repeatable)')
 
     # You don't need to throw a -o flag
-    usage += "  pyNastranGUI INPUT OUTPUT [-f FORMAT] [-o OUTPUT]\n"
-    usage += '               [-g GSCRIPT] [-p PSCRIPT]\n'
-    usage += '               [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]\n'
-    usage += '               [-q] [--groups] [--log LOG]%s\n' % (dev)
+    usage += "  pyNastranGUI INPUT OUTPUT [-f FORMAT] [-o OUTPUT] [options]\n"
+    #usage += '               [-g GSCRIPT] [-p PSCRIPT]\n'
+    #usage += '               [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]\n'
+    #usage += '               [-q] [--groups] [--log LOG]%s\n' % (dev)
 
     # no input/output files
     # can you ever have an OUTPUT, but no INPUT?
-    usage += "  pyNastranGUI [-f FORMAT] [-i INPUT] [-o OUTPUT...]\n"
-    usage += '               [-g GSCRIPT] [-p PSCRIPT]\n'
-    usage += '               [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]\n'
-    usage += '               [-q] [--groups] [--log LOG]%s\n' % (dev)
+    usage += "  pyNastranGUI [-f FORMAT] [-i INPUT] [-o OUTPUT...] [options]\n"
+    #usage += '               [-g GSCRIPT] [-p PSCRIPT]\n'
+    #usage += '               [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]\n'
+    #usage += '               [-q] [--groups] [--log LOG]%s\n' % (dev)
     #usage += '  pyNastranGUI -h | --help\n'
     usage += '  pyNastranGUI -v | --version\n'
 
+    usage += (
+        '  [options] = [-g GSCRIPT] [-p PSCRIPT]\n'
+        '              [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]\n'
+        '              [-q] [--groups] [--log LOG]%s\n' % (dev)
+    )
     arg_msg = ''
     arg_msg += "\n"
     arg_msg += "Primary Options:\n"
@@ -217,21 +228,28 @@ def run_argparse():
         #prog = 'pyNastranGUI',
         #usage = usage,
         #description='A foo that bars',
-        epilog="And that's how you'd foo a bar",
+        #epilog="And that's how you'd foo a bar",
         #formatter_class=argparse.RawDescriptionHelpFormatter,
         #description=textwrap.dedent(text),
         #version=pyNastran.__version__,
         #add_help=False,
     )
+    # pyNastranGUI INPUT OUTPUT [-f FORMAT] [-o OUTPUT]
     # positional arguments
     parent_parser.add_argument('INPUT', nargs='?', help='path to input file', type=str)
     parent_parser.add_argument('OUTPUT', nargs='?', help='path to output file', type=str)
 
-    parent_parser.add_argument('-i', '--input', help='path to input file')
-    parent_parser.add_argument('-o', '--output', help='path to output file')
+    #nargs : st
+    #   + : one or more
+    #   ? : optional
+    #   int : int values
+    #SUPPORT_MULTIMODEL = False
+    append_action = 'append' if SUPPORT_MULTIMODEL else None
+    parent_parser.add_argument('-i', '--input', help='path to input file', action=append_action) # nargs='+'
+    parent_parser.add_argument('-o', '--output', help='path to output file', action=append_action)
     #parent_parser.add_argument('--user_geom', type=str, help='log msg')
 
-    parent_parser.add_argument('-f', '--format', type=str,
+    parent_parser.add_argument('-f', '--format', type=str, action=append_action,
                                help='format type (avus, bedge, cart3d, lawgs, nastran, '
                                'openfoam_hex, openfoam_shell, openfoam_faces, panair, '
                                'stl, surf, tetgen, usm3d, ugrid, ugrid3d, #plot3d)')
@@ -297,7 +315,7 @@ def run_argparse():
                 file = _sys.stderr
             file.write(mymsg)
     parent_parser._print_message = _print_message
-    args = parent_parser.parse_args()
+    args = parent_parser.parse_args(args=argv)
     #args.plugin = True
     argdict = argparse_to_dict(args)
     _update_argparse_argdict(argdict)
@@ -312,8 +330,13 @@ def _update_argparse_argdict(argdict):
     swap_key(argdict, 'points_fname', 'user_points')
 
     input_filenames = []
+    #print("argdict['input'] =", argdict['input'])
+    #print("argdict['INPUT'] =", argdict['INPUT'])
     if isinstance(argdict['input'], str):
         input_filenames += [argdict['input']]
+    elif isinstance(argdict['input'], list):
+        input_filenames += argdict['input']
+
     if isinstance(argdict['INPUT'], str):
         input_filenames += [argdict['INPUT']]
     del argdict['INPUT']
@@ -349,7 +372,7 @@ def _update_argparse_argdict(argdict):
         assert input_format in allowed_formats, 'format=%r is not supported' % input_format
 
     if input_filenames and argdict['format'] is None:
-        input_format = determine_format(input_filenames[0])
+        input_format = [determine_format(input_filenamei) for input_filenamei in input_filenames]
         argdict['format'] = input_format
 
     if argdict['geomscript']:
@@ -378,7 +401,23 @@ def _update_argparse_argdict(argdict):
         #'log' : log,
         #'test' : test,
     #}
-    #print(argdict)
+
+    formats = argdict['format']
+    ninput_files = len(input_filenames)
+    if formats:
+        if isinstance(formats, string_types):
+            formats = [formats]
+        nformats = len(formats)
+        if nformats == 1 and ninput_files > 1:
+            formats = formats * ninput_files
+        argdict['format'] = formats
+        if nformats != ninput_files:
+            msg = (
+                'nformats=%s formats=%s\n'
+                'ninput_files=%s input_filenames=%s' % (
+                    nformats, formats,
+                    ninput_files, input_filenames))
+            raise RuntimeError(msg)
     return argdict
 
 def swap_key(mydict, key_orig, key_new):

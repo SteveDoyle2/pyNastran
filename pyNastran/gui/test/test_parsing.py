@@ -2,65 +2,72 @@
 defines various GUI unit tests
 """
 from __future__ import print_function
-import os
+#import os
 import unittest
-import numpy as np
+#import numpy as np
 
-import pyNastran
+#import pyNastran
 from pyNastran.gui.arg_handling import get_inputs
 
-PKG_PATH = pyNastran.__path__[0]
-MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
+#PKG_PATH = pyNastran.__path__[0]
+#MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
 
 
 class GuiParsing(unittest.TestCase):
     def test_parse_1(self):
-        """tests ``check_for_newer_version``"""
-        keys_to_remove = ['noupdate', 'log', 'test', 'geomscript', 'postscript', 'qt', 'plugin', 'is_groups',
-                          'user_geom', 'user_points', 'debug']
+        """tests parsing of the pyNastranGUI command line"""
+        keys_to_remove = ['noupdate', 'log', 'test', 'geomscript', 'postscript', 'qt',
+                          'plugin', 'is_groups', 'user_geom', 'user_points', 'debug']
         with open('fem.bdf', 'w') as bdf_file:
+            pass
+        with open('fem.op2', 'w') as op2_file:
             pass
         with open('fem.tri', 'w') as tri_file:
             pass
 
-        #args = ['pyNastranGUI']
-        #args = []
-        #out = get_inputs(print_inputs=False, argv=args)
-        #remove_args(out, *keys_to_remove)
-        #print(out, '\n')
-
-        args = ['C:\\Anaconda2\\Scripts\\pyNastranGUI', 'fem.bdf']
-        #args = ['pyNastranGUI', 'fem.bdf']
-        #args = ['fem.bdf']
+        args = ['pyNastranGUI']
         out = get_inputs(print_inputs=False, argv=args)
         remove_args(out, *keys_to_remove)
-        print(out, '\n')
-
-        #args = ['pyNastranGUI', 'fem.tri']
-        #args = ['fem.tri']
-        #out = get_inputs(print_inputs=False, argv=args)
-        #remove_args(out, *keys_to_remove)
+        assert out == {'format': None, 'output': None, 'input': None}, out
         #print(out, '\n')
 
-        #args = ['pyNastranGUI', '-f', 'nastran', 'fem.bdf']
-        #args = ['-f', 'nastran', 'fem.bdf']
-        #out = get_inputs(print_inputs=False, argv=args)
-        #remove_args(out, *keys_to_remove)
+        args = ['pyNastranGUI', 'fem.bdf']
+        out = get_inputs(print_inputs=False, argv=args)
+        remove_args(out, *keys_to_remove)
+        assert out == {'format': ['nastran'], 'output': [], 'input': ['fem.bdf']}, out
         #print(out, '\n')
 
-        #args = ['pyNastranGUI', '-f', 'nastran', '-i', 'fem.bdf']
-        #args = ['-f', 'nastran', '-i', 'fem.bdf']
-        #out = get_inputs(print_inputs=False, argv=args)
-        #remove_args(out, *keys_to_remove)
+        args = ['pyNastranGUI', 'fem.tri']
+        out = get_inputs(print_inputs=False, argv=args)
+        remove_args(out, *keys_to_remove)
+        assert out == {'format': ['cart3d'], 'output': [], 'input': ['fem.tri']}, out
         #print(out, '\n')
 
-        #args = ['pyNastranGUI', '-f', 'nastran', '-i', 'fem.bdf', '-o', 'fem.op2']
-        #args = ['-f', 'nastran', '-i', 'fem.bdf', '-o', 'fem.op2']
-        #out = get_inputs(print_inputs=False, argv=args)
-        #remove_args(out, *keys_to_remove)
+        args = ['pyNastranGUI', '-f', 'nastran', 'fem.bdf']
+        out = get_inputs(print_inputs=False, argv=args)
+        remove_args(out, *keys_to_remove)
+        assert out == {'format': ['nastran'], 'output': [], 'input': ['fem.bdf']}, out
         #print(out, '\n')
+
+        args = ['pyNastranGUI', '-f', 'nastran', '-i', 'fem.bdf']
+        out = get_inputs(print_inputs=False, argv=args)
+        remove_args(out, *keys_to_remove)
+        assert out == {'format': ['nastran'], 'output': [], 'input': ['fem.bdf']}, out
+        #print(out, '\n')
+
+        args = ['pyNastranGUI', '-f', 'nastran', '-i', 'fem.bdf', '-o', 'fem.op2']
+        out = get_inputs(print_inputs=False, argv=args)
+        remove_args(out, *keys_to_remove)
+        assert out == {'format': ['nastran'], 'output': ['fem.op2'], 'input': ['fem.bdf']}, out
+        #print(out, '\n')
+
+        args = ['pyNastranGUI', 'fem.bdf', 'fem.op2']
+        out = get_inputs(print_inputs=False, argv=args)
+        remove_args(out, *keys_to_remove)
+        assert out == {'format': ['nastran'], 'output': ['fem.op2'], 'input': ['fem.bdf']}, out
 
 def remove_args(dicti, *keys_to_remove):
+    """removes keys from a dictionary to declutter the comparison"""
     for key in keys_to_remove:
         if key in dicti:
             del dicti[key]
