@@ -1,11 +1,13 @@
 """defines various GUI unit tests"""
 from __future__ import print_function
-#import os
+import os
 import unittest
-#import numpy as np
 
-#import pyNastran
+from six import PY2
 from pyNastran.gui.arg_handling import get_inputs
+
+if PY2:
+    FileNotFoundError = IOError
 
 
 class GuiParsing(unittest.TestCase):
@@ -88,6 +90,37 @@ class GuiParsing(unittest.TestCase):
         out = get_inputs(print_inputs=False, argv=args)
         remove_args(out, *keys_to_remove)
         assert out == {'format': ['nastran'], 'user_geom': ['fem.dat', 'fem2.dat'], 'output': [], 'user_points': None, 'input': ['fem.bdf']}, out
+
+
+    def test_parse_3(self):
+        """tests parsing of the pyNastranGUI command line"""
+        keys_to_remove = ['noupdate', 'log', 'test', 'qt',
+                          'plugin', 'is_groups', 'user_geom', 'user_points', 'debug']
+
+        args = ['pyNastranGUI', 'fem.bdf', '--geomscript', 'myscript.py']
+        if os.path.exists('myscript.py'):  # pragma: no cover
+            os.remove('myscript.py')
+        with self.assertRaises(FileNotFoundError):
+            out = get_inputs(print_inputs=False, argv=args)
+
+        args = ['pyNastranGUI', 'fem.bdf', '--postscript', 'myscript.py']
+        with self.assertRaises(FileNotFoundError):
+            out = get_inputs(print_inputs=False, argv=args)
+
+        #------------------------------------------------------
+        with open('myscript.py', 'w') as unused_py_file:
+            pass
+
+        args = ['pyNastranGUI', 'fem.bdf', '--geomscript', 'myscript.py']
+        out = get_inputs(print_inputs=False, argv=args)
+        remove_args(out, *keys_to_remove)
+        assert out == {'format': ['nastran'], 'output': [], 'postscript': None, 'input': ['fem.bdf'], 'geomscript': 'myscript.py'}, out
+
+        args = ['pyNastranGUI', 'fem.bdf', '--postscript', 'myscript.py']
+        out = get_inputs(print_inputs=False, argv=args)
+        remove_args(out, *keys_to_remove)
+        assert out == {'format': ['nastran'], 'output': [], 'postscript': 'myscript.py', 'input': ['fem.bdf'], 'geomscript': None}, out
+
 
 def remove_args(dicti, *keys_to_remove):
     """removes keys from a dictionary to declutter the comparison"""

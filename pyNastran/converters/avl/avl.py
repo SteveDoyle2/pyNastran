@@ -16,14 +16,16 @@ AVL_KEYWORDS_LONG = [
     #'NOLABE', 'DESIGN', 'AIRFOIL', 'CLAF', 'CDCL',
 ]
 
-AVL_KEYWORDS = [name[:4] for name in AVL_KEYWORDS_LONG]
+AVL_KEYWORDS = [_avl_keyword[:4] for _avl_keyword in AVL_KEYWORDS_LONG]
 
 def read_avl(avl_filename, log=None, debug=False):
+    """reads a *.avl file"""
     avl = AVL(log=log, debug=debug)
     avl.read_avl(avl_filename)
     return avl
 
 class AVL(object):
+    """Interface to the AVL (Athena Vortex Lattice) code"""
     def __init__(self, log=None, debug=False):
         self.name = 'model_name'
         self.log = get_logger2(log=log, debug=debug, encoding='utf-8')
@@ -343,12 +345,12 @@ class AVL(object):
 
         #def get_wing(isurface, surface, xyz_scale, dxyz, nodes,
                      #quad_elements, surfaces, ipoint):
-            nchord, chord_spacing = surface['chord']
-            nspan, span_spacing = surface['span']
+            nchord, unused_chord_spacing = surface['chord']
+            nspan, unused_span_spacing = surface['span']
             sections = surface['sections']
 
 
-            span_stations, airfoil_sections = get_airfoils_from_sections(sections)
+            unused_span_stations, airfoil_sections = get_airfoils_from_sections(sections)
 
 
             #for iairfoil, is_afile in enumerate(surface['is_afile']):
@@ -356,7 +358,7 @@ class AVL(object):
 
             #surface['naca']
             #print('naca =', naca)
-            loft_sections = []
+            #loft_sections = []
             #for naca in airfoils:
             #get_lofted_sections(None)
 
@@ -421,7 +423,7 @@ class AVL(object):
                 alpha1 = section1['section'][1]
 
                 if airfoil_sections[i] is not None:
-                    interpolated_stations = interp_stations(
+                    unused_interpolated_stations = interp_stations(
                         y, nspan,
                         airfoil_sections[i], chord0, alpha0, p1,
                         airfoil_sections[i+1], chord1, alpha1, p4, end=end)
@@ -493,7 +495,7 @@ class AVL(object):
         assert len(surfaces) == quad_elements.shape[0]
         return nodes, quad_elements, line_elements, surfaces
 
-def interp_stations(y, nspan,
+def interp_stations(y, unused_nspan,
                     airfoil_section0, chord0, alpha0, xyz_le0,
                     airfoil_section1, chord1, alpha1, xyz_le1, end=True):
     """
@@ -691,7 +693,7 @@ def get_naca_4_series(naca='2412'):
     #print('xtotal =', xtotal)
     xy = np.vstack([xtotal, ytotal]).T
     import matplotlib.pyplot as plt
-    fig = plt.figure(1)
+    plt.figure(1)
     plt.plot(xtotal, ytotal)
     plt.grid(True)
     #print(xy)
@@ -733,7 +735,8 @@ def get_fuselage_from_file(dirname, isurface, surface, xyz_scale, dxyz,
 
     # find x/c from 0 to 1 starting from the nose
     xc2 = np.linspace(xc_nose, xc_end, num=nchord+1, endpoint=True, retstep=False, dtype=None)
-    h2 = np.interp(xc2, xc_truncate_reversed, h_truncate_reversed, left=None, right=None, period=None)
+    h2 = np.interp(xc2, xc_truncate_reversed, h_truncate_reversed,
+                   left=None, right=None, period=None)
 
     p1 = np.zeros(3) #dxyz
     xstation = xc2
@@ -763,10 +766,10 @@ def get_fuselage_from_file(dirname, isurface, surface, xyz_scale, dxyz,
     return ipoint, nelement2
 
 def get_fuselage(dirname, isurface, surface, xyz_scale, dxyz, yduplicate,
-                 nodes, line_elements, quad_elements, surfaces, ipoint):
+                 nodes, unused_line_elements, quad_elements, surfaces, ipoint):
     #print('----------------------------------------')
     #print(surface)
-    nchord, chord_spacing = surface['chord']
+    nchord, unused_chord_spacing = surface['chord']
     #nchord = 1
     assert nchord >= 1, nchord
     x = np.linspace(0., 1., num=nchord+1, endpoint=True, retstep=False, dtype=None)
@@ -779,8 +782,8 @@ def get_fuselage(dirname, isurface, surface, xyz_scale, dxyz, yduplicate,
     #print(sections)
     nsections = len(sections)
     if nsections == 0:
-        #print('*****from file')
-        ipoint, nelement2 = get_fuselage_from_file(
+        # from file
+        ipoint, unused_nelement2 = get_fuselage_from_file(
             dirname, isurface, surface, xyz_scale, dxyz, nodes, quad_elements, surfaces,
             ipoint, nchord)
         return ipoint
@@ -890,7 +893,7 @@ def simplify_surface(surface):
         del surface2['sections']
         return surface2
 
-    sections2 = {}
+    #sections2 = {}
     for section in sections:
         if not section['control']:
             del section['control']

@@ -248,11 +248,9 @@ def run_argparse(argv):
                                #'stl, surf, tetgen, usm3d, ugrid, ugrid3d, #plot3d)',
                                #action='append')
     parent_parser.add_argument('-g', '--geomscript', type=str,
-                               help='path to geometry script file (runs before load geometry)',
-                               action='append')
+                               help='path to geometry script file (runs before load geometry)')
     parent_parser.add_argument('-p', '--postscript', type=str,
-                               help='path to post script file (runs after load geometry)',
-                               action='append')
+                               help='path to post script file (runs after load geometry)')
     parent_parser.add_argument('-u', '--points_fname', type=str, action='append',
                                help='an (nrows, 3) comma/tab/space separated list of points (repeatable)')
     parent_parser.add_argument('--user_geom', type=str, action='append',
@@ -396,9 +394,11 @@ def _update_argparse_argdict(argdict):
             assert input_format in allowed_formats, 'format=%r is not supported' % input_format
 
     if argdict['geomscript']:
-        check_path(argdict['geomscript'], name='geomscript')
+        geom_script = argdict['geomscript']
+        check_path(geom_script, name='geomscript')
     if argdict['postscript']:
-        check_path(argdict['postscript'], name='postscript')
+        post_script = argdict['postscript']
+        check_path(post_script, name='postscript')
 
     if argdict['qt'] is not None:
         qt = argdict['qt'].lower()
