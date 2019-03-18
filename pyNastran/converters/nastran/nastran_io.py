@@ -125,6 +125,49 @@ NO_THETA = [
     'CHBDYP',
 ]
 
+DESIRED_RESULTS = [
+    # nodal
+    # ---------
+    'displacements', 'velocities', 'accelerations', 'temperatures',
+    'constraint_forces', 'spc_forces', 'mpc_forces', 'eigenvectors',
+
+    #'gridPointForces',
+    #'stress',
+
+    # untested
+    'load_vectors',
+    'applied_loads',
+    'force_vectors',
+
+    # ---------
+    # centroidal
+    'stress',
+    'chexa_stress', 'cpenta_stress', 'ctetra_stress',
+
+    'ctria3_stress', 'ctria3_stress',
+    'cquad8_stress''cquad4_stress',
+
+    'ctria3_composite_stress', 'ctria3_composite_stress',
+    'cquad8_composite_stress''cquad4_composite_stress',
+
+    'cbar_stress', 'cbeam_stress',
+    'crod_stress', 'conrod_stress', 'ctube_stress',
+    'celas1_stress', 'celas2_stress', 'celas3_stress', 'celas4_stress',
+    #=================================================
+    'strain',
+    'chexa_strain', 'cpenta_strain', 'ctetra_strein',
+
+    'ctria3_strain', 'ctria3_strain',
+    'cquad8_strain', 'cquad4_strain',
+
+    'ctria3_composite_strain', 'ctria3_composite_strain',
+    'cquad8_composite_strain', 'cquad4_composite_strain',
+
+    'cbar_strain', 'cbeam_strain',
+    'crod_strain', 'conrod_strain', 'ctube_strain',
+    'celas1_strain', 'celas2_strain', 'celas3_strain', 'celas4_strain',
+]
+
 IS_TESTING = 'test' in sys.argv[0]
 class NastranIO(NastranGuiResults, NastranGeometryHelper):
     """
@@ -6796,49 +6839,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 if 0:  # pragma: no cover
                     model._results.saved = set([])
                     all_results = model.get_all_results()
-                    desired_results = [
-                        # nodal
-                        # ---------
-                        'displacements', 'velocities', 'accelerations', 'temperatures',
-                        'constraint_forces', 'spc_forces', 'mpc_forces', 'eigenvectors',
-
-                        #'gridPointForces',
-                        #'stress',
-
-                        # untested
-                        'load_vectors',
-                        'applied_loads',
-                        'force_vectors',
-
-                        # ---------
-                        # centroidal
-                        'stress',
-                        'chexa_stress', 'cpenta_stress', 'ctetra_stress',
-
-                        'ctria3_stress', 'ctria3_stress',
-                        'cquad8_stress''cquad4_stress',
-
-                        'ctria3_composite_stress', 'ctria3_composite_stress',
-                        'cquad8_composite_stress''cquad4_composite_stress',
-
-                        'cbar_stress', 'cbeam_stress',
-                        'crod_stress', 'conrod_stress', 'ctube_stress',
-                        'celas1_stress', 'celas2_stress', 'celas3_stress', 'celas4_stress',
-                        #=================================================
-                        'strain',
-                        'chexa_strain', 'cpenta_strain', 'ctetra_strein',
-
-                        'ctria3_strain', 'ctria3_strain',
-                        'cquad8_strain', 'cquad4_strain',
-
-                        'ctria3_composite_strain', 'ctria3_composite_strain',
-                        'cquad8_composite_strain', 'cquad4_composite_strain',
-
-                        'cbar_strain', 'cbeam_strain',
-                        'crod_strain', 'conrod_strain', 'ctube_strain',
-                        'celas1_strain', 'celas2_strain', 'celas3_strain', 'celas4_strain',
-                    ]
-                    for result in desired_results:
+                    for result in DESIRED_RESULTS:
                         if result in all_results:
                             model._results.saved.add(result)
                 model.read_op2(op2_filename, combine=False)

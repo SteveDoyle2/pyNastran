@@ -36,6 +36,7 @@ class LoadActions(object):
         raise_error : bool; default=True
             stop the code if True
         """
+        assert isinstance(name, string_types), 'name=%r type=%s' % (name, type(name))
         is_failed, out = self._load_geometry_filename(
             geometry_format, infile_name)
         print("is_failed =", is_failed)
@@ -57,7 +58,7 @@ class LoadActions(object):
                 #self.grid_mapper.SetScalarRange(scalar_range)
                 self.gui.grid_mapper.ScalarVisibilityOff()
                 #self.grid_mapper.SetLookupTable(self.color_function)
-            self.gui.name = str(name)
+            self.gui.name = name
             self.gui._reset_model(name)
 
             # reset alt grids

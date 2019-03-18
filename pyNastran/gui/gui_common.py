@@ -2389,6 +2389,17 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #if key in ['y', 'z', 'X', 'Y', 'Z']:
             #self.update_camera(key)
 
+    def get_new_icase(self):
+        if len(self.result_cases):
+            return max(self.result_cases) + 1
+        return 0
+
+    def update_result_cases(self, cases):
+        """acts like result_cases.update(cases)"""
+        for key, case in cases.items():
+            assert key not in self.result_cases, 'key=%r is already used' % key
+            self.result_cases[key] = case
+
     def _set_results(self, form, cases):
         assert len(cases) > 0, cases
         if isinstance(cases, OrderedDict):

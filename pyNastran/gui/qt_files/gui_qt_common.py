@@ -1503,8 +1503,7 @@ class GuiCommon(GuiAttributes):
             self.rend.AddActor(plane_actor)
 
         nodes, elements = points_elements_from_quad_points(n1, n2, n3, n4, x, y)
-        color = RED
-        self.set_quad_grid(actor_name, nodes, elements, color,
+        self.set_quad_grid(actor_name, nodes, elements, color=RED,
                            line_width=1, opacity=1., representation='surface',
                            add=add)
         #plane_actor.Modified()
