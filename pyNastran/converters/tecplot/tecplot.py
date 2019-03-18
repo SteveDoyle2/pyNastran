@@ -16,7 +16,6 @@ from numpy import (
 from cpylog import get_logger2
 
 from pyNastran.utils import is_binary_file
-#from pyNastran.utils.numpy_utils import unique_rows
 
 
 def read_tecplot(tecplot_filename, use_cols=None, dtype=None, log=None, debug=False):

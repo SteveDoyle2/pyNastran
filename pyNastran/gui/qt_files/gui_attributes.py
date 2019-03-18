@@ -8,6 +8,7 @@ import sys
 import traceback
 from collections import OrderedDict
 
+from six import string_types
 import numpy as np
 import vtk
 from qtpy import QtGui
@@ -1028,9 +1029,11 @@ class GuiAttributes(object):
         if geom_script is not None:
             self.on_run_script(geom_script)
 
-        if not inputs['format']:
+        formats = inputs['format']
+        if isinstance(formats, string_types):
+            formats = [formats]
+        if not formats:
             return
-        form = inputs['format'].lower()
         input_filenames = inputs['input']
         results_filename = inputs['output']
         plot = True
@@ -1038,8 +1041,12 @@ class GuiAttributes(object):
             plot = False
 
         #print('input_filename =', input_filename)
+        print(formats)
+        print(input_filenames)
+        assert len(formats) == len(input_filenames)
         if input_filenames is not None:
-            for input_filename in input_filenames:
+            for form, input_filename in zip(formats, input_filenames):
+                form = form.lower()
                 if not os.path.exists(input_filename):
                     msg = 'input filename: %s does not exist\n%s' % (
                         input_filename, print_bad_path(input_filename))
@@ -1061,6 +1068,7 @@ class GuiAttributes(object):
         #unused_is_geom_results = input_filename == results_filename and len(input_filenames) == 1
         unused_is_geom_results = False
         is_failed = False
+        print('input_filenames =', input_filenames)
         for i, input_filename in enumerate(input_filenames):
             if i == 0:
                 name = 'main'

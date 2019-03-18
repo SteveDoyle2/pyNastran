@@ -62,10 +62,10 @@ def unique_rows(A, return_index=False, return_inverse=False):
 
     Returns
     -------
-    I : ndarray?
+    I : ndarray
         the index array;
         returns if return_index=True
-    J : ndarray?
+    J : ndarray
         the inverse array;
         returns if return_inverse=True
 
@@ -79,7 +79,7 @@ def unique_rows(A, return_index=False, return_inverse=False):
     per https://github.com/numpy/numpy/issues/2871
     """
     A = np.require(A, requirements='C')
-    assert A.ndim == 2, "array must be 2-dim'l"
+    assert A.ndim == 2, 'array must be 2D; shape=%s' % str(A.shape)
 
     B = np.unique(A.view([('', A.dtype)] * A.shape[1]),
                   return_index=return_index,

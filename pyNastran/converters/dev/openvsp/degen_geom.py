@@ -1,3 +1,7 @@
+"""
+defines:
+ - model = read_degen_geom(degen_geom_csv, log=None, debug=False)
+"""
 from __future__ import print_function
 from copy import deepcopy
 from collections import defaultdict
@@ -146,7 +150,7 @@ class DegenGeom(object):
                     nid, eid, pid = comp.write_bdf_file_obj(bdf_file, nid, eid, pid)
                     pid += 1
 
-    def write_panair(self, panair_filename, panair_case_filename):  # pragma: no cover
+    def write_panair(self, panair_filename, panair_case_filename):
         pan = PanairGrid()
         pan.mach = 0.5
         pan.is_end = True
@@ -418,16 +422,3 @@ def read_stick_face(degen_geom_file, lines, iline, log):
     nx = int(nx)
     iline += nx
     return iline
-
-def main():  # pragma: no cover
-    degen_geom_csv = 'model_DegenGeom.csv'
-    model = DegenGeom()
-    model.read_degen_geom(degen_geom_csv)
-    model.write_bdf('model.bdf')
-
-    panair_filename = 'panair.inp'
-    panair_case_filename = 'model_DegenGeom.vspaero'
-    model.write_panair(panair_filename, panair_case_filename)
-
-if __name__ == '__main__':  # pragma: no cover
-    main()
