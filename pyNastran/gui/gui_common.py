@@ -35,7 +35,7 @@ else:
 from pyNastran.utils import check_path
 from pyNastran.utils.numpy_utils import integer_types
 
-from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
+from pyNastran.gui.qt_files.gui_qt_common import GuiQtCommon
 from pyNastran.gui.qt_files.scalar_bar import ScalarBar
 
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
@@ -80,7 +80,7 @@ from pyNastran.gui.formats import CLASS_MAP
 
 
 # http://pyqt.sourceforge.net/Docs/PyQt5/multiinheritance.html
-class GuiCommon2(QMainWindow, GuiCommon):
+class GuiCommon2(QMainWindow, GuiQtCommon):
     def __init__(self, **kwds):
         """
         fmt_order, html_logging, inputs, parent=None,
@@ -89,7 +89,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #super(QMainWindow, self).__init__(self)
         if qt_version == 'pyqt4':
             QMainWindow.__init__(self)
-            GuiCommon.__init__(self, **kwds)
+            GuiQtCommon.__init__(self, **kwds)
         elif qt_version == 'pyqt5':
             super(GuiCommon2, self).__init__(**kwds)
         elif qt_version in ['pyside', 'pyside2']:
@@ -97,7 +97,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
             # fails
             #QMainWindow.__init__(self)
-            #GuiCommon.__init__(self, **kwds)
+            #GuiQtCommon.__init__(self, **kwds)
 
             #super(GuiCommon2, self).__init__(**kwds)
             #super(GuiCommon2, self).__init__(**kwds)
@@ -105,7 +105,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #super(GuiCommon2, self).__init__(**kwds)
 
             QMainWindow.__init__(self)
-            GuiCommon.__init__(self, **kwds)
+            GuiQtCommon.__init__(self, **kwds)
         else:
             raise NotImplementedError(qt_version)
 
@@ -2388,17 +2388,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         #if key in ['y', 'z', 'X', 'Y', 'Z']:
             #self.update_camera(key)
-
-    def get_new_icase(self):
-        if len(self.result_cases):
-            return max(self.result_cases) + 1
-        return 0
-
-    def update_result_cases(self, cases):
-        """acts like result_cases.update(cases)"""
-        for key, case in cases.items():
-            assert key not in self.result_cases, 'key=%r is already used' % key
-            self.result_cases[key] = case
 
     def _set_results(self, form, cases):
         assert len(cases) > 0, cases

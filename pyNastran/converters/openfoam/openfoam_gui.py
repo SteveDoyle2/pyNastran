@@ -11,7 +11,7 @@ from qtpy.QtWidgets import QApplication
 import pyNastran
 from pyNastran.gui.gui_common import GuiCommon2
 from pyNastran.gui.arg_handling import get_inputs
-#from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
+#from pyNastran.gui.qt_files.gui_qt_common import GuiQtCommon
 #from pyNastran.converters.nastran.nastran_io import NastranIO
 from pyNastran.converters.stl.stl_io import STL_IO
 from pyNastran.converters.openfoam.openfoam_io import OpenFoamIO

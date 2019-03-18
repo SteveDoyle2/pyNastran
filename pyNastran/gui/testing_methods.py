@@ -30,7 +30,7 @@ from pyNastran.gui.test.mock_vtk import (
 #)
 import vtk
 
-from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
+from pyNastran.gui.qt_files.gui_qt_common import GuiQtCommon
 from pyNastran.gui.qt_files.scalar_bar import ScalarBar
 #from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.gui.formats import CLASS_MAP
@@ -75,7 +75,7 @@ class MockResWidget(object):
         """fake method"""
         pass
 
-class FakeGUIMethods(GuiCommon):
+class FakeGUIMethods(GuiQtCommon):
     """all the methods in here are faked"""
     def __init__(self, inputs=None):
         if inputs is None:
@@ -93,7 +93,7 @@ class FakeGUIMethods(GuiCommon):
             'res_widget' : res_widget
         }
         #GuiAttributes.__init__(self, **kwds)
-        GuiCommon.__init__(self, **kwds)
+        GuiQtCommon.__init__(self, **kwds)
         self.res_widget = res_widget
         self.vtk_interactor = VTKInteractor()
         self.debug = False

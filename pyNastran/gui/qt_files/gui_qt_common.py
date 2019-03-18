@@ -1,5 +1,5 @@
 """
-defines GuiCommon
+defines GuiQtCommon
 
 This file defines functions related to the result updating that are VTK specific
 """
@@ -30,11 +30,11 @@ BLUE = (0., 0., 1.)
 RED = (1., 0., 0.)
 
 
-class GuiCommon(GuiAttributes):
+class GuiQtCommon(GuiAttributes):
     def __init__(self, **kwds):
         inputs = kwds['inputs']
         kwds['res_widget'] = None
-        super(GuiCommon, self).__init__(**kwds)
+        super(GuiQtCommon, self).__init__(**kwds)
         self.is_groups = inputs['is_groups']
 
         #self.groups = set([])
@@ -44,8 +44,8 @@ class GuiCommon(GuiAttributes):
         self._names_storage = NamesStorage()
 
         self.vtk_version = VTK_VERSION
-        if not IS_TESTING or not pyNastran.is_pynastrangui_exe:  # pragma: no cover
-            print('vtk_version = %s' % (self.vtk_version))
+        #if not IS_TESTING or not pyNastran.is_pynastrangui_exe:  # pragma: no cover
+            #print('vtk_version = %s' % (self.vtk_version))
         if self.vtk_version[0] < 7 and not IS_DEV:  # TODO: should check for 7.1
             raise RuntimeError('VTK %s is no longer supported' % vtk.VTK_VERSION)
 
@@ -121,6 +121,17 @@ class GuiCommon(GuiAttributes):
         assert case is not False, case
         if show_msg:
             self.log_command('cycle_results(case=%r)' % self.icase)
+
+    def get_new_icase(self):
+        if len(self.result_cases):
+            return max(self.result_cases) + 1
+        return 0
+
+    def update_result_cases(self, cases):
+        """acts like result_cases.update(cases)"""
+        for key, case in cases.items():
+            assert key not in self.result_cases, 'key=%r is already used' % key
+            self.result_cases[key] = case
 
     def get_subtitle_label(self, subcase_id):
         try:

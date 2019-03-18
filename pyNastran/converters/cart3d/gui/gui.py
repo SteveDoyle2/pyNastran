@@ -23,7 +23,7 @@ import vtk
 import pyNastran
 from pyNastran.gui.formats import Cart3dIO#, CLASS_MAP
 from pyNastran.gui.arg_handling import get_inputs
-#from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
+#from pyNastran.gui.qt_files.gui_qt_common import GuiQtCommon
 from pyNastran.gui.gui_common import GuiCommon2
 
 

@@ -6526,8 +6526,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
                 midsi = mids[:, ilayer]
                 if midsi.max() == 0:
-                    if not(i == 1 and ilayer == 0):
-                        print('cant find anything in ilayer=%s' % ilayer)
+                    pass
+                    #if not(i == 1 and ilayer == 0):
+                        #print('cant find anything in ilayer=%s' % ilayer)
                     #continue
                 else:
                     has_mat8, has_mat11, e11, e22, e33 = get_material_arrays(model, midsi)
@@ -6665,7 +6666,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         try:
             load_case_id = subcase.get_parameter('LOAD')[0]
         except KeyError:
-            self.gui.log.warning('LOAD not found in subcase_id=%s' % (subcase_id))
+            #self.gui.log.warning('LOAD not found in subcase_id=%s' % (subcase_id))
             return icase
 
         if load_case_id not in model.loads and load_case_id not in model.load_combinations:
@@ -6720,8 +6721,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 normals=self.normals, nid_map=self.nid_map,)
             is_loads, is_temperatures, temperature_data, load_data = out
 
-            self.log.info('subcase_id=%s is_loads=%s is_temperatures=%s' % (
-                subcase_id, is_loads, is_temperatures))
+            #self.log.info('subcase_id=%s is_loads=%s is_temperatures=%s' % (
+                #subcase_id, is_loads, is_temperatures))
             if is_loads:
                 centroidal_pressures, forces, spcd = load_data
                 if np.abs(centroidal_pressures).max():
@@ -7115,7 +7116,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 ogs_str = '' if ogs == 0 else '; OGS=%s' % ogs_old
                 subcase_str = 'Subcase %s; %s%s%s%s' % (
                     subcase_id_old, subtitle_old, superelement_adaptivity_index, count_str, ogs_str)
-                print(subcase_str)
+                #print(subcase_str)
                 res = (
                     subcase_str.rstrip('; '),
                     None,
@@ -7188,7 +7189,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             count_str = '' if count == 0 else ' ; opt_count=%s' % count_old
             ogs_str = '' if ogs == 0 else '; OGS=%s' % ogs_old
             subcase_str = 'Subcase %s; %s%s%s' % (subcase_id, subtitle, count_str, ogs_str)
-            print('*', subcase_str)
+            #print('*', subcase_str)
             res = (
                 subcase_str.strip('; '),
                 None,

@@ -50,7 +50,7 @@ except:
 
 class MainWindow(GuiCommon2, NastranIO):
     """
-    MainWindow -> GuiCommon2 -> GuiCommon
+    MainWindow -> GuiCommon2 -> GuiQtCommon
     gui.py     -> gui_common -> gui_qt_common
 
     warp vector might finally work
