@@ -1,6 +1,4 @@
-"""
-defines various GUI unit tests
-"""
+"""defines various GUI unit tests"""
 from __future__ import print_function
 #import os
 import unittest
@@ -9,20 +7,18 @@ import unittest
 #import pyNastran
 from pyNastran.gui.arg_handling import get_inputs
 
-#PKG_PATH = pyNastran.__path__[0]
-#MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
-
 
 class GuiParsing(unittest.TestCase):
+    """tests parsing of the pyNastranGUI command line"""
     def test_parse_1(self):
         """tests parsing of the pyNastranGUI command line"""
         keys_to_remove = ['noupdate', 'log', 'test', 'geomscript', 'postscript', 'qt',
                           'plugin', 'is_groups', 'user_geom', 'user_points', 'debug']
-        with open('fem.bdf', 'w') as bdf_file:
+        with open('fem.bdf', 'w') as unused_bdf_file:
             pass
-        with open('fem.op2', 'w') as op2_file:
+        with open('fem.op2', 'w') as unused_op2_file:
             pass
-        with open('fem.tri', 'w') as tri_file:
+        with open('fem.tri', 'w') as unused_tri_file:
             pass
 
         args = ['pyNastranGUI']
