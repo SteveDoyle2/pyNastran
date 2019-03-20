@@ -31,6 +31,78 @@ class RealSpringArray(OES_Object):
     def get_headers(self):
         raise NotImplementedError()
 
+    #def __mul__(self, factor):
+        #"""in-place multiplication"""
+        #assert isinstance(factor, float_types), 'factor=%s and must be a float' % (factor)
+        #self.data *= factor
+    #def __rmul__(self, factor):
+        #assert isinstance(factor, float_types), 'factor=%s and must be a float' % (factor)
+        #self.data *= factor
+
+    #def __sub__(self, factor):
+        #if isinstance(factor, float_types):
+            #self.data -= factor
+        #else:
+            ## TODO: should support arrays
+            #raise TypeError('factor=%s and must be a float' % (factor))
+    #def __add__(self, factor):
+        #"""[C] = [A] + b"""
+        #if isinstance(factor, float_types):
+            #self.data += factor
+        #else:
+            ## TODO: should support arrays
+            #raise TypeError('factor=%s and must be a float' % (factor))
+
+    #def __radd__(self, factor):
+        #"""[C] = b + [A]"""
+        #return self.__add__(factor)
+
+    def update_data_components(self):
+        pass
+
+    def __iadd__(self, factor):
+        """[A] += b"""
+        if isinstance(factor, float_types):
+            self.data += factor
+        else:
+            # TODO: should support arrays
+            raise TypeError('factor=%s and must be a float' % (factor))
+        self.update_data_components()
+
+    def __isub__(self, factor):
+        """[A] -= b"""
+        if isinstance(factor, float_types):
+            self.data -= factor
+        else:
+            # TODO: should support arrays
+            raise TypeError('factor=%s and must be a float' % (factor))
+        self.update_data_components()
+
+    def __imul__(self, factor):
+        """[A] *= b"""
+        assert isinstance(factor, float_types), 'factor=%s and must be a float' % (factor)
+        self.data *= factor
+        self.update_data_components()
+
+    def __idiv__(self, factor):
+        """[A] *= b"""
+        assert isinstance(factor, float_types), 'factor=%s and must be a float' % (factor)
+        self.data *= 1. / factor
+        self.update_data_components()
+
+    #def linear_combination(a, coeffs):
+        #import numexpr as ne
+        #local_vars = locals()
+        #letters = [
+            #'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
+            #'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
+        #expr = ''
+        #for ai, coeff, letter in zip(a, coeffs, letters):
+            #expr += '%s*%s' % (coeff, letter)
+            #local_vars[letter] = ai.data
+        #c = ne.evaluate(expr)
+        #return c
+
     def build(self):
         """sizes the vectorized attributes of the RealSpringArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))

@@ -14,7 +14,7 @@ INT_WORDS_1 = [
     'POST', 'OPPHIPA', 'OPPHIPB', 'GRDPNT', 'RPOSTS1', 'BAILOUT',
     'COUPMASS', 'CURV', 'INREL', 'MAXRATI', 'OG',
     'S1AM', 'S1M', 'DDRMM', 'MAXIT', 'PLTMSG', 'LGDISP', 'NLDISP',
-    'OUNIT2M', 'RESCOMP', 'PDRMSG', 'LMODES', 'USETPRT',]
+    'OUNIT2M', 'RESCOMP', 'PDRMSG', 'LMODES', 'USETPRT', 'NOCOMPS',]
 #float_words_1 = [
     #b'K6ROT', b'WTMASS', b'SNORM', b'PATVER', b'MAXRATIO', b'EPSHT',
     #b'SIGMA', b'TABS']

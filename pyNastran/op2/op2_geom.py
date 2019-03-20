@@ -280,6 +280,13 @@ class OP2Geom(BDF, OP2GeomCommon):
         OP2GeomCommon.__init__(self, make_geom=make_geom,
                                debug=debug, log=log, debug_file=debug_file, mode=mode)
 
+    def gpdt_to_nodes(self):
+        nid_cp_cd_ps = self.gpdt['nid_cp_cd_ps']
+        xyz = self.gpdt['xyz']
+        for nid_cp_cd_psi, xyzi in zip(nid_cp_cd_ps, xyz):
+            nid, cp, cd, ps = nid_cp_cd_psi
+            self.add_grid(nid, xyzi, cp=cp, cd=cd, ps=ps, seid=0, comment='')
+
     def __getstate__(self):
         """clears out a few variables in order to pickle the object"""
         raise NotImplementedError()

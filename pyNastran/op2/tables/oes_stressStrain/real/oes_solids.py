@@ -44,6 +44,61 @@ class RealSolidArray(OES_Object):
         self.itotal = 0
         self.ielement = 0
 
+    def update_data_components(self):
+        # vm
+        oxx = self.data[:, :, 0]
+        oyy = self.data[:, :, 1]
+        ozz = self.data[:, :, 2]
+        txy = self.data[:, :, 3]
+        tyz = self.data[:, :, 4]
+        txz = self.data[:, :, 5]
+
+        #I1 = oxx + oyy + ozz
+        #txyz = txy**2 + tyz**2 + txz ** 2
+        #I2 = oxx * oyy + oyy * ozz + ozz * oxx - txyz
+        #I3 = oxx * oyy * ozz + 2 * txy * tyz * txz + oxx * tyz**2 - oyy * txz**2 - ozz * txy
+
+        # (n_subarrays, nrows, ncols)
+
+        ovm = np.sqrt((oxx - oyy)**2 + (oyy - ozz)**2 + (oxx - ozz)**2 +
+                      3. * (txy**2 + tyz**2 + txz ** 2))
+        self.data[:, :, 9] = ovm
+        #A = [[doxx, dtxy, dtxz],
+             #[dtxy, doyy, dtyz],
+             #[dtxz, dtyz, dozz]]
+        #(_lambda, v) = eigh(A)  # a hermitian matrix is a symmetric-real matrix
+
+    def __iadd__(self, factor):
+        """[A] += b"""
+        #[oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, ovmShear]
+        if isinstance(factor, float_types):
+            self.data[:, :, :6] += factor
+        else:
+            # TODO: should support arrays
+            raise TypeError('factor=%s and must be a float' % (factor))
+        self.update_data_components()
+
+    def __isub__(self, factor):
+        """[A] -= b"""
+        if isinstance(factor, float_types):
+            self.data[:, :, :6] -= factor
+        else:
+            # TODO: should support arrays
+            raise TypeError('factor=%s and must be a float' % (factor))
+        self.update_data_components()
+
+    def __imul__(self, factor):
+        """[A] *= b"""
+        assert isinstance(factor, float_types), 'factor=%s and must be a float' % (factor)
+        self.data[:, :, :6] *= factor
+        self.update_data_components()
+
+    def __idiv__(self, factor):
+        """[A] *= b"""
+        assert isinstance(factor, float_types), 'factor=%s and must be a float' % (factor)
+        self.data[:, :, :6] *= 1. / factor
+        self.update_data_components()
+
     def build(self):
         """sizes the vectorized attributes of the RealSolidArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))

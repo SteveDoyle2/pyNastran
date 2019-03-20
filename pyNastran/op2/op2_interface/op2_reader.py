@@ -631,45 +631,185 @@ class OP2Reader(object):
         unused_table_name = self._read_table_name(rewind=False)
         self.read_markers([-1])
         data = self._read_record()
+        #print(self.show_data(data))
+        # 101, 466286, 15,      1, 1, 180, 0
+        # 101, 466286, ncoords, 1, 1, 180, 0
         assert len(data) == 28, len(data)
 
         self.read_markers([-2, 1, 0])
-        data = self._read_record()
+        data = self._read_record() # CSTM
+        #print(self.show_data(data, types='s'))
         assert len(data) == 8, len(data)
 
         self.read_markers([-3, 1, 0])
-        data = self._read_record()
-        ints = np.frombuffer(data, dtype='int32')
-        floats = np.frombuffer(data, dtype='float32')
-        nints = len(ints)
-        assert nints % 14 == 0, 'nints=%s' % (nints)
-        ncstm = get_table_size_from_ncolumns('CSTM', nints, 14)
-        ints = ints.reshape(ncstm, 14)[:, :2]
-        floats = floats.reshape(ncstm, 14)[:, 2:]
-        #assert ncstm == 1, 'ncoords = %s' % ncstm
-        #print(self.coords)
+
         coord_type_map = {
             1 : 'CORD2R',
             2 : '???',
         }
-        for i, unused_coord in enumerate(ints):
+        #1. Coordinate system type:
+        #- 1 = unknown (seriously?)
+        #- 1 = rectangular
+        #- 2 = cylindrical
+        #- 3 = spherical
+        #- 4 = convective coordinate system defined on a GMCURV+GMSURF pair
+        #- 5 = convective coordinate system defined on a GMSURF
+        #- 6 = convective coordinate system defined on a FEEDGE+FEFACE pair
+        #- 7 = convective coordinate system defined on a FEFACE
+        i = 0
+        itable = -4
+
+        blocks = []
+        while 1:
+            markers = self.get_nmarkers(1, rewind=True)
+            if markers == [0]:
+                break
+            data = self._read_record()
+            blocks.append(data)
+            self.read_markers([itable, 1, 0])
+            itable -= 1
+
+        nblocks = len(blocks)
+        if nblocks == 1:
+            # vectorized
+            ints = np.frombuffer(blocks[0], dtype='int32')
+            floats = np.frombuffer(blocks[0], dtype='float32')
+            #doubles = np.frombuffer(blocks[1], dtype='float64')
+            nints = len(ints)
+
+            assert nints % 14 == 0, 'nints=%s' % (nints)
+            ncstm = get_table_size_from_ncolumns('CSTM', nints, 14)
+            ints = ints.reshape(ncstm, 14)[:, :2]
+            floats = floats.reshape(ncstm, 14)[:, 2:]
+            #assert ncstm == 1, 'ncoords = %s' % ncstm
+            #print(self.coords)
+            #for i, unused_coord in enumerate(ints):
             cid = ints[i, 0]
             coord_type_int = ints[i, 1]
-        if coord_type_int in coord_type_map:
-            unused_coord_type = coord_type_map[coord_type_int]
+            if coord_type_int in coord_type_map:
+                unused_coord_type = coord_type_map[coord_type_int]
+            else:  # pragma: no cover
+                msg = 'cid=%s coord_type_int=%s is not supported\n' % (cid, coord_type_int)
+                if hasattr(self, 'coords'):
+                    print(op2.coords)
+                raise RuntimeError(msg)
+
+            for intsi, valuesi in zip(ints, floats):
+                cid = intsi[0]
+                coord_type_int = intsi[1]
+                assert len(valuesi) == 12, valuesi
+                #if coord_type_int in coord_type_map:
+                    #unused_coord_type = coord_type_map[coord_type_int]
+                #else:  # pragma: no cover
+                    #msg = 'cid=%s coord_type_int=%s is not supported\n' % (cid, coord_type_int)
+                    #if hasattr(self, 'coords'):
+                        #print(op2.coords)
+                    #raise RuntimeError(msg)
+
+                origin = valuesi[:3]
+                i = valuesi[3:6]
+                j = valuesi[6:9]
+                k = valuesi[9:12]
+                zaxis = origin + k
+                xzplane = origin + i
+                assert len(origin) == 3, origin
+                assert len(zaxis) == 3, zaxis
+                assert len(xzplane) == 3, xzplane
+                if coord_type_int == 1:
+                    self.op2.add_cord2r(cid, rid=0,
+                                        origin=origin, zaxis=zaxis, xzplane=xzplane,
+                                        comment='')
+                elif coord_type_int == 2:
+                    self.op2.add_cord2c(cid, rid=0,
+                                        origin=origin, zaxis=zaxis, xzplane=xzplane,
+                                        comment='')
+                else:  # pragma: no cover
+                    raise NotImplementedError('coord_type_int=%s' % coord_type_int)
+
+        elif nblocks == 2:
+            # cstm style
+            #block4 - 4 values  - cid, type, int_index, double_index
+            #block5 - 12 values - ox, oy, oz, T11, T12, T13, T21, T22, T23, T31, T32, T33
+            ints = np.frombuffer(blocks[0], dtype='int32')
+            doubles = np.frombuffer(blocks[1], dtype='float64')
+            nints = len(ints)
+            ndoubles = len(doubles)
+            ncoords = nints // 4
+            ints = ints.reshape(ncoords, 4)
+            #print('ints =', ints.tolist())
+            if ncoords == ndoubles // 12:
+                values = doubles.reshape(ncoords, 12)
+                #print('doubles =', doubles.tolist())
+            else:
+                values = np.frombuffer(blocks[1], dtype='float32').reshape(ncoords // 4, 12)
+                #print('floats =', floats.tolist())
+            for intsi, valuesi in zip(ints, values):
+                cid, cid_type, int_index, double_index = intsi
+                assert len(valuesi) == 12, valuesi
+
+                origin = valuesi[:3]
+                i = valuesi[3:6]
+                j = valuesi[6:9]
+                k = valuesi[9:12]
+                zaxis = origin + k
+                xzplane = origin + i
+                assert len(origin) == 3, origin
+                assert len(zaxis) == 3, zaxis
+                assert len(xzplane) == 3, xzplane
+                if cid_type == 1:
+                    self.op2.add_cord2r(cid, rid=0,
+                                        origin=origin, zaxis=zaxis, xzplane=xzplane,
+                                        comment='')
+                else:  # pragma: no cover
+                    raise NotImplementedError('coord_type_int=%s' % coord_type_int)
         else:  # pragma: no cover
-            msg = 'cid=%s coord_type_int=%s is not supported\n' % (cid, coord_type_int)
-            if hasattr(self, 'coords'):
-                print(op2.coords)
-            raise RuntimeError(msg)
+            raise NotImplementedError('nCSTM blocks=%s (not 1 or 2)' % nblocks)
 
-        #print(self.coords)
-        #print('cid = ', cid)
-        #print('coord_type = ', coord_type)
-        #print('myints =', ints)
-        #print('floats =', floats)
+        markers = self.get_nmarkers(1, rewind=False)
 
-        self.read_markers([-4, 1, 0, 0])
+        #while i < len(ints):
+            #break
+            #cid = ints[i]
+            #coord_type_int = ints[i + 1]
+
+            #if coord_type_int in coord_type_map:
+                #unused_coord_type = coord_type_map[coord_type_int]
+            #else:  # pragma: no cover
+                #msg = 'cid=%s coord_type_int=%s is not supported\n' % (cid, coord_type_int)
+                #if hasattr(self, 'coords'):
+                    #print(op2.coords)
+                #raise RuntimeError(msg)
+
+            #if coord_type_int in [1, 2, 3]: # rectangular, cylindrical, spherical
+                #translations_cosines = floats[i+3:i+14]
+                #print(len(translations_cosines))
+                #i += 14
+            #else:
+                #raise NotImplementedError('coord_type_int = %i' % coord_type_int)
+        #if 0:
+            ## vectorized
+            #assert nints % 14 == 0, 'nints=%s' % (nints)
+            #ncstm = get_table_size_from_ncolumns('CSTM', nints, 14)
+            #ints = ints.reshape(ncstm, 14)[:, :2]
+            #floats = floats.reshape(ncstm, 14)[:, 2:]
+            ##assert ncstm == 1, 'ncoords = %s' % ncstm
+            ##print(self.coords)
+            #for i, unused_coord in enumerate(ints):
+                #cid = ints[i, 0]
+                #coord_type_int = ints[i, 1]
+            #if coord_type_int in coord_type_map:
+                #unused_coord_type = coord_type_map[coord_type_int]
+            #else:  # pragma: no cover
+                #msg = 'cid=%s coord_type_int=%s is not supported\n' % (cid, coord_type_int)
+                #if hasattr(self, 'coords'):
+                    #print(op2.coords)
+                #raise RuntimeError(msg)
+
+            #print(self.coords)
+            #print('cid = ', cid)
+            #print('coord_type = ', coord_type)
+            #print('myints =', ints)
+            #print('floats =', floats)
 
     def _read_dit(self):
         """
@@ -928,7 +1068,7 @@ class OP2Reader(object):
 
     def read_gpdt(self):
         """
-        reads the
+        reads the GPDT table
 
         tested by ???
         """
@@ -936,6 +1076,7 @@ class OP2Reader(object):
             #read_record = self._skip_record
         #else:
         read_record = self._read_record
+        skip_record = self._skip_record
 
         op2 = self.op2
         table_name = self._read_table_name(rewind=False)
@@ -961,47 +1102,52 @@ class OP2Reader(object):
         #print('--------------------')
 
         self.read_markers([-3, 1, 0])
-        data = read_record() # nid,cp,x,y,z,cd,ps
 
-        nvalues = len(data) // 4
-        #self.show_data(data)
 
         ## TODO: no idea how this works...
-        if nvalues % 7 == 0:
-            nrows = get_table_size_from_ncolumns('GPDT', nvalues, 7)
-            ints = np.frombuffer(data, op2.idtype).reshape(nrows, 7).copy()
-            floats = np.frombuffer(data, op2.fdtype).reshape(nrows, 7).copy()
-        elif nvalues % 10 == 0:
-            nrows = get_table_size_from_ncolumns('GPDT', nvalues, 10)
-            ints = np.frombuffer(data, op2.idtype).reshape(nrows, 10).copy()
-            floats = np.frombuffer(data, op2.fdtype).reshape(nrows, 10).copy()
-            #print('ints:')
-            #print(ints)
-            iints = [0]
-            ifloats = [3, 5]
-            izero = [1, 2, 4, 6, 7, 8, 9]
+        if self.read_mode == 1:
+            data = read_record() # nid,cp,x,y,z,cd,ps
+            nvalues = len(data) // 4
+            if nvalues % 7 == 0:
+                # mixed ints, floats
+                #  0   1   2   3   4   5   6
+                # id, cp, x1, x2, x3, cd, ps
+                nrows = get_table_size_from_ncolumns('GPDT', nvalues, 7)
+                ints = np.frombuffer(data, op2.idtype).reshape(nrows, 7).copy()
+                floats = np.frombuffer(data, op2.fdtype).reshape(nrows, 7).copy()
+                nid_cp_cd_ps = ints[:, iints]
+                xyz = floats[:, 2:5]
+                #iints = [0, 1, 5, 6] # [1, 2, 6, 7] - 1
+            elif nvalues % 10 == 0:
+                # mixed ints, doubles
+                nrows = get_table_size_from_ncolumns('GPDT', nvalues, 10)
+                iints = [0, 1, 8, 9]
+                #ifloats = [2, 3, 4, 5, 6, 7]
+                idoubles = [1, 2, 3]
+                izero = [1, 8, 9]
 
-            # not conclusive, but effective...
-            is_all_zero = ints[:, izero].max() == ints[:, izero].min()
-            if not is_all_zero:
-                self.log.warning('error reading %s table with is_all_zero != 0' % table_name)
-            #for row in ints:
+                #print('ints:')
+                #print(ints)
+                # nid cp, x,    y,    z,    cd, ps
+                # [0, 1,  2, 3, 4, 5, 6, 7, 8,   9]
+                # [ ,  ,  1, 1, 2, 2, 3, 3,  ,    ]
+                if self.read_mode == 1:
+                    ints = np.frombuffer(data, op2.idtype).reshape(nrows, 10).copy()
+                    #floats = np.frombuffer(data, op2.fdtype).reshape(nrows, 10).copy()
+                    doubles = np.frombuffer(data, 'float64').reshape(nrows, 5).copy()
 
-            #print(ints[iints, :])
+                    nid_cp_cd_ps = ints[:, iints]
+                    xyz = doubles[:, idoubles]
+            else:
+                raise NotImplementedError(nvalues)
 
-            #ifloats = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-            #print('floats:')
-            #print(floats)
-            #print(floats[30, ifloats])
+            self.op2.gpdt = {
+                'nid_cp_cd_ps' : nid_cp_cd_ps,
+                'xyz' : xyz,
+            }
         else:
-            raise NotImplementedError(nvalues)
-        #iints = [0, 1, 5, 6] # [1, 2, 6, 7] - 1
-        #nid_cp_cd_ps = ints[:, iints]
-        #xyz = floats[:, 2:5]
-        #gpdt = {
-            #'nid_cp_cd_ps' : nid_cp_cd_ps,
-            #'xyz' : xyz,
-        #}
+            unused_data = skip_record() # nid,cp,x,y,z,cd,ps
+
 
         # 1. Scalar points are identified by CP=-1 and words X1 through
         #    PS are zero.
@@ -1193,7 +1339,12 @@ class OP2Reader(object):
         self.read_markers([-4, 1, 0, 0])
 
     def read_ibulk(self):
-        """tested by TestOP2.test_ibulk"""
+        """
+        tested by TestOP2.test_ibulk
+
+        read_mode = 1 (array sizing)
+        read_mode = 1 (reading)
+        """
         op2 = self.op2
         op2.table_name = self._read_table_name(rewind=False)
         op2.log.debug('table_name = %r' % op2.table_name)
@@ -1203,6 +1354,7 @@ class OP2Reader(object):
         if self.is_debug_file:
             self.binary_debug.write('---markers = [-1]---\n')
         unused_data = self._read_record()
+        #print(self.show_data(data))
 
         unused_markers = self.get_nmarkers(1, rewind=True)
         marker = -2
@@ -1210,14 +1362,17 @@ class OP2Reader(object):
             self.read_markers([marker, 1, 0])
             nfields = self.get_marker1(rewind=True)
             if nfields > 0:
-                unused_data = self._read_record()
-                #self.show_data(data, types='s', endian=None)
+                # we're not reading the record because the IBULK
+                # table is literally just an unsorted echo of the
+                # BULK data table in the BDF
+                unused_data = self._skip_record()
             elif nfields == 0:
                 #op2.show_ndata(100, types='ifs')
                 break
             else:
                 raise RuntimeError('nfields=%s' % nfields)
             marker -= 1
+        #print("marker = ", marker)
         unused_marker_end = self.get_marker1(rewind=False)
 
     def read_omm2(self):

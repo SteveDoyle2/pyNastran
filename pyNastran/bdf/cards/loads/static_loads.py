@@ -2598,6 +2598,10 @@ class PLOAD4(Load):
             g34 = None
         cid = data[5]
         nvector = data[6]
+        if cid == 0 and nvector == [0., 0., 0.]:
+            # these are apparently the secret defaults
+            cid = None
+            nvector = None
 
         surf_or_line = data[7]
 
@@ -2744,6 +2748,13 @@ class PLOAD4(Load):
             else:
                 list_fields += [None, None]
 
+        #+--------+-----+-----+----+----+------+------+------+-------+
+        #|   1    |  2  |  3  |  4 |  5 |  6   |   7  |   8  |   9   |
+        #+========+=====+=====+====+====+======+======+======+=======+
+        #| PLOAD4 | SID | EID | P1 | P2 |  P3  |  P4  | THRU | EID2  |
+        #+--------+-----+-----+----+----+------+------+------+-------+
+        #|        | CID | N1  | N2 | N3 | SORL | LDIR |      |       |
+        #+--------+-----+-----+----+----+------+------+------+-------+
         cid = self.Cid()
         if cid is not None or not np.all(np.isnan(self.nvector)):
             n1, n2, n3 = self.nvector
