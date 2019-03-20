@@ -209,6 +209,8 @@ class OP2Writer(OP2_F06_Common):
             'OGS1',
         ]
         for table_type in obj.get_table_types():
+            if table_type in ['gpdt', 'eqexin']:
+                continue
             res_dict = obj.get_result(table_type)
             for unused_key, res in res_dict.items():
                 if hasattr(res, 'table_name_str'): # params

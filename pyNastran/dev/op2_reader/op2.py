@@ -980,6 +980,10 @@ class OP2(OP2_Scalar):
                     self.log.info('  %s' % str(key))
         #self.log.info('subcase_key = %s' % self.subcase_key)
 
+    @property
+    def is_geometry(self):
+        return False
+
     def transform_displacements_to_global(self, i_transform, coords, xyz_cid0=None, debug=False):
         """
         Transforms the ``data`` of displacement-like results into the

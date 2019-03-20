@@ -264,6 +264,9 @@ class OP2(OP2_Scalar):
         else:
             skip_results = set(skip_results)
 
+        skip_results.add('gpdt')
+        skip_results.add('eqexin')
+
         if not self.read_mode == op2_model.read_mode:
             self.log.warning('self.read_mode=%s op2_model.read_mode=%s ... assume True' % (
                 self.read_mode, op2_model.read_mode))
@@ -560,6 +563,10 @@ class OP2(OP2_Scalar):
         #"""
         #self.ask = ask
 
+    @property
+    def is_geometry(self):
+        return False
+
     def read_op2(self, op2_filename=None, combine=True,
                  build_dataframe=None, skip_undefined_matrices=False, encoding=None):
         """
@@ -659,7 +666,7 @@ class OP2(OP2_Scalar):
         """internal method"""
         result_types = self.get_table_types()
         for result_type in result_types:
-            if result_type in ['params']:
+            if result_type in ['params', 'gpdt', 'eqexin']:
                 continue
             result = self.get_result(result_type)
             for obj in result.values():
@@ -698,7 +705,7 @@ class OP2(OP2_Scalar):
                     #continue
 
         for result_type in result_types:
-            if result_type == 'params':
+            if result_type in ['params', 'gpdt', 'eqexin']:
                 #self.log.debug('skipping %s' % result_type)
                 continue
 
@@ -847,9 +854,12 @@ class OP2(OP2_Scalar):
         """
         self.combine = combine
         result_types = self.get_table_types()
+        results_to_skip = ['gpdt', 'eqexin']
 
         # set subcase_key
         for result_type in result_types:
+            if result_type in results_to_skip:
+                continue
             result = self.get_result(result_type)
             case_keys = sorted(result.keys())
             unique_isubcases = []
@@ -887,6 +897,8 @@ class OP2(OP2_Scalar):
 
         self.log.debug('combine_results')
         for result_type in result_types:
+            if result_type in results_to_skip:
+                continue
             result = self.get_result(result_type)
             if len(result) == 0:
                 continue
@@ -966,7 +978,7 @@ class OP2(OP2_Scalar):
 
         subcase_key2 = {}
         for result_type in result_types:
-            if result_type in ['eigenvalues', 'params']:
+            if result_type in ['eigenvalues', 'params', 'gpdt', 'eqexin']:
                 continue
             result = self.get_result(result_type)
             case_keys = list(result.keys())
@@ -1007,6 +1019,8 @@ class OP2(OP2_Scalar):
         table_types = self.get_table_types()
         for table_type in sorted(table_types):
             result_type_dict = self.get_result(table_type)
+            if result_type_dict is None: # gpdt, eqexin
+                continue
             if len(result_type_dict) == 0:
                 continue
             for key in result_type_dict:

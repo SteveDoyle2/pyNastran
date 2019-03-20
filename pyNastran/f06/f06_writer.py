@@ -562,7 +562,7 @@ class F06Writer(OP2_F06_Common):
         header_old = ['     DEFAULT                                                                                                                        \n',
                       '\n', ' \n']
         header = copy.deepcopy(header_old)
-        unallowed_results = ['eigenvectors', 'eigenvalues', 'params']
+        unallowed_results = ['eigenvectors', 'eigenvalues', 'params', 'gpdt', 'eqexin']
         res_types = list(self.get_result(table_type) for table_type in sorted(self.get_table_types())
                          if table_type not in unallowed_results)
 

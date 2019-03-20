@@ -628,6 +628,8 @@ class OP2Reader(object):
         T is transformation from local to basic for the coordinate system.
         """
         op2 = self.op2
+
+        is_geometry = op2.is_geometry
         unused_table_name = self._read_table_name(rewind=False)
         self.read_markers([-1])
         data = self._read_record()
@@ -668,6 +670,10 @@ class OP2Reader(object):
             blocks.append(data)
             self.read_markers([itable, 1, 0])
             itable -= 1
+        markers = self.get_nmarkers(1, rewind=False)
+
+        if not is_geometry:
+            return
 
         nblocks = len(blocks)
         if nblocks == 1:
@@ -765,7 +771,6 @@ class OP2Reader(object):
         else:  # pragma: no cover
             raise NotImplementedError('nCSTM blocks=%s (not 1 or 2)' % nblocks)
 
-        markers = self.get_nmarkers(1, rewind=False)
 
         #while i < len(ints):
             #break
@@ -1115,9 +1120,9 @@ class OP2Reader(object):
                 nrows = get_table_size_from_ncolumns('GPDT', nvalues, 7)
                 ints = np.frombuffer(data, op2.idtype).reshape(nrows, 7).copy()
                 floats = np.frombuffer(data, op2.fdtype).reshape(nrows, 7).copy()
+                iints = [0, 1, 5, 6] # [1, 2, 6, 7] - 1
                 nid_cp_cd_ps = ints[:, iints]
                 xyz = floats[:, 2:5]
-                #iints = [0, 1, 5, 6] # [1, 2, 6, 7] - 1
             elif nvalues % 10 == 0:
                 # mixed ints, doubles
                 nrows = get_table_size_from_ncolumns('GPDT', nvalues, 10)
@@ -1141,10 +1146,7 @@ class OP2Reader(object):
             else:
                 raise NotImplementedError(nvalues)
 
-            self.op2.gpdt = {
-                'nid_cp_cd_ps' : nid_cp_cd_ps,
-                'xyz' : xyz,
-            }
+            self.op2.op2_results.gpdt = GPDT(nid_cp_cd_ps, xyz)
         else:
             unused_data = skip_record() # nid,cp,x,y,z,cd,ps
 
@@ -3627,3 +3629,27 @@ class EQEXIN(object):
         self.nid = nid
         self.dof = dof
         self.doftype = doftype
+
+    def write_csv(self, file_obj):
+        file_obj.write('# nnodes=%s\n' % len(self.nid))
+        file_obj.write('# nid, dof, dof_type\n')
+        for nid, dof, dof_type in zip(self.nid, self.dof, self.doftype):
+            file_obj.write('%s, %s, %s\n' % (nid, dof, dof_type))
+
+    def get_stats(self, short=True):
+        return str(self)
+
+    def __repr__(self):
+        return 'EQEXIN(nid, ndof, doftype); nnodes=%s\n' % len(self.nid)
+
+
+class GPDT(object):
+    def __init__(self, nid_cp_cd_ps, xyz):
+        self.nid_cp_cd_ps = nid_cp_cd_ps
+        self.xyz = xyz
+
+    def get_stats(self, short=True):
+        return str(self)
+
+    def __repr__(self):
+        return 'GPDT(nid_cp_cd_ps, xyz); nnodes=%s\n' % (self.xyz.shape[0])

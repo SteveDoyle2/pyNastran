@@ -1112,10 +1112,13 @@ def _export_subcases(hdf5_file, op2_model):
     subcase_groups = {}
     result_types = op2_model.get_table_types()
     for result_type in result_types:
-        if result_type == 'params':
+        if result_type in ['params', 'gpdt', 'eqexin']:
             op2_model.log.debug('skipping %s' % result_type)
             continue
+
         result = op2_model.get_result(result_type)
+        if result is None:  # gpdt, eqexin
+            continue
         #if len(result):
             #print(result)
 
@@ -1159,7 +1162,7 @@ def load_op2_from_hdf5_file(model, h5_file, log, debug=False):
     for key in h5_file.keys():
         if key.startswith('Subcase'):
             h5_subcase = h5_file.get(key)
-            log.debug('subcase:')
+            #log.debug('subcase:')
             for result_name in h5_subcase.keys():
                 if result_name == 'eigenvalues':
                     #log.warning('    skipping %r...' % result_name)

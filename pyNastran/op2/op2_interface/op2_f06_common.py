@@ -23,6 +23,7 @@ from pyNastran.op2.tables.grid_point_weight import GridPointWeight
 class Results(object):
     def __init__(self):
         self.eqexin = None
+        self.gpdt = None
         self.ato = AutoCorrelationObjects()
         self.psd = PowerSpectralDensityObjects()
         self.rms = RootMeansSquareObjects()
@@ -60,7 +61,7 @@ class Results(object):
             self.RADCONS, self.RAFCONS, self.RASCONS, self.RAECONS, self.RAGCONS, self.RAPCONS, self.RANCONS,
             self.RADEATC, self.RAFEATC, self.RASEATC, self.RAEEATC, self.RAGEATC, self.RAPEATC, self.RANEATC,
         ]
-        base = []
+        base = ['eqexin', 'gpdt']
         for objs in sum_objs:
             base.extend(objs.get_table_types())
         return base
@@ -269,7 +270,10 @@ class OP2_F06_Common(object):
             storage_dict = getattr(storage_obj, result_name)
             return storage_dict
         else:
-            storage_obj = getattr(self, result_name)
+            try:
+                storage_obj = getattr(self, result_name)
+            except AttributeError:
+                storage_obj = getattr(self.op2_results, result_name)
             return storage_obj
 
     def del_result(self, result_name):
@@ -286,7 +290,10 @@ class OP2_F06_Common(object):
             storage_obj = getattr(self.op2_results, obj_name)
             delattr(storage_obj, result_name)
         else:
-            delattr(self, result_name)
+            try:
+                delattr(self, result_name)
+            except AttributeError:
+                storage_obj = delattr(self.op2_results, result_name)
 
     def deprecated(self, old_name, new_name, deprecated_version):
         """allows for simple OP2 vectorization"""
@@ -1100,6 +1107,13 @@ class OP2_F06_Common(object):
                 if table_type in ['params']:
                     msg.extend(_write_params(self.params))
                     continue
+                elif table_type in ['gpdt', 'eqexin']:
+                    obj = self.get_result(table_type)
+                    if obj is None:
+                        continue
+                    stats = obj.get_stats(short=True)
+                    msg.extend(stats)
+                    continue
 
                 table = self.get_result(table_type)
                 for isubcase, subcase in sorted(table.items(), key=compare):
@@ -1129,6 +1143,14 @@ class OP2_F06_Common(object):
                 if table_type in ['params']:
                     msg.extend(_write_params(self.params))
                     continue
+                elif table_type in ['gpdt', 'eqexin']:
+                    obj = self.get_result(table_type)
+                    if obj is None:
+                        continue
+                    stats = obj.get_stats(short=False)
+                    msg.extend(stats)
+                    continue
+
                 try:
                     for isubcase, subcase in sorted(table.items(), key=compare):
                         class_name = subcase.__class__.__name__

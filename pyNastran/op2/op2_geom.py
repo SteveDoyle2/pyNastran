@@ -280,11 +280,39 @@ class OP2Geom(BDF, OP2GeomCommon):
         OP2GeomCommon.__init__(self, make_geom=make_geom,
                                debug=debug, log=log, debug_file=debug_file, mode=mode)
 
+    @property
+    def is_geometry(self):
+        return True
+
+    def read_op2(self, op2_filename=None, combine=True,
+                 build_dataframe=None, skip_undefined_matrices=False, encoding=None):
+        """see ``OP2.read_op2``"""
+        OP2.read_op2(self, op2_filename=op2_filename, combine=combine,
+                     build_dataframe=build_dataframe,
+                     skip_undefined_matrices=skip_undefined_matrices,
+                     encoding=encoding)
+        if len(self.nodes) == 0:
+            self.gpdt_to_nodes()
+
     def gpdt_to_nodes(self):
-        nid_cp_cd_ps = self.gpdt['nid_cp_cd_ps']
-        xyz = self.gpdt['xyz']
-        for nid_cp_cd_psi, xyzi in zip(nid_cp_cd_ps, xyz):
-            nid, cp, cd, ps = nid_cp_cd_psi
+        """converts the GPDT & EQEXIN tables to node ids"""
+        eqexin = self.op2_results.eqexin
+        gpdt = self.op2_results.gpdt
+        msg = ''
+        if eqexin is None:
+            msg += 'eqexin is None; '
+        if gpdt is None:
+            msg += 'gpdt is None'
+            return
+        if msg:
+            self.log.error(msg.rstrip('; '))
+            return
+
+        nid_cp_cd_ps = gpdt.nid_cp_cd_ps
+        xyz = gpdt.xyz
+        nids = eqexin.nid
+        for nid, nid_cp_cd_psi, xyzi in zip(nids, nid_cp_cd_ps, xyz):
+            _nid, cp, cd, ps = nid_cp_cd_psi
             self.add_grid(nid, xyzi, cp=cp, cd=cd, ps=ps, seid=0, comment='')
 
     def __getstate__(self):
