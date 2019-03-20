@@ -1018,9 +1018,11 @@ class OP2(OP2_Scalar):
         keys = []
         table_types = self.get_table_types()
         for table_type in sorted(table_types):
-            result_type_dict = self.get_result(table_type)
-            if result_type_dict is None: # gpdt, eqexin
+            if table_type in ['gpdt', 'eqexin']:
                 continue
+            result_type_dict = self.get_result(table_type)
+            #if result_type_dict is None: # gpdt, eqexin
+                #continue
             if len(result_type_dict) == 0:
                 continue
             for key in result_type_dict:
