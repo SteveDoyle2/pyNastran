@@ -249,7 +249,7 @@ class OP2Reader(object):
         if mode is None:
             self.log.warning("No mode was set, assuming 'msc'")
             mode = 'msc'
-        self.log.info('mode = %r' % mode)
+        self.log.debug('mode = %r' % mode)
         self.op2.set_mode(mode)
         self.op2.set_table_type()
 
