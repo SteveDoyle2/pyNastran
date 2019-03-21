@@ -350,7 +350,6 @@ class OP2Reader(object):
         #print('-----------------------')
         #print('end')
         #self.show(200)
-        #aaa
 
     def read_monitor(self):
         """reads the MONITOR table"""
@@ -1448,28 +1447,66 @@ class OP2Reader(object):
         op2.log.debug("table_name = %r" % op2.table_name)
         unused_table_name = self._read_table_name(rewind=False)
 
+        #read_record = self._skip_record if self.read_mode == 2 else self._read_record
         self.read_markers([-1])
-        unused_data = self._skip_record()
+
+        # (104, 0, 103, 412, 0, 0, 103)
+        data_header = self._read_record()
 
         self.read_markers([-2, 1, 0])
-        unused_data = self._skip_record()
+        # 'IPCOMPT '
+        unused_data = self._read_record()
         #table_name, = op2.struct_8s.unpack(data)
 
-        self.read_markers([-3, 1, 0])
+        isubtable = -3
+        self.read_markers([isubtable, 1, 0])
         markers = self.get_nmarkers(1, rewind=True)
+
         if markers != [-4]:
-            unused_data = self._skip_record()
+            unused_data = self._read_record()
 
         self.read_markers([-4, 1, 0])
         markers = self.get_nmarkers(1, rewind=True)
+        #self.show(200, types='ifsd')
         if markers != [0]:
-            unused_data = self._skip_record()
+            #self.show_data(data_header, types='ifsd')
+            # (1, 4, 0, '    ')
+            #(421, 4, 128, '    ')
+            #(814, 4, 256, '    ')
+            data = self._read_record()
+            #self.show_data(data, types='ifsd')
+
+            if 0: # pramga: no cover
+                i = 0
+                j = 0
+                s1 = Struct(b'< 3i 4s')
+                while i < len(data):
+                    datai = data[i:i+16]
+                    out = s1.unpack(datai)
+                    print(out)
+                    i += 16
+                    j += 1
         else:
             self.read_markers([0])
             return
 
         self.read_markers([-5, 1, 0])
-        unused_data = self._skip_record()
+        data = self._read_record()
+        #self.show_data(data, types='ifsd')
+
+        if 0: # pramga: no cover
+            i = 0
+            j = 0
+            nbytes = 128
+            s1 = Struct(b'< 6i fi 96s')
+            while i < len(data):
+                datai = data[i:i+nbytes]
+                a, b, c, d, e, f, g, h, blank = s1.unpack(datai)
+                print('%r %r %r %r %r %r %r %r %r ' % (
+                    a, b, c, d, e, f, g, h, blank.rstrip()))
+                i += nbytes
+                j += 1
+
 
         self.read_markers([-6, 1, 0])
         self.read_markers([0])
@@ -1794,7 +1831,6 @@ class OP2Reader(object):
         #op2.show_ndata(440, types='ifs')
 
         #self.show_data(data)
-        #aaaa
 
     def _get_matrix_row_fmt_nterms_nfloats(self, nvalues, tout):
         """

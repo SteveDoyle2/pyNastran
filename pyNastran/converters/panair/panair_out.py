@@ -29,7 +29,9 @@ class Network(object):
         self.data = []
         self.jc = 0
         self.ip = 0
-        self.headers = ['x', 'y', 'z', 'wx', 'wy', 'wz', 'cp2ndu', 'cpisnu', 'lmachu', 'source', 'doublet']
+        self.headers = [
+            'x', 'y', 'z', 'wx', 'wy', 'wz', 'cp2ndu', 'cpisnu', 'lmachu', 'source', 'doublet',
+        ]
 
     def add(self, jc, ip, x, y, z, wx, wy, wz, cp2ndu, cpisnu, lmachu, source, doublet):
         """adds the data"""
@@ -45,11 +47,14 @@ class PanairOut(object):
     """reads the panair.out file"""
     def __init__(self, log=None, debug=False):
         self.log = get_logger2(log=log, debug=debug, encoding='utf-8')
-        self.headers = ['x', 'y', 'z', 'wx', 'wy', 'wz', 'cp2ndu', 'cpisnu', 'lmachu', 'source', 'doublet']
-        self.headers_ft13 = ['x', 'y', 'z', 'd0', 'dx', 'dy', 'dz', 's0', 'anx', 'any', 'anz',
-                             'lmachu', 'wxu', 'wyu', 'wzu', 'pheu', 'vxu', 'vyu', 'vzu', 'cplinu', 'cpslnu', 'cp2ndu', 'cpisnu',
-                             'lmachl', 'wxl', 'wyl', 'wzl', 'phel', 'vxl', 'vyl', 'vzl', 'cplinl', 'cpslnl', 'cp2ndl', 'cpisnl',
-                             'wnu', 'wnl', 'pwnu', 'pwnl', 'vtu', 'vtl', 'pvtu', 'pvtl', 'cplind', 'cpslnd', 'cp2ndd', 'cpisnd']
+        self.headers = [
+            'x', 'y', 'z', 'wx', 'wy', 'wz', 'cp2ndu', 'cpisnu', 'lmachu', 'source', 'doublet'
+        ]
+        self.headers_ft13 = [
+            'x', 'y', 'z', 'd0', 'dx', 'dy', 'dz', 's0', 'anx', 'any', 'anz',
+            'lmachu', 'wxu', 'wyu', 'wzu', 'pheu', 'vxu', 'vyu', 'vzu', 'cplinu', 'cpslnu', 'cp2ndu', 'cpisnu',
+            'lmachl', 'wxl', 'wyl', 'wzl', 'phel', 'vxl', 'vyl', 'vzl', 'cplinl', 'cpslnl', 'cp2ndl', 'cpisnl',
+            'wnu', 'wnl', 'pwnu', 'pwnl', 'vtu', 'vtl', 'pvtu', 'pvtl', 'cplind', 'cpslnd', 'cp2ndd', 'cpisnd']
         self.networks = {}
         self.networks_ft13 = {}
 
@@ -172,7 +177,10 @@ class PanairOut(object):
             lines = out_file.readlines()
 
         iline = -1
-        keywords = ['simultaneous solution number', 'network id:', 'force / moment data for network']
+        unused_keywords = [
+            'simultaneous solution number',
+            'network id:',
+            'force / moment data for network']
         isolution = 1
         iline_old = -1
         nlines = len(lines) - 1
@@ -221,10 +229,10 @@ class PanairOut(object):
             return iline
 
         if line.startswith('1    network id:') and inetwork not in networks:
-                network = Network(line)
-                networks[inetwork] = network
-                #print(network)
-                self.log.debug('%s: network!; %s' % (iline, line))
+            network = Network(line)
+            networks[inetwork] = network
+            #print(network)
+            self.log.debug('%s: network!; %s' % (iline, line))
 
         #print('reading network---')
         #print(line)
@@ -297,5 +305,3 @@ class PanairOut(object):
 
 if __name__ == '__main__':  # pragma: no cover
     read_panair_out(panair_out_filename='panair.out')
-
-

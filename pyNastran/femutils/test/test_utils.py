@@ -8,7 +8,7 @@ import os
 import unittest
 from io import open, BytesIO #, StringIO
 
-from six import PY2, StringIO, BytesIO
+from six import PY2, StringIO
 import numpy as np
 from numpy.testing import assert_equal, assert_array_equal
 
@@ -21,7 +21,6 @@ from pyNastran.femutils.utils import perpendicular_vector, perpendicular_vector2
 from pyNastran.femutils.coord_transforms import cylindrical_rotation_matrix
 
 from pyNastran.femutils.test.utils import is_array_close
-from numpy.compat import asbytes
 
 PKG_PATH = pyNastran.__path__[0]
 
@@ -248,7 +247,7 @@ class TestFemIO(unittest.TestCase):
         c.seek(0)
 
         x = loadtxt_nice(c, dtype=[('x', np.int32), ('y', np.float32)])
-        x2 = np.loadtxt(c, dtype=[('x', np.int32), ('y', np.float32)])
+        unused_x2 = np.loadtxt(c, dtype=[('x', np.int32), ('y', np.float32)])
 
         #print('x =', x, type(x2))
         #print('x2 =', x2, type(x2))
@@ -403,9 +402,9 @@ class TestFemIO(unittest.TestCase):
         savetxt_nice(csv_filename, B, fmt='%.18e', delimiter=',', newline='\n',
                      header='', footer='', comments='# ')
         with self.assertRaises(ValueError):  ## TODO: mistake
-            B2 = loadtxt_nice(csv_filename, delimiter=',', skiprows=0, comments='#',
-                              dtype=np.float64, converters=None,
-                              usecols=None, unpack=False, ndmin=0)
+            unused_B2 = loadtxt_nice(csv_filename, delimiter=',', skiprows=0, comments='#',
+                                     dtype=np.float64, converters=None,
+                                     usecols=None, unpack=False, ndmin=0)
             #assert np.array_equal(B, B2), 'expected:\n%s\nactual:\n%s' % (B, B2)
         os.remove(csv_filename)
 

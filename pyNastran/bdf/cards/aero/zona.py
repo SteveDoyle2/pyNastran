@@ -1810,7 +1810,7 @@ class BODY7(BaseCard):
 
             thetas = self._get_thetas()
             for itype, camber, yrad, zrad, idy_ref, idz_ref in zip(
-                itypes, cambers, yrads, zrads, idys_ref2, idzs_ref2):
+                    itypes, cambers, yrads, zrads, idys_ref2, idzs_ref2):
                 if itype == 1:
                     # Body of Revolution
                     # Xi, CAMi, YRi
@@ -1931,7 +1931,7 @@ class BODY7(BaseCard):
     @property
     def npanels(self):
         nz = len(self.segmesh_refs)
-        segmesh = self.segmesh_refs[0]
+        unused_segmesh = self.segmesh_refs[0]
         nthetas = self._get_nthetas()
         npanels = nz * (nthetas - 1)
         return npanels
@@ -1983,10 +1983,11 @@ class BODY7(BaseCard):
 
         nthetas = segmesh.nradial
         thetas = np.radians(np.linspace(0., 360., nthetas))
-        for itype, x, yrad, zrad, camber, idy_ref, idz_ref in zip(segmesh.itypes,
-                                                                  segmesh.xs, segmesh.ys, segmesh.zs,
-                                                                  segmesh.cambers,
-                                                                  segmesh.idys_ref, segmesh.idzs_ref):
+        for itype, x, yrad, zrad, camber, idy_ref, idz_ref in zip(
+                segmesh.itypes,
+                segmesh.xs, segmesh.ys, segmesh.zs,
+                segmesh.cambers,
+                segmesh.idys_ref, segmesh.idzs_ref):
             y = 0.
             z = 0.
             if itype == 1:
@@ -2546,18 +2547,18 @@ class CAERO7(BaseCard):
         z1 = double_or_blank(card, 11, 'z1', 0.0)
         p1 = np.array([x1, y1, z1])
         x12 = double_or_blank(card, 12, 'x12', 0.)
-        lchord_root = integer_or_blank(card, 13, 'lchord_root')
-        attach_root = integer_or_blank(card, 14, 'attach_root')
-        achord_root = integer_or_blank(card, 15, 'achord_root')
+        unused_lchord_root = integer_or_blank(card, 13, 'lchord_root')
+        unused_attach_root = integer_or_blank(card, 14, 'attach_root')
+        unused_achord_root = integer_or_blank(card, 15, 'achord_root')
 
         x4 = double_or_blank(card, 17, 'x4', 0.0)
         y4 = double_or_blank(card, 18, 'y4', 0.0)
         z4 = double_or_blank(card, 19, 'z4', 0.0)
         p4 = np.array([x4, y4, z4])
         x43 = double_or_blank(card, 20, 'x43', 0.)
-        lchord_tip = integer_or_blank(card, 21, 'lchord_tip')
-        attach_tip = integer_or_blank(card, 22, 'attach_tip')
-        achord_tip = integer_or_blank(card, 23, 'achord_tip')
+        unused_lchord_tip = integer_or_blank(card, 21, 'lchord_tip')
+        unused_attach_tip = integer_or_blank(card, 22, 'attach_tip')
+        unused_achord_tip = integer_or_blank(card, 23, 'achord_tip')
 
         assert len(card) <= 23, 'len(CAERO7 card) = %i\ncard=%s' % (len(card), card)
         return CAERO7(eid, name, p1, x12, p4, x43,
@@ -2581,7 +2582,8 @@ class CAERO7(BaseCard):
 
         npanels = nchord * nspan
         try:
-            self.box_ids = np.arange(self.eid, self.eid + npanels, dtype=dtype).reshape(nspan, nchord).T
+            self.box_ids = np.arange(self.eid, self.eid + npanels,
+                                     dtype=dtype).reshape(nspan, nchord).T
         except OverflowError:
             if dtype == 'int64':
                 # we already tried int64
@@ -3056,9 +3058,9 @@ class TRIM_ZONA(BaseCard):
             double(card, 9, 'cg-z'),
         ]
 
-        wtmass = double(card, 9, 'wtmass')
-        weight = double(card, 10, 'weight')
-        inertia = [
+        unused_wtmass = double(card, 9, 'wtmass')
+        unused_weight = double(card, 10, 'weight')
+        unused_inertia = [
             double(card, 11, 'Ixx'),
             double(card, 12, 'Ixy'),
             double(card, 13, 'Iyy'),
@@ -3555,30 +3557,30 @@ class FLUTTER_ZONA(Spline):
 
     def cross_reference(self, model):
         return
-        msg = ', which is required by SPLINE1 eid=%s' % self.eid
-        self.setg_ref = model.Set(self.setg, msg=msg)
-        self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
+        #msg = ', which is required by SPLINE1 eid=%s' % self.eid
+        #self.setg_ref = model.Set(self.setg, msg=msg)
+        #self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
 
-        self.panlst_ref = model.zona.panlsts[self.panlst]
-        self.panlst_ref.cross_reference(model)
-        self.aero_element_ids = self.panlst_ref.aero_element_ids
+        #self.panlst_ref = model.zona.panlsts[self.panlst]
+        #self.panlst_ref.cross_reference(model)
+        #self.aero_element_ids = self.panlst_ref.aero_element_ids
 
     def safe_cross_reference(self, model, xref_errors=None):
         return
-        msg = ', which is required by SPLINE1 eid=%s' % self.eid
-        try:
-            self.setg_ref = model.Set(self.setg, msg=msg)
-            self.setg_ref.safe_cross_reference(model, 'Node', msg=msg)
-        except KeyError:
-            model.log.warning('failed to find SETx set_id=%s%s; allowed_sets=%s' % (
-                self.setg, msg, np.unique(list(model.sets.keys()))))
+        #msg = ', which is required by SPLINE1 eid=%s' % self.eid
+        #try:
+            #self.setg_ref = model.Set(self.setg, msg=msg)
+            #self.setg_ref.safe_cross_reference(model, 'Node', msg=msg)
+        #except KeyError:
+            #model.log.warning('failed to find SETx set_id=%s%s; allowed_sets=%s' % (
+                #self.setg, msg, np.unique(list(model.sets.keys()))))
 
-        try:
-            self.panlst_ref = model.zona.panlsts[self.panlst]
-            self.panlst_ref.safe_cross_reference(model, xref_errors)
-            self.aero_element_ids = self.panlst_ref.aero_element_ids
-        except KeyError:
-            pass
+        #try:
+            #self.panlst_ref = model.zona.panlsts[self.panlst]
+            #self.panlst_ref.safe_cross_reference(model, xref_errors)
+            #self.aero_element_ids = self.panlst_ref.aero_element_ids
+        #except KeyError:
+            #pass
 
     def uncross_reference(self):
         return
@@ -3589,10 +3591,10 @@ class FLUTTER_ZONA(Spline):
         raise NotImplementedError()
 
     def raw_fields(self):
-        asdf
-        list_fields = ['FLUTTER', self.sid, self.sym, self.fix, self.nmode,
-                       self.tabdmp, self.mlist, self.conmlst, self.nkstep]
-        return list_fields
+        raise NotImplementedError('FLUTTER - raw_fields')
+        #list_fields = ['FLUTTER', self.sid, self.sym, self.fix, self.nmode,
+                       #self.tabdmp, self.mlist, self.conmlst, self.nkstep]
+        #return list_fields
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()

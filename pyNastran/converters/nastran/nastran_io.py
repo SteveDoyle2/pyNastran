@@ -6396,8 +6396,12 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             elif pid < 0:
                 continue
 
-            prop = properties[pid]
-            #try:
+            try:
+                prop = properties[pid]
+            except KeyError:
+                print('skipping pid=%i' % pid)
+                continue
+
             if prop.type in prop_types_with_mid:
                 # simple types
                 i = np.where(pids == pid)[0]
@@ -6531,6 +6535,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                         #print('cant find anything in ilayer=%s' % ilayer)
                     #continue
                 else:
+                    imids_masked = midsi == 0
                     has_mat8, has_mat11, e11, e22, e33 = get_material_arrays(model, midsi)
                     mid_res = GuiResult(0, header='MaterialID', title='MaterialID',
                                         location='centroid', scalar=midsi, mask_value=0)
@@ -6563,6 +6568,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                         icase += 2
 
                         is_isotropic = np.zeros(len(e11), dtype='int8')
+                        is_isotropic[imids_masked] = -1
                         if has_mat11:
                             is_isotropic[(e11 == e22) | (e11 == e33)] = 1
                             e33_res = GuiResult(0, header='E_33', title='E_33',
@@ -6571,12 +6577,12 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                             form_layer.append(('E_33', icase, []))
                             icase += 1
                         else:
-                            #is_isotropic_map = e11 == e22
                             is_isotropic[e11 == e22] = 1
 
                         iso_res = GuiResult(
                             0, header='IsIsotropic?', title='IsIsotropic?',
-                            location='centroid', scalar=is_isotropic, data_format='%i')
+                            location='centroid', scalar=is_isotropic, data_format='%i',
+                            mask_value=-1)
                         cases[icase] = (iso_res, (0, 'Is Isotropic?'))
                         form_layer.append(('Is Isotropic?', icase, []))
                         icase += 1

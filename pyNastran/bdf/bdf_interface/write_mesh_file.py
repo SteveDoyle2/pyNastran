@@ -11,7 +11,7 @@ import os
 from typing import List, Dict, Union, Optional, Tuple, Any, cast
 from codecs import open
 from collections import defaultdict
-from six import string_types, iterkeys #, iteritems, PY2, StringIO
+from six import string_types
 import numpy as np
 #from pyNastran.bdf.bdf_interface.utils import print_filename
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -88,7 +88,8 @@ class WriteMeshs(WriteMesh):
                 size = 16
 
         #self.write_caero_model()
-        ifile_out_filenames = _map_filenames_to_ifile_filname_dict(out_filenames, self.active_filenames)
+        ifile_out_filenames = _map_filenames_to_ifile_filname_dict(
+            out_filenames, self.active_filenames)
         ifile0 = list(sorted(ifile_out_filenames))[0]
 
         out_filename0 = ifile_out_filenames[ifile0]
@@ -267,8 +268,10 @@ class WriteMeshs(WriteMesh):
         self._write_static_aero_file(bdf_files, size, is_double, is_long_ids=is_long_ids)
 
         write_aero_in_flutter, write_aero_in_gust = self._find_aero_location()
-        self._write_flutter_file(bdf_files, size, is_double, write_aero_in_flutter, is_long_ids=is_long_ids)
-        self._write_gust_file(bdf_files, size, is_double, write_aero_in_gust, is_long_ids=is_long_ids)
+        self._write_flutter_file(bdf_files, size, is_double, write_aero_in_flutter,
+                                 is_long_ids=is_long_ids)
+        self._write_gust_file(bdf_files, size, is_double, write_aero_in_gust,
+                              is_long_ids=is_long_ids)
 
         self._write_thermal_file(bdf_files, size, is_double, is_long_ids=is_long_ids)
         self._write_thermal_materials_file(bdf_files, size, is_double, is_long_ids=is_long_ids)
@@ -735,7 +738,7 @@ def _map_filenames_to_ifile_filname_dict(out_filenames, active_filenames):
     #print('active_filenames = %s' % active_filenames)
     active_filenames_abspath = [os.path.abspath(path) for path in active_filenames]
     ifile_out_filenames = {}
-    out_filename0 = None
+    unused_out_filename0 = None
     for filename, new_filename in out_filenames.items():
         assert isinstance(filename, string_types), 'filename=%r' % filename
         #print('filename = %r' % filename)
@@ -765,4 +768,3 @@ def write_xpoints_file(bdf_files, cardtype, points, comment=''):
     assert isinstance(points, dict), points
     for point in points:
         bdf_files[point.ifile].write(point.write_card())
-
