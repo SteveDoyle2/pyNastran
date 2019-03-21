@@ -148,7 +148,7 @@ class TestLoads(unittest.TestCase):
             model.add_card(card_lines, 'ACCEL1', comment='',
                            is_list=False, has_none=True)
 
-        for key, loads in sorted(model.loads.items()):
+        for unused_key, loads in sorted(model.loads.items()):
             for load in loads:
                 str(load)
 
@@ -362,13 +362,15 @@ class TestLoads(unittest.TestCase):
         pressures = [1., 0., 0., 0.]
         cid = 0
 
-        #The direction of the line load (SORL=LINE) is defined by either (CID, N1, N2, N3) or LDIR.
-        #Fatal error will be issued if both methods are given. TANG denotes that the line load is in
-        #tangential direction of the edge, pointing from G1 to G2 if the edge is connecting G1 and G2.
-        #NORM denotes that the line load is in the mean plan, normal to the edge, and pointing outward
-        #from the element. X, Y, or Z denotes the line load is in the X, Y, or Z direction of the element
-        #coordinate system. If both (CID, N1, n2, N3) and LDIR are blank, then the default is
-        #LDIR=NORM.
+        # The direction of the line load (SORL=LINE) is defined by either (CID, N1, N2, N3) or
+        # LDIR. Fatal error will be issued if both methods are given.  TANG denotes that the line
+        # load is in tangential direction of the edge, pointing from G1 to G2 if the edge is
+        # connecting G1 and G2.
+        #
+        # NORM denotes that the line load is in the mean plan, normal to the edge, and pointing
+        # outward from the element.  X, Y, or Z denotes the line load is in the X, Y, or Z
+        # direction of the element coordinate system.  If both (CID, N1, n2, N3) and LDIR are
+        # blank, then the default is LDIR=NORM.
         nvector = [1., 0., 0.]
         pload4 = model.add_pload4(sid, eids, pressures, g1=None, g34=None,
                                   cid=cid, nvector=nvector,
@@ -376,17 +378,19 @@ class TestLoads(unittest.TestCase):
         assert pload4.raw_fields() == ['PLOAD4', 10, 10, 1.0, 0.0, 0.0, 0.0, 'THRU', 11, 0, 1.0, 0.0, 0.0, 'LINE', 'NORM']
         str(pload4)
 
-        pload4_surf = model.add_pload4(sid, eids, pressures, g1=None, g34=None,
-                                       cid=cid, nvector=nvector,
-                                       surf_or_line='SURF', line_load_dir='NORM', comment='pload4_line')
+        unused_pload4_surf = model.add_pload4(sid, eids, pressures, g1=None, g34=None,
+                                              cid=cid, nvector=nvector,
+                                              surf_or_line='SURF', line_load_dir='NORM',
+                                              comment='pload4_line')
         str(pload4.raw_fields())
 
         sid = 11
         eids = 10
         pressures = 1.0
-        pload4_surf = model.add_pload4(sid, eids, pressures, g1=None, g34=None,
-                                       cid=cid, nvector=nvector,
-                                       surf_or_line='SURF', line_load_dir='NORM', comment='pload4_line')
+        unused_pload4_surf = model.add_pload4(sid, eids, pressures, g1=None, g34=None,
+                                              cid=cid, nvector=nvector,
+                                              surf_or_line='SURF', line_load_dir='NORM',
+                                              comment='pload4_line')
         model.validate()
         model.cross_reference()
 
@@ -640,7 +644,7 @@ class TestLoads(unittest.TestCase):
                 # print('%i f=%s fexpected=%s' % (isubcase, f, fm))
 
             g34 = load.g34_ref.nid
-            face, area, centroid, normal = elem.get_face_area_centroid_normal(g1, g34)
+            face, area, unused_centroid, normal = elem.get_face_area_centroid_normal(g1, g34)
             msg = '%s%s%s\n' % (
                 elem.nodes[face[0]], elem.nodes[face[1]],
                 elem.nodes[face[2]])
@@ -749,7 +753,7 @@ class TestLoads(unittest.TestCase):
                 # print('%i f=%s fexpected=%s' % (isubcase, f, fm))
 
             g34 = load.g34_ref.nid
-            face, area, centroid, normal = elem.get_face_area_centroid_normal(g1, g34)
+            face, area, unused_centroid, normal = elem.get_face_area_centroid_normal(g1, g34)
             msg = '%s%s%s%s\n' % (
                 elem.nodes[face[0]], elem.nodes[face[1]],
                 elem.nodes[face[2]], elem.nodes[face[3]])
@@ -992,11 +996,11 @@ class TestLoads(unittest.TestCase):
         eid_tube = 2
         pid_tube = 2
         nids = [3, 12]
-        ctube = model.add_ctube(eid_tube, pid_tube, nids, comment='ctube')
-        ctube = model.add_ctube(eid_tube, pid_tube, nids, comment='ctube')
+        unused_ctube = model.add_ctube(eid_tube, pid_tube, nids, comment='ctube')
+        unused_ctube = model.add_ctube(eid_tube, pid_tube, nids, comment='ctube')
         OD1 = 0.1
-        ptube = model.add_ptube(pid_tube, mid, OD1, t=None, nsm=0., OD2=None,
-                                comment='ptube')
+        unused_ptube = model.add_ptube(pid_tube, mid, OD1, t=None, nsm=0., OD2=None,
+                                       comment='ptube')
         model.add_ptube(pid_tube, mid, OD1, t=None, nsm=0., OD2=None,
                         comment='ptube')
 
@@ -1024,8 +1028,8 @@ class TestLoads(unittest.TestCase):
         eid = 4
         pid = 4
         nids = [1, 2, 3, 4]
-        cquad4 = model.add_cquad4(eid, pid, nids, theta_mcid=0.0, zoffset=0.,
-                                  tflag=0, T1=1.0, T2=1.0, T3=1.0, T4=1.0, comment='')
+        unused_cquad4 = model.add_cquad4(eid, pid, nids, theta_mcid=0.0, zoffset=0.,
+                                         tflag=0, T1=1.0, T2=1.0, T3=1.0, T4=1.0, comment='')
         mids = [mid, mid, mid]
         thicknesses = [0.1, 0.2, 0.3]
         model.add_pcomp(pid, mids, thicknesses, thetas=None, souts=None,
@@ -1041,9 +1045,9 @@ class TestLoads(unittest.TestCase):
         global_ply_ids = [5, 6, 7]
         mids = [mid, mid, mid]
         thicknesses = [0.1, 0.2, 0.3]
-        pcompg = model.add_pcompg(pid, global_ply_ids, mids, thicknesses, thetas=None,
-                                  souts=None, nsm=0.0, sb=0.0, ft=None, tref=0.0, ge=0.0,
-                                  lam=None, z0=None, comment='pcompg')
+        unused_pcompg = model.add_pcompg(pid, global_ply_ids, mids, thicknesses, thetas=None,
+                                         souts=None, nsm=0.0, sb=0.0, ft=None, tref=0.0, ge=0.0,
+                                         lam=None, z0=None, comment='pcompg')
         model.add_pcompg(pid, global_ply_ids, mids, thicknesses, thetas=None,
                          souts=None, nsm=0.0, sb=0.0, ft=None, tref=0.0, ge=0.0,
                          lam=None, z0=None, comment='pcompg')
@@ -1052,23 +1056,23 @@ class TestLoads(unittest.TestCase):
         pid = 40
         eid = 5
         nids = [1, 2, 3, 5]
-        ctetra = model.add_ctetra(eid, pid, nids, comment='ctetra')
+        unused_ctetra = model.add_ctetra(eid, pid, nids, comment='ctetra')
 
         eid = 6
         nids = [1, 2, 3, 4, 5]
-        cpyram = model.add_cpyram(eid, pid, nids, comment='cpyram')
+        unused_cpyram = model.add_cpyram(eid, pid, nids, comment='cpyram')
 
         eid = 7
         nids = [1, 2, 3, 5, 6, 7]
-        cpenta = model.add_cpenta(eid, pid, nids, comment='cpenta')
+        unused_cpenta = model.add_cpenta(eid, pid, nids, comment='cpenta')
 
         eid = 8
         nids = [1, 2, 3, 4, 5, 6, 7, 8]
         chexa = model.add_chexa(eid, pid, nids, comment='chexa')
         # mass = rho*V = 0.2*1
 
-        psolid = model.add_psolid(pid, mid, cordm=0, integ=None, stress=None,
-                                  isop=None, fctn='SMECH', comment='psolid')
+        unused_psolid = model.add_psolid(pid, mid, cordm=0, integ=None, stress=None,
+                                         isop=None, fctn='SMECH', comment='psolid')
 
 
         conid = 42
@@ -1084,7 +1088,7 @@ class TestLoads(unittest.TestCase):
             1., 1., 1., 1., 1., 1.,
             1., 1., 1., 1., 1., 1.,
         ]
-        mpc = model.add_mpc(conid, nodes, components, coefficients, comment='mpc')
+        unused_mpc = model.add_mpc(conid, nodes, components, coefficients, comment='mpc')
 
         eid = 1
         ga = 9
@@ -1093,8 +1097,8 @@ class TestLoads(unittest.TestCase):
         cnb = ''
         cma = ''
         cmb = ''
-        rbar = model.add_rbar(eid, [ga, gb], cna, cnb, cma, cmb, alpha=0.,
-                              comment='rbar')
+        unused_rbar = model.add_rbar(eid, [ga, gb], cna, cnb, cma, cmb, alpha=0.,
+                                     comment='rbar')
 
         eid = 2
         ga = 10
@@ -1102,17 +1106,17 @@ class TestLoads(unittest.TestCase):
         rrod_a = RROD(eid, [ga, gb], cma='42', cmb='33')
         with self.assertRaises(RuntimeError):
             rrod_a.validate()
-        rrod_b = model.add_rrod(eid, [ga, gb], cma='3', cmb=None, alpha=0.0, comment='')
+        unused_rrod_b = model.add_rrod(eid, [ga, gb], cma='3', cmb=None, alpha=0.0, comment='')
 
         conid = 43
         nodes = [10, 11]
         components = ['1', '0']
         coefficients = [1., 1.]
-        mpc = model.add_mpc(conid, nodes, components, coefficients)
+        unused_mpc = model.add_mpc(conid, nodes, components, coefficients)
         model.add_spoint(11, comment='spoint')
         conid = 44
         sets = [42, 43]
-        mpcadd = model.add_mpcadd(conid, sets, comment='mpcadd')
+        unused_mpcadd = model.add_mpcadd(conid, sets, comment='mpcadd')
         #model.add_spoint([11, 'THRU', 42], comment='spoint3')
         str(model.spoints)
 
@@ -1120,22 +1124,22 @@ class TestLoads(unittest.TestCase):
         xyz = [2., 3., 4.]
         node = 7
         mag = 1.0
-        force = model.add_force(sid, node, mag, xyz, cid=0, comment='force')
-        moment = model.add_moment(sid, node, mag, xyz, comment='moment')
+        unused_force = model.add_force(sid, node, mag, xyz, cid=0, comment='force')
+        unused_moment = model.add_moment(sid, node, mag, xyz, comment='moment')
 
         node = 6
         mag = 1.0
         g1 = 2
         g2 = 3
-        force1 = model.add_force1(sid, node, mag, g1, g2, comment='force1')
-        moment1 = model.add_moment1(sid, node, mag, g1, g2, comment='moment1')
+        unused_force1 = model.add_force1(sid, node, mag, g1, g2, comment='force1')
+        unused_moment1 = model.add_moment1(sid, node, mag, g1, g2, comment='moment1')
 
         g1 = 1
         g2 = 3
         g3 = 2
         g4 = 4
-        force2 = model.add_force2(sid, node, mag, g1, g2, g3, g4, comment='force2')
-        moment2 = model.add_moment2(sid, node, mag, g1, g2, g3, g4, comment='moment2')
+        unused_force2 = model.add_force2(sid, node, mag, g1, g2, g3, g4, comment='force2')
+        unused_moment2 = model.add_moment2(sid, node, mag, g1, g2, g3, g4, comment='moment2')
         #g2, g3 = g3, g2
         #force2 = model.add_force2(sid, node, mag, g1, g2, g3, g4, comment='force2')
 
@@ -1143,7 +1147,7 @@ class TestLoads(unittest.TestCase):
         scale = 1.
         scale_factors = [1.0, 2.0]
         load_ids = [12, 13] # force, pload4
-        load = model.add_load(load_id, scale, scale_factors, load_ids, comment='load')
+        unused_load = model.add_load(load_id, scale, scale_factors, load_ids, comment='load')
 
         # loads
         sid = 13
@@ -1153,11 +1157,11 @@ class TestLoads(unittest.TestCase):
 
         eids = [8] # hexa
         g1 = 6
-        g34 = 8
+        unused_g34 = 8
         pressures = [1., 1., 1., 1.]
-        pload4 = model.add_pload4(sid, eids, pressures, g1=1, g34=8,
-                                  cid=None, nvector=None, surf_or_line='SURF',
-                                  line_load_dir='NORM', comment='pload4')
+        unused_pload4 = model.add_pload4(sid, eids, pressures, g1=1, g34=8,
+                                         cid=None, nvector=None, surf_or_line='SURF',
+                                         line_load_dir='NORM', comment='pload4')
         #print(model.loads)
         #print(model.load_combinations)
 
@@ -1167,14 +1171,14 @@ class TestLoads(unittest.TestCase):
         nodes = [1, 2]
         components = ['123', '123']
         enforced = [0., 0.]
-        spc = model.add_spc(conid, nodes, components, enforced, comment='spc')
+        unused_spc = model.add_spc(conid, nodes, components, enforced, comment='spc')
         conid = 43
         nodes = [1, 2]
         components2 = '123456'
-        spc1 = model.add_spc1(conid, components2, nodes, comment='spc1')
+        unused_spc1 = model.add_spc1(conid, components2, nodes, comment='spc1')
         conid = 44
         sets = [42, 43]
-        spcadd = model.add_spcadd(conid, sets, comment='spcadd')
+        unused_spcadd = model.add_spcadd(conid, sets, comment='spcadd')
 
         #-----------------------------------------------------------------------
         sid = 12
@@ -1259,8 +1263,8 @@ class TestLoads(unittest.TestCase):
     def test_load_sort(self):
         """makes sure LOAD cards don't get sorted"""
         model = BDF(debug=False, log=log)
-        load2 = model.add_load(sid=14, scale=1.,
-                               scale_factors=[0.5, 0.1, 0.4], load_ids=[11, 10])
+        unused_load2 = model.add_load(sid=14, scale=1.,
+                                      scale_factors=[0.5, 0.1, 0.4], load_ids=[11, 10])
         with self.assertRaises(IndexError):
             model.validate()
 
@@ -1271,12 +1275,12 @@ class TestLoads(unittest.TestCase):
         sid = 14
         nids = 11 # SPOINT
         mags = 20.
-        sload = model.add_sload(sid, nids, mags, comment='an sload')
+        unused_sload = model.add_sload(sid, nids, mags, comment='an sload')
 
         sid = 14
         nids = [11, 12] # SPOINT, GRID
         mags = [20., 30.]
-        sload = model.add_sload(sid, nids, mags, comment='an sload')
+        unused_sload = model.add_sload(sid, nids, mags, comment='an sload')
         model.validate()
 
         model.cross_reference()
@@ -1298,4 +1302,3 @@ class TestLoads(unittest.TestCase):
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
-

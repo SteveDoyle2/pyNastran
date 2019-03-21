@@ -1,7 +1,6 @@
 """defines various Material card tests"""
 import unittest
 import numpy as np
-from six.moves import StringIO
 
 from pyNastran.bdf.bdf import BDF, BDFCard, MAT1, MAT8, MAT11
 from pyNastran.bdf.field_writer_8 import print_card_8

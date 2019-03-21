@@ -3,8 +3,7 @@ defines readers for BDF objects in the OP2 GEOM2/GEOM2S table
 """
 # pylint: disable=W0612,C0103
 ### pyldint: disable=W0612,C0103,C0302,W0613,R0914,R0201
-from struct import unpack, Struct
-from six import b
+from struct import Struct
 import numpy as np
 
 from pyNastran.bdf.cards.elements.elements import CGAP, PLOTEL
@@ -196,8 +195,6 @@ class GEOM2(GeomCommon):
             (12600, 126, 6661): ['', self._read_fake],
             (14700, 147, 6662): ['', self._read_fake],
             (7309, 73, 0): ['', self._read_fake],
-            (17200, 172, 6663): ['', self._read_fake],
-            (17300, 173, 6664): ['', self._read_fake],
             (11501, 115, 9941): ['', self._read_fake],    # record
             (12501, 125, 9923): ['', self._read_fake],    # record
             (3401, 34, 9600): ['', self._read_fake],    # record
@@ -414,7 +411,7 @@ class GEOM2(GeomCommon):
                            [f, x1, x2, x3]]
             elif f == 1:  # global cid
                 # CBEAM    89616   5       384720  384521  0.      0.     -1.
-                out = s2.unpack(edata)
+                out = s1.unpack(edata)
                 (eid, pid, ga, gb, sa, sb, x1, x2, x3, fe,
                  pa, pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
                 #self.log.info('CBEAM: eid=%s fe=%s f=%s; global cid' % (eid, fe, f))
@@ -808,8 +805,8 @@ class GEOM2(GeomCommon):
             out = s.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CFLUID2=%s\n' % str(out))
-            eid, idf1, idf2, rho, b, harmonic = out
-            self.add_cfluid2(eid, [idf1, idf2], rho, b, harmonic)
+            eid, idf1, idf2, rho, bi, harmonic = out
+            self.add_cfluid2(eid, [idf1, idf2], rho, bi, harmonic)
             n += 24
         self.card_count['CFLUID2'] = nelements
         return n
@@ -859,8 +856,8 @@ class GEOM2(GeomCommon):
             out = s.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CFLUID4=%s\n' % str(out))
-            eid, idf1, idf2, idf3, idf4, rho, b, harmonic = out
-            self.add_cfluid4(eid, [idf1, idf2, idf3, idf4], rho, b, harmonic)
+            eid, idf1, idf2, idf3, idf4, rho, bi, harmonic = out
+            self.add_cfluid4(eid, [idf1, idf2, idf3, idf4], rho, bi, harmonic)
             n += 32
         self.card_count['CFLUID4'] = nelements
         return n

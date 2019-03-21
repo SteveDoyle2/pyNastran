@@ -221,7 +221,7 @@ class TestNsm(unittest.TestCase):
                   3, 3.0,
                   4, 2.0]
         model.add_card(fields, 'NSM', comment='', is_list=True,
-                      has_none=True)
+                       has_none=True)
         model.add_card(fields, 'NSML', comment='', is_list=True,
                        has_none=True)
 

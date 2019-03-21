@@ -291,6 +291,7 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     #         and forces on nonlinear elements
     # DOEF1 - Scaled Response Spectra
     b'OEFIT', b'OEF1X', b'OEF1', b'DOEF1',
+    b'OEFITSTN', # output.op2
 
 
     # Table of Max values?
@@ -842,6 +843,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             #=======================
             # OEF
             # element forces
+            #b'OEFITSTN' : [self._table_passer, self._table_passer], # works
+            b'OEFITSTN' : [self._read_oef1_3, self._read_oef1_4],
             b'OEFIT' : [self._read_oef1_3, self._read_oef1_4],  # failure indices
             b'OEF1X' : [self._read_oef1_3, self._read_oef1_4],  # element forces at intermediate stations
             b'OEF1'  : [self._read_oef1_3, self._read_oef1_4],  # element forces or heat flux

@@ -167,6 +167,9 @@ class OEF(OP2Common):
             assert self.table_code in [25], self.code_information()
             postfix = '_failure_indicies'
             #raise NotImplementedError(self.code_information())
+        elif self.table_name in [b'OEFITSTN']: # composite failure indicies
+            assert self.table_code in [25], self.code_information()
+            postfix = '_failure_indicies'
         else:
             raise NotImplementedError('%r' % self.table_name)
         return prefix, postfix
@@ -523,6 +526,7 @@ class OEF(OP2Common):
         if self._results.is_not_saved('element_forces'):
             return ndata
         prefix, postfix = self.get_oef_prefix_postfix()
+
         n = 0
         #thermal
         #is_magnitude_phase = self.is_magnitude_phase()
@@ -2554,15 +2558,29 @@ class OEF(OP2Common):
         return n, nelements, ntotal
 
     def _oef_shells_composite(self, data, ndata, dt, unused_is_magnitude_phase,
-                              unused_prefix, unused_postfix):
+                              prefix, postfix):
         """
         95 - CQUAD4
         96 - CQUAD8
         97 - CTRIA3
         98 - CTRIA6 (composite)
         """
+        if self.element_type == 95:
+            result_name = prefix + 'cquad4_composite_force' + postfix
+        elif self.element_type == 96:
+            result_name = prefix + 'cquad8_composite_force' + postfix
+        elif self.element_type == 97:
+            result_name = prefix + 'ctria3_composite_force' + postfix
+        elif self.element_type == 98:
+            result_name = prefix + 'ctria6_composite_force' + postfix
+        else:
+            raise NotImplementedError(self.code_information())
+
+        self._results._found_result(result_name)
+        slot = self.get_result(result_name)
+
         n = 0
-        if self.format_code == 1 and self.num_wide == 9:  # real
+        if self.format_code == 1 and self.num_wide == 9 and self.read_mode == 1:  # real
             if self.read_mode == 1:
                 return ndata, None, None
             ntotal = 36

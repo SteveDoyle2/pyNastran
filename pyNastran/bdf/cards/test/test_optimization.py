@@ -6,7 +6,7 @@ from __future__ import print_function
 import os
 import unittest
 
-from six import integer_types
+#from six import integer_types
 import numpy as np
 from cpylog import get_logger
 
@@ -16,7 +16,7 @@ from pyNastran.op2.op2 import read_op2
 from pyNastran.bdf.cards.test.utils import save_load_deck
 from pyNastran.bdf.cards.optimization import break_word_by_trailing_integer
 
-model_path = os.path.join(pyNastran.__path__[0], '..', 'models')
+MODEL_PATH = os.path.join(pyNastran.__path__[0], '..', 'models')
 
 
 class TestOpt(unittest.TestCase):
@@ -27,14 +27,14 @@ class TestOpt(unittest.TestCase):
     def test_opt_1(self):
         """tests SOL 200"""
         log = get_logger(level='warning')
-        bdf_filename = os.path.join(model_path, 'sol200', 'model_200.bdf')
-        model = read_bdf(bdf_filename, xref=True, debug=False)
-        op2_filename = os.path.join(model_path, 'sol200', 'model_200.op2')
+        bdf_filename = os.path.join(MODEL_PATH, 'sol200', 'model_200.bdf')
+        unused_model = read_bdf(bdf_filename, xref=True, debug=False)
+        op2_filename = os.path.join(MODEL_PATH, 'sol200', 'model_200.op2')
         #bdf, op2 = run_model(bdf_filename, op2_filename,
                              #f06_has_weight=False, vectorized=True,
                              #encoding='utf-8')
         op2 = read_op2(op2_filename, log=log, debug=True, debug_file='temp.debug')
-        subcase_ids = op2.subcase_key.keys()
+        unused_subcase_ids = op2.subcase_key.keys()
         #for subcase_id in subcase_ids:
             #assert isinstance(subcase_id, integer_types), subcase_id
             #for key, dresp in sorted(model.dresps.items()):
@@ -110,8 +110,8 @@ class TestOpt(unittest.TestCase):
         # ???
         mass_new = mass0 + c3 * (mass3 + delta)
         model.add_dvcrel1(3, element_type, eid_conm2, cp_name, desvars, coeffs, cp_min=None,
-                         cp_max=1e20, c0=mass0,
-                         validate=True, comment='')
+                          cp_max=1e20, c0=mass0,
+                          validate=True, comment='')
         #---------------------------------------------------
 
         x14 = 37.
@@ -324,7 +324,7 @@ class TestOpt(unittest.TestCase):
 
         oid = 1001
         dconstr = model.add_dconstr(oid, dresp1_id, lid=-1.e20, uid=1.e20,
-                                   lowfq=0., highfq=1.e20, comment='dconstr1')
+                                    lowfq=0., highfq=1.e20, comment='dconstr1')
         oid = 1002
         dconstr = model.add_dconstr(oid, dresp2_id, lid=-1.e20, uid=1.e20,
                                     lowfq=0., highfq=1.e20)
@@ -543,7 +543,7 @@ class TestOpt(unittest.TestCase):
         mass = 1.
         nid1 = 100
         nid2 = 101
-        conm2 = model.add_conm2(conm2_eid, nid1, mass, cid=0, X=None, I=None,
+        unused_conm2 = model.add_conm2(conm2_eid, nid1, mass, cid=0, X=None, I=None,
                                 comment='conm2')
         model.add_grid(100, [1., 2., 3.])
         model.add_grid(101, [2., 2., 4.])
@@ -584,8 +584,8 @@ class TestOpt(unittest.TestCase):
         nid = 101
         dvid = 10001
         dxyz = np.array([1., 2., 3.])
-        dvgrid2 = model.add_dvgrid(dvid, nid, dxyz, cid=0, coeff=1.0,
-                                   comment='dvgrid')
+        unused_dvgrid2 = model.add_dvgrid(dvid, nid, dxyz, cid=0, coeff=1.0,
+                                          comment='dvgrid')
 
         model.pop_parse_errors()
 
@@ -658,6 +658,7 @@ class TestOpt(unittest.TestCase):
         cid = 1
         model = BDF(debug=False)
         dvgrid = model.add_dvgrid(dvid, nid, dxyz, cid=cid, coeff=1.0, comment='')
+        dvgrid.raw_fields()
         model.pop_parse_errors()
         model.cross_reference()
         save_load_deck(model)
@@ -684,7 +685,7 @@ class TestOpt(unittest.TestCase):
         model.add_prod(pid, mid, A, j=0., c=0., nsm=0., comment='')
 
         OD1 = 1.
-        t = 0.1
+        unused_t = 0.1
         model.add_ctube(eid+2, pid+1, nids, comment='')
         model.add_ptube(pid+1, mid, OD1, t=None, nsm=0., OD2=None, comment='')
 
@@ -775,7 +776,8 @@ class TestOpt(unittest.TestCase):
                         comment='')
         beam_type = 'BAR'
         dims = [dim]
-        model.add_pbeaml(pid+3, mid, beam_type, xxb, dims, so=None, nsm=None, group='MSCBML0', comment='')
+        model.add_pbeaml(pid+3, mid, beam_type, xxb, dims, so=None, nsm=None,
+                         group='MSCBML0', comment='')
 
         dvprels = [
             #oid, pid, prop_type, pname_fid
@@ -900,4 +902,3 @@ class TestOpt(unittest.TestCase):
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
-

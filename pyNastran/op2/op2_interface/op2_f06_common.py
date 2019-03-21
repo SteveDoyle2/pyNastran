@@ -384,6 +384,11 @@ class OP2_F06_Common(object):
         self.cquad8_force = {}
         self.cquadr_force = {}
 
+        self.cquad4_composite_force_failure_indicies = {}
+        self.cquad8_composite_force_failure_indicies = {}
+        self.ctria3_composite_force_failure_indicies = {}
+        self.ctria6_composite_force_failure_indicies = {}
+
         self.ctria3_stress = {}
         self.ctria6_stress = {}
         self.cquad4_stress = {}
@@ -708,6 +713,8 @@ class OP2_F06_Common(object):
         self.genel_strain_energy = {}
         self.cshear_strain_energy = {}
         self.conm2_strain_energy = {}
+        self.rbe1_strain_energy = {}
+        self.rbe3_strain_energy = {}
 
     def _get_result_length(self, res_types, res_key):
         """
@@ -901,6 +908,11 @@ class OP2_F06_Common(object):
             #OEF - Fluxes - tCode=4 thermal=1
             'conv_thermal_load',
 
+            'cquad4_composite_force_failure_indicies',
+            'cquad8_composite_force_failure_indicies',
+            'ctria3_composite_force_failure_indicies',
+            'ctria6_composite_force_failure_indicies',
+
             #'thermalLoad_CHBDY',
             'chbdye_thermal_load', 'chbdye_thermal_load_flux',
             'chbdyg_thermal_load', 'chbdyg_thermal_load_flux',
@@ -998,6 +1010,7 @@ class OP2_F06_Common(object):
             'dmig_strain_energy',
             'genel_strain_energy',
             'conm2_strain_energy',
+            'rbe1_strain_energy', 'rbe3_strain_energy',
 
             # unused?
             'displacement_scaled_response_spectra_NRL',

@@ -2616,7 +2616,8 @@ class PLOAD4(Load):
         pload4 = PLOAD4(sid, eids, pressures, g1, g34, cid, nvector,
                         surf_or_line, line_load_dir, comment=comment)
         assert sid < 10000000, pload4
-        assert cid < 10000000, pload4
+        if cid is not None:
+            assert cid < 10000000, pload4
         return pload4
 
     def get_loads(self):

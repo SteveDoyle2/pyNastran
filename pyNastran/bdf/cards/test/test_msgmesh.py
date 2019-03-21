@@ -30,7 +30,7 @@ class TestMsgMesh(unittest.TestCase):
         bdf_filename = StringIO()
         bdf_filename2 = StringIO()
         bdf_filename3 = StringIO()
-        bdf_filename4 = StringIO()
+        #bdf_filename4 = StringIO()
 
         model.validate()
         model._verify_bdf(xref=False)

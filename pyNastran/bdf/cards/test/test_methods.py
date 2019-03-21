@@ -65,7 +65,7 @@ class TestMethods(unittest.TestCase):
         eigp = model.add_eigp(sid, alpha1, omega1, m1, alpha2, omega2, m2, comment='eigp')
         eigp.raw_fields()
 
-        eigp2 = model.CMethod(sid)
+        unused_eigp2 = model.CMethod(sid)
         model.validate()
         save_load_deck(model)
 
@@ -75,7 +75,7 @@ class TestMethods(unittest.TestCase):
         sid = 1
         nd = -42
         eigr = model.add_eigr(sid, method='LAN', f1=None, f2=None, ne=None, nd=nd,
-                 norm='MASS', G=None, C=None, comment='eigr')
+                              norm='MASS', G=None, C=None, comment='eigr')
 
         sid = 2
         eigr = model.add_eigr(sid, method='SINV', f1=None, f2=None, ne=None, nd=None,

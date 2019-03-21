@@ -1,6 +1,7 @@
 """tests nodes.py"""
 from __future__ import print_function, unicode_literals
 import unittest
+from six.moves import range
 
 from pyNastran.bdf.bdf import BDF, BDFCard
 from pyNastran.bdf.cards.nodes import GRID, SPOINTs as SPOINT
@@ -64,9 +65,10 @@ class TestNodes(unittest.TestCase):
         #print(msg)
         msg = n1.write_card(size=16, is_double=True)
         #print(msg)
-        if 0:
-            msg = n1.write_card(size=8)
-            #print('%r' % msg)
+
+        msg = n1.write_card(size=8)
+        #print('%r' % msg)
+        if 0:  # pragma: no cover
             # small field
             self.assertEqual(msg, 'GRID           1       2      0.      0.      0.                        \n')
             msg = n1.write_card(size=16)
@@ -74,9 +76,9 @@ class TestNodes(unittest.TestCase):
             # large field
             card = ('GRID*                  1               2             .-0             .-0\n'
                     '*                    .-0                                                \n')
-            print('%r' % msg)
+            #print('%r' % msg)
             ref = 'ERROR\n'
-            if card != msg:
+            if card != msg:  # pragma: no cover
                 scard = card.split('\n')
                 smsg = msg.split('\n')
                 i = 0
@@ -178,10 +180,9 @@ class TestNodes(unittest.TestCase):
         g = GRID(4, [0., 0., 0.])
         s = SPOINT(4)
         import time
-        import six
 
         time0 = time.time()
-        for i in six.moves.range(5000000):
+        for unused_i in range(5000000):
             if g.type == 'GRID':
                 pass
             if s.type == 'GRID':
@@ -189,7 +190,7 @@ class TestNodes(unittest.TestCase):
         dt_type = time.time() - time0
 
         time1 = time.time()
-        for i in six.moves.range(5000000):
+        for unused_i in range(5000000):
             if isinstance(g, GRID):
                 pass
             if isinstance(s, GRID):

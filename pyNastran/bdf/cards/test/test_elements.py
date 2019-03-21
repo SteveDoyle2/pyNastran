@@ -109,7 +109,7 @@ class TestElements(unittest.TestCase):
         nu = 0.3
         G = E / (2. * (1. + nu))
         E = None
-        mat1 = model.add_mat1(mid, E, G, nu, rho=0.2)
+        unused_mat1 = model.add_mat1(mid, E, G, nu, rho=0.2)
 
         eid = 14
         pid = 15
@@ -174,7 +174,8 @@ class TestElements(unittest.TestCase):
         eid = 10
         pid = 100
         model.add_cbush1d(eid, pid, nids, cid=None, comment='cbush1d')
-        model.add_pbush1d(pid, k=0., c=0., m=0., sa=0., se=0., optional_vars=None, comment='pbush1d')
+        model.add_pbush1d(pid, k=0., c=0., m=0., sa=0., se=0., optional_vars=None,
+                          comment='pbush1d')
 
         model.pop_parse_errors()
         model.cross_reference()
@@ -188,7 +189,8 @@ class TestElements(unittest.TestCase):
         nids = [2, 3]
         eid = 10
         pid = 100
-        cbush2d = model.add_cbush2d(eid, pid, nids, cid=0, plane='XY', sptid=None, comment='cbush2d')
+        unused_cbush2d = model.add_cbush2d(eid, pid, nids, cid=0, plane='XY', sptid=None,
+                                           comment='cbush2d')
         #model.add_pbush2d()
 
         #model.pop_parse_errors()
@@ -224,6 +226,8 @@ class TestElements(unittest.TestCase):
         iplane = 1
         crac2d = model.add_crac2d(eid, pid, nids, comment='crac2d')
         prac2d = model.add_prac2d(pid, mid, thick, iplane, nsm=0., gamma=0.5, phi=180., comment='')
+        crac2d.raw_fields()
+        prac2d.raw_fields()
 
         E = 3.0e7
         G = None
@@ -260,10 +264,12 @@ class TestElements(unittest.TestCase):
         eid = 10
         pid = 100
         mid = 1000
-        thick = 20.
-        iplane = 1
+        unused_thick = 20.
+        unused_iplane = 1
         crac3d = model.add_crac3d(eid, pid, nids, comment='crac3d')
         prac3d = model.add_prac3d(pid, mid, gamma=0.5, phi=180., comment='crac3d')
+        crac3d.raw_fields()
+        prac3d.raw_fields()
 
         E = 3.0e7
         G = None

@@ -26,6 +26,7 @@ from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.errors import DuplicateIDsError
 from pyNastran.op2.op2 import OP2, FatalError, SortCodeError, DeviceCodeError, FortranMarkerError
 
+
 def read_op2_geom(op2_filename=None, combine=True, subcases=None,
                   exclude_results=None, include_results=None,
                   validate=True, xref=True,
@@ -367,8 +368,7 @@ class OP2Geom(BDF, OP2GeomCommon):
           - BucklingEigenvalues
 
         """
-        from pyNastran.op2.op2_interface.hdf5_interface import export_op2_to_hdf5_file
-
-        op2_model = self
+        #from pyNastran.op2.op2_interface.hdf5_interface import export_op2_to_hdf5_file
+        #op2_model = self
         OP2GeomCommon.export_to_hdf5_file(self, hdf5_file)
         BDF.export_to_hdf5_file(self, hdf5_file)

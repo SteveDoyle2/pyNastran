@@ -783,6 +783,8 @@ TABLE_OBJ_MAP = {
     'genel_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
     'dmig_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
     'conm2_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'rbe1_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'rbe3_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
 
     'RANCONS.cbush_strain_energy' : (RealStrainEnergyArray, ),
     'RANCONS.cbar_strain_energy' : (RealStrainEnergyArray, ),

@@ -444,6 +444,10 @@ class ONR(OP2Common):
             result_name = 'genel_strain_energy'
         elif self.data_code['element_name'] == 'CONM2':
             result_name = 'conm2_strain_energy'
+        elif self.data_code['element_name'] == 'RBE1':
+            result_name = 'rbe1_strain_energy'
+        elif self.data_code['element_name'] == 'RBE3':
+            result_name = 'rbe3_strain_energy'
         else:
             #result_name = 'chexa8fd_strain_energy'
 

@@ -1,10 +1,10 @@
 import unittest
 
-import pyNastran
+#import pyNastran
 from pyNastran.bdf.bdf import BDF, PARAM, BDFCard
 
-root_path = pyNastran.__path__[0]
-#test_path = os.path.join(root_path, 'bdf', 'cards', 'test')
+#ROOT_PATH = pyNastran.__path__[0]
+#test_path = os.path.join(ROOT_PATH, 'bdf', 'cards', 'test')
 
 class TestOther(unittest.TestCase):
     def test_param_01(self):

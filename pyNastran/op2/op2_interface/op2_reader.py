@@ -98,6 +98,7 @@ class OP2Reader(object):
             b'EXTDB' : self.read_extdb,
             b'OMM2' : self.read_omm2,
             b'TOL' : self.read_tol,
+            b'PCOMPT' : self._read_pcompts,
             b'PCOMPTS' : self._read_pcompts,
             b'MONITOR' : self.read_monitor,
             b'AEMONPT' : self.read_aemonpt,
@@ -248,6 +249,7 @@ class OP2Reader(object):
         if mode is None:
             self.log.warning("No mode was set, assuming 'msc'")
             mode = 'msc'
+        self.log.info('mode = %r' % mode)
         self.op2.set_mode(mode)
         self.op2.set_table_type()
 
@@ -2621,7 +2623,7 @@ class OP2Reader(object):
         """bypasses the next table as quickly as possible"""
         if table_name in ['DIT', 'DITS']:  # tables
             self._read_dit()
-        elif table_name in ['PCOMPTS']:
+        elif table_name in ['PCOMPTS', 'PCOMPTS']:
             self._read_pcompts()
         else:
             self._skip_table_helper(warn=warn)
