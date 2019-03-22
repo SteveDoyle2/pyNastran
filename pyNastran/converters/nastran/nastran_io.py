@@ -7360,9 +7360,10 @@ def build_offset_normals_dims(model, eid_map, nelements):
                 raise AttributeError(msg)
             except RuntimeError:
                 # this happens when you have a degenerate tri
-                msg = 'eid=%i normal=NaN...\n'
-                msg += '%s' % (element)
-                msg += 'nodes = %s' % str(element.nodes)
+                msg = (
+                    'eid=%i normal=NaN...\n'
+                    '%s'
+                    'nodes = %s' % (eid, element, str(element.nodes)))
                 log.error(msg)
                 normali = np.ones(3) * np.nan
                 #raise
@@ -7381,9 +7382,9 @@ def build_offset_normals_dims(model, eid_map, nelements):
                 elif ptype == 'PLPLANE':
                     z0 = 0.
                 elif ptype == 'PSHEAR':
-                    z0 = 0.
+                    z0 = np.nan
                 elif ptype in ['PSOLID', 'PLSOLID']:
-                    z0 = 0.
+                    z0 = np.nan
                 else:
                     raise NotImplementedError(ptype) # PSHEAR, PCOMPG
 

@@ -9,7 +9,7 @@ import sys
 import io
 from typing import List, Dict, Union, Optional, Tuple, Any, cast
 from codecs import open
-from six import string_types, iteritems, PY2, PY3, StringIO
+from six import string_types, iteritems, PY2, StringIO
 
 from pyNastran.bdf.bdf_interface.utils import print_filename
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -84,7 +84,7 @@ class WriteMesh(BDFAttributes):
             assert size in [8, 16], size
 
         assert isinstance(interspersed, bool)
-        fname = print_filename(out_filename)
+        #fname = print_filename(out_filename)
         #self.log.debug("***writing %s" % fname)
         return out_filename
 
@@ -113,7 +113,7 @@ class WriteMesh(BDFAttributes):
             bdf_file.write('CEND\n')
             bdf_file.write('BEGIN BULK\n')
             #if is_subpanel_model:
-            for aesurf_id, aesurf in self.aesurf.items():
+            for aesurf_id, unused_aesurf in self.aesurf.items():
                 #cid = aesurf.cid1
 
                 #aesurf_mid = aesurf_id
@@ -253,7 +253,8 @@ class WriteMesh(BDFAttributes):
                 bdf_file.write('BEGIN SUPER=%s\n' % superelement_id)
                 superelement.write_bdf(out_filename=bdf_file, encoding=encoding,
                                        size=size, is_double=is_double,
-                                       interspersed=interspersed, enddata=False, write_header=False, close=False)
+                                       interspersed=interspersed, enddata=False,
+                                       write_header=False, close=False)
                 bdf_file.write('$' + '*'*80+'\n')
             bdf_file.write('BEGIN BULK\n')
 
@@ -269,8 +270,10 @@ class WriteMesh(BDFAttributes):
         self._write_materials(bdf_file, size, is_double, is_long_ids=is_long_ids)
 
         self._write_masses(bdf_file, size, is_double, is_long_ids=is_long_ids)
-        self._write_rigid_elements(bdf_file, size, is_double, is_long_ids=is_long_ids) # split out for write_bdf_symmetric
-        self._write_aero(bdf_file, size, is_double, is_long_ids=is_long_ids)  # split out for write_bdf_symmetric
+
+        # split out for write_bdf_symmetric
+        self._write_rigid_elements(bdf_file, size, is_double, is_long_ids=is_long_ids)
+        self._write_aero(bdf_file, size, is_double, is_long_ids=is_long_ids)
 
         self._write_common(bdf_file, size, is_double, is_long_ids=is_long_ids)
         if (enddata is None and 'ENDDATA' in self.card_count) or enddata:
@@ -533,8 +536,9 @@ class WriteMesh(BDFAttributes):
             for mkaero in self.mkaeros:
                 bdf_file.write(mkaero.write_card(size, is_double))
 
-    def _write_gust(self, bdf_file, size=8, is_double=False, write_aero_in_gust=True, is_long_ids=None):
-        # type: (Any, int, bool, bool) -> None
+    def _write_gust(self, bdf_file, size=8, is_double=False, write_aero_in_gust=True,
+                    is_long_ids=None):
+        # type: (Any, int, bool, bool, Optional[bool]) -> None
         """Writes the gust cards"""
         if (write_aero_in_gust and self.aero) or self.gusts:
             bdf_file.write('$GUST\n')
@@ -545,7 +549,7 @@ class WriteMesh(BDFAttributes):
                 bdf_file.write(gust.write_card(size, is_double))
 
     def _write_common(self, bdf_file, size=8, is_double=False, is_long_ids=None):
-        # type: (Any, int, bool) -> None
+        # type: (Any, int, bool, Optional[bool) -> None
         """
         Write the common outputs so none get missed...
 
@@ -566,7 +570,8 @@ class WriteMesh(BDFAttributes):
         self._write_static_aero(bdf_file, size, is_double, is_long_ids=is_long_ids)
 
         write_aero_in_flutter, write_aero_in_gust = self._find_aero_location()
-        self._write_flutter(bdf_file, size, is_double, write_aero_in_flutter, is_long_ids=is_long_ids)
+        self._write_flutter(bdf_file, size, is_double, write_aero_in_flutter,
+                            is_long_ids=is_long_ids)
         self._write_gust(bdf_file, size, is_double, write_aero_in_gust, is_long_ids=is_long_ids)
 
         self._write_thermal(bdf_file, size, is_double, is_long_ids=is_long_ids)
@@ -808,10 +813,11 @@ class WriteMesh(BDFAttributes):
         # type: (Any, int, bool) -> None
         """Writes the materials in a sorted order"""
         size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
+        is_big_materials = hasattr(self, 'big_materials') and self.big_materials
         is_materials = (self.materials or self.hyperelastic_materials or self.creep_materials or
                         self.MATS1 or self.MATS3 or self.MATS8 or self.MATT1 or
                         self.MATT2 or self.MATT3 or self.MATT4 or self.MATT5 or
-                        self.MATT8 or self.MATT9 or self.nxstrats)
+                        self.MATT8 or self.MATT9 or self.nxstrats or is_big_materials)
         if is_materials:
             bdf_file.write('$MATERIALS\n')
             for (unused_mid, material) in sorted(self.materials.items()):
@@ -844,6 +850,10 @@ class WriteMesh(BDFAttributes):
                 bdf_file.write(material.write_card(size, is_double))
             for (unused_sid, nxstrat) in sorted(self.nxstrats.items()):
                 bdf_file.write(nxstrat.write_card(size, is_double))
+
+            if is_big_materials:
+                for unused_mid, mat in sorted(self.big_materials.items()):
+                    bdf_file.write(mat.write_card_16(is_double))
 
     def _write_nodes(self, bdf_file, size=8, is_double=False, is_long_ids=None):
         # type: (Any, int, bool) -> None
@@ -990,7 +1000,9 @@ class WriteMesh(BDFAttributes):
         # type: (Any, int, bool) -> None
         """Writes the properties in a sorted order"""
         size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
-        is_properties = self.properties or self.pelast or self.pdampt or self.pbusht
+        is_big_properties = hasattr(self, 'big_properties') and self.big_properties
+        is_properties = (self.properties or self.pelast or
+                         self.pdampt or self.pbusht or is_big_properties)
         if is_properties:
             bdf_file.write('$PROPERTIES\n')
             prop_groups = (self.properties, self.pelast, self.pdampt, self.pbusht)
@@ -1006,7 +1018,12 @@ class WriteMesh(BDFAttributes):
                     for unused_pid, prop in sorted(prop_group.items()):
                         bdf_file.write(prop.write_card(size, is_double))
 
-    def _write_properties_by_element_type(self, bdf_file, size=8, is_double=False, is_long_ids=None):
+            if is_big_properties:
+                for unused_pid, prop in sorted(self.big_properties.items()):
+                    bdf_file.write(prop.write_card_16(is_double))
+
+    def _write_properties_by_element_type(self, bdf_file, size=8, is_double=False,
+                                          is_long_ids=None):
         # type: (Any, int, bool) -> None
         """
         Writes the properties in a sorted order by property type grouping
@@ -1044,7 +1061,7 @@ class WriteMesh(BDFAttributes):
         properties_by_class = defaultdict(list)
         prop_groups = (self.properties, self.pelast, self.pdampt, self.pbusht)
         for properties in prop_groups:
-            for pid, prop in properties.items():
+            for unused_pid, prop in properties.items():
                 prop_class = property_type_to_property_class[prop.type]
                 print(prop.type, '->', prop_class)
                 properties_by_class[prop_class].append(prop)

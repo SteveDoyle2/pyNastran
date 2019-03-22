@@ -9,10 +9,10 @@ defines:
 """
 from __future__ import print_function
 from collections import defaultdict
+from codecs import open
 from six import string_types
 from numpy import array, allclose, unique, zeros
 from pyNastran.bdf.bdf import read_bdf
-from codecs import open
 
 from pyNastran.bdf.mesh_utils.bdf_equivalence import bdf_equivalence_nodes
 from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
@@ -34,8 +34,11 @@ def clear_out_solids(bdf_filename, bdf_filename_out=None,
                        bdf_filename_out, renumber, equivalence))
             raise RuntimeError(msg)
 
-    print('clearing out solids from %s' % bdf_filename)
-    model = read_bdf(bdf_filename, xref=False)
+    if isinstance(bdf_filename, string_types):
+        print('clearing out solids from %s' % bdf_filename)
+        model = read_bdf(bdf_filename, xref=False)
+    else:
+        model = bdf_filename
     #nodes2    = {nid, node for nid, node in model.nodes.items()}
     #elements2 = {eid, element for eid, element in model.elements.items()
                  #if element.type in ['CTRIA3', 'CQUAD4']}
@@ -43,22 +46,22 @@ def clear_out_solids(bdf_filename, bdf_filename_out=None,
     out_dict = model.get_card_ids_by_card_types(card_types=['CTRIA3', 'CQUAD4'])
     save_eids = set(out_dict['CTRIA3'] + out_dict['CQUAD4'])
     all_eids = set(model.element_ids)
-    print('all_eids =', all_eids)
-    print('save_eids =', save_eids)
+    #print('all_eids =', all_eids)
+    #print('save_eids =', save_eids)
     remove_eids = all_eids - save_eids
-    print('remove_eids =', remove_eids)
+    #print('remove_eids =', remove_eids)
 
     for eid in remove_eids:
-        print('eid =', eid)
+        #print('eid =', eid)
         del model.elements[eid]
 
     # TODO: seems like we could be more efficient...
     #nids = unique(hstack([model.elements[eid].node_ids for eid in save_eids]))
 
-
+    # get nodes that are remaining in the model
     nids = set([])
     unused_elements2 = {}
-    print(model.elements)
+    #print(model.elements)
     for eid, element in model.elements.items():
         #if element.type not in ['CTRIA3', 'CQUAD4']:
             #continue
@@ -67,6 +70,7 @@ def clear_out_solids(bdf_filename, bdf_filename_out=None,
     nids = list(nids)
     nids.sort()
 
+    # filter out old nodes & properties
     nodes2 = {nid : node for nid, node in model.nodes.items() if nid in nids}
     properties2 = {pid : prop for pid, prop in model.properties.items() if prop.type == 'PSHELL'}
 
@@ -98,6 +102,7 @@ def clear_out_solids(bdf_filename, bdf_filename_out=None,
             bdf_renumber(bdf_equivalenced_filename, bdf_filename_out, size=8, is_double=False,
                          starting_id_dict=starting_id_dict)
     elif renumber:
+        model.cross_reference()
         bdf_renumber(model, bdf_filename_out, size=8, is_double=False,
                      starting_id_dict=starting_id_dict)
 
@@ -397,40 +402,3 @@ def _write_surf(surf_filename, maxnode,
                 pid = renumber_pids[pid]
             n1, n2, n3, n4 = element
             surf_file.write('%i %i %i %i %i %s %s\n' % (n1, n2, n3, n4, pid, rf, grid_bc))
-
-
-
-def main():  # pragma: no cover
-    """test function"""
-    deck = (
-        "$ pyNastran: punch=True\n"
-        "GRID,1\n"
-        "GRID,2\n"
-        "GRID,3\n"
-        "GRID,4\n"
-        "GRID,5\n"
-        "GRID,6\n"
-        "GRID,7\n"
-        "GRID,8\n"
-
-        "GRID,9\n"
-        "GRID,10\n"
-        "GRID,11\n"
-        "GRID,12\n"
-        "CHEXA,1,1, 1,2,3,4,5,6,\n"
-        ",7,8\n"
-        "CQUAD4,2,200, 8,9,10,11\n"
-        "PSHELL,200,1000,0.1\n"
-        "PSOLID,100,1000\n"
-        "MAT1,1000,3.0e7,,0.3\n"
-    )
-
-    bdf_filename = 'deck.bdf'
-    bdf_clean = 'clean.bdf'
-    with open(bdf_filename, 'wb') as bdf_file:
-        bdf_file.write(deck)
-    clear_out_solids(bdf_filename, bdf_clean, renumber=True, equivalence=True)
-
-
-if __name__ == '__main__':
-    main()
