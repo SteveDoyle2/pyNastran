@@ -1,8 +1,10 @@
 from numpy import zeros
 
 class ShabpOut(object):
-    def __init__(self, log=None, debug=False):
-        pass
+    def __init__(self, model, log=None, debug=False):
+        self.model = model
+        self.X = model.X
+        self.npatches = len(model.X)
 
     def readline(self, f, i):
         i += 1
@@ -10,30 +12,29 @@ class ShabpOut(object):
 
     def readline_n(self, f, i, n):
         i += n
-        for j in range(n-1):
+        for unused_j in range(n-1):
             f.readline()
         return f.readline(), i
 
     def read_shabp_out(self, out_filename):
-        npatches = len(self.X)
-        istart = zeros(npatches, dtype='int32')
+        #npatches = len(self.X)
+        istart = zeros(self.npatches, dtype='int32')
         nelements = 0
-        for ipatch in range(npatches):
+        for ipatch in range(self.npatches):
             X = self.X[ipatch]
             nrows, ncols = X.shape
             nelementsi = (nrows-1) * (ncols-1)
             istart[ipatch] = nelements
             nelements += nelementsi
 
-
         Cp_out = {}
         delta_out = {}
 
         # all of case 1, then all of case 2
         Cp_dict, delta_dict, ncases = self._parse_results(out_filename)
-        ncomps = len(self.component_num_to_name)
+        #unused_ncomps = len(self.component_num_to_name)
 
-        components = self.component_name_to_patch.keys()
+        components = self.model.component_name_to_patch.keys()
         for icase in range(ncases):
             Cp = zeros(nelements, dtype='float32')
             delta = zeros(nelements, dtype='float32')
@@ -45,13 +46,13 @@ class ShabpOut(object):
                 delta_array = delta_dict[icomp]
                 ndata = len(Cp_array) // ncases
                 jelement_start = ndata * icase
-                for i, ipatch in enumerate(patches):  # ipatch starts at 1
+                for unused_i, ipatch in enumerate(patches):  # ipatch starts at 1
                     X = self.X[ipatch-1]
                     iistart = istart[ipatch-1]
 
                     nrows, ncols = X.shape
                     nelementsi = (nrows-1) * (ncols-1)
-                    Cp[   iistart:iistart+nelementsi] = Cp_array[   jelement_start:jelement_start+nelementsi]
+                    Cp[iistart:iistart+nelementsi] = Cp_array[jelement_start:jelement_start+nelementsi]
                     delta[iistart:iistart+nelementsi] = delta_array[jelement_start:jelement_start+nelementsi]
                     jelement_start += nelementsi
             Cp_out[icase] = Cp
@@ -68,8 +69,10 @@ class ShabpOut(object):
         while '*** PRESSURE CALCULATION PROGRAM' not in line:
             line, i = self.readline(f, i)
 
-        line, i, Cp_dict_components, delta_dict_components, ncases = self._read_inviscid_pressure(f, i)
+        out = self._read_inviscid_pressure(f, i)
+        line, i, Cp_dict_components, delta_dict_components, ncases = out
         #self._read_viscous2(line, i)
+        return Cp_dict_components, delta_dict_components, ncases
 
     def read_viscous2(self, f, i):
         line = ''
@@ -80,7 +83,7 @@ class ShabpOut(object):
 
         nstreamlines = 19
         streamlines = []
-        for istreamline in range(nstreamlines):
+        for unused_istreamline in range(nstreamlines):
             # streamline 1
             streamline = []
             line, i = self.readline(f, i)
@@ -105,17 +108,17 @@ class ShabpOut(object):
         Cp_dict_components = {}
         delta_dict_components = {}
         _line, i = self.readline_n(f, i, 5)
-        for icomponent in range(npatches):
+        for icomponent in range(self.npatches):
             mach_line, i = self.readline(f, i)
             if 'Summation Number' in mach_line:
                 break
             if 'MACH' not in mach_line:
                 raise RuntimeError('couldnt find MACH in line[%i]=%r' % (i, mach_line.strip()))
 
-            xcg_line, i = self.readline(f, i)
-            alpha_line, i = self.readline(f, i)
+            unused_xcg_line, i = self.readline(f, i)
+            unused_alpha_line, i = self.readline(f, i)
 
-            xcent_line, i = self.readline_n(f, i, 3)
+            unused_xcent_line, i = self.readline_n(f, i, 3)
             #0  L      DEL CA        DEL CY        DEL CN       DEL CLL       DEL CLM       DEL CLN       CP             AREA
             #            CA            CY            CN           CLL           CLM            CLN        DELTA
             #           XCENT         YCENT         ZCENT      NX             NY             NZ
@@ -125,7 +128,9 @@ class ShabpOut(object):
             Delta = []
             while 1:
                 while line[0] == '0':
-                    del_ca, del_cy, del_cn, del_cll, del_clm, del_cln, cp, area = (
+                    (unused_del_ca, unused_del_cy, unused_del_cn,
+                     unused_del_cll, unused_del_clm, unused_del_cln,
+                     cp, unused_area) = (
                         line[8 :20], line[21:33],
                         line[35:47], line[49:63],
                         line[63:75], line[77:89],
@@ -133,7 +138,7 @@ class ShabpOut(object):
                     )
 
                     line, i = self.readline(f, i)
-                    ca, cy, cn, cll, clm, cln, delta = (
+                    unused_ca, unused_cy, unused_cn, unused_cll, unused_clm, unused_cln, delta = (
                         line[8 :20], line[21:33],
                         line[35:47], line[49:63],
                         line[63:75], line[77:89],
@@ -141,7 +146,7 @@ class ShabpOut(object):
                     )
 
                     line, i = self.readline(f, i)
-                    xc, yc, zc, nx, ny, nz = (
+                    unused_xc, unused_yc, unused_zc, unused_nx, unused_ny, unused_nz = (
                         line[8 :20], line[21:33],
                         line[35:47], line[49:63],
                         line[63:75], line[77:89],

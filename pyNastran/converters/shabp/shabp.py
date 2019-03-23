@@ -34,7 +34,6 @@ class SHABP(ShabpOut):
             if log is set, debug is ignored and uses the
             settings the logging object has
         """
-        ShabpOut.__init__(self, log, debug)
         #self.xyz = {}
         self.X = {}
         self.Y = {}

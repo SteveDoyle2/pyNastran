@@ -12,6 +12,7 @@ from pyNastran.utils.dev import list_print
 from pyNastran.utils.mathematics import (
     get_abs_max, get_max_index, get_min_index, get_abs_index,
     is_list_ranged)
+from pyNastran.utils.dev import get_files_of_type
 
 
 PKG_PATH = pyNastran.__path__[0]
@@ -43,6 +44,13 @@ class B1(A1):
 
 
 class TestUtils(unittest.TestCase):
+
+    def test_get_files_of_type(self):
+        """tests the get_files_of_type function"""
+        model_path = os.path.join(PKG_PATH, '..', 'models')
+        op2_files = get_files_of_type(model_path, extension='.op2', max_size=100.,
+                                      limit_file='no_dig.txt')
+        #assert len(op2_files) == 98, len(op2_files)
 
     def test_is_list_ranged(self):
         """tests the is_list_ranged function"""

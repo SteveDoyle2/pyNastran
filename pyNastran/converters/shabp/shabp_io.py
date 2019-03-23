@@ -2,7 +2,7 @@
 Defines the GUI IO file for S/HABP.
 """
 from __future__ import print_function
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 
 import numpy as np
 from numpy import zeros, cross, amax, amin
@@ -12,6 +12,7 @@ import vtk
 from vtk import vtkQuad
 
 from pyNastran.converters.shabp.shabp import read_shabp
+from pyNastran.converters.shabp.shabp_results import ShabpOut
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 
 
@@ -40,7 +41,8 @@ class ShabpIO(object):
         self.model = read_shabp(shabp_filename, log=self.gui.log, debug=self.gui.debug)
         self.gui.model_type = 'shabp' # model.model_type
 
-        nodes, elements, patches, components, impact, shadow = self.model.get_points_elements_regions()
+        out = self.model.get_points_elements_regions()
+        nodes, elements, patches, components, impact, shadow = out
         #for nid,node in enumerate(nodes):
             #print "node[%s] = %s" %(nid,str(node))
 
@@ -66,7 +68,7 @@ class ShabpIO(object):
             points.InsertPoint(nid, *node)
 
         assert len(elements) > 0
-        for eid, element in enumerate(elements):
+        for unused_eid, element in enumerate(elements):
             (p1, p2, p3, p4) = element
             elem = vtkQuad()
             elem.GetPointIds().SetId(0, p1)
@@ -97,6 +99,7 @@ class ShabpIO(object):
         self.gui.node_ids = node_ids
         self.gui.element_ids = element_ids
         self.gui._finish_results_io2(model_name, form, cases)
+        self.gui.bkp = self.model
 
     def clear_shabp(self):
         del seguient.elements
@@ -228,29 +231,47 @@ class ShabpIO(object):
         return form, cases
 
     def load_shabp_results(self, shabp_filename):
+        #print(dir(self))
+        #print(dir(self.gui))
         model_name = 'main'
-        Cpd, deltad = self.model.read_shabp_out(shabp_filename)
+        #print(self.model)
+        model = self.gui.bkp
+        out_model = ShabpOut(model, log=self.gui.log, debug=self.gui.debug)
+        Cpd, unused_deltad = out_model.read_shabp_out(shabp_filename)
 
         cases = self.gui.result_cases
         icase = len(cases)
         mach_results = []
-        form = self.gui.form
+
+        form = self.gui.get_form()
         form.append(('Results', None, mach_results))
-        mach_forms = {}
+        mach_forms = defaultdict(list)
         for case_id, Cp in sorted(Cpd.items()):
             Cp = Cpd[case_id]
             #delta = deltad[case_id]
 
-            mach, alpha, beta = self.model.shabp_cases[case_id]
+            try:
+                mach, alpha, unused_beta = model.shabp_cases[case_id]
+                name = 'Mach=%g Alpha=%g' % (mach, alpha)
+            except KeyError:
+                name = 'Mach=? Alpha=? (Case %i)' % case_id
             #name = 'Mach=%g Alpha=%g' % (mach, alpha)
-            name = 'Mach=%g Alpha=%g' % (mach, alpha)
-            cases[(name, icase, 'Cp', 1, 'centroid', '%.3f', '')] = Cp
-            cp_form = [
-                ('Cp', icase, [])
-            ]
-            mach_forms[mach].append(('Cp', None, cp_form))
+            #(name, icase, 'Cp', 1, 'centroid', '%.3f', '')
+            cases[icase] = Cp
+            #cp_form = [
+                #('Cp', icase, [])
+            #]
+
+            ID = 1
+            cp_res = GuiResult(ID, header='Cp', title='Cp',
+                               location='centroid', scalar=Cp) # data_format='%.2f
+            itime = 0
+            cases[icase] = (cp_res, (itime, name))
+            mach_forms[mach].append(('Cp', icase, []))
+            icase += 1
             #self.result_cases[(name, 'delta', 1, 'centroid', '%.3f')] = delta
 
         for mach, mach_form in sorted(mach_forms.items()):
-            mach_results.append(mach_form)
+            mach_formi = ('Mach=%s' % mach, None, mach_form)
+            mach_results.append(mach_formi)
         self.gui._finish_results_io2(model_name, form, cases)

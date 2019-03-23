@@ -344,7 +344,7 @@ def list_print(list_a, tol=1e-8, float_fmt='%-3.2g', zero_fmt='    0'):
 
 Area = lambda a, b: 0.5 * norm(cross(a, b))
 
-def gauss(n):
+def gauss(n):  # pragma: no cover
     r"""
     A quadrature rule: an approximation of the definite integral of a function.
     Currently implementation supports up to 5 quadrature points.
