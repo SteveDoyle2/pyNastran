@@ -8,7 +8,7 @@ from pyNastran.bdf.bdf import read_bdf
 
 from pyNastran.converters.nastran.nastran_to_cart3d import nastran_to_cart3d
 from pyNastran.converters.nastran.nastran_to_stl import nastran_to_stl
-from pyNastran.converters.nastran.nastran_to_surf import nastran_to_surf
+from pyNastran.converters.nastran.nastran_to_surf import nastran_to_surf, clear_out_solids
 from pyNastran.converters.nastran.nastran_to_tecplot import nastran_to_tecplot
 from pyNastran.converters.nastran.nastran_to_ugrid import nastran_to_ugrid
 from pyNastran.converters.aflr.ugrid.ugrid_reader import read_ugrid
@@ -57,6 +57,50 @@ class TestNastran(unittest.TestCase):
         stl_filename = os.path.join(MODEL_PATH, 'plate', 'plate.stl')
         log = get_logger(log=None, level='warning', encoding='utf-8')
         nastran_to_stl(bdf_filename, stl_filename, is_binary=False, log=log)
+
+    def test_clear_out_solids(self):
+        """tests clear_out_solids"""
+        deck = (
+            "$ pyNastran: punch=True\n"
+            "GRID,1\n"
+            "GRID,2\n"
+            "GRID,3\n"
+            "GRID,4\n"
+            "GRID,5\n"
+            "GRID,6\n"
+            "GRID,7\n"
+            "GRID,8\n"
+
+            "GRID,9\n"
+            "GRID,10\n"
+            "GRID,11\n"
+            "GRID,12\n"
+            "CHEXA,1,1, 5,6,7,8,9,10,\n"
+            ",7,8\n"
+            "CQUAD4,2,200, 1,2,3,4\n"
+            # doesn't work
+            #"CHEXA,1,1, 1,2,3,4,5,6,\n"
+            #",7,8\n"
+            #"CQUAD4,2,200, 8,9,10,11\n"
+            "PSHELL,200,1000,0.1\n"
+            "PSOLID,100,1000\n"
+            "MAT1,1000,3.0e7,,0.3\n"
+        )
+
+        bdf_filename = 'deck.bdf'
+        bdf_clean_filename = 'clean.bdf'
+        with open(bdf_filename, 'w') as bdf_file:
+            bdf_file.write(deck)
+
+        model = read_bdf(bdf_filename, xref=False)
+        clear_out_solids(model, bdf_clean_filename, renumber=True,
+                         equivalence=False, equivalence_tol=0.01)
+
+        model = read_bdf(bdf_clean_filename)
+        assert len(model.nodes) == 4, len(model.nodes)
+        assert len(model.elements) == 1, len(model.elements)
+        os.remove(bdf_filename)
+        os.remove(bdf_clean_filename)
 
 if __name__ == '__main__':  # pragma: no cover
     import time

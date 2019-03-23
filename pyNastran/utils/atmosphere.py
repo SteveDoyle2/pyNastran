@@ -28,7 +28,7 @@ from math import log, exp
 import numpy as np
 
 
-def get_alt_for_density(density, density_units='slug/ft^3', alt_units='ft', nmax=20):
+def get_alt_for_density(density, density_units='slug/ft^3', alt_units='ft', nmax=20, tol=5.):
     # type : (float, str, str, int) -> float
     """
     Gets the altitude associated with a given air density.
@@ -75,8 +75,8 @@ def get_alt_for_density(density, density_units='slug/ft^3', alt_units='ft', nmax
 
 
 def get_alt_for_eas_with_constant_mach(equivalent_airspeed, mach,
-                                       velocity_units='ft/s', alt_units='ft', nmax=20):
-    # type : (float, float, str, str, int) -> float
+                                       velocity_units='ft/s', alt_units='ft', nmax=20, tol=5.):
+    # type : (float, float, str, str, int, float) -> float
     """
     Gets the altitude associated with a equivalent airspeed.
 
@@ -90,6 +90,8 @@ def get_alt_for_eas_with_constant_mach(equivalent_airspeed, mach,
         the altitude units; ft, kft, m
     nmax : int; default=20
         max number of iterations for convergence
+    tol : float; default=5.
+        tolerance in alt_units
 
     Returns
     -------
@@ -97,11 +99,11 @@ def get_alt_for_eas_with_constant_mach(equivalent_airspeed, mach,
         the altitude in alt units
     """
     equivalent_airspeed = convert_velocity(equivalent_airspeed, velocity_units, 'ft/s')
+    tol = convert_altitude(tol, alt_units_in, 'ft')
     dalt = 500.
     alt_old = 0.
     alt_final = 5000.
     n = 0
-    tol = 5. # ft
 
     R = 1716.
     z0 = 0.
@@ -132,8 +134,8 @@ def get_alt_for_eas_with_constant_mach(equivalent_airspeed, mach,
     alt_final = convert_altitude(alt_final, 'ft', alt_units)
     return alt_final
 
-def get_alt_for_q_with_constant_mach(q, mach, pressure_units='psf', alt_units='ft', nmax=20):
-    # type : (float, float, str, str, int) -> float
+def get_alt_for_q_with_constant_mach(q, mach, pressure_units='psf', alt_units='ft', nmax=20, tol=5.):
+    # type : (float, float, str, str, int, float) -> float
     """
     Gets the altitude associated with a dynamic pressure.
 
@@ -149,6 +151,8 @@ def get_alt_for_q_with_constant_mach(q, mach, pressure_units='psf', alt_units='f
         the altitude units; ft, kft, m
     nmax : int; default=20
         max number of iterations for convergence
+    tol : float; default=5.
+        tolerance in alt_units
 
     Returns
     -------
@@ -157,11 +161,11 @@ def get_alt_for_q_with_constant_mach(q, mach, pressure_units='psf', alt_units='f
     """
     pressure = 2 * q / (1.4 * mach ** 2) # gamma = 1.4
     alt = get_alt_for_pressure(
-        pressure, pressure_units=pressure_units, alt_units=alt_units, nmax=nmax)
+        pressure, pressure_units=pressure_units, alt_units=alt_units, nmax=nmax, tol=tol)
     return alt
 
-def get_alt_for_pressure(pressure, pressure_units='psf', alt_units='ft', nmax=20):
-    # type : (float, str, str, int) -> float
+def get_alt_for_pressure(pressure, pressure_units='psf', alt_units='ft', nmax=20, tol=5.):
+    # type : (float, str, str, int, float) -> float
     """
     Gets the altitude associated with a pressure.
 
@@ -175,6 +179,8 @@ def get_alt_for_pressure(pressure, pressure_units='psf', alt_units='ft', nmax=20
         the altitude units; ft, kft, m
     nmax : int; default=20
         max number of iterations for convergence
+    tol : float; default=5.
+        tolerance in alt_units
 
     Returns
     -------
@@ -182,11 +188,11 @@ def get_alt_for_pressure(pressure, pressure_units='psf', alt_units='ft', nmax=20
         the altitude in alt_units
     """
     pressure = convert_pressure(pressure, pressure_units, 'psf')
+    tol = convert_pressure(tol, alt_units, 'ft')
     dalt = 500.
     alt_old = 0.
     alt_final = 5000.
     n = 0
-    tol = 5. # ft
 
     # Newton's method
     while abs(alt_final - alt_old) > tol and n < nmax:
@@ -201,6 +207,9 @@ def get_alt_for_pressure(pressure, pressure_units='psf', alt_units='ft', nmax=20
 
     if n > nmax - 1:
         print('n = %s' % n)
+    #if abs(alt_final - alt_old) > tol:
+        #raise RuntimeError('Did not converge; Check your units; n=nmax=%s\n'
+                           #'target alt=%s alt_current=%s' % (nmax, alt_final, alt1))
 
     alt_final = convert_altitude(alt_final, 'ft', alt_units)
     return alt_final
