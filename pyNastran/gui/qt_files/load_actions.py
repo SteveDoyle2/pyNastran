@@ -327,6 +327,9 @@ class LoadActions(object):
                 self._load_deflection(out_filename)
                 restype = 'Deflection'
             elif iwildcard == 3:
+                self._load_force(out_filename)
+                restype = 'Force'
+            elif iwildcard == 4:
                 self.load_patran_nod(out_filename)
                 restype = 'Patran_nod'
             else:
@@ -356,6 +359,7 @@ class LoadActions(object):
                 'Node - Delimited Text (*.txt; *.dat; *.csv)',
                 'Element - Delimited Text (*.txt; *.dat; *.csv)',
                 'Nodal Deflection - Delimited Text (*.txt; *.dat; *.csv)',
+                'Nodal Force - Delimited Text (*.txt; *.dat; *.csv)',
                 'Patran nod (*.nod)',
             ]
             fmt = ';;'.join(fmts)
@@ -365,13 +369,17 @@ class LoadActions(object):
             iwildcard = fmts.index(wildcard_level)
         else:
             fmts = [
-                'node', 'element', 'deflection', 'patran_nod',
+                'node', 'element', 'deflection', 'force', 'patran_nod',
             ]
             iwildcard = fmts.index(restype.lower())
         is_failed = False
         return is_failed, out_filename, iwildcard
 
     def _load_deflection(self, out_filename):
+        """loads a deflection file"""
+        self._load_deflection_force(out_filename, is_deflection=True, is_force=False)
+
+    def _load_force(self, out_filename):
         """loads a force file"""
         self._load_deflection_force(out_filename, is_deflection=False, is_force=True)
 
@@ -387,7 +395,7 @@ class LoadActions(object):
         result_type = 'node'
         self._add_cases_to_form(A, fmt_dict, headers, result_type,
                                 out_filename_short, update=True, is_scalar=False,
-                                is_deflection=is_deflection, is_force=is_deflection)
+                                is_deflection=is_deflection, is_force=is_force)
 
     def _on_load_nodal_elemental_results(self, result_type, out_filename=None):
         """
@@ -523,10 +531,13 @@ class LoadActions(object):
         #assert len(headers) < 50, 'headers=%s' % (headers)
         for header in headers:
             if is_scalar:
-                out = create_res_obj(islot, headers, header, A, fmt_dict, result_type)
+                out = create_res_obj(islot, headers, header, A, fmt_dict, result_type,
+                                     colormap='jet')
             else:
                 out = create_res_obj(islot, headers, header, A, fmt_dict, result_type,
-                                     self.gui.settings.dim_max, self.gui.xyz_cid0)
+                                     is_deflection=is_deflection, is_force=is_force,
+                                     dim_max=self.gui.settings.dim_max, xyz_cid0=self.gui.xyz_cid0,
+                                     colormap='jet')
             res_obj, title = out
 
             #cases[icase] = (stress_res, (subcase_id, 'Stress - isElementOn'))

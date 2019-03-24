@@ -156,10 +156,14 @@ class TestNastranGUI(unittest.TestCase):
     def test_solid_bending(self):
         bdf_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending_ogs.op2')
+        deflection_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending_multi_deflection_node.txt')
 
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
-        test.load_nastran_results(op2_filename)
+        #test.load_nastran_results(op2_filename)
+        test.on_load_custom_results(out_filename=deflection_filename, restype='Deflection')
+        test.on_load_custom_results(out_filename=deflection_filename, restype='Force')
+
 
     def test_beam_modes_01(self):
         """CBAR/CBEAM - PARAM,POST,-1"""

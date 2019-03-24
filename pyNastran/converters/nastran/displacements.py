@@ -23,20 +23,17 @@ class NastranTable(GuiResultCommon):
             the sidebar word
         titles : List[str]
             the legend title
-
         #xyz : (nnodes, 3)
             #the nominal xyz locations
         #scalars : (nnodes,n) float ndarray
             ##the data to make a contour plot with
             #does nothing
-
         dxyz : (nnodes, 3)
             the delta xyz values
         linked_scale_factor : bool
             is the displacement scale factor linked
             displacements/loads steps should be
             force/eigenvectors should not be
-
         scales : List[float]
             the table (e.g., deflection, SPC Forces) scale factors
             nominally, this starts as an empty list and is filled later
@@ -334,7 +331,7 @@ class ForceTableResults(NastranTable):
                  scales, data_formats=None,
                  nlabels=None, labelsize=None, ncolors=None, colormap='jet',
                  set_max_min=False, uname='NastranGeometry'):
-        """this is a nodal result"""
+        """this is a nodal force result"""
         linked_scale_factor = False
         location = 'node'
         NastranTable.__init__(

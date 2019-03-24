@@ -11,7 +11,7 @@ import pyNastran
 from pyNastran.utils import _filename
 from pyNastran.utils.numpy_utils import loadtxt_nice
 from pyNastran.gui.gui_objects.gui_result import GuiResult
-from pyNastran.converters.nastran.displacements import DisplacementResults
+from pyNastran.converters.nastran.displacements import DisplacementResults, ForceTableResults
 from pyNastran.converters.stl.stl import read_stl
 
 
@@ -88,6 +88,7 @@ def check_for_newer_version(version_current=None):
     return version_latest, version_current, is_newer
 
 def create_res_obj(islot, headers, header, A, fmt_dict, result_type,
+                   is_deflection=False, is_force=False,
                    dim_max=None, xyz_cid0=None, colormap='jet'):
     """
     Parameters
@@ -151,13 +152,25 @@ def create_res_obj(islot, headers, header, A, fmt_dict, result_type,
         data_formats = [fmti] * 3
         scalar = None
         dxyz = datai
-        xyz = xyz_cid0
-        res_obj = DisplacementResults(
-            islot, titles, headers,
-            xyz, dxyz, scalar, scales, data_formats=data_formats,
-            nlabels=None, labelsize=None, ncolors=None,
-            colormap=colormap,
-            set_max_min=True)
+        if is_deflection:
+            xyz = xyz_cid0
+            res_obj = DisplacementResults(
+                #subcase_id, titles, headers, xyz, dxyz, unused_scalar
+                islot, titles, headers,
+                xyz, dxyz, scalar, scales, data_formats=data_formats,
+                nlabels=None, labelsize=None, ncolors=None,
+                colormap=colormap,
+                set_max_min=True)
+        elif is_force:
+            # scalar is unused
+            res_obj = ForceTableResults(
+                islot, titles, headers,
+                dxyz, scalar, scales, data_formats=data_formats,
+                nlabels=None, labelsize=None, ncolors=None,
+                colormap=colormap,
+                set_max_min=True)
+        else:
+            raise RuntimeError('is_deflection=%s is_force=%s' % (is_deflection, is_force))
     else:
         raise RuntimeError('vector_size=%s' % (vector_size))
     return res_obj, title

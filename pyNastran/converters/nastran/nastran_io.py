@@ -779,6 +779,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 #self.load_nastran_geometry_vectorized(bdf_filename, plot=plot)
         else:
             self.load_nastran_geometry_unvectorized(bdf_filename, plot=plot)
+        self.gui.format = 'nastran'
 
     def load_nastran_geometry_vectorized(self, bdf_filename, plot=True):
         """
