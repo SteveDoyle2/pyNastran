@@ -67,8 +67,14 @@ class GuiUtils(unittest.TestCase):
         #assert nrows == self.nnodes, 'nrows=%s nnodes=%s' % (nrows, self.nnodes)
         header = header0
         islot = 0
+        with self.assertRaises(RuntimeError):
+            create_res_obj(islot, headers, header, A, fmt_dict, result_type,
+                           dim_max=1.0, xyz_cid0=None,
+                           is_deflection=False, is_force=False)
+
         create_res_obj(islot, headers, header, A, fmt_dict, result_type,
-                       dim_max=1.0, xyz_cid0=None)
+                       dim_max=1.0, xyz_cid0=None,
+                       is_deflection=True, is_force=False)
 
     def test_gui_custom_geom_01(self):
         """tests custom_geom.csv"""
