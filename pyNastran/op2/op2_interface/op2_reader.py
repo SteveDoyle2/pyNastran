@@ -1445,13 +1445,29 @@ class OP2Reader(object):
         """
         op2 = self.op2
         op2.log.debug("table_name = %r" % op2.table_name)
-        unused_table_name = self._read_table_name(rewind=False)
+        table_name = self._read_table_name(rewind=False)
 
         #read_record = self._skip_record if self.read_mode == 2 else self._read_record
         self.read_markers([-1])
 
-        # (104, 0, 103, 412, 0, 0, 103)
+        # (104, 0,   1,   3, 0, 0,   0) - tpl\qrcomp.op2 PCOMPTS (length 3?)
+        # (104, 8,   0,   0, 0, 0,   0) - tpl\lmtas1.op2 PCOMPTS (return after -4)
+        # (104, 0, 103, 412, 0, 0, 103) - output.op2     PCOMPT  (return at end)
         data_header = self._read_record()
+        self.show_data(data_header, types='ifsd', endian=None)
+        a, b, n4a, n5, e, f, n4b = Struct(b'<7i').unpack(data_header)
+        self.log.debug('a=%s b=%s n4a=%s n5=%s e=%s f=%s n4b=%s' % (
+            a, b, n4a, n5, e, f, n4b))
+        #assert n4a == n4b, 'n4a=%s n4b=%s' % (n4a, n4b)
+
+        if table_name == b'PCOMPT':
+            n4words = n4a * 4
+            n5words = n5 * 32
+        elif table_name == b'PCOMPTS':
+            n4words = n4a * 3
+            n5words = n5
+        else:  # pragma: no cover
+            raise NotImplementedError(table_name)
 
         self.read_markers([-2, 1, 0])
         # 'IPCOMPT '
@@ -1467,16 +1483,20 @@ class OP2Reader(object):
 
         self.read_markers([-4, 1, 0])
         markers = self.get_nmarkers(1, rewind=True)
-        #self.show(200, types='ifsd')
-        if markers != [0]:
+        if markers != [0]: # n4a=0
             #self.show_data(data_header, types='ifsd')
             # (1, 4, 0, '    ')
             #(421, 4, 128, '    ')
             #(814, 4, 256, '    ')
             data = self._read_record()
-            #self.show_data(data, types='ifsd')
 
-            if 0: # pramga: no cover
+            assert len(data) == n4words*4, 'n4words=%s len(data)=%s n4words*4=%s'  % (n4words, len(data), n4words*4)
+
+            if table_name == b'PCOMPTS':
+                # (11, 3, 0)
+                pass
+                #self.show_data(data, types='ifs', endian=None)
+            elif 0: # pramga: no cover
                 i = 0
                 j = 0
                 s1 = Struct(b'< 3i 4s')
@@ -1486,15 +1506,22 @@ class OP2Reader(object):
                     print(out)
                     i += 16
                     j += 1
+                print("j (-4) = %s" % j)
+                assert i == len(data), '-4'
         else:
             self.read_markers([0])
+            assert n4a == 0, n4a
             return
 
         self.read_markers([-5, 1, 0])
         data = self._read_record()
-        #self.show_data(data, types='ifsd')
+        assert len(data) == n5words * 4, 'n5words=%s len(data)=%s n5words*4=%s'  % (n5words, len(data), n5words*4)
 
-        if 0: # pramga: no cover
+        if table_name == b'PCOMPTS':
+            # (101, 102, 103)
+            pass
+            #self.show_data(data, types='ifs', endian=None)
+        elif 0: # pramga: no cover
             i = 0
             j = 0
             nbytes = 128
@@ -1506,7 +1533,8 @@ class OP2Reader(object):
                     a, b, c, d, e, f, g, h, blank.rstrip()))
                 i += nbytes
                 j += 1
-
+            print("j (-5) = %s" % j)
+            assert i == len(data), '-5'
 
         self.read_markers([-6, 1, 0])
         self.read_markers([0])

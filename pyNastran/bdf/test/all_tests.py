@@ -12,6 +12,7 @@ from pyNastran.bdf.patran_utils.test_patran import TestPatran
 
 # unit
 from pyNastran.bdf.test.unit.test_read_write import TestReadWrite
+from pyNastran.bdf.test.unit.test_parsing import TestBDFParsing
 from pyNastran.bdf.test.test_openmdao import TestOpenMDAO
 
 # bdf_interface

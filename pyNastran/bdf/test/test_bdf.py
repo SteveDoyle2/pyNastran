@@ -656,17 +656,18 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
                         is_double=False, interspersed=False,
                         enddata=None, write_header=True, close=True) # hdf5
         for key, value in fem1.card_count.items():
-            if key == 'ENDDATA':
+            if key in ['ECHOOFF', 'ECHOON']:
                 continue
+            #if key == 'ENDDATA':
             hdf5_msg = ''
             if key not in fem1a.card_count:
                 hdf5_msg += 'key=%r was not loaded to hdf5\n' % key
 
             if hdf5_msg:
                 hdf5_msg += 'expected=%s\nactual=%s' % (
-                                    fem1.card_count, fem1a.card_count)
-                #raise RuntimeError(hdf5_msg)
-                self.log.error(hdf5_msg)
+                    fem1.card_count, fem1a.card_count)
+                fem1a.log.error(hdf5_msg)
+                raise RuntimeError(hdf5_msg)
         #sys.exit('hdf5')
 
     if mesh_form is None:
@@ -1861,6 +1862,84 @@ def compare(fem1, fem2, xref=True, check=True, print_stats=True, quiet=False):
     #compute(fem1.params, fem2.params)
 
 
+def run_argparse(argv=None):
+    """Gets the inputs for test_bdf using argparse."""
+    if argv is None:
+        argv = sys.argv[1:]  # same as argparse
+        #print('get_inputs; argv was None -> %s' % argv)
+    else:
+        # drop the pyNastranGUI; same as argparse
+        argv = argv[1:]
+
+    encoding = sys.getdefaultencoding()
+    import argparse
+    parent_parser = argparse.ArgumentParser()
+    parent_parser.add_argument('BDF_FILENAME', nargs=1,
+                               help='path to BDF/DAT/NAS file', type=str)
+
+    #'  -e E, --nerrors E  Allow for cross-reference errors (default=100)\n'
+    #'  --encoding ENCODE  the encoding method (default=None -> %r)\n' % encoding +
+    xref_safe_group = parent_parser.add_mutually_exclusive_group()
+    xref_safe_group.add_argument('-x', '--xref',
+                               help='disables cross-referencing and checks of the BDF '
+                               '(default=True -> on)', action='store_true')
+    xref_safe_group.add_argument('--safe', help='Use safe cross-reference (default=False)',
+                               action='store_true')
+
+    parent_parser.add_argument('-p', '--punch',
+                               help='disables reading the executive and case control decks '
+                               'in the BDF; (default=False -> reads entire deck)',
+                               action='store_true')
+
+    parent_parser.add_argument('-c', '--check',
+                               help='disables BDF checks.  Checks run the methods on; '
+                               'every element/property to test them.  May fails if a'
+                               'card is fully not supported (default=False)', action='store_true')
+    parent_parser.add_argument('-l', '--large',
+                               help='writes the BDF in large field, single precision format '
+                               '(default=False)', action='store_true')
+    parent_parser.add_argument('-d', '--double',
+                               help='writes the BDF in large field, double precision format '
+                               '(default=False)', action='store_true')
+    parent_parser.add_argument('-L', '--loads',
+                               help='Disables forces/moments summation for the different '
+                               'subcases  (default=True)', action='store_false')
+    parent_parser.add_argument('-e', '--nerrors', type=int, nargs=1, default=100,
+                               help='Allow for cross-reference errors (default=100)')
+    parent_parser.add_argument('--encoding', type=str, nargs=1,
+                               help='the encoding method (default=None -> %r)' % encoding)
+    # -e
+    parent_parser.add_argument('-q', '--quiet', help='prints debug messages (default=False)',
+                               action='store_true')
+    parent_parser.add_argument('-v', '--version', action='version',
+                               version=pyNastran.__version__)
+
+    #'  --crash C,       Crash on specific cards (e.g. CGEN,EGRID)\n'
+    parent_parser.add_argument('-D', '--dumplines', help='Writes the BDF exactly as read with '
+                               'the INCLUDES processed (pyNastran_dump.bdf)',
+                               action='store_true')
+    parent_parser.add_argument('-i', '--dictsort', help='Writes the BDF with exactly as read with '
+                               'the INCLUDES processed (pyNastran_dict.bdf)',
+                               action='store_true')
+
+    parent_parser.add_argument('-f', '--profile', help='Profiles the code (default=False)',
+                               action='store_true')
+    parent_parser.add_argument('-s', '--stop', help='Stop after first read/write (default=False)',
+                               action='store_true')
+    parent_parser.add_argument('-k', '--pickle', help='Pickles the data objects (default=False)',
+                               action='store_true')
+    parent_parser.add_argument('--hdf5', help='Save/load the BDF in HDF5 format',
+                               action='store_true')
+    try:
+        args = parent_parser.parse_args(args=argv)
+    except SystemExit:
+        fobj = StringIO()
+        #args = parent_parser.format_usage()
+        parent_parser.print_usage(file=fobj)
+        args = fobj.getvalue()
+        raise
+    return vars(args)
+
 def get_test_bdf_data():
     """defines the docopt interface"""
     encoding = sys.getdefaultencoding()
@@ -1869,11 +1948,12 @@ def get_test_bdf_data():
     options = '[-e E] [--encoding ENCODE] [-q] [-D] [-i] [--crash C] [-k] [-f] [--hdf5] '
     msg = (
         "Usage:\n"
-        '  test_bdf [-x | --safe] [-p] [-c] [-L]      %sBDF_FILENAME\n' % options +
-        '  test_bdf [-x | --safe] [-p] [-c] [-L] [-d] %sBDF_FILENAME\n' % options +
-        '  test_bdf [-x | --safe] [-p] [-c] [-L] [-l] %sBDF_FILENAME\n' % options +
-        '  test_bdf               [-p]                %sBDF_FILENAME\n' % options +
-        '  test_bdf [-x | --safe] [-p] [-s]           %sBDF_FILENAME\n' % options +
+        '  test_bdf [-x | --safe] [-p] [-c] [-L]      BDF_FILENAME\n' +
+        '  test_bdf [-x | --safe] [-p] [-c] [-L] [-d] BDF_FILENAME\n' +
+        '  test_bdf [-x | --safe] [-p] [-c] [-L] [-l] BDF_FILENAME\n' +
+        '  test_bdf               [-p]                BDF_FILENAME\n' +
+        '  test_bdf [-x | --safe] [-p] [-s]           BDF_FILENAME\n' +
+        '  [options] = %s\n' % options +
 
         #"  test_bdf [-q] [-p] [-o [<VAR=VAL>]...] BDF_FILENAME\n"
         '  test_bdf -h | --help\n'
