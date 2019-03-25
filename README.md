@@ -45,7 +45,7 @@ for more detailed information.
 
 # Overview
 
-pyNastran is an interface library to the various Nastran file formats (BDF, OP2, OP4).  Using the BDF interface, you can read/edit/write Nastran geometry without worrying about field formatting.  Many checks are also performed to verify that your model is correct.  Using the OP2 interface, you can read very large result files very quckly and very efficiently.  Additionally, you can also extract a subset of the result data and write F06 result files.
+pyNastran is an interface library to the various Nastran file formats (BDF, OP2, OP4).  Using the BDF interface, you can read/edit/write Nastran geometry without worrying about field formatting.  Many checks are also performed to verify that your model is correct.  Using the OP2 interface, you can read very large result files very quckly and very efficiently.  Additionally, you can also extract a subset of the result data and write OP2/F06 result files.
 
 Using the pyNastran GUI, you can read in Nastran models and quickly view results for a model.  While it's no FEMAP/Patran, it can replace many tasks that would otherwise require a commercial program.
 
@@ -70,36 +70,45 @@ The OP2 reader also now supports SORT2 along with much improved random results r
 If you're using 60+ GB OP2s, you also might have had issues with RAM usage in the past.
 With the new ability to dump the OP2 directly to HDF5, this should not be an issue.
 
-Finally, Python 2.7 is end of life.  Numpy, scipy, and matplotlib have all dropped Python 2.7 support.  It's time for pyNastran to as well.  The OP2 reader is 30% faster in Python 3.5+ than Python 2.7, so it's not all bad!
+Finally, Python 2.7 is end of life.  Numpy, scipy, and matplotlib have all dropped Python 2.7 support.  It's time for pyNastran to as well.  The OP2 reader is 30% faster in Python 3.6+ than Python 2.7, so it's not all bad!
 
 Programmatics:
  - This is the last Python 2.7 release.
- - Supports Python 2.7, 3.5-3.7
+ - Dropping Python 3.5 support
+ - Supports Python 2.7, 3.6-3.7
  - GUI is compatible with PyQt4/PyQt5 as well as PySide/PySide2
 
 BDF:
  - xxx cards supported (up from 343)
  - support for writing to separate BDFs
  - HDF5 import/export
+ - superelement support
+ - added abiltity to write models to separate include files
 
 OP2:
- - HDF5 support for OP2Geom
+ - OP2 write support
  - reorganization of random op2 results into op2.results.psd (or ato, no, crm, rms) to aide in finding data
  - reorganization of op2 class to reduce number of functions in the object.  This affects any custom op2 table reading, but is simple to upgrade
  - SORT2 support
- - reading EQEXIN/S, GPT, GPDT, CSTM/S tables
  - improved optimzation response reading
- - fixed theta/mcid reading for CTRIA3/CQUAD4
- - Imrpoved HDF5 export/import support (e.g., matrices, random results)
  - fixed CD transformation bug for BOUGV1 and BOPHIG1 tables
+ - Improved HDF5 export/import support (e.g., matrices, random results)
+ - Can optionally save directly to HDF5 instead of numpy (limited).
  - TODO: CD transforms for cylindrical/spherical displacement, velocity, acceleration, forces.  This shouldn't be terrible.
  - TODO: stress transforms.  This is probably a bit of work.
- - Can optionally save directly to HDF5 instead of numpy.
+
+OP2Geom:
+ - HDF5 support
+ - reading EQEXIN/S, GPT, GPDT, CSTM/S tables
+ - recovery of nodes & coordinate with OP2Geom
+ - fixed theta/mcid reading for CTRIA3/CQUAD4
+ - fixed CQUAD8 bug
  
 GUI:
  - sped up HTML logging
  - options for Nastran in preferences menu to speed up loading/limit memory usage
  - visualization when pickling nodes/elements
+ - custom force vectors
  - TODO: highlight menu
 
 Known issues:
