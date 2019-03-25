@@ -221,6 +221,106 @@ class RealBushArray(OES_Object):
             page_num -= 1
         return page_num
 
+    def write_op2(self, op2, op2_ascii, itable, new_result, date,
+                  is_mag_phase=False, endian='>'):
+        """writes an OP2"""
+        import inspect
+        from struct import Struct, pack
+        frame = inspect.currentframe()
+        call_frame = inspect.getouterframes(frame, 2)
+        op2_ascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
+
+        if itable == -1:
+            self._write_table_header(op2, op2_ascii, date)
+            itable = -3
+
+        #if isinstance(self.nonlinear_factor, float):
+            #op2_format = '%sif' % (7 * self.ntimes)
+            #raise NotImplementedError()
+        #else:
+            #op2_format = 'i21f'
+        #s = Struct(op2_format)
+
+        eids = self.element
+
+        # table 4 info
+        #ntimes = self.data.shape[0]
+        #nnodes = self.data.shape[1]
+        nelements = self.data.shape[1]
+
+        # 21 = 1 node, 3 principal, 6 components, 9 vectors, 2 p/ovm
+        #ntotal = ((nnodes * 21) + 1) + (nelements * 4)
+
+        ntotali = self.num_wide
+        ntotal = ntotali * nelements
+
+        #print('shape = %s' % str(self.data.shape))
+        #assert self.ntimes == 1, self.ntimes
+
+        device_code = self.device_code
+        op2_ascii.write('  ntimes = %s\n' % self.ntimes)
+
+        eids_device = self.element * 10 + self.device_code
+
+        #fmt = '%2i %6f'
+        #print('ntotal=%s' % (ntotal))
+        #assert ntotal == 193, ntotal
+
+        if self.is_sort1:
+            struct1 = Struct(endian + b'i6f')
+        else:
+            raise NotImplementedError('SORT2')
+
+        op2_ascii.write('nelements=%i\n' % nelements)
+
+        for itime in range(self.ntimes):
+            #print('3, %s' % itable)
+            self._write_table_3(op2, op2_ascii, new_result, itable, itime)
+
+            # record 4
+            #print('stress itable = %s' % itable)
+            itable -= 1
+            #print('4, %s' % itable)
+            header = [4, itable, 4,
+                      4, 1, 4,
+                      4, 0, 4,
+                      4, ntotal, 4,
+                      4 * ntotal]
+            op2.write(pack('%ii' % len(header), *header))
+            op2_ascii.write('r4 [4, 0, 4]\n')
+            op2_ascii.write('r4 [4, %s, 4]\n' % (itable))
+            op2_ascii.write('r4 [4, %i, 4]\n' % (4 * ntotal))
+
+            tx = self.data[itime, :, 0]
+            ty = self.data[itime, :, 1]
+            tz = self.data[itime, :, 2]
+            rx = self.data[itime, :, 3]
+            ry = self.data[itime, :, 4]
+            rz = self.data[itime, :, 5]
+
+            for eid, eid_device, txi, tyi, tzi, rxi, ryi, rzi in zip(
+                    eids, eids_device, tx, ty, tz, rx, ry, rz):
+                data = [eid_device, txi, tyi, tzi, rxi, ryi, rzi]
+
+                vals = [txi, tyi, tzi, rxi, ryi, rzi]
+                vals2 = write_floats_13e(vals)
+                [txi, tyi, tzi, rxi, ryi, rzi] = vals2
+                op2_ascii.write('0                   %8i     %-13s %-13s %-13s %-13s %-13s %s\n' % (
+                        eid, txi, tyi, tzi, rxi, ryi, rzi))
+                op2.write(struct1.pack(*data))
+
+            #for eid, axiali, SMai, torsioni, SMti in zip(eids_device, axial, SMa, torsion, SMt):
+                #data = [eid, axiali, SMai, torsioni, SMti]
+                #op2_ascii.write('  eid=%s axial=%s SMa=%s torsion=%s SMt=%s\n' % tuple(data))
+                #op2.write(struct1.pack(*data))
+
+            itable -= 1
+            header = [4 * ntotal,]
+            op2.write(pack('i', *header))
+            op2_ascii.write('footer = %s\n' % header)
+            new_result = False
+        return itable
+
 
 class RealBushStressArray(RealBushArray, StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):

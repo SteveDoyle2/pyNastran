@@ -420,12 +420,15 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
             model = os.path.splitext(op2_filename)[0]
             op2_filename2 = model + '.test_op2.op2'
             op2w = OP2Writer(op2)
-            op2w.write_op2(op2_filename2, obj=op2, is_mag_phase=is_mag_phase, endian=b'<')
-            print('------------------------------')
-            op2a = OP2(debug_file='debug.out')
-            op2a.use_vector = False
-            op2a.read_op2(op2_filename2)
-            os.remove(op2_filename2)
+            total_case_count = op2w.write_op2(op2_filename2, obj=op2,
+                                              #is_mag_phase=is_mag_phase,
+                                              endian=b'<')
+            if total_case_count > 0:
+                print('------------------------------')
+                op2a = OP2(debug_file='debug.out')
+                op2a.use_vector = False
+                op2a.read_op2(op2_filename2)
+                os.remove(op2_filename2)
             #read_op2(op2_filename2)
             if delete_f06:
                 try:

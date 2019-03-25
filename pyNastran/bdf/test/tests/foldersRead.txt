@@ -27,6 +27,7 @@ F:\Program Files\Siemens\NXNastran\nxn10p1\nxn10p1\nast\tpl
 C:\NASA\m4\formats\git\examples\pyNastran_examples
 C:\NASA\m4\formats\git\examples\pyNastran_examples\demo
 C:\NASA\m4\formats\git\examples\pyNastran_examples\demo_sort2_post_m2
+C:\NASA\m4\formats\git\examples
 C:\NASA\m4\formats\git\examples\move
 C:\NASA\m4\formats\git\examples\move_tpl
 C:\NASA\m4\formats\git\examples\move_tpl\works

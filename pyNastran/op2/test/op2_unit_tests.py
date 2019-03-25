@@ -612,7 +612,13 @@ class TestOP2(Tester):
     def test_op2_solid_bending_02(self):
         folder = os.path.join(MODEL_PATH, 'solid_bending')
         op2_filename = os.path.join(folder, 'solid_bending.op2')
-        op2 = read_op2(op2_filename, debug=False)
+        op2 = OP2(debug=False, log=None, debug_file=None, mode=None)
+        op2.load_as_h5 = True
+        op2.read_op2(op2_filename=op2_filename, combine=True,
+                     build_dataframe=None, skip_undefined_matrices=False,
+                     encoding=None)
+        #op2 = read_op2(op2_filename, debug=False)
+        del op2
 
     def test_op2_solid_bending_02_geom(self):
         folder = os.path.join(MODEL_PATH, 'solid_bending')
