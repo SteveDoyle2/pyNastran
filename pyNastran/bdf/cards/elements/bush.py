@@ -644,6 +644,37 @@ class CBUSH2D(BushElement):
         assert len(card) <= 8, 'len(CBUSH2D card) = %i\ncard=%s' % (len(card), card)
         return CBUSH2D(eid, pid, [ga, gb], cid, plane, sptid, comment=comment)
 
+    @classmethod
+    def export_to_hdf5(cls, h5_file, model, eids, encoding='ascii'):
+        """exports the elements in a vectorized way"""
+        #comments = []
+        pids = []
+        nodes = []
+        cid = []
+        plane = []
+        sptid = []
+        #nan = np.full(3, np.nan)
+        for eid in eids:
+            element = model.elements[eid]
+            #comments.append(element.comment)
+            pids.append(element.pid)
+            nodes.append(element.nodes)
+            cid.append(element.cid)
+            plane.append(element.plane.encode(encoding))
+            sptidi = 0 if element.sptid is None else element.sptid
+            sptid.append(sptidi)
+        #h5_file.create_dataset('_comment', data=comments)
+        h5_file.create_dataset('eid', data=eids)
+        h5_file.create_dataset('nodes', data=nodes)
+        h5_file.create_dataset('pid', data=pids)
+        #print('x =', x)
+        #print('g0 =', g0)
+        #print('cid =', cid)
+        h5_file.create_dataset('cid', data=cid)
+        h5_file.create_dataset('plane', data=plane)
+        #print('si =', si)
+        h5_file.create_dataset('sptid', data=sptid)
+
     #@classmethod
     #def add_op2_data(cls, data, comment=''):
         #eid = data[0]

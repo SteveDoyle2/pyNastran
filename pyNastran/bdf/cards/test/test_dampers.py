@@ -6,7 +6,7 @@ from pyNastran.bdf.bdf import BDF, BDFCard, PDAMP, read_bdf#, get_logger2
 from pyNastran.bdf.cards.test.utils import save_load_deck
 from pyNastran.bdf.cards.test.test_shells import (
     make_dvprel_optimization, make_dvcrel_optimization,
-    make_dvmrel_optimization,
+    #make_dvmrel_optimization,
 )
 
 
@@ -68,7 +68,7 @@ class TestDampers(unittest.TestCase):
         bdf_file = StringIO()
         model.write_bdf(bdf_file, close=False)
         bdf_file.seek(0)
-        model2 = read_bdf(bdf_file, punch=True, debug=False)
+        unused_model2 = read_bdf(bdf_file, punch=True, debug=False)
 
     def test_damper_03(self):
         """tests the CDAMP4, PDAMP, CDAMP4, SPOINT"""
@@ -133,7 +133,7 @@ class TestDampers(unittest.TestCase):
         m = 3.
         sa = 4.
         se = 5.
-        optional_vars = None
+        #optional_vars = None
         cbush1d = model.add_cbush1d(eid, pid, nids, cid=None, comment='cbush1d')
         pbush1d = model.add_pbush1d(pid, k=k, c=c, m=m, sa=sa, se=se,
                                     optional_vars=None, comment='pbush1d')
@@ -227,7 +227,7 @@ class TestDampers(unittest.TestCase):
         model.cross_reference()
         model.update_model_by_desvars()
 
-        save_load_deck(model, run_convert=True)
+        save_load_deck(model)
 
     def test_pbusht(self):
         """tests CBUSH, PBUSH, PBUSHT"""
@@ -243,10 +243,10 @@ class TestDampers(unittest.TestCase):
         nids = [10, 11]
         x = [1., 0., 0.]
         g0 = None
-        cbush = model.add_cbush(eid, pid, nids, x, g0, cid=None, s=0.5,
-                                ocid=-1, si=None, comment='cbush')
-        pbush = model.add_pbush(pid, k, b, ge, rcv=None, mass=None,
-                                comment='pbush')
+        unused_cbush = model.add_cbush(eid, pid, nids, x, g0, cid=None, s=0.5,
+                                       ocid=-1, si=None, comment='cbush')
+        unused_pbush = model.add_pbush(pid, k, b, ge, rcv=None, mass=None,
+                                       comment='pbush')
 
         k_tables = [2]
         b_tables = [2]
@@ -259,9 +259,7 @@ class TestDampers(unittest.TestCase):
         model._verify_bdf()
         model.cross_reference()
         model._verify_bdf()
-        save_load_deck(model, xref='standard', punch=True,
-                       run_remove_unused=True, run_convert=True, run_renumber=True, run_mirror=True,
-                       run_save_load=True, run_quality=True, write_saves=True)
+        save_load_deck(model, xref='standard', punch=True)
 
 
     def test_pdamp(self):
@@ -275,8 +273,8 @@ class TestDampers(unittest.TestCase):
         b2 = 2.0
         b3 = 3.0
         b4 = 4.0
-        nodes1 = [10, 20]
-        nodes2 = [20, 30]
+        #nodes1 = [10, 20]
+        #nodes2 = [20, 30]
         card_lines = ['PDAMP', eid1, b1, eid2, b2, eid3, b3, eid4, b4]
         model.add_card(card_lines, 'PDAMP', comment='', is_list=True, has_none=True)
         model.validate()

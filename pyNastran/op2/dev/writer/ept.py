@@ -35,6 +35,8 @@ def write_ept(op2, op2_ascii, obj, endian=b'<'):
         'PBEND', 'PBUSH', 'PBUSH1D',
         'PMASS', 'PBCOMP',
 
+        #'PCOMPG',
+
         # thermal
         'PHBDY',
 
@@ -52,6 +54,10 @@ def write_ept(op2, op2_ascii, obj, endian=b'<'):
             continue
         elif name == 'PCOMP':
             itable = write_pcomp(name, pids, itable, op2, op2_ascii, obj, endian=endian)
+            continue
+        elif name == 'PCOMPG':
+            #continue
+            itable = write_pcompg(name, pids, itable, op2, op2_ascii, obj, endian=endian)
             continue
         elif name == 'PELAS':
             key = (302, 3, 46)
@@ -515,6 +521,98 @@ def write_pcomp(name, pids, itable, op2, op2_ascii, obj, endian=b'<'):
             data2 = [mid, t, theta, sout]
             op2.write(s2.pack(*data2))
             op2_ascii.write(str(data2) + '\n')
+
+
+    #data_in = [
+        #pid, z0, nsm, sb, ft, Tref, ge,
+        #is_symmetrical, mids, T, thetas, souts]
+
+    op2.write(pack('i', nbytes))
+    itable -= 1
+    data = [
+        4, itable, 4,
+        4, 1, 4,
+        4, 0, 4]
+    op2.write(pack('9i', *data))
+    op2_ascii.write(str(data) + '\n')
+
+    return itable
+
+def write_pcompg(name, pids, itable, op2, op2_ascii, obj, endian=b'<'):
+    """writes the PCOMPG"""
+    key = (15006, 150, 604)
+
+    nproperties = len(pids)
+    nlayers = 0
+    for pid in sorted(pids):
+        #(pid, mid, a, j, c, nsm) = out
+        prop = obj.properties[pid]
+        #(pid, nlayers, z0, nsm, sb, ft, Tref, ge) = out # 8
+        nlayers += prop.nplies
+
+    # we add a layer for the (-1, -1, -1, -1, -1) at the end
+    nvalues = 8 * nproperties + (5 * (nlayers + 1)) + 3 # +3 comes from the keys
+    nbytes = nvalues * 4
+    op2.write(pack('3i', *[4, nvalues, 4]))
+    op2.write(pack('i', nbytes)) #values, nbtyes))
+
+    op2.write(pack('3i', *key))
+    op2_ascii.write('%s %s\n' % (name, str(key)))
+
+    #is_symmetrical = 'NO'
+    #if nlayers < 0:
+        #is_symmetrical = 'SYM'
+        #nlayers = abs(nlayers)
+    #assert nlayers > 0, out
+
+    s1 = Struct(endian + b'2i3fi2f')
+    s2 = Struct(endian + b'ii2fi')
+    struct_i5 = Struct(endian + b'5i')
+
+    lam_map = {
+        None : 0,
+    }
+    for pid in sorted(pids):
+        prop = obj.properties[pid]
+        #print(prop.get_stats())
+
+        if prop.ft is None:
+            ft = 0
+        elif prop.ft == 'HILL':
+            ft = 1
+        elif prop.ft == 'HOFF':
+            ft = 2
+        elif prop.ft == 'TSAI':
+            ft = 3
+        elif prop.ft == 'STRN':
+            ft = 4
+        else:
+            raise RuntimeError('unsupported ft.  pid=%s ft=%r.'
+                               '\nPCOMP = %s' % (pid, prop.ft, prop))
+
+        #is_symmetric = True
+        symmetric_factor = 1
+        lam = lam_map[prop.lam]
+        #(pid, lam_int, z0, nsm, sb, ft_int, tref, ge) = out
+        data = [pid, lam, prop.z0,
+                prop.nsm, prop.sb, ft, prop.tref, prop.ge]
+        op2.write(s1.pack(*data))
+        op2_ascii.write(str(data) + '\n')
+
+        for (glply, mid, t, theta, sout) in zip(prop.global_ply_ids, prop.mids, prop.thicknesses, prop.thetas, prop.souts):
+            if sout == 'NO':
+                sout = 0
+            elif sout == 'YES':
+                sout = 1
+            else:
+                raise RuntimeError('unsupported sout.  sout=%r and must be 0 or 1.'
+                                   '\nPCOMPG = %s' % (sout, data))
+            data2 = [glply, mid, t, theta, sout]
+            op2.write(s2.pack(*data2))
+            op2_ascii.write(str(data2) + '\n')
+        data2 = [-1, -1, -1, -1, -1]
+        op2.write(struct_i5.pack(*data2))
+        op2_ascii.write(str(data2) + '\n')
 
 
     #data_in = [

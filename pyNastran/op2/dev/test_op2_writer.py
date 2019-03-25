@@ -163,6 +163,116 @@ class TestOP2Writer(unittest.TestCase):
                              skip_results=['params', ],
                              stop_on_failure=True, debug=False)
 
+    def test_write_elements_1(self):
+        """tests basic op2 writing"""
+        folder = os.path.join(MODEL_PATH, 'elements')
+        op2_filename = os.path.join(folder, 'freq_elements.op2')
+        op2_filename_debug = os.path.join(folder, 'freq_elements.debug.out')
+        op2_filename_out = os.path.join(folder, 'freq_elements_out.op2')
+        op2_filename_debug_out = os.path.join(folder, 'freq_elements_out.debug.out')
+        model = os.path.splitext(op2_filename)[0]
+
+        op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug)
+
+        op2w = OP2Writer(op2)
+        op2w.write_op2(op2_filename_out, obj=op2) #, is_mag_phase=False)
+        op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out)
+        op2.assert_op2_equal(op2b,
+                             skip_results=['params', ],
+                             stop_on_failure=True, debug=False)
+
+    def test_write_elements_2(self):
+        """tests basic op2 writing"""
+        folder = os.path.join(MODEL_PATH, 'elements')
+        op2_filename = os.path.join(folder, 'freq_elements2.op2')
+        op2_filename_debug = os.path.join(folder, 'freq_elements2.debug.out')
+        op2_filename_out = os.path.join(folder, 'freq_elements_out2.op2')
+        op2_filename_debug_out = os.path.join(folder, 'freq_elements_out2.debug.out')
+        model = os.path.splitext(op2_filename)[0]
+
+        exclude_results = [
+            'ctria6_force', 'ctriar_force', 'cshear_force',
+            'cvisc_force', 'modal_contribution.cshear_stress',
+        ]
+        op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug,
+                            exclude_results=exclude_results)
+
+        op2w = OP2Writer(op2)
+        op2w.write_op2(op2_filename_out, obj=op2) #, is_mag_phase=False)
+        op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out)
+        #op2.assert_op2_equal(op2b,
+                             #skip_results=['params', ],
+                             #stop_on_failure=True, debug=False)
+
+    def test_write_elements_3(self):
+        """tests basic op2 writing"""
+        folder = os.path.join(MODEL_PATH, 'elements')
+        op2_filename = os.path.join(folder, 'freq_random_elements.op2')
+        op2_filename_debug = os.path.join(folder, 'freq_random_elements.debug.out')
+        op2_filename_out = os.path.join(folder, 'freq_random_elements_out.op2')
+        op2_filename_debug_out = os.path.join(folder, 'freq_random_elements_out.debug.out')
+        model = os.path.splitext(op2_filename)[0]
+
+        exclude_results = [
+            'ctria6_force', 'ctriar_force', 'cshear_force',
+            'cvisc_force', 'cshear_stress', '*strain_energy',
+        ]
+        op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug,
+                            exclude_results=exclude_results)
+
+        op2w = OP2Writer(op2)
+        op2w.write_op2(op2_filename_out, obj=op2) #, is_mag_phase=False)
+        op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out)
+        op2.assert_op2_equal(op2b,
+                             skip_results=['params', ],
+                             stop_on_failure=True, debug=False)
+
+    def test_write_elements_4(self):
+        """tests basic op2 writing"""
+        folder = os.path.join(MODEL_PATH, 'elements')
+        op2_filename = os.path.join(folder, 'modes_complex_elements.op2')
+        op2_filename_debug = os.path.join(folder, 'modes_complex_elements.debug.out')
+        op2_filename_out = os.path.join(folder, 'modes_complex_elements_out.op2')
+        op2_filename_debug_out = os.path.join(folder, 'modes_complex_elements_out.debug.out')
+        model = os.path.splitext(op2_filename)[0]
+
+        exclude_results = [
+            'ctria6_force', 'ctriar_force', 'cshear_force',
+            'cvisc_force', 'cshear_stress', #'*strain_energy',
+        ]
+        op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug,
+                            exclude_results=exclude_results)
+
+        op2w = OP2Writer(op2)
+        op2w.write_op2(op2_filename_out, obj=op2) #, is_mag_phase=False)
+        op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out)
+        op2.assert_op2_equal(op2b,
+                             skip_results=['params', ],
+                             stop_on_failure=True, debug=False)
+
+    def test_write_elements_5(self):
+        """tests basic op2 writing"""
+        folder = os.path.join(MODEL_PATH, 'elements')
+        op2_filename = os.path.join(folder, 'time_elements.op2')
+        op2_filename_debug = os.path.join(folder, 'time_elements.debug.out')
+        op2_filename_out = os.path.join(folder, 'time_elements_out.op2')
+        op2_filename_debug_out = os.path.join(folder, 'time_elements_out.debug.out')
+        model = os.path.splitext(op2_filename)[0]
+
+        exclude_results = [
+            'cshear_force',
+            'cvisc_force', 'cshear_stress', 'grid_point_forces', '*strain_energy',
+        ]
+        op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug,
+                            exclude_results=exclude_results)
+
+        op2w = OP2Writer(op2)
+        op2w.write_op2(op2_filename_out, obj=op2) #, is_mag_phase=False)
+        op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out)
+        op2.assert_op2_equal(op2b,
+                             skip_results=['params', ],
+                             stop_on_failure=True, debug=False)
+
     def test_thermal_1(self):
         """tests basic op2 thermal writing"""
         folder = os.path.join(MODEL_PATH, 'elements')

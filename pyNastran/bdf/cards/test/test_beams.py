@@ -10,7 +10,6 @@ import unittest
 from itertools import count
 
 import numpy as np
-from numpy import array, allclose
 
 import matplotlib
 matplotlib.use('Agg')
@@ -507,8 +506,8 @@ class TestBeams(unittest.TestCase):
         x = None
         g0 = 30
         model.add_cbeam(eid, pid, nids, x, g0, offt='GGG', bit=None, pa=0,
-                       pb=0, wa=None, wb=None, sa=0,
-                       sb=0, comment='')
+                        pb=0, wa=None, wb=None, sa=0,
+                        sb=0, comment='')
 
         mid = 6
         E = 1.0e7
@@ -541,9 +540,9 @@ class TestBeams(unittest.TestCase):
         nids = [1, 2]
         x = [0., 0., 1.]
         g0 = None
-        cbeam1 = model.add_cbeam(eid, pid, nids, x, g0, offt='GGG', bit=None,
-                                 pa=0, pb=0, wa=None, wb=None,
-                                 sa=0, sb=0, comment='CBEAM')
+        unused_cbeam1 = model.add_cbeam(eid, pid, nids, x, g0, offt='GGG', bit=None,
+                                        pa=0, pb=0, wa=None, wb=None,
+                                        sa=0, sb=0, comment='CBEAM')
         beam_type = 'BOX'
         xxb = [0.]
         dims = [[1., 2., 0.1, 0.1], [1., 2., 0.1, 0.1]]
@@ -699,7 +698,7 @@ class TestBeams(unittest.TestCase):
         e2 = [0.]
         f1 = [0.]
         f2 = [0.]
-        pbeam = model.add_pbeam(
+        unused_pbeam = model.add_pbeam(
             pid, mid, xxb, so, area, i1, i2, i12, j, nsm,
             c1, c2, d1, d2,
             e1, e2, f1, f2,
@@ -861,7 +860,7 @@ class TestBeams(unittest.TestCase):
         model.cross_reference()
         #print(model.properties[11])
 
-        mass, cg, I = model.mass_properties(
+        unused_mass, unused_cg, unused_I = model.mass_properties(
             element_ids=None, mass_ids=None,
             reference_point=None,
             sym_axis=None,
@@ -871,11 +870,11 @@ class TestBeams(unittest.TestCase):
         area = (area1 + area2) / 2.
         nsm = (nsm_a + nsm_b) / 2.
         mass_per_length = area * rho + nsm
-        mass = L * mass_per_length
+        unused_mass = L * mass_per_length
 
         mass_a = L / 2. * (area1 * rho + nsm_a)
         mass_b = L / 2. * (area2 * rho + nsm_b)
-        xcg = (0.0 * mass_a + 1.0 * mass_b) / (mass_a + mass_b)
+        unused_xcg = (0.0 * mass_a + 1.0 * mass_b) / (mass_a + mass_b)
         #print(mass_a, mass_b, xcg, mass_a + mass_b)
         #print('mass =', mass)
         #cbeam = CBEAM()
@@ -883,7 +882,7 @@ class TestBeams(unittest.TestCase):
         pbeam = model.properties[11]
         assert pbeam.Nu() == nu, 'pbeam.Nu()=%s nu=%s' % (pbeam.Nu(), nu)
         assert pbeam.Rho() == rho, 'pbeam.Rho()=%s rho=%s' % (pbeam.Rho(), rho)
-        assert allclose(cbeam.Length(), 1.0), cbeam.Length()
+        assert np.allclose(cbeam.Length(), 1.0), cbeam.Length()
         #assert allclose(cbeam.Mass(), 10.25), cbeam.Mass()
         #assert allclose(cbeam.MassPerLength(), 10.25), cbeam.MassPerLength()
         #assert allclose(mass, 10.25), mass
@@ -957,18 +956,18 @@ class TestBeams(unittest.TestCase):
         nsm = [1., 1.]
         pid_pbeam_nsm = 30
         pbeam_b1 = model.add_pbeam(pid_pbeam_nsm, mid, xxb, so, area, i1, i2, i12, j, nsm,
-                                  c1, c2, d1, d2,
-                                  e1, e2, f1, f2,
-                                  k1=1., k2=1.,
-                                  s1=0., s2=0.,
-                                  nsia=10., nsib=10.,
-                                  cwa=0., cwb=None,
-                                  # cg location at A/B (1.,1.)
-                                  m1a=1., m2a=1.,
-                                  m1b=1., m2b=1.,
-                                  # neutral axis at A/B (0., 0.)
-                                  n1a=0., n2a=None,
-                                  n1b=0., n2b=None, comment='')
+                                   c1, c2, d1, d2,
+                                   e1, e2, f1, f2,
+                                   k1=1., k2=1.,
+                                   s1=0., s2=0.,
+                                   nsia=10., nsib=10.,
+                                   cwa=0., cwb=None,
+                                   # cg location at A/B (1.,1.)
+                                   m1a=1., m2a=1.,
+                                   m1b=1., m2b=1.,
+                                   # neutral axis at A/B (0., 0.)
+                                   n1a=0., n2a=None,
+                                   n1b=0., n2b=None, comment='')
         eid = 42
         model.add_cbeam(eid, pid_pbeam_nsm, [1, 2], x, g0, offt='GGG', bit=None,
                         pa=0, pb=0, wa=None, wb=None, sa=0, sb=0, comment='')
@@ -1000,7 +999,7 @@ class TestBeams(unittest.TestCase):
         assert pbeam_a1.MassPerLength() == 1.0
         assert pbeam_b1.MassPerLength() == 1.0, pbeam_b1.MassPerLength() # should be 10
 
-        mass, cg1, inertia = model.mass_properties(
+        mass, cg1, unused_inertia = model.mass_properties(
             element_ids=eid,
             mass_ids=None,
             reference_point=None,
@@ -1010,7 +1009,7 @@ class TestBeams(unittest.TestCase):
         #print('cg1=%s' % cg)
         assert np.allclose(cg1, [0.5, 1., 1.]), cg1
 
-        mass, cg2, inertia = model.mass_properties_nsm(
+        mass, cg2, unused_inertia = model.mass_properties_nsm(
             element_ids=eid, mass_ids=None,
             nsm_id=None,
             reference_point=None,
@@ -1037,13 +1036,13 @@ class TestBeams(unittest.TestCase):
         mid = 1
         beam_type = 'BAR'
         dim = [1., 2.]  # area = 2.0
-        nsm = 1.
+        unused_nsm = 1.
         xxb = [0., 1.]
         dims = [dim, dim]
         pbeaml = model.add_pbeaml(pid, mid, beam_type, xxb, dims, so=None,
-                                 nsm=[1.0],
-                                 group='MSCBML0',
-                                 comment='')
+                                  nsm=[1.0],
+                                  group='MSCBML0',
+                                  comment='')
         E = 1.0
         G = None
         nu = 0.3
@@ -1086,35 +1085,35 @@ class TestBeams(unittest.TestCase):
         i12 = [0.01, 0.01]
         c1 = c2 = d1 = d2 = e1 = e2 = f1 = f2 = [0., 0.]
         pbeam = model.add_pbeam(pid, mid, xxb, so, area, i1, i2, i12, j, nsm,
-                               c1, c2, d1, d2,
-                               e1, e2, f1, f2,
-                               k1=1., k2=1.,
-                               s1=0., s2=0.,
-                               nsia=0., nsib=None,
-                               cwa=0., cwb=None,
-                               m1a=0., m2a=None,
-                               m1b=0., m2b=None,
-                               n1a=0., n2a=None,
-                               n1b=0., n2b=None, comment='')
+                                c1, c2, d1, d2,
+                                e1, e2, f1, f2,
+                                k1=1., k2=1.,
+                                s1=0., s2=0.,
+                                nsia=0., nsib=None,
+                                cwa=0., cwb=None,
+                                m1a=0., m2a=None,
+                                m1b=0., m2b=None,
+                                n1a=0., n2a=None,
+                                n1b=0., n2b=None, comment='')
         pbeam.validate()
 
         E = 1.0
         G = None
         nu = 0.3
-        mat1 = model.add_mat1(mid, E, G, nu)
+        unused_mat1 = model.add_mat1(mid, E, G, nu)
         prop_type = 'PBEAM'
 
         desvar_id = 1
         xinit = 1.0
         label = 'VAR1'
         model.add_desvar(desvar_id, label, xinit, xlb=-1e20, xub=1e20,
-                        delx=None, ddval=None,
-                        comment='')
+                         delx=None, ddval=None,
+                         comment='')
         desvar_id = 2
         label = 'VAR2'
         model.add_desvar(desvar_id, label, xinit, xlb=-1e20, xub=1e20,
-                        delx=None, ddval=None,
-                        comment='')
+                         delx=None, ddval=None,
+                         comment='')
         for i in range(15):
             oid = i + 1
             pname_fid = -8 - i
@@ -1131,7 +1130,7 @@ class TestBeams(unittest.TestCase):
         independent_desvars = 2
         coeffs = 1.0
         model.add_dlink(oid, dependent_desvar, independent_desvars, coeffs,
-                       c0=0., cmult=1., comment='')
+                        c0=0., cmult=1., comment='')
         model.cross_reference()
         model.update_model_by_desvars()
         save_load_deck(model, run_save_load_hdf5=True)
@@ -1189,13 +1188,13 @@ class TestBeams(unittest.TestCase):
         mid = 1
         beam_type = 'BAR'
         dim = [1., 2.]  # area = 2.0
-        nsm = 1.
+        unused_nsm = 1.
         xxb = [0., 1.]
         dims = [dim, dim]
-        pbeaml = model.add_pbeaml(pid, mid, beam_type, xxb, dims, so=None,
-                                 nsm=[1.0],
-                                 group='MSCBML0',
-                                 comment='')
+        unused_pbeaml = model.add_pbeaml(pid, mid, beam_type, xxb, dims, so=None,
+                                         nsm=[1.0],
+                                         group='MSCBML0',
+                                         comment='')
 
         E = 3.0e7
         G = None
@@ -1209,7 +1208,7 @@ class TestBeams(unittest.TestCase):
         eid = 1
         card_lines = ['CBEAM', eid, pid, n1, n2]
         model.add_card(card_lines, 'CBEAM', comment='', is_list=True,
-                      has_none=True)
+                       has_none=True)
         model.pop_parse_errors()
 
     def test_pbeam3(self):
@@ -1285,9 +1284,9 @@ class TestBeams(unittest.TestCase):
         fsi = 1
         rm = 0.2
         t = 0.4
-        p = 0.5
-        rb = 0.6
-        theta_b = 0.7
+        #p = 0.5
+        #rb = 0.6
+        #theta_b = 0.7
         pbend2 = PBEND.add_beam_type_2(
             pid, mid, fsi, rm, t,
             p=None, rb=None, theta_b=None,
@@ -1427,12 +1426,12 @@ class TestBeams(unittest.TestCase):
         pid = 2
         mid = 3
         model.add_mat1(mid, 3.0e7, None, 0.3, rho=0.2)
-        model.add_point(1001, [0.,    0., 0.])
-        model.add_point(1002, [22.5,  0., 0.])
+        model.add_point(1001, [0., 0., 0.])
+        model.add_point(1002, [22.5, 0., 0.])
         model.add_point(1003, [22.5, 45., 0.])
-        model.add_point(1004, [0.,   45., 0.])
-        model.add_point(1005, [45.,   0., 0.])
-        model.add_point(1006, [45.,  45., 0.])
+        model.add_point(1004, [0., 45., 0.])
+        model.add_point(1005, [45., 0., 0.])
+        model.add_point(1006, [45., 45., 0.])
         #point, 1001,,   0.,   0.
         #point, 1002,,  22.5,  0.
         #point, 1003,,  22.5, 45.
@@ -1487,11 +1486,11 @@ class TestBeams(unittest.TestCase):
         #---------------------
         #$ Section profile
         model.add_point(1, [-0.5, .23, 0.])
-        model.add_point(2, [0.0,  .23, 0.])
-        model.add_point(3, [0.5,  .23, 0.])
-        model.add_point(4, [-0.5,-.23, 0.])
-        model.add_point(5, [0.,  -.23, 0.])
-        model.add_point(6, [0.5, -.23, 0.])
+        model.add_point(2, [0.00, .23, 0.])
+        model.add_point(3, [0.50, .23, 0.])
+        model.add_point(4, [-0.5, -.23, 0.])
+        model.add_point(5, [0.00, -.23, 0.])
+        model.add_point(6, [0.50, -.23, 0.])
         #point 1 -0.50 0.23
         #point 2 0.00 0.23
         #point 3 0.50 0.23
@@ -1554,16 +1553,16 @@ class TestBeams(unittest.TestCase):
         mid = 10
         model.add_mat1(mid, 3.0e7, None, 0.3, rho=0.2)
 
-        model.add_point(111, [0.,  0.,   0.,])
-        model.add_point(112, [20., 0.,   0.,])
+        model.add_point(111, [0.0, 0.00, 0.,])
+        model.add_point(112, [20., 0.00, 0.,])
         model.add_point(113, [20., 19.4, 0.,])
-        model.add_point(114, [0.,  19.4, 0.,])
-        model.add_point(125, [1.,  1.,   0.,])
-        model.add_point(126, [10., 1.,   0.,])
+        model.add_point(114, [0.0, 19.4, 0.,])
+        model.add_point(125, [1.0, 1.00, 0.,])
+        model.add_point(126, [10., 1.00, 0.,])
         model.add_point(127, [10., 18.4, 0.,])
-        model.add_point(128, [1.,  18.4, 0.,])
-        model.add_point(132, [11., 1.,   0.,])
-        model.add_point(133, [19., 1.,   0.,])
+        model.add_point(128, [1.0, 18.4, 0.,])
+        model.add_point(132, [11., 1.00, 0.,])
+        model.add_point(133, [19., 1.00, 0.,])
         model.add_point(134, [19., 18.4, 0.,])
         model.add_point(135, [11., 18.4, 0.,])
         #POINT   111             0.0     0.0

@@ -7,11 +7,10 @@ from six.moves import StringIO
 import numpy as np
 
 import pyNastran
-from pyNastran.bdf.bdf import BDF, read_bdf, CaseControlDeck, CrossReferenceError
+from pyNastran.bdf.bdf import BDF, read_bdf, CrossReferenceError
 from pyNastran.bdf.cards.test.utils import save_load_deck
 
-root_path = pyNastran.__path__[0]
-#test_path = os.path.join(root_path, 'bdf', 'cards', 'test')
+#ROOT_PATH = pyNastran.__path__[0]
 
 class TestDynamic(unittest.TestCase):
     """
@@ -44,6 +43,7 @@ class TestDynamic(unittest.TestCase):
         tstep2.raw_fields()
         tstep2.write_card()
         tstep2.write_card(size=16)
+        save_load_deck(model)
 
     def test_tstepnl(self):
         """tests a TSTEPNL card"""
@@ -66,6 +66,7 @@ class TestDynamic(unittest.TestCase):
         tstepnl2.raw_fields()
         tstepnl2.write_card()
         tstepnl2.write_card(size=16)
+        save_load_deck(model)
 
     def test_delay(self):
         """tests a two field DELAY card"""
@@ -81,6 +82,7 @@ class TestDynamic(unittest.TestCase):
         model.validate()
         model.cross_reference()
         #print(model.delays[42])
+        save_load_deck(model)
 
     def test_dphase(self):
         """tests a two field DPHASE card"""
@@ -96,6 +98,7 @@ class TestDynamic(unittest.TestCase):
         model.validate()
         model.cross_reference()
         #print(model.dphases[42])
+        save_load_deck(model)
 
     def test_freq(self):
         """tests FREQ, FREQ1, FREQ2, FREQ4"""
@@ -130,7 +133,7 @@ class TestDynamic(unittest.TestCase):
         freq5 = model.add_freq5(sid, fractions, f1=0., f2=100., comment='freq5')
 
         fractions = np.linspace(0., 1.)
-        freq5b = model.add_freq5(sid, fractions, f1=0., f2=100., comment='freq5')
+        unused_freq5b = model.add_freq5(sid, fractions, f1=0., f2=100., comment='freq5')
         model.validate()
 
         freq.raw_fields()
@@ -155,13 +158,14 @@ class TestDynamic(unittest.TestCase):
 
         bdf_file = StringIO()
         model.write_bdf(bdf_file, close=False)
-        out = bdf_file.getvalue()
+        unused_out = bdf_file.getvalue()
         bdf_file.seek(0)
 
         model2 = read_bdf(bdf_file, punch=True, debug=False)
         model2.uncross_reference()
         model2.safe_cross_reference()
         model2.uncross_reference()
+        save_load_deck(model)
 
     def test_tload(self):
         """tests DLOAD, TLOAD1, TLOAD2, TABLED2 cards"""
@@ -245,10 +249,10 @@ class TestDynamic(unittest.TestCase):
 
         bdf_file = StringIO()
         model.write_bdf(bdf_file, close=False)
-        out = bdf_file.getvalue()
+        unused_out = bdf_file.getvalue()
         bdf_file.seek(0)
-        outs = model.get_bdf_stats(return_type='list')
-        outs = model.get_bdf_stats(return_type='string')
+        unused_outs = model.get_bdf_stats(return_type='list')
+        unused_outs = model.get_bdf_stats(return_type='string')
 
         time = 0.5
         out1 = tload1.get_load_at_time(time, scale=1.)
@@ -273,6 +277,7 @@ class TestDynamic(unittest.TestCase):
         model2.uncross_reference()
         #print(out)
         #print(outs)
+        save_load_deck(model)
 
     def test_rload(self):
         """tests DLOAD, RLOAD1, RLOAD2, TABLED2 cards"""
@@ -283,7 +288,7 @@ class TestDynamic(unittest.TestCase):
         delay = 0
         tid = 42
         rload1 = model.add_rload1(sid, excite_id, delay=0, dphase=0, tc=0,
-                                 td=0, Type='LOAD', comment='rload1')
+                                  td=0, Type='LOAD', comment='rload1')
         rload1 = model.add_rload1(sid, excite_id, delay=1., dphase=0, tc=0,
                                   td=0, Type='DISP', comment='rload1')
         rload1 = model.add_rload1(sid, excite_id, delay=2, dphase=0, tc=0,
@@ -294,7 +299,7 @@ class TestDynamic(unittest.TestCase):
         sid = 3
         excite_id = 30
         rload2 = model.add_rload2(sid, excite_id, delay=0, dphase=0, tb=0,
-                                 tp=0, Type='LOAD', comment='rload2')
+                                  tp=0, Type='LOAD', comment='rload2')
         rload2 = model.add_rload2(sid, excite_id, delay=1., dphase=0, tb=0,
                                   tp=0, Type='D', comment='rload2')
         rload2 = model.add_rload2(sid, excite_id, delay=2, dphase=0, tb=0,
@@ -364,10 +369,10 @@ class TestDynamic(unittest.TestCase):
 
         bdf_file = StringIO()
         model.write_bdf(bdf_file, close=False)
-        out = bdf_file.getvalue()
+        unused_out = bdf_file.getvalue()
         bdf_file.seek(0)
-        outs = model.get_bdf_stats(return_type='list')
-        outs = model.get_bdf_stats(return_type='string')
+        unused_outs = model.get_bdf_stats(return_type='list')
+        unused_outs = model.get_bdf_stats(return_type='string')
 
         freq = 0.5
         out1 = rload1.get_load_at_freq(freq, scale=1.)
@@ -391,6 +396,7 @@ class TestDynamic(unittest.TestCase):
         model2.uncross_reference()
         #print(out)
         #print(outs)
+        save_load_deck(model)
 
     def test_ascre(self):
         """tests ASCRE, DELAY, DPHASE, TABLED2"""
@@ -401,6 +407,7 @@ class TestDynamic(unittest.TestCase):
         b = 2.0
         acsrce = model.add_acsrce(sid, excite_id, rho, b, delay=0, dphase=0, power=0,
                                   comment='acsrce')
+        acsrce.raw_fields()
         sid = 3
         excite_id = 4
         rho = 1.0
@@ -408,8 +415,8 @@ class TestDynamic(unittest.TestCase):
         delay = 3
         dphase = 4
         power = 5
-        acsrce2 = model.add_acsrce(sid, excite_id, rho, b, delay=delay,
-                                   dphase=dphase, power=power)
+        unused_acsrce2 = model.add_acsrce(sid, excite_id, rho, b, delay=delay,
+                                          dphase=dphase, power=power)
         nodes = 4
         components = 5
         delays = 6.0
@@ -485,7 +492,8 @@ class TestDynamic(unittest.TestCase):
         segment_id = 10
         scales = [1.]
         load_ids = [3]
-        loadcyn = model.add_loadcyn(sid, scale, segment_id, scales, load_ids, segment_type=None, comment='loadcyn')
+        loadcyn = model.add_loadcyn(sid, scale, segment_id, scales, load_ids,
+                                    segment_type=None, comment='loadcyn')
         loadcyn.validate()
         model.pop_parse_errors()
         card = loadcyn.write_card(size=8)
@@ -500,6 +508,7 @@ class TestDynamic(unittest.TestCase):
         model.cross_reference()
         model.uncross_reference()
         model.safe_cross_reference()
+        save_load_deck(model, run_convert=False)
 
     def test_deform(self):
         """tests DEFORM"""
@@ -538,6 +547,7 @@ class TestDynamic(unittest.TestCase):
         model.add_mat1(mid, E, G, nu)
         model.add_conrod(eid, mid, nids, A=0.0, j=0.0, c=0.0, nsm=0.0, comment='')
         model.cross_reference()
+        save_load_deck(model)
 
     def test_rforce(self):
         """tests RFORCE"""
@@ -548,7 +558,8 @@ class TestDynamic(unittest.TestCase):
         cid = 1
         scale = 2.
         r123 = [0., 1., 2.]
-        rforce = model.add_rforce(sid, nid, scale, r123, cid=cid, method=1, racc=0., mb=0, idrf=0, comment='rforce')
+        rforce = model.add_rforce(sid, nid, scale, r123, cid=cid,
+                                  method=1, racc=0., mb=0, idrf=0, comment='rforce')
         rforce.validate()
         card = rforce.write_card(size=8)
         rforce.write_card(size=16, is_double=False)
@@ -572,6 +583,7 @@ class TestDynamic(unittest.TestCase):
         model.add_grid(2, [0., 0., 0.])
         model.add_cord2r(cid, [0., 0., 0.], [0., 0., 1.], [1., 0., 0.], rid=0, comment='')
         model.cross_reference()
+        save_load_deck(model, run_convert=False)
 
     def test_rforce1(self):
         """tests RFORCE1"""
@@ -579,12 +591,14 @@ class TestDynamic(unittest.TestCase):
         sid = 42
         nid = 2
         scale = 2.
-        r123 = None
+        #r123 = None
         group_id = -4
         cid = 1
-        rforce1 = model.add_rforce1(sid, nid, scale, group_id, cid=cid, r123=None, racc=0., mb=0, method=2, comment='rforce1')
+        rforce1 = model.add_rforce1(sid, nid, scale, group_id, cid=cid, r123=None,
+                                    racc=0., mb=0, method=2, comment='rforce1')
         rforce1.validate()
-        rforce1b = model.add_rforce1(sid, nid, scale, group_id, cid=0, r123=[1., 2., 3.], racc=0., mb=0, method=2, comment='rforce1')
+        rforce1b = model.add_rforce1(sid, nid, scale, group_id, cid=0, r123=[1., 2., 3.],
+                                     racc=0., mb=0, method=2, comment='rforce1')
         rforce1b.validate()
         model.pop_parse_errors()
         card = rforce1.write_card(size=8)
@@ -609,6 +623,7 @@ class TestDynamic(unittest.TestCase):
         model.add_grid(2, [0., 0., 0.])
         model.add_cord2r(cid, [0., 0., 0.], [0., 0., 1.], [1., 0., 0.], rid=0, comment='')
         model.cross_reference()
+        save_load_deck(model, run_convert=False, run_save_load_hdf5=False)
 
     def _test_dynamic1(self):
         """

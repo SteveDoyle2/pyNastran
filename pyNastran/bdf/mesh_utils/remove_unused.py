@@ -34,6 +34,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
 
     nids_used = set([])
     cids_used = set([])
+    eids_used = set([])
     pids_used = set([])
     pids_mass_used = set([])
     mids_used = set([])
@@ -105,7 +106,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
         'GMLOAD', 'RFORCE', 'RFORCE1',
         'TEMP', 'QBDY1', 'QBDY2', 'QBDY3', 'QHBDY',
         'ACCEL', 'PLOADX1', 'SLOAD', 'ACCEL1', 'LOADCYN', 'LOAD',
-        'LSEQ', 'DLOAD', 'QVECT', 'RADM', 'TEMPAX',
+        'LSEQ', 'DLOAD', 'QVECT', 'RADM', 'TEMPAX', 'DEFORM',
     ]
 
     # could remove some if we look at the rid_trace
@@ -290,7 +291,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
         elif card_type in ['TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2', 'ACSRCE']:
             pass
         elif card_type in load_types:
-            _store_loads(model, card_type, ids, nids_used, cids_used)
+            _store_loads(model, card_type, ids, nids_used, eids_used, cids_used)
 
         elif card_type == 'TEMPD':
             pass
@@ -580,7 +581,7 @@ def _store_nsm(model, ids, pids_used):
                 msg = 'found nsm_type=%r...\n%s' % (nsm.nsm_type, str(nsm))
                 raise NotImplementedError(msg)
 
-def _store_loads(model, unused_card_type, unused_ids, nids_used, cids_used):
+def _store_loads(model, unused_card_type, unused_ids, nids_used, eids_used, cids_used):
     """helper for ``remove_unused``"""
     for loads in model.loads.values():
         for load in loads:
@@ -604,6 +605,8 @@ def _store_loads(model, unused_card_type, unused_ids, nids_used, cids_used):
             elif load.type == 'PLOAD4':
                 # eids, g1, g34
                 cids_used.add(load.Cid())
+            elif load.type == 'DEFORM':
+                eids_used.add(load.Eid())
             elif load.type == 'SPCD':
                 nids_used.update(load.node_ids)
             elif load.type == 'GMLOAD':

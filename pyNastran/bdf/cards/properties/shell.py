@@ -26,6 +26,13 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
 class ShellProperty(Property):
+    """
+    Common class for:
+     - PSHELL
+     - PSHEAR
+     - PLPLANE
+     - PPLANE
+    """
     def __init__(self):
         Property.__init__(self)
     @property
@@ -37,6 +44,11 @@ class ShellProperty(Property):
 
 
 class CompositeShellProperty(ShellProperty):
+    """
+    Common class for:
+     - PCOMP
+     - PCOMPG
+    """
     def __init__(self):
         ShellProperty.__init__(self)
         self.mids = []
@@ -900,7 +912,8 @@ class PCOMP(CompositeShellProperty):
     @property
     def plies(self):
         plies = []
-        for mid, t, theta, sout in zip(self.material_ids, self.thicknesses, self.thetas, self.souts):
+        for mid, t, theta, sout in zip(self.material_ids, self.thicknesses,
+                                       self.thetas, self.souts):
             plies.append([mid, t, theta, sout])
         return plies
 
@@ -1117,7 +1130,8 @@ class PCOMPG(CompositeShellProperty):
         # 'NO' is not an option!
         allowed_lam = [None, 'SYM', 'MEM', 'BEND', 'SMEAR', 'SMCORE']
         if self.lam not in allowed_lam:
-            msg = 'lam=%r is invalid; allowed=[%s]' % (self.lam, ', '.join(str(lam) for lam in allowed_lam))
+            msg = 'lam=%r is invalid; allowed=[%s]' % (self.lam, ', '.join(
+                str(lam) for lam in allowed_lam))
             raise ValueError(msg)
         for iply, sout in enumerate(self.souts):
             assert sout in ['YES', 'NO'], "iply=%s sout=%r; SOUT must be ['YES', 'NO']" % (iply, sout)
@@ -1806,7 +1820,7 @@ class PSHELL(ShellProperty):
     @classmethod
     def export_to_hdf5(cls, h5_file, model, pids):
         """exports the properties in a vectorized way"""
-        comments = []
+        #comments = []
         mids = []
         npids = len(pids)
         assert npids > 0, pids
@@ -1966,7 +1980,8 @@ class PSHELL(ShellProperty):
                 #elif mid_ref.type == 'MAT8':
                     #pass
                 else:
-                    raise NotImplementedError('PSHELL: pid=%s mid_ref.type=%s' % (self.pid, mid_ref.type))
+                    raise NotImplementedError('PSHELL: pid=%s mid_ref.type=%s' % (
+                        self.pid, mid_ref.type))
 
             t = self.Thickness()
             nsm = self.Nsm()
@@ -2120,8 +2135,8 @@ class PSHELL(ShellProperty):
             z2 = abs(self.z2)
             t = self.t
             if not ((-1.5*t <= z1 <= 1.5*t) or (-1.5*t <= z2 <= 1.5*t)):
-                msg = 'PSHELL pid=%s midsurface: z1=%s z2=%s t=%s not in range of -1.5t < zi < 1.5t' % (
-                    self.pid, self.z1, self.z2, t)
+                msg = ('PSHELL pid=%s midsurface: z1=%s z2=%s t=%s not in range of '
+                       '-1.5t < zi < 1.5t' % (self.pid, self.z1, self.z2, t))
                 model.log.warning(msg)
 
     def uncross_reference(self):

@@ -1264,13 +1264,13 @@ class SPCOFF(Constraint):
         """
         nodes = []
         components = []
-        ncards = len(card) - 1
-        nconstraints = ncards // 2
-        if ncards % 2 == 1:
+        nfields = len(card) - 1
+        nconstraints = nfields // 2
+        if nfields % 2 == 1:
             nconstraints += 1
-        for counter in range(ncards):
+        for counter in range(nconstraints):
             igrid = counter + 1
-            ifield = 1 + counter * 2
+            ifield = counter * 2 + 1
             node = integer(card, ifield, 'G%i' % igrid)
             component = components_or_blank(card, ifield+1, 'C%i' % igrid, '0')
             nodes.append(node)

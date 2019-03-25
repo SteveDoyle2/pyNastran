@@ -2529,6 +2529,16 @@ def hdf5_load_elements(model, elements_group, encoding):
                 if cidi == -1:
                     cidi = None
                 model.add_cbush1d(eid, pid, nids, cid=cidi, comment='')
+        elif card_type == 'CBUSH2D':
+            eids = _cast(elements['eid'])
+            pids = _cast(elements['pid'])
+            nodes = _cast(elements['nodes']).tolist()
+            cid = _cast(elements['cid'])
+            sptid = _cast(elements['sptid'])
+            plane = _cast(elements['plane']).tolist()
+            for eid, pid, nids, cidi, planei, sptidi in zip(eids, pids, nodes, cid, plane, sptid):
+                planei = planei.decode(encoding)
+                model.add_cbush2d(eid, pid, nids, cid=cidi, plane=planei, sptid=sptidi, comment='')
 
         elif card_type in ['CTRIA3', 'CTRIAR']:
             func = model.add_ctria3 if card_type == 'CTRIA3' else model.add_ctriar

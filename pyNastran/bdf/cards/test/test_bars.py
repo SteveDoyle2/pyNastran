@@ -308,7 +308,7 @@ class TestBars(unittest.TestCase):
         model.validate()
         model.cross_reference()
 
-        mass, cg, I = model.mass_properties(
+        mass, unused_cg, unused_I = model.mass_properties(
             element_ids=None, mass_ids=None,
             reference_point=None,
             sym_axis=None,
@@ -354,7 +354,7 @@ class TestBars(unittest.TestCase):
             os.system('nastran scr=yes bat=no old=no cbar.bdf')
         os.remove('cbar.bdf')
 
-        if 0:
+        if 0:  # pragma: no cover
             from pyNastran.op2.op2 import OP2
             op2 = OP2()
             op2.read_op2('cbar.op2')
@@ -363,9 +363,9 @@ class TestBars(unittest.TestCase):
             op2_mass = gpw.mass.max()
             assert np.allclose(op2_mass, mass), 'op2_mass=%s mass=%s' % (op2_mass, mass)
             #print('op2_mass=%s mass=%s' % (op2_mass, mass))
-            op2_cg = gpw.cg
+            unused_op2_cg = gpw.cg
 
-            cg = np.array([0.5, 0., 0.], dtype='float32')
+            unused_cg = np.array([0.5, 0., 0.], dtype='float32')
             #print('cg =', op2_cg)
 
     def test_bar_mass_2(self):
@@ -387,40 +387,40 @@ class TestBars(unittest.TestCase):
         nids = [1, 2]
         x = [0., 0., 1.]
         g0 = None
-        cbar = model.add_cbar(eid, pid, nids, x, g0, offt='GGG',
-                              pa=0, pb=0, wa=None, wb=None,
-                              comment='CBAR')
+        unused_cbar = model.add_cbar(eid, pid, nids, x, g0, offt='GGG',
+                                     pa=0, pb=0, wa=None, wb=None,
+                                     comment='CBAR')
         Type = 'BOX'
         dim = [1., 2., 0.1, 0.1]
         #pbeaml = model.add_pbeaml(pid, mid, Type, xxb, dims, nsm=None,
                                   #so=None, comment='PBEAML')
-        pbarl = model.add_pbarl(pid, mid, Type, dim, group='MSCBML0', nsm=0.,
-                                comment='PBARL')
+        unused_pbarl = model.add_pbarl(pid, mid, Type, dim, group='MSCBML0', nsm=0.,
+                                       comment='PBARL')
         #---------------------------------------------------------------
         eid = 2
         pid = 102
         x = None
         g0 = 3
-        cbar = model.add_cbar(eid, pid, nids, x, g0, offt='GGG',
-                              pa=0, pb=0, wa=None, wb=None,
-                              comment='CBAR')
+        unused_cbar = model.add_cbar(eid, pid, nids, x, g0, offt='GGG',
+                                     pa=0, pb=0, wa=None, wb=None,
+                                     comment='CBAR')
         Type = 'BOX'
         dim = [1., 2., 0.1, 0.1]
-        pbarl = model.add_pbarl(pid, mid, Type, dim, group='MSCBML0', nsm=0.,
-                                comment='PBARL')
+        unused_pbarl = model.add_pbarl(pid, mid, Type, dim, group='MSCBML0', nsm=0.,
+                                       comment='PBARL')
         #---------------------------------------------------------------
         eid = 3
         pid = 103
         #cbar = model.add_cbar(eid, pid, nids, x, g0, offt='GGG',
                               #pa=42, pb=5, wa=None, wb=None,
                               #comment='CBAR')
-        pbar = model.add_pbar(pid, mid, A=1., i1=0., i2=0., i12=0., j=0., nsm=0.1,
-                              c1=0., c2=0.,
-                              d1=0., d2=0.,
-                              e1=0., e2=0.,
-                              f1=0., f2=0.,
-                              k1=1.e8, k2=1.e8,
-                              comment='pbar')
+        unused_pbar = model.add_pbar(pid, mid, A=1., i1=0., i2=0., i12=0., j=0., nsm=0.1,
+                                     c1=0., c2=0.,
+                                     d1=0., d2=0.,
+                                     e1=0., e2=0.,
+                                     f1=0., f2=0.,
+                                     k1=1.e8, k2=1.e8,
+                                     comment='pbar')
 
         #G = 3.0e7
         #E = None
@@ -446,12 +446,11 @@ class TestBars(unittest.TestCase):
         nsm = 1.
         area = 2.0
         pbar = model.add_pbar(pid, mid, A=area, i1=0., i2=0., i12=0., j=0.,
-                             nsm=nsm,
-                             c1=0., c2=0., d1=0., d2=0.,
-                             e1=0., e2=0., f1=0., f2=0.,
-                             k1=1.e8,
-                             k2=1.e8,
-                             comment='')
+                              nsm=nsm,
+                              c1=0., c2=0., d1=0., d2=0.,
+                              e1=0., e2=0., f1=0., f2=0.,
+                              k1=1.e8, k2=1.e8,
+                              comment='')
 
         E = 1.0
         G = None
@@ -485,9 +484,8 @@ class TestBars(unittest.TestCase):
         mid = 1
         bar_type = 'BAR'
         dim = [1., 2.]  # area = 2.0
-        nsm = 1.
         pbarl = model.add_pbarl(pid, mid, bar_type, dim, group='MSCBML0', nsm=1.,
-                               comment='')
+                                comment='')
 
         E = 1.0
         G = None
@@ -540,8 +538,10 @@ class TestBars(unittest.TestCase):
         p0 = 1
         eids = None
         nids = None
-        force1, moment1 = model.sum_forces_moments(p0, loadcase_id, include_grav=False, xyz_cid0=None)
-        force2, moment2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False, xyz_cid0=None)
+        force1, moment1 = model.sum_forces_moments(p0, loadcase_id,
+                                                   include_grav=False, xyz_cid0=None)
+        force2, moment2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids,
+                                                            include_grav=False, xyz_cid0=None)
         #print(force1, force2)
         assert np.allclose(force1, force2), force1
         assert np.allclose(moment1, moment2), moment1
@@ -559,9 +559,8 @@ class TestBars(unittest.TestCase):
         mid = 1
         bar_type = 'BAR'
         dim = [1., 2.]  # area = 2.0
-        nsm = 1.
-        pbarl = model.add_pbarl(pid, mid, bar_type, dim, group='MSCBML0', nsm=1.,
-                               comment='')
+        unused_pbarl = model.add_pbarl(pid, mid, bar_type, dim, group='MSCBML0', nsm=1.,
+                                       comment='')
 
         E = 3.0e7
         G = None
@@ -574,8 +573,7 @@ class TestBars(unittest.TestCase):
 
         eid = 1
         card_lines = ['CBAR', eid, pid, n1, n2]
-        model.add_card(card_lines, 'CBAR', comment='', is_list=True,
-                      has_none=True)
+        model.add_card(card_lines, 'CBAR', comment='', is_list=True, has_none=True)
         model.pop_parse_errors()
 
     def test_cbend(self):

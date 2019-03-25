@@ -2,18 +2,21 @@ from __future__ import print_function
 from itertools import count
 import unittest
 from pyNastran.bdf.bdf import BDF, BDFCard, SUPORT, SUPORT1, MPC
+from pyNastran.bdf.cards.test.utils import save_load_deck
 
 class TestConstraints(unittest.TestCase):
     def test_support_01(self):
         lines = ['SUPORT, 1,      126']
-        bdf = BDF(debug=False)
-        card = bdf._process_card(lines)
-        card = BDFCard(card)
+        model = BDF(debug=False)
+        con = model.add_card(lines, 'SUPORT', comment='',
+                             ifile=None, is_list=False, has_none=True)
+        model.add_grid(1, [0., 0., 0.])
 
+        con = model.suport[0]
         size = 8
-        con = SUPORT.add_card(card)
         con.write_card(size, 'dummy')
         con.raw_fields()
+        save_load_deck(model)
 
     def test_suport_02(self):
         card = ['SUPORT']
@@ -140,8 +143,8 @@ class TestConstraints(unittest.TestCase):
         mpc = MPC.add_card(card)
         msg_8_actual = mpc.write_card(size=8)
         msg_16_actual = mpc.write_card(size=16)
-        self.check_card(msg8, msg_8_actual)
-        self.check_card(msg16, msg_16_actual)
+        check_card(msg8, msg_8_actual)
+        check_card(msg16, msg_16_actual)
 
     def test_mpc_03(self):
         model = BDF(debug=False)
@@ -168,9 +171,9 @@ class TestConstraints(unittest.TestCase):
         mpc = MPC.add_card(card)
         msg_8_actual = mpc.write_card(size=8)
         msg_16_actual = mpc.write_card(size=16)
-        msg_16_double_actual = mpc.write_card(size=16, is_double=True)
-        self.check_card(msg8, msg_8_actual)
-        self.check_card(msg16, msg_16_actual)
+        unused_msg_16_double_actual = mpc.write_card(size=16, is_double=True)
+        check_card(msg8, msg_8_actual)
+        check_card(msg16, msg_16_actual)
 
     def test_mpcadd(self):
         """tests MPCADD"""
@@ -216,6 +219,7 @@ class TestConstraints(unittest.TestCase):
         model.add_grid(4, [0., 0., 0.])
         model.cross_reference()
         check_mpc_spc(model)
+        save_load_deck(model)
 
     def test_spcadd(self):
         """tests SPCADD"""
@@ -259,6 +263,7 @@ class TestConstraints(unittest.TestCase):
         model.add_grid(3, [0., 0., 0.])
         model.add_grid(4, [0., 0., 0.])
         check_mpc_spc(model)
+        save_load_deck(model)
 
     def test_spcoff(self):
         """tests SPCOFF/SPCOFF1"""
@@ -307,6 +312,7 @@ class TestConstraints(unittest.TestCase):
         model.safe_cross_reference()
 
         #model.add_grid(43, [0., 0., 0.])
+        save_load_deck(model, run_remove_unused=False, run_save_load_hdf5=False)
 
     def test_gmspc(self):
         """tests GMSPC"""
@@ -330,6 +336,7 @@ class TestConstraints(unittest.TestCase):
         model.safe_cross_reference()
         str(gmspc)
         check_mpc_spc(model)
+        save_load_deck(model)
 
     def test_spcax(self):
         """tests SPCAX"""
@@ -354,19 +361,20 @@ class TestConstraints(unittest.TestCase):
         model.safe_cross_reference()
         str(spcax)
         check_mpc_spc(model)
+        save_load_deck(model)
 
-    def check_card(self, msg_expected, msg_actual):
-        if isinstance(msg_expected, tuple):
-            msg_expected = msg_expected[0]
-        msg_expected_lines = msg_expected.split('\n')
-        msg_actual_lines = msg_actual.split('\n')
-        for i, actual, expected  in zip(count(), msg_actual_lines, msg_expected_lines):
-            msg = 'Error on line %i\n' % i
-            msg += 'actual=\n%s\n' % actual
-            msg += 'expected=\n%s\n\n' % expected
-            msg += 'Actual Card =\n%s\n' % '\n'.join(msg_actual_lines)
-            msg += '\nExpected Card =\n%s\n' % '\n'.join(msg_expected_lines)
-            assert actual == expected, msg
+def check_card(msg_expected, msg_actual):
+    if isinstance(msg_expected, tuple):
+        msg_expected = msg_expected[0]
+    msg_expected_lines = msg_expected.split('\n')
+    msg_actual_lines = msg_actual.split('\n')
+    for i, actual, expected  in zip(count(), msg_actual_lines, msg_expected_lines):
+        msg = 'Error on line %i\n' % i
+        msg += 'actual=\n%s\n' % actual
+        msg += 'expected=\n%s\n\n' % expected
+        msg += 'Actual Card =\n%s\n' % '\n'.join(msg_actual_lines)
+        msg += '\nExpected Card =\n%s\n' % '\n'.join(msg_expected_lines)
+        assert actual == expected, msg
 
 def check_mpc_spc(model):
     """simple MPC/SPC checks"""

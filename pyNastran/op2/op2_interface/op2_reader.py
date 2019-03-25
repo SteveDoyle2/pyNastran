@@ -1459,7 +1459,7 @@ class OP2Reader(object):
         # (104, 8,   0,   0, 0, 0,   0) - tpl\lmtas1.op2 PCOMPTS (return after -4)
         # (104, 0, 103, 412, 0, 0, 103) - output.op2     PCOMPT  (return at end)
         data_header = self._read_record()
-        self.show_data(data_header, types='ifsd', endian=None)
+        #self.show_data(data_header, types='ifsd', endian=None)
         a, bi, n4a, n5, e, f, n4b = Struct(b'<7i').unpack(data_header)
         self.log.debug('a=%s b=%s n4a=%s n5=%s e=%s f=%s n4b=%s' % (
             a, bi, n4a, n5, e, f, n4b))

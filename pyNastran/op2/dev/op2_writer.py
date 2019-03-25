@@ -198,7 +198,7 @@ class OP2Writer(OP2_F06_Common):
             'OEFATO2', 'OEFCRM2', 'OEFNO2', 'OEFPSD2', 'OEFRMS2',
 
             'OESNLXD', 'OESNLXR', 'OESNL1X',
-            'OES1', 'OES1X', 'OES1X1',
+            'OES1', 'OES1X', 'OES1X1', 'OESVM1', 'OSTRVM1',
             'OES1C',
             'OESCP',
             'OCRPG', 'OCRUG',
@@ -222,13 +222,14 @@ class OP2Writer(OP2_F06_Common):
             res_dict = obj.get_result(table_type)
             for unused_key, res in res_dict.items():
                 if hasattr(res, 'table_name_str'): # params
+                    #print(table_type)
                     res_categories2[res.table_name_str].append(res)
 
         for table_name, results in sorted(res_categories2.items()):
             assert table_name in table_order, table_name
 
         total_case_count = 0
-        pretables = ['LAMA', 'BLAMA', 'CLAMA']
+        pretables = ['LAMA', 'BLAMA', ] # 'CLAMA'
         for unused_title, eigenvalue in obj.eigenvalues.items():
             res_categories2[eigenvalue.table_name].append(eigenvalue)
 
@@ -263,7 +264,8 @@ class OP2Writer(OP2_F06_Common):
                                                        isubcase, element_name))
                         raise
                 else:
-                    raise NotImplementedError("  *op2 - %s not written" % result.__class__.__name__)
+                    raise NotImplementedError("  *op2 - %s not written" % (
+                        result.__class__.__name__))
                     #obj.log.warning("  *op2 - %s not written" % result.__class__.__name__)
                     #continue
 

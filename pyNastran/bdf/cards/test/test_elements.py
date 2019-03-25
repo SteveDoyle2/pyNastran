@@ -25,8 +25,7 @@ class TestElements(unittest.TestCase):
         model.uncross_reference()
         model.safe_cross_reference()
         save_load_deck(model, xref='standard', punch=True,
-                       run_renumber=False,
-                       run_save_load=True, run_save_load_hdf5=True)
+                       run_renumber=False)
 
     def test_cbush_01(self):
         """tests a CBUSH"""
@@ -163,7 +162,7 @@ class TestElements(unittest.TestCase):
         model.uncross_reference()
         model.safe_cross_reference()
         model.mass_properties()
-        save_load_deck(model, run_convert=False, run_save_load_hdf5=True)
+        save_load_deck(model, run_convert=False)
 
     def test_cbush1d(self):
         model = BDF(debug=False)
@@ -179,7 +178,7 @@ class TestElements(unittest.TestCase):
 
         model.pop_parse_errors()
         model.cross_reference()
-        save_load_deck(model, run_save_load_hdf5=True)
+        save_load_deck(model)
 
     def test_cbush2d(self):
         model = BDF(debug=False)
@@ -195,7 +194,7 @@ class TestElements(unittest.TestCase):
 
         #model.pop_parse_errors()
         #model.cross_reference()
-        #save_load_deck(model)
+        save_load_deck(model, run_convert=False, xref=False, run_renumber=False)
 
     def test_crac2d(self):
         model = BDF(debug=False)
@@ -218,7 +217,7 @@ class TestElements(unittest.TestCase):
         model.add_grid(17, [1., 0., 0.])
         model.add_grid(18, [1., 0., 0.])
         model.add_grid(19, [1., 0., 0.])
-        nids = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 ,13, 14, 15, 16, 17, 18]
+        nids = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
         eid = 10
         pid = 100
         mid = 1000
@@ -260,7 +259,7 @@ class TestElements(unittest.TestCase):
         model.add_grid(17, [1., 0., 0.])
         model.add_grid(18, [1., 0., 0.])
         model.add_grid(19, [1., 0., 0.])
-        nids = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 ,13, 14, 15, 16, 17, 18, 19]
+        nids = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
         eid = 10
         pid = 100
         mid = 1000
@@ -336,9 +335,7 @@ class TestElements(unittest.TestCase):
         str(elemi)
 
         save_load_deck(model, xref='standard', punch=True,
-                       run_remove_unused=True, run_convert=True, run_renumber=True,
-                       run_mirror=False, run_save_load=True, run_quality=True,
-                       write_saves=True, run_save_load_hdf5=True)
+                       run_mirror=False)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

@@ -1342,7 +1342,11 @@ class ComplexGridPointForcesArray(GridPointForcesObject):
                 msg += '%s\n' % str(self.code_information())
                 i = 0
                 for itime in range(self.ntimes):
-                    for ie, e in enumerate(self.node_element):
+                    print('is_unique =', self.is_unique)
+                    import sys
+                    sys.stdout.flush()
+                    for ie, e in enumerate(self.node_element[itime, :, :]):
+                        print(e)
                         (eid, nid) = e
                         ename1 = self.element_names[itime, ie]
                         ename2 = self.element_names[itime, ie]

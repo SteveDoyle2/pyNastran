@@ -6,9 +6,8 @@ from __future__ import print_function
 import unittest
 #from cpylog import SimpleLogger
 
-import pyNastran
 from pyNastran.bdf.bdf import BDF
-from pyNastran.bdf.test.test_bdf import run_bdf
+#from pyNastran.bdf.test.test_bdf import run_bdf
 from pyNastran.bdf.cards.test.utils import save_load_deck
 
 class TestAxi(unittest.TestCase):
@@ -48,7 +47,8 @@ class TestAxi(unittest.TestCase):
                         a50=0., a41=0., a32=0., a23=0., a14=0., a05=0., d5=0.,
                         tab1=None, tab2=None, tab3=None, tab4=None, tabd=None,
                         comment='mathp')
-        #model.add_mathe(mid, model, bulk, rho, texp, mus, alphas, betas, mooney, sussbat, aboyce, comment='')
+        #model.add_mathe(mid, model, bulk, rho, texp, mus, alphas, betas, mooney,
+                        #sussbat, aboyce, comment='')
         model.validate()
         model._verify_bdf()
         model.cross_reference()
@@ -90,6 +90,7 @@ class TestAxi(unittest.TestCase):
 
         nharmonics = 12
         axic = model.add_axic(nharmonics, comment='axic')
+        tempax.raw_fields()
         ringax.raw_fields()
         pointax.raw_fields()
         cconeax.raw_fields()

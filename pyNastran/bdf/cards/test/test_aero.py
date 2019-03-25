@@ -777,15 +777,15 @@ class TestAero(unittest.TestCase):
         sid = 60
         ids = [7, 13]
         set_obj = SET1(sid, ids, is_skin=False, comment='set card')
-        grid7 = GRID(nid=7, cp=0, xyz=[7., 0., 0.], cd=0, ps='', seid=0, comment='')
-        grid13 = GRID(nid=13, cp=0, xyz=[13., 0., 0.], cd=0, ps='', seid=0, comment='')
 
         model = BDF(log=None)
         model._add_coord_object(coord)
         model._add_caero_object(caero2)
         model._add_set_object(set_obj)
-        model._add_node_object(grid7)
-        model._add_node_object(grid13)
+        model.add_grid(7, [7., 0., 0.], cp=0, cd=0, ps='', seid=0, comment='')
+        model.add_grid(13, [13., 0., 0.], cp=0, cd=0, ps='', seid=0, comment='')
+        #model._add_node_object(grid7)
+        #model._add_node_object(grid13)
 
         eid = 5
         caero = 8
@@ -1870,7 +1870,7 @@ class TestAero(unittest.TestCase):
 
         diverg = model.add_card(['DIVERG', sid, nroots] + machs, 'DIVERG', comment='divergence')
         model.validate()
-        save_load_deck(model, run_save_load_hdf5=True)
+        save_load_deck(model)
         #diverg.validate()
         #diverg.write_card()
 
@@ -1953,14 +1953,18 @@ class TestAero(unittest.TestCase):
         q = 100.
         labels = ['URDD3', 'PITCH']
         uxs = [2.5, 0.0]
-        trim1a = model.add_trim(sid, mach, q, labels, uxs, aeqr=0.0, trim_type=1, comment='') # 75
-        trim2a = model.add_trim(sid+1, mach, q, labels, uxs, aeqr=0.0, trim_type=2, comment='') # 76
+        trim1a = model.add_trim(sid, mach, q, labels, uxs, aeqr=0.0,
+                                trim_type=1, comment='') # 75
+        trim2a = model.add_trim(sid+1, mach, q, labels, uxs, aeqr=0.0,
+                                trim_type=2, comment='') # 76
 
         labels = ['URDD3', 'URDD5', 'PITCH']
         uxs = [2.5, 0.0, 0.0]
         # good
-        trim1b = model.add_trim(sid+2, mach, q, labels, uxs, aeqr=0.0, trim_type=1, comment='trim') # 77
-        trim2b = model.add_trim(sid+3, mach, q, labels, uxs, aeqr=0.0, trim_type=2, comment='trim') # 78
+        trim1b = model.add_trim(sid+2, mach, q, labels, uxs, aeqr=0.0,
+                                trim_type=1, comment='trim') # 77
+        trim2b = model.add_trim(sid+3, mach, q, labels, uxs, aeqr=0.0,
+                                trim_type=2, comment='trim') # 78
 
         model.add_aestat(1, 'URDD3', comment='aestat')
         model.add_aestat(2, 'URDD5', comment='aestat')
@@ -2034,7 +2038,7 @@ class TestAero(unittest.TestCase):
         gust2 = GUST.add_card(BDFCard(['GUST', sid, dload, wg, x0, V]), comment='gust load')
         gust2.validate()
         gust2.write_card()
-        save_load_deck(model, run_save_load_hdf5=True)
+        save_load_deck(model)
 
 
     def test_csschd(self):
@@ -2157,7 +2161,7 @@ class TestAero(unittest.TestCase):
         model._verify_bdf(xref=True)
         model.uncross_reference()
 
-        save_load_deck(model, run_save_load_hdf5=True)
+        save_load_deck(model)
 
     def test_bah_plane_bdf(self):
         """tests the bah_plane"""
@@ -2203,7 +2207,7 @@ class TestAero(unittest.TestCase):
             sid, nids, comment='rotorg'
         )
         rotorg.validate()
-        save_load_deck(model, run_save_load_hdf5=True)
+        save_load_deck(model)
 
     def test_zona_1(self):
         """zona explicit test"""
@@ -2242,7 +2246,7 @@ class TestAero(unittest.TestCase):
 
         bdf_file.seek(0)
         model.clear_attributes()
-        model2 = read_bdf('zona.bdf')
+        model2 = read_bdf('zona.bdf', debug=None)
         os.remove('zona.bdf')
 
         model2.zona.convert_to_nastran()

@@ -765,12 +765,12 @@ def _convert_constraints(model, xyz_scale):
     """
     for unused_spc_id, spcs in model.spcs.items():
         for spc in spcs:
-            if spc.type in ['SPCADD', 'SPC1']:
+            if spc.type in ['SPCADD', 'SPC1', 'GMSPC']:
                 continue
             elif spc.type == 'SPC':
                 spc.enforced = [enforcedi*xyz_scale for enforcedi in spc.enforced]
             elif spc.type == 'SPCAX':
-                spc.d = spc.d * xyz_scale
+                spc.enforced = spc.enforced * xyz_scale
             else:
                 raise NotImplementedError(spc)
 
@@ -911,6 +911,8 @@ def _convert_loads(model, xyz_scale, weight_scale):
                 load.pressure *= pressure_scale
             elif load_type == 'PLOAD4':
                 load.pressures = [pressure*pressure_scale for pressure in load.pressures]
+            elif load_type == 'DEFORM':
+                load.deformation *= xyz_scale
             elif load_type == 'RANDPS':
                 table = load.tid # defines G(f)
                 if table.type == 'TABRND1':

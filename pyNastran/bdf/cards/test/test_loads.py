@@ -19,7 +19,8 @@ from pyNastran.bdf.cards.test.utils import save_load_deck
 from pyNastran.op2.op2 import OP2
 
 bdf = BDF(debug=False)
-test_path = pyNastran.__path__[0]
+TEST_PATH = pyNastran.__path__[0]
+MODEL_PATH = os.path.join(TEST_PATH, '..', 'models')
 log = get_logger(level='warning')
 
 
@@ -375,7 +376,8 @@ class TestLoads(unittest.TestCase):
         pload4 = model.add_pload4(sid, eids, pressures, g1=None, g34=None,
                                   cid=cid, nvector=nvector,
                                   surf_or_line='LINE', line_load_dir='NORM', comment='pload4_line')
-        assert pload4.raw_fields() == ['PLOAD4', 10, 10, 1.0, 0.0, 0.0, 0.0, 'THRU', 11, 0, 1.0, 0.0, 0.0, 'LINE', 'NORM']
+        assert pload4.raw_fields() == ['PLOAD4', 10, 10, 1.0, 0.0, 0.0, 0.0, 'THRU', 11,
+                                       0, 1.0, 0.0, 0.0, 'LINE', 'NORM']
         str(pload4)
 
         unused_pload4_surf = model.add_pload4(sid, eids, pressures, g1=None, g34=None,
@@ -405,8 +407,8 @@ class TestLoads(unittest.TestCase):
 
     def test_pload4_cpenta(self):
         """tests a PLOAD4 with a CPENTA"""
-        bdf_filename = os.path.join(test_path, '..', 'models', 'pload4', 'cpenta.bdf')
-        op2_filename = os.path.join(test_path, '..', 'models', 'pload4', 'cpenta.op2')
+        bdf_filename = os.path.join(MODEL_PATH, 'pload4', 'cpenta.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'pload4', 'cpenta.op2')
         op2 = OP2(debug=False, log=log)
         op2.read_op2(op2_filename)
 
@@ -501,8 +503,8 @@ class TestLoads(unittest.TestCase):
 
     def test_pload4_ctria3(self):
         """tests a PLOAD4 with a CTRIA3"""
-        bdf_filename = os.path.join(test_path, '..', 'models', 'pload4', 'ctria3.bdf')
-        op2_filename = os.path.join(test_path, '..', 'models', 'pload4', 'ctria3.op2')
+        bdf_filename = os.path.join(MODEL_PATH, 'pload4', 'ctria3.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'pload4', 'ctria3.op2')
         op2 = OP2(debug=False, log=log)
         op2.read_op2(op2_filename)
 
@@ -553,8 +555,8 @@ class TestLoads(unittest.TestCase):
 
     def test_pload4_cquad4(self):
         """tests a PLOAD4 with a CQUAD4"""
-        bdf_filename = os.path.join(test_path, '..', 'models', 'pload4', 'cquad4.bdf')
-        op2_filename = os.path.join(test_path, '..', 'models', 'pload4', 'cquad4.op2')
+        bdf_filename = os.path.join(MODEL_PATH, 'pload4', 'cquad4.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'pload4', 'cquad4.op2')
         op2 = OP2(debug=False, log=log)
         op2.read_op2(op2_filename)
 
@@ -586,7 +588,8 @@ class TestLoads(unittest.TestCase):
                 assert array_equal(normal, array([0., 0., 1.])), 'normal=%s\n%s' % (normal, msg)
 
             f1, m1 = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
-            f2, m2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
+            f2, m2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids,
+                                                       include_grav=False)
             assert allclose(f1, f2), 'f1=%s f2=%s' % (f1, f2)
             assert allclose(m1, m2), 'm1=%s m2=%s' % (m1, m2)
 
@@ -607,8 +610,8 @@ class TestLoads(unittest.TestCase):
 
     def test_pload4_ctetra(self):
         """tests a PLOAD4 with a CTETRA"""
-        bdf_filename = os.path.join(test_path, '..', 'models', 'pload4', 'ctetra.bdf')
-        op2_filename = os.path.join(test_path, '..', 'models', 'pload4', 'ctetra.op2')
+        bdf_filename = os.path.join(MODEL_PATH, 'pload4', 'ctetra.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'pload4', 'ctetra.op2')
         op2 = OP2(debug=False, log=log)
         op2.read_op2(op2_filename)
 
@@ -689,20 +692,23 @@ class TestLoads(unittest.TestCase):
             fm = -case.data[0, :, :].sum(axis=0)
             assert len(fm) == 6, fm
             if not allclose(forces1[0], fm[0]):
-                model.log.error('subcase=%-2i Fx g=(%s,%s) forces1=%s fexpected=%s face=%s normal=%s' % (
-                    isubcase, g1, g34, forces1, fm, face, normal))
+                model.log.error('subcase=%-2i Fx g=(%s,%s) forces1=%s fexpected=%s '
+                                'face=%s normal=%s' % (
+                                    isubcase, g1, g34, forces1, fm, face, normal))
             if not allclose(forces1[1], fm[1]):
-                model.log.error('subcase=%-2i Fy g=(%s,%s) forces1=%s fexpected=%s face=%s normal=%s' % (
-                    isubcase, g1, g34, forces1, fm, face, normal))
+                model.log.error('subcase=%-2i Fy g=(%s,%s) forces1=%s fexpected=%s '
+                                'face=%s normal=%s' % (
+                                    isubcase, g1, g34, forces1, fm, face, normal))
             if not allclose(forces1[2], fm[2]):
-                model.log.error('subcase=%-2i Fz g=(%s,%s) forces1=%s fexpected=%s face=%s normal=%s' % (
-                    isubcase, g1, g34, forces1, fm, face, normal))
+                model.log.error('subcase=%-2i Fz g=(%s,%s) forces1=%s fexpected=%s '
+                                'face=%s normal=%s' % (
+                                    isubcase, g1, g34, forces1, fm, face, normal))
         save_load_deck(model, punch=False, run_save_load_hdf5=True)
 
     def test_pload4_chexa(self):
         """tests a PLOAD4 with a CHEXA"""
-        bdf_filename = os.path.join(test_path, '..', 'models', 'pload4', 'chexa.bdf')
-        op2_filename = os.path.join(test_path, '..', 'models', 'pload4', 'chexa.op2')
+        bdf_filename = os.path.join(MODEL_PATH, 'pload4', 'chexa.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'pload4', 'chexa.op2')
         op2 = OP2(debug=False, log=log)
         op2.read_op2(op2_filename)
 
@@ -798,7 +804,8 @@ class TestLoads(unittest.TestCase):
             forces1, moments1 = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
             eids = None
             nids = None
-            forces2, moments2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
+            forces2, moments2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids,
+                                                                  include_grav=False)
             assert allclose(forces1, forces2), 'forces1=%s forces2=%s' % (forces1, forces2)
             assert allclose(moments1, moments2), 'moments1=%s moments2=%s' % (moments1, moments2)
 

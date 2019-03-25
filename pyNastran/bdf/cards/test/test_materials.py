@@ -130,7 +130,7 @@ class TestMaterials(unittest.TestCase):
         model.cross_reference()
         model.pop_xref_errors()
         model.uncross_reference()
-        model2 = save_load_deck(model)
+        unused_model2 = save_load_deck(model)
 
     def test_mat2_01(self):
         """tests MAT2, MATT2"""

@@ -1003,6 +1003,7 @@ class EPT(GeomCommon):
             (pid, lam_int, z0, nsm, sb, ft_int, tref, ge) = out
             if self.binary_debug:
                 self.binary_debug.write('PCOMPG pid=%s lam_int=%s z0=%s nsm=%s sb=%s ft_int=%s tref=%s ge=%s' % tuple(out))
+            #print('PCOMPG pid=%s lam_int=%s z0=%s nsm=%s sb=%s ft_int=%s tref=%s ge=%s' % tuple(out))
             assert isinstance(lam_int, int), out
             n += 32
 

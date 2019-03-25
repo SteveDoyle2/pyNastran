@@ -22,7 +22,7 @@ class TestDMIG(unittest.TestCase):
         model.read_bdf(bdf_name, xref=False, punch=True)
         out = model.dmigs['REALS'].get_matrix(is_sparse=False)
 
-        reals_actual, rows_reversed, cols_reversed = out
+        reals_actual, unused_rows_reversed, unused_cols_reversed = out
         #print "---reals_actual---\n", reals_actual
         #print "---out---\n", out
 
@@ -43,7 +43,7 @@ class TestDMIG(unittest.TestCase):
         model.read_bdf(bdf_name, xref=False, punch=True)
 
         out = model.dmigs['REAL'].get_matrix(is_sparse=False)
-        real_actual, rows_reversed, cols_reversed = out
+        real_actual, unused_rows_reversed, unused_cols_reversed = out
         #print "---REAL_actual---\n", REAL_actual
         real_expected = [
             [1.0, 0.5, 0.25],
@@ -67,7 +67,7 @@ class TestDMIG(unittest.TestCase):
         model.read_bdf(bdf_name, xref=False, punch=True)
         out = model.dmigs['IMAG'].get_matrix(is_sparse=False)
 
-        imag_actual, rows_reversed, cols_reversed = out
+        imag_actual, unused_rows_reversed, unused_cols_reversed = out
         #print "---IMAG_actual---\n", IMAG_actual
         imag_expected_real = [
             [1.0, 0.5, 0.25],
@@ -93,7 +93,7 @@ class TestDMIG(unittest.TestCase):
         model.read_bdf(bdf_name, xref=False, punch=True)
 
         out = model.dmigs['IMAGS'].get_matrix(is_sparse=False)
-        imags_actual, rows_reversed, cols_reversed = out
+        imags_actual, unused_rows_reversed, unused_cols_reversed = out
         #print("---imag_actual---\n", imag_actual)
         imags_expected_real = [
             [1.0, 0.5, 0.25],
@@ -122,7 +122,7 @@ class TestDMIG(unittest.TestCase):
         model.read_bdf(bdf_filename, xref=False, punch=True)
         out = model.dmigs['POLE'].get_matrix(is_sparse=False)
 
-        pole_actual, rows_reversed, cols_reversed = out
+        pole_actual, unused_rows_reversed, unused_cols_reversed = out
         #print("---pole_actual---\n", pole_actual)
         mag_expected = array([
             [1.0, 4.0, 5.0],
@@ -372,7 +372,7 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
         w2gj.get_matrix()
 
         real2 = []
-        for i, real in enumerate(w2gj.Real):
+        for i, unused_real in enumerate(w2gj.Real):
             real2.append(0.1  * i)
         #w2gj.Real = real2
         #print(w2gj.GCi)  # varying (rows)
@@ -458,8 +458,8 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
         dmig.get_matrix()
 
         name = 'DMIK_1'
-        nrows = None
-        form = None
+        unused_nrows = None
+        unused_form = None
         dmik = model.add_dmik(name, ifo, tin, tout, polar, ncols, GCj, GCi,
                               Real=reals, Complex=reals,
                               comment='dmik')
@@ -493,8 +493,8 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
         dmig.get_matrix()
 
         name = 'DMIK_1'
-        nrows = None
-        form = None
+        unused_nrows = None
+        unused_form = None
         dmik = model.add_dmik(name, ifo, tin, tout, polar, ncols, GCj, GCi,
                               Real=reals, Complex=reals,
                               comment='dmik')
