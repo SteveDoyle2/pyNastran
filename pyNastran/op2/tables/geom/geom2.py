@@ -1463,8 +1463,8 @@ class GEOM2(GeomCommon):
             (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, n9) = out
             if self.is_debug_file:
                 self.binary_debug.write('  %s=%s\n' % (element.type, str(out)))
-            print('eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s n5=%s n6=%s n7=%s n8=%s' % (
-                eid, pid, n1, n2, n3, n4, n5, n6, n7, n8))
+            #print('CQUAD eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s n5=%s n6=%s n7=%s n8=%s' % (
+                #eid, pid, n1, n2, n3, n4, n5, n6, n7, n8))
             data = [eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, n9]
             elem = element.add_op2_data(data)
             self.add_op2_element(elem)

@@ -644,7 +644,7 @@ class RealTableArray(TableArray):
             'OPG1', 'OPGV1',
             'OAGATO1', 'OAGCRM1', 'OAGNO1', 'OAGPSD1', 'OAGRMS1',
             'OQGPSD1',
-            'OCRPG', 'OCRUG',
+            'OCRPG', 'OCRUG', 'OUG1',
         ]
         assert self.table_name in allowed_tables, self.table_name
 

@@ -206,12 +206,13 @@ def write_card(op2, op2_ascii, load_type, loads, endian):
             pressures = list(load.pressures)
             g1 = load.g1 if load.g1 is not None else 0
             g34 = load.g34 if load.g34 is not None else 0
-            nids = [g1, g34, load.cid]
+            cid = load.cid if load.cid is not None else 0
+            nids_cid = [g1, g34, cid]
             nvector = list(load.nvector)
             assert len(load.pressures) == 4, load.pressures
-            assert None not in nids, nids
+            assert None not in nids_cid, nids_cid
 
-            pnn = pressures + nids + nvector
+            pnn = pressures + nids_cid + nvector
             for eid in load.eids:
                 #(sid, eid, p1, p2, p3, p4, g1, g34, cid, n1, n2, n3, surf_or_line, line_load_dir) = out
                 surf_or_line = load.surf_or_line.encode('ascii')

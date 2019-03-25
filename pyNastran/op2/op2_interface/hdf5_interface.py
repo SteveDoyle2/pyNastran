@@ -402,6 +402,7 @@ TABLE_OBJ_MAP = {
     'modal_contribution.cbar_strain' : (RealBarStrainArray, ComplexBarStrainArray, ),
 
     'cbar_force' : (RealCBarForceArray, ComplexCBarForceArray),
+    'cbar_force_abs' : (RealCBarForceArray, ),
     'ato.cbar_force' : (RealCBarForceArray, ),
     'crm.cbar_force' : (RealCBarForceArray, ),
     'psd.cbar_force' : (RealCBarForceArray, ),

@@ -316,13 +316,13 @@ def write_card(name, eids, spack, obj, op2, op2_ascii, endian):
                 f = 1
                 x1, x2, x3 = elem.x
                 data = [eid, pid, ga, gb, x1, x2, x3, f, cid]
-                print('CGAP x; x=%s data=%s' % (elem.x, data))
+                #print('CGAP x; x=%s data=%s' % (elem.x, data))
                 op2.write(structf.pack(*data))
             else:
                 f = 2
                 g0 = elem.g0
                 data = [eid, pid, ga, gb, g0, 0, 0, f, cid]
-                print('CGAP g0; x=%s data=%s' % (g0, data))
+                #print('CGAP g0; x=%s data=%s' % (g0, data))
                 op2.write(structi.pack(*data))
 
     elif name == 'CBAR':
@@ -361,7 +361,7 @@ def write_card(name, eids, spack, obj, op2, op2_ascii, endian):
                     eid, pid, ga, gb, g0, 0, 0, fe, pa, pb,
                     w1a, w2a, w3a, w1b, w2b, w3b]
                 assert None not in data, 'CBAR-1; data=%s' % (data)
-                print('CBAR data2 =', data)
+                #print('CBAR data2 =', data)
                 op2.write(s3.pack(*data))
 
             #if f == 0:
@@ -460,7 +460,7 @@ def write_card(name, eids, spack, obj, op2, op2_ascii, endian):
             assert None not in data, '%s data=%s' % (name, data)
             assert isinstance(elem.tflag, int), elem.get_stats()
             assert elem.tflag in [-1, 0, 1], elem.get_stats()
-            print('  CQUAD8 eid=%s pid=%s nids=%s data=%s\n' % (eid, pid, str(nids), data[6:]))
+            #print('  CQUAD8 eid=%s pid=%s nids=%s data=%s\n' % (eid, pid, str(nids), data[6:]))
             op2_ascii.write('  eid=%s pid=%s nids=%s\n' % (eid, pid, str(nids)))
             op2.write(spack.pack(*data))
     elif name == 'CTRIA6':  # current; not 2001
@@ -547,7 +547,7 @@ def write_card(name, eids, spack, obj, op2, op2_ascii, endian):
             if n2 is None:
                 n2 = 0
             data = [eid, pid, n1, n2, elem.c1, elem.c2]
-            print(name, data)
+            #print(name, data)
             op2_ascii.write('  eid=%s pid=%s nids=[%s, %s]\n' % (eid, pid, n1, n2))
             op2.write(spack.pack(*data))
     elif name == 'CELAS2':
@@ -575,7 +575,7 @@ def write_card(name, eids, spack, obj, op2, op2_ascii, endian):
                 n2 = 0
             #(eid, pid, s1, s2) = out
             data = [eid, pid, n1, n2]
-            print(name, data)
+            #print(name, data)
             op2_ascii.write('  eid=%s pid=%s nids=[%s, %s]\n' % (eid, pid, n1, n2))
             op2.write(spack.pack(*data))
     elif name == 'CELAS4':
@@ -601,7 +601,7 @@ def write_card(name, eids, spack, obj, op2, op2_ascii, endian):
             c1 = elem.c1 if elem.c1 is not None else 0
             c2 = elem.c2 if elem.c2 is not None else 0
             data = [eid, elem.b, n1, n2, c1, c2]
-            print(name, data)
+            #print(name, data)
             op2_ascii.write('  eid=%s nids=[%s, %s]\n' % (eid, n1, n2))
             op2.write(spack.pack(*data))
     elif name == 'CDAMP4':
@@ -614,7 +614,7 @@ def write_card(name, eids, spack, obj, op2, op2_ascii, endian):
                 n2 = 0
             #(eid, b, s1, s2) = out
             data = [eid, elem.b, n1, n2]
-            print(name, data)
+            #print(name, data)
             op2_ascii.write('  eid=%s nids=[%s, %s]\n' % (eid, n1, n2))
             op2.write(spack.pack(*data))
     elif name == 'SPOINT':

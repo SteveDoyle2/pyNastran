@@ -30,7 +30,7 @@ class TestOP2Writer(unittest.TestCase):
                             include_results='displacements')
 
         op2w = OP2Writer(op2)
-        op2w.write_op2(op2_filename_out, obj=op2, is_mag_phase=False)
+        op2w.write_op2(op2_filename_out, obj=op2) #, is_mag_phase=False)
         op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out)
         assert op2 == op2b
 
@@ -50,7 +50,7 @@ class TestOP2Writer(unittest.TestCase):
                        )
 
         op2w = OP2Writer(op2)
-        op2w.write_op2(op2_filename_out, obj=op2, is_mag_phase=False)
+        op2w.write_op2(op2_filename_out, obj=op2) #, is_mag_phase=False)
         op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out)
         assert op2 == op2b
 
@@ -70,7 +70,7 @@ class TestOP2Writer(unittest.TestCase):
                             )
 
         op2w = OP2Writer(op2)
-        op2w.write_op2(op2_filename_out, obj=op2, is_mag_phase=False)
+        op2w.write_op2(op2_filename_out, obj=op2) #, is_mag_phase=False)
         op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out)
 
     def test_write_4(self):
@@ -87,7 +87,7 @@ class TestOP2Writer(unittest.TestCase):
         op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug)
 
         op2w = OP2Writer(op2)
-        op2w.write_op2(op2_filename_out, obj=op2, is_mag_phase=False)
+        op2w.write_op2(op2_filename_out, obj=op2) #, is_mag_phase=False)
         op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out)
         op2.assert_op2_equal(op2b,
                              skip_results=['params', ],
@@ -105,7 +105,7 @@ class TestOP2Writer(unittest.TestCase):
         #debug_file = model + '.debug.out'
 
         exclude_results = [
-            '*_strain_energy',
+            #'*_strain_energy',
         ]
         op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug,
                             exclude_results=exclude_results,
@@ -117,7 +117,7 @@ class TestOP2Writer(unittest.TestCase):
                             )
 
         op2w = OP2Writer(op2)
-        op2w.write_op2(op2_filename_out, obj=op2, is_mag_phase=False)
+        op2w.write_op2(op2_filename_out, obj=op2,) #is_mag_phase=False)
         op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out)
         op2.assert_op2_equal(op2b,
                              skip_results=['params', ],
@@ -137,7 +137,7 @@ class TestOP2Writer(unittest.TestCase):
         op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug)
 
         op2w = OP2Writer(op2)
-        op2w.write_op2(op2_filename_out, obj=op2, is_mag_phase=False)
+        op2w.write_op2(op2_filename_out, obj=op2) #, is_mag_phase=False)
         op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out)
         op2.assert_op2_equal(op2b,
                              skip_results=['params', ],
@@ -157,7 +157,7 @@ class TestOP2Writer(unittest.TestCase):
         op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug)
 
         op2w = OP2Writer(op2)
-        op2w.write_op2(op2_filename_out, obj=op2, is_mag_phase=False)
+        op2w.write_op2(op2_filename_out, obj=op2) #, is_mag_phase=False)
         op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out)
         op2.assert_op2_equal(op2b,
                              skip_results=['params', ],
@@ -187,7 +187,7 @@ class TestOP2Writer(unittest.TestCase):
                             #include_results='stress',
                             )
         op2w = OP2Writer(op2)
-        op2w.write_op2(op2_filename_out, obj=op2, is_mag_phase=False)
+        op2w.write_op2(op2_filename_out, obj=op2) #, is_mag_phase=False)
         op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out)
         op2.assert_op2_equal(op2b,
                              skip_results=['params', ],
@@ -219,9 +219,9 @@ class TestOP2Writer(unittest.TestCase):
                             #include_results='element_forces',
                             #include_results='stress',
                             )
-        print(op2.get_op2_stats(short=True))
+        str(op2.get_op2_stats(short=True))
         op2w = OP2Writer(op2)
-        op2w.write_op2(op2_filename_out, obj=op2, is_mag_phase=False)
+        op2w.write_op2(op2_filename_out, obj=op2) #, is_mag_phase=False)
         op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out)
         op2.assert_op2_equal(op2b,
                              skip_results=['params', ],

@@ -248,7 +248,7 @@ class RealEigenvalues(BaseScalarObject):
         load_set = 0
         #print(self.code_information())
 
-        print(title, len(title))
+        #print(title, len(title))
         ftable3 = b'i' * 50 + b'128s 128s 128s'
         field6 = 0
         field7 = 0

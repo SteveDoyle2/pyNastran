@@ -392,7 +392,7 @@ def write_card(op2, op2_ascii, obj, name, pids, spack, endian):
             data = [pid, prop.mid, prop.cid, location,
                     0, 0, #prop.t, prop.csopt, # unsupported NX
                     0, 0, 0, 0, 0]
-            print(name, data)
+            #print(name, data)
             op2_ascii.write('  pid=%s mid=%s data=%s\n' % (pid, prop.mid, data[2:]))
             op2.write(spack.pack(*data))
     elif name == 'PROD':
@@ -426,7 +426,7 @@ def write_card(op2, op2_ascii, obj, name, pids, spack, endian):
             #pid, mid, location, csopt, null_a, null_b, null_c = out
             csopt = 0
             data = [pid, prop.mid, location, csopt, 0, 0, 0]
-            print(name, data)
+            #print(name, data)
             op2_ascii.write('  pid=%s mid=%s data=%s\n' % (pid, prop.mid, data[2:]))
             op2.write(spack.pack(*data))
     elif name == 'PMASS':

@@ -152,6 +152,10 @@ class OP2(OP2_Scalar):
         self.ask = False
         self.post = None
 
+    def __del__(self):
+        if hasattr(self, 'h5_file') and self.h5_file is not None:
+            self.h5_file.close()
+
     def object_attributes(self, mode='public', keys_to_skip=None):
         # type: (str, Optional[List[str]]) -> List[str]
         """

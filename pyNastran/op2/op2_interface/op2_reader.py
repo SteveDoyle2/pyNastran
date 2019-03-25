@@ -190,7 +190,7 @@ class OP2Reader(object):
             if self.is_debug_file:
                 self.binary_debug.write('%r\n' % data)
             version = data.strip()
-            version_str = version.decode(self._encoding)
+            #version_str = version.decode(self._encoding)
             #print('version = %r' % version_str)
 
             if macro_version == 'nastran':
@@ -434,7 +434,7 @@ class OP2Reader(object):
         data = self._read_record()
         #self.show_data(data)
 
-        ints = unpack(self._endian + b'7i', data)
+        unused_ints = unpack(self._endian + b'7i', data)
         #print('date?  = (?, month, day, ?, ?, ?) =', ints)
 
         self.read_markers([-2, 1, 0])
@@ -470,7 +470,7 @@ class OP2Reader(object):
             while n0 < ndata:
                 #print("--------")
                 #print('n0=%s ndata=%s' % (n0, ndata))
-                eid, nactive_grid, gei, address1, address2 = unpack(self._endian + b'2i f 2i', data[n0:n0+20])
+                eid, unused_nactive_grid, gei, address1, address2 = unpack(self._endian + b'2i f 2i', data[n0:n0+20])
                 eids.append(eid)
                 ge.append(gei)
                 address.append([address1, address2])
@@ -651,7 +651,7 @@ class OP2Reader(object):
             2 : '???',
         }
         #1. Coordinate system type:
-        #- 1 = unknown (seriously?)
+        #- 0 = unknown (seriously?)
         #- 1 = rectangular
         #- 2 = cylindrical
         #- 3 = spherical
@@ -673,9 +673,8 @@ class OP2Reader(object):
             itable -= 1
         markers = self.get_nmarkers(1, rewind=False)
 
-        if not is_geometry:
+        if not is_geometry or self.read_mode == 1:
             return
-
         nblocks = len(blocks)
         if nblocks == 1:
             # vectorized
@@ -715,7 +714,7 @@ class OP2Reader(object):
 
                 origin = valuesi[:3]
                 i = valuesi[3:6]
-                j = valuesi[6:9]
+                unused_j = valuesi[6:9]
                 k = valuesi[9:12]
                 zaxis = origin + k
                 xzplane = origin + i
@@ -728,6 +727,10 @@ class OP2Reader(object):
                                         comment='')
                 elif coord_type_int == 2:
                     self.op2.add_cord2c(cid, rid=0,
+                                        origin=origin, zaxis=zaxis, xzplane=xzplane,
+                                        comment='')
+                elif coord_type_int == 3:
+                    self.op2.add_cord2s(cid, rid=0,
                                         origin=origin, zaxis=zaxis, xzplane=xzplane,
                                         comment='')
                 else:  # pragma: no cover
@@ -751,7 +754,7 @@ class OP2Reader(object):
                 values = np.frombuffer(blocks[1], dtype='float32').reshape(ncoords // 4, 12)
                 #print('floats =', floats.tolist())
             for intsi, valuesi in zip(ints, values):
-                cid, cid_type, int_index, double_index = intsi
+                cid, cid_type, unused_int_index, unused_double_index = intsi
                 assert len(valuesi) == 12, valuesi
 
                 origin = valuesi[:3]
@@ -772,6 +775,8 @@ class OP2Reader(object):
         else:  # pragma: no cover
             raise NotImplementedError('nCSTM blocks=%s (not 1 or 2)' % nblocks)
 
+        #print(self.op2.coords)
+        #asdf
 
         #while i < len(ints):
             #break
@@ -1096,7 +1101,7 @@ class OP2Reader(object):
         ints = np.frombuffer(header_data, op2.idtype)
 
         #seid = ints[0] # ??? is this a table number>
-        nnodes = ints[1]
+        unused_nnodes = ints[1]
 
         if self.is_debug_file:
             self.binary_debug.write('---markers = [-1]---\n')
@@ -1130,7 +1135,7 @@ class OP2Reader(object):
                 iints = [0, 1, 8, 9]
                 #ifloats = [2, 3, 4, 5, 6, 7]
                 idoubles = [1, 2, 3]
-                izero = [1, 8, 9]
+                unused_izero = [1, 8, 9]
 
                 #print('ints:')
                 #print(ints)
@@ -1455,9 +1460,9 @@ class OP2Reader(object):
         # (104, 0, 103, 412, 0, 0, 103) - output.op2     PCOMPT  (return at end)
         data_header = self._read_record()
         self.show_data(data_header, types='ifsd', endian=None)
-        a, b, n4a, n5, e, f, n4b = Struct(b'<7i').unpack(data_header)
+        a, bi, n4a, n5, e, f, n4b = Struct(b'<7i').unpack(data_header)
         self.log.debug('a=%s b=%s n4a=%s n5=%s e=%s f=%s n4b=%s' % (
-            a, b, n4a, n5, e, f, n4b))
+            a, bi, n4a, n5, e, f, n4b))
         #assert n4a == n4b, 'n4a=%s n4b=%s' % (n4a, n4b)
 
         if table_name == b'PCOMPT':

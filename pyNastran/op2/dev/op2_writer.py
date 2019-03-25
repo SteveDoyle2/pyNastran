@@ -19,6 +19,14 @@ from .writer.ept import write_ept
 from .writer.mpt import write_mpt
 
 
+class TrashWriter(object):
+    def __init__(self, *args, **kwargs):
+        pass
+    def write(self, data):
+        pass
+    def close(self):
+        pass
+
 def make_stamp(title, today=None):
     if 'Title' is None:
         title = ''
@@ -59,7 +67,7 @@ class OP2Writer(OP2_F06_Common):
         """If this class is inherited, the PAGE stamp may be overwritten"""
         return make_stamp(title, today)
 
-    def write_op2(self, op2_outname, obj=None, is_mag_phase=False,
+    def write_op2(self, op2_outname, obj=None, #is_mag_phase=False,
                   post=-1, endian=b'<'):
         """
         Writes an OP2 file based on the data we have stored in the object
@@ -70,10 +78,10 @@ class OP2Writer(OP2_F06_Common):
             the name of the F06 file to write
         obj : OP2(); default=None -> self
             the OP2 object if you didn't inherit the class
-        is_mag_phase : bool; default=False
-            should complex data be written using Magnitude/Phase
-            instead of Real/Imaginary (default=False; Real/Imag)
-            Real objects don't use this parameter.
+        #is_mag_phase : bool; default=False
+            #should complex data be written using Magnitude/Phase
+            #instead of Real/Imaginary (default=False; Real/Imag)
+            #Real objects don't use this parameter.
         """
         #print('writing %s' % op2_outname)
         struct_3i = Struct(endian + b'3i')
@@ -82,7 +90,8 @@ class OP2Writer(OP2_F06_Common):
             obj = self
         if isinstance(op2_outname, str):
             fop2 = open(op2_outname, 'wb')
-            fop2_ascii = open(op2_outname + '.txt', 'w')
+            #fop2_ascii = open(op2_outname + '.txt', 'w')
+            fop2_ascii = TrashWriter()
             #print('op2 out = %r' % op2_outname)
         else:
             assert isinstance(op2_outname, file), 'type(op2_outname)= %s' % op2_outname
@@ -131,14 +140,11 @@ class OP2Writer(OP2_F06_Common):
         #write_dynamic(fop2, fop2_ascii, obj)
         if obj.grid_point_weight.reference_point is not None:
             if hasattr(obj.grid_point_weight, 'write_op2'):
-                print("grid_point_weight")
                 obj.grid_point_weight.write_op2(fop2, endian=endian)
             else:
-                print("*op2 - grid_point_weight not written")
-
+                raise NotImplementedError("*op2 - grid_point_weight not written")
 
         #is_mag_phase = False
-
         # we writte all the other tables
         # nastran puts the tables in order of the Case Control deck,
         # but we're lazy so we just hardcode the order
@@ -152,7 +158,8 @@ class OP2Writer(OP2_F06_Common):
             ##self.show(100)
             #data = self._read_record()
 
-        self._write(obj, fop2, fop2_ascii, struct_3i, endian)
+        case_count = self._write(obj, fop2, fop2_ascii, struct_3i, endian)
+        return case_count
 
     def _write(self, obj, fop2, fop2_ascii, struct_3i, endian):
         res_categories2 = defaultdict(list)
@@ -163,6 +170,7 @@ class OP2Writer(OP2_F06_Common):
             'TOUGV1',
             'OAGATO1', 'OAGCRM1', 'OAGNO1', 'OAGPSD1', 'OAGRMS1',
             'OAGATO2', 'OAGCRM2', 'OAGNO2', 'OAGPSD2', 'OAGRMS2',
+            'OUG1',
 
             'OQG1',
             'OQGV1',
@@ -220,7 +228,7 @@ class OP2Writer(OP2_F06_Common):
             assert table_name in table_order, table_name
 
         total_case_count = 0
-        pretables = ['LAMA', 'BLAMA']
+        pretables = ['LAMA', 'BLAMA', 'CLAMA']
         for unused_title, eigenvalue in obj.eigenvalues.items():
             res_categories2[eigenvalue.table_name].append(eigenvalue)
 
@@ -271,7 +279,7 @@ class OP2Writer(OP2_F06_Common):
                 fop2_ascii.write('footer2 = %s\n' % header)
                 new_result = False
 
-            assert case_count > 0, case_count
+            #assert case_count > 0, case_count
             if case_count:
                 #print(result.table_name, itable)
                 #print('res_category_name=%s case_count=%s'  % (res_category_name, case_count))
@@ -283,11 +291,12 @@ class OP2Writer(OP2_F06_Common):
                 total_case_count += case_count
             total_case_count += case_count
 
-        if total_case_count == 0:
-            raise FatalError('total_case_count = 0')
+        #if total_case_count == 0:
+            #raise FatalError('total_case_count = 0')
         # close off the op2
         footer = [4, 0, 4]
         fop2.write(struct_3i.pack(*footer))
         fop2_ascii.write('close_b = %s\n' % footer)
         fop2.close()
         fop2_ascii.close()
+        return total_case_count

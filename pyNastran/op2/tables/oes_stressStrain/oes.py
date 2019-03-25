@@ -3326,11 +3326,11 @@ class OES(OP2Common):
                     ints = frombuffer(data, dtype=self.idtype)
                     ints1 = ints.reshape(nelements, 9)
                     eids = ints1[:, 0] // 10
-                    print(eids)
+                    #print(eids)
                     eids = np.vstack([eids, eids]).T.ravel()
-                    print(eids.shape)
-                    print(eids)
-                    print(obj.element)
+                    #print(eids.shape)
+                    #print(eids)
+                    #print(obj.element)
                     assert eids.min() > 0, eids.min()
                     obj.element[itotal:itotal2, 0] = eids
 

@@ -1299,7 +1299,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'NOCOMPS', ]
         float_words_1 = [
             b'K6ROT', b'WTMASS', b'SNORM', b'PATVER', b'MAXRATIO', b'EPSHT',
-            b'SIGMA', b'TABS', ]
+            b'SIGMA', b'TABS', b'EPPRT']
         str_words_1 = [
             b'POSTEXT', b'PRTMAXIM', b'AUTOSPC', b'OGEOM', b'PRGPST',
             b'RESVEC', b'RESVINER', b'ALTRED', b'OGPS', b'OIBULK', b'OMACHPR',
@@ -1437,7 +1437,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         if load_as_h5:
             h5_file = None
             import h5py
-            self.op2_reader.h5_file = h5py.File(self.h5_filename, 'w')
+            self.h5_file = h5py.File(self.h5_filename, 'w')
+            self.op2_reader.h5_file = self.h5_file
 
         self._count = 0
         if self.read_mode == 1:

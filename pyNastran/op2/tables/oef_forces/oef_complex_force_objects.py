@@ -1742,11 +1742,11 @@ class ComplexCBarForceArray(ComplexForceObject):
         #self.element_type = 'CBAR'
         #self.cid = {}  # gridGauss
 
-        if is_sort1:
-            #sort1
-            pass
-        else:
-            raise NotImplementedError('SORT2')
+        #if is_sort1:
+            ##sort1
+            #pass
+        #else:
+            #raise NotImplementedError('SORT2')
 
     def get_headers(self):
         headers = ['bending_moment_1a', 'bending_moment_2a',
@@ -2727,11 +2727,11 @@ class ComplexCBendForceArray(ScalarObject):  # 69-CBEND
         return page_num - 1
 
 
-class ComplexSolidPressureForceArray(ScalarObject):
+class ComplexSolidPressureForceArray(ComplexForceObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         self.element_type = None
         self.element_name = None
-        ScalarObject.__init__(self, data_code, isubcase)
+        ComplexForceObject.__init__(self, data_code, isubcase)
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
         #self.ntimes = 0  # or frequency/mode
@@ -2953,14 +2953,127 @@ class ComplexSolidPressureForceArray(ScalarObject):
             page_num += 1
         return page_num - 1
 
+    def write_op2(self, op2, op2_ascii, itable, new_result, date,
+                  is_mag_phase=False, endian='>'):
+        """writes an OP2"""
+        import inspect
+        from struct import Struct, pack
+        frame = inspect.currentframe()
+        call_frame = inspect.getouterframes(frame, 2)
+        op2_ascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
 
-class ComplexCBushForceArray(ScalarObject):
+        if itable == -1:
+            self._write_table_header(op2, op2_ascii, date)
+            itable = -3
+
+        eids = self.element
+
+        # table 4 info
+        #ntimes = self.data.shape[0]
+        #nnodes = self.data.shape[1]
+        nelements = self.data.shape[1]
+
+        # 21 = 1 node, 3 principal, 6 components, 9 vectors, 2 p/ovm
+        #ntotal = ((nnodes * 21) + 1) + (nelements * 4)
+
+        ntotali = self.num_wide
+        ntotal = ntotali * nelements
+
+        device_code = self.device_code
+        op2_ascii.write('  ntimes = %s\n' % self.ntimes)
+
+        eids_device = self.element * 10 + self.device_code
+
+        if self.is_sort1:
+            struct1 = Struct(endian + b'i 8s13f')
+        else:
+            raise NotImplementedError('SORT2')
+
+        op2_ascii.write('nelements=%i\n' % nelements)
+
+        etypei = self.element_type
+        if etypei == 76:
+            ename = b'HEXPR'
+        elif etypei == 77:
+            ename = b'PENPR'
+        elif etypei == 78:
+            ename = b'TETPR'
+        else:
+            raise NotImplementedError(self)
+        etypeb = self.element_type#.encode('ascii')
+        for itime in range(self.ntimes):
+            self._write_table_3(op2, op2_ascii, new_result, itable, itime)
+
+            # record 4
+            itable -= 1
+            header = [4, itable, 4,
+                      4, 1, 4,
+                      4, 0, 4,
+                      4, ntotal, 4,
+                      4 * ntotal]
+            op2.write(pack('%ii' % len(header), *header))
+            op2_ascii.write('r4 [4, 0, 4]\n')
+            op2_ascii.write('r4 [4, %s, 4]\n' % (itable))
+            op2_ascii.write('r4 [4, %i, 4]\n' % (4 * ntotal))
+
+            ax = self.data[itime, :, 0]
+            ay = self.data[itime, :, 0]
+            az = self.data[itime, :, 0]
+            vx = self.data[itime, :, 0]
+            vy = self.data[itime, :, 0]
+            vz = self.data[itime, :, 0]
+            pressure = self.data[itime, :, 0]
+
+            for eid, eid_device, axi, ayi, azi, vxi, vyi, vzi, pressurei in zip(
+                    eids, eids_device, ax, ay, az, vx, vy, vz, pressure):
+                out = write_imag_floats_13e([axi, ayi, azi, vxi, vyi, vzi, pressurei], is_mag_phase)
+                [saxr, sayr, sazr, svxr, svyr, svzr, spressurer,
+                 saxi, sayi, sazi, svxi, svyi, svzi, spressurei] = out
+                #'       1000    HEXPR      1.582050E-08    5.505425E+06    2.598164E-09    -8.884337E-10  -4.806934E+04   1.046571E-10   9.968034E+01'
+                #'                         -1.116439E-08   -6.040572E+05    1.315160E-09    -1.258955E-09  -4.381078E+05  -2.067553E-10'
+                data = [
+                    eid_device, ename,
+                    axi.real, ayi.real, azi.real, vxi.real, vyi.real, vzi.real, pressurei.real,
+                    axi.imag, ayi.imag, azi.imag, vxi.imag, vyi.imag, vzi.imag,
+                ]
+                op2_ascii.write('      %8i %8s %-13s %-13s %-13s %-13s %-13s %-13s %s\n'
+                                '      %8s %8s %-13s %-13s %-13s %-13s %-13s %s\n\n'
+                                % (eid, etypei, saxr, sayr, sazr, svxr, svyr, svzr, spressurer,
+                                   '', '',      saxi, sayi, sazi, svxi, svyi, svzi))
+                op2.write(struct1.pack(*data))
+
+            #for eid, eid_device, fxi, fyi, fzi, mxi, myi, mzi in zip(eids, eids_device, fx, fy, fz, mx, my, mz):
+                #data = [
+                    #eid_device,
+                    #fxi.real, fyi.real, fzi.real, mxi.real, myi.real, mzi.real,
+                    #fxi.imag, fyi.imag, fzi.imag, mxi.imag, myi.imag, mzi.imag,
+                #]
+
+                #vals = (fxi, fyi, fzi, mxi, myi, mzi)
+                #vals2 = write_imag_floats_13e(vals, is_mag_phase)
+                #(fxir, fyir, fzir, mxir, myir, mzir,
+                 #fxii, fyii, fzii, mxii, myii, mzii) = vals2
+                #op2_ascii.write('0%26i   %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
+                               #' %26s   %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                                   #eid, fxir, fyir, fzir, mxir, myir, mzir,
+                                   #'', fxii, fyii, fzii, mxii, myii, mzii))
+                #op2.write(struct1.pack(*data))
+
+            itable -= 1
+            header = [4 * ntotal,]
+            op2.write(pack('i', *header))
+            op2_ascii.write('footer = %s\n' % header)
+            new_result = False
+        return itable
+
+
+class ComplexCBushForceArray(ComplexForceObject):
     def get_headers(self):
         headers = ['fx', 'fy', 'fz', 'mx', 'my', 'mz']
         return headers
 
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        ScalarObject.__init__(self, data_code, isubcase)
+        ComplexForceObject.__init__(self, data_code, isubcase)
 
         self.result_flag = 0
         #self.code = [self.format_code, self.sort_code, self.s_code]
@@ -3213,6 +3326,90 @@ class ComplexCBushForceArray(ScalarObject):
             f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num
+
+    def write_op2(self, op2, op2_ascii, itable, new_result, date,
+                  is_mag_phase=False, endian='>'):
+        """writes an OP2"""
+        import inspect
+        from struct import Struct, pack
+        frame = inspect.currentframe()
+        call_frame = inspect.getouterframes(frame, 2)
+        op2_ascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
+
+        if itable == -1:
+            self._write_table_header(op2, op2_ascii, date)
+            itable = -3
+
+        eids = self.element
+
+        # table 4 info
+        #ntimes = self.data.shape[0]
+        #nnodes = self.data.shape[1]
+        nelements = self.data.shape[1]
+
+        # 21 = 1 node, 3 principal, 6 components, 9 vectors, 2 p/ovm
+        #ntotal = ((nnodes * 21) + 1) + (nelements * 4)
+
+        ntotali = self.num_wide
+        ntotal = ntotali * nelements
+
+        device_code = self.device_code
+        op2_ascii.write('  ntimes = %s\n' % self.ntimes)
+
+        eids_device = self.element * 10 + self.device_code
+
+        if self.is_sort1:
+            struct1 = Struct(endian + b'i 12f')
+        else:
+            raise NotImplementedError('SORT2')
+
+        op2_ascii.write('nelements=%i\n' % nelements)
+
+        for itime in range(self.ntimes):
+            self._write_table_3(op2, op2_ascii, new_result, itable, itime)
+
+            # record 4
+            itable -= 1
+            header = [4, itable, 4,
+                      4, 1, 4,
+                      4, 0, 4,
+                      4, ntotal, 4,
+                      4 * ntotal]
+            op2.write(pack('%ii' % len(header), *header))
+            op2_ascii.write('r4 [4, 0, 4]\n')
+            op2_ascii.write('r4 [4, %s, 4]\n' % (itable))
+            op2_ascii.write('r4 [4, %i, 4]\n' % (4 * ntotal))
+
+            fx = self.data[itime, :, 0]
+            fy = self.data[itime, :, 1]
+            fz = self.data[itime, :, 2]
+            mx = self.data[itime, :, 3]
+            my = self.data[itime, :, 4]
+            mz = self.data[itime, :, 5]
+
+            for eid, eid_device, fxi, fyi, fzi, mxi, myi, mzi in zip(eids, eids_device, fx, fy, fz, mx, my, mz):
+                data = [
+                    eid_device,
+                    fxi.real, fyi.real, fzi.real, mxi.real, myi.real, mzi.real,
+                    fxi.imag, fyi.imag, fzi.imag, mxi.imag, myi.imag, mzi.imag,
+                ]
+
+                vals = (fxi, fyi, fzi, mxi, myi, mzi)
+                vals2 = write_imag_floats_13e(vals, is_mag_phase)
+                (fxir, fyir, fzir, mxir, myir, mzir,
+                 fxii, fyii, fzii, mxii, myii, mzii) = vals2
+                op2_ascii.write('0%26i   %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
+                               ' %26s   %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                                   eid, fxir, fyir, fzir, mxir, myir, mzir,
+                                   '', fxii, fyii, fzii, mxii, myii, mzii))
+                op2.write(struct1.pack(*data))
+
+            itable -= 1
+            header = [4 * ntotal,]
+            op2.write(pack('i', *header))
+            op2_ascii.write('footer = %s\n' % header)
+            new_result = False
+        return itable
 
 class ComplexCBeamForceVUArray(ScalarObject):  # 191-VUBEAM
     """

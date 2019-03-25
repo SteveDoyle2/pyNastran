@@ -157,8 +157,10 @@ class OEF(OP2Common):
             prefix = 'RAFEATC.'
         elif self.table_name in [b'DOEF1']:
             assert self.table_code in [4], self.code_information()
-            if self.thermal == 2:
+            if self.thermal == 0:
                 postfix = '_abs'
+            elif self.thermal == 2:
+                postfix = '_abs'  # Scaled response spectra ABS
             elif self.thermal == 8:
                 postfix = '_nrl'  # Scaled response spectra NRL
             else:
@@ -3309,7 +3311,7 @@ class OEF(OP2Common):
             # TODO: vectorize
             ntotal = 52  # 13*4
             nelements = ndata // ntotal
-            result_name = 'cbush_force'
+            #result_name = prefix + 'cbush_force' + postfix
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, ComplexCBushForceArray)
             if auto_return:

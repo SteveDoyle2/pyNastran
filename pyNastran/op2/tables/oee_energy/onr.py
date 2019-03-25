@@ -183,6 +183,8 @@ class ONR(OP2Common):
         #assert len(datai) == 8, len(datai)
         #print(4 * (field_num - 1), 4 * (field_num + 1))
         #element_name, = self.struct_8s.unpack(data[24:32])  # changed on 11/30/2015; was this for a long time...
+
+        #self.show_data(data[:28])
         element_name, = self.struct_8s.unpack(data[20:28])
         #print("element_name = %s" % (element_name))
         try:
@@ -450,7 +452,6 @@ class ONR(OP2Common):
             result_name = 'rbe3_strain_energy'
         else:
             #result_name = 'chexa8fd_strain_energy'
-
             raise NotImplementedError('element_name=%r' % (
                 self.data_code['element_name']))
         prefix, postfix = self.get_onr_prefix_postfix()

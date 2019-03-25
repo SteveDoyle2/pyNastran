@@ -1,10 +1,11 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import integer_types, binary_type
+from six import integer_types, string_types, binary_type
 import numpy as np
 
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
 from pyNastran.f06.f06_formatting import _eigenvalue_header, write_float_13e
+from pyNastran.op2.op2_interface.write_utils import set_table3_field
 
 SORT2_TABLE_NAME_MAP = {
     'ONRGY2' : 'ONRGY1',
@@ -431,6 +432,232 @@ class RealStrainEnergyArray(ScalarObject):
             break
         return page_num - 1
 
+    def write_op2(self, op2, op2_ascii, itable, new_result, date,
+                  is_mag_phase=False, endian='>'):
+        """writes an OP2"""
+        import inspect
+        from struct import Struct, pack
+        frame = inspect.currentframe()
+        call_frame = inspect.getouterframes(frame, 2)
+        op2_ascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
+
+        if itable == -1:
+            self._write_table_header(op2, op2_ascii, date)
+            itable = -3
+
+        ntotali = self.num_wide
+
+        device_code = self.device_code
+        op2_ascii.write('  ntimes = %s\n' % self.ntimes)
+
+        if self.is_sort1:
+            struct1 = Struct(endian + b'i 3f')
+        else:
+            raise NotImplementedError('SORT2')
+
+        for itime in range(self.ntimes):
+            eids = self.element[itime, :]
+            nelements = len(eids)
+            ntotal = ntotali * nelements
+            op2_ascii.write('nelements=%i\n' % nelements)
+
+            eids_device = eids * 10 + self.device_code
+            self._write_table_3(op2, op2_ascii, new_result, itable, itime)
+
+            # record 4
+            itable -= 1
+            header = [4, itable, 4,
+                      4, 1, 4,
+                      4, 0, 4,
+                      4, ntotal, 4,
+                      4 * ntotal]
+            op2.write(pack('%ii' % len(header), *header))
+            op2_ascii.write('r4 [4, 0, 4]\n')
+            op2_ascii.write('r4 [4, %s, 4]\n' % (itable))
+            op2_ascii.write('r4 [4, %i, 4]\n' % (4 * ntotal))
+
+            energy = self.data[itime, :, 0]
+            percent = self.data[itime, :, 1]
+            density = self.data[itime, :, 2]
+            #print(eids_device)
+            for (eid, eid_device, energyi, percenti, densityi) in zip(eids, eids_device, energy, percent, density):
+                data = [eid_device, energyi, percenti, densityi]
+                #print(data)
+
+                #vals = (fxi, fyi, fzi, mxi, myi, mzi)
+                #vals2 = write_imag_floats_13e(vals, is_mag_phase)
+                #(fxir, fyir, fzir, mxir, myir, mzir,
+                 #fxii, fyii, fzii, mxii, myii, mzii) = vals2
+                #op2_ascii.write('0%26i   %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
+                               #' %26s   %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                                   #eid, fxir, fyir, fzir, mxir, myir, mzir,
+                                   #'', fxii, fyii, fzii, mxii, myii, mzii))
+                op2.write(struct1.pack(*data))
+
+            itable -= 1
+            header = [4 * ntotal,]
+            op2.write(pack('i', *header))
+            op2_ascii.write('footer = %s\n' % header)
+            new_result = False
+        return itable
+
+    def _write_table_3(self, op2, op2_ascii, new_result, itable, itime): #itable=-3, itime=0):
+        import inspect
+        from struct import pack
+        frame = inspect.currentframe()
+        call_frame = inspect.getouterframes(frame, 2)
+        op2_ascii.write('%s.write_table_3: %s\n' % (self.__class__.__name__, call_frame[1][3]))
+
+        #print('new_result=%s itable=%s' % (new_result, itable))
+        if new_result and itable != -3:
+            header = [
+                4, 146, 4,
+            ]
+        else:
+            header = [
+                4, itable, 4,
+                4, 1, 4,
+                4, 0, 4,
+                4, 146, 4,
+            ]
+        op2.write(pack(b'%ii' % len(header), *header))
+        op2_ascii.write('table_3_header = %s\n' % header)
+
+        approach_code = self.approach_code
+        table_code = self.table_code
+        isubcase = self.isubcase
+        element_name = ('%-8s' % self.element_name).encode('ascii')
+        #element_type = self.element_type
+        #assert isinstance(self.element_type, int), self.element_type
+
+        #[
+            #'aCode', 'tCode', 'element_type', 'isubcase',
+            #'???', '???', '???', 'load_set'
+            #'format_code', 'num_wide', 's_code', '???',
+            #'???', '???', '???', '???',
+            #'???', '???', '???', '???',
+            #'???', '???', '???', '???',
+            #'???', 'Title', 'subtitle', 'label']
+        #random_code = self.random_code
+        format_code = self.format_code
+        s_code = 0 # self.s_code
+        num_wide = self.num_wide
+        acoustic_flag = 0
+        thermal = 0
+        title = b'%-128s' % self.title.encode('ascii')
+        subtitle = b'%-128s' % self.subtitle.encode('ascii')
+        label = b'%-128s' % self.label.encode('ascii')
+        ftable3 = b'50i 128s 128s 128s'
+        oCode = 0
+        load_set = 0
+        #print(self.code_information())
+
+        ftable3 = b'i' * 50 + b'128s 128s 128s'
+        field6 = 0
+        field7 = 0
+        if 0:
+            pass
+        elif self.analysis_code == 1:
+            field5 = self.lsdvmns[itime]
+        elif self.analysis_code == 2:
+            field5 = self.modes[itime]
+            #field6 = self.eigns[itime]
+            #field7 = self.cycles[itime]
+            field5 = int(field5)
+            assert isinstance(field5, int), type(field5)
+            #assert isinstance(field6, float), type(field6)
+            #assert isinstance(field7, float), type(field7)
+            #ftable3 = set_table3_field(ftable3, 6, b'f') # field 6
+            #ftable3 = set_table3_field(ftable3, 7, b'f') # field 7
+        elif self.analysis_code == 5:
+            #try:
+            #print(self)
+            field5 = self.freq2s[itime]
+            #except AttributeError:  # pragma: no cover
+                #print(self)
+                #raise
+            ftable3 = set_table3_field(ftable3, 5, b'f') # field 5
+        elif self.analysis_code == 6:
+            #if hasattr(self, 'times'):
+            try:
+                field5 = self.times[itime]
+            ##elif hasattr(self, 'dts'):
+                ##field5 = self.times[itime]
+            #else:  # pragma: no cover
+            except:
+                print(self.get_stats())
+                raise NotImplementedError('cant find times or dts on analysis_code=8')
+            ftable3 = set_table3_field(ftable3, 5, b'f') # field 5
+        #elif self.analysis_code == 7:  # pre-buckling
+            #field5 = self.loadIDs[itime] # load set number
+        #elif self.analysis_code == 8:  # post-buckling
+            #field5 = self.lsdvmns[itime] # load set number
+            #if hasattr(self, 'eigns'):
+                #field6 = self.eigns[itime]
+            #elif hasattr(self, 'eigrs'):
+                #field6 = self.eigrs[itime]
+            #else:  # pragma: no cover
+                #print(self.get_stats())
+                #raise NotImplementedError('cant find eigns or eigrs on analysis_code=8')
+            #assert isinstance(field6, float_types), type(field6)
+            #ftable3 = set_table3_field(ftable3, 6, b'f') # field 6
+        elif self.analysis_code == 9:  # complex eigenvalues
+            field5 = self.modes[itime]
+            #if hasattr(self, 'eigns'):
+                #field6 = self.eigns[itime]
+            #elif hasattr(self, 'eigrs'):
+                #field6 = self.eigrs[itime]
+            #else:  # pragma: no cover
+                #print(self.get_stats())
+                #raise NotImplementedError('cant find eigns or eigrs on analysis_code=8')
+            #ftable3 = set_table3_field(ftable3, 6, b'f') # field 6
+            #field7 = self.eigis[itime]
+            #ftable3 = set_table3_field(ftable3, 7, b'f') # field 7
+            assert isinstance(field5, int), type(field5)
+        elif self.analysis_code == 10:  # nonlinear statics
+            field5 = self.loadFactors[itime]
+            ftable3 = set_table3_field(ftable3, 5, b'f') # field 5; load step
+        #elif self.analysis_code == 11:  # old geometric nonlinear statics
+            #field5 = self.loadIDs[itime] # load set number
+        else:
+            raise NotImplementedError(self.analysis_code)
+        # we put these out of order, so we can set the element_name field
+        # (that spans 2 fields) in the right order
+        ftable3 = set_table3_field(ftable3, 7, b'4s') # field 7
+        ftable3 = set_table3_field(ftable3, 6, b'4s') # field 7
+        element_name0 = element_name[:4]
+        element_name1 = element_name[4:]
+        print(str(self))
+        table3 = [
+            approach_code, table_code, 0, isubcase, field5,
+            element_name0, element_name1, load_set, format_code, num_wide,
+            s_code, acoustic_flag, 0, 0, 0,
+            0, 0, 0, 0, 0,
+            0, 0, thermal, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0,
+            title, subtitle, label,
+        ]
+        assert table3[22] == thermal
+
+        n = 0
+        for v in table3:
+            if isinstance(v, (int, float, np.float32)):
+                n += 4
+            elif isinstance(v, string_types):
+                #print('%i %r' % (len(v), v))
+                n += len(v)
+            else:
+                #print('write_table_3', v)
+                n += len(v)
+        assert n == 584, n
+        data = [584] + table3 + [584]
+        fmt = b'i' + ftable3 + b'i'
+        #f.write(pack(fascii, '%s header 3c' % self.table_name, fmt, data))
+        op2_ascii.write('%s header 3c = %s\n' % (self.table_name, data))
+
+        op2.write(pack(fmt, *data))
+
 
 class ComplexStrainEnergyArray(ScalarObject):
     """
@@ -622,7 +849,7 @@ class ComplexStrainEnergyArray(ScalarObject):
                     t2 = table.data[itime, ie, :]
                     (energyi1r, engery1i, percenti1, densityi1) = t1
                     (energyi2r, engery2i, percenti2, densityi2) = t2
-                    print(t1, t2)
+                    #print(t1, t2)
                     if np.isnan(densityi1) or not np.isfinite(densityi1):
                         if not np.array_equal(t1[:2], t2[:2]):
                             msg += (

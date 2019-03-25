@@ -398,7 +398,7 @@ class RealHeatFluxVU3DArray(ScalarObject):
             # [xgrad, ygrad, zgrad, xflux, yflux, zflux]
             #nids = self.int_data[itime, :, 0]
             vugrids = self.int_data[itime, :, 0]
-            print(vugrids)
+            #print(vugrids)
             xgrad = self.data[itime, :, 0]
             ygrad = self.data[itime, :, 1]
             zgrad = self.data[itime, :, 2]

@@ -129,7 +129,11 @@ class ForceObject(ScalarObject):
             ftable3 = set_table3_field(ftable3, 6, b'f') # field 6
             ftable3 = set_table3_field(ftable3, 7, b'f') # field 7
         elif self.analysis_code == 5:
-            field5 = self.freqs[itime]
+            try:
+                field5 = self.freqs[itime]
+            except AttributeError:  # pragma: no cover
+                print(self)
+                raise
             ftable3 = set_table3_field(ftable3, 5, b'f') # field 5
         elif self.analysis_code == 6:
             if hasattr(self, 'times'):

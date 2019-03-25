@@ -42,7 +42,7 @@ def write_geom4(op2, op2_ascii, obj, endian=b'<'):
             loads_by_type[spcadd.type].append(spcadd)
     for unused_id, mpcadds in obj.mpcadds.items():
         for mpcadd in mpcadds:
-            loads_by_type[spcadd.type].append(mpcadd)
+            loads_by_type[mpcadd.type].append(mpcadd)
 
     for unused_load_id, load in obj.tempds.items():
         loads_by_type[load.type].append(load)
@@ -105,7 +105,7 @@ def write_card(op2, op2_ascii, card_type, cards, endian):
     if card_type == 'MPC':
         key = (4901, 49, 17)
         nfields = 7
-        print(cards)
+        #print(cards)
         aaa
         spack = Struct(endian + b'3i 4f')
         nbytes = write_header(card_type, nfields, ncards, key, op2, op2_ascii)
