@@ -293,7 +293,7 @@ class AreaPickStyle(vtk.vtkInteractorStyleRubberBandZoom):  # works
             # numpy setdiff1d, so we don't show extra points
             pointsu = ugrid.GetPoints()
             output_data = ugrid.GetPoints().GetData()
-            points_array = numpy_support.vtk_to_numpy(output_data)  # yeah!
+            points_array = vtk_to_numpy(output_data)  # yeah!
 
             isort_nids = np.argsort(nids)
             nids = nids[isort_nids]

@@ -29,7 +29,7 @@ class HighlightObject(object):
         min_clip, max_clip = camera.GetClippingRange()
         settings = self.gui.settings
 
-        model_name = ''
+        model_name = 'main'
         data = {
             'font_size' : settings.font_size,
 

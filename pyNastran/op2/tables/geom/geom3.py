@@ -22,7 +22,7 @@ class GEOM3(GeomCommon):
 
     def _add_op2_rigid_element(self, elem):
         """helper method for op2"""
-        ntables = self.table_names.count('GEOM4') + self.table_names.count('GEOM4S')
+        ntables = self.table_names.count(b'GEOM4') + self.table_names.count(b'GEOM4S')
         eid = elem.eid
         allow_overwrites = (
             ntables > 1 and

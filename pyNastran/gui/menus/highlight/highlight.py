@@ -4,25 +4,31 @@ The highlight menu handles:
  - Preferences
 """
 from __future__ import print_function
-from math import log10, ceil
+#from math import log10, ceil
+import numpy as np
 
 #import PySide  # for local testing
 from qtpy import QtGui
 from qtpy.QtWidgets import (
     QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
-    QSpinBox, QDoubleSpinBox, QColorDialog, QLineEdit, QCheckBox, QComboBox)
-import vtk
+    QColorDialog)
+#import vtk
+from vtk.util.numpy_support import vtk_to_numpy
 
 from pyNastran.gui.utils.qt.pydialog import PyDialog, check_patran_syntax
-from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
+#from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
 from pyNastran.gui.menus.menu_utils import eval_float_from_string
-from pyNastran.gui.utils.qt.qelement_edit import QNodeEdit, QElementEdit, QNodeElementEdit
+from pyNastran.gui.utils.qt.qelement_edit import QNodeEdit, QElementEdit#, QNodeElementEdit
 
 from pyNastran.gui.styles.highlight_style import (
     create_vtk_selection_node_by_cell_ids,
-    create_vtk_selection_node_by_point_ids,
+    #create_vtk_selection_node_by_point_ids,
     extract_selection_node_from_grid_to_ugrid,
+    #create_surface_actor_from_grid_and_cell_ids,
 )
+from pyNastran.gui.utils.vtk.vtk_utils import (
+    create_unstructured_point_grid, numpy_to_vtk_points)
+
 class HighlightWindow(PyDialog):
     """
     +-----------+
@@ -44,8 +50,11 @@ class HighlightWindow(PyDialog):
 
         self._updated_highlight = False
 
+        self.actors = []
         self._default_font_size = data['font_size']
         self.model_name = data['model_name']
+        assert len(self.model_name) > 0, self.model_name
+
         #self._default_annotation_size = data['annotation_size'] # int
         #self.default_magnify = data['magnify']
 
@@ -77,12 +86,12 @@ class HighlightWindow(PyDialog):
         """creates the display window"""
         # Text Size
 
-        model_name = ''
+        model_name = self.model_name
         self.nodes_label = QLabel("Nodes:")
         self.nodes_edit = QNodeEdit(self, model_name, pick_style='area', tab_to_next=False)
 
         self.elements_label = QLabel("Elements:")
-        self.elements_edit = QNodeEdit(self, model_name, pick_style='area', tab_to_next=False)
+        self.elements_edit = QElementEdit(self, model_name, pick_style='area', tab_to_next=False)
 
         #-----------------------------------------------------------------------
         # Highlight Color
@@ -101,6 +110,7 @@ class HighlightWindow(PyDialog):
         #-----------------------------------------------------------------------
         # closing
         self.show_button = QPushButton("Show")
+        self.clear_button = QPushButton("Clear")
         self.close_button = QPushButton("Close")
 
     def create_layout(self):
@@ -127,6 +137,7 @@ class HighlightWindow(PyDialog):
         #grid2 = self.create_legend_layout()
         ok_cancel_box = QHBoxLayout()
         ok_cancel_box.addWidget(self.show_button)
+        ok_cancel_box.addWidget(self.clear_button)
         ok_cancel_box.addWidget(self.close_button)
 
         vbox = QVBoxLayout()
@@ -144,6 +155,7 @@ class HighlightWindow(PyDialog):
         self.nodes_edit.textChanged.connect(self.on_validate)
         self.elements_edit.textChanged.connect(self.on_validate)
         self.show_button.clicked.connect(self.on_show)
+        self.clear_button.clicked.connect(self.on_clear_actors)
         self.close_button.clicked.connect(self.on_close)
         # closeEvent
 
@@ -207,10 +219,8 @@ class HighlightWindow(PyDialog):
     #---------------------------------------------------------------------------
 
     def on_validate(self):
-        nodes, flag1 = check_patran_syntax(self.nodes_edit, pound=self._nodes_pound)
-        elements, flag2 = check_patran_syntax(self.elements_edit, pound=self._elements_pound)
-        print('%s nodes=%s' % (flag1, nodes))
-        print('%s elements=%s' % (flag2, elements))
+        unused_nodes, flag1 = check_patran_syntax(self.nodes_edit, pound=self._nodes_pound)
+        unused_elements, flag2 = check_patran_syntax(self.elements_edit, pound=self._elements_pound)
         if all([flag1, flag2]):
             self.out_data['clicked_ok'] = True
             return True
@@ -218,27 +228,63 @@ class HighlightWindow(PyDialog):
 
     def on_show(self):
         passed = self.on_validate()
+        self.parent().mouse_actions.get_grid_selected(self.model_name)
 
         if passed and self.win_parent is not None:
-            nodes, flag1 = check_patran_syntax(self.nodes_edit, pound=self._nodes_pound)
-            elements, flag2 = check_patran_syntax(self.elements_edit, pound=self._elements_pound)
+            nodes, unused_flag1 = check_patran_syntax(self.nodes_edit, pound=self._nodes_pound)
+            elements, unused_flag2 = check_patran_syntax(
+                self.elements_edit, pound=self._elements_pound)
+            if len(nodes) == 0 and len(elements) == 0:
+                return False
+            nodes_filtered = np.intersect1d(self.nodes, nodes)
+            elements_filtered = np.intersect1d(self.elements, elements)
+            nnodes = len(nodes_filtered)
+            nelements = len(elements_filtered)
+            if nnodes == 0 and nelements == 0:
+                return False
+            self.on_clear_actors()
 
-            import numpy as np
-            nodes_filtered = np.union1d(self.nodes, nodes)
-            elements_filtered = np.union1d(self.elements, elements)
+            actors = []
+            mouse_actions = self.parent().mouse_actions
+            grid = mouse_actions.get_grid_selected(self.model_name)
 
-            point_ids = np.searchsorted(self.nodes, nodes_filtered)
-            cell_ids = np.searchsorted(self.elements, elements_filtered)
-            selection_node_cells = create_vtk_selecion_node_by_cell_ids(cell_ids)
-            selection_node_points = create_vtk_selecion_node_by_cell_ids(cell_ids)
+            if nnodes:
+                point_ids = np.searchsorted(self.nodes, nodes_filtered)
+                output_data = grid.GetPoints().GetData()
+                points_array = vtk_to_numpy(output_data)  # yeah!
 
-            self.actor = actor
-            self.parent.vtk_interactor.Render()
+                point_array2 = points_array[point_ids, :]
+                points2 = numpy_to_vtk_points(point_array2)
 
+                ugrid = create_unstructured_point_grid(points2, nnodes)
+                actor = mouse_actions.create_highlighted_actor(ugrid, representation='points')
+                actors.append(actor)
 
+            if nelements:
+                cell_ids = np.searchsorted(self.elements, elements_filtered)
+
+                selection_node = create_vtk_selection_node_by_cell_ids(cell_ids)
+                ugrid = extract_selection_node_from_grid_to_ugrid(grid, selection_node)
+                actor = mouse_actions.create_highlighted_actor(ugrid, representation='wire')
+                actors.append(actor)
+
+            if actors:
+                self.actors = actors
+                renderer = self.parent().rend
+                for actor in actors:
+                    renderer.AddActor(actor)
+                renderer.Render()
         return passed
 
+    def on_clear_actors(self):
+        renderer = self.parent().rend
+        for actor in self.actors:
+            renderer.RemoveActor(actor)
+        self.actors = []
+        renderer.Render()
+
     def on_close(self):
+        self.on_clear_actors()
         self.out_data['close'] = True
         self.close()
 

@@ -842,16 +842,21 @@ def _lines_to_decks_main(lines, ilines, keep_enddata=True, consider_superelement
 
         elif flag == 2 or flag < 0:
             # we're in the case control deck right now and looking
-            # for a 'BEGIN BULK' or 'BEGIN SUPER=1' or 'BEGIN BULK AUXMODEL=200'
+            # for one of the following:
+            #  - 'BEGIN BULK'
+            #  - 'BEGIN SUPER=1'
+            #  - 'BEGIN BULK AUXMODEL=200'
+            #  - 'BEGIN BULK AFPM=300'
             #
-            # There's also a special case for 'BEGIN AUXMODEL=1',
-            # so we flag AUXCASE/AUXMODEL, and do some extra parsing
-            # in flag=3.
+            # There's a special case for 'BEGIN AUXMODEL=1', so we flag
+            # AUXCASE/AUXMODEL, and do some extra parsing in flag=3.
             #
             # flag=2 (BEGIN BULK)
             # flag=-1 (BEGIN SUPER=1)
             # flag=-2 (BEGIN SUPER=2)
             # ...
+            #
+            # We haven't yet tried to handle the AFPM special case
 
             # we have to handle the comment because we could incorrectly
             # flag the model as flipping to the BULK data section if we
@@ -919,13 +924,6 @@ def _lines_to_decks_main(lines, ilines, keep_enddata=True, consider_superelement
 
                 #print('%s: %s' % (flag_word, line.rstrip()))
                 current_lines.append(line.rstrip())
-            elif uline.startswith('AUXMODEL'):
-                # case control line
-                # AUXMODEL = 10
-                auxmodel_idi = int(uline.split('=')[1])
-                auxmodels_to_find.append(auxmodel_idi)
-                assert flag == 2
-                is_auxmodel = True
             elif uline.startswith('SUPER'):
                 # case control line
                 # SUPER = ALL
@@ -933,6 +931,21 @@ def _lines_to_decks_main(lines, ilines, keep_enddata=True, consider_superelement
                 #auxmodels_to_find.append(auxmodel_idi)
                 assert flag == 2
                 is_superelement = True
+            elif uline.startswith('AUXMODEL'):
+                # case control line
+                # AUXMODEL = 10
+                auxmodel_idi = int(uline.split('=')[1])
+                auxmodels_to_find.append(auxmodel_idi)
+                assert flag == 2
+                is_auxmodel = True
+            elif uline.startswith('AFPM'):
+                # case control line
+                # AFPM = 10
+                afpm_idi = int(uline.split('=')[1])
+                afpms_to_find.append(afpm_idi)
+                assert flag == 2
+                is_afpm = True
+
             #print('%s: %s' % (flag_word, line.rstrip()))
             current_lines.append(line.rstrip())
         elif flag == 3:
@@ -1015,8 +1028,19 @@ def _bulk_data_lines_extract(lines, ilines, bulk_data_lines, i,
     return bulk_data_ilines
 
 def _is_begin_bulk(uline):
-    """is this a 'BEGIN BULK', but not 'BEGIN BULK SUPER=2', or 'BEGIN BULK AUXMODEL=2'"""
-    return 'BULK' in uline and 'AUXMODEL' not in uline and 'SUPER' not in uline
+    """
+    is this a:
+      'BEGIN BULK'
+    but not:
+      'BEGIN BULK SUPER=2'
+      'BEGIN BULK AUXMODEL=2'
+      'BEGIN BULK AFPM=2'
+    """
+    is_begin_bulk = 'BULK' in uline and (
+        'AUXMODEL' not in uline and
+        'AFPM' not in uline and
+        'SUPER' not in uline)
+    return is_begin_bulk
 
 def _read_bulk_for_auxmodel(ifile_iline, line, flag, bulk_data_lines,
                             current_lines, current_ilines,
@@ -1052,10 +1076,14 @@ def _read_bulk_for_auxmodel(ifile_iline, line, flag, bulk_data_lines,
             current_lines = auxmodel_lines[auxmodel_id]
             current_ilines = []
             auxmodels_found.add(auxmodel_id)
-            if len(auxmodels_found) == len(auxmodels_to_find):
+            if len(auxmodels_found) == len(auxmodels_to_find) and len(auxmodels_found):
                 #print('broken...final', len(bulk_data_lines), len(bulk_data_ilines))
                 is_broken = True
-                return is_broken, auxmodel_id, is_auxmodel_active, flag, current_lines
+                out = (is_broken,
+                       auxmodel_id, is_auxmodel_active,
+                       afpm_id, is_afpm_active,
+                       flag, current_lines)
+                return out
         elif 'SUPER' in uline:
             super_id = _get_super_id(line, uline)
             old_flags.append(flag)
@@ -1070,12 +1098,12 @@ def _read_bulk_for_auxmodel(ifile_iline, line, flag, bulk_data_lines,
             current_lines = afpm_lines[afpm_id]
             current_ilines = []
             afpm_found.add(afpm_id)
-            if len(afpm_found) == len(afpm_to_find):
+            if len(afpm_found) == len(afpm_to_find) and len(afpm_found):
                 #print('broken...final', len(bulk_data_lines), len(bulk_data_ilines))
                 is_broken = True
                 return is_broken, auxmodel_id, is_auxmodel_active, flag, current_lines
         else:
-            msg = 'expected "BEGIN AUXMODEL=1" or "BEGIN SUPER=1"\nline = %s' % line
+            msg = 'expected "BEGIN SUPER=1", "BEGIN AUXMODEL=1" or "BEGIN AFPM=1"\nline = %s' % line
             raise RuntimeError(msg)
     rline = line.rstrip()
     if rline:

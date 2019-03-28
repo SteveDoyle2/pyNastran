@@ -105,7 +105,7 @@ class EPT(GeomCommon):
         #if prop.pid > 100000000:
             #raise RuntimeError('bad parsing; pid > 100000000...%s' % str(prop))
         #print(str(prop)[:-1])
-        ntables = self.table_names.count('EPT') + self.table_names.count('EPTS')
+        ntables = self.table_names.count(b'EPT') + self.table_names.count(b'EPTS')
         pid = prop.pid
         allow_overwrites = (
             ntables > 1 and
